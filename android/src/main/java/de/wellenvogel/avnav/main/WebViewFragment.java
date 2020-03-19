@@ -17,6 +17,7 @@ import android.widget.Toast;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.lang.reflect.Method;
+import java.net.URLDecoder;
 import java.util.HashMap;
 
 import de.wellenvogel.avnav.appapi.JavaScriptApi;
@@ -127,7 +128,7 @@ public class WebViewFragment extends Fragment {
                 WebResourceResponse rt=null;
                 if (handler != null) {
                     try {
-                        rt = handler.handleRequest(view, url);
+                        rt = handler.handleRequest(view, URLDecoder.decode(url,"UTF-8"));
                     }catch (Throwable t){
                         AvnLog.e("web request for "+url+" failed",t);
                         InputStream is=new ByteArrayInputStream(new byte[]{});

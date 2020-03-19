@@ -88,24 +88,20 @@ public class ChartHandler implements INavRequestHandler {
      */
     public static ParcelFileDescriptor getFileFromUri(String uriPart, Context ctx) throws Exception {
         if (uriPart == null) return null;
-        if (uriPart.startsWith("/")) uriPart=uriPart.substring(1);
-        String parts[]=uriPart.split("/");
-        if (parts.length < 5) return null;
-        if (!parts[0].equals(CHARTPREFIX)) return null;
-        if (!parts[1].equals(REALCHARTS)) return null;
-        if (!parts[3].equals(TYPE_GEMF) && ! parts[3].equals(TYPE_MBTILES)) return null;
-        if (parts[2].equals(INDEX_INTERNAL)){
+        KeyAndParts kp=urlToKey(uriPart,true);
+        if (!kp.originalParts[3].equals(TYPE_GEMF) && ! kp.originalParts[3].equals(TYPE_MBTILES)) return null;
+        if (kp.originalParts[2].equals(INDEX_INTERNAL)){
             File chartBase=getInternalChartsDir(ctx);
-            File chartFile=new File(chartBase,DirectoryRequestHandler.safeName(parts[4],true));
+            File chartFile=new File(chartBase,DirectoryRequestHandler.safeName(kp.originalParts[4],true));
             if (!chartFile.exists() || ! chartFile.canRead()) return null;
             return ParcelFileDescriptor.open(chartFile,ParcelFileDescriptor.MODE_READ_ONLY);
         }
-        if (parts[2].equals(INDEX_EXTERNAL)){
+        if (kp.originalParts[2].equals(INDEX_EXTERNAL)){
             String secondChartDirStr=AvnUtil.getSharedPreferences(ctx).getString(Constants.CHARTDIR,"");
             if (secondChartDirStr.isEmpty()) return null;
             if (!secondChartDirStr.startsWith("content:")) return null;
             DocumentFile dirFile=DocumentFile.fromTreeUri(ctx,Uri.parse(secondChartDirStr));
-            DocumentFile chartFile=dirFile.findFile(DirectoryRequestHandler.safeName(parts[4],true));
+            DocumentFile chartFile=dirFile.findFile(DirectoryRequestHandler.safeName(kp.originalParts[4],true));
             if (chartFile == null) return null;
             return ctx.getContentResolver().openFileDescriptor(chartFile.getUri(),"r");
         }
@@ -208,20 +204,20 @@ public class ChartHandler implements INavRequestHandler {
             try {
                 if (f.getName().endsWith(GEMFEXTENSION)){
                     String gemfName = f.getName();
-                    String urlName= Constants.REALCHARTS + "/"+index+"/"+TYPE_GEMF+"/" + gemfName;
+                    String urlName= Constants.REALCHARTS + "/"+index+"/"+TYPE_GEMF+"/" + URLEncoder.encode(gemfName,"UTF-8");
                     arr.put(urlName,new Chart(Chart.TYPE_GEMF,activity, f,urlName,f.lastModified()));
                     AvnLog.d(Constants.LOGPRFX,"readCharts: adding gemf url "+urlName+" for "+f.getAbsolutePath());
                 }
                 if (f.getName().endsWith(MBTILESEXTENSION)){
                     String name = f.getName();
-                    String urlName= Constants.REALCHARTS + "/"+index+"/"+TYPE_MBTILES+"/" + name;
+                    String urlName= Constants.REALCHARTS + "/"+index+"/"+TYPE_MBTILES+"/" + URLEncoder.encode(name,"UTF-8");
                     arr.put(urlName,new Chart(Chart.TYPE_MBTILES,activity, f,urlName,f.lastModified()));
                     AvnLog.d(Constants.LOGPRFX,"readCharts: adding mbtiles url "+urlName+" for "+f.getAbsolutePath());
 
                 }
                 if (f.getName().endsWith(".xml")){
                     String name=f.getName().substring(0,f.getName().length()-".xml".length());
-                    String urlName=Constants.REALCHARTS+"/"+index+"/avnav/"+name;
+                    String urlName=Constants.REALCHARTS+"/"+index+"/avnav/"+URLEncoder.encode(name,"UTF-8");
                     Chart newChart=new Chart(Chart.TYPE_XML,activity, f,urlName,f.lastModified());
                     arr.put(urlName,newChart);
                     AvnLog.d(Constants.LOGPRFX,"readCharts: adding xml url "+urlName+" for "+f.getAbsolutePath());
@@ -316,9 +312,9 @@ public class ChartHandler implements INavRequestHandler {
                 }
             }
         }
-        String charturl=uri.getQueryParameter("url");
-        if (charturl == null) return false;
-        Chart chart= getChartDescription(charturl.substring(Constants.CHARTPREFIX.length()+2));
+        String charturl=AvnUtil.getMandatoryParameter(uri,"url");
+        KeyAndParts kp=urlToKey(charturl,true);
+        Chart chart= getChartDescription(kp.key);
         if (chart == null){
             return false;
         }
@@ -335,7 +331,8 @@ public class ChartHandler implements INavRequestHandler {
         if (command.equals("scheme")){
             String scheme=AvnUtil.getMandatoryParameter(uri,"newScheme");
             String url=AvnUtil.getMandatoryParameter(uri,"url");
-            Chart chart= getChartDescription(url.substring(Constants.CHARTPREFIX.length()+2));
+            KeyAndParts kp=urlToKey(url,true);
+            Chart chart= getChartDescription(kp.key);
             if (chart == null){
                 return RequestHandler.getErrorReturn("chart not found");
             }
@@ -364,63 +361,101 @@ public class ChartHandler implements INavRequestHandler {
         return chartDir;
     }
 
+    // charts/charts/index/type/name/avnav.xml|/src/z/x/y
+
+
+    static class KeyAndParts{
+        String key;
+        String parts[];
+        String originalParts[];
+        boolean isDemo=false;
+        KeyAndParts(String key,String parts[],int start){
+            this.key=key;
+            this.originalParts=parts;
+            if (parts.length <= start){
+                this.parts=new String[0];
+            }
+            else{
+                this.parts=new String[parts.length-start];
+                for (int i=0;i< parts.length-start;i++){
+                    this.parts[i]=parts[i+start];
+                }
+            }
+        }
+
+    }
+
+    /**
+     * get the key and the remaining parts from the (decoded) url
+     * @param url
+     * @return
+     * @throws Exception
+     */
+    private static KeyAndParts urlToKey(String url, boolean noDemo) throws Exception {
+        url=url.replaceAll("^//*","");
+        url=url.replaceAll("\\?.*", "");
+        String parts[]=url.split("/");
+        if (parts.length < 3) {
+            throw new Exception("no chart url");
+        }
+        if (!parts[0].equals(CHARTPREFIX)){
+            throw new Exception("no chart url");
+        }
+        if (parts[1].equals(DEMOCHARTS)){
+            if (noDemo) throw new Exception("not permitted for demo charts");
+            if (parts.length < 4) throw new Exception("invaldi chart url");
+            KeyAndParts rt=new KeyAndParts(null,parts,2);
+            rt.isDemo=true;
+            return rt;
+        }
+        if (!parts[1].equals(REALCHARTS)){
+            throw new Exception("no chart url");
+        }
+        if (parts.length < 5) throw new Exception("invalid chart request " + url);
+        //the name is url encoded in the key
+        String key=parts[1]+"/"+parts[2]+"/"+parts[3]+"/"+URLEncoder.encode(parts[4],"UTF-8");
+        return new KeyAndParts(key,parts,5);
+    }
 
     private ExtendedWebResourceResponse handleChartRequest(String fname) throws Exception {
-        fname = fname.substring(Constants.CHARTPREFIX.length() + 1);
         InputStream rt = null;
-        fname = fname.replaceAll("\\?.*", "");
-        fname=fname.replaceFirst("^/","");
-        String parts[]=fname.split("/");
-        if (parts.length < 3) throw new Exception("invalid url");
+        KeyAndParts kp = urlToKey(fname,false);
         String mimeType = handler.mimeType(fname);
         int len = 0;
         try {
-            if (parts[0].equals(DEMOCHARTS)) {
-                if (fname.endsWith(CHARTOVERVIEW)) {
+            if (kp.isDemo) {
+                if (kp.parts[1].equals(CHARTOVERVIEW)) {
                     AvnLog.d(Constants.LOGPRFX, "overview request " + fname);
-                    String safeName=DirectoryRequestHandler.safeName(parts[1],true);
+                    String safeName = DirectoryRequestHandler.safeName(kp.parts[0], true);
                     safeName += ".xml";
                     rt = activity.getAssets().open(Constants.CHARTPREFIX + "/" + safeName);
                     len = -1;
-                } else throw new FileNotFoundException("unable to handle demo request for " + fname);
+                } else
+                    throw new FileNotFoundException("unable to handle demo request for " + fname);
             }
-            if (parts[0].equals(Constants.REALCHARTS)) {
-                //the name will be REALCHARTS/index/type/name/param
-                //type being either avnav or gemf
-                if (parts.length < 5) throw new Exception("invalid chart request " + fname);
-                String key = parts[0] + "/" + parts[1] + "/" + parts[2] + "/" + URLDecoder.decode(parts[3],"UTF-8");
-                Chart chart = getChartDescription(key);
-                if (chart == null)
-                    throw new Exception("request a file that is not in the list: " + fname);
-                if (parts[2].equals(TYPE_GEMF)|| parts[2].equals(TYPE_MBTILES)) {
-                    if (parts[4].equals(CHARTOVERVIEW)) {
-                        try {
-                            return chart.getOverview();
-                        } catch (Exception e) {
-                            Log.e(Constants.LOGPRFX, "unable to read chart file " + fname + ": " + e.getLocalizedMessage());
-                        }
-                    } else {
-                        if (parts.length < 8) {
-                            throw new Exception("invalid parameter for chart call " + fname);
-                        }
-                        int z = Integer.parseInt(parts[5]);
-                        int x = Integer.parseInt(parts[6]);
-                        int y = Integer.parseInt(parts[7].replaceAll("\\.png", ""));
-                        return chart.getChartData(x, y, z, Integer.parseInt(parts[4]));
-                    }
-                } else if (parts[2].equals("avnav")) {
-                    if (!parts[4].equals(CHARTOVERVIEW)) {
-                        throw new Exception("only overview supported for xml files: " + fname);
-                    }
+            Chart chart = getChartDescription(kp.key);
+            if (chart == null) {
+                throw new Exception("request a file that is not in the list: " + fname);
+            }
+            if (kp.parts[0].equals(CHARTOVERVIEW)) {
+                try {
                     return chart.getOverview();
-                } else {
-                    Log.e(Constants.LOGPRFX, "invalid chart request " + fname);
+                } catch (Exception e) {
+                    Log.e(Constants.LOGPRFX, "unable to read chart file " + fname + ": " + e.getLocalizedMessage());
                 }
+            } else {
+                if (chart.isXml()) throw new Exception("only overview for xml charts");
+                if (kp.parts.length < 4) {
+                    throw new Exception("invalid parameter for chart call " + fname);
+                }
+                int z = Integer.parseInt(kp.parts[1]);
+                int x = Integer.parseInt(kp.parts[2]);
+                int y = Integer.parseInt(kp.parts[3].replaceAll("\\.png", ""));
+                return chart.getChartData(x, y, z, Integer.parseInt(kp.parts[0]));
             }
+
             if (rt == null) {
                 Log.e(Constants.LOGPRFX, "unknown chart path " + fname);
-
-
             }
 
             return new ExtendedWebResourceResponse(len, mimeType, "", rt);

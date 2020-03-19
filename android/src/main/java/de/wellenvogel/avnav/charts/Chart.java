@@ -144,7 +144,7 @@ public class Chart implements INavRequestHandler.IJsonObect {
         }catch (Exception ex){
             throw new JSONException(ex.getLocalizedMessage());
         }
-        e.put("name", key.replaceAll(".*/", ""));
+        e.put("name", (realFile!=null)?realFile.getName():documentFile.getName());
         e.put("time", getLastModified() / 1000);
         e.put("url", "/"+ Constants.CHARTPREFIX + "/"+key);
         e.put("canDelete",canDelete());

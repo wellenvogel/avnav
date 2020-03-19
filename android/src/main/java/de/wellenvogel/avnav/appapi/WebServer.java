@@ -145,7 +145,7 @@ public class WebServer {
         public void handle(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
             AvnLog.d(NAME,"prefix request for "+handler.getPrefix()+request.getRequestLine());
             try {
-                String url = URLDecoder.decode(request.getRequestLine().getUri());
+                String url = URLDecoder.decode(request.getRequestLine().getUri(),"UTF-8");
                 String method = request.getRequestLine().getMethod().toUpperCase(Locale.ENGLISH);
                 url = url.replaceAll("^/*", "");
                 url = url.replaceAll("\\?.*", "");
