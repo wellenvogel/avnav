@@ -1,4 +1,4 @@
-package de.wellenvogel.avnav.gemf;
+package de.wellenvogel.avnav.charts;
 
 import android.app.Activity;
 import android.content.Context;
@@ -10,7 +10,6 @@ import android.os.ParcelFileDescriptor;
 import android.support.v4.provider.DocumentFile;
 import android.util.Log;
 
-import org.apache.http.HttpEntity;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -18,16 +17,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Iterator;
 
 import de.wellenvogel.avnav.appapi.DirectoryRequestHandler;
 import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
-import de.wellenvogel.avnav.appapi.IDirectoryHandler;
-import de.wellenvogel.avnav.appapi.JsonWrapper;
 import de.wellenvogel.avnav.appapi.PostVars;
 import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.main.BuildConfig;
@@ -42,16 +39,19 @@ import static de.wellenvogel.avnav.main.Constants.DEMOCHARTS;
 import static de.wellenvogel.avnav.main.Constants.REALCHARTS;
 
 
-public class GemfHandler implements INavRequestHandler {
+public class ChartHandler implements INavRequestHandler {
     private static final String GEMFEXTENSION =".gemf";
+    private static final String MBTILESEXTENSION =".mbtiles";
+    private static final String TYPE_GEMF="gemf";
+    private static final String TYPE_MBTILES="mbtiles";
     public static final String INDEX_INTERNAL = "1";
     public static final String INDEX_EXTERNAL = "2";
     private Activity activity;
     private RequestHandler handler;
     //mapping of url name to char descriptors
-    private HashMap<String, GemfChart> gemfFiles =new HashMap<String, GemfChart>();
+    private HashMap<String, Chart> chartList =new HashMap<String, Chart>();
 
-    public GemfHandler(Activity a,RequestHandler h){
+    public ChartHandler(Activity a, RequestHandler h){
         handler=h;
         activity=a;
 
@@ -61,7 +61,7 @@ public class GemfHandler implements INavRequestHandler {
      * create the name part for the content provider uri
      * @param fileName
      * @param url charts/charts/index/type/name/
-     *            this is created by {@link GemfChart#toJson()}
+     *            this is created by {@link Chart#toJson()}
      * @return basically the same url after some checks
      */
     public static String uriPath(String fileName, String url) throws Exception {
@@ -71,7 +71,7 @@ public class GemfHandler implements INavRequestHandler {
         if (parts.length < 5) return null;
         if (!parts[0].equals(CHARTPREFIX)) return null;
         if (!parts[1].equals(REALCHARTS)) return null;
-        if (!parts[3].equals("gemf")) return null;
+        if (!parts[3].equals(TYPE_GEMF) && ! parts[3].equals(TYPE_MBTILES)) return null;
         if (parts[2].equals(INDEX_EXTERNAL) || parts[2].equals(INDEX_INTERNAL)){
             return parts[0]+"/"+parts[1]+"/"+parts[2]+"/"+parts[3]+"/"+DirectoryRequestHandler.safeName(parts[4],true);
         }
@@ -82,7 +82,7 @@ public class GemfHandler implements INavRequestHandler {
      * open a file for download
      * @param uriPart - corresponds to the path we returned from {@link #uriPath(String, String)}
      *                chart/index/type/name/
-     *                it is the same like the url returned by {@link GemfChart#toJson()}
+     *                it is the same like the url returned by {@link Chart#toJson()}
      * @return
      */
     public static ParcelFileDescriptor getFileFromUri(String uriPart, Context ctx) throws Exception {
@@ -92,10 +92,10 @@ public class GemfHandler implements INavRequestHandler {
         if (parts.length < 5) return null;
         if (!parts[0].equals(CHARTPREFIX)) return null;
         if (!parts[1].equals(REALCHARTS)) return null;
-        if (!parts[3].equals("gemf")) return null;
+        if (!parts[3].equals(TYPE_GEMF) && ! parts[3].equals(TYPE_MBTILES)) return null;
         if (parts[2].equals(INDEX_INTERNAL)){
             File chartBase=getInternalChartsDir(ctx);
-            File chartFile=new File(chartBase,DirectoryRequestHandler.safeName(parts[4],true)+GEMFEXTENSION);
+            File chartFile=new File(chartBase,DirectoryRequestHandler.safeName(parts[4],true));
             if (!chartFile.exists() || ! chartFile.canRead()) return null;
             return ParcelFileDescriptor.open(chartFile,ParcelFileDescriptor.MODE_READ_ONLY);
         }
@@ -113,7 +113,7 @@ public class GemfHandler implements INavRequestHandler {
 
 
     public synchronized void updateChartList(){
-        HashMap<String, GemfChart> newGemfFiles=new HashMap<String, GemfChart>();
+        HashMap<String, Chart> newGemfFiles=new HashMap<String, Chart>();
         SharedPreferences prefs=AvnUtil.getSharedPreferences(activity);
         File workDir=AvnUtil.getWorkDir(prefs,activity);
         File chartDir = getInternalChartsDir(activity);
@@ -128,21 +128,21 @@ public class GemfHandler implements INavRequestHandler {
         //currently we assume only one thread to change the chartlist...
         boolean modified=false;
         for (String url : newGemfFiles.keySet()){
-            GemfChart chart=newGemfFiles.get(url);
+            Chart chart=newGemfFiles.get(url);
             long lastModified=chart.getLastModified();
-            if (gemfFiles.get(url) == null ){
-                gemfFiles.put(url,chart);
+            if (chartList.get(url) == null ){
+                chartList.put(url,chart);
                 modified=true;
             }
             else{
-                if (gemfFiles.get(url).getLastModified() < lastModified){
+                if (chartList.get(url).getLastModified() < lastModified){
                     modified=true;
-                    gemfFiles.get(url).close();
-                    gemfFiles.put(url,chart);
+                    chartList.get(url).close();
+                    chartList.put(url,chart);
                 }
             }
         }
-        Iterator<String> it=gemfFiles.keySet().iterator();
+        Iterator<String> it= chartList.keySet().iterator();
         while (it.hasNext()){
             String url=it.next();
             if (newGemfFiles.get(url) == null){
@@ -150,7 +150,7 @@ public class GemfHandler implements INavRequestHandler {
                 modified=true;
             }
             else{
-                GemfChart chart=gemfFiles.get(url);
+                Chart chart= chartList.get(url);
                 if (chart.closeInactive()){
                     AvnLog.i("closing gemf file "+url);
                     modified=true;
@@ -162,11 +162,11 @@ public class GemfHandler implements INavRequestHandler {
         }
     }
 
-    public GemfChart getChartDescription(String url){
-        return gemfFiles.get(url);
+    public Chart getChartDescription(String url){
+        return chartList.get(url);
     }
 
-    private void readChartDir(String chartDirStr,String index,HashMap<String,GemfChart> arr) {
+    private void readChartDir(String chartDirStr,String index,HashMap<String, Chart> arr) {
         if (chartDirStr == null) return;
         if (Build.VERSION.SDK_INT >= 21) {
             if (chartDirStr.startsWith("content:")) {
@@ -175,18 +175,24 @@ public class GemfHandler implements INavRequestHandler {
                 Uri dirUri = Uri.parse(chartDirStr);
                 DocumentFile dirFile=DocumentFile.fromTreeUri(activity,dirUri);
                 for (DocumentFile f : dirFile.listFiles()){
-                    if (f.getName().endsWith(".gemf")){
-                        String urlName = Constants.REALCHARTS + "/" + index + "/gemf/" + f.getName();
-                        arr.put(urlName, new GemfChart(activity, f, urlName, f.lastModified()));
-                        AvnLog.d(Constants.LOGPRFX,"readCharts: adding gemf url "+urlName+" for "+f.getUri());
-                    }
-                    if (f.getName().endsWith(".xml")){
-                        String name=f.getName().substring(0,f.getName().length()-".xml".length());
-                        String urlName=Constants.REALCHARTS+"/"+index+"/avnav/"+name;
-                        GemfChart newChart=new GemfChart(activity, f,urlName,f.lastModified());
-                        newChart.setIsXml();
-                        arr.put(urlName,newChart);
-                        AvnLog.d(Constants.LOGPRFX,"readCharts: adding xml url "+urlName+" for "+f.getUri());
+                    try {
+                        if (f.getName().endsWith(GEMFEXTENSION)) {
+                            String urlName = Constants.REALCHARTS + "/" + index + "/gemf/" + URLEncoder.encode(f.getName(), "UTF-8");
+                            arr.put(urlName, new Chart(Chart.TYPE_GEMF,activity, f, urlName, f.lastModified()));
+                            AvnLog.d(Constants.LOGPRFX, "readCharts: adding gemf url " + urlName + " for " + f.getUri());
+                        }
+                        if (f.getName().endsWith(MBTILESEXTENSION)){
+                            //TODO
+                        }
+                        if (f.getName().endsWith(".xml")) {
+                            String name = f.getName().substring(0, f.getName().length() - ".xml".length());
+                            String urlName = Constants.REALCHARTS + "/" + index + "/avnav/" + URLEncoder.encode(name, "UTF-8");
+                            Chart newChart = new Chart(Chart.TYPE_XML,activity, f, urlName, f.lastModified());
+                            arr.put(urlName, newChart);
+                            AvnLog.d(Constants.LOGPRFX, "readCharts: adding xml url " + urlName + " for " + f.getUri());
+                        }
+                    }catch (Throwable t){
+                        AvnLog.e("unable to handle chart "+f.getName()+": "+t.getLocalizedMessage());
                     }
                 }
                 return;
@@ -201,14 +207,16 @@ public class GemfHandler implements INavRequestHandler {
                 if (f.getName().endsWith(GEMFEXTENSION)){
                     String gemfName = f.getName();
                     String urlName= Constants.REALCHARTS + "/"+index+"/gemf/" + gemfName;
-                    arr.put(urlName,new GemfChart(activity, f,urlName,f.lastModified()));
+                    arr.put(urlName,new Chart(Chart.TYPE_GEMF,activity, f,urlName,f.lastModified()));
                     AvnLog.d(Constants.LOGPRFX,"readCharts: adding gemf url "+urlName+" for "+f.getAbsolutePath());
+                }
+                if (f.getName().endsWith(MBTILESEXTENSION)){
+
                 }
                 if (f.getName().endsWith(".xml")){
                     String name=f.getName().substring(0,f.getName().length()-".xml".length());
                     String urlName=Constants.REALCHARTS+"/"+index+"/avnav/"+name;
-                    GemfChart newChart=new GemfChart(activity, f,urlName,f.lastModified());
-                    newChart.setIsXml();
+                    Chart newChart=new Chart(Chart.TYPE_XML,activity, f,urlName,f.lastModified());
                     arr.put(urlName,newChart);
                     AvnLog.d(Constants.LOGPRFX,"readCharts: adding xml url "+urlName+" for "+f.getAbsolutePath());
                 }
@@ -222,7 +230,7 @@ public class GemfHandler implements INavRequestHandler {
      * download chart - only works for single file charts
      * otherwise we would pick up only the first file
      * @param name - ignored
-     * @param uri - we expect an url parameter that has been filled by {@link GemfChart#toJson()}
+     * @param uri - we expect an url parameter that has been filled by {@link Chart#toJson()}
      *              so it has charts/charts/index/typ/name
      * @return
      * @throws Exception
@@ -242,7 +250,8 @@ public class GemfHandler implements INavRequestHandler {
     @Override
     public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
         String safeName= DirectoryRequestHandler.safeName(name,true);
-        if (! safeName.endsWith(".gemf")) throw new Exception("only .gemf files allowed");
+        if (! safeName.endsWith(GEMFEXTENSION) && ! safeName.endsWith(MBTILESEXTENSION))
+            throw new Exception("only "+GEMFEXTENSION+" or "+MBTILESEXTENSION+" files allowed");
         File outFile=new File(getInternalChartsDir(activity),safeName);
         if (outFile.exists() && !ignoreExisting){
             throw new Exception("file already exists");
@@ -262,8 +271,8 @@ public class GemfHandler implements INavRequestHandler {
         //here we will have more dirs in the future...
         JSONArray rt=new JSONArray();
         try {
-            for (String url : gemfFiles.keySet()) {
-                GemfChart chart = gemfFiles.get(url);
+            for (String url : chartList.keySet()) {
+                Chart chart = chartList.get(url);
                 rt.put(chart.toJson());
             }
         } catch (Exception e) {
@@ -275,10 +284,11 @@ public class GemfHandler implements INavRequestHandler {
                 if (! demo.endsWith(".xml")) continue;
                 String name=demo.replaceAll("\\.xml$", "");
                 AvnLog.d(Constants.LOGPRFX,"found demo chart "+demo);
+                String url="/"+ Constants.CHARTPREFIX+"/"+Constants.DEMOCHARTS+"/"+URLEncoder.encode(name,"UTF-8");
                 JSONObject e = new JSONObject();
                 e.put("name", name);
-                e.put("url", "/"+ Constants.CHARTPREFIX+"/"+Constants.DEMOCHARTS+"/" + name);
-                e.put("charturl","/"+ Constants.CHARTPREFIX+"/"+Constants.DEMOCHARTS+"/" + name);
+                e.put("url",url);
+                e.put("charturl",url);
                 e.put("canDelete",false);
                 e.put("time", BuildConfig.TIMESTAMP/1000);
                 rt.put(e);
@@ -292,8 +302,8 @@ public class GemfHandler implements INavRequestHandler {
         if (uri == null){
             //only delete single files from internal dir
             String safeName= DirectoryRequestHandler.safeName(name,true);
-            if (! safeName.endsWith(".gemf")) throw new Exception("only .gemf files allowed");
-            for (GemfChart f:gemfFiles.values()){
+            if (! safeName.endsWith(TYPE_GEMF) && ! safeName.endsWith(TYPE_MBTILES)) throw new Exception("only chart files allowed");
+            for (Chart f: chartList.values()){
                 if (f.isName(safeName)){
                     f.deleteFile();
                     updateChartList();
@@ -302,7 +312,7 @@ public class GemfHandler implements INavRequestHandler {
         }
         String charturl=uri.getQueryParameter("url");
         if (charturl == null) return false;
-        GemfChart chart= getChartDescription(charturl.substring(Constants.CHARTPREFIX.length()+2));
+        Chart chart= getChartDescription(charturl.substring(Constants.CHARTPREFIX.length()+2));
         if (chart == null){
             return false;
         }
@@ -322,7 +332,7 @@ public class GemfHandler implements INavRequestHandler {
 
 
     @Override
-    public ExtendedWebResourceResponse handleDirectRequest(String url) throws FileNotFoundException {
+    public ExtendedWebResourceResponse handleDirectRequest(String url) throws Exception {
         return handleChartRequest(url);
     }
 
@@ -338,53 +348,51 @@ public class GemfHandler implements INavRequestHandler {
     }
 
 
-    private ExtendedWebResourceResponse handleChartRequest(String fname) {
+    private ExtendedWebResourceResponse handleChartRequest(String fname) throws Exception {
         fname = fname.substring(Constants.CHARTPREFIX.length() + 1);
         InputStream rt = null;
         fname = fname.replaceAll("\\?.*", "");
+        fname=fname.replaceFirst("^/","");
+        String parts[]=fname.split("/");
+        if (parts.length < 3) throw new Exception("invalid url");
         String mimeType = handler.mimeType(fname);
         int len = 0;
         try {
-            if (fname.startsWith(DEMOCHARTS)) {
-                fname = fname.substring(DEMOCHARTS.length() + 1);
+            if (parts[0].equals(DEMOCHARTS)) {
                 if (fname.endsWith(CHARTOVERVIEW)) {
                     AvnLog.d(Constants.LOGPRFX, "overview request " + fname);
-                    fname = fname.substring(0, fname.length() - CHARTOVERVIEW.length() - 1); //just the pure name
-                    fname += ".xml";
-                    rt = activity.getAssets().open(Constants.CHARTPREFIX + "/" + fname);
+                    String safeName=DirectoryRequestHandler.safeName(parts[1],true);
+                    safeName += ".xml";
+                    rt = activity.getAssets().open(Constants.CHARTPREFIX + "/" + safeName);
                     len = -1;
-                } else throw new Exception("unable to handle demo request for " + fname);
+                } else throw new FileNotFoundException("unable to handle demo request for " + fname);
             }
-            if (fname.startsWith(Constants.REALCHARTS)) {
+            if (parts[0].equals(Constants.REALCHARTS)) {
                 //the name will be REALCHARTS/index/type/name/param
                 //type being either avnav or gemf
-                String baseAndUrl[] = fname.split("/", 5);
-                if (baseAndUrl.length < 5) throw new Exception("invalid chart request " + fname);
-                String key = baseAndUrl[0] + "/" + baseAndUrl[1] + "/" + baseAndUrl[2] + "/" + baseAndUrl[3];
-                GemfChart chart = getChartDescription(key);
+                if (parts.length < 5) throw new Exception("invalid chart request " + fname);
+                String key = parts[0] + "/" + parts[1] + "/" + parts[2] + "/" + URLDecoder.decode(parts[3],"UTF-8");
+                Chart chart = getChartDescription(key);
                 if (chart == null)
                     throw new Exception("request a file that is not in the list: " + fname);
-                if (baseAndUrl[2].equals("gemf")) {
-                    if (baseAndUrl[4].equals(CHARTOVERVIEW)) {
+                if (parts[2].equals("gemf")) {
+                    if (parts[4].equals(CHARTOVERVIEW)) {
                         try {
                             return chart.getOverview();
                         } catch (Exception e) {
                             Log.e(Constants.LOGPRFX, "unable to read gemf file " + fname + ": " + e.getLocalizedMessage());
                         }
                     } else {
-                        GemfFileReader f = chart.getGemf();
-                        //we have source/z/x/y in baseAndUrl[1]
-                        String param[] = baseAndUrl[4].split("/");
-                        if (param.length < 4) {
-                            throw new Exception("invalid parameter for gemf call " + fname);
+                        if (parts.length < 8) {
+                            throw new Exception("invalid parameter for chart call " + fname);
                         }
-                        int z = Integer.parseInt(param[1]);
-                        int x = Integer.parseInt(param[2]);
-                        int y = Integer.parseInt(param[3].replaceAll("\\.png", ""));
-                        return f.getChartData(x, y, z, Integer.parseInt(param[0]));
+                        int z = Integer.parseInt(parts[5]);
+                        int x = Integer.parseInt(parts[6]);
+                        int y = Integer.parseInt(parts[7].replaceAll("\\.png", ""));
+                        return chart.getChartData(x, y, z, Integer.parseInt(parts[4]));
                     }
-                } else if (baseAndUrl[2].equals("avnav")) {
-                    if (!baseAndUrl[4].equals(CHARTOVERVIEW)) {
+                } else if (parts[2].equals("avnav")) {
+                    if (!parts[4].equals(CHARTOVERVIEW)) {
                         throw new Exception("only overview supported for xml files: " + fname);
                     }
                     return chart.getOverview();

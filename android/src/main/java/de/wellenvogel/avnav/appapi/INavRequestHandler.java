@@ -48,7 +48,7 @@ public interface INavRequestHandler {
      * @return
      * @throws FileNotFoundException
      */
-    ExtendedWebResourceResponse handleDirectRequest(String url) throws FileNotFoundException;
+    ExtendedWebResourceResponse handleDirectRequest(String url) throws Exception;
 
     /**
      * get the prefix string we handle

@@ -14,7 +14,7 @@ import java.util.List;
 
 import de.wellenvogel.avnav.appapi.DirectoryRequestHandler;
 import de.wellenvogel.avnav.appapi.RequestHandler;
-import de.wellenvogel.avnav.gemf.GemfHandler;
+import de.wellenvogel.avnav.charts.ChartHandler;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
@@ -64,7 +64,7 @@ public class UserFileProvider extends ContentProvider {
                 throw new Exception("invalid uri");
             }
             if (segments.get(0).equals("chart")){
-                return GemfHandler.getFileFromUri(uri.getPath().substring(segments.get(0).length()+1),getContext());
+                return ChartHandler.getFileFromUri(uri.getPath().substring(segments.get(0).length()+1),getContext());
             }
             File rt=getPathFromUri(uri);
             if (rt == null) throw new FileNotFoundException();
@@ -105,7 +105,7 @@ public class UserFileProvider extends ContentProvider {
     public static Uri createContentUri(String type, String fileName,String url) throws Exception {
         if (RequestHandler.typeDirs.get(type) == null) return null;
         if (type.equals("chart")){
-            fileName= GemfHandler.uriPath(fileName,url);
+            fileName= ChartHandler.uriPath(fileName,url);
         }
         else {
             DirectoryRequestHandler.safeName(fileName, true);

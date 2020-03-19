@@ -1,4 +1,4 @@
-package de.wellenvogel.avnav.gemf;
+package de.wellenvogel.avnav.charts;
 
 import android.app.Activity;
 import android.support.v4.provider.DocumentFile;
@@ -16,57 +16,61 @@ import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.appapi.INavRequestHandler;
 import de.wellenvogel.avnav.util.AvnLog;
 
-public class GemfChart implements INavRequestHandler.IJsonObect {
+public class Chart implements INavRequestHandler.IJsonObect {
+    static final int TYPE_GEMF=1;
+    static final int TYPE_MBTILES=2;
+    static final int TYPE_XML=3;
     private static final long INACTIVE_CLOSE=100000; //100s
     private Activity activity;
     private File realFile;
     private DocumentFile documentFile; //alternative to realFile
-    private GemfFileReader gemf;
+    private ChartFileReader chartReader;
     private  String key;
     private long lastModified;
     private long lastTouched;
-    private boolean isXml=false;
-    public GemfChart(Activity activity, File f, String key, long last){
+    private int type;
+    public Chart(int type,Activity activity, File f, String key, long last){
         this.activity=activity;
         realFile=f;
         this.key=key;
         this.lastModified=last;
         this.lastTouched=System.currentTimeMillis();
+        this.type=type;
     }
-    public GemfChart(Activity activity, DocumentFile f, String key, long last){
+    public Chart(int type,Activity activity, DocumentFile f, String key, long last){
         this.activity = activity;
         documentFile =f;
         this.key=key;
         this.lastModified=last;
         this.lastTouched=System.currentTimeMillis();
+        this.type=type;
     }
-    public void setIsXml(){
-        isXml=true;
-    }
-    public synchronized GemfFileReader getGemf() throws IOException {
-        if (isXml)
-            throw new IOException("unable to get GEMF file from xml");
-        if (gemf == null){
-            AvnLog.i("RequestHandler","open gemf file "+key);
+    private synchronized ChartFileReader getChartFileReader() throws IOException {
+        if (isXml())
+            throw new IOException("unable to get chart file from xml");
+        if (chartReader == null){
+            AvnLog.i("RequestHandler","open chart file "+key);
             if (documentFile != null){
-                gemf=new GemfFileReader(new GEMFFile(documentFile, activity),key);
+                ChartFile cf=(type == TYPE_MBTILES)?null:new GEMFFile(documentFile, activity);
+                chartReader =new ChartFileReader(cf,key);
             }
             else {
-                gemf = new GemfFileReader(new GEMFFile(realFile), key);
+                ChartFile cf=(type == TYPE_MBTILES)?null:new GEMFFile(realFile);
+                chartReader = new ChartFileReader(cf, key);
             }
         }
         this.lastTouched=System.currentTimeMillis();
-        return gemf;
+        return chartReader;
     }
     synchronized void close(){
-        if (gemf != null){
-            gemf.close();
-            gemf=null;
+        if (chartReader != null){
+            chartReader.close();
+            chartReader =null;
         }
     }
 
     synchronized boolean closeInactive(){
-        if (gemf == null) return false;
+        if (chartReader == null) return false;
         if (lastTouched < (System.currentTimeMillis() -INACTIVE_CLOSE)) {
             this.close();
             return true;
@@ -86,9 +90,9 @@ public class GemfChart implements INavRequestHandler.IJsonObect {
     public boolean canDelete(){
         //TODO: move delete handling to GEMFfile
         try {
-            return realFile != null && (getGemf().numFiles() == 1);
+            return realFile != null && (getChartFileReader().numFiles() == 1);
         }catch (Exception e){
-            AvnLog.e("unable to get num of gemf files",e);
+            AvnLog.e("unable to get num of chartReader files",e);
             return false;
         }
     }
@@ -105,15 +109,15 @@ public class GemfChart implements INavRequestHandler.IJsonObect {
     }
     public File deleteFile() throws IOException {
         if (!canDelete()) return null;
-        getGemf().close();
+        getChartFileReader().close();
         realFile.delete();
         return realFile;
     }
     public boolean isXml(){
-        return isXml;
+        return (type == TYPE_XML);
     }
     public ExtendedWebResourceResponse getOverview() throws IOException {
-        if (isXml){
+        if (isXml()){
             if (realFile != null){
                 return new ExtendedWebResourceResponse((int)realFile.length(),"text/xml","",new FileInputStream(realFile));
             }
@@ -123,17 +127,20 @@ public class GemfChart implements INavRequestHandler.IJsonObect {
             }
         }
         else{
-            GemfFileReader f = getGemf();
-            InputStream rt=f.gemfOverview();
+            ChartFileReader f = getChartFileReader();
+            InputStream rt=f.chartOverview();
             return new ExtendedWebResourceResponse(-1,"text/xml","",rt);
         }
+    }
+    public ExtendedWebResourceResponse getChartData(int x, int y, int z, int sourceIndex) {
+        return chartReader.getChartData(x,y,z,sourceIndex);
     }
 
     public JSONObject toJson() throws JSONException {
         JSONObject e = new JSONObject();
         int numFiles=0;
         try {
-            numFiles=getGemf().numFiles();
+            numFiles= getChartFileReader().numFiles();
         }catch (Exception ex){
             throw new JSONException(ex.getLocalizedMessage());
         }
@@ -142,7 +149,7 @@ public class GemfChart implements INavRequestHandler.IJsonObect {
         e.put("url", "/"+ Constants.CHARTPREFIX + "/"+key);
         e.put("canDelete",canDelete());
         e.put("info",numFiles+" files");
-        e.put("canDownload",!isXml && (numFiles == 1));
+        e.put("canDownload",!isXml() && (numFiles == 1));
         return e;
     }
 }

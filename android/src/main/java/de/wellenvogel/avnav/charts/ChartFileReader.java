@@ -1,20 +1,23 @@
-package de.wellenvogel.avnav.gemf;
+package de.wellenvogel.avnav.charts;
 
-import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
-import de.wellenvogel.avnav.main.Constants;
-import de.wellenvogel.avnav.util.AvnLog;
-
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
+import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
+import de.wellenvogel.avnav.main.Constants;
+import de.wellenvogel.avnav.util.AvnLog;
+
 /**
  * Created by andreas on 06.12.14.
  */
-public class GemfFileReader {
+public class ChartFileReader {
     private String urlName;
     private static final String MAPSRCTEMPLATE="    <TileMap \n" +
             "       title=\"%TITLE%\" \n" +
@@ -32,7 +35,7 @@ public class GemfFileReader {
             "       </LayerZoomBoundings>\n"+
             "       \n" +
             "    </TileMap>\n";
-    private static final String GEMFTEMPLATE="<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n" +
+    private static final String SERVICETEMPLATE ="<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n" +
             " <TileMapService version=\"1.0.0\" >\n" +
             "   <Title>avnav tile map service</Title>\n" +
             "   <TileMaps>\n" +
@@ -47,35 +50,35 @@ public class GemfFileReader {
             "%BOUNDINGS%\n" +
             "</ZoomBoundings>\n";
     private static final String ZOOMBOUNDING="<BoundingBox minx=\"%MINX%\" maxx=\"%MAXX%\" miny=\"%MINY%\" maxy=\"%MAXY%\" />\n";
-    private GEMFFile gemf;
-    public GemfFileReader(GEMFFile file, String urlName){
+    private ChartFile chart;
+    public ChartFileReader(ChartFile file, String urlName){
         this.urlName=urlName;
-        gemf=file;
+        chart =file;
     }
 
     public ExtendedWebResourceResponse getChartData(int x, int y, int z, int sourceIndex){
-        GEMFFile.GEMFInputStream str=getInputStream(x,y,z,sourceIndex);
+        ChartFile.ChartInputStream str=getInputStream(x,y,z,sourceIndex);
         if (str == null)
             return null;
         return new ExtendedWebResourceResponse(str.getLength(),"image/png","",str);
     }
 
-    public GEMFFile.GEMFInputStream getInputStream(int x,int y, int z,int sourceIndex) {
-        GEMFFile.GEMFInputStream rt = gemf.getInputStream(x, y, z,sourceIndex);
-        AvnLog.d(Constants.LOGPRFX, "loaded gemf z=" + z + ", x=" + x + ", y=" + y + ",src=" + sourceIndex + ", rt=" + ((rt != null) ? "OK" : "<null>"));
+    public ChartFile.ChartInputStream getInputStream(int x,int y, int z,int sourceIndex) {
+        ChartFile.ChartInputStream rt = chart.getInputStream(x, y, z,sourceIndex);
+        AvnLog.d(Constants.LOGPRFX, "loaded chart z=" + z + ", x=" + x + ", y=" + y + ",src=" + sourceIndex + ", rt=" + ((rt != null) ? "OK" : "<null>"));
         return rt;
     }
     public String getUrlName(){
         return urlName;
     }
     public int numFiles(){
-        return gemf.numFiles();
+        return chart.numFiles();
     }
     public void close(){
         try {
-            gemf.close();
+            chart.close();
         } catch (IOException e) {
-            AvnLog.d(Constants.LOGPRFX,"exception while closing gemf file "+urlName);
+            AvnLog.d(Constants.LOGPRFX,"exception while closing chart file "+urlName);
         }
     }
     private String replaceTemplate(String template,HashMap<String,String> values){
@@ -128,7 +131,7 @@ public class GemfFileReader {
         bb.east = tile2lon(x + 1, zoom);
         return bb;
     }
-    static BoundingBox range2boundingBox(GEMFFile.GEMFRange range) {
+    static BoundingBox range2boundingBox(ChartFile.ChartRange range) {
         BoundingBox bb = new BoundingBox();
         bb.north = tile2lat(range.yMin, range.zoom);
         bb.south = tile2lat(range.yMax + 0.999, range.zoom);
@@ -165,9 +168,9 @@ public class GemfFileReader {
      * @return
      * @throws UnsupportedEncodingException
      */
-    public InputStream gemfOverview() throws UnsupportedEncodingException {
-        HashMap<Integer,String> sources=gemf.getSources();
-        List<GEMFFile.GEMFRange> ranges = gemf.getRanges();
+    public InputStream chartOverview() throws UnsupportedEncodingException {
+        HashMap<Integer,String> sources= chart.getSources();
+        List<ChartFile.ChartRange> ranges = chart.getRanges();
         SourceEntry mapSources[]=new SourceEntry[sources.size()];
         int idx=0;
         for (Integer src:sources.keySet()) {
@@ -178,7 +181,7 @@ public class GemfFileReader {
             //we first have to find out min/max zoom as we only consider max zoom for bounding boxes
             //if we have multiple layers
             HashSet<Integer> zooms=new HashSet<>();
-            for (GEMFFile.GEMFRange range : ranges) {
+            for (ChartFile.ChartRange range : ranges) {
                 if (range.sourceIndex != src.intValue()) continue;
                 zooms.add(range.zoom);
                 if (range.zoom < minzoom) minzoom = range.zoom;
@@ -189,7 +192,7 @@ public class GemfFileReader {
 
             for (Integer zoom : zooms) {
                 StringBuilder zb = new StringBuilder();
-                for (GEMFFile.GEMFRange range : ranges) {
+                for (ChartFile.ChartRange range : ranges) {
                     if (range.sourceIndex != src.intValue()) continue;
                     if (!range.zoom.equals(zoom)) continue;
                     HashMap<String, String> values = new HashMap<String, String>();
@@ -212,7 +215,7 @@ public class GemfFileReader {
             SourceEntry e=new SourceEntry(src,maxzoom,replaceTemplate(MAPSRCTEMPLATE,values));
             mapSources[idx]=e;
             idx++;
-            AvnLog.i(Constants.LOGPRFX, "read gemf overview " + gemf.getName() + " source=" + sources.get(src) + " ,minzoom= " + minzoom + ", maxzoom=" + maxzoom + " : " + extend.toString());
+            AvnLog.i(Constants.LOGPRFX, "read chart overview " + chart.getName() + " source=" + sources.get(src) + " ,minzoom= " + minzoom + ", maxzoom=" + maxzoom + " : " + extend.toString());
         }
         //sort layers by maxzoomlevel
         Arrays.sort(mapSources, new Comparator<SourceEntry>() {
@@ -227,8 +230,8 @@ public class GemfFileReader {
         }
         HashMap<String,String> values=new HashMap<String, String>();
         values.put("MAPSOURCES",sourceString.toString());
-        AvnLog.i(Constants.LOGPRFX, "done read gemf overview " + gemf.getName());
-        String rt=replaceTemplate(GEMFTEMPLATE,values);
+        AvnLog.i(Constants.LOGPRFX, "done read chart overview " + chart.getName());
+        String rt=replaceTemplate(SERVICETEMPLATE,values);
         return new ByteArrayInputStream(rt.getBytes("UTF-8"));
     }
 }

@@ -28,7 +28,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
-import de.wellenvogel.avnav.gemf.GemfHandler;
+import de.wellenvogel.avnav.charts.ChartHandler;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.MainActivity;
 import de.wellenvogel.avnav.main.R;
@@ -57,7 +57,7 @@ public class RequestHandler {
     private boolean chartHandlerRunning=false;
     private final Object chartHandlerMonitor=new Object();
 
-    private GemfHandler gemfHandler;
+    private ChartHandler gemfHandler;
     private LayoutHandler layoutHandler;
     private AddonHandler addonHandler;
 
@@ -143,7 +143,7 @@ public class RequestHandler {
 
     public RequestHandler(MainActivity activity){
         this.activity=activity;
-        this.gemfHandler =new GemfHandler(activity,this);
+        this.gemfHandler =new ChartHandler(activity,this);
         this.gemfHandler.updateChartList();
         this.addonHandler= new AddonHandler(activity,this);
         ownMimeMap.put("js", "text/javascript");
