@@ -29,6 +29,11 @@ import sys
 import os
 import struct
 import threading
+import traceback
+
+import create_overview
+from avnav_util import AVNLog
+
 
 class GemfFile():
   def __init__(self,filename):
@@ -231,6 +236,27 @@ class GemfFile():
     for l in self.lengthes:
       rt+=" flen=%d," % l
     return rt
+
+  def changeSchema(self,schema):
+    raise Exception("change schema not allowed for %s"%self.filename)
+  def getSchema(self):
+    return None
+
+  def getAvnavXml(self,upzoom=2):
+    if not self.isOpen:
+      return None
+    try:
+      data = self.getSources()
+      options = {}
+      options['upzoom'] = self.getIntParam('upzoom')
+      rt = create_overview.getGemfInfo(data, options)
+      AVNLog.info("created GEMF overview for %s", self.filename)
+      AVNLog.debug("overview for %s:%s", self.filename, rt)
+      return rt
+
+    except:
+      AVNLog.error("error while trying to get the overview data for %s  %s", self.filename, traceback.format_exc())
+    return None
 
 
 if __name__ == "__main__":

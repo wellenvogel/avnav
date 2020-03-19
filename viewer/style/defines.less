@@ -29,6 +29,12 @@
 
 @headlineHeight: 4em;
 
+@iconBase: "../images/icons-new";
+
+.iconImage(@icon){
+  background-image: url("@{iconBase}/@{icon}");;
+}
+
 .nightColors() {
   .nightMode & {
     background-color: #000;

@@ -62,9 +62,40 @@ export const Checkbox=(props)=>{
     </div>
 };
 
+
+
 Checkbox.propTypes=assign({},DEFAULT_TYPES,{
     onClick: PropTypes.func, //if set: do not call onChange but call onClick with the event
 });
+
+export const Radio=(props)=>{
+    let className="radio";
+    let frameClass=props.dialogRow?"dialogRow":"";
+    if (props.className) frameClass+=" "+props.className;
+    let clickFunction=(ev)=>{
+        if (props.onClick) return props.onClick(ev);
+        if (props.onChange) props.onChange(!props.value);
+    };
+    return <div className={frameClass} key={props.key}>
+        {props.label&& <span className="inputLabel">{props.label}</span>}
+        {props.itemList.map((el)=>{
+            let displayClass=className;
+            if (props.value == el.value) displayClass+=" checked";
+            return(
+                <div className="radioInner" onClick={()=>props.onChange(el.value)}>
+                <span className="inputLabel">{el.label}</span>
+                <span className= {displayClass} ></span>
+                </div>
+                )
+            })}
+        {props.children}
+    </div>
+};
+
+Radio.propTypes=assign({},DEFAULT_TYPES,{
+    itemList: PropTypes.array, //a list of {label:xxx,value:yyy}
+});
+
 
 export const InputReadOnly=(props)=>{
     let className=props.dialogRow?"dialogRow":"";

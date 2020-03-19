@@ -79,6 +79,10 @@ class MBTilesFile():
     self.handler.setDaemon(True)
     self.handler.start()
 
+
+  def getTmsMarkerName(self):
+    return self.filename+".tms"
+
   def handleRequests(self):
     connection=sqlite3.connect(self.filename)
     while not self.stop:
@@ -116,34 +120,11 @@ class MBTilesFile():
       raise Exception("mbtiles file %s already open" % (self.filename))
     if not os.path.isfile(self.filename):
       raise Exception("mbtiles file %s not found" %(self.filename))
-    self.connection=sqlite3.connect(self.filename)
-    if self.connection is None:
-      raise Exception("unable to open mbtiles file %s" %(self.filename))
-    AVNLog.info("opening mbtiles file %s",self.filename)
-    cu=None
-    try:
-      cu=self.connection.cursor()
-      for zl in cu.execute("select distinct zoom_level from tiles;"):
-        self.zoomlevels.append(zl[0])
-      for zl in self.zoomlevels:
-        el={}
-        for rowmima in cu.execute("select min(tile_row),max(tile_row) from tiles where zoom_level=?",[zl]):
-          #names must match getGemfInfo in create_overview
-          if self.schemeXyz:
-            el['ymin']=self.rowToY(zl, rowmima[1])
-            el['ymax']=self.rowToY(zl, rowmima[0])
-          else:
-            el['ymin'] = self.rowToY(zl, rowmima[0])
-            el['ymax'] = self.rowToY(zl, rowmima[1])
-        for colmima in cu.execute("select min(tile_column),max(tile_column) from tiles where zoom_level=?",[zl]):
-          el['xmin'] = self.colToX(zl, colmima[0])
-          el['xmax'] = self.colToX(zl, colmima[1])
-        self.zoomLevelBoundings[zl]=el
-    except Exception as e:
-      AVNLog.error("error reading base info from %s:%s",self.filename,e.message)
-    if cu is not None:
-      cu.close()
-    self.connection.close()
+    tmsmarker = self.getTmsMarkerName()
+    if os.path.exists(tmsmarker):
+      AVNLog.info("found tms marker %s, setting tms schema" % tmsmarker)
+      self.schemeXyz = False
+    self.createOverview()
     self.isOpen=True
 
   #tile is (z,x,y)
@@ -178,7 +159,7 @@ class MBTilesFile():
           pass
     return None
 
-  def getAvnavXml(self):
+  def getAvnavXml(self,upzoom=2):
     if not self.isOpen:
       return None
     ranges=[]
@@ -190,7 +171,65 @@ class MBTilesFile():
     data=[{"name":"mbtiles","ranges":ranges}]
     return create_overview.getGemfInfo(data,{})
 
+  def createOverview(self):
+    zoomlevels=[]
+    zoomLevelBoundings={}
+    connection = sqlite3.connect(self.filename)
+    if connection is None:
+      raise Exception("unable to open mbtiles file %s" % (self.filename))
+    AVNLog.info("opening mbtiles file %s", self.filename)
+    cu = None
+    try:
+      cu = connection.cursor()
+      for zl in cu.execute("select distinct zoom_level from tiles;"):
+        zoomlevels.append(zl[0])
+      for zl in zoomlevels:
+        el = {}
+        for rowmima in cu.execute("select min(tile_row),max(tile_row) from tiles where zoom_level=?", [zl]):
+          # names must match getGemfInfo in create_overview
+          if self.schemeXyz:
+            el['ymin'] = self.rowToY(zl, rowmima[1])
+            el['ymax'] = self.rowToY(zl, rowmima[0])
+          else:
+            el['ymin'] = self.rowToY(zl, rowmima[0])
+            el['ymax'] = self.rowToY(zl, rowmima[1])
+        for colmima in cu.execute("select min(tile_column),max(tile_column) from tiles where zoom_level=?", [zl]):
+          el['xmin'] = self.colToX(zl, colmima[0])
+          el['xmax'] = self.colToX(zl, colmima[1])
+        zoomLevelBoundings[zl] = el
+    except Exception as e:
+      AVNLog.error("error reading base info from %s:%s", self.filename, e.message)
+    self.zoomlevels=zoomlevels
+    self.zoomLevelBoundings=zoomLevelBoundings
+    if cu is not None:
+      cu.close()
+    connection.close()
 
+  def changeSchema(self,schema):
+    if schema not in ['xyz','tms']:
+      raise Exception("unknown schema %s"%schema)
+    if schema == "tms":
+      if not self.schemeXyz:
+        return False
+      self.schemeXyz=False
+      tmsmarker=self.getTmsMarkerName()
+      with open(tmsmarker,"w") as f:
+        f.write("tms")
+        f.close()
+      self.createOverview()
+      return True
+    if schema == "xyz":
+      if self.schemeXyz:
+        return False
+      tmsmarker=self.getTmsMarkerName()
+      self.schemeXyz=True
+      if os.path.exists(tmsmarker):
+        os.unlink(tmsmarker)
+      self.createOverview()
+      return True
+
+  def getSchema(self):
+    return "xyz" if self.schemeXyz else "tms"
 
   def close(self):
     if not self.isOpen:
@@ -212,6 +251,9 @@ class MBTilesFile():
     self.close()
     if os.path.isfile(self.filename):
       os.unlink(self.filename)
+    tmsmarker=self.getTmsMarkerName()
+    if os.path.exists(tmsmarker):
+      os.unlink(tmsmarker)
 
   def __unicode__(self):
     rt="mbtiles %s " %(self.filename)

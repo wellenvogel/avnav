@@ -105,7 +105,7 @@ html,body {
   float: right;
   width: 1em;
   height: 1em;
-  background-image: url('../images/icons-new/ic_chevron_right.svg');
+  .iconImage('ic_chevron_right.svg');
   background-size: 100% 100%;
   opacity: 0.6;
 }
@@ -466,13 +466,34 @@ span.valuePrefix{
   display: inline-block;
   width:  1.8em;
   height: 1.8em;
-  background-image: url('../images/icons-new/checkbox-blank-outline.svg');
+  .iconImage('checkbox-blank-outline.svg');
   background-repeat: no-repeat;
   background-size: cover;
   &.checked{
     background-image: url('../images/icons-new/checkbox-marked-outline.svg');
   }
   vertical-align: middle;
+}
+
+//--Radio button
+.radioInner {
+  .inputLabel{
+    width: auto;
+    margin-left: 1em;
+  }
+  .radio {
+    display: inline-block;
+    width: 1.8em;
+    height: 1.8em;
+    .iconImage('radio_button_unchecked.svg');
+    background-repeat: no-repeat;
+    background-size: cover;
+    &.checked {
+      .iconImage('radio_button_checked.svg');
+    }
+    vertical-align: middle;
+  }
+  display: inline-block;
 }
 
 //--ColorSelector

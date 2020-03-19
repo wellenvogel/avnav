@@ -28,7 +28,7 @@ import Mob from '../components/Mob.js';
 import LeaveHandler from '../util/leavehandler.js';
 import LayoutNameDialog from '../components/LayoutNameDialog.jsx';
 import ViewPage from './ViewPage.jsx';
-import {Input,InputSelect,InputReadOnly} from '../components/Inputs.jsx';
+import {Input,InputSelect,InputReadOnly,Radio} from '../components/Inputs.jsx';
 import DB from '../components/DialogButton.jsx';
 import DialogContainer from '../components/OverlayDialogDisplay.jsx';
 import AndroidEventHandler from '../util/androidEventHandler.js';
@@ -702,6 +702,7 @@ class FileDialog extends React.Component{
             changed:false,
             existingName:false,
             name:props.current.name,
+            schema:props.current.schema||"xyz",
             allowed:allowedItemActions(props.current)
         };
         this.onChange=this.onChange.bind(this);
@@ -725,12 +726,22 @@ class FileDialog extends React.Component{
     render(){
         let self=this;
         let cn=this.state.existingName?"existing":"";
-        let rename=this.state.changed && ! this.state.existingName;
+        let rename=this.state.changed && ! this.state.existingName && (this.state.name != this.props.current.name);
         let Dialog=this.state.dialog;
+        let showSchema=(this.props.current.type == 'chart' && this.props.current.url.match(/.*mbtiles.*/));
+        let schemaChanged=(this.props.current.schema||"xyz") != this.state.schema;
         return(
             <React.Fragment>
             <div className="fileDialog flexInner">
                 <h3 className="dialogTitle">{this.props.current.name}</h3>
+                {showSchema &&
+                    <Radio
+                        label="schema"
+                        value={this.state.schema}
+                        onChange={(v)=>{this.setState({changed:true,schema:v})}}
+                        itemList={[{label:"xyz",value:"xyz"},{label:"tms",value:"tms"}]}
+                        className="mbtilesType"/>
+                }
                 {this.state.allowed.showRename ?
                     <div className="dialogLine">
                         <Input
@@ -743,15 +754,21 @@ class FileDialog extends React.Component{
                     : null
                 }
                 <div className="dialogButtons dialogLine">
-                    {this.state.allowed.showRename ?
-                        <DB name="rename"
+                    {(this.state.allowed.showRename || showSchema)?
+                        <DB name="ok"
                                 onClick={()=>{
                                     self.props.closeCallback();
-                                    self.props.okFunction('rename',this.props.current.name,this.state.name);
+                                    let action="";
+                                    if (rename) action+="rename";
+                                    if (schemaChanged){
+                                        if (action == "") action="schema";
+                                        else action+=",schema";
+                                    }
+                                    self.props.okFunction(action,this.props.current.name,this.state.name,this.state.schema);
                                 }}
-                                disabled={!rename}
+                                disabled={!rename && ! schemaChanged}
                             >
-                            Rename
+                            Change
                         </DB>
                         :
                         null
@@ -841,24 +858,39 @@ class FileDialog extends React.Component{
 }
 
 const showFileDialog=(item)=>{
-    let rename=(oldName,newName)=>{
-        Requests.getJson('?request=api&type='+encodeURIComponent(item.type)+
-            "&command=rename&name="+encodeURIComponent(oldName)+
-            "&newName="+encodeURIComponent(newName))
-            .then(()=>{})
-            .catch((error)=>{Toast("rename failed: "+error)});
+    let schemaAction=(newSchema)=>{
+        return Requests.getJson('?request=api&type='+encodeURIComponent(item.type)+
+            "&command=schema&name="+encodeURIComponent(item.name)+"&url="+encodeURIComponent(item.url)+
+            "&newSchema="+encodeURIComponent(newSchema));
     };
-    let actionFunction=(action,name,opt_new)=>{
-        if (action == 'rename'){
-            Requests.getJson('?request=api&type='+encodeURIComponent(item.type)+
-                "&command=rename&name="+encodeURIComponent(name)+
-                "&newName="+encodeURIComponent(opt_new))
-                .then(()=>{ fillData();})
+    let renameAction=(name,newName)=>{
+        Requests.getJson('?request=api&type='+encodeURIComponent(item.type)+
+            "&command=rename&name="+encodeURIComponent(name)+
+            "&newName="+encodeURIComponent(newName))
+            .then(()=>{
+                fillData();
+            })
+            .catch((error)=>{
+                Toast("rename failed: "+error);
+                fillData();
+            });
+    };
+    let actionFunction=(action,name,opt_new,opt_schema)=>{
+        if (action.match(/schema/)){
+            schemaAction(opt_schema)
+                .then(()=>{
+                    if (action.match(/rename/)) renameAction(name,opt_new);
+                    else fillData();
+                })
                 .catch((error)=>{
-                    Toast("rename failed: "+error);
-                    fillData();
+                    Toast("change schema failed: "+error);
+                    if (action.match(/rename/)) renameAction(name,opt_new);
+                    else fillData();
                 });
             return;
+        }
+        if (action == 'rename'){
+            return renameAction(name,opt_new);
         }
         if (action == 'view'){
             history.push('viewpage',{type:item.type,name:name,readOnly:true});

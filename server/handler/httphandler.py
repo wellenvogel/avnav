@@ -286,7 +286,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         rtj=self.handleSpecificRequest(requestParam,requestType)
       self.sendNavResponse(rtj,requestParam)
     except Exception as e:
-          text=e.message
+          text=unicode(e)
           rtj=json.dumps(AVNUtil.getReturnData(error=text,stack=traceback.format_exc()))
           self.sendNavResponse(rtj,requestParam)
           return

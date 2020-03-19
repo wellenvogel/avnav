@@ -137,18 +137,13 @@ class AVNChartHandler(AVNWorker):
             oldChartFile = None
         if oldChartFile is None:
           AVNLog.info("trying to add chart file %s", fname)
-          chart=None
-          avnav=None
           if fname.endswith(".gemf"):
             chart = gemf_reader.GemfFile(fname)
-            chart.open()
-            avnav = self.getGemfInfo(chart)
           else:
             chart=mbtiles_reader.MBTilesFile(fname)
-            chart.open()
-            avnav=chart.getAvnavXml()
-            pass
           try:
+            chart.open()
+            avnav = chart.getAvnavXml(self.getIntParam('upzoom'))
             chartdata = {'name': newchart, 'chart': chart, 'avnav': avnav, 'mtime': gstat.st_mtime}
             self.chartlist[newchart] = chartdata
             AVNLog.info("successfully added chart file %s %s", newchart, unicode(chart))
@@ -156,22 +151,6 @@ class AVNChartHandler(AVNWorker):
             AVNLog.error("error while trying to open chart file %s  %s", fname, traceback.format_exc())
     except:
       AVNLog.error("Exception in chart handler %s, ignore", traceback.format_exc())
-
-  # get the avnav info from a gemf file
-  # we can nicely reuse here the stuff we have for MOBAC atlas files
-  def getGemfInfo(self, gemf):
-    try:
-      data = gemf.getSources()
-      options = {}
-      options['upzoom'] = self.getIntParam('upzoom')
-      rt = create_overview.getGemfInfo(data, options)
-      AVNLog.info("created GEMF overview for %s", gemf.filename)
-      AVNLog.debug("overview for %s:%s", gemf.filename, rt)
-      return rt
-
-    except:
-      AVNLog.error("error while trying to get the overview data for %s  %s", gemf.filename, traceback.format_exc())
-    return "<Dummy/>"
 
   def listChanged(self):
     self.listCondition.acquire()
@@ -241,7 +220,8 @@ class AVNChartHandler(AVNWorker):
              'charturl':url,
              'time': chart['mtime'],
              'canDelete': True,
-             'canDownload': True
+             'canDownload': True,
+             'schema': chart['chart'].getSchema()
       }
       data.append(entry)
     try:
@@ -353,6 +333,27 @@ class AVNChartHandler(AVNWorker):
       self.listChanged()
       return AVNUtil.getReturnData()
 
+    if type == "api":
+      command=AVNUtil.getHttpRequestParam(requestparam,"command",True)
+      if (command == "schema"):
+        url=AVNUtil.getHttpRequestParam(requestparam,"url",True)
+        schema=AVNUtil.getHttpRequestParam(requestparam,"newSchema",True)
+        if not url.startswith(self.PATH_PREFIX):
+          raise Exception("invalid url")
+        parr = url[1:].split("/")
+        if len(parr) < 3:
+          raise Exception("invalid url")
+        if parr[1] != self.INT_PREFIX:
+          raise Exception("invalid url")
+        chartEntry = self.chartlist.get(parr[2])
+        if chartEntry is None:
+          raise Exception("chart not found")
+        changed=chartEntry['chart'].changeSchema(schema)
+        if changed:
+          chartEntry['avnav']=chartEntry['chart'].getAvnavXml(self.getIntParam('upzoom'))
+        return AVNUtil.getReturnData()
+
+    return AVNUtil.getReturnData(error="Unknown chart request")
 
 
 
