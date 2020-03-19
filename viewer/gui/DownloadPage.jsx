@@ -702,7 +702,7 @@ class FileDialog extends React.Component{
             changed:false,
             existingName:false,
             name:props.current.name,
-            schema:props.current.schema||"xyz",
+            scheme:props.current.scheme||"xyz",
             allowed:allowedItemActions(props.current)
         };
         this.onChange=this.onChange.bind(this);
@@ -729,16 +729,16 @@ class FileDialog extends React.Component{
         let rename=this.state.changed && ! this.state.existingName && (this.state.name != this.props.current.name);
         let Dialog=this.state.dialog;
         let showSchema=(this.props.current.type == 'chart' && this.props.current.url.match(/.*mbtiles.*/));
-        let schemaChanged=(this.props.current.schema||"xyz") != this.state.schema;
+        let schemeChanged=(this.props.current.scheme||"xyz") != this.state.scheme;
         return(
             <React.Fragment>
             <div className="fileDialog flexInner">
                 <h3 className="dialogTitle">{this.props.current.name}</h3>
                 {showSchema &&
                     <Radio
-                        label="schema"
-                        value={this.state.schema}
-                        onChange={(v)=>{this.setState({changed:true,schema:v})}}
+                        label="scheme"
+                        value={this.state.scheme}
+                        onChange={(v)=>{this.setState({changed:true,scheme:v})}}
                         itemList={[{label:"xyz",value:"xyz"},{label:"tms",value:"tms"}]}
                         className="mbtilesType"/>
                 }
@@ -760,13 +760,13 @@ class FileDialog extends React.Component{
                                     self.props.closeCallback();
                                     let action="";
                                     if (rename) action+="rename";
-                                    if (schemaChanged){
-                                        if (action == "") action="schema";
-                                        else action+=",schema";
+                                    if (schemeChanged){
+                                        if (action == "") action="scheme";
+                                        else action+=",scheme";
                                     }
-                                    self.props.okFunction(action,this.props.current.name,this.state.name,this.state.schema);
+                                    self.props.okFunction(action,this.props.current.name,this.state.name,this.state.scheme);
                                 }}
-                                disabled={!rename && ! schemaChanged}
+                                disabled={!rename && ! schemeChanged}
                             >
                             Change
                         </DB>
@@ -858,10 +858,10 @@ class FileDialog extends React.Component{
 }
 
 const showFileDialog=(item)=>{
-    let schemaAction=(newSchema)=>{
+    let schemeAction=(newScheme)=>{
         return Requests.getJson('?request=api&type='+encodeURIComponent(item.type)+
-            "&command=schema&name="+encodeURIComponent(item.name)+"&url="+encodeURIComponent(item.url)+
-            "&newSchema="+encodeURIComponent(newSchema));
+            "&command=scheme&name="+encodeURIComponent(item.name)+"&url="+encodeURIComponent(item.url)+
+            "&newScheme="+encodeURIComponent(newScheme));
     };
     let renameAction=(name,newName)=>{
         Requests.getJson('?request=api&type='+encodeURIComponent(item.type)+
@@ -875,15 +875,15 @@ const showFileDialog=(item)=>{
                 fillData();
             });
     };
-    let actionFunction=(action,name,opt_new,opt_schema)=>{
-        if (action.match(/schema/)){
-            schemaAction(opt_schema)
+    let actionFunction=(action,name,opt_new,opt_scheme)=>{
+        if (action.match(/scheme/)){
+            schemeAction(opt_scheme)
                 .then(()=>{
                     if (action.match(/rename/)) renameAction(name,opt_new);
                     else fillData();
                 })
                 .catch((error)=>{
-                    Toast("change schema failed: "+error);
+                    Toast("change scheme failed: "+error);
                     if (action.match(/rename/)) renameAction(name,opt_new);
                     else fillData();
                 });

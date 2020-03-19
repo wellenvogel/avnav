@@ -237,9 +237,9 @@ class GemfFile():
       rt+=" flen=%d," % l
     return rt
 
-  def changeSchema(self,schema):
+  def changeScheme(self,schema):
     raise Exception("change schema not allowed for %s"%self.filename)
-  def getSchema(self):
+  def getScheme(self):
     return None
 
   def getAvnavXml(self,upzoom=2):

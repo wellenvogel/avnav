@@ -220,7 +220,7 @@ class AVNChartHandler(AVNWorker):
              'time': chart['mtime'],
              'canDelete': True,
              'canDownload': True,
-             'schema': chart['chart'].getSchema(),
+             'scheme': chart['chart'].getScheme(),
              'sequence':chart['chart'].getChangeCount()
       }
       data.append(entry)
@@ -335,9 +335,9 @@ class AVNChartHandler(AVNWorker):
 
     if type == "api":
       command=AVNUtil.getHttpRequestParam(requestparam,"command",True)
-      if (command == "schema"):
+      if (command == "scheme"):
         url=AVNUtil.getHttpRequestParam(requestparam,"url",True)
-        schema=AVNUtil.getHttpRequestParam(requestparam,"newSchema",True)
+        scheme=AVNUtil.getHttpRequestParam(requestparam,"newScheme",True)
         if not url.startswith(self.PATH_PREFIX):
           raise Exception("invalid url")
         parr = url[1:].split("/")
@@ -348,7 +348,7 @@ class AVNChartHandler(AVNWorker):
         chartEntry = self.chartlist.get(parr[2])
         if chartEntry is None:
           raise Exception("chart not found")
-        changed=chartEntry['chart'].changeSchema(schema)
+        changed=chartEntry['chart'].changeScheme(scheme)
         if changed:
           chartEntry['avnav']=chartEntry['chart'].getAvnavXml(self.getIntParam('upzoom'))
         return AVNUtil.getReturnData()

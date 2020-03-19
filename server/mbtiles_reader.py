@@ -182,6 +182,13 @@ class MBTilesFile():
     cu = None
     try:
       cu = connection.cursor()
+      for sr in cu.execute("select value from metadata where name=?",["scheme"]):
+        v=sr[0]
+        if v is not None:
+          v=v.lower()
+          if v in ['tms','xyz']:
+            AVNLog.info("setting scheme for %s to %s",self.filename,v)
+            self.changeScheme(v,False)
       for zl in cu.execute("select distinct zoom_level from tiles;"):
         zoomlevels.append(zl[0])
       for zl in zoomlevels:
@@ -207,7 +214,7 @@ class MBTilesFile():
     connection.close()
     self.changeCount=AVNUtil.utcnow()
 
-  def changeSchema(self,schema):
+  def changeScheme(self,schema,createOverview=True):
     if schema not in ['xyz','tms']:
       raise Exception("unknown schema %s"%schema)
     if schema == "tms":
@@ -227,10 +234,11 @@ class MBTilesFile():
       self.schemeXyz=True
       if os.path.exists(tmsmarker):
         os.unlink(tmsmarker)
-      self.createOverview()
+      if (createOverview):
+        self.createOverview()
       return True
 
-  def getSchema(self):
+  def getScheme(self):
     return "xyz" if self.schemeXyz else "tms"
 
   def close(self):
