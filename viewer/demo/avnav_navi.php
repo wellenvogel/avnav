@@ -75,11 +75,15 @@ function readFileEntry($rqtype){
 	return $edata[1];
 }
 $rq='gps';
+$type='';
 if (isset($_REQUEST['request'])){
 	$rq=$_REQUEST['request'];
 }
+if (isset($_REQUEST['type'])){
+	$type=$_REQUEST['type'];
+}
 $isEncoded=1;
-if ($rq == 'listCharts'){
+if ($rq == 'list' && $type == 'chart'){
 		$rt['status']='OK';
 		$base=$_SERVER['REQUEST_URI'];
 		$base=preg_replace("/\?.*/","",$base);
@@ -87,10 +91,10 @@ if ($rq == 'listCharts'){
 		$de=array('name'=>'eniro','url'=>$base.'/demo-eniro','charturl'=>$base.'/demo-eniro');
 		$de2=array('name'=>'bsh','url'=>$base.'/demo-bsh','charturl'=>$base.'/demo-bsh');
 		$de3=array('name'=>'osm','url'=>$base.'/demo-osm','charturl'=>$base.'/demo-osm');
-		$rt['data']=array($de,$de2,$de3);
+		$rt['items']=array($de,$de2,$de3);
 		$isEncoded=0;
 }
-else if ($rq == 'listdir' || $rq == 'routing'){
+else if ($rq == 'listdir' || $rq == 'list' || $rq == 'routing'){
     $rt['status']='OK';
     $rt['data']=array();
     $rt['items']=array();
