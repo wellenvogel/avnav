@@ -248,7 +248,7 @@ class GemfFile():
     try:
       data = self.getSources()
       options = {}
-      options['upzoom'] = self.getIntParam('upzoom')
+      options['upzoom'] = upzoom
       rt = create_overview.getGemfInfo(data, options)
       AVNLog.info("created GEMF overview for %s", self.filename)
       AVNLog.debug("overview for %s:%s", self.filename, rt)
@@ -258,6 +258,8 @@ class GemfFile():
       AVNLog.error("error while trying to get the overview data for %s  %s", self.filename, traceback.format_exc())
     return None
 
+  def getChangeCount(self):
+    return 1
 
 if __name__ == "__main__":
   f=GemfFile(sys.argv[1])

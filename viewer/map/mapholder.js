@@ -156,6 +156,7 @@ const MapHolder=function(){
     this.propertyChange=new Callback(()=>{
         self._chartbase=undefined;
         self._url=undefined;
+        self._sequence=undefined;
     });
     this.editMode=new Callback(()=>{
         let isEditing=globalStore.getData(keys.gui.global.layoutEditing)
@@ -181,6 +182,13 @@ const MapHolder=function(){
      * @private
      */
     this._url=undefined;
+
+    /**
+     * if the map provides a sequence we use this to detect changes
+     * @type {undefined}
+     * @private
+     */
+    this._sequence=undefined;
 
     globalStore.storeData(keys.map.courseUp,this.courseUp);
     globalStore.storeData(keys.map.lockPosition,this.gpsLocked);
@@ -282,12 +290,13 @@ MapHolder.prototype.renderTo=function(div){
  **/
 const storeKeys={
     url:keys.map.url,
-    chartBase:keys.map.chartBase
+    chartBase:keys.map.chartBase,
+    sequence: keys.map.sequence
 };
 
-MapHolder.prototype.setMapUrl=function(url,chartBase){
+MapHolder.prototype.setMapUrl=function(url,chartBase,sequence){
     globalStore.storeMultiple(
-        {url:url,chartBase:chartBase}
+        {url:url,chartBase:chartBase,sequence:sequence}
         ,
         storeKeys)
 };
@@ -295,6 +304,7 @@ MapHolder.prototype.setMapUrl=function(url,chartBase){
 MapHolder.prototype.loadMap=function(div){
     let url=globalStore.getData(keys.map.url);
     let chartBase=globalStore.getData(keys.map.chartBase);
+    let sequence=globalStore.getData(keys.map.sequence);
     if (! chartBase) chartBase=url;
     let self=this;
     return new Promise((resolve,reject)=> {
@@ -302,7 +312,7 @@ MapHolder.prototype.loadMap=function(div){
             reject("no map selected");
             return;
         }
-        if (this._url == url && this._chartbase == chartBase){
+        if (this._url == url && this._chartbase == chartBase && this._sequence== sequence){
             this.renderTo(div);
             resolve(0);
             return;
@@ -328,6 +338,7 @@ MapHolder.prototype.loadMap=function(div){
                     : 1);
                 this._url = originalUrl;
                 this._chartbase = chartBase;
+                this._sequence=sequence;
                 resolve(1);
             }catch (e){
                 console.log("map loding error: "+e+": "+e.stack);

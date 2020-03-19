@@ -30,7 +30,7 @@ import sys
 import threading
 
 import create_overview
-from avnav_util import AVNLog
+from avnav_util import AVNLog, AVNUtil
 
 
 #mbtiles:
@@ -78,6 +78,7 @@ class MBTilesFile():
     self.handler=threading.Thread(target=self.handleRequests)
     self.handler.setDaemon(True)
     self.handler.start()
+    self.changeCount=AVNUtil.utcnow()
 
 
   def getTmsMarkerName(self):
@@ -204,6 +205,7 @@ class MBTilesFile():
     if cu is not None:
       cu.close()
     connection.close()
+    self.changeCount=AVNUtil.utcnow()
 
   def changeSchema(self,schema):
     if schema not in ['xyz','tms']:
@@ -254,6 +256,9 @@ class MBTilesFile():
     tmsmarker=self.getTmsMarkerName()
     if os.path.exists(tmsmarker):
       os.unlink(tmsmarker)
+
+  def getChangeCount(self):
+    return self.changeCount
 
   def __unicode__(self):
     rt="mbtiles %s " %(self.filename)

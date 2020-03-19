@@ -276,13 +276,8 @@ const fillList = function () {
             let items = [];
             for (let e in json.items) {
                 let chartEntry = json.items[e];
-                let listEntry = {
-                    key: chartEntry.name,
-                    name: chartEntry.name,
-                    url: chartEntry.url,
-                    charturl: chartEntry.charturl
-                };
-                items.push(listEntry);
+                if (chartEntry.key) chartEntry.key=chartEntry.name;
+                items.push(chartEntry);
             }
             globalStore.storeData(keys.gui.mainpage.chartList, items);
         },
@@ -304,7 +299,7 @@ const readAddOns = function () {
  */
 const showNavpage = function (entry) {
     base.log("activating navpage with url " + entry.url);
-    MapHolder.setMapUrl(entry.url,entry.charturl);
+    MapHolder.setMapUrl(entry.url,entry.charturl,entry.sequence);
     history.push('navpage');
 
 };

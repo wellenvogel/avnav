@@ -29,7 +29,6 @@ import shutil
 import urllib
 
 import avnav_handlerList
-import create_overview
 import gemf_reader
 import mbtiles_reader
 from avnav_util import *
@@ -221,7 +220,8 @@ class AVNChartHandler(AVNWorker):
              'time': chart['mtime'],
              'canDelete': True,
              'canDownload': True,
-             'schema': chart['chart'].getSchema()
+             'schema': chart['chart'].getSchema(),
+             'sequence':chart['chart'].getChangeCount()
       }
       data.append(entry)
     try:

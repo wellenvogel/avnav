@@ -152,6 +152,7 @@ let keys={
         centerPosition:K,
         url:K,
         chartBase: K,
+        sequence: K,
         },
     gui:{
         capabilities:{
