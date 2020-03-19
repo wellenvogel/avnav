@@ -81,8 +81,6 @@ class MBTilesFile():
     self.changeCount=AVNUtil.utcnow()
 
 
-  def getTmsMarkerName(self):
-    return self.filename+".tms"
 
   def handleRequests(self):
     connection=sqlite3.connect(self.filename)
@@ -121,10 +119,6 @@ class MBTilesFile():
       raise Exception("mbtiles file %s already open" % (self.filename))
     if not os.path.isfile(self.filename):
       raise Exception("mbtiles file %s not found" %(self.filename))
-    tmsmarker = self.getTmsMarkerName()
-    if os.path.exists(tmsmarker):
-      AVNLog.info("found tms marker %s, setting tms schema" % tmsmarker)
-      self.schemeXyz = False
     self.createOverview()
     self.isOpen=True
 
@@ -188,7 +182,7 @@ class MBTilesFile():
           v=v.lower()
           if v in ['tms','xyz']:
             AVNLog.info("setting scheme for %s to %s",self.filename,v)
-            self.changeScheme(v,False)
+            self.schemeXyz=False if v == "tms" else True
       for zl in cu.execute("select distinct zoom_level from tiles;"):
         zoomlevels.append(zl[0])
       for zl in zoomlevels:
@@ -221,22 +215,30 @@ class MBTilesFile():
       if not self.schemeXyz:
         return False
       self.schemeXyz=False
-      tmsmarker=self.getTmsMarkerName()
-      with open(tmsmarker,"w") as f:
-        f.write("tms")
-        f.close()
-      self.createOverview()
-      return True
     if schema == "xyz":
       if self.schemeXyz:
         return False
-      tmsmarker=self.getTmsMarkerName()
       self.schemeXyz=True
-      if os.path.exists(tmsmarker):
-        os.unlink(tmsmarker)
-      if (createOverview):
-        self.createOverview()
-      return True
+    con=sqlite3.connect(self.filename)
+    cu = con.cursor()
+    try:
+      rs=cu.execute("select value from metadata where name=?", ["scheme"])
+      row=rs.fetchone()
+      if row is not None:
+        cu.execute("update metadata set value=? where name='scheme'",[schema])
+        con.commit()
+      else:
+        cu.execute("insert into metadata (name,value) values ('scheme',?)",[schema])
+        con.commit()
+    except Exception as e:
+      cu.close()
+      con.close()
+      raise
+    cu.close()
+    con.close()
+    if (createOverview):
+      self.createOverview()
+    return True
 
   def getScheme(self):
     return "xyz" if self.schemeXyz else "tms"
@@ -261,9 +263,6 @@ class MBTilesFile():
     self.close()
     if os.path.isfile(self.filename):
       os.unlink(self.filename)
-    tmsmarker=self.getTmsMarkerName()
-    if os.path.exists(tmsmarker):
-      os.unlink(tmsmarker)
 
   def getChangeCount(self):
     return self.changeCount
