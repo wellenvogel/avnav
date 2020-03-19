@@ -43,6 +43,12 @@ public abstract class ChartFile {
 	// List of tile sources within this archive
 	protected final LinkedHashMap<Integer, String> mSources = new LinkedHashMap<Integer, String>();
 
+	public abstract String getScheme();
+
+	public abstract boolean setScheme(String newScheme) throws Exception;
+
+	public abstract long getSequence();
+
 
 	static interface AbstractFile{
 		public void close() throws IOException;
@@ -101,7 +107,7 @@ public abstract class ChartFile {
 
 		@Override
 		public long length() throws IOException {
-			return descriptor.getStatSize();
+			return channel.size();
 		}
 
 		@Override
@@ -118,6 +124,7 @@ public abstract class ChartFile {
 			}
 			return -1;
 		}
+
 	}
 
 
@@ -147,7 +154,7 @@ public abstract class ChartFile {
 	 * must be called by derived classes
 	 * @throws IOException
 	 */
-	protected void initialize() throws IOException {
+	protected void initialize() throws Exception {
 		if (mDocument != null){
 			openFilesUri();
 		}
@@ -200,7 +207,7 @@ public abstract class ChartFile {
 	 * fill mRanges,mSources
 	 * not thread safe!
 	 */
-	 protected abstract void readHeader() throws IOException ;
+	 protected abstract void readHeader() throws Exception;
 
 
 	// ===========================================================
@@ -243,7 +250,7 @@ public abstract class ChartFile {
 	 *
 	 * @return InputStream of tile data, or null if not found.
 	 */
-	public abstract ChartInputStream getInputStream(final int pX, final int pY, final int pZ, final int sourceIndex);
+	public abstract ChartInputStream getInputStream(final int pX, final int pY, final int pZ, final int sourceIndex) throws IOException;
 
 	public List<ChartRange> getRanges(){
 		return mRangeData;
@@ -286,15 +293,21 @@ public abstract class ChartFile {
 	class ChartInputStream extends InputStream {
 
 		AbstractFile raf=null;
+		InputStream is=null;
 		int remainingBytes;
-		int length;
+		long length;
 
-		ChartInputStream(AbstractFile raf, final long offset, final int length) throws IOException {
+		ChartInputStream(AbstractFile raf, final long offset, final long length) throws IOException {
 			this.raf = raf;
 			raf.seek(offset);
 
-			this.remainingBytes = length;
+			this.remainingBytes = (int)length;
 			this.length=length;
+		}
+		ChartInputStream(InputStream is,long len){
+			this.is=is;
+			this.length=len;
+			this.remainingBytes = (int)len;
 		}
 
 
@@ -303,13 +316,17 @@ public abstract class ChartFile {
 			return remainingBytes;
 		}
 
-		public int getLength(){
+		public long getLength(){
 			return length;
 		}
 
 		@Override
 		public void close() throws IOException {
 			remainingBytes=0;
+			if (is != null){
+				is.close();
+				return;
+			}
 			if (raf == null) return;
 			raf.close();
 			raf=null;
@@ -322,6 +339,11 @@ public abstract class ChartFile {
 
 		@Override
 		public int read(final byte[] buffer, final int offset, int length) throws IOException {
+			if (is != null){
+				int rt=is.read(buffer,offset,length);
+				if (rt >=0) remainingBytes-=rt;
+				return rt;
+			}
 			if (raf == null ) return -1;
 
 			int read= raf.read(buffer, offset, length > remainingBytes ? remainingBytes : length);
@@ -337,6 +359,13 @@ public abstract class ChartFile {
 
 		@Override
 		public int read() throws IOException {
+			if (is != null){
+				if (remainingBytes > 0){
+					remainingBytes--;
+					return is.read();
+				}
+				return -1;
+			}
 			if (raf == null) throw new IOException("already closed");
 			if (remainingBytes > 0) {
 				remainingBytes--;

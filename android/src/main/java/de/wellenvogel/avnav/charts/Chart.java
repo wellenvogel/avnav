@@ -45,7 +45,7 @@ public class Chart implements INavRequestHandler.IJsonObect {
         this.lastTouched=System.currentTimeMillis();
         this.type=type;
     }
-    private synchronized ChartFileReader getChartFileReader() throws IOException {
+    private synchronized ChartFileReader getChartFileReader() throws Exception {
         if (isXml())
             throw new IOException("unable to get chart file from xml");
         if (chartReader == null){
@@ -55,7 +55,7 @@ public class Chart implements INavRequestHandler.IJsonObect {
                 chartReader =new ChartFileReader(cf,key);
             }
             else {
-                ChartFile cf=(type == TYPE_MBTILES)?null:new GEMFFile(realFile);
+                ChartFile cf=(type == TYPE_MBTILES)?new MbTilesFile(realFile):new GEMFFile(realFile);
                 chartReader = new ChartFileReader(cf, key);
             }
         }
@@ -107,7 +107,7 @@ public class Chart implements INavRequestHandler.IJsonObect {
         if (realFile.getName().equals(fileName)) return true;
         return false;
     }
-    public File deleteFile() throws IOException {
+    public File deleteFile() throws Exception {
         if (!canDelete()) return null;
         getChartFileReader().close();
         realFile.delete();
@@ -116,7 +116,7 @@ public class Chart implements INavRequestHandler.IJsonObect {
     public boolean isXml(){
         return (type == TYPE_XML);
     }
-    public ExtendedWebResourceResponse getOverview() throws IOException {
+    public ExtendedWebResourceResponse getOverview() throws Exception {
         if (isXml()){
             if (realFile != null){
                 return new ExtendedWebResourceResponse((int)realFile.length(),"text/xml","",new FileInputStream(realFile));
@@ -132,7 +132,7 @@ public class Chart implements INavRequestHandler.IJsonObect {
             return new ExtendedWebResourceResponse(-1,"text/xml","",rt);
         }
     }
-    public ExtendedWebResourceResponse getChartData(int x, int y, int z, int sourceIndex) {
+    public ExtendedWebResourceResponse getChartData(int x, int y, int z, int sourceIndex) throws IOException {
         return chartReader.getChartData(x,y,z,sourceIndex);
     }
 
@@ -150,6 +150,12 @@ public class Chart implements INavRequestHandler.IJsonObect {
         e.put("canDelete",canDelete());
         e.put("info",numFiles+" files");
         e.put("canDownload",!isXml() && (numFiles == 1));
+        e.put("sequence",chartReader.getSequence());
+        e.put("scheme",chartReader.getScheme());
         return e;
+    }
+
+    public boolean setScheme(String newScheme) throws Exception {
+        return getChartFileReader().setSchema(newScheme);
     }
 }

@@ -63,18 +63,33 @@ public class GEMFFile  extends ChartFile {
 	// ===========================================================
 
 
+	@Override
+	public String getScheme() {
+		return null;
+	}
+
+	@Override
+	public boolean setScheme(String newScheme) throws Exception{
+		throw new Exception("unable to set scheme for gemf files");
+	}
+
+	@Override
+	public long getSequence() {
+		return 1;
+	}
+
 	/*
 	 * Constructor to read existing GEMF archive
 	 *
 	 * @param pLocation
 	 * 		File object representing first GEMF archive file
 	 */
-	public GEMFFile(final File pLocation) throws FileNotFoundException, IOException {
+	public GEMFFile(final File pLocation) throws Exception {
 		super(pLocation);
 		initialize();
 	}
 
-	public GEMFFile(DocumentFile document, Context context) throws IOException {
+	public GEMFFile(DocumentFile document, Context context) throws Exception {
 		super(document, context);
 		initialize();
 	}

@@ -56,14 +56,14 @@ public class ChartFileReader {
         chart =file;
     }
 
-    public ExtendedWebResourceResponse getChartData(int x, int y, int z, int sourceIndex){
+    public ExtendedWebResourceResponse getChartData(int x, int y, int z, int sourceIndex) throws IOException {
         ChartFile.ChartInputStream str=getInputStream(x,y,z,sourceIndex);
         if (str == null)
             return null;
         return new ExtendedWebResourceResponse(str.getLength(),"image/png","",str);
     }
 
-    public ChartFile.ChartInputStream getInputStream(int x,int y, int z,int sourceIndex) {
+    public ChartFile.ChartInputStream getInputStream(int x,int y, int z,int sourceIndex) throws IOException {
         ChartFile.ChartInputStream rt = chart.getInputStream(x, y, z,sourceIndex);
         AvnLog.d(Constants.LOGPRFX, "loaded chart z=" + z + ", x=" + x + ", y=" + y + ",src=" + sourceIndex + ", rt=" + ((rt != null) ? "OK" : "<null>"));
         return rt;
@@ -233,5 +233,15 @@ public class ChartFileReader {
         AvnLog.i(Constants.LOGPRFX, "done read chart overview " + chart.getName());
         String rt=replaceTemplate(SERVICETEMPLATE,values);
         return new ByteArrayInputStream(rt.getBytes("UTF-8"));
+    }
+
+    public String getScheme(){
+        return chart.getScheme();
+    }
+    public boolean setSchema(String newScheme) throws Exception {
+        return chart.setScheme(newScheme);
+    }
+    public long getSequence(){
+        return chart.getSequence();
     }
 }

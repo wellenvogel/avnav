@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.ParcelFileDescriptor;
 import android.support.v4.provider.DocumentFile;
+import android.telephony.AvailableNetworkInfo;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -177,12 +178,13 @@ public class ChartHandler implements INavRequestHandler {
                 for (DocumentFile f : dirFile.listFiles()){
                     try {
                         if (f.getName().endsWith(GEMFEXTENSION)) {
-                            String urlName = Constants.REALCHARTS + "/" + index + "/gemf/" + URLEncoder.encode(f.getName(), "UTF-8");
+                            String urlName = Constants.REALCHARTS + "/" + index + "/"+TYPE_GEMF+"/" + URLEncoder.encode(f.getName(), "UTF-8");
                             arr.put(urlName, new Chart(Chart.TYPE_GEMF,activity, f, urlName, f.lastModified()));
                             AvnLog.d(Constants.LOGPRFX, "readCharts: adding gemf url " + urlName + " for " + f.getUri());
                         }
                         if (f.getName().endsWith(MBTILESEXTENSION)){
-                            //TODO
+                            //we cannot handle this!
+                            AvnLog.e("unable to read mbtiles from external dir: "+f.getName());
                         }
                         if (f.getName().endsWith(".xml")) {
                             String name = f.getName().substring(0, f.getName().length() - ".xml".length());
@@ -206,11 +208,15 @@ public class ChartHandler implements INavRequestHandler {
             try {
                 if (f.getName().endsWith(GEMFEXTENSION)){
                     String gemfName = f.getName();
-                    String urlName= Constants.REALCHARTS + "/"+index+"/gemf/" + gemfName;
+                    String urlName= Constants.REALCHARTS + "/"+index+"/"+TYPE_GEMF+"/" + gemfName;
                     arr.put(urlName,new Chart(Chart.TYPE_GEMF,activity, f,urlName,f.lastModified()));
                     AvnLog.d(Constants.LOGPRFX,"readCharts: adding gemf url "+urlName+" for "+f.getAbsolutePath());
                 }
                 if (f.getName().endsWith(MBTILESEXTENSION)){
+                    String name = f.getName();
+                    String urlName= Constants.REALCHARTS + "/"+index+"/"+TYPE_MBTILES+"/" + name;
+                    arr.put(urlName,new Chart(Chart.TYPE_MBTILES,activity, f,urlName,f.lastModified()));
+                    AvnLog.d(Constants.LOGPRFX,"readCharts: adding mbtiles url "+urlName+" for "+f.getAbsolutePath());
 
                 }
                 if (f.getName().endsWith(".xml")){
@@ -325,7 +331,18 @@ public class ChartHandler implements INavRequestHandler {
 
     @Override
     public JSONObject handleApiRequest(Uri uri, PostVars postData) throws Exception {
-        return null;
+        String command=AvnUtil.getMandatoryParameter(uri,"command");
+        if (command.equals("scheme")){
+            String scheme=AvnUtil.getMandatoryParameter(uri,"newScheme");
+            String url=AvnUtil.getMandatoryParameter(uri,"url");
+            Chart chart= getChartDescription(url.substring(Constants.CHARTPREFIX.length()+2));
+            if (chart == null){
+                return RequestHandler.getErrorReturn("chart not found");
+            }
+            chart.setScheme(scheme);
+            return RequestHandler.getReturn();
+        }
+        return RequestHandler.getErrorReturn("unknown request");
     }
 
 
@@ -375,12 +392,12 @@ public class ChartHandler implements INavRequestHandler {
                 Chart chart = getChartDescription(key);
                 if (chart == null)
                     throw new Exception("request a file that is not in the list: " + fname);
-                if (parts[2].equals("gemf")) {
+                if (parts[2].equals(TYPE_GEMF)|| parts[2].equals(TYPE_MBTILES)) {
                     if (parts[4].equals(CHARTOVERVIEW)) {
                         try {
                             return chart.getOverview();
                         } catch (Exception e) {
-                            Log.e(Constants.LOGPRFX, "unable to read gemf file " + fname + ": " + e.getLocalizedMessage());
+                            Log.e(Constants.LOGPRFX, "unable to read chart file " + fname + ": " + e.getLocalizedMessage());
                         }
                     } else {
                         if (parts.length < 8) {
