@@ -51,6 +51,8 @@ public class ChartFileReader {
             "</ZoomBoundings>\n";
     private static final String ZOOMBOUNDING="<BoundingBox minx=\"%MINX%\" maxx=\"%MAXX%\" miny=\"%MINY%\" maxy=\"%MAXY%\" />\n";
     private ChartFile chart;
+    private final Object overviewLock=new Object();
+    private String overview=null;
     public ChartFileReader(ChartFile file, String urlName){
         this.urlName=urlName;
         chart =file;
@@ -169,6 +171,13 @@ public class ChartFileReader {
      * @throws UnsupportedEncodingException
      */
     public InputStream chartOverview() throws UnsupportedEncodingException {
+        return new ByteArrayInputStream(getOverview().getBytes("UTF-8"));
+    }
+
+    public String getOverview(){
+        synchronized (overviewLock){
+            if (overview != null) return overview;
+        }
         HashMap<Integer,String> sources= chart.getSources();
         List<ChartFile.ChartRange> ranges = chart.getRanges();
         SourceEntry mapSources[]=new SourceEntry[sources.size()];
@@ -232,14 +241,23 @@ public class ChartFileReader {
         values.put("MAPSOURCES",sourceString.toString());
         AvnLog.i(Constants.LOGPRFX, "done read chart overview " + chart.getName());
         String rt=replaceTemplate(SERVICETEMPLATE,values);
-        return new ByteArrayInputStream(rt.getBytes("UTF-8"));
+        synchronized (overviewLock){
+            overview=rt;
+        }
+        return rt;
     }
 
     public String getScheme(){
         return chart.getScheme();
     }
     public boolean setSchema(String newScheme) throws Exception {
-        return chart.setScheme(newScheme);
+        boolean rt=chart.setScheme(newScheme);
+        if (rt){
+            synchronized (overviewLock){
+                overview=null;
+            }
+        }
+        return rt;
     }
     public long getSequence(){
         return chart.getSequence();

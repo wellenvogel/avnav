@@ -53,11 +53,16 @@ public class ChartHandler implements INavRequestHandler {
     private RequestHandler handler;
     //mapping of url name to char descriptors
     private HashMap<String, Chart> chartList =new HashMap<String, Chart>();
+    private boolean isStopped=false;
 
     public ChartHandler(Activity a, RequestHandler h){
         handler=h;
         activity=a;
 
+    }
+
+    public void stop(){
+        isStopped=true;
     }
 
     /**
@@ -149,6 +154,23 @@ public class ChartHandler implements INavRequestHandler {
         }
         if (modified){
             activity.sendBroadcast(new Intent(Constants.BC_RELOAD_DATA));
+            Thread overviewCreator=new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    AvnLog.i("creating chart overviews");
+                    for (Chart chart :chartList.values()){
+                        try{
+                            chart.computeOverview();
+                        }catch (Throwable t){
+                            AvnLog.e("error computing chart overview",t);
+                        }
+                        if (isStopped) break;
+                    }
+                    AvnLog.i("done creating chart overviews");
+                }
+            });
+            overviewCreator.setDaemon(true);
+            overviewCreator.start();
         }
     }
 

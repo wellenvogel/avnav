@@ -168,4 +168,8 @@ public class Chart implements INavRequestHandler.IJsonObect {
     public boolean setScheme(String newScheme) throws Exception {
         return getChartFileReader().setSchema(newScheme);
     }
+    public void computeOverview() throws Exception {
+        if (isXml()) return;
+        getChartFileReader().getOverview();
+    }
 }

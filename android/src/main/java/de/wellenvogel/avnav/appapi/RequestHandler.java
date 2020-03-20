@@ -379,16 +379,6 @@ public class RequestHandler {
                 }
                 fout=o;
             }
-            if (type.equals("listCharts")){
-                handled=true;
-                JSONObject out=new JSONObject();
-                try {
-                    fout=getReturn(new KeyValue<JSONArray>("data",gemfHandler.handleList()));
-                }catch (Exception e){
-                    Log.e(Constants.LOGPRFX, "error reading chartlist: " + e.getLocalizedMessage());
-                    fout=getErrorReturn(e.getLocalizedMessage());
-                }
-            }
             if (type.equals("track")){
                 handled=true;
                 if (getGpsService() != null) {
