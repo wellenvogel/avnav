@@ -182,6 +182,7 @@ class AVNLayoutHandler(AVNWorker):
           fp.write(data)
           fp.close()
       self.updateAllLayouts()
+      return AVNUtil.getReturnData()
 
     if type == 'download':
       name=AVNUtil.getHttpRequestParam(requestparam,'name')

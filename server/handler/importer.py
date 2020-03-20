@@ -142,13 +142,18 @@ class AVNImporter(AVNWorker):
             candidate=self.candidateTimes.get(k)
             if (candidate is None or candidate != currentFileTime):
               self.candidateTimes[k]=currentFileTime
+              self.setInfo("converter", "change detected for %s, waiting to settle" % k, AVNWorker.Status.STARTED)
             else:
               if ((candidate+self.waittime) < currentTime):
                 AVNLog.debug("detected file/directory %s to be new",k)
                 if gemftime is None or gemftime < currentFileTime:
                   self.startConversion(k)
+                  break
                 else:
                   AVNLog.debug("gemf file is newer, no conversion")
+              else:
+                self.setInfo("converter", "change detected for %s, waiting to settle" % k, AVNWorker.Status.STARTED)
+
 
         #end for currentKeys
       else:
@@ -159,6 +164,15 @@ class AVNImporter(AVNWorker):
       else:
         time.sleep(1)
   #read the import dir and return a dictionary: key - name of dir or mbtiles file, entry: timestamp
+
+  def allExtensions(self):
+    return self.extensions + ["mbtiles", "navipack"]
+
+  def getExt(self,filename):
+    rt=os.path.splitext(filename)[1]
+    if len(rt) > 0:
+      rt=rt[1:]
+    return rt
   def readImportDir(self):
     AVNLog.debug("read import dir %s",self.importDir)
     rt={}
@@ -185,7 +199,7 @@ class AVNImporter(AVNWorker):
           rt[file]=timestamp
       else:
         knownFile=False
-        for ext in self.extensions + ["mbtiles","navipack"]:
+        for ext in self.allExtensions():
            if file.upper().endswith("."+ext.upper()):
               knownFile=True
               break
@@ -354,6 +368,46 @@ class AVNImporter(AVNWorker):
       return rt
     except:
       AVNLog.error("unable to start converter for %s:%s",name,traceback.format_exc())
+
+
+  def getHandledCommands(self):
+    type="import"
+    rt = {"api": type, "upload": type, "list": type, "download": type, "delete": type}
+    return rt
+
+  def handleApiRequest(self, type, subtype, requestparam, **kwargs):
+    if type == "list":
+      return AVNUtil.getReturnData(items=[])
+    if type == "delete":
+      return AVNUtil.getReturnData(error="delete not yet supported")
+    if type == "download":
+      return None
+
+    if type == "upload":
+      handler=kwargs.get('handler')
+      if handler is None:
+        return AVNUtil.getReturnData(error="no handler")
+      name=AVNUtil.clean_filename(AVNUtil.getHttpRequestParam(requestparam,"name",True))
+      subdir=AVNUtil.clean_filename(AVNUtil.getHttpRequestParam(requestparam,"subdir",False))
+      if not ( self.getExt(name) in self.allExtensions()) :
+        return AVNUtil.getReturnData(error="invalid filename")
+      dir=self.importDir
+      if subdir is not None:
+        dir=os.path.join(self.importDir,subdir)
+        if not os.path.isdir(dir):
+          os.makedirs(dir)
+        if not os.path.isdir(dir):
+          return AVNUtil.getReturnData(error="unable to create directory %s"%dir)
+      fname=os.path.join(dir,name)
+      handler.writeFileFromInput(fname,kwargs.get('flen'),True)
+      return AVNUtil.getReturnData()
+
+    if type == "api":
+      command=AVNUtil.getHttpRequestParam(requestparam,"command",True)
+      if (command == "extensions"):
+        return AVNUtil.getReturnData(items=self.allExtensions())
+    return AVNUtil.getReturnData(error="unknown command for import")
+
 avnav_handlerList.registerHandler(AVNImporter)
 
 

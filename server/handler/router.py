@@ -809,7 +809,7 @@ class AVNRouter(AVNWorker):
       rinfo=AVNRouteInfo.fromRoute(route,AVNUtil.utcnow())
       self.routeInfos[route.name]=rinfo
       self.saveRoute(route)
-      return
+      return AVNUtil.getReturnData()
     except Exception as e:
       raise Exception("exception parsing route:%s"%(e.message))
 

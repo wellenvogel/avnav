@@ -163,6 +163,7 @@ let keys={
             uploadLayout:K,
             uploadUser:K,
             uploadImages:K,
+            uploadImport: K,
             canConnect: K,
         },
         global:{
@@ -226,6 +227,8 @@ let keys={
             uploadInfo:K,
             requestedUploadId: new D("the last requested upload for android"),
             addOns:K,
+            chartImportExtensions:K,
+            chartImportSubDir:K
         },
         settingspage:{
             hasChanges:K,

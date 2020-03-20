@@ -28,7 +28,7 @@ import Mob from '../components/Mob.js';
 import LeaveHandler from '../util/leavehandler.js';
 import LayoutNameDialog from '../components/LayoutNameDialog.jsx';
 import ViewPage from './ViewPage.jsx';
-import {Input,InputSelect,InputReadOnly,Radio} from '../components/Inputs.jsx';
+import {Input,InputSelect,InputReadOnly,Radio,Checkbox} from '../components/Inputs.jsx';
 import DB from '../components/DialogButton.jsx';
 import DialogContainer from '../components/OverlayDialogDisplay.jsx';
 import AndroidEventHandler from '../util/androidEventHandler.js';
@@ -434,11 +434,99 @@ const uploadLayoutData = (fileName, data)=> {
         }
     )
 };
+
+class ImportDialog extends React.Component{
+    constructor(props){
+        super(props);
+        this.state={
+            subdir:props.subdir,
+            useSubdir:props.subdir?true:false
+        };
+    }
+    render(){
+        return (
+            <React.Fragment>
+                <div className="importDialog flexInner">
+                    <h3 className="dialogTitle">Upload Chart to Importer</h3>
+                    <InputReadOnly
+                        dialogRow={true}
+                        label="name"
+                        value={this.props.name}
+                        />
+                    <Checkbox
+                        dialogRow={true}
+                        label="use set name"
+                        value={this.state.useSubdir}
+                        onChange={(nv)=>this.setState({useSubdir:nv})}
+                        />
+                    {this.state.useSubdir?<Input
+                        dialogRow={true}
+                        label="set name"
+                        value={this.state.subdir}
+                        onChange={(nv)=>{this.setState({subdir:nv})}}
+                        />
+                        :
+                        null}
+
+                    <div className="dialogButtons">
+                        <DB name="ok"
+                            onClick={()=>{
+                                this.props.okFunction(this.props,this.state.useSubdir?this.state.subdir:undefined);
+                                this.props.closeCallback();
+                            }}
+                            disabled={this.state.useSubdir && !this.state.subdir}
+                            >OK</DB>
+                        <DB name="cancel"
+                            onClick={()=>{
+                                this.props.cancelFunction();
+                                this.props.closeCallback();
+                                }}
+                            >Cancel</DB>
+                    </div>
+                </div>
+             </React.Fragment>
+        );
+    }
+}
+
+const startImportDialog=(file)=>{
+    const okFunction=(props,subdir)=>{
+        globalStore.storeData(keys.gui.downloadpage.chartImportSubDir,subdir);
+        resetUpload();
+        directUpload('import',file,{subdir:subdir});
+    };
+    OverlayDialog.dialog((props)=>{
+        return(
+            <ImportDialog
+                {...props}
+                okFunction={okFunction}
+                cancelFunction={resetUpload}
+                name={file.name}
+                subdir={globalStore.getData(keys.gui.downloadpage.chartImportSubDir)}
+                />
+        );
+    });
+};
 const runUpload=(ev)=>{
     let type=globalStore.getData(keys.gui.downloadpage.type);
     if (! type) return;
     if (type == 'chart'){
-        return uploadGeneric(type,ev.target,['gemf','mbtiles','xml']);
+        let directExtensions=['gemf','mbtiles','xml'];
+        let fileObject=ev.target;
+        if (fileObject.files && fileObject.files.length > 0) {
+            let file = fileObject.files[0];
+            let ext = getExt(file.name);
+            if (directExtensions.indexOf(ext) >= 0) {
+                return uploadGeneric(type, ev.target);
+            }
+            else{
+                let importExtensions=globalStore.getData(keys.gui.downloadpage.chartImportExtensions,[]);
+                if (importExtensions.indexOf(ext)>=0) {
+                    return startImportDialog(file);
+                }
+            }
+            Toast("only files of types: "+directExtensions.join(","));
+        }
     }
     if (type == 'route'){
         uploadFileReader(ev.target,".gpx").then((content)=> {
@@ -525,8 +613,13 @@ const UploadIndicator = Dynamic((info)=> {
 }, {
    storeKeys:{uploadInfo: keys.gui.downloadpage.uploadInfo}
 });
-const directUpload=(type,file)=>{
+const directUpload=(type,file,opt_options)=>{
     let url=globalStore.getData(keys.properties.navUrl)+ "?request=upload&type="+type+"&name=" + encodeURIComponent(file.name);
+    if (opt_options){
+        for (let k in opt_options){
+            url+="&"+k+"="+encodeURIComponent(opt_options[k]);
+        }
+    }
     Requests.uploadFile(url, file, {
         self: self,
         starthandler: function(param,xhdr){
@@ -938,6 +1031,13 @@ const createItem=(type)=>{
         .catch(()=>{})
 };
 
+const readImportExtensions=()=>{
+    if (!globalStore.getData(keys.gui.capabilities.uploadImport)) return;
+    Requests.getJson("?request=api",undefined,{type:'import',command:'extensions'})
+        .then((data)=>{globalStore.storeData(keys.gui.downloadpage.chartImportExtensions,data.items)})
+        .catch();
+};
+
 class DownloadPage extends React.Component{
     constructor(props){
         super(props);
@@ -955,6 +1055,7 @@ class DownloadPage extends React.Component{
         globalStore.storeData(keys.gui.downloadpage.uploadInfo,{});
         readAddOns();
         fillData();
+        readImportExtensions();
         this.androidSubscriptions=[];
         this.androidUploadHandler=this.androidUploadHandler.bind(this);
         this.androidCopyHandler=this.androidCopyHandler.bind(this);

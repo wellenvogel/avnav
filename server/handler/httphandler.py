@@ -489,8 +489,8 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       handler=self.server.getRequestHandler("upload",type)
       if handler is not None:
         AVNLog.debug("found handler for upload request %s:%s"%(type,handler.getConfigName()))
-        handler.handleApiRequest("upload",type,requestParam,rfile=self.rfile,flen=rlen,handler=self)
-        return json.dumps({'status': 'OK'})
+        rt=handler.handleApiRequest("upload",type,requestParam,rfile=self.rfile,flen=rlen,handler=self)
+        return json.dumps(rt)
       else:
         raise Exception("invalid request %s",type)
     except Exception as e:
@@ -562,6 +562,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       'uploadLayout':True,
       'uploadUser':True,
       'uploadImages':True,
+      'uploadImport': True,
       'canConnect': True
     }
     return json.dumps({'status':'OK','data':rt})

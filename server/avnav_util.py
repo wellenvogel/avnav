@@ -388,8 +388,10 @@ class AVNUtil():
 
 
   @classmethod
-  def clean_filename(cls,filename, whitelist=None, replace=' '):
-    valid_filename_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
+  def clean_filename(cls,filename, whitelist=None, replace=''):
+    if filename is None:
+      return None
+    valid_filename_chars = " -_.() %s%s" % (string.ascii_letters, string.digits)
     char_limit = 255
     if whitelist is None:
       whitelist=valid_filename_chars
