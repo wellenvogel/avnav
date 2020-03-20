@@ -272,7 +272,7 @@ class MainPage extends React.Component {
 
 
 const fillList = function () {
-    Requests.getJson("?request=list&type=chart").then((json)=>{
+    Requests.getJson("?request=list&type=chart",{timeout:3*parseFloat(globalStore.getData(keys.properties.networkTimeout))}).then((json)=>{
             let items = [];
             for (let e in json.items) {
                 let chartEntry = json.items[e];
