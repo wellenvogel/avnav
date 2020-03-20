@@ -40,9 +40,11 @@ public class MbTilesFile extends ChartFile {
         }
         if (newScheme.equals("xyz")){
             if (schemeXyz) return false;
+            schemeXyz=true;
         }
         else{
             if (!schemeXyz) return false;
+            schemeXyz=false;
         }
         synchronized (writerLock) {
             SQLiteDatabase dbrw = SQLiteDatabase.openDatabase(mRealFile.getPath(), null, SQLiteDatabase.OPEN_READWRITE);
@@ -69,7 +71,7 @@ public class MbTilesFile extends ChartFile {
             }
         }
         readHeader();
-        return false;
+        return true;
     }
 
     @Override
