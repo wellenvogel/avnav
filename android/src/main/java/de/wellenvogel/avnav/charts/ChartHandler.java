@@ -426,6 +426,7 @@ public class ChartHandler implements INavRequestHandler {
                     safeName += ".xml";
                     rt = activity.getAssets().open(Constants.CHARTPREFIX + "/" + safeName);
                     len = -1;
+                    return new ExtendedWebResourceResponse(len, mimeType, "", rt);
                 } else
                     throw new FileNotFoundException("unable to handle demo request for " + fname);
             }
@@ -450,11 +451,7 @@ public class ChartHandler implements INavRequestHandler {
                 return chart.getChartData(x, y, z, Integer.parseInt(kp.parts[0]));
             }
 
-            if (rt == null) {
-                Log.e(Constants.LOGPRFX, "unknown chart path " + fname);
-            }
-
-            return new ExtendedWebResourceResponse(len, mimeType, "", rt);
+            Log.e(Constants.LOGPRFX, "unknown chart path " + fname);
         } catch (Exception e) {
             Log.e(Constants.LOGPRFX, "chart file " + fname + " not found: " + e.getLocalizedMessage());
         }
