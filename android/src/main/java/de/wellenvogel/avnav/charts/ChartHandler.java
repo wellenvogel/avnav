@@ -43,8 +43,10 @@ import static de.wellenvogel.avnav.main.Constants.REALCHARTS;
 public class ChartHandler implements INavRequestHandler {
     private static final String GEMFEXTENSION =".gemf";
     private static final String MBTILESEXTENSION =".mbtiles";
+    private static final String XMLEXTENSION=".xml";
     private static final String TYPE_GEMF="gemf";
     private static final String TYPE_MBTILES="mbtiles";
+    private static final String TYPE_XML="xml";
     public static final String INDEX_INTERNAL = "1";
     public static final String INDEX_EXTERNAL = "2";
     private Activity activity;
@@ -67,16 +69,8 @@ public class ChartHandler implements INavRequestHandler {
      */
     public static String uriPath(String fileName, String url) throws Exception {
         if (url == null) return null;
-        if (url.startsWith("/")) url=url.substring(1);
-        String parts[]=url.split("/");
-        if (parts.length < 5) return null;
-        if (!parts[0].equals(CHARTPREFIX)) return null;
-        if (!parts[1].equals(REALCHARTS)) return null;
-        if (!parts[3].equals(TYPE_GEMF) && ! parts[3].equals(TYPE_MBTILES)) return null;
-        if (parts[2].equals(INDEX_EXTERNAL) || parts[2].equals(INDEX_INTERNAL)){
-            return parts[0]+"/"+parts[1]+"/"+parts[2]+"/"+parts[3]+"/"+DirectoryRequestHandler.safeName(parts[4],true);
-        }
-        return null;
+        KeyAndParts kp=urlToKey(url,true);
+        return CHARTPREFIX+"/"+REALCHARTS+"/"+kp.originalParts[2]+"/"+kp.originalParts[3]+"/"+DirectoryRequestHandler.safeName(kp.originalParts[4],true);
     }
 
     /**
@@ -89,7 +83,6 @@ public class ChartHandler implements INavRequestHandler {
     public static ParcelFileDescriptor getFileFromUri(String uriPart, Context ctx) throws Exception {
         if (uriPart == null) return null;
         KeyAndParts kp=urlToKey(uriPart,true);
-        if (!kp.originalParts[3].equals(TYPE_GEMF) && ! kp.originalParts[3].equals(TYPE_MBTILES)) return null;
         if (kp.originalParts[2].equals(INDEX_INTERNAL)){
             File chartBase=getInternalChartsDir(ctx);
             File chartFile=new File(chartBase,DirectoryRequestHandler.safeName(kp.originalParts[4],true));
@@ -182,9 +175,9 @@ public class ChartHandler implements INavRequestHandler {
                             //we cannot handle this!
                             AvnLog.e("unable to read mbtiles from external dir: "+f.getName());
                         }
-                        if (f.getName().endsWith(".xml")) {
-                            String name = f.getName().substring(0, f.getName().length() - ".xml".length());
-                            String urlName = Constants.REALCHARTS + "/" + index + "/avnav/" + URLEncoder.encode(name, "UTF-8");
+                        if (f.getName().endsWith(XMLEXTENSION)) {
+                            String name = f.getName();
+                            String urlName = Constants.REALCHARTS + "/" + index + "/"+TYPE_XML+"/" + URLEncoder.encode(name, "UTF-8");
                             Chart newChart = new Chart(Chart.TYPE_XML,activity, f, urlName, f.lastModified());
                             arr.put(urlName, newChart);
                             AvnLog.d(Constants.LOGPRFX, "readCharts: adding xml url " + urlName + " for " + f.getUri());
@@ -215,9 +208,9 @@ public class ChartHandler implements INavRequestHandler {
                     AvnLog.d(Constants.LOGPRFX,"readCharts: adding mbtiles url "+urlName+" for "+f.getAbsolutePath());
 
                 }
-                if (f.getName().endsWith(".xml")){
-                    String name=f.getName().substring(0,f.getName().length()-".xml".length());
-                    String urlName=Constants.REALCHARTS+"/"+index+"/avnav/"+URLEncoder.encode(name,"UTF-8");
+                if (f.getName().endsWith(XMLEXTENSION)){
+                    String name=f.getName();
+                    String urlName=Constants.REALCHARTS+"/"+index+"/"+TYPE_XML+"/"+URLEncoder.encode(name,"UTF-8");
                     Chart newChart=new Chart(Chart.TYPE_XML,activity, f,urlName,f.lastModified());
                     arr.put(urlName,newChart);
                     AvnLog.d(Constants.LOGPRFX,"readCharts: adding xml url "+urlName+" for "+f.getAbsolutePath());
@@ -240,7 +233,6 @@ public class ChartHandler implements INavRequestHandler {
     @Override
     public ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception {
         String url=AvnUtil.getMandatoryParameter(uri,"url");
-        if (url.startsWith("/")) url=url.substring(1);
         ParcelFileDescriptor fd=getFileFromUri(url,activity);
         if (fd == null) return null;
         return new ExtendedWebResourceResponse(fd.getStatSize(),
@@ -252,8 +244,8 @@ public class ChartHandler implements INavRequestHandler {
     @Override
     public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
         String safeName= DirectoryRequestHandler.safeName(name,true);
-        if (! safeName.endsWith(GEMFEXTENSION) && ! safeName.endsWith(MBTILESEXTENSION))
-            throw new Exception("only "+GEMFEXTENSION+" or "+MBTILESEXTENSION+" files allowed");
+        if (! safeName.endsWith(GEMFEXTENSION) && ! safeName.endsWith(MBTILESEXTENSION) && ! safeName.endsWith(XMLEXTENSION))
+            throw new Exception("only "+GEMFEXTENSION+" or "+MBTILESEXTENSION+" or "+XMLEXTENSION+" files allowed");
         File outFile=new File(getInternalChartsDir(activity),safeName);
         if (outFile.exists() && !ignoreExisting){
             throw new Exception("file already exists");
@@ -411,6 +403,10 @@ public class ChartHandler implements INavRequestHandler {
         if (!parts[1].equals(REALCHARTS)){
             throw new Exception("no chart url");
         }
+        if (!parts[3].equals(TYPE_MBTILES) && ! parts[3].equals(TYPE_GEMF) && ! parts[3].equals(TYPE_XML))
+            throw new Exception("invalid chart type "+parts[3]);
+        if (!parts[2].equals(INDEX_EXTERNAL) && ! parts[2].equals(INDEX_INTERNAL))
+            throw new Exception("invalid chart index "+parts[2]);
         if (parts.length < 5) throw new Exception("invalid chart request " + url);
         //the name is url encoded in the key
         String key=parts[1]+"/"+parts[2]+"/"+parts[3]+"/"+URLEncoder.encode(parts[4],"UTF-8");

@@ -90,7 +90,7 @@ public class Chart implements INavRequestHandler.IJsonObect {
     public boolean canDelete(){
         //TODO: move delete handling to GEMFfile
         try {
-            return realFile != null && (getChartFileReader().numFiles() == 1);
+            return realFile != null && (isXml() || (getChartFileReader().numFiles() == 1));
         }catch (Exception e){
             AvnLog.e("unable to get num of chartReader files",e);
             return false;
@@ -109,6 +109,7 @@ public class Chart implements INavRequestHandler.IJsonObect {
     }
     public File deleteFile() throws Exception {
         if (!canDelete()) return null;
+        if (isXml()) return null;
         getChartFileReader().close();
         realFile.delete();
         return realFile;
@@ -139,8 +140,17 @@ public class Chart implements INavRequestHandler.IJsonObect {
     public JSONObject toJson() throws JSONException {
         JSONObject e = new JSONObject();
         int numFiles=0;
+        long sequence=0;
+        String scheme="";
         try {
-            numFiles= getChartFileReader().numFiles();
+            if (isXml()) {
+                numFiles=1;
+            }
+            else {
+                numFiles= getChartFileReader().numFiles();
+                sequence=getChartFileReader().getSequence();
+                scheme=getChartFileReader().getScheme();
+            }
         }catch (Exception ex){
             throw new JSONException(ex.getLocalizedMessage());
         }
@@ -149,9 +159,9 @@ public class Chart implements INavRequestHandler.IJsonObect {
         e.put("url", "/"+ Constants.CHARTPREFIX + "/"+key);
         e.put("canDelete",canDelete());
         e.put("info",numFiles+" files");
-        e.put("canDownload",!isXml() && (numFiles == 1));
-        e.put("sequence",chartReader.getSequence());
-        e.put("scheme",chartReader.getScheme());
+        e.put("canDownload",isXml() || (numFiles == 1));
+        e.put("sequence",sequence);
+        e.put("scheme",scheme);
         return e;
     }
 
