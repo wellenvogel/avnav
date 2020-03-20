@@ -1112,7 +1112,7 @@ class DownloadPage extends React.Component{
             }
         }
         if (type == 'chart'){
-            if (['gemf','mbtiles'].indexOf(getExt(fileName))<0){
+            if (['gemf','mbtiles','xml'].indexOf(getExt(fileName))<0){
                 Toast("only gemf or mbtiles files allowed");
                 return;
             }
