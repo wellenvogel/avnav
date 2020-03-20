@@ -109,8 +109,7 @@ public class Chart implements INavRequestHandler.IJsonObect {
     }
     public File deleteFile() throws Exception {
         if (!canDelete()) return null;
-        if (isXml()) return null;
-        getChartFileReader().close();
+        if (! isXml()) getChartFileReader().close();
         realFile.delete();
         return realFile;
     }
