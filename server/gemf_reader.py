@@ -261,6 +261,9 @@ class GemfFile():
   def getChangeCount(self):
     return 1
 
+  def getDownloadFile(self):
+    return self.filename
+
 if __name__ == "__main__":
   f=GemfFile(sys.argv[1])
   f.open()

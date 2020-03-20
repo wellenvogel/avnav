@@ -438,7 +438,7 @@ const runUpload=(ev)=>{
     let type=globalStore.getData(keys.gui.downloadpage.type);
     if (! type) return;
     if (type == 'chart'){
-        return uploadGeneric(type,ev.target,['gemf','mbtiles']);
+        return uploadGeneric(type,ev.target,['gemf','mbtiles','xml']);
     }
     if (type == 'route'){
         uploadFileReader(ev.target,".gpx").then((content)=> {

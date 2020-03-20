@@ -267,6 +267,9 @@ class MBTilesFile():
   def getChangeCount(self):
     return self.changeCount
 
+  def getDownloadFile(self):
+    return self.filename
+
   def __unicode__(self):
     rt="mbtiles %s " %(self.filename)
     return rt

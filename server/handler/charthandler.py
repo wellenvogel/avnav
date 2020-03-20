@@ -34,12 +34,57 @@ import mbtiles_reader
 from avnav_util import *
 from avnav_worker import AVNWorker
 
+class XmlChartFile:
+  def __init__(self,filename,isDir=False):
+    self.filename=filename
+    self.isDir=isDir
+
+  def getTileData(self,tile,soure):
+    raise Exception("no tile data for xml files")
+
+  def getAvnavXml(self,upzoom=None):
+    if not os.path.exists(self.filename):
+      return None
+    if self.isDir:
+      ovname=os.path.join(self.filename,AVNUtil.NAVXML)
+      if not os.path.exists(ovname):
+        return None
+    else:
+      ovname=self.filename
+    with open(ovname,"r") as f:
+      return f.read()
+
+  def changeScheme(self,schema,createOverview=True):
+    raise Exception("not supported")
+
+  def getScheme(self):
+    return None
+  def close(self):
+    pass
+  def open(self):
+    pass
+  def deleteFiles(self):
+    if os.path.isfile(self.filename):
+      return os.unlink(self.filename)
+    if self.isDir and os.path.isdir(self.filename):
+      shutil.rmtree(self.filename)
+
+  def getChangeCount(self):
+    return 0
+
+  def getDownloadFile(self):
+    if self.isDir:
+      return os.path.join(self.filename,AVNUtil.NAVXML)
+    else:
+      return self.filename
+
+  def __unicode__(self):
+    return "xml %s"%self.filename
 
 class AVNChartHandler(AVNWorker):
   """a worker to check the chart dirs
   """
   PATH_PREFIX="/chart"
-  EXT_PREFIX="ext" # prefix for found xml files
   INT_PREFIX="int" #prefix for mbtiles,gemf
   def __init__(self,param):
     self.param=param
@@ -102,11 +147,17 @@ class AVNChartHandler(AVNWorker):
       oldlist = self.chartlist.keys()
       currentlist = []
       for f in files:
-        if not f.endswith(".gemf") and not  f.endswith(".mbtiles"):
-          continue
-        if not os.path.isfile(os.path.join(chartbaseDir, f)):
-          continue
-        AVNLog.debug("found chart file %s", f)
+        fullname=os.path.join(chartbaseDir, f)
+        if os.path.isfile(fullname):
+          if not f.endswith(".gemf") and not  f.endswith(".mbtiles") and not f.endswith(".xml"):
+            continue
+        else:
+          if os.path.isdir(fullname):
+            if not os.path.exists(os.path.join(fullname,AVNUtil.NAVXML)):
+              continue
+          else:
+            continue
+        AVNLog.debug("found chart file/dir %s", f)
         currentlist.append(f)
       for old in oldlist:
         if not old in currentlist:
@@ -127,8 +178,8 @@ class AVNChartHandler(AVNWorker):
         if oldChartFile is not None:
           mtime = gstat.st_mtime
           if mtime != oldChartFile['mtime']:
-            AVNLog.info("closing gemf file %s due to changed timestamp", newchart)
-            oldChartFile['gemf'].close()
+            AVNLog.info("closing chart file %s due to changed timestamp", newchart)
+            oldChartFile['chart'].close()
             try:
               del self.chartlist[newchart]
             except:
@@ -136,18 +187,25 @@ class AVNChartHandler(AVNWorker):
             oldChartFile = None
         if oldChartFile is None:
           AVNLog.info("trying to add chart file %s", fname)
-          if fname.endswith(".gemf"):
-            chart = gemf_reader.GemfFile(fname)
+          chart=None
+          if os.path.isdir(fname):
+            chart=XmlChartFile(fname,True)
           else:
-            chart=mbtiles_reader.MBTilesFile(fname)
-          try:
-            chart.open()
-            avnav = chart.getAvnavXml(self.getIntParam('upzoom'))
-            chartdata = {'name': newchart, 'chart': chart, 'avnav': avnav, 'mtime': gstat.st_mtime}
-            self.chartlist[newchart] = chartdata
-            AVNLog.info("successfully added chart file %s %s", newchart, unicode(chart))
-          except:
-            AVNLog.error("error while trying to open chart file %s  %s", fname, traceback.format_exc())
+            if fname.endswith(".gemf"):
+              chart = gemf_reader.GemfFile(fname)
+            if fname.endswith(".mbtiles"):
+              chart=mbtiles_reader.MBTilesFile(fname)
+            if fname.endswith(".xml"):
+              chart=XmlChartFile(fname)
+          if chart is not None:
+            try:
+              chart.open()
+              avnav = chart.getAvnavXml(self.getIntParam('upzoom'))
+              chartdata = {'name': newchart, 'chart': chart, 'avnav': avnav, 'mtime': gstat.st_mtime}
+              self.chartlist[newchart] = chartdata
+              AVNLog.info("successfully added chart file %s %s", newchart, unicode(chart))
+            except:
+              AVNLog.error("error while trying to open chart file %s  %s", fname, traceback.format_exc())
     except:
       AVNLog.error("Exception in chart handler %s, ignore", traceback.format_exc())
 
@@ -163,14 +221,9 @@ class AVNChartHandler(AVNWorker):
     try:
       path=url.replace(self.PATH_PREFIX+"/","",1)
       parr=path.split("/")
-      if len(parr) < 3:
+      if len(parr) < 2:
         return None
-      if parr[0] == self.EXT_PREFIX:
-        if parr[2] != AVNUtil.NAVXML:
-          return None
-        avnav =os.path.join(self.chartDir,AVNUtil.clean_filename(parr[1]),AVNUtil.NAVXML)
-        return avnav
-      name=parr[1]
+      name=parr[0]
       for g in self.chartlist.values():
         if g['name']==name:
           AVNLog.debug("chart file %s, request %s, lend=%d",name,path,len(parr))
@@ -178,7 +231,7 @@ class AVNChartHandler(AVNWorker):
           #basically we can today handle 2 types of requests:
           #get the overview /chart/int/<name>/avnav.xml
           #get a tile /chart/int/<name>/<srcname>/z/x/y.png
-          if parr[2] == AVNUtil.NAVXML:
+          if parr[1] == AVNUtil.NAVXML:
             AVNLog.debug("avnav request for chart %s",name)
             data=g['avnav']
             handler.send_response(200)
@@ -188,9 +241,9 @@ class AVNChartHandler(AVNWorker):
             handler.end_headers()
             handler.wfile.write(data)
             return True
-          if len(parr) != 6:
-            raise Exception("invalid request to GEMF file %s: %s" %(name,path))
-          data=g['chart'].getTileData((int(parr[3]),int(parr[4]),int(parr[5].replace(".png",""))),parr[2])
+          if len(parr) != 5:
+            raise Exception("invalid request to chart file %s: %s" %(name,path))
+          data=g['chart'].getTileData((int(parr[2]),int(parr[3]),int(parr[4].replace(".png",""))),parr[1])
           if data is None:
             handler.send_error(404,"File %s not found"%(path))
             return None
@@ -212,7 +265,7 @@ class AVNChartHandler(AVNWorker):
       return AVNUtil.getReturnData(error="no chart dir")
     data=[]
     for chart in self.chartlist.values():
-      url=self.PATH_PREFIX+"/"+self.INT_PREFIX+"/"+urllib.quote(chart['name'].encode('utf-8'))
+      url=self.PATH_PREFIX+"/"+urllib.quote(chart['name'].encode('utf-8'))
       entry={
              'name':chart['name'],
              'url':url,
@@ -224,34 +277,6 @@ class AVNChartHandler(AVNWorker):
              'sequence':chart['chart'].getChangeCount()
       }
       data.append(entry)
-    try:
-      list = os.listdir(chartbaseDir)
-    except os.error:
-      return AVNUtil.getReturnData(error="unable to read %s"%chartbaseDir)
-    list.sort(key=lambda a: a.lower())
-    AVNLog.debug("reading chartDir %s",chartbaseDir)
-    for de in list:
-      if de==".":
-        continue
-      if de=="..":
-        continue
-      dpath=os.path.join(chartbaseDir,de)
-      fname=os.path.join(dpath,AVNUtil.NAVXML)
-      if not os.path.isdir(dpath):
-        continue
-      if not os.path.isfile(fname):
-        continue
-      url=self.PATH_PREFIX+"/"+self.EXT_PREFIX+"/"+urllib.quote(de.encode('utf-8'))
-      charturl=url
-      entry={
-             'name':de,
-             'url':url,
-             'charturl':charturl,
-             'time': os.path.getmtime(fname),
-             'canDelete': False
-             }
-      AVNLog.ld("chartentry",entry)
-      data.append(entry)
     num=len(data)
     AVNLog.debug("read %d entries from %s",num,chartbaseDir)
     return AVNUtil.getReturnData(items=data)
@@ -260,25 +285,17 @@ class AVNChartHandler(AVNWorker):
     if not url.startswith(self.PATH_PREFIX):
       return AVNUtil.getReturnData(error="invalid url %s"%url)
     parr=url[1:].split("/")
-    if len(parr) < 3:
+    if len(parr) < 2:
       return AVNUtil.getReturnData(error="invalid url %s" % url)
-    if parr[1] == self.INT_PREFIX:
-      chartEntry=self.chartlist.get(parr[2])
-      if chartEntry is None:
-        return AVNUtil.getReturnData(error="chart %s not found"%url)
-      del self.chartlist[parr[2]]
-      chartEntry['chart'].deleteFiles()
-      importer = self.server.getHandler("AVNImporter")  # cannot import this as we would get cycling dependencies...
-      if importer is not None:
-        importer.deleteImport(chartEntry['name'])
-      return AVNUtil.getReturnData()
-    if parr[1] == self.EXT_PREFIX:
-      dir=os.path.join(self.chartDir,AVNUtil.clean_filename(parr[2]))
-      if not os.path.isdir(dir):
-        return AVNUtil.getReturnData(error="invalid external url %s"%url)
-      shutil.rmtree(dir)
-      return AVNUtil.getReturnData()
-    return AVNUtil.getReturnData(error="invalid chart url")
+    chartEntry=self.chartlist.get(parr[1])
+    if chartEntry is None:
+      return AVNUtil.getReturnData(error="chart %s not found"%url)
+    del self.chartlist[parr[1]]
+    chartEntry['chart'].deleteFiles()
+    importer = self.server.getHandler("AVNImporter")  # cannot import this as we would get cycling dependencies...
+    if importer is not None:
+      importer.deleteImport(chartEntry['name'])
+    return AVNUtil.getReturnData()
 
   def getHandledCommands(self):
     type="chart"
@@ -303,14 +320,12 @@ class AVNChartHandler(AVNWorker):
       if not url.startswith(self.PATH_PREFIX):
         raise Exception("invalid url")
       parr = url[1:].split("/")
-      if len(parr) < 3:
+      if len(parr) < 2:
         raise Exception("invalid url")
-      if parr[1] != self.INT_PREFIX:
-        raise Exception("invalid url")
-      chartEntry=self.chartlist.get(parr[2])
+      chartEntry=self.chartlist.get(parr[1])
       if chartEntry is None:
         raise Exception("chart not found")
-      fname=chartEntry['chart'].filename
+      fname=chartEntry['chart'].getDownloadFile()
       if not os.path.isfile(fname):
         raise Exception("chart file not found")
       return AVNUtil.getReturnData(
@@ -324,7 +339,7 @@ class AVNChartHandler(AVNWorker):
       if handler is None:
         return AVNUtil.getReturnData(error="no handler")
       name=AVNUtil.clean_filename(AVNUtil.getHttpRequestParam(requestparam,"name",True))
-      if not ( name.endswith(".gemf") or name.endswith(".mbtiles")):
+      if not ( name.endswith(".gemf") or name.endswith(".mbtiles") or name.endswith(".xml")) :
         return AVNUtil.getReturnData(error="invalid filename")
       if self.chartlist.get(name) is not None:
         return AVNUtil.getReturnData(error="already exists")
@@ -341,11 +356,9 @@ class AVNChartHandler(AVNWorker):
         if not url.startswith(self.PATH_PREFIX):
           raise Exception("invalid url")
         parr = url[1:].split("/")
-        if len(parr) < 3:
+        if len(parr) < 2:
           raise Exception("invalid url")
-        if parr[1] != self.INT_PREFIX:
-          raise Exception("invalid url")
-        chartEntry = self.chartlist.get(parr[2])
+        chartEntry = self.chartlist.get(parr[1])
         if chartEntry is None:
           raise Exception("chart not found")
         changed=chartEntry['chart'].changeScheme(scheme)
@@ -354,11 +367,5 @@ class AVNChartHandler(AVNWorker):
         return AVNUtil.getReturnData()
 
     return AVNUtil.getReturnData(error="Unknown chart request")
-
-
-
-
-
-
 
 avnav_handlerList.registerHandler(AVNChartHandler)
