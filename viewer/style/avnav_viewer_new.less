@@ -531,17 +531,18 @@ span.valuePrefix{
 #mainpage{
   .chartItem{
     cursor: pointer;
-    vertical-align: middle !important;
     overflow: hidden;
-    width: 20em;
-    height: 2em;
-    display: inline-block;
+    width: 22em;
+    max-width: 100%;
+    .flex-display(inline);
+    .flex-direction(row);
+    .flex-align-items(center);
     margin-right: 3em;
     padding: 1em;
+    padding-right: 0;
     line-height: 2em;
     border-bottom: 1px solid;
     border-color: rgba(0, 0, 0, 0.3);
-    box-sizing: content-box;
     .more {
       display: inline-block;
       float: right;
@@ -558,6 +559,12 @@ span.valuePrefix{
       border-radius: 50%;
       margin-right: 1em;
       vertical-align: middle;
+    }
+    .chartName{
+      .flex(1);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
   }

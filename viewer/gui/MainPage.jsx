@@ -185,7 +185,7 @@ class MainPage extends React.Component {
             return (
                 <div className={cls} onClick={props.onClick}>
                     <img src={chartImage}/>
-                    <span className="">{props.name}</span>
+                    <span className="chartName">{props.name}</span>
                     <span className="more"/>
                 </div>
             );
