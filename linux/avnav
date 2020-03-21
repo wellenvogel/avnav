@@ -2,17 +2,19 @@
 
 avnavdir=`readlink -f $0`
 avnavdir=`dirname $avnavdir`
+pdir=$avnavdir
 
 dopt=""
 basedir=""
 chartdir=""
 xmlfile=""
+viewer=""
 silent=0
 gui=0
 template="$avnavdir/avnav_template.xml"
 
 usage(){
-  echo "usage: $0 [-e] [-d] [-q] [-b basedir] [-c chartdir] [-x cfgfile] [-t template] [-g]"
+  echo "usage: $0 [-e] [-d] [-q] [-b basedir] [-c chartdir] [-x cfgfile] [-t template] [-g] [-a softwareBaseDir] [-v viewerDir]"
 }
 
 err(){
@@ -21,7 +23,7 @@ err(){
 }
 
 
-while getopts dec:b:x:qgt: opt; do
+while getopts dec:b:x:qgt:a:v: opt; do
 case $opt in
   d)
     dopt="-d"
@@ -49,6 +51,12 @@ case $opt in
     template="$OPTARG"
     [ ! -f "$template" ] && err "template $template not found"
     ;;
+  a)
+    avnavdir="$OPTARG"
+    ;;
+  v)
+    viewer="$OPTARG"
+    ;;    
   \?)
     echo "invalid option $opt"
     usage
@@ -64,15 +72,16 @@ startprog="$avnavdir/server/avnav_server.py"
 [ ! -x $startprog ] && err "$startprog not found"
 
 guiprog="$avnavdir/gui/avnav_gui.py"
-[ "$gui" != 0 -a ! -x $guiprog ] && err "the gui $guiprog is not installed"
+if [ "$gui" != 0 ]; then
+  if [ ! -f "$guiprog" ]; then
+    guiprog="$pdir/avnav_gui.py"
+  fi
+  [ ! -x "$guiprog" ] && err "the gui $guiprog is not installed"
+fi  
 
 if [ "$basedir" = "" ] ; then
   if [ "$HOME" = "" ] ; then
     err "no parameter -b is set and environment HOME is unset"
-  fi
-  if [ "$chartdir" = "" ] ; then
-    #be compatible to the converter
-    chartdir="$HOME/AvNavCharts/out"
   fi
   basedir="$HOME/avnav"
   if [ -d $basedir/data ] ; then
@@ -104,17 +113,20 @@ if [ "$xmlfile" = "" ] ; then
     sed -e "s?#DATADIR#?$basedir?" -e "s?#AVNAVDIR#?$avnavdir?" "$template" > $xmlfile || err "unable to create $xmlfile"
   fi
 fi
-
+if [ "$viewer" = "" ]; then
+  viewer="$avnavdir/viewer"
+fi
+viewer=`readlink -f "$viewer"`
 if [ "$gui" != 0 ] ; then
   python -c 'import wx' > /dev/null 2>&1
   [ $? != 0 ] && err "missing package python-wxgtkn.n, please install a valid version of this package (e.g. python-wxgtk3.0)"
-  exec $guiprog -b "$basedir" -u "viewer=$avnavdir/viewer,libraries=$avnavdir/viewer/libraries,sounds=$avnavdir/sounds"
+  exec $guiprog -b "$basedir" -u "viewer=$viewer,libraries=$avnavdir/viewer/libraries,sounds=$avnavdir/sounds"
 else
   echo "chartdir=$chartdir, basedir=$basedir, config=$xmlfile, starting server..."
   if [ "$silent" = 0 ] ; then
-    exec $startprog -c "$chartdir" -w "$basedir" -u "viewer=$avnavdir/viewer,libraries=$avnavdir/viewer/libraries,sounds=$avnavdir/sounds" $dopt $eopt "$xmlfile"
+    exec $startprog -c "$chartdir" -w "$basedir" -u "viewer=$viewer,libraries=$avnavdir/viewer/libraries,sounds=$avnavdir/sounds" $dopt $eopt "$xmlfile"
   else
-    exec $startprog -c "$chartdir" -w "$basedir" -u "viewer=$avnavdir/viewer,libraries=$avnavdir/viewer/libraries,sounds=$avnavdir/sounds" $dopt $eopt "$xmlfile"  > /dev/null 2>&1
+    exec $startprog -c "$chartdir" -w "$basedir" -u "viewer=$viewer,libraries=$avnavdir/viewer/libraries,sounds=$avnavdir/sounds" $dopt $eopt "$xmlfile"  > /dev/null 2>&1
   fi
 fi
 
