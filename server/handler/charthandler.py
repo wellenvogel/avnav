@@ -291,10 +291,10 @@ class AVNChartHandler(AVNWorker):
     if chartEntry is None:
       return AVNUtil.getReturnData(error="chart %s not found"%url)
     del self.chartlist[parr[1]]
-    chartEntry['chart'].deleteFiles()
     importer = self.server.getHandler("AVNImporter")  # cannot import this as we would get cycling dependencies...
     if importer is not None:
       importer.deleteImport(chartEntry['name'])
+    chartEntry['chart'].deleteFiles()
     return AVNUtil.getReturnData()
 
   def getHandledCommands(self):

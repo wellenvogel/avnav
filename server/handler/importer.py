@@ -59,7 +59,8 @@ class AVNImporter(AVNWorker):
       'importDir':'import', #directory below our data dir
       'workDir': '',    #working directory
       'waittime': 30,       #time to wait in seconds before a conversion is started after detecting a change (and no further change)
-      'knownExtensions': 'kap,map,geo' #extensions for gdal conversion
+      'knownExtensions': 'kap,map,geo', #extensions for gdal conversion
+      'keepInfoTime': 30 #seconds to keep the info entry
     }
     return rt
 
@@ -119,19 +120,26 @@ class AVNImporter(AVNWorker):
   def run(self):
     self.setName(self.getThreadPrefix())
     self.setInfo("main","monitoring started for %s"%(self.importDir),AVNWorker.Status.NMEA)
-    self.setInfo("converter","free",AVNWorker.Status.INACTIVE)
+    self.setInfo("converter","free",AVNWorker.Status.STARTED)
+    infoEntries={}
     while True:
       AVNLog.debug("mainloop")
+      now=AVNUtil.utcnow()
       if len(self.runningConversions.keys()) == 0:
         currentTimes=self.readImportDir()
         currentTime=time.time()
+        removeInfoTime=now-self.getIntParam('keepInfoTime')
+        for k in infoEntries.keys():
+          if infoEntries[k] < removeInfoTime:
+            self.deleteInfo(k)
+            del infoEntries[k]
         for k in currentTimes.keys():
+          infoKey="conv:%s"%AVNUtil.clean_filename(k)
           if len(self.runningConversions.keys()) > 0:
             AVNLog.debug("conversion already running, skip searching")
             break
           currentFileTime=currentTimes.get(k)
           lastTime=self.lastTimeStamps.get(k)
-          startConversion=False
           currentlyRunning=self.runningConversions.get(k)
           if currentlyRunning is not None:
             AVNLog.debug("conversion for %s currently running, skip",k)
@@ -142,18 +150,26 @@ class AVNImporter(AVNWorker):
             candidate=self.candidateTimes.get(k)
             if (candidate is None or candidate != currentFileTime):
               self.candidateTimes[k]=currentFileTime
-              self.setInfo("converter", "change detected for %s, waiting to settle" % k, AVNWorker.Status.STARTED)
+              self.setInfo(infoKey, "change detected, waiting to settle", AVNWorker.Status.STARTED)
+              infoEntries[infoKey]=now
             else:
               if ((candidate+self.waittime) < currentTime):
                 AVNLog.debug("detected file/directory %s to be new",k)
                 if gemftime is None or gemftime < currentFileTime:
+                  self.setInfo(infoKey, "conversion started", AVNWorker.Status.NMEA)
+                  infoEntries[infoKey] = now
                   self.startConversion(k)
                   break
                 else:
+                  self.setInfo(infoKey, "gemf is up to date", AVNWorker.Status.STARTED)
+                  infoEntries[infoKey] = now
                   AVNLog.debug("gemf file is newer, no conversion")
               else:
-                self.setInfo("converter", "change detected for %s, waiting to settle" % k, AVNWorker.Status.STARTED)
-
+                self.setInfo(infoKey, "change detected, waiting to settle" , AVNWorker.Status.STARTED)
+                infoEntries[infoKey] = now
+          else:
+            self.setInfo(infoKey, "no change", AVNWorker.Status.STARTED)
+            infoEntries[infoKey] = now
 
         #end for currentKeys
       else:
@@ -236,7 +252,7 @@ class AVNImporter(AVNWorker):
     except:
       pass
     now=time.time()
-    self.setInfo("converter","running for %s"%(name),AVNWorker.Status.RUNNING)
+    self.setInfo("converter","running for %s"%(name),AVNWorker.Status.NMEA)
     self.lastTimeStamps[name]=now
     fullname=os.path.join(self.importDir,name)
     gemfName=self.getGemfName(name)
@@ -304,7 +320,7 @@ class AVNImporter(AVNWorker):
               AVNLog.error("unable to rename %s to %s: %s",tmpname,gemfname,traceback.format_exc())
               rtc=1
         if rtc == 0:
-          self.setInfo("converter","successful for %s"%(k),AVNWorker.Status.INACTIVE)
+          self.setInfo("converter","successful for %s"%(k),AVNWorker.Status.STARTED)
         else:
           self.setInfo("converter","failed for %s"%(k),AVNWorker.Status.ERROR)
         del(self.runningConversions[k])
@@ -321,7 +337,7 @@ class AVNImporter(AVNWorker):
         isRunning.kill()
         isRunning.poll()
         del(self.runningConversions[name])
-        self.setInfo("converter","killed for %s"%(name),AVNWorker.Status.INACTIVE)
+        self.setInfo("converter","killed for %s"%(name),AVNWorker.Status.ERROR)
       except:
         pass
     try:
