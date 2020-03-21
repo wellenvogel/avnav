@@ -414,7 +414,7 @@ const userlayoutExists=(name)=>{
 const uploadLayoutData = (fileName, data)=> {
     if (userlayoutExists(fileName)) {
         let baseName=LayoutHandler.nameToBaseName(fileName);
-        LayoutNameDialog.createDialog(baseName,userlayoutExists)
+        LayoutNameDialog.createDialog(baseName,userlayoutExists,"Layout exists, select new name")
             .then((newName)=>{
                 LayoutHandler.uploadLayout(newName,data,true)
                     .then((result)=>{fillData();})
@@ -836,7 +836,7 @@ class FileDialog extends React.Component{
                         className="mbtilesType"/>
                 }
                 {this.state.allowed.showRename ?
-                    <div className="dialogLine">
+                    <div className="dialogRow">
                         <Input
                             label={this.state.existingName?"existing":"new name"}
                             className={cn}
@@ -846,7 +846,7 @@ class FileDialog extends React.Component{
                     </div>
                     : null
                 }
-                <div className="dialogButtons dialogLine">
+                <div className="dialogButtons">
                     {(this.state.allowed.showRename || showSchema)?
                         <DB name="ok"
                                 onClick={()=>{
@@ -880,7 +880,7 @@ class FileDialog extends React.Component{
                         null
                     }
                 </div>
-                <div className="dialogButtons dialogLine">
+                <div className="dialogButtons">
                     <DB name="cancel"
                             onClick={self.props.closeCallback}FileDia
                         >

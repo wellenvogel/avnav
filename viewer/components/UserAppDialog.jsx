@@ -178,7 +178,7 @@ export default class UserAppDialog extends React.Component{
                          </InputReadOnly>
                     }
 
-                    <div className="dialogButtons dialogLine">
+                    <div className="dialogButtons">
                         <DB name="ok" onClick={()=>{
                             if (! this.checkOk()) return;
                             this.props.closeCallback();

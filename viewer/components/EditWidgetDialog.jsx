@@ -108,7 +108,7 @@ class EditWidgetDialog extends React.Component{
             this.sizeCount=this.state.sizeCount;
             window.setTimeout(self.props.updateDimensions,100);
         }
-        let panelClass="dialogLine panel";
+        let panelClass="panel";
         if (this.props.panel !== this.state.panel){
             panelClass+=" changed";
         }
@@ -117,6 +117,7 @@ class EditWidgetDialog extends React.Component{
             <div className="selectDialog editWidgetDialog">
                 <h3 className="dialogTitle">{this.props.title||'Select Widget'}</h3>
                 <InputSelect className={panelClass}
+                             dialogRow={true}
                              label="Panel"
                              value={this.state.panel}
                              list={(current)=>this.getList(this.props.panelList,current)}
@@ -125,17 +126,19 @@ class EditWidgetDialog extends React.Component{
                                 }}
                              showDialogFunction={this.showDialog}/>
                 {hasCurrent?
-                    <div className="dialogLine info"><span className="inputLabel">Current</span>{this.props.current.name}</div>
+                    <div className="dialogRow info"><span className="inputLabel">Current</span>{this.props.current.name}</div>
                     :
                     null}
                 {(this.props.weight !== undefined)?
-                        <Input className="dialogLine weigth"
+                        <Input className="weigth"
+                               dialogRow={true}
                                type="number"
                                label="Weight"
                                onChange={(ev)=>this.updateWidgetState({weight:ev})}
                                value={this.state.widget.weight!==undefined?this.state.widget.weight:1}/>
                     :null}
-                <InputSelect className="dialogLine selectElement info"
+                <InputSelect className="selectElement info"
+                    dialogRow={true}
                     label="New Widget"
                     onChange={(selected)=>{this.updateWidgetState({name:selected.name},true);}}
                     list={()=>this.getList(WidgetFactory.getAvailableWidgets())}
@@ -171,7 +174,8 @@ class EditWidgetDialog extends React.Component{
                     }
                     if (!ValueInput) return;
                     return <ValueInput
-                            className={"editWidgetParam dialogLine "+param.name+addClass}
+                            dialogRow={true}
+                            className={"editWidgetParam "+param.name+addClass}
                             key={param.name.replace(/  */,'')}
                             label={param.displayName}
                             onChange={inputFunction}
@@ -182,13 +186,13 @@ class EditWidgetDialog extends React.Component{
                         />
                 })}
                 {(this.state.widget.name !== undefined)?
-                    <div className="insertButtons dialogLine">
+                    <div className="insertButtons">
                         {hasCurrent?<DB name="before" onClick={()=>this.insert(true)}>Before</DB>:null}
                         {hasCurrent?<DB name="after" onClick={()=>this.insert(false)}>After</DB>:null}
                         {(!hasCurrent)?<DB name="after" onClick={()=>this.insert(false)}>Insert</DB>:null}
                     </div>
                     :null}
-                <div className="dialogButtons dialogLine">
+                <div className="dialogButtons">
                     {this.props.updateCallback?
                         <DB name="ok" onClick={()=>{
                         this.props.closeCallback();

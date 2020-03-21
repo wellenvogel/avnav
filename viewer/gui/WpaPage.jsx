@@ -99,23 +99,22 @@ class Dialog extends React.Component{
             <div className="wpaDialog inner">
                 <div>
                     <h3><span >{this.props.ssid}</span></h3>
-                    <div className="dialogRow">
+
                         <Input
+                            dialogRow={true}
                             label="Password"
                             type="password"
                             name="psk"
                             onChange={(value)=>self.setState({psk:value})}
                             value={this.state.psk}/>
                         {this.props.showAccess?
-                            <div className="dialogRow">
                             <Checkbox
+                                dialogRow={true}
                                 onChange={(newVal)=>self.setState({allowAccess:newVal})}
                                 label="External access"
                                 value={this.state.allowAccess}/>
-                            </div>
                             :null
                         }
-                    </div>
                     {id >=0 && <DB name="remove" onClick={this.buttonClick}>Remove</DB>}
                     <DB name="cancel" onClick={this.buttonClick}>Cancel</DB>
                     <DB name="connect" onClick={this.buttonClick}>Connect</DB>
