@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <TileMapService version="1.0.0" >
+   <Title>OpenSemap/OpenStretmap</Title>
+   <TileMaps>
+     <TileMap 
+       title="OpenSeaMap" 
+       href="http://t1.openseamap.org/seamark/"
+       minzoom="6"
+       maxzoom="20"
+       projection="EPSG:4326">
+	     <BoundingBox minlon="9" minlat="50" maxlon="20" maxlat="60" title="layer"/>
+       <TileFormat width="256" height="256" mime-type="x-png" extension="png" />
+    </TileMap>
+    <TileMap 
+       title="OSM" 
+       srs="OSGEO:41001" 
+       href="http://a.tile.openstreetmap.org/" 
+       minzoom="4"
+       maxzoom="20">
+       <BoundingBox minlon="-20" minlat="10" maxlon="30" maxlat="70" title="layer"/>
+       <TileFormat width="256" height="256" mime-type="x-png" extension="png" />
+    </TileMap>       
+   </TileMaps>
+ </TileMapService>
+ 

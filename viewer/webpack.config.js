@@ -29,7 +29,8 @@ var copyList=[
     {from: '../libraries/movable-type/geo.js', to: 'libraries'},
     {from: '../libraries/movable-type/latlon.js',to: 'libraries'},
     {from: '../sounds/1-minute-of-silence.mp3',to: 'sounds'},
-    {from: './layout',to:'layout'}
+    {from: './layout',to:'layout'},
+    {context: './demo',from: '*.xml',to:'demo/'}
     ];
 var images=[
     'WebIcon-512.png'
