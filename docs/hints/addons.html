@@ -3,9 +3,54 @@
   <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <title>User Apps</title>
+    <link href="../styles.css" rel="stylesheet" type="text/css">
   </head>
   <body>
     <h1>Nutzerspezifische HTML-Seiten</h1>
+    <p>Um ggf. weitere Tools in AvNav einzubinden, gibt es die Möglichkeit "User
+      Apps" bzw. Addons zu konfigurieren. Wenn solche addons konfiguriert sind,
+      ist auf der Hauptseite ein App-Button <img src="../viewerimages/icons-new/apps.svg"
+        alt="" class="inlineimage">sichtbar, über den eine Seite mit diesen
+      User-Apps erreicht werden kann.</p>
+    <img src="../userapps-signalk.png" alt="" class="image">
+    <p>Im Bild ist diese Seite zu sehen, wenn das <a href="CanboatAndSignalk.html">signalK</a>
+      plugin aktiv ist (das erzeugt eine solche User-App für das signalK Web
+      Interface).</p>
+    <p>Für jede UserApp wird ein Icon benötigt (Upload vorzugsweise in das
+      Images Verzeichnis über Files/Download <img src="../viewerimages/icons-new/ic_file_download.svg"
+        alt="" class="inlineimage">, <img src="../viewerimages/icons-new/image-icon.svg"
+        alt="" class="inlineimage">). Ausserdem wird entweder eine externe URL
+      oder eine HTML Seite, die in das user-Verzeichnis geladen wurde benötigt.</p>
+    <p>Über die Konfigurationsseite für die User Apps (Settings <img src="../viewerimages/icons-new/ic_settings.svg"
+        alt="" class="inlineimage">, User Apps <img src="../viewerimages/icons-new/apps.svg"
+        alt="" class="inlineimage">) kann man dann Einträge erzeugen, die zu
+      neuen Buttons auf der User App Seite führen.</p>
+    <p><img src="../addonpage.png" alt="" class="image"><br>
+    </p>
+    <p>Mit dem "+" Button wird ein neuer Eintrag erzeugt.</p>
+    <p><img src="../addonpage-dialog-extern.png" alt="" class="image"></p>
+    <p>Wenn "internal" selektiert wird, stehen die HTML Seiten im
+      Nutzer-Verzeichnis zur Auswahl.</p>
+    <p>Der Eintrag "title" entscheidet, ob ein Titel-Balken auf der Seite
+      angezeigt wird oder nicht.</p>
+    <p><b>Achtung</b>: Wenn eine solche User App angelegt oder modifiziert wird,
+      verändert der Server seine avnav_server.xml Datei. Falls dabei etwas
+      kaputt gehen sollte, wird er beim nächsten Start auf eine Kopie dieser
+      Datei mit der Endung ".ok" zurückfallen, die beim letzten erfolgreichen
+      Start angelegt wurde.</p>
+    <p>Über den Button <img src="../viewerimages/icons-new/visibility.svg" alt=""
+        class="inlineimage">kann direkt der Eintrag auf der User Apps Seite
+      angezeigt werden.</p>
+    <p><img src="../userapps-homepage.png" alt="" class="image"></p>
+    <p>Hier im Bild der Beispiel-Eintrag.</p>
+    <p>Wenn solche User-Apps mit internen HTML Dateien angelegt wurden und die
+      HTML Datei wird gelöscht, dann wird auch der User App Eintrag gelöscht.</p>
+    <p>Falls eines der verwendeten Icons gelöscht wird, wird die User-App auf
+      der Seite nicht mehr angezeigt, über die Konfiguration kann sie aber
+      wieder bearbeitet werden.</p>
+    <p><br>
+    </p>
+    <br>
     <p><br>
     </p>
   </body>
