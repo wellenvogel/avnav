@@ -180,7 +180,7 @@ def proj_cs2geog_cs(proj4):
     srs_geo.CopyGeogCSFrom(srs_proj)
     return srs_geo.ExportToProj4()
 
-class MyTransformer(gdal.Transformer):
+class MyTransformer:
     def __init__(self,src_ds=None,dst_ds=None,**options):
         for key in ('SRC_SRS','DST_SRS'):
             try:
@@ -189,12 +189,12 @@ class MyTransformer(gdal.Transformer):
                     options[key]=proj4wkt(srs)
             except: pass
         opt_lst=['%s=%s' % (key,options[key]) for key in options]
-        super(MyTransformer, self).__init__(src_ds,dst_ds,opt_lst)
+        self.transfomer=gdal.Transformer(src_ds,dst_ds,opt_lst)
 
     def transform(self,points,inv=False):
         if not points:
             return []
-        transformed,ok=self.TransformPoints(inv,points)
+        transformed,ok=self.transfomer.TransformPoints(inv,points)
         assert ok
         return [i[:2] for i in transformed]
 
