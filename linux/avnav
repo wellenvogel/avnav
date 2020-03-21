@@ -3,6 +3,9 @@
 avnavdir=`readlink -f $0`
 avnavdir=`dirname $avnavdir`
 pdir=$avnavdir
+#demochart from the viewer/demo dir, will be copied to the charts dir
+#if also copying the template
+DEMOCHART="osm-online.xml"
 
 dopt=""
 basedir=""
@@ -14,7 +17,17 @@ gui=0
 template="$avnavdir/avnav_template.xml"
 
 usage(){
-  echo "usage: $0 [-e] [-d] [-q] [-b basedir] [-c chartdir] [-x cfgfile] [-t template] [-g] [-a softwareBaseDir] [-v viewerDir]"
+  echo "usage: $0 [-e] [-d] [-q] [-b basedir] [-c chartdir] [-x cfgfile] [-t template] [-g] [-a softwareBase] [-v viewerDir]"
+  echo "       -b basedir     : data dir for avanv routes,tracks,charts,..."
+  echo "       -c chartdir    : separate dir for charts (instead of basedir/charts)"
+  echo "       -x cfgfile     :  start the server directly with this config (not for gui)"
+  echo "       -t template    : create basedir/avnav_server.xml from this if not found"
+  echo "       -e             : directly fail on any errors in avnav_server.xml instead of trying avnav_server.xml.ok"
+  echo "       -d             : start with loglevel debug"
+  echo "       -g             : start with GUI instead of normal server mode"
+  echo "       -------------- some development options --------------"
+  echo "       -a softwareBase: find the server software at this directory"
+  echo "       -v viewerDir   : find the viewer software at this directory"
 }
 
 err(){
@@ -105,18 +118,22 @@ fi
 if [ ! -d "$chartdir" ] ; then
   mkdir -p "$chartdir" || err "unable to create chart dir $chartdir"
 fi
-
+if [ "$viewer" = "" ]; then
+  viewer="$avnavdir/viewer"
+fi
+viewer=`readlink -f "$viewer"`
 if [ "$xmlfile" = "" ] ; then
   xmlfile=$basedir/avnav_server.xml
   if [ ! -f "$xmlfile" ] ; then
     echo "creating initial $xmlfile"
     sed -e "s?#DATADIR#?$basedir?" -e "s?#AVNAVDIR#?$avnavdir?" "$template" > $xmlfile || err "unable to create $xmlfile"
+    demo="$viewer/demo/$DEMOCHART"
+    if [ -f "$demo" ];then
+      echo "copying demo chart $demo"
+      cp "$demo" "$chartdir"
+    fi  
   fi
 fi
-if [ "$viewer" = "" ]; then
-  viewer="$avnavdir/viewer"
-fi
-viewer=`readlink -f "$viewer"`
 if [ "$gui" != 0 ] ; then
   python -c 'import wx' > /dev/null 2>&1
   [ $? != 0 ] && err "missing package python-wxgtkn.n, please install a valid version of this package (e.g. python-wxgtk3.0)"
