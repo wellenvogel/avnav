@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>avnav-layouts</title>
+    <link href="../styles.css" rel="stylesheet" type="text/css">
+  </head>
+  <body class="image">
+    <h1>Layout-Anpassung </h1>
+    <p>Die Anzeigen auf der Navigationsseite und im Dashboard werden über eine
+      Konfigurationsdatei ("layout") gesteuert. Das ist eine Json-Datei. AvNav
+      bring selbst einige solcher Dateien mit (zu erkennen am Namens-Prefix
+      system.). Der Benutzer kann eigene Layouts speichern (Namensprefix:
+      user.). Diese Dateien werden unterhalb des Datenverzeichnisses
+      (/home/pi/avnav/data auf dem raspberry) im Ordner "layout" abgelegt. Man
+      kann diese Dateien direkt bearbeiten (innerhalb von avnav), sie
+      herunterladen (und wieder hochladen) oder man kann das layout innerhalb
+      von AvNav editieren ("layout editor").</p>
+    <p>Der bevorzugte Weg sollte hierbei der Layout-Editor sein, da dieser die
+      wenigsten Fehlerquellen bietet.</p>
+    <h2>Layout Editor</h2>
+    <p>Der Start des Layout-Editors erfolgt über die Einstellungsseite <img src="../viewerimages/icons-new/ic_settings.svg"
+        alt="" class="inlineimage">. </p>
+    <p>Auf der Settings-Seite wird er über das Layout-Symbol <img src="../viewerimages/icons-new/ballot.svg"
+        alt="" class="inlineimage">gestartet.</p>
+    <p><img src="../settingspage-layouteditor.png" alt="" class="image"></p>
+    <p>Hier wird der Name für das layout-File vergeben. Wenn bisher ein
+      System-Layout aktiv war, wird hier ein user-Layout mit dem gleichen Namen
+      erzeugt und aktiviert. Falls das Layout schon existiert, wir gefragt, ob
+      es überschrieben werden soll (das kann am Ende noch verhindert werden, in
+      dem alle Änderungen verworfen werden).</p>
+    <p>Nach dem Start bekommt die App einen roten Rand und es sind nur noch die
+      Seiten sichtbar, auf denen das Layout angepasst werden kann. </p>
+    <p><img src="../mainpage-layout.png" alt="" class="image"><img src="../viewerimages/icons-new/visibility.svg"
+        alt=""></p>
+    <p>Durch Auswahl einer Karte gelangt man wie immer zur Navigationsseite.</p>
+    <p><img src="../navpage-layout.png" alt="" class="image"></p>
+    <p>Die Anzeigen sind auf allen relevanten Seiten in sogenannten "Panels"
+      angeordnet.<br>
+      Innerhalb des jeweiligen Panels können die Anzeigen im Editor-Modus
+      einfach verschoben werden.<br>
+      Auf der Navigationsseite können die Panels unterschiedlich belegt werden,
+      je nachdem ob ein eher schmales Display vorhanden ist (small) oder ein
+      breiteres (die Grenze dafür kann in den Settings eingestellt werden).</p>
+    <p>Über <img src="../viewerimages/icons-new/tune.svg" alt="" class="inlineimage">kann
+      die Konfiguration für die Panels auf der jeweiligen Seite aufgerufen
+      werden.</p>
+    <img src="../navpage-layout-panels-marked.png" alt="" class="image">
+    <p>Im Bild sind die vorhandenen Panels markiert. Im Dialog kann ausgwehält
+      werden, welche der Panels jeweils sichtbar sein sollen. Wenn in der Spalte
+      "small" ein Häkchen gesetzt ist, bedeutet das, das bei schmalem Bildschirm
+      das Panel anders belegt werden kann. Im Beispiel ist das Top-Panel im
+      normalen Modus nicht sichtbar, sondern nur im schmalen, das Left-Panel ist
+      jeweils unterschiedlich belegt. Die beiden unteren Panels sind jeweils
+      gleich belegt. Unter "Current Conditions" kann ausgewählt werden, ob die
+      Panele für die Normal-Ansicht oder für die schmale Ansicht bearbeitet
+      werden sollen..png</p>
+    
+    <p>Die beiden unteren Panels können potentiell 2 Reihen von Anzeigen
+      aufnehmen (Einstellung: "2 widget rows"), nicht mehr passende Anzeigen
+      werden ausgeblendet.</p>
+    <p>Nach Beenden des Panel-Dialogs können jetzt Anzeigen (Widgets) innerhalb
+      der Panels verschoben werden (jedoch nicht von einem Panel zum anderen).</p>
+    <p>Zum Ändern oder Einfügen eines Widgets klickt man auf ein Vorhandenes
+      oder auf ein freies Feld in einem Panel.</p>
+    <p>Man erhält den folgenden Dialog.</p>
+    <img src="../navpage-layout-widget.png" alt="" class="image">
+    <p>Je nach Art des Widgets sind hier unterschiedliche Werte sichtbar bzw.
+      änderbar. Nicht ausgefüllte Werte haben meist defaults.</p>
+    <p>Falls des Widget in ein anderes Panel verschoben werden soll, kann man
+      oben das neue Panel auswählen.</p>
+    <p>Änderungen schliesst man mit "Update" ab.</p>
+    <p>Unter "New Widget" kann man ein anderes Widget aus der Liste der
+      vorhandenen Widgets auswählen.</p>
+    <p>Jedes Widget benötigt eine Information, welche Daten es anzeigen soll.
+      Die verfügbaren Daten sind intern in einem Speicher verfügbar und werden
+      über einen key ausgewählt.</p>
+    <p>Je nach Art des Widgets ist dieser Key (oder auch mehrere) fest im Widget
+      eingebaut, bei anderen kann man das frei wählen. Fast immer wählbar sind
+      der Titel (caption), die Einheit (unit) und die css Klasse (falls man das
+      <a href="usercss.html">Aussehen per css anpassen möchte</a>).</p>
+    <p>Die meisten widgets benötigen für die Darstellung einen Formatierer, die
+      den internen Wert in die gewünschte Darstellung wandelt. Meist ist der
+      beim widget fest vorgegeben. Einige Formatieren akzeptieren eine
+      Komma-getrennte Liste von Parametern um die Formatierung anzupassen (z.B.
+      m/s statt kn).</p>
+    <p>Die folgenden Formatierer sind vorhanden:</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Beschreibung</td>
+          <td>Parameter</td>
+        </tr>
+        <tr>
+          <td>formatDecimal</td>
+          <td>einfache Formatierung als Dezimalzahl</td>
+          <td>Vorkomma-Stellen,Nachkomma-Stellen<br>
+            z.B.: 3,1</td>
+        </tr>
+        <tr>
+          <td>formatDistance</td>
+          <td>Entfernung in nm</td>
+          <td>ein Parameter:<br>
+            m- Entfernung in m statt nm<br>
+            km - Entfernung in km statt nm</td>
+        </tr>
+        <tr>
+          <td>formatSpeed</td>
+          <td>Geschwindigkeit in kn</td>
+          <td>ein Parameter:<br>
+            ms - m/s statt kn<br>
+            kmh - km/h statt kn</td>
+        </tr>
+        <tr>
+          <td>formatDirection</td>
+          <td>Formatieren einen Gradwert</td>
+          <td>ein Parameter:<br>
+            rad - Input in rad statt °</td>
+        </tr>
+        <tr>
+          <td>formatTime</td>
+          <td>Formatiere einen Zeitwert (Wert muss intern ein Date wert sein)
+            (hh:mm:ss)</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>formatClock</td>
+          <td>Formatiere einen Zeitwert (Wert muss intern ein Date wert sein)
+            (hh:mm)</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>formatDateTime</td>
+          <td>Formatiere Datum und Uhrzeit (Wert muss intern ein Date wert sein)</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>formatDate</td>
+          <td>Formatiere Datum (Wert muss intern ein Date wert sein)</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>formatString</td>
+          <td>gibt den input unverändert weiter</td>
+          <td><br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Plugins oder eigene Erweiterungen können ggf. weitere Formatter
+      hinzufügen.</p>
+    <p>Falls man das vorhandene Widget nicht ersetzen möchte, kann man das
+      geänderte Widget davor oder danach einfügen (Before/After).</p>
+    <p>Falls das Widget weitere Parameter unterstützt, dann werden diese im
+      Dialog angezeigt.</p>
+    <p><img src="../dashboard-3-layouit-widget.png" alt="" class="image"></p>
+    <p>Im Beispiel die Konfiguration für eine grafische Anzeige (avnav nutzt
+      hierzu <a href="https://canvas-gauges.com/">canvas-gauges</a>).</p>
+    <p>Von der Navigationsseite kann über die Hauptseite zu den Dashboard Seiten
+      gewechselt werden.</p>
+    <p>Es können bis zu 5 Dashboard Seiten konfiguriert werden. Auf jeder Seite
+      sind bis zu 5 Panels möglich.</p>
+    <p>Auf einer leeren Dashboard Seite muss zunächst die Panel-Konfiguration
+      erfolgen - <img src="../viewerimages/icons-new/tune.svg" alt="" class="inlineimage">.</p>
+    <p><img src="../dashboard-4-layout-panel.png" alt="" class="image"></p>
+    <p>Auf den Dashboard Seiten kann eine abweichende Konfiguration eingestellt
+      werden, wenn die Ankerwache aktiv ist (im default layout z.B. auf
+      Dashboard Seite 1 genutzt).</p>
+    <p>Leere Dashboard Seiten erscheinen später nicht in der Anzeige.</p>
+    <p>Es ist auch eine Konfiguration auf der Seite des Routen-Editors (<img src="../viewerimages/icons-new/route.svg"
+        alt="" class="inlineimage">von der Navigationsseite aus) möglich, hier
+      muss allerdings die Liste der Wegepunkte und die Anzeige der editierten
+      Route immer sichtbar bleiben.</p>
+    <p><br>
+    </p>
+    <p>Nach Abschluss der Layoutbearbeitung muss das layout noch gespeichert
+      werden - rot umrandeter Button <img src="../viewerimages/icons-new/ballot.svg"
+        alt="" class="inlineimage">auf jeder Seite.</p>
+    <p><img src="../dashboard-layout-save.png" alt="" class="image"></p>
+    <p>Hier kann ggf. noch einmal entschieden werden, die Änderungen zu
+      verwerfen.</p>
+    <p>Das Layout wird im aktuellen Browser sofort aktiv (und auf dem Server
+      gespeichert). Andere Browser erhalten es erst, wenn dort die App neu
+      geladen wird oder das Layout gewechselt wird.</p>
+    <h2>Layout Download/Upload</h2>
+    <p>Über die Files/Download Seite <img src="../viewerimages/icons-new/ic_file_download.svg"
+        alt="" class="inlineimage">können unter <img src="../viewerimages/icons-new/ballot.svg"
+        alt="" class="inlineimage">die Layout-Files
+      heruntergeladen/hochgeladen/gelöscht bzw. als Datei bearbeitet werden.</p>
+    <p>Das momentan aktive Layout kann hier allerdings nur heruntergeladen
+      werden.</p>
+    <p>Wenn ein Layout gelöscht wird, das momentan in einem anderen Browser noch
+      aktiv ist, wird dieser es wieder zum Server hochladen, wenn dort die App
+      neu geladen wird. Das muss man ggf. beachten.</p>
+    <h2>Spezielle Widgets</h2>
+    <p>Neben einer ganzen Liste von vorkonfigurierten Widgets (wie z.B. SOG,
+      COG, BRG, AisTargetWidget,...) bei denen ggf. nur die Beschriftung und die
+      Parameterisierung des Formatters geändert werden kann, gibt es einige
+      spezielle Widgets</p>
+    <h3>Default</h3>
+    <img src="../dashboard-3-layout-default.png" alt="" class="image">
+    <p>Dieses Widget ist intern die Basis für die meisten anderen Widgets. Man
+      kann damit recht einfach Anzeigen für bestimmte Werte realisieren.</p>
+    <p>Wichtig ist hier, das in jedem Falle ein formatter und ein "value"
+      gewählt werden müssen.</p>
+    <p>Unter value bekommt an eine Liste der zur verfügung stehenden
+      Anzeige-Daten.</p>
+    <p><img src="../dashboard-3-layout-value.png" alt="" class="image">Das sind
+      einmal die in AvNav intern vorhandenen Daten. Falls die <a href="CanboatAndSignalk.html">signalk
+        Integration</a> aktiv ist (nicht unter Android), erscheinen hier auch
+      vorhandene Werte unter vessels/self mit dem Prefix nav.gps.signalk.&nbsp;</p>
+    <p>Die Auswahl des formatters muss passend zum Wert erfolgen.</p>
+    <h3>Gauges</h3>
+    <p>Wie oben bereits erwähnt stellt avnav eine Integration von <a href="https://canvas-gauges.com/">canvas-gauges</a>
+      bereit. Basierend auf dieser Bibliothek bringt avnav einige vorbereitete
+      Widgets mit, deren Parameter jeweils konfigurierbar sind.</p>
+    <p>Es gibt lineare Anzeigen (linGauge...) oder radiale Anzeigen
+      (radGauge...).<br>
+      Über den Layout-Editor sind nur bestimmte Parameter direkt anpassbar.</p>
+    <p>Falls die Anzeigen weitergehend verändert werden sollen, sollte dazu eine
+      <a href="userjs.html">Anpassung über nutzerspezifischen JavaScript code </a>erfolgen.</p>
+    <h3>SignalK</h3>
+    <p>Das SignalK plugin bringt auch einige Widgets mit, die insbesondere
+      Formatter für Daten enthalten, die so in avnav sonst nicht verfügbar sind
+      - z.B. signalKCelsius zur Anzeige von Temperaturen. Diese machen natürlich
+      nur Sinn, wenn entsprechende SignalK Daten vorhanden sind.</p>
+    <h2>Anpassung des Aussehens</h2>
+    <p>Falls man das Aussehen eines Widgets anpassen möchte, empfiehlt es sich
+      eine neue css class zu vergeben - auf diese kann man dann mit <a href="usercss.html">nutzerspezifischem
+        css</a> zugreifen.</p>
+    <h2>Eigene Widgets</h2>
+    <p>Mit <a href="userjs.html">nutzerspezifischem Java Script Code</a> kann
+      man relativ leicht auch eigene Anzeigen einbauen - sowohl mit simplem HTML
+      als auch mit grafischen Elementen.</p>
+    <p><br>
+    </p>
+  </body>
+</html>

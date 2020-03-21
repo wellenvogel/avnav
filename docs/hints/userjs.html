@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>user java script</title>
+    <link href="../styles.css" rel="stylesheet" type="text/css">
+  </head>
+  <body>
+    <h1>User Spezifischer Java Script Code</h1>
+    <p>Um eine einfache Möglichkeit zu bieten, avnav an seine Bedürfnisse
+      anzupassen, kann man mit ein wenig Java Script Code AvNav relativ einfach
+      erweitern.</p>
+    <p>Dabei ist es zunächst einmal möglich, neue Anzeigen zu definieren, die
+      dann im Layout Editor ausgewählt werden können. Prinzipiell kann man dort
+      natürlich beliebigen Java Script code ausführen - muss dabei aber
+      natürlich sehen, die Funktionen von avnav nicht zu stören.</p>
+    <p>Der Java Script code liegt in der Datei user.js im Verzeichnis
+      BASEDIR/user/viewer.<br>
+      BASEDIR ist z.B. auf dem pi /home/pi/avnav/data.</p>
+    <p>Um die Bearbeitung zu erleichtern, kann man über die Files/Download Seite
+      <img src="../viewerimages/icons-new/ic_file_download.svg" alt="" class="inlineimage">und
+      die Unterseite <img src="../viewerimages/icons-new/folder_shared.svg" alt=""
+        class="inlineimage">auf die Dateien in diesem Verzeichnis zugreifen.</p>
+    <p><img src="../downloadpage-user.png" alt="" class="image"></p>
+    <p>Wie im Bild zu sehen, existiert dort bereits eine Datei user.js. Diese
+      wird beim erstmaligen Start aus einem Template erzeugt.</p>
+    <p>Durch einen Klick auf die Datei und die Auswahl von "Edit" kann man die
+      Datei direkt bearbeiten.</p>
+    <p><img src="../viewpage-edit-user.png" alt="" class="image"></p>
+    <p>In der Datei sind bereits Beispiele vorhanden für die Möglichkeiten der
+      Anpassung. Nach dem Bearbeiten die Datei speichern <img src="../viewerimages/icons-new/save.svg"
+        alt="" class="inlineimage">und avnav neu laden.</p>
+    <p>Es empfiehlt sich, die Datei in regelmäßigen Abständen nach dem
+      Bearbeiten herunterzuladen und noch einmal irgenwo zu speichern - es gibt
+      keine Versionsverwaltung in avnav.</p>
+    <p>Das aktuelle Template kann man auch <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">auf
+        github</a> finden.</p>
+    <p>Man kann im Wesentlichen die folgenden Arten von Anzeigen hinzufügen:</p>
+    <ul>
+      <li>Widgets mit eigenem Formatter (und ggf. festen Werten) basierend auf
+        dem Default Widget (Beispiel 1)</li>
+      <li>Anpassung/Erweiterung der Grafik Widgets mit <a href="https://canvas-gauges.com/">canvas
+          gauges</a> (Beispiel 2)<br>
+        Hiermit ist es auch möglich, Parameter zugänglich zu machen, die in den
+        bisher vorhandenen Widgets nicht enthalten sind.</li>
+      <li>Widgets mit eigenem HTML code (Beispiel 3)</li>
+      <li>Widgets mit Grafik in einem Canvas Element (Beispiel im <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/testPlugin/plugin.js">TestPlugin</a>)</li>
+    </ul>
+    <p>Das Interface, über das mit avnav kommuniziert wird, findet sich <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/util/api.js">auf
+        github</a> bzw. im Template Code.</p>
+    <p>Falls der eigene Java Script code auf libraries oder images zugreifen
+      soll, können diese in das gleiche Verzeichnis hochgeladen werden - Images
+      auch in das Images <img src="../viewerimages/icons-new/image-icon.svg" alt=""
+        class="inlineimage">Verzeichnis (als URL erreichbar über ../images).</p>
+    <p>Das Einbinden von Bibliotheken kann z.B. so erfolgen</p>
+    <div class="code">var fileref=document.createElement('script');
+fileref.setAttribute("type","text/javascript");
+fileref.setAttribute("src", "my_nice_lib.js");
+document.getElementsByTagName("head")[0].appendChild(fileref)</div>
+    <p>Es empfiehlt sich, für alle Widgets css Klassen zu vergeben, damit man
+      diese dann mit <a href="usercss.html">nutzerspezifischem CSS</a> anpassen
+      kann. IDs sollten nicht verwendet werden, da die Element potentiell
+      mehrfach auf der Seite auftauchen können.</p>
+    <p>Falls Daten vom Server geladen werden sollen, empfiehlt sich die
+      Verwendung von <a href="https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch">fetch</a>.
+      Alle Dateien im user Verzeichnis sind direkt über ihren Namen als relative
+      URL abrufbar.</p>
+    <p>Falls im User-Verzeichnis z.B. eine weitere Text-, Html- oder andere
+      Datei angelegt werden soll (ohne eine hochzuladen), kann man das auch
+      direkt mit dem "+" Button unten rechts erledigen - die Datei kann dann
+      natürlich ebenfalls direkt bearbeitet werden. <br>
+    </p>
+    <p><br>
+    </p>
+  </body>
+</html>
