@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>AvNav Beschreibung</title>
+    <link href="styles.css" rel="stylesheet" type="text/css">
+  </head>
+  <body>
+    <h1 class="western">AvNav WebApp Beschreibung</h1>
+    <p>2020/01/26: Die Beschreibung wird momentan überarbeitet. In weiten Teilen
+      entspricht sie dem aktuellen Stand, es fehlen jedoch einige Funktionen.</p>
+    <p>Die wesentlichen Fähigkeiten:</p>
+    <ul>
+      <li> Darstellung der Kartendaten (blattschnittfrei je Satz), mit den
+        enstprechenden Funktionen (Zoom, move,...) </li>
+      <li> Dartstellung der aktuellen Schiffsposition mit Kurs, Geschwindigkeit
+        (mit Lock der Karte auf Schiffsposition) </li>
+      <li> Darstellung des aktuellen Tracks (der Track wird auch in einer gpx
+        Datei gespeichert) </li>
+      <li> Setzen eines Wegepunktes, Anzeige von Richtung,Entfernung,ETA </li>
+      <li> AIS Anzeige mit Darstellung in der Karte, AIS Target am nächsten zum
+        Schiff, Warnung bei CPA &lt; 500m, CPA,TCPA, AIS Infos </li>
+      <li> Erzeugen von Routen (mit Editiermöglichkeit zu jedem Zeitpunkt),
+        Speichern/Laden/ImportExport von Routen im gpx Format</li>
+      <li>Automatisches Target Handling in der Route inklusive
+        Autopilot-Steuerung</li>
+      <li>Upload/download von Karten zum Raspberry</li>
+      <li>Mehrere Displays an einem Server (connected/dicsonnected mode)</li>
+      <li>Nachtmodus</li>
+      <li>GPS Display (Anzeige ohne Karte)</li>
+    </ul>
+    <p>Im Folgenden beschreibe ich kurz die Bedienung der aktuellen Version.</p>
+    Nach dem Aufruf der Start-Url landet man auf der
+    <div>
+      <h2><a name="mainpage" id="mainpage"></a>Hauptseite</h2>
+    </div>
+    <img src="mainpage-demochart.png" alt="" class="image">
+    <div> <br>
+      <div class="inline"> <b>Buttons</b>
+        <table border="1">
+          <tbody>
+            <tr>
+              <td>Icon</td>
+              <td>Name</td>
+              <td>Beschreibung</td>
+            </tr>
+            <tr>
+              <td><img class="inlineimage" src="viewerimages/icons-new/status.svg"
+                  alt=""><br>
+              </td>
+              <td>ShowStatus<br>
+              </td>
+              <td style="height: 36px;">Status-Seite für den Server<br>
+              </td>
+            </tr>
+            <tr>
+              <td><img class="inlineimage" src="viewerimages/icons-new/ic_settings.svg"
+                  alt=""><br>
+              </td>
+              <td>ShowSettings<br>
+              </td>
+              <td>Einstellungen<br>
+              </td>
+            </tr>
+            <tr>
+              <td><img src="viewerimages/icons-new/ic_file_download.svg" alt=""
+                  class="inlineimage"><br>
+              </td>
+              <td>ShowDownload<br>
+              </td>
+              <td>Files/Downloads<br>
+                zum Herunterladen und Hochladen von Tracks, Routen, Karten,
+                Layouts, User Files und Images<br>
+              </td>
+            </tr>
+            <tr>
+              <td><img src="viewerimages/icons-new/plug.svg" alt="" class="inlineimage"><br>
+              </td>
+              <td>Connected</td>
+              <td>Wenn aktiv wird die Navigation (Wegepunkte, Routen) auch auf
+                dem Server aktiviert, sonst nur lokal</td>
+            </tr>
+            <tr>
+              <td><img src="viewerimages/icons-new/data.svg" class="inlineimage"><br>
+              </td>
+              <td>ShowGps<br>
+              </td>
+              <td>Anzeige des Dashboards<br>
+              </td>
+            </tr>
+            <tr>
+              <td><img src="viewerimages/icons-new/night.svg" alt="" class="inlineimage"><br>
+              </td>
+              <td>Night<br>
+              </td>
+              <td>Nachtmodus aktivieren<br>
+              </td>
+            </tr>
+            <tr>
+              <td><img src="viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
+              </td>
+              <td>MOB</td>
+              <td>Mann über Bord (nur sichtbar wenn connected)</td>
+            </tr>
+            <tr>
+              <td><img src="viewerimages/icons-new/apps.svg" alt="" class="inlineimage"><br>
+              </td>
+              <td>MainAddOns</td>
+              <td>Anzeige von konfigurierten user apps (z.B. signalK)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p>Im Hauptbereich der Seite befindet sich die Liste der vom Server
+      gefundenen Kartensätze (beim Raspi-Server gemf files unter
+      /data/avnav/charts, in der Android App unter charts im gewählten
+      Verzeichnis). </p>
+    <p>Nach der ersten Installation sind hier einige Online Demo Karten
+      sichtbar. Diese können nur mit Internet-Verbindung genutzt werden.</p>
+    <p>Weitere Karten kann man über die Files/Download Seite hochladen bzw.
+      direkt in das entsprechende Verzeichnis kopieren (raspberry) bzw. aus
+      einem externen Verzeichnis lesen (Android).</p>
+    <p>AvNav kann Karten im gemf Format lesen (bevorzugt), ab Version 202003xx
+      auch im mbtiles Format. Ausserdem kann auch eine Online-Karten-Quelle über
+      ein XML File eingebunden werden. Details dazu unter <a href="hints/chart-formats.html">Kartenformate</a>.</p>
+    <p>Durch Anklicken gelang man zur <a href="#navpage">Navigationsseite</a>
+      mit dem enstprechenden Kartensatz.</p>
+    <p>Wie auf allen Seiten befindet sich am rechten Rand eine Button-Leiste. </p>
+    <h2 class="western"><a name="navpage" id="navpage"></a>Die Navigationsseite</h2>
+    <p>Dieses Bild zeigt einen gesetzten Marker (locked) – das Boot ist auf
+      Kurs.</p>
+    <div><img src="navi-routing-wp-ais.png" name="Grafik4" class="image"></div>
+    <div><b><br>
+      </b></div>
+    <div><b>Buttons</b><br>
+    </div>
+    <table border="1">
+      <tbody>
+        <tr>
+          <td>con</td>
+          <td>Name</td>
+          <td>Funktion</td>
+        </tr>
+        <tr>
+          <td><img src="viewerimages/icons-new/ic_zoom_in.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>ZoomIn</td>
+          <td>Hereinzoomen</td>
+        </tr>
+        <tr>
+          <td><img src="viewerimages/icons-new/ic_zoom_out.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>ZoomOut<br>
+          </td>
+          <td>Herauszoomen<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="viewerimages/icons-new/boat.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>LockPos<br>
+          </td>
+          <td>Kartenmittelpunkt auf Bootsposition setzen und dort halten (Karte
+            bewegt sich mit dem Boot).<br>
+            Nur aktivierbar bei gültiger Position.<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="viewerimages/icons-new/stop-nav.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>StopNav<br>
+          </td>
+          <td>Navigation beenden.<br>
+            Nur sichtbar, wenn momentan ein Wegepunkt oder eine Route aktiv ist.<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="viewerimages/icons-new/waypoint.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>LockMarker<br>
+          </td>
+          <td>Navigation starten.<br>
+            Der aktuelle Kartenmittelpunkt (Kreuz) wird zum Ziel-Wegepunkt.<br>
+            Nur sichtbar, wenn momentan keine Navigation aktiv ist.<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="viewerimages/icons-new/compass.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>CourseUp<br>
+          </td>
+          <td>Karte drehen, so das die Kurs-Voraus Richtung oben ist.<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="viewerimages/icons-new/route.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>ShowRoutePanel<br>
+          </td>
+          <td>Wechsel zum Routen-Editor<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>MOB<br>
+          </td>
+          <td>Mann über Bord<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>Cancel</td>
+          <td>Zurück zur Hauptseite<br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Dies ist die Navigationsansicht. In der Mitte befindet sich die
+      Kartenansicht mit der Schiffsposition (roter Pfeil). Die gelben und grünen
+      Dreiecke mit Pfeilspitzen sind empfangene AIS Ziele in der Nähe (10nm) mit
+      ihrem aktuellen Kurs sowie Name oder MMSI. Die organgefarbene Linie zeigt
+      zum aktiven Wegepunkt. Die gepunktete Linie zeigt den Kurs vom Start der
+      Navigation zum Wegepunkt (Sollkurs). Die Karte kann mit den normalen
+      Gesten verschoben oder gezoomt werden, zum zoomen können auch die Buttons
+      +/- auf der rechten Leiste benutzt werden.Wenn (wie im Bild) der
+      Schiff-Button einen grünen Rand hat ("Schiff lock"), ist die Karten-Mitte
+      auf die Schiffsposition fixiert und springt immer wieder dahin zurück.</p>
+    <p>Um das Schiff kann man bis zu 3 Kreise in entsprechenden Entfernungen
+      einstellen um Abstände zu schätzen (Über settings-&gt;Navigation Display,
+      Standard 300m und 1000m).</p>
+    <p>Links befinden sich (von oben nach unten):</p>
+    <ul>
+      <li>Die aktuelle Zoom-Stufe der Karte (wenn auto zoom aktive ist in
+        Klammern die gewünschte)</li>
+      <li>Das nächste AIS Ziel (ggf. rot bei Warnung) oder das ausgewählte AIS
+        Ziel (gelb)</li>
+      <li>Die aktuelle Uhrzeit</li>
+    </ul>
+    <p>Die Darstellung des nächsten AIS Zieles (geringste momentane Entfernung)
+      färbt sich rot, wenn eine CPA von 500m unterschritten wird. Gelb bedeuted,
+      dass nicht das nächste Ziel sondern ein separat ausgewähltes Ziel (siehe
+      unten AIS) angezeigt wird. Ein Klick auf diese Fläche oder ein AIS Ziel
+      auf der Karte führt auf die AIS Info Seite .</p>
+    <p>Im unteren Bereich der Navigationsseite befindet sich die Anzeige der
+      wichtigsten Navigationsdaten ("Widgets"). Links die Daten des aktuellen
+      Wegepunktes (Marker):</p>
+    <ul>
+      <li> Position </li>
+      <li>ETA </li>
+      <li> Kurs </li>
+      <li> Distanz (nm) </li>
+    </ul>
+    <p>Danach folgen die Schiffsdaten:</p>
+    <ul>
+      <li> Kurs </li>
+      <li> Geschwindigkeit (kn) </li>
+      <li> Position </li>
+      <li> aktuelle (lokale) Zeit vom GPS </li>
+      <li> GPS Indikator: grün – GPS Daten vorhanden, rot: keine Daten </li>
+    </ul>
+    <p>Je nach Breite des Bildschirms und den Einstellungen für die Schriftgröße
+      der "Widgets" werden bis zu 2 Reihen an Daten angezeigt (unter Settings
+      einstellbar). Daten, die nicht mehr auf den Bildschirm passen, werden
+      unterdrückt.</p>
+    <p>Für die Schiffsposition, Kurs und Geschwindigkeit kann eine
+      Mittelwertbildung eingestellt werden (Settings-&gt;Navigation). Wenn diese
+      eingestellt ist, sind die Bezeichner rot.</p>
+    <p>Die Anzeigen auf der Seite können über den <a href="hints/layouts.html">Layout
+        Editor</a> angepasst werden.</p>
+    <p>Ein Klick auf die rechte Seite unteren Anzeigen führt zum <a href="#dashboard">Dashboard</a>.</p>
+    <p>Ein Klick auf die linke Seite (Wegepunkt) zeigt einige zusätzliche
+      Wegepunkt-Buttons.</p>
+    <p><img src="navpage-waypoint-buttons.png" alt="" class="image"> </p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Icon</td>
+          <td>Name</td>
+          <td>Funktion</td>
+        </tr>
+        <tr>
+          <td><img src="viewerimages/icons-new/anchor.png" alt="" class="inlineimage"><br>
+          </td>
+          <td>AnchorWatch</td>
+          <td>Einschalten der Ankerwache (s.u.)</td>
+        </tr>
+        <tr>
+          <td><img src="viewerimages/icons-new/center.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>WpLocate</td>
+          <td>Zentrieren des Mittelpunktes auf den Wegepunkt</td>
+        </tr>
+        <tr>
+          <td><img src="viewerimages/icons-new/ic_edit.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>WpEdit</td>
+          <td>Bearbeiten des Wegepunktes.<br>
+            Im angezeigten Dialog kann der Name und die Position des Wegepunktes
+            editiert werden</td>
+        </tr>
+        <tr>
+          <td><img src="viewerimages/icons-new/wpgoto.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>WpGoto</td>
+          <td>Start der Navigation zu diesem Wegepunkt.<br>
+            Wir nur angezeigt, wenn noch keine Navigation aktiv ist.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Falls momentan eine Route aktiv ist, werden etwas andere Buttons beim
+      Klick auf die Wegepunkt-Daten angezeigt.</p>
+    <p><img src="navpage-waypoint-buttons-route.png" alt="" class="image"><br>
+    </p>
+    <p>Die zusätzlichen Buttons haben folgende Funktionen</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Icon</td>
+          <td>Name</td>
+          <td>Funktion</td>
+        </tr>
+        <tr>
+          <td><img src="viewerimages/icons-new/nextwp.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>NavNext</td>
+          <td>Navigiere zum nächsten Wegepunkt der Route</td>
+        </tr>
+        <tr>
+          <td><img src="viewerimages/icons-new/ic_arrow_forward.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>WpNext</td>
+          <td>Zentriere den Kartenmittelpunkt auf den nächsten Wegepunkt</td>
+        </tr>
+        <tr>
+          <td><img src="viewerimages/icons-new/ic_arrow_back.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>WpPrevious</td>
+          <td>Zentriere den Kartenmittelpunkt auf den vorigen Wegepunkt</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Wenn eine Route aktiv ist, hat man wie im Bild links eine Anzeige der
+      Daten für die aktuelle Route (Name,verbleibende Distanz, Ankunftszeit).</p>
+    <p>In diesem Modus erfolgt eine automatische Weiterschaltung zum nächsten
+      Wegepunkt, wenn die folgenden Bedingungen erfüllt sind:</p>
+    <ul>
+      <li>Das Boot befindet sich im "Fangbereich" (default 200m -
+        settings-&gt;route-&gt;approach)</li>
+      <li>Die Entfernung zum Wegepunkt wird größer</li>
+    </ul>
+    <p> Die Anzeige der Routen-Parameter wird rot und zeigt den Kurs zum
+      nächsten WP an, wenn das Boot im "Fangbereich" ist. Ausserdem erfolgt eine
+      Alarmierung mit einem akustischen Signal und einer Anzeige.</p>
+    <p>Falls keine automatische Weiterschaltung erfolgt (z.B. weil man nicht
+      dicht genug am WP ist), kann man auf den Wegepunkt klicken und mit den
+      dann sichtbaren Wegepunkt Buttons weiterschalten.Danach ggf. Boot wieder
+      locken.</p>
+    <img src="navpage-route-waypoint.png" alt="" class="image">
+    <h3>Simple Wegepunkt Navigation</h3>
+    <p>Schritte:</p>
+    <ol>
+      <li>Unlock Boot (falls an)</li>
+      <li>Stop Nav</li>
+      <li>Karte verschieben bis Mittelpunkt (Kreuz) auf gewünschter Position
+        (Zoom nutzen)</li>
+      <li>LockMarker </li>
+      <li>Lock Boot </li>
+    </ol>
+    <h3>Peilungen</h3>
+    <p>Wenn man einen Wegepunkt aktiv hat (Marker Button grün) und die Karte
+      nicht auf das Schiff "gelockt" ist (Schiffsbutton nicht grün), wird beim
+      Bewegen der Karte ein Kreuz im Zentrum gezeigt und links erscheint eine
+      Anzeig des aktuellen Abstandes vom Marker bzw. Schiff zum
+      Kartenmittelpunkt. Damit kann man einfache Peilungen machen - Mittelpunkt
+      auf Peilziel verschieben und Peilung ablesen.</p>
+    <p>Für das Starten einer Route wechselt man zunächst mittels <img src="viewerimages/icons-new/route.svg"
+        alt="" class="inlineimage">zum Routen Editor.</p>
+    <h2><a name="routepage" id="routepage"></a>Der Routeneditor</h2>
+    <div> <img src="routeedit-demo-start.png" alt="" class="image"><span style="font-weight: bold;"><br>
+      </span></div>
+    <div><span style="font-weight: bold;"><br>
+      </span></div>
+    <p style="font-weight: bold;">Buttons</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Icon</td>
+          <td>Name</td>
+          <td>Funktion</td>
+        </tr>
+        <tr>
+          <td><img src="viewerimages/icons-new/ic_zoom_in.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>ZoomIn</td>
+          <td>Hereinzoomen<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="viewerimages/icons-new/ic_zoom_out.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>ZoomOut</td>
+          <td>Hinauszoomen<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="viewerimages/icons-new/wpplus.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>NavAdd</td>
+          <td>Einen neuen Punkt zur Route hinzufügen.<br>
+            Der Kartenmittelpunkt (Kreuz) wir als neuer Punkt hinter dem
+            momentan rot markierten Punkt der Route hinzugefügt.<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="viewerimages/icons-new/wpminus.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>NavDelete</td>
+          <td>Löschen des momentan rot markierten Punktes der Route<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="viewerimages/icons-new/wpcenter.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>NavToCenter</td>
+          <td>Verschieben des momentan rot markierten Punktes der Route auf den
+            Kartenmittelpunkt<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="viewerimages/icons-new/wpgoto.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>NavGoto</td>
+          <td>Starte die Navigation zum momentan rot markierten Punkt der Route<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>MOB</td>
+          <td>Mann über Bord </td>
+        </tr>
+        <tr>
+          <td><img src="viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>Cancel</td>
+          <td>Zurück zur Navigationsseite<br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p><br>
+    </p>
+    <p>Auf der Routing Seite kann man eine Route bearbeiten bzw. editieren.</p>
+    <p>Zu jeder Zeit gibt es einen aktiven Wegepunkt (rot dargestellt, links in
+      der Anzeige grau unterlegt. Die meisten Aktionen bezihen sich auf diesen
+      Wegepunkt. Er kann durch Anklicken links oder durch anklicken auf der
+      Karte geändert werden.</p>
+    <p>Wenn man die momentan aktive Route bearbeitet, wird das durch einen roten
+      Rahmen links um die Routen-Info angezeigt. Falls eine andere Route
+      bearbeitet wird, ist dieser grün.</p>
+    Wenn man den Editor verlässt, geht die Anzeige zur aktiven Route zurück.
+    <p>Auf der linken Seite werden die Wegepunkte der aktuellen Route angezeigt.
+      Dazu jeweils die Kurse und Distanzen für die Abschnitte. Im oberen Teil
+      die Gesamtlänge der Route sowie die Gesamtstrecke sowie die ETA. Durch
+      Anklicken kann man einen Wegepunkt aktivieren.</p>
+    <p>Durch nochmaligen Klick auf einen links bereits markierten Punkt wird
+      eine Eingabemaske aufgerufen, in der man den Wegepunkt bearbeiten kann.</p>
+    <p>Ein Klick auf das Route Info Feld (links oben) führt zur Routen-Seite.
+      Hier kann man den Namen der Route ändern oder alle Wegepunkte löschen. </p>
+    <div>
+      <h2> <a name="editroutepage" id="editroutepage"></a>Route Listen Seite</h2>
+    </div>
+    <div><img src="editroute-default.png" alt="" class="image"></div>
+    <div><b>Buttons</b></div>
+    <div>
+      <table border="1">
+        <tbody>
+          <tr>
+            <td>Icon</td>
+            <td>Name</td>
+            <td>Funktion</td>
+          </tr>
+          <tr>
+            <td><img src="viewerimages/icons-new/ic_done.svg" alt="" class="inlineimage"><br>
+            </td>
+            <td>RoutePageOk</td>
+            <td>Änderungen übernehmen und zum <a href="#editroutepage">Route
+                Editor</a> zurückkehren.</td>
+          </tr>
+          <tr>
+            <td><img src="viewerimages/icons-new/wpgoto.svg" alt="" class="inlineimage"><br>
+            </td>
+            <td>NavGoto</td>
+            <td>Navigation zum ausgewählten Wegepunkt starten<br>
+              Der ausgewählte Punkt ist grau hinterlegt</td>
+          </tr>
+          <tr>
+            <td><img src="viewerimages/icons-new/invertroute.svg" alt="" class="inlineimage"><br>
+            </td>
+            <td>NavInvert</td>
+            <td>Reihenfolge der Punkte in der Route umkehren</td>
+          </tr>
+          <tr>
+            <td><img src="viewerimages/icons-new/ic_delete.svg" alt="" class="inlineimage"><br>
+            </td>
+            <td>NavDeleteAll</td>
+            <td>Alle Punkte aus der Route löschen</td>
+          </tr>
+          <tr>
+            <td><img src="viewerimages/icons-new/ic_file_download.svg" alt="" class="inlineimage"><br>
+            </td>
+            <td>RoutePageDownload</td>
+            <td>Wechsel zur Files/Download Seite, Unterseite Routen.<br>
+              Es kann eine Route aus der Liste ausgewählt werden, routen können
+              heruntergeladen oder hochgeladen werden.<br>
+              Nach Auswahl einer Route Rückkehr zu dieser Seite mit der
+              gewählten Route.</td>
+          </tr>
+          <tr>
+            <td><img src="viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
+            </td>
+            <td>MOB</td>
+            <td>Mann über Bord</td>
+          </tr>
+          <tr>
+            <td><img src="viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage"><br>
+            </td>
+            <td>Cancel</td>
+            <td>Bearbeitung abbrechen, zurück zum <a href="#editroutepage">Route
+                Editor</a></td>
+          </tr>
+        </tbody>
+      </table>
+      <br>
+    </div>
+    <p>Hier kann man alle Punkte bearbeiten (Klick) oder die Route unter einem
+      neuen Namen speichern (Kopie). Dazu klickt man auf den Namen der Route und
+      erhält einen Dialog.</p>
+    <p> <img src="editroutepage-saveasnew.png" alt="" class="image"> </p>
+    Danach über den OK Button zurück zum <a href="#routepage">Routen Editor</a>
+    um die Route weiter zu bearbeiten.<br>
+    <h2><a name="aisinfopage" id="aisinfopage"></a>Die AIS Info Seite </h2>
+    <p> <img src="aisinfo.png" alt="" class="image"> </p>
+    <p> Von der <a href="#navpage">Navigationsseite</a> oder von einer <a href="#dashboard">Dashboard-Seite
+        </a>kommt man durch Klick auf die AIS-Anzeige oder auf ein AIS-Ziel in
+      der Karte auf diese Info-Seite.</p>
+    <p>Die Details zum Ziel werden angezeigt.</p>
+    <p><b>Buttons</b></p>
+    <table border="1">
+      <tbody>
+        <tr>
+          <td>Icon</td>
+          <td>Name</td>
+          <td>Funktion</td>
+        </tr>
+        <tr>
+          <td><img src="viewerimages/icons-new/ais-nearest.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>AisNearest<br>
+          </td>
+          <td>Zentriere auf das nächste Ziel und mache dieses wieder zum
+            angezeigten Ziel auf der <a href="#navpage">Navigationsseite</a><br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="viewerimages/icons-new/center.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>AisInfoLocate<br>
+          </td>
+          <td>Zentriere die Karte auf dieses Ziel und zeige dessen Daten auf der
+            <a href="#navpage">Navigationsseite</a><br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="viewerimages/icons-new/ic_list.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>AisInfoList<br>
+          </td>
+          <td>Anzeige der Liste aller AIS Ziele<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>MOB<br>
+          </td>
+          <td>Mann über Bord<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>Cancel<br>
+          </td>
+          <td>Zurück zur vorigen Seite<br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p><br>
+    </p>
+    <h3>Die AIS Übersicht</h3>
+    <p>Mit einem Klick auf die AIS Info (oder auf ein AIS Target in der Karte)
+      gelangt man zur AIS Übersicht:</p>
+    <p><img src="navi-ais.png" name="Grafik10" border="0" width="600"><br clear="RIGHT">
+      Auf dieser Seite sieht man alle empfangenen AIS Ziele im Umkreis von ca.
+      10nm zur Bootsposition (sortiert nach CPA). Mit Klick auf eine Zeile
+      springt man zurück zur Karten-Anzeige mit dem gewählten AIS Ziel im
+      Zentrum. Das gewählte Ziel erscheint auch im AIS Info Fenster (dieses
+      färbt sich gelb). Ein Klick auf den grünen Pfeil schaltet wieder in den
+      „Normalmodus“ - d.h. Anzeige des nächsten AIS Zieles.</p>
+    <p>Mit dem zurück Button geht es unverändert zur Karten-Anzeige zurück.</p>
+    <h3>Die Dashboard Seite</h3>
+    <p>Über den Button (000) auf der Start-Seite oder einen Klick auf die
+      Position (rechts unten) auf der Navi-Seite gelangt man zu einer Anzeige
+      der GPS-Daten ohne Karte.</p>
+    <p>Im Layout können bis zu 5 solcher Seiten mit verschiedenen Anzeigen
+      konfiguriert werden.</p>
+    <img alt="" src="gps-display.png" height="400"><br>
+    <br>
+    Ein Klick auf die Anzeige des nächsten AIS-Zieles (rechts unten) führt zur
+    AIS-Seite, ein Klick auf jede andere Stelle oder den Cancel-Button zurück
+    zur Seite von der man kam.<br>
+    <br>
+    <h3> Die Settings Seite</h3>
+    <br>
+    Über den Button <img alt="" src="../viewer/images/spanner32.png" height="20">von
+    der Startseite erreicht man die Einstellungs-Seite. Hier können verschiedene
+    Parameter der Applikation eingestellt werden. Diese werden im Browser
+    gespeichert, beziehen sich also auf das jeweilige Gerät.<br>
+    Allgemein führt ein Klick auf <img alt="" src="../viewer/images/trash32.png"
+      height="20">zum Rücksetzen auf Standard-Werte (einzelne Einstellung oder
+    alle), Cancel verläßt die Seite und verwirft alle Änderungen.<br>
+    <img alt="" src="settingspage.png" height="400"><br>
+    <br>
+    <h3>Die Status Seite</h3>
+    Von der Startseite kann man noch eine Status-Seite erreichen – hier werden
+    interne Status-Infos des Servers angezeigt.
+    <div><img style="width: 690px;" src="navi-status.png" name="Grafik11" border="0"
+        width="600">
+      <div style="display: inline-block;margin-left: 2em;"> <span style="font-weight: bold;">Buttons</span><br>
+        <ul>
+          <li>Zurück</li>
+          <li>Android Settings (nur Android)</li>
+          <li>WLAN (nur Raspberry)</li>
+          <li>QR Codes (Android im external browser mode, raspberry)</li>
+        </ul>
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+      </div>
+    </div>
+    <p> Wichtig ist hier insbesondere der Status der „Serial reader“ - dieser
+      zeigt, ob sie NMEA Daten empfangen.</p>
+    <p>Unter Android kann man von hier aus auch die Android Einstellungen
+      erreichen.</p>
+    <p>Mit dem QR-Code Button kommt man zu einer Seite, auf der die Adressen des
+      Web-Servers angezeigt werden.</p>
+    <img style="width: 639px; height: 400px;" alt="qr codes" src="qrpage.png"><br>
+    Durch scannen dieser Codes mit einem anderen Tablet kann man leicht auf den
+    gleichen Server (raspberry) zugreifen. Typisch wird es der 2. angezeigt code
+    sein, den man benutzen muss (der erste ist nur lokal auf dem Gerät).<br>
+    <p>Über den WLAN-Button gelangt man zur WLAN Seite (nicht auf Android).</p>
+    <img style="width: 678px; height: 400px;" alt="" src="wpa-page.png"><br>
+    Falls der 2. WLAN Adapter konfiguriert ist, werden verfügbare WLANs gescannt
+    und angezeigt.<br>
+    Zum Verbinden auf das gewünschte WLAN klicken.<br>
+    <img style="width: 689px;" alt="" src="wpa-connect.png"><br>
+    <br>
+    Im moment kann nur eine Verbindung zu WPA verschlüsselten (und freien) WLANs
+    hergestellt werden.<br>
+    <h3>Die Download/Upload Seite</h3>
+    <p>Von der Startseite kommt man mit dem Download Button zur Download-/Upload
+      Seite. Auf dieser Seite kann man Tracks, Routen und Karten herunterladen
+      oder auf den Raspberry hochladen und sie dort auch löschen.</p>
+    <p>Hochladen/Löschen funktioneren nur im connected Mode.</p>
+    <img style="width: 690px;" alt="" src="download.png">
+    <h3>Der Nachtmodus</h3>
+    <p>Um im Dunkeln nicht zu blenden, kann man auf einen Nachtmodus umstellen
+      (button <img alt="" src="../viewer/images/Night60.png" height="20">auf
+      der Startseite).</p>
+    <img alt="" src="gps-display-night.png" height="400"> <br>
+    <br>
+    <h3> Connected Mode</h3>
+    Der Button <img alt="" src="../viewer/images/plug32.png" height="20">auf
+    der Startseite schaltet den connected mode. Wenn er aktiv ist (default) wird
+    das Setzen eines Wegepunktes oder das Aktivieren einer Route zum Server
+    übertragen, so dass das auf allen angeschlossenen Geräten aktiv wird.<br>
+    Wenn vom non-connected zum connected mode gewechselt wird, werden die Daten
+    vom Server übernommen (Wegepunkt und Route).<br>
+    <br>
+    <br>
+    <h2 class="western">Lizenzen und verwendete Libraries</h2>
+    <p>Diese Software: MIT Licence</p>
+    <div id="block-system-main" dir="LTR">
+      <div id="node-66" dir="LTR">
+        <h4 class="western">The MIT License (MIT)</h4>
+        <p>Copyright (c) 2013-2017 Andreas Vogel http://www.wellenvogel.de</p>
+        <p>Permission is hereby granted, free of charge, to any person obtaining
+          a copy<br>
+          of this software and associated documentation files (the "Software"),
+          to deal<br>
+          in the Software without restriction, including without limitation the
+          rights<br>
+          to use, copy, modify, merge, publish, distribute, sublicense, and/or
+          sell<br>
+          copies of the Software, and to permit persons to whom the Software is<br>
+          furnished to do so, subject to the following conditions:</p>
+        <p>The above copyright notice and this permission notice shall be
+          included in<br>
+          all copies or substantial portions of the Software.</p>
+        <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+          EXPRESS OR<br>
+          IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+          MERCHANTABILITY,<br>
+          FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
+          SHALL THE<br>
+          AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER<br>
+          LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+          ARISING FROM,<br>
+          OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+          IN<br>
+          THE SOFTWARE.</p>
+      </div>
+    </div>
+    <p>Es werden eine ganze Reihe von OpenSource Libraries verwendet - diese
+      sind im Detail auf der Info Seite in der App aufgeführt.<br>
+      <br>
+    </p>
+    <p><br>
+      <br>
+    </p>
+    <h3 class="western">Technische Infos</h3>
+    <p>Die WebApp besteht aus einem HTML Gerüst (avnav_viewer.html) sowie den
+      eingebundenen JavaScript Bibliotheken und einem JavaScript Anteil
+      (avnav_min.js). Die Darstellung ist weitgehend von der eigentlichen
+      Funktion entkoppelt und wird per css (unter Nutzung von less) gesteuert.
+      Als Framework wird <a href="https://reactjs.org/">ReactJs</a> verwendet.</p>
+    <p>Die Kommunikation erfolgt durch einfache GET/POST requests zur url <a href="http://avnav/viewer/avnav_navi.php">http://avnav/viewer/avnav_navi.php</a>,
+      dann folgen Parameter, die den request beschreiben. Die Antworten vom
+      server sind json kodiert.</p>
+    <p>Die wichtigsten requests sind:</p>
+    <ul>
+      <li>
+        <p>gps: Abfrage der Positionsdaten </p>
+      </li>
+      <li>
+        <p>ais: Abfrage der AIS Daten </p>
+      </li>
+      <li>
+        <p>track: Abfrage des aktuellen Tracks</p>
+      </li>
+    </ul>
+    <p>Diese Requests werden periodisch wiederholt (polling).</p>
+    <p><br>
+    </p>
+  </body>
+</html>
