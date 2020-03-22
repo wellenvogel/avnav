@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>User Apps</title>
+    <link href="../styles.css" rel="stylesheet" type="text/css">
+  </head>
+  <body>
+    <h1>User Specific HTML Pages</h1>
+    <p>To integrate other tools into AvNav there is an option to integrate "User
+      Apps" (or addons). If such addons are configured, you will have an app
+      button&nbsp; <img src="../viewerimages/icons-new/apps.svg" alt="" class="inlineimage">on
+      the main page. By clicking this button there will be a new page with one
+      of the configured add ons being displayed.</p>
+    <img src="../userapps-signalk.png" alt="" class="image">
+    <p>In the picture you see the <a href="CanboatAndSignalk.html">signalK</a>
+      web interface - that has been automatically configured by the signalk
+      plugin.</p>
+    <p>For each of your user apps you need an icon. Those icons should be
+      uploaded to the images folder via Files/Download <img src="../viewerimages/icons-new/ic_file_download.svg"
+        alt="" class="inlineimage">, subpage images<img src="../viewerimages/icons-new/image-icon.svg"
+        alt="" class="inlineimage">.</p>
+    <p>Additionally you need an external URL or a HTML page that has been
+      uploaed into the user dir.</p>
+    <p>Via Settings <img src="../viewerimages/icons-new/ic_settings.svg" alt=""
+        class="inlineimage">, User Apps <img src="../viewerimages/icons-new/apps.svg"
+        alt="" class="inlineimage"> you reach the configuration page for user
+      apps. Here you can create new entries (or edit/delete existing ones). The
+      Icon you select here will become the icon on the button on the user app
+      page.</p>
+    <p><img src="../addonpage.png" alt="" class="image"><br>
+    </p>
+    <p>With the&nbsp; "+" button you can create a new entry.</p>
+    <p><img src="../addonpage-dialog-extern.png" alt="" class="image"></p>
+    <p>If you select "internal" you will be prompted with a list of the
+      available HTML pages in the user directory.</p>
+    <p>When leaving the title entry empty you will not see a title bar on the
+      user app page if this entry is active.</p>
+    <p><b>Remark</b>: When you create a user app (or modify/delete one) the
+      avnav server will modify and write back it's config file
+      (avnav_server.xml). If something goes wrong in this process and the server
+      cannot start up the next time it will fall back to a config file with the
+      extension ".ok" that it creates on every successful start up.</p>
+    <p>Via the button <img src="../viewerimages/icons-new/visibility.svg" alt=""
+        class="inlineimage">you can directly go to to the user app page with the
+      selected app being active.</p>
+    <p><img src="../userapps-homepage.png" alt="" class="image"></p>
+    <p>The picture shows the result of the example entry.</p>
+    <p>If you created a user app configuration from a HTML page in the user
+      directory and you delete this HTML file via AvNav the user app
+      configuration will be deleted, too.</p>
+    <p>If you delete a used icon the user app will not be visible at the user
+      app page any more - but you can still reach the configuration and e.g.
+      select another icon.</p>
+    <p><br>
+    </p>
+    <br>
+    <p><br>
+    </p>
+  </body>
+</html>

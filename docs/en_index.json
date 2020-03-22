@@ -1,0 +1,19 @@
+{
+    "title":"Wellenvogel-AvNav",
+    "headline": "Wellenvogel AvNav",
+    "headlineLink":"beschreibung.html",
+    "headerImage":"../../../images/ausschnitt1.jpg",
+    "menutitle": "AvNav",
+    "navlist":[
+        {"title":"Introduction","url":"beschreibung.html"},
+        {"title":"Demo","url":"demo.html"},
+        {"title":"Installation","url":"install.html"},
+        {"title":"Releases","url":"release.html"},
+        {"title":"Charts","url":"avnav-chart-convert-de.html"},
+        {"title":"Usage","url":"avnav-de.html"},
+        {"title":"Configuration","url":"hints/index.html"},
+        {"title":"Android","url":"avnav-android-de.html"},
+        {"title":">Sailing","url":"../../../segeln/index.html"},
+         {"title":">Software","url":"../../../software/index.html"}
+    ]
+}

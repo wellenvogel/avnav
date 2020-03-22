@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>user java script</title>
+    <link href="../styles.css" rel="stylesheet" type="text/css">
+  </head>
+  <body>
+    <h1>User Spezific Java Script Code</h1>
+    <p>To adapt AvNav to your needs you can extend it with some java script
+      code.</p>
+    <p>It is possible to define new data displays (widgets) that later on can be
+      placed using the <a href="mailto:file:///home/andreas/projects/avnav/docs/hints/layouts.html">layout
+        editor</a>. In principle you can run arbitrary java script code but you
+      have to take care not to disturb the AvNav main functions.</p>
+    <p>The jave script code has to be located at user.js in the directory
+      BASEDIR/user/viewer.<br>
+      (e.g. on the pi BASEDIR is /home/pi/avnav/data).</p>
+    <p>To simplify working on the code you can directly access the files in this
+      directory via Files/Download page <img src="../viewerimages/icons-new/ic_file_download.svg"
+        alt="" class="inlineimage">, subpage <img src="../viewerimages/icons-new/folder_shared.svg"
+        alt="" class="inlineimage">.</p>
+    <p><img src="../downloadpage-user.png" alt="" class="image"></p>
+    <p>As you can se in the picture initially a file user.js will already be
+      there - being created from a template on the first start of the server.</p>
+    <p>By clicking on the file and selecting "Edit" in the dialog you can
+      immediately start working on the file.</p>
+    <p><img src="../viewpage-edit-user.png" alt="" class="image"></p>
+    <p>There is a couple of examples already included in the file. They will
+      show you various means of adding new widgets. After editing use<img src="../viewerimages/icons-new/save.svg"
+        alt="" class="inlineimage">to store the file and realod AvNav to see
+      your changes in action.</p>
+    <p>I would recommend to download and store the file regularly after editing
+      it as there is no version control included in AvNav.</p>
+    <p>The current template for the file you can also find on <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">github</a>.</p>
+    <p>Basically you can add the following types of widgets:</p>
+    <ul>
+      <li>widgets with an own formatter (and potentially fixed values the
+        fetch)basing on the default widget (example 1)</li>
+      <li>adaptations and extensions of the graphics widgets (<a href="https://canvas-gauges.com/">canvas
+          gauges)</a> (example 2)<br>
+        This way you can access canvas widget parameters that are currently not
+        directly accessible.</li>
+      <li>widgets with own HTML code (example 3)</li>
+      <li>widgest with canvas graphics (example within the <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/testPlugin/plugin.js">TestPlugin</a>)</li>
+    </ul>
+    <p>The interface to communicate with avnav is available <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/util/api.js">at
+        github</a> and in the example code.</p>
+    <p>If you need to access libraries or images in your java script code you
+      can upload they into the same directory- images additionally also into the
+      images <img src="../viewerimages/icons-new/image-icon.svg" alt="" class="inlineimage">directory
+      (this one you can reach via the releative url ../images).</p>
+    <p>Embedding of libraries can be done like this:</p>
+    <div class="code">var fileref=document.createElement('script');
+fileref.setAttribute("type","text/javascript");
+fileref.setAttribute("src", "my_nice_lib.js");
+document.getElementsByTagName("head")[0].appendChild(fileref)</div>
+    <p>I recommend to assign css classes to your own widgets to provide easy
+      means of adapting their look and feel later on with <a href="usercss.html">user
+        defined CSS</a>. You should not use HTML ids in your code as the widgets
+      poitentially will be instantiated multiple times on one page.</p>
+    <p>If you need to download data from the server I recommend using <a href="https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch">fetch</a>.
+      All files within the user directory can be downloaded directly via their
+      filenames as relative urls.</p>
+    <p>If you need to create an additonal file in the user directory (e.g. text
+      or HTML) you can directly do this using the "+" button (lower right) -
+      afterwards you can directly edit the file.<br>
+    </p>
+    <p><br>
+    </p>
+  </body>
+</html>
