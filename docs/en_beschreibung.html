@@ -1,0 +1,274 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Description avNav</title>
+    <link href="styles.css" rel="stylesheet" type="text/css">
+  </head>
+  <body>
+    <h1>Navigation in the Browser </h1>
+    <p>Raspberry Pi as on board computer</p>
+    <p>26.01.2020</p>
+    <ul class="mainlist">
+      <li><a title="open-boat-projects" href="https://open-boat-projects.org/">AvNav
+          at Boot 2020 Düsseldorf - open-boat-projects</a></li>
+      <li>Privacy: <a href="../viewern/privacy-en.html">english</a>,<a href="../viewern/privacy-de.html">deutsch</a></li>
+      <li><a href="https://www.segeln-forum.de/board1-rund-ums-segeln/board35-bootstechnik-und-elektronik/43757-raspberry-pi-als-bordcomputer-spielzeug-f%C3%BCr-den-winter/">Thread
+          Segeln Forum - german<br>
+        </a></li>
+      <li><a href="https://github.com/wellenvogel/avnav">Source Code at GitHub</a></li>
+      <li><a href="avnav-de.html">User-Documentation</a> </li>
+      <li><a href="avnav-android-de.html">Android App</a></li>
+      <li> <a href="avnav-chart-convert-de.html">Downloading and Converting
+          Charts<br>
+        </a></li>
+      <li><a href="install.html">Installation</a></li>
+      <li><a href="release.html">Release-Notes</a></li>
+      <li><a href="demo.html">Demo</a></li>
+      <li><a href="./AvNavPraesi.pdf">Slide set(PDF) -german<br>
+        </a></li>
+    </ul>
+    <p>Important Hint:</p>
+    <p><i><b>In no case I can promise or being reliable for a correct function
+          of AvNav - especially using it for navigation is at your own risk.
+          Before using it I recommend to carefully test the precision of the
+          display and the used charts.</b></i></p>
+    <h2 class="western">Motivation</h2>
+    <p>After already navigating for some time with raster charts (first on
+      Windows with Seaclear, later at Windows, WindowsCE and OSX with OpenCPN
+      and OziExplorer) I was looking for options to extend this and make it
+      better suite to my needs when being at sea.</p>
+    <p>My wish list was:</p>
+    <ul>
+      <li>
+        <p>Navigation on small devices (Laptop always slightly to big) – 7 or 10
+          inch tablet would be perfect</p>
+      </li>
+      <li>
+        <p>Navigation also in the cockpit</p>
+      </li>
+      <li>
+        <p>Track storage</p>
+      </li>
+      <li>
+        <p>Connection to "on board" electronics - I own a VHF that provides AIS
+          data</p>
+      </li>
+      <li>
+        <p>Usage of raster charts (BSB, NV, everything that can be downloaded
+          using mobile atlas creator)</p>
+      </li>
+      <li>
+        <p>Minimized installation effort</p>
+      </li>
+      <li>
+        <p>Small, low power consumption (should be possible to run it all the
+          time)</p>
+      </li>
+      <li>
+        <p>Not too much manual work - avoid soldering own circuits</p>
+      </li>
+    </ul>
+    <p>At some point in time I noticed the raspberry pi and felt it could become
+      a perfect device for my needs.</p>
+    <p>After some research (back in 2012...) I found that there was no ready to
+      go solution that would perfectly fit my needs. Especially the handling of
+      the serial devices (typically USB-serial converters) is at least tricky
+      most of the time on linux.</p>
+    <p>So I started this project. I try to provide some description here for
+      people that would like to use it. The software is available at an open
+      source license (MIT). </p>
+    <p><br>
+      <br>
+    </p>
+    <h2 class="western">Overview</h2>
+    <p><img src="overview.png" name="Grafik1" border="0" width="600" align="LEFT">avnav-raspi-2020<br
+        clear="LEFT">
+      The whole solution consists of different parts:</p>
+    <ul>
+      <li>
+        <p>A Raspberry Pi with the server software (avnav_server.py), that is
+          reading the connected devices (NMEA via serial-USB converter – like PL
+          2303), Bluetooth GPS, multiplexing and storing the data and providing
+          them via WLAN</p>
+      </li>
+      <li>
+        <p>A variant of this software for the desktop (Windows/OSx/Linux) for
+          converting and preparing the charts</p>
+      </li>
+    </ul>
+    <p>The raspberry pi creates an access point and various devices cann access
+      its data:</p>
+    <ul>
+      <li>
+        <p>There is some (other) navigation software running on the device
+          (tested: InavX,OpenCPN), those access the NMEA data via TCP or UDP. </p>
+      </li>
+      <li>
+        <p>On the devices there is only a browser. All the navigation is handled
+          by the AvNav ajav script app that is downloaded from the raspi. There
+          is no need for any other installed software on the device, only a
+          current HTML5 browser (tested: Chrome Windows, OSX, Safari, Android
+          starting 4.4 – Chrom/Stock/Boat Browser, IOS, Blackberry stockBrowser,
+          WebBrowser mini).</p>
+      </li>
+    </ul>
+    <p>The server part is written in python and can be configured via an xml
+      file. The normal set up is ready to go - i.e. there is no need for any
+      configuration to get started. Beside the software itself there are images
+      that you can download to get started - see <a href="install.html">installation</a>.</p>
+    <p>The java script app provides all the basic navigation functions on raster
+      charts including AIS display, waypoint navigation, routes, tracks,... The
+      charts being used by the web app must be installed on the raspberry. AvNav
+      reads charts in the <a href="http://www.cgtk.co.uk/gemf">gemf</a> format
+      (2020-03 also mbtiles). If you have other formats you have to <a href="avnav-chart-convert-de.html">convert</a>
+      them into gemf - using avnav at the desktop (or directly on the pi). The
+      converter can handle the following formats:</p>
+    <ul>
+      <li>
+        <p>All chart sources that can be read by <a href="https://gdal.org/">GDAL</a>
+          software lesen kann (especially BSB)</p>
+      </li>
+      <li>
+        <p>Charts downloaded with Mobile Atlas Creator</p>
+      </li>
+    </ul>
+    <p>Beside the described set up there is also an&nbsp; <a href="avnav-android-de.html">Android-App</a>
+      that provides similar functions.The server part is implemented natievly in
+      Java, the display part is identical.</p>
+    <p>The following chapters describe the parts a bit more in detail.</p>
+    <h2 class="western">The Server Software (avnav_server.py)</h2>
+    <p>On the pi there is a <a href="http://www.raspberrypi.org/downloads">normal
+        Debian image</a> installed (app. 2GB). Afterwards a couple of additional
+      packages will be installed together with AvNav.</p>
+    <p>The structire of the server software:</p>
+    <p><img src="software.png" name="Grafik2" border="0" width="600" align="LEFT"><br
+        clear="LEFT">
+    </p>
+    <p>The server tries to detect all devices connected via USB-serial and via
+      bluetooth-serial. You have to take care that your USB-serial device is
+      correctly handled by the pi - like e.g. <a href="http://elinux.org/RPi_VerifiedPeripherals#USB_UART_and_USB_to_Serial_.28RS-232.29_adapters">this
+        one</a>. The server scans connected devices (via dbus) and discoveres
+      the device nodes. Afterwards it tries to do some auto-bauding (i.e.
+      determine the baudrate for the device) between 4800 and 34000 baud and
+      trying to receive NMEA data. If no data is detected it starts over again
+      by closing and reopening the devices. This way it can cope with
+      disconnecting and reconnecting devices.I have connected a AIS VHF that
+      gets GPS data from the Pi and sends AIS data towards it. If bluetooth
+      serial devices are detected it will also try to read from them.</p>
+    <p>You can also configure deivces to output the data and this way have a
+      NMEA multiplexer.</p>
+    <p>All NMEA data internally are stored in a queue and are provided to
+      outputs. By default a TCP socket is open that you can connect to (default
+      port: 34567).</p>
+    <p>Additionally you can configure more outputs (TCP,UDP,serial).</p>
+    <p>Internally the data (including AIS) is also provided towards a decoder
+      that will store them in the server software ("NMEA decoded data"). Those
+      data is provided via an HTTP json API for the app. Additionally the server
+      writes track data, computes routing information, handles anchor watch and
+      alarms. </p>
+    <p>For controlling an auto pilot the server computes RMB data and sends them
+      to the internal queue so that it can be received by any connected device.<br>
+    </p>
+    If there is a valid time information in the GPS data it sets the system time
+    of the raspberry.<br>
+    <p>For automated start up there is a (systemd) service so you can control
+      start and stop via systemctl.</p>
+    Most of the server functions you can configure via an xml file
+    (avnav_server.xml). In the installed template there are examples for a
+    couple of use cases already being included.Ausserdem wird (falls ein
+    Bluetooth adapter erkannt wurde) versucht, mit allen seriellen Bluetooth
+    Geräten Verbindung aufzunehmen und auch von dort NMEA Daten zu empfangen.
+    Damit sollte im Normalfall keine weitere Konfiguration nötig sein und NMEA
+    Daten sofort erkannt werden (kann man im Status display prüfen - s.u.).
+    <p>You can find the software on <a href="https://github.com/wellenvogel/avnav">github</a>
+      for installation instructions see the <a href="install.html">installation
+        description</a>.</p>
+    <h3 class="western">Software on the raspberry</h3>
+    <p>On the&nbsp; raspberry the following directories are used;</p>
+    <table cellspacing="4" cellpadding="4" border="1" width="100%">
+      <colgroup><col width="73*"> <col width="183*"> </colgroup>
+      <tbody>
+        <tr valign="TOP">
+          <th width="28%">
+            <p>Verzeichnis</p>
+          </th>
+          <th width="72%">
+            <p>Inhalt</p>
+          </th>
+        </tr>
+        <tr>
+          <td>/usr/lib/avnav</td>
+          <td>software</td>
+        </tr>
+        <tr valign="TOP">
+          <td width="28%">
+            <p>/home/pi/avnav/data/</p>
+          </td>
+          <td width="72%">
+            <p>base data directory</p>
+          </td>
+        </tr>
+        <tr valign="TOP">
+          <td width="28%">
+            <p>.../data/charts</p>
+          </td>
+          <td width="72%">
+            <p>charts - see&nbsp;<a href="#Chartconvert"> converting charts</a>.</p>
+          </td>
+        </tr>
+        <tr valign="TOP">
+          <td width="28%">
+            <p>.../dava/log</p>
+          </td>
+          <td width="72%">
+            <p>logfiles</p>
+          </td>
+        </tr>
+        <tr valign="TOP">
+          <td width="28%">
+            <p>.../data/tracks</p>
+          </td>
+          <td width="72%">
+            <p>trackfiles (gpx), one file per day, nmea logs</p>
+          </td>
+        </tr>
+        <tr>
+          <td>.../data/routes</td>
+          <td>routes - xxx.gpx and the current segment (leg) currentLeg.json</td>
+        </tr>
+        <tr>
+          <td>.../data/import</td>
+          <td>input directory for the converter</td>
+        </tr>
+        <tr>
+          <td>.../data/user/viewer</td>
+          <td>location of user files (user.js, user.css,...)</td>
+        </tr>
+        <tr>
+          <td>.../data/user/images</td>
+          <td>location for user image files</td>
+        </tr>
+        <tr>
+          <td>.../data/layout</td>
+          <td>location if user layout files</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Except the systemd scripts (and some command scripts) the software is
+      running with the user pi (on the raspberry). You can also start the
+      software from the commandline using the command "avnav". On a desktop
+      system you can run this as any user.</p>
+    <h2>The Web App</h2>
+    The app is a single page app built with<span style="color: #0000ee;"> </span><a
+      href="https://reactjs.org/">ReactJs</a>.<br>
+    It communicates with the server using HTTP. The app entry point is <a href="http://avnav/viewer/avnav_viewer.html">http://avnav/viewer/avnav_viewer.html</a>.
+    It is optimized for mobile devices - especially tablets starting at 7". But
+    you can use it alos on desktop systems or larger displays. Meaningful usage
+    starts at around 900x540 pixel.<br>
+    <br>
+    For a user documentation of the app refer to <a href="avnav-de.html">this
+      description</a>.<br>
+    <br>
+  </body>
+</html>
