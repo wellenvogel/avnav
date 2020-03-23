@@ -712,6 +712,13 @@ RouteData.prototype._handleLegResponse = function (serverData) {
         this.lastSentLeg=nleg;
     }
     this.lastReceivedLeg = nleg;
+    if (this.isEditingActiveRoute() && nleg.currentRoute){
+        //if we are editing the active route we are not sending separate
+        //route requests and we use the route from the leg
+        //so we have to set this as last received route
+        //to avoid the server overwriting us when we stop the active route e.g. by empying it
+        this.lastReceivedRoute=nleg.currentRoute.clone();
+    }
     activeRoute.modify((data)=> {
         if (this.lastReceivedLeg.differsTo(data.leg)) {
             data.leg = this.lastReceivedLeg.clone();
