@@ -28,8 +28,9 @@ public interface INavRequestHandler {
     /**
      * list the items
      * @return a list of items
+     * @param serverInfo
      */
-    JSONArray handleList() throws Exception;
+    JSONArray handleList(RequestHandler.ServerInfo serverInfo) throws Exception;
 
     /**
      * delet an item
@@ -40,7 +41,7 @@ public interface INavRequestHandler {
      */
     boolean handleDelete(String name, Uri uri) throws Exception;
 
-    JSONObject handleApiRequest(Uri uri, PostVars postData) throws Exception;
+    JSONObject handleApiRequest(Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception;
 
     /**
      * handle a direct request if our prefix matches

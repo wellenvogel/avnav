@@ -2,7 +2,6 @@ package de.wellenvogel.avnav.appapi;
 
 import android.app.Activity;
 import android.net.Uri;
-import android.support.v4.content.FileProvider;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -18,7 +17,6 @@ import java.util.ArrayList;
 
 import de.wellenvogel.avnav.fileprovider.UserFileProvider;
 import de.wellenvogel.avnav.main.BuildConfig;
-import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.fileprovider.AssetsProvider;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
@@ -71,7 +69,7 @@ public class LayoutHandler implements INavRequestHandler{
     }
 
     @Override
-    public JSONArray handleList() throws Exception{
+    public JSONArray handleList(RequestHandler.ServerInfo serverInfo) throws Exception{
             JSONArray li=readDir(userDir,true);
             for (IJsonObect o: readAssetsDir()){
                 li.put(o.toJson());
@@ -93,10 +91,10 @@ public class LayoutHandler implements INavRequestHandler{
     }
 
     @Override
-    public JSONObject handleApiRequest(Uri uri,PostVars postData) throws Exception {
+    public JSONObject handleApiRequest(Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
         String command= AvnUtil.getMandatoryParameter(uri,"command");
         if (command.equals("list")){
-            RequestHandler.getReturn(new RequestHandler.KeyValue("data",handleList()));
+            RequestHandler.getReturn(new RequestHandler.KeyValue("data",handleList(serverInfo)));
         }
         return null;
     }

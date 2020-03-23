@@ -63,7 +63,7 @@ public class DirectoryRequestHandler implements INavRequestHandler{
                URLEncoder.encode(name,"utf-8");
     }
     @Override
-    public JSONArray handleList() throws Exception {
+    public JSONArray handleList(RequestHandler.ServerInfo serverInfo) throws Exception {
         JSONArray rt=new JSONArray();
         for (File localFile: workDir.listFiles()) {
             if (localFile.isFile()){
@@ -92,10 +92,10 @@ public class DirectoryRequestHandler implements INavRequestHandler{
     }
 
     @Override
-    public JSONObject handleApiRequest(Uri uri,PostVars postData) throws Exception {
+    public JSONObject handleApiRequest(Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
         String command=AvnUtil.getMandatoryParameter(uri,"command");
         if (command.equals("list")){
-            return RequestHandler.getReturn(new RequestHandler.KeyValue("items",handleList()));
+            return RequestHandler.getReturn(new RequestHandler.KeyValue("items",handleList(serverInfo)));
         }
         if (command.equals("delete")){
             String name=AvnUtil.getMandatoryParameter(uri,"name");

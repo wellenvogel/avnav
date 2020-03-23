@@ -1,6 +1,5 @@
 package de.wellenvogel.avnav.appapi;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -9,21 +8,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.wellenvogel.avnav.fileprovider.AssetsProvider;
-import de.wellenvogel.avnav.fileprovider.UserFileProvider;
-import de.wellenvogel.avnav.main.BuildConfig;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
@@ -42,6 +33,7 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
             rt.put("key",name);
             rt.put("canDelete",true);
             rt.put("url",url);
+            rt.put("originalUrl",url);
             rt.put("keepUrl",url.startsWith("http"));
             rt.put("icon",icon);
             if (title != null) rt.put("title",title);
@@ -78,10 +70,22 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
     }
 
     @Override
-    public JSONArray handleList() throws Exception{
+    public JSONArray handleList(RequestHandler.ServerInfo serverInfo) throws Exception{
         List<AddonInfo> addons=getAddons(true);
         JSONArray rt=new JSONArray();
-        for (AddonInfo addon : addons) rt.put(addon.toJson());
+        String host="localhost";
+        if (serverInfo != null && serverInfo.address != null) {
+            host=serverInfo.address.getHostString();
+        }
+        for (AddonInfo addon : addons) {
+            JSONObject aj=addon.toJson();
+            if (aj.optBoolean("keepUrl",false)){
+                //external url
+                String url=aj.optString("url","").replace("$HOST",host);
+                aj.put("url",url);
+            }
+            rt.put(aj);
+        }
         return rt;
     }
 
@@ -180,10 +184,10 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
     }
 
     @Override
-    public JSONObject handleApiRequest(Uri uri,PostVars postData) throws Exception {
+    public JSONObject handleApiRequest(Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
         String command= AvnUtil.getMandatoryParameter(uri,"command");
         if (command.equals("list")){
-            RequestHandler.getReturn(new RequestHandler.KeyValue("data",handleList()));
+            return RequestHandler.getReturn(new RequestHandler.KeyValue("items",handleList(serverInfo)));
         }
         if (command.equals("update")){
             String name=uri.getQueryParameter("name");
@@ -195,7 +199,9 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
             if (name == null){
                 name=computeName(url,icon,title);
                 idx=findAddon(addons,name);
-                if (idx >= 0 ) RequestHandler.getErrorReturn("a similar addon already exists");
+                if (idx >= 0 ) {
+                    return RequestHandler.getErrorReturn("a similar addon already exists");
+                }
                 AddonInfo newAddon=new AddonInfo(name);
                 newAddon.url=url;
                 newAddon.icon=icon;
@@ -211,6 +217,7 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
                 current.url=url;
             }
             saveAddons(addons);
+            return RequestHandler.getReturn();
         }
         if (command.equals("delete")){
             String name=AvnUtil.getMandatoryParameter(uri,"name");

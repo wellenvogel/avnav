@@ -6,12 +6,12 @@ import android.util.Log;
 
 import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
 import de.wellenvogel.avnav.appapi.PostVars;
+import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.main.IMediaUpdater;
 import de.wellenvogel.avnav.appapi.INavRequestHandler;
 import de.wellenvogel.avnav.main.ISO8601DateParser;
 import de.wellenvogel.avnav.util.AvnLog;
 
-import org.apache.http.HttpEntity;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -43,7 +43,7 @@ public class TrackWriter implements INavRequestHandler {
     }
 
     @Override
-    public JSONArray handleList() throws Exception {
+    public JSONArray handleList(RequestHandler.ServerInfo serverInfo) throws Exception {
 
         JSONArray rt = new JSONArray();
         for (File f : trackdir.listFiles()) {
@@ -73,7 +73,7 @@ public class TrackWriter implements INavRequestHandler {
     }
 
     @Override
-    public JSONObject handleApiRequest(Uri uri,PostVars postData) throws Exception {
+    public JSONObject handleApiRequest(Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
         return null;
     }
 

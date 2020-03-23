@@ -8,7 +8,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.ParcelFileDescriptor;
 import android.support.v4.provider.DocumentFile;
-import android.telephony.AvailableNetworkInfo;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -90,7 +89,7 @@ public class ChartHandler implements INavRequestHandler {
         KeyAndParts kp=urlToKey(uriPart,true);
         if (kp.originalParts[2].equals(INDEX_INTERNAL)){
             File chartBase=getInternalChartsDir(ctx);
-            File chartFile=new File(chartBase,DirectoryRequestHandler.safeName(kp.originalParts[4],true));
+            File chartFile=new File(chartBase,DirectoryRequestHandler.safeName(URLDecoder.decode(kp.originalParts[4],"UTF-8"),true));
             if (!chartFile.exists() || ! chartFile.canRead()) return null;
             return ParcelFileDescriptor.open(chartFile,ParcelFileDescriptor.MODE_READ_ONLY);
         }
@@ -99,7 +98,7 @@ public class ChartHandler implements INavRequestHandler {
             if (secondChartDirStr.isEmpty()) return null;
             if (!secondChartDirStr.startsWith("content:")) return null;
             DocumentFile dirFile=DocumentFile.fromTreeUri(ctx,Uri.parse(secondChartDirStr));
-            DocumentFile chartFile=dirFile.findFile(DirectoryRequestHandler.safeName(kp.originalParts[4],true));
+            DocumentFile chartFile=dirFile.findFile(DirectoryRequestHandler.safeName(URLDecoder.decode(kp.originalParts[4],"UTF-8"),true));
             if (chartFile == null) return null;
             return ctx.getContentResolver().openFileDescriptor(chartFile.getUri(),"r");
         }
@@ -283,7 +282,7 @@ public class ChartHandler implements INavRequestHandler {
     }
 
     @Override
-    public JSONArray handleList() throws Exception {
+    public JSONArray handleList(RequestHandler.ServerInfo serverInfo) throws Exception {
         //here we will have more dirs in the future...
         JSONArray rt=new JSONArray();
         try {
@@ -340,7 +339,7 @@ public class ChartHandler implements INavRequestHandler {
     }
 
     @Override
-    public JSONObject handleApiRequest(Uri uri, PostVars postData) throws Exception {
+    public JSONObject handleApiRequest(Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
         String command=AvnUtil.getMandatoryParameter(uri,"command");
         if (command.equals("scheme")){
             String scheme=AvnUtil.getMandatoryParameter(uri,"newScheme");
@@ -431,7 +430,7 @@ public class ChartHandler implements INavRequestHandler {
             throw new Exception("invalid chart index "+parts[2]);
         if (parts.length < 5) throw new Exception("invalid chart request " + url);
         //the name is url encoded in the key
-        String key=parts[1]+"/"+parts[2]+"/"+parts[3]+"/"+URLEncoder.encode(parts[4],"UTF-8");
+        String key=parts[1]+"/"+parts[2]+"/"+parts[3]+"/"+parts[4];
         return new KeyAndParts(key,parts,5);
     }
 

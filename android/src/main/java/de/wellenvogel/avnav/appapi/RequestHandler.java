@@ -3,7 +3,6 @@ package de.wellenvogel.avnav.appapi;
 import android.content.SharedPreferences;
 import android.location.Location;
 import android.net.Uri;
-import android.util.Log;
 import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.webkit.WebResourceResponse;
@@ -44,7 +43,7 @@ import de.wellenvogel.avnav.worker.RouteHandler;
  * Created by andreas on 22.11.15.
  */
 public class RequestHandler {
-    public static final String URLPREFIX="file://android_asset/";
+    public static final String ASSETS="android_asset";
     protected static final String NAVURL="viewer/avnav_navi.php";
     private SimpleDateFormat dateFormat=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
     MainActivity activity;
@@ -276,18 +275,26 @@ public class RequestHandler {
 
 
     public WebResourceResponse handleRequest(View view, String url) throws Exception {
-        if (url.startsWith(URLPREFIX)){
+        Uri uri=null;
+        try {
+            uri = Uri.parse(url);
+        }catch (Exception e){
+            return null;
+        }
+        String path=uri.getPath();
+        if (path == null) return null;
+        if (ASSETS.equals(uri.getAuthority()) && "file".equals(uri.getScheme())){
             try {
-                String fname=url.substring(URLPREFIX.length());
-                if (fname.startsWith(NAVURL)){
+                if (path.startsWith("/")) path=path.substring(1);
+                if (path.startsWith(NAVURL)){
                     return handleNavRequest(url,null);
                 }
-                INavRequestHandler handler=getPrefixHandler(fname);
+                INavRequestHandler handler=getPrefixHandler(path);
                 if (handler != null){
-                    return handler.handleDirectRequest(fname);
+                    return handler.handleDirectRequest(path);
                 }
-                InputStream is=activity.getAssets().open(fname.replaceAll("\\?.*",""));
-                return new WebResourceResponse(mimeType(fname),"",is);
+                InputStream is=activity.getAssets().open(path);
+                return new WebResourceResponse(mimeType(path),"",is);
             } catch (Throwable e) {
                 e.printStackTrace();
                 throw new Exception("error processing "+url+": "+e.getLocalizedMessage());
@@ -430,7 +437,7 @@ public class RequestHandler {
             }
             if (type.equals("routing")){
                 if (getGpsService() != null && getRouteHandler() != null) {
-                    JSONObject o=getRouteHandler().handleApiRequest(uri,postData);
+                    JSONObject o=getRouteHandler().handleApiRequest(uri,postData, null);
                     if (o != null){
                         handled=true;
                         fout=o;
@@ -442,7 +449,7 @@ public class RequestHandler {
                 INavRequestHandler handler=getHandler(dirtype);
                 if (handler != null){
                     handled=true;
-                    fout=getReturn(new KeyValue<JSONArray>("items",handler.handleList()));
+                    fout=getReturn(new KeyValue<JSONArray>("items",handler.handleList(serverInfo)));
                 }
 
             }
@@ -628,7 +635,7 @@ public class RequestHandler {
                     String apiType = AvnUtil.getMandatoryParameter(uri, "type");
                     RequestHandler.LazyHandlerAccess handler = handlerMap.get(apiType);
                     if (handler == null || handler.getHandler() == null ) throw new Exception("no handler for api request "+apiType);
-                    JSONObject resp=handler.getHandler().handleApiRequest(uri,postData);
+                    JSONObject resp=handler.getHandler().handleApiRequest(uri,postData, serverInfo);
                     if (resp == null){
                         fout=getErrorReturn("api request returned null");
                     }

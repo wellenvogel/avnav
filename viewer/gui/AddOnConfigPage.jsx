@@ -20,11 +20,12 @@ const AddonItem=(props)=>{
     if (props.className) className+=" "+props.className;
     let source=props.source||'user';
     if (props.invalid) source+=", invalid";
+    let url=(props.originalUrl!==undefined)?props.originalUrl:props.url;
     return (
         <div className={className} onClick={props.onClick}>
             <img className="appIcon" src={props.icon}/>
             <div className="itemMain">
-                <div className="info">{props.url}</div>
+                <div className="info">{url}</div>
                 {props.title && <div className="itemTitle">{props.title}</div>}
                 <div className="sourceInfo">{source}</div>
             </div>

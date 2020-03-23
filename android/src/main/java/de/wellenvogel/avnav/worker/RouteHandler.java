@@ -4,7 +4,6 @@ import android.location.Location;
 import android.net.Uri;
 import android.util.Log;
 
-import org.apache.http.HttpEntity;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -28,6 +27,7 @@ import java.util.Map;
 
 import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
 import de.wellenvogel.avnav.appapi.PostVars;
+import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.IMediaUpdater;
 import de.wellenvogel.avnav.appapi.INavRequestHandler;
@@ -76,7 +76,7 @@ public class RouteHandler implements INavRequestHandler {
     }
 
     @Override
-    public JSONArray handleList() throws Exception {
+    public JSONArray handleList(RequestHandler.ServerInfo serverInfo) throws Exception {
         JSONArray rt=new JSONArray();
         for (RouteInfo i:getRouteInfo().values()){
             RouteInfo iv=i.clone();
@@ -93,7 +93,7 @@ public class RouteHandler implements INavRequestHandler {
 
 
     @Override
-    public JSONObject handleApiRequest(Uri uri, PostVars postData) throws Exception {
+    public JSONObject handleApiRequest(Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
         JSONObject o = new JSONObject();
         o.put("status", "OK");
         String command = AvnUtil.getMandatoryParameter(uri,"command");

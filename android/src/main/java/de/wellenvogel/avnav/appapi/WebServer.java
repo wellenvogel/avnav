@@ -7,6 +7,7 @@ package de.wellenvogel.avnav.appapi;
 
 
 import android.app.NotificationManager;
+import android.net.Uri;
 import android.util.Log;
 
 import org.apache.http.ConnectionClosedException;
@@ -85,12 +86,11 @@ public class WebServer {
         @Override
         public void handle(HttpRequest httpRequest, HttpResponse httpResponse, HttpContext httpContext) throws HttpException, IOException {
             AvnLog.d(NAME,"nav request"+httpRequest.getRequestLine());
-            String url = URLDecoder.decode(httpRequest.getRequestLine().getUri());
+            String url = httpRequest.getRequestLine().getUri();
             String method = httpRequest.getRequestLine().getMethod().toUpperCase(Locale.ENGLISH);
             if (!method.equals("GET") && !method.equals("HEAD")  && ! method.equals("POST")) {
                 throw new MethodNotSupportedException(method + " method not supported");
             }
-            url=url.replaceAll("^/*", "");
             PostVars postData=null;
             if (httpRequest instanceof HttpEntityEnclosingRequest) {
                 HttpEntity data = ((HttpEntityEnclosingRequest) httpRequest).getEntity();
@@ -145,10 +145,8 @@ public class WebServer {
         public void handle(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
             AvnLog.d(NAME,"prefix request for "+handler.getPrefix()+request.getRequestLine());
             try {
-                String url = URLDecoder.decode(request.getRequestLine().getUri(),"UTF-8");
+                String url=request.getRequestLine().getUri();
                 String method = request.getRequestLine().getMethod().toUpperCase(Locale.ENGLISH);
-                url = url.replaceAll("^/*", "");
-                url = url.replaceAll("\\?.*", "");
                 if (method.equals("GET") || method.equals("HEAD")) {
                     ExtendedWebResourceResponse resp = handler.handleDirectRequest(url);
                     if (resp != null) {

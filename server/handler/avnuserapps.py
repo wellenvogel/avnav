@@ -238,6 +238,7 @@ class AVNUserAppHandler(AVNWorker):
         continue
       item=addon.copy()
       if hostparts is not None:
+        item['originalUrl']=addon['url']
         item['url'] = addon['url'].replace('$HOST', hostparts[0])
       outdata.append(item)
     rt = AVNUtil.getReturnData(items=outdata)

@@ -21,6 +21,7 @@ export default class UserAppDialog extends React.Component{
         this.state.userFiles=[];
         this.state.internal=true;
         let fixed=props.fixed||{};
+        if (props.addon && props.addon.originalUrl !== undefined && ! fixed.url) this.state.url=props.addon.originalUrl;
         if (! fixed.url && this.state.keepUrl) this.state.internal=false;
         this.showDialog=this.showDialog.bind(this);
         this.fillLists();

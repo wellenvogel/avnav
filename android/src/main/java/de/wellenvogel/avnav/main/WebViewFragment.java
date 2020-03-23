@@ -128,7 +128,7 @@ public class WebViewFragment extends Fragment {
                 WebResourceResponse rt=null;
                 if (handler != null) {
                     try {
-                        rt = handler.handleRequest(view, URLDecoder.decode(url,"UTF-8"));
+                        rt = handler.handleRequest(view,url);
                     }catch (Throwable t){
                         AvnLog.e("web request for "+url+" failed",t);
                         InputStream is=new ByteArrayInputStream(new byte[]{});
@@ -181,7 +181,7 @@ public class WebViewFragment extends Fragment {
         getActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         //we nedd to add a filename to the base to make local storage working...
         //http://stackoverflow.com/questions/8390985/android-4-0-1-breaks-webview-html-5-local-storage
-        String start= RequestHandler.URLPREFIX+"viewer/dummy.html?navurl=avnav_navi.php";
+        String start= "file://"+RequestHandler.ASSETS+"/viewer/dummy.html?navurl=avnav_navi.php";
         if (BuildConfig.DEBUG) start+="&logNmea=1";
         webView.loadDataWithBaseURL(start,htmlPage,"text/html","UTF-8",null);
         return webView;
