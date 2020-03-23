@@ -43,7 +43,7 @@ public class DirectoryRequestHandler implements INavRequestHandler{
         if (found == null) return null;
         return new ExtendedWebResourceResponse(
             found.length(),
-            handler.mimeType(found.getName()),
+            "application/octet-stream",
             "",
             new FileInputStream(found)
         );
