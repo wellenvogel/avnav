@@ -457,6 +457,7 @@ RouteData.prototype.listRoutesServer=function(okCallback,opt_failCallback,opt_ca
         okCallback([],opt_callbackData);
         return;
     }
+    let editingName=editingRoute.getRouteName();
     let canDelete=globalStore.getData(keys.properties.connectedMode,false);
     return this._remoteRouteOperation("list",{
         okcallback:function(data,param){
@@ -474,6 +475,7 @@ RouteData.prototype.listRoutesServer=function(okCallback,opt_failCallback,opt_ca
                 ri.server = true;
                 ri.time=ri.time*1e3; //we receive TS in s
                 if (ri.canDelete !== false) ri.canDelete=canDelete;
+                if (ri.name === editingName) ri.canDelete=false;
                 if (self.isActiveRoute(ri.name)) ri.active=true;
                 items.push(ri);
             }
@@ -498,6 +500,7 @@ RouteData.prototype.listRoutesLocal=function(){
     let i=0;
     let key,rtinfo,route;
     let routeprfx=globalStore.getData(keys.properties.routeName)+".";
+    let editingName=editingRoute.getRouteName();
     for (i=0;i<localStorage.length;i++){
         key=localStorage.key(i);
         if (key.substr(0,routeprfx.length)==routeprfx){
@@ -509,7 +512,7 @@ RouteData.prototype.listRoutesLocal=function(){
                 rtinfo.length=route.computeLength(0);
                 rtinfo.time=route.time;
                 if (this.isActiveRoute(rtinfo.name)) rtinfo.active=true;
-
+                if (rtinfo.name === editingName) rtinfo.canDelete=false;
             } catch(e){}
             rt.push(rtinfo);
         }
