@@ -8,6 +8,7 @@
      settimecmd: command to set the systemtime (must accept time in format like date - utc - and must be able to run as pi)
      systimediff: timediff in seconds between gps timestamp and system time that we allow before we set gps time
      settimeperiod: time in seconds befor we retry setting the systemtime
+     ownMMSI: Own ship's MMSI 
 -->
 <AVNConfig debug="0" 
 	logfile="/home/pi/avnav/data/log/avnav.log" 
