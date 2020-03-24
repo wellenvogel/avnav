@@ -5,15 +5,15 @@
     "headerImage":"../../../images/ausschnitt1.jpg",
     "menutitle": "AvNav",
     "navlist":[
-        {"title":"Einführung","url":"beschreibung.html"},
+        {"title":"Einführung","en_title":"Introduction","url":"beschreibung.html"},
         {"title":"Demo","url":"demo.html"},
         {"title":"Installation","url":"install.html"},
         {"title":"Releases","url":"release.html"},
-        {"title":"Karten","url":"avnav-chart-convert-de.html"},
-        {"title":"Benutzung","url":"userdoc.html"},
-        {"title":"Konfiguration & Technik","url":"hints/index.html"},
+        {"title":"Karten","en_title":"Charts","url":"avnav-chart-convert-de.html"},
+        {"title":"Benutzung","en_title":"Usage","url":"userdoc.html"},
+        {"title":"Konfiguration & Technik","en_title":"Configuration","url":"hints/index.html"},
         {"title":"Android","url":"avnav-android-de.html"},
-        {"title":">Segeln","url":"../../../segeln/index.html"},
+        {"title":">Segeln","en_title":"Sailing","url":"../../../segeln/index.html"},
          {"title":">Software","url":"../../../software/index.html"}
     ]
 }

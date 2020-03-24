@@ -1,0 +1,17 @@
+{
+    "title":"Wellenvogel-AvNav",
+    "headline": "Wellenvogel AvNav Konfiguration",
+    "en_headline": "Wellenvogel AvNav Configuration",
+    "headlineLink":"index.html",
+    "headerImage":"../../../../images/ausschnitt1.jpg",
+    "menutitle": "AvNav",
+    "navlist":[
+        {"title":"Einführung","en_title":"Introduction","url":"../beschreibung.html"},
+        {"title":"Konfiguration & Technik","en_title":"Configuration","url":"index.html"},
+        {"title":"NMEA2K und Signalk","en_title":"NMEA2K and SignalK","url":"CanboatAndSignalk.html"},
+        {"title":"Anpassen von AvNav","en_title":"Adapting AvNav","url":"adapt.html"},
+        {"title":"Android","url":"../avnav-android-de.html"},
+        {"title":">Segeln","en_title":"Sailing","url":"../../../segeln/index.html"},
+         {"title":">Software","url":"../../../software/index.html"}
+    ]
+}
