@@ -20,6 +20,7 @@ import keyhandler from '../util/keyhandler.js';
 import CodeFlask from 'codeflask';
 import Prism from 'prismjs';
 import GuiHelpers from '../util/GuiHelpers.js';
+import InputMonitor from '../hoc/InputMonitor.jsx';
 
 //add all extensions here that we can edit
 //if set to undefined we will edit them but without highlighting
@@ -35,7 +36,7 @@ const languageMap={
 const MAXEDITSIZE=50000;
 
 
-class ViewPage extends React.Component{
+class ViewPageBase extends React.Component{
     constructor(props){
         super(props);
         let self=this;
@@ -227,6 +228,7 @@ class ViewPage extends React.Component{
     }
 }
 
+var ViewPage=InputMonitor(ViewPageBase);
 ViewPage.VIEWABLES=Object.keys(languageMap).concat(GuiHelpers.IMAGES);
 ViewPage.EDITABLES=Object.keys(languageMap);
 ViewPage.MAXEDITSIZE=MAXEDITSIZE;
