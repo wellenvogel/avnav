@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>AvNav Dashboard</title>
+    <link href="../styles.css" rel="stylesheet" type="text/css">
+  </head>
+  <body>
+    <h1>Die Dashboard Seite </h1>
+    <p>Über den Button (000) auf der Start-Seite oder einen Klick auf die
+      Position (rechts unten) auf der Navi-Seite gelangt man zu einer Anzeige
+      der GPS-Daten ohne Karte.</p>
+    <p>Im Layout können bis zu 5 solcher Seiten mit verschiedenen Anzeigen
+      konfiguriert werden.</p>
+    <p> <img src="../dashboard-1.png" alt="" class="image"></p>
+    <br>
+    <img src="../dashboard-3.png" alt="" class="image">
+    <h2> Buttons</h2>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Icon</td>
+          <td>Name</td>
+          <td>Funktion</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/center.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>GpsCenter</td>
+          <td>Zentriere Karte auf den Wegepunkt und zurück zur vorigen Seite</td>
+        </tr>
+        <tr>
+          <td>1,2,...</td>
+          <td>Gps1, Gps2, ...</td>
+          <td>Auswahl des anzuzeigenden Dashboards. Die Konfiguration kann durch
+            Auswahl eines Layouts oder Anpassung mit dem <a href="../hints/layouts.html">Layout
+              Editor</a> geschehen.</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/anchor.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>AnchorWatch</td>
+          <td>Aktivieren der Ankerwache, siehe <a href="#anchorwatch">unten</a></td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>MOB</td>
+          <td>Mann über Bord (siehe <a href="mainpage.html#mob">Hauptseite</a>)</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>Cancel</td>
+          <td>Zurück zur vorigen Seite</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Ein Klick auf die Anzeige des nächsten AIS-Zieles (rechts unten) führt
+      zur <a href="aisinfopage.html"> AIS-Seite</a>, ein Klick auf jede andere
+      Stelle oder den Cancel-Button zurück zur Seite von der man kam.</p>
+    <h2>Spezielle Funktionen</h2>
+    <h3><a name="anchorwatch" id="anchorwatch"></a>Ankerwache</h3>
+    <p>Durch Klick auf den <img src="../viewerimages/icons-new/anchor.svg" alt=""
+        class="inlineimage"> Button wird die Ankerwache aktiviert.</p>
+    <img src="../dashboard1-startanchor.png" alt="" class="image">
+    <p>Im Dialog wird der Radius gewählt, der um die aktuelle Position gestattet
+      ist (default in den Einstellungen).</p>
+    <p>Nach Aktivierung bekommt der <img src="../viewerimages/icons-new/anchor.svg"
+        alt="" class="inlineimage">Button einen grünen Rand und die Überwachung
+      startet. Bei Überschreiten der Entfernung wird ein Alarm ausgelöst.
+      Ausserdem erfolgt auch eine Alarmierung, wenn während der Ankerwache das
+      GPS Signal ausfällt. Die Überwachung erfolgt dabei auf dem Server, d.h. es
+      muss kein aktives Display verbunden sein. Voraussetzung ist natürlich, das
+      auf dem Server eine Sound-Ausgabe möglich (und konfiguriert) ist.</p>
+    <p>Mit aktiver Ankerwache ändern einige Dashboard Seiten ihren Inhalt. </p>
+    <p><img src="../dashboard1-anchor.png" alt="" class="image"> </p>
+    <br>
+  </body>
+</html>

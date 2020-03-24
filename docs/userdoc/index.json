@@ -1,0 +1,16 @@
+{
+    "title":"Wellenvogel-AvNav",
+    "headline": "Wellenvogel AvNav Nutzerbeschreibung",
+    "en_headline": "Wellenvogel AvNav User doc",
+    "headlineLink":"index.html",
+    "menutitle": "AvNav",
+    "navlist":[
+        {"title":">Einführung","en_title":">Introduction","url":"../beschreibung.html"},
+        {"title":"Konfiguration & Technik","en_title":"Configuration","url":"../hints/index.html"},
+        {"title":"Übersicht","en_title":"Overview","url":"index.html"},
+        {"title":"Navigation","en_title":"Navigation","url":"navpage.html"},
+        {"title":"Route Editor","url":"editroutepage.html"},
+        {"title":"Dashboard","url":"dashboardpage.html"},
+        {"title":"Files/Download","url":"downloadpage.html"}
+    ]
+}

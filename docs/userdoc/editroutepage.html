@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>AvNav Routen Editor</title>
+    <link href="../styles.css" rel="stylesheet" type="text/css">
+  </head>
+  <body>
+    <h1>Der Routeneditor </h1>
+    <p>Der Routen-Editor ist über den Button <img src="../viewerimages/icons-new/route.svg"
+        alt="" class="inlineimage">von der <a href="navpage.html">Navigationsseite</a>
+      erreichbar.</p>
+    <div> <img src="../routeedit-demo-start.png" alt="" class="image"><span style="font-weight: bold;"><br>
+      </span></div>
+    <div><span style="font-weight: bold;"><br>
+      </span></div>
+    <p style="font-weight: bold;">Buttons</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Icon</td>
+          <td>Name</td>
+          <td>Funktion</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_zoom_in.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>ZoomIn</td>
+          <td>Hereinzoomen<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_zoom_out.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>ZoomOut</td>
+          <td>Hinauszoomen<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/wpplus.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>NavAdd</td>
+          <td>Einen neuen Punkt zur Route hinzufügen.<br>
+            Der Kartenmittelpunkt (Kreuz) wir als neuer Punkt hinter dem
+            momentan rot markierten Punkt der Route hinzugefügt.<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/wpminus.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>NavDelete</td>
+          <td>Löschen des momentan rot markierten Punktes der Route<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/wpcenter.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>NavToCenter</td>
+          <td>Verschieben des momentan rot markierten Punktes der Route auf den
+            Kartenmittelpunkt<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/wpgoto.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>NavGoto</td>
+          <td>Starte die Navigation zum momentan rot markierten Punkt der Route<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>MOB</td>
+          <td>Mann über Bord(siehe <a href="mainpage.html#mob">Hauptseite</a>)</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>Cancel</td>
+          <td>Zurück zur <a href="navpage.html">Navigationsseite</a><br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p><br>
+    </p>
+    <p>Auf dieser Seite kann man eine Route bearbeiten bzw. erzeugen.</p>
+    <p>Zu jeder Zeit gibt es einen aktiven Wegepunkt (rot dargestellt, links in
+      der Anzeige grau unterlegt. Die meisten Aktionen bezihen sich auf diesen
+      Wegepunkt. Er kann durch Anklicken links in der Liste oder durch Anklicken
+      auf der Karte geändert werden.</p>
+    <p>Wenn man die momentan aktive Route bearbeitet, wird das durch einen roten
+      Rahmen links um die Routen-Info angezeigt. Falls eine andere Route
+      bearbeitet wird, ist dieser grün.</p>
+    <p> Wenn man den Editor verlässt, geht die Anzeige zur aktiven Route zurück.
+    </p>
+    <p>Alle Änderungen werden sofort wirksam, es gibt kein undo.</p>
+    <p>Auf der linken Seite werden die Wegepunkte der aktuellen Route angezeigt.
+      Dazu jeweils die Kurse und Distanzen für die Abschnitte. Im oberen Teil
+      die Gesamtlänge der Route sowie die Gesamtstrecke sowie die ETA. Durch
+      Anklicken kann man einen Wegepunkt aktivieren.</p>
+    <p>Durch nochmaligen Klick auf einen links bereits markierten Punkt wird
+      eine Eingabemaske aufgerufen, in der man den Wegepunkt bearbeiten kann.</p>
+    <p>Ein Klick auf das Route Info Feld (links oben) führt zur <a href="routepage.html">Route
+        Liste</a>. Hier kann man den Namen der Route ändern oder alle Wegepunkte
+      löschen. </p>
+    <p>Ein Klick auf die linken unteren Anzeigen zeigt einige zusätzliche
+      Buttons.</p>
+    <p><img src="../editroute-wpbuttons.png" alt="" class="image"></p>
+    <p>Mit diesen kann zwischen den Punkten der Route gewechselt werden bzw. der
+      aktuelle Punkt kann bearbeitet werden.</p>
+    <p>Ein Klick auf die rechten Anzeigen zentriert die Karte auf die
+      Bootsposition.</p>
+    <br>
+    <div>
+      <h2> <a name="editroutepage" id="editroutepage"></a></h2>
+    </div>
+  </body>
+</html>

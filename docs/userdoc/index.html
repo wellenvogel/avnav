@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>AvNav Nutzerbeschreibung</title>
+    <link href="../styles.css" rel="stylesheet" type="text/css">
+  </head>
+  <body>
+    <h1 class="western">AvNav WebApp Beschreibung</h1>
+    <p>Die WebApp kann man im Normalfall über den Link http://avnav.avnav.de
+      oder http://avnav.local erreichen, wenn man sich im WLAN des raspberry
+      befindet.</p>
+    <p>Unter <a href="avnav-android-de.html">Android</a> ist der Aufruf direkt
+      in der App integriert.</p>
+    <p>Die WebApp gliedert sich in eine Reihe von Seiten die man entweder direkt
+      von der Hauptseite - oder teilweise auch über bestimmte Zwischenseiten
+      erreicht.</p>
+    <p>Über die Links in der 2. Spalte der Tabelle sind die Beschreibungen der
+      einzelnen Seiten erreichbar.</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Icon</td>
+          <td>Seite</td>
+          <td>Erreichbar</td>
+          <td>Funktion</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><a href="mainpage.html">Hauptseite</a></td>
+          <td>Direkt nach dem Start</td>
+          <td>Anzeige der Liste der Karten, NMEA Status, Verzweigung zu weiteren
+            Seiten</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><a href="navpage.html">Navigationsseite</a></td>
+          <td>Klick auf eine Karte auf der Hauptseite</td>
+          <td>Basis-Navigationsfunktion, Karten und Instrumenten-Anzeige,
+            Wegepunkte, Routen...</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/status.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td><a href="statuspage.html">Status Seite</a></td>
+          <td>Button auf der Hauptseite</td>
+          <td>Status-Anzeige für den Server, Weiterverzweigung zur <a href="wpapage.html">Wifi
+              Konfiguration</a>, zur Anzeige der <a href="addresspage.html">Server-Adressen</a>,
+            zum Herunterfahren und zur Lizenz-Info</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_settings.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td><a href="settingspage.html">Einstellungen</a></td>
+          <td>Button auf der Hauptseite</td>
+          <td>Einstellungen für die Anzeige im Browser, von dort weiter zum <a
+              href="hints/layouts.html">Layout-Editor</a>, zur User Apps
+            Konfiguration und zu Android Settings (nur Android)</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_file_download.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td><a href="downloadpage.html">Files/Download</a></td>
+          <td>Button auf der Hauptseite</td>
+          <td>Anzeige, Download, Upload, Bearbeiten von Karten, Tracks, Routen,
+            <a href="hints/userjs.html">Nutzerdateien</a>, Bildern, <a href="hints/layouts.html">Layouts</a></td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/data.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td><a href="dashboardpage.html">Dashboard</a></td>
+          <td>Button auf der Hauptseite, Klick auf bestimmte Anzeigen auf der
+            Navigationsseite</td>
+          <td>Anzeige von Instrumentendaten (bis zu 5 Unterseiten)</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/route.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td><a href="editroutepage.html">Route Editor</a></td>
+          <td>Button auf der <a href="navpage.html#editroute">Navigationsseite</a></td>
+          <td>Erstellen und Bearbeiten von Routen</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/apps.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td><a href="addonpage.html">User Apps</a></td>
+          <td>Button auf der Hauptseite (nur sichtbar wenn user apps
+            konfiguriert)</td>
+          <td>Anzeige von internen oder externen HTML-Seiten (z.B. signalK Web
+            Interface wenn konfiguriert)</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><a href="routepage.html">Route Liste</a></td>
+          <td>Klick auf die Anzeige der aktuellen Route im <a href="editroutepage.html">Routen-Editor</a></td>
+          <td>Anzeige alelr Wegepunkte einer Route, Kopierfunktion, Bearbeitung,
+            Auswahl gespeicherter Routen</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_rss_feed.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td><a href="wpapage.html">Wifi Konfiguration</a></td>
+          <td>Button auf der Statusseite (<img src="../viewerimages/icons-new/status.svg"
+              alt="" class="inlineimage">)</td>
+          <td>Verbinden zu einem externen WLAN (nur wenn konfiguriert und WLAN
+            Stick gesteckt ist, nicht Android)</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/qrcode.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td><a href="addresspage.html">Anzeige der Serveradressen</a></td>
+          <td>Button auf der Statusseite (<img src="../viewerimages/icons-new/status.svg"
+              alt="" class="inlineimage">)</td>
+          <td>Anzeige der aktuellen Serveradressen mit QR-Code zum einfachen
+            Scannen mit einem anderen Gerät</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ballot.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td><a href="hints/layouts.html">Layout Editor</a></td>
+          <td>Button auf der Einstellungsseite (<img src="../viewerimages/icons-new/ic_settings.svg"
+              alt="" class="inlineimage">)</td>
+          <td>Bearbeiten der Anzeigen auf der Navigationsseite und auf den
+            Dashboard Seiten</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/apps.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td><a href="addonconfigpage.html">User App Konfiguration</a></td>
+          <td>Button auf der Einstellungsseite (<img src="../viewerimages/icons-new/ic_settings.svg"
+              alt="" class="inlineimage">)</td>
+          <td>Definieren von externen oder internen HTML Seiten, die als User
+            Apps angezeigt werden sollen</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><a href="aisinfopage.html">Ais Info<br>
+            </a></td>
+          <td>Klick auf die AIS Anzeige auf der <a href="navpage.html">Navigationsseite</a>
+            oder ein AIS Ziel auf der Karte</td>
+          <td>Anzeige der Informationen zu einem AIS Ziel. Von dort weiter zur <a
+              href="aispage.html">AIS Liste</a>.</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_list.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td><a href="aispage.html">Ais Liste</a></td>
+          <td>Über die Ais Info Seite, Button </td>
+          <td>Anzeige der Liste der AIS Ziele in der Umgebung, sortierbar</td>
+        </tr>
+      </tbody>
+    </table>
+    <br>
+  </body>
+</html>

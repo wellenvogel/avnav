@@ -2,39 +2,168 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
-    <title>AvNav Beschreibung</title>
-    <link href="styles.css" rel="stylesheet" type="text/css">
+    <title>AvNav Nutzerbeschreibung</title>
+    <link href="../styles.css" rel="stylesheet" type="text/css">
   </head>
   <body>
     <h1 class="western">AvNav WebApp Beschreibung</h1>
-    <p>2020/01/26: Die Beschreibung wird momentan überarbeitet. In weiten Teilen
-      entspricht sie dem aktuellen Stand, es fehlen jedoch einige Funktionen.</p>
-    <p>Die wesentlichen Fähigkeiten:</p>
-    <ul>
-      <li> Darstellung der Kartendaten (blattschnittfrei je Satz), mit den
-        enstprechenden Funktionen (Zoom, move,...) </li>
-      <li> Dartstellung der aktuellen Schiffsposition mit Kurs, Geschwindigkeit
-        (mit Lock der Karte auf Schiffsposition) </li>
-      <li> Darstellung des aktuellen Tracks (der Track wird auch in einer gpx
-        Datei gespeichert) </li>
-      <li> Setzen eines Wegepunktes, Anzeige von Richtung,Entfernung,ETA </li>
-      <li> AIS Anzeige mit Darstellung in der Karte, AIS Target am nächsten zum
-        Schiff, Warnung bei CPA &lt; 500m, CPA,TCPA, AIS Infos </li>
-      <li> Erzeugen von Routen (mit Editiermöglichkeit zu jedem Zeitpunkt),
-        Speichern/Laden/ImportExport von Routen im gpx Format</li>
-      <li>Automatisches Target Handling in der Route inklusive
-        Autopilot-Steuerung</li>
-      <li>Upload/download von Karten zum Raspberry</li>
-      <li>Mehrere Displays an einem Server (connected/dicsonnected mode)</li>
-      <li>Nachtmodus</li>
-      <li>GPS Display (Anzeige ohne Karte)</li>
-    </ul>
-    <p>Im Folgenden beschreibe ich kurz die Bedienung der aktuellen Version.</p>
-    Nach dem Aufruf der Start-Url landet man auf der
+    <p>Die WebApp kann man im Normalfall über den Link http://avnav.avnav.de
+      oder http://avnav.local erreichen, wenn man sich im WLAN des raspberry
+      befindet.</p>
+    <p>Unter <a href="avnav-android-de.html">Android</a> ist der Aufruf direkt
+      in der App integriert.</p>
+    <p><img src="../mainpage-demochart.png" alt="" class="image"><br>
+    </p>
+    <p>Die WebApp gliedert sich in eine Reihe von Seiten die man entweder direkt
+      von der Hauptseite - oder teilweise auch über bestimmte Zwischenseiten
+      erreicht.</p>
+    <p>Über die Links in der 2. Spalte der Tabelle sind die Beschreibungen der
+      einzelnen Seiten erreichbar.</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Icon</td>
+          <td>Seite</td>
+          <td>Erreichbar</td>
+          <td>Funktion</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><a href="mainpage.html">Hauptseite</a></td>
+          <td>Direkt nach dem Start</td>
+          <td>Anzeige der Liste der Karten, NMEA Status, Verzweigung zu weiteren
+            Seiten</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><a href="navpage.html">Navigationsseite</a></td>
+          <td>Klick auf eine Karte auf der Hauptseite</td>
+          <td>Basis-Navigationsfunktion, Karten und Instrumenten-Anzeige,
+            Wegepunkte, Routen...</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/status.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td><a href="statuspage.html">Status Seite</a></td>
+          <td>Button auf der Hauptseite</td>
+          <td>Status-Anzeige für den Server, Weiterverzweigung zur <a href="wpapage.html">Wifi
+              Konfiguration</a>, zur Anzeige der <a href="addresspage.html">Server-Adressen</a>,
+            zum Herunterfahren und zur Lizenz-Info</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_settings.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td><a href="settingspage.html">Einstellungen</a></td>
+          <td>Button auf der Hauptseite</td>
+          <td>Einstellungen für die Anzeige im Browser, von dort weiter zum <a
+              href="hints/layouts.html">Layout-Editor</a>, zur User Apps
+            Konfiguration und zu Android Settings (nur Android)</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_file_download.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td><a href="downloadpage.html">Files/Download</a></td>
+          <td>Button auf der Hauptseite</td>
+          <td>Anzeige, Download, Upload, Bearbeiten von Karten, Tracks, Routen,
+            <a href="hints/userjs.html">Nutzerdateien</a>, Bildern, <a href="hints/layouts.html">Layouts</a></td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/data.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td><a href="dashboardpage.html">Dashboard</a></td>
+          <td>Button auf der Hauptseite, Klick auf bestimmte Anzeigen auf der
+            Navigationsseite</td>
+          <td>Anzeige von Instrumentendaten (bis zu 5 Unterseiten)</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/route.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td><a href="editroutepage.html">Route Editor</a></td>
+          <td>Button auf der <a href="navpage.html#editroute">Navigationsseite</a></td>
+          <td>Erstellen und Bearbeiten von Routen</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/apps.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td><a href="addonpage.html">User Apps</a></td>
+          <td>Button auf der Hauptseite (nur sichtbar wenn user apps
+            konfiguriert)</td>
+          <td>Anzeige von internen oder externen HTML-Seiten (z.B. signalK Web
+            Interface wenn konfiguriert)</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><a href="routepage.html">Route Liste</a></td>
+          <td>Klick auf die Anzeige der aktuellen Route im <a href="editroutepage.html">Routen-Editor</a></td>
+          <td>Anzeige alelr Wegepunkte einer Route, Kopierfunktion, Bearbeitung,
+            Auswahl gespeicherter Routen</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_rss_feed.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td><a href="wpapage.html">Wifi Konfiguration</a></td>
+          <td>Button auf der Statusseite (<img src="../viewerimages/icons-new/status.svg"
+              alt="" class="inlineimage">)</td>
+          <td>Verbinden zu einem externen WLAN (nur wenn konfiguriert und WLAN
+            Stick gesteckt ist, nicht Android)</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/qrcode.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td><a href="addresspage.html">Anzeige der Serveradressen</a></td>
+          <td>Button auf der Statusseite (<img src="../viewerimages/icons-new/status.svg"
+              alt="" class="inlineimage">)</td>
+          <td>Anzeige der aktuellen Serveradressen mit QR-Code zum einfachen
+            Scannen mit einem anderen Gerät</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ballot.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td><a href="hints/layouts.html">Layout Editor</a></td>
+          <td>Button auf der Einstellungsseite (<img src="../viewerimages/icons-new/ic_settings.svg"
+              alt="" class="inlineimage">)</td>
+          <td>Bearbeiten der Anzeigen auf der Navigationsseite und auf den
+            Dashboard Seiten</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/apps.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td><a href="addonconfigpage.html">User App Konfiguration</a></td>
+          <td>Button auf der Einstellungsseite (<img src="../viewerimages/icons-new/ic_settings.svg"
+              alt="" class="inlineimage">)</td>
+          <td>Definieren von externen oder internen HTML Seiten, die als User
+            Apps angezeigt werden sollen</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><a href="aisinfopage.html">Ais Info<br>
+            </a></td>
+          <td>Klick auf die AIS Anzeige auf der <a href="navpage.html">Navigationsseite</a>
+            oder ein AIS Ziel auf der Karte</td>
+          <td>Anzeige der Informationen zu einem AIS Ziel. Von dort weiter zur <a
+              href="aispage.html">AIS Liste</a>.</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_list.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td><a href="aispage.html">Ais Liste</a></td>
+          <td>Über die Ais Info Seite, Button </td>
+          <td>Anzeige der Liste der AIS Ziele in der Umgebung, sortierbar</td>
+        </tr>
+      </tbody>
+    </table>
+    <p><br>
+    </p>
+    <p><br>
+    </p>
+    <p>Nach dem Aufruf der Start-Url landet man auf der </p>
     <div>
       <h2><a name="mainpage" id="mainpage"></a>Hauptseite</h2>
     </div>
-    <img src="mainpage-demochart.png" alt="" class="image">
     <div> <br>
       <div class="inline"> <b>Buttons</b>
         <table border="1">
@@ -45,7 +174,7 @@
               <td>Beschreibung</td>
             </tr>
             <tr>
-              <td><img class="inlineimage" src="viewerimages/icons-new/status.svg"
+              <td><img class="inlineimage" src="../viewerimages/icons-new/status.svg"
                   alt=""><br>
               </td>
               <td>ShowStatus<br>
@@ -54,7 +183,7 @@
               </td>
             </tr>
             <tr>
-              <td><img class="inlineimage" src="viewerimages/icons-new/ic_settings.svg"
+              <td><img class="inlineimage" src="../viewerimages/icons-new/ic_settings.svg"
                   alt=""><br>
               </td>
               <td>ShowSettings<br>
@@ -63,7 +192,7 @@
               </td>
             </tr>
             <tr>
-              <td><img src="viewerimages/icons-new/ic_file_download.svg" alt=""
+              <td><img src="../viewerimages/icons-new/ic_file_download.svg" alt=""
                   class="inlineimage"><br>
               </td>
               <td>ShowDownload<br>
@@ -74,14 +203,14 @@
               </td>
             </tr>
             <tr>
-              <td><img src="viewerimages/icons-new/plug.svg" alt="" class="inlineimage"><br>
+              <td><img src="../viewerimages/icons-new/plug.svg" alt="" class="inlineimage"><br>
               </td>
               <td>Connected</td>
               <td>Wenn aktiv wird die Navigation (Wegepunkte, Routen) auch auf
                 dem Server aktiviert, sonst nur lokal</td>
             </tr>
             <tr>
-              <td><img src="viewerimages/icons-new/data.svg" class="inlineimage"><br>
+              <td><img src="../viewerimages/icons-new/data.svg" class="inlineimage"><br>
               </td>
               <td>ShowGps<br>
               </td>
@@ -89,7 +218,7 @@
               </td>
             </tr>
             <tr>
-              <td><img src="viewerimages/icons-new/night.svg" alt="" class="inlineimage"><br>
+              <td><img src="../viewerimages/icons-new/night.svg" alt="" class="inlineimage"><br>
               </td>
               <td>Night<br>
               </td>
@@ -97,13 +226,13 @@
               </td>
             </tr>
             <tr>
-              <td><img src="viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
+              <td><img src="../viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
               </td>
               <td>MOB</td>
               <td>Mann über Bord (nur sichtbar wenn connected)</td>
             </tr>
             <tr>
-              <td><img src="viewerimages/icons-new/apps.svg" alt="" class="inlineimage"><br>
+              <td><img src="../viewerimages/icons-new/apps.svg" alt="" class="inlineimage"><br>
               </td>
               <td>MainAddOns</td>
               <td>Anzeige von konfigurierten user apps (z.B. signalK)</td>
@@ -130,7 +259,7 @@
     <h2 class="western"><a name="navpage" id="navpage"></a>Die Navigationsseite</h2>
     <p>Dieses Bild zeigt einen gesetzten Marker (locked) – das Boot ist auf
       Kurs.</p>
-    <div><img src="navi-routing-wp-ais.png" name="Grafik4" class="image"></div>
+    <div><img src="../navi-routing-wp-ais.png" name="Grafik4" class="image"></div>
     <div><b><br>
       </b></div>
     <div><b>Buttons</b><br>
@@ -143,13 +272,13 @@
           <td>Funktion</td>
         </tr>
         <tr>
-          <td><img src="viewerimages/icons-new/ic_zoom_in.svg" alt="" class="inlineimage"><br>
+          <td><img src="../viewerimages/icons-new/ic_zoom_in.svg" alt="" class="inlineimage"><br>
           </td>
           <td>ZoomIn</td>
           <td>Hereinzoomen</td>
         </tr>
         <tr>
-          <td><img src="viewerimages/icons-new/ic_zoom_out.svg" alt="" class="inlineimage"><br>
+          <td><img src="../viewerimages/icons-new/ic_zoom_out.svg" alt="" class="inlineimage"><br>
           </td>
           <td>ZoomOut<br>
           </td>
@@ -157,7 +286,7 @@
           </td>
         </tr>
         <tr>
-          <td><img src="viewerimages/icons-new/boat.svg" alt="" class="inlineimage"><br>
+          <td><img src="../viewerimages/icons-new/boat.svg" alt="" class="inlineimage"><br>
           </td>
           <td>LockPos<br>
           </td>
@@ -167,7 +296,7 @@
           </td>
         </tr>
         <tr>
-          <td><img src="viewerimages/icons-new/stop-nav.svg" alt="" class="inlineimage"><br>
+          <td><img src="../viewerimages/icons-new/stop-nav.svg" alt="" class="inlineimage"><br>
           </td>
           <td>StopNav<br>
           </td>
@@ -176,7 +305,7 @@
           </td>
         </tr>
         <tr>
-          <td><img src="viewerimages/icons-new/waypoint.svg" alt="" class="inlineimage"><br>
+          <td><img src="../viewerimages/icons-new/waypoint.svg" alt="" class="inlineimage"><br>
           </td>
           <td>LockMarker<br>
           </td>
@@ -186,7 +315,7 @@
           </td>
         </tr>
         <tr>
-          <td><img src="viewerimages/icons-new/compass.svg" alt="" class="inlineimage"><br>
+          <td><img src="../viewerimages/icons-new/compass.svg" alt="" class="inlineimage"><br>
           </td>
           <td>CourseUp<br>
           </td>
@@ -194,7 +323,7 @@
           </td>
         </tr>
         <tr>
-          <td><img src="viewerimages/icons-new/route.svg" alt="" class="inlineimage"><br>
+          <td><img src="../viewerimages/icons-new/route.svg" alt="" class="inlineimage"><br>
           </td>
           <td>ShowRoutePanel<br>
           </td>
@@ -202,7 +331,7 @@
           </td>
         </tr>
         <tr>
-          <td><img src="viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
+          <td><img src="../viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
           </td>
           <td>MOB<br>
           </td>
@@ -210,7 +339,7 @@
           </td>
         </tr>
         <tr>
-          <td><img src="viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage"><br>
+          <td><img src="../viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage"><br>
           </td>
           <td>Cancel</td>
           <td>Zurück zur Hauptseite<br>
@@ -273,7 +402,7 @@
     <p>Ein Klick auf die rechte Seite unteren Anzeigen führt zum <a href="#dashboard">Dashboard</a>.</p>
     <p>Ein Klick auf die linke Seite (Wegepunkt) zeigt einige zusätzliche
       Wegepunkt-Buttons.</p>
-    <p><img src="navpage-waypoint-buttons.png" alt="" class="image"> </p>
+    <p><img src="../navpage-waypoint-buttons.png" alt="" class="image"> </p>
     <table style="width: 100%" border="1">
       <tbody>
         <tr>
@@ -282,19 +411,19 @@
           <td>Funktion</td>
         </tr>
         <tr>
-          <td><img src="viewerimages/icons-new/anchor.png" alt="" class="inlineimage"><br>
+          <td><img src="../viewerimages/icons-new/anchor.png" alt="" class="inlineimage"><br>
           </td>
           <td>AnchorWatch</td>
           <td>Einschalten der Ankerwache (s.u.)</td>
         </tr>
         <tr>
-          <td><img src="viewerimages/icons-new/center.svg" alt="" class="inlineimage"><br>
+          <td><img src="../viewerimages/icons-new/center.svg" alt="" class="inlineimage"><br>
           </td>
           <td>WpLocate</td>
           <td>Zentrieren des Mittelpunktes auf den Wegepunkt</td>
         </tr>
         <tr>
-          <td><img src="viewerimages/icons-new/ic_edit.svg" alt="" class="inlineimage"><br>
+          <td><img src="../viewerimages/icons-new/ic_edit.svg" alt="" class="inlineimage"><br>
           </td>
           <td>WpEdit</td>
           <td>Bearbeiten des Wegepunktes.<br>
@@ -302,7 +431,7 @@
             editiert werden</td>
         </tr>
         <tr>
-          <td><img src="viewerimages/icons-new/wpgoto.svg" alt="" class="inlineimage"><br>
+          <td><img src="../viewerimages/icons-new/wpgoto.svg" alt="" class="inlineimage"><br>
           </td>
           <td>WpGoto</td>
           <td>Start der Navigation zu diesem Wegepunkt.<br>
@@ -312,7 +441,7 @@
     </table>
     <p>Falls momentan eine Route aktiv ist, werden etwas andere Buttons beim
       Klick auf die Wegepunkt-Daten angezeigt.</p>
-    <p><img src="navpage-waypoint-buttons-route.png" alt="" class="image"><br>
+    <p><img src="../navpage-waypoint-buttons-route.png" alt="" class="image"><br>
     </p>
     <p>Die zusätzlichen Buttons haben folgende Funktionen</p>
     <table style="width: 100%" border="1">
@@ -323,19 +452,19 @@
           <td>Funktion</td>
         </tr>
         <tr>
-          <td><img src="viewerimages/icons-new/nextwp.svg" alt="" class="inlineimage"><br>
+          <td><img src="../viewerimages/icons-new/nextwp.svg" alt="" class="inlineimage"><br>
           </td>
           <td>NavNext</td>
           <td>Navigiere zum nächsten Wegepunkt der Route</td>
         </tr>
         <tr>
-          <td><img src="viewerimages/icons-new/ic_arrow_forward.svg" alt="" class="inlineimage"><br>
+          <td><img src="../viewerimages/icons-new/ic_arrow_forward.svg" alt="" class="inlineimage"><br>
           </td>
           <td>WpNext</td>
           <td>Zentriere den Kartenmittelpunkt auf den nächsten Wegepunkt</td>
         </tr>
         <tr>
-          <td><img src="viewerimages/icons-new/ic_arrow_back.svg" alt="" class="inlineimage"><br>
+          <td><img src="../viewerimages/icons-new/ic_arrow_back.svg" alt="" class="inlineimage"><br>
           </td>
           <td>WpPrevious</td>
           <td>Zentriere den Kartenmittelpunkt auf den vorigen Wegepunkt</td>
@@ -358,7 +487,7 @@
       dicht genug am WP ist), kann man auf den Wegepunkt klicken und mit den
       dann sichtbaren Wegepunkt Buttons weiterschalten.Danach ggf. Boot wieder
       locken.</p>
-    <img src="navpage-route-waypoint.png" alt="" class="image">
+    <img src="../navpage-route-waypoint.png" alt="" class="image">
     <h3>Simple Wegepunkt Navigation</h3>
     <p>Schritte:</p>
     <ol>
@@ -376,10 +505,10 @@
       Anzeig des aktuellen Abstandes vom Marker bzw. Schiff zum
       Kartenmittelpunkt. Damit kann man einfache Peilungen machen - Mittelpunkt
       auf Peilziel verschieben und Peilung ablesen.</p>
-    <p>Für das Starten einer Route wechselt man zunächst mittels <img src="viewerimages/icons-new/route.svg"
+    <p>Für das Starten einer Route wechselt man zunächst mittels <img src="../viewerimages/icons-new/route.svg"
         alt="" class="inlineimage">zum Routen Editor.</p>
     <h2><a name="routepage" id="routepage"></a>Der Routeneditor</h2>
-    <div> <img src="routeedit-demo-start.png" alt="" class="image"><span style="font-weight: bold;"><br>
+    <div> <img src="../routeedit-demo-start.png" alt="" class="image"><span style="font-weight: bold;"><br>
       </span></div>
     <div><span style="font-weight: bold;"><br>
       </span></div>
@@ -392,21 +521,21 @@
           <td>Funktion</td>
         </tr>
         <tr>
-          <td><img src="viewerimages/icons-new/ic_zoom_in.svg" alt="" class="inlineimage"><br>
+          <td><img src="../viewerimages/icons-new/ic_zoom_in.svg" alt="" class="inlineimage"><br>
           </td>
           <td>ZoomIn</td>
           <td>Hereinzoomen<br>
           </td>
         </tr>
         <tr>
-          <td><img src="viewerimages/icons-new/ic_zoom_out.svg" alt="" class="inlineimage"><br>
+          <td><img src="../viewerimages/icons-new/ic_zoom_out.svg" alt="" class="inlineimage"><br>
           </td>
           <td>ZoomOut</td>
           <td>Hinauszoomen<br>
           </td>
         </tr>
         <tr>
-          <td><img src="viewerimages/icons-new/wpplus.svg" alt="" class="inlineimage"><br>
+          <td><img src="../viewerimages/icons-new/wpplus.svg" alt="" class="inlineimage"><br>
           </td>
           <td>NavAdd</td>
           <td>Einen neuen Punkt zur Route hinzufügen.<br>
@@ -415,14 +544,14 @@
           </td>
         </tr>
         <tr>
-          <td><img src="viewerimages/icons-new/wpminus.svg" alt="" class="inlineimage"><br>
+          <td><img src="../viewerimages/icons-new/wpminus.svg" alt="" class="inlineimage"><br>
           </td>
           <td>NavDelete</td>
           <td>Löschen des momentan rot markierten Punktes der Route<br>
           </td>
         </tr>
         <tr>
-          <td><img src="viewerimages/icons-new/wpcenter.svg" alt="" class="inlineimage"><br>
+          <td><img src="../viewerimages/icons-new/wpcenter.svg" alt="" class="inlineimage"><br>
           </td>
           <td>NavToCenter</td>
           <td>Verschieben des momentan rot markierten Punktes der Route auf den
@@ -430,20 +559,20 @@
           </td>
         </tr>
         <tr>
-          <td><img src="viewerimages/icons-new/wpgoto.svg" alt="" class="inlineimage"><br>
+          <td><img src="../viewerimages/icons-new/wpgoto.svg" alt="" class="inlineimage"><br>
           </td>
           <td>NavGoto</td>
           <td>Starte die Navigation zum momentan rot markierten Punkt der Route<br>
           </td>
         </tr>
         <tr>
-          <td><img src="viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
+          <td><img src="../viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
           </td>
           <td>MOB</td>
           <td>Mann über Bord </td>
         </tr>
         <tr>
-          <td><img src="viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage"><br>
+          <td><img src="../viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage"><br>
           </td>
           <td>Cancel</td>
           <td>Zurück zur Navigationsseite<br>
@@ -473,7 +602,7 @@
     <div>
       <h2> <a name="editroutepage" id="editroutepage"></a>Route Listen Seite</h2>
     </div>
-    <div><img src="editroute-default.png" alt="" class="image"></div>
+    <div><img src="../editroute-default.png" alt="" class="image"></div>
     <div><b>Buttons</b></div>
     <div>
       <table border="1">
@@ -484,33 +613,34 @@
             <td>Funktion</td>
           </tr>
           <tr>
-            <td><img src="viewerimages/icons-new/ic_done.svg" alt="" class="inlineimage"><br>
+            <td><img src="../viewerimages/icons-new/ic_done.svg" alt="" class="inlineimage"><br>
             </td>
             <td>RoutePageOk</td>
             <td>Änderungen übernehmen und zum <a href="#editroutepage">Route
                 Editor</a> zurückkehren.</td>
           </tr>
           <tr>
-            <td><img src="viewerimages/icons-new/wpgoto.svg" alt="" class="inlineimage"><br>
+            <td><img src="../viewerimages/icons-new/wpgoto.svg" alt="" class="inlineimage"><br>
             </td>
             <td>NavGoto</td>
             <td>Navigation zum ausgewählten Wegepunkt starten<br>
               Der ausgewählte Punkt ist grau hinterlegt</td>
           </tr>
           <tr>
-            <td><img src="viewerimages/icons-new/invertroute.svg" alt="" class="inlineimage"><br>
+            <td><img src="../viewerimages/icons-new/invertroute.svg" alt="" class="inlineimage"><br>
             </td>
             <td>NavInvert</td>
             <td>Reihenfolge der Punkte in der Route umkehren</td>
           </tr>
           <tr>
-            <td><img src="viewerimages/icons-new/ic_delete.svg" alt="" class="inlineimage"><br>
+            <td><img src="../viewerimages/icons-new/ic_delete.svg" alt="" class="inlineimage"><br>
             </td>
             <td>NavDeleteAll</td>
             <td>Alle Punkte aus der Route löschen</td>
           </tr>
           <tr>
-            <td><img src="viewerimages/icons-new/ic_file_download.svg" alt="" class="inlineimage"><br>
+            <td><img src="../viewerimages/icons-new/ic_file_download.svg" alt=""
+                class="inlineimage"><br>
             </td>
             <td>RoutePageDownload</td>
             <td>Wechsel zur Files/Download Seite, Unterseite Routen.<br>
@@ -520,13 +650,13 @@
               gewählten Route.</td>
           </tr>
           <tr>
-            <td><img src="viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
+            <td><img src="../viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
             </td>
             <td>MOB</td>
             <td>Mann über Bord</td>
           </tr>
           <tr>
-            <td><img src="viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage"><br>
+            <td><img src="../viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage"><br>
             </td>
             <td>Cancel</td>
             <td>Bearbeitung abbrechen, zurück zum <a href="#editroutepage">Route
@@ -539,11 +669,11 @@
     <p>Hier kann man alle Punkte bearbeiten (Klick) oder die Route unter einem
       neuen Namen speichern (Kopie). Dazu klickt man auf den Namen der Route und
       erhält einen Dialog.</p>
-    <p> <img src="editroutepage-saveasnew.png" alt="" class="image"> </p>
+    <p> <img src="../editroutepage-saveasnew.png" alt="" class="image"> </p>
     Danach über den OK Button zurück zum <a href="#routepage">Routen Editor</a>
     um die Route weiter zu bearbeiten.<br>
     <h2><a name="aisinfopage" id="aisinfopage"></a>Die AIS Info Seite </h2>
-    <p> <img src="aisinfo.png" alt="" class="image"> </p>
+    <p> <img src="../aisinfo.png" alt="" class="image"> </p>
     <p> Von der <a href="#navpage">Navigationsseite</a> oder von einer <a href="#dashboard">Dashboard-Seite
         </a>kommt man durch Klick auf die AIS-Anzeige oder auf ein AIS-Ziel in
       der Karte auf diese Info-Seite.</p>
@@ -557,7 +687,7 @@
           <td>Funktion</td>
         </tr>
         <tr>
-          <td><img src="viewerimages/icons-new/ais-nearest.svg" alt="" class="inlineimage"><br>
+          <td><img src="../viewerimages/icons-new/ais-nearest.svg" alt="" class="inlineimage"><br>
           </td>
           <td>AisNearest<br>
           </td>
@@ -566,7 +696,7 @@
           </td>
         </tr>
         <tr>
-          <td><img src="viewerimages/icons-new/center.svg" alt="" class="inlineimage"><br>
+          <td><img src="../viewerimages/icons-new/center.svg" alt="" class="inlineimage"><br>
           </td>
           <td>AisInfoLocate<br>
           </td>
@@ -575,7 +705,7 @@
           </td>
         </tr>
         <tr>
-          <td><img src="viewerimages/icons-new/ic_list.svg" alt="" class="inlineimage"><br>
+          <td><img src="../viewerimages/icons-new/ic_list.svg" alt="" class="inlineimage"><br>
           </td>
           <td>AisInfoList<br>
           </td>
@@ -583,7 +713,7 @@
           </td>
         </tr>
         <tr>
-          <td><img src="viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
+          <td><img src="../viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
           </td>
           <td>MOB<br>
           </td>
@@ -591,7 +721,7 @@
           </td>
         </tr>
         <tr>
-          <td><img src="viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage"><br>
+          <td><img src="../viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage"><br>
           </td>
           <td>Cancel<br>
           </td>
@@ -605,7 +735,7 @@
     <h3>Die AIS Übersicht</h3>
     <p>Mit einem Klick auf die AIS Info (oder auf ein AIS Target in der Karte)
       gelangt man zur AIS Übersicht:</p>
-    <p><img src="navi-ais.png" name="Grafik10" border="0" width="600"><br clear="RIGHT">
+    <p><img src="../navi-ais.png" name="Grafik10" border="0" width="600"><br clear="RIGHT">
       Auf dieser Seite sieht man alle empfangenen AIS Ziele im Umkreis von ca.
       10nm zur Bootsposition (sortiert nach CPA). Mit Klick auf eine Zeile
       springt man zurück zur Karten-Anzeige mit dem gewählten AIS Ziel im
@@ -619,7 +749,7 @@
       der GPS-Daten ohne Karte.</p>
     <p>Im Layout können bis zu 5 solcher Seiten mit verschiedenen Anzeigen
       konfiguriert werden.</p>
-    <img alt="" src="gps-display.png" height="400"><br>
+    <img alt="" src="../gps-display.png" height="400"><br>
     <br>
     Ein Klick auf die Anzeige des nächsten AIS-Zieles (rechts unten) führt zur
     AIS-Seite, ein Klick auf jede andere Stelle oder den Cancel-Button zurück
@@ -627,19 +757,19 @@
     <br>
     <h3> Die Settings Seite</h3>
     <br>
-    Über den Button <img alt="" src="../viewer/images/spanner32.png" height="20">von
+    Über den Button <img alt="" src="../../viewer/images/spanner32.png" height="20">von
     der Startseite erreicht man die Einstellungs-Seite. Hier können verschiedene
     Parameter der Applikation eingestellt werden. Diese werden im Browser
     gespeichert, beziehen sich also auf das jeweilige Gerät.<br>
-    Allgemein führt ein Klick auf <img alt="" src="../viewer/images/trash32.png"
+    Allgemein führt ein Klick auf <img alt="" src="../../viewer/images/trash32.png"
       height="20">zum Rücksetzen auf Standard-Werte (einzelne Einstellung oder
     alle), Cancel verläßt die Seite und verwirft alle Änderungen.<br>
-    <img alt="" src="settingspage.png" height="400"><br>
+    <img alt="" src="../settingspage.png" height="400"><br>
     <br>
     <h3>Die Status Seite</h3>
     Von der Startseite kann man noch eine Status-Seite erreichen – hier werden
     interne Status-Infos des Servers angezeigt.
-    <div><img style="width: 690px;" src="navi-status.png" name="Grafik11" border="0"
+    <div><img style="width: 690px;" src="../navi-status.png" name="Grafik11" border="0"
         width="600">
       <div style="display: inline-block;margin-left: 2em;"> <span style="font-weight: bold;">Buttons</span><br>
         <ul>
@@ -665,16 +795,16 @@
       erreichen.</p>
     <p>Mit dem QR-Code Button kommt man zu einer Seite, auf der die Adressen des
       Web-Servers angezeigt werden.</p>
-    <img style="width: 639px; height: 400px;" alt="qr codes" src="qrpage.png"><br>
+    <img style="width: 639px; height: 400px;" alt="qr codes" src="../qrpage.png"><br>
     Durch scannen dieser Codes mit einem anderen Tablet kann man leicht auf den
     gleichen Server (raspberry) zugreifen. Typisch wird es der 2. angezeigt code
     sein, den man benutzen muss (der erste ist nur lokal auf dem Gerät).<br>
     <p>Über den WLAN-Button gelangt man zur WLAN Seite (nicht auf Android).</p>
-    <img style="width: 678px; height: 400px;" alt="" src="wpa-page.png"><br>
+    <img style="width: 678px; height: 400px;" alt="" src="../wpa-page.png"><br>
     Falls der 2. WLAN Adapter konfiguriert ist, werden verfügbare WLANs gescannt
     und angezeigt.<br>
     Zum Verbinden auf das gewünschte WLAN klicken.<br>
-    <img style="width: 689px;" alt="" src="wpa-connect.png"><br>
+    <img style="width: 689px;" alt="" src="../wpa-connect.png"><br>
     <br>
     Im moment kann nur eine Verbindung zu WPA verschlüsselten (und freien) WLANs
     hergestellt werden.<br>
@@ -683,15 +813,15 @@
       Seite. Auf dieser Seite kann man Tracks, Routen und Karten herunterladen
       oder auf den Raspberry hochladen und sie dort auch löschen.</p>
     <p>Hochladen/Löschen funktioneren nur im connected Mode.</p>
-    <img style="width: 690px;" alt="" src="download.png">
+    <img style="width: 690px;" alt="" src="../download.png">
     <h3>Der Nachtmodus</h3>
     <p>Um im Dunkeln nicht zu blenden, kann man auf einen Nachtmodus umstellen
-      (button <img alt="" src="../viewer/images/Night60.png" height="20">auf
+      (button <img alt="" src="../../viewer/images/Night60.png" height="20">auf
       der Startseite).</p>
-    <img alt="" src="gps-display-night.png" height="400"> <br>
+    <img alt="" src="../gps-display-night.png" height="400"> <br>
     <br>
     <h3> Connected Mode</h3>
-    Der Button <img alt="" src="../viewer/images/plug32.png" height="20">auf
+    Der Button <img alt="" src="../../viewer/images/plug32.png" height="20">auf
     der Startseite schaltet den connected mode. Wenn er aktiv ist (default) wird
     das Setzen eines Wegepunktes oder das Aktivieren einer Route zum Server
     übertragen, so dass das auf allen angeschlossenen Geräten aktiv wird.<br>

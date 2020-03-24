@@ -3,7 +3,6 @@
     "headline": "Wellenvogel AvNav Konfiguration",
     "en_headline": "Wellenvogel AvNav Configuration",
     "headlineLink":"index.html",
-    "headerImage":"../../../../images/ausschnitt1.jpg",
     "menutitle": "AvNav",
     "navlist":[
         {"title":"Einführung","en_title":"Introduction","url":"../beschreibung.html"},

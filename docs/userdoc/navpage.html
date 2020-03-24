@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>AvNav Navigationsseite</title>
+    <link href="../styles.css" rel="stylesheet" type="text/css">
+  </head>
+  <body>
+    <h1>Die Navigationsseite </h1>
+    <p>Diese Seite ist die im Normalfall für die Navigation genutzte
+      Darstellung.<br>
+      Dieses Bild zeigt einen gesetzten Wegepunkt (Marker locked) – das Boot ist
+      auf Kurs und der Kartenmittelpunkt wird permanent auf das Boot zentriert.</p>
+    <div><img src="../navi-routing-wp-ais.png" name="Grafik4" class="image"></div>
+    <div><b><br>
+      </b></div>
+    <div><b>Buttons</b><br>
+    </div>
+    <table border="1">
+      <tbody>
+        <tr>
+          <td>Icon</td>
+          <td>Name</td>
+          <td>Funktion</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_zoom_in.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>ZoomIn</td>
+          <td>Hereinzoomen</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_zoom_out.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>ZoomOut<br>
+          </td>
+          <td>Herauszoomen<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/boat.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>LockPos<br>
+          </td>
+          <td>Kartenmittelpunkt auf Bootsposition setzen und dort halten (Karte
+            bewegt sich mit dem Boot).<br>
+            Nur aktivierbar bei gültiger Position.<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/stop-nav.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>StopNav<br>
+          </td>
+          <td>Navigation beenden.<br>
+            Nur sichtbar, wenn momentan ein Wegepunkt oder eine Route aktiv ist.<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/waypoint.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>LockMarker<br>
+          </td>
+          <td><a href="#waypoint">Navigation starten</a>.<br>
+            Der aktuelle Kartenmittelpunkt (Kreuz) wird zum Ziel-Wegepunkt.<br>
+            Nur sichtbar, wenn momentan keine Navigation aktiv ist.<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/compass.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>CourseUp<br>
+          </td>
+          <td>Karte drehen, so das die Kurs-Voraus Richtung oben ist.<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/route.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>ShowRoutePanel<br>
+          </td>
+          <td>Wechsel zum <a href="editroutepage.html">Routen-Editor</a> (auch
+            durch Klick auf eine angezeigte Route)<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>MOB<br>
+          </td>
+          <td>Mann über Bord (siehe <a href="mainpage.html#mob">Hauptseite</a>)<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>Cancel</td>
+          <td>Zurück zur <a href="mainpage.html">Hauptseite</a><br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Dies ist die Navigationsansicht. In der Mitte befindet sich die
+      Kartenansicht mit der Schiffsposition (roter Pfeil). Die gelben und grünen
+      Dreiecke mit Pfeilspitzen sind empfangene AIS Ziele in der Nähe (10nm,
+      einstellbar) mit ihrem aktuellen Kurs sowie Name oder MMSI. Die
+      organgefarbene Linie zeigt zum aktiven Wegepunkt. Die gepunktete Linie
+      zeigt den Kurs vom Start der Navigation zum Wegepunkt (Sollkurs). Die
+      Karte kann mit den normalen Gesten verschoben oder gezoomt werden, zum
+      zoomen können auch die Buttons +/- auf der rechten Leiste benutzt
+      werden.Wenn (wie im Bild) der Schiff-Button einen grünen Rand hat ("Schiff
+      lock"), ist die Karten-Mitte auf die Schiffsposition fixiert und springt
+      immer wieder dahin zurück.</p>
+    <p>Um das Schiff kann man bis zu 3 Kreise in entsprechenden Entfernungen
+      einstellen um Abstände zu schätzen (Über Einstellungen-&gt;Navigation
+      Display, Standard 300m und 1000m).</p>
+    <p>Links befinden sich (von oben nach unten):</p>
+    <ul>
+      <li>Die aktuelle Zoom-Stufe der Karte (wenn auto zoom aktive ist in
+        Klammern die gewünschte)</li>
+      <li>Das nächste AIS Ziel (ggf. rot bei Warnung) oder das ausgewählte AIS
+        Ziel (gelb)</li>
+      <li>Die aktuelle Uhrzeit</li>
+    </ul>
+    <p>Die Darstellung des nächsten AIS Zieles (geringste momentane Entfernung)
+      färbt sich rot, wenn eine CPA von 500m (einstellbar) unterschritten wird.
+      Gelb bedeuted, dass nicht das nächste Ziel sondern ein separat
+      ausgewähltes Ziel (siehe unten AIS) angezeigt wird. Ein Klick auf diese
+      Fläche oder ein AIS Ziel auf der Karte führt auf die AIS Info Seite .</p>
+    <p>Im unteren Bereich der Navigationsseite befindet sich die Anzeige der
+      wichtigsten Navigationsdaten ("Widgets"). Links die Daten des aktuellen
+      Wegepunktes (Marker):</p>
+    <ul>
+      <li> Position </li>
+      <li>ETA </li>
+      <li> Kurs </li>
+      <li> Distanz (nm) </li>
+    </ul>
+    <p>Danach folgen die Schiffsdaten:</p>
+    <ul>
+      <li> Kurs </li>
+      <li> Geschwindigkeit (kn) </li>
+      <li> Position </li>
+      <li> aktuelle (lokale) Zeit vom GPS </li>
+      <li> GPS Indikator: grün – GPS Daten vorhanden, rot: keine Daten </li>
+    </ul>
+    <p>Je nach Breite des Bildschirms und den Einstellungen für die Schriftgröße
+      der "Widgets" werden bis zu 2 Reihen an Daten angezeigt (unter Settings
+      einstellbar). Daten, die nicht mehr auf den Bildschirm passen, werden
+      unterdrückt.</p>
+    <p>Für die Schiffsposition, Kurs und Geschwindigkeit kann eine
+      Mittelwertbildung eingestellt werden (Settings-&gt;Navigation). Wenn diese
+      eingestellt ist, sind die Bezeichner rot.</p>
+    <p>Die Anzeigen auf der Seite können über den <a href="hints/layouts.html">Layout
+        Editor</a> angepasst werden.</p>
+    <p>Ein Klick auf die rechte Seite unteren Anzeigen führt zum <a href="dashboardpage.html">Dashboard</a>.</p>
+    <p>Ein Klick auf die linke Seite (Wegepunkt) zeigt einige zusätzliche
+      Wegepunkt-Buttons.</p>
+    <p><img src="../navpage-waypoint-buttons.png" alt="" class="image"> </p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Icon</td>
+          <td>Name</td>
+          <td>Funktion</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/anchor.png" alt="" class="inlineimage"><br>
+          </td>
+          <td>AnchorWatch</td>
+          <td>Einschalten der Ankerwache (s.u.)</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/center.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>WpLocate</td>
+          <td>Zentrieren des Mittelpunktes auf den Wegepunkt</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_edit.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>WpEdit</td>
+          <td>Bearbeiten des Wegepunktes.<br>
+            Im angezeigten Dialog kann der Name und die Position des Wegepunktes
+            editiert werden</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/wpgoto.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>WpGoto</td>
+          <td>Start der Navigation zu diesem Wegepunkt.<br>
+            Wir nur angezeigt, wenn noch keine Navigation aktiv ist.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Falls momentan eine Route aktiv ist, werden etwas andere Buttons beim
+      Klick auf die Wegepunkt-Daten angezeigt.</p>
+    <p><img src="../navpage-waypoint-buttons-route.png" alt="" class="image"><br>
+    </p>
+    <p>Die zusätzlichen Buttons haben folgende Funktionen</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Icon</td>
+          <td>Name</td>
+          <td>Funktion</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/nextwp.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>NavNext</td>
+          <td>Navigiere zum nächsten Wegepunkt der Route</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_arrow_forward.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>WpNext</td>
+          <td>Zentriere den Kartenmittelpunkt auf den nächsten Wegepunkt</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_arrow_back.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>WpPrevious</td>
+          <td>Zentriere den Kartenmittelpunkt auf den vorigen Wegepunkt</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Wenn eine Route aktiv ist, hat man wie im Bild links eine Anzeige der
+      Daten für die aktuelle Route (Name,verbleibende Distanz, Ankunftszeit).</p>
+    <p>In diesem Modus erfolgt eine automatische Weiterschaltung zum nächsten
+      Wegepunkt, wenn die folgenden Bedingungen erfüllt sind:</p>
+    <ul>
+      <li>Das Boot befindet sich im "Fangbereich" (default 200m -
+        settings-&gt;route-&gt;approach)</li>
+      <li>Die Entfernung zum Wegepunkt wird größer</li>
+    </ul>
+    <p> Die Anzeige der Routen-Parameter wird rot und zeigt den Kurs zum
+      nächsten WP an, wenn das Boot im "Fangbereich" ist. Ausserdem erfolgt eine
+      Alarmierung mit einem akustischen Signal und einer Anzeige.</p>
+    <p>Falls keine automatische Weiterschaltung erfolgt (z.B. weil man nicht
+      dicht genug am WP ist), kann man auf den Wegepunkt klicken und mit den
+      dann sichtbaren Wegepunkt Buttons weiterschalten.Danach ggf. Boot wieder
+      locken.</p>
+    <img src="../navpage-route-waypoint.png" alt="" class="image">
+    <h2>Spezielle Funktionen</h2>
+    <h3><a name="waypoint" id="waypoint"></a>Simple Wegepunkt Navigation</h3>
+    <p>Schritte:</p>
+    <ol>
+      <li>Unlock Boot (falls an)</li>
+      <li>Stop Nav</li>
+      <li>Karte verschieben bis Mittelpunkt (Kreuz) auf gewünschter Position
+        (Zoom nutzen)</li>
+      <li>LockMarker </li>
+      <li>Lock Boot </li>
+    </ol>
+    <h3>Peilungen</h3>
+    <p>Wenn man einen Wegepunkt aktiv hat (Marker Button grün) und die Karte
+      nicht auf das Schiff "gelockt" ist (Schiffsbutton nicht grün), wird beim
+      Bewegen der Karte ein Kreuz im Zentrum gezeigt und links erscheint eine
+      Anzeig des aktuellen Abstandes vom Marker bzw. Schiff zum
+      Kartenmittelpunkt. Damit kann man einfache Peilungen machen - Mittelpunkt
+      auf Peilziel verschieben und Peilung ablesen.</p>
+    <p>Für das Starten einer Route wechselt man zunächst mittels <img src="../viewerimages/icons-new/route.svg"
+        alt="" class="inlineimage">zum <a href="editroutepage.html">Routen
+        Editor</a>.</p>
+  </body>
+</html>

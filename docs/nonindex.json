@@ -9,7 +9,7 @@
         {"title":"Installation","url":"install.html"},
         {"title":"Releases","url":"release.html"},
         {"title":"Karten","en_title":"Charts","url":"avnav-chart-convert-de.html"},
-        {"title":"Benutzung","en_title":"Usage","url":"userdoc.html"},
+        {"title":"Benutzung","en_title":"Usage","url":"userdoc/index.html"},
         {"title":"Konfiguration & Technik","en_title":"Configuration","url":"hints/index.html"},
         {"title":"Android","url":"avnav-android-de.html"},
         {"title":">Segeln","en_title":"Sailing","url":"../../../segeln/index.html"},

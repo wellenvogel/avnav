@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><!-- configuration for avnav_server on windows
+<?xml version="1.0" encoding="utf-8"?><!-- configuration for avnav_server on windows
      we do not have a gpsd and we can only directly use serial readers --><AVNServer>
 <AVNConfig debugToLog="true" loglevel="DEBUG" settimecmd="beep" settimeperiod="3600" systimediff="5"/>
 <Readers>
@@ -61,7 +61,8 @@
 </Readers>
 <!-- provide your data at this port for e.g. OpenCPN -->
 <AVNSocketWriter filter="" maxDevices="5" minTime="100" port="34567" read="true"/>
-<AVNTrackWriter distance="100" interval="10" trackdir="../data_linux/tracks"/>
+<AVNSocketWriter blackList="testreader" filter="$RMB" maxDevices="5" minTime="100" port="34571" read="true"/>
+<AVNTrackWriter distance="100" interval="10"/>
 <AVNHttpServer chartbase="maps" empty="nonexistent" httpPort="8081" navurl="/viewer/avnav_navi.php" upzoom="0">
 <!-- chartbaseurl="http://$host/Karten/anav"> -->
 	<Directory path="~/AvNavCharts/out" urlpath="maps"/>
@@ -103,7 +104,8 @@
 
 
 
-<AVNAddonHandler>
-<UserTool icon="/user/images/boat.svg" keepUrl="False" key="kaese.html" title="kxxx" url="/user/viewer/kaese.html"/>
-</AVNAddonHandler>
+<AVNUserAppHandler>
+<UserTool icon="/user/images/boat.svg" keepUrl="False" name="58c34d627f8619cdea67dd5b26b4440d" title="haha5" url="/user/viewer/kaese.html"/>
+<UserTool icon="/user/images/Kaese.jpg" keepUrl="False" name="b0d0769e65f90b6e4efa127f504a7bd8" title="Großer Käase!" url="/user/viewer/kaese.html"/>
+</AVNUserAppHandler>
 </AVNServer>
