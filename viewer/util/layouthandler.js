@@ -557,6 +557,7 @@ class LayoutHandler{
                        type:'layout',
                        server:false,
                        canDelete:k != activeLayout,
+                       active: k == activateLayout,
                        time: (new Date()).getTime()/1000
                    };
                    rt.push(item);
@@ -571,7 +572,10 @@ class LayoutHandler{
                     assign(fi, json.items[i]);
                     fi.type = 'layout';
                     fi.server = true;
-                    if (activeLayout == fi.name) fi.canDelete = false;
+                    if (activeLayout == fi.name) {
+                        fi.canDelete = false;
+                        fi.active=true;
+                    }
                     list.push(fi);
                 }
                 resolve(list);
