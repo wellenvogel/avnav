@@ -7,21 +7,35 @@ import LayoutHandler from './layouthandler.js';
 
 
 const resizeElementFont=(el)=>{
+    let MAX=250;
+    let MIN=10;
     if (!el) return;
-    el.style.fontSize = "100%";
+    let current=el.style.fontSize;
+    let start=100;
+    let keepSize=false;
+    if (current && current.match(/\%/)){
+        try {
+            start = parseFloat(current);
+            if (isNaN(start) || start < MIN || start > MAX) start=100;
+            else keepSize=true;
+        }catch(e){}
+    }
+    if (! keepSize) {
+        el.style.fontSize = start+"%";
+    }
     if (el.scrollHeight > el.clientHeight || el.scrollWidth > el.clientWidth) {
         //scale down
-        for (let size = 100; (el.scrollHeight > el.clientHeight ||  el.scrollWidth > el.clientWidth) && size > 10 ; size -= 10) {
+        for (let size = start; (el.scrollHeight > el.clientHeight ||  el.scrollWidth > el.clientWidth) && size > MIN ; size -= 10) {
             el.style.fontSize = size + '%';
         }
     }
     else{
-        let lastSize=100;
-        for (let size = 100; el.scrollWidth <= el.clientWidth && el.scrollHeight <= el.clientHeight && size <= 250 ; size += 10) {
+        let lastSize=start;
+        for (let size = start; el.scrollWidth <= el.clientWidth && el.scrollHeight <= el.clientHeight && size <= MAX ; size += 10) {
             lastSize=size;
             el.style.fontSize = size + '%';
         }
-        if (lastSize > 100){
+        if (lastSize > start){
             //maybe we went multi-line...
             lastSize-=10;
             el.style.fontSize = lastSize + '%';
