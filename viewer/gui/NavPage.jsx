@@ -106,6 +106,7 @@ const startWaypointDialog=(item,idx)=>{
 };
 
 const setCenterToTarget=()=>{
+    MapHolder.setGpsLock(false);
     MapHolder.setCenter(activeRoute.hasRoute()?activeRoute.getPointAt():activeRoute.getCurrentTarget());
 };
 
