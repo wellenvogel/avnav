@@ -180,7 +180,7 @@ const allowedItemActions=(props)=>{
     let ext=getExt(props.name);
     if (props.type == 'route') ext="gpx";
     if (props.type == 'layout') ext="json";
-    let showView=(props.type == 'user' || props.type=='images' || props.type == 'route' || props.type == 'track' || props.type == 'layout') && ViewPage.VIEWABLES.indexOf(ext)>=0;
+    let showView=(props.type == 'user' || props.type=='images' || (props.type == 'route' && props.server) || props.type == 'track' || props.type == 'layout') && ViewPage.VIEWABLES.indexOf(ext)>=0;
     let showEdit=(((props.type == 'user' && props.size !== undefined && props.size < ViewPage.MAXEDITSIZE)|| (props.type == 'layout' && props.canDelete)  ) && ViewPage.EDITABLES.indexOf(ext) >=0);
     let showDownload=false;
     if (props.canDownload || props.type === "track"
