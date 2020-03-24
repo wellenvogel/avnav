@@ -43,7 +43,7 @@ public class TrackWriter implements INavRequestHandler {
     }
 
     @Override
-    public JSONArray handleList(RequestHandler.ServerInfo serverInfo) throws Exception {
+    public JSONArray handleList(Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception {
 
         JSONArray rt = new JSONArray();
         for (File f : trackdir.listFiles()) {

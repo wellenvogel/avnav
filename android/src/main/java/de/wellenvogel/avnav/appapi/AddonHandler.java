@@ -70,8 +70,9 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
     }
 
     @Override
-    public JSONArray handleList(RequestHandler.ServerInfo serverInfo) throws Exception{
-        List<AddonInfo> addons=getAddons(true);
+    public JSONArray handleList(Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception{
+        String includeInvalid=uri.getQueryParameter("invalid");
+        List<AddonInfo> addons=getAddons(!((includeInvalid != null) && (includeInvalid.toLowerCase().equals("true"))));
         JSONArray rt=new JSONArray();
         String host="localhost";
         if (serverInfo != null && serverInfo.address != null) {
@@ -187,7 +188,7 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
     public JSONObject handleApiRequest(Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
         String command= AvnUtil.getMandatoryParameter(uri,"command");
         if (command.equals("list")){
-            return RequestHandler.getReturn(new RequestHandler.KeyValue("items",handleList(serverInfo)));
+            return RequestHandler.getReturn(new RequestHandler.KeyValue("items",handleList(uri, serverInfo)));
         }
         if (command.equals("update")){
             String name=uri.getQueryParameter("name");
@@ -210,7 +211,9 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
             }
             else{
                 idx=findAddon(addons,name);
-                if (idx < 0) RequestHandler.getErrorReturn("addon not found");
+                if (idx < 0) {
+                    return RequestHandler.getErrorReturn("addon not found");
+                }
                 AddonInfo current=addons.get(idx);
                 current.icon=icon;
                 current.title=title;
@@ -225,7 +228,7 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
             if (rt) return RequestHandler.getReturn();
             else return RequestHandler.getErrorReturn("delete failed");
         }
-        return RequestHandler.getReturn();
+        return RequestHandler.getErrorReturn("unknown command "+command);
     }
 
     @Override

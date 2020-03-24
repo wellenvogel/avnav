@@ -28,9 +28,10 @@ public interface INavRequestHandler {
     /**
      * list the items
      * @return a list of items
+     * @param uri
      * @param serverInfo
      */
-    JSONArray handleList(RequestHandler.ServerInfo serverInfo) throws Exception;
+    JSONArray handleList(Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception;
 
     /**
      * delet an item

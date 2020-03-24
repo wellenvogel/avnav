@@ -282,7 +282,7 @@ public class ChartHandler implements INavRequestHandler {
     }
 
     @Override
-    public JSONArray handleList(RequestHandler.ServerInfo serverInfo) throws Exception {
+    public JSONArray handleList(Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception {
         //here we will have more dirs in the future...
         JSONArray rt=new JSONArray();
         try {

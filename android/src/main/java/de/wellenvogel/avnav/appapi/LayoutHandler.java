@@ -69,7 +69,7 @@ public class LayoutHandler implements INavRequestHandler{
     }
 
     @Override
-    public JSONArray handleList(RequestHandler.ServerInfo serverInfo) throws Exception{
+    public JSONArray handleList(Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception{
             JSONArray li=readDir(userDir,true);
             for (IJsonObect o: readAssetsDir()){
                 li.put(o.toJson());
@@ -94,7 +94,7 @@ public class LayoutHandler implements INavRequestHandler{
     public JSONObject handleApiRequest(Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
         String command= AvnUtil.getMandatoryParameter(uri,"command");
         if (command.equals("list")){
-            RequestHandler.getReturn(new RequestHandler.KeyValue("data",handleList(serverInfo)));
+            RequestHandler.getReturn(new RequestHandler.KeyValue("data",handleList(uri, serverInfo)));
         }
         return null;
     }

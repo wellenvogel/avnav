@@ -352,6 +352,7 @@ public class RequestHandler {
     ExtendedWebResourceResponse handleNavRequest(String url, PostVars postData,ServerInfo serverInfo) throws Exception {
         Uri uri= Uri.parse(url);
         String remain=uri.getPath();
+        if (remain.startsWith("/")) remain=remain.substring(1);
         if (remain != null) {
             remain=remain.substring(Math.min(remain.length(),NAVURL.length()+1));
         }
@@ -449,7 +450,7 @@ public class RequestHandler {
                 INavRequestHandler handler=getHandler(dirtype);
                 if (handler != null){
                     handled=true;
-                    fout=getReturn(new KeyValue<JSONArray>("items",handler.handleList(serverInfo)));
+                    fout=getReturn(new KeyValue<JSONArray>("items",handler.handleList(uri, serverInfo)));
                 }
 
             }

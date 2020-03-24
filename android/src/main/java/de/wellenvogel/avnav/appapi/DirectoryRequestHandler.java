@@ -11,6 +11,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 
 import de.wellenvogel.avnav.util.AvnUtil;
@@ -63,7 +64,7 @@ public class DirectoryRequestHandler implements INavRequestHandler{
                URLEncoder.encode(name,"utf-8");
     }
     @Override
-    public JSONArray handleList(RequestHandler.ServerInfo serverInfo) throws Exception {
+    public JSONArray handleList(Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception {
         JSONArray rt=new JSONArray();
         for (File localFile: workDir.listFiles()) {
             if (localFile.isFile()){
@@ -95,7 +96,7 @@ public class DirectoryRequestHandler implements INavRequestHandler{
     public JSONObject handleApiRequest(Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
         String command=AvnUtil.getMandatoryParameter(uri,"command");
         if (command.equals("list")){
-            return RequestHandler.getReturn(new RequestHandler.KeyValue("items",handleList(serverInfo)));
+            return RequestHandler.getReturn(new RequestHandler.KeyValue("items",handleList(uri, serverInfo)));
         }
         if (command.equals("delete")){
             String name=AvnUtil.getMandatoryParameter(uri,"name");
@@ -135,12 +136,13 @@ public class DirectoryRequestHandler implements INavRequestHandler{
         return null;
     }
     @Override
-    public ExtendedWebResourceResponse handleDirectRequest(String url) throws FileNotFoundException {
+    public ExtendedWebResourceResponse handleDirectRequest(String url) throws FileNotFoundException, UnsupportedEncodingException {
         if (!url.startsWith(urlPrefix)) return null;
         url = url.substring((urlPrefix.length())).replaceAll("\\?.*", "");
         String[] parts = url.split("/");
         if (parts.length < 1) return null;
-        File foundFile = findLocalFile(parts[parts.length - 1]);
+        String name= URLDecoder.decode(parts[parts.length - 1],"UTF-8");
+        File foundFile = findLocalFile(name);
         if (foundFile != null) {
             return new ExtendedWebResourceResponse(
                     foundFile.length(),
