@@ -43,8 +43,8 @@ public class Constants {
     public static final String GPSALARM="alarm.gps";
     public static final String WAYPOINTALARM="alarm.waypoint";
     public static final String MOBALARM="alarm.mob";
-    public static final String GPS_PERMISSION_REQUESTED="permissions.gps";
-    public static final String STORAGE_PERMISSION_REQUESTED="permissions.storage";
+    public static final String GPS_PERMISSION_REQUESTED_NUM="permissions.numgps";
+    public static final String STORAGE_PERMISSION_REQUESTED_NUM="permissions.numstorage";
     public static final String ADDON_CONFIG="addon.config";
 
     public static final String REALCHARTS="charts";

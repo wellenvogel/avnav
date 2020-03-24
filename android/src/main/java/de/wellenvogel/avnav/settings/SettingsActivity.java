@@ -6,6 +6,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.os.Build;
@@ -167,15 +169,27 @@ public class SettingsActivity extends PreferenceActivity {
     public static boolean checkStoragePermission(final Activity activity,boolean doRequest, boolean showToasts){
         return checkStoragePermission(activity,doRequest,showToasts, getNextPermissionRequestCode());
     }
+    private static long getInstallTs(Activity activity){
+        long ts=1L;
+        try {
+            ApplicationInfo info=activity.getPackageManager().getApplicationInfo(activity.getApplicationContext().getPackageName(),0);
+            String src=info.sourceDir;
+            ts=new File(src).lastModified();
+        } catch (Exception e) {
+            AvnLog.e("unable to get package info",e);
+        }
+        return ts;
+    }
     private static boolean checkStoragePermission(final Activity activity,boolean doRequest, boolean showToasts, int requestCode){
         if (Build.VERSION.SDK_INT < 23) return true;
         if (ContextCompat.checkSelfPermission(activity, Manifest.permission.READ_EXTERNAL_STORAGE) !=
                 PackageManager.PERMISSION_GRANTED) {
+            long ts=getInstallTs(activity);
             SharedPreferences prefs = activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
-            boolean alreadyAsked=prefs.getBoolean(Constants.STORAGE_PERMISSION_REQUESTED,false);
-            if ((! alreadyAsked || ActivityCompat.shouldShowRequestPermissionRationale(activity,Manifest.permission.READ_EXTERNAL_STORAGE) )&& doRequest)
+            long alreadyAsked=prefs.getLong(Constants.STORAGE_PERMISSION_REQUESTED_NUM,0L);
+            if (((alreadyAsked != ts) || ActivityCompat.shouldShowRequestPermissionRationale(activity,Manifest.permission.READ_EXTERNAL_STORAGE) )&& doRequest)
             {
-                prefs.edit().putBoolean(Constants.STORAGE_PERMISSION_REQUESTED,true).apply();
+                prefs.edit().putLong(Constants.STORAGE_PERMISSION_REQUESTED_NUM,ts).apply();
                 activity.requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, requestCode);
                 return false;
             }
@@ -197,10 +211,11 @@ public class SettingsActivity extends PreferenceActivity {
         if (Build.VERSION.SDK_INT >= 23) {
             if (ContextCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) !=
                     PackageManager.PERMISSION_GRANTED) {
-                boolean alreadyAsked=prefs.getBoolean(Constants.GPS_PERMISSION_REQUESTED,false);
-                if ((! alreadyAsked || ActivityCompat.shouldShowRequestPermissionRationale(activity,Manifest.permission.ACCESS_FINE_LOCATION) )&& doRequest)
+                long ts=getInstallTs(activity);
+                long alreadyAsked=prefs.getLong(Constants.GPS_PERMISSION_REQUESTED_NUM,0L);
+                if (( (alreadyAsked != ts) || ActivityCompat.shouldShowRequestPermissionRationale(activity,Manifest.permission.ACCESS_FINE_LOCATION) )&& doRequest)
                 {
-                    prefs.edit().putBoolean(Constants.GPS_PERMISSION_REQUESTED,true).apply();
+                    prefs.edit().putLong(Constants.GPS_PERMISSION_REQUESTED_NUM,ts).apply();
                     activity.requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 99);
                     return false;
                 }
