@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>AvNav Files/Download</title>
+    <link href="../styles.css" rel="stylesheet" type="text/css">
+  </head>
+  <body class="image">
+    <h1>The Files/Download Page </h1>
+    <p>From the <a href="mainpage.html">mainpage</a> you will get here using
+      the<img src="../viewerimages/icons-new/ic_file_download.svg" alt="" class="inlineimage">
+      button. At this page you can download/upload/delete/edit/view
+      charts,tracks,routes, user files and images.</p>
+    <p> <img src="../downloadpage-charts.png" alt="" class="image"> </p>
+    <h2>Buttons</h2>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Icon</td>
+          <td>Name</td>
+          <td>Function</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/map2.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>DownloadPageCharts</td>
+          <td>show list of charts</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/track.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>DownloadPageTracks</td>
+          <td>show list of tracks</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/route.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>DownloadPageRoutes</td>
+          <td>show list of routes</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ballot.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>DownloadPageLayouts</td>
+          <td>show list of layouts</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/folder_shared.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>DownloadPageUser</td>
+          <td>show list of <a href="#userfiles">user files</a></td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/image-icon.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>DownloadPageImages</td>
+          <td>show list of user images</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_file_upload.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>DownloadPageUpload</td>
+          <td>upload a file to the currently show category</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>MOB</td>
+          <td>man over board (see <a href="mainpage.html#mob">main page</a>)</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>Cancel</td>
+          <td>back to previous page</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>For each entry in the list there will be a couple of informations and
+      there is a <img src="../viewerimages/icons-new/ic_delete.svg" alt="" class="inlineimage">delete
+      and a <img src="../viewerimages/icons-new/ic_file_download.svg" alt="" class="inlineimage">download
+      button. They are only visible if the operation is permitted for the
+      particular element (e.g. no deletion of demo charts or system layouts).<br>
+      Potentially there will be more icons to give you a hint which operations
+      are possible for this element. By clicking on the element a dialog will be
+      shown with the available actions for the element.</p>
+    <p><img src="../downloadpage-user-dialog.png" alt="" class="image"></p>
+    <p>If available ("Edit" / "View") you can move to an edit/show view.</p>
+    <p><img src="../viewpage-edit-layout.png" alt="" class="image">In this view
+      you can make changes - if "Editing" is shown or the content is shown. By
+      clicking on <img src="../viewerimages/icons-new/save.svg" alt="" class="inlineimage">the
+      changes will be stored.</p>
+    <h2>Special Functions</h2>
+    <h3><a name="userfiles" id="userfiles"></a>User Files</h3>
+    <p>By changing to <img src="../viewerimages/icons-new/folder_shared.svg" alt=""
+        class="inlineimage">user files you can e.g. edit <a href="../hints/userjs.html">user.js</a>
+      and <a href="../hints/usercss.html">user.css</a>. The file keys.json
+      contains <a href="../hints/keyboard.html">user defined keyboard shortcuts</a>.
+    </p>
+    <p><img src="../downloadpage-user.png" alt="" class="image"></p>
+    <p>Ypu can also upload additional files here that you need to adapt AvNav
+      (e.g. css files, java script files or HTML files). Those files you can
+      reach via the url /user/viewer/&lt;name&gt;.<br>
+      Images should be uploaded using the Images <img src="../viewerimages/icons-new/image-icon.svg"
+        alt="" class="inlineimage">category. They will be reachable via
+      /user/images/&lt;name&gt;.</p>
+    <p>Using the "+" button (lower right) you can create a new file. This could
+      be an HTML file that you later on would use to create a <a href="addonconfigpage.html">User
+        App</a> .</p>
+    <p>For a HTML file the action dialog will contain an "<img src="../viewerimages/icons-new/apps.svg"
+        alt="" class="inlineimage">App" button that you can use to directly
+      create a <a href="addonconfigpage.html">User App</a>. You have to be sure
+      to upload an Icon image file beforehand.</p>
+    <p><img src="../downloadpage-user-dialog-html.png" alt="" class="image"></p>
+    <h3><a name="mbtiles" id="mbtiles"></a>Charts - mbtiles Format</h3>
+    <p>Using a chart in <a href="https://wiki.openstreetmap.org/wiki/MBTiles">mbtiles</a>
+      could lead to problems if the tiles internally are not ordered using the
+      default "xyz" format an there is no hint in the meta data about that. If
+      you experience display problems with an mbtiles chart you can try to
+      switch the format in the action dialog to "tms". This change will be
+      written to the chart file.</p>
+    <p><img src="../downloadpage-charts-mbtiles.png" alt="" class="image"></p>
+    <br>
+    <p><br>
+    </p>
+  </body>
+</html>

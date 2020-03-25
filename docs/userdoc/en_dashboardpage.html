@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>AvNav Dashboard</title>
+    <link href="../styles.css" rel="stylesheet" type="text/css">
+  </head>
+  <body>
+    <h1>The Dashboard Page </h1>
+    <p>Using the button (000) on the <a href="mainpage.html">mainpage</a> or by
+      clicking on the lower right display on the <a href="navpage.html">navigation
+        page</a>&nbsp; you will reach this page. There is no need for an
+      available chart to display this page.</p>
+    <p>You can configure up to 5 dashboard pages in the <a href="../hints/layouts.html">layout</a>.</p>
+    <p> <img src="../dashboard-1.png" alt="" class="image"></p>
+    <br>
+    <img src="../dashboard-3.png" alt="" class="image">
+    <h2> Buttons</h2>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Icon</td>
+          <td>Name</td>
+          <td>Function</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/center.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>GpsCenter</td>
+          <td>center chart to waypoint and go back to previous page</td>
+        </tr>
+        <tr>
+          <td>1,2,...</td>
+          <td>Gps1, Gps2, ...</td>
+          <td>select the dashboard you would like to display. You can customize
+            the display by selecting an available layout at settings-&gt;layout
+            or you can adapt the layout using the <a href="../hints/layouts.html">layout
+              editor</a><span style="color: #0000ee;">.</span></td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/anchor.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>AnchorWatch</td>
+          <td>activate anchor watch, ssee <a href="#anchorwatch">below</a></td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>MOB</td>
+          <td>Man over Board (see <a href="mainpage.html#mob">main page</a>)</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>Cancel</td>
+          <td>back to previous page</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Clicking on the AIS target (lower right) will move you to the&nbsp;<a href="aisinfopage.html">
+        AIS page</a>, any other click will get you back to where you came from.</p>
+    <h2>Special Functions</h2>
+    <h3><a name="anchorwatch" id="anchorwatch"></a>anchor watch</h3>
+    <p>By clicking on the <img src="../viewerimages/icons-new/anchor.svg" alt=""
+        class="inlineimage"> button you activate the anchor watch.</p>
+    <img src="../dashboard1-startanchor.png" alt="" class="image">
+    <p>In the dialog you will select the radius that is tolerated around the
+      current position (the default can be changed at settings).</p>
+    <p>After activation the <img src="../viewerimages/icons-new/anchor.svg" alt=""
+        class="inlineimage"> button will have a green border and the supervision
+      will start. If your boat will move outside the defined radius an alarm
+      will be switched on. Additionally a loss of the GPS signal will also
+      switch on an alarm. The supervision is done at the server side - so you
+      can switch of any display. But you need to have a sound device at your
+      server in this case.</p>
+    <p>When the anchor watch is active some dashboard pages will change their
+      content.</p>
+    <p><img src="../dashboard1-anchor.png" alt="" class="image"> </p>
+    <br>
+  </body>
+</html>
