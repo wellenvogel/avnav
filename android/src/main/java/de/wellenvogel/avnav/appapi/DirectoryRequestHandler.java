@@ -136,10 +136,13 @@ public class DirectoryRequestHandler implements INavRequestHandler{
         return null;
     }
     @Override
-    public ExtendedWebResourceResponse handleDirectRequest(String url) throws FileNotFoundException, UnsupportedEncodingException {
-        if (!url.startsWith(urlPrefix)) return null;
-        url = url.substring((urlPrefix.length())).replaceAll("\\?.*", "");
-        String[] parts = url.split("/");
+    public ExtendedWebResourceResponse handleDirectRequest(Uri uri) throws FileNotFoundException, UnsupportedEncodingException {
+        String path=uri.getPath();
+        if (path == null) return null;
+        if (path.startsWith("/")) path=path.substring(1);
+        if (!path.startsWith(urlPrefix)) return null;
+        path = path.substring((urlPrefix.length()));
+        String[] parts = path.split("/");
         if (parts.length < 1) return null;
         String name= URLDecoder.decode(parts[parts.length - 1],"UTF-8");
         File foundFile = findLocalFile(name);

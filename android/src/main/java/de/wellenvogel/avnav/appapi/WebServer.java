@@ -91,6 +91,10 @@ public class WebServer {
             if (!method.equals("GET") && !method.equals("HEAD")  && ! method.equals("POST")) {
                 throw new MethodNotSupportedException(method + " method not supported");
             }
+            Uri uri=Uri.parse(url);
+            if (uri.getPath() == null){
+                throw new HttpException("no path in "+url);
+            }
             PostVars postData=null;
             if (httpRequest instanceof HttpEntityEnclosingRequest) {
                 HttpEntity data = ((HttpEntityEnclosingRequest) httpRequest).getEntity();
@@ -99,7 +103,7 @@ public class WebServer {
             ExtendedWebResourceResponse resp=null;
             try {
                 if (activity.getRequestHandler() != null) {
-                    resp = activity.getRequestHandler().handleNavRequest(url,
+                    resp = activity.getRequestHandler().handleNavRequest(uri,
                             postData,
                             getServerInfo());
                 }
@@ -137,18 +141,26 @@ public class WebServer {
 
     class DirectoryRequestHandler implements HttpRequestHandler{
 
-        INavRequestHandler handler;
-        DirectoryRequestHandler(INavRequestHandler handler){
+        RequestHandler handler;
+        String prefix;
+        DirectoryRequestHandler(String prefix,RequestHandler handler){
             this.handler=handler;
+            this.prefix=prefix;
         }
         @Override
         public void handle(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
-            AvnLog.d(NAME,"prefix request for "+handler.getPrefix()+request.getRequestLine());
+            AvnLog.d(NAME,"prefix request for "+prefix+request.getRequestLine());
             try {
                 String url=request.getRequestLine().getUri();
+                Uri uri=Uri.parse(url);
+                if (uri.getPath() == null){
+                    response.setStatusCode(404);
+                    response.setReasonPhrase("no path");
+                    return;
+                }
                 String method = request.getRequestLine().getMethod().toUpperCase(Locale.ENGLISH);
                 if (method.equals("GET") || method.equals("HEAD")) {
-                    ExtendedWebResourceResponse resp = handler.handleDirectRequest(url);
+                    ExtendedWebResourceResponse resp = handler.tryDirectRequest(uri);
                     if (resp != null) {
                         response.setHeader("content-type", resp.getMimeType());
                         if (resp.getLength() < 0) {
@@ -173,36 +185,39 @@ public class WebServer {
         }
 
         String getPrefix(){
-            return handler.getPrefix();
+            return prefix;
         }
     }
 
     class BaseRequestHandler implements HttpRequestHandler{
 
         @Override
-        public void handle(HttpRequest httpRequest, HttpResponse httpResponse, HttpContext httpContext) throws HttpException, IOException {
+        public void handle(HttpRequest httpRequest, HttpResponse httpResponse, HttpContext httpContext) throws HttpException{
             AvnLog.d(NAME,"base request"+httpRequest.getRequestLine());
-            String url = URLDecoder.decode(httpRequest.getRequestLine().getUri());
+            Uri uri=Uri.parse(httpRequest.getRequestLine().getUri());
+            if (uri.getPath() == null){
+                throw new HttpException("no path");
+            }
             String method = httpRequest.getRequestLine().getMethod().toUpperCase(Locale.ENGLISH);
             if (!method.equals("GET") && !method.equals("HEAD") ) {
                 throw new MethodNotSupportedException(method + " method not supported");
             }
-            if (url.equals("")|| url.equals("/")) {
+            String path=uri.getPath();
+            if (path.equals("")|| path.equals("/")) {
                 httpResponse.setStatusCode(301);
                 httpResponse.addHeader("Location","/viewer/avnav_viewer.html?onAndroid=1");
                 return;
             }
-            url=url.replaceAll("^/*","");
-            url=url.replaceAll("\\?.*","");
+            path=path.replaceAll("^/*","");
             //TODO: restrict access
             try {
-                InputStream is=activity.getAssets().open(url);
+                InputStream is=activity.getAssets().open(path);
                 httpResponse.setStatusCode(HttpStatus.SC_OK);
                 httpResponse.setEntity(new InputStreamEntity(is));
-                httpResponse.addHeader("content-type", activity.getRequestHandler().mimeType(url));
+                httpResponse.addHeader("content-type", activity.getRequestHandler().mimeType(path));
 
             }catch (Exception e){
-                AvnLog.d(NAME,"file "+url+" not found: "+e);
+                AvnLog.d(NAME,"file "+path+" not found: "+e);
                 httpResponse.setStatusCode(404);
                 httpResponse.setReasonPhrase("not found");
             }
@@ -281,7 +296,7 @@ public class WebServer {
             registry.register("/"+ RequestHandler.NAVURL+"*",navRequestHandler);
             for (INavRequestHandler h: activity.getRequestHandler().getHandlers()){
                 if (h.getPrefix() == null) continue;
-                DirectoryRequestHandler handler=new DirectoryRequestHandler(h);
+                DirectoryRequestHandler handler=new DirectoryRequestHandler(h.getPrefix(),activity.getRequestHandler());
                 registry.register("/"+h.getPrefix()+"/*",handler);
             }
 

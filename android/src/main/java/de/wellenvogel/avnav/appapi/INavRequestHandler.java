@@ -46,11 +46,11 @@ public interface INavRequestHandler {
 
     /**
      * handle a direct request if our prefix matches
-     * @param url
+     * @param uri
      * @return
      * @throws FileNotFoundException
      */
-    ExtendedWebResourceResponse handleDirectRequest(String url) throws Exception;
+    ExtendedWebResourceResponse handleDirectRequest(Uri uri) throws Exception;
 
     /**
      * get the prefix string we handle

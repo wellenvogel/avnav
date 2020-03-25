@@ -359,8 +359,8 @@ public class ChartHandler implements INavRequestHandler {
 
 
     @Override
-    public ExtendedWebResourceResponse handleDirectRequest(String url) throws Exception {
-        return handleChartRequest(url);
+    public ExtendedWebResourceResponse handleDirectRequest(Uri uri) throws Exception {
+        return handleChartRequest(uri);
     }
 
     @Override
@@ -434,8 +434,10 @@ public class ChartHandler implements INavRequestHandler {
         return new KeyAndParts(key,parts,5);
     }
 
-    private ExtendedWebResourceResponse handleChartRequest(String fname) throws Exception {
+    private ExtendedWebResourceResponse handleChartRequest(Uri uri) throws Exception {
         InputStream rt = null;
+        String fname=uri.getPath();
+        if (fname == null) return null;
         KeyAndParts kp = urlToKey(fname,false);
         String mimeType = handler.mimeType(fname);
         int len = 0;

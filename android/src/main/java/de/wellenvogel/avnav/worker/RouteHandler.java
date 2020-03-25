@@ -122,7 +122,7 @@ public class RouteHandler implements INavRequestHandler {
     }
 
     @Override
-    public ExtendedWebResourceResponse handleDirectRequest(String url) throws FileNotFoundException {
+    public ExtendedWebResourceResponse handleDirectRequest(Uri uri) throws FileNotFoundException {
         return null;
     }
 

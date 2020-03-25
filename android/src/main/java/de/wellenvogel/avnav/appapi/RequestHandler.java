@@ -273,7 +273,13 @@ public class RequestHandler {
         return mimeType;
     }
 
-
+    /**
+     * used for the internal requests from our WebView
+     * @param view
+     * @param url undecoded url
+     * @return
+     * @throws Exception
+     */
     public WebResourceResponse handleRequest(View view, String url) throws Exception {
         Uri uri=null;
         try {
@@ -287,12 +293,10 @@ public class RequestHandler {
             try {
                 if (path.startsWith("/")) path=path.substring(1);
                 if (path.startsWith(NAVURL)){
-                    return handleNavRequest(url,null);
+                    return handleNavRequest(uri,null);
                 }
-                INavRequestHandler handler=getPrefixHandler(path);
-                if (handler != null){
-                    return handler.handleDirectRequest(path);
-                }
+                WebResourceResponse rt=tryDirectRequest(uri);
+                if (rt != null) return rt;
                 InputStream is=activity.getAssets().open(path);
                 return new WebResourceResponse(mimeType(path),"",is);
             } catch (Throwable e) {
@@ -304,6 +308,17 @@ public class RequestHandler {
             AvnLog.d("AvNav", "external request " + url);
             return null;
         }
+    }
+
+    public ExtendedWebResourceResponse tryDirectRequest(Uri uri) throws Exception {
+        String path=uri.getPath();
+        if (path == null) return null;
+        if (path.startsWith("/")) path=path.substring(1);
+        INavRequestHandler handler=getPrefixHandler(path);
+        if (handler != null){
+            return handler.handleDirectRequest(uri);
+        }
+        return null;
     }
 
     public String getStartPage(){
@@ -346,11 +361,11 @@ public class RequestHandler {
         return null;
     }
 
-    ExtendedWebResourceResponse handleNavRequest(String url, PostVars postData) throws Exception{
-        return handleNavRequest(url,postData,null);
+    ExtendedWebResourceResponse handleNavRequest(Uri uri, PostVars postData) throws Exception{
+        return handleNavRequest(uri,postData,null);
     }
-    ExtendedWebResourceResponse handleNavRequest(String url, PostVars postData,ServerInfo serverInfo) throws Exception {
-        Uri uri= Uri.parse(url);
+    ExtendedWebResourceResponse handleNavRequest(Uri uri, PostVars postData,ServerInfo serverInfo) throws Exception {
+        if (uri.getPath() == null) return null;
         String remain=uri.getPath();
         if (remain.startsWith("/")) remain=remain.substring(1);
         if (remain != null) {
@@ -467,7 +482,7 @@ public class RequestHandler {
                     try {
                         resp = handler.handleDownload(name, uri);
                     }catch (Exception e){
-                        AvnLog.e("error in download request "+url,e);
+                        AvnLog.e("error in download request "+uri.getPath(),e);
                     }
                 }
                 if (!handled && dltype != null && dltype.equals("alarm") && name != null) {
