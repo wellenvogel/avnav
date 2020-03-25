@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>AvNav Files/Download</title>
+    <link href="../styles.css" rel="stylesheet" type="text/css">
+  </head>
+  <body class="image">
+    <h1>Die Files/Download Seite </h1>
+    <p>Von der Startseite kommt man mit dem&nbsp;<img src="../viewerimages/icons-new/ic_file_download.svg"
+        alt="" class="inlineimage"> Button zur Files/Download Seite. Auf dieser
+      Seite kann man Karten, Tracks, Routen, Layouts, Nutzer-Dateien, Bilder
+      herunterladen oder auf den Raspberry (Server) hochladen und sie dort auch
+      löschen. Für einige Dateien ist auch eine direkte Bearbeitung möglich.</p>
+    <p> <img src="../downloadpage-charts.png" alt="" class="image"> </p>
+    <h2>Buttons</h2>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Icon</td>
+          <td>Name</td>
+          <td>Funktion</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/map2.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>DownloadPageCharts</td>
+          <td>Anzeige der Liste der Karten</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/track.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>DownloadPageTracks</td>
+          <td>Anzeige der Liste der Tracks</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/route.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>DownloadPageRoutes</td>
+          <td>Anzeige der Liste der Routen</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ballot.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>DownloadPageLayouts</td>
+          <td>Anzeige der Liste der Layouts</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/folder_shared.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>DownloadPageUser</td>
+          <td>Anzeige der Liste der Nutzerdateien</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/image-icon.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>DownloadPageImages</td>
+          <td>Anzeige der Liste der Nutzer-Bilder</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_file_upload.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>DownloadPageUpload</td>
+          <td>Hochladen einer Datei für die gerade angezeigte Kategorie</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>MOB</td>
+          <td>Mann über Bord (siehe <a href="mainpage.html#mob">Hauptseite</a>)</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>Cancel</td>
+          <td>Zurück zur vorigen Seite</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>In der angezeigten Liste stehen einige Informationen zum jeweiligen
+      Eintrag und es gibt einen <img src="../viewerimages/icons-new/ic_delete.svg"
+        alt="" class="inlineimage">Löschen und einen <img src="../viewerimages/icons-new/ic_file_download.svg"
+        alt="" class="inlineimage">Download Button. Diese aber nur, wenn es das
+      jeweilige Element erlaubt (z.B. kein Löschen von demo charts oder
+      system-Layouts).</p>
+    <p>Potentiell werden noch weitere Icons angezeigt, die die
+      Bearbeitungsoptionen darstellen. Beim Klick auf ein Element in der Liste
+      öffnet sich ein Dialog mit den verfügbaren Optionen.</p>
+    <p><img src="../downloadpage-user-dialog.png" alt="" class="image"></p>
+    <p>Falls angeboten ("Edit" / "View") kann hier zu einer Anzeige- /
+      Bearbeitungsansicht gewechselt werden.</p>
+    <p><img src="../viewpage-edit-layout.png" alt="" class="image">Auf dieser
+      Seite können Änderungen vorgenommen werden (Überschrift "Editing") oder
+      der Inhalt wird angezeigt. Durch Klick auf <img src="../viewerimages/icons-new/save.svg"
+        alt="" class="inlineimage">werden Änderungen gespeichert.</p>
+    <h2>Besondere Funktionen</h2>
+    <h3><a name="userfiles" id="userfiles"></a>Nutzer Dateien</h3>
+    <p>Wenn zur Ansicht <img src="../viewerimages/icons-new/folder_shared.svg"
+        alt="" class="inlineimage">Nutzer Dateien gewechselt wurde, können hier
+      unter anderem die Datei <a href="../hints/userjs.html">user.js</a> und <a
+        href="../hints/usercss.html">user.css</a> angesehen und bearbeitet
+      werden.</p>
+    <p>Die Datei keys.json ermöglicht <a href="../hints/keyboard.html">nutzerspezifische
+        Tastaturkürzel</a>.</p>
+    <p><img src="../downloadpage-user.png" alt="" class="image"></p>
+    <p>Auf dieser Seite können auch weitere Dateien hochgeladen werden, die für
+      die Anpassung von avnav benötigt werden (z.B. css Dateien, java script
+      files oder auch HMTL Dateien). Diese Dateien sind jeweils über die URL
+      /user/viewer/&lt;name&gt; erreichbar.<br>
+      Bilder sollten vorzugsweise in der Ansicht <img src="../viewerimages/icons-new/image-icon.svg"
+        alt="" class="inlineimage">hochgeladen werden und sind dann über
+      /user/images/&lt;name&gt; erreichbar.</p>
+    <p>Über den "+" Button unten rechts kann eine neue Datei angelegt werden.
+      Das könnte z.B. eine HTML Datei sein, die dann zu einer <a href="addonconfigpage.html">User
+        App</a> gemacht werden soll.</p>
+    <p>Für eine HTML Datei enthält der Aktionen Dialog den Button "<img src="../viewerimages/icons-new/apps.svg"
+        alt="" class="inlineimage">App", mit dem direkt eine <a href="addonconfigpage.html">User
+        App</a> erzeugt werden kann (vorher muss allerdings ein Icon hochgeladen
+      worden sein).</p>
+    <p><img src="../downloadpage-user-dialog-html.png" alt="" class="image"></p>
+    <h3><a name="mbtiles" id="mbtiles"></a>Karten - mbtiles Format</h3>
+    <p>Bei einer Karte im mbtiles Format kann es sein, das die Kacheln intern in
+      einer anderen als der default Ordnung gespeichert sind. Der default ist
+      "xyz", optional gibt es "tms". Falls die Karte keine gültige Information
+      enthält, wird "xyz" angenommen. Wenn eine solche Karte nicht korrekt
+      dargestellt wird, kann man versuchen auf "tms" umzuschalten.</p>
+    <p><img src="../downloadpage-charts-mbtiles.png" alt="" class="image"></p>
+    <p>Diese Information wird dann dauerhaft in der Kartendatei gespeichert.</p>
+    <br>
+    <p><br>
+    </p>
+  </body>
+</html>

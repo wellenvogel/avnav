@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>AvNav Wifi Konfiguration</title>
+    <link href="../styles.css" rel="stylesheet" type="text/css">
+  </head>
+  <body class="image">
+    <h1> Die Wifi Konfigurationsseite </h1>
+    <p><img src="../wpapage.png" alt="" class="image"></p>
+    <p>Diese Seite wird nur angezeigt, wenn des Wifi Client Handling
+      konfiguriert ist (als default an) und ein WLAN-Adapter in der richtigen
+      USB-Buchse eingesteckt wurde.</p>
+    <p><img src="../raspi3-wlan.jpg" alt="" class="image"></p>
+    <p>Im Bild gezeigt hier ein Raspberry Pi 3. Bei den neueren mit USB 3.0
+      (blaue Buchsen) muss er in der blauen Buchse auf der Leiterplatten-Seite
+      stecken.</p>
+    <p>Auf Systemebene muss ein WLAN "wlan-av1" angezeigt werden. In der
+      Konfiguration (avnav_server.xml) muss eine Eintrag der Form</p>
+    <div class="code">&lt;AVNWpaHandler wpaSocket="/var/run/wpa_supplicant/wlan-av1"&gt;
+&lt;/AVNWpaHandler&gt;<meta http-equiv="content-type" content="text/html; charset=utf-8"></div>
+    <p>vorhanden sein.</p>
+    <p>Auf der Seite werden alle in Reichweite befindlichen oder konfigurierten
+      WLANs angezeigt.</p>
+    <p>Durch Klick auf ein angezeigtes WLAN kann die Verbindung hergestellt
+      werden.</p>
+    <p><img src="../wpa-connect.png" alt="" class="image"></p>
+    <p>Falls ein Zugriff von aussen auf den Raspberry erfolgen soll, kann hier
+      "External Access" eingeschaltet werden.</p>
+    <p><b>Achtung: Das sollte nicht in öffentlichen WLANs aktiviert werden, da
+        AvNav keinen besonderen Schutz bietet und sonst jeder im gleichen WLAN
+        ungehindert zugreifen kann.</b> <br>
+      Es kann aber z.B. genutzt werden, wenn man einen LTE Router nutzt und
+      seine Geräte direkt mit diesem verbunden sein sollen.</p>
+    <p>Wenn die Verbindung hergesetllt wurde, wird das entsprechend angezeigt,
+      das verbundene Netzwerk ist grau hinterlegt.</p>
+    <p><img src="../wpapage-connected.png" alt="" class="image"></p>
+    <p>Während des Verbiundungsaufbaus werden bei "Interface"
+      Zustandsinformationen angezeigt.</p>
+    <p>Falls man das WLAN trennen möchte, kann man durch erneuten Klick auf das
+      Netzwerk dieses disablen (oder auch komplett aus der Konfiguration
+      entfernen).</p>
+    <p><img src="../wpapage-modify.png" alt="" class="image"></p>
+    <p>Die WLAN Informationen werden in der Datei
+      /etc/wpa_supplicant/wpa_supplicant.conf gespeichert.</p>
+    <p><br>
+    </p>
+    <br>
+    <p><br>
+    </p>
+  </body>
+</html>
