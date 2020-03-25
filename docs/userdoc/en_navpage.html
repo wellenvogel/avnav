@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>AvNav Navigation Page</title>
+    <link href="../styles.css" rel="stylesheet" type="text/css">
+  </head>
+  <body>
+    <h1>The Navigation Page</h1>
+    <p>This page is the one normally used for navigation. In the picture there
+      is an active waypoint and the chart is locked to the boat position (i.e.
+      will move with the boat).</p>
+    <div><img src="../navi-routing-wp-ais.png" name="Grafik4" class="image"></div>
+    <div><b><br>
+      </b></div>
+    <div><b>Buttons</b><br>
+    </div>
+    <table border="1">
+      <tbody>
+        <tr>
+          <td>Icon</td>
+          <td>Name</td>
+          <td>Funktion</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_zoom_in.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>ZoomIn</td>
+          <td>Zoom in</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_zoom_out.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>ZoomOut<br>
+          </td>
+          <td>Zoom out<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/boat.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>LockPos<br>
+          </td>
+          <td>lock the chart center to the boat position<br>
+            can only be activated if there is a valid position<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/stop-nav.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>StopNav<br>
+          </td>
+          <td>stop the navigation<br>
+            only visible if there is currently an active waypoint or route<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/waypoint.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>LockMarker<br>
+          </td>
+          <td><a href="#waypoint">start waypoint navigation</a>.<br>
+            the center of the chart (cross) will become the target waypoint.<br>
+            only visible if there is currently no active route or waypoint<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/compass.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>CourseUp<br>
+          </td>
+          <td>rotate chart - course forward will be at top<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/route.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>ShowRoutePanel<br>
+          </td>
+          <td>change to <a href="editroutepage.html">route editor</a> (also by
+            clicking on the route display if there is any)<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>MOB<br>
+          </td>
+          <td>man over board (see <a href="mainpage.html#mob">main page</a>)<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>Cancel</td>
+          <td>back to <a href="mainpage.html">main page</a><br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>This is the navigation view. In the middle there is the chart display
+      with the boat position (red arrow). The yellow and green symbols are the
+      AIS targets in vicinity (10nm, can be changed in settings) together with
+      their current curse and name or MMSI. The orange line is the course
+      towards the current target waypoint. The dotted line show the original
+      course from the start of navigation to the target waypoint. You can move
+      and zoom the chart with the normal gestures. For zooming you can also use
+      the buttons +/- on the right side. If the chart is locked to the boat
+      position (like in the picture) it will always jump back there.</p>
+    <p>You can have up to 3 circles being drawn around the boat to be able to
+      estimate distances. You can change them via settings-&gt;navigation
+      display. Standard values are 300m and 1000m.</p>
+    <p>At the left side you have (top down):</p>
+    <ul>
+      <li>current chart zoom, required in brackets if you have auto zoom active</li>
+      <li>the next AIS target (green), turning red on AIS warning or the
+        selected AIS target (yellow)</li>
+      <li>current time</li>
+    </ul>
+    <p>The display of the next AIS target will turn red if the expected CPA will
+      be less then 500m (can be changed in settings). If the display is yellow
+      it does not show the nearest target but another one you have selected on
+      the <a href="aisinfopage.html">ais info page</a>. If you click on this
+      display you move to the ais info page.</p>
+    <p>At the bottom of the navigation page you have the most important
+      instrument data. At the left the data for the current active waypoint (if
+      any):</p>
+    <ul>
+      <li> Position </li>
+      <li>ETA </li>
+      <li>Course</li>
+      <li> Distance (nm) </li>
+    </ul>
+    <p>On the right the boat data:</p>
+    <ul>
+      <li>Course</li>
+      <li> SOG (kn) </li>
+      <li> Position </li>
+      <li> local time from GPS </li>
+      <li> GPS indicator: green - gps data ok, red: no gps data</li>
+    </ul>
+    <p>Depending on the display width and the settings for the font size (widget
+      font size) you will have 2 rows of data (you can change this in settings
+      at "2 widget rows"). Items that do not fit any more will be hidden
+      completely.</p>
+    <p>For the boat data (position, course, speed) you can set up an averaging
+      (settings-&gt;navigation). If turned on the captions at the displays will
+      turn red.</p>
+    <p>All display can be adapted with the <a href="hints/layouts.html">layout
+        editor</a>.</p>
+    <p>If you click on the lower right displays you will be moved to the <a href="dashboardpage.html">dashboard</a>.</p>
+    <p>Clicking on the lower left displays will bring up a couple of additional
+      waypoint buttons.</p>
+    <p><img src="../navpage-waypoint-buttons.png" alt="" class="image"> </p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Icon</td>
+          <td>Name</td>
+          <td>Function</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/anchor.png" alt="" class="inlineimage"><br>
+          </td>
+          <td>AnchorWatch</td>
+          <td>switch on anchor watch (see <a href="dashboardpage.html#anchorwatch">dashboard</a>)</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/center.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>WpLocate</td>
+          <td>move chart center to waypoint</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_edit.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>WpEdit</td>
+          <td>edit waypoint<br>
+            you can change the name and position of the waypoint in the dialog</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/wpgoto.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>WpGoto</td>
+          <td>start navigation to this waypoint<br>
+            will only be visible if there is no current navigation</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>If currently a route is active, the waypoint buttons will change
+      slightly.</p>
+    <p><img src="../navpage-waypoint-buttons-route.png" alt="" class="image"><br>
+    </p>
+    <p>The additional buttons</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Icon</td>
+          <td>Name</td>
+          <td>Function</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/nextwp.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>NavNext</td>
+          <td>start navigation to the next waypoint of the current route</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_arrow_forward.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>WpNext</td>
+          <td>center chart to next waypoint</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_arrow_back.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>WpPrevious</td>
+          <td>center chart to previous waypoint</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>If a route is currently active there will be a display for the route data
+      on the left side (name, remaining distance, eta).</p>
+    <p>In routing mode there will be a change of the target waypoint to the next
+      one if the following conditions are met:</p>
+    <ul>
+      <li>the boat is inside the approach radius to the current target
+        waypoint&nbsp; (default 200m - settings-&gt;route-&gt;approach)</li>
+      <li>the distance to the waypoint starts to increase (and the distance to
+        the next one to decrease)</li>
+    </ul>
+    <p> In approach the display of the route parameters will turn red and the
+      course to the next waypoint will be shown additionally. Additionally a
+      waypoint alarm is triggered.</p>
+    <p>If the is no automatic movement to the next waypoint, you can click on
+      the waypoint data and use the <img src="../viewerimages/icons-new/nextwp.svg"
+        alt="" class="inlineimage"> button to set the next waypoint as target.</p>
+    <img src="../navpage-route-waypoint.png" alt="" class="image">
+    <h2>Special Functions</h2>
+    <h3><a name="waypoint" id="waypoint"></a>Simple Waypoint Navigation</h3>
+    <p>Steps:</p>
+    <ol>
+      <li>Unlock Chart (if on)</li>
+      <li>Stop Nav</li>
+      <li>Move chart until your target is below the center (cross), use zoom if
+        necessary</li>
+      <li>LockMarker (start navigation) </li>
+      <li>Lock Chart</li>
+    </ol>
+    <h3>Bearings</h3>
+    <p>If a waypoint is active and the chart is not locked to the boat position
+      you have a "Center" display at the left side. This shows the center
+      position, the course and distance from the boat to the center and from the
+      waypoint to the center. For a simple bearing just move the chart center
+      (cross) to the bearing target and read the bearing from the "Center"
+      display.</p>
+    <p>To start a route - change with&nbsp; <img src="../viewerimages/icons-new/route.svg"
+        alt="" class="inlineimage">to the <a href="editroutepage.html">route
+        editor</a>.</p>
+  </body>
+</html>

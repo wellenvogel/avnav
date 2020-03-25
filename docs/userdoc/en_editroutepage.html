@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>AvNav Route Editor</title>
+    <link href="../styles.css" rel="stylesheet" type="text/css">
+  </head>
+  <body>
+    <h1>The Route Editor </h1>
+    <p>You will reach the route editor with the&nbsp; <img src="../viewerimages/icons-new/route.svg"
+        alt="" class="inlineimage"> button from the <a href="navpage.html">navigation
+        page</a> .</p>
+    <div> <img src="../routeedit-demo-start.png" alt="" class="image"><span style="font-weight: bold;"><br>
+      </span></div>
+    <div><span style="font-weight: bold;"><br>
+      </span></div>
+    <p style="font-weight: bold;">Buttons</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Icon</td>
+          <td>Name</td>
+          <td>Function</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_zoom_in.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>ZoomIn</td>
+          <td>zoom in<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_zoom_out.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>ZoomOut</td>
+          <td>zoom out<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/wpplus.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>NavAdd</td>
+          <td>add a new point to the route<br>
+            the chart center (cross) will be added after the point that is
+            currently marked red<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/wpminus.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>NavDelete</td>
+          <td>delete the point that is currently marked red<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/wpcenter.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>NavToCenter</td>
+          <td>move the currently marked red point to the center of the chart
+            (cross)<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/wpgoto.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>NavGoto</td>
+          <td>start navigation to the currently marked red point<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>MOB</td>
+          <td>man over board(see <a href="mainpage.html#mob">main page</a>)</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>Cancel</td>
+          <td>back to the <a href="navpage.html">navigation page</a><br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>At this page you can create an edit a route.</p>
+    <p>At each point in time there is a currently selected point within the
+      route. It is marked red on the chart and marked grey in the list on the
+      left side. You can change the selected point by clicking on a different
+      point on the chart or in the list on the left side.<br>
+      If you are editing the currently active route, the route info at the left
+      side will have a red border (otherwise green).<br>
+      If you leave the editor the display will go back to the active route.</p>
+    <p>All changes will become effective immediately - there is no fallback.</p>
+    <p>At the left side you have the list of all points in the route with
+      courses and distances. In the upper display you have the overall route
+      length and the estimated ETA (if the route is active).<br>
+      By clicking on an already selected waypoint in the list you can open an
+      edit dialog to change the name or position.<br>
+      Clicking on the route info on the left side will move you to the <a href="routepage.html">route
+        list</a>. At this page you can delete all points, change the name,
+      invert or load a new route.</p>
+    <p>Clicking on the lower left panel will bring up some additional buttons.</p>
+    <p><img src="../editroute-wpbuttons.png" alt="" class="image"></p>
+    <p>Using those buttons you can move between the points in the route or you
+      can edit the selected point.<br>
+      Clicking on the lower right will center the chart to the boat position.<br>
+    </p>
+    <div>
+      <h2> <a name="editroutepage" id="editroutepage"></a></h2>
+    </div>
+  </body>
+</html>

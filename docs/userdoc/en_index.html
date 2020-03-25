@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>AvNav User Doc</title>
+    <link href="../styles.css" rel="stylesheet" type="text/css">
+  </head>
+  <body>
+    <h1 class="western">AvNav WebApp User Doc</h1>
+    <p>The web app can be started via the link http://avnav.avnav.de or
+      http://avnav.local if you are connected to the Wifi that is provided by
+      the raspberry pi.<br>
+      On <a href="avnav-android-de.html">Android</a> calling the startpage is
+      directly handled by the app.<br>
+      As an alternate option you could also install a bonjour browser on your
+      mobile device - this way you can connect without any typing of urls.<br>
+      Apps for that case: </p>
+    <ul>
+      <li>IOS: <a href="https://itunes.apple.com/us/app/bonjour-search-for-http-web-in-wi-fi/id1097517829?mt=8"><img
+            class="inlineimage" src="https://is4-ssl.mzstatic.com/image/thumb/Purple69/v4/ba/f9/c2/baf9c2dd-656d-c303-fae1-a07310825e72/pr_source.png/246x0w.png"></a></li>
+      <li>Android: <a href="https://play.google.com/store/apps/details?id=de.wellenvogel.bonjourbrowser"><img
+            src="https://lh3.googleusercontent.com/sOV0YDqS3VNhTd4PfLB4PKj89_bbP8MtFHCVydjSp1-zLMyc8LB_z_HFVsZQEFgINQ=s180-rw"
+            alt="" class="inlineimage"></a> </li>
+    </ul>
+    <p>The AvNav web app consists of a couple of pages that can be reached
+      either directly from the main page or via some sub pages.<br>
+      The links in the second column of the table will guide you to the
+      descriptions of the pages.</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Icon</td>
+          <td>Page</td>
+          <td>How to get there</td>
+          <td>Function</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><a href="mainpage.html">mainpage</a></td>
+          <td>opens at start</td>
+          <td>list of charts, NMEA status, go to further pages</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><a href="navpage.html">navigation page</a></td>
+          <td>click on a chart on the mainpage</td>
+          <td>base navigation functions, charts, instrument displays, waypoints,
+            routes...</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/status.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td><a href="statuspage.html">status page</a></td>
+          <td>button on mainpage</td>
+          <td>status display for the server. Go on to <a href="wpapage.html">wifi
+              configuration</a>, display of <a href="addresspage.html">server
+              addresses</a>, shutdown, license and privacy info</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_settings.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td><a href="settingspage.html">settings</a></td>
+          <td>button on mainpage</td>
+          <td>settings for the display in the browser, go on to <a href="../hints/layouts.html">layout
+              editor</a>, to <a href="addonconfigpage.html">user app
+              configuration</a> and to android settings (android only)</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_file_download.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td><a href="downloadpage.html">files/download</a></td>
+          <td>button on mainpage</td>
+          <td>display, download, upload, edit of tracks, routes, charts, images,
+            <a href="hints/userjs.html">user files</a>, <a href="hints/layouts.html">layouts</a></td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/data.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td><a href="dashboardpage.html">dashboard</a></td>
+          <td>button on mainpage, click on some displays on navigation page</td>
+          <td>display of instrument data (up to 5 sub pages)</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/route.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td><a href="editroutepage.html">route editor</a></td>
+          <td>button on <a href="navpage.html#editroute">navigation page</a></td>
+          <td>creating and editing of routes</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/apps.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td><a href="addonpage.html">user apps</a></td>
+          <td>button on mainpage, only visible if user apps are configured</td>
+          <td>display of internal or external HTML pages (e.g. the signalk web
+            ui)</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><a href="routepage.html">route list</a></td>
+          <td>click on the display of the active route inside the <a href="editroutepage.html">route
+              editor</a></td>
+          <td>display of all waypoints of a route, copy function, editing,
+            selecting stored routes</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_rss_feed.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td><a href="wpapage.html">wifi configuration</a></td>
+          <td>button on status page (<img src="../viewerimages/icons-new/status.svg"
+              alt="" class="inlineimage">)</td>
+          <td>connection to en external wifi network (only if configured and a
+            wifi stick is plugged in, not on android)</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/qrcode.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td><a href="addresspage.html">display of server addresses</a></td>
+          <td>button on status page (<img src="../viewerimages/icons-new/status.svg"
+              alt="" class="inlineimage">)</td>
+          <td>display of the current server addresses, QR code to be scanned by
+            external devices</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ballot.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td><a href="../hints/layouts.html">layout editor</a></td>
+          <td>button on settings page (<img src="../viewerimages/icons-new/ic_settings.svg"
+              alt="" class="inlineimage">)</td>
+          <td>editing of the displays on the navigation page and on the
+            dashboard pages</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/apps.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td><a href="addonconfigpage.html">user app configuration</a></td>
+          <td>button on setting spage (<img src="../viewerimages/icons-new/ic_settings.svg"
+              alt="" class="inlineimage">)</td>
+          <td>configure external or internal HTML pages that should be shown as
+            user apps</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><a href="aisinfopage.html">ais info<br>
+            </a></td>
+          <td>click on the AIS display on the <a href="navpage.html">navigation
+              page</a> or an AIS target on the map</td>
+          <td>display of information about an AIS target, go on to the <a href="aispage.html">AIS
+              list</a>.</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_list.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td><a href="aispage.html">AIS list</a></td>
+          <td>via ais info page</td>
+          <td>display of the AIS targets in vicinity as list, can be sorted</td>
+        </tr>
+      </tbody>
+    </table>
+    <br>
+  </body>
+</html>

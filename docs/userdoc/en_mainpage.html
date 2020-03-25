@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>AvNav Main Page</title>
+    <link href="../styles.css" rel="stylesheet" type="text/css">
+  </head>
+  <body>
+    <h1 class="western">AvNav Main Page</h1>
+    <img src="../mainpage-demochart.png" alt="" class="image">
+    <div> <br>
+      <div> <b>Buttons</b>
+        <table border="1">
+          <tbody>
+            <tr>
+              <td>Icon</td>
+              <td>Name</td>
+              <td>Description</td>
+            </tr>
+            <tr>
+              <td><img class="inlineimage" src="../viewerimages/icons-new/status.svg"
+                  alt=""><br>
+              </td>
+              <td>ShowStatus<br>
+              </td>
+              <td><a href="statuspage.html">status page</a> für den Server<br>
+              </td>
+            </tr>
+            <tr>
+              <td><img class="inlineimage" src="../viewerimages/icons-new/ic_settings.svg"
+                  alt=""><br>
+              </td>
+              <td>ShowSettings<br>
+              </td>
+              <td><a href="settingspage.html">settings page</a><br>
+              </td>
+            </tr>
+            <tr>
+              <td><img src="../viewerimages/icons-new/ic_file_download.svg" alt=""
+                  class="inlineimage"><br>
+              </td>
+              <td>ShowDownload<br>
+              </td>
+              <td><a href="downloadpage.html">files/downloads</a><br>
+                for download/upload/delete/edit of charts, tracks, routes,
+                layouts, user files, images<br>
+              </td>
+            </tr>
+            <tr>
+              <td><img src="../viewerimages/icons-new/plug.svg" alt="" class="inlineimage"><br>
+              </td>
+              <td>Connected</td>
+              <td>if active - sync waypoints and routes with the server,
+                otherwise keep them locally only</td>
+            </tr>
+            <tr>
+              <td><img src="../viewerimages/icons-new/data.svg" class="inlineimage"><br>
+              </td>
+              <td>ShowGps<br>
+              </td>
+              <td><a href="dashboardpage.html">dashboards</a><br>
+              </td>
+            </tr>
+            <tr>
+              <td><img src="../viewerimages/icons-new/night.svg" alt="" class="inlineimage"><br>
+              </td>
+              <td>Night<br>
+              </td>
+              <td>night mode<br>
+              </td>
+            </tr>
+            <tr>
+              <td><img src="../viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
+              </td>
+              <td>MOB</td>
+              <td><a href="#mob">man over board</a> (only visible if connected)</td>
+            </tr>
+            <tr>
+              <td><img src="../viewerimages/icons-new/apps.svg" alt="" class="inlineimage"><br>
+              </td>
+              <td>MainAddOns</td>
+              <td><a href="addonpage.html">display of configured user apps </a>
+                (e.g. signalk)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p>In the page main area there is the list of charts being available on the
+      server (at the raspi files at /home/pi/avnav/data/charts, on andorid
+      charts in the choosen directory). </p>
+    <p>After first installation you will see some/one online demo charts. The
+      can be used with internet connectivity only, of course.</p>
+    <p>Further charts you can upload via the <a href="downloadpage.html">files/download
+        page</a> or copy them directly into the correct directory (raspberry) or
+      read them form a selected directory (android).</p>
+    <p>AvNav can read charts in the <a href="http://www.cgtk.co.uk/gemf">gemf</a>
+      format (preferred), since version 202003xx also in <a href="https://wiki.openstreetmap.org/wiki/MBTiles">mbtiles</a>
+      format. You can also add online chart sources using an xml definition. For
+      details refer to <a href="hints/chart-formats.html">chart formats</a>.</p>
+    <p>By clicking on a chart entry you will go to the <a href="#navpage">navigation
+        page</a> with the selected chart set.</p>
+    <h2>Special Functions</h2>
+    <h3><a name="mob" id="mob"></a>Man over Board</h3>
+    <p>Visible on all pages - but only if we are in connected mode - button <img
+        src="../viewerimages/icons-new/plug.svg" alt="" class="inlineimage">with
+      green border.<br>
+      By clicking on the MOB button the current position will become a dedicated
+      waypoint named "MOB". A current routing will be stopped and a routing to
+      the MOB waypint will start. The display will change to the navigation page
+      with the last selected chart. The chart will be centered to the boat and a
+      fixed zoom will be selected (can be set in settings). Additionally a MOB
+      alarm will be triggered. The alarm can be stopped. The MOB routing remains
+      active until you click the MOB button again.</p>
+    <p><img src="../mob-navpage.png" alt="" class="image"></p>
+    <p>If there was no selected chart before the display will go to the <a href="dashboardpage.html">dashboard</a>
+      .</p>
+    <h3>Night Mode</h3>
+    <p>By clicking the <img src="../viewerimages/icons-new/night.svg" alt="" class="inlineimage">button
+      you will activate the night mode. You can fine tune the dim factors in the
+      settings.</p>
+    <p><img src="../gpspage-night.png" alt="" class="image"></p>
+    <h3>Connected/ Not Connected</h3>
+    <p>With the<img src="../viewerimages/icons-new/plug.svg" alt="" class="inlineimage">button
+      you control how the route data is synced with the server. If it is active
+      (green border) all changes on routing data (waypoints, start routing, stop
+      routing, change route) will be synced with teh serer immediately. This way
+      they will become visible at all connected displays.</p>
+    <p>If it is switched off all the routing changes will only be stored
+      locally. In this mode you can e.g. try out a new route without disturbing
+      the helms man or the auto pilot. If you re connect later on data from
+      server will always win. To keep your changes you need to store them e.g.
+      in a new route with different name. If you are activating a route that
+      only has been stored locally (and you are connected again) this route now
+      will be synced to the server. At the <a href="downloadpage">files/download</a>
+      page the symbol <img src="../viewerimages/icons-new/plug.svg" alt="" class="inlineimage">at
+      the routes will show if they are synced with the server.</p>
+    <p>The connected/not connected mode only affects routing data and waypoints.
+      All other functions are always connected with the server (except MOB -
+      this is a routing function and not possible when disconnected).</p>
+    <h3></h3>
+  </body>
+</html>
