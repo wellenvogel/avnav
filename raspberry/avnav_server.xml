@@ -113,7 +113,7 @@
      port: destination port. Default 2000
      broadcast: logical switch to enable/disable broadcasting. Default "true"
      filter: separated list of sentences either !AIVDM or $RMC - for $ we ignore the 1st 2 characters
-     blacklist: separated list of sources we do not send out
+     blackList: separated list of sources we do not send out
 <AVNUdpWriter host="192.168.30.255" port="2000" filter=""/>
 -->
 
@@ -168,9 +168,11 @@
 	 filter can be either $XXX,... - the NMEA setence, in this case the first 2 characters are ignored or
 	        any other value like !AIVDM. If not set or empty any data will be sent out
 	 address - if set, only bind to this address, otherwise allow connections from any port
-         read    - if set to true allow data input from connected devices
-         minTime - when reading data wait that many milliseconds between records to avoid overloading
-         readFilter - if set, only read filtered data
+     read    - if set to true allow data input from connected devices
+     minTime - when reading data wait that many milliseconds between records to avoid overloading
+     readFilter - if set, only read filtered data
+     blackList - list of names from channels we do not send out
+     name - the name of the channel
  -->
 <!-- a tcp socket that will output all NMEA data that AvNav has received
      you can customize it using the filter -->
