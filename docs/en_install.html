@@ -1,0 +1,134 @@
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Avnav Installation</title>
+    <link href="styles.css" rel="stylesheet" type="text/css">
+  </head>
+  <body>
+    <h3 class="western">AvNav Installation</h3>
+    <ul class="mainlist">
+      <li><a href="install.html#Headless">Image without attached Display
+          (Headless)</a></li>
+      <li><a href="install.html#Touch">Image with attached Display (avnav-touch)</a></li>
+      <li><a href="install.html#Packages">Package Installation</a></li>
+      <li><a href="install.html#Windows">Windows</a></li>
+      <li><a href="release.html">Releases</a></li>
+    </ul>
+    <h3 class="western"><a name="Headless"></a>Image wihout attached
+      display(Headless)</h3>
+    <p>Those images are maintained by <a href="https://www.segeln-forum.de/user/27970-blacksea/">BlackSea</a>
+      (many thanks...). A description is available on<a href="https://github.com/free-x/avnav/wiki">
+        his page</a>.</p>
+    <p>For this image just download it from&nbsp; <a href="https://www.free-x.de/raspbian/buster/">free-x</a>
+      and put it on a SD card like described at <a href="http://www.raspberrypi.org/downloads">http://www.raspberrypi.org/downloads</a>
+      (raw images). Afterwards you could login to the pi once to potentially
+      adapt some system settings. The simplest approach is to hook your pi to
+      your home network and ask your router for the address of the pi. You could
+      also try a broadcast ping from your desktop like&nbsp; ping -b
+      &lt;brodcast-address&gt; . You could also connect a keyboard and screen to
+      your pi, of course.</p>
+    <p>All passwords are set to default values.login pi, password raspberry. You
+      can get a root shell with sudo -i. You should change the passowrd for the
+      pi user (passwd). The image will set up a wifi access point with the SSID
+      avnav using the internal wifi adapter.<br>
+      This network will have the address range 192.168.20.0/24. The pi itself
+      has the address 192.168.20.10 - use this as url in the browser if nothing
+      else works. There is a DHCP server and a DNS server (dnsmasqd). You can
+      adapt the configuration in /etc/dnsmasqd.conf. If the pi is connected to a
+      wired network it tries to get an ip via DHCP. It has NAT forwarding from
+      it's wifi to the wired network. This way you can easily connect to the
+      internet.<br>
+      If you connect further wifi sticks, more access points will be created.<br>
+      Exception: wifi stick like in the picture (on newer Pi4 use the blue
+      socket close to the PCB) - this will become a client network, internal
+      name wlan-av1. You can configure client access via <a href="userdoc/wpapage.html">the
+        app</a>. </p>
+    <img class="image" src="raspi3-wlan.jpg">
+    <p>Port 80 is forwarded to the listener port of AvNav (8080) but only for
+      the wifi network.<br>
+      If everything is set up correctly you can reach the WebApp at <a href="http://avnav/">http://avnav.avnav.de</a>.<br>
+      Avnav is announcing a bonjour service (avnav) - with an appropriate app (<a
+        href="https://play.google.com/store/apps/details?id=de.wellenvogel.bonjourbrowser">Android</a>,
+      <a href="https://apps.apple.com/us/app/bonjour-search-for-http-web-in-wi-fi/id1097517829">IOS</a>)
+      you can reach the server without any address input.<br>
+      If you have a wifi client connection the wifi is forwarding traffic there
+      via NAT. This way internet connectivity will be available for connected
+      devices.<br>
+      You can check the status/start/stop with </p>
+    <div class="code">sudo systemctl status avnav
+sudo systemctl start avnav 
+sudo systemctl stop avnav</div>
+    <p> </p>
+    <h3 class="western"><a name="Touch"></a>Image with Display (avnav-touch)</h3>
+    <span>If you would like to directly connect a display to your pi thsi image
+      is for you. </span>Holger (<a href="https://www.segeln-forum.de/user/13545-pandel/">pandel</a>)
+    is maintaining an own image line for this set up. Great documentation is
+    available at his <a href="https://open-mind.space/">AvNav-Touch page</a>.
+    Download is possible from the <a href="https://open-mind.space/download/">download
+      page</a>.<br>
+    You still will be able to connect further external displays.<br>
+    <h3 class="western"><a name="Packages"></a>Package Installation</h3>
+    Thanks to Holger&nbsp; there are ready to go package repositories that you
+    can use in your debian based system. Thsi will work on the pi as well as on
+    any other debian (like ubuntu).<br>
+    Information is available at his <a href="https://open-mind.space/rasbian-buster-lite-zu-avnavtouch-in-5-schritten/">description</a>.<br>
+    For installing packages on a different raspberry (not avnav-touch) you must
+    change step 5 of his description to:<br>
+    <div class="code">sudo apt-get install avnav avnav-raspi</div>
+    The raspberry will start avnav with teh user pi.<br>
+    <br>
+    For a different debian you would change step 5 to:<br>
+    <div class="code">sudo apt-get install avnav</div>
+    Afterwards you can start AvNav as any user with <br>
+    <div class="code">avnav</div>
+    <br>
+    With <br>
+    <div class="code">sudo systemctl enable avnav
+sudo systemctl start avnav</div>
+    you can enable avnav to start with the user avnav on system reboot.<br>
+    Alternatively you can download all packages from my download pages:<br>
+    <ul>
+      <li><a title="downloads/releases" href="../downloads/releasefr">Releases</a></li>
+      <li><a href="../downloads/dailyfr">Daily Builds</a></li>
+    </ul>
+    After downloading you can install them<br>
+    <div class="code">sudo dpkg -i avnav_xxxxxxxx_all,deb
+sudo dpkg -i avnav-raspi_xxxxxxxx_all.deb
+sudo apt-get -f</div>
+    (only use the&nbsp; -raspi... package on a rasberry pi).The firstz commands
+    will complain about missing dependencies, the last one should fix this.<br>
+    If you install on a pi you should only use the avnav-raspi package if it is
+    ok to you to change your network set up to the AvNav defaults. Otherwise
+    only install the basic avnav package.<br>
+    You could start up avnav as user pi from the command line with avnav.<br>
+    If you would like to run it as a system service you need to create the
+    directory:<br>
+    /usr/lib/systemd/system/avnav.service.d<br>
+    and copy the file <a href="https://github.com/wellenvogel/avnav/blob/master/raspberry/raspberry.conf">raspberry.conf</a>
+    there.<br>
+    Afterwards you still need to change the line 5 in this file as you do not
+    have the rasperry specific template. Change it to:<br>
+    <br>
+    <div class="code"><meta http-equiv="content-type" content="text/html; charset=utf-8"><span
+style="color: rgb(36, 41, 46); font-family: SFMono-Regular, Consolas, &quot;Liberation Mono&quot;, Menlo, monospace; font-size: 12px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; white-space: pre; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; background-color: rgb(255, 255, 255); text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none;">ExecStart=/usr/bin/avnav -q -b /home/pi/avnav/data -t /usr/lib/avnav/avnav_template.xml</span></div>
+    Afterwards you can enable and start avnav as system service with<br>
+    <div class="code">sudo systemctl daemon-reload<br>sudo systemctl enable avnav<br>sudo systemctl start avnv</div>
+    <p>If you did not create/copy the file avnav will run with the user avnav.</p>
+    <p>If you want a small GUI for the chart conversion on your desktop you need
+      to install the package python-wxgtk3.0. You can bring up the GUI with</p>
+    <div class="code">avnav -g</div>
+    <br>
+    <br>
+    <h3><a name="Windows"></a>Windows</h3>
+    For windows there is an installer. This installer will not be updated on
+    every release. The current version is <a href="../downloads/latestwindows/fr">here</a>.<br>
+    I recommend to use the AvNavNetSetup-jjjj-mm-dd-0.exe installer as this one
+    will download the AvNav software directly and is able to update it without a
+    new installer.<br>
+    The windows version is focusing on <a href="charts.html#windows">chart
+      conversion</a> but has the complete functionality. You can connect further
+    displays.<br>
+    <br>
+    <br>
+  </body>
+</html>

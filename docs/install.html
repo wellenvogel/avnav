@@ -57,13 +57,15 @@
       müssen. </p>
     <br>
     In der App gibt es eine Seite, um sich mit einem WLAN zu verbinden
-    (Status-Seite-&gt;WLAN) - siehe <a href="userdoc/index.html">Beschreibung der
-      App</a>.<br>
+    (Status-Seite-&gt;WLAN) - siehe <a href="userdoc/index.html">Beschreibung
+      der App</a>.<br>
     Die Verbindung zu einem externen WLAN wird an die angeschlossenen Geräte
     "durchgereicht".<br>
-    Mit <em>sudo service avnav status</em> kann man den Status des servers
-    prüfen, mit <em>sudo service avnav start</em> bzw. <em>sudo service avnav
-      stop</em> kann man ihn starten und stoppen.
+    Mit den Kommandos<br>
+    <div class="code">sudo systemctl status avnav
+sudo systemctl start avnav 
+sudo systemctl stop avnav</div>
+    <p>kann man den Status des servers prüfen, starten und stoppen. </p>
     <h3 class="western"><a name="Touch"></a>Image mit Bildschirm</h3>
     <span>Falls man direkt einen Bildschirm an den Pi anschliessen möchte, ist
       dieses Image das Richtige.<br>
@@ -106,9 +108,28 @@ sudo apt-get -f</div>
     installieren (dabei das -raspi... Paket nur auf einem raspberry). Die ersten
     Kommandos werden typischerweise Fehler erzeugen, das letzte lädt dann die
     fehlenden Abhängigkeiten.<br>
-    Wenn man auch die Karten-Konvertierung auf dem Linux Rechner mit einer
-    kleinen GUI machen möchte, muss man zusätz das Paket python-wxgtk3.0
-    installiert werden. Dann muss man avnav mit<br>
+    Wenn man auf einem Raspberry installiert, sollte man das avnav-raspi Paket
+    nur dann installieren, wenn man damit einverstanden ist, das die
+    Netzwerk-Konfiguration so geändert wird, wie AvNav das möchte. Sonst sollte
+    man nur das avnav Paket installieren.<br>
+    Man kann dann als Nutzer pi avnav einfach von der Kommandozeile starten
+    lassen.<br>
+    Wenn man es als systemd service laufen lassen möchte, sollte man das
+    Verzeichnis:<br>
+    /usr/lib/systemd/system/avnav.service.d<br>
+    anlegen und dort die Datei <a href="https://github.com/wellenvogel/avnav/blob/master/raspberry/raspberry.conf">raspberry.conf</a>
+    hineinkopieren.<br>
+    Die Zeile 5 in der Datei muss dann noch etwas abgeändert werden, da das dort
+    angegebene Template für die avnav_server.xml nicht existiert.<br>
+    Also ändern in
+    <div class="code"><span style="color: rgb(36, 41, 46); font-family: SFMono-Regular, Consolas, &quot;Liberation Mono&quot;, Menlo, monospace; font-size: 12px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; white-space: pre; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; background-color: rgb(255, 255, 255); text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none;">ExecStart=/usr/bin/avnav -q -b /home/pi/avnav/data -t /usr/lib/avnav/avnav_template.xml</span></div>
+    Danach kann man mit den Kommandos
+    <div class="code">sudo systemctl daemon-reload<br>sudo systemctl enable avnav<br>sudo systemctl start avnv</div>
+    <p>Avnav als systemdienst starten. Wenn man diese Datei nicht anlegt/kopiert
+      wird avnav nicht mit den Nutzer pi sondern mit dem Nutzer avnav arbeiten.</p>
+    <p> Wenn man auch die Karten-Konvertierung auf dem Linux Rechner mit einer
+      kleinen GUI machen möchte, muss man zusätz das Paket python-wxgtk3.0
+      installiert werden. Dann muss man avnav mit</p>
     <div class="code">avnav -g</div>
     starten.<br>
     <br>
@@ -119,10 +140,10 @@ sudo apt-get -f</div>
     verwenden, da dieser die eigentliche Software nachlädt und somit eine
     Möglichkeit bietet, jeweils die neueste AvNav Version zu installieren (ohne
     den Installer selbst neu herunterladen zu müssen).<br>
-    Die Windows Version ist primär auf die Karten-Konvertierung ausgelegt,
-    bietet aber die volle Funktionalität und kann somit auch zur Navigation
-    unter Windows verwendet werden. Wie immer lassen sich weitere Geräte
-    ankoppeln.<br>
+    Die Windows Version ist primär auf die <a href="charts.html#windows">Karten-Konvertierung</a>
+    ausgelegt, bietet aber die volle Funktionalität und kann somit auch zur
+    Navigation unter Windows verwendet werden. Wie immer lassen sich weitere
+    Geräte ankoppeln.<br>
     <br>
     <br>
   </body>
