@@ -101,8 +101,10 @@
     <p>Damit sind diese Daten in der App anzeigbar. Ein <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/signalk/example.json">entsprechendes
         Layout</a> wird mitgeliefert und kann angepasst werden. Dieses Layout
       kann über die Settings Seite gewählt werden
-      (system.plugin.builtin-signalk.example) - es sist aber nur sichtbar, wenn
-      das Plugin aktiv ist.</p>
+      (system.plugin.builtin-signalk.example) - es ist aber nur sichtbar, wenn
+      das Plugin aktiv ist. Alternativ kann man auch sein eigenes Layout mit dem
+      <a href="layouts.html">Layout Editor</a> erstellen, das signalk Werte
+      anzeigt.</p>
     <p>Die Kommunikation mit SignalK erfolgt über ein plugin, das entsprechend
       konfiguriert werden muss (in den Images entsprechend vorbereitet, Beispiel
       sonst wieder unter /usr/lib/avnav/raspberry/avnav_server.xml):</p>
@@ -114,8 +116,9 @@
       plugins gemeinsam unter einem AVNPluginHandler Eintrag konfigurieren.</p>
     <p>Da SignalK alle NMEA Daten von AvNav empfängt, ist beispielsweise auch
       ein aktiver Wegepunkt dort sichtbar.</p>
-    <p>Wenn das plugin enabled wurde ist bei AvNav unter User-Apps ein Eintrag
-      für SignalK vorhanden, so das die Web Oberfläche geöffnet werden kann.</p>
+    <p>Wenn das plugin enabled wurde ist bei AvNav unter <a href="../userdoc/addonpage.html">User-Apps
+        </a>ein Eintrag für SignalK vorhanden, so das die Web Oberfläche
+      geöffnet werden kann.</p>
     <p>Es sind natürlich auch andere Konfigurationen einstellbar - z.B. AvNav
       empfängt seine NMEA Daten von SignalK und schickt nur RMB (Wegepunkt)
       dorthin zurück. Dabei muss jedoch sorgfältig konfiguriert werden, um
