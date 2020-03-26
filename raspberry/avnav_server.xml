@@ -109,9 +109,36 @@
 <AVNUdpReader port="34667" minTime="100"></AVNUdpReader>
 
 <!-- UDP Broadcaster for Navionics
+     host: destination IP/hostname. Default 127.0.0.1
+     port: destination port. Default 2000
+     broadcast: logical switch to enable/disable broadcasting. Default "true"
+     filter: separated list of sentences either !AIVDM or $RMC - for $ we ignore the 1st 2 characters
+     blacklist: separated list of sources we do not send out
 <AVNUdpWriter host="192.168.30.255" port="2000" filter=""/>
 -->
 
+<!-- Reader for BME280 Sensor
+      interval: time interval between NMEA sentences are written. Default 5s
+      writeMda: logical switch to switch MDA NMEA sentences on/off. Default "true"
+      writeXdr: logical switch to switch XDR NMEA sentences on/off. Default "true"
+      addr: I2C sensor address. Default 0x77 
+<AVNBME280Reader addr="0x77" /> 
+-->
+
+<!-- Reader for BMP180 Sensor
+      interval: time interval between NMEA sentences are written. Default 5s
+      writeMda: logical switch to switch MDA NMEA sentences on/off. Default "true"
+      writeXdr: logical switch to switch XDR NMEA sentences on/off. Default "true"
+      addr: I2C sensor address. Default 0x77 
+<AVNBMP180Reader addr="0x77" /> 
+-->
+
+<!-- SenseHat Reader
+      interval: time interval between NMEA sentences are written. Default 5s
+      writeMda: logical switch to switch MDA NMEA sentences on/off. Default "true"
+      writeXdr: logical switch to switch XDR NMEA sentences on/off. Default "true"
+<AVNSenseHatReader />
+-->
 
 <!-- the Web server
      the port defaults to 8080, the host to "any"
