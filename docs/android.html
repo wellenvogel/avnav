@@ -3,11 +3,10 @@
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <title>AvNav-Android</title>
+    <link href="styles.css" rel="stylesheet" type="text/css">
   </head>
   <body>
     <h1>AvNav Android</h1>
-    <p>2020/01/26: Die Beschreibung spiegelt noch nicht überall aktuellen Stand
-      wieder und wird überarbeitet. Weite Teile sind jedoch unverändert.</p>
     <p>Nachdem die Navigations-App für die <a href="beschreibung.html">Nutzung
         mit dem Raspberry Pi</a>&nbsp; bereits einige Jahre erfolgreich im
       Einsatz ist, gibt es jetzt auch eine Version, die direkt (ohne einen
@@ -25,14 +24,18 @@
       Sender, der die NMEA Daten per WLAN bereitstellt. Auch eine einfache GPS
       bluetooth "Maus" ist geeignet.</p>
     <p>Damit kann die Software auch auf Tablets ohne eingebautes GPS laufen.</p>
-    <p>Die Karten werden im gleichen gemf Format erwartet. Sie können in 2
-      Verzeichnissen liegen:</p>
+    <p>Die Karten werden im gemf <a href="charts.html#chartformats">Format</a>
+      erwartet.Ab Version 20200325 auch als mbtiles oder xml files. Sie können
+      in 2 Verzeichnissen liegen:</p>
     <ul>
       <li> im charts Verzeichnis unterhalb des Arbeitsverzeichnisses (kann beim
         Start gewählt werden). Dieses muß beschreibbar sein und wird daher bei
         Android 4.4 und höher auf dem internen Speicher liegen müssen</li>
       <li>in einem beliebigen anderen Verzeichnis (vorzugsweise auf der SD
-        Karte) - "additional charts dir" in den Einstellungen</li>
+        Karte) - "additional charts dir" in den Einstellungen<br>
+        Hier können allerdings keine mbtiles Karten genutzt werden, diese müssen
+        erst in das interne Verzeichnis <a href="userdoc/downloadpage.html">hochgeladen</a>
+        werden.</li>
     </ul>
     <p>Die Karten müssen auf das Gerät in eines der Verzeichnisse kopiert werden
       . Zusätzlich sind einige Demo-Karten vorhanden, die allerdings eine
@@ -52,23 +55,18 @@
       Einführungsseite:</p>
     <img alt="" src="android-start-first.png" height="400"><br>
     Nach dem Klick kommt man auf die Einstellungsseite:<br>
-    <img style="width: 640px; height: 400px;" alt="" src="android-settings-main.png"><br>
+    <img src="android-mainsettings.png" alt="" class="image"><br>
     Hier können z.B. die Verzeichnisse&nbsp; für Karten und Tracks gewählt
     werden, sowie die Quelle für die Positionsdaten.<br>
     Eine Liste der Settings findet sich <a href="#Settings">hier</a>.<br>
     <br>
-    Die Settings Seite kann über den OK button (oben rechts) oder über den
-    Zurück-Button verlassen werden. Im Normalmodus erreicht man damit die
-    Hauptseite der App.<br>
-    <br>
-    <img style="width: 640px; height: 400px;" alt="" src="android-main-ip.png"><br>
-    <br>
-    <br>
-    <br>
-    Im Bild ist die IP Verbindung (eingestellt in Settings) erfolgreich
-    aufgebaut&nbsp; und es wirden eine gültige Position (oberer grüner Punkt)
-    und gültige AIS Daten (unterer grüner Punkt) empfangen.<br>
-    Um zu den Android Einstellungen zu gelangen, zunächst die Einstellungsseite
+    <p> Die Settings Seite kann über den OK button (oben rechts) oder über den
+      Zurück-Button verlassen werden. Im Normalmodus erreicht man damit die
+      Hauptseite der App.</p>
+    <img src="android-mainpage.png" alt="" class="image"><br>
+    Im Bild ist wird eine gültige Position (oberer grüner Punkt) und bisher noch
+    keine gültigen AIS Daten (unterer roter Punkt) empfangen.<br>
+    Um zu den Android Einstellungen zu gelangen, zunächst die <a href="userdoc/settingspage.html">Einstellungsseite</a>
     in der App aufrufen, dort dann auf den Android Button klicken.<br>
     Bei weiteren Starts erreicht man sofort die Hauptseite der App.<br>
     <br>
@@ -100,7 +98,7 @@
     Im Externl-Browser Mode startet die App einen kleinen Webserver (also spielt
     so ein wenig Raspberry...) auf einem einstellbaren Port (34567) und zeigt
     die folgende Seite an:<br>
-    <img style="width: 641px; height: 400px;" alt="" src="android-browser.png"><br>
+    <img src="android-external.png" alt="" class="image"><br>
     <br>
     Durch einen Klick auf Start Browser wird eine Auswahl der installierten
     Browser angezeigt, hier Chrome auswählen.<br>
