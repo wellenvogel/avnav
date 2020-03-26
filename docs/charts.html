@@ -23,7 +23,7 @@
       <li><a href="#chartformats">Formate</a></li>
       <li><a href="#installation">Installation</a></li>
       <li><a href="#Convert">Konvertieren von vorhandenen Rasterkarten (z.B.
-          BSB) oder mbtiles<br>
+          BSB)<br>
         </a></li>
       <li><a href="#Download">Herunterladen von Kachel-Karten</a></li>
     </ul>
@@ -71,10 +71,10 @@
       Karten in solche Layer einzusortieren, sie ggf zu reprojezieren und dann
       die Kartenkacheln (sowie eine Beschreibungsdatei) zu erzeugen. Das
       erfordert meist eine ganze Menge Rechenleistung (und ggf. Zeit), daher ist
-      das etwas, dass auf einem PC oder Laptop laufen sollte (der pi ist dafür
-      zu schwach). Das ist aber nicht schlimm – man muss das ja nur einmal
-      machen. Belohnt wird man dafür mit einer sogenannten „blattschnittfreien“
-      Darstellung.</p>
+      das etwas, dass auf einem PC oder Laptop laufen sollte (der pi braucht
+      potentiell sehr lange dafür). Das ist aber nicht schlimm – man muss das ja
+      nur einmal machen. Belohnt wird man dafür mit einer sogenannten
+      „blattschnittfreien“ Darstellung.</p>
     <p>Für den Download gilt Vergleichbares - hier muss man geeignet die
       zoomlevel und Bereiche auswählen.</p>
     <p>Das Verfahren dazu hängt von der Quelle ab. Im Moment habe ich support
@@ -137,20 +137,8 @@
       Resourcen jedoch ziemlich begrenzt sind, muß mit längeren Laufzeiten
       gerechnet werden (Beispiel: Auf einem Raspi 2 dauerte das Konvertieren
       eines älteren NV Satzes (Ostsee 4) ca. 1 Stunde).</p>
-    <p>Dazu müssen die Karten in das /home/pi/avnav/data/import Verzeichnis
-      kopiert werden (ganze Sätze bitte in ein Unterverzeichnis). Der Server
-      beobachtet dieses Verzeichnis und wird die Konvertierung starten, sobald
-      er neue Dateien dort entdeckt. Neben den Dateien, die GDAL lesen kann,
-      können auch Dateien vom Typ .mbtiles konvertiert werden. Der Zustand des
-      "Importers" kann auf der Status Seite geprüft werden. Logfiles liegen dann
-      unter /data/avnav/log. Ein Upload über die App wird sicher in einer
-      späteren Version folgen.</p>
-    <p>Da beim Konvertieren temporär recht viele Dateien entstehen, sollte das
-      Filesystem auf der SD Karte darauf vorbereitet sein (ist bei meinen Images
-      so gegeben). Es sollte auch ausreichen Platz vorhanden sein (eine 8GB
-      Karte ist aber gut ausreichend).</p>
-    <p>Einfacher geht die Konvertierung auf einem Windows (oder Linux/Mac)
-      Rechner. Für die nötigen Installationen siehe:</p>
+    Einfacher geht die Konvertierung auf einem Windows (oder Linux/Mac) Rechner.
+    Für die nötigen Installationen siehe:
     <ul>
       <li><a href="install.html#Packages">Linux</a></li>
       <li><a href="install.html#Windows">Windows</a></li>
@@ -164,9 +152,6 @@
       Verzeichnis gewählt werden. Standarmäßig ensteht für jeden Konverter-Lauf
       eine xxx.gemf Datei, xxx ist dabei der Dateiname der ersten Datei oder der
       Name des ersten gewählten Verzeichnisses.</p>
-    <p>Wenn zusätzlich auch mbtiles Dateien gewählt werden (ab 20200126), dann
-      werden diese separat behandelt, da sie sich direkt in die gemf Dateien
-      umwandeln lassen.</p>
     <p>Im AvNavCharts Verzeichnis gibt es auch noch ein work-Verzeichnis, dieses
       sollte nicht gelöscht werden, da dann bei einem Update (z.B.
       Berichtigungen eingepflegt) nur die geänderten Karten neu erzeugt werden
@@ -180,12 +165,12 @@
       <li>
         <p>Erzeugung der Kacheln</p>
       </li>
+      <li>Erzeugung der gemf Datei</li>
     </ul>
-    <p>Wenn die Datei xxx.gemf rezeugt wurde, diese auf den raspberry nach
-      /data/avnav/charts kopieren (darauf achten, dass sie für den Nutzer pi
-      lesbar ist). Der Server sollte sie automatisch erkennen...</p>
-    <p>Der upload kann auch über die App erfolgen (dazu z.B. mit dem Laptop im
-      Raspi WLAN anmelden und die Startseite aufrufen, dann Upload/Download).</p>
+    <p>Wenn die Datei xxx.gemf rezeugt wurde, diese auf den raspberry <a href="#installation">installieren</a>.<br>
+      Man kann auch die Karte direkt auf dem desktop Computer testen, nach
+      Abschluss der Konvertierung wird der AvNav server gestartet und man kann
+      sich mit einem Browser verbinden.</p>
     <h4>Windows</h4>
     <p>Der <a href="install.html#Windows">Net-Installer</a> (AvNavNet...) für
       windows installiert neben der eigentlichen Konverter-Software auch die
@@ -196,9 +181,9 @@
       <li>Pillow 2.7.0</li>
       <li>pyserial 2.7</li>
     </ul>
-    Der installer werden unter ProgramFiles\AvNav installiert. Wenn AvNav
+    Der Installer wird unter ProgramFiles\AvNav installiert. Wenn AvNav
     deinstalliert wird, werden nur diese Anteile mit entfernt. <br>
-    Die nachgeladenen Teile werden im Home-Verzichnis des Nutzers installiert
+    Die nachgeladenen Teile werden im Home-Verzeichnis des Nutzers installiert
     und müssen aus der UI deinstalliert werden.<br>
     Nach der Installation kann man mit AvChartConvert die Applikation starten. <br>
     <br>
@@ -283,8 +268,8 @@
       Atlas-Konfiguration unter einem beliebigen Namen speichern - die kann man
       ggf. nochg für weitere Versuche brauchen. Als output Format OsmDroid GEMF
       (File-&gt;convertAtlasFormat) wählen und die Atlas-Erzeugung starten. Im
-      output Verzeichnis entsteht eine xxx.gemf Datei. Diese auf den raspberry
-      unter /data/avnav/charts kopieren oder mit der App hochladen.<br>
+      output Verzeichnis entsteht eine xxx.gemf Datei. Diese auf den raspberry <a
+        href="#installation">installieren</a>. <br>
       Auf der <a href="mapsources.html">Mapsources Seite</a> sammle ich chart
       sources für den mobac, die für uns nützlich sein lönnten. </p>
     <p><br>
