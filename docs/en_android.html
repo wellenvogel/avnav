@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>AvNav-Android</title>
+    <link href="styles.css" rel="stylesheet" type="text/css">
+  </head>
+  <body>
+    <h1>AvNav Android</h1>
+    <p>After having the <a href="beschreibung.html">AvNav web GUI for the
+        Raspberry Pi</a>&nbsp; already in place for some years there is now also
+      a pure android version. It needs android starting from 4.4.(KitKat).</p>
+    <p>The most current version is available at <a href="../downloads/release/latest/fr">downloads</a>
+      . Alternatively in the&nbsp; <a href="https://play.google.com/store/apps/details?id=de.wellenvogel.avnav.main">Play
+        Store</a>.<br>
+      Older versions or daily builds you can find via the&nbsp; <a href="install.html">installation
+        instructions</a>.</p>
+    <p>Basically the app is packaging the WebApp (see <a href="userdoc/index.html">User
+        documentation</a>) into an android app. For Charts see the hints at <a
+        href="charts.html">creating/converting charts</a>.</p>
+    <p>The app can use the internal GPS of your device. Additionally you can
+      receive NMEA data via TCP/IP, bluetooth or with an USB-serial adapter if
+      your device supports USB OTG. As a sender for NMEA data you can e.g. use
+      the raspberry version - or any other NMEA0183-wifi gateway. You can also
+      use a simple bluetooth GPS mouse if your device does not have an internal
+      GPS.</p>
+    <p>Charts are primarily expected in gemf <a href="charts.html#chartformats">Format</a>.
+      Since version 20200325 you can also use mbtiles or xml files for online
+      chart sources. Charts can be located in 2 directories:</p>
+    <ul>
+      <li> in the charts folder within the app working directory (choosen at
+        start up). As this must be writable it will typically not be possible to
+        put this on an SD card in newer android versions. </li>
+      <li>in a freely selectable other directory (also on an SD card)
+        "additional charts dir" in the settings<br>
+        In the external charts dir you cannot directly use mbtiles. They must be
+        copied into the working directory using <a href="userdoc/downloadpage.html">the
+          app</a> .</li>
+    </ul>
+    <p>When starting up there are some demo online charts being available.</p>
+    <p>If the choosen working directory is not yet there it will be created on
+      first start up.(default: internal-sd-card/avnav).</p>
+    <p>The track and log data will be written into the track directory below the
+      working directory.</p>
+    <p>In the routes sub folder the routes will be store in gpx format. Routes
+      and tracks can be provided to other apps using the <a href="userdoc/downloadpage.html">download</a>
+      function. To save them you need to have a file manager installed.</p>
+    <p>After first start up you will see an introduction page:</p>
+    <img alt="" src="android-start-first.png" height="400"><br>
+    After clicking ok you will be on the main settings page.<br>
+    <img src="android-mainsettings.png" alt="" class="image"><br>
+    You can select the working directory and the external charts directory.
+    Additionally you can select the sources for your NMEA data.<br>
+    A complete list of settings you can find <a href="#Settings">here</a>.<br>
+    <br>
+    <p> You can leave the settings page with the upper right button or by
+      pressing the back button. In normal mode you will reach the <a href="userdoc/mainpage.html">main
+        page</a> of the app.</p>
+    <img src="android-mainpage.png" alt="" class="image"><br>
+    In the picture there is a valid internal position (green bubble) but
+    currently no AIS data (red bubble).<br>
+    To go back to the android setting move to the <a href="userdoc/settingspage.html">settings
+      page</a> within the app and click the android button there.<br>
+    On further starts you will directly start on the main page.<br>
+    <br>
+    <h2>Bluetooth</h2>
+    <br>
+    To connect to a bluetooth device just pair it outside the app before
+    starting AvNav.<br>
+    Inside the app go to settings-&gt;bluetooth and select your device.<br>
+    <br>
+    To leave the app use the <img src="viewerimages/icons-new/ic_clear.svg" alt=""
+      class="inlineimage">button on the main page. This will shut down the
+    background service that is writing the track even if the app is in
+    background otherwise.<br>
+    <h2> Modes</h2>
+    The app can run in 2 modes:<br>
+    <ul>
+      <li>Normal</li>
+      <li>External Browser</li>
+    </ul>
+    In the normal mode the browser is integrated in the app and it behaves like
+    a normal android app.<br>
+    In external browser mode the app starts up a web server an a port that you
+    can&nbsp; select (default 34567) and shows the following page.<br>
+    <img src="android-external.png" alt="" class="image"><br>
+    <br>
+    By clicking on "START BROWSER" you will be presented with a list of
+    installed browsers and can select your favorite. I would recommend chrome.<br>
+    Normally in the browser you will always have the address bar that wastes
+    space. By using "add to home screen" in the settings you can put it on your
+    start screen - and if you start from there it will run full screen.<br>
+    <br>
+    <img style="width: 640px; height: 400px;" alt="" src="android-chrome.png"><br>
+    <br>
+    <br>
+    <img style="width: 640px; height: 400px;" alt="" src="android-chrome2.png"><br>
+    <br>
+    To stop the app in this mode use the notification (sailboat) to go back to
+    the app and leave it via "EXIT".<br>
+    On the next start up only start the app and afterwards start your browser
+    via the home screen icon.<br>
+    <p> If you select Settings&gt;Android-&gt;MainSettings "WebServer external
+      access" other devices in the same network can access your app.</p>
+    <span style="color:red">Take care: Never use this in a publci network as
+      there is no protection inside the app. Any user in the same network can
+      access your device!</span><br>
+    The app will annouce itself via bonjour as avnav-android so other devices
+    can easily find it.<br>
+    <br>
+    When the app is running the track data will be written to a file every 5
+    minutes.<br>
+    Important Hint:<br>
+    If you start up your browser once from the app and once from the home screen
+    you will end up with different settings in the app.<br>
+    <br>
+    <h2> <a id="Settings" name="Settings"></a>Settings</h2>
+    <br>
+    <h3>Main Settings</h3>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Meaning</td>
+          <td>Default</td>
+        </tr>
+        <tr>
+          <td>Application Mode</td>
+          <td>Working mode, see "Modes"</td>
+          <td>Normal</td>
+        </tr>
+        <tr>
+          <td>working directory</td>
+          <td>working driectory for your data (sub folders charts,tracks,
+            routes, user, layout)</td>
+          <td>/storage/sdcard/avnav</td>
+        </tr>
+        <tr>
+          <td>additional charts directory</td>
+          <td>external chart directory (not for mbtiles), put this on an SD card</td>
+          <td>---</td>
+        </tr>
+        <tr>
+          <td>show demo charts</td>
+          <td>demo charts (only with internet connectivity)</td>
+          <td>on</td>
+        </tr>
+        <tr>
+          <td>WebServer External Access</td>
+          <td>allow access from external devices. You can use the <a href="userdoc/addresspage.html">QR
+              codes</a> or bonjour to connect.</td>
+          <td>off</td>
+        </tr>
+        <tr>
+          <td>Alarm sounds</td>
+          <td>switch of alarm sounds. If you run the external browser mode you
+            need to switch them off in your browser additionally.</td>
+          <td>on<br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <br>
+    <h3> NMEA</h3>
+    <table style="width: 100%;" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Meaning</td>
+          <td>Default</td>
+        </tr>
+        <tr>
+          <td>NMEA Source</td>
+          <td>Position data source (Off,Internal, IP, Bluetooth)</td>
+          <td>Internal</td>
+        </tr>
+        <tr>
+          <td>AIS Source</td>
+          <td>AIS data source (Off,IP,Bluetooth)</td>
+          <td>Off</td>
+        </tr>
+        <tr>
+          <td>send own position on AIS device</td>
+          <td>send out RMC on the AIS data channel if it differs from the NMEA
+            channel. Useful if you e.g. connect to a VHF with AIS - you just
+            provide your position to it.</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>IP Address</td>
+          <td>IP address for tcp connections</td>
+          <td>192.168.10.20</td>
+        </tr>
+        <tr>
+          <td>IP Port</td>
+          <td>port for tcp connections</td>
+          <td>34567</td>
+        </tr>
+        <tr>
+          <td>Bluetooth Device</td>
+          <td>select your bluetooth device</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>USB Device</td>
+          <td>select a connected USB device</td>
+          <td style="height: 19px;"><br>
+          </td>
+        </tr>
+        <tr>
+          <td>USB Baudrate</td>
+          <td>baudrate for the USB device</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>filter own MMSI</td>
+          <td>set your own MMSI here if your receiver also provides it. It will
+            be filtered out.</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>filter incoming NMEA</td>
+          <td>set up a filter for NMEA data. If empty all data will be recived.
+            If you provide e.g. $RMC it will receive all $XXRMC records.</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>log NMEA Data</td>
+          <td>write an NMEA log in the track directory</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>log AIS Data</td>
+          <td>write AIS data to a log in the track directory</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>filter NMEA logs</td>
+          <td>a filter for the written log data (similar to NMEA filter)</td>
+          <td><br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <br>
+    <h3>Expert Settings</h3>
+    <table style="width: 100%;" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Meaning</td>
+          <td>Default</td>
+        </tr>
+        <tr>
+          <td>offset internal gps(s)</td>
+          <td>set an offset for the internal GPS time</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td>offset IP gps time(s)</td>
+          <td>set a time offset for gps data received by IP</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td>offset bluetooth gps time(s)</td>
+          <td>set a time offset for GPS data received by bluetooth</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td style="height: 19px;">AIS info invalid after(s)</td>
+          <td>time after whioch an AIS target si deleted if no update is
+            received</td>
+          <td>1200</td>
+        </tr>
+        <tr>
+          <td>min trackpoint distance(m)</td>
+          <td>write an entry to the track log if this distnace to the last one
+            is exceeded</td>
+          <td>25</td>
+        </tr>
+        <tr>
+          <td>time between trackpoints(s)</td>
+          <td>write an entry to the track earliest after that many seconds from
+            the last</td>
+          <td>10</td>
+        </tr>
+        <tr>
+          <td>write track file every (s)</td>
+          <td>write out the track file after n seconds. Until this time track
+            data is collected in memory only. Tries to give a balance between
+            write access and safety against crashes.</td>
+          <td>300</td>
+        </tr>
+        <tr>
+          <td>port for external browser mode</td>
+          <td>change the listener port for the web server</td>
+          <td>34567</td>
+        </tr>
+        <tr>
+          <td>Sound for XXX alarm</td>
+          <td>select the sounds for the alarms</td>
+          <td>built in<br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <br>
+  </body>
+</html>
