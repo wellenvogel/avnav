@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="de">
   <head>
-    <meta content="text/html; charset=utf-8" http-equiv="content-type">
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <title>AvnNav Karten Konvertieren</title>
     <meta content="Andreas Vogel" name="author">
     <meta content="AvNav Raspberry" name="keywords">
@@ -17,17 +17,17 @@
     </script>
   </head>
   <body>
-    <h2 class="western"><a name="Chartconvert">Avnav Karten</a></h2>
+    <h1 class="western"><a name="Chartconvert">Avnav Karten</a></h1>
     <ul class="mainlist">
-      <li><a href="avnav-chart-convert-de.html#Intro">Einführung</a><br>
-      </li>
-      <li><a href="avnav-chart-convert-de.html#Convert">Konvertieren von
-          vorhandenen Rasterkarten (z.B. BSB) oder mbtiles<br>
+      <li><a href="#Intro">Einführung</a></li>
+      <li><a href="#chartformats">Formate</a></li>
+      <li><a href="#installation">Installation</a></li>
+      <li><a href="#Convert">Konvertieren von vorhandenen Rasterkarten (z.B.
+          BSB) oder mbtiles<br>
         </a></li>
-      <li><a href="avnav-chart-convert-de.html#Download">Herunterladen von
-          Kachel-Karten</a></li>
+      <li><a href="#Download">Herunterladen von Kachel-Karten</a></li>
     </ul>
-    <h3><a id="Intro" name="Intro"></a>Einführung</h3>
+    <h2><a id="Intro" name="Intro"></a>Einführung</h2>
     <img title="Karten" alt="Karten" src="Karten.png" width="600">
     <p>Damit Karten in der WebApp verwendet werden können, müssen sie in einem
       „Kachelformat“ vorliegen. Das ist das Format, das durch Dienste wie
@@ -87,11 +87,52 @@
       <li> Nutzung von downloads mit dem <a href="http://mobac.sourceforge.net/">Mobile
           Atlas Creator</a>. </li>
     </ul>
-    <p>Die Karten werden in das <a href="http://www.cgtk.co.uk/gemf">GEMF</a>
-      Format konvertiert - das ist ein kompaktes Format - anstelle von sehr
-      vielen einzelnen Files sind diese in einem großen File zusammengefaßt.</p>
-    <h3 class="western"><a id="Convert" name="Convert"></a>Konvertierung von
-      Karten</h3>
+    <h2><a name="chartformats" id="chartformats"></a>Kartenformate</h2>
+    <p>AvNav nutzt als primäres Kartenformat das <a href="http://www.cgtk.co.uk/gemf">GEMF</a>
+      Format - das ist ein kompaktes Format - anstelle von sehr vielen einzelnen
+      Files sind diese in einem großen File zusammengefaßt. Mit diesem Format
+      können auch spezielle Funktionen wie eine automatische Anpassung des zoom
+      levels ermöglicht werden.&nbsp;&nbsp;&nbsp; <br>
+      Ab der Version 20200325 kann AvNav auch direkt das <a href="https://wiki.openstreetmap.org/wiki/MBTiles">mbtiles</a>
+      Format lesen. Bei diesem Format muss ggf. noch die richtige interne
+      Anordnung der Kacheln gewählt werden - der Standard is "xyz", es gibt aber
+      auch Dateien, die im "tms" Format vorliegen. Eine Umschaltung kann auf der
+      <a href="userdoc/downloadpage.html#mbtiles">Files/Download</a> Seite
+      erfolgen. MbTiles können z.B. direkt von <a href="https://wiki.openstreetmap.org/wiki/DE:Locus#https://wiki.openstreetmap.org/wiki/DE:Locus#Offline-Karten">OpenSeamap</a>
+      heruntergeladen werden.<br>
+      Zusätzlich können (ab 20200325) auch online Kartenquellen eingebunden
+      werden, wenn sie ein entsprechendes URL Format unterstützen. Die
+      Konfiguration erfolgt über XML Dateien. Ein Beispiel ist die mitgelieferte
+      <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/demo/osm-online.xml">Quelle
+        für OpenSeaMap</a>.</p>
+    <h2><a name="installation" id="installation"></a>Installation von Karten</h2>
+    <p>Nach der Installation ist in AvNav zunächst nur eine/einige
+      Online-Demo-Karten vorhanden. Zur realen Nutzung müssen die Karten
+      zunächst bei AvNav installiert werden.<br>
+      Das kann durch direkte Kopie in das Karten-Verzeichnis
+      (/home/pi/avnav/data/charts) bzw. in das externe Kartenverzeichnis unter
+      Android erfolgen. Alternativ können die Karten auch direkt in der WebApp
+      hochgeladen werden (einige erst ab 20200325). Das Hochladen erfolgt auf
+      der <a href="userdoc/downloadpage.html#chartupload">Files/Download Seite</a>.<br>
+      Für Android ist zu beachten, das mbtiles Karten nur gelesen werden können,
+      wenn sie hochgeladen wurden, nicht aus dem externen Karten Verzeichnis.<br>
+      Für mbtiles bitte auch diesen <a href="userdoc/downloadpage.html#mbtiles">Hinweis
+        auf der Files/Download Seite</a> beachten.</p>
+    <p>In den normalen Versionen (nicht Android) können ab 20200325 auch Karten,
+      die erst noch konvertiert werden müssen direkt hochgeladen werden. AvNav
+      enthält immer auch den unter <a href="#Convert">Konvertierung</a>
+      beschriebenen Konverter. Der liest Dateien aus seinem import Verzeichnis
+      (/home/pi/avnav/data/import) bzw. aus Unterverzeichnissen. Wenn beim <a href="userdoc/downloadpage.html#chartupload">Hochladen</a>
+      eine Karte mit einem Dateinamen für den Konverter gewählt wird (z.B.
+      .kap), dann wird gefragt, ob diese direkt dem Konverter übergeben werden
+      soll. Der Arbeitszustand des Konverters kann auf der Status Seite
+      beobachtet werden. Es sollte dabei beachtet werden, das die Konvertierung
+      ein rechenintensiver Prozeß sein kann, der auf einem Raspberry Pi viele
+      Stunden dauern kann. Das sollte daher ggf. auf einem Desktop Rechner
+      erfolgen.<br>
+    </p>
+    <h2 class="western"><a id="Convert" name="Convert"></a>Konvertierung von
+      Karten</h2>
     <p>Die Konvertierung kann direkt auf dem Raspi erfolgen. Da hier die
       Resourcen jedoch ziemlich begrenzt sind, muß mit längeren Laufzeiten
       gerechnet werden (Beispiel: Auf einem Raspi 2 dauerte das Konvertieren
