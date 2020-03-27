@@ -1,0 +1,61 @@
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Releases</title>
+    <link href="styles.css" rel="stylesheet" type="text/css">
+  </head>
+  <body>
+    <h1>Avnav Releases</h1>
+    The directory with all releases you will find <a href="../downloads/release/fr">here</a>.<br>
+    <h2>Hints</h2>
+    <a href="install.html">The&nbsp; installation instructions<span style="color: black;"></span></a>
+    have a detailed description on the different options you have to install
+    AvNav. On this page you will find information about the various releases.<br>
+    Not with any update there will be new images (although for most).
+    Intermediate updates are either <a href="../downloads/daily/fr">developer
+      versions(daily)</a> or <a href="../downloads/release/fr">releases</a>.<br>
+    To install such an intermediate update you need a command line on the pi.
+    From windows you could e.g. use&nbsp; <a href="https://www.putty.org/">putty
+      </a>. Just get the address of your pi and connect, use pi, paasword:
+    raspberry.<br>
+    How to install the packages you will also find in the&nbsp; <a href="install.html#Packages">installation
+      instructions</a> .<br>
+    Afterwards you potentially need to adapt the configuration<br>
+    <div class="code">/home/pi/avnav/data/avnav_server.xml</div>
+    This could be done like<br>
+    <br>
+    <div class="code">sudo systemctl stop avnav
+nano /home/pi/avnav/data/avnav_server.xml # dann ändern und speichern
+sudo systemctl start avnav</div>
+    <br>
+    You will find only hints for <a href="../downloads/release/fr">released
+      versions</a> on this page. For <a href="../downloads/daily/fr">daily
+      builds</a> refer to the <a href="https://github.com/wellenvogel/avnav/commits/master">commits
+      on GitHub</a> .<br>
+    <br>
+    <div> </div>
+    <h2>Versions</h2>
+    <p><span style="font-weight: bold;">20200325</span> <a title="release/20200325"
+        href="../downloads/release/20200325/fr">link</a></p>
+    <ul>
+      <li><a href="hints/layouts.html">Layout Editor</a> to adapt the layout to
+        your needs</li>
+      <li><a href="charts.html">mbtiles format</a> for charts</li>
+      <li>Embedded <a href="userdoc/dashboardpage.html">graphic displays</a>
+        (using <a href="https://canvas-gauges.com/">canvas-gauges</a>)</li>
+      <li>Management of&nbsp; <a href="userdoc/downloadpage.html#userfiles">user
+          files</a> and "<a href="userdoc/addonconfigpage.html">user apps</a>"
+        to integrate own web pages</li>
+      <li>Extension and adaption of AvNav with <a href="hints/userjs.html">java
+          script</a> and <a href="hints/usercss.html">css</a></li>
+      <li>Rewritten Documentation (also in english)</li>
+    </ul>
+    <p><span style="font-weight: bold;">20200204</span> <a title="release/20200204"
+        href="../downloads/release/20200204/fr">link</a></p>
+    <ul>
+      <li>Support for NME2000 (via canboat) and SignalK - see <a href="hints/CanboatAndSignalk.html">description</a></li>
+      <li>Layout changes</li>
+    </ul>
+    <p>Older Versions on the <a href="?lang=de">german page</a> only....</p>
+  </body>
+</html>
