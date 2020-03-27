@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>AvNav Config File</title>
+    <link href="../styles.css" rel="stylesheet" type="text/css">
+  </head>
+  <body>
+    <h1>AvNav Server Konfiguration</h1>
+    <p>== nicht für <a href="../android.html#Settings">Android</a> ==</p>
+    <h2>Einführung</h2>
+    <p>Der AvNav server liest beim start seine Konfiguration aus einer xml Datei
+      - avnav_server.xml.<br>
+      Diese Datei befindet sich normalerweise unter /home/pi/avnav/data auf dem
+      raspberry, sonst unter $HOME/avnav - siehe <a href="../install.html">Installation</a>.</p>
+    <p>Wenn diese Datei beim ersten Start noch nicht existiert, wird sie aus
+      einem Template erzeugt - passend für den <a href="https://github.com/wellenvogel/avnav/blob/master/raspberry/avnav_server.xml">raspberry</a>
+      oder <a href="https://github.com/wellenvogel/avnav/blob/master/linux/avnav_template.xml">andere
+        Systeme</a>.<br>
+      Bei updates der AvNav Software wird diese Datei im Allgemeinen nicht
+      geändert. Es kann aber notwendig sein, das für neue Funktionen neue
+      Einträge nötig werden. Dann wird in den <a href="../release.html">Release
+        Notes</a> darauf hingewiesen.</p>
+    <p>Mit jedem erfolgreichen Start (ab Version 20200325) schreibt AvNav eine
+      Kopie diese Datei mit der Endung .ok. Falls beim nächsten Start das Parsen
+      der xml Datei fehlschlägt, liest er stattdessen die .ok Datei. Diese
+      Funktion soll verhindern, das nach einer Änderung, die AvNav in manchen
+      Situation selbst vornimmt, der nächste Start ggf. scheitert.</p>
+    <p>Wenn man Änderungen an der Konfiguration vornimmt, muss AvNav danach neu
+      gestartet werden. Wenn AvNav als Systemdienst läuft macht man das mit dem
+      Kommando</p>
+    <div class="code">sudo systemctl restart avnav
+    </div>
+    <p> </p>
+    <p>Es empfiehlt sich jedoch, nach einer Änderung AvNav zunächst einmal nur
+      von der Kommandozeile zu starten, um zu sehen, ob es schwerwiegende Fehler
+      gibt. Die Kommandofolge ist dann</p>
+    <div class="code">sudo systemctl stop avnav<br>avnav -e<br>^C<br>sudo systemctl start avnav</div>
+    <p> Die option -e erst ab Version 20200325. Sie verhindert, das im
+      Fehlerfall die avnav_server.xml.ok geladen wird. ^C bricht das laufende
+      AvNav wieder ab.</p>
+    <h2>Inhalt</h2>
+    <p>Innerhalb der avnav_server.xml sind Einträge für die einzelnen
+      Bestandteile von AvNav enthalten. In den Templates sind bereits viele
+      kommentierte Beispiele für entsprechende Einstellungen.</p>
+    <p>Grundsätzlich gibt es 3 Kategorien von solchen Bestandteilen:</p>
+    <ol>
+      <li>Anteile, die nur genau einmal auftreten dürfen, die aber unbedingt in
+        der avnav_server.xml stehen müssen<br>
+        Beispiele: AVNConfig, AVNHttpServer,...</li>
+      <li>Anteile, die im Normalfall nicht in der avnav_config.xml stehen
+        müssen, nur wenn etwas Spezielles konfiguriert werden soll<br>
+        Beispiele: AVNAlarmHandler, AVNChartHandler,...</li>
+      <li>Anteile, die ein- oder mehrfach in der avnva_server.xml stehen können.
+        Das sind insbesondere die Eingangs- und Ausgangskanäle. Wenn kein
+        solcher Eintrag vorhanden ist, steht die Funktion nicht zur Verfügung.</li>
+    </ol>
+    <p>Es gibt einige Eigenschaften, die an mehreren Bestandteilen auftauchen,
+      für diese hier eine Erklärung.</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Beschreibung</td>
+          <td>Beispiel</td>
+        </tr>
+        <tr>
+          <td>name</td>
+          <td>Name eines Input oder Output Kanals. Dieser wird auf der
+            Status-Seite angezeigt und kann auch im parameter <a href="#blackList">blackList</a>
+            für Filterungen genutzt werden</td>
+          <td>nmea0183tosignalk</td>
+        </tr>
+        <tr>
+          <td><a name="filter" id="filter"></a>filter</td>
+          <td>Filterung von NMEA Daten. hier können durch Komma getrennte Filter
+            angegeben werden, die bestimmen, welche NMEA Daten durchgelassen
+            werden. Um sie unabhängig von Talker Ids zu machen, werden die 2
+            Zeichen nach einem $ nicht berücksichtigt. Ein Filter für $GPRMC
+            sieht dann so aus: $RMC.<br>
+            Wenn dem Filter ein ^ vorangestellt wird, wird er negiert, also
+            ^$RMC heisst: keine RMC records. AIS Daten kann man mit dem Filter
+            "!" oder "!AIVDM" matchen.</td>
+          <td>$RMC,^$RMB,!AIVDM</td>
+        </tr>
+        <tr>
+          <td>readFilter</td>
+          <td>Für kombinierte Reader/Writer ein filter für die Eingangsseite.
+            Siehe <a href="#filter">filter</a></td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td><a name="blackList" id="blackList"></a>blackList</td>
+          <td>Liste von Kanal-Namen, deren Daten nicht ausgesendet werden
+            sollen. Schreibweise beachten (grosses L)</td>
+          <td>nmea0183tosignalk</td>
+        </tr>
+      </tbody>
+    </table>
+    <p><br>
+    </p>
+    <p>Im Folgenden sind die wichtigsten Bestandteile mit ihren Parameterns
+      aufgeführt. Falls Parameter hier nicht beschrieben sind, aber ggf. in
+      einem Template auftauchen, sollte sie so belassen werden, wie sie dort
+      sind.<br>
+    </p>
+    <h3>AVNConfig</h3>
+    <p>Basis Konfiguration, Kategorie 1 (1x,nötig)</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Beschreibung</td>
+          <td>default/template</td>
+        </tr>
+        <tr>
+          <td>loglevel</td>
+          <td>Level für die Log Ausgabe (ERROR, INFO, DEBUG,...)</td>
+          <td>INFO</td>
+        </tr>
+        <tr>
+          <td>logfile</td>
+          <td>Name des logfiles.</td>
+          <td>&lt;datadir&gt;/log/avnav.log</td>
+        </tr>
+        <tr>
+          <td>maxtimeback</td>
+          <td>maximale Zeit, die die Systemzeit rückwärts gesetzt wird, bevor
+            alle internen Daten gelöscht werden (s)</td>
+          <td>5</td>
+        </tr>
+        <tr>
+          <td>systimediff</td>
+          <td>maximale Zeitabweichung der Systemzeit von der gps-Zeit bevor die
+            Systemzeit neu gesetzt wird (s)</td>
+          <td>5</td>
+        </tr>
+        <tr>
+          <td>settimecmd</td>
+          <td>Kommando für das setzen der Systemzeit</td>
+          <td>/usr/lib/avnav/raspberry/settime.sh
+            <meta http-equiv="content-type" content="text/html; charset=utf-8">
+          </td>
+        </tr>
+        <tr>
+          <td>settimeperiod</td>
+          <td>Zeit in s bevor die Systemzeit erneut gesetzt wird</td>
+          <td>3600</td>
+        </tr>
+        <tr>
+          <td>ownMMSI</td>
+          <td>MMSI des eigenen Bootes, diese wird aus den AIS Daten ausgefiltert</td>
+          <td><br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <h3>AVNGpsdFeeder</h3>
+    <p>Die interne NMEA Liste und Dekodier-Einheit. Kategorie 2 (1x, nicht nötig
+      ab Version 20200325).</p>
+    <p>Diese Einheit hat keine Parameter mehr. In früheren Versionen wurde hier
+      der gpsd für die Dekodierung genutzt, daher sind u.U. noch Parameter zu
+      finden, die sich darauf beziehen. In neueren Versionen sollte der Eintrag
+      so geändert werden, das useGpsd="false" enthalten ist.</p>
+    <h3>AVNHttpServer</h3>
+    <p>Der interne HTTP server. Kategorie 1 (einmal, erforderlich).</p>
+    <p>Neben den Parametern für AVNHttpServer gibt es einige Unter-Einträge, die
+      sich mehrfach wiederholen können. Im Normalfall sollten hier aber keine
+      Änderungen nötig sein (Directory,MimeType).</p>
+    <p>Ausser dem httpPort sollten normalerweise keine Änderungen erforderlich
+      sein.</p>
+    <h4>Parameter für AVNHttpServer</h4>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Beschreibung</td>
+          <td>default/template</td>
+        </tr>
+        <tr>
+          <td>httpPort</td>
+          <td>der Port, auf dem der HTTP Server Anfragen annimmt</td>
+          <td>8080</td>
+        </tr>
+        <tr>
+          <td>navurl</td>
+          <td>REST interface, nicht änderbar</td>
+          <td>/viewer/avnav_navi.php</td>
+        </tr>
+        <tr>
+          <td>index</td>
+          <td>Startseite, nicht änderbar</td>
+          <td>/viewer/avnav_viewer.html</td>
+        </tr>
+        <tr>
+          <td>httpHost</td>
+          <td>Die Bind Adresse, man kann hier z.B. auf ein bestimmtes Netzwerk
+            beschränken</td>
+          <td>0.0.0.0</td>
+        </tr>
+        <tr>
+          <td>numThreads</td>
+          <td>Die Zahl der vom Server genutzten Threads</td>
+          <td>5</td>
+        </tr>
+      </tbody>
+    </table>
+    <h4>Parameter für Directory</h4>
+    <p>Diese Werte werden meist durch den Aufruf (Parameter -u bei avnav)
+      überschrieben und sollten nicht geändert werden.</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Beschreibung</td>
+          <td>default/template</td>
+        </tr>
+        <tr>
+          <td>urlpath</td>
+          <td>die URL (ohne /)</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>path</td>
+          <td>der reale Pfad auf dem System</td>
+          <td><br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <h4>Parameter für MimeType</h4>
+    <p>Hier werden mime types für Dateinamensendungen konfiguriert. Falls eine
+      eigene Anwendung hier ggf. etwas spezielles benötigt, kann man das
+      ergänzen.</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Beschreibung</td>
+          <td>default/template</td>
+        </tr>
+        <tr>
+          <td>extension</td>
+          <td>Namens-Enddung (z.B. .avt)</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>type</td>
+          <td>Mime type (z.B. text/plain)</td>
+          <td><br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p><br>
+    </p>
+    <h3>AVNBlueToothReader</h3>
+    <p>Lesen von Bluetooth Geräten mit seriellem Profil. Kategorie 3 (einmal
+      möglich, optional)<br>
+      Nur möglich, wenn das Gerät ein Bluetooth Device hat.</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Beschreibung</td>
+          <td>default/template</td>
+        </tr>
+        <tr>
+          <td>maxDevices</td>
+          <td>Anzahl der maximal gleichzeitig verbundenen Bluetooth Geräte</td>
+          <td>5</td>
+        </tr>
+        <tr>
+          <td>deviceList</td>
+          <td>Komma-separierte Liste von Bluetooth Geräte-Ids. Wenn gesetzt,
+            werden nur diese Geräte verbunden.</td>
+          <td><br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <h3><a name="AVNSerialReader" id="AVNSerialReader"></a>AVNSerialReader</h3>
+    <p>Lesen von seriellen Geräten. Kategorie 3 (mehrfach, optional). Dieser
+      Reader sollte nur für direkt per Hardware (UART) verbundene Geräte genutzt
+      werden, für Geräte, die per USB angeschlossen sind ist der <a href="#AVNUsbSerialReader">AVNUsbSerialReader</a>
+      zuständig.</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Beschreibung</td>
+          <td>default/template</td>
+        </tr>
+        <tr>
+          <td>name</td>
+          <td>Kanal Name für die Nutzung in blackList und für die Anzeige</td>
+          <td>intern gebildeter Name</td>
+        </tr>
+        <tr>
+          <td>port</td>
+          <td>Gerätename, z.B. /dev/ttyAMA0</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>baud</td>
+          <td>Baudrate. Wenn minBaud auch angegeben ist, die maximale Baudrate
+            die für das automatische Feststellen der Baudrate genutzt wird</td>
+          <td>4800</td>
+        </tr>
+        <tr>
+          <td>minbaud</td>
+          <td>Minimale Baudrate, die für eine automatische Erkenung genutzt
+            wird. Wenn nicht gesetzt oder 0 - automatische Erkennung aus</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>timeout</td>
+          <td>Timeout in s, nach dem das Gerät ohne Daten geschlossen und wieder
+            geöffnet wird</td>
+          <td>1</td>
+        </tr>
+        <tr>
+          <td>bytesize</td>
+          <td>serielle Byte Größe</td>
+          <td>8</td>
+        </tr>
+        <tr>
+          <td>parity</td>
+          <td>Parity</td>
+          <td>N</td>
+        </tr>
+        <tr>
+          <td>stopbits</td>
+          <td>Anzahl der Stopbits</td>
+          <td>1</td>
+        </tr>
+        <tr>
+          <td>xoxoff</td>
+          <td>Nutzung xon/xoff Protokoll (0: aus)</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td>rtscts</td>
+          <td>RTS/CTS Nutzung (0: aus)</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td>numerrors</td>
+          <td>Anzahl der Fehler, nach der Das Gerät geschlossen und neu geöffnet
+            wird.</td>
+          <td>20</td>
+        </tr>
+        <tr>
+          <td>autobaudtime</td>
+          <td>Zeit in s, die versucht wird ein Newline in den Daten zu erkennen
+            während der automatischen Baudraten-Erkennung</td>
+          <td>5</td>
+        </tr>
+        <tr>
+          <td>filter</td>
+          <td>NMEA Filter, siehe <a href="#filter">filter</a></td>
+          <td><br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <h3><a name="AVNSerialWriter" id="AVNSerialWriter"></a>AVNSerialWriter</h3>
+    <p>Ausgang über ein serielles Gerät. Auch kombiniert Ein- und Ausgang.
+      Kategorie 3 (optional)<br>
+      Nur für direkte serielle Geräte, nicht für USB-Wandler (<a href="#AVNUsbSerialReader">AVNUsbSerialReader</a>
+      für diese)</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Beschreibung</td>
+          <td>default/template</td>
+        </tr>
+        <tr>
+          <td>combined</td>
+          <td>wenn "true", dann gleichzeitig Eingang und Ausgang</td>
+          <td>false</td>
+        </tr>
+        <tr>
+          <td>readFilter</td>
+          <td><a href="#filter">filter</a> für die Eingangsrichtung. Der
+            Parameter "filter" bezieht sich auf die Ausgangsrichtung!</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>blackList</td>
+          <td><a href="#blackList">blackList</a>, Komma getrennte Liste von
+            Kanalnamen, deren Daten nicht ausgegeben werden sollen.</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>....</td>
+          <td>alle Parameter von AVNSerialReader</td>
+          <td><br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <h3>AVNUsbSerialReader</h3>
+    <p>Behandelt über USB angeschlossene serielle Geräte. Kategorie 3(einmal,
+      optional).<br>
+      Dieser Worker scann alle über USB verbundenen Geräte und für solche mit
+      einem seriellen Profil versucht er diese zu öffnen, automatische die
+      Baudrate einzustellen und dann NMEA Daten zu lesen. Damit werden solche
+      Geräte normalerweise komplett automatisch von AvNav erkannt.<br>
+      Man kann für einzelne Geräte Regeln definieren, um sie speziell zu
+      behandeln. Als Identifikation für ein Gerät wird dabei eine ID genutzt,
+      die die enstprechende USB Buchse identifiziert. Mann diese ID am
+      einfachsten ermitteln, indem man bei Einstecken des Gerätes die <a href="../userdoc/statuspage.html">Status
+        Seite</a> beobachtet.</p>
+    <p>Die Parameter gliedern sich in 2 Teile: </p>
+    <ul>
+      <li>Attribute für den Eintrag selbst</li>
+      <li>Darunter liegende Einträge des Types UsbDevice</li>
+    </ul>
+    <p>Beispiel</p>
+    <div class="code">&lt;AVNUsbSerialReader maxDevices="5" allowUnknown="true" baud="38400" minbaud="4800"&gt;
+	&lt;UsbDevice usbid="1-1.2.1:1.0" baud="38400" minbaud="4800" filter="$RMC"/&gt;<br>&lt;/AVNUsbSerialReader&gt;</div>
+    <h4>Parameter für AVNUsbSerialReader</h4>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Beschreibung</td>
+          <td>default/template</td>
+        </tr>
+        <tr>
+          <td>maxDevices</td>
+          <td>maximale Zahl von gleichzeitig verbundenen USB Geräten</td>
+          <td>5</td>
+        </tr>
+        <tr>
+          <td>allowUnknown</td>
+          <td>nur wenn dieser Eintrag auf "true" steht, werden Geräte
+            eingebunden, die nicht explizit mit UsbDevice konfiguriert sind</td>
+          <td>true</td>
+        </tr>
+        <tr>
+          <td>...</td>
+          <td>alle Parameter von <a href="#AVNSerialReader">AVNSerialReader</a>
+            bis auf port. Diese werden für nicht explizit konfigurierte Geräte
+            gesetzt.</td>
+          <td><br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <h4>Parameter für UsbDevice</h4>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Beschreibung</td>
+          <td>default/template</td>
+        </tr>
+        <tr>
+          <td>usbid</td>
+          <td>USB Port identifikation z.B. "1-1.2.1:1.0", erforderlich</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>type</td>
+          <td>Type des Gerätes reader, writer, combined, ignore, setze ignore,
+            wenn das Gerät nicht genutzt werden soll</td>
+          <td>reader</td>
+        </tr>
+        <tr>
+          <td>...</td>
+          <td>alle Parameter von <a href="#AVNSerialReader">AVNSerialReader</a>
+            wenn der type = "reader" ist (bis auf port, dieser wird intern
+            gesetzt)</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>...</td>
+          <td>alle Parameter von <a href="#AVNSerialWriter">AVNSerialWriter</a>wenn
+            der type combined oder writer ist (bis auf port, dieser wird intern
+            gesetzt)</td>
+          <td><br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <h3>AVNUdpReader<br>
+    </h3>
+    <p>Öffnet einen UPD port und verarbeitet dort hereinkommende Daten.
+      Kategorie 3(optional, mehrfach).</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Beschreibung</td>
+          <td>default/template</td>
+        </tr>
+        <tr>
+          <td>name</td>
+          <td>Kanalname für die Nutzung in <a href="#blackList">blackList</a>
+            und in der Anzeige</td>
+          <td>intern berechnet</td>
+        </tr>
+        <tr>
+          <td>port</td>
+          <td>UDP port</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>host</td>
+          <td>Bind Adresse für den Port. Damit kann der Empfang z.B. auf
+            localhost begrenzt werden.</td>
+          <td>0.0.0.0</td>
+        </tr>
+        <tr>
+          <td>minTime</td>
+          <td>wenn gesetzt: Wartezeit in s bevore ein weiterer Datensatz
+            empfangen wird. Hiermit kann u.U. die Datenrate begrenzt werden.</td>
+          <td>0</td>
+        </tr>
+      </tbody>
+    </table>
+    <h3>AVNUdpWriter</h3>
+    <p>Sendet NMEA Daten per UDP. Kategorie 3 (optional, mehrfach)</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Beschreibung</td>
+          <td>default/template</td>
+        </tr>
+        <tr>
+          <td>name</td>
+          <td>Kanalname</td>
+          <td>intern berechnet</td>
+        </tr>
+        <tr>
+          <td>port</td>
+          <td>UDP Ziel port</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>host</td>
+          <td>UDP Zieladresse</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>filter</td>
+          <td><a href="#filter">filter</a> NMEA Daten, die gesendet werden</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>broadcast</td>
+          <td>muss auf true gesetzt werden, wenn die Daten als broadcast
+            geschickt werden sollen</td>
+          <td>false</td>
+        </tr>
+        <tr>
+          <td>blackList</td>
+          <td><a href="#blackList">blackList</a> für Kanalnamen, deren Daten
+            nicht gesendet werden sollen</td>
+          <td> <br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <h3>AVNSocketWriter</h3>
+    <p>Ein Ausgang, der auf einem Port auf Verbindungen wartet und an diese die
+      NMEA Daten ausgibt (TCP server). Kategorie 3 (mehrfach, optional).</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Beschreibung</td>
+          <td>default/template</td>
+        </tr>
+        <tr>
+          <td>name</td>
+          <td>Kanalname</td>
+          <td>intern berechnet</td>
+        </tr>
+        <tr>
+          <td>port</td>
+          <td>der Listener Port</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>address</td>
+          <td>wenn gesetzt, binde auf diese Adresse (sonst any: 0.0.0.0)</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>filter</td>
+          <td><a href="#filter">filter</a> für NMEA Daten</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>read</td>
+          <td>wenn true, werden auch Daten vom Socket gelesen</td>
+          <td>false</td>
+        </tr>
+        <tr>
+          <td>readFilter</td>
+          <td>falls auch gelsen wird, NMEA <a href="#filter">filter</a> für die
+            Eingangsrichtung</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>blackList</td>
+          <td><a href="#blackList">blackList</a> durch Komma getrennte Liste von
+            Kanalnamen, für die keine Daten ausgegeben werden</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>minTime</td>
+          <td>minimale Zeit in s zwischen 2 gesendeten Nachrichten. Damit kann
+            die Datenrate begrenzt werden.</td>
+          <td>0</td>
+        </tr>
+      </tbody>
+    </table>
+    <h3>AVNSocketReader</h3>
+    <p>Ein Eingang, der sich mit einem TCP server verbindet und von dort Daten
+      liest (TCP client). Kategorie 3 (mehrfach, optional)</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Beschreibung</td>
+          <td>default/template</td>
+        </tr>
+        <tr>
+          <td>name</td>
+          <td>Kanalname</td>
+          <td>intern berechnet</td>
+        </tr>
+        <tr>
+          <td>port</td>
+          <td>TCP Port zu dem eine Verbiundung aufgebaut wird</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>host</td>
+          <td>TCP Zieladresse zu der eine Verbindung aufgebaut wird</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>timeout</td>
+          <td>Verbindungs-timeout in s</td>
+          <td>10</td>
+        </tr>
+        <tr>
+          <td>minTime</td>
+          <td>Minimale Zeit zwischen 2 empfangenen Nachrichten</td>
+          <td>0</td>
+        </tr>
+      </tbody>
+    </table>
+    <p><br>
+    </p>
+    <h3>AVNBME280Reader</h3>
+    <p>Reader für BME280 per I2C. Kategorie 3 (optional)<br>
+      Schreibt MDA und XDR Datensätze.</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Beschreibung</td>
+          <td>default/template</td>
+        </tr>
+        <tr>
+          <td>name</td>
+          <td>Kanalname</td>
+          <td>intern berechnet</td>
+        </tr>
+        <tr>
+          <td>addr</td>
+          <td>I2C Adresse des Sensors</td>
+          <td>0x77</td>
+        </tr>
+        <tr>
+          <td>interval</td>
+          <td>Zeit zwischen 2 NMEA Datensätzen in s</td>
+          <td>5</td>
+        </tr>
+        <tr>
+          <td>writeXdr</td>
+          <td>Schreibe XDR wenn true</td>
+          <td>true</td>
+        </tr>
+        <tr>
+          <td>writeMda</td>
+          <td>Schreibe MDA wenn true</td>
+          <td>true</td>
+        </tr>
+      </tbody>
+    </table>
+    <h3>AVNBMB180Reader</h3>
+    <p>Reader für BMP180 per I2C. Kategorie 3 (optional)<br>
+      Schreibt MDA und XDR Datensätze.</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Beschreibung</td>
+          <td>default/template</td>
+        </tr>
+        <tr>
+          <td>name</td>
+          <td>Kanalname</td>
+          <td>intern berechnet</td>
+        </tr>
+        <tr>
+          <td>addr</td>
+          <td>I2C Adresse des Sensors</td>
+          <td>0x77</td>
+        </tr>
+        <tr>
+          <td>interval</td>
+          <td>Zeit zwischen 2 NMEA Datensätzen in s</td>
+          <td>5</td>
+        </tr>
+        <tr>
+          <td>writeXdr</td>
+          <td>Schreibe XDR wenn true</td>
+          <td>true</td>
+        </tr>
+        <tr>
+          <td>writeMda</td>
+          <td>Schreibe MDA wenn true</td>
+          <td>true</td>
+        </tr>
+      </tbody>
+    </table>
+    <h3>AVNSenseHatReader</h3>
+    <p>Reader für SenseHat I2C. Kategorie 3 (optional)<br>
+      Schreibt MDA und XDR Datensätze.</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Beschreibung</td>
+          <td>default/template</td>
+        </tr>
+        <tr>
+          <td>name</td>
+          <td>Kanalname</td>
+          <td>intern berechnet</td>
+        </tr>
+        <tr>
+          <td>interval</td>
+          <td>Zeit zwischen 2 NMEA Datensätzen in s</td>
+          <td>5</td>
+        </tr>
+        <tr>
+          <td>writeXdr</td>
+          <td>Schreibe XDR wenn true</td>
+          <td>true</td>
+        </tr>
+        <tr>
+          <td>writeMda</td>
+          <td>Schreibe MDA wenn true</td>
+          <td>true</td>
+        </tr>
+      </tbody>
+    </table>
+    <h3>AVNTrackWriter</h3>
+    <p>Schreiben von Tracks im gpx Format und einem simplen ASCII Format.
+      Kategorie 3 (einmal, optional)</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Beschreibung</td>
+          <td>default/template</td>
+        </tr>
+        <tr>
+          <td>interval</td>
+          <td>minimaler Abstand in s zwischen dem Schreiben von 2 Einträgen</td>
+          <td>10</td>
+        </tr>
+        <tr>
+          <td>mindistance</td>
+          <td>minimaler Abstand in m zwischen 2 Track Punkten</td>
+          <td>50</td>
+        </tr>
+        <tr>
+          <td>trackdir</td>
+          <td>Verzeichnis für tracks</td>
+          <td>&lt;datadir&gt;/tracks</td>
+        </tr>
+        <tr>
+          <td>cleanup</td>
+          <td>Maximale Länge des intern vorgehaltenen Tracks in Stunden.
+            Trackdaten werden weiter in Dateien geschrieben, aber die App kann
+            maximal diese Zeit (rückwärts) als Track bekommen.</td>
+          <td>25</td>
+        </tr>
+      </tbody>
+    </table>
+    <h3>AVNRouter</h3>
+    <p>Verwalten von Routing Daten (Wegepunkte, Routen, Ankeralarm). Berechnung
+      der AP Daten. Kategorie 1(einmal, erforderlich).</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Beschreibung</td>
+          <td>default/template</td>
+        </tr>
+        <tr>
+          <td>name</td>
+          <td>Kanalname (genutzt für AP Daten)</td>
+          <td>intern berechnet</td>
+        </tr>
+        <tr>
+          <td>routesdir</td>
+          <td>Verzeichnis für routen</td>
+          <td>&lt;datadir&gt;/routes</td>
+        </tr>
+        <tr>
+          <td>interval</td>
+          <td>Intervall (in s) zwischen RMB Datensätzen</td>
+          <td>5</td>
+        </tr>
+        <tr>
+          <td>computeRMB</td>
+          <td>berechne einen RMB Datensatz wenn ein Wegepunkt aktiv ist</td>
+          <td>true</td>
+        </tr>
+        <tr>
+          <td>computeAPB</td>
+          <td>berechne einen APB Datensatz</td>
+          <td>false</td>
+        </tr>
+      </tbody>
+    </table>
+    <h3>AVNNmeaLogger</h3>
+    <p>Schreibt NMEA logs in das track Verzeichnis. Kategorie 3 (einmal,
+      optional).</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Beschreibung</td>
+          <td>default/template</td>
+        </tr>
+        <tr>
+          <td>maxfiles</td>
+          <td>Anzahl der Dateien (1 pro Tag), die aufgeoben werden</td>
+          <td>100</td>
+        </tr>
+        <tr>
+          <td>filter </td>
+          <td><a href="#filter">filter</a> für NMEA Daten</td>
+          <td>"$RMC,$DBT,$DBP"
+            <meta http-equiv="content-type" content="text/html; charset=utf-8">
+          </td>
+        </tr>
+        <tr>
+          <td>interval</td>
+          <td>Minimale Zeit in s bevor ein satz des gleichen Types erneut
+            geschrieben wird</td>
+          <td>5</td>
+        </tr>
+      </tbody>
+    </table>
+    <h3>AVNImporter</h3>
+    <p>Importiert Karten, die noch konvertiert werden müssen. Kategorie 2
+      (einmal, nicht notwendig)</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Beschreibung</td>
+          <td>default/template</td>
+        </tr>
+        <tr>
+          <td>importDir</td>
+          <td>Verzeichnis aus dem die zu importierenden Karten gelesen werden</td>
+          <td>&lt;datadir&gt;/import</td>
+        </tr>
+        <tr>
+          <td>workDir</td>
+          <td>Arbeitsverzeichnis für den import</td>
+          <td>&lt;datadir&gt;/work</td>
+        </tr>
+        <tr>
+          <td>waittime</td>
+          <td>Zeit in s die nach dem Finden einer Datei im Import-Verzeichnis
+            gewartet wird, bevor der Konverter startet</td>
+          <td>30</td>
+        </tr>
+        <tr>
+          <td>knownExtensions</td>
+          <td>Liste der Dateinamensendungen, die in der App zum Hochladen in den
+            Importer angeboten werden</td>
+          <td>kap,map,geo</td>
+        </tr>
+        <tr>
+          <td>keepInfoTime</td>
+          <td>Zeit in s, die eine Information über einen Import noch stehen
+            bleibt</td>
+          <td>30</td>
+        </tr>
+      </tbody>
+    </table>
+    <h3>AVNWpaHandler</h3>
+    <p>Konfiguration von externen WLAN Verbindungen. Kategorie3 (einmalig,
+      optional)</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Beschreibung</td>
+          <td>default/template</td>
+        </tr>
+        <tr>
+          <td>wpaSocket</td>
+          <td>die Steuerverbindung zu wpa_supplicant</td>
+          <td>/var/run/wpa_supplicant/wlan-av1</td>
+        </tr>
+        <tr>
+          <td>ownSsid</td>
+          <td>eigene SSIDs, diese werden ausgeblendet</td>
+          <td>avnav,avnav1,avnav2</td>
+        </tr>
+        <tr>
+          <td>firewallCommand</td>
+          <td>wenn konfiguriert kann damit der externe Zugriff über ein WLAN
+            freigeschaltet werden</td>
+          <td>sudo -n $BASEDIR/../raspberry/iptables-ext.sh wlan-av1</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <h3>AVNCommandHandler</h3>
+    <p>Ausführen von Kommandos, u.a. für Alarme. Kategorie2 (einmalig,nicht
+      notwendig).</p>
+    <p>Der AVNCommandHandler selbst hat keine Parameter. Es können jedoch
+      verschiedene Kommandos konfiguriert werden, die dann jeweils per Name
+      angesprochen werden. Die default Konfiguration ist:</p>
+    <div class="code">&lt;AVNCommandHandler&gt;
+     &lt;Command name="sound" command="mpg123 -q" repeat="1"/&gt;
+&lt;/AVNCommandHandler&gt;</div>
+    <h4>Parameter für Command</h4>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Beschreibung</td>
+          <td>default/template</td>
+        </tr>
+        <tr>
+          <td>name</td>
+          <td>Name des Kommandos</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>command</td>
+          <td>Auszuführender Befehl</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>repeat</td>
+          <td>Zahl der Wiederholungen</td>
+          <td>1</td>
+        </tr>
+      </tbody>
+    </table>
+    <h3>AVNAlarmHandler</h3>
+    <p>Management von Alarmen. Kategorie 2 (einmal, nicht notwendig).</p>
+    <p>Die default Konfiguration ist:</p>
+    <div class="code">&lt;AVNAlarmHandler&gt;
+	&lt;Alarm name="waypoint" command="sound" parameter="$BASEDIR/../sounds/waypointAlarm.mp3" repeat="1"/&gt;
+	&lt;Alarm name="anchor" command="sound" parameter="$BASEDIR/../sounds/anchorAlarm.mp3" repeat="20000"/&gt;
+	&lt;Alarm name="gps" command="sound" parameter="$BASEDIR/../sounds/anchorAlarm.mp3" repeat="20000"/&gt;
+	&lt;Alarm name="mob" command="sound" parameter="$BASEDIR/../sounds/anchorAlarm.mp3" repeat="2"/&gt;<br>&lt;/AVNAlarmHandler&gt;
+    </div>
+    <p>AVNAlarmHandler hat einen Parameter: stopAlarmPin. Wenn dieser gesetzt
+      wird (GPIO Zählung, nur Raspberry) kann ein Alarm mit einem L signal an
+      diesem GPIO Pin abgeschaltet werden.<br>
+      Die bei den Alarmen gesetzten Parameter werden auch gleichzeitig als die
+      Sounds für die Alarme in der WebApp genutzt.</p>
+    <h3>AVNPluginHandler</h3>
+    <p>Management von plugins. Kategorie 2 (einmalig, optional).<br>
+      Der AVNPluginHandler verwaltet <a href="plugins.html">plugins</a>, die in
+      verschiedenen Verzeichnissen installiert werden können.Es gibt 3
+      Verzeichnisse in denen plugins gesucht werden:</p>
+    <ul>
+      <li>builtin: /usr/lib/avnav/server/plugins</li>
+      <li>system: /user/lib/avnav/plugins</li>
+      <li>user: /home/pi/avnav/data/plugins</li>
+    </ul>
+    <p>Neben den Parametern für den Plugin Handler selbst können die jeweiligen
+      plugins Parameter erwarten. Der Name für das plugin ergibt sich dabei aus
+      der Kategorie und dem plugin Verzeichnis. Beispiel:</p>
+    <div class="code">&lt;AVNPluginHandler&gt;
+        &lt;builtin-signalk enabled="true"/&gt;
+	&lt;builtin-canboat enabled="true" allowKeyOverwrite="true" autoSendRMC="30" sourceName="canboatgen"/&gt;
+&lt;/AVNPluginHandler&gt;</div>
+    <h4>Parameter für AVNPluginHandler</h4>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Beschreibung</td>
+          <td>default/template</td>
+        </tr>
+        <tr>
+          <td>builtinDir</td>
+          <td>Verzeichnis für eingebaute plugins, nicht änderbar</td>
+          <td>/usr/lib/avnav/server/plugins</td>
+        </tr>
+        <tr>
+          <td>systemDir</td>
+          <td>Verzeichnis für plugins, die als separate Pakete installiert
+            werden</td>
+          <td>/usr/lib/avnav/plugins</td>
+        </tr>
+        <tr>
+          <td>userDir</td>
+          <td>Verzeichnis für Nutzer Plugins</td>
+          <td>/home/pi/avnav/data/plugins</td>
+        </tr>
+      </tbody>
+    </table>
+    <h4>Parameter für <a href="CanboatAndSignalk.html">builtin-signalk</a></h4>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Beschreibung</td>
+          <td>default/template</td>
+        </tr>
+        <tr>
+          <td>enabled</td>
+          <td>Nur wenn auf true ist das plugin aktiv</td>
+          <td>false</td>
+        </tr>
+        <tr>
+          <td>port</td>
+          <td>Der Port für das signalk interface</td>
+          <td>3000</td>
+        </tr>
+        <tr>
+          <td>period</td>
+          <td>Intervall für die Abfrage (ms)</td>
+          <td>1000</td>
+        </tr>
+      </tbody>
+    </table>
+    <h4>Parameter für builtin-canboat</h4>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Beschreibung</td>
+          <td>default/template</td>
+        </tr>
+        <tr>
+          <td>enabled</td>
+          <td>Nur wenn auf true ist das plugin aktiv</td>
+          <td>false</td>
+        </tr>
+        <tr>
+          <td>allowKeyOverride</td>
+          <td>Muss gesetzt werden, wenn Datum und Zeit von canboat gelesen
+            werden sollen</td>
+          <td>false</td>
+        </tr>
+        <tr>
+          <td>port</td>
+          <td>canboat json Port</td>
+          <td>2598</td>
+        </tr>
+        <tr>
+          <td>host</td>
+          <td>Host für den n2kd</td>
+          <td>localhost</td>
+        </tr>
+        <tr>
+          <td>autoSendRMC</td>
+          <td>falls für diese Zeit in Sekunden kein RMC im NMEA-Datenstrom
+            gesehen wird und gültige Positionsdaten + Zeit von canboat vorhanden
+            sind: sende RMC (ist wichtig für Datum/Zeit auf NMEA0183)</td>
+          <td>0 (aus)</td>
+        </tr>
+        <tr>
+          <td>sourceName</td>
+          <td>Kanalname der für RMC genutzt wird</td>
+          <td>plugin-Name</td>
+        </tr>
+        <tr>
+          <td>timeInterval</td>
+          <td>minimale Zeit zwischen 2 NMEA2000 Zeit Werten bevor diese
+            gespeichert werden (Sekunden)</td>
+          <td>0.5</td>
+        </tr>
+        <tr>
+          <td>timePGNs</td>
+          <td>PGNs die für das Setzen der Zeit genutzt werden</td>
+          <td>126992,129029</td>
+        </tr>
+      </tbody>
+    </table>
+    <h3>AVNChartHandler</h3>
+    <p>Verwaltung der Karten. Kategorie 2 (einmal, muss nicht enthalten sein)</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Beschreibung</td>
+          <td>default/template</td>
+        </tr>
+        <tr>
+          <td>period</td>
+          <td>Zeitintervall zwischen 2 Lesevorgängen für das Kartenverzeichnis
+            (Sekunden)</td>
+          <td>30</td>
+        </tr>
+        <tr>
+          <td>upzoom</td>
+          <td>Anzahl von zoom Stufen über der höchsten vorhandenen Stufe</td>
+          <td>2</td>
+        </tr>
+      </tbody>
+    </table>
+    <h3>AVNUserHandler</h3>
+    <p>Verwaltung der Nutzer-Dateien. Kategorie 2 (einmal, muss nicht enthalten
+      sein)</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Beschreibung</td>
+          <td>default/template</td>
+        </tr>
+        <tr>
+          <td>interval</td>
+          <td>Zeitintervall zwischen 2 Lesevorgängen für das Verzeichnis
+            (Sekunden)</td>
+          <td>5</td>
+        </tr>
+      </tbody>
+    </table>
+    <h3>AVNImagesHandler</h3>
+    <p>Verwaltung der Nutzer-Images. Kategorie 2 (einmal, muss nicht enthalten
+      sein)</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Beschreibung</td>
+          <td>default/template</td>
+        </tr>
+        <tr>
+          <td>interval</td>
+          <td>Zeitintervall zwischen 2 Lesevorgängen für das Verzeichnis
+            (Sekunden)</td>
+          <td>5</td>
+        </tr>
+      </tbody>
+    </table>
+    <h3>AVNUserAppHandler</h3>
+    <p>Verwaltung der konfigurierten <a href="../userdoc/addonconfigpage.html">User
+        Apps</a>. Kategorie 2 (einmal, muss nicht enthalten sein)</p>
+    <p>Dieser Handler ist etwas speziell. Initial sind hier keine
+      Konfigurationen zu finden, über die WebApp können aber Konfigurationen
+      angelegt werden. Eind händische Änderung ist nicht empfohlen.<br>
+    </p>
+  </body>
+</html>
