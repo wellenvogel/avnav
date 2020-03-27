@@ -1,9 +1,10 @@
 {
     "title":"Wellenvogel-AvNav",
-    "headline": "Wellenvogel AvNav Nutzerbeschreibung",
-    "en_headline": "Wellenvogel AvNav User doc",
+    "headline": "Wellenvogel AvNav Benutzung",
+    "en_headline": "Wellenvogel AvNav Usage",
     "headlineLink":"index.html",
-    "menutitle": "AvNav",
+    "menutitle": "AvNav Benutzung",
+    "en_menutitle": "AvNav Usage",
     "navlist":[
         {"title":">Einführung","en_title":">Introduction","url":"../beschreibung.html"},
         {"title":"Konfiguration & Technik","en_title":"Configuration","url":"../hints/index.html"},

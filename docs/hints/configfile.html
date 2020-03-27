@@ -51,7 +51,7 @@
       <li>Anteile, die im Normalfall nicht in der avnav_config.xml stehen
         müssen, nur wenn etwas Spezielles konfiguriert werden soll<br>
         Beispiele: AVNAlarmHandler, AVNChartHandler,...</li>
-      <li>Anteile, die ein- oder mehrfach in der avnva_server.xml stehen können.
+      <li>Anteile, die ein- oder mehrfach in der avnav_server.xml stehen können.
         Das sind insbesondere die Eingangs- und Ausgangskanäle. Wenn kein
         solcher Eintrag vorhanden ist, steht die Funktion nicht zur Verfügung.</li>
     </ol>
@@ -139,9 +139,7 @@
         <tr>
           <td>settimecmd</td>
           <td>Kommando für das setzen der Systemzeit</td>
-          <td>/usr/lib/avnav/raspberry/settime.sh
-            <meta http-equiv="content-type" content="text/html; charset=utf-8">
-          </td>
+          <td>/usr/lib/avnav/raspberry/settime.sh </td>
         </tr>
         <tr>
           <td>settimeperiod</td>
@@ -243,7 +241,7 @@
         </tr>
         <tr>
           <td>extension</td>
-          <td>Namens-Enddung (z.B. .avt)</td>
+          <td>Namens-Endung (z.B. .avt)</td>
           <td><br>
           </td>
         </tr>
@@ -382,6 +380,12 @@
           <td>default/template</td>
         </tr>
         <tr>
+          <td>name</td>
+          <td>channel name</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
           <td>combined</td>
           <td>wenn "true", dann gleichzeitig Eingang und Ausgang</td>
           <td>false</td>
@@ -402,7 +406,7 @@
         </tr>
         <tr>
           <td>....</td>
-          <td>alle Parameter von AVNSerialReader</td>
+          <td>alle Parameter von <a href="#AVNSerialReader">AVNSerialReader</a></td>
           <td><br>
           </td>
         </tr>
@@ -411,13 +415,13 @@
     <h3>AVNUsbSerialReader</h3>
     <p>Behandelt über USB angeschlossene serielle Geräte. Kategorie 3(einmal,
       optional).<br>
-      Dieser Worker scann alle über USB verbundenen Geräte und für solche mit
+      Dieser Worker sucht alle über USB verbundenen Geräte und für solche mit
       einem seriellen Profil versucht er diese zu öffnen, automatische die
       Baudrate einzustellen und dann NMEA Daten zu lesen. Damit werden solche
       Geräte normalerweise komplett automatisch von AvNav erkannt.<br>
       Man kann für einzelne Geräte Regeln definieren, um sie speziell zu
       behandeln. Als Identifikation für ein Gerät wird dabei eine ID genutzt,
-      die die enstprechende USB Buchse identifiziert. Mann diese ID am
+      die die enstprechende USB Buchse identifiziert. Mann kann diese ID am
       einfachsten ermitteln, indem man bei Einstecken des Gerätes die <a href="../userdoc/statuspage.html">Status
         Seite</a> beobachtet.</p>
     <p>Die Parameter gliedern sich in 2 Teile: </p>
@@ -875,9 +879,7 @@
         <tr>
           <td>filter </td>
           <td><a href="#filter">filter</a> für NMEA Daten</td>
-          <td>"$RMC,$DBT,$DBP"
-            <meta http-equiv="content-type" content="text/html; charset=utf-8">
-          </td>
+          <td>"$RMC,$DBT,$DBP" </td>
         </tr>
         <tr>
           <td>interval</td>
@@ -1081,7 +1083,7 @@
         </tr>
       </tbody>
     </table>
-    <h4>Parameter für builtin-canboat</h4>
+    <h4>Parameter für <a href="CanboatAndSignalk.html">builtin-canboat</a></h4>
     <table style="width: 100%" border="1">
       <tbody>
         <tr>
