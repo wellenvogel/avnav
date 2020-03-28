@@ -724,6 +724,7 @@ def docTree=fileTree("docs",{
     include "**/*css"
     include "**/*pdf"
     include "**/*PDF"
+    include "**/*json"
 })
 task addImagesToDoc(type: DefaultTask){
     doFirst(){
@@ -763,6 +764,7 @@ def findImages(fileTree){
           def page = new XmlSlurper(tagsoupParser).parse(element.getFile())
           page.'**'.findAll().each{ node->
             if (node.name() == "img" ){
+                if (node.@src.toString().startsWith("http")) return;
                 def imgFile=RelativePath.parse(true,node.@src.toString())
                 def completePath=element.getRelativePath().getParent().append(imgFile)
                 def segments=new ArrayList()
@@ -795,6 +797,32 @@ task findImages(type: DefaultTask){
         def rt=findImages(list)
         rt.each { img ->
             println "image: ${img}"
+        }
+    }
+}
+
+task findUnusedImages(type: DefaultTask){
+    doFirst(){
+            def list=fileTree("docs",{
+                    include "**/*html"
+            })
+        def rt=findImages(list)
+        def images=fileTree("docs",{
+                include "**/*png"
+                include "**/*PNG"
+                include "**/*jpg"
+                include "**/*JPG"
+        })
+        images.visit{ FileVisitDetails element ->
+            if (! element.getFile().isFile()) return;
+            def path=element.getRelativePath().getPathString()
+            if (path.startsWith("viewerimages")) return
+            if (! rt.contains(path)){
+                println "unused: $path"
+            }
+            else{
+                println "used: $path"
+            }
         }
     }
 }
