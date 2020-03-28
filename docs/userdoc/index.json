@@ -7,7 +7,7 @@
     "en_menutitle": "AvNav Usage",
     "navlist":[
         {"title":">Einführung","en_title":">Introduction","url":"../beschreibung.html"},
-        {"title":"Konfiguration & Technik","en_title":"Configuration","url":"../hints/index.html"},
+        {"title":"Konfiguration & Technik","en_title":"Configuration & Technics","url":"../hints/index.html"},
         {"title":"Übersicht","en_title":"Overview","url":"index.html"},
         {"title":"Navigation","en_title":"Navigation","url":"navpage.html"},
         {"title":"Route Editor","url":"editroutepage.html"},

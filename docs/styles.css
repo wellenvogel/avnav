@@ -21,6 +21,9 @@
 .image{
 	width: 600px;
 }
+.fimage{
+    max-width: 100%;
+}
 
 .inline{
 	display: inline-block;
@@ -30,7 +33,7 @@
 }
 
 .gallery img{
-	height: 250px:
+	height: 250px;
 }
 
 .mainlist{

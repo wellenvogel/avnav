@@ -11,6 +11,7 @@
         {"title":"NMEA2K und Signalk","en_title":"NMEA2K and SignalK","url":"CanboatAndSignalk.html"},
         {"title":"Anpassen von AvNav","en_title":"Adapting AvNav","url":"adapt.html"},
         {"title":"Konfiguration","en_title":"Configuration","url":"configfile.html"},
+        {"title":"Plugins","en_title":"Plugins","url":"plugins.html"},
         {"title":">Android","url":"../android.html"},
          {"title":">>Software","url":"../../../index.html"}
     ]
