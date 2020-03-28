@@ -1,0 +1,211 @@
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Plugins</title>
+    <link href="../styles.css" rel="stylesheet" type="text/css">
+  </head>
+  <body>
+    <h1>Avnav Plugins</h1>
+    <p>=== nicht für Android ===</p>
+    <p>Um die Funktionalität von AvNav erweitern zu können gibt es Plugins.
+      Plugins können mit Python code den Server erweitern und sie können mit
+      Java Script und Css die WebApp erweitern.</p>
+    <p>Jedes Plugin muss sich in einem eigenen Verzeichnis befinden. Dessen Name
+      ist gleichzeitig der Plugin Name. Es gibt 2 Wurzelverzeichnisse, die AvNav
+      nach plugins durchsucht:</p>
+    <ul>
+      <li>"systemdir" - ein Verzeichnis für plugins, die für alle Nutzer auf
+        einem System installiert werden (z.B. als Pakete). Dieses ist
+        /usr/lib/avnav/plugins.</li>
+      <li>"userdir" - ein Verzeichnis für plugins eines einzelnen Nutzers. Das
+        befindet sich unterhalb des "datadir" - also auf dem pi
+        /home/pi/avnav/data/plugins, sonst unter Linux $HOME/avnav/plugins.</li>
+    </ul>
+    <p>Daneben gibt es noch ein internes Plugin Verzeichnis (builtin).</p>
+    <p>Grundsätzlich können die Server-Anteile an verschiedenen Stellen Daten
+      aus AvNav lesen oder hineinschreiben. Die WebApp Anteile können im
+      Allgemeinen dazu dienen diese Daten dann z.B. anzuzeigen. Daneben können
+      sie aber auch einfach weitere Anzeigen einbringen oder das Aussehen
+      anpassen.</p>
+    <p>In einem Plugin Verzeichnis kann es bis zu 3 Dateien geben, die von AvNav
+      beachtet werden (daneben natürlich weitere Dateien, die das Plugin selbst
+      benötigt).</p>
+    <p>Diese sind:</p>
+    <ul>
+      <li>plugin.py - die Serveranteile des plugins, optional</li>
+      <li>plugin.js - die Java Script Anteile des plugins, optional</li>
+      <li>plugin.css - die CSS Anteile des plugins, optional</li>
+    </ul>
+    <p>Ein Beispiel für ein Plugin findet man auf <a href="https://github.com/wellenvogel/avnav/tree/master/server/plugins/testPlugin">GitHub</a>.</p>
+    <h2>plugin.js</h2>
+    <p>Im Java script code sind genau die gleichen Funktionen verfügbar wie
+      unter <a href="userjs.html">nutzerspezifischer Java Script code</a>
+      beschrieben.</p>
+    <h2>plugin.css</h2>
+    <p>Im CSS code sind die gleichen Möglichkeiten vorhanden wie unter <a href="usercss.html">nutzerspezifisches
+        CSS</a> beschrieben.</p>
+    <h2>plugin.py</h2>
+    <img src="../software-with-plugin.png" alt="" class="image">
+    <p>Die Zeichnung gibt einen groben Überblick über die interne Struktur des
+      AvNav Servers und die Punkte, an denen ein Plugin Daten auslesen oder
+      einspeisen kann.</p>
+    <table border="1" width="100%">
+      <tbody>
+        <tr>
+          <td>Punkt</td>
+          <td>Funktion</td>
+          <td>Beispiel</td>
+        </tr>
+        <tr>
+          <td>A</td>
+          <td>Einspeisen von NMEA Daten in die interne Liste. Diese stehen dann
+            an allen Ausgängen zur Verfügung.<br>
+            Hinweis: Solche Daten stehen zunächst nicht für die WebApp zur
+            Verfügung, solange es keineń Dekoder für diesen Datensatz gibt.</td>
+          <td>Auslesen eines Sensors und Erzeugen des passenden NMEA0183
+            Datensatzes.</td>
+        </tr>
+        <tr>
+          <td>B</td>
+          <td>Auslesen von empfangenen NMEA Daten. Hier können (ggf. mit einem
+            Filter) alle in AvNav durchlaufenden NMEA Daten gelesen werden.</td>
+          <td>In Zusammenspiel mit Punkt "C" Dekodieren von NMEA Datensätzen</td>
+        </tr>
+        <tr>
+          <td>C</td>
+          <td>Einspeisen von Daten in den internen Speicher von AvNav. Die Datem
+            im internen Speicher sind in einem Baum abgelegt. Jedes Element ist
+            durch einen Schlüssel der Form "a.b.c...." adressiert. Beispiel:
+            "gps.lat".<br>
+            Alle Schlüsselwerte, die mit "gps." starten, werden automatisch an
+            die WebApp übertragen und sind dann dort unter "nav.gps...."
+            verfügbar. (siehe <a href="layouts.html">Layout Editor</a> und <a
+              href="userjs.html">nutzerspezifisches Java Script</a>).<br>
+            Schlüsselwerte müssen vorher durch das Plugin angemeldet werden, es
+            ist nicht möglich, bereits im System genutzte Schlüssel zu
+            überschreiben. Ausnahme: Der Nutzer konfiguriert für das plugin den
+            Wert "allowKeyOverride" auf true.</td>
+          <td>Einspeisen eines von einem Sensor gelesenen Wertes - z.B.
+            gps.temperature.outside oder von dekodierten NMEA Daten.</td>
+        </tr>
+        <tr>
+          <td>D</td>
+          <td>Auslesen von Daten aus dem internen Speicher.</td>
+          <td>Berechnung neuer Daten und Einspeisung unter "C" - oder
+            Weiterreichen an eine externe Verbindung.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Ein Beispiel für eine plugin.py findet sich auf <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/testPlugin/plugin.py">GitHub</a>.</p>
+    <p>Damit das Plugin von AvNav erkannt wird, müssen folgende Voraussetzungen
+      eingehalten werden:</p>
+    <ol>
+      <li>In plugin.py muss mindestens eine Klasse vorhanden sein (der Name
+        sollte Plugin sein)</li>
+      <li>Die Klasse muss eine statische Methode (@classmethod) mit dem Namen
+        pluginInfo haben, die ein dictionary zurückgibt.<br>
+        <div class="code">* description (mandatory)
+* data: list of keys to be stored (optional)
+     * path - the key - see AVNApi.addData, all pathes starting with "gps." will be sent to the GUI
+     * description
+        </div>
+        <br>
+        Ein Beispiel könnte so aussehen:<br>
+        <div class="code">@classmethod
+def pluginInfo(cls):<br>  return {
+    'description': 'a test plugins',
+    'data': [
+        {
+        'path': 'gps.test',
+        'description': 'output of testdecoder',
+        }
+      ]
+    }
+        </div>
+      </li>
+      <li>Der Konstruktor der Plugin Klasse muss einen Parameter erwarten.<br>
+        Beim Aufruf wird hier eine Instanz des <a href="https://github.com/wellenvogel/avnav/blob/master/server/avnav_api.py">API</a>
+        übergeben, über das die Kommunikation mit AvNav erfolgt. </li>
+      <li>Die Klasse muss eine run Methode (ohne Parameter) besitzen.<br>
+        Diese wird in einem eigenen Thread aufgerufen, nachdem die
+        Initialisierung abgeschlossen ist.<br>
+        Typischerweise wird diese Methode eine Endlosschleife enthalten, um die
+        Plugin-Funktion zu realisieren.</li>
+    </ol>
+    <p>Für das Plugin können in der <a href="configfile.html#plugins">avnav_server.xml</a>
+      Parameter konfiguriert werden, diese sind dann über das API
+      (getConfigValue) abrufbar.</p>
+    <p>Am <a href="https://github.com/wellenvogel/avnav/blob/master/server/avnav_api.py">API</a>
+      stehen die folgenden Funktionen zur Verfügung</p>
+    <table border="1" width="100%">
+      <tbody>
+        <tr>
+          <td>Funktion</td>
+          <td>Beschreibung</td>
+        </tr>
+        <tr>
+          <td>log,debug,error</td>
+          <td>Logging Funktionen. Es werden Zeilen in die AvNav log Datei
+            geschrieben. Man sollte für log und error vermeiden, solche Einträge
+            in grosser Zahl zu schreiben, da sonst im Log potentiell wichtige
+            Informationen verloren gehen (also z.B. nicht jede Sekunde ein
+            Fehlereintrag...)</td>
+        </tr>
+        <tr>
+          <td>getConfigValue</td>
+          <td>lies einen config Wert aus der <a href="configfile.html#plugins">avnav_server.xml</a>.</td>
+        </tr>
+        <tr>
+          <td>fetchFromQueue</td>
+          <td>Interface B: lies Daten aus der internen NMEA Liste. Ein Beispiel
+            ist im API code vorhanden. Der filter Parameter funktioniert wie in
+            der <a href="configfile.html#filter">avnav_server.xml</a>.</td>
+        </tr>
+        <tr>
+          <td>addNMEA</td>
+          <td>Interface A: schreibe einen NMEA Datensatz in die interne Liste.
+            Man kann AvNav die Prüfsummenberechnung überlassen und man kann auch
+            eine Dekodierung in AvNav verhindern. Der Parameter source ist ein
+            Wert, der in <a href="configfile.html#blackList">blackList
+              parametern</a> genutzt werden kann.</td>
+        </tr>
+        <tr>
+          <td>addData</td>
+          <td>Interface C: schreibe einen Wert in den internen Speicher. Es
+            können nur Werte geschrieben werden, deren Schlüssel in der Rückgabe
+            der pluginInfo Methode vorhanden waren.</td>
+        </tr>
+        <tr>
+          <td>getSingleValue</td>
+          <td>Interface D: lese einen Datenwert aus dem internen Speicher. Zur
+            Zusammenfassung mehrerer solcher Lesevorgänge existiert die Funktion
+            getDataByPrefix</td>
+        </tr>
+        <tr>
+          <td>setStatus</td>
+          <td>Hier sollte der aktuelle Zustand des plugins gesetzt werden. Das
+            ist der Wert, der auf der <a href="../userdoc/statuspage.html">Statusseite</a>
+            angezeigt wird.</td>
+        </tr>
+        <tr>
+          <td>registerUserApp</td>
+          <td>Ein plugin kann eine <a href="../userdoc/addonconfigpage.html">User
+              App</a> registrieren. Dafür nötig ist eine URL und eine Icon
+            Datei. Die Icon Datei sollte mit im Plugin Verzeichnis liegen. In
+            der URL kann $HOST verwendet werden, das wird dann durch die
+            korrekte IP Adresse des AvNav servers ersetzt. Beispiel im <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/signalk/plugin.py">signalk
+              Plugin</a>.</td>
+        </tr>
+        <tr>
+          <td>registerLayout</td>
+          <td>Falls das Plugin z.B. eigene Widgets mitbringt, ist es u.U.
+            hilfreich ein vorbereitetes Layout mitzuliefern, das der Nutzer dann
+            auswählen kann. Das layout dazu nach der Erstellung mit dem <a href="layouts.html">Layout
+              Editor</a> herunterladen und im Plugin Verzeichnis speichern.
+            Beispiel wieder im <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/signalk/plugin.py">signalk
+              Plugin</a>.</td>
+        </tr>
+      </tbody>
+    </table>
+  </body>
+</html>
