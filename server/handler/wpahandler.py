@@ -293,6 +293,12 @@ class AVNWpaHandler(AVNWorker):
   def getHandledCommands(self):
     return "wpa"
 
+  def safeInt(self,val):
+    try:
+      return int(val)
+    except:
+      return None
+
   def handleApiRequest(self,type,subtype,requestparam,**kwargs):
     start=datetime.datetime.utcnow()
     command=self.getRequestParam(requestparam, 'command')
@@ -336,7 +342,7 @@ class AVNWpaHandler(AVNWorker):
           param[k]=v
       key=self.getRequestParam(requestparam,"psk")
       id = self.getRequestParam(requestparam, 'id')
-      if ( key is None or key == "" )  and id is None:
+      if ( key is None or key == "" )  and ( id is None or self.safeInt(id) < 0) :
         param['key_mgmt'] = "NONE"
       else:
         param['key_mgmt'] = "WPA-PSK"
