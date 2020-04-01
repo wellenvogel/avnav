@@ -29,51 +29,54 @@
 nano /home/pi/avnav/data/avnav_server.xml # dann ändern und speichern
 sudo systemctl start avnav</div>
     <br>
-    <dfehler kann="" man="" z.b.="" im="" log="" unter="" home="" pi="" avnav=""
-      data="" avnav.log="" sehen.<br=""> Auf dieser Seite sind nur Hinweise zu
-      den <a href="../downloads/release/fr">release-Versionen</a> enthalten,
-      für <a href="../downloads/daily/fr">tägliche Builds</a> kann man die <a
-        href="https://github.com/wellenvogel/avnav/commits/master">commits auf
-        GitHub</a> prüfen.<br>
-      <br>
-      <div> </div>
-      <h2>Versionen</h2>
-      <p><span style="font-weight: bold;">20200325</span> <a title="release/20200325"
-          href="../downloads/release/20200325/fr">link</a></p>
-      <ul>
-        <li><a href="hints/layouts.html">Layout Editor</a> zur Anpassung des
-          Layouts an eigene Vorstellungen</li>
-        <li>Karten im <a href="charts.html">mbtiles Format</a></li>
-        <li>Einbindung von <a href="userdoc/dashboardpage.html">grafischen
-            Anzeigen</a> (mittels <a href="https://canvas-gauges.com/">canvas-gauges</a>)</li>
-        <li>Verwalten von <a href="userdoc/downloadpage.html#userfiles">Nutzerdateien</a>
-          und "<a href="userdoc/addonconfigpage.html">user apps</a>" um eigene
-          Web Seiten einzubinden</li>
-        <li>Erweiterung und Anpassung von AvNav mit <a href="hints/userjs.html">java
-            script</a> und <a href="hints/usercss.html">css</a></li>
-        <li>Überarbeitete Dokumentation (auch in Englisch)</li>
-      </ul>
-      <p><span style="font-weight: bold;">20200204</span> <a title="release/20200204"
-          href="../downloads/release/20200204/fr">link</a></p>
-      <ul>
-        <li>Support für NME2000 (via canboat) und SignalK - siehe <a href="hints/CanboatAndSignalk.html">Beschreibung</a></li>
-        <li>Anpassungen am Layout</li>
-      </ul>
-      <p><span style="font-weight: bold;"><a name="20200126"></a>20200126</span>
-        <a title="release/20200126" href="../downloads/release/20200126/fr">link</a></p>
-      <ul>
-        <li>Fehlerkorrektur Android ständiger Notification-Ton</li>
-        <li>Fehlerkorrektur Routen-Länge auf der Detail-Seite.</li>
-        <li>MOB Handling. Bei Klick auf die MOB Taste wird ein aktuelles routing
-          abgebrochen, die aktuelle Position wird als Wegepunkt "MOB" gesetzt
-          und es wird ein Alarm ausgelöst. Die MOB Taste bekommt einen roten
-          Rand. Beendet wird das MOB über die MOB Taste oder über das Stoppen
-          der Navigation.<br>
-          Wenn in avnav_config.xml ein AlarmHandler konfiguriert wurde, benötigt
-          diese Funktion einen neuen Eintrag dort. <br>
-          Wenn nur die Standard-Sounds für die Alarme verwendet werden sollen,
-          kann der gesamte AVNAlarmHandler Eintrag entfernt werden.<br>
-          <div class="code">&lt;AVNAlarmHandler&gt;
+    Auf dieser Seite sind nur Hinweise zu den <a href="../downloads/release/fr">release-Versionen</a>
+    enthalten, für <a href="../downloads/daily/fr">tägliche Builds</a> kann man
+    die <a href="https://github.com/wellenvogel/avnav/commits/master">commits
+      auf GitHub</a> prüfen.<br>
+    <br>
+    <div> </div>
+    <h2>Versionen</h2>
+    <p><span style="font-weight: bold;">20200401</span> <a title="release/20200401"
+        href="../downloads/release/20200401/fr">link</a></p>
+    <ul>
+      <li>Verbindung mit freien externen WLANs funktioniert wieder</li>
+    </ul>
+    <p><span style="font-weight: bold;">20200325</span> <a title="release/20200325"
+        href="../downloads/release/20200325/fr">link</a></p>
+    <ul>
+      <li><a href="hints/layouts.html">Layout Editor</a> zur Anpassung des
+        Layouts an eigene Vorstellungen</li>
+      <li>Karten im <a href="charts.html">mbtiles Format</a></li>
+      <li>Einbindung von <a href="userdoc/dashboardpage.html">grafischen
+          Anzeigen</a> (mittels <a href="https://canvas-gauges.com/">canvas-gauges</a>)</li>
+      <li>Verwalten von <a href="userdoc/downloadpage.html#userfiles">Nutzerdateien</a>
+        und "<a href="userdoc/addonconfigpage.html">user apps</a>" um eigene Web
+        Seiten einzubinden</li>
+      <li>Erweiterung und Anpassung von AvNav mit <a href="hints/userjs.html">java
+          script</a> und <a href="hints/usercss.html">css</a></li>
+      <li>Überarbeitete Dokumentation (auch in Englisch)</li>
+    </ul>
+    <p><span style="font-weight: bold;">20200204</span> <a title="release/20200204"
+        href="../downloads/release/20200204/fr">link</a></p>
+    <ul>
+      <li>Support für NME2000 (via canboat) und SignalK - siehe <a href="hints/CanboatAndSignalk.html">Beschreibung</a></li>
+      <li>Anpassungen am Layout</li>
+    </ul>
+    <p><span style="font-weight: bold;"><a name="20200126"></a>20200126</span> <a
+        title="release/20200126" href="../downloads/release/20200126/fr">link</a></p>
+    <ul>
+      <li>Fehlerkorrektur Android ständiger Notification-Ton</li>
+      <li>Fehlerkorrektur Routen-Länge auf der Detail-Seite.</li>
+      <li>MOB Handling. Bei Klick auf die MOB Taste wird ein aktuelles routing
+        abgebrochen, die aktuelle Position wird als Wegepunkt "MOB" gesetzt und
+        es wird ein Alarm ausgelöst. Die MOB Taste bekommt einen roten Rand.
+        Beendet wird das MOB über die MOB Taste oder über das Stoppen der
+        Navigation.<br>
+        Wenn in avnav_config.xml ein AlarmHandler konfiguriert wurde, benötigt
+        diese Funktion einen neuen Eintrag dort. <br>
+        Wenn nur die Standard-Sounds für die Alarme verwendet werden sollen,
+        kann der gesamte AVNAlarmHandler Eintrag entfernt werden.<br>
+        <div class="code">&lt;AVNAlarmHandler&gt;
        &lt;Alarm name="waypoint" command="sound" parameter="$BASEDIR/../sounds/waypointAlarm.mp3" repeat="1"/&gt;
        &lt;Alarm name="ais" command="sound" parameter="$BASEDIR/../sounds/aisAlarm.mp3" repeat="1"/&gt;
        &lt;Alarm name="anchor" command="sound" parameter="$BASEDIR/../sounds/anchorAlarm.mp3" repeat="20000"/&gt;
@@ -81,200 +84,198 @@ sudo systemctl start avnav</div>
        <span style="color: #ff6666;">&lt;Alarm name="mob" command="sound" parameter="$BASEDIR/../sounds/anchorAlarm.mp3" repeat="2"/&gt;</span>
 &lt;/AVNAlarmHandler&gt;
 </div></li>
-      </ul>
-      <p><span style="font-weight: bold;"><a name="20191224"></a>20191224</span>
-        <a title="release/20191224" href="../downloads/release/20191224/fr">link</a></p>
-      <ul>
-        <li>Größerer interner Umbau</li>
-        <li>Keyboard Support. Die aktuellen Bindings findet man auf <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/layout/keys.json">GitHub</a>.
-          Eine Anpassung ist im Layout über einen parameter "keys" möglich.
-          Siehe <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/layout/testPlugin1.json">Beispiel
-            auf GitHub</a>. Eine detaillierte Beschreibung folgt. Auch unter
-          Android.</li>
-        <li>Einführung von Layouts: Man kann über eine Json Datei die Widgets
-          auf der Navigationsseite und auf den Dashboard Seiten anpassen. Dazu
-          unter Settings-&gt;Layout eine andere Layout-Datei wählen. Zum ändern
-          die vorhandene system.default Datei herunterladen (Download Seite),
-          Anpassen, ggf. umbenennen und wieder hochladen. Eine detaillierte
-          Beschreibung folgt.<br>
-          Das ist auch unter Android möglich.</li>
-        <li>Anpassung des Aussehens per css. Über eine Datei
-          /home/pi/avnav/data/user/viewer/user.css können eigene css-Regeln
-          eingebracht werden. Das ist auch unter Android möglich.</li>
-        <li>Anpassen&nbsp; des Verhaltens über eigene Widgets. Mit einer Datei
-          /home/pi/avnav/user/viewer/user.js können eigene Widgets definiert und
-          später im Layout genutzt werden. Ein <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/testPlugin/plugin.js">Beispiel
-            findet sich auf GitHub</a>. Das ist auch unter Android möglich.</li>
-        <li>Plugin Konzept. Mit Python code und Js-Code kann avnav jetzt
-          erweitert werden. Mit den Python Anteilen können z.B. weitere NMEA
-          Sätze dekodiert werden, NMEA Daten gelesen und geschrieben werden oder
-          auch Daten in den internen Speicher (und damit zur Anzeige) geschickt
-          werden. <a href="https://github.com/wellenvogel/avnav/tree/master/server/plugins/testPlugin">Ein
-            Beispiel ist auf GitHub</a> vorhanden. Eine detaillierte
-          Beschreibung folgt. Nicht unter Android.</li>
-      </ul>
-      <p><span style="font-weight: bold;"><a name="20190429"></a>20190429</span>
-        <a title="release/20190429" href="../downloads/release/20190429/fr">link</a></p>
-      <ul>
-        <li>Im neuesten Raspbian gibt es Fehler, die verhindern das bei
-          bestimmten REALTEK basierten WLAN-Adaptern ein Neu-Verbinden mit einem
-          Netz funktioniert. Es betrifft Adapter die das Kernel Module 8192cu
-          nutzen. Man sieht im log dann Fehler dieser Art:<br>
-          <div class="code">wlan-av1: Association request to the driver failed</div>
-          Als Workaround habe ich eine Überwachung eingebaut, die wenn dieser
-          Fehler ein paar mal auftritt, das Kernel module neu lädt. Damit
-          arbeitet der WLAN Zugang zu externen Netzen wieder. Es kommt nur beim
-          Neu-Verbinden immer zu einer kurzzeitigen Nicht-Verfügbarkeit des
-          WLANs - sieht man im Status. Schwierig wird es nur dann, wenn man
-          mehrere WLAN-Module mit diesem Chipsatz verwendet und eines davon auch
-          als access point. Hier würde das WLAN auch kurzzeitig unterbrochen -
-          Mobile Geräte verbinden sich dann gerne mal mit einem anderen. Solange
-          man den Access Point ( default ) über das interne WLAN abwickelt, hat
-          man keine Probleme. Da es nur ein wokraround ist, wird der nicht
-          standarmäßig aktiviert - nach der Installation des Updates muss man
-          noch den entsprechenden service aktivieren und starten:<br>
-          <div class="code">sudo systemctl enable avnav-check-wlan
+    </ul>
+    <p><span style="font-weight: bold;"><a name="20191224"></a>20191224</span> <a
+        title="release/20191224" href="../downloads/release/20191224/fr">link</a></p>
+    <ul>
+      <li>Größerer interner Umbau</li>
+      <li>Keyboard Support. Die aktuellen Bindings findet man auf <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/layout/keys.json">GitHub</a>.
+        Eine Anpassung ist im Layout über einen parameter "keys" möglich. Siehe
+        <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/layout/testPlugin1.json">Beispiel
+          auf GitHub</a>. Eine detaillierte Beschreibung folgt. Auch unter
+        Android.</li>
+      <li>Einführung von Layouts: Man kann über eine Json Datei die Widgets auf
+        der Navigationsseite und auf den Dashboard Seiten anpassen. Dazu unter
+        Settings-&gt;Layout eine andere Layout-Datei wählen. Zum ändern die
+        vorhandene system.default Datei herunterladen (Download Seite),
+        Anpassen, ggf. umbenennen und wieder hochladen. Eine detaillierte
+        Beschreibung folgt.<br>
+        Das ist auch unter Android möglich.</li>
+      <li>Anpassung des Aussehens per css. Über eine Datei
+        /home/pi/avnav/data/user/viewer/user.css können eigene css-Regeln
+        eingebracht werden. Das ist auch unter Android möglich.</li>
+      <li>Anpassen&nbsp; des Verhaltens über eigene Widgets. Mit einer Datei
+        /home/pi/avnav/user/viewer/user.js können eigene Widgets definiert und
+        später im Layout genutzt werden. Ein <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/testPlugin/plugin.js">Beispiel
+          findet sich auf GitHub</a>. Das ist auch unter Android möglich.</li>
+      <li>Plugin Konzept. Mit Python code und Js-Code kann avnav jetzt erweitert
+        werden. Mit den Python Anteilen können z.B. weitere NMEA Sätze dekodiert
+        werden, NMEA Daten gelesen und geschrieben werden oder auch Daten in den
+        internen Speicher (und damit zur Anzeige) geschickt werden. <a href="https://github.com/wellenvogel/avnav/tree/master/server/plugins/testPlugin">Ein
+          Beispiel ist auf GitHub</a> vorhanden. Eine detaillierte Beschreibung
+        folgt. Nicht unter Android.</li>
+    </ul>
+    <p><span style="font-weight: bold;"><a name="20190429"></a>20190429</span> <a
+        title="release/20190429" href="../downloads/release/20190429/fr">link</a></p>
+    <ul>
+      <li>Im neuesten Raspbian gibt es Fehler, die verhindern das bei bestimmten
+        REALTEK basierten WLAN-Adaptern ein Neu-Verbinden mit einem Netz
+        funktioniert. Es betrifft Adapter die das Kernel Module 8192cu nutzen.
+        Man sieht im log dann Fehler dieser Art:<br>
+        <div class="code">wlan-av1: Association request to the driver failed</div>
+        Als Workaround habe ich eine Überwachung eingebaut, die wenn dieser
+        Fehler ein paar mal auftritt, das Kernel module neu lädt. Damit arbeitet
+        der WLAN Zugang zu externen Netzen wieder. Es kommt nur beim
+        Neu-Verbinden immer zu einer kurzzeitigen Nicht-Verfügbarkeit des WLANs
+        - sieht man im Status. Schwierig wird es nur dann, wenn man mehrere
+        WLAN-Module mit diesem Chipsatz verwendet und eines davon auch als
+        access point. Hier würde das WLAN auch kurzzeitig unterbrochen - Mobile
+        Geräte verbinden sich dann gerne mal mit einem anderen. Solange man den
+        Access Point ( default ) über das interne WLAN abwickelt, hat man keine
+        Probleme. Da es nur ein wokraround ist, wird der nicht standarmäßig
+        aktiviert - nach der Installation des Updates muss man noch den
+        entsprechenden service aktivieren und starten:<br>
+        <div class="code">sudo systemctl enable avnav-check-wlan
 sudo systemctl start avnav-check-wlan</div>
-          Ich hoffe, das es irgendwann eine Korrektur gibt, die den workaround
-          wieder überflüssig macht.</li>
-        <li>Standardmässig ist der Zugang von aussen (Web-Oberfläche oder
-          ssh)&nbsp; über das wlan-av1 (d.h. den WLAN Adapter, der eine
-          Verbindung nach draussen macht) gesperrt, damit aus einem öffentlichen
-          WLAN niemand auf den raspberry zugreifen kann. Für manche Szenarien
-          wäre es aber wünschenswert, wenn man das kann. Ich habe z.B. einen
-          mobilen Hotspot und möchte den raspi gerne mit diesem verbinden. Wenn
-          dann bei mir Geräte direkt mit dem Hotspot verbunden sind (und nicht
-          mit dem avnav WLAN) möchte ich trotzdem auf den raspi zugreifen
-          können. Daher gibt es jetzt eine Möglichkeit, diesen Zugriff von
-          aussen pro WLAN zu gestatten. Man sollte hier sorfältig sein, und das
-          auf keinen Fall in einem öffentlichen WLAN (z.B. Hafen) zulassen!<br>
-          Um die Funktion zu ermöglichen, muss nach der Installation ein Eintrag
-          in der avnav_server.xml vorgenommen werden:<br>
-          <div class="code">&lt;AVNWpaHandler&gt;
+        Ich hoffe, das es irgendwann eine Korrektur gibt, die den workaround
+        wieder überflüssig macht.</li>
+      <li>Standardmässig ist der Zugang von aussen (Web-Oberfläche oder
+        ssh)&nbsp; über das wlan-av1 (d.h. den WLAN Adapter, der eine Verbindung
+        nach draussen macht) gesperrt, damit aus einem öffentlichen WLAN niemand
+        auf den raspberry zugreifen kann. Für manche Szenarien wäre es aber
+        wünschenswert, wenn man das kann. Ich habe z.B. einen mobilen Hotspot
+        und möchte den raspi gerne mit diesem verbinden. Wenn dann bei mir
+        Geräte direkt mit dem Hotspot verbunden sind (und nicht mit dem avnav
+        WLAN) möchte ich trotzdem auf den raspi zugreifen können. Daher gibt es
+        jetzt eine Möglichkeit, diesen Zugriff von aussen pro WLAN zu gestatten.
+        Man sollte hier sorfältig sein, und das auf keinen Fall in einem
+        öffentlichen WLAN (z.B. Hafen) zulassen!<br>
+        Um die Funktion zu ermöglichen, muss nach der Installation ein Eintrag
+        in der avnav_server.xml vorgenommen werden:<br>
+        <div class="code">&lt;AVNWpaHandler&gt;
 <span class="red"> firewallCommand="sudo -n $BASEDIR/../raspberry/iptables-ext.sh wlan-av1"</span>
  wpaSocket="/var/run/wpa_supplicant/wlan-av1"&gt;
 &lt;/AVNWpaHandler&gt;</div>
-          Wenn dieser Eintrag vorhanden ist (danach neu starten), wird bei
-          WLANs, die für diesen Zugriff freigeschaltet sind, "ext access"
-          angezeigt, beim Verbinden kann das ausgewählt werden.<br>
-          Im Status für das Interface wird ebenfalls angezeigt, ob der externe
-          Zugriff erlaubt ist und ob das firewallCommand erfolgreich war. Wenn
-          es nicht erfolgreich war, sollte der raspi neu gestartet werden, damit
-          die firewall wieder korrekt funktioniert.</li>
-      </ul>
-      <p><span style="font-weight: bold;"><a name="20190415"></a>20190415</span>
-        <a href="..downloads/avnav-raspi-20190415.zip">link</a></p>
+        Wenn dieser Eintrag vorhanden ist (danach neu starten), wird bei WLANs,
+        die für diesen Zugriff freigeschaltet sind, "ext access" angezeigt, beim
+        Verbinden kann das ausgewählt werden.<br>
+        Im Status für das Interface wird ebenfalls angezeigt, ob der externe
+        Zugriff erlaubt ist und ob das firewallCommand erfolgreich war. Wenn es
+        nicht erfolgreich war, sollte der raspi neu gestartet werden, damit die
+        firewall wieder korrekt funktioniert.</li>
+    </ul>
+    <p><span style="font-weight: bold;"><a name="20190415"></a>20190415</span> <a
+        href="..downloads/avnav-raspi-20190415.zip">link</a></p>
+    <ul>
+      <li>Neues Image basierend auf 2019-04-08-raspbian-stretch-lite</li>
+      <li>Support für Raspi3b+</li>
+      <li>Alle Korrekturen bis 2019/04/15 (Udp Writer thx to BlackSea)</li>
+      <li>ahavi config für avnav (mit Bonjour-Browser zu finden)</li>
       <ul>
-        <li>Neues Image basierend auf 2019-04-08-raspbian-stretch-lite</li>
-        <li>Support für Raspi3b+</li>
-        <li>Alle Korrekturen bis 2019/04/15 (Udp Writer thx to BlackSea)</li>
-        <li>ahavi config für avnav (mit Bonjour-Browser zu finden)</li>
-        <ul>
-          <li>für IOS <a href="https://itunes.apple.com/us/app/bonjour-search-for-http-web-in-wi-fi/id1097517829?mt=8">Bounjour
-              Search</a></li>
-          <li>für Android <a href="https://play.google.com/store/apps/details?id=de.wellenvogel.bonjourbrowser">Bonjour
-              Browser</a></li>
-        </ul>
-        <li>Möglichkeit in der Start-Page andere URLs einzubinden</li>
-        <li>Größerer interner Umbau - Plugin-Interface (Doku folgt...)</li>
-        <li>Dieses Image ist das letzte direkt von mir bereitgestellte Image -
-          neuere finden sich wie unter <a href="install.html">Installation</a>
-          beschrieben.</li>
+        <li>für IOS <a href="https://itunes.apple.com/us/app/bonjour-search-for-http-web-in-wi-fi/id1097517829?mt=8">Bounjour
+            Search</a></li>
+        <li>für Android <a href="https://play.google.com/store/apps/details?id=de.wellenvogel.bonjourbrowser">Bonjour
+            Browser</a></li>
       </ul>
-      <p><span style="font-weight: bold;">20180313</span> <a href="../downloads/release/20180313/fr">link</a></p>
-      <ul>
-        <li>Ausschalten aller Alarme mittels Taster an GPIO Pin. Dazu muss in
-          der avnav_server.xml für den AlarmHandler ein Attribut stopAlarmPin
-          angegeben werden. Beispiel:<br>
-          <div class="code">&lt;AVNAlarmHandler stopAlarmPin="7"&gt;</div>
-          <p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Die
-            Pin Nummer ist dabei die Nummer am Pi connector - siehe <a href="http://raspberrypiguide.de/howtos/raspberry-pi-gpio-how-to/">howto
-              </a>- im Beispiel Pin 7 = GPIO4.<br>
-            Zum Ausschalten der Alarme muss dieser Pin mit Masse verbunden
-            werden (einfacher Taster).</p>
-        </li>
-      </ul>
-      <p>Korrekturen:</p>
-      <ul>
-        <li>Konverter für die Karten auf dem Pi funktioniert wieder mit dem
-          neuesten Image (neue gdal Version)</li>
-      </ul>
-      <p><span style="font-weight: bold;">20180306</span> <a href="../downloads/release/20180306/fr">link</a></p>
-      Korrekturen:<br>
-      <ul>
-        <li>gps Alarm aktiv</li>
-        <li>korrektes Icon für Android "add to homescreen"</li>
-      </ul>
-      <p><span style="font-weight: bold;">20180218</span> <a href="../downloads/release/20180218/fr">link</a></p>
-      <p>kleinere Fehlerkorrekturen zu 20180215</p>
-      <ul>
-        <li>Status auf Hauptseite vertauscht für NMEA/AIS</li>
-        <li>Versions-Info auf Hauptseite falsch</li>
-        <li>kleinere Android Korrekturen</li>
-      </ul>
-      <span style="font-weight: bold;">20180215</span> <a href="../downloads/release/20180215/fr">link</a><br>
-      <br>
-      Anker Alarm<br>
-      Achtung: Dazu muss die avnav_server.xml erweitert werden. (Wenn man neu
-      aufsetzt, wird das automatisch erzeugt, dann muss man nichts tun).<br>
-      Am Ende bitte einfügen:<br>
-      <br>
-      <div class="code">&lt;AVNCommandHandler &gt;
+      <li>Möglichkeit in der Start-Page andere URLs einzubinden</li>
+      <li>Größerer interner Umbau - Plugin-Interface (Doku folgt...)</li>
+      <li>Dieses Image ist das letzte direkt von mir bereitgestellte Image -
+        neuere finden sich wie unter <a href="install.html">Installation</a>
+        beschrieben.</li>
+    </ul>
+    <p><span style="font-weight: bold;">20180313</span> <a href="../downloads/release/20180313/fr">link</a></p>
+    <ul>
+      <li>Ausschalten aller Alarme mittels Taster an GPIO Pin. Dazu muss in der
+        avnav_server.xml für den AlarmHandler ein Attribut stopAlarmPin
+        angegeben werden. Beispiel:<br>
+        <div class="code">&lt;AVNAlarmHandler stopAlarmPin="7"&gt;</div>
+        <p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Die
+          Pin Nummer ist dabei die Nummer am Pi connector - siehe <a href="http://raspberrypiguide.de/howtos/raspberry-pi-gpio-how-to/">howto
+            </a>- im Beispiel Pin 7 = GPIO4.<br>
+          Zum Ausschalten der Alarme muss dieser Pin mit Masse verbunden werden
+          (einfacher Taster).</p>
+      </li>
+    </ul>
+    <p>Korrekturen:</p>
+    <ul>
+      <li>Konverter für die Karten auf dem Pi funktioniert wieder mit dem
+        neuesten Image (neue gdal Version)</li>
+    </ul>
+    <p><span style="font-weight: bold;">20180306</span> <a href="../downloads/release/20180306/fr">link</a></p>
+    Korrekturen:<br>
+    <ul>
+      <li>gps Alarm aktiv</li>
+      <li>korrektes Icon für Android "add to homescreen"</li>
+    </ul>
+    <p><span style="font-weight: bold;">20180218</span> <a href="../downloads/release/20180218/fr">link</a></p>
+    <p>kleinere Fehlerkorrekturen zu 20180215</p>
+    <ul>
+      <li>Status auf Hauptseite vertauscht für NMEA/AIS</li>
+      <li>Versions-Info auf Hauptseite falsch</li>
+      <li>kleinere Android Korrekturen</li>
+    </ul>
+    <span style="font-weight: bold;">20180215</span> <a href="../downloads/release/20180215/fr">link</a><br>
+    <br>
+    Anker Alarm<br>
+    Achtung: Dazu muss die avnav_server.xml erweitert werden. (Wenn man neu
+    aufsetzt, wird das automatisch erzeugt, dann muss man nichts tun).<br>
+    Am Ende bitte einfügen:<br>
+    <br>
+    <div class="code">&lt;AVNCommandHandler &gt;
 &nbsp;&nbsp;&nbsp; &lt;Command name="shutdown" command="sudo shutdown -P"/&gt;
 &nbsp;&nbsp;&nbsp; &lt;Command name="sound" command="/bin/sh $BASEDIR/../raspberry/sound.sh 90%" repeat="1"/&gt;<br>&lt;/AVNCommandHandler&gt;
 &lt;AVNAlarmHandler&gt;
  &nbsp;&nbsp;&nbsp; &lt;Alarm name="waypoint" command="sound" parameter="$BASEDIR/../sounds/waypointAlarm.mp3" repeat="1"/&gt;<br> &nbsp;&nbsp;&nbsp; &lt;Alarm name="anchor" command="sound" parameter="$BASEDIR/../sounds/anchorAlarm.mp3" repeat="20000"/&gt;<br>     &lt;Alarm name="gps" command="sound" parameter="$BASEDIR/../sounds/anchorAlarm.mp3" repeat="20000"/&gt;
 &lt;/AVNAlarmHandler&gt;</div>
-      Das Kommando, das den Alarm-Sound ausgibt, kann frei angepasst werden
-      ("sound" command oder ein anderes) - man kann auch z.B. ein gpio Pin
-      schalten. <br>
-      Falls man ein anderes Kommando nutzen möchte (z.B. eigenes Shell-Script)
-      muss man das als neues Kommando unter AVNCommandHandler eintragen, ihm
-      einen Namen geben und dann bei den alarmen diesen neuen Namen nutzen.<br>
-      Man kann natürlich auch das oben angegebene "sound" Kommando durch etwas
-      anderes ersetzen.<br>
-      Der unter "Alarm" angegebene Parameter wird an das entsprechende Kommando
-      weitergereicht.<br>
-      In jedem Falls sollte eine Alarm-Ausgabe am pi direkt vorgesehen werden,
-      es kann ja sein, das gerade kein Tablet an ist. <br>
-      Wenn beim Alarm als Parameter eine sound-Datei angegeben ist, kann der
-      sound (zusätzlich) auch auf dem Tablet erzeugt werden (dort in den
-      settings prüfen, ob er eingeschaltet ist).<br>
-      <br>
-      Fehlerkorrekturen/Verbesserungen:<br>
-      <ul>
-        <li><a href="https://github.com/wellenvogel/avnav/issues/27">https://github.com/wellenvogel/avnav/issues/27</a></li>
-        <li><a href="https://github.com/wellenvogel/avnav/issues/30">https://github.com/wellenvogel/avnav/issues/30</a></li>
-        <li>SenseHat Support <a href="https://github.com/wellenvogel/avnav/pull/31">https://github.com/wellenvogel/avnav/pull/31</a></li>
-        <li>besseres Handling von mehreren WLAN interfaces</li>
-        <li>support für BMP180,BME820 (Danke Oleg!)</li>
-        <li><a href="https://github.com/wellenvogel/avnav/issues/33">https://github.com/wellenvogel/avnav/issues/33</a></li>
-        <li>erlaube Verbindungen zu offenen WLANs (kein Passwort)</li>
-        <li>router output jetzt auch APB (nicht nur RMB)</li>
-        <li>navipack Konverter (Danke Oleg!)</li>
-        <li>Datenschutzerklärung</li>
-        <li>NMEA checksum error <a href="https://github.com/wellenvogel/avnav/pull/37">https://github.com/wellenvogel/avnav/pull/37</a>
-          (Danke Oleg!)</li>
-        <li>workaround für IOS Geräte (keine Anzeige der AIS-Seite)</li>
-        <li>Layout tuning</li>
-      </ul>
-      <br>
-      <br>
-      <span style="font-weight: bold;">20170410</span> <a href="../downloads/release/20170410/fr">link</a><br>
-      Fehlerkorrekturen:<br>
-      <ul>
-        <li>track display</li>
-        <li>route handling wenn nicht verbunden</li>
-        <li>erhalte wlan config files bei updates</li>
-        <li>#29: Radius der Kreise</li>
-        <li>modus ohne gpsd funktioniert wieder</li>
-        <li>korrekte Ermittlung der Layer-Grenzen für gemf Karten</li>
-        <li>Android Korrekturen</li>
-      </ul>
-      <br>
-      <br>
-      <br>
-      <br>
-    </dfehler>
+    Das Kommando, das den Alarm-Sound ausgibt, kann frei angepasst werden
+    ("sound" command oder ein anderes) - man kann auch z.B. ein gpio Pin
+    schalten. <br>
+    Falls man ein anderes Kommando nutzen möchte (z.B. eigenes Shell-Script)
+    muss man das als neues Kommando unter AVNCommandHandler eintragen, ihm einen
+    Namen geben und dann bei den alarmen diesen neuen Namen nutzen.<br>
+    Man kann natürlich auch das oben angegebene "sound" Kommando durch etwas
+    anderes ersetzen.<br>
+    Der unter "Alarm" angegebene Parameter wird an das entsprechende Kommando
+    weitergereicht.<br>
+    In jedem Falls sollte eine Alarm-Ausgabe am pi direkt vorgesehen werden, es
+    kann ja sein, das gerade kein Tablet an ist. <br>
+    Wenn beim Alarm als Parameter eine sound-Datei angegeben ist, kann der sound
+    (zusätzlich) auch auf dem Tablet erzeugt werden (dort in den settings
+    prüfen, ob er eingeschaltet ist).<br>
+    <br>
+    Fehlerkorrekturen/Verbesserungen:<br>
+    <ul>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/27">https://github.com/wellenvogel/avnav/issues/27</a></li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/30">https://github.com/wellenvogel/avnav/issues/30</a></li>
+      <li>SenseHat Support <a href="https://github.com/wellenvogel/avnav/pull/31">https://github.com/wellenvogel/avnav/pull/31</a></li>
+      <li>besseres Handling von mehreren WLAN interfaces</li>
+      <li>support für BMP180,BME820 (Danke Oleg!)</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/33">https://github.com/wellenvogel/avnav/issues/33</a></li>
+      <li>erlaube Verbindungen zu offenen WLANs (kein Passwort)</li>
+      <li>router output jetzt auch APB (nicht nur RMB)</li>
+      <li>navipack Konverter (Danke Oleg!)</li>
+      <li>Datenschutzerklärung</li>
+      <li>NMEA checksum error <a href="https://github.com/wellenvogel/avnav/pull/37">https://github.com/wellenvogel/avnav/pull/37</a>
+        (Danke Oleg!)</li>
+      <li>workaround für IOS Geräte (keine Anzeige der AIS-Seite)</li>
+      <li>Layout tuning</li>
+    </ul>
+    <br>
+    <br>
+    <span style="font-weight: bold;">20170410</span> <a href="../downloads/release/20170410/fr">link</a><br>
+    Fehlerkorrekturen:<br>
+    <ul>
+      <li>track display</li>
+      <li>route handling wenn nicht verbunden</li>
+      <li>erhalte wlan config files bei updates</li>
+      <li>#29: Radius der Kreise</li>
+      <li>modus ohne gpsd funktioniert wieder</li>
+      <li>korrekte Ermittlung der Layer-Grenzen für gemf Karten</li>
+      <li>Android Korrekturen</li>
+    </ul>
+    <br>
+    <br>
+    <br>
+    <br>
   </body>
 </html>
