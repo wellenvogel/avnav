@@ -38,6 +38,7 @@ from avnav_worker import *
 import avnav_handlerList
 from avnuserapps import AVNUserAppHandler
 from layouthandler import AVNLayoutHandler
+from charthandler import AVNChartHandler
 
 
 class ApiImpl(AVNApi):
@@ -163,6 +164,14 @@ class ApiImpl(AVNApi):
     if dt is None:
       dt=datetime.datetime.utcnow()
     return AVNUtil.datetimeToTsUTC(dt)
+
+  def getDataDir(self):
+    return self.phandler.getParamValue(AVNConfig.BASEPARAM.DATADIR)
+
+  def registerChartProvider(self,callback):
+    charthandler = AVNWorker.findHandlerByName(AVNChartHandler.getConfigName())
+    charthandler.registerExternalProvider(self.prefix,callback)
+    pass
 
 class AVNPluginHandler(AVNWorker):
   """a handler for plugins"""

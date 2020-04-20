@@ -182,3 +182,28 @@ class AVNApi:
     @return: timestamp in seconds
     '''
     raise NotImplemented()
+
+  def getDataDir(self):
+    '''
+    get the AvNav data directory
+    @return:
+    '''
+    raise NotImplemented()
+
+  def registerChartProvider(self,callback):
+    '''
+    register a function that will be called whenever a chart query is being executed
+    it must return a list of entries in the form of
+    {
+             'name':name,
+             'url':url,
+             'charturl':url,
+             'time': mtime,
+             'canDelete': True,
+             'canDownload': True,
+             'sequence':changeCount
+      }
+    @param callback: function that will be called with a parameter host containing the IP if the server
+    @return:
+    '''
+    raise NotImplemented()

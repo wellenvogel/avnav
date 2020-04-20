@@ -92,6 +92,7 @@ class AVNChartHandler(AVNWorker):
     self.chartDir=None
     self.server=None
     self.listCondition = threading.Condition()
+    self.externalProviders={} #key is the plugin name, value the callback
     AVNWorker.__init__(self, param)
   @classmethod
   def getConfigName(cls):
@@ -259,7 +260,7 @@ class AVNChartHandler(AVNWorker):
       handler.send_error(500,"Error: %s"%(traceback.format_exc()))
       return
 
-  def listCharts(self):
+  def listCharts(self,httpHandler):
     chartbaseDir=self.chartDir
     if chartbaseDir is None:
       return AVNUtil.getReturnData(error="no chart dir")
@@ -277,6 +278,17 @@ class AVNChartHandler(AVNWorker):
              'sequence':chart['chart'].getChangeCount()
       }
       data.append(entry)
+    host = httpHandler.headers.get('host')
+    hostparts = host.split(':')
+    for k in self.externalProviders.keys():
+      cb=self.externalProviders[k]
+      try:
+        if cb is not None:
+          ip=hostparts[0]
+          extList=cb(ip)
+          data.extend(extList)
+      except:
+        AVNLog.error("exception while querying charts from %s: %s",k,traceback.format_exc())
     num=len(data)
     AVNLog.debug("read %d entries from %s",num,chartbaseDir)
     return AVNUtil.getReturnData(items=data)
@@ -304,14 +316,14 @@ class AVNChartHandler(AVNWorker):
     return rt
 
   def handleApiRequest(self, type, subtype, requestparam, **kwargs):
+    handler = kwargs.get('handler')
     if type == 'path':
-      handler=kwargs.get('handler')
       if handler is None:
         AVNLog.error("chartrequest without handler")
         return None
       return self.handleChartRequest(subtype,handler)
     if type == "list":
-      return self.listCharts()
+      return self.listCharts(handler)
     if type == "delete":
       url=AVNUtil.getHttpRequestParam(requestparam,"url",True)
       self.handleDelete(url)
@@ -367,5 +379,10 @@ class AVNChartHandler(AVNWorker):
         return AVNUtil.getReturnData()
 
     return AVNUtil.getReturnData(error="Unknown chart request")
+
+
+  def registerExternalProvider(self,name,callback):
+    AVNLog.info("registering external chart provider %s",name)
+    self.externalProviders[name]=callback
 
 avnav_handlerList.registerHandler(AVNChartHandler)
