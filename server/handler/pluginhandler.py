@@ -259,14 +259,17 @@ class AVNPluginHandler(AVNWorker):
         else:
           if os.path.exists(os.path.join(dir,"plugin.js")) or os.path.exists(os.path.join(dir,"plugin.css")):
             self.pluginDirs[moduleName]=dir
-      for name in self.createdPlugins.keys():
-        plugin=self.createdPlugins[name]
-        AVNLog.info("starting plugin %s",name)
-        thread=threading.Thread(target=plugin.run)
-        thread.setDaemon(True)
-        thread.setName("Plugin: %s"%(name))
-        thread.start()
-        self.startedThreads[name]=thread
+    for name in self.createdPlugins.keys():
+      plugin=self.createdPlugins[name]
+      AVNLog.info("starting plugin %s",name)
+      thread=threading.Thread(target=plugin.run)
+      thread.setDaemon(True)
+      thread.setName("Plugin: %s"%(name))
+      thread.start()
+      self.startedThreads[name]=thread
+
+    AVNLog.info("pluginhandler finished")
+
 
   def instantiateHandlersFromModule(self,modulename, module):
     MANDATORY_METHODS = ['run']
