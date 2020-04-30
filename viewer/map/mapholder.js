@@ -319,7 +319,7 @@ MapHolder.prototype.renderTo=function(div){
 
 
 MapHolder.prototype.setChartEntry=function(entry){
-    this._chartEntry=assign(entry);
+    this._chartEntry=assign({},entry);
 };
 
 
@@ -1470,6 +1470,10 @@ MapHolder.prototype.getAisIcon=function(type){
 
 MapHolder.prototype.setCompassOffset=function(y){
    this.compassOffset=y;
+};
+
+MapHolder.prototype.getCurrentChartEntry=function(){
+    return assign({},this._chartEntry);
 };
 
 module.exports=new MapHolder();

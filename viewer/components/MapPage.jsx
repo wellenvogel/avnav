@@ -29,8 +29,57 @@ import DirectWidget from '../components/DirectWidget.jsx';
 import navobjects from '../nav/navobjects.js';
 import EditWidgetDialog from '../components/EditWidgetDialog.jsx';
 import LayoutHandler from '../util/layouthandler.js';
+import EulaDialog from './EulaDialog.jsx';
 
+const SHOW_MODE={
+    never:0,
+    once: 1,
+    session:2
+};
 
+const INFO_TYPES={
+    eula:keys.properties.eulaStoreName,
+    valid:keys.properties.chartValidStoreName
+};
+
+const needsToShow=(setName,type,mode)=>{
+    if (mode == SHOW_MODE.never) return false;
+    let storeName=globalStore.getData(type);
+    if (! storeName) return false;
+    let currentRaw=localStorage.getItem(storeName)||"{}";
+    let current={};
+    try{
+        current=JSON.parse(currentRaw);
+    }catch (e){
+        base.log("unable to read state for "+type);
+    }
+    let lastShown=current[setName];
+    if (lastShown === undefined) return true;
+    if (mode == SHOW_MODE.once) return false;
+    let lastDate=undefined;
+    try{
+        lastDate=new Date(lastShown);
+    }catch (e){
+
+    }
+    if (lastDate === undefined) return true;
+    let now=new Date();
+    return lastDate.getDay() != now.getDay();
+};
+
+const setShown=(setName,type)=>{
+    let storeName=globalStore.getData(type);
+    if (! storeName) return;
+    let currentRaw=localStorage.getItem(storeName)||"{}";
+    let current={};
+    try{
+        current=JSON.parse(currentRaw);
+    }catch (e){
+        base.log("unable to read state for "+type);
+    }
+    current[setName]=(new Date()).getTime();
+    localStorage.setItem(storeName,JSON.stringify(current));
+};
 
 
 
@@ -73,11 +122,35 @@ class MapPage extends React.Component{
         let self=this;
         NavHandler.setAisCenterMode(navobjects.AisCenterMode.MAP);
         this.subscribeToken=MapHolder.subscribe(this.mapEvent);
-        MapHolder.loadMap(this.refs.map).
-            then((result)=>{
-                globalStore.storeData(keys.gui.global.hasSelectedChart,true);
-            }).
-            catch((error)=>{Toast(error)});
+        let chartEntry=MapHolder.getCurrentChartEntry();
+        let showMap=()=>{
+            if (chartEntry.infoMode !== undefined ){
+                if (needsToShow(chartEntry.name,INFO_TYPES.valid,chartEntry.infoMode)){
+                    Toast("Chart valid from "+chartEntry.validFrom+" to "+chartEntry.validTo);
+                    setShown(chartEntry.name,INFO_TYPES.valid);
+                }
+            }
+            MapHolder.loadMap(this.refs.map).
+                then((result)=>{
+                    globalStore.storeData(keys.gui.global.hasSelectedChart,true);
+                }).
+                catch((error)=>{Toast(error)});
+        };
+        if (chartEntry.eulaMode !== undefined){
+            if (needsToShow(chartEntry.name,INFO_TYPES.eula,chartEntry.eulaMode)){
+                EulaDialog.createDialog(chartEntry.name,chartEntry.url+"/eula")
+                    .then(()=>{
+                        setShown(chartEntry.name,INFO_TYPES.eula);
+                        showMap();
+                    })
+                    .catch(()=>{
+                        Toast("EULA rejected");
+                    });
+                return;
+            }
+        }
+        showMap();
+
     }
     render(){
         let self=this;

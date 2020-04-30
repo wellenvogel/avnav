@@ -320,6 +320,8 @@ let keys={
         routingDataName: new Property("avnav.routing"),
         routeName: new Property("avnav.route"), //prefix for route names
         layoutStoreName: new Property("avnav.layout"),
+        eulaStoreName: new Property("avnav.eulas"),
+        chartValidStoreName: new Property("avnav.chartvalid"),
         routingServerError: new Property(true, "ServerError", PropertyType.CHECKBOX), //notify comm errors to server
         routingTextSize: new Property(14, "Text Size(px)", PropertyType.RANGE, [8, 36]), //in px
         centerName: new Property("avnav.center"),

@@ -43,6 +43,7 @@ const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE);
 const DynamicPage=Dynamic(MapPage);
 const PAGENAME='navpage';
 
+
 const widgetClick=(item,data,panel,invertEditDirection)=>{
     if (EditWidgetDialog.createDialog(item,PAGENAME,panel,invertEditDirection)) return;
     if (item.name == "AisTarget"){
