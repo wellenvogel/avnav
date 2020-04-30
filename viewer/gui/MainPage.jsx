@@ -299,7 +299,7 @@ const readAddOns = function () {
  */
 const showNavpage = function (entry) {
     base.log("activating navpage with url " + entry.url);
-    MapHolder.setMapUrl(entry.url,entry.charturl,entry.sequence);
+    MapHolder.setChartEntry(entry);
     history.push('navpage');
 
 };

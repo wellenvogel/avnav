@@ -20,6 +20,7 @@ import PubSub from 'PubSub';
 import helper from '../util/helper.js';
 import northImage from '../images/nadel_mit.png';
 import KeyHandler from '../util/keyhandler.js';
+import assign from 'object-assign';
 
 
 const PSTOPIC="mapevent";
@@ -190,6 +191,36 @@ const MapHolder=function(){
      */
     this._sequence=undefined;
 
+    /**
+     * the chart description as received from the server
+     * @type {undefined}
+     * @private
+     */
+    this._chartEntry={};
+
+    /**
+     * the urls for token scripts already loaded
+     * @type {{}}
+     * @private
+     */
+    this._loadedTokenScripts={};
+
+    /**
+     * heartbeat timer for crypto support
+     * @type {undefined}
+     * @private
+     */
+    this._heartbeatFunction=undefined;
+    this._lastHeartbeat=0;
+
+    /**
+     * if set - use this to encrypt urls
+     * @type {undefined}
+     * @private
+     */
+    this._encryptFunction=undefined;
+
+
     globalStore.storeData(keys.map.courseUp,this.courseUp);
     globalStore.storeData(keys.map.lockPosition,this.gpsLocked);
     this.timer=undefined;
@@ -285,26 +316,17 @@ MapHolder.prototype.renderTo=function(div){
     this.olmap.updateSize();
 };
 
-/**
- *  entry function to load the map
- **/
-const storeKeys={
-    url:keys.map.url,
-    chartBase:keys.map.chartBase,
-    sequence: keys.map.sequence
+
+
+MapHolder.prototype.setChartEntry=function(entry){
+    this._chartEntry=assign(entry);
 };
 
-MapHolder.prototype.setMapUrl=function(url,chartBase,sequence){
-    globalStore.storeMultiple(
-        {url:url,chartBase:chartBase,sequence:sequence}
-        ,
-        storeKeys)
-};
 
 MapHolder.prototype.loadMap=function(div){
-    let url=globalStore.getData(keys.map.url);
-    let chartBase=globalStore.getData(keys.map.chartBase);
-    let sequence=globalStore.getData(keys.map.sequence);
+    let url=this._chartEntry.url;
+    let chartBase=this._chartEntry.chartBase;
+    let sequence=this._chartEntry.sequence;
     if (! chartBase) chartBase=url;
     let self=this;
     return new Promise((resolve,reject)=> {
@@ -317,36 +339,89 @@ MapHolder.prototype.loadMap=function(div){
             resolve(0);
             return;
         }
-        let originalUrl=url;
-        if (!url.match(/^http:/)) {
-            if (url.match(/^\//)) {
-                url = window.location.href.replace(/^([^\/:]*:\/\/[^\/]*).*/, '$1') + url;
+        this._encryptFunction=undefined;
+        this._heartbeatFunction=undefined;
+        let newChart=()=> {
+            let originalUrl = url;
+            if (!url.match(/^http:/)) {
+                if (url.match(/^\//)) {
+                    url = window.location.href.replace(/^([^\/:]*:\/\/[^\/]*).*/, '$1') + url;
+                }
+                else {
+                    url = window.location.href.replace(/[?].*/, '').replace(/[^\/]*$/, '') + "/" + url;
+                }
             }
-            else {
-                url = window.location.href.replace(/[?].*/, '').replace(/[^\/]*$/, '') + "/" + url;
-            }
+            url = url + "/avnav.xml";
+            Requests.getHtmlOrText(url, {
+                useNavUrl: false,
+                timeout: parseInt(globalStore.getData(keys.properties.chartQueryTimeout || 10000))
+            }).then((data)=> {
+                try {
+                    self.initMap(div, data, chartBase);
+                    self.setBrightness(globalStore.getData(keys.properties.nightMode) ?
+                    globalStore.getData(keys.properties.nightChartFade, 100) / 100
+                        : 1);
+                    this._url = originalUrl;
+                    this._chartbase = chartBase;
+                    this._sequence = sequence;
+                    resolve(1);
+                } catch (e) {
+                    console.log("map loding error: " + e + ": " + e.stack);
+                    throw e;
+                }
+            }).catch((error)=> {
+                reject("unable to load map: " + error);
+            })
+        };
+        let tokenUrl=this._chartEntry.tokenUrl;
+        if (tokenUrl === undefined){
+            newChart();
+            return;
         }
-        url = url + "/avnav.xml";
-        Requests.getHtmlOrText(url, {
-            useNavUrl: false,
-            timeout: parseInt(globalStore.getData(keys.properties.chartQueryTimeout||10000))
-        }).then((data)=> {
-            try {
-                self.initMap(div, data, chartBase);
-                self.setBrightness(globalStore.getData(keys.properties.nightMode) ?
-                globalStore.getData(keys.properties.nightChartFade, 100) / 100
-                    : 1);
-                this._url = originalUrl;
-                this._chartbase = chartBase;
-                this._sequence=sequence;
-                resolve(1);
-            }catch (e){
-                console.log("map loding error: "+e+": "+e.stack);
-                throw e;
+        if (this._chartEntry.tokenFunction == undefined){
+            this._chartEntry.tokenFunction="tokenHandler"+(new Date()).getTime();
+        }
+        let scriptId=this._chartEntry.tokenFunction;
+        if (! this._loadedTokenScripts[tokenUrl]){
+            base.log("load new tokenhandler "+tokenUrl);
+            let scriptel=document.createElement("script");
+            scriptel.setAttribute("type","text/javascript");
+            document.getElementsByTagName("head")[0].appendChild(scriptel);
+            scriptel.setAttribute("id",scriptId);
+            scriptel.onload=()=>{
+                base.log("token handler "+scriptId+" loaded");
+                this._loadedTokenScripts[tokenUrl]=1;
+                let baseObject=window.avnav[scriptId];
+                if (! baseObject || ! baseObject.heartBeat){
+                    reject("unable to install crypto handler");
+                }
+                baseObject.heartBeat()
+                    .then((res)=>{
+                        self._encryptFunction=baseObject.encryptUrl;
+                        self._heartbeatFunction=baseObject.heartBeat;
+                        newChart();
+                        return;
+                    })
+                    .catch((err)=>{reject("error initializing chart access: "+err)});
+            };
+            scriptel.setAttribute("src",tokenUrl);
+        }
+        else{
+            let baseObject=window.avnav[scriptId];
+            //script already loaded
+            if (! baseObject || ! baseObject.heartBeat){
+                reject("unable to install crypto handler");
             }
-        }).catch((error)=> {
-            reject("unable to load map: " + error);
-        })
+            baseObject.heartBeat()
+                .then((res)=>{
+                    self._encryptFunction=baseObject.encryptUrl;
+                    self._heartbeatFunction=baseObject.heartBeat;
+                    newChart();
+                    return;
+                })
+                .catch((err)=>{reject("error initializing chart access: "+err)});
+        }
+
     });
 
 };
@@ -588,6 +663,16 @@ MapHolder.prototype.timerFunction=function(){
         required:keys.map.requiredZoom,
         current:keys.map.currentZoom
     });
+    let now=(new Date()).getTime();
+    if (this._heartbeatFunction) {
+        if ((now - this._lastHeartbeat) >= 20000) {
+            this._lastHeartbeat = now;
+            this._heartbeatFunction();
+        }
+    }
+    else{
+        this._lastHeartbeat=now;
+    }
 };
 
 /**
@@ -1024,8 +1109,11 @@ MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
                 if (rt.inversy) {
                     y = (1 << z) - y - 1
                 }
-
-                return layerurl + '/' + z + '/' + x + '/' + y + ".png";
+                let tileUrl=z + '/' + x + '/' + y + ".png";
+                if (self._encryptFunction){
+                    tileUrl=self._encryptFunction(tileUrl);
+                }
+                return layerurl + '/' + tileUrl;
             },
             extent: rt.extent
             /*

@@ -149,10 +149,7 @@ let keys={
         courseUp: K,
         currentZoom:K,
         requiredZoom:K,
-        centerPosition:K,
-        url:K,
-        chartBase: K,
-        sequence: K,
+        centerPosition:K
         },
     gui:{
         capabilities:{
