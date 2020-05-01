@@ -125,9 +125,9 @@ class MapPage extends React.Component{
         let chartEntry=MapHolder.getCurrentChartEntry();
         let showMap=()=>{
             if (chartEntry.infoMode !== undefined ){
-                if (needsToShow(chartEntry.name,INFO_TYPES.valid,chartEntry.infoMode)){
-                    Toast("Chart valid from "+chartEntry.validFrom+" to "+chartEntry.validTo);
-                    setShown(chartEntry.name,INFO_TYPES.valid);
+                if (needsToShow(chartEntry.url,INFO_TYPES.valid,chartEntry.infoMode)){
+                    Toast("Chart "+chartEntry.name+ ", version: "+chartEntry.version+", valid to: "+chartEntry.validTo);
+                    setShown(chartEntry.url,INFO_TYPES.valid);
                 }
             }
             MapHolder.loadMap(this.refs.map).
@@ -137,10 +137,10 @@ class MapPage extends React.Component{
                 catch((error)=>{Toast(error)});
         };
         if (chartEntry.eulaMode !== undefined){
-            if (needsToShow(chartEntry.name,INFO_TYPES.eula,chartEntry.eulaMode)){
+            if (needsToShow(chartEntry.url,INFO_TYPES.eula,chartEntry.eulaMode)){
                 EulaDialog.createDialog(chartEntry.name,chartEntry.url+"/eula")
                     .then(()=>{
-                        setShown(chartEntry.name,INFO_TYPES.eula);
+                        setShown(chartEntry.url,INFO_TYPES.eula);
                         showMap();
                     })
                     .catch(()=>{
