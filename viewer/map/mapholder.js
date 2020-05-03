@@ -1111,11 +1111,23 @@ MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
                 }
                 let tileUrl=z + '/' + x + '/' + y + ".png";
                 if (self._encryptFunction){
-                    tileUrl=self._encryptFunction(tileUrl);
+                    tileUrl="##encrypt##"+tileUrl;
                 }
                 return layerurl + '/' + tileUrl;
             },
-            extent: rt.extent
+            extent: rt.extent,
+            tileLoadFunction: function(imageTile,src){
+                if (! self._encryptFunction){
+                    imageTile.getImage().src=src;
+                }
+                else{
+                    let encryptPart=src.replace(/.*##encrypt##/,"");
+                    let basePart=src.replace(/##encrypt##.*/,"");
+                    let finalSrc=basePart+self._encryptFunction(encryptPart);
+                    imageTile.getImage().src=finalSrc;
+                }
+            }
+
             /*
              url:layerurl+'/{z}/{x}/{y}.png'
              */
