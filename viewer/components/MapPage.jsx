@@ -39,7 +39,7 @@ const SHOW_MODE={
 
 const INFO_TYPES={
     eula:keys.properties.eulaStoreName,
-    valid:keys.properties.chartValidStoreName
+    info:keys.properties.chartInfoStoreName
 };
 
 const needsToShow=(setName,type,mode)=>{
@@ -125,9 +125,9 @@ class MapPage extends React.Component{
         let chartEntry=MapHolder.getCurrentChartEntry();
         let showMap=()=>{
             if (chartEntry.infoMode !== undefined ){
-                if (needsToShow(chartEntry.url,INFO_TYPES.valid,chartEntry.infoMode)){
-                    Toast("Chart "+chartEntry.name+ ", version: "+chartEntry.version+", valid to: "+chartEntry.validTo);
-                    setShown(chartEntry.url,INFO_TYPES.valid);
+                if (needsToShow(chartEntry.url,INFO_TYPES.info,chartEntry.infoMode)){
+                    Toast("Chart "+chartEntry.info);
+                    setShown(chartEntry.url,INFO_TYPES.info);
                 }
             }
             MapHolder.loadMap(this.refs.map).

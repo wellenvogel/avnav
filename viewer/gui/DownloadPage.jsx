@@ -827,6 +827,13 @@ class FileDialog extends React.Component{
             <React.Fragment>
             <div className="fileDialog flexInner">
                 <h3 className="dialogTitle">{this.props.current.name}</h3>
+                {this.props.current.info !== undefined?
+                    <div className="dialogRow">
+                        <span className="itemInfo">{this.props.current.info}</span>
+                    </div>
+                    :
+                    null
+                }
                 {showSchema &&
                     <Radio
                         label="scheme"
