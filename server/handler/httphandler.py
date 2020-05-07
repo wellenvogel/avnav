@@ -362,20 +362,10 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         else:
           status = "yellow"
     src = self.server.navdata.getLastSource(AVNStore.BASE_KEY_GPS + ".lat")  # we just want the last source of position
-    # TODO: add info from sky
-    sky = self.server.navdata.getDataByPrefix(AVNStore.BASE_KEY_SKY)
-    visible = set()
-    used = set()
-    try:
-      satellites = sky.get('satellites')
-      if satellites is not None:
-        for sat in satellites.keys():
-          visible.add(sat)
-          if satellites[sat].get('used'):
-            used.add(sat)
-    except:
-      AVNLog.info("unable to get sat count: %s", traceback.format_exc())
-    statusNmea = {"status": status, "source": src, "info": "Sat %d visible/%d used" % (len(visible), len(used))}
+    satInview = rtv.get('satInview')
+    satUsed   = rtv.get('satUsed')
+    statusNmea = {"status": status, "source": src, "info": "Sat %d visible/%d used" % (int(satInview), int(satUsed))}
+
     status = "red"
     numAis = self.server.navdata.getAisCounter()
     if numAis > 0:
