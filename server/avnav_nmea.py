@@ -73,7 +73,9 @@ class NMEAParser():
     Key('depthBelowKeel','depthBelowKeel in m','m'),
     Key('source','source of GPS info'),
     Key('tag','the original NMEA record'),
-    Key('time','the received GPS time')
+    Key('time','the received GPS time'),
+    Key('satInview', 'number of Sats in view'),
+    Key('satUsed', 'number of Sats in use')
   ]
 
   @classmethod
@@ -262,7 +264,12 @@ class NMEAParser():
       if tag=='GGA':
         rt['lat']=self.nmeaPosToFloat(darray[2],darray[3])
         rt['lon']=self.nmeaPosToFloat(darray[4],darray[5])
-        rt['mode']=int(darray[6] or '0')
+        rt['mode']=int(darray[6] or '0') #quality
+        rt['satUsed']=int(darray[7])
+        self.addToNavData(rt,source=source,record=tag)
+        return True
+      if tag=='GSV':
+        rt['satInview']=int(darray[3])
         self.addToNavData(rt,source=source,record=tag)
         return True
       if tag=='GLL':
