@@ -295,6 +295,8 @@ class GpsdReader(threading.Thread):
             except:
               AVNLog.debug("exception storing ais data %s", traceback.format_exc())
         if cl == 'SKY':
+          satInview = 0
+          satUsed   = 0
           try:
             base=self.filterToDict(report,NMEAParser.SKY_BASE_KEYS)
             self.navdata.setValue(AVNStore.BASE_KEY_SKY,base,source=self.infoName)
@@ -305,7 +307,13 @@ class GpsdReader(threading.Thread):
                 entry=self.filterToDict(sat,NMEAParser.SKY_SATELLITE_KEYS)
                 PRN=entry.get('PRN')
                 if PRN is not None:
+                  satInview += 1
                   self.navdata.setValue(AVNStore.BASE_KEY_SKY+".satellites."+str(PRN),entry,source=self.infoName)
+                  USED=entry.get('used')
+                  if USED == True:
+                    satUsed += 1
+            self.navdata.setValue(AVNStore.BASE_KEY_GPS+".satInview",satInview,source=self.infoName)
+            self.navdata.setValue(AVNStore.BASE_KEY_GPS+".satUsed",satUsed,source=self.infoName)
           except:
             AVNLog.debug("exception storing sky data %s", traceback.format_exc())
       if self.stop:
