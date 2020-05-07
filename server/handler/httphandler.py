@@ -363,7 +363,11 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
           status = "yellow"
     src = self.server.navdata.getLastSource(AVNStore.BASE_KEY_GPS + ".lat")  # we just want the last source of position
     satInview = rtv.get('satInview')
+    if satInview is None:
+      satInview=0
     satUsed   = rtv.get('satUsed')
+    if satUsed is None:
+      satUsed=0
     statusNmea = {"status": status, "source": src, "info": "Sat %d visible/%d used" % (int(satInview), int(satUsed))}
 
     status = "red"
