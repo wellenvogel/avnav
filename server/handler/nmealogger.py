@@ -83,7 +83,7 @@ class AVNNmeaLogger(AVNWorker):
     if feeder is None:
       raise Exception("%s: cannot find a suitable feeder (name %s)",self.getName(),self.getStringParam("feederName") or "")
     self.feeder=feeder
-    filter=filterstr.split(",")
+    nmeaFilter=filterstr.split(",")
     if trackdir is None:
       trackwriter=self.findHandlerByName(AVNTrackWriter.getConfigName())
       if trackwriter is not None:
@@ -152,19 +152,19 @@ class AVNNmeaLogger(AVNWorker):
               pass
           newFile=False
           self.setInfo('main', "writing to %s"%(curfname,), AVNWorker.Status.NMEA)
-        seq,data=self.feeder.fetchFromHistory(seq,10)
+        seq,data=self.feeder.fetchFromHistory(seq,10,nmeafilter=nmeaFilter)
         if len(data)>0:
           for line in data:
-            if NMEAParser.checkFilter(line, filter):
-              now=datetime.datetime.utcnow()
-              key=line[0:6]
-              prev=last.get(key)
-              if prev is not None:
-                diff=now-prev
-                if diff.seconds < interval:
-                  continue
-              last[key]=now
-              self.writeLine(f,line)
+
+            now=datetime.datetime.utcnow()
+            key=line[0:6]
+            prev=last.get(key)
+            if prev is not None:
+              diff=now-prev
+              if diff.seconds < interval:
+                continue
+            last[key]=now
+            self.writeLine(f,line)
       except Exception as e:
         AVNLog.error("exception in nmea logger: %s",traceback.format_exc());
         time.sleep(1)

@@ -486,7 +486,7 @@ class AVNGpsdFeeder(AVNGpsd):
     else:
       rt=[]
       for le in list:
-        if filter is None or NMEAParser.checkFilter(le.data,filter):
+        if nmeafilter is None or NMEAParser.checkFilter(le.data,nmeafilter):
           rt.append(le.data)
       return (seq,rt)
   
