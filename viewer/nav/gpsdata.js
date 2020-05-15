@@ -112,6 +112,8 @@ GpsData.prototype.handleGpsResponse=function(data, status){
         delete data.windSpeed;
         gpsdata.windReference = data.windReference || 'R';
         delete data.windReference;
+        //gpsdata.depthBelowTransducer=data.depthBelowTransducer;
+        //delete data.depthBelowTransducer;
     }
     if (!gpsdata.valid){
         //clean average data
