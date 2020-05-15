@@ -85,7 +85,7 @@ const setShown=(setName,type)=>{
 
 
 const widgetCreator=(widget,mode)=>{
-    let rt=WidgetFactory.createWidget(widget,{mode:mode,className:'',handleVisible:!globalStore.getData(keys.gui.global.layoutEditing)});
+    let rt=WidgetFactory.createWidget(widget,{mode:mode,handleVisible:!globalStore.getData(keys.gui.global.layoutEditing)});
     if (widget.name=='CenterDisplay'){
         rt=Dynamic(Visible(rt),{
             storeKeys:{
