@@ -4,6 +4,9 @@ pdir=`readlink -f $pdir`
 PROG=$pdir/avnav
 CFG=avnav_server.xml
 RUNDIR=$pdir/../data_linux
+if [ "$HOME" != "" ]; then
+  RUNDIR=$HOME/avnav
+fi
 rm -f $RUNDIR/$CFG
 vdir="release"
 gui=0
