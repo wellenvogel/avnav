@@ -1,0 +1,42 @@
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Plugins</title>
+    <link href="../styles.css" rel="stylesheet" type="text/css">
+  </head>
+  <body>
+    <h1>Avnav Ocharts</h1>
+    <p>=== nicht für Android ===</p>
+    <p>AvNav kann bisher Karten in den verschiedenen Raster-Formaten
+      verarbeiten. Bisher war es aber nicht in der Lage, offiziell verfügbare
+      Seekarten zu lesen und anzuzeigen. Seit einiger Zeit gibt es die Firma <a
+        href="https://o-charts.org/">o-charts</a>, die Karten für viele Gebiete
+      der Erde für OpenCPN bereitstellt.</p>
+    <p>Nach einigen Absprachen mit der Firma können diese Karten nun (ab Version
+      xxxx - s.u.) auch für AvNav genutzt werden. Diese Karten sind allerdings
+      zum großen Teil Vektor Karten (oesenc) - bisher können auch nur diese
+      genutzt werden.</p>
+    <p>Um die Karten in AvNav darzustellen, müssen sie zunächst einmal in Raster
+      Karten umgewandelt werden. Das erledigt ein neues Plugin für AvNav
+      (avnav-ocharts). Die Umwandlung erfolgt dabei im laufenden Betrieb immer
+      dann, wenn die Karten dargestellt werden sollen. Damit kann mit diesen
+      Karten weitgehend normal gearbeitet werden und das man sich um diesen
+      Prozess kümmern muss.</p>
+    <p>Das Handling der Karten erfolgt dabei komplett über das Plugin - das
+      betrifft auch die Installation.</p>
+    <p>Erwerb und Installation der Karten</p>
+    <p>Um bei ocharts Karten kaufen zu können, muss <a href="https://o-charts.org/shop/de/autenticacion?back=my-account">dort</a>
+      zunächst ein Konto angelegt werden.</p>
+    <p>Anschliessend muss man seine Systeme, auf denen man die Karten nutzen
+      möchte <a href="https://o-charts.org/shop/de/module/occharts/occharts">auf
+        der Seite von o-charts</a> registrieren. AvNav benutzt dabei den <a href="https://manuals.o-charts.org/oesenc_de_DE.html">"Offline"
+        Prozess</a> bei o-charts. Für die Registrierung eines Systems wird ein
+      sogenannter Fingerprint benötigt. Dieser kann in AvNav über die
+      Bedienoberfläche des Plugins erzeugt und heruntergeladen werden.</p>
+    <p>Dazu auf der Hauptseite den Button <img src="../viewerimages/icons-new/apps.svg"
+        alt="" class="inlineimage">(User Apps) nutzen und dort die
+      Ocharts-Provider GUI auswählen:&nbsp; <img src="ochartsicon.png" alt="" class="inlineimage">.</p>
+    <p><br>
+    </p>
+  </body>
+</html>
