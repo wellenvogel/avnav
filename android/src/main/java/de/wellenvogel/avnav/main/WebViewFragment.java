@@ -116,7 +116,9 @@ public class WebViewFragment extends Fragment {
             } catch (Exception e) {
             }
         }
-        String htmlPage = getRequestHandler().getStartPage();
+        String htmlPage = null;
+        RequestHandler handler=getRequestHandler();
+        if (handler != null) htmlPage=handler.getStartPage();
         webView.setWebViewClient(new WebViewClient() {
             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
                 Toast.makeText(getActivity(), "Oh no! " + description, Toast.LENGTH_SHORT).show();
@@ -183,7 +185,9 @@ public class WebViewFragment extends Fragment {
         //http://stackoverflow.com/questions/8390985/android-4-0-1-breaks-webview-html-5-local-storage
         String start= "file://"+RequestHandler.ASSETS+"/viewer/dummy.html?navurl=avnav_navi.php";
         if (BuildConfig.DEBUG) start+="&logNmea=1";
-        webView.loadDataWithBaseURL(start,htmlPage,"text/html","UTF-8",null);
+        if (htmlPage != null) {
+            webView.loadDataWithBaseURL(start, htmlPage, "text/html", "UTF-8", null);
+        }
         return webView;
     }
 
