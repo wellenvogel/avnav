@@ -90,7 +90,7 @@ public class Chart implements INavRequestHandler.IJsonObect {
     public boolean canDelete(){
         //TODO: move delete handling to GEMFfile
         try {
-            return realFile != null && (isXml() || (getChartFileReader().numFiles() == 1));
+            return realFile != null && (isXml() || (type == TYPE_MBTILES) || (getChartFileReader().numFiles() == 1));
         }catch (Exception e){
             AvnLog.e("unable to get num of chartReader files",e);
             return false;
@@ -109,7 +109,13 @@ public class Chart implements INavRequestHandler.IJsonObect {
     }
     public File deleteFile() throws Exception {
         if (!canDelete()) return null;
-        if (! isXml()) getChartFileReader().close();
+        if (! isXml()) {
+            try {
+                getChartFileReader().close();
+            }catch (Throwable t){
+                AvnLog.e("unable to close chart file before delete",t);
+            }
+        }
         realFile.delete();
         return realFile;
     }

@@ -32,7 +32,7 @@ dependencies {
     implementation "com.android.support:support-compat:26.0.0"
     compile 'com.android.support:appcompat-v7:26.0.0'
     compile 'com.github.felHR85:UsbSerial:4.5'
-    compile group: 'org.apache.httpcomponents', name: 'httpcore', version: '4.4.12'
+    compile group: 'org.apache.httpcomponents', name: 'httpcore', version: '4.0'
     //compile 'com.android.support:preference-v7:23.1.0'
 }
 

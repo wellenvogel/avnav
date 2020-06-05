@@ -28,8 +28,8 @@ import org.apache.http.params.CoreConnectionPNames;
 import org.apache.http.params.CoreProtocolPNames;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.BasicHttpProcessor;
+import org.apache.http.protocol.ExecutionContext;
 import org.apache.http.protocol.HttpContext;
-import org.apache.http.protocol.HttpCoreContext;
 import org.apache.http.protocol.HttpRequestHandler;
 import org.apache.http.protocol.HttpRequestHandlerRegistry;
 import org.apache.http.protocol.HttpService;
@@ -111,7 +111,7 @@ public class WebServer {
                 AvnLog.e("error handling request "+url,t);
                 if (postData != null) {
                     postData.closeInput();
-                    HttpServerConnection con=(HttpServerConnection)httpContext.getAttribute(HttpCoreContext.HTTP_CONNECTION);
+                    HttpServerConnection con=(HttpServerConnection)httpContext.getAttribute(ExecutionContext.HTTP_CONNECTION);
                     con.close();
                 }
                 throw new HttpException("error handling "+url,t);
@@ -213,7 +213,7 @@ public class WebServer {
             try {
                 InputStream is=activity.getAssets().open(path);
                 httpResponse.setStatusCode(HttpStatus.SC_OK);
-                httpResponse.setEntity(new InputStreamEntity(is));
+                httpResponse.setEntity(new InputStreamEntity(is,-1));
                 httpResponse.addHeader("content-type", activity.getRequestHandler().mimeType(path));
 
             }catch (Exception e){

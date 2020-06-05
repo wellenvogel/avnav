@@ -157,15 +157,28 @@ public class ChartHandler implements INavRequestHandler {
                 @Override
                 public void run() {
                     AvnLog.i("creating chart overviews");
+                    boolean readAgain=false;
                     for (Chart chart :chartList.values()){
                         try{
                             chart.computeOverview();
                         }catch (Throwable t){
-                            AvnLog.e("error computing chart overview",t);
+                            AvnLog.e("error computing chart overview, deleting "+t);
+                            if (chart.canDelete()){
+                                try{
+                                    chart.deleteFile();
+                                    readAgain=true;
+                                }catch (Throwable tdel){
+                                    AvnLog.e("error deleting chart ",tdel);
+                                }
+                            }
                         }
                         if (isStopped) break;
                     }
                     AvnLog.i("done creating chart overviews");
+                    if (readAgain){
+                        AvnLog.i("errors when creating chart overview, files have been deleted - read again");
+                        updateChartList();
+                    }
                 }
             });
             overviewCreator.setDaemon(true);
@@ -288,7 +301,11 @@ public class ChartHandler implements INavRequestHandler {
         try {
             for (String url : chartList.keySet()) {
                 Chart chart = chartList.get(url);
-                rt.put(chart.toJson());
+                try {
+                    rt.put(chart.toJson());
+                }catch (Throwable t){
+                    AvnLog.e("error reading chart "+url,t);
+                }
             }
         } catch (Exception e) {
             Log.e(Constants.LOGPRFX, "exception reading chartlist:", e);
