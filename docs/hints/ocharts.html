@@ -13,29 +13,119 @@
         href="https://o-charts.org/">o-charts</a>, die Karten für viele Gebiete
       der Erde für OpenCPN bereitstellt.</p>
     <p>Nach einigen Absprachen mit der Firma können diese Karten nun (ab Version
-      xxxx - s.u.) auch für AvNav genutzt werden. Diese Karten sind allerdings
-      zum großen Teil Vektor Karten (oesenc) - bisher können auch nur diese
-      genutzt werden.</p>
+      xxxx - s.u.) auch für AvNav genutzt werden. Bsher können die oesenc
+      Vektor-karten genutzt werden.</p>
     <p>Um die Karten in AvNav darzustellen, müssen sie zunächst einmal in Raster
       Karten umgewandelt werden. Das erledigt ein neues Plugin für AvNav
       (avnav-ocharts). Die Umwandlung erfolgt dabei im laufenden Betrieb immer
       dann, wenn die Karten dargestellt werden sollen. Damit kann mit diesen
-      Karten weitgehend normal gearbeitet werden und das man sich um diesen
+      Karten weitgehend normal gearbeitet werden ohne das man sich um diesen
       Prozess kümmern muss.</p>
     <p>Das Handling der Karten erfolgt dabei komplett über das Plugin - das
-      betrifft auch die Installation.</p>
-    <p>Erwerb und Installation der Karten</p>
+      betrifft auch die Installation. Das Plugin hat dazu eine eigene GUI, die
+      von der Hauptseite über den Button <img src="../viewerimages/icons-new/apps.svg"
+        alt="" class="inlineimage">(User Apps) und dort über den Button
+      Ocharts-Provider&nbsp; <img src="ochartsicon.png" alt="" class="inlineimage">
+      erreichbar ist.</p>
+    <img src="ocharts-gui-1.png" alt="" class="image"><br>
+    <h2>Erwerb und Installation der Karten</h2>
     <p>Um bei ocharts Karten kaufen zu können, muss <a href="https://o-charts.org/shop/de/autenticacion?back=my-account">dort</a>
       zunächst ein Konto angelegt werden.</p>
     <p>Anschliessend muss man seine Systeme, auf denen man die Karten nutzen
       möchte <a href="https://o-charts.org/shop/de/module/occharts/occharts">auf
         der Seite von o-charts</a> registrieren. AvNav benutzt dabei den <a href="https://manuals.o-charts.org/oesenc_de_DE.html">"Offline"
-        Prozess</a> bei o-charts. Für die Registrierung eines Systems wird ein
-      sogenannter Fingerprint benötigt. Dieser kann in AvNav über die
-      Bedienoberfläche des Plugins erzeugt und heruntergeladen werden.</p>
-    <p>Dazu auf der Hauptseite den Button <img src="../viewerimages/icons-new/apps.svg"
-        alt="" class="inlineimage">(User Apps) nutzen und dort die
-      Ocharts-Provider GUI auswählen:&nbsp; <img src="ochartsicon.png" alt="" class="inlineimage">.</p>
+        Prozess</a> . </p>
+    <p>Dieser besteht aus den folgenden Schritten:</p>
+    <ol>
+      <li>Erzeugung eines "Fingerprints" für das System, auf dem die Karten
+        genutzt werden sollen. Dieser kann in AvNav über die Bedienoberfläche
+        des Plugins erzeugt und heruntergeladen werden.</li>
+      <li>Hochladen dieses Fingerprints zu o-charts und Anlegen eines Systems
+        (im Wesentlichen Vergabe eines Namens)</li>
+      <li>Kaufen von Karten</li>
+      <li>Zuordnen zu dem angelegten System</li>
+      <li>Nach kurzer Zeit gibt es eine Mail von o-charts mit einem
+        Download-Link für die Karten (Zip-File)</li>
+      <li>Hochladen der Karten in AvNav (wieder über die Bedienoberfläche des
+        Plugins).</li>
+    </ol>
+    <p>Für Updates werden die Schritte 4,5 und 6 wiederholt (bei 4 nur
+      Anforderung des Updates).</p>
+    <p>Für weitere Kartensätze Schritte 3-6.</p>
+    <p>Für die Schritte 2,3,4 und 5 wird natürlich ein System mit
+      Internet-Verbindung benötigt. Das kann z.B. ein Laptop oder auch ein
+      Android Tablet sein.</p>
+    <p>Für den Ablauf des Prozesses habe ich ein Video gemacht, um ihn zu
+      verdeutlichen. Hier noch einmal eine kurze Beschreibung dazu.</p>
+    <h3>1. Erzeugung des Fingerprints</h3>
+    <p>Über <img src="../viewerimages/icons-new/apps.svg" alt="" class="inlineimage">-&gt;<img
+        src="ochartsicon.png" alt="" class="inlineimage">auf die Oberfläche des
+      Plugins gehen, dort den Tab "Charts" auswählen.</p>
+    <img src="ocharts-gui-charts1.png" alt="" class="image">
+    <p>Mit "Get Fingerprint" die Erzeugung des Fingerprints anstossen. Falls man
+      einen Dongle von o-charts benutzt, den Fingerprint über "Get
+      Fingerprint(Dongle)" erzeugen.</p>
+    <p><img src="ocharts-gui-charts2.png" alt="" class="image"></p>
+    <p>Im Dialog die erzeugte Datei auf meinem Gerät speichern.</p>
+    <h3>2. Hochladen des Fingerprints zu o-charts</h3>
+    <p>Auf die <a href="https://o-charts.org/shop/de/module/occharts/occharts">o-charts
+        Seit</a>e gehen und den Fingerprint hochladen.</p>
+    <img src="ocharts-buying.png" alt="" class="image">
+    <p>Mit Choose File die unter 2. gespeicherte Datei wählen. Dazu einen
+      sinnvollen Namen vergeben (dieser findet sich später in den Mails mit den
+      Download Links).</p>
+    <h3>3. Kaufen von Karten</h3>
+    <p>Bei o-charts aus den verfügbaren <a href="https://o-charts.org/shop/de/8-oesenc">oeSENC
+        Karten</a> die gewünschten kaufen.</p>
+    <h3>4. Zuordnen zum angelegten System</h3>
+    <img src="ocharts-assign.png" alt="" class="image">
+    <p>Bei 1 kann die Zuordnung zu einem angelegten System erfolgen (hier nicht
+      mehr möglich, weil die Karten bereits zu den 2 maximal verfügbaren
+      Systemen zugeordnet sind). Bei 2 wird dann die Mail mit dem Download-Link
+      angefordert (das erfolgt auch bei Updates - hier im Bild zu sehen: Die
+      letzte abgerufene Version ist 21, verfügbar ist 23).</p>
+    <h3>5. Herunterladen der Karten</h3>
+    <img src="ocharts-download.png" alt="" class="image">
+    <p>Nach kurzer Zeit erhält man von o-charts eine mail mit dem Download-Link.
+      Diese Datei (zip) herunterladen.</p>
+    <p>6. Hochladen der Zip-Datei zu AvNav.</p>
+    <p><img src="ocharts-upload1.png" alt="" class="image"></p>
+    <p>In der GUI des o-chart plugins über "Upload Zip" die im Schritt 5.
+      heruntergeladene Datei zu AvNav hochladen.</p>
+    <p>Während des Uploads wird ein Fortschritt angezeigt.</p>
+    <p><img src="ocharts-upload2.png" alt="" class="image"></p>
+    <p>Am Ende des Uploads wird auf dem AvNav Server die Datei ausgepackt und es
+      werden einige Prüfungen durchgeführt (das kann einige Sekunden dauern).</p>
+    <p>Die Karten werden (falls nicht anders konfiguriert) in das Verzeichnis
+      /home/pi/avnav/data/ocharts/charts hochgeladen.</p>
+    <p><img src="ocharts-upload3.png" alt="" class="image"></p>
+    <p>Wenn alle Prüfungen erfolgreich waren, wird angeboten sofort das Plugin
+      zu restarten um die Karten nutzen zu können.</p>
+    <p>Dabei kommt es kurzzeitig zu einigen Fehlermeldungen, aber nach max. 30s
+      sollte der Status zumindest wieder gelb sein (das Plugin liest jetzt alle
+      vorhandenen Karten).</p>
+    <p>Wenn die Karten erfolgreich geladen werden konnten, sollte am Ende der
+      Status für die Karten auf grün (READY) gehen.</p>
+    <p><img src="ocharts-upload4.png" alt="" class="image"></p>
+    <p>Falls der Status zu "ERROR" (rot) wird, wurde u.U. ein Zip-File
+      hochgeladen, was für ein anderes System zugeordnet war. Details kann man
+      u.U. im Log File (/home/pi/avnav/data/ocharts/provider.log) sehen.</p>
+    <p>Nun sind die Karten verfügbar und können genutzt werden.<br>
+      Unter dem Tab Status kann man etwas mehr Details erhalten.</p>
+    <img src="ocharts-status-filling.png" alt="" class="image">
+    <p>Im Bild ist zu sehen, das nach dem Hochladen jetzt automatisch bereits
+      eine Erzeugung von Kartenkacheln angelaufen ist ("Cache Prefill"). Das
+      sorgt dafür, das die Verzögerungen, die sonst bei der Nutzung durch die
+      begrenzten Resourcen des raspberry pi entstehen können, verringert werden.
+      Dazu wird nach einem bestimmten Verfahren ein Teil der Kacheln im Bereich
+      des Kartensatzes bereits erzeugt und in einem Cache File gespeichert.</p>
+    <p>Trotzdem können die Karten auch bereits unmittelbar genutzt werden.</p>
+    <p><img src="ocharts-mainpage.png" alt="" class="image"></p>
+    <p><img src="ocharts-navpage.png" alt="" class="image"></p>
+    <p>Wie bereits erwähnt kann es bei der erstmaligen Nutzung in einem
+      bestimmten Bereich zu Verzögerungen kommen (insbesondere auf den
+      kleineren/älteren Pi's) - nach der einmaligen Nutzung sind die Kacheln für
+      den Bereich aber im Cache und die Verzögerungen sind minimal.</p>
     <p><br>
     </p>
   </body>
