@@ -77,7 +77,7 @@
 <AVNChartHandler/>
     <!--  routing handler -->
 <AVNRouter computeAPB="true"/>
-<!--<AVNNmeaLogger filter="$" interval="0"></AVNNmeaLogger>-->
+<AVNNmeaLogger filter="$RMC" interval="0"></AVNNmeaLogger>-->
 <AVNNmeaLogger/>
 <AVNImporter/>
 <AVNWpaHandler allowDenyCommand="sudo $BASEDIR/../raspberry/iptables-ext.sh wlx0013eff503f2" wpaSocket="/var/run/wpa_supplicant/wlx0013eff503f2"/>
@@ -99,6 +99,8 @@
 <AVNPluginHandler>
 	<builtin-signalk enabled="true"/>
 	<builtin-canboat allowKeyOverwrite="true" autoSendRMC="30" enabled="true" host="10.222.10.122" sourceName="canboat"/>
+<!--	<user-ocharts chartdir="/home/andreas/projects/ocharts-provider/charts" debug="10"/>-->
+<!--	<user-ocharts chartdir="/home/andreas/OCharts/desktop-DE-2020-13" ocpnPluginDir="/home/andreas/projects/oesenc_pi/debug" memPercent="3" debug="10" prefillZoom="17"/>-->
 </AVNPluginHandler>
 
 
