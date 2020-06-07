@@ -299,10 +299,11 @@ class AVNChartHandler(AVNWorker):
     parr=url[1:].split("/")
     if len(parr) < 2:
       return AVNUtil.getReturnData(error="invalid url %s" % url)
-    chartEntry=self.chartlist.get(parr[1])
+    chartName=urllib.unquote(parr[1])
+    chartEntry=self.chartlist.get(chartName)
     if chartEntry is None:
       return AVNUtil.getReturnData(error="chart %s not found"%url)
-    del self.chartlist[parr[1]]
+    del self.chartlist[chartName]
     importer = self.server.getHandler("AVNImporter")  # cannot import this as we would get cycling dependencies...
     if importer is not None:
       importer.deleteImport(chartEntry['name'])
@@ -334,7 +335,8 @@ class AVNChartHandler(AVNWorker):
       parr = url[1:].split("/")
       if len(parr) < 2:
         raise Exception("invalid url")
-      chartEntry=self.chartlist.get(parr[1])
+      chartName=urllib.unquote(parr[1])
+      chartEntry=self.chartlist.get(chartName)
       if chartEntry is None:
         raise Exception("chart not found")
       fname=chartEntry['chart'].getDownloadFile()
@@ -370,7 +372,8 @@ class AVNChartHandler(AVNWorker):
         parr = url[1:].split("/")
         if len(parr) < 2:
           raise Exception("invalid url")
-        chartEntry = self.chartlist.get(parr[1])
+        chartName=urllib.unquote(parr[1])
+        chartEntry = self.chartlist.get(chartName)
         if chartEntry is None:
           raise Exception("chart not found")
         changed=chartEntry['chart'].changeScheme(scheme)

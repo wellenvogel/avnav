@@ -327,7 +327,9 @@ def createOverviewSingleLayer(layer,zoomBoundings,options):
   numupzoom=upzoom
   if options is not None and options.get('upzoom') is not None:
     numupzoom=options['upzoom']
-  for idx in range(numupzoom+1):
+  #currently our front end does not really handle any upzoom
+  #for idx in range(numupzoom+1):
+  for idx in range(1):
     tilemaps+=createTileMapForLayer(layer,layer.name if idx == 0 else "%s-%d"%(layer.name,idx),
                                     zOffset,tileSize,zoomBoundings)
     zOffset+=1
