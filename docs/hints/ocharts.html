@@ -67,6 +67,10 @@
     <p>Für den Ablauf des Prozesses habe ich ein <a href="https://www.youtube.com/watch?v=q24VRAtbbEE">Video</a>
       gemacht, um ihn zu verdeutlichen. Hier noch einmal eine kurze Beschreibung
       dazu.</p>
+    <p><b>Hinweis</b>: Wenn die Karten auf dem gleichen System bereits für
+      OpenCPN registriert sind, dann kann man direkt mit Schritt 6 starten. Als
+      Alternative können die OpenCPN Kartenverzeichniss mit o-charts Karten auch
+      im <a href="#Chartconfig">Plugin konfiguriert</a> werden.</p>
     <h3>1. Erzeugung des Fingerprints</h3>
     <p>Über <img src="../viewerimages/icons-new/apps.svg" alt="" class="inlineimage">-&gt;<img
         src="ochartsicon.png" alt="" class="inlineimage">auf die Oberfläche des
@@ -357,7 +361,12 @@
     <div class="code">&lt;AVNPluginHandler&gt;<br>...<br>&lt;system-ocharts port="8082".../&gt;<br>&lt;/AVNPluginHandler&gt;</div>
     <p>Für eine Liste der Konfigurationswerte siehe die <a href="https://github.com/wellenvogel/avnav-ocharts-provider/blob/master/avnav-plugin/plugin.py">Beschreibung
         im code des Plugins</a>.</p>
-    <p><br>
+    <p><a name="Chartconfig"></a>Falls man Karten z.B. gemeinsam mit OpenCPN
+      nutzen möchte, können die Verzeichnisse, in denen die o-charts Karten
+      liegen beispielsweise mit</p>
+    <div class="code">&lt;AVNPluginHandler&gt;<br>...<br>&lt;system-ocharts chartdir="/my/chartdir1,/my/chartdir2"/&gt;<br>&lt;/AVNPluginHandler&gt;</div>
+    <p>konfiguriert werden. Im Normalfall wird allerdings der direkte upload der
+      zip Files empfohlen, wie unter <a href="#Charts">Karten</a> beschrieben.<br>
     </p>
     <p><br>
     </p>

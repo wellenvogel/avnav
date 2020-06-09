@@ -65,6 +65,10 @@
       You can e.g. use a laptop or an android device.</p>
     <p>For this process I created a <a href="https://www.youtube.com/watch?v=q24VRAtbbEE">video</a>
       to show the basics. Additionally here is a short description.</p>
+    <p><b>Hint</b>: If the charts are already registered at the same system for
+      OpenCPN you can directly continue at step 6. Alternatively you could also
+      configure the OpenCPN chart directories with o-charts at the <a href="#Chartconfig">plugin</a>
+      .</p>
     <h3>1. Creating the fingerprint</h3>
     <p>Via <img src="../viewerimages/icons-new/apps.svg" alt="" class="inlineimage">-&gt;<img
         src="ochartsicon.png" alt="" class="inlineimage"> reach the GUI of the
@@ -342,9 +346,12 @@
     <div class="code">&lt;AVNPluginHandler&gt;<br>...<br>&lt;system-ocharts port="8082".../&gt;<br>&lt;/AVNPluginHandler&gt;</div>
     <p>For a list of available options refer to the <a href="https://github.com/wellenvogel/avnav-ocharts-provider/blob/master/avnav-plugin/plugin.py">description
         in the plugin source code</a>.</p>
-    <p><br>
-    </p>
-    <p><br>
+    <p><a name="Chartconfig"></a>If you e.g. want to use charts that you already
+      installed for OpenCPN you can just configure the OpenCPN chart directories
+      with o-charts like:</p>
+    <div class="code">&lt;AVNPluginHandler&gt;<br>...<br>&lt;system-ocharts chartdir="/my/chartdir1,/my/chartdir2"/&gt;<br>&lt;/AVNPluginHandler&gt;</div>
+    <p>Normally the recommendation is anyway to upload the zip files like
+      described at&nbsp; <a href="#Charts">charts</a> .<br>
     </p>
   </body>
 </html>
