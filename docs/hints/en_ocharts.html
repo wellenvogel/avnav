@@ -13,8 +13,8 @@
       <li><a href="#MainSettings">Adapting the Look and Feel<br>
         </a></li>
       <li><a href="#Installation">Installation</a></li>
-      <li><a href="#License">License Hints<br>
-        </a></li>
+      <li><a href="#Releases">Releases</a></li>
+      <li><a href="#License">License Hints</a></li>
       <li><a href="#Details">Technical Details</a></li>
     </ul>
     <p>AvNav is able to handle chart in various raster formats. Until now it was
@@ -315,11 +315,23 @@
       /usr/lib/avnav/plugins/ocharts to avoid conflicts with a parallel OpenCPN
       installation.</p>
     <div class="code">sudo apt-get update<br>sudo apt-get install avnav-ocharts-plugin avnav-oesenc<br>sudo systemctl restart avnav</div>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <p>If you are working on other images you should add the repository from
       free-x:</p>
     <div class="code">deb https://www.free-x.de/debian buster main contrib non-free</div>
     <p>The packages will also be uploaded to this web page in the near future.</p>
+    <h2><a name="Releases"></a>Releases</h2>
+    <ul>
+      <li>20200606 <a href="https://www.wellenvogel.net/software/avnav/downloads/release-ochartsplugin/20200606/avnav-ocharts-plugin_20200606-raspbian-buster_armhf.deb">Paket
+          <br></a></li>
+      <ul>
+        <li>first version</li>
+      </ul>
+      <li>20200705 <a href="https://www.wellenvogel.net/software/avnav/downloads/release-ochartsplugin/20200705/avnav-ocharts-plugin_20200705-raspbian-buster_armhf.deb">Paket</a></li>
+      <ul>
+        <li>correct a problem in the OpenCPN plugin that could potentially stop
+          it from decoding charts after running for a long time.</li>
+      </ul>
+    </ul>
     <h2><a name="License"></a>License Hints</h2>
     <p>Using the charts in AvNav with the oesenc-pi plugin has been agreed with
       o-charts and therefore is inline with their license conditions.<br>
