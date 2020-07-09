@@ -324,18 +324,35 @@
     <p>If you are working on other images you should add the repository from
       free-x:</p>
     <div class="code">deb https://www.free-x.de/debian buster main contrib non-free</div>
-    <p>The packages will also be uploaded to this web page in the near future.</p>
+    <p>You can also see the packages in the release list below. To use one of
+      those packages (if it is not in the repo yet or if you need an older one)
+      - just download and install the package (replace the version by the one
+      you want):
+    </p>
+    <div class="code">cd /home/pi/avnav<br>wget -O avnav-ocharts-plugin_20200606-raspbian-buster_armhf.deb https://www.wellenvogel.net/software/avnav/downloads/release-ochartsplugin/20200606/avnav-ocharts-plugin_20200606-raspbian-buster_armhf.deb <br>sudo dpkg -i /home/pi/avnav/avnav-ocharts-plugin_20200606-raspbian-buster_armhf.deb<br>sudo systemctl restart avnav</div>
+    <h2><a name="Releases"></a></h2>
+    You can also download on a PC, scp/WinScp to the pi and install then.
     <h2><a name="Releases"></a>Releases</h2>
     <ul>
-      <li>20200606 <a href="https://www.wellenvogel.net/software/avnav/downloads/release-ochartsplugin/20200606/avnav-ocharts-plugin_20200606-raspbian-buster_armhf.deb">Paket
+      <li>20200606 <a href="https://www.wellenvogel.net/software/avnav/downloads/release-ochartsplugin/20200606/avnav-ocharts-plugin_20200606-raspbian-buster_armhf.deb">package
           <br></a></li>
       <ul>
         <li>first version</li>
       </ul>
-      <li>20200705 <a href="https://www.wellenvogel.net/software/avnav/downloads/release-ochartsplugin/20200705/avnav-ocharts-plugin_20200705-raspbian-buster_armhf.deb">Paket</a></li>
+      <li>20200705 <a href="https://www.wellenvogel.net/software/avnav/downloads/release-ochartsplugin/20200705/avnav-ocharts-plugin_20200705-raspbian-buster_armhf.deb">package</a></li>
       <ul>
         <li>correct a problem in the OpenCPN plugin that could potentially stop
           it from decoding charts after running for a long time.</li>
+      </ul>
+      <li>20200709 <a href="https://www.wellenvogel.net/software/avnav/downloads/release-ochartsplugin/20200709/avnav-ocharts-plugin_20200709-raspbian-buster_armhf.deb">package</a></li>
+      <ul>
+        <li>You can now set the directory for the charts - see <a href="#Upload">details
+            <br> </a></li>
+        <li>When uploading charts it is checked if those charts can be read.
+          Otherwise the upload is rejected.</li>
+      </ul>
+      <ul>
+        <li>No errors in GUI any more when restarting the provider</li>
       </ul>
     </ul>
     <h2><a name="License"></a>License Hints</h2>
@@ -369,7 +386,18 @@
       with o-charts like:</p>
     <div class="code">&lt;AVNPluginHandler&gt;<br>...<br>&lt;system-ocharts chartdir="/my/chartdir1,/my/chartdir2"/&gt;<br>&lt;/AVNPluginHandler&gt;</div>
     <p>Normally the recommendation is anyway to upload the zip files like
-      described at&nbsp; <a href="#Charts">charts</a> .<br>
+      described at&nbsp; <a href="#Charts">charts</a> .</p>
+    <p><a name="Upload"></a>Since version 20200709 you can separately set the
+      directory for uploading the charts: </p>
+    <div class="code">&lt;AVNPluginHandler&gt;<br>...<br>&lt;system-ocharts uploadDir="$DATADIR/charts/ocharts"/&gt;<br>&lt;/AVNPluginHandler&gt;</div>
+    <p>In this example the directory is set to
+      /home/pi/avnav/data/charts/ocharts (normally it is located at
+      /home/pi/avnav/data/ocharts/charts). This could be helpful on the&nbsp; <a
+        href="../install.html#Touch">touch image</a> as only in
+      /home/pi/avnav/data/charts there is sufficient disk space.<br>
     </p>
+    <p><br>
+    </p>
+    <p> </p>
   </body>
 </html>
