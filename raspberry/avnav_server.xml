@@ -198,6 +198,7 @@
 <!-- ##CANBOAT 
 	<builtin-canboat enabled="true" allowKeyOverwrite="true" autoSendRMC="30" sourceName="canboatgen"/>
  ##CANBOAT -->
+  <builtin-ntptime enabled="true" allowKeyOverwrite="true" host="pool.ntp.org"/>
 </AVNPluginHandler>
 
 <!-- create chart overview files -->

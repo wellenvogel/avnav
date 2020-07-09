@@ -85,4 +85,13 @@
 	<Alarm name="anchor" command="sound" parameter="$BASEDIR/../sounds/anchorAlarm.mp3" repeat="20000"/>
 	<Alarm name="gps" command="sound" parameter="$BASEDIR/../sounds/anchorAlarm.mp3" repeat="20000"/>
 </AVNAlarmHandler>
+<AVNPluginHandler>
+<!-- ##SIGNALK 
+        <builtin-signalk enabled="true"/>
+ ##SIGNALK -->
+<!-- ##CANBOAT 
+	<builtin-canboat enabled="true" allowKeyOverwrite="true" autoSendRMC="30" sourceName="canboatgen"/>
+ ##CANBOAT -->
+  <builtin-ntptime enabled="true" allowKeyOverwrite="true" host="pool.ntp.org"/>
+</AVNPluginHandler>
 </AVNServer>

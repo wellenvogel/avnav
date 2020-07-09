@@ -93,8 +93,8 @@ class NMEAParser():
   def __init__(self,navdata):
     self.payloads = {'A':'', 'B':''}    #AIS paylod data
     self.navdata=navdata # type: AVNStore
-
-  def formatTime(self,ts):
+  @classmethod
+  def formatTime(cls,ts):
     t = ts.isoformat()
     # seems that isoformat does not well harmonize with OpenLayers.Date
     # they expect at leas a timezone info
