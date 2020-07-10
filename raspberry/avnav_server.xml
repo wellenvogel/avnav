@@ -179,6 +179,10 @@
 <AVNSocketWriter port="34567" maxDevices="5" filter="" read="true" minTime="50" name="allnmea0183"/>
 <!-- the following entries provide the integration with signalk and canboat
      we provide a connector to canboat (n2kd) to receive all data that has been translated from nmea2000 to nmea0183
+       for the socketreader that connects to 2599 we set a very long timeout (one year) as
+       n2k does not really handle its sockets correctly and leaves them in CLOSE_WAIT.
+       So after ~1000 connect retries if there is no data on the bus(~3h with the default 10s) n2kd becomes unusable as
+       it is out of open file descriptors. It will consume 100% CPU at this time.
      we provide an additional socket that will provide only the nmea data that has not been received from canboat
        this will be used for signalk to get all of our nmea0183. signalk will itself connect to canboat to get the nmea2000
        directly, inside signalk just configure a connector to this port and the canboat nmea200 connector
@@ -189,7 +193,7 @@
 -->
 <!-- ##SIGNALK CANBOAT
 <AVNSocketWriter port="34568" maxDevices="5" filter="" read="true" minTime="50" name="nmea0183tosignalk" blackList="canboatnmea0183,canboatgen"/>
-<AVNSocketReader port="2599" host="localhost" filter="" name="canboatnmea0183"/>
+<AVNSocketReader port="2599" host="localhost" filter="" name="canboatnmea0183" timeout="31104000"/>
  ##SIGNALK CANBOAT-->
 <AVNPluginHandler>
 <!-- ##SIGNALK 
@@ -198,7 +202,6 @@
 <!-- ##CANBOAT 
 	<builtin-canboat enabled="true" allowKeyOverwrite="true" autoSendRMC="30" sourceName="canboatgen"/>
  ##CANBOAT -->
-  <builtin-ntptime enabled="true" allowKeyOverwrite="true" host="pool.ntp.org"/>
 </AVNPluginHandler>
 
 <!-- create chart overview files -->
