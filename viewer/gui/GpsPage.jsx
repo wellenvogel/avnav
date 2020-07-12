@@ -23,6 +23,7 @@ import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 import LayoutHandler from '../util/layouthandler.js';
 import anchorWatch from '../components/AnchorWatchDialog.jsx';
 import Mob from '../components/Mob.js';
+import Dimmer from '../util/dimhandler.js';
 
 const PANEL_LIST=['left','m1','m2','m3','right'];
 //from https://stackoverflow.com/questions/16056591/font-scaling-based-on-width-of-container
@@ -204,6 +205,10 @@ class GpsPage extends React.Component{
                 PANEL_LIST,
                 [LayoutHandler.OPTIONS.ANCHOR]),
             LayoutFinishedDialog.getButtonDef(),
+            {
+                name: 'Dim',
+                onClick: Dimmer.activate
+            },
             {
                 name:'Cancel',
                 onClick:()=>{history.pop();}

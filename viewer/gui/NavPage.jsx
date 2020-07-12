@@ -35,6 +35,7 @@ import EditWidgetDialog from '../components/EditWidgetDialog.jsx';
 import EditPageDialog from '../components/EditPageDialog.jsx';
 import anchorWatch from '../components/AnchorWatchDialog.jsx';
 import Mob from '../components/Mob.js';
+import Dimmer from '../util/dimhandler.js';
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -335,6 +336,10 @@ class NavPage extends React.Component{
                 MapPage.PANELS,
                 [LayoutHandler.OPTIONS.SMALL]),
             LayoutFinishedDialog.getButtonDef(),
+            {
+                name: 'Dim',
+                onClick: Dimmer.activate
+            },
             {
                 name: 'Cancel',
                 onClick: ()=>{history.pop()}

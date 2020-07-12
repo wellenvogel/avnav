@@ -180,7 +180,9 @@ let keys={
             toastTimeout:K,
             toastCallback:K,
             hasSelectedChart: K,
-            soundEnabled: new D("only enable sound once we reach the mainpage")
+            soundEnabled: new D("only enable sound once we reach the mainpage"),
+            dimActive: K
+
         },
         mainpage:{
             chartList: K,
@@ -339,6 +341,7 @@ let keys={
         },
         nightFade: new Property(50, "NightDim(%)", PropertyType.RANGE, [1, 99]), //in px
         nightChartFade: new Property(30, "NightChartDim(%)", PropertyType.RANGE, [1, 99]), //in %
+        dimFade: new Property(20,"Dim Fade(%)",PropertyType.RANGE,[0,60]),
         baseFontSize: new Property(14, "Base Font(px)", PropertyType.RANGE, [8, 28]),
         widgetFontSize: new Property(16, "Widget Base Font(px)", PropertyType.RANGE, [8, 28]),
         allowTwoWidgetRows: new Property(true, "2 widget rows", PropertyType.CHECKBOX),

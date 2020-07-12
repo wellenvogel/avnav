@@ -33,6 +33,7 @@ import assign from 'object-assign';
 import AlarmHandler from './nav/alarmhandler.js';
 import GuiHelpers from './util/GuiHelpers.js';
 import Mob from './components/Mob.js';
+import Dimmer from './util/dimhandler.js';
 
 
 const DynamicSound=Dynamic(SoundHandler);
@@ -106,7 +107,12 @@ class Router extends Component {
         let className="pageFrame "+ (this.props.nightMode?"nightMode":"");
         let style={};
         if (this.props.nightMode) style['opacity']=globalStore.getData(keys.properties.nightFade)/100;
+        let dimFade=globalStore.getData(keys.properties.dimFade,0)/100;
+        if (dimFade < 0) dimFade=0;
+        if (dimFade > 1) dimFade=1;
+        let dimStyle={opacity: 1- dimFade};
         return <div className={className}>
+            {this.props.dim ? <div className="dimm" style={dimStyle} onClick={Dimmer.trigger}></div>:null}
                 <Page style={style} options={this.props.options} location={this.props.location}/>
             </div>
     }
@@ -202,7 +208,8 @@ class App extends React.Component {
                 location: keys.gui.global.pageName,
                 options: keys.gui.global.pageOptions,
                 sequence: keys.gui.global.propertySequence,
-                dimensions: keys.gui.global.windowDimensions
+                dimensions: keys.gui.global.windowDimensions,
+                dim: keys.gui.global.dimActive
                 },keys.gui.capabilities)
             }
                 nightMode={this.props.nightMode}
