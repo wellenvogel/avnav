@@ -336,10 +336,7 @@ class NavPage extends React.Component{
                 MapPage.PANELS,
                 [LayoutHandler.OPTIONS.SMALL]),
             LayoutFinishedDialog.getButtonDef(),
-            {
-                name: 'Dim',
-                onClick: Dimmer.activate
-            },
+            Dimmer.buttonDef(),
             {
                 name: 'Cancel',
                 onClick: ()=>{history.pop()}

@@ -35,6 +35,7 @@ public class Constants {
     public static final String AISLOG="gps.logAis";
     public static final String NMEAFILTER="gps.filter";
     public static final String NMEALOGFILTER="gps.logFilter";
+    public static final String HIDE_BARS="layout.hideBars";
     public static final String RUNMODE="runmode"; //normal,server,xwalk
     public static final String WAITSTART="waitstart";
     public static final String VERSION="version";

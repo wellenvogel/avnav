@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.view.WindowManager;
 import android.webkit.*;
 import android.widget.Toast;
@@ -34,7 +35,30 @@ public class WebViewFragment extends Fragment {
     ProgressDialog pd;
     JavaScriptApi jsInterface=null;
     int goBackSequence=0;
+    private float currentBrigthness=1;
+    private void doSetBrightness(float newBrightness){
+        Window w=getActivity().getWindow();
+        WindowManager.LayoutParams lp=w.getAttributes();
+        lp.screenBrightness=newBrightness;
+        w.setAttributes(lp);
+    }
+    private Handler screenBrightnessHandler = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            int percent=msg.what;
+            float newBrightness=(float)percent/100;
+            if (newBrightness < 0.001f) newBrightness=0.001f;
+            if (newBrightness > 1) newBrightness=1;
+            currentBrigthness=newBrightness;
+            doSetBrightness(newBrightness);
+        }
+    };
 
+    public void setBrightness(int percent){
+        Message msg=screenBrightnessHandler.obtainMessage(percent);
+        screenBrightnessHandler.sendMessage(msg);
+    }
     public void onBackPressed(){
         final int num=goBackSequence+1;
         sendEventToJs(Constants.JS_BACK,num);
@@ -181,6 +205,9 @@ public class WebViewFragment extends Fragment {
         webView.getSettings().setDatabasePath(databasePath);
         webView.addJavascriptInterface(jsInterface,"avnavAndroid");
         getActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        handleBars();
+
+
         //we nedd to add a filename to the base to make local storage working...
         //http://stackoverflow.com/questions/8390985/android-4-0-1-breaks-webview-html-5-local-storage
         String start= "file://"+RequestHandler.ASSETS+"/viewer/dummy.html?navurl=avnav_navi.php";
@@ -191,6 +218,22 @@ public class WebViewFragment extends Fragment {
         return webView;
     }
 
+    private void handleBars(){
+        SharedPreferences sharedPrefs=getActivity().getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+        boolean hideStatus=sharedPrefs.getBoolean(Constants.HIDE_BARS,false);
+        if (hideStatus ) {
+            View decorView = getActivity().getWindow().getDecorView();
+            int flags=View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+            flags+=View.SYSTEM_UI_FLAG_FULLSCREEN;
+            flags+=View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
+            decorView.setSystemUiVisibility(flags);
+        }
+    }
+    @Override
+    public void onResume() {
+        super.onResume();
+        handleBars();
+    }
 
     @Override
     public void onAttach(Activity activity) {

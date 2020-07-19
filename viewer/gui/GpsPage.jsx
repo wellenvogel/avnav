@@ -205,10 +205,7 @@ class GpsPage extends React.Component{
                 PANEL_LIST,
                 [LayoutHandler.OPTIONS.ANCHOR]),
             LayoutFinishedDialog.getButtonDef(),
-            {
-                name: 'Dim',
-                onClick: Dimmer.activate
-            },
+            Dimmer.buttonDef(),
             {
                 name:'Cancel',
                 onClick:()=>{history.pop();}

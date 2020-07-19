@@ -10,12 +10,31 @@ class DimmHandler{
         globalStore.storeData(KEY,false);
         this.trigger=this.trigger.bind(this);
         this.activate=this.activate.bind(this);
+        this.buttonDef=this.buttonDef.bind(this);
         this.mode="manual";
+        this.actionFunction=undefined;
+        try {
+            if (window && window.bonjourBrowser && window.bonjourBrowser.dimScreen) {
+                this.actionFunction = window.bonjourBrowser.dimScreen.bind(window.bonjourBrowser);
+            }
+        }catch (e){}
+        if (! this.actionFunction){
+            try {
+                //we must use the original injection point here as windo.avnav.android will be set later only
+                if (window.avnavAndroid && window.avnavAndroid.dimScreen) {
+                    this.actionFunction = window.avnavAndroid.dimScreen.bind(window.avnavAndroid);
+                }
+            }catch(e){}
+        }
 
     }
     activate(){
         if (this.mode != "manual" && this.mode != "timer") return;
         globalStore.storeData(KEY,true);
+        let dimFade=globalStore.getData(keys.properties.dimFade,0);
+        if (dimFade < 0) dimFade=0;
+        if (dimFade > 100) dimFade=100;
+        this.actionFunction(dimFade);
     }
     setMode(mode){
         if (this.mode != "manual" && this.mode != "timer" && this.mode != "off") return false;
@@ -23,6 +42,7 @@ class DimmHandler{
         this.trigger();
     }
     timerAction(){
+
         if (this.mode == "timer"){
             if (globalStore.getData(KEY,false)) return;
             let now=(new Date()).getTime();
@@ -37,9 +57,17 @@ class DimmHandler{
     trigger(){
         this._setLastTrigger();
         globalStore.storeData(KEY,false);
+        this.actionFunction(100);
     }
     isActive(){
         return globalStore.getData(KEY,false);
+    }
+    buttonDef(){
+        return{
+            name: 'Dim',
+            onClick: this.activate,
+            visible: (this.actionFunction !== undefined)
+        }
     }
 
 }

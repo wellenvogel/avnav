@@ -28,4 +28,9 @@
         android:title="@string/alarmSounds"
         android:widgetLayout="@layout/preference_checkbox">
     </CheckBoxPreference>
+    <CheckBoxPreference
+        android:key="layout.hideBars"
+        android:title="@string/hideBars"
+        android:widgetLayout="@layout/preference_checkbox">
+    </CheckBoxPreference>
 </PreferenceScreen>

@@ -107,10 +107,7 @@ class Router extends Component {
         let className="pageFrame "+ (this.props.nightMode?"nightMode":"");
         let style={};
         if (this.props.nightMode) style['opacity']=globalStore.getData(keys.properties.nightFade)/100;
-        let dimFade=globalStore.getData(keys.properties.dimFade,0)/100;
-        if (dimFade < 0) dimFade=0;
-        if (dimFade > 1) dimFade=1;
-        let dimStyle={opacity: 1- dimFade};
+        let dimStyle={opacity: 0.5};
         return <div className={className}>
             {this.props.dim ? <div className="dimm" style={dimStyle} onClick={Dimmer.trigger}></div>:null}
                 <Page style={style} options={this.props.options} location={this.props.location}/>

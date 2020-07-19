@@ -138,5 +138,6 @@
     <string name="importFailed">import failed</string>
     <string name="receiveAlreadyExists">Route already exists</string>
     <string name="labelSettingsMobAlarm">Sound for MOB alarm</string>
+    <string name="hideBars">Hide System Bars</string>
 
 </resources>

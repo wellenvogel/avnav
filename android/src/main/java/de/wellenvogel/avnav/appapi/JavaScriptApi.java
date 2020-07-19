@@ -273,6 +273,11 @@ public class JavaScriptApi {
             return "<unknown>";
         }
     }
+    @JavascriptInterface
+    public boolean dimScreen(int percent){
+        fragment.setBrightness(percent);
+        return true;
+    }
 
 
 }
