@@ -260,5 +260,8 @@ RouteLayer.prototype.dataChanged=function() {
     this.setStyle();
     this.mapholder.triggerRender();
 };
+RouteLayer.prototype.setImageStyles=function(styles){
+
+};
 
 module.exports=RouteLayer;

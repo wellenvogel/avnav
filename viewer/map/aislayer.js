@@ -6,6 +6,8 @@ import navobjects from '../nav/navobjects';
 import keys from '../util/keys.jsx';
 import globalStore from '../util/globalstore.jsx';
 import base from '../base.js';
+import assign from 'object-assign';
+import NavCompute from '../nav/navcompute.js';
 
 
 /**
@@ -65,11 +67,12 @@ const AisLayer=function(mapholder){
  * @param {string} color - the css color
  * @returns {*} - an image data uri
  */
-AisLayer.prototype.createIcon=function(color){
+AisLayer.prototype.createIcon=function(color,useCourseVector){
     let canvas = document.createElement("canvas");
     if (! canvas) return undefined;
+    let offset=useCourseVector?0:200;
     canvas.width=100;
-    canvas.height=300;
+    canvas.height=offset+100;
     let ctx=canvas.getContext('2d');
     //drawing code created by http://www.professorcloud.com/svg-to-canvas/
     //from ais-nearest.svg
@@ -82,23 +85,25 @@ AisLayer.prototype.createIcon=function(color){
     ctx.lineCap = "butt";
     ctx.lineJoin = "miter";
     ctx.beginPath();
-    ctx.moveTo(23.5, 297.875);
-    ctx.lineTo(50, 200);
-    ctx.lineTo(76.5, 297.875);
-    ctx.lineTo(23.5, 297.875);
+    ctx.moveTo(23.5, offset+97.875);
+    ctx.lineTo(50, offset);
+    ctx.lineTo(76.5, offset+97.875);
+    ctx.lineTo(23.5, offset+97.875);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
-    ctx.fillStyle = "rgba(0, 0, 0, 0)";
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 4;
-    ctx.lineCap = "butt";
-    ctx.lineJoin = "miter";
-    ctx.beginPath();
-    ctx.moveTo(50, 200);
-    ctx.lineTo(50, 3);
-    ctx.fill();
-    ctx.stroke();
+    if (! useCourseVector) {
+        ctx.fillStyle = "rgba(0, 0, 0, 0)";
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 4;
+        ctx.lineCap = "butt";
+        ctx.lineJoin = "miter";
+        ctx.beginPath();
+        ctx.moveTo(50, 200);
+        ctx.lineTo(50, 3);
+        ctx.fill();
+        ctx.stroke();
+    }
     return canvas.toDataURL();
 };
 
@@ -108,9 +113,10 @@ AisLayer.prototype.createIcon=function(color){
  */
 AisLayer.prototype.createAllIcons=function(){
     let style=globalStore.getMultiple(keys.properties.style);
-    this.nearestImage.src=this.createIcon(style.aisNearestColor);
-    this.warningImage.src=this.createIcon(style.aisWarningColor);
-    this.normalImage.src=this.createIcon(style.aisNormalColor);
+    let useCourseVector=globalStore.getData(keys.properties.aisCourseVectorTime,0) != 0;
+    this.nearestImage.src=this.createIcon(style.aisNearestColor,useCourseVector);
+    this.warningImage.src=this.createIcon(style.aisWarningColor,useCourseVector);
+    this.normalImage.src=this.createIcon(style.aisNormalColor,useCourseVector);
 };
 /**
  * find the AIS target that has been clicked
@@ -139,6 +145,12 @@ AisLayer.prototype.setStyles=function(){
         rotation: 0,
         rotateWithView: true
     };
+    this.targetStyleCourseVector={
+        anchor: [15, 0],
+        size: [30,30],
+        rotation: 0,
+        rotateWithView: true
+    }
 };
 
 
@@ -153,6 +165,8 @@ AisLayer.prototype.onPostCompose=function(center,drawing){
     let i;
     let pixel=[];
     let aisList=globalStore.getData(keys.nav.ais.list,[]);
+    let courseVectorTime=globalStore.getData(keys.properties.aisCourseVectorTime,0);
+    let colors=globalStore.getMultiple(keys.properties.style);
     for (i in aisList){
         let current=aisList[i];
         let pos=current.mapPos;
@@ -163,13 +177,26 @@ AisLayer.prototype.onPostCompose=function(center,drawing){
         let rotation=current.course||0;
         let text=current.shipname;
         if (! text || text == "unknown") text=current.mmsi;
+        let color=colors.aisNormalColor;
         let icon = this.normalImage;
-        if (current.nearest)
+        if (current.nearest) {
+            color = colors.aisNearestColor;
             icon = this.nearestImage;
-        if (current.warning)
+        }
+        if (current.warning) {
             icon = this.warningImage;
-        this.targetStyle.rotation=rotation*Math.PI/180;
-        let curpix=drawing.drawImageToContext(pos,icon,this.targetStyle);
+            color = colors.aisWarningColor;
+        }
+        let style=assign({},(courseVectorTime>0)?this.targetStyleCourseVector:this.targetStyle);
+        style.rotation=rotation*Math.PI/180;
+        let curpix=drawing.drawImageToContext(pos,icon,style);
+        if (courseVectorTime > 0){
+            let courseVectorDistance=(current.speed !== undefined)?current.speed*courseVectorTime:0;
+            if (courseVectorDistance > 0){
+                let other=this.computeTarget(pos,rotation,courseVectorDistance);
+                drawing.drawLineToContext([pos,other],{color:color,width:3});
+            }
+        }
         pixel.push({pixel:curpix,ais:current});
         drawing.drawTextToContext(pos,text,this.textStyle);
     }
@@ -198,5 +225,29 @@ AisLayer.prototype.getAisIcon=function(type){
     }
     return this.createIcon(globalStore.getData(keys.properties.style.aisNormalColor));
 };
+
+/**
+ * compute a target point in map units from a given point
+ * for drawing the circles
+ * assumes "flatted" area around the point
+ * @param {ol.Coordinate} pos in map coordinates
+ * @param {number} course in degrees
+ * @param {number} dist in m
+ */
+AisLayer.prototype.computeTarget=function(pos,course,dist){
+    let point=new navobjects.Point();
+    point.fromCoord(this.mapholder.transformFromMap(pos));
+    let tp=NavCompute.computeTarget(point,course,dist);
+    let tpmap=this.mapholder.transformToMap(tp.toCoord());
+    return tpmap;
+};
+/**
+ *
+ * @param styles
+ */
+AisLayer.prototype.setImageStyles=function(styles){
+
+};
+
 
 module.exports=AisLayer;

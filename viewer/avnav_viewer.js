@@ -196,6 +196,19 @@ avnav.main=function() {
         globalStore.storeMultiple({},keys.gui.capabilities);
         doLateLoads(globalStore.getData(keys.gui.capabilities.plugins));
     });
+    Requests.getJson("/user/viewer/images.json",{useNavUrl:false,checkOk:false})
+        .then((data)=>{
+            MapHolder.setImageStyles(data);
+        })
+        .catch((error)=> {
+            Requests.getJson("images.json", {useNavUrl: false, checkOk: false})
+                .then((data)=> {
+                    MapHolder.setImageStyles(data);
+                })
+                .catch((error)=> {
+                    Toast("unable to load image definitions: " + error);
+                });
+        });
     base.log("avnav loaded");
 };
 

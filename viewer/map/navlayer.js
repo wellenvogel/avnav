@@ -8,7 +8,7 @@ import anchor from '../images/icons-new/anchor.png' ;
 import keys from '../util/keys.jsx';
 import globalStore from '../util/globalstore.jsx';
 import RouteEdit from '../nav/routeeditor.js';
-import boatImage from '../images/Boat2.png';
+import boatImage from '../images/Boat-NoNeedle.png';
 import markerImage from '../images/Marker2.png';
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE,true);
@@ -116,8 +116,14 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
     this.boatStyle.rotation=course*Math.PI/180;
     let boatPosition = this.mapholder.transformToMap(gps.position.toCoord());
     if (globalStore.getData(keys.properties.layers.boat) && gps.valid) {
+        let courseVectorTime=parseInt(globalStore.getData(keys.properties.navBoatCourseTime,600));
+        let courseVetcorDistance=(gps.speed !== undefined)?gps.speed*courseVectorTime:0;
         drawing.drawImageToContext(boatPosition, this.boatStyle.image, this.boatStyle);
         let other;
+        if (courseVetcorDistance > 0){
+            other=this.computeTarget(boatPosition,course,courseVetcorDistance);
+            drawing.drawLineToContext([boatPosition,other],this.circleStyle);
+        }
         if (! anchorDistance) {
             let radius1 = parseInt(globalStore.getData(keys.properties.navCircle1Radius));
             if (radius1 > 10) {
@@ -173,6 +179,17 @@ NavLayer.prototype.computeTarget=function(pos,course,dist){
 
 NavLayer.prototype.dataChanged=function(){
     this.setStyle();
+};
+
+NavLayer.prototype.setImageStyles=function(styles){
+    if (styles.boatImage){
+        let boat=styles.boatImage;
+        if (typeof(boat) === 'object'){
+            if (boat.src) this.boatStyle.image.src=boat.src;
+            if (boat.anchor) this.boatStyle.anchor=boat.anchor;
+            if (boat.size) this.boatStyle.size=boat.size;
+        }
+    }
 };
 
 module.exports=NavLayer;

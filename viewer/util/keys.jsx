@@ -286,6 +286,7 @@ let keys={
         routeShowLL: new Property(false, "showLatLon", PropertyType.CHECKBOX), //show latlon or leg course/len
         navCircleColor: new Property("#D71038", "Circle Color", PropertyType.COLOR),
         navCircleWidth: new Property(1, "Circle Width", PropertyType.RANGE, [1, 10]),
+        navBoatCourseTime: new Property(600,"Boat Course Vector Length(sec)", PropertyType.RANGE,[1,3600]),
         anchorCircleColor: new Property("#D71038", "Anchor Circle Color", PropertyType.COLOR),
         anchorCircleWidth: new Property(1, "Anchor Circle Width", PropertyType.RANGE, [1, 10]),
         navCircle1Radius: new Property(300, "Circle 1 Radius(m)", PropertyType.RANGE, [0, 5000, 10]),
@@ -300,6 +301,7 @@ let keys={
         initialTrackLength: new Property(24, "Length(h)", PropertyType.RANGE, [1, 48]), //in h
         aisQueryTimeout: new Property(5000, "AIS (ms)", PropertyType.RANGE, [1000, 10000, 10]), //ms
         aisDistance: new Property(20, "AIS-Range(nm)", PropertyType.RANGE, [1, 100]), //distance for AIS query in nm
+        aisCourseVectorTime: new Property(0, "AIS Course Vetcor length(sec)", PropertyType.RANGE, [0, 3600]), //0 - off
         aisClickTolerance: new Property(80, "Click Tolerance", PropertyType.RANGE, [10, 100]),
         maxAisErrors: new Property(3), //after that many errors AIS display will be switched off
         minAISspeed: new Property(0.1), //minimal speed in m/s that we consider when computing cpa/tcpa

@@ -1488,5 +1488,13 @@ MapHolder.prototype.getCurrentChartEntry=function(){
     return assign({},this._chartEntry);
 };
 
+MapHolder.prototype.setImageStyles=function(styles){
+    if (! styles || typeof(styles) !== 'object') return;
+    this.navlayer.setImageStyles(styles);
+    this.aislayer.setImageStyles(styles);
+    this.routinglayer.setImageStyles(styles);
+    this.tracklayer.setImageStyles(styles);
+};
+
 module.exports=new MapHolder();
 

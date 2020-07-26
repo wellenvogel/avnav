@@ -128,5 +128,8 @@ TrackLayer.prototype.dataChanged=function() {
     this.currentTrack=[]; //trigger a complete redraw
     this.trackPoints=[];
 };
+TrackLayer.prototype.setImageStyles=function(styles){
+
+};
 
 module.exports=TrackLayer;
