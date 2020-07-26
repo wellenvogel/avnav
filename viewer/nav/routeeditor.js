@@ -254,6 +254,10 @@ class RouteEdit{
             data.leg.to=nextPoint;
             if (!nextPoint) data.leg.active=false;
         }
+        if (! nextPoint && data.index > 0){
+            //we deleted the last point (and there are just points in the route)
+            data.index-=1;
+        }
         write(this.writeKeys,data);
     }
     checkChangePossible(newPoint,opt_index){

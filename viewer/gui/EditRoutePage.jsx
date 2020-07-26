@@ -253,6 +253,12 @@ class EditRoutePage extends React.Component{
                 onClick:()=>{
                     if (!checkRouteWritable()) return;
                     getCurrentEditor().deleteWaypoint();
+                    let newIndex=getCurrentEditor().getIndex();
+                    let currentPoint=getCurrentEditor().getPointAt(newIndex);
+                    if (currentPoint) {
+                        MapHolder.setCenter(currentPoint);
+                        globalStore.storeData(keys.gui.editroutepage.lastCenteredWp, newIndex);
+                    }
                 },
                 editDisable: true
             },
