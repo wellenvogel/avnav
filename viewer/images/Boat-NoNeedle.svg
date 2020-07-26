@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   inkscape:export-ydpi="100.34609"
+   inkscape:export-xdpi="100.34609"
+   inkscape:export-filename="/home/andreas/projects/avnav/viewer/images/Boat-NoNeedle.png"
+   width="95.6689"
+   height="162.4621"
+   version="1.1"
+   id="svg13"
+   sodipodi:docname="Boat-NoNeedle.svg"
+   inkscape:version="1.0 (1.0+r73+1)">
+  <metadata
+     id="metadata19">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title>Boat2</dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs17" />
+  <sodipodi:namedview
+     inkscape:document-rotation="0"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1920"
+     inkscape:window-height="971"
+     id="namedview15"
+     showgrid="false"
+     inkscape:zoom="2.04"
+     inkscape:cx="-47.263247"
+     inkscape:cy="1.8404568"
+     inkscape:window-x="0"
+     inkscape:window-y="31"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g11" />
+  <!-- Created with SVG-edit - http://svg-edit.googlecode.com/ -->
+  <title
+     id="title2">Boat2</title>
+  <g
+     transform="translate(-2.1652083,-237.37523)"
+     id="g11">
+    <title
+       id="title4">Layer 1</title>
+    <g
+       transform="matrix(1.33731,0,0,1.43491,-0.0244032,-26.724)"
+       id="svg_17">
+      <title
+         id="title6">Layer 1</title>
+      <path
+         stroke="#000000"
+         fill="#ff0000"
+         stroke-width="5"
+         stroke-dasharray="none"
+         stroke-linejoin="null"
+         stroke-linecap="null"
+         d="m 6.031637,241.73303 31.376898,-52.78718 31.373066,52.78718 H 53.094173 v 53.0409 H 21.719129 v -53.0409 H 6.031636 Z"
+         id="svg_15" />
+    </g>
+    <!-- Created with SVG-edit - http://svg-edit.googlecode.com/ -->
+  </g>
+</svg>

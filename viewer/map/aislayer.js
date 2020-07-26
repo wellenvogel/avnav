@@ -113,7 +113,7 @@ AisLayer.prototype.createIcon=function(color,useCourseVector){
  */
 AisLayer.prototype.createAllIcons=function(){
     let style=globalStore.getMultiple(keys.properties.style);
-    let useCourseVector=globalStore.getData(keys.properties.aisCourseVectorTime,0) != 0;
+    let useCourseVector=globalStore.getData(keys.properties.aisUseCourseVector,false);
     this.nearestImage.src=this.createIcon(style.aisNearestColor,useCourseVector);
     this.warningImage.src=this.createIcon(style.aisWarningColor,useCourseVector);
     this.normalImage.src=this.createIcon(style.aisNormalColor,useCourseVector);
@@ -165,7 +165,9 @@ AisLayer.prototype.onPostCompose=function(center,drawing){
     let i;
     let pixel=[];
     let aisList=globalStore.getData(keys.nav.ais.list,[]);
-    let courseVectorTime=globalStore.getData(keys.properties.aisCourseVectorTime,0);
+    let courseVectorTime=globalStore.getData(keys.properties.navBoatCourseTime,0);
+    let useCourseVector=globalStore.getData(keys.properties.aisUseCourseVector,false);
+    let courseVectorWidth=globalStore.getData(keys.properties.navCircleWidth);
     let colors=globalStore.getMultiple(keys.properties.style);
     for (i in aisList){
         let current=aisList[i];
@@ -190,11 +192,11 @@ AisLayer.prototype.onPostCompose=function(center,drawing){
         let style=assign({},(courseVectorTime>0)?this.targetStyleCourseVector:this.targetStyle);
         style.rotation=rotation*Math.PI/180;
         let curpix=drawing.drawImageToContext(pos,icon,style);
-        if (courseVectorTime > 0){
+        if (useCourseVector){
             let courseVectorDistance=(current.speed !== undefined)?current.speed*courseVectorTime:0;
             if (courseVectorDistance > 0){
                 let other=this.computeTarget(pos,rotation,courseVectorDistance);
-                drawing.drawLineToContext([pos,other],{color:color,width:3});
+                drawing.drawLineToContext([pos,other],{color:color,width:courseVectorWidth});
             }
         }
         pixel.push({pixel:curpix,ais:current});
