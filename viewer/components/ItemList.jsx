@@ -57,7 +57,12 @@ class ItemList extends React.Component{
                 <div className={props.className}
                      style={props.style}
                      ref={(el)=>{if (props.listRef) props.listRef(el)}}
-                     onClick={(ev)=>{if (self.props.onClick)self.props.onClick(ev);}}
+                     onClick={(ev)=>{
+                        if (self.props.onClick){
+                            ev.stopPropagation();
+                            self.props.onClick(ev);
+                        }
+                        }}
                     >
                     {allitems.map(function (entry) {
                         let itemProps = assign({}, entry);
