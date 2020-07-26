@@ -302,6 +302,8 @@ let keys={
         aisQueryTimeout: new Property(5000, "AIS (ms)", PropertyType.RANGE, [1000, 10000, 10]), //ms
         aisDistance: new Property(20, "AIS-Range(nm)", PropertyType.RANGE, [1, 100]), //distance for AIS query in nm
         aisUseCourseVector: new Property(false, "AIS Use Course Vector", PropertyType.CHECKBOX),
+        aisIconBorderWidth: new Property(3, "Border Width", PropertyType.RANGE, [0, 10]),
+        aisIconScale: new Property(1,"Icon Scale",PropertyType.RANGE, [0.5,5,0.1]),
         aisClickTolerance: new Property(80, "Click Tolerance", PropertyType.RANGE, [10, 100]),
         maxAisErrors: new Property(3), //after that many errors AIS display will be switched off
         minAISspeed: new Property(0.1), //minimal speed in m/s that we consider when computing cpa/tcpa

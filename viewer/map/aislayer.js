@@ -44,6 +44,17 @@ const AisLayer=function(mapholder){
      * @type {string}
      */
     this.normalImage=new Image();
+
+    /**
+     * external image sources
+     */
+    this.nearestSource=undefined;
+    this.nearestStyle={};
+    this.normalSource=undefined;
+    this.normalStle=undefined;
+    this.warningSource=undefined;
+    this.warningStyle=undefined;
+
     this.createAllIcons();
 
     /**
@@ -79,6 +90,7 @@ AisLayer.prototype.createIcon=function(color,useCourseVector){
     ctx.strokeStyle = 'rgba(0,0,0,0)';
     ctx.lineCap = 'butt';
     ctx.lineJoin = 'miter';
+    ctx.lineWidth=parseInt(globalStore.getData(keys.properties.aisIconBorderWidth,1));
     ctx.miterLimit = 4;
     ctx.fillStyle = color;
     ctx.strokeStyle = "#000000";
@@ -114,9 +126,9 @@ AisLayer.prototype.createIcon=function(color,useCourseVector){
 AisLayer.prototype.createAllIcons=function(){
     let style=globalStore.getMultiple(keys.properties.style);
     let useCourseVector=globalStore.getData(keys.properties.aisUseCourseVector,false);
-    this.nearestImage.src=this.createIcon(style.aisNearestColor,useCourseVector);
-    this.warningImage.src=this.createIcon(style.aisWarningColor,useCourseVector);
-    this.normalImage.src=this.createIcon(style.aisNormalColor,useCourseVector);
+    this.nearestImage.src=this.nearestSource?this.nearestSource:this.createIcon(style.aisNearestColor,useCourseVector);
+    this.warningImage.src=this.warningSource?this.warningSource:this.createIcon(style.aisWarningColor,useCourseVector);
+    this.normalImage.src=this.normalSource?this.normalSource:this.createIcon(style.aisNormalColor,useCourseVector);
 };
 /**
  * find the AIS target that has been clicked
@@ -150,7 +162,13 @@ AisLayer.prototype.setStyles=function(){
         size: [30,30],
         rotation: 0,
         rotateWithView: true
-    }
+    };
+    this.externalSourceTargetStyle={
+        anchor:[15,0],
+        size:[30,30],
+        rotation:0,
+        rotateWithView: true
+    };
 };
 
 
@@ -169,6 +187,7 @@ AisLayer.prototype.onPostCompose=function(center,drawing){
     let useCourseVector=globalStore.getData(keys.properties.aisUseCourseVector,false);
     let courseVectorWidth=globalStore.getData(keys.properties.navCircleWidth);
     let colors=globalStore.getMultiple(keys.properties.style);
+    let scale=globalStore.getData(keys.properties.aisIconScale,1);
     for (i in aisList){
         let current=aisList[i];
         let pos=current.mapPos;
@@ -181,15 +200,30 @@ AisLayer.prototype.onPostCompose=function(center,drawing){
         if (! text || text == "unknown") text=current.mmsi;
         let color=colors.aisNormalColor;
         let icon = this.normalImage;
+        let style=assign({},useCourseVector?this.targetStyleCourseVector:this.targetStyle);
+        if (scale != 1){
+            style.size=[style.size[0]*scale,style.size[1]*scale];
+            style.anchor=[style.anchor[0]*scale,style.anchor[1]*scale];
+        }
+        if ( ! current.nearest && ! current.warning){
+            if (this.normalSource){
+                style=assign({},this.externalSourceTargetStyle,this.normalStyle);
+            }
+        }
         if (current.nearest) {
             color = colors.aisNearestColor;
             icon = this.nearestImage;
+            if (this.nearestSource){
+                style=assign({},this.externalSourceTargetStyle,this.nearestStyle);
+            }
         }
         if (current.warning) {
             icon = this.warningImage;
             color = colors.aisWarningColor;
+            if (this.warningSource){
+                style=assign({},this.externalSourceTargetStyle,this.warningStyle);
+            }
         }
-        let style=assign({},(courseVectorTime>0)?this.targetStyleCourseVector:this.targetStyle);
         style.rotation=rotation*Math.PI/180;
         let curpix=drawing.drawImageToContext(pos,icon,style);
         if (useCourseVector){
@@ -248,6 +282,17 @@ AisLayer.prototype.computeTarget=function(pos,course,dist){
  * @param styles
  */
 AisLayer.prototype.setImageStyles=function(styles){
+    let names=['Normal','Warning','Nearest'];
+    for (let i in names){
+        let name=names[i];
+        let styleProp="ais"+name+"Image";
+        if (typeof(styles[styleProp]) === 'object' ){
+            let style=styles[styleProp];
+            this[name.toLowerCase()+"Source"]=style.src;
+            this[name.toLowerCase()+"Style"]={anchor:style.anchor,size:style.size};
+        }
+    }
+    this.createAllIcons();
 
 };
 
