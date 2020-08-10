@@ -883,7 +883,7 @@ lengths = {
     2:  168,
     3:  168,
     4:  168,
-    5:  424,
+    5:  (323,424), #seems that our decoder can handle shortened messages...
     6:  (88, 1008),
     7:  (72, 168),
     8:  (56, 1008),
