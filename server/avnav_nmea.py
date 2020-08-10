@@ -185,16 +185,20 @@ class NMEAParser():
   #check if the line matches a provided filter
   #filter entries starting with ^are considered as blacklist
   def checkFilter(cls,line,filter):
+    okMatch = False
+    inversMatch = False
+    #only consider the check to fail if nothing matches but we had at least one positive condition
+    hasPositiveCondition = False
     try:
       if filter is None:
         return True
-      okMatch=False
-      inversMatch=False
       for f in filter:
         invers=False
         if f[0:1]=="^":
           invers=True
           f=f[1:]
+        else:
+          hasPositiveCondition=True
         if f[0:1]=='$':
           if line[0:1]!='$':
             continue
@@ -223,7 +227,7 @@ class NMEAParser():
       return False
     if okMatch:
       return True
-    return False
+    return not hasPositiveCondition
 
   #compute the NMEA checksum
   @classmethod
@@ -339,10 +343,11 @@ class NMEAParser():
         3) Checksum
         '''
         rt['depthBelowTransducer'] = float(darray[1])
-        if float(darray[2]) >= 0:
-          rt['depthBelowWaterline'] = float(darray[1]) + float(darray[2])
-        else:
-          rt['depthBelowKeel'] = float(darray[1]) + float(darray[2])
+        if len(darray[2]) > 0:
+          if float(darray[2]) >= 0:
+            rt['depthBelowWaterline'] = float(darray[1]) + float(darray[2])
+          else:
+            rt['depthBelowKeel'] = float(darray[1]) + float(darray[2])
         self.addToNavData(rt,source=source,record=tag)
         return True
       if tag == 'DBT':
@@ -360,9 +365,11 @@ class NMEAParser():
          6) F = Fathoms
          7) Checksum
         '''
-        rt['depthBelowTransducer'] = float(darray[3])
-        self.addToNavData(rt,source=source,record=tag)
-        return True
+        if len(darray[3]) > 0:
+          rt['depthBelowTransducer'] = float(darray[3])
+          self.addToNavData(rt,source=source,record=tag)
+          return True
+        return False
     except Exception:
       AVNLog.info(" error parsing nmea data " + unicode(data) + "\n" + traceback.format_exc())
   
@@ -399,15 +406,18 @@ class NMEAParser():
         except ValueError:
             pad = 0
         crc = fields[6].split('*')[1].strip()
-    except IndexError:
-        AVNLog.debug("malformed line: %s\n",line.strip())
+    except IndexError as e:
+        AVNLog.debug("malformed line: %s: %sn",line.strip(),traceback.format_exc())
         return False
     if csum != crc:
         AVNLog.debug("bad checksum %s, expecting %s: %s\n",crc, csum, line.strip())
         return False
     if fragment < expect:
-        AVNLog.debug("waiting for more fragments: %s",line.strip())
+        AVNLog.debug("waiting for more fragments on channel %s: %s",channel,line.strip())
         return True
+    else:
+      if fragment > '1':
+        AVNLog.debug("fragments now complete on channel %s with number %s: %s", channel, fragment,line.strip())
     # Render assembled payload to packed bytes
     bits = ais.BitVector()
     bits.from_sixbit(self.payloads[channel], pad)
@@ -450,7 +460,7 @@ class NMEAParser():
                   expected_range = expected
               actual = values['length']
               if not (actual >= expected_range[0] and actual <= expected_range[1]):
-                  raise AISUnpackingException(0, "length", actual)
+                  raise Exception("invalid length %d(%d..%d)"%(actual,expected_range[0],expected_range[1]))
           # We're done, hand back a decoding
           #AVNLog.ld('decoded AIS data',cooked)
           self.storeAISdata(cooked,source=source)
