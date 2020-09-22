@@ -160,7 +160,7 @@ const MapHolder=function(){
         self._sequence=undefined;
     });
     this.editMode=new Callback(()=>{
-        let isEditing=globalStore.getData(keys.gui.global.layoutEditing)
+        let isEditing=globalStore.getData(keys.gui.global.layoutEditing);
         if (isEditing){
             self.setCourseUp(false);
             self.setGpsLock(false);
@@ -219,6 +219,19 @@ const MapHolder=function(){
      * @private
      */
     this._encryptFunction=undefined;
+
+    /**
+     * last div used in loadMap
+     * @type {undefined}
+     * @private
+     */
+    this._lastMapDiv=undefined;
+    /**
+     * last sequence query time
+     * @type {undefined}
+     * @private
+     */
+    this._lastSequenceQuery=0;
 
 
     globalStore.storeData(keys.map.courseUp,this.courseUp);
@@ -305,10 +318,12 @@ MapHolder.prototype.renderTo=function(div){
     if (this.timer && ! div){
         window.clearInterval(this.timer);
         this.timer=undefined;
+        this._lastMapDiv=undefined;
     }
     if (! this.olmap) return;
     let mapDiv=div||this.defaultDiv;
     this.olmap.setTarget(mapDiv);
+    this._lastMapDiv=div;
     let self=this;
     if (! this.timer && div){
         this.timer=window.setInterval(()=>{self.timerFunction()},1000)
@@ -324,6 +339,7 @@ MapHolder.prototype.setChartEntry=function(entry){
 
 
 MapHolder.prototype.loadMap=function(div){
+    this._lastMapDiv=div;
     let url=this._chartEntry.url;
     let chartBase=this._chartEntry.chartBase;
     let sequence=this._chartEntry.sequence;
@@ -673,7 +689,25 @@ MapHolder.prototype.timerFunction=function(){
     else{
         this._lastHeartbeat=now;
     }
-};
+    let self=this;
+    if (this._lastSequenceQuery < (now -5000)){
+        this._lastSequenceQuery=now;
+        if (this._chartEntry && this._chartEntry.url && this._lastMapDiv && this._sequence !== undefined) {
+            let url = this._chartEntry.url + "/sequence?_="+(new Date()).getTime();
+            //set noCache to false to avoid pragma in header
+            Requests.getJson(url, {useNavUrl: false,noCache:false})
+                .then((data)=> {
+                    if (!data.sequence) return;
+                    if (data.sequence != self._sequence) {
+                        self._chartEntry.sequence=data.sequence;
+                        self.loadMap(self._lastMapDiv);
+                    }
+                })
+                .catch((error)=> {
+                });
+        }
+    }
+}
 
 /**
  * increase/decrease the map zoom

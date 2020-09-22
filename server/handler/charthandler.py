@@ -25,6 +25,7 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py
 ###############################################################################
+import json
 import shutil
 import urllib
 
@@ -241,6 +242,10 @@ class AVNChartHandler(AVNWorker):
             handler.send_header("Last-Modified", handler.date_time_string())
             handler.end_headers()
             handler.wfile.write(data)
+            return True
+          if parr[1] == "sequence":
+            rsp={'status':'OK','sequence':g['chart'].getChangeCount()}
+            handler.sendNavResponse(json.dumps(rsp))
             return True
           if len(parr) != 5:
             raise Exception("invalid request to chart file %s: %s" %(name,path))

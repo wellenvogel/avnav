@@ -10,6 +10,7 @@ import threading
 import traceback
 import urllib
 import urlparse
+from cookielib import request_path
 from os import path
 
 from avnav_store import AVNStore
@@ -211,10 +212,10 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
 
   #send a json encoded response
-  def sendNavResponse(self,rtj,requestParam):
+  def sendNavResponse(self,rtj,requestParam=None):
     if not rtj is None:
       self.send_response(200)
-      if not requestParam.get('callback') is None:
+      if requestParam is not None and not requestParam.get('callback') is None:
         rtj="%s(%s);"%(requestParam.get('callback'),rtj)
         self.send_header("Content-type", "text/javascript")
       else:
