@@ -13,6 +13,7 @@ import android.util.Log;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -323,6 +324,7 @@ public class ChartHandler implements INavRequestHandler {
                 e.put("charturl",url);
                 e.put("canDelete",false);
                 e.put("time", BuildConfig.TIMESTAMP/1000);
+                e.put("sequence",0);
                 rt.put(e);
             }
         }
@@ -467,7 +469,13 @@ public class ChartHandler implements INavRequestHandler {
                     rt = activity.getAssets().open(Constants.CHARTPREFIX + "/" + safeName);
                     len = -1;
                     return new ExtendedWebResourceResponse(len, mimeType, "", rt);
-                } else
+                }
+                else if (kp.parts[1].equals("sequence")){
+                    JSONObject sq= RequestHandler.getReturn(new RequestHandler.KeyValue("sequence",0));
+                    byte o[]=sq.toString().getBytes("UTF-8");
+                    return new ExtendedWebResourceResponse(o.length,"application/json","UTF-8",new ByteArrayInputStream(o));
+                }
+                else
                     throw new FileNotFoundException("unable to handle demo request for " + fname);
             }
             Chart chart = getChartDescription(kp.key);
@@ -480,7 +488,12 @@ public class ChartHandler implements INavRequestHandler {
                 } catch (Exception e) {
                     Log.e(Constants.LOGPRFX, "unable to read chart file " + fname + ": " + e.getLocalizedMessage());
                 }
-            } else {
+            } else if (kp.parts[0].equals("sequence")){
+                JSONObject sq= RequestHandler.getReturn(new RequestHandler.KeyValue("sequence",chart.getSequence()));
+                byte o[]=sq.toString().getBytes("UTF-8");
+                return new ExtendedWebResourceResponse(o.length,"application/json","UTF-8",new ByteArrayInputStream(o));
+            }
+            else{
                 if (chart.isXml()) throw new Exception("only overview for xml charts");
                 if (kp.parts.length < 4) {
                     throw new Exception("invalid parameter for chart call " + fname);

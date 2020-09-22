@@ -177,4 +177,8 @@ public class Chart implements INavRequestHandler.IJsonObect {
         if (isXml()) return;
         getChartFileReader().getOverview();
     }
+    public long getSequence() throws Exception {
+        if (isXml()) return 0;
+        return getChartFileReader().getSequence();
+    }
 }
