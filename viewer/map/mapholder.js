@@ -699,6 +699,7 @@ MapHolder.prototype.timerFunction=function(){
                 .then((data)=> {
                     if (!data.sequence) return;
                     if (data.sequence != self._sequence) {
+                        base.log("Sequence changed from "+self._sequence+" to "+data.sequence+" reload map");
                         self._chartEntry.sequence=data.sequence;
                         self.loadMap(self._lastMapDiv);
                     }
