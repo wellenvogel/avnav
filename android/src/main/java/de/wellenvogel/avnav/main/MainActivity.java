@@ -25,23 +25,21 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.WindowManager;
 
-import org.xwalk.core.XWalkActivity;
-
 import java.io.File;
 import java.util.List;
 
 import de.wellenvogel.avnav.appapi.RequestHandler;
-import de.wellenvogel.avnav.worker.GpsService;
 import de.wellenvogel.avnav.settings.SettingsActivity;
 import de.wellenvogel.avnav.util.ActionBarHandler;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.DialogBuilder;
+import de.wellenvogel.avnav.worker.GpsService;
 
 /**
  * Created by andreas on 06.01.15.
  */
-public class MainActivity extends XWalkActivity implements IDialogHandler,IMediaUpdater,SharedPreferences.OnSharedPreferenceChangeListener {
+public class MainActivity extends Activity implements IDialogHandler,IMediaUpdater,SharedPreferences.OnSharedPreferenceChangeListener {
 
     private String lastStartMode=null; //The last mode we used to select the fragment
     SharedPreferences sharedPrefs;

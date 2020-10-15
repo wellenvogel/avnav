@@ -28,12 +28,12 @@ repositories{
 apply plugin: 'com.android.application'
 
 dependencies {
-    compile fileTree(dir: 'libs', include: '*.jar')
+    //implementation fileTree(dir: 'libs', include: '*.jar')
+    implementation "net.sf.marineapi:marineapi:0.11.0"
     implementation "com.android.support:support-compat:26.0.0"
-    compile 'com.android.support:appcompat-v7:26.0.0'
-    compile 'com.github.felHR85:UsbSerial:4.5'
-    compile group: 'org.apache.httpcomponents', name: 'httpcore', version: '4.0'
-    //compile 'com.android.support:preference-v7:23.1.0'
+    implementation 'com.android.support:appcompat-v7:26.0.0'
+    implementation 'com.github.felHR85:UsbSerial:4.5'
+    implementation group: 'org.apache.httpcomponents', name: 'httpcore', version: '4.0'
 }
 
 File srcBase = new File(project.rootDir, "src" + File.separator + "main")
@@ -89,8 +89,8 @@ android {
         release.setRoot('build-types/release')
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_7
-        targetCompatibility JavaVersion.VERSION_1_7
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
     signingConfigs {
 
@@ -137,11 +137,11 @@ android {
         def vname=variant.getName()
         def version=defaultConfig.versionCode
         variant.outputs.each { output ->
-            File oldFile=output.outputFile
+            def name=output.outputFileName
             def sign=""
-            if (oldFile.name.matches(/.*unsigned.*/)) sign="-unsigned"
+            if (name.matches(/.*unsigned.*/)) sign="-unsigned"
             output.outputFileName="avnav-$vname$sign-${version}.apk"
-            logger.lifecycle("rename Outfile $oldFile to $output.outputFile")
+            logger.lifecycle("rename Outfile $name to $output.outputFileName")
         }
     }
 }
