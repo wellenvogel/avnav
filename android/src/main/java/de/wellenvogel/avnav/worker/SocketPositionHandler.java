@@ -5,6 +5,7 @@ import android.location.Location;
 import android.util.Log;
 
 import net.sf.marineapi.nmea.parser.SentenceFactory;
+import net.sf.marineapi.nmea.parser.SentenceParser;
 import net.sf.marineapi.nmea.sentence.DBTSentence;
 import net.sf.marineapi.nmea.sentence.DPTSentence;
 import net.sf.marineapi.nmea.sentence.DateSentence;
@@ -17,6 +18,7 @@ import net.sf.marineapi.nmea.sentence.PositionSentence;
 import net.sf.marineapi.nmea.sentence.RMCSentence;
 import net.sf.marineapi.nmea.sentence.Sentence;
 import net.sf.marineapi.nmea.sentence.SentenceValidator;
+import net.sf.marineapi.nmea.sentence.TalkerId;
 import net.sf.marineapi.nmea.sentence.TimeSentence;
 import net.sf.marineapi.nmea.util.DataStatus;
 import net.sf.marineapi.nmea.util.Position;
@@ -136,6 +138,23 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
             }
             nmeaFilter=AvnUtil.splitNmeaFilter(prop.nmeaFilter);
         }
+        private String correctTalker(String nmea){
+            try{
+                //if we have no exceptionthe talker is ok
+                TalkerId.parse(nmea);
+                return nmea;
+            }catch(RuntimeException e){
+                //seems that we did not find a valid talker ID
+                //in this case we use the special "$P" that is handled by the lib
+                //as we change the NMEA we remove the checksum (has already been checked before...)
+                AvnLog.d(LOGPRFX,"unknown talker in "+nmea);
+                int csdel=nmea.indexOf('*');
+                if (csdel >= 0){
+                    return "$P"+nmea.substring(3,csdel);
+                }
+                return "$P"+nmea.substring(3);
+            }
+        }
         @Override
         public void run() {
             int numGsv=0; //number of gsv sentences without being the last
@@ -194,6 +213,7 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
                             //NMEA
                             if (SentenceValidator.isValid(line)) {
                                 try {
+                                    line=correctTalker(line);
                                     Sentence s = factory.createParser(line);
                                     if (s instanceof DateSentence) {
                                         lastDate = ((DateSentence) s).getDate();
@@ -293,7 +313,11 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
                                     }
                                     net.sf.marineapi.nmea.util.Time time = null;
                                     if (s instanceof TimeSentence) {
-                                        time = ((TimeSentence) s).getTime();
+                                        try {
+                                            time = ((TimeSentence) s).getTime();
+                                        }catch (RuntimeException e){
+                                            AvnLog.d(LOGPRFX,"empty time in "+line);
+                                        }
                                     }
                                     if (time != null && lastDate != null && p != null) {
                                         synchronized (this) {
