@@ -73,10 +73,25 @@ html,body {
 }
 
 .buttonContainer{
-  display: block;
+  .flex-display();
+  .flex-direction(column);
   position: relative;
   .nightBackFade(@colorMain);
   overflow-y: auto;
+  &.shrink {
+    overflow: hidden;
+  }
+  &.columns{
+    overflow: hidden;
+    .flex-wrap(wrap)
+  }
+  &.scroll{
+    overflow-y: auto;
+  }
+  button{
+    flex-shrink: 0;
+  }
+
 }
 
 .leftPart{

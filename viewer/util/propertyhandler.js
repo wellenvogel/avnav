@@ -35,7 +35,6 @@ class PropertyHandler {
         this.propertyDescriptions = KeyHelper.getKeyDescriptions(true);
         this.getProperties=this.getProperties.bind(this);
         this.saveUserData=this.saveUserData.bind(this);
-        this.getButtonFontSize=this.getButtonFontSize.bind(this);
         this.getColor=this.getColor.bind(this);
         this.getAisColor=this.getAisColor.bind(this);
         this.incrementSequence=this.incrementSequence.bind(this);
@@ -98,19 +97,6 @@ class PropertyHandler {
         this.incrementSequence();
     }
 
-
-    getButtonFontSize() {
-        let numButtons = globalStore.getData(keys.properties.maxButtons);
-        let currentButtonHeight = globalStore.getData(keys.properties.style.buttonSize);
-        let scale=1;
-        let height = window.innerHeight;
-        if (height !== undefined) {
-            let buttonHeight = height / numButtons - 4; //TODO: should we get this from CSS?
-            scale = buttonHeight / currentButtonHeight;
-        }
-        if (scale > 1) scale = 1;
-        return currentButtonHeight * scale / 4;
-    }
 
 
     getColor(colorName, addNightFade) {

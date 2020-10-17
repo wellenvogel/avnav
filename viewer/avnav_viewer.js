@@ -29,6 +29,7 @@ icons partly from http://www.tutorial9.net/downloads/108-mono-icons-huge-set-of-
                   http://ionicons.com/ (MIT license)
 */
 
+if (getParam('dimm')) avnav.testDim=true;
 
 import NavData from './nav/navdata';
 import React from 'react';

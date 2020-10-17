@@ -20,7 +20,7 @@ import LayoutHandler from '../util/layouthandler.js';
 import Mob from '../components/Mob.js';
 import LayoutNameDialog from '../components/LayoutNameDialog.jsx';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
-import {Input,ColorSelector,Checkbox} from '../components/Inputs.jsx';
+import {Input,ColorSelector,Checkbox,Radio} from '../components/Inputs.jsx';
 import ColorDialog from '../components/ColorDialog.jsx';
 import DB from '../components/DialogButton.jsx';
 
@@ -28,7 +28,7 @@ const settingsSections={
     Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,keys.properties.layers.grid,keys.properties.layers.compass],
     UpdateTimes:[keys.properties.positionQueryTimeout,keys.properties.trackQueryTimeout,keys.properties.aisQueryTimeout, keys.properties.networkTimeout ],
     Widgets:    [keys.properties.widgetFontSize,keys.properties.showClock,keys.properties.showZoom,keys.properties.showWind,keys.properties.showDepth],
-    Layout:     [keys.properties.layoutName,keys.properties.baseFontSize,keys.properties.smallBreak,keys.properties.allowTwoWidgetRows,keys.properties.autoZoom,keys.properties.style.buttonSize,keys.properties.nightFade,keys.properties.nightChartFade,keys.properties.dimFade,keys.properties.localAlarmSound,keys.properties.mobMinZoom],
+    Layout:     [keys.properties.layoutName,keys.properties.baseFontSize,keys.properties.smallBreak,keys.properties.allowTwoWidgetRows,keys.properties.autoZoom,keys.properties.style.buttonSize,keys.properties.nightFade,keys.properties.nightChartFade,keys.properties.dimFade,keys.properties.localAlarmSound,keys.properties.mobMinZoom,keys.properties.buttonOverflow],
     AIS:        [keys.properties.aisDistance,keys.properties.aisWarningCpa,keys.properties.aisWarningTpa,keys.properties.aisTextSize,keys.properties.aisUseCourseVector,keys.properties.style.aisNormalColor,keys.properties.style.aisNearestColor,keys.properties.style.aisWarningColor,keys.properties.aisIconBorderWidth,keys.properties.aisIconScale],
     Navigation: [keys.properties.bearingColor,keys.properties.bearingWidth,keys.properties.navCircleColor,keys.properties.navCircleWidth,keys.properties.navCircle1Radius,keys.properties.navCircle2Radius,keys.properties.navCircle3Radius,
         keys.properties.navBoatCourseTime,keys.properties.courseAverageTolerance,keys.properties.gpsXteMax,keys.properties.courseAverageInterval,keys.properties.speedAverageInterval,keys.properties.positionAverageInterval,keys.properties.anchorWatchDefault,keys.properties.anchorCircleWidth,
@@ -137,6 +137,30 @@ const RangeSettingsItem=(properties)=> {
     </div>;
 };
 
+const ListSettingsItem=(properties)=> {
+    let items=[];
+    for (let k in properties.values){
+        let nv=properties.values[k].split(":");
+        if (nv.length > 1){
+            items.push({label:nv[0],value:nv[1]});
+        }
+        else{
+            items.push( {label:nv[0],value:nv[0]});
+        }
+    }
+    return <div className={properties.className+ " listEntry"}>
+            <div className="label">{properties.label}</div>
+            <Radio
+                onChange={function(newVal){
+                            properties.onClick(newVal);
+                        }}
+                itemList={items}
+                value={properties.value}>
+            </Radio>
+          </div>
+};
+
+
 const ColorSettingsItem=(properties)=>{
     let style={
         backgroundColor: properties.value
@@ -164,6 +188,9 @@ const createSettingsItem=(item)=>{
     }
     if (item.type == PropertyType.LAYOUT){
         return LayoutItem;
+    }
+    if (item.type == PropertyType.LIST){
+        return ListSettingsItem;
     }
     return (props)=>{
         return (<div className="listEntry">

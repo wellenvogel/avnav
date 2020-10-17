@@ -169,7 +169,7 @@ class App extends React.Component {
         let small = current.width <globalStore.getData(keys.properties.smallBreak);
         globalStore.storeData(keys.gui.global.smallDisplay,small); //set small before we change dimensions...
         globalStore.storeData(keys.gui.global.windowDimensions,{width:current.width,height:current.height});
-        globalStore.storeData(keys.gui.global.buttonFontSize,PropertyHandler.getButtonFontSize())
+        //globalStore.storeData(keys.gui.global.buttonFontSize,PropertyHandler.getButtonFontSize())
     }
     componentDidMount(){
         document.addEventListener("keydown",this.keyDown);

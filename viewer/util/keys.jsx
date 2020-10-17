@@ -363,6 +363,7 @@ let keys={
         toastTimeout: new Property(15,"time(s) to display messages",PropertyType.RANGE,[2,3600]),
         layoutName: new Property("system.default","Layout name",PropertyType.LAYOUT),
         mobMinZoom: new Property(16,"minzoom for MOB",PropertyType.RANGE,[8,20]),
+        buttonOverflow: new Property("shrink","overflow mode for buttons",PropertyType.LIST,['shrink','scroll','columns']),
 
         style: {
             buttonSize: new Property(60, "Button Size(px)", PropertyType.RANGE, [35, 100]),

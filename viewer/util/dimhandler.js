@@ -20,11 +20,17 @@ class DimmHandler{
         }catch (e){}
         if (! this.actionFunction){
             try {
-                //we must use the original injection point here as windo.avnav.android will be set later only
+                //we must use the original injection point here as window.avnav.android will be set later only
                 if (window.avnavAndroid && window.avnavAndroid.dimScreen) {
                     this.actionFunction = window.avnavAndroid.dimScreen.bind(window.avnavAndroid);
                 }
             }catch(e){}
+        }
+        //test only...
+        if (! this.actionFunction && window.location.search.match(/[?&]dimm=true/)){
+            this.actionFunction=()=>{
+                console.log("dimmer");
+            }
         }
 
     }
