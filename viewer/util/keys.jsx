@@ -175,7 +175,6 @@ let keys={
             layoutEditing:K,
             layoutSequence: K, //updated on layout load
             reloadSequence: K, //will be changed if new data from server
-            buttonFontSize: K,
             toastText:K,
             toastTimeout:K,
             toastCallback:K,
@@ -364,6 +363,7 @@ let keys={
         layoutName: new Property("system.default","Layout name",PropertyType.LAYOUT),
         mobMinZoom: new Property(16,"minzoom for MOB",PropertyType.RANGE,[8,20]),
         buttonOverflow: new Property("shrink","overflow mode for buttons",PropertyType.LIST,['shrink','scroll','columns']),
+        cancelTop: new Property(false,"Back button top",PropertyType.CHECKBOX),
 
         style: {
             buttonSize: new Property(60, "Button Size(px)", PropertyType.RANGE, [35, 100]),

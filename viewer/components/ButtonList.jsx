@@ -12,6 +12,7 @@ class ButtonList extends React.Component{
     constructor(props){
         super(props);
         this.refCallback=this.refCallback.bind(this);
+        this.itemSort=this.itemSort.bind(this);
     }
     refCallback(el){
         if (!el) return;
@@ -20,10 +21,19 @@ class ButtonList extends React.Component{
         }
     }
 
+    itemSort(a,b){
+        if (! this.props.cancelTop) return 0;
+        if (a.name == 'Cancel') return -1;
+        return 0;
+    }
+
     render(){
         let className=this.props.className||"";
         className+=" buttonContainer "+this.props.buttonOverflow;
+        let items=this.props.itemList.slice();
+        items.sort(this.itemSort);
         return <ItemList {...this.props}
+            itemList={items}
             className={className}
             itemClass={Dynamic(Visible(LayoutEditing(Button)))}
             listRef={(el)=>{this.refCallback(el)}}
@@ -37,7 +47,8 @@ module.exports=Dynamic(ButtonList,{
         buttonSize: keys.properties.style.buttonSize,
         //fontSize:keys.gui.global.buttonFontSize,
         dimensions: keys.gui.global.windowDimensions,
-        buttonOverflow: keys.properties.buttonOverflow
+        buttonOverflow: keys.properties.buttonOverflow,
+        cancelTop: keys.properties.cancelTop
         },
     updateFunction:(state)=> {
         let fontSize= state.buttonSize / 4;
@@ -53,7 +64,8 @@ module.exports=Dynamic(ButtonList,{
         }
         return{
             fontSize: fontSize,
-            buttonOverflow: state.buttonOverflow
+            buttonOverflow: state.buttonOverflow,
+            cancelTop: state.cancelTop
         };
     }
 });
