@@ -95,7 +95,9 @@ public class AisMessage5 extends AisStaticCommon {
 
     public void parse() throws AisMessageException, SixbitException {
         BinArray binArray = vdm.getBinArray();
-        if (binArray.getLength() < 424) {
+        int len=binArray.getLength();
+        //seems that sometimes we receive broken class 5 mesages being to short...
+        if (len > 424 || len < 323) {
             throw new AisMessageException("Message 5 wrong length " + binArray.getLength());
         }
 
@@ -113,9 +115,14 @@ public class AisMessage5 extends AisStaticCommon {
         this.posType = (int) binArray.getVal(4);
         this.eta = binArray.getVal(20);
         this.draught = (int) binArray.getVal(8);
-        this.dest = binArray.getString(20);
-        this.dte = (int) binArray.getVal(1);
-        this.spare = (int) binArray.getVal(1);
+        int remain=len-binArray.getReadPtr()-1;
+        int dstlen=20;
+        while (dstlen >0 && (dstlen*6) > remain){
+            dstlen--;
+        }
+        if (dstlen > 0) this.dest = binArray.getString(dstlen);
+        if (binArray.hasMoreBits()) this.dte = (int) binArray.getVal(1);
+        if (binArray.hasMoreBits()) this.spare = (int) binArray.getVal(1);
     }
 
     @Override
