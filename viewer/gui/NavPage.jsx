@@ -328,7 +328,8 @@ class NavPage extends React.Component{
                     if (activeRoute.getIndex() < 0 ) activeRoute.setIndexToTarget();
                     activeRoute.syncTo(RouteEdit.MODES.EDIT);
                     history.push("editroutepage");
-                }
+                },
+                overflow: true
 
             },
             Mob.mobDefinition,

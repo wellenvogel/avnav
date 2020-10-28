@@ -77,15 +77,9 @@ html,body {
   .flex-direction(column);
   position: relative;
   .nightBackFade(@colorMain);
-  &.shrink {
-    overflow: hidden;
-  }
-  &.columns{
+  &.wrap{
     overflow: hidden;
     .flex-wrap(wrap-reverse)
-  }
-  &.scroll{
-    overflow-y: auto;
   }
   button{
     flex-shrink: 0;
@@ -99,7 +93,7 @@ html,body {
 
 .buttonContainerWrap{
   .flex-display();
-  .flex-direction(column);
+  .flex-direction(row-reverse);
   .buttonContainer.scroll{
     .flex-grow(1);
   }

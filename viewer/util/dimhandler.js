@@ -72,7 +72,8 @@ class DimmHandler{
         return{
             name: 'Dim',
             onClick: this.activate,
-            visible: (this.actionFunction !== undefined)
+            visible: (this.actionFunction !== undefined),
+            overflow: true
         }
     }
 
