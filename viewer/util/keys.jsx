@@ -180,7 +180,8 @@ let keys={
             toastCallback:K,
             hasSelectedChart: K,
             soundEnabled: new D("only enable sound once we reach the mainpage"),
-            dimActive: K
+            dimActive: K,
+            computedButtonHeight: K,
 
         },
         mainpage:{

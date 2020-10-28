@@ -34,6 +34,7 @@ import AlarmHandler from './nav/alarmhandler.js';
 import GuiHelpers from './util/GuiHelpers.js';
 import Mob from './components/Mob.js';
 import Dimmer from './util/dimhandler.js';
+import Button from './components/Button.jsx';
 
 
 const DynamicSound=Dynamic(SoundHandler);
@@ -116,6 +117,22 @@ class Router extends Component {
 }
 
 const DynamicRouter=Dynamic(Router);
+//show one button (unscaled) to be able to compute button sizes
+const ButtonSizer=Dynamic((props)=>{
+        let fontSize=props.fontSize/4; //unscaled button font size
+        let style={fontSize:fontSize+"px"};
+        return(
+            <div className="buttonSizer" style={style} ref={props.refFunction}>
+                <Button/>
+            </div>
+        )},
+        {
+            storeKeys: {
+                fontSize: keys.properties.style.buttonSize
+            }
+        }
+    );
+
 
 class App extends React.Component {
     constructor(props) {
@@ -219,6 +236,11 @@ class App extends React.Component {
                 />:
                 null}
             <ToastDisplay/>
+            <ButtonSizer refFunction={(el)=>{
+                if (!el) return;
+                let rect=el.getBoundingClientRect();
+                globalStore.storeData(keys.gui.global.computedButtonHeight,rect.height);
+            }}/>
         </div>
     };
 }

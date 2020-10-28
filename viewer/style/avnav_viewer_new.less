@@ -77,13 +77,12 @@ html,body {
   .flex-direction(column);
   position: relative;
   .nightBackFade(@colorMain);
-  overflow-y: auto;
   &.shrink {
     overflow: hidden;
   }
   &.columns{
     overflow: hidden;
-    .flex-wrap(wrap)
+    .flex-wrap(wrap-reverse)
   }
   &.scroll{
     overflow-y: auto;
@@ -92,6 +91,18 @@ html,body {
     flex-shrink: 0;
   }
 
+}
+.buttonSizer{
+  display: inline-block;
+  opacity: 0;
+}
+
+.buttonContainerWrap{
+  .flex-display();
+  .flex-direction(column);
+  .buttonContainer.scroll{
+    .flex-grow(1);
+  }
 }
 
 .leftPart{

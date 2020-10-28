@@ -17,8 +17,22 @@ class ButtonList extends React.Component{
     refCallback(el){
         if (!el) return;
         if (this.props.buttonOverflow == 'columns') {
-            el.style.width = el.scrollWidth + "px";
+            let margin=5;
+            let numChildren=el.children.length;
+            let prect=el.getBoundingClientRect();
+            let minx=prect.x;
+            let cwidth=-1;
+            for (let i=0;i<numChildren;i++){
+                let crect=el.children[i].getBoundingClientRect();
+                if (crect.x < minx) minx=crect.x;
+                if (cwidth < 0) cwidth=crect.width;
+            }
+            if (minx < prect.x){
+                el.style.width=(prect.width+prect.x-minx+margin)+"px";
+            }
+            //el.style.width = el.scrollWidth + "px";
         }
+
     }
 
     itemSort(a,b){
@@ -32,18 +46,38 @@ class ButtonList extends React.Component{
         className+=" buttonContainer "+this.props.buttonOverflow;
         let items=this.props.itemList.slice();
         items.sort(this.itemSort);
-        return <ItemList {...this.props}
-            itemList={items}
-            className={className}
-            itemClass={Dynamic(Visible(LayoutEditing(Button)))}
-            listRef={(el)=>{this.refCallback(el)}}
-            />
+        if (this.props.buttonOverflow == 'scroll' && this.props.cancelTop && items.length > 1 && items[0].name == 'Cancel'){
+            //we keep the cancel button separate at the top
+            let topItems=[items.shift()];
+            return <div className="buttonContainerWrap">
+                    <ItemList {...this.props}
+                        className="buttonContainer"
+                        itemList={topItems}
+                        itemClass={Dynamic(Visible(LayoutEditing(Button)))}
+                        />
+                    <ItemList {...this.props}
+                        className={className}
+                        itemList={items}
+                        itemClass={Dynamic(Visible(LayoutEditing(Button)))}
+                        listRef={(el)=>{this.refCallback(el)}}
+                    />
+                </div>
+        }
+        else {
+            return <ItemList {...this.props}
+                itemList={items}
+                className={className}
+                itemClass={Dynamic(Visible(LayoutEditing(Button)))}
+                listRef={(el)=>{this.refCallback(el)}}
+                />
+        }
     }
 
 }
 module.exports=Dynamic(ButtonList,{
     storeKeys:{
         maxButtons:keys.properties.maxButtons,
+        buttonHeight: keys.gui.global.computedButtonHeight,
         buttonSize: keys.properties.style.buttonSize,
         //fontSize:keys.gui.global.buttonFontSize,
         dimensions: keys.gui.global.windowDimensions,
@@ -52,12 +86,12 @@ module.exports=Dynamic(ButtonList,{
         },
     updateFunction:(state)=> {
         let fontSize= state.buttonSize / 4;
-        if (state.buttonOverflow == 'shrink' && state.dimensions) {
+        if (state.buttonOverflow == 'shrink' && state.dimensions && state.buttonHeight) {
             let scale=1;
             let height = state.dimensions.height;
-            if (height !== undefined) {
-                let buttonHeight = height / state.maxButtons - 4; //TODO: should we get this from CSS?
-                scale = buttonHeight / state.buttonSize;
+            if (height !== undefined && height > 0) {
+                let buttonHeight = state.buttonHeight*state.maxButtons; //TODO: should we get this from CSS?
+                scale = buttonHeight / height;
             }
             if (scale > 1) scale = 1;
             fontSize = state.buttonSize * scale / 4;
