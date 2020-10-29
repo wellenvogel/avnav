@@ -51,7 +51,7 @@ const AisLayer=function(mapholder){
     this.nearestSource=undefined;
     this.nearestStyle={};
     this.normalSource=undefined;
-    this.normalStle=undefined;
+    this.normalStyle=undefined;
     this.warningSource=undefined;
     this.warningStyle=undefined;
 
@@ -230,7 +230,7 @@ AisLayer.prototype.onPostCompose=function(center,drawing){
             let courseVectorDistance=(current.speed !== undefined)?current.speed*courseVectorTime:0;
             if (courseVectorDistance > 0){
                 let other=this.computeTarget(pos,rotation,courseVectorDistance);
-                drawing.drawLineToContext([pos,other],{color:color,width:courseVectorWidth});
+                drawing.drawLineToContext([pos,other],{color:style.courseVectorColor || color,width:courseVectorWidth});
             }
         }
         pixel.push({pixel:curpix,ais:current});
@@ -289,10 +289,11 @@ AisLayer.prototype.setImageStyles=function(styles){
         if (typeof(styles[styleProp]) === 'object' ){
             let style=styles[styleProp];
             this[name.toLowerCase()+"Source"]=style.src;
-            this[name.toLowerCase()+"Style"]={anchor:style.anchor,size:style.size};
+            this[name.toLowerCase()+"Style"]={anchor:style.anchor,size:style.size,courseVectorColor: style.courseVectorColor};
         }
     }
     this.createAllIcons();
+    let x=1;
 
 };
 
