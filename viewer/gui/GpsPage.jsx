@@ -141,7 +141,8 @@ class GpsPage extends React.Component{
                 }},
                 onClick:()=>{
                     globalStore.storeData(keys.gui.gpspage.pageNumber,1);
-                }
+                },
+                overflow: true
             },
             {
                 name: "Gps2",
@@ -155,7 +156,8 @@ class GpsPage extends React.Component{
                 }},
                 onClick:()=>{
                     globalStore.storeData(keys.gui.gpspage.pageNumber,2);
-                }
+                },
+                overflow: true
             },
             {
                 name: "Gps3",
@@ -169,7 +171,8 @@ class GpsPage extends React.Component{
                 }},
                 onClick:()=>{
                     globalStore.storeData(keys.gui.gpspage.pageNumber,3);
-                }
+                },
+                overflow: true
             },
             {
                 name: "Gps4",
@@ -183,7 +186,8 @@ class GpsPage extends React.Component{
                 }},
                 onClick:()=>{
                     globalStore.storeData(keys.gui.gpspage.pageNumber,4);
-                }
+                },
+                overflow: true
             },
             {
                 name: "Gps5",
@@ -197,7 +201,8 @@ class GpsPage extends React.Component{
                 }},
                 onClick:()=>{
                     globalStore.storeData(keys.gui.gpspage.pageNumber,5);
-                }
+                },
+                overflow: true
             },
             anchorWatch(),
             Mob.mobDefinition,

@@ -12,6 +12,14 @@ class ButtonList extends React.Component{
         this.itemSort=this.itemSort.bind(this);
         this.buttonChanged=this.buttonChanged.bind(this);
         this.state={showOverflow:false};
+        if (this.props.itemList){
+            for (let k in this.props.itemList){
+                let key=this.getStateKey(this.props.itemList[k]);
+                if (! key) continue;
+                let visible=this.buttonVisible(this.props.itemList[k]);
+                this.state[key]=visible;
+            }
+        }
     }
     itemSort(a,b){
         if (! this.props.cancelTop) return 0;
@@ -106,7 +114,11 @@ class ButtonList extends React.Component{
             }
         }
         if (hasOverflow && !this.props.buttonCols){
-            let topItems=[items.shift()];
+            if (! this.state.showOverflow){
+                //add currently invisible items to the invisible list
+                //to get changeCallbacks
+                invisibleItems=invisibleItems.concat(overflowItems);
+            }
             return <div className={"buttonContainerWrap "}>
                     <ItemList {...this.props}
                         fontSize={fontSize}

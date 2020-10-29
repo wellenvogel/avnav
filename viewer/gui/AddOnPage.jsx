@@ -82,7 +82,8 @@ class AddOnPage extends React.Component{
                             globalStore.storeData(keys.gui.addonpage.activeAddOn, i);
                         },100);
                     },
-                    toggle: activeIndex == i
+                    toggle: activeIndex == i,
+                    overflow: true
                 };
                 rt.push(button);
             }
