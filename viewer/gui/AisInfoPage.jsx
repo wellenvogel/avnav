@@ -77,7 +77,7 @@ class AisInfoPage extends React.Component{
                 name: 'AisInfoLocate',
                 onClick:()=>{
                     if (!self.props.options || ! self.props.options.mmsi) return;
-                    let pos=AisHandler.getAisPositionByMmsi(self.props.mmsi);
+                    let pos=AisHandler.getAisPositionByMmsi(self.props.options.mmsi);
                     if (pos) {
                         MapHolder.setCenter(pos);
                         MapHolder.setGpsLock(false);
