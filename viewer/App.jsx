@@ -239,7 +239,10 @@ class App extends React.Component {
             <ButtonSizer refFunction={(el)=>{
                 if (!el) return;
                 let rect=el.getBoundingClientRect();
-                globalStore.storeData(keys.gui.global.computedButtonHeight,rect.height);
+                globalStore.storeMultiple(
+                    {height:rect.height,width:rect.width},
+                    {height: keys.gui.global.computedButtonHeight,width:keys.gui.global.computedButtonWidth}
+                    );
             }}/>
         </div>
     };

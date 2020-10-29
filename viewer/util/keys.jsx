@@ -182,6 +182,7 @@ let keys={
             soundEnabled: new D("only enable sound once we reach the mainpage"),
             dimActive: K,
             computedButtonHeight: K,
+            computedButtonWidth: K
 
         },
         mainpage:{

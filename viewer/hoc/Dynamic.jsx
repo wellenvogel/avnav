@@ -13,7 +13,7 @@ import assign from 'object-assign';
 
 
 
-module.exports= function(Component,opt_options){
+export default function(Component,opt_options){
     let store=globalStore;
     class Dynamic extends React.Component{
         constructor(props){
@@ -65,4 +65,20 @@ module.exports= function(Component,opt_options){
         }
     };
     return Dynamic;
+};
+
+export const GetCurrentValues=(props,opt_options)=>{
+    let {storeKeys,updateFunction,...forwardProps}=props;
+    if (! storeKeys) {
+        if (!opt_options || !opt_options.storeKeys) return props;
+        storeKeys=opt_options.storeKeys;
+    }
+    let values=globalStore.getMultiple(storeKeys);
+    if (! updateFunction){
+        if (opt_options && opt_options.updateFunction) updateFunction=opt_options.updateFunction;
+    }
+    if (updateFunction) {
+        values=updateFunction(values,storeKeys);
+    }
+    return assign({},props,values);
 };

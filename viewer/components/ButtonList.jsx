@@ -1,6 +1,6 @@
 import React from 'react';
 import Button from './Button.jsx';
-import Dynamic from '../hoc/Dynamic.jsx';
+import Dynamic,{GetCurrentValues} from '../hoc/Dynamic.jsx';
 import keys from '../util/keys.jsx';
 import ItemList from './ItemList.jsx';
 import PropertyHandler from '../util/propertyhandler.js';
@@ -10,22 +10,7 @@ class ButtonList extends React.Component{
     constructor(props){
         super(props);
         this.itemSort=this.itemSort.bind(this);
-        this.refCallback=this.refCallback.bind(this);
         this.state={showOverflow:false};
-    }
-    refCallback(el){
-        if (!el) return;
-        if (this.props.buttonCols) {
-            let rect=el.getBoundingClientRect();
-            let min=rect.left;
-            for (let i=0;i<el.childElementCount;i++){
-                let crect=el.children[i].getBoundingClientRect();
-                if (crect.left < min) min=crect.left;
-            }
-            let width=rect.width;
-            width+=Math.ceil((rect.left-min)/55)*55;
-            el.style.width = width + "px";
-        }
     }
     itemSort(a,b){
         if (! this.props.cancelTop) return 0;
@@ -34,9 +19,10 @@ class ButtonList extends React.Component{
     }
 
     itemVisible(item){
-        if (item.visible !== undefined && ! item.visible) return false;
-        if (item.editDisable && this.props.isEditing) return false;
-        if (item.editOnly && ! this.props.isEditing) return false;
+        let itemv=GetCurrentValues(item);
+        if (itemv.visible !== undefined && ! itemv.visible) return false;
+        if (itemv.editDisable && this.props.isEditing) return false;
+        if (itemv.editOnly && ! this.props.isEditing) return false;
         return true;
     }
 
@@ -64,7 +50,7 @@ class ButtonList extends React.Component{
         let fontSize=this.props.buttonSize*scale/4.0;
         let mainItems=[];
         let overflowItems=[];
-        if (hasOverflow){
+        if (hasOverflow && !this.props.buttonCols){
             //split the buttons into multiple lists
             for (let k in items){
                 if (items[k].overflow ){
@@ -87,11 +73,7 @@ class ButtonList extends React.Component{
                 hasOverflow = false;
             }
         }
-        else{
-            mainItems=items;
-        }
-        if (hasOverflow){
-            //we keep the cancel button separate at the top
+        if (hasOverflow && !this.props.buttonCols){
             let topItems=[items.shift()];
             return <div className={"buttonContainerWrap "}>
                     <ItemList {...this.props}
@@ -113,12 +95,14 @@ class ButtonList extends React.Component{
                 </div>
         }
         else {
+            let style={};
+            if (hasOverflow && this.props.buttonCols ) style.width=(this.props.buttonWidth*scale*2)+"px";
             return <ItemList {...this.props}
+                style={style}
                 fontSize={fontSize}
                 itemList={items}
                 className={className +(this.props.buttonCols?" wrap":"")}
                 itemClass={Dynamic(Button)}
-                listRef={(el)=>{this.refCallback(el)}}
                 />
         }
     }
@@ -128,31 +112,11 @@ module.exports=Dynamic(ButtonList,{
     storeKeys:{
         maxButtons:keys.properties.maxButtons,
         buttonHeight: keys.gui.global.computedButtonHeight,
+        buttonWidth: keys.gui.global.computedButtonWidth,
         buttonSize: keys.properties.style.buttonSize,
-        //fontSize:keys.gui.global.buttonFontSize,
         dimensions: keys.gui.global.windowDimensions,
         buttonCols: keys.properties.buttonCols,
         cancelTop: keys.properties.cancelTop,
         isEditing:keys.gui.global.layoutEditing
-        },
-    updateFunctionXX:(state)=> {
-        let fontSize= state.buttonSize / 4;
-        let buttonScale=1;
-        let maxButtons=state.maxButtons;
-        if (state.dimensions && state.buttonHeight) {
-            let height = state.dimensions.height;
-            if (height !== undefined && height > 0) {
-                let buttonHeight = state.buttonHeight*state.maxButtons; //TODO: should we get this from CSS?
-                buttonScale = height / buttonHeight;
-            }
-            if (buttonScale > 1) buttonScale = 1;
         }
-        return{
-            fontSize: fontSize,
-            buttonCols: state.buttonCols,
-            cancelTop: state.cancelTop,
-            buttonScale: buttonScale,
-            buttonHeight: scale.buttonHeight
-        };
-    }
 });
