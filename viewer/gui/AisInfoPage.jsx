@@ -17,6 +17,7 @@ import AisFormatter from '../nav/aisformatter.jsx';
 import MapHolder from '../map/mapholder.js';
 import GuiHelpers from '../util/GuiHelpers.js';
 import Mob from '../components/Mob.js';
+import {Drawing} from '../map/drawing.js';
 
 const displayItems = [
     {name: 'mmsi', label: 'MMSI'},
@@ -98,6 +99,7 @@ class AisInfoPage extends React.Component{
             }
         ];
         this.checkNoTarget=this.checkNoTarget.bind(this);
+        this.drawIcon=this.drawIcon.bind(this);
         this.timer=GuiHelpers.lifecycleTimer(this,this.checkNoTarget,5000,true);
 
     }
@@ -110,22 +112,35 @@ class AisInfoPage extends React.Component{
         }
         this.timer.startTimer(timerSequence);
     }
+    drawIcon(canvas,current){
+        if (! canvas) return;
+        if (! current) return;
+        let drawing=new Drawing({
+            coordToPixel:(p)=>{return p;},
+            pixelToCoord:(p)=>{return p;}
+        });
+        let ctx=canvas.getContext('2d');
+        drawing.setContext(ctx);
+        let rect=canvas.getBoundingClientRect();
+        canvas.width=rect.width;
+        canvas.height=rect.height;
+        MapHolder.aislayer.drawTargetSymbol(
+            drawing,
+            [rect.width/2,rect.height/2],
+            current,
+            (xy,rotation,distance)=>{
+                rotation=rotation/180*Math.PI;
+                return [
+                    rect.width/2*(1+Math.sin(rotation)),
+                    rect.height/2*(1-Math.cos(rotation))
+                ]
+            });
+    }
 
     render(){
         let self=this;
         const Status = function (props) {
-            let status="normal";
-            let src="";
-            let rotation=0;
-            if (props.current){
-                if (props.current.warning) status="warning";
-                else {
-                    if (props.current.nearest) status="nearest";
-                }
-                rotation=props.current.course||0;
-            }
-            src=MapHolder.getAisIcon(status);
-            return <img src={src} style={{transform:'rotate('+rotation+'deg)'}} className="status"/>
+            return <canvas className="status" ref={(ctx)=>{self.drawIcon(ctx,props.current)}}/>
         };
         const RenderStatus=Dynamic(Status);
         //gets mmsi

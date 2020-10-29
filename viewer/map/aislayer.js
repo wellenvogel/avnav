@@ -10,11 +10,12 @@ import assign from 'object-assign';
 import NavCompute from '../nav/navcompute.js';
 import AisFormatter from '../nav/aisformatter.jsx';
 
-const StyleEntry=function(src,style){
+const StyleEntry=function(src,style,opt_external){
     this.src=src;
     this.style=style;
     this.image=new Image();
     this.image.src=src;
+    this.external=opt_external||false;
 };
 
 const styleKeyFromItem=(item,useDefault)=>{
@@ -127,17 +128,17 @@ AisLayer.prototype.createAllIcons=function(){
     let style=globalStore.getMultiple(keys.properties.style);
     let useCourseVector=globalStore.getData(keys.properties.aisUseCourseVector,false);
     let symbolStyle=useCourseVector?this.targetStyleCourseVector:this.targetStyle;
-    if (! this.symbolStyles.nearest){
+    if (! this.symbolStyles.nearest || ! this.symbolStyles.nearest.external){
         this.symbolStyles.nearest=new StyleEntry(
             this.createIcon(style.aisNearestColor,useCourseVector),
             assign({},symbolStyle,{courseVectorColor:style.aisNearestColor}));
     }
-    if (! this.symbolStyles.warning){
+    if (! this.symbolStyles.warning || ! this.symbolStyles.warning.external){
         this.symbolStyles.warning=new StyleEntry(
             this.createIcon(style.aisWarningColor,useCourseVector),
             assign({},symbolStyle,{courseVectorColor:style.aisWarningColor}));
     }
-    if (! this.symbolStyles.normal){
+    if (! this.symbolStyles.normal || ! this.symbolStyles.normal.external){
         this.symbolStyles.normal=new StyleEntry(
             this.createIcon(style.aisNormalColor,useCourseVector),
             assign({},symbolStyle,{courseVectorColor:style.aisNormalColor}));
@@ -305,8 +306,9 @@ AisLayer.prototype.setImageStyles=function(styles){
                     anchor: style.anchor,
                     size: style.size,
                     courseVectorColor: style.courseVectorColor,
-                    rotate: style.rotate
-                }
+                    rotate: style.rotate,
+                },
+                true
             );
         }
         let re=new RegExp("^"+styleProp+"[-]");
@@ -322,7 +324,8 @@ AisLayer.prototype.setImageStyles=function(styles){
                             size:dstyle.size,
                             courseVectorColor: dstyle.courseVectorColor,
                             rotate: dstyle.rotate
-                        }
+                        },
+                        true
                     )
                 }
             }
