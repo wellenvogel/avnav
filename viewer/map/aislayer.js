@@ -8,7 +8,30 @@ import globalStore from '../util/globalstore.jsx';
 import base from '../base.js';
 import assign from 'object-assign';
 import NavCompute from '../nav/navcompute.js';
+import AisFormatter from '../nav/aisformatter.jsx';
 
+const StyleEntry=function(src,style){
+    this.src=src;
+    this.style=style;
+    this.image=new Image();
+    this.image.src=src;
+};
+
+const styleKeyFromItem=(item,useDefault)=>{
+    let rt="normal";
+    if (item.warning){
+      rt="warning";
+    }
+    else{
+        if (item.nearest){
+            rt="nearest";
+        }
+    }
+    if (useDefault) return rt;
+    let suffix=AisFormatter.format('shiptype',item);
+    return rt+"-"+suffix;
+
+};
 
 /**
  * a cover for the layer with the AIS display
@@ -29,31 +52,7 @@ const AisLayer=function(mapholder){
     this.textStyle ={};
     this.setStyles();
 
-    /**
-     * @private
-     * @type {string}
-     */
-    this.nearestImage=new Image();
-    /**
-     * @private
-     * @type {string}
-     */
-    this.warningImage=new Image();
-    /**
-     * @private
-     * @type {string}
-     */
-    this.normalImage=new Image();
-
-    /**
-     * external image sources
-     */
-    this.nearestSource=undefined;
-    this.nearestStyle={};
-    this.normalSource=undefined;
-    this.normalStyle=undefined;
-    this.warningSource=undefined;
-    this.warningStyle=undefined;
+    this.symbolStyles={};
 
     this.createAllIcons();
 
@@ -69,6 +68,7 @@ const AisLayer=function(mapholder){
      */
     this.visible=globalStore.getData(keys.properties.layers.ais);
     globalStore.register(this,keys.gui.global.propertySequence);
+    this.computeTarget=this.computeTarget.bind(this);
 
 };
 
@@ -126,9 +126,22 @@ AisLayer.prototype.createIcon=function(color,useCourseVector){
 AisLayer.prototype.createAllIcons=function(){
     let style=globalStore.getMultiple(keys.properties.style);
     let useCourseVector=globalStore.getData(keys.properties.aisUseCourseVector,false);
-    this.nearestImage.src=this.nearestSource?this.nearestSource:this.createIcon(style.aisNearestColor,useCourseVector);
-    this.warningImage.src=this.warningSource?this.warningSource:this.createIcon(style.aisWarningColor,useCourseVector);
-    this.normalImage.src=this.normalSource?this.normalSource:this.createIcon(style.aisNormalColor,useCourseVector);
+    let symbolStyle=useCourseVector?this.targetStyleCourseVector:this.targetStyle;
+    if (! this.symbolStyles.nearest){
+        this.symbolStyles.nearest=new StyleEntry(
+            this.createIcon(style.aisNearestColor,useCourseVector),
+            assign({},symbolStyle,{courseVectorColor:style.aisNearestColor}));
+    }
+    if (! this.symbolStyles.warning){
+        this.symbolStyles.warning=new StyleEntry(
+            this.createIcon(style.aisWarningColor,useCourseVector),
+            assign({},symbolStyle,{courseVectorColor:style.aisWarningColor}));
+    }
+    if (! this.symbolStyles.normal){
+        this.symbolStyles.normal=new StyleEntry(
+            this.createIcon(style.aisNormalColor,useCourseVector),
+            assign({},symbolStyle,{courseVectorColor:style.aisNormalColor}));
+    }
 };
 /**
  * find the AIS target that has been clicked
@@ -163,15 +176,53 @@ AisLayer.prototype.setStyles=function(){
         rotation: 0,
         rotateWithView: true
     };
-    this.externalSourceTargetStyle={
-        anchor:[15,0],
-        size:[30,30],
-        rotation:0,
-        rotateWithView: true
-    };
 };
 
+/**
+ *
+ * @param item
+ * @returns {StyleEntry}
+ */
+AisLayer.prototype.getStyleEntry=function(item){
+    let name=styleKeyFromItem(item,false);
+    let rt={};
+    if (this.symbolStyles[name]) {
+        rt=this.symbolStyles[name];
+    }
+    return assign({},this.symbolStyles[styleKeyFromItem(item,true)],rt);
+};
 
+AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,computeTargetFunction){
+    let courseVectorTime=globalStore.getData(keys.properties.navBoatCourseTime,0);
+    let useCourseVector=globalStore.getData(keys.properties.aisUseCourseVector,false);
+    let courseVectorWidth=globalStore.getData(keys.properties.navCircleWidth);
+    let scale=globalStore.getData(keys.properties.aisIconScale,1);
+    let rotation=current.course||0;
+    let symbol=this.getStyleEntry(current)||{};
+    let style=assign({},symbol.style);
+    if (scale != 1){
+        style.size=[style.size[0]*scale,style.size[1]*scale];
+        style.anchor=[style.anchor[0]*scale,style.anchor[1]*scale];
+    }
+    if (style.rotate !== undefined && ! style.rotate) {
+        style.rotation = 0;
+        style.rotateWithView=false;
+    }
+    else{
+        style.rotation = rotation * Math.PI / 180;
+        style.rotateWithView=true;
+    }
+
+    let curpix=drawing.drawImageToContext(xy,symbol.image,style);
+    if (useCourseVector){
+        let courseVectorDistance=(current.speed !== undefined)?current.speed*courseVectorTime:0;
+        if (courseVectorDistance > 0){
+            let other=computeTargetFunction(xy,rotation,courseVectorDistance);
+            drawing.drawLineToContext([xy,other],{color:style.courseVectorColor,width:courseVectorWidth});
+        }
+    }
+    return curpix;
+};
 
 /**
  *
@@ -183,11 +234,6 @@ AisLayer.prototype.onPostCompose=function(center,drawing){
     let i;
     let pixel=[];
     let aisList=globalStore.getData(keys.nav.ais.list,[]);
-    let courseVectorTime=globalStore.getData(keys.properties.navBoatCourseTime,0);
-    let useCourseVector=globalStore.getData(keys.properties.aisUseCourseVector,false);
-    let courseVectorWidth=globalStore.getData(keys.properties.navCircleWidth);
-    let colors=globalStore.getMultiple(keys.properties.style);
-    let scale=globalStore.getData(keys.properties.aisIconScale,1);
     for (i in aisList){
         let current=aisList[i];
         let pos=current.mapPos;
@@ -195,44 +241,9 @@ AisLayer.prototype.onPostCompose=function(center,drawing){
             pos=this.mapholder.pointToMap((new navobjects.Point(current.lon,current.lat)).toCoord());
             current.mapPos=pos;
         }
-        let rotation=current.course||0;
+        let curpix=this.drawTargetSymbol(drawing,pos,current,this.computeTarget);
         let text=current.shipname;
         if (! text || text == "unknown") text=current.mmsi;
-        let color=colors.aisNormalColor;
-        let icon = this.normalImage;
-        let style=assign({},useCourseVector?this.targetStyleCourseVector:this.targetStyle);
-        if (scale != 1){
-            style.size=[style.size[0]*scale,style.size[1]*scale];
-            style.anchor=[style.anchor[0]*scale,style.anchor[1]*scale];
-        }
-        if ( ! current.nearest && ! current.warning){
-            if (this.normalSource){
-                style=assign({},this.externalSourceTargetStyle,this.normalStyle);
-            }
-        }
-        if (current.nearest) {
-            color = colors.aisNearestColor;
-            icon = this.nearestImage;
-            if (this.nearestSource){
-                style=assign({},this.externalSourceTargetStyle,this.nearestStyle);
-            }
-        }
-        if (current.warning) {
-            icon = this.warningImage;
-            color = colors.aisWarningColor;
-            if (this.warningSource){
-                style=assign({},this.externalSourceTargetStyle,this.warningStyle);
-            }
-        }
-        style.rotation=rotation*Math.PI/180;
-        let curpix=drawing.drawImageToContext(pos,icon,style);
-        if (useCourseVector){
-            let courseVectorDistance=(current.speed !== undefined)?current.speed*courseVectorTime:0;
-            if (courseVectorDistance > 0){
-                let other=this.computeTarget(pos,rotation,courseVectorDistance);
-                drawing.drawLineToContext([pos,other],{color:style.courseVectorColor || color,width:courseVectorWidth});
-            }
-        }
         pixel.push({pixel:curpix,ais:current});
         drawing.drawTextToContext(pos,text,this.textStyle);
     }
@@ -286,15 +297,37 @@ AisLayer.prototype.setImageStyles=function(styles){
     for (let i in names){
         let name=names[i];
         let styleProp="ais"+name+"Image";
-        if (typeof(styles[styleProp]) === 'object' ){
-            let style=styles[styleProp];
-            this[name.toLowerCase()+"Source"]=style.src;
-            this[name.toLowerCase()+"Style"]={anchor:style.anchor,size:style.size,courseVectorColor: style.courseVectorColor};
+        if (typeof(styles[styleProp]) === 'object' ) {
+            let style = styles[styleProp];
+            this.symbolStyles[name.toLowerCase()] = new StyleEntry(
+                style.src,
+                {
+                    anchor: style.anchor,
+                    size: style.size,
+                    courseVectorColor: style.courseVectorColor,
+                    rotate: style.rotate
+                }
+            );
+        }
+        let re=new RegExp("^"+styleProp+"[-]");
+        for (let k in styles){
+            if (re.exec(k)){
+                let suffix=k.replace(/.*[-]/,"");
+                let styleKey=name.toLowerCase()+"-"+suffix;
+                let dstyle=styles[k];
+                if (typeof (dstyle) === 'object') {
+                    this.symbolStyles[styleKey] = new StyleEntry(
+                        dstyle.src,
+                        {   anchor:dstyle.anchor,
+                            size:dstyle.size,
+                            courseVectorColor: dstyle.courseVectorColor,
+                            rotate: dstyle.rotate
+                        }
+                    )
+                }
+            }
         }
     }
-    this.createAllIcons();
-    let x=1;
-
 };
 
 
