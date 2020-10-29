@@ -24,6 +24,15 @@ export default function(Component,opt_options){
             let keys=this.getStoreKeys();
             if (keys) store.register(this,keys);
             this.state=this.getTranslatedStoreValues();
+            this.updateCallback(this.state);
+        }
+        updateCallback(data){
+            let updateFunction=this.props.changeCallback;
+            if (! updateFunction && opt_options) updateFunction=opt_options.changeCallback;
+            if (! updateFunction) return;
+            let {storeKeys,uf,changeCallback,...forwardProps}=this.props;
+            let childprops=assign({},forwardProps,data);
+            updateFunction(childprops);
         }
         getStoreKeys(){
             let storeKeys=this.props.storeKeys;
@@ -48,7 +57,9 @@ export default function(Component,opt_options){
             return values;
             }
         dataChanged(){
-            this.setState(this.getTranslatedStoreValues()||{});
+            let data=this.getTranslatedStoreValues()||{};
+            this.setState(data);
+            this.updateCallback(data);
         }
         componentDidMount(){
             let keys=this.getStoreKeys();
@@ -59,26 +70,10 @@ export default function(Component,opt_options){
             store.deregister(this);
         }
         render(){
-            let {storeKeys,updateFunction,...forwardProps}=this.props;
+            let {storeKeys,updateFunction,changeCallback,...forwardProps}=this.props;
             let childprops=assign({},forwardProps,this.state);
             return <Component {...childprops}/>
         }
     };
     return Dynamic;
-};
-
-export const GetCurrentValues=(props,opt_options)=>{
-    let {storeKeys,updateFunction,...forwardProps}=props;
-    if (! storeKeys) {
-        if (!opt_options || !opt_options.storeKeys) return props;
-        storeKeys=opt_options.storeKeys;
-    }
-    let values=globalStore.getMultiple(storeKeys);
-    if (! updateFunction){
-        if (opt_options && opt_options.updateFunction) updateFunction=opt_options.updateFunction;
-    }
-    if (updateFunction) {
-        values=updateFunction(values,storeKeys);
-    }
-    return assign({},props,values);
 };
