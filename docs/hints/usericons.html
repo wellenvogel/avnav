@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>user icons</title>
+    <link href="../styles.css" rel="stylesheet" type="text/css">
+  </head>
+  <body>
+    <h1>Nutzer Symbole</h1>
+    <p>Seit Version 20201030.</p>
+    <p>Eine Reihe der in AvNav genutzten Symbole kann man an die eigenen
+      Bedürfnisse anpassen. Man kann die vorhanden Symbole in ihrer Größe
+      ändern, verschiedene Eigenschaften einstellen oder sie durch eigene
+      Symbole ersetzen.</p>
+    <p>Falls man eigene Symbole nutzen möchte, müssen diese als .png Dateien in
+      das Images Verzeichnis hochgeladen werden - siehe bei der <a href="../userdoc/downloadpage.html#userfiles">Beschreibung
+        zu Nutzer-Dateien</a>.</p>
+    <p>Welche Symbole verändert werden sollen (und wie) wird in einer Json Datei
+      im Nutzer Verzeichnis beschrieben - images.json.</p>
+    <p>Diese Datei hat den folgenden Aufbau (Beispiel):</p>
+    <div class="code">{
+  "boatImage": {
+    "anchor": [20,0],
+    "size":[40,71]
+  },
+  "markerImage":{
+    "src": "/user/images/Marker.png",
+    "anchor": [15,15],
+    "size":[30,30]
+  },
+  "aisNormalImage-Sail":{
+    "src": "/user/images/Sail-Boat-40.png",
+    "anchor": [15,15],
+    "size":[30,30],
+    "courseVectorColor": "#ff00ff",
+    "rotate":false
+  },
+  "aisNormalImage-Military":{
+    "anchor": [32,0],
+    "size":[64,120]
+  }
+}</div>
+    <p>Für jedes zu ersetzende Symbol muss ein Eintrag mit dem entsprechenden
+      Namen existieren.</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>boatImage</td>
+          <td>Das Symbol für das Boot auf der Navigationsseite</td>
+        </tr>
+        <tr>
+          <td>markerImage</td>
+          <td>Das Symbol für den aktuellen Ziel-Wegepunkt</td>
+        </tr>
+        <tr>
+          <td>aisNormalImage</td>
+          <td>Das Symbol für ein AIS Ziel das nicht das nächste oder eines mit
+            Warnung ist</td>
+        </tr>
+        <tr>
+          <td>aisNearestImage</td>
+          <td>Das Symbol für das nächste AIS Ziel</td>
+        </tr>
+        <tr>
+          <td>aisWarningImage</td>
+          <td>Das Symbol für ein AIS Ziel mit einer Näherungs-Warnung</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Bei den AisImages kann mit -shiptype noch ausgewählt, für welchen der
+      verschiedenen angezeigten Typen diese Image gelten soll. Falls für einen
+      Type kein spezifisches Image definiert wurde, wird das jeweilige
+      Basis-Image (also ohne -shiptype) bzw. das eingebaute Image genutzt.</p>
+    <p>Die folgende werte werden für shiptype unterstützt:</p>
+    <div class="code">WIG<br>Fishing<br>Towing<br>Dredging<br>Diving<br>Military<br>Sail<br>Pleasure<br>HighSp<br>Pilot<br>SAR<br>Tug<br>PortT<br>AntiPol<br>Law<br>Medical<br>Passenger<br>Cargo<br>Tanker<br>Hazard</div>
+    <p>Für die AisImages müssen jeweils alle 3 Varianten (also Normal, Nearest,
+      Warning) definiert werden, sonst ändert sich das Symbol je nach Zustand.</p>
+    <p>Die folgenden Parameter können für jedes Symbol definiert werden:</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>src</td>
+          <td>Die URL für die Image Datei. Typisch /user/images/XYZ.png für eine
+            Datei, die über die Download Seite hochgeladen wurde.<br>
+            Falls dieser Parameter nicht angegeben wird, wird das in AvNav
+            vorhandene Symbol genutzt - man kann aber z.B. mit den anderen
+            Parametern die Größe ändern.<br>
+            Die Bilddateien sollten ein wenig grösser sein, als das was man bei
+            size angibt - z.B. Faktor 2 (aber nicht zu gross, da sonst die
+            Performance leidet). Wenn man Vektorgrafiken hat, kann man z.B. <a
+              href="https://inkscape.org">inkscape</a> nutzen, um daraus png's
+            zu erzeugen</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>size</td>
+          <td>[breite,höhe] - muss als Array (siehe Beispiel) angegeben werden.
+            Das beschreibt die Größe des Symbols (die Bilddatei wird auf diese
+            Größe skaliert).<br>
+            Falls man keinen src Parameter angibt, kann man hiermit die Größe
+            des internen Symbols verändern. </td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>anchor</td>
+          <td>[x,y] - der Punkt des Symbols (bezogen auf Breite und Höhe), der
+            auf die aktuelle Position auf der Karte gesetzt werden soll.</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>rotate</td>
+          <td>true oder false - wenn auf false gesetzt, wrid das Symbol nicht
+            entsprechend des aktuellen Kurses rotatiert</td>
+          <td>nicht für markerImage</td>
+        </tr>
+        <tr>
+          <td>courseVector</td>
+          <td>true oder false - wenn auf false, wird für dieses Symbol kein
+            Voraus-Vektor gezeichnet (auch wenn es über die Einstellungen aktiv
+            ist)</td>
+          <td>nicht für markerImage</td>
+        </tr>
+        <tr>
+          <td>courseVectorColor</td>
+          <td>die Farbe für den course Vektor. Hier kann man eine Farbe wählen,
+            die zu den genutzten Bildern passt.</td>
+          <td>nicht für markerImage</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Bei der Bearbeitung der images.json muss darauf geachtet werden valides
+      json zu erzeugen. Wenn man es innerhalb von AvNav auf der Files/Download
+      Seite <img src="../viewerimages/icons-new/ic_file_download.svg" alt="" class="inlineimage">(Unterseite
+      <img src="../viewerimages/icons-new/folder_shared.svg" alt="" class="inlineimage">)
+      bearbeitet, wird beim Speichern automatisch eine Syntax-Prüfung
+      vorgenommen. </p>
+    <p><img src="edit-images.png" alt="" class="image"></p>
+    <p> Nach der Änderung von images.json muss AvNav neu geladen werden.</p>
+    <p><br>
+    </p>
+  </body>
+</html>

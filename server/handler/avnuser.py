@@ -258,6 +258,7 @@ class AVNUserHandlerBase(AVNWorker):
 class AVNUserHandler(AVNUserHandlerBase):
   PREFIX = "/user/viewer"
   FLIST=['user.css',"user.js"]
+  EMPTY_JSONS=['keys.json','images.json']
   @classmethod
   def getPrefix(cls):
     return cls.PREFIX
@@ -283,10 +284,11 @@ class AVNUserHandler(AVNUserHandlerBase):
       if not os.path.exists(dest) and os.path.exists(src):
         AVNLog.info("copying template from %s to %s"%(src,dest))
         shutil.copyfile(src,dest)
-    dest=os.path.join(self.baseDir,"keys.json")
-    if not os.path.exists(dest):
-      with open(dest,"w") as fh:
-        fh.write("{\n}\n")
+    for jf in self.EMPTY_JSONS:
+      dest=os.path.join(self.baseDir,jf)
+      if not os.path.exists(dest):
+        with open(dest,"w") as fh:
+          fh.write("{\n}\n")
 
 
 
