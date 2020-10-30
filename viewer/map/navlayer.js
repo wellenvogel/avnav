@@ -10,6 +10,7 @@ import globalStore from '../util/globalstore.jsx';
 import RouteEdit from '../nav/routeeditor.js';
 import boatImage from '../images/Boat-NoNeedle.png';
 import markerImage from '../images/Marker2.png';
+import assign from 'object-assign';
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE,true);
 
@@ -113,16 +114,25 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
     let gps=globalStore.getMultiple(positionKeys);
     let course=gps.course;
     if (course === undefined) course=0;
-    this.boatStyle.rotation=course*Math.PI/180;
+    if (this.boatStyle.rotate === false){
+        this.boatStyle.rotation=0;
+    }
+    else {
+        this.boatStyle.rotation = course * Math.PI / 180;
+    }
     let boatPosition = this.mapholder.transformToMap(gps.position.toCoord());
     if (globalStore.getData(keys.properties.layers.boat) && gps.valid) {
         let courseVectorTime=parseInt(globalStore.getData(keys.properties.navBoatCourseTime,600));
         let courseVetcorDistance=(gps.speed !== undefined)?gps.speed*courseVectorTime:0;
         drawing.drawImageToContext(boatPosition, this.boatStyle.image, this.boatStyle);
         let other;
-        if (courseVetcorDistance > 0){
+        let courseVectorStyle=assign({},this.circleStyle);
+        if (this.boatStyle.courseVectorColor !== undefined) {
+            courseVectorStyle.color=this.boatStyle.courseVectorColor;
+        }
+        if (courseVetcorDistance > 0 && this.boatStyle.courseVector !== false){
             other=this.computeTarget(boatPosition,course,courseVetcorDistance);
-            drawing.drawLineToContext([boatPosition,other],this.circleStyle);
+            drawing.drawLineToContext([boatPosition,other],courseVectorStyle);
         }
         if (! anchorDistance) {
             let radius1 = parseInt(globalStore.getData(keys.properties.navCircle1Radius));
@@ -185,9 +195,15 @@ NavLayer.prototype.setImageStyles=function(styles){
     if (styles.boatImage){
         let boat=styles.boatImage;
         if (typeof(boat) === 'object'){
-            if (boat.src) this.boatStyle.image.src=boat.src;
+            if (boat.src) {
+                this.boatStyle.image.src=boat.src;
+                this.boatStyle.src=boat.src;
+            }
             if (boat.anchor) this.boatStyle.anchor=boat.anchor;
             if (boat.size) this.boatStyle.size=boat.size;
+            if (boat.rotate !== undefined) this.boatStyle.rotate=boat.rotate;
+            if (boat.courseVector !== undefined) this.boatStyle.courseVector=boat.courseVector;
+            if (boat.courseVectorColor !== undefined) this.boatStyle.courseVectorColor=boat.courseVectorColor;
         }
     }
 };
