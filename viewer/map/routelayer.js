@@ -95,7 +95,7 @@ const RouteLayer=function(mapholder){
  * set the styles
  * @private
  */
-RouteLayer.prototype.setStyle=function() {
+RouteLayer.prototype.setStyle=function(opt_change) {
     this.lineStyle = {
             color:  globalStore.getData(keys.properties.routeColor),
             width:  globalStore.getData(keys.properties.routeWidth),
@@ -126,14 +126,15 @@ RouteLayer.prototype.setStyle=function() {
         width: 1,
         background:  globalStore.getData(keys.properties.bearingColor)
     };
-
-    this.markerStyle={
-        anchor: [20, 20],
-        size: [40, 40],
-        src: orangeMarker,
-        image:  new Image()
-    };
-    this.markerStyle.image.src=this.markerStyle.src;
+    if (! opt_change) {
+        this.markerStyle = {
+            anchor: [20, 20],
+            size: [40, 40],
+            src: orangeMarker,
+            image: new Image()
+        };
+        this.markerStyle.image.src = this.markerStyle.src;
+    }
     this.courseStyle = {
         color:  globalStore.getData(keys.properties.bearingColor),
         width:  globalStore.getData(keys.properties.bearingWidth)
@@ -257,10 +258,19 @@ RouteLayer.prototype.findTarget=function(pixel){
 };
 RouteLayer.prototype.dataChanged=function() {
     this.visible=globalStore.getData(keys.properties.layers.nav);
-    this.setStyle();
+    this.setStyle(true);
     this.mapholder.triggerRender();
 };
 RouteLayer.prototype.setImageStyles=function(styles){
+    let markerStyle=styles.markerImage;
+    if (typeof(markerStyle) === 'object'){
+        if (markerStyle.src) {
+            this.markerStyle.src=markerStyle.src;
+            this.markerStyle.image.src=markerStyle.src;
+        }
+        if (markerStyle.size) this.markerStyle.size=markerStyle.size;
+        if (markerStyle.anchor) this.markerStyle.anchor=markerStyle.anchor;
+    }
 
 };
 

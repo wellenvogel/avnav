@@ -38,6 +38,7 @@ const handleJson=(rurl,requestOptions,options)=>{
             (response)=>{
                 if (response.status < 200 || response.status >= 300){
                     reject(response.statusText);
+                    return;
                 }
                 if (response.ok){
                     return response.json();

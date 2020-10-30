@@ -202,13 +202,7 @@ avnav.main=function() {
             MapHolder.setImageStyles(data);
         })
         .catch((error)=> {
-            Requests.getJson("images.json", {useNavUrl: false, checkOk: false})
-                .then((data)=> {
-                    MapHolder.setImageStyles(data);
-                })
-                .catch((error)=> {
-                    Toast("unable to load image definitions: " + error);
-                });
+            Toast("unable to load user image definitions: " + error);
         });
     base.log("avnav loaded");
 };

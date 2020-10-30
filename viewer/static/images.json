@@ -1,7 +1,0 @@
-{
-  "boatImage": {
-    "src": "images/Boat-NoNeedle.png",
-    "anchor": [15,0],
-    "size":[30,51]
-  }
-}
