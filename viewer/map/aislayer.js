@@ -9,16 +9,35 @@ import base from '../base.js';
 import assign from 'object-assign';
 import NavCompute from '../nav/navcompute.js';
 import AisFormatter from '../nav/aisformatter.jsx';
+import Helper from '../util/helper.js';
 
-const StyleEntry=function(src,style,opt_external){
+const StyleEntry=function(src,style){
     this.src=src;
     this.style=style;
-    this.image=new Image();
-    this.image.src=src;
-    this.external=opt_external||false;
+    if (src !== undefined) {
+        this.image = new Image();
+        this.image.src = src;
+    }
+};
+const mergeStyles=function(){
+    let rt={
+        style:{}
+    };
+    for (let i=0;i< arguments.length;i++) {
+        let other = arguments[i];
+        if (!other) continue;
+        if (other.src !== undefined) {
+            rt.src = other.src;
+        }
+        if (other.image !== undefined) {
+            rt.image = other.image;
+        }
+        assign(rt.style, other.style);
+    }
+    return rt;
 };
 
-const styleKeyFromItem=(item,useDefault)=>{
+const styleKeyFromItem=(item,useDefault,useInternal)=>{
     let rt="normal";
     if (item.warning){
       rt="warning";
@@ -28,7 +47,9 @@ const styleKeyFromItem=(item,useDefault)=>{
             rt="nearest";
         }
     }
-    if (useDefault) return rt;
+    if (useDefault) {
+        return useInternal?"internal"+rt:rt;
+    }
     let suffix=AisFormatter.format('shiptype',item);
     return rt+"-"+suffix;
 
@@ -55,7 +76,7 @@ const AisLayer=function(mapholder){
 
     this.symbolStyles={};
 
-    this.createAllIcons();
+    this.createInternalIcons();
 
     /**
      * an array of pixel positions of the current ais data
@@ -124,25 +145,22 @@ AisLayer.prototype.createIcon=function(color,useCourseVector){
  * compute the icons for the AIS display
  * @private
  */
-AisLayer.prototype.createAllIcons=function(){
-    let style=globalStore.getMultiple(keys.properties.style);
-    let useCourseVector=globalStore.getData(keys.properties.aisUseCourseVector,false);
-    let symbolStyle=useCourseVector?this.targetStyleCourseVector:this.targetStyle;
-    if (! this.symbolStyles.nearest || ! this.symbolStyles.nearest.external){
-        this.symbolStyles.nearest=new StyleEntry(
-            this.createIcon(style.aisNearestColor,useCourseVector),
-            assign({},symbolStyle,{courseVectorColor:style.aisNearestColor}));
-    }
-    if (! this.symbolStyles.warning || ! this.symbolStyles.warning.external){
-        this.symbolStyles.warning=new StyleEntry(
-            this.createIcon(style.aisWarningColor,useCourseVector),
-            assign({},symbolStyle,{courseVectorColor:style.aisWarningColor}));
-    }
-    if (! this.symbolStyles.normal || ! this.symbolStyles.normal.external){
-        this.symbolStyles.normal=new StyleEntry(
-            this.createIcon(style.aisNormalColor,useCourseVector),
-            assign({},symbolStyle,{courseVectorColor:style.aisNormalColor}));
-    }
+AisLayer.prototype.createInternalIcons = function () {
+    let style = globalStore.getMultiple(keys.properties.style);
+    let useCourseVector = globalStore.getData(keys.properties.aisUseCourseVector, false);
+    let symbolStyle = useCourseVector ? this.targetStyleCourseVector : this.targetStyle;
+    this.symbolStyles.internalnearest = new StyleEntry(
+        this.createIcon(style.aisNearestColor, useCourseVector),
+        assign({}, symbolStyle, {courseVectorColor: style.aisNearestColor}));
+
+    this.symbolStyles.internalwarning = new StyleEntry(
+        this.createIcon(style.aisWarningColor, useCourseVector),
+        assign({}, symbolStyle, {courseVectorColor: style.aisWarningColor}));
+
+    this.symbolStyles.internalnormal = new StyleEntry(
+        this.createIcon(style.aisNormalColor, useCourseVector),
+        assign({}, symbolStyle, {courseVectorColor: style.aisNormalColor}));
+
 };
 /**
  * find the AIS target that has been clicked
@@ -185,12 +203,9 @@ AisLayer.prototype.setStyles=function(){
  * @returns {StyleEntry}
  */
 AisLayer.prototype.getStyleEntry=function(item){
-    let name=styleKeyFromItem(item,false);
-    let rt={};
-    if (this.symbolStyles[name]) {
-        rt=this.symbolStyles[name];
-    }
-    return assign({},this.symbolStyles[styleKeyFromItem(item,true)],rt);
+    return mergeStyles(this.symbolStyles[styleKeyFromItem(item,true,true)],
+        this.symbolStyles[styleKeyFromItem(item,true)],
+        this.symbolStyles[styleKeyFromItem(item)]);
 };
 
 AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,computeTargetFunction){
@@ -199,7 +214,7 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,computeTargetFun
     let courseVectorWidth=globalStore.getData(keys.properties.navCircleWidth);
     let scale=globalStore.getData(keys.properties.aisIconScale,1);
     let rotation=current.course||0;
-    let symbol=this.getStyleEntry(current)||{};
+    let symbol=this.getStyleEntry(current);
     let style=assign({},symbol.style);
     if (scale != 1){
         style.size=[style.size[0]*scale,style.size[1]*scale];
@@ -215,7 +230,7 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,computeTargetFun
     }
 
     let curpix=drawing.drawImageToContext(xy,symbol.image,style);
-    if (useCourseVector){
+    if (useCourseVector && style.courseVector !== false){
         let courseVectorDistance=(current.speed !== undefined)?current.speed*courseVectorTime:0;
         if (courseVectorDistance > 0){
             let other=computeTargetFunction(xy,rotation,courseVectorDistance);
@@ -256,7 +271,7 @@ AisLayer.prototype.onPostCompose=function(center,drawing){
  */
 AisLayer.prototype.dataChanged=function(){
     this.visible=globalStore.getData(keys.properties.layers.ais);
-    this.createAllIcons();
+    this.createInternalIcons();
     this.setStyles();
 };
 /**
@@ -295,6 +310,13 @@ AisLayer.prototype.computeTarget=function(pos,course,dist){
  */
 AisLayer.prototype.setImageStyles=function(styles){
     let names=['Normal','Warning','Nearest'];
+    let allowedStyles={
+        anchor:true,
+        size: true,
+        courseVectorColor: true,
+        courseVector: true,
+        rotate: true
+    };
     for (let i in names){
         let name=names[i];
         let styleProp="ais"+name+"Image";
@@ -302,12 +324,7 @@ AisLayer.prototype.setImageStyles=function(styles){
             let style = styles[styleProp];
             this.symbolStyles[name.toLowerCase()] = new StyleEntry(
                 style.src,
-                {
-                    anchor: style.anchor,
-                    size: style.size,
-                    courseVectorColor: style.courseVectorColor,
-                    rotate: style.rotate,
-                },
+                Helper.filteredAssign(allowedStyles,style),
                 true
             );
         }
@@ -320,11 +337,7 @@ AisLayer.prototype.setImageStyles=function(styles){
                 if (typeof (dstyle) === 'object') {
                     this.symbolStyles[styleKey] = new StyleEntry(
                         dstyle.src,
-                        {   anchor:dstyle.anchor,
-                            size:dstyle.size,
-                            courseVectorColor: dstyle.courseVectorColor,
-                            rotate: dstyle.rotate
-                        },
+                        Helper.filteredAssign(allowedStyles,dstyle),
                         true
                     )
                 }

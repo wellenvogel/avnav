@@ -109,6 +109,19 @@ Helper.getExt=(name)=>{
     return name.replace(/.*\./,'').toLocaleLowerCase();
 };
 
+Helper.filteredAssign=function(){
+    let args = Array.prototype.slice.call(arguments);
+    let filter=args.shift();
+    let rt={};
+    for (let k in args){
+        let o=args[k];
+        for (let ok in filter){
+            if (o[ok] !== undefined) rt[ok]=o[ok];
+        }
+    }
+    return rt;
+};
+
 
 
 
