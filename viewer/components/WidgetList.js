@@ -138,6 +138,7 @@ let widgetList=[
             value:keys.nav.anchor.distance
         },
         formatter: 'formatDistance',
+        formatterParameters: ['m']
     },
     {
         name: 'AnchorWatchDistance',
