@@ -90,9 +90,13 @@ class OverlayDialog extends React.Component {
         window.setTimeout(function () {
             if (!self.refs.box) return; //could have become invisible...
             let boxRect = self.refs.box.getBoundingClientRect();
+            let left=(rect.width - boxRect.width) / 2;
+            let top=(rect.height - boxRect.height) / 2;
             assign(self.refs.box.style, {
-                left: (rect.width - boxRect.width) / 2 + "px",
-                top: (rect.height - boxRect.height) / 2 + "px",
+                left: left + "px",
+                top: top + "px",
+                maxWidth: (rect.width-left)+"px",
+                maxHeight: (rect.height-top)+"px",
                 opacity: 1
             });
         }, 0);

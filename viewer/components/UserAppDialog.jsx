@@ -125,13 +125,15 @@ export default class UserAppDialog extends React.Component{
                                 }/>}
                             {!this.state.internal ?
                                 <Input
+                                    dialogRow={true}
                                     label="external url"
                                     value={this.state.url}
-                                    minSize={30}
+                                    minSize={50}
                                     maxSize={100}
                                     onChange={(val)=>self.setState({url:val})}/>
                                 :
                                 <InputSelect
+                                    dialogRow={true}
                                     label="internal url"
                                     value={this.state.url}
                                     list={this.state.userFiles}
@@ -145,7 +147,7 @@ export default class UserAppDialog extends React.Component{
                             dialogRow={true}
                             label="title"
                             value={this.state.title}
-                            minSize={30}
+                            minSize={50}
                             maxSize={100}
                             onChange={(value)=>{self.setState({title:value})}}
                             />
