@@ -1506,14 +1506,7 @@ MapHolder.prototype.showEditingRoute=function(on){
 MapHolder.prototype.setBrightness=function(brightness){
     this.opacity=brightness;
 };
-/**
- * get an AIS icon as data url
- * @param {string} type: nearest,warning,normal
- * @returns {string} the icon as a data url
- */
-MapHolder.prototype.getAisIcon=function(type){
-    return this.aislayer.getAisIcon(type);
-};
+
 
 MapHolder.prototype.setCompassOffset=function(y){
    this.compassOffset=y;

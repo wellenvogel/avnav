@@ -274,20 +274,7 @@ AisLayer.prototype.dataChanged=function(){
     this.createInternalIcons();
     this.setStyles();
 };
-/**
- * get an AIS icon as data url
- * @param {string} type: nearest,warning,normal
- * @returns {string} the icon as a data url
- */
-AisLayer.prototype.getAisIcon=function(type){
-    if (type == 'nearest'){
-        return this.createIcon(globalStore.getData(keys.properties.style.aisNearestColor));
-    }
-    if (type == 'warning'){
-        return this.createIcon(globalStore.getData(keys.properties.style.aisWarningColor));
-    }
-    return this.createIcon(globalStore.getData(keys.properties.style.aisNormalColor));
-};
+
 
 /**
  * compute a target point in map units from a given point
