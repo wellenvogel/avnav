@@ -407,3 +407,22 @@ class AVNUtil():
     cleaned_filename = ''.join(c for c in cleaned_filename if c in whitelist)
     return cleaned_filename[:char_limit]
 
+
+class ChartFile:
+  def getScheme(self):
+    return None
+  def close(self):
+    pass
+  def open(self):
+    pass
+  def changeScheme(self,schema,createOverview=True):
+    raise Exception("not supported")
+  def getChangeCount(self):
+    return 0
+  def getOriginalScheme(self):
+    '''
+    just return a schema if the user did not set it but it was found in the chart
+    @return:
+    '''
+    return None
+

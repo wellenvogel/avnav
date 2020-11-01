@@ -238,6 +238,9 @@ const DownloadItem=(props)=>{
     if (props.active){
         cls+=" activeEntry";
     }
+    if (props.type == "chart" && props.originalScheme){
+        cls+=" userAction";
+    }
     let dataClass="downloadItemData";
     if (!(showDelete && ! props.active)) dataClass+=" noDelete";
     return(
@@ -822,7 +825,7 @@ class FileDialog extends React.Component{
         let rename=this.state.changed && ! this.state.existingName && (this.state.name != this.props.current.name);
         let Dialog=this.state.dialog;
         let showSchema=(this.props.current.type == 'chart' && this.props.current.url.match(/.*mbtiles.*/));
-        let schemeChanged=(this.props.current.scheme||"xyz") != this.state.scheme;
+        let schemeChanged=((this.props.current.scheme||"tms") != this.state.scheme)|| this.props.current.originalScheme;
         return(
             <React.Fragment>
             <div className="fileDialog flexInner">
@@ -834,6 +837,17 @@ class FileDialog extends React.Component{
                     :
                     null
                 }
+                {(showSchema && this.props.current.originalScheme) &&
+                <div className="dialogRow userAction">
+                    <span className="inputLabel">
+                        original DB scheme
+                    </span>
+                    <span className="value">
+                        {this.props.current.originalScheme}
+                    </span>
+
+                </div>
+                }
                 {showSchema &&
                     <Radio
                         label="scheme"
@@ -841,6 +855,7 @@ class FileDialog extends React.Component{
                         onChange={(v)=>{this.setState({changed:true,scheme:v})}}
                         itemList={[{label:"xyz",value:"xyz"},{label:"tms",value:"tms"}]}
                         className="mbtilesType"/>
+
                 }
                 {this.state.allowed.showRename ?
                     <div className="dialogRow">

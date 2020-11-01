@@ -147,6 +147,7 @@ public class Chart implements INavRequestHandler.IJsonObect {
         int numFiles=0;
         long sequence=0;
         String scheme="";
+        String orignalScheme=null;
         try {
             if (isXml()) {
                 numFiles=1;
@@ -155,6 +156,7 @@ public class Chart implements INavRequestHandler.IJsonObect {
                 numFiles= getChartFileReader().numFiles();
                 sequence=getChartFileReader().getSequence();
                 scheme=getChartFileReader().getScheme();
+                orignalScheme=getChartFileReader().getOriginalScheme();
             }
         }catch (Exception ex){
             throw new JSONException(ex.getLocalizedMessage());
@@ -167,6 +169,9 @@ public class Chart implements INavRequestHandler.IJsonObect {
         e.put("canDownload",isXml() || (numFiles == 1));
         e.put("sequence",sequence);
         e.put("scheme",scheme);
+        if (orignalScheme != null){
+            e.put("originalScheme",orignalScheme);
+        }
         return e;
     }
 

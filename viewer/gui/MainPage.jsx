@@ -182,6 +182,7 @@ class MainPage extends React.Component {
         let ChartItem = function (props) {
             let cls="chartItem";
             if (props.selected) cls+=" activeEntry";
+            if (props.originalScheme) cls+=" userAction";
             return (
                 <div className={cls} onClick={props.onClick}>
                     <img src={chartImage}/>

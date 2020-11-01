@@ -122,17 +122,7 @@ class Tileset():
     self.miny=miny
     self.maxx=maxx
     self.maxy=maxy
-  def getBoundings(self):
-    #minx/miny: upper left corner - minlon,maxlat
-    #maxx/maxy: lower right       - maxlon,minlat
-    maxlat,minlon=num2deg(self.minx,self.miny,self.zoom)
-    #try to avoid alway including the next tiles by subtracting 1/1000...
-    minlat,maxlon=num2deg(self.maxx+0.999,self.maxy+0.999,self.zoom)
-    return {'minlon':minlon,
-            'minlat':minlat,
-            'maxlon':maxlon,
-            'maxlat':maxlat,
-            'title':self.name}
+
 
 class Tilegroup():
   def __init__(self,name):
@@ -188,45 +178,43 @@ class Layer():
     for tg in self.tlist:
       rt+=tg.getZoomElements(zoom)
     return rt
-  #return a pseudo tileset to the complete layer
-  #depending on the use case we either take the max zoom level (typically: multi source)
-  #or compute the max of all zoomlevels
-  def getBoundingElement(self,useMax=True):
-    startzoom=None
+
+  def createBoundingsXml(self, useMax=False):
+    upperOffset=0.999 #using this for the max value to avoid some rounding errors
+    startzoom = None
     if useMax:
-      startzoom=self.maxzoom
+      startzoom = self.maxzoom
     else:
-      startzoom=self.minzoom
-    zoom=startzoom
-    minx=-1
-    miny=-1
-    maxx=0
-    maxy=0
-    found=(zoom,minx,miny,maxx,maxy)
-    for zoom in range(startzoom,self.maxzoom+1):
-      hasChanged=False
-      mz=self.getZoomElements(zoom)
+      startzoom = self.minzoom
+    minlat=85
+    maxlat=-85
+    minlon=180
+    maxlon=-180
+
+    for zoom in range(startzoom, self.maxzoom + 1):
+      mz = self.getZoomElements(zoom)
       for el in mz:
-        if miny==-1 or el.miny < miny:
-          miny=el.miny
-          hasChanged=True
-        if minx==-1 or el.minx < minx:
-          minx=el.minx
-          hasChanged=True
-        if el.maxx > maxx:
-          maxx=el.maxx
-          hasChanged=True
-        if el.maxy > maxy:
-          maxy=el.maxy
-          hasChanged=True
-      if hasChanged:
-        found=(zoom,minx,miny,maxx,maxy)
-      minx*=2
-      miny*=2
-      maxx*=2
-      maxy*=2
-    nel=Tileset("layer",found[0],found[1],found[2],found[3],found[4])
-    return nel
+        # minx/miny: upper left corner - minlon,maxlat
+        # maxx/maxy: lower right       - maxlon,minlat
+        # try to avoid always including the next tiles by subtracting 1/1000...
+        elmaxlat, elminlon = num2deg(el.minx, el.miny, el.zoom)
+        elminlat, elmaxlon = num2deg(el.maxx + upperOffset, el.maxy + upperOffset, el.zoom)
+        if elmaxlat > maxlat:
+          maxlat=elmaxlat
+        if elmaxlon > maxlon:
+          maxlon=elmaxlon
+        if elminlat < minlat:
+          minlat=elminlat
+        if elminlon < minlon:
+          minlon=elminlon
+
+    boundings = {'minlon': minlon,
+               'minlat': minlat,
+               'maxlon': maxlon,
+               'maxlat': maxlat,
+               'title': 'bounding'}
+    return boundingbox_xml % boundings
+
     
 
 #----------------------------
@@ -280,8 +268,7 @@ class ListHandler(sax.handler.ContentHandler):
   
 
 
-def createBoundingsXml(tileset):
-  return boundingbox_xml % tileset.getBoundings()
+
   
 
 def createTileMapForLayer(layer,name,zOffset,tileSize,zoomBoundings):
@@ -300,7 +287,7 @@ def createTileMapForLayer(layer,name,zOffset,tileSize,zoomBoundings):
             "url":layer.baseurl,
             "minZoom":layer.minzoom,
             "maxZoom":layer.maxzoom,
-            "bounding":createBoundingsXml(layer.getBoundingElement(False)),
+            "bounding":layer.createBoundingsXml(),
             "layerboundings":zoom_boundings%{'boundings':layerBoundings},
             "tileSize":tileSize,
             "zoomOffset":'zOffset="%d"'%(zOffset,)

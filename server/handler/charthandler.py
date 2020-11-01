@@ -35,7 +35,8 @@ import mbtiles_reader
 from avnav_util import *
 from avnav_worker import AVNWorker
 
-class XmlChartFile:
+
+class XmlChartFile(ChartFile):
   def __init__(self,filename,isDir=False):
     self.filename=filename
     self.isDir=isDir
@@ -55,23 +56,11 @@ class XmlChartFile:
     with open(ovname,"r") as f:
       return f.read()
 
-  def changeScheme(self,schema,createOverview=True):
-    raise Exception("not supported")
-
-  def getScheme(self):
-    return None
-  def close(self):
-    pass
-  def open(self):
-    pass
   def deleteFiles(self):
     if os.path.isfile(self.filename):
       return os.unlink(self.filename)
     if self.isDir and os.path.isdir(self.filename):
       shutil.rmtree(self.filename)
-
-  def getChangeCount(self):
-    return 0
 
   def getDownloadFile(self):
     if self.isDir:
@@ -280,7 +269,8 @@ class AVNChartHandler(AVNWorker):
              'canDelete': True,
              'canDownload': True,
              'scheme': chart['chart'].getScheme(),
-             'sequence':chart['chart'].getChangeCount()
+             'sequence':chart['chart'].getChangeCount(),
+             'originalScheme': chart['chart'].getOriginalScheme()
       }
       data.append(entry)
     host = httpHandler.headers.get('host')

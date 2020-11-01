@@ -32,10 +32,10 @@ import threading
 import traceback
 
 import create_overview
-from avnav_util import AVNLog
+from avnav_util import AVNLog, ChartFile
 
 
-class GemfFile():
+class GemfFile(ChartFile):
   def __init__(self,filename):
     self.filename=filename
     self.handles=[]

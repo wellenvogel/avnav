@@ -30,7 +30,7 @@ import sys
 import threading
 
 import create_overview
-from avnav_util import AVNLog, AVNUtil
+from avnav_util import AVNLog, AVNUtil, ChartFile
 
 
 #mbtiles:
@@ -63,7 +63,7 @@ class QueueEntry:
 
 
 
-class MBTilesFile():
+class MBTilesFile(ChartFile):
   def __init__(self,filename,timeout=300):
     self.filename=filename
     self.isOpen=False
@@ -71,7 +71,9 @@ class MBTilesFile():
     self.connection=None
     self.zoomlevels=[]
     self.zoomLevelBoundings={}
-    self.schemeXyz=True
+    self.schemeTMS=True
+    self.originalScheme=None
+    self.schemeInconsistent=False #if there is a scheme entry in the DB but no avnav_schema
     self.requestQueue=[]
     self.timeout=timeout
     self.stop=False
@@ -80,7 +82,10 @@ class MBTilesFile():
     self.handler.start()
     self.changeCount=AVNUtil.utcnow()
 
-
+  def getOriginalScheme(self):
+    if not self.schemeInconsistent:
+      return None
+    return self.originalScheme
 
   def handleRequests(self):
     connection=sqlite3.connect(self.filename)
@@ -101,13 +106,13 @@ class MBTilesFile():
 
   #tile is (z,x,y)
   def zxyToZoomColRow(self,tile):
-    if self.schemeXyz:
+    if self.schemeTMS:
       return [tile[0],tile[1],pow(2,tile[0])-1-tile[2]]
     else:
       return [tile[0],tile[1],tile[2]]
 
   def rowToY(self, z, row):
-    if self.schemeXyz:
+    if self.schemeTMS:
       return pow(2,z)-1-row
     else:
       return row
@@ -174,22 +179,33 @@ class MBTilesFile():
       raise Exception("unable to open mbtiles file %s" % (self.filename))
     AVNLog.info("opening mbtiles file %s", self.filename)
     cu = None
+    hasAvnavScheme=False
     try:
       cu = connection.cursor()
-      for sr in cu.execute("select value from metadata where name=?",["scheme"]):
+      for sr in cu.execute("select value from metadata where name=?",["avnav_scheme"]):
         v=sr[0]
         if v is not None:
           v=v.lower()
           if v in ['tms','xyz']:
             AVNLog.info("setting scheme for %s to %s",self.filename,v)
-            self.schemeXyz=False if v == "tms" else True
+            self.schemeTMS=False if v == "xyz" else True
+            self.schemeInconsistent=False
+            hasAvnavScheme=True
+      #check if there is a schema entry
+      for sr in cu.execute("select value from metadata where name=?",["scheme"]):
+        v=sr[0]
+        if v is not None:
+          v=v.lower()
+          self.originalScheme=v
+          if not hasAvnavScheme:
+            self.schemeInconsistent=True
       for zl in cu.execute("select distinct zoom_level from tiles;"):
         zoomlevels.append(zl[0])
       for zl in zoomlevels:
         el = {}
         for rowmima in cu.execute("select min(tile_row),max(tile_row) from tiles where zoom_level=?", [zl]):
           # names must match getGemfInfo in create_overview
-          if self.schemeXyz:
+          if self.schemeTMS:
             el['ymin'] = self.rowToY(zl, rowmima[1])
             el['ymax'] = self.rowToY(zl, rowmima[0])
           else:
@@ -211,24 +227,24 @@ class MBTilesFile():
   def changeScheme(self,schema,createOverview=True):
     if schema not in ['xyz','tms']:
       raise Exception("unknown schema %s"%schema)
-    if schema == "tms":
-      if not self.schemeXyz:
-        return False
-      self.schemeXyz=False
     if schema == "xyz":
-      if self.schemeXyz:
+      if not self.schemeTMS and not self.schemeInconsistent:
         return False
-      self.schemeXyz=True
+      self.schemeTMS=False
+    if schema == "tms":
+      if self.schemeTMS and not self.schemeInconsistent:
+        return False
+      self.schemeTMS=True
     con=sqlite3.connect(self.filename)
     cu = con.cursor()
     try:
-      rs=cu.execute("select value from metadata where name=?", ["scheme"])
+      rs=cu.execute("select value from metadata where name=?", ["avnav_scheme"])
       row=rs.fetchone()
       if row is not None:
-        cu.execute("update metadata set value=? where name='scheme'",[schema])
+        cu.execute("update metadata set value=? where name='avnav_scheme'",[schema])
         con.commit()
       else:
-        cu.execute("insert into metadata (name,value) values ('scheme',?)",[schema])
+        cu.execute("insert into metadata (name,value) values ('avnav_scheme',?)",[schema])
         con.commit()
     except Exception as e:
       cu.close()
@@ -241,7 +257,7 @@ class MBTilesFile():
     return True
 
   def getScheme(self):
-    return "xyz" if self.schemeXyz else "tms"
+    return "tms" if self.schemeTMS else "xyz"
 
   def close(self):
     if not self.isOpen:

@@ -45,6 +45,8 @@ public abstract class ChartFile {
 
 	public abstract String getScheme();
 
+	public String getOriginalScheme() {return null;}
+
 	public abstract boolean setScheme(String newScheme) throws Exception;
 
 	public abstract long getSequence();

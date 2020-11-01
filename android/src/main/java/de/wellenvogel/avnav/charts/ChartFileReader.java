@@ -250,6 +250,9 @@ public class ChartFileReader {
     public String getScheme(){
         return chart.getScheme();
     }
+    public String getOriginalScheme(){
+        return chart.getOriginalScheme();
+    }
     public boolean setSchema(String newScheme) throws Exception {
         boolean rt=chart.setScheme(newScheme);
         if (rt){

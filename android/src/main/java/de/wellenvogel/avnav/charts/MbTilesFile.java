@@ -1,12 +1,8 @@
 package de.wellenvogel.avnav.charts;
 
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteStatement;
-import android.os.ParcelFileDescriptor;
-import android.support.v4.provider.DocumentFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -17,7 +13,9 @@ import java.util.ArrayList;
 import de.wellenvogel.avnav.util.AvnLog;
 
 public class MbTilesFile extends ChartFile {
-    private boolean schemeXyz=true;
+    private boolean schemeTms =true;
+    private String originalScheme=null;
+    private boolean schemeInconsistent=false;
     SQLiteDatabase db=null;
     Object lock=new Object();
     Object writerLock=new Object();
@@ -29,7 +27,13 @@ public class MbTilesFile extends ChartFile {
 
     @Override
     public String getScheme() {
-        return schemeXyz?"xyz":"tms";
+        return schemeTms ?"tms":"xyz";
+    }
+
+    @Override
+    public String getOriginalScheme() {
+        if (! schemeInconsistent) return null;
+        return originalScheme;
     }
 
     @Override
@@ -38,27 +42,27 @@ public class MbTilesFile extends ChartFile {
         if (!newScheme.equals("xyz") && ! newScheme.equals("tms")){
             throw new Exception("invalid scheme");
         }
-        if (newScheme.equals("xyz")){
-            if (schemeXyz) return false;
-            schemeXyz=true;
+        if (newScheme.equals("tms")){
+            if (schemeTms && ! schemeInconsistent) return false;
+            schemeTms =true;
         }
         else{
-            if (!schemeXyz) return false;
-            schemeXyz=false;
+            if (!schemeTms && ! schemeInconsistent) return false;
+            schemeTms =false;
         }
         synchronized (writerLock) {
             SQLiteDatabase dbrw = SQLiteDatabase.openDatabase(mRealFile.getPath(), null, SQLiteDatabase.OPEN_READWRITE);
             Cursor cu=null;
             try {
-                cu = dbrw.rawQuery("select value from metadata where name='scheme'", null);
+                cu = dbrw.rawQuery("select value from metadata where name='avnav_scheme'", null);
                 ContentValues update = new ContentValues();
                 update.put("value", newScheme);
                 if (cu.moveToFirst()) {
                     cu.close();
-                    dbrw.update("metadata", update, "name='scheme'", null);
+                    dbrw.update("metadata", update, "name='avnav_scheme'", null);
                 } else {
                     cu.close();
-                    update.put("name","scheme");
+                    update.put("name","avnav_scheme");
                     dbrw.insert("metadata", null, update);
                 }
             }finally{
@@ -111,7 +115,7 @@ public class MbTilesFile extends ChartFile {
 
     //tile is (z,x,y)
     private Tile zxyToZoomColRow(int z,int x, int y) {
-        if (schemeXyz) {
+        if (schemeTms) {
             return new Tile(z, x, (1 << z) - 1 - y);
         }
         else {
@@ -120,7 +124,7 @@ public class MbTilesFile extends ChartFile {
     }
 
     private int rowToY(int z, int row) {
-        if (schemeXyz){
+        if (schemeTms){
             return (1<< z) - 1 - row;
         }
         else {
@@ -153,11 +157,24 @@ public class MbTilesFile extends ChartFile {
         }
         db=SQLiteDatabase.openDatabase(mRealFile.getPath(),null,SQLiteDatabase.OPEN_READONLY);
         try {
+            boolean hasAvnavScheme=false;
+            cu = db.rawQuery("select value from metadata where name=?", new String[]{"avnav_scheme"});
+            if (cu.moveToFirst()){
+                String scheme=cu.getString(0);
+                AvnLog.i("found schema for "+mRealFile.getPath()+": "+scheme);
+                if (!scheme.equalsIgnoreCase("tms")) schemeTms =false;
+                hasAvnavScheme=true;
+                schemeInconsistent=false;
+            }
+            cu.close();
             cu = db.rawQuery("select value from metadata where name=?", new String[]{"scheme"});
             if (cu.moveToFirst()){
                 String scheme=cu.getString(0);
                 AvnLog.i("found schema for "+mRealFile.getPath()+": "+scheme);
-                if (scheme.equalsIgnoreCase("tms")) schemeXyz=false;
+                originalScheme=scheme;
+                if (!hasAvnavScheme){
+                    schemeInconsistent=true;
+                }
             }
             cu.close();
             cu=db.rawQuery("select distinct zoom_level from tiles",null);
@@ -175,7 +192,7 @@ public class MbTilesFile extends ChartFile {
                 cu=db.rawQuery("select min(tile_row),max(tile_row) from tiles where zoom_level=?",
                         new String[]{Integer.toString(zl)});
                 if (cu.moveToFirst()){
-                    if (schemeXyz) {
+                    if (schemeTms) {
                         range.yMin=rowToY(zl,cu.getInt(1));
                         range.yMax=rowToY(zl,cu.getInt(0));
                     }
