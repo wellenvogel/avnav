@@ -36,8 +36,8 @@ const NavLayer=function(mapholder){
      * @type {ol.style.Style}
      */
     this.boatStyle={
-        anchor: [15, 72],
-        size: [30,120],
+        anchor: [15, 0],
+        size: [30,48],
         src: boatImage,
         rotation: 20/180*Math.PI,
         rotateWithView: true,
