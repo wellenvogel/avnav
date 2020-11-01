@@ -197,8 +197,6 @@ ospackage {
     os = LINUX // only applied to RPM
     packageGroup='misc'
     packageName='avnav'
-    requires('gpsd')
-    requires('python-gps')
     requires('bluetooth')
     requires('python-bluez')
     requires('python-pyudev')
