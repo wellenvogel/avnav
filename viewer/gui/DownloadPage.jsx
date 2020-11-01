@@ -1219,13 +1219,15 @@ class DownloadPage extends React.Component{
                 name:'DownloadPageUser',
                 toggle: type == 'user',
                 visible: (type == 'user'|| allowTypeChange) && globalStore.getData(keys.gui.capabilities.uploadUser,false),
-                onClick:()=>{changeType('user')}
+                onClick:()=>{changeType('user')},
+                overflow:true
             },
             {
                 name:'DownloadPageImages',
                 toggle: type == 'images',
                 visible: (type == 'images'|| allowTypeChange) && globalStore.getData(keys.gui.capabilities.uploadImages,false),
-                onClick:()=>{changeType('images')}
+                onClick:()=>{changeType('images')},
+                overflow: true
             },
             {
                 name:'DownloadPageUpload',
