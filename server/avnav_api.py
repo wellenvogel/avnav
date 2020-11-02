@@ -227,3 +227,10 @@ class AVNApi:
     @return:
     '''
     raise NotImplemented()
+
+  def getApiUrl(self):
+    '''
+    return the API url that must be used to trigger a registered request handler
+    @return:
+    '''
+    raise NotImplemented()

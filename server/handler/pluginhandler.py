@@ -41,6 +41,7 @@ from avnuserapps import AVNUserAppHandler
 from layouthandler import AVNLayoutHandler
 from charthandler import AVNChartHandler
 
+URL_PREFIX= "/plugins"
 
 class ApiImpl(AVNApi):
   def __init__(self,parent,store,queue,prefix,moduleFile):
@@ -149,7 +150,7 @@ class ApiImpl(AVNApi):
     iconFilePath=os.path.join(os.path.dirname(self.fileName),iconFile)
     if not os.path.exists(iconFilePath):
       raise Exception("icon file %s not found"%iconFilePath)
-    addonhandler.registerAddOn("%s%i"%(self.prefix,self.addonIndex),url,"%s/%s/%s"%(AVNPluginHandler.PREFIX,self.prefix,iconFile),title)
+    addonhandler.registerAddOn("%s%i"%(self.prefix,self.addonIndex),url,"%s/%s/%s"%(URL_PREFIX,self.prefix,iconFile),title)
     self.addonIndex+=1
 
   def registerLayout(self, name, layoutFile):
@@ -177,6 +178,10 @@ class ApiImpl(AVNApi):
 
   def registerRequestHandler(self, callback):
     self.requestHandler=callback
+
+  def getApiUrl(self):
+    return URL_PREFIX+"/"+self.prefix+"/api"
+
 
 
 class AVNPluginHandler(AVNWorker):
@@ -338,7 +343,7 @@ class AVNPluginHandler(AVNWorker):
     @param name: the module name
     @return: the module (if nay)
     """
-    moduleFile=os.path.join(dir,"plugin.py");
+    moduleFile=os.path.join(dir,"plugin.py")
     if not os.path.exists(moduleFile):
       return None
     try:
@@ -353,9 +358,8 @@ class AVNPluginHandler(AVNWorker):
     rt={}
     return rt
 
-  PREFIX="/plugins"
   def getHandledCommands(self):
-    return {"api":"plugins","path":self.PREFIX}
+    return {"api":"plugins","path":URL_PREFIX}
 
   def handleApiRequest(self,atype,command,requestparam,**kwargs):
     if atype == 'path':
@@ -363,7 +367,7 @@ class AVNPluginHandler(AVNWorker):
       '''path mapping request, just return the module path
          command is the original url
       '''
-      localPath=command[len(self.PREFIX)+1:].split("/",1)
+      localPath= command[len(URL_PREFIX) + 1:].split("/", 1)
       if len(localPath) < 2:
         raise Exception(404,"missing plugin path")
       dir=self.pluginDirs.get(localPath[0])
@@ -389,7 +393,7 @@ class AVNPluginHandler(AVNWorker):
           return None
         fname=os.path.join(dir,'plugin.js')
         name=localPath[0]
-        url=self.PREFIX+"/"+name+"/api"
+        url= URL_PREFIX + "/" + name + "/api"
         addCode="var AVNAV_PLUGIN_NAME=\"%s\";\nvar AVNAV_PLUGIN_URL=\"%s\";\n"%(name,url)
         return handler.sendJsFile(fname,addCode)
       return os.path.join(dir,kwargs.get('server').plainUrlToPath(localPath[1],False))
@@ -407,9 +411,9 @@ class AVNPluginHandler(AVNWorker):
           dir=self.pluginDirs[k]
           element={'name':k,'dir':dir}
           if os.path.exists(os.path.join(dir,"plugin.js")):
-            element['js']=self.PREFIX+"/"+k+"/plugin.js"
+            element['js']= URL_PREFIX + "/" + k + "/plugin.js"
           if os.path.exists(os.path.join(dir,"plugin.css")):
-            element['css']=self.PREFIX+"/"+k+"/plugin.css"
+            element['css']= URL_PREFIX + "/" + k + "/plugin.css"
           data.append(element)
         rt={'status':'OK','data':data}
         return rt
