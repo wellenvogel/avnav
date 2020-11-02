@@ -825,7 +825,7 @@ class FileDialog extends React.Component{
         let rename=this.state.changed && ! this.state.existingName && (this.state.name != this.props.current.name);
         let Dialog=this.state.dialog;
         let showSchema=(this.props.current.type == 'chart' && this.props.current.url.match(/.*mbtiles.*/));
-        let schemeChanged=((this.props.current.scheme||"tms") != this.state.scheme)|| this.props.current.originalScheme;
+        let schemeChanged=showSchema && (((this.props.current.scheme||"tms") != this.state.scheme)|| this.props.current.originalScheme);
         return(
             <React.Fragment>
             <div className="fileDialog flexInner">
