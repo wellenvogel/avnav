@@ -204,7 +204,7 @@ class AVNStore():
     self.__aisLock.release()
 
 
-  def getAisData(self, asDict=False):
+  def getAisData(self, asDict=False,copyElements=False):
     rt=[] if not asDict else {}
     keysToRemove=[]
     now=AVNUtil.utcnow()
@@ -216,9 +216,15 @@ class AVNStore():
           keysToRemove.append(key)
         else:
           if asDict:
-            rt[key]=aisEntry.value
+            if copyElements:
+              rt[key] = aisEntry.value.copy()
+            else:
+              rt[key]=aisEntry.value
           else:
-            rt.append(aisEntry.value)
+            if copyElements:
+              rt.append(aisEntry.value.copy())
+            else:
+              rt.append(aisEntry.value)
       for rkey in keysToRemove:
         del self.__aisList[rkey]
     except:
@@ -251,9 +257,7 @@ class AVNStore():
     @return: a dict with all entries, keys having the prefix removed
     """
     if prefix == self.BASE_KEY_AIS:
-      rt={}
-      rt['entities']=self.getAisData(True).copy()
-      rt['count']=self.getAisCounter()
+      rt=self.getAisData(True,copyElements=True)
       return rt
     prefix=prefix+"."
     plen=len(prefix)
