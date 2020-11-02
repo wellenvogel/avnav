@@ -227,6 +227,34 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       AVNLog.ld("nav response",rtj)
     else:
       raise Exception("empty response")
+
+  def sendJsFile(self,filename,addCode=None):
+    '''
+    send a js file that we encapsulate into an anonymus function
+    @param filename:
+    @return:
+    '''
+    PREFIX="(function(){\n"
+    SUFFIX="\n})();\n"
+    if not os.path.exists(filename):
+      self.send_error(404,"File not found")
+      return
+    self.send_response(200)
+    flen=os.path.getsize(filename)
+    dlen=flen+len(PREFIX)+len(SUFFIX)
+    if addCode is not None:
+      dlen+=len(addCode)
+    self.send_header("Content-type", "text/javascript")
+    self.send_header("Content-Length", str(dlen))
+    self.send_header("Last-Modified", self.date_time_string())
+    self.end_headers()
+    self.wfile.write(PREFIX)
+    if addCode is not None:
+      self.wfile.write(addCode)
+    fh=open(filename,"r")
+    self.writeStream(flen,fh)
+    self.wfile.write(SUFFIX)
+    return True
   #handle a navigational query
   #request parameters:
   #request=gps&filter=TPV&bbox=54.531,13.014,54.799,13.255

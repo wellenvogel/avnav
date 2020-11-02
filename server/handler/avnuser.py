@@ -158,7 +158,7 @@ class AVNUserHandlerBase(AVNWorker):
     src = os.path.join(self.baseDir, name)
     return os.path.exists(src)
 
-  def getPathFromUrl(self,url,restrictName=False):
+  def getPathFromUrl(self,url,restrictName=False,handler=None):
     if not url.startswith(self.getPrefix()):
       return None
     path = url[len(self.getPrefix()) + 1:]
@@ -204,7 +204,8 @@ class AVNUserHandlerBase(AVNWorker):
         return self.handleList()
       raise Exception("unknown command for %s api request: %s"%(self.type,command))
     if type == 'path':
-      return self.getPathFromUrl(subtype)
+      handler=kwargs.get('handler')
+      return self.getPathFromUrl(subtype,handler=handler)
 
     if type == "list":
       return self.handleList()
@@ -290,7 +291,14 @@ class AVNUserHandler(AVNUserHandlerBase):
         with open(dest,"w") as fh:
           fh.write("{\n}\n")
 
-
+  def getPathFromUrl(self, url, restrictName=False,handler=None):
+    if url.startswith(self.PREFIX):
+      path=url[len(self.PREFIX)+1:]
+      if path == 'user.js':
+        fname=os.path.join(self.baseDir,path)
+        if os.path.exists(fname) and handler is not None:
+          return handler.sendJsFile(fname)
+    return super(AVNUserHandler, self).getPathFromUrl(url, restrictName,handler)
 
   def handlePathRequest(self,path):
     for p in self.FLIST:

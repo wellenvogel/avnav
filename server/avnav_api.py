@@ -207,3 +207,23 @@ class AVNApi:
     @return:
     '''
     raise NotImplemented()
+
+  def registerRequestHandler(self,callback):
+    '''
+    register a handler for requests to the plugin URL fro the GUI (js)
+    the url is /plugin/name/api
+    at the js side you will have a global variable AVNAV_PLUGIN_URL to use this
+    there will be exactly one request handler - if you call this method again, the
+    old handler will be removed
+    @param callback: a function that will receive 3 parameters:
+                     url - the request url (after the plugin/.../api part)
+                     handler - a HttpRequestHandler object- see https://docs.python.org/2/library/basehttpserver.html#BaseHTTPServer.BaseHTTPRequestHandler
+                     args - a dictionary of request parameters
+                     You can either return:
+                        a dictionary - this will be sent as a json response,
+                        True - in this case it is assumed you did send data already with the handler
+                        None - will return an error
+                     if you provide None it deletes an existing handler
+    @return:
+    '''
+    raise NotImplemented()

@@ -3,11 +3,40 @@ console.log("test plugin loaded");
 var widget={
     name:"testPlugin_Widget",
     /**
+     * if our plugin would like to use event handlers (like button click)
+     * we need to register handler functions
+     * this can be done at any time - but for performance reasons this should be done
+     * inside an init function
+     * @param context - the context - this is an object being the "this" for all other function calls
+     *                  there is an empty eventHandler object in this context.
+     *                  we need to register a function for every event handler we would like to use
+     *                  later in renderHtml
+     */
+    initFunction:function(context){
+        /**
+         * each event handler we register will get the event as parameter
+         * when being called, this is pointing to the context (not the event target - this can be obtained by ev.target)
+         * in this example we issue a request to the python side of the plugin using the
+         * global variable AVNAV_PLUGIN_URL and appending a further url
+         * We expect the response to be json
+         * @param ev
+         */
+        context.eventHandler.buttonClick=function(ev){
+            fetch(AVNAV_PLUGIN_URL+"/reset")
+            .then(function(data){
+                return data.json();
+                })
+                .then(function(json)
+                {
+                //alert("STATUS:"+json.status);
+                })
+            .catch(function(error){alert("ERROR: "+error)});
+        }
+    },
+    /**
      * a function that will render the HTML content of the widget
      * normally it should return a div with the class widgetData
      * but basically you are free
-     * It is important to return one surrounding element (not a list of multiple).
-     * You can nest internally as much as you want.
      * If you return null, the widget will not be visible any more.
      * @param props
      * @returns {string}
@@ -23,7 +52,14 @@ var widget={
         if (this.counter === undefined) this.counter=0;
         this.counter++;
         var dv=avnav.api.formatter.formatDirection(props.course);
-        return "<div class=\"widgetData\">["+props.myValue+"] "+dv+"</div>";
+        /**
+         * in our html below we assign an event handler to the button
+         * just be careful: this is not a strict W3C conforming HTML syntax:
+         * the event handler is not directly js code but only the name(!) of the registered event handler.
+         * it must be one of the names we have registered at the context.eventHandler in our init function
+         * Unknown handlers or pure java script code will be silently ignored!
+         */
+        return "<button class=\"reset\" onclick=\"buttonClick\">Reset</button><div class=\"widgetData\">["+props.myValue+"] "+dv+"</div>";
     },
     /**
      * optional render some graphics to a canvas object

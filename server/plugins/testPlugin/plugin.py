@@ -37,6 +37,9 @@ class Plugin:
         @type  api: AVNApi
     """
     self.api = api # type: AVNApi
+    #we register an handler for API requests
+    self.api.registerRequestHandler(self.handleApiRequest)
+    self.count=0
 
 
 
@@ -50,15 +53,31 @@ class Plugin:
     @return:
     """
     seq=0
-    count=0
     self.api.log("started")
     while True:
       seq,data=self.api.fetchFromQueue(seq,10)
       if len(data) > 0:
         for line in data:
           #do something
-          count+=1
-          if count%10 == 0:
-            self.api.addData(self.PATH,count)
+          self.count+=1
+          if self.count%10 == 0:
+            self.api.addData(self.PATH,self.count)
             #self.api.addData("wrong.path",count) #this would be ignored as we did not announce our path - and will write to the log
 
+
+  def handleApiRequest(self,url,handler,args):
+    """
+    handler for API requests send from the JS
+    @param url: the url after the plugin base
+    @param handler: the HTTP request handler
+                    https://docs.python.org/2/library/basehttpserver.html#BaseHTTPServer.BaseHTTPRequestHandler
+    @param args: dictionary of query arguments
+    @return:
+    """
+    if url == 'test':
+      return {'status':'OK'}
+    if url == 'reset':
+      self.count=0
+      self.api.addData(self.PATH, self.count)
+      return {'status': 'OK'}
+    return {'status','unknown request'}

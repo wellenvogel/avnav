@@ -28,6 +28,7 @@
 
 import imp
 import inspect
+import json
 
 from avnav_api import AVNApi
 from avnav_store import AVNStore
@@ -58,6 +59,7 @@ class ApiImpl(AVNApi):
     self.wildcardPatterns=[]
     self.addonIndex=1
     self.fileName=moduleFile
+    self.requestHandler=None
 
   def log(self, str, *args):
     AVNLog.info("%s",str % args)
@@ -172,6 +174,10 @@ class ApiImpl(AVNApi):
     charthandler = AVNWorker.findHandlerByName(AVNChartHandler.getConfigName())
     charthandler.registerExternalProvider(self.prefix,callback)
     pass
+
+  def registerRequestHandler(self, callback):
+    self.requestHandler=callback
+
 
 class AVNPluginHandler(AVNWorker):
   """a handler for plugins"""
@@ -351,8 +357,9 @@ class AVNPluginHandler(AVNWorker):
   def getHandledCommands(self):
     return {"api":"plugins","path":self.PREFIX}
 
-  def handleApiRequest(self,type,command,requestparam,**kwargs):
-    if type == 'path':
+  def handleApiRequest(self,atype,command,requestparam,**kwargs):
+    if atype == 'path':
+      handler = kwargs.get('handler')
       '''path mapping request, just return the module path
          command is the original url
       '''
@@ -362,6 +369,29 @@ class AVNPluginHandler(AVNWorker):
       dir=self.pluginDirs.get(localPath[0])
       if dir is None:
         raise Exception("plugin %s not found"%localPath[0])
+      if localPath[1][0:3] == 'api':
+        #plugin api request
+        api=self.createdApis.get(localPath[0])
+        if api is None:
+          raise Exception("no plugin %s found"%localPath[0])
+        if api.requestHandler is None:
+          raise Exception("plugin %s does not handle requests " % localPath[0])
+        if handler is None:
+          raise Exception("no handler for plugin %s request" % localPath[0])
+        rt=api.requestHandler(localPath[1][4:],handler,kwargs)
+        if type(rt) is dict:
+          handler.sendNavResponse(json.dumps(rt))
+          return True
+        return rt
+      if localPath[1] == 'plugin.js':
+        if handler is None:
+          AVNLog.error("plugin.js request without handler")
+          return None
+        fname=os.path.join(dir,'plugin.js')
+        name=localPath[0]
+        url=self.PREFIX+"/"+name+"/api"
+        addCode="var AVNAV_PLUGIN_NAME=\"%s\";\nvar AVNAV_PLUGIN_URL=\"%s\";\n"%(name,url)
+        return handler.sendJsFile(fname,addCode)
       return os.path.join(dir,kwargs.get('server').plainUrlToPath(localPath[1],False))
 
     '''
@@ -370,7 +400,7 @@ class AVNPluginHandler(AVNWorker):
     :return: the answer
     '''
     sub=AVNUtil.getHttpRequestParam(requestparam,'command')
-    if type == "api":
+    if atype == "api":
       if sub=="list":
         data=[]
         for k in self.pluginDirs.keys():
