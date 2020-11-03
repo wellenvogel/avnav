@@ -2,11 +2,18 @@ import datetime
 import json
 import re
 import sys
+import threading
 import time
 #the following import is optional
 #it only allows "intelligent" IDEs (like PyCharm) to support you in using it
 import traceback
 import urllib
+hasWebsockets=False
+try:
+  import websocket
+  hasWebsockets=True
+except:
+  pass
 
 from avnav_api import AVNApi
 
@@ -77,6 +84,11 @@ class Plugin:
           'description': 'proxy tile requests: never,always,sameHost',
           'default': 'sameHost'
         },
+        {
+          'name': 'useWebsockets',
+          'description': 'use websockets if the package is available - true or false',
+          'default': 'true'
+        },
 
       ],
       'data': [
@@ -101,6 +113,8 @@ class Plugin:
     self.connected=False
     self.skHost='localhost'
     self.proxyMode='sameHost'
+    self.webSocket=None
+    self.useWebsockets=True
 
 
 
@@ -129,6 +143,7 @@ class Plugin:
       self.skHost=self.api.getConfigValue('host','localhost')
       chartQueryPeriod=int(self.api.getConfigValue('chartQueryPeriod','10000'))/1000
       self.proxyMode=self.api.getConfigValue('proxyMode','sameHost')
+      self.useWebSockets=self.api.getConfigValue('useWebsockets','true').lower() == 'true'
     except:
       self.api.log("exception while reading config values %s",traceback.format_exc())
       raise
@@ -138,9 +153,16 @@ class Plugin:
     self.api.registerLayout("example","example.json")
     self.api.registerChartProvider(self.listCharts)
     errorReported=False
+    self.api.setStatus("STARTED", "connecting at %s" % baseUrl)
     while True:
       apiUrl=None
-      self.api.setStatus("STARTED", "connecting at %s"%baseUrl)
+      websocketUrl=None
+      if self.webSocket is not None:
+        try:
+          self.webSocket.close()
+        except:
+          pass
+        self.webSocket=None
       while apiUrl is None:
         self.connected=False
         responseData=None
@@ -157,12 +179,15 @@ class Plugin:
             raise Exception("no endpoints in response to %s"%baseUrl)
           for k in endpoints.keys():
             ep=endpoints[k]
-            apiUrl=ep.get('signalk-http')
-            if apiUrl is not None:
-              errorReported=False
-              break
+            if apiUrl is None:
+              apiUrl=ep.get('signalk-http')
+              if apiUrl is not None:
+                errorReported=False
+            if websocketUrl is None:
+              websocketUrl=ep.get("signalk-ws")
         except:
           if not errorReported:
+            self.api.setStatus("ERROR", "unable to connect at %s" % baseUrl)
             self.api.log("unable to connect at url %s: %s" % (baseUrl, sys.exc_info()[0]))
             errorReported=True
           time.sleep(1)
@@ -172,21 +197,42 @@ class Plugin:
         else:
           self.api.log("found api url %s",apiUrl)
       selfUrl=apiUrl+"vessels/self"
-      self.api.setStatus("NMEA", "connected at %s" % apiUrl)
+      self.connected = True
+      useWebsockets = self.useWebsockets and hasWebsockets and websocketUrl is not None
+      self.api.log("using websockets: %s",websocketUrl)
+      if useWebsockets:
+        if self.webSocket is not None:
+          try:
+            self.webSocket.close()
+          except:
+            self.api.debug("error when closing websocket: %s",traceback.format_exc())
+        self.webSocket=websocket.WebSocketApp(websocketUrl,
+                                    on_error=self.webSocketError,
+                                    on_message=self.webSocketMessage,
+                                    on_close=self.webSocketClose)
+        webSocketThread=threading.Thread(name="signalk-websocket",target=self.webSocket.run_forever)
+        webSocketThread.setDaemon(True)
+        webSocketThread.start()
       try:
         lastChartQuery=0
-        while True:
-          response=urllib.urlopen(selfUrl)
-          if response is None:
-            self.skCharts=[]
-            raise Exception("unable to fetch from %s:%s",selfUrl,sys.exc_info()[0])
-          data=json.loads(response.read())
-          self.api.debug("read: %s",json.dumps(data))
-          self.storeData(data,self.PATH)
-          self.connected=True
-          name=data.get('name')
-          if name is not None:
-            self.api.addData(self.PATH+".name",name)
+        first=True # when we newly connect, just query everything once
+        while self.connected:
+          if not useWebsockets or first:
+            response=urllib.urlopen(selfUrl)
+            if response is None:
+              self.skCharts=[]
+              raise Exception("unable to fetch from %s:%s",selfUrl,sys.exc_info()[0])
+            if not first:
+              self.api.setStatus("NMEA", "connected at %s" % apiUrl)
+            data=json.loads(response.read())
+            self.api.debug("read: %s",json.dumps(data))
+            self.storeData(data,self.PATH)
+            first=False
+            name=data.get('name')
+            if name is not None:
+              self.api.addData(self.PATH+".name",name)
+          else:
+            pass
           if chartQueryPeriod > 0 and lastChartQuery < (time.time() - chartQueryPeriod):
             lastChartQuery=time.time()
             try:
@@ -197,7 +243,50 @@ class Plugin:
           time.sleep(float(period)/1000.0)
       except:
         self.api.log("error when fetching from signalk %s: %s",apiUrl,traceback.format_exc())
+        self.api.setStatus("ERROR","error when fetching from signalk %s"%(apiUrl))
+        self.connected=False
         time.sleep(5)
+
+  def webSocketError(self,ws,error):
+    self.api.setStatus("ERROR","error on websocket connection %s: %s"%(ws.url,error))
+    self.api.error("error on websocket connection: %s",error)
+    try:
+      self.webSocket.close()
+    except:
+      pass
+    self.webSocket=None
+    self.connected=False
+
+  def webSocketClose(self,ws):
+    self.api.log("websocket connection closed")
+    self.api.setStatus("ERROR", "connection closed at %s" % ws.url)
+    self.connected=False
+    self.webSocket=None
+
+  def webSocketMessage(self,ws,message):
+    self.api.setStatus("NMEA", "connected at %s" % ws.url)
+    try:
+      data=json.loads(message)
+      updates=data.get('updates')
+      if updates is None:
+        return
+      for update in updates:
+        values=update.get('values')
+        if values is None:
+          continue
+        for item in values:
+          value=item.get('value')
+          path=item.get('path')
+          if value is not None and path is not None:
+            self.api.addData(self.PATH+"."+path,value, 'signalk')
+    except:
+      self.api.error("error decoding %s:%s",message,traceback.format_exc())
+      try:
+        self.webSocket.close()
+      except:
+        pass
+      self.webSocket=None
+      self.connected=False
 
   def queryCharts(self,apiUrl,port):
     charturl = apiUrl + "resources/charts"
