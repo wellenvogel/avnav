@@ -24,8 +24,8 @@ class Plugin:
        minzoom="%(minzoom)s"
        maxzoom="%(maxzoom)s"
        projection="EPSG:4326">
-             <BoundingBox minlon="9" minlat="50" maxlon="20" maxlat="60" title="layer"/>
-       <TileFormat width="256" height="256" mime-type="x-png" extension="png" />
+             <BoundingBox minlon="%(minlon)f" minlat="%(minlat)f" maxlon="%(maxlon)f" maxlat="%(maxlat)f" title="layer"/>
+       <TileFormat width="256" height="256" mime-type="x-%(format)s" extension="%(format)s" />
     </TileMap>       
    </TileMaps>
  </TileMapService>
@@ -66,7 +66,18 @@ class Plugin:
           'name':'period',
           'description':'query period in ms',
           'default':'1000'
-        }
+        },
+        {
+          'name': 'chartQueryPeriod',
+          'description': 'charts query period in ms, 0 to disable',
+          'default': '10000'
+        },
+        {
+          'name': 'chartProxyMode',
+          'description': 'proxy tile requests: never,always,sameHost',
+          'default': 'sameHost'
+        },
+
       ],
       'data': [
         {
@@ -88,6 +99,8 @@ class Plugin:
     self.api.registerRequestHandler(self.requestHandler)
     self.skCharts=[]
     self.connected=False
+    self.skHost='localhost'
+    self.proxyMode='sameHost'
 
 
 
@@ -107,18 +120,20 @@ class Plugin:
       return
     port=3000
     period=1000
-    host='localhost'
+    chartQueryPeriod=10
     try:
       port=self.api.getConfigValue('port','3000')
       port=int(port)
       period=self.api.getConfigValue('period','1000')
       period=int(period)
-      host=self.api.getConfigValue('host','localhost')
+      self.skHost=self.api.getConfigValue('host','localhost')
+      chartQueryPeriod=int(self.api.getConfigValue('chartQueryPeriod','10000'))/1000
+      self.proxyMode=self.api.getConfigValue('proxyMode','sameHost')
     except:
       self.api.log("exception while reading config values %s",traceback.format_exc())
       raise
     self.api.log("started with port %d, period %d"%(port,period))
-    baseUrl="http://%s:%d/signalk"%(host,port)
+    baseUrl="http://%s:%d/signalk"%(self.skHost,port)
     self.api.registerUserApp("http://$HOST:%s"%port,"signalk.svg")
     self.api.registerLayout("example","example.json")
     self.api.registerChartProvider(self.listCharts)
@@ -159,6 +174,7 @@ class Plugin:
       selfUrl=apiUrl+"vessels/self"
       self.api.setStatus("NMEA", "connected at %s" % apiUrl)
       try:
+        lastChartQuery=0
         while True:
           response=urllib.urlopen(selfUrl)
           if response is None:
@@ -171,44 +187,63 @@ class Plugin:
           name=data.get('name')
           if name is not None:
             self.api.addData(self.PATH+".name",name)
-          try:
-            charturl=apiUrl+"resources/charts"
-            chartlistResponse=urllib.urlopen(charturl)
-            if chartlistResponse is None:
+          if chartQueryPeriod > 0 and lastChartQuery < (time.time() - chartQueryPeriod):
+            lastChartQuery=time.time()
+            try:
+              self.queryCharts(apiUrl,port)
+            except Exception as e:
               self.skCharts=[]
-              continue
-            chartlist=json.loads(chartlistResponse.read())
-            newList=[]
-            baseUrl=self.api.getApiUrl()+"/charts/"
-            for chart in chartlist.values():
-              name=chart.get('identifier')
-              if name is None:
-                continue
-              name=self.CHARTNAME_PREFIX+name
-              url=baseUrl+urllib.quote(name)
-              chartInfo={
-                'name':name,
-                'url': url,
-                'charturl': url,
-                'sequence':0, #TODO
-                'canDelete': False,
-                'internal':{
-                  'url': "http://%s:%d"%(host,port)+chart.get('tilemapUrl'),
-                  'bounds': chart.get('bounds'),
-                  'minzoom': chart.get('minzoom'),
-                  'maxzoom': chart.get('maxzoom')
-                }
-              }
-              newList.append(chartInfo)
-            self.skCharts=newList
-          except Exception as e:
-            self.skCharts=[]
-            self.api.debug("exception while reading chartlist %s",traceback.format_exc())
+              self.api.debug("exception while reading chartlist %s",traceback.format_exc())
           time.sleep(float(period)/1000.0)
       except:
         self.api.log("error when fetching from signalk %s: %s",apiUrl,traceback.format_exc())
         time.sleep(5)
 
+  def queryCharts(self,apiUrl,port):
+    charturl = apiUrl + "resources/charts"
+    chartlistResponse = urllib.urlopen(charturl)
+    if chartlistResponse is None:
+      self.skCharts = []
+      return
+    chartlist = json.loads(chartlistResponse.read())
+    newList = []
+    baseUrl = self.api.getApiUrl() + "/charts/"
+    for chart in chartlist.values():
+      name = chart.get('identifier')
+      if name is None:
+        continue
+      name = self.CHARTNAME_PREFIX + name
+      url = baseUrl + urllib.quote(name)
+      bounds=chart.get('bounds')
+      #bounds is upperLeftLon,upperLeftLat,lowerRightLon,lowerRightLat
+      #          minlon,      maxlat,      maxlon,       minlat
+      if bounds is None:
+        bounds=[-180,85,180,-85]
+      if bounds[1] < bounds[3]:
+        #it seems that the plugin does not really provide the BB correctly...
+        tmp=bounds[3]
+        bounds[3]=bounds[1]
+        bounds[1]=tmp
+      chartInfo = {
+        'name': name,
+        'url': url,
+        'charturl': url,
+        'sequence': 0,  # TODO
+        'canDelete': False,
+        'internal': {
+          'url': "http://%s:%d" % (self.skHost, port) + chart.get('tilemapUrl'),
+          'minlon': bounds[0],
+          'maxlat': bounds[1],
+          'maxlon': bounds[2],
+          'minlat': bounds[3],
+          'format': chart.get('format') or 'png',
+          'bounds': chart.get('bounds'),
+          'minzoom': chart.get('minzoom'),
+          'maxzoom': chart.get('maxzoom')
+        }
+      }
+      newList.append(chartInfo)
+    self.skCharts = newList
   def storeData(self,node,prefix):
     if 'value' in node:
       self.api.addData(prefix, node.get('value'), 'signalk')
@@ -256,12 +291,21 @@ class Plugin:
       if chart is None:
         raise Exception("chart %s not found"%chartName)
       if parr[1] == "avnav.xml":
-        data=self.AVNAV_XML%{
+        requestHost = handler.headers.get('host')
+        requestHostAddr = requestHost.split(':')[0]
+        url='tiles'
+        doProxy=False
+        if self.proxyMode=='always' or ( self.proxyMode=='sameHost' and self.skHost != 'localhost'):
+          doProxy=True
+        if not doProxy:
+          #no proxying, direct access to sk for charts
+          url=chart['internal']['url'].replace('localhost',requestHostAddr)
+        param=chart['internal'].copy()
+        param.update({
           'title':chart['name'],
-          'url':'tiles',
-          'minzoom':chart['internal'].get('minzoom'),
-          'maxzoom':chart['internal'].get('maxzoom')
-        }
+          'url':url,
+        })
+        data=self.AVNAV_XML%param
         handler.send_response(200)
         handler.send_header("Content-type", "text/xml")
         handler.send_header("Content-Length", len(data))
@@ -278,7 +322,7 @@ class Plugin:
                 'y':re.sub("\..*","",parr[4])}
       skurl=chart['internal']['url']
       for k in replaceV.keys():
-        skurl=re.sub("{"+k+"}",replaceV[k],skurl)
+        skurl=skurl.replace("{"+k+"}",replaceV[k])
       try:
         tile = urllib.urlopen(skurl)
         if tile is None:
@@ -288,7 +332,7 @@ class Plugin:
         self.api.debug("unable to read tile from sk %s:%s"%(url,traceback.format_exc()))
         return
       handler.send_response(200)
-      handler.send_header("Content-type", "image/png")
+      handler.send_header("Content-type", "image/%s"%chart['internal']['format'])
       handler.send_header("Content-Length", len(tileData))
       handler.send_header("Last-Modified", handler.date_time_string())
       handler.end_headers()

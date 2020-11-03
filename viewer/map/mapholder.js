@@ -1049,6 +1049,10 @@ MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
             layerurl=baseurl+"/"+rt.url;
         }
         else layerurl=rt.url;
+        let replaceInUrl=false;
+        if (layerurl.indexOf("{x}") >= 0 && layerurl.indexOf("{y}") >= 0 && layerurl.indexOf("{z}") >= 0){
+            replaceInUrl=true;
+        }
         rt.extent=ol.extent.applyTransform(rt.layerExtent,self.transformToMap);
         if (rt.wms){
             let param={};
@@ -1144,11 +1148,16 @@ MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
                 if (rt.inversy) {
                     y = (1 << z) - y - 1
                 }
-                let tileUrl=z + '/' + x + '/' + y + ".png";
-                if (self._encryptFunction){
-                    tileUrl="##encrypt##"+tileUrl;
+                if (! replaceInUrl) {
+                    let tileUrl = z + '/' + x + '/' + y + ".png";
+                    if (self._encryptFunction) {
+                        tileUrl = "##encrypt##" + tileUrl;
+                    }
+                    return layerurl + '/' + tileUrl;
                 }
-                return layerurl + '/' + tileUrl;
+                else{
+                    return layerurl.replace("{x}",x).replace("{y}",y).replace("{z}",z);
+                }
             },
             extent: rt.extent,
             tileLoadFunction: function(imageTile,src){
