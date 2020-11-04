@@ -300,7 +300,8 @@ class Plugin:
       return
     chartlist = json.loads(chartlistResponse.read())
     newList = []
-    baseUrl = self.api.getApiUrl() + "/charts/"
+    pluginUrl= self.api.getBaseUrl()
+    baseUrl = pluginUrl + "/api/charts/"
     for chart in chartlist.values():
       name = chart.get('identifier')
       if name is None:
@@ -323,6 +324,7 @@ class Plugin:
         'charturl': url,
         'sequence': 0,  # TODO
         'canDelete': False,
+        'icon': pluginUrl+"/signalk.svg",
         'internal': {
           'url': "http://%s:%d" % (self.skHost, port) + chart.get('tilemapUrl'),
           'minlon': bounds[0],

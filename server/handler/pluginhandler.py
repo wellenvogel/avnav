@@ -179,8 +179,8 @@ class ApiImpl(AVNApi):
   def registerRequestHandler(self, callback):
     self.requestHandler=callback
 
-  def getApiUrl(self):
-    return URL_PREFIX+"/"+self.prefix+"/api"
+  def getBaseUrl(self):
+    return URL_PREFIX+"/"+self.prefix
 
 
 

@@ -228,9 +228,12 @@ class AVNApi:
     '''
     raise NotImplemented()
 
-  def getApiUrl(self):
+  def getBaseUrl(self):
     '''
-    return the API url that must be used to trigger a registered request handler
+    return the url for the plugin
+    append "/api" to this url for api request
+    other requests will look for files with the requested name
+    in the plugin directory
     @return:
     '''
     raise NotImplemented()

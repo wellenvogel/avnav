@@ -185,7 +185,7 @@ class MainPage extends React.Component {
             if (props.originalScheme) cls+=" userAction";
             return (
                 <div className={cls} onClick={props.onClick}>
-                    <img src={chartImage}/>
+                    <img src={props.icon||chartImage}/>
                     <span className="chartName">{props.name}</span>
                     <span className="more"/>
                 </div>
