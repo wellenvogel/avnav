@@ -6,6 +6,7 @@
 import WidgetFactory from '../components/WidgetFactory.jsx';
 import base from '../base.js';
 import Formatter from './formatter.js';
+import Helper from './helper.js';
 
 class Api{
     constructor(){
@@ -20,6 +21,9 @@ class Api{
     }
     formatter(){
         return Formatter;
+    }
+    templateReplace(template,replacements){
+        return Helper.templateReplace(template,replacements)
     }
 
 }

@@ -122,6 +122,22 @@ Helper.filteredAssign=function(){
     return rt;
 };
 
+/**
+ * replace any ${name} with the values of the replacement object
+ * e.g. templateReplace("test${a} test${zzz}",{a:"Hello",zzz:"World"})
+ * will return: "testHello testWorld"
+ * @param tstring
+ * @param replacements
+ * @returns {string}
+ */
+Helper.templateReplace=function(tstring,replacements){
+    if (typeof(replacements) !== 'object') return tstring;
+    for (let k in replacements){
+        tstring=tstring.replace("${"+k+"}",replacements[k]);
+    }
+    return tstring;
+};
+
 
 
 

@@ -36,10 +36,15 @@ const transform=(self,node,index)=>{
 class ExternalWidget extends React.Component{
     constructor(props){
         super(props);
+        let self=this;
+        this.state={updateCount:1};
         this.canvasRef=this.canvasRef.bind(this);
         this.renderCanvas=this.renderCanvas.bind(this);
         GuiHelper.nameKeyEventHandler(this,"widget");
-        this.userData={eventHandler:[]};
+        this.userData={
+            eventHandler:[],
+            triggerRedraw: ()=>{self.setState({updateCount:self.state.updateCount+1})}
+        };
         if (typeof(this.props.initFunction) === 'function'){
             this.props.initFunction.call(this.userData,this.userData);
         }
@@ -78,6 +83,11 @@ class ExternalWidget extends React.Component{
     componentDidUpdate(){
         this.renderCanvas();
     }
+    componentWillUnmout(){
+        if (typeof(this.props.finalizeFunction) === 'function'){
+            this.props.finalizeFunction.call(this.userData,this.userData);
+        }
+    }
     canvasRef(item){
         this.canvas=item;
         setTimeout(this.renderCanvas,0);
@@ -102,7 +112,8 @@ ExternalWidget.propTypes={
     default: PropTypes.string,
     renderHtml: PropTypes.func,
     renderCanvas: PropTypes.func,
-    initFunction: PropTypes.func
+    initFunction: PropTypes.func,
+    finalizeFunction: PropTypes.func
 };
 ExternalWidget.editableParameters={
     caption:true,
