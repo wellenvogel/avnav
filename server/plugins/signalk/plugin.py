@@ -278,7 +278,11 @@ class Plugin:
           value=item.get('value')
           path=item.get('path')
           if value is not None and path is not None:
-            self.api.addData(self.PATH+"."+path,value, 'signalk')
+            if path.startswith("notifications"):
+              #TODO: handle notifications
+              pass
+            else:
+              self.api.addData(self.PATH+"."+path,value, 'signalk')
     except:
       self.api.error("error decoding %s:%s",message,traceback.format_exc())
       try:
