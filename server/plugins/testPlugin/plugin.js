@@ -22,16 +22,40 @@ var widget={
          * @param ev
          */
         context.eventHandler.buttonClick=function(ev){
+            //when the event handle ris called, this points to the context
+            let self=this;
+            let id=(new Date()).getTime();
+            //we remember this request as the currently last request being run
+            //we could also prevent a new request if we want
+            self.requestRunning=id;
+            //as we add a differnt class to our display (color...) when a request is running
+            //we must redraw now
+            self.triggerRedraw();
             fetch(AVNAV_PLUGIN_URL+"/reset")
             .then(function(data){
                 return data.json();
                 })
                 .then(function(json)
                 {
+                    if (self.requestRunning==id) {
+                        //if this is the answer to the last running request - switch of
+                        //the request running - and redraw
+                        self.requestRunning=undefined;
+                        self.triggerRedraw();
+                    }
                 //alert("STATUS:"+json.status);
                 })
-            .catch(function(error){alert("ERROR: "+error)});
-        }
+            .catch(function(error){
+                    if (self.requestRunning==id) {
+                        //if this is the answer to the last running request - switch of
+                        //the request running - and redraw
+                        self.requestRunning=undefined;
+                        self.triggerRedraw();
+                    }
+                    alert("ERROR: "+error)}
+            );
+        };
+        context.requestRunning=undefined;
     },
     /**
      * a function that will render the HTML content of the widget
@@ -45,8 +69,8 @@ var widget={
         /**
          * example for storing some instance data
          * in this case a useless counter, that will increment on each update
-         * "this" points to an object that represent the instance of the widget
-         * initially it will be empty
+         * "this" points to the context object that represent the instance of the widget
+         * initially it will only contain the eventHandler array and a triggerRedraw function
          * whenever the page will reload it will be emptied again!
          */
         if (this.counter === undefined) this.counter=0;
@@ -59,7 +83,17 @@ var widget={
          * it must be one of the names we have registered at the context.eventHandler in our init function
          * Unknown handlers or pure java script code will be silently ignored!
          */
-        return "<button class=\"reset\" onclick=\"buttonClick\">Reset</button><div class=\"widgetData\">["+props.myValue+"] "+dv+"</div>";
+        var buttonClass="reset";
+        if (this.requestRunning) buttonClass+=" running";
+        //as we are not sure if the browser supports template strings we use the AvNav helper for that...
+        var replacements={
+            course: props.course,
+            myValue:props.myValue,
+            buttonClass: buttonClass,
+            disabled: this.requestRunning?"disabled":""
+        };
+        var template='<div class="widgetData">${course}</div><div class="lower"><div class="head">Server NMEA records</div><button class="${buttonClass}" ${disabled}  onclick="buttonClick">Reset</button><div class="server">${myValue}</div></div>';
+        return avnav.api.templateReplace(template,replacements);
     },
     /**
      * optional render some graphics to a canvas object
@@ -114,7 +148,7 @@ var widget={
       myValue: 'nav.gps.test' //stored at the server side with gps.test
 
     },
-    caption: "Test",
+    caption: "Test(Course)",
     unit: "°"
 };
 
