@@ -178,7 +178,7 @@ var widgetServer={
                         self.requestRunning=undefined;
                         self.triggerRedraw();
                     }
-                    alert("ERROR: "+error)}
+                    avnav.api.showToast("ERROR: "+error)}
             );
         };
         context.requestRunning=undefined;

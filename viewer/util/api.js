@@ -7,6 +7,7 @@ import WidgetFactory from '../components/WidgetFactory.jsx';
 import base from '../base.js';
 import Formatter from './formatter.js';
 import Helper from './helper.js';
+import Toast from '../components/Toast.jsx';
 
 class Api{
     constructor(){
@@ -22,8 +23,34 @@ class Api{
     formatter(){
         return Formatter;
     }
+    /**
+     * replace any ${name} with the values of the replacement object
+     * e.g. templateReplace("test${a} test${zzz}",{a:"Hello",zzz:"World"})
+     * will return: "testHello testWorld"
+     * @param tstring
+     * @param replacements
+     * @returns {string}
+     */
     templateReplace(template,replacements){
         return Helper.templateReplace(template,replacements)
+    }
+
+    /**
+     * escape special characters in a string
+     * so it can be afterwards safely added to some HTML
+     * @param string
+     */
+    escapeHtml(string){
+        return Helper.escapeHtml(string);
+    }
+
+    /**
+     * show a toast containing a message
+     * @param string the message
+     * @param opt_time a timeout in ms (optional)
+     */
+    showToast(string,opt_time){
+        Toast(string,opt_time);
     }
 
 }
