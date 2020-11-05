@@ -345,6 +345,20 @@
     dann z.B. per scp/WinScp auf den pi kopieren und dann dort installieren.<br>
     <h2>Releases</h2>
     <ul>
+      <li>2020115 <a href="https://www.wellenvogel.net/software/avnav/downloads/release-ochartsplugin/20201105/avnav-ocharts-plugin_20201105-raspbian-buster_armhf.deb">Paket</a></li>
+      <ul>
+        <li>Verbessertes Memory Handling: Der Xvfb wird überwacht und restartet,
+          wenn er &gt; 120 MB Speicher braucht</li>
+        <li>Schnellerer Start: Die Karteninformationen werden in einem cache
+          gehalten, es wird nur neu gelesen, wenn sich an den Karten etwas
+          ändert</li>
+        <li>Speicherleak im OpenCPN plugin beseitigt (workaround) - damit wächst
+          der Speicherverbrauch vom Xvfb nicht mehr so stark</li>
+        <li>Hinweis: Nach Installation per Hand mit dpkg (erzeugt einen Fehler)
+          müssen ggf mit
+          <div class="code"> sudo apt-get install -f</div>
+          die neuen Abhängigkeiten nachinstalliert werden. </li>
+      </ul>
       <li>20200710 <a href="https://www.wellenvogel.net/software/avnav/downloads/release-ochartsplugin/20200710/avnav-ocharts-plugin_20200710-raspbian-buster_armhf.deb">Paket</a></li>
       <ul>
         <li>Das Verzeichnis für die Karten kann separat eingestellt werden -

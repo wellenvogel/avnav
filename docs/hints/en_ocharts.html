@@ -110,7 +110,7 @@
     <p>In the GUI of the o-chart plugin use "Upload Zip" to transfer the zip
       file you have downloaded in step 5 to AvNav.</p>
     <p>There will be a progress bar during upload.</p>
-    <p><img src="ocharts-upload2.png" alt="" class="image"></p>
+    <p><img src="ocharts-upload2.png" alt="" class="image">aha</p>
     <p>After the upload is finished the zip file will be unpacked and there will
       be some initial checks on it (this can take some time).</p>
     <p>If you did not configure anything the charts will be uploaded to
@@ -327,13 +327,25 @@
     <p>You can also see the packages in the release list below. To use one of
       those packages (if it is not in the repo yet or if you need an older one)
       - just download and install the package (replace the version by the one
-      you want):
-    </p>
+      you want): </p>
     <div class="code">cd /home/pi/avnav<br>wget -O avnav-ocharts-plugin_20200606-raspbian-buster_armhf.deb https://www.wellenvogel.net/software/avnav/downloads/release-ochartsplugin/20200606/avnav-ocharts-plugin_20200606-raspbian-buster_armhf.deb <br>sudo dpkg -i /home/pi/avnav/avnav-ocharts-plugin_20200606-raspbian-buster_armhf.deb<br>sudo systemctl restart avnav</div>
     <h2><a name="Releases"></a></h2>
     You can also download on a PC, scp/WinScp to the pi and install then.
     <h2><a name="Releases"></a>Releases</h2>
     <ul>
+      <li>2020115 <a href="https://www.wellenvogel.net/software/avnav/downloads/release-ochartsplugin/20201105/avnav-ocharts-plugin_20201105-raspbian-buster_armhf.deb">package</a></li>
+      <ul>
+        <li>Improved memory handling. The Xvfb will be restarted if it reaches
+          120MB</li>
+        <li>Faster start up. The chart information will be kept in a cache file.
+          So reading the charts is only necessary if some charts have changed.</li>
+        <li>Removed memory leak within the used OpenCPN plugin (workaround) - so
+          the memory usage of Xvfb will not increase that much any more.</li>
+        <li>Hint: When installing with dpkg -i (will give an error) you need to
+          install missing dependencies with:
+          <div class="code"> sudo apt-get install -f</div>
+        </li>
+      </ul>
       <li>20200710 <a href="https://www.wellenvogel.net/software/avnav/downloads/release-ochartsplugin/20200710/avnav-ocharts-plugin_20200710-raspbian-buster_armhf.deb">package</a></li>
       <ul>
         <li>You can now set the directory for the charts - see <a href="#Upload">details
