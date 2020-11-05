@@ -27,15 +27,19 @@ public class UserDirectoryRequestHandler extends DirectoryRequestHandler {
         int prfxPtr=0;
         int sfxPtr=0;
         int mode=0; //0-prefix,1-file,2-suffix
-        public JsStream(FileInputStream fs) throws UnsupportedEncodingException {
+        byte[] prefix=null;
+        public JsStream(FileInputStream fs,byte[] additionalPrefix) throws UnsupportedEncodingException {
             this.fs=fs;
+            this.prefix=new byte[PREFIX.length+additionalPrefix.length];
+            System.arraycopy(PREFIX,0,this.prefix,0,PREFIX.length);
+            System.arraycopy(additionalPrefix,0,this.prefix,PREFIX.length,additionalPrefix.length);
         }
         @Override
         public int read() throws IOException {
             switch (mode) {
                 case 0:
-                    if (prfxPtr < PREFIX.length) {
-                        int rt=PREFIX[prfxPtr];
+                    if (prfxPtr < this.prefix.length) {
+                        int rt=this.prefix[prfxPtr];
                         prfxPtr++;
                         return rt;
                     }
@@ -113,8 +117,10 @@ public class UserDirectoryRequestHandler extends DirectoryRequestHandler {
         if (!name.equals("user.js")) return super.handleDirectRequest(uri);
         File foundFile=new File(workDir,name);
         if (! foundFile.exists()) return super.handleDirectRequest(uri);
-        long flen=foundFile.length()+SUFFIX.length+PREFIX.length;
-        JsStream out=new JsStream(new FileInputStream(foundFile));
+        String base="/"+urlPrefix;
+        byte[] baseUrl=("var AVNAV_BASE_URL=\""+base+"\";\n").getBytes(StandardCharsets.UTF_8);
+        long flen=foundFile.length()+SUFFIX.length+PREFIX.length+baseUrl.length;
+        JsStream out=new JsStream(new FileInputStream(foundFile),baseUrl);
         return new ExtendedWebResourceResponse(
                     flen,
                     handler.mimeType(foundFile.getName()),

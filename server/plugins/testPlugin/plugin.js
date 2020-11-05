@@ -31,7 +31,7 @@ var widget={
             //as we add a differnt class to our display (color...) when a request is running
             //we must redraw now
             self.triggerRedraw();
-            fetch(AVNAV_PLUGIN_URL+"/reset")
+            fetch(AVNAV_BASE_URL+"/api/reset")
             .then(function(data){
                 return data.json();
                 })

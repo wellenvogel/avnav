@@ -228,13 +228,13 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     else:
       raise Exception("empty response")
 
-  def sendJsFile(self,filename,addCode=None):
+  def sendJsFile(self,filename,baseUrl,addCode=None):
     '''
     send a js file that we encapsulate into an anonymus function
     @param filename:
     @return:
     '''
-    PREFIX="(function(){\n"
+    PREFIX="(function(){\nvar AVNAV_BASE_URL=\"%s\";\n"%urllib.quote(baseUrl)
     SUFFIX="\n})();\n"
     if not os.path.exists(filename):
       self.send_error(404,"File not found")

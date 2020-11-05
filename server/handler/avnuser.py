@@ -297,7 +297,7 @@ class AVNUserHandler(AVNUserHandlerBase):
       if path == 'user.js':
         fname=os.path.join(self.baseDir,path)
         if os.path.exists(fname) and handler is not None:
-          return handler.sendJsFile(fname)
+          return handler.sendJsFile(fname,self.PREFIX)
     return super(AVNUserHandler, self).getPathFromUrl(url, restrictName,handler)
 
   def handlePathRequest(self,path):

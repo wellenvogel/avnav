@@ -393,9 +393,9 @@ class AVNPluginHandler(AVNWorker):
           return None
         fname=os.path.join(dir,'plugin.js')
         name=localPath[0]
-        url= URL_PREFIX + "/" + name + "/api"
-        addCode="var AVNAV_PLUGIN_NAME=\"%s\";\nvar AVNAV_PLUGIN_URL=\"%s\";\n"%(name,url)
-        return handler.sendJsFile(fname,addCode)
+        url= URL_PREFIX + "/" + name
+        addCode="var AVNAV_PLUGIN_NAME=\"%s\";\n"%(name)
+        return handler.sendJsFile(fname,url,addCode)
       return os.path.join(dir,kwargs.get('server').plainUrlToPath(localPath[1],False))
 
     '''

@@ -400,9 +400,6 @@ class WidgetFactory{
             if (! internalDescription.wclass){
                 throw new Error("invalid widget type: "+internalDescription.type);
             }
-            if (internalDescription.renderHtml && typeof(internalDescription.renderHtml) !== 'function') {
-                throw new Error("renderHtml must be a function");
-            }
         }
         if (! internalDescription.wclass) {
             if (internalDescription.renderHtml || internalDescription.renderCanvas) {
