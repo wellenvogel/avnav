@@ -36,16 +36,260 @@
     <p>Basically you can add the following types of widgets:</p>
     <ul>
       <li>widgets with an own formatter (and potentially fixed values the
-        fetch)basing on the default widget (example 1)</li>
+        fetch)basing on the default widget (example 1-&nbsp; <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">user.js</a>:
+        rpmWidget, <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/testPlugin/plugin.js">testPlugin</a>:
+        testPluing_simpleWidget)</li>
       <li>adaptations and extensions of the graphics widgets (<a href="https://canvas-gauges.com/">canvas
-          gauges)</a> (example 2)<br>
+          gauges)</a> (example 2 - <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">user.js</a>:
+        rpmGauge)<br>
         This way you can access canvas widget parameters that are currently not
         directly accessible.</li>
-      <li>widgets with own HTML code (example 3)</li>
-      <li>widgest with canvas graphics (example within the <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/testPlugin/plugin.js">TestPlugin</a>)</li>
+      <li>widgets with own HTML code (example 3 - <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">user.js</a>:
+        userSpecialRpm, <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/testPlugin/plugin.js">TestPlugin</a>:
+        testPlugin_courseWidget)</li>
+      <li>widgets with canvas graphics (example within the <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/testPlugin/plugin.js">TestPlugin</a>:
+        testPlugin_courseWidget)</li>
+      <li>widgets with own HTML that are communicating with the server part of a
+        plugin (<a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/testPlugin/plugin.js">TestPlugin</a>:
+        testPlugin_serverWidget</li>
     </ul>
     <p>The interface to communicate with avnav is available <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/util/api.js">at
         github</a> and in the example code.</p>
+    <p>For an own widget the following functions/properties can be implemented:</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Type</td>
+          <td>Usable for type</td>
+          <td>Description</td>
+        </tr>
+        <tr>
+          <td>name</td>
+          <td>String</td>
+          <td>all</td>
+          <td>the name of the widget as displayed in the layout editor</td>
+        </tr>
+        <tr>
+          <td>type</td>
+          <td>string<br>
+            (optional)</td>
+          <td>alle</td>
+          <td>defines which type of widget should be created<br>
+            Values: radialGauge, linearGauge<br>
+            If you do not set the type either the defaul widget will be used (no
+            renderHtml and no renderCanvas provided) or a special userWidget
+            will be used.</td>
+        </tr>
+        <tr>
+          <td>renderHtml</td>
+          <td>function<br>
+            (optional)</td>
+          <td>userWidget</td>
+          <td>This method must return&nbsp; a string that contains valid HTML.
+            It will be injected into the widget.<br>
+            If you would like to use event handlers for your elements you have
+            to register them before (see initFunction) and in the HTML you will
+            assign them with:<br>
+            <div class="code">&lt;button onclick="myHandler"&gt;Click!&lt;/button&gt;
+              </div>
+            Note that is is not exactly strict HTML as you only provide the name
+            of the event handler - no java script code! <br>
+            <br>
+            The "this" inside renderHtml points to the widget context (an object
+            that is specific for the particular widget).<br>
+            If the event handler is being called, the "this" will also point to
+            the context.<br>
+            <br>
+            The parameter of renderHtml contains all parameters of teh widget
+            and the values defined at storeKeys.<br>
+            The function will be called each time the values have changed.</td>
+        </tr>
+        <tr>
+          <td>renderCanvas<br>
+          </td>
+          <td>function<br>
+            (optional)</td>
+          <td>userWidget</td>
+          <td>With this function you can draw to the provided canvas object.<br>
+            The second parameter of renderCanvas contains all parameters of teh
+            widget and the values defined at storeKeys.<br>
+            The function will be called each time the values have changed.<br>
+            The "this" inside renderCanvas points to the widget context (an
+            object that is specific for the particular widget).<br>
+          </td>
+        </tr>
+        <tr>
+          <td>storeKeys<br>
+          </td>
+          <td>object</td>
+          <td>all</td>
+          <td>You have to provide the parameters that you would like being read
+            from the internal store and becoming properties for the renderXXX
+            function parameters.<br>
+          </td>
+        </tr>
+        <tr>
+          <td>caption</td>
+          <td>string<br>
+            (optional)</td>
+          <td>all</td>
+          <td>A default caption.</td>
+        </tr>
+        <tr>
+          <td>unit</td>
+          <td>string<br>
+            (optional)</td>
+          <td>alle</td>
+          <td>A default unit</td>
+        </tr>
+        <tr>
+          <td>formatter</td>
+          <td>function<br>
+            (optional)</td>
+          <td>defaultWidget,<br>
+            radialGauge, linearGauge</td>
+          <td>A formatter for the value. For teh defaultWidget this function is
+            mandatory.</td>
+        </tr>
+        <tr>
+          <td>translateFunction</td>
+          <td>function<br>
+            (optional)</td>
+          <td>alle</td>
+          <td>This function will be called with the current values of the
+            parameters and must return an object with all the computed values
+            derived.<br>
+            Make mainly senso if yo do not have own renderXXX functions to be
+            able to combine/compute the values that should be displayed - see <a
+              href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">example</a>.</td>
+        </tr>
+        <tr>
+          <td>initFunction</td>
+          <td>function<br>
+            (optional)</td>
+          <td>userWidget</td>
+          <td>If this function is available it will be called once the widget
+            has been created before any renderXXX function. The widget context
+            will be provided as a parameter and as the "this" variable.<br>
+            The widget context has an eventHandler Property. At this object you
+            have to define all event handlers that you would like to use in your
+            HTML code.<br>
+            With a triggerRedraw function you can force a new rendering of the
+            widget causing the renderXXX functions to be called again.</td>
+        </tr>
+        <tr>
+          <td>finalizeFunktion</td>
+          <td>function<br>
+            (optional)</td>
+          <td>userWidget</td>
+          <td>If available this function will get called before the widget is
+            removed. The "this" points to the widget context.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>The following global variables are set for the java script code:</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>plugin.js/user.js</td>
+          <td>Decsription</td>
+        </tr>
+        <tr>
+          <td>AVNAV_BASE_URL</td>
+          <td>both</td>
+          <td>The URL to the directory from where the java script code has been
+            loaded. This can be used to load other elements from there. For the
+            user.js you can reach files from the images directory with
+            AVNAV_BASE_URL+"../mages".<br>
+            For plugins AVNAV_BASE_URL+"/api" will give you the base URL to
+            trigger the communication with the python side.</td>
+        </tr>
+        <tr>
+          <td>AVNAV_PLUGIN_NAME</td>
+          <td>plugin.js</td>
+          <td>The name of the plugin.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>After defining a widget you need to register it at
+      AvNav(avnav.registerWidget). As a second parameter you can provide an
+      object containing parameters that should be shown in the layout editor.</p>
+    <p>Examples are inside the <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">user.js
+        template</a>. The values that a user selects in the Layout editor will
+      become part of the properties provided to the renderHtml and renderCanvas
+      functions.(except for parameters of type KEY: the values read from the
+      store will be provided).<br>
+      For each of the parameters you can provide the following properties:</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Type</td>
+          <td>Description</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td>key</td>
+          <td>The name of the parameter as to be shown in the layout editor and
+            as it should appear for the renderXXX functions.</td>
+        </tr>
+        <tr>
+          <td>type</td>
+          <td>string</td>
+          <td>STRING, NUMBER,KEY, SELECT,ARRAY, BOOLEAN,COLOR<br>
+            The type of the parameter. Depending on the type a different user
+            dialog will be shown.<br>
+            For COLOR this will be a color selector, for SELECT a select list
+            and for KEY the list of known items in the global store.<br>
+            For an array the user can provide a list of values separated by
+            comma.</td>
+        </tr>
+        <tr>
+          <td>default</td>
+          <td>depending on type</td>
+          <td>The defualt value. <br>
+            For COLOR a color css property - like
+            <meta http-equiv="content-type" content="text/html; charset=utf-8">
+            "rgba(200, 50, 50, .75)"</td>
+        </tr>
+        <tr>
+          <td>list</td>
+          <td>Array<br>
+            (only for type SELECT)</td>
+          <td>An array of strings or objects {name:'xxx',value:'yyy'} - they
+            will be shown in the select list.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>There is a couple of predefined parameters for the layout editor. For
+      those you do not provide a describing object with properties but instead
+      only true or false(this will define whether they will be shown in the
+      editor or not).</p>
+    <p>Those are:</p>
+    <ul>
+      <li>caption (STRING)</li>
+      <li>unit (STRING)</li>
+      <li>formatter (SELECT)</li>
+      <li>formatterParameters (ARRAY)</li>
+      <li>value (KEY)</li>
+      <li>className (STRING)</li>
+    </ul>
+    <p>An example definition:</p>
+    <div class="code">var exampleUserParameters = {
+    //formatterParameters is already well known to avnav, so no need for any definition
+    //just tell avnav that the user should be able to set this
+    formatterParameters: true,
+    //we would like to get a value from the internal data store
+    //if we name it "value" avnav already knows how to ask the user about it
+    value: true,
+    //we allow the user to define a minValue and a maxValue
+    minValue: {type: 'NUMBER', default: 0},
+    maxValue: {type: 'NUMBER', default: 4000},
+   };
+</div>
     <p>If you need to access libraries or images in your java script code you
       can upload they into the same directory- images additionally also into the
       images <img src="../viewerimages/icons-new/image-icon.svg" alt="" class="inlineimage">directory
@@ -65,8 +309,6 @@ document.getElementsByTagName("head")[0].appendChild(fileref)</div>
     <p>If you need to create an additonal file in the user directory (e.g. text
       or HTML) you can directly do this using the "+" button (lower right) -
       afterwards you can directly edit the file.<br>
-    </p>
-    <p><br>
     </p>
   </body>
 </html>

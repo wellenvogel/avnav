@@ -38,38 +38,285 @@
     <p>Man kann im Wesentlichen die folgenden Arten von Anzeigen hinzufügen:</p>
     <ul>
       <li>Widgets mit eigenem Formatter (und ggf. festen Werten) basierend auf
-        dem Default Widget (Beispiel 1)</li>
+        dem Default Widget (Beispiel 1 - <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">user.js</a>:
+        rpmWidget, <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/testPlugin/plugin.js">testPlugin</a>:
+        testPluing_simpleWidget )</li>
       <li>Anpassung/Erweiterung der Grafik Widgets mit <a href="https://canvas-gauges.com/">canvas
-          gauges</a> (Beispiel 2)<br>
+          gauges</a> (Beispiel 2 - <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">user.js</a>:
+        rpmGauge)<br>
         Hiermit ist es auch möglich, Parameter zugänglich zu machen, die in den
         bisher vorhandenen Widgets nicht enthalten sind.</li>
-      <li>Widgets mit eigenem HTML code (Beispiel 3)</li>
-      <li>Widgets mit Grafik in einem Canvas Element (Beispiel im <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/testPlugin/plugin.js">TestPlugin</a>)</li>
+      <li>Widgets mit eigenem HTML code (Beispiel 3 - <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">user.js</a>:
+        userSpecialRpm, <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/testPlugin/plugin.js">TestPlugin</a>:
+        testPlugin_courseWidget)</li>
+      <li>Widgets mit Grafik in einem Canvas Element (Beispiel im <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/testPlugin/plugin.js">TestPlugin:</a>
+        testPlugin_courseWidget)</li>
+      <li>Widgets mit eigenem HTML, die mit dem Server Teil eines plugins
+        interagieren(<a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/testPlugin/plugin.js">TestPlugin</a>:
+        testPlugin_serverWidget)</li>
     </ul>
     <p>Das Interface, über das mit avnav kommuniziert wird, findet sich <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/util/api.js">auf
         github</a> bzw. im Template Code.</p>
+    <p>Für ein selbst geschriebenes Widget können die folgenden
+      Funktionen/Eigenschaften implementiert werden:</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Typ</td>
+          <td>Nutzbar bei Typ</td>
+          <td>Beschreibung</td>
+        </tr>
+        <tr>
+          <td>name</td>
+          <td>String</td>
+          <td>alle</td>
+          <td>der Name des Widgets</td>
+        </tr>
+        <tr>
+          <td>type</td>
+          <td>String<br>
+            (optional)</td>
+          <td>alle</td>
+          <td>Bestimmt, welches Widget erzeugt werden soll.<br>
+            Werte: radialGauge, linearGauge<br>
+            Wenn der Typ nicht gesetzt ist, wird entweder das default widget
+            genutzt (keine Funktion renderHtml und keine Funktion renderCanvas
+            angegeben) - oder ein nutzer definiertes Widget (userWidget)</td>
+        </tr>
+        <tr>
+          <td>renderHtml</td>
+          <td>Funktion<br>
+            (optional)</td>
+          <td>userWidget</td>
+          <td>Diese Methode muss einen String zurückgeben, der dann als HTML
+            code in das Widget eingebaut wird.<br>
+            Falls eventHandler für Elemente genutzt werden sollen, müssen diese
+            vorher registriert werden (siehe initFunction) und werden im HTML
+            code einfach mit<br>
+            <div class="code">&lt;button onclick="myHandler"&gt;Click!&lt;/button&gt;
+              </div>
+            angegeben (das ist keine exakte HTML Syntax da nur der Name des
+            event handlers angegeben wird, kein java script code).<br>
+            <br>
+            Die "this" variable innerhalb von renderHtml zeigt auf ein Objekt,
+            das spezifisch für das Widget ist (Kontext).<br>
+            Wenn der EventHandler aufgerufen wird, zeigt this ebenfalls auf
+            diesen Kontext.<br>
+            <br>
+            Das als Parameter an renderHtml übergebene Objekt enthält die unter
+            storeKeys definierten Werte.<br>
+            Die Funktion wird jedesmal erneut aufgerufen, wenn sich die Werte
+            geändert haben.</td>
+        </tr>
+        <tr>
+          <td>renderCanvas<br>
+          </td>
+          <td>Funktion<br>
+            (optional)</td>
+          <td>userWidget</td>
+          <td>Mit dieser Funktion kann in das übergebene Canvas Objekt
+            gezeichnet werden.<br>
+            Das als zweiter Parameter an renderCanvas übergebene Objekt enthält
+            die unter storeKeys definierten Werte.<br>
+            Die Funktion wird jedesmal erneut aufgerufen, wenn sich die Werte
+            geändert haben.<br>
+            Die "this" variable innerhalb von renderCanvas zeigt auf ein Objekt,
+            das spezifisch für das Widget ist (Kontext).<br>
+          </td>
+        </tr>
+        <tr>
+          <td>storeKeys<br>
+          </td>
+          <td>Object</td>
+          <td>alle</td>
+          <td>Hier müssen die Daten angegeben werden, die aus dem zentralen
+            Speicher gelesen&nbsp; und als Parameter den renderXXX Funktionen
+            mitgegeben werden sollen<br>
+          </td>
+        </tr>
+        <tr>
+          <td>caption</td>
+          <td>String<br>
+            (optional)</td>
+          <td>alle</td>
+          <td>Eine default Beschriftung</td>
+        </tr>
+        <tr>
+          <td>unit</td>
+          <td>String<br>
+            (optional)</td>
+          <td>alle</td>
+          <td>Eine default Einheit</td>
+        </tr>
+        <tr>
+          <td>formatter</td>
+          <td>Funktion<br>
+            (optional)</td>
+          <td>defaultWidget,<br>
+            radialGauge, linearGauge</td>
+          <td>Ein Formatierer für den Wert. Für das defaultWidget muss diese
+            Funktion angegeben werden.</td>
+        </tr>
+        <tr>
+          <td>translateFunction</td>
+          <td>Funktion<br>
+            (optional)</td>
+          <td>alle</td>
+          <td>Diese Funktion wird mit den aktuellen Werten als Parameter
+            aufgerufen (so wie bei storeKeys angegeben) und muss die daruas
+            berechneten Werte zurückgeben.<br>
+            Falls keine eigene renderXXX Funktion genutzt werden soll, kann hier
+            vor dem Rendern eine Umrechnung von Werten erfolgen - siehe <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">Beispiel</a>.</td>
+        </tr>
+        <tr>
+          <td>initFunction</td>
+          <td>Funktion<br>
+            (optional)</td>
+          <td>userWidget</td>
+          <td>Falls vorhanden, wird diese Funktion einmalig aufgerufen, wenn das
+            Widget erzeugt wird. Als Parameter (und als this) ist der Widget
+            Context vorhanden.<br>
+            Diese Objekt hat eine eventHandler Eigenschaft - hier müssen die im
+            renderHTML genutzten eventHandler eingetragen werden.<br>
+            Mit der Funktion triggerRedraw am Widget Kontext kann ein erneuter
+            Aufruf der renderXXX Funktionen erzwungen werden </td>
+        </tr>
+        <tr>
+          <td>finalizeFunktion</td>
+          <td>Funktion<br>
+            (optional)</td>
+          <td>userWidget</td>
+          <td>Fall vorhanden, wird diese Funktion gerufen, bevor das Widget
+            nicht mehr genutzt wird. Die "this" Variable zeigt wieder auf den
+            Widget Kontext.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Der java script code erhält folgende globale Variablen:</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>plugin.js/user.js</td>
+          <td>Beschreibung</td>
+        </tr>
+        <tr>
+          <td>AVNAV_BASE_URL</td>
+          <td>beide</td>
+          <td>die URL zum Verzeichnis, aus dem die Java script Datei geladen
+            wurde. Diese kann z.B. verwendet werden, um weitere Elemente von
+            dort zu laden. Für die user.js können Dateien aus dem images
+            Verzeichnis über AVNAV_BASE_URL+"../mages" erreicht werden.<br>
+            Für plugins kann über AVNAV_BASE_URL+"/api" die Kommunikation mit
+            dem Python Anteil erreicht werden.</td>
+        </tr>
+        <tr>
+          <td>AVNAV_PLUGIN_NAME</td>
+          <td>plugin.js</td>
+          <td>Der Name des Plugins.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Nach der definition muss das Widget bei AvNav bekannt gemacht werden
+      (avnav.registerWidget). Neben der Widget Definition können hier noch
+      Parameter angegeben werden, die dann im Layout Editor für das Widget
+      angezeigt werden.</p>
+    <p>Beispiele sind im <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">user.js
+        Template</a> zu finden. Die Werte, die im Layout Editor für diese
+      Parameter angegeben werden, stehen später in den renderHtml und
+      renderCanvas Funktionen zur Verfügung (Ausnahme: Typ KEY, hier wird
+      der&nbsp; aus dem Speicher gelesene Wert zur Verfügung gestellt).<br>
+      Für jeden Parameter kann man die folgenden Werte angeben:</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Type</td>
+          <td>Beschreibung</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td>key</td>
+          <td>Der Name des Parameters so wie er im Layout Editor angezeigt
+            werden soll und wie er den renderXXX Funktionen zur Verfügung stehen
+            soll.</td>
+        </tr>
+        <tr>
+          <td>type</td>
+          <td>String</td>
+          <td>STRING, NUMBER,KEY, SELECT,ARRAY, BOOLEAN,COLOR<br>
+            Der Typ für den Parameter. Je nach Typ wird er dem Nutzer
+            unterschiedlich angezeigt.<br>
+            Für COLOR eine Farb-Auswahl, für SELECT eine AuswahlListe und für
+            KEY die Liste der momentan verfügbaren Werte im Store.<br>
+            Für Array kann eine durch Komma getrennte Liste angegeben werden.</td>
+        </tr>
+        <tr>
+          <td>default</td>
+          <td>je nach type</td>
+          <td>Der default Wert. <br>
+            Für COLOR eine color css Property - also z.B.
+            <meta http-equiv="content-type" content="text/html; charset=utf-8">
+            "rgba(200, 50, 50, .75)"</td>
+        </tr>
+        <tr>
+          <td>list</td>
+          <td>Array<br>
+            (nur für type SELECT)</td>
+          <td>Ein Array von Strings oder von Objekten {name:'xxx',value:'yyy'} -
+            diese Werte werden&nbsp; zur Auswahl angezeigt.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Es gibt eine Reihe von vordefinierten Parametern für den Layout Editor.
+      Bei diesen wird zur Beschreibung kein Objekt mit Eigenschaften angegeben,
+      sonder nur true oder false (das zeigt, ob sie zum Ändern angeboten werden
+      sollen oder nicht).</p>
+    <p>Das sind:</p>
+    <ul>
+      <li>caption (STRING)</li>
+      <li>unit (STRING)</li>
+      <li>formatter (SELECT)</li>
+      <li>formatterParameters (ARRAY)</li>
+      <li>value (KEY)</li>
+      <li>className (STRING)</li>
+    </ul>
+    <p>Ein Beispiel für eine Definition:</p>
+    <div class="code">var exampleUserParameters = {
+    //formatterParameters is already well known to avnav, so no need for any definition
+    //just tell avnav that the user should be able to set this
+    formatterParameters: true,
+    //we would like to get a value from the internal data store
+    //if we name it "value" avnav already knows how to ask the user about it
+    value: true,
+    //we allow the user to define a minValue and a maxValue
+    minValue: {type: 'NUMBER', default: 0},
+    maxValue: {type: 'NUMBER', default: 4000},
+   };
+</div>
     <p>Falls der eigene Java Script code auf libraries oder images zugreifen
       soll, können diese in das gleiche Verzeichnis hochgeladen werden - Images
       auch in das Images <img src="../viewerimages/icons-new/image-icon.svg" alt=""
-        class="inlineimage">Verzeichnis (als URL erreichbar über ../images).</p>
+        class="inlineimage">Verzeichnis.</p>
     <p>Das Einbinden von Bibliotheken kann z.B. so erfolgen</p>
     <div class="code">var fileref=document.createElement('script');
 fileref.setAttribute("type","text/javascript");
-fileref.setAttribute("src", "my_nice_lib.js");
+fileref.setAttribute("src", AVNAV_BASE_URL+"/my_nice_lib.js");
 document.getElementsByTagName("head")[0].appendChild(fileref)</div>
     <p>Es empfiehlt sich, für alle Widgets css Klassen zu vergeben, damit man
       diese dann mit <a href="usercss.html">nutzerspezifischem CSS</a> anpassen
-      kann. IDs sollten nicht verwendet werden, da die Element potentiell
+      kann. IDs sollten nicht verwendet werden, da die Elemente potentiell
       mehrfach auf der Seite auftauchen können.</p>
     <p>Falls Daten vom Server geladen werden sollen, empfiehlt sich die
       Verwendung von <a href="https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch">fetch</a>.
-      Alle Dateien im user Verzeichnis sind direkt über ihren Namen als relative
-      URL abrufbar.</p>
+      Alle Dateien im user Verzeichnis sind nach dem Schema
+      AVNAV_BASE_URL+"/"+name abrufbar.</p>
     <p>Falls im User-Verzeichnis z.B. eine weitere Text-, Html- oder andere
       Datei angelegt werden soll (ohne eine hochzuladen), kann man das auch
       direkt mit dem "+" Button unten rechts erledigen - die Datei kann dann
-      natürlich ebenfalls direkt bearbeitet werden. <br>
-    </p>
+      natürlich ebenfalls direkt bearbeitet werden. </p>
     <p><br>
     </p>
   </body>

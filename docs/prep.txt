@@ -1,0 +1,18 @@
+//firefox toggle bars - function for browser console
+
+(1) enable console input -> about:config
+    devtools.chrome ->enable
+
+ (2) WebDeveloper->Browser Console   
+
+(function(){ /*toggle toolbox*/
+var doc = Services.wm.getMostRecentWindow("navigator:browser").window.document;
+var nt = doc.getElementById("navigator-toolbox");
+var ds = nt.style.getPropertyValue("display") == "none";
+nt.style.setProperty("display",ds?"-moz-box":"none","important");}
+)()
+
+//set window size
+xdotool search --name "AVNav-Web - Mozilla Firefox" windowsize 1024 768
+
+

@@ -94,8 +94,17 @@
           <td>Berechnung neuer Daten und Einspeisung unter "C" - oder
             Weiterreichen an eine externe Verbindung.</td>
         </tr>
+        <tr>
+          <td>E</td>
+          <td>Bearbeiten von HTTP requests</td>
+          <td>Die Java script Anteile können einen HTTP request senden, der im
+            python code bearbeitet werden kann.<br>
+            Anworten typischerweise in Json</td>
+        </tr>
       </tbody>
     </table>
+    <p><br>
+    </p>
     <p>Ein Beispiel für eine plugin.py findet sich auf <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/testPlugin/plugin.py">GitHub</a>.</p>
     <p>Damit das Plugin von AvNav erkannt wird, müssen folgende Voraussetzungen
       eingehalten werden:</p>
@@ -204,6 +213,31 @@ def pluginInfo(cls):<br>  return {
               Editor</a> herunterladen und im Plugin Verzeichnis speichern.
             Beispiel wieder im <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/signalk/plugin.py">signalk
               Plugin</a>.</td>
+        </tr>
+        <tr>
+          <td>getDataDir</td>
+          <td>Das Verzeichnis, in dem AvNav Daten ablegt</td>
+        </tr>
+        <tr>
+          <td>registerChartProvider</td>
+          <td>Falls das Plugin Karten bereitstellt, wird hier ein callback
+            registriert, der eine Liste der Karten zurückgibt.</td>
+        </tr>
+        <tr>
+          <td>registerRequestHandler</td>
+          <td>Falls das Plugin HTTP requests bearbeiten soll (Interface E) muss
+            hier ein callback registriert werden der den Request behandelt. Die
+            url für den Aufruf ist:<br>
+            &lt;pluginBase&gt;/api<br>
+            Dabei ist pluginBase der unter getBaseUrl zurückgegebene Wert.<br>
+            Die <a href="userjs.html">java script Anteile</a> bekommen die API
+            url in der variable AVNAV_PLUGIN_URL übergeben.<br>
+            Im einfachsten Fall kann die aufgerufen callback-Funktion ein
+            dictionary zurückgeben, dieses wird als Json zurück gesendet.</td>
+        </tr>
+        <tr>
+          <td>getBaseUrl</td>
+          <td>gib die Basis URL für das plugin zurück</td>
         </tr>
       </tbody>
     </table>

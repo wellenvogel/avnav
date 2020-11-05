@@ -90,6 +90,32 @@
           </td>
         </tr>
         <tr>
+          <td><img src="../viewerimages/icons-new/more_left.svg" alt="" class="inlineimage">
+          </td>
+          <td>Overflow<br>
+          </td>
+          <td>Show a second button list if the screen is too small for all
+            buttons. Only visible if you did not select "2 button columns" at
+            Settings/Layout.<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/brightness_low.svg" alt="" class="inlineimage">
+          </td>
+          <td>Dim<br>
+          </td>
+          <td>Dim Mode. The screen will be dimmed and all buttons become
+            inactive. Leave this state by clicking anywhere on the screen.<br>
+            This button is only visible in the Android app or when using the <a
+              href="https://play.google.com/store/apps/details?id=de.wellenvogel.bonjourbrowser&amp;hl=gsw">BonjourBrowser</a>
+            (version 1.5 and above). <br>
+            This button really dims the complete screen. This way you can limit
+            the power consumption of your device if you do not need an instant
+            display. It can also prevent overheating when running on high
+            brightness and on high temperatures.<br>
+          </td>
+        </tr>
+        <tr>
           <td><img src="../viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage"><br>
           </td>
           <td>Cancel</td>
@@ -110,6 +136,13 @@
     <p>You can have up to 3 circles being drawn around the boat to be able to
       estimate distances. You can change them via settings-&gt;navigation
       display. Standard values are 300m and 1000m.</p>
+    <p>(since 202011xx) The length of the line showing your current course&nbsp;
+      ("Course Vector") can be adapted in the settings(Navigation/Boat Course
+      Vector Length). You will set the seconds and the length will be computed
+      using your current boat speed (default: 10 minutes). The width of this
+      line is controlled by the width for the Navigation Circles. </p>
+    <p>The same settings are also valid for the course vectors of the AIS
+      targets.</p>
     <p>At the left side you have (top down):</p>
     <ul>
       <li>current chart zoom, required in brackets if you have auto zoom active</li>
@@ -122,6 +155,12 @@
       it does not show the nearest target but another one you have selected on
       the <a href="aisinfopage.html">ais info page</a>. If you click on this
       display you move to the ais info page.</p>
+    <p>(since 202011xx)The icons used for your boat and the AIS targets can be
+      changed using a file <a href="../hints/usericons.html">images.json</a>.
+      Additionally you can scale the AIS symbols(AIS/Icon Scale) and you can
+      give them a border(AIS/Border Width). If your browser is slowed down by
+      the computation and drawing of the AIS course vectors you can switch them
+      off (AIS/AIS Use Course Vector).</p>
     <p>At the bottom of the navigation page you have the most important
       instrument data. At the left the data for the current active waypoint (if
       any):</p>

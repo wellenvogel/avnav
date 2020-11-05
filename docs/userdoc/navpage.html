@@ -92,6 +92,31 @@
           </td>
         </tr>
         <tr>
+          <td><img src="../viewerimages/icons-new/more_left.svg" alt="" class="inlineimage">
+          </td>
+          <td>Overflow<br>
+          </td>
+          <td>Zeige eine zweite Liste von Buttons falls der Bildschirm zu klein
+            für alle Buttons ist. Nur sichtbar, wenn unter Settings/Layout nicht
+            "2 Button columns" ausgewählt ist<br>
+          </td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/brightness_low.svg" alt="" class="inlineimage">
+          </td>
+          <td>Dim<br>
+          </td>
+          <td>Dim Mode. Der Bildschirm wird abgedunkelt und alle Buttons werden
+            inaktiv. Aufheben des Zustandes über Click auf eine beliebige Stelle
+            auf dem Bildschirm.<br>
+            Der Button ist nur unter Android oder bei Nutzung des <a href="https://play.google.com/store/apps/details?id=de.wellenvogel.bonjourbrowser&amp;hl=gsw">BonjourBrowsers</a>
+            (Version 1.5) sichtbar. <br>
+            Es wird dann auch der Bildschirm insgesamt gedimmt. Darüber kann der
+            Stromverbrauch bei Nicht-Nutzung verringert werden - oder eine
+            Überlast bei großer Helligkeit und hohen Temperaturen.<br>
+          </td>
+        </tr>
+        <tr>
           <td><img src="../viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage"><br>
           </td>
           <td>Cancel</td>
@@ -114,6 +139,12 @@
     <p>Um das Schiff kann man bis zu 3 Kreise in entsprechenden Entfernungen
       einstellen um Abstände zu schätzen (Über Einstellungen-&gt;Navigation
       Display, Standard 300m und 1000m).</p>
+    <p>(ab 202011xx) In Vorausrichting ("Course Vector") kann man die Länge der
+      Linie in den Settings (Navigation/Boat Course Vector Length) einstellen.
+      Man stellt die Sekunden ein, die Länge berechnet sich dann aus der
+      aktuellen Geschwindigkeit (default: 10 Minuten).&nbsp; Die Dicke der
+      Kursvektoren wird über die Einstellung für die Navigationskreise bestimmt.</p>
+    <p>Die gleiche Einstellung gilt auch für die Kursvektoren der AIS Ziele.</p>
     <p>Links befinden sich (von oben nach unten):</p>
     <ul>
       <li>Die aktuelle Zoom-Stufe der Karte (wenn auto zoom aktive ist in
@@ -128,6 +159,13 @@
       ausgewähltes Ziel (siehe unten AIS) angezeigt wird. Ein Klick auf diese
       Fläche oder ein AIS Ziel auf der Karte führt auf die <a href="aisinfopage.html">AIS
         Info Seite</a> .</p>
+    <p>(ab 202011xx)Die verwendeten Symbole für das Boot und die AIS Ziele
+      können bei Bedarf über eine Datei <a href="../hints/usericons.html">images.json</a>
+      angepasst werden. Ausserdem können die AIS Symbole in den Einstellungen
+      (AIS/Icon Scale) in ihrer Größe verändert werden, ein Rand kann ebenfalls
+      hinzugefügt werden (AIS/Border Width). Falls die Berechnungen der AIS
+      Kursvektoren zu aufwendig ist (Browser wird zu langsam) kann sie in den
+      Einstellungen abgeschaltet werden (AIS/AIS Use Course Vector).</p>
     <p>Im unteren Bereich der Navigationsseite befindet sich die Anzeige der
       wichtigsten Navigationsdaten ("Widgets"). Links die Daten des aktuellen
       Wegepunktes (Marker):</p>

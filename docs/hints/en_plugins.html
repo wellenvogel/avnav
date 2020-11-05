@@ -88,6 +88,13 @@
           <td>Computing of derived data (and writing them back at "C") - or just
             send values somewhere externally.</td>
         </tr>
+        <tr>
+          <td>E</td>
+          <td>Handling of HTTP requests</td>
+          <td>The java script parts can send a HTTP request that can be handled
+            in the python code. Normally you will return a dictionary (send back
+            as json).</td>
+        </tr>
       </tbody>
     </table>
     <p>A plugin.py example is available at <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/testPlugin/plugin.py">GitHub</a>.</p>
@@ -191,6 +198,32 @@ def pluginInfo(cls):<br>  return {
             plugin directory after creating it with the <a href="layouts.html">layout
               editor</a>. Example again within the <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/signalk/plugin.py">signalk
               plugin</a>.</td>
+        </tr>
+        <tr>
+          <td>getDataDir</td>
+          <td>The data directory of AvNav.</td>
+        </tr>
+        <tr>
+          <td>registerChartProvider</td>
+          <td>If the plugin is going to provide charts you will register a
+            callback here that returns a list of charts.</td>
+        </tr>
+        <tr>
+          <td>registerRequestHandler</td>
+          <td>If the plugin is going to handle HTTP requests (interface E) you
+            need to register a callback here. The url that will trigger the
+            callback is:<br>
+            &lt;pluginBase&gt;/api<br>
+            pluginBase is the value returned by getBaseUrl
+            (/plugins/&lt;name&gt;).<br>
+            The <a href="userjs.html">java script parts</a> will get the API
+            url in the variable AVNAV_PLUGIN_URL.<br>
+            In the simple case your callback should return a dictionary that is
+            send back as json.</td>
+        </tr>
+        <tr>
+          <td>getBaseUrl</td>
+          <td>returns the base URL for the plugin</td>
         </tr>
       </tbody>
     </table>
