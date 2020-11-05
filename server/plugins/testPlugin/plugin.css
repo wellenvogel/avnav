@@ -1,20 +1,11 @@
-.testPlugin_Widget .widgetData{
+.testPlugin_CourseWidget .widgetData{
     font-size: 2.5em;
 }
-.testPlugin_Widget .reset.running{
-    color: yellow;
-}
-.testPlugin_Widget .head {
-    font-size: 0.3em;
-    padding-top: 0.2em;
-    padding-bottom: 0.2em;
-    border-top: 1px solid grey;
-    text-align: end;
-}
-.testPlugin_Widget canvas{
-    height: 30%;
+
+.testPlugin_CourseWidget canvas{
+    height: 40%;
 }
 
-.testPlugin_Widget .server{
-    text-align: right;
+.testPlugin_ServerWidget .reset.running{
+    color: yellow;
 }
