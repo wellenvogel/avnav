@@ -35,6 +35,48 @@ sudo systemctl start avnav</div>
     <br>
     <div> </div>
     <h2>Versions</h2>
+    <p> <span style="font-weight: bold;">20201105</span> <a title="release/20201105"
+        href="../downloads/release/20201105/fr">link</a> </p>
+    <ul>
+      <li>Feature: Power saving button (android and BonjourBrowser) <a href="https://github.com/wellenvogel/avnav/issues/69">#69</a></li>
+      <li>Feature: Implement course vectors (depending on speed) for boat and
+        AIS <a href="https://github.com/wellenvogel/avnav/issues/59">#59</a>,
+        see <a href="userdoc/navpage.html">Navigation Page</a> (some new
+        Settings)</li>
+      <li>Feature: Allow to set AIS symbol size and Border <a href="https://github.com/wellenvogel/avnav/issues/58">#58</a></li>
+      <li>Feature: Allow to set Images for different AIS targets, own boat,
+        marker <a href="https://github.com/wellenvogel/avnav/issues/53">#53</a>,
+        see <a href="hints/usericons.html">Description</a></li>
+      <li>Feature: Show overflow button if more then 8 Buttons on a page, allow
+        for 2 button columns <a href="https://github.com/wellenvogel/avnav/issues/68">#68</a>,
+        see <a href="userdoc/navpage.html">Navigation Page<br>
+        </a></li>
+      <li>Feature: Setting to force back button on top</li>
+      <li>Feature: Remove package dependency to gpsd</li>
+      <li>Feature: Allow plugins (widgets) to have event handlers at their
+        objects and to communicate with the python part <a href="https://github.com/wellenvogel/avnav/issues/75">#75</a>,
+        see <a href="hints/plugins.html">Plugin Description</a> and <a href="hints/userjs.html">User
+          Java Script</a></li>
+      <li>Feature: Usage of <a href="https://github.com/SignalK/charts-plugin">SignalK
+          charts</a> <a href="https://github.com/wellenvogel/avnav/issues/76">#76</a>,
+        see <a href="hints/CanboatAndSignalk.html#SignalKCharts">SignalK Charts</a></li>
+      <li>Bug: Avoid n2k not working any more after long time </li>
+      <li>Bug: Unexpected go back from various pages when clicking (itemlist
+        clicking)</li>
+      <li>Bug: Correctly go to previous waypoint when deleting last in route</li>
+      <li>Bug: Become robust against empty values in DPT,DBT <a href="https://github.com/wellenvogel/avnav/issues/60">#60</a></li>
+      <li>Bug: Correctly handle filters in avnav_server.xml with blacklist only</li>
+      <li>Bug: Become more robust against shortened AIS type 5 message&nbsp; (
+        no callsign, name,... for some AIS targets)</li>
+      <li>Bug: Reload a chart in the Browser if it has been modified on server
+        (mbtiles, ocharts)</li>
+      <li>Bug: (Android only) accept unknown NMEA talker ids</li>
+      <li>Bug: Make center to Ais target working again <a href="https://github.com/wellenvogel/avnav/issues/74">#74</a></li>
+      <li>Bug: Correctly show anchor watch distance in m <a href="https://github.com/wellenvogel/avnav/issues/62">#62</a></li>
+      <li>Bug: Fix broken user app dialog for long urls <a href="https://github.com/wellenvogel/avnav/issues/66">#66</a></li>
+      <li>Bug: Change handling for mbtiles scheme <a href="https://github.com/wellenvogel/avnav/issues/63">#63</a>,
+        see <a href="charts.html">Description Charts</a></li>
+    </ul>
     <p><span style="font-weight: bold;">20200609</span> <a title="release/20200609"
         href="../downloads/release/20200609/fr">link</a></p>
     <ul>

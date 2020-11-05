@@ -36,8 +36,55 @@ sudo systemctl start avnav</div>
     <br>
     <div> </div>
     <h2>Versionen</h2>
-    <p><br>
-      <span style="font-weight: bold;">20200609</span> <a title="release/20200609"
+    <p> <span style="font-weight: bold;">20201105</span> <a title="release/20201105"
+        href="../downloads/release/20201105/fr">link</a> </p>
+    <ul>
+      <li>Feature: Button für Power Save (Android und BonjourBrowser) <a href="https://github.com/wellenvogel/avnav/issues/69">#69</a></li>
+      <li>Feature: Geschwindigkeitsabhängige Kurs-Vektoren für eigenes Boot und
+        AIS <a href="https://github.com/wellenvogel/avnav/issues/59">#59</a>,
+        siehe <a href="userdoc/navpage.html">Navigationsseite</a> (dazu einige
+        neue Einstellungen)</li>
+      <li>Feature: Einstellungen für die AIS Symbolgröße und einen Rand <a href="https://github.com/wellenvogel/avnav/issues/58">#58</a></li>
+      <li>Feature: Eigene Symbole für das Boot und AIS Ziele (unterschiedlich
+        pro Typ) <a href="https://github.com/wellenvogel/avnav/issues/53">#53</a>,
+        siehe <a href="hints/usericons.html">Beschreibung</a></li>
+      <li>Feature: Overflow Button wenn mehr als 8 Buttons nicht passen,
+        Möglichkeit für 2. Button Spalte <a href="https://github.com/wellenvogel/avnav/issues/68">#68</a>,
+        siehe <a href="userdoc/navpage.html">Navigationsseite</a></li>
+      <li>Feature: Einstellmöglichkeit um den Zurück-Button immer ganz oben zu
+        haben</li>
+      <li>Feature: Package Abhängigkeit zu gpsd entfernt</li>
+      <li>Feature: Möglichkeit für Plugin Widgets mit dem Server zu
+        kommunizieren (event handler) <a href="https://github.com/wellenvogel/avnav/issues/75">#75</a>,
+        siehe <a href="hints/plugins.html">Plugin Beschreibung</a> und <a href="hints/userjs.html">User
+          Java Script</a></li>
+      <li>Feature: Nutzung von Karten, die unter <a href="https://github.com/SignalK/charts-plugin">SignalK
+          installiert</a> sind <a href="https://github.com/wellenvogel/avnav/issues/76">#76</a>,
+        siehe <a href="hints/CanboatAndSignalk.html#SignalKCharts">SignalK
+          Karten</a></li>
+      <li>Bug: N2K (canboat) arbeitet weiter auch wenn lange keine Daten
+        vorhanden sind</li>
+      <li>Bug: Unerwarteter Wechsel von einer Seite zur anderen (doppeltes Klick
+        Handling in Listen)</li>
+      <li>Bug: Gehe im Routen Editor zum vorletzten Punkt, wenn der letzte
+        gelöscht wird</li>
+      <li>Bug: Robusteres Dekodieren von teilweise leeren DPT und DBT Sätzen <a
+          href="https://github.com/wellenvogel/avnav/issues/60">#60</a></li>
+      <li>Bug: korrekte Behandlung von Filtern in avnav_server.xml die nur eine
+        Blacklist enthalten</li>
+      <li>Bug: Robustere Behandlung von verkürzten Class 5 AIS Nachrichten
+        (keine Namen, Callsign,...) </li>
+      <li>Bug: Neuladen einer Karte im Browser, wenn sie auf dem Server
+        modifiziert wurde (mbtiles, ocharts)</li>
+      <li>Bug: (Android) akzeptiere unbekannte NMEA talker ids</li>
+      <li>Bug: Center to Ais target funktioniert nicht <a href="https://github.com/wellenvogel/avnav/issues/74">#74</a></li>
+      <li>Bug: Richtige Anzeige der anchor watch distance in m <a href="https://github.com/wellenvogel/avnav/issues/62">#62</a></li>
+      <li>Bug: Darstellung kaputt für lange URL in User App Dialog <a href="https://github.com/wellenvogel/avnav/issues/66">#66</a></li>
+      <li>Bug: Korrektur für das Handling des Schemas bei mbtiles (xyz,tms) <a
+          href="https://github.com/wellenvogel/avnav/issues/63">#63</a>, siehe <a
+          href="charts.html">Beschreibung Karten</a></li>
+    </ul>
+    <p> <span style="font-weight: bold;">20200609</span> <a title="release/20200609"
         href="../downloads/release/20200609/fr">link</a> </p>
     <ul>
       <li>korrektes Handling von Karten mit Leerzeichen im Namen</li>

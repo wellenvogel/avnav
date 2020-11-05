@@ -9,7 +9,7 @@
     <h1>Interworking with Canboat and SignalK</h1>
     <p>Starting with release 20200204 AvNav can interwork with canboat
       (NMEA2000) and signalk.</p>
-    <h2>Canboat (NMEA2000)</h2>
+    <h2><a name="Canboat" id="Canboat"></a>Canboat (NMEA2000)</h2>
     <p>Using <a href="https://github.com/canboat/canboat">canboat</a> you can
       interface to NMEA 2000 bus systems using a CAN adapter (e.g. <a href="https://www.reichelt.de/entwicklerboards-can-modul-mcp2515-mcp2562-debo-can-modul-p239277.html">MCP2515</a>
       or a <a href="https://www.waveshare.com/wiki/RS485_CAN_HAT">Waveshare
@@ -85,7 +85,7 @@
       required, you can handle this via signalk.</p>
     <p><br>
     </p>
-    <h2>SignalK</h2>
+    <h2><a name="SignalK" id="SignalK"></a>SignalK</h2>
     <p>Starting from 20200204 a first step of interworking with <a href="http://signalk.org/">SignalK</a>
       is possible.</p>
     <img alt="SignalK" src="SignalK.png" width="800">
@@ -112,9 +112,9 @@
 &lt;AVNPluginHandler&gt;
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;builtin-signalk enabled="true"/&gt;
 &lt;/AVNPluginHandler&gt;</div>
-    <p>If you alos use the canboat integration please do only create one
+    <p>If you also use the canboat integration please do only create one
       AVNPluginHandler entry and configure both plugins below it.<br>
-      As signalk is receiving all NMEA0183 data an active waypoint will be
+      As SignalK is receiving all NMEA0183 data an active waypoint will be
       visible there (sent via $RMB).<br>
       If the plugin is enabled a <a href="../userdoc/addonpage.html">user app</a>
       entry will be visible for signalk showing the Web UI.</p>
@@ -125,5 +125,80 @@
       the filter and&nbsp; name options and at the writers the filter,
       readFilter and blackList options. In this set up you could also handle the
       canboat integration via signalk.</p>
+    <p>The following plugin parameters are available:</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Default</td>
+          <td>Description</td>
+        </tr>
+        <tr>
+          <td>enabled</td>
+          <td>false</td>
+          <td>Plugin will only be active if this is set to true</td>
+        </tr>
+        <tr>
+          <td>port</td>
+          <td>3000</td>
+          <td>SignalK Port</td>
+        </tr>
+        <tr>
+          <td>period</td>
+          <td>1000</td>
+          <td>Query Interval in ms (since 202011xx only valid if no web sockets
+            are used)</td>
+        </tr>
+        <tr>
+          <td>host</td>
+          <td>localhost</td>
+          <td>(since version 202011xx) address of the server that SignalK is
+            running on</td>
+        </tr>
+        <tr>
+          <td>useWebSockets</td>
+          <td>true</td>
+          <td>(since version 202011xx) if available use WebSockets to
+            communicate with SignalK (Changes will become available earlier)</td>
+        </tr>
+      </tbody>
+    </table>
+    <h3><a name="SignalKCharts" id="SignalKCharts"></a>SignalK - Charts</h3>
+    <p>Since version 202011xx an integration of the <a href="https://github.com/SignalK/charts-plugin">SignalK
+        chart provider</a> is available. Charts provided by SignalK can be
+      selected on the main page. At SignalK you have to enable the chart
+      provider plugin and you have to configure/upload charts.</p>
+    <p>Normally AvNav will just provide the information about the charts, the
+      browser will directly access SignalK for the chart tiles.</p>
+    <p>If this is not possible (e.g. prevented by some firewall rules) you can
+      proxy all chart tile requests via AvNav. </p>
+    <p>There is a couple of new parameters in the plugin for the chart handling.
+      Normally you can leave them at their defaults.</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Default</td>
+          <td>Description</td>
+        </tr>
+        <tr>
+          <td>chartQueryPeriod</td>
+          <td>10000</td>
+          <td>Interval in ms for querying the list of charts from SignalK. If
+            set to 0, no charts are queried.</td>
+        </tr>
+        <tr>
+          <td>chartProxyMode</td>
+          <td>sameHost</td>
+          <td>Proxy mode for the request to the chart tiles.<br>
+            sameHost: directly route to SignalK if this is on the same host like
+            AvNav (normal case). Otherwise proxy via AvNav.<br>
+            never: always directly to SignalK<br>
+            always: always proxy via AvNav</td>
+        </tr>
+      </tbody>
+    </table>
+    <p><br>
+    </p>
   </body>
 </html>

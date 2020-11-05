@@ -27,6 +27,7 @@
           BSB)<br>
         </a></li>
       <li><a href="#Download">Herunterladen von Kachel-Karten</a></li>
+      <li><a href="hints/CanboatAndSignalk.html#SignalKCharts">SignalK</a></li>
     </ul>
     <h2><a id="Intro" name="Intro"></a>Einführung</h2>
     <img title="Karten" alt="Karten" src="Karten.png" width="600">
@@ -101,7 +102,16 @@
       <a href="userdoc/downloadpage.html#mbtiles">Files/Download</a> Seite
       erfolgen. MbTiles können z.B. direkt von <a href="https://wiki.openstreetmap.org/wiki/DE:Locus#https://wiki.openstreetmap.org/wiki/DE:Locus#Offline-Karten">OpenSeamap</a>
       heruntergeladen werden.<br>
-      Zusätzlich können (ab 20200325) auch online Kartenquellen eingebunden
+      <b>Hinweis</b>: Bis Version 202011xx hat AvNav einen Eintrag "scheme" in
+      den Metadaten von mbtiles Files ausgewertet. Leider ist die Benutzung
+      nicht wirklich klar geregelt und verschiedene Quellen nutzen das
+      unterschiedlich (siehe auch <a href="https://github.com/wellenvogel/avnav/issues/63">Issue
+        #63</a>). AvNav hat auch intern xyz und tms genau invers verwendet. Mit
+      der Version 202011xx ignoriert jetzt AvNav diesen Wert (und nimmt tms an).
+      Falls er in den Metadaten vorhanden ist, wird die Karte in rot angezeigt,
+      über die <a href="userdoc/downloadpage.html">Download-Seite</a> kann dann
+      gewählt werden, welche interne Kodierung genutzt werden soll. </p>
+    <p> Zusätzlich können (ab 20200325) auch online Kartenquellen eingebunden
       werden, wenn sie ein entsprechendes URL Format unterstützen. Die
       Konfiguration erfolgt über XML Dateien. Ein Beispiel ist die mitgelieferte
       <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/demo/osm-online.xml">Quelle
@@ -109,6 +119,9 @@
     <p>Ab Version 20200515 können mit einem <a href="hints/ocharts.html">Plugin</a>
       auch Karten von <a href="https://o-charts.org/">o-charts</a> verwendet
       werden.</p>
+    <p>Ab Version 202011xx können (wenn die <a href="hints/CanboatAndSignalk.html#SignalK">signalK
+        Integration</a> aktiv ist) auch Karten genutzt werden, die im <a href="https://github.com/SignalK/charts-plugin">signalK
+        chart provider</a> vorhanden sind.</p>
     <h2><a name="installation" id="installation"></a>Installation von Karten</h2>
     <p>Nach der Installation ist in AvNav zunächst nur eine/einige
       Online-Demo-Karten vorhanden. Zur realen Nutzung müssen die Karten
@@ -276,7 +289,5 @@
         href="#installation">installieren</a>. <br>
       Auf der <a href="mapsources.html">Mapsources Seite</a> sammle ich chart
       sources für den mobac, die für uns nützlich sein lönnten. </p>
-    <p><br>
-    </p>
   </body>
 </html>

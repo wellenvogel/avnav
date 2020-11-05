@@ -27,6 +27,7 @@
         </a></li>
       <li><a href="#Download">Downlading of Raster Charts<br>
         </a></li>
+      <li><a href="hints/CanboatAndSignalk.html#SignalKCharts">SignalK</a></li>
     </ul>
     <h2><a id="Intro" name="Intro"></a>Introduction</h2>
     <img title="Karten" alt="Karten" src="Karten.png" width="600">
@@ -94,15 +95,27 @@
       for the internal sorting of the tiles. The default formt is "xyz" but
       there is also a "tms" format available. You can switch the format at the <a
         href="userdoc/downloadpage.html#mbtiles">Files/Download</a> page.
-      MbTiles you can directly download e.g. from <a href="https://wiki.openstreetmap.org/wiki/DE:Locus#https://wiki.openstreetmap.org/wiki/DE:Locus#Offline-Karten">OpenSeamap</a>.<br>
-      Additionally (since 20200325) you can also use online chart sources if
+      MbTiles you can directly download e.g. from <a href="https://wiki.openstreetmap.org/wiki/DE:Locus#https://wiki.openstreetmap.org/wiki/DE:Locus#Offline-Karten">OpenSeamap</a>.</p>
+    <p><b>Hint</b>: Up to version 202011xx AvNav was reading an entry "scheme"
+      in the mbtiles metadata. Unfortunately the usage of this entry is not well
+      defined and different sources are using this in a different way (see <a href="https://github.com/wellenvogel/avnav/issues/63">Issue
+        #63</a>).
+      Additionally AvNav internally inverted the meaning of xyz and tms. With
+      version 202011xx AvNav now is ignoring this value (and assumes tms). If
+      the value is set in the metadata the chart will be shown in red and you
+      can use the <a href="userdoc/downloadpage.html">Download-Page</a> to
+      choose which type should be applied for this chart.</p>
+    <p>Additionally (since 20200325) you can also use online chart sources if
       they support the default url format. You have to configure this with an
       xml file. An example can be found in the provided <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/demo/osm-online.xml">online
         source for OpenSeaMap</a>.</p>
-    <p>Since Version 20200515 you can use a <a href="hints/ocharts.html">plugin</a>
+    <p>Since version 20200515 you can use a <a href="hints/ocharts.html">plugin</a>
       to also utilize charts from <a href="https://o-charts.org/">o-charts</a>.</p>
+    <p>Since version 202011xx you can use charts from the <a href="https://github.com/SignalK/charts-plugin">signalK
+        chart provider</a> &nbsp; (if the <a href="hints/CanboatAndSignalk.html#SignalK">signalK
+        integration</a> is active).</p>
     <h2><a name="installation" id="installation"></a>Installation of Charts</h2>
-    <p>Afgter installing AvNav there is only one/a couple of online demo charts
+    <p>After installing AvNav there is only one/a couple of online demo charts
       available. For real usage you have to install charts in AvNav.<br>
       You can do this either by directly copying charts into the chart directory
       (/home/pi/avnav/data/charts) or the external chart directory on android.

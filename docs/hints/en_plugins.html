@@ -216,8 +216,8 @@ def pluginInfo(cls):<br>  return {
             &lt;pluginBase&gt;/api<br>
             pluginBase is the value returned by getBaseUrl
             (/plugins/&lt;name&gt;).<br>
-            The <a href="userjs.html">java script parts</a> will get the API
-            url in the variable AVNAV_PLUGIN_URL.<br>
+            The <a href="userjs.html">java script parts</a> can compute the API
+            url using the variable AVNAV_BASE_URL: AVNAV_BASE_URL+"/api"<br>
             In the simple case your callback should return a dictionary that is
             send back as json.</td>
         </tr>
