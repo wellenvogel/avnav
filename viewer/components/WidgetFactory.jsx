@@ -207,8 +207,8 @@ class WidgetFactory{
      * @param widget - either a name or a widget description with a name field
      * @returns {*}
      */
-    findWidget(widget){
-        let i=this.findWidgetIndex(widget);
+    findWidget(widget,opt_useFallback){
+        let i=this.findWidgetIndex(widget,opt_useFallback);
         if (i < 0) return undefined;
         return this.widgetDefinitions[i];
     }
@@ -275,7 +275,7 @@ class WidgetFactory{
      * @param widget - either a name or a widget description with a name field
      * @returns {number} - -1 omn error
      */
-    findWidgetIndex(widget){
+    findWidgetIndex(widget,opt_useFallback){
         if (widget === undefined) return -1;
         let search=widget;
         if (typeof(widget) !== "string"){
@@ -287,13 +287,14 @@ class WidgetFactory{
                 return i;
             }
         }
-        return -1;
+        if (! opt_useFallback) return -1;
+        return this.findWidgetIndex("Undefined");
     }
 
     createWidget(props, opt_properties) {
         let self = this;
         if (!props.name) return;
-        let e = this.findWidget(props.name);
+        let e = this.findWidget(props.name,true);
         if (!e ) {
             return;
         }
