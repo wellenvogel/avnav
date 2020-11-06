@@ -46,7 +46,8 @@ const headlines={
     route: "Routes",
     layout:"Layouts",
     user: "User",
-    images: "Images"
+    images: "Images",
+    overlays: "Overlays"
 };
 const DynamicPage=Dynamic(Page);
 const DynamicList=Dynamic(ItemList);
@@ -180,14 +181,15 @@ const allowedItemActions=(props)=>{
     let ext=getExt(props.name);
     if (props.type == 'route') ext="gpx";
     if (props.type == 'layout') ext="json";
-    let showView=(props.type == 'user' || props.type=='images' || (props.type == 'route' && props.server) || props.type == 'track' || props.type == 'layout') && ViewPage.VIEWABLES.indexOf(ext)>=0;
-    let showEdit=(((props.type == 'user' && props.size !== undefined && props.size < ViewPage.MAXEDITSIZE)|| (props.type == 'layout' && props.canDelete)  ) && ViewPage.EDITABLES.indexOf(ext) >=0);
+    let showView=(props.type == 'overlays' || props.type == 'user' || props.type=='images' || (props.type == 'route' && props.server) || props.type == 'track' || props.type == 'layout') && ViewPage.VIEWABLES.indexOf(ext)>=0;
+    let showEdit=((((props.type == 'overlays' || props.type == 'user') && props.size !== undefined && props.size < ViewPage.MAXEDITSIZE)|| (props.type == 'layout' && props.canDelete)  ) && ViewPage.EDITABLES.indexOf(ext) >=0);
     let showDownload=false;
     if (props.canDownload || props.type === "track"
         || props.type === "route"
         || props.type == 'layout'
         || props.type == 'user'
         || props.type == 'images'
+        || props.type == 'overlays'
         || (props.url && props.url.match("^/gemf") ) ) {
         showDownload=true;
     }
@@ -195,7 +197,7 @@ const allowedItemActions=(props)=>{
     if (props.canDelete !== undefined){
         showDelete=props.canDelete && ! props.active;
     }
-    let showRename=(props.type == 'user' || props.type == 'images');
+    let showRename=(props.type == 'user' || props.type == 'images' || props.type == 'overlays' );
     let showApp=(props.type == 'user' && ext == 'html' && globalStore.getData(keys.gui.capabilities.addons));
     let isApp=(showApp && props.isAddon);
     return {
@@ -360,6 +362,7 @@ const download = (info)=> {
             || info.type == 'user'
             || info.type == 'images'
             || info.type == 'chart'
+            || info.type == 'overlays'
         )
             startServerDownload(info.type, info.name,info.url);
         else {
@@ -1227,6 +1230,13 @@ class DownloadPage extends React.Component{
                 toggle: type == 'images',
                 visible: (type == 'images'|| allowTypeChange) && globalStore.getData(keys.gui.capabilities.uploadImages,false),
                 onClick:()=>{changeType('images')},
+                overflow: true
+            },
+            {
+                name:'DownloadPageOverlays',
+                toggle: type == 'overlays',
+                visible: (type == 'overlays'|| allowTypeChange) && globalStore.getData(keys.gui.capabilities.uploadOverlays,false),
+                onClick:()=>{changeType('overlays')},
                 overflow: true
             },
             {

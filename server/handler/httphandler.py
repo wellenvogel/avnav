@@ -586,6 +586,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       'uploadUser':True,
       'uploadImages':True,
       'uploadImport': True,
+      'uploadOverlays': True,
       'canConnect': True
     }
     return json.dumps({'status':'OK','data':rt})

@@ -367,27 +367,39 @@ MapHolder.prototype.loadMap=function(div){
                     url = window.location.href.replace(/[?].*/, '').replace(/[^\/]*$/, '') + "/" + url;
                 }
             }
-            url = url + "/avnav.xml";
-            Requests.getHtmlOrText(url, {
-                useNavUrl: false,
-                timeout: parseInt(globalStore.getData(keys.properties.chartQueryTimeout || 10000))
-            }).then((data)=> {
-                try {
-                    self.initMap(div, data, chartBase);
-                    self.setBrightness(globalStore.getData(keys.properties.nightMode) ?
-                    globalStore.getData(keys.properties.nightChartFade, 100) / 100
-                        : 1);
-                    this._url = originalUrl;
-                    this._chartbase = chartBase;
-                    this._sequence = sequence;
-                    resolve(1);
-                } catch (e) {
-                    console.log("map loding error: " + e + ": " + e.stack);
-                    throw e;
-                }
-            }).catch((error)=> {
-                reject("unable to load map: " + error);
+            let xmlUrl = url + "/avnav.xml";
+            let overlayParam={
+                request: 'api',
+                type: 'chart',
+                url:originalUrl,
+                command: 'getOverlays'
+                };
+            Requests.getJson("",{},overlayParam).then((overlays)=>{
+                let overlayList=overlays.data;
+                Requests.getHtmlOrText(xmlUrl, {
+                    useNavUrl: false,
+                    timeout: parseInt(globalStore.getData(keys.properties.chartQueryTimeout || 10000))
+                }).then((data)=> {
+                    try {
+                        self.initMap(div, data, chartBase,overlayList);
+                        self.setBrightness(globalStore.getData(keys.properties.nightMode) ?
+                        globalStore.getData(keys.properties.nightChartFade, 100) / 100
+                            : 1);
+                        this._url = originalUrl;
+                        this._chartbase = chartBase;
+                        this._sequence = sequence;
+                        resolve(1);
+                    } catch (e) {
+                        console.log("map loding error: " + e + ": " + e.stack);
+                        throw e;
+                    }
+                }).catch((error)=> {
+                    reject("unable to load map: " + error);
+                })
             })
+            .catch((error)=>{
+                    reject("unable to load map: " + error);
+                })
         };
         let tokenUrl=this._chartEntry.tokenUrl;
         if (tokenUrl === undefined){
@@ -481,6 +493,51 @@ MapHolder.prototype.getBaseLayer=function(){
 
 };
 
+MapHolder.prototype.getGpxLayer=function(url){
+    var styles = {
+        'Point': new ol.style.Style({
+            image: new ol.style.Circle({
+                fill: new ol.style.Fill({
+                    color: 'rgba(255,255,0,0.4)',
+                }),
+                radius: 5,
+                stroke: new ol.style.Stroke({
+                    color: '#ff0',
+                    width: 1,
+                }),
+            }),
+        }),
+        'LineString': new ol.style.Style({
+            stroke: new ol.style.Stroke({
+                color: '#f00',
+                width: 3,
+            }),
+        }),
+        'MultiLineString': new ol.style.Style({
+            stroke: new ol.style.Stroke({
+                color: '#0f0',
+                width: 3,
+            }),
+        }),
+    };
+
+    var styleFunction = function(feature) {
+        return styles[feature.getGeometry().getType()];
+    };
+    var vectorSource = new ol.source.Vector({
+        format: new ol.format.GPX(),
+        url: url,
+        wrapX: false
+    });
+
+    var vectorLayer = new ol.layer.Vector({
+        source: vectorSource,
+        style: styleFunction
+    });
+    return vectorLayer;
+
+};
+
 MapHolder.prototype.getMapOutlineLayer = function (layers) {
     let style = new ol.style.Style({
         stroke: new ol.style.Stroke({
@@ -523,9 +580,10 @@ MapHolder.prototype.getMapOutlineLayer = function (layers) {
  * @param {String} div
  * @param {Object} layerdata - the data as returned by the query to the description
  * @param {string} baseurl - the baseurl to be used
+ * @param {Array} overlayList - list of overlays to load
  */
 
-MapHolder.prototype.initMap=function(div,layerdata,baseurl){
+MapHolder.prototype.initMap=function(div,layerdata,baseurl,overlayList){
     let self=this;
     let layers=this.parseLayerlist(layerdata,baseurl);
     let layersreverse=[];
@@ -539,6 +597,14 @@ MapHolder.prototype.initMap=function(div,layerdata,baseurl){
         }
         if (layers[i].avnavOptions.maxZoom > this.maxzoom){
             this.maxzoom=layers[i].avnavOptions.maxZoom;
+        }
+    }
+    for (let oi in overlayList){
+        let overlay=overlayList[oi];
+        if (! overlay.name) continue;
+        if (overlay.name.match(/\.gpx$/)){
+            let url="/overlays/"+overlay.name; //TODO: escape
+            layersreverse.push(self.getGpxLayer(url));
         }
     }
     this.mapMinZoom=this.minzoom;

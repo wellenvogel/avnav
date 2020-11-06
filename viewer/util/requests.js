@@ -6,7 +6,7 @@ import 'whatwg-fetch-timeout';
 
 
 const prepare=(url,options,defaults)=>{
-    if (!url) {
+    if (url === undefined) {
         return [undefined,undefined];
     }
     let ioptions=assign({},defaults,options);

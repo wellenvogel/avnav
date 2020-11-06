@@ -161,6 +161,7 @@ let keys={
             uploadUser:K,
             uploadImages:K,
             uploadImport: K,
+            uploadOverlays: K,
             canConnect: K,
         },
         global:{

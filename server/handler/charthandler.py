@@ -232,7 +232,11 @@ class AVNChartHandler(AVNWorker):
 
   def handleChartRequest(self,url,handler):
     try:
-      (chart,parr)=self.getChartFromUrl(url,True)
+      try:
+        (chart,parr)=self.getChartFromUrl(url,True)
+      except Exception as e:
+        handler.send_error(404, "%s:%s" % (url,e.message))
+        return True
       AVNLog.debug("chart file %s, request %s, lend=%d",chart['name'],url,len(parr))
       #found file
       #basically we can today handle 2 types of requests:
@@ -257,14 +261,14 @@ class AVNChartHandler(AVNWorker):
       data=chart['chart'].getTileData((int(parr[2]),int(parr[3]),int(parr[4].replace(".png",""))),parr[1])
       if data is None:
         handler.send_error(404,"File %s not found"%(url))
-        return None
+        return True
       handler.send_response(200)
       handler.send_header("Content-type", "image/png")
       handler.send_header("Content-Length", len(data))
       handler.send_header("Last-Modified", handler.date_time_string())
       handler.end_headers()
       handler.wfile.write(data)
-      return None
+      return True
     except:
       handler.send_error(500,"Error: %s"%(traceback.format_exc()))
       return
@@ -362,14 +366,26 @@ class AVNChartHandler(AVNWorker):
 
     if type == "api":
       command=AVNUtil.getHttpRequestParam(requestparam,"command",True)
-      if (command == "scheme"):
-        url=AVNUtil.getHttpRequestParam(requestparam,"url",True)
-        scheme=AVNUtil.getHttpRequestParam(requestparam,"newScheme",True)
-        chartEntry = self.getChartFromUrl(url)
-        changed=chartEntry['chart'].changeScheme(scheme)
-        if changed:
-          chartEntry['avnav']=chartEntry['chart'].getAvnavXml(self.getIntParam('upzoom'))
-        return AVNUtil.getReturnData()
+      try:
+        if (command == "scheme"):
+          url=AVNUtil.getHttpRequestParam(requestparam,"url",True)
+          scheme=AVNUtil.getHttpRequestParam(requestparam,"newScheme",True)
+          chartEntry = self.getChartFromUrl(url)
+          changed=chartEntry['chart'].changeScheme(scheme)
+          if changed:
+            chartEntry['avnav']=chartEntry['chart'].getAvnavXml(self.getIntParam('upzoom'))
+          return AVNUtil.getReturnData()
+        if (command == "getOverlays"):
+          url = AVNUtil.getHttpRequestParam(requestparam, "url", True)
+          chartEntry = self.getChartFromUrl(url)
+          ovlname=os.path.join(self.chartDir,chartEntry['name']+".ovl")
+          rt=[]
+          if os.path.exists(ovlname):
+            with open(ovlname,"r") as f:
+              rt=json.load(f)
+          return AVNUtil.getReturnData(data=rt)
+      except Exception as e:
+        return AVNUtil.getReturnData(error=e.message)
 
     return AVNUtil.getReturnData(error="Unknown chart request")
 

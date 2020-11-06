@@ -37,7 +37,7 @@ from avnav_nmea import *
 from avnav_worker import *
 import avnav_handlerList
 
-class AVNUserHandlerBase(AVNWorker):
+class AVNDirectoryHandlerBase(AVNWorker):
   '''
   handle the files in the user directory
   '''
@@ -152,28 +152,14 @@ class AVNUserHandlerBase(AVNWorker):
       return False
     return True
 
-  def checkExists(self,name,doRaise=True):
-    if not self.checkName(name,doRaise):
-      return False
-    src = os.path.join(self.baseDir, name)
-    return os.path.exists(src)
 
-  def getPathFromUrl(self,url,restrictName=False,handler=None):
+  def getPathFromUrl(self,url,handler=None):
     if not url.startswith(self.getPrefix()):
       return None
     path = url[len(self.getPrefix()) + 1:]
-    if restrictName:
-      if not self.checkExists(path,False):
-        return None #name is no simple name
-      return path
-    originalPath = self.httpServer.plainUrlToPath(url, True)
-    if os.path.exists(originalPath):
-      return originalPath
-    path = url[len(self.getPrefix()) + 1:]
-    rt = self.handlePathRequest(path)
-    if rt is not None:
-      return rt
-    # nothing we can really do...
+    #TODO: should we limit this to only one level?
+    #we could use checkName and this way ensure that we onle have one level
+    originalPath = os.path.join(self.baseDir,self.httpServer.plainUrlToPath(path, False))
     return originalPath
 
 
@@ -216,9 +202,9 @@ class AVNUserHandlerBase(AVNWorker):
       filename = AVNUtil.getHttpRequestParam(requestparam, "name")
       if filename is None:
         raise Exception("missing filename in upload request")
+      self.checkName(filename)
       rlen=kwargs.get('flen')
       handler=kwargs.get('handler')
-      filename = AVNUtil.clean_filename(filename)
       outname=os.path.join(self.baseDir,filename)
       data=AVNUtil.getHttpRequestParam(requestparam,'_json')
       if data is not None:
@@ -256,7 +242,7 @@ class AVNUserHandlerBase(AVNWorker):
     raise Exception("unable to handle user request %s"%(type))
 
 
-class AVNUserHandler(AVNUserHandlerBase):
+class AVNUserHandler(AVNDirectoryHandlerBase):
   PREFIX = "/user/viewer"
   FLIST=['user.css',"user.js"]
   EMPTY_JSONS=['keys.json','images.json']
@@ -264,11 +250,11 @@ class AVNUserHandler(AVNUserHandlerBase):
   def getPrefix(cls):
     return cls.PREFIX
   def __init__(self,param):
-    AVNUserHandlerBase.__init__(self,param,"user")
+    AVNDirectoryHandlerBase.__init__(self, param, "user")
     self.baseDir = AVNConfig.getDirWithDefault(self.param, 'userDir', os.path.join('user', 'viewer'))
   def start(self):
     self.addonHandler=self.findHandlerByName("AVNUserAppHandler")
-    AVNUserHandlerBase.start(self)
+    AVNDirectoryHandlerBase.start(self)
 
   def copyTemplates(self):
     httpserver=self.findHandlerByName("AVNHttpServer")
@@ -291,36 +277,37 @@ class AVNUserHandler(AVNUserHandlerBase):
         with open(dest,"w") as fh:
           fh.write("{\n}\n")
 
-  def getPathFromUrl(self, url, restrictName=False,handler=None):
+  def getPathFromUrl(self, url, handler=None):
     if url.startswith(self.PREFIX):
       path=url[len(self.PREFIX)+1:]
       if path == 'user.js':
         fname=os.path.join(self.baseDir,path)
         if os.path.exists(fname) and handler is not None:
           return handler.sendJsFile(fname,self.PREFIX)
-    return super(AVNUserHandler, self).getPathFromUrl(url, restrictName,handler)
+    return super(AVNUserHandler, self).getPathFromUrl(url, handler)
 
-  def handlePathRequest(self,path):
-    for p in self.FLIST:
-      if path == p:
-        return self.httpServer.plainUrlToPath("/viewer/" + p, True)
-    if path.startswith("images/"):
-      return self.httpServer.plainUrlToPath("/viewer/images/" + path[len("images/"):])
 
-class AVNImagesHandler(AVNUserHandlerBase):
+class AVNImagesHandler(AVNDirectoryHandlerBase):
   PREFIX = "/user/images"
   @classmethod
   def getPrefix(cls):
     return cls.PREFIX
   def __init__(self,param):
-    AVNUserHandlerBase.__init__(self,param,"images")
+    AVNDirectoryHandlerBase.__init__(self, param, "images")
     self.baseDir = AVNConfig.getDirWithDefault(self.param, 'userDir', os.path.join('user', 'images'))
 
 
-  def handlePathRequest(self,path):
-      return self.httpServer.plainUrlToPath("/viewer/images/" + path[len("images/"):])
+class AVNOverlayHandler(AVNDirectoryHandlerBase):
+  PREFIX = "/overlays"
+  @classmethod
+  def getPrefix(cls):
+    return cls.PREFIX
+  def __init__(self,param):
+    AVNDirectoryHandlerBase.__init__(self, param, "overlays")
+    self.baseDir = AVNConfig.getDirWithDefault(self.param, 'overlayDir', "overlays")
 
 
+avnav_handlerList.registerHandler(AVNOverlayHandler)
 avnav_handlerList.registerHandler(AVNUserHandler)
 avnav_handlerList.registerHandler(AVNImagesHandler)
 
