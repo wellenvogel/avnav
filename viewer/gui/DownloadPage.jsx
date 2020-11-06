@@ -551,7 +551,7 @@ const runUpload=(ev)=>{
             (error)=>{Toast(error)}
         )
     }
-    if (type == 'user'){
+    if (type == 'user' || type == 'overlays'){
         return uploadGeneric(type,ev.target);
     }
     if (type == 'images'){
@@ -1244,7 +1244,8 @@ class DownloadPage extends React.Component{
                 visible: type == 'route' || type == 'layout'
                     || (type =='chart' && globalStore.getData(keys.gui.capabilities.uploadCharts,false))
                     || (type == 'user' && globalStore.getData(keys.gui.capabilities.uploadUser,false))
-                    || (type == 'images' && globalStore.getData(keys.gui.capabilities.uploadImages,false)),
+                    || (type == 'images' && globalStore.getData(keys.gui.capabilities.uploadImages,false))
+                    || (type == 'overlays' && globalStore.getData(keys.gui.capabilities.uploadOverlays,false)),
                 onClick:()=>{
                     if (avnav.android){
                         let nextId=globalStore.getData(keys.gui.downloadpage.requestedUploadId,0)+1;

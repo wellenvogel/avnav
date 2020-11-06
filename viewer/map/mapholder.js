@@ -357,17 +357,39 @@ MapHolder.prototype.loadMap=function(div){
         }
         this._encryptFunction=undefined;
         this._heartbeatFunction=undefined;
-        let newChart=()=> {
-            let originalUrl = url;
-            if (!url.match(/^http:/)) {
-                if (url.match(/^\//)) {
-                    url = window.location.href.replace(/^([^\/:]*:\/\/[^\/]*).*/, '$1') + url;
-                }
-                else {
-                    url = window.location.href.replace(/[?].*/, '').replace(/[^\/]*$/, '') + "/" + url;
-                }
+        let originalUrl = url;
+        if (!url.match(/^http:/)) {
+            if (url.match(/^\//)) {
+                url = window.location.href.replace(/^([^\/:]*:\/\/[^\/]*).*/, '$1') + url;
             }
-            let xmlUrl = url + "/avnav.xml";
+            else {
+                url = window.location.href.replace(/[?].*/, '').replace(/[^\/]*$/, '') + "/" + url;
+            }
+        }
+        let xmlUrl = url + "/avnav.xml";
+        let loadAvNavXml=(overlayList)=>{
+            Requests.getHtmlOrText(xmlUrl, {
+                useNavUrl: false,
+                timeout: parseInt(globalStore.getData(keys.properties.chartQueryTimeout || 10000))
+            }).then((data)=> {
+                try {
+                    self.initMap(div, data, chartBase,overlayList);
+                    self.setBrightness(globalStore.getData(keys.properties.nightMode) ?
+                    globalStore.getData(keys.properties.nightChartFade, 100) / 100
+                        : 1);
+                    this._url = originalUrl;
+                    this._chartbase = chartBase;
+                    this._sequence = sequence;
+                    resolve(1);
+                } catch (e) {
+                    console.log("map loding error: " + e + ": " + e.stack);
+                    throw e;
+                }
+            }).catch((error)=> {
+                reject("unable to load map: " + error);
+            })
+        };
+        let newChart=()=> {
             let overlayParam={
                 request: 'api',
                 type: 'chart',
@@ -376,29 +398,10 @@ MapHolder.prototype.loadMap=function(div){
                 };
             Requests.getJson("",{},overlayParam).then((overlays)=>{
                 let overlayList=overlays.data;
-                Requests.getHtmlOrText(xmlUrl, {
-                    useNavUrl: false,
-                    timeout: parseInt(globalStore.getData(keys.properties.chartQueryTimeout || 10000))
-                }).then((data)=> {
-                    try {
-                        self.initMap(div, data, chartBase,overlayList);
-                        self.setBrightness(globalStore.getData(keys.properties.nightMode) ?
-                        globalStore.getData(keys.properties.nightChartFade, 100) / 100
-                            : 1);
-                        this._url = originalUrl;
-                        this._chartbase = chartBase;
-                        this._sequence = sequence;
-                        resolve(1);
-                    } catch (e) {
-                        console.log("map loding error: " + e + ": " + e.stack);
-                        throw e;
-                    }
-                }).catch((error)=> {
-                    reject("unable to load map: " + error);
-                })
+                loadAvNavXml(overlayList);
             })
             .catch((error)=>{
-                    reject("unable to load map: " + error);
+                    loadAvNavXml();
                 })
         };
         let tokenUrl=this._chartEntry.tokenUrl;
