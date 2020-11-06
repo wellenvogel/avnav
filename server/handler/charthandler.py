@@ -208,48 +208,63 @@ class AVNChartHandler(AVNWorker):
       pass
     self.listCondition.release()
 
+  def getChartFromUrl(self,url,returnParts=False):
+    '''
+    find a chart from the url
+    @param url:
+    @param returnParts: if True return a tuple (chart,urlsPartsArray)
+    @return: either the chart or the tuple
+    '''
+    if not url.startswith(self.PATH_PREFIX):
+      raise Exception("invalid url %s"%url)
+    path = url.replace(self.PATH_PREFIX + "/", "", 1)
+    parr=path.split("/")
+    if len(parr) < 1:
+      raise Exception("invalid url %s" % url)
+    chartName=urllib.unquote(parr[0])
+    chartEntry = self.chartlist.get(chartName)
+    if chartEntry is None:
+      raise Exception("chart %s not found"%chartName)
+    if returnParts:
+      return (chartEntry,parr)
+    else:
+      return chartEntry
+
   def handleChartRequest(self,url,handler):
     try:
-      path=url.replace(self.PATH_PREFIX+"/","",1)
-      parr=path.split("/")
-      if len(parr) < 2:
+      (chart,parr)=self.getChartFromUrl(url,True)
+      AVNLog.debug("chart file %s, request %s, lend=%d",chart['name'],url,len(parr))
+      #found file
+      #basically we can today handle 2 types of requests:
+      #get the overview /chart/int/<name>/avnav.xml
+      #get a tile /chart/int/<name>/<srcname>/z/x/y.png
+      if parr[1] == AVNUtil.NAVXML:
+        AVNLog.debug("avnav request for chart %s",chart['name'])
+        data=chart['avnav']
+        handler.send_response(200)
+        handler.send_header("Content-type", "text/xml")
+        handler.send_header("Content-Length", len(data))
+        handler.send_header("Last-Modified", handler.date_time_string())
+        handler.end_headers()
+        handler.wfile.write(data)
+        return True
+      if parr[1] == "sequence":
+        rsp={'status':'OK','sequence':chart['chart'].getChangeCount()}
+        handler.sendNavResponse(json.dumps(rsp))
+        return True
+      if len(parr) != 5:
+        raise Exception("invalid request to chart file %s: %s" %(chart['name'],url))
+      data=chart['chart'].getTileData((int(parr[2]),int(parr[3]),int(parr[4].replace(".png",""))),parr[1])
+      if data is None:
+        handler.send_error(404,"File %s not found"%(url))
         return None
-      name=parr[0]
-      for g in self.chartlist.values():
-        if g['name']==name:
-          AVNLog.debug("chart file %s, request %s, lend=%d",name,path,len(parr))
-          #found file
-          #basically we can today handle 2 types of requests:
-          #get the overview /chart/int/<name>/avnav.xml
-          #get a tile /chart/int/<name>/<srcname>/z/x/y.png
-          if parr[1] == AVNUtil.NAVXML:
-            AVNLog.debug("avnav request for chart %s",name)
-            data=g['avnav']
-            handler.send_response(200)
-            handler.send_header("Content-type", "text/xml")
-            handler.send_header("Content-Length", len(data))
-            handler.send_header("Last-Modified", handler.date_time_string())
-            handler.end_headers()
-            handler.wfile.write(data)
-            return True
-          if parr[1] == "sequence":
-            rsp={'status':'OK','sequence':g['chart'].getChangeCount()}
-            handler.sendNavResponse(json.dumps(rsp))
-            return True
-          if len(parr) != 5:
-            raise Exception("invalid request to chart file %s: %s" %(name,path))
-          data=g['chart'].getTileData((int(parr[2]),int(parr[3]),int(parr[4].replace(".png",""))),parr[1])
-          if data is None:
-            handler.send_error(404,"File %s not found"%(path))
-            return None
-          handler.send_response(200)
-          handler.send_header("Content-type", "image/png")
-          handler.send_header("Content-Length", len(data))
-          handler.send_header("Last-Modified", handler.date_time_string())
-          handler.end_headers()
-          handler.wfile.write(data)
-          return None
-      raise Exception("chart file %s not found" %(name))
+      handler.send_response(200)
+      handler.send_header("Content-type", "image/png")
+      handler.send_header("Content-Length", len(data))
+      handler.send_header("Last-Modified", handler.date_time_string())
+      handler.end_headers()
+      handler.wfile.write(data)
+      return None
     except:
       handler.send_error(500,"Error: %s"%(traceback.format_exc()))
       return
@@ -289,16 +304,12 @@ class AVNChartHandler(AVNWorker):
     return AVNUtil.getReturnData(items=data)
 
   def handleDelete(self,url):
-    if not url.startswith(self.PATH_PREFIX):
-      return AVNUtil.getReturnData(error="invalid url %s"%url)
-    parr=url[1:].split("/")
-    if len(parr) < 2:
-      return AVNUtil.getReturnData(error="invalid url %s" % url)
-    chartName=urllib.unquote(parr[1])
-    chartEntry=self.chartlist.get(chartName)
-    if chartEntry is None:
-      return AVNUtil.getReturnData(error="chart %s not found"%url)
-    del self.chartlist[chartName]
+    chartEntry=None
+    try:
+      chartEntry=self.getChartFromUrl(url)
+    except Exception as e:
+      return AVNUtil.getReturnData(error=e.message)
+    del self.chartlist[chartEntry['name']]
     importer = self.server.getHandler("AVNImporter")  # cannot import this as we would get cycling dependencies...
     if importer is not None:
       importer.deleteImport(chartEntry['name'])
@@ -325,15 +336,7 @@ class AVNChartHandler(AVNWorker):
       self.handleDelete(url)
     if type == "download":
       url = AVNUtil.getHttpRequestParam(requestparam, "url", True)
-      if not url.startswith(self.PATH_PREFIX):
-        raise Exception("invalid url")
-      parr = url[1:].split("/")
-      if len(parr) < 2:
-        raise Exception("invalid url")
-      chartName=urllib.unquote(parr[1])
-      chartEntry=self.chartlist.get(chartName)
-      if chartEntry is None:
-        raise Exception("chart not found")
+      chartEntry=self.getChartFromUrl(url)
       fname=chartEntry['chart'].getDownloadFile()
       if not os.path.isfile(fname):
         raise Exception("chart file not found")
@@ -362,15 +365,7 @@ class AVNChartHandler(AVNWorker):
       if (command == "scheme"):
         url=AVNUtil.getHttpRequestParam(requestparam,"url",True)
         scheme=AVNUtil.getHttpRequestParam(requestparam,"newScheme",True)
-        if not url.startswith(self.PATH_PREFIX):
-          raise Exception("invalid url")
-        parr = url[1:].split("/")
-        if len(parr) < 2:
-          raise Exception("invalid url")
-        chartName=urllib.unquote(parr[1])
-        chartEntry = self.chartlist.get(chartName)
-        if chartEntry is None:
-          raise Exception("chart not found")
+        chartEntry = self.getChartFromUrl(url)
         changed=chartEntry['chart'].changeScheme(scheme)
         if changed:
           chartEntry['avnav']=chartEntry['chart'].getAvnavXml(self.getIntParam('upzoom'))
