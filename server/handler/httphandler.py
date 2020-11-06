@@ -70,6 +70,14 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       self.end_headers()
       return
 
+  def getMimeType(self,path):
+    base, ext = posixpath.splitext(path)
+    if ext in self.server.overwrite_map:
+      ctype = self.server.overwrite_map[ext]
+    else:
+      ctype = self.guess_type(path)
+    return ctype
+
   #overwrite this from SimpleHTTPRequestHandler
   def send_head(self):
     path=self.translate_path(self.path)
@@ -101,11 +109,8 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 break
         else:
             return self.list_directory(path)
-    base, ext = posixpath.splitext(path)
-    if ext in self.server.overwrite_map:
-      ctype=self.server.overwrite_map[ext]
-    else:
-      ctype = self.guess_type(path)
+
+    ctype = self.getMimeType(path)
     try:
         # Always read in binary mode. Opening files in text mode may cause
         # newline translations, making the actual size of the content

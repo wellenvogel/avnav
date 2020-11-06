@@ -493,7 +493,9 @@ MapHolder.prototype.getBaseLayer=function(){
 
 };
 
-MapHolder.prototype.getGpxLayer=function(url){
+MapHolder.prototype.getGpxLayer=function(url,iconBase){
+    let self=this;
+    let styleMap={};
     var styles = {
         'Point': new ol.style.Style({
             image: new ol.style.Circle({
@@ -521,7 +523,29 @@ MapHolder.prototype.getGpxLayer=function(url){
         }),
     };
 
-    var styleFunction = function(feature) {
+    var styleFunction = function(feature,resolution) {
+
+        let type=feature.getGeometry().getType();
+        if (type == 'Point' && iconBase){
+            let sym=feature.get('sym');
+            if (sym){
+                if (! sym.match(/\./)) sym+=".png";
+                if (!styleMap[sym]) {
+                    let style = new ol.style.Style({
+                        image: new ol.style.Icon({
+                            src: iconBase + "/" + sym,
+                            //scale: 3
+                        })
+                    });
+                    styleMap[sym] = style;
+                }
+                let rt=styleMap[sym];
+                let scale=self.olmap.getView().getResolutionForZoom(13)/resolution;
+                if (scale > 1) scale=1;
+                rt.getImage().setScale(scale);
+                return rt;
+            }
+        }
         return styles[feature.getGeometry().getType()];
     };
     var vectorSource = new ol.source.Vector({
@@ -603,8 +627,12 @@ MapHolder.prototype.initMap=function(div,layerdata,baseurl,overlayList){
         let overlay=overlayList[oi];
         if (! overlay.name) continue;
         if (overlay.name.match(/\.gpx$/)){
+            let iconurl=undefined;
             let url="/overlays/"+overlay.name; //TODO: escape
-            layersreverse.push(self.getGpxLayer(url));
+            if (overlay.icons){
+                iconurl="/overlays/icons/"+overlay.icons
+            }
+            layersreverse.push(self.getGpxLayer(url,iconurl));
         }
     }
     this.mapMinZoom=this.minzoom;

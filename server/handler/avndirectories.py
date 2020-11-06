@@ -31,6 +31,7 @@
 import StringIO
 import shutil
 import urllib
+from zipfile import ZipFile
 
 from avnav_config import *
 from avnav_nmea import *
@@ -100,8 +101,6 @@ class AVNDirectoryHandlerBase(AVNWorker):
     while True:
       time.sleep(sleepTime)
 
-  def handlePathRequest(self,path):
-    return None
 
   def handleDelete(self,name):
     if name is None:
@@ -162,6 +161,8 @@ class AVNDirectoryHandlerBase(AVNWorker):
     originalPath = os.path.join(self.baseDir,self.httpServer.plainUrlToPath(path, False))
     return originalPath
 
+  def handleSpecialApiRequest(self,command,requestparam,handler):
+    raise Exception("unknown command for %s api request: %s" % (self.type, command))
 
   def handleApiRequest(self, type, subtype, requestparam, **kwargs):
     if type == 'api':
@@ -188,7 +189,8 @@ class AVNDirectoryHandlerBase(AVNWorker):
         return AVNUtil.getReturnData()
       elif command == 'list':
         return self.handleList()
-      raise Exception("unknown command for %s api request: %s"%(self.type,command))
+      else:
+        return self.handleSpecialApiRequest(command,requestparam,kwargs.get('handler'))
     if type == 'path':
       handler=kwargs.get('handler')
       return self.getPathFromUrl(subtype,handler=handler)
@@ -299,12 +301,43 @@ class AVNImagesHandler(AVNDirectoryHandlerBase):
 
 class AVNOverlayHandler(AVNDirectoryHandlerBase):
   PREFIX = "/overlays"
+  ICONPREFIX=PREFIX+"/icons"
   @classmethod
   def getPrefix(cls):
     return cls.PREFIX
   def __init__(self,param):
     AVNDirectoryHandlerBase.__init__(self, param, "overlays")
     self.baseDir = AVNConfig.getDirWithDefault(self.param, 'overlayDir', "overlays")
+
+  def getPathFromUrl(self, url, handler=None):
+    if url.startswith(self.ICONPREFIX):
+      path=url[len(self.ICONPREFIX)+1:]
+      parr=path.split("/")
+      if len(parr) < 0 or len(parr) > 2:
+        raise Exception("invalid icon request %s"%url)
+      self.checkName(parr[0])
+      if len(parr) == 1:
+        self.checkName(parr[0])
+        fname=os.path.join(self.baseDir,parr[0])
+        return fname
+      if not parr[0].endswith('.zip'):
+        raise Exception("icon file %s is no zip file"%parr[0])
+      zipname=os.path.join(self.baseDir,parr[0])
+      if not os.path.exists(zipname):
+        raise Exception("zip file %s not found"%zipname)
+      zip=ZipFile(zipname)
+      entry=zip.getinfo(parr[1])
+      if entry is None:
+        raise Exception("no entry %s in %s"%(parr[1],zipname))
+      handler.send_response(200)
+      handler.send_header("Content-type", handler.getMimeType(parr[1]))
+      handler.send_header("Content-Length", entry.file_size)
+      handler.send_header("Last-Modified", handler.date_time_string())
+      handler.end_headers()
+      handler.wfile.write(zip.read(entry))
+      return True
+    else:
+      return super(AVNOverlayHandler, self).getPathFromUrl(url, handler)
 
 
 avnav_handlerList.registerHandler(AVNOverlayHandler)
