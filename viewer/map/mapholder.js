@@ -21,6 +21,7 @@ import helper from '../util/helper.js';
 import northImage from '../images/nadel_mit.png';
 import KeyHandler from '../util/keyhandler.js';
 import assign from 'object-assign';
+import ChartSource from './chartsource.js';
 
 
 const PSTOPIC="mapevent";
@@ -34,16 +35,6 @@ class Callback{
     }
 }
 
-/**
- * the types of the layers
- * @type {{TCHART: number, TNAV: number}}
- */
-const LayerTypes={
-    TCHART:0,
-    TNAV:1,
-    TTRACK:2,
-    TAIS:3
-};
 
 const EventTypes={
     SELECTAIS:1,
@@ -206,19 +197,20 @@ const MapHolder=function(){
     this._loadedTokenScripts={};
 
     /**
-     * heartbeat timer for crypto support
+     * heartbeat timer functions for crypto support
      * @type {undefined}
      * @private
      */
-    this._heartbeatFunction=undefined;
+    this._heartbeatFunctions={};
     this._lastHeartbeat=0;
 
     /**
-     * if set - use this to encrypt urls
-     * @type {undefined}
+     * an object of encrypt functions
+     * teh keys being the chart urls
+     * @type {object}
      * @private
      */
-    this._encryptFunction=undefined;
+    this._encryptFunctions={};
 
     /**
      * last div used in loadMap
@@ -338,6 +330,12 @@ MapHolder.prototype.setChartEntry=function(entry){
 };
 
 
+MapHolder.prototype.prepareChartSource=function(chartEntry){
+    return new Promise((resolve,reject)=>{
+
+    });
+};
+
 MapHolder.prototype.loadMap=function(div){
     this._lastMapDiv=div;
     let url=this._chartEntry.url;
@@ -350,108 +348,40 @@ MapHolder.prototype.loadMap=function(div){
             reject("no map selected");
             return;
         }
-        if (this._url == url && this._chartbase == chartBase && this._sequence== sequence){
+        if (this._url == url && this._chartbase == chartBase && this._sequence == sequence) {
             this.renderTo(div);
             resolve(0);
             return;
         }
-        this._encryptFunction=undefined;
-        this._heartbeatFunction=undefined;
-        let originalUrl = url;
-        if (!url.match(/^http:/)) {
-            if (url.match(/^\//)) {
-                url = window.location.href.replace(/^([^\/:]*:\/\/[^\/]*).*/, '$1') + url;
-            }
-            else {
-                url = window.location.href.replace(/[?].*/, '').replace(/[^\/]*$/, '') + "/" + url;
-            }
-        }
-        let xmlUrl = url + "/avnav.xml";
-        let loadAvNavXml=(overlayList)=>{
-            Requests.getHtmlOrText(xmlUrl, {
-                useNavUrl: false,
-                timeout: parseInt(globalStore.getData(keys.properties.chartQueryTimeout || 10000))
-            }).then((data)=> {
-                try {
-                    self.initMap(div, data, chartBase,overlayList);
+        this.resetHartbeats();
+        let chartSource=new ChartSource(this,this._chartEntry);
+        let createMap=(overlayLayers)=>{
+            chartSource.prepare()
+                .then((layers)=>{
+                    self.initMap(div,layers,chartSource.getChartBase(),overlayLayers);
                     self.setBrightness(globalStore.getData(keys.properties.nightMode) ?
                     globalStore.getData(keys.properties.nightChartFade, 100) / 100
                         : 1);
-                    this._url = originalUrl;
+                    this._url = url;
                     this._chartbase = chartBase;
                     this._sequence = sequence;
                     resolve(1);
-                } catch (e) {
-                    console.log("map loding error: " + e + ": " + e.stack);
-                    throw e;
-                }
-            }).catch((error)=> {
-                reject("unable to load map: " + error);
-            })
-        };
-        let newChart=()=> {
-            let overlayParam={
-                request: 'api',
-                type: 'chart',
-                url:originalUrl,
-                command: 'getOverlays'
-                };
-            Requests.getJson("",{},overlayParam).then((overlays)=>{
-                let overlayList=overlays.data;
-                loadAvNavXml(overlayList);
-            })
-            .catch((error)=>{
-                    loadAvNavXml();
                 })
+                .catch((error)=>{reject(error);})
         };
-        let tokenUrl=this._chartEntry.tokenUrl;
-        if (tokenUrl === undefined){
-            newChart();
-            return;
-        }
-        if (this._chartEntry.tokenFunction == undefined){
-            this._chartEntry.tokenFunction="tokenHandler"+(new Date()).getTime();
-        }
-        let scriptId=this._chartEntry.tokenFunction;
-        if (! this._loadedTokenScripts[tokenUrl]){
-            base.log("load new tokenhandler "+tokenUrl);
-            let scriptel=document.createElement("script");
-            scriptel.setAttribute("type","text/javascript");
-            document.getElementsByTagName("head")[0].appendChild(scriptel);
-            scriptel.setAttribute("id",scriptId);
-            scriptel.onload=()=>{
-                base.log("token handler "+scriptId+" loaded");
-                this._loadedTokenScripts[tokenUrl]=1;
-                let baseObject=window.avnav[scriptId];
-                if (! baseObject || ! baseObject.heartBeat){
-                    reject("unable to install crypto handler");
-                }
-                baseObject.heartBeat()
-                    .then((res)=>{
-                        self._encryptFunction=baseObject.encryptUrl;
-                        self._heartbeatFunction=baseObject.heartBeat;
-                        newChart();
-                        return;
-                    })
-                    .catch((err)=>{reject("error initializing chart access: "+err)});
-            };
-            scriptel.setAttribute("src",tokenUrl);
-        }
-        else{
-            let baseObject=window.avnav[scriptId];
-            //script already loaded
-            if (! baseObject || ! baseObject.heartBeat){
-                reject("unable to install crypto handler");
-            }
-            baseObject.heartBeat()
-                .then((res)=>{
-                    self._encryptFunction=baseObject.encryptUrl;
-                    self._heartbeatFunction=baseObject.heartBeat;
-                    newChart();
-                    return;
-                })
-                .catch((err)=>{reject("error initializing chart access: "+err)});
-        }
+        let overlayParam = {
+            request: 'api',
+            type: 'chart',
+            url: chartBase,
+            command: 'getOverlays'
+        };
+        Requests.getJson("", {}, overlayParam).then((overlays)=> {
+            let overlayList = overlays.data;
+            createMap(overlayList);
+        })
+            .catch((error)=> {
+                createMap();
+            })
 
     });
 
@@ -605,14 +535,13 @@ MapHolder.prototype.getMapOutlineLayer = function (layers) {
 /**
  * init the map (deinit an old one...)
  * @param {String} div
- * @param {Object} layerdata - the data as returned by the query to the description
+ * @param {Array} layers - the chart layers (ol layers)
  * @param {string} baseurl - the baseurl to be used
  * @param {Array} overlayList - list of overlays to load
  */
 
-MapHolder.prototype.initMap=function(div,layerdata,baseurl,overlayList){
+MapHolder.prototype.initMap=function(div,layers,baseurl,overlayList){
     let self=this;
-    let layers=this.parseLayerlist(layerdata,baseurl);
     let layersreverse=[];
     this.minzoom=32;
     this.mapMinZoom=this.minzoom;
@@ -777,14 +706,11 @@ MapHolder.prototype.timerFunction=function(){
         current:keys.map.currentZoom
     });
     let now=(new Date()).getTime();
-    if (this._heartbeatFunction) {
-        if ((now - this._lastHeartbeat) >= 20000) {
-            this._lastHeartbeat = now;
-            this._heartbeatFunction();
+    if ((now - this._lastHeartbeat) >= 20000) {
+        this._lastHeartbeat = now;
+        for (let k in this._heartbeatFunctions) {
+            this._heartbeatFunctions[k]();
         }
-    }
-    else{
-        this._lastHeartbeat=now;
     }
     let self=this;
     if (this._lastSequenceQuery < (now -5000)){
@@ -909,15 +835,7 @@ MapHolder.prototype.drawNorth=function() {
     });
 };
 
-/**
- * parse a float attribute value
- * @param elem
- * @param {String} attr
- * @private
- */
-MapHolder.prototype.e2f=function(elem,attr){
-    return parseFloat(elem.getAttribute(attr));
-};
+
 
 /**
  * get the mode of the course up display
@@ -1039,251 +957,68 @@ MapHolder.prototype.checkAutoZoom=function(opt_force){
     }
 };
 
-/**
- * parse the layerdata and return a list of layers
- * @param {Object} layerdata
- * @param {string} baseurl - the baseurl
- * @returns {Array.<ol.layer.Layer>} list of Layers
- */
-MapHolder.prototype.parseLayerlist=function(layerdata,baseurl){
+MapHolder.prototype.createOrActivateEncrypt=function(chartKey,tokenUrl,opt_tokenFunction){
     let self=this;
-    let ll=[];
-    let xmlDoc=helper.parseXml(layerdata);
-    Array.from(xmlDoc.getElementsByTagName('TileMap')).forEach(function(tm){
-        let rt={};
-        rt.type=LayerTypes.TCHART;
-        //complete tile map entry here
-        rt.inversy=false;
-        rt.wms=false;
-        let layer_profile=tm.getAttribute('profile');
-        if (layer_profile) {
-            if (layer_profile != 'global-mercator' && layer_profile != 'zxy-mercator' && layer_profile != 'wms') {
-                throw new Exception('unsupported profile in tilemap.xml ' + layer_profile);
-                return null;
-            }
-            if (layer_profile == 'global-mercator'){
-                //our very old style stuff where we had y=0 at lower left
-                rt.inversy=true;
-            }
-            if (layer_profile == 'wms'){
-                rt.wms=true;
-            }
+    return new Promise((resolve,reject)=>{
+        let scriptId=opt_tokenFunction;
+        if (! scriptId) scriptId="tokenHandler"+(new Date()).getTime();
+        if (! this._loadedTokenScripts[tokenUrl]){
+            base.log("load new tokenhandler "+tokenUrl);
+            let scriptel=document.createElement("script");
+            scriptel.setAttribute("type","text/javascript");
+            document.getElementsByTagName("head")[0].appendChild(scriptel);
+            scriptel.setAttribute("id",scriptId);
+            scriptel.onload=()=>{
+                base.log("token handler "+scriptId+" loaded");
+                this._loadedTokenScripts[tokenUrl]=1;
+                let baseObject=window.avnav[scriptId];
+                if (! baseObject || ! baseObject.heartBeat){
+                    reject("unable to install crypto handler");
+                    return;
+                }
+                baseObject.heartBeat()
+                    .then((res)=>{
+                        self._encryptFunctions[chartKey]=baseObject.encryptUrl;
+                        self._heartbeatFunctions[chartKey]=baseObject.heartBeat;
+                        resolve({
+                            encryptFunction:baseObject.encryptUrl
+                        });
+                        return;
+                    })
+                    .catch((err)=> {
+                        reject("error initializing chart access: " + err);
+                        return;
+                    });
+            };
+            scriptel.setAttribute("src",tokenUrl);
         }
-        rt.url=tm.getAttribute('href');
-        rt.title = tm.getAttribute('title');
-        rt.minZoom=parseInt(tm.getAttribute('minzoom'));
-        rt.maxZoom=parseInt(tm.getAttribute('maxzoom'));
-        rt.projection=tm.getAttribute('projection'); //currently only for WMS
-        //we store the layer region in EPSG:4326
-        Array.from(tm.childNodes).forEach(function(bb){
-            if (bb.tagName != 'BoundingBox') return;
-            rt.layerExtent = [self.e2f(bb,'minlon'),self.e2f(bb,'minlat'),
-                self.e2f(bb,'maxlon'),self.e2f(bb,'maxlat')];
-        });
-        //TODO: do wen need the origin stuff?
-        /*
-        $(tm).find(">Origin").each(function(nr,or){
-            rt.tile_origin = new OpenLayers.LonLat(e2f(or,'x'),e2f(or,'y'));
-        });
-        if (! rt.tile_origin){
-            rt.tile_origin=new OpenLayers.LonLat(-20037508.343,-20037508.343);
-        }
-        */
-        //TODO: any non standard form tiles? - not for now
-        /*
-        $(tm).find(">TileFormat").each(function(nr,tf){
-            rt.tile_size= new OpenLayers.Size(
-                parseInt($(tf).attr('width')),
-                parseInt($(tf).attr('height')));
-            rt.tile_ext=$(tf).attr('extension');
-            rt.zOffset=parseInt($(tf).attr('zOffset'));
-        });
-        if (!rt.tile_size) rt.tile_size=new OpenLayers.Size(256,256);
-        if (!rt.tile_ext)rt.tile_ext="png";
-        */
-        //although we currently do not need the boundings
-        //we just parse them...
-        let boundings=[];
-        Array.from(tm.getElementsByTagName("LayerBoundings")).forEach((lb)=>{
-            Array.from(lb.getElementsByTagName("BoundingBox")).forEach((bb)=>{
-            let bounds=[self.e2f(bb,'minlon'),self.e2f(bb,'maxlat'),
-                self.e2f(bb,'maxlon'),self.e2f(bb,'minlat')];
-            boundings.push(bounds);
-            });
-        });
-        rt.boundings=boundings;
-
-        let zoomLayerBoundings=[];
-        Array.from(tm.getElementsByTagName("LayerZoomBoundings")).forEach((lzb)=> {
-            Array.from(lzb.getElementsByTagName("ZoomBoundings")).forEach((zb)=> {
-                let zoom = parseInt(zb.getAttribute('zoom'));
-                let zoomBoundings = [];
-                Array.from(zb.getElementsByTagName("BoundingBox")).forEach((bb)=> {
-                    let bounds = {
-                        minx: parseInt(bb.getAttribute('minx')),
-                        miny: parseInt(bb.getAttribute('miny')),
-                        maxx: parseInt(bb.getAttribute('maxx')),
-                        maxy: parseInt(bb.getAttribute('maxy'))
-                    };
-                    zoomBoundings.push(bounds);
+        else{
+            let baseObject=window.avnav[scriptId];
+            //script already loaded
+            if (! baseObject || ! baseObject.heartBeat){
+                reject("unable to install crypto handler");
+            }
+            baseObject.heartBeat()
+                .then((res)=>{
+                    self._encryptFunctions[chartKey]=baseObject.encryptUrl;
+                    self._heartbeatFunctions[chartKey]=baseObject.heartBeat;
+                    resolve({
+                        encryptFunction:baseObject.encryptUrl
+                    });
+                    return;
+                })
+                .catch((err)=> {
+                    reject("error initializing chart access: " + err);
+                    return;
                 });
-                if (zoomBoundings.length) {
-                    zoomLayerBoundings[zoom] = zoomBoundings;
-                }
-            });
-        });
-        if (zoomLayerBoundings.length){
-            rt.zoomLayerBoundings=zoomLayerBoundings;
         }
-
-        //now we have all our options - just create the layer from them
-        let layerurl="";
-        if (rt.url === undefined){
-            throw new Exception("missing href in layer");
-            return null;
-        }
-        if (! rt.url.match(/^https*:/)){
-            layerurl=baseurl+"/"+rt.url;
-        }
-        else layerurl=rt.url;
-        let replaceInUrl=false;
-        if (layerurl.indexOf("{x}") >= 0 && layerurl.indexOf("{y}") >= 0 && layerurl.indexOf("{z}") >= 0){
-            replaceInUrl=true;
-        }
-        rt.extent=ol.extent.applyTransform(rt.layerExtent,self.transformToMap);
-        if (rt.wms){
-            let param={};
-            Array.from(tm.getElementsByTagName("WMSParameter")).forEach((wp)=>{
-                let n=wp.getAttribute('name');
-                let v=wp.getAttribute('value');
-                if (n !== undefined && v !== undefined){
-                    param[n]=v;
-                }
-            });
-            rt.wmsparam=param;
-            let layermap={};
-            Array.from(tm.getElementsByTagName("WMSLayerMapping")).forEach((mapping)=>{
-                let zooms=mapping.getAttribute('zooms');
-                let layers=mapping.getAttribute('layers');
-                let zarr=zooms.split(/,/);
-                let i;
-                for (i in zarr){
-                    try {
-                        let zlevel=parseInt(zarr[i]);
-                        layermap[zlevel]=layers;
-                    }catch (ex){}
-                }
-            });
-            rt.wmslayermap=layermap;
-
-        }
-        //we use a bit a dirty hack here:
-        //ol3 nicely shows a lower zoom if the tile cannot be loaded (i.e. has an error)
-        //to avoid server round trips, we use a local image url
-        //the more forward way would be to return undefined - but in this case
-        //ol will NOT show the lower zoom tiles...
-        let invalidUrl='data:image/png;base64,i';
-        let source=undefined;
-        //as WMS support is broken in OL3 (as always ol3 tries to be more intelligent than everybody...)
-        //we always use an XYZ layer but directly construct the WMS tiles...
-        source = new ol.source.XYZ({
-            tileUrlFunction: function (coord) {
-                if (!coord) return undefined;
-                let zxy = coord;
-                let z = zxy[0];
-                let x = zxy[1];
-                let y = zxy[2];
-                y=-y-1; //change for ol3-151 - commit af319c259b349c86a4d164c42cc4eb5884f896fb
-
-                if (rt.zoomLayerBoundings) {
-                    let found = false;
-                    if (!rt.zoomLayerBoundings[z]) return invalidUrl;
-                    for (let bindex in rt.zoomLayerBoundings[z]) {
-                        let zbounds = rt.zoomLayerBoundings[z][bindex];
-                        if (zbounds.minx <= x && zbounds.maxx >= x && zbounds.miny <= y && zbounds.maxy >= y) {
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (!found) {
-                        return invalidUrl;
-                    }
-                }
-                if (rt.wms){
-                    //construct the WMS url
-                    let grid=rt.source.getTileGrid();
-                    //taken from tilegrid.js:
-                    //let origin = grid.getOrigin(z);
-                    //the xyz source seems to have a very strange origin - x at -... but y at +...
-                    //but we rely on the origin being ll
-                    //not sure if this is correct for all projections...
-                    let origin=[-20037508.342789244,-20037508.342789244]; //unfortunately the ol3 stuff does not export this...
-                    let resolution = grid.getResolution(z);
-                    let tileSize = grid.getTileSize(z);
-                    y = (1 << z) - y - 1;
-                    let minX = origin[0] + x * tileSize * resolution;
-                    let minY = origin[1] + y * tileSize * resolution;
-                    let maxX = minX + tileSize * resolution;
-                    let maxY = minY + tileSize * resolution;
-                    //now compute the bounding box
-                    let converter=ol.proj.getTransform("EPSG:3857",rt.projection||"EPSG:4326");
-                    let bbox=converter([minX,minY,maxX,maxY]);
-                    let rturl=layerurl+"SERVICE=WMS&REQUEST=GetMap&FORMAT=image/png&WIDTH="+tileSize+"&HEIGHT="+tileSize+"&SRS="+encodeURI(rt.projection);
-                    let k;
-                    let layers;
-                    if (rt.wmslayermap[z]) layers=rt.wmslayermap[z];
-                    for (k in rt.wmsparam){
-                        let v=rt.wmsparam[k];
-                        if (layers && (k == "LAYERS"|| k== "layers")) {
-                            v = layers;
-                        }
-                        rturl+="&"+k+"="+v;
-                    }
-                    rturl+="&BBOX="+bbox[0]+","+bbox[1]+","+bbox[2]+","+bbox[3];
-                    return rturl;
-                }
-                if (rt.inversy) {
-                    y = (1 << z) - y - 1
-                }
-                if (! replaceInUrl) {
-                    let tileUrl = z + '/' + x + '/' + y + ".png";
-                    if (self._encryptFunction) {
-                        tileUrl = "##encrypt##" + tileUrl;
-                    }
-                    return layerurl + '/' + tileUrl;
-                }
-                else{
-                    return layerurl.replace("{x}",x).replace("{y}",y).replace("{z}",z);
-                }
-            },
-            extent: rt.extent,
-            tileLoadFunction: function(imageTile,src){
-                if (! self._encryptFunction){
-                    imageTile.getImage().src=src;
-                }
-                else{
-                    let encryptPart=src.replace(/.*##encrypt##/,"");
-                    let basePart=src.replace(/##encrypt##.*/,"");
-                    let finalSrc=basePart+self._encryptFunction(encryptPart);
-                    imageTile.getImage().src=finalSrc;
-                }
-            }
-
-            /*
-             url:layerurl+'/{z}/{x}/{y}.png'
-             */
-        });
-
-        rt.source=source;
-        let layer=new ol.layer.Tile({
-            source: source
-        });
-        layer.avnavOptions=rt;
-        ll.push(layer);
     });
-    return ll;
-
 };
+MapHolder.prototype.resetHartbeats=function(){
+    this._encryptFunctions={};
+    this._heartbeatFunctions={};
+};
+
 /**
  * transforms a point from EPSG:4326 to map projection
  * @param {ol.Coordinate} point
