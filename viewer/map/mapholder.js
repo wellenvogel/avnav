@@ -164,25 +164,6 @@ const MapHolder=function(){
     globalStore.register(this.editMode,keys.gui.global.layoutEditing);
 
 
-    /**
-     * the last base url
-     * @type {String}
-     * @private
-     */
-    this._chartbase=undefined;
-    /**
-     * the last url
-     * @type {String}
-     * @private
-     */
-    this._url=undefined;
-
-    /**
-     * if the map provides a sequence we use this to detect changes
-     * @type {undefined}
-     * @private
-     */
-    this._sequence=undefined;
 
     /**
      * the chart description as received from the server
@@ -190,6 +171,12 @@ const MapHolder=function(){
      * @private
      */
     this._chartEntry={};
+    /**
+     * the list of currently active sources (index 0: base, othe: overlays)
+     * @type {Array}
+     * @private
+     */
+    this.sources=[];
 
     /**
      * last div used in loadMap
@@ -308,96 +295,111 @@ MapHolder.prototype.setChartEntry=function(entry){
     this._chartEntry=assign({},entry);
 };
 
-
-MapHolder.prototype.prepareChartSource=function(chartEntry){
-    return new Promise((resolve,reject)=>{
-
+MapHolder.prototype.prepareSourcesAndCreate=function(newSources){
+    return new Promise((resolve,reject)=> {
+        for (let k in this.sources) {
+            this.sources[k].destroy();
+        }
+        if (newSources) {
+            this.sources = newSources;
+        }
+        CryptHandler.resetHartbeats();
+        if (this.sources.length < 1) {
+            reject("no sources");
+        }
+        let readyCount = 0;
+        //now trigger all prepares
+        for (let k in this.sources) {
+            this.sources[k].prepare()
+                .then(()=> {
+                    //check if all are ready now...
+                    readyCount++;
+                    let ready = true;
+                    for (let idx in this.sources) {
+                        if (!this.sources[idx].isReady()) {
+                            ready = false;
+                            break;
+                        }
+                    }
+                    if (ready) {
+                        let overlayLayers = [];
+                        for (let ovi = 1; ovi < this.sources.length; ovi++) {
+                            overlayLayers = overlayLayers.concat(this.sources[ovi].getLayers());
+                        }
+                        this.initMap(this.sources[0].getLayers(), this.sources[0].getChartKey(), overlayLayers);
+                        this.setBrightness(globalStore.getData(keys.properties.nightMode) ?
+                        globalStore.getData(keys.properties.nightChartFade, 100) / 100
+                            : 1);
+                        resolve(1);
+                    }
+                    else {
+                        if (readyCount >= this.sources.length) {
+                            reject("internal error: not all sources are ready");
+                        }
+                    }
+                })
+                .catch((error)=> {
+                    reject(error)
+                });
+        }
     });
 };
 
 MapHolder.prototype.loadMap=function(div){
     this._lastMapDiv=div;
-    let url=this._chartEntry.url;
-    let chartBase=this._chartEntry.chartBase;
-    let sequence=this._chartEntry.sequence;
-    if (! chartBase) chartBase=url;
     let self=this;
     return new Promise((resolve,reject)=> {
+        let url=this._chartEntry.url;
         if (!url) {
             reject("no map selected");
             return;
         }
-        if (this._url == url && this._chartbase == chartBase && this._sequence == sequence) {
-            this.renderTo(div);
-            resolve(0);
-            return;
-        }
-        CryptHandler.resetHartbeats();
         let chartSource=new AvNavChartSource(this,this._chartEntry);
         /**
          * finally prepare all layer sources and when done
          * create the map
          * @param overlayLayers
          */
-        let createMap=(overlayLayers)=>{
-            let sources=[];
-            let readyCount=0;
-            sources.push(chartSource);
-            for (let k in overlayLayers){
-                let overlaySource=new GpxChartSource(this,{
-                    url: "/overlays/"+overlayLayers[k].name,
-                    iconBase: overlayLayers[k].icons?"/overlays/icons/"+overlayLayers[k].icons:undefined
-                });
-                sources.push(overlaySource);
+        let newSources=[chartSource];
+        let prepareAndCreate=(newSources)=>{
+            this.prepareSourcesAndCreate(newSources)
+                .then((res)=>{resolve(res)})
+                .catch((error)=>{reject(error)});
+        };
+        let checkChanges=()=>{
+            if (this.sources.length != newSources.length ){
+                prepareAndCreate(newSources);
+                return;
             }
-            //now trigger all prepares
-            for (let k in sources){
-                sources[k].prepare()
-                    .then(()=>{
-                        //check if all are ready now...
-                        readyCount++;
-                        let ready=true;
-                        for (let idx in sources){
-                            if (!sources[idx].isReady()){
-                                ready=false;
-                                break;
-                            }
-                        }
-                        if (ready){
-                            let overlayLayers=[];
-                            for (let ovi=1;ovi<sources.length;ovi++){
-                                overlayLayers=overlayLayers.concat(sources[ovi].getLayers());
-                            }
-                            self.initMap(div,chartSource.getLayers(),chartSource.getChartBase(),overlayLayers);
-                            self.setBrightness(globalStore.getData(keys.properties.nightMode) ?
-                            globalStore.getData(keys.properties.nightChartFade, 100) / 100
-                                : 1);
-                            this._url = url;
-                            this._chartbase = chartBase;
-                            this._sequence = sequence;
-                            resolve(1);
-                        }
-                        else{
-                            if (readyCount >= sources.length){
-                                reject("internal error: not all sources are ready");
-                            }
-                        }
-                    })
-                    .catch((error)=>{reject(error)});
+            for (let i=0;i<this.sources.length;i++){
+                if (!this.sources[i].isEqual(newSources[i])){
+                    prepareAndCreate(newSources);
+                    return;
+                }
             }
+            this.renderTo(div);
+            resolve(0);
         };
         let overlayParam = {
             request: 'api',
             type: 'chart',
-            url: chartBase,
+            url: chartSource.getChartKey(),
             command: 'getOverlays'
         };
-        Requests.getJson("", {}, overlayParam).then((overlays)=> {
-            let overlayList = overlays.data;
-            createMap(overlayList);
-        })
+        Requests.getJson("", {}, overlayParam)
+            .then((overlays)=> {
+                let overlayList = overlays.data;
+                for (let k in overlayList){
+                    let overlaySource=new GpxChartSource(this,{
+                        url: "/overlays/"+overlayList[k].name,
+                        iconBase: overlayList[k].icons?"/overlays/icons/"+overlayList[k].icons:undefined
+                    });
+                    newSources.push(overlaySource);
+                }
+                checkChanges();
+            })
             .catch((error)=> {
-                createMap([]);
+                checkChanges();
             })
 
     });
@@ -489,7 +491,8 @@ MapHolder.prototype.getMapOutlineLayer = function (layers) {
  * @param {Array} overlayList - list of overlays to load
  */
 
-MapHolder.prototype.initMap=function(div,layers,baseurl,overlayList){
+MapHolder.prototype.initMap=function(layers,baseurl,overlayList){
+    let div=this._lastMapDiv;
     let self=this;
     let layersreverse=[];
     this.minzoom=32;
@@ -650,20 +653,16 @@ MapHolder.prototype.timerFunction=function(){
     let now=(new Date()).getTime();
     if (this._lastSequenceQuery < (now -5000)){
         this._lastSequenceQuery=now;
-        if (this._chartEntry && this._chartEntry.url && this._lastMapDiv && this._sequence !== undefined) {
-            let url = this._chartEntry.url + "/sequence?_="+(new Date()).getTime();
-            //set noCache to false to avoid pragma in header
-            Requests.getJson(url, {useNavUrl: false,noCache:false})
-                .then((data)=> {
-                    if (!data.sequence) return;
-                    if (data.sequence != self._sequence) {
-                        base.log("Sequence changed from "+self._sequence+" to "+data.sequence+" reload map");
-                        self._chartEntry.sequence=data.sequence;
-                        self.loadMap(self._lastMapDiv);
-                    }
-                })
-                .catch((error)=> {
-                });
+        if (this.sources.length > 0 && this._lastMapDiv) {
+            for (let k in this.sources){
+                this.sources[k].checkSequence()
+                    .then((res)=>{
+                        if (res){
+                            self.prepareSourcesAndCreate();
+                        }
+                    })
+                    .catch((error)=>{})
+            }
         }
     }
 }

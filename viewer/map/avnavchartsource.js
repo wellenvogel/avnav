@@ -36,26 +36,15 @@ import ChartSourceBase from './chartsourcebase.js';
 class AvnavChartSource extends ChartSourceBase{
     constructor(mapholer, chartEntry) {
         super(mapholer,chartEntry);
+        this.destroySequence=0;
     }
 
     prepareInternal() {
         let url = this.chartEntry.url;
-        let chartBase = this.getChartBase();
-        let sequence = this.chartEntry.sequence;
-        let self = this;
         return new Promise((resolve, reject)=> {
             if (!url) {
                 reject("no map selected");
                 return;
-            }
-            let originalUrl = url;
-            if (!url.match(/^http:/)) {
-                if (url.match(/^\//)) {
-                    url = window.location.href.replace(/^([^\/:]*:\/\/[^\/]*).*/, '$1') + url;
-                }
-                else {
-                    url = window.location.href.replace(/[?].*/, '').replace(/[^\/]*$/, '') + "/" + url;
-                }
             }
             let xmlUrl = url + "/avnav.xml";
             Requests.getHtmlOrText(xmlUrl, {
@@ -63,7 +52,7 @@ class AvnavChartSource extends ChartSourceBase{
                 timeout: parseInt(globalStore.getData(keys.properties.chartQueryTimeout || 10000))
             })
                 .then((data)=> {
-                    let layers = this.parseLayerlist(data, chartBase);
+                    let layers = this.parseLayerlist(data, url);
                     resolve(layers);
                 })
                 .catch((error)=> {
@@ -324,6 +313,38 @@ class AvnavChartSource extends ChartSourceBase{
 
     }
 
+
+    checkSequence() {
+        let self=this;
+        //prevent from triggering a reload if we already have been destroyed
+        let destroySequence=this.destroySequence;
+        return new Promise((resolve,reject)=>{
+            let url = this.chartEntry.url + "/sequence?_="+(new Date()).getTime();
+            //set noCache to false to avoid pragma in header (CORS...)
+            Requests.getJson(url, {useNavUrl: false,noCache:false})
+                .then((data)=> {
+                    if (!data.sequence || this.destroySequence != destroySequence) {
+                        resolve(0);
+                        return;
+                    }
+                    if (data.sequence != self.chartEntry.sequence) {
+                        base.log("Sequence changed from "+self.chartEntry.sequence+" to "+data.sequence+" reload map");
+                        self.chartEntry.sequence=data.sequence;
+                        resolve(1);
+                        return;
+                    }
+                    resolve(0);
+                })
+                .catch((error)=> {
+                    reject(error);
+                });
+        });
+    }
+
+    destroy() {
+        super.destroy();
+        this.destroySequence++;
+    }
 }
 
 export default AvnavChartSource;

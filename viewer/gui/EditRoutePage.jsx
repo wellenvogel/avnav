@@ -296,8 +296,6 @@ class EditRoutePage extends React.Component{
     }
     render(){
         let self=this;
-        let url=globalStore.getData(keys.gui.editroutepage.mapurl);
-        let chartBase=globalStore.getData(keys.gui.editroutepage.chartbase,url);
         let isSmall=globalStore.getData(keys.gui.global.windowDimensions,{width:0}).width
             < globalStore.getData(keys.properties.smallBreak);
         return (
@@ -307,8 +305,6 @@ class EditRoutePage extends React.Component{
                 id={PAGENAME}
                 mapEventCallback={self.mapEvent}
                 onItemClick={widgetClick}
-                mapUrl={url}
-                chartBase={chartBase}
                 panelCreator={getPanelList}
                 storeKeys={
                     [keys.nav.routeHandler.activeName,

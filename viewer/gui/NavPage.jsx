@@ -347,8 +347,6 @@ class NavPage extends React.Component{
     }
     render(){
         let self=this;
-        let url=globalStore.getData(keys.gui.navpage.mapurl);
-        let chartBase=globalStore.getData(keys.gui.navpage.chartbase,url);
         return (
             <DynamicPage
                 className={self.props.className}
@@ -356,8 +354,6 @@ class NavPage extends React.Component{
                 id={PAGENAME}
                 mapEventCallback={self.mapEvent}
                 onItemClick={widgetClick}
-                mapUrl={url}
-                chartBase={chartBase}
                 panelCreator={getPanelList}
                 storeKeys={{
                     showWpButtons:keys.gui.navpage.showWpButtons

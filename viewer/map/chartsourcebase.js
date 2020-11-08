@@ -39,7 +39,8 @@ class ChartSourceBase {
      * @param mapholder
      * @param chartEntry
      *        properties: url           - the chart url
-     *                    chartBase     - a base name for the chart used as key (opt)
+     *                    chartKey      - a base name for the chart used as key (opt, defaults to url)
+     *                                    used for querying the overlays
      *                    tokenUrl      - the url for a token handler script (opt)
      *                    tokenFunction - the name of the token function we expect from the token handler
      */
@@ -61,8 +62,28 @@ class ChartSourceBase {
 
     }
 
-    getChartBase() {
-        let chartBase = this.chartEntry.chartBase;
+    /**
+     * returns a promise that resolves to 1 for changed
+     */
+    checkSequence(){
+        return new Promise((resolve,reject)=>{
+           resolve(0);
+        });
+    }
+
+    isEqual(other){
+        if (this.mapholder !== other.mapholder) return false;
+        if (! this.chartEntry || ! other.chartEntry) return false;
+        if (this.chartEntry.url !== other.chartEntry.url) return false;
+        if (this.getChartKey() !== other.getChartKey()) return false;
+        if (this.chartEntry.sequence !== other.chartEntry.sequence) return false;
+        if (this.chartEntry.tokenUrl !== other.chartEntry.tokenUrl) return false;
+        if (this.chartEntry.tokenFunction !== other.chartEntry.tokenFunction) return false;
+        return true;
+    }
+
+    getChartKey() {
+        let chartBase = this.chartEntry.chartKey;
         if (!chartBase) chartBase = this.chartEntry.url;
         return chartBase;
     }
@@ -76,7 +97,7 @@ class ChartSourceBase {
     prepare() {
         return new Promise((resolve, reject)=> {
             if (this.chartEntry.tokenUrl) {
-                CryptHandler.createOrActivateEncrypt(this.getChartBase(), this.chartEntry.tokenUrl, this.chartEntry.tokenFunction)
+                CryptHandler.createOrActivateEncrypt(this.getChartKey(), this.chartEntry.tokenUrl, this.chartEntry.tokenFunction)
                     .then((result)=> {
                         this.encryptFunction = result.encryptFunction;
                         this.prepareInternal()
@@ -109,7 +130,7 @@ class ChartSourceBase {
 
 
     destroy(){
-        CryptHandler.removeChartEntry(this.getChartBase());
+        CryptHandler.removeChartEntry(this.getChartKey());
         this.isReadyFlag=false;
         this.layers=[];
     }

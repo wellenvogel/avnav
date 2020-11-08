@@ -121,8 +121,10 @@ class GpxChartSource extends ChartSourceBase{
     }
 
 
-
-
+    isEqual(other) {
+        if (!super.isEqual(other)) return false;
+        if (this.chartEntry.iconBase !== other.chartEntry.iconBase) return false;
+    }
 }
 
 export default GpxChartSource;
