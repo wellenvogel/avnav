@@ -176,6 +176,10 @@ const MapHolder=function(){
     globalStore.register(this.propertyChange,keys.gui.global.propertySequence);
     globalStore.register(this.editMode,keys.gui.global.layoutEditing);
 
+    globalStore.register(()=>{
+        this.updateSize();
+    },keys.gui.global.windowDimensions);
+
 
 
     /**
@@ -204,6 +208,7 @@ const MapHolder=function(){
      */
     this._lastSequenceQuery=0;
 
+    this.canvasElement=undefined;
 
     globalStore.storeData(keys.map.courseUp,this.courseUp);
     globalStore.storeData(keys.map.lockPosition,this.gpsLocked);
@@ -290,16 +295,22 @@ MapHolder.prototype.renderTo=function(div){
         window.clearInterval(this.timer);
         this.timer=undefined;
         this._lastMapDiv=undefined;
+        this.canvasElement=undefined;
     }
     if (! this.olmap) return;
     let mapDiv=div||this.defaultDiv;
     this.olmap.setTarget(mapDiv);
     this._lastMapDiv=div;
+    if (!this.canvasElement && div){
+        this.canvasElement=document.createElement("canvas");
+        this.canvasElement.className="mapCanvas";
+        div.appendChild(this.canvasElement);
+    }
     let self=this;
     if (! this.timer && div){
         this.timer=window.setInterval(()=>{self.timerFunction()},1000)
     }
-    this.olmap.updateSize();
+    this.updateSize();
 };
 
 
@@ -524,23 +535,6 @@ MapHolder.prototype.initMap=function(layers,baseurl,overlayList){
         let overlay=overlayList[oi];
         layersreverse.push(overlay);
     }
-    let feature = new olFeature(new olPoinGeometry([0,0]));
-    let source=new olVectorSource({});
-    source.addFeature(feature);
-    let avnavRenderLayer=new olVectorLayer({
-        name: 'avnavRenderLayer',
-        source : source
-    });
-    let originalRender=avnavRenderLayer.render;
-    avnavRenderLayer.render=(framestate,target)=>{
-        let rt=originalRender.call(avnavRenderLayer,framestate,target);
-        self.onPostCompose({
-            context: avnavRenderLayer.getRenderer().context,
-            frameState: framestate
-        });
-        return rt;
-    };
-    layersreverse.push(avnavRenderLayer);
     this.mapMinZoom=this.minzoom;
     let hasBaseLayers=globalStore.getData(keys.properties.layers.base,true);
     if (hasBaseLayers) {
@@ -605,15 +599,14 @@ MapHolder.prototype.initMap=function(layers,baseurl,overlayList){
         this.olmap.on('dblclick', function(evt) {
             return self.onDoubleClick(evt);
         });
+        this.olmap.on('postcompose', function(evt) {
+            return self.onPostCompose(evt);
+        });
         this.olmap.getView().on('change:resolution',function(evt){
             return self.onZoomChange(evt);
         });
+
     }
-    /*if (layersreverse.length >0){
-        layersreverse[layersreverse.length-1].on('postrender',function(evt){
-            return self.onPostCompose(evt);
-        });
-    }*/
     this.renderTo(div);
     let recenter=true;
     let view;
@@ -1160,12 +1153,15 @@ MapHolder.prototype.setCenterFromMove=function(newCenter,force){
  * @param {RenderEvent} evt
  */
 MapHolder.prototype.onPostCompose=function(evt){
+    if (! this.canvasElement) return;
+    let context=this.canvasElement.getContext('2d');
+    context.clearRect(0,0,this.canvasElement.width,this.canvasElement.height);
     if (this.opacity != this.lastOpacity){
-        evt.context.canvas.style.opacity=this.opacity;
+        context.canvas.style.opacity=this.opacity;
         this.lastOpacity=this.opacity;
     }
-    this.drawing.setContext(evt.context);
-    this.drawing.setDevPixelRatio(evt.frameState.pixelRatio);
+    this.drawing.setContext(context);
+    this.drawing.setDevPixelRatio(1);
     this.drawing.setRotation(evt.frameState.viewState.rotation);
     this.drawGrid();
     this.drawNorth();
@@ -1205,6 +1201,10 @@ MapHolder.prototype.doSlide=function(start){
  */
 MapHolder.prototype.updateSize=function(){
     if (this.olmap) this.olmap.updateSize();
+    if (this.canvasElement){
+        this.canvasElement.width=this.canvasElement.parentElement.offsetWidth;
+        this.canvasElement.height=this.canvasElement.parentElement.offsetHeight;
+    }
 };
 
 /**
