@@ -43,4 +43,4 @@ class AndroidEventHandler{
     }
 }
 
-export default new AndroidEventHandler();
+export default  new AndroidEventHandler();

@@ -21,4 +21,4 @@ class LeaveHandler{
 
 }
 
-export default new LeaveHandler();
+export default  new LeaveHandler();

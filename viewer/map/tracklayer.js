@@ -41,7 +41,7 @@ const TrackLayer=function(mapholder){
     this.trackPoints=[];
     /**
      * @private
-     * @type {ol.style.Style}
+     * @type {olStyle}
      */
     this.lineStyle={};
     this.setStyle();
@@ -115,7 +115,7 @@ TrackLayer.prototype.navEvent = function () {
 
 /**
  *
- * @param {ol.Coordinate} center
+ * @param {olCoordinate} center
  * @param {Drawing} drawing
  */
 TrackLayer.prototype.onPostCompose=function(center,drawing){
@@ -132,4 +132,4 @@ TrackLayer.prototype.setImageStyles=function(styles){
 
 };
 
-module.exports=TrackLayer;
+export default TrackLayer;

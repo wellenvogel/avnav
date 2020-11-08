@@ -667,4 +667,4 @@ LayoutHandler.prototype.ADD_MODES={
     beforeIndex: 3,
     afterIndex: 4
 };
-export default new LayoutHandler();
+export default  new LayoutHandler();

@@ -64,7 +64,7 @@ const mobDefinition={
 };
 
 
-module.exports={
+export default {
     mobDefinition,
     controlMob,
     toggleMob

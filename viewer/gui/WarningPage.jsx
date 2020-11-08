@@ -68,4 +68,4 @@ class WarningPage extends React.Component{
     }
 }
 
-module.exports=WarningPage;
+export default WarningPage;

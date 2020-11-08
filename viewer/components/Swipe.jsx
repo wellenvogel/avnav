@@ -146,4 +146,4 @@ ReactSwipe.propTypes = {
 };
 
 
-export default ReactSwipe;
+export default  ReactSwipe;

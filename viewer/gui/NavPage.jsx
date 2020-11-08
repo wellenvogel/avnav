@@ -381,4 +381,4 @@ class NavPage extends React.Component{
     }
 }
 
-module.exports=NavPage;
+export default NavPage;

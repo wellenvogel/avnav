@@ -107,4 +107,4 @@ ColorDialog.propTypes={
     showUnset: PropTypes.bool
 };
 
-export default ColorDialog;
+export default  ColorDialog;

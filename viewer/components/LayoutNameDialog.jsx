@@ -95,4 +95,4 @@ LayoutNameDialog.createDialog=(name,opt_checkExists,opt_title,opt_subTitle)=>{
     });
 };
 
-export default LayoutNameDialog;
+export default  LayoutNameDialog;

@@ -32,6 +32,5 @@ window.avnav={};
 window.fetch=undefined; //force using whatwg-fetch-timeout
 //we do some lazy loading of modules...
 (function () {
-   window.avnav.version=require ('./version.js');
-   require ('./avnav_viewer.js');
+      require ('./avnav_viewer.js');
 }());

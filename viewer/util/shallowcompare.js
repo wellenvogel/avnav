@@ -21,4 +21,4 @@ let ShallowCompare=function(oldData,newData){
     return oldData == newData;
 };
 
-module.exports=ShallowCompare;
+export default ShallowCompare;

@@ -38,4 +38,4 @@ WayPointListItem.propTypes={
         selected:   PropTypes.bool
 };
 
-module.exports=WayPointListItem;
+export default WayPointListItem;

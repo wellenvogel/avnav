@@ -252,4 +252,4 @@ class AisPage extends React.Component{
     }
 }
 
-module.exports=AisPage;
+export default AisPage;

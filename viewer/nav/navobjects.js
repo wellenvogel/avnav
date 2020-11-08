@@ -225,4 +225,4 @@ navobjects.Ais=function(){
 
 };
 
-module.exports=navobjects;
+export default navobjects;

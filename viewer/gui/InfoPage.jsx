@@ -88,4 +88,4 @@ class InfoPage extends React.Component{
     }
 }
 
-module.exports=InfoPage;
+export default InfoPage;

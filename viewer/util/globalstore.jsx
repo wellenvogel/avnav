@@ -3,5 +3,5 @@
  */
 import Store from './store';
 
-module.exports=new Store();
+export default new Store();
 

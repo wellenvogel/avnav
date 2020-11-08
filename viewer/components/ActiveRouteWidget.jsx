@@ -74,4 +74,4 @@ ActiveRouteWidget.storeKeys={
     isEditing: keys.gui.global.layoutEditing
 };
 
-module.exports=ActiveRouteWidget;
+export default ActiveRouteWidget;

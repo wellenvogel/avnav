@@ -1337,4 +1337,4 @@ class DownloadPage extends React.Component{
     }
 }
 
-module.exports=DownloadPage;
+export default DownloadPage;

@@ -76,4 +76,4 @@ class AlarmHandler{
 
 }
 
-export default new AlarmHandler();
+export default  new AlarmHandler();

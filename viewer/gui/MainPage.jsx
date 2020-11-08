@@ -307,4 +307,4 @@ const showNavpage = function (entry) {
 
 
 
-module.exports = Dynamic(MainPage,{storeKeys:keys.gui.global.reloadSequence});
+export default Dynamic(MainPage,{storeKeys:keys.gui.global.reloadSequence});

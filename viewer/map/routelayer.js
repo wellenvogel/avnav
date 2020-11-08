@@ -66,7 +66,7 @@ const RouteLayer=function(mapholder){
 
     /**
      * @private
-     * @type {ol.style.Style}
+     * @type {olStyle}
      */
     this.lineStyle={};
     this.activeWpStyle={};
@@ -161,7 +161,7 @@ RouteLayer.prototype.showEditingRoute=function(on){
 
 /**
  *
- * @param {ol.Coordinate} center
+ * @param {olCoordinate} center
  * @param {Drawing} drawing
  */
 RouteLayer.prototype.onPostCompose=function(center,drawing) {
@@ -274,4 +274,4 @@ RouteLayer.prototype.setImageStyles=function(styles){
 
 };
 
-module.exports=RouteLayer;
+export default RouteLayer;

@@ -233,4 +233,4 @@ ViewPage.VIEWABLES=Object.keys(languageMap).concat(GuiHelpers.IMAGES);
 ViewPage.EDITABLES=Object.keys(languageMap);
 ViewPage.MAXEDITSIZE=MAXEDITSIZE;
 
-module.exports=ViewPage;
+export default ViewPage;

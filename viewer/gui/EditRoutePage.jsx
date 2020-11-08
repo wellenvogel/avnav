@@ -336,4 +336,4 @@ class EditRoutePage extends React.Component{
     }
 }
 
-module.exports=EditRoutePage;
+export default EditRoutePage;

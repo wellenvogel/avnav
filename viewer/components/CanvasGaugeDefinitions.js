@@ -64,7 +64,7 @@ const voltageTranslateFunction=(props)=>{
 };
 
 
-export default ()=>{
+export default  ()=>{
     let prefix="radGauge_";
     WidgetFactory.registerWidget(
       //Compass

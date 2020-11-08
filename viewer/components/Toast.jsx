@@ -63,7 +63,7 @@ const Toast=(html,time,opt_callback)=>{
         toastTimer=window.setInterval(hideToast,time);
     }
 };
-export default Toast;
+export default  Toast;
 export const hideToast=()=>{
     clearTimer();
     globalStore.storeMultiple({

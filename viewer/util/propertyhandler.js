@@ -152,7 +152,7 @@ class PropertyHandler {
 
 }
 
-module.exports=new PropertyHandler();
+export default new PropertyHandler();
 
 
 

@@ -179,4 +179,4 @@ TrackData.prototype.resetTrack=function(){
     globalStore.storeData(keys.nav.track.currentTrack,[]);
 };
 
-module.exports=TrackData;
+export default TrackData;

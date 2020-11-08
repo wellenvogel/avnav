@@ -209,4 +209,4 @@ StoreApi.prototype.getMultiple=function(keys){
 
 
 
-module.exports=StoreApi;
+export default StoreApi;

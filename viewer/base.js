@@ -60,4 +60,4 @@ if (! window.SVGElement){
     window.SVGElement=function(){};
 }
 
-module.exports=base;
+export default   base;

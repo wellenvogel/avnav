@@ -1029,5 +1029,5 @@ RouteData.prototype.unsetCurrentRoutePage=function(page){
 
 
 
-module.exports=RouteData;
+export default RouteData;
 

@@ -162,7 +162,7 @@ class ButtonList extends React.Component{
     }
 
 }
-module.exports=Dynamic(ButtonList,{
+export default Dynamic(ButtonList,{
     storeKeys:{
         maxButtons:keys.properties.maxButtons,
         buttonHeight: keys.gui.global.computedButtonHeight,

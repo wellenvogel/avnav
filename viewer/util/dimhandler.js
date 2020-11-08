@@ -79,4 +79,4 @@ class DimmHandler{
 
 }
 
-export default new DimmHandler();
+export default  new DimmHandler();

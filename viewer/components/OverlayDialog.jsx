@@ -354,4 +354,4 @@ const Dialogs = {
 
 };
 
-module.exports=Dialogs;
+export default Dialogs;

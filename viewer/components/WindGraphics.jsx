@@ -165,4 +165,4 @@ WindGraphics.storeKeys={
     showKnots:  keys.properties.windKnots,
     scaleAngle: keys.properties.windScaleAngle
 };
-module.exports=WindGraphics;
+export default WindGraphics;

@@ -163,4 +163,4 @@ class CryptHandler{
 
 }
 
-export default new CryptHandler();
+export default  new CryptHandler();

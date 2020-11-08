@@ -112,4 +112,4 @@ OverlayDialog.propTypes={
 };
 
 
-module.exports= OverlayDialog;
+export default  OverlayDialog;

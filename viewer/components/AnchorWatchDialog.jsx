@@ -31,7 +31,7 @@ export const anchorWatchDialog = (overlayContainer)=> {
         })
 };
 
-export default ()=>{
+export default  ()=>{
     return{
         name: "AnchorWatch",
         storeKeys: {watchDistance:keys.nav.anchor.watchDistance},

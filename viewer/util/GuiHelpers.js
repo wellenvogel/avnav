@@ -201,7 +201,7 @@ const IMAGES=['png','jpg','svg','bmp','tiff','gif'];
 
 
 
-module.exports={
+export default {
     resizeElementFont,
     resizeByQuerySelector,
     lifecycleSupport,

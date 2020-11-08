@@ -12,7 +12,7 @@ import Helper from '../util/helper.js';
 import Requests from '../util/requests.js';
 import GuiHelpers from '../util/GuiHelpers.js';
 
-export default class UserAppDialog extends React.Component{
+export default  class UserAppDialog extends React.Component{
     constructor(props){
         super(props);
         this.state=assign({},props.addon,props.fixed);

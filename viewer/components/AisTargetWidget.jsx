@@ -99,4 +99,4 @@ AisTargetWidget.propTypes={
     mode: PropTypes.string
 };
 
-module.exports=AisTargetWidget;
+export default AisTargetWidget;

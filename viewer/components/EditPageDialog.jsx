@@ -231,4 +231,4 @@ EditPageDialog.getButtonDef=(pagename,panelNames,handledOptions)=>{
 
 };
 
-export default EditPageDialog;
+export default  EditPageDialog;

@@ -247,7 +247,7 @@ class App extends React.Component {
         </div>
     };
 }
-module.exports=Dynamic(App,{
+export default   Dynamic(App,{
   storeKeys:{
       fontSize: keys.properties.baseFontSize,
       nightMode: keys.properties.nightMode,

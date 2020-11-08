@@ -31,7 +31,10 @@ import keys from '../util/keys.jsx';
 import Helper from '../util/helper.js';
 import CryptHandler from './crypthandler.js';
 import ChartSourceBase from './chartsourcebase.js';
-
+import * as olExtent from 'ol/extent';
+import {XYZ as olXYZSource} from 'ol/source';
+import * as olTransforms  from 'ol/proj/transforms';
+import {Tile as olTileLayer} from 'ol/layer';
 
 class AvnavChartSource extends ChartSourceBase{
     constructor(mapholer, chartEntry) {
@@ -177,7 +180,7 @@ class AvnavChartSource extends ChartSourceBase{
             if (layerurl.indexOf("{x}") >= 0 && layerurl.indexOf("{y}") >= 0 && layerurl.indexOf("{z}") >= 0) {
                 replaceInUrl = true;
             }
-            rt.extent = ol.extent.applyTransform(rt.layerExtent, self.mapholder.transformToMap);
+            rt.extent = olExtent.applyTransform(rt.layerExtent, self.mapholder.transformToMap);
             if (rt.wms) {
                 let param = {};
                 Array.from(tm.getElementsByTagName("WMSParameter")).forEach((wp)=> {
@@ -214,14 +217,14 @@ class AvnavChartSource extends ChartSourceBase{
             let source = undefined;
             //as WMS support is broken in OL3 (as always ol3 tries to be more intelligent than everybody...)
             //we always use an XYZ layer but directly construct the WMS tiles...
-            source = new ol.source.XYZ({
+            source = new olXYZSource({
                 tileUrlFunction: function (coord) {
                     if (!coord) return undefined;
                     let zxy = coord;
                     let z = zxy[0];
                     let x = zxy[1];
                     let y = zxy[2];
-                    y = -y - 1; //change for ol3-151 - commit af319c259b349c86a4d164c42cc4eb5884f896fb
+                    //y = -y - 1; //revert change back for ol6...change for ol3-151 - commit af319c259b349c86a4d164c42cc4eb5884f896fb
 
                     if (rt.zoomLayerBoundings) {
                         let found = false;
@@ -254,7 +257,7 @@ class AvnavChartSource extends ChartSourceBase{
                         let maxX = minX + tileSize * resolution;
                         let maxY = minY + tileSize * resolution;
                         //now compute the bounding box
-                        let converter = ol.proj.getTransform("EPSG:3857", rt.projection || "EPSG:4326");
+                        let converter = olTransforms.get("EPSG:3857", rt.projection || "EPSG:4326");
                         let bbox = converter([minX, minY, maxX, maxY]);
                         let rturl = layerurl + "SERVICE=WMS&REQUEST=GetMap&FORMAT=image/png&WIDTH=" + tileSize + "&HEIGHT=" + tileSize + "&SRS=" + encodeURI(rt.projection);
                         let k;
@@ -303,7 +306,7 @@ class AvnavChartSource extends ChartSourceBase{
             });
 
             rt.source = source;
-            let layer = new ol.layer.Tile({
+            let layer = new olTileLayer({
                 source: source
             });
             layer.avnavOptions = rt;
@@ -347,4 +350,4 @@ class AvnavChartSource extends ChartSourceBase{
     }
 }
 
-export default AvnavChartSource;
+export default  AvnavChartSource;

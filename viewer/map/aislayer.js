@@ -69,7 +69,7 @@ const AisLayer=function(mapholder){
 
     /**
      * @private
-     * @type {ol.style.Stroke}
+     * @type {olStroke}
      */
     this.textStyle ={};
     this.setStyles();
@@ -80,7 +80,7 @@ const AisLayer=function(mapholder){
 
     /**
      * an array of pixel positions of the current ais data
-     * @type {Array.<{pixel:ol.Coordinate,ais:{}}
+     * @type {Array.<{pixel:olCoordinate,ais:{}}
      */
     this.pixel=[];
 
@@ -164,7 +164,7 @@ AisLayer.prototype.createInternalIcons = function () {
 };
 /**
  * find the AIS target that has been clicked
- * @param {ol.Coordinate} pixel the css pixel from the event
+ * @param {olCoordinate} pixel the css pixel from the event
  */
 AisLayer.prototype.findTarget=function(pixel){
     base.log("findAisTarget "+pixel[0]+","+pixel[1]);
@@ -242,7 +242,7 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,computeTargetFun
 
 /**
  *
- * @param {ol.Coordinate} center
+ * @param {olCoordinate} center
  * @param {Drawing} drawing
  */
 AisLayer.prototype.onPostCompose=function(center,drawing){
@@ -280,7 +280,7 @@ AisLayer.prototype.dataChanged=function(){
  * compute a target point in map units from a given point
  * for drawing the circles
  * assumes "flatted" area around the point
- * @param {ol.Coordinate} pos in map coordinates
+ * @param {olCoordinate} pos in map coordinates
  * @param {number} course in degrees
  * @param {number} dist in m
  */
@@ -334,4 +334,4 @@ AisLayer.prototype.setImageStyles=function(styles){
 };
 
 
-module.exports=AisLayer;
+export default AisLayer;

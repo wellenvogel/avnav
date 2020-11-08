@@ -410,4 +410,4 @@ class ColorPicker extends React.Component{
 };
 
 ColorPicker.displayName='ColorPicker';
-export default ColorPicker;
+export default  ColorPicker;

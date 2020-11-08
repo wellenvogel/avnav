@@ -12,7 +12,7 @@ import assign from 'object-assign';
 let activeInputs={};
 let currentId=0;
 
-module.exports= function(Component,opt_store){
+export default  function(Component,opt_store){
     let store=opt_store?opt_store:globalStore;
     class InputMonitor extends React.Component{
         constructor(props){

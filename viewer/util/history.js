@@ -63,4 +63,4 @@ class History{
             options:keys.gui.global.pageOptions});
     }
 }
-module.exports=new History(globalStore);
+export default new History(globalStore);

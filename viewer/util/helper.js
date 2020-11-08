@@ -141,7 +141,7 @@ Helper.templateReplace=function(tstring,replacements){
 
 
 
-module.exports=Helper;
+export default Helper;
 
 
 

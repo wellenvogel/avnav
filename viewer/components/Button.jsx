@@ -43,4 +43,4 @@ Button.propTypes={
     disabled: PropTypes.bool
 };
 
-module.exports=Button;
+export default Button;

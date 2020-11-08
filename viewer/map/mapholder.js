@@ -24,6 +24,19 @@ import assign from 'object-assign';
 import AvNavChartSource from './avnavchartsource.js';
 import GpxChartSource from './gpxchartsource.js';
 import CryptHandler from './crypthandler.js';
+import {Map as olMap,View as olView,
+    Feature as olFeature,
+    } from 'ol';
+import * as olExtent from 'ol/extent';
+import * as olCoordinate from 'ol/coordinate';
+import * as olInteraction from 'ol/interaction';
+import {Polygon as olPolygonGemotery, Point as olPoinGeometry} from 'ol/geom';
+import {Vector as olVectorSource, XYZ as olXYZSource} from 'ol/source';
+import {Vector as olVectorLayer} from 'ol/layer';
+import {GeoJSON as olGeoJSONFormat} from 'ol/format';
+import {Style as olStyle, Stroke as olStroke, Text as olText, Icon as olIcon, Fill as olFill} from 'ol/style';
+import {Event as olRenderEvent} from 'ol/render';
+import * as olTransforms  from 'ol/proj/transforms';
 
 
 const PSTOPIC="mapevent";
@@ -53,7 +66,7 @@ const MapHolder=function(){
 
     DrawingPositionConverter.call(this);
     /** @private
-     * @type {ol.Map}
+     * @type {Map}
      * */
     this.olmap=null;
 
@@ -86,8 +99,8 @@ const MapHolder=function(){
      */
     this.movingAveragefactor=0.5;
 
-    this.transformFromMap=ol.proj.getTransform("EPSG:3857","EPSG:4326");
-    this.transformToMap=ol.proj.getTransform("EPSG:4326","EPSG:3857");
+    this.transformFromMap=olTransforms.get("EPSG:3857","EPSG:4326");
+    this.transformToMap=olTransforms.get("EPSG:4326","EPSG:3857");
 
     this.aislayer=new AisLayer(this);
     this.navlayer=new NavLayer(this);
@@ -232,16 +245,16 @@ MapHolder.prototype.unsubscribe=function(token){
 };
 /**
  * @inheritDoc
- * @param {ol.Coordinate} point
- * @returns {ol.Coordinate}
+ * @param {Coordinate} point
+ * @returns {Coordinate}
  */
 MapHolder.prototype.coordToPixel=function(point){
     return this.olmap.getPixelFromCoordinate(point);
 };
 /**
  * @inheritDoc
- * @param {ol.Coordinate} pixel
- * @returns {ol.Coordinate}
+ * @param {Coordinate} pixel
+ * @returns {Coordinate}
  */
 MapHolder.prototype.pixelToCoord=function(pixel){
     return this.olmap.getCoordinateFromPixel(pixel);
@@ -250,7 +263,7 @@ MapHolder.prototype.pixelToCoord=function(pixel){
 
 /**
  * get the 2Dv view
- * @returns {ol.View2D}
+ * @returns {View}
  */
 
 MapHolder.prototype.getView=function(){
@@ -408,21 +421,21 @@ MapHolder.prototype.loadMap=function(div){
 
 MapHolder.prototype.getBaseLayer=function(){
     var styles = {
-        'MultiPolygon': new ol.style.Style({
-            stroke: new ol.style.Stroke({
+        'MultiPolygon': new olStyle({
+            stroke: new olStroke({
                 color: 'blue',
                 width: 1
             }),
-            fill: new ol.style.Fill({
+            fill: new olFill({
                 color: 'rgba(0, 0, 255, 0.1)'
             })
         }),
-        'Polygon': new ol.style.Style({
-            stroke: new ol.style.Stroke({
+        'Polygon': new olStyle({
+            stroke: new olStroke({
                 color: 'blue',
                 width: 1
             }),
-            fill: new ol.style.Fill({
+            fill: new olFill({
                 color: 'rgba(0, 0, 255, 0.1)'
             })
         })
@@ -431,13 +444,13 @@ MapHolder.prototype.getBaseLayer=function(){
     var styleFunction = function(feature) {
         return styles[feature.getGeometry().getType()];
     };
-    var vectorSource = new ol.source.Vector({
-        format: new ol.format.GeoJSON(),
+    var vectorSource = new olVectorSource({
+        format: new olGeoJSONFormat(),
         url: 'countries-110m.json',
         wrapX: false
     });
 
-    var vectorLayer = new ol.layer.Vector({
+    var vectorLayer = new olVectorLayer({
         source: vectorSource,
         style: styleFunction
     });
@@ -447,30 +460,30 @@ MapHolder.prototype.getBaseLayer=function(){
 
 
 MapHolder.prototype.getMapOutlineLayer = function (layers) {
-    let style = new ol.style.Style({
-        stroke: new ol.style.Stroke({
+    let style = new olStyle({
+        stroke: new olStroke({
             color: 'red',
             width: 2
         })
     });
 
-    let source = new ol.source.Vector({
+    let source = new olVectorSource({
         wrapX: false
     });
     if (layers && layers.length > 0) {
-        let extent = ol.extent.createEmpty();
+        let extent = olExtent.createEmpty();
         layers.forEach((layer)=> {
             if (layer.avnavOptions && layer.avnavOptions.extent) {
                 let e = layer.avnavOptions.extent;
-                extent = ol.extent.extend(extent, e);
+                extent = olExtent.extend(extent, e);
             }
         });
-        let feature = new ol.Feature(new ol.geom.Polygon([
+        let feature = new olFeature(new olPolygonGemotery([
             [
-                ol.extent.getBottomLeft(extent),
-                ol.extent.getBottomRight(extent),
-                ol.extent.getTopRight(extent),
-                ol.extent.getTopLeft(extent)
+                olExtent.getBottomLeft(extent),
+                olExtent.getBottomRight(extent),
+                olExtent.getTopRight(extent),
+                olExtent.getTopLeft(extent)
 
             ]
         ]));
@@ -478,7 +491,7 @@ MapHolder.prototype.getMapOutlineLayer = function (layers) {
         source.addFeature(feature);
     }
     ;
-    return new ol.layer.Vector({
+    return new olVectorLayer({
         source: source
     });
 };
@@ -511,6 +524,23 @@ MapHolder.prototype.initMap=function(layers,baseurl,overlayList){
         let overlay=overlayList[oi];
         layersreverse.push(overlay);
     }
+    let feature = new olFeature(new olPoinGeometry([0,0]));
+    let source=new olVectorSource({});
+    source.addFeature(feature);
+    let avnavRenderLayer=new olVectorLayer({
+        name: 'avnavRenderLayer',
+        source : source
+    });
+    let originalRender=avnavRenderLayer.render;
+    avnavRenderLayer.render=(framestate,target)=>{
+        let rt=originalRender.call(avnavRenderLayer,framestate,target);
+        self.onPostCompose({
+            context: avnavRenderLayer.getRenderer().context,
+            frameState: framestate
+        });
+        return rt;
+    };
+    layersreverse.push(avnavRenderLayer);
     this.mapMinZoom=this.minzoom;
     let hasBaseLayers=globalStore.getData(keys.properties.layers.base,true);
     if (hasBaseLayers) {
@@ -547,16 +577,16 @@ MapHolder.prototype.initMap=function(layers,baseurl,overlayList){
                 base.push(this.getMapOutlineLayer(layers))
             }
         }
-        this.olmap = new ol.Map({
+        this.olmap = new olMap({
             target: div?div:self.defaultDiv,
             layers: base.concat(layersreverse),
-            interactions: ol.interaction.defaults({
+            interactions: olInteraction.defaults({
                 altShiftDragRotate:false,
                 pinchRotate: false
             }),
             controls: [],
-            view: new ol.View({
-                center: ol.proj.transform([ 13.8, 54.1], 'EPSG:4326', 'EPSG:3857'),
+            view: new olView({
+                center: this.transformToMap([ 13.8, 54.1]),
                 zoom: 9,
                 extent: this.transformToMap([-200,-89,200,89])
             })
@@ -569,9 +599,6 @@ MapHolder.prototype.initMap=function(layers,baseurl,overlayList){
             //more or less similar top ol2 move
             return self.onMoveEnd(evt);
         });
-        this.olmap.on('postcompose',function(evt){
-            return self.onPostCompose(evt);
-        });
         this.olmap.on('click', function(evt) {
             return self.onClick(evt);
         });
@@ -582,6 +609,11 @@ MapHolder.prototype.initMap=function(layers,baseurl,overlayList){
             return self.onZoomChange(evt);
         });
     }
+    /*if (layersreverse.length >0){
+        layersreverse[layersreverse.length-1].on('postrender',function(evt){
+            return self.onPostCompose(evt);
+        });
+    }*/
     this.renderTo(div);
     let recenter=true;
     let view;
@@ -605,7 +637,7 @@ MapHolder.prototype.initMap=function(layers,baseurl,overlayList){
         let lext=undefined;
         if (layers.length > 0) {
             lext=layers[0].avnavOptions.extent;
-            if (lext !== undefined && !ol.extent.containsCoordinate(lext,this.pointToMap(this.center))){
+            if (lext !== undefined && !olExtent.containsCoordinate(lext,this.pointToMap(this.center))){
                 let ok=OverlayDialog.confirm("Position outside map, center to map now?");
                 ok.then(function(){
                     if (layers.length > 0) {
@@ -842,7 +874,7 @@ MapHolder.prototype.checkAutoZoom=function(opt_force){
             let layer=layers[i];
             if (! layer.avnavOptions || ! layer.avnavOptions.zoomLayerBoundings) continue;
             let source=layer.get('source');
-            if (!source || ! (source instanceof ol.source.XYZ)) continue;
+            if (!source || ! (source instanceof olXYZSource)) continue;
             hasZoomInfo=true;
             let boundings=layer.avnavOptions.zoomLayerBoundings;
             let centerTile=source.getTileGrid().getTileCoordForCoordAndZ(centerCoord,tzoom);
@@ -894,7 +926,7 @@ MapHolder.prototype.checkAutoZoom=function(opt_force){
 
 /**
  * transforms a point from EPSG:4326 to map projection
- * @param {ol.Coordinate} point
+ * @param {olCoordinate} point
  * @returns {Array.<number>|*}
  */
 MapHolder.prototype.pointToMap=function(point){
@@ -903,7 +935,7 @@ MapHolder.prototype.pointToMap=function(point){
 
 /**
  * convert a point from map projection to EPSG:4326
- * @param {ol.Coordinate} point
+ * @param {olCoordinate} point
  * @returns {Array.<number>|*}
  */
 MapHolder.prototype.pointFromMap=function(point){
@@ -1009,7 +1041,7 @@ MapHolder.prototype.setGpsLock=function(lock){
 
 /**
  * click event handler
- * @param {ol.MapBrowserEvent} evt
+ * @param {MapBrowserEvent} evt
  */
 MapHolder.prototype.onClick=function(evt){
     let wp=this.routinglayer.findTarget(evt.pixel);
@@ -1125,7 +1157,7 @@ MapHolder.prototype.setCenterFromMove=function(newCenter,force){
 
 /**
  *
- * @param {ol.render.Event} evt
+ * @param {RenderEvent} evt
  */
 MapHolder.prototype.onPostCompose=function(evt){
     if (this.opacity != this.lastOpacity){
@@ -1238,5 +1270,5 @@ MapHolder.prototype.setImageStyles=function(styles){
     this.tracklayer.setImageStyles(styles);
 };
 
-module.exports=new MapHolder();
+export default new MapHolder();
 

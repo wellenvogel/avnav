@@ -46,4 +46,4 @@ EtaWidget.storeKeys={
     eta: keys.nav.wp.eta,
     wpname: keys.nav.wp.name
 };
-module.exports=EtaWidget;
+export default EtaWidget;

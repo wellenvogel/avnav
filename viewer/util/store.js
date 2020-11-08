@@ -90,4 +90,4 @@ Store.prototype.getKeysByPrefix=function(prefix){
     return rt;
 };
 
-module.exports=Store;
+export default Store;

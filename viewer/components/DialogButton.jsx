@@ -41,4 +41,4 @@ DialogButton.propTypes={
     disabled: PropTypes.bool
 };
 
-module.exports=DialogButton;
+export default DialogButton;

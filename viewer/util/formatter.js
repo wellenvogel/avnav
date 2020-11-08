@@ -202,7 +202,7 @@ const formatString=function(data){
     return data;
 };
 
-module.exports={
+export default {
     formatDateTime,
     formatClock,
     formatTime,

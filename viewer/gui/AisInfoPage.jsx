@@ -179,4 +179,4 @@ class AisInfoPage extends React.Component{
     }
 }
 
-module.exports=AisInfoPage;
+export default AisInfoPage;

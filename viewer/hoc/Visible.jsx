@@ -14,4 +14,4 @@ const Visible=function(Component){
     }
 };
 
-module.exports=Visible;
+export default Visible;

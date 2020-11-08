@@ -85,4 +85,4 @@ EditRouteWidget.storeKeys=editor.getStoreKeys({
     isApproaching: keys.nav.route.isApproaching
 });
 
-module.exports=EditRouteWidget;
+export default EditRouteWidget;

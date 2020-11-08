@@ -61,4 +61,4 @@ Page.propTypes={
     isEditing: PropTypes.bool
 };
 
-module.exports=Dynamic(Page,{storeKeys:{isEditing:keys.gui.global.layoutEditing}});
+export default Dynamic(Page,{storeKeys:{isEditing:keys.gui.global.layoutEditing}});

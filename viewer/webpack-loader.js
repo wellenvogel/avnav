@@ -34,7 +34,6 @@
     var scripts = [
         'libraries/geo.js',
         'libraries/latlon.js',
-        'libraries/ol.js',
         'avnav_min.js',
         'avnav_viewer.css',
         '/user/viewer/user.css',

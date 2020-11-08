@@ -40,12 +40,6 @@ images.forEach(function(el){
    copyList.push({from: "./images/"+el,to:'images'});
 });
 
-if (isProduction) {
-    copyList.push({from: 'node_modules/openlayers/dist/ol.js', to:'libraries/ol.js'})
-}
-else{
-    copyList.push({from: 'node_modules/openlayers/dist/ol-debug.js', to: 'libraries/ol.js'})
-}
 
 var devtool="inline-source-map";
 var resolveAlias={
@@ -53,9 +47,6 @@ var resolveAlias={
 };
 if (isProduction) {
     devtool="";
-}
-if (! isProduction) {
-    resolveAlias['openlayers$']=__dirname+"/node_modules/openlayers/dist/ol-debug.js";
 }
 
 var plugins = [
@@ -107,7 +98,7 @@ module.exports = {
                     loader: 'babel-loader',
                     options:
                     {
-                        presets: ['react', 'es2015', 'stage-0'],
+                        presets: ['@babel/preset-react', '@babel/preset-env'],
                         plugins: [
                             ["prismjs", {
                                 "languages": ["javascript", "css", "markup","json"],

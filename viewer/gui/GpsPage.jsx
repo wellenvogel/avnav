@@ -300,7 +300,7 @@ GpsPage.propTypes={
     pageNum: PropTypes.number
 };
 
-module.exports=Dynamic(GpsPage,{
+export default Dynamic(GpsPage,{
     storeKeys:LayoutHandler.getStoreKeys({
         pageNum: keys.gui.gpspage.pageNumber,
     })

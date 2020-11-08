@@ -242,4 +242,4 @@ let RequestHandler={
 };
 Object.freeze(RequestHandler);
 
-module.exports=RequestHandler;
+export default RequestHandler;

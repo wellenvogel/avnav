@@ -235,6 +235,6 @@ NavCompute.computeLegInfo=function(target,gps,opt_start){
 };
 NavCompute.NM=1852; //m per NM
 
-module.exports=NavCompute;
+export default NavCompute;
 
 

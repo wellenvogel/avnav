@@ -52,4 +52,4 @@ DateTimeWidget.storeKeys={
     gpsValid: keys.nav.gps.valid
 };
 
-module.exports=DateTimeWidget;
+export default DateTimeWidget;

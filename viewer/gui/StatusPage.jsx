@@ -200,4 +200,4 @@ class StatusPage extends React.Component{
     }
 }
 
-module.exports=StatusPage;
+export default StatusPage;

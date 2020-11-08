@@ -275,7 +275,7 @@ NavData.prototype.getCurrentPosition=function(){
     }
 };
 
-module.exports=new NavData();
+export default new NavData();
 
 
 

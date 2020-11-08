@@ -298,4 +298,4 @@ EditWidgetDialog.createDialog=(widgetItem,pagename,panelname,opt_beginning,opt_w
     return true;
 };
 
-export default EditWidgetDialog;
+export default  EditWidgetDialog;

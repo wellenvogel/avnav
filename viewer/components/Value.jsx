@@ -21,4 +21,4 @@ const Value=function(props){
 Value.propTypes={
     value: PropTypes.string
 }
-module.exports=Value;
+export default Value;

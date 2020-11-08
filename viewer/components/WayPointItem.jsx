@@ -37,4 +37,4 @@ WayPointItem.propTypes={
         selected:   PropTypes.bool
     };
 
-export default WayPointItem;
+export default  WayPointItem;

@@ -120,4 +120,4 @@ XteWidget.storeKeys={
     xteMax:     keys.properties.gpsXteMax
 };
 
-module.exports=XteWidget;
+export default XteWidget;

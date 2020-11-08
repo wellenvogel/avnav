@@ -65,4 +65,4 @@ DirectWidget.editableParameters={
     value: true
 };
 
-module.exports=DirectWidget;
+export default DirectWidget;

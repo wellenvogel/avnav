@@ -36,7 +36,6 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import OverlayDialog from './components/OverlayDialog.jsx';
 import propertyHandler from './util/propertyhandler';
-ol.DEFAULT_TILE_CACHE_HIGH_WATER_MARK=256;
 import App from './App.jsx';
 import history from './util/history';
 import MapHolder from './map/mapholder';
@@ -51,7 +50,7 @@ import LayoutHandler from './util/layouthandler.js';
 import LeaveHandler from './util/leavehandler.js';
 import registerRadial from './components/CanvasGaugeDefinitions.js';
 import AndroidEventHandler from './util/androidEventHandler.js';
-
+import AvNavVersion from './version.js';
 
 
 if (! window.avnav){
@@ -59,6 +58,7 @@ if (! window.avnav){
 }
 
 window.avnav.api=Api;
+window.avnav.version=AvNavVersion;
 
 
 function getParam(key)

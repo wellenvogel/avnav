@@ -114,4 +114,4 @@ class AddonConfigPage extends React.Component{
     }
 }
 
-module.exports=AddonConfigPage;
+export default AddonConfigPage;

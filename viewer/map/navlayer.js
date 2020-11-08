@@ -33,7 +33,7 @@ const NavLayer=function(mapholder){
     /**
      * the initial course must be different from 0 to create a style...
      * @private
-     * @type {ol.style.Style}
+     * @type {olStyle}
      */
     this.boatStyle={
         anchor: [15, 0],
@@ -47,7 +47,7 @@ const NavLayer=function(mapholder){
 
     /**
      * @private
-     * @type {ol.style.Style}
+     * @type {olStyle}
      */
     this.circleStyle={};
     this.anchorCircleStyle={};
@@ -106,7 +106,7 @@ const positionKeys={
 /**
  * draw the marker and course
  * we rely on the move end to really store the marker position
- * @param {ol.Coordinate} center in map coordinates
+ * @param {olCoordinate} center in map coordinates
  * @param {Drawing} drawing
  */
 NavLayer.prototype.onPostCompose=function(center,drawing){
@@ -173,7 +173,7 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
  * compute a target point in map units from a given point
  * for drawing the circles
  * assumes "flatted" area around the point
- * @param {ol.Coordinate} pos in map coordinates
+ * @param {olCoordinate} pos in map coordinates
  * @param {number} course in degrees
  * @param {number} dist in m
  */
@@ -208,4 +208,4 @@ NavLayer.prototype.setImageStyles=function(styles){
     }
 };
 
-module.exports=NavLayer;
+export default NavLayer;

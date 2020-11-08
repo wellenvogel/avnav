@@ -23,4 +23,4 @@ EmptyWidget.propTypes={
         classes: PropTypes.string
 };
 
-module.exports=EmptyWidget;
+export default EmptyWidget;

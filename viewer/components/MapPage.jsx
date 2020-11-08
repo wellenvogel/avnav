@@ -236,4 +236,4 @@ let DynamicPage=Dynamic(MapPage,{
     })
 });
 DynamicPage.PANELS=['left','top','bottomLeft','bottomRight'];
-module.exports=DynamicPage;
+export default DynamicPage;

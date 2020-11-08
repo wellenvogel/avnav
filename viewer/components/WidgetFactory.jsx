@@ -482,4 +482,4 @@ WidgetFactory.prototype.loadAllGaugeDefinitions=function(){
 };
 
 
-export default new WidgetFactory();
+export default  new WidgetFactory();

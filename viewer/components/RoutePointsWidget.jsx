@@ -94,4 +94,4 @@ RoutePointsWidget.storeKeys=editor.getStoreKeys({
     isEditing: keys.gui.global.layoutEditing
 });
 
-module.exports=RoutePointsWidget;
+export default RoutePointsWidget;

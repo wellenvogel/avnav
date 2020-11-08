@@ -116,4 +116,4 @@ class AddressPage extends React.Component{
     }
 }
 
-module.exports=AddressPage;
+export default AddressPage;

@@ -525,4 +525,4 @@ for (let k in [RouteEdit.MODES.EDIT,RouteEdit.MODES.PAGE]) {
 }
 //globalStore.register(guard,keylist);
 
-export default RouteEdit;
+export default  RouteEdit;

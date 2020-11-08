@@ -78,4 +78,4 @@ AlarmWidget.storeKeys={
     isEditing: keys.gui.global.layoutEditing
 };
 
-module.exports=AlarmWidget;
+export default AlarmWidget;

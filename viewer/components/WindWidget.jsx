@@ -85,4 +85,4 @@ WindWidget.storeKeys={
     showKnots: keys.properties.windKnots
 };
 
-module.exports=WindWidget;
+export default WindWidget;

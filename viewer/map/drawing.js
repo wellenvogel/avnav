@@ -10,11 +10,11 @@
  * an interface for converting between lat/lon and css pixel
  * @constructor
  */
-const DrawingPositionConverter=function(){
+export const DrawingPositionConverter=function(){
 };
 /**
  * to be overloaded
- * @param {ol.Coordinate} point
+ * @param {olCoordinate} point
  * @returns {undefined}
  */
 DrawingPositionConverter.prototype.coordToPixel=function(point){
@@ -23,10 +23,10 @@ DrawingPositionConverter.prototype.coordToPixel=function(point){
 /**
  * convert from pixel (as provided by an event) to map coordinates
  * @param pixel
- * @returns {ol.Coordinate}
+ * @returns {olCoordinate}
  */
 DrawingPositionConverter.prototype.pixelToCoord=function(pixel){
-    return new ol.Coordinate();
+    return [0,0];
 };
 
 /**
@@ -35,7 +35,7 @@ DrawingPositionConverter.prototype.pixelToCoord=function(pixel){
  * @param {DrawingPositionConverter} converter
  * @param {number} opt_ratio - device pixel ratio
  */
-const Drawing=function(converter,opt_ratio){
+export const Drawing=function(converter,opt_ratio){
     /**
      * the device pixel ratio
      * @private
@@ -66,8 +66,8 @@ const Drawing=function(converter,opt_ratio){
 
 /**
  * draw a circle determined by a center point an one other point
- * @param {ol.Coordinate} center
- * @param {ol.Coordinate} other
+ * @param {olCoordinate} center
+ * @param {olCoordinate} other
  * @param opt_styles - see drawLineToContext
  * @return the center in css pixel
  */
@@ -87,9 +87,9 @@ Drawing.prototype.drawCircleToContext=function(center,other,opt_styles){
 };
 
 /**
- * @param {ol.Coordinate} point the position in map coordinates
+ * @param {olCoordinate} point the position in map coordinates
  * @param {image} the image to display (must be loaded - no check!)
- * @param {Object} opt_options handles the same properties like ol.style.Icon
+ * @param {Object} opt_options handles the same properties like olIcon
  *             currently supported:
  *             anchor[x,y] in pixels
  *             size[x,y]
@@ -99,7 +99,7 @@ Drawing.prototype.drawCircleToContext=function(center,other,opt_styles){
  *             background: a color for an optional background rectangle
  *             backgroundAlpha: an alpha for the background
  *             backgroundCircle: a color for an optional background circle
- * @return {ol.Coordinate} the css pixel coordinates of the object
+ * @return {olCoordinate} the css pixel coordinates of the object
  */
 Drawing.prototype.drawImageToContext=function(point,image,opt_options){
     if (! this.context) return;
@@ -224,14 +224,14 @@ Drawing.prototype.arrow=function(x1,y1,x2,y2,w,l,pe,open){
 };
 /**
  * draw a line string
- * @param {Array.<ol.Coordinate>}points in map coordinates
+ * @param {Array.<olCoordinate>}points in map coordinates
  * @param opt_style - properties:
  *          color:  - css color
  *          width:  - width in px
  *          cap:    - line cap
  *          join:   - line join
  *          dashed: - if set draw a dashed line
- * @return {Array.<ol.Coordinate>} the css pixel coordinates of the points
+ * @return {Array.<olCoordinate>} the css pixel coordinates of the points
  */
 Drawing.prototype.drawLineToContext=function(points,opt_style){
     if (! points || points.length < 2) return;
@@ -312,7 +312,7 @@ Drawing.prototype.drawBubbleToContext=function(point,radius,opt_style){
 
 /**
  *
- * @param {ol.Coordinate} point
+ * @param {olCoordinate} point
  * @param {string} text
  * @param opt_styles - properties
  *      font: the text font
@@ -397,9 +397,9 @@ Drawing.prototype.getRotation=function(){
 };
 /**
  * convert a point in map coordinates into pixel
- * @param {ol.Coordinate} coord
+ * @param {olCoordinate} coord
  *
- * @returns {ol.Coordinate}
+ * @returns {olCoordinate}
  */
 Drawing.prototype.pointToCssPixel=function(coord) {
     let rt = this.converter.coordToPixel(coord);
@@ -408,8 +408,8 @@ Drawing.prototype.pointToCssPixel=function(coord) {
 
 /**
  * convert pixel from css to device
- * @param {ol.Coordinate} pixel
- * @returns {ol.Coordinate}
+ * @param {olCoordinate} pixel
+ * @returns {olCoordinate}
  */
 Drawing.prototype.pixelToDevice=function(pixel) {
     let rt=[];
@@ -451,7 +451,3 @@ Drawing.prototype.setLineStyles=function(opt_style){
     }
 };
 
-module.exports={
-    Drawing,
-    DrawingPositionConverter
-};

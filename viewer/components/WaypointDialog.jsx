@@ -129,4 +129,4 @@ let WaypointDialog = reactCreateClass({
 });
 
 
-module.exports=WaypointDialog;
+export default WaypointDialog;

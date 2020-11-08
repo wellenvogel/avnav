@@ -34,4 +34,4 @@ UndefinedWidget.propTypes={
 };
 
 
-module.exports=UndefinedWidget;
+export default UndefinedWidget;

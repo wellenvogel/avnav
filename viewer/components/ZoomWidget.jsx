@@ -58,4 +58,4 @@ ZoomWidget.storeKeys={
     requiredZoom: keys.map.requiredZoom,
     visible: keys.properties.showZoom
 };
-module.exports=ZoomWidget;
+export default ZoomWidget;

@@ -50,4 +50,4 @@ TimeStatusWidget.storeKeys={
     gpsValid: keys.nav.gps.valid
 };
 
-module.exports=TimeStatusWidget;
+export default TimeStatusWidget;

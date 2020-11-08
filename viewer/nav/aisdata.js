@@ -288,4 +288,4 @@ AisData.prototype.setTrackedTarget=function(mmsi){
     this.handleAisData();
 };
 
-module.exports=new AisData();
+export default new AisData();

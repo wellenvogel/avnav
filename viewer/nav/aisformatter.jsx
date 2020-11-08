@@ -166,4 +166,4 @@ const AisFormatter={
     }
 };
 
-module.exports=AisFormatter;
+export default AisFormatter;

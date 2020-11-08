@@ -734,4 +734,4 @@ routeobjects.Route.prototype.findBestMatchingIdx=function(point){
     return bestPoint;
 };
 
-module.exports=routeobjects;
+export default routeobjects;

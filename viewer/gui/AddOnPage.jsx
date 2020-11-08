@@ -128,4 +128,4 @@ class AddOnPage extends React.Component{
     }
 }
 
-module.exports=AddOnPage;
+export default AddOnPage;

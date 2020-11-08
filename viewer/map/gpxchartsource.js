@@ -31,29 +31,33 @@ import keys from '../util/keys.jsx';
 import Helper from '../util/helper.js';
 import CryptHandler from './crypthandler.js';
 import ChartSourceBase from './chartsourcebase.js';
+import {Style as olStyle, Stroke as olStroke, Circle as olCircle, Icon as olIcon, Fill as olFill} from 'ol/style';
+import {Vector as olVectorSource} from 'ol/source';
+import {Vector as olVectorLayer} from 'ol/layer';
+import {GPX as olGPXFormat} from 'ol/format';
 
 //TODO: styles...
 const styles = {
-    'Point': new ol.style.Style({
-        image: new ol.style.Circle({
-            fill: new ol.style.Fill({
+    'Point': new olStyle({
+        image: new olCircle({
+            fill: new olFill({
                 color: 'rgba(255,255,0,0.4)',
             }),
             radius: 5,
-            stroke: new ol.style.Stroke({
+            stroke: new olStroke({
                 color: '#ff0',
                 width: 1,
             }),
         }),
     }),
-    'LineString': new ol.style.Style({
-        stroke: new ol.style.Stroke({
+    'LineString': new olStyle({
+        stroke: new olStroke({
             color: '#f00',
             width: 3,
         }),
     }),
-    'MultiLineString': new ol.style.Style({
-        stroke: new ol.style.Stroke({
+    'MultiLineString': new olStyle({
+        stroke: new olStroke({
             color: '#0f0',
             width: 3,
         }),
@@ -81,8 +85,8 @@ class GpxChartSource extends ChartSourceBase{
             if (sym){
                 if (! sym.match(/\./)) sym+=".png";
                 if (!this.styleMap[sym]) {
-                    let style = new ol.style.Style({
-                        image: new ol.style.Icon({
+                    let style = new olStyle({
+                        image: new olIcon({
                             src: this.chartEntry.iconBase + "/" + sym
                         })
                     });
@@ -106,13 +110,13 @@ class GpxChartSource extends ChartSourceBase{
                 reject("no map selected");
                 return;
             }
-            let vectorSource = new ol.source.Vector({
-                format: new ol.format.GPX(),
+            let vectorSource = new olVectorSource({
+                format: new olGPXFormat(),
                 url: url,
                 wrapX: false
             });
 
-            let vectorLayer = new ol.layer.Vector({
+            let vectorLayer = new olVectorLayer({
                 source: vectorSource,
                 style: this.styleFunction
             });
@@ -127,4 +131,4 @@ class GpxChartSource extends ChartSourceBase{
     }
 }
 
-export default GpxChartSource;
+export default  GpxChartSource;

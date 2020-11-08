@@ -79,4 +79,4 @@ CenterDisplayWidget.propTypes={
     centerDistance:PropTypes.number,
     centerPosition: PropTypes.object
 };
-module.exports=CenterDisplayWidget;
+export default CenterDisplayWidget;

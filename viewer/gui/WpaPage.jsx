@@ -290,4 +290,4 @@ class WpaPage extends React.Component{
     }
 }
 
-module.exports=WpaPage;
+export default WpaPage;

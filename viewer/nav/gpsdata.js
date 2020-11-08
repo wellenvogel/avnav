@@ -231,4 +231,4 @@ GpsData.prototype.getStoreKeys=function(){
 };
 GpsData.getStoreKeys=GpsData.prototype.getStoreKeys;
 
-module.exports=GpsData;
+export default GpsData;

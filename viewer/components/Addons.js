@@ -64,7 +64,7 @@ const removeAddon=(name)=>{
     })
 };
 
-export default {
+export default  {
     readAddOns:readAddOns,
     findAddonByUrl:findAddonByUrl,
     updateAddon:updateAddon,

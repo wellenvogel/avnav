@@ -92,4 +92,4 @@ SoundHandler.propTypes={
     enabled: PropTypes.bool
 };
 
-module.exports=SoundHandler;
+export default SoundHandler;

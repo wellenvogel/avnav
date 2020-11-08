@@ -120,4 +120,4 @@ ExternalWidget.editableParameters={
     unit:true
 };
 
-module.exports=ExternalWidget;
+export default ExternalWidget;

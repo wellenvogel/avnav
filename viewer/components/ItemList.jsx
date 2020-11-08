@@ -154,4 +154,4 @@ ItemList.propTypes={
         onSortEnd:      PropTypes.func
 };
 
-module.exports=ItemList;
+export default ItemList;
