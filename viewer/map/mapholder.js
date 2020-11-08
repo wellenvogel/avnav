@@ -21,7 +21,9 @@ import helper from '../util/helper.js';
 import northImage from '../images/nadel_mit.png';
 import KeyHandler from '../util/keyhandler.js';
 import assign from 'object-assign';
-import ChartSource from './chartsource.js';
+import AvNavChartSource from './avnavchartsource.js';
+import GpxChartSource from './gpxchartsource.js';
+import CryptHandler from './crypthandler.js';
 
 
 const PSTOPIC="mapevent";
@@ -190,29 +192,6 @@ const MapHolder=function(){
     this._chartEntry={};
 
     /**
-     * the urls for token scripts already loaded
-     * @type {{}}
-     * @private
-     */
-    this._loadedTokenScripts={};
-
-    /**
-     * heartbeat timer functions for crypto support
-     * @type {undefined}
-     * @private
-     */
-    this._heartbeatFunctions={};
-    this._lastHeartbeat=0;
-
-    /**
-     * an object of encrypt functions
-     * teh keys being the chart urls
-     * @type {object}
-     * @private
-     */
-    this._encryptFunctions={};
-
-    /**
      * last div used in loadMap
      * @type {undefined}
      * @private
@@ -353,21 +332,59 @@ MapHolder.prototype.loadMap=function(div){
             resolve(0);
             return;
         }
-        this.resetHartbeats();
-        let chartSource=new ChartSource(this,this._chartEntry);
+        CryptHandler.resetHartbeats();
+        let chartSource=new AvNavChartSource(this,this._chartEntry);
+        /**
+         * finally prepare all layer sources and when done
+         * create the map
+         * @param overlayLayers
+         */
         let createMap=(overlayLayers)=>{
-            chartSource.prepare()
-                .then((layers)=>{
-                    self.initMap(div,layers,chartSource.getChartBase(),overlayLayers);
-                    self.setBrightness(globalStore.getData(keys.properties.nightMode) ?
-                    globalStore.getData(keys.properties.nightChartFade, 100) / 100
-                        : 1);
-                    this._url = url;
-                    this._chartbase = chartBase;
-                    this._sequence = sequence;
-                    resolve(1);
-                })
-                .catch((error)=>{reject(error);})
+            let sources=[];
+            let readyCount=0;
+            sources.push(chartSource);
+            for (let k in overlayLayers){
+                let overlaySource=new GpxChartSource(this,{
+                    url: "/overlays/"+overlayLayers[k].name,
+                    iconBase: overlayLayers[k].icons?"/overlays/icons/"+overlayLayers[k].icons:undefined
+                });
+                sources.push(overlaySource);
+            }
+            //now trigger all prepares
+            for (let k in sources){
+                sources[k].prepare()
+                    .then(()=>{
+                        //check if all are ready now...
+                        readyCount++;
+                        let ready=true;
+                        for (let idx in sources){
+                            if (!sources[idx].isReady()){
+                                ready=false;
+                                break;
+                            }
+                        }
+                        if (ready){
+                            let overlayLayers=[];
+                            for (let ovi=1;ovi<sources.length;ovi++){
+                                overlayLayers=overlayLayers.concat(sources[ovi].getLayers());
+                            }
+                            self.initMap(div,chartSource.getLayers(),chartSource.getChartBase(),overlayLayers);
+                            self.setBrightness(globalStore.getData(keys.properties.nightMode) ?
+                            globalStore.getData(keys.properties.nightChartFade, 100) / 100
+                                : 1);
+                            this._url = url;
+                            this._chartbase = chartBase;
+                            this._sequence = sequence;
+                            resolve(1);
+                        }
+                        else{
+                            if (readyCount >= sources.length){
+                                reject("internal error: not all sources are ready");
+                            }
+                        }
+                    })
+                    .catch((error)=>{reject(error)});
+            }
         };
         let overlayParam = {
             request: 'api',
@@ -380,7 +397,7 @@ MapHolder.prototype.loadMap=function(div){
             createMap(overlayList);
         })
             .catch((error)=> {
-                createMap();
+                createMap([]);
             })
 
     });
@@ -426,74 +443,6 @@ MapHolder.prototype.getBaseLayer=function(){
 
 };
 
-MapHolder.prototype.getGpxLayer=function(url,iconBase){
-    let self=this;
-    let styleMap={};
-    var styles = {
-        'Point': new ol.style.Style({
-            image: new ol.style.Circle({
-                fill: new ol.style.Fill({
-                    color: 'rgba(255,255,0,0.4)',
-                }),
-                radius: 5,
-                stroke: new ol.style.Stroke({
-                    color: '#ff0',
-                    width: 1,
-                }),
-            }),
-        }),
-        'LineString': new ol.style.Style({
-            stroke: new ol.style.Stroke({
-                color: '#f00',
-                width: 3,
-            }),
-        }),
-        'MultiLineString': new ol.style.Style({
-            stroke: new ol.style.Stroke({
-                color: '#0f0',
-                width: 3,
-            }),
-        }),
-    };
-
-    var styleFunction = function(feature,resolution) {
-
-        let type=feature.getGeometry().getType();
-        if (type == 'Point' && iconBase){
-            let sym=feature.get('sym');
-            if (sym){
-                if (! sym.match(/\./)) sym+=".png";
-                if (!styleMap[sym]) {
-                    let style = new ol.style.Style({
-                        image: new ol.style.Icon({
-                            src: iconBase + "/" + sym,
-                            //scale: 3
-                        })
-                    });
-                    styleMap[sym] = style;
-                }
-                let rt=styleMap[sym];
-                let scale=self.olmap.getView().getResolutionForZoom(13)/resolution;
-                if (scale > 1) scale=1;
-                rt.getImage().setScale(scale);
-                return rt;
-            }
-        }
-        return styles[feature.getGeometry().getType()];
-    };
-    var vectorSource = new ol.source.Vector({
-        format: new ol.format.GPX(),
-        url: url,
-        wrapX: false
-    });
-
-    var vectorLayer = new ol.layer.Vector({
-        source: vectorSource,
-        style: styleFunction
-    });
-    return vectorLayer;
-
-};
 
 MapHolder.prototype.getMapOutlineLayer = function (layers) {
     let style = new ol.style.Style({
@@ -557,15 +506,7 @@ MapHolder.prototype.initMap=function(div,layers,baseurl,overlayList){
     }
     for (let oi in overlayList){
         let overlay=overlayList[oi];
-        if (! overlay.name) continue;
-        if (overlay.name.match(/\.gpx$/)){
-            let iconurl=undefined;
-            let url="/overlays/"+overlay.name; //TODO: escape
-            if (overlay.icons){
-                iconurl="/overlays/icons/"+overlay.icons
-            }
-            layersreverse.push(self.getGpxLayer(url,iconurl));
-        }
+        layersreverse.push(overlay);
     }
     this.mapMinZoom=this.minzoom;
     let hasBaseLayers=globalStore.getData(keys.properties.layers.base,true);
@@ -705,14 +646,8 @@ MapHolder.prototype.timerFunction=function(){
         required:keys.map.requiredZoom,
         current:keys.map.currentZoom
     });
-    let now=(new Date()).getTime();
-    if ((now - this._lastHeartbeat) >= 20000) {
-        this._lastHeartbeat = now;
-        for (let k in this._heartbeatFunctions) {
-            this._heartbeatFunctions[k]();
-        }
-    }
     let self=this;
+    let now=(new Date()).getTime();
     if (this._lastSequenceQuery < (now -5000)){
         this._lastSequenceQuery=now;
         if (this._chartEntry && this._chartEntry.url && this._lastMapDiv && this._sequence !== undefined) {
@@ -957,67 +892,6 @@ MapHolder.prototype.checkAutoZoom=function(opt_force){
     }
 };
 
-MapHolder.prototype.createOrActivateEncrypt=function(chartKey,tokenUrl,opt_tokenFunction){
-    let self=this;
-    return new Promise((resolve,reject)=>{
-        let scriptId=opt_tokenFunction;
-        if (! scriptId) scriptId="tokenHandler"+(new Date()).getTime();
-        if (! this._loadedTokenScripts[tokenUrl]){
-            base.log("load new tokenhandler "+tokenUrl);
-            let scriptel=document.createElement("script");
-            scriptel.setAttribute("type","text/javascript");
-            document.getElementsByTagName("head")[0].appendChild(scriptel);
-            scriptel.setAttribute("id",scriptId);
-            scriptel.onload=()=>{
-                base.log("token handler "+scriptId+" loaded");
-                this._loadedTokenScripts[tokenUrl]=1;
-                let baseObject=window.avnav[scriptId];
-                if (! baseObject || ! baseObject.heartBeat){
-                    reject("unable to install crypto handler");
-                    return;
-                }
-                baseObject.heartBeat()
-                    .then((res)=>{
-                        self._encryptFunctions[chartKey]=baseObject.encryptUrl;
-                        self._heartbeatFunctions[chartKey]=baseObject.heartBeat;
-                        resolve({
-                            encryptFunction:baseObject.encryptUrl
-                        });
-                        return;
-                    })
-                    .catch((err)=> {
-                        reject("error initializing chart access: " + err);
-                        return;
-                    });
-            };
-            scriptel.setAttribute("src",tokenUrl);
-        }
-        else{
-            let baseObject=window.avnav[scriptId];
-            //script already loaded
-            if (! baseObject || ! baseObject.heartBeat){
-                reject("unable to install crypto handler");
-            }
-            baseObject.heartBeat()
-                .then((res)=>{
-                    self._encryptFunctions[chartKey]=baseObject.encryptUrl;
-                    self._heartbeatFunctions[chartKey]=baseObject.heartBeat;
-                    resolve({
-                        encryptFunction:baseObject.encryptUrl
-                    });
-                    return;
-                })
-                .catch((err)=> {
-                    reject("error initializing chart access: " + err);
-                    return;
-                });
-        }
-    });
-};
-MapHolder.prototype.resetHartbeats=function(){
-    this._encryptFunctions={};
-    this._heartbeatFunctions={};
-};
 
 /**
  * transforms a point from EPSG:4326 to map projection
