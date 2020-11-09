@@ -180,7 +180,8 @@ AisLayer.prototype.setStyles=function(){
         stroke: '#fff',
         color: '#000',
         width: 3,
-        font: globalStore.getData(keys.properties.aisTextSize)+'px Calibri,sans-serif',
+        fontSize: globalStore.getData(keys.properties.aisTextSize),
+        fontBase: 'Calibri,sans-serif',
         offsetY: 15
     };
     this.targetStyle={

@@ -118,7 +118,7 @@ class AisInfoPage extends React.Component{
         let drawing=new Drawing({
             coordToPixel:(p)=>{return p;},
             pixelToCoord:(p)=>{return p;}
-        });
+        },globalStore.getData(keys.properties.style.useHdpi,false));
         let ctx=canvas.getContext('2d');
         drawing.setContext(ctx);
         let rect=canvas.getBoundingClientRect();

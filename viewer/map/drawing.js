@@ -35,14 +35,13 @@ DrawingPositionConverter.prototype.pixelToCoord=function(pixel){
  * @param {DrawingPositionConverter} converter
  * @param {number} opt_ratio - device pixel ratio
  */
-export const Drawing=function(converter,opt_ratio){
+export const Drawing=function(converter,opt_useHdpi){
     /**
      * the device pixel ratio
      * @private
      * @type {number}
      */
     this.devPixelRatio=1;
-    if (opt_ratio) this.devPixelRatio=opt_ratio;
     /**
      * the global rotation - will be added to rotations
      * if rotateWithView is set
@@ -61,7 +60,17 @@ export const Drawing=function(converter,opt_ratio){
      * @type {CanvasRenderingContext2D}
      */
     this.context=undefined;
+    /**
+     * whether to convert font sizes and line width to hdpi (i.e. pixel ratio)
+     * @private
+     * @type {*|boolean}
+     */
+    this.useHdpi=opt_useHdpi||false;
 
+};
+
+Drawing.prototype.setUseHdpi=function(val){
+    this.useHdpi=val||false;
 };
 
 /**
@@ -255,19 +264,24 @@ Drawing.prototype.drawLineToContext=function(points,opt_style){
     if (opt_style && opt_style.arrow){
        if (typeof opt_style.arrow === "object"){
            try{
-               arrowStyle={}
+               arrowStyle={};
                arrowStyle.width=opt_style.arrow.width||(this.context.lineWidth||1)*3;
                arrowStyle.length=opt_style.arrow.length||(this.context.lineWidth||1)*8;
                arrowStyle.offset=opt_style.arrow.offset||10;
                arrowStyle.open=opt_style.arrow.open||false;
-           } catch (e){;}
+           } catch (e){}
        } else{
-           arrowStyle={}
+           arrowStyle={};
            arrowStyle.width=(this.context.lineWidth||1)*3;
            arrowStyle.length=(this.context.lineWidth||1)*8;
            arrowStyle.offset=10;
            arrowStyle.open=false;
        }
+        if (this.useHdpi){
+            arrowStyle.width*=this.devPixelRatio;
+            arrowStyle.length*=this.devPixelRatio;
+            //arrowStyle.offset*=this.devPixelRatio;
+        }
     }
     for (i=1;i<points.length;i++){
         p=this.pointToCssPixel(points[i]);
@@ -315,7 +329,8 @@ Drawing.prototype.drawBubbleToContext=function(point,radius,opt_style){
  * @param {olCoordinate} point
  * @param {string} text
  * @param opt_styles - properties
- *      font: the text font
+ *      fontBase: the text font
+ *      fontSize: the size in px
  *      color: the text color
  *      stroke: text stroke - either stroke or color (color will win)
  *      width: text width
@@ -337,13 +352,17 @@ Drawing.prototype.drawTextToContext=function(point,text,opt_styles){
     let dp=this.pixelToDevice(rt);
     let offset=[0,0];
     if (opt_styles) {
-        if (opt_styles.font) this.context.font = opt_styles.font;
+        if (opt_styles.fontBase) {
+            let fontStyle=opt_styles.fontSize||10;
+            if (this.useHdpi) fontStyle*=this.devPixelRatio;
+            this.context.font = fontStyle+"px "+opt_styles.fontBase;
+        }
         if (opt_styles.color) this.context.fillStyle = opt_styles.color;
         if (opt_styles.stroke) {
             doStroke = true;
             this.context.strokeStyle = opt_styles.stroke;
         }
-        if (opt_styles.width)this.context.lineWidth = opt_styles.width;
+        if (opt_styles.width)this.context.lineWidth = this.useHdpi?opt_styles.width*this.devPixelRatio:opt_styles.width;
         if (opt_styles.rotateWithView) noRotate=false;
         if (opt_styles.fixX !== undefined) {
             dp[0]=opt_styles.fixX*this.devPixelRatio;
@@ -445,7 +464,7 @@ Drawing.prototype.setRotation=function(angle){
 Drawing.prototype.setLineStyles=function(opt_style){
     if (opt_style){
         if (opt_style.color) this.context.strokeStyle=opt_style.color;
-        if (opt_style.width) this.context.lineWidth=opt_style.width;
+        if (opt_style.width) this.context.lineWidth=this.useHdpi?opt_style.width*this.devPixelRatio:opt_style.width;
         if (opt_style.cap) this.context.lineCap=opt_style.cap;
         if (opt_style.join) this.context.lineJoin=opt_style.join;
     }

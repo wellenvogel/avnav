@@ -129,7 +129,7 @@ const MapHolder=function(){
      * @private
      * @type {Drawing}
      */
-    this.drawing=new Drawing(this);
+    this.drawing=new Drawing(this,globalStore.getData(keys.properties.style.useHdpi,false));
 
     this.northImage=new Image();
     this.northImage.src=northImage;
@@ -164,6 +164,7 @@ const MapHolder=function(){
         self._chartbase=undefined;
         self._url=undefined;
         self._sequence=undefined;
+        self.drawing.setUseHdpi(globalStore.getData(keys.properties.style.useHdpi,false));
     });
     this.editMode=new Callback(()=>{
         let isEditing=globalStore.getData(keys.gui.global.layoutEditing);
@@ -759,7 +760,8 @@ MapHolder.prototype.drawGrid=function() {
     let drawText=this.drawing.getRotation()?false:true;
     let textStyle={
         color: 'grey',
-        font: '12px Calibri,sans-serif',
+        fontSize: 12,
+        fontBase: 'Calibri,sans-serif',
         offsetY:7, //should compute this from the font...
         fixY:0
     };

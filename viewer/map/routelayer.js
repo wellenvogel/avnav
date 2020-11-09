@@ -144,7 +144,8 @@ RouteLayer.prototype.setStyle=function(opt_change) {
         stroke: '#fff',
         color: '#000',
         width: 3,
-        font: globalStore.getData(keys.properties.routingTextSize)+'px Calibri,sans-serif',
+        fontSize: globalStore.getData(keys.properties.routingTextSize),
+        fontBase: 'Calibri,sans-serif',
         offsetY: 15
     };
 

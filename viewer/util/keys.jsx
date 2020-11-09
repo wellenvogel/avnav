@@ -375,7 +375,8 @@ let keys={
             aisNearestColor: new Property('#70F3AF', "Nearest", PropertyType.COLOR),
             aisTrackingColor: new Property('#CAD5BE', "Tracking", PropertyType.COLOR),
             routeApproachingColor: new Property('#FA584A', "Approach", PropertyType.COLOR),
-            widgetMargin: new Property(3, "Widget Margin(px)", PropertyType.RANGE, [1, 20])
+            widgetMargin: new Property(3, "Widget Margin(px)", PropertyType.RANGE, [1, 20]),
+            useHdpi: new Property(false,"Increase Fonts on High Res",PropertyType.CHECKBOX)
         }
 
     }
