@@ -294,6 +294,7 @@ let keys={
         navCircle1Radius: new Property(300, "Circle 1 Radius(m)", PropertyType.RANGE, [0, 5000, 10]),
         navCircle2Radius: new Property(1000, "Circle 2 Radius(m)", PropertyType.RANGE, [0, 5000, 10]),
         navCircle3Radius: new Property(0, "Circle 3 Radius(m)", PropertyType.RANGE, [0, 10000, 10]),
+        boatIconScale: new Property(1,"Boat Icon Scale",PropertyType.RANGE, [0.5,5,0.1]),
         windScaleAngle: new Property(50, "red/green Angle Wind", PropertyType.RANGE, [5, 90, 1]),
         anchorWatchDefault: new Property(300, "AnchorWatch(m)", PropertyType.RANGE, [0, 1000, 1]),
         gpsXteMax: new Property(1, "XTE(nm)", PropertyType.RANGE, [0.1, 5, 0.1, 1]),
@@ -317,7 +318,6 @@ let keys={
         aisNormalImage: new Property(aisDefaultImage),
         aisNearestImage: new Property(aisNearestImage),
         aisWarningImage: new Property(aisWarningImage),
-        aisBrowserWorkaround: new Property(600, "Browser AisPage Workaround(ms)", PropertyType.RANGE, [0, 6000, 10]),
         statusQueryTimeout: new Property(3000), //ms
         networkTimeout: new Property(3000,"Network timeout(ms)",PropertyType.RANGE,[1000,10000,100]),
         wpaQueryTimeout: new Property(4000), //ms
