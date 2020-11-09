@@ -7,7 +7,7 @@ import PropTypes from 'prop-types';
 import Helper from '../util/helper.js';
 import Value from './Value.jsx';
 import GuiHelper from '../util/GuiHelpers.js';
-import ReactHtmlParser,{convertNodeToElement} from 'react-html-parser/src';
+import ReactHtmlParser,{convertNodeToElement} from 'react-html-parser/dist/react-html-parser.min.js';
 import base from '../base.js';
 
 

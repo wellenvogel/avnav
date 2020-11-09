@@ -45,6 +45,7 @@ var devtool="inline-source-map";
 var resolveAlias={
 
 };
+resolveAlias['React$']=__dirname+"/node_modules/react/index.js";
 if (isProduction) {
     devtool="";
 }
