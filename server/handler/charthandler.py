@@ -273,6 +273,13 @@ class AVNChartHandler(AVNWorker):
       handler.send_error(500,"Error: %s"%(traceback.format_exc()))
       return
 
+  def getChartKey(self,entry,prefix=None):
+    if prefix is None:
+      prefix=self.INT_PREFIX
+    name=entry.get('baseName')
+    if name is None:
+      name=entry.get('name')
+    return prefix+"@"+AVNUtil.clean_filename(name)
   def listCharts(self,httpHandler):
     chartbaseDir=self.chartDir
     if chartbaseDir is None:
@@ -289,8 +296,9 @@ class AVNChartHandler(AVNWorker):
              'canDownload': True,
              'scheme': chart['chart'].getScheme(),
              'sequence':chart['chart'].getChangeCount(),
-             'originalScheme': chart['chart'].getOriginalScheme()
+             'originalScheme': chart['chart'].getOriginalScheme(),
       }
+      entry['chartKey']=self.getChartKey(entry)
       data.append(entry)
     host = httpHandler.headers.get('host')
     hostparts = host.split(':')
@@ -299,7 +307,10 @@ class AVNChartHandler(AVNWorker):
       try:
         if cb is not None:
           ip=hostparts[0]
-          extList=cb(ip)
+          extList=[]
+          extList.extend(cb(ip))
+          for e in extList:
+            e['chartKey']=self.getChartKey(e,k)
           data.extend(extList)
       except:
         AVNLog.error("exception while querying charts from %s: %s",k,traceback.format_exc())
@@ -377,9 +388,10 @@ class AVNChartHandler(AVNWorker):
           return AVNUtil.getReturnData()
         if (command == "getOverlays"):
           url = AVNUtil.getHttpRequestParam(requestparam, "url", True)
+          chartKey = AVNUtil.getHttpRequestParam(requestparam, "chartKey", True)
           try:
             chartEntry = self.getChartFromUrl(url)
-            ovlname = os.path.join(self.chartDir, chartEntry['name'] + ".ovl")
+            ovlname = os.path.join(self.chartDir, chartKey + ".ovl")
           except Exception as e:
             AVNLog.debug("error querying overlays for %s:%s", url, e.message)
             return AVNUtil.getReturnData(data=[])

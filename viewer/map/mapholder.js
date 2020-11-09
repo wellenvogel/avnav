@@ -415,7 +415,8 @@ MapHolder.prototype.loadMap=function(div){
         let overlayParam = {
             request: 'api',
             type: 'chart',
-            url: chartSource.getChartKey(),
+            url: chartSource.getUrl(),
+            chartKey: chartSource.getChartKey(),
             command: 'getOverlays'
         };
         Requests.getJson("", {}, overlayParam)

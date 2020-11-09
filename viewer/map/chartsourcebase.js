@@ -82,6 +82,9 @@ class ChartSourceBase {
         if (this.mapholder !== other.mapholder) return false;
         return shallowcompare(this.chartEntry,other.chartEntry);
     }
+    getUrl(){
+        return this.chartEntry.url;
+    }
 
     getChartKey() {
         let chartBase = this.chartEntry.chartKey;
