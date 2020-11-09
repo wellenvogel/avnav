@@ -306,9 +306,11 @@ class AvnavChartSource extends ChartSourceBase{
             });
 
             rt.source = source;
-            let layer = new olTileLayer({
+            let layerOptions={
                 source: source
-            });
+            };
+            if (self.chartEntry.opacity !== undefined) layerOptions.opacity=parseFloat(self.chartEntry.opacity);
+            let layer = new olTileLayer(layerOptions);
             layer.avnavOptions = rt;
             ll.push(layer);
         });
