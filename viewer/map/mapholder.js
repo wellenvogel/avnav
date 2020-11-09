@@ -363,6 +363,20 @@ MapHolder.prototype.prepareSourcesAndCreate=function(newSources){
     });
 };
 
+MapHolder.prototype.createChartSource=function(description,opt_forceChart){
+    if (opt_forceChart || description.type=='chart'){
+        return new AvNavChartSource(this,description);
+    }
+    if (! description.url){
+        throw Error("missing url for overlay");
+    }
+    if (! description.url.match(/\.gpx$/)){
+        throw Error("only gpx overlays supported: "+description.url)
+    }
+    return new GpxChartSource(this,description);
+
+};
+
 MapHolder.prototype.loadMap=function(div){
     this._lastMapDiv=div;
     let self=this;
@@ -372,7 +386,7 @@ MapHolder.prototype.loadMap=function(div){
             reject("no map selected");
             return;
         }
-        let chartSource=new AvNavChartSource(this,this._chartEntry);
+        let chartSource=this.createChartSource(this._chartEntry,true);
         /**
          * finally prepare all layer sources and when done
          * create the map
@@ -408,16 +422,13 @@ MapHolder.prototype.loadMap=function(div){
             .then((overlays)=> {
                 let overlayList = overlays.data;
                 for (let k in overlayList){
-                    let overlaySource=new GpxChartSource(this,{
-                        url: "/overlays/"+overlayList[k].name,
-                        iconBase: overlayList[k].icons?"/overlays/icons/"+overlayList[k].icons:undefined
-                    });
+                    let overlaySource=this.createChartSource(overlayList[k]);
                     newSources.push(overlaySource);
                 }
                 checkChanges();
             })
             .catch((error)=> {
-                checkChanges();
+                reject("unable to query overlays:"+error);
             })
 
     });

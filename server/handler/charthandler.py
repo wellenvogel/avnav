@@ -377,10 +377,14 @@ class AVNChartHandler(AVNWorker):
           return AVNUtil.getReturnData()
         if (command == "getOverlays"):
           url = AVNUtil.getHttpRequestParam(requestparam, "url", True)
-          chartEntry = self.getChartFromUrl(url)
-          ovlname=os.path.join(self.chartDir,chartEntry['name']+".ovl")
+          try:
+            chartEntry = self.getChartFromUrl(url)
+            ovlname = os.path.join(self.chartDir, chartEntry['name'] + ".ovl")
+          except Exception as e:
+            AVNLog.debug("error querying overlays for %s:%s", url, e.message)
+            return AVNUtil.getReturnData(data=[])
           rt=[]
-          if os.path.exists(ovlname):
+          if ovlname is not None and os.path.exists(ovlname):
             with open(ovlname,"r") as f:
               rt=json.load(f)
           return AVNUtil.getReturnData(data=rt)

@@ -152,7 +152,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
     return True
 
 
-  def getPathFromUrl(self,url,handler=None):
+  def getPathFromUrl(self,url,handler=None,requestParam=None):
     if not url.startswith(self.getPrefix()):
       return None
     path = url[len(self.getPrefix()) + 1:]
@@ -193,7 +193,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
         return self.handleSpecialApiRequest(command,requestparam,kwargs.get('handler'))
     if type == 'path':
       handler=kwargs.get('handler')
-      return self.getPathFromUrl(subtype,handler=handler)
+      return self.getPathFromUrl(subtype,handler=handler,requestParam=requestparam)
 
     if type == "list":
       return self.handleList()
@@ -279,14 +279,14 @@ class AVNUserHandler(AVNDirectoryHandlerBase):
         with open(dest,"w") as fh:
           fh.write("{\n}\n")
 
-  def getPathFromUrl(self, url, handler=None):
+  def getPathFromUrl(self, url, handler=None,requestParam=None):
     if url.startswith(self.PREFIX):
       path=url[len(self.PREFIX)+1:]
       if path == 'user.js':
         fname=os.path.join(self.baseDir,path)
         if os.path.exists(fname) and handler is not None:
           return handler.sendJsFile(fname,self.PREFIX)
-    return super(AVNUserHandler, self).getPathFromUrl(url, handler)
+    return super(AVNUserHandler, self).getPathFromUrl(url, handler,requestParam)
 
 
 class AVNImagesHandler(AVNDirectoryHandlerBase):
@@ -309,26 +309,39 @@ class AVNOverlayHandler(AVNDirectoryHandlerBase):
     AVNDirectoryHandlerBase.__init__(self, param, "overlays")
     self.baseDir = AVNConfig.getDirWithDefault(self.param, 'overlayDir', "overlays")
 
-  def getPathFromUrl(self, url, handler=None):
+  def tryFallbackOrFail(self,requestParam,handler,error):
+    url=AVNUtil.getHttpRequestParam(requestParam,"fallback")
+    if url is None:
+      raise Exception(error)
+    rt=handler.server.tryExternalMappings(url,"",handler)
+    if rt is None:
+      raise Exception(error)
+    return rt
+
+  def getPathFromUrl(self, url, handler=None,requestParam=None):
     if url.startswith(self.ICONPREFIX):
       path=url[len(self.ICONPREFIX)+1:]
       parr=path.split("/")
       if len(parr) < 0 or len(parr) > 2:
-        raise Exception("invalid icon request %s"%url)
+        self.tryFallbackOrFail(requestParam,handler,"invalid icon request %s"%url)
       self.checkName(parr[0])
       if len(parr) == 1:
         self.checkName(parr[0])
         fname=os.path.join(self.baseDir,parr[0])
         return fname
       if not parr[0].endswith('.zip'):
-        raise Exception("icon file %s is no zip file"%parr[0])
+        return self.tryFallbackOrFail(requestParam,handler,"icon file %s is no zip file"%parr[0])
       zipname=os.path.join(self.baseDir,parr[0])
       if not os.path.exists(zipname):
-        raise Exception("zip file %s not found"%zipname)
+        return self.tryFallbackOrFail(requestParam,handler,"zip file %s not found"%zipname)
       zip=ZipFile(zipname)
-      entry=zip.getinfo(parr[1])
+      entry=None
+      try:
+        entry=zip.getinfo(parr[1])
+      except KeyError as e:
+        pass
       if entry is None:
-        raise Exception("no entry %s in %s"%(parr[1],zipname))
+        return self.tryFallbackOrFail(requestParam,handler,"no entry %s in %s"%(parr[1],zipname))
       handler.send_response(200)
       handler.send_header("Content-type", handler.getMimeType(parr[1]))
       handler.send_header("Content-Length", entry.file_size)
@@ -337,7 +350,7 @@ class AVNOverlayHandler(AVNDirectoryHandlerBase):
       handler.wfile.write(zip.read(entry))
       return True
     else:
-      return super(AVNOverlayHandler, self).getPathFromUrl(url, handler)
+      return super(AVNOverlayHandler, self).getPathFromUrl(url, handler,requestParam)
 
 
 avnav_handlerList.registerHandler(AVNOverlayHandler)

@@ -36,33 +36,7 @@ import {Vector as olVectorSource} from 'ol/source';
 import {Vector as olVectorLayer} from 'ol/layer';
 import {GPX as olGPXFormat} from 'ol/format';
 
-//TODO: styles...
-const styles = {
-    'Point': new olStyle({
-        image: new olCircle({
-            fill: new olFill({
-                color: 'rgba(255,255,0,0.4)',
-            }),
-            radius: 5,
-            stroke: new olStroke({
-                color: '#ff0',
-                width: 1,
-            }),
-        }),
-    }),
-    'LineString': new olStyle({
-        stroke: new olStroke({
-            color: '#f00',
-            width: 3,
-        }),
-    }),
-    'MultiLineString': new olStyle({
-        stroke: new olStroke({
-            color: '#0f0',
-            width: 3,
-        }),
-    }),
-};
+
 
 class GpxChartSource extends ChartSourceBase{
     /**
@@ -70,36 +44,95 @@ class GpxChartSource extends ChartSourceBase{
      * @param mapholer
      * @param chartEntry
      *        properties: url - the url of the gpx
-     *                    iconBase - the base url for icons (if points have a sym)
+     *                    icons - the base url for icons (if points have a sym)
+     *                    fallbackIcon - the url for an icon if sym not found (opt)
+     *                    minZoom - minimal zoom (opt)
+     *                    maxZoom - maximal zoom (opt)
+     *                    minScale - min zoom, lower zoom decrease symbol size (opt)
+     *                    maxScale - max zoom, higher zooms increase symbol size (opt)
+     *                    opacity - 0...1 (opt)
      */
     constructor(mapholer, chartEntry) {
         super(mapholer,chartEntry);
         this.styleMap={};
         this.styleFunction=this.styleFunction.bind(this);
+        let styleParam={
+            lineWidth:3,
+            lineColor: '#000000',
+            fillColor: 'rgba(255,255,0,0.4)',
+            strokeWidth: 3,
+            circleWidth: 10
+
+        };
+        if (typeof  chartEntry.styles === 'object'){
+            for (k in styleParam){
+                if (chartEntry.styles[k] !== undefined){
+                    styleParam[k]=chartEntry.styles[k];
+                }
+            }
+        }
+        this.styles = {
+            'Point': new olStyle({
+                image: new olCircle({
+                    fill: new olFill({
+                        color: styleParam.fillColor,
+                    }),
+                    radius: styleParam.circleWidth/2,
+                    stroke: new olStroke({
+                        color: styleParam.lineColor,
+                        width: styleParam.strokeWidth,
+                    })
+                })
+            }),
+            'LineString': new olStyle({
+                stroke: new olStroke({
+                    color: styleParam.lineColor,
+                    width: styleParam.lineWidth,
+                })
+            }),
+            'MultiLineString': new olStyle({
+                stroke: new olStroke({
+                    color: styleParam.lineColor,
+                    width: styleParam.lineWidth,
+                })
+            })
+        };
+    }
+    getSymbolUrl(sym){
+        if (! sym.match(/\./)) sym+=".png";
+        let url=this.chartEntry.icons + "/" + sym;
+        if (this.chartEntry.fallbackIcon) url+="?fallback="+encodeURIComponent(this.chartEntry.fallbackIcon);
+        return url;
     }
     styleFunction(feature,resolution) {
 
         let type=feature.getGeometry().getType();
-        if (type == 'Point' && this.chartEntry.iconBase){
+        if (type == 'Point' && this.chartEntry.icons){
             let sym=feature.get('sym');
             if (sym){
-                if (! sym.match(/\./)) sym+=".png";
                 if (!this.styleMap[sym]) {
                     let style = new olStyle({
                         image: new olIcon({
-                            src: this.chartEntry.iconBase + "/" + sym
+                            src: this.getSymbolUrl(sym)
                         })
                     });
                     this.styleMap[sym] = style;
                 }
                 let rt=this.styleMap[sym];
-                let scale=this.mapholder.olmap.getView().getResolutionForZoom(13)/resolution;
-                if (scale > 1) scale=1;
+                let view=this.mapholder.olmap.getView();
+                let scale=1;
+                let currentZoom=view.getZoom();
+                if (this.chartEntry.minScale && currentZoom < this.chartEntry.minScale){
+                    scale=1/Math.pow(2,this.chartEntry.minScale-currentZoom);
+                }
+                if (this.chartEntry.maxScale && currentZoom > this.chartEntry.maxScale){
+                    scale=Math.pow(2,currentZoom-this.chartEntry.maxScale);
+                }
                 rt.getImage().setScale(scale);
                 return rt;
             }
         }
-        return styles[feature.getGeometry().getType()];
+        return this.styles[feature.getGeometry().getType()];
     };
 
     prepareInternal() {
@@ -115,19 +148,16 @@ class GpxChartSource extends ChartSourceBase{
                 url: url,
                 wrapX: false
             });
-
-            let vectorLayer = new olVectorLayer({
+            let layerOptions={
                 source: vectorSource,
-                style: this.styleFunction
-            });
+                style: this.styleFunction,
+                opacity: this.chartEntry.opacity!==undefined?this.chartEntry.opacity:1
+            };
+            if (this.chartEntry.minZoom !== undefined) layerOptions.minZoom=this.chartEntry.minZoom;
+            if (this.chartEntry.maxZoom !== undefined) layerOptions.maxZoom=this.chartEntry.maxZoom;
+            let vectorLayer = new olVectorLayer(layerOptions);
             resolve([vectorLayer]);
         });
-    }
-
-
-    isEqual(other) {
-        if (!super.isEqual(other)) return false;
-        if (this.chartEntry.iconBase !== other.chartEntry.iconBase) return false;
     }
 }
 

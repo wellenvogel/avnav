@@ -30,6 +30,7 @@ import SocketServer
 import BaseHTTPServer
 import posixpath
 import urllib
+import urlparse
 
 import gemf_reader
 
@@ -239,13 +240,14 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     return (path,query)
 
   def tryExternalMappings(self,path,query,handler=None):
+    requestParam=requestParam=urlparse.parse_qs(query,True)
     for prefix in self.externalHandlers.keys():
       if path.startswith(prefix):
         # the external handler can either return a mapped path (already
         # converted in an OS path - e.g. using plainUrlToPath)
         # or just do the handling by its own and return None
         try:
-          return self.externalHandlers[prefix].handleApiRequest('path', path, query, server=self,handler=handler)
+          return self.externalHandlers[prefix].handleApiRequest('path', path, requestParam, server=self,handler=handler)
         except:
           AVNLog.error("external mapping failed: %s",traceback.format_exc())
         return None

@@ -31,6 +31,7 @@ import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import Helper from '../util/helper.js';
 import CryptHandler from './crypthandler.js';
+import shallowcompare from '../util/shallowcompare.js';
 
 
 class ChartSourceBase {
@@ -46,7 +47,12 @@ class ChartSourceBase {
      */
     constructor(mapholder, chartEntry) {
         this.mapholder = mapholder;
-        this.chartEntry = chartEntry;
+        this.chartEntry = assign({},chartEntry);
+        for (let k in this.chartEntry){
+            if (typeof this.chartEntry[k] === 'function'){
+                delete this.chartEntry[k];
+            }
+        }
         this.encryptFunction = undefined;
         this.isReadyFlag = false;
         this.layers = [];
@@ -72,14 +78,9 @@ class ChartSourceBase {
     }
 
     isEqual(other){
+
         if (this.mapholder !== other.mapholder) return false;
-        if (! this.chartEntry || ! other.chartEntry) return false;
-        if (this.chartEntry.url !== other.chartEntry.url) return false;
-        if (this.getChartKey() !== other.getChartKey()) return false;
-        if (this.chartEntry.sequence !== other.chartEntry.sequence) return false;
-        if (this.chartEntry.tokenUrl !== other.chartEntry.tokenUrl) return false;
-        if (this.chartEntry.tokenFunction !== other.chartEntry.tokenFunction) return false;
-        return true;
+        return shallowcompare(this.chartEntry,other.chartEntry);
     }
 
     getChartKey() {
