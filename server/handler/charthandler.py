@@ -76,6 +76,7 @@ class AVNChartHandler(AVNWorker):
   """
   PATH_PREFIX="/chart"
   INT_PREFIX="int" #prefix for mbtiles,gemf
+  DEFAULT_CHART_CFG="default.cfg"
   def __init__(self,param):
     self.param=param
     self.chartlist={}
@@ -273,14 +274,54 @@ class AVNChartHandler(AVNWorker):
       handler.send_error(500,"Error: %s"%(traceback.format_exc()))
       return
 
-  def getChartKey(self,entry,prefix=None):
+  def getChartConfigKey(self,entry,prefix=None):
     if prefix is None:
       prefix=self.INT_PREFIX
     name=entry.get('baseName')
     if name is None:
       name=entry.get('name')
     return prefix+"@"+AVNUtil.clean_filename(name)
-  def listCharts(self,httpHandler):
+
+  def getChartConfigFile(self,entry,prefix=None):
+    cfgkey=self.getChartConfigKey(entry,prefix)
+    cfgfile=os.path.join(self.chartDir,cfgkey+".cfg")
+    if not os.path.exists(cfgfile):
+      return None
+    return cfgfile
+
+  def getChartKey(self,entry,prefix=None):
+    if prefix is None:
+      prefix=self.INT_PREFIX
+    name=entry.get('name')
+    return prefix+"@"+name
+
+  def getChartByKey(self,chartKey,requestIp="localhost",returnTuple=True):
+    '''
+    find a chart by given key
+    @param chartKey:
+    @param requestIp:
+    @return: a tuple (prefix,chart) or None
+    '''
+    if chartKey is None:
+      return
+    ckp=chartKey.split("@",1)
+    if len(ckp) != 2:
+      AVNLog.debug("invalid chart key %s",chartKey)
+      return
+    if ckp[0] == self.INT_PREFIX:
+      #internal chart
+      for chart in self.chartlist.values():
+        if chart['name'] == ckp[1]:
+          return (ckp[0],chart) if returnTuple else chart
+      return
+    provider=self.externalProviders.get(ckp[0])
+    if provider is None:
+      return
+    for chart in provider(requestIp):
+      if chart['name'] == ckp[1]:
+        return (ckp[0],chart) if returnTuple else chart
+
+  def listCharts(self,httpHandler,hostip):
     chartbaseDir=self.chartDir
     if chartbaseDir is None:
       return AVNUtil.getReturnData(error="no chart dir")
@@ -300,15 +341,12 @@ class AVNChartHandler(AVNWorker):
       }
       entry['chartKey']=self.getChartKey(entry)
       data.append(entry)
-    host = httpHandler.headers.get('host')
-    hostparts = host.split(':')
     for k in self.externalProviders.keys():
       cb=self.externalProviders[k]
       try:
         if cb is not None:
-          ip=hostparts[0]
           extList=[]
-          extList.extend(cb(ip))
+          extList.extend(cb(hostip))
           for e in extList:
             e['chartKey']=self.getChartKey(e,k)
           data.extend(extList)
@@ -329,6 +367,11 @@ class AVNChartHandler(AVNWorker):
     if importer is not None:
       importer.deleteImport(chartEntry['name'])
     chartEntry['chart'].deleteFiles()
+    #for our own files we can safely delete the config...
+    #as it is unique for a chart
+    cfgFile=self.getChartConfigFile(chartEntry)
+    if cfgFile is not None:
+      os.unlink(cfgFile)
     return AVNUtil.getReturnData()
 
   def getHandledCommands(self):
@@ -339,13 +382,20 @@ class AVNChartHandler(AVNWorker):
 
   def handleApiRequest(self, type, subtype, requestparam, **kwargs):
     handler = kwargs.get('handler')
+    hostip='localhost'
+    try:
+      host = handler.headers.get('host')
+      hostparts = host.split(':')
+      hostip=hostparts[0]
+    except:
+      pass
     if type == 'path':
       if handler is None:
         AVNLog.error("chartrequest without handler")
         return None
       return self.handleChartRequest(subtype,handler)
     if type == "list":
-      return self.listCharts(handler)
+      return self.listCharts(handler,hostip)
     if type == "delete":
       url=AVNUtil.getHttpRequestParam(requestparam,"url",True)
       self.handleDelete(url)
@@ -365,14 +415,33 @@ class AVNChartHandler(AVNWorker):
       handler=kwargs.get('handler')
       if handler is None:
         return AVNUtil.getReturnData(error="no handler")
-      name=AVNUtil.clean_filename(AVNUtil.getHttpRequestParam(requestparam,"name",True))
-      if not ( name.endswith(".gemf") or name.endswith(".mbtiles") or name.endswith(".xml")) :
-        return AVNUtil.getReturnData(error="invalid filename")
-      if self.chartlist.get(name) is not None:
-        return AVNUtil.getReturnData(error="already exists")
-      fname=os.path.join(self.chartDir,name)
-      handler.writeFileFromInput(fname,kwargs.get('flen'),False)
-      self.listChanged()
+      name=AVNUtil.getHttpRequestParam(requestparam, "name", True)
+      if name.endswith(".cfg"):
+        nameparts=name.split("@",1)
+        if len(nameparts) != 2:
+          return AVNUtil.getReturnData(error="invalid filename")
+        cleanName=AVNUtil.clean_filename(nameparts[1])
+        if cleanName != nameparts[1]:
+          return AVNUtil.getReturnData(error="invalid filename")
+        if nameparts[0] != self.INT_PREFIX and self.externalProviders[nameparts[0]] is None:
+          return AVNUtil.getReturnData(error="chart provider %s not available"%nameparts[0])
+        fname = os.path.join(self.chartDir, name)
+        if os.path.exists(fname):
+          overwrite=AVNUtil.getHttpRequestParam(requestparam,"overwrite")
+          if overwrite is not None and overwrite.lower() == 'true':
+            pass
+          else:
+            return AVNUtil.getReturnData(error="already exists")
+        handler.writeFileFromInput(fname, kwargs.get('flen'), False)
+      else:
+        name=AVNUtil.clean_filename(name)
+        if not ( name.endswith(".gemf") or name.endswith(".mbtiles") or name.endswith(".xml")) :
+          return AVNUtil.getReturnData(error="invalid filename")
+        if self.chartlist.get(name) is not None:
+          return AVNUtil.getReturnData(error="already exists")
+        fname=os.path.join(self.chartDir,name)
+        handler.writeFileFromInput(fname,kwargs.get('flen'),False)
+        self.listChanged()
       return AVNUtil.getReturnData()
 
     if type == "api":
@@ -386,19 +455,48 @@ class AVNChartHandler(AVNWorker):
           if changed:
             chartEntry['avnav']=chartEntry['chart'].getAvnavXml(self.getIntParam('upzoom'))
           return AVNUtil.getReturnData()
-        if (command == "getOverlays"):
-          url = AVNUtil.getHttpRequestParam(requestparam, "url", True)
+        if (command == "getConfig"):
           chartKey = AVNUtil.getHttpRequestParam(requestparam, "chartKey", True)
-          try:
-            chartEntry = self.getChartFromUrl(url)
-            ovlname = os.path.join(self.chartDir, chartKey + ".ovl")
-          except Exception as e:
-            AVNLog.debug("error querying overlays for %s:%s", url, e.message)
-            return AVNUtil.getReturnData(data=[])
-          rt=[]
+          expandCharts = AVNUtil.getHttpRequestFlag(requestparam, "expandCharts",False)
+          mergeDefault = AVNUtil.getHttpRequestFlag(requestparam,"mergeDefault",False)
+          chartEntryAnPrefix = self.getChartByKey(chartKey)
+          if chartEntryAnPrefix is None:
+            AVNLog.debug("chart not found for key %s", chartKey)
+            return AVNUtil.getReturnData(data={})
+          ovlname = self.getChartConfigFile(chartEntryAnPrefix[1],chartEntryAnPrefix[0])
+          rt={}
+          default= {}
+          if mergeDefault:
+            defaultCfg=os.path.join(self.chartDir,self.DEFAULT_CHART_CFG)
+            if (os.path.exists(defaultCfg)):
+              with open(defaultCfg,"r") as f:
+                default=json.load(f)
           if ovlname is not None and os.path.exists(ovlname):
             with open(ovlname,"r") as f:
               rt=json.load(f)
+              useDefault=rt.get('useDefault')
+              if (useDefault is None or useDefault) and mergeDefault:
+                merged={}
+                merged.update(default)
+                merged.update(rt)
+                merged['overlays']=default.get('overlays') or []
+                merged['overlays'].extend(rt.get('overlays') or [])
+                rt=merged
+              if expandCharts:
+                noMerge=['type','chartKey','opacity']
+                overlays = rt.get('overlays')
+                if overlays is not None:
+                  for overlay in overlays:
+                    if overlay.get('type') == 'chart':
+                      #update with the final chart config
+                      overlay.update(
+                        dict(filter(
+                          lambda (k,v): k not in noMerge ,
+                          ( self.getChartByKey(overlay.get('chartKey'), hostip, returnTuple=False)or {})
+                            .items())))
+
+          else:
+            rt=default
           return AVNUtil.getReturnData(data=rt)
       except Exception as e:
         return AVNUtil.getReturnData(error=e.message)

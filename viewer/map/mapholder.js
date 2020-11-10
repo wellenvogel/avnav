@@ -362,9 +362,22 @@ MapHolder.prototype.prepareSourcesAndCreate=function(newSources){
         }
     });
 };
+/**
+ *
+ * @param description an object containing:
+ *      type: chart || overlay
+ *      type: chart:
+ *          chartKey
+ *          chart: (type chart only) the final chart description
+ *      type overlay:
+ *          url (mandatory)
+ *          other parameter depending on source
+ *
+ * @returns {*}
+ */
 
-MapHolder.prototype.createChartSource=function(description,opt_forceChart){
-    if (opt_forceChart || description.type=='chart'){
+MapHolder.prototype.createChartSource=function(description){
+    if (description.type=='chart'){
         return new AvNavChartSource(this,description);
     }
     if (! description.url){
@@ -386,7 +399,10 @@ MapHolder.prototype.loadMap=function(div){
             reject("no map selected");
             return;
         }
-        let chartSource=this.createChartSource(this._chartEntry,true);
+        let chartSource=this.createChartSource(assign({type:'chart'},this._chartEntry));
+        if (! chartSource){
+            reject("chart "+this._chartEntry.name+" not found");
+        }
         /**
          * finally prepare all layer sources and when done
          * create the map
@@ -412,19 +428,27 @@ MapHolder.prototype.loadMap=function(div){
             this.renderTo(div);
             resolve(0);
         };
-        let overlayParam = {
+        let cfgParam = {
             request: 'api',
             type: 'chart',
             url: chartSource.getUrl(),
             chartKey: chartSource.getChartKey(),
-            command: 'getOverlays'
+            command: 'getConfig',
+            expandCharts: true,
+            mergeDefault: true
         };
-        Requests.getJson("", {}, overlayParam)
-            .then((overlays)=> {
-                let overlayList = overlays.data;
-                for (let k in overlayList){
-                    let overlaySource=this.createChartSource(overlayList[k]);
-                    newSources.push(overlaySource);
+        Requests.getJson("", {}, cfgParam)
+            .then((config)=> {
+                config = config.data;
+                if (! config){
+                    checkChanges();
+                    return;
+                }
+                if (config.overlays) {
+                    for (let k in config.overlays) {
+                        let overlaySource = this.createChartSource(config.overlays[k]);
+                        if (overlaySource) newSources.push(overlaySource);
+                    }
                 }
                 checkChanges();
             })

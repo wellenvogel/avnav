@@ -347,6 +347,13 @@ class AVNUtil():
     return rt
 
   @classmethod
+  def getHttpRequestFlag(cls, requestparam, name,default=False, mantadory=False):
+    flagString=cls.getHttpRequestParam(requestparam,name,mantadory)
+    if flagString is None:
+      return default
+    return flagString.lower() == 'true'
+
+  @classmethod
   def getReturnData(cls,error=None,**kwargs):
     if error is not None:
       rt= {'status':error}
