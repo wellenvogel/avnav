@@ -348,9 +348,54 @@ const Dialogs = {
 
     hide: function(){
         removeAll();
+    },
+
+    nestedHelper: function(thisref,stateName){
+        if (! stateName) stateName="dialog";
+        let rt={
+            showDialog:(Dialog)=>{
+                let state={};
+                state[stateName]=(props)=>{
+                    return(
+                        <Dialog
+                            {...props}
+                            closeCallback={()=>{
+                                let state={};
+                                state[stateName]=undefined;
+                                thisref.setState(state);
+                            }}
+                            />
+                    )
+                };
+                thisref.setState(state);
+            },
+            hideDialog:()=>{
+                let state={};
+                state[stateName]=undefined;
+                thisref.setState(state);
+            },
+            filterState:(state)=>{
+                let rt=assign({},state);
+                delete rt[stateName];
+                return rt;
+            },
+            getRender(){
+                if (!thisref.state[stateName]) return null;
+                return(
+                    <DialogDisplay
+                        className="nested"
+                        content={thisref.state[stateName]}
+                        onClick={()=>{this.hideDialog()}}
+                        />
+                );
+            }
+        };
+        rt.showDialog=rt.showDialog.bind(rt);
+        rt.hideDialog=rt.hideDialog.bind(rt);
+        rt.filterState=rt.filterState.bind(rt);
+        rt.getRender=rt.getRender.bind(rt);
+        return rt;
     }
-
-
 
 };
 

@@ -432,7 +432,7 @@ class AVNChartHandler(AVNWorker):
             pass
           else:
             return AVNUtil.getReturnData(error="already exists")
-        handler.writeFileFromInput(fname, kwargs.get('flen'), False)
+        handler.writeFileFromInput(fname, kwargs.get('flen'), True)
       else:
         name=AVNUtil.clean_filename(name)
         if not ( name.endswith(".gemf") or name.endswith(".mbtiles") or name.endswith(".xml")) :
@@ -497,6 +497,7 @@ class AVNChartHandler(AVNWorker):
 
           else:
             rt=default
+          rt['name']=self.getChartConfigKey(chartEntryAnPrefix[1],chartEntryAnPrefix[0])+".cfg"
           return AVNUtil.getReturnData(data=rt)
       except Exception as e:
         return AVNUtil.getReturnData(error=e.message)

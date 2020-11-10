@@ -103,9 +103,10 @@ let RequestHandler={
         return handleJson(addParameters(rurl,opt_parameter),requestOptions,options);
     },
 
-    postJson:(url,body,options)=>{
+    postJson:(url,body,options,opt_parameters)=>{
         let [rurl,requestOptions]=prepare(url,options);
         requestOptions.method='POST';
+        rurl=addParameters(rurl,opt_parameters);
         if (!requestOptions.headers) requestOptions.headers={};
         requestOptions.headers['content-type']='application/json';
         let encodedBody=JSON.stringify(body);
@@ -126,8 +127,9 @@ let RequestHandler={
         return handleJson(rurl,requestOptions,options);
     },
 
-    postPlain:(url,body,options)=>{
+    postPlain:(url,body,options,opt_parameters)=>{
         let [rurl,requestOptions]=prepare(url,options);
+        rurl=addParameters(rurl,opt_parameters);
         requestOptions.method='POST';
         if (!requestOptions.headers) requestOptions.headers={};
         requestOptions.headers['content-type']='application/octet-string';

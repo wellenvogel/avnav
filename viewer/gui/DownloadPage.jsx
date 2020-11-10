@@ -35,6 +35,7 @@ import AndroidEventHandler from '../util/androidEventHandler.js';
 import Addons from '../components/Addons.js';
 import GuiHelpers from '../util/GuiHelpers.js';
 import UserAppDialog from '../components/UserAppDialog.jsx';
+import EditOverlaysDialog from '../components/EditOverlaysDialog.jsx';
 
 const MAXUPLOADSIZE=100000;
 const RouteHandler=NavHandler.getRoutingHandler();
@@ -200,6 +201,7 @@ const allowedItemActions=(props)=>{
     let showRename=(props.type == 'user' || props.type == 'images' || props.type == 'overlays' );
     let showApp=(props.type == 'user' && ext == 'html' && globalStore.getData(keys.gui.capabilities.addons));
     let isApp=(showApp && props.isAddon);
+    let showOverlay=(props.type === 'chart' && globalStore.getData(keys.gui.capabilities.uploadOverlays));
     return {
         showEdit:showEdit,
         showView:showView,
@@ -207,7 +209,8 @@ const allowedItemActions=(props)=>{
         showDelete:showDelete,
         showRename:showRename,
         showApp:showApp,
-        isApp:isApp
+        isApp:isApp,
+        showOverlay: showOverlay
     };
 };
 
@@ -936,6 +939,19 @@ class FileDialog extends React.Component{
                         :
                         null
                     }
+                    {(this.state.allowed.showOverlay)?
+                        <DB name="overlays"
+                            onClick={()=>{
+                                    self.props.closeCallback();
+                                    self.props.okFunction('overlays',this.props.current.name);
+                                }}
+                            disabled={this.state.changed}
+                            >
+                            Overlays
+                        </DB>
+                        :
+                        null
+                    }
                     {(this.state.allowed.showDownload) ?
                         <DB name="download"
                                 onClick={()=>{
@@ -1023,6 +1039,9 @@ const showFileDialog=(item)=>{
         }
         if (action == 'delete'){
             return deleteItem(item);
+        }
+        if (action == 'overlays'){
+            return EditOverlaysDialog.createDialog(item)
         }
     };
     let {showView,showEdit}=allowedItemActions(item);

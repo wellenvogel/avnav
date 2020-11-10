@@ -224,7 +224,7 @@ html,body {
     min-height: 1em;
   }
 
-  button:not(.dialogButton){
+  button:not(.dialogButton,.smallButton){
     .dialogButton();
   }
 
@@ -328,6 +328,15 @@ html,body {
     .nightBorderColorGR(40);
     margin-top: 0.5em;
     padding-top: 0.5em;
+  }
+}
+
+.editOverlaysDialog{
+  .listEntry.overlayElement {
+    .flex-display();
+    .flex-direction(row);
+    .flex-justify-content(space-between);
+    padding: 0.5em;
   }
 }
 

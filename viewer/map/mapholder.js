@@ -431,7 +431,6 @@ MapHolder.prototype.loadMap=function(div){
         let cfgParam = {
             request: 'api',
             type: 'chart',
-            url: chartSource.getUrl(),
             chartKey: chartSource.getChartKey(),
             command: 'getConfig',
             expandCharts: true,
