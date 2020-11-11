@@ -18,6 +18,7 @@ import globalStore from '../util/globalstore.jsx';
 import ItemList from '../components/ItemList.jsx';
 import keys from '../util/keys.jsx';
 import DB from './DialogButton.jsx';
+import shallowcompare from '../util/shallowcompare.js';
 
 let id=1;
 
@@ -350,52 +351,135 @@ const Dialogs = {
         removeAll();
     },
 
-    nestedHelper: function(thisref,stateName){
-        if (! stateName) stateName="dialog";
-        let rt={
-            showDialog:(Dialog)=>{
-                let state={};
-                state[stateName]=(props)=>{
-                    return(
-                        <Dialog
-                            {...props}
-                            closeCallback={()=>{
-                                let state={};
-                                state[stateName]=undefined;
-                                thisref.setState(state);
-                            }}
-                            />
-                    )
-                };
-                thisref.setState(state);
-            },
-            hideDialog:()=>{
-                let state={};
-                state[stateName]=undefined;
-                thisref.setState(state);
-            },
-            filterState:(state)=>{
-                let rt=assign({},state);
-                delete rt[stateName];
-                return rt;
-            },
-            getRender(){
-                if (!thisref.state[stateName]) return null;
+
+
+};
+/**
+ * a helper that will add dialog functionality to a component
+ * it will maintain a variable inside the component state that holds the dialog
+ * and it will wrap the render method to render the dialog if it is set
+ * it exposes a couple of methods to control the dialog
+ * normally you will instantiate it in the constructor like
+ *    this.dialogHelper=dialogHelper(this);
+ * and later you will use it like
+ *    this.dialogHelper.showDialog((props)=>return <div>HelloDialog</div>);
+ * @param thisref - the react component
+ * @param stateName
+ * @returns {*}
+ */
+export const dialogHelper=(thisref,stateName)=>{
+    if (! stateName) stateName="dialog";
+    let rt={
+        showDialog:(Dialog)=>{
+            let state={};
+            state[stateName]=(props)=>{
                 return(
-                    <DialogDisplay
-                        className="nested"
-                        content={thisref.state[stateName]}
-                        onClick={()=>{this.hideDialog()}}
+                    <Dialog
+                        {...props}
+                        closeCallback={()=>{
+                                rt.hideDialog();
+                            }}
                         />
-                );
-            }
-        };
-        rt.showDialog=rt.showDialog.bind(rt);
-        rt.hideDialog=rt.hideDialog.bind(rt);
-        rt.filterState=rt.filterState.bind(rt);
-        rt.getRender=rt.getRender.bind(rt);
-        return rt;
+                )
+            };
+            thisref.setState(state);
+        },
+        hideDialog:()=>{
+            let state={};
+            state[stateName]=undefined;
+            thisref.setState(state);
+        },
+        filterState:(state)=>{
+            let rt=assign({},state);
+            delete rt[stateName];
+            return rt;
+        },
+        getRender(){
+            if (!thisref.state[stateName]) return null;
+            return(
+                <DialogDisplay
+                    className="nested"
+                    content={thisref.state[stateName]}
+                    onClick={()=>{this.hideDialog()}}
+                    />
+            );
+        }
+    };
+    rt.showDialog=rt.showDialog.bind(rt);
+    rt.hideDialog=rt.hideDialog.bind(rt);
+    rt.filterState=rt.filterState.bind(rt);
+    rt.getRender=rt.getRender.bind(rt);
+    let originalRender=thisref.render;
+    let newRender=()=>{
+        return <React.Fragment>
+            {rt.getRender()}
+            {originalRender.call(thisref)}
+            </React.Fragment>
+    };
+    thisref.render=newRender.bind(thisref);
+    return rt;
+};
+/**
+ * helper for maintaining the values that are edited inside a dialog
+ * it will add 2 fields to the state:
+ *   values - the current values
+ *   changed - a flag that is true if the values differ from the initialValues
+ *             compared with shallowcompare
+ * create a instance in the constructor:
+ *    this.stateHelper=stateHelper(this,props.current);
+ * later call it using
+ *    this.stateHelper.changeValue(key,value)
+ * @param thisref
+ * @param initialValues
+ * @param opt_namePrefix - prefix for the state variabe names
+ */
+export const stateHelper=(thisref,initialValues,opt_namePrefix)=>{
+    let valueName="values";
+    let changedName="changed";
+    if (opt_namePrefix){
+        valueName=opt_namePrefix+valueName;
+        changedName=opt_namePrefix+changedName;
     }
+    if (! thisref.state) thisref.state={};
+    thisref.state[valueName]=assign({},initialValues);
+    thisref.state[changedName]=false;
+    let rt={
+        setValue:(key,value)=>{
+            let values=assign({},thisref.state[valueName]);
+            if (values[key] == value) return;
+            values[key]=value;
+            let newState={};
+            newState[valueName]=values;
+            newState[changedName]=!shallowcompare(values,initialValues);
+            thisref.setState(newState);
+        },
+        setState:(partialState)=>{
+            let values=assign({},thisref.state[valueName],partialState);
+            let newState={};
+            newState[valueName]=values;
+            newState[changedName]=!shallowcompare(values,initialValues);
+            thisref.setState(newState);
+        },
+        isChanged(){
+            return thisref.state[changedName]||false;
+        },
+        reset(){
+            let newState={};
+            newState[valueName]=assign({},initialValues);
+            newState[changedName]=false;
+            thisref.setState(newState);
+        },
+        getValues(opt_copy){
+            if (opt_copy){
+                return assign({},thisref.state[valueName]);
+            }
+            return thisref.state[valueName]||{};
+        },
+        getValue(key){
+            return rt.getValues()[key];
+        }
+    };
+    return rt;
 
 };
 
