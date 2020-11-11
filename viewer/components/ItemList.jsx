@@ -80,32 +80,40 @@ class ItemList extends React.Component{
                         if (self.props.selectedIndex !== undefined && idx == self.props.selectedIndex) {
                             itemProps.selected = true;
                         }
-                        if (!itemProps.onClick && self.props.onItemClick) {
-                            itemProps.onClick = function (data) {
-                                if (data && data.stopPropagation) data.stopPropagation();
-                                if (data && data.preventDefault) data.preventDefault();
-                                if (self.props.reverse){
-                                    let len=self.props.itemList?self.props.itemList.length:0;
-                                    self.props.onItemClick(assign({},itemProps,{index:len-itemProps.index}),data);
-                                }
-                                else {
-                                    self.props.onItemClick(itemProps, data);
-                                }
-                            }
-                        }
-                        idx++;
                         let ItemClass;
                         if (self.props.itemCreator) {
                             ItemClass = self.props.itemCreator(entry);
                             if (!ItemClass) return null;
-                            if (self.props.dragdrop) ItemClass=SortableElement(ItemClass);
-                            return <ItemClass {...itemProps}/>
                         }
                         else {
                             ItemClass = self.props.itemClass;
                         }
                         if (self.props.dragdrop) ItemClass=SortableElement(ItemClass);
-                        return <ItemClass {...itemProps}/>
+                        let ItemWrapper;
+                        if (!itemProps.onClick && self.props.onItemClick) {
+                            ItemWrapper=(iprops)=>{
+                                return <ItemClass
+                                    {...iprops}
+                                    onClick={(data)=>{
+                                        if (data && data.stopPropagation) data.stopPropagation();
+                                        if (data && data.preventDefault) data.preventDefault();
+                                        if (self.props.reverse){
+                                            let len=self.props.itemList?self.iprops.itemList.length:0;
+                                            self.props.onItemClick(assign({},iprops,{index:len-iprops.index}),data);
+                                        }
+                                        else {
+                                            self.props.onItemClick(iprops, data);
+                                        }
+                                    }}
+                                    />
+                            };
+                        }
+                        else{
+                            ItemWrapper=ItemClass;
+                        }
+                        idx++;
+
+                        return <ItemWrapper {...itemProps}/>
                     })}
                 </div>
             );
