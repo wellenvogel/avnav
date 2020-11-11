@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Promise from 'promise';
-import OverlayDialog from './OverlayDialog.jsx';
+import OverlayDialog,{dialogHelper,stateHelper} from './OverlayDialog.jsx';
 import assign from 'object-assign';
 import {Input,Checkbox,InputReadOnly,InputSelect,ColorSelector} from './Inputs.jsx';
 import ColorDialog from './ColorDialog.jsx';
@@ -34,28 +34,28 @@ const ITEM_PROPERTIES={enabled:true};
 class OverlayItemDialog extends React.Component{
     constructor(props){
         super(props);
-        this.state=assign({},props.current)||{};
-        this.dialogHelper=OverlayDialog.nestedHelper(this);
+        this.dialogHelper=dialogHelper(this);
+        this.stateHelper=stateHelper(this,props.current||{});
     }
     render(){
-        let hasChanges=Helper.compareProperties(this.props.current,this.state,assign({},this.props.current,ITEM_PROPERTIES));
+        let hasChanges=this.stateHelper.isChanged();
         return(
         <React.Fragment>
             <div className="selectDialog editOverlayItemDialog">
                 <h3 className="dialogTitle">{this.props.title||'Edit Overlay'}</h3>
-                <div className="dialogRow info"><span className="inputLabel">Overlay</span>{this.state.name}</div>
+                <div className="dialogRow info"><span className="inputLabel">Overlay</span>{this.stateHelper.getValue('name')}</div>
                 <Checkbox
                     className="enabled"
                     dialogRow={true}
                     label="enabled"
-                    onChange={(nv)=>this.setState({enabled:nv})}
-                    value={this.state.enabled||false}/>
+                    onChange={(nv)=>this.stateHelper.setState({enabled:nv})}
+                    value={this.stateHelper.getValue("enabled")||false}/>
                 <div className="dialogButtons">
                     {this.props.updateCallback?
                         <DB
                             name="ok"
                             onClick={()=>{
-                                let changes=this.dialogHelper.filterState(this.state);
+                                let changes=this.stateHelper.getValues();
                                 this.props.updateCallback(changes);
                                 }}
                             disabled={!hasChanges}
@@ -65,7 +65,6 @@ class OverlayItemDialog extends React.Component{
                     <div className="clear"></div>
                 </div>
             </div>
-            {this.dialogHelper.getRender()}
         </React.Fragment>);
     }
 
@@ -74,15 +73,20 @@ class OverlayItemDialog extends React.Component{
 
 const OverlayElement=(props)=>{
     return (
-        <div className={"listEntry overlayElement "+(props.selected?"activeEntry":"")} onClick={()=>props.onClick('select')}>
+        <div className={"listEntry overlayElement "+(props.selected?"activeEntry":"")+(props.enabled?"":" disabled")} onClick={()=>props.onClick('select')}>
             <div className="itemInfo">
                 <div className="infoRow">
-                    <span className="inputLabel">Name</span>{props.name}
+                    <span className="inputLabel">Name</span><span className="valueText">{props.name}</span>
                 </div>
                 <div className="infoRow">
-                    <span className="inputLabel">Type</span>{props.type}
+                    <span className="inputLabel">Type</span><span className="valueText">{props.type}</span>
                 </div>
             </div>
+            <Checkbox
+                className="overlayEnabled"
+                value={props.enabled||false}
+                onChange={(nv)=>{props.onClick(nv?"enable":"disable")}}
+                />
             <Button name="Edit"
                     className="smallButton"
                     onClick={(ev)=>{ev.stopPropagation();props.onClick('edit')}}
@@ -94,16 +98,12 @@ const OverlayElement=(props)=>{
 class EditOverlaysDialog extends React.Component{
     constructor(props){
         super(props);
-        this.state= assign({},props.current);
+        this.stateHelper=stateHelper(this,props.current);
         this.state.selectedIndex=0;
-        this.dialogHelper=OverlayDialog.nestedHelper(this);
-        this.updateState=this.updateState.bind(this);
+        this.dialogHelper=dialogHelper(this);
         this.sizeCount=0;
     }
-    updateState(newState){
-        let ns=assign({},newState,{hasChanged:true});
-        this.setState(ns);
-    }
+
 
     showItemDialog(item){
         return new Promise((resolve,reject)=>{
@@ -139,34 +139,39 @@ class EditOverlaysDialog extends React.Component{
             .then((overlay)=>{
                 let overlays=(this.state.overlays||[]).slice();
                 overlays.splice(before?idx:idx+1,0,overlay);
-                this.updateState({overlays:overlays});
+                this.stateHelper.setState({overlays:overlays});
             })
             .catch((reason)=>{if (reason) Toast(reason);});
     }
     editItem(item){
         this.showItemDialog(item)
             .then((changedItem)=>{
-                let overlays=(this.state.overlays||[]).slice();
-                if (item.index < 0 || item.index >= overlays.length){
-                    Toast("internal error, index changed");
-                    return;
-                }
-                overlays.splice(item.index,1,changedItem);
-                this.updateState({overlays:overlays});
+                this.updateItem(changedItem);
             })
             .catch((reason)=>{if (reason) Toast(reason);})
     }
-
+    updateItem(item,newValues){
+        let overlays=(this.stateHelper.getValues().overlays||[]).slice();
+        if (item.index < 0 || item.index >= overlays.length){
+            Toast("internal error, index changed");
+            return;
+        }
+        overlays.splice(item.index,1,assign({},item,newValues));
+        this.stateHelper.setState({overlays:overlays});
+    }
+    getCurrentOverlays(opt_doCopy){
+        return this.stateHelper.getValues(opt_doCopy).overlays||[];
+    }
     render () {
         let self=this;
-        let Dialog=this.state.dialog;
         let hasCurrent=this.props.current.name !== undefined;
-        let parameters=this.state.parameters;
         if (this.sizeCount !== this.state.sizeCount && this.props.updateDimensions){
             this.sizeCount=this.state.sizeCount;
             window.setTimeout(self.props.updateDimensions,100);
         }
-        let hasOverlays=this.state.overlays && this.state.overlays.length> 0;
+        let hasOverlays=this.getCurrentOverlays().length> 0;
+        let selectedItem=(this.state.selectedIndex >=0 && this.state.selectedIndex < this.getCurrentOverlays().length)?
+            this.getCurrentOverlays()[this.state.selectedIndex]:undefined;
         return (
             <React.Fragment>
             <div className="selectDialog editOverlaysDialog">
@@ -176,8 +181,8 @@ class EditOverlaysDialog extends React.Component{
                     className="useDefault"
                     dialogRow={true}
                     label="use default"
-                    onChange={(nv)=>this.updateState({useDefault:true})}
-                    value={this.state.useDefault||false}/>
+                    onChange={(nv)=>this.stateHelper.setState({useDefault:true})}
+                    value={this.stateHelper.getValue("useDefault")||false}/>
                 <ItemList
                     className="overlayItems"
                     itemClass={OverlayElement}
@@ -191,11 +196,20 @@ class EditOverlaysDialog extends React.Component{
                             this.editItem(item);
                             return;
                         }
+                        if (data == 'disable'){
+                            this.updateItem(item,{enabled:false});
+                            return;
+                        }
+                        if (data == 'enable'){
+                            this.updateItem(item,{enabled:true});
+                            return;
+                        }
                      }}
                     scrollable={true}
-                    itemList={this.state.overlays||[]}
+                    itemList={this.getCurrentOverlays()}
                     />
                 <div className="insertButtons">
+                    {selectedItem?<DB name="edit" onClick={()=>this.editItem(selectedItem)}>Edit</DB>:null}
                     {hasOverlays?<DB name="before" onClick={()=>this.insert(true)}>Insert Before</DB>:null}
                     <DB name="after" onClick={()=>this.insert(false)}>Insert After</DB>
                 </div>
@@ -205,7 +219,7 @@ class EditOverlaysDialog extends React.Component{
                             name="ok"
                             onClick={()=>{
                                 this.props.closeCallback();
-                                let changes=Helper.filteredAssign(this.props.current,this.state);
+                                let changes=this.stateHelper.getValues(true);
                                 if (changes.overlays){
                                     let newOverlays=[];
                                     changes.overlays.forEach((overlay)=>{
@@ -218,14 +232,13 @@ class EditOverlaysDialog extends React.Component{
                                 }
                                 this.props.updateCallback(changes);
                                 }}
-                            disabled={!this.state.hasChanged}
+                            disabled={!this.stateHelper.isChanged()}
                             >Update</DB>
                     :null}
                     <DB name="cancel" onClick={this.props.closeCallback}>Cancel</DB>
                 <div className="clear"></div>
                 </div>
             </div>
-                {this.dialogHelper.getRender()}
             </React.Fragment>
         );
     }

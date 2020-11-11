@@ -35,7 +35,9 @@ export const Input=(props)=>{
     }
     return <div className={className} key={props.key}>
         <span className="inputLabel">{props.label}</span>
-        <input size={size} type={props.type||"text"} value={props.value} onChange={(ev)=>props.onChange(ev.target.value)}/>
+        <input size={size} type={props.type||"text"} value={props.value} onChange={
+            (ev)=>{ev.stopPropagation();props.onChange(ev.target.value);}
+            }/>
         {props.children}
         </div>;
 };
@@ -53,7 +55,10 @@ export const Checkbox=(props)=>{
     if (props.className) frameClass+=" "+props.className;
     let clickFunction=(ev)=>{
         if (props.onClick) return props.onClick(ev);
-        if (props.onChange) props.onChange(!props.value);
+        if (props.onChange) {
+            ev.stopPropagation();
+            props.onChange(!props.value);
+        }
     };
     return <div className={frameClass} onClick={clickFunction} key={props.key}>
         <span className="inputLabel">{props.label}</span>
@@ -72,17 +77,16 @@ export const Radio=(props)=>{
     let className="radio";
     let frameClass=props.dialogRow?"dialogRow":"";
     if (props.className) frameClass+=" "+props.className;
-    let clickFunction=(ev)=>{
-        if (props.onClick) return props.onClick(ev);
-        if (props.onChange) props.onChange(!props.value);
-    };
     return <div className={frameClass} key={props.key}>
         {props.label&& <span className="inputLabel">{props.label}</span>}
         {props.itemList.map((el)=>{
             let displayClass=className;
             if (props.value == el.value) displayClass+=" checked";
             return(
-                <div className="radioInner" onClick={()=>props.onChange(el.value)}>
+                <div className="radioInner" onClick={(ev)=>{
+                        ev.stopPropagation();
+                        props.onChange(el.value);
+                        }}>
                 <span className="inputLabel">{el.label}</span>
                 <span className= {displayClass} ></span>
                 </div>
@@ -144,7 +148,8 @@ export const ColorSelector=(props)=>{
         let colorChange=(newColor)=>{
             props.onChange(newColor)
         };
-        onClick=()=>{
+        onClick=(ev)=>{
+            ev.stopPropagation();
             let d=(p)=>{
                 return <ColorDialog
                     {...p}

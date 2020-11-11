@@ -107,6 +107,9 @@ class ChartSourceBase {
                         this.prepareInternal()
                             .then((layers)=> {
                                 this.layers = layers;
+                                if (! this.chartEntry.enabled){
+                                    this.layers.forEach((layer)=>layer.setVisible(false));
+                                }
                                 this.isReadyFlag = true;
                                 resolve(this.layers);
                             })
@@ -122,6 +125,9 @@ class ChartSourceBase {
             this.prepareInternal()
                 .then((layers)=> {
                     this.layers = layers;
+                    if (! this.chartEntry.enabled){
+                        this.layers.forEach((layer)=>layer.setVisible(false));
+                    }
                     this.isReadyFlag = true;
                     resolve(this.layers);
                 })
@@ -137,6 +143,11 @@ class ChartSourceBase {
         CryptHandler.removeChartEntry(this.getChartKey());
         this.isReadyFlag=false;
         this.layers=[];
+    }
+
+    setVisible(visible){
+        if (! this.isReady()) return;
+        this.layers.forEach((layer)=>layer.setVisible(visible));
     }
 
 }

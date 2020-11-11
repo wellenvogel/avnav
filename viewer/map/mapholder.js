@@ -399,7 +399,7 @@ MapHolder.prototype.loadMap=function(div){
             reject("no map selected");
             return;
         }
-        let chartSource=this.createChartSource(assign({type:'chart'},this._chartEntry));
+        let chartSource=this.createChartSource(assign({type:'chart',enabled:true},this._chartEntry));
         if (! chartSource){
             reject("chart "+this._chartEntry.name+" not found");
         }
