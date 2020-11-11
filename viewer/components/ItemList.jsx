@@ -80,6 +80,9 @@ class ItemList extends React.Component{
                         if (self.props.selectedIndex !== undefined && idx == self.props.selectedIndex) {
                             itemProps.selected = true;
                         }
+                        else{
+                            itemProps.selected = false;
+                        }
                         let ItemClass;
                         if (self.props.itemCreator) {
                             ItemClass = self.props.itemCreator(entry);
