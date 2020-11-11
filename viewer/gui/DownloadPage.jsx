@@ -39,7 +39,7 @@ import EditOverlaysDialog from '../components/EditOverlaysDialog.jsx';
 
 const MAXUPLOADSIZE=100000;
 const RouteHandler=NavHandler.getRoutingHandler();
-
+const DEFAULT_OVERLAY_CONFIG="default.cfg";
 
 const headlines={
     track: "Tracks",
@@ -85,6 +85,16 @@ const findAddon=(item)=>{
 const fillDataServer=(type)=>{
     Requests.getJson("?request=listdir&type="+type).then((json)=>{
         let list=[];
+        if (type == 'chart'){
+            list.push({
+                type: type,
+                name: 'DefaultOverlays',
+                chartKey: DEFAULT_OVERLAY_CONFIG,
+                canDelete: false,
+                canDownload:false,
+                time: (new Date()).getTime()/1000
+            });
+        }
         for (let i=0;i<json.items.length;i++){
             let fi=new FileInfo();
             assign(fi,json.items[i]);
@@ -830,7 +840,7 @@ class FileDialog extends React.Component{
         let cn=this.state.existingName?"existing":"";
         let rename=this.state.changed && ! this.state.existingName && (this.state.name != this.props.current.name);
         let Dialog=this.state.dialog;
-        let showSchema=(this.props.current.type == 'chart' && this.props.current.url.match(/.*mbtiles.*/));
+        let showSchema=(this.props.current.type == 'chart' && this.props.current.url && this.props.current.url.match(/.*mbtiles.*/));
         let schemeChanged=showSchema && (((this.props.current.scheme||"tms") != this.state.scheme)|| this.props.current.originalScheme);
         return(
             <React.Fragment>
@@ -1041,7 +1051,7 @@ const showFileDialog=(item)=>{
             return deleteItem(item);
         }
         if (action == 'overlays'){
-            return EditOverlaysDialog.createDialog(item)
+            return EditOverlaysDialog.createDialog(item, item.chartKey === DEFAULT_OVERLAY_CONFIG)
         }
     };
     let {showView,showEdit}=allowedItemActions(item);

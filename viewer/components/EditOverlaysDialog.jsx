@@ -79,7 +79,7 @@ const OverlayElement=(props)=>{
                     <span className="inputLabel">Name</span><span className="valueText">{props.name}</span>
                 </div>
                 <div className="infoRow">
-                    <span className="inputLabel">Type</span><span className="valueText">{props.type}</span>
+                    <span className="inputLabel">Type</span><span className="valueText">{props.type+(props.isDefault?"   [default]":"")}</span>
                 </div>
             </div>
             <div className="actions">
@@ -209,13 +209,16 @@ class EditOverlaysDialog extends React.Component{
             <div className="selectDialog editOverlaysDialog">
                 <h3 className="dialogTitle">{this.props.title||'Edit Overlays'}</h3>
                 <div className="dialogRow info"><span className="inputLabel">Chart</span>{this.props.chartName}</div>
-                <Checkbox
+                {!this.props.noDefault && <Checkbox
                     className="useDefault"
                     dialogRow={true}
                     label="use default"
-                    onChange={(nv)=>this.stateHelper.setState({useDefault:nv,selectedIndex:0})}
-                    value={this.stateHelper.getValue("useDefault")||false}/>
-                <ItemList
+                    onChange={(nv)=>{
+                        this.stateHelper.setState({useDefault:nv});
+                        this.setState({selectedIndex:0});
+                        }}
+                    value={this.stateHelper.getValue("useDefault")||false}/>}
+                {!this.props.noDefault && <ItemList
                     className="overlayItems"
                     itemClass={OverlayElement}
                     onItemClick={(item,data)=>{
@@ -229,7 +232,7 @@ class EditOverlaysDialog extends React.Component{
                         }
                      }}
                     itemList={this.getCurrentDefaults()}
-                    />
+                    />}
                 <ItemList
                     className="overlayItems"
                     itemClass={OverlayElement}
@@ -305,17 +308,20 @@ EditOverlaysDialog.propTypes={
  * @param chartKey
  * @return {boolean}
  */
-EditOverlaysDialog.createDialog=(chartItem)=>{
+EditOverlaysDialog.createDialog=(chartItem,opt_noDefault)=>{
+    if (! chartItem.chartKey) return;
     let getParameters={
         request: 'api',
         type: 'chart',
         chartKey: chartItem.chartKey,
         command: 'getConfig',
         expandCharts: true,
-        mergeDefault: true
+        mergeDefault: !opt_noDefault
     };
     Requests.getJson("",{},getParameters)
         .then((config)=>{
+            if (! config.data) return;
+            if (config.data.useDefault === undefined) config.data.useDefault=true;
             OverlayDialog.dialog((props)=> {
                 return <EditOverlaysDialog
                     {...props}
@@ -333,6 +339,7 @@ EditOverlaysDialog.createDialog=(chartItem)=>{
                             .then((res)=>{})
                             .catch((error)=>{Toast("unable to save overlay config: "+error)});
                     }}
+                    noDefault={opt_noDefault||false}
                     />
             });
         })

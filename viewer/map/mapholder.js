@@ -444,6 +444,7 @@ MapHolder.prototype.loadMap=function(div){
                     return;
                 }
                 let overrides=config.defaultsOverride||{};
+                if (config.useDefault === undefined) config.useDefault=true;
                 if (config.useDefault && config.defaults){
                     for (let k in config.defaults){
                         let dv=assign(config.defaults[k],overrides[config.defaults[k].name],{isDefault:true});
