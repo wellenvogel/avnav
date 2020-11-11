@@ -428,6 +428,10 @@ MapHolder.prototype.loadMap=function(div){
             this.renderTo(div);
             resolve(0);
         };
+        if (! globalStore.getData(keys.gui.capabilities.uploadOverlays)){
+            checkChanges();
+            return;
+        }
         let cfgParam = {
             request: 'api',
             type: 'chart',
