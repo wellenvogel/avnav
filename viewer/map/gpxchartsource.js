@@ -140,7 +140,7 @@ class GpxChartSource extends ChartSourceBase{
         let self = this;
         return new Promise((resolve, reject)=> {
             if (!url) {
-                reject("no map selected");
+                reject("no url for "+this.chartEntry.name);
                 return;
             }
             let vectorSource = new olVectorSource({

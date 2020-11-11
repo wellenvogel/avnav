@@ -46,7 +46,7 @@ class AvnavChartSource extends ChartSourceBase{
         let url = this.chartEntry.url;
         return new Promise((resolve, reject)=> {
             if (!url) {
-                reject("no map selected");
+                reject("no map url for "+(this.chartEntry.name||this.chartEntry.chartKey));
                 return;
             }
             let xmlUrl = url + "/avnav.xml";
@@ -324,6 +324,7 @@ class AvnavChartSource extends ChartSourceBase{
         //prevent from triggering a reload if we already have been destroyed
         let destroySequence=this.destroySequence;
         return new Promise((resolve,reject)=>{
+            if (! self.isReady() || destroySequence > 0) resolve(0);
             let url = this.chartEntry.url + "/sequence?_="+(new Date()).getTime();
             //set noCache to false to avoid pragma in header (CORS...)
             Requests.getJson(url, {useNavUrl: false,noCache:false})

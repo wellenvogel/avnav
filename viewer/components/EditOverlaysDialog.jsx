@@ -73,7 +73,7 @@ class OverlayItemDialog extends React.Component{
 
 const OverlayElement=(props)=>{
     return (
-        <div className={"listEntry overlayElement "+(props.selected?"activeEntry":"")+(props.enabled?"":" disabled")} onClick={()=>props.onClick('select')}>
+        <div className={"listEntry overlayElement "+(props.selected?"activeEntry":"")+(props.enabled?"":" disabled")+(props.isDefault?" defaultOverlay":"")} onClick={()=>props.onClick('select')}>
             <div className="itemInfo">
                 <div className="infoRow">
                     <span className="inputLabel">Name</span><span className="valueText">{props.name}</span>
@@ -82,15 +82,17 @@ const OverlayElement=(props)=>{
                     <span className="inputLabel">Type</span><span className="valueText">{props.type}</span>
                 </div>
             </div>
+            <div className="actions">
             <Checkbox
                 className="overlayEnabled"
                 value={props.enabled||false}
                 onChange={(nv)=>{props.onClick(nv?"enable":"disable")}}
                 />
             <Button name="Edit"
-                    className="smallButton"
+                    className={"smallButton "+(props.isDefault?"disabled":"")}
                     onClick={(ev)=>{ev.stopPropagation();props.onClick('edit')}}
                 />
+             </div>
         </div>
     );
 };
@@ -167,12 +169,29 @@ class EditOverlaysDialog extends React.Component{
         overlays.splice(item.index,1,assign({},item,newValues));
         this.stateHelper.setState({overlays:overlays});
     }
+    updateDefault(item,newValue) {
+        if (! item.name) return;
+        let current = assign({}, this.stateHelper.getValue('defaultsOverride'));
+        current[item.name]=assign({},current[item.name],newValue);
+        this.stateHelper.setValue('defaultsOverride',current);
+    }
+
     getCurrentOverlays(opt_doCopy){
         let rt=this.stateHelper.getValues().overlays||[];
         if (opt_doCopy){
             return rt.slice();
         }
         return rt;
+    }
+    getCurrentDefaults(){
+        if (!this.stateHelper.getValue('useDefault')) return [];
+        let defaults=this.stateHelper.getValues().defaults||[].slice();
+        let overrides=this.stateHelper.getValue('defaultsOverride')||{};
+        defaults.forEach((def)=>{
+            assign(def,overrides[def.name],{isDefault:true});
+        });
+        return defaults;
+
     }
     render () {
         let self=this;
@@ -194,8 +213,23 @@ class EditOverlaysDialog extends React.Component{
                     className="useDefault"
                     dialogRow={true}
                     label="use default"
-                    onChange={(nv)=>this.stateHelper.setState({useDefault:true})}
+                    onChange={(nv)=>this.stateHelper.setState({useDefault:nv,selectedIndex:0})}
                     value={this.stateHelper.getValue("useDefault")||false}/>
+                <ItemList
+                    className="overlayItems"
+                    itemClass={OverlayElement}
+                    onItemClick={(item,data)=>{
+                        if (data == 'disable'){
+                            this.updateDefault(item,{enabled:false});
+                            return;
+                        }
+                        if (data == 'enable'){
+                            this.updateDefault(item,{enabled:true});
+                            return;
+                        }
+                     }}
+                    itemList={this.getCurrentDefaults()}
+                    />
                 <ItemList
                     className="overlayItems"
                     itemClass={OverlayElement}
@@ -243,6 +277,7 @@ class EditOverlaysDialog extends React.Component{
                                 else{
                                     changes.overlays=[];
                                 }
+                                delete changes.defaults;
                                 this.props.updateCallback(changes);
                                 }}
                             disabled={!this.stateHelper.isChanged()}
@@ -276,7 +311,8 @@ EditOverlaysDialog.createDialog=(chartItem)=>{
         type: 'chart',
         chartKey: chartItem.chartKey,
         command: 'getConfig',
-        expandCharts: true
+        expandCharts: true,
+        mergeDefault: true
     };
     Requests.getJson("",{},getParameters)
         .then((config)=>{

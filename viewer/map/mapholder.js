@@ -443,6 +443,14 @@ MapHolder.prototype.loadMap=function(div){
                     checkChanges();
                     return;
                 }
+                let overrides=config.defaultsOverride||{};
+                if (config.useDefault && config.defaults){
+                    for (let k in config.defaults){
+                        let dv=assign(config.defaults[k],overrides[config.defaults[k].name],{isDefault:true});
+                        let overlaySource = this.createChartSource(dv);
+                        if (overlaySource) newSources.push(overlaySource);
+                    }
+                }
                 if (config.overlays) {
                     for (let k in config.overlays) {
                         let overlaySource = this.createChartSource(config.overlays[k]);
