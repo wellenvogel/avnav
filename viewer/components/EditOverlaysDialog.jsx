@@ -137,7 +137,7 @@ class EditOverlaysDialog extends React.Component{
         let idx=this.state.selectedIndex||0;
         this.showItemDialog(undefined)
             .then((overlay)=>{
-                let overlays=(this.state.overlays||[]).slice();
+                let overlays=this.getCurrentOverlays(true);
                 overlays.splice(before?idx:idx+1,0,overlay);
                 this.stateHelper.setState({overlays:overlays});
             })
@@ -150,8 +150,16 @@ class EditOverlaysDialog extends React.Component{
             })
             .catch((reason)=>{if (reason) Toast(reason);})
     }
+    deleteItem(item){
+        if (item.index < 0 || item.index >= this.getCurrentOverlays().length){
+            return;
+        }
+        let overlays=this.getCurrentOverlays(true);
+        overlays.splice(item.index,1);
+        this.stateHelper.setValue('overlays',overlays);
+    }
     updateItem(item,newValues){
-        let overlays=(this.stateHelper.getValues().overlays||[]).slice();
+        let overlays=this.getCurrentOverlays(true);
         if (item.index < 0 || item.index >= overlays.length){
             Toast("internal error, index changed");
             return;
@@ -160,7 +168,11 @@ class EditOverlaysDialog extends React.Component{
         this.stateHelper.setState({overlays:overlays});
     }
     getCurrentOverlays(opt_doCopy){
-        return this.stateHelper.getValues(opt_doCopy).overlays||[];
+        let rt=this.stateHelper.getValues().overlays||[];
+        if (opt_doCopy){
+            return rt.slice();
+        }
+        return rt;
     }
     render () {
         let self=this;
@@ -172,6 +184,7 @@ class EditOverlaysDialog extends React.Component{
         let hasOverlays=this.getCurrentOverlays().length> 0;
         let selectedItem=(this.state.selectedIndex >=0 && this.state.selectedIndex < this.getCurrentOverlays().length)?
             this.getCurrentOverlays()[this.state.selectedIndex]:undefined;
+        if (selectedItem) selectedItem.index=this.state.selectedIndex;
         return (
             <React.Fragment>
             <div className="selectDialog editOverlaysDialog">
@@ -205,10 +218,10 @@ class EditOverlaysDialog extends React.Component{
                             return;
                         }
                      }}
-                    scrollable={true}
                     itemList={this.getCurrentOverlays()}
                     />
                 <div className="insertButtons">
+                    {selectedItem?<DB name="delete" onClick={()=>this.deleteItem(selectedItem)}>Delete</DB>:null}
                     {selectedItem?<DB name="edit" onClick={()=>this.editItem(selectedItem)}>Edit</DB>:null}
                     {hasOverlays?<DB name="before" onClick={()=>this.insert(true)}>Insert Before</DB>:null}
                     <DB name="after" onClick={()=>this.insert(false)}>Insert After</DB>
