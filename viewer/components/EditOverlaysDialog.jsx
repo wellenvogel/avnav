@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import Promise from 'promise';
 import OverlayDialog,{dialogHelper,stateHelper} from './OverlayDialog.jsx';
 import assign from 'object-assign';
-import {Input,Checkbox,InputReadOnly,InputSelect,ColorSelector} from './Inputs.jsx';
+import {Input,Checkbox,InputReadOnly,InputSelect,ColorSelector,Radio} from './Inputs.jsx';
 import ColorDialog from './ColorDialog.jsx';
 import DB from './DialogButton.jsx';
 import Button from './Button.jsx';
@@ -11,6 +11,7 @@ import ItemList from './ItemList.jsx';
 import Requests from '../util/requests.js';
 import Toast from './Toast.jsx';
 import Helper from '../util/helper.js';
+import GuiHelpers from '../util/GuiHelpers.js';
 
 const filterOverlayItem=(item)=>{
     let rt=undefined;
@@ -31,14 +32,66 @@ const filterOverlayItem=(item)=>{
 };
 
 const ITEM_PROPERTIES={enabled:true};
+const KNOWN_OVERLAY_EXTENSIONS=['gpx'];
+const KNOWN_ICON_FILE_EXTENSIONS=['zip'];
 class OverlayItemDialog extends React.Component{
-    constructor(props){
+    constructor(props) {
         super(props);
-        this.dialogHelper=dialogHelper(this);
-        this.stateHelper=stateHelper(this,props.current||{});
+        this.dialogHelper = dialogHelper(this);
+        this.stateHelper = stateHelper(this, props.current || {});
+        this.state.itemsFetchCount = 0;
+        //we make them only a variable as we consider them to be static
+        this.itemLists={icons:[],chart:[],overlays:[],images:[],user:[],knownOverlays:[],iconFiles:[{label:"--none--"}]};
+        this.getItemList('chart');
+        this.getItemList('overlays');
+        this.getItemList('images');
+        this.getItemList('user');
+    }
+    getItemList(type){
+        Requests.getJson("",{},{
+            request: 'listdir',
+            type: type
+        })
+        .then((data)=>{
+                this.itemLists[type]=data.items;
+                if (type == 'user' || type == 'images' || type == 'overlays') {
+                    data.items.forEach((item)=>{
+                        if (GuiHelpers.IMAGES.indexOf(Helper.getExt(item.name)) >= 0) {
+                            let el=assign({},item);
+                            el.label=el.url;
+                            el.value=el;
+                            this.itemLists.icons.push(el);
+                        }
+                    })
+                }
+                if (type == 'chart'){
+                    //prepare select list
+                    data.items.forEach((item)=>{
+                        item.label=item.name;
+                        item.value=item.chartKey;
+                    });
+                }
+                if (type == 'overlays'){
+                    data.items.forEach((item)=>{
+                        item.label=item.name;
+                        item.value=item.url;
+                        if (KNOWN_OVERLAY_EXTENSIONS.indexOf(Helper.getExt(item.name))>=0){
+                            this.itemLists.knownOverlays.push(item);
+                        }
+                        if (KNOWN_ICON_FILE_EXTENSIONS.indexOf(Helper.getExt(item.name))>=0){
+                            this.itemLists.iconFiles.push(assign({},item,{label:item.url}));
+                        }
+                    });
+                }
+                this.setState({itemsFetchCount:this.state.itemsFetchCount+1})
+            })
+        .catch((error)=>{
+                Toast("error fetching list of "+type+": "+error);
+            })
     }
     render(){
         let hasChanges=this.stateHelper.isChanged();
+        let currentType=this.stateHelper.getValue('type');
         return(
         <React.Fragment>
             <div className="selectDialog editOverlayItemDialog">
@@ -50,12 +103,97 @@ class OverlayItemDialog extends React.Component{
                     label="enabled"
                     onChange={(nv)=>this.stateHelper.setState({enabled:nv})}
                     value={this.stateHelper.getValue("enabled")||false}/>
+                <Radio
+                    className="type"
+                    dialogRow={true}
+                    label="type"
+                    value={currentType}
+                    itemList={[{label:'overlay',value:'overlay'},{label:'chart',value:'chart'}]}
+                    onChange={(nv)=>this.stateHelper.setValue('type',nv)}
+                    />
+                <Input
+                    className="opacity"
+                    dialogRow={true}
+                    label="opacity"
+                    value={this.stateHelper.getValue('opacity')}
+                    onChange={(nv)=>this.stateHelper.setValue('opacity',nv)}
+                    type="number"
+                    />
+                {(currentType=='chart')?
+                    <React.Fragment>
+                        <InputSelect
+                            dialogRow={true}
+                            label="chart name"
+                            value={this.stateHelper.getValue('chartKey')}
+                            list={this.itemLists.chart}
+                            fetchCount={this.state.itemsFetchCount}
+                            showDialogFunction={this.dialogHelper.showDialog}
+                            onChange={(nv)=>{
+                                this.stateHelper.setState({chartKey:nv.chartKey,name:nv.name});
+                                }}
+                            />
+                    </React.Fragment>:
+                    <React.Fragment>
+                        <InputSelect
+                            dialogRow={true}
+                            label="overlay name"
+                            value={this.stateHelper.getValue('name')}
+                            list={this.itemLists.knownOverlays}
+                            fetchCount={this.state.itemsFetchCount}
+                            showDialogFunction={this.dialogHelper.showDialog}
+                            onChange={(nv)=>{
+                                this.stateHelper.setState({url:nv.url,name:nv.name});
+                                }}
+                            />
+                        <InputSelect
+                            dialogRow={true}
+                            label="icon file"
+                            value={this.stateHelper.getValue('icons')}
+                            list={this.itemLists.iconFiles}
+                            fetchCount={this.state.itemsFetchCount}
+                            showDialogFunction={this.dialogHelper.showDialog}
+                            onChange={(nv)=>{
+                                this.stateHelper.setState({icons:nv.url});
+                                }}
+                            />
+                        <Input
+                            dialogRow={true}
+                            type="number"
+                            label="min zoom"
+                            value={this.stateHelper.getValue('minZoom')||0}
+                            onChange={(nv)=>this.stateHelper.setValue('minZoom',nv)}
+                            />
+                        <Input
+                            dialogRow={true}
+                            type="number"
+                            label="max zoom"
+                            value={this.stateHelper.getValue('maxZoom')||0}
+                            onChange={(nv)=>this.stateHelper.setValue('maxZoom',nv)}
+                            />
+                        <Input
+                            dialogRow={true}
+                            type="number"
+                            label="min scale"
+                            value={this.stateHelper.getValue('minScale')||0}
+                            onChange={(nv)=>this.stateHelper.setValue('minScale',nv)}
+                            />
+                        <Input
+                            dialogRow={true}
+                            type="number"
+                            label="max scale"
+                            value={this.stateHelper.getValue('maxScale')||0}
+                            onChange={(nv)=>this.stateHelper.setValue('maxScale',nv)}
+                            />
+                    </React.Fragment>
+                }
                 <div className="dialogButtons">
                     {this.props.updateCallback?
                         <DB
                             name="ok"
                             onClick={()=>{
-                                let changes=this.stateHelper.getValues();
+                                let changes=this.stateHelper.getValues(true);
+                                if (changes.opacity < 0) changes.opacity=0;
+                                if (changes.opacity > 1) changes.opacity=1;
                                 this.props.updateCallback(changes);
                                 }}
                             disabled={!hasChanges}
@@ -132,12 +270,12 @@ class EditOverlaysDialog extends React.Component{
             if (this.state.selectedIndex === undefined){
                 return;
             }
-            if (this.state.selectedIndex < 0 || this.state.selectedIndex >= this.state.overlays.length){
+            if (this.state.selectedIndex < 0 || this.state.selectedIndex >= this.getCurrentOverlays().length){
                 return;
             }
         }
         let idx=this.state.selectedIndex||0;
-        this.showItemDialog(undefined)
+        this.showItemDialog({type:'overlay',opacity:1})
             .then((overlay)=>{
                 let overlays=this.getCurrentOverlays(true);
                 overlays.splice(before?idx:idx+1,0,overlay);

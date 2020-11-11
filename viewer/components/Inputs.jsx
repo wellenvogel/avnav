@@ -116,9 +116,18 @@ export const InputSelect=(props)=>{
     let onClick=props.onClick;
     if (props.onChange && props.list){
         onClick=()=> {
-            let valueChanged = (newValue)=>props.onChange(newValue);
+            let valueChanged = (newValue)=>{
+                props.onChange(props.changeOnlyValue?(newValue||{}).value:newValue);
+            };
             let displayList = props.list;
-            if (typeof(props.list) === 'function') displayList = props.list(props.value);
+            let finalList;
+            if (typeof(props.list) === 'function') finalList = props.list(props.value);
+            else {
+                finalList = displayList.slice();
+                finalList.forEach((el)=> {
+                    if (el.value == props.value) el.selected = true;
+                });
+            }
             let d =OverlayDialog.createSelectDialog(props.label, displayList, valueChanged);
             if (props.showDialogFunction) {
                 props.showDialogFunction(d);
@@ -137,7 +146,8 @@ export const InputSelect=(props)=>{
 InputSelect.propTypes=assign({},DEFAULT_TYPES,{
     onChange: PropTypes.func, //if set  and if prop.list is set: show the select dialog
     list: PropTypes.any,      //array of items to show or a function to create the list
-    showDialogFunction: PropTypes.func //if set: use this function to display the select dialog
+    showDialogFunction: PropTypes.func, //if set: use this function to display the select dialog
+    changeOnlyValue: PropTypes.bool //only return the value property of the list element in onChange
 });
 
 

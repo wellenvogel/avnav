@@ -295,7 +295,7 @@ class AVNChartHandler(AVNWorker):
     name=entry.get('name')
     return prefix+"@"+name
 
-  def getChartByKey(self,chartKey,requestIp="localhost",returnTuple=True):
+  def getChartDescriptionByKey(self, chartKey, requestIp="localhost", returnTuple=True):
     '''
     find a chart by given key
     @param chartKey:
@@ -312,7 +312,8 @@ class AVNChartHandler(AVNWorker):
       #internal chart
       for chart in self.chartlist.values():
         if chart['name'] == ckp[1]:
-          return (ckp[0],chart) if returnTuple else chart
+          description=self.getDescriptionFromChart(chart)
+          return (ckp[0],description) if returnTuple else description
       return
     provider=self.externalProviders.get(ckp[0])
     if provider is None:
@@ -321,25 +322,29 @@ class AVNChartHandler(AVNWorker):
       if chart['name'] == ckp[1]:
         return (ckp[0],chart) if returnTuple else chart
 
+  def getDescriptionFromChart(self,chart):
+    url = self.PATH_PREFIX + "/" + urllib.quote(chart['name'].encode('utf-8'))
+    entry = {
+      'name': chart['name'],
+      'url': url,
+      'charturl': url,
+      'time': chart['mtime'],
+      'canDelete': True,
+      'canDownload': True,
+      'scheme': chart['chart'].getScheme(),
+      'sequence': chart['chart'].getChangeCount(),
+      'originalScheme': chart['chart'].getOriginalScheme(),
+    }
+    entry['chartKey'] = self.getChartKey(entry)
+    return entry
+
   def listCharts(self,httpHandler,hostip):
     chartbaseDir=self.chartDir
     if chartbaseDir is None:
       return AVNUtil.getReturnData(error="no chart dir")
     data=[]
     for chart in self.chartlist.values():
-      url=self.PATH_PREFIX+"/"+urllib.quote(chart['name'].encode('utf-8'))
-      entry={
-             'name':chart['name'],
-             'url':url,
-             'charturl':url,
-             'time': chart['mtime'],
-             'canDelete': True,
-             'canDownload': True,
-             'scheme': chart['chart'].getScheme(),
-             'sequence':chart['chart'].getChangeCount(),
-             'originalScheme': chart['chart'].getOriginalScheme(),
-      }
-      entry['chartKey']=self.getChartKey(entry)
+      entry=self.getDescriptionFromChart(chart)
       data.append(entry)
     for k in self.externalProviders.keys():
       cb=self.externalProviders[k]
@@ -417,14 +422,17 @@ class AVNChartHandler(AVNWorker):
         return AVNUtil.getReturnData(error="no handler")
       name=AVNUtil.getHttpRequestParam(requestparam, "name", True)
       if name.endswith(".cfg"):
-        nameparts=name.split("@",1)
-        if len(nameparts) != 2:
-          return AVNUtil.getReturnData(error="invalid filename")
-        cleanName=AVNUtil.clean_filename(nameparts[1])
-        if cleanName != nameparts[1]:
-          return AVNUtil.getReturnData(error="invalid filename")
-        if nameparts[0] != self.INT_PREFIX and self.externalProviders[nameparts[0]] is None:
-          return AVNUtil.getReturnData(error="chart provider %s not available"%nameparts[0])
+        if name == self.DEFAULT_CHART_CFG:
+          pass
+        else:
+          nameparts=name.split("@",1)
+          if len(nameparts) != 2:
+            return AVNUtil.getReturnData(error="invalid filename")
+          cleanName=AVNUtil.clean_filename(nameparts[1])
+          if cleanName != nameparts[1]:
+            return AVNUtil.getReturnData(error="invalid filename")
+          if nameparts[0] != self.INT_PREFIX and self.externalProviders[nameparts[0]] is None:
+            return AVNUtil.getReturnData(error="chart provider %s not available"%nameparts[0])
         fname = os.path.join(self.chartDir, name)
         if os.path.exists(fname):
           overwrite=AVNUtil.getHttpRequestParam(requestparam,"overwrite")
@@ -459,11 +467,16 @@ class AVNChartHandler(AVNWorker):
           chartKey = AVNUtil.getHttpRequestParam(requestparam, "chartKey", True)
           expandCharts = AVNUtil.getHttpRequestFlag(requestparam, "expandCharts",False)
           mergeDefault = AVNUtil.getHttpRequestFlag(requestparam,"mergeDefault",False)
-          chartEntryAnPrefix = self.getChartByKey(chartKey)
-          if chartEntryAnPrefix is None:
-            AVNLog.debug("chart not found for key %s", chartKey)
-            return AVNUtil.getReturnData(data={})
-          ovlname = self.getChartConfigFile(chartEntryAnPrefix[1],chartEntryAnPrefix[0])
+          if chartKey == self.DEFAULT_CHART_CFG:
+            configName=self.DEFAULT_CHART_CFG
+            ovlname=os.path.join(self.chartDir,self.DEFAULT_CHART_CFG)
+          else:
+            chartEntryAnPrefix = self.getChartDescriptionByKey(chartKey)
+            if chartEntryAnPrefix is None:
+              AVNLog.debug("chart not found for key %s", chartKey)
+              return AVNUtil.getReturnData(data={})
+            ovlname = self.getChartConfigFile(chartEntryAnPrefix[1],chartEntryAnPrefix[0])
+            configName=self.getChartConfigKey(chartEntryAnPrefix[1],chartEntryAnPrefix[0])+".cfg"
           rt={}
           default= {}
           if mergeDefault:
@@ -474,30 +487,26 @@ class AVNChartHandler(AVNWorker):
           if ovlname is not None and os.path.exists(ovlname):
             with open(ovlname,"r") as f:
               rt=json.load(f)
-              useDefault=rt.get('useDefault')
-              if (useDefault is None or useDefault) and mergeDefault:
-                merged={}
-                merged.update(default)
-                merged.update(rt)
-                merged['overlays']=default.get('overlays') or []
-                merged['overlays'].extend(rt.get('overlays') or [])
-                rt=merged
-              if expandCharts:
-                noMerge=['type','chartKey','opacity']
-                overlays = rt.get('overlays')
-                if overlays is not None:
-                  for overlay in overlays:
-                    if overlay.get('type') == 'chart':
-                      #update with the final chart config
-                      overlay.update(
-                        dict(filter(
-                          lambda (k,v): k not in noMerge ,
-                          ( self.getChartByKey(overlay.get('chartKey'), hostip, returnTuple=False)or {})
-                            .items())))
+          if mergeDefault:
+            if default.get('overlays') is not None:
+              rt['defaults'] = default['overlays']
+          if expandCharts:
+            noMerge = ['type', 'chartKey', 'opacity', 'chart']
+            for ovlname in ['defaults', 'overlays']:
+              overlays = rt.get(ovlname)
+              if overlays is not None:
+                for overlay in overlays:
+                  if overlay.get('type') == 'chart':
+                    # update with the final chart config
+                    overlay.update(
+                      dict(filter(
+                        lambda (k, v): k not in noMerge,
+                        (self.getChartDescriptionByKey(overlay.get('chartKey'), hostip, returnTuple=False) or {})
+                          .items())))
 
           else:
             rt=default
-          rt['name']=self.getChartConfigKey(chartEntryAnPrefix[1],chartEntryAnPrefix[0])+".cfg"
+          rt['name']=configName
           return AVNUtil.getReturnData(data=rt)
       except Exception as e:
         return AVNUtil.getReturnData(error=e.message)
