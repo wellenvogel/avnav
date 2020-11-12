@@ -88,10 +88,9 @@ if ($rq == 'list' && $type == 'chart'){
 		$base=$_SERVER['REQUEST_URI'];
 		$base=preg_replace("/\?.*/","",$base);
 		$base=preg_replace("?/[^/]*$?","",$base);
-		$de=array('name'=>'eniro','url'=>$base.'/demo-eniro','charturl'=>$base.'/demo-eniro');
 		$de2=array('name'=>'bsh','url'=>$base.'/demo-bsh','charturl'=>$base.'/demo-bsh');
 		$de3=array('name'=>'osm','url'=>$base.'/demo-osm','charturl'=>$base.'/demo-osm');
-		$rt['items']=array($de,$de2,$de3);
+		$rt['items']=array($de2,$de3);
 		$isEncoded=0;
 }
 else if ($rq == 'listdir' || $rq == 'list' || $rq == 'routing'){
