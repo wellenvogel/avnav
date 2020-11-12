@@ -128,7 +128,7 @@ export const InputSelect=(props)=>{
                     if (el.value == props.value) el.selected = true;
                 });
             }
-            let d =OverlayDialog.createSelectDialog(props.label, displayList, valueChanged);
+            let d =OverlayDialog.createSelectDialog(props.label, finalList, valueChanged);
             if (props.showDialogFunction) {
                 props.showDialogFunction(d);
             }
