@@ -364,7 +364,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
           fentry=AVNUtil.convertAIS(entry)
           mdist=AVNUtil.distance((fentry.get('lat'),fentry.get('lon')), dest)
           if mdist<=dist:
-            fentry['distance']=mdist
+            fentry['distance']=mdist*AVNUtil.NM #have this in m
             frt.append(fentry)
           else:
             AVNLog.debug("filtering out %s due to distance %f",unicode(fentry['mmsi']),mdist)
