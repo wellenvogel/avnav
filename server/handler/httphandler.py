@@ -239,8 +239,8 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     @param filename:
     @return:
     '''
-    PREFIX="(function(){\nvar AVNAV_BASE_URL=\"%s\";\n"%urllib.quote(baseUrl)
-    SUFFIX="\n})();\n"
+    PREFIX="try{(\nfunction(){\nvar AVNAV_BASE_URL=\"%s\";\n"%urllib.quote(baseUrl)
+    SUFFIX="\n})();\n}catch(e){\nwindow.avnav.api.showToast(e.message+\"\\n\"+(e.stack||e));\n }\n"
     if not os.path.exists(filename):
       self.send_error(404,"File not found")
       return
