@@ -45,7 +45,7 @@ class GpxChartSource extends ChartSourceBase{
      * @param chartEntry
      *        properties: url - the url of the gpx
      *                    icons - the base url for icons (if points have a sym)
-     *                    fallbackIcon - the url for an icon if sym not found (opt)
+     *                    defaultIcon - the url for an icon if sym not found (opt)
      *                    minZoom - minimal zoom (opt)
      *                    maxZoom - maximal zoom (opt)
      *                    minScale - min zoom, lower zoom decrease symbol size (opt)
@@ -101,7 +101,7 @@ class GpxChartSource extends ChartSourceBase{
     getSymbolUrl(sym){
         if (! sym.match(/\./)) sym+=".png";
         let url=this.chartEntry.icons + "/" + sym;
-        if (this.chartEntry.fallbackIcon) url+="?fallback="+encodeURIComponent(this.chartEntry.fallbackIcon);
+        if (this.chartEntry.defaultIcon) url+="?fallback="+encodeURIComponent(this.chartEntry.defaultIcon);
         return url;
     }
     styleFunction(feature,resolution) {

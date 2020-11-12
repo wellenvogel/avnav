@@ -114,6 +114,12 @@ export const InputReadOnly=(props)=>{
 
 export const InputSelect=(props)=>{
     let onClick=props.onClick;
+    let {value,...forwardProps}=props;
+    let label=value;
+    if (typeof value === 'object'){
+        label=value.label;
+        value=value.value;
+    }
     if (props.onChange && props.list){
         onClick=()=> {
             let valueChanged = (newValue)=>{
@@ -125,7 +131,7 @@ export const InputSelect=(props)=>{
             else {
                 finalList = displayList.slice();
                 finalList.forEach((el)=> {
-                    if (el.value == props.value) el.selected = true;
+                    if (el.value == value) el.selected = true;
                 });
             }
             let d =OverlayDialog.createSelectDialog(props.label, finalList, valueChanged);
@@ -138,8 +144,9 @@ export const InputSelect=(props)=>{
         };
     }
     return <InputReadOnly
-        {...props}
+        {...forwardProps}
         onClick={onClick}
+        value={label}
         />
 };
 

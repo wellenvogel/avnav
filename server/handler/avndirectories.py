@@ -151,14 +151,63 @@ class AVNDirectoryHandlerBase(AVNWorker):
       return False
     return True
 
+  def tryFallbackOrFail(self,requestParam,handler,error):
+    if requestParam is None:
+      raise Exception(error)
+    url=AVNUtil.getHttpRequestParam(requestParam,"fallback")
+    if url is None:
+      raise Exception(error)
+    rt=handler.translate_path(re.sub("\?.*","",url))
+    if rt is None:
+      raise Exception(error)
+    return rt
+
+  def getZipEntry(self,zipname,entryName,handler,requestParam=None):
+    if not os.path.exists(zipname):
+      return self.tryFallbackOrFail(requestParam, handler, "zip file %s not found" % zipname)
+    zip = ZipFile(zipname)
+    entry = None
+    try:
+      entry = zip.getinfo(entryName)
+    except KeyError as e:
+      pass
+    if entry is None:
+      return self.tryFallbackOrFail(requestParam, handler, "no entry %s in %s" % (entryName, zipname))
+    handler.send_response(200)
+    handler.send_header("Content-type", handler.getMimeType(entryName))
+    handler.send_header("Content-Length", entry.file_size)
+    handler.send_header("Last-Modified", handler.date_time_string())
+    handler.end_headers()
+    handler.wfile.write(zip.read(entry))
+    return True
 
   def getPathFromUrl(self,url,handler=None,requestParam=None):
     if not url.startswith(self.getPrefix()):
       return None
     path = url[len(self.getPrefix()) + 1:]
     #TODO: should we limit this to only one level?
-    #we could use checkName and this way ensure that we onle have one level
-    originalPath = os.path.join(self.baseDir,self.httpServer.plainUrlToPath(path, False))
+    #we could use checkName and this way ensure that we only have one level
+    subPath=self.httpServer.plainUrlToPath(path, False)
+    #check for zip files in the path
+    pathParts=subPath.split(os.path.sep)
+    hasZip=False
+    for part in pathParts:
+      if part.lower().endswith(".zip"):
+        hasZip=True
+        break
+    if not hasZip:
+      originalPath = os.path.join(self.baseDir, subPath)
+      return originalPath
+    currentPath=self.baseDir
+    for k in range(0,len(pathParts)):
+      part=pathParts[k]
+      currentPath=os.path.join(currentPath,part)
+      if not os.path.exists(currentPath):
+        return None
+      if part.lower().endswith(".zip") and k < (len(pathParts)-1):
+        return self.getZipEntry(currentPath,"/".join(pathParts[k+1:]),handler,requestParam)
+    #we should never end here - but just to be sure
+    originalPath = os.path.join(self.baseDir,subPath)
     return originalPath
 
   def handleSpecialApiRequest(self,command,requestparam,handler):
@@ -308,49 +357,6 @@ class AVNOverlayHandler(AVNDirectoryHandlerBase):
   def __init__(self,param):
     AVNDirectoryHandlerBase.__init__(self, param, "overlays")
     self.baseDir = AVNConfig.getDirWithDefault(self.param, 'overlayDir', "overlays")
-
-  def tryFallbackOrFail(self,requestParam,handler,error):
-    url=AVNUtil.getHttpRequestParam(requestParam,"fallback")
-    if url is None:
-      raise Exception(error)
-    rt=handler.server.tryExternalMappings(url,"",handler)
-    if rt is None:
-      raise Exception(error)
-    return rt
-
-  def getPathFromUrl(self, url, handler=None,requestParam=None):
-    if url.startswith(self.ICONPREFIX):
-      path=url[len(self.ICONPREFIX)+1:]
-      parr=path.split("/")
-      if len(parr) < 0 or len(parr) > 2:
-        self.tryFallbackOrFail(requestParam,handler,"invalid icon request %s"%url)
-      self.checkName(parr[0])
-      if len(parr) == 1:
-        self.checkName(parr[0])
-        fname=os.path.join(self.baseDir,parr[0])
-        return fname
-      if not parr[0].endswith('.zip'):
-        return self.tryFallbackOrFail(requestParam,handler,"icon file %s is no zip file"%parr[0])
-      zipname=os.path.join(self.baseDir,parr[0])
-      if not os.path.exists(zipname):
-        return self.tryFallbackOrFail(requestParam,handler,"zip file %s not found"%zipname)
-      zip=ZipFile(zipname)
-      entry=None
-      try:
-        entry=zip.getinfo(parr[1])
-      except KeyError as e:
-        pass
-      if entry is None:
-        return self.tryFallbackOrFail(requestParam,handler,"no entry %s in %s"%(parr[1],zipname))
-      handler.send_response(200)
-      handler.send_header("Content-type", handler.getMimeType(parr[1]))
-      handler.send_header("Content-Length", entry.file_size)
-      handler.send_header("Last-Modified", handler.date_time_string())
-      handler.end_headers()
-      handler.wfile.write(zip.read(entry))
-      return True
-    else:
-      return super(AVNOverlayHandler, self).getPathFromUrl(url, handler,requestParam)
 
 
 avnav_handlerList.registerHandler(AVNOverlayHandler)

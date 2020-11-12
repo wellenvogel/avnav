@@ -41,7 +41,7 @@ class OverlayItemDialog extends React.Component{
         this.stateHelper = stateHelper(this, props.current || {});
         this.state.itemsFetchCount = 0;
         //we make them only a variable as we consider them to be static
-        this.itemLists={icons:[],chart:[],overlays:[],images:[],user:[],knownOverlays:[],iconFiles:[{label:"--none--"}]};
+        this.itemLists={icons:[{label:"--none--"}],chart:[],overlays:[],images:[],user:[],knownOverlays:[],iconFiles:[{label:"--none--"}]};
         this.getItemList('chart');
         this.getItemList('overlays');
         this.getItemList('images');
@@ -59,7 +59,6 @@ class OverlayItemDialog extends React.Component{
                         if (GuiHelpers.IMAGES.indexOf(Helper.getExt(item.name)) >= 0) {
                             let el=assign({},item);
                             el.label=el.url;
-                            el.value=el;
                             this.itemLists.icons.push(el);
                         }
                     })
@@ -89,6 +88,14 @@ class OverlayItemDialog extends React.Component{
                 Toast("error fetching list of "+type+": "+error);
             })
     }
+    changeType(newType){
+        if (newType == this.stateHelper.getValue('type')) return;
+        let newState={
+            type: newType,
+            opacity: 1
+        };
+        this.stateHelper.setState(newState,true);
+    }
     render(){
         let hasChanges=this.stateHelper.isChanged();
         let currentType=this.stateHelper.getValue('type');
@@ -109,7 +116,7 @@ class OverlayItemDialog extends React.Component{
                     label="type"
                     value={currentType}
                     itemList={[{label:'overlay',value:'overlay'},{label:'chart',value:'chart'}]}
-                    onChange={(nv)=>this.stateHelper.setValue('type',nv)}
+                    onChange={(nv)=>this.changeType(nv)}
                     />
                 <Input
                     className="opacity"
@@ -124,7 +131,7 @@ class OverlayItemDialog extends React.Component{
                         <InputSelect
                             dialogRow={true}
                             label="chart name"
-                            value={this.stateHelper.getValue('chartKey')}
+                            value={{value:this.stateHelper.getValue('chartKey'),label:this.stateHelper.getValue('name')}}
                             list={this.itemLists.chart}
                             fetchCount={this.state.itemsFetchCount}
                             showDialogFunction={this.dialogHelper.showDialog}
@@ -183,6 +190,17 @@ class OverlayItemDialog extends React.Component{
                             label="max scale"
                             value={this.stateHelper.getValue('maxScale')||0}
                             onChange={(nv)=>this.stateHelper.setValue('maxScale',nv)}
+                            />
+                        <InputSelect
+                            dialogRow={true}
+                            label="default icon"
+                            value={this.stateHelper.getValue('defaultIcon')||'--none--'}
+                            list={this.itemLists.icons}
+                            fetchCount={this.state.itemsFetchCount}
+                            showDialogFunction={this.dialogHelper.showDialog}
+                            onChange={(nv)=>{
+                                this.stateHelper.setState({defaultIcon:nv.url});
+                                }}
                             />
                     </React.Fragment>
                 }
