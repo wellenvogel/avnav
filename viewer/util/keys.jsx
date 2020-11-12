@@ -186,12 +186,6 @@ let keys={
             computedButtonWidth: K
 
         },
-        mainpage:{
-            chartList: K,
-            status: K,
-            addOns: K,
-            selectedChartIndex:K,
-        },
         gpspage:{
             pageNumber:K,
         },

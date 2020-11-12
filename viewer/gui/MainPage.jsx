@@ -22,8 +22,8 @@ import GuiHelper from '../util/GuiHelpers.js';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 import Mob from '../components/Mob.js';
 import Addons from '../components/Addons.js';
+import EditOverlaysDialog from '../components/EditOverlaysDialog.jsx';
 
-const DynamicList = Dynamic(ItemList);
 
 
 const getImgSrc=function(color){
@@ -32,29 +32,127 @@ const getImgSrc=function(color){
     if (color == "yellow")return globalStore.getData(keys.properties.statusYellowImage);
 };
 
-const selectChart=(offset)=>{
-    let chartList=globalStore.getData(keys.gui.mainpage.chartList);
-    let len=0;
-    if (chartList) len=chartList.length;
-    let currentIndex=globalStore.getData(keys.gui.mainpage.selectedChartIndex);
-    let newIndex=(currentIndex||0)+offset;
-    if (newIndex >= len){
-        newIndex=0;
-    }
-    if (newIndex < 0){
-        newIndex=0;
-    }
-    if (newIndex != currentIndex){
-        globalStore.storeData(keys.gui.mainpage.selectedChartIndex,newIndex);
-    }
+class BottomLine extends React.Component {
+        constructor(props) {
+            super(props);
+            this.state = {status:{}};
+            this.timer = GuiHelper.lifecycleTimer(this,
+                this.timerCall,
+                globalStore.getData(keys.properties.positionQueryTimeout), true);
+            this.timerCall = this.timerCall.bind(this);
+            GuiHelper.storeHelperState(this,'gps',{
+                valid: keys.nav.gps.valid,
+                connectionLost: keys.nav.gps.connectionLost
+            })
+        }
+
+        timerCall(sequence) {
+            if (sequence != this.timer.currentSequence()) return;
+            Requests.getJson("?request=nmeaStatus")
+                .then((json)=> {
+                    this.setState({status: json.data});
+                    this.timer.startTimer(sequence);
+                })
+                .catch((error)=> {
+                    this.setState({status: {}});
+                    this.timer.startTimer(sequence);
+                })
+        }
+
+        render() {
+            //we have the raw nmea in "raw"
+            let nmeaColor = !this.state.gps.connectionLost ? "yellow" : "red";
+            let aisColor = !this.state.gps.connectionLost ? "yellow" : "red";
+            let nmeaText = !this.state.gps.connectionLost ? "" : "server connection lost";
+            let aisText = "";
+            if (!this.state.gps.connectionLost) {
+                if (this.state.status && this.state.status.nmea) {
+                    nmeaColor = this.state.status.nmea.status;
+                    nmeaText = this.state.status.nmea.source + ":" + this.state.status.nmea.info;
+                }
+                if (this.state.status && this.state.status.ais) {
+                    aisColor = this.state.status.ais.status;
+                    aisText = this.state.status.ais.source + ":" + this.state.status.ais.info;
+                }
+            }
+            return (
+                <div className='footer'>
+                    <div className='inner'>
+                        <div className='status'>
+                            <div >
+                                <img className='status_image' src={getImgSrc(nmeaColor)}/>
+                                NMEA&nbsp;{nmeaText}
+                            </div>
+                            {!this.state.gps.connectionLost ? <div >
+                                <img className='status_image' src={getImgSrc(aisColor)}/>
+                                AIS&nbsp;{aisText}
+                            </div> : null
+                            }
+                        </div>
+                        <div className="link">
+                            <div > AVNav Version <span >{avnav.version}</span></div>
+                            <div><a href="http://www.wellenvogel.de/software/avnav/index.php" className="extLink">www.wellenvogel.de/software/avnav/index.php</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )
+        }
+    };
+
+const ChartItem = (props)=> {
+    let cls="chartItem";
+    if (props.selected) cls+=" activeEntry";
+    if (props.originalScheme) cls+=" userAction";
+    let isConnected=globalStore.getData(keys.properties.connectedMode,false);
+    return (
+        <div className={cls} onClick={props.onClick}>
+            <img src={props.icon||chartImage}/>
+            <span className="chartName">{props.name}</span>
+            {isConnected && <Button
+                className="smallButton"
+                name="MainOverlays"
+                onClick={(ev)=>{
+                    ev.stopPropagation();
+                    EditOverlaysDialog.createDialog(props);
+                }}
+                />}
+        </div>
+    );
 };
 
 class MainPage extends React.Component {
     constructor(props) {
         super(props);
-        this.timerCall=this.timerCall.bind(this);
+        this.state={
+            chartList:[],
+            addOns:[],
+            selectedChart:0,
+            status:{}
+        };
+        GuiHelper.storeHelperState(this,'reload',{sequence:keys.gui.global.reloadSequence})
         let self=this;
-        this.buttons = [
+        this.selectChart(0);
+        GuiHelper.keyEventHandler(this,(component,action)=>{
+            if (action == "selectChart"){
+                let chartlist=globalStore.getData(keys.gui.mainpage.chartList);
+                let selected=globalStore.getData(keys.gui.mainpage.selectedChartIndex,0);
+                if (chartlist && chartlist[selected]){
+                    showNavpage(chartlist[selected]);
+                }
+            }
+            if (action == "nextChart"){
+                self.selectChart(1);
+            }
+            if (action == "previousChart"){
+                self.selectChart(-1);
+            }
+        },"page",["selectChart","nextChart","previousChart"]);
+
+    }
+
+    getButtons() {
+        return [
             {
                 name: 'ShowStatus',
                 onClick: ()=> {
@@ -77,7 +175,7 @@ class MainPage extends React.Component {
             },
             {
                 name: 'Connected',
-                storeKeys: [keys.gui.global.onAndroid, keys.properties.connectedMode,keys.gui.capabilities.canConnect],
+                storeKeys: [keys.gui.global.onAndroid, keys.properties.connectedMode, keys.gui.capabilities.canConnect],
                 updateFunction: (state, skeys) => {
                     return {
                         visible: !state[keys.gui.global.onAndroid] && state[keys.gui.capabilities.canConnect] == true,
@@ -120,116 +218,63 @@ class MainPage extends React.Component {
             },
             {
                 name: 'MainAddOns',
-                storeKeys: keys.gui.mainpage.addOns,
-                updateFunction: (state, skeys)=> {
-                    return {
-                        visible: state[keys.gui.mainpage.addOns] && state[keys.gui.mainpage.addOns].length > 0
-                    };
-                },
                 onClick: ()=> {
                     history.push('addonpage')
                 },
+                visible: this.state.addOns.length > 0,
                 editDisable: true
             }
         ];
-        globalStore.storeData(keys.gui.mainpage.chartList, []);
-        globalStore.storeData(keys.gui.mainpage.addOns, []);
-        selectChart(0);
-        GuiHelper.keyEventHandler(this,(component,action)=>{
-            if (action == "selectChart"){
-                let chartlist=globalStore.getData(keys.gui.mainpage.chartList);
-                let selected=globalStore.getData(keys.gui.mainpage.selectedChartIndex,0);
-                if (chartlist && chartlist[selected]){
-                    showNavpage(chartlist[selected]);
-                }
-            }
-            if (action == "nextChart"){
-                selectChart(1);
-            }
-            if (action == "previousChart"){
-                selectChart(-1);
-            }
-        },"page",["selectChart","nextChart","previousChart"]);
-        this.timer=GuiHelper.lifecycleTimer(this,this.timerCall,globalStore.getData(keys.properties.positionQueryTimeout),true);
     }
 
 
     componentDidMount() {
         globalStore.storeData(keys.gui.global.soundEnabled,true);
-        readAddOns();
-        fillList();
-    }
-    componentDidUpdate(){
-        readAddOns();
-        fillList();
+        this.readAddOns();
+        this.fillList();
     }
 
-    timerCall(sequence){
-        if (sequence != this.timer.currentSequence()) return;
-        Requests.getJson("?request=nmeaStatus")
-            .then((json)=>{
-                globalStore.storeData(keys.gui.mainpage.status,json.data);
-                this.timer.startTimer(sequence);
+    selectChart(offset){
+        let len=(this.state.chartList||[]).length;
+        let currentIndex=this.state.selectedChart;
+        let newIndex=currentIndex+offset;
+        if (newIndex >= len){
+            newIndex=0;
+        }
+        if (newIndex < 0){
+            newIndex=0;
+        }
+        if (newIndex != currentIndex){
+            this.setState({selectedChart:newIndex});
+        }
+    };
+
+
+    fillList() {
+        Requests.getJson("?request=list&type=chart",{timeout:3*parseFloat(globalStore.getData(keys.properties.networkTimeout))}).then((json)=>{
+                let items = [];
+                for (let e in json.items) {
+                    let chartEntry = json.items[e];
+                    if (chartEntry.key) chartEntry.key=chartEntry.name;
+                    items.push(chartEntry);
+                }
+                this.setState({chartList:items});
+            },
+            (error)=>{
+                Toast("unable to read chart list: "+error);
+            });
+    };
+    readAddOns() {
+        Addons.readAddOns(true)
+            .then((items)=>{
+                this.setState({addOns: items});
             })
-            .catch((error)=>{
-                globalStore.storeData(keys.gui.mainpage.status,{});
-                this.timer.startTimer(sequence);
-            })
-    }
+            .catch(()=>{});
+    };
 
     render() {
         let self = this;
-        let ChartItem = function (props) {
-            let cls="chartItem";
-            if (props.selected) cls+=" activeEntry";
-            if (props.originalScheme) cls+=" userAction";
-            return (
-                <div className={cls} onClick={props.onClick}>
-                    <img src={props.icon||chartImage}/>
-                    <span className="chartName">{props.name}</span>
-                    <span className="more"/>
-                </div>
-            );
-        };
-        let BottomLine = Dynamic(function (props) {
-            //we have the raw nmea in "raw"
-            let nmeaColor=!props.connectionLost?"yellow":"red";
-            let aisColor=!props.connectionLost?"yellow":"red";
-            let nmeaText=!props.connectionLost?"":"server connection lost";
-            let aisText="";
-            if (!props.connectionLost) {
-                if (props.status && props.status.nmea) {
-                    nmeaColor = props.status.nmea.status;
-                    nmeaText = props.status.nmea.source + ":" + props.status.nmea.info;
-                }
-                if (props.status && props.status.ais) {
-                    aisColor = props.status.ais.status;
-                    aisText = props.status.ais.source + ":" + props.status.ais.info;
-                }
-            }
-            return (
-                <div className='footer'>
-                    <div className='inner'>
-                        <div className='status'>
-                            <div >
-                                <img className='status_image' src={getImgSrc(nmeaColor)}/>
-                                NMEA&nbsp;{nmeaText}
-                            </div>
-                            {!props.connectionLost ? <div >
-                                <img className='status_image' src={getImgSrc(aisColor)}/>
-                                AIS&nbsp;{aisText}
-                            </div> : null
-                            }
-                        </div>
-                        <div className="link">
-                            <div > AVNav Version <span >{avnav.version}</span></div>
-                            <div><a href="http://www.wellenvogel.de/software/avnav/index.php" className="extLink">www.wellenvogel.de/software/avnav/index.php</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )
-        });
+
         return (
             <Page
                   className={this.props.className}
@@ -237,14 +282,11 @@ class MainPage extends React.Component {
                   id="mainpage"
                   title="AvNav"
                   mainContent={
-                    <DynamicList className="mainContent"
+                    <ItemList className="mainContent"
                                itemClass={ChartItem}
                                onItemClick={showNavpage}
-                               itemList={[]}
-                               storeKeys={{
-                                    itemList:keys.gui.mainpage.chartList,
-                                    selectedIndex: keys.gui.mainpage.selectedChartIndex
-                                    }}
+                               itemList={this.state.chartList}
+                               selectedIndex={this.state.selectedChart}
                                scrollable={true}
                                listRef={(list)=>{
                                     if (!list) return;
@@ -256,13 +298,11 @@ class MainPage extends React.Component {
                         />
                         }
                   bottomContent={
-                    <BottomLine storeKeys={{
-                        status:keys.gui.mainpage.status,
-                        valid: keys.nav.gps.valid,
-                        connectionLost: keys.nav.gps.connectionLost
-                        }} />
+                    <BottomLine />
                     }
-                  buttonList={self.buttons}/>
+                  buttonList={self.getButtons()}
+                  dummy={self.state.status}
+                />
         );
 
 
@@ -272,27 +312,7 @@ class MainPage extends React.Component {
 }
 
 
-const fillList = function () {
-    Requests.getJson("?request=list&type=chart",{timeout:3*parseFloat(globalStore.getData(keys.properties.networkTimeout))}).then((json)=>{
-            let items = [];
-            for (let e in json.items) {
-                let chartEntry = json.items[e];
-                if (chartEntry.key) chartEntry.key=chartEntry.name;
-                items.push(chartEntry);
-            }
-            globalStore.storeData(keys.gui.mainpage.chartList, items);
-        },
-        (error)=>{
-            Toast("unable to read chart list: "+error);
-        });
-};
-const readAddOns = function () {
-    Addons.readAddOns(true)
-        .then((items)=>{
-            globalStore.storeData(keys.gui.mainpage.addOns, items);
-        })
-        .catch(()=>{});
-};
+
 
 /**
  * the click handler for the charts
@@ -307,4 +327,4 @@ const showNavpage = function (entry) {
 
 
 
-export default Dynamic(MainPage,{storeKeys:keys.gui.global.reloadSequence});
+export default MainPage;

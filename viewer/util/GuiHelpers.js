@@ -83,6 +83,59 @@ const lifecycleSupport=(thisref,callback,opt_onUpdate)=> {
     };
 };
 
+class Callback{
+    constructor(cb){
+        this.cb=cb;
+    }
+    dataChanged(data,keys){
+        this.cb(data,keys);
+    }
+}
+/**
+ * easy access to global store
+ * alternative to the Dynamic HOC
+ * @param thisref
+ * @param dataCanged will be called with an object with the new values
+ * @param storeKeys
+ * @param opt_callImmediate - immediately call the cb with initial values
+ */
+const storeHelper=(thisref,dataCanged,storeKeys,opt_callImmediate)=>{
+    let cbHandler=new Callback(()=>{
+        dataCanged(globalStore.getMultiple(storeKeys));
+    });
+    globalStore.register(cbHandler,storeKeys);
+    lifecycleSupport(thisref,(unmount)=>{
+        if (unmount ){
+            globalStore.deregister(cbHandler)
+        }
+    });
+    if (opt_callImmediate){
+        dataCanged(globalStore.getMultiple(storeKeys));
+    }
+};
+
+/**
+ * get some data from the global store into our state
+ * @param thisref
+ * @param stateName
+ * @param storeKeys
+ */
+const storeHelperState=(thisref,stateName,storeKeys)=>{
+    let cbHandler=new Callback((data)=>{
+        let ns={};
+        ns[stateName]=globalStore.getMultiple(storeKeys);
+        thisref.setState(ns);
+    });
+    if (! thisref.state) thisref.state={};
+    thisref.state[stateName]=globalStore.getMultiple(storeKeys);
+    globalStore.register(cbHandler,storeKeys);
+    lifecycleSupport(thisref,(unmount)=>{
+        if ( unmount ){
+            globalStore.deregister(cbHandler)
+        }
+    });
+};
+
 /**
  * set up a lifecycle controlled timer
  * @param thisref
@@ -209,5 +262,7 @@ export default {
     scrollInContainer,
     keyEventHandler,
     nameKeyEventHandler,
-    IMAGES
+    IMAGES,
+    storeHelper,
+    storeHelperState
 };
