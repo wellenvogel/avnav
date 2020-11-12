@@ -47,15 +47,34 @@ class ChartSourceBase {
      */
     constructor(mapholder, chartEntry) {
         this.mapholder = mapholder;
+        /**
+         * @protected
+         */
         this.chartEntry = assign({},chartEntry);
         for (let k in this.chartEntry){
             if (typeof this.chartEntry[k] === 'function'){
                 delete this.chartEntry[k];
             }
         }
+        /**
+         * @protected
+         * @type {undefined}
+         */
         this.encryptFunction = undefined;
-        this.isReadyFlag = false;
+        /**
+         * @protected
+         * @type {boolean}
+         */
+        this.isReadyFlag = false
+        /**
+         * @protected
+         * @type {boolean}
+         */
+        ;
         this.layers = [];
+    }
+    getConfig(){
+        return(assign({},this.chartEntry));
     }
     isReady(){
         return this.isReadyFlag;
@@ -67,6 +86,7 @@ class ChartSourceBase {
         return this.layers;
 
     }
+
 
     /**
      * returns a promise that resolves to 1 for changed
@@ -148,6 +168,10 @@ class ChartSourceBase {
     setVisible(visible){
         if (! this.isReady()) return;
         this.layers.forEach((layer)=>layer.setVisible(visible));
+    }
+    resetVisible(){
+        if (! this.isReady()) return;
+        this.layers.forEach((layer)=>layer.setVisible(this.chartEntry.enabled));
     }
 
 }

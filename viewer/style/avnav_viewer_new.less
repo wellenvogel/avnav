@@ -384,6 +384,12 @@ html,body {
     float: left;
     margin-right: 2em;
   }
+  &.preventEdit{
+    .button.Edit {
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
 }
 
 //-- Color Picker

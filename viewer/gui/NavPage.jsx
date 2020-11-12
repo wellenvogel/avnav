@@ -11,7 +11,7 @@ import keys from '../util/keys.jsx';
 import React from 'react';
 import PropertyHandler from '../util/propertyhandler.js';
 import history from '../util/history.js';
-import MapPage from '../components/MapPage.jsx';
+import MapPage,{overlayDialog} from '../components/MapPage.jsx';
 import Toast from '../components/Toast.jsx';
 import Requests from '../util/requests.js';
 import assign from 'object-assign';
@@ -331,6 +331,11 @@ class NavPage extends React.Component{
                 },
                 overflow: true
 
+            },
+            {
+                name: "NavOverlays",
+                onClick:()=>overlayDialog(),
+                overflow: true
             },
             Mob.mobDefinition,
             EditPageDialog.getButtonDef(PAGENAME,

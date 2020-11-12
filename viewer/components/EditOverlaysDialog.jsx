@@ -12,6 +12,7 @@ import Requests from '../util/requests.js';
 import Toast from './Toast.jsx';
 import Helper from '../util/helper.js';
 import GuiHelpers from '../util/GuiHelpers.js';
+import {getKeyFromOverlay} from '../map/mapholder.js';
 
 const filterOverlayItem=(item)=>{
     let rt=undefined;
@@ -28,8 +29,10 @@ const filterOverlayItem=(item)=>{
     }
     delete rt.selected;
     delete rt.index;
+    delete rt.isDefault;
     return rt;
 };
+
 
 const ITEM_PROPERTIES={enabled:true};
 const KNOWN_OVERLAY_EXTENSIONS=['gpx'];
@@ -245,7 +248,7 @@ const OverlayElement=(props)=>{
                 onChange={(nv)=>{props.onClick(nv?"enable":"disable")}}
                 />
             <Button name="Edit"
-                    className={"smallButton "+(props.isDefault?"disabled":"")}
+                    className={"smallButton "+((props.isDefault||props.preventEdit)?"disabled":"")}
                     onClick={(ev)=>{ev.stopPropagation();props.onClick('edit')}}
                 />
              </div>
@@ -284,6 +287,7 @@ class EditOverlaysDialog extends React.Component{
         })
     }
     insert(before){
+        if (this.props.preventEdit) return;
         if (before) {
             if (this.state.selectedIndex === undefined){
                 return;
@@ -302,6 +306,7 @@ class EditOverlaysDialog extends React.Component{
             .catch((reason)=>{if (reason) Toast(reason);});
     }
     editItem(item){
+        if (this.props.preventEdit) return;
         this.showItemDialog(item)
             .then((changedItem)=>{
                 this.updateItem(changedItem);
@@ -309,6 +314,7 @@ class EditOverlaysDialog extends React.Component{
             .catch((reason)=>{if (reason) Toast(reason);})
     }
     deleteItem(item){
+        if (this.props.preventEdit) return;
         if (item.index < 0 || item.index >= this.getCurrentOverlays().length){
             return;
         }
@@ -326,9 +332,9 @@ class EditOverlaysDialog extends React.Component{
         this.stateHelper.setState({overlays:overlays});
     }
     updateDefault(item,newValue) {
-        if (! item.name) return;
+        if (! getKeyFromOverlay(item)) return;
         let current = assign({}, this.stateHelper.getValue('defaultsOverride'));
-        current[item.name]=assign({},current[item.name],newValue);
+        current[getKeyFromOverlay(item)]=assign({},current[getKeyFromOverlay(item)],newValue);
         this.stateHelper.setValue('defaultsOverride',current);
     }
 
@@ -344,7 +350,7 @@ class EditOverlaysDialog extends React.Component{
         let defaults=this.stateHelper.getValues().defaults||[].slice();
         let overrides=this.stateHelper.getValue('defaultsOverride')||{};
         defaults.forEach((def)=>{
-            assign(def,overrides[def.name],{isDefault:true});
+            assign(def,overrides[getKeyFromOverlay(def,true)],{isDefault:true});
         });
         return defaults;
 
@@ -357,15 +363,15 @@ class EditOverlaysDialog extends React.Component{
             window.setTimeout(self.props.updateDimensions,100);
         }
         let hasOverlays=this.getCurrentOverlays().length> 0;
-        let selectedItem=(this.state.selectedIndex >=0 && this.state.selectedIndex < this.getCurrentOverlays().length)?
+        let selectedItem=(!this.props.preventEdit && this.state.selectedIndex >=0 && this.state.selectedIndex < this.getCurrentOverlays().length)?
             this.getCurrentOverlays()[this.state.selectedIndex]:undefined;
         if (selectedItem) selectedItem.index=this.state.selectedIndex;
         return (
             <React.Fragment>
-            <div className="selectDialog editOverlaysDialog">
+            <div className={"selectDialog editOverlaysDialog"+(this.props.preventEdit?" preventEdit":"")}>
                 <h3 className="dialogTitle">{this.props.title||'Edit Overlays'}</h3>
                 <div className="dialogRow info"><span className="inputLabel">Chart</span>{this.props.chartName}</div>
-                {!this.props.noDefault && <Checkbox
+                {(!this.props.noDefault && ! this.props.preventEdit) && <Checkbox
                     className="useDefault"
                     dialogRow={true}
                     label="use default"
@@ -392,7 +398,7 @@ class EditOverlaysDialog extends React.Component{
                 <ItemList
                     className="overlayItems"
                     itemClass={OverlayElement}
-                    selectedIndex={this.state.selectedIndex}
+                    selectedIndex={this.props.preventEdit?undefined:this.state.selectedIndex}
                     onItemClick={(item,data)=>{
                         if (data == 'select'){
                             this.setState({selectedIndex:item.index});
@@ -416,10 +422,20 @@ class EditOverlaysDialog extends React.Component{
                 <div className="insertButtons">
                     {selectedItem?<DB name="delete" onClick={()=>this.deleteItem(selectedItem)}>Delete</DB>:null}
                     {selectedItem?<DB name="edit" onClick={()=>this.editItem(selectedItem)}>Edit</DB>:null}
-                    {hasOverlays?<DB name="before" onClick={()=>this.insert(true)}>Insert Before</DB>:null}
-                    <DB name="after" onClick={()=>this.insert(false)}>Insert After</DB>
+                    {(hasOverlays && ! this.props.preventEdit)?<DB name="before" onClick={()=>this.insert(true)}>Insert Before</DB>:null}
+                    {!this.props.preventEdit && <DB name="after" onClick={()=>this.insert(false)}>Insert After</DB>}
                 </div>
                 <div className="dialogButtons">
+                    {this.props.resetCallback &&
+                        <DB
+                            name="reset"
+                            onClick={()=>{
+                                this.props.closeCallback();
+                                this.props.resetCallback();
+                                }}
+                            >Reset
+                        </DB>
+                    }
                     {this.props.updateCallback?
                         <DB
                             name="ok"
@@ -455,7 +471,9 @@ EditOverlaysDialog.propTypes={
     title: PropTypes.string,
     current:PropTypes.any, //the current config
     updateCallback: PropTypes.func,
-    closeCallback: PropTypes.func.isRequired
+    resetCallback: PropTypes.func,
+    closeCallback: PropTypes.func.isRequired,
+    preventEdit: PropTypes.bool
 };
 
 

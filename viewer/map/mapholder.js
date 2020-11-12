@@ -197,6 +197,12 @@ const MapHolder=function(){
     this.sources=[];
 
     /**
+     * a map with the name as key and override parameters
+     * @type {{}}
+     */
+    this.overlayOverrides={};
+
+    /**
      * last div used in loadMap
      * @type {undefined}
      * @private
@@ -390,6 +396,12 @@ MapHolder.prototype.createChartSource=function(description){
 
 };
 
+export const getKeyFromOverlay=(overlayConfig,opt_forceDefault)=>{
+    let prefix="local-";
+    if (overlayConfig.isDefault || opt_forceDefault) prefix="default-";
+    if (overlayConfig.type == 'chart') return prefix+(overlayConfig.chartKey||overlayConfig.name);
+    return prefix+overlayConfig.name;
+};
 MapHolder.prototype.loadMap=function(div){
     this._lastMapDiv=div;
     let self=this;
@@ -409,9 +421,17 @@ MapHolder.prototype.loadMap=function(div){
          * @param overlayLayers
          */
         let newSources=[chartSource];
+        if (this.sources.length < 1 ||
+            this.sources[0].getChartKey() != chartSource.getChartKey ){
+            //new chart - forget all local overlay overrides
+            this.overlayOverrides={};
+        }
         let prepareAndCreate=(newSources)=>{
             this.prepareSourcesAndCreate(newSources)
-                .then((res)=>{resolve(res)})
+                .then((res)=>{
+                    self.updateOverlayConfig(); //update all sources with existing config
+                    resolve(res)
+                })
                 .catch((error)=>{reject(error)});
         };
         let checkChanges=()=>{
@@ -451,7 +471,7 @@ MapHolder.prototype.loadMap=function(div){
                 if (config.useDefault === undefined) config.useDefault=true;
                 if (config.useDefault && config.defaults){
                     for (let k in config.defaults){
-                        let dv=assign(config.defaults[k],overrides[config.defaults[k].name],{isDefault:true});
+                        let dv=assign(config.defaults[k],overrides[getKeyFromOverlay(config.defaults[k])],{isDefault:true});
                         let overlaySource = this.createChartSource(dv);
                         if (overlaySource) newSources.push(overlaySource);
                     }
@@ -470,6 +490,57 @@ MapHolder.prototype.loadMap=function(div){
 
     });
 
+};
+MapHolder.prototype.getCurrentOverlayConfig=function(){
+    if (this.sources.length <2) return;
+    let rt={
+        useDefault:true,
+        overlays:[],
+        defaults:[]
+    };
+    for (let i=1;i<this.sources.length;i++){
+        let source=this.sources[i];
+        let config=source.getConfig();
+        if (config.isDefault){
+            rt.defaults.push(assign(config,this.overlayOverrides[getKeyFromOverlay(config)]));
+        }
+        else{
+            rt.overlays.push(assign(config,this.overlayOverrides[getKeyFromOverlay(config)]));
+        }
+    };
+    return rt;
+};
+MapHolder.prototype.updateOverlayConfig=function(newConfig){
+    if (newConfig){
+        let overrides=assign({},this.overlayOverrides);
+        if (newConfig.overlays){
+            newConfig.overlays.forEach((overlay)=>{
+                overrides[getKeyFromOverlay(overlay)]= {enabled:overlay.enabled,opacity:overlay.opacity};
+            });
+        }
+        if (newConfig.defaultsOverride){
+            for (let k in newConfig.defaultsOverride){
+                overrides[k]={enabled:newConfig.defaultsOverride[k].enabled};
+            }
+        }
+        this.overlayOverrides=overrides;
+    }
+    for (let i=0;i<this.sources.length;i++){
+        let source=this.sources[i];
+        let override=this.overlayOverrides[getKeyFromOverlay(source.getConfig())];
+        if (override){
+            source.setVisible(override.enabled === undefined || override.enabled);
+            //TODO: opcaity
+        }
+        else{
+            source.resetVisible();
+        }
+    }
+};
+
+MapHolder.prototype.resetOverlayConfig=function(){
+    this.overlayOverrides={};
+    this.updateOverlayConfig();
 };
 
 MapHolder.prototype.getBaseLayer=function(){
@@ -1321,4 +1392,3 @@ MapHolder.prototype.setImageStyles=function(styles){
 };
 
 export default new MapHolder();
-

@@ -30,6 +30,7 @@ import navobjects from '../nav/navobjects.js';
 import EditWidgetDialog from '../components/EditWidgetDialog.jsx';
 import LayoutHandler from '../util/layouthandler.js';
 import EulaDialog from './EulaDialog.jsx';
+import EditOverlaysDialog from './EditOverlaysDialog.jsx';
 
 const SHOW_MODE={
     never:0,
@@ -228,6 +229,26 @@ MapPage.propertyTypes={
     mapEventCallback:   PropTypes.func,
     id:                 PropTypes.string,
     overlayContent:     PropTypes.any               //overlay in the map container
+};
+
+export const overlayDialog=(opt_chartName)=>{
+    let current=MapHolder.getCurrentOverlayConfig();
+    OverlayDialog.dialog((props)=> {
+        return <EditOverlaysDialog
+            {...props}
+            chartName={opt_chartName||MapHolder.getCurrentChartEntry().name}
+            title="Active Overlays"
+            current={current}
+            updateCallback={(newConfig)=>{
+                MapHolder.updateOverlayConfig(newConfig);
+                }
+            }
+            resetCallback={()=>{
+                MapHolder.resetOverlayConfig();
+            }}
+            preventEdit={true}
+            />;
+    });
 };
 
 let DynamicPage=Dynamic(MapPage,{
