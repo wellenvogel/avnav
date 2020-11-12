@@ -189,11 +189,12 @@ const getExt=(name)=>{
     return name.replace(/.*\./,'').toLocaleLowerCase();
 };
 const allowedItemActions=(props)=>{
+    let isConnected=globalStore.getData(keys.properties.connectedMode,true);
     let ext=getExt(props.name);
     if (props.type == 'route') ext="gpx";
     if (props.type == 'layout') ext="json";
     let showView=(props.type == 'overlays' || props.type == 'user' || props.type=='images' || (props.type == 'route' && props.server) || props.type == 'track' || props.type == 'layout') && ViewPage.VIEWABLES.indexOf(ext)>=0;
-    let showEdit=((((props.type == 'overlays' || props.type == 'user') && props.size !== undefined && props.size < ViewPage.MAXEDITSIZE)|| (props.type == 'layout' && props.canDelete)  ) && ViewPage.EDITABLES.indexOf(ext) >=0);
+    let showEdit=(isConnected && (((props.type == 'overlays' || props.type == 'user') && props.size !== undefined && props.size < ViewPage.MAXEDITSIZE)|| (props.type == 'layout' && props.canDelete)  ) && ViewPage.EDITABLES.indexOf(ext) >=0);
     let showDownload=false;
     if (props.canDownload || props.type === "track"
         || props.type === "route"
@@ -208,10 +209,11 @@ const allowedItemActions=(props)=>{
     if (props.canDelete !== undefined){
         showDelete=props.canDelete && ! props.active;
     }
-    let showRename=(props.type == 'user' || props.type == 'images' || props.type == 'overlays' );
-    let showApp=(props.type == 'user' && ext == 'html' && globalStore.getData(keys.gui.capabilities.addons));
+    if (! isConnected && (props.type != 'route' || props.isServer)) showDelete=false;
+    let showRename=isConnected && (props.type == 'user' || props.type == 'images' || props.type == 'overlays' );
+    let showApp=isConnected && (props.type == 'user' && ext == 'html' && globalStore.getData(keys.gui.capabilities.addons));
     let isApp=(showApp && props.isAddon);
-    let showOverlay=(props.type === 'chart' && globalStore.getData(keys.gui.capabilities.uploadOverlays));
+    let showOverlay=(isConnected && props.type === 'chart' && globalStore.getData(keys.gui.capabilities.uploadOverlays));
     return {
         showEdit:showEdit,
         showView:showView,
@@ -1270,11 +1272,12 @@ class DownloadPage extends React.Component{
             },
             {
                 name:'DownloadPageUpload',
-                visible: type == 'route' || type == 'layout'
+                visible: (type == 'route' || type == 'layout'
                     || (type =='chart' && globalStore.getData(keys.gui.capabilities.uploadCharts,false))
                     || (type == 'user' && globalStore.getData(keys.gui.capabilities.uploadUser,false))
                     || (type == 'images' && globalStore.getData(keys.gui.capabilities.uploadImages,false))
-                    || (type == 'overlays' && globalStore.getData(keys.gui.capabilities.uploadOverlays,false)),
+                    || (type == 'overlays' && globalStore.getData(keys.gui.capabilities.uploadOverlays,false))) &&
+                    globalStore.getData(keys.properties.connectedMode,true),
                 onClick:()=>{
                     if (avnav.android){
                         let nextId=globalStore.getData(keys.gui.downloadpage.requestedUploadId,0)+1;

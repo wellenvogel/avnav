@@ -318,8 +318,16 @@ class SettingsPage extends React.Component{
                 onClick:()=>{
                     this.handleLayoutClick();
                 },
+                updateFunction:(state)=>{
+                    return {
+                        toggle:state.toggle,
+                        visible: ! state.cap || state.con
+                    }
+                },
                 storeKeys:{
-                    toggle: keys.gui.global.layoutEditing
+                    toggle: keys.gui.global.layoutEditing,
+                    cap: keys.gui.capabilities.uploadLayout,
+                    con: keys.properties.connectedMode
                 }
             },
             {
@@ -329,6 +337,9 @@ class SettingsPage extends React.Component{
                         self.resetChanges();
                         history.push("addonconfigpage");
                     });
+                },
+                storeKeys:{
+                    visible:keys.properties.connectedMode
                 }
             },
             Mob.mobDefinition,
