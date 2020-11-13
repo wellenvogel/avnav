@@ -134,12 +134,17 @@ const ButtonSizer=Dynamic((props)=>{
     );
 
 
+let lastError={
+};
+
 class App extends React.Component {
     constructor(props) {
         super(props);
         this.checkSizes=this.checkSizes.bind(this);
         this.keyDown=this.keyDown.bind(this);
-        this.state={};
+        this.state={
+            error:0
+        };
         Requests.getJson("keys.json",{useNavUrl:false,checkOk:false}).then(
             (json)=>{
                 KeyHandler.registerMappings(json);
@@ -178,6 +183,16 @@ class App extends React.Component {
         },'addon',['0','1','2','3','4','5','6','7']);
 
     }
+    static getDerivedStateFromError(error) {
+        lastError.error=error;
+        lastError.stack=(error||{}).stack;
+        // Update state so the next render will show the fallback UI.
+        return { error: 1 };
+    }
+    componentDidCatch(error,errorInfo){
+        lastError.componentStack=(errorInfo||{}).componentStack;
+        this.setState({error:2});
+    }
     checkSizes(){
         if (globalStore.getData(keys.gui.global.hasActiveInputs,false)) return;
         if (! this.refs.app) return;
@@ -210,6 +225,29 @@ class App extends React.Component {
         KeyHandler.handleKeyEvent(evt);
     }
     render(){
+        if (this.state.error){
+            let version=(window.avnav||{}).version;
+            let etext=`VERSION:${version}\nERROR:${lastError.error}\n${lastError.stack}\n${lastError.componentStack}`;
+            let etextData='data:text/plain;charset=utf-8,'+encodeURIComponent(etext);
+            return <div className="errorDisplay">
+                <h1>Internal Error</h1>
+                <button
+                    className="button"
+                    onClick={()=>window.location.href=window.location.href}
+                    >
+                    Reload App
+                </button>
+                <a className="errorDownload button"
+                   href={etextData}
+                   download="AvNavError"
+                    >
+                    Download Error
+                </a>
+                <div className="errorInfo">
+                    {etext}
+                </div>
+                </div>
+        }
         const Dialogs = OverlayDialog.getDialogContainer;
         return <div
             className="app"
