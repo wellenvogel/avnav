@@ -53,7 +53,8 @@ class Callback{
 
 const EventTypes={
     SELECTAIS:1,
-    SELECTWP: 2
+    SELECTWP: 2,
+    RELOAD: 3
 };
 
 
@@ -430,6 +431,7 @@ MapHolder.prototype.loadMap=function(div){
             this.prepareSourcesAndCreate(newSources)
                 .then((res)=>{
                     self.updateOverlayConfig(); //update all sources with existing config
+                    this.pubSub.publish(PSTOPIC,{type:this.EventTypes.RELOAD});
                     resolve(res)
                 })
                 .catch((error)=>{reject(error)});
@@ -491,6 +493,9 @@ MapHolder.prototype.loadMap=function(div){
     });
 
 };
+MapHolder.prototype.hasOverlays=function(){
+    return this.sources.length > 1;
+}
 MapHolder.prototype.getCurrentOverlayConfig=function(){
     if (this.sources.length <2) return;
     let rt={

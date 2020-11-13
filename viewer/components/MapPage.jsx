@@ -231,8 +231,9 @@ MapPage.propertyTypes={
     overlayContent:     PropTypes.any               //overlay in the map container
 };
 
-export const overlayDialog=(opt_chartName)=>{
+export const overlayDialog=(opt_chartName,opt_updateCallback)=>{
     let current=MapHolder.getCurrentOverlayConfig();
+    if (! current) return;
     OverlayDialog.dialog((props)=> {
         return <EditOverlaysDialog
             {...props}
@@ -241,6 +242,7 @@ export const overlayDialog=(opt_chartName)=>{
             current={current}
             updateCallback={(newConfig)=>{
                 MapHolder.updateOverlayConfig(newConfig);
+                if (opt_updateCallback) opt_updateCallback(newConfig);
                 }
             }
             resetCallback={()=>{

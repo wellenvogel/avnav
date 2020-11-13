@@ -357,6 +357,10 @@ class EditOverlaysDialog extends React.Component{
     }
     render () {
         let self=this;
+        if (! this.props.current){
+            this.props.closeCallback();
+            return null;
+        }
         let hasCurrent=this.props.current.name !== undefined;
         if (this.sizeCount !== this.state.sizeCount && this.props.updateDimensions){
             this.sizeCount=this.state.sizeCount;

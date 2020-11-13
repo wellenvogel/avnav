@@ -101,7 +101,7 @@ class ItemList extends React.Component{
                                         if (data && data.stopPropagation) data.stopPropagation();
                                         if (data && data.preventDefault) data.preventDefault();
                                         if (self.props.reverse){
-                                            let len=self.props.itemList?self.iprops.itemList.length:0;
+                                            let len=self.props.itemList?self.props.itemList.length:0;
                                             self.props.onItemClick(assign({},iprops,{index:len-iprops.index}),data);
                                         }
                                         else {

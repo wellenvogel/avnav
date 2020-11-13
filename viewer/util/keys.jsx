@@ -231,10 +231,6 @@ let keys={
             section:K,
             leftPanelVisible: K
         },
-        navpage:{
-            showWpButtons:K,
-
-        },
         editroutepage:{
             showWpButtons:K,
             selectedWp:K,

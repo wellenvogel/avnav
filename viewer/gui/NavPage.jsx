@@ -41,37 +41,10 @@ const RouteHandler=NavHandler.getRoutingHandler();
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE);
 
-const DynamicPage=Dynamic(MapPage);
 const PAGENAME='navpage';
 
 
-const widgetClick=(item,data,panel,invertEditDirection)=>{
-    if (EditWidgetDialog.createDialog(item,PAGENAME,panel,invertEditDirection)) return;
-    if (item.name == "AisTarget"){
-        let mmsi=(data && data.mmsi)?data.mmsi:item.mmsi;
-        if (! mmsi) return;
-        history.push("aisinfopage",{mmsi:mmsi});
-        return;
-    }
-    if (item.name == "ActiveRoute"){
-        if (!activeRoute.hasRoute()) return;
-        activeRoute.setIndexToTarget();
-        activeRoute.syncTo(RouteEdit.MODES.EDIT);
-        history.push("editroutepage");
-        return;
-    }
-    if (item.name == "Zoom"){
-        MapHolder.checkAutoZoom(true);
-        return;
-    }
-    if (panel == 'bottomLeft'){
-        activeRoute.setIndexToTarget();
-        globalStore.storeData(keys.gui.navpage.showWpButtons,true);
-        return;
-    }
-    history.push("gpspage",{widget:item.name});
 
-};
 
 const getPanelList=(panel)=>{
     return LayoutHandler.getPanelData(PAGENAME,panel,LayoutHandler.getOptionValues([LayoutHandler.OPTIONS.SMALL]));
@@ -145,6 +118,12 @@ class NavPage extends React.Component{
         let self=this;
         this.getButtons=this.getButtons.bind(this);
         this.mapEvent=this.mapEvent.bind(this);
+        this.state={
+            hasOverlays:MapHolder.hasOverlays(),
+            showWpButtons: false
+        };
+        this.showWpButtons=this.showWpButtons.bind(this);
+        this.widgetClick=this.widgetClick.bind(this);
         this.waypointButtons=[
             anchorWatch(),
             {
@@ -152,20 +131,19 @@ class NavPage extends React.Component{
                 onClick:()=>{
                     self.wpTimer.startTimer();
                     setCenterToTarget();
-                    globalStore.storeData(keys.gui.navpage.showWpButtons,false);
+                    this.showWpButtons(false);
                 }
             },
             {
                 name:'WpEdit',
                 onClick:()=>{
-                    self.wpTimer.startTimer();
                     if (activeRoute.hasRoute()){
                         startWaypointDialog(activeRoute.getPointAt(),activeRoute.getIndex());
                     }
                     else {
                         startWaypointDialog(activeRoute.getCurrentTarget());
                     }
-                    globalStore.storeData(keys.gui.navpage.showWpButtons,false);
+                    this.showWpButtons(false);
                 }
             },
             {
@@ -175,9 +153,8 @@ class NavPage extends React.Component{
                     return {visible: !StateHelper.selectedIsActiveTarget(state)}
                 },
                 onClick:()=>{
-                    self.wpTimer.startTimer();
                     let selected=activeRoute.getPointAt();
-                    globalStore.storeData(keys.gui.navpage.showWpButtons,false);
+                    this.showWpButtons(false);
                     if (selected) RouteHandler.wpOn(selected);
                 }
 
@@ -189,8 +166,7 @@ class NavPage extends React.Component{
                     return {visible:  StateHelper.selectedIsActiveTarget(state) &&  StateHelper.hasPointAtOffset(state,1)};
                 },
                 onClick:()=>{
-                    self.wpTimer.startTimer();
-                    globalStore.storeData(keys.gui.navpage.showWpButtons,false);
+                    self.showWpButtons(false);
                     activeRoute.moveIndex(1);
                     RouteHandler.wpOn(activeRoute.getPointAt());
 
@@ -231,9 +207,8 @@ class NavPage extends React.Component{
             }
         ];
         activeRoute.setIndexToTarget();
-        globalStore.storeData(keys.gui.navpage.showWpButtons,false);
         this.wpTimer=GuiHelpers.lifecycleTimer(this,()=>{
-            globalStore.storeData(keys.gui.navpage.showWpButtons,false);
+            this.showWpButtons(false);
         },globalStore.getData(keys.properties.wpButtonTimeout)*1000);
         GuiHelpers.keyEventHandler(this,(component,action)=>{
             if (action == "centerToTarget"){
@@ -247,6 +222,42 @@ class NavPage extends React.Component{
             }
         },"page",["centerToTarget","navNext","toggleNav"])
     }
+    widgetClick(item,data,panel,invertEditDirection){
+        if (EditWidgetDialog.createDialog(item,PAGENAME,panel,invertEditDirection)) return;
+        if (item.name == "AisTarget"){
+            let mmsi=(data && data.mmsi)?data.mmsi:item.mmsi;
+            if (! mmsi) return;
+            history.push("aisinfopage",{mmsi:mmsi});
+            return;
+        }
+        if (item.name == "ActiveRoute"){
+            if (!activeRoute.hasRoute()) return;
+            activeRoute.setIndexToTarget();
+            activeRoute.syncTo(RouteEdit.MODES.EDIT);
+            history.push("editroutepage");
+            return;
+        }
+        if (item.name == "Zoom"){
+            MapHolder.checkAutoZoom(true);
+            return;
+        }
+        if (panel == 'bottomLeft'){
+            activeRoute.setIndexToTarget();
+            this.showWpButtons(true);
+            return;
+        }
+        history.push("gpspage",{widget:item.name});
+
+    };
+    showWpButtons(on){
+        if (on) {
+            this.wpTimer.startTimer();
+        }
+        else {
+            this.wpTimer.stopTimer();
+        }
+        this.setState({showWpButtons:on})
+    }
     mapEvent(evdata,token){
         console.log("mapevent: "+evdata.type);
         if (evdata.type === MapHolder.EventTypes.SELECTAIS){
@@ -258,6 +269,14 @@ class NavPage extends React.Component{
             }
             return;
         }
+        if (evdata.type === MapHolder.EventTypes.RELOAD){
+            let hasOverlays=MapHolder.hasOverlays();
+            if (this.state.hasOverlays != hasOverlays) {
+                this.setState({
+                    hasOverlays: hasOverlays
+                })
+            }
+        }
     }
     componentWillUnmount(){
     }
@@ -265,7 +284,7 @@ class NavPage extends React.Component{
         MapHolder.showEditingRoute(false);
 
     }
-    getButtons(type){
+    getButtons(){
         let rt=[
             {
                 name: "ZoomIn",
@@ -335,7 +354,8 @@ class NavPage extends React.Component{
             {
                 name: "NavOverlays",
                 onClick:()=>overlayDialog(),
-                overflow: true
+                overflow: true,
+                visible: this.state.hasOverlays
             },
             Mob.mobDefinition,
             EditPageDialog.getButtonDef(PAGENAME,
@@ -353,34 +373,18 @@ class NavPage extends React.Component{
     render(){
         let self=this;
         return (
-            <DynamicPage
+            <MapPage
                 className={self.props.className}
                 style={self.props.style}
                 id={PAGENAME}
                 mapEventCallback={self.mapEvent}
-                onItemClick={widgetClick}
+                onItemClick={self.widgetClick}
                 panelCreator={getPanelList}
-                storeKeys={{
-                    showWpButtons:keys.gui.navpage.showWpButtons
-                }}
-                updateFunction={(state)=>{
-                    let rt={
-                        buttonList:[],
-                        overlayContent:undefined
-                    };
-                    rt.buttonList=self.getButtons();
-                    if (state.showWpButtons){
-                        self.wpTimer.startTimer();
-                        rt.overlayContent=<ButtonList
+                overlayContent={this.state.showWpButtons?<ButtonList
                             itemList={self.waypointButtons}
                             className="overlayContainer"
-                        />;
-                    }
-                    else{
-                        self.wpTimer.stopTimer();
-                    }
-                    return rt;
-                }}
+                        />:null}
+                buttonList={self.getButtons()}
                 />
         );
     }

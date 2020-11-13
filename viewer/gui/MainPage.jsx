@@ -40,7 +40,7 @@ class BottomLine extends React.Component {
                 this.timerCall,
                 globalStore.getData(keys.properties.positionQueryTimeout), true);
             this.timerCall = this.timerCall.bind(this);
-            GuiHelper.storeHelperState(this,'gps',{
+            GuiHelper.storeHelperState(this,{
                 valid: keys.nav.gps.valid,
                 connectionLost: keys.nav.gps.connectionLost
             })
@@ -61,11 +61,11 @@ class BottomLine extends React.Component {
 
         render() {
             //we have the raw nmea in "raw"
-            let nmeaColor = !this.state.gps.connectionLost ? "yellow" : "red";
-            let aisColor = !this.state.gps.connectionLost ? "yellow" : "red";
-            let nmeaText = !this.state.gps.connectionLost ? "" : "server connection lost";
+            let nmeaColor = !this.state.connectionLost ? "yellow" : "red";
+            let aisColor = !this.state.connectionLost ? "yellow" : "red";
+            let nmeaText = !this.state.connectionLost ? "" : "server connection lost";
             let aisText = "";
-            if (!this.state.gps.connectionLost) {
+            if (!this.state.connectionLost) {
                 if (this.state.status && this.state.status.nmea) {
                     nmeaColor = this.state.status.nmea.status;
                     nmeaText = this.state.status.nmea.source + ":" + this.state.status.nmea.info;
@@ -83,7 +83,7 @@ class BottomLine extends React.Component {
                                 <img className='status_image' src={getImgSrc(nmeaColor)}/>
                                 NMEA&nbsp;{nmeaText}
                             </div>
-                            {!this.state.gps.connectionLost ? <div >
+                            {!this.state.connectionLost ? <div >
                                 <img className='status_image' src={getImgSrc(aisColor)}/>
                                 AIS&nbsp;{aisText}
                             </div> : null
@@ -128,9 +128,12 @@ class MainPage extends React.Component {
             chartList:[],
             addOns:[],
             selectedChart:0,
-            status:{}
+            sequence:0
         };
-        GuiHelper.storeHelperState(this,'reload',{sequence:keys.gui.global.reloadSequence})
+        GuiHelper.storeHelper(this,(data)=>{
+            this.readAddOns();
+            this.fillList();
+        },{sequence:keys.gui.global.reloadSequence},1);
         let self=this;
         this.selectChart(0);
         GuiHelper.keyEventHandler(this,(component,action)=>{
@@ -230,8 +233,6 @@ class MainPage extends React.Component {
 
     componentDidMount() {
         globalStore.storeData(keys.gui.global.soundEnabled,true);
-        this.readAddOns();
-        this.fillList();
     }
 
     selectChart(offset){

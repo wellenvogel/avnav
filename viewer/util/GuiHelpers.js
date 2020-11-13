@@ -2,6 +2,7 @@ import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import KeyHandler from './keyhandler.js';
 import LayoutHandler from './layouthandler.js';
+import assign from 'object-assign';
 
 
 
@@ -97,7 +98,7 @@ class Callback{
  * @param thisref
  * @param dataCanged will be called with an object with the new values
  * @param storeKeys
- * @param opt_callImmediate - immediately call the cb with initial values
+ * @param opt_callImmediate - call the cb with initial values 0/undef: never, 1: immediate, 2: on mount
  */
 const storeHelper=(thisref,dataCanged,storeKeys,opt_callImmediate)=>{
     let cbHandler=new Callback(()=>{
@@ -108,8 +109,13 @@ const storeHelper=(thisref,dataCanged,storeKeys,opt_callImmediate)=>{
         if (unmount ){
             globalStore.deregister(cbHandler)
         }
+        else{
+            if (opt_callImmediate == 2){
+                dataCanged(globalStore.getMultiple(storeKeys));
+            }
+        }
     });
-    if (opt_callImmediate){
+    if (opt_callImmediate == 1){
         dataCanged(globalStore.getMultiple(storeKeys));
     }
 };
@@ -117,17 +123,27 @@ const storeHelper=(thisref,dataCanged,storeKeys,opt_callImmediate)=>{
 /**
  * get some data from the global store into our state
  * @param thisref
- * @param stateName
+ * @param opt_stateName - if set - create a sub object in the state
  * @param storeKeys
  */
-const storeHelperState=(thisref,stateName,storeKeys)=>{
+const storeHelperState=(thisref,storeKeys,opt_stateName)=>{
     let cbHandler=new Callback((data)=>{
         let ns={};
-        ns[stateName]=globalStore.getMultiple(storeKeys);
+        if (opt_stateName) {
+            ns[opt_stateName] = globalStore.getMultiple(storeKeys);
+        }
+        else{
+            ns= globalStore.getMultiple(storeKeys);
+        }
         thisref.setState(ns);
     });
     if (! thisref.state) thisref.state={};
-    thisref.state[stateName]=globalStore.getMultiple(storeKeys);
+    if (opt_stateName) {
+        thisref.state[opt_stateName] = globalStore.getMultiple(storeKeys);
+    }
+    else{
+        assign(thisref.state,globalStore.getMultiple(storeKeys));
+    }
     globalStore.register(cbHandler,storeKeys);
     lifecycleSupport(thisref,(unmount)=>{
         if ( unmount ){
