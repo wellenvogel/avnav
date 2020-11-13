@@ -34,9 +34,10 @@ import ChartSourceBase from './chartsourcebase.js';
 import {Style as olStyle, Stroke as olStroke, Circle as olCircle, Icon as olIcon, Fill as olFill} from 'ol/style';
 import {Vector as olVectorSource} from 'ol/source';
 import {Vector as olVectorLayer} from 'ol/layer';
+import {LineString as olLineString, MultiLineString as olMultiLineString, Point as olPoint} from 'ol/geom';
 import {GPX as olGPXFormat} from 'ol/format';
 
-
+export const stylePrefix="style."; // the prefix for style attributes
 
 class GpxChartSource extends ChartSourceBase{
     /**
@@ -64,11 +65,9 @@ class GpxChartSource extends ChartSourceBase{
             circleWidth: 10
 
         };
-        if (typeof  chartEntry.styles === 'object'){
-            for (k in styleParam){
-                if (chartEntry.styles[k] !== undefined){
-                    styleParam[k]=chartEntry.styles[k];
-                }
+        for (let k in styleParam) {
+            if (chartEntry[stylePrefix + k] !== undefined) {
+                styleParam[k] = chartEntry[stylePrefix + k];
             }
         }
         this.styles = {
@@ -162,3 +161,51 @@ class GpxChartSource extends ChartSourceBase{
 }
 
 export default  GpxChartSource;
+
+/**
+ * parses an gpx document and returns a couple of flags
+ * to determine which kind of styling is necessary
+ * @param gpx
+ * @returns {*}
+ *      hasSymbols
+ *      hasLinks
+ *      hasWaypoint
+ *      hasRoute
+ *      hasTrack
+ *      styleXXX - XXX being the keys from styleParam
+ *
+ */
+export const readFeatureInfoFromGpx=(gpx)=>{
+    let parser=new olGPXFormat();
+    let rt={
+        styles:{}
+    };
+    let features=parser.readFeatures(gpx);
+    features.forEach((feature)=>{
+        if (! feature) return;
+        if (feature.get('sym')){
+            rt.hasSymbols=true;
+        }
+        if (feature.get('link')){
+            rt.hasLinks=true;
+        }
+        let geo=feature.getGeometry();
+        if (geo instanceof olPoint) {
+            rt.hasWaypoint = true;
+            rt.hasAny=true;
+        }
+        else if (geo instanceof olLineString){
+            rt.hasRoute=true;
+            rt[stylePrefix+"lineColor"]=true;
+            rt[stylePrefix + "lineWidth"] = true;
+            rt.hasAny=true;
+        }
+        else if (geo instanceof olMultiLineString){
+            rt.hasTrack=true;
+            rt[stylePrefix+"lineColor"]=true;
+            rt[stylePrefix + "lineWidth"] = true;
+            rt.hasAny=true;
+        }
+    })
+    return rt;
+}
