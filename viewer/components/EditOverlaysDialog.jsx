@@ -512,7 +512,19 @@ class EditOverlaysDialog extends React.Component{
                     />
                 <div className="insertButtons">
                     {selectedItem?<DB name="delete" onClick={()=>this.deleteItem(selectedItem)}>Delete</DB>:null}
-                    {selectedItem?<DB name="edit" onClick={()=>this.editItem(selectedItem)}>Edit</DB>:null}
+                    {selectedItem || this.props.editCallback?
+                        <DB name="edit" onClick={()=>{
+                            if (this.props.editCallback){
+                                if (this.props.editCallback(selectedItem)){
+                                    this.props.closeCallback();
+                                };
+                            }
+                            else {
+                                this.editItem(selectedItem);
+                            }
+                        }}>Edit</DB>
+                        :null
+                    }
                     {(hasOverlays && ! this.props.preventEdit)?<DB name="before" onClick={()=>this.insert(true)}>Insert Before</DB>:null}
                     {!this.props.preventEdit && <DB name="after" onClick={()=>this.insert(false)}>Insert After</DB>}
                 </div>
@@ -563,6 +575,7 @@ EditOverlaysDialog.propTypes={
     current:PropTypes.any, //the current config
     updateCallback: PropTypes.func,
     resetCallback: PropTypes.func,
+    editCallback: PropTypes.func,  //only meaningful if preventEdit is set
     closeCallback: PropTypes.func.isRequired,
     preventEdit: PropTypes.bool
 };
@@ -573,7 +586,7 @@ EditOverlaysDialog.propTypes={
  * @param chartKey
  * @return {boolean}
  */
-EditOverlaysDialog.createDialog=(chartItem,opt_noDefault)=>{
+EditOverlaysDialog.createDialog=(chartItem,opt_noDefault,opt_callback)=>{
     if (! chartItem.chartKey) return;
     let getParameters={
         request: 'api',
@@ -601,8 +614,13 @@ EditOverlaysDialog.createDialog=(chartItem,opt_noDefault)=>{
                             overwrite: true
                         };
                         Requests.postPlain("",JSON.stringify(newConfig,undefined,2),{},postParam)
-                            .then((res)=>{})
-                            .catch((error)=>{Toast("unable to save overlay config: "+error)});
+                            .then((res)=>{
+                                if (opt_callback) opt_callback(newConfig);
+                            })
+                            .catch((error)=>{
+                                Toast("unable to save overlay config: "+error);
+                                if (opt_callback) opt_callback();
+                            });
                     }}
                     noDefault={opt_noDefault||false}
                     />

@@ -234,10 +234,11 @@ MapPage.propertyTypes={
 export const overlayDialog=(opt_chartName,opt_updateCallback)=>{
     let current=MapHolder.getCurrentOverlayConfig();
     if (! current) return;
+    let currentChart=MapHolder.getCurrentChartEntry()||{};
     OverlayDialog.dialog((props)=> {
         return <EditOverlaysDialog
             {...props}
-            chartName={opt_chartName||MapHolder.getCurrentChartEntry().name}
+            chartName={opt_chartName||currentChart.name}
             title="Active Overlays"
             current={current}
             updateCallback={(newConfig)=>{
@@ -248,6 +249,15 @@ export const overlayDialog=(opt_chartName,opt_updateCallback)=>{
             resetCallback={()=>{
                 MapHolder.resetOverlayConfig();
             }}
+            editCallback={(globalStore.getData(keys.properties.connectedMode,false) && currentChart.chartKey)?()=>{
+                EditOverlaysDialog.createDialog(currentChart,false,(nv)=>{
+                    if (nv) {
+                        MapHolder.resetOverlayConfig();
+                        MapHolder.loadMap(undefined,true);
+                    }
+                });
+                return true;
+            }:undefined}
             preventEdit={true}
             />;
     });

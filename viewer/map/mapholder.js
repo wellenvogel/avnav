@@ -320,7 +320,7 @@ MapHolder.prototype.setChartEntry=function(entry){
     this._chartEntry=assign({},entry);
 };
 
-MapHolder.prototype.prepareSourcesAndCreate=function(newSources){
+MapHolder.prototype.prepareSourcesAndCreate=function(newSources,opt_preventDialog){
     return new Promise((resolve,reject)=> {
         for (let k in this.sources) {
             this.sources[k].destroy();
@@ -351,7 +351,7 @@ MapHolder.prototype.prepareSourcesAndCreate=function(newSources){
                         for (let ovi = 1; ovi < this.sources.length; ovi++) {
                             overlayLayers = overlayLayers.concat(this.sources[ovi].getLayers());
                         }
-                        this.initMap(this.sources[0].getLayers(), this.sources[0].getChartKey(), overlayLayers);
+                        this.initMap(this.sources[0].getLayers(), this.sources[0].getChartKey(), overlayLayers,opt_preventDialog);
                         this.setBrightness(globalStore.getData(keys.properties.nightMode) ?
                         globalStore.getData(keys.properties.nightChartFade, 100) / 100
                             : 1);
@@ -403,8 +403,8 @@ export const getKeyFromOverlay=(overlayConfig,opt_forceDefault)=>{
     if (overlayConfig.type == 'chart') return prefix+(overlayConfig.chartKey||overlayConfig.name);
     return prefix+overlayConfig.name;
 };
-MapHolder.prototype.loadMap=function(div){
-    this._lastMapDiv=div;
+MapHolder.prototype.loadMap=function(div,opt_preventDialogs){
+   if (div) this._lastMapDiv=div;
     let self=this;
     return new Promise((resolve,reject)=> {
         let url=this._chartEntry.url;
@@ -428,7 +428,7 @@ MapHolder.prototype.loadMap=function(div){
             this.overlayOverrides={};
         }
         let prepareAndCreate=(newSources)=>{
-            this.prepareSourcesAndCreate(newSources)
+            this.prepareSourcesAndCreate(newSources,opt_preventDialogs)
                 .then((res)=>{
                     self.updateOverlayConfig(); //update all sources with existing config
                     this.pubSub.publish(PSTOPIC,{type:this.EventTypes.RELOAD});
@@ -447,7 +447,7 @@ MapHolder.prototype.loadMap=function(div){
                     return;
                 }
             }
-            this.renderTo(div);
+            this.renderTo(this._lastMapDiv);
             resolve(0);
         };
         if (! globalStore.getData(keys.gui.capabilities.uploadOverlays)){
@@ -633,7 +633,7 @@ MapHolder.prototype.getMapOutlineLayer = function (layers) {
  * @param {Array} overlayList - list of overlays to load
  */
 
-MapHolder.prototype.initMap=function(layers,baseurl,overlayList){
+MapHolder.prototype.initMap=function(layers,baseurl,overlayList,opt_preventDialog){
     let div=this._lastMapDiv;
     let self=this;
     let layersreverse=[];
@@ -762,7 +762,7 @@ MapHolder.prototype.initMap=function(layers,baseurl,overlayList){
         let lext=undefined;
         if (layers.length > 0) {
             lext=layers[0].avnavOptions.extent;
-            if (lext !== undefined && !olExtent.containsCoordinate(lext,this.pointToMap(this.center))){
+            if (! opt_preventDialog && lext !== undefined && !olExtent.containsCoordinate(lext,this.pointToMap(this.center))){
                 let ok=OverlayDialog.confirm("Position outside map, center to map now?");
                 ok.then(function(){
                     if (layers.length > 0) {
@@ -815,7 +815,7 @@ MapHolder.prototype.timerFunction=function(){
                 this.sources[k].checkSequence()
                     .then((res)=>{
                         if (res){
-                            self.prepareSourcesAndCreate();
+                            self.prepareSourcesAndCreate(undefined,true);
                         }
                     })
                     .catch((error)=>{})
