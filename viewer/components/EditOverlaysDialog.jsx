@@ -265,6 +265,11 @@ class EditOverlaysDialog extends React.Component{
         this.sizeCount=0;
     }
 
+    updateDimensions(){
+        if (this.props.updateDimensions){
+            this.props.updateDimensions();
+        }
+    }
 
     showItemDialog(item){
         return new Promise((resolve,reject)=>{
@@ -276,6 +281,7 @@ class EditOverlaysDialog extends React.Component{
                         reject(0);
                     }}
                     updateCallback={(changed)=>{
+                        this.updateDimensions();
                         if (!changed.name) reject(0);
                         else resolve(changed);
                         props.closeCallback();
@@ -321,6 +327,7 @@ class EditOverlaysDialog extends React.Component{
         let overlays=this.getCurrentOverlays(true);
         overlays.splice(item.index,1);
         this.stateHelper.setValue('overlays',overlays);
+        this.updateDimensions();
     }
     updateItem(item,newValues){
         let overlays=this.getCurrentOverlays(true);
@@ -382,6 +389,7 @@ class EditOverlaysDialog extends React.Component{
                     onChange={(nv)=>{
                         this.stateHelper.setState({useDefault:nv});
                         this.setState({selectedIndex:0});
+                        this.updateDimensions();
                         }}
                     value={this.stateHelper.getValue("useDefault")||false}/>}
                 {!this.props.noDefault && <ItemList
