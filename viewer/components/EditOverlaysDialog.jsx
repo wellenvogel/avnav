@@ -257,21 +257,21 @@ class OverlayItemDialog extends React.Component{
                                         value={this.stateHelper.getValue('maxZoom') || 0}
                                         onChange={(nv) => this.stateHelper.setValue('maxZoom', nv)}
                                     />
-                                    <Input
+                                    {itemInfo.hasSymbols && <Input
                                         dialogRow={true}
                                         type="number"
                                         label="min scale"
                                         value={this.stateHelper.getValue('minScale') || 0}
                                         onChange={(nv) => this.stateHelper.setValue('minScale', nv)}
-                                    />
-                                    <Input
+                                    />}
+                                    {itemInfo.hasSymbols && <Input
                                         dialogRow={true}
                                         type="number"
                                         label="max scale"
                                         value={this.stateHelper.getValue('maxScale') || 0}
                                         onChange={(nv) => this.stateHelper.setValue('maxScale', nv)}
-                                    />
-                                    <InputSelect
+                                    />}
+                                    {itemInfo.hasSymbols &&<InputSelect
                                         dialogRow={true}
                                         label="default icon"
                                         value={this.stateHelper.getValue('defaultIcon') || '--none--'}
@@ -281,7 +281,7 @@ class OverlayItemDialog extends React.Component{
                                         onChange={(nv) => {
                                             this.stateHelper.setState({defaultIcon: nv.url});
                                         }}
-                                    />
+                                    />}
                                 </React.Fragment>
                             }
                         </React.Fragment>
