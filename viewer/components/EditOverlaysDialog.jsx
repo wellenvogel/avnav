@@ -496,7 +496,7 @@ class EditOverlaysDialog extends React.Component{
                     itemList={this.getCurrentDefaults()}
                     />}
                 <ItemList
-                    dragdrop={true}
+                    dragdrop={!this.props.preventEdit}
                     onSortEnd={(oldIndex,newIndex)=>{
                         this.moveItem(oldIndex,newIndex);
                         this.setState({selectedIndex:newIndex});
