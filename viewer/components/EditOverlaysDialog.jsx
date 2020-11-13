@@ -417,6 +417,15 @@ class EditOverlaysDialog extends React.Component{
         overlays.splice(item.index,1,assign({},item,newValues));
         this.stateHelper.setState({overlays:overlays});
     }
+    moveItem(oldIndex,newIndex){
+        let overlays=this.getCurrentOverlays(true);
+        if (oldIndex < 0 || oldIndex >= overlays.length) return;
+        if (newIndex < 0 || newIndex >= overlays.length) return;
+        let item=overlays[oldIndex];
+        overlays.splice(oldIndex,1);
+        overlays.splice(newIndex,0,item)
+        this.stateHelper.setState({overlays:overlays});
+    }
     updateDefault(item,newValue) {
         if (! getKeyFromOverlay(item)) return;
         let current = assign({}, this.stateHelper.getValue('defaultsOverride'));
@@ -487,6 +496,11 @@ class EditOverlaysDialog extends React.Component{
                     itemList={this.getCurrentDefaults()}
                     />}
                 <ItemList
+                    dragdrop={true}
+                    onSortEnd={(oldIndex,newIndex)=>{
+                        this.moveItem(oldIndex,newIndex);
+                        this.setState({selectedIndex:newIndex});
+                    }}
                     className="overlayItems"
                     itemClass={OverlayElement}
                     selectedIndex={this.props.preventEdit?undefined:this.state.selectedIndex}

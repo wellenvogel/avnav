@@ -205,7 +205,7 @@ html,body {
     .mdText2();
   }
 
-  label, {
+  label {
     display: table-cell;
     text-align: right;
     .mdText2();
@@ -331,26 +331,27 @@ html,body {
   }
 }
 
-.editOverlaysDialog{
+.overlayElement{
+  &.sortableHelper {
+    z-index: 130; //for dragdrop
+  }
+  .flex-display();
+  .flex-direction(row);
+  padding: 0.5em;
+  @media(max-width: 35em){
+    .flex-direction(column);
+    .flex-align-items(flex-start);
+    .itemInfo{
+      margin-right: 0!important;
+    }
+  }
+  .itemInfo{
+    .flex-grow(1);
+    margin-right: 1em;
+  }
   .inputLabel{
     .flex-shrink(0);
     width: 6em;
-  }
-  .listEntry.overlayElement {
-    .flex-display();
-    .flex-direction(row);
-    padding: 0.5em;
-    @media(max-width: 35em){
-      .flex-direction(column);
-      .flex-align-items(flex-start);
-      .itemInfo{
-        margin-right: 0!important;
-      }
-    }
-    .itemInfo{
-      .flex-grow(1);
-      margin-right: 1em;
-    }
   }
   .infoRow,.actions{
     .flex-display();
@@ -365,6 +366,12 @@ html,body {
     .valueText{
       word-break: break-all;
     }
+  }
+}
+.editOverlaysDialog{
+  .actions{
+    .flex-display();
+    .flex-direction(row);
   }
   button.smallButton.disabled {
     opacity: 0;

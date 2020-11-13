@@ -93,7 +93,9 @@ class ItemList extends React.Component{
                         else {
                             ItemClass = self.props.itemClass;
                         }
-                        if (self.props.dragdrop) ItemClass=SortableElement(ItemClass);
+                        if (self.props.dragdrop) {
+                            ItemClass=SortableElement(ItemClass);
+                        }
                         let ItemWrapper;
                         if (!itemProps.onClick && self.props.onItemClick) {
                             ItemWrapper=(iprops)=>{
@@ -129,6 +131,7 @@ class ItemList extends React.Component{
             dragProps.axis=self.props.horizontal?"x":"y";
             dragProps.distance=20;
             dragProps.onSortEnd=self.onSortEnd;
+            dragProps.helperClass="sortableHelper";
 
         }
         if (this.props.scrollable) {
