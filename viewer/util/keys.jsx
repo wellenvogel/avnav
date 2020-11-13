@@ -230,11 +230,6 @@ let keys={
             values:K,
             section:K,
             leftPanelVisible: K
-        },
-        editroutepage:{
-            showWpButtons:K,
-            selectedWp:K,
-            lastCenteredWp:K
         }
 
     },
