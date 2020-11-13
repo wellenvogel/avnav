@@ -477,8 +477,12 @@ export const stateHelper=(thisref,initialValues,opt_namePrefix)=>{
             }
             return thisref.state[valueName]||{};
         },
-        getValue(key){
-            return rt.getValues()[key];
+        getValue(key,opt_default){
+            let v=rt.getValues()[key];
+            if (v === undefined && opt_default !== undefined){
+                v=opt_default;
+            }
+            return v;
         }
     };
     return rt;

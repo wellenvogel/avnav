@@ -4,7 +4,6 @@ import Promise from 'promise';
 import OverlayDialog,{dialogHelper,stateHelper} from './OverlayDialog.jsx';
 import assign from 'object-assign';
 import {Input,Checkbox,InputReadOnly,InputSelect,ColorSelector,Radio} from './Inputs.jsx';
-import ColorDialog from './ColorDialog.jsx';
 import DB from './DialogButton.jsx';
 import Button from './Button.jsx';
 import ItemList from './ItemList.jsx';
@@ -14,6 +13,8 @@ import Helper from '../util/helper.js';
 import GuiHelpers from '../util/GuiHelpers.js';
 import {getKeyFromOverlay} from '../map/mapholder.js';
 import {readFeatureInfoFromGpx} from '../map/gpxchartsource';
+import globalStore from "../util/globalstore";
+import keys from '../util/keys';
 
 const filterOverlayItem=(item,opt_itemInfo)=>{
     let rt=undefined;
@@ -146,6 +147,10 @@ class OverlayItemDialog extends React.Component{
         let hasChanges=this.stateHelper.isChanged();
         let currentType=this.stateHelper.getValue('type');
         let itemInfo=this.state.itemInfo||{ };
+        let defaultLineWith=(itemInfo.hasRoute)?globalStore.getData(keys.properties.routeWidth):
+            globalStore.getData(keys.properties.trackWidth);
+        let defaultColor=(itemInfo.hasRoute)?globalStore.getData(keys.properties.routeColor):
+            globalStore.getData(keys.properties.routeColor);
         return(
             <React.Fragment>
                 <div className="selectDialog editOverlayItemDialog">
@@ -225,7 +230,7 @@ class OverlayItemDialog extends React.Component{
                                             dialogRow={true}
                                             type="number"
                                             label="line width"
-                                            value={this.stateHelper.getValue('style.lineWidth')}
+                                            value={this.stateHelper.getValue('style.lineWidth',defaultLineWith)}
                                             onChange={(nv)=>this.stateHelper.setValue('style.lineWidth',nv)}
                                             />
                                     }
@@ -233,7 +238,7 @@ class OverlayItemDialog extends React.Component{
                                     <ColorSelector
                                         dialogRow={true}
                                         label="line color"
-                                        value={this.stateHelper.getValue('style.lineColor')}
+                                        value={this.stateHelper.getValue('style.lineColor',defaultColor)}
                                         onChange={(nv)=>this.stateHelper.setValue('style.lineColor',nv)}
                                         showDialogFunction={this.dialogHelper.showDialog}
                                     />
