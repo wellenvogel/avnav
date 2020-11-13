@@ -77,11 +77,13 @@ class ItemList extends React.Component{
                         itemProps.index=self.props.reverse?allitems.length-idx:idx;
                         itemProps.key = key;
                         existingKeys[key]=true;
-                        if (self.props.selectedIndex !== undefined && idx == self.props.selectedIndex) {
-                            itemProps.selected = true;
-                        }
-                        else{
-                            itemProps.selected = false;
+                        if (self.props.selectedIndex !== undefined){
+                            if (idx == self.props.selectedIndex) {
+                                itemProps.selected = true;
+                            }
+                            else {
+                                itemProps.selected = false;
+                            }
                         }
                         let ItemClass;
                         if (self.props.itemCreator) {
