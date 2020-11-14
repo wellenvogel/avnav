@@ -104,8 +104,6 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     self.basedir=AVNConfig.getDirWithDefault(cfgparam,'basedir',defaultSub='',belowData=False)
     datadir=cfgparam[AVNConfig.BASEPARAM.DATADIR]
     pathmappings=None
-    #a list of gemf files (key is the url below charts)
-    self. gemflist={}
     marray=cfgparam.get("Directory")
     if marray is not None:
       pathmappings={}

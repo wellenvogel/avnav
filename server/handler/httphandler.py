@@ -18,6 +18,41 @@ from avnav_util import AVNUtil, AVNLog
 from avnav_worker import AVNWorker
 
 
+class Encoder(json.JSONEncoder):
+  '''
+  allow our objects to have a "serialize" method
+  to make them json encodable in a generic manner
+  '''
+  def default(self, o):
+    if hasattr(o,'serialize'):
+      return o.serialize()
+    return super(Encoder, self).default(o)
+
+class AVNDownload(object):
+  def __init__(self, filename, size=None, stream=None, mimeType=None):
+    self.filename = filename
+    self.size = size
+    self.stream = stream
+    self.mimeType = mimeType
+
+  def getSize(self):
+    if self.size is None:
+      return os.path.getsize(self.filename)
+    return self.size
+
+  def getStream(self):
+    if self.stream is None:
+      return open(self.filename, 'rb')
+    return self.stream
+
+  def getMimeType(self, handler=None):
+    if self.mimeType is not None:
+      return self.mimeType
+    if handler is None:
+      return "application/octet-stream"
+    return handler.guess_type(self.filename)
+
+
 class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
   def __init__(self,request,client_address,server):
     #allow write buffering
@@ -35,8 +70,6 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         self.id="?"
       threading.current_thread().setName("[%s]HTTPHandler"%(self.id))
     AVNLog.debug(format,*args)
-  def handlePathmapping(self,path):
-    return self.server.handlePathmapping(path)
 
   def do_POST(self):
     maxlen=5000000
@@ -149,6 +182,9 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       except Exception as e:
         self.send_error(404,e.message)
         return None
+      if isinstance(extPath,AVNDownload):
+        self.writeFromDownload(extPath)
+        return None
       if extPath == True:
         return None
       if extPath is not None:
@@ -156,9 +192,6 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       if path.startswith(self.server.navurl):
         requestParam=urlparse.parse_qs(query,True)
         self.handleNavRequest(path,requestParam)
-        return None
-      if path.startswith("/gemf"):
-        self.handleGemfRequest(path,query)
         return None
       if path=="" or path=="/":
         path=self.server.getStringParam('index')
@@ -168,52 +201,6 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         return None
 
       return self.server.plainUrlToPath(path)
-
-
-  #handle the request to an gemf file
-  def handleGemfRequest(self,path,query):
-    try:
-      path=path.replace("/gemf/","",1)
-      parr=path.split("/")
-      gemfname=parr[0]+".gemf"
-      for g in self.server.gemflist.values():
-        if g['name']==gemfname:
-          AVNLog.debug("gemf file %s, request %s, lend=%d",gemfname,path,len(parr))
-          #found file
-          #basically we can today handle 2 types of requests:
-          #get the overview /gemf/<name>/avnav.xml
-          #get a tile /gemf/<name>/<srcname>/z/x/y.png
-          if parr[1] == self.server.navxml:
-            AVNLog.debug("avnav request for GEMF %s",gemfname)
-            data=g['avnav']
-            self.send_response(200)
-            self.send_header("Content-type", "text/xml")
-            self.send_header("Content-Length", len(data))
-            self.send_header("Last-Modified", self.date_time_string())
-            self.end_headers()
-            self.wfile.write(data)
-            return None
-          if len(parr) != 5:
-            raise Exception("invalid request to GEMF file %s: %s" %(gemfname,path))
-          data=g['gemf'].getTileData((int(parr[2]),int(parr[3]),int(parr[4].replace(".png",""))),parr[1])
-          if data is None:
-            empty=self.server.emptytile
-            if empty is not None:
-              data=empty
-          if data is None:
-            self.send_error(404,"File %s not found"%(path))
-            return None
-          self.send_response(200)
-          self.send_header("Content-type", "image/png")
-          self.send_header("Content-Length", len(data))
-          self.send_header("Last-Modified", self.date_time_string())
-          self.end_headers()
-          self.wfile.write(data)
-          return None
-      raise Exception("gemf file %s not found" %(gemfname))
-    except:
-      self.send_error(500,"Error: %s"%(traceback.format_exc()))
-      return
 
 
   #send a json encoded response
@@ -305,7 +292,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
           rtj=self.handleUploadRequest(requestParam)
         except Exception as e:
           AVNLog.error("upload error: %s",unicode(e))
-          rtj=json.dumps({'status':unicode(e)})
+          rtj=json.dumps({'status':unicode(e)},cls=Encoder)
       elif requestType=='delete':
         rtj=self.handleDeleteRequest(requestParam)
 
@@ -321,7 +308,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       self.sendNavResponse(rtj,requestParam)
     except Exception as e:
           text=unicode(e)
-          rtj=json.dumps(AVNUtil.getReturnData(error=text,stack=traceback.format_exc()))
+          rtj=json.dumps(AVNUtil.getReturnData(error=text,stack=traceback.format_exc()),cls=Encoder)
           self.sendNavResponse(rtj,requestParam)
           return
 
@@ -339,7 +326,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       raise Exception("no handler found for request %s", rtype)
     rtj = handler.handleApiRequest('api', rtype, requestParam,handler=self)
     if isinstance(rtj, dict) or isinstance(rtj, list):
-      rtj = json.dumps(rtj)
+      rtj = json.dumps(rtj,cls=Encoder)
     return rtj
 
   #return AIS targets
@@ -376,11 +363,11 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
           frt.append(AVNUtil.convertAIS(entry))
         except Exception as e:
           AVNLog.debug("unable to convert ais data: %s",traceback.format_exc())
-    return json.dumps(frt)
+    return json.dumps(frt,cls=Encoder)
 
   def handleGpsRequest(self,requestParam):
     rtv=self.server.navdata.getDataByPrefix(AVNStore.BASE_KEY_GPS)
-    return json.dumps(rtv)
+    return json.dumps(rtv,cls=Encoder)
 
   def handleNmeaStatus(self, requestParam):
     rtv = self.server.navdata.getDataByPrefix(AVNStore.BASE_KEY_GPS)
@@ -411,7 +398,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     src = self.server.navdata.getLastAisSource()
     statusAis = {"status": status, "source": self.server.navdata.getLastAisSource(), "info": "%d targets" % (numAis)}
     rt = {"status": "OK","data":{"nmea": statusNmea, "ais": statusAis}}
-    return json.dumps(rt)
+    return json.dumps(rt,cls=Encoder)
 
 
   def handleStatusRequest(self,requestParam):
@@ -424,7 +411,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
              'disabled': handler.isDisabled(),
              'properties':handler.getStatusProperties() if not handler.isDisabled() else {}}
       rt.append(entry)
-    return json.dumps({'handler':rt})
+    return json.dumps({'handler':rt},cls=Encoder)
   def handleDebugLevelRequest(self,requestParam):
     rt={'status':'ERROR','info':'missing parameter'}
     level=self.getRequestParam(requestParam,'level')
@@ -437,7 +424,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         rt['info']="invalid level "+str(level)
     filter=self.getRequestParam(requestParam,'filter')
     AVNLog.setFilter(filter)
-    return json.dumps(rt)
+    return json.dumps(rt,cls=Encoder)
 
   def writeStream(self,bToSend,fh):
     maxread = 1000000
@@ -448,6 +435,21 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       self.wfile.write(buf)
       bToSend -= len(buf)
     fh.close()
+
+
+  def writeFromDownload(self,download,filename=None,noattach=False):
+    # type: (AVNDownload, basestring,bool) -> object or None
+    self.send_response(200)
+    size = download.getSize()
+    if filename is not None and filename != "" and not noattach:
+      self.send_header("Content-Disposition", "attachment")
+    self.send_header("Content-type", download.getMimeType(self))
+    self.send_header("Content-Length", size)
+    self.send_header("Last-Modified", self.date_time_string())
+    self.end_headers()
+    stream = None
+    stream = download.getStream()
+    self.writeStream(size, stream)
 
   #download requests
   #parameters:
@@ -464,6 +466,16 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         dl=handler.handleApiRequest('download',type,requestParam,handler=self)
         if dl is None:
           raise Exception("unable to download %s",type)
+        if isinstance(dl,AVNDownload):
+          try:
+            self.writeFromDownload(dl,
+              filename=self.getRequestParam(requestParam, "filename")
+              ,noattach=self.getRequestParam(requestParam, 'noattach') is not None)
+          except:
+            AVNLog.debug("error when downloading %s: %s",dl.filename,traceback.format_exc())
+          return
+        #legacy handling
+        #TODO: removethis
         if dl.get('mimetype') is None:
           raise Exception("no mimetype")
         if dl.get('size') is None:
@@ -518,11 +530,11 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       if handler is not None:
         AVNLog.debug("found handler for upload request %s:%s"%(type,handler.getConfigName()))
         rt=handler.handleApiRequest("upload",type,requestParam,rfile=self.rfile,flen=rlen,handler=self)
-        return json.dumps(rt)
+        return json.dumps(rt,cls=Encoder)
       else:
         raise Exception("invalid request %s",type)
     except Exception as e:
-      return json.dumps({'status':unicode(e)})
+      return json.dumps({'status':unicode(e)},cls=Encoder)
 
   def writeFileFromInput(self,outname,rlen,overwrite=False,stream=None):
     if os.path.exists(outname) and not overwrite:
@@ -564,7 +576,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       rt=handler.handleApiRequest('list',type,requestParam,handler=self)
       if rt is None:
         raise Exception("invalid list response")
-      return json.dumps(rt)
+      return json.dumps(rt,cls=Encoder)
 
     raise Exception("invalid type %s"%type)
 
@@ -577,7 +589,7 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     if handler is not None:
       AVNLog.debug("found handler for delete request %s:%s" % (type, handler.getConfigName()))
       handler.handleApiRequest('delete', type, requestParam,handler=self)
-      return json.dumps(rt)
+      return json.dumps(rt,cls=Encoder)
     raise Exception("invalid type %s"%type)
 
   def handleCapabilityRequest(self,param):
@@ -594,4 +606,4 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       'uploadOverlays': True,
       'canConnect': True
     }
-    return json.dumps({'status':'OK','data':rt})
+    return json.dumps({'status':'OK','data':rt},cls=Encoder)
