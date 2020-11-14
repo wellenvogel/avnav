@@ -42,16 +42,41 @@ class AVNDirectoryListEntry(object):
   a json serializable
   '''
   def serialize(self):
-    return self.__dict__
+    return dict((key,value)
+                for key,value in self.__dict__.iteritems()
+                if value is not None and not key.startswith("_") and key not in self.getFilteredKeys())
 
-  def __init__(self,type,prefix,name,time=0,size=0,canDelete=False):
+  @classmethod
+  def getFilteredKeys(self):
+    return []
+  def __init__(self,type,prefix,name,time=0,size=0,
+               canDelete=False,isDirectory=False,**kwargs):
     self.name=name
     self.type=type
     self.prefix=prefix
-    self.url=prefix+"/"+urllib.quote(name)
+    self.url=prefix+"/"+urllib.quote(name.encode('utf-8'))
     self.time=time
     self.size=size
     self.canDelete=canDelete
+    self.isDirectory=isDirectory
+
+  def isSame(self,other):
+    # type: (AVNDirectoryListEntry) -> bool
+    if other is None:
+      return False
+    if self.name == other.name and self.prefix == other.prefix and self.isDirectory == other.isDirectory:
+      return True
+    return False
+
+  def isModified(self, other):
+    # type: (AVNDirectoryListEntry) -> bool
+    if not self.isSame(other):
+      return True
+    if self.time != other.time or self.size != other.size:
+      return True
+
+    return False
+
 
 class AVNDirectoryHandlerBase(AVNWorker):
   '''
@@ -71,7 +96,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
 
   @classmethod
   def nameToUrl(cls,name):
-    return cls.getPrefix()+"/"+urllib.quote(name)
+    return cls.getPrefix()+"/"+urllib.quote(name.encode('utf-8'))
 
   @classmethod
   def preventMultiInstance(cls):
@@ -89,6 +114,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
     self.type=type
     self.httpServer=None
     self.addonHandler=None
+    self.waitCondition = threading.Condition()
 
   def start(self):
     self.httpServer=self.findHandlerByName('AVNHttpServer')
@@ -103,6 +129,16 @@ class AVNDirectoryHandlerBase(AVNWorker):
   def periodicRun(self):
     pass
 
+  def wakeUp(self):
+    self.waitCondition.acquire()
+    try:
+      self.waitCondition.notify_all()
+    except:
+      pass
+    self.waitCondition.release()
+
+  def getSleepTime(self):
+    return self.getFloatParam('interval')
 
   # thread run method - just try forever
   def run(self):
@@ -115,14 +151,19 @@ class AVNDirectoryHandlerBase(AVNWorker):
       AVNLog.error("unable to create user dir %s"%self.baseDir)
       return
     self.copyTemplates()
-    sleepTime=self.getFloatParam('interval')
+    sleepTime=self.getSleepTime()
     self.setInfo('main', "handling %s"%self.baseDir, AVNWorker.Status.NMEA)
     while True:
-      time.sleep(sleepTime)
       try:
         self.periodicRun()
       except:
         AVNLog.debug("%s: exception in periodic run: %s",self.getName(),traceback.format_exc())
+      self.waitCondition.acquire()
+      try:
+        self.waitCondition.wait(sleepTime)
+      except:
+        pass
+      self.waitCondition.release()
 
   @classmethod
   def canDelete(self):
@@ -145,24 +186,46 @@ class AVNDirectoryHandlerBase(AVNWorker):
         AVNLog.error("unable to delete addons for %s:%s",name,e)
 
   @classmethod
-  def canList(self):
+  def canList(cls):
     return True
+
+  @classmethod
+  def getListEntryClass(cls):
+    return AVNDirectoryListEntry
+
+  def listDirectory(self,includeDirs=False):
+    # type: (bool) -> list[AVNDirectoryListEntry]
+    data = []
+    if not os.path.exists(self.baseDir):
+      return []
+    for f in os.listdir(self.baseDir):
+      fullname = os.path.join(self.baseDir, f)
+      isDir=False
+      if not os.path.isfile(fullname):
+        if not includeDirs:
+          continue
+        isDir=True
+      element = self.getListEntryClass()(self.type, self.getPrefix(), f,
+                                      time=os.path.getmtime(fullname),
+                                      size=os.path.getsize(fullname),
+                                      canDelete=True,isDir=isDir)
+      data.append(element)
+    return data
+
+  def listContains(self,list,entry):
+    # type: (list[AVNDirectoryListEntry], AVNDirectoryListEntry) -> bool
+    for e in list:
+      if e.isSame(entry):
+        return True
+    return False
+
 
   def handleList(self,handler=None):
     if not self.canList():
       raise Exception("list not possible")
-    data = []
     if not os.path.exists(self.baseDir):
       return AVNUtil.getReturnData("directory %s does not exist" % self.baseDir)
-    for f in os.listdir(self.baseDir):
-      fullname = os.path.join(self.baseDir, f)
-      if not os.path.isfile(fullname):
-        continue
-      element = AVNDirectoryListEntry(self.type,self.getPrefix(),f,
-                                      time=os.path.getmtime(fullname),
-                                      size=os.path.getsize(fullname),
-                                      canDelete=True)
-      data.append(element)
+    data=self.listDirectory()
     rt = AVNUtil.getReturnData(items=data)
     return rt
 
@@ -205,12 +268,14 @@ class AVNDirectoryHandlerBase(AVNWorker):
     handler.wfile.write(zip.read(entry))
     return True
 
-  def getPathFromUrl(self,url,handler=None,requestParam=None):
-    if self.getPrefix() is None:
-      return None
-    if not url.startswith(self.getPrefix()):
-      return None
-    path = url[len(self.getPrefix()) + 1:]
+  def getPathFromUrl(self,path,handler=None,requestParam=None):
+    """
+    the path is already unqouted and utf8-decoded here
+    @param path:
+    @param handler:
+    @param requestParam:
+    @return:
+    """
     #TODO: should we limit this to only one level?
     #we could use checkName and this way ensure that we only have one level
     subPath=self.httpServer.plainUrlToPath(path, False)
@@ -326,7 +391,12 @@ class AVNDirectoryHandlerBase(AVNWorker):
       else:
         return self.handleSpecialApiRequest(command,requestparam,kwargs.get('handler'))
     if type == 'path':
-      return self.getPathFromUrl(subtype,handler=handler,requestParam=requestparam)
+      if self.getPrefix() is None:
+        raise Exception("Internal error: no handler prefix for %s"%subtype)
+      if not subtype.startswith(self.getPrefix()+"/"):
+        raise Exception("Internal routing error: handler prefix %s for %s" % (self.getPrefix(),subtype))
+      path = subtype[len(self.getPrefix()) + 1:]
+      return self.getPathFromUrl(path,handler=handler,requestParam=requestparam)
 
     if type == "list":
       return self.handleList(handler)

@@ -398,7 +398,7 @@ class AVNUtil():
   def clean_filename(cls,filename, whitelist=None, replace=''):
     if filename is None:
       return None
-    valid_filename_chars = " -_.() %s%s" % (string.ascii_letters, string.digits)
+    valid_filename_chars = "@ -_.() %s%s" % (string.ascii_letters, string.digits)
     char_limit = 255
     if whitelist is None:
       whitelist=valid_filename_chars
@@ -431,5 +431,7 @@ class ChartFile:
     just return a schema if the user did not set it but it was found in the chart
     @return:
     '''
+    return None
+  def getAvnavXml(self,upzoom=None):
     return None
 

@@ -13,6 +13,7 @@ import Helper from '../util/helper.js';
 import GuiHelpers from '../util/GuiHelpers.js';
 import {getKeyFromOverlay} from '../map/mapholder.js';
 import {readFeatureInfoFromGpx} from '../map/gpxchartsource';
+import {getOverlayConfig} from '../map/chartsourcebase'
 import globalStore from "../util/globalstore";
 import keys from '../util/keys';
 
@@ -605,7 +606,7 @@ EditOverlaysDialog.createDialog=(chartItem,opt_noDefault,opt_callback)=>{
     let getParameters={
         request: 'api',
         type: 'chart',
-        chartKey: chartItem.chartKey,
+        overlayConfig: getOverlayConfig(chartItem),
         command: 'getConfig',
         expandCharts: true,
         mergeDefault: !opt_noDefault

@@ -75,14 +75,12 @@ class AVNUserHandler(AVNDirectoryHandlerBase):
         with open(dest,"w") as fh:
           fh.write("{\n}\n")
 
-  def getPathFromUrl(self, url, handler=None,requestParam=None):
-    if url.startswith(self.PREFIX):
-      path=url[len(self.PREFIX)+1:]
-      if path == 'user.js':
-        fname=os.path.join(self.baseDir,path)
-        if os.path.exists(fname) and handler is not None:
-          return handler.sendJsFile(fname,self.PREFIX)
-    return super(AVNUserHandler, self).getPathFromUrl(url, handler,requestParam)
+  def getPathFromUrl(self, path, handler=None,requestParam=None):
+    if path == 'user.js':
+      fname=os.path.join(self.baseDir,path)
+      if os.path.exists(fname) and handler is not None:
+        return handler.sendJsFile(fname,self.PREFIX)
+    return super(AVNUserHandler, self).getPathFromUrl(path, handler,requestParam)
 
 
 class AVNImagesHandler(AVNDirectoryHandlerBase):

@@ -457,7 +457,7 @@ MapHolder.prototype.loadMap=function(div,opt_preventDialogs){
         let cfgParam = {
             request: 'api',
             type: 'chart',
-            chartKey: chartSource.getChartKey(),
+            overlayConfig: chartSource.getOverlayConfig(),
             command: 'getConfig',
             expandCharts: true,
             mergeDefault: true

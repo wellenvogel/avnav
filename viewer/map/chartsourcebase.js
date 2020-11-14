@@ -33,15 +33,17 @@ import Helper from '../util/helper.js';
 import CryptHandler from './crypthandler.js';
 import shallowcompare from '../util/shallowcompare.js';
 
-
+export const getOverlayConfig=(chartEntry)=>{
+    return chartEntry.overlayConfig || chartEntry.chartKey;
+}
 class ChartSourceBase {
     /**
      *
      * @param mapholder
      * @param chartEntry
      *        properties: url           - the chart url
-     *                    chartKey      - a base name for the chart used as key (opt, defaults to url)
-     *                                    used for querying the overlays
+     *                    chartKey      - a base name for the chart used as key
+     *                    overlayConfig - name of the overlay config assigned to this chart
      *                    tokenUrl      - the url for a token handler script (opt)
      *                    tokenFunction - the name of the token function we expect from the token handler
      */
@@ -76,6 +78,7 @@ class ChartSourceBase {
     getConfig(){
         return(assign({},this.chartEntry));
     }
+
     isReady(){
         return this.isReadyFlag;
     }
@@ -110,6 +113,9 @@ class ChartSourceBase {
         let chartBase = this.chartEntry.chartKey;
         if (!chartBase) chartBase = this.chartEntry.url;
         return chartBase;
+    }
+    getOverlayConfig(){
+        return getOverlayConfig(this.chartEntry);
     }
 
     prepareInternal(){

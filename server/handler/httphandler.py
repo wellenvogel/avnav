@@ -436,6 +436,13 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       bToSend -= len(buf)
     fh.close()
 
+  def writeData(self,data,mimeType):
+    self.send_response(200)
+    self.send_header("Content-type", mimeType)
+    self.send_header("Content-Length", len(data))
+    self.send_header("Last-Modified", self.date_time_string())
+    self.end_headers()
+    self.wfile.write(data)
 
   def writeFromDownload(self,download,filename=None,noattach=False):
     # type: (AVNDownload, basestring,bool) -> object or None
