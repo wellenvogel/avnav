@@ -50,7 +50,7 @@ class AVNDirectoryListEntry(object):
   def getFilteredKeys(self):
     return []
   def __init__(self,type,prefix,name,time=0,size=0,
-               canDelete=False,isDirectory=False,**kwargs):
+               canDelete=False,isDirectory=False,canDownload=True,**kwargs):
     self.name=name
     self.type=type
     self.prefix=prefix
@@ -59,6 +59,7 @@ class AVNDirectoryListEntry(object):
     self.size=size
     self.canDelete=canDelete
     self.isDirectory=isDirectory
+    self.canDownload=canDownload
 
   def isSame(self,other):
     # type: (AVNDirectoryListEntry) -> bool

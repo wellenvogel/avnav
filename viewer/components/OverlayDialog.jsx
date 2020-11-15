@@ -477,6 +477,9 @@ export const stateHelper=(thisref,initialValues,opt_namePrefix)=>{
             }
             return thisref.state[valueName]||{};
         },
+        getState(opt_copy){
+            return rt.getValues(opt_copy)
+        },
         getValue(key,opt_default){
             let v=rt.getValues()[key];
             if (v === undefined && opt_default !== undefined){

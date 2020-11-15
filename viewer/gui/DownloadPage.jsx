@@ -16,7 +16,7 @@ import assign from 'object-assign';
 import NavHandler from '../nav/navdata.js';
 import routeobjects from '../nav/routeobjects.js';
 import Formatter from '../util/formatter.js';
-import OverlayDialog from '../components/OverlayDialog.jsx';
+import OverlayDialog, {stateHelper} from '../components/OverlayDialog.jsx';
 import Helper from '../util/helper.js';
 import Promise from 'promise';
 import LayoutHandler from '../util/layouthandler.js';
@@ -246,53 +246,9 @@ const DownloadItem=(props)=>{
     );
 };
 
-const startServerDownload=(type,name,opt_url,opt_json)=>{
-    let action=undefined;
-    let filename=name;
-    if (filename) {
-        if (type == 'route') filename += ".gpx";
-        if (type == 'layout') filename=filename.replace(/^[^.]*\./,'')+".json";
-        action = globalStore.getData(keys.properties.navUrl) + "/" + filename;
-    }
-    if (avnav.android){
-        //we cannot handle the special case with local routes on android
-        //but this will not happen anyway...
-        if (type == 'route') name+=".gpx";
-        if (type == "layout") name+=".json";
-        return avnav.android.downloadFile(name,type,opt_url);
-    }
 
-    globalStore.storeData(keys.gui.downloadpage.downloadParameters,{
-        name:name,
-        url:opt_url,
-        type: type,
-        action:action,
-        count:(new Date()).getTime(), //have a count to always trigger an update
-        json:opt_json
-    });
-};
 
-const download = (info) => {
-    if (info) {
-        if (info.type == 'layout') {
-            if (LayoutHandler.download(info.name)) return;
-        }
 
-        if (info.type == "route") {
-            if (info.server) startServerDownload(info.type, info.name);
-            else {
-                RouteHandler.fetchRoute(info.name, true, (data) => {
-                        jsdownload(data.toXml(), info.name + ".gpx", "application/gpx+xml");
-                    },
-                    (err) => {
-                        Toast("unable to get route " + info.name);
-                    });
-            }
-            return;
-        }
-        startServerDownload(info.type, info.name, info.url);
-    }
-};
 
 
 const resetUpload=()=>{
@@ -616,22 +572,7 @@ class DownloadForm extends React.Component {
         super(props);
     }
 
-    componentDidMount(){
-        if (this.refs.form) {
-            LeaveHandler.stop();
-            this.refs.form.submit();
-            LeaveHandler.activate();
-            globalStore.storeData(keys.gui.downloadpage.downloadParameters,{});
-        }
-    }
-    componentDidUpdate(){
-        if (this.refs.form) {
-            LeaveHandler.stop();
-            this.refs.form.submit();
-            LeaveHandler.activate();
-            globalStore.storeData(keys.gui.downloadpage.downloadParameters,{});
-        }
-    }
+
 
     render() {
         let props=this.props.downloadParameters||{};
@@ -640,7 +581,7 @@ class DownloadForm extends React.Component {
             <form
                 className="hidden downloadForm"
                 action={props.action}
-                ref="form"
+                ref={this.props.formRef}
                 method="get"
                 >
                 <input type="hidden" name="request" value="download"/>
@@ -652,11 +593,7 @@ class DownloadForm extends React.Component {
         );
     }
 }
-const DynamicForm=Dynamic(DownloadForm,{
-    storeKeys:{
-        downloadParameters:keys.gui.downloadpage.downloadParameters
-    }
-});
+
 
 class UploadForm extends React.Component{
     constructor(props){
@@ -720,6 +657,7 @@ const readImportExtensions=()=>{
 class DownloadPage extends React.Component{
     constructor(props){
         super(props);
+        this.downloadState=stateHelper(this,{},'download');
         this.getButtons=this.getButtons.bind(this);
         let type='chart';
         if (props.options && props.options.downloadtype){
@@ -728,6 +666,7 @@ class DownloadPage extends React.Component{
         if (globalStore.getData(keys.gui.downloadpage.type) === undefined || ! (props.options && props.options.returning)) {
             globalStore.storeData(keys.gui.downloadpage.type, type);
         }
+        GuiHelpers.storeHelperState(this,{type:keys.gui.downloadpage.type});
         globalStore.storeData(keys.gui.downloadpage.downloadParameters,{});
         globalStore.storeData(keys.gui.downloadpage.enableUpload,false);
         globalStore.storeData(keys.gui.downloadpage.uploadInfo,{});
@@ -921,6 +860,52 @@ class DownloadPage extends React.Component{
         ];
         return rt;
     }
+    download(info){
+        if (info) {
+            if (info.type === 'layout') {
+                if (LayoutHandler.download(info.name)) return;
+            }
+
+            if (info.type === "route") {
+                if (info.server) this.startServerDownload(info.type, info.name);
+                else {
+                    RouteHandler.fetchRoute(info.name, true, (data) => {
+                            jsdownload(data.toXml(), info.name + ".gpx", "application/gpx+xml");
+                        },
+                        (err) => {
+                            Toast("unable to get route " + info.name);
+                        });
+                }
+                return;
+            }
+            this.startServerDownload(info.type, info.name, info.url);
+        }
+    };
+    startServerDownload(type,name,opt_url,opt_json){
+        let action=undefined;
+        let filename=name;
+        if (filename) {
+            if (type === 'route') filename += ".gpx";
+            if (type === 'layout') filename=filename.replace(/^[^.]*\./,'')+".json";
+            action = globalStore.getData(keys.properties.navUrl) + "/" + filename;
+        }
+        if (avnav.android){
+            //we cannot handle the special case with local routes on android
+            //but this will not happen anyway...
+            if (type === 'route') name+=".gpx";
+            if (type === "layout") name+=".json";
+            return avnav.android.downloadFile(name,type,opt_url);
+        }
+
+        this.downloadState.setState({
+            name:name,
+            url:opt_url,
+            type: type,
+            action:action,
+            count:(new Date()).getTime(), //have a count to always trigger an update
+            json:opt_json
+        });
+    };
     render(){
         let self=this;
         return (
@@ -928,6 +913,71 @@ class DownloadPage extends React.Component{
                 className={self.props.className}
                 style={self.props.style}
                 id="downloadpage"
+                mainContent={<React.Fragment>
+                        <DynamicList
+                            itemClass={DownloadItem}
+                            scrollable={true}
+                            storeKeys={{
+                                itemList:keys.gui.downloadpage.currentItems,
+                                type:keys.gui.downloadpage.type
+                            }}
+                            onItemClick={(item,data)=>{
+                                console.log("click on "+item.name+" type="+data);
+                                if (data === 'delete'){
+                                    return deleteItem(item,fillData);
+                                }
+                                if (data === 'download'){
+                                    return this.download(item);
+                                }
+                                if (self.props.options && self.props.options.selectItemCallback){
+                                    return self.props.options.selectItemCallback(item);
+                                }
+                                showFileDialog(item,
+                                    (item)=>{
+                                        this.download(item);
+                                    },
+                                    (action,item)=>{
+                                        if (action === 'userapp') readAddOns()
+                                        else fillData();
+                                    },
+                                    (newName)=>{
+                                        //checkExisting
+                                        return entryExists(newName);
+                                    });
+                            }}
+                        />
+                        <DynamicUploadForm
+                            storeKeys={{
+                                fileInputKey: keys.gui.downloadpage.fileInputKey,
+                                enableUpload: keys.gui.downloadpage.enableUpload
+                            }}
+                            startUpload={runUpload}
+                        />
+                        <UploadIndicator/>
+                        {(this.state.type === "user")?
+                            <Button
+                                className="fab"
+                                name="DownloadPageCreate"
+                                onClick={()=>{
+                                    createItem("user");
+                                }}
+                            />
+                            :
+                            null}
+                        {this.downloadState.getValues().action &&
+                        <DownloadForm
+                            downloadParameters={this.downloadState.getState()}
+                            formRef={(form)=>{
+                                if (!form) return;
+                                LeaveHandler.stop();
+                                form.submit();
+                                LeaveHandler.activate();
+                                this.downloadState.setState({},true);
+                            }}
+                        />
+                        }
+                    </React.Fragment>
+                }
                 storeKeys={{
                     type:keys.gui.downloadpage.type,
                     reloadSequence:keys.gui.global.reloadSequence
@@ -937,61 +987,6 @@ class DownloadPage extends React.Component{
                     rt.title=headlines[state.type];
                     rt.buttonList=self.getButtons(state.type);
                     rt.type=state.type;
-                    rt.mainContent=(
-                        <React.Fragment>
-                            <DynamicList
-                                itemClass={DownloadItem}
-                                scrollable={true}
-                                storeKeys={{
-                                            itemList:keys.gui.downloadpage.currentItems,
-                                            type:keys.gui.downloadpage.type
-                                            }}
-                                onItemClick={(item,data)=>{
-                                            console.log("click on "+item.name+" type="+data);
-                                            if (data === 'delete'){
-                                                return deleteItem(item,fillData);
-                                            }
-                                            if (data === 'download'){
-                                                return download(item);
-                                            }
-                                            if (self.props.options && self.props.options.selectItemCallback){
-                                                return self.props.options.selectItemCallback(item);
-                                            }
-                                            showFileDialog(item,
-                                                (item)=>{
-                                                    download(item);
-                                                },
-                                                (action,item)=>{
-                                                    if (action === 'userapp') readAddOns()
-                                                    else fillData();
-                                                },
-                                                (newName)=>{
-                                                    //checkExisting
-                                                    return entryExists(newName);
-                                                });
-                                        }}
-                                />
-                            <DynamicForm/>
-                            <DynamicUploadForm
-                                storeKeys={{
-                                            fileInputKey: keys.gui.downloadpage.fileInputKey,
-                                            enableUpload: keys.gui.downloadpage.enableUpload
-                                        }}
-                                startUpload={runUpload}
-                                />
-                            <UploadIndicator/>
-                            {(rt.type == "user")?
-                                <Button
-                                    className="fab"
-                                    name="DownloadPageCreate"
-                                    onClick={()=>{
-                                                createItem(rt.type);
-                                            }}
-                                    />
-                                :
-                                null}
-                        </React.Fragment>);
-
                     //as we will only be called if the type really changes - we can fill the display...
                     addItems([],true);
                     fillData();
