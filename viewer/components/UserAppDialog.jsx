@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Promise from 'promise';
-import OverlayDialog from './OverlayDialog.jsx';
+import OverlayDialog, {dialogHelper,stateHelper} from './OverlayDialog.jsx';
 import DialogContainer from './OverlayDialogDisplay.jsx';
 import Toast from './Toast.jsx';
 import assign from 'object-assign';
@@ -15,15 +15,14 @@ import GuiHelpers from '../util/GuiHelpers.js';
 export default  class UserAppDialog extends React.Component{
     constructor(props){
         super(props);
-        this.state=assign({},props.addon,props.fixed);
-        this.state.dialog=undefined;
+        this.stateHelper=stateHelper(this,assign({},props.addon,props.fixed),'addon');
+        this.dialogHelper=dialogHelper(this);
         this.state.iconList=[];
         this.state.userFiles=[];
+        this.state.addons=[];
         this.state.internal=true;
-        let fixed=props.fixed||{};
-        if (props.addon && props.addon.originalUrl !== undefined && ! fixed.url) this.state.url=props.addon.originalUrl;
-        if (! fixed.url && this.state.keepUrl) this.state.internal=false;
-        this.showDialog=this.showDialog.bind(this);
+        this.state.loaded=(props.fixed||{}).url === undefined || props.addon !== undefined; //addons loaded (for fixed)
+        if (this.state.loaded && (props.addon||{}).keepUrl) this.state.internal=false;
         this.fillLists();
 
     }
@@ -37,10 +36,12 @@ export default  class UserAppDialog extends React.Component{
                     data.items.forEach((el)=>{
                         if (GuiHelpers.IMAGES.indexOf(Helper.getExt(el.name)) >= 0){
                             el.label=el.url;
+                            el.value=el.url;
                             iconList.push(el);
                         }
-                        if (Helper.getExt(el.name) == 'html'){
+                        if (Helper.getExt(el.name) === 'html'){
                             el.label=el.url;
+                            el.value=el.url;
                             userFiles.push(el);
                         }
                     });
@@ -57,6 +58,7 @@ export default  class UserAppDialog extends React.Component{
                     data.items.forEach((el)=> {
                         if (GuiHelpers.IMAGES.indexOf(Helper.getExt(el.name)) >= 0) {
                             el.label=el.url;
+                            el.value=el.url;
                             itemList.push(el);
                         }
                     });
@@ -64,31 +66,28 @@ export default  class UserAppDialog extends React.Component{
                 }
             })
             .catch((error)=>{})
-    }
-    showDialog(Dialog){
-        let self=this;
-        this.setState({
-            dialog: (props)=>{
-                return(
-                    <Dialog
-                        {...props}
-                        closeCallback={()=>self.setState({dialog:undefined})}
-                        />
-                )
-            }
-        });
+        if (!this.state.loaded) Addons.readAddOns()
+            .then((addons)=>{
+                let current=Addons.findAddonByUrl(addons,self.props.fixed.url)
+                if (current) this.stateHelper.setState(assign({},current,this.props.fixed));
+                this.setState({loaded:true})
+            })
+            .catch((error)=>Toast("unable to load addons: "+error));
+
     }
 
+
     checkOk(){
-        if (! this.state.url){
+        let current=this.stateHelper.getValues();
+        if (! current.url){
             Toast("you must provide an url");
             return false;
         }
-        if (! this.state.icon){
+        if (! current.icon){
             Toast("you must provide an icon");
             return false;
         }
-        if (! this.state.internal && ! this.state.url.startsWith("http")){
+        if (! this.state.internal && ! current.url.startsWith("http")){
             Toast("external urls must start with http");
             return false;
         }
@@ -97,48 +96,49 @@ export default  class UserAppDialog extends React.Component{
 
     render(){
         let self=this;
-        let Dialog=this.state.dialog;
         let fixed=this.props.fixed||{};
-        let canEdit=this.state.canDelete;
-        if (canEdit === undefined) canEdit=true;
+        let canEdit=this.stateHelper.getValue('canDelete',true);
+        if (!this.state.loaded) canEdit=false;
+        let fixedUrl=fixed.url !== undefined;
         let title="";
-        if (canEdit)title=fixed.name?"Modify ":"Create ";
+        if (canEdit)title=fixed?"Modify ":"Create ";
         return(
             <React.Fragment>
                 <div className="userAppDialog">
                     <h3 className="dialogTitle">{title+'User App'}</h3>
-                    {(fixed.url || ! canEdit) ?
+                    {(fixedUrl || ! canEdit) ?
                         <InputReadOnly
                             dialogRow={true}
                             className="url"
                             label="url"
-                            value={this.state.url}/>
+                            value={this.stateHelper.getValue('url')}/>
                         :
                         <React.Fragment>
-                            {(canEdit && ! fixed.url) && <Checkbox
+                            {(canEdit && ! fixedUrl) && <Checkbox
                                 dialogRow={true}
                                 label="internal"
                                 value={this.state.internal}
                                 onChange={(nv)=>{
-                                    this.setState({internal:nv,url:undefined})
+                                    this.setState({internal:nv});
+                                    this.stateHelper.setState({url:undefined});
                                     }
                                 }/>}
                             {!this.state.internal ?
                                 <Input
                                     dialogRow={true}
                                     label="external url"
-                                    value={this.state.url}
+                                    value={this.stateHelper.getValue('url')}
                                     minSize={50}
                                     maxSize={100}
-                                    onChange={(val)=>self.setState({url:val})}/>
+                                    onChange={(val)=>self.stateHelper.setState({url:val})}/>
                                 :
                                 <InputSelect
                                     dialogRow={true}
                                     label="internal url"
-                                    value={this.state.url}
+                                    value={this.stateHelper.getValue('url')}
                                     list={this.state.userFiles}
-                                    showDialogFunction={this.showDialog}
-                                    onChange={(selected)=>self.setState({url:selected.url})}/>
+                                    showDialogFunction={this.dialogHelper.showDialog}
+                                    onChange={(selected)=>self.stateHelper.setState({url:selected.url})}/>
                             }
                         </React.Fragment>
                     }
@@ -146,38 +146,38 @@ export default  class UserAppDialog extends React.Component{
                         <Input
                             dialogRow={true}
                             label="title"
-                            value={this.state.title}
+                            value={this.stateHelper.getValue('title')}
                             minSize={50}
                             maxSize={100}
-                            onChange={(value)=>{self.setState({title:value})}}
+                            onChange={(value)=>{self.stateHelper.setState({title:value})}}
                             />
                         :
                         <InputReadOnly
                             dialogRow={true}
                             label="title"
-                            value={this.state.title}
+                            value={this.stateHelper.getValue('title')}
                             />
                     }
                     {canEdit ?
                         <InputSelect
                             dialogRow={true}
                             label="icon"
-                            value={this.state.icon}
+                            value={this.stateHelper.getValue('icon')}
                             list={this.state.iconList}
-                            showDialogFunction={this.showDialog}
-                            onChange={(selected)=>this.setState({
+                            showDialogFunction={this.dialogHelper.showDialog}
+                            onChange={(selected)=>this.stateHelper.setState({
                                     icon:selected.url
                                 })}
                             >
-                            {this.state.icon && <img className="appIcon" src={this.state.icon}/>}
+                            {this.stateHelper.getValue('icon') && <img className="appIcon" src={this.stateHelper.getValue('icon')}/>}
                         </InputSelect>
                         :
                         <InputReadOnly
                             dialogRow={true}
                             label="icon"
-                            value={this.state.icon}
+                            value={this.stateHelper.getValue('icon')}
                             >
-                            {this.state.icon && <img className="appIcon" src={this.state.icon}/>}
+                            {this.stateHelper.getValue('icon') && <img className="appIcon" src={this.stateHelper.getValue('icon')}/>}
                          </InputReadOnly>
                     }
 
@@ -185,28 +185,21 @@ export default  class UserAppDialog extends React.Component{
                         <DB name="ok" onClick={()=>{
                             if (! this.checkOk()) return;
                             this.props.closeCallback();
-                            this.props.okFunction(assign({},this.state,fixed))
+                            this.props.okFunction(assign({},this.stateHelper.getValues(),this.props.fixed))
                             }}
-                            disabled={!this.state.icon || ! this.state.url || !canEdit}
+                            disabled={!this.stateHelper.getValue('icon') || ! this.stateHelper.getValue('url')|| !canEdit}
                             >Ok</DB>
                         <DB name="cancel" onClick={this.props.closeCallback}>Cancel</DB>
-                        {(fixed.name && this.state.canDelete && canEdit) && <DB name="delete" onClick={()=>{
-                            self.showDialog(OverlayDialog.createConfirmDialog("really delete User App?",
+                        {(this.stateHelper.getValue('name') && this.stateHelper.getValue('canDelete') && canEdit) && <DB name="delete" onClick={()=>{
+                            self.dialogHelper.showDialog(OverlayDialog.createConfirmDialog("really delete User App?",
                                 ()=>{
                                     this.props.closeCallback();
-                                    this.props.removeFunction(fixed.name);
+                                    this.props.removeFunction(this.stateHelper.getValue('name'));
                                 }
                                 ));
                             }}>Delete</DB>}
                     </div>
                 </div>
-                {Dialog?
-                    <DialogContainer
-                        className="nested"
-                        content={Dialog}
-                        onClick={()=>{this.setState({dialog:undefined})}}
-                        />:
-                    null}
             </React.Fragment>
         );
     }
@@ -220,8 +213,13 @@ UserAppDialog.propTypes={
     removeFunction: PropTypes.func.isRequired
 };
 
-UserAppDialog.showUserAppDialog=(item,fixedValues,opt_showToasts)=>{
+UserAppDialog.showUserAppDialog=(item,fixed,opt_showToasts)=>{
     return new Promise((resolve,reject)=> {
+        if (! item && ! (fixed||{}).url){
+            let err="either addon or fixed.url required";
+            if (opt_showToasts) Toast(err);
+            reject(err);
+        }
         OverlayDialog.dialog((props)=> {
             return (
                 <UserAppDialog
@@ -244,7 +242,7 @@ UserAppDialog.showUserAppDialog=(item,fixedValues,opt_showToasts)=>{
                     }}
                     //TODO: item vs addon
                     addon={item}
-                    fixed={fixedValues}
+                    fixed={fixed}
                     />
             )
         })

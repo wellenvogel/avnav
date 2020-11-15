@@ -3,13 +3,11 @@
  */
 
 import Dynamic from '../hoc/Dynamic.jsx';
-import Visible from '../hoc/Visible.jsx';
 import Button from '../components/Button.jsx';
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import React from 'react';
-import PropertyHandler from '../util/propertyhandler.js';
 import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import Toast from '../components/Toast.jsx';
@@ -20,26 +18,22 @@ import routeobjects from '../nav/routeobjects.js';
 import Formatter from '../util/formatter.js';
 import OverlayDialog from '../components/OverlayDialog.jsx';
 import Helper from '../util/helper.js';
-import base from '../base.js';
 import Promise from 'promise';
 import LayoutHandler from '../util/layouthandler.js';
 import jsdownload from 'downloadjs';
 import Mob from '../components/Mob.js';
 import LeaveHandler from '../util/leavehandler.js';
 import LayoutNameDialog from '../components/LayoutNameDialog.jsx';
-import ViewPage from './ViewPage.jsx';
-import {Input,InputSelect,InputReadOnly,Radio,Checkbox} from '../components/Inputs.jsx';
+import {Input,InputReadOnly,Checkbox} from '../components/Inputs.jsx';
 import DB from '../components/DialogButton.jsx';
-import DialogContainer from '../components/OverlayDialogDisplay.jsx';
 import AndroidEventHandler from '../util/androidEventHandler.js';
 import Addons from '../components/Addons.js';
 import GuiHelpers from '../util/GuiHelpers.js';
-import UserAppDialog from '../components/UserAppDialog.jsx';
-import EditOverlaysDialog from '../components/EditOverlaysDialog.jsx';
+import {showFileDialog, deleteItem, allowedItemActions, getExt} from '../components/FileDialog';
+import {DEFAULT_OVERLAY_CONFIG} from '../components/EditOverlaysDialog';
 
 const MAXUPLOADSIZE=100000;
 const RouteHandler=NavHandler.getRoutingHandler();
-const DEFAULT_OVERLAY_CONFIG="default.cfg";
 
 const headlines={
     track: "Tracks",
@@ -74,7 +68,7 @@ class FileInfo{
          */
         this.canDelete = true;
     }
-};
+}
 
 const findAddon=(item)=>{
     if (item.type !== 'user') return;
@@ -85,7 +79,7 @@ const findAddon=(item)=>{
 const fillDataServer=(type)=>{
     Requests.getJson("?request=listdir&type="+type).then((json)=>{
         let list=[];
-        if (type == 'chart'){
+        if (type === 'chart'){
             list.push({
                 type: type,
                 name: 'DefaultOverlays',
@@ -117,7 +111,7 @@ const fillDataServer=(type)=>{
 
 const findInfo=(list,item)=>{
     for (let k=0;k < list.length;k++){
-        if (list[k].name == item.name) return k;
+        if (list[k].name === item.name) return k;
     }
     return -1;
 };
@@ -184,47 +178,7 @@ const changeType=(newType)=>{
     globalStore.storeData(keys.gui.downloadpage.type, newType);
 };
 
-const getExt=(name)=>{
-    if (!name) return;
-    return name.replace(/.*\./,'').toLocaleLowerCase();
-};
-const allowedItemActions=(props)=>{
-    let isConnected=globalStore.getData(keys.properties.connectedMode,true);
-    let ext=getExt(props.name);
-    if (props.type == 'route') ext="gpx";
-    if (props.type == 'layout') ext="json";
-    let showView=(props.type == 'overlays' || props.type == 'user' || props.type=='images' || (props.type == 'route' && props.server) || props.type == 'track' || props.type == 'layout') && ViewPage.VIEWABLES.indexOf(ext)>=0;
-    let showEdit=(isConnected && (((props.type == 'overlays' || props.type == 'user') && props.size !== undefined && props.size < ViewPage.MAXEDITSIZE)|| (props.type == 'layout' && props.canDelete)  ) && ViewPage.EDITABLES.indexOf(ext) >=0);
-    let showDownload=false;
-    if (props.canDownload || props.type === "track"
-        || props.type === "route"
-        || props.type == 'layout'
-        || props.type == 'user'
-        || props.type == 'images'
-        || props.type == 'overlays'
-        || (props.url && props.url.match("^/gemf") ) ) {
-        showDownload=true;
-    }
-    let showDelete=!props.active;
-    if (props.canDelete !== undefined){
-        showDelete=props.canDelete && ! props.active;
-    }
-    if (! isConnected && (props.type != 'route' || props.isServer)) showDelete=false;
-    let showRename=isConnected && (props.type == 'user' || props.type == 'images' || props.type == 'overlays' );
-    let showApp=isConnected && (props.type == 'user' && ext == 'html' && globalStore.getData(keys.gui.capabilities.addons));
-    let isApp=(showApp && props.isAddon);
-    let showOverlay=(isConnected && props.type === 'chart' && globalStore.getData(keys.gui.capabilities.uploadOverlays));
-    return {
-        showEdit:showEdit,
-        showView:showView,
-        showDownload:showDownload,
-        showDelete:showDelete,
-        showRename:showRename,
-        showApp:showApp,
-        isApp:isApp,
-        showOverlay: showOverlay
-    };
-};
+
 
 const readAddOns = function () {
     Addons.readAddOns(true)
@@ -264,7 +218,7 @@ const DownloadItem=(props)=>{
         <div className={cls} onClick={function(ev){
             props.onClick('select')
         }}>
-            {(showDelete && ! props.active) &&<Button className="Delete smallButton" onClick={(ev)=>{
+            {(showDelete && ! props.active) &&<Button name="Delete" className="Delete smallButton" onClick={(ev)=>{
                 ev.preventDefault();
                 ev.stopPropagation();
                 props.onClick('delete');
@@ -281,7 +235,7 @@ const DownloadItem=(props)=>{
                     {isApp && <div className="appimage"></div>}
                 </div>
             </div>
-            { showDownload && <Button className="Download smallButton" onClick={
+            { showDownload && <Button name="Download" className="Download smallButton" onClick={
                 (ev)=>{
                     ev.stopPropagation();
                     ev.preventDefault();
@@ -290,55 +244,6 @@ const DownloadItem=(props)=>{
             }/>}
         </div>
     );
-};
-
-const sendDelete=(info)=>{
-    let url = "?request=delete&type="+info.type;
-    url+="&name="+encodeURIComponent(info.name);
-    if (info.url){
-        url+="&url="+encodeURIComponent(info.url);
-    }
-    Requests.getJson(url).then((json)=>{
-        if (info.type == 'track'){
-            NavHandler.resetTrack();
-        }
-        fillData();
-    }).catch((error)=>{
-        Toast("unable to delete "+info.name+": "+error);
-        fillData();
-    });
-};
-
-const deleteItem=(info)=>{
-    let ok = OverlayDialog.confirm("delete " + info.name + "?");
-    ok.then(function() {
-        if (info.type == 'layout'){
-            if (LayoutHandler.deleteItem(info.name)) {
-                fillData();
-                return;
-            }
-        }
-        if (info.type != "route") {
-            sendDelete(info);
-        }
-        else{
-            if (RouteHandler.isActiveRoute(info.name)){
-                Toast("unable to delete active route");
-                return false;
-            }
-            RouteHandler.deleteRoute(info.name,
-                (data)=>{fillData();},
-                (rinfo)=>{
-                    Toast("unable to delete route: "+rinfo);
-                    fillData();
-                },
-                !info.server //if we think this is a local route - just delete it local only
-            );
-        }
-    });
-    ok.catch(function(err){
-        base.log("delete canceled");
-    });
 };
 
 const startServerDownload=(type,name,opt_url,opt_json)=>{
@@ -367,33 +272,25 @@ const startServerDownload=(type,name,opt_url,opt_json)=>{
     });
 };
 
-const download = (info)=> {
+const download = (info) => {
     if (info) {
-        if (info.type == 'layout'){
+        if (info.type == 'layout') {
             if (LayoutHandler.download(info.name)) return;
         }
-        if (info.type == "track"
-            || info.type == 'layout'
-            || info.type == 'user'
-            || info.type == 'images'
-            || info.type == 'chart'
-            || info.type == 'overlays'
-        )
-            startServerDownload(info.type, info.name,info.url);
-        else {
-            if (info.type == "route") {
-                if (info.server) startServerDownload(info.type, info.name);
-                else {
-                    RouteHandler.fetchRoute(info.name, true, (data)=> {
-                            jsdownload(data.toXml(),info.name+".gpx","application/gpx+xml");
-                        },
-                        (err)=> {
-                            Toast("unable to get route " + info.name);
-                        });
-                }
-            }
-        }
 
+        if (info.type == "route") {
+            if (info.server) startServerDownload(info.type, info.name);
+            else {
+                RouteHandler.fetchRoute(info.name, true, (data) => {
+                        jsdownload(data.toXml(), info.name + ".gpx", "application/gpx+xml");
+                    },
+                    (err) => {
+                        Toast("unable to get route " + info.name);
+                    });
+            }
+            return;
+        }
+        startServerDownload(info.type, info.name, info.url);
     }
 };
 
@@ -764,6 +661,8 @@ const DynamicForm=Dynamic(DownloadForm,{
 class UploadForm extends React.Component{
     constructor(props){
         super(props);
+        this.fileInput=undefined;
+        this.form=undefined;
     }
     shouldComponentUpdate(nextProps,nextState){
         //ensure that we only trigger again if at least the keys has changed
@@ -772,18 +671,19 @@ class UploadForm extends React.Component{
         return false;
     }
     componentDidMount(){
-        if (this.refs.form) this.refs.form.reset();
-        if (this.refs.fileInput) this.refs.fileInput.click();
+        if (this.form) this.form.reset();
+        if (this.fileInput) this.fileInput.click();
     }
     componentDidUpdate(){
-        if (this.refs.form) this.refs.form.reset();
-        if (this.refs.fileInput) this.refs.fileInput.click();
+        if (this.form) this.form.reset();
+        if (this.fileInput) this.fileInput.click();
     }
     render(){
         if (!this.props.enableUpload) return null;
         return(
-        <form className="hidden" method="post" ref="form">
-            <input type="file" ref="fileInput" name="file" key={this.props.fileInputKey} onChange={this.props.startUpload}/>
+        <form className="hidden" method="post" ref={(el)=>this.form=el}>
+            <input type="file" ref={(el)=>this.fileInput=el} name="file"
+                   key={this.props.fileInputKey} onChange={this.props.startUpload}/>
         </form>
         );
     }
@@ -791,283 +691,6 @@ class UploadForm extends React.Component{
 
 const DynamicUploadForm=Dynamic(UploadForm);
 
-class Callback{
-    constructor(callback){
-        this.callback=callback;
-    }
-    dataChanged(keys){
-        this.callback(keys);
-    }
-}
-
-
-const showUserAppDialog=(item)=>{
-    let addon=findAddon(item)||{};
-    let fixed={name:addon.name,url:item.url};
-    UserAppDialog.showUserAppDialog(addon,fixed,true)
-        .then((res)=>{readAddOns();})
-        .catch((error)=>{readAddOns()});
-};
-
-class FileDialog extends React.Component{
-    constructor(props){
-        super(props);
-        this.state={
-            changed:false,
-            existingName:false,
-            name:props.current.name,
-            scheme:props.current.scheme||"xyz",
-            allowed:allowedItemActions(props.current)
-        };
-        this.onChange=this.onChange.bind(this);
-    }
-    onChange(newName){
-        if (newName == this.state.name) return;
-        if (newName == this.props.current.name){
-            this.setState({
-                changed:false,
-                existingName:false,
-                name:newName
-            });
-            return;
-        }
-        let newState={name:newName,changed:true};
-        if (this.props.checkName){
-            newState.existingName=this.props.checkName(newName);
-        }
-        this.setState(newState)
-    }
-    render(){
-        let self=this;
-        let cn=this.state.existingName?"existing":"";
-        let rename=this.state.changed && ! this.state.existingName && (this.state.name != this.props.current.name);
-        let Dialog=this.state.dialog;
-        let showSchema=(this.props.current.type == 'chart' && this.props.current.url && this.props.current.url.match(/.*mbtiles.*/));
-        let schemeChanged=showSchema && (((this.props.current.scheme||"tms") != this.state.scheme)|| this.props.current.originalScheme);
-        return(
-            <React.Fragment>
-            <div className="fileDialog flexInner">
-                <h3 className="dialogTitle">{this.props.current.name}</h3>
-                {this.props.current.info !== undefined?
-                    <div className="dialogRow">
-                        <span className="itemInfo">{this.props.current.info}</span>
-                    </div>
-                    :
-                    null
-                }
-                {(showSchema && this.props.current.originalScheme) &&
-                <div className="dialogRow userAction">
-                    <span className="inputLabel">
-                        original DB scheme
-                    </span>
-                    <span className="value">
-                        {this.props.current.originalScheme}
-                    </span>
-
-                </div>
-                }
-                {showSchema &&
-                    <Radio
-                        label="scheme"
-                        value={this.state.scheme}
-                        onChange={(v)=>{this.setState({changed:true,scheme:v})}}
-                        itemList={[{label:"xyz",value:"xyz"},{label:"tms",value:"tms"}]}
-                        className="mbtilesType"/>
-
-                }
-                {this.state.allowed.showRename ?
-                    <div className="dialogRow">
-                        <Input
-                            label={this.state.existingName?"existing":"new name"}
-                            className={cn}
-                            value={this.state.name}
-                            onChange={this.onChange}
-                            />
-                    </div>
-                    : null
-                }
-                <div className="dialogButtons">
-                    {(this.state.allowed.showRename || showSchema)?
-                        <DB name="ok"
-                                onClick={()=>{
-                                    self.props.closeCallback();
-                                    let action="";
-                                    if (rename) action+="rename";
-                                    if (schemeChanged){
-                                        if (action == "") action="scheme";
-                                        else action+=",scheme";
-                                    }
-                                    self.props.okFunction(action,this.props.current.name,this.state.name,this.state.scheme);
-                                }}
-                                disabled={!rename && ! schemeChanged}
-                            >
-                            Change
-                        </DB>
-                        :
-                        null
-                    }
-                    {this.state.allowed.showDelete?
-                        <DB name="delete"
-                                onClick={()=>{
-                                    self.props.closeCallback();
-                                    self.props.okFunction('delete',this.props.current.name);
-                                }}
-                                disabled={this.state.changed}
-                            >
-                            Delete
-                        </DB>
-                        :
-                        null
-                    }
-                </div>
-                <div className="dialogButtons">
-                    <DB name="cancel"
-                            onClick={self.props.closeCallback}FileDia
-                        >
-                        Cancel
-                    </DB>
-                    {(this.state.allowed.showView )?
-                        <DB name="view"
-                                onClick={()=>{
-                                    self.props.closeCallback();
-                                    self.props.okFunction('view',this.props.current.name);
-                                }}
-                                disabled={this.state.changed}
-                            >
-                            View
-                        </DB>
-                        :
-                        null}
-                    {(this.state.allowed.showEdit)?
-                        <DB name="edit"
-                                onClick={()=>{
-                                    self.props.closeCallback();
-                                    self.props.okFunction('edit',this.props.current.name);
-                                }}
-                                disabled={this.state.changed}
-                            >
-                            Edit
-                        </DB>
-                        :
-                        null
-                    }
-                    {(this.state.allowed.showOverlay)?
-                        <DB name="overlays"
-                            onClick={()=>{
-                                    self.props.closeCallback();
-                                    self.props.okFunction('overlays',this.props.current.name);
-                                }}
-                            disabled={this.state.changed}
-                            >
-                            Overlays
-                        </DB>
-                        :
-                        null
-                    }
-                    {(this.state.allowed.showDownload) ?
-                        <DB name="download"
-                                onClick={()=>{
-                                    self.props.closeCallback();
-                                    self.props.okFunction('download',this.props.current.name);
-                                }}
-                                disabled={this.state.changed}
-                            >
-                            Download
-                        </DB>
-                        :
-                        null
-                    }
-                    {(this.state.allowed.showApp) &&
-                    <DB name="userApp"
-                        onClick={()=>{
-                                    this.props.closeCallback();
-                                    showUserAppDialog(this.props.current);
-                                }}
-                        disabled={this.state.changed}
-                        >
-                        App
-                    </DB>
-
-                    }
-                </div>
-            </div>
-                {Dialog?
-                    <DialogContainer
-                        className="nested"
-                        content={Dialog}
-                        onClick={()=>{this.setState({dialog:undefined})}}
-                        />:
-                    null}
-            </React.Fragment>
-        );
-    }
-}
-
-const showFileDialog=(item)=>{
-    let schemeAction=(newScheme)=>{
-        return Requests.getJson('?request=api&type='+encodeURIComponent(item.type)+
-            "&command=scheme&name="+encodeURIComponent(item.name)+"&url="+encodeURIComponent(item.url)+
-            "&newScheme="+encodeURIComponent(newScheme));
-    };
-    let renameAction=(name,newName)=>{
-        Requests.getJson('?request=api&type='+encodeURIComponent(item.type)+
-            "&command=rename&name="+encodeURIComponent(name)+
-            "&newName="+encodeURIComponent(newName))
-            .then(()=>{
-                fillData();
-            })
-            .catch((error)=>{
-                Toast("rename failed: "+error);
-                fillData();
-            });
-    };
-    let actionFunction=(action,name,opt_new,opt_scheme)=>{
-        if (action.match(/scheme/)){
-            schemeAction(opt_scheme)
-                .then(()=>{
-                    if (action.match(/rename/)) renameAction(name,opt_new);
-                    else fillData();
-                })
-                .catch((error)=>{
-                    Toast("change scheme failed: "+error);
-                    if (action.match(/rename/)) renameAction(name,opt_new);
-                    else fillData();
-                });
-            return;
-        }
-        if (action == 'rename'){
-            return renameAction(name,opt_new);
-        }
-        if (action == 'view'){
-            history.push('viewpage',{type:item.type,name:name,readOnly:true});
-            return;
-        }
-        if (action == 'edit'){
-            history.push('viewpage',{type:item.type,name:name});
-            return;
-        }
-        if (action == 'download'){
-            return download(item);
-        }
-        if (action == 'delete'){
-            return deleteItem(item);
-        }
-        if (action == 'overlays'){
-            return EditOverlaysDialog.createDialog(item, item.chartKey === DEFAULT_OVERLAY_CONFIG)
-        }
-    };
-    let {showView,showEdit}=allowedItemActions(item);
-    OverlayDialog.dialog((props)=>{
-       return(
-           <FileDialog
-               {...props}
-               okFunction={actionFunction}
-               current={item}
-               checkName={entryExists}
-               />
-       );
-    });
-};
 
 const createItem=(type)=>{
     OverlayDialog.valueDialogPromise('enter filename','')
@@ -1097,7 +720,6 @@ const readImportExtensions=()=>{
 class DownloadPage extends React.Component{
     constructor(props){
         super(props);
-        let self=this;
         this.getButtons=this.getButtons.bind(this);
         let type='chart';
         if (props.options && props.options.downloadtype){
@@ -1326,16 +948,27 @@ class DownloadPage extends React.Component{
                                             }}
                                 onItemClick={(item,data)=>{
                                             console.log("click on "+item.name+" type="+data);
-                                            if (data == 'delete'){
-                                                return deleteItem(item);
+                                            if (data === 'delete'){
+                                                return deleteItem(item,fillData);
                                             }
-                                            if (data == 'download'){
+                                            if (data === 'download'){
                                                 return download(item);
                                             }
                                             if (self.props.options && self.props.options.selectItemCallback){
                                                 return self.props.options.selectItemCallback(item);
                                             }
-                                            showFileDialog(item);
+                                            showFileDialog(item,
+                                                (item)=>{
+                                                    download(item);
+                                                },
+                                                (action,item)=>{
+                                                    if (action === 'userapp') readAddOns()
+                                                    else fillData();
+                                                },
+                                                (newName)=>{
+                                                    //checkExisting
+                                                    return entryExists(newName);
+                                                });
                                         }}
                                 />
                             <DynamicForm/>

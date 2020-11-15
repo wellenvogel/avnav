@@ -646,4 +646,6 @@ EditOverlaysDialog.createDialog=(chartItem,opt_noDefault,opt_callback)=>{
     return true;
 };
 
+export const DEFAULT_OVERLAY_CONFIG="default.cfg";
+
 export default  EditOverlaysDialog;

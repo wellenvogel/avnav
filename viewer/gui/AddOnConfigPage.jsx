@@ -49,7 +49,7 @@ class AddonConfigPage extends React.Component{
             {
                 name: 'AddonConfigPlus',
                 onClick: ()=> {
-                    UserAppDialog.showUserAppDialog({},{},true)
+                    UserAppDialog.showUserAppDialog({},false,true)
                         .then(()=>this.readAddons())
                         .catch(()=>this.readAddons());
                 }
