@@ -77,6 +77,9 @@ class AVNDirectoryListEntry(object):
 
     return False
 
+  def getKey(self):
+    return self.name
+
 
 class AVNDirectoryHandlerBase(AVNWorker):
   '''
@@ -108,13 +111,41 @@ class AVNDirectoryHandlerBase(AVNWorker):
   	  </%s>
       """ % (cls.getConfigName(), cls.getConfigName())
 
+  @classmethod
+  def getListEntryClass(cls):
+    """
+    get the class that should be used in the list functions
+    must inherit from AVNDirectoryListEntry
+    @return:
+    """
+    return AVNDirectoryListEntry
+
+  @classmethod
+  def getAutoScanExtensions(cls):
+    """
+    if a derived class overloads this
+    there will be a periodic reading of the directory
+    and self.itemList will be filled with descriptions of the type
+    the key will be the value returned by getKey of the item description
+    returned by getListEntryClass (the must inherit from AVNDirectoryListEntry
+    Callbacks:
+    #onItemAdd when a new entry is to be added
+    #onItemRemove when an entry has been removed from the list
+    @return:
+    """
+    return []
+
+  @classmethod
+  def autoScanIncludeDirectories(cls):
+    return False
+
   def __init__(self,param,type):
     AVNWorker.__init__(self,param)
     self.baseDir=None
     self.type=type
     self.httpServer=None
-    self.addonHandler=None
     self.waitCondition = threading.Condition()
+    self.itemList={}
 
   def start(self):
     self.httpServer=self.findHandlerByName('AVNHttpServer')
@@ -122,8 +153,33 @@ class AVNDirectoryHandlerBase(AVNWorker):
       raise Exception("unable to find AVNHttpServer")
     AVNWorker.start(self)
 
+  def onItemAdd(self,itemDescription):
+    # type: (AVNDirectoryListEntry) -> AVNDirectoryListEntry or None
+    """
+    called when the directory is scanned and this new item
+    is to be inserted
+    @param itemDescription:
+    @return: an itemDescription to be added or None
+    """
+    return itemDescription
 
-  def copyTemplates(self):
+  def onItemRemove(self,itemDescription):
+    """
+    being called after an entry has been removed from the list
+    @param itemDescription:
+    @return:
+    """
+    pass
+
+  def onItemDelete(self,itemDescription):
+    """
+    being called after an entry has been removed from the list
+    @param itemDescription:
+    @return: True if the delete should be handled by this base class
+    """
+    return True
+
+  def onPreRun(self):
     pass
 
   def periodicRun(self):
@@ -140,6 +196,63 @@ class AVNDirectoryHandlerBase(AVNWorker):
   def getSleepTime(self):
     return self.getFloatParam('interval')
 
+  def removeItem(self, name):
+    """
+    remove an item from the list of scanned items
+    @param name:
+    @return:
+    """
+    item=self.itemList.get(name)
+    if item is None:
+      return
+    try:
+      del self.itemList[name]
+    except:
+      pass
+    self.onItemRemove(item)
+
+  def _scanDirectory(self):
+    if not self.autoScanIncludeDirectories() and len(self.getAutoScanExtensions()) < 1:
+      return
+    try:
+      if not os.path.isdir(self.baseDir):
+        AVNLog.debug("basedir %s is no directory",self.baseDir)
+        return
+      newContent=self.listDirectory(self.autoScanIncludeDirectories())
+      oldContent=self.itemList.values()
+      currentlist = []
+      for f in newContent:
+        name=f.name
+        if not f.isDirectory:
+          (path,ext)=os.path.splitext(name)
+          if not ext in self.getAutoScanExtensions():
+            continue
+        AVNLog.debug("found matching file/dir %s", f)
+        currentlist.append(f)
+      for old in oldContent:  # type: AVNDirectoryListEntry
+        if old is None:
+          continue
+        if not self.listContains(currentlist,old):
+          AVNLog.info("closing chart/overlay file %s", old)
+          self.removeItem(old.getKey())
+      for newitem in currentlist:  # type: AVNDirectoryListEntry
+        olditem = self.itemList.get(newitem.getKey())
+        if olditem is not None:
+          if olditem.isModified(newitem):
+            AVNLog.info("closing file %s due to changed timestamp", newitem.name)
+            self.removeItem(olditem.getKey())
+        AVNLog.info("trying to add file %s", newitem.name)
+        filteritem=self.onItemAdd(newitem)
+        if filteritem is None:
+          AVNLog.info("file %s filtered out", newitem.name)
+          continue
+
+        self.itemList[newitem.getKey()] = newitem
+        AVNLog.info("successfully added file %s", newitem.name)
+    except:
+      AVNLog.error("Exception in periodic scan %s, ignore", traceback.format_exc())
+
+
   # thread run method - just try forever
   def run(self):
     self.setName(self.getThreadPrefix())
@@ -150,11 +263,13 @@ class AVNDirectoryHandlerBase(AVNWorker):
       self.setInfo("main","unable to create %s"%self.baseDir,AVNWorker.Status.ERROR)
       AVNLog.error("unable to create user dir %s"%self.baseDir)
       return
-    self.copyTemplates()
+    self.onPreRun()
     sleepTime=self.getSleepTime()
     self.setInfo('main', "handling %s"%self.baseDir, AVNWorker.Status.NMEA)
     while True:
       try:
+        if len(self.getAutoScanExtensions()) > 0 or self.autoScanIncludeDirectories():
+          self._scanDirectory()
         self.periodicRun()
       except:
         AVNLog.debug("%s: exception in periodic run: %s",self.getName(),traceback.format_exc())
@@ -169,29 +284,23 @@ class AVNDirectoryHandlerBase(AVNWorker):
   def canDelete(self):
     return True
 
+
   def handleDelete(self,name):
     if not self.canDelete():
       raise Exception("delete not possible")
     if name is None:
       raise Exception("missing name")
+    self.removeItem(name)
     name = AVNUtil.clean_filename(name)
     filename = os.path.join(self.baseDir, name)
     if not os.path.exists(filename):
       raise Exception("file %s not found" % filename)
     os.unlink(filename)
-    if self.addonHandler is not None:
-      try:
-        self.addonHandler.deleteByUrl(self.nameToUrl(name))
-      except Exception as e:
-        AVNLog.error("unable to delete addons for %s:%s",name,e)
 
   @classmethod
   def canList(cls):
     return True
 
-  @classmethod
-  def getListEntryClass(cls):
-    return AVNDirectoryListEntry
 
   def listDirectory(self,includeDirs=False):
     # type: (bool) -> list[AVNDirectoryListEntry]
@@ -297,7 +406,6 @@ class AVNDirectoryHandlerBase(AVNWorker):
         return None
       if part.lower().endswith(".zip") and k < (len(pathParts)-1):
         return self.getZipEntry(currentPath,"/".join(pathParts[k+1:]),handler,requestParam)
-    #we should never end here - but just to be sure
     originalPath = os.path.join(self.baseDir,subPath)
     return originalPath
 
@@ -337,6 +445,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
     if os.path.exists(dst):
       raise Exception("%s already exists" % newName)
     os.rename(src, dst)
+    self._scanDirectory()
     return AVNUtil.getReturnData()
 
   def handleUpload(self,name,handler,requestparam):
@@ -362,6 +471,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
       fh.close()
     else:
       handler.writeFileFromInput(outname, rlen, overwrite)
+    self._scanDirectory()
     return AVNUtil.getReturnData()
 
   def handleDownload(self,name,handler,requestparam):

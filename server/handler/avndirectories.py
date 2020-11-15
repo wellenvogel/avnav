@@ -50,11 +50,12 @@ class AVNUserHandler(AVNDirectoryHandlerBase):
   def __init__(self,param):
     AVNDirectoryHandlerBase.__init__(self, param, "user")
     self.baseDir = AVNConfig.getDirWithDefault(self.param, 'userDir', os.path.join('user', 'viewer'))
+    self.addonHandler=None
   def start(self):
     self.addonHandler=self.findHandlerByName("AVNUserAppHandler")
     AVNDirectoryHandlerBase.start(self)
 
-  def copyTemplates(self):
+  def onPreRun(self):
     httpserver=self.findHandlerByName("AVNHttpServer")
     if not httpserver:
       return
@@ -74,6 +75,14 @@ class AVNUserHandler(AVNDirectoryHandlerBase):
       if not os.path.exists(dest):
         with open(dest,"w") as fh:
           fh.write("{\n}\n")
+
+  def handleDelete(self,name):
+    super(AVNUserHandler, self).handleDelete(name)
+    if self.addonHandler is not None:
+      try:
+        self.addonHandler.deleteByUrl(self.nameToUrl(name))
+      except Exception as e:
+        AVNLog.error("unable to delete addons for %s:%s", name, e)
 
   def getPathFromUrl(self, path, handler=None,requestParam=None):
     if path == 'user.js':
