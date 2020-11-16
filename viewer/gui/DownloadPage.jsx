@@ -20,17 +20,22 @@ import OverlayDialog, {stateHelper} from '../components/OverlayDialog.jsx';
 import Helper from '../util/helper.js';
 import Promise from 'promise';
 import LayoutHandler from '../util/layouthandler.js';
-import jsdownload from 'downloadjs';
 import Mob from '../components/Mob.js';
-import LeaveHandler from '../util/leavehandler.js';
 import LayoutNameDialog from '../components/LayoutNameDialog.jsx';
 import {Input,InputReadOnly,Checkbox} from '../components/Inputs.jsx';
 import DB from '../components/DialogButton.jsx';
 import AndroidEventHandler from '../util/androidEventHandler.js';
 import Addons from '../components/Addons.js';
 import GuiHelpers from '../util/GuiHelpers.js';
-import {showFileDialog, deleteItem, allowedItemActions, getExt} from '../components/FileDialog';
+import {
+    showFileDialog,
+    deleteItem,
+    allowedItemActions,
+    getDownloadUrl,
+    ItemDownloadButton
+} from '../components/FileDialog';
 import {DEFAULT_OVERLAY_CONFIG} from '../components/EditOverlaysDialog';
+import DownloadButton from '../components/DownloadButton';
 
 const MAXUPLOADSIZE=100000;
 const RouteHandler=NavHandler.getRoutingHandler();
@@ -189,6 +194,7 @@ const readAddOns = function () {
         .catch(()=>{});
 };
 
+
 const DownloadItem=(props)=>{
     let dp={};
     if (props.type == "route"){
@@ -235,13 +241,12 @@ const DownloadItem=(props)=>{
                     {isApp && <div className="appimage"></div>}
                 </div>
             </div>
-            { showDownload && <Button name="Download" className="Download smallButton" onClick={
-                (ev)=>{
-                    ev.stopPropagation();
-                    ev.preventDefault();
-                    props.onClick('download');
-                }
-            }/>}
+            { showDownload && <ItemDownloadButton
+                name="Download"
+                className="Download smallButton"
+                item={props}
+                />
+            }
         </div>
     );
 };
@@ -389,7 +394,7 @@ const runUpload=(ev)=>{
         let fileObject=ev.target;
         if (fileObject.files && fileObject.files.length > 0) {
             let file = fileObject.files[0];
-            let ext = getExt(file.name);
+            let ext = Helper.getExt(file.name);
             if (directExtensions.indexOf(ext) >= 0) {
                 return uploadGeneric(type, ev.target);
             }
@@ -437,7 +442,7 @@ const uploadGeneric=(type,fileObject,opt_restrictedExtensions)=>{
     if (fileObject.files && fileObject.files.length > 0) {
         let file = fileObject.files[0];
         if (opt_restrictedExtensions){
-            let ext=getExt(file.name);
+            let ext=Helper.getExt(file.name);
             if (opt_restrictedExtensions.indexOf(ext) < 0){
                 Toast("only files of types: "+opt_restrictedExtensions.join(","));
                 resetUpload();
@@ -567,32 +572,7 @@ const uploadFileReader=(fileObject,allowedExtension)=> {
 };
 
 
-class DownloadForm extends React.Component {
-    constructor(props) {
-        super(props);
-    }
 
-
-
-    render() {
-        let props=this.props.downloadParameters||{};
-        if (! props.action) return null;
-        return (
-            <form
-                className="hidden downloadForm"
-                action={props.action}
-                ref={this.props.formRef}
-                method="get"
-                >
-                <input type="hidden" name="request" value="download"/>
-                <input type="hidden" name="name" value={props.json?"":props.name}/>
-                <input type="hidden" name="url" value={props.url}/>
-                <input type="hidden" name="type" value={props.type}/>
-                {props.json ? <input type = "hidden" name="_json" value={props.json}/>:null}
-            </form>
-        );
-    }
-}
 
 
 class UploadForm extends React.Component{
@@ -657,7 +637,6 @@ const readImportExtensions=()=>{
 class DownloadPage extends React.Component{
     constructor(props){
         super(props);
-        this.downloadState=stateHelper(this,{},'download');
         this.getButtons=this.getButtons.bind(this);
         let type='chart';
         if (props.options && props.options.downloadtype){
@@ -723,13 +702,13 @@ class DownloadPage extends React.Component{
             return;
         }
         if (type == 'images'){
-            if (GuiHelpers.IMAGES.indexOf(getExt(fileName)) < 0){
+            if (GuiHelpers.IMAGES.indexOf(Helper.getExt(fileName)) < 0){
                 Toast("only files of types: "+GuiHelpers.IMAGES.join(","));
                 return;
             }
         }
         if (type == 'chart'){
-            if (['gemf','mbtiles','xml'].indexOf(getExt(fileName))<0){
+            if (['gemf','mbtiles','xml'].indexOf(Helper.getExt(fileName))<0){
                 Toast("only gemf or mbtiles files allowed");
                 return;
             }
@@ -860,52 +839,6 @@ class DownloadPage extends React.Component{
         ];
         return rt;
     }
-    download(info){
-        if (info) {
-            if (info.type === 'layout') {
-                if (LayoutHandler.download(info.name)) return;
-            }
-
-            if (info.type === "route") {
-                if (info.server) this.startServerDownload(info.type, info.name);
-                else {
-                    RouteHandler.fetchRoute(info.name, true, (data) => {
-                            jsdownload(data.toXml(), info.name + ".gpx", "application/gpx+xml");
-                        },
-                        (err) => {
-                            Toast("unable to get route " + info.name);
-                        });
-                }
-                return;
-            }
-            this.startServerDownload(info.type, info.name, info.url);
-        }
-    };
-    startServerDownload(type,name,opt_url,opt_json){
-        let action=undefined;
-        let filename=name;
-        if (filename) {
-            if (type === 'route') filename += ".gpx";
-            if (type === 'layout') filename=filename.replace(/^[^.]*\./,'')+".json";
-            action = globalStore.getData(keys.properties.navUrl) + "/" + filename;
-        }
-        if (avnav.android){
-            //we cannot handle the special case with local routes on android
-            //but this will not happen anyway...
-            if (type === 'route') name+=".gpx";
-            if (type === "layout") name+=".json";
-            return avnav.android.downloadFile(name,type,opt_url);
-        }
-
-        this.downloadState.setState({
-            name:name,
-            url:opt_url,
-            type: type,
-            action:action,
-            count:(new Date()).getTime(), //have a count to always trigger an update
-            json:opt_json
-        });
-    };
     render(){
         let self=this;
         return (
@@ -933,9 +866,6 @@ class DownloadPage extends React.Component{
                                     return self.props.options.selectItemCallback(item);
                                 }
                                 showFileDialog(item,
-                                    (item)=>{
-                                        this.download(item);
-                                    },
                                     (action,item)=>{
                                         if (action === 'userapp') readAddOns()
                                         else fillData();
@@ -964,18 +894,6 @@ class DownloadPage extends React.Component{
                             />
                             :
                             null}
-                        {this.downloadState.getValues().action &&
-                        <DownloadForm
-                            downloadParameters={this.downloadState.getState()}
-                            formRef={(form)=>{
-                                if (!form) return;
-                                LeaveHandler.stop();
-                                form.submit();
-                                LeaveHandler.activate();
-                                this.downloadState.setState({},true);
-                            }}
-                        />
-                        }
                     </React.Fragment>
                 }
                 storeKeys={{

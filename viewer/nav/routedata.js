@@ -553,6 +553,14 @@ RouteData.prototype.deleteRoute=function(name,opt_okcallback,opt_errorcallback,o
         }
     }
 };
+
+RouteData.prototype.getLocalRouteXml=function(name){
+    name=name.replace(/\.gpx$/,"");
+    let route=this._loadRoute(name,true)
+    if (! route) return;
+    return route.toXml();
+}
+
 /**
  *
  * @param name

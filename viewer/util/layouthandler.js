@@ -25,7 +25,6 @@ class LayoutHandler{
         this.temporaryOptions={}; //options being set during edit
         globalStore.register(this,keys.gui.capabilities.uploadLayout);
     }
-
     dataChanged(skeys){
         this.storeLocally=!globalStore.getData(keys.gui.capabilities.uploadLayout,false);
     }
@@ -585,19 +584,16 @@ class LayoutHandler{
     }
 
     /**
-     * download if there is a special handling
-     * return true if we handled
+     * get a layout fetch function for downloads we handle this locally
      * @param name
      */
-    download(name){
-        let fileName=this.nameToBaseName(name)+".json";
-        if (this.storeLocally){
-            let layout=this.temporaryLayouts[name];
-            if (! layout) return;
-            jsdownload(JSON.stringify(layout,null,2),fileName,"application/json");
-            return true;
-        }
-        return false;
+    getLocalDownload() {
+        if (!this.storeLocally) return;
+        return (name) => {
+            let layout = this.temporaryLayouts[name];
+            if (!layout) return;
+            return JSON.stringify(layout, null, 2);
+        };
     }
 
     /**

@@ -37,18 +37,56 @@ import history from "../util/history";
 import LayoutHandler from "../util/layouthandler";
 import base from "../base";
 import NavHandler from "../nav/navdata";
+import Helper from '../util/helper';
 import UserAppDialog from "./UserAppDialog";
+import DownloadButton from "./DownloadButton";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
-export const getExt=(name)=>{
-    if (!name) return;
-    return name.replace(/.*\./,'').toLocaleLowerCase();
-};
+export const ItemDownloadButton=(props)=>{
+    let {item,...forwards}=props;
+    let localData=getLocalDataFunction(item);
+    return <DownloadButton
+        {...forwards}
+        url={localData?undefined:getDownloadUrl(item)}
+        fileName={getDownloadFileName(item)}
+        localData={localData}
+        type={item.type}
+        />
+}
+const getLocalDataFunction=(item)=>{
+    if (item.type === 'route' && ! item.server){
+        return ()=>{ return RouteHandler.getLocalRouteXml(item.name)}
+    }
+    if (item.type === 'layout'){
+        return LayoutHandler.getLocalDownload(item.name);
+    }
+}
+const getDownloadFileName=(item)=>{
+    if (item.type === 'layout') return LayoutHandler.nameToBaseName(item.name)+".json";
+    if (item.type === 'route'){
+        if (! item.name.match(/\.gpx$/)) return item.name+".gpx";
+        return item.name;
+    }
+    return item.name;
+}
+const getDownloadUrl=(item)=>{
+    let name=item.name;
+    if (item.type==='route') {
+        if (item.server === false) return;
+        name+=".gpx";
+    }
+    //if (item.type === 'layout') return;
+    return globalStore.getData(keys.properties.navUrl)+"?request=download&type="+
+        encodeURIComponent(item.type)+"&name="+
+        encodeURIComponent(name)
+}
+
+
 export const allowedItemActions=(props)=>{
     if (! props) return {};
     let isConnected=globalStore.getData(keys.properties.connectedMode,true);
-    let ext=getExt(props.name);
+    let ext=Helper.getExt(props.name);
     if (props.type === 'route') ext="gpx";
     if (props.type === 'layout') ext="json";
     let showView=(props.type === 'overlays' || props.type === 'user' || props.type==='images' || (props.type === 'route' && props.server) || props.type === 'track' || props.type === 'layout') && ViewPage.VIEWABLES.indexOf(ext)>=0;
@@ -238,16 +276,15 @@ export default  class FileDialog extends React.Component{
                             :
                             null
                         }
-                        {(this.state.allowed.showDownload && ! this.props.noDownload) ?
-                            <DB name="download"
-                                onClick={()=>{
-                                    self.props.closeCallback();
-                                    self.props.okFunction('download',this.props.current);
-                                }}
+                        {(this.state.allowed.showDownload ) ?
+                            <ItemDownloadButton
+                                name="download"
                                 disabled={this.state.changed}
+                                item={this.props.current||{}}
+                                useDialogButton={true}
                             >
                                 Download
-                            </DB>
+                            </ItemDownloadButton>
                             :
                             null
                         }
@@ -321,7 +358,7 @@ export const deleteItem=(info,opt_resultCallback)=> {
     });
 };
 
-export const showFileDialog=(item,opt_downloadCallback,opt_doneCallback,opt_checkExists)=>{
+export const showFileDialog=(item,opt_doneCallback,opt_checkExists)=>{
     let actionFunction=(action,newItem)=>{
         let doneAction=()=>{
             if (opt_doneCallback){
@@ -376,12 +413,6 @@ export const showFileDialog=(item,opt_downloadCallback,opt_doneCallback,opt_chec
                 .then((data)=>doneAction())
                 .catch((error)=>doneAction());
         }
-        if (action === 'download'){
-            if (opt_downloadCallback){
-                opt_downloadCallback(item);
-            }
-            return;
-        }
         if (action === 'delete'){
             return deleteItem(item,doneAction);
         }
@@ -394,7 +425,6 @@ export const showFileDialog=(item,opt_downloadCallback,opt_doneCallback,opt_chec
         return(
             <FileDialog
                 {...props}
-                noDownload={!opt_downloadCallback}
                 okFunction={actionFunction}
                 current={item}
                 checkName={opt_checkExists}
