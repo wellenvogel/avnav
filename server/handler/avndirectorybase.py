@@ -242,6 +242,8 @@ class AVNDirectoryHandlerBase(AVNWorker):
           if olditem.isModified(newitem):
             AVNLog.info("closing file %s due to changed timestamp", newitem.name)
             self.removeItem(olditem.getKey())
+          else:
+            continue
         AVNLog.info("trying to add file %s", newitem.name)
         filteritem=self.onItemAdd(newitem)
         if filteritem is None:
