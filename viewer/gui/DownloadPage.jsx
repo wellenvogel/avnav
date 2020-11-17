@@ -511,7 +511,7 @@ class DownloadPage extends React.Component{
                 if (directExtensions.indexOf(ext) < 0) {
                     //check for import
                     let importExtensions=globalStore.getData(keys.gui.downloadpage.chartImportExtensions,[]);
-                    if (importExtensions.indexOf(ext)>=0) {
+                    if (importExtensions.indexOf(ext)>=0 && ! avnav.android) {
                         OverlayDialog.dialog((props)=>{
                             return(
                                 <ImportDialog
@@ -520,7 +520,7 @@ class DownloadPage extends React.Component{
                                         globalStore.storeData(keys.gui.downloadpage.chartImportSubDir,subdir);
                                         resolve({name:name,type:'import',uploadParameters:{subdir:subdir}});
                                     }}
-                                    cancelFunction={reject("canceled")}
+                                    cancelFunction={()=>reject("canceled")}
                                     name={name}
                                     subdir={globalStore.getData(keys.gui.downloadpage.chartImportSubDir)}
                                 />

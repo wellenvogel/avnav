@@ -13,8 +13,6 @@ import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.nio.charset.StandardCharsets;
 
-import de.wellenvogel.avnav.appapi.INavRequestHandler;
-import de.wellenvogel.avnav.appapi.PostVars;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.WebViewFragment;
 import de.wellenvogel.avnav.util.AvnLog;
@@ -87,9 +85,10 @@ public class UploadData{
         }
     }
 
-    public boolean copyFile() {
+    public boolean copyFile(String newName) {
         if (doRead) return false;
         if (name == null || fileUri == null || targetHandler==null) return false;
+        if (newName != null) name=newName;
         if (fragment.getActivity()==null) return false;
         try {
             final DocumentFile df = DocumentFile.fromSingleUri(fragment.getActivity(), fileUri);

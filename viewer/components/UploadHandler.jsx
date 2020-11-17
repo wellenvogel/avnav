@@ -184,65 +184,64 @@ class UploadHandler extends React.Component{
      * if we had set the "local" flag
      * @param eventData
      */
-    androidUploadHandler(eventData){
+    androidUploadHandler(eventData) {
         if (!avnav.android) return;
-        let {id}=eventData;
-        let requestedId=this.state.androidSequence;
+        let {id} = eventData;
+        let requestedId = this.state.androidSequence;
         if (id !== requestedId) return;
-        //lets go back to the main thread as we had been called from android...
-        window.setTimeout(()=> {
-            let type = this.props.type;
-            let filename = avnav.android.getFileName(id);
-            if (!filename) return;
-            let data=avnav.android.getFileData(id);
-            this.checkName(filename)
-                .then((res)=>{
-                    this.props.doneCallback({
-                        name:res.name,
-                        data: data
-                    })
+
+        let type = this.props.type;
+        let filename = avnav.android.getFileName(id);
+        if (!filename) return;
+        let data = avnav.android.getFileData(id);
+        this.checkName(filename)
+            .then((res) => {
+                this.props.doneCallback({
+                    name: res.name,
+                    data: data
                 })
-                .catch(()=>{});
-            },0);
+            })
+            .catch(() => {
+            });
     }
 
     /**
      * called from android when the file selection is ready
      * @param eventData
      */
-    androidCopyHandler(eventData){
+    androidCopyHandler(eventData) {
         if (!avnav.android) return;
-        let requestedId=this.state.androidSequence;
-        let {id}=eventData;
+        let requestedId = this.state.androidSequence;
+        let {id} = eventData;
         if (id !== requestedId) return;
-        let type=this.props.type
-        let fileName=avnav.android.getFileName(id);
-        window.setTimeout(()=> {
-            this.checkName(fileName)
-                .then((res) => {
-                    let copyInfo = {
-                        xhdr: {
-                            abort: () => {
-                                avnav.android.interruptCopy(id);
-                            }
-                        },
-                        total: avnav.android.getFileSize(id),
-                        loaded: 0,
-                        loadedPercent: true
-                    };
-                    this.stateHelper.setState(copyInfo, true);
-                    if (avnav.android.copyFile(id)) {
-                        //we update the file size as with copyFile it is fetched again
-                        this.stateHelper.setValue('total', avnav.android.getFileSize(id));
-                    } else {
-                        this.props.errorCallback("unable to upload");
-                        this.stateHelper.setState({}, true);
-                    }
-                })
-                .catch(() => {
-                    avnav.android.interruptCopy(id)
-                });
-        },0);
+        let type = this.props.type
+        let fileName = avnav.android.getFileName(id);
+
+        this.checkName(fileName)
+            .then((res) => {
+                let copyInfo = {
+                    xhdr: {
+                        abort: () => {
+                            avnav.android.interruptCopy(id);
+                        }
+                    },
+                    total: avnav.android.getFileSize(id),
+                    loaded: 0,
+                    loadedPercent: true
+                };
+                this.stateHelper.setState(copyInfo, true);
+                if (avnav.android.copyFile(id,res.name)) {
+                    //we update the file size as with copyFile it is fetched again
+                    this.stateHelper.setValue('total', avnav.android.getFileSize(id));
+                } else {
+                    this.props.errorCallback("unable to upload");
+                    this.stateHelper.setState({}, true);
+                }
+            })
+            .catch(() => {
+                avnav.android.interruptCopy(id)
+            });
+
     }
     androidProgressHandler(eventData){
         let {event,id}=eventData;
@@ -254,9 +253,7 @@ class UploadHandler extends React.Component{
         else{
             //done, error already reported from java side
             this.stateHelper.setState({},true);
-            setTimeout(()=>{
-                this.props.doneCallback();
-            },0);
+            this.props.doneCallback();
         }
     }
 

@@ -170,13 +170,14 @@ public class JavaScriptApi {
      * When done we fire {@link Constants#JS_FILE_COPY_DONE} - with 0 for success, 1 for errors
      * The target is determined by the type that we provided in requestFile
      * @param id the id we used in {@link #requestFile(String, int, boolean)}
+     * @param newName if != null use this as the target file name
      * @return true if the copy started successfully
      */
     @JavascriptInterface
-    public boolean copyFile(int id){
+    public boolean copyFile(int id,String newName){
         if (detached) return false;
         if (uploadData==null || ! uploadData.isReady(id)) return false;
-        return uploadData.copyFile();
+        return uploadData.copyFile(newName);
     }
     @JavascriptInterface
     public long getFileSize(int id){
