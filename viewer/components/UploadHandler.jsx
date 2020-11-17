@@ -30,8 +30,11 @@ import globalStore from "../util/globalstore";
 import keys from "../util/keys";
 import Requests from "../util/requests";
 import Toast from "./Toast";
+import AndroidEventHandler from "../util/androidEventHandler";
+import Promise from 'promise';
+import Helper from "../util/helper";
 
-
+const MAXUPLOADSIZE=100000;
 
 class UploadHandler extends React.Component{
     constructor(props) {
@@ -43,32 +46,94 @@ class UploadHandler extends React.Component{
         this.stateHelper=stateHelper(this,{},'upload');
         this.uploadServer=this.uploadServer.bind(this);
         this.fileChange=this.fileChange.bind(this);
-        this.fileRef=null;
+        this.androidSubscriptions=[];
 
     }
-    uploadServer(file){
+
+    /**
+     * check the filename if an external check function has been provided
+     * @param name
+     * @returns a Promise
+     *      resolves withe an object with name, uploadParameters (object)
+     *      or rejects
+     */
+    checkName(name){
+        if (! this.props.checkNameCallback) {
+            return new Promise((resolve, reject) => {
+                resolve({name: name});
+            });
+        }
+        return this.props.checkNameCallback(name);
+    }
+    upload(file){
         let self=this;
         if (! file || ! this.props.type) return;
-        let url=globalStore.getData(keys.properties.navUrl)
-            + "?request=upload&type="+this.props.type
-            +"&name=" + encodeURIComponent(file.name);
-        let currentSequence=this.props.uploadSequence;
+        this.checkName(file.name)
+            .then((res)=>{
+                if (!this.props.local){
+                    this.uploadServer(file,res.name,res.type||this.props.type,res.uploadParameters)
+                }
+                else{
+                    this.uploadFileReader(file,res.name)
+                }
+            })
+            .catch((err)=>{
+                this.props.errorCallback(err);
+            });
+    }
+
+    uploadFileReader(file, name) {
+        this.stateHelper.setState({}, true);
+        if (file.size) {
+            if (file.size > MAXUPLOADSIZE) {
+                let error = "file is to big, max allowed: " + MAXUPLOADSIZE;
+                this.props.errorCallback(error)
+                return;
+            }
+        }
+        if (!window.FileReader) {
+            this.props.errorCallback("your browser does not support FileReader, cannot upload");
+            return;
+        }
+        let reader = new FileReader();
+        reader.onloadend = () => {
+            let content = reader.result;
+            if (!content) {
+                this.props.errorCallback("unable to load file " + file.name);
+                return;
+            }
+            this.props.doneCallback({data: content, name: name});
+
+
+        };
+        reader.readAsText(file);
+    }
+    uploadServer(file, name,type, opt_options) {
+        let self=this;
+        let url = globalStore.getData(keys.properties.navUrl)
+            + "?request=upload&type=" + type
+            + "&name=" + encodeURIComponent(name);
+        if (opt_options) {
+            for (let k in opt_options) {
+                url += "&" + k + "=" + encodeURIComponent(opt_options[k]);
+            }
+        }
+        let currentSequence = this.props.uploadSequence;
         Requests.uploadFile(url, file, {
             self: self,
-            starthandler: function(param,xhdr){
-                if (self.props.uploadSequence !== currentSequence){
+            starthandler: function (param, xhdr) {
+                if (self.props.uploadSequence !== currentSequence) {
                     if (xhdr) xhdr.abort();
                     return;
                 }
                 self.stateHelper.setState({
-                    xhdr:xhdr
+                    xhdr: xhdr
                 });
             },
             errorhandler: function (param, err) {
                 if (self.props.uploadSequence !== currentSequence) return;
-                self.stateHelper.setState({},true);
-                Toast("upload failed: " + err);
-                if (self.props.errorCallback){
+                self.stateHelper.setState({}, true);
+                if (self.props.errorCallback) {
                     self.props.errorCallback(err);
                 }
             },
@@ -76,15 +141,15 @@ class UploadHandler extends React.Component{
                 if (self.props.uploadSequence !== currentSequence) return;
                 if (ev.lengthComputable) {
                     self.stateHelper.setState({
-                            total:ev.total,
-                            loaded: ev.loaded
-                        });
+                        total: ev.total,
+                        loaded: ev.loaded
+                    });
                 }
             },
             okhandler: function (param, data) {
                 if (self.props.uploadSequence !== currentSequence) return;
-                self.stateHelper.setState({},true);
-                if (self.props.doneCallback){
+                self.stateHelper.setState({}, true);
+                if (self.props.doneCallback) {
                     self.props.doneCallback();
                 }
             }
@@ -99,14 +164,120 @@ class UploadHandler extends React.Component{
             xhdr.abort();
         }
         this.stateHelper.setState(newUpload,true);
+        if (avnav.android){
+          let newState= {
+              uploadSequence:this.props.uploadSequence,
+              androidSequence: (new Date()).getTime()
+          }
+          this.setState(newState);
+          avnav.android.requestFile(this.props.type,newState.androidSequence,this.props.local||false);
+        }
         //trigger re-render of file input, in it's ref we send the click event
         this.setState({
             uploadSequence:this.props.uploadSequence
         })
 
     }
+
+    /**
+     * called back from android if the file was completely read
+     * if we had set the "local" flag
+     * @param eventData
+     */
+    androidUploadHandler(eventData){
+        if (!avnav.android) return;
+        let {id}=eventData;
+        let requestedId=this.state.androidSequence;
+        if (id !== requestedId) return;
+        //lets go back to the main thread as we had been called from android...
+        window.setTimeout(()=> {
+            let type = this.props.type;
+            let filename = avnav.android.getFileName(id);
+            if (!filename) return;
+            let data=avnav.android.getFileData(id);
+            this.checkName(filename)
+                .then((res)=>{
+                    this.props.doneCallback({
+                        name:res.name,
+                        data: data
+                    })
+                })
+                .catch(()=>{});
+            },0);
+    }
+
+    /**
+     * called from android when the file selection is ready
+     * @param eventData
+     */
+    androidCopyHandler(eventData){
+        if (!avnav.android) return;
+        let requestedId=this.state.androidSequence;
+        let {id}=eventData;
+        if (id !== requestedId) return;
+        let type=this.props.type
+        let fileName=avnav.android.getFileName(id);
+        window.setTimeout(()=> {
+            this.checkName(fileName)
+                .then((res) => {
+                    let copyInfo = {
+                        xhdr: {
+                            abort: () => {
+                                avnav.android.interruptCopy(id);
+                            }
+                        },
+                        total: avnav.android.getFileSize(id),
+                        loaded: 0,
+                        loadedPercent: true
+                    };
+                    this.stateHelper.setState(copyInfo, true);
+                    if (avnav.android.copyFile(id)) {
+                        //we update the file size as with copyFile it is fetched again
+                        this.stateHelper.setValue('total', avnav.android.getFileSize(id));
+                    } else {
+                        this.props.errorCallback("unable to upload");
+                        this.stateHelper.setState({}, true);
+                    }
+                })
+                .catch(() => {
+                    avnav.android.interruptCopy(id)
+                });
+        },0);
+    }
+    androidProgressHandler(eventData){
+        let {event,id}=eventData;
+        if (event === "fileCopyPercent"){
+            let old=this.stateHelper.getState();
+            if (!old.total) return; //no upload...
+            this.stateHelper.setValue('loaded',id);
+        }
+        else{
+            //done, error already reported from java side
+            this.stateHelper.setState({},true);
+            setTimeout(()=>{
+                this.props.doneCallback();
+            },0);
+        }
+    }
+
     componentDidMount() {
+        this.androidUploadHandler=this.androidUploadHandler.bind(this);
+        this.androidCopyHandler=this.androidCopyHandler.bind(this);
+        this.androidProgressHandler=this.androidProgressHandler.bind(this);
+        this.androidSubscriptions.push(AndroidEventHandler.subscribe("uploadAvailable",this.androidUploadHandler));
+        this.androidSubscriptions.push(AndroidEventHandler.subscribe("fileCopyReady",this.androidCopyHandler));
+        this.androidSubscriptions.push(AndroidEventHandler.subscribe("fileCopyPercent",this.androidProgressHandler));
+        this.androidSubscriptions.push(AndroidEventHandler.subscribe("fileCopyDone",this.androidProgressHandler));
         this.checkForUpload();
+    }
+    componentWillUnmount() {
+        this.androidSubscriptions.forEach((token)=> {
+            AndroidEventHandler.unsubscribe(token);
+        });
+        let xhdr=this.stateHelper.getValue('xhdr');
+        if (xhdr){
+            xhdr.abort();
+        }
     }
 
     componentDidUpdate() {
@@ -116,7 +287,7 @@ class UploadHandler extends React.Component{
         ev.stopPropagation();
         let fileObject=ev.target;
         if (fileObject.files && fileObject.files.length > 0){
-            this.uploadServer(fileObject.files[0]);
+            this.upload(fileObject.files[0]);
         }
     }
     render(){
@@ -133,7 +304,7 @@ class UploadHandler extends React.Component{
         };
         return (
             <React.Fragment>
-                <form className="hiddenUpload" method="post">
+                {! avnav.android && <form className="hiddenUpload" method="post">
                     <input type="file"
                            ref={(el) => {
                                if (!el) return;
@@ -144,7 +315,7 @@ class UploadHandler extends React.Component{
                            }}
                            name="file"
                            key={this.state.uploadSequence} onChange={this.fileChange}/>
-                </form>
+                </form>}
                 {this.stateHelper.getValue('xhdr') && <div className="downloadProgress">
                     <div className="progressContainer">
                         <div className="progressInfo">{(loaded || 0) + "/" + (props.total || 0)}</div>
@@ -172,9 +343,10 @@ UploadHandler.propTypes={
                                           //which will abort
     type:               PropTypes.string,
     local:              PropTypes.bool,
-    doneCallback:       PropTypes.func, //will be called with the data for local=true, otherwise
-                                  //with true
-    errorCallback:      PropTypes.func //called with error text (or undefined for cancel)
+    doneCallback:       PropTypes.func, //will be called with and object with name,data for local=true, otherwise
+                                        //with no parameter
+    errorCallback:      PropTypes.func, //called with error text (or undefined for cancel)
+    checkNameCallback:  PropTypes.func //must resolve an object with name, uploadParameters, type
 }
 export default UploadHandler;
 

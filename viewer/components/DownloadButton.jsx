@@ -78,6 +78,7 @@ class DownloadButton extends React.Component{
                         onClick={(ev) =>{
                             ev.stopPropagation();
                             this.saveLocal();
+                            if (this.props.onClick) this.props.onClick(ev);
                         }}
                     >
                         {this.props.children}
@@ -88,6 +89,7 @@ class DownloadButton extends React.Component{
                         onClick={(ev) =>{
                             ev.stopPropagation();
                             this.serverDownload();
+                            if (this.props.onClick) this.props.onClick(ev);
                         }}
                     >
                         {this.props.children}
@@ -105,7 +107,8 @@ DownloadButton.propTypes={
     className: PropTypes.string,
     useDialogButton: PropTypes.bool,
     fileName:  PropTypes.string,
-    type: PropTypes.string
+    type: PropTypes.string,
+    onClick: PropTypes.func
 }
 
 export default DownloadButton;

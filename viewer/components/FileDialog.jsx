@@ -275,6 +275,7 @@ export default  class FileDialog extends React.Component{
                             disabled={this.state.changed}
                             item={this.props.current || {}}
                             useDialogButton={true}
+                            onClick={this.props.closeCallback}
                         >
                             Download
                         </ItemDownloadButton>

@@ -24,21 +24,17 @@ import Mob from '../components/Mob.js';
 import LayoutNameDialog from '../components/LayoutNameDialog.jsx';
 import {Input,InputReadOnly,Checkbox} from '../components/Inputs.jsx';
 import DB from '../components/DialogButton.jsx';
-import AndroidEventHandler from '../util/androidEventHandler.js';
 import Addons from '../components/Addons.js';
 import GuiHelpers from '../util/GuiHelpers.js';
-import UploadHandler, {UploadForm} from "../components/UploadHandler";
+import UploadHandler  from "../components/UploadHandler";
 import {
     showFileDialog,
     deleteItem,
     allowedItemActions,
-    getDownloadUrl,
     ItemDownloadButton
 } from '../components/FileDialog';
 import {DEFAULT_OVERLAY_CONFIG} from '../components/EditOverlaysDialog';
-import DownloadButton from '../components/DownloadButton';
 
-const MAXUPLOADSIZE=100000;
 const RouteHandler=NavHandler.getRoutingHandler();
 
 const headlines={
@@ -252,14 +248,6 @@ const DownloadItem=(props)=>{
 };
 
 
-
-
-
-
-const resetUpload=()=>{
-    globalStore.storeData(keys.gui.downloadpage.enableUpload,false);
-};
-
 const uploadRouteData=(filename,data)=>{
     let route = undefined;
     try {
@@ -290,29 +278,7 @@ const userlayoutExists=(name)=>{
     return entryExists(itemName);
 };
 
-const uploadLayoutData = (fileName, data)=> {
-    if (userlayoutExists(fileName)) {
-        let baseName=LayoutHandler.nameToBaseName(fileName);
-        LayoutNameDialog.createDialog(baseName,userlayoutExists,"Layout exists, select new name")
-            .then((newName)=>{
-                LayoutHandler.uploadLayout(newName,data,true)
-                    .then((result)=>{fillData();})
-                    .catch((error)=>{Toast("unable to upload layout: "+error);})
-                })
-            .catch((error)=>{});
-        return;
-    }
-    LayoutHandler.uploadLayout(fileName, data, true)
-        .then(
-        (result)=> {
-            fillData();
-        }
-    ).catch(
-        (error)=> {
-            Toast("unable to upload layout: " + error);
-        }
-    )
-};
+
 
 class ImportDialog extends React.Component{
     constructor(props){
@@ -368,183 +334,11 @@ class ImportDialog extends React.Component{
     }
 }
 
-const startImportDialog=(file)=>{
-    const okFunction=(props,subdir)=>{
-        globalStore.storeData(keys.gui.downloadpage.chartImportSubDir,subdir);
-        resetUpload();
-        directUpload('import',file,{subdir:subdir});
-    };
-    OverlayDialog.dialog((props)=>{
-        return(
-            <ImportDialog
-                {...props}
-                okFunction={okFunction}
-                cancelFunction={resetUpload}
-                name={file.name}
-                subdir={globalStore.getData(keys.gui.downloadpage.chartImportSubDir)}
-                />
-        );
-    });
-};
-const runUpload=(ev)=>{
-    let type=globalStore.getData(keys.gui.downloadpage.type);
-    if (! type) return;
-    if (type == 'chart'){
-        let directExtensions=['gemf','mbtiles','xml'];
-        let fileObject=ev.target;
-        if (fileObject.files && fileObject.files.length > 0) {
-            let file = fileObject.files[0];
-            let ext = Helper.getExt(file.name);
-            if (directExtensions.indexOf(ext) >= 0) {
-                return uploadGeneric(type, ev.target);
-            }
-            else{
-                let importExtensions=globalStore.getData(keys.gui.downloadpage.chartImportExtensions,[]);
-                if (importExtensions.indexOf(ext)>=0) {
-                    return startImportDialog(file);
-                }
-            }
-            Toast("only files of types: "+directExtensions.join(","));
-        }
-    }
-    if (type == 'route'){
-        uploadFileReader(ev.target,".gpx").then((content)=> {
-                return uploadRouteData(content.name, content.content);
-            }
-        ).catch((error)=>{
-                Toast(error);
-            })
-    }
-    if (type == 'layout'){
-        uploadFileReader(ev.target,".json").then(
-            (content)=>{
-                return uploadLayoutData(content.name,content.content)
-            }
-        ).catch(
-            (error)=>{Toast(error)}
-        )
-    }
-    if (type == 'user' || type == 'overlays'){
-        return uploadGeneric(type,ev.target);
-    }
-    if (type == 'images'){
-        return uploadGeneric(type,ev.target,GuiHelpers.IMAGES);
-    }
-    resetUpload();
-};
 
 const entryExists=(name)=>{
     let current=globalStore.getData(keys.gui.downloadpage.currentItems,[]);
     return findInfo(current,{name:name})>=0;
 };
-
-const uploadGeneric=(type,fileObject,opt_restrictedExtensions)=>{
-    if (fileObject.files && fileObject.files.length > 0) {
-        let file = fileObject.files[0];
-        if (opt_restrictedExtensions){
-            let ext=Helper.getExt(file.name);
-            if (opt_restrictedExtensions.indexOf(ext) < 0){
-                Toast("only files of types: "+opt_restrictedExtensions.join(","));
-                resetUpload();
-                return;
-            }
-        }
-        let current=globalStore.getData(keys.gui.downloadpage.currentItems,[]);
-        for (let i=0;i<current.length;i++){
-            if (current[i].name ==file.name){
-                Toast("file "+file.name+" already exists");
-                resetUpload();
-                return;
-            }
-        }
-        resetUpload();
-        directUpload(type,file);
-    }
-};
-
-
-const directUpload=(type,file,opt_options)=>{
-    let url=globalStore.getData(keys.properties.navUrl)+ "?request=upload&type="+type+"&name=" + encodeURIComponent(file.name);
-    if (opt_options){
-        for (let k in opt_options){
-            url+="&"+k+"="+encodeURIComponent(opt_options[k]);
-        }
-    }
-    Requests.uploadFile(url, file, {
-        self: self,
-        starthandler: function(param,xhdr){
-            globalStore.storeData(keys.gui.downloadpage.uploadInfo,{
-                xhdr:xhdr
-            });
-        },
-        errorhandler: function (param, err) {
-            globalStore.storeData(keys.gui.downloadpage.uploadInfo,{});
-            Toast("upload failed: " + err);
-            setTimeout(function(){
-                fillData();
-            },1500);
-        },
-        progresshandler: function (param, ev) {
-            if (ev.lengthComputable) {
-                let old=globalStore.getData(keys.gui.downloadpage.uploadInfo);
-                globalStore.storeData(keys.gui.downloadpage.uploadInfo,
-                    assign({},old,{
-                    total:ev.total,
-                    loaded: ev.loaded
-                }));
-            }
-        },
-        okhandler: function (param, data) {
-            globalStore.storeData(keys.gui.downloadpage.uploadInfo,{});
-            setTimeout(function(){
-                fillData();
-            },1500);
-        }
-    });
-};
-
-const uploadFileReader=(fileObject,allowedExtension)=> {
-    return new Promise((resolve,reject)=> {
-        if (fileObject.files && fileObject.files.length > 0) {
-            let file = fileObject.files[0];
-            resetUpload();
-            if (!Helper.endsWith(file.name, allowedExtension)) {
-                reject("only "+allowedExtension+" files");
-                return false;
-            }
-            let rname = file.name;
-            if (file.size) {
-                if (file.size > MAXUPLOADSIZE) {
-                    reject("file is to big, max allowed: " + MAXUPLOADSIZE);
-                    return;
-                }
-            }
-            if (!window.FileReader) {
-                reject("your browser does not support FileReader, cannot upload");
-                return;
-            }
-            let reader = new FileReader();
-            reader.onloadend = ()=> {
-                let content = reader.result;
-                if (!content) {
-                    reject("unable to load file " + file.name);
-                    return;
-                }
-                resolve({content:content,name:rname});
-
-
-            };
-            reader.readAsText(file);
-        }
-        else {
-            reject("no file selected");
-        }
-    });
-};
-
-
-
-
 
 
 
@@ -573,6 +367,7 @@ const readImportExtensions=()=>{
         .catch();
 };
 
+
 class DownloadPage extends React.Component{
     constructor(props){
         super(props);
@@ -594,116 +389,9 @@ class DownloadPage extends React.Component{
         readAddOns();
         fillData();
         readImportExtensions();
-        this.androidSubscriptions=[];
-        this.androidUploadHandler=this.androidUploadHandler.bind(this);
-        this.androidCopyHandler=this.androidCopyHandler.bind(this);
-        this.androidProgressHandler=this.androidProgressHandler.bind(this);
-        this.androidSubscriptions.push(AndroidEventHandler.subscribe("uploadAvailable",this.androidUploadHandler));
-        this.androidSubscriptions.push(AndroidEventHandler.subscribe("fileCopyReady",this.androidCopyHandler));
-        this.androidSubscriptions.push(AndroidEventHandler.subscribe("fileCopyPercent",this.androidProgressHandler));
-        this.androidSubscriptions.push(AndroidEventHandler.subscribe("fileCopyDone",this.androidProgressHandler));
-    }
-    androidUploadHandler(eventData){
-        if (!avnav.android) return;
-        let {id}=eventData;
-        let requestedId=globalStore.getData(keys.gui.downloadpage.requestedUploadId);
-        if (id != requestedId) return;
-        //lets go back to the main thread as we had been called from android...
-        window.setTimeout(()=> {
-            let type = globalStore.getData(keys.gui.downloadpage.type);
-            let filename = avnav.android.getFileName(id);
-            if (!filename) return;
-            let data=avnav.android.getFileData(id);
-            if (type == 'route') {
-                if (!filename.match(/\.gpx$/)) {
-                    Toast("only gpx files for routes");
-                    return;
-                }
-                uploadRouteData(filename,data);
-            }
-            if (type == 'layout') {
-                uploadLayoutData(filename,data);
-            }
-        },0);
+        this.checkNameForUpload=this.checkNameForUpload.bind(this);
     }
 
-    /**
-     * called from android when the file selection is ready
-     * we now have to start the copy - showing the upload progress
-     * @param eventData
-     */
-    androidCopyHandler(eventData){
-        if (!avnav.android) return;
-        let requestedId=globalStore.getData(keys.gui.downloadpage.requestedUploadId);
-        let {id}=eventData;
-        if (id != requestedId) return;
-        let type=globalStore.getData(keys.gui.downloadpage.type);
-        let fileName=avnav.android.getFileName(id);
-        if (entryExists(fileName)){
-            Toast("file "+fileName+" already exists");
-            return;
-        }
-        if (type == 'images'){
-            if (GuiHelpers.IMAGES.indexOf(Helper.getExt(fileName)) < 0){
-                Toast("only files of types: "+GuiHelpers.IMAGES.join(","));
-                return;
-            }
-        }
-        if (type == 'chart'){
-            if (['gemf','mbtiles','xml'].indexOf(Helper.getExt(fileName))<0){
-                Toast("only gemf or mbtiles files allowed");
-                return;
-            }
-        }
-        let copyInfo={
-            xhdr:{
-                abort:()=>{
-                    avnav.android.interruptCopy(id);
-                }
-            },
-            total:avnav.android.getFileSize(id),
-            loaded:0,
-            loadedPercent:true
-        };
-        globalStore.storeData(keys.gui.downloadpage.uploadInfo,copyInfo);
-        if (avnav.android.copyFile(id)) {
-            //we update the file size as with copyFile it is fetched again
-            globalStore.storeData(keys.gui.downloadpage.uploadInfo, assign({}, copyInfo, {total: avnav.android.getFileSize(id)}));
-        }
-        else{
-            Toast("unable to upload");
-            globalStore.storeData(keys.gui.downloadpage.uploadInfo,{});
-        }
-
-    }
-    androidProgressHandler(eventData){
-        let {event,id}=eventData;
-        if (event == "fileCopyPercent"){
-            let old=globalStore.getData(keys.gui.downloadpage.uploadInfo);
-            if (!old.total) return; //no upload...
-            globalStore.storeData(keys.gui.downloadpage.uploadInfo,
-                assign({},old,{
-                    loaded: id
-                }));
-        }
-        else{
-            //done, error already reported from java side
-            globalStore.storeData(keys.gui.downloadpage.uploadInfo,{});
-            setTimeout(function(){
-                fillData();
-            },1500);
-        }
-    }
-
-
-
-    componentWillUnmount(){
-        this.androidSubscriptions.forEach((token)=> {
-            AndroidEventHandler.unsubscribe(token);
-        });
-        let uploadInfo=globalStore.getData(keys.gui.downloadpage.uploadInfo,{});
-        if (uploadInfo.xhdr) uploadInfo.xhdr.abort();
-    }
     getButtons(type){
         let allowTypeChange=! (this.props.options && this.props.options.allowChange === false);
         let rt=[
@@ -778,8 +466,112 @@ class DownloadPage extends React.Component{
         ];
         return rt;
     }
+
+    /**
+     * will be called once the user has selected a file
+     * the returned promise should resolve to an object with:
+     *   name: the new (potentially changed) name
+     *   type: if set, use this type for the upload instead of the original type
+     *   uploadParameters: an object containing parameters that will be added tp the upload url
+     * @param name
+     * @returns {ThenPromise<unknown>}
+     */
+    checkNameForUpload(name){
+        return new Promise((resolve,reject)=>{
+            let ext=Helper.getExt(name);
+            let rt={name:name};
+            if (this.state.type === 'route'){
+                if (ext !== "gpx") {
+                    reject("only gpx for routes");
+                    return;
+                }
+            }
+            if (this.state.type === 'images'){
+                if (GuiHelpers.IMAGES.indexOf(ext) < 0){
+                    reject("only images of types "+GuiHelpers.IMAGES.join(","));
+                    return;
+                }
+            }
+            if (this.state.type === 'layout'){
+                if (userlayoutExists(name)) {
+                    let baseName=LayoutHandler.nameToBaseName(name);
+                    LayoutNameDialog.createDialog(baseName,userlayoutExists,"Layout exists, select new name")
+                        .then((newName)=>{
+                            resolve({name:newName});
+                        })
+                        .catch((error)=>{reject(error)})
+                }
+                else{
+                    resolve(rt);
+                }
+                return;
+            }
+            if (this.state.type === 'chart'){
+                let directExtensions=['gemf','mbtiles','xml'];
+                if (directExtensions.indexOf(ext) < 0) {
+                    //check for import
+                    let importExtensions=globalStore.getData(keys.gui.downloadpage.chartImportExtensions,[]);
+                    if (importExtensions.indexOf(ext)>=0) {
+                        OverlayDialog.dialog((props)=>{
+                            return(
+                                <ImportDialog
+                                    {...props}
+                                    okFunction={(props,subdir)=>{
+                                        globalStore.storeData(keys.gui.downloadpage.chartImportSubDir,subdir);
+                                        resolve({name:name,type:'import',uploadParameters:{subdir:subdir}});
+                                    }}
+                                    cancelFunction={reject("canceled")}
+                                    name={name}
+                                    subdir={globalStore.getData(keys.gui.downloadpage.chartImportSubDir)}
+                                />
+                            );
+                        });
+                        return;
+                    }
+                    else{
+                        reject("unknown chart type");
+                        return;
+                    }
+                }
+                //fallthrough to check existing...
+            }
+            if (entryExists(name)){
+                reject("already exists");
+            }
+            else{
+                resolve(rt);
+            }
+        })
+    }
+
+    /**
+     * return a function that will receive the result of a local upload
+     * as an object with name and data
+     * @returns {function(*): void}
+     *          if no function is returned, the upload will go to the server
+     */
+    getLocalUploadFunction(){
+        if (this.state.type === 'route'){
+            return (obj)=>{uploadRouteData(obj.name,obj.data);fillData();}
+        }
+        if (this.state.type === 'layout'){
+            return (obj)=>{
+                LayoutHandler.uploadLayout(obj.name, obj.data, true)
+                    .then(
+                        (result)=> {
+                            fillData();
+                        }
+                    ).catch(
+                    (error)=> {
+                        Toast("unable to upload layout: " + error);
+                    }
+                )
+            }
+        }
+    }
     render(){
         let self=this;
+        let localDoneFunction=this.getLocalUploadFunction();
         return (
             <DynamicPage
                 className={self.props.className}
@@ -816,10 +608,12 @@ class DownloadPage extends React.Component{
                             }}
                         />
                         <UploadHandler
+                            local={localDoneFunction||false}
                             type={this.state.type}
-                            doneCallback={fillData}
-                            errorCallback={fillData}
+                            doneCallback={localDoneFunction?localDoneFunction:fillData}
+                            errorCallback={(err)=>{if (err) Toast(err);fillData();}}
                             uploadSequence={this.state.uploadSequence}
+                            checkNameCallback={this.checkNameForUpload}
                         />
                         {(this.state.type === "user")?
                             <Button
