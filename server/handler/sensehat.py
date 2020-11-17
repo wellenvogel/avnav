@@ -84,7 +84,7 @@ class AVNSenseHatReader(AVNWorker):
           AVNLog.debug("SenseHat:MDA %s", mda)
           self.writeData(mda,source,addCheckSum=True)
           """$AVMTA,19.50,C*2B"""
-          mta = 'AVMTA,%.2f,C' % (sense.temp)
+          mta = '$AVMTA,%.2f,C' % (sense.temp)
           AVNLog.debug("SenseHat:MTA %s", mta)
           self.writeData(mta,source,addCheckSum=True)
         if self.getBoolParam('writeXdr'):

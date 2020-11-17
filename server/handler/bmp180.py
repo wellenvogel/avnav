@@ -189,7 +189,7 @@ class AVNBMP180Reader(AVNWorker):
           AVNLog.debug("BMP180:MDA %s", mda)
           self.writeData(mda,source,addCheckSum=True)
           """$AVMTA,19.50,C*2B"""
-          mta = 'AVMTA,%.2f,C' % (temperature)
+          mta = '$AVMTA,%.2f,C' % (temperature)
           AVNLog.debug("BMP180:MTA %s", mta)
           self.writeData(mta,source,addCheckSum=True)
         if self.getBoolParam('writeXdr'):
