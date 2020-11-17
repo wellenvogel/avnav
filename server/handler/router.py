@@ -769,6 +769,8 @@ class AVNRouter(AVNWorker):
     try:
       name=self.getRequestParam(requestparam,"name")
       if name is not None and not name == "":
+        if name.endswith('.gpx'):
+          name=name[:-4]
         AVNLog.debug("download route name=%s",name)
         route=self.loadRoute(name)
       else:

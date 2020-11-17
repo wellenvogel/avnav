@@ -210,7 +210,7 @@ const DownloadItem=(props)=>{
             " nm, "+props.numpoints+" points";
         if (props.server) showRas=true;
     }
-    let {showView,showEdit,showDownload,showDelete,showApp,isApp}=allowedItemActions(props);
+    let {showView,showEdit,showDelete,showApp,isApp}=allowedItemActions(props);
     let  cls="listEntry";
     if (props.active){
         cls+=" activeEntry";
@@ -241,12 +241,11 @@ const DownloadItem=(props)=>{
                     {isApp && <div className="appimage"></div>}
                 </div>
             </div>
-            { showDownload && <ItemDownloadButton
+            <ItemDownloadButton
                 name="Download"
                 className="Download smallButton"
                 item={props}
-                />
-            }
+            />
         </div>
     );
 };

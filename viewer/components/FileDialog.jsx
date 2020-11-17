@@ -45,6 +45,7 @@ const RouteHandler=NavHandler.getRoutingHandler();
 
 export const ItemDownloadButton=(props)=>{
     let {item,...forwards}=props;
+    if (item.canDownload === false) return null;
     let localData=getLocalDataFunction(item);
     return <DownloadButton
         {...forwards}
@@ -79,7 +80,7 @@ const getDownloadUrl=(item)=>{
     //if (item.type === 'layout') return;
     return globalStore.getData(keys.properties.navUrl)+"?request=download&type="+
         encodeURIComponent(item.type)+"&name="+
-        encodeURIComponent(name)
+        encodeURIComponent(name)+"&filename="+encodeURIComponent(name)
 }
 
 
@@ -91,12 +92,6 @@ export const allowedItemActions=(props)=>{
     if (props.type === 'layout') ext="json";
     let showView=(props.type === 'overlays' || props.type === 'user' || props.type==='images' || (props.type === 'route' && props.server) || props.type === 'track' || props.type === 'layout') && ViewPage.VIEWABLES.indexOf(ext)>=0;
     let showEdit=(isConnected && (((props.type === 'overlays' || props.type === 'user') && props.size !== undefined && props.size < ViewPage.MAXEDITSIZE)|| (props.type === 'layout' && props.canDelete)  ) && ViewPage.EDITABLES.indexOf(ext) >=0);
-    let showDownload=false;
-    if (props.canDownload || props.type === "track"
-        || props.type === "route"
-        || props.type === 'layout'){
-        showDownload=true;
-    }
     let showDelete=!props.active;
     if (props.canDelete !== undefined){
         showDelete=props.canDelete && ! props.active;
@@ -110,7 +105,6 @@ export const allowedItemActions=(props)=>{
     return {
         showEdit:showEdit,
         showView:showView,
-        showDownload:showDownload,
         showDelete:showDelete,
         showRename:showRename,
         showApp:showApp,
@@ -276,18 +270,14 @@ export default  class FileDialog extends React.Component{
                             :
                             null
                         }
-                        {(this.state.allowed.showDownload ) ?
-                            <ItemDownloadButton
-                                name="download"
-                                disabled={this.state.changed}
-                                item={this.props.current||{}}
-                                useDialogButton={true}
-                            >
-                                Download
-                            </ItemDownloadButton>
-                            :
-                            null
-                        }
+                        <ItemDownloadButton
+                            name="download"
+                            disabled={this.state.changed}
+                            item={this.props.current || {}}
+                            useDialogButton={true}
+                        >
+                            Download
+                        </ItemDownloadButton>
                         {(this.state.allowed.showApp) &&
                         <DB name="userApp"
                             onClick={()=>{
