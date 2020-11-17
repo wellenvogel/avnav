@@ -27,6 +27,7 @@ import DB from '../components/DialogButton.jsx';
 import AndroidEventHandler from '../util/androidEventHandler.js';
 import Addons from '../components/Addons.js';
 import GuiHelpers from '../util/GuiHelpers.js';
+import UploadHandler, {UploadForm} from "../components/UploadHandler";
 import {
     showFileDialog,
     deleteItem,
@@ -461,36 +462,7 @@ const uploadGeneric=(type,fileObject,opt_restrictedExtensions)=>{
     }
 };
 
-const UploadIndicator = Dynamic((info)=> {
-    let props=info.uploadInfo;
-    if (! props || !props.xhdr) return null;
-    let loaded=props.loaded;
-    let percentComplete = props.total ? 100 * loaded / props.total : 0;
-    if (props.loadedPercent) {
-        percentComplete=props.loaded||0;
-        loaded=(props.loaded*props.total)/100;
-    }
-    let doneStyle = {
-        width: percentComplete + "%"
-    };
-    return (
-        <div className="downloadProgress">
-            <div className="progressContainer">
-                <div className="progressInfo">{(loaded||0) + "/" + (props.total||0)}</div>
-                <div className="progressDisplay">
-                    <div className="progressDone" style={doneStyle}></div>
-                </div>
-            </div>
-            <Button className="DownloadPageUploadCancel button" onClick={()=>{
-                if (props.xhdr) props.xhdr.abort();
-                globalStore.storeData(keys.gui.downloadpage.uploadInfo,{});
-                }}
-                />
-        </div>
-    );
-}, {
-   storeKeys:{uploadInfo: keys.gui.downloadpage.uploadInfo}
-});
+
 const directUpload=(type,file,opt_options)=>{
     let url=globalStore.getData(keys.properties.navUrl)+ "?request=upload&type="+type+"&name=" + encodeURIComponent(file.name);
     if (opt_options){
@@ -574,38 +546,6 @@ const uploadFileReader=(fileObject,allowedExtension)=> {
 
 
 
-class UploadForm extends React.Component{
-    constructor(props){
-        super(props);
-        this.fileInput=undefined;
-        this.form=undefined;
-    }
-    shouldComponentUpdate(nextProps,nextState){
-        //ensure that we only trigger again if at least the keys has changed
-        if (nextProps.fileInputKey != this.props.fileInputKey) return true;
-        if (nextProps.enableUpload != this.props.enableUpload) return true;
-        return false;
-    }
-    componentDidMount(){
-        if (this.form) this.form.reset();
-        if (this.fileInput) this.fileInput.click();
-    }
-    componentDidUpdate(){
-        if (this.form) this.form.reset();
-        if (this.fileInput) this.fileInput.click();
-    }
-    render(){
-        if (!this.props.enableUpload) return null;
-        return(
-        <form className="hidden" method="post" ref={(el)=>this.form=el}>
-            <input type="file" ref={(el)=>this.fileInput=el} name="file"
-                   key={this.props.fileInputKey} onChange={this.props.startUpload}/>
-        </form>
-        );
-    }
-}
-
-const DynamicUploadForm=Dynamic(UploadForm);
 
 
 const createItem=(type)=>{
@@ -644,6 +584,9 @@ class DownloadPage extends React.Component{
         if (globalStore.getData(keys.gui.downloadpage.type) === undefined || ! (props.options && props.options.returning)) {
             globalStore.storeData(keys.gui.downloadpage.type, type);
         }
+        this.state={
+            uploadSequence:0
+        };
         GuiHelpers.storeHelperState(this,{type:keys.gui.downloadpage.type});
         globalStore.storeData(keys.gui.downloadpage.downloadParameters,{});
         globalStore.storeData(keys.gui.downloadpage.enableUpload,false);
@@ -824,10 +767,7 @@ class DownloadPage extends React.Component{
                         avnav.android.requestFile(type,nextId,(type == 'layout' || type == 'route'));
                         return;
                     }
-                    globalStore.storeMultiple({key:(new Date()).getTime(),enable:true},{
-                        key: keys.gui.downloadpage.fileInputKey,
-                        enable: keys.gui.downloadpage.enableUpload
-                    });
+                    this.setState({uploadSequence:this.state.uploadSequence+1});
                 }
             },
             Mob.mobDefinition,
@@ -875,14 +815,12 @@ class DownloadPage extends React.Component{
                                     });
                             }}
                         />
-                        <DynamicUploadForm
-                            storeKeys={{
-                                fileInputKey: keys.gui.downloadpage.fileInputKey,
-                                enableUpload: keys.gui.downloadpage.enableUpload
-                            }}
-                            startUpload={runUpload}
+                        <UploadHandler
+                            type={this.state.type}
+                            doneCallback={fillData}
+                            errorCallback={fillData}
+                            uploadSequence={this.state.uploadSequence}
                         />
-                        <UploadIndicator/>
                         {(this.state.type === "user")?
                             <Button
                                 className="fab"
