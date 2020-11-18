@@ -170,7 +170,7 @@ class UploadHandler extends React.Component{
               androidSequence: (new Date()).getTime()
           }
           this.setState(newState);
-          avnav.android.requestFile(this.props.type,newState.androidSequence,this.props.local||false);
+          avnav.android.requestFile(this.props.type,newState.androidSequence,this.props.local?true:false);
         }
         //trigger re-render of file input, in it's ref we send the click event
         this.setState({
@@ -201,7 +201,8 @@ class UploadHandler extends React.Component{
                     data: data
                 })
             })
-            .catch(() => {
+            .catch((err) => {
+                Toast(err);
             });
     }
 
@@ -238,8 +239,9 @@ class UploadHandler extends React.Component{
                     this.stateHelper.setState({}, true);
                 }
             })
-            .catch(() => {
+            .catch((err) => {
                 avnav.android.interruptCopy(id)
+                if (err)this.props.errorCallback(err);
             });
 
     }

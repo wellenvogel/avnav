@@ -21,7 +21,7 @@ import de.wellenvogel.avnav.util.AvnLog;
 public class UploadData{
     public static final long FILE_MAX_SIZE=1000000; //for file uploads
 
-    int id;
+    long id;
     boolean doRead;
     String name;
     String fileData;
@@ -31,14 +31,14 @@ public class UploadData{
     Thread copyThread;
     boolean noResults=false;
     long size;
-    public UploadData(WebViewFragment fragment, INavRequestHandler targetHandler, int id, boolean doRead){
+    public UploadData(WebViewFragment fragment, INavRequestHandler targetHandler, long id, boolean doRead){
         this.id=id;
         this.doRead=doRead;
         this.fragment=fragment;
         this.targetHandler=targetHandler;
     }
 
-    public boolean isReady(int id){
+    public boolean isReady(long id){
         if (id != this.id) return false;
         if (name == null || (fileData == null && doRead)) return false;
         return true;

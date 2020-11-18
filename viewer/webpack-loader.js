@@ -39,6 +39,9 @@
         '/user/viewer/user.css',
         'polyfill.js'
     ];
+    if (window.location.search.match(/[?&]androidshim=true/)){
+        scripts.splice(0,0,'test/androidshim.js');
+    }
     for (var i in scripts) {
         var scriptname = scripts[i];
         if (scriptname.match(/\.css/)){

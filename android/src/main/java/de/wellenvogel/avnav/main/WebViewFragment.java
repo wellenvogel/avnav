@@ -251,7 +251,7 @@ public class WebViewFragment extends Fragment {
      * @param key - a key string - only a-z_0-9A-Z
      * @param id
      */
-    public void sendEventToJs(String key, int id) {
+    public void sendEventToJs(String key, long id) {
         AvnLog.i("js event key="+key+", id="+id);
         webView.loadUrl("javascript:if (avnav && avnav.android) avnav.android.receiveEvent('" + key + "'," + id + ")");
     }

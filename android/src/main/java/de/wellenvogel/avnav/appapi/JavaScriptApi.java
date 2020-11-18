@@ -122,7 +122,7 @@ public class JavaScriptApi {
      * @param readFile if true: read the file (used for small files), otherwise jsut keep the file url for later copy
      */
     @JavascriptInterface
-    public boolean requestFile(String type,int id,boolean readFile){
+    public boolean requestFile(String type,long id,boolean readFile){
         if (detached) return false;
         RequestHandler.KeyValue<Integer> title= RequestHandler.typeHeadings.get(type);
         if (title == null){
@@ -151,36 +151,36 @@ public class JavaScriptApi {
     }
 
     @JavascriptInterface
-    public String getFileName(int id){
+    public String getFileName(long id){
         if (uploadData==null || ! uploadData.isReady(id)) return null;
         return uploadData.getName();
     }
 
     @JavascriptInterface
-    public String getFileData(int id){
+    public String getFileData(long id){
         if (uploadData==null || ! uploadData.isReady(id)) return null;
         return uploadData.getFileData();
     }
 
     /**
      * start a file copy operation for a file that previously has been requested by
-     * {@link #requestFile(String, int, boolean)}
+     * {@link #requestFile(String, long, boolean)}
      * during the transfer we fire an {@link Constants#JS_FILE_COPY_PERCENT} event having the
      * progress in % as id.
      * When done we fire {@link Constants#JS_FILE_COPY_DONE} - with 0 for success, 1 for errors
      * The target is determined by the type that we provided in requestFile
-     * @param id the id we used in {@link #requestFile(String, int, boolean)}
+     * @param id the id we used in {@link #requestFile(String, long, boolean)}
      * @param newName if != null use this as the target file name
      * @return true if the copy started successfully
      */
     @JavascriptInterface
-    public boolean copyFile(int id,String newName){
+    public boolean copyFile(long id,String newName){
         if (detached) return false;
         if (uploadData==null || ! uploadData.isReady(id)) return false;
         return uploadData.copyFile(newName);
     }
     @JavascriptInterface
-    public long getFileSize(int id){
+    public long getFileSize(long id){
         if (uploadData==null || ! uploadData.isReady(id)) return -1;
         return uploadData.getSize();
     }

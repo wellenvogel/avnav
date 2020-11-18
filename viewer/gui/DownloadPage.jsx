@@ -449,12 +449,6 @@ class DownloadPage extends React.Component{
                     || (type == 'overlays' && globalStore.getData(keys.gui.capabilities.uploadOverlays,false))) &&
                     globalStore.getData(keys.properties.connectedMode,true),
                 onClick:()=>{
-                    if (avnav.android){
-                        let nextId=globalStore.getData(keys.gui.downloadpage.requestedUploadId,0)+1;
-                        globalStore.storeData(keys.gui.downloadpage.requestedUploadId,nextId);
-                        avnav.android.requestFile(type,nextId,(type == 'layout' || type == 'route'));
-                        return;
-                    }
                     this.setState({uploadSequence:this.state.uploadSequence+1});
                 }
             },
@@ -529,7 +523,7 @@ class DownloadPage extends React.Component{
                         return;
                     }
                     else{
-                        reject("unknown chart type");
+                        reject("unknown chart type \""+ext+'"');
                         return;
                     }
                 }
@@ -552,10 +546,21 @@ class DownloadPage extends React.Component{
      */
     getLocalUploadFunction(){
         if (this.state.type === 'route'){
-            return (obj)=>{uploadRouteData(obj.name,obj.data);fillData();}
+            return (obj)=>{
+                if (!obj) {
+                    Toast("no data available after upload");
+                    return;
+                }
+                uploadRouteData(obj.name,obj.data);
+                fillData();
+            }
         }
         if (this.state.type === 'layout'){
             return (obj)=>{
+                if (!obj) {
+                    Toast("no data available after upload");
+                    return;
+                }
                 LayoutHandler.uploadLayout(obj.name, obj.data, true)
                     .then(
                         (result)=> {

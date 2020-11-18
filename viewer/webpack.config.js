@@ -39,7 +39,12 @@ var images=[
 images.forEach(function(el){
    copyList.push({from: "./images/"+el,to:'images'});
 });
-
+if (!isProduction) {
+    copyList.push({
+        from: 'test/static',
+        to: 'test'
+    })
+}
 
 var devtool="inline-source-map";
 var resolveAlias={
