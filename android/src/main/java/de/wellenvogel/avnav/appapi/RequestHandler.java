@@ -43,7 +43,16 @@ import de.wellenvogel.avnav.worker.RouteHandler;
  * Created by andreas on 22.11.15.
  */
 public class RequestHandler {
-    public static final String ASSETS="android_asset";
+    //we have to use a valid http url instead of a file url for loading our page
+    //otherwise we crash the renderer process with ol6 and chrome 86 in debug builds
+    /*
+    E/chromium: [ERROR:render_process_host_impl.cc(5148)] Terminating render process for bad Mojo message: Received bad user message: Non committable URL passed to BlobURLStore::Register
+    E/chromium: [ERROR:bad_message.cc(26)] Terminating renderer for bad IPC message, reason 123
+    E/DecorView: mWindow.mActivityCurrentConfig is null
+    E/chromium: [ERROR:aw_browser_terminator.cc(123)] Renderer process (9537) crash detected (code -1).
+    E/chromium: [ERROR:aw_browser_terminator.cc(89)] Render process (9537) kill (OOM or update) wasn't handed by all associated webviews, killing application.
+     */
+    public static final String PAGE_PREFIX ="http://assets";
     protected static final String NAVURL="viewer/avnav_navi.php";
     private SimpleDateFormat dateFormat=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
     MainActivity activity;
@@ -289,7 +298,7 @@ public class RequestHandler {
         }
         String path=uri.getPath();
         if (path == null) return null;
-        if (ASSETS.equals(uri.getAuthority()) && "file".equals(uri.getScheme())){
+        if (url.startsWith(PAGE_PREFIX)){
             try {
                 if (path.startsWith("/")) path=path.substring(1);
                 if (path.startsWith(NAVURL)){
