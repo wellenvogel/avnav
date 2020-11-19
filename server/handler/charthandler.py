@@ -295,6 +295,13 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
     if itemDescription.isChart():
       itemDescription.getChart().close()
 
+  def deleteFromOverlays(self,type,name):
+    '''
+    delete an entry from overlays
+    @param type:
+    @param name:
+    @return:
+    '''
   def handleDelete(self,name):
     chartEntry=self.itemList.get(name)
     if chartEntry is None:

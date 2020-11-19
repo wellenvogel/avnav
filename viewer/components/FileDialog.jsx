@@ -94,6 +94,7 @@ const getDownloadUrl=(item)=>{
             url+="&"+k+"="+encodeURIComponent(item[k])
         }
     }
+    return url;
 }
 
 
@@ -103,14 +104,14 @@ export const allowedItemActions=(props)=>{
     let ext=Helper.getExt(props.name);
     if (props.type === 'route') ext="gpx";
     if (props.type === 'layout') ext="json";
-    let showView=(props.type === 'overlays' || props.type === 'user' || props.type==='images' || (props.type === 'route' && props.server) || props.type === 'track' || props.type === 'layout') && ViewPage.VIEWABLES.indexOf(ext)>=0;
-    let showEdit=(isConnected && (((props.type === 'overlays' || props.type === 'user') && props.size !== undefined && props.size < ViewPage.MAXEDITSIZE)|| (props.type === 'layout' && props.canDelete)  ) && ViewPage.EDITABLES.indexOf(ext) >=0);
+    let showView=(props.type === 'overlay' || props.type === 'user' || props.type==='images' || (props.type === 'route' && props.server) || props.type === 'track' || props.type === 'layout') && ViewPage.VIEWABLES.indexOf(ext)>=0;
+    let showEdit=(isConnected && (((props.type === 'overlay' || props.type === 'user') && props.size !== undefined && props.size < ViewPage.MAXEDITSIZE)|| (props.type === 'layout' && props.canDelete)  ) && ViewPage.EDITABLES.indexOf(ext) >=0);
     let showDelete=!props.active;
     if (props.canDelete !== undefined){
         showDelete=props.canDelete && ! props.active;
     }
     if (! isConnected && (props.type !== 'route' || props.isServer)) showDelete=false;
-    let showRename=isConnected && (props.type === 'user' || props.type === 'images' || props.type === 'overlays' );
+    let showRename=isConnected && (props.type === 'user' || props.type === 'images' || props.type === 'overlay' );
     let showApp=isConnected && (props.type === 'user' && ext === 'html' && globalStore.getData(keys.gui.capabilities.addons));
     let isApp=(showApp && props.isAddon);
     let showOverlay=(isConnected && props.type === 'chart' && globalStore.getData(keys.gui.capabilities.uploadOverlays));
@@ -274,7 +275,7 @@ export default  class FileDialog extends React.Component{
                             <DB name="overlays"
                                 onClick={()=>{
                                     self.props.closeCallback();
-                                    self.props.okFunction('overlays',this.props.current);
+                                    self.props.okFunction('overlay',this.props.current);
                                 }}
                                 disabled={this.state.changed}
                             >
@@ -425,7 +426,7 @@ export const showFileDialog=(item,opt_doneCallback,opt_checkExists)=>{
         if (action === 'delete'){
             return deleteItem(item,doneAction);
         }
-        if (action === 'overlays'){
+        if (action === 'overlay'){
             doneAction();
             return EditOverlaysDialog.createDialog(item, item.chartKey === DEFAULT_OVERLAY_CONFIG)
         }

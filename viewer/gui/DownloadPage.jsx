@@ -44,7 +44,7 @@ const headlines={
     layout:"Layouts",
     user: "User",
     images: "Images",
-    overlays: "Overlays"
+    overlay: "Overlays"
 };
 const DynamicPage=Dynamic(Page);
 const DynamicList=Dynamic(ItemList);
@@ -435,9 +435,9 @@ class DownloadPage extends React.Component{
             },
             {
                 name:'DownloadPageOverlays',
-                toggle: type == 'overlays',
-                visible: (type == 'overlays'|| allowTypeChange) && globalStore.getData(keys.gui.capabilities.uploadOverlays,false),
-                onClick:()=>{changeType('overlays')},
+                toggle: type == 'overlay',
+                visible: (type == 'overlay'|| allowTypeChange) && globalStore.getData(keys.gui.capabilities.uploadOverlays,false),
+                onClick:()=>{changeType('overlay')},
                 overflow: true
             },
             {
@@ -446,7 +446,7 @@ class DownloadPage extends React.Component{
                     || (type =='chart' && globalStore.getData(keys.gui.capabilities.uploadCharts,false))
                     || (type == 'user' && globalStore.getData(keys.gui.capabilities.uploadUser,false))
                     || (type == 'images' && globalStore.getData(keys.gui.capabilities.uploadImages,false))
-                    || (type == 'overlays' && globalStore.getData(keys.gui.capabilities.uploadOverlays,false))) &&
+                    || (type == 'overlay' && globalStore.getData(keys.gui.capabilities.uploadOverlays,false))) &&
                     globalStore.getData(keys.properties.connectedMode,true),
                 onClick:()=>{
                     this.setState({uploadSequence:this.state.uploadSequence+1});

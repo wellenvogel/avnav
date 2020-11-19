@@ -76,7 +76,7 @@ public class RequestHandler {
     public static String TYPE_TRACK="track";
     public static String TYPE_USER="user";
     public static String TYPE_IMAGE="images";
-    public static String TYPE_OVERLAY="overlays";
+    public static String TYPE_OVERLAY="overlay";
     public static String TYPE_ADDON="addon";
 
     public static class KeyValue<VT>{

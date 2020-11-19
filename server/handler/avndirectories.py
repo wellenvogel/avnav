@@ -109,7 +109,7 @@ class AVNOverlayHandler(AVNDirectoryHandlerBase):
   def getPrefix(cls):
     return cls.PREFIX
   def __init__(self,param):
-    AVNDirectoryHandlerBase.__init__(self, param, "overlays")
+    AVNDirectoryHandlerBase.__init__(self, param, "overlay")
     self.baseDir = AVNConfig.getDirWithDefault(self.param, 'overlayDir', "overlays")
 
 
