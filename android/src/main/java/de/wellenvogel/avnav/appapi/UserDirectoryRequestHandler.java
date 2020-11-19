@@ -17,8 +17,8 @@ import java.nio.charset.StandardCharsets;
 import de.wellenvogel.avnav.util.AvnLog;
 
 public class UserDirectoryRequestHandler extends DirectoryRequestHandler {
-    private static final byte[] PREFIX="(function(){\n".getBytes(StandardCharsets.UTF_8);
-    private static final byte[] SUFFIX="\n})();\n".getBytes(StandardCharsets.UTF_8);
+    private static final byte[] PREFIX="try{(\nfunction(){\n".getBytes(StandardCharsets.UTF_8);
+    private static final byte[] SUFFIX="\n})();\n}catch(e){\nwindow.avnav.api.showToast(e.message+\"\\n\"+(e.stack||e));\n }\n".getBytes(StandardCharsets.UTF_8);
     private static String templateFiles[]=new String[]{"user.css","user.js"};
     private static String emptyJsonFiles[]=new String[]{"keys.json","images.json"};
     //input stream for a js file wrapped by prefix and suffix

@@ -76,6 +76,7 @@ public class RequestHandler {
     public static String TYPE_TRACK="track";
     public static String TYPE_USER="user";
     public static String TYPE_IMAGE="images";
+    public static String TYPE_OVERLAY="overlays";
     public static String TYPE_ADDON="addon";
 
     public static class KeyValue<VT>{
@@ -101,7 +102,8 @@ public class RequestHandler {
             new KeyValue<Integer>(TYPE_CHART,R.string.uploadChart),
             new KeyValue<Integer>(TYPE_IMAGE,R.string.uploadImage),
             new KeyValue<Integer>(TYPE_USER,R.string.uploadUser),
-            new KeyValue<Integer>(TYPE_LAYOUT,R.string.uploadLayout)
+            new KeyValue<Integer>(TYPE_LAYOUT,R.string.uploadLayout),
+            new KeyValue<Integer>(TYPE_OVERLAY,R.string.uploadOverlay)
     );
 
     //directories below workdir
@@ -111,7 +113,8 @@ public class RequestHandler {
             new KeyValue<File>(TYPE_TRACK,new File("tracks")),
             new KeyValue<File>(TYPE_LAYOUT,new File("layout")),
             new KeyValue<File>(TYPE_USER,new File(new File("user"),"viewer")),
-            new KeyValue<File>(TYPE_IMAGE,new File(new File("user"),"images"))
+            new KeyValue<File>(TYPE_IMAGE,new File(new File("user"),"images")),
+            new KeyValue<File>(TYPE_OVERLAY,new File(new File("user"),"overlays"))
 
     );
 
@@ -138,6 +141,17 @@ public class RequestHandler {
         rt.put("status",error == null?"OK":error);
         return rt;
     }
+    public static JSONObject getReturn(ArrayList<KeyValue> data) throws JSONException {
+        JSONObject rt=new JSONObject();
+        Object error=null;
+        for (KeyValue kv : data){
+            if ("error".equals(kv.key)) error=kv.value;
+            else rt.put(kv.key,kv.value);
+        }
+        rt.put("status",error == null?"OK":error);
+        return rt;
+    }
+
     public static JSONObject getErrorReturn(String error,KeyValue ...data) throws JSONException {
         JSONObject rt=new JSONObject();
         rt.put("status",error == null?"OK":error);
@@ -201,6 +215,18 @@ public class RequestHandler {
                 @Override
                 public INavRequestHandler getHandler() {
                     return imageHandler;
+                }
+            });
+        }catch(Exception e){
+            AvnLog.e("unable to create images handler",e);
+        }
+        try {
+            final DirectoryRequestHandler overlayHandler=new DirectoryRequestHandler(this, TYPE_OVERLAY,
+                    typeDirs.get(TYPE_OVERLAY).value, "user/overlays",null);
+            handlerMap.put(TYPE_OVERLAY, new LazyHandlerAccess() {
+                @Override
+                public INavRequestHandler getHandler() {
+                    return overlayHandler;
                 }
             });
         }catch(Exception e){
@@ -653,6 +679,7 @@ public class RequestHandler {
                 o.put("canConnect",true);
                 o.put("uploadUser",true);
                 o.put("uploadImages",true);
+                o.put("uploadOverlays",true);
                 fout=getReturn(new KeyValue<JSONObject>("data",o));
             }
             if (type.equals("api")){

@@ -5,7 +5,11 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
 
+import org.json.JSONObject;
+
 import java.io.File;
+import java.io.FileInputStream;
+import java.nio.charset.StandardCharsets;
 
 import de.wellenvogel.avnav.main.Constants;
 
@@ -86,6 +90,24 @@ public class AvnUtil {
     public static String getMandatoryParameter(Uri uri, String name)throws Exception{
         String rt=uri.getQueryParameter(name);
         if (rt == null) throw new Exception("missing mandatory parameter "+name);
+        return rt;
+    }
+    public static boolean getFlagParameter(Uri uri, String name,boolean defaultV)throws Exception{
+        String rt=uri.getQueryParameter(name);
+        if (rt == null || rt.isEmpty()) return defaultV;
+        return rt.toLowerCase().equals("true");
+    }
+
+    public static JSONObject readJsonFile(File file,long maxBytes) throws Exception {
+        if (!file.exists()) throw new Exception("file " + file.getAbsolutePath() + " not found");
+        if (file.length() > maxBytes)
+            throw new Exception("file " + file.getAbsolutePath() + " too long to read");
+        FileInputStream is = new FileInputStream(file);
+        byte[] buffer = new byte[(int) (file.length())];
+        int rd = is.read(buffer);
+        if (rd != file.length())
+            throw new Exception("unable to read all bytes for " + file.getAbsolutePath());
+        JSONObject rt = new JSONObject(new String(buffer, StandardCharsets.UTF_8));
         return rt;
     }
 }

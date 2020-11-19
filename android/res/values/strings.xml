@@ -61,6 +61,7 @@
     <string name="uploadImage">Select an image to upload</string>
     <string name="uploadUser">Select a file to upload</string>
     <string name="uploadLayout">Select a layout to upload</string>
+    <string name="uploadOverlay">Select a file to upload</string>
     <string name="installFileManager">Please install a file manager</string>
     <string name="bluetoothLabel">Bluetooth</string>
     <string name="selectBlueTooth">Bluetooth Device</string>

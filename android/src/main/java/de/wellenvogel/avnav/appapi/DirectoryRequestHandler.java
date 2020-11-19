@@ -164,7 +164,7 @@ public class DirectoryRequestHandler implements INavRequestHandler{
 
     public static String safeName(String name,boolean throwError) throws Exception {
         if (name == null) throw new Exception("name is null");
-        String safeName=name.replaceAll("[^\\w. ()+-]","");
+        String safeName=name.replaceAll("[^\\w. ()+-@]","");
         if (!name.equals(safeName) && throwError) throw new Exception("illegal filename "+name);
         return safeName;
     }

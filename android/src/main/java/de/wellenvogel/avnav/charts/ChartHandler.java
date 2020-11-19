@@ -11,6 +11,7 @@ import android.support.v4.provider.DocumentFile;
 import android.util.Log;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayInputStream;
@@ -21,8 +22,11 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 
 import de.wellenvogel.avnav.appapi.DirectoryRequestHandler;
 import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
@@ -34,6 +38,7 @@ import de.wellenvogel.avnav.appapi.INavRequestHandler;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 
+import static de.wellenvogel.avnav.charts.Chart.CFG_EXTENSION;
 import static de.wellenvogel.avnav.main.Constants.CHARTOVERVIEW;
 import static de.wellenvogel.avnav.main.Constants.CHARTPREFIX;
 import static de.wellenvogel.avnav.main.Constants.DEMOCHARTS;
@@ -49,6 +54,8 @@ public class ChartHandler implements INavRequestHandler {
     private static final String TYPE_XML="xml";
     public static final String INDEX_INTERNAL = "1";
     public static final String INDEX_EXTERNAL = "2";
+    private static final String DEFAULT_CFG="default.cfg";
+    private static final long MAX_CONFIG_SIZE=100000;
     private Activity activity;
     private RequestHandler handler;
     //mapping of url name to char descriptors
@@ -190,6 +197,11 @@ public class ChartHandler implements INavRequestHandler {
     public Chart getChartDescription(String url){
         return chartList.get(url);
     }
+    public Chart getChartDescriptionByChartKey(String key){
+        if (key == null) return null;
+        //we rely on the the key (url) being the same as our chart key
+        return chartList.get(key);
+    }
 
     private void readChartDir(String chartDirStr,String index,HashMap<String, Chart> arr) {
         if (chartDirStr == null) return;
@@ -279,8 +291,9 @@ public class ChartHandler implements INavRequestHandler {
     @Override
     public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
         String safeName= DirectoryRequestHandler.safeName(name,true);
-        if (! safeName.endsWith(GEMFEXTENSION) && ! safeName.endsWith(MBTILESEXTENSION) && ! safeName.endsWith(XMLEXTENSION))
-            throw new Exception("only "+GEMFEXTENSION+" or "+MBTILESEXTENSION+" or "+XMLEXTENSION+" files allowed");
+        if (! safeName.endsWith(GEMFEXTENSION) && ! safeName.endsWith(MBTILESEXTENSION)
+                && ! safeName.endsWith(XMLEXTENSION) && ! safeName.endsWith(CFG_EXTENSION))
+            throw new Exception("only "+GEMFEXTENSION+" or "+MBTILESEXTENSION+" or "+XMLEXTENSION+" or "+CFG_EXTENSION+" files allowed");
         File outFile=new File(getInternalChartsDir(activity),safeName);
         if (outFile.exists() && !ignoreExisting){
             throw new Exception("file already exists");
@@ -333,17 +346,6 @@ public class ChartHandler implements INavRequestHandler {
 
     @Override
     public boolean handleDelete(String name, Uri uri) throws Exception {
-        if (uri == null){
-            //only delete single files from internal dir
-            String safeName= DirectoryRequestHandler.safeName(name,true);
-            if (! safeName.endsWith(TYPE_GEMF) && ! safeName.endsWith(TYPE_MBTILES)) throw new Exception("only chart files allowed");
-            for (Chart f: chartList.values()){
-                if (f.isName(safeName)){
-                    f.deleteFile();
-                    updateChartList();
-                }
-            }
-        }
         String charturl=AvnUtil.getMandatoryParameter(uri,"url");
         KeyAndParts kp=urlToKey(charturl,true);
         Chart chart= getChartDescription(kp.key);
@@ -352,11 +354,21 @@ public class ChartHandler implements INavRequestHandler {
         }
         else {
             File chartfile=chart.deleteFile();
+            String cfgName=chart.getConfigName();
+            File cfgFile=new File(getInternalChartsDir(this.activity),cfgName);
+            if (cfgFile.exists()) cfgFile.delete();
             updateChartList();
             return chartfile != null;
         }
     }
 
+    private static void merge(JSONObject target, JSONObject source, List<String> blacklist) throws JSONException {
+        for (Iterator<String> it = source.keys(); it.hasNext(); ) {
+            String sk = it.next();
+            if (blacklist.contains(sk)) continue;
+            target.put(sk,source.get(sk));
+        }
+    }
     @Override
     public JSONObject handleApiRequest(Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
         String command=AvnUtil.getMandatoryParameter(uri,"command");
@@ -370,6 +382,63 @@ public class ChartHandler implements INavRequestHandler {
             }
             chart.setScheme(scheme);
             return RequestHandler.getReturn();
+        }
+        if (command.equals("getConfig")){
+            String configName=DirectoryRequestHandler.safeName(AvnUtil.getMandatoryParameter(uri,"overlayConfig"),true);
+            boolean expandCharts=AvnUtil.getFlagParameter(uri,"expandCharts",false);
+            boolean mergeDefault=AvnUtil.getFlagParameter(uri,"mergeDefault",false);
+            if (configName.equals(DEFAULT_CFG)) mergeDefault=false;
+            File cfgFile=new File(getInternalChartsDir(this.activity),configName);
+            JSONObject localConfig=new JSONObject();
+            JSONObject globalConfig=new JSONObject();
+            if (cfgFile.exists()){
+                try{
+                    localConfig=AvnUtil.readJsonFile(cfgFile,MAX_CONFIG_SIZE);
+                }
+                catch (Exception e){
+                    AvnLog.e("unable to read chart config "+cfgFile.getAbsolutePath(),e);
+                }
+            }
+            localConfig.put("name",configName);
+            File globalCfgFile=new File(getInternalChartsDir(this.activity),DEFAULT_CFG);
+            if (mergeDefault && globalCfgFile.exists()){
+                try{
+                    globalConfig=AvnUtil.readJsonFile(globalCfgFile,MAX_CONFIG_SIZE);
+                }
+                catch (Exception e){
+                    AvnLog.e("unable to read default chart config "+globalCfgFile.getAbsolutePath(),e);
+                }
+                if (globalConfig.has("overlays")){
+                    localConfig.put("defaults",globalConfig.get("overlays"));
+                }
+            }
+            if (expandCharts){
+                List<String> blackList= Arrays.asList("type", "chartKey", "opacity", "chart");
+                String[] expandKeys=new String[]{"overlays","defaults"};
+                for (String key : expandKeys){
+                    if (! localConfig.has(key)) continue;
+                    JSONArray overlays=localConfig.getJSONArray(key);
+                    JSONArray newOverlays=new JSONArray();
+                    for (int idx=0;idx<overlays.length();idx++){
+                        JSONObject overlay=overlays.getJSONObject(idx);
+                        if (overlay.has("type") && "chart".equals(overlay.getString("type"))){
+                            Chart chart=getChartDescriptionByChartKey(overlay.optString("chartKey"));
+                            if (chart != null){
+                                merge(overlay,chart.toJson(),blackList);
+                            }
+                            else{
+                                continue; //skip this entry in the returned list
+                            }
+                        }
+                        newOverlays.put(overlay);
+                    }
+                    localConfig.put(key,newOverlays);
+                }
+            }
+            JSONObject rt=new JSONObject();
+            rt.put("status","OK");
+            rt.put("data",localConfig);
+            return rt;
         }
         return RequestHandler.getErrorReturn("unknown request");
     }

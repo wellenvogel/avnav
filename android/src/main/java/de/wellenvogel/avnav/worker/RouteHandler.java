@@ -18,6 +18,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Formatter;
@@ -710,7 +711,7 @@ public class RouteHandler implements INavRequestHandler {
         String data=currentLeg.toJson().toString();
         File legFile=new File(routedir,LEGFILE);
         FileOutputStream os=new FileOutputStream(legFile);
-        os.write(data.getBytes("UTF-8"));
+        os.write(data.getBytes(StandardCharsets.UTF_8));
         os.close();
     }
 
@@ -719,39 +720,16 @@ public class RouteHandler implements INavRequestHandler {
         JSONObject rt=new JSONObject();
         File legFile=new File(routedir,LEGFILE);
         boolean hasError=false;
-        if (! legFile.isFile()) {
-            rt.put("status","legfile "+legFile.getAbsolutePath()+" not found");
-            hasError=true;
-        }
         long maxlegsize=MAXROUTESIZE+2000;
-        if (! hasError && legFile.length() > maxlegsize){
-            rt.put("status","legfile "+legFile.getAbsolutePath()+" too big, allowed "+maxlegsize);
-            hasError=true;
+        try{
+            rt=AvnUtil.readJsonFile(legFile,maxlegsize);
+            currentLeg = new RoutingLeg(rt);
         }
-        if (! hasError) {
-            FileInputStream is = new FileInputStream(legFile);
-            byte buffer[] = new byte[(int) (legFile.length())];
-            int rd = is.read(buffer);
-            if (rd != legFile.length()) {
-                rt.put("status", "unable to read all bytes for " + legFile.getAbsolutePath());
-                hasError=true;
-            }
-            if (! hasError) {
-                try {
-                    rt = new JSONObject(new String(buffer, "UTF-8"));
-                } catch (Exception e) {
-                    rt.put("status", "exception while parsing legfile " + legFile.getAbsolutePath() + ": " + e.getLocalizedMessage());
-                    hasError=true;
-                }
-            }
-        }
-        if (hasError){
+        catch (Exception e){
+            AvnLog.e("error reading leg file: ",e);
             currentLeg=new RoutingLeg(new JSONObject());
             rt=currentLeg.toJson();
             saveCurrentLeg();
-        }
-        else {
-            currentLeg = new RoutingLeg(rt);
         }
         return rt;
     }

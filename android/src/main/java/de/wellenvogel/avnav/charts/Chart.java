@@ -20,6 +20,7 @@ public class Chart implements INavRequestHandler.IJsonObect {
     static final int TYPE_GEMF=1;
     static final int TYPE_MBTILES=2;
     static final int TYPE_XML=3;
+    static final String CFG_EXTENSION=".cfg";
     private static final long INACTIVE_CLOSE=100000; //100s
     private Activity activity;
     private File realFile;
@@ -169,10 +170,16 @@ public class Chart implements INavRequestHandler.IJsonObect {
         e.put("canDownload",isXml() || (numFiles == 1));
         e.put("sequence",sequence);
         e.put("scheme",scheme);
+        e.put("chartKey",key);
+        e.put("overlayConfig",getConfigName());
         if (orignalScheme != null){
             e.put("originalScheme",orignalScheme);
         }
         return e;
+    }
+
+    public String getConfigName(){
+        return key.replace('/','@')+CFG_EXTENSION;
     }
 
     public boolean setScheme(String newScheme) throws Exception {
