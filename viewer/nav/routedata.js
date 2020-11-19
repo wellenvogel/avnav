@@ -435,6 +435,7 @@ RouteData.prototype.routeOff=function(){
         data.leg.currentRoute = undefined;
         data.leg.to.routeName = undefined;
         data.activeName=undefined;
+        data.route=undefined;
         return true;
     });
 };
