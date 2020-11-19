@@ -22,6 +22,7 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -357,6 +358,7 @@ public class ChartHandler implements INavRequestHandler {
             String cfgName=chart.getConfigName();
             File cfgFile=new File(getInternalChartsDir(this.activity),cfgName);
             if (cfgFile.exists()) cfgFile.delete();
+            deleteFromOverlays("chart",chart.getChartKey());
             updateChartList();
             return chartfile != null;
         }
@@ -368,6 +370,50 @@ public class ChartHandler implements INavRequestHandler {
             if (blacklist.contains(sk)) continue;
             target.put(sk,source.get(sk));
         }
+    }
+
+    /**
+     * delete an entry from the overlay configs
+     * @param type
+     * @param name
+     */
+    public int deleteFromOverlays(String type, String name){
+        int numChanges=0;
+        if (type == null || name == null) return numChanges;
+        File baseDir=getInternalChartsDir(this.activity);
+        for (File f : baseDir.listFiles()){
+            if (!f.getName().endsWith(CFG_EXTENSION)) continue;
+            try{
+                JSONObject config=AvnUtil.readJsonFile(f,MAX_CONFIG_SIZE);
+                if (!config.has("overlays")) continue;
+                JSONArray overlays=config.getJSONArray("overlays");
+                JSONArray newOverlays=new JSONArray();
+                boolean hasChanges=false;
+                for (int i=0;i<overlays.length();i++){
+                    JSONObject overlay=overlays.getJSONObject(i);
+                    if (type.equals(overlay.optString("type"))) {
+                        String overlayName = type.equals("chart") ? overlay.optString("chartKey") : overlay.optString("name");
+                        if (name.equals(overlayName)){
+                            AvnLog.d("removing overlay "+name+" from "+f.getAbsolutePath());
+                            hasChanges=true;
+                            continue;
+                        }
+                    }
+                    newOverlays.put(overlay);
+                }
+                if (hasChanges){
+                    config.put("overlays",newOverlays);
+                    numChanges++;
+                    FileOutputStream fout=new FileOutputStream(f);
+                    fout.write(config.toString(2).getBytes(StandardCharsets.UTF_8));
+                    fout.close();
+                }
+            } catch(Exception e){
+                AvnLog.e("error reading/updating overlay config "+f.getAbsolutePath(),e);
+                continue;
+            }
+        }
+        return numChanges;
     }
     @Override
     public JSONObject handleApiRequest(Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {

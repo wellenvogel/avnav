@@ -296,12 +296,44 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
       itemDescription.getChart().close()
 
   def deleteFromOverlays(self,type,name):
-    '''
+    """
     delete an entry from overlays
-    @param type:
-    @param name:
+    @param type: the type of overlay
+    @param name: tha name (for charts this is the chartKey)
     @return:
-    '''
+    """
+    numChanged=0
+    for info in self.itemList.values():
+      if info.isChart():
+        continue
+      overlayConfig=info.getData()
+      overlays=overlayConfig.get('overlays')
+      isModified=False
+      if overlays is not None:
+        newOverlays=[]
+        for overlay in overlays:
+          if overlay.get('type') != type:
+            newOverlays.append(overlay)
+            continue
+          overlayName=overlay.get('name') if type != 'chart' else overlay.get('chartKey')
+          if overlayName == name:
+            AVNLog.debug("removing overlay entry %s from %s",name,info.name)
+            isModified=True
+          else:
+            newOverlays.append(overlay)
+        if isModified:
+          numChanged+=1
+          overlayConfig['overlays']=newOverlays
+          try:
+            with open(os.path.join(self.baseDir,info.name),"w") as f:
+              f.write(json.dumps(overlayConfig,indent=2))
+              f.close()
+          except Exception as e:
+            AVNLog.error("unable to write overlay config %s:%s",info.name,traceback.format_exc())
+    if numChanged > 0:
+      self.wakeUp()
+    return numChanged
+
   def handleDelete(self,name):
     chartEntry=self.itemList.get(name)
     if chartEntry is None:
@@ -320,6 +352,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
       if configEntry is not None:
         os.unlink(os.path.join(self.baseDir,configEntry.name))
         self.removeItem(configEntry.getKey())
+      self.deleteFromOverlays('chart',chartEntry.chartKey)
     else:
       os.unlink(os.path.join(self.baseDir,chartEntry.name))
     self.wakeUp()

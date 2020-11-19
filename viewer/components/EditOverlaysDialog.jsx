@@ -61,12 +61,12 @@ class OverlayItemDialog extends React.Component{
         this.stateHelper = stateHelper(this, props.current || {},'item');
         this.state.itemsFetchCount = 0;
         //we make them only a variable as we consider them to be static
-        this.itemLists={icons:[{label:"--none--"}],chart:[],overlays:[],images:[],user:[],knownOverlays:[],iconFiles:[{label:"--none--"}]};
+        this.itemLists={icons:[{label:"--none--"}],chart:[],overlay:[],images:[],user:[],knownOverlays:[],iconFiles:[{label:"--none--"}]};
         if (props.current && props.current.url && props.current.type !== 'chart') {
             this.analyseOverlay(props.current.url);
         }
         this.getItemList('chart');
-        this.getItemList('overlays');
+        this.getItemList('overlay');
         this.getItemList('images');
         this.getItemList('user');
     }
@@ -77,7 +77,7 @@ class OverlayItemDialog extends React.Component{
         })
         .then((data)=>{
                 this.itemLists[type]=data.items;
-                if (type == 'user' || type == 'images' || type == 'overlays') {
+                if (type == 'user' || type == 'images' || type == 'overlay') {
                     data.items.forEach((item)=>{
                         if (GuiHelpers.IMAGES.indexOf(Helper.getExt(item.name)) >= 0) {
                             let el=assign({},item);
@@ -93,7 +93,7 @@ class OverlayItemDialog extends React.Component{
                         item.value=item.chartKey;
                     });
                 }
-                if (type == 'overlays'){
+                if (type == 'overlay'){
                     data.items.forEach((item)=>{
                         item.label=item.name;
                         item.value=item.url;

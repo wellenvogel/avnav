@@ -288,6 +288,11 @@ class AVNDirectoryHandlerBase(AVNWorker):
     return True
 
 
+  def deleteFromOverlays(self,name):
+    chartHandler=self.findHandlerByName('AVNChartHandler')
+    if chartHandler is not None:
+      chartHandler.deleteFromOverlays(self.type,name)
+
   def handleDelete(self,name):
     if not self.canDelete():
       raise Exception("delete not possible")
@@ -299,6 +304,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
     if not os.path.exists(filename):
       raise Exception("file %s not found" % filename)
     os.unlink(filename)
+    self.deleteFromOverlays(name)
 
   @classmethod
   def canList(cls):

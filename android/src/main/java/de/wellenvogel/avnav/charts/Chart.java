@@ -75,7 +75,9 @@ public class Chart implements INavRequestHandler.IJsonObect {
         if (lastTouched < (System.currentTimeMillis() -INACTIVE_CLOSE)) {
             this.close();
             return true;
-        }
+        }if ("chart".equals(type)) {
+
+            }
         return false;
     }
 
@@ -180,6 +182,10 @@ public class Chart implements INavRequestHandler.IJsonObect {
 
     public String getConfigName(){
         return key.replace('/','@')+CFG_EXTENSION;
+    }
+
+    public String getChartKey(){
+        return key;
     }
 
     public boolean setScheme(String newScheme) throws Exception {
