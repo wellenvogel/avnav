@@ -42,6 +42,15 @@ import UserAppDialog from "./UserAppDialog";
 import DownloadButton from "./DownloadButton";
 
 const RouteHandler=NavHandler.getRoutingHandler();
+/**
+ * additional parameters that should be included in server requests
+ * if they are set at the item
+ * @type {{url: boolean, chartKey: boolean}}
+ */
+export const additionalUrlParameters={
+    url:true,
+    chartKey:true
+}
 
 export const ItemDownloadButton=(props)=>{
     let {item,...forwards}=props;
@@ -75,12 +84,16 @@ const getDownloadUrl=(item)=>{
     let name=item.name;
     if (item.type==='route') {
         if (item.server === false) return;
-        name+=".gpx";
+        if (! name.match(/\.gpx$/)) name+=".gpx";
     }
-    //if (item.type === 'layout') return;
-    return globalStore.getData(keys.properties.navUrl)+"?request=download&type="+
+    let url=globalStore.getData(keys.properties.navUrl)+"?request=download&type="+
         encodeURIComponent(item.type)+"&name="+
-        encodeURIComponent(name)+"&filename="+encodeURIComponent(name)
+        encodeURIComponent(name)+"&filename="+encodeURIComponent(name);
+    for (let k in additionalUrlParameters){
+        if (item[k] !== undefined){
+            url+="&"+k+"="+encodeURIComponent(item[k])
+        }
+    }
 }
 
 
@@ -297,6 +310,15 @@ export default  class FileDialog extends React.Component{
         );
     }
 }
+const buildRequestParameters=(request,item,opt_additional)=>{
+    return assign({},Helper.filteredAssign(additionalUrlParameters,item),
+        opt_additional,
+        {
+            request: request,
+            type: item.type,
+            name:item.name
+        })
+}
 export const deleteItem=(info,opt_resultCallback)=> {
     let doneAction=()=> {
         if (opt_resultCallback) opt_resultCallback(info);
@@ -311,11 +333,7 @@ export const deleteItem=(info,opt_resultCallback)=> {
             doneAction();
         }
         if (info.type !== "route") {
-            Requests.getJson('', {}, {
-                request: 'delete',
-                type: info.type,
-                name: info.name
-            })
+            Requests.getJson('', {}, buildRequestParameters('delete',info))
                 .then(() => {
                     if (info.type === 'track') {
                         NavHandler.resetTrack();
@@ -357,14 +375,14 @@ export const showFileDialog=(item,opt_doneCallback,opt_checkExists)=>{
             }
         };
         let schemeAction=(newScheme)=>{
-            return Requests.getJson('?request=api&type='+encodeURIComponent(item.type)+
-                "&command=scheme&name="+encodeURIComponent(item.name)+"&url="+encodeURIComponent(item.url)+
-                "&newScheme="+encodeURIComponent(newScheme));
+            return Requests.getJson('',{},
+                buildRequestParameters('api',item,
+                    {command:'scheme',newScheme:newScheme}));
         };
         let renameAction=(name,newName)=>{
-            Requests.getJson('?request=api&type='+encodeURIComponent(item.type)+
-                "&command=rename&name="+encodeURIComponent(name)+
-                "&newName="+encodeURIComponent(newName))
+            Requests.getJson('',{},
+                buildRequestParameters('api',item,
+                    {command:'rename',newName:newName}))
                 .then(()=>{
                     doneAction();
                 })
