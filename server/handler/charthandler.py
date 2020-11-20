@@ -93,7 +93,6 @@ class ChartDescription(AVNDirectoryListEntry):
                   version=None,
                   url=None,
                   icon=None,
-                  hasOverlays=False,
                  **kwargs):
       super(ChartDescription,self).__init__(type,prefix,name,**kwargs)
       self._chart=None
@@ -115,7 +114,6 @@ class ChartDescription(AVNDirectoryListEntry):
       self.validTo=validTo
       self.version=version
       self.icon=icon
-      self.hasOverlays=hasOverlays
       if url is not None:
         self.url=url
 
@@ -594,6 +592,9 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
         else:
           rt = default
         rt['name'] = configName
+        return AVNUtil.getReturnData(data=rt)
+      if command == 'listOverlays':
+        rt=filter(lambda item: not item.isChart(),self.itemList.values())
         return AVNUtil.getReturnData(data=rt)
     except Exception as e:
       return AVNUtil.getReturnData(error=e.message)

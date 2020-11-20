@@ -347,6 +347,14 @@ public class ChartHandler implements INavRequestHandler {
 
     @Override
     public boolean handleDelete(String name, Uri uri) throws Exception {
+        if (name.endsWith(CFG_EXTENSION)){
+            name=DirectoryRequestHandler.safeName(name,true);
+            File cfgFile=new File(getInternalChartsDir(this.activity),name);
+            if (cfgFile.isFile()){
+                return cfgFile.delete();
+            }
+            return false;
+        }
         String charturl=AvnUtil.getMandatoryParameter(uri,"url");
         KeyAndParts kp=urlToKey(charturl,true);
         Chart chart= getChartDescription(kp.key);
@@ -485,6 +493,18 @@ public class ChartHandler implements INavRequestHandler {
             rt.put("status","OK");
             rt.put("data",localConfig);
             return rt;
+        }
+        if (command.equals("listOverlays")){
+           JSONArray rt=new JSONArray();
+            File baseDir=getInternalChartsDir(this.activity);
+            for (File f : baseDir.listFiles()) {
+                if (!f.getName().endsWith(CFG_EXTENSION)) continue;
+                JSONObject overlay=new JSONObject();
+                overlay.put("name",f.getName());
+                rt.put(overlay);
+            }
+            return RequestHandler.getReturn(new RequestHandler.KeyValue("data",rt));
+
         }
         return RequestHandler.getErrorReturn("unknown request");
     }

@@ -23,6 +23,8 @@ import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 import Mob from '../components/Mob.js';
 import Addons from '../components/Addons.js';
 import EditOverlaysDialog from '../components/EditOverlaysDialog.jsx';
+import OverlayDialog from "../components/OverlayDialogDisplay";
+import {stateHelper} from "../components/OverlayDialog";
 
 
 
@@ -104,6 +106,7 @@ const ChartItem = (props)=> {
     let cls="chartItem";
     if (props.selected) cls+=" activeEntry";
     if (props.originalScheme) cls+=" userAction";
+    cls+=props.hasOverlays?" withOverlays":" noOverlays";
     let isConnected=globalStore.getData(keys.properties.connectedMode,false);
     return (
         <div className={cls} onClick={props.onClick}>
@@ -114,7 +117,9 @@ const ChartItem = (props)=> {
                 name="MainOverlays"
                 onClick={(ev)=>{
                     ev.stopPropagation();
-                    EditOverlaysDialog.createDialog(props);
+                    EditOverlaysDialog.createDialog(props,false,()=>{
+                        if (props.reload) props.reload();
+                    });
                 }}
                 />}
         </div>
@@ -128,7 +133,8 @@ class MainPage extends React.Component {
             chartList:[],
             addOns:[],
             selectedChart:0,
-            sequence:0
+            sequence:0,
+            overlays:{}
         };
         GuiHelper.storeHelper(this,(data)=>{
             this.readAddOns();
@@ -257,6 +263,8 @@ class MainPage extends React.Component {
                 for (let e in json.items) {
                     let chartEntry = json.items[e];
                     if (!chartEntry.key) chartEntry.key=chartEntry.chartKey||chartEntry.name;
+                    chartEntry.hasOverlays=!!this.state.overlays[chartEntry.overlayConfig];
+                    chartEntry.reload=()=>this.fillList();
                     items.push(chartEntry);
                 }
                 this.setState({chartList:items});
@@ -264,6 +272,26 @@ class MainPage extends React.Component {
             (error)=>{
                 Toast("unable to read chart list: "+error);
             });
+        Requests.getJson('',{},{
+            request:'api',
+            type:'chart',
+            command:'listOverlays'
+        })
+            .then((json)=>{
+                let overlays={};
+                for (let i in json.data){
+                    let overlay=json.data[i];
+                    overlays[overlay.name]=overlay;
+                }
+                let newChartList=this.state.chartList.slice();
+                for (let i in newChartList){
+                    newChartList[i].hasOverlays=!!overlays[newChartList[i].overlayConfig];
+                }
+                this.setState({overlays:overlays,chartList:newChartList});
+            })
+            .catch((error)=>{
+                this.setState({overlays:{}})
+            })
     };
     readAddOns() {
         Addons.readAddOns(true)
@@ -275,7 +303,6 @@ class MainPage extends React.Component {
 
     render() {
         let self = this;
-
         return (
             <Page
                   className={this.props.className}
