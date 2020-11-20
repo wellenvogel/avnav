@@ -182,6 +182,15 @@ export default  class UserAppDialog extends React.Component{
                     }
 
                     <div className="dialogButtons">
+                        {(this.stateHelper.getValue('name') && this.stateHelper.getValue('canDelete') && canEdit) && <DB name="delete" onClick={()=>{
+                            self.dialogHelper.showDialog(OverlayDialog.createConfirmDialog("really delete User App?",
+                                ()=>{
+                                    this.props.closeCallback();
+                                    this.props.removeFunction(this.stateHelper.getValue('name'));
+                                }
+                            ));
+                        }}>Delete</DB>}
+                        <DB name="cancel" onClick={this.props.closeCallback}>Cancel</DB>
                         <DB name="ok" onClick={()=>{
                             if (! this.checkOk()) return;
                             this.props.closeCallback();
@@ -189,15 +198,7 @@ export default  class UserAppDialog extends React.Component{
                             }}
                             disabled={!this.stateHelper.getValue('icon') || ! this.stateHelper.getValue('url')|| !canEdit}
                             >Ok</DB>
-                        <DB name="cancel" onClick={this.props.closeCallback}>Cancel</DB>
-                        {(this.stateHelper.getValue('name') && this.stateHelper.getValue('canDelete') && canEdit) && <DB name="delete" onClick={()=>{
-                            self.dialogHelper.showDialog(OverlayDialog.createConfirmDialog("really delete User App?",
-                                ()=>{
-                                    this.props.closeCallback();
-                                    this.props.removeFunction(this.stateHelper.getValue('name'));
-                                }
-                                ));
-                            }}>Delete</DB>}
+
                     </div>
                 </div>
             </React.Fragment>

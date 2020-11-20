@@ -43,12 +43,13 @@ class EulaDialog extends React.Component{
                     }
 
                 </div>
-                <DB name="ok" onClick={()=>{
-                    this.props.okCallback(this.state.value);
-                    this.props.closeCallback();
+                <div className="dialogButtons">
+                    <DB name="cancel" onClick={this.props.closeCallback}>Cancel</DB>
+                    <DB name="ok" onClick={() => {
+                        this.props.okCallback(this.state.value);
+                        this.props.closeCallback();
                     }}>Accept</DB>
-                <DB name="cancel" onClick={this.props.closeCallback}>Cancel</DB>
-                <div className="clear"></div>
+                </div>
             </div>
         );
 

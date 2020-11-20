@@ -288,6 +288,7 @@ class OverlayItemDialog extends React.Component{
                         </React.Fragment>
                     }
                     <div className="dialogButtons">
+                        <DB name="cancel" onClick={this.props.closeCallback}>Cancel</DB>
                         {this.props.updateCallback ?
                             <DB
                                 name="ok"
@@ -298,10 +299,9 @@ class OverlayItemDialog extends React.Component{
                                     this.props.updateCallback(changes);
                                 }}
                                 disabled={!hasChanges}
-                            >Update</DB>
+                            >Ok</DB>
                             : null}
-                        <DB name="cancel" onClick={this.props.closeCallback}>Cancel</DB>
-                        <div className="clear"></div>
+
                     </div>
                 </div>
             </React.Fragment>);
@@ -554,6 +554,7 @@ class EditOverlaysDialog extends React.Component{
                             >Reset
                         </DB>
                     }
+                    <DB name="cancel" onClick={this.props.closeCallback}>Cancel</DB>
                     {this.props.updateCallback?
                         <DB
                             name="ok"
@@ -574,9 +575,8 @@ class EditOverlaysDialog extends React.Component{
                                 this.props.updateCallback(changes);
                                 }}
                             disabled={!this.stateHelper.isChanged()}
-                            >Update</DB>
+                            >Save</DB>
                     :null}
-                    <DB name="cancel" onClick={this.props.closeCallback}>Cancel</DB>
                 <div className="clear"></div>
                 </div>
             </div>

@@ -115,12 +115,13 @@ class Dialog extends React.Component{
                                 value={this.state.allowAccess}/>
                             :null
                         }
-                    {id >=0 && <DB name="remove" onClick={this.buttonClick}>Remove</DB>}
-                    <DB name="cancel" onClick={this.buttonClick}>Cancel</DB>
-                    <DB name="connect" onClick={this.buttonClick}>Connect</DB>
-                    {id >= 0 && <DB name="enable" onClick={this.buttonClick}>Enable</DB>}
-                    {id >= 0 && <DB name="disable" onClick={this.buttonClick}>Disable</DB>}
-                    <div className="clear"></div>
+                    <div className="dialogButtons">
+                        <DB name="cancel" onClick={this.buttonClick}>Cancel</DB>
+                        {id >= 0 && <DB name="remove" onClick={this.buttonClick}>Remove</DB>}
+                        {id >= 0 && <DB name="enable" onClick={this.buttonClick}>Enable</DB>}
+                        {id >= 0 && <DB name="disable" onClick={this.buttonClick}>Disable</DB>}
+                        <DB name="connect" onClick={this.buttonClick}>Connect</DB>
+                    </div>
                 </div>
             </div>
         );
@@ -169,6 +170,7 @@ class WpaPage extends React.Component{
                     if (ssid === undefined) continue;
                     let displayItem = {};
                     displayItem.ssid = ssid;
+                    displayItem.key=ssid;
                     displayItem.name = ssid;
                     displayItem.allowAccess = item.allowAccess;
                     displayItem.showAccess=json.showAccess;

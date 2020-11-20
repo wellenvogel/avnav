@@ -193,6 +193,12 @@ class EditWidgetDialog extends React.Component{
                     </div>
                     :null}
                 <div className="dialogButtons">
+                    {(this.props.removeCallback && (this.state.panel === this.props.panel)) ?
+                        <DB name="delete" onClick={()=>{
+                            this.props.closeCallback();
+                            this.props.removeCallback();
+                        }}>Delete</DB>:null}
+                    <DB name="cancel" onClick={this.props.closeCallback}>Cancel</DB>
                     {this.props.updateCallback?
                         <DB name="ok" onClick={()=>{
                         this.props.closeCallback();
@@ -206,13 +212,6 @@ class EditWidgetDialog extends React.Component{
                         this.props.updateCallback(changes,this.state.panel);
                     }}>Update</DB>
                     :null}
-                    <DB name="cancel" onClick={this.props.closeCallback}>Cancel</DB>
-                    {(this.props.removeCallback && (this.state.panel === this.props.panel)) ?
-                    <DB name="delete" onClick={()=>{
-                        this.props.closeCallback();
-                        this.props.removeCallback();
-                    }}>Delete</DB>:null}
-                <div className="clear"></div>
                 </div>
             </div>
             {Dialog?

@@ -314,6 +314,12 @@ class ImportDialog extends React.Component{
                         null}
 
                     <div className="dialogButtons">
+                        <DB name="cancel"
+                            onClick={()=>{
+                                this.props.cancelFunction();
+                                this.props.closeCallback();
+                            }}
+                        >Cancel</DB>
                         <DB name="ok"
                             onClick={()=>{
                                 this.props.okFunction(this.props,this.state.useSubdir?this.state.subdir:undefined);
@@ -321,12 +327,6 @@ class ImportDialog extends React.Component{
                             }}
                             disabled={this.state.useSubdir && !this.state.subdir}
                             >OK</DB>
-                        <DB name="cancel"
-                            onClick={()=>{
-                                this.props.cancelFunction();
-                                this.props.closeCallback();
-                                }}
-                            >Cancel</DB>
                     </div>
                 </div>
              </React.Fragment>

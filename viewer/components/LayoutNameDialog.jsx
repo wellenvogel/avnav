@@ -48,12 +48,13 @@ class LayoutNameDialog extends React.Component{
                             value={this.state.value} onChange={this.valueChanged}/>
                     </div>
                 </div>
-                <DB name="ok" onClick={()=>{
-                    this.props.okCallback(this.state.value);
-                    this.props.closeCallback();
-                    }}>{this.state.exists?"Overwrite":"Ok"}</DB>
-                <DB name="cancel" onClick={this.props.closeCallback}>Cancel</DB>
-                <div className="clear"></div>
+                <div className="dialogButtons">
+                    <DB name="cancel" onClick={this.props.closeCallback}>Cancel</DB>
+                    <DB name="ok" onClick={() => {
+                        this.props.okCallback(this.state.value);
+                        this.props.closeCallback();
+                    }}>{this.state.exists ? "Overwrite" : "Ok"}</DB>
+                </div>
             </div>
         );
     }

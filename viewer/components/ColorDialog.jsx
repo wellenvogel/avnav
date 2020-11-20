@@ -81,17 +81,18 @@ class ColorDialog extends React.Component{
                            onChange={this.colorInput}
                            value={this.state.value}/>
                 </div>
-                <DB name="ok" onClick={this.buttonClick}>OK</DB>
-                <DB name="cancel" onClick={this.buttonClick}>Cancel</DB>
-                {(this.props.default !== undefined)?
-                    <DB name="reset" onClick={this.buttonClick}>Reset</DB>
+                <div className="dialogButtons">
+                    {(this.props.default !== undefined) ?
+                        <DB name="reset" onClick={this.buttonClick}>Reset</DB>
                         :
-                    null}
-                {(this.props.showUnset !== undefined)?
-                    <DB name="unset" onClick={this.buttonClick}>Unset</DB>
-                    :
-                    null}
-                <div className="clear"></div>
+                        null}
+                    {(this.props.showUnset !== undefined) ?
+                        <DB name="unset" onClick={this.buttonClick}>Unset</DB>
+                        :
+                        null}
+                    <DB name="cancel" onClick={this.buttonClick}>Cancel</DB>
+                    <DB name="ok" onClick={this.buttonClick}>Ok</DB>
+                </div>
             </div>
         );
     }

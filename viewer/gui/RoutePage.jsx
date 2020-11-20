@@ -98,9 +98,10 @@ const createNewRouteDialog=(name,okCallback)=> {
                                 value={self.state.copyPoints}/>
                         </div>
                     </div>
-                    <DB name="ok" onClick={this.okFunction}>Ok</DB>
-                    <DB name="cancel" onClick={this.cancelFunction}>Cancel</DB>
-                    <div className="clear"></div>
+                    <div className="dialogButtons">
+                        <DB name="cancel" onClick={this.cancelFunction}>Cancel</DB>
+                        <DB name="ok" onClick={this.okFunction}>Ok</DB>
+                    </div>
                 </div>
             );
             return html;

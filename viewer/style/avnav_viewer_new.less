@@ -166,13 +166,13 @@ html,body {
   & > div{
     min-width: 0;
   }
+  font-size: 1.1em;
   z-index: 121;
-  padding: 1em;
+  padding: 0.6em;
   background-color: white;
   border-radius: 3px;
   .flex-display();
   .nightColors();
-  font-size: 1.3em;
   .mdShadow2();
   &.nested{
     font-size: 1em;
@@ -252,6 +252,20 @@ html,body {
 
   .dialogButtons {
     margin-top: 0.5em;
+    .dialogRow();
+    .flex-justify-content(flex-end);
+    .flex-wrap(wrap)
+  }
+  .insertButtons{
+    .dialogRow();
+    border-bottom: 1px solid;
+    .nightBorderColorGR(30);
+    .flex-justify-content(flex-end);
+    .flex-wrap(wrap)
+  }
+  .smallButton{
+    width: 1.5em;
+    height: 1.5em;
   }
 
 }
@@ -278,10 +292,6 @@ html,body {
 
   .selectElement{
     margin-top: 0.8em;
-  }
-  .insertButtons{
-    border-bottom: 1px solid;
-    .nightBorderColorGR(30);
   }
   button{
     width: 4.8em;
@@ -387,15 +397,14 @@ html,body {
       .mdText2();
     }
   }
-  .dialogButton.delete{
-    float: left;
-    margin-right: 2em;
-  }
   &.preventEdit{
     .button.Edit {
       opacity: 0;
       pointer-events: none;
     }
+  }
+  .overlayItems{
+    padding-right: 35px; /* some room for scrolling */
   }
 }
 

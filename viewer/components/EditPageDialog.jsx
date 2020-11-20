@@ -175,6 +175,7 @@ class EditPageDialog extends React.Component{
                 })}
                 </div>
                 <div className="dialogButtons">
+                    <DB name="cancel" onClick={this.props.closeCallback}>Cancel</DB>
                     <DB name="ok" onClick={()=>{
                         this.props.closeCallback();
                         for (let pn in this.state.panelList){
@@ -183,8 +184,7 @@ class EditPageDialog extends React.Component{
                         }
                         LayoutHandler.setTemporaryOptionValues(this.state.currentOptions);
                     }}>Ok</DB>
-                    <DB name="cancel" onClick={this.props.closeCallback}>Cancel</DB>
-                <div className="clear"></div>
+
                 </div>
             </div>
             </React.Fragment>

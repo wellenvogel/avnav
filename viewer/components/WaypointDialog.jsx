@@ -84,9 +84,10 @@ let WaypointDialog = reactCreateClass({
                          value={this.state.lat}/>
                     </div>
                 </div>
-                <DB name="ok" tabIndex="4" onClick={this.okFunction}>Ok</DB>
-                <DB name="cancel" tabIndex="3" onClick={this.cancelFunction}>Cancel</DB>
-                <div className="clear"></div>
+                <div className="dialogButtons">
+                    <DB name="cancel" tabIndex="3" onClick={this.cancelFunction}>Cancel</DB>
+                    <DB name="ok" tabIndex="4" onClick={this.okFunction}>Ok</DB>
+                </div>
             </div>
         );
         return html;

@@ -29,10 +29,11 @@ class LayoutFinishedDialog extends React.Component{
         return (
             <div>
                 <h3 className="dialogTitle">Save Layout Changes?</h3>
-                <DB name="ok" onClick={()=>this.buttonFunction(1)}>Ok</DB>
-                <DB name="cancel" onClick={()=>this.buttonFunction(3)}>Cancel</DB>
-                <DB name="delete" onClick={()=>this.buttonFunction(2)}>Discard Changes</DB>
-                <div className="clear"></div>
+                <div className="dialogButtons">
+                    <DB name="delete" onClick={()=>this.buttonFunction(2)}>Discard Changes</DB>
+                    <DB name="cancel" onClick={()=>this.buttonFunction(3)}>Cancel</DB>
+                    <DB name="ok" onClick={()=>this.buttonFunction(1)}>Ok</DB>
+                </div>
             </div>
         );
     }

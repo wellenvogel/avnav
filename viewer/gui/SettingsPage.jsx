@@ -118,10 +118,11 @@ const rangeItemDialog=(item)=>{
                                    step={item.values[2]||1}
                                    name="value" onChange={this.valueChange} value={this.state.value}/>
                     </div>
-                    <DB name="ok" onClick={this.buttonClick}>OK</DB>
-                    <DB name="cancel" onClick={this.buttonClick}>Cancel</DB>
-                    <DB name="reset" onClick={this.buttonClick}>Reset</DB>
-                    <div className="clear"></div>
+                    <div className="dialogButtons">
+                        <DB name="reset" onClick={this.buttonClick}>Reset</DB>
+                        <DB name="cancel" onClick={this.buttonClick}>Cancel</DB>
+                        <DB name="ok" onClick={this.buttonClick}>OK</DB>
+                    </div>
                 </div>
             );
         }

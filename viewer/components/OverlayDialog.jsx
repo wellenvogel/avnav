@@ -112,7 +112,6 @@ const Dialogs = {
                                     if (cancelCallback) cancelCallback(ev);
                                 }}
                             >Cancel</DB>
-                        <div className="clear"></div>
                     </div>
                 </div>
             );
@@ -149,9 +148,10 @@ const Dialogs = {
                                 <input type="text" name="value" value={this.state.value} onChange={this.valueChanged}/>
                             </div>
                         </div>
-                        <DB name="ok" onClick={()=>okCallback(this.state.value)}>Ok</DB>
-                        <DB name="cancel" onClick={cancelCallback}>Cancel</DB>
-                        <div className="clear"></div>
+                        <div className="dialogButtons">
+                            <DB name="cancel" onClick={cancelCallback}>Cancel</DB>
+                            <DB name="ok" onClick={() => okCallback(this.state.value)}>Ok</DB>
+                        </div>
                     </div>
                 );
             }
@@ -166,15 +166,16 @@ const Dialogs = {
                     <h3 className="dialogTitle">{opt_title || ''}</h3>
 
                     <div className="dialogText">{text}</div>
-                    <DB name="ok" onClick={()=>{
-                        if (okFunction) okFunction();
-                        if (props.closeCallback) props.closeCallback();
-                    }}>Ok</DB>
-                    <DB name="cancel" onClick={()=>{
-                        if (cancelFunction) cancelFunction();
-                        if (props.closeCallback) props.closeCallback();
-                    }}>Cancel</DB>
-                    <div className="clear"></div>
+                    <div className="dialogButtons">
+                        <DB name="cancel" onClick={() => {
+                            if (cancelFunction) cancelFunction();
+                            if (props.closeCallback) props.closeCallback();
+                        }}>Cancel</DB>
+                        <DB name="ok" onClick={() => {
+                            if (okFunction) okFunction();
+                            if (props.closeCallback) props.closeCallback();
+                        }}>Ok</DB>
+                    </div>
                 </div>
             );
         };
@@ -224,8 +225,9 @@ const Dialogs = {
                         <h3 className="dialogTitle">Alert</h3>
 
                         <div className="dialogText">{text}</div>
-                        <DB name="ok" onClick={okFunction}>Ok</DB>
-                        <div className="clear"></div>
+                        <div className="dialogButtons">
+                            <DB name="ok" onClick={okFunction}>Ok</DB>
+                        </div>
                     </div>
                 );
             };
