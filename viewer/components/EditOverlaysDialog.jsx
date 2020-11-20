@@ -588,7 +588,7 @@ class EditOverlaysDialog extends React.Component{
                                 this.props.updateCallback(changes);
                                 }}
                             disabled={!this.stateHelper.isChanged()}
-                            >Save</DB>
+                            >{this.props.preventEdit?"Ok":"Save"}</DB>
                     :null}
                 </div>
             </div>
