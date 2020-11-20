@@ -133,7 +133,6 @@ class GpxChartSource extends ChartSourceBase{
         }
         return this.styles[feature.getGeometry().getType()];
     };
-
     prepareInternal() {
         let url = this.chartEntry.url;
         let self = this;
@@ -144,7 +143,21 @@ class GpxChartSource extends ChartSourceBase{
             }
             let vectorSource = new olVectorSource({
                 format: new olGPXFormat(),
-                url: url,
+                loader: (extent,resolution,projection)=>{
+                    Requests.getHtmlOrText(url)
+                        .then((gpx)=>{
+                            gpx=stripExtensions(gpx);
+                            vectorSource.addFeatures(
+                                vectorSource.getFormat().readFeatures(gpx,{
+                                    extent: extent,
+                                    featureProjection: projection,
+                                })
+                            );
+                        })
+                        .catch((error)=>{
+                            //vectorSource.removeLoadedExtent(extent);
+                        })
+                },
                 wrapX: false
             });
             let layerOptions={
@@ -161,6 +174,17 @@ class GpxChartSource extends ChartSourceBase{
 }
 
 export default  GpxChartSource;
+
+/**
+ * we will strip extensions from the gpx for now
+ * as firefox is very strict with namespaces
+ * and we potentially have some strange gpx files (e.g. nautin)
+ * @param xml
+ */
+const stripExtensions=(gpx)=>{
+    if (!gpx) return;
+    return gpx.replaceAll(/<extensions.*?>.*?<\/extensions.*?>/g,"")
+}
 
 /**
  * parses an gpx document and returns a couple of flags
@@ -180,7 +204,7 @@ export const readFeatureInfoFromGpx=(gpx)=>{
     let rt={
         styles:{}
     };
-    let features=parser.readFeatures(gpx);
+    let features=parser.readFeatures(stripExtensions(gpx));
     features.forEach((feature)=>{
         if (! feature) return;
         if (feature.get('sym')){
