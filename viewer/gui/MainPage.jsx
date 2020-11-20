@@ -133,7 +133,7 @@ class MainPage extends React.Component {
         GuiHelper.storeHelper(this,(data)=>{
             this.readAddOns();
             this.fillList();
-        },{sequence:keys.gui.global.reloadSequence},1);
+        },{sequence:keys.gui.global.reloadSequence},2);
         let self=this;
         this.selectChart(0);
         GuiHelper.keyEventHandler(this,(component,action)=>{
@@ -256,7 +256,7 @@ class MainPage extends React.Component {
                 let items = [];
                 for (let e in json.items) {
                     let chartEntry = json.items[e];
-                    if (chartEntry.key) chartEntry.key=chartEntry.name;
+                    if (!chartEntry.key) chartEntry.key=chartEntry.chartKey||chartEntry.name;
                     items.push(chartEntry);
                 }
                 this.setState({chartList:items});
