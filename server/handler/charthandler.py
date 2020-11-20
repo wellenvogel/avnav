@@ -29,7 +29,7 @@ import json
 import shutil
 import urllib
 
-from typing import Dict
+from typing import Dict, Any
 
 import avnav_handlerList
 import gemf_reader
@@ -93,6 +93,7 @@ class ChartDescription(AVNDirectoryListEntry):
                   version=None,
                   url=None,
                   icon=None,
+                  hasOverlays=False,
                  **kwargs):
       super(ChartDescription,self).__init__(type,prefix,name,**kwargs)
       self._chart=None
@@ -114,8 +115,21 @@ class ChartDescription(AVNDirectoryListEntry):
       self.validTo=validTo
       self.version=version
       self.icon=icon
+      self.hasOverlays=hasOverlays
       if url is not None:
         self.url=url
+
+
+    def copy(self):
+      """
+      craete a copy for all simple types
+      @return:
+      """
+      rt=ChartDescription(self.type,self.prefix,self.name)
+      rt.__dict__=self.__dict__.copy()
+      rt._chart=None
+      rt._data=None
+      return rt
 
     @classmethod
     def splitChartKey(cls,chartKey):
@@ -191,16 +205,74 @@ class ChartDescription(AVNDirectoryListEntry):
     def isOwnChart(self):
       return self.isChart() and self.chartKey.startswith(self.INT_PREFIX+"@")
 
+    def replaceParameters(self,parameters):
+      for k in self.__dict__.keys():
+        if k.startswith("_"):
+          continue
+        v=self.__dict__[k]
+        if not isinstance(v,str) and not isinstance(v,unicode):
+          continue
+        self.__dict__[k]=AVNUtil.replaceParam(v,parameters)
+
+class ExternalProvider:
+  charts = None  # type: Dict[basestring, ChartDescription]
+  REPLACE_LATER="##REPLACE_LATER##"
+
+  def __init__(self,prefix,providerName,callback):
+    self.providerName=providerName
+    self.callback=callback
+    self.prefix=prefix
+    self.charts={}
+
+  def _externalChartToDescription(self,ext):
+    filteredExt=dict((key,value)
+                for key,value in ext.iteritems()
+                if key != 'name' and key != 'keyPrefix')
+    x=filteredExt
+    return ChartDescription('chart',self.prefix,ext['name'],
+                                      keyPrefix=self.providerName,
+                                      **(filteredExt)
+                                      )
+  def queryProvider(self):
+    if self.callback is None:
+      self.charts={}
+      return
+    extList = []
+    extList.extend(self.callback("$"+self.REPLACE_LATER))
+    newChartList={}
+    for e in extList:
+      extEntry = self._externalChartToDescription(e)
+      newChartList[extEntry.chartKey]=extEntry
+    self.charts=newChartList
+
+  def getList(self,hostip):
+    rt=[]
+    for chart in self.charts.values():
+      chartCopy=chart.copy() #type: ChartDescription
+      chartCopy.replaceParameters({self.REPLACE_LATER:hostip})
+      rt.append(chartCopy)
+    return rt
+
+  def getChartByKey(self,chartKey,makeCopy=False):
+    rt=self.charts.get(chartKey)
+    if rt is None:
+      return None
+    if not makeCopy:
+      return rt
+    return rt.copy()
+
+
 class AVNChartHandler(AVNDirectoryHandlerBase):
   """a worker to check the chart dirs
   """
+  externalProviders = None  # type: Dict[basestring, ExternalProvider]
   itemList = None  # type: Dict[basestring, ChartDescription]
   PATH_PREFIX="/chart"
   DEFAULT_CHART_CFG="default.cfg"
   ALLOWED_EXTENSIONS=[".gemf",".mbtiles",".xml",ChartDescription.OVL_EXT]
   def __init__(self,param):
     self.param=param
-    self.externalProviders={} #key is the plugin name, value the callback
+    self.externalProviders={}
     AVNDirectoryHandlerBase.__init__(self, param,'chart')
   @classmethod
   def getConfigName(cls):
@@ -210,7 +282,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
     if child is not None:
       return None
     return {
-            'period': 10, #how long to sleep between 2 checks
+            'period': 5, #how long to sleep between 2 checks
             'upzoom': 2 #zoom up in charts
     }
 
@@ -252,6 +324,8 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
     else:
       self.setInfo("main", "handling directory %s, %d charts" % (self.baseDir, len(self.itemList)),
                    AVNWorker.Status.NMEA)
+    for extProvider in self.externalProviders.keys():
+      self.externalProviders[extProvider].queryProvider()
 
   def onItemAdd(self, itemDescription):
     # type: (ChartDescription) -> ChartDescription or None
@@ -392,19 +466,8 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
   def handleList(self, handler=None):
     hostip=self._getRequestIp(handler)
     list=filter(lambda entry: entry.isChart(),self.itemList.values())
-    for k in self.externalProviders.keys():
-      cb=self.externalProviders[k]
-      try:
-        if cb is not None:
-          extList=[]
-          extList.extend(cb(hostip))
-          extDescriptions=[]
-          for e in extList:
-            extEntry=self._externalChartToDescription(e,k)
-            extDescriptions.append(extEntry)
-          list.extend(extDescriptions)
-      except Exception as ex:
-        AVNLog.error("exception while querying charts from %s: %s",k,traceback.format_exc())
+    for provider in self.externalProviders.values():
+      list.extend(provider.getList(hostip))
     return AVNUtil.getReturnData(items=list)
 
 
@@ -461,11 +524,11 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
     provider=self.externalProviders.get(ckp[0])
     if provider is None:
       return None
-    for chart in provider(requestIp):
-      if chart['name'] == ckp[1]:
-        description=self._externalChartToDescription(chart,ckp[0])
-        return description.serialize()
-    return None
+    chart=provider.getChartByKey(chartKey,True)
+    if chart is None:
+      return None
+    chart.replaceParameters({ExternalProvider.REPLACE_LATER:requestIp})
+    return chart.serialize()
 
   def _legacyNameFromUrl(self,url):
     if url is None:
@@ -548,6 +611,15 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
 
   def registerExternalProvider(self,name,callback):
     AVNLog.info("registering external chart provider %s",name)
-    self.externalProviders[name]=callback
+    if callback is not None:
+      self.externalProviders[name]=ExternalProvider(
+        self.getPrefix(),name,callback)
+      self.wakeUp()
+    else:
+      if self.externalProviders.get(name):
+        try:
+          del self.externalProviders[name]
+        except:
+          pass
 
 avnav_handlerList.registerHandler(AVNChartHandler)
