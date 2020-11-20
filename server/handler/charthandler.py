@@ -104,7 +104,7 @@ class ChartDescription(AVNDirectoryListEntry):
       self.canDelete = kp == self.INT_PREFIX
       self.chartKey=kp+"@"+name
       self.overlayConfig=AVNUtil.clean_filename(kp+"@"+name)+self.OVL_EXT
-      self.sequence=sequence if sequence is None else self.time
+      self.sequence=sequence if sequence is not None else self.time
       self.tokenUrl=tokenUrl
       self.tokenFunction=tokenFunction
       self.scheme=scheme
@@ -228,7 +228,6 @@ class ExternalProvider:
     filteredExt=dict((key,value)
                 for key,value in ext.iteritems()
                 if key != 'name' and key != 'keyPrefix')
-    x=filteredExt
     return ChartDescription('chart',self.prefix,ext['name'],
                                       keyPrefix=self.providerName,
                                       **(filteredExt)
@@ -454,15 +453,6 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
       pass
     return hostip
 
-  def _externalChartToDescription(self,ext,keyPrefix):
-    filteredExt=dict((key,value)
-                for key,value in ext.iteritems()
-                if key != 'name' and key != 'keyPrefix')
-    x=filteredExt
-    return ChartDescription('chart',self.getPrefix(),ext['name'],
-                                      keyPrefix=keyPrefix,
-                                      **(filteredExt)
-                                      )
   def handleList(self, handler=None):
     hostip=self._getRequestIp(handler)
     list=filter(lambda entry: entry.isChart(),self.itemList.values())

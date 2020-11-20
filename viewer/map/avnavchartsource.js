@@ -324,16 +324,16 @@ class AvnavChartSource extends ChartSourceBase{
         //prevent from triggering a reload if we already have been destroyed
         let destroySequence=this.destroySequence;
         return new Promise((resolve,reject)=>{
-            if (! self.isReady() || destroySequence > 0) resolve(0);
+            if (! self.isReady() || destroySequence !== this.destroySequence) resolve(0);
             let url = this.chartEntry.url + "/sequence?_="+(new Date()).getTime();
             //set noCache to false to avoid pragma in header (CORS...)
             Requests.getJson(url, {useNavUrl: false,noCache:false})
                 .then((data)=> {
-                    if (!data.sequence || this.destroySequence != destroySequence) {
+                    if (!data.sequence || this.destroySequence !== destroySequence) {
                         resolve(0);
                         return;
                     }
-                    if (data.sequence != self.chartEntry.sequence) {
+                    if (data.sequence !== self.chartEntry.sequence) {
                         base.log("Sequence changed from "+self.chartEntry.sequence+" to "+data.sequence+" reload map");
                         self.chartEntry.sequence=data.sequence;
                         resolve(1);
