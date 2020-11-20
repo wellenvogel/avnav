@@ -343,6 +343,7 @@ class EditOverlaysDialog extends React.Component{
         this.state.selectedIndex=0;
         this.dialogHelper=dialogHelper(this);
         this.sizeCount=0;
+        this.reset=this.reset.bind(this);
     }
 
     updateDimensions(){
@@ -442,14 +443,29 @@ class EditOverlaysDialog extends React.Component{
         return rt;
     }
     getCurrentDefaults(){
-        if (!this.stateHelper.getValue('useDefault')) return [];
-        let defaults=this.stateHelper.getValues().defaults||[].slice();
+        let rt=[];
+        if (!this.stateHelper.getValue('useDefault')) return rt;
+        let defaults=this.stateHelper.getValues().defaults;
+        if (! defaults) return rt;
         let overrides=this.stateHelper.getValue('defaultsOverride')||{};
         defaults.forEach((def)=>{
-            assign(def,overrides[getKeyFromOverlay(def,true)],{isDefault:true});
+            rt.push(assign({},def,overrides[getKeyFromOverlay(def,true)],{isDefault:true}));
         });
-        return defaults;
+        return rt;
 
+    }
+    reset(){
+        if (this.props.resetCallback){
+            this.props.closeCallback();
+            this.props.resetCallback();
+            return;
+        }
+        this.stateHelper.setState(
+            {
+                useDefault:true,
+                overlays:[],
+                defaults:this.props.current.defaults
+            },true);
     }
     render () {
         let self=this;
@@ -463,6 +479,7 @@ class EditOverlaysDialog extends React.Component{
             window.setTimeout(self.props.updateDimensions,100);
         }
         let hasOverlays=this.getCurrentOverlays().length> 0;
+        let hasDefaults=this.stateHelper.getValue('defaults',[]).length > 0;
         let selectedItem=(!this.props.preventEdit && this.state.selectedIndex >=0 && this.state.selectedIndex < this.getCurrentOverlays().length)?
             this.getCurrentOverlays()[this.state.selectedIndex]:undefined;
         if (selectedItem) selectedItem.index=this.state.selectedIndex;
@@ -471,7 +488,7 @@ class EditOverlaysDialog extends React.Component{
             <div className={"selectDialog editOverlaysDialog"+(this.props.preventEdit?" preventEdit":"")}>
                 <h3 className="dialogTitle">{this.props.title||'Edit Overlays'}</h3>
                 <div className="dialogRow info"><span className="inputLabel">Chart</span>{this.props.chartName}</div>
-                {(!this.props.noDefault && ! this.props.preventEdit) && <Checkbox
+                {(!this.props.noDefault && ! this.props.preventEdit && hasDefaults) && <Checkbox
                     className="useDefault"
                     dialogRow={true}
                     label="use default"
@@ -544,16 +561,11 @@ class EditOverlaysDialog extends React.Component{
                     {!this.props.preventEdit && <DB name="after" onClick={()=>this.insert(false)}>Insert After</DB>}
                 </div>
                 <div className="dialogButtons">
-                    {this.props.resetCallback &&
-                        <DB
-                            name="reset"
-                            onClick={()=>{
-                                this.props.closeCallback();
-                                this.props.resetCallback();
-                                }}
-                            >Reset
-                        </DB>
-                    }
+                    <DB
+                        name="reset"
+                        onClick={this.reset}
+                    >Reset
+                    </DB>
                     <DB name="cancel" onClick={this.props.closeCallback}>Cancel</DB>
                     {this.props.updateCallback?
                         <DB
@@ -572,12 +584,12 @@ class EditOverlaysDialog extends React.Component{
                                     changes.overlays=[];
                                 }
                                 delete changes.defaults;
+                                changes.name=this.props.current.name; //we cannot change this
                                 this.props.updateCallback(changes);
                                 }}
                             disabled={!this.stateHelper.isChanged()}
                             >Save</DB>
                     :null}
-                <div className="clear"></div>
                 </div>
             </div>
             </React.Fragment>
@@ -594,11 +606,35 @@ EditOverlaysDialog.propTypes={
     closeCallback: PropTypes.func.isRequired,
     preventEdit: PropTypes.bool
 };
-
-
+/**
+ * check if the configuration for a chart is falling back to the default
+ * in this case we will tell the server to remove the config
+ * default is:
+ *   useDefault == true
+ *   no defaultOverwrite for any existing default or just same state like in default
+ *   no own overlays
+ * @param oldConfig
+ * @param newConfig
+ */
+const isEmpty=(oldConfig,newConfig)=>{
+    if (newConfig.useDefault === false) return false;
+    if (newConfig.overlays && newConfig.overlays.length > 0) return false;
+    if (newConfig.defaultsOverride){
+        if (!oldConfig.defaults) return true;
+        for (let idx in oldConfig.defaults){
+            let currentDefault=oldConfig.defaults[idx]
+            let key=getKeyFromOverlay(currentDefault,true);
+            if (newConfig.defaultsOverride[key]){
+                //check if the same state
+                if (newConfig.defaultsOverride[key].enabled !== currentDefault.enabled ) return false;
+            }
+        }
+    }
+    return true;
+}
 /**
  *
- * @param chartKey
+ * @param chartItem
  * @return {boolean}
  */
 EditOverlaysDialog.createDialog=(chartItem,opt_noDefault,opt_callback)=>{
@@ -621,21 +657,38 @@ EditOverlaysDialog.createDialog=(chartItem,opt_noDefault,opt_callback)=>{
                     chartName={chartItem.name}
                     title="Edit Overlays"
                     current={config.data}
-                    updateCallback={(newConfig)=>{
-                        let postParam={
-                            request: 'upload',
-                            type: 'chart',
-                            name: newConfig.name,
-                            overwrite: true
-                        };
-                        Requests.postPlain("",JSON.stringify(newConfig,undefined,2),{},postParam)
-                            .then((res)=>{
-                                if (opt_callback) opt_callback(newConfig);
-                            })
-                            .catch((error)=>{
-                                Toast("unable to save overlay config: "+error);
-                                if (opt_callback) opt_callback();
-                            });
+                    updateCallback={(newConfig) => {
+                        if (isEmpty(config.data, newConfig)) {
+                            //we can tell the server to delete the config
+                            let param={
+                                request:'delete',
+                                type:'chart',
+                                name:newConfig.name
+                            }
+                            Requests.getJson('',{},param)
+                                .then(()=>{
+                                    if (opt_callback) opt_callback(newConfig);
+                                })
+                                .catch((err)=>{
+                                    Toast("unable to save overlay config: " + error);
+                                    if (opt_callback) opt_callback();
+                                })
+                        } else {
+                            let postParam = {
+                                request: 'upload',
+                                type: 'chart',
+                                name: newConfig.name,
+                                overwrite: true
+                            };
+                            Requests.postPlain("", JSON.stringify(newConfig, undefined, 2), {}, postParam)
+                                .then((res) => {
+                                    if (opt_callback) opt_callback(newConfig);
+                                })
+                                .catch((error) => {
+                                    Toast("unable to save overlay config: " + error);
+                                    if (opt_callback) opt_callback();
+                                });
+                        }
                     }}
                     noDefault={opt_noDefault||false}
                     />

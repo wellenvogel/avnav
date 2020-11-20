@@ -189,16 +189,17 @@ html,body {
 
 
   input, .input {
-    display: table-cell;
     font-size: inherit;
-    margin-top: 0.5em;
-    margin-bottom: 0.5em;
     max-width: 100%;
     width: 20em;
     min-width: 5em;
     border: none;
     border-bottom: 1px solid;
     .nightBorderColorGR();
+    display: inline-block;
+    vertical-align: middle;
+    line-height: 2em;
+    min-height: 2em;
   }
 
   .disabled .input{
@@ -218,11 +219,7 @@ html,body {
     margin-right: 0.5em;
     font-size: 0.8em;
   }
-  .input{
-    display: inline-block;
-    vertical-align: middle;
-    min-height: 1em;
-  }
+
 
   button:not(.dialogButton,.smallButton){
     .dialogButton();
