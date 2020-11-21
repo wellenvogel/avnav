@@ -29,7 +29,6 @@ import json
 import shutil
 import urllib
 
-from typing import Dict, Any
 
 import avnav_handlerList
 import gemf_reader
@@ -213,7 +212,7 @@ class ChartDescription(AVNDirectoryListEntry):
         self.__dict__[k]=AVNUtil.replaceParam(v,parameters)
 
 class ExternalProvider:
-  charts = None  # type: Dict[basestring, ChartDescription]
+  charts = None
   REPLACE_LATER="##REPLACE_LATER##"
 
   def __init__(self,prefix,providerName,callback):
@@ -262,8 +261,8 @@ class ExternalProvider:
 class AVNChartHandler(AVNDirectoryHandlerBase):
   """a worker to check the chart dirs
   """
-  externalProviders = None  # type: Dict[basestring, ExternalProvider]
-  itemList = None  # type: Dict[basestring, ChartDescription]
+  externalProviders = None
+  itemList = None
   PATH_PREFIX="/chart"
   DEFAULT_CHART_CFG="default.cfg"
   ALLOWED_EXTENSIONS=[".gemf",".mbtiles",".xml",ChartDescription.OVL_EXT]
