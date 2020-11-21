@@ -205,6 +205,7 @@ ospackage {
     requires('python-imaging').or('python-pil')
     requires('python-netifaces')
     requires('python-websocket')
+    requires('python-typing')
     user='root'
     into ('/usr/lib/avnav') {
         from('viewer/build/release') {
