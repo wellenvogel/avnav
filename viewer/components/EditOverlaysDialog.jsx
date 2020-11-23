@@ -46,6 +46,12 @@ const filterOverlayItem=(item,opt_itemInfo)=>{
 };
 const KNOWN_OVERLAY_EXTENSIONS=['gpx'];
 const KNOWN_ICON_FILE_EXTENSIONS=['zip'];
+const TYPE_LIST=[
+    {label: 'overlay', value: 'overlay'},
+    {label: 'chart', value: 'chart'},
+    {label: 'route', value: 'route'},
+    {label: 'track', value: 'track'},
+    ]
 class OverlayItemDialog extends React.Component{
     constructor(props) {
         super(props);
@@ -58,7 +64,7 @@ class OverlayItemDialog extends React.Component{
         this.stateHelper = stateHelper(this, props.current || {},'item');
         this.state.itemsFetchCount = 0;
         //we make them only a variable as we consider them to be static
-        this.itemLists={icons:[{label:"--none--"}],chart:[],overlay:[],images:[],user:[],knownOverlays:[],iconFiles:[{label:"--none--"}]};
+        this.itemLists={icons:[{label:"--none--"}],chart:[],overlay:[],images:[],user:[],knownOverlays:[],iconFiles:[{label:"--none--"}],route:[],track:[]};
         if (props.current && props.current.url && props.current.type !== 'chart') {
             this.analyseOverlay(props.current.url);
         }
@@ -66,6 +72,8 @@ class OverlayItemDialog extends React.Component{
         this.getItemList('overlay');
         this.getItemList('images');
         this.getItemList('user');
+        this.getItemList('route');
+        this.getItemList('track');
     }
     getItemList(type){
         Requests.getJson("",{},{
@@ -90,8 +98,14 @@ class OverlayItemDialog extends React.Component{
                         item.value=item.chartKey;
                     });
                 }
-                if (type == 'overlay'){
+                if (type === 'overlay'|| type === 'route' || type === 'track'){
                     data.items.forEach((item)=>{
+                        item.type=type;
+                        if (type === 'route'){
+                            if (! item.url) item.url=globalStore.getData(keys.properties.navUrl)+
+                                "?request=download&type=route&name="+encodeURIComponent(item.name)+"&extension=.gpx";
+                            if (! item.name.match(/\.gpx/)) item.name+=".gpx";
+                        }
                         item.label=item.name;
                         item.value=item.url;
                         if (KNOWN_OVERLAY_EXTENSIONS.indexOf(Helper.getExt(item.name))>=0){
@@ -109,7 +123,7 @@ class OverlayItemDialog extends React.Component{
             })
     }
     changeType(newType){
-        if (newType == this.stateHelper.getValue('type')) return;
+        if (newType === this.stateHelper.getValue('type')) return;
         let newState={
             type: newType,
             opacity: 1
@@ -141,6 +155,14 @@ class OverlayItemDialog extends React.Component{
                 this.stateHelper.setValue('name',undefined);
             })
     }
+    filteredNameList(){
+        let currentType=this.stateHelper.getValue('type');
+        let rt=[];
+        this.itemLists.knownOverlays.forEach((item)=>{
+            if (item.type === currentType) rt.push(item);
+        })
+        return rt;
+    }
     render(){
         let hasChanges=this.stateHelper.isChanged();
         let currentType=this.stateHelper.getValue('type');
@@ -170,7 +192,7 @@ class OverlayItemDialog extends React.Component{
                                 dialogRow={true}
                                 label="type"
                                 value={currentType}
-                                itemList={[{label: 'overlay', value: 'overlay'}, {label: 'chart', value: 'chart'}]}
+                                itemList={TYPE_LIST}
                                 onChange={(nv) => this.changeType(nv)}
                             />
                             <Input
@@ -203,7 +225,7 @@ class OverlayItemDialog extends React.Component{
                                         dialogRow={true}
                                         label="overlay name"
                                         value={this.stateHelper.getValue('name')}
-                                        list={this.itemLists.knownOverlays}
+                                        list={this.filteredNameList()}
                                         fetchCount={this.state.itemsFetchCount}
                                         showDialogFunction={this.dialogHelper.showDialog}
                                         onChange={(nv) => {

@@ -352,11 +352,7 @@ MapHolder.prototype.prepareSourcesAndCreate=function(newSources,opt_preventDialo
                         }
                     }
                     if (ready) {
-                        let overlayLayers = [];
-                        for (let ovi = 1; ovi < this.sources.length; ovi++) {
-                            overlayLayers = overlayLayers.concat(this.sources[ovi].getLayers());
-                        }
-                        this.initMap(this.sources[0].getLayers(), this.sources[0].getChartKey(), overlayLayers,opt_preventDialog);
+                        this.initMap(opt_preventDialog);
                         this.setBrightness(globalStore.getData(keys.properties.nightMode) ?
                         globalStore.getData(keys.properties.nightChartFade, 100) / 100
                             : 1);
@@ -408,6 +404,14 @@ export const getKeyFromOverlay=(overlayConfig,opt_forceDefault)=>{
     if (overlayConfig.type == 'chart') return prefix+(overlayConfig.chartKey||overlayConfig.name);
     return prefix+overlayConfig.name;
 };
+MapHolder.prototype.getBaseChart=function(){
+    if (! this.sources || this.sources.length < 1) return;
+    for (let i=0;i<this.sources.length;i++){
+        if (this.sources[i].getConfig().baseChart){
+            return this.sources[i];
+        }
+    }
+}
 MapHolder.prototype.loadMap=function(div,opt_preventDialogs){
    if (div) this._lastMapDiv=div;
     let self=this;
@@ -417,17 +421,13 @@ MapHolder.prototype.loadMap=function(div,opt_preventDialogs){
             reject("no map selected");
             return;
         }
-        let chartSource=this.createChartSource(assign({type:'chart',enabled:true},this._chartEntry));
+        let chartSource=this.createChartSource(assign({},this._chartEntry,{type:'chart',enabled:true,baseChart:true}));
         if (! chartSource){
             reject("chart "+this._chartEntry.name+" not found");
         }
-        /**
-         * finally prepare all layer sources and when done
-         * create the map
-         * @param overlayLayers
-         */
+        let oldBase=this.getBaseChart();
         if (this.sources.length < 1 ||
-            this.sources[0].getChartKey() != chartSource.getChartKey ){
+            (oldBase && oldBase.getChartKey() !== chartSource.getChartKey() )){
             //new chart - forget all local overlay overrides
             this.overlayOverrides=new OverlayConfig();
         }
@@ -441,7 +441,7 @@ MapHolder.prototype.loadMap=function(div,opt_preventDialogs){
                 .catch((error)=>{reject(error)});
         };
         let checkChanges=()=>{
-            if (this.sources.length != newSources.length ){
+            if (this.sources.length !== newSources.length ){
                 prepareAndCreate(newSources);
                 return;
             }
@@ -606,31 +606,30 @@ MapHolder.prototype.getMapOutlineLayer = function (layers) {
 
 /**
  * init the map (deinit an old one...)
- * @param {String} div
- * @param {Array} layers - the chart layers (ol layers)
- * @param {string} baseurl - the baseurl to be used
- * @param {Array} overlayList - list of overlays to load
  */
 
-MapHolder.prototype.initMap=function(layers,baseurl,overlayList,opt_preventDialog){
+MapHolder.prototype.initMap=function(opt_preventDialog){
     let div=this._lastMapDiv;
     let self=this;
-    let layersreverse=[];
+    let layers=[];
+    let baseLayers=[];
     this.minzoom=32;
     this.mapMinZoom=this.minzoom;
     this.maxzoom=0;
-    for (let i=layers.length- 1;i>=0;i--){
-        layersreverse.push(layers[i]);
-        if (layers[i].avnavOptions.minZoom < this.minzoom){
-            this.minzoom=layers[i].avnavOptions.minZoom;
-        }
-        if (layers[i].avnavOptions.maxZoom > this.maxzoom){
-            this.maxzoom=layers[i].avnavOptions.maxZoom;
-        }
-    }
-    for (let oi in overlayList){
-        let overlay=overlayList[oi];
-        layersreverse.push(overlay);
+    for (let i=0;i<this.sources.length;i++){
+        let sourceLayers=this.sources[i].getLayers();
+        sourceLayers.forEach((layer)=> {
+            if (this.sources[i].getConfig().baseChart && layer.avnavOptions) {
+                if (layer.avnavOptions.minZoom < this.minzoom){
+                    this.minzoom=layer.avnavOptions.minZoom;
+                }
+                if (layer.avnavOptions.maxZoom > this.maxzoom){
+                    this.maxzoom=layer.avnavOptions.maxZoom;
+                }
+                baseLayers.push(layer);
+            }
+            layers.push(layer);
+        });
     }
     let avnavRenderLayer=new olVectorLayer({
         source: new olVectorSource({
@@ -644,7 +643,7 @@ MapHolder.prototype.initMap=function(layers,baseurl,overlayList,opt_preventDialo
         renderBuffer: Infinity,
         zIndex: Infinity
     });
-    layersreverse.push(avnavRenderLayer);
+    layers.push(avnavRenderLayer);
     this.mapMinZoom=this.minzoom;
     let hasBaseLayers=globalStore.getData(keys.properties.layers.base,true);
     if (hasBaseLayers) {
@@ -664,12 +663,12 @@ MapHolder.prototype.initMap=function(layers,baseurl,overlayList,opt_preventDialo
         }
         if (hasBaseLayers) {
             this.olmap.addLayer(this.getBaseLayer());
-            if (layers.length > 0) {
-                this.olmap.addLayer(this.getMapOutlineLayer(layers))
+            if (baseLayers.length > 0) {
+                this.olmap.addLayer(this.getMapOutlineLayer(baseLayers))
             }
         }
-        for (let i=0;i< layersreverse.length;i++){
-            this.olmap.addLayer(layersreverse[i]);
+        for (let i=0;i< layers.length;i++){
+            this.olmap.addLayer(layers[i]);
         }
         this.renderTo(div);
     }
@@ -677,13 +676,13 @@ MapHolder.prototype.initMap=function(layers,baseurl,overlayList,opt_preventDialo
         let base=[];
         if (hasBaseLayers) {
             base.push(this.getBaseLayer());
-            if (layers.length > 0) {
-                base.push(this.getMapOutlineLayer(layers))
+            if (baseLayers.length > 0) {
+                base.push(this.getMapOutlineLayer(baseLayers))
             }
         }
         this.olmap = new olMap({
             target: div?div:self.defaultDiv,
-            layers: base.concat(layersreverse),
+            layers: base.concat(layers),
             interactions: olInteraction.defaults({
                 altShiftDragRotate:false,
                 pinchRotate: false
@@ -713,8 +712,8 @@ MapHolder.prototype.initMap=function(layers,baseurl,overlayList,opt_preventDialo
             return self.onZoomChange(evt);
         });
     }
-    if (layersreverse.length >0){
-        layersreverse[layersreverse.length-1].on('postrender',function(evt){
+    if (layers.length >0){
+        layers[layers.length-1].on('postrender',function(evt){
             return self.onPostCompose(evt);
         });
     }
@@ -739,14 +738,14 @@ MapHolder.prototype.initMap=function(layers,baseurl,overlayList,opt_preventDialo
         this.setZoom(this.zoom);
         recenter=false;
         let lext=undefined;
-        if (layers.length > 0) {
-            lext=layers[0].avnavOptions.extent;
+        if (baseLayers.length > 0) {
+            lext=baseLayers[0].avnavOptions.extent;
             if (! opt_preventDialog && lext !== undefined && !olExtent.containsCoordinate(lext,this.pointToMap(this.center))){
                 let ok=OverlayDialog.confirm("Position outside map, center to map now?");
                 ok.then(function(){
-                    if (layers.length > 0) {
+                    if (baseLayers.length > 0) {
                         let view = self.getView();
-                        lext = layers[0].avnavOptions.extent;
+                        lext = baseLayers[0].avnavOptions.extent;
                         if (lext !== undefined) view.fit(lext,self.olmap.getSize());
                         self.setZoom(self.minzoom);
                         self.center = self.pointFromMap(view.getCenter());
@@ -762,9 +761,9 @@ MapHolder.prototype.initMap=function(layers,baseurl,overlayList,opt_preventDialo
         }
     }
     if (recenter) {
-        if (layers.length > 0) {
+        if (baseLayers.length > 0) {
             view = this.getView();
-            let lextx=layers[0].avnavOptions.extent;
+            let lextx=baseLayers[0].avnavOptions.extent;
             if (lextx !== undefined) view.fit(lextx,self.olmap.getSize());
             this.setZoom(this.minzoom);
             this.center=this.pointFromMap(view.getCenter());

@@ -314,8 +314,9 @@ class AvnavChartSource extends ChartSourceBase{
             layer.avnavOptions = rt;
             ll.push(layer);
         });
-        return ll;
-
+        //our avnav.xml has the layers in inverse order
+        //maybe we should better sort based on zoomlevelboundings
+        return ll.reverse();
     }
 
 
