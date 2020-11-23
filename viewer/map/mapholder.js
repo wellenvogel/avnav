@@ -352,6 +352,7 @@ MapHolder.prototype.prepareSourcesAndCreate=function(newSources,opt_preventDialo
                         }
                     }
                     if (ready) {
+                        this.updateOverlayConfig();
                         this.initMap(opt_preventDialog);
                         this.setBrightness(globalStore.getData(keys.properties.nightMode) ?
                         globalStore.getData(keys.properties.nightChartFade, 100) / 100
@@ -496,9 +497,6 @@ MapHolder.prototype.loadMap=function(div,opt_preventDialogs){
     });
 
 };
-MapHolder.prototype.hasOverlays=function(){
-    return this.sources.length > 1;
-}
 MapHolder.prototype.getCurrentMergedOverlayConfig=function(){
     let rt=this.overlayConfig.copy();
     rt.mergeOverrides(this.overlayOverrides);

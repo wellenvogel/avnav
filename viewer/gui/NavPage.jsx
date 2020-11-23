@@ -119,7 +119,6 @@ class NavPage extends React.Component{
         this.getButtons=this.getButtons.bind(this);
         this.mapEvent=this.mapEvent.bind(this);
         this.state={
-            hasOverlays:MapHolder.hasOverlays(),
             showWpButtons: false
         };
         this.showWpButtons=this.showWpButtons.bind(this);
@@ -269,14 +268,6 @@ class NavPage extends React.Component{
             }
             return;
         }
-        if (evdata.type === MapHolder.EventTypes.RELOAD){
-            let hasOverlays=MapHolder.hasOverlays();
-            if (this.state.hasOverlays != hasOverlays) {
-                this.setState({
-                    hasOverlays: hasOverlays
-                })
-            }
-        }
     }
     componentWillUnmount(){
     }
@@ -355,7 +346,9 @@ class NavPage extends React.Component{
                 name: "NavOverlays",
                 onClick:()=>overlayDialog(),
                 overflow: true,
-                visible: this.state.hasOverlays
+                storeKeys:{
+                    visible:keys.gui.capabilities.uploadOverlays
+                }
             },
             Mob.mobDefinition,
             EditPageDialog.getButtonDef(PAGENAME,
