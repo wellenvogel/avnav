@@ -245,6 +245,29 @@ export default class OverlayConfig{
             defaultsOverride: this.config.defaultsOverride
         }
     }
+
+    /**
+     * currently we only merge in the enabled state
+     * @param overrides OverlayConfig
+     */
+    mergeOverrides(overrides){
+        this.config.overlays.forEach((overlay)=>{
+            let override=overrides.getCurrentItemConfig(overlay);
+            assign(overlay,Helper.filteredAssign({enabled:true},override));
+        })
+        this.config.defaults.forEach((overlay)=>{
+            let override=overrides.getCurrentItemConfig(overlay,true);
+            let our=this.getCurrentItemConfig(overlay,true);
+            if (our.enabled !== override.enabled){
+                if (override.enabled !== overlay.enabled){
+                    this.config.defaultsOverride[OverlayConfig.getOverrideKey(overlay)]={enabled:override.enabled}
+                }
+                else{
+                    delete this.config.defaultsOverride[OverlayConfig.getOverrideKey(overlay)];
+                }
+            }
+        })
+    }
     reset(){
         let numOverrides=0;
         for (let k in this.config.defaultsOverride){
@@ -264,7 +287,8 @@ export default class OverlayConfig{
         for (let idx in this.config.defaults) {
             let currentDefault = this.config.defaults[idx]
             let key = OverlayConfig.getOverrideKey(currentDefault);
-            if ((this.config.defaultsOverride[key] || {}).enabled !== currentDefault.enabled) return false;
+            let override=this.config.defaultsOverride[key];
+            if (override && override.enabled !== currentDefault.enabled) return false;
         }
         return true;
     }
@@ -274,9 +298,10 @@ export default class OverlayConfig{
     isChartBucket(item){
         return item.bucket === 'M';
     }
-    getCurrentItemConfig(item){
+    getCurrentItemConfig(item,opt_forceDefault){
         let configEntries=[];
-        let list=item.isDefault?this.config.defaults:this.config.overlays;
+        let isDefault=item.isDefault || opt_forceDefault||false;
+        let list=isDefault?this.config.defaults:this.config.overlays;
         let keyFunction=OverlayConfig.getKeyFromOverlay;
         let itemName=keyFunction(item);
         for (let k in list){
@@ -284,7 +309,7 @@ export default class OverlayConfig{
                 configEntries.push(list[k]);
             }
         }
-        if (item.isDefault) {
+        if (isDefault) {
             configEntries.push(this.config.defaultsOverride[OverlayConfig.getOverrideKey(item)]);
         }
         let rt=assign({},item);

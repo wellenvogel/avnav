@@ -499,11 +499,13 @@ MapHolder.prototype.loadMap=function(div,opt_preventDialogs){
 MapHolder.prototype.hasOverlays=function(){
     return this.sources.length > 1;
 }
-MapHolder.prototype.getCurrentOverlayConfig=function(){
-    return this.overlayConfig; //TODO: make a copy?
+MapHolder.prototype.getCurrentMergedOverlayConfig=function(){
+    let rt=this.overlayConfig.copy();
+    rt.mergeOverrides(this.overlayOverrides);
+    return rt;
 };
-MapHolder.prototype.updateOverlayConfig=function(newConfig){
-    if (newConfig) this.overlayOverrides=newConfig;
+MapHolder.prototype.updateOverlayConfig=function(newOverrides){
+    if (newOverrides) this.overlayOverrides=newOverrides;
     for (let i=0;i<this.sources.length;i++){
         let source=this.sources[i];
         let currentConfig=source.getConfig();

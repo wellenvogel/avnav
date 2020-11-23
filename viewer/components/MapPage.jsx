@@ -223,7 +223,7 @@ MapPage.propertyTypes={
 };
 
 export const overlayDialog=(opt_chartName,opt_updateCallback)=>{
-    let current=MapHolder.getCurrentOverlayConfig();
+    let current=MapHolder.getCurrentMergedOverlayConfig();
     if (! current) return;
     let currentChart=MapHolder.getCurrentChartEntry()||{};
     OverlayDialog.dialog((props)=> {

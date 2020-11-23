@@ -308,6 +308,17 @@ class OverlayItemDialog extends React.Component{
 }
 
 
+const BaseElement=(props)=>{
+    return(
+    <div className={"listEntry overlayElement baseChart"}>
+        <div className="itemInfo">
+            <div className="infoRow">
+                <span className="inputLabel"> </span><span className="valueText">---chart---</span>
+            </div>
+        </div>
+    </div>
+    );
+}
 
 const OverlayElement=(props)=>{
     return (
@@ -419,6 +430,12 @@ class EditOverlaysDialog extends React.Component{
             this.maxKey=i;
         }
         this.state.list=displayListFromOverlays(itemList);
+        for (let i=0;i<this.state.list.length;i++){
+            if (this.state.list[i].type !== undefined && this.state.list[i].type !== 'base'){
+                this.state.selectedIndex=i;
+                break;
+            }
+        }
         this.maxKey++;
         this.state.useDefault=this.props.current.getUseDefault();
         this.state.isChanged=false;
@@ -428,8 +445,22 @@ class EditOverlaysDialog extends React.Component{
         this.updateList=this.updateList.bind(this);
     }
 
-    updateList(opt_newList){
-        this.setState({list:opt_newList?opt_newList:this.state.list.slice(),isChanged:true});
+    updateList(newList) {
+        let idx = this.state.selectedIndex;
+        if (idx < 0) {
+            idx = 0;
+        }
+        if (idx >= newList.length) {
+            idx = 0;
+        }
+        let count = newList.length;
+        while ((newList[idx].type === undefined || newList[idx].type === 'base') && count >= 0) {
+            idx++;
+            if (idx >= newList.length) idx = 0;
+            count--;
+        }
+        if (count < 0) idx = -1;
+        this.setState({list: newList, isChanged: true, selectedIndex: idx});
     }
     getNewKey(){
         this.maxKey++;
@@ -470,7 +501,10 @@ class EditOverlaysDialog extends React.Component{
             if (this.state.selectedIndex < 0 || this.state.selectedIndex >= this.state.list.length) return;
         }
         let idx=this.state.selectedIndex;
-        if (idx < 0) idx=0;
+        if (idx < 0) {
+            //we can only have this for after - so we always add on top
+            idx=this.state.list.length;
+        }
         this.showItemDialog({type:'overlay',opacity:1})
             .then((overlay)=>{
                 let overlays=this.state.list.slice();
@@ -542,12 +576,14 @@ class EditOverlaysDialog extends React.Component{
             this.props.resetCallback();
             return;
         }
+        let copy=this.props.current.copy();
+        copy.reset();
         this.setState({
-            list:displayListFromOverlays(this.props.current.getOverlayList()),
-            useDefault: this.props.current.getUseDefault(),
+            useDefault: copy.getUseDefault(),
             selectedIndex:0,
             isChanged:true
         })
+        this.updateList(displayListFromOverlays(copy.getOverlayList()))
     }
     render () {
         let self=this;
@@ -563,7 +599,7 @@ class EditOverlaysDialog extends React.Component{
         let hasOverlays=true; //TODO
         let hasDefaults=this.props.current.hasDefaults();
         let selectedItem;
-        if (this.state.selectedIndex >=0 && this.state.selectedIndex <= this.state.list.length){
+        if (this.state.selectedIndex >=0 && this.state.selectedIndex <= this.state.list.length && ! this.props.preventEdit){
             selectedItem=this.state.list[this.state.selectedIndex];
         }
         return (
@@ -576,7 +612,7 @@ class EditOverlaysDialog extends React.Component{
                     dialogRow={true}
                     label="use default"
                     onChange={(nv)=>{
-                        this.setState({useDefault:nv,selectedIndex:0,isChanged:true});
+                        this.setState({useDefault:nv,isChanged:true});
                         this.updateDimensions();
                         }}
                     value={this.state.useDefault||false}/>}
@@ -588,6 +624,7 @@ class EditOverlaysDialog extends React.Component{
                     }}
                     className="overlayItems"
                     itemCreator={(item)=>{
+                        if (item.type === 'base') return BaseElement;
                         if (item.itemClass === CombinedOverlayElement){
                             if (this.state.useDefault) return CombinedOverlayElement
                             else return HiddenCombinedOverlayElement
@@ -644,7 +681,7 @@ class EditOverlaysDialog extends React.Component{
                         }}>Edit</DB>
                         :null
                     }
-                    {(hasOverlays && ! this.props.preventEdit)?<DB name="before" onClick={()=>this.insert(true)}>Insert Before</DB>:null}
+                    {(hasOverlays && ! this.props.preventEdit && selectedItem)?<DB name="before" onClick={()=>this.insert(true)}>Insert Before</DB>:null}
                     {!this.props.preventEdit && <DB name="after" onClick={()=>this.insert(false)}>Insert After</DB>}
                 </div>
                 <div className="dialogButtons">
