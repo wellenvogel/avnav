@@ -11,11 +11,11 @@ import Requests from '../util/requests.js';
 import Toast from './Toast.jsx';
 import Helper from '../util/helper.js';
 import GuiHelpers from '../util/GuiHelpers.js';
-import {getKeyFromOverlay} from '../map/mapholder.js';
 import {readFeatureInfoFromGpx} from '../map/gpxchartsource';
-import {getOverlayConfig} from '../map/chartsourcebase'
+import {getOverlayConfigName} from '../map/chartsourcebase'
 import globalStore from "../util/globalstore";
 import keys from '../util/keys';
+import OverlayConfig from '../map/overlayconfig';
 
 const filterOverlayItem=(item,opt_itemInfo)=>{
     let rt=undefined;
@@ -32,7 +32,7 @@ const filterOverlayItem=(item,opt_itemInfo)=>{
     }
     delete rt.selected;
     delete rt.index;
-    delete rt.isDefault;
+    delete rt.disabled;
     let dstyles=['style.lineWidth','style.lineColor'];
     if (opt_itemInfo){
         dstyles.forEach((st)=> {
@@ -44,9 +44,6 @@ const filterOverlayItem=(item,opt_itemInfo)=>{
     }
     return rt;
 };
-
-
-const ITEM_PROPERTIES={enabled:true};
 const KNOWN_OVERLAY_EXTENSIONS=['gpx'];
 const KNOWN_ICON_FILE_EXTENSIONS=['zip'];
 class OverlayItemDialog extends React.Component{
@@ -310,6 +307,8 @@ class OverlayItemDialog extends React.Component{
 
 }
 
+
+
 const OverlayElement=(props)=>{
     return (
         <div className={"listEntry overlayElement "+(props.selected?"activeEntry":"")+(props.enabled?"":" disabled")+(props.isDefault?" defaultOverlay":"")} onClick={()=>props.onClick('select')}>
@@ -322,29 +321,121 @@ const OverlayElement=(props)=>{
                 </div>
             </div>
             <div className="actions">
-            <Checkbox
-                className="overlayEnabled"
-                value={props.enabled||false}
-                onChange={(nv)=>{props.onClick(nv?"enable":"disable")}}
+                {props.type !== 'base' &&
+                <Checkbox
+                    className="overlayEnabled"
+                    value={props.enabled || false}
+                    onChange={(nv) => {
+                        props.onClick(nv ? "enable" : "disable")
+                    }}
                 />
-            <Button name="Edit"
-                    className={"smallButton "+((props.isDefault||props.preventEdit)?"disabled":"")}
-                    onClick={(ev)=>{ev.stopPropagation();props.onClick('edit')}}
+                }
+                {props.type !== 'base' &&
+                <Button name="Edit"
+                        className={"smallButton " + ((props.isDefault || props.preventEdit) ? "disabled" : "")}
+                        onClick={(ev) => {
+                            ev.stopPropagation();
+                            props.onClick('edit')
+                        }}
                 />
-             </div>
+                }
+            </div>
         </div>
     );
 };
 
+const CombinedOverlayElement=(props)=> {
+    return(
+        <ItemList
+            className="defaultOverlayItems"
+            itemClass={OverlayElement}
+            itemList={props.items}
+            onItemClick={(item,data)=>{
+                props.onClick({item:item,data:data});
+            }}
+            />
+    );
+}
+
+const HiddenCombinedOverlayElement=(props)=>{
+    return <div className="empty"></div>
+}
+
+/**
+ * convert the list of overlays into the list for displaying it
+ * by grouping default items into a combined item
+ * @param overlayList
+ * @param updateCallback
+ * @returns {[]}
+ */
+const displayListFromOverlays=(overlayList)=>{
+    let rt=[];
+    if (! overlayList) return rt;
+    let lastBucket=undefined;
+    overlayList.forEach((overlay)=>{
+        if (overlay.isDefault){
+            if (! lastBucket){
+                lastBucket={
+                    itemClass:CombinedOverlayElement,
+                    items:[],
+                    disabled:true
+                };
+            }
+            lastBucket.items.push(overlay);
+            return;
+        }
+        if (lastBucket) rt.push(lastBucket);
+        lastBucket=undefined;
+        rt.push(assign({},overlay,{disabled:overlay.type==='base'}));
+    })
+    if (lastBucket) rt.push(lastBucket);
+    return rt;
+}
+
+const displayListToOverlays=(displayList)=>{
+    let rt=[];
+    if (! displayList) return rt;
+    displayList.forEach((element)=>{
+        if (element.itemClass === CombinedOverlayElement){
+            element.items.forEach((item)=>{
+                rt.push(filterOverlayItem(item));
+            });
+        }
+        else{
+            rt.push(filterOverlayItem(element));
+        }
+    });
+    return rt;
+}
+
 class EditOverlaysDialog extends React.Component{
     constructor(props){
         super(props);
-        this.stateHelper=stateHelper(this,props.current);
-        this.state.selectedIndex=0;
+        this.state={};
+        this.state.selectedIndex=-1;
+        let itemList=this.props.current.getOverlayList(true);
+        for (let i = 0; i < itemList.length; i++) {
+            itemList[i].itemKey=i;
+            this.maxKey=i;
+        }
+        this.state.list=displayListFromOverlays(itemList);
+        this.maxKey++;
+        this.state.useDefault=this.props.current.getUseDefault();
+        this.state.isChanged=false;
         this.dialogHelper=dialogHelper(this);
         this.sizeCount=0;
         this.reset=this.reset.bind(this);
+        this.updateList=this.updateList.bind(this);
     }
+
+    updateList(opt_newList){
+        this.setState({list:opt_newList?opt_newList:this.state.list.slice(),isChanged:true});
+    }
+    getNewKey(){
+        this.maxKey++;
+        return this.maxKey;
+    }
+
 
     updateDimensions(){
         if (this.props.updateDimensions){
@@ -376,83 +467,74 @@ class EditOverlaysDialog extends React.Component{
     insert(before){
         if (this.props.preventEdit) return;
         if (before) {
-            if (this.state.selectedIndex === undefined){
-                return;
-            }
-            if (this.state.selectedIndex < 0 || this.state.selectedIndex >= this.getCurrentOverlays().length){
-                return;
-            }
+            if (this.state.selectedIndex < 0 || this.state.selectedIndex >= this.state.list.length) return;
         }
-        let idx=this.state.selectedIndex||0;
+        let idx=this.state.selectedIndex;
+        if (idx < 0) idx=0;
         this.showItemDialog({type:'overlay',opacity:1})
             .then((overlay)=>{
-                let overlays=this.getCurrentOverlays(true);
+                let overlays=this.state.list.slice();
+                overlay.itemKey=this.getNewKey();
                 overlays.splice(before?idx:idx+1,0,overlay);
-                this.stateHelper.setState({overlays:overlays});
+                this.updateList(overlays);
             })
             .catch((reason)=>{if (reason) Toast(reason);});
     }
     editItem(item){
         if (this.props.preventEdit) return;
+        if (item.disabled) return;
         this.showItemDialog(item)
             .then((changedItem)=>{
-                this.updateItem(changedItem);
+                this.updateItem(item.itemKey,changedItem);
             })
             .catch((reason)=>{if (reason) Toast(reason);})
     }
+    updateItem(itemKey,newValues){
+        let overlays=this.state.list;
+        let hasChanged=false;
+        overlays.forEach((element)=>{
+            if (element.items){
+                //combined...
+                element.items.forEach((item)=>{
+                    if (item.itemKey === itemKey){
+                        assign(item,newValues);
+                        hasChanged=true;
+                    }
+                });
+            }
+            else{
+                if (element.itemKey === itemKey){
+                    assign(element,newValues);
+                    hasChanged=true;
+                }
+            }
+        })
+        if (hasChanged){
+            this.updateList(overlays);
+        }
+    }
     deleteItem(item){
         if (this.props.preventEdit) return;
-        if (item.index < 0 || item.index >= this.getCurrentOverlays().length){
-            return;
+        if (item.disabled) return;
+        if (item.itemKey === undefined) return;
+        let overlays=this.state.list.slice();
+        for (let i=0;i<overlays.length;i++) {
+            //not allowed for combined...
+            if (overlays[i].itemKey===item.itemKey) {
+                overlays.splice(i, 1);
+                this.updateList(overlays);
+                this.updateDimensions();
+            }
         }
-        let overlays=this.getCurrentOverlays(true);
-        overlays.splice(item.index,1);
-        this.stateHelper.setValue('overlays',overlays);
-        this.updateDimensions();
-    }
-    updateItem(item,newValues){
-        let overlays=this.getCurrentOverlays(true);
-        if (item.index < 0 || item.index >= overlays.length){
-            Toast("internal error, index changed");
-            return;
-        }
-        overlays.splice(item.index,1,assign({},item,newValues));
-        this.stateHelper.setState({overlays:overlays});
     }
     moveItem(oldIndex,newIndex){
-        let overlays=this.getCurrentOverlays(true);
+        let overlays=this.state.list.slice();
         if (oldIndex < 0 || oldIndex >= overlays.length) return;
         if (newIndex < 0 || newIndex >= overlays.length) return;
         let item=overlays[oldIndex];
         overlays.splice(oldIndex,1);
         overlays.splice(newIndex,0,item)
-        this.stateHelper.setState({overlays:overlays});
-    }
-    updateDefault(item,newValue) {
-        if (! getKeyFromOverlay(item)) return;
-        let current = assign({}, this.stateHelper.getValue('defaultsOverride'));
-        current[getKeyFromOverlay(item)]=assign({},current[getKeyFromOverlay(item)],newValue);
-        this.stateHelper.setValue('defaultsOverride',current);
-    }
-
-    getCurrentOverlays(opt_doCopy){
-        let rt=this.stateHelper.getValues().overlays||[];
-        if (opt_doCopy){
-            return rt.slice();
-        }
-        return rt;
-    }
-    getCurrentDefaults(){
-        let rt=[];
-        if (!this.stateHelper.getValue('useDefault')) return rt;
-        let defaults=this.stateHelper.getValues().defaults;
-        if (! defaults) return rt;
-        let overrides=this.stateHelper.getValue('defaultsOverride')||{};
-        defaults.forEach((def)=>{
-            rt.push(assign({},def,overrides[getKeyFromOverlay(def,true)],{isDefault:true}));
-        });
-        return rt;
-
+        this.updateList(overlays);
     }
     reset(){
         if (this.props.resetCallback){
@@ -460,12 +542,12 @@ class EditOverlaysDialog extends React.Component{
             this.props.resetCallback();
             return;
         }
-        this.stateHelper.setState(
-            {
-                useDefault:true,
-                overlays:[],
-                defaults:this.props.current.defaults
-            },true);
+        this.setState({
+            list:displayListFromOverlays(this.props.current.getOverlayList()),
+            useDefault: this.props.current.getUseDefault(),
+            selectedIndex:0,
+            isChanged:true
+        })
     }
     render () {
         let self=this;
@@ -473,16 +555,17 @@ class EditOverlaysDialog extends React.Component{
             this.props.closeCallback();
             return null;
         }
-        let hasCurrent=this.props.current.name !== undefined;
+        let hasCurrent=this.props.current.getName() !== undefined;
         if (this.sizeCount !== this.state.sizeCount && this.props.updateDimensions){
             this.sizeCount=this.state.sizeCount;
             window.setTimeout(self.props.updateDimensions,100);
         }
-        let hasOverlays=this.getCurrentOverlays().length> 0;
-        let hasDefaults=this.stateHelper.getValue('defaults',[]).length > 0;
-        let selectedItem=(!this.props.preventEdit && this.state.selectedIndex >=0 && this.state.selectedIndex < this.getCurrentOverlays().length)?
-            this.getCurrentOverlays()[this.state.selectedIndex]:undefined;
-        if (selectedItem) selectedItem.index=this.state.selectedIndex;
+        let hasOverlays=true; //TODO
+        let hasDefaults=this.props.current.hasDefaults();
+        let selectedItem;
+        if (this.state.selectedIndex >=0 && this.state.selectedIndex <= this.state.list.length){
+            selectedItem=this.state.list[this.state.selectedIndex];
+        }
         return (
             <React.Fragment>
             <div className={"selectDialog editOverlaysDialog"+(this.props.preventEdit?" preventEdit":"")}>
@@ -493,26 +576,10 @@ class EditOverlaysDialog extends React.Component{
                     dialogRow={true}
                     label="use default"
                     onChange={(nv)=>{
-                        this.stateHelper.setState({useDefault:nv});
-                        this.setState({selectedIndex:0});
+                        this.setState({useDefault:nv,selectedIndex:0,isChanged:true});
                         this.updateDimensions();
                         }}
-                    value={this.stateHelper.getValue("useDefault")||false}/>}
-                {!this.props.noDefault && <ItemList
-                    className="overlayItems"
-                    itemClass={OverlayElement}
-                    onItemClick={(item,data)=>{
-                        if (data == 'disable'){
-                            this.updateDefault(item,{enabled:false});
-                            return;
-                        }
-                        if (data == 'enable'){
-                            this.updateDefault(item,{enabled:true});
-                            return;
-                        }
-                     }}
-                    itemList={this.getCurrentDefaults()}
-                    />}
+                    value={this.state.useDefault||false}/>}
                 <ItemList
                     dragdrop={!this.props.preventEdit}
                     onSortEnd={(oldIndex,newIndex)=>{
@@ -520,27 +587,47 @@ class EditOverlaysDialog extends React.Component{
                         this.setState({selectedIndex:newIndex});
                     }}
                     className="overlayItems"
-                    itemClass={OverlayElement}
+                    itemCreator={(item)=>{
+                        if (item.itemClass === CombinedOverlayElement){
+                            if (this.state.useDefault) return CombinedOverlayElement
+                            else return HiddenCombinedOverlayElement
+                        }
+                        else return OverlayElement;
+                    }}
                     selectedIndex={this.props.preventEdit?undefined:this.state.selectedIndex}
                     onItemClick={(item,data)=>{
-                        if (data == 'select'){
+                        if (data === 'select'){
                             this.setState({selectedIndex:item.index});
                             return;
                         }
-                        if (data == 'edit'){
+                        if (data === 'edit'){
                             this.editItem(item);
                             return;
                         }
-                        if (data == 'disable'){
-                            this.updateItem(item,{enabled:false});
+                        if (data === 'disable'){
+                            this.updateItem(item.itemKey,{enabled:false});
                             return;
                         }
-                        if (data == 'enable'){
-                            this.updateItem(item,{enabled:true});
+                        if (data === 'enable'){
+                            this.updateItem(item.itemKey,{enabled:true});
                             return;
+                        }
+                        //the combined items will give us the action as an object
+                        if (typeof data === 'object'){
+                            if (! data.item) return;
+                            let itemKey=data.item.itemKey;
+                            if (itemKey === undefined) return;
+                            if (data.data === 'enable'){
+                                this.updateItem(itemKey,{enabled:true});
+                                return;
+                            }
+                            if (data.data === 'disable'){
+                                this.updateItem(itemKey,{enabled:false});
+                                return;
+                            }
                         }
                      }}
-                    itemList={this.getCurrentOverlays()}
+                    itemList={this.state.list}
                     />
                 <div className="insertButtons">
                     {selectedItem?<DB name="delete" onClick={()=>this.deleteItem(selectedItem)}>Delete</DB>:null}
@@ -549,7 +636,7 @@ class EditOverlaysDialog extends React.Component{
                             if (this.props.editCallback){
                                 if (this.props.editCallback(selectedItem)){
                                     this.props.closeCallback();
-                                };
+                                }
                             }
                             else {
                                 this.editItem(selectedItem);
@@ -572,22 +659,12 @@ class EditOverlaysDialog extends React.Component{
                             name="ok"
                             onClick={()=>{
                                 this.props.closeCallback();
-                                let changes=this.stateHelper.getValues(true);
-                                if (changes.overlays){
-                                    let newOverlays=[];
-                                    changes.overlays.forEach((overlay)=>{
-                                        newOverlays.push(filterOverlayItem(overlay,this.state.itemInfo));
-                                    });
-                                    changes.overlays=newOverlays;
-                                }
-                                else{
-                                    changes.overlays=[];
-                                }
-                                delete changes.defaults;
-                                changes.name=this.props.current.name; //we cannot change this
-                                this.props.updateCallback(changes);
+                                let updatedOverlays=this.props.current.copy();
+                                updatedOverlays.writeBack(displayListToOverlays(this.state.list));
+                                updatedOverlays.setUseDefault(this.state.useDefault);
+                                this.props.updateCallback(updatedOverlays);
                                 }}
-                            disabled={!this.stateHelper.isChanged()}
+                            disabled={!this.state.isChanged}
                             >{this.props.preventEdit?"Ok":"Save"}</DB>
                     :null}
                 </div>
@@ -599,39 +676,14 @@ class EditOverlaysDialog extends React.Component{
 
 EditOverlaysDialog.propTypes={
     title: PropTypes.string,
-    current:PropTypes.any, //the current config
+    current:PropTypes.instanceOf(OverlayConfig), //the current config
     updateCallback: PropTypes.func,
     resetCallback: PropTypes.func,
     editCallback: PropTypes.func,  //only meaningful if preventEdit is set
     closeCallback: PropTypes.func.isRequired,
     preventEdit: PropTypes.bool
 };
-/**
- * check if the configuration for a chart is falling back to the default
- * in this case we will tell the server to remove the config
- * default is:
- *   useDefault == true
- *   no defaultOverwrite for any existing default or just same state like in default
- *   no own overlays
- * @param oldConfig
- * @param newConfig
- */
-const isEmpty=(oldConfig,newConfig)=>{
-    if (newConfig.useDefault === false) return false;
-    if (newConfig.overlays && newConfig.overlays.length > 0) return false;
-    if (newConfig.defaultsOverride){
-        if (!oldConfig.defaults) return true;
-        for (let idx in oldConfig.defaults){
-            let currentDefault=oldConfig.defaults[idx]
-            let key=getKeyFromOverlay(currentDefault,true);
-            if (newConfig.defaultsOverride[key]){
-                //check if the same state
-                if (newConfig.defaultsOverride[key].enabled !== currentDefault.enabled ) return false;
-            }
-        }
-    }
-    return true;
-}
+
 /**
  *
  * @param chartItem
@@ -642,7 +694,7 @@ EditOverlaysDialog.createDialog=(chartItem,opt_noDefault,opt_callback)=>{
     let getParameters={
         request: 'api',
         type: 'chart',
-        overlayConfig: getOverlayConfig(chartItem),
+        overlayConfig: getOverlayConfigName(chartItem),
         command: 'getConfig',
         expandCharts: true,
         mergeDefault: !opt_noDefault
@@ -651,23 +703,24 @@ EditOverlaysDialog.createDialog=(chartItem,opt_noDefault,opt_callback)=>{
         .then((config)=>{
             if (! config.data) return;
             if (config.data.useDefault === undefined) config.data.useDefault=true;
+            let overlayConfig=new OverlayConfig(config.data);
             OverlayDialog.dialog((props)=> {
                 return <EditOverlaysDialog
                     {...props}
                     chartName={chartItem.name}
                     title="Edit Overlays"
-                    current={config.data}
+                    current={overlayConfig}
                     updateCallback={(newConfig) => {
-                        if (isEmpty(config.data, newConfig)) {
+                        if (newConfig.isEmpty()) {
                             //we can tell the server to delete the config
                             let param={
                                 request:'delete',
                                 type:'chart',
-                                name:newConfig.name
+                                name:overlayConfig.getName()
                             }
                             Requests.getJson('',{},param)
                                 .then(()=>{
-                                    if (opt_callback) opt_callback(newConfig);
+                                    if (opt_callback) opt_callback(newConfig.getWriteBackData());
                                 })
                                 .catch((err)=>{
                                     Toast("unable to save overlay config: " + error);
@@ -677,12 +730,12 @@ EditOverlaysDialog.createDialog=(chartItem,opt_noDefault,opt_callback)=>{
                             let postParam = {
                                 request: 'upload',
                                 type: 'chart',
-                                name: newConfig.name,
+                                name: overlayConfig.getName(),
                                 overwrite: true
                             };
-                            Requests.postPlain("", JSON.stringify(newConfig, undefined, 2), {}, postParam)
+                            Requests.postPlain("", JSON.stringify(newConfig.getWriteBackData(), undefined, 2), {}, postParam)
                                 .then((res) => {
-                                    if (opt_callback) opt_callback(newConfig);
+                                    if (opt_callback) opt_callback(newConfig.getWriteBackData());
                                 })
                                 .catch((error) => {
                                     Toast("unable to save overlay config: " + error);

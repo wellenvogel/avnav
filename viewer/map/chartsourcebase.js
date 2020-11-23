@@ -33,7 +33,7 @@ import Helper from '../util/helper.js';
 import CryptHandler from './crypthandler.js';
 import shallowcompare from '../util/shallowcompare.js';
 
-export const getOverlayConfig=(chartEntry)=>{
+export const getOverlayConfigName=(chartEntry)=>{
     return chartEntry.overlayConfig || chartEntry.chartKey;
 }
 class ChartSourceBase {
@@ -114,8 +114,8 @@ class ChartSourceBase {
         if (!chartBase) chartBase = this.chartEntry.url;
         return chartBase;
     }
-    getOverlayConfig(){
-        return getOverlayConfig(this.chartEntry);
+    getOverlayConfigName(){
+        return getOverlayConfigName(this.chartEntry);
     }
 
     prepareInternal(){

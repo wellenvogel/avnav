@@ -35,8 +35,8 @@ import {Vector as olVectorSource, XYZ as olXYZSource} from 'ol/source';
 import {Vector as olVectorLayer} from 'ol/layer';
 import {GeoJSON as olGeoJSONFormat} from 'ol/format';
 import {Style as olStyle,Circle as olCircle, Stroke as olStroke, Text as olText, Icon as olIcon, Fill as olFill} from 'ol/style';
-import {Event as olRenderEvent} from 'ol/render';
 import * as olTransforms  from 'ol/proj/transforms';
+import OverlayConfig from "./overlayconfig";
 
 
 const PSTOPIC="mapevent";
@@ -196,12 +196,17 @@ const MapHolder=function(){
      * @private
      */
     this.sources=[];
+    /**
+     * @private
+     * @type {OverlayConfig}
+     */
+    this.overlayConfig=new OverlayConfig();
 
     /**
      * a map with the name as key and override parameters
-     * @type {{}}
+     * @type {OverlayConfig}
      */
-    this.overlayOverrides={};
+    this.overlayOverrides=new OverlayConfig();
 
     /**
      * last div used in loadMap
@@ -421,11 +426,10 @@ MapHolder.prototype.loadMap=function(div,opt_preventDialogs){
          * create the map
          * @param overlayLayers
          */
-        let newSources=[chartSource];
         if (this.sources.length < 1 ||
             this.sources[0].getChartKey() != chartSource.getChartKey ){
             //new chart - forget all local overlay overrides
-            this.overlayOverrides={};
+            this.overlayOverrides=new OverlayConfig();
         }
         let prepareAndCreate=(newSources)=>{
             this.prepareSourcesAndCreate(newSources,opt_preventDialogs)
@@ -450,14 +454,17 @@ MapHolder.prototype.loadMap=function(div,opt_preventDialogs){
             this.renderTo(this._lastMapDiv);
             resolve(0);
         };
+        let newSources=[];
         if (! globalStore.getData(keys.gui.capabilities.uploadOverlays)){
+            this.overlayConfig=new OverlayConfig();
+            newSources.push(chartSource);
             checkChanges();
             return;
         }
         let cfgParam = {
             request: 'api',
             type: 'chart',
-            overlayConfig: chartSource.getOverlayConfig(),
+            overlayConfig: chartSource.getOverlayConfigName(),
             command: 'getConfig',
             expandCharts: true,
             mergeDefault: true
@@ -466,24 +473,20 @@ MapHolder.prototype.loadMap=function(div,opt_preventDialogs){
             .then((config)=> {
                 config = config.data;
                 if (! config){
+                    this.overlayConfig=new OverlayConfig();
                     checkChanges();
                     return;
                 }
-                let overrides=config.defaultsOverride||{};
-                if (config.useDefault === undefined) config.useDefault=true;
-                if (config.useDefault && config.defaults){
-                    for (let k in config.defaults){
-                        let dv=assign(config.defaults[k],overrides[getKeyFromOverlay(config.defaults[k])],{isDefault:true});
-                        let overlaySource = this.createChartSource(dv);
-                        if (overlaySource) newSources.push(overlaySource);
+                this.overlayConfig=new OverlayConfig(config);
+                let overlays=this.overlayConfig.getOverlayList();
+                overlays.forEach((overlay)=>{
+                    if (overlay.type === 'base'){
+                        newSources.push(chartSource);
+                        return;
                     }
-                }
-                if (config.overlays) {
-                    for (let k in config.overlays) {
-                        let overlaySource = this.createChartSource(config.overlays[k]);
-                        if (overlaySource) newSources.push(overlaySource);
-                    }
-                }
+                    let overlaySource = this.createChartSource(overlay);
+                    if (overlaySource) newSources.push(overlaySource);
+                });
                 checkChanges();
             })
             .catch((error)=> {
@@ -497,44 +500,18 @@ MapHolder.prototype.hasOverlays=function(){
     return this.sources.length > 1;
 }
 MapHolder.prototype.getCurrentOverlayConfig=function(){
-    if (this.sources.length <2) return;
-    let rt={
-        useDefault:true,
-        overlays:[],
-        defaults:[]
-    };
-    for (let i=1;i<this.sources.length;i++){
-        let source=this.sources[i];
-        let config=source.getConfig();
-        if (config.isDefault){
-            rt.defaults.push(assign(config,this.overlayOverrides[getKeyFromOverlay(config)]));
-        }
-        else{
-            rt.overlays.push(assign(config,this.overlayOverrides[getKeyFromOverlay(config)]));
-        }
-    };
-    return rt;
+    return this.overlayConfig; //TODO: make a copy?
 };
 MapHolder.prototype.updateOverlayConfig=function(newConfig){
-    if (newConfig){
-        let overrides=assign({},this.overlayOverrides);
-        if (newConfig.overlays){
-            newConfig.overlays.forEach((overlay)=>{
-                overrides[getKeyFromOverlay(overlay)]= {enabled:overlay.enabled,opacity:overlay.opacity};
-            });
-        }
-        if (newConfig.defaultsOverride){
-            for (let k in newConfig.defaultsOverride){
-                overrides[k]={enabled:newConfig.defaultsOverride[k].enabled};
-            }
-        }
-        this.overlayOverrides=overrides;
-    }
+    if (newConfig) this.overlayOverrides=newConfig;
     for (let i=0;i<this.sources.length;i++){
         let source=this.sources[i];
-        let override=this.overlayOverrides[getKeyFromOverlay(source.getConfig())];
-        if (override){
-            source.setVisible(override.enabled === undefined || override.enabled);
+        let currentConfig=source.getConfig();
+        let newConfig=assign({},currentConfig,
+            this.overlayConfig.getCurrentItemConfig(currentConfig),
+            this.overlayOverrides.getCurrentItemConfig(currentConfig));
+        if (newConfig){
+            source.setVisible(newConfig.enabled === undefined || newConfig.enabled);
             //TODO: opcaity
         }
         else{
@@ -544,7 +521,7 @@ MapHolder.prototype.updateOverlayConfig=function(newConfig){
 };
 
 MapHolder.prototype.resetOverlayConfig=function(){
-    this.overlayOverrides={};
+    this.overlayOverrides=new OverlayConfig();
     this.updateOverlayConfig();
 };
 
@@ -1395,5 +1372,6 @@ MapHolder.prototype.setImageStyles=function(styles){
     this.routinglayer.setImageStyles(styles);
     this.tracklayer.setImageStyles(styles);
 };
+
 
 export default new MapHolder();
