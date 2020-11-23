@@ -27,88 +27,146 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
 
-import StringIO
 import os
 import sys
+
+import gpxpy098.parser as gpxparser
 
 from __main__ import traceback
 
 from avnav_config import AVNConfig
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__),"..","..","libraries"))
-import gpxpy098.gpx as gpx
-import gpxpy098.parser as gpxparser
-import gpxpy098.geo as geo
 
-from avnav_worker import *
-from avnav_nmea import *
+from avndirectorybase import *
 import avnav_handlerList
 
 class AVNRoutingLeg():
   MOBNAME="MOB" #the waypoint name fro MOB
-  def __init__(self,name,fromWP,toWP,active,currentTarget,approachDistance,approach):
-    self.name=name
-    self.fromWP=fromWP
-    self.toWP=toWP
-    self.active=active
-    self.currentTarget=currentTarget
-    self.approachDistance=approachDistance if approachDistance is not None else 300
-    self.approach = approach if approach is not None else False
-    self.currentRoute=None
-    self.anchorDistance=None #if set - we are in anchor watch mode, ignore any toWp and any route
+  def __init__(self,dict):
+    self.plain=dict
+    #TODO: some checks here
+
+  def getFrom(self):
+    return self.plain.get('from')
+  def getTo(self):
+    return self.plain.get('to')
 
   def isMob(self):
-    if self.toWP is None:
+    toWp=self.getTo()
+    if toWp is None:
       return False
-    if self.toWP.name == self.MOBNAME:
+    if toWp.get('name') == self.MOBNAME:
       return True
     return False
 
+  def isValid(self):
+    return self.getFrom() is not None
+
+  def isAnchorWatch(self):
+    return self.plain.get('anchorDistance') is not None and self.isValid()
+
+  def getAnchorDistance(self):
+    if not self.isAnchorWatch():
+      return None
+    return float(self.plain.get('anchorDistance'))
+  def getCurrentRoute(self):
+    return self.plain.get('currentRoute')
+  def getRouteName(self):
+    route=self.getCurrentRoute()
+    if route is not None:
+      return route.get('name')
+
+  def getCurrentTarget(self):
+    return self.plain.get('currentTarget')
+
+  def getApproachDistance(self):
+    d=self.plain.get('approachDistance')
+    if d is not None:
+      return d
+    return 300
+
+  def isActive(self):
+    if not self.isValid():
+      return False
+    if self.getTo() is None:
+      return False
+    act=self.plain.get('active')
+    if act is None:
+      return False
+    return act
+
+  def isApproach(self):
+    return self.plain.get('approach')
+
+  def getJson(self):
+    return self.plain
+
+  def equal(self,other):
+    # type: (AVNRoutingLeg) -> bool
+    if other is None:
+      return False
+    s1=json.dumps(self.getJson())
+    s2=json.dumps(other.getJson())
+    return (s1 == s2)
+
+  def setApproach(self,nv):
+    self.plain['approach']=nv
+
+  def setActive(self,nv):
+    self.plain['active']=nv
+
+  def setNewLeg(self,newTarget,newFrom,newTo):
+    self.plain['currentTarget']=newTarget
+    self.plain['to']=newTo
+    self.plain['from']=newFrom
+    self.plain['approach']=False
+
   def __unicode__(self):
-    if self.anchorDistance is not None:
-      return "AVNRoutingLeg route=%s,from=%s,anchorDistanc=%s" \
-             % (self.name, unicode(self.fromWP),unicode(self.anchorDistance))
+    if self.isAnchorWatch():
+      return "AVNRoutingLeg AnchorWatch from=%s,anchorDistanc=%s" \
+             % (unicode(self.getFrom()),unicode(self.getAnchorDistance()))
     else:
       return "AVNRoutingLeg route=%s,from=%s,to=%s,active=%s, target=%d, approachDistance=%s, approach=%s"\
-           %(self.name,unicode(self.fromWP),unicode(self.toWP),self.active,self.currentTarget,unicode(self.approachDistance),"True" if self.approach else "False")
+           %(self.getRouteName(),unicode(self.getFrom()),unicode(self.getTo()),self.isActive(),self.getCurrentTarget(),unicode(self.getApproachDistance()),"True" if self.isApproach() else "False")
 
-class AVNRouteInfo():
-  def __init__(self,name):
+class AVNRouteInfo(AVNDirectoryListEntry):
+  def __init__(self,type,prefix,name,**kwargs):
+    super(AVNRouteInfo,self).__init__(type,prefix,name,**kwargs)
     self.name=name
     self.length=0
     self.numpoints=0
-    self.time=AVNUtil.utcnow();
     self.canDelete=True
-  @classmethod
-  def fromRoute(cls,route,time):
-    rt=AVNRouteInfo(route.name)
-    rt.numpoints=len(route.points)
-    rt.length=route.length()/AVNUtil.NM;
-    rt.time=time
-    return rt
 
-  def toJson(self):
-    return json.dumps(self.__dict__)
+  def fillInfo(self,baseDir):
+    routeFile=os.path.join(baseDir,self.name)
+    try:
+      if os.path.isfile(routeFile):
+        content=""
+        with open(routeFile,"r") as f:
+          content=f.read()
+        parser = gpxparser.GPXParser(content)
+        gpx = parser.parse()
+        if gpx.routes is None or len(gpx.routes) == 0:
+          AVNLog.error("no routes in %s",routeFile)
+        else:
+          route=gpx.routes[0]
+          self.numpoints=len(route.points)
+          self.length=route.length()/AVNUtil.NM
+    except Exception as e:
+      AVNLog.error("error when parsing route %s: %s",routeFile,e.message)
 
   def __unicode__(self):
-    return self.toJson()
+    return "Route: %s"%self.name
 
 #routing handler
-class AVNRouter(AVNWorker):
-  MAXROUTESIZE=500000;
-  gpxFormat='''<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
-    <gpx version="1.1" creator="avnav">%s</gpx>'''
+class AVNRouter(AVNDirectoryHandlerBase):
+  currentLeg = None  # type: AVNRoutingLeg
+  MAXROUTESIZE=500000
+  PATH_PREFIX="/route"
+  ALLOWED_EXTENSIONS=['.gpx']
   currentLegName=u"currentLeg.json"
-  #unfortunately the gpx stuff uses some long names
-  #but we would like to have the same names as in the gpx file also for our json
-  #to avoid double parsing all the time we use a conversion list
-  fromGpx={
-    'latitude':'lat','longitude':'lon', 'elevation':'elevation',
-    'time':'time', 'name':'name', 'description':'desc', 'symbol':'sym',
-    'type':'type', 'comment':'comment', 'horizontal_dilution':'hdop',
-    'vertical_dilution':'vdop', 'position_dilution':'pdop'
-     }
-  toGpx={}
+
   @classmethod
   def getConfigName(cls):
     return "AVNRouter"
@@ -126,143 +184,45 @@ class AVNRouter(AVNWorker):
           }
       return rt
     return None
-  
+
+  @classmethod
+  def getListEntryClass(cls):
+    return AVNRouteInfo
+
+  @classmethod
+  def getPrefix(cls):
+    return cls.PATH_PREFIX
+
+  @classmethod
+  def getAutoScanExtensions(cls):
+    return cls.ALLOWED_EXTENSIONS
 
   ALARMS=Enum(['gps','waypoint','anchor','mob'])
   
   def __init__(self,cfgparam):
-    AVNWorker.__init__(self, cfgparam)
-    self.routesdir=None
+    AVNDirectoryHandlerBase.__init__(self,cfgparam,'route')
+    self.baseDir = AVNConfig.getDirWithDefault(self.param, 'routesdir', 'routes')
     self.currentLeg=None
-    self.activeRoute=None
-    self.activeRouteName=None
     self.currentLegFileName=None
     self.feeder=self.findFeeder(self.getStringParam('feederName'))
-    self.startWp=None
-    self.endWp=None
-    self.WpNr=0
     #approach handling
     self.lastDistanceToCurrent=None
     self.lastDistanceToNext=None
-    self.routes=[]
-    self.routeListLock=threading.Lock()
-    self.routeInfos={}
-    self.getRequestParam=AVNUtil.getHttpRequestParam
     self.activatedAlarms={} #we keep in mind if WE have already set (or reset) an alarm
                             #independently of others already clearing the alarm
                             #so we re-enable it only after we cleared once
-    #build the backward conversion
-    for k in self.fromGpx.keys():
-      v=self.fromGpx[k]
-      self.toGpx[v]=k
-    
 
-  #make some checks when we have to start
-  #we cannot do this on init as we potentiall have to find the feeder...
-  def start(self):
-    
-    AVNWorker.start(self) 
-   
-  #convert a dictionary to the gpx representation
-  def convert(self,dct,converter):
-    rt={}
-    for k in dct.keys():
-      v=dct.get(k)
-      if v is not None:
-        sk=converter.get(k)
-        if sk is not None:
-          rt[sk]=v
-    return rt
-  
-  def convertFromGpx(self,dct):
-    return self.convert(dct,self.fromGpx)
-  
-  def convertToGpx(self,dct):
-    return self.convert(dct,self.toGpx)
-  
-  #parse a waypoint from a dictionary  
-  def parseWP(self,dct):
-    return gpx.GPXWaypoint(**self.convertToGpx(dct))
-  
-  #parse a leg from a json string
-  def parseLeg(self,str):
-    dct=json.loads(str)
-    if dct.get('from') is None:
-      return None
-    if (dct.get('anchorDistance') is not None):
-      rt = AVNRoutingLeg(
-        None,
-        gpx.GPXWaypoint(**self.convertToGpx(dct.get('from'))),
-          None,
-          False,
-          -1,
-          0,
-          False)
-      rt.anchorDistance=float(dct.get('anchorDistance'))
-      return rt
-
-    if dct.get('to') is None:
-      return None
-    currentTarget=dct.get('currentTarget')
-    if currentTarget is None:
-      currentTarget=-1
-    rt= AVNRoutingLeg(
-                  dct.get('name'),
-                  gpx.GPXWaypoint(**self.convertToGpx(dct.get('from'))),
-                  gpx.GPXWaypoint(**self.convertToGpx(dct.get('to'))),
-                  dct.get('active'),
-                  currentTarget,
-                  dct.get('approachDistance'),
-                  dct.get('approach')
-                  )
-    if dct.get('currentRoute') is not None:
-      try:
-        rt.currentRoute=self.routeFromJson(dct.get('currentRoute'))
-      except:
-        AVNLog.error("error parsing route from leg: %s",traceback.format_exc())
-    return rt
-  #convert a leg into json
-  def leg2Json(self,leg):
-    if leg is None:
-      return {}
-    if leg.anchorDistance is not None:
-      dct={
-        'from': self.convertFromGpx(leg.fromWP.__dict__),
-        'anchorDistance':leg.anchorDistance
-      }
-      return dct
-    dct={
-         'from':self.convertFromGpx(leg.fromWP.__dict__),
-         'to':self.convertFromGpx(leg.toWP.__dict__),
-         'name':leg.name,
-         'active':leg.active,
-         'currentTarget':leg.currentTarget,
-         'approachDistance':leg.approachDistance,
-         'approach':leg.approach
-         }
-    if leg.currentRoute is not None:
-      dct['currentRoute']=self.routeToJson(leg.currentRoute)
-    return dct
-
-  #get a simple tuple lat,lon from a WP
-  #as this is used by our util functions
-  def wpToLatLon(self,wP):
-    return (wP.latitude,wP.longitude)
+    self.startWp = None
+    self.endWp = None
+    self.WpNr = 0
 
 
-  def legsEqual(self,leg1,leg2):
-    if leg1 is None:
-      return False if leg2 is not None else True
-    if leg2 is None:
-      return False
-    s1=json.dumps(self.leg2Json(leg1))
-    s2=json.dumps(self.leg2Json(leg2))
-    return (s1 == s2)
 
   LEG_CHANGE_KEY='leg'
 
   def setCurrentLeg(self,leg):
-    changed=not self.legsEqual(self.currentLeg,leg)
+    # type: (AVNRoutingLeg) -> object
+    changed=self.currentLeg == None or not self.currentLeg.equal(leg)
     if changed:
       self.navdata.updateChangeCounter(self.LEG_CHANGE_KEY)
     self.currentLeg=leg
@@ -271,229 +231,100 @@ class AVNRouter(AVNWorker):
         os.unlink(self.currentLegFileName)
         AVNLog.info("current leg removed")
       return
-    ls=self.leg2Json(leg)
     AVNLog.info("new leg %s",unicode(leg))
     f=open(self.currentLegFileName,"w")
     try:
-      f.write(json.dumps(ls))
+      f.write(json.dumps(leg.getJson()))
     except:
       f.close()
       raise
     f.close()
-    if leg.name is not None:
-      self.activeRouteName=leg.name
-    if leg.currentRoute is not None:
-      self.saveRoute(leg.currentRoute)
-    if not leg.active:
+    if not leg.isActive():
       self.computeApproach() #ensure that we immediately switch off alarms
 
-  def routeFromJsonString(self,routeJson):
-    try:
-      dct=json.loads(routeJson)
-      return self.routeFromJson(dct)
-    except :
-      AVNLog.error("error parsing json for route: %s",traceback.format_exc())
-      return None
+  def getSleepTime(self):
+    return self.getIntParam('interval')
 
-  def routeFromJson(self,dct):
-    if dct.get('name') is None:
-      raise Exception("missing name in route")
-    route=gpx.GPXRoute(**self.convertToGpx(dict((x,dct.get(x)) for x in ['name','description'])))
-    points=dct.get('points')
-    if points is not None:
-      for p in points:
-        rp=gpx.GPXRoutePoint(**self.convertToGpx(dict((x,p.get(x)) for x in ['name','lon','lat'])))
-        route.points.append(rp)
-    AVNLog.debug("routeFromJson: %s",unicode(route))
-    return route
 
-  def routeToJsonString(self,route):
-    return json.dumps(self.routeToJson(route))
+  def onItemAdd(self, itemDescription):
+    # type: (AVNRouteInfo) -> AVNRouteInfo
+    itemDescription.fillInfo(self.baseDir)
+    return itemDescription
 
-  def routeToJson(self,route):
-    AVNLog.debug("routeToJson: %s",unicode(route))
-    rt={'name':route.name,
-        'points':[]
-        }
-    for p in route.points:
-      rt['points'].append(self.convertFromGpx(p.__dict__))
-    return rt
-
-  def getRouteFileName(self,name):
-    return os.path.join(self.routesdir,name+u'.gpx')
-
-  def saveRoute(self,route,ignoreExisting=False):
-    if ignoreExisting and self.routeInfos.get(route.name) is not None:
-      AVNLog.info("ignore existing route %s"%(route.name))
-    self.updateRouteInfo(route)
-    self.addRouteToList(route)
-    if self.activeRouteName is not None and self.activeRouteName == route.name:
-      self.activeRoute=route
-    filename=self.getRouteFileName(route.name)
-    f=open(filename,"w")
-    try:
-      f.write(self.gpxFormat%(route.to_xml()))
-    except:
-      f.close()
-      raise
-    f.close()
-
-  def loadRoute(self,name):
-    rt=self.getRouteFromList(name)
-    if rt is not None:
-      return rt
-    filename=self.getRouteFileName(name)
-    try:
-      rt=self.loadRouteFile(filename)
-    except:
-      AVNLog.error("unable to load route %s:%s"%(filename,traceback.format_exc(1)))
-      return
-    if rt is not None:
-      self.addRouteToList(rt)
-    return rt
-
-  def loadRouteFile(self,filename):
-    f=open(filename,"r")
-    gpx_xml = f.read()
-    f.close()
-    parser = gpxparser.GPXParser(gpx_xml)
-    gpx = parser.parse()
-    if gpx.routes is None or len(gpx.routes)  == 0:
-      raise "no routes in "+filename
-    return gpx.routes[0]
-
-  #fill all routeInfos
-  def fillRouteInfos(self):
-    routeInfos={}
-    try:
-      for fn in os.listdir(self.routesdir):
-        fullname=os.path.join(self.routesdir,fn)
-        if not os.path.isfile(fullname):
-          continue
-        if not fn.endswith('.gpx'):
-          continue
-        try:
-          route=self.loadRouteFile(fullname)
-          ri=AVNRouteInfo.fromRoute(route,os.path.getmtime(fullname))
-          routeInfos[ri.name]=ri
-          AVNLog.debug("add route info for %s",unicode(ri))
-        except:
-          AVNLog.debug("unable to read route from %s",fullname)
-      self.routeInfos=routeInfos
-      AVNLog.debug("read %d routes",len(self.routeInfos.items()))
-    except Exception as e:
-      AVNLog.error("reading routes failed: %s"%e.message)
-      pass
-
-  def updateRouteInfo(self,route):
-    ri=AVNRouteInfo.fromRoute(route,AVNUtil.utcnow())
-    self.routeInfos[ri.name]=ri
-  def deleteRouteInfo(self,name):
-    try:
-      del self.routeInfos[name]
-    except:
-      pass
-        
   #this is the main thread - listener
-  def run(self):
-    self.setName(self.getThreadPrefix())
-    interval=self.getIntParam('interval')
-    routesdir=AVNConfig.getDirWithDefault(self.param,'routesdir','routes')
-    self.routesdir=routesdir
-    if not os.path.isdir(self.routesdir):
-      AVNLog.info("creating routes directory %s"%(self.routesdir))
-      os.makedirs(self.routesdir,0755)
-    self.fillRouteInfos()
-    self.currentLegFileName=os.path.join(self.routesdir,self.currentLegName)
+  def onPreRun(self):
+    self.currentLegFileName=os.path.join(self.baseDir,self.currentLegName)
     if os.path.exists(self.currentLegFileName):
       f=None
       try:
         f=open(self.currentLegFileName,"r")
         strleg=f.read(self.MAXROUTESIZE+1000)
-        self.currentLeg=self.parseLeg(strleg)
-        if self.currentLeg.toWP is not None:
-          distance=geo.length([self.currentLeg.fromWP,self.currentLeg.toWP])
-          AVNLog.info("read current leg, route=%s, from=%s, to=%s, length=%fNM"%(self.currentLeg.name,
-                                                                  unicode(self.currentLeg.fromWP),unicode(self.currentLeg.toWP),distance/AVNUtil.NM))
+        self.currentLeg=AVNRoutingLeg(json.loads(strleg))
+        if self.currentLeg.getTo() is not None:
+          distance=AVNUtil.distanceM(self.wpToLatLon(self.currentLeg.getFrom()),self.wpToLatLon(self.currentLeg.getTo()))
+          AVNLog.info("read current leg, route=%s, from=%s, to=%s, length=%fNM"%(self.currentLeg.getRouteName(),
+                                                                  unicode(self.currentLeg.getFrom()),unicode(self.currentLeg.getTo()),distance/AVNUtil.NM))
         else:
-          AVNLog.info("read current leg, route=%s, from=%s, to=%s"% (self.currentLeg.name,
-                                                                                   unicode(self.currentLeg.fromWP),
+          AVNLog.info("read current leg, route=%s, from=%s, to=%s"% (self.currentLeg.getRouteName(),
+                                                                                   unicode(self.currentLeg.getFrom()),
                                                                                    "NONE",
                                                                                    ))
-        if self.currentLeg.name is not None:
-          self.activeRouteName=self.currentLeg.name
-        if self.currentLeg.currentRoute is not None:
-          #this will also set the active route
-          self.saveRoute(self.currentLeg.currentRoute)
-          if self.currentLeg.name != self.currentLeg.currentRoute.name:
-            AVNLog.error("leg inconsistent, name in route %s different from name in leg %s, correcting to route name",self.currentLeg.name,
-                         self.currentLeg.currentRoute.name)
-            self.currentLeg.name=self.currentLeg.currentRoute.name
-            self.activeRouteName=self.currentLeg.name
-            #write back the corrected leg
-            self.setCurrentLeg(self.currentLeg)
-        else:
-          if self.currentLeg.name is not None:
-            self.activeRoute=self.loadRoute(self.currentLeg.name)
-            if self.activeRoute is None:
-              self.activeRoute=gpx.GPXRoute(self.currentLeg.name)
-            self.currentLeg.currentRoute=self.activeRoute
+        self.setCurrentLeg(self.currentLeg)
       except:
         AVNLog.error("error parsing current leg %s: %s"%(self.currentLegFileName,traceback.format_exc()))
       if f is not None:
         f.close()
-      #TODO: open route
     else:
       AVNLog.info("no current leg %s found"%(self.currentLegFileName,))
+      self.setCurrentLeg(AVNRoutingLeg({}))
     AVNLog.info("router main loop started")
-    while True:
-      hasLeg=False
-      hasRMB=False
-      time.sleep(interval)
-      self.fillRouteInfos();
-      if self.currentLeg and self.currentLeg.active:
-        hasLeg=True
-        if self.currentLeg.anchorDistance is not None:
-          routerInfo = "Anchor watch, from %s, (anchor radius %dm)" % (
-          unicode(self.currentLeg.fromWP),
-           int(self.currentLeg.anchorDistance))
-        else:
-          routerInfo="from %s, to %s, route=%s, activeWp=%d, approach=%s (approach radius %dm)"%(unicode(self.currentLeg.fromWP)
-                   if self.currentLeg.fromWP else "NONE",unicode(self.currentLeg.toWP) if self.currentLeg.toWP else "NONE",
-                   self.currentLeg.name if self.currentLeg.name is not None else "NONE", self.currentLeg.currentTarget,
-                   "TRUE" if self.currentLeg.approach else "FALSE",int(self.currentLeg.approachDistance))
-        AVNLog.debug(routerInfo)
-        self.setInfo("leg",routerInfo
-                  ,AVNWorker.Status.RUNNING)
-      try:
-        if self.currentLeg is not None and self.currentLeg.anchorDistance is not None:
-          self.computeAnchor()
-        else:
-          self.startStopAlarm(False,self.ALARMS.anchor)
-          self.startStopAlarm(False, self.ALARMS.gps)
-          computeRMB=self.getBoolParam("computeRMB")
-          computeAPB=self.getBoolParam("computeAPB")
-          if computeRMB or computeAPB :
-            hasRMB=self.computeRMB(computeRMB,computeAPB)
-      except Exception as e:
-        AVNLog.warn("exception in computeRMB %s, retrying",traceback.format_exc())
-      try:
-        self.computeApproach()
-      except:
-        AVNLog.warn("exception in computeApproach %s, retrying",traceback.format_exc())
-      if (not hasLeg):
-        self.setInfo("leg","no leg",AVNWorker.Status.INACTIVE)
-      if (not hasRMB):
-        self.setInfo("autopilot","no autopilot data",AVNWorker.Status.INACTIVE)
-      try:
-        curTPV = self.navdata.getMergedEntries("TPV", [])
-        lat = curTPV.data.get('lat')
-        lon = curTPV.data.get('lon')
-        if lat is not None and lon is not None:
-          self.startStopAlarm(False,self.ALARMS.gps)
-      except:
-        pass
-      AVNLog.debug("router main loop")
+
+  def periodicRun(self):
+    hasLeg = False
+    hasRMB = False
+    if self.currentLeg and self.currentLeg.isActive():
+      hasLeg = True
+      if self.currentLeg.getAnchorDistance() is not None:
+        routerInfo = "Anchor watch, from %s, (anchor radius %sm)" % (
+          unicode(self.currentLeg.getFrom()),
+          unicode(self.currentLeg.getAnchorDistance()))
+      else:
+        routerInfo = "from %s, to %s, route=%s, activeWp=%s, approach=%s (approach radius %sm)" % (
+        unicode(self.currentLeg.getFrom()), unicode(self.currentLeg.getTo()),
+        self.currentLeg.getRouteName(), self.currentLeg.getCurrentTarget(),
+        self.currentLeg.isApproach(), self.currentLeg.getApproachDistance())
+      AVNLog.debug(routerInfo)
+      self.setInfo("leg", routerInfo
+                   , AVNWorker.Status.RUNNING)
+    try:
+      if self.currentLeg is not None and self.currentLeg.getAnchorDistance() is not None:
+        self.computeAnchor()
+      else:
+        self.startStopAlarm(False, self.ALARMS.anchor)
+        self.startStopAlarm(False, self.ALARMS.gps)
+        computeRMB = self.getBoolParam("computeRMB")
+        computeAPB = self.getBoolParam("computeAPB")
+        if computeRMB or computeAPB:
+          hasRMB = self.computeRMB(computeRMB, computeAPB)
+    except Exception as e:
+      AVNLog.warn("exception in computeRMB %s, retrying", traceback.format_exc())
+    try:
+      self.computeApproach()
+    except:
+      AVNLog.warn("exception in computeApproach %s, retrying", traceback.format_exc())
+    if (not hasLeg):
+      self.setInfo("leg", "no leg", AVNWorker.Status.INACTIVE)
+    if (not hasRMB):
+      self.setInfo("autopilot", "no autopilot data", AVNWorker.Status.INACTIVE)
+    try:
+      curTPV = self.navdata.getMergedEntries("TPV", [])
+      lat = curTPV.data.get('lat')
+      lon = curTPV.data.get('lon')
+      if lat is not None and lon is not None:
+        self.startStopAlarm(False, self.ALARMS.gps)
+    except:
+      pass
+    AVNLog.debug("router main loop")
 
   def startStopAlarm(self,start,name=ALARMS.waypoint):
     alert = self.findHandlerByName("AVNAlarmHandler")
@@ -512,7 +343,7 @@ class AVNRouter(AVNWorker):
       self.startStopAlarm(False,self.ALARMS.waypoint)
       self.startStopAlarm(False, self.ALARMS.mob)
       return
-    if not self.currentLeg.active:
+    if not self.currentLeg.isActive():
       self.startStopAlarm(False,self.ALARMS.waypoint)
       self.startStopAlarm(False, self.ALARMS.mob)
       return
@@ -528,12 +359,14 @@ class AVNRouter(AVNWorker):
     if lat is None or lon is None:
       self.startStopAlarm(False,self.ALARMS.waypoint)
       return
-    dst = AVNUtil.distanceM(self.wpToLatLon(self.currentLeg.toWP),(lat,lon));
+    currentLocation=(lat,lon)
+    dst=AVNUtil.distanceM(currentLocation,self.wpToLatLon(self.currentLeg.getTo()))
     AVNLog.debug("approach current distance=%f",float(dst))
-    if (dst > self.currentLeg.approachDistance):
-      self.currentLeg.approach=False
+    if (dst > self.currentLeg.getApproachDistance()):
+      old=self.currentLeg.isApproach()
+      self.currentLeg.setApproach(False)
       self.startStopAlarm(False,self.ALARMS.waypoint)
-      if (self.currentLeg.approach):
+      if old:
         #save leg
         self.setCurrentLeg(self.currentLeg)
       self.lastDistanceToCurrent=None
@@ -541,70 +374,67 @@ class AVNRouter(AVNWorker):
       return
     if self.activatedAlarms.get(self.ALARMS.waypoint) is None:
       self.startStopAlarm(True, self.ALARMS.waypoint)
-    if not self.currentLeg.approach:
-      self.currentLeg.approach=True
+    if not self.currentLeg.isApproach():
+      self.currentLeg.setApproach(True)
       #save the leg
       self.setCurrentLeg(self.currentLeg)
     AVNLog.info("Route: approaching wp %d (%s) currentDistance=%f",self.currentLeg.currentTarget,unicode(self.currentLeg.toWP),float(dst))
-    if self.currentLeg.name is None:
+    route=self.currentLeg.getCurrentRoute()
+    if route is None or route.get('points') is None:
       AVNLog.debug("Approach: no route active")
+      #TODO: stop routing?
       return
-    self.activeRouteName=self.currentLeg.name
-    try:
-      if self.activeRoute is None or self.activeRoute.name != self.activeRouteName:
-        self.activeRoute=self.loadRoute(self.activeRouteName)
-        if self.activeRoute is None:
-          AVNLog.error("unable to load route %s, cannot make approach handling",self.currentLeg.name)
-          return
-    except:
-      AVNLog.error("exception when loading route %s:%s",self.activeRouteName,traceback.format_exc())
-      return
-    nextWpNum=self.currentLeg.currentTarget+1
-    hasNextWp=True
-    nextDistance=0
-    if nextWpNum >= self.activeRoute.get_points_no():
-      AVNLog.debug("already at last WP of route %d",(nextWpNum-1))
+    currentTarget=self.currentLeg.getCurrentTarget()
+    hasNextWp = True
+    nextWpNum=0
+    if currentTarget is None:
       hasNextWp=False
     else:
-      nextWp=self.activeRoute.points[nextWpNum]
-      nextDistance=AVNUtil.distanceM((lat,lon),self.wpToLatLon(nextWp))
-    if self.lastDistanceToNext is None or self.lastDistanceToNext is None:
-      #first time in approach
-      self.lastDistanceToNext=nextDistance
-      self.lastDistanceToCurrent=dst
-      return
-
-    #check if the distance to own wp increases and to the next decreases
-    diffcurrent=dst-self.lastDistanceToCurrent
-    if (diffcurrent <= 0):
-      #still decreasing
-      self.lastDistanceToCurrent=dst
-      self.lastDistanceToNext=nextDistance
-      return
-    diffnext=nextDistance-self.lastDistanceToNext
-    if (diffnext > 0):
-      #increases to next
-      self.lastDistanceToCurrent=dst
-      self.lastDistanceToNext=nextDistance
-      return
-    if not hasNextWp:
+      nextWpNum=currentTarget+1
+      nextDistance=0
+      if nextWpNum >= len(route['points']):
+        AVNLog.debug("already at last WP of route %d",(nextWpNum-1))
+        hasNextWp=False
+    if hasNextWp:
+      nextWp=route['points'][nextWpNum]
+      nextDistance=AVNUtil.distanceM(currentLocation,self.wpToLatLon(nextWp))
+      if self.lastDistanceToNext is None or self.lastDistanceToNext is None:
+          #first time in approach
+          self.lastDistanceToNext=nextDistance
+          self.lastDistanceToCurrent=dst
+          return
+        #check if the distance to own wp increases and to the next decreases
+      diffcurrent=dst-self.lastDistanceToCurrent
+      if (diffcurrent <= 0):
+          #still decreasing
+          self.lastDistanceToCurrent=dst
+          self.lastDistanceToNext=nextDistance
+          return
+      diffnext=nextDistance-self.lastDistanceToNext
+      if (diffnext > 0):
+          #increases to next
+          self.lastDistanceToCurrent=dst
+          self.lastDistanceToNext=nextDistance
+          return
+    else:
       AVNLog.info("last WP of route reached, switch of routing")
-      self.currentLeg.active=False
-      self.currentLeg.approach=False
-      self.currentLeg.name=None
+      self.currentLeg.setActive(False)
       self.setCurrentLeg(self.currentLeg)
       self.lastDistanceToCurrent=None
       self.lastDistanceToNext=None
       return
     #should we wait for some time???
     AVNLog.info("switching to next WP num=%d, wp=%s",nextWpNum,unicode(nextWp))
-    self.currentLeg.currentTarget=nextWpNum
-    self.currentLeg.fromWP=self.currentLeg.toWP
-    self.currentLeg.toWP=nextWp
-    self.currentLeg.approach=False
+    self.currentLeg.setNewLeg(nextWpNum,self.currentLeg.getTo(),nextWp)
     self.lastDistanceToCurrent=None
     self.lastDistanceToNext=None
     self.setCurrentLeg(self.currentLeg)
+
+  @classmethod
+  def wpToLatLon(cls,wp):
+    if wp is None:
+      return (0,0)
+    return (float(wp.get('lat')),float(wp.get('lon')))
 
   #compute an RMB record and write this into the feeder
   #if we have an active leg
@@ -612,10 +442,10 @@ class AVNRouter(AVNWorker):
     hasRMB=False
     #do the computation of some route data
     nmeaData="$GPRMB,A,,,,,,,,,,,,V,D*19\r\n"
-    if self.currentLeg is not None and self.currentLeg.active:
-      if self.startWp!=self.currentLeg.fromWP or self.endWp!=self.currentLeg.toWP:
-        self.startWp=self.currentLeg.fromWP
-        self.endWp=self.currentLeg.toWP
+    if self.currentLeg is not None and self.currentLeg.isActive():
+      if self.startWp!=self.currentLeg.getFrom() or self.endWp!=self.currentLeg.getTo():
+        self.startWp=self.currentLeg.getFrom()
+        self.endWp=self.currentLeg.getTo()
         self.WpNr+=1
 
       if self.startWp is not None and self.endWp is not None:
@@ -642,7 +472,7 @@ class AVNRouter(AVNWorker):
           destDis=AVNUtil.distance((lat,lon),self.wpToLatLon(self.endWp))
           if destDis>999.9:
             destDis=999.9
-          if self.currentLeg.approach:
+          if self.currentLeg.isApproach():
             arrival="A"
           else:
             arrival="V"
@@ -668,6 +498,8 @@ class AVNRouter(AVNWorker):
   ''' anchor watch
       will only be called if self.currentLeg.anchorDistance is not none
   '''
+
+
   def computeAnchor(self):
     curGps = self.navdata.getDataByPrefix(AVNStore.BASE_KEY_GPS,1)
     lat = curGps.get('lat')
@@ -678,168 +510,33 @@ class AVNRouter(AVNWorker):
         self.startStopAlarm(True,self.ALARMS.gps)
       return
     self.startStopAlarm(False,self.ALARMS.gps)
-    anchorDistance = AVNUtil.distanceM((lat, lon), self.wpToLatLon(self.currentLeg.fromWP))
-    AVNLog.debug("Anchor distance %d, allowed %d",anchorDistance,self.currentLeg.anchorDistance)
-    if anchorDistance > self.currentLeg.anchorDistance:
+    anchorDistance = AVNUtil.distanceM((lat, lon), self.wpToLatLon(self.currentLeg.getFrom()))
+    AVNLog.debug("Anchor distance %d, allowed %d",anchorDistance,self.currentLeg.getAnchorDistance())
+    if anchorDistance > self.currentLeg.getAnchorDistance():
       self.startStopAlarm(True,self.ALARMS.anchor)
     return
-  def deleteRouteFromList(self,name):
-    self.routeListLock.acquire()
-    for i in range(0,len(self.routes)):
-      if self.routes[i].name is not None and self.routes[i].name == name:
-        self.routes.pop(i)
-        self.routeListLock.release()
-        return True
-    self.routeListLock.release()
-    return False
 
-  #get a route from our internal list
-  def getRouteFromList(self,name):
-    rt=None
-    self.routeListLock.acquire()
-    for rt in self.routes:
-      if rt.name is not None and rt.name == name:
-        self.routeListLock.release()
-        return rt
-    self.routeListLock.release()
-    return None
+  def handleList(self,handler=None):
+    data=self.itemList.values()
+    rt = AVNUtil.getReturnData(items=data)
+    return rt
 
-  def addRouteToList(self,route):
-    self.routeListLock.acquire()
-    for i in range(0,len(self.routes)):
-      if self.routes[i].name is not None and self.routes[i].name == route.name:
-        self.routes.pop(i)
-        self.routes.append(route)
-        self.routeListLock.release()
-        return
-    if len(self.routes) > 10:
-      self.routes.pop(0)
-    self.routes.append(route)
-    self.routeListLock.release()
-
-  def getHandledCommands(self):
-    return {"api":"routing","download":"route","upload":"route","delete":"route","list":"route"}
-
-  #handle a routing request
-  #this expects a command as parameter
-  #data has the POST data
-  def handleApiRequest(self,type,subtype,requestparam,**kwargs):
-    if type == 'api':
-      return self.handleRoutingRequest(requestparam)
-    elif type=="upload":
-      return self.handleRouteUploadRequest(requestparam)
-    elif type=="download":
-      return self.handleRouteDownloadRequest(requestparam)
-    elif type=="delete":
-      return self.handleRouteDeleteRequest(requestparam)
-    elif type == "list":
-      return self.handleRouteListRequest(requestparam)
-
-    raise Exception("unable to handle routing request of type %s:%s"%(type,subtype))
-  def handleRoutingRequest(self,requestparam):
-    command=self.getRequestParam(requestparam, 'command')
-
-    if command is None:
-      raise Exception('missing command for routing request')
+  def handleSpecialApiRequest(self,command,requestparam,handler):
+    command=AVNUtil.getHttpRequestParam(requestparam, 'command',True)
     if (command == 'getleg'):
-      return self.leg2Json(self.currentLeg)
+      return self.currentLeg.getJson() if self.currentLeg is not None else {}
     if (command == 'unsetleg'):
       self.setCurrentLeg(None)
       return {'status':'OK'}
     if (command == 'setleg'):
-      data=self.getRequestParam(requestparam, 'leg')
+      data=AVNUtil.getHttpRequestParam(requestparam, 'leg')
       if data is None:
-        data=self.getRequestParam(requestparam,'_json')
+        data=AVNUtil.getHttpRequestParam(requestparam,'_json')
         if data is None:
           raise Exception("missing leg data for setleg")
-      leg=self.parseLeg(data)
-      if leg is None:
-        raise Exception("invalid leg data %s"%(data))
-      self.setCurrentLeg(leg)
+      self.setCurrentLeg(AVNRoutingLeg(json.loads(data)))
       return {'status':'OK'}
     raise Exception("invalid command "+command)
-  #download a route in xml or json format
-  #this has 2 flavours:
-  #either we have a name as parameter - in this case, download the route from us
-  #otherwise we expected a JSON route as post param and send back this one
-  #we need to ensure that we always return some data
-  #otherwise we break the GUI
-  def handleRouteDownloadRequest(self,requestparam):
-    route=None
-    try:
-      name=self.getRequestParam(requestparam,"name")
-      if name is not None and not name == "":
-        if name.endswith('.gpx'):
-          name=name[:-4]
-        AVNLog.debug("download route name=%s",name)
-        route=self.loadRoute(name)
-      else:
-        data=self.getRequestParam(requestparam,'_json')
-        if data is None:
-          AVNLog.error("unable to find a route for download, returning an empty")
-          raise Exception("no data for the route was found")
-        route=self.routeFromJsonString(data)
-      if route is None:
-          raise Exception("error - route not found")
-      if self.getRequestParam(requestparam,'format') != 'json':
-        mtype = "application/gpx+xml"
-        data=self.gpxFormat%(route.to_xml())
-      else:
-        mtype="application/json"
-        data=self.routeToJsonString(route)
-      stream=StringIO.StringIO(data)
-      stream.seek(0)
-      return {'size':len(data),'mimetype':mtype,'stream':stream}
-    except:
-      AVNLog.error("exception in route download %s",traceback.format_exc())
-      return "error"
-
-  #we only accept the route upload in json format - so being in a _json parameter
-  def handleRouteUploadRequest(self,requestparam):
-    data=self.getRequestParam(requestparam,'_json')
-    if data is None:
-      raise Exception("missing _json data")
-    AVNLog.debug("route upload request %s"%data)
-    try:
-      route=self.routeFromJsonString(data)
-      if route is None:
-        raise Exception("no route found in file")
-      rinfo=self.routeInfos.get(route.name)
-      ignoreExisting = self.getRequestParam(requestparam, 'overwrite')
-      if rinfo is not None and ignoreExisting == 'true':
-        raise Exception("route with name "+route.name+" already exists")
-      rinfo=AVNRouteInfo.fromRoute(route,AVNUtil.utcnow())
-      self.routeInfos[route.name]=rinfo
-      self.saveRoute(route)
-      return AVNUtil.getReturnData()
-    except Exception as e:
-      raise Exception("exception parsing route:%s"%(e.message))
-
-  def handleRouteDeleteRequest(self, requestparam):
-    name = self.getRequestParam(requestparam, 'name')
-    if name is None:
-      raise Exception("missing parameter name")
-    if self.currentLeg is not None and self.currentLeg.name is not None and self.currentLeg.active and self.currentLeg.name == name:
-      raise Exception('cannot delete active route')
-    self.deleteRouteFromList(name)
-    self.deleteRouteInfo(name)
-    fname = self.getRouteFileName(name)
-    if os.path.exists(fname):
-      try:
-        os.unlink(fname)
-      except:
-        pass
-
-  def handleRouteListRequest(self, requestparam):
-    rt = {'status': 'OK'}
-    infos = []
-    for ri in self.routeInfos:
-      plainInfo=self.routeInfos[ri].__dict__
-      if plainInfo.get('name') == self.activeRouteName:
-        plainInfo['canDelete']=False
-      infos.append(plainInfo)
-    rt['items'] = infos
-    return rt
 
 avnav_handlerList.registerHandler(AVNRouter)
 

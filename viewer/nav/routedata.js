@@ -43,6 +43,8 @@ class Callback{
  *      * query the current leg
  *      * do not send the leg until we received one (lastReceivedLeg is set)
  *      * only send the leg if different to lastSentLeg
+ *      * whenever we send a leg with a route
+ *      * we also upload this route as gpx (with overwrite being set)
  *      * on errors reset lastSent/lastReceived leg
  *
  *      * if active and editing are equal:
@@ -51,7 +53,7 @@ class Callback{
  *        - ignore answers for route
  *      * if not equal:
  *        - if lastReceivedRoute is empty or not our name
- *          - send with "ignore existing"
+ *          - send with "no overwrite"
  *        - do route query
  *  if we change to connected:
  *      * trigger send for editing route with ignore existing
@@ -192,11 +194,11 @@ let RouteData=function(){
             if (route.differsTo(this.lastSentRoute)){
                 this.lastSentRoute=route.clone();
             }
-            let ignoreExisting=false;
+            let overwrite=true;
             if (! this.lastReceivedRoute || this.lastReceivedRoute.name != route.name){
-                ignoreExisting=true;
+                overwrite=false;
             }
-            this._sendRoute(route, ()=>{return false},ignoreExisting); //ignore any errors
+            this._sendRoute(route, ()=>{return false},overwrite); //ignore any errors
         }
     });
     globalStore.register(this.activeRouteChanged,activeRoute.getStoreKeys());
@@ -450,7 +452,7 @@ RouteData.prototype.routeOff=function(){
  * @param okCallback function that will be called with a list of RouteInfo
  * @param opt_failCallback
  */
-RouteData.prototype.listRoutesServer=function(okCallback,opt_failCallback,opt_callbackData){
+RouteData.prototype.listRoutesServer=function(okCallback,opt_failCallback){
     let self=this;
     let canUpload=globalStore.getData(keys.gui.capabilities.uploadRoute,false);
     if (! canUpload){
@@ -460,37 +462,28 @@ RouteData.prototype.listRoutesServer=function(okCallback,opt_failCallback,opt_ca
     }
     let editingName=editingRoute.getRouteName();
     let canDelete=globalStore.getData(keys.properties.connectedMode,false);
-    return this._remoteRouteOperation("list",{
-        okcallback:function(data,param){
-            if ((data.status && data.status!='OK') || (!data.items)) {
-                if (opt_failCallback) {
-                    opt_failCallback(data.status || "no items", param.callbackdata)
-                    return;
-                }
-            }
+    Requests.getJson('',{},{
+        request:'list',
+        type:'route'
+    })
+        .then((data)=>{
             let items = [];
             let i;
             for (i = 0; i < data.items.length; i++) {
                 let ri = new routeobjects.RouteInfo();
                 assign(ri, data.items[i]);
                 ri.server = true;
-                ri.time=ri.time*1e3; //we receive TS in s
                 if (ri.canDelete !== false) ri.canDelete=canDelete;
                 if (ri.name === editingName) ri.canDelete=false;
                 if (self.isActiveRoute(ri.name)) ri.active=true;
                 items.push(ri);
             }
-            okCallback(items, param.callbackdata);
+            okCallback(items);
 
-        },
-        errorcallback:function(err,param){
-            if (opt_failCallback){
-                opt_failCallback(err,param.callbackdata)
-            }
-        },
-        callbackdata:opt_callbackData
-
-    });
+        })
+        .catch((error)=>{
+            if (opt_failCallback) opt_failCallback(error);
+        });
 };
 /**
  * list local routes
@@ -504,8 +497,8 @@ RouteData.prototype.listRoutesLocal=function(){
     let editingName=editingRoute.getRouteName();
     for (i=0;i<localStorage.length;i++){
         key=localStorage.key(i);
-        if (key.substr(0,routeprfx.length)==routeprfx){
-            rtinfo=new routeobjects.RouteInfo(key.substr(routeprfx.length));
+        if (key.substr(0,routeprfx.length)===routeprfx){
+            rtinfo=new routeobjects.RouteInfo(this._ensureGpx(key.substr(routeprfx.length)));
             try {
                 route=new routeobjects.Route();
                 route.fromJsonString(localStorage.getItem(key));
@@ -540,11 +533,17 @@ RouteData.prototype.deleteRoute=function(name,opt_okcallback,opt_errorcallback,o
         localStorage.removeItem(globalStore.getData(keys.properties.routeName)+"."+name);
     }catch(e){}
     if (this.connectMode && ! opt_localonly){
-        this._remoteRouteOperation("delete",{
-            name:name,
-            errorcallback:opt_errorcallback,
-            okcallback:opt_okcallback
-        });
+        Requests.getJson('',{},{
+            request:'delete',
+            type:'route',
+            name: this._ensureGpx(name)
+        })
+            .then((res)=>{
+                if (opt_okcallback) opt_okcallback();
+            })
+            .catch((error)=>{
+                if (opt_errorcallback) opt_errorcallback(error);
+            })
     }
     else {
         if (opt_okcallback){
@@ -562,6 +561,27 @@ RouteData.prototype.getLocalRouteXml=function(name){
     return route.toXml();
 }
 
+RouteData.prototype._ensureGpx=function(name){
+    if (! name.match(/\.gpx$/)) name+=".gpx";
+    return name;
+}
+
+RouteData.prototype._downloadRoute=function (name,okcallback,opt_errorcallback){
+    name=this._ensureGpx(name);
+    Requests.getHtmlOrText('',{useNavUrl:true},{
+        request:'download',
+        type:'route',
+        name:name
+    })
+        .then((xml)=>{
+            let newRoute=new routeobjects.Route();
+            newRoute.fromXml(xml);
+            okcallback(newRoute);
+        })
+        .catch((error)=>{
+            if (opt_errorcallback) opt_errorcallback(error);
+        })
+}
 /**
  *
  * @param name
@@ -585,28 +605,17 @@ RouteData.prototype.fetchRoute=function(name,localOnly,okcallback,opt_errorcallb
         }
         return;
     }
-    this._remoteRouteOperation("download",{
-        format:'json',
-        name:name,
-        self:this,
-        f_okcallback:okcallback,
-        f_errorcallback:opt_errorcallback,
-        okcallback: function(data,param){
-            let rt=new routeobjects.Route(param.name);
-            rt.fromJson(data);
-            rt.server=true;
-            if (rt.time) rt.time=rt.time*1000;
-            param.self._saveRouteLocal(rt,true);
-            if (param.f_okcallback){
-                param.f_okcallback(rt);
+    this._downloadRoute(name,(route)=>{
+            route.server=true;
+            self._saveRouteLocal(route,true);
+            if (okcallback){
+                okcallback(route);
             }
-        },
-        errorcallback:function(status,param){
-            if (param.f_errorcallback){
-                param.f_errorcallback(param.name);
+        },(error)=>{
+            if (opt_errorcallback){
+                opt_errorcallback(error);
             }
-        }
-    });
+        });
 };
 
 /*---------------------------------------------------------
@@ -753,58 +762,11 @@ RouteData.prototype._handleLegResponse = function (serverData) {
     });
 };
 /**
- *
- * @param operation: getroute,listroutes,setroute,deleteroute
- * @param param {object}
- *        okcallback(data,param)
- *        errorcallback(errdata,param)
- *        name for operation load
- *        route for operation save
- * @private
- *
- */
-RouteData.prototype._remoteRouteOperation=function(operation, param) {
-    let url = "?request="+operation+"&type=route";
-    let data=undefined;
-    let opt=['name','format','overwrite'];
-    opt.forEach((rp)=>{
-    if (param[rp] !== undefined)
-        url += "&"+rp+"=" + encodeURIComponent(param[rp]);
-    });
-    base.log("remoteRouteOperation, operation="+operation);
-    let promise=undefined;
-    if (operation != "upload"){
-        promise=Requests.getJson(url,{checkOk:false});
-    }
-    else{
-        if (!globalStore.getData(keys.gui.capabilities.uploadRoute)){
-            base.log("route upload disabled by capabilities");
-            return;
-        }
-        data=param.route;
-        promise=Requests.postJson(url,data);
-    }
-    promise.then(
-        (data)=>{
-            if (data.status !== undefined && data.status != 'OK'){
-                param.errorcallback("status: "+data.status,param);
-                return;
-            }
-            param.okcallback(data,param);
-        }
-    ).catch(
-        (error)=>{
-           param.errorcallback(error,param);
-        }
-    );
-};
-
-/**
  * @private
  */
 RouteData.prototype._startQuery=function() {
     this._checkNextWp();
-    let url = "?request=routing&command=getleg";
+    let url = "?request=route&command=getleg";
     let timeout = globalStore.getData(keys.properties.routeQueryTimeout); //in ms!
     let self = this;
     if (! this.connectMode ){
@@ -854,13 +816,9 @@ RouteData.prototype._startQuery=function() {
         if (! editingRoute.hasRoute()) return;
         if (this.currentRoutePage === undefined) return;
         //we always query the server to let him overwrite what we have...
-        this._remoteRouteOperation("download",{
-            format:'json',
-            name:editingRoute.getRouteName(),
-            okcallback:function(data,param){
+        this._downloadRoute(editingRoute.getRouteName(),
+                (nRoute)=>{
                 if (self.isEditingActiveRoute()) return;
-                let nRoute = new routeobjects.Route();
-                nRoute.fromJson(data);
                 nRoute.server=true;
                 let change = nRoute.differsTo(self.lastReceivedRoute);
                 base.log("route data change=" + change);
@@ -880,11 +838,8 @@ RouteData.prototype._startQuery=function() {
 
                 }
             },
-            errorcallback: function(status,param){
-
-            }
-        });
-
+            (error)=>{}
+        );
     }
 };
 
@@ -895,7 +850,7 @@ RouteData.prototype._startQuery=function() {
  */
 RouteData.prototype._saveRouteLocal=function(route, opt_keepTime) {
     if (! route) return;
-    if (! opt_keepTime || ! route.time) route.time = new Date().getTime();
+    if (! opt_keepTime || ! route.time) route.time = new Date().getTime()/1000;
     let str = route.toJsonString();
     localStorage.setItem(globalStore.getData(keys.properties.routeName) + "." + route.name, str);
     return route;
@@ -910,6 +865,7 @@ RouteData.prototype._saveRouteLocal=function(route, opt_keepTime) {
  * @returns {routeobjects.Route}
  */
 RouteData.prototype._loadRoute=function(name,opt_returnUndef){
+    if (name.match(/\.gpx$/)) name=name.replace(/\.gpx$/,'');
     let rt=new routeobjects.Route(name);
     try{
         let raw=localStorage.getItem(globalStore.getData(keys.properties.routeName)+"."+name);
@@ -940,25 +896,25 @@ RouteData.prototype._loadRoute=function(name,opt_returnUndef){
  * @param {routeobjects.Route} route
  * @param {function} opt_callback -. will be called on result, param: true on success
  */
-RouteData.prototype._sendRoute=function(route, opt_callback,opt_ignoreExisting){
+RouteData.prototype._sendRoute=function(route, opt_callback,opt_overwrite){
     //send route to server
     let self=this;
     let sroute=route.clone();
-    if (sroute.time) sroute.time=sroute.time/1000;
-    this._remoteRouteOperation("upload",{
-        route:route,
-        self:self,
-        okcallback:function(data,param){
+    Requests.postPlain('',route.toXml(),{},{
+        request:'upload',
+        type:'route',
+        name: this._ensureGpx(route.name),
+        overwrite: opt_overwrite
+    })
+        .then((res)=>{
             base.log("route sent to server");
             if (opt_callback)opt_callback();
-        },
-        errorcallback:function(status,param){
+        })
+        .catch((error)=>{
             let showError=true;
-            if (opt_callback) showError=opt_callback(status);
-            if (showError && globalStore.getData(keys.properties.routingServerError)) Toast("unable to send route to server:" + status);
-        },
-        overwrite:opt_ignoreExisting
-    });
+            if (opt_callback) showError=opt_callback(error);
+            if (showError && globalStore.getData(keys.properties.routingServerError)) Toast("unable to send route to server:" + error);
+        })
 };
 
 
@@ -984,6 +940,9 @@ RouteData.prototype._legChangedLocally=function(leg){
     if (avnav.android){
         this.lastSentLeg=leg;
         let rt=avnav.android.setLeg(leg.toJsonString());
+        if (leg.hasRoute()){
+            this._sendRoute(leg.currentRoute,undefined,true);
+        }
         if (rt){
             try{
                 rt=JSON.parse(rt);
@@ -1000,7 +959,10 @@ RouteData.prototype._legChangedLocally=function(leg){
             base.log("upload leg disabled by capabilities");
             return;
         }
-        Requests.postJson("?request=routing&command=setleg",legJson).then(
+        if (leg.hasRoute()){
+            this._sendRoute(leg.currentRoute,undefined,true);
+        }
+        Requests.postJson("?request=route&command=setleg",legJson).then(
             (data)=>{
                 base.log("new leg sent to server");
             }

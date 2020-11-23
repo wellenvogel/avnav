@@ -159,13 +159,14 @@ let RequestHandler={
     getHtmlOrText:(url,options,opt_parameter)=>{
         let [rurl,requestOptions]=prepare(url,options,{useNavUrl:false,noCache:false});
         return new Promise((resolve,reject)=>{
+          rurl=addParameters(rurl,opt_parameter)
           if (!rurl) {
-              reject("missing url");
-              return;
+            reject("missing url");
+            return;
           }
           let sequence=undefined;
           if (options && options.sequenceFunction) sequence=options.sequenceFunction();
-          fetch(addParameters(rurl,opt_parameter),requestOptions).then(
+          fetch(rurl,requestOptions).then(
               (response)=>{
                   if (response.status < 200 || response.status >= 300){
                       reject(response.statusText);

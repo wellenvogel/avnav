@@ -316,8 +316,8 @@ class AVNDirectoryHandlerBase(AVNWorker):
     data = []
     if not os.path.exists(self.baseDir):
       return []
-    for f in os.listdir(self.baseDir):
-      fullname = os.path.join(self.baseDir, f)
+    for f in os.listdir(unicode(self.baseDir)):
+      fullname = os.path.join(unicode(self.baseDir), f)
       isDir=False
       if not os.path.isfile(fullname):
         if not includeDirs:

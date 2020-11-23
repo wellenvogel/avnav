@@ -194,12 +194,7 @@ const readAddOns = function () {
 
 const DownloadItem=(props)=>{
     let dp={};
-    if (props.type == "route"){
-        dp.timeText=Formatter.formatDateTime(new Date(props.time));
-    }
-    else{
-        dp.timeText=Formatter.formatDateTime(new Date(props.time*1000));
-    }
+    dp.timeText=Formatter.formatDateTime(new Date(props.time*1000));
     dp.infoText=props.name;
     let showRas=false;
     if (props.type == "route"){
@@ -261,7 +256,7 @@ const uploadRouteData=(filename,data)=>{
         Toast("route has no route name");
         return;
     }
-    if (entryExists(route.name)) {
+    if (entryExists(route.name) || entryExists(route.name+".gpx")) {
         Toast("route with name " + route.name + " already exists");
         return false;
     }
