@@ -120,14 +120,14 @@ export const InputSelect=(props)=>{
         label=value.label;
         value=value.value;
     }
-    if (props.onChange && props.list){
+    let displayList = props.list||props.itemList;
+    if (props.onChange && displayList){
         onClick=()=> {
             let valueChanged = (newValue)=>{
                 props.onChange(props.changeOnlyValue?(newValue||{}).value:newValue);
             };
-            let displayList = props.list;
             let finalList;
-            if (typeof(props.list) === 'function') finalList = props.list(props.value);
+            if (typeof(displayList) === 'function') finalList = props.list(props.value);
             else {
                 finalList = displayList.slice();
                 finalList.forEach((el)=> {

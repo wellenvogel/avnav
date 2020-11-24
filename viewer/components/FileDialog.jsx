@@ -24,12 +24,12 @@
  */
 import React from "react";
 import keys from '../util/keys.jsx';
-import {Input, Radio} from "./Inputs";
+import {Input, InputSelect, Radio} from "./Inputs";
 import DB from "./DialogButton";
 import Requests from "../util/requests";
 import Toast from "./Toast";
 import EditOverlaysDialog, {KNOWN_OVERLAY_EXTENSIONS,DEFAULT_OVERLAY_CHARTENTRY} from "./EditOverlaysDialog";
-import OverlayDialog from "./OverlayDialog";
+import OverlayDialog, {dialogHelper} from "./OverlayDialog";
 import globalStore from "../util/globalstore";
 import ViewPage from "../gui/ViewPage";
 import assign from 'object-assign';
@@ -138,17 +138,27 @@ export const allowedItemActions=(props)=>{
 class AddRemoveOverlayDialog extends React.Component{
     constructor(props) {
         super(props);
-        this.chartOptions={all:assign({},DEFAULT_OVERLAY_CHARTENTRY)};
-        let current=MapHolder.getCurrentChartEntry();
-        if (current && current.name && getOverlayConfigName(current)){
-            this.chartOptions.current=current;
-        }
         this.state={};
-        this.state.chart='all'
+        this.state.chartList=[DEFAULT_OVERLAY_CHARTENTRY];
+        this.state.chart=DEFAULT_OVERLAY_CHARTENTRY.chartKey
         this.state.action='add';
         this.state.changed=false;
         this.titles={add:"Add to Charts",remove:"Remove from Charts"}
+        this.dialogHelper=dialogHelper(this);
     }
+    componentDidMount() {
+        Requests.getJson('',{},{
+            request:'list',
+            type:'chart'
+        })
+            .then((data)=>{
+                this.setState({
+                    chartList:this.state.chartList.concat(data.items)
+                })
+            })
+            .catch((error)=>Toast("unable to read chart list: "+error));
+    }
+
     action(){
         if (this.state.action === 'remove'){
             Requests.getJson('',{},{
@@ -163,20 +173,40 @@ class AddRemoveOverlayDialog extends React.Component{
             return;
         }
         if (this.state.action === 'add'){
-            EditOverlaysDialog.createDialog(this.chartOptions[this.state.chart],
-
+            let chart=this.findChart(this.state.chart);
+            if (! chart) return;
+            EditOverlaysDialog.createDialog(chart,
                 undefined,
                 this.props.current
                 );
             return;
         }
     }
-    getChartSelectionList(){
-        let rt=[{label:this.chartOptions.all.name,value:'all'}];
-        if (this.chartOptions.current && this.state.action === 'add'){
-            rt.push({label:this.chartOptions.current.name,value:'current'});
+    findChart(chartKey){
+        for (let i=0;i<this.state.chartList.length;i++){
+            if (this.state.chartList[i].chartKey === chartKey) return this.state.chartList[i];
         }
+    }
+    getChartSelectionList(){
+        if (this.state.action === 'remove'){
+            return {label:DEFAULT_OVERLAY_CHARTENTRY.name,value:DEFAULT_OVERLAY_CHARTENTRY.chartKey};
+        }
+        let rt=[];
+        this.state.chartList.forEach((chart)=>{
+            if (! chart.chartKey) return;
+            rt.push({label:chart.name,value:chart.chartKey});
+        })
         return rt;
+    }
+    getCurrentChartValue(){
+        if (this.state.action === 'remove'){
+            return {label:'All Charts',value:undefined};
+        }
+        return(
+            {
+                label:(this.findChart(this.state.chart) || {}).name,
+                value:this.state.chart
+            })
     }
     render(){
         return (
@@ -192,13 +222,15 @@ class AddRemoveOverlayDialog extends React.Component{
                     onChange={(v)=>{this.setState({changed:true,action:v})}}
                     itemList={[{label:this.titles.add,value:"add"},{label:this.titles.remove,value:"remove"}]}
                     />
-                <Radio
+                <InputSelect
                     dialogRow={true}
                     label="Chart"
-                    value={this.state.chart}
+                    value={this.getCurrentChartValue()}
                     onChange={(v) => {
                         this.setState({changed: true, chart: v})
                     }}
+                    changeOnlyValue={true}
+                    showDialogFunction={this.dialogHelper.showDialog}
                     itemList={this.getChartSelectionList()}
                 />
                 <div className="dialogButtons">
