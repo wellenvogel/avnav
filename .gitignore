@@ -18,6 +18,8 @@ viewer/node_modules
 *.bak
 *.swp
 *.bck
+*.log
+avnav_server.xml-????*
 hardware/**/*-cache.lib
 hardware/**/sym-lib-table
 hardware/**/Generic.dcm
@@ -29,3 +31,4 @@ windows/**/*.save
 windows/**/AvChartConvert.v12.suo
 windows/installer/Output
 windows/installer/library
+android/assets/sounds/**
