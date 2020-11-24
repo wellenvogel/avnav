@@ -83,6 +83,7 @@ export default class OverlayConfig{
         if (! this.config.defaults) this.config.defaults=[];
         if (! this.config.overlays) this.config.overlays=[];
         if (!this.config.defaultsOverride) this.config.defaultsOverride={};
+        if (this.config.useDefault === undefined) this.config.useDefault=true;
         this.hasChanges=false;
     }
     static getBucketNames() {

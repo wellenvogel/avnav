@@ -104,7 +104,7 @@ public class UserDirectoryRequestHandler extends DirectoryRequestHandler {
         }
     }
     @Override
-    public ExtendedWebResourceResponse handleDirectRequest(Uri uri) throws FileNotFoundException, UnsupportedEncodingException {
+    public ExtendedWebResourceResponse handleDirectRequest(Uri uri) throws IOException {
         String path=uri.getPath();
         if (path == null) return null;
         if (path.startsWith("/")) path=path.substring(1);

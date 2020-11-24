@@ -11,9 +11,14 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.util.Arrays;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 
 import de.wellenvogel.avnav.util.AvnUtil;
 
@@ -136,15 +141,45 @@ public class DirectoryRequestHandler implements INavRequestHandler{
         }
         return null;
     }
+    static class CloseHelperStream extends InputStream {
+        private InputStream is;
+        private ZipFile zf;
+        public CloseHelperStream(InputStream zi,ZipFile zf){
+            this.is=zi;
+            this.zf=zf;
+        }
+        @Override
+        public int read() throws IOException {
+            return is.read();
+        }
+
+        @Override
+        public void close() throws IOException {
+            super.close();
+            zf.close();
+        }
+    }
     @Override
-    public ExtendedWebResourceResponse handleDirectRequest(Uri uri) throws FileNotFoundException, UnsupportedEncodingException {
+    public ExtendedWebResourceResponse handleDirectRequest(Uri uri) throws IOException {
         String path=uri.getPath();
         if (path == null) return null;
         if (path.startsWith("/")) path=path.substring(1);
         if (!path.startsWith(urlPrefix)) return null;
-        path = path.substring((urlPrefix.length()));
+        path = path.substring((urlPrefix.length()+1));
         String[] parts = path.split("/");
         if (parts.length < 1) return null;
+        if (parts[0].endsWith(".zip")){
+            String name= URLDecoder.decode(parts[0],"UTF-8");
+            File foundFile = findLocalFile(name);
+            if (foundFile == null) return null;
+            ZipFile zf=new ZipFile(foundFile);
+            String entryPath= path.replaceFirst(".*/","");
+            ZipEntry entry=zf.getEntry(entryPath);
+            if (entry == null) return null;
+            return new ExtendedWebResourceResponse(entry.getSize(),
+                    RequestHandler.mimeType(entryPath),
+                    "",new CloseHelperStream(zf.getInputStream(entry),zf));
+        }
         String name= URLDecoder.decode(parts[parts.length - 1],"UTF-8");
         File foundFile = findLocalFile(name);
         if (foundFile != null) {
