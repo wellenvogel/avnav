@@ -52,6 +52,25 @@ const TYPE_LIST=[
     {label: 'route', value: 'route'},
     {label: 'track', value: 'track'},
     ]
+const itemSort=(a,b)=>{
+    let na=a.name;
+    let nb=b.name;
+    if (na === undefined && nb === undefined) return 0;
+    if (na === undefined) return -1;
+    if (nb === undefined) return 1;
+    na=na.toUpperCase();
+    nb=nb.toUpperCase();
+    if (na < nb) return -1;
+    if (na > nb) return 1;
+    return 0;
+}
+const trackSort=(a,b)=>{
+    let ta=a.time;
+    let tb=b.time;
+    if (ta < tb) return 1;
+    if (ta > tb) return -1;
+    return 0;
+}
 class OverlayItemDialog extends React.Component{
     constructor(props) {
         super(props);
@@ -61,6 +80,7 @@ class OverlayItemDialog extends React.Component{
             itemInfo: undefined,
             loading: false
         }
+        this.sortLists=['icons','chart','overlay','images','user','knownOverlays','iconFiles','route','track']
         this.stateHelper = stateHelper(this, props.current || {},'item');
         this.state.itemsFetchCount = 0;
         //we make them only a variable as we consider them to be static
@@ -116,6 +136,9 @@ class OverlayItemDialog extends React.Component{
                         }
                     });
                 }
+                this.sortLists.forEach((list)=>{
+                    this.itemLists[list].sort(itemSort);
+                });
                 this.setState({itemsFetchCount:this.state.itemsFetchCount+1})
             })
         .catch((error)=>{
@@ -161,6 +184,9 @@ class OverlayItemDialog extends React.Component{
         this.itemLists.knownOverlays.forEach((item)=>{
             if (item.type === currentType) rt.push(item);
         })
+        if (currentType === 'track'){
+            rt.sort(trackSort);
+        }
         return rt;
     }
     render(){

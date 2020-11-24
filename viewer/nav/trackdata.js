@@ -89,7 +89,7 @@ TrackData.prototype.handleTrackResponse=function(data){
  * @private
  */
 TrackData.prototype.startQuery=function() {
-    let url = "?request=track";
+    let url = "?request=track&command=getTrack";
     let timeout = parseInt(globalStore.getData(keys.properties.trackQueryTimeout)); //in ms!
     let interval=parseInt(globalStore.getData(keys.properties.trackInterval)); //in seconds
     let self = this;
