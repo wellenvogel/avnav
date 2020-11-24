@@ -33,7 +33,7 @@ import {
     allowedItemActions,
     ItemDownloadButton
 } from '../components/FileDialog';
-import {DEFAULT_OVERLAY_CONFIG} from '../components/EditOverlaysDialog';
+import {DEFAULT_OVERLAY_CHARTENTRY} from '../components/EditOverlaysDialog';
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -82,14 +82,7 @@ const fillDataServer=(type)=>{
     Requests.getJson("?request=listdir&type="+type).then((json)=>{
         let list=[];
         if (type === 'chart'){
-            list.push({
-                type: type,
-                name: 'DefaultOverlays',
-                chartKey: DEFAULT_OVERLAY_CONFIG,
-                canDelete: false,
-                canDownload:false,
-                time: (new Date()).getTime()/1000
-            });
+            list.push(assign({},DEFAULT_OVERLAY_CHARTENTRY));
         }
         for (let i=0;i<json.items.length;i++){
             let fi=new FileInfo();

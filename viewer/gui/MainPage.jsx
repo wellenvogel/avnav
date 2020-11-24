@@ -117,7 +117,7 @@ const ChartItem = (props)=> {
                 name="MainOverlays"
                 onClick={(ev)=>{
                     ev.stopPropagation();
-                    EditOverlaysDialog.createDialog(props,false,()=>{
+                    EditOverlaysDialog.createDialog(props,()=>{
                         if (props.reload) props.reload();
                     });
                 }}

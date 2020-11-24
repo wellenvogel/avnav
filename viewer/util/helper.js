@@ -104,9 +104,11 @@ Helper.filterObjectTree=function(source,filterFunction,opt_basepath){
     return rt;
 };
 
-Helper.getExt=(name)=>{
+Helper.getExt=(name,opt_stripDot)=>{
     if (!name) return;
-    return name.replace(/.*\./,'').toLocaleLowerCase();
+    let rt=name.replace(/.*\./,'').toLocaleLowerCase();
+    if (opt_stripDot) return rt.replace(/^\./,'')
+    return rt;
 };
 
 Helper.filteredAssign=function(){

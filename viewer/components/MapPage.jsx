@@ -241,7 +241,7 @@ export const overlayDialog=(opt_chartName,opt_updateCallback)=>{
                 MapHolder.resetOverlayConfig();
             }}
             editCallback={(globalStore.getData(keys.properties.connectedMode,false) && currentChart.chartKey)?()=>{
-                EditOverlaysDialog.createDialog(currentChart,false,(nv)=>{
+                EditOverlaysDialog.createDialog(currentChart,(nv)=>{
                     if (nv) {
                         MapHolder.resetOverlayConfig();
                         MapHolder.loadMap(undefined,true);

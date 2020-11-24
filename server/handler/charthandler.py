@@ -595,6 +595,12 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
       if command == 'listOverlays':
         rt=filter(lambda item: not item.isChart(),self.itemList.values())
         return AVNUtil.getReturnData(data=rt)
+      if command == 'deleteFromOverlays':
+        if name is None:
+          return AVNUtil.getReturnData(error="missing name")
+        type=AVNUtil.getHttpRequestParam(requestparam,'itemType')
+        rt=self.deleteFromOverlays(type,name)
+        return AVNUtil.getReturnData();
     except Exception as e:
       return AVNUtil.getReturnData(error=e.message)
     return super(AVNChartHandler, self).handleSpecialApiRequest(command, requestparam, handler)

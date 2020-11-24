@@ -44,7 +44,7 @@ const filterOverlayItem=(item,opt_itemInfo)=>{
     }
     return rt;
 };
-const KNOWN_OVERLAY_EXTENSIONS=['gpx'];
+export const KNOWN_OVERLAY_EXTENSIONS=['gpx'];
 const KNOWN_ICON_FILE_EXTENSIONS=['zip'];
 const TYPE_LIST=[
     {label: 'overlay', value: 'overlay'},
@@ -343,7 +343,7 @@ class OverlayItemDialog extends React.Component{
                                     if (changes.opacity > 1) changes.opacity = 1;
                                     this.props.updateCallback(changes);
                                 }}
-                                disabled={!hasChanges}
+                                disabled={!hasChanges && ! this.props.forceOk}
                             >Ok</DB>
                             : null}
 
@@ -478,6 +478,7 @@ class EditOverlaysDialog extends React.Component{
             this.maxKey=i;
         }
         this.state.list=displayListFromOverlays(itemList);
+        this.state.addEntry=props.addEntry;
         for (let i=0;i<this.state.list.length;i++){
             if (this.state.list[i].type !== undefined && this.state.list[i].type !== 'base'){
                 this.state.selectedIndex=i;
@@ -491,6 +492,13 @@ class EditOverlaysDialog extends React.Component{
         this.sizeCount=0;
         this.reset=this.reset.bind(this);
         this.updateList=this.updateList.bind(this);
+    }
+    componentDidMount() {
+        if (this.state.addEntry){
+            let entry=this.state.addEntry;
+            this.setState({addEntry:undefined,isChanged:true});
+            this.insert(false,entry);
+        }
     }
 
     updateList(newList) {
@@ -522,7 +530,7 @@ class EditOverlaysDialog extends React.Component{
         }
     }
 
-    showItemDialog(item){
+    showItemDialog(item,opt_forceOk){
         return new Promise((resolve,reject)=>{
             this.dialogHelper.showDialog((props)=>{
                 return <OverlayItemDialog
@@ -539,11 +547,12 @@ class EditOverlaysDialog extends React.Component{
                     }}
                     current={item}
                     title={item?"Edit Overlay":"New Overlay"}
+                    forceOk={opt_forceOk}
                     />
             })
         })
     }
-    insert(before){
+    insert(before,opt_item){
         if (this.props.preventEdit) return;
         if (before) {
             if (this.state.selectedIndex < 0 || this.state.selectedIndex >= this.state.list.length) return;
@@ -553,7 +562,7 @@ class EditOverlaysDialog extends React.Component{
             //we can only have this for after - so we always add on top
             idx=this.state.list.length;
         }
-        this.showItemDialog({type:'overlay',opacity:1})
+        this.showItemDialog(opt_item||{type:'overlay',opacity:1},opt_item !== undefined)
             .then((overlay)=>{
                 let overlays=this.state.list.slice();
                 overlay.itemKey=this.getNewKey();
@@ -766,23 +775,37 @@ EditOverlaysDialog.propTypes={
     resetCallback: PropTypes.func,
     editCallback: PropTypes.func,  //only meaningful if preventEdit is set
     closeCallback: PropTypes.func.isRequired,
-    preventEdit: PropTypes.bool
+    preventEdit: PropTypes.bool,
+    addEntry: PropTypes.object //if this is set, immediately start with appending this entry
 };
 
 /**
  *
  * @param chartItem
+ * @param opt_callback if set - callback when done
+ * @param opt_addEntry if set (itemInfo) start with adding this item
  * @return {boolean}
  */
-EditOverlaysDialog.createDialog=(chartItem,opt_noDefault,opt_callback)=>{
-    if (! chartItem.chartKey) return;
+EditOverlaysDialog.createDialog=(chartItem,opt_callback,opt_addEntry)=>{
+    if (! getOverlayConfigName(chartItem)) return false;
+    if (opt_addEntry){
+        //check for an allowed item that we can add
+        if (! opt_addEntry.type) return false;
+        let typeOk=false;
+        TYPE_LIST.forEach((type)=>{
+            if (type.value === opt_addEntry.type) typeOk=true;
+        })
+        if (! typeOk) return false;
+        opt_addEntry=assign({opacity:1,enabled:true},opt_addEntry);
+    }
+    let noDefault=getOverlayConfigName(chartItem) === DEFAULT_OVERLAY_CONFIG;
     let getParameters={
         request: 'api',
         type: 'chart',
         overlayConfig: getOverlayConfigName(chartItem),
         command: 'getConfig',
         expandCharts: true,
-        mergeDefault: !opt_noDefault
+        mergeDefault: !noDefault
     };
     Requests.getJson("",{},getParameters)
         .then((config)=>{
@@ -828,7 +851,8 @@ EditOverlaysDialog.createDialog=(chartItem,opt_noDefault,opt_callback)=>{
                                 });
                         }
                     }}
-                    noDefault={opt_noDefault||false}
+                    noDefault={noDefault||false}
+                    addEntry={opt_addEntry}
                     />
             });
         })
@@ -836,7 +860,14 @@ EditOverlaysDialog.createDialog=(chartItem,opt_noDefault,opt_callback)=>{
 
     return true;
 };
-
-export const DEFAULT_OVERLAY_CONFIG="default.cfg";
+const DEFAULT_OVERLAY_CONFIG="default.cfg";
+export const DEFAULT_OVERLAY_CHARTENTRY={
+    type: 'chart',
+    name: 'DefaultOverlays',
+    chartKey: DEFAULT_OVERLAY_CONFIG,
+    canDelete: false,
+    canDownload:false,
+    time: (new Date()).getTime()/1000
+};
 
 export default  EditOverlaysDialog;

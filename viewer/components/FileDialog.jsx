@@ -28,7 +28,7 @@ import {Input, Radio} from "./Inputs";
 import DB from "./DialogButton";
 import Requests from "../util/requests";
 import Toast from "./Toast";
-import EditOverlaysDialog,{DEFAULT_OVERLAY_CONFIG} from "./EditOverlaysDialog";
+import EditOverlaysDialog, {KNOWN_OVERLAY_EXTENSIONS,DEFAULT_OVERLAY_CHARTENTRY} from "./EditOverlaysDialog";
 import OverlayDialog from "./OverlayDialog";
 import globalStore from "../util/globalstore";
 import ViewPage from "../gui/ViewPage";
@@ -40,6 +40,8 @@ import NavHandler from "../nav/navdata";
 import Helper from '../util/helper';
 import UserAppDialog from "./UserAppDialog";
 import DownloadButton from "./DownloadButton";
+import MapHolder from '../map/mapholder';
+import {getOverlayConfigName} from "../map/chartsourcebase";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 /**
@@ -114,7 +116,12 @@ export const allowedItemActions=(props)=>{
     let showRename=isConnected && (props.type === 'user' || props.type === 'images' || props.type === 'overlay' );
     let showApp=isConnected && (props.type === 'user' && ext === 'html' && globalStore.getData(keys.gui.capabilities.addons));
     let isApp=(showApp && props.isAddon);
-    let showOverlay=(isConnected && props.type === 'chart' && globalStore.getData(keys.gui.capabilities.uploadOverlays));
+    let showOverlay=(isConnected &&
+            (props.type === 'chart' ||
+            (['overlay','route','track'].indexOf(props.type) >= 0
+                && KNOWN_OVERLAY_EXTENSIONS.indexOf(Helper.getExt(props.name,true)) >= 0)
+            ) &&
+        globalStore.getData(keys.gui.capabilities.uploadOverlays));
     let showScheme=(props.type === 'chart' && props.url && props.url.match(/.*mbtiles.*/));
     return {
         showEdit:showEdit,
@@ -127,6 +134,89 @@ export const allowedItemActions=(props)=>{
         showScheme: showScheme,
     };
 };
+
+class AddRemoveOverlayDialog extends React.Component{
+    constructor(props) {
+        super(props);
+        this.chartOptions={all:assign({},DEFAULT_OVERLAY_CHARTENTRY)};
+        let current=MapHolder.getCurrentChartEntry();
+        if (current && current.name && getOverlayConfigName(current)){
+            this.chartOptions.current=current;
+        }
+        this.state={};
+        this.state.chart='all'
+        this.state.action='add';
+        this.state.changed=false;
+        this.titles={add:"Add to Charts",remove:"Remove from Charts"}
+    }
+    action(){
+        if (this.state.action === 'remove'){
+            Requests.getJson('',{},{
+                request: 'api',
+                type:'chart',
+                command:'deleteFromOverlays',
+                name:this.props.current.name,
+                itemType:this.props.current.type
+            })
+                .then(()=>{})
+                .catch((error)=>{Toast(error)})
+            return;
+        }
+        if (this.state.action === 'add'){
+            EditOverlaysDialog.createDialog(this.chartOptions[this.state.chart],
+
+                undefined,
+                this.props.current
+                );
+            return;
+        }
+    }
+    getChartSelectionList(){
+        let rt=[{label:this.chartOptions.all.name,value:'all'}];
+        if (this.chartOptions.current && this.state.action === 'add'){
+            rt.push({label:this.chartOptions.current.name,value:'current'});
+        }
+        return rt;
+    }
+    render(){
+        return (
+            <div className="AddRemoveOverlayDialog flexInner">
+                <h3 className="dialogTitle">On Charts</h3>
+                <div className={"dialogRow"}>
+                    <span className="itemInfo">{this.props.current.name}</span>
+                </div>
+                <Radio
+                    dialogRow={true}
+                    label={"Action"}
+                    value={this.state.action}
+                    onChange={(v)=>{this.setState({changed:true,action:v})}}
+                    itemList={[{label:this.titles.add,value:"add"},{label:this.titles.remove,value:"remove"}]}
+                    />
+                <Radio
+                    dialogRow={true}
+                    label="Chart"
+                    value={this.state.chart}
+                    onChange={(v) => {
+                        this.setState({changed: true, chart: v})
+                    }}
+                    itemList={this.getChartSelectionList()}
+                />
+                <div className="dialogButtons">
+                    <DB name="cancel"
+                        onClick={()=>{
+                            this.props.closeCallback();
+                        }}
+                        >Cancel</DB>
+                    <DB name="ok"
+                        onClick={()=>{
+                            this.action();
+                            this.props.closeCallback()
+                        }}>Ok</DB>
+                </div>
+            </div>
+        )
+    }
+}
 
 export default  class FileDialog extends React.Component{
     constructor(props){
@@ -428,7 +518,20 @@ export const showFileDialog=(item,opt_doneCallback,opt_checkExists)=>{
         }
         if (action === 'overlay'){
             doneAction();
-            return EditOverlaysDialog.createDialog(item, item.chartKey === DEFAULT_OVERLAY_CONFIG)
+            if (item.type === 'chart') {
+                return EditOverlaysDialog.createDialog(item )
+            }
+            else{
+                OverlayDialog.dialog((props)=>{
+                    return(
+                        <AddRemoveOverlayDialog
+                            {...props}
+                            current={item}
+                            />
+                        )
+                });
+                return;
+            }
         }
     };
     OverlayDialog.dialog((props)=>{
