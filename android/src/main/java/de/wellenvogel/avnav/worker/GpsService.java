@@ -339,7 +339,11 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
             }
         }
         if (loadTrack) {
-            trackWriter = new TrackWriter(trackDir,trackTime,trackDistance,trackMintime,trackInterval);
+            try {
+                trackWriter = new TrackWriter(trackDir,trackTime,trackDistance,trackMintime,trackInterval);
+            } catch (IOException e) {
+                AvnLog.e("unable to create track writer",e);
+            }
             timerSequence++;
         }
         File routeDir=new File(AvnUtil.getWorkDir(prefs,this),"routes");

@@ -4,6 +4,7 @@ import android.location.Location;
 import android.net.Uri;
 import android.util.Log;
 
+import de.wellenvogel.avnav.appapi.DirectoryRequestHandler;
 import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
 import de.wellenvogel.avnav.appapi.PostVars;
 import de.wellenvogel.avnav.appapi.RequestHandler;
@@ -28,14 +29,8 @@ import static de.wellenvogel.avnav.main.Constants.LOGPRFX;
 /**
  * Created by andreas on 12.12.14.
  */
-public class TrackWriter implements INavRequestHandler {
+public class TrackWriter extends DirectoryRequestHandler {
 
-    @Override
-    public ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception {
-        File trackfile = new File(trackdir, name);
-        if (!trackfile.isFile()) throw new IOException("trackfile "+name+" not found");
-        return new ExtendedWebResourceResponse((int) trackfile.length(), "application/gpx+xml", "", new FileInputStream(trackfile));
-    }
 
     @Override
     public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
@@ -52,6 +47,7 @@ public class TrackWriter implements INavRequestHandler {
             TrackInfo e = new TrackInfo();
             e.name = f.getName();
             e.mtime = f.lastModified();
+            e.url=getUrlFromName(e.name);
             rt.put(e.toJson());
         }
         return rt;
@@ -60,11 +56,7 @@ public class TrackWriter implements INavRequestHandler {
 
     @Override
     public boolean handleDelete(String name, Uri uri) throws Exception {
-        File trackfile = new File(trackdir, name);
-        if (! trackfile.isFile()){
-            return false;
-        }
-        boolean rt=trackfile.delete();
+        boolean rt=super.handleDelete(name,uri);
         if (name.replace(".gpx","").equals(getCurrentTrackname(new Date()))) {
             AvnLog.i("deleting current trackfile");
             trackpoints.clear();
@@ -72,29 +64,17 @@ public class TrackWriter implements INavRequestHandler {
         return rt;
     }
 
-    @Override
-    public JSONObject handleApiRequest(Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
-        return null;
-    }
-
-    @Override
-    public ExtendedWebResourceResponse handleDirectRequest(Uri uri) throws FileNotFoundException {
-        return null;
-    }
-
-    @Override
-    public String getPrefix() {
-        return null;
-    }
 
     public static class TrackInfo implements INavRequestHandler.IJsonObect{
         public String name;
         public long mtime;
+        public String url;
         public JSONObject toJson() throws JSONException {
             JSONObject o=new JSONObject();
             o.put("name",name);
             o.put("time",mtime/1000);
             o.put("canDelete",true);
+            o.put("url",url);
             return o;
         }
     }
@@ -166,7 +146,8 @@ public class TrackWriter implements INavRequestHandler {
         }
     }
 
-    TrackWriter(File trackdir,long trackTime,long trackDistance,long trackMintime,long trackInterval){
+    TrackWriter(File trackdir,long trackTime,long trackDistance,long trackMintime,long trackInterval) throws IOException {
+        super(RequestHandler.TYPE_TRACK,trackdir,"track",null);
         this.trackdir=trackdir;
         this.trackTime=trackTime;
         this.trackDistance=trackDistance;
