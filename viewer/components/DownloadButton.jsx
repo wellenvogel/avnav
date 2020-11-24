@@ -55,7 +55,7 @@ class DownloadButton extends React.Component{
     }
     serverDownload(){
         if (avnav.android){
-            return avnav.android.downloadFile(this.props.fileName,this.props.type);
+            return avnav.android.downloadFile(this.props.fileName,this.props.type,this.props.androidUrl);
         }
         if (! this.hiddenA) return;
         this.hiddenA.click();
@@ -108,7 +108,8 @@ DownloadButton.propTypes={
     useDialogButton: PropTypes.bool,
     fileName:  PropTypes.string,
     type: PropTypes.string,
-    onClick: PropTypes.func
+    onClick: PropTypes.func,
+    androidUrl: PropTypes.string //optional url for android downloads
 }
 
 export default DownloadButton;

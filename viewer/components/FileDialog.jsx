@@ -64,6 +64,7 @@ export const ItemDownloadButton=(props)=>{
         fileName={getDownloadFileName(item)}
         localData={localData}
         type={item.type}
+        androidUrl={item.url}
         />
 }
 const getLocalDataFunction=(item)=>{

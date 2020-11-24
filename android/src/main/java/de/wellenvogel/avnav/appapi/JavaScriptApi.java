@@ -71,9 +71,11 @@ public class JavaScriptApi {
         shareIntent.setAction(Intent.ACTION_SEND);
         shareIntent.putExtra(Intent.EXTRA_STREAM, data);
         shareIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        shareIntent.setType("application/octet-stream");
         if (type.equals("layout")) {
             shareIntent.setType("application/json");
-        } else {
+        }
+        if (type.equals("route") || type.equals("track")) {
             shareIntent.setType("application/gpx+xml");
         }
         String title = requestHandler.activity.getText(R.string.selectApp) + " " + name;
