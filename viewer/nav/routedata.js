@@ -520,7 +520,8 @@ RouteData.prototype.listRoutesLocal=function(){
  * @param opt_errorcallback
  */
 RouteData.prototype.deleteRoute=function(name,opt_okcallback,opt_errorcallback,opt_localonly){
-    let rt=this._loadRoute(name,true);
+    let localName=name.replace(/\.gpx$/,'');
+    let rt=this._loadRoute(localName,true);
     if ((! rt || rt.server) && ! this.connectMode && ! opt_localonly){
         if (opt_errorcallback){
             setTimeout(function(){
@@ -530,7 +531,7 @@ RouteData.prototype.deleteRoute=function(name,opt_okcallback,opt_errorcallback,o
         return false;
     }
     try{
-        localStorage.removeItem(globalStore.getData(keys.properties.routeName)+"."+name);
+        localStorage.removeItem(globalStore.getData(keys.properties.routeName)+"."+localName);
     }catch(e){}
     if (this.connectMode && ! opt_localonly){
         Requests.getJson('',{},{
@@ -607,7 +608,7 @@ RouteData.prototype.fetchRoute=function(name,localOnly,okcallback,opt_errorcallb
     }
     this._downloadRoute(name,(route)=>{
             route.server=true;
-            self._saveRouteLocal(route,true);
+            this._saveRouteLocal(route,true);
             if (okcallback){
                 okcallback(route);
             }

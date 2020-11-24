@@ -593,7 +593,7 @@ public class ChartHandler implements INavRequestHandler {
         String fname=uri.getPath();
         if (fname == null) return null;
         KeyAndParts kp = urlToKey(fname,false);
-        String mimeType = handler.mimeType(fname);
+        String mimeType = RequestHandler.mimeType(fname);
         int len = 0;
         try {
             if (kp.isDemo) {

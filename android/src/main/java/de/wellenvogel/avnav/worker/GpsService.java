@@ -41,6 +41,7 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -343,9 +344,13 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         }
         File routeDir=new File(AvnUtil.getWorkDir(prefs,this),"routes");
         if (routeHandler == null || routeHandler.isStopped()) {
-            routeHandler = new RouteHandler(routeDir,this);
-            routeHandler.setMediaUpdater(mediaUpdater);
-            routeHandler.start();
+            try {
+                routeHandler = new RouteHandler(routeDir,this);
+                routeHandler.setMediaUpdater(mediaUpdater);
+                routeHandler.start();
+            } catch (IOException e) {
+                AvnLog.e("unable to create route handler:",e);
+            }
         }
         if (! isWatchdog || runnable == null) {
             runnable = new TimerRunnable(timerSequence);

@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import de.wellenvogel.avnav.appapi.DirectoryRequestHandler;
 import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
 import de.wellenvogel.avnav.appapi.PostVars;
 import de.wellenvogel.avnav.appapi.RequestHandler;
@@ -38,99 +39,7 @@ import de.wellenvogel.avnav.util.AvnUtil;
 /**
  * Created by andreas on 12.12.14.
  */
-public class RouteHandler implements INavRequestHandler {
-
-    @Override
-    public ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception {
-        String format=uri.getQueryParameter("format");
-        String mimemtype="application/gpx+xml";
-        //TODO: handle special case when we have a route in the "json" parameter but no route here...
-        InputStream is;
-        int len=-1;
-        if (format != null && format.equals("json")){
-            mimemtype="application/json";
-            JSONObject jsonRoute=loadRouteJson(name);
-            byte routeBytes[]=jsonRoute.toString().getBytes("UTF-8");
-            len=routeBytes.length;
-            is=new ByteArrayInputStream(routeBytes);
-        }
-        else{
-            File routeFile=openRouteFile(name);
-            len=(int)routeFile.length();
-            is=new FileInputStream(routeFile);
-
-        }
-        return new ExtendedWebResourceResponse(len,mimemtype,"",is);
-    }
-
-
-    @Override
-    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
-        Route rt = Route.fromJson(new JSONObject(postData.getAsString()));
-        try {
-            saveRoute(rt, !ignoreExisting);
-        }catch (Exception e){
-            AvnLog.e("Exception when storing route",e);
-            return false;
-        }
-        return true;
-    }
-
-    @Override
-    public JSONArray handleList(Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception {
-        JSONArray rt=new JSONArray();
-        for (RouteInfo i:getRouteInfo().values()){
-            RouteInfo iv=i.clone();
-            if (isCurrentRoute(iv.name)) iv.canDelete=false;
-            rt.put(iv.toJson());
-        }
-        return rt;
-    }
-
-    @Override
-    public boolean handleDelete(String name, Uri uri) throws Exception {
-        return deleteRoute(name);
-    }
-
-
-    @Override
-    public JSONObject handleApiRequest(Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
-        JSONObject o = new JSONObject();
-        o.put("status", "OK");
-        String command = AvnUtil.getMandatoryParameter(uri,"command");
-        if (command.equals("getleg")){
-            return getLeg();
-        }
-        if (command.equals("unsetleg")){
-            unsetLeg();
-            return o;
-        }
-        if (command.equals("setleg")) {
-            String legData = uri.getQueryParameter("leg");
-            if (legData == null) {
-                legData = postData.getAsString();
-            }
-            try {
-                setLeg(legData);
-                update();
-            } catch (Exception e) {
-                o.put("status", e.getMessage());
-            }
-
-            return o;
-        }
-        return null;
-    }
-
-    @Override
-    public ExtendedWebResourceResponse handleDirectRequest(Uri uri) throws FileNotFoundException {
-        return null;
-    }
-
-    @Override
-    public String getPrefix() {
-        return null;
-    }
+public class RouteHandler extends DirectoryRequestHandler {
 
     public static interface UpdateReceiver{
         public void updated();
@@ -138,18 +47,6 @@ public class RouteHandler implements INavRequestHandler {
 
     private static final String LEGFILE="currentLeg.json";
     private static final long MAXROUTESIZE= Constants.MAXFILESIZE;
-    private static final String header="<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>\n"+
-            "<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" version=\"1.1\" creator=\"avnav\"\n"+
-            "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"+
-            "xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd\">\n"+
-            "<rte>\n"+
-            "<name>%s</name>\n";
-    private static final String footer="</rte>\n"+
-            "</gpx>\n";
-    private static final String rtpnt="<rtept lat=\"%2.9f\" lon=\"%2.9f\" >%s</rtept>\n";
-    private static final String rtpntName="<name>%s</name>";
-
-    private IMediaUpdater mediaUpdater;
     private UpdateReceiver updateReceiver;
     private long startSequence=1;
 
@@ -179,7 +76,7 @@ public class RouteHandler implements INavRequestHandler {
         @Override
         public JSONObject toJson() throws JSONException{
             JSONObject e=new JSONObject();
-            e.put("name",name);
+            e.put("name",name+".gpx");
             e.put("time",mtime/1000);
             e.put("numpoints",numpoints);
             e.put("length",length);
@@ -217,11 +114,6 @@ public class RouteHandler implements INavRequestHandler {
             rt.lon = o.getDouble("lon");
             if (o.opt("name") != null) rt.name = o.getString("name");
             return rt;
-        }
-        public String toXml(){
-            String fname="";
-            if (name != null) fname=(new Formatter(Locale.ENGLISH)).format(rtpntName,escapeXml(name)).toString();
-            return new Formatter(Locale.ENGLISH).format(rtpnt,lat,lon,fname).toString();
         }
         public Location toLocation(){
             Location rt=new Location((String)null);
@@ -263,13 +155,6 @@ public class RouteHandler implements INavRequestHandler {
                 rt.points.add(RoutePoint.fromJson(pt.getJSONObject(i)));
             }
             return rt;
-        }
-        public String toXml(){
-            String fpoints="";
-            for (RoutePoint p:points){
-                fpoints+=p.toXml()+"\n";
-            }
-            return new Formatter(Locale.ENGLISH).format(header,escapeXml(name)).toString()+fpoints+footer;
         }
 
         public double computeLength(){
@@ -403,11 +288,12 @@ public class RouteHandler implements INavRequestHandler {
     private File routedir;
     private HashMap<String,RouteInfo> routeInfos=new HashMap<String, RouteInfo>();
     private boolean stopParser;
-    private Object parserLock=new Object();
+    private final Object parserLock=new Object();
     private RoutingLeg currentLeg;
     private long legSequence=System.currentTimeMillis();
 
-    public RouteHandler(File routedir,UpdateReceiver updater){
+    public RouteHandler(File routedir,UpdateReceiver updater) throws IOException {
+        super(RequestHandler.TYPE_ROUTE,routedir,"route",null);
         this.routedir=routedir;
         stopParser=true;
         updateReceiver=updater;
@@ -504,22 +390,7 @@ public class RouteHandler implements INavRequestHandler {
         }
     }
 
-    public Route parseRouteFile(String routeName) throws Exception{
-        Route rt=new Route();
-        File infile = openRouteFile(routeName);
-        InputStream in_s = null;
-        try {
-            in_s = new FileInputStream(infile);
 
-            rt=new RouteParser().parseRouteFile(in_s);
-            in_s.close();
-        } catch (Exception e) {
-            Log.e(AvnLog.LOGPREFIX,"unexpected error while parsing routefile "+e);
-            return rt;
-        }
-        AvnLog.d("read routefile "+infile+", name="+rt.name+" with "+rt.points.size()+" points");
-        return rt;
-    }
 
     public static Route parseRouteStream(InputStream is,boolean returnEmpty){
         return new RouteParser().parseRouteFile(is,returnEmpty);
@@ -623,73 +494,48 @@ public class RouteHandler implements INavRequestHandler {
         }
         update();
     }
-    private void addRouteInfo(Route route){
-        synchronized (parserLock){
-            routeInfos.put(route.name,route.getInfo());
-        }
-        update();
-    }
-
     public Map<String,RouteInfo> getRouteInfo(){
         synchronized (parserLock) {
             return routeInfos;
         }
     }
 
-
-
-    private Route saveRoute(Route rt,boolean overwrite ) throws Exception{
-        String name=rt.name;
-        if (name == null){
-            throw new Exception("cannot save route without name");
-        }
-        File routeFile=new File(routedir,name+".gpx");
-        if (! overwrite && routeFile.exists()) throw new Exception("route "+name +" already exists");
-        AvnLog.i("saving route "+name);
-        FileOutputStream os=new FileOutputStream(routeFile);
-        os.write(rt.toXml().getBytes("UTF-8"));
-        os.close();
-        if (mediaUpdater != null) mediaUpdater.triggerUpdateMtp(routeFile);
-        addRouteInfo(rt);
+    @Override
+    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
+        boolean rt=super.handleUpload(postData, name, ignoreExisting);
+        if (rt) triggerParser();
         return rt;
     }
 
-    private File openRouteFile(String name) throws Exception{
-        File routeFile=new File(routedir,name+".gpx");
-        if (! routeFile.isFile()) throw new Exception("route "+name+" not found");
-        return routeFile;
-    }
-
-    public JSONObject loadRouteJson(String name) throws Exception {
-        File routeFile=openRouteFile(name);
-        AvnLog.i("loading route "+name);
-        Route rt=new RouteParser().parseRouteFile(new FileInputStream(routeFile));
-        return rt.toJson();
-    }
-
-    public boolean deleteRoute(String name){
-        if (isCurrentRoute(name)){
-            AvnLog.e("unable to delete current route "+name);
-            return false;
-        }
-        File routeFile=new File(routedir,name+".gpx");
-        if (! routeFile.isFile()) {
-            deleteRouteInfo(name);
-            return true;
-        }
-        AvnLog.i("delete route "+name);
-        boolean rt=routeFile.delete();
-        deleteRouteInfo(name);
+    @Override
+    public boolean handleDelete(String name, Uri uri) throws Exception {
+        boolean rt=super.handleDelete(name, uri);
+        if (rt) deleteRouteInfo(name);
         return rt;
     }
 
-    boolean isCurrentRoute(String name){
-        if (currentLeg == null) return false;
-        if (!currentLeg.active) return false;
-        if (currentLeg.getRoute() == null) return false;
-        if (name == null) return false;
-        if (currentLeg.getRoute().name == null) return false;
-        return currentLeg.getRoute().name.equals(name);
+    @Override
+    public JSONArray handleList(Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception {
+        JSONArray rt=new JSONArray();
+        for (RouteInfo i:getRouteInfo().values()){
+            RouteInfo iv=i.clone();
+            JSONObject info=iv.toJson();
+            info.put("url",getUrlFromName(iv.name+".gpx"));
+            rt.put(info);
+        }
+        return rt;
+    }
+
+    @Override
+    protected JSONObject handleSpecialApiRequest(String command, Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
+        if (command.equals("getleg")){
+            return getLeg();
+        }
+        if (command.equals("setleg")){
+            setLeg(postData.getAsString());
+            return RequestHandler.getReturn();
+        }
+        return super.handleSpecialApiRequest(command, uri, postData, serverInfo);
     }
 
     public void setLeg(String data) throws Exception{
@@ -852,7 +698,6 @@ public class RouteHandler implements INavRequestHandler {
     }
 
     public void setMediaUpdater(IMediaUpdater u){
-        mediaUpdater=u;
     }
 
 

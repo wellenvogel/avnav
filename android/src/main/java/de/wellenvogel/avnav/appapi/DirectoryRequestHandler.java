@@ -3,6 +3,7 @@ package de.wellenvogel.avnav.appapi;
 import android.net.Uri;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -17,18 +18,14 @@ import java.net.URLEncoder;
 import de.wellenvogel.avnav.util.AvnUtil;
 
 public class DirectoryRequestHandler implements INavRequestHandler{
-    private File subDir;
-    protected RequestHandler handler;
     protected File workDir;
     protected String urlPrefix;
     protected String type;
     protected IDeleteByUrl deleter;
-    public DirectoryRequestHandler(RequestHandler handler, String type,File subDir,String urlPrefrix,IDeleteByUrl deleter) throws IOException {
-        this.handler=handler;
+    public DirectoryRequestHandler(String type, File workDir, String urlPrefrix, IDeleteByUrl deleter) throws IOException {
         this.type=type;
-        this.subDir=subDir;
         this.urlPrefix=urlPrefrix;
-        this.workDir=new File(handler.getWorkDir(),subDir.getPath());
+        this.workDir=workDir;
         if (! workDir.exists()){
             workDir.mkdirs();
         }
@@ -59,7 +56,7 @@ public class DirectoryRequestHandler implements INavRequestHandler{
         return true;
     }
 
-    private String getUrlFromName(String name) throws UnsupportedEncodingException {
+    protected String getUrlFromName(String name) throws UnsupportedEncodingException {
        return "/"+urlPrefix+"/"+
                URLEncoder.encode(name,"utf-8");
     }
@@ -122,7 +119,11 @@ public class DirectoryRequestHandler implements INavRequestHandler{
             return RequestHandler.getErrorReturn("rename failed");
 
         }
-        return null;
+        return handleSpecialApiRequest(command,uri,postData,serverInfo);
+    }
+
+    protected JSONObject handleSpecialApiRequest(String command,Uri uri,PostVars postData,RequestHandler.ServerInfo serverInfo) throws Exception {
+        return RequestHandler.getErrorReturn("unknonw api request "+command);
     }
 
     private File findLocalFile(String name){
@@ -149,7 +150,7 @@ public class DirectoryRequestHandler implements INavRequestHandler{
         if (foundFile != null) {
             return new ExtendedWebResourceResponse(
                     foundFile.length(),
-                    handler.mimeType(foundFile.getName()),
+                    RequestHandler.mimeType(foundFile.getName()),
                     "", new FileInputStream(foundFile));
 
         }

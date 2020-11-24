@@ -57,7 +57,6 @@ public class RequestHandler {
     private SimpleDateFormat dateFormat=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
     MainActivity activity;
     private SharedPreferences preferences;
-    private HashMap<String,String> ownMimeMap=new HashMap<String, String>();
     private MimeTypeMap mime = MimeTypeMap.getSingleton();
     private final Object handlerMonitor =new Object();
 
@@ -161,14 +160,17 @@ public class RequestHandler {
         return rt;
     }
 
-
+    public File getWorkDirFromType(String type) throws Exception {
+        KeyValue<File>subDir=typeDirs.get(type);
+        if (subDir == null) throw new Exception("invalid type "+type);
+        return new File(getWorkDir(),subDir.value.getPath());
+    }
 
     public RequestHandler(MainActivity activity){
         this.activity=activity;
         this.gemfHandler =new ChartHandler(activity,this);
         this.gemfHandler.updateChartList();
         this.addonHandler= new AddonHandler(activity,this);
-        ownMimeMap.put("js", "text/javascript");
         startHandler();
         layoutHandler=new LayoutHandler(activity,"viewer/layout",
                 new File(getWorkDir(),typeDirs.get(TYPE_LAYOUT).value.getPath()));
@@ -209,8 +211,8 @@ public class RequestHandler {
             AvnLog.e("unable to create user handler",e);
         }
         try {
-            final DirectoryRequestHandler imageHandler=new DirectoryRequestHandler(this, TYPE_IMAGE,
-                    typeDirs.get(TYPE_IMAGE).value, "user/images",null);
+            final DirectoryRequestHandler imageHandler=new DirectoryRequestHandler(TYPE_IMAGE,
+                    getWorkDirFromType(TYPE_IMAGE), "user/images",null);
             handlerMap.put(TYPE_IMAGE, new LazyHandlerAccess() {
                 @Override
                 public INavRequestHandler getHandler() {
@@ -221,8 +223,8 @@ public class RequestHandler {
             AvnLog.e("unable to create images handler",e);
         }
         try {
-            final DirectoryRequestHandler overlayHandler=new DirectoryRequestHandler(this, TYPE_OVERLAY,
-                    typeDirs.get(TYPE_OVERLAY).value, "user/overlays",null);
+            final DirectoryRequestHandler overlayHandler=new DirectoryRequestHandler(TYPE_OVERLAY,
+                    getWorkDirFromType(TYPE_OVERLAY), "user/overlays",null);
             handlerMap.put(TYPE_OVERLAY, new LazyHandlerAccess() {
                 @Override
                 public INavRequestHandler getHandler() {
@@ -299,9 +301,11 @@ public class RequestHandler {
         return preferences;
     }
 
-    public String mimeType(String fname){
+    public static String mimeType(String fname){
+        HashMap<String,String> ownMimeMap=new HashMap<String, String>();
+        ownMimeMap.put("js", "text/javascript");
         String ext=fname.replaceAll(".*\\.", "");
-        String mimeType=mime.getMimeTypeFromExtension(ext);
+        String mimeType=MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext);
         if (mimeType == null) {
             mimeType=ownMimeMap.get(ext);
         }
@@ -486,7 +490,7 @@ public class RequestHandler {
                     fout=getGpsService().getAisData(lat, lon, distance);
                 }
             }
-            if (type.equals("routing")){
+            if (type.equals("route")){
                 if (getGpsService() != null && getRouteHandler() != null) {
                     JSONObject o=getRouteHandler().handleApiRequest(uri,postData, null);
                     if (o != null){

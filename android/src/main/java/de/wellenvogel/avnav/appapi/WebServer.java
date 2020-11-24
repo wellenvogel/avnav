@@ -214,7 +214,7 @@ public class WebServer {
                 InputStream is=activity.getAssets().open(path);
                 httpResponse.setStatusCode(HttpStatus.SC_OK);
                 httpResponse.setEntity(new InputStreamEntity(is,-1));
-                httpResponse.addHeader("content-type", activity.getRequestHandler().mimeType(path));
+                httpResponse.addHeader("content-type", RequestHandler.mimeType(path));
 
             }catch (Exception e){
                 AvnLog.d(NAME,"file "+path+" not found: "+e);

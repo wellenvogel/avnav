@@ -66,8 +66,8 @@ public class UserDirectoryRequestHandler extends DirectoryRequestHandler {
             mode=3;
         }
     };
-    public UserDirectoryRequestHandler(RequestHandler handler, IDeleteByUrl deleter) throws IOException {
-        super(handler, RequestHandler.TYPE_USER, RequestHandler.typeDirs.get(RequestHandler.TYPE_USER).value, "user/viewer", deleter);
+    public UserDirectoryRequestHandler(RequestHandler handler, IDeleteByUrl deleter) throws Exception {
+        super(RequestHandler.TYPE_USER, handler.getWorkDirFromType(RequestHandler.TYPE_USER), "user/viewer", deleter);
         AssetManager assets=handler.activity.getAssets();
         for (String filename : templateFiles){
             File file=new File(workDir,filename);
@@ -123,7 +123,7 @@ public class UserDirectoryRequestHandler extends DirectoryRequestHandler {
         JsStream out=new JsStream(new FileInputStream(foundFile),baseUrl);
         return new ExtendedWebResourceResponse(
                     flen,
-                    handler.mimeType(foundFile.getName()),
+                    RequestHandler.mimeType(foundFile.getName()),
                     "", out);
 
     }
