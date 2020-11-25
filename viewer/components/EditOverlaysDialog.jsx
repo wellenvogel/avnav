@@ -15,7 +15,7 @@ import {readFeatureInfoFromGpx} from '../map/gpxchartsource';
 import {getOverlayConfigName} from '../map/chartsourcebase'
 import globalStore from "../util/globalstore";
 import keys from '../util/keys';
-import OverlayConfig from '../map/overlayconfig';
+import OverlayConfig, {getKeyFromOverlay} from '../map/overlayconfig';
 
 const filterOverlayItem=(item,opt_itemInfo)=>{
     let rt=undefined;
@@ -467,16 +467,20 @@ const displayListToOverlays=(displayList)=>{
     return rt;
 }
 
+const isSameItem=(item,compare)=>{
+    let itemKey=getKeyFromOverlay(item);
+    let compareKey=getKeyFromOverlay(compare);
+    if (itemKey === undefined || compareKey === undefined) return false;
+    if (itemKey !== compareKey) return false;
+    return item.isDefault === compare.isDefault;
+}
 class EditOverlaysDialog extends React.Component{
     constructor(props){
         super(props);
         this.state={};
         this.state.selectedIndex=-1;
+        this.currentConfig=this.props.current.copy();
         let itemList=this.props.current.getOverlayList(true);
-        for (let i = 0; i < itemList.length; i++) {
-            itemList[i].itemKey=i;
-            this.maxKey=i;
-        }
         this.state.list=displayListFromOverlays(itemList);
         this.state.addEntry=props.addEntry;
         for (let i=0;i<this.state.list.length;i++){
@@ -485,7 +489,6 @@ class EditOverlaysDialog extends React.Component{
                 break;
             }
         }
-        this.maxKey++;
         this.state.useDefault=this.props.current.getUseDefault();
         this.state.isChanged=false;
         this.dialogHelper=dialogHelper(this);
@@ -518,18 +521,11 @@ class EditOverlaysDialog extends React.Component{
         if (count < 0) idx = -1;
         this.setState({list: newList, isChanged: true, selectedIndex: idx});
     }
-    getNewKey(){
-        this.maxKey++;
-        return this.maxKey;
-    }
-
-
     updateDimensions(){
         if (this.props.updateDimensions){
             this.props.updateDimensions();
         }
     }
-
     showItemDialog(item,opt_forceOk){
         return new Promise((resolve,reject)=>{
             this.dialogHelper.showDialog((props)=>{
@@ -562,10 +558,10 @@ class EditOverlaysDialog extends React.Component{
             //we can only have this for after - so we always add on top
             idx=this.state.list.length;
         }
-        this.showItemDialog(opt_item||{type:'overlay',opacity:1},opt_item !== undefined)
+        let newItem=this.currentConfig.createNewOverlay(opt_item||{type:'overlay',opacity:1});
+        this.showItemDialog(newItem,opt_item !== undefined)
             .then((overlay)=>{
                 let overlays=this.state.list.slice();
-                overlay.itemKey=this.getNewKey();
                 overlays.splice(before?idx:idx+1,0,overlay);
                 this.updateList(overlays);
             })
@@ -576,25 +572,25 @@ class EditOverlaysDialog extends React.Component{
         if (item.disabled) return;
         this.showItemDialog(item)
             .then((changedItem)=>{
-                this.updateItem(item.itemKey,changedItem);
+                this.updateItem(item,changedItem);
             })
             .catch((reason)=>{if (reason) Toast(reason);})
     }
-    updateItem(itemKey,newValues){
+    updateItem(item,newValues){
         let overlays=this.state.list;
         let hasChanged=false;
         overlays.forEach((element)=>{
             if (element.items){
                 //combined...
-                element.items.forEach((item)=>{
-                    if (item.itemKey === itemKey){
-                        assign(item,newValues);
+                element.items.forEach((elitem)=>{
+                    if (isSameItem(item,elitem)){
+                        assign(elitem,newValues);
                         hasChanged=true;
                     }
                 });
             }
             else{
-                if (element.itemKey === itemKey){
+                if (isSameItem(element,item)){
                     assign(element,newValues);
                     hasChanged=true;
                 }
@@ -607,11 +603,11 @@ class EditOverlaysDialog extends React.Component{
     deleteItem(item){
         if (this.props.preventEdit) return;
         if (item.disabled) return;
-        if (item.itemKey === undefined) return;
+        if (getKeyFromOverlay(item) === undefined) return;
         let overlays=this.state.list.slice();
         for (let i=0;i<overlays.length;i++) {
             //not allowed for combined...
-            if (overlays[i].itemKey===item.itemKey) {
+            if (isSameItem(overlays[i],item)) {
                 overlays.splice(i, 1);
                 this.updateList(overlays);
                 this.updateDimensions();
@@ -633,14 +629,13 @@ class EditOverlaysDialog extends React.Component{
             this.props.resetCallback();
             return;
         }
-        let copy=this.props.current.copy();
-        copy.reset();
+        this.currentConfig.reset();
         this.setState({
-            useDefault: copy.getUseDefault(),
+            useDefault: this.currentConfig.getUseDefault(),
             selectedIndex:0,
             isChanged:true
         })
-        this.updateList(displayListFromOverlays(copy.getOverlayList()))
+        this.updateList(displayListFromOverlays(this.currentConfig.getOverlayList()))
     }
     render () {
         let self=this;
@@ -699,24 +694,22 @@ class EditOverlaysDialog extends React.Component{
                             return;
                         }
                         if (data === 'disable'){
-                            this.updateItem(item.itemKey,{enabled:false});
+                            this.updateItem(item,{enabled:false});
                             return;
                         }
                         if (data === 'enable'){
-                            this.updateItem(item.itemKey,{enabled:true});
+                            this.updateItem(item,{enabled:true});
                             return;
                         }
                         //the combined items will give us the action as an object
                         if (typeof data === 'object'){
                             if (! data.item) return;
-                            let itemKey=data.item.itemKey;
-                            if (itemKey === undefined) return;
                             if (data.data === 'enable'){
-                                this.updateItem(itemKey,{enabled:true});
+                                this.updateItem(data.item,{enabled:true});
                                 return;
                             }
                             if (data.data === 'disable'){
-                                this.updateItem(itemKey,{enabled:false});
+                                this.updateItem(data.item,{enabled:false});
                                 return;
                             }
                         }
@@ -753,7 +746,7 @@ class EditOverlaysDialog extends React.Component{
                             name="ok"
                             onClick={()=>{
                                 this.props.closeCallback();
-                                let updatedOverlays=this.props.current.copy();
+                                let updatedOverlays=this.currentConfig;
                                 updatedOverlays.writeBack(displayListToOverlays(this.state.list));
                                 updatedOverlays.setUseDefault(this.state.useDefault);
                                 this.props.updateCallback(updatedOverlays);

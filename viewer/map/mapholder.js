@@ -399,12 +399,6 @@ MapHolder.prototype.createChartSource=function(description){
 
 };
 
-export const getKeyFromOverlay=(overlayConfig,opt_forceDefault)=>{
-    let prefix="local-";
-    if (overlayConfig.isDefault || opt_forceDefault) prefix="default-";
-    if (overlayConfig.type == 'chart') return prefix+(overlayConfig.chartKey||overlayConfig.name);
-    return prefix+overlayConfig.name;
-};
 MapHolder.prototype.getBaseChart=function(){
     if (! this.sources || this.sources.length < 1) return;
     for (let i=0;i<this.sources.length;i++){
@@ -504,15 +498,14 @@ MapHolder.prototype.getCurrentMergedOverlayConfig=function(){
 };
 MapHolder.prototype.updateOverlayConfig=function(newOverrides){
     if (newOverrides) this.overlayOverrides=newOverrides;
+    let merged=this.getCurrentMergedOverlayConfig();
     for (let i=0;i<this.sources.length;i++){
         let source=this.sources[i];
         let currentConfig=source.getConfig();
-        let newConfig=assign({},currentConfig,
-            this.overlayConfig.getCurrentItemConfig(currentConfig),
-            this.overlayOverrides.getCurrentItemConfig(currentConfig));
+        let newConfig=assign({},currentConfig,merged.getCurrentItemConfig(currentConfig));
         if (newConfig){
             source.setVisible(newConfig.enabled === undefined || newConfig.enabled);
-            //TODO: opcaity
+            //TODO: opacity
         }
         else{
             source.resetVisible();

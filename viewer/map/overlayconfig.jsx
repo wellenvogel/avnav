@@ -38,13 +38,12 @@ import Helper from "../util/helper";
  *
  *
  */
-const itemToBucket=function(buckets,item,opt_forceDefault){
+const itemToBucket=function(buckets,item){
     let bucketName="H";
     let ownBuckets=['L1','L2','H1','H2'];
-    if (item.isDefault || opt_forceDefault){
+    if (item.isDefault){
         if (item.bucket === undefined || item.bucket.match(/^H/)) bucketName='H';
         else bucketName='L';
-        item.isDefault=true;
     }
     else{
         if (item.bucket === undefined) bucketName='H2';
@@ -77,11 +76,43 @@ const filterOverlayItem=(item)=>{
     delete rt.isDefault;
     return rt;
 };
+const OVERLAY_ID='overlayId'; //unique (within one config) id of an overlay, constant during it's life time
+const OVERRIDE_KEYS={
+    enabled:true
+};
+export const getKeyFromOverlay=(overlay)=>{
+    if (!overlay) return;
+    return overlay[OVERLAY_ID];
+}
 export default class OverlayConfig{
-    constructor(overlayConfig) {
+    constructor(overlayConfig,opt_mutable) {
         this.config=overlayConfig||{};
+        this.mutable=opt_mutable||false;
         if (! this.config.defaults) this.config.defaults=[];
+        else{
+            let newDefaults=[];
+            this.config.defaults.forEach((item)=>{
+                if (getKeyFromOverlay(item) === undefined) return;
+                newDefaults.push(assign({ },item,{isDefault:true}));
+            })
+            this.config.defaults=newDefaults;
+        }
         if (! this.config.overlays) this.config.overlays=[];
+        else{
+            let newOverlays=[];
+            this.config.overlays.forEach((item)=>{
+                if (getKeyFromOverlay(item) === undefined) return;
+                newOverlays.push(assign({},item,{isDefault:false}));
+            })
+            this.config.overlays=newOverlays;
+        }
+        this.nextId=-1;
+        this.config.overlays.forEach((overlay)=>{
+            if (getKeyFromOverlay(overlay) !== undefined && getKeyFromOverlay(overlay) > this.nextId){
+                this.nextId=getKeyFromOverlay(overlay);
+            }
+        })
+        this.nextId++;
         if (!this.config.defaultsOverride) this.config.defaultsOverride={};
         if (this.config.useDefault === undefined) this.config.useDefault=true;
         this.hasChanges=false;
@@ -90,11 +121,16 @@ export default class OverlayConfig{
         return ['L2', 'L', 'L1', 'M', 'H1', 'H', 'H2'];
     }
 
-    static getOverrideKey(defaultItem){
-        return "default-"+this.getKeyFromOverlay(defaultItem)
-    }
     static getKeyFromOverlay(overlay){
-        return (overlay.chartKey||overlay.name);
+        return (getKeyFromOverlay(overlay));
+    }
+    createNewOverlay(parameters){
+        this.checkMutable()
+        let id=this.nextId;
+        this.nextId++;
+        let fixed={isDefault:false};
+        fixed[OVERLAY_ID]=id;
+        return assign(parameters,fixed)
     }
     copy(){
         let rt={
@@ -112,7 +148,7 @@ export default class OverlayConfig{
         for (let k in this.config.defaultsOverride){
             rt.defaultsOverride[k]=assign({},this.config.defaultsOverride[k]);
         }
-        return new OverlayConfig(rt);
+        return new OverlayConfig(rt,true);
     }
     /**
      * fill an object (keys are the bucket names) with a copy of the overlay objects
@@ -131,11 +167,13 @@ export default class OverlayConfig{
         let overrides=this.config.defaultsOverride;
         if (this.config.useDefault || opt_forceDefaults) {
             defaults.forEach((item) => {
-                itemToBucket(buckets, assign({}, item, overrides[OverlayConfig.getOverrideKey(item)]), true);
+                if (getKeyFromOverlay(item) === undefined) return;
+                itemToBucket(buckets, assign({}, item, overrides[getKeyFromOverlay(item)],{isDefault:true}));
             })
         }
         overlays.forEach((item)=>{
-            itemToBucket(buckets,assign({},item));
+            if (getKeyFromOverlay(item) === undefined) return;
+            itemToBucket(buckets,assign({},item,{isDefault:false}));
         })
         return buckets;
     }
@@ -147,7 +185,9 @@ export default class OverlayConfig{
         })
         return rt;
     }
-
+    checkMutable(){
+        if (! this.mutable) throw new Error("overlay config not mutable");
+    }
     /**
      * write back a list after it potentially has been changed
      * the buckets in the list are ignored and computed from the sequence
@@ -155,6 +195,7 @@ export default class OverlayConfig{
      * @param overlayList
      */
     writeBack(overlayList){
+        this.checkMutable();
         let self=this;
         if (! overlayList) return false;
         let newDefaults=[];
@@ -167,6 +208,7 @@ export default class OverlayConfig{
                 currentBucket = 'M';
                 return;
             }
+            if (getKeyFromOverlay(item) === undefined) return;
             if (item.isDefault) {
                 let currentIndex = bucketNames.indexOf(currentBucket);
                 if (currentIndex < bucketNames.indexOf('M')) {
@@ -205,25 +247,32 @@ export default class OverlayConfig{
                 this.hasChanges=true;
             }
         }
-        let len=newDefaults.length;
-        if (newDefaults.length !== this.config.defaults.length){
-            len=Math.min(newDefaults.length,this.config.defaults.length);
-        }
-        for (let i=0;i<len;i++){
-            //for defaults we can only change enable
-            let old=assign({},this.config.defaults[i],
-                this.config.defaultsOverride[OverlayConfig.getOverrideKey(this.config.defaults[i])]);
-            if (old.enabled !== newDefaults[i].enabled){
-                this.hasChanges=true;
-                this.config.defaultsOverride[OverlayConfig.getOverrideKey(this.config.defaults[i])]={
-                    enabled:newDefaults[i].enabled
-                };
+        let newOverrides={};
+        newDefaults.forEach((item)=>{
+            let id= getKeyFromOverlay(item);
+            if (id === undefined) return;
+            let old=undefined;
+            this.config.defaults.forEach((item)=>{
+                if (getKeyFromOverlay(item) === id) old=item;
+            })
+            if (! old) return; //someone tried to add a new default - not possible
+            let newOverride=Helper.filteredAssign(OVERRIDE_KEYS,item);
+            if (!shallowcompare(Helper.filteredAssign(OVERRIDE_KEYS,old),newOverride)) {
+                newOverrides[id] = newOverride;
             }
+        })
+        for (let k in this.config.defaultsOverride){
+            if (! shallowcompare(this.config.defaultsOverride[k],newOverrides[k])) this.hasChanges=true;
         }
+        for (let k in newOverrides){
+            if (! shallowcompare(this.config.defaultsOverride[k],newOverrides[k])) this.hasChanges=true;
+        }
+        this.config.defaultsOverride=newOverrides;
         return this.hasChanges;
     }
 
     setUseDefault(newValue){
+        this.checkMutable();
         if (newValue !== this.config.useDefault){
             this.config.useDefault=newValue;
             this.hasChanges=true;
@@ -252,24 +301,23 @@ export default class OverlayConfig{
      * @param overrides OverlayConfig
      */
     mergeOverrides(overrides){
+        const MERGE_FILTER={enabled:true};
+        this.checkMutable();
         this.config.overlays.forEach((overlay)=>{
             let override=overrides.getCurrentItemConfig(overlay);
-            assign(overlay,Helper.filteredAssign({enabled:true},override));
+            assign(overlay,Helper.filteredAssign(MERGE_FILTER,override));
         })
         this.config.defaults.forEach((overlay)=>{
-            let override=overrides.getCurrentItemConfig(overlay,true);
-            let our=this.getCurrentItemConfig(overlay,true);
-            if (our.enabled !== override.enabled){
-                if (override.enabled !== overlay.enabled){
-                    this.config.defaultsOverride[OverlayConfig.getOverrideKey(overlay)]={enabled:override.enabled}
-                }
-                else{
-                    delete this.config.defaultsOverride[OverlayConfig.getOverrideKey(overlay)];
-                }
-            }
+            let id=getKeyFromOverlay(overlay);
+            if (id === undefined) return;
+            let override=overrides.getCurrentItemConfig(overlay);
+            let our=this.getCurrentItemConfig(overlay);
+            let merged=Helper.filteredAssign(MERGE_FILTER,our,override);
+            this.config.defaultsOverride[id]=assign({},this.config.defaultsOverride[id],merged);
         })
     }
     reset(){
+        this.checkMutable();
         let numOverrides=0;
         for (let k in this.config.defaultsOverride){
             numOverrides++;
@@ -286,10 +334,13 @@ export default class OverlayConfig{
         if (this.config.useDefault === false) return false;
         if (this.config.overlays.length > 0) return false;
         for (let idx in this.config.defaults) {
-            let currentDefault = this.config.defaults[idx]
-            let key = OverlayConfig.getOverrideKey(currentDefault);
-            let override=this.config.defaultsOverride[key];
-            if (override && override.enabled !== currentDefault.enabled) return false;
+            let currentDefault = this.config.defaults[idx];
+            if (getKeyFromOverlay(currentDefault) !== undefined) {
+                let override = this.config.defaultsOverride[getKeyFromOverlay(currentDefault)];
+                if (override) {
+                    if (!shallowcompare(override, Helper.filteredAssign(OVERRIDE_KEYS, currentDefault))) return false;
+                }
+            }
         }
         return true;
     }
@@ -299,19 +350,19 @@ export default class OverlayConfig{
     isChartBucket(item){
         return item.bucket === 'M';
     }
-    getCurrentItemConfig(item,opt_forceDefault){
+    getCurrentItemConfig(item){
         let configEntries=[];
-        let isDefault=item.isDefault || opt_forceDefault||false;
+        if (getKeyFromOverlay(item) === undefined) return item;
+        let isDefault=item.isDefault;
         let list=isDefault?this.config.defaults:this.config.overlays;
-        let keyFunction=OverlayConfig.getKeyFromOverlay;
-        let itemName=keyFunction(item);
+        let id=getKeyFromOverlay(item);
         for (let k in list){
-            if (keyFunction(list[k]) === itemName){
+            if (getKeyFromOverlay(list[k]) === id){
                 configEntries.push(list[k]);
             }
         }
         if (isDefault) {
-            configEntries.push(this.config.defaultsOverride[OverlayConfig.getOverrideKey(item)]);
+            configEntries.push(this.config.defaultsOverride[getKeyFromOverlay(item)]);
         }
         let rt=assign({},item);
         configEntries.forEach((config)=>{
