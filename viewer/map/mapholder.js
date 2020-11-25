@@ -37,6 +37,7 @@ import {GeoJSON as olGeoJSONFormat} from 'ol/format';
 import {Style as olStyle,Circle as olCircle, Stroke as olStroke, Text as olText, Icon as olIcon, Fill as olFill} from 'ol/style';
 import * as olTransforms  from 'ol/proj/transforms';
 import OverlayConfig from "./overlayconfig";
+import FeatureInfoDialog from '../components/FeatureInfoDialog';
 
 
 const PSTOPIC="mapevent";
@@ -1163,7 +1164,7 @@ MapHolder.prototype.onClick=function(evt){
                 if (promiseFeatures[pi] === undefined || promiseFeatures[pi].length < 1) continue;
                 let feature = promiseFeatures[pi][0];
                 if (feature) {
-                    OverlayDialog.alert(feature.get('desc'));
+                    FeatureInfoDialog.showDialog(feature);
                 }
             }
        })

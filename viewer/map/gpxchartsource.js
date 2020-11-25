@@ -24,18 +24,14 @@
  */
 
 import Promise from 'promise';
-import base from '../base.js';
 import Requests from '../util/requests.js';
-import globalStore from '../util/globalstore.jsx';
-import keys from '../util/keys.jsx';
-import Helper from '../util/helper.js';
-import CryptHandler from './crypthandler.js';
 import ChartSourceBase from './chartsourcebase.js';
 import {Style as olStyle, Stroke as olStroke, Circle as olCircle, Icon as olIcon, Fill as olFill} from 'ol/style';
 import {Vector as olVectorSource} from 'ol/source';
 import {Vector as olVectorLayer} from 'ol/layer';
 import {LineString as olLineString, MultiLineString as olMultiLineString, Point as olPoint} from 'ol/geom';
 import {GPX as olGPXFormat} from 'ol/format';
+import Helper from "../util/helper";
 
 export const stylePrefix="style."; // the prefix for style attributes
 
@@ -97,8 +93,8 @@ class GpxChartSource extends ChartSourceBase{
             })
         };
     }
-    getSymbolUrl(sym){
-        if (! sym.match(/\./)) sym+=".png";
+    getSymbolUrl(sym,opt_ext){
+        if (! sym.match(/\./) && opt_ext) sym+=opt_ext;
         let url=this.chartEntry.icons + "/" + sym;
         if (this.chartEntry.defaultIcon) url+="?fallback="+encodeURIComponent(this.chartEntry.defaultIcon);
         return url;
@@ -112,7 +108,7 @@ class GpxChartSource extends ChartSourceBase{
                 if (!this.styleMap[sym]) {
                     let style = new olStyle({
                         image: new olIcon({
-                            src: this.getSymbolUrl(sym)
+                            src: this.getSymbolUrl(sym,'.png')
                         })
                     });
                     this.styleMap[sym] = style;
@@ -171,7 +167,42 @@ class GpxChartSource extends ChartSourceBase{
             resolve([vectorLayer]);
         });
     }
-
+    featureToInfo(feature,pixel){
+        let rt={
+            overlayName:this.chartEntry.name,
+            overlayType:this.chartEntry.type,
+            overlayUrl: this.chartEntry.url
+        };
+        if (! feature) {
+            return rt;
+        }
+        let geometry=feature.getGeometry();
+        let coordinates;
+        if (geometry instanceof olPoint){
+            coordinates=this.mapholder.transformFromMap(geometry.getCoordinates());
+            let sym=feature.get('sym');
+            if (sym && this.chartEntry.icons){
+                rt.icon=this.getSymbolUrl(sym,'.png');
+            }
+            let link=feature.get('link');
+            if (link && this.chartEntry.icons){
+                rt.link=this.getSymbolUrl(link);
+                rt.linkText=feature.get('linkText');
+            }
+        }
+        else{
+            coordinates=this.mapholder.transformFromMap(pixel);
+        }
+        rt.coordinates=coordinates;
+        let info=feature.get('desc')||feature.get('name');
+        rt.info=info;
+        for (let k in this.chartEntry){
+            if (Helper.startsWith(k,stylePrefix)){
+                rt[k]=this.chartEntry[k];
+            }
+        }
+        return rt;
+    }
     getFeatureAtPixel(pixel) {
         let promises=[];
         let rt=[];
@@ -186,7 +217,9 @@ class GpxChartSource extends ChartSourceBase{
             Promise.all(promises)
                 .then((promiseFeatures)=>{
                     promiseFeatures.forEach((list)=> {
-                        rt = rt.concat(list);
+                        list.forEach((feature)=>{
+                            rt.push(this.featureToInfo(feature,pixel));
+                        })
                     });
                     resolve(rt);
                 })

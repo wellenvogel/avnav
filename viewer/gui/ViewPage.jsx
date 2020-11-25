@@ -21,6 +21,7 @@ import CodeFlask from 'codeflask';
 import Prism from 'prismjs';
 import GuiHelpers from '../util/GuiHelpers.js';
 import InputMonitor from '../hoc/InputMonitor.jsx';
+import Helper from "../util/helper.js";
 
 //add all extensions here that we can edit
 //if set to undefined we will edit them but without highlighting
@@ -50,7 +51,8 @@ class ViewPageBase extends React.Component{
         }
         this.type=this.props.options.type;
         this.name=this.props.options.name;
-        if (this.props.options.readOnly || this.isImage()){
+        this.url=this.props.options.url;
+        if (this.props.options.readOnly || this.isImage() || this.url){
             state.readOnly=true;
         }
         this.state=state;
@@ -148,14 +150,15 @@ class ViewPageBase extends React.Component{
     getExt(){
         if (this.type == 'route') return "gpx";
         if (this.type == 'layout') return 'json';
-        return this.name.replace(/.*\./,'');
+        if (this.url) return Helper.getExt(this.url);
+        return Helper.getExt(this.name);
     }
     isImage(){
         let ext=this.getExt().toLowerCase();
         return (GuiHelpers.IMAGES.indexOf(ext) >= 0);
     }
     canChangeMode(){
-        return this.getExt() == 'html';
+        return this.getExt() == 'html' && ! this.state.readOnly;
     }
     getLanguage(){
         let ext=this.getExt();
@@ -164,12 +167,13 @@ class ViewPageBase extends React.Component{
         return language;
     }
     getUrl(includeNavUrl){
+        if (this.url) return this.url;
         return (includeNavUrl?globalStore.getData(keys.properties.navUrl):"")+"?request=download&type="+this.type+"&name="+encodeURIComponent(this.name);
     }
     componentDidMount(){
         let self=this;
         if (this.isImage()) return;
-        Requests.getHtmlOrText(this.getUrl(),{useNavUrl:true,noCache:true}).then((text)=>{
+        Requests.getHtmlOrText(this.getUrl(),{noCache:true}).then((text)=>{
             if (! this.state.readOnly || this.canChangeMode()) {
                 let language = self.getLanguage();
                 this.flask = new CodeFlask(self.refs.editor, {
@@ -184,7 +188,7 @@ class ViewPageBase extends React.Component{
                 this.flask.onUpdate(this.changed);
             }
             this.setState({data:text})
-        },(error)=>{Toast("unable to load "+this.name+": "+error)});
+        },(error)=>{Toast("unable to load "+(this.url||this.name)+": "+error)});
 
     }
     componentWillUnmount(){

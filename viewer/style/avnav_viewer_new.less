@@ -405,6 +405,15 @@ html,body {
   }
 }
 
+.FeatureInfoDialog{
+  .dialogRow{
+    margin-bottom: 0.5em;
+  }
+  .icon{
+    margin-right: 1em;
+  }
+}
+
 //-- Color Picker
 
 .colorPicker {
@@ -615,13 +624,16 @@ span.valuePrefix{
 
 //--iconimage
 
-.iconImage(@url){
+.icon{
   width:1.5em;
   height:1.5em;
   margin: 0.2em;
-  background-image: url("../images/icons-new/@{url}");
   background-size: contain;
   display: inline-block;
+}
+.iconImage(@url){
+  .icon();
+  background-image: url("@{iconBase}/@{url}");
 }
 
 //-- appIcon
