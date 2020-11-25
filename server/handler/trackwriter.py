@@ -259,6 +259,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
 
   def periodicRun(self):
     try:
+      self.loopCount+=1
       currentTime = datetime.datetime.utcnow()
       curfname = self.createFileName(currentTime)
       newFile=False
@@ -278,9 +279,9 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
               self.track.append((trkpoint[0], trkpoint[1], trkpoint[2]))
           self.initial = False
       if newFile:
-        f = open(realfilename, "a")
-        f.write("#anvnav Trackfile started/continued at %s\n" % (currentTime.isoformat()))
-        f.flush()
+        self.currentFile = open(realfilename, "a")
+        self.currentFile.write("#anvnav Trackfile started/continued at %s\n" % (currentTime.isoformat()))
+        self.currentFile.flush()
         self.setInfo('main', "writing to %s" % (realfilename,), AVNWorker.Status.NMEA)
       if self.loopCount >= 10:
         self.cleanupTrack()
@@ -291,7 +292,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
       if not lat is None and not lon is None:
         if self.lastlat is None or self.lastlon is None:
           AVNLog.ld("write track entry", gpsdata)
-          self.writeLine(f, currentTime, gpsdata)
+          self.writeLine(self.currentFile, currentTime, gpsdata)
           self.track.append((currentTime, lat, lon))
           self.lastlat = lat
           self.lastlon = lon
