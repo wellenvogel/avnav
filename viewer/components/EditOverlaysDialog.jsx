@@ -149,9 +149,8 @@ class OverlayItemDialog extends React.Component{
         if (newType === this.stateHelper.getValue('type')) return;
         let newState={
             type: newType,
-            opacity: 1
         };
-        this.stateHelper.setState(newState,true);
+        this.stateHelper.setState(newState);
     }
     analyseOverlay(url){
         this.setState({loading:true,itemInfo:undefined});
