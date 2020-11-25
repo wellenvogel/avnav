@@ -180,6 +180,12 @@ class ChartSourceBase {
         this.layers.forEach((layer)=>layer.setVisible(this.chartEntry.enabled));
     }
 
+    getFeatureAtPixel(pixel){
+        return new Promise((resolve,reject)=>{
+            resolve([]);
+        })
+    }
+
 }
 
 export default  ChartSourceBase;

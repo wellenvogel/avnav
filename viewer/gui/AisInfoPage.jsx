@@ -18,6 +18,7 @@ import MapHolder from '../map/mapholder.js';
 import GuiHelpers from '../util/GuiHelpers.js';
 import Mob from '../components/Mob.js';
 import {Drawing} from '../map/drawing.js';
+import MapEventGuard from "../hoc/MapEventGuard";
 
 const displayItems = [
     {name: 'mmsi', label: 'MMSI'},
@@ -60,6 +61,7 @@ const createItem=(config,mmsi)=>{
 
     });
 };
+const GuardedList=MapEventGuard(ItemList);
 class AisInfoPage extends React.Component{
     constructor(props){
         super(props);
@@ -151,7 +153,7 @@ class AisInfoPage extends React.Component{
                     storeKeys={storeKeys}
                     updateFunction={createUpdateFunction({},props.mmsi)}
                     />
-                <ItemList
+                <GuardedList
                     itemCreator={(config)=>{return createItem(config,props.mmsi)}}
                     itemList={displayItems}
                     scrollable={true}

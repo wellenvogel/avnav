@@ -171,6 +171,28 @@ class GpxChartSource extends ChartSourceBase{
             resolve([vectorLayer]);
         });
     }
+
+    getFeatureAtPixel(pixel) {
+        let promises=[];
+        let rt=[];
+        return new Promise((resolve,reject)=>{
+            if (! this.isReady()) resolve([]);
+            for (let i=this.layers.length-1;i>=0;i--){
+                if (this.layers[i].getVisible()) {
+                    promises.push(this.layers[i].getFeatures(pixel));
+                }
+            }
+            if (promises.length < 1) resolve([]);
+            Promise.all(promises)
+                .then((promiseFeatures)=>{
+                    promiseFeatures.forEach((list)=> {
+                        rt = rt.concat(list);
+                    });
+                    resolve(rt);
+                })
+                .catch((error)=>reject(error));
+        });
+    }
 }
 
 export default  GpxChartSource;
@@ -232,4 +254,5 @@ export const readFeatureInfoFromGpx=(gpx)=>{
         }
     })
     return rt;
+
 }

@@ -149,7 +149,8 @@ let keys={
         courseUp: K,
         currentZoom:K,
         requiredZoom:K,
-        centerPosition:K
+        centerPosition:K,
+        lastClickTime: K
         },
     gui:{
         capabilities:{
@@ -345,7 +346,7 @@ let keys={
         nightMode: new Property(false, "NightMode", PropertyType.CHECKBOX),
         nightColorDim: new Property(60, "Night Dim for Colors", PropertyType.RANGE, [5, 100]), //should match @nightModeVale in less
         smallBreak: new Property(480, "portrait layout below (px)", PropertyType.RANGE, [200, 9999]),
-        iosWorkaroundTime: new Property(300, "time to ignore events after page show", PropertyType.RANGE, [0, 1000]),
+        mapClickWorkaroundTime: new Property(300, "time to ignore events map click", PropertyType.RANGE, [0, 1000]),
         wpButtonTimeout: new Property(30,"time(s) for auto hiding wp buttons",PropertyType.RANGE,[2,3600]),
         toastTimeout: new Property(15,"time(s) to display messages",PropertyType.RANGE,[2,3600]),
         layoutName: new Property("system.default","Layout name",PropertyType.LAYOUT),

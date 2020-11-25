@@ -1139,16 +1139,37 @@ MapHolder.prototype.setGpsLock=function(lock){
  * @param {MapBrowserEvent} evt
  */
 MapHolder.prototype.onClick=function(evt){
+    evt.preventDefault();
+    evt.stopPropagation();
+    globalStore.storeData(keys.map.lastClickTime,(new Date()).getTime());
     let wp=this.routinglayer.findTarget(evt.pixel);
     if (wp){
-        this.pubSub.publish(PSTOPIC,{type:this.EventTypes.SELECTWP,wp:wp})
+        this.pubSub.publish(PSTOPIC,{type:this.EventTypes.SELECTWP,wp:wp});
+        return false;
     }
-    evt.preventDefault();
-    if (this.routingActive || wp) return false;
+    if (this.routingActive) return false;
     let aisparam=this.aislayer.findTarget(evt.pixel);
     if (aisparam) {
         this.pubSub.publish(PSTOPIC,{type:EventTypes.SELECTAIS,aisparam:aisparam});
+        return false;
     }
+    let promises=[];
+    for (let i=this.sources.length-1;i>=0;i--) {
+        promises.push(this.sources[i].getFeatureAtPixel(evt.pixel));
+    }
+    Promise.all(promises)
+        .then((promiseFeatures) => {
+            for (let pi = 0; pi < promiseFeatures.length; pi++) {
+                if (promiseFeatures[pi] === undefined || promiseFeatures[pi].length < 1) continue;
+                let feature = promiseFeatures[pi][0];
+                if (feature) {
+                    OverlayDialog.alert(feature.get('desc'));
+                }
+            }
+       })
+        .catch((error) => {
+            base.log("error in query features: "+error);
+        });
     return false;
 };
 /**

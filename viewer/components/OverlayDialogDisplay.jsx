@@ -12,11 +12,20 @@ import Promise from 'promise';
 import PropTypes from 'prop-types';
 import assign from 'object-assign';
 import base from '../base.js';
+import MapEventGuard from "../hoc/MapEventGuard";
  //"active input" to prevent resizes
+const Container=MapEventGuard(React.forwardRef((props,ref)=>{
+    return (
+        <div className="overlay_cover_active" onClick={props.onClick} ref={ref}>
+            {props.children}
+        </div>
+    )
+}));
 class OverlayDialog extends React.Component {
     constructor(props) {
         super(props);
         this.updateDimensions = this.updateDimensions.bind(this);
+        this.container=null;
     }
 
     render() {
@@ -24,15 +33,15 @@ class OverlayDialog extends React.Component {
         let className="dialog";
         if (this.props.className) className+=" "+this.props.className;
         return (
-            <div ref="container" className="overlay_cover_active" onClick={this.props.onClick}>
-                <div ref="box" className={className} onClick={
+            <Container ref={(el)=>this.container=el} onClick={this.props.closeCallback}>
+                <div ref={(el)=>this.box=el} className={className} onClick={
                     (ev)=>{
                     ev.preventDefault();
                     ev.stopPropagation();
                     }
                 }>
                     <Content closeCallback={this.props.closeCallback} updateDimensions={this.updateDimensions}/></div>
-            </div>
+            </Container>
         );
     }
 
@@ -52,13 +61,14 @@ class OverlayDialog extends React.Component {
 
     updateDimensions() {
         if (!this.props.content) return;
+        if (! this.container) return;
         let props = this.props;
         let assingToViewport = true;
         if (props.parent) {
             try {
                 //expected to be a dom element
                 let containerRect = props.parent.getBoundingClientRect();
-                assign(this.refs.container.style, {
+                assign(this.container.style, {
                     position: "fixed",
                     top: containerRect.top + "px",
                     left: containerRect.left + "px",
@@ -71,7 +81,7 @@ class OverlayDialog extends React.Component {
             }
         }
         if (assingToViewport) {
-            assign(this.refs.container.style, {
+            assign(this.container.style, {
                 position: "fixed",
                 top: 0,
                 left: 0,
@@ -79,8 +89,9 @@ class OverlayDialog extends React.Component {
                 bottom: 0
             });
         }
-        let rect = this.refs.container.getBoundingClientRect();
-        assign(this.refs.box.style, {
+        if (! this.box) return;
+        let rect = this.container.getBoundingClientRect();
+        assign(this.box.style, {
             maxWidth: rect.width + "px",
             maxHeight: rect.height + "px",
             position: 'fixed',
@@ -88,11 +99,11 @@ class OverlayDialog extends React.Component {
         });
         let self = this;
         window.setTimeout(function () {
-            if (!self.refs.box) return; //could have become invisible...
-            let boxRect = self.refs.box.getBoundingClientRect();
+            if (!self.box) return; //could have become invisible...
+            let boxRect = self.box.getBoundingClientRect();
             let left=(rect.width - boxRect.width) / 2;
             let top=(rect.height - boxRect.height) / 2;
-            assign(self.refs.box.style, {
+            assign(self.box.style, {
                 left: left + "px",
                 top: top + "px",
                 maxWidth: (rect.width-left)+"px",
