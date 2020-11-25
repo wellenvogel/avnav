@@ -176,6 +176,7 @@ class GpxChartSource extends ChartSourceBase{
         if (! feature) {
             return rt;
         }
+
         let geometry=feature.getGeometry();
         let coordinates;
         if (geometry instanceof olPoint){
@@ -189,9 +190,16 @@ class GpxChartSource extends ChartSourceBase{
                 rt.link=this.getSymbolUrl(link);
                 rt.linkText=feature.get('linkText');
             }
+            rt.nextTarget=coordinates;
         }
         else{
-            coordinates=this.mapholder.transformFromMap(pixel);
+            if (geometry){
+                coordinates=this.mapholder.transformFromMap(geometry.getClosestPoint(this.mapholder.pixelToCoord(pixel)));
+                rt.nextTarget=coordinates;
+            }
+            else {
+                coordinates = this.mapholder.transformFromMap(this.mapholder.pixelToCoord(pixel));
+            }
         }
         rt.coordinates=coordinates;
         let info=feature.get('desc')||feature.get('name');
