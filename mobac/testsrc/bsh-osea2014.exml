@@ -8,7 +8,7 @@
 <name>OSM</name>
 <minZoom>6</minZoom>
 <maxZoom>20</maxZoom>
-<url>http://a.tile.openstreetmap.org/{$z}/{$x}/{$y}.png</url>
+<url>https://b.tile.geofabrik.de/23228979966ae9040ceb0597251e12a2/{$z}/{$x}/{$y}.png</url>
 </exCustomMapSource>
 <exCustomWmsMapSource>
 <name>BSHSkinOfTheEarth</name>
