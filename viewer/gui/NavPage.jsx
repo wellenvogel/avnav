@@ -37,6 +37,7 @@ import anchorWatch from '../components/AnchorWatchDialog.jsx';
 import Mob from '../components/Mob.js';
 import Dimmer from '../util/dimhandler.js';
 import FeatureInfoDialog from "../components/FeatureInfoDialog";
+import NavCompute from "../nav/navcompute";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -273,19 +274,82 @@ class NavPage extends React.Component{
         if (evdata.type === MapHolder.EventTypes.FEATURE){
             let feature=evdata.feature;
             if (! feature) return;
-            if (feature.nextTarget) {
-                feature.additionalActions = [
-                    {
-                        name: 'goto', label: 'Goto', onClick: () => {
-                            let target = feature.nextTarget;
-                            if (!target) return;
-                            let wp = new navobjects.WayPoint(target[0], target[1], feature.name);
-                            RouteHandler.wpOn(wp);
+            feature.additionalActions=[];
+            const showFeature=()=>{
+                if (feature.nextTarget) {
+                    feature.additionalActions.push(
+                        {
+                            name: 'goto', label: 'Goto', onClick: () => {
+                                let target = feature.nextTarget;
+                                if (!target) return;
+                                let wp = new navobjects.WayPoint(target[0], target[1], feature.name);
+                                RouteHandler.wpOn(wp);
+                            }
                         }
-                    }
-                ]
+                    );
+                }
+                FeatureInfoDialog.showDialog(feature);
             }
-            FeatureInfoDialog.showDialog(feature);
+            if (feature.overlayType === 'route'){
+                let currentRouteName=activeRoute.getRouteName();
+                if (Helper.getExt(currentRouteName) !== '.gpx') currentRouteName+='.gpx';
+                if (activeRoute.hasActiveTarget() && currentRouteName === feature.overlayName){
+                    //do not show a feature pop up if we have an overlay that exactly has the current route
+                    return false;
+                }
+            }
+            if (feature.overlayType !== 'route' || ! feature.nextTarget){
+                showFeature()
+            }
+            else{
+                RouteHandler.fetchRoute(feature.overlayName,false,
+                    (route)=>{
+                        let target = feature.nextTarget;
+                        let wp = new navobjects.WayPoint(target[0], target[1], feature.name);
+                        let idx=route.findBestMatchingIdx(wp);
+                        if (idx >= 0){
+                            //now we check if we are somehow between the found point and the next
+                            let currentTarget=route.getPointAtIndex(idx);
+                            let nextTarget=route.getPointAtIndex(idx+1);
+                            if (nextTarget && currentTarget){
+                                let nextDistanceWp=NavCompute.computeDistance(wp,nextTarget).dts;
+                                let nextDistanceRt=NavCompute.computeDistance(currentTarget,nextTarget).dts;
+                                //if the distance to the next wp is larger then the distance between current and next
+                                //we stick at current
+                                //we allow additionally a xx% catch range
+                                //so we only go to the next if the distance to the nextWp is xx% smaller then the distance between the rp
+                                let limit=nextDistanceRt * (100 - globalStore.getData(keys.properties.routeCatchRange,50))/100;
+                                if (nextDistanceWp <= limit ){
+                                    feature.routeTarget=nextTarget;
+                                }
+                                else{
+                                    feature.routeTarget=currentTarget;
+                                }
+                            }
+                            feature.additionalActions.push({
+                                name:'routeTo',
+                                label: 'Route',
+                                onClick:()=>{
+                                   RouteHandler.wpOn(feature.routeTarget);
+                                }
+                            })
+                        }
+                        feature.additionalActions.push({
+                            name:'editRoute',
+                            label:'Edit',
+                            onClick:()=>{
+                                let editor=new RouteEdit(RouteEdit.MODES.EDIT);
+                                editor.setNewRoute(route,idx >= 0?idx:undefined);
+                                history.push("editroutepage");
+                            }
+                        });
+                        showFeature();
+                    },
+                    (error)=> {
+                        if (error) Toast(error);
+                        showFeature();
+                    });
+            }
             return true;
         }
     }

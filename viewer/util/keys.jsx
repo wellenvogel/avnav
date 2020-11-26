@@ -318,6 +318,7 @@ let keys={
         chartInfoStoreName: new Property("avnav.chartinfo"),
         routingServerError: new Property(true, "ServerError", PropertyType.CHECKBOX), //notify comm errors to server
         routingTextSize: new Property(14, "Text Size(px)", PropertyType.RANGE, [8, 36]), //in px
+        routeCatchRange: new Property(50,"route point snap distance %", PropertyType.RANGE,[0,100]),
         centerName: new Property("avnav.center"),
         licenseAcceptedName: new Property("avnav.licenseAccepted"),
         statusErrorImage: new Property(redBubble),

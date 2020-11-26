@@ -146,7 +146,7 @@ class GpxChartSource extends ChartSourceBase{
             let vectorSource = new olVectorSource({
                 format: new olGPXFormat(),
                 loader: (extent,resolution,projection)=>{
-                    Requests.getHtmlOrText(url)
+                    Requests.getHtmlOrText(url,{},{'_':(new Date()).getTime()})
                         .then((gpx)=>{
                             gpx=stripExtensions(gpx);
                             vectorSource.addFeatures(

@@ -577,6 +577,13 @@ RouteData.prototype._downloadRoute=function (name,okcallback,opt_errorcallback){
         .then((xml)=>{
             let newRoute=new routeobjects.Route();
             newRoute.fromXml(xml);
+            let routeName=name.replace(/\.gpx$/,'');
+            if (newRoute.name !== routeName){
+                let error="downloaded route has invalid name expected="+routeName+", current="+newRoute.name;
+                if (opt_errorcallback) opt_errorcallback(error);
+                else base.log(error);
+                return;
+            }
             okcallback(newRoute);
         })
         .catch((error)=>{
