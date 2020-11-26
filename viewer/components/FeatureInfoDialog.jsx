@@ -84,7 +84,7 @@ class FeatureInfoDialog extends React.Component{
     linkAction(){
         if (! this.props.link) return;
         this.props.closeCallback();
-        history.push('viewpage',{url:this.props.link});
+        history.push('viewpage',{url:this.props.link,name:this.props.name,useIframe:true});
     }
     render(){
         let link=this.props.link;

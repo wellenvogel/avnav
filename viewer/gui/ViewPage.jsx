@@ -158,7 +158,7 @@ class ViewPageBase extends React.Component{
         return (GuiHelpers.IMAGES.indexOf(ext) >= 0);
     }
     canChangeMode(){
-        return this.getExt() == 'html' && ! this.state.readOnly;
+        return this.getExt() == 'html' && ! this.props.options.readOnly && ! this.url;
     }
     getLanguage(){
         let ext=this.getExt();
@@ -173,7 +173,7 @@ class ViewPageBase extends React.Component{
     componentDidMount(){
         let self=this;
         if (this.isImage()) return;
-        Requests.getHtmlOrText(this.getUrl(),{noCache:true}).then((text)=>{
+        Requests.getHtmlOrText(this.getUrl(true),{noCache:true}).then((text)=>{
             if (! this.state.readOnly || this.canChangeMode()) {
                 let language = self.getLanguage();
                 this.flask = new CodeFlask(self.refs.editor, {
@@ -197,11 +197,15 @@ class ViewPageBase extends React.Component{
     render(){
         let self=this;
         let mode=this.isImage()?0:(this.getExt() == 'html')?1:2;
+        if (this.url && this.props.options.useIframe){
+            mode=4;
+        }
         let showView=this.state.readOnly || this.canChangeMode();
         let showEdit=!this.state.readOnly || this.canChangeMode();
         let viewData=(showEdit && this.flask)?this.flask.getCode():this.state.data;
         let viewClass="mainContainer view";
         if (!this.state.readOnly) viewClass+=" hidden";
+        if (mode === 4) viewClass+=" flex";
         if (mode == 0) viewClass+=" image";
         let editClass="mainContainer edit";
         if (this.state.readOnly) editClass+=" hidden";
@@ -211,6 +215,11 @@ class ViewPageBase extends React.Component{
                     {(mode == 1)&&  <div dangerouslySetInnerHTML={{__html: viewData}}/>}
                     {(mode == 0) && <img className="readOnlyImage" src={this.getUrl(true)}/>}
                     {(mode == 2) && <textarea className="readOnlyText" defaultValue={viewData} readOnly={true}/>}
+                    {(mode == 4) &&
+                    <div className="addOnFrame">
+                        <iframe className="viewPageIframe addOn" src={this.getUrl(true)}/>
+                    </div>
+                    }
                 </div>}
             {showEdit &&
                 <div className={editClass} ref="editor">

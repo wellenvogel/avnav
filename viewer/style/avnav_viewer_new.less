@@ -969,15 +969,15 @@ span.valuePrefix{
   }
 }
 
-#addonpage{
-  .addOnFrame{
+.addOnFrame{
+  .flex(1);
+  .flex-display();
+  .flex-align-items(stretch);
+  iframe{
     .flex(1);
-    .flex-display();
-    .flex-align-items(stretch);
-    iframe{
-      .flex(1);
-    }
   }
+}
+#addonpage{
   .buttonContainer{
     overflow-y: auto;
   }
@@ -1305,8 +1305,11 @@ span.valuePrefix{
       .flex-align-items(center);
       .flex-justify-content(center);
     }
-    .hidden{
+    &.hidden{
       display: none !important;
+    }
+    &.flex{
+      .flex-display();
     }
   }
   .readOnlyText{
