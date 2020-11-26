@@ -32,6 +32,9 @@ import history from "../util/history";
 import OverlayDialog from "./OverlayDialog";
 import NavHandler from "../nav/navdata";
 import navobjects from "../nav/navobjects";
+import globalstore from "../util/globalstore";
+import keys from "../util/keys";
+import NavCompute from "../nav/navcompute";
 const RouteHandler=NavHandler.getRoutingHandler();
 const InfoItem=(props)=>{
     return <div className={"dialogRow "+props.className}>
@@ -41,13 +44,31 @@ const InfoItem=(props)=>{
 }
 
 const INFO_ROWS=[
-    {label:'description',value:'info'},
+    {label:'name',value:'name'},
+    {label:'description',value:'desc',formatter:(v,feature)=>{
+        if (feature.name === v) return;
+        return v;
+        }},
     {label:'overlay',value:'overlayName',formatter:(v,overlay)=>{
         let prefix="";
         if (overlay.overlayType) prefix=TYPE_PREFIX[overlay.overlayType]||"";
         return prefix+v;
         }},
-    {label: 'position',value:'coordinates',formatter:(v)=>Formatter.formatLonLats({lon:v[0],lat:v[1]})}
+    {label: 'position',value:'coordinates',formatter:(v)=>Formatter.formatLonLats({lon:v[0],lat:v[1]})},
+    {label: 'distance',value:'coordinates',formatter:(v)=>{
+        let position=globalstore.getData(keys.nav.gps.position);
+        let valid=globalstore.getData(keys.nav.gps.valid,false);
+        if (! valid) return;
+        let distance=NavCompute.computeDistance(position,new navobjects.Point(v[0],v[1]));
+        return Formatter.formatDistance(distance.dts)+" nm";
+        }},
+    {label: 'bearing',value:'coordinates',formatter:(v)=>{
+            let position=globalstore.getData(keys.nav.gps.position);
+            let valid=globalstore.getData(keys.nav.gps.valid,false);
+            if (! valid) return;
+            let distance=NavCompute.computeDistance(position,new navobjects.Point(v[0],v[1]));
+            return Formatter.formatDirection(distance.course)+" °";
+        }}
 ];
 
 const TYPE_PREFIX={
@@ -87,6 +108,7 @@ class FeatureInfoDialog extends React.Component{
                     let v=this.props[row.value];
                     if (v === undefined) return null;
                     if (row.formatter) v=row.formatter(v,this.props);
+                    if (v === undefined) return null;
                     return <InfoItem label={row.label} value={v}/>
                 })}
                 <div className={"dialogButtons"}>

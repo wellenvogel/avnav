@@ -36,6 +36,7 @@ import EditPageDialog from '../components/EditPageDialog.jsx';
 import anchorWatch from '../components/AnchorWatchDialog.jsx';
 import Mob from '../components/Mob.js';
 import Dimmer from '../util/dimhandler.js';
+import FeatureInfoDialog from "../components/FeatureInfoDialog";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -267,6 +268,11 @@ class NavPage extends React.Component{
                 history.push('aisinfopage',{mmsi:aisparam.mmsi});
             }
             return;
+        }
+        if (evdata.type === MapHolder.EventTypes.FEATURE){
+            let feature=evdata.feature;
+            if (! feature) return;
+            FeatureInfoDialog.showDialog(feature);
         }
     }
     componentWillUnmount(){

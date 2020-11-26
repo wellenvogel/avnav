@@ -55,7 +55,8 @@ class Callback{
 const EventTypes={
     SELECTAIS:1,
     SELECTWP: 2,
-    RELOAD: 3
+    RELOAD: 3,
+    FEATURE: 4
 };
 
 
@@ -238,6 +239,13 @@ const MapHolder=function(){
     KeyHandler.registerHandler(()=>{self.moveCenterPercent(0,10)},"map","down");
     KeyHandler.registerHandler(()=>{self.setCourseUp(!self.getCourseUp())},"map","toggleCourseUp");
     KeyHandler.registerHandler(()=>{self.centerToGps()},"map","centerToGps");
+    /**
+     * registered guards will be called back on some handled map events (click,dblclick) with the event type
+     * this call is synchronous
+     * @private
+     * @type {*[]}
+     */
+    this.eventGuards=[];
 };
 
 base.inherits(MapHolder,DrawingPositionConverter);
@@ -695,9 +703,11 @@ MapHolder.prototype.initMap=function(opt_preventDialog){
             return self.onMoveEnd(evt);
         });
         this.olmap.on('click', function(evt) {
+            self._callGuards('click');
             return self.onClick(evt);
         });
         this.olmap.on('dblclick', function(evt) {
+            self._callGuards('dblclick');
             return self.onDoubleClick(evt);
         });
         this.olmap.getView().on('change:resolution',function(evt){
@@ -1142,13 +1152,11 @@ MapHolder.prototype.setGpsLock=function(lock){
 MapHolder.prototype.onClick=function(evt){
     evt.preventDefault();
     evt.stopPropagation();
-    globalStore.storeData(keys.map.lastClickTime,(new Date()).getTime());
     let wp=this.routinglayer.findTarget(evt.pixel);
     if (wp){
         this.pubSub.publish(PSTOPIC,{type:this.EventTypes.SELECTWP,wp:wp});
         return false;
     }
-    if (this.routingActive) return false;
     let aisparam=this.aislayer.findTarget(evt.pixel);
     if (aisparam) {
         this.pubSub.publish(PSTOPIC,{type:EventTypes.SELECTAIS,aisparam:aisparam});
@@ -1164,7 +1172,7 @@ MapHolder.prototype.onClick=function(evt){
                 if (promiseFeatures[pi] === undefined || promiseFeatures[pi].length < 1) continue;
                 let feature = promiseFeatures[pi][0];
                 if (feature) {
-                    FeatureInfoDialog.showDialog(feature);
+                    this.pubSub.publish(PSTOPIC,{type:EventTypes.FEATURE,feature:feature});
                 }
             }
        })
@@ -1386,6 +1394,18 @@ MapHolder.prototype.setImageStyles=function(styles){
     this.routinglayer.setImageStyles(styles);
     this.tracklayer.setImageStyles(styles);
 };
+
+MapHolder.prototype.registerEventGuard=function(callback){
+    if (!callback) return;
+    if (this.eventGuards.indexOf(callback) >= 0) return;
+    this.eventGuards.push(callback);
+}
+
+MapHolder.prototype._callGuards=function(eventName){
+    this.eventGuards.forEach((guard)=>{
+        guard(eventName);
+    })
+}
 
 
 export default new MapHolder();

@@ -31,8 +31,13 @@
 import globalStore from "../util/globalstore.jsx";
 import React from 'react';
 import keys from '../util/keys.jsx';
+import MapHolder from '../map/mapholder';
 
-
+MapHolder.registerEventGuard((eventName)=>{
+    if (eventName === 'click'){
+        globalStore.storeData(keys.map.lastClickTime,(new Date()).getTime());
+    }
+});
 export default  (Component,opt_store)=>{
     return React.forwardRef((props,ref)=>{
         let {onClick,...forwards}=props;

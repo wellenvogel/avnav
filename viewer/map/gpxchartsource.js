@@ -202,8 +202,8 @@ class GpxChartSource extends ChartSourceBase{
             }
         }
         rt.coordinates=coordinates;
-        let info=feature.get('desc')||feature.get('name');
-        rt.info=info;
+        rt.desc=feature.get('desc')
+        rt.name=feature.get('name')
         for (let k in this.chartEntry){
             if (Helper.startsWith(k,stylePrefix)){
                 rt[k]=this.chartEntry[k];
