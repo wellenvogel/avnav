@@ -11,7 +11,7 @@ import keys,{KeyHelper} from '../util/keys.jsx';
 import React from 'react';
 import PropertyHandler from '../util/propertyhandler.js';
 import history from '../util/history.js';
-import MapPage from '../components/MapPage.jsx';
+import MapPage, {overlayDialog} from '../components/MapPage.jsx';
 import Toast from '../components/Toast.jsx';
 import Requests from '../util/requests.js';
 import assign from 'object-assign';
@@ -34,6 +34,7 @@ import EditWidgetDialog from '../components/EditWidgetDialog.jsx';
 import EditPageDialog from '../components/EditPageDialog.jsx';
 import LayoutHandler from '../util/layouthandler.js';
 import Mob from '../components/Mob.js';
+import FeatureInfoDialog from "../components/FeatureInfoDialog";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 const PAGENAME="editroutepage";
@@ -222,8 +223,52 @@ class EditRoutePage extends React.Component{
 
     mapEvent(evdata,token){
         console.log("mapevent: "+evdata.type);
-        let currentEditor=getCurrentEditor();
-        currentEditor.setNewIndex(currentEditor.getIndexFromPoint(evdata.wp));
+        if (evdata.type === MapHolder.EventTypes.SELECTWP) {
+            let currentEditor = getCurrentEditor();
+            currentEditor.setNewIndex(currentEditor.getIndexFromPoint(evdata.wp));
+        }
+        if (evdata.type === MapHolder.EventTypes.FEATURE){
+            let feature=evdata.feature;
+            if (! feature) return;
+            if (feature.kind === 'point' && feature.nextTarget && checkRouteWritable()){
+                feature.additionalActions=[
+                    {name:'add',label:'Before',onClick:()=>{
+                            let currentEditor=getCurrentEditor();
+                            let target=new navobjects.WayPoint(
+                                feature.nextTarget[0],
+                                feature.nextTarget[1],
+                                feature.name
+                            )
+                            MapHolder.setCenter(target);
+                            currentEditor.addWaypoint(target,true);
+                            this.setState({lastCenteredWp:currentEditor.getIndex()});
+                        }},
+                    {name:'add',label:'After',onClick:()=>{
+                        let currentEditor=getCurrentEditor();
+                        let target=new navobjects.WayPoint(
+                            feature.nextTarget[0],
+                            feature.nextTarget[1],
+                            feature.name
+                        )
+                        MapHolder.setCenter(target);
+                        currentEditor.addWaypoint(target);
+                        this.setState({lastCenteredWp:currentEditor.getIndex()});
+                        }},
+                    {name:'center',label:'Center',onClick:()=>{
+                            let currentEditor=getCurrentEditor();
+                            let target=new navobjects.WayPoint(
+                                feature.nextTarget[0],
+                                feature.nextTarget[1],
+                                feature.name
+                            )
+                            MapHolder.setCenter(target);
+                            currentEditor.changeSelectedWaypoint(target);
+                            this.setState({lastCenteredWp:currentEditor.getIndex()});
+                        }}
+                ]
+            }
+            FeatureInfoDialog.showDialog(feature);
+        }
 
     }
     componentWillUnmount(){
@@ -248,7 +293,7 @@ class EditRoutePage extends React.Component{
                 onClick:()=>{MapHolder.changeZoom(-1)}
             },
             {
-                name:"NavAdd",
+                name:"NavAddAfter",
                 onClick:()=>{
                     if (!checkRouteWritable()) return;
                     let center=MapHolder.getCenter();
@@ -260,6 +305,23 @@ class EditRoutePage extends React.Component{
                         if (distance < 8) return;
                     }
                     currentEditor.addWaypoint(center);
+                    this.setState({lastCenteredWp:currentEditor.getIndex()});
+                },
+                editDisable: true
+            },
+            {
+                name:"NavAdd",
+                onClick:()=>{
+                    if (!checkRouteWritable()) return;
+                    let center=MapHolder.getCenter();
+                    if (!center) return;
+                    let currentEditor=getCurrentEditor();
+                    let current=currentEditor.getPointAt();
+                    if (current){
+                        let distance=MapHolder.pixelDistance(center,current);
+                        if (distance < 8) return;
+                    }
+                    currentEditor.addWaypoint(center,true);
                     this.setState({lastCenteredWp:currentEditor.getIndex()});
                 },
                 editDisable: true
@@ -288,6 +350,7 @@ class EditRoutePage extends React.Component{
                     currentEditor.changeSelectedWaypoint(center);
                     this.setState({lastCenteredWp:currentEditor.getIndex()});
                 },
+                overflow: true,
                 editDisable: true
             },
             {
@@ -297,7 +360,16 @@ class EditRoutePage extends React.Component{
                     RouteHandler.wpOn(getCurrentEditor().getPointAt());
                     history.pop();
                 },
-                editDisable: true
+                editDisable: true,
+                overflow: true
+            },
+            {
+                name: "NavOverlays",
+                onClick:()=>overlayDialog(),
+                overflow: true,
+                storeKeys:{
+                    visible:keys.gui.capabilities.uploadOverlays
+                }
             },
             Mob.mobDefinition,
             EditPageDialog.getButtonDef(PAGENAME,

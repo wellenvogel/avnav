@@ -272,6 +272,18 @@ class NavPage extends React.Component{
         if (evdata.type === MapHolder.EventTypes.FEATURE){
             let feature=evdata.feature;
             if (! feature) return;
+            if (feature.nextTarget) {
+                feature.additionalActions = [
+                    {
+                        name: 'goto', label: 'Goto', onClick: () => {
+                            let target = feature.nextTarget;
+                            if (!target) return;
+                            let wp = new navobjects.WayPoint(target[0], target[1], feature.name);
+                            RouteHandler.wpOn(wp);
+                        }
+                    }
+                ]
+            }
             FeatureInfoDialog.showDialog(feature);
         }
     }

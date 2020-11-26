@@ -544,7 +544,7 @@ routeobjects.Route.prototype.findFreeName=function(){
     base.log("no free name found for wp");
     return "no free name found";
 };
-routeobjects.Route.prototype.addPoint=function(idx, point){
+routeobjects.Route.prototype.addPoint=function(idx, point,opt_before){
     point=this._toWayPoint(point);
     let rp=point.clone();
     if (rp.name){
@@ -557,13 +557,13 @@ routeobjects.Route.prototype.addPoint=function(idx, point){
         rp.name=this.findFreeName();
     }
     rp.routeName=this.name.slice(0);
-    let rt=idx+1;
-    if (idx < 0 || idx >= (this.points.length-1)) {
+    let rt=opt_before?idx:idx+1;
+    if (rt < 0 || rt >= (this.points.length-1)) {
         this.points.push(rp);
         rt=this.points.length-1;
     }
     else{
-        this.points.splice(idx+1,0,rp);
+        this.points.splice(rt,0,rp);
     }
     return rt;
 };

@@ -126,11 +126,11 @@ class RouteEdit{
     getStoreKeys(opt_merge){
         return assign({},opt_merge,this.storeKeys);
     }
-    addWaypoint(point){
+    addWaypoint(point,opt_before){
         this.checkWritable();
         let data=load(this.storeKeys,true);
         if (!data.route) return;
-        data.index=data.route.addPoint(data.index,point);
+        data.index=data.route.addPoint(data.index,point,opt_before);
         write(this.writeKeys,data);
     }
     emptyRoute(){

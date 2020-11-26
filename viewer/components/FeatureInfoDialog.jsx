@@ -80,19 +80,11 @@ class FeatureInfoDialog extends React.Component{
     constructor(props) {
         super(props);
         this.linkAction=this.linkAction.bind(this);
-        this.navigateTo=this.navigateTo.bind(this);
     }
     linkAction(){
         if (! this.props.link) return;
         this.props.closeCallback();
         history.push('viewpage',{url:this.props.link});
-    }
-    navigateTo(){
-        let target=this.props.nextTarget;
-        if (! target) return;
-        this.props.closeCallback();
-        let wp=new navobjects.WayPoint(target[0],target[1],this.props.name);
-        RouteHandler.wpOn(wp);
     }
     render(){
         let link=this.props.link;
@@ -112,18 +104,20 @@ class FeatureInfoDialog extends React.Component{
                     return <InfoItem label={row.label} value={v}/>
                 })}
                 <div className={"dialogButtons"}>
-                    {this.props.nextTarget &&
-                        <DB name="goto"
-                            onClick={this.navigateTo}
-                            >Goto</DB>
-                    }
+                    {this.props.additionalActions && this.props.additionalActions.map((action)=>{
+                        return <DB
+                            name={action.name}
+                            onClick={()=>{this.props.closeCallback();action.onClick(this.props)}}>
+                            {action.label}
+                        </DB>
+                    })}
                     {link && <DB
                         name="info"
                         onClick={this.linkAction}
                         >Info</DB>}
-                    <DB name={"ok"}
+                    <DB name={"cancel"}
                         onClick={this.props.closeCallback}
-                        >Ok</DB>
+                        >Cancel</DB>
                 </div>
             </div>
         );
@@ -136,7 +130,8 @@ FeatureInfoDialog.propTypes={
     coordinates: PropTypes.array,
     overlayName: PropTypes.string,
     overlayType: PropTypes.string,
-    overlayUrl: PropTypes.string
+    overlayUrl: PropTypes.string,
+    additionalActions: PropTypes.array //array of objects with: name,label,onClick
 }
 
 FeatureInfoDialog.showDialog=(info,opt_showDialogFunction)=>{

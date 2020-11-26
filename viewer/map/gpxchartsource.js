@@ -95,14 +95,20 @@ class GpxChartSource extends ChartSourceBase{
     }
     getSymbolUrl(sym,opt_ext){
         if (! sym.match(/\./) && opt_ext) sym+=opt_ext;
-        let url=this.chartEntry.icons + "/" + sym;
-        if (this.chartEntry.defaultIcon) url+="?fallback="+encodeURIComponent(this.chartEntry.defaultIcon);
+        let url;
+        if (this.chartEntry.icons){
+            url=this.chartEntry.icons + "/" + sym;
+            if (this.chartEntry.defaultIcon) url+="?fallback="+encodeURIComponent(this.chartEntry.defaultIcon);
+        }
+        else{
+            return this.chartEntry.defaultIcon;
+        }
         return url;
     }
     styleFunction(feature,resolution) {
 
         let type=feature.getGeometry().getType();
-        if (type == 'Point' && this.chartEntry.icons){
+        if (type == 'Point' && (this.chartEntry.icons||this.chartEntry.defaultIcon)){
             let sym=feature.get('sym');
             if (sym){
                 if (!this.styleMap[sym]) {
@@ -180,6 +186,7 @@ class GpxChartSource extends ChartSourceBase{
         let geometry=feature.getGeometry();
         let coordinates;
         if (geometry instanceof olPoint){
+            rt.kind='point';
             coordinates=this.mapholder.transformFromMap(geometry.getCoordinates());
             let sym=feature.get('sym');
             if (sym && this.chartEntry.icons){

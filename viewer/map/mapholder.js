@@ -1173,6 +1173,7 @@ MapHolder.prototype.onClick=function(evt){
                 let feature = promiseFeatures[pi][0];
                 if (feature) {
                     this.pubSub.publish(PSTOPIC,{type:EventTypes.FEATURE,feature:feature});
+                    return true;
                 }
             }
        })
