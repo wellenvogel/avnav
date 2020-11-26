@@ -93,7 +93,7 @@ export default class OverlayConfig{
             let newDefaults=[];
             this.config.defaults.forEach((item)=>{
                 if (getKeyFromOverlay(item) === undefined) return;
-                newDefaults.push(assign({ },item,{isDefault:true}));
+                newDefaults.push(assign({ enabled:true},item,{isDefault:true}));
             })
             this.config.defaults=newDefaults;
         }
@@ -102,7 +102,7 @@ export default class OverlayConfig{
             let newOverlays=[];
             this.config.overlays.forEach((item)=>{
                 if (getKeyFromOverlay(item) === undefined) return;
-                newOverlays.push(assign({},item,{isDefault:false}));
+                newOverlays.push(assign({enabled:true},item,{isDefault:false}));
             })
             this.config.overlays=newOverlays;
         }
@@ -130,7 +130,9 @@ export default class OverlayConfig{
         this.nextId++;
         let fixed={isDefault:false};
         fixed[OVERLAY_ID]=id;
-        return assign(parameters,fixed)
+        let rt=assign(parameters,fixed);
+        if (rt.enabled === undefined) rt.enabled=true;
+        return rt;
     }
     copy(){
         let rt={
