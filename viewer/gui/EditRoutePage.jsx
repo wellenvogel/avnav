@@ -221,11 +221,12 @@ class EditRoutePage extends React.Component{
         return waypointButtons;
     };
 
-    mapEvent(evdata,token){
+    mapEvent(evdata){
         console.log("mapevent: "+evdata.type);
         if (evdata.type === MapHolder.EventTypes.SELECTWP) {
             let currentEditor = getCurrentEditor();
             currentEditor.setNewIndex(currentEditor.getIndexFromPoint(evdata.wp));
+            return true;
         }
         if (evdata.type === MapHolder.EventTypes.FEATURE){
             let feature=evdata.feature;
@@ -268,6 +269,7 @@ class EditRoutePage extends React.Component{
                 ]
             }
             FeatureInfoDialog.showDialog(feature);
+            return true;
         }
 
     }

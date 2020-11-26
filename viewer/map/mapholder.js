@@ -16,8 +16,6 @@ import globalStore from '../util/globalstore.jsx';
 import Promise from 'promise';
 import Requests from '../util/requests.js';
 import base from '../base.js';
-import PubSub from 'PubSub';
-import helper from '../util/helper.js';
 import northImage from '../images/nadel_mit.png';
 import KeyHandler from '../util/keyhandler.js';
 import assign from 'object-assign';
@@ -95,13 +93,6 @@ const MapHolder=function(){
      * @type {number}
      */
     this.averageCourse=0;
-
-    /**
-     * factor for moving average for the course
-     * @type {number}
-     */
-    this.movingAveragefactor=0.5;
-
     this.transformFromMap=olTransforms.get("EPSG:3857","EPSG:4326");
     this.transformToMap=olTransforms.get("EPSG:4326","EPSG:3857");
 
@@ -227,7 +218,6 @@ const MapHolder=function(){
     globalStore.storeData(keys.map.courseUp,this.courseUp);
     globalStore.storeData(keys.map.lockPosition,this.gpsLocked);
     this.timer=undefined;
-    this.pubSub=new PubSub();
     KeyHandler.registerHandler(()=>{self.changeZoom(+1)},"map","zoomIn");
     KeyHandler.registerHandler(()=>{self.changeZoom(-1)},"map","zoomOut");
     KeyHandler.registerHandler(()=>{self.setGpsLock(true)},"map","lockGps");
@@ -246,6 +236,13 @@ const MapHolder=function(){
      * @type {*[]}
      */
     this.eventGuards=[];
+    this.mapEventSubscriptionId=0;
+    /**
+     * list of subscriptions
+     * @private
+     * @type {{}}
+     */
+    this.mapEventSubscriptions={};
 };
 
 base.inherits(MapHolder,DrawingPositionConverter);
@@ -256,18 +253,32 @@ MapHolder.prototype.EventTypes=EventTypes;
  * register for map events
  * @param callback a callback function, will be called with data and topic
  *        data is {type:EventTypes,...}
+ *        return true if the event has been consumed
  * @returns {number} a token to be used for unsubscribe
  */
 MapHolder.prototype.subscribe=function(callback){
-    return this.pubSub.subscribe(PSTOPIC,callback);
+    for (let k in this.mapEventSubscriptions){
+        if (this.mapEventSubscriptions[k] === callback) return k;
+    }
+    let id=this.mapEventSubscriptionId++;
+    this.mapEventSubscriptions[id]=callback;
+    return id;
 };
 
+MapHolder.prototype._callHandlers=function(eventData){
+    for (let k in this.mapEventSubscriptions){
+        let rt=this.mapEventSubscriptions[k](eventData);
+        if (rt) return rt;
+    }
+    return false;
+}
 /**
  * deregister from map events
  * @param token - the value obtained from register
  */
 MapHolder.prototype.unsubscribe=function(token){
-    return this.pubSub.unsubscribe(token);
+    if (token === undefined) return;
+    delete this.mapEventSubscriptions[token];
 };
 /**
  * @inheritDoc
@@ -439,7 +450,7 @@ MapHolder.prototype.loadMap=function(div,opt_preventDialogs){
             this.prepareSourcesAndCreate(newSources,opt_preventDialogs)
                 .then((res)=>{
                     self.updateOverlayConfig(); //update all sources with existing config
-                    this.pubSub.publish(PSTOPIC,{type:this.EventTypes.RELOAD});
+                    this._callHandlers({type:this.EventTypes.RELOAD});
                     resolve(res)
                 })
                 .catch((error)=>{reject(error)});
@@ -1154,13 +1165,13 @@ MapHolder.prototype.onClick=function(evt){
     evt.stopPropagation();
     let wp=this.routinglayer.findTarget(evt.pixel);
     if (wp){
-        this.pubSub.publish(PSTOPIC,{type:this.EventTypes.SELECTWP,wp:wp});
-        return false;
+        let rt=this._callHandlers({type:this.EventTypes.SELECTWP,wp:wp});
+        if (rt) return false;
     }
     let aisparam=this.aislayer.findTarget(evt.pixel);
     if (aisparam) {
-        this.pubSub.publish(PSTOPIC,{type:EventTypes.SELECTAIS,aisparam:aisparam});
-        return false;
+        let rt=this._callHandlers({type:EventTypes.SELECTAIS,aisparam:aisparam});
+        if (rt) return false;
     }
     let promises=[];
     for (let i=this.sources.length-1;i>=0;i--) {
@@ -1172,7 +1183,7 @@ MapHolder.prototype.onClick=function(evt){
                 if (promiseFeatures[pi] === undefined || promiseFeatures[pi].length < 1) continue;
                 let feature = promiseFeatures[pi][0];
                 if (feature) {
-                    this.pubSub.publish(PSTOPIC,{type:EventTypes.FEATURE,feature:feature});
+                    this._callHandlers({type:EventTypes.FEATURE,feature:feature});
                     return true;
                 }
             }

@@ -98,9 +98,9 @@ class MapPage extends React.Component{
         this.subscribeToken=undefined;
 
     }
-    mapEvent(evdata,token){
+    mapEvent(evdata){
         if (globalStore.getData(keys.gui.global.layoutEditing)) return;
-        this.props.mapEventCallback(evdata,token);
+        return this.props.mapEventCallback(evdata);
     }
     componentWillUnmount(){
         NavHandler.setAisCenterMode(navobjects.AisCenterMode.GPS);

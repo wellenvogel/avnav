@@ -258,7 +258,7 @@ class NavPage extends React.Component{
         }
         this.setState({showWpButtons:on})
     }
-    mapEvent(evdata,token){
+    mapEvent(evdata){
         console.log("mapevent: "+evdata.type);
         if (evdata.type === MapHolder.EventTypes.SELECTAIS){
             let aisparam=evdata.aisparam;
@@ -266,6 +266,7 @@ class NavPage extends React.Component{
             if (aisparam.mmsi){
                 AisData.setTrackedTarget(aisparam.mmsi);
                 history.push('aisinfopage',{mmsi:aisparam.mmsi});
+                return true;
             }
             return;
         }
@@ -285,6 +286,7 @@ class NavPage extends React.Component{
                 ]
             }
             FeatureInfoDialog.showDialog(feature);
+            return true;
         }
     }
     componentWillUnmount(){
