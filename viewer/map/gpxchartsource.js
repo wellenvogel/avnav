@@ -32,6 +32,8 @@ import {Vector as olVectorLayer} from 'ol/layer';
 import {LineString as olLineString, MultiLineString as olMultiLineString, Point as olPoint} from 'ol/geom';
 import {GPX as olGPXFormat} from 'ol/format';
 import Helper from "../util/helper";
+import globalstore from "../util/globalstore";
+import keys from "../util/keys";
 
 export const stylePrefix="style."; // the prefix for style attributes
 
@@ -108,7 +110,7 @@ class GpxChartSource extends ChartSourceBase{
     styleFunction(feature,resolution) {
 
         let type=feature.getGeometry().getType();
-        if (type == 'Point' && (this.chartEntry.icons||this.chartEntry.defaultIcon)){
+        if (type === 'Point' && (this.chartEntry.icons||this.chartEntry.defaultIcon)){
             let sym=feature.get('sym');
             if (sym){
                 if (!this.styleMap[sym]) {
@@ -133,8 +135,33 @@ class GpxChartSource extends ChartSourceBase{
                 return rt;
             }
         }
+        if (type === 'LineString'){
+            //route
+            let geometry=feature.getGeometry();
+            let styles=[this.styles[type]];
+            let isFirst=true;
+            geometry.forEachSegment((start,end)=>{
+                if (isFirst){
+                    styles.push(this.getRoutePointStyle(start));
+                    isFirst=false;
+                }
+                styles.push(this.getRoutePointStyle(end));
+            })
+            return styles;
+        }
         return this.styles[feature.getGeometry().getType()];
     };
+    getRoutePointStyle(coordinates){
+        return new olStyle({
+            geometry: new olPoint(coordinates),
+            image: new olCircle({
+                fill: new olFill({
+                        color: this.styles.LineString.getStroke().getColor()
+                    }),
+                radius: globalstore.getData(keys.properties.routeWpSize)
+            })
+        });
+    }
     prepareInternal() {
         let url = this.chartEntry.url;
         let self = this;

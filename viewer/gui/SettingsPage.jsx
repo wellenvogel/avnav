@@ -35,7 +35,7 @@ const settingsSections={
         keys.properties.navBoatCourseTime,keys.properties.boatIconScale,keys.properties.courseAverageTolerance,keys.properties.gpsXteMax,keys.properties.courseAverageInterval,keys.properties.speedAverageInterval,keys.properties.positionAverageInterval,keys.properties.anchorWatchDefault,keys.properties.anchorCircleWidth,
         keys.properties.anchorCircleColor,keys.properties.windKnots,keys.properties.windScaleAngle],
     Track:      [keys.properties.trackColor,keys.properties.trackWidth,keys.properties.trackInterval,keys.properties.initialTrackLength],
-    Route:      [keys.properties.routeColor,keys.properties.routeWidth,keys.properties.routingTextSize,keys.properties.routeApproach,keys.properties.routeShowLL]
+    Route:      [keys.properties.routeColor,keys.properties.routeWidth,keys.properties.routeWpSize,keys.properties.routingTextSize,keys.properties.routeApproach,keys.properties.routeShowLL]
 };
 
 
