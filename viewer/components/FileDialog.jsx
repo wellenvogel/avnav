@@ -42,6 +42,7 @@ import UserAppDialog from "./UserAppDialog";
 import DownloadButton from "./DownloadButton";
 import MapHolder from '../map/mapholder';
 import {getOverlayConfigName} from "../map/chartsourcebase";
+import TrackInfoDialog from "./TrackInfoDialog";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 /**
@@ -124,6 +125,7 @@ export const allowedItemActions=(props)=>{
             ) &&
         globalStore.getData(keys.gui.capabilities.uploadOverlays));
     let showScheme=(props.type === 'chart' && props.url && props.url.match(/.*mbtiles.*/));
+    let showInfo=(props.type === 'track' && ext === 'gpx');
     return {
         showEdit:showEdit,
         showView:showView,
@@ -133,8 +135,13 @@ export const allowedItemActions=(props)=>{
         isApp:isApp,
         showOverlay: showOverlay,
         showScheme: showScheme,
+        showInfo: showInfo
     };
 };
+
+const showInfoFunctions={
+    track: TrackInfoDialog.showDialog
+}
 
 class AddRemoveOverlayDialog extends React.Component{
     constructor(props) {
@@ -364,11 +371,17 @@ export default  class FileDialog extends React.Component{
                         }
                     </div>
                     <div className="dialogButtons">
-                        <DB name="cancel"
-                            onClick={self.props.closeCallback}
-                        >
-                            Cancel
-                        </DB>
+                        {this.state.allowed.showInfo &&
+                            <DB name="info"
+                                onClick={()=>{
+                                    let infoFunction=showInfoFunctions[this.props.current.type];
+                                    if (infoFunction){
+                                        this.props.closeCallback()
+                                        infoFunction(this.props.current);
+                                    }
+                                }}
+                                >Info</DB>
+                        }
                         {(this.state.allowed.showView )?
                             <DB name="view"
                                 onClick={()=>{
@@ -428,6 +441,11 @@ export default  class FileDialog extends React.Component{
                         </DB>
 
                         }
+                        <DB name="cancel"
+                            onClick={self.props.closeCallback}
+                        >
+                            Cancel
+                        </DB>
                     </div>
                 </div>
             </React.Fragment>

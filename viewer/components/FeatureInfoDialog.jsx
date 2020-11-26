@@ -15,7 +15,7 @@
  #  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  #  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  #  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
- #  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHERtime
+ #  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  #  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  #  DEALINGS IN THE SOFTWARE.
@@ -35,6 +35,7 @@ import navobjects from "../nav/navobjects";
 import globalstore from "../util/globalstore";
 import keys from "../util/keys";
 import NavCompute from "../nav/navcompute";
+import TrackInfoDialog from "./TrackInfoDialog";
 const RouteHandler=NavHandler.getRoutingHandler();
 const InfoItem=(props)=>{
     return <div className={"dialogRow "+props.className}>
@@ -76,6 +77,11 @@ const TYPE_PREFIX={
     track: "Track: "
 };
 
+const showInfoFunctions={
+    track: TrackInfoDialog.showDialog
+}
+
+
 class FeatureInfoDialog extends React.Component{
     constructor(props) {
         super(props);
@@ -104,6 +110,18 @@ class FeatureInfoDialog extends React.Component{
                     return <InfoItem label={row.label} value={v}/>
                 })}
                 <div className={"dialogButtons"}>
+                    {showInfoFunctions[this.props.overlayType] &&
+                        <DB
+                            name="info"
+                            onClick={()=>{
+                                this.props.closeCallback();
+                                showInfoFunctions[this.props.overlayType]({
+                                    type:this.props.overlayType,
+                                    name:this.props.overlayName
+                                });
+                            }}
+                            >Info</DB>
+                    }
                     {this.props.additionalActions && this.props.additionalActions.map((action)=>{
                         return <DB
                             name={action.name}
