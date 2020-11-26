@@ -1,7 +1,7 @@
 group 'de.wellenvogel.avnav'
 apply plugin: 'java'
 
-def revision="3"
+def revision="4"
 def mobacJar="Mobile_Atlas_Creator.jar"
 
 dependencies{

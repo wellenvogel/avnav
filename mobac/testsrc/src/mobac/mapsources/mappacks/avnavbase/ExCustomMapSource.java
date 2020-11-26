@@ -7,6 +7,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.ProtocolException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -197,6 +198,11 @@ public class ExCustomMapSource implements HttpMapSource {
 			}
 		}
 		return rt;
+	}
+
+	@Override
+	public void prepareConnection(HttpURLConnection httpURLConnection) throws ProtocolException {
+
 	}
 
 	public String getTileUrl(int zoom, int tilex, int tiley) {
