@@ -653,11 +653,16 @@ class EditOverlaysDialog extends React.Component{
         if (this.state.selectedIndex >=0 && this.state.selectedIndex <= this.state.list.length && ! this.props.preventEdit){
             selectedItem=this.state.list[this.state.selectedIndex];
         }
+        let isEditingDefault=this.props.current.getName() === DEFAULT_OVERLAY_CONFIG;
+        let title=this.props.title||(isEditingDefault?'Edit Default Overlays':'Edit Overlays');
         return (
             <React.Fragment>
             <div className={"selectDialog editOverlaysDialog"+(this.props.preventEdit?" preventEdit":"")}>
-                <h3 className="dialogTitle">{this.props.title||'Edit Overlays'}</h3>
-                <div className="dialogRow info"><span className="inputLabel">Chart</span>{this.props.chartName}</div>
+                <h3 className="dialogTitle">{title}</h3>
+                {! isEditingDefault &&
+                    <div className="dialogRow info"><span className="inputLabel">Chart</span>{this.props.chartName}
+                    </div>
+                }
                 {(!this.props.noDefault && ! this.props.preventEdit && hasDefaults) && <Checkbox
                     className="useDefault"
                     dialogRow={true}
@@ -808,7 +813,6 @@ EditOverlaysDialog.createDialog=(chartItem,opt_callback,opt_addEntry)=>{
                 return <EditOverlaysDialog
                     {...props}
                     chartName={chartItem.name}
-                    title="Edit Overlays"
                     current={overlayConfig}
                     updateCallback={(newConfig) => {
                         if (newConfig.isEmpty()) {

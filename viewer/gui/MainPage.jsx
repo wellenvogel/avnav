@@ -22,9 +22,10 @@ import GuiHelper from '../util/GuiHelpers.js';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 import Mob from '../components/Mob.js';
 import Addons from '../components/Addons.js';
-import EditOverlaysDialog from '../components/EditOverlaysDialog.jsx';
+import EditOverlaysDialog, {DEFAULT_OVERLAY_CHARTENTRY} from '../components/EditOverlaysDialog.jsx';
 import OverlayDialog from "../components/OverlayDialogDisplay";
 import {stateHelper} from "../components/OverlayDialog";
+import overlayconfig from "../map/overlayconfig";
 
 
 
@@ -173,7 +174,8 @@ class MainPage extends React.Component {
                 name: 'ShowSettings',
                 onClick: ()=> {
                     history.push('settingspage')
-                }
+                },
+                overflow: true
             },
             {
                 name: 'ShowDownload',
@@ -196,7 +198,8 @@ class MainPage extends React.Component {
                     con = !con;
                     globalStore.storeData(keys.properties.connectedMode, con);
                 },
-                editDisable: true
+                editDisable: true,
+                overflow: true
             },
             {
                 name: 'ShowGps',
@@ -218,12 +221,20 @@ class MainPage extends React.Component {
             LayoutFinishedDialog.getButtonDef(),
 
             {
-                name: 'MainCancel',
+                name: 'Cancel',
                 storeKeys: {visible: keys.gui.global.onAndroid},
                 onClick: ()=> {
                     avnav.android.goBack()
                 }
 
+            },
+            {
+                name: 'NavOverlays',
+                onClick: ()=> {
+                    EditOverlaysDialog.createDialog(DEFAULT_OVERLAY_CHARTENTRY);
+                },
+                editDisable: true,
+                overflow: true
             },
             {
                 name: 'MainAddOns',
