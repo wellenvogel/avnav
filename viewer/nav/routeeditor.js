@@ -126,6 +126,24 @@ class RouteEdit{
     getStoreKeys(opt_merge){
         return assign({},opt_merge,this.storeKeys);
     }
+    addMultipleWaypoints(points,opt_before){
+        if (! points || ! points.length) return;
+        this.checkWritable();
+        let data=load(this.storeKeys,true);
+        if (!data.route) return;
+        if (opt_before){
+            //start from the end
+            for (let i=points.length-1;i>=0;i--){
+                data.index=data.route.addPoint(data.index,points[i],true);
+            }
+        }
+        else{
+            for (let i=0;i<points.length;i++){
+                data.index=data.route.addPoint(data.index,points[i],false);
+            }
+        }
+        write(this.writeKeys,data);
+    }
     addWaypoint(point,opt_before){
         this.checkWritable();
         let data=load(this.storeKeys,true);

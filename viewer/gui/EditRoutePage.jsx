@@ -220,11 +220,20 @@ class EditRoutePage extends React.Component{
         ];
         return waypointButtons;
     };
-
+    insertOtherRoute(name,opt_before){
+        RouteHandler.fetchRoute(name,false,(route)=>{
+            let lastPoint;
+            let editor=getCurrentEditor();
+            if (! route.points) return;
+            editor.addMultipleWaypoints(route.points,opt_before);
+            },
+            (error)=>{Toast(error)}
+            );
+    }
     mapEvent(evdata){
         console.log("mapevent: "+evdata.type);
+        let currentEditor = getCurrentEditor();
         if (evdata.type === MapHolder.EventTypes.SELECTWP) {
-            let currentEditor = getCurrentEditor();
             currentEditor.setNewIndex(currentEditor.getIndexFromPoint(evdata.wp));
             return true;
         }
@@ -233,7 +242,7 @@ class EditRoutePage extends React.Component{
             if (! feature) return;
             if (feature.kind === 'point' && feature.nextTarget && checkRouteWritable()){
                 feature.additionalActions=[
-                    {name:'add',label:'Before',onClick:()=>{
+                    {name:'insert',label:'Before',onClick:()=>{
                             let currentEditor=getCurrentEditor();
                             let target=new navobjects.WayPoint(
                                 feature.nextTarget[0],
@@ -267,6 +276,19 @@ class EditRoutePage extends React.Component{
                             this.setState({lastCenteredWp:currentEditor.getIndex()});
                         }}
                 ]
+            }
+            if (feature.overlayType === 'route'){
+                let routeName=feature.overlayName;
+                if (routeName && routeName.replace(/\.gpx$/,'') !== currentEditor.getRouteName()){
+                    feature.additionalActions=[
+                        {name:'insert',label:'Before',onClick:()=>{
+                                this.insertOtherRoute(feature.overlayName,true);
+                            }},
+                        {name:'add',label:'Ater',onClick:()=>{
+                                this.insertOtherRoute(feature.overlayName,false);
+                            }}
+                    ]
+                }
             }
             FeatureInfoDialog.showDialog(feature);
             return true;
