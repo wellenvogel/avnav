@@ -558,7 +558,7 @@ routeobjects.Route.prototype.addPoint=function(idx, point,opt_before){
     }
     rp.routeName=this.name.slice(0);
     let rt=opt_before?idx:idx+1;
-    if (rt < 0 || rt >= (this.points.length-1)) {
+    if (rt < 0 || rt >= this.points.length) {
         this.points.push(rp);
         rt=this.points.length-1;
     }
