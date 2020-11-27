@@ -100,7 +100,7 @@ public class LayoutHandler implements INavRequestHandler{
     }
 
     @Override
-    public ExtendedWebResourceResponse handleDirectRequest(Uri uri) throws FileNotFoundException {
+    public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler) throws FileNotFoundException {
         return null;
     }
 

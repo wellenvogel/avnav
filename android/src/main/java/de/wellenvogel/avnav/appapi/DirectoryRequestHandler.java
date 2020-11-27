@@ -3,22 +3,18 @@ package de.wellenvogel.avnav.appapi;
 import android.net.Uri;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.util.Arrays;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import java.util.zip.ZipInputStream;
 
 import de.wellenvogel.avnav.util.AvnUtil;
 
@@ -159,8 +155,19 @@ public class DirectoryRequestHandler implements INavRequestHandler{
             zf.close();
         }
     }
+    private ExtendedWebResourceResponse tryFallbackOrFail(Uri uri,RequestHandler handler) throws Exception {
+        String fallback=uri.getQueryParameter("fallback");
+        if (fallback == null || fallback.isEmpty()) return null;
+        if (!fallback.startsWith("/")) {
+            fallback=RequestHandler.PAGE_PREFIX+RequestHandler.ROOT_PATH+"/"+fallback;
+        }
+        else{
+            fallback=RequestHandler.PAGE_PREFIX+fallback;
+        }
+        return handler.handleRequest(null,fallback);
+    }
     @Override
-    public ExtendedWebResourceResponse handleDirectRequest(Uri uri) throws IOException {
+    public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler) throws Exception {
         String path=uri.getPath();
         if (path == null) return null;
         if (path.startsWith("/")) path=path.substring(1);
@@ -171,11 +178,11 @@ public class DirectoryRequestHandler implements INavRequestHandler{
         if (parts[0].endsWith(".zip")){
             String name= URLDecoder.decode(parts[0],"UTF-8");
             File foundFile = findLocalFile(name);
-            if (foundFile == null) return null;
+            if (foundFile == null) return tryFallbackOrFail(uri,handler);
             ZipFile zf=new ZipFile(foundFile);
             String entryPath= path.replaceFirst(".*/","");
             ZipEntry entry=zf.getEntry(entryPath);
-            if (entry == null) return null;
+            if (entry == null) return tryFallbackOrFail(uri,handler);
             return new ExtendedWebResourceResponse(entry.getSize(),
                     RequestHandler.mimeType(entryPath),
                     "",new CloseHelperStream(zf.getInputStream(entry),zf));

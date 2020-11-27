@@ -54,6 +54,7 @@ public class RequestHandler {
      */
     public static final String PAGE_PREFIX ="http://assets";
     protected static final String NAVURL="viewer/avnav_navi.php";
+    public static final String ROOT_PATH="/viewer";
     private SimpleDateFormat dateFormat=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
     MainActivity activity;
     private SharedPreferences preferences;
@@ -319,7 +320,7 @@ public class RequestHandler {
      * @return
      * @throws Exception
      */
-    public WebResourceResponse handleRequest(View view, String url) throws Exception {
+    public ExtendedWebResourceResponse handleRequest(View view, String url) throws Exception {
         Uri uri=null;
         try {
             uri = Uri.parse(url);
@@ -334,10 +335,10 @@ public class RequestHandler {
                 if (path.startsWith(NAVURL)){
                     return handleNavRequest(uri,null);
                 }
-                WebResourceResponse rt=tryDirectRequest(uri);
+                ExtendedWebResourceResponse rt=tryDirectRequest(uri);
                 if (rt != null) return rt;
                 InputStream is=activity.getAssets().open(path);
-                return new WebResourceResponse(mimeType(path),"",is);
+                return new ExtendedWebResourceResponse(-1,mimeType(path),"",is);
             } catch (Throwable e) {
                 e.printStackTrace();
                 throw new Exception("error processing "+url+": "+e.getLocalizedMessage());
@@ -355,7 +356,7 @@ public class RequestHandler {
         if (path.startsWith("/")) path=path.substring(1);
         INavRequestHandler handler=getPrefixHandler(path);
         if (handler != null){
-            return handler.handleDirectRequest(uri);
+            return handler.handleDirectRequest(uri,this );
         }
         return null;
     }

@@ -362,6 +362,12 @@ class AVNDirectoryHandlerBase(AVNWorker):
     url=AVNUtil.getHttpRequestParam(requestParam,"fallback")
     if url is None:
       raise Exception(error)
+    if url[0] != '/':
+      if handler is None:
+        raise Exception("no handler")
+      baseUrl=handler.server.getStringParam('index')
+      baseUrl=re.sub("/[^/]*$","",baseUrl)
+      url=baseUrl+"/"+url
     rt=handler.translate_path(re.sub("\?.*","",url))
     if rt is None:
       raise Exception(error)

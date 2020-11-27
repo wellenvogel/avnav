@@ -205,7 +205,7 @@ public class WebServer {
             String path=uri.getPath();
             if (path.equals("")|| path.equals("/")) {
                 httpResponse.setStatusCode(301);
-                httpResponse.addHeader("Location","/viewer/avnav_viewer.html?onAndroid=1");
+                httpResponse.addHeader("Location",RequestHandler.ROOT_PATH+"/avnav_viewer.html?onAndroid=1");
                 return;
             }
             path=path.replaceAll("^/*","");

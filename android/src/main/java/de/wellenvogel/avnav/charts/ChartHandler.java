@@ -23,7 +23,6 @@ import java.io.InputStream;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -514,7 +513,7 @@ public class ChartHandler implements INavRequestHandler {
 
 
     @Override
-    public ExtendedWebResourceResponse handleDirectRequest(Uri uri) throws Exception {
+    public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler) throws Exception {
         return handleChartRequest(uri);
     }
 
