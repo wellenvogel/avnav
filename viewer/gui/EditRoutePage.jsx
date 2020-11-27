@@ -221,14 +221,44 @@ class EditRoutePage extends React.Component{
         return waypointButtons;
     };
     insertOtherRoute(name,opt_before){
-        RouteHandler.fetchRoute(name,false,(route)=>{
-            let lastPoint;
-            let editor=getCurrentEditor();
-            if (! route.points) return;
-            editor.addMultipleWaypoints(route.points,opt_before);
-            },
-            (error)=>{Toast(error)}
+        let editor=getCurrentEditor();
+        let idx=editor.getIndex();
+        let current=editor.getPointAt(idx);
+        if (! current) return;
+        let otherIndex=idx+(opt_before?-1:1);
+        let other=editor.getPointAt(otherIndex);
+        const runInsert=()=>{
+            RouteHandler.fetchRoute(name,false,(route)=>{
+                    if (! route.points) return;
+                    editor.addMultipleWaypoints(route.points,opt_before);
+                },
+                (error)=>{Toast(error)}
             );
+        }
+        let text,replace;
+        if (other !== undefined && otherIndex >= 0){
+            //ask the user if we should really insert between 2 points
+            text="Really insert route ${route} between ${from} and ${to}?";
+            replace={route:name};
+            if (opt_before){
+                replace.from=other.name;
+                replace.to=current.name;
+            }
+            else{
+                replace.from=current.name;
+                replace.to=other.name;
+            }
+        }
+        else{
+            text=opt_before?
+                "Really insert route ${route} before ${current}?":
+                "Really append route ${route} after ${current}?";
+            replace={route:name,current:current.name}
+            replace={route:name,current:current.name}
+        }
+        OverlayDialog.confirm(Helper.templateReplace(text,replace))
+            .then(()=>runInsert())
+            .catch(()=>{});
     }
     mapEvent(evdata){
         console.log("mapevent: "+evdata.type);
