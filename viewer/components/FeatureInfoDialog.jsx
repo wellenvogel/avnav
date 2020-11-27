@@ -57,6 +57,7 @@ const INFO_ROWS=[
         if (overlay.overlayType) prefix=TYPE_PREFIX[overlay.overlayType]||"";
         return prefix+v;
         }},
+    {label:'symbol',value:'sym'},
     {label: 'position',value:'coordinates',formatter:(v)=>Formatter.formatLonLats({lon:v[0],lat:v[1]})},
     {label: 'distance',value:'coordinates',formatter:(v)=>{
         let position=globalstore.getData(keys.nav.gps.position);

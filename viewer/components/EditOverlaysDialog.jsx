@@ -16,6 +16,7 @@ import {getOverlayConfigName} from '../map/chartsourcebase'
 import globalStore from "../util/globalstore";
 import keys from '../util/keys';
 import OverlayConfig, {getKeyFromOverlay} from '../map/overlayconfig';
+import DefaultGpxIcon from '../images/icons-new/DefaultGpxPoint.png'
 
 const filterOverlayItem=(item,opt_itemInfo)=>{
     let rt=undefined;
@@ -84,7 +85,16 @@ class OverlayItemDialog extends React.Component{
         this.stateHelper = stateHelper(this, props.current || {},'item');
         this.state.itemsFetchCount = 0;
         //we make them only a variable as we consider them to be static
-        this.itemLists={icons:[{label:"--none--"}],chart:[],overlay:[],images:[],user:[],knownOverlays:[],iconFiles:[{label:"--none--"}],route:[],track:[]};
+        this.itemLists={
+            icons:[{label:"--none--"},{label:"--DefaultGpxIcon--",value:DefaultGpxIcon}],
+            chart:[],
+            overlay:[],
+            images:[],
+            user:[],
+            knownOverlays:[],
+            iconFiles:[{label:"--none--"}],
+            route:[],
+            track:[]};
         if (props.current && props.current.url && props.current.type !== 'chart') {
             this.analyseOverlay(props.current.url);
         }
@@ -107,6 +117,7 @@ class OverlayItemDialog extends React.Component{
                         if (GuiHelpers.IMAGES.indexOf(Helper.getExt(item.name)) >= 0) {
                             let el=assign({},item);
                             el.label=el.url;
+                            el.value=el.url;
                             this.itemLists.icons.push(el);
                         }
                     })
@@ -324,9 +335,14 @@ class OverlayItemDialog extends React.Component{
                                         fetchCount={this.state.itemsFetchCount}
                                         showDialogFunction={this.dialogHelper.showDialog}
                                         onChange={(nv) => {
-                                            this.stateHelper.setState({defaultIcon: nv.url});
+                                            this.stateHelper.setState({defaultIcon: nv.value});
                                         }}
-                                    />}
+                                        >
+                                        {this.stateHelper.getValue('defaultIcon') &&
+                                            <span className="icon"
+                                              style={{backgroundImage: "url('"+this.stateHelper.getValue('defaultIcon')+"')"}}> </span>
+                                        }
+                                    </InputSelect>}
                                 </React.Fragment>
                             }
                         </React.Fragment>

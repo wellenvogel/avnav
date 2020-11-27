@@ -236,8 +236,9 @@ class GpxChartSource extends ChartSourceBase{
             }
         }
         rt.coordinates=coordinates;
-        rt.desc=feature.get('desc')
-        rt.name=feature.get('name')
+        rt.desc=feature.get('desc');
+        rt.name=feature.get('name');
+        rt.sym=feature.get('sym');
         for (let k in this.chartEntry){
             if (Helper.startsWith(k,stylePrefix)){
                 rt[k]=this.chartEntry[k];
