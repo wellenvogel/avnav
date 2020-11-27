@@ -29,13 +29,15 @@ import PropTypes from 'prop-types';
 import Formatter from '../util/formatter';
 import DB from './DialogButton';
 import history from "../util/history";
-import OverlayDialog from "./OverlayDialog";
+import OverlayDialog, {stateHelper} from "./OverlayDialog";
 import NavHandler from "../nav/navdata";
 import navobjects from "../nav/navobjects";
 import globalstore from "../util/globalstore";
 import keys from "../util/keys";
 import NavCompute from "../nav/navcompute";
-import TrackInfoDialog from "./TrackInfoDialog";
+import {getTrackInfo,INFO_ROWS as TRACK_INFO_ROWS} from "./TrackInfoDialog";
+import {getRouteInfo,INFO_ROWS as ROUTE_INFO_ROWS} from "./RouteInfoDialog";
+import Toast from "./Toast";
 const RouteHandler=NavHandler.getRoutingHandler();
 const InfoItem=(props)=>{
     return <div className={"dialogRow "+props.className}>
@@ -77,23 +79,55 @@ const TYPE_PREFIX={
     track: "Track: "
 };
 
-const showInfoFunctions={
-    track: TrackInfoDialog.showDialog
+const INFO_FUNCTIONS={
+    track: getTrackInfo,
+    route: getRouteInfo
+};
+const INFO_DISPLAY={
+    track: TRACK_INFO_ROWS,
+    route: ROUTE_INFO_ROWS
 }
-
 
 class FeatureInfoDialog extends React.Component{
     constructor(props) {
         super(props);
         this.linkAction=this.linkAction.bind(this);
+        this.extendedInfo=stateHelper(this,{},'trackInfo');
+        this.updateCount=0;
+        this.lastDimensionChange=0;
     }
     linkAction(){
         if (! this.props.link) return;
         this.props.closeCallback();
         history.push('viewpage',{url:this.props.link,name:this.props.name,useIframe:true});
     }
+    componentDidMount() {
+        let infoFunction=INFO_FUNCTIONS[this.props.overlayType]
+        if (infoFunction){
+            infoFunction(this.props.overlayName)
+                .then((info)=>{
+                    this.updateCount++;
+                    this.extendedInfo.setState(info,true)
+                })
+                .catch((error)=>Toast(error));
+        }
+    }
+    componentDidUpdate() {
+        if (this.lastDimensionChange !== this.updateCount){
+            if (this.props.updateDimensions) this.props.updateDimensions();
+            this.lastDimensionChange=this.updateCount;
+        }
+    }
+    infoRowDisplay(row,data){
+        let v=data[row.value];
+        if (v === undefined) return null;
+        if (row.formatter) v=row.formatter(v,data);
+        if (v === undefined) return null;
+        return <InfoItem label={row.label} value={v}/>
+    }
     render(){
         let link=this.props.link;
+        let extendedInfoRows=INFO_DISPLAY[this.props.overlayType];
         return (
             <div className="FeatureInfoDialog flexInner">
                 <h3 className="dialogTitle">
@@ -103,25 +137,15 @@ class FeatureInfoDialog extends React.Component{
                     Feature Info
                 </h3>
                 {INFO_ROWS.map((row)=>{
-                    let v=this.props[row.value];
-                    if (v === undefined) return null;
-                    if (row.formatter) v=row.formatter(v,this.props);
-                    if (v === undefined) return null;
-                    return <InfoItem label={row.label} value={v}/>
+                    return this.infoRowDisplay(row,this.props);
+                })}
+                {extendedInfoRows && extendedInfoRows.map((row)=>{
+                    return this.infoRowDisplay(row,this.extendedInfo.getState());
+                })}
+                {this.props.additionalInfoRows && this.props.additionalInfoRows.map((row)=>{
+                    return this.infoRowDisplay(row,this.props);
                 })}
                 <div className={"dialogButtons"}>
-                    {showInfoFunctions[this.props.overlayType] &&
-                        <DB
-                            name="info"
-                            onClick={()=>{
-                                this.props.closeCallback();
-                                showInfoFunctions[this.props.overlayType]({
-                                    type:this.props.overlayType,
-                                    name:this.props.overlayName
-                                });
-                            }}
-                            >Info</DB>
-                    }
                     {this.props.additionalActions && this.props.additionalActions.map((action)=>{
                         return <DB
                             name={action.name}
@@ -149,7 +173,8 @@ FeatureInfoDialog.propTypes={
     overlayName: PropTypes.string,
     overlayType: PropTypes.string,
     overlayUrl: PropTypes.string,
-    additionalActions: PropTypes.array //array of objects with: name,label,onClick
+    additionalActions: PropTypes.array, //array of objects with: name,label,onClick
+    additionalInfoRows: PropTypes.array //array of name,value,formatter
 }
 
 FeatureInfoDialog.showDialog=(info,opt_showDialogFunction)=>{

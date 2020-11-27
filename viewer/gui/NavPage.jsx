@@ -275,6 +275,7 @@ class NavPage extends React.Component{
             let feature=evdata.feature;
             if (! feature) return;
             feature.additionalActions=[];
+            feature.additionalInfoRows=[];
             const showFeature=()=>{
                 if (feature.nextTarget) {
                     feature.additionalActions.push(
@@ -332,6 +333,11 @@ class NavPage extends React.Component{
                                 onClick:()=>{
                                    RouteHandler.wpOn(feature.routeTarget);
                                 }
+                            })
+                            feature.additionalInfoRows.push({
+                                label: 'next point',
+                                value: 'routeTarget',
+                                formatter: (v)=>{return v.name}
                             })
                         }
                         feature.additionalActions.push({

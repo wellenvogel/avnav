@@ -486,6 +486,21 @@ RouteData.prototype.listRoutesServer=function(okCallback,opt_failCallback){
         });
 };
 /**
+ *
+ * @param route {routeobjects.Route}
+ * @returns {routeobjects.RouteInfo}
+ */
+RouteData.prototype.getInfoFromRoute=function(route){
+    if (! route) return;
+    let rtinfo=new routeobjects.RouteInfo(route.name);
+    try {
+        if (route.points) rtinfo.numpoints=route.points.length;
+        rtinfo.length=route.computeLength(0);
+        rtinfo.time=route.time;
+    } catch(e){}
+    return rtinfo;
+}
+/**
  * list local routes
  * returns a list of RouteInfo
  */
