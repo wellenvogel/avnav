@@ -50,10 +50,12 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URLDecoder;
+import java.util.HashSet;
 import java.util.Locale;
 
 import de.wellenvogel.avnav.main.MainActivity;
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.worker.GpsService;
 
 public class WebServer {
 
@@ -268,6 +270,10 @@ public class WebServer {
         private boolean any; //bind to any
         private int port;
         private String lastError=null;
+        private boolean gpsServiceConnected=false;
+        private boolean doStop=false;
+        private final Object waiter=new Object();
+        private HashSet<String> registeredHandlerPrefixes=new HashSet<String>();
 
 
         Listener(boolean any, int port) throws IOException {
@@ -294,15 +300,39 @@ public class WebServer {
             httpService.setParams(params);
             registry = new HttpRequestHandlerRegistry();
             registry.register("/"+ RequestHandler.NAVURL+"*",navRequestHandler);
+            gpsServiceConnected=activity.getGpsService()!=null;
             for (INavRequestHandler h: activity.getRequestHandler().getHandlers()){
-                if (h.getPrefix() == null) continue;
-                DirectoryRequestHandler handler=new DirectoryRequestHandler(h.getPrefix(),activity.getRequestHandler());
+                String prefix=h.getPrefix();
+                if (prefix == null) continue;
+                DirectoryRequestHandler handler=new DirectoryRequestHandler(prefix,activity.getRequestHandler());
+                registeredHandlerPrefixes.add(prefix);
                 registry.register("/"+h.getPrefix()+"/*",handler);
             }
 
             registry.register("*",baseRequestHandler);
 
             httpService.setHandlerResolver(registry);
+            if (! gpsServiceConnected) {
+                Thread retryHandlers = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        while (!doStop) {
+                            synchronized (waiter) {
+                                try {
+                                    waiter.wait(100);
+                                } catch (InterruptedException e) {
+                                    return;
+                                }
+                                if (timerCall()) {
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                });
+                retryHandlers.setDaemon(true);
+                retryHandlers.start();
+            }
         }
 
         int getPort(){
@@ -316,6 +346,27 @@ public class WebServer {
             return new InetSocketAddress(serversocket.getInetAddress(),port);
         }
 
+
+
+        public boolean timerCall(){
+            if (gpsServiceConnected) return true;
+            GpsService service=activity.getGpsService();
+            if (service != null){
+                gpsServiceConnected=true;
+                AvnLog.i("gps service active now, updating handlers in WebServer");
+                for (INavRequestHandler h: activity.getRequestHandler().getHandlers()){
+                    String prefix=h.getPrefix();
+                    if (prefix == null) continue;
+                    if (registeredHandlerPrefixes.contains(prefix)) continue;
+                    DirectoryRequestHandler handler=new DirectoryRequestHandler(h.getPrefix(),activity.getRequestHandler());
+                    registry.register("/"+prefix+"/*",handler);
+
+                }
+                return true;
+            }
+            return false;
+        }
+
         boolean getAny(){
             return any;
         }
@@ -323,6 +374,10 @@ public class WebServer {
         void close(){
             try {
                 serversocket.close();
+                doStop=true;
+                synchronized (waiter){
+                    waiter.notifyAll();
+                }
             }catch(Exception i){}
         }
 
