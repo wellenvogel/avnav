@@ -5,7 +5,6 @@ import android.location.Location;
 import android.net.Uri;
 import android.view.View;
 import android.webkit.MimeTypeMap;
-import android.webkit.WebResourceResponse;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -52,9 +51,9 @@ public class RequestHandler {
     E/chromium: [ERROR:aw_browser_terminator.cc(123)] Renderer process (9537) crash detected (code -1).
     E/chromium: [ERROR:aw_browser_terminator.cc(89)] Render process (9537) kill (OOM or update) wasn't handed by all associated webviews, killing application.
      */
-    public static final String PAGE_PREFIX ="http://assets";
-    protected static final String NAVURL="viewer/avnav_navi.php";
+    public static final String INTERNAL_URL_PREFIX ="http://assets";
     public static final String ROOT_PATH="/viewer";
+    protected static final String NAVURL="viewer/avnav_navi.php";
     private SimpleDateFormat dateFormat=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
     MainActivity activity;
     private SharedPreferences preferences;
@@ -329,7 +328,7 @@ public class RequestHandler {
         }
         String path=uri.getPath();
         if (path == null) return null;
-        if (url.startsWith(PAGE_PREFIX)){
+        if (url.startsWith(INTERNAL_URL_PREFIX)){
             try {
                 if (path.startsWith("/")) path=path.substring(1);
                 if (path.startsWith(NAVURL)){

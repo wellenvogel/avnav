@@ -159,10 +159,10 @@ public class DirectoryRequestHandler implements INavRequestHandler{
         String fallback=uri.getQueryParameter("fallback");
         if (fallback == null || fallback.isEmpty()) return null;
         if (!fallback.startsWith("/")) {
-            fallback=RequestHandler.PAGE_PREFIX+RequestHandler.ROOT_PATH+"/"+fallback;
+            fallback=RequestHandler.INTERNAL_URL_PREFIX +RequestHandler.ROOT_PATH+"/"+fallback;
         }
         else{
-            fallback=RequestHandler.PAGE_PREFIX+fallback;
+            fallback=RequestHandler.INTERNAL_URL_PREFIX +fallback;
         }
         return handler.handleRequest(null,fallback);
     }
