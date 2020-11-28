@@ -160,6 +160,7 @@ class OverlayItemDialog extends React.Component{
         if (newType === this.stateHelper.getValue('type')) return;
         let newState={
             type: newType,
+            name: undefined
         };
         this.stateHelper.setState(newState);
     }
@@ -175,7 +176,13 @@ class OverlayItemDialog extends React.Component{
                         this.stateHelper.setValue('name',undefined);
                     }
                     let newState={loading:false,itemInfo: featureInfo}
+                    let newItemState={};
+                    newItemState['style.lineWidth']=(featureInfo.hasRoute)?globalStore.getData(keys.properties.routeWidth):
+                        globalStore.getData(keys.properties.trackWidth);
+                    newItemState['style.lineColor']=(featureInfo.hasRoute)?globalStore.getData(keys.properties.routeColor):
+                        globalStore.getData(keys.properties.trackColor);
                     this.setState(newState);
+                    this.stateHelper.setState(newItemState);
                 }catch (e){
                     Toast(url+" is no valid gpx: "+e.message);
                     this.setState({loading:false,itemInfo:{}});
@@ -206,7 +213,7 @@ class OverlayItemDialog extends React.Component{
         let defaultLineWith=(itemInfo.hasRoute)?globalStore.getData(keys.properties.routeWidth):
             globalStore.getData(keys.properties.trackWidth);
         let defaultColor=(itemInfo.hasRoute)?globalStore.getData(keys.properties.routeColor):
-            globalStore.getData(keys.properties.routeColor);
+            globalStore.getData(keys.properties.trackColor);
         return(
             <React.Fragment>
                 <div className="selectDialog editOverlayItemDialog">
@@ -358,7 +365,7 @@ class OverlayItemDialog extends React.Component{
                                     if (changes.opacity > 1) changes.opacity = 1;
                                     this.props.updateCallback(changes);
                                 }}
-                                disabled={!hasChanges && ! this.props.forceOk}
+                                disabled={(!hasChanges && ! this.props.forceOk) || ! this.stateHelper.getValue('name')}
                             >Ok</DB>
                             : null}
 
@@ -552,7 +559,9 @@ class EditOverlaysDialog extends React.Component{
                     }}
                     updateCallback={(changed)=>{
                         this.updateDimensions();
-                        if (!changed.name) reject(0);
+                        if (!changed.name) {
+                            reject("missing overlay name");
+                        }
                         else resolve(changed);
                         props.closeCallback();
                     }}
