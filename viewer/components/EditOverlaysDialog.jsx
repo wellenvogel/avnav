@@ -886,9 +886,11 @@ export const DEFAULT_OVERLAY_CHARTENTRY={
     type: 'chart',
     name: 'DefaultOverlays',
     chartKey: DEFAULT_OVERLAY_CONFIG,
+    overlayConfig: DEFAULT_OVERLAY_CONFIG,
     canDelete: false,
     canDownload:false,
     time: (new Date()).getTime()/1000
 };
+
 
 export default  EditOverlaysDialog;

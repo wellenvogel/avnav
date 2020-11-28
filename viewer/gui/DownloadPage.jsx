@@ -33,7 +33,8 @@ import {
     allowedItemActions,
     ItemDownloadButton
 } from '../components/FileDialog';
-import {DEFAULT_OVERLAY_CHARTENTRY} from '../components/EditOverlaysDialog';
+import EditOverlaysDialog, {DEFAULT_OVERLAY_CHARTENTRY} from '../components/EditOverlaysDialog';
+import {getOverlayConfigName} from "../map/chartsourcebase";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -588,6 +589,10 @@ class DownloadPage extends React.Component{
                                 }
                                 if (self.props.options && self.props.options.selectItemCallback){
                                     return self.props.options.selectItemCallback(item);
+                                }
+                                if (item.type === 'chart' && getOverlayConfigName(item) === getOverlayConfigName(DEFAULT_OVERLAY_CHARTENTRY)){
+                                    EditOverlaysDialog.createDialog(item,()=>fillData());
+                                    return;
                                 }
                                 showFileDialog(item,
                                     (action,item)=>{
