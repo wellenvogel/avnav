@@ -107,6 +107,10 @@ class GpxChartSource extends ChartSourceBase{
         }
         return url;
     }
+    getLinkUrl(link){
+        if (! this.chartEntry.icons) return;
+        return this.chartEntry.icons+"/"+link;
+    }
     styleFunction(feature,resolution) {
 
         let type=feature.getGeometry().getType();
@@ -222,7 +226,7 @@ class GpxChartSource extends ChartSourceBase{
             }
             let link=feature.get('link');
             if (link && this.chartEntry.icons){
-                rt.link=this.getSymbolUrl(link);
+                rt.link=this.getLinkUrl(link);
                 rt.linkText=feature.get('linkText');
             }
             rt.nextTarget=coordinates;

@@ -180,7 +180,7 @@ public class DirectoryRequestHandler implements INavRequestHandler{
             File foundFile = findLocalFile(name);
             if (foundFile == null) return tryFallbackOrFail(uri,handler);
             ZipFile zf=new ZipFile(foundFile);
-            String entryPath= path.replaceFirst(".*/","");
+            String entryPath= path.replaceFirst("[^/]*/","");
             ZipEntry entry=zf.getEntry(entryPath);
             if (entry == null) return tryFallbackOrFail(uri,handler);
             return new ExtendedWebResourceResponse(entry.getSize(),
