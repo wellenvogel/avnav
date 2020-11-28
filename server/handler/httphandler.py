@@ -162,6 +162,10 @@ class AVNHTTPHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     self.end_headers()
     return f
 
+  def getPageRoot(self):
+    path = self.server.getStringParam('index')
+    return re.sub("/[^/]*$", "", path)
+
   #overwrite this from SimpleHTTPRequestHandler
   def translate_path(self, path):
       """Translate a /-separated PATH to the local filename syntax.
