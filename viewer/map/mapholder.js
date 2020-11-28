@@ -199,7 +199,7 @@ const MapHolder=function(){
      * a map with the name as key and override parameters
      * @type {OverlayConfig}
      */
-    this.overlayOverrides=new OverlayConfig();
+    this.overlayOverrides=this.overlayConfig.copy();
 
     /**
      * last div used in loadMap
@@ -441,10 +441,11 @@ MapHolder.prototype.loadMap=function(div,opt_preventDialogs){
             reject("chart "+this._chartEntry.name+" not found");
         }
         let oldBase=this.getBaseChart();
+        let resetOverrides=false;
         if (this.sources.length < 1 ||
             (oldBase && oldBase.getChartKey() !== chartSource.getChartKey() )){
             //new chart - forget all local overlay overrides
-            this.overlayOverrides=new OverlayConfig();
+            resetOverrides=true;
         }
         let prepareAndCreate=(newSources)=>{
             this.prepareSourcesAndCreate(newSources,opt_preventDialogs)
@@ -472,6 +473,7 @@ MapHolder.prototype.loadMap=function(div,opt_preventDialogs){
         let newSources=[];
         if (! globalStore.getData(keys.gui.capabilities.uploadOverlays)){
             this.overlayConfig=new OverlayConfig();
+            this.overlayOverrides=this.overlayConfig.copy();
             newSources.push(chartSource);
             checkChanges();
             return;
@@ -489,10 +491,19 @@ MapHolder.prototype.loadMap=function(div,opt_preventDialogs){
                 config = config.data;
                 if (! config){
                     this.overlayConfig=new OverlayConfig();
+                    if (resetOverrides) this.overlayOverrides=this.overlayConfig.copy();
                     checkChanges();
                     return;
                 }
                 this.overlayConfig=new OverlayConfig(config);
+                if (resetOverrides){
+                    this.overlayOverrides=this.overlayConfig.copy();
+                }
+                else{
+                    let newOverrides=this.overlayConfig.copy();
+                    newOverrides.mergeOverrides(this.overlayOverrides);
+                    this.overlayOverrides=newOverrides;
+                }
                 let overlays=this.overlayConfig.getOverlayList();
                 overlays.forEach((overlay)=>{
                     if (overlay.type === 'base'){
@@ -517,7 +528,10 @@ MapHolder.prototype.getCurrentMergedOverlayConfig=function(){
     return rt;
 };
 MapHolder.prototype.updateOverlayConfig=function(newOverrides){
-    if (newOverrides) this.overlayOverrides=newOverrides;
+    if (newOverrides) {
+        this.overlayOverrides=this.overlayConfig.copy();
+        this.overlayOverrides.mergeOverrides(newOverrides);
+    }
     let merged=this.getCurrentMergedOverlayConfig();
     for (let i=0;i<this.sources.length;i++){
         let source=this.sources[i];
@@ -534,9 +548,15 @@ MapHolder.prototype.updateOverlayConfig=function(newOverrides){
 };
 
 MapHolder.prototype.resetOverlayConfig=function(){
-    this.overlayOverrides=new OverlayConfig();
+    this.overlayOverrides=this.overlayConfig.copy();
     this.updateOverlayConfig();
 };
+
+MapHolder.prototype.setEnabled=function(chartSource,enabled,opt_update){
+    if (! chartSource) return;
+    let changed=this.overlayOverrides.setEnabled(chartSource.getConfig(),enabled);
+    if (changed && opt_update) this.updateOverlayConfig();
+}
 
 MapHolder.prototype.getBaseLayer=function(){
     var styles = {

@@ -93,6 +93,7 @@ class FeatureInfoDialog extends React.Component{
     constructor(props) {
         super(props);
         this.linkAction=this.linkAction.bind(this);
+        this.hideAction=this.hideAction.bind(this);
         this.extendedInfo=stateHelper(this,{},'trackInfo');
         this.updateCount=0;
         this.lastDimensionChange=0;
@@ -101,6 +102,11 @@ class FeatureInfoDialog extends React.Component{
         if (! this.props.link) return;
         this.props.closeCallback();
         history.push('viewpage',{url:this.props.link,name:this.props.name,useIframe:true});
+    }
+    hideAction(){
+        if (! this.props.overlaySource) return;
+        this.props.closeCallback();
+        this.props.overlaySource.setEnabled(false,true);
     }
     componentDidMount() {
         let infoFunction=INFO_FUNCTIONS[this.props.overlayType]
@@ -158,6 +164,10 @@ class FeatureInfoDialog extends React.Component{
                         name="info"
                         onClick={this.linkAction}
                         >Info</DB>}
+                    {this.props.overlaySource &&
+                    <DB name="hide"
+                        onClick={this.hideAction}
+                        >Hide</DB>}
                     <DB name={"cancel"}
                         onClick={this.props.closeCallback}
                         >Cancel</DB>

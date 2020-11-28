@@ -204,7 +204,8 @@ class GpxChartSource extends ChartSourceBase{
         let rt={
             overlayName:this.chartEntry.name,
             overlayType:this.chartEntry.type,
-            overlayUrl: this.chartEntry.url
+            overlayUrl: this.chartEntry.url,
+            overlaySource: this
         };
         if (! feature) {
             return rt;

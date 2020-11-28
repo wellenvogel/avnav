@@ -188,6 +188,11 @@ class ChartSourceBase {
         return {};
     }
 
+
+    setEnabled(enabled,opt_update){
+        this.mapholder.setEnabled(this,enabled,opt_update);
+    }
+
     /**
      * resolves to an array of featureInfo
      * @param pixel

@@ -373,6 +373,26 @@ export default class OverlayConfig{
         return rt;
     }
 
+    setEnabled(item,enabled){
+        this.checkMutable();
+        let id=getKeyFromOverlay(item);
+        if ( id === undefined) return;
+        if (item.isDefault){
+            this.config.defaultsOverride[id]=assign(this.config.defaultsOverride[id],{enabled:enabled});
+            this.hasChanges=true;
+            return true;
+        }
+        else{
+            for (let i=0;i<this.config.overlays.length;i++){
+                if (getKeyFromOverlay(this.config.overlays[i]) === id){
+                    assign(this.config.overlays[i],{enabled:enabled});
+                    this.hasChanges=true;
+                    return true;
+                }
+            }
+        }
+    }
+
     getName(){
         return this.config.name;
     }
