@@ -168,7 +168,7 @@ AisLayer.prototype.createInternalIcons = function () {
  */
 AisLayer.prototype.findTarget=function(pixel){
     base.log("findAisTarget "+pixel[0]+","+pixel[1]);
-    let tolerance=globalStore.getData(keys.properties.aisClickTolerance)/2;
+    let tolerance=globalStore.getData(keys.properties.clickTolerance)/2;
     let idx=this.mapholder.findTarget(pixel,this.pixel,tolerance);
     if (idx >=0) return this.pixel[idx].ais;
     return undefined;

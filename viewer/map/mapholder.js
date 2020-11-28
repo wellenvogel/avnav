@@ -1173,9 +1173,39 @@ MapHolder.prototype.onClick=function(evt){
         let rt=this._callHandlers({type:EventTypes.SELECTAIS,aisparam:aisparam});
         if (rt) return false;
     }
+    //detect vector layer features
+    let detectedFeatures=[];
+    this.olmap.forEachFeatureAtPixel(evt.pixel,(feature,layer)=>{
+        if (! layer.avnavOptions) return;
+        detectedFeatures.push({feature:feature,layer:layer,source:layer.avnavOptions.chartSource});
+        },
+        {
+            hitTolerance: globalStore.getData(keys.properties.clickTolerance)/2
+        });
+    let topFeature;
+    for (let i=this.sources.length;i>=0 && ! topFeature;i--){
+        for (let fidx=0;fidx<detectedFeatures.length;fidx++){
+            if (detectedFeatures[fidx].source === this.sources[i]){
+                topFeature=detectedFeatures[fidx];
+                break;
+            }
+        }
+    }
     let promises=[];
+    //just get chart features on top of the currently detected feature
     for (let i=this.sources.length-1;i>=0;i--) {
-        promises.push(this.sources[i].getFeatureAtPixel(evt.pixel));
+        if (topFeature && topFeature.source === this.sources[i]){
+            break;
+        }
+        promises.push(this.sources[i].getChartFeaturesAtPixel(evt.pixel));
+    }
+    const callForTop=()=>{
+        if (! topFeature) return;
+        let featureInfo=topFeature.source.featureToInfo(topFeature.feature,evt.pixel);
+        return this._callHandlers({type:EventTypes.FEATURE,feature:featureInfo})
+    }
+    if (promises.length < 1){
+        return callForTop();
     }
     Promise.all(promises)
         .then((promiseFeatures) => {
@@ -1187,6 +1217,7 @@ MapHolder.prototype.onClick=function(evt){
                     return true;
                 }
             }
+            return callForTop();
        })
         .catch((error) => {
             base.log("error in query features: "+error);

@@ -150,6 +150,10 @@ class ChartSourceBase {
             }
             this.prepareInternal()
                 .then((layers)=> {
+                    layers.forEach((layer)=>{
+                        if (!layer.avnavOptions) layer.avnavOptions={};
+                        layer.avnavOptions.chartSource=this;
+                    })
                     this.layers = layers;
                     if (! this.chartEntry.enabled){
                         this.layers.forEach((layer)=>layer.setVisible(false));
@@ -180,9 +184,18 @@ class ChartSourceBase {
         this.layers.forEach((layer)=>layer.setVisible(this.chartEntry.enabled));
     }
 
-    getFeatureAtPixel(pixel){
+    featureToInfo(feature,pixel,layer){
+        return {};
+    }
+
+    /**
+     * resolves to an array of featureInfo
+     * @param pixel
+     * @returns {ThenPromise<unknown>}
+     */
+    getChartFeaturesAtPixel(pixel){
         return new Promise((resolve,reject)=>{
-            resolve([]);
+            resolve([])
         })
     }
 

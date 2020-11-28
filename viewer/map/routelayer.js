@@ -241,7 +241,7 @@ RouteLayer.prototype.onPostCompose=function(center,drawing) {
  */
 RouteLayer.prototype.findTarget=function(pixel){
     //TODO: own tolerance
-    let tolerance=globalStore.getData(keys.properties.aisClickTolerance)/2;
+    let tolerance=globalStore.getData(keys.properties.clickTolerance)/2;
     let currentEditor=this._displayEditing?editingRoute:activeRoute;
     if (this.routePixel) {
         let idx = this.mapholder.findTarget(pixel, this.routePixel, tolerance);

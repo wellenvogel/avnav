@@ -293,7 +293,7 @@ let keys={
         aisUseCourseVector: new Property(true, "AIS Use Course Vector", PropertyType.CHECKBOX),
         aisIconBorderWidth: new Property(3, "Border Width", PropertyType.RANGE, [0, 10]),
         aisIconScale: new Property(1,"Icon Scale",PropertyType.RANGE, [0.5,5,0.1]),
-        aisClickTolerance: new Property(80, "Click Tolerance", PropertyType.RANGE, [10, 100]),
+        clickTolerance: new Property(60, "Click Tolerance", PropertyType.RANGE, [10, 120]),
         maxAisErrors: new Property(3), //after that many errors AIS display will be switched off
         minAISspeed: new Property(0.1), //minimal speed in m/s that we consider when computing cpa/tcpa
         maxAisTPA: new Property(3),    //max. computed AIS TPA time in h (otherwise we do not consider this)
