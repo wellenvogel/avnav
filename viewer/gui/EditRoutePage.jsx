@@ -80,9 +80,10 @@ const getPanelList=(panel)=>{
     return LayoutHandler.getPanelData(PAGENAME,panel,LayoutHandler.getOptionValues([LayoutHandler.OPTIONS.SMALL]));
 };
 
-const checkRouteWritable=function(){
+const checkRouteWritable=function(opt_noDialog){
     let currentEditor=getCurrentEditor();
     if (currentEditor.isRouteWritable()) return true;
+    if (opt_noDialog) return false;
     let ok=OverlayDialog.confirm("you cannot edit this route as you are disconnected. OK to select a new name");
     ok.then(function(){
         currentEditor.syncTo(RouteEdit.MODES.PAGE);
@@ -220,26 +221,33 @@ class EditRoutePage extends React.Component{
         ];
         return waypointButtons;
     };
-    insertOtherRoute(name,opt_before){
+    insertOtherRoute(name,otherStart,opt_before){
         let editor=getCurrentEditor();
         let idx=editor.getIndex();
         let current=editor.getPointAt(idx);
-        if (! current) return;
-        let otherIndex=idx+(opt_before?-1:1);
-        let other=editor.getPointAt(otherIndex);
+        if (!otherStart) return;
         const runInsert=()=>{
             RouteHandler.fetchRoute(name,false,(route)=>{
                     if (! route.points) return;
-                    editor.addMultipleWaypoints(route.points,opt_before);
+                    let insertPoints=[];
+                    let usePoints=false;
+                    for (let i=0;i<route.points.length;i++){
+                        if (route.points[i].compare(otherStart)) usePoints=true;
+                        if (usePoints) insertPoints.push(route.points[i]);
+                    }
+                    editor.addMultipleWaypoints(insertPoints,opt_before);
                 },
                 (error)=>{Toast(error)}
             );
         }
+        if (! current) return runInsert();
+        let otherIndex=idx+(opt_before?-1:1);
+        let other=editor.getPointAt(otherIndex);
         let text,replace;
         if (other !== undefined && otherIndex >= 0){
             //ask the user if we should really insert between 2 points
-            text="Really insert route ${route} between ${from} and ${to}?";
-            replace={route:name};
+            text="Really insert route ${route} starting at ${start} between ${from} and ${to}?";
+            replace={route:name,start:otherStart.name};
             if (opt_before){
                 replace.from=other.name;
                 replace.to=current.name;
@@ -251,10 +259,9 @@ class EditRoutePage extends React.Component{
         }
         else{
             text=opt_before?
-                "Really insert route ${route} before ${current}?":
-                "Really append route ${route} after ${current}?";
-            replace={route:name,current:current.name}
-            replace={route:name,current:current.name}
+                "Really insert route ${route} starting at ${start} before ${current}?":
+                "Really append route ${route} starting at ${start} after ${current}?";
+            replace={route:name,current:current.name,start:otherStart.name};
         }
         OverlayDialog.confirm(Helper.templateReplace(text,replace))
             .then(()=>runInsert())
@@ -270,7 +277,7 @@ class EditRoutePage extends React.Component{
         if (evdata.type === MapHolder.EventTypes.FEATURE){
             let feature=evdata.feature;
             if (! feature) return;
-            if (feature.kind === 'point' && feature.nextTarget && checkRouteWritable()){
+            if (feature.kind === 'point' && feature.nextTarget && checkRouteWritable(true)){
                 feature.additionalActions=[
                     {name:'insert',label:'Before',onClick:()=>{
                             let currentEditor=getCurrentEditor();
@@ -309,15 +316,26 @@ class EditRoutePage extends React.Component{
             }
             if (feature.overlayType === 'route'){
                 let routeName=feature.overlayName;
-                if (routeName && routeName.replace(/\.gpx$/,'') !== currentEditor.getRouteName()){
-                    feature.additionalActions=[
-                        {name:'insert',label:'Before',onClick:()=>{
-                                this.insertOtherRoute(feature.overlayName,true);
-                            }},
-                        {name:'add',label:'Ater',onClick:()=>{
-                                this.insertOtherRoute(feature.overlayName,false);
-                            }}
-                    ]
+                if (routeName && routeName.replace(/\.gpx$/,'') !== currentEditor.getRouteName() &&
+                    checkRouteWritable(true)
+                ){
+                    feature.additionalActions = [
+                        {
+                            name: 'insert', label: 'Before', onClick: (props) => {
+                                this.insertOtherRoute(feature.overlayName, props.routeTarget, true);
+                            },
+                            condition: (props) => props.routeTarget
+                        }
+                    ];
+                    if (currentEditor.getIndex() >= 0 && currentEditor.getPointAt()) {
+                        feature.additionalActions.push(
+                            {
+                                name: 'add', label: 'Ater', onClick: (props) => {
+                                    this.insertOtherRoute(feature.overlayName, props.routeTarget, false);
+                                },
+                                condition: (props) => props.routeTarget
+                            });
+                    }
                 }
             }
             FeatureInfoDialog.showDialog(feature);

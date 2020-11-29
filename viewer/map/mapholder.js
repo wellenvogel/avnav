@@ -1222,6 +1222,7 @@ MapHolder.prototype.onClick=function(evt){
     const callForTop=()=>{
         if (! topFeature) return;
         let featureInfo=topFeature.source.featureToInfo(topFeature.feature,evt.pixel);
+        this._callGuards('click'); //do this again as some time could have passed
         return this._callHandlers({type:EventTypes.FEATURE,feature:featureInfo})
     }
     if (promises.length < 1){
@@ -1233,6 +1234,7 @@ MapHolder.prototype.onClick=function(evt){
                 if (promiseFeatures[pi] === undefined || promiseFeatures[pi].length < 1) continue;
                 let feature = promiseFeatures[pi][0];
                 if (feature) {
+                    this._callGuards('click'); //do this again as some time could have passed
                     this._callHandlers({type:EventTypes.FEATURE,feature:feature});
                     return true;
                 }

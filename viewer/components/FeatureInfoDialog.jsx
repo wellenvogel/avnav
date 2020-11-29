@@ -38,6 +38,7 @@ import NavCompute from "../nav/navcompute";
 import {getTrackInfo,INFO_ROWS as TRACK_INFO_ROWS} from "./TrackInfoDialog";
 import {getRouteInfo,INFO_ROWS as ROUTE_INFO_ROWS} from "./RouteInfoDialog";
 import Toast from "./Toast";
+import assign from 'object-assign';
 const RouteHandler=NavHandler.getRoutingHandler();
 const InfoItem=(props)=>{
     return <div className={"dialogRow "+props.className}>
@@ -47,6 +48,21 @@ const InfoItem=(props)=>{
 }
 
 const INFO_ROWS=[
+    {label: 'position',value:'coordinates',formatter:(v)=>Formatter.formatLonLats({lon:v[0],lat:v[1]})},
+    {label: 'distance',value:'coordinates',formatter:(v)=>{
+            let position=globalstore.getData(keys.nav.gps.position);
+            let valid=globalstore.getData(keys.nav.gps.valid,false);
+            if (! valid) return;
+            let distance=NavCompute.computeDistance(position,new navobjects.Point(v[0],v[1]));
+            return Formatter.formatDistance(distance.dts)+" nm";
+        }},
+    {label: 'bearing',value:'coordinates',formatter:(v)=>{
+            let position=globalstore.getData(keys.nav.gps.position);
+            let valid=globalstore.getData(keys.nav.gps.valid,false);
+            if (! valid) return;
+            let distance=NavCompute.computeDistance(position,new navobjects.Point(v[0],v[1]));
+            return Formatter.formatDirection(distance.course)+" °";
+        }},
     {label:'name',value:'name'},
     {label:'description',value:'desc',formatter:(v,feature)=>{
         if (feature.name === v) return;
@@ -57,22 +73,8 @@ const INFO_ROWS=[
         if (overlay.overlayType) prefix=TYPE_PREFIX[overlay.overlayType]||"";
         return prefix+v;
         }},
-    {label:'symbol',value:'sym'},
-    {label: 'position',value:'coordinates',formatter:(v)=>Formatter.formatLonLats({lon:v[0],lat:v[1]})},
-    {label: 'distance',value:'coordinates',formatter:(v)=>{
-        let position=globalstore.getData(keys.nav.gps.position);
-        let valid=globalstore.getData(keys.nav.gps.valid,false);
-        if (! valid) return;
-        let distance=NavCompute.computeDistance(position,new navobjects.Point(v[0],v[1]));
-        return Formatter.formatDistance(distance.dts)+" nm";
-        }},
-    {label: 'bearing',value:'coordinates',formatter:(v)=>{
-            let position=globalstore.getData(keys.nav.gps.position);
-            let valid=globalstore.getData(keys.nav.gps.valid,false);
-            if (! valid) return;
-            let distance=NavCompute.computeDistance(position,new navobjects.Point(v[0],v[1]));
-            return Formatter.formatDirection(distance.course)+" °";
-        }}
+    {label:'symbol',value:'sym'}
+
 ];
 
 const TYPE_PREFIX={
@@ -111,7 +113,9 @@ class FeatureInfoDialog extends React.Component{
     componentDidMount() {
         let infoFunction=INFO_FUNCTIONS[this.props.overlayType]
         if (infoFunction){
-            infoFunction(this.props.overlayName)
+            infoFunction(this.props.overlayName,
+                new navobjects.WayPoint(this.props.nextTarget[0],this.props.nextTarget[1])
+                )
                 .then((info)=>{
                     this.updateCount++;
                     this.extendedInfo.setState(info,true)
@@ -135,6 +139,7 @@ class FeatureInfoDialog extends React.Component{
     render(){
         let link=this.props.link;
         let extendedInfoRows=INFO_DISPLAY[this.props.overlayType];
+        let merged=assign({},this.props,this.extendedInfo.getState());
         return (
             <div className="FeatureInfoDialog flexInner">
                 <h3 className="dialogTitle">
@@ -150,13 +155,17 @@ class FeatureInfoDialog extends React.Component{
                     return this.infoRowDisplay(row,this.extendedInfo.getState());
                 })}
                 {this.props.additionalInfoRows && this.props.additionalInfoRows.map((row)=>{
-                    return this.infoRowDisplay(row,this.props);
+                    return this.infoRowDisplay(row,merged);
                 })}
                 <div className={"dialogButtons"}>
                     {this.props.additionalActions && this.props.additionalActions.map((action)=>{
+                        if ( typeof(action.condition) === "function" ){
+                            if (! action.condition(merged)) return null;
+                        }
+                        if (action.condition !== undefined && ! action.condition) return null;
                         return <DB
                             name={action.name}
-                            onClick={()=>{this.props.closeCallback();action.onClick(this.props)}}>
+                            onClick={()=>{this.props.closeCallback();action.onClick(merged)}}>
                             {action.label}
                         </DB>
                     })}
@@ -184,7 +193,7 @@ FeatureInfoDialog.propTypes={
     overlayName: PropTypes.string,
     overlayType: PropTypes.string,
     overlayUrl: PropTypes.string,
-    additionalActions: PropTypes.array, //array of objects with: name,label,onClick
+    additionalActions: PropTypes.array, //array of objects with: name,label,onClick,condition
     additionalInfoRows: PropTypes.array //array of name,value,formatter
 }
 
