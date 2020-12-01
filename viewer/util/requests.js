@@ -166,12 +166,14 @@ let RequestHandler={
           }
           let sequence=undefined;
           if (options && options.sequenceFunction) sequence=options.sequenceFunction();
+          let finalResponse;
           fetch(rurl,requestOptions).then(
               (response)=>{
                   if (response.status < 200 || response.status >= 300){
                       reject(response.statusText);
                   }
                   if (response.ok){
+                      finalResponse=response;
                       return response.text();
                   }
                   else{
@@ -187,7 +189,7 @@ let RequestHandler={
                           return;
                       }
                   }
-                 resolve(text);
+                 resolve(text,finalResponse);
               },(error)=>{
                   reject(error);
               });

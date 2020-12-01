@@ -29,12 +29,12 @@ import Requests from '../util/requests.js';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import Helper from '../util/helper.js';
-import CryptHandler from './crypthandler.js';
 import ChartSourceBase from './chartsourcebase.js';
 import * as olExtent from 'ol/extent';
 import {XYZ as olXYZSource} from 'ol/source';
 import * as olTransforms  from 'ol/proj/transforms';
 import {Tile as olTileLayer} from 'ol/layer';
+import assign from 'object-assign';
 
 //we use a bit a dirty hack here:
 //ol3 nicely shows a lower zoom if the tile cannot be loaded (i.e. has an error)
@@ -397,7 +397,7 @@ class AvnavChartSource extends ChartSourceBase{
                         tolerance: tolerance
                     })
                         .then((result)=>{
-                            if (result.data && result.data !== "") {
+                            if (result.data) {
                                 aresolve([result.data])
                             }
                             else{
@@ -419,12 +419,12 @@ class AvnavChartSource extends ChartSourceBase{
                         }
                     }
                     if (topInfo) {
-                        let info={
+                        let info=assign({},topInfo,{
                             overlayType:'chart',
                             overlayName:this.chartEntry.name,
-                            coordinates: lonlat,
-                            htmlInfo: topInfo
-                        }
+                            coordinates: lonlat},
+                            topInfo
+                        );
                         resolve([info]);
                     }
                     else resolve([]);

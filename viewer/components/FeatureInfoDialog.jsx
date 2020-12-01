@@ -73,7 +73,11 @@ const INFO_ROWS=[
         if (overlay.overlayType) prefix=TYPE_PREFIX[overlay.overlayType]||"";
         return prefix+v;
         }},
-    {label:'symbol',value:'sym'}
+    {label:'symbol',value:'sym'},
+    //for s57 objects
+    {label: 'buoy',value: 'buoy'},
+    {label: 'top',value:'top'},
+    {label: 'light', value:'light'}
 
 ];
 
@@ -101,9 +105,13 @@ class FeatureInfoDialog extends React.Component{
         this.lastDimensionChange=0;
     }
     linkAction(){
-        if (! this.props.link) return;
+        if (! this.props.link && ! this.props.htmlInfo) return;
         this.props.closeCallback();
-        history.push('viewpage',{url:this.props.link,name:this.props.name,useIframe:true});
+        let url=this.props.link;
+        if (this.props.htmlInfo){
+            url = 'data:text/html,' + encodeURIComponent(this.props.htmlInfo);
+        }
+        history.push('viewpage',{url:url,name:this.props.name,useIframe:true});
     }
     hideAction(){
         if (! this.props.overlaySource) return;
@@ -137,7 +145,7 @@ class FeatureInfoDialog extends React.Component{
         return <InfoItem label={row.label} value={v}/>
     }
     render(){
-        let link=this.props.link;
+        let link=this.props.link||this.props.htmlInfo;
         let extendedInfoRows=INFO_DISPLAY[this.props.overlayType];
         let merged=assign({},this.props,this.extendedInfo.getState());
         return (
@@ -190,6 +198,7 @@ FeatureInfoDialog.propTypes={
     info: PropTypes.string,
     link: PropTypes.string,
     coordinates: PropTypes.array,
+    nextTarget:  PropTypes.array,
     overlayName: PropTypes.string,
     overlayType: PropTypes.string,
     overlayUrl: PropTypes.string,
