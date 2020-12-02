@@ -124,6 +124,8 @@ class ApiImpl(AVNApi):
   def getSingleValue(self, key,includeInfo=False):
     return self.store.getSingleValue(key,includeInfo=includeInfo)
 
+  def getExpiryPeriod(self):
+    return self.store.getExpiryPeriod()
 
   def getConfigValue(self, key, default=None):
     childcfg=self.phandler.getParamValue(self.prefix) #for now we use the prefix as cfg name
