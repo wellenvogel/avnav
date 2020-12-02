@@ -214,8 +214,10 @@ class Plugin:
         self.webSocket=websocket.WebSocketApp(websocketUrl,
                                     on_error=self.webSocketError,
                                     on_message=self.webSocketMessage,
-                                    on_close=self.webSocketClose)
-        webSocketThread=threading.Thread(name="signalk-websocket",target=self.webSocket.run_forever)
+                                    on_close=self.webSocketClose,
+                                    on_open=self.webSocketOpen)
+        self.api.log("websocket created at %s",self.webSocket.url)
+        webSocketThread=threading.Thread(name="signalk-websocket",target=self.webSocketRun)
         webSocketThread.setDaemon(True)
         webSocketThread.start()
       try:
@@ -261,24 +263,46 @@ class Plugin:
         self.connected=False
         time.sleep(5)
 
-  def webSocketError(self,ws,error):
-    self.api.setStatus("ERROR","error on websocket connection %s: %s"%(ws.url,error))
-    self.api.error("error on websocket connection: %s",error)
+  def webSocketRun(self):
+    self.api.log("websocket receiver started")
+    self.webSocket.run_forever()
+    self.api.log("websocket receiver finished")
+
+  def webSocketOpen(self,*args):
+    self.api.log("websocket connected")
+
+  #there is a change in the websocket client somewhere between
+  #0.44 and 0.55 - the newer versions omit the ws parameter
+  def getParam(self,*args):
+    if len(args) > 1:
+      return args[1]
+    if len(args) > 0:
+      return args[0]
+
+  def webSocketError(self,*args):
+    error=self.getParam(*args)
+    self.api.error("error on websocket connection: %s", error)
     try:
+      self.api.setStatus("ERROR", "error on websocket connection %s: %s" % (self.webSocket.url, error))
       self.webSocket.close()
     except:
       pass
     self.webSocket=None
     self.connected=False
 
-  def webSocketClose(self,ws):
+  def webSocketClose(self,*args):
     self.api.log("websocket connection closed")
-    self.api.setStatus("ERROR", "connection closed at %s" % ws.url)
     self.connected=False
+    try:
+      self.api.setStatus("ERROR", "connection closed at %s" % self.webSocket.url)
+    except:
+      pass
     self.webSocket=None
 
-  def webSocketMessage(self,ws,message):
-    self.api.setStatus("NMEA", "connected at %s" % ws.url)
+  def webSocketMessage(self,*args):
+    message=self.getParam(*args)
+    self.api.setStatus("NMEA", "connected at %s" % self.webSocket.url)
+    self.api.debug("received: %s",message)
     try:
       data=json.loads(message)
       updates=data.get('updates')
