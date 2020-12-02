@@ -149,7 +149,10 @@ class Plugin:
       raise
     self.api.log("started with port %d, period %d"%(port,period))
     baseUrl="http://%s:%d/signalk"%(self.skHost,port)
-    self.api.registerUserApp("http://$HOST:%s"%port,"signalk.svg")
+    if self.skHost == "localhost":
+      self.api.registerUserApp("http://$HOST:%s"%port,"signalk.svg")
+    else:
+      self.api.registerUserApp("http://%s:%s" % (self.skHost,port), "signalk.svg")
     self.api.registerLayout("example","example.json")
     self.api.registerChartProvider(self.listCharts)
     errorReported=False
