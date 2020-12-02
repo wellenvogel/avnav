@@ -143,7 +143,7 @@ class Plugin:
       self.skHost=self.api.getConfigValue('host','localhost')
       chartQueryPeriod=int(self.api.getConfigValue('chartQueryPeriod','10000'))/1000
       self.proxyMode=self.api.getConfigValue('proxyMode','sameHost')
-      self.useWebSockets=self.api.getConfigValue('useWebsockets','true').lower() == 'true'
+      self.useWebsockets=self.api.getConfigValue('useWebsockets','true').lower() == 'true'
     except:
       self.api.log("exception while reading config values %s",traceback.format_exc())
       raise
@@ -199,8 +199,8 @@ class Plugin:
       selfUrl=apiUrl+"vessels/self"
       self.connected = True
       useWebsockets = self.useWebsockets and hasWebsockets and websocketUrl is not None
-      self.api.log("using websockets: %s",websocketUrl)
       if useWebsockets:
+        self.api.log("using websockets: %s", websocketUrl)
         if self.webSocket is not None:
           try:
             self.webSocket.close()
