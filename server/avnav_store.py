@@ -98,6 +98,8 @@ class AVNStore():
     et=now - self.__aisExpiryTime
     return aisEntry.timestamp < et
 
+  def getExpiryPeriod(self):
+    return self.__expiryTime
 
   def updateChangeCounter(self,name):
     if not name in self.CHANGE_COUNTER:

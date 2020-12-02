@@ -63,13 +63,13 @@ class ApiImpl(AVNApi):
     self.requestHandler=None
 
   def log(self, str, *args):
-    AVNLog.info("%s",str % args)
+    AVNLog.info("[%s]%s",AVNLog.getThreadId(),str % args)
 
   def error(self, str, *args):
-    AVNLog.error("%s" % (str % args))
+    AVNLog.error("[%s]%s", AVNLog.getThreadId(),(str % args))
 
   def debug(self, str, *args):
-    AVNLog.debug("%s" % (str % args))
+    AVNLog.debug("[%s]%s",AVNLog.getThreadId(),(str % args))
 
   def fetchFromQueue(self, sequence, number=10,includeSource=False,waitTime=0.5,filter=None):
     if filter is not None:
@@ -124,6 +124,8 @@ class ApiImpl(AVNApi):
   def getSingleValue(self, key,includeInfo=False):
     return self.store.getSingleValue(key,includeInfo=includeInfo)
 
+  def getExpiryPeriod(self):
+    return self.store.getExpiryPeriod()
 
   def getConfigValue(self, key, default=None):
     childcfg=self.phandler.getParamValue(self.prefix) #for now we use the prefix as cfg name

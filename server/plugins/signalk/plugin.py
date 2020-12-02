@@ -139,7 +139,10 @@ class Plugin:
       port=self.api.getConfigValue('port','3000')
       port=int(port)
       period=self.api.getConfigValue('period','1000')
-      period=int(period)
+      period=int(period)/1000
+      expiryPeriod=self.api.getExpiryPeriod()/3
+      if (period > expiryPeriod):
+        period=expiryPeriod
       self.skHost=self.api.getConfigValue('host','localhost')
       chartQueryPeriod=int(self.api.getConfigValue('chartQueryPeriod','10000'))/1000
       self.proxyMode=self.api.getConfigValue('proxyMode','sameHost')
@@ -147,7 +150,7 @@ class Plugin:
     except:
       self.api.log("exception while reading config values %s",traceback.format_exc())
       raise
-    self.api.log("started with port %d, period %d"%(port,period))
+    self.api.log("started with host %s port %d, period %d"%(self.skHost,port,period))
     baseUrl="http://%s:%d/signalk"%(self.skHost,port)
     if self.skHost == "localhost":
       self.api.registerUserApp("http://$HOST:%s"%port,"signalk.svg")
@@ -203,7 +206,9 @@ class Plugin:
       self.connected = True
       useWebsockets = self.useWebsockets and hasWebsockets and websocketUrl is not None
       if useWebsockets:
-        self.api.log("using websockets: %s", websocketUrl)
+        if period < expiryPeriod:
+          period=expiryPeriod
+        self.api.log("using websockets at %s, querying with period %d", websocketUrl,period)
         if self.webSocket is not None:
           try:
             self.webSocket.close()
@@ -212,15 +217,25 @@ class Plugin:
         self.webSocket=websocket.WebSocketApp(websocketUrl,
                                     on_error=self.webSocketError,
                                     on_message=self.webSocketMessage,
-                                    on_close=self.webSocketClose)
-        webSocketThread=threading.Thread(name="signalk-websocket",target=self.webSocket.run_forever)
+                                    on_close=self.webSocketClose,
+                                    on_open=self.webSocketOpen)
+        self.api.log("websocket created at %s",self.webSocket.url)
+        webSocketThread=threading.Thread(name="signalk-websocket",target=self.webSocketRun)
         webSocketThread.setDaemon(True)
         webSocketThread.start()
       try:
         lastChartQuery=0
+        lastQuery=0
         first=True # when we newly connect, just query everything once
         while self.connected:
-          if not useWebsockets or first:
+          now = time.time()
+          #handle time shift backward
+          if lastChartQuery > now:
+            lastChartQuery=0
+          if lastQuery > now:
+            lastQuery=0
+          if (now - lastQuery) > period or first:
+            lastQuery=now
             response=urllib.urlopen(selfUrl)
             if response is None:
               self.skCharts=[]
@@ -236,38 +251,61 @@ class Plugin:
               self.api.addData(self.PATH+".name",name)
           else:
             pass
-          if chartQueryPeriod > 0 and lastChartQuery < (time.time() - chartQueryPeriod):
-            lastChartQuery=time.time()
+          if chartQueryPeriod > 0 and lastChartQuery < (now - chartQueryPeriod):
+            lastChartQuery=now
             try:
               self.queryCharts(apiUrl,port)
             except Exception as e:
               self.skCharts=[]
               self.api.debug("exception while reading chartlist %s",traceback.format_exc())
-          time.sleep(float(period)/1000.0)
+          sleepTime=1 if period > 1 else period
+          time.sleep(sleepTime)
       except:
         self.api.log("error when fetching from signalk %s: %s",apiUrl,traceback.format_exc())
         self.api.setStatus("ERROR","error when fetching from signalk %s"%(apiUrl))
         self.connected=False
         time.sleep(5)
 
-  def webSocketError(self,ws,error):
-    self.api.setStatus("ERROR","error on websocket connection %s: %s"%(ws.url,error))
-    self.api.error("error on websocket connection: %s",error)
+  def webSocketRun(self):
+    self.api.log("websocket receiver started")
+    self.webSocket.run_forever()
+    self.api.log("websocket receiver finished")
+
+  def webSocketOpen(self,*args):
+    self.api.log("websocket connected")
+
+  #there is a change in the websocket client somewhere between
+  #0.44 and 0.55 - the newer versions omit the ws parameter
+  def getParam(self,*args):
+    if len(args) > 1:
+      return args[1]
+    if len(args) > 0:
+      return args[0]
+
+  def webSocketError(self,*args):
+    error=self.getParam(*args)
+    self.api.error("error on websocket connection: %s", error)
     try:
+      self.api.setStatus("ERROR", "error on websocket connection %s: %s" % (self.webSocket.url, error))
       self.webSocket.close()
     except:
       pass
     self.webSocket=None
     self.connected=False
 
-  def webSocketClose(self,ws):
+  def webSocketClose(self,*args):
     self.api.log("websocket connection closed")
-    self.api.setStatus("ERROR", "connection closed at %s" % ws.url)
     self.connected=False
+    try:
+      self.api.setStatus("ERROR", "connection closed at %s" % self.webSocket.url)
+    except:
+      pass
     self.webSocket=None
 
-  def webSocketMessage(self,ws,message):
-    self.api.setStatus("NMEA", "connected at %s" % ws.url)
+  def webSocketMessage(self,*args):
+    message=self.getParam(*args)
+    self.api.setStatus("NMEA", "connected at %s" % self.webSocket.url)
+    self.api.debug("received: %s",message)
     try:
       data=json.loads(message)
       updates=data.get('updates')

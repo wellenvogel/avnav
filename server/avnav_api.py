@@ -144,6 +144,14 @@ class AVNApi:
     """
     raise NotImplemented()
 
+  def getExpiryPeriod(self):
+    """
+    get the time in seconds after which a normal entry in the store is
+    considered to be expired, just refresh within this time
+    @return:
+    """
+    raise NotImplemented()
+
   def setStatus(self,value,info):
     """
     set the status for the plugin
