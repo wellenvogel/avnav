@@ -23,7 +23,8 @@ class ButtonList extends React.Component{
     }
     itemSort(a,b){
         if (! this.props.cancelTop) return 0;
-        if (a.name == 'Cancel') return -1;
+        if (a.name === 'Cancel') return -1;
+        if (b.name === 'Cancel') return 1;
         return 0;
     }
     getStateKey(props){
