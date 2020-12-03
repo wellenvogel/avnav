@@ -517,6 +517,7 @@ class EditOverlaysDialog extends React.Component{
         this.sizeCount=0;
         this.reset=this.reset.bind(this);
         this.updateList=this.updateList.bind(this);
+        this.hideAll=this.hideAll.bind(this);
     }
     componentDidMount() {
         if (this.state.addEntry){
@@ -661,6 +662,13 @@ class EditOverlaysDialog extends React.Component{
         })
         this.updateList(displayListFromOverlays(this.currentConfig.getOverlayList()))
     }
+    hideAll(){
+        this.currentConfig.setAllEnabled(false);
+        this.setState({
+            isChanged:true
+        })
+        this.updateList(displayListFromOverlays(this.currentConfig.getOverlayList()))
+    }
     render () {
         let self=this;
         if (! this.props.current){
@@ -746,6 +754,10 @@ class EditOverlaysDialog extends React.Component{
                     itemList={this.state.list}
                     />
                 <div className="insertButtons">
+                    <DB name="hide"
+                        onClick={this.hideAll}>
+                        HideAll
+                    </DB>
                     {selectedItem?<DB name="delete" onClick={()=>this.deleteItem(selectedItem)}>Delete</DB>:null}
                     {selectedItem || this.props.editCallback?
                         <DB name="edit" onClick={()=>{

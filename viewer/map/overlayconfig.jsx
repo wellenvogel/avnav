@@ -373,6 +373,14 @@ export default class OverlayConfig{
         return rt;
     }
 
+    setAllEnabled(enabled){
+        this.config.overlays.forEach((overlay)=>{
+            this.setEnabled(overlay,enabled);
+        })
+        this.config.defaults.forEach((overlay)=>{
+            this.setEnabled(overlay,enabled);
+        })
+    }
     setEnabled(item,enabled){
         this.checkMutable();
         let id=getKeyFromOverlay(item);
