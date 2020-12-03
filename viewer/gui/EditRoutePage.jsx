@@ -277,7 +277,7 @@ class EditRoutePage extends React.Component{
         if (evdata.type === MapHolder.EventTypes.FEATURE){
             let feature=evdata.feature;
             if (! feature) return;
-            if (feature.kind === 'point' && feature.nextTarget && checkRouteWritable(true)){
+            if (feature.nextTarget && checkRouteWritable(true)){
                 feature.additionalActions=[
                     {name:'insert',label:'Before',onClick:()=>{
                             let currentEditor=getCurrentEditor();

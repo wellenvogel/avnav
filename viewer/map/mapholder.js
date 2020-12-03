@@ -175,14 +175,12 @@ const MapHolder=function(){
         this.updateSize();
     },keys.gui.global.windowDimensions);
 
-
-
     /**
-     * the chart description as received from the server
-     * @type {undefined}
+     *
+     * @type {ChartSourceBase}
      * @private
      */
-    this._chartEntry={};
+    this._baseChart=undefined;
     /**
      * the list of currently active sources (index 0: base, othe: overlays)
      * @type {Array}
@@ -342,7 +340,9 @@ MapHolder.prototype.renderTo=function(div){
 
 
 MapHolder.prototype.setChartEntry=function(entry){
-    this._chartEntry=assign({},entry);
+    //set the new base chart
+    this._baseChart=this.createChartSource(assign({},entry,{type:'chart',enabled:true,baseChart:true}));
+
 };
 
 MapHolder.prototype.prepareSourcesAndCreate=function(newSources,opt_preventDialog){
@@ -431,14 +431,14 @@ MapHolder.prototype.loadMap=function(div,opt_preventDialogs){
    if (div) this._lastMapDiv=div;
     let self=this;
     return new Promise((resolve,reject)=> {
-        let url=this._chartEntry.url;
+        let url=this._baseChart.getConfig().url;
         if (!url) {
             reject("no map selected");
             return;
         }
-        let chartSource=this.createChartSource(assign({},this._chartEntry,{type:'chart',enabled:true,baseChart:true}));
+        let chartSource=this._baseChart;
         if (! chartSource){
-            reject("chart "+this._chartEntry.name+" not found");
+            reject("chart not set");
         }
         let oldBase=this.getBaseChart();
         let resetOverrides=false;
@@ -1193,6 +1193,7 @@ MapHolder.prototype.onClick=function(evt){
         let rt=this._callHandlers({type:EventTypes.SELECTAIS,aisparam:aisparam});
         if (rt) return false;
     }
+    if (! globalStore.getData(keys.properties.featureInfo,true)) return true;
     //detect vector layer features
     let detectedFeatures=[];
     this.olmap.forEachFeatureAtPixel(evt.pixel,(feature,layer)=>{
@@ -1233,7 +1234,14 @@ MapHolder.prototype.onClick=function(evt){
             for (let pi = 0; pi < promiseFeatures.length; pi++) {
                 if (promiseFeatures[pi] === undefined || promiseFeatures[pi].length < 1) continue;
                 let feature = promiseFeatures[pi][0];
-                if (feature) {
+                if (feature && (feature.nextTarget || globalStore.getData(keys.properties.emptyFeatureInfo))) {
+                    if (! feature.nextTarget){
+                        //we always fill the click position
+                        //so we could goto
+                        let mapcoordinates=this.pixelToCoord(evt.pixel);
+                        let lonlat=this.transformFromMap(mapcoordinates);
+                        feature.nextTarget=lonlat;
+                    }
                     this._callGuards('click'); //do this again as some time could have passed
                     this._callHandlers({type:EventTypes.FEATURE,feature:feature});
                     return true;
@@ -1449,7 +1457,8 @@ MapHolder.prototype.setCompassOffset=function(y){
 };
 
 MapHolder.prototype.getCurrentChartEntry=function(){
-    return assign({},this._chartEntry);
+    if (! this._baseChart) return {}
+    return this._baseChart.getConfig();
 };
 
 MapHolder.prototype.setImageStyles=function(styles){

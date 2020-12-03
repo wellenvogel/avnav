@@ -197,8 +197,8 @@ class ViewPageBase extends React.Component{
     render(){
         let self=this;
         let mode=this.isImage()?0:(this.getExt() == 'html')?1:2;
-        if (this.url && this.props.options.useIframe){
-            mode=4;
+        if (this.url){
+            mode=this.props.options.useIframe?4:1;
         }
         let showView=this.state.readOnly || this.canChangeMode();
         let showEdit=!this.state.readOnly || this.canChangeMode();

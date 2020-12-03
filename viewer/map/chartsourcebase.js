@@ -129,7 +129,7 @@ class ChartSourceBase {
             if (this.chartEntry.tokenUrl) {
                 CryptHandler.createOrActivateEncrypt(this.getChartKey(), this.chartEntry.tokenUrl, this.chartEntry.tokenFunction)
                     .then((result)=> {
-                        //this.encryptFunction = result.encryptFunction;
+                        this.encryptFunction = result.encryptFunction;
                         this.prepareInternal()
                             .then((layers)=> {
                                 this.layers = layers;

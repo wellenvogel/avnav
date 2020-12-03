@@ -354,6 +354,8 @@ let keys={
         mobMinZoom: new Property(16,"minzoom for MOB",PropertyType.RANGE,[8,20]),
         buttonCols: new Property(false,"2 button columns",PropertyType.CHECKBOX),
         cancelTop: new Property(false,"Back button top",PropertyType.CHECKBOX),
+        featureInfo: new Property(true,"Overlay Info on Click",PropertyType.CHECKBOX),
+        emptyFeatureInfo: new Property(false,"Always Info on Chart Click",PropertyType.CHECKBOX),
 
         style: {
             buttonSize: new Property(60, "Button Size(px)", PropertyType.RANGE, [35, 100]),

@@ -384,9 +384,10 @@ class AvnavChartSource extends ChartSourceBase{
                 if (! layer.getVisible()) continue;
                 if (! layer.avnavOptions) continue;
                 if (! layer.avnavOptions.isTileLayer) continue;
-                let zoom=Math.floor(this.mapholder.getView().getZoom());
+                let res=this.mapholder.getView().getResolution();
+                let zoom=Math.round(this.mapholder.getView().getZoom());
                 let tile=layer.getSource().getTileGrid()
-                    .getTileCoordForCoordAndZ(mapcoordinates,zoom);
+                    .getTileCoordForCoordAndResolution(mapcoordinates,res);
                 let url=layerUrlFunction(layer.avnavOptions,tile);
                 let action=new Promise((aresolve,areject)=>{
                     let finalUrl=this.encryptUrl(url);
