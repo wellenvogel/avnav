@@ -128,7 +128,7 @@ class AVNStore():
     @param source: optional a source key
     @return:
     """
-    AVNLog.ld("AVNNavData set value key=%s", key, value)
+    AVNLog.ld("AVNNavData set value key=%s", key, unicode(value))
     self.__listLock.acquire()
     isDict=False
     dataValue=value
