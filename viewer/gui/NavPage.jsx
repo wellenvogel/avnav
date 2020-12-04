@@ -324,7 +324,7 @@ class NavPage extends React.Component{
                     onClick:()=>{
                         RouteHandler.fetchRoute(feature.overlayName,false,
                             (route)=>{
-                                let idx=route.findBestMatchingIdx(wp);
+                                let idx=route.findBestMatchingIdx(feature.nextTarget);
                                 let editor=new RouteEdit(RouteEdit.MODES.EDIT);
                                 editor.setNewRoute(route,idx >= 0?idx:undefined);
                                 history.push("editroutepage");
