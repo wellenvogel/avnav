@@ -73,6 +73,7 @@
     "react-sortable-hoc": "^1.11.0",
     "shallow-equal": "^1.0.0",
     "tinycolor2": "^1.4.1",
-    "whatwg-fetch-timeout": "^2.0.2-timeout"
+    "whatwg-fetch-timeout": "^2.0.2-timeout",
+    "xml-writer": "^1.7.0"
   }
 }

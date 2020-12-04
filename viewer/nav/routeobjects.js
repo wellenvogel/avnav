@@ -5,9 +5,9 @@
 import navobjects from './navobjects' ;
 import NavCompute from './navcompute' ;
 import Formatter from '../util/formatter' ;
-import assign from 'object-assign' ;
 import helper from '../util/helper.js';
 import base from '../base.js';
+let XmlWriter=require('xml-writer');
 let routeobjects={};
 
 
@@ -394,17 +394,18 @@ routeobjects.Route.prototype.fromXml=function(xml){
 };
 
 routeobjects.Route.prototype.toXml=function(noUtf8){
-    let rt='<?xml version="1.0" encoding="UTF-8" standalone="no" ?>'+"\n"+
-        '<gpx version="1.1" creator="avnav">'+"\n"+
-        '<rte>'+"\n";
-    rt+="<name>"+(noUtf8?this.name:unescape(encodeURIComponent(this.name)))+"</name>\n";
-    let i;
-    for (i=0;i<this.points.length;i++){
-        rt+='<rtept lon="'+this.points[i].lon+'" lat="'+this.points[i].lat+'"><name>'+
-            (noUtf8?this.points[i].name:unescape(encodeURIComponent(this.points[i].name)))+'</name></rtept>'+"\n";
+    let writer=new XmlWriter(true);
+    writer.startDocument('1.0','UTF-8');
+    let rte=writer.startElement('gpx').startElement('rte');
+    rte.startElement('name').text(this.name).endElement();
+    for (let i=0;i<this.points.length;i++){
+        let point=rte.startElement('rtept');
+        point.writeAttribute('lon',this.points[i].lon);
+        point.writeAttribute('lat',this.points[i].lat);
+        point.startElement('name').text(this.points[i].name).endElement();
+        point.endElement();
     }
-    rt+="</rte>\n</gpx>\n";
-    return rt;
+    return writer.toString();
 };
 
 /**
