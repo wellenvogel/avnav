@@ -405,7 +405,7 @@ class AvnavChartSource extends ChartSourceBase{
                                 aresolve([]);
                             }
                         })
-                        .catch((error)=>aresolve([error])); //TODO
+                        .catch((error)=>aresolve([])); //TODO
                 });
                 layerActions.push(action);
             }

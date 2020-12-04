@@ -1222,7 +1222,24 @@ MapHolder.prototype.onClick=function(evt){
     let detectedFeatures=[];
     let topFeature;
     const callForTop=()=>{
-        if (! topFeature) return;
+        if (! topFeature){
+            if (globalStore.getData(keys.properties.emptyFeatureInfo)){
+                let baseChart=this.getBaseChart();
+                if (!baseChart) return;
+                let coordinates=this.transformFromMap(this.pixelToCoord(evt.pixel));
+                let featureInfo={
+                    overlayType: 'chart',
+                    overlayName: baseChart.getConfig().name,
+                    coordinates: coordinates,
+                    nextTarget: coordinates
+                };
+                this._callGuards('click'); //do this again as some time could have passed
+                return this._callHandlers({type:EventTypes.FEATURE,feature:featureInfo})
+            }
+            else{
+                return;
+            }
+        }
         let featureInfo=topFeature.source.featureToInfo(topFeature.feature,evt.pixel);
         this._callGuards('click'); //do this again as some time could have passed
         return this._callHandlers({type:EventTypes.FEATURE,feature:featureInfo})
@@ -1234,6 +1251,7 @@ MapHolder.prototype.onClick=function(evt){
         {
             hitTolerance: globalStore.getData(keys.properties.clickTolerance)/2
         });
+    //sort the detected features by the order of our soorces so that we use the topmost
     for (let i=this.sources.length;i>=0 && ! topFeature;i--){
         for (let fidx=0;fidx<detectedFeatures.length;fidx++){
             if (detectedFeatures[fidx].source === this.sources[i]){
@@ -1248,7 +1266,9 @@ MapHolder.prototype.onClick=function(evt){
         if (topFeature && topFeature.source === this.sources[i]){
             break;
         }
-        promises.push(this.sources[i].getChartFeaturesAtPixel(evt.pixel));
+        if (this.sources[i].hasFeatureInfo()) {
+            promises.push(this.sources[i].getChartFeaturesAtPixel(evt.pixel));
+        }
     }
 
     if (promises.length < 1){

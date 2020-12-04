@@ -92,6 +92,7 @@ class ChartDescription(AVNDirectoryListEntry):
                   version=None,
                   url=None,
                   icon=None,
+                  hasFeatureInfo=None,
                  **kwargs):
       super(ChartDescription,self).__init__(type,prefix,name,**kwargs)
       self._chart=None
@@ -113,6 +114,7 @@ class ChartDescription(AVNDirectoryListEntry):
       self.validTo=validTo
       self.version=version
       self.icon=icon
+      self.hasFeatureInfo=hasFeatureInfo
       if url is not None:
         self.url=url
 

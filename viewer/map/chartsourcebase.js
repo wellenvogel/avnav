@@ -204,6 +204,11 @@ class ChartSourceBase {
         })
     }
 
+    hasFeatureInfo(){
+        if (! this.isReady()) return false;
+        return this.chartEntry.hasFeatureInfo||false;
+    }
+
 }
 
 export default  ChartSourceBase;
