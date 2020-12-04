@@ -12,6 +12,7 @@ import Toast from './Toast.jsx';
 import Helper from '../util/helper.js';
 import GuiHelpers from '../util/GuiHelpers.js';
 import {readFeatureInfoFromGpx} from '../map/gpxchartsource';
+import {readFeatureInfoFromKml} from '../map/kmlchartsource';
 import {getOverlayConfigName} from '../map/chartsourcebase'
 import globalStore from "../util/globalstore";
 import keys from '../util/keys';
@@ -45,7 +46,7 @@ const filterOverlayItem=(item,opt_itemInfo)=>{
     }
     return rt;
 };
-export const KNOWN_OVERLAY_EXTENSIONS=['gpx'];
+export const KNOWN_OVERLAY_EXTENSIONS=['gpx','kml'];
 const KNOWN_ICON_FILE_EXTENSIONS=['zip'];
 const TYPE_LIST=[
     {label: 'overlay', value: 'overlay'},
@@ -169,7 +170,13 @@ class OverlayItemDialog extends React.Component{
         Requests.getHtmlOrText(url)
             .then((data)=>{
                 try {
-                    let featureInfo = readFeatureInfoFromGpx(data);
+                    let featureInfo;
+                    if (Helper.getExt(url) === '.gpx'){
+                        featureInfo= readFeatureInfoFromGpx(data);
+                    }
+                    else{
+                        featureInfo =readFeatureInfoFromKml(data);
+                    }
                     if (! featureInfo.hasAny){
                         Toast(url+" is no valid gpx file");
                         this.setState({loading:false,itemInfo:{}});

@@ -37,6 +37,7 @@ import * as olTransforms  from 'ol/proj/transforms';
 import OverlayConfig from "./overlayconfig";
 import FeatureInfoDialog from '../components/FeatureInfoDialog';
 import Helper from "../util/helper";
+import KmlChartSource from "./kmlchartsource";
 
 
 const PSTOPIC="mapevent";
@@ -413,10 +414,14 @@ MapHolder.prototype.createChartSource=function(description){
     if (! description.url){
         throw Error("missing url for overlay");
     }
-    if (! description.url.match(/\.gpx$/)){
-        throw Error("only gpx overlays supported: "+description.url)
+    if (description.url.match(/\.gpx$/)){
+        return new GpxChartSource(this,description);
     }
-    return new GpxChartSource(this,description);
+    if (description.url.match(/\.kml$/)){
+        return new KmlChartSource(this,description);
+    }
+    throw Error("unsupported overlay: "+description.url)
+
 
 };
 
