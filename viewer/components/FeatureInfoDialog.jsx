@@ -69,10 +69,16 @@ const INFO_ROWS=[
         return v;
         }},
     {label:'overlay',value:'overlayName',formatter:(v,overlay)=>{
+        if (overlay.overlayType === 'chart') return;
         let prefix="";
         if (overlay.overlayType) prefix=TYPE_PREFIX[overlay.overlayType]||"";
         return prefix+v;
         }},
+    {label:'chart',value:'overlayName',formatter:(v,overlay)=>{
+        if (overlay.overlayType !== 'chart') return;
+        return v;
+        }
+    },
     {label:'symbol',value:'sym'},
     //for s57 objects
     {label: 'buoy',value: 'buoy'},

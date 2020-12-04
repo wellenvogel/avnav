@@ -278,7 +278,7 @@ class NavPage extends React.Component{
             feature.additionalActions=[];
             feature.additionalInfoRows=[];
             const showFeature=()=>{
-                if (feature.nextTarget) {
+                if (feature.nextTarget && ! feature.activeRoute) {
                     feature.additionalActions.push(
                         {
                             name: 'goto', label: 'Goto', onClick: () => {
@@ -292,7 +292,7 @@ class NavPage extends React.Component{
                 }
                 FeatureInfoDialog.showDialog(feature);
             }
-            if (feature.overlayType === 'route'){
+            if (feature.overlayType === 'route' && ! feature.activeRoute){
                 let currentRouteName=activeRoute.getRouteName();
                 if (Helper.getExt(currentRouteName) !== '.gpx') currentRouteName+='.gpx';
                 if (activeRoute.hasActiveTarget() && currentRouteName === feature.overlayName){
@@ -303,20 +303,28 @@ class NavPage extends React.Component{
             if (feature.overlayType !== 'route' || ! feature.nextTarget){
                 showFeature()
             } else {
-                feature.additionalActions.push({
-                    name: 'routeTo',
-                    label: 'Route',
-                    onClick: (props) => {
-                        RouteHandler.wpOn(props.routeTarget);
-                    },
-                    condition: (props) => props.routeTarget
-                });
+                let currentTarget=activeRoute.getCurrentTarget();
+                //show a "routeTo" if this is not the current target
+                if (! feature.activeRoute || ! currentTarget ||
+                    currentTarget.lon !== feature.nextTarget[0]||
+                    currentTarget.lat !== feature.nextTarget[1]
+                ) {
+                    feature.additionalActions.push({
+                        name: 'routeTo',
+                        label: 'Route',
+                        onClick: (props) => {
+                            RouteHandler.wpOn(props.routeTarget);
+                        },
+                        condition: (props) => props.routeTarget
+                    });
+                }
                 feature.additionalActions.push({
                     name:'editRoute',
                     label:'Edit',
                     onClick:()=>{
                         RouteHandler.fetchRoute(feature.overlayName,false,
                             (route)=>{
+                                let idx=route.findBestMatchingIdx(wp);
                                 let editor=new RouteEdit(RouteEdit.MODES.EDIT);
                                 editor.setNewRoute(route,idx >= 0?idx:undefined);
                                 history.push("editroutepage");

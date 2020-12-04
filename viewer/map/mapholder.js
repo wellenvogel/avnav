@@ -36,6 +36,7 @@ import {Style as olStyle,Circle as olCircle, Stroke as olStroke, Text as olText,
 import * as olTransforms  from 'ol/proj/transforms';
 import OverlayConfig from "./overlayconfig";
 import FeatureInfoDialog from '../components/FeatureInfoDialog';
+import Helper from "../util/helper";
 
 
 const PSTOPIC="mapevent";
@@ -1194,8 +1195,38 @@ MapHolder.prototype.onClick=function(evt){
         if (rt) return false;
     }
     if (! globalStore.getData(keys.properties.featureInfo,true)) return true;
+    //if we have a route point we will treat this as a feature info if not handled directly
+    if (wp){
+        let feature = {
+            coordinates: [wp.lon, wp.lat]
+        }
+        let routeName=wp.routeName;
+        if (routeName) {
+            if (Helper.getExt(routeName) !== '.gpx') routeName += ".gpx";
+            assign(feature,{
+                overlayType: 'route',
+                overlayName: routeName,
+                activeRoute: true,
+                nextTarget: [wp.lon, wp.lat],
+            });
+        }
+        else{
+            assign(feature,{
+                overlayType: 'target',
+                overlayName: 'current target'
+            })
+        }
+        if (this._callHandlers({type:EventTypes.FEATURE,feature:feature})) return false;
+    }
     //detect vector layer features
     let detectedFeatures=[];
+    let topFeature;
+    const callForTop=()=>{
+        if (! topFeature) return;
+        let featureInfo=topFeature.source.featureToInfo(topFeature.feature,evt.pixel);
+        this._callGuards('click'); //do this again as some time could have passed
+        return this._callHandlers({type:EventTypes.FEATURE,feature:featureInfo})
+    }
     this.olmap.forEachFeatureAtPixel(evt.pixel,(feature,layer)=>{
         if (! layer.avnavOptions) return;
         detectedFeatures.push({feature:feature,layer:layer,source:layer.avnavOptions.chartSource});
@@ -1203,7 +1234,6 @@ MapHolder.prototype.onClick=function(evt){
         {
             hitTolerance: globalStore.getData(keys.properties.clickTolerance)/2
         });
-    let topFeature;
     for (let i=this.sources.length;i>=0 && ! topFeature;i--){
         for (let fidx=0;fidx<detectedFeatures.length;fidx++){
             if (detectedFeatures[fidx].source === this.sources[i]){
@@ -1220,12 +1250,7 @@ MapHolder.prototype.onClick=function(evt){
         }
         promises.push(this.sources[i].getChartFeaturesAtPixel(evt.pixel));
     }
-    const callForTop=()=>{
-        if (! topFeature) return;
-        let featureInfo=topFeature.source.featureToInfo(topFeature.feature,evt.pixel);
-        this._callGuards('click'); //do this again as some time could have passed
-        return this._callHandlers({type:EventTypes.FEATURE,feature:featureInfo})
-    }
+
     if (promises.length < 1){
         return callForTop();
     }
