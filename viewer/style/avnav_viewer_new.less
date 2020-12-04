@@ -952,6 +952,13 @@ span.valuePrefix{
     width: 100px;
     height:100px;
   }
+  .smallDisplay & .status{
+    display: block;
+    margin-left: 1em;
+    position: relative;
+    top: 0;
+    left: 0;
+  }
   .infoList{
     width: 100%;
     max-width: 60em;
@@ -967,6 +974,18 @@ span.valuePrefix{
       .mdText2();
       padding-bottom: .7em;
       width: 50%;
+    }
+    .smallDisplay & {
+      .label {
+        display: block;
+        text-align: left;
+        width: inherit;
+        margin-left: 1em;
+      }
+      .aisData{
+        width: inherit;
+        margin-left: 1em;
+      }
     }
     .aisData {
       display: inline-block;

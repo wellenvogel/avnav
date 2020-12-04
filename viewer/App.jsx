@@ -249,8 +249,10 @@ class App extends React.Component {
                 </div>
         }
         const Dialogs = OverlayDialog.getDialogContainer;
+        let appClass="app";
+        if (this.props.smallDisplay) appClass+=" smallDisplay";
         return <div
-            className="app"
+            className={appClass}
             ref="app"
             style={{fontSize: this.props.fontSize+"px"}}
             tabIndex="0"
@@ -288,6 +290,7 @@ class App extends React.Component {
 export default   Dynamic(App,{
   storeKeys:{
       fontSize: keys.properties.baseFontSize,
+      smallDisplay: keys.gui.global.smallDisplay,
       nightMode: keys.properties.nightMode,
   }
 });
