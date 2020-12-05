@@ -39,7 +39,7 @@ import {getTrackInfo,INFO_ROWS as TRACK_INFO_ROWS} from "./TrackInfoDialog";
 import {getRouteInfo,INFO_ROWS as ROUTE_INFO_ROWS} from "./RouteInfoDialog";
 import Toast from "./Toast";
 import assign from 'object-assign';
-const RouteHandler=NavHandler.getRoutingHandler();
+NavHandler.getRoutingHandler();
 const InfoItem=(props)=>{
     return <div className={"dialogRow "+props.className}>
         <span className={"inputLabel"}>{props.label}</span>
@@ -106,6 +106,7 @@ class FeatureInfoDialog extends React.Component{
         super(props);
         this.linkAction=this.linkAction.bind(this);
         this.hideAction=this.hideAction.bind(this);
+        this.dialogRef=this.dialogRef.bind(this);
         this.extendedInfo=stateHelper(this,{},'trackInfo');
         this.updateCount=0;
         this.lastDimensionChange=0;
@@ -139,6 +140,17 @@ class FeatureInfoDialog extends React.Component{
                 .catch((error)=>Toast(error));
         }
     }
+    dialogRef(el){
+        console.log("dialog ref");
+        if (!el) return;
+        let images=el.getElementsByTagName('img');
+        for (let i=0;i<images.length;i++){
+            images[i].addEventListener('load',()=>{
+                this.updateCount++;
+                this.componentDidUpdate();
+            })
+        }
+    }
     componentDidUpdate() {
         if (this.lastDimensionChange !== this.updateCount){
             if (this.props.updateDimensions) this.props.updateDimensions();
@@ -157,7 +169,7 @@ class FeatureInfoDialog extends React.Component{
         let extendedInfoRows=INFO_DISPLAY[this.props.overlayType];
         let merged=assign({},this.props,this.extendedInfo.getState());
         return (
-            <div className="FeatureInfoDialog flexInner">
+            <div className="FeatureInfoDialog flexInner" ref={this.dialogRef}>
                 <h3 className="dialogTitle">
                     {this.props.icon &&
                         <span className="icon" style={{backgroundImage:"url('"+this.props.icon+"')"}}/>

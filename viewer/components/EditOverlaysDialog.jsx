@@ -46,7 +46,7 @@ const filterOverlayItem=(item,opt_itemInfo)=>{
     }
     return rt;
 };
-export const KNOWN_OVERLAY_EXTENSIONS=['gpx','kml'];
+export const KNOWN_OVERLAY_EXTENSIONS=['gpx','kml','kmz'];
 const KNOWN_ICON_FILE_EXTENSIONS=['zip'];
 const TYPE_LIST=[
     {label: 'overlay', value: 'overlay'},
@@ -171,14 +171,14 @@ class OverlayItemDialog extends React.Component{
             .then((data)=>{
                 try {
                     let featureInfo;
-                    if (Helper.getExt(url) === '.gpx'){
+                    if (Helper.getExt(url) === 'gpx'){
                         featureInfo= readFeatureInfoFromGpx(data);
                     }
                     else{
                         featureInfo =readFeatureInfoFromKml(data);
                     }
                     if (! featureInfo.hasAny){
-                        Toast(url+" is no valid gpx file");
+                        Toast(url+" is no valid xml file");
                         this.setState({loading:false,itemInfo:{}});
                         this.stateHelper.setValue('name',undefined);
                     }
@@ -188,10 +188,12 @@ class OverlayItemDialog extends React.Component{
                         globalStore.getData(keys.properties.trackWidth);
                     newItemState['style.lineColor']=(featureInfo.hasRoute)?globalStore.getData(keys.properties.routeColor):
                         globalStore.getData(keys.properties.trackColor);
+                    newItemState['style.fillColor']=newItemState['style.lineColor'];
+                    newItemState['style.circleWidth']=newItemState['style.lineWidth']*3;
                     this.setState(newState);
                     this.stateHelper.setState(newItemState);
                 }catch (e){
-                    Toast(url+" is no valid gpx: "+e.message);
+                    Toast(url+" is no valid xml: "+e.message);
                     this.setState({loading:false,itemInfo:{}});
                     this.stateHelper.setValue('name',undefined);
                 }
@@ -279,8 +281,13 @@ class OverlayItemDialog extends React.Component{
                                         fetchCount={this.state.itemsFetchCount}
                                         showDialogFunction={this.dialogHelper.showDialog}
                                         onChange={(nv) => {
-                                            this.stateHelper.setState({url: nv.url, name: nv.name});
-                                            this.analyseOverlay(nv.url);
+                                            let newState={url: nv.url, name: nv.name};
+                                            if (Helper.getExt(nv.name) === 'kmz'){
+                                                newState.icons=nv.url;
+                                                newState.url+="/doc.kml";
+                                            }
+                                            this.stateHelper.setState(newState);
+                                            this.analyseOverlay(newState.url);
                                         }}
                                     />
                                     {(itemInfo.hasSymbols || itemInfo.hasLinks) && <InputSelect
@@ -295,6 +302,24 @@ class OverlayItemDialog extends React.Component{
                                         }}
                                     />
                                     }
+                                    {itemInfo.allowOnline && <Checkbox
+                                        dialogRow={true}
+                                        label="allow online"
+                                        value={this.stateHelper.getValue('allowOnline')||false}
+                                        onChange={(nv)=>this.stateHelper.setValue('allowOnline',nv)}
+                                    />}
+                                    {itemInfo.showText && <Checkbox
+                                        dialogRow={true}
+                                        label="show text"
+                                        value={this.stateHelper.getValue('showText')||false}
+                                        onChange={(nv)=>this.stateHelper.setValue('showText',nv)}
+                                    />}
+                                    {itemInfo.allowHtml && <Checkbox
+                                        dialogRow={true}
+                                        label="allow html"
+                                        value={this.stateHelper.getValue('allowHtml')||false}
+                                        onChange={(nv)=>this.stateHelper.setValue('allowHtml',nv)}
+                                    />}
                                     {itemInfo['style.lineWidth'] &&
                                         <Input
                                             dialogRow={true}
@@ -304,12 +329,30 @@ class OverlayItemDialog extends React.Component{
                                             onChange={(nv)=>this.stateHelper.setValue('style.lineWidth',nv)}
                                             />
                                     }
+                                    {itemInfo['style.circleWidth'] &&
+                                    <Input
+                                        dialogRow={true}
+                                        type="number"
+                                        label="circle width"
+                                        value={this.stateHelper.getValue('style.circleWidth',defaultLineWith*3)}
+                                        onChange={(nv)=>this.stateHelper.setValue('style.circleWidth',nv)}
+                                    />
+                                    }
                                     {itemInfo['style.lineColor'] &&
                                     <ColorSelector
                                         dialogRow={true}
                                         label="line color"
                                         value={this.stateHelper.getValue('style.lineColor',defaultColor)}
                                         onChange={(nv)=>this.stateHelper.setValue('style.lineColor',nv)}
+                                        showDialogFunction={this.dialogHelper.showDialog}
+                                    />
+                                    }
+                                    {itemInfo['style.fillColor'] &&
+                                    <ColorSelector
+                                        dialogRow={true}
+                                        label="circle color"
+                                        value={this.stateHelper.getValue('style.fillColor',defaultColor)}
+                                        onChange={(nv)=>this.stateHelper.setValue('style.fillColor',nv)}
                                         showDialogFunction={this.dialogHelper.showDialog}
                                     />
                                     }
@@ -341,7 +384,7 @@ class OverlayItemDialog extends React.Component{
                                         value={this.stateHelper.getValue('maxScale') || 0}
                                         onChange={(nv) => this.stateHelper.setValue('maxScale', nv)}
                                     />}
-                                    {itemInfo.hasSymbols &&<InputSelect
+                                    {(itemInfo.hasSymbols || itemInfo.allowOnline) &&<InputSelect
                                         dialogRow={true}
                                         label="default icon"
                                         value={this.stateHelper.getValue('defaultIcon') || '--none--'}

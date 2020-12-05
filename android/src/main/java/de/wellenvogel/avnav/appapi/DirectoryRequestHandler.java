@@ -175,7 +175,7 @@ public class DirectoryRequestHandler implements INavRequestHandler{
         path = path.substring((urlPrefix.length()+1));
         String[] parts = path.split("/");
         if (parts.length < 1) return null;
-        if (parts[0].endsWith(".zip")){
+        if (parts[0].endsWith(".zip") || parts[0].endsWith(".kmz")){
             String name= URLDecoder.decode(parts[0],"UTF-8");
             File foundFile = findLocalFile(name);
             if (foundFile == null) return tryFallbackOrFail(uri,handler);

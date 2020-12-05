@@ -31,9 +31,11 @@ import {Vector as olVectorSource} from 'ol/source';
 import {Vector as olVectorLayer} from 'ol/layer';
 import {LineString as olLineString, MultiLineString as olMultiLineString, Point as olPoint} from 'ol/geom';
 import {KML as olKMLFormat} from 'ol/format';
-import Helper from "../util/helper";
-import globalstore from "../util/globalstore";
-import keys from "../util/keys";
+import DefaultGpxIcon from '../images/icons-new/DefaultGpxPoint.png';
+import base from "../base";
+import {stylePrefix} from './gpxchartsource';
+import ReactHmtlParser from 'react-html-parser';
+import convertNodeToElement from "react-html-parser/lib/convertNodeToElement";
 
 
 class KmlChartSource extends ChartSourceBase{
@@ -42,16 +44,70 @@ class KmlChartSource extends ChartSourceBase{
      * @param mapholer
      * @param chartEntry
      *        properties: url - the url of the gpx
-     *                    icons - the base url for icons (if points have a sym)
+     *                    icons - the base url for icons (if points have an icon url)
      *                    defaultIcon - the url for an icon if sym not found (opt)
      *                    minZoom - minimal zoom (opt)
      *                    maxZoom - maximal zoom (opt)
      *                    minScale - min zoom, lower zoom decrease symbol size (opt)
      *                    maxScale - max zoom, higher zooms increase symbol size (opt)
+     *                    allowOnline - allow image icons that are embedded (online...)
+     *                    showText  - show text at points
      *                    opacity - 0...1 (opt)
      */
     constructor(mapholer, chartEntry) {
         super(mapholer,chartEntry);
+        this.styleMap=[];
+
+    }
+    replacePointStyle(feature,style){
+        let type=feature.getGeometry().getType();
+        if (type === 'Point'){
+            try {
+                let currentUrl=style.getImage().getSrc();
+                if (currentUrl.startsWith(this.chartEntry.icons) || currentUrl.startsWith(this.chartEntry.defaultIcon)){
+                    return style;
+                }
+                let url;
+                let ourBase=window.location.href.replace(/\/[^/]*$/,'');
+                if (currentUrl.startsWith(ourBase)){
+                    currentUrl=currentUrl.substr(ourBase.length);
+                    if (currentUrl.startsWith("/")) currentUrl=currentUrl.substr(1);
+                }
+                if (currentUrl.startsWith("http")){
+                    if (this.chartEntry.allowOnline){
+                        return style;
+                    }
+                    url=this.chartEntry.defaultIcon;
+                }
+                else{
+                    if (this.chartEntry.icons){
+                        url=this.chartEntry.icons+"/"+currentUrl+"?fallback="+encodeURIComponent(this.chartEntry.defaultIcon);
+                    }
+                    else{
+                        url=this.chartEntry.defaultIcon;
+                    }
+                }
+                if (url) {
+                    style.setImage(
+                        new olIcon({
+                                src: url
+                            }
+                        )
+                    )
+                }
+                else{
+                    style.setImage(
+                        new olCircle({
+                            fill: new olFill({
+                                color: this.chartEntry[stylePrefix+'fillColor']||'#000000',
+                            }),
+                            radius: (this.chartEntry[stylePrefix+'circleWidth']||10)/2,
+                        })
+                    );
+                }
+            }catch (e){base.log("exception in kml style: "+e.message);}
+        }
+        return style;
     }
     prepareInternal() {
         let url = this.chartEntry.url;
@@ -62,9 +118,40 @@ class KmlChartSource extends ChartSourceBase{
                 return;
             }
             let vectorSource = new olVectorSource({
-                url:url,
-                format: new olKMLFormat(),
-                wrapX: false
+                format: new olKMLFormat({
+                    showPointNames: this.chartEntry.showText||false,
+                }),
+                wrapX: false,
+                loader: (extent,resolution,projection)=>{
+                    Requests.getHtmlOrText(url,{},{'_':(new Date()).getTime()})
+                        .then((kml)=>{
+                            let features=vectorSource.getFormat().readFeatures(kml,{
+                                extent: extent,
+                                featureProjection: projection,
+                            });
+                            features.forEach((feature)=>{
+                                let oldSf=feature.getStyleFunction();
+                                if (typeof oldSf === 'function'){
+                                    let newSf=(sfeature,resolution)=>{
+                                        let style=oldSf(sfeature,resolution);
+                                        if (style instanceof Array){
+                                            let rt=[];
+                                            style.forEach((styleElement)=>{
+                                                rt.push(this.replacePointStyle(feature,styleElement));
+                                            })
+                                            return rt;
+                                        }
+                                        return this.replacePointStyle(feature,style);
+                                    }
+                                    feature.setStyle(newSf);
+                                }
+                            })
+                            vectorSource.addFeatures(features);
+                        })
+                        .catch((error)=>{
+                            //vectorSource.removeLoadedExtent(extent);
+                        })
+                },
             });
             let layerOptions={
                 source: vectorSource,
@@ -104,7 +191,26 @@ class KmlChartSource extends ChartSourceBase{
             }
         }
         rt.coordinates=coordinates;
-        rt.desc=feature.get('desc');
+        rt.desc=feature.get('desc')||feature.get('description');
+        const transform=(node,index)=>{
+            if (node && node.attribs){
+                if (node.attribs.src){
+                    let url=node.attribs.src;
+                    if (url.startsWith('http')){
+                        if (!this.chartEntry.allowOnline) node.attribs.src="";
+                    }
+                    else{
+                        node.attribs.src=this.chartEntry.icons+"/"+url;
+                    }
+                }
+            }
+            return convertNodeToElement(node,index,transform);
+        };
+        if (rt.desc){
+            if (rt.desc.indexOf("<") >= 0 && this.chartEntry.allowHtml){
+                rt.desc=ReactHmtlParser(rt.desc,{transform:transform});
+            }
+        }
         rt.name=feature.get('name');
         rt.sym=feature.get('sym');
         return rt;
@@ -134,26 +240,28 @@ export const readFeatureInfoFromKml=(kml)=>{
     let features=parser.readFeatures(kml);
     features.forEach((feature)=>{
         if (! feature) return;
-        if (feature.get('sym')){
-            rt.hasSymbols=true;
-        }
-        if (feature.get('link')){
-            rt.hasLinks=true;
-        }
         let geo=feature.getGeometry();
         if (geo instanceof olPoint) {
             rt.hasWaypoint = true;
             rt.hasAny=true;
         }
         else if (geo instanceof olLineString){
-            rt.hasRoute=true;
+            rt.hasTrack=true;
             rt.hasAny=true;
         }
         else if (geo instanceof olMultiLineString){
             rt.hasTrack=true;
             rt.hasAny=true;
         }
+        let desc=feature.get('desc')||feature.get('description');
+        if (desc && desc.indexOf("<")>=0){
+            rt.allowHtml=true;
+        }
     })
+    rt[stylePrefix+'fillColor']=true;
+    rt[stylePrefix+'circleWidth']=true;
+    rt.allowOnline=true;
+    rt.showText=true;
     return rt;
 
 }

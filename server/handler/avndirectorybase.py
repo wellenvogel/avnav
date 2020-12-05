@@ -406,7 +406,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
     pathParts=subPath.split(os.path.sep)
     hasZip=False
     for part in pathParts:
-      if part.lower().endswith(".zip"):
+      if part.lower().endswith(".zip") or part.lower().endswith(".kmz"):
         hasZip=True
         break
     if not hasZip:
@@ -418,7 +418,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
       currentPath=os.path.join(currentPath,part)
       if not os.path.exists(currentPath):
         return None
-      if part.lower().endswith(".zip") and k < (len(pathParts)-1):
+      if (part.lower().endswith(".zip") or part.lower().endswith('.kmz')) and k < (len(pathParts)-1):
         return self.getZipEntry(currentPath,"/".join(pathParts[k+1:]),handler,requestParam)
     originalPath = os.path.join(self.baseDir,subPath)
     return originalPath
