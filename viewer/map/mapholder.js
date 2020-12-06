@@ -1227,6 +1227,18 @@ MapHolder.prototype.onClick=function(evt){
         }
         if (this._callHandlers({type:EventTypes.FEATURE,feature:feature})) return false;
     }
+    let currentTrackPoint=this.tracklayer.findTarget(evt.pixel);
+    if (currentTrackPoint){
+        let mapcoordinates=this.pixelToCoord(evt.pixel);
+        let lonlat=this.transformFromMap(mapcoordinates);
+        let featureInfo={
+            overlayType: 'track',
+            overlayName: 'current',
+            coordinates: lonlat,
+            nextTarget: currentTrackPoint
+        }
+        if (this._callHandlers({type:EventTypes.FEATURE,feature:featureInfo})) return false;
+    }
     //detect vector layer features
     let detectedFeatures=[];
     let topFeature;

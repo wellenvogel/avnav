@@ -466,7 +466,7 @@ public class RequestHandler {
                     for (int i=track.size()-1;i>=0;i--){
                         Location l=track.get(i);
                         JSONObject e=new JSONObject();
-                        e.put("ts",l.getTime());
+                        e.put("ts",l.getTime()/1000.0);
                         e.put("time",dateFormat.format(new Date(l.getTime())));
                         e.put("lon",l.getLongitude());
                         e.put("lat",l.getLatitude());

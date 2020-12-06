@@ -35,6 +35,8 @@ import navobjects from "../nav/navobjects";
 import NavCompute from "../nav/navcompute";
 import Formatter from '../util/formatter';
 import assign from 'object-assign';
+import globalstore from "../util/globalstore";
+import keys from "../util/keys";
 
 const InfoItem=(props)=>{
     return <div className={"dialogRow "+props.className}>
@@ -45,9 +47,15 @@ const InfoItem=(props)=>{
 
 export const INFO_ROWS=[
     {label:'name',value:'name'},
-    {label:'points',value:'numPoints'},
+    {label:'points',value:'numPoints',formatter:(v,data)=>{
+        if (data.refIdx !== undefined) return data.refIdx+"/"+data.numPoints;
+        return v;
+        }},
     {label:'length',value:'distance',formatter:(v)=>{
         return Formatter.formatDistance(v)+" nm";
+        }},
+    {label:'remain',value:'remain',formatter: (v)=>{
+        return Formatter.formatDistance(v)+ " nm";
         }},
     {label:'average',value:'avgSpeed', formatter:(v)=>{
         return Formatter.formatSpeed(v)+" kn";
@@ -56,7 +64,89 @@ export const INFO_ROWS=[
     {label:'end',value:'endTime',formatter:(v)=>Formatter.formatDateTime(v)},
     ];
 
-export const getTrackInfo = (trackName) => {
+class TrackInfo{
+    constructor(opt_refpoint) {
+        this.points=[];
+        this.distance = 0;
+        this.lastPoint = undefined;
+        this.startTime = undefined;
+        this.endTime = undefined;
+        this.hasTimeErrors = false;
+        this.refPoint=opt_refpoint;
+    }
+
+    /**
+     *
+     * @param point {navobjects.TrackPoint}
+     */
+    addPoint(point){
+        if (this.startTime === undefined || point.ts < this.startTime) {
+            this.startTime = point.ts;
+        }
+        if (this.endTime === undefined || point.ts > this.endTime) {
+            this.endTime = point.ts;
+        }
+        this.points.push(point);
+        if (this.lastPoint) {
+            let dts = NavCompute.computeDistance(this.lastPoint, point);
+            this.distance += dts.dts;
+        }
+        this.lastPoint = point;
+    }
+
+    finalize(resolve,reject){
+        if (this.points.length < 2) {
+            reject("no points parsed from track");
+            return;
+        }
+        let avgSpeed = undefined;
+        let MINDIFF = 1;//s
+        if (this.endTime !== undefined && this.startTime !== undefined
+            && this.endTime > (this.startTime + MINDIFF)) {
+            avgSpeed = this.distance / (this.endTime - this.startTime); //m/s
+        }
+        let refIdx;
+        let remain=0;
+        if (this.refPoint){
+            let bestDistance;
+            for (let i=0;i<this.points.length;i++){
+                let cur=NavCompute.computeDistance(this.refPoint,this.points[i]).dts;
+                if (bestDistance === undefined || cur < bestDistance){
+                    refIdx=i;
+                    bestDistance=cur;
+                }
+            }
+            let last=this.points[refIdx];
+            for (let i=refIdx+1;i<this.points.length;i++){
+                remain+=NavCompute.computeDistance(last,this.points[i]).dts;
+                last=this.points[i];
+            }
+        }
+        resolve({
+            points: this.points,
+            distance: this.distance,
+            numPoints: this.points.length,
+            refIdx: refIdx>=0?refIdx:undefined,
+            remain: refIdx>=0?remain:undefined,
+            timeErrors: this.hasTimeErrors,
+            avgSpeed: avgSpeed,
+            startTime: new Date(this.startTime*1000),
+            endTime: new Date(this.endTime*1000)
+        });
+    }
+}
+export const getTrackInfo = (trackName,opt_point) => {
+    let trackInfo=new TrackInfo(opt_point);
+    if (trackName === 'current'){
+        let trackPoints=globalstore.getData(keys.nav.track.currentTrack,[]);
+        return new Promise((resolve,reject)=>{
+            trackPoints.forEach((point)=>{
+                trackInfo.addPoint(point);
+            });
+            trackInfo.finalize(resolve,reject);
+        })
+    }
+
     return new Promise((resolve, reject) => {
         if (!trackName) reject("missing track name");
         Requests.getHtmlOrText('', {
@@ -90,12 +180,6 @@ export const getTrackInfo = (trackName) => {
                     reject('no track segments in trackfile');
                     return;
                 }
-                let points = [];
-                let distance = 0;
-                let lastPoint = undefined;
-                let startTime = undefined;
-                let endTime = undefined;
-                let hasTimeErrors = false;
                 for (let sid = 0; sid < segments.length; sid++) {
                     let tpoints = segments[sid].getElementsByTagName('trkpt');
                     for (let pid = 0; pid < tpoints.length; pid++) {
@@ -110,49 +194,22 @@ export const getTrackInfo = (trackName) => {
                         if (isNaN(lon) || isNaN(lat)) {
                             continue;
                         }
-                        let newPoint = new navobjects.Point(lon, lat);
+                        let newPoint = new navobjects.TrackPoint(lon, lat,undefined);
                         let timev = tpoint.getElementsByTagName('time')[0];
                         let validTime = false;
                         if (timev && timev.textContent) {
                             let time = new Date(timev.textContent);
                             if (!isNaN(time)) {
-                                newPoint.time = time;
+                                newPoint.ts = time.getTime()/1000.0;
+                                trackInfo.addPoint(newPoint);
                                 validTime = true;
-                                if (startTime === undefined || time.getTime() < startTime.getTime()) {
-                                    startTime = time;
-                                }
-                                if (endTime === undefined || time.getTime() > endTime.getTime()) {
-                                    endTime = time;
-                                }
                             }
                         }
-                        if (!validTime) hasTimeErrors = true;
-                        points.push(newPoint);
-                        if (lastPoint) {
-                            let dts = NavCompute.computeDistance(lastPoint, newPoint);
-                            distance += dts.dts;
-                        }
-                        lastPoint = newPoint;
+                        if (!validTime) trackInfo.hasTimeErrors=true;
+
                     }
                 }
-                if (points.length < 2) {
-                    reject("no points parsed from track");
-                    return;
-                }
-                let avgSpeed = undefined;
-                let MINDIFF = 1000;//ms
-                if (endTime && startTime && endTime.getTime() > (startTime.getTime() + MINDIFF)) {
-                    avgSpeed = distance / (endTime.getTime() - startTime.getTime()) * 1000; //m/s
-                }
-                resolve({
-                    points: points,
-                    distance: distance,
-                    numPoints: points.length,
-                    timeErrors: hasTimeErrors,
-                    avgSpeed: avgSpeed,
-                    startTime: startTime,
-                    endTime: endTime
-                });
+                trackInfo.finalize(resolve,reject);
             })
             .catch((error) => reject(error))
     })

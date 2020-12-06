@@ -106,7 +106,6 @@ class FeatureInfoDialog extends React.Component{
         super(props);
         this.linkAction=this.linkAction.bind(this);
         this.hideAction=this.hideAction.bind(this);
-        this.dialogRef=this.dialogRef.bind(this);
         this.extendedInfo=stateHelper(this,{},'trackInfo');
         this.updateCount=0;
         this.lastDimensionChange=0;
@@ -129,26 +128,16 @@ class FeatureInfoDialog extends React.Component{
     }
     componentDidMount() {
         let infoFunction=INFO_FUNCTIONS[this.props.overlayType]
+        let infoCoordinates=this.props.nextTarget?this.props.nextTarget:this.props.coordinates;
         if (infoFunction){
             infoFunction(this.props.overlayName,
-                new navobjects.WayPoint(this.props.nextTarget[0],this.props.nextTarget[1])
+                new navobjects.WayPoint(infoCoordinates[0],infoCoordinates[1])
                 )
                 .then((info)=>{
                     this.updateCount++;
                     this.extendedInfo.setState(info,true)
                 })
                 .catch((error)=>Toast(error));
-        }
-    }
-    dialogRef(el){
-        console.log("dialog ref");
-        if (!el) return;
-        let images=el.getElementsByTagName('img');
-        for (let i=0;i<images.length;i++){
-            images[i].addEventListener('load',()=>{
-                this.updateCount++;
-                this.componentDidUpdate();
-            })
         }
     }
     componentDidUpdate() {
@@ -169,7 +158,7 @@ class FeatureInfoDialog extends React.Component{
         let extendedInfoRows=INFO_DISPLAY[this.props.overlayType];
         let merged=assign({},this.props,this.extendedInfo.getState());
         return (
-            <div className="FeatureInfoDialog flexInner" ref={this.dialogRef}>
+            <div className="FeatureInfoDialog flexInner" >
                 <h3 className="dialogTitle">
                     {this.props.icon &&
                         <span className="icon" style={{backgroundImage:"url('"+this.props.icon+"')"}}/>

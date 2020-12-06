@@ -5,6 +5,8 @@
 import navobjects from '../nav/navobjects';
 import keys from '../util/keys.jsx';
 import globalStore from '../util/globalstore.jsx';
+import RouteLayer from "./routelayer";
+import mapholder from "./mapholder";
 
 
 class Callback{
@@ -39,6 +41,11 @@ const TrackLayer=function(mapholder){
      * @type {Array}
      */
     this.trackPoints=[];
+    /**
+     * list of last drawn pixel positions
+     * @type {*[]}
+     */
+    this.trackPixel=[];
     /**
      * @private
      * @type {olStyle}
@@ -119,17 +126,35 @@ TrackLayer.prototype.navEvent = function () {
  * @param {Drawing} drawing
  */
 TrackLayer.prototype.onPostCompose=function(center,drawing){
-    if (! this.visible) return;
-    drawing.drawLineToContext(this.trackPoints,this.lineStyle);
+    if (! this.visible) {
+        this.trackPixel=[];
+        return;
+    }
+    this.trackPixel=drawing.drawLineToContext(this.trackPoints,this.lineStyle);
 };
 TrackLayer.prototype.dataChanged=function() {
     this.visible=globalStore.getData(keys.properties.layers.track);
     this.setStyle();
     this.currentTrack=[]; //trigger a complete redraw
     this.trackPoints=[];
+    this.trackPixel=[];
 };
 TrackLayer.prototype.setImageStyles=function(styles){
 
 };
 
+/**
+ * find the waypoint that has been clicked and set this as active
+ * @param pixel
+ * @returns trackpoint or undefined
+ */
+TrackLayer.prototype.findTarget=function(pixel){
+    //TODO: own tolerance
+    let tolerance=globalStore.getData(keys.properties.clickTolerance)/2;
+    let idx = this.mapholder.findTarget(pixel, this.trackPixel, tolerance);
+    if (idx >= 0 && idx < this.trackPoints.length){
+        return mapholder.pointFromMap(this.trackPoints[idx]);
+    }
+    return;
+};
 export default TrackLayer;
