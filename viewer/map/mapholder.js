@@ -38,6 +38,7 @@ import OverlayConfig from "./overlayconfig";
 import FeatureInfoDialog from '../components/FeatureInfoDialog';
 import Helper from "../util/helper";
 import KmlChartSource from "./kmlchartsource";
+import GeoJsonChartSource from "./geojsonchartsource";
 
 
 const PSTOPIC="mapevent";
@@ -419,6 +420,9 @@ MapHolder.prototype.createChartSource=function(description){
     }
     if (description.url.match(/\.kml$/)){
         return new KmlChartSource(this,description);
+    }
+    if (description.url.match(/\.geojson$/)){
+        return new GeoJsonChartSource(this,description);
     }
     throw Error("unsupported overlay: "+description.url)
 

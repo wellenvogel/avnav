@@ -18,6 +18,7 @@ import globalStore from "../util/globalstore";
 import keys from '../util/keys';
 import OverlayConfig, {getKeyFromOverlay} from '../map/overlayconfig';
 import DefaultGpxIcon from '../images/icons-new/DefaultGpxPoint.png'
+import {readFeatureInfoFromGeoJson} from "../map/geojsonchartsource";
 
 const filterOverlayItem=(item,opt_itemInfo)=>{
     let rt=undefined;
@@ -46,7 +47,7 @@ const filterOverlayItem=(item,opt_itemInfo)=>{
     }
     return rt;
 };
-export const KNOWN_OVERLAY_EXTENSIONS=['gpx','kml','kmz'];
+export const KNOWN_OVERLAY_EXTENSIONS=['gpx','kml','kmz','geojson'];
 const KNOWN_ICON_FILE_EXTENSIONS=['zip'];
 const TYPE_LIST=[
     {label: 'overlay', value: 'overlay'},
@@ -171,14 +172,18 @@ class OverlayItemDialog extends React.Component{
             .then((data)=>{
                 try {
                     let featureInfo;
-                    if (Helper.getExt(url) === 'gpx'){
+                    let ext=Helper.getExt(url);
+                    if (ext === 'gpx'){
                         featureInfo= readFeatureInfoFromGpx(data);
                     }
-                    else{
+                    if (ext === 'kml') {
                         featureInfo =readFeatureInfoFromKml(data);
                     }
+                    if (ext === 'geojson') {
+                        featureInfo =readFeatureInfoFromGeoJson(data);
+                    }
                     if (! featureInfo.hasAny){
-                        Toast(url+" is no valid xml file");
+                        Toast(url+" is no valid overlay file");
                         this.setState({loading:false,itemInfo:{}});
                         this.stateHelper.setValue('name',undefined);
                     }
