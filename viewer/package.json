@@ -15,6 +15,7 @@
   },
   "author": "Andreas Vogel",
   "license": "MIT",
+  "browserslist": "> 0.25%, not dead",
   "devDependencies": {
     "@babel/core": "^7.12.3",
     "@babel/preset-env": "^7.12.1",

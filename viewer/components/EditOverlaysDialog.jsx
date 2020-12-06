@@ -223,6 +223,7 @@ class OverlayItemDialog extends React.Component{
             globalStore.getData(keys.properties.trackWidth);
         let defaultColor=(itemInfo.hasRoute)?globalStore.getData(keys.properties.routeColor):
             globalStore.getData(keys.properties.trackColor);
+        let iconsReadOnly=Helper.getExt(this.stateHelper.getValue('name')) === 'kmz';
         return(
             <React.Fragment>
                 <div className="selectDialog editOverlayItemDialog">
@@ -290,7 +291,7 @@ class OverlayItemDialog extends React.Component{
                                             this.analyseOverlay(newState.url);
                                         }}
                                     />
-                                    {(itemInfo.hasSymbols || itemInfo.hasLinks) && <InputSelect
+                                    {!iconsReadOnly && (itemInfo.hasSymbols || itemInfo.hasLinks) && <InputSelect
                                         dialogRow={true}
                                         label="icon file"
                                         value={this.stateHelper.getValue('icons')}
@@ -302,6 +303,11 @@ class OverlayItemDialog extends React.Component{
                                         }}
                                     />
                                     }
+                                    {iconsReadOnly &&<InputReadOnly
+                                        dialogRow={true}
+                                        label="icon file"
+                                        value={this.stateHelper.getValue('icons')}
+                                        />}
                                     {itemInfo.allowOnline && <Checkbox
                                         dialogRow={true}
                                         label="allow online"

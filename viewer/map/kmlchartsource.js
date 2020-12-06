@@ -31,11 +31,8 @@ import {Vector as olVectorSource} from 'ol/source';
 import {Vector as olVectorLayer} from 'ol/layer';
 import {LineString as olLineString, MultiLineString as olMultiLineString, Point as olPoint} from 'ol/geom';
 import {KML as olKMLFormat} from 'ol/format';
-import DefaultGpxIcon from '../images/icons-new/DefaultGpxPoint.png';
 import base from "../base";
 import {stylePrefix} from './gpxchartsource';
-import ReactHmtlParser from 'react-html-parser';
-import convertNodeToElement from "react-html-parser/lib/convertNodeToElement";
 
 
 class KmlChartSource extends ChartSourceBase{
@@ -192,23 +189,18 @@ class KmlChartSource extends ChartSourceBase{
         }
         rt.coordinates=coordinates;
         rt.desc=feature.get('desc')||feature.get('description');
-        const transform=(node,index)=>{
-            if (node && node.attribs){
-                if (node.attribs.src){
-                    let url=node.attribs.src;
-                    if (url.startsWith('http')){
-                        if (!this.chartEntry.allowOnline) node.attribs.src="";
-                    }
-                    else{
-                        node.attribs.src=this.chartEntry.icons+"/"+url;
-                    }
-                }
-            }
-            return convertNodeToElement(node,index,transform);
-        };
         if (rt.desc){
-            if (rt.desc.indexOf("<") >= 0 && this.chartEntry.allowHtml){
-                rt.desc=ReactHmtlParser(rt.desc,{transform:transform});
+            if (rt.desc.indexOf("<") >= 0){
+                if(this.chartEntry.allowHtml) {
+                    rt.htmlInfo = rt.desc.replaceAll(/src *= *"([^"]*)"/g,(match,url)=>{
+                        if (url.startsWith('http')){
+                            if (!this.chartEntry.allowOnline) return 'src=""';
+                            return match;
+                        }
+                        return 'src="'+(this.chartEntry.icons+"/"+url).replace('"','\\"')+'" ';
+                    });
+                    rt.desc=undefined;
+                }
             }
         }
         rt.name=feature.get('name');
