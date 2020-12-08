@@ -29,7 +29,7 @@ import PropTypes from 'prop-types';
 import Formatter from '../util/formatter';
 import DB from './DialogButton';
 import history from "../util/history";
-import OverlayDialog, {stateHelper} from "./OverlayDialog";
+import OverlayDialog, {stateHelper,InfoItem} from "./OverlayDialog";
 import NavHandler from "../nav/navdata";
 import navobjects from "../nav/navobjects";
 import globalstore from "../util/globalstore";
@@ -40,12 +40,7 @@ import {getRouteInfo,INFO_ROWS as ROUTE_INFO_ROWS} from "./RouteInfoDialog";
 import Toast from "./Toast";
 import assign from 'object-assign';
 NavHandler.getRoutingHandler();
-const InfoItem=(props)=>{
-    return <div className={"dialogRow "+props.className}>
-        <span className={"inputLabel"}>{props.label}</span>
-        <span className={"itemInfo"}>{props.value}</span>
-    </div>
-}
+
 
 const INFO_ROWS=[
     {label: 'position',value:'coordinates',formatter:(v)=>Formatter.formatLonLats({lon:v[0],lat:v[1]})},

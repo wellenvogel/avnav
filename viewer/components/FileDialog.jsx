@@ -29,7 +29,7 @@ import DB from "./DialogButton";
 import Requests from "../util/requests";
 import Toast from "./Toast";
 import EditOverlaysDialog, {KNOWN_OVERLAY_EXTENSIONS,DEFAULT_OVERLAY_CHARTENTRY} from "./EditOverlaysDialog";
-import OverlayDialog, {dialogHelper} from "./OverlayDialog";
+import OverlayDialog, {dialogHelper, InfoItem, stateHelper} from "./OverlayDialog";
 import globalStore from "../util/globalstore";
 import ViewPage from "../gui/ViewPage";
 import assign from 'object-assign';
@@ -40,9 +40,9 @@ import NavHandler from "../nav/navdata";
 import Helper from '../util/helper';
 import UserAppDialog from "./UserAppDialog";
 import DownloadButton from "./DownloadButton";
-import MapHolder from '../map/mapholder';
-import {getOverlayConfigName} from "../map/chartsourcebase";
-import TrackInfoDialog from "./TrackInfoDialog";
+import TrackInfoDialog, {TrackConvertDialog} from "./TrackInfoDialog";
+import {getTrackInfo,INFO_ROWS as TRACK_INFO_ROWS} from "./TrackInfoDialog";
+import {getRouteInfo,INFO_ROWS as ROUTE_INFO_ROWS} from "./RouteInfoDialog";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 /**
@@ -125,7 +125,7 @@ export const allowedItemActions=(props)=>{
             ) &&
         globalStore.getData(keys.gui.capabilities.uploadOverlays));
     let showScheme=(props.type === 'chart' && props.url && props.url.match(/.*mbtiles.*/));
-    let showInfo=(props.type === 'track' && ext === 'gpx');
+    let showConvert=(props.type === 'track' && ext === 'gpx');
     return {
         showEdit:showEdit,
         showView:showView,
@@ -135,12 +135,14 @@ export const allowedItemActions=(props)=>{
         isApp:isApp,
         showOverlay: showOverlay,
         showScheme: showScheme,
-        showInfo: showInfo
+        showConvert: showConvert
     };
 };
 
-const showInfoFunctions={
-    track: TrackInfoDialog.showDialog
+const showConvertFunctions = {
+    track: (item) => {
+        TrackConvertDialog.showDialog(item.name);
+    }
 }
 
 class AddRemoveOverlayDialog extends React.Component{
@@ -257,7 +259,17 @@ class AddRemoveOverlayDialog extends React.Component{
         )
     }
 }
+const INFO_ROWS=[
 
+];
+const TYPE_INFO_ROWS={
+    track: TRACK_INFO_ROWS,
+    route: ROUTE_INFO_ROWS
+}
+const INFO_FUNCTIONS={
+    track: getTrackInfo,
+    route: getRouteInfo
+};
 export default  class FileDialog extends React.Component{
     constructor(props){
         super(props);
@@ -268,7 +280,33 @@ export default  class FileDialog extends React.Component{
             scheme:props.current.scheme,
             allowed:allowedItemActions(props.current)
         };
+        this.updateCount=0;
+        this.lastDimensionsCount=0;
         this.onChange=this.onChange.bind(this);
+        this.extendedInfo=stateHelper(this,{},'extendedInfo');
+    }
+    componentDidMount() {
+        let f=INFO_FUNCTIONS[this.props.current.type];
+        if (f){
+            f(this.props.current.name).then((info)=>{
+                this.extendedInfo.setState(info,true);
+                this.updateCount++;
+            }).catch(()=>{});
+        }
+    }
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if (this.updateCount !== this.lastDimensionsCount){
+             this.props.updateDimensions();
+             this.lastDimensionsCount=this.updateCount;
+        }
+    }
+
+    infoRowDisplay(row,data){
+        let v=data[row.value];
+        if (v === undefined) return null;
+        if (row.formatter) v=row.formatter(v,data);
+        if (v === undefined) return null;
+        return <InfoItem label={row.label} value={v}/>
     }
     onChange(newName){
         if (newName === this.state.name) return;
@@ -291,6 +329,7 @@ export default  class FileDialog extends React.Component{
         let cn=this.state.existingName?"existing":"";
         let rename=this.state.changed && ! this.state.existingName && (this.state.name !== this.props.current.name);
         let schemeChanged=this.state.allowed.showScheme && (((this.props.current.scheme||"tms") !== this.state.scheme)|| this.props.current.originalScheme);
+        let extendedInfoRows=TYPE_INFO_ROWS[this.props.current.type];
         return(
             <React.Fragment>
                 <div className="fileDialog flexInner">
@@ -302,6 +341,12 @@ export default  class FileDialog extends React.Component{
                         :
                         null
                     }
+                    {INFO_ROWS.map((row)=>{
+                        return this.infoRowDisplay(row,this.props);
+                    })}
+                    {extendedInfoRows && extendedInfoRows.map((row)=>{
+                        return this.infoRowDisplay(row,this.extendedInfo.getState());
+                    })}
                     {(this.state.allowed.showScheme && this.props.current.originalScheme) &&
                     <div className="dialogRow userAction">
                     <span className="inputLabel">
@@ -371,16 +416,16 @@ export default  class FileDialog extends React.Component{
                         }
                     </div>
                     <div className="dialogButtons">
-                        {this.state.allowed.showInfo &&
-                            <DB name="info"
+                        {this.state.allowed.showConvert &&
+                            <DB name="toroute"
                                 onClick={()=>{
-                                    let infoFunction=showInfoFunctions[this.props.current.type];
-                                    if (infoFunction){
+                                    let convertFunction=showConvertFunctions[this.props.current.type];
+                                    if (convertFunction){
                                         this.props.closeCallback()
-                                        infoFunction(this.props.current);
+                                        convertFunction(this.props.current);
                                     }
                                 }}
-                                >Info</DB>
+                                >Convert</DB>
                         }
                         {(this.state.allowed.showView )?
                             <DB name="view"

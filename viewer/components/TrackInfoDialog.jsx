@@ -354,6 +354,21 @@ TrackConvertDialog.propTypes={
     name: PropTypes.string.isRequired
 }
 
+TrackConvertDialog.showDialog=(name,opt_showDialogFunction)=>{
+    if (!opt_showDialogFunction){
+        opt_showDialogFunction=OverlayDialog.dialog;
+    }
+    getTrackInfo(name)
+        .then((info) => {
+            opt_showDialogFunction((props) => {
+                return <TrackConvertDialog
+                    {...props}
+                    points={info.points} name={name}/>;
+            });
+        })
+        .catch((error) => Toast(error));
+}
+
 class TrackInfoDialog extends React.Component{
     constructor(props) {
         super(props);

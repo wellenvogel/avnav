@@ -494,4 +494,10 @@ export const stateHelper=(thisref,initialValues,opt_namePrefix)=>{
 
 };
 
+export const InfoItem=(props)=>{
+    return <div className={"dialogRow "+props.className}>
+        <span className={"inputLabel"}>{props.label}</span>
+        <span className={"itemInfo"}>{props.value}</span>
+    </div>
+}
 export default Dialogs;

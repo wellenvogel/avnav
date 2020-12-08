@@ -39,6 +39,7 @@ import Dimmer from '../util/dimhandler.js';
 import FeatureInfoDialog from "../components/FeatureInfoDialog";
 import NavCompute from "../nav/navcompute";
 import {getClosestPoint} from "../components/RouteInfoDialog";
+import {TrackConvertDialog} from "../components/TrackInfoDialog";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -299,6 +300,15 @@ class NavPage extends React.Component{
                     //do not show a feature pop up if we have an overlay that exactly has the current route
                     return false;
                 }
+            }
+            if (feature.overlayType === 'track'){
+                feature.additionalActions.push({
+                   name:'toroute',
+                   label: 'Convert',
+                   onClick:(props)=>{
+                       TrackConvertDialog.showDialog(props.overlayName)
+                   }
+                });
             }
             if (feature.overlayType !== 'route' || ! feature.nextTarget){
                 showFeature()
