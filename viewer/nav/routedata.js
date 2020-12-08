@@ -13,6 +13,7 @@ import RoutEdit from './routeeditor.js';
 import Requests from '../util/requests.js';
 import assign from 'object-assign';
 import base from '../base.js';
+import Promise from 'promise';
 
 const activeRoute=new RoutEdit(RoutEdit.MODES.ACTIVE);
 const editingRoute=new RoutEdit(RoutEdit.MODES.EDIT);
@@ -231,18 +232,22 @@ RouteData.prototype.isActiveRoute=function(name){
 
 /**
  * save the route (locally and on the server)
- * @param {routeobjects.Route|undefined} rte
- * @param {function} opt_callback
+ * @param {routeobjects.Route} rte
  */
-RouteData.prototype.saveRoute=function(rte,opt_callback) {
-    if (! rte) return;
-    this._saveRouteLocal(rte);
-    if (this.connectMode) this._sendRoute(rte, opt_callback,true);
-    else {
-        if (opt_callback) setTimeout(function () {
-            opt_callback();
-        }, 0);
-    }
+RouteData.prototype.saveRoute=function(rte) {
+    return new Promise((resolve,reject)=>{
+        if (! rte) reject("no route");
+        if (this._localRouteExists(rte)) reject("route already exists");
+        this._saveRouteLocal(rte);
+        if (this.connectMode) this._sendRoute(rte,(error)=>{
+            if (error) reject(error);
+            resolve(0);
+        });
+        else {
+            resolve(0);
+        }
+    });
+
 
 };
 /**
@@ -879,6 +884,17 @@ RouteData.prototype._saveRouteLocal=function(route, opt_keepTime) {
     return route;
 };
 
+/**
+ *
+ * @param route
+ * @returns {boolean}
+ * @private
+ */
+RouteData.prototype._localRouteExists=function(route) {
+    if (! route) return false;
+    let existing=localStorage.getItem(globalStore.getData(keys.properties.routeName) + "." + route.name);
+    return !!existing;
+};
 
 /**
  * load a locally stored route

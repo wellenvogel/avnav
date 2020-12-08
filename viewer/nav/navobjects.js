@@ -2,6 +2,7 @@
  * Created by Andreas on 14.05.2014.
  */
 import base from '../base.js';
+import assign from 'object-assign';
 let navobjects={};
 
 
@@ -66,6 +67,10 @@ navobjects.Point.prototype.compare=function(point){
 navobjects.Point.prototype.toCoord=function(){
     let rt=[this.lon,this.lat];
     return rt;
+};
+
+navobjects.Point.prototype.clone=function(){
+    return new navobjects.Point(this.lon,this.lat);
 };
 /**
  * a waypoint (to interact with the server)
@@ -157,6 +162,11 @@ navobjects.TrackPoint=function(lon,lat,ts,opt_speed,opt_course){
     this.speed=opt_speed||0;
     this.opt_course=opt_course||0;
 };
+navobjects.TrackPoint.prototype.clone=function(){
+    let rt=new navobjects.TrackPoint();
+    assign(rt,this);
+    return rt;
+}
 base.inherits(navobjects.TrackPoint,navobjects.Point);
 
 

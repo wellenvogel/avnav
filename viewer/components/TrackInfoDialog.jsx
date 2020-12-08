@@ -27,7 +27,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import DB from "./DialogButton";
-import OverlayDialog from "./OverlayDialog";
+import OverlayDialog, {dialogHelper, stateHelper} from "./OverlayDialog";
 import Requests from '../util/requests';
 import Toast from "./Toast";
 import Helper from "../util/helper";
@@ -37,6 +37,13 @@ import Formatter from '../util/formatter';
 import assign from 'object-assign';
 import globalstore from "../util/globalstore";
 import keys from "../util/keys";
+import {Input} from "./Inputs";
+import SimpleRouteFilter from "../nav/simpleroutefilter";
+import navdata from "../nav/navdata";
+import routeobjects from "../nav/routeobjects";
+
+const RouteHandler=navdata.getRoutingHandler();
+
 
 const InfoItem=(props)=>{
     return <div className={"dialogRow "+props.className}>
@@ -135,18 +142,23 @@ class TrackInfo{
         });
     }
 }
-export const getTrackInfo = (trackName,opt_point) => {
+
+export const getInfoForList=(trackPoints,opt_point)=>{
     let trackInfo=new TrackInfo(opt_point);
+    return new Promise((resolve,reject)=>{
+        trackPoints.forEach((point)=>{
+            trackInfo.addPoint(point);
+        });
+        trackInfo.finalize(resolve,reject);
+    })
+}
+
+export const getTrackInfo = (trackName,opt_point) => {
     if (trackName === 'current'){
         let trackPoints=globalstore.getData(keys.nav.track.currentTrack,[]);
-        return new Promise((resolve,reject)=>{
-            trackPoints.forEach((point)=>{
-                trackInfo.addPoint(point);
-            });
-            trackInfo.finalize(resolve,reject);
-        })
+        return getInfoForList(trackPoints,opt_point);
     }
-
+    let trackInfo=new TrackInfo(opt_point);
     return new Promise((resolve, reject) => {
         if (!trackName) reject("missing track name");
         Requests.getHtmlOrText('', {
@@ -214,6 +226,134 @@ export const getTrackInfo = (trackName,opt_point) => {
             .catch((error) => reject(error))
     })
 }
+
+const CONVERT_INFO_ROWS=[
+    {label:'points',value:'numPoints'},
+    {label:'length',value:'distance',formatter:(v)=>{
+            return Formatter.formatDistance(v)+" nm";
+        }}
+    ];
+export class TrackConvertDialog extends React.Component{
+    constructor(props) {
+        super(props);
+        this.state={
+            points:this.props.points,
+            convertedPoints:this.props.points,
+            routeName: "Track-"+this.props.name,
+            loaded:false,
+            processing:false,
+            maxXte: props.maxXte||20
+        }
+        this.info=stateHelper(this,{},'info');
+        this.originalInfo=stateHelper(this,{},'originalInfo');
+        this.okClicked=this.okClicked.bind(this);
+        this.convert=this.convert.bind(this);
+    }
+
+    componentDidMount() {
+        getInfoForList(this.state.points)
+            .then((values)=>{
+                this.setState({loaded:true});
+                this.info.setState(values,true);
+                this.originalInfo.setState(values,true);
+            })
+            .catch((error)=>Toast(error));
+    }
+    getRowValue(data,description){
+        let v=data[description.value];
+        if (v === undefined) return null;
+        if (description.formatter){
+            v=description.formatter(v,data);
+            if (v === undefined) return null;
+        }
+        return <InfoItem label={description.label} value={v}/>
+    }
+    okClicked(){
+        let name=this.state.routeName.replace(/\.gpx$/,"");
+        let route=new routeobjects.Route(name);
+        let idx=1;
+        this.state.convertedPoints.forEach((point)=>{
+            idx=route.addPoint(idx,point);
+            idx++;
+        })
+        RouteHandler.saveRoute(route)
+            .then(()=>{
+                this.props.closeCallback();
+            })
+            .catch((error)=>{
+                Toast(error);
+            })
+    }
+    convert(){
+        let converter=new SimpleRouteFilter(this.state.points,false,undefined,this.state.maxXte);
+        this.setState({processing:true});
+        window.setTimeout(()=>{
+            let newPoints=converter.process()
+            getInfoForList(newPoints).then((info)=>{
+                this.info.setState(info,true);
+                this.setState({convertedPoints: newPoints,processing:false});
+            })
+        },10);
+    }
+    render(){
+        let maxroute=this.props.maxroute||50;
+        let currentPoints=this.info.getValue('numPoints');
+        return  <div className="TrackConvertDialog flexInner">
+            <h3 className="dialogTitle">Convert Track to Route</h3>
+            <Input
+                dialogRow={true}
+                label="route name"
+                value={this.state.routeName}
+                onChange={(nv)=>this.setState({routeName:nv})}
+                />
+            <div className="originalPoints">
+                <div className="heading dialogRow">original points</div>
+                {CONVERT_INFO_ROWS.map((row)=>{
+                    return this.getRowValue(this.originalInfo.getState(),row);
+                })}
+            </div>
+            <div className="computedPoints">
+                <div className="heading dialogRow">optimized points</div>
+                {CONVERT_INFO_ROWS.map((row)=>{
+                    return this.getRowValue(this.info.getState(),row);
+                })}
+            </div>
+            <div className="converter">
+                {currentPoints>maxroute &&
+                <div className={"warning"}>{`Your track contains more then ${maxroute} points. 
+                You should reduce this count by clicking compute below. 
+                Potentially you need to enlarge the allowed Xte`}
+                </div>}
+                <div className="heading dialogRow">converter options</div>
+                <Input
+                    dialogRow={true}
+                    label="max Xte"
+                    value={this.state.maxXte}
+                    onChange={(nv)=>this.setState({maxXte:nv})}
+                    />
+                <div className="dialogButtons">
+                    <DB name="convert"
+                        onClick={this.convert}
+                        >Compute</DB>
+                </div>
+            </div>
+            <div className="dialogButtons">
+                <DB name={"cancel"}
+                    onClick={this.props.closeCallback}
+                >Cancel</DB>
+                <DB name={"ok"}
+                    onClick={this.okClicked}
+                >Save</DB>
+            </div>
+        </div>
+    }
+}
+
+TrackConvertDialog.propTypes={
+    points: PropTypes.array.isRequired,
+    name: PropTypes.string.isRequired
+}
+
 class TrackInfoDialog extends React.Component{
     constructor(props) {
         super(props);
@@ -222,6 +362,7 @@ class TrackInfoDialog extends React.Component{
             loaded:false,
             name:this.props.name
         }
+        this.showConvertDialog=this.showConvertDialog.bind(this);
     }
 
     componentDidMount() {
@@ -231,7 +372,15 @@ class TrackInfoDialog extends React.Component{
             })
             .catch((error)=>Toast(error));
     }
-
+    showConvertDialog(){
+        this.props.closeCallback();
+        OverlayDialog.dialog((props)=>{
+            return <TrackConvertDialog
+                {...props}
+                points={this.state.points}
+                name={this.props.name}/>
+        })
+    }
     render(){
        return  <div className="TrackInfoDialog flexInner">
             <h3 className="dialogTitle">Track Info</h3>
@@ -243,6 +392,11 @@ class TrackInfoDialog extends React.Component{
                 return <InfoItem label={row.label} value={v}/>
             })}
             <div className="dialogButtons">
+                <DB name={"toroute"}
+                    onClick={this.showConvertDialog}
+                    disabled={!this.state.loaded}
+                >
+                    Convert</DB>
                 <DB name={"cancel"}
                     onClick={this.props.closeCallback}
                 >Cancel</DB>

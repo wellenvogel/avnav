@@ -255,10 +255,11 @@ const uploadRouteData=(filename,data)=>{
         return false;
     }
     if (globalStore.getData(keys.properties.connectedMode, false)) route.server = true;
-    RouteHandler.saveRoute(route, function () {
-        fillData();
-        return true;
-    });
+    RouteHandler.saveRoute(route)
+        .then(()=> {
+            fillData();
+            return true;})
+        .catch((error)=>Toast(error));
 };
 
 
