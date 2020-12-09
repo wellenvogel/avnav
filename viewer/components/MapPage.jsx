@@ -124,7 +124,6 @@ class MapPage extends React.Component{
             }
             MapHolder.loadMap(this.refs.map).
                 then((result)=>{
-                    globalStore.storeData(keys.gui.global.hasSelectedChart,true);
                 }).
                 catch((error)=>{Toast(error)});
         };
@@ -219,7 +218,8 @@ MapPage.propertyTypes={
     onItemClick:        PropTypes.func.isRequired,  //like ItemList
     mapEventCallback:   PropTypes.func,
     id:                 PropTypes.string,
-    overlayContent:     PropTypes.any               //overlay in the map container
+    overlayContent:     PropTypes.any,               //overlay in the map container
+    mapLoadCallback:    PropTypes.func
 };
 
 export const overlayDialog=(opt_chartName,opt_updateCallback)=>{

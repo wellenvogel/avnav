@@ -99,6 +99,7 @@ const DEFAULT_ROUTE="default";
 class EditRoutePage extends React.Component{
     constructor(props){
         super(props);
+        this.hasCentered=false;
         this.state={
             showWpButtons:false,
             lastCenteredWp: undefined
@@ -125,15 +126,6 @@ class EditRoutePage extends React.Component{
             activeRouteName: keys.nav.routeHandler.activeName,
             dimensions:keys.gui.global.windowDimensions
         });
-        if (this.props.options && this.props.options.center){
-            if (editor.hasRoute()){
-                let wp=editor.getPointAt();
-                if (wp){
-                    this.state.lastCenteredWp=wp;
-                    mapholder.setCenter(wp);
-                }
-            }
-        }
     }
     showWpButtons(on){
         if (on) {
@@ -280,6 +272,19 @@ class EditRoutePage extends React.Component{
     mapEvent(evdata){
         console.log("mapevent: "+evdata.type);
         let currentEditor = getCurrentEditor();
+        if (evdata.type === MapHolder.EventTypes.LOAD || evdata.type === MapHolder.EventTypes.RELOAD){
+            if (this.hasCentered) return true;
+            if (this.props.options && this.props.options.center){
+                if (editor.hasRoute()){
+                    let wp=editor.getPointAt();
+                    if (wp){
+                        this.state.lastCenteredWp=wp;
+                        mapholder.setCenter(wp);
+                    }
+                }
+            }
+            this.hasCentered=true;
+        }
         if (evdata.type === MapHolder.EventTypes.SELECTWP) {
             currentEditor.setNewIndex(currentEditor.getIndexFromPoint(evdata.wp));
             return true;

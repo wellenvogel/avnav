@@ -33,11 +33,6 @@ public class TrackWriter extends DirectoryRequestHandler {
 
 
     @Override
-    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
-        throw new Exception("unable to upload tracks");
-    }
-
-    @Override
     public JSONArray handleList(Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception {
 
         JSONArray rt = new JSONArray();

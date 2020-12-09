@@ -102,7 +102,8 @@ public class RequestHandler {
             new KeyValue<Integer>(TYPE_IMAGE,R.string.uploadImage),
             new KeyValue<Integer>(TYPE_USER,R.string.uploadUser),
             new KeyValue<Integer>(TYPE_LAYOUT,R.string.uploadLayout),
-            new KeyValue<Integer>(TYPE_OVERLAY,R.string.uploadOverlay)
+            new KeyValue<Integer>(TYPE_OVERLAY,R.string.uploadOverlay),
+            new KeyValue<Integer>(TYPE_TRACK,R.string.uploadTrack)
     );
 
     //directories below workdir
@@ -694,6 +695,7 @@ public class RequestHandler {
                 o.put("uploadUser",true);
                 o.put("uploadImages",true);
                 o.put("uploadOverlays",true);
+                o.put("uploadTracks",true);
                 fout=getReturn(new KeyValue<JSONObject>("data",o));
             }
             if (type.equals("api")){

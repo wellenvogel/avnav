@@ -163,6 +163,7 @@ let keys={
             uploadImages:K,
             uploadImport: K,
             uploadOverlays: K,
+            uploadTracks: K,
             canConnect: K,
         },
         global:{
@@ -180,7 +181,6 @@ let keys={
             toastText:K,
             toastTimeout:K,
             toastCallback:K,
-            hasSelectedChart: K,
             soundEnabled: new D("only enable sound once we reach the mainpage"),
             dimActive: K,
             computedButtonHeight: K,

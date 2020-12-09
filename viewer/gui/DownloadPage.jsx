@@ -428,11 +428,12 @@ class DownloadPage extends React.Component{
             },
             {
                 name:'DownloadPageUpload',
-                visible: (type == 'route' || type == 'layout'
-                    || (type =='chart' && globalStore.getData(keys.gui.capabilities.uploadCharts,false))
-                    || (type == 'user' && globalStore.getData(keys.gui.capabilities.uploadUser,false))
-                    || (type == 'images' && globalStore.getData(keys.gui.capabilities.uploadImages,false))
-                    || (type == 'overlay' && globalStore.getData(keys.gui.capabilities.uploadOverlays,false))) &&
+                visible: (type === 'route' || type === 'layout'
+                    || (type ==='chart' && globalStore.getData(keys.gui.capabilities.uploadCharts,false))
+                    || (type === 'user' && globalStore.getData(keys.gui.capabilities.uploadUser,false))
+                    || (type === 'images' && globalStore.getData(keys.gui.capabilities.uploadImages,false))
+                    || (type === 'overlay' && globalStore.getData(keys.gui.capabilities.uploadOverlays,false))
+                    || (type === 'track' && globalStore.getData(keys.gui.capabilities.uploadTracks,false))) &&
                     globalStore.getData(keys.properties.connectedMode,true),
                 onClick:()=>{
                     this.setState({uploadSequence:this.state.uploadSequence+1});
@@ -463,6 +464,12 @@ class DownloadPage extends React.Component{
             if (this.state.type === 'route'){
                 if (ext !== "gpx") {
                     reject("only gpx for routes");
+                    return;
+                }
+            }
+            if (this.state.type === 'track'){
+                if (ext !== "gpx") {
+                    reject("only gpx for tracks");
                     return;
                 }
             }

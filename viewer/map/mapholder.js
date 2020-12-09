@@ -57,7 +57,8 @@ const EventTypes={
     SELECTAIS:1,
     SELECTWP: 2,
     RELOAD: 3,
-    FEATURE: 4
+    LOAD: 4,
+    FEATURE: 5
 };
 
 
@@ -489,6 +490,7 @@ MapHolder.prototype.loadMap=function(div,opt_preventDialogs){
                 }
             }
             this.renderTo(this._lastMapDiv);
+            this._callHandlers({type:this.EventTypes.LOAD});
             resolve(0);
         };
         let newSources=[];

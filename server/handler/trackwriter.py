@@ -68,10 +68,6 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
   def getPrefix(cls):
     return '/track'
 
-  @classmethod
-  def canUpload(self):
-    return False
-
   def getTrackDir(self):
     return self.baseDir
   #write out the line

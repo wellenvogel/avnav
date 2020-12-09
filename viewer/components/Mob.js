@@ -23,7 +23,7 @@ const controlMob=(start)=>{
         target.name=navobjects.WayPoint.MOB;
         Router.wpOn(target,false);
         MapHolder.setGpsLock(true);
-        if (globalStore.getData(keys.gui.global.hasSelectedChart)){
+        if (MapHolder.getCurrentChartEntry()){
             let currentZoom=MapHolder.getZoom();
             let mzoom=globalStore.getData(keys.properties.mobMinZoom);
             let diff=mzoom-currentZoom.required;
