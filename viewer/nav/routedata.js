@@ -233,16 +233,17 @@ RouteData.prototype.isActiveRoute=function(name){
 /**
  * save the route (locally and on the server)
  * @param {routeobjects.Route} rte
+ * @param opt_overwrite if true - overwrite route
  */
-RouteData.prototype.saveRoute=function(rte) {
+RouteData.prototype.saveRoute=function(rte,opt_overwrite) {
     return new Promise((resolve,reject)=>{
         if (! rte) reject("no route");
-        if (this._localRouteExists(rte)) reject("route already exists");
+        if (! opt_overwrite && this._localRouteExists(rte)) reject("route already exists");
         this._saveRouteLocal(rte);
         if (this.connectMode) this._sendRoute(rte,(error)=>{
             if (error) reject(error);
             resolve(0);
-        });
+        },opt_overwrite);
         else {
             resolve(0);
         }
@@ -454,41 +455,47 @@ RouteData.prototype.routeOff=function(){
 /**
  * list functions for routes
  * works async
- * @param okCallback function that will be called with a list of RouteInfo
- * @param opt_failCallback
+ * @param includeServer if set also fetch routes from server
  */
-RouteData.prototype.listRoutesServer=function(okCallback,opt_failCallback){
-    let self=this;
-    let canUpload=globalStore.getData(keys.gui.capabilities.uploadRoute,false);
-    if (! canUpload){
-        //if we cannot upload there should not be any routes on the server
-        okCallback([],opt_callbackData);
-        return;
-    }
-    let editingName=editingRoute.getRouteName();
-    let canDelete=globalStore.getData(keys.properties.connectedMode,false);
-    Requests.getJson('',{},{
-        request:'list',
-        type:'route'
-    })
-        .then((data)=>{
-            let items = [];
-            let i;
-            for (i = 0; i < data.items.length; i++) {
-                let ri = new routeobjects.RouteInfo();
-                assign(ri, data.items[i]);
-                ri.server = true;
-                if (ri.canDelete !== false) ri.canDelete=canDelete;
-                if (ri.name === editingName) ri.canDelete=false;
-                if (self.isActiveRoute(ri.name)) ri.active=true;
-                items.push(ri);
-            }
-            okCallback(items);
-
+RouteData.prototype.listRoutes=function(includeServer){
+    return new Promise((resolve,reject)=>{
+        let list=this._listRoutesLocal();
+        if (! includeServer || ! globalStore.getData(keys.gui.capabilities.uploadRoute,false)){
+            resolve(list);
+            return;
+        }
+        let editingName=editingRoute.getRouteName();
+        let canDelete=globalStore.getData(keys.properties.connectedMode,false);
+        Requests.getJson('',{},{
+            request:'list',
+            type:'route'
         })
-        .catch((error)=>{
-            if (opt_failCallback) opt_failCallback(error);
-        });
+            .then((data)=>{
+                for (let i = 0; i < data.items.length; i++) {
+                    let ri = new routeobjects.RouteInfo();
+                    assign(ri, data.items[i]);
+                    ri.server = true;
+                    if (ri.canDelete !== false) ri.canDelete=canDelete;
+                    if (ri.name === editingName) ri.canDelete=false;
+                    if (this.isActiveRoute(ri.name)) ri.active=true;
+                    let replace=false;
+                    for (let oi=0;oi<list.length;oi++){
+                        if (list[oi].name === ri.name){
+                            list[oi]=ri;
+                            replace=true;
+                            break;
+                        }
+                    }
+                    if (! replace) list.push(ri);
+                }
+                resolve(list);
+
+            })
+            .catch((error)=>{
+                reject(error);
+            });
+
+    });
 };
 /**
  *
@@ -508,8 +515,9 @@ RouteData.prototype.getInfoFromRoute=function(route){
 /**
  * list local routes
  * returns a list of RouteInfo
+ * @private
  */
-RouteData.prototype.listRoutesLocal=function(){
+RouteData.prototype._listRoutesLocal=function(){
     let rt=[];
     let i=0;
     let key,rtinfo,route;

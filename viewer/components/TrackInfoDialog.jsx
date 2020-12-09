@@ -41,6 +41,9 @@ import {Input} from "./Inputs";
 import SimpleRouteFilter from "../nav/simpleroutefilter";
 import navdata from "../nav/navdata";
 import routeobjects from "../nav/routeobjects";
+import RouteEdit from "../nav/routeeditor";
+import history from "../util/history";
+import mapholder from "../map/mapholder";
 
 const RouteHandler=navdata.getRoutingHandler();
 
@@ -233,6 +236,30 @@ const CONVERT_INFO_ROWS=[
             return Formatter.formatDistance(v)+" nm";
         }}
     ];
+
+const AskEditRoute=(props)=>{
+    return  <div className="AskEditRouteDialog flexInner">
+        <h3 className="dialogTitle">Route Created</h3>
+        <div className="dialogRow">
+            route &nbsp;<span>{props.route.name}</span>&nbsp; successfully created
+        </div>
+        <div className="dialogButtons">
+            <DB name="cancel"
+                onClick={props.closeCallback}>
+                Cancel
+            </DB>
+            <DB name="editRoute"
+                onClick={()=>{
+                    props.closeCallback();
+                    let editor=new RouteEdit(RouteEdit.MODES.EDIT);
+                    editor.setNewRoute(props.route);
+                    history.push('editroutepage');
+                }}
+            >Edit</DB>
+        </div>
+    </div>
+}
+
 export class TrackConvertDialog extends React.Component{
     constructor(props) {
         super(props);
@@ -242,6 +269,8 @@ export class TrackConvertDialog extends React.Component{
             routeName: "Track-"+this.props.name,
             loaded:false,
             processing:false,
+            routesLoaded:false,
+            currentRoutes:[],
             maxXte: props.maxXte||20
         }
         this.info=stateHelper(this,{},'info');
@@ -258,6 +287,19 @@ export class TrackConvertDialog extends React.Component{
                 this.originalInfo.setState(values,true);
             })
             .catch((error)=>Toast(error));
+        RouteHandler.listRoutes(true)
+            .then((routes)=>{
+                this.setState({currentRoutes:routes,routesLoaded:true});
+            })
+            .catch((error)=>{Toast(error)});
+    }
+    existsRoute(name){
+        if (! this.state.routesLoaded) return false;
+        if (Helper.getExt(name) !== 'gpx') name+='.gpx';
+        for (let i=0;i<this.state.currentRoutes.length;i++){
+            if (this.state.currentRoutes[i].name === name) return true;
+        }
+        return false;
     }
     getRowValue(data,description){
         let v=data[description.value];
@@ -276,9 +318,17 @@ export class TrackConvertDialog extends React.Component{
             idx=route.addPoint(idx,point);
             idx++;
         })
-        RouteHandler.saveRoute(route)
+        RouteHandler.saveRoute(route,true)
             .then(()=>{
                 this.props.closeCallback();
+                if (mapholder.getCurrentChartEntry()){
+                    OverlayDialog.dialog((props)=>{
+                        return <AskEditRoute
+                            {...props}
+                            route={route}
+                            />
+                    })
+                }
             })
             .catch((error)=>{
                 Toast(error);
@@ -298,6 +348,7 @@ export class TrackConvertDialog extends React.Component{
     render(){
         let maxroute=this.props.maxroute||50;
         let currentPoints=this.info.getValue('numPoints');
+        let existingName=this.existsRoute(this.state.routeName);
         return  <div className="TrackConvertDialog flexInner">
             <h3 className="dialogTitle">Convert Track to Route</h3>
             <Input
@@ -306,6 +357,7 @@ export class TrackConvertDialog extends React.Component{
                 value={this.state.routeName}
                 onChange={(nv)=>this.setState({routeName:nv})}
                 />
+            {existingName && <div className="warning">Name already exists</div>}
             <div className="originalPoints">
                 <div className="heading dialogRow">original points</div>
                 {CONVERT_INFO_ROWS.map((row)=>{
@@ -341,9 +393,12 @@ export class TrackConvertDialog extends React.Component{
                 <DB name={"cancel"}
                     onClick={this.props.closeCallback}
                 >Cancel</DB>
+                {existingName?<DB name={"ok"}
+                    onClick={this.okClicked}
+                >Overwrite</DB>:
                 <DB name={"ok"}
                     onClick={this.okClicked}
-                >Save</DB>
+                >Save</DB>}
             </div>
         </div>
     }

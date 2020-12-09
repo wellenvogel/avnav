@@ -26,6 +26,7 @@ import EditOverlaysDialog, {DEFAULT_OVERLAY_CHARTENTRY} from '../components/Edit
 import OverlayDialog from "../components/OverlayDialogDisplay";
 import {stateHelper} from "../components/OverlayDialog";
 import overlayconfig from "../map/overlayconfig";
+import mapholder from "../map/mapholder.js";
 
 
 
@@ -145,8 +146,8 @@ class MainPage extends React.Component {
         this.selectChart(0);
         GuiHelper.keyEventHandler(this,(component,action)=>{
             if (action == "selectChart"){
-                let chartlist=globalStore.getData(keys.gui.mainpage.chartList);
-                let selected=globalStore.getData(keys.gui.mainpage.selectedChartIndex,0);
+                let chartlist=this.state.chartList;
+                let selected=this.state.selectedChart||0;
                 if (chartlist && chartlist[selected]){
                     showNavpage(chartlist[selected]);
                 }
@@ -271,14 +272,29 @@ class MainPage extends React.Component {
     fillList() {
         Requests.getJson("?request=list&type=chart",{timeout:3*parseFloat(globalStore.getData(keys.properties.networkTimeout))}).then((json)=>{
                 let items = [];
+                let current=mapholder.getBaseChart();
+                let lastChartKey=current?current.getChartKey():mapholder.getLastChartKey();
+                let i=0;
+                let selectedChart;
                 for (let e in json.items) {
                     let chartEntry = json.items[e];
                     if (!chartEntry.key) chartEntry.key=chartEntry.chartKey||chartEntry.name;
                     chartEntry.hasOverlays=!!this.state.overlays[chartEntry.overlayConfig];
                     chartEntry.reload=()=>this.fillList();
+                    if (lastChartKey === chartEntry.key){
+                        selectedChart=i;
+                    }
                     items.push(chartEntry);
+                    i++;
                 }
-                this.setState({chartList:items});
+                let newState={chartList:items};
+                if (selectedChart !== undefined) {
+                    newState.selectedChart=selectedChart;
+                    //if current is undefined we have just started
+                    //just set the chart entry at the mapholder
+                    mapholder.setChartEntry(items[selectedChart]);
+                }
+                this.setState(newState);
             },
             (error)=>{
                 Toast("unable to read chart list: "+error);

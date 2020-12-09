@@ -114,7 +114,7 @@ class MapPage extends React.Component{
         let self=this;
         NavHandler.setAisCenterMode(navobjects.AisCenterMode.MAP);
         this.subscribeToken=MapHolder.subscribe(this.mapEvent);
-        let chartEntry=MapHolder.getCurrentChartEntry();
+        let chartEntry=MapHolder.getCurrentChartEntry()||{};
         let showMap=()=>{
             if (chartEntry.infoMode !== undefined ){
                 if (needsToShow(chartEntry.url,INFO_TYPES.info,chartEntry.infoMode)){

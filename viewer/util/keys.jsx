@@ -312,6 +312,7 @@ let keys={
         maxGpsErrors: new Property(3), //after that much invalid responses/timeouts the GPS is dead
         settingsName: new Property("avnav.settings"), //storage name
         routingDataName: new Property("avnav.routing"),
+        chartDataName: new Property("avnav.lastChart"),
         routeName: new Property("avnav.route"), //prefix for route names
         layoutStoreName: new Property("avnav.layout"),
         eulaStoreName: new Property("avnav.eulas"),

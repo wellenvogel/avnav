@@ -345,8 +345,19 @@ MapHolder.prototype.renderTo=function(div){
 MapHolder.prototype.setChartEntry=function(entry){
     //set the new base chart
     this._baseChart=this.createChartSource(assign({},entry,{type:'chart',enabled:true,baseChart:true}));
-
+    try{
+        localStorage.setItem(globalStore.getData(keys.properties.chartDataName),this._baseChart.getChartKey());
+    }catch(e){}
 };
+
+MapHolder.prototype.getLastChartKey=function (){
+    let rt;
+    try{
+        rt=localStorage.getItem(globalStore.getData(keys.properties.chartDataName));
+        return rt;
+    }catch (e){}
+}
+
 
 MapHolder.prototype.prepareSourcesAndCreate=function(newSources,opt_preventDialog){
     return new Promise((resolve,reject)=> {
@@ -1523,7 +1534,7 @@ MapHolder.prototype.setCompassOffset=function(y){
 };
 
 MapHolder.prototype.getCurrentChartEntry=function(){
-    if (! this._baseChart) return {}
+    if (! this._baseChart) return;
     return this._baseChart.getConfig();
 };
 

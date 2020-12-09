@@ -142,16 +142,12 @@ const addItems=(items,opt_empty)=>{
 
 
 const fillDataRoutes = ()=> {
-    let localRoutes = RouteHandler.listRoutesLocal();
-    addItems(localRoutes, true);
-    RouteHandler.listRoutesServer(
-        (routingInfos)=> {
-            addItems(routingInfos);
-        },
-        (err)=> {
-            Toast("unable to load routes from server: " + err);
-        }
-    );
+    RouteHandler.listRoutes(true)
+        .then((items)=>{
+            addItems(items,true);
+        }).catch((error)=>{
+            Toast(error);
+    });
 };
 
 const fillData=()=>{
