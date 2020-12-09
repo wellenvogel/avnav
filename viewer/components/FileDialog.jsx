@@ -43,6 +43,8 @@ import DownloadButton from "./DownloadButton";
 import TrackInfoDialog, {TrackConvertDialog} from "./TrackInfoDialog";
 import {getTrackInfo,INFO_ROWS as TRACK_INFO_ROWS} from "./TrackInfoDialog";
 import {getRouteInfo,INFO_ROWS as ROUTE_INFO_ROWS} from "./RouteInfoDialog";
+import RouteEdit from "../nav/routeeditor";
+import mapholder from "../map/mapholder";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 /**
@@ -110,6 +112,7 @@ export const allowedItemActions=(props)=>{
     if (props.type === 'layout') ext="json";
     let showView=(props.type === 'overlay' || props.type === 'user' || props.type==='images' || (props.type === 'route' && props.server) || props.type === 'track' || props.type === 'layout') && ViewPage.VIEWABLES.indexOf(ext)>=0;
     let showEdit=(isConnected && (((props.type === 'overlay' || props.type === 'user') && props.size !== undefined && props.size < ViewPage.MAXEDITSIZE)|| (props.type === 'layout' && props.canDelete)  ) && ViewPage.EDITABLES.indexOf(ext) >=0);
+    if (props.type === 'route' && mapholder.getCurrentChartEntry()) showEdit=true;
     let showDelete=!props.active;
     if (props.canDelete !== undefined){
         showDelete=props.canDelete && ! props.active;
@@ -600,7 +603,17 @@ export const showFileDialog=(item,opt_doneCallback,opt_checkExists)=>{
             return;
         }
         if (action === 'edit'){
-            doneAction()
+            doneAction();
+            if (item.type === 'route'){
+                RouteHandler.fetchRoute(item.name,false,
+                    (route)=>{
+                        let editor=new RouteEdit(RouteEdit.MODES.EDIT);
+                        editor.setNewRoute(route,0);
+                        history.push('editroutepage',{center:true});
+                    },
+                    (error)=>Toast(error));
+                return;
+            }
             history.push('viewpage',{type:item.type,name:item.name});
             return;
         }

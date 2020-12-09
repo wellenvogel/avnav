@@ -252,8 +252,8 @@ const AskEditRoute=(props)=>{
                 onClick={()=>{
                     props.closeCallback();
                     let editor=new RouteEdit(RouteEdit.MODES.EDIT);
-                    editor.setNewRoute(props.route);
-                    history.push('editroutepage');
+                    editor.setNewRoute(props.route,0);
+                    history.push('editroutepage',{center:true});
                 }}
             >Edit</DB>
         </div>

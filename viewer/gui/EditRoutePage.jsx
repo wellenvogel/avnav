@@ -35,6 +35,7 @@ import EditPageDialog from '../components/EditPageDialog.jsx';
 import LayoutHandler from '../util/layouthandler.js';
 import Mob from '../components/Mob.js';
 import FeatureInfoDialog from "../components/FeatureInfoDialog";
+import mapholder from "../map/mapholder.js";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 const PAGENAME="editroutepage";
@@ -124,6 +125,15 @@ class EditRoutePage extends React.Component{
             activeRouteName: keys.nav.routeHandler.activeName,
             dimensions:keys.gui.global.windowDimensions
         });
+        if (this.props.options && this.props.options.center){
+            if (editor.hasRoute()){
+                let wp=editor.getPointAt();
+                if (wp){
+                    this.state.lastCenteredWp=wp;
+                    mapholder.setCenter(wp);
+                }
+            }
+        }
     }
     showWpButtons(on){
         if (on) {
