@@ -323,8 +323,6 @@ class AvnavChartSource extends ChartSourceBase{
             let layerOptions={
                 source: source
             };
-            if (rt.minZoom !== undefined) layerOptions.minZoom=rt.minZoom;
-            if (rt.maxZoom !== undefined) layerOptions.maxZoom=rt.maxZoom;
             let extent=rt.extent;
             if (self.chartEntry.opacity !== undefined) layerOptions.opacity=parseFloat(self.chartEntry.opacity);
             let layer = new olTileLayer(layerOptions);
