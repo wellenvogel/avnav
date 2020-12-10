@@ -148,6 +148,7 @@ const MapHolder=function(){
      */
     this.lastOpacity=-1;
     this.compassOffset=0;
+
     let self=this;
     let storeKeys=KeyHelper.flattenedKeys(keys.nav.gps).concat(
         KeyHelper.flattenedKeys(keys.nav.center),
@@ -159,9 +160,6 @@ const MapHolder=function(){
         self.navEvent();
     });
     this.propertyChange=new Callback(()=>{
-        self._chartbase=undefined;
-        self._url=undefined;
-        self._sequence=undefined;
         self.drawing.setUseHdpi(globalStore.getData(keys.properties.style.useHdpi,false));
     });
     this.editMode=new Callback(()=>{
@@ -337,6 +335,14 @@ MapHolder.prototype.renderTo=function(div){
     let self=this;
     if (! this.timer && div){
         this.timer=window.setInterval(()=>{self.timerFunction()},1000)
+    }
+    if (div){
+        let baseVisible=globalStore.getData(keys.properties.layers.base,false);
+        this.olmap.getLayers().forEach((layer)=>{
+            if (layer.avnavOptions && layer.avnavOptions.isBase){
+                layer.setVisible(baseVisible);
+            }
+        })
     }
     this.updateSize();
 };
@@ -581,7 +587,7 @@ MapHolder.prototype.setEnabled=function(chartSource,enabled,opt_update){
     if (changed && opt_update) this.updateOverlayConfig();
 }
 
-MapHolder.prototype.getBaseLayer=function(){
+MapHolder.prototype.getBaseLayer=function(visible){
     var styles = {
         'MultiPolygon': new olStyle({
             stroke: new olStroke({
@@ -614,14 +620,16 @@ MapHolder.prototype.getBaseLayer=function(){
 
     var vectorLayer = new olVectorLayer({
         source: vectorSource,
-        style: styleFunction
+        style: styleFunction,
+        visible:visible
     });
+    vectorLayer.avnavOptions={isBase:true};
     return vectorLayer;
 
 };
 
 
-MapHolder.prototype.getMapOutlineLayer = function (layers) {
+MapHolder.prototype.getMapOutlineLayer = function (layers,visible) {
     let style = new olStyle({
         stroke: new olStroke({
             color: 'red',
@@ -652,10 +660,12 @@ MapHolder.prototype.getMapOutlineLayer = function (layers) {
         feature.setStyle(style);
         source.addFeature(feature);
     }
-    ;
-    return new olVectorLayer({
-        source: source
+    let vectorLayer= new olVectorLayer({
+        source: source,
+        visible: visible
     });
+    vectorLayer.avnavOptions={isBase:true};
+    return vectorLayer;
 };
 
 /**
@@ -704,49 +714,45 @@ MapHolder.prototype.initMap=function(opt_preventDialog){
     if (hasBaseLayers) {
         this.minzoom = 2;
     }
-    if (this.olmap){
-        let oldlayers=this.olmap.getLayers();
-        if (oldlayers && oldlayers.getArray().length){
-            let olarray=[];
+    if (this.olmap) {
+        let oldlayers = this.olmap.getLayers();
+        if (oldlayers && oldlayers.getArray().length) {
+            let olarray = [];
             //make a copy of the layerlist
             //as the original array is modified when deleting...
-            let olarray_in=oldlayers.getArray();
-            olarray=olarray_in.slice(0);
-            for(let i=0;i<olarray.length;i++){
+            let olarray_in = oldlayers.getArray();
+            olarray = olarray_in.slice(0);
+            for (let i = 0; i < olarray.length; i++) {
                 this.olmap.removeLayer(olarray[i]);
             }
         }
-        if (hasBaseLayers) {
-            this.olmap.addLayer(this.getBaseLayer());
-            if (baseLayers.length > 0) {
-                this.olmap.addLayer(this.getMapOutlineLayer(baseLayers))
-            }
+        this.olmap.addLayer(this.getBaseLayer(hasBaseLayers));
+        if (baseLayers.length > 0) {
+            this.olmap.addLayer(this.getMapOutlineLayer(baseLayers, hasBaseLayers))
         }
-        for (let i=0;i< layers.length;i++){
+        for (let i = 0; i < layers.length; i++) {
             this.olmap.addLayer(layers[i]);
         }
         this.renderTo(div);
     }
     else {
-        let base=[];
-        if (hasBaseLayers) {
-            base.push(this.getBaseLayer());
-            if (baseLayers.length > 0) {
-                base.push(this.getMapOutlineLayer(baseLayers))
-            }
+        let base = [];
+        base.push(this.getBaseLayer(hasBaseLayers));
+        if (baseLayers.length > 0) {
+            base.push(this.getMapOutlineLayer(baseLayers, hasBaseLayers))
         }
         this.olmap = new olMap({
-            target: div?div:self.defaultDiv,
+            target: div ? div : self.defaultDiv,
             layers: base.concat(layers),
             interactions: olInteraction.defaults({
-                altShiftDragRotate:false,
+                altShiftDragRotate: false,
                 pinchRotate: false
             }),
             controls: [],
             view: new olView({
-                center: this.transformToMap([ 13.8, 54.1]),
+                center: this.transformToMap([13.8, 54.1]),
                 zoom: 9,
-                extent: this.transformToMap([-200,-89,200,89])
+                extent: this.transformToMap([-200, -89, 200, 89])
             })
 
         });

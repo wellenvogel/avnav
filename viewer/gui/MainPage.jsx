@@ -278,7 +278,7 @@ class MainPage extends React.Component {
                 let selectedChart;
                 for (let e in json.items) {
                     let chartEntry = json.items[e];
-                    if (!chartEntry.key) chartEntry.key=chartEntry.chartKey||chartEntry.name;
+                    if (!chartEntry.key) chartEntry.key=chartEntry.chartKey||chartEntry.url;
                     chartEntry.hasOverlays=!!this.state.overlays[chartEntry.overlayConfig];
                     chartEntry.reload=()=>this.fillList();
                     if (lastChartKey === chartEntry.key){
@@ -288,11 +288,16 @@ class MainPage extends React.Component {
                     i++;
                 }
                 let newState={chartList:items};
+                if (selectedChart === undefined && items.length > 0){
+                    selectedChart=0;
+                    current=undefined; //it seems that the last chart from the mapholder is not available any more
+                                       //just set the first chart
+                }
                 if (selectedChart !== undefined) {
                     newState.selectedChart=selectedChart;
                     //if current is undefined we have just started
                     //just set the chart entry at the mapholder
-                    mapholder.setChartEntry(items[selectedChart]);
+                    if (! current) mapholder.setChartEntry(items[selectedChart]);
                 }
                 this.setState(newState);
             },
