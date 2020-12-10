@@ -16,14 +16,16 @@ import {readFeatureInfoFromKml} from '../map/kmlchartsource';
 import {getOverlayConfigName} from '../map/chartsourcebase'
 import globalStore from "../util/globalstore";
 import keys from '../util/keys';
-import OverlayConfig, {getKeyFromOverlay} from '../map/overlayconfig';
+import OverlayConfig, {getKeyFromOverlay,OVERLAY_ID} from '../map/overlayconfig';
 import DefaultGpxIcon from '../images/icons-new/DefaultGpxPoint.png'
 import {readFeatureInfoFromGeoJson} from "../map/geojsonchartsource";
 
 const filterOverlayItem=(item,opt_itemInfo)=>{
     let rt=undefined;
     if (item.type === 'chart') {
-        rt=Helper.filteredAssign({chartKey:true,type:true,opacity:true,enabled:true},item)
+        let filter={chartKey:true,type:true,opacity:true,enabled:true};
+        filter[OVERLAY_ID]=true;
+        rt=Helper.filteredAssign(filter,item)
     }
     else {
         rt = assign({}, item);

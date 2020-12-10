@@ -1261,8 +1261,7 @@ MapHolder.prototype.onClick=function(evt){
     }
     //detect vector layer features
     let detectedFeatures=[];
-    let topFeature;
-    const callForTop=()=>{
+    const callForTop=(topFeature)=>{
         if (! topFeature){
             if (globalStore.getData(keys.properties.emptyFeatureInfo)){
                 let baseChart=this.getBaseChart();
@@ -1292,7 +1291,8 @@ MapHolder.prototype.onClick=function(evt){
         {
             hitTolerance: globalStore.getData(keys.properties.clickTolerance)/2
         });
-    //sort the detected features by the order of our soorces so that we use the topmost
+    //sort the detected features by the order of our sources so that we use the topmost
+    let topFeature;
     for (let i=this.sources.length-1;i>=0 && ! topFeature;i--){
         for (let fidx=0;fidx<detectedFeatures.length;fidx++){
             if (detectedFeatures[fidx].source === this.sources[i]){
@@ -1313,27 +1313,54 @@ MapHolder.prototype.onClick=function(evt){
     }
 
     if (promises.length < 1){
-        return callForTop();
+        return callForTop(topFeature);
     }
     Promise.all(promises)
         .then((promiseFeatures) => {
+            /* 3 steps
+               (1) - find the topmost "point" feature (i.e. having nextTarget set)
+               (2) - check if we have a feature from our base chart
+               (3) - use the topmost feature without nextTarget
+               This will give us some more info if the charts did have a nice info (e.g. in htmlInfo)
+               if we do not find any of them - just fall through to a simple map click in callForTop
+             */
+            let nextTargetFeature;
+            let baseChartFeature;
+            let topChartFeature;
+            let baseChart=this.getBaseChart();
             for (let pi = 0; pi < promiseFeatures.length; pi++) {
                 if (promiseFeatures[pi] === undefined || promiseFeatures[pi].length < 1) continue;
                 let feature = promiseFeatures[pi][0];
-                if (feature && (feature.nextTarget || globalStore.getData(keys.properties.emptyFeatureInfo))) {
-                    if (! feature.nextTarget){
-                        //we always fill the click position
-                        //so we could goto
-                        let mapcoordinates=this.pixelToCoord(evt.pixel);
-                        let lonlat=this.transformFromMap(mapcoordinates);
-                        feature.nextTarget=lonlat;
+                if (feature){
+                    if (feature.nextTarget){
+                        nextTargetFeature=feature;
+                        //ok - this wins in any case
+                        break;
                     }
-                    this._callGuards('click'); //do this again as some time could have passed
-                    this._callHandlers({type:EventTypes.FEATURE,feature:feature});
-                    return true;
+                    if (baseChart && baseChart.getChartKey() === feature.chartKey ){
+                        baseChartFeature=feature;
+                    }
+                    if (! topChartFeature && feature.htmlInfo){
+                        topChartFeature=feature;
+                    }
                 }
             }
-            return callForTop();
+            let finalFeature=nextTargetFeature;
+            if (! finalFeature) finalFeature=topChartFeature;
+            if (! finalFeature) finalFeature=baseChartFeature;
+            if (finalFeature) {
+                if (!finalFeature.nextTarget) {
+                    //we always fill the click position
+                    //so we could goto
+                    let mapcoordinates = this.pixelToCoord(evt.pixel);
+                    let lonlat = this.transformFromMap(mapcoordinates);
+                    finalFeature.nextTarget = lonlat;
+                }
+                this._callGuards('click'); //do this again as some time could have passed
+                this._callHandlers({type: EventTypes.FEATURE, feature: finalFeature});
+                return true;
+            }
+            return callForTop(topFeature);
        })
         .catch((error) => {
             base.log("error in query features: "+error);

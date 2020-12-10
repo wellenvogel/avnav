@@ -61,7 +61,9 @@ const itemToBucket=function(buckets,item){
 const filterOverlayItem=(item)=>{
     let rt=undefined;
     if (item.type === 'chart') {
-        rt=Helper.filteredAssign({chartKey:true,type:true,opacity:true,enabled:true,bucket:true},item)
+        let filter={chartKey:true,type:true,opacity:true,enabled:true,bucket:true};
+        filter[OVERLAY_ID]=true;
+        rt=Helper.filteredAssign(filter,item);
     }
     else {
         rt = assign({}, item);
@@ -76,7 +78,7 @@ const filterOverlayItem=(item)=>{
     delete rt.isDefault;
     return rt;
 };
-const OVERLAY_ID='overlayId'; //unique (within one config) id of an overlay, constant during it's life time
+export const OVERLAY_ID='overlayId'; //unique (within one config) id of an overlay, constant during it's life time
 const OVERRIDE_KEYS={
     enabled:true
 };

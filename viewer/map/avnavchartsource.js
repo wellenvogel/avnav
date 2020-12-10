@@ -425,6 +425,8 @@ class AvnavChartSource extends ChartSourceBase{
                     if (topInfo) {
                         let info=assign({},topInfo,{
                             overlayType:'chart',
+                            chartKey: this.getChartKey(),
+                            source: this,
                             overlayName:this.chartEntry.name,
                             coordinates: lonlat},
                             topInfo
