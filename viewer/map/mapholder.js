@@ -1286,14 +1286,14 @@ MapHolder.prototype.onClick=function(evt){
         return this._callHandlers({type:EventTypes.FEATURE,feature:featureInfo})
     }
     this.olmap.forEachFeatureAtPixel(evt.pixel,(feature,layer)=>{
-        if (! layer.avnavOptions) return;
+        if (! layer.avnavOptions || ! layer.avnavOptions.chartSource) return;
         detectedFeatures.push({feature:feature,layer:layer,source:layer.avnavOptions.chartSource});
         },
         {
             hitTolerance: globalStore.getData(keys.properties.clickTolerance)/2
         });
     //sort the detected features by the order of our soorces so that we use the topmost
-    for (let i=this.sources.length;i>=0 && ! topFeature;i--){
+    for (let i=this.sources.length-1;i>=0 && ! topFeature;i--){
         for (let fidx=0;fidx<detectedFeatures.length;fidx++){
             if (detectedFeatures[fidx].source === this.sources[i]){
                 topFeature=detectedFeatures[fidx];
