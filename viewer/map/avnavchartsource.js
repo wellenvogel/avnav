@@ -89,7 +89,7 @@ const layerUrlFunction=function (layerOptions,coord) {
         //now compute the bounding box
         let converter = olTransforms.get("EPSG:3857", layerOptions.projection || "EPSG:4326");
         let bbox = converter([minX, minY, maxX, maxY]);
-        let rturl = layerurl + "SERVICE=WMS&REQUEST=GetMap&FORMAT=image/png&WIDTH=" + tileSize + "&HEIGHT=" + tileSize + "&SRS=" + encodeURI(layerOptions.projection);
+        let rturl = layerOptions.layerurl + "SERVICE=WMS&REQUEST=GetMap&FORMAT=image/png&WIDTH=" + tileSize + "&HEIGHT=" + tileSize + "&SRS=" + encodeURI(layerOptions.projection);
         let k;
         let layers;
         if (layerOptions.wmslayermap[z]) layers = layerOptions.wmslayermap[z];
@@ -183,7 +183,7 @@ class AvnavChartSource extends ChartSourceBase{
             let layer_profile = tm.getAttribute('profile');
             if (layer_profile) {
                 if (layer_profile != 'global-mercator' && layer_profile != 'zxy-mercator' && layer_profile != 'wms') {
-                    throw new Exception('unsupported profile in tilemap.xml ' + layer_profile);
+                    throw new Error('unsupported profile in tilemap.xml ' + layer_profile);
                 }
                 if (layer_profile == 'global-mercator') {
                     //our very old style stuff where we had y=0 at lower left
@@ -323,6 +323,9 @@ class AvnavChartSource extends ChartSourceBase{
             let layerOptions={
                 source: source
             };
+            if (rt.minZoom !== undefined) layerOptions.minZoom=rt.minZoom;
+            if (rt.maxZoom !== undefined) layerOptions.maxZoom=rt.maxZoom;
+            let extent=rt.extent;
             if (self.chartEntry.opacity !== undefined) layerOptions.opacity=parseFloat(self.chartEntry.opacity);
             let layer = new olTileLayer(layerOptions);
             rt.isTileLayer=true;
