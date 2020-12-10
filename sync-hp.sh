@@ -13,7 +13,7 @@ rsync -rav --delete $BASE/viewer/demo/ $TARGET/viewer
 rsync -rav --delete $BASE/mobac/testsrc/build/libs/avnav-mapsources.zip $TARGET/downloads
 cp -p $BASE/docs/indexav.json $TARGET/index.json
 
-for lib in movable-type ol3201
+for lib in movable-type 
 do
 	rsync -rav --delete $BASE/libraries/$lib/* $TARGET/libraries/$lib/
 done
