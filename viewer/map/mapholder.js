@@ -691,7 +691,8 @@ MapHolder.prototype.initMap=function(opt_preventDialog){
         }),
         style: new olStyle({
             image: new olCircle({
-                radius: 0
+                radius: 0.6  //we need to set > 0 to avoid errors on small zoom levels
+                             //Failed to execute 'drawImage' on 'CanvasRenderingContext2D': The image argument is a canvas element with a width or height of 0
             })
         }),
         renderBuffer: Infinity,
