@@ -556,7 +556,7 @@ class LayoutHandler{
                        type:'layout',
                        server:false,
                        canDelete:k != activeLayout,
-                       active: k == activateLayout,
+                       active: k == activeLayout,
                        time: (new Date()).getTime()/1000
                    };
                    rt.push(item);
