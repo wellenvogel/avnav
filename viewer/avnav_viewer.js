@@ -31,7 +31,6 @@ icons partly from http://www.tutorial9.net/downloads/108-mono-icons-huge-set-of-
 
 if (getParam('dimm')) avnav.testDim=true;
 
-import NavData from './nav/navdata';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import OverlayDialog from './components/OverlayDialog.jsx';
@@ -45,12 +44,10 @@ import base from './base.js';
 import Requests from './util/requests.js';
 import Toast from './components/Toast.jsx';
 import Api from './util/api.js';
-import RouteHandler from './nav/routedata.js';
-import LayoutHandler from './util/layouthandler.js';
-import LeaveHandler from './util/leavehandler.js';
 import registerRadial from './components/CanvasGaugeDefinitions.js';
 import AndroidEventHandler from './util/androidEventHandler.js';
 import AvNavVersion from './version.js';
+import assign from 'object-assign';
 
 
 if (! window.avnav){
@@ -190,11 +187,16 @@ avnav.main=function() {
     //register some widget definitions
     registerRadial();
     //check capabilities
+    let falseCapabilities={};
+    for (let k in keys.gui.capabilities){
+        falseCapabilities[k]=false;
+    }
     Requests.getJson("?request=capabilities").then((json)=>{
-        globalStore.storeMultiple(json.data,keys.gui.capabilities);
+        let capabilities=assign({},falseCapabilities,json.data);
+        globalStore.storeMultiple(capabilities,keys.gui.capabilities);
         doLateLoads(globalStore.getData(keys.gui.capabilities.plugins));
     }).catch((error)=>{
-        globalStore.storeMultiple({},keys.gui.capabilities);
+        globalStore.storeMultiple(falseCapabilities,keys.gui.capabilities);
         doLateLoads(globalStore.getData(keys.gui.capabilities.plugins));
     });
     Requests.getJson("/user/viewer/images.json",{useNavUrl:false,checkOk:false})

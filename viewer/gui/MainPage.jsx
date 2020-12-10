@@ -222,20 +222,15 @@ class MainPage extends React.Component {
             LayoutFinishedDialog.getButtonDef(),
 
             {
-                name: 'Cancel',
-                storeKeys: {visible: keys.gui.global.onAndroid},
-                onClick: ()=> {
-                    avnav.android.goBack()
-                }
-
-            },
-            {
                 name: 'NavOverlays',
                 onClick: ()=> {
                     EditOverlaysDialog.createDialog(DEFAULT_OVERLAY_CHARTENTRY);
                 },
                 editDisable: true,
-                overflow: true
+                overflow: true,
+                storeKeys: {
+                    visible: keys.gui.capabilities.uploadOverlays
+                }
             },
             {
                 name: 'MainAddOns',
@@ -244,6 +239,14 @@ class MainPage extends React.Component {
                 },
                 visible: this.state.addOns.length > 0,
                 editDisable: true
+            },
+            {
+                name: 'Cancel',
+                storeKeys: {visible: keys.gui.global.onAndroid},
+                onClick: ()=> {
+                    avnav.android.goBack()
+                }
+
             }
         ];
     }
