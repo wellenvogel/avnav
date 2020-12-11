@@ -114,7 +114,7 @@ public class RequestHandler {
             new KeyValue<File>(TYPE_LAYOUT,new File("layout")),
             new KeyValue<File>(TYPE_USER,new File(new File("user"),"viewer")),
             new KeyValue<File>(TYPE_IMAGE,new File(new File("user"),"images")),
-            new KeyValue<File>(TYPE_OVERLAY,new File(new File("user"),"overlays"))
+            new KeyValue<File>(TYPE_OVERLAY,new File("overlays"))
 
     );
 
