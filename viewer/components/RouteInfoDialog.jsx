@@ -27,7 +27,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import DB from "./DialogButton";
-import OverlayDialog from "./OverlayDialog";
+import OverlayDialog,{InfoItem} from "./OverlayDialog";
 import Toast from "./Toast";
 import NavCompute from "../nav/navcompute";
 import Formatter from '../util/formatter';
@@ -37,12 +37,6 @@ import globalStore from "../util/globalstore";
 import keys from "../util/keys";
 
 let RouteHandler=navdata.getRoutingHandler();
-const InfoItem=(props)=>{
-    return <div className={"dialogRow "+props.className}>
-        <span className={"inputLabel"}>{props.label}</span>
-        <span className={"itemInfo"}>{props.value}</span>
-    </div>
-}
 
 export const INFO_ROWS=[
     {label:'name',value:'name'},

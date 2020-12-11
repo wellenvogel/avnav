@@ -2,30 +2,19 @@
  * Created by andreas on 02.05.14.
  */
 
-import Dynamic from '../hoc/Dynamic.jsx';
-import Visible from '../hoc/Visible.jsx';
-import Button from '../components/Button.jsx';
-import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
-import keys,{KeyHelper} from '../util/keys.jsx';
+import keys from '../util/keys.jsx';
 import React from 'react';
-import PropertyHandler from '../util/propertyhandler.js';
 import history from '../util/history.js';
 import MapPage, {overlayDialog} from '../components/MapPage.jsx';
 import Toast from '../components/Toast.jsx';
-import Requests from '../util/requests.js';
-import assign from 'object-assign';
 import NavHandler from '../nav/navdata.js';
 import routeobjects from '../nav/routeobjects.js';
-import Formatter from '../util/formatter.js';
-import OverlayDialog from '../components/OverlayDialog.jsx';
+import OverlayDialog, {dialogHelper, InfoItem} from '../components/OverlayDialog.jsx';
 import Helper from '../util/helper.js';
-import WidgetFactory from '../components/WidgetFactory.jsx';
 import GuiHelpers from '../util/GuiHelpers.js';
 import MapHolder from '../map/mapholder.js';
-import DirectWidget from '../components/DirectWidget.jsx';
 import navobjects from '../nav/navobjects.js';
-import AisData from '../nav/aisdata.js';
 import WayPointDialog from '../components/WaypointDialog.jsx';
 import ButtonList from '../components/ButtonList.jsx';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
@@ -36,6 +25,9 @@ import LayoutHandler from '../util/layouthandler.js';
 import Mob from '../components/Mob.js';
 import FeatureInfoDialog from "../components/FeatureInfoDialog";
 import mapholder from "../map/mapholder.js";
+import {Input, InputSelect} from "../components/Inputs";
+import DB from '../components/DialogButton';
+import Formatter from "../util/formatter";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 const PAGENAME="editroutepage";
@@ -45,7 +37,7 @@ const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE);
 
 const isActiveRoute=()=>{
     let activeName=activeRoute.getRouteName();
-    if (activeName && activeName == editor.getRouteName()) return true;
+    if (activeName && activeName === editor.getRouteName()) return true;
     return false;
 };
 const getCurrentEditor=()=>{
@@ -73,7 +65,200 @@ const startWaypointDialog=(item,index)=>{
     OverlayDialog.dialog(RenderDialog);
 };
 
+export const INFO_ROWS=[
+    {label:'points',value:'numpoints'},
+    {label:'length',value:'length',formatter:(v)=>{
+            return Formatter.formatDistance(v)+" nm";
+        }},
+];
+class EditRouteDialog extends React.Component{
+    constructor(props) {
+        super(props);
+        this.state={
+            name:props.route.name,
+            route: this.props.route,
+            changed:false,
+            nameChanged: false,
+            currentRoutes: [],
+            inverted: false,
+            editOther: false
+        }
+        this.changeName=this.changeName.bind(this);
+        this.dialog=dialogHelper(this);
+    }
+    componentDidMount() {
+        RouteHandler.listRoutes(true)
+            .then((routes)=>{
+                this.setState({currentRoutes:routes,routesLoaded:true});
+            })
+            .catch((error)=>{Toast(error)});
+    }
+    existsRoute(name){
+        if (! this.state.routesLoaded) return false;
+        if (Helper.getExt(name) !== 'gpx') name+='.gpx';
+        for (let i=0;i<this.state.currentRoutes.length;i++){
+            if (this.state.currentRoutes[i].name === name) return true;
+        }
+        return false;
+    }
+    changeName(newName){
+        let changed=newName !== this.props.route.name;
+        this.setState({name:newName,nameChanged:changed});
+    }
+    save(copy){
+        this.props.closeCallback();
+        if (this.state.nameChanged){
+            this.state.route.name=this.state.name;
+        }
+        if (! copy && this.state.nameChanged){
+            RouteHandler.deleteRoute(this.state.route.name,
+                ()=>{
+                    editor.setNewRoute(this.state.route);
+                    this.done();
+                },
+                (error)=>{Toast(error)})
+        }
+        editor.setNewRoute(this.state.route,0);
+        this.done();
+    }
+    done(){
+        if(this.props.updateCallback){
+            this.props.updateCallback();
+        }
+    }
 
+    delete() {
+        if (isActiveRoute()) return;
+        OverlayDialog.confirm("Really delete route " + this.state.name)
+            .then(() => {
+                this.props.closeCallback();
+                RouteHandler.deleteRoute(this.state.route.name,
+                    () => {
+                        editor.removeRoute();
+                        this.done();
+                    },
+                    (error) => {
+                        Toast(error)
+                    })
+            })
+            .catch(() => {
+            })
+    }
+    render() {
+        let existingName=this.existsRoute(this.state.name) && this.state.nameChanged;
+        let canDelete=! isActiveRoute() && ! this.state.nameChanged && this.state.name !== DEFAULT_ROUTE;
+        let info=RouteHandler.getInfoFromRoute(this.state.route);
+        return <div className="EditRouteDialog flexInnner">
+            <h3 className="dialogTitle">Edit Route</h3>
+            <Input
+                dialogRow={true}
+                label="name"
+                value={this.state.name}
+                onChange={this.changeName}
+            >
+            </Input>
+            {existingName && <div className="warning">Name already exists</div>}
+            <InputSelect
+                dialogRow={true}
+                label="edit new"
+                itemList={(selected)=>{
+                    let li=[];
+                    this.state.currentRoutes.forEach((route)=>{
+                        let name=route.name.replace(/\.gpx/,'');
+                        li.push({label:name,value:name,originalName:route.name});
+                    })
+                    return li;
+                }}
+                value={this.state.name}
+                showDialogFunction={this.dialog.showDialog}
+                onChange={(entry)=>{
+                    if (entry.name === this.state.route.name) return;
+                    RouteHandler.fetchRoute(entry.originalName,false,
+                        (route)=>{
+                            this.setState({
+                                route:route.clone(),
+                                changed:true,
+                                name: route.name,
+                                nameChanged: false,
+                                inverted: false,
+                                editOther: true
+                            })
+                        },
+                        (error)=>{Toast(error)});
+                }}
+
+            />
+            {INFO_ROWS.map((description)=>{
+                return InfoItem.show(info,description);
+            })}
+            {this.state.inverted && <InfoItem
+                label=""
+                value="inverted"
+            />}
+            <div className="dialogButtons">
+                <DB name="empty"
+                    onClick={() => {
+                        let route=this.state.route.clone();
+                        route.points=[];
+                        this.setState({
+                            changed:true,
+                            route: route
+                        })
+                    }}
+                >Empty</DB>
+                <DB name="invert"
+                    onClick={() => {
+                        let route=this.state.route.clone();
+                        route.swap();
+                        let newInverted=!this.state.inverted;
+                        this.setState({
+                            changed:true,
+                            route: route,
+                            inverted: newInverted
+                        })
+                    }}
+                >Invert</DB>
+                {this.props.editAction &&
+                <DB name="edit"
+                    onClick={()=>{
+                        this.props.closeCallback();
+                        this.props.editAction();
+                    }}
+                    >
+                    Edit
+                </DB>}
+            </div>
+            <div className="dialogButtons">
+                { canDelete && <DB name="delete"
+                    onClick={() => {this.delete(); }}
+                >Delete</DB>}
+                <DB name="copy"
+                    onClick={() => this.save(true)}
+                    disabled={(!this.state.nameChanged || existingName)}
+                >
+                    Copy
+                </DB>
+                <DB name="cancel"
+                    onClick={this.props.closeCallback}
+                >Cancel</DB>
+                {this.state.nameChanged ?
+                    <DB name="ok"
+                        onClick={() => this.save()}
+                        disabled={existingName}
+                    >
+                        Rename
+                    </DB> :
+                    <DB name="ok"
+                        onClick={() => this.save()}
+                        disabled={!this.state.changed}
+                    >
+                        OK
+                    </DB>
+                }
+            </div>
+        </div>
+    }
+}
 
 
 
@@ -107,6 +292,18 @@ class EditRoutePage extends React.Component{
         let self=this;
         this.getButtons=this.getButtons.bind(this);
         this.mapEvent=this.mapEvent.bind(this);
+        this.checkEmptyRoute();
+        this.wpTimer=GuiHelpers.lifecycleTimer(this,()=>{
+            this.setState({showWpButtons:false});
+        },globalStore.getData(keys.properties.wpButtonTimeout)*1000);
+        RouteHandler.setCurrentRoutePage(PAGENAME);
+        this.widgetClick=this.widgetClick.bind(this);
+        GuiHelpers.storeHelperState(this,{
+            activeRouteName: keys.nav.routeHandler.activeName,
+            dimensions:keys.gui.global.windowDimensions
+        });
+    }
+    checkEmptyRoute(){
         if (!editor.hasRoute()){
             RouteHandler.fetchRoute(DEFAULT_ROUTE,true,(route)=>{
                     editor.setRouteAndIndex(route,0);
@@ -117,15 +314,6 @@ class EditRoutePage extends React.Component{
                 });
 
         }
-        this.wpTimer=GuiHelpers.lifecycleTimer(this,()=>{
-            this.setState({showWpButtons:false});
-        },globalStore.getData(keys.properties.wpButtonTimeout)*1000);
-        RouteHandler.setCurrentRoutePage(PAGENAME);
-        this.widgetClick=this.widgetClick.bind(this);
-        GuiHelpers.storeHelperState(this,{
-            activeRouteName: keys.nav.routeHandler.activeName,
-            dimensions:keys.gui.global.windowDimensions
-        });
     }
     showWpButtons(on){
         if (on) {
@@ -139,13 +327,22 @@ class EditRoutePage extends React.Component{
 
     widgetClick(item,data,panel,invertEditDirection){
         let currentEditor=getCurrentEditor();
-        if (item.name == "EditRoute"){
+        if (item.name === "EditRoute"){
             if (globalStore.getData(keys.gui.global.layoutEditing)) return;
-            currentEditor.syncTo(RouteEdit.MODES.PAGE);
-            history.push("routepage");
+            OverlayDialog.dialog((props)=>{
+                return <EditRouteDialog
+                    {...props}
+                    route={currentEditor.getRoute().clone()}
+                    editAction={()=>{
+                        currentEditor.syncTo(RouteEdit.MODES.PAGE);
+                        history.push("routepage");
+                    }}
+                    updateCallback={()=>{this.checkEmptyRoute()}}
+                    />
+            })
             return;
         }
-        if (item.name == 'RoutePoints'){
+        if (item.name === 'RoutePoints'){
             if (globalStore.getData(keys.gui.global.layoutEditing)) return;
             if (data && data.idx !== undefined){
                 let lastSelected=currentEditor.getIndex();

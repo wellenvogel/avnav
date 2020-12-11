@@ -35,6 +35,7 @@ import GuiHelpers from './util/GuiHelpers.js';
 import Mob from './components/Mob.js';
 import Dimmer from './util/dimhandler.js';
 import Button from './components/Button.jsx';
+import LeaveHandler from './util/leavehandler';
 
 
 const DynamicSound=Dynamic(SoundHandler);
@@ -226,6 +227,7 @@ class App extends React.Component {
     }
     render(){
         if (this.state.error){
+            LeaveHandler.stop();
             let version=(window.avnav||{}).version;
             let etext=`VERSION:${version}\nERROR:${lastError.error}\n${lastError.stack}\n${lastError.componentStack}`;
             let etextData='data:text/plain;charset=utf-8,'+encodeURIComponent(etext);

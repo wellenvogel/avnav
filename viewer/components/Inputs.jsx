@@ -127,7 +127,7 @@ export const InputSelect=(props)=>{
                 props.onChange(props.changeOnlyValue?(newValue||{}).value:newValue);
             };
             let finalList;
-            if (typeof(displayList) === 'function') finalList = props.list(props.value);
+            if (typeof(displayList) === 'function') finalList = displayList(props.value);
             else {
                 finalList = displayList.slice();
                 finalList.forEach((el)=> {

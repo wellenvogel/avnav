@@ -158,6 +158,14 @@ class RouteEdit{
         data.route.points=[];
         write(this.writeKeys,data);
     }
+    removeRoute(){
+        this.checkWritable();
+        let data=load(this.storeKeys,true);
+        if (!data.route) return;
+        data.route=undefined;
+        data.index=-1;
+        write(this.writeKeys,data);
+    }
     invertRoute(){
         this.checkWritable();
         let data=load(this.storeKeys,true);

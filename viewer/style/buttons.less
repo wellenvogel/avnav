@@ -199,7 +199,7 @@ button{
     .iconButton('invertroute.svg');
   }
   &.NavDeleteAll {
-    .iconButton('ic_delete.svg');
+    .iconButton('delete_sweep.svg');
   }
 
   &.NavNext {
@@ -528,6 +528,18 @@ button{
   }
   .AskEditRouteDialog &.editRoute{
     .dialogIconButton('route.svg');
+  }
+  .EditRouteDialog &.copy{
+    .dialogIconButton('content_copy.svg');
+  }
+  .EditRouteDialog &.edit{
+    .dialogIconButton('ic_edit.svg');
+  }
+  .EditRouteDialog &.empty{
+    .dialogIconButton('delete_sweep.svg');
+  }
+  .EditRouteDialog &.invert{
+    .dialogIconButton('invertroute.svg');
   }
 
 }

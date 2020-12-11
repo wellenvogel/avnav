@@ -500,4 +500,14 @@ export const InfoItem=(props)=>{
         <span className={"itemInfo"}>{props.value}</span>
     </div>
 }
+
+InfoItem.show=(data,description)=>{
+    let v=data[description.value];
+    if (v === undefined) return null;
+    if (description.formatter){
+        v=description.formatter(v,data);
+        if (v === undefined) return null;
+    }
+    return <InfoItem label={description.label} value={v}/>
+}
 export default Dialogs;
