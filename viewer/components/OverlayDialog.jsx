@@ -402,7 +402,9 @@ export const dialogHelper=(thisref,stateName)=>{
                 <DialogDisplay
                     className="nested"
                     content={thisref.state[stateName]}
-                    onClick={()=>{this.hideDialog()}}
+                    closeCallback={()=>{
+                        this.hideDialog()
+                    }}
                     />
             );
         }

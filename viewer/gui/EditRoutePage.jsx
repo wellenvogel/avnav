@@ -169,7 +169,7 @@ class EditRouteDialog extends React.Component{
                     })
                     return li;
                 }}
-                value={this.state.name}
+                value={""}
                 showDialogFunction={this.dialog.showDialog}
                 onChange={(entry)=>{
                     if (entry.name === this.state.route.name) return;
