@@ -48,6 +48,7 @@ import registerRadial from './components/CanvasGaugeDefinitions.js';
 import AndroidEventHandler from './util/androidEventHandler.js';
 import AvNavVersion from './version.js';
 import assign from 'object-assign';
+import LeaveHandler from './util/leavehandler';
 
 
 if (! window.avnav){
@@ -89,6 +90,9 @@ avnav.main=function() {
     let ro="readOnlyServer";
     if (getParam(ro) && getParam(ro) == "true"){
         globalStore.storeData(keys.properties.connectedMode,false,true);
+    }
+    if (getParam("noCloseDialog") === "true"){
+        LeaveHandler.stop();
     }
     //make the android API available as avnav.android
     if (window.avnavAndroid){
