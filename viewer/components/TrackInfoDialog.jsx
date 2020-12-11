@@ -349,13 +349,14 @@ export class TrackConvertDialog extends React.Component{
         let maxroute=this.props.maxroute||50;
         let currentPoints=this.info.getValue('numPoints');
         let existingName=this.existsRoute(this.state.routeName);
+        let displayName=this.state.routeName.replace(/\.gpx$/,'');
         return  <div className="TrackConvertDialog flexInner">
             <h3 className="dialogTitle">Convert Track to Route</h3>
             <Input
                 dialogRow={true}
                 label="route name"
-                value={this.state.routeName}
-                onChange={(nv)=>this.setState({routeName:nv})}
+                value={displayName}
+                onChange={(nv)=>this.setState({routeName:nv+".gpx"})}
                 />
             {existingName && <div className="warning">Name already exists</div>}
             <div className="originalPoints">
