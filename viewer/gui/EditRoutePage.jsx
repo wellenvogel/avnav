@@ -89,6 +89,13 @@ class EditRouteDialog extends React.Component{
     componentDidMount() {
         RouteHandler.listRoutes(true)
             .then((routes)=>{
+                routes.sort((a,b)=>{
+                    let na=a.name?a.name.toLowerCase():undefined;
+                    let nb=b.name?b.name.toLowerCase():undefined;
+                    if (na < nb) return -1;
+                    if (na > nb) return 1;
+                    return 0;
+                })
                 this.setState({currentRoutes:routes,routesLoaded:true});
             })
             .catch((error)=>{Toast(error)});
@@ -165,7 +172,7 @@ class EditRouteDialog extends React.Component{
                     let li=[];
                     this.state.currentRoutes.forEach((route)=>{
                         let name=route.name.replace(/\.gpx/,'');
-                        li.push({label:name,value:name,originalName:route.name});
+                        li.push({label:name,value:name,key:name,originalName:route.name});
                     })
                     return li;
                 }}
