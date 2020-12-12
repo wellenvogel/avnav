@@ -1,0 +1,234 @@
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Overlays</title>
+    <link href="../styles.css" rel="stylesheet" type="text/css">
+  </head>
+  <body>
+    <h1>Avnav Overlays</h1>
+    <ul>
+      <li><a href="#configuration">Konfiguration</a></li>
+      <li><a href="#usage">Nutzung</a></li>
+    </ul>
+    <p>Ab der Version 202012xx ist AvNav in der Lage, neben der eigentlichen
+      Karte noch Zusatzinformationen anzuzeigen. Das können z.B. Wegepunkte aus
+      einer GPX Datei aber auch vorhandene Tracks oder andere Daten (wie z.B.
+      aktuelle Tonnen von <a href="http://nautin.nl/wb/pages/navigatie/boeienbestanden/downloaden.php">nautin.nl</a>)
+      sein.</p>
+    <p>Daneben können mit dieser neuen Funktionalität auch mehrere Karten
+      übereinander gelegt werden (z.B. eine OpenSeamap Karte die einen weiteren
+      Bereich abdeckt unter eine o-charts Karte - oder auch o-charts Karten für
+      verschiedene Regionen).</p>
+    <p>Innerhalb von AvNav wird diese Funktion als Overlays bezeichnet.</p>
+    <p>Im Einzelnen können die folgenden Daten als Overlays genutzt werden:</p>
+    <ul>
+      <li>GPX Dateien (Wegepunkte,Tracks,Routen)</li>
+      <li><a href="https://developers.google.com/kml/documentation/kmzarchives">KML
+          und KMZ</a> Dateien (google) - ind der KMZ Datei wird eine doc.kml
+        erwartet.</li>
+      <li><a href="https://de.wikipedia.org/wiki/GeoJSON">geojson</a> Dateien</li>
+      <li>andere in AvNav vorhandene Karten</li>
+      <li>AvNav Routen</li>
+      <li>AvNav Tracks</li>
+    </ul>
+    <p>Zu den GPX und KML Dateien können nutzerdefinierte Icons oder auch Daten,
+      die über "link" Tags erreichbar sind, als zip Dateien gespeichert werden.
+      KMZ Dateien enthalten diese Icons im Normalfall schon.</p>
+    <p>Wenn solche Overlays auf einer Karte vorhanden sind, können durch Klick
+      auf entsprechende Punkte dazu Zusatzinformationen abgerufen werden.</p>
+    <h2><a name="configuration"></a>Konfiguration</h2>
+    <p>Bevor externe Overlays genutzt werden können, müssen die Dateien in AvNav
+      hochgeladen werden.</p>
+    <p><img src="DownloadPage-Overlays.png" alt="" class="image"></p>
+    <p>Innerhalb von AvNav wird das Symbol <img src="../viewerimages/icons-new/layers-black.svg"
+        alt="" class="inlineimage">für Overlays benutzt.</p>
+    <p>Nachdem die entsprechenden Dateien hochgeladen wurden, können diese
+      Overlays den Karten zugeordnet werden. Man kann einen Satz von Overlays
+      definieren, der für alle Karten genutzt werden soll (default overlays).
+      Ausserdem kann man für jede einzelne Karte noch definieren, welche
+      Overlays auf dieser angezeigt werden sollen.</p>
+    <p>Die Konfiguration der Overlays kann entweder auf der <a href="../userdoc/downloadpage.html">Files/Download-Seite</a>
+      im Reiter Karten erfolgen - oder auf der <a href="../userdoc/mainpage.html">Hauptseite</a>.</p>
+    <p><img src="Overlay-Config-Default-DownloadPage.png" alt="" class="image"></p>
+    <p>Im Bild ist der Dialog sichtbar, der nach Klick auf "DefaultOverlays" auf
+      der Files/Download Seite erreichbar ist.</p>
+    <p>Hier können jetzt Overlays hinzugefügt, verändert oder gelöscht werden.</p>
+    <p><img src="Overlay-Config-Default-Select1.png" alt="" class="image"></p>
+    <p>Im Bild wurde hier mit "InsertAfter" die Auswahl der vorhandenen Overlays
+      aufgerufen.<br>
+      Im Beispiel wurde die im overlays Verzeichnis vorhandene Datei
+      Wegepunkte2020.gpx (<a href="https://nvcharts.com/shop/media/download/Wegepunkte2020_gpx.zip">NV
+        Verlag</a>)&nbsp; gewählt.<br>
+      Es können jetzt noch Parameter für die Anzeige eingestellt werden.</p>
+    <table border="1" width="100%">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>default</td>
+          <td>Beschreibung</td>
+        </tr>
+        <tr>
+          <td>enable</td>
+          <td>ja</td>
+          <td>Wenn das auf nein gesetzt wird, ist das Overlay zwar konfiguriert
+            - wird aber aktuell nicht angezeigt. Man hat aber später die
+            Möglichkeit, das mit einem Klick anzuzeigen.</td>
+        </tr>
+        <tr>
+          <td>type</td>
+          <td>overlay</td>
+          <td>Art des Overlays.<br>
+            overlay: eine Datei, die unter overlays hochgeladen wurde<br>
+            chart: eine in AvNav vorhandene Karte<br>
+            route: eine in AvNav vorhandene Route<br>
+            track: ein in AvNav vorhander Track</td>
+        </tr>
+        <tr>
+          <td>overlay name</td>
+          <td>---</td>
+          <td>hier wird je nach type die Liste der vorhandenen Elemente zur
+            Auswahl angeboten</td>
+        </tr>
+        <tr>
+          <td>opacity</td>
+          <td>1</td>
+          <td>Ein Wert zwischen 0...1, der die Farbdeckung angibt (0:
+            unsichtbar)</td>
+        </tr>
+        <tr>
+          <td>user icons</td>
+          <td>---</td>
+          <td>Hier kann eine zip-Datei angegeben werden, die die Bilder (oder
+            sonstigen Inhalte) entält.<br>
+            Wenn in einer gpx-Datei eine "sym" Eigenschaft vorhanden ist (z.B.
+            sym="b1"), wird in der Zip Datei zur Darstellung eine Datei b1.png
+            gesucht.<br>
+            Wenn eine link Eigenschaft vorhanden ist (z.B. link="data/1.html")
+            dann wird in der Zip Datei nach einem Eintrag data/1.html gesucht.<br>
+            Für KML Dateien gilt das sinngemäss. Allerdings empfiehlt sich
+            hierbei eher die Nutzung des KMZ Formates.</td>
+        </tr>
+        <tr>
+          <td>min zoom</td>
+          <td>0</td>
+          <td>der minimale Karten-Zoom bei dem das overlay noch angezeigt wird
+            (0: immer)</td>
+        </tr>
+        <tr>
+          <td>max zoom</td>
+          <td>0</td>
+          <td>der maximale Karten-Zoom bei dem das overlay noch angezeigt wird
+            (0: immer)</td>
+        </tr>
+        <tr>
+          <td>min scale</td>
+          <td>0</td>
+          <td>wenn der Kartenzoom kleiner als min scale ist, werden die Icons
+            verkleinert (0: Funktion dekativiert)</td>
+        </tr>
+        <tr>
+          <td>max scale</td>
+          <td>0</td>
+          <td>wenn der Kartenzoom grösser als max scale ist, werden die Icons
+            vergrößert (0: Funktion dekativiert)</td>
+        </tr>
+        <tr>
+          <td>default icon</td>
+          <td>--none--</td>
+          <td>Hier kann eine Bild-Datein (png, svg) ausgewählt werden, die als
+            Icon genutzt werden soll, wenn kein anderes Icon gefunden wurde. Die
+            Bild-Datei muss vorher bei layouts (oder user Dateien oder Images)
+            hochgeladen worden sein.<br>
+            Mit --DefaultGpxIcon-- kann ein Icon gewählt werden, das AvNav
+            bereits mitbringt. <img src="../viewerimages/icons-new/DefaultGpxPoint.svg"
+              alt="" class="inlineimage"></td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Falls die Datei andere Inhalte hat als Wegepunkte, werden ggf. noch
+      weitere Auswahlmöglichkeiten angeboten.</p>
+    <p><img src="Overlay-Config-Default-Select2.png" alt="" class="image"></p>
+    <table border="1" width="100%">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>default</td>
+          <td>Beschreibung</td>
+        </tr>
+        <tr>
+          <td>line width</td>
+          <td>track/route line width</td>
+          <td>Die Linienstärke für die Darstellung</td>
+        </tr>
+        <tr>
+          <td>line color</td>
+          <td>track/route color</td>
+          <td>Die Farbe für die Darstellung</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Nach Bestätigung mit Ok ist das Overlay jetzt hinzugefügt.</p>
+    <img src="Overlay-Config-Default-SelectList.png" alt="" class="image"><br>
+    <p>Die Reihenfolge der Overlays kann in der Liste per drag&amp;drop geändert
+      werden - sie können auch "unterhalb" der Karten angezeigt werden - dann
+      vor die ---chart--- Reihe verschieben.</p>
+    <p>Für die default overlays macht es u.U. Sinn, diese zunächst disabled zu
+      haben - und dann erst bei den einzelnen Karten (oder wenn sie benötigt
+      werden) anzuschalten.</p>
+    <p>Für Karten sieht die Overlay Konfiguration dann so aus:</p>
+    <img src="Overlay-Config-Default-SelectListNormal.png" alt="" class="image">
+    <p>Hier können die unter default konfigurierten Overlays nur verschoben und
+      an- bzw. abgeschaltet werden, die Overlays nur für diese Karte können
+      bearbeitet werden.</p>
+    <p>Die Overlay-Konfiguration kann auch auf der Hauptseite durch Klick auf
+      den <img src="../viewerimages/icons-new/layers-black.svg" alt="" class="inlineimage">Button
+      neben der jeweiligen Karte erreicht werden.</p>
+    <p><img src="Overlay-Config-Mainpage.png" alt="" class="image"></p>
+    <p>Der Button auf der rechten Seite führt zur Konfiguration der default
+      overlays.</p>
+    <h2><a name="usage"></a>Nutzung</h2>
+    <p>Wenn eine Karte ausgewählt wird, wird sie zusammen mit ihren Overlays
+      dargestellt.</p>
+    <img src="Overlay-Example-Maps-Waypoints.png" alt="" class="image">
+    <p>Im Beispiel eine o-charts Karte mit einer OpenStreetMap Karte darunter
+      und einer Wegepunkt-Datei darüber.<br>
+      Als Icon wurde das DefaultGpxIcon gewählt.<br>
+      Wenn auf eines der Icons aus dem Overlay geklickt wird, erscheint ein Info
+      Dialog.</p>
+    <img src="Overlay-Example-InfoDialog.png" alt="" class="image">
+    <p>Man erhält die zum Punkt verfügbaren Informationen und die Möglichkeit
+      z.B. diesen Punkt sofort als Zielpunkt zum routing zu verwenden (Goto).<br>
+      Über "Hide" kann das gesamte Overlay temporär ausgeblendet werden.<br>
+      Wenn man sich momentan im <a href="../userdoc/editroutepage.html">Routen-Editor</a>
+      befindet, stehen noch weitere Funktionen zur Verfügung.</p>
+    <p><img src="Overlay-Example-InfoDialogRouting.png" alt="" class="image"></p>
+    <p>Der gewählte Punkt kann zur Route hinzugefügt werden (vor oder hinter dem
+      aktuellen Punkt der Route) oder der aktuelle Punkt der Route kann auf
+      diesen Wegepunkt verschoben werden.</p>
+    <p>Wenn es sich beim Overlay um eine Route handelt, kann diese Route (ab dem
+      gewählten Punkt) zur aktuellen Route hinzugefügt werden.</p>
+    <p><img src="Overlay-Example-InfoDialogRouting2.png" alt="" class="image"></p>
+    <p>Auf der <a href="../userdoc/navpage.html">Navigationsseite</a> und im <a
+        href="../userdoc/editroutepage.html">Route-Editor</a> gibt es die
+      Möglichkeit, Overlays aus- und einzublenden.<br>
+      Dazu auf der rechten Seite den <img src="../viewerimages/icons-new/layers-black.svg"
+        alt="" class="inlineimage">Button verwenden.</p>
+    <p><img src="Overlay-Config-ActiveOverlays.png" alt="" class="image"></p>
+    <p>Hier kann man kurzfristig Overlays ein- und ausschalten. Diese
+      Einstellungen bleiben wirksam, bis die gewählte Karte gewechselt wird. Sie
+      betreffen auch nur das aktuelle Gerät, auf dem man arbeitet. Alle anderen
+      Veränderungen an den Overlays finden immer auf dem Server statt und werden
+      somit für alle Nutzer wirksam.</p>
+    <p>Über Edit kann man wieder zur normalen Bearbeitung der Overlays wechseln.</p>
+    <p><b>Hinweis:</b></p>
+    <p>Wenn man Overlay-Dateien mit sehr vielen Elementen nutzt, kann das die
+      Arbeitsgeschwindikeit stark reduzieren. Momentan ist dort kein festes
+      Limit eingebaut, Dateien von einigen 100MB werden allerdings mit
+      Sicherheit Probleme bereiten. 1000 Punkte in einem Overlay sind dagegen
+      kein Problem.</p>
+    <p><br>
+    </p>
+    <p><br>
+    </p>
+  </body>
+</html>
