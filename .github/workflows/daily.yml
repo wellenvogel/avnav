@@ -34,7 +34,8 @@ jobs:
       
       - name: generate tag
         uses: actions/github-script@v3
-        env: TAG_NAME: daily-${{ steps.date.outputs.date}}
+        env: 
+          TAG_NAME: daily-${{ steps.date.outputs.date}}
         with:
           github-token: ${{ github.token }}
           script: |
