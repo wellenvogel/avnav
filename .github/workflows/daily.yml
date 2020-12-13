@@ -27,13 +27,32 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-      # Runs a single command using the runners shell
+      #set a date parameter
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y%m%d')"
       - name: gradle build
         env:  
           AVNAV_REPO_USER: ${{ secrets.AVNAV_REPO_USER }}
           AVNAV_REPO_PASSWD: ${{ secrets.AVNAV_REPO_PASSWD }}
         run: ./gradlew upload
-      - name: list files  
-        if: always()
-        run: find .
+      - name: generate tag
+        uses: actions/github-script@v3
+        env: TAG_NAME: daily-${{ steps.date.outputs.date}}
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            await github.git.deleteRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: "refs/tags/"+process.env.TAG_NAME,
+            })
+            github.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: "refs/tags/"+process.env.TAG_NAME,
+              sha: context.sha
+            })
+
+
         
