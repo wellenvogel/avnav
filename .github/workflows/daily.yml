@@ -31,11 +31,7 @@ jobs:
       - name: Get current date
         id: date
         run: echo "::set-output name=date::$(date +'%Y%m%d')"
-      - name: gradle build
-        env:  
-          AVNAV_REPO_USER: ${{ secrets.AVNAV_REPO_USER }}
-          AVNAV_REPO_PASSWD: ${{ secrets.AVNAV_REPO_PASSWD }}
-        run: ./gradlew upload
+      
       - name: generate tag
         uses: actions/github-script@v3
         env: TAG_NAME: daily-${{ steps.date.outputs.date}}
@@ -52,7 +48,13 @@ jobs:
               repo: context.repo.repo,
               ref: "refs/tags/"+process.env.TAG_NAME,
               sha: context.sha
-            })
+            })  
+      
+      - name: gradle build
+        env:  
+          AVNAV_REPO_USER: ${{ secrets.AVNAV_REPO_USER }}
+          AVNAV_REPO_PASSWD: ${{ secrets.AVNAV_REPO_PASSWD }}
+        run: ./gradlew upload
 
 
         
