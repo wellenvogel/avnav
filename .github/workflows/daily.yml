@@ -39,11 +39,13 @@ jobs:
         with:
           github-token: ${{ github.token }}
           script: |
+            try{
             await github.git.deleteRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
               ref: "refs/tags/"+process.env.TAG_NAME,
             })
+            } catch(e){}
             github.git.createRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
