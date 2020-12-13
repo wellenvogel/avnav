@@ -325,7 +325,7 @@ task raspiDeb(type: GradleBuild){
 task releaseRpm(type: Rpm) {
     group taskgroup
     arch = NOARCH
-    dependsOn pkgVersion
+    dependsOn 'releaseViewer',pkgVersion
 }
 
 task releaseDeb(type: Deb) {
@@ -686,6 +686,7 @@ task uploadAndroidBeta(type: UploadTask){
 }
 
 task uploadViewer(type: UploadTask){
+    useHashes=true
     inputFiles=fileTree(dir:"viewer/build/release")
     inputFiles+=fileTree("viewer/demo",{
         include "demo-osm/**"
@@ -702,6 +703,7 @@ task uploadViewer(type: UploadTask){
 }
 
 task uploadViewerRelease(type: UploadTask){
+    useHashes=true
     inputFiles=fileTree(dir:"viewer/build/release")
     inputFiles+=fileTree("viewer/demo",{
         include "demo-osm/**"
