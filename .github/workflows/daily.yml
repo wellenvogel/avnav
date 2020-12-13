@@ -1,5 +1,5 @@
 # daily builds
-name: CI
+name: DailyBuild
 
 # Controls when the action will run. 
 on:
