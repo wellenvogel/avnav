@@ -681,7 +681,7 @@ task uploadAndroidRelease(type: UploadTask){
     dependsOn assembleReleaseAndroid
 }
 task uploadAndroidBeta(type: UploadTask){
-    inputFile=file("android/build/outputs/apk/beta/avnav-beta$sign-${avnavVersion}.apk")
+    inputFile=file("android/build/outputs/apk/beta/avnav-beta-${avnavVersion}.apk")
     dependsOn assembleBetaAndroid
 }
 
