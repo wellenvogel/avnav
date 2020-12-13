@@ -33,3 +33,7 @@ jobs:
           AVNAV_REPO_USER: ${{ secrets.AVNAV_REPO_USER }}
           AVNAV_REPO_PASSWD: ${{ secrets.AVNAV_REPO_PASSWD }}
         run: ./gradlew upload
+      - name: list files  
+        if: always()
+        run: find .
+        
