@@ -74,18 +74,28 @@ sudo systemctl stop avnav</div>
     Beschreibungen dazu findet man auf seiner <a href="https://open-mind.space/">AvNav-Touch
       Seite</a>. Herunterladen kann man die Images von der <a href="https://open-mind.space/download/">download
       Seite</a>.<br>
-    Natürlich kann man auch hier weitere externe (Display-)Geräte nutzen.<br>
+    <p> Natürlich kann man auch hier weitere externe (Display-)Geräte nutzen.</p>
+    <p><b>Wichtiger Hinweis</b>: <span style="color: red;">Momentan (12/2020)
+        sind diese Images nicht mehr aktuell. Man müsste die Paketquellen aus
+        dem nächsten Absatz einbinden und die Pakete updaten. Wir arbeiten an
+        einer Aktualisierung.</span></p>
     <h3 class="western"><a name="Packages"></a>Paket Installation</h3>
-    Dank Holger gibt es jetzt fertige Paket-Repositories, die man in sein debian
+    Dank Oleg gibt es jetzt fertige Paket-Repositories, die man in sein debian
     einbinden kann. Das geht auf dem raspberry pi - aber auch auf jeder anderen
     Debian Variante (z.B. Ubuntu). <br>
-    Informationen dazu findet man wieder in seiner <a href="https://open-mind.space/rasbian-buster-lite-zu-avnavtouch-in-5-schritten/">Beschreibung</a>.<br>
-    Für die Installation auf einem anderen raspberry System (nicht avnav-touch)
-    ändert man Schritt 5 der Beschreibung ab zu:<br>
+    Informationen dazu findet man wieder in seiner <a href="https://github.com/free-x/avnav/wiki">Beschreibung</a>.<br>
+    <p>Die Paketquellen bindet man wie folgt ein:</p>
+    <div class="code">wget https://www.free-x.de/debian/oss.boating.gpg.key
+sudo apt-key add oss.boating.gpg.key
+wget https://www.free-x.de/debian/boating.list
+sudo cp boating.list /etc/apt/sources.list.d/<br>sudo apt-get update</div>
+    <p>Für die Installation auf einem raspberry System muss man nach Einbindung
+      der Paketquellen die folgenden Schritte ausführen:</p>
     <div class="code">sudo apt-get install avnav avnav-raspi</div>
     Der raspberry startet danach avnav automatisch mit dem Nutzer pi.<br>
     <br>
-    Für ein anderes debian ändert man Schritt 5 zu:<br>
+    Für ein anderes debian (oder wenn man die Konfigurationsfunktionen für das
+    Betriebssystem von AvNav nicht nutzen möchte) ändert man das zu:<br>
     <div class="code">sudo apt-get install avnav</div>
     Danach kann man als jeder Nutzer mit dem Kommando<br>
     <div class="code">avnav</div>
