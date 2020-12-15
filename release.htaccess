@@ -5,4 +5,6 @@ indexignore ..
 RewriteRule "latest/$" "VERSION/" [PT]
 RewriteRule "latest/(avnav.*)-latest\.(.*)" "VERSION/$1-VERSION.$2" [PT]
 RewriteRule "latest/(avnav.*)_latest_([^.]*)\.(.*)" "VERSION/$1_VERSION_$2.$3" [PT]
+RewriteRule "latest/(avnav.*)-VERSION\.(.*)" "VERSION/$1-VERSION.$2" [PT]
+RewriteRule "latest/(avnav.*)_VERSION_([^.]*)\.(.*)" "VERSION/$1_VERSION_$2.$3" [PT]
 
