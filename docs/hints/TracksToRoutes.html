@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Tracks zu Routen</title>
+    <link href="../styles.css" rel="stylesheet" type="text/css">
+  </head>
+  <body>
+    <h1>Konvertierung von Tracks zu Routen</h1>
+    <div class="toc"> </div>
+    <p>AvNav zeichnet permanent <a href="../quickstart.html#h2:Tracks">Tracks</a>
+      auf. Für jeden Tag wird eine neue gpx Datei mit dem aktuellen Datum
+      geschrieben.</p>
+    <p>Diese Tracks (oder auch Tracks, die auf der <a href="../userdoc/downloadpage.html">Files/Download</a>
+      Seite hochgeladen wurden) können in Routen umgewandelt werden, um sie zur
+      Navigation zu nutzen.</p>
+    <h2>Verfahren</h2>
+    <p>Für diese Umwandlung ist es typischerweise nötig, die Zahl der Punkte im
+      Track zu verringern (Tracks haben oft weit über 1000 Punkte). Sonst ist
+      eine sinnvolle Nutzung einer solchen Route kaum möglich.</p>
+    <p>AvNav nutzt dazu ein Reduktionsverfahren, das an <a href="https://www.gpsbabel.org/htmldoc-development/filter_simplify.html">GPS
+        Babel</a> angelehnt ist. Es werden nacheinander die Punkte entfernt, bei
+      denen die Abweichung zur neu entstehenden Strecke zwischen den
+      Nachbarpunkten am kleinsten ist.</p>
+    <p>Man kann für dieses Verfahren eine maximale Abweichung (xte) angeben, die
+      man tolerieren möchte. Je größer man diese zulässige Abweichung wählt, um
+      so weniger Punkte bleiben am Ende übrig. Man sollte typischerweise
+      versuchen, Routen auf ca. 50 Punkte zu begrenzen.</p>
+    <p>Nach der Umwandlung kann man die Route im <a href="../userdoc/editroutepage.html">Routen-Editor</a>
+      ggf. noch etwas nachbearbeiten.</p>
+    <h2>Ablauf</h2>
+    <p>Man kann den Dialog für die Konvertierung entweder von der Files/Download
+      Seite aus dem <a href="../userdoc/downloadpage.html#h3:Tracks">Track Info</a>
+      Dialog erreichen (<img src="../viewerimages/icons-new/route.svg" alt="" class="inlineimage">Convert
+      Button) oder aus dem Info Dialog falls man einen Track als <a href="overlays.html#h2:Nutzung">Overlay</a>
+      auf der Karte hat und einen Punkt in diesem anklickt. Im Info Dialog
+      wieder den <img src="../viewerimages/icons-new/route.svg" alt="" class="inlineimage">Convert
+      Button nutzen - siehe Bild.</p>
+    <img src="FeatureInfo-Track.png" alt="" class="fimage">
+    <p>Nach Klick auf den Convert Button erhält man den Konverter-Dialog.</p>
+    <img src="TracksToRoutes1.png" alt="" class="fimage">
+    <p>Wie im Bild zu sehen, wird man typischerweise eine Warnung bekommen, das
+      die Anzahl der Punkte über 50 liegt.</p>
+    <p>Über max Xte stellt man die maximal zulässige Abweichung ein und kann mit
+      "Compute" eine Konvertierung starten. Falls das Ergebnis (Zahl der Punkte)
+      noch nicht passend ist, kann man mehrere Durchläufe machen mit veränderter
+      Abweichung.</p>
+    <img src="TracksToRoutes2.png" alt="" class="fimage">
+    <p>Im Beispiel wurde mit einer Abweichung von 22m eine ausreichend kleine
+      Route erstellt.</p>
+    <p>Man kann im Dialog noch den Namen der enstehenden Route ändern (und ggf.
+      entscheiden, ob eine bestehende Route gleichen Namens überschrieben werden
+      soll).</p>
+    <p>Nach dem Speichern kann man ggf. die enstandene Route direkt bearbeiten.</p>
+    <img src="TracksToRoutes3.png" alt="" class="fimage">
+    <p>Hier ist es von Vorteil, wenn man den Track vorher als Overlay auf der
+      Karte hatte, dann kann man jetzt leicht vergleichen, ob die Route alle
+      wichtigen Punkte enthält.</p>
+    <img src="TracksToRoutes4.png" alt="" class="fimage">
+    <p><br>
+    </p>
+  </body>
+</html>
