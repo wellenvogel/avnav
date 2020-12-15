@@ -19,6 +19,7 @@ viewer/node_modules
 *.swp
 *.bck
 *.log
+docs/*docmap.json
 avnav_server.xml-????*
 hardware/**/*-cache.lib
 hardware/**/sym-lib-table

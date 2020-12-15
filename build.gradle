@@ -726,6 +726,8 @@ def docTree=fileTree("docs",{
     include "**/*pdf"
     include "**/*PDF"
     include "**/*json"
+    include "**/*js"
+    include "**/.htaccess"
 })
 task addImagesToDoc(type: DefaultTask){
     doFirst(){
@@ -741,7 +743,7 @@ task uploadDoc(type: UploadTask){
     deleteTargetDir=false
     baseDir="/www/software/avnav/docs"
     useHashes=true
-    dependsOn addImagesToDoc
+    dependsOn addImagesToDoc, 'buildDocMap'
 }
 
 task computeDocHashes(type:DefaultTask){
@@ -790,6 +792,87 @@ def findImages(fileTree){
     }
     return result
 }
+
+def headingToAnchor(tag,txt){
+    if (txt == null || txt.isEmpty()) return null;
+    return tag+":"+txt.replaceAll("[^a-zA-Z0-9_-]","");
+}
+def findHeadings(fileTree,rlang){
+    def result=[]
+    def tagList=['h1','h2','h3','h4']
+    fileTree.visit{ FileVisitDetails element ->
+          if (! element.getFile().isFile()) return;
+          if (! element.getName().matches('.*html$')) return;  
+          def tagsoupParser = new org.ccil.cowan.tagsoup.Parser()
+          def page = new XmlSlurper(tagsoupParser).parse(element.getFile())
+          def pagePath=element.getPath()
+          def relPath=element.getRelativePath().getParent().getPathString()
+          def pageTitle=null
+          //first get the h1
+          page.'**'.findAll({node->node.name()=='h1'}).each{ h1 ->
+            if (pageTitle == null && !h1.text().isEmpty()) pageTitle=h1.text();
+          }
+          if (pageTitle == null) return;
+          def pageName=element.getName()
+          def lang='de';
+          if (pageName.startsWith('en_')){
+              lang='en';
+              pageName=pageName.replaceAll("^en_","");
+          }
+          if (lang != rlang) return
+          def prefix=relPath
+          if (prefix != "") prefix+="/"
+          page.'**'.findAll().each{ node->
+            if (node.name() in tagList ){
+                if (node.text() =~ '^ *$' ) return;
+                def entry=[tag:node.name(),
+                    lang: lang,
+                    href:prefix+pageName+"#"+headingToAnchor(node.name(),node.text()),
+                    path:pagePath,
+                    relPath:relPath,
+                    page: pageTitle,
+                    text: node.text(),
+                    depth: element.getRelativePath().getSegments().length
+                    ]
+                result.add(entry)
+            }
+          }  
+    }
+    result.sort {a,b -> 
+        if (a.depth < b.depth) return -1;
+        if (a.depth > b.depth) return 1;
+        return 0
+    }
+    return result
+}
+
+import groovy.json.*
+
+task buildDocMap(type: DefaultTask){
+    def enTarget=file("docs/en_docmap.json")
+    def deTarget=file("docs/de_docmap.json")
+    outputs.file enTarget
+    outputs.file deTarget
+    def list=fileTree("docs",{
+                    include "**/*html"
+                    exclude "**/*docmap.html"
+            })
+    inputs.files list        
+    doLast(){
+        def rt=findHeadings(list,"de")
+        deTarget.withWriter('utf-8'){ wr->
+            wr.writeLine(JsonOutput.toJson(rt))
+
+        } 
+        rt=findHeadings(list,"en")
+        enTarget.withWriter('utf-8'){ wr->
+            wr.write(JsonOutput.toJson(rt))
+
+        }
+    }
+}
+
+
 task findImages(type: DefaultTask){
     doFirst(){
             def list=fileTree("docs",{

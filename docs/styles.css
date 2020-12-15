@@ -48,3 +48,22 @@ table{
 td{
     padding: 5px;
 }     
+
+.docMapItem{
+    display: list-item;
+}
+.docMapLevelh2{
+    margin-left: 1em;
+}
+.docMapLevelh3{
+    margin-left: 2em;
+}
+.docMapLevelh4{
+    margin-left: 3em;
+}
+
+.error {
+    text-align: center;
+    font-size: 1.5em;
+    color: red;
+}
