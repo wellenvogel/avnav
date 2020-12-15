@@ -1,5 +1,5 @@
 function buildDocMap(lang,container){
-    var name=lang+'_docmap.json'
+    var name=lang+'_docmapdata.json'
     fetch(name)
     .then(function(response){
         if (response.status < 200 || response.status >= 300){

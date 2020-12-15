@@ -849,8 +849,8 @@ def findHeadings(fileTree,rlang){
 import groovy.json.*
 
 task buildDocMap(type: DefaultTask){
-    def enTarget=file("docs/en_docmap.json")
-    def deTarget=file("docs/de_docmap.json")
+    def enTarget=file("docs/en_docmapdata.json")
+    def deTarget=file("docs/de_docmapdata.json")
     outputs.file enTarget
     outputs.file deTarget
     def list=fileTree("docs",{
