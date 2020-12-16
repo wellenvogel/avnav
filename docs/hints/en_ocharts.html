@@ -8,15 +8,7 @@
     <h1>Avnav Ocharts</h1>
     <p>=== not for Android ===</p>
     <h3>Inhalt</h3>
-    <ul>
-      <li><a href="#Charts">Buying and Installing Charts</a></li>
-      <li><a href="#MainSettings">Adapting the Look and Feel</a></li>
-      <li><a href="#featureinfo">Feature Info (Object Query)</a></li>
-      <li><a href="#Installation">Installation</a></li>
-      <li><a href="#Releases">Releases</a></li>
-      <li><a href="#License">License Hints</a></li>
-      <li><a href="#Details">Technical Details</a></li>
-    </ul>
+    <div class="toc"> </div>
     <p>AvNav is able to handle chart in various raster formats. Until now it was
       unable to handle any charts you can buy officially. There is the company <a
         href="https://o-charts.org/">o-charts</a> that is supplying charts for
@@ -138,8 +130,12 @@
       started that will pre-render chart tiles. This will help to prevent lags
       that otherwise would (potentially) occur due to the limited resources of
       the pi. The cache prefill will pick a couple of tiles for the chart set
-      and will render them into a cache file.</p>
-    <p>Anyway you can start using the charts immediately.</p>
+      and will render them into a cache file. This will potentially last for
+      several hours. The provider will easily use one CPU (out of the 4
+      available) on a raspberry pi during this time. Once the prefill is done,
+      the cpu usage will dramatically decrease.</p>
+    <p>Anyway you can start using the charts immediately (the prefill will only
+      use the spare time).</p>
     <p><img src="ocharts-mainpage.png" alt="" class="fimage"></p>
     <p><img src="ocharts-navpage.png" alt="" class="fimage"></p>
     <p>As already mentioned there is a chance that lags will occur when you are
@@ -320,8 +316,8 @@
     <br>
     <h2><a name="Installation"></a>Installation</h2>
     <p>You can install the new plugin as packages on AvNav images. For the <a href="../install.html#Headless">Headless
-        Images</a> the packages are already available in the repository. You
-      need to install</p>
+        Images</a> the necessary packages are already contained in the images.
+      Additionally they are available in the repository. You need to install</p>
     <ul>
       <li>avnav-ocharts-plugin</li>
       <li>avnav-oesenc</li>
