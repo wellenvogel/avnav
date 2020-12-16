@@ -872,6 +872,62 @@ task buildDocMap(type: DefaultTask){
     }
 }
 
+//https://stackoverflow.com/questions/31241519/xmlslurper-obtain-the-line-number-of-groovy-util-slurpersupport-nodechild-in-or
+import org.xml.sax.*;
+import org.xml.sax.ext.Attributes2Impl;
+import javax.xml.parsers.*;
+
+class MySlurper extends XmlSlurper{
+    Locator locator
+    static def LINE_NUM_ATTR='__line'
+    public MySlurper(XMLReader parser) throws ParserConfigurationException, SAXException {
+        super(parser);
+    }
+    @Override
+    public void setDocumentLocator(Locator locator) {
+        this.locator = locator;
+    }
+    @Override
+    public void startElement(String uri, String localName, String qName, Attributes attrs) throws SAXException {
+        Attributes2Impl newAttrs = new Attributes2Impl(attrs); 
+        newAttrs.addAttribute("", LINE_NUM_ATTR, LINE_NUM_ATTR, "ENTITY", "" + locator.getLineNumber());        
+        super.startElement(uri, localName, qName, newAttrs);
+    }
+}
+
+task findBrokenLinks(type: DefaultTask){
+    def baseDir="docs"
+    def list=fileTree(baseDir,{
+                    include "**/*html"
+            })
+    inputs.files list 
+    doLast(){
+        list.visit{ FileVisitDetails element ->
+          if (! element.getFile().isFile()) return;
+          if (! element.getName().matches('.*html$')) return;  
+          def pageName=element.getPath();
+          def tagsoupParser = new org.ccil.cowan.tagsoup.Parser()
+          def page = new MySlurper(tagsoupParser).parse(element.getFile())
+          def relPath=element.getRelativePath().getParent().getPathString()
+          if (! relPath.isEmpty()) relPath+="/"
+          page.'**'.findAll().each{ node->
+            def link=node.@src
+            if (link.isEmpty()) link=node.@href
+            if (link.isEmpty()) return;
+            link=link.toString()
+            link=link.replaceAll("[#?].*","")
+            def line=node["@"+MySlurper.LINE_NUM_ATTR]
+            if (link.startsWith("http")) return; //TODO: check online links?
+            def target=file("$baseDir/$relPath$link")
+            if (!target.exists()){
+                println("##$pageName:$line:$relPath$link")
+            }
+          }  
+          
+        }
+    }
+}
+
 
 task findImages(type: DefaultTask){
     doFirst(){
