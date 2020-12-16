@@ -110,6 +110,16 @@ class KeyHandler{
         return this.findMappingForType(this.keymappings,key,this.ALLPAGES,opt_inDialog);
 
     }
+    hasRegistrations(component,action){
+        let compReg=this.registrations[component];
+        if (!compReg) return false;
+        for (let a in compReg){
+            if (a === action) {
+                return compReg[a].length > 0;
+            }
+        }
+        return false;
+    }
     findMappingForType(mappings,key,page,opt_inDialog){
         if (mappings === undefined) return;
         if (key === undefined) return;
@@ -123,16 +133,17 @@ class KeyHandler{
             }
             let component=mappings[page][k];
             for (let a in component){
+                if (! this.hasRegistrations(k,a)) continue;
                 let actionKey=component[a];
                 if (actionKey instanceof Array){
                     for (let i in actionKey){
-                        if (actionKey[i] == key){
+                        if (actionKey[i] === key){
                             return new Mapping(k,a);
                         }
                     }
                 }
                 else{
-                    if (actionKey == key){
+                    if (actionKey === key){
                         return new Mapping(k,a);
                     }
                 }
