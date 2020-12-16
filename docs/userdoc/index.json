@@ -14,6 +14,6 @@
         {"title":"Route Editor","url":"editroutepage.html"},
         {"title":"Dashboard","url":"dashboardpage.html"},
         {"title":"Files/Download","url":"downloadpage.html"},
-        {"title":">Map","url":"../docmap.html"}
+        {"title":">Index","url":"../docmap.html"}
     ]
 }

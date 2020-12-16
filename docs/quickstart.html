@@ -15,6 +15,12 @@
     <div class="toc"></div>
     <p class="western">Eine ausführliche Beschreibung der Konzepte und der
       Motivation findet man im Kapitel <a href="beschreibung.html">Einführung</a>.</p>
+    <h2 class="western">Generelles</h2>
+    <p>AvNav ist primär ausgelegt für die Bedienung auf touch Geräten (auch mit
+      relative kleinen Bildschirmen). Es wurde versucht, die Bedienelemente und
+      Anzeigen so zu gestalten, das sie auch unter Bord-Bedingungen gut nutzbar
+      sind.</p>
+    <p>Eine Bedienung über Maus (und Tastatur) ist natürlich ebenfalls möglich.</p>
     <h2 class="western">Installation und Inbetriebnahme</h2>
     <p>AvNav gibt es in 2 Varianten:</p>
     <ol>
@@ -31,8 +37,8 @@
         Linux-Distributionen</a> (Debian Pakete, Rpm) sowie als <a href="install.html#Windows">Installer
         für Windows</a> zur Verfügung.<br>
       Die debian Pakete sind in einem <a href="https://github.com/free-x/avnav/wiki">Repository</a>
-      verfügbar und können ausserdem von der Release-Seite heruntergeladen
-      werden.<br>
+      verfügbar und können ausserdem von der <a href="release.html">Release-Seite</a>
+      heruntergeladen werden.<br>
       Ausserdem pflegen wir <a href="install.html#Headless">Images für den
         Raspberry Pi</a>. Eine ausführliche Beschreibung findet sich im Kapitel
       <a href="install.html">Installation</a>.</p>
@@ -57,11 +63,11 @@
         href="https://play.google.com/store/apps/details?id=de.wellenvogel.avnav.main"><img
           src="sailboat512r.png" alt="" class="inlineimage"> </a></p>
     <h2>Konfiguration</h2>
-    <p>Wenn AvNav installiert wurde (oder ein fertiges Image genuztzt wird),
-      kann normalerweise AvNav ohne weitere Konfiguration starten. Die USB
-      Anschlüsse werden nach seriellen Schnittstellen abgesucht und an den
-      gefundenen wird die Baudrate automatisch ermittelt. Je nach gewählter
-      Installation ist meist ein Empfänger für Udp Daten auf Port 34667 aktiv.</p>
+    <p>Wenn AvNav installiert wurde (oder ein fertiges Image genuzt wird), kann
+      normalerweise AvNav ohne weitere Konfiguration starten. Die USB Anschlüsse
+      werden nach seriellen Schnittstellen abgesucht und an den gefundenen wird
+      die Baudrate automatisch ermittelt. Je nach gewählter Installation ist
+      meist ein Empfänger für Udp Daten auf Port 34667 aktiv.</p>
     <p>Für weitergehende Anforderungen kann eine detaillierte Konfiguration in
       der Datei <a href="hints/configfile.html">avnav_server.xml</a>
       vorgenommen werden. Eine Anpassung des Aussehens kann über die <a href="userdoc/settingspage.html">Einstellungen</a>,
@@ -78,10 +84,10 @@
       an beliebige Schnittstellen wieder auszusenden.</p>
     <p>Einen Teil der Daten dekodiert AvNav (Positionsdaten, AIS,...) und nutzt
       sie für die eigenen Anzeige-Funktionen.</p>
-    <p>In Zusammenarbeit mit <a href="hints/CanboatAndSignalk.html">SignalK</a>
-      können auch <a href="hints/CanboatAndSignalk.html">NMEA2000</a> Daten
-      empfangen und genutzt werden. Ausserdem können alle Daten für das eigene
-      Schiff, die in SignalK verfügbar sind, in AvNav angezeigt werden.</p>
+    <p>In Zusammenarbeit mit <a href="hints/CanboatAndSignalk.html">Canboat and
+        SignalK</a> können auch <a href="hints/CanboatAndSignalk.html">NMEA2000</a>
+      Daten empfangen und genutzt werden. Ausserdem können alle Daten für das
+      eigene Schiff, die in SignalK verfügbar sind, in AvNav angezeigt werden.</p>
     <h3>Android</h3>
     <p>Unter <a href="android.html">Android</a> kann das interne GPS genutzt
       werden. Ausserdem kann eine TCP oder Bluetooth Verbindung zum Empfang von
@@ -90,8 +96,11 @@
     <h2>Karten</h2>
     <p>AvNav verarbeitet grundsätzlich Karten im <a href="charts.html#Intro">Rasterformat</a>.
       Diese können aus verschiedenen Quellen im Netz heruntergeladen werden
-      (z.B. OpenSeaMap) oder z.B. mit dem MobileAtlasCreator aus Quellen im Netz
-      erstellt werden.</p>
+      (z.B. <a href="https://wiki.openstreetmap.org/wiki/DE:Locus#https://wiki.openstreetmap.org/wiki/DE:Locus#Offline-Karten">OpenSeaMap</a>
+      or <a href="https://tileservice.charts.noaa.gov/tileset.html#50000_1-locator">NOAA</a>)
+      oder z.B. mit dem <a href="https://mobac.sourceforge.io/">MobileAtlasCreator</a>
+      oder <a href="https://wiki.openstreetmap.org/wiki/SAS_Planet">SASPlanet</a>
+      aus Quellen im Netz erstellt werden.</p>
     <p>Unmittelbar verarbeiten kann AvNav Karten im <a href="charts.html#chartformats">gemf
         und mbtiles Format</a>. Daneben können Karten z.B. im BSB (kap) Format <a
         href="charts.html#Convert">konvertiert</a> werden (entweder direkt auf
@@ -101,7 +110,7 @@
       Software zu sehr günstigen Preisen an.</p>
     <p>Karten müssen zur Benutzung in AvNav "hochgeladen" werden - auf der <a href="userdoc/downloadpage.html">Files/Download
         Seite</a>, Reiter Karten <img src="viewerimages/icons-new/map2.svg" alt=""
-        class="inlineimage">. Aussnahme; o-charts Karten, diese werden über das
+        class="inlineimage">. Aussnahme: o-charts Karten, diese werden über das
       <a href="hints/ocharts.html">o-charts Plugin</a> hochgeladen.</p>
     <p>Weitere Details im Kapitel <a href="charts.html">Karten</a>.</p>
     <h2>Anzeigen</h2>
@@ -144,13 +153,13 @@
       erfolgt eine Alarmierung, wenn der nächste Wegepunkt erreicht wird /sobald
       man sich innerhalb des "approach" genannten umkreises befindet) und ein
       automatisches Weiterschalten zum nächsten Wegepunkt.</p>
-    <h2>Tracks</h2>
-    <p>AvNav zeichnet beständig den aktuellen Track auf. Dabei wird versucht,
-      die Zahl der Trackpunkte zu begrenzen, indem nur bei größeren Änderungen
-      oder nach einer bestimmten Zeit erneut ein Trackpunkt geschrieben wird
-      (Siehe <a href="hints/configfile.html">Konfiguration</a> AVTrackWriter).
-      Die Tracks werden in regelmäßigen Abständen als gpx Datei gespeichert und
-      können auf der <a href="userdoc/downloadpage.html#tracks">Files/Download
+    <h2><a name="tracks"></a>Tracks</h2>
+    <p>AvNav zeichnet beständig den aktuellen Track auf und zeigt ihn auf der
+      Karte. Dabei wird versucht, die Zahl der Trackpunkte zu begrenzen, indem
+      nur bei größeren Änderungen oder nach einer bestimmten Zeit erneut ein
+      Trackpunkt geschrieben wird (Siehe <a href="hints/configfile.html?lang=en#h3:AVNTrackWriter">Konfiguration
+        ANVTrackWriter </a>). Die Tracks werden in regelmäßigen Abständen als
+      gpx Datei gespeichert und können auf der <a href="userdoc/downloadpage.html#tracks">Files/Download
         Seite</a> exportiert und importiert werden (dort ist auch eine Anzeige
       ihrer Daten - also Strecke, Zeit, usw. möglich). Pro Tag wird eine
       separate gpx Datei erzeugt. Ausserdem können vorhandene Tracks auf der
@@ -163,10 +172,11 @@
       (default: 20nm) mit Ihren Positionen und ihren Kursen dargestellt.
       Ausserdem erfolgt eine Berechnung des nächsten Zieles und eine Warnung,
       falls eine einstellbare minimale Begegnungsentfernung unterschritten wird.</p>
-    <p>Die Symbole für die AIS Ziele können durch eigene Smybole (bei Bedarf
-      verschieden je nach AIS shiptype) angepasst werden. Für das eigene Boot
-      und für die AIS Ziele wird ein Kurs-Vektor gezeichnet, dessen Ende die
-      Position nach 10 Minuten (einstellbar) markiert.</p>
+    <p>Die Symbole für die AIS Ziele können durch <a href="hints/usericons.html">eigene
+        Smybole</a> (bei Bedarf verschieden je nach AIS shiptype) angepasst
+      werden. Für das eigene Boot und für die AIS Ziele wird ein Kurs-Vektor
+      gezeichnet, dessen Ende die Position nach 10 Minuten (einstellbar)
+      markiert.</p>
     <p>Durch Klick auf eine AIS Ziel (oder auf die Anzeige des nächsten Zieles
       in den Anzeige-Bereichen) erhält man alle <a href="userdoc/aisinfopage.html">Informationen</a>
       zu diesem Ziel und kann zur <a href="userdoc/aispage.html">Liste aller
@@ -175,15 +185,17 @@
     <p>AvNav kann Alarme erzeugen für:</p>
     <ul>
       <li>Eine Ankerwache.<br>
-        Dazu kann auf den <a href="userdoc/dashboardpage.html">Dashboard-Seiten</a>
-        die Ankerwache aktiviert werden. Bei Verlassen des vorgegebenen
-        Bereiches (oder bei Ausfall des GPS Signals) erfolgt eine Alarmierung</li>
+        Dazu kann auf den <a href="userdoc/dashboardpage.html#anchorwatch">Dashboard-Seiten</a>
+        die Ankerwache aktiviert werden. Abhängig vom Layout werden die Anzeigen
+        angepasst.Bei Verlassen des vorgegebenen Bereiches (oder bei Ausfall des
+        GPS Signals) erfolgt eine Alarmierung</li>
       <li>Erreichen des nächsten Wegepunktes</li>
       <li>Mann über Bord<br>
-        Dazu ist auf allen Ansichten eine separate Mann-über-Bord Taste
-        vorhanden. Durch diese wird die aktuelle Position zum neuen Zielpunkt,
-        alle anderen Routings werden beendet. Ausserdem wird der Alarm
-        ausgelöst.</li>
+        Dazu ist auf allen Ansichten eine separate<img src="viewerimages/icons-new/drowning.svg"
+          alt="" class="inlineimage"> <a href="userdoc/mainpage.html#mob">Mann-über-Bord
+          Taste</a> vorhanden. Durch diese wird die aktuelle Position zum neuen
+        Zielpunkt, alle anderen Routings werden beendet. Ausserdem wird der
+        Alarm ausgelöst.</li>
     </ul>
     <p>Alarme werden in AvNav auf dem Server erzeugt und verwaltet. Insbesondere
       z.B. für die Ankerwache können alle Anzeige-Geräte abgeschaltet werden
@@ -191,12 +203,12 @@
     <p>Es kann bei den Alarmen eine akustische Signalisierung (sowohl auf dem
       Server als auch in der Anzeige) erfolgen. Auf dem Server können auch
       weitere Aktionen ausgelöst werden (siehe <a href="https://github.com/wellenvogel/avnav/tree/master/hardware/simple-pi">Beispiel</a>)
-      . Die Konfiguration erfolgt im <a href="hints/configfile.html">configfile</a>
-      - AVNAlarmHandler.</p>
+      . Die Konfiguration erfolgt im&nbsp; <a href="hints/configfile.html#h3:AVNAlarmHandler">configfile
+        - AVNAlarmHandler</a>.</p>
     <h2>Nachtmodus</h2>
     <p>AvNav kann auf der <a href="userdoc/mainpage.html">Hauptseite</a> in
-      einen Nachtmodus geschaltet werden. Dann sind alle Anzeigen entsprechend
-      angepasst.</p>
+      einen Nachtmodus <img src="viewerimages/icons-new/night.svg" alt="" class="inlineimage">
+      geschaltet werden. Dann sind alle Anzeigen entsprechend angepasst.</p>
     <h2>Anpassung</h2>
     <p>AvNav kann in verschiedener Weise an eigene Bedürfnisse angepasst werden.
       Da die gesamte Darstellung im Browser abläuft, kann man das Aussehen mit <a

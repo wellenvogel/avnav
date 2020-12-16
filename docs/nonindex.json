@@ -13,7 +13,7 @@
         {"title":"Benutzung","en_title":"Usage","url":"userdoc/index.html"},
         {"title":"Konfiguration & Technik","en_title":"Configuration","url":"hints/index.html"},
         {"title":"Android","url":"android.html"},
-        {"title":"Map","url":"docmap.html"},
+        {"title":"Index","url":"docmap.html"},
         {"title":">Segeln","en_title":"Sailing","url":"../../../segeln/index.html"},
          {"title":">Software","url":"../../../software/index.html"}
     ]
