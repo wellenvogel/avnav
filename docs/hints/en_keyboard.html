@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="de">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Keybord Support</title>
+    <link href="../styles.css" rel="stylesheet" type="text/css">
+  </head>
+  <body>
+    <h1>Keyboard Support</h1>
+    <div class="toc"> </div>
+    <p>AvNav&nbsp; has support for keyboard short cuts for important functions.<br>
+      You can make free assignments between keys and the functions inside AvNav.
+    </p>
+    <h2>Concept</h2>
+    <p>The assignment happens in 3 steps:</p>
+    <ol>
+      <li>Page<br>
+        This is the currently shown view in AvNav (see <a href="../userdoc/index.html#userfiles">user
+          documentation</a>). With the special name "all" you can assign the
+        function to all pages.</li>
+      <li>Group<br>
+        This just groups the functionality.</li>
+      <li>Function<br>
+        The particular action that you will trigger (like the click on a
+        button).</li>
+    </ol>
+    <p>You can assign one or multiple keys to each of those triples (page,
+      group, function). A more specific configuration will win (e.g. an
+      assigment for navpage will win against an assignment for all).</p>
+    <h2>Configuration</h2>
+    <p>The assignment is handled with a file keys.json in the <a href="../userdoc/index.html#userfiles">user
+        directory</a>. This file can be edited directly there. Additionally
+      there is a&nbsp; <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/keys.json">build
+        in&nbsp;</a> with defaults.</p>
+    <p>With the keys.json in the user directory you can overwrite the defaults.</p>
+    <p> <img src="Keyboard-Mob.png" alt="" class="fimage"> </p>
+    <p>In this example I created a keyboard assignment for "man over board" with
+      the keys Ctrl-Space and Ctrl-x.</p>
+    <p>If you only assign one key the square brackets are not necessary. After
+      you saved your changes you must reload the AvNav page.</p>
+    <h2>Pages Groups and Functions</h2>
+    <p>The list of pages, groups and functions just below will only show the
+      current state when creating this documentation. Step by step new ones will
+      be added.</p>
+    <p>The names you have to use for the keys refer to the <a href="https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key">documentation</a>.
+      If the Control key is pressed additionally the string "Control-" will be
+      prepended.</p>
+    <p>The function names within the group "button" are the names that you will
+      find beside the buttons in the <a href="../userdoc/index.html">user
+        documentation</a>.<br>
+      Clicking on a widget can be achieved by using the group "widgets" and the
+      name of the widget as the function (the name you will see in the <a href="layouts.html">layout
+        editor</a>). A SOG widget could be triggered with</p>
+    <div class="code">"all":{<br>   "widgets": {<br>      "SOG": "s"<br>   }<br>}</div>
+    <p>using the key "s" on all pages.</p>
+    <p>The dialog buttons can be assigned using the group "dialogButton" and the
+      name of the button as function. The name you can easily find out using the
+      developer tools of your browser ("inspect element"). You should be careful
+      to only assign special keys to dialog buttons - otherwise you will not be
+      able to make normal inputs.</p>
+    <p>In the table below I listed the groups and functions that either already
+      have a default key assignment - or are neither buttons nor widgets. The
+      texts in brackets are just hints about the functionality.</p>
+    <h2>Assignments</h2>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Seite</td>
+          <td>Group</td>
+          <td>Function</td>
+          <td>Default Keys</td>
+        </tr>
+        <tr>
+          <td>all</td>
+          <td>button</td>
+          <td>Cancel</td>
+          <td>"Escape"</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td>map</td>
+          <td>zoomIn</td>
+          <td>["+","PageUp"]</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>zoomOut</td>
+          <td>["-","PageDown"]</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>up</td>
+          <td>"ArrowUp"</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>down</td>
+          <td>"ArrowDown"</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>left</td>
+          <td>"ArrowLeft"</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>right</td>
+          <td>"ArrowRight"</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>lockGps (keep map center at boat position)</td>
+          <td>"l"</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>unlockGps</td>
+          <td>"u"</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>toggleGps</td>
+          <td>["t","Control-a"]</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>toggleCourseUp</td>
+          <td>"b"</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>centerToGps (one time center map to boat)</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td>alarm</td>
+          <td>stop</td>
+          <td>"a"</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td>global<br>
+          </td>
+          <td>mobon<br>
+          </td>
+          <td>["Control- "]<br>
+          </td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>moboff</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>mobtoggle</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td>addon</td>
+          <td>0 (first addon)</td>
+          <td>"Control-0"</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>1</td>
+          <td>"Control-1"</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>2</td>
+          <td>"Control-2"</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>3</td>
+          <td>"Control-3"</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>4</td>
+          <td>"Control-4"</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>5</td>
+          <td>"Control-5"</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>6</td>
+          <td>"Control-6"</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>7</td>
+          <td>"Control-7"</td>
+        </tr>
+        <tr>
+          <td>gpspage (dashboard)</td>
+          <td>button</td>
+          <td>Cancel</td>
+          <td>["d","Escape"]</td>
+        </tr>
+        <tr>
+          <td>navpage (navigation page)</td>
+          <td>widget</td>
+          <td>AisTarget</td>
+          <td>"a" (goes to the <a href="../userdoc/aisinfopage.html">Ais Info
+              page</a>)</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>COG</td>
+          <td>"d" (goes to the <a href="../userdoc/dashboardpage.html">Dashboard</a>,
+            with the key d you can this way toglle between navigation page and
+            dashboard page)</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td>button</td>
+          <td>LockMarker (start navigation to current map center)</td>
+          <td>"g" </td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>StopNav</td>
+          <td>"s"</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>ShowRoutePanel (open the&nbsp; <a href="../userdoc/editroutepage.html">Route
+              Editor</a>)</td>
+          <td>["Control-r","r"]</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td>map</td>
+          <td>centerToGps (one time map center to boat position)</td>
+          <td>"c"</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td>page</td>
+          <td>centerToTarget (move the chart to have the current target waypoint
+            at center)</td>
+          <td>"w"</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>navNext (navigate to the next point from the route)</td>
+          <td>["n","Control-n"]</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>toggleNav (navigation on/off)</td>
+          <td>["Control-g"]</td>
+        </tr>
+        <tr>
+          <td>mainpage (Hauptseite)</td>
+          <td>page</td>
+          <td>selectChart (goto the n<a href="../userdoc/navpage.html">avigation
+              page</a> using the selected chart)</td>
+          <td>"Enter"</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>nextChart</td>
+          <td>["Tab","ArrowDown"]</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>previousChart</td>
+          <td>"ArrowUp"</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td>button</td>
+          <td>ShowSettings</td>
+          <td>"Control-+"</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>ShowStatus</td>
+          <td>"Control-s"</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>ShowGps</td>
+          <td>"d"</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td>Night</td>
+          <td>["c","Control-c","Control-g"]</td>
+        </tr>
+        <tr>
+          <td>infopage (license)</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>addonpage (user apps)</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>addresspage (QR codes)</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>statuspage (server status)</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>wpapage (wifi control)</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>routepage (route list)</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>downloadpage (files/download)</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>settingspage </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>editroutepage (route editor)</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>addonconfigpage (configuration of user apps)</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>viewpage </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p><br>
+    </p>
+    <p><br>
+    </p>
+  </body>
+</html>
