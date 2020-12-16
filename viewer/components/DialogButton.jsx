@@ -1,11 +1,13 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import GuiHelper from '../util/GuiHelpers.js';
+import KeyHandler from '../util/keyhandler';
 
 class DialogButton extends React.Component {
     constructor(props){
         super(props);
         let self=this;
+        KeyHandler.registerDialogComponent("dialogButton");
         GuiHelper.keyEventHandler(this,(component,action)=>{
             if (self.props.onClick && ! self.props.disabled) self.props.onClick();
         },"dialogButton",this.props.name);

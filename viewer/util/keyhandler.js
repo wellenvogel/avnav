@@ -16,12 +16,17 @@ class KeyHandler{
         this.page=undefined;
         this.ALLPAGES="all";
         this.enabled=true;
+        this.dialogComponents=[]; //components registered here will be handled in dialogs
     }
     disable(){
         this.enabled=false;
     }
     enable(){
         this.enabled=true;
+    }
+    registerDialogComponent(component){
+        if (this.dialogComponents.indexOf(component)>=0) return;
+        this.dialogComponents.push(component);
     }
     registerHandler(handlerFunction,component,action){
         if (! this.registrations[component]){
@@ -87,30 +92,35 @@ class KeyHandler{
         this.page=page;
     }
 
-    findMappingForPage(key,page){
+    findMappingForPage(key,page,opt_inDialog){
         let mapping=undefined;
         for (let lidx=this.mergeLevels.length-1;lidx>=0;lidx--) {
             let mergeIndex=this.mergeLevels[lidx];
             try {
-                mapping = this.findMappingForType(this.merges[mergeIndex], key, page);
+                mapping = this.findMappingForType(this.merges[mergeIndex], key, page,opt_inDialog);
                 if (mapping) return mapping;
-                mapping = this.findMappingForType(this.merges[mergeIndex], key,this.ALLPAGES );
+                mapping = this.findMappingForType(this.merges[mergeIndex], key,this.ALLPAGES ,opt_inDialog);
             } catch (e) {
                 console.log("error when searching keymapping: " + e)
             }
             if (mapping) return mapping;
         }
-        mapping=this.findMappingForType(this.keymappings,key,page);
+        mapping=this.findMappingForType(this.keymappings,key,page,opt_inDialog);
         if (mapping) return mapping;
-        return this.findMappingForType(this.keymappings,key,this.ALLPAGES);
+        return this.findMappingForType(this.keymappings,key,this.ALLPAGES,opt_inDialog);
 
     }
-    findMappingForType(mappings,key,page){
+    findMappingForType(mappings,key,page,opt_inDialog){
         if (mappings === undefined) return;
         if (key === undefined) return;
         if (page === undefined) return;
         if (! mappings[page]) return;
         for (let k in mappings[page]){
+            if (opt_inDialog){
+                if (this.dialogComponents.indexOf(k) < 0){
+                    continue;
+                }
+            }
             let component=mappings[page][k];
             for (let a in component){
                 let actionKey=component[a];
@@ -130,7 +140,7 @@ class KeyHandler{
         }
     }
 
-    handleKeyEvent(keyEvent){
+    handleKeyEvent(keyEvent,opt_inDialog){
         if (! this.enabled) return;
         if (! keyEvent) return;
         let key=keyEvent.key;
@@ -141,7 +151,7 @@ class KeyHandler{
         base.log("handle key: "+key);
         if (! this.keymappings) return;
         let page=this.page;
-        let mapping=this.findMappingForPage(key,page);
+        let mapping=this.findMappingForPage(key,page,opt_inDialog);
         if (! mapping) return;
         keyEvent.preventDefault();
         keyEvent.stopPropagation();

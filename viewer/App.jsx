@@ -222,8 +222,8 @@ class App extends React.Component {
         }
     }
     keyDown(evt){
-        if (globalStore.getData(keys.gui.global.hasActiveInputs,false)) return;
-        KeyHandler.handleKeyEvent(evt);
+        let inDialog=globalStore.getData(keys.gui.global.hasActiveInputs,false);
+        KeyHandler.handleKeyEvent(evt,inDialog);
     }
     render(){
         if (this.state.error){
