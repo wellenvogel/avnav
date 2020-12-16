@@ -244,7 +244,7 @@ class MainPage extends React.Component {
                 name: 'Cancel',
                 storeKeys: {visible: keys.gui.global.onAndroid},
                 onClick: ()=> {
-                    avnav.android.goBack()
+                    if (avnav.android) avnav.android.goBack()
                 }
 
             }
