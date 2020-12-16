@@ -9,9 +9,9 @@
     <h1>Tastatur Unterstützung</h1>
     <div class="toc"> </div>
     <p>AvNav hat eine Unterstützung für die Bedienung wichtiger Funktionen über
-      Tastenkürzel.</p>
-    <p>Die Zuordnung zwischen Tasten und Funktionen kann dabei relativ frei
-      konfiguriert werden.</p>
+      Tastenkürzel.<br>
+      Die Zuordnung zwischen Tasten und Funktionen kann dabei relativ frei
+      konfiguriert werden. </p>
     <h2>Prinzip</h2>
     <p>Die Zuordnung erfolgt dabei über 3 Stufen:</p>
     <ol>
@@ -20,7 +20,7 @@
         Über den spezielle Namen "all" kann die Funktion auf allen Seiten
         zugeordnet werden.</li>
       <li>Gruppe<br>
-        Hier sind die Funktionen noch einmal gruppiert - z.B. "buttons"</li>
+        Hier sind die Funktionen noch einmal gruppiert - z.B. "button"</li>
       <li>Funktion<br>
         Die eigentliche Funktion, die ausgelöst werden soll (z.B. der Klick auf
         einen Button)</li>
@@ -37,24 +37,24 @@
     <p>In der Datei im user Verzeichnis können die Werte aus der default-Datei
       überschrieben werden.</p>
     <p> <img src="Keyboard-Mob.png" alt="" class="fimage"> </p>
-    <p>Mit diesem Beispiel werde auf allen Seiten dem Button "Mann über Board"
-      die Tasten Ctrl-Leer und Ctrl-x zugeordnet.</p>
-    <p>Wenn nur eine Taste zugeordnet werden soll, müssen keine eckigen Klammern
+    <p>Mit diesem Beispiel werden auf allen Seiten dem Button "Mann über Board"
+      die Tasten Ctrl-Leer und Ctrl-x zugeordnet.<br>
+      Wenn nur eine Taste zugeordnet werden soll, müssen keine eckigen Klammern
       angegeben werden. Nach dem Speichern der Änderungen muss die AvNav Seite
-      neu geladen werden.</p>
+      neu geladen werden. </p>
     <h2>Seiten Gruppen und Funktionen</h2>
     <p>Die Liste der Seiten, Gruppen und Funktionen ist hier immer nur der
       aktuelle Stand beim Erstellen der Dokumentation. Es werden Stück für Stück
       weitere hinzu kommen.</p>
     <p>Die Namen für die Keys entsprechen den Werten laut der <a href="https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key">Dokumentation</a>.
       Wenn die Control (Strg) Taste dazu gedrückt ist, wird ein "Control-" vor
-      den Namen gesetzt.</p>
-    <p>Die Namen der Funktion in der gruppe "button" sind jeweils die Namen der
+      den Namen gesetzt.<br>
+      Die Namen der Funktion in der gruppe "button" sind jeweils die Namen der
       buttons, so wie sie in der <a href="../userdoc/index.html">Nutzerbeschreibung</a>
-      dokumentiert sind.</p>
-    <p>Ein Klick auf ein Widgets kann über die Gruppe "widgets" und den Namen
-      des Widgets erreicht werden (die Namen sieht man im <a href="layouts.html">Layout
-        editor</a>). Ein SOG widget wäre z.B. mit</p>
+      dokumentiert sind.<br>
+      Ein Klick auf ein Widgets kann über die Gruppe "widgets" und den Namen des
+      Widgets erreicht werden (die Namen sieht man im <a href="layouts.html">Layout
+        editor</a>). Ein SOG widget wäre z.B. mit </p>
     <div class="code">"all":{<br>   "widgets": {<br>      "SOG": "s"<br>   }<br>}</div>
     <p>mit der Taste s auf allen Seiten anklickbar.</p>
     <p>Die Buttons in Dialogen sind über die Gruppe "dialogButton" und den Namen
@@ -64,7 +64,7 @@
       normale Werte-Eingabe mehr möglich ist.</p>
     <p>In der folgenden Tabelle sind die Gruppen und Funktionen aufgelistet, die
       entweder in den default Einstellungen bereits eine Taste zugewiesen haben
-      - oder aber weder button, dialogButton noch widget sind. Text in Klammern
+      - oder aber weder button, dialogButton noch widget sind. Texte in Klammern
       in der Tabelle sind Hinweise zur Funktion.</p>
     <h2>Zuweisungen</h2>
     <table style="width: 100%" border="1">
