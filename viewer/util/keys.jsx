@@ -356,7 +356,7 @@ let keys={
         buttonCols: new Property(false,"2 button columns",PropertyType.CHECKBOX),
         cancelTop: new Property(false,"Back button top",PropertyType.CHECKBOX),
         featureInfo: new Property(true,"Overlay Info on Click",PropertyType.CHECKBOX),
-        emptyFeatureInfo: new Property(false,"Always Info on Chart Click",PropertyType.CHECKBOX),
+        emptyFeatureInfo: new Property(true,"Always Info on Chart Click",PropertyType.CHECKBOX),
 
         style: {
             buttonSize: new Property(60, "Button Size(px)", PropertyType.RANGE, [35, 100]),
