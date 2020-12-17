@@ -527,7 +527,7 @@ class UploadTask extends DefaultTask{
         return rt
     }
     def server="www.wellenvogel.net"
-    def baseDir="/www/software/avnav/downloads/daily"
+    def baseDir="daily"
     def subDir=project.avnavVersion
     def useHashes=false
     def hashFileName="_hashes"
@@ -536,6 +536,13 @@ class UploadTask extends DefaultTask{
     def getTargetName=null
     FileTree inputFiles
     boolean deleteTargetDir=false
+
+    def getRealBase(){
+        def base=System.getenv("AVNAV_REPO_BASE");
+        if (base == null) base="/www/software/avnav/downloads"
+        return (base+"/"+baseDir).replaceAll('[^/]*/+\\.\\./*','').replaceAll('/*$','')
+    }
+
     @TaskAction
     public void exec(){
         /*
@@ -557,8 +564,8 @@ class UploadTask extends DefaultTask{
         checkReply(ftp)
         ftp.enterLocalPassiveMode()
         ftp.setBufferSize(1024*1024)
-        def dir=baseDir
-        def remoteDir=(subDir!=null)?baseDir+"/"+subDir:baseDir
+        def dir=getRealBase()
+        def remoteDir=(subDir!=null)?dir+"/"+subDir:dir
         if (inputFile != null){
             assert inputFile.exists(),"input file $inputFile does not exist"
             if (deleteTargetDir) removeRemoteDir(ftp,remoteDir)
@@ -670,7 +677,7 @@ task uploadAccessWindows(type: UploadTask){
     inputFile=windowsHtAccess
     subDir=null
     getTargetName={ return ".htaccess"}
-    baseDir="/www/software/avnav/downloads" 
+    baseDir="" 
 }
 
 def ks=System.getenv("ANDROID_KEYSTORE")
@@ -697,7 +704,7 @@ task uploadViewer(type: UploadTask){
     inputFiles+=fileTree("viewer/demo",{
         include "demo-bsh/**"
     })
-    baseDir="/www/software/avnav/viewern"
+    baseDir="../viewern"
     //deleteTargetDir=true
     dependsOn releaseViewer
 }
@@ -714,7 +721,7 @@ task uploadViewerRelease(type: UploadTask){
     inputFiles+=fileTree("viewer/demo",{
         include "demo-bsh/**"
     })
-    baseDir="/www/software/avnav/viewern"
+    baseDir="../viewern"
     //deleteTargetDir=true
     dependsOn releaseViewer
 }
@@ -741,7 +748,7 @@ task addImagesToDoc(type: DefaultTask){
 task uploadDoc(type: UploadTask){
     inputFiles=docTree
     deleteTargetDir=false
-    baseDir="/www/software/avnav/docs"
+    baseDir="../docs"
     useHashes=true
     dependsOn addImagesToDoc, 'buildDocMap'
 }
@@ -1003,7 +1010,7 @@ afterEvaluate{
     }
     if (project.avnavRelease) {
         tasks.withType(UploadTask.class) { UploadTask task ->
-            if (! task.name.equals("uploadViewerRelease") && ! task.name.equals("uploadAccessWindows")) task.baseDir = "/www/software/avnav/downloads/release"
+            if (! task.name.equals("uploadViewerRelease") && ! task.name.equals("uploadAccessWindows")) task.baseDir = "release"
 
         }
     }

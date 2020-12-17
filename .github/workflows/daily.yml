@@ -57,6 +57,7 @@ jobs:
         env:  
           AVNAV_REPO_USER: ${{ secrets.AVNAV_REPO_USER }}
           AVNAV_REPO_PASSWD: ${{ secrets.AVNAV_REPO_PASSWD }}
+          AVNAV_REPO_BASE: ""
         run: ./gradlew upload
 
 
