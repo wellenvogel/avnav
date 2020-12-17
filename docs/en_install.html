@@ -5,17 +5,10 @@
     <link href="styles.css" rel="stylesheet" type="text/css">
   </head>
   <body>
-    <h3 class="western">AvNav Installation</h3>
-    <ul class="mainlist">
-      <li><a href="install.html#Headless">Image without attached Display
-          (Headless)</a></li>
-      <li><a href="install.html#Touch">Image with attached Display (avnav-touch)</a></li>
-      <li><a href="install.html#Packages">Package Installation</a></li>
-      <li><a href="install.html#Windows">Windows</a></li>
-      <li><a href="release.html">Releases</a></li>
-    </ul>
-    <h3 class="western"><a name="Headless"></a>Image wihout attached
-      display(Headless)</h3>
+    <h1 class="western">AvNav Installation</h1>
+    <div class="toc"> </div>
+    <h2 class="western"><a name="Headless"></a>Image wihout attached
+      display(Headless)</h2>
     <p>Those images are maintained by <a href="https://www.segeln-forum.de/user/27970-blacksea/">BlackSea</a>
       (many thanks...). A description is available on<a href="https://github.com/free-x/avnav/wiki">
         his page</a>. </p>
@@ -59,7 +52,7 @@
 sudo systemctl start avnav 
 sudo systemctl stop avnav</div>
     <p> </p>
-    <h3 class="western"><a name="Touch"></a>Image with Display (avnav-touch)</h3>
+    <h2 class="western"><a name="Touch"></a>Image with Display (avnav-touch)</h2>
     <span>If you would like to directly connect a display to your pi thsi image
       is for you. </span>Holger (<a href="https://www.segeln-forum.de/user/13545-pandel/">pandel</a>)
     is maintaining an own image line for this set up. Great documentation is
@@ -71,17 +64,21 @@ sudo systemctl stop avnav</div>
       images are outdated. You would need to set up the package repository
       described in the next chapter and update the packages from there. We are
       working on an update.</span><br>
-    <h3 class="western"><a name="Packages"></a>Package Installation</h3>
+    <h2 class="western"><a name="Packages"></a>Package Installation</h2>
     Thanks to Oleg&nbsp; there are ready to go package repositories that you can
     use in your debian based system. This will work on the pi as well as on any
     other debian (like ubuntu).<br>
     Information is available at his <a href="https://github.com/free-x/avnav/wiki">description</a>.
     <p>To set up the repository on your system run the following commands:</p>
-    <div class="code">wget https://www.free-x.de/debian/oss.boating.gpg.key
+    <div class="code">sudo date -s "2020/12/03 14:30" <br>wget https://www.free-x.de/debian/oss.boating.gpg.key
 sudo apt-key add oss.boating.gpg.key
 wget https://www.free-x.de/debian/boating.list
 sudo cp boating.list /etc/apt/sources.list.d/<br>sudo apt-get update</div>
-    <p> For installing packages on a raspberry you need the run the following
+    <p>The first line (date -s...) is only necessary if you start e.g. with the
+      headless images or other images that do not have a time synchronization
+      active. Adapt the date and time to your current time.<br>
+    </p>
+    <p>For installing packages on a raspberry you need the run the following
       command after setting up the package repository:</p>
     <div class="code">sudo apt-get install avnav avnav-raspi</div>
     The raspberry will start avnav with the user pi.<br>
@@ -126,9 +123,26 @@ sudo apt-get -f</div>
     <p>If you want a small GUI for the chart conversion on your desktop you need
       to install the package python-wxgtk3.0. You can bring up the GUI with</p>
     <div class="code">avnav -g</div>
-    <br>
-    <br>
-    <h3><a name="Windows"></a>Windows</h3>
+    <p> </p>
+    <h2>OpenPlotter</h2>
+    <p>For <a href="https://openmarine.net/openplotter">OpenPlotter</a> we have
+      a complete integration for AvNav (thanks to <a href="https://github.com/e-sailing">e-sailing</a>).
+      In the repository <a href="https://www.free-x.de/deb4op/">https://www.free-x.de/deb4op/</a>
+      (that is already active in OpenPlotter) the necessary packages are already
+      available. So you can install them simply with</p>
+    <div class="code">sudo apt update
+sudo apt install openplotter-avnav</div>
+    <p> </p>
+    <p>Do not install avnav-raspi_xxx.deb on OpenPlotter as this will interfere
+      with the OpenPlotter network configuration. Within the OpenPlotter AvNav
+      configuration you can change the port for AvNav (default 8080 and 8082 for
+      ocharts) if this interferes with other applications.</p>
+    <p>When you install AvNav this way it will receive all NMEA data from
+      SignalK (and will not open up USB devices by its own). So you can make any
+      interface configuration changes in OpenPlotter or SignalK.</p>
+    <p><br>
+    </p>
+    <h2><a name="Windows"></a>Windows</h2>
     For windows there is an installer. This installer will not be updated on
     every release. The current version is <a href="../downloads/latestwindows/fr">here</a>.<br>
     I recommend to use the AvNavNetSetup-jjjj-mm-dd-0.exe installer as this one
