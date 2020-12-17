@@ -76,12 +76,12 @@ class EditRouteDialog extends React.Component{
         super(props);
         this.state={
             name:props.route.name,
-            route: this.props.route,
+            unchangedName: props.route.name,
+            route: this.props.route?this.props.route.clone():undefined,
             changed:false,
             nameChanged: false,
             currentRoutes: [],
-            inverted: false,
-            editOther: false
+            inverted: false
         }
         this.changeName=this.changeName.bind(this);
         this.dialog=dialogHelper(this);
@@ -100,6 +100,13 @@ class EditRouteDialog extends React.Component{
             })
             .catch((error)=>{Toast(error)});
     }
+    isActiveRoute(){
+        let activeName=activeRoute.getRouteName();
+        return (activeName && this.state.unchangedName === activeName);
+    }
+    getCurrentEditor(){
+        return this.isActiveRoute()?activeRoute:editor;
+    }
     existsRoute(name){
         if (! this.state.routesLoaded) return false;
         if (Helper.getExt(name) !== 'gpx') name+='.gpx';
@@ -110,23 +117,46 @@ class EditRouteDialog extends React.Component{
     }
     changeName(newName){
         let changed=newName !== this.props.route.name;
-        this.setState({name:newName,nameChanged:changed});
+        let ns={name:newName,nameChanged:changed};
+        if (changed) ns.forceChange=false;
+        this.setState(ns);
     }
     save(copy){
         this.props.closeCallback();
+        let oldName=this.props.route.name;
         if (this.state.nameChanged){
             this.state.route.name=this.state.name;
         }
+        else{
+            copy=false;
+        }
+        if (! copy){
+            this.getCurrentEditor().setNewRoute(this.state.route);
+            //the page must also know that we are now editing a different route
+            editor.setNewRoute(this.state.route);
+        }
+        else{
+            //if we had been editing the active this will change now
+            //but there is no chance that we start editing the active with copy
+            //as the name cannot exist already
+            //do a last check anyway
+            let activeName=activeRoute.getRouteName();
+            if (activeName && this.state.route.name === activeName){
+                Toast("unable to copy to active route");
+                return;
+            }
+            editor.setNewRoute(this.state.route)
+        }
         if (! copy && this.state.nameChanged){
-            RouteHandler.deleteRoute(this.state.route.name,
+            RouteHandler.deleteRoute(oldName,
                 ()=>{
-                    editor.setNewRoute(this.state.route);
                     this.done();
                 },
-                (error)=>{Toast(error)})
+                (error)=>{
+                    this.done();
+                    Toast(error);
+                })
         }
-        editor.setNewRoute(this.state.route,0);
-        this.done();
     }
     done(){
         if(this.props.updateCallback){
@@ -135,13 +165,15 @@ class EditRouteDialog extends React.Component{
     }
 
     delete() {
-        if (isActiveRoute()) return;
+        if (this.isActiveRoute()) return;
         OverlayDialog.confirm("Really delete route " + this.state.name)
             .then(() => {
                 this.props.closeCallback();
                 RouteHandler.deleteRoute(this.state.route.name,
                     () => {
-                        editor.removeRoute();
+                        if (this.getCurrentEditor().getRouteName() === this.state.route.name) {
+                            this.getCurrentEditor().removeRoute();
+                        }
                         this.done();
                     },
                     (error) => {
@@ -153,7 +185,7 @@ class EditRouteDialog extends React.Component{
     }
     render() {
         let existingName=this.existsRoute(this.state.name) && this.state.nameChanged;
-        let canDelete=! isActiveRoute() && ! this.state.nameChanged && this.state.name !== DEFAULT_ROUTE;
+        let canDelete=! this.isActiveRoute() && ! this.state.nameChanged && this.state.name !== DEFAULT_ROUTE;
         let info=RouteHandler.getInfoFromRoute(this.state.route);
         return <div className="EditRouteDialog flexInnner">
             <h3 className="dialogTitle">Edit Route</h3>
@@ -172,7 +204,9 @@ class EditRouteDialog extends React.Component{
                     let li=[];
                     this.state.currentRoutes.forEach((route)=>{
                         let name=route.name.replace(/\.gpx/,'');
-                        li.push({label:name,value:name,key:name,originalName:route.name});
+                        //mark the route we had been editing on the page before
+                        let selected=getCurrentEditor().getRouteName() === name;
+                        li.push({label:name,value:name,key:name,originalName:route.name,selected:selected});
                     })
                     return li;
                 }}
@@ -186,9 +220,9 @@ class EditRouteDialog extends React.Component{
                                 route:route.clone(),
                                 changed:true,
                                 name: route.name,
+                                unchangedName: route.name,
                                 nameChanged: false,
-                                inverted: false,
-                                editOther: true
+                                inverted: false
                             })
                         },
                         (error)=>{Toast(error)});
@@ -257,7 +291,7 @@ class EditRouteDialog extends React.Component{
                     </DB> :
                     <DB name="ok"
                         onClick={() => this.save()}
-                        disabled={!this.state.changed}
+                        disabled={!this.state.changed || existingName}
                     >
                         OK
                     </DB>
