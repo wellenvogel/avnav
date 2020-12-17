@@ -43,7 +43,7 @@ jobs:
             await github.git.deleteRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              ref: "refs/tags/"+process.env.TAG_NAME,
+              ref: "tags/"+process.env.TAG_NAME,
             });
             console.log("deleted ref "+process.env.TAG_NAME)
 
