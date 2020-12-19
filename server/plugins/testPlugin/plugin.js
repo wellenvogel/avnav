@@ -149,8 +149,8 @@ var widgetServer={
          */
         context.eventHandler.buttonClick=function(ev){
             //when the event handle ris called, this points to the context
-            let self=this;
-            let id=(new Date()).getTime();
+            var self=this;
+            var id=(new Date()).getTime();
             //we remember this request as the currently last request being run
             //we could also prevent a new request if we want
             self.requestRunning=id;
