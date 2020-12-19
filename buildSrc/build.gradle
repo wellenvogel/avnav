@@ -1,0 +1,9 @@
+repositories {
+    mavenCentral()
+}
+
+dependencies{
+    compile 'commons-net:commons-net:3.3'
+}
+
+apply plugin: "groovy"
