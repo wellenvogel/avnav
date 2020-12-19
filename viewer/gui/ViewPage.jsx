@@ -52,8 +52,12 @@ class ViewPageBase extends React.Component{
         this.type=this.props.options.type;
         this.name=this.props.options.name;
         this.url=this.props.options.url;
-        if (this.props.options.readOnly || this.isImage() || this.url){
+        this.html=this.props.options.html;
+        if (this.props.options.readOnly || this.isImage() || this.url || this.html){
             state.readOnly=true;
+        }
+        if (this.html){
+            state.data=this.html;
         }
         this.state=state;
         this.changed=this.changed.bind(this);
@@ -151,6 +155,7 @@ class ViewPageBase extends React.Component{
         if (this.type == 'route') return "gpx";
         if (this.type == 'layout') return 'json';
         if (this.url) return Helper.getExt(this.url);
+        if (this.html) return 'html';
         return Helper.getExt(this.name);
     }
     isImage(){
@@ -158,7 +163,7 @@ class ViewPageBase extends React.Component{
         return (GuiHelpers.IMAGES.indexOf(ext) >= 0);
     }
     canChangeMode(){
-        return this.getExt() == 'html' && ! this.props.options.readOnly && ! this.url;
+        return this.getExt() == 'html' && ! this.props.options.readOnly && ! this.url && ! this.html;
     }
     getLanguage(){
         let ext=this.getExt();
@@ -173,6 +178,9 @@ class ViewPageBase extends React.Component{
     componentDidMount(){
         let self=this;
         if (this.isImage()) return;
+        if (this.html) {
+            return;
+        }
         Requests.getHtmlOrText(this.getUrl(true),{noCache:true}).then((text)=>{
             if (! this.state.readOnly || this.canChangeMode()) {
                 let language = self.getLanguage();
@@ -200,6 +208,7 @@ class ViewPageBase extends React.Component{
         if (this.url){
             mode=this.props.options.useIframe?4:1;
         }
+        if (this.html) mode=1;
         let showView=this.state.readOnly || this.canChangeMode();
         let showEdit=!this.state.readOnly || this.canChangeMode();
         let viewData=(showEdit && this.flask)?this.flask.getCode():this.state.data;

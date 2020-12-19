@@ -109,12 +109,11 @@ class FeatureInfoDialog extends React.Component{
         if (! this.props.link && ! this.props.htmlInfo) return;
         this.props.closeCallback();
         let url=this.props.link;
-        let useIframe=true;
         if (this.props.htmlInfo){
-            url = 'data:text/html,' + encodeURIComponent(this.props.htmlInfo);
-            useIframe=false;
+            history.push('viewpage',{html:this.props.htmlInfo,name:this.props.name||'featureInfo'});
+            return;
         }
-        history.push('viewpage',{url:url,name:this.props.name,useIframe:useIframe});
+        history.push('viewpage',{url:url,name:this.props.name,useIframe:true});
     }
     hideAction(){
         if (! this.props.overlaySource) return;

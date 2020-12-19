@@ -105,10 +105,10 @@ var rpmGauge = {
         //we need to compute the "ticks" that should be displayed from
         //minValue and maxValue
         if (props.minValue !== undefined && props.maxValue !== undefined) {
-            let inc = Math.floor((props.maxValue - props.minValue) / 10);
+            var inc = Math.floor((props.maxValue - props.minValue) / 10);
             if (inc < 1) inc = 1;
-            let majorTicks = [];
-            for (let i = Math.round(props.minValue); i <= props.maxValue; i += inc) {
+            var majorTicks = [];
+            for (var i = Math.round(props.minValue); i <= props.maxValue; i += inc) {
                 majorTicks.push(i);
             }
             props.majorTicks = majorTicks;

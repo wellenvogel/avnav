@@ -35,10 +35,11 @@ import {GeoJSON as olGeoJSONFormat} from 'ol/format';
 import {Style as olStyle,Circle as olCircle, Stroke as olStroke, Text as olText, Icon as olIcon, Fill as olFill} from 'ol/style';
 import * as olTransforms  from 'ol/proj/transforms';
 import OverlayConfig from "./overlayconfig";
-import FeatureInfoDialog from '../components/FeatureInfoDialog';
 import Helper from "../util/helper";
 import KmlChartSource from "./kmlchartsource";
 import GeoJsonChartSource from "./geojsonchartsource";
+import pepjsdispatcher from '@openlayers/pepjs/src/dispatcher';
+import pepjstouch from '@openlayers/pepjs/src/touch';
 
 
 const PSTOPIC="mapevent";
@@ -243,6 +244,13 @@ const MapHolder=function(){
      * @type {{}}
      */
     this.mapEventSubscriptions={};
+
+    /**
+     * pepjs polyfill handling for converting touch events to pointer events
+     * we need to handle this somehow by our own
+     * @type {undefined}
+     */
+    this.evDispatcher=undefined;
 };
 
 base.inherits(MapHolder,DrawingPositionConverter);
@@ -337,6 +345,19 @@ MapHolder.prototype.renderTo=function(div){
         this.timer=window.setInterval(()=>{self.timerFunction()},1000)
     }
     if (div){
+        if (! window.PointerEvent) {
+            let viewport = document.querySelectorAll('.ol-viewport')[0];
+            if (viewport) {
+                if (!this.evDispatcher) {
+                    this.evDispatcher = pepjsdispatcher;
+                    this.evDispatcher.registerSource('touch', pepjstouch);
+                }
+                if (!viewport.hasAttribute('touch-action')) {
+                    viewport.setAttribute('touch-action', 'none');
+                    this.evDispatcher.register(document.querySelectorAll('.map')[0]);
+                }
+            }
+        }
         let baseVisible=globalStore.getData(keys.properties.layers.base,false);
         this.olmap.getLayers().forEach((layer)=>{
             if (layer.avnavOptions && layer.avnavOptions.isBase){

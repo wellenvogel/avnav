@@ -104,7 +104,12 @@ module.exports = {
                     loader: 'babel-loader',
                     options:
                     {
-                        presets: ['@babel/preset-react', '@babel/preset-env'],
+                        presets: ['@babel/preset-react', ["@babel/preset-env",
+                            { targets: {
+                                browsers: "> 0.25%, not dead, safari 9, safari 10, safari 11"
+                                }
+                            }
+                            ]],
                         plugins: [
                             ["prismjs", {
                                 "languages": ["javascript", "css", "markup","json"],

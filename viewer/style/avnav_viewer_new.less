@@ -177,12 +177,8 @@ html,body {
   &.nested{
     font-size: 1em;
   }
-
-  .inner{
-    overflow: auto;
-  }
+  overflow: auto;
   .flexInner{
-    overflow: auto;
     .flex-display();
     .flex-direction(column);
   }
@@ -1428,6 +1424,14 @@ span.valuePrefix{
     .map{
       .flex(1);
       overflow: hidden;
+      /* position absolute contradicts somehow the flex approach
+         but otherwise the map will not show on old Safari (IPad 4, safari 9)
+       */
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
     }
     min-width: 0;
     min-height: 0;

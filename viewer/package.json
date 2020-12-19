@@ -15,7 +15,6 @@
   },
   "author": "Andreas Vogel",
   "license": "MIT",
-  "browserslist": "> 0.25%, not dead",
   "devDependencies": {
     "@babel/core": "^7.12.3",
     "@babel/preset-env": "^7.12.1",
@@ -59,6 +58,7 @@
   },
   "dependencies": {
     "@babel/polyfill": "^7.7.0",
+    "@openlayers/pepjs": "^0.5.4",
     "PubSub": "^3.6.0",
     "canvas-gauges": "^2.1.5",
     "codeflask": "git+https://github.com/wellenvogel/CodeFlask.git#20201108",
