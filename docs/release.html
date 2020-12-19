@@ -12,8 +12,8 @@
     enthält eine detaillierte Beschreibung der Installationsoptionen. Auf dieser
     Seite finden sich Informationen zu den einzelnen Release-Versionen.<br>
     Nicht mit jedem update werden neue Images bereitgestellt. Zwischen-Updates
-    sind entweder <a href="../downloads/daily/">Entwickler-Versionen</a> oder
-    <a href="../downloads/release/">Releases</a>.<br>
+    sind entweder <a href="../downloads/daily/">Entwickler-Versionen</a> oder <a
+      href="../downloads/release/">Releases</a>.<br>
     Um ein solches Update zu installieren, benötigt man eine Kommandozeile auf
     dem pi. Von Windows aus geht das z.B. mit <a href="https://www.putty.org/">putty
       </a>. Dazu die IP Adresse vom pi ermitteln und dann mit putty dorthin
@@ -36,6 +36,69 @@ sudo systemctl start avnav</div>
     <br>
     <div> </div>
     <h2>Versionen</h2>
+    <p> <span style="font-weight: bold;">20201219</span> <a title="release/20201219"
+        href="../downloads/release/20201219">link</a></p>
+    <ul>
+      <li><a href="hints/overlays.html">Karten Overlays</a></li>
+      <ul>
+        <li>Man kann&nbsp; gpx,kml,kmz und geojson Dateien über die Karten
+          legen. </li>
+        <li>Mehrere Karten übereinander legen.</li>
+        <li>Anzeige von vorhandenen Tracks und Routen</li>
+        <li>Nutzerdefinierte Symbole und links mit HTML Seiten</li>
+        <li>Anzeige von Inofrmationen zu einem Punkt beim Klick</li>
+      </ul>
+      <li><a href="hints/ocharts.html#featureinfo">Anzeige von
+          Objekt-Informationen</a> (Feature Query) bei o-charts (erfordert neue
+        <a href="hints/ocharts.html#Releases">avnav-ocharts Version</a>)</li>
+      <li>Erweiterungen beim Track Handling</li>
+      <ul>
+        <li>Anzeige von Informationen (Länge, Zeit, Geschwindigkeit)</li>
+        <li><a href="https://github.com/wellenvogel/avnav/issues/67">#67</a>:
+          Anzeige von Tracks auf der Karte (als Overlay)</li>
+        <li><a href="hints/TracksToRoutes.html">Konvertierung</a> von Tracks zu
+          Routen</li>
+        <li>Import von gpx Tracks</li>
+      </ul>
+      <li>Verbesserungen im Routen Handling</li>
+      <ul>
+        <li><a href="userdoc/editroutepage.html#routedialog">Neuer Dialog</a>
+          für Umbenennen, Leeren, Kopieren, Löschen</li>
+        <li>Verbinden von Routen</li>
+        <li><a href="https://github.com/wellenvogel/avnav/issues/9">#9</a> Nutze
+          einen Wegepunkt aus einer Gpx Datei zum Hinzufügen zu Routen</li>
+        <li>Routen können jetzt auch "rückwärts" gebaut werden ("insert before")</li>
+      </ul>
+      <li>Verbessertes Fehlerhandling</li>
+      <ul>
+        <li>Zeige einen Fehlerdialog mit der Möglichkeit den Fehler zu speichern</li>
+        <li>Anzeige von Fehlern in der user.js</li>
+      </ul>
+      <li>Erweiterungen in den Settings</li>
+      <ul>
+        <li>"increase fonts on hires" - Vergrößerung verschiedener
+          Anzeige-Elemente bei hochauflösenden Displays</li>
+        <li>"Overlay Info on Click" - Anzeige von Overlay Informationen wenn man
+          auf die Karte klickt (default: ein)<br>
+          das steuert auch die Anzeige von Objekt-Informationen bei Ocharts</li>
+        <li>"Always Info on Chart Click" - Anzeige einer Information in
+          Bereichen ohne Overlays (default: aus)</li>
+      </ul>
+      <li>Verbesserte Dokumentation</li>
+      <ul>
+        <li><a href="hints/keyboard.html">Tastaturunterstützung</a> beschrieben</li>
+        <li><a href="docmap.html">Index</a></li>
+      </ul>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/79">#79</a>:
+        Aufrufparameter noCloseDialog um die Abfrage beim Verlassen der Seite zu
+        verhindern</li>
+      <li>Fehlerkorrekturen:</li>
+      <ul>
+        <li>Zurückspringen zur Startseite nach Klick auf ein AIS symbol</li>
+        <li>"cancelTop" funktioniert jetzt auch unter firefox</li>
+        <li>Korrektes Senden von MTA NMEA Sätzen ($ am Anfang fehlte)</li>
+      </ul>
+    </ul>
     <p> <span style="font-weight: bold;">20201202</span> <a title="release/20201202"
         href="../downloads/release/20201202">link</a> </p>
     <p> Fehlerkorrekturversion für 20201105 </p>

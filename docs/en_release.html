@@ -29,12 +29,73 @@ nano /home/pi/avnav/data/avnav_server.xml # dann ändern und speichern
 sudo systemctl start avnav</div>
     <br>
     You will find only hints for <a href="../downloads/release/">released
-      versions</a> on this page. For <a href="../downloads/daily/">daily
-      builds</a> refer to the <a href="https://github.com/wellenvogel/avnav/commits/master">commits
+      versions</a> on this page. For <a href="../downloads/daily/">daily builds</a>
+    refer to the <a href="https://github.com/wellenvogel/avnav/commits/master">commits
       on GitHub</a> .<br>
     <br>
     <div> </div>
     <h2>Versions</h2>
+    <p> <span style="font-weight: bold;">20201219</span> <a title="release/20201219"
+        href="../downloads/release/20201219">link</a></p>
+    <ul>
+      <li><a href="hints/overlays.html">Chart Overlays</a></li>
+      <ul>
+        <li>show gpx,kml,kmz and geojson files on the chart</li>
+        <li>stack multiple charts on top of each other</li>
+        <li>show available tracks and routes</li>
+        <li>user defined symbols and links to HTML pages</li>
+        <li>information dialog when clicking on chart object</li>
+      </ul>
+      <li><a href="hints/ocharts.html#featureinfo">Display of object information</a>
+        (Feature Query) at o-charts (requires new <a href="hints/ocharts.html#Releases">avnav-ocharts
+          version</a>)</li>
+      <li>Extensions in track handling</li>
+      <ul>
+        <li>information display(length, time,speed)</li>
+        <li><a href="https://github.com/wellenvogel/avnav/issues/67">#67</a>:
+          display of tracks on the chart (as overlays)</li>
+        <li><a href="hints/TracksToRoutes.html">Converting</a> tracks to routes</li>
+        <li>Importing of gpx tracks</li>
+      </ul>
+      <li>Improvement in route handling</li>
+      <ul>
+        <li><a href="userdoc/editroutepage.html#routedialog">New dialog</a> for
+          rename, copy,delete, empty, invert</li>
+        <li>Combining of routes</li>
+        <li><a href="https://github.com/wellenvogel/avnav/issues/9">#9</a> add
+          waypoints from a gpx file to routes</li>
+        <li>build routes "backwards" ("insert before")</li>
+      </ul>
+      <li>Improved error handling</li>
+      <ul>
+        <li>Show an error dialog with the ability to save the error</li>
+        <li>Show errors in the user.js</li>
+      </ul>
+      <li>Settings extensions</li>
+      <ul>
+        <li>"increase fonts on hires" - Scale up various elements on high
+          resolution displays</li>
+        <li>"Overlay Info on Click" - Show an information dialog when clicking
+          on chart objects (default: on)<br>
+          this also enables the object info for o-charts</li>
+        <li>"Always Info on Chart Click" - Also show a dialog on areas without
+          objects (default: off)</li>
+      </ul>
+      <li>Improved cocumentation</li>
+      <ul>
+        <li><a href="hints/keyboard.html">Keyboard support documented</a> </li>
+        <li><a href="docmap.html">Index</a></li>
+      </ul>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/79">#79</a>:
+        Start parameter noCloseDialog to prevent close dialog when leaving the
+        AvNav page</li>
+      <li>Bugfixes:</li>
+      <ul>
+        <li>Go back to mainpage after clicking on AIS object</li>
+        <li>"cancelTop" is working in firefox</li>
+        <li>Correctly send out MTA NMEA sentences (missing $)</li>
+      </ul>
+    </ul>
     <p> <span style="font-weight: bold;">20201202</span> <a title="release/20201202"
         href="../downloads/release/20201202">link</a> </p>
     <p> Bugfix version for 20201105 </p>
