@@ -33,8 +33,8 @@ if (getParam('dimm')) avnav.testDim=true;
 
 import React from 'react';
 import ReactDOM from 'react-dom';
-import OverlayDialog from './components/OverlayDialog.jsx';
 import propertyHandler from './util/propertyhandler';
+import OverlayDialog from './components/OverlayDialog.jsx';
 import App from './App.jsx';
 import history from './util/history';
 import MapHolder from './map/mapholder';
