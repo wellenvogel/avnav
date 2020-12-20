@@ -441,12 +441,20 @@ task addImagesToDoc(type: DefaultTask){
         }
     }
 }
+task uploadDownloadIndex(type: UploadTask){
+    inputFile=file("docs/downloads/index.json")
+    deleteTargetDir=false
+    baseDir=""
+    subDir=null
+    useHashes=false
+}
+
 task uploadDoc(type: UploadTask){
     inputFiles=docTree
     deleteTargetDir=false
     baseDir="../docs"
     useHashes=true
-    dependsOn addImagesToDoc, 'buildDocMap'
+    dependsOn addImagesToDoc, 'buildDocMap', uploadDownloadIndex
 }
 
 task computeDocHashes(type:DefaultTask){

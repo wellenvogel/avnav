@@ -7,6 +7,7 @@ if [ "$1" != "" ] ; then
 fi
 set -x
 rsync -rav --no-links --include=.htaccess --exclude="*bak" --exclude="*odg" --exclude="*php" --delete $BASE/docs/ $TARGET/docs
+rsync -rav --no-links --include=.htaccess --exclude="*bak" --exclude="*odg" --exclude="*php" $BASE/docs/downloads/ $TARGET/downloads
 rsync -rav --include="*php" --exclude="*" $BASE/docs/ $TARGET
 rsync -rav --delete $BASE/viewer/build/$SUB/ $TARGET/viewern
 rsync -rav --delete $BASE/viewer/demo/ $TARGET/viewer
