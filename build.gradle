@@ -520,9 +520,12 @@ def findHeadings(fileTree,rlang){
           def relPath=element.getRelativePath().getParent().getPathString()
           def pageTitle=null
           //first get the h1
-          page.'**'.findAll({node->node.name()=='h1'}).each{ h1 ->
-            if (pageTitle == null && !h1.text().isEmpty()) pageTitle=h1.text();
+          page.'**'.findAll({node->node.name()=='h1'}).each { h1 ->
+              if (pageTitle == null && !h1.text().isEmpty()) pageTitle = h1.text();
           }
+          def bodyElem=page.body
+          def pageOrder=bodyElem['@data-order']
+
           if (pageTitle == null) return;
           def pageName=element.getName()
           def lang='de';
@@ -543,8 +546,11 @@ def findHeadings(fileTree,rlang){
                     relPath:relPath,
                     page: pageTitle,
                     text: node.text(),
-                    depth: element.getRelativePath().getSegments().length
+                    depth: element.getRelativePath().getSegments().length,
                     ]
+                if (pageOrder.toString() != "") {
+                    entry['pageOrder']=pageOrder.toInteger()
+                }
                 result.add(entry)
             }
           }  
@@ -567,6 +573,7 @@ task buildDocMap(type: DefaultTask){
     def list=fileTree("docs",{
                     include "**/*html"
                     exclude "**/*docmap.html"
+                    exclude "**/*onepage.html"
             })
     inputs.files list        
     doLast(){
