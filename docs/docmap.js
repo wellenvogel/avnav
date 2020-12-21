@@ -23,8 +23,16 @@ function buildDocMap(lang,container){
     });
 }
 
+function nameFromPage(pageName){
+   return pageName.replace(/[/.]/g,'_');  
+}
+function headingTextToAnchor(tag,txt){
+    if (! txt) return;
+    return tag+":"+txt.replaceAll(/[^a-zA-Z0-9_-]/g,'');
+}
+
 function buildOnePage(lang,container){
-    var name=lang+'_docmapdata.json'
+    let name=lang+'_docmapdata.json'
     fetch(name)
     .then(function(response){
         if (response.status < 200 || response.status >= 300){
@@ -33,33 +41,97 @@ function buildOnePage(lang,container){
         }
         return response.json();
     }).then(function(json){
-        var parent=$(container);
-        var pages={}
+        let parent=$(container);
+        let pages={}
         json.forEach(function(item){
             var page=item.href.replace(/[?#].*/,'');
             pages[page]=1;
         });
         let base=window.location.href.replace(/[#?].*/,'');
-        for (var pageName in pages){
-            var el=$('<iframe class="printPage"/>').attr('src',pageName).attr('frameborder',0).attr('scrolling','no');
-            $(el).on('load',function(ev) {
-                var obj=ev.target;
-                var body=obj.contentWindow.document.body;
-                obj.style.height = body.scrollHeight + 'px';
-                $(obj.contentWindow.document.body).addClass('printBody');
-                $(body).find('a').each(function(idx,link){
-                    var href=$(link).attr('href');
-                    if (! href) return;
-                    if (href.match(/^http/)) return;
-                    href=href.replace(/.*software\/avnav\/docs[/]*/,'');
-                    $(link).attr('href',base+'#'+href.replace(/[#?].*/,'')); //no idea how to link into the iframe...
-                })
-            })
-            var anchor=$('<a/>').attr('name',pageName);
+        let toc=$('<div class="onePageToc"/>');
+        $(container).append(toc);
+        for (let pageName in pages){
+            let name=nameFromPage(pageName);
+            let el=$('<div class="printPage"/>').attr('id',name)
+            let anchor=$('<a>').attr('name',name);
             $(parent).append(anchor);
             $(parent).append(el);
+            let pageBase=pageName.replace(/[^/]*$/,'');
+            let replacements=[];
+            if (pageBase != '') {
+                let baseParts=pageBase.split(/[/]+/);
+                for (let i=baseParts.length-1;i--;i>=0){
+                    replacements.push(new RegExp(baseParts[i]+"\\/\\.\\."))
+                }
+                pageBase+="/";
+            }
+            
+            fetch(pageName)
+                .then(function(response){return response.text()})
+                .then(function(pageData){
+                    let tocInserted=false;
+                    let page=$('<div/>',{html:pageData});
+                    //insert first h1 of page as TOC
+                    $(page).find('h1').each(function(idx,hdl){
+                        if (tocInserted) return true;
+                        let tocEntry=$('<div class="tocEntry tocLevel0"/>');
+                        tocEntry.append($('<a/>').attr('href','#'+name).text($(hdl).text()));
+                        toc.append(tocEntry);
+                        tocInserted=true;
+                    });
+                    $(page).find('a').each(function(idx,link){
+                        let href=$(link).attr('href');
+                        if (! href) {
+                            let anchor=$(link).attr('name');
+                            if (! anchor) return;
+                            anchor=name+":"+anchor;
+                            $(link).attr('name',anchor);
+                            return;
+                        };
+                        if (href.match(/^http/)) return;
+                        if (href.match(/^mailto:/)) return;
+                        if (href.match(/.*software\/avnav\/docs[/]*/)){
+                            href=href.replace(/.*software\/avnav\/docs[/]*/,'');
+                        }
+                        else{
+                            href=(pageBase+href).replace(/[/]+/,'/');
+                        }
+                        replacements.forEach(function(repl){
+                            href=href.replace(repl,"");
+                        });
+                        //check if we are still outside
+                        if (href.match(/^\.\./)) return;
+                        href=href.replace(/^\/*/,'').replace(/[?].*/,'');
+                        let parts=href.split("#");
+                        let newTarget="#"+nameFromPage(parts[0]);
+                        if (parts.length > 1 && parts[1]){
+                            newTarget+=":"+parts[1];
+                        }
+                        $(link).attr('href',newTarget);
+                    })
+                    $(page).find('img').each(function(idx,link){
+                        let href=$(link).attr('src');
+                        if (! href) return;
+                        if (href.match(/^http/)) return;
+                        if (href.match(/.*software\/avnav\/docs[/]*/)){
+                            href=href.replace(/.*software\/avnav\/docs[/]*/,'');
+                        }
+                        else{
+                            href=(pageBase+href).replace(/[/]+/,'/');
+                            replacements.forEach(function(repl){
+                                href=href.replace(repl,"");
+                            });
+                            href=href.replace(/^\/*/,'');
+                        }
+                    
+                        $(link).attr('src',href);
+                    })
+                    $('#'+name).html(page);
+                    generateToc($('#'+name),name+":");
+                })
+                .catch(function(error){});
+            continue;    
         };
-        updateLanguage();
     })
     .catch(function(error){
         $('<p class="error"/>')
