@@ -1,3 +1,13 @@
+
+function docmapSort(a,b){
+    if (a.pageOrder === undefined && b.pageOrder !== undefined) return 1;
+    if (a.pageOrder !== undefined && b.pageOrder === undefined) return -1;
+    if (a.pageOrder === undefined && b.pageOrder === undefined) return 0;
+    if (a.pageOrder < b.pageOrder) return -1;
+    if (a.pageOrder > b.pageOrder) return 1;
+    return 0;
+
+}
 function buildDocMap(lang,container){
     var name=lang+'_docmapdata.json'
     fetch(name)
@@ -8,6 +18,7 @@ function buildDocMap(lang,container){
         }
         return response.json();
     }).then(function(json){
+        json.sort(docmapSort);
         var parent=$(container);
         json.forEach(function(item){
             var el=$('<div class="docMapItem docMapLevel'+item.tag+'"/>');
@@ -41,21 +52,39 @@ function buildOnePage(lang,container){
         }
         return response.json();
     }).then(function(json){
+        json.sort(docmapSort);
         let parent=$(container);
         let pages={}
         json.forEach(function(item){
-            var page=item.href.replace(/[?#].*/,'');
-            pages[page]=1;
+            let page=item.href.replace(/[?#].*/,'');
+            pages[page]=item.pageOrder||99999;
         });
+        let pageList=[];
+        for (let page in pages){
+            pageList.push({name:page,pageOrder:pages[page]});
+        }
+        pageList.sort(docmapSort);
         let base=window.location.href.replace(/[#?].*/,'');
+        let date=new Date();
+        let dateText;
+        if (lang == 'en'){
+            dateText="Generated: "+date.getFullYear()+"/"+(date.getMonth()+1)+"/"+date.getDate();
+        }
+        else{
+            dateText="Erzeugt: "+date.getDate()+"."+(date.getMonth()+1)+"."+date.getFullYear();
+        }
+        $(container).append($('<div class"onePageDate"/>').text(dateText));
         let toc=$('<div class="onePageToc"/>');
         $(container).append(toc);
-        for (let pageName in pages){
+        for (let idx=0;idx<pageList.length;idx++){
+            let pageName=pageList[idx].name;
             let name=nameFromPage(pageName);
             let el=$('<div class="printPage"/>').attr('id',name)
             let anchor=$('<a>').attr('name',name);
             $(parent).append(anchor);
             $(parent).append(el);
+            let tocEntry=$('<div class="tocEntry tocLevel0"/>').attr('id','toc_'+name);
+            toc.append(tocEntry);
             let pageBase=pageName.replace(/[^/]*$/,'');
             let replacements=[];
             if (pageBase != '') {
@@ -74,9 +103,8 @@ function buildOnePage(lang,container){
                     //insert first h1 of page as TOC
                     $(page).find('h1').each(function(idx,hdl){
                         if (tocInserted) return true;
-                        let tocEntry=$('<div class="tocEntry tocLevel0"/>');
-                        tocEntry.append($('<a/>').attr('href','#'+name).text($(hdl).text()));
-                        toc.append(tocEntry);
+                        let tocEntry=$('#toc_'+name);
+                        tocEntry.append($('<a/>').attr('href','#'+name).text($(hdl).text()));                    
                         tocInserted=true;
                     });
                     $(page).find('a').each(function(idx,link){
