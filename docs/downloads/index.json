@@ -1,0 +1,20 @@
+{
+    "title":"Wellenvogel-AvNav",
+    "headline": "Wellenvogel AvNav",
+    "headlineLink":"../docs/beschreibung.html",
+    "menutitle": "AvNav",
+    "navlist":[
+        {"title":"Einführung","en_title":"Introduction","url":"../docs/beschreibung.html"},
+        {"title":"Quickstart","url":"../docs/quickstart.html"},
+        {"title":"Demo","url":"../docs/demo.html"},
+        {"title":"Installation","url":"../docs/install.html"},
+        {"title":"Releases","url":"../docs/release.html"},
+        {"title":"Karten","en_title":"Charts","url":"../docs/charts.html"},
+        {"title":"Benutzung","en_title":"Usage","url":"../docs/userdoc/index.html"},
+        {"title":"Konfiguration & Technik","en_title":"Configuration","url":"../docs/hints/index.html"},
+        {"title":"Android","url":"../docs/android.html"},
+        {"title":"Index","url":"../docs/docmap.html"},
+        {"title":">Segeln","en_title":"Sailing","url":"../../../segeln/index.html"},
+         {"title":">Software","url":"../../../software/index.html"}
+    ]
+}

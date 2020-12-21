@@ -66,7 +66,7 @@ function buildOnePage(lang,container){
                 pageBase+="/";
             }
             
-            fetch(pageName)
+            fetch(pageName+"?lang="+lang)
                 .then(function(response){return response.text()})
                 .then(function(pageData){
                     let tocInserted=false;
