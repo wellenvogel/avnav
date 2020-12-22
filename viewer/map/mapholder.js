@@ -40,6 +40,7 @@ import KmlChartSource from "./kmlchartsource";
 import GeoJsonChartSource from "./geojsonchartsource";
 import pepjsdispatcher from '@openlayers/pepjs/src/dispatcher';
 import pepjstouch from '@openlayers/pepjs/src/touch';
+import pepjsmouse from '@openlayers/pepjs/src/mouse';
 
 
 const PSTOPIC="mapevent";
@@ -350,12 +351,18 @@ MapHolder.prototype.renderTo=function(div){
             if (viewport) {
                 if (!this.evDispatcher) {
                     this.evDispatcher = pepjsdispatcher;
-                    this.evDispatcher.registerSource('touch', pepjstouch);
+                    if ('ontouchstart' in window) {
+                        this.evDispatcher.registerSource('touch', pepjstouch);
+                    }
+                    else{
+                        this.evDispatcher.registerSource('mouse',pepjsmouse);
+                    }
                 }
                 if (!viewport.hasAttribute('touch-action')) {
                     viewport.setAttribute('touch-action', 'none');
-                    this.evDispatcher.register(document.querySelectorAll('.map')[0]);
                 }
+                base.log("register map in pepjs");
+                this.evDispatcher.register(document.querySelectorAll('.map')[0]);
             }
         }
         let baseVisible=globalStore.getData(keys.properties.layers.base,false);
@@ -364,6 +371,15 @@ MapHolder.prototype.renderTo=function(div){
                 layer.setVisible(baseVisible);
             }
         })
+    }
+    else{
+        if (this.evDispatcher){
+            let oldMap=document.querySelectorAll('.map')[0];
+            if (oldMap) {
+                base.log("unregister map in pepjs");
+                this.evDispatcher.unregister(oldMap);
+            }
+        }
     }
     this.updateSize();
 };
