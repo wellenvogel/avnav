@@ -381,10 +381,10 @@ task uploadRepoDaily(type: UploadSftp){
         include "avnav_${project.avnavVersion}_all.deb"
         include "avnav-raspi_${project.avnavVersion}_all.deb"
     })
-    server='sftp.hidrive.strato.com'
+    server='free-x.de'
     base=''
-    baseDir="/public/share/avnav/daily/${project.avnavVersion}"
-    user="andvogel"
+    baseDir="daily/avnav/${project.avnavVersion}"
+    user="wellenvogel"
     doFirst{
         assert System.getenv('AVNAV_REPO_KEY')
     }
@@ -396,10 +396,10 @@ task uploadRepoRelease(type: UploadSftp){
         include "avnav_${project.avnavVersion}_all.deb"
         include "avnav-raspi_${project.avnavVersion}_all.deb"
     })
-    server='sftp.hidrive.strato.com'
+    server='free-x.de'
     base=''
-    baseDir="/public/share/avnav/release/${project.avnavVersion}"
-    user="andvogel"
+    baseDir="release/avnav/${project.avnavVersion}"
+    user="wellenvogel"
     doFirst{
         assert System.getenv('AVNAV_REPO_KEY')
     }
