@@ -334,36 +334,77 @@ task beta{
 }
 
 
-
+def UPLOAD_GROUP="avnavUpload"
 
 
 task uploadDeb(type: UploadTask){
+    group=UPLOAD_GROUP
     inputFile=file("$buildDir/distributions/avnav_${project.avnavVersion}_all.deb")
     dependsOn releaseDeb
+    baseDir="daily/${project.avnavVersion}"
 }
 task uploadRaspi(type: UploadTask){
+    group=UPLOAD_GROUP
     inputFile=file("$buildDir/distributions/avnav-raspi_${project.avnavVersion}_all.deb")
     dependsOn raspiDeb
+    baseDir="daily/${project.avnavVersion}"
 }
 task uploadZip(type: UploadTask){
+    group=UPLOAD_GROUP
     inputFile=file("$buildDir/distributions/avnav-${project.avnavVersion}.zip")
     dependsOn buildZip
+    baseDir="daily/${project.avnavVersion}"
 }
 task uploadRpm(type: UploadTask){
+    group=UPLOAD_GROUP
     inputFile=file("$buildDir/distributions/avnav-${project.avnavVersion}.noarch.rpm")
     dependsOn releaseRpm
+    baseDir="daily/${project.avnavVersion}"
 }
 task uploadWindows(type: UploadTask){
+    group=UPLOAD_GROUP
     def windowsVersion=project.avnavVersion.replaceAll(/(....)(..)(..)/,'$1-$2-$3').replaceAll(/-0([^-])/,'-$1')
     inputFile=file("windows/build/AvNavSetup-${windowsVersion}-0.exe")
     dependsOn windowsBuild
+    baseDir="daily/${project.avnavVersion}"
 }
 task uploadWindowsNet(type: UploadTask){
+    group=UPLOAD_GROUP
     def windowsVersion=project.avnavVersion.replaceAll(/(....)(..)(..)/,'$1-$2-$3').replaceAll(/-0([^-])/,'-$1')
     inputFile=file("windows/build/AvNavNetSetup-${windowsVersion}-0.exe")
     dependsOn windowsBuild
+    baseDir="daily/${project.avnavVersion}"
 }
 
+task uploadRepoDaily(type: UploadSftp){
+    inputFiles=fileTree("$buildDir/distributions",{
+        include "avnav_${project.avnavVersion}_all.deb"
+        include "avnav-raspi_${project.avnavVersion}_all.deb"
+    })
+    server='sftp.hidrive.strato.com'
+    base=''
+    baseDir="/public/share/avnav/daily/${project.avnavVersion}"
+    user="andvogel"
+    doFirst{
+        assert System.getenv('AVNAV_REPO_KEY')
+    }
+    dependsOn 'beta'
+}
+
+task uploadRepoRelease(type: UploadSftp){
+    inputFiles=fileTree("$buildDir/distributions",{
+        include "avnav_${project.avnavVersion}_all.deb"
+        include "avnav-raspi_${project.avnavVersion}_all.deb"
+    })
+    server='sftp.hidrive.strato.com'
+    base=''
+    baseDir="/public/share/avnav/release/${project.avnavVersion}"
+    user="andvogel"
+    doFirst{
+        assert System.getenv('AVNAV_REPO_KEY')
+    }
+    dependsOn 'release'
+}
 
 task uploadAccess(type: UploadHtAccess){
     sourceName=project.avnavRelease?"release.htaccess":"daily.htaccess"
@@ -382,10 +423,12 @@ if (ks) sign=""
 task uploadAndroidRelease(type: UploadTask){
     inputFile=file("android/build/outputs/apk/release/avnav-release$sign-${avnavVersion}.apk")
     dependsOn assembleReleaseAndroid
+    baseDir="release/${project.avnavVersion}"
 }
 task uploadAndroidBeta(type: UploadTask){
     inputFile=file("android/build/outputs/apk/beta/avnav-beta-${avnavVersion}.apk")
     dependsOn assembleBetaAndroid
+    baseDir="daily/${project.avnavVersion}"
 }
 
 task uploadViewer(type: UploadTask){
@@ -445,7 +488,6 @@ task uploadDownloadIndex(type: UploadTask){
     inputFile=file("docs/downloads/index.json")
     deleteTargetDir=false
     baseDir=""
-    subDir=null
     useHashes=false
 }
 
@@ -748,7 +790,10 @@ afterEvaluate{
     }
     if (project.avnavRelease) {
         tasks.withType(UploadTask.class) { UploadTask task ->
-            if (! task.name.equals("uploadViewerRelease") && ! task.name.equals("uploadAccessWindows")) task.baseDir = "release"
+            if (task.group != UPLOAD_GROUP) return;
+            def baseDir = "release/${project.avnavVersion}"
+            logger.info("setting baseDir for ${task.name} to $baseDir")
+            task.baseDir=baseDir
 
         }
     }

@@ -29,7 +29,6 @@ class UploadHtAccess extends UploadTask{
         inputFile=new File(project.buildDir,src.getName())
         createHtAccess(src,inputFile,version)
         getTargetName={ return ".htaccess"}
-        subDir=null
         super.exec()
 
     }
