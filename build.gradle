@@ -620,6 +620,8 @@ task findBrokenLinks(type: DefaultTask){
             })
     inputs.files list 
     doLast(){
+        def anchorMap=[:]
+        def requestedAnchors=[]
         list.visit{ FileVisitDetails element ->
           if (! element.getFile().isFile()) return;
           if (! element.getName().matches('.*html$')) return;  
@@ -629,19 +631,44 @@ task findBrokenLinks(type: DefaultTask){
           def relPath=element.getRelativePath().getParent().getPathString()
           if (! relPath.isEmpty()) relPath+="/"
           page.'**'.findAll().each{ node->
+            def line=node["@"+MySlurper.LINE_NUM_ATTR]
+            if (node.name() == 'a'){
+                def anchorName=node.@name
+                if (!anchorName.isEmpty()){
+                    def anchorlink=pageName+"#"+anchorName;
+                    logger.info("adding achor $anchorlink")
+                    anchorMap[anchorlink]=[page:pageName,anchor:anchorName,line:line]
+                }
+            }
             def link=node.@src
             if (link.isEmpty()) link=node.@href
             if (link.isEmpty()) return;
             link=link.toString()
-            link=link.replaceAll("[#?].*","")
-            def line=node["@"+MySlurper.LINE_NUM_ATTR]
             if (link.startsWith("http")) return; //TODO: check online links?
-            def target=file("$baseDir/$relPath$link")
-            if (!target.exists()){
-                println("##$pageName:$line:$relPath$link")
+            if (link.startsWith("mailto:")) return;
+            link=link.replaceAll("[?].*","")
+            def parts=link.split('#')
+            def pageLink=parts[0]
+            if (!pageLink.isEmpty()){        
+                def target=file("$baseDir/$relPath$pageLink")
+                if (!target.exists()){
+                    println("##$pageName:$line:$relPath$pageLink")
+                }
             }
+            if (parts.length > 1){
+                def lpage=parts[0].isEmpty()?pageName:(relPath+parts[0])
+                lpage=lpage.replaceAll("[^/]+/\\.\\./*","")
+                requestedAnchors.add([link:lpage+"#"+parts[1],source:pageName,line:line])
+            }
+            
           }  
           
+        }
+        requestedAnchors.each { anchor ->
+            def destination=anchorMap[anchor.link]
+            if (! destination){
+                println("##@@${anchor.source}:${anchor.line}:${anchor.link}")
+            }
         }
     }
 }
