@@ -12,7 +12,8 @@
     <a href="https://www.youtube.com/playlist?list=PLxNyj_GYzonmrSgnqtHogY7XK-TANk6q3">
     </a>
     <ul class="mainlist">
-      <li class="printPageHidden"><a href="../downloads/en_AvNavDoc.pdf"><img class="inlineimage" title="Everaldo Coelho and YellowIcon;, LGPL &lt;http://www.gnu.org/licenses/lgpl.html&gt;, via Wikimedia Commons"
+      <li class="printPageHidden"><a href="../downloads/en_AvNavDoc.pdf"><img class="inlineimage"
+            title="Everaldo Coelho and YellowIcon;, LGPL &lt;http://www.gnu.org/licenses/lgpl.html&gt;, via Wikimedia Commons"
             src="https://upload.wikimedia.org/wikipedia/commons/6/6b/Crystal_Clear_mimetype_pdf.png">Complete
           documentation as PDF</a></li>
       <li><a href="https://www.youtube.com/playlist?list=PLxNyj_GYzonmrSgnqtHogY7XK-TANk6q3">YouTube
@@ -89,8 +90,8 @@
       <br>
     </p>
     <h2 class="western">Overview</h2>
-    <p><img class="fimage" src="overview.png" name="Grafik1" border="0" width="600" align="LEFT">avnav-raspi-2020<br
-        clear="LEFT">
+    <p><img class="fimage" src="overview.png" name="Grafik1" border="0" width="600"
+        align="LEFT">avnav-raspi-2020<br clear="LEFT">
       The whole solution consists of different parts:</p>
     <ul>
       <li>
@@ -104,7 +105,7 @@
           converting and preparing the charts</p>
       </li>
     </ul>
-    <p>The raspberry pi creates an access point and various devices cann access
+    <p>The raspberry pi creates an access point and various devices can access
       its data:</p>
     <ul>
       <li>
@@ -113,10 +114,10 @@
       </li>
       <li>
         <p>On the devices there is only a browser. All the navigation is handled
-          by the AvNav ajav script app that is downloaded from the raspi. There
-          is no need for any other installed software on the device, only a
-          current HTML5 browser (tested: Chrome Windows, OSX, Safari, Android
-          starting 4.4 – Chrom/Stock/Boat Browser, IOS, Blackberry stockBrowser,
+          by the AvNav WebApp that is downloaded from the raspi. There is no
+          need for any other installed software on the device, only a current
+          HTML5 browser (tested: Chrome Windows, OSX, Safari, Android starting
+          4.4 – Chrome/Stock/Boat Browser, IOS, Blackberry stockBrowser,
           WebBrowser mini).</p>
       </li>
     </ul>
@@ -125,12 +126,16 @@
       configuration to get started. Beside the software itself there are images
       that you can download to get started - see <a href="install.html">installation</a>.</p>
     <p>The java script app provides all the basic navigation functions on raster
-      charts including AIS display, waypoint navigation, routes, tracks,... The
-      charts being used by the web app must be installed on the raspberry. AvNav
-      reads charts in the <a href="http://www.cgtk.co.uk/gemf">gemf</a> format
-      (2020-03 also mbtiles). If you have other formats you have to <a href="charts.html">convert</a>
-      them into gemf - using avnav at the desktop (or directly on the pi). The
-      converter can handle the following formats:</p>
+      charts (<a href="charts.html#chartformats">gemf,mbtiles</a>) or <a href="hints/ocharts.html">OESenc
+        vector charts</a>&nbsp; including AIS display, waypoint navigation,
+      routes, tracks,... The charts being used by the web app must be installed
+      on the raspberry. </p>
+    <p><a href="hints/ocharts.html">OESenc charts</a> can be bought in the <a href="https://www.o-charts.org/">o-charts</a>
+      shop.</p>
+    <p> If you have chart formats that cannot be handled directly in the app you
+      have to <a href="charts.html">convert</a> them into gemf - using avnav at
+      the desktop (or directly on the pi within the App). The converter can
+      handle the following formats:</p>
     <ul>
       <li>
         <p>All chart sources that can be read by <a href="https://gdal.org/">GDAL</a>
@@ -141,7 +146,7 @@
       </li>
     </ul>
     <p>Beside the described set up there is also an&nbsp; <a href="android.html">Android-App</a>
-      that provides similar functions.The server part is implemented natievly in
+      that provides similar functions.The server part is implemented natively in
       Java, the display part is identical.</p>
     <p>The following chapters describe the parts a bit more in detail.</p>
     <h2 class="western">The Server Software (avnav_server.py)</h2>
@@ -149,7 +154,7 @@
         Debian image</a> installed (app. 2GB). Afterwards a couple of additional
       packages will be installed together with AvNav.</p>
     <p>The structire of the server software:</p>
-    <p><img class="fimage" src="software.png" name="Grafik2" border="0" width="600" >
+    <p><img class="fimage" src="software.png" name="Grafik2" border="0" width="600">
     </p>
     <p>The server tries to detect all devices connected via USB-serial and via
       bluetooth-serial. You have to take care that your USB-serial device is
@@ -157,13 +162,13 @@
         one</a>. The server scans connected devices (via dbus) and discoveres
       the device nodes. Afterwards it tries to do some auto-bauding (i.e.
       determine the baudrate for the device) between 4800 and 34000 baud and
-      trying to receive NMEA data. If no data is detected it starts over again
-      by closing and reopening the devices. This way it can cope with
-      disconnecting and reconnecting devices.I have connected a AIS VHF that
-      gets GPS data from the Pi and sends AIS data towards it. If bluetooth
-      serial devices are detected it will also try to read from them.</p>
-    <p>You can also configure deivces to output the data and this way have a
-      NMEA multiplexer.</p>
+      tries to receive NMEA data. If no data is detected it starts over again by
+      closing and reopening the devices. This way it can cope with disconnecting
+      and reconnecting devices.I have connected a AIS VHF that gets GPS data
+      from the Pi and sends AIS data towards it. If bluetooth serial devices are
+      detected it will also try to read from them.</p>
+    <p>You can also configure dvices to output the data and this way have a NMEA
+      multiplexer.</p>
     <p>All NMEA data internally are stored in a queue and are provided to
       outputs. By default a TCP socket is open that you can connect to (default
       port: 34567).</p>
@@ -180,13 +185,12 @@
     of the raspberry.<br>
     <p>For automated start up there is a (systemd) service so you can control
       start and stop via systemctl.</p>
-    Most of the server functions you can configure via an xml file
-    (avnav_server.xml). In the installed template there are examples for a
-    couple of use cases already being included.Ausserdem wird (falls ein
-    Bluetooth adapter erkannt wurde) versucht, mit allen seriellen Bluetooth
-    Geräten Verbindung aufzunehmen und auch von dort NMEA Daten zu empfangen.
-    Damit sollte im Normalfall keine weitere Konfiguration nötig sein und NMEA
-    Daten sofort erkannt werden (kann man im Status display prüfen - s.u.).
+    <p> Most of the server functions you can configure via an xml file
+      (avnav_server.xml). In the installed template there are examples for a
+      couple of use cases already being included. Additionally (if a bluetooth
+      device has been detected) AvNav tries to connect to bluetooths serial
+      devices and receive NMEA data from them. </p>
+    <p>Normally there is no need for additional configuration.</p>
     <p>You can find the software on <a href="https://github.com/wellenvogel/avnav">github</a>
       for installation instructions see the <a href="install.html">installation
         description</a>.</p>
@@ -263,14 +267,14 @@
     </table>
     <p>Except the systemd scripts (and some command scripts) the software is
       running with the user pi (on the raspberry). You can also start the
-      software from the commandline using the command "avnav". On a desktop
+      software from the command line using the command "avnav". On a desktop
       system you can run this as any user.</p>
     <h2>The Web App</h2>
     The app is a single page app built with<span style="color: #0000ee;"> </span><a
       href="https://reactjs.org/">ReactJs</a>.<br>
-    It communicates with the server using HTTP. The app entry point is <a href="http://avnav/viewer/avnav_viewer.html">http://avnav/viewer/avnav_viewer.html</a>.
+    It communicates with the server using HTTP. The app entry point is <a href="http://avnav.avnav.de/viewer/avnav_viewer.html">http://avnav.avnav.de/viewer/avnav_viewer.html</a>.
     It is optimized for mobile devices - especially tablets starting at 7". But
-    you can use it alos on desktop systems or larger displays. Meaningful usage
+    you can use it also on desktop systems or larger displays. Meaningful usage
     starts at around 900x540 pixel.<br>
     <br>
     For a user documentation of the app refer to <a href="userdoc/index.html">this

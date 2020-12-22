@@ -11,7 +11,8 @@
     <p>Für einen schnellen Einstieg: <a href="quickstart.html">Quickstart</a></p>
     15.12.2020
     <ul class="mainlist">
-      <li class="printPageHidden"><a href="../downloads/de_AvNavDoc.pdf"><img class="inlineimage" title="Everaldo Coelho and YellowIcon;, LGPL &lt;http://www.gnu.org/licenses/lgpl.html&gt;, via Wikimedia Commons"
+      <li class="printPageHidden"><a href="../downloads/de_AvNavDoc.pdf"><img class="inlineimage"
+            title="Everaldo Coelho and YellowIcon;, LGPL &lt;http://www.gnu.org/licenses/lgpl.html&gt;, via Wikimedia Commons"
             src="https://upload.wikimedia.org/wikipedia/commons/6/6b/Crystal_Clear_mimetype_pdf.png">Komplette
           Dokumentation als PDF</a></li>
       <li><a href="https://www.youtube.com/playlist?list=PLxNyj_GYzonmrSgnqtHogY7XK-TANk6q3">YouTube
@@ -72,24 +73,24 @@
         <p>Wenig „Bastelarbeit“ - also möglichst keine eigenen Schaltungen löten</p>
       </li>
     </ul>
-    <p>Irgendwann habe ich mal den raspberry pi entdeckt und nachdem er zu Hause
-      jetzt schon eine Weile als media center arbeitet, dachte ich, dass der
-      eine gute Basis für einen Bordcomputer abgeben könnte. </p>
+    <p>Irgendwann habe ich dann den Raspberry pi entdeckt und nachdem er zu
+      Hause jetzt schon eine Weile als Media Center arbeitet, dachte ich, dass
+      der eine gute Basis für einen Bordcomputer abgeben könnte. </p>
     <p>Allerdings musste ich nach einiger Recherche feststellen, dass es noch
       keine fertige Software gab, die meinen Anforderungen genügen würde.
       Insbesondere die Einbettung der seriellen Schnittstellen (typisch
-      seriell-usb-Wandler) macht immer wieder Mühe, da Linux hier immer etwas
+      Seriell-Usb-Wandler) macht immer wieder Mühe, da Linux hier immer etwas
       kreativ ist... </p>
     <p>Also habe ich beschlossen mich selbst daran zu machen. Im Folgenden will
-      ich meine Lösung beschreiben, da es ja vielleicht Interessierte gibt, die
-      es Nachnutzen möchten. Die gesamte Software steht zum download unter einer
-      open source Lizenz bereit. </p>
+      ich meine Lösung beschreiben, da es bestimmt Interessierte gibt, die es
+      nachnutzen möchten. Die gesamte Software steht zum Download unter einer
+      Open Source Lizenz bereit. </p>
     <p><br>
       <br>
     </p>
     <h2 class="western">Überblick </h2>
-    <p><img class="fimage" src="overview.png" name="Grafik1" border="0" width="600" align="LEFT">avnav-raspi-2020<br
-        clear="LEFT">
+    <p><img class="fimage" src="overview.png" name="Grafik1" border="0" width="600"
+        align="LEFT">avnav-raspi-2020<br clear="LEFT">
       Wie im Bild zu sehen, besteht die gesamte Lösung aus mehreren Teilen:</p>
     <ul>
       <li>
@@ -103,19 +104,19 @@
           Konvertieren der Karten dient</p>
       </li>
     </ul>
-    <p>Über ein WLAN, das der raspberry pi als access point bereitstellt, können
+    <p>Über ein WLAN, das der Raspberry pi als Access Point bereitstellt, können
       verschiedene Geräte auf die Daten zugreifen. Dabei gibt es mehrere
       Varianten:</p>
     <ul>
       <li>
         <p>Auf den Geräten (z.B. Ipad oder Laptop) kann eine Navigationssoftware
-          laufen (getestet: InavX,OpenCPN), diese greifen über TCP auf die NMEA
+          laufen (getestet: InavX,OpenCPN), diese greift über TCP auf die NMEA
           Daten zu. Navigationssoftware und Karten müssen natürlich auf den
           Geräten installiert sein.</p>
       </li>
       <li>
         <p>Auf den Geräten läuft nur ein Browser, die Navigation erfolgt per
-          Java Script app, die vom raspberry bereitgestellt wird. Dazu muss nur
+          Java Script App, die vom Raspberry bereitgestellt wird. Dazu muss nur
           die entsprechende URL aufgerufen werden. In diesem Falle ist auf den
           Geräten keine Software installiert, nur ein aktueller Browser muss
           vorhanden sein (getestet: Chrome unter Windows, OSX, Safari, Android
@@ -123,16 +124,21 @@
           WebBrowser mini).</p>
       </li>
     </ul>
-    <p>Die server software auf dem raspberry ist in python geschrieben und über
-      ein xml file konfigurierbar (was im Normalfall aber nicht notwendig sein
-      sollte). Ich stelle neben dieser Software auch ein fertiges Image für den
-      raspberry zur Verfügung, dass nur noch auf eine SD-Karte installiert
+    <p>Die Server Software auf dem Raspberry ist in Python geschrieben und über
+      eine XML Datei konfigurierbar - was im Normalfall aber nicht notwendig
+      sein sollte. Ich stelle neben dieser Software auch ein fertiges Image für
+      den Raspberry zur Verfügung, das nur noch auf eine SD-Karte installiert
       werden muss (Empfehlung: mindestens 8GB, mehr ist besser...).</p>
-    <p>Die Web Applikation bietet eine&nbsp; Navigation mit Rasterkarten
-      inklusive AIS Darstellung, Wegepunkt Navigation und Routing. Falls die
+    <p>Die Web Applikation bietet eine&nbsp; Navigation mit Rasterkarten (<a href="charts.html#chartformats">gemf,mbtiles</a>)&nbsp;
+      oder <a href="hints/ocharts.html">OESenc Vektorkarten</a> inklusive
+      AIS-Darstellung, Wegepunkt-Navigation und Routing. Falls die
       Web-Applikation verwendet werden soll, müssen die Karten dafür auch auf
-      dem raspberry installiert werden. Diese müssen dazu vorher auf dem PC
-      (Windows, Osx, Linux) oder direkt auf dem raspberry in das <a href="http://www.cgtk.co.uk/gemf">gemf</a>
+      dem Raspberry installiert werden.</p>
+    <p><a href="hints/ocharts.html">OESenc Karten</a> können im Shop von <a href="https://www.o-charts.org/">o-charts</a>
+      erworben werden.</p>
+    <p>Karten, die die Software nicht direkt verarbeiten kann (siehe <a href="charts.html">Karten</a>),
+      müssen vorher auf dem PC (Windows, Osx, Linux) oder direkt auf dem
+      raspberry (innerhalb der App) in das <a href="http://www.cgtk.co.uk/gemf">gemf</a>
       Format <a href="charts.html">konvertiert</a> werden. Im Wesentlichen
       können die folgenden Kartenquellen verarbeitet werden:</p>
     <ul>
@@ -151,76 +157,70 @@
     <p>In den folgenden Abschnitten gehe ich auf die Funktion der einzelnen
       Teile ein wenig genauer ein.</p>
     <h2 class="western">Die Server Software (avnav_server.py)</h2>
-    <p>Auf dem raspberry pi ist zunächst ein<a href="http://www.raspberrypi.org/downloads">
-        ganz normales Debian image</a> installiert (ca. 2GB). Dazu kommen einige
-      Zusatzpakete (liste siehe unten) und meine Software. </p>
-    <p>Der Hauptbestandteil der Sofware auf dem raspberry pi ist ein in python
+    <p>Auf dem Raspberry pi ist zunächst ein<a href="http://www.raspberrypi.org/downloads">
+        ganz normales Debian Image</a> installiert (ca. 2GB). Dazu kommen einige
+      Zusatzpakete (Liste siehe unten) und meine AvNav-Software. </p>
+    <p>Der Hauptbestandteil der Sofware auf dem Raspberry pi ist ein in Python
       geschriebener Server. Im Folgenden beschreibe ich in groben Zügen, was
       dieser Server intern tut.</p>
-    <p><img class="fimage" src="software.png" name="Grafik2" border="0" width="600" align="LEFT"><br
-        clear="LEFT">
+    <p><img class="fimage" src="software.png" name="Grafik2" border="0" width="600"
+        align="LEFT"><br clear="LEFT">
       <br>
-      Dieser Server versucht alle am raspberry angeschlossenen seriellen Geräte
+      Dieser Server versucht alle am Raspberry angeschlossenen seriellen Geräte
       zu erkennen und deren NMEA Daten zu lesen. Typisch werden die Geräte über
-      seriell-usb Wandler angeschlossen (bei mir z.B. PL2303). Man muss ein
-      wenig aufpassen, dass man einen Wandler hat, der vom Raspberry auch sauber
+      Seriell-USB Wandler angeschlossen (z.B. PL2303). Man muss ein wenig
+      aufpassen, dass man einen Wandler hat, der vom Raspberry auch sauber
       unterstützt wird - siehe z.B. <a href="http://elinux.org/RPi_VerifiedPeripherals#USB_UART_and_USB_to_Serial_.28RS-232.29_adapters">hier</a>.
       Da das Verwalten der seriellen Schnittstellen unter Linux etwas magisch
-      ist, scant der Server (per Dbus) die angeschlossenen Geräte auf eine
-      entsprechende serielle Klasse und ermittelt deren Schnittstelle (device).
-      Anschliessend versucht er ein auto bauding zwischen 4800 und 34000 Baud
-      und bemüht sich, NMEA Daten zu erkennen. Falls keine Daten empfangen
-      werden, wird die Schnittstelle geschlossen und das Spiel beginnt von vorn.
-      Damit „überlebt“ er auch das Anschliessen/Abstecken von Wandlern im
-      Betrieb oder das An- bzw. Abschalten von Geräten. Bei mir hängt ein RO4800
-      mit AIS Decoder dran, die GPS Daten werden durchgereicht. Alternativ
-      versucht er auch Kontakt zu seriellen Bluetooth Geräten aufzunehmen, falls
-      er per discovery welche findet und versucht ebenfalls NMEA Daten zu Lesen.
-      Getestet bei mir mit einer Holux GPS Slim236. In diesem Sinne arbeitet er
-      auch als NMEA Multiplexer.</p>
+      ist, scannt der Server die angeschlossenen Geräte auf eine entsprechende
+      serielle Klasse und ermittelt deren Schnittstelle (device). Anschliessend
+      versucht er ein "auto bauding" zwischen 4800 und 34000 Baud und bemüht
+      sich, NMEA Daten zu erkennen. Falls keine Daten empfangen werden, wird die
+      Schnittstelle geschlossen und das Spiel beginnt von vorn. Damit „überlebt“
+      der Server auch das Anschliessen/Abstecken von Wandlern während des
+      Betriebes oder das An- bzw. Abschalten von Geräten. Bei mir hängt ein
+      RO4800 mit AIS Decoder an einem Seriell-USB Wandler , die GPS Daten werden
+      durchgereicht. Alternativ versucht AvNav auch Kontakt zu seriellen
+      Bluetooth-Geräten aufzunehmen. Falls er per "discovery" welche findet,
+      versucht er von diesen ebenfalls NMEA Daten zu lesen. Das wurde z.B. mit
+      einer Holux GPS Slim236 getestet. In diesem Sinne arbeitet der
+      AvNav-Server auch als NMEA Multiplexer.</p>
     <p>Alle GPS-Daten werden intern in eine Liste eingefügt und per TCP
       bereitgestellt. Verbundene TCP Empfänger (z.B. OpenCPN) bekommen so jeden
-      empfangenen Datensatz weitergereicht. Per Default "lauscht" der server
+      empfangenen Datensatz weitergereicht. Per Default "lauscht" der Server
       (intern:SocketWriter) auf Port 34567.</p>
     <p>Daneben lassen sich Daten auch per TCP, UDP oder direkt über die
       seriellen Schnittstellen des Raspberry lesen und schreiben.</p>
     <p>Anschliessend werden die NMEA Daten an den Decoder weitergereicht. Die
-      dekodierten gps und AIS Daten werden im Server abgelegt ("NMEA decoded
-      data") für den Zugriff per HTTP aus der WebApp.Zusätzlich werden die
-      dekodierten Daten auch benutzt um Track Dateien zu schreiben.</p>
+      dekodierten GPS- und AIS-Daten werden im Server abgelegt ("NMEA decoded
+      data") und für den Zugriff per HTTP aus der WebApp bereitgestellt.
+      Zusätzlich werden die dekodierten Daten auch benutzt, um Trackdateien zu
+      schreiben.</p>
     <p>Über den integrierten WebServer kann der Zugriff auf diese dekodierten
       Daten erfolgen (per HTTP GET, Antwort als json).</p>
     <p>Der Route-Handler wertet eingestellte Routen (bzw. Wegepunkte) aus und
       berechnet daraus die Daten für eine Autopilot-Steuerung. Diese werden als
-      RMB NMEA Datensätze wieder in die NMEA Daten eingespeist und stehen so an
-      allen Schnittstellen zur Verfügung.</p>
+      RMB NMEA Datensätze wieder in die internen NMEA Daten eingespeist und
+      stehen so an allen Schnittstellen zur Verfügung.</p>
     Falls gültige GPS Zeitinformationen empfangen werden, wird die Systemzeit
-    des raspberry entsprechend eingestellt.
-    <p>Auf dem raspberry gibt es noch einen service, der den avnav_server beim
+    des Raspberry entsprechend eingestellt.
+    <p>Auf dem Raspberry gibt es noch einen Service, der den AvNav-Server beim
       Systemstart automatisch startet und es auch ermöglicht, ihn geordnet zu
       beenden.</p>
-    <p>Da der gesamte server in python geschrieben ist, kann er auch (vor allem
-      zu Testzwecken) unter Windows oder Osx (Mac), Linux laufen. Dazu muss
-      python ab 2.7 installiert sein, falls reale serielle Daten gelesen werden
-      sollen noch <a href="http://pyserial.sourceforge.net/">pyserial</a>. </p>
-    <p>Der Server kann in weiten Grenzen durch ein xml File konfiguriert werden,
-      für die verschiedenen Nutzungsfälle liefere ich dokumentierte Beispiele
-      mit.</p>
-    <p>In der Auslieferung für den pi ist die Software so konfiguriert, dass sie
-      alle per USB angebundenen seriellen Schnittstellen öffnet, dort versucht
-      NMEA Daten zu erkennen (per auto-bauding von 4800 B/s bis 38400 B/s) und
-      diese dann verarbeitet. </p>
-    <p>Ausserdem wird (falls ein Bluetooth adapter erkannt wurde) versucht, mit
-      allen seriellen Bluetooth Geräten Verbindung aufzunehmen und auch von dort
-      NMEA Daten zu empfangen. Damit sollte im Normalfall keine weitere
-      Konfiguration nötig sein und NMEA Daten sofort erkannt werden (kann man im
-      Status display prüfen - s.u.).</p>
-    <p>Die ausgelieferte avnav_server.xml Datei enthält Kommentare, so das
-      Anpassungen an die eigenen Bedürfnisse einfach möglich sein sollten.</p>
+    <p>Da der gesamte Server in Python geschrieben ist, kann er auch (vor allem
+      zu Testzwecken) unter Windows, Osx (Mac) oder Linux laufen. Dazu muss
+      Python ab 2.7 installiert sein, falls reale serielle Daten gelesen werden
+      sollen, muss dazu noch <a href="http://pyserial.sourceforge.net/">pyserial</a>
+      installiert werden.</p>
+    <p>Der Server kann in weiten Grenzen durch eine XML Datei konfiguriert
+      werden, für die verschiedenen Nutzungsfälle liegen dokumentierte Beispiele
+      vor.</p>
+    Die ausgelieferte avnav_server.xml Datei enthält Kommentare, so dass
+    Anpassungen an die eigenen Bedürfnisse einfach möglich sein sollten.
     <p>Die Software ist auf <a href="https://github.com/wellenvogel/avnav">github</a>
       verfügbar - für die Installation siehe die separate <a href="install.html">Beschreibung</a>.</p>
     <h3 class="western">Software auf dem raspberry</h3>
-    <p>Auf dem raspberry ist die Software in der folgenden Verzeichnisstruktur
+    <p>Auf dem Raspberry ist die Software in der folgenden Verzeichnisstruktur
       installiert:</p>
     <table cellspacing="4" cellpadding="4" border="1" width="100%">
       <colgroup><col width="73*"> <col width="183*"> </colgroup>
@@ -283,22 +283,22 @@
       </tbody>
     </table>
     <p>&nbsp;</p>
-    <p>Bis auf die systemd scripte läuft die gesamte Software unter dem Nutzer
-      pi (auf dem raspberry) oder als beliebiger anderer Nutzer (avnav als
+    <p>Bis auf die "systemd" Scripte läuft die gesamte Software unter dem Nutzer
+      pi (auf dem Raspberry) oder als beliebiger anderer Nutzer (avnav als
       default). Die Installation muss allerdings als root erfolgen.</p>
     <h2>Die Web App</h2>
     Zur Navigation mit den auf dem Raspberry Pi vorhandenen Karten gibt es eine
     Web App. Diese ist mit <a href="https://reactjs.org/">ReactJs</a>
     realisiert.<br>
-    Die App kommuniziert mit dem webserver des avnav_server.py auf dem pi. Die
-    Einstiegsseite ist unter der url <a href="http://avnav/viewer/avnav_viewer.html">http://avnav/viewer/avnav_viewer.html</a>
-    erreichbar. Es is eine sogenannte „single page app“, d.h. Die weitere
-    Kommunikation mit dem server geschieht per Ajax durch den JavaScript Anteil.
-    Vom Layout ist sie optimiert für die Darstellung auf einem 7 Zoll (oder
-    größer) Tablet (bei mir momentan im Einsatz: Nexus 7 am Navitisch,
-    Blackberry Playbook draussen), sie läuft aber natürlich auch auf größeren
-    Tablets (Ipad) oder auf einem Laptop/Desktop. Eine sinnvolle Nutzung ist ab
-    etwa 900x540 Pixel möglich.<br>
+    <p> Die App kommuniziert mit dem in AvNav integrierten Webserver auf dem pi.
+      Die Einstiegsseite ist unter der url <a href="http://avnav.avnav.de/viewer/avnav_viewer.html">http://avnav.avnav.de/viewer/avnav_viewer.html</a>
+      erreichbar. Es ist eine sogenannte „single page app“, d.h. die weitere
+      Kommunikation mit dem server geschieht per Ajax durch den
+      JavaScript-Anteil. Vom Layout ist sie optimiert für die Darstellung auf
+      einem 7 Zoll (oder größer) Tablet (bei mir momentan im Einsatz: Nexus 7 am
+      Navitisch, Blackberry Playbook draussen), sie läuft aber natürlich auch
+      auf größeren Tablets (Ipad) oder auf einem Laptop/Desktop. Eine sinnvolle
+      Nutzung ist ab etwa 900x540 Pixel möglich.</p>
     <br>
     Zur Beschreibung der WebApp <a href="userdoc/index.html">hier</a>.<br>
     <br>
