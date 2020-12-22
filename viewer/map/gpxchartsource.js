@@ -263,7 +263,7 @@ export default  GpxChartSource;
  */
 const stripExtensions=(gpx)=>{
     if (!gpx) return;
-    return gpx.replaceAll(/<extensions.*?>.*?<\/extensions.*?>/g,"")
+    return gpx.replace(/<extensions.*?>.*?<\/extensions.*?>/g,"")
 }
 
 /**

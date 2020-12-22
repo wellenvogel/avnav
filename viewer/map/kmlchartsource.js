@@ -192,7 +192,7 @@ class KmlChartSource extends ChartSourceBase{
         if (rt.desc){
             if (rt.desc.indexOf("<") >= 0){
                 if(this.chartEntry.allowHtml) {
-                    rt.htmlInfo = rt.desc.replaceAll(/src *= *"([^"]*)"/g,(match,url)=>{
+                    rt.htmlInfo = rt.desc.replace(/src *= *"([^"]*)"/g,(match,url)=>{
                         if (url.startsWith('http')){
                             if (!this.chartEntry.allowOnline) return 'src=""';
                             return match;
