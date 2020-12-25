@@ -245,8 +245,9 @@ export const overlayDialog=(opt_chartName,opt_updateCallback)=>{
             editCallback={(canEdit)?()=>{
                 EditOverlaysDialog.createDialog(currentChart,(nv)=>{
                     if (nv) {
-                        MapHolder.resetOverlayConfig();
-                        MapHolder.loadMap(undefined,true);
+                        MapHolder.loadMap(undefined,true).then(()=>{
+                            MapHolder.resetOverlayConfig();
+                        })
                     }
                 });
                 return true;
