@@ -22,6 +22,7 @@ import EditWidgetDialog from '../components/EditWidgetDialog.jsx';
 import LayoutHandler from '../util/layouthandler.js';
 import EulaDialog from './EulaDialog.jsx';
 import EditOverlaysDialog from './EditOverlaysDialog.jsx';
+import {getOverlayConfigName} from "../map/chartsourcebase";
 
 const SHOW_MODE={
     never:0,
@@ -227,6 +228,7 @@ export const overlayDialog=(opt_chartName,opt_updateCallback)=>{
     if (! current) return;
     let currentChart=MapHolder.getCurrentChartEntry()||{};
     OverlayDialog.dialog((props)=> {
+        let canEdit=getOverlayConfigName(currentChart) !== undefined && globalStore.getData(keys.properties.connectedMode,false) ;
         return <EditOverlaysDialog
             {...props}
             chartName={opt_chartName||currentChart.name}
@@ -240,7 +242,7 @@ export const overlayDialog=(opt_chartName,opt_updateCallback)=>{
             resetCallback={()=>{
                 MapHolder.resetOverlayConfig();
             }}
-            editCallback={(globalStore.getData(keys.properties.connectedMode,false) && currentChart.chartKey)?()=>{
+            editCallback={(canEdit)?()=>{
                 EditOverlaysDialog.createDialog(currentChart,(nv)=>{
                     if (nv) {
                         MapHolder.resetOverlayConfig();
