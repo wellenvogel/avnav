@@ -2,28 +2,17 @@
  * Created by andreas on 02.05.14.
  */
 
-import Dynamic from '../hoc/Dynamic.jsx';
-import Visible from '../hoc/Visible.jsx';
-import Button from '../components/Button.jsx';
-import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import React from 'react';
-import PropertyHandler from '../util/propertyhandler.js';
 import history from '../util/history.js';
 import MapPage,{overlayDialog} from '../components/MapPage.jsx';
 import Toast from '../components/Toast.jsx';
-import Requests from '../util/requests.js';
-import assign from 'object-assign';
 import NavHandler from '../nav/navdata.js';
-import routeobjects from '../nav/routeobjects.js';
-import Formatter from '../util/formatter.js';
 import OverlayDialog from '../components/OverlayDialog.jsx';
 import Helper from '../util/helper.js';
-import WidgetFactory from '../components/WidgetFactory.jsx';
 import GuiHelpers from '../util/GuiHelpers.js';
 import MapHolder from '../map/mapholder.js';
-import DirectWidget from '../components/DirectWidget.jsx';
 import navobjects from '../nav/navobjects.js';
 import AisData from '../nav/aisdata.js';
 import ButtonList from '../components/ButtonList.jsx';
@@ -37,9 +26,8 @@ import anchorWatch from '../components/AnchorWatchDialog.jsx';
 import Mob from '../components/Mob.js';
 import Dimmer from '../util/dimhandler.js';
 import FeatureInfoDialog from "../components/FeatureInfoDialog";
-import NavCompute from "../nav/navcompute";
-import {getClosestPoint} from "../components/RouteInfoDialog";
 import {TrackConvertDialog} from "../components/TrackInfoDialog";
+import FullScreen from '../components/Fullscreen';
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -435,6 +423,7 @@ class NavPage extends React.Component{
                 MapPage.PANELS,
                 [LayoutHandler.OPTIONS.SMALL]),
             LayoutFinishedDialog.getButtonDef(),
+            FullScreen.fullScreenDefinition,
             Dimmer.buttonDef(),
             {
                 name: 'Cancel',

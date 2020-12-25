@@ -184,7 +184,8 @@ let keys={
             soundEnabled: new D("only enable sound once we reach the mainpage"),
             dimActive: K,
             computedButtonHeight: K,
-            computedButtonWidth: K
+            computedButtonWidth: K,
+            isFullScreen: K,
 
         },
         gpspage:{
@@ -358,6 +359,7 @@ let keys={
         cancelTop: new Property(false,"Back button top",PropertyType.CHECKBOX),
         featureInfo: new Property(true,"Overlay Info on Click",PropertyType.CHECKBOX),
         emptyFeatureInfo: new Property(true,"Always Info on Chart Click",PropertyType.CHECKBOX),
+        showFullScreen: new Property(true,"Show Fullscreen Button",PropertyType.CHECKBOX),
 
         style: {
             buttonSize: new Property(60, "Button Size(px)", PropertyType.RANGE, [35, 100]),

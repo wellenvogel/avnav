@@ -23,10 +23,8 @@ import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 import Mob from '../components/Mob.js';
 import Addons from '../components/Addons.js';
 import EditOverlaysDialog, {DEFAULT_OVERLAY_CHARTENTRY} from '../components/EditOverlaysDialog.jsx';
-import OverlayDialog from "../components/OverlayDialogDisplay";
-import {stateHelper} from "../components/OverlayDialog";
-import overlayconfig from "../map/overlayconfig";
 import mapholder from "../map/mapholder.js";
+import FullScreen from '../components/Fullscreen';
 
 
 
@@ -240,6 +238,7 @@ class MainPage extends React.Component {
                 visible: this.state.addOns.length > 0,
                 editDisable: true
             },
+            FullScreen.fullScreenDefinition,
             {
                 name: 'Cancel',
                 storeKeys: {visible: keys.gui.global.onAndroid},
