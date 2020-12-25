@@ -111,7 +111,7 @@ const layerUrlFunction=function (layerOptions,coord) {
         if (layerOptions.encryptFunction) {
             tileUrl = "##encrypt##" + tileUrl;
         }
-        return layerOptions.layerurl + '/' + tileUrl;
+        return Helper.endsWith(layerOptions.layerurl,"/")?(layerOptions.layerurl+tileUrl):(layerOptions.layerurl + '/' + tileUrl);
     }
     else {
         return layerOptions.layerurl.replace("{x}", x).replace("{y}", y).replace("{z}", z);
