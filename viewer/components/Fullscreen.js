@@ -32,7 +32,7 @@ const fullScreenDefinition={
     storeKeys: {visible:keys.properties.showFullScreen, toggle:keys.gui.global.isFullScreen},
     updateFunction:(state)=>{
         return {
-            toggle: state.toggle,
+            toggle: !!document.fullscreenElement, //we directly query here again as IE does not seem to fire the event...
             visible: state.visible && fullScreenAvailable()
         }
     },
