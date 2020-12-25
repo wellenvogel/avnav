@@ -781,6 +781,7 @@ MapHolder.prototype.initMap=function(opt_preventDialog){
         let pixelRatio=undefined;
         try{
             if (document.body.style.transform === undefined){
+                console.log("browser has no transform feature, keeping pixelRatio at 1");
                 pixelRatio=1;
             }
         }catch (e){
