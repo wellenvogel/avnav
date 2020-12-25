@@ -46,9 +46,15 @@ public class WebViewFragment extends Fragment {
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             int percent=msg.what;
-            float newBrightness=(float)percent/100;
-            if (newBrightness < 0.001f) newBrightness=0.001f;
-            if (newBrightness > 1) newBrightness=1;
+            float newBrightness;
+            if (percent >= 100){
+                newBrightness= WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE;
+            }
+            else {
+                newBrightness = (float) percent / 100;
+                if (newBrightness < 0.01f) newBrightness = 0.01f;
+                if (newBrightness > 1) newBrightness = 1;
+            }
             currentBrigthness=newBrightness;
             doSetBrightness(newBrightness);
         }

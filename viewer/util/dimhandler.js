@@ -36,8 +36,9 @@ class DimmHandler{
     }
     activate(){
         if (this.mode != "manual" && this.mode != "timer") return;
+        if (! this.enabled()) return;
         globalStore.storeData(KEY,true);
-        let dimFade=globalStore.getData(keys.properties.dimFade,0);
+        let dimFade=parseInt(globalStore.getData(keys.properties.dimFade,0));
         if (dimFade < 0) dimFade=0;
         if (dimFade > 100) dimFade=100;
         this.actionFunction(dimFade);
@@ -68,11 +69,17 @@ class DimmHandler{
     isActive(){
         return globalStore.getData(KEY,false);
     }
+    canHandle(){
+        return this.actionFunction !== undefined;
+    }
+    enabled(){
+        return this.canHandle() && globalStore.getData(keys.properties.showDimButton,false);
+    }
     buttonDef(){
         return{
             name: 'Dim',
             onClick: this.activate,
-            visible: (this.actionFunction !== undefined),
+            visible: this.enabled(),
             overflow: true
         }
     }

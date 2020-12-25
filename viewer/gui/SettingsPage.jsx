@@ -3,13 +3,10 @@
  */
 
 import Dynamic from '../hoc/Dynamic.jsx';
-import Visible from '../hoc/Visible.jsx';
-import Button from '../components/Button.jsx';
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys,{KeyHelper,PropertyType} from '../util/keys.jsx';
 import React from 'react';
-import PropertyHandler from '../util/propertyhandler.js';
 import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import Toast,{hideToast} from '../components/Toast.jsx';
@@ -21,14 +18,15 @@ import Mob from '../components/Mob.js';
 import LayoutNameDialog from '../components/LayoutNameDialog.jsx';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 import {Input,ColorSelector,Checkbox,Radio} from '../components/Inputs.jsx';
-import ColorDialog from '../components/ColorDialog.jsx';
 import DB from '../components/DialogButton.jsx';
+import DimHandler from '../util/dimhandler';
 
 const settingsSections={
     Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,keys.properties.layers.grid,keys.properties.layers.compass],
     UpdateTimes:[keys.properties.positionQueryTimeout,keys.properties.trackQueryTimeout,keys.properties.aisQueryTimeout, keys.properties.networkTimeout ],
     Widgets:    [keys.properties.widgetFontSize,keys.properties.showClock,keys.properties.showZoom,keys.properties.showWind,keys.properties.showDepth],
-    Layout1:     [keys.properties.layoutName,keys.properties.baseFontSize,keys.properties.smallBreak,keys.properties.allowTwoWidgetRows,keys.properties.autoZoom,keys.properties.style.buttonSize,keys.properties.nightFade,keys.properties.nightChartFade,keys.properties.dimFade],
+    Layout1:     [keys.properties.layoutName,keys.properties.baseFontSize,keys.properties.smallBreak,keys.properties.allowTwoWidgetRows,keys.properties.autoZoom,keys.properties.style.buttonSize,keys.properties.nightFade,
+        keys.properties.nightChartFade,keys.properties.showDimButton,keys.properties.dimFade],
     Layout2:     [keys.properties.localAlarmSound, keys.properties.mobMinZoom,keys.properties.cancelTop,keys.properties.buttonCols,keys.properties.style.useHdpi,keys.properties.clickTolerance,keys.properties.featureInfo,keys.properties.emptyFeatureInfo],
     AIS:        [keys.properties.aisDistance,keys.properties.aisWarningCpa,keys.properties.aisWarningTpa,keys.properties.aisTextSize,keys.properties.aisUseCourseVector,keys.properties.style.aisNormalColor,keys.properties.style.aisNearestColor,keys.properties.style.aisWarningColor,keys.properties.aisIconBorderWidth,keys.properties.aisIconScale],
     Navigation: [keys.properties.bearingColor,keys.properties.bearingWidth,keys.properties.navCircleColor,keys.properties.navCircleWidth,keys.properties.navCircle1Radius,keys.properties.navCircle2Radius,keys.properties.navCircle3Radius,
@@ -37,6 +35,12 @@ const settingsSections={
     Track:      [keys.properties.trackColor,keys.properties.trackWidth,keys.properties.trackInterval,keys.properties.initialTrackLength],
     Route:      [keys.properties.routeColor,keys.properties.routeWidth,keys.properties.routeWpSize,keys.properties.routingTextSize,keys.properties.routeApproach,keys.properties.routeShowLL]
 };
+
+const settingsConditions={
+};
+
+settingsConditions[keys.properties.dimFade]=()=>DimHandler.canHandle();
+settingsConditions[keys.properties.showDimButton]=()=>DimHandler.canHandle();
 
 
 /**
@@ -485,6 +489,9 @@ class SettingsPage extends React.Component{
             if (settingsSections[currentSection]) {
                 for (let s in settingsSections[currentSection]) {
                     let key = settingsSections[currentSection][s];
+                    if (settingsConditions[key] !== undefined){
+                        if (! settingsConditions[key]()) continue;
+                    }
                     let description = KeyHelper.getKeyDescriptions()[key];
                     let item = assign({}, description, {
                         name: key,
