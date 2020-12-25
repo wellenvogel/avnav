@@ -1284,12 +1284,14 @@ MapHolder.prototype.onClick=function(evt){
                 overlayName: routeName,
                 activeRoute: true,
                 nextTarget: [wp.lon, wp.lat],
+                name: wp.name
             });
         }
         else{
             assign(feature,{
                 overlayType: 'target',
-                overlayName: 'current target'
+                overlayName: 'current target',
+                name: wp.name
             })
         }
         if (this._callHandlers({type:EventTypes.FEATURE,feature:feature})) return false;
