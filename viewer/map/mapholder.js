@@ -778,7 +778,16 @@ MapHolder.prototype.initMap=function(opt_preventDialog){
         if (baseLayers.length > 0) {
             base.push(this.getMapOutlineLayer(baseLayers, hasBaseLayers))
         }
+        let pixelRatio=undefined;
+        try{
+            if (document.body.style.transform === undefined){
+                pixelRatio=1;
+            }
+        }catch (e){
+            console.log("unable to detect transform feature");
+        }
         this.olmap = new olMap({
+            pixelRatio: pixelRatio,
             target: div ? div : self.defaultDiv,
             layers: base.concat(layers),
             interactions: olInteraction.defaults({
