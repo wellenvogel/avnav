@@ -38,7 +38,7 @@ class Page extends React.Component {
                 {props.bottomContent ? props.bottomContent : null}
                 <Alarm onClick={alarmClick}/>
             </div>
-            <ButtonList itemList={props.buttonList}/>
+            <ButtonList itemList={props.buttonList} widthChanged={props.buttonWidthChanged}/>
         </div>
     }
     componentDidMount(){
@@ -58,7 +58,8 @@ Page.propTypes={
     bottomContent: PropTypes.any,
     buttonList: PropTypes.any,
     style: PropTypes.object,
-    isEditing: PropTypes.bool
+    isEditing: PropTypes.bool,
+    buttonWidthChanged: PropTypes.func
 };
 
 export default Dynamic(Page,{storeKeys:{isEditing:keys.gui.global.layoutEditing}});

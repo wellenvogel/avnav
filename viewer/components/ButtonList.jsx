@@ -20,6 +20,9 @@ class ButtonList extends React.Component{
                 this.state[key]=visible;
             }
         }
+        this.buttonListRef=this.buttonListRef.bind(this);
+        this.buttonList=undefined;
+        this.buttonListWidth=0;
     }
     itemSort(a,b){
         if (! this.props.cancelTop) return 0;
@@ -53,6 +56,26 @@ class ButtonList extends React.Component{
         if (item.editDisable && this.props.isEditing) return false;
         if (item.editOnly && ! this.props.isEditing) return false;
         return true;
+    }
+    buttonListRef(el){
+        this.buttonList=el;
+    }
+    handleListCols(){
+        if (! this.buttonList) return;
+        let rect=this.buttonList.getBoundingClientRect();
+        if (rect.width !== this.buttonListWidth){
+            if (this.props.widthChanged){
+                this.props.widthChanged(rect.width);
+            }
+            this.buttonListWidth=rect.width;
+        }
+    }
+
+    componentDidMount() {
+        this.handleListCols();
+    }
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        this.handleListCols();
     }
 
     render(){
@@ -120,7 +143,7 @@ class ButtonList extends React.Component{
                 //to get changeCallbacks
                 invisibleItems=invisibleItems.concat(overflowItems);
             }
-            return <div className={"buttonContainerWrap "}>
+            return <div className={"buttonContainerWrap "} ref={this.buttonListRef}>
                     <ItemList {...this.props}
                         fontSize={fontSize}
                         className={className + " main"}
@@ -146,7 +169,7 @@ class ButtonList extends React.Component{
         else {
             let style={};
             if (hasOverflow && this.props.buttonCols ) style.width=(this.props.buttonWidth*scale*2)+"px";
-            return <React.Fragment>
+            return <div className={"buttonContainerWrap "} ref={this.buttonListRef}>
                 <ItemList {...this.props}
                 style={style}
                 fontSize={fontSize}
@@ -158,7 +181,7 @@ class ButtonList extends React.Component{
                     itemList={invisibleItems}
                     itemClass={Dynamic(Button,{changeCallback:this.buttonChanged})}
                 />
-                </React.Fragment>
+            </div>
         }
     }
 

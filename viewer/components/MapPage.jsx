@@ -23,6 +23,7 @@ import LayoutHandler from '../util/layouthandler.js';
 import EulaDialog from './EulaDialog.jsx';
 import EditOverlaysDialog from './EditOverlaysDialog.jsx';
 import {getOverlayConfigName} from "../map/chartsourcebase";
+import mapholder from "../map/mapholder.js";
 
 const SHOW_MODE={
     never:0,
@@ -204,7 +205,9 @@ class MapPage extends React.Component{
                             </React.Fragment>
                         }
                 buttonList={self.props.buttonList}
-
+                buttonWidthChanged={()=>{
+                    mapholder.updateSize();
+                }}
                 />
 
         );
