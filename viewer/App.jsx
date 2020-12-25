@@ -119,20 +119,14 @@ class Router extends Component {
 
 const DynamicRouter=Dynamic(Router);
 //show one button (unscaled) to be able to compute button sizes
-const ButtonSizer=Dynamic((props)=>{
+const ButtonSizer=(props)=>{
         let fontSize=props.fontSize/4; //unscaled button font size
         let style={fontSize:fontSize+"px"};
         return(
             <div className="buttonSizer" style={style} ref={props.refFunction}>
                 <Button/>
             </div>
-        )},
-        {
-            storeKeys: {
-                fontSize: keys.properties.style.buttonSize
-            }
-        }
-    );
+        )};
 
 
 let lastError={
@@ -143,6 +137,7 @@ class App extends React.Component {
         super(props);
         this.checkSizes=this.checkSizes.bind(this);
         this.keyDown=this.keyDown.bind(this);
+        this.buttonSizer=null;
         this.state={
             error:0
         };
@@ -202,7 +197,16 @@ class App extends React.Component {
         let small = current.width <globalStore.getData(keys.properties.smallBreak);
         globalStore.storeData(keys.gui.global.smallDisplay,small); //set small before we change dimensions...
         globalStore.storeData(keys.gui.global.windowDimensions,{width:current.width,height:current.height});
-        //globalStore.storeData(keys.gui.global.buttonFontSize,PropertyHandler.getButtonFontSize())
+        this.computeButtonSizes();
+
+    }
+    computeButtonSizes(){
+        if (! this.buttonSizer) return;
+        let rect=this.buttonSizer.getBoundingClientRect();
+        globalStore.storeMultiple(
+            {height:rect.height,width:rect.width},
+            {height: keys.gui.global.computedButtonHeight,width:keys.gui.global.computedButtonWidth}
+        );
     }
     componentDidMount(){
         document.addEventListener("keydown",this.keyDown);
@@ -278,19 +282,18 @@ class App extends React.Component {
                 />:
                 null}
             <ToastDisplay/>
-            <ButtonSizer refFunction={(el)=>{
-                if (!el) return;
-                let rect=el.getBoundingClientRect();
-                globalStore.storeMultiple(
-                    {height:rect.height,width:rect.width},
-                    {height: keys.gui.global.computedButtonHeight,width:keys.gui.global.computedButtonWidth}
-                    );
+            <ButtonSizer
+                fontSize={this.props.buttonFontSize}
+                refFunction={(el)=>{
+                this.buttonSizer=el;
+                this.computeButtonSizes();
             }}/>
         </div>
     };
 }
 export default   Dynamic(App,{
   storeKeys:{
+      buttonFontSize: keys.properties.style.buttonSize,
       fontSize: keys.properties.baseFontSize,
       smallDisplay: keys.gui.global.smallDisplay,
       nightMode: keys.properties.nightMode,
