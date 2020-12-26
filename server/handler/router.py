@@ -476,8 +476,8 @@ class AVNRouter(AVNDirectoryHandlerBase):
             arrival="A"
           else:
             arrival="V"
-          wplat=NMEAParser.nmeaFloatToPos(self.endWp.latitude,True)
-          wplon = NMEAParser.nmeaFloatToPos(self.endWp.longitude, False)
+          wplat=NMEAParser.nmeaFloatToPos(self.endWp['lat'],True)
+          wplon = NMEAParser.nmeaFloatToPos(self.endWp['lon'], False)
           destBearing=AVNUtil.calcBearing((lat,lon),self.wpToLatLon(self.endWp))
           brg=AVNUtil.calcBearing(self.wpToLatLon(self.startWp),self.wpToLatLon(self.endWp))
           self.setInfo("autopilot","RMB=%s,APB=%s:WpNr=%d,XTE=%s%s,DST=%s,BRG=%s,ARR=%s"%
