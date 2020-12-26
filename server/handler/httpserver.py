@@ -247,7 +247,7 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
         try:
           return self.externalHandlers[prefix].handleApiRequest('path', path, requestParam, server=self,handler=handler)
         except:
-          AVNLog.error("external mapping failed: %s",traceback.format_exc())
+          AVNLog.error("external mapping failed for %s: %s",path,traceback.format_exc())
         return None
     #legacy fallback:
     #if we have images at /user/images or /user/icons we can fallback to viewer
