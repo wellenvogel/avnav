@@ -384,7 +384,7 @@ class AVNPluginHandler(AVNWorker):
           raise Exception("plugin %s does not handle requests " % localPath[0])
         if handler is None:
           raise Exception("no handler for plugin %s request" % localPath[0])
-        rt=api.requestHandler(localPath[1][4:],handler,kwargs)
+        rt=api.requestHandler(localPath[1][4:],handler,requestparam)
         if type(rt) is dict:
           handler.sendNavResponse(json.dumps(rt))
           return True
