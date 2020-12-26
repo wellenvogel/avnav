@@ -83,7 +83,7 @@ class ExternalWidget extends React.Component{
     componentDidUpdate(){
         this.renderCanvas();
     }
-    componentWillUnmout(){
+    componentWillUnmount(){
         if (typeof(this.props.finalizeFunction) === 'function'){
             this.props.finalizeFunction.call(this.userData,this.userData);
         }
