@@ -59,6 +59,30 @@ class DummyHandler():
   def stopHandler(self):
     self.stop=True
 
+class ExternalHandler():
+  def __init__(self,infoHandler,device,callback,name=None):
+    self.stop=False
+    self.infoHandler=infoHandler
+    self.device=device
+    self.callback=callback
+    self.name=name or "extern"
+  def run(self):
+    try:
+      self.callback(self.device)
+      self.infoHandler.setInfo('main', '%s: handled by %s' % (self.device,self.name), AVNWorker.Status.INACTIVE)
+    except Exception as e:
+      self.infoHandler.setInfo('main','%s: error in handler %s: %s'%(self.device,self.name,unicode(e.message)),AVNWorker.Status.ERROR)
+    while( not self.stop):
+      time.sleep(0.2)
+    self.infoHandler.deleteInfo('main')
+  def stopHandler(self):
+    self.stop=True
+
+class ExternalRegistration:
+  def __init__(self,usibid,name,callback):
+    self.name=name
+    self.usbid=usibid
+    self.callback=callback
 
 #a worker that will use udev to find serial devices
 #based on the configuration it will open available devices and read data from them
@@ -105,24 +129,63 @@ class AVNUsbSerialReader(AVNWorker):
     AVNWorker.__init__(self, cfgparam)
     self.maplock=threading.Lock()
     self.addrmap={}
+    self.externalHandlers={}
 
-   
+
+  def registerExternalHandler(self,usbid,name,callback):
+    AVNLog.info("AVNUsbSerialReader: register external handler %s for %s",name,usbid)
+    old=None
+    self.maplock.acquire()
+    try:
+      old=self.externalHandlers.get(usbid)
+      if old is None:
+        self.externalHandlers[usbid]=ExternalRegistration(usbid,name,callback)
+      else:
+        if old.name == name:
+          #update
+          old.callback=callback
+          old=None
+    except:
+      self.maplock.release()
+      raise
+    self.maplock.release()
+    if old is not None:
+      AVNLog.error("AVNUsbSerialReader: external handler for %s already registered: %s"%(usbid,old.name))
+      raise Exception("handler for %s already registered: %s"%(usbid,old.name))
+    #potentially we had the device already open - close it now
+    self.stopHandler(usbid)
+
   #return True if added
   def checkAndAddHandler(self,addr,handler,device):
     rt=False
     maxd=self.getIntParam('maxDevices')
     self.maplock.acquire()
-    if len(self.addrmap) < maxd:
-      if not addr in self.addrmap:
-        self.addrmap[addr]=(handler,device)
-        rt=True
+    if not isinstance(handler,DummyHandler) and not isinstance(handler,ExternalHandler):
+      numActive=0
+      for entry in self.addrmap.values():
+        h=entry[0]
+        if isinstance(h,DummyHandler) or isinstance(h,ExternalHandler):
+          continue
+        numActive+=1
+      if numActive >= maxd:
+        self.maplock.release()
+        return rt
+    if not addr in self.addrmap:
+      self.addrmap[addr]=(handler,device)
+      rt=True
     self.maplock.release()
     return rt
   
-  def removeHandler(self,addr):
+  def removeHandler(self,addr,handler=None):
     rt=None
     self.maplock.acquire()
     try:
+      if handler is not None:
+        #if we are called from a handler - only remove exactly this handler
+        old=self.addrmap.get(addr)
+        if old is not None and old[0] != handler:
+          self.maplock.release()
+          return
       rt=self.addrmap.pop(addr)
     except:
       pass
@@ -155,6 +218,13 @@ class AVNUsbSerialReader(AVNWorker):
     return rt
   
   def getParamByUsbId(self,usbid):
+    externalHandler=self.externalHandlers.get(usbid)
+    if externalHandler is not None:
+      return {
+        'type':'external',
+        'callback':externalHandler.callback,
+        'handlername':externalHandler.name
+      }
     configuredDevices=self.param.get('UsbDevice')
     if configuredDevices is None:
       return None
@@ -178,7 +248,7 @@ class AVNUsbSerialReader(AVNWorker):
     except:
       AVNLog.info("serial handler stopped with %s",(traceback.format_exc(),))
     AVNLog.debug("serial handler for %s finished",addr)
-    self.removeHandler(addr)
+    self.removeHandler(addr,handler)
     self.deleteInfo(handler.getName())
   
   #param: a dict key being the usb id, value the device node
@@ -186,6 +256,11 @@ class AVNUsbSerialReader(AVNWorker):
     startStop=self.getStartStopList(devicelist)
     for usbid in startStop:
       if startStop[usbid]=='start':
+        old=self.addrmap.get(usbid)
+        if old is not None:
+          #the handler is still/already there
+          #do nothing - potentially we handle it in the next round
+          continue
         AVNLog.debug("must start handler for %s at %s",usbid,devicelist[usbid])
         sourceName="%s-%s"%(self.getName(),usbid)
         param=self.getParamByUsbId(usbid)
@@ -204,16 +279,19 @@ class AVNUsbSerialReader(AVNWorker):
         handlertype="reader"
         if param.get('type') is not None:
           handlertype=param.get('type')
-        if handlertype == 'writer' or handlertype == "combined":
-          handler=SerialWriter(param,self.writeData,InfoHandler(usbid,self),sourceName)
-          if handlertype == "combined":
-            handler.param["combined"]=True
+        if handlertype == 'external':
+          handler=ExternalHandler(InfoHandler(usbid,self),devicelist[usbid],param.get('callback'),param.get('handlername'))
         else:
-          if handlertype == 'reader':
-            handler=SerialReader(param, self.writeData, InfoHandler(usbid,self),sourceName)
+          if handlertype == 'writer' or handlertype == "combined":
+            handler=SerialWriter(param,self.writeData,InfoHandler(usbid,self),sourceName)
+            if handlertype == "combined":
+              handler.param["combined"]=True
           else:
-            AVNLog.info("ignore device %s : type %s",usbid,handlertype)
-            handler=DummyHandler(InfoHandler(usbid,self),devicelist[usbid])
+            if handlertype == 'reader':
+              handler=SerialReader(param, self.writeData, InfoHandler(usbid,self),sourceName)
+            else:
+              AVNLog.info("ignore device %s : type %s",usbid,handlertype)
+              handler=DummyHandler(InfoHandler(usbid,self),devicelist[usbid])
         res=self.checkAndAddHandler(usbid, handler,devicelist[usbid])
         if not res:
             AVNLog.debug("max number of readers already reached, skip start of %s at %s",usbid,devicelist[usbid])

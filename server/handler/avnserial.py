@@ -83,12 +83,18 @@ class SerialReader():
       raise Exception("writeData has to be set")
     self.startpattern=AVNUtil.getNMEACheck()
     self.doStop=False 
-    self.setInfo("created",AVNWorker.Status.INACTIVE) 
+    self.setInfo("created",AVNWorker.Status.INACTIVE)
+    self.device=None
   def getName(self):
     return "SerialReader-"+self.param['name']
    
   def stopHandler(self):
     self.doStop=True
+    try:
+      if self.device is not None:
+        self.device.close()
+    except Exception as e:
+      AVNLog.debug("unable to close serial device: %s",unicode(e.message))
    
   # a simple approach for autobauding
   # we try to read some data (~3 lines) and find a 0x0a in it
@@ -97,7 +103,7 @@ class SerialReader():
   
   def openDevice(self,baud,autobaud,init=False):
     self.buffer=''
-    f=None
+    self.device=None
     try:
       pnum=int(self.param['port'])
     except:
@@ -121,14 +127,17 @@ class SerialReader():
     lastTime=time.time()
     try:
       self.setInfo("opening at %d baud"%(baud),AVNWorker.Status.STARTED)
-      f=serial.Serial(pnum, timeout=timeout, baudrate=baud, bytesize=bytesize, parity=parity, stopbits=stopbits, xonxoff=xonxoff, rtscts=rtscts)
+      self.device=serial.Serial(pnum, timeout=timeout, baudrate=baud, bytesize=bytesize, parity=parity, stopbits=stopbits, xonxoff=xonxoff, rtscts=rtscts)
       self.setInfo("port open at %d baud"%baud,AVNWorker.Status.STARTED)
       if autobaud:
         starttime=time.time()
         while time.time() <= (starttime + autobaudtime):
-          bytes=f.read(300)
+          bytes=self.device.read(300)
           if self.doStop:
-            f.close()
+            try:
+              self.device.close()
+            except:
+              pass
             return None
           if len(bytes)==0:
             #if there is no data at all we simply take all the time we have...
@@ -149,11 +158,11 @@ class SerialReader():
             AVNLog.debug("assumed startpattern %s at baud %d in %s",match.group(0),baud,data)
             AVNLog.info("autobaud successfully finished at baud %d",baud)
             self.setInfo("NMEA data at %d baud"%(baud),AVNWorker.Status.STARTED)
-            return f
-        f.close()
+            return self.device
+        self.device.close()
         return None
       #hmm - seems that we have not been able to autobaud - return anyway
-      return f
+      return self.device
     except Exception:
       self.setInfo("unable to open port",AVNWorker.Status.ERROR)
       try:
@@ -161,13 +170,13 @@ class SerialReader():
       except:
         tf="unable to decode exception"
       AVNLog.debug("Exception on opening %s : %s",portname,tf)
-      if f is not None:
+      if self.device is not None:
         try:
-          f.close()
+          self.device.close()
         except:
           pass
-        f=None
-    return f  
+        self.device=None
+    return self.device
   
   def readLine(self,serialDevice,timeout):
     #if not os.name=='posix':
@@ -211,7 +220,7 @@ class SerialReader():
   #the run method - just try forever  
   def run(self):
     threading.current_thread().setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
-    f=None
+    self.device=None
     init=True
     isOpen=False
     AVNLog.debug("started with param %s",",".join(unicode(i)+"="+unicode(self.param[i]) for i in self.param.keys()))
@@ -250,42 +259,42 @@ class SerialReader():
            if not f is None:
              break
        else:
-         f=self.openDevice(baud,False,init)
+         self.openDevice(baud,False,init)
          init=False
        if self.doStop:
          AVNLog.info("handler stopped, leaving")
          self.setInfo("stopped",AVNWorker.Status.INACTIVE)
          try:
-           f.close()
+           self.device.close()
          except:
            pass
          break
-       if f is None:
+       if self.device is None:
          time.sleep(porttimeout/2)
          continue
-       AVNLog.debug("%s opened, start receiving data",f.name)
+       AVNLog.debug("%s opened, start receiving data",self.device.name)
        lastTime=time.time()
        numerrors=0
        hasNMEA=False
        while True and not self.doStop:
          bytes=0
          try:
-           bytes=self.readLine(f,timeout)
+           bytes=self.readLine(self.device,timeout)
            if not bytes.find("\n"):
              raise Exception("no newline in serial data")
          except Exception as e:
            AVNLog.debug("Exception %s in serial read, close and reopen %s",traceback.format_exc(),portname)
            try:
-             f.close()
+             self.device.close()
              isOpen=False
            except:
              pass
            break
          if not bytes is None and len(bytes)> 0:
            if not hasNMEA:
-             self.setInfo("receiving at %d baud"%f.baudrate,AVNWorker.Status.STARTED)
+             self.setInfo("receiving at %d baud"%self.device.baudrate,AVNWorker.Status.STARTED)
            if not isOpen:
-             AVNLog.info("successfully opened %s",f.name)
+             AVNLog.info("successfully opened %s",self.device.name)
              isOpen=True
            self.status=True
            data=bytes.decode('ascii','ignore').translate(NMEAParser.STRIPCHARS)
@@ -297,10 +306,10 @@ class SerialReader():
                    #hmm - seems that we do not see any NMEA data
                    AVNLog.debug("did not see any NMEA data for %d lines - close and reopen",maxerrors)
                    try:
-                     f.close()
+                     self.device.close()
                    except:
                      pass
-                   break;
+                   break
                  continue
              else:
                pass
@@ -321,7 +330,8 @@ class SerialReader():
 
          if (time.time() - lastTime) > porttimeout:
            self.setInfo("timeout",AVNWorker.Status.ERROR)
-           f.close()
+           self.device.close()
+           self.device=None
            if isOpen:
              AVNLog.info("reopen port %s - timeout elapsed",portname)
              isOpen=False

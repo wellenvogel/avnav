@@ -38,6 +38,7 @@ from avnav_util import *
 from avnav_worker import *
 import avnav_handlerList
 from avnuserapps import AVNUserAppHandler
+from usb import AVNUsbSerialReader
 from layouthandler import AVNLayoutHandler
 from charthandler import AVNChartHandler
 
@@ -184,6 +185,11 @@ class ApiImpl(AVNApi):
   def getBaseUrl(self):
     return URL_PREFIX+"/"+self.prefix
 
+  def registerUsbHandler(self, usbid, callback):
+    usbhandler=AVNWorker.findHandlerByName(AVNUsbSerialReader.getConfigName())
+    if usbhandler is None:
+      raise Exception("no usb handler configured, cannot register %s"%usbid)
+    usbhandler.registerExternalHandler(usbid,self.prefix,callback)
 
 
 class AVNPluginHandler(AVNWorker):

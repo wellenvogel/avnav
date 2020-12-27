@@ -245,3 +245,15 @@ class AVNApi:
     @return:
     '''
     raise NotImplemented()
+
+  def registerUsbHandler(self,usbid,callback):
+    '''
+    register a handler for an USB device
+    the USB Id is the same format like you configure for AVNUsbSerialReader
+    When you register for such an id, the UsbSerialReader will ignore this device
+    and when it is detected, your callback will be invoked with the device path
+    An exception will be raised if someone else already registered for the same device
+    @param usbid:
+    @param callback:
+    @return:
+    '''
