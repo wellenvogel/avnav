@@ -239,6 +239,18 @@ def pluginInfo(cls):<br>  return {
           <td>getBaseUrl</td>
           <td>gib die Basis URL für das plugin zurück</td>
         </tr>
+        <tr>
+          <td>registerUsbHandler<br>
+            (ab 20201227)</td>
+          <td>registriert einen Callback für ein USB Gerät. Mit dieser
+            Registrierung wird AvNav mitgeteilt, das es das USB Gerät nicht
+            beachten soll. Der Callback wird mit dem Device-Pfad für das Gerät
+            aufgerufen, wenn das Gerät erkannt wurde.<br>
+            Die USB-Id kann am einfachsten durch Beobachten der Status-Seite
+            beim Einstecken des Gerätes ermittelt werden. Siehe auch <a href="configfile.html#h4:ParameterfrAVNUsbSerialReader">AVNUsbSerialReader</a>.
+            Damit kann ein plugin selbst einfach das Handling für ein spezielles
+            Gerät übernehmen, Ein Beispiel findet sich auf <a href="https://github.com/wellenvogel/avnav-seatalk-remote-plugin/blob/master/plugin.py">GitHub</a>.</td>
+        </tr>
       </tbody>
     </table>
   </body>
