@@ -321,7 +321,7 @@ class SerialReader():
              if not NMEAParser.checkFilter(data,filter):
                continue
              if not hasNMEA:
-               self.setInfo("receiving at %d baud"%f.baudrate,AVNWorker.Status.NMEA)
+               self.setInfo("receiving at %d baud"%self.device.baudrate,AVNWorker.Status.NMEA)
              hasNMEA=True
              if not self.writeData is None:
                self.writeData(data,source=self.sourceName)
