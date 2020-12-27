@@ -29,7 +29,7 @@ project.ext.avnavVersion=null
 task pkgVersion {
     doFirst{	
 	    if (!project.hasProperty('packageVersion')) {
-		SimpleDateFormat f = new SimpleDateFormat('YYYYMMdd')
+		SimpleDateFormat f = new SimpleDateFormat('yyyyMMdd')
 		project.avnavVersion=f.format(new Date())
 	    } else {
 		project.avnavVersion = packageVersion

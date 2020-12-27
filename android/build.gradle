@@ -39,7 +39,7 @@ dependencies {
 File srcBase = new File(project.rootDir, "src" + File.separator + "main")
 File assetsDir = new File(project.rootDir, "assets")
 if (! project.hasProperty('packageVersion')){
-    SimpleDateFormat f=new SimpleDateFormat('YYYYMMdd')
+    SimpleDateFormat f=new SimpleDateFormat('yyyyMMdd')
     project.ext.avnavVersion=f.format(new Date())
 }
 else{

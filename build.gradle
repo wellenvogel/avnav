@@ -52,8 +52,9 @@ else {
     }
 }
 if (! project.hasProperty('packageVersion')){
-    SimpleDateFormat f=new SimpleDateFormat('YYYYMMdd')
+    SimpleDateFormat f=new SimpleDateFormat('yyyyMMdd')
     project.ext.avnavVersion=f.format(new Date())
+    logger.lifecycle("creating version from date: ${project.avnavVersion}")
 }
 else{
     project.ext.avnavVersion=project.packageVersion
