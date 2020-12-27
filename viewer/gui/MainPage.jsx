@@ -227,7 +227,13 @@ class MainPage extends React.Component {
                 editDisable: true,
                 overflow: true,
                 storeKeys: {
-                    visible: keys.gui.capabilities.uploadOverlays
+                    visible: keys.gui.capabilities.uploadOverlays,
+                    connected: keys.properties.connectedMode
+                },
+                updateFunction: (state)=>{
+                    return {
+                        visible: state.visible && state.connected
+                    }
                 }
             },
             {
