@@ -50,11 +50,12 @@ const toggleMob=()=>{
 
 const mobDefinition={
     name: "MOB",
-    storeKeys: activeRoute.getStoreKeys({visible:keys.properties.connectedMode}),
+    storeKeys: activeRoute.getStoreKeys({visible:keys.properties.connectedMode, hasGps: keys.nav.gps.valid}),
     updateFunction:(state)=>{
+        let toggle=StateHelper.targetName(state) === navobjects.WayPoint.MOB
         return {
-            toggle: StateHelper.targetName(state) === navobjects.WayPoint.MOB,
-            visible: state.visible
+            toggle: toggle,
+            visible: toggle || (state.visible && state.hasGps)
         }
     },
     onClick:()=>{
