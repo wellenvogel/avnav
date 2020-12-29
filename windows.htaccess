@@ -2,6 +2,12 @@ AddType application/octet-stream .img
 Options -Indexes
 RewriteEngine on
 RewriteOptions Inherit
+RewriteCond %{REQUEST_URI} "(.*)/latestwindows$" 
+RewriteRule ".*" "%1/latestwindows/" [R,L]
+
+RewriteCond %{REQUEST_URI} "(.*)/latestwindows/fr$" 
+RewriteRule ".*" "%1/latestwindows/" [R,L]
+
 RewriteRule "latestwindows/$" "release/VERSION/" [PT]
 RewriteRule "latestwindows/fr$" "release/VERSION/fr" [PT]
 RewriteRule "latestwindows/fr/$" "release/VERSION/fr/" [PT]
