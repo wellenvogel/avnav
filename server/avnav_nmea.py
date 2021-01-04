@@ -75,7 +75,8 @@ class NMEAParser():
     Key('tag','the original NMEA record'),
     Key('time','the received GPS time'),
     Key('satInview', 'number of Sats in view'),
-    Key('satUsed', 'number of Sats in use')
+    Key('satUsed', 'number of Sats in use'),
+    Key('transducers.*','transducer data from xdr')
   ]
 
   @classmethod
@@ -269,7 +270,7 @@ class NMEAParser():
         rt['lat']=self.nmeaPosToFloat(darray[2],darray[3])
         rt['lon']=self.nmeaPosToFloat(darray[4],darray[5])
         rt['mode']=int(darray[6] or '0') #quality
-        rt['satUsed']=int(darray[7])
+        rt['satUsed']=int(darray[7] or '0')
         self.addToNavData(rt,source=source,record=tag)
         return True
       if tag=='GSV':
@@ -298,13 +299,14 @@ class NMEAParser():
         #$--RMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,xxxx,x.x,a*hh
         #this includes current date
         rt['mode']=( 0 if darray[2] != 'A' else 2)
-        gpstime=darray[1]
         rt['lat']=self.nmeaPosToFloat(darray[3],darray[4])
         rt['lon']=self.nmeaPosToFloat(darray[5],darray[6])
         rt['speed']=float(darray[7] or '0')*self.NM/3600
         rt['track']=float(darray[8] or '0')
+        gpstime = darray[1]
         gpsdate = darray[9]
-        rt['time']=self.formatTime(self.gpsTimeToTime(gpstime, gpsdate))
+        if gpsdate != "" and gpstime != "":
+          rt['time']=self.formatTime(self.gpsTimeToTime(gpstime, gpsdate))
         self.addToNavData(rt,source=source,priority=1,record=tag)
         return True
       if tag == 'MWV':
@@ -370,9 +372,54 @@ class NMEAParser():
           self.addToNavData(rt,source=source,record=tag)
           return True
         return False
+
+      if tag == 'XDR':
+        # $--XDR,a,x.x,a,c--c, ..... *hh<CR><LF>
+        lf = len(darray)
+        i = 1
+        hasData=False
+        while i < lf:
+          if i < (lf - 3):
+            try:
+              # we need 4 fields
+              if darray[i + 1] is not None and darray[i] != "":
+                ttype = darray[i]
+                tdata = float(darray[i + 1])
+                tunit = darray[i + 2]
+                tname = darray[i + 3]
+                data=self.convertXdrValue(tdata,tunit)
+                if tname is not None and tname != "":
+                  rt["transducers."+tname]=data
+                  hasData=True
+            except Exception as e:
+              AVNLog.debug("decode %s at pos %d failed: %s"%(data,i,unicode(e.message)))
+              pass
+            i+=4
+        if hasData:
+          self.addToNavData(rt, source=source, record=tag)
+          return True
+        return False
+
     except Exception:
       AVNLog.info(" error parsing nmea data " + unicode(data) + "\n" + traceback.format_exc())
-  
+
+  @classmethod
+  def convertXdrValue(self, value, unit):
+    '''
+
+    :param value:
+    :param type:
+    :return:
+    '''
+    #see e.g. https://gpsd.gitlab.io/gpsd/NMEA.html#_xdr_transducer_measurement
+    if value is None:
+      return value
+    if unit == "C":
+      value+=273.15
+    if unit == "B":
+      value=value*100*1000
+    return value
+
   #parse one line of AIS data 
   #taken from ais.py and adapted to our input handling     
   def ais_packet_scanner(self,line,source='internal'):
