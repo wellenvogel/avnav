@@ -3,6 +3,7 @@
  */
 
 import navcompute from '../nav/navcompute.js';
+import {extendCoordinate} from "ol/extent";
 
 /**
  *
@@ -202,6 +203,33 @@ const formatString=function(data){
     return data;
 };
 
+const formatPressure=function(data,opt_unit){
+    try {
+        if (!opt_unit || opt_unit.toLowerCase() === 'pa') return formatDecimal(data);
+        if (opt_unit.toLowerCase() === 'hpa') {
+            return (parseFloat(data)/100).toFixed(2)
+        }
+        if (opt_unit.toLowerCase() === 'bar') {
+            return formatDecimal(parseFloat(data)/100000,2,4);
+        }
+    }catch(e){
+        return "-----";
+    }
+}
+
+const formatTemperature=function(data,opt_unit){
+    try{
+        if (! opt_unit || opt_unit.toLowerCase().match(/^k/)){
+            return formatDecimal(data,3,1);
+        }
+        if (opt_unit.toLowerCase().match(/^c/)){
+            return formatDecimal(parseFloat(data)-273.15,3,1)
+        }
+    }catch(e){
+        return "-----"
+    }
+}
+
 export default {
     formatDateTime,
     formatClock,
@@ -214,5 +242,7 @@ export default {
     formatDirection,
     formatSpeed,
     formatString,
-    formatDate
+    formatDate,
+    formatPressure,
+    formatTemperature
 };

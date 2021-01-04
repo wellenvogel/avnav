@@ -80,8 +80,12 @@ class KeyWidgetParameter extends WidgetParameter {
         super(name, type, list, displayName);
         this.list = ()=> {
             let kl = KeyHelper.getValueKeys().slice(0);
-            //TODO: better + generic
-            kl = kl.concat(globalStore.getKeysByPrefix('nav.gps.signalk'));
+            let storeKeys=globalStore.getKeysByPrefix('nav.gps',true);
+            storeKeys.forEach((sk)=>{
+                if (kl.indexOf(sk) >= 0) return;
+                kl.push(sk);
+            })
+
             return kl;
         };
     }

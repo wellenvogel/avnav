@@ -78,12 +78,15 @@ Store.prototype.getDataLocal=function(key,opt_default){
     return opt_default;
 };
 
-Store.prototype.getKeysByPrefix=function(prefix){
+Store.prototype.getKeysByPrefix=function(prefix,opt_simpleValuesOnly){
     let rt=[];
     if (!prefix) return rt;
     let len=prefix.length;
     for (let k in this.data){
-        if (k.substr(0,len) == prefix){
+        if (k.substr(0,len) === prefix){
+            if (opt_simpleValuesOnly){
+                if (typeof(this.data[k]) === 'object') continue;
+            }
             rt.push(k);
         }
     }
