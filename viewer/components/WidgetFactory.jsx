@@ -142,12 +142,13 @@ WidgetParameter.TYPE={
     SELECT:4,
     DISPLAY: 5,
     ARRAY: 6,
-    BOOLEAN:7,
-    COLOR:8
+    FORMATTER_PARAM: 7,
+    BOOLEAN:8,
+    COLOR:9
 };
 
 
-const createWidgetParameter=(name,type,list,displayName)=>{
+export const createWidgetParameter=(name,type,list,displayName)=>{
     if (typeof(type) === 'string'){
         type=WidgetParameter.TYPE[type];
         if (type === undefined) return;
@@ -164,6 +165,7 @@ const createWidgetParameter=(name,type,list,displayName)=>{
         case WidgetParameter.TYPE.KEY:
             return new KeyWidgetParameter(name, type, list, displayName);
         case WidgetParameter.TYPE.ARRAY:
+        case WidgetParameter.TYPE.FORMATTER_PARAM:
             return new ArrayWidgetParameter(name, type, list, displayName);
 
     }
@@ -179,7 +181,7 @@ const PREDEFINED_PARAMETERS=[
         }
         return fl;
     }),
-    createWidgetParameter('formatterParameters',WidgetParameter.TYPE.ARRAY,undefined,"formatter parameters"),
+    createWidgetParameter('formatterParameters',WidgetParameter.TYPE.FORMATTER_PARAM,undefined,"formatter parameters"),
     createWidgetParameter('value',WidgetParameter.TYPE.KEY),
     createWidgetParameter("className",WidgetParameter.TYPE.STRING,undefined,"css class")
 ];

@@ -1,15 +1,182 @@
+/**
+ *###############################################################################
+ # Copyright (c) 2012-2020 Andreas Vogel andreas@wellenvogel.net
+ #
+ #  Permission is hereby granted, free of charge, to any person obtaining a
+ #  copy of this software and associated documentation files (the "Software"),
+ #  to deal in the Software without restriction, including without limitation
+ #  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ #  and/or sell copies of the Software, and to permit persons to whom the
+ #  Software is furnished to do so, subject to the following conditions:
+ #
+ #  The above copyright notice and this permission notice shall be included
+ #  in all copies or substantial portions of the Software.
+ #
+ #  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ #  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ #  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ #  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ #  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ #  DEALINGS IN THE SOFTWARE.
+ #
+ ###############################################################################
+ * edit widget parameters
+ */
+
 import React from 'react';
 import PropTypes from 'prop-types';
-import Promise from 'promise';
 import LayoutHandler from '../util/layouthandler.js';
-import OverlayDialog from './OverlayDialog.jsx';
-import DialogContainer from './OverlayDialogDisplay.jsx';
-import WidgetFactory,{WidgetParameter} from '../components/WidgetFactory.jsx';
+import OverlayDialog,{dialogHelper} from './OverlayDialog.jsx';
+import WidgetFactory, {createWidgetParameter, WidgetParameter} from '../components/WidgetFactory.jsx';
 import assign from 'object-assign';
 import {Input,Checkbox,InputReadOnly,InputSelect,ColorSelector} from './Inputs.jsx';
-import ColorDialog from './ColorDialog.jsx';
 import DB from './DialogButton.jsx';
+import Formatters from '../util/formatter';
 
+const FormatterParamInput=(props)=>{
+        if (! props.formatterParameterDescription){
+            return <Input {...props}/>
+        }
+        let {className,
+            dialogRow,
+            showDialogFunction,
+            showUnset,
+            onChange,
+            list,
+            value,
+            ...other}=props;
+        let inputs=[];
+        let i=-1;
+        let current=value?value.split(","):[];
+        const changeValue=(newValue,idx)=> {
+            if (idx < 0) return;
+            if (idx >= current.length) return;
+            else current[i]=newValue;
+            props.onChange(current.join(","));
+        }
+        /*
+        we recycle here the widget parameter stuff
+         */
+        for (let d in props.formatterParameterDescription){
+            i++;
+            let idx=i;
+            let pD=createWidgetParameter(d,
+                props.formatterParameterDescription[d].type,
+                props.formatterParameterDescription[d].list,
+                "formatter:"+d
+                )
+            if (!pD) continue;
+            pD.default=props.formatterParameterDescription[d].default;
+            pD.idx=i;
+            pD.getValue=()=> {return idx>= current.length?pD.default:(current[idx]||pD.default)};
+            pD.setValue=(w,v)=>changeValue(v,idx);
+            inputs.push(pD);
+        }
+        while (current.length < (i+1)){
+            current.push("");
+        }
+        return(
+            <div className={className + " formatterParamContainer"}
+                 >
+                {inputs.map((d)=>{
+                    return ParamValueInput({
+                        param: d,
+                        widget:{},
+                        onChange: (nv)=> {},
+                        showDialogFunction:showDialogFunction
+                    })
+                })}
+            </div>
+        );
+}
+
+const getList=(list,current)=> {
+    let self=this;
+    let idx=0;
+    let displayList=[];
+    list.forEach((el)=>{
+        let item=undefined;
+        if (typeof(el) === 'object') {
+            item=assign({},el);
+        }
+        else{
+            item={name:el}
+        }
+        item.key=idx;
+        if (! item.label) item.label=item.name;
+        idx++;
+        displayList.push(item);
+    });
+    displayList.sort((a,b)=>{
+        if ( ! a || ! a.name) return -1;
+        if (! b || ! b.name) return 1;
+        let na=a.name.toUpperCase();
+        let nb=b.name.toUpperCase();
+        if (na<nb) return -1;
+        if (na > nb) return 1;
+        return 0;
+    });
+    return displayList;
+}
+
+const ParamValueInput=(props)=>{
+    let param=props.param;
+    let ValueInput=undefined;
+    let current=param.getValue(props.widget);
+    let addClass="";
+    let inputFunction=(val)=>{
+        props.onChange(param.setValue({},val));
+    };
+    let addOnProps={};
+    if (param.type == WidgetParameter.TYPE.DISPLAY){
+        ValueInput=InputReadOnly;
+        addClass=" disabled";
+    }
+    if (param.type == WidgetParameter.TYPE.STRING ||
+        param.type == WidgetParameter.TYPE.NUMBER||
+        param.type == WidgetParameter.TYPE.ARRAY){
+        ValueInput=Input;
+    }
+    if (param.type === WidgetParameter.TYPE.FORMATTER_PARAM){
+        ValueInput=FormatterParamInput;
+        let formatter=props.widget.formatter;
+        try {
+            if (typeof(formatter) !== 'function') {
+                let formatterFunction=Formatters[formatter];
+                if (formatterFunction && formatterFunction.parameters) {
+                    addOnProps.formatterParameterDescription = formatterFunction.parameters;
+                }
+            }
+        } catch (e){}
+    }
+    if (param.type == WidgetParameter.TYPE.SELECT || param.type == WidgetParameter.TYPE.KEY){
+        ValueInput=InputSelect;
+        inputFunction=(val)=>{
+            props.onChange(param.setValue({},val.name));
+        };
+    }
+    if (param.type == WidgetParameter.TYPE.BOOLEAN){
+        ValueInput=Checkbox;
+    }
+    if (param.type == WidgetParameter.TYPE.COLOR){
+        ValueInput=ColorSelector;
+    }
+    if (!ValueInput) return;
+    return <ValueInput
+        dialogRow={true}
+        className={"editWidgetParam "+param.name+addClass}
+        key={param.name.replace(/  */,'')}
+        label={param.displayName}
+        onChange={inputFunction}
+        showDialogFunction={props.showDialogFunction}
+        showUnset={true}
+        list={(current)=>getList(param.getList(),current)}
+        value={current}
+        widget={props.widget}
+        {...addOnProps}
+    />
+}
 
 class EditWidgetDialog extends React.Component{
     constructor(props){
@@ -21,54 +188,17 @@ class EditWidgetDialog extends React.Component{
             parameters:WidgetFactory.getEditableWidgetParameters(props.current)};
         this.insert=this.insert.bind(this);
         this.showDialog=this.showDialog.bind(this);
-        this.getList=this.getList.bind(this);
+        this.updateWidgetState=this.updateWidgetState.bind(this);
         this.sizeCount=0;
+        this.dialogHelper=dialogHelper(this);
     }
     insert(before){
         if (! this.props.insertCallback) return;
         this.props.closeCallback();
         this.props.insertCallback(this.state.widget,before,this.state.panel);
     }
-    getList(list,current){
-        let self=this;
-        let idx=0;
-        let displayList=[];
-        list.forEach((el)=>{
-            let item=undefined;
-            if (typeof(el) === 'object') {
-                item=assign({},el);
-            }
-            else{
-                item={name:el}
-            }
-            item.key=idx;
-            if (! item.label) item.label=item.name;
-            idx++;
-            displayList.push(item);
-        });
-        displayList.sort((a,b)=>{
-            if ( ! a || ! a.name) return -1;
-            if (! b || ! b.name) return 1;
-            let na=a.name.toUpperCase();
-            let nb=b.name.toUpperCase();
-            if (na<nb) return -1;
-            if (na > nb) return 1;
-            return 0;
-        });
-        return displayList;
-    }
     showDialog(Dialog){
-        let self=this;
-        this.setState({
-            dialog: (props)=>{
-                return(
-                    <Dialog
-                        {...props}
-                        closeCallback={()=>self.setState({dialog:undefined})}
-                    />
-                )
-            }
-        });
+        this.dialogHelper.showDialog(Dialog);
     }
     updateWidgetState(values,opt_new){
         let nvalues=undefined;
@@ -101,7 +231,6 @@ class EditWidgetDialog extends React.Component{
 
     render () {
         let self=this;
-        let Dialog=this.state.dialog;
         let hasCurrent=this.props.current.name !== undefined;
         let parameters=this.state.parameters;
         if (this.sizeCount !== this.state.sizeCount && this.props.updateDimensions){
@@ -112,6 +241,13 @@ class EditWidgetDialog extends React.Component{
         if (this.props.panel !== this.state.panel){
             panelClass+=" changed";
         }
+        let formatter;
+        for (let i in this.state.parameters){
+            if (this.state.parameters[i].name === 'formatter'){
+                formatter=this.state.parameters[i].getValue(this.state.widget);
+                break;
+            }
+        }
         return (
             <React.Fragment>
             <div className="selectDialog editWidgetDialog">
@@ -120,7 +256,7 @@ class EditWidgetDialog extends React.Component{
                              dialogRow={true}
                              label="Panel"
                              value={this.state.panel}
-                             list={(current)=>this.getList(this.props.panelList,current)}
+                             list={(current)=>getList(this.props.panelList,current)}
                              onChange={(selected)=>{
                                 this.setState({panel:selected.name})
                                 }}
@@ -141,49 +277,17 @@ class EditWidgetDialog extends React.Component{
                     dialogRow={true}
                     label="New Widget"
                     onChange={(selected)=>{this.updateWidgetState({name:selected.name},true);}}
-                    list={()=>this.getList(WidgetFactory.getAvailableWidgets())}
+                    list={()=>getList(WidgetFactory.getAvailableWidgets())}
                     value={this.state.widget.name||'-Select Widget-'}
                     showDialogFunction={this.showDialog}/>
                 {parameters.map((param)=>{
-                    let ValueInput=undefined;
-                    let current=param.getValue(this.state.widget);
-                    let addClass="";
-                    let inputFunction=(val)=>{
-                        self.updateWidgetState(param.setValue({},val));
-                    };
-                    if (param.type == WidgetParameter.TYPE.DISPLAY){
-                        ValueInput=InputReadOnly;
-                        addClass=" disabled";
-                    }
-                    if (param.type == WidgetParameter.TYPE.STRING ||
-                        param.type == WidgetParameter.TYPE.NUMBER||
-                        param.type == WidgetParameter.TYPE.ARRAY){
-                        ValueInput=Input;
-                    }
-                    if (param.type == WidgetParameter.TYPE.SELECT || param.type == WidgetParameter.TYPE.KEY){
-                        ValueInput=InputSelect;
-                        inputFunction=(val)=>{
-                            self.updateWidgetState(param.setValue({},val.name));
-                        };
-                    }
-                    if (param.type == WidgetParameter.TYPE.BOOLEAN){
-                        ValueInput=Checkbox;
-                    }
-                    if (param.type == WidgetParameter.TYPE.COLOR){
-                        ValueInput=ColorSelector;
-                    }
-                    if (!ValueInput) return;
-                    return <ValueInput
-                            dialogRow={true}
-                            className={"editWidgetParam "+param.name+addClass}
-                            key={param.name.replace(/  */,'')}
-                            label={param.displayName}
-                            onChange={inputFunction}
-                            showDialogFunction={self.showDialog}
-                            showUnset={true}
-                            list={(current)=>this.getList(param.getList(),current)}
-                            value={current}
-                        />
+                    return ParamValueInput({
+                        param:param,
+                        widget:assign({},this.state.widget,{formatter:formatter}),  //we must hand over the formatter
+                                                                                           //for correct handling of formatter param
+                        showDialogFunction: self.dialogHelper.showDialog,
+                        onChange:self.updateWidgetState
+                    })
                 })}
                 {(this.state.widget.name !== undefined)?
                     <div className="insertButtons">
@@ -214,13 +318,6 @@ class EditWidgetDialog extends React.Component{
                     :null}
                 </div>
             </div>
-            {Dialog?
-                <DialogContainer
-                    className="nested"
-                    content={Dialog}
-                    onClick={()=>{this.setState({dialog:undefined})}}
-                />:
-                null}
             </React.Fragment>
         );
     }
