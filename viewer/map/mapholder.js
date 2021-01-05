@@ -139,16 +139,7 @@ const MapHolder=function(){
      * @type {boolean}
      */
     this.routingActive=false;
-    /**
-     * the brightness
-     * @type {number}
-     */
-    this.opacity=0;
-    /**
-     * last set opacity
-     * @type {number}
-     */
-    this.lastOpacity=-1;
+
     this.compassOffset=0;
 
     let self=this;
@@ -432,9 +423,6 @@ MapHolder.prototype.prepareSourcesAndCreate=function(newSources,opt_preventDialo
                     if (ready) {
                         this.updateOverlayConfig();
                         this.initMap(opt_preventDialog);
-                        this.setBrightness(globalStore.getData(keys.properties.nightMode) ?
-                        globalStore.getData(keys.properties.nightChartFade, 100) / 100
-                            : 1);
                         resolve(1);
                     }
                     else {
@@ -605,7 +593,6 @@ MapHolder.prototype.updateOverlayConfig=function(newOverrides){
         let newConfig=assign({},currentConfig,merged.getCurrentItemConfig(currentConfig));
         if (newConfig){
             source.setVisible(newConfig.enabled === undefined || newConfig.enabled);
-            //TODO: opacity
         }
         else{
             source.resetVisible();
@@ -1520,10 +1507,6 @@ MapHolder.prototype.setCenterFromMove=function(newCenter,force){
  * @param {RenderEvent} evt
  */
 MapHolder.prototype.onPostCompose=function(evt){
-    if (this.opacity != this.lastOpacity){
-        evt.context.canvas.style.opacity=this.opacity;
-        this.lastOpacity=this.opacity;
-    }
     this.drawing.setContext(evt.context);
     this.drawing.setDevPixelRatio(evt.frameState.pixelRatio);
     this.drawing.setRotation(evt.frameState.viewState.rotation);
@@ -1607,10 +1590,6 @@ MapHolder.prototype.getRoutingActive=function(){
  */
 MapHolder.prototype.showEditingRoute=function(on){
     this.routinglayer.showEditingRoute(on);
-};
-
-MapHolder.prototype.setBrightness=function(brightness){
-    this.opacity=brightness;
 };
 
 

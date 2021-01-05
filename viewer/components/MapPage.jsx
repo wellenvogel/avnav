@@ -167,6 +167,9 @@ class MapPage extends React.Component{
                 onSortEnd={(oldIndex,newIndex)=>LayoutHandler.moveItem(self.props.id,panelItems.name,oldIndex,newIndex)}
                 />
         };
+        let mapOpacity=globalStore.getData(keys.properties.nightMode) ?
+            globalStore.getData(keys.properties.nightChartFade, 100) / 100
+            : 1;
         return (
             <Page
                 className={self.props.className?self.props.className+" mapPage":"mapPage"}
@@ -186,7 +189,7 @@ class MapPage extends React.Component{
                                     mode="horizontal"
                                 />
 
-                                <div className="map" ref="map"/>
+                                <div className="map" ref="map" style={{opacity:mapOpacity}}/>
                                 {self.props.overlayContent?self.props.overlayContent:null}
                             </div>
                             <div className={"bottomSection" + (globalStore.getData(keys.properties.allowTwoWidgetRows)?" twoRows":"")}>
