@@ -53,6 +53,10 @@ class Api{
         Toast(string,opt_time);
     }
 
+    registerFormatter(name,formatterFunction){
+        WidgetFactory.registerFormatter(name,formatterFunction);
+    }
+
 }
 
 export default  new Api();

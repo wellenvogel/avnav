@@ -41,7 +41,10 @@ let widgetList=[
             value: keys.nav.gps.course,
             isAverage:keys.nav.gps.courseAverageOn
         },
-        formatter: 'formatDirection'
+        formatter: 'formatDirection',
+        editableParameters: {
+            formatterParameters: false
+        }
 
     },
     {
@@ -86,7 +89,10 @@ let widgetList=[
         storeKeys:{
             value: keys.nav.wp.course
         },
-        formatter: 'formatDirection'
+        formatter: 'formatDirection',
+        editableParameters: {
+            formatterParameters: false
+        }
     },
     {
         name: 'VMG',
@@ -107,7 +113,10 @@ let widgetList=[
         storeKeys:{
             value:keys.nav.gps.windAngle
         },
-        formatter: 'formatDirection'
+        formatter: 'formatDirection',
+        editableParameters: {
+            formatterParameters: false
+        }
     },
     {
         name: 'WindSpeed',
@@ -129,6 +138,9 @@ let widgetList=[
             value:keys.nav.anchor.direction
         },
         formatter: 'formatDirection',
+        editableParameters: {
+            formatterParameters: false
+        }
     },
     {
         name: 'AnchorDistance',
@@ -257,7 +269,13 @@ let widgetList=[
     {
         name: 'RteCombine',
         caption: '',
-        children: [{name:'RteDistance'},{name:'RteEta'}]
+        children: [{name:'RteDistance'},{name:'RteEta'}],
+        editableParameters:{
+            formatter: false,
+            unit: false,
+            formatterParameters: false,
+            value: false
+        }
     },
     {
         name: 'Alarm',

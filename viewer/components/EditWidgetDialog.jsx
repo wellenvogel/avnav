@@ -47,34 +47,32 @@ const FormatterParamInput=(props)=>{
             value,
             ...other}=props;
         let inputs=[];
-        let i=-1;
-        let current=value?value.split(","):[];
-        const changeValue=(newValue,idx)=> {
-            if (idx < 0) return;
-            if (idx >= current.length) return;
-            else current[i]=newValue;
-            props.onChange(current.join(","));
+        let currentValues={};
+        let updateFunction=()=>{
+            let output=[];
+            for (let i=0;i<props.formatterParameterDescription.length;i++){
+                let v=currentValues[props.formatterParameterDescription[i].name];
+                output.push(v);
+            }
+            onChange(output);
         }
         /*
         we recycle here the widget parameter stuff
          */
+        let idx=-1;
         for (let d in props.formatterParameterDescription){
-            i++;
-            let idx=i;
-            let pD=createWidgetParameter(d,
+            idx++;
+            let pD=createWidgetParameter( props.formatterParameterDescription[d].name,
                 props.formatterParameterDescription[d].type,
                 props.formatterParameterDescription[d].list,
-                "formatter:"+d
+                "fmt:"+props.formatterParameterDescription[d].name
                 )
-            if (!pD) continue;
+            if (!pD) {
+                continue;
+            }
             pD.default=props.formatterParameterDescription[d].default;
-            pD.idx=i;
-            pD.getValue=()=> {return idx>= current.length?pD.default:(current[idx]||pD.default)};
-            pD.setValue=(w,v)=>changeValue(v,idx);
+            currentValues[pD.name]=value[idx];
             inputs.push(pD);
-        }
-        while (current.length < (i+1)){
-            current.push("");
         }
         return(
             <div className={className + " formatterParamContainer"}
@@ -82,8 +80,11 @@ const FormatterParamInput=(props)=>{
                 {inputs.map((d)=>{
                     return ParamValueInput({
                         param: d,
-                        widget:{},
-                        onChange: (nv)=> {},
+                        widget:currentValues,
+                        onChange: (nv)=> {
+                            assign(currentValues,nv);
+                            updateFunction();
+                        },
                         showDialogFunction:showDialogFunction
                     })
                 })}
@@ -123,7 +124,7 @@ const getList=(list,current)=> {
 const ParamValueInput=(props)=>{
     let param=props.param;
     let ValueInput=undefined;
-    let current=param.getValue(props.widget);
+    let current=param.getValueForDisplay(props.widget);
     let addClass="";
     let inputFunction=(val)=>{
         props.onChange(param.setValue({},val));
@@ -143,10 +144,11 @@ const ParamValueInput=(props)=>{
         let formatter=props.widget.formatter;
         try {
             if (typeof(formatter) !== 'function') {
-                let formatterFunction=Formatters[formatter];
-                if (formatterFunction && formatterFunction.parameters) {
-                    addOnProps.formatterParameterDescription = formatterFunction.parameters;
-                }
+                formatter = Formatters[formatter];
+            }
+            if (formatter && formatter.parameters) {
+                addOnProps.formatterParameterDescription = formatter.parameters;
+                current=param.getValue(props.widget)
             }
         } catch (e){}
     }
@@ -185,7 +187,7 @@ class EditWidgetDialog extends React.Component{
             panel: props.panel,
             widget:props.current,
             sizeCount:0,
-            parameters:WidgetFactory.getEditableWidgetParameters(props.current)};
+            parameters:WidgetFactory.getEditableWidgetParameters(props.current.name)};
         this.insert=this.insert.bind(this);
         this.showDialog=this.showDialog.bind(this);
         this.updateWidgetState=this.updateWidgetState.bind(this);
@@ -205,12 +207,9 @@ class EditWidgetDialog extends React.Component{
         if (opt_new){
             nvalues=values;
             let newState={
-                widget: nvalues,
+                widget: assign({weight:this.state.widget.weight},nvalues),
                 sizeCount: this.sizeCount + 1,
-                parameters:WidgetFactory.getEditableWidgetParameters(nvalues)};
-            newState.parameters.forEach((p)=>{
-                p.setDefault(newState.widget);
-            });
+                parameters:WidgetFactory.getEditableWidgetParameters(nvalues.name)};
             this.setState(newState);
         }
         else {
@@ -218,16 +217,6 @@ class EditWidgetDialog extends React.Component{
             this.setState({widget: nvalues})
         }
     }
-
-    getWidgetFromState(){
-        let rt=assign({},this.state.widget);
-        if (this.state.parameters){
-            this.state.parameters.forEach((p)=>{
-                p.ensureValue(rt);
-            })
-        }
-    }
-
 
     render () {
         let self=this;
@@ -241,13 +230,7 @@ class EditWidgetDialog extends React.Component{
         if (this.props.panel !== this.state.panel){
             panelClass+=" changed";
         }
-        let formatter;
-        for (let i in this.state.parameters){
-            if (this.state.parameters[i].name === 'formatter'){
-                formatter=this.state.parameters[i].getValue(this.state.widget);
-                break;
-            }
-        }
+        let completeWidgetData=assign({},WidgetFactory.findWidget(this.state.widget.name),this.state.widget);
         return (
             <React.Fragment>
             <div className="selectDialog editWidgetDialog">
@@ -283,8 +266,7 @@ class EditWidgetDialog extends React.Component{
                 {parameters.map((param)=>{
                     return ParamValueInput({
                         param:param,
-                        widget:assign({},this.state.widget,{formatter:formatter}),  //we must hand over the formatter
-                                                                                           //for correct handling of formatter param
+                        widget:completeWidgetData,
                         showDialogFunction: self.dialogHelper.showDialog,
                         onChange:self.updateWidgetState
                     })
@@ -360,7 +342,6 @@ EditWidgetDialog.createDialog=(widgetItem,pagename,panelname,opt_beginning,opt_w
     OverlayDialog.dialog((props)=> {
         return <EditWidgetDialog
             {...props}
-            weight={opt_weight||false}
             title="Select Widget"
             panel={panelname}
             panelList={LayoutHandler.getPagePanels(pagename)}

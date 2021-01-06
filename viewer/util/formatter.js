@@ -57,7 +57,7 @@ const formatLonLats=function(lonlat){
     let ew=this.formatLonLatsDecimal(lonlat.lon, 'lon');
     return ns + ', ' + ew;
 };
-formatLonLats.parameters={}
+formatLonLats.parameters=[];
 
 /**
  * format a number with a fixed number of fractions
@@ -96,11 +96,11 @@ const formatDecimal=function(number,fix,fract,addSpace){
     }
     return sign+rt;
 };
-formatDecimal.parameters={
-    fix:{type:'NUMBER'},
-    fract:{type:'NUMBER'},
-    addSpace:{type:'BOOLEAN'}
-}
+formatDecimal.parameters=[
+    {name:'fix',type:'NUMBER'},
+    {name: 'fract',type:'NUMBER'},
+    {name: 'addSpace',type:'BOOLEAN'}
+];
 const formatDecimalOpt=function(number,fix,fract,addSpace){
     number=parseFloat(number);
     if (isNaN(number)) return formatDecimal(number,fix,fract,addSpace);
@@ -110,11 +110,11 @@ const formatDecimalOpt=function(number,fix,fract,addSpace){
     return formatDecimal(number,fix,fract,addSpace);
 };
 
-formatDecimalOpt.parameters={
-    fix:{type:'NUMBER'},
-    fract:{type:'NUMBER'},
-    addSpace:{type:'BOOLEAN'}
-}
+formatDecimalOpt.parameters=[
+    {name:'fix',type:'NUMBER'},
+    {name: 'fract',type:'NUMBER'},
+    {name: 'addSpace',type:'BOOLEAN'}
+];
 
 /**
  * format a distance
@@ -137,9 +137,9 @@ const formatDistance=function(distance,opt_unit){
     }
     return formatDecimal(number,5,0);
 };
-formatDistance.parameters={
-    unit:{type:'SELECT',list:['nm','m','km'],default:'nm'}
-}
+formatDistance.parameters=[
+    {name:'unit',type:'SELECT',list:['nm','m','km'],default:'nm'}
+];
 
 /**
  *
@@ -161,9 +161,9 @@ const formatSpeed=function(speed,opt_unit){
     return formatDecimal(number,3,0);
 };
 
-formatSpeed.parameters={
-    unit:{type:'SELECT',list:['kn','ms','kmh'],default:'kn'}
-}
+formatSpeed.parameters=[
+    {name:'unit',type:'SELECT',list:['kn','ms','kmh'],default:'kn'}
+];
 
 const formatDirection=function(dir,opt_rad){
     if (opt_rad){
@@ -171,9 +171,9 @@ const formatDirection=function(dir,opt_rad){
     }
     return formatDecimal(dir,3,0);
 };
-formatDirection.parameters={
-    showRadian: {type:'BOOLEAN',default:false}
-}
+formatDirection.parameters=[
+    {name:'inputRadian',type:'BOOLEAN',default:false}
+];
 
 /**
  *
@@ -187,7 +187,7 @@ const formatTime=function(curDate){
         this.formatDecimal(curDate.getSeconds(),2,0).replace(" ","0");
     return datestr;
 };
-formatTime.parameters={}
+formatTime.parameters=[]
 /**
  *
  * @param {Date} curDate
@@ -199,7 +199,7 @@ const formatClock=function(curDate){
         this.formatDecimal(curDate.getMinutes(),2,0).replace(" ","0");
     return datestr;
 };
-formatClock.parameters={}
+formatClock.parameters=[]
 /**
  * format date and time
  * @param {Date} curDate
@@ -214,7 +214,7 @@ const formatDateTime=function(curDate){
         this.formatDecimal(curDate.getSeconds(),2,0).replace(" ","0");
     return datestr;
 };
-formatDateTime.parameters={}
+formatDateTime.parameters=[];
 
 const formatDate=function(curDate){
     let datestr=this.formatDecimal(curDate.getFullYear(),4,0)+"/"+
@@ -222,12 +222,12 @@ const formatDate=function(curDate){
         this.formatDecimal(curDate.getDate(),2,0);
     return datestr;
 };
-formatDate.parameters={}
+formatDate.parameters=[];
 
 const formatString=function(data){
     return data;
 };
-formatString.parameters={}
+formatString.parameters=[];
 const formatPressure=function(data,opt_unit){
     try {
         if (!opt_unit || opt_unit.toLowerCase() === 'pa') return formatDecimal(data);
@@ -241,9 +241,9 @@ const formatPressure=function(data,opt_unit){
         return "-----";
     }
 }
-formatPressure.parameters={
-    unit:{type:'SELECT',list:['pa','hpa','bar'],default:'pa'}
-}
+formatPressure.parameters=[
+    {name:'unit',type:'SELECT',list:['pa','hpa','bar'],default:'pa'}
+]
 
 const formatTemperature=function(data,opt_unit){
     try{
@@ -257,9 +257,9 @@ const formatTemperature=function(data,opt_unit){
         return "-----"
     }
 }
-formatTemperature.parameters={
-    unit: {type:'SELECT',list:['celsius','kelvin'],default:'celsius'}
-}
+formatTemperature.parameters=[
+    {name:'unit',type:'SELECT',list:['celsius','kelvin'],default:'celsius'}
+]
 
 export default {
     formatDateTime,

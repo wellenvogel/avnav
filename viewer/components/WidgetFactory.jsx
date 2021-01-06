@@ -31,8 +31,6 @@ export class WidgetParameter{
     }
     setValue(widget,value){
         if (! widget) widget={};
-        if (this.type == WidgetParameter.TYPE.DISPLAY) return widget;
-        if (value === '') value=undefined;
         widget[this.name] = value;
         return widget;
     }
@@ -49,7 +47,6 @@ export class WidgetParameter{
     }
     getValue(widget){
         let rt=widget[this.name];
-        if (rt === undefined) rt='';
         return rt;
     }
     getValueForDisplay(widget,opt_placeHolder){
@@ -57,7 +54,7 @@ export class WidgetParameter{
         if (rt !== undefined) return rt;
         rt=this.default;
         if (rt !== undefined) return rt;
-        return opt_placeHolder;
+        return opt_placeHolder||"";
     }
     isValid(value){
         return true;
@@ -93,14 +90,14 @@ class KeyWidgetParameter extends WidgetParameter {
         if (!widget) widget = {};
         if (!widget.storeKeys) widget.storeKeys = {};
         if (value === '') value=undefined;
-        widget.storeKeys.value = value;
+        widget.storeKeys[this.name] = value;
         return widget;
     }
 
     getValue(widget) {
         if (!widget) return '';
         if (!widget.storeKeys) return '';
-        return widget.storeKeys.value||'';
+        return widget.storeKeys[this.name]||'';
     }
 
 }
@@ -118,8 +115,18 @@ class ArrayWidgetParameter extends WidgetParameter {
     }
     getValue(widget){
         let rt=widget[this.name];
-        if (! rt) return '';
-        if (rt instanceof Array) return rt.join(",");
+        if (! rt) return [];
+        if (typeof(rt) === 'string') return rt.split(",");
+        return rt;
+    }
+    getValueForDisplay(widget,opt_placeHolder){
+        let rt=this.getValue(widget);
+        if (rt === undefined)  rt=this.default;
+        if (rt === undefined) rt=opt_placeHolder;
+        if (! rt) return "";
+        if (rt instanceof Array){
+            return rt.join(",")
+        }
         return rt;
     }
 }
@@ -128,7 +135,14 @@ class ReadOnlyWidgetParameter extends WidgetParameter {
     constructor(name, type, list, displayName) {
         super(name, type, list, displayName);
     }
-
+    getValue(widget){
+        let rt=widget[this.name];
+        if (rt === undefined) rt='';
+        if (typeof(rt)==='function'){
+            rt=rt.name||"function";
+        }
+        return rt;
+    }
     setValue(widget, value) {
         if (!widget) widget = {};
         return widget;
@@ -228,7 +242,6 @@ class WidgetFactory{
         let widgetData=this.findWidget(widget);
         if (! widgetData) return[];
         let rt=[];
-        let mergedData=assign({},widgetData,widget);
         let wClass=widgetData.wclass || DirectWidget;
         let editableParameters=assign({className:true},wClass.editableParameters,widgetData.editableParameters);
         let storeKeys=assign({},wClass.storeKeys,widgetData.storeKeys);
@@ -241,26 +254,25 @@ class WidgetFactory{
                 continue;
             }
             if (predefined){
+                //some special handling for the formatter
+                //some widgets have a fixed formatter
+                //but we still want to edit the formatter parameters
+                //and it is helpfull to show the formatter to the user
+                //so we set a readOnly parameter for the formatter
                 pdefinition=predefined;
                 if (pdefinition.name === 'formatter'){
                     if (widgetData.formatter){
                         pdefinition.type=WidgetParameter.TYPE.DISPLAY; //read only
                         pdefinition=pdefinition.clone(); //ensure correct class
-                        pdefinition.getValue=(widget)=> {
-                            if (typeof(widgetData.formatter) === 'function') {
-                                return widgetData.formatter.name;
-                            }
-                            else {
-                                return widgetData.formatter;
-                            }
-                        }
                     }
                 }
-                if (pdefinition.name === 'value' && storeKeys.value){
+                //do not allow to edit key parameters if they are already provided
+                //in the widget definition
+                if (pdefinition.type === WidgetParameter.TYPE.KEY && storeKeys[pdefinition.name]){
                     continue;
                 }
             }
-            else{
+            if (! predefined){
                 let npdefinition=createWidgetParameter(pname,pdefinition.type,pdefinition.list,pdefinition.displayName);
                 if (! npdefinition){
                     base.log("unknown widget parameter type: "+pdefinition.type);
@@ -486,6 +498,17 @@ WidgetFactory.prototype.loadAllGaugeDefinitions=function(){
         self.loadGaugeDefinitions(le.name,le.prefix,le.wclass);
     })
 };
+
+WidgetFactory.prototype.registerFormatter=function(name,formatterFunction){
+    if (! name) throw new Error("registerFormatter: missing parameter name");
+    if (! formatterFunction || (typeof(formatterFunction) !== 'function')){
+        throw new Error("registerFormatter("+name+"): missing or invalid formatterFunction");
+    }
+    if (Formatter[name]){
+        throw new Error("registerFormatter("+name+"): formatter already exists");
+    }
+    Formatter[name]=formatterFunction;
+}
 
 
 export default  new WidgetFactory();
