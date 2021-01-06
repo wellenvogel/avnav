@@ -1,3 +1,9 @@
+from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
+from builtins import map
+from builtins import str
+from builtins import object
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
@@ -136,7 +142,7 @@ class TileSet(object):
 
     def load_from(self,src_tiles):
         ld((src_tiles.root, self.root))
-        map(self.process_tile,src_tiles)
+        list(map(self.process_tile,src_tiles))
 
     def process_tile(self, tile):
         if self.pyramid and not self.pyramid.belongs_to(tile.coord()):
@@ -193,7 +199,7 @@ class TMStiles(TileDir): # see TileMap Diagram at http://wiki.osgeo.org/wiki/Til
     dir_pattern='[0-9]*/*/*.*'
 
     def path2coord(self,tile_path):
-        z,x,y=map(int,path2list(tile_path)[-4:-1])
+        z,x,y=list(map(int,path2list(tile_path)[-4:-1]))
         return (z,x,2**z-y-1)
 
     def coord2path(self,z,x,y):
@@ -205,7 +211,7 @@ class ZXYtiles(TileDir): # http://code.google.com/apis/maps/documentation/javasc
     dir_pattern='[0-9]*/*/*.*'
 
     def path2coord(self,tile_path):
-        return map(int,path2list(tile_path)[-4:-1])
+        return list(map(int,path2list(tile_path)[-4:-1]))
 
     def coord2path(self,z,x,y):
         return '%d/%d/%d' % (z,x,y)
@@ -219,7 +225,7 @@ class MapNav(TileDir): # http://mapnav.spb.ru/site/e107_plugins/forum/forum_view
 
     def path2coord(self,tile_path):
         z,y,x=path2list(tile_path)[-4:-1]
-        return map(int,(z[1:],x,y))
+        return list(map(int,(z[1:],x,y)))
 
     def coord2path(self,z,x,y):
         return 'Z%d/%d/%d' % (z,y,x)
@@ -232,7 +238,7 @@ class SASPlanet(TileDir): # http://sasgis.ru/forum/viewtopic.php?f=2&t=24
 
     def path2coord(self,tile_path):
         z,dx,x,dy,y=path2list(tile_path)[-6:-1]
-        z,x,y=map(int,(z[1:],x[1:],y[1:]))
+        z,x,y=list(map(int,(z[1:],x[1:],y[1:])))
         return (z-1,x,y)
 
     def coord2path(self,z,x,y):
@@ -245,7 +251,7 @@ class SASGoogle(TileDir):
 
     def path2coord(self,tile_path):
         z,y,x=path2list(tile_path)[-4:-1]
-        return map(int,(z[1:],x,y))
+        return list(map(int,(z[1:],x,y)))
 
     def coord2path(self,z,x,y):
         return 'z%d/%d/%d' % (z,x,y)
@@ -302,13 +308,13 @@ class MapperGDBM(TileSet): # due to GDBM weirdness on ARM this only works if run
     def child_init(self):
         import platform
         assert platform.machine().startswith('arm'), 'This convertion works only on a Nokia tablet'
-        import gdbm
+        import dbm.gnu
         import struct
 
         self.pack=struct.pack
         self.unpack=struct.unpack
-        print self.root
-        self.db=gdbm.open(self.root, 'cf' if write else 'r')
+        print(self.root)
+        self.db=dbm.gnu.open(self.root, 'cf' if write else 'r')
 
     def __del__(self):
         self.db.sync()
@@ -345,12 +351,12 @@ tile_formats=(
 
 def list_formats():
     for cl in tile_formats:
-        print '%10s\t%s%s\t%s' % (
+        print('%10s\t%s%s\t%s' % (
             cl.format,
             'r' if cl.input else ' ',
             'w' if cl.output else ' ',
             cl.__doc__
-            )
+            ))
 
 def tiles_convert(src_lst,options):
     for in_class in tile_formats:

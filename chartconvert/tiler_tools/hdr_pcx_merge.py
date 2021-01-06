@@ -1,3 +1,5 @@
+from builtins import range
+from builtins import object
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
@@ -39,7 +41,7 @@ from tiler_functions import *
 pcx_tile_w=640
 pcx_tile_h=480
 
-class MergeSet:
+class MergeSet(object):
     def __init__(self,src_lst,dest_dir):
         self.src_lst=src_lst
         self.dest_dir=dest_dir

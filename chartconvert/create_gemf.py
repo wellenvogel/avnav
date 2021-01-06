@@ -1,7 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
-from compiler.pyassem import CONV
 
 ###############################################################################
 # Copyright (c) 2012,2013,2014 Andreas Vogel andreas@wellenvogel.net
@@ -36,8 +35,8 @@ import threading
 # in a second phase tiles can be written "stream like"
 # logwriter must be a class having a log(string) method for writing infos
 # tiles are tuples (z,x,y)
-class GemfWriter():
-  MAXFILESIZE = 2000000000L
+class GemfWriter(object):
+  MAXFILESIZE = 2000000000
   def __init__(self,filename,logwriter=None):
     self.filename=filename
     self.headerComplete=False
@@ -61,7 +60,7 @@ class GemfWriter():
     if self.logwriter is not None:
       self.logwriter.log(txt)
     else:
-      print "GemfWriter(%s): %s" %(self.filename,txt)
+      print("GemfWriter(%s): %s" %(self.filename,txt))
   #check if we are still in the header phase
   def headerOpen(self):
     if self.headerComplete:
@@ -109,26 +108,26 @@ class GemfWriter():
       # unique_sets[zoom][Y values key] = [X values array]
       # unique_sets[10]["1-2-3-4-5"] = [1,2,3,4,5]
       unique_sets = {}
-      for zoom_level in results.keys():
+      for zoom_level in list(results.keys()):
         unique_sets[zoom_level] = {}
-        for x_val in results[zoom_level].keys():
+        for x_val in list(results[zoom_level].keys()):
 
             # strkey: Sorted list of Y values for a zoom/X, eg: "1-2-3-4"
             strkey = "-".join(["%d" % i for i in sorted(results[zoom_level][x_val])])
-            if strkey in unique_sets[zoom_level].keys():
+            if strkey in list(unique_sets[zoom_level].keys()):
                 unique_sets[zoom_level][strkey].append(x_val)
             else:
                 unique_sets[zoom_level][strkey] = [x_val,]
 
       # Find missing X rows in each unique_set record 
       split_xsets = {}
-      for zoom_level in results.keys():
+      for zoom_level in list(results.keys()):
         split_xsets[zoom_level] = []
-        for xset in unique_sets[zoom_level].values():
+        for xset in list(unique_sets[zoom_level].values()):
             setxmin = min(xset)
             setxmax = max(xset)
             last_valid = None
-            for xv in xrange(setxmin, setxmax+2):
+            for xv in range(setxmin, setxmax+2):
                 if xv not in xset and last_valid is not None:
                     split_xsets[zoom_level].append({'xmin': last_valid, 'xmax': xv-1})
                     last_valid = None
@@ -140,7 +139,7 @@ class GemfWriter():
       # Find missing Y rows in each unique_set chunk, create full_sets records for each complete chunk
 
       full_sets = {}
-      for zoom_level in split_xsets.keys():
+      for zoom_level in list(split_xsets.keys()):
         full_sets[zoom_level] = []
         for xr in split_xsets[zoom_level]:
             yset = results[zoom_level][xr['xmax']]
@@ -149,7 +148,7 @@ class GemfWriter():
             setymin = min(yset)
             setymax = max(yset)
             last_valid = None
-            for yv in xrange(setymin, setymax+2):
+            for yv in range(setymin, setymax+2):
                 if yv not in yset and last_valid is not None:
                     full_sets[zoom_level].append({'xmin': xr['xmin'], 'xmax': xr['xmax'],
                         'ymin': last_valid, 'ymax': yv-1,
@@ -160,7 +159,7 @@ class GemfWriter():
 
       #now we have in full_sets the complete ranges for this source
       numranges=0
-      for zoom in full_sets.keys():
+      for zoom in list(full_sets.keys()):
         for ri in full_sets[zoom]:
           rangedata=ri.copy()
           rangedata['zoom']=zoom
@@ -178,13 +177,13 @@ class GemfWriter():
       raise Exception("GemfWriter %s: unable to open file" %(self.filename))
     self.firsthandle=self.filehandle
     self.bytesWritten=0
-    sourcelist=""
+    sourcelist=b""
     for source in self.sources:
       sourcelist+=struct.pack("!l",source['index'])
       l=len(source['name'])
       sourcelist+=struct.pack("!l",l)
-      sourcelist+=struct.pack("!%ds" % (l),str(source['name']))
-    hdr=""
+      sourcelist+=struct.pack("!%ds" % (l),str(source['name']).encode('utf-8'))
+    hdr=b""
     hdr+=struct.pack("!3l",4,256,len(self.sources)) #GEMF version, tilesize,srclen
     hdr+=sourcelist
     hdr+=struct.pack("!l",len(self.ranges))
@@ -302,7 +301,7 @@ class GemfWriter():
 #some simple test function
 def gemfTest(mapdir,outfile):
   import traceback
-  print "creating gemf file %s from mapdir %s" %(outfile,mapdir)
+  print("creating gemf file %s from mapdir %s" %(outfile,mapdir))
   wr=GemfWriter(outfile)
   for r in range(2):
     srclist=os.listdir(mapdir)
@@ -324,7 +323,7 @@ def gemfTest(mapdir,outfile):
                     yv=y.replace(".png","")
                     try:
                       tile=(int(z),int(x),int(yv))
-                      print "(%d)adding tile %s %d %d %d" %(r,source,tile[0],tile[1],tile[2])
+                      print("(%d)adding tile %s %d %d %d" %(r,source,tile[0],tile[1],tile[2]))
                       if r==0:
                         wr.addTileSet(source,set([tile,]))
                       else:
@@ -333,7 +332,7 @@ def gemfTest(mapdir,outfile):
                         h.close()
                         wr.addTile(source,tile,buf)
                     except:
-                      print "Exception for %s: %s" % (ypath,traceback.format_exc())
+                      print("Exception for %s: %s" % (ypath,traceback.format_exc()))
     if r == 0:
       wr.finishHeader()
     else:

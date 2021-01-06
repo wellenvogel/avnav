@@ -1,3 +1,11 @@
+from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import map
+from builtins import chr
+from builtins import range
+from builtins import object
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
@@ -32,7 +40,7 @@ import logging
 import optparse
 import xml.dom.minidom
 import sqlite3
-import htmlentitydefs
+import html.entities
 import csv
 
 from tiler_functions import *
@@ -42,7 +50,7 @@ def re_subs(sub_list,l):
         l=re.sub(pattern,repl,l)
     return l
 
-htmlentitydefs.name2codepoint['apos']=27
+html.entities.name2codepoint['apos']=27
 
 def strip_html(text):
     'Removes HTML markup from a text string. http://effbot.org/zone/re-sub.htm#strip-html'
@@ -57,13 +65,13 @@ def strip_html(text):
             if text[1] == "#":
                 try:
                     if text[2] == "x":
-                        return unichr(int(text[3:-1], 16))
+                        return chr(int(text[3:-1], 16))
                     else:
-                        return unichr(int(text[2:-1]))
+                        return chr(int(text[2:-1]))
                 except ValueError:
                     pass
             else:
-                return unichr(htmlentitydefs.name2codepoint[text[1:-1]])
+                return chr(html.entities.name2codepoint[text[1:-1]])
         return text # leave as is
         # fixup end
 
@@ -72,7 +80,7 @@ def strip_html(text):
 def attr_update(self,**updates):
         self.__dict__.update(updates)
 
-class Category:
+class Category(object):
     def __init__(self,label):
         attr_update(self,label=label,enabled=1,desc='',cat_id=None,icons={})
 
@@ -86,13 +94,13 @@ class Category:
         if enabled is not None:
             self.enabled= 1 if enabled else 0;
 
-class Poi:
+class Poi(object):
     def __init__(self,label=None,lat=None,lon=None,desc='',categ=None):
         if desc is None:
             desc=''
         attr_update(self,label=label,desc=desc,lat=lat,lon=lon,categ=categ.lower())
 
-class Poi2Mapper:
+class Poi2Mapper(object):
     def __init__ (self,src,dest_db):
         attr_update(self,src=src,categories={},styles={},icons={},pois=[])
         if dest_db:
@@ -126,7 +134,7 @@ class Poi2Mapper:
     def load_categ(self,src):
         path=os.path.splitext(src)[0] + '.categories'
         if os.path.exists(path):
-            cats_lst=[[unicode(i.strip(),'utf-8') for i in l.split(',',4)] 
+            cats_lst=[[str(i.strip(),'utf-8') for i in l.split(',',4)] 
                         for l in open(path)]
             for d in cats_lst:
                 try:
@@ -163,7 +171,7 @@ class Poi2Mapper:
         csv.register_dialect('strip', skipinitialspace=True)
         with open(path,'rb') as data_f:
             data_csv=csv.reader(data_f,'strip')
-            header=[s.decode('utf-8').lower() for s in data_csv.next()]
+            header=[s.decode('utf-8').lower() for s in next(data_csv)]
 
             for col in range(len(header)): # find relevant colunm numbers
                 for id in col_id:
@@ -211,7 +219,7 @@ class Poi2Mapper:
                     
     def get_coords(self,elm):
         coords=elm.getElementsByTagName("coordinates")[0].firstChild.data.split()
-        return [map(float,c.split(',')) for c in coords]
+        return [list(map(float,c.split(','))) for c in coords]
         
     def handlePlacemark(self,pm):
         point=pm.getElementsByTagName("Point")
@@ -243,7 +251,7 @@ class Poi2Mapper:
         icon_urls=[]
         icon_aliases=[] #"ln -s '%s.db' 'poi.db'"  % self.base]
         icon_aliase_templ="ln -s '%s' '%s'"
-        for (c_key,c) in self.categories.iteritems():
+        for (c_key,c) in self.categories.items():
             for i_key in c.icons:
                 cat_list.append('%i, %s, %s%s' % (c.enabled,i_key,c.label,((', '+c.desc) if c.desc else '')))
                 url=c.icons[i_key]
@@ -253,11 +261,11 @@ class Poi2Mapper:
                     icon_aliases.append(icon_aliase_templ % (i_key, c_key+'.jpg'))
         with open(self.base+'.categories.gen','w') as f:
             for s in cat_list:
-                print >>f, s
+                print(s, file=f)
         with open(self.base+'.sh','w') as f:
             for ls in [icon_urls,icon_aliases]:
                 for s in ls:
-                    print >>f, s
+                    print(s, file=f)
 
     def proc_category(self,c):
         self.dbc.execute('insert into category (label, desc, enabled) values (?,?,?);',
@@ -276,8 +284,8 @@ class Poi2Mapper:
             self.name=[n for n in self.doc.getElementsByTagName("Document")[0].childNodes 
                         if n.nodeType == n.ELEMENT_NODE and n.tagName == 'name'][0].firstChild.data
 
-            self.styles=dict(map(self.handleStyle,self.doc.getElementsByTagName("Style")))
-            self.pois+=filter(None,map(self.handlePlacemark,self.doc.getElementsByTagName("Placemark")))
+            self.styles=dict(list(map(self.handleStyle,self.doc.getElementsByTagName("Style"))))
+            self.pois+=[_f for _f in map(self.handlePlacemark,self.doc.getElementsByTagName("Placemark")) if _f]
             self.doc.unlink()
         except IOError:
             logging.warning(' No input file: %s' % src)
@@ -291,7 +299,7 @@ class Poi2Mapper:
                     raise Exception('Invalid input file: %s' % src)
 
     def proc_all(self):
-        map(self.proc_src, self.src)
+        list(map(self.proc_src, self.src))
 
         self.db=sqlite3.connect(self.dest_db)
         self.dbc = self.db.cursor()
@@ -305,8 +313,8 @@ class Poi2Mapper:
         except:
             pass
 
-        map(self.proc_category,self.categories.itervalues())
-        map(self.proc_poi,self.pois)
+        list(map(self.proc_category,iter(self.categories.values())))
+        list(map(self.proc_poi,self.pois))
         self.db.commit()
         self.db.close()
         self.write_aux()

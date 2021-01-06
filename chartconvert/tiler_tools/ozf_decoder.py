@@ -27,6 +27,12 @@
 
 from __future__ import with_statement
 from __future__ import print_function
+from builtins import str
+from builtins import hex
+from builtins import zip
+from builtins import map
+from builtins import range
+from builtins import object
 
 import sys
 import os
@@ -139,7 +145,7 @@ class OzfImg(object):
             if foo < 0: foo+=256
             if foo not in magic_lst:
                 pf('s',end='')                
-            ld('seed found',map(hex,(self.seed,magic_lst[0x93],foo)),foo in magic_lst,i)
+            ld('seed found',list(map(hex,(self.seed,magic_lst[0x93],foo))),foo in magic_lst,i)
             self.new_seed(seed)
             
         # continue with header 1
@@ -175,12 +181,12 @@ class OzfImg(object):
 
         # palette
         p_raw=oziread('<%dB' % (256*long_size))
-        self.palette=flatten(zip(p_raw[2::4],p_raw[1::4],p_raw[0::4]))
+        self.palette=flatten(list(zip(p_raw[2::4],p_raw[1::4],p_raw[0::4])))
         try:
             assert not any(p_raw[3::4]), 'pallete pad is not zero'
         except:
             pf('p',end='')
-            ld('p_raw[3::4]',map(hex,p_raw[3::4]))
+            ld('p_raw[3::4]',list(map(hex,p_raw[3::4])))
         #self.max_color=0
         #ld('palette',self.palette)
 
@@ -221,7 +227,7 @@ class OzfImg(object):
         src=self.mmap[self.mmap_pos:self.mmap_pos+sz]
         res=struct.unpack(fmt,self.descramble(src))
         self.mmap_pos+=sz
-        return dict(zip(fields,res)) if fields else res 
+        return dict(list(zip(fields,res))) if fields else res 
         
     def tell(self):
         return self.mmap_pos
@@ -417,11 +423,11 @@ def make_new_map(src,dest,map_dir):
         img_dir='.'
     if map_dir is None:
         map_dir=img_dir
-    dir_lst=flatten(map(glob.glob,(
+    dir_lst=flatten(list(map(glob.glob,(
         '%s/%s*.map' % (map_dir,base),
         '%s/%s*.MAP' % (map_dir,base),
         '%s/*.map' % (map_dir,),
-        '%s/*.MAP' % (map_dir,))))
+        '%s/*.MAP' % (map_dir,)))))
     ld(img_file,dir_lst)
 
     patt=img_file.decode('utf_8','ignore').lower()
@@ -521,7 +527,7 @@ if __name__=='__main__':
     except:
         raise Exception("No source specified")
             
-    err_lst=filter(None,parallel_map(convert,sources))
+    err_lst=[_f for _f in parallel_map(convert,sources) if _f]
     pf('')
     if not err_lst:
         sys.exit(0)

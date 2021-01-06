@@ -25,6 +25,10 @@
 
 from __future__ import with_statement
 from __future__ import print_function
+from builtins import zip
+from builtins import map
+from builtins import range
+from builtins import object
 
 version='%prog version 2.3'
 
@@ -70,7 +74,7 @@ def set_nothreads():
 
 def parallel_map(func,iterable):
     if multiprocessing is None or len(iterable) < 2:
-        return map(func,iterable)
+        return list(map(func,iterable))
     else:
         # map in parallel
         mp_pool = multiprocessing.Pool() # multiprocessing pool
@@ -81,14 +85,14 @@ def parallel_map(func,iterable):
     return res
 
 def ld(*parms):
-    logging.debug(' '.join(itertools.imap(repr,parms)))
+    logging.debug(' '.join(map(repr,parms)))
 
 def ld_nothing(*parms):
     return
 
 def pf(*parms,**kparms):
     end=kparms['end'] if 'end' in kparms else '\n'
-    sys.stdout.write(' '.join(itertools.imap(str,parms))+end)
+    sys.stdout.write(' '.join(map(str,parms))+end)
     sys.stdout.flush()
 
 def pf_nothing(*parms,**kparms):
@@ -180,7 +184,7 @@ def proj_cs2geog_cs(proj4):
     srs_geo.CopyGeogCSFrom(srs_proj)
     return srs_geo.ExportToProj4()
 
-class MyTransformer:
+class MyTransformer(object):
     def __init__(self,src_ds=None,dst_ds=None,**options):
         for key in ('SRC_SRS','DST_SRS'):
             try:
@@ -211,7 +215,7 @@ def sasplanet_hlg2ogr(fname):
         for l in lines[2:]:
             val=float(l.split('=')[1].replace(',','.'))
             coords[1 if 'Lat' in l else 0].append(val)
-        points=zip(*coords)
+        points=list(zip(*coords))
         ld('points',points)
 
     ring = ogr.Geometry(ogr.wkbLinearRing)

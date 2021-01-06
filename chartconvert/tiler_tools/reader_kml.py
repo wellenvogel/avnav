@@ -72,7 +72,7 @@ class KmlLayer(SrcLayer):
         layer=self.data
         
         if '<gx:LatLonQuad>' in layer:
-            src_refs=[map(float,i.split(',')) for i in kml_parm(layer,'coordinates').split()]
+            src_refs=[list(map(float,i.split(','))) for i in kml_parm(layer,'coordinates').split()]
         else: # assume LatLonBox
             assert '<LatLonBox>' in layer
             north,south,east,west=[float(kml_parm(layer,parm)) for parm in ('north','south','east','west')]
@@ -84,14 +84,14 @@ class KmlLayer(SrcLayer):
             angle=math.radians(float(kml_parm(layer,'rotation')))
             dx=east-west
             dy=north-south
-            xc=(west +east )/2
-            yc=(south+north)/2
+            xc=(west +east )//2
+            yc=(south+north)//2
             x1=dy*math.sin(angle)
             x2=dx*math.cos(angle)
             y1=dy*math.cos(angle)
             y2=dx*math.sin(angle)
-            x0=xc-(x1+x2)/2
-            y0=yc-(y1+y2)/2
+            x0=xc-(x1+x2)//2
+            y0=yc-(y1+y2)//2
             dst_refs=[(x0+x1,y0),(x0+x1+x2,y0+y2),(x0+x2,y0+y1+y2),(x0,y0+y1)]
         ld(dst_refs)
 

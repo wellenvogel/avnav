@@ -23,7 +23,6 @@
 #  DEALINGS IN THE SOFTWARE.
 ###############################################################################
 
-from __future__ import with_statement
 
 import os
 import logging
@@ -86,12 +85,12 @@ class RefPoints(object):
 
         nrefs=len(filter(None,(self.pixels,self.latlong,self.cartesian))[0])
         if not self.ids:
-            self.ids=map(str,range(1,nrefs+1))
+            self.ids=list(map(str,list(range(1,nrefs+1))))
 
         if nrefs == 2:
             logging.warning(' Only 2 reference points: assuming the chart is north alligned')
             self.ids += ['Extra03','Extra04']
-            for i in filter(None,(self.pixels,self.latlong,self.cartesian,self.zone,self.hemisphere)):
+            for i in [_f for _f in (self.pixels,self.latlong,self.cartesian,self.zone,self.hemisphere) if _f]:
                 try: # list of coordinates? -- swap x and y between them
                     i.append((i[0][0],i[1][1]))
                     i.append((i[1][0],i[0][1]))
@@ -135,8 +134,8 @@ class RefPoints(object):
 
     def over_180(self):
         if not self.cartesian: # refs are lat/long
-            leftmost=min(zip(self.pixels,self.latlong),key=lambda r: r[0][0])
-            rightmost=max(zip(self.pixels,self.latlong),key=lambda r: r[0][0])
+            leftmost=min(list(zip(self.pixels,self.latlong)),key=lambda r: r[0][0])
+            rightmost=max(list(zip(self.pixels,self.latlong)),key=lambda r: r[0][0])
             ld('leftmost',leftmost,'rightmost',rightmost)
             if leftmost[1][0] > rightmost[1][0]:
                 return leftmost[1][0]
@@ -151,9 +150,9 @@ class LatLonRefPoints(RefPoints):
     def __init__(self,owner,ref_lst):
         super(LatLonRefPoints,self).__init__(
             owner,
-            **dict(zip(
+            **dict(list(zip(
                 ['ids','pixels','latlong'],
-                self.transpose(ref_lst)[:3]))
+                self.transpose(ref_lst)[:3])))
             )
 
 ###############################################################################
@@ -184,7 +183,7 @@ class SrcMap(object):
                     pass
                 except KeyError:
                     pass
-        for dct,func in csv_map.values():
+        for dct,func in list(csv_map.values()):
             ld(dct)
 
     def ini_lst(self,dct,row):
@@ -305,7 +304,7 @@ class SrcLayer(object):
             os.chdir(start_dir)
 
         if options.get_cutline: # print cutline then return
-            print poly
+            print(poly)
             return
         if gmt_data and options.cut_file: # create shapefile with a cut polygon
             with open(base+'.gmt','w+') as f:

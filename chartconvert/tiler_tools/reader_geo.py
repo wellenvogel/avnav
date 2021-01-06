@@ -25,7 +25,6 @@
 #  DEALINGS IN THE SOFTWARE.
 ###############################################################################
 
-from __future__ import with_statement
 
 import os
 import logging
@@ -151,7 +150,7 @@ class GeoNosLayer(SrcLayer):
         assert hdr.startswith('NOS/')
         patt='RA='
         sz=hdr[hdr.index(patt)+len(patt):].split(',')[2:4]
-        return map(int,sz)
+        return list(map(int,sz))
 
     def get_name(self):
         return self.hdr_parms('Name')[0]

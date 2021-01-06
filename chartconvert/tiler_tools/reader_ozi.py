@@ -25,8 +25,6 @@
 #  DEALINGS IN THE SOFTWARE.
 ###############################################################################
 
-from __future__ import with_statement
-
 import os
 import logging
 import locale
@@ -35,6 +33,7 @@ from optparse import OptionParser
 
 from tiler_functions import *
 from reader_backend import *
+from functools import reduce
 
 ###############################################################################
 
@@ -89,9 +88,9 @@ class OziCartesianRefPoints(RefPoints):
     def __init__(self,owner,ref_lst):
         super(OziCartesianRefPoints,self).__init__(
             owner,
-            **dict(zip(
+            **dict(list(zip(
                 ['ids','pixels','cartesian','zone','hemisphere'],
-                self.transpose(ref_lst)[:5]))
+                self.transpose(ref_lst)[:5])))
             )
 
     def grid2coord(self):

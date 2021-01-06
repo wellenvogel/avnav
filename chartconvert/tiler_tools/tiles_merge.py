@@ -47,7 +47,7 @@ def transparency(img):
     (a_min,a_max)=a.getextrema() # get min/max values for alpha channel
     return 1 if a_min == 255 else 0 if a_max == 0 else -1
 
-class MergeSet:
+class MergeSet(object):
     
     def __init__(self,src_dir,dst_dir):
 
@@ -92,14 +92,14 @@ class MergeSet:
         if self.src.profile.startswith('zxy'):
             self.underlay_map=[ 
                 #  lf    up    rt    lw
-                (   0,    0,tsx/2,tsy/2), (tsx/2,    0,  tsx,tsy/2),
-                (   0,tsy/2,tsx/2,  tsy), (tsx/2,tsy/2,  tsx,  tsy),
+                (   0,    0,tsx//2,tsy/2), (tsx//2,    0,  tsx,tsy//2),
+                (   0,tsy//2,tsx//2,  tsy), (tsx//2,tsy//2,  tsx,  tsy),
                 ]
         else:
             self.underlay_map=[ 
                 #  lf    up    rt    lw
-                (   0,tsy/2,tsx/2,  tsy), (tsx/2,tsy/2,  tsx,  tsy),
-                (   0,    0,tsx/2,tsy/2), (tsx/2,    0,  tsx,tsy/2),
+                (   0,tsy//2,tsx//2,  tsy), (tsx//2,tsy//2,  tsx,  tsy),
+                (   0,    0,tsx//2,tsy//2), (tsx//2,    0,  tsx,tsy//2),
                 ]
 
     def merge_metadata(self):
@@ -121,7 +121,7 @@ class MergeSet:
 
         ld([round(i/1000) for i in src.extent],[round(i/1000) for i in dst.extent])
         box_el = elem0(doc,"BoundingBox")
-        for i,name,func in zip(range(4),('minx','miny','maxx','maxy'),(min,min,max,max)):
+        for i,name,func in zip(list(range(4)),('minx','miny','maxx','maxy'),(min,min,max,max)):
             box_el.setAttribute(name, repr(func(src.extent[i],dst.extent[i])))
 
         new_zooms=src.zooms - dst.zooms
@@ -151,7 +151,7 @@ class MergeSet:
         (s,ext)=os.path.splitext(tile)
         (s,y)=os.path.split(s)
         (z,x)=os.path.split(s)
-        (z,y,x)=map(int,(z,y,x))
+        (z,y,x)=list(map(int,(z,y,x)))
         if z < self.max_zoom:
             return
 
@@ -212,7 +212,7 @@ class MergeSet:
             if options.underlay and transp != 0:
                 self.underlay(tile,src_path,src_raster,options.underlay)
         except KeyboardInterrupt: # http://jessenoller.com/2009/01/08/multiprocessingpool-and-keyboardinterrupt/
-            print 'got KeyboardInterrupt'
+            print('got KeyboardInterrupt')
             raise KeyboardInterruptError()
         return (tile,transp) # send back transparency values for caching
 

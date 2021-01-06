@@ -1,10 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
-from compiler.pyassem import CONV
 
 ###############################################################################
-# Copyright (c) 2012,2013 Andreas Vogel andreas@wellenvogel.net
+# Copyright (c) 2012,2021 Andreas Vogel andreas@wellenvogel.net
 #  parts of this software are based on tiler_tools (...)
 #  the license terms (see below) apply to the complete software the same way
 #
@@ -47,10 +46,10 @@ def ttConvert(chart,outdir,outname,tilertools):
   
   
 def slog(txt):
-  print "LOG %s"%(txt,)
+  print("LOG %s"%(txt,))
 
 def swarn(txt):
-  print "WARNING %s"%(txt,)
+  print("WARNING %s"%(txt,))
 
 
 #------------------------------------------------
@@ -165,7 +164,7 @@ def nvConvert(chart,outdir,outname,tilertools,logf,warn,updateOnly=False):
   
 if __name__ == '__main__':
   if len(sys.argv) != 4:
-    print "usage: %s chartname outdir tilertoolsdir"%(sys.argv[0],)
+    print("usage: %s chartname outdir tilertoolsdir"%(sys.argv[0],))
     sys.exit(1)
   nvConvert(sys.argv[1], sys.argv[2], os.path.join(sys.argv[2],os.path.basename(sys.argv[1])+".vrt"), 
             sys.argv[3],  slog, swarn, False)
