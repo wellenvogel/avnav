@@ -7,15 +7,17 @@
   </head>
   <body data-order="6200">
     <h1>User Spezific Java Script Code</h1>
+    <div class="toc"> </div>
     <p>To adapt AvNav to your needs you can extend it with some java script
       code.</p>
     <p>It is possible to define new data displays (widgets) that later on can be
-      placed using the <a href="layouts.html">layout
-        editor</a>. In principle you can run arbitrary java script code but you
-      have to take care not to disturb the AvNav main functions.</p>
+      placed using the <a href="layouts.html">layout editor</a>. In principle
+      you can run arbitrary java script code but you have to take care not to
+      disturb the AvNav main functions.</p>
     <p>The jave script code has to be located at user.js in the directory
       BASEDIR/user/viewer.<br>
       (e.g. on the pi BASEDIR is /home/pi/avnav/data).</p>
+    <h2>Editing</h2>
     <p>To simplify working on the code you can directly access the files in this
       directory via Files/Download page <img src="../viewerimages/icons-new/ic_file_download.svg"
         alt="" class="inlineimage">, subpage <img src="../viewerimages/icons-new/folder_shared.svg"
@@ -33,6 +35,7 @@
     <p>I would recommend to download and store the file regularly after editing
       it as there is no version control included in AvNav.</p>
     <p>The current template for the file you can also find on <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">github</a>.</p>
+    <h2>Widgets</h2>
     <p>Basically you can add the following types of widgets:</p>
     <ul>
       <li>widgets with an own formatter (and potentially fixed values they will
@@ -215,8 +218,11 @@
       </tbody>
     </table>
     <p>After defining a widget you need to register it at AvNav
-      (avnav.registerWidget). As a second parameter you can provide an object
-      containing parameters that should be shown in the layout editor.</p>
+      (avnav.registerWidget). </p>
+      <a name="widgetparameter" id="widgetparameter"></a>  
+    <h2>Widget Parameters</h2>
+    <p>As a second parameter you can provide an object containing parameters
+      that should be shown in the layout editor.</p>
     <p>Examples are inside the <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">user.js
         template</a>. The values that a user selects in the Layout editor will
       become part of the properties provided to the renderHtml and renderCanvas
@@ -289,6 +295,46 @@
     maxValue: {type: 'NUMBER', default: 4000},
    };
 </div>
+    <h2>Formatter </h2>
+    <p>Beside the widgets you can implement formatter that will prepare the
+      values for being displayed.<br>
+      There is already a couple of formatters being available in the system -
+      see <a href="layouts.html#formatter">Layout Editor</a>.</p>
+    <p>Since version 20210106 you can register your own formatters in AvNav and
+      this way make them available for other widgets. Basically a formatter is a
+      function that will get the value to be formatted as first parameter and
+      has to return a string.<br>
+      The length of the string should be independent from the current value
+      (using space padding if necessary) to avoid interfering with the automatic
+      sizing on the dashboard pages.</p>
+    <p>A formatter can accept additional parameters to control the output. Those
+      parameters can be set with the widget property "formatterParameters" -
+      typically in the <a href="layouts.html#formatter">Layout Editor</a>.</p>
+    <p>Example:</p>
+    <div class="code">const formatTemperature=function(data,opt_unit){
+    try{
+        if (! opt_unit || opt_unit.toLowerCase().match(/^k/)){
+            return formatDecimal(data,3,1);
+        }
+        if (opt_unit.toLowerCase().match(/^c/)){
+            return formatDecimal(parseFloat(data)-273.15,3,1)
+        }
+    }catch(e){
+        return "-----"
+    }
+}
+formatTemperature.parameters=[
+    {name:'unit',type:'SELECT',list:['celsius','kelvin'],default:'celsius'}
+]</div>
+    <div class="code">avnav.api.registerFormatter("mySpecialTemperature",formatTemperature);</div>
+    <p>If there is already a formatter with the same name registerFormatter will
+      throw an exception.</p>
+    <p>Ech formatter function should have a property "parameters". This property
+      describes the values that will be presented to the user in the layout
+      editor as formatterParameters. The values in this definition follow the
+      same syntax as for <a href="#widgetparameter">editable widget parameters</a>.</p>
+    <p></p>
+    <h2>Libraries and Images</h2>
     <p>If you need to access libraries or images in your java script code you
       can upload they into the same directory- images additionally also into the
       images <img src="../viewerimages/icons-new/image-icon.svg" alt="" class="inlineimage">directory.</p>

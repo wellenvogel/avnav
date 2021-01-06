@@ -7,6 +7,7 @@
   </head>
   <body data-order="6200">
     <h1>User Spezifischer Java Script Code</h1>
+    <div class="toc"> </div>
     <p>Um eine einfache Möglichkeit zu bieten, avnav an seine Bedürfnisse
       anzupassen, kann man mit ein wenig Java Script Code AvNav relativ einfach
       erweitern.</p>
@@ -17,6 +18,7 @@
     <p>Der Java Script code liegt in der Datei user.js im Verzeichnis
       BASEDIR/user/viewer.<br>
       BASEDIR ist z.B. auf dem pi /home/pi/avnav/data.</p>
+    <h2>Bearbeitung</h2>
     <p>Um die Bearbeitung zu erleichtern, kann man über die Files/Download Seite
       <img src="../viewerimages/icons-new/ic_file_download.svg" alt="" class="inlineimage">und
       die Unterseite <img src="../viewerimages/icons-new/folder_shared.svg" alt=""
@@ -35,6 +37,7 @@
       keine Versionsverwaltung in avnav.</p>
     <p>Das aktuelle Template kann man auch <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">auf
         github</a> finden.</p>
+    <h2>Anzeigen (Widgets)</h2>
     <p>Man kann im Wesentlichen die folgenden Arten von Anzeigen hinzufügen:</p>
     <ul>
       <li>Widgets mit eigenem Formatter (und ggf. festen Werten) basierend auf
@@ -219,9 +222,10 @@
       </tbody>
     </table>
     <p>Nach der definition muss das Widget bei AvNav bekannt gemacht werden
-      (avnav.registerWidget). Neben der Widget Definition können hier noch
-      Parameter angegeben werden, die dann im Layout Editor für das Widget
-      angezeigt werden.</p>
+      (avnav.registerWidget). </p>
+    <h2><a name="widgetparameter" id="widgetparameter"></a>Widget Parameter</h2>
+    <p>Neben der Widget Definition können hier noch Parameter angegeben werden,
+      die dann im Layout Editor für das Widget angezeigt werden.</p>
     <p>Beispiele sind im <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">user.js
         Template</a> zu finden. Die Werte, die im Layout Editor für diese
       Parameter angegeben werden, stehen später in den renderHtml und
@@ -295,6 +299,46 @@
     maxValue: {type: 'NUMBER', default: 4000},
    };
 </div>
+    <h2> Formatierer(Formatter) </h2>
+    <p>Neben den eigentlichen Anzeigen können auch eigene Formatierer
+      geschrieben werden, die die Werte für die Anzeige aufbereiten.<br>
+      Im System sind bereits eine Reihe von Formatierern vorhanden - siehe <a href="layouts.html#formatter">Layout
+        Editor</a>.</p>
+    <p>Ab Version 20210106 können eigene Formatierer bei AvNav registriert
+      werden und stehen dann allen Widgets zur Verfügung. Ein Formatierer ist
+      eine Funktion, die als ersten Parameter den zu formatierenden Wert
+      übergeben bekommt und als Ergebnis einen String zurück liefern muss.<br>
+      Der String sollte dabei unabhänging vom momentanen Wert immer die gleiche
+      Länge haben (ggf. Leerzeichen voranstellen) um die Größenanpassung auf den
+      Dashboard-Seiten nicht zu stören.</p>
+    <p>Eine Formatierer-Funktion kann zusätzliche Parameter akzeptieren, um die
+      Umwandlung zu steuern. Diese werden über die Widget Eigenschaft
+      formatterParameters typischerweise im <a href="layouts.html#formatter">Layout
+        Editor</a> gesetzt.</p>
+    <p>Beispiel:</p>
+    <div class="code">const formatTemperature=function(data,opt_unit){
+    try{
+        if (! opt_unit || opt_unit.toLowerCase().match(/^k/)){
+            return formatDecimal(data,3,1);
+        }
+        if (opt_unit.toLowerCase().match(/^c/)){
+            return formatDecimal(parseFloat(data)-273.15,3,1)
+        }
+    }catch(e){
+        return "-----"
+    }
+}
+formatTemperature.parameters=[
+    {name:'unit',type:'SELECT',list:['celsius','kelvin'],default:'celsius'}
+]</div>
+    <div class="code">avnav.api.registerFormatter("mySpecialTemperature",formatTemperature);</div>
+    <p>Falls ein Formatierer mit dem gleichen Namen schon existiert, wirft
+      registerFormatter eine Exception.</p>
+    <p>Jede Formatter Funktion sollte eine Property "parameters" bekommen. Diese
+      beschreibt die im Layout-Editor sichtbaren Parameter für die Funktion. Die
+      Werte in dieser Definition haben die gleiche Syntax wie die <a href="#widgetparameter">editierbaren
+        Widget-Parameter</a>.</p>
+    <h2>Bibliotheken und Bilder</h2>
     <p>Falls der eigene Java Script code auf libraries oder images zugreifen
       soll, können diese in das gleiche Verzeichnis hochgeladen werden - Images
       auch in das Images <img src="../viewerimages/icons-new/image-icon.svg" alt=""

@@ -667,7 +667,9 @@ task findBrokenLinks(type: DefaultTask){
         def requestedAnchors=[]
         list.visit{ FileVisitDetails element ->
           if (! element.getFile().isFile()) return;
-          if (! element.getName().matches('.*html$')) return;  
+          if (! element.getName().matches('.*html$')) return;
+          def prefix="";
+          if (element.getName().startsWith("en_")) prefix="en_";  
           def pageName=element.getPath();
           def tagsoupParser = new org.ccil.cowan.tagsoup.Parser()
           def page = new MySlurper(tagsoupParser).parse(element.getFile())
@@ -692,6 +694,9 @@ task findBrokenLinks(type: DefaultTask){
             link=link.replaceAll("[?].*","")
             def parts=link.split('#')
             def pageLink=parts[0]
+            if (pageLink.endsWith("html")){
+                pageLink=pageLink.replaceAll("/([^/]*)\$","/"+prefix+'$1')
+            }
             if (!pageLink.isEmpty()){        
                 def target=file("$baseDir/$relPath$pageLink")
                 if (!target.exists()){

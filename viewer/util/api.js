@@ -53,6 +53,14 @@ class Api{
         Toast(string,opt_time);
     }
 
+    /**
+     * register a formatter function
+     * if the formatter (name) already exists an exception is thrown
+     * the formatterFunction should have a "parameters" property describing the meaning
+     * of it's (potentially) handled options
+     * @param name the name of the formatter
+     * @param formatterFunction the function
+     */
     registerFormatter(name,formatterFunction){
         WidgetFactory.registerFormatter(name,formatterFunction);
     }

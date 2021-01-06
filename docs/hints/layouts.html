@@ -7,7 +7,7 @@
   </head>
   <body data-order="5400">
     <h1>Layout-Anpassung </h1>
-     <div class="toc"> </div>
+    <div class="toc"> </div>
     <p>Die Anzeigen auf der Navigationsseite und im Dashboard werden über eine
       Konfigurationsdatei ("layout") gesteuert. Das ist eine Json-Datei. AvNav
       bring selbst einige solcher Dateien mit (zu erkennen am Namens-Prefix
@@ -82,7 +82,7 @@
       eingebaut, bei anderen kann man das frei wählen. Fast immer wählbar sind
       der Titel (caption), die Einheit (unit) und die css Klasse (falls man das
       <a href="usercss.html">Aussehen per css anpassen möchte</a>).</p>
-    <h2>Formatierer (formatter)</h2>
+    <h2><a name="formatter" id="formatter"></a>Formatierer (formatter)</h2>
     <p>Die meisten widgets benötigen für die Darstellung einen Formatierer, der
       den internen Wert in die gewünschte Darstellung wandelt. Meist ist der
       beim widget fest vorgegeben. Einige Formatierer akzeptieren eine
@@ -99,20 +99,22 @@
         <tr>
           <td>formatDecimal</td>
           <td>einfache Formatierung als Dezimalzahl</td>
-          <td>Vorkomma-Stellen,Nachkomma-Stellen<br>
+          <td>fix,fract,addSpace<br>
             z.B.: 3,1</td>
         </tr>
         <tr>
           <td>formatDistance</td>
           <td>Entfernung in nm</td>
-          <td>ein Parameter:<br>
+          <td>ein Parameter(unit):<br>
+            nm - Enterfnung in nm<br>
             m- Entfernung in m statt nm<br>
             km - Entfernung in km statt nm</td>
         </tr>
         <tr>
           <td>formatSpeed</td>
           <td>Geschwindigkeit in kn</td>
-          <td>ein Parameter:<br>
+          <td>ein Parameter(unit):<br>
+            kn - knoten<br>
             ms - m/s statt kn<br>
             kmh - km/h statt kn</td>
         </tr>
@@ -120,7 +122,7 @@
           <td>formatDirection</td>
           <td>Formatieren einen Gradwert</td>
           <td>ein Parameter:<br>
-            rad - Input in rad statt °</td>
+            inputRadian - Input in rad statt °</td>
         </tr>
         <tr>
           <td>formatTime</td>
@@ -153,6 +155,18 @@
           <td>gibt den input unverändert weiter</td>
           <td><br>
           </td>
+        </tr>
+        <tr>
+          <td>formatTemperature</td>
+          <td>Formatiere eine Temperatur (seit 20210106), input in Kelvin</td>
+          <td>ein Parameter (unit)<br>
+            celsius,kelvin</td>
+        </tr>
+        <tr>
+          <td>formatPressure</td>
+          <td>Formatiere einen Druck (seit 20210106), input in Pa</td>
+          <td>ein Parameter (unit)<br>
+            pa,hpa,bar</td>
         </tr>
       </tbody>
     </table>

@@ -79,7 +79,7 @@
       dialog. The caption, unit and the css class can be set at most widgets.
       Assigning a css class is helpfull if you want to <a href="usercss.html">adapt
         the look and feel via css</a>).</p>
-    <h2>Formatter</h2>
+    <h2><a name="formatter" id="formatter"></a>Formatter</h2>
     <p>Most of the widgets need a formatter to convert the data from the
       internal format into the display format. In most cases the formatter being
       used by a widget is fixed. But some of the allow some parameters (comma
@@ -96,20 +96,21 @@
         <tr>
           <td>formatDecimal</td>
           <td>format a decimal value</td>
-          <td>fix,fract<br>
+          <td>fix,fract,addSpace<br>
             e.g.: 3,1</td>
         </tr>
         <tr>
           <td>formatDistance</td>
           <td>distance in nm</td>
-          <td>one parameter:<br>
+          <td>one parameter (unit):<br>
+            nm - distance in nm<br>
             m- distance in m instead of nm<br>
             km - distance&nbsp; in km instead of nm</td>
         </tr>
         <tr>
           <td>formatSpeed</td>
           <td>speed in kn</td>
-          <td>one parameter:<br>
+          <td>one parameter(unit):<br>
             ms - m/s instead of kn<br>
             kmh - km/h instead of kn</td>
         </tr>
@@ -117,7 +118,7 @@
           <td>formatDirection</td>
           <td>formatting a degree</td>
           <td>one parameter:<br>
-            rad - input in rad instead of degrees </td>
+            inputRadian - input in rad instead of degrees </td>
         </tr>
         <tr>
           <td>formatTime</td>
@@ -148,6 +149,18 @@
           <td>pass through</td>
           <td><br>
           </td>
+        </tr>
+        <tr>
+          <td>formatTemperature</td>
+          <td>format a temperature (since 20210106), input in kelvin</td>
+          <td>one Parameter(unit):<br>
+            celsius,kelvin</td>
+        </tr>
+        <tr>
+          <td>formatPressure</td>
+          <td>format a presssure (since 20210106), input in pa</td>
+          <td>one Parameter (unit):<br>
+            pa,hpa,bar</td>
         </tr>
       </tbody>
     </table>
