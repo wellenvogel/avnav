@@ -1,3 +1,6 @@
+from builtins import str
+from builtins import range
+from builtins import object
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
@@ -36,14 +39,14 @@ from avnav_util import *
 
 
 #the main List of navigational items received
-class AVNStore():
+class AVNStore(object):
   BASE_KEY_GPS = 'gps'
   BASE_KEY_AIS = 'ais'
   BASE_KEY_SKY = 'sky'
   KEY_LAST_RECORD = 'internal.last' #we remember when we received the last kind of NMEA record
   # AIS messages we store
   knownAISTypes = (1, 2, 3, 5, 18, 19, 24)
-  class DataEntry:
+  class DataEntry(object):
     def __init__(self,value,source=None,priority=0,keepAlways=False):
       self.value=value
       self.timestamp=AVNUtil.utcnow()
@@ -51,7 +54,7 @@ class AVNStore():
       self.priority=priority
       self.keepAlways=keepAlways
 
-  class AisDataEntry:
+  class AisDataEntry(object):
     def __init__(self,data):
       self.value=data
       self.timestamp = AVNUtil.utcnow()
@@ -128,14 +131,14 @@ class AVNStore():
     @param source: optional a source key
     @return:
     """
-    AVNLog.ld("AVNNavData set value key=%s", key, unicode(value))
+    AVNLog.ld("AVNNavData set value key=%s", key, str(value))
     self.__listLock.acquire()
     isDict=False
     dataValue=value
     try:
       keylist=['']
       if type(value) == dict:
-        keylist=value.keys()
+        keylist=list(value.keys())
         isDict=True
       for kext in keylist:
         if isDict:
@@ -212,7 +215,7 @@ class AVNStore():
     now=AVNUtil.utcnow()
     self.__aisLock.acquire()
     try:
-      for key in self.__aisList.keys():
+      for key in list(self.__aisList.keys()):
         aisEntry=self.__aisList[key]
         if self.__isAisExpired(aisEntry, now):
           keysToRemove.append(key)
@@ -268,7 +271,7 @@ class AVNStore():
     try:
       now=AVNUtil.utcnow()
       keysToRemove=[]
-      for key in self.__list.keys():
+      for key in list(self.__list.keys()):
         if not key.startswith(prefix):
           continue
         entry=self.__list[key]
@@ -352,11 +355,11 @@ class AVNStore():
     @param key:
     @return: True if ok, False otherwise
     """
-    if self.__registeredKeys.has_key(key):
+    if key in self.__registeredKeys:
       return True
     if key in self.__approvedKeys:
       return True
-    for wildcard in self.__wildcardKeys.keys():
+    for wildcard in list(self.__wildcardKeys.keys()):
       if self.wildCardMatch(key, wildcard):
         self.__approvedKeys.add(key)
         return True
@@ -374,14 +377,14 @@ class AVNStore():
     @return:
     """
     self.__checkKey(key)
-    for existing in self.__registeredKeys.keys():
+    for existing in list(self.__registeredKeys.keys()):
       if existing == key or key.startswith(existing):
         raise Exception("key %s already registered from %s:%s" % (key,existing,self.__registeredKeys[existing]))
-    for existing in self.__wildcardKeys.keys():
+    for existing in list(self.__wildcardKeys.keys()):
       if self.wildCardMatch(key, existing):
         raise Exception("key %s matches wildcard from %s:%s" % (key, existing, self.__wildcardKeys[existing]))
     if self.__isWildCard(key):
-      for existing in self.__registeredKeys.keys():
+      for existing in list(self.__registeredKeys.keys()):
         if self.wildCardMatch(existing, key):
           raise Exception("wildcard key %s matches existing from %s:%s" % (key, existing, self.__registeredKeys[existing]))
     self.__keySources[key]=source
@@ -400,7 +403,7 @@ class AVNStore():
     rt="%s \n"%self.__class__.__name__
     idx=0
     self.__listLock.acquire()
-    for k in self.__list.keys():
+    for k in list(self.__list.keys()):
       rt+="   (%03d:%s)%s=%s\n" % (idx, time.strftime("%Y/%m/%d-%H:%M:%S ", time.gmtime(self.__list[k].timestamp)), k, self.__list[k].value)
     self.__listLock.release()
     return rt

@@ -1,10 +1,11 @@
+from builtins import object
 import time
 #the following import is optional
 #it only allows "intelligent" IDEs (like PyCharm) to support you in using it
 from avnav_api import AVNApi
 
 
-class Plugin:
+class Plugin(object):
   PATH="gps.test"
 
   @classmethod

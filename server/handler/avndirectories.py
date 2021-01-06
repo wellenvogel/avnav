@@ -28,10 +28,9 @@
 #  parts contributed by Matt Hawkins http://www.raspberrypi-spy.co.uk/
 #
 ###############################################################################
-import StringIO
-import shutil
-import urllib
-from zipfile import ZipFile
+from __future__ import unicode_literals
+from future import standard_library
+standard_library.install_aliases()
 
 from avnav_config import *
 from avnav_nmea import *

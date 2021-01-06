@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
@@ -36,7 +38,7 @@ from avnav_worker import *
 from wpa_control import WpaControl
 
 
-class FwInfo:
+class FwInfo(object):
   def __init__(self,ssid,mode,status):
     self.ssid=ssid
     self.mode=mode

@@ -46,7 +46,7 @@ def findHandlerByConfigName(name):
 
 def getAllHandlerClasses():
   rt=[]
-  for name in handlerList.keys():
+  for name in list(handlerList.keys()):
     handler=handlerList[name]
     rt.append(handler)
   return rt

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
 ###############################################################################
-# Copyright (c) 2012,2013 Andreas Vogel andreas@wellenvogel.net
+# Copyright (c) 2012,2021 Andreas Vogel andreas@wellenvogel.net
 #                         Dirk Radloff nixtodo@gmx.de
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a
@@ -26,6 +26,13 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
+from __future__ import unicode_literals
+from __future__ import division
+from builtins import str
+from past.utils import old_div
+from builtins import object
+
+
 
 import os
 import sys
@@ -41,7 +48,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__),"..","..","libraries")
 from avndirectorybase import *
 import avnav_handlerList
 
-class AVNRoutingLeg():
+class AVNRoutingLeg(object):
   MOBNAME="MOB" #the waypoint name fro MOB
   def __init__(self,dict):
     self.plain=dict
@@ -125,10 +132,10 @@ class AVNRoutingLeg():
   def __unicode__(self):
     if self.isAnchorWatch():
       return "AVNRoutingLeg AnchorWatch from=%s,anchorDistanc=%s" \
-             % (unicode(self.getFrom()),unicode(self.getAnchorDistance()))
+             % (str(self.getFrom()),str(self.getAnchorDistance()))
     else:
       return "AVNRoutingLeg route=%s,from=%s,to=%s,active=%s, target=%d, approachDistance=%s, approach=%s"\
-           %(self.getRouteName(),unicode(self.getFrom()),unicode(self.getTo()),self.isActive(),self.getCurrentTarget(),unicode(self.getApproachDistance()),"True" if self.isApproach() else "False")
+           %(self.getRouteName(),str(self.getFrom()),str(self.getTo()),self.isActive(),self.getCurrentTarget(),str(self.getApproachDistance()),"True" if self.isApproach() else "False")
 
 class AVNRouteInfo(AVNDirectoryListEntry):
   def __init__(self,type,prefix,name,**kwargs):
@@ -152,7 +159,7 @@ class AVNRouteInfo(AVNDirectoryListEntry):
         else:
           route=gpx.routes[0]
           self.numpoints=len(route.points)
-          self.length=route.length()/AVNUtil.NM
+          self.length=old_div(route.length(),AVNUtil.NM)
     except Exception as e:
       AVNLog.error("error when parsing route %s: %s",routeFile,e.message)
 
@@ -165,7 +172,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
   MAXROUTESIZE=500000
   PATH_PREFIX="/route"
   ALLOWED_EXTENSIONS=['.gpx']
-  currentLegName=u"currentLeg.json"
+  currentLegName="currentLeg.json"
 
   @classmethod
   def getConfigName(cls):
@@ -231,7 +238,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
         os.unlink(self.currentLegFileName)
         AVNLog.info("current leg removed")
       return
-    AVNLog.info("new leg %s",unicode(leg))
+    AVNLog.info("new leg %s",str(leg))
     f=open(self.currentLegFileName,"w")
     try:
       f.write(json.dumps(leg.getJson()))
@@ -263,10 +270,10 @@ class AVNRouter(AVNDirectoryHandlerBase):
         if self.currentLeg.getTo() is not None:
           distance=AVNUtil.distanceM(self.wpToLatLon(self.currentLeg.getFrom()),self.wpToLatLon(self.currentLeg.getTo()))
           AVNLog.info("read current leg, route=%s, from=%s, to=%s, length=%fNM"%(self.currentLeg.getRouteName(),
-                                                                  unicode(self.currentLeg.getFrom()),unicode(self.currentLeg.getTo()),distance/AVNUtil.NM))
+                                                                  str(self.currentLeg.getFrom()),str(self.currentLeg.getTo()),old_div(distance,AVNUtil.NM)))
         else:
           AVNLog.info("read current leg, route=%s, from=%s, to=%s"% (self.currentLeg.getRouteName(),
-                                                                                   unicode(self.currentLeg.getFrom()),
+                                                                                   str(self.currentLeg.getFrom()),
                                                                                    "NONE",
                                                                                    ))
         self.setCurrentLeg(self.currentLeg)
@@ -286,11 +293,11 @@ class AVNRouter(AVNDirectoryHandlerBase):
       hasLeg = True
       if self.currentLeg.getAnchorDistance() is not None:
         routerInfo = "Anchor watch, from %s, (anchor radius %sm)" % (
-          unicode(self.currentLeg.getFrom()),
-          unicode(self.currentLeg.getAnchorDistance()))
+          str(self.currentLeg.getFrom()),
+          str(self.currentLeg.getAnchorDistance()))
       else:
         routerInfo = "from %s, to %s, route=%s, activeWp=%s, approach=%s (approach radius %sm)" % (
-        unicode(self.currentLeg.getFrom()), unicode(self.currentLeg.getTo()),
+        str(self.currentLeg.getFrom()), str(self.currentLeg.getTo()),
         self.currentLeg.getRouteName(), self.currentLeg.getCurrentTarget(),
         self.currentLeg.isApproach(), self.currentLeg.getApproachDistance())
       AVNLog.debug(routerInfo)
@@ -378,7 +385,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
       self.currentLeg.setApproach(True)
       #save the leg
       self.setCurrentLeg(self.currentLeg)
-    AVNLog.info("Route: approaching wp %d (%s) currentDistance=%f",self.currentLeg.currentTarget,unicode(self.currentLeg.toWP),float(dst))
+    AVNLog.info("Route: approaching wp %d (%s) currentDistance=%f",self.currentLeg.currentTarget,str(self.currentLeg.toWP),float(dst))
     route=self.currentLeg.getCurrentRoute()
     if route is None or route.get('points') is None:
       AVNLog.debug("Approach: no route active")
@@ -424,7 +431,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
       self.lastDistanceToNext=None
       return
     #should we wait for some time???
-    AVNLog.info("switching to next WP num=%d, wp=%s",nextWpNum,unicode(nextWp))
+    AVNLog.info("switching to next WP num=%d, wp=%s",nextWpNum,str(nextWp))
     self.currentLeg.setNewLeg(nextWpNum,self.currentLeg.getTo(),nextWp)
     self.lastDistanceToCurrent=None
     self.lastDistanceToNext=None
@@ -460,8 +467,8 @@ class AVNRouter(AVNDirectoryHandlerBase):
         #we could have speed(kn) or course(deg) in curTPV
         #they are basically as decoded by gpsd
         if lat is not None and lon is not None:
-          AVNLog.debug("compute route data from %s to %s",unicode(self.startWp),unicode(self.endWp))
-          XTE=AVNUtil.calcXTE((lat,lon), self.wpToLatLon(self.startWp), self.wpToLatLon(self.endWp))/float(AVNUtil.NM)
+          AVNLog.debug("compute route data from %s to %s",str(self.startWp),str(self.endWp))
+          XTE=old_div(AVNUtil.calcXTE((lat,lon), self.wpToLatLon(self.startWp), self.wpToLatLon(self.endWp)),float(AVNUtil.NM))
           if XTE > 0:
             LR="L"
           else:
@@ -517,7 +524,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
     return
 
   def handleList(self,handler=None):
-    data=self.itemList.values()
+    data=list(self.itemList.values())
     rt = AVNUtil.getReturnData(items=data)
     return rt
 

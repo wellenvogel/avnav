@@ -25,6 +25,11 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
+from __future__ import unicode_literals
+from future import standard_library
+standard_library.install_aliases()
+
+
 
 import imp
 import inspect
@@ -279,7 +284,7 @@ class AVNPluginHandler(AVNWorker):
         else:
           if os.path.exists(os.path.join(dir,"plugin.js")) or os.path.exists(os.path.join(dir,"plugin.css")):
             self.pluginDirs[moduleName]=dir
-    for name in self.createdPlugins.keys():
+    for name in list(self.createdPlugins.keys()):
       plugin=self.createdPlugins[name]
       AVNLog.info("starting plugin %s",name)
       thread=threading.Thread(target=plugin.run)
@@ -416,7 +421,7 @@ class AVNPluginHandler(AVNWorker):
     if atype == "api":
       if sub=="list":
         data=[]
-        for k in self.pluginDirs.keys():
+        for k in list(self.pluginDirs.keys()):
           dir=self.pluginDirs[k]
           element={'name':k,'dir':dir}
           if os.path.exists(os.path.join(dir,"plugin.js")):

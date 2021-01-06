@@ -1,3 +1,4 @@
+from builtins import str
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
@@ -90,7 +91,7 @@ class AVNBlueToothReader(AVNWorker,SocketReader):
   def readBT(self,host,port):
     infoName="BTReader-%s"%(host)
     threading.current_thread().setName("%s[Reader %s]"%(self.getThreadPrefix(),host))
-    AVNLog.debug("started bluetooth reader thread for %s:%s",unicode(host),unicode(port))
+    AVNLog.debug("started bluetooth reader thread for %s:%s",str(host),str(port))
     self.setInfo(infoName, "connecting", AVNWorker.Status.STARTED)
     try:
       sock=bluetooth.BluetoothSocket( bluetooth.RFCOMM )

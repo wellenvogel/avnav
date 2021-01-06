@@ -1,3 +1,9 @@
+from __future__ import division
+from __future__ import print_function
+from builtins import map
+from builtins import str
+from past.utils import old_div
+from builtins import object
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
@@ -59,7 +65,7 @@ class LogFilter(logging.Filter):
       return True
     return False
 
-class AVNLog():
+class AVNLog(object):
   logger=logging.getLogger('avn')
   consoleHandler=None
   fhandler=None
@@ -158,7 +164,7 @@ class AVNLog():
     cls.logger.error(str,*args,**kwargs)
   @classmethod
   def ld(cls,*parms):
-    cls.logger.debug(' '.join(itertools.imap(repr,parms)))
+    cls.logger.debug(' '.join(map(repr,parms)))
   @classmethod
   def getLogDir(cls):
     return cls.logDir
@@ -174,13 +180,13 @@ class AVNLog():
       SYS_gettid = 224
       libc = ctypes.cdll.LoadLibrary('libc.so.6')
       tid = libc.syscall(SYS_gettid)
-      return unicode(tid)
+      return str(tid)
     except:
       return "0"
 
 
 
-class AVNUtil():
+class AVNUtil(object):
   NAVXML="avnav.xml"
   NM=1852.0; #convert nm into m
   R=6371000; #earth radius in m
@@ -191,13 +197,13 @@ class AVNUtil():
       return None
     #subtract the EPOCH
     td = (dt - datetime.datetime(1970,1,1, tzinfo=None))
-    ts=((td.days*24*3600+td.seconds)*10**6 + td.microseconds)/1e6
+    ts=old_div(((td.days*24*3600+td.seconds)*10**6 + td.microseconds),1e6)
     return ts
 
   #timedelta total_seconds that is not available in 2.6
   @classmethod
   def total_seconds(cls,td):
-    return (td.microseconds + (td.seconds+td.days*24*3600)*10**6)/10**6
+    return old_div((td.microseconds + (td.seconds+td.days*24*3600)*10**6),10**6)
   
   #now timestamp in utc
   @classmethod
@@ -207,7 +213,7 @@ class AVNUtil():
   #check if a given position is within a bounding box
   #all in WGS84
   #ll parameters being tuples lat,lon
-  #currently passing 180� is not handled...
+  #currently passing 180 is not handled...
   #lowerleft: smaller lat,lot
   @classmethod
   def inBox(cls,pos,lowerleft,upperright):
@@ -231,8 +237,8 @@ class AVNUtil():
 
     dlat = math.radians(lat2-lat1)
     dlon = math.radians(lon2-lon1)
-    a = math.sin(dlat/2) * math.sin(dlat/2) + math.cos(math.radians(lat1)) \
-        * math.cos(math.radians(lat2)) * math.sin(dlon/2) * math.sin(dlon/2)
+    a = math.sin(old_div(dlat,2)) * math.sin(old_div(dlat,2)) + math.cos(math.radians(lat1)) \
+        * math.cos(math.radians(lat2)) * math.sin(old_div(dlon,2)) * math.sin(old_div(dlon,2))
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
     d = (cls.R * c )
     return d
@@ -241,7 +247,7 @@ class AVNUtil():
   @classmethod
   def distance(cls,origin,destination):
     rt=cls.distanceM(origin,destination);
-    return rt/float(cls.NM);
+    return old_div(rt,float(cls.NM));
 
   #XTE - originally from Dirk HH, crosschecked against
   #http://www.movable-type.co.uk/scripts/latlong.html
@@ -251,7 +257,7 @@ class AVNUtil():
     d13 = cls.distanceM(startWp,Pp);
     w13 = cls.calcBearing(startWp,Pp)
     w12 = cls.calcBearing(startWp,endWp)
-    return math.asin(math.sin(d13/cls.R)*math.sin(math.radians(w13)-math.radians(w12))) * cls.R
+    return math.asin(math.sin(old_div(d13,cls.R))*math.sin(math.radians(w13)-math.radians(w12))) * cls.R
 
   #bearing from one point the next originally by DirkHH
   #http://www.movable-type.co.uk/scripts/latlong.html
@@ -271,11 +277,11 @@ class AVNUtil():
   @classmethod
   def convertAIS(cls,aisdata):
     rt=aisdata.copy()
-    rt['lat']=float(aisdata.get('lat') or 0)/600000
-    rt['lon']=float(aisdata.get('lon') or 0)/600000
-    rt['speed']=(float(aisdata.get('speed') or 0)/10) * cls.NM/3600;
-    rt['course']=float(aisdata.get('course') or 0)/10
-    rt['mmsi']=unicode(aisdata['mmsi'])
+    rt['lat']=old_div(float(aisdata.get('lat') or 0),600000)
+    rt['lon']=old_div(float(aisdata.get('lon') or 0),600000)
+    rt['speed']=(old_div(float(aisdata.get('speed') or 0),10)) * cls.NM/3600;
+    rt['course']=old_div(float(aisdata.get('course') or 0),10)
+    rt['mmsi']=str(aisdata['mmsi'])
     return rt
   
   #parse an ISO8601 t8ime string
@@ -332,7 +338,7 @@ class AVNUtil():
       try:
         scope[module_name] = __import__(module_name)
       except:
-        print "error importing module %s"%module_name,traceback.format_exc()
+        print("error importing module %s"%module_name,traceback.format_exc())
         raise
 
   @classmethod
@@ -359,7 +365,7 @@ class AVNUtil():
       rt= {'status':error}
     else:
       rt={'status':'OK'}
-    for k in kwargs.keys():
+    for k in list(kwargs.keys()):
       if kwargs[k] is not None:
         rt[k]=kwargs[k]
     return rt
@@ -370,7 +376,7 @@ class AVNUtil():
       return instr
     if param is None:
       return instr
-    for k in param.keys():
+    for k in list(param.keys()):
       instr=instr.replace("$"+k,param.get(k))
     return instr
 
@@ -390,8 +396,8 @@ class AVNUtil():
   def getDirWithDefault(cls,parameters,name,defaultSub,belowData=True):
     value=parameters.get(name)
     if value is not None:
-      if not isinstance(value,unicode):
-        value=unicode(value,errors='ignore')
+      if not isinstance(value,str):
+        value=str(value,errors='ignore')
 
 
   @classmethod
@@ -404,7 +410,7 @@ class AVNUtil():
     return filename
 
 
-class ChartFile:
+class ChartFile(object):
   def getScheme(self):
     return None
   def close(self):

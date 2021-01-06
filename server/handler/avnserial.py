@@ -25,6 +25,10 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
+from __future__ import division
+from builtins import str
+from builtins import object
+from past.utils import old_div
 import time
 from avnav_util import *
 from avnav_nmea import *
@@ -47,7 +51,7 @@ import avnav_handlerList
 #instead it is used by worker classes to handle serial input
 #it also contains our internal converting routines
 
-class SerialReader():
+class SerialReader(object):
   
   @classmethod
   def getConfigParam(cls):
@@ -94,7 +98,7 @@ class SerialReader():
       if self.device is not None:
         self.device.close()
     except Exception as e:
-      AVNLog.debug("unable to close serial device: %s",unicode(e.message))
+      AVNLog.debug("unable to close serial device: %s",str(e.message))
    
   # a simple approach for autobauding
   # we try to read some data (~3 lines) and find a 0x0a in it
@@ -223,7 +227,7 @@ class SerialReader():
     self.device=None
     init=True
     isOpen=False
-    AVNLog.debug("started with param %s",",".join(unicode(i)+"="+unicode(self.param[i]) for i in self.param.keys()))
+    AVNLog.debug("started with param %s",",".join(str(i)+"="+str(self.param[i]) for i in list(self.param.keys())))
     self.setInfo("created",AVNWorker.Status.STARTED)
     filterstr=self.param.get('filter')
     filter=None
@@ -243,7 +247,7 @@ class SerialReader():
        if minbaud != baud and minbaud != 0:
          autobaud=True
          if not baud in rates or not minbaud in rates:
-           AVNLog.debug("minbaud/baud not in allowed rates %s","".join(unicode(f) for f in rates))
+           AVNLog.debug("minbaud/baud not in allowed rates %s","".join(str(f) for f in rates))
            autobaud=False
          if minbaud >= baud:
            AVNLog.debug("minbaud >= baud")
@@ -270,7 +274,7 @@ class SerialReader():
            pass
          break
        if self.device is None:
-         time.sleep(porttimeout/2)
+         time.sleep(old_div(porttimeout,2))
          continue
        AVNLog.debug("%s opened, start receiving data",self.device.name)
        lastTime=time.time()

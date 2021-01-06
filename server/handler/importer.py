@@ -23,6 +23,9 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 ###############################################################################
+from __future__ import division
+from __future__ import unicode_literals
+from past.utils import old_div
 import os
 import shutil
 
@@ -125,17 +128,17 @@ class AVNImporter(AVNWorker):
     while True:
       AVNLog.debug("mainloop")
       now=AVNUtil.utcnow()
-      if len(self.runningConversions.keys()) == 0:
+      if len(list(self.runningConversions.keys())) == 0:
         currentTimes=self.readImportDir()
         currentTime=time.time()
         removeInfoTime=now-self.getIntParam('keepInfoTime')
-        for k in infoEntries.keys():
+        for k in list(infoEntries.keys()):
           if infoEntries[k] < removeInfoTime:
             self.deleteInfo(k)
             del infoEntries[k]
-        for k in currentTimes.keys():
+        for k in list(currentTimes.keys()):
           infoKey="conv:%s"%AVNUtil.clean_filename(k)
-          if len(self.runningConversions.keys()) > 0:
+          if len(list(self.runningConversions.keys())) > 0:
             AVNLog.debug("conversion already running, skip searching")
             break
           currentFileTime=currentTimes.get(k)
@@ -175,8 +178,8 @@ class AVNImporter(AVNWorker):
       else:
         AVNLog.debug("conversion(s) running, skip check")
       self.checkConversionFinished()
-      if len(self.runningConversions.keys()) > 0 or len(self.candidateTimes.keys()) == 0:
-        time.sleep(self.waittime/5)
+      if len(list(self.runningConversions.keys())) > 0 or len(list(self.candidateTimes.keys())) == 0:
+        time.sleep(old_div(self.waittime,5))
       else:
         time.sleep(1)
   #read the import dir and return a dictionary: key - name of dir or mbtiles file, entry: timestamp
@@ -223,7 +226,7 @@ class AVNImporter(AVNWorker):
           fstat=os.stat(fullname)
           AVNLog.debug("chart file %s:%d",file,fstat.st_mtime)
           rt[file]=fstat.st_mtime
-    AVNLog.debug("return %d entries",len(rt.keys()))
+    AVNLog.debug("return %d entries",len(list(rt.keys())))
     return rt
 
   def getGemfName(self,name):
@@ -289,10 +292,10 @@ class AVNImporter(AVNWorker):
     self.runningConversions[name]=[po,tmpOutName]
 
   def checkConversionFinished(self):
-    if len(self.runningConversions.keys()) == 0:
+    if len(list(self.runningConversions.keys())) == 0:
       return
     now=time.time()
-    for k in self.runningConversions.keys():
+    for k in list(self.runningConversions.keys()):
       [po,tmpname]=self.runningConversions.get(k)
       AVNLog.debug("check running conversion for %s",k)
       rtc=po.poll()

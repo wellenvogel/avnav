@@ -1,3 +1,10 @@
+from __future__ import division
+from __future__ import print_function
+from builtins import map
+from builtins import str
+from builtins import range
+from past.utils import old_div
+from builtins import object
 #!/usr/bin/env python
 #
 # A Python AIVDM/AIVDO plugins
@@ -25,7 +32,7 @@
 
 # Here are the pseudoinstructions in the pseudolanguage.
 
-class bitfield:
+class bitfield(object):
     "Object defining the interpretation of an AIS bitfield."
     # The only un-obvious detail is the use of the oob (out-of-band)
     # member.  This isn't used in data extraction, but rather to cut
@@ -43,13 +50,13 @@ class bitfield:
         self.formatter = formatter	# Custom reporting hook.
         self.conditional = conditional	# Evaluation guard for this field
 
-class spare:
+class spare(object):
     "Describes spare bits,, not to be interpreted."
     def __init__(self, width, conditional=None):
         self.width = width
         self.conditional = conditional	# Evaluation guard for this field
 
-class dispatch:
+class dispatch(object):
     "Describes how to dispatch to a message type variant on a subfield value."
     def __init__(self, fieldname, subtypes, compute=lambda x: x, conditional=None):
         self.fieldname = fieldname	# Value of view to dispatch on
@@ -93,10 +100,10 @@ def cnb_rot_format(n):
     elif n == 127:
         return "fastright"
     else:
-        return str((n / 4.733) ** 2);
+        return str((old_div(n, 4.733)) ** 2);
 
 def cnb_latlon_format(n):
-    return str(n / 600000.0)
+    return str(old_div(n, 600000.0))
 
 def cnb_speed_format(n):
     if n == 1023:
@@ -104,10 +111,10 @@ def cnb_speed_format(n):
     elif n == 1022:
         return "fast"
     else:
-        return str(n / 10.0);
+        return str(old_div(n, 10.0));
 
 def cnb_course_format(n):
-    return str(n / 10.0);
+    return str(old_div(n, 10.0));
 
 def cnb_second_format(n):
     if n == 60:
@@ -300,7 +307,7 @@ type5 = (
     bitfield("hour",          5, 'unsigned',   24, "ETA hour"),
     bitfield("minute",        6, 'unsigned',   60, "ETA minute"),
     bitfield("draught",       8, 'unsigned',    0, "Draught",
-             formatter=lambda n: n/10.0),
+             formatter=lambda n: old_div(n,10.0)),
     bitfield("destination", 120, 'string',   None, "Destination"),
     bitfield("dte",           1, 'unsigned', None, "DTE"),
     spare(1),
@@ -362,7 +369,7 @@ type7 = (
 #
 
 def type8_latlon_format(n):
-    return str(n / 60000.0)
+    return str(old_div(n, 60000.0))
 
 type8_dac_or_fid_unknown = (
     bitfield("data",           952, 'raw',      None,  "Data"),
@@ -590,7 +597,7 @@ type16 = (
     )
 
 def short_latlon_format(n):
-    return str(n / 600.0)
+    return str(old_div(n, 600.0))
 
 type17 = (
     spare(2),
@@ -826,7 +833,7 @@ type24b = (
              validator=lambda n: n >= 0 and n <= 99,
              formatter=ship_type_legends),
     bitfield("vendorid",     42, 'string',   None, "Vendor ID"),
-    dispatch("mmsi", {0:type24b1, 1:type24b2}, lambda m: 1 if `m`[:2]=='98' else 0),
+    dispatch("mmsi", {0:type24b1, 1:type24b2}, lambda m: 1 if repr(m)[:2]=='98' else 0),
     )
 
 type24 = (
@@ -929,7 +936,7 @@ from array import array
 
 BITS_PER_BYTE = 8
 
-class BitVector:
+class BitVector(object):
     "Fast bit-vector class based on Python built-in array type."
     def __init__(self, data=None, length=None):
         self.bits = array('B')
@@ -943,7 +950,7 @@ class BitVector:
     def extend_to(self, length):
         "Extend vector to given bitlength."
         if length > self.bitlen:
-            self.bits.extend([0]*((length - self.bitlen +7 )/8))
+            self.bits.extend([0]*(old_div((length - self.bitlen +7 ),8)))
             self.bitlen = length
     def from_sixbit(self, data, pad=0):
         "Initialize bit vector from AIVDM-style six-bit armoring."
@@ -954,13 +961,13 @@ class BitVector:
                 ch -= 8
             for i in (5, 4, 3, 2, 1, 0):
                 if (ch >> i) & 0x01:
-                    self.bits[self.bitlen/8] |= (1 << (7 - self.bitlen % 8))
+                    self.bits[old_div(self.bitlen,8)] |= (1 << (7 - self.bitlen % 8))
                 self.bitlen += 1
         self.bitlen -= pad
     def ubits(self, start, width):
         "Extract a (zero-origin) bitfield from the buffer as an unsigned int."
         fld = 0
-        for i in range(start/BITS_PER_BYTE, (start + width + BITS_PER_BYTE - 1) / BITS_PER_BYTE):
+        for i in range(old_div(start,BITS_PER_BYTE), old_div((start + width + BITS_PER_BYTE - 1), BITS_PER_BYTE)):
             fld <<= BITS_PER_BYTE
             fld |= self.bits[i]
         end = (start + width) % BITS_PER_BYTE
@@ -978,7 +985,7 @@ class BitVector:
         return self.bitlen
     def __repr__(self):
         "Used for dumping binary data."
-        return str(self.bitlen) + ":" + "".join(map(lambda d: "%02x" % d, self.bits[:(self.bitlen + 7)/8]))
+        return str(self.bitlen) + ":" + "".join(["%02x" % d for d in self.bits[:old_div((self.bitlen + 7),8)]])
 
 import sys, exceptions, re
 
@@ -1014,7 +1021,7 @@ def aivdm_unpack(lc, data, offset, values, instructions):
                 # The try/catch error here is in case we run off the end
                 # of a variable-length string field, as in messages 12 and 14
                 try:
-                    for i in range(inst.width/6):
+                    for i in range(old_div(inst.width,6)):
                         newchar = "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^- !\"#$%&'()*+,-./0123456789:;<=>?"[data.ubits(offset + 6*i, 6)]
                         if newchar == '@':
                             break
@@ -1025,7 +1032,7 @@ def aivdm_unpack(lc, data, offset, values, instructions):
                 value = value.replace("@", " ").rstrip()
             elif inst.type == 'raw':
                 # Note: Doesn't rely on the length.
-                value = BitVector(data.bits[offset/8:], len(data)-offset)
+                value = BitVector(data.bits[old_div(offset,8):], len(data)-offset)
             values[inst.name] = value
             if inst.validator and not inst.validator(value):
                 raise AISUnpackingException(lc, inst.name, value)
@@ -1086,7 +1093,7 @@ def packet_scanner(source):
                 raise AISUnpackingException(lc, "checksum", crc)
         if csum != crc:
             if skiperr:
-                sys.stderr.write("%d: bad checksum %s, expecting %s: %s\n" % (lc, `crc`, csum, line.strip()))
+                sys.stderr.write("%d: bad checksum %s, expecting %s: %s\n" % (lc, repr(crc), csum, line.strip()))
                 well_formed = False
             else:
                 raise AISUnpackingException(lc, "checksum", crc)
@@ -1126,8 +1133,8 @@ def parse_ais_messages(source, scaled=False, skiperr=False, verbose=0):
             # Collect some field groups into ISO8601 format
             for (offset, template, label, legend, formatter) in field_groups:
                 segment = cooked[offset:offset+len(template)]
-                if map(lambda x: x[0], segment) == template:
-                    group = formatter(*map(lambda x: x[1], segment))
+                if [x[0] for x in segment] == template:
+                    group = formatter(*[x[1] for x in segment])
                     group = (label, group, 'string', legend, None)
                     cooked = cooked[:offset]+[group]+cooked[offset+len(template):]
             # Apply the postprocessor stage
@@ -1168,9 +1175,9 @@ def parse_ais_messages(source, scaled=False, skiperr=False, verbose=0):
             raise KeyboardInterrupt
         except GeneratorExit:
             raise GeneratorExit
-        except AISUnpackingException, e:
+        except AISUnpackingException as e:
             if skiperr:
-                sys.stderr.write("%s: %s\n" % (`e`, raw.strip().split()))
+                sys.stderr.write("%s: %s\n" % (repr(e), raw.strip().split()))
                 continue
             else:
                 raise
@@ -1189,9 +1196,9 @@ if __name__ == "__main__":
 
     try:
         (options, arguments) = getopt.getopt(sys.argv[1:], "cdhjmqst:vx")
-    except getopt.GetoptError, msg:
-        print "ais.py: " + str(msg)
-        raise SystemExit, 1
+    except getopt.GetoptError as msg:
+        print("ais.py: " + str(msg))
+        raise SystemExit(1)
 
     dsv = False
     dump = False
@@ -1220,7 +1227,7 @@ if __name__ == "__main__":
         elif switch == '-s':      # Report AIS in scaled form
             scaled = True
         elif switch == '-t':      # Filter for a comma-separated list of types
-            types = map(int, val.split(","))
+            types = list(map(int, val.split(",")))
         elif switch == '-v':      # Dump raw packet before JSON or DSV.
             verbose += 1
         elif switch == '-x':      # Skip decoding errors
@@ -1237,9 +1244,9 @@ if __name__ == "__main__":
                 sys.stdout.write(raw)
             if not bogon:
                 if json:
-                    print "{" + ",".join(map(lambda x: '"' + x[0].name + '":' + str(x[1]), parsed)) + "}"
+                    print("{" + ",".join(['"' + x[0].name + '":' + str(x[1]) for x in parsed]) + "}")
                 elif dsv:
-                    print "|".join(map(lambda x: str(x[1]), parsed))
+                    print("|".join([str(x[1]) for x in parsed]))
                 elif histogram:
                     key = "%02d" % msgtype
                     frequencies[key] = frequencies.get(key, 0) + 1
@@ -1255,14 +1262,14 @@ if __name__ == "__main__":
                         frequencies[key] = frequencies.get(key, 0) + 1
                 elif dump:
                     for (inst, value) in parsed:
-                        print "%-25s: %s" % (inst.legend, value)
-                    print "%%"
+                        print("%-25s: %s" % (inst.legend, value))
+                    print("%%")
             sys.stdout.flush()
         if histogram:
-            keys = frequencies.keys()
+            keys = list(frequencies.keys())
             keys.sort()
             for msgtype in keys:
-                print "%-33s\t%d" % (msgtype, frequencies[msgtype])
+                print("%-33s\t%d" % (msgtype, frequencies[msgtype]))
     except KeyboardInterrupt:
         pass
 # End

@@ -28,7 +28,14 @@
 #  parts contributed by Matt Hawkins http://www.raspberrypi-spy.co.uk/
 #
 ###############################################################################
-import urllib
+from __future__ import unicode_literals
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import range
+from builtins import object
+
+import urllib.request, urllib.parse, urllib.error
 from zipfile import ZipFile
 
 from avnav_nmea import *
@@ -43,7 +50,7 @@ class AVNDirectoryListEntry(object):
   '''
   def serialize(self):
     return dict((key,value)
-                for key,value in self.__dict__.iteritems()
+                for key,value in self.__dict__.items()
                 if value is not None and not key.startswith("_") and key not in self.getFilteredKeys())
 
   @classmethod
@@ -54,7 +61,7 @@ class AVNDirectoryListEntry(object):
     self.name=name
     self.type=type
     self.prefix=prefix
-    self.url=prefix+"/"+urllib.quote(name.encode('utf-8'))
+    self.url=prefix+"/"+urllib.parse.quote(name.encode('utf-8'))
     self.time=time
     self.size=size
     self.canDelete=canDelete
@@ -100,7 +107,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
 
   @classmethod
   def nameToUrl(cls,name):
-    return cls.getPrefix()+"/"+urllib.quote(name.encode('utf-8'))
+    return cls.getPrefix()+"/"+urllib.parse.quote(name.encode('utf-8'))
 
   @classmethod
   def preventMultiInstance(cls):
@@ -220,7 +227,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
         AVNLog.debug("basedir %s is no directory",self.baseDir)
         return
       newContent=self.listDirectory(self.autoScanIncludeDirectories())
-      oldContent=self.itemList.values()
+      oldContent=list(self.itemList.values())
       currentlist = []
       for f in newContent:
         name=f.name
@@ -316,8 +323,8 @@ class AVNDirectoryHandlerBase(AVNWorker):
     data = []
     if not os.path.exists(self.baseDir):
       return []
-    for f in os.listdir(unicode(self.baseDir)):
-      fullname = os.path.join(unicode(self.baseDir), f)
+    for f in os.listdir(str(self.baseDir)):
+      fullname = os.path.join(str(self.baseDir), f)
       isDir=False
       if not os.path.isfile(fullname):
         if not includeDirs:

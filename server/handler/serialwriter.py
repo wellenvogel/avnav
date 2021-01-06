@@ -26,6 +26,9 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
 
+from __future__ import division
+from builtins import str
+from past.utils import old_div
 from avnserial import *
 import avnav_handlerList
 from avnav_worker import AVNWorker
@@ -145,10 +148,10 @@ class SerialWriter(SerialReader):
     self.device=None
     init=True
     isOpen=False
-    AVNLog.debug("started with param %s",",".join(unicode(i)+"="+unicode(self.param[i]) for i in self.param.keys()))
+    AVNLog.debug("started with param %s",",".join(str(i)+"="+str(self.param[i]) for i in list(self.param.keys())))
     self.setInfoWithKey("writer","created",AVNWorker.Status.STARTED)
     startReader=self.param.get('combined')
-    if startReader is not None and unicode(startReader).upper()=='TRUE':
+    if startReader is not None and str(startReader).upper()=='TRUE':
       AVNLog.debug("starting reader")
       reader=threading.Thread(target=self.readMethod)
       reader.setDaemon(True)
@@ -176,7 +179,7 @@ class SerialWriter(SerialReader):
           pass
         return
       if self.device is None:
-        time.sleep(porttimeout/2)
+        time.sleep(old_div(porttimeout,2))
         continue
       AVNLog.debug("%s opened, start sending data",self.device.name)
       lastTime=time.time()
@@ -223,7 +226,7 @@ class SerialWriter(SerialReader):
         if self.device is not None:
           bytes=self.device.readline(300)
           if self.doStop:
-            AVNLog.info("Stopping reader of combined reader/writer %s",unicode(self.param['port']))
+            AVNLog.info("Stopping reader of combined reader/writer %s",str(self.param['port']))
             self.deleteInfoWithKey("reader")
             return
           if bytes is None or len(bytes)==0:
@@ -247,7 +250,7 @@ class SerialWriter(SerialReader):
         else:
           time.sleep(0.5)
       except:
-        AVNLog.debug("exception on read in mixed reader/writer %s (port %s)",traceback.format_exc(),unicode(self.param['port']))
+        AVNLog.debug("exception on read in mixed reader/writer %s (port %s)",traceback.format_exc(),str(self.param['port']))
         time.sleep(0.5)
         hasNmea=False
 

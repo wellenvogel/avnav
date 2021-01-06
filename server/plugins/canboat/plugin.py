@@ -1,3 +1,6 @@
+from __future__ import division
+from builtins import object
+from past.utils import old_div
 import datetime
 import json
 import socket
@@ -10,7 +13,7 @@ import traceback
 from avnav_api import AVNApi
 
 
-class Plugin:
+class Plugin(object):
   PATH="gps.time"
   NM = 1852.0
   #PGNS used to set the time
@@ -124,7 +127,7 @@ class Plugin:
       self.api.log("no pgns to be handled, stopping plugin")
       self.api.setStatus("INACTIVE", "no pgns to be handled")
       return
-    handledPGNs=map(lambda p: int(p),handledPGNs)
+    handledPGNs=[int(p) for p in handledPGNs]
     self.api.log("started with host=%s,port %d, autoSendRMC=%d"%(host,port,autoSendRMC))
     source=self.api.getConfigValue("sourceName",None)
     errorReported=False
@@ -185,7 +188,7 @@ class Plugin:
                             cog=self.api.getSingleValue("gps.track")
                             self.api.debug("generating RMC lat=%f,lon=%f,ts=%s",lat,lon,dt.isoformat())
                             # $--RMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,xxxx,x.x,a*hh
-                            fixutc="%02d%02d%02d.%02d"%(dt.hour,dt.minute,dt.second,dt.microsecond/1000)
+                            fixutc="%02d%02d%02d.%02d"%(dt.hour,dt.minute,dt.second,old_div(dt.microsecond,1000))
                             (latstr,NS)=self.nmeaFloatToPos(lat,True)
                             (lonstr,EW)=self.nmeaFloatToPos(lon,False)
                             speedstr="" if speed is None else "%.2f"%(speed*3600/self.NM)

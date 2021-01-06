@@ -28,6 +28,11 @@
 #  parts contributed by Matt Hawkins http://www.raspberrypi-spy.co.uk/
 #
 ###############################################################################
+from __future__ import unicode_literals
+from builtins import str
+from builtins import range
+
+
 import hashlib
 
 import avnav_handlerList
@@ -204,7 +209,7 @@ class AVNUserAppHandler(AVNWorker):
       child =children[i]
       if child.get('name') == name:
         if ignoreInvalid:
-          inList=filter(lambda e: e.get('name') == name and not ( e.get('invalid') == True),self.addonList)
+          inList=[e for e in self.addonList if e.get('name') == name and not ( e.get('invalid') == True)]
           if len(inList) < 0:
             return -1
         return i
@@ -323,7 +328,7 @@ class AVNUserAppHandler(AVNWorker):
         idx=self.findChild(name)
         if idx < 0 and not doAdd:
           raise Exception("did not find a user app with this name")
-        for k in param.keys():
+        for k in list(param.keys()):
           idx=self.changeChildConfig(self.CHILDNAME,idx,k,param[k],True)
         self.writeConfigChanges()
         self.fillList()

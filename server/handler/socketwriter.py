@@ -25,6 +25,9 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
+from __future__ import division
+from builtins import str
+from past.utils import old_div
 from threading import Thread
 
 import time
@@ -110,8 +113,8 @@ class AVNSocketWriter(AVNWorker,SocketReader):
 
   #the writer for a connected client
   def client(self,socket,addr):
-    infoName="SocketWriter-%s"%(unicode(addr),)
-    self.setName("%s-Writer %s"%(self.getThreadPrefix(),unicode(addr)))
+    infoName="SocketWriter-%s"%(str(addr),)
+    self.setName("%s-Writer %s"%(self.getThreadPrefix(),str(addr)))
     self.setInfo(infoName,"sending data",AVNWorker.Status.RUNNING)
     if self.getBoolParam('read',False):
       clientHandler=threading.Thread(target=self.clientRead,args=(socket, addr))
@@ -145,8 +148,8 @@ class AVNSocketWriter(AVNWorker,SocketReader):
     self.deleteInfo(infoName)
 
   def clientRead(self,socket,addr):
-    infoName="SocketReader-%s"%(unicode(addr),)
-    threading.currentThread().setName("%s-Reader-%s"%(self.getThreadPrefix(),unicode(addr)))
+    infoName="SocketReader-%s"%(str(addr),)
+    threading.currentThread().setName("%s-Reader-%s"%(self.getThreadPrefix(),str(addr)))
     #on each newly connected socket we recompute the filter
     filterstr=self.getStringParam('readerFilter')
     filter=None
@@ -166,7 +169,7 @@ class AVNSocketWriter(AVNWorker,SocketReader):
     if doFeed:
       self.feederWrite(data,source)
     if (self.getIntParam('minTime')):
-      time.sleep(float(self.getIntParam('minTime'))/1000)
+      time.sleep(old_div(float(self.getIntParam('minTime')),1000))
         
   #this is the main thread - listener
   def run(self):
@@ -184,18 +187,18 @@ class AVNSocketWriter(AVNWorker,SocketReader):
         listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         listener.bind((self.getStringParam('address'),self.getIntParam('port')))
         listener.listen(1)
-        AVNLog.info("listening at port address %s",unicode(listener.getsockname()))
-        self.setInfo('main', "listening at %s"%(unicode(listener.getsockname()),), AVNWorker.Status.RUNNING)
+        AVNLog.info("listening at port address %s",str(listener.getsockname()))
+        self.setInfo('main', "listening at %s"%(str(listener.getsockname()),), AVNWorker.Status.RUNNING)
         while True:
           outsock,addr=listener.accept()
-          AVNLog.info("connect from %s",unicode(addr))
+          AVNLog.info("connect from %s",str(addr))
           allowAccept=self.checkAndAddHandler(addr,outsock)
           if allowAccept:
             clientHandler=threading.Thread(target=self.client,args=(outsock, addr))
             clientHandler.daemon=True
             clientHandler.start()
           else:
-            AVNLog.error("connection from %s not allowed", unicode(addr))
+            AVNLog.error("connection from %s not allowed", str(addr))
             try:
               outsock.close()
             except:

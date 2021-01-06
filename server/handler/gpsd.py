@@ -26,6 +26,11 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
 
+from __future__ import division
+from __future__ import print_function
+from builtins import str
+from builtins import object
+from past.utils import old_div
 import socket
 
 from avnserial import *
@@ -89,7 +94,7 @@ class AVNGpsd(AVNWorker):
   
   def stopChildren(self):
     if not self.gpsdproc is None:
-      print "stopping gpsd"
+      print("stopping gpsd")
       self.gpsdproc.terminate()
   
   def run(self):
@@ -108,12 +113,12 @@ class AVNGpsd(AVNWorker):
       self.setName("%s-dev:%s-port:%d"%(self.getThreadPrefix(),device,port))
       if init:
         AVNLog.info("started for %s with command %s, timeout %f",device,gpsdcommand,timeout)
-        self.setInfo('main', "waiting for device %s"%(unicode(device)), AVNWorker.Status.STARTED)
+        self.setInfo('main', "waiting for device %s"%(str(device)), AVNWorker.Status.STARTED)
         init=False
       if not ( os.path.exists(device) or noCheck):
         self.setInfo('main',"device not visible",AVNWorker.Status.INACTIVE)
         AVNLog.debug("device %s still not visible, continue waiting",device)
-        time.sleep(timeout/2)
+        time.sleep(old_div(timeout,2))
         continue
       else:
         if hasSerial and not noCheck:
@@ -130,7 +135,7 @@ class AVNGpsd(AVNWorker):
               raise Exception("unable to read data from device")
           except:
             AVNLog.debug("open device %s failed: %s",device,traceback.format_exc())
-            time.sleep(timeout/2)
+            time.sleep(old_div(timeout,2))
             continue
         AVNLog.info("device %s became visible, starting gpsd",device)
         self.setInfo('main', "starting gpsd with command %s"%(gpsdcommand), AVNWorker.Status.STARTED)
@@ -146,7 +151,7 @@ class AVNGpsd(AVNWorker):
           except:
             pass
           self.setInfo('main', "unable to start gpsd with command"%(gpsdcommand), AVNWorker.Status.STARTED)
-          time.sleep(timeout/2)
+          time.sleep(old_div(timeout,2))
           continue
         AVNLog.debug("started gpsd with pid %d",self.gpsdproc.pid)
         while True:
@@ -192,7 +197,7 @@ class AVNGpsd(AVNWorker):
                 AVNLog.error("unable to stop gpsd reader thread within 10s")
             reader=None  
         #end of loop - device available
-        time.sleep(timeout/2)
+        time.sleep(old_div(timeout,2))
 avnav_handlerList.registerHandler(AVNGpsd)
         
       
@@ -286,7 +291,7 @@ class GpsdReader(threading.Thread):
             AVNLog.debug("exception storing gpsd data %s",traceback.format_exc())
         if cl == 'AIS':
           aisdata={}
-          for k in report.keys():
+          for k in list(report.keys()):
             aisdata[k]=report[k]
           mmsi=aisdata.get('mmsi')
           if mmsi is not None:
@@ -335,7 +340,7 @@ class GpsdReader(threading.Thread):
 
         
     
-class NmeaEntry:
+class NmeaEntry(object):
   def __init__(self,data,source=None,omitDecode=False):
     self.data=data
     self.source=source
@@ -482,7 +487,7 @@ class AVNGpsdFeeder(AVNGpsd):
     if includeSource:
       if nmeafilter is None:
         return (seq,list)
-      return (seq,filter(lambda el: NMEAParser.checkFilter(el.data,nmeafilter),list))
+      return (seq,[el for el in list if NMEAParser.checkFilter(el.data,nmeafilter)])
     else:
       rt=[]
       for le in list:
@@ -503,13 +508,13 @@ class AVNGpsdFeeder(AVNGpsd):
         listener.bind(('localhost',lport))
         self.setInfo(infoName, "listening at port %d"%(lport), AVNWorker.Status.STARTED)
         listener.listen(1)
-        AVNLog.info("feeder listening at port address %s",unicode(listener.getsockname()))
+        AVNLog.info("feeder listening at port address %s",str(listener.getsockname()))
         waitTime=self.getFloatParam('feederSleep')
         while True:
           self.gpsdsocket=None
           self.gpsdsocket,addr=listener.accept()
-          self.setInfo(infoName, "gpsd connected from %s"%(unicode(addr)), AVNWorker.Status.RUNNING)
-          AVNLog.info("feeder - gpsd connected from %s",unicode(addr))
+          self.setInfo(infoName, "gpsd connected from %s"%(str(addr)), AVNWorker.Status.RUNNING)
+          AVNLog.info("feeder - gpsd connected from %s",str(addr))
           try:
             while True:
               data=self.popListEntry(waitTime=waitTime,includeSource=True)
@@ -590,7 +595,7 @@ class AVNGpsdFeeder(AVNGpsd):
             self.gpsdproc.wait()
           except:
             pass
-          time.sleep(self.getIntParam('timeout')/2)
+          time.sleep(old_div(self.getIntParam('timeout'),2))
           reader.doStop()
           continue
         AVNLog.info("started gpsd with pid %d",self.gpsdproc.pid)

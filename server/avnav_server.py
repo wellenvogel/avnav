@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
 ###############################################################################
-# Copyright (c) 2012,2013 Andreas Vogel andreas@wellenvogel.net
+# Copyright (c) 2012,2021 Andreas Vogel andreas@wellenvogel.net
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a
 #  copy of this software and associated documentation files (the "Software"),
@@ -25,6 +25,9 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
+from __future__ import unicode_literals
+from builtins import str
+
 import logging.handlers
 import optparse
 import signal
@@ -180,7 +183,7 @@ def main(argv):
       handledCommands=handler.getHandledCommands()
       if handledCommands is not None:
         if isinstance(handledCommands,dict):
-          for h in handledCommands.keys():
+          for h in list(handledCommands.keys()):
             httpServer.registerRequestHandler(h,handledCommands[h],handler)
         else:
           httpServer.registerRequestHandler('api',handledCommands,handler)
@@ -198,7 +201,7 @@ def main(argv):
     filename=os.path.expanduser(baseConfig.param.get("logfile"))
   AVNLog.info("####start processing (version=%s, logging to %s, parameters=%s)####",AVNAV_VERSION,filename," ".join(argv))
   if not os.path.exists(os.path.dirname(filename)):
-    os.makedirs(os.path.dirname(filename), 0777)
+    os.makedirs(os.path.dirname(filename), 0o777)
   AVNLog.initLoggingSecond(level, filename,baseConfig.getParam()['debugToLog'].upper()=='TRUE') 
   AVNLog.info("#### avnserver pid=%d,version=%s,parameters=%s start processing ####",os.getpid(),AVNAV_VERSION," ".join(argv))
   if options.pidfile is not None:

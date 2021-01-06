@@ -25,6 +25,10 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
+from __future__ import unicode_literals
+from builtins import str
+
+
 import glob
 
 import avnav_handlerList
@@ -80,8 +84,8 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
     filehandle.write(str)
     filehandle.flush()
   def createFileName(self,dt):
-    str=unicode(dt.strftime("%Y-%m-%d"))
-    return str
+    fstr=str(dt.strftime("%Y-%m-%d"))
+    return fstr
   def cleanupTrack(self):
     numremoved=0
     cleanupTime=datetime.datetime.utcnow()-datetime.timedelta(hours=self.getIntParam('cleanup'))
@@ -222,7 +226,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
     infoName="TrackWriter:converter"
     AVNLog.info("%s thread %s started",infoName,AVNLog.getThreadId())
     while True:
-      currentTracks=glob.glob(os.path.join(self.baseDir,u"*.avt"))
+      currentTracks=glob.glob(os.path.join(self.baseDir,"*.avt"))
       for track in currentTracks:
         try:
           gpx=re.sub(r"avt$","gpx",track)

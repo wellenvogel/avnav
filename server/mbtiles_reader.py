@@ -1,3 +1,5 @@
+from __future__ import print_function
+from builtins import object
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
@@ -38,7 +40,7 @@ from avnav_util import AVNLog, AVNUtil, ChartFile
 #tile_column => x
 #tile_row => 2^^z-1-y
 
-class QueueEntry:
+class QueueEntry(object):
   def __init__(self,tile):
     self.cond=threading.Condition()
     self.tile=tile
@@ -294,7 +296,7 @@ class MBTilesFile(ChartFile):
 if __name__ == "__main__":
   f=MBTilesFile(sys.argv[1])
   f.open()
-  print "read file %s" %(f,)
-  print f.getAvnavXml()
+  print("read file %s" %(f,))
+  print(f.getAvnavXml())
 
 

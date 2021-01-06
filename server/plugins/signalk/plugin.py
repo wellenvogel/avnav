@@ -1,3 +1,8 @@
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
+from past.utils import old_div
 import datetime
 import json
 import re
@@ -7,7 +12,7 @@ import time
 #the following import is optional
 #it only allows "intelligent" IDEs (like PyCharm) to support you in using it
 import traceback
-import urllib
+import urllib.request, urllib.parse, urllib.error
 hasWebsockets=False
 try:
   import websocket
@@ -18,7 +23,7 @@ except:
 from avnav_api import AVNApi
 
 
-class Plugin:
+class Plugin(object):
   PATH="gps.signalk"
   CHARTNAME_PREFIX="sk-"
   AVNAV_XML="""<?xml version="1.0" encoding="UTF-8" ?>
@@ -139,12 +144,12 @@ class Plugin:
       port=self.api.getConfigValue('port','3000')
       port=int(port)
       period=self.api.getConfigValue('period','1000')
-      period=int(period)/1000
-      expiryPeriod=self.api.getExpiryPeriod()/3
+      period=old_div(int(period),1000)
+      expiryPeriod=old_div(self.api.getExpiryPeriod(),3)
       if (period > expiryPeriod):
         period=expiryPeriod
       self.skHost=self.api.getConfigValue('host','localhost')
-      chartQueryPeriod=int(self.api.getConfigValue('chartQueryPeriod','10000'))/1000
+      chartQueryPeriod=old_div(int(self.api.getConfigValue('chartQueryPeriod','10000')),1000)
       self.proxyMode=self.api.getConfigValue('proxyMode','sameHost')
       self.useWebsockets=self.api.getConfigValue('useWebsockets','true').lower() == 'true'
     except:
@@ -173,7 +178,7 @@ class Plugin:
         self.connected=False
         responseData=None
         try:
-          response=urllib.urlopen(baseUrl)
+          response=urllib.request.urlopen(baseUrl)
           if response is None:
             raise Exception("no response on %s"%baseUrl)
           responseData=json.loads(response.read())
@@ -183,7 +188,7 @@ class Plugin:
           endpoints = responseData.get('endpoints')
           if endpoints is None:
             raise Exception("no endpoints in response to %s"%baseUrl)
-          for k in endpoints.keys():
+          for k in list(endpoints.keys()):
             ep=endpoints[k]
             if apiUrl is None:
               apiUrl=ep.get('signalk-http')
@@ -236,7 +241,7 @@ class Plugin:
             lastQuery=0
           if (now - lastQuery) > period or first:
             lastQuery=now
-            response=urllib.urlopen(selfUrl)
+            response=urllib.request.urlopen(selfUrl)
             if response is None:
               self.skCharts=[]
               raise Exception("unable to fetch from %s:%s",selfUrl,sys.exc_info()[0])
@@ -335,7 +340,7 @@ class Plugin:
 
   def queryCharts(self,apiUrl,port):
     charturl = apiUrl + "resources/charts"
-    chartlistResponse = urllib.urlopen(charturl)
+    chartlistResponse = urllib.request.urlopen(charturl)
     if chartlistResponse is None:
       self.skCharts = []
       return
@@ -343,12 +348,12 @@ class Plugin:
     newList = []
     pluginUrl= self.api.getBaseUrl()
     baseUrl = pluginUrl + "/api/charts/"
-    for chart in chartlist.values():
+    for chart in list(chartlist.values()):
       name = chart.get('identifier')
       if name is None:
         continue
       name = self.CHARTNAME_PREFIX + name
-      url = baseUrl + urllib.quote(name)
+      url = baseUrl + urllib.parse.quote(name)
       bounds=chart.get('bounds')
       #bounds is upperLeftLon,upperLeftLat,lowerRightLon,lowerRightLat
       #          minlon,      maxlat,      maxlon,       minlat
@@ -384,7 +389,7 @@ class Plugin:
     if 'value' in node:
       self.api.addData(prefix, node.get('value'), 'signalk')
       return
-    for key, item in node.items():
+    for key, item in list(node.items()):
       if isinstance(item,dict):
         self.storeData(item,prefix+"."+key)
 
@@ -457,10 +462,10 @@ class Plugin:
                 'x':parr[3],
                 'y':re.sub("\..*","",parr[4])}
       skurl=chart['internal']['url']
-      for k in replaceV.keys():
+      for k in list(replaceV.keys()):
         skurl=skurl.replace("{"+k+"}",replaceV[k])
       try:
-        tile = urllib.urlopen(skurl)
+        tile = urllib.request.urlopen(skurl)
         if tile is None:
           return None
         tileData = tile.read()

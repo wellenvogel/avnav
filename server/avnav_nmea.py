@@ -25,11 +25,13 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
-import sys
-import datetime
-import traceback
-import pprint
-from avnav_util import *
+from __future__ import division
+from __future__ import unicode_literals
+from builtins import str
+from builtins import range
+from past.utils import old_div
+from builtins import object
+
 from avnav_store import *
 hasAisDecoder=False
 try:
@@ -43,13 +45,13 @@ __date__ ="$29.06.2014 21:28:01$"
 #an NMEA parser
 #parses some simple NMEA setences and uses ais from the gpsd project to parse AIS setences
 #adds parsed data to a navdata struct
-class Key:
+class Key(object):
   def __init__(self,key,description,unit=None):
     self.key=key
     self.description=description
     self.unit=unit
 
-class NMEAParser():
+class NMEAParser(object):
   SKY_BASE_KEYS = ['gdop', 'tdop', 'vdop', 'hdop', 'pdop']
   SKY_SATELLITE_KEYS = ['ss', 'el', 'PRN', 'az', 'used']
   NM=AVNUtil.NM
@@ -63,9 +65,9 @@ class NMEAParser():
     Key('lat','gps latitude'),
     Key('lon','gps longitude'),
     Key('mode','nmea mode 0/2'),
-    Key('track','course','°'),
+    Key('track','course','\N{DEGREE SIGN}'),
     Key('speed','speed in m/s','m/s'),
-    Key('windAngle','wind direction','°'),
+    Key('windAngle','wind direction','\N{DEGREE SIGN}'),
     Key('windReference','wind reference: R or T'),
     Key('windSpeed','wind speed in m/s','m/s'),
     Key('depthBelowTransducer','depthBelowTransducer in m','m'),
@@ -161,7 +163,7 @@ class NMEAParser():
     grd=posa[0][-10:-2]
     min=posa[0][-2:]
     min=min+"."+posa[1]
-    rt=float(grd)+float(min)/60
+    rt=float(grd)+old_div(float(min),60)
     if rt > 0 and (direction == 'S' or direction == 'W'):
       rt=-rt
     AVNLog.ld("pos",pos,rt)
@@ -325,7 +327,7 @@ class NMEAParser():
         #we keep the speed im m/s
         windspeed=float(darray[3])
         if (darray[4] == 'K'):
-          windspeed=windspeed/3.6
+          windspeed=old_div(windspeed,3.6)
         if (darray[4] == 'N'):
           windspeed=windspeed*self.NM/3600
         rt['windSpeed']=windspeed
@@ -392,7 +394,7 @@ class NMEAParser():
                   rt["transducers."+tname]=data
                   hasData=True
             except Exception as e:
-              AVNLog.debug("decode %s at pos %d failed: %s"%(data,i,unicode(e.message)))
+              AVNLog.debug("decode %s at pos %d failed: %s"%(data,i,str(e.message)))
               pass
             i+=4
         if hasData:
@@ -401,7 +403,7 @@ class NMEAParser():
         return False
 
     except Exception:
-      AVNLog.info(" error parsing nmea data " + unicode(data) + "\n" + traceback.format_exc())
+      AVNLog.info(" error parsing nmea data " + str(data) + "\n" + traceback.format_exc())
 
   @classmethod
   def convertXdrValue(self, value, unit):
@@ -491,8 +493,8 @@ class NMEAParser():
           # Collect some field groups into ISO8601 format
           for (offset, template, label, legend, formatter) in ais.field_groups:
               segment = cooked[offset:offset+len(template)]
-              if map(lambda x: x[0], segment) == template:
-                  group = ais.formatter(*map(lambda x: x[1], segment))
+              if [x[0] for x in segment] == template:
+                  group = ais.formatter(*[x[1] for x in segment])
                   group = (label, group, 'string', legend, None)
                   cooked = cooked[:offset]+[group]+cooked[offset+len(template):]
           # Apply the postprocessor stage

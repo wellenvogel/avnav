@@ -25,6 +25,8 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py
 ###############################################################################
+from __future__ import unicode_literals
+from builtins import object
 import json
 import traceback
 
@@ -35,7 +37,7 @@ from avnav_worker import AVNWorker
 from avnav_config import AVNConfig
 from avnav_util import *
 
-class LayoutInfo:
+class LayoutInfo(object):
   def __init__(self,name,filename,time,isSystem=False):
     self.filename=filename
     self.time=time
@@ -160,7 +162,7 @@ class AVNLayoutHandler(AVNWorker):
   def handleApiRequest(self, type, command, requestparam, **kwargs):
     if type == 'list':
       rt=[]
-      for v in self.layouts.values():
+      for v in list(self.layouts.values()):
         rt.append(v.toPlain())
       return {'status':'OK','items':rt}
     if type == 'upload':

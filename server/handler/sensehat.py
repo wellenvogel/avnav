@@ -27,6 +27,8 @@
 #  parts contributed by free-x https://github.com/free-x
 ###############################################################################
 
+from __future__ import division
+from past.utils import old_div
 import time
 import threading
 
@@ -80,7 +82,7 @@ class AVNSenseHatReader(AVNWorker):
       try:
         if self.getBoolParam('writeMda'):
           """$AVMDA,,,1.00000,B,,,,,,,,,,,,,,,,"""
-          mda = '$AVMDA,,,%.5f,B,,,,,,,,,,,,,,,,' % ( sense.pressure / 1000.)
+          mda = '$AVMDA,,,%.5f,B,,,,,,,,,,,,,,,,' % ( old_div(sense.pressure, 1000.))
           AVNLog.debug("SenseHat:MDA %s", mda)
           self.writeData(mda,source,addCheckSum=True)
           """$AVMTA,19.50,C*2B"""
@@ -88,7 +90,7 @@ class AVNSenseHatReader(AVNWorker):
           AVNLog.debug("SenseHat:MTA %s", mta)
           self.writeData(mta,source,addCheckSum=True)
         if self.getBoolParam('writeXdr'):
-          xdr = '$AVXDR,P,%.5f,B,Barometer' % (sense.pressure / 1000.)
+          xdr = '$AVXDR,P,%.5f,B,Barometer' % (old_div(sense.pressure, 1000.))
           AVNLog.debug("SenseHat:XDR %s", xdr)
           self.writeData(xdr,source,addCheckSum=True)
 

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import threading
 import time
@@ -16,13 +17,13 @@ class ApiImpl(AVNApi):
     self.prefix=''
 
   def log(self, str, *args):
-    print "###LOG### %s%s" % (self.prefix,str % args)
+    print("###LOG### %s%s" % (self.prefix,str % args))
 
   def error(self, str, *args):
-    print "###ERROR# %s%s" % (self.prefix,str % args)
+    print("###ERROR# %s%s" % (self.prefix,str % args))
 
   def debug(self, str, *args):
-    print "###DEBUG# %s%s" % (self.prefix,str % args)
+    print("###DEBUG# %s%s" % (self.prefix,str % args))
 
   def fetchFromQueue(self, sequence, number=10):
     time.sleep(0.5)
@@ -39,9 +40,9 @@ class ApiImpl(AVNApi):
           matches=True
           break
       if not matches:
-        print "@@ERROR: invalid path %s"%(path)
+        print("@@ERROR: invalid path %s"%(path))
         return
-    print "@@DATA@@:%s->%s"%(path,value)
+    print("@@DATA@@:%s->%s"%(path,value))
 
 import os, glob, imp
 
@@ -108,27 +109,27 @@ PREFIX="avnav_decoder_sys_"
 logger=ApiImpl()
 modules=loadModulesFromDir(os.path.join(os.path.dirname(__file__),'..','plugins'),logger,PREFIX)
 
-print modules
+print(modules)
 
 allHandlers=[]
 for modulname in modules:
   handlers=instantiateHandlersFromModule(modulname,modules[modulname],allData,logger)
   allHandlers+=handlers
 
-print "created %d handlers"%len(allHandlers)
+print("created %d handlers"%len(allHandlers))
 
 for handler in allHandlers:
     try:
       dt=threading.Thread(target=handler.run)
       dt.setDaemon(True)
       dt.start()
-      print "###INFO: started %s"%handler
+      print("###INFO: started %s"%handler)
     except:
-      print "##ERROR: cannot start %s, errors in run %s"%(handler,traceback.format_exc())
+      print("##ERROR: cannot start %s, errors in run %s"%(handler,traceback.format_exc()))
 
-print "Parameter Listing:"
-for p in allData.keys():
-  print "%s:%s"%(p,allData[p])
+print("Parameter Listing:")
+for p in list(allData.keys()):
+  print("%s:%s"%(p,allData[p]))
 
 time.sleep(10)
 

@@ -25,6 +25,9 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
+from __future__ import unicode_literals
+from builtins import str
+from builtins import object
 
 import time
 import subprocess
@@ -45,7 +48,7 @@ from avnav_util import *
 from avnav_worker import *
 import avnav_handlerList
 
-class Handler:
+class Handler(object):
   def __init__(self,command,id,callback,parameters=None):
     repeat=command.get('repeat')
     self.command=command
@@ -209,7 +212,7 @@ class AVNCommandHandler(AVNWorker):
     rt=[]
     if name is None:
       return rt
-    for id in self.runningProcesses.keys():
+    for id in list(self.runningProcesses.keys()):
       try:
         if self.runningProcesses[id].getName() == name:
           rt.append(self.runningProcesses[id])
@@ -246,7 +249,7 @@ class AVNCommandHandler(AVNWorker):
     handler=Handler(cmd,id,self.commandFinished,parameters)
     try:
       handler.start()
-      self.setInfo(id,"running %s"%(unicode(handler)),self.Status.RUNNING)
+      self.setInfo(id,"running %s"%(str(handler)),self.Status.RUNNING)
     except:
       AVNLog.error("error starting command %s=%s: %s",name,handler.getCommandStr(),traceback.format_exc())
       self.setInfo(name, "unable to run %s: %s"%(cmd,traceback.format_exc(1)), self.Status.ERROR)

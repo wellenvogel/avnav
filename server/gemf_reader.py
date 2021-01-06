@@ -1,3 +1,6 @@
+from __future__ import print_function
+from builtins import str
+from builtins import range
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
@@ -267,6 +270,6 @@ class GemfFile(ChartFile):
 if __name__ == "__main__":
   f=GemfFile(sys.argv[1])
   f.open()
-  print "read file %s" %(f,)
+  print("read file %s" %(f,))
 
 

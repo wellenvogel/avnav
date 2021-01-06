@@ -25,6 +25,9 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
+from __future__ import unicode_literals
+from builtins import str
+from builtins import object
 import codecs
 import shutil
 
@@ -35,7 +38,7 @@ import xml.dom.minidom as parser
 import avnav_handlerList
 
 
-class ConfigChanger:
+class ConfigChanger(object):
   def __init__(self,changeHandler,domBase,isAttached,elementDom,childMap):
     self.isAttached=isAttached
     self.domBase=domBase
@@ -66,7 +69,7 @@ class ConfigChanger:
 
   def changeAttribute(self,name,value):
     self._addToDom()
-    self.elementDom.setAttribute(name,unicode(value))
+    self.elementDom.setAttribute(name,str(value))
     self._setDirty()
     self.handleChange()
 
@@ -81,13 +84,13 @@ class ConfigChanger:
     if childIndex >= 0:
       if childIndex >= len(childList):
         raise Exception("trying to update an non existing child index %s:%d"%(childName,childIndex))
-      childList[childIndex].setAttribute(name,unicode(value))
+      childList[childIndex].setAttribute(name,str(value))
       self._setDirty()
       self.handleChange(delayUpdate)
       return
     #we must insert
     newEl=self.domBase.createElement(childName)
-    newEl.setAttribute(name,unicode(value))
+    newEl.setAttribute(name,str(value))
     self.elementDom.appendChild(newEl)
     newline = self.domBase.createTextNode("\n")
     self.elementDom.appendChild(newline)
@@ -119,7 +122,7 @@ class ConfigChanger:
     return
 
 # a class for parsing the config file
-class AVNConfig():
+class AVNConfig(object):
   class BASEPARAM(Enum):
     BASEDIR='BASEDIR' #the base directory for the server - location of the main python file
     DATADIR='DATADIR' #the data directory if not provided on the commandline: either parent dir of chart dir or $HOME/avnav
@@ -142,8 +145,8 @@ class AVNConfig():
     if baseDir is None:
       raise Exception("%s not found in parameters"%defName)
     if value is not None and value:
-      if not isinstance(value, unicode):
-        value = unicode(value, errors='ignore')
+      if not isinstance(value, str):
+        value = str(value)
       value=os.path.expanduser(value)
       value=AVNUtil.replaceParam(value,cls.filterBaseParam(parameters))
       if not os.path.isabs(value):
@@ -168,7 +171,7 @@ class AVNConfig():
     rt={}
     if dict is None:
       return rt
-    for k in cls.BASEPARAM.__dict__.keys():
+    for k in list(cls.BASEPARAM.__dict__.keys()):
       if dict.get(k) is not None:
         rt[k]=dict[k]
     return rt

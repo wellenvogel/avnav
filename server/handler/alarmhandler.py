@@ -25,7 +25,8 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
-
+from __future__ import unicode_literals
+from builtins import str
 import time
 import subprocess
 import threading
@@ -117,7 +118,7 @@ class AVNAlarmHandler(AVNWorker):
     while True:
       time.sleep(0.5)
       deletes=[]
-      for k in self.runningAlarms.keys():
+      for k in list(self.runningAlarms.keys()):
         id = self.runningAlarms.get(k)
         if not self.commandHandler.isCommandRunning(id):
           info=self.findAlarm(k,True)
@@ -139,7 +140,7 @@ class AVNAlarmHandler(AVNWorker):
     rt=dict.get(name)
     if rt is None:
       return False
-    return unicode(rt).upper() == u'TRUE'
+    return str(rt).upper() == 'TRUE'
   @classmethod
   def getInt(cls,dict,name):
     if dict is None:
@@ -204,10 +205,10 @@ class AVNAlarmHandler(AVNWorker):
   def stopAll(self):
     '''stop all alarms'''
     AVNLog.info("stopAllAlarms")
-    list=self.getRunningAlarms()
+    alist=self.getRunningAlarms()
     if list is None:
       return
-    for name in list.keys():
+    for name in list(alist.keys()):
       self.stopAlarm(name)
   def stopAlarm(self, name):
     '''stop a named command'''
@@ -242,7 +243,7 @@ class AVNAlarmHandler(AVNWorker):
         if n is None:
           continue
         rt[n]=cmd.get('command')
-    for k in self.runningAlarms.keys():
+    for k in list(self.runningAlarms.keys()):
       if rt.get(k) is None:
         info=self.findAlarm(k,True)
         rt[k]=info.get('command')
@@ -294,7 +295,7 @@ class AVNAlarmHandler(AVNWorker):
       definedCommands = self.getStatusProperties()
       if definedCommands is None:
         return rt
-      for name in definedCommands.keys():
+      for name in list(definedCommands.keys()):
         if name is None:
           continue
         if not name in status and not 'all' in status :

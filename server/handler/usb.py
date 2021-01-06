@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
@@ -37,7 +39,7 @@ except:
   pass
 
 
-class InfoHandler():
+class InfoHandler(object):
   def __init__(self,name,parent):
     self.name=name
     self.parent=parent
@@ -46,7 +48,7 @@ class InfoHandler():
   def deleteInfo(self,item):
     self.parent.deleteInfo(self.name)
 
-class DummyHandler():
+class DummyHandler(object):
   def __init__(self,infoHandler,device):
     self.stop=False
     self.infoHandler=infoHandler
@@ -59,7 +61,7 @@ class DummyHandler():
   def stopHandler(self):
     self.stop=True
 
-class ExternalHandler():
+class ExternalHandler(object):
   def __init__(self,infoHandler,device,callback,name=None):
     self.stop=False
     self.infoHandler=infoHandler
@@ -71,14 +73,14 @@ class ExternalHandler():
       self.callback(self.device)
       self.infoHandler.setInfo('main', '%s: handled by %s' % (self.device,self.name), AVNWorker.Status.INACTIVE)
     except Exception as e:
-      self.infoHandler.setInfo('main','%s: error in handler %s: %s'%(self.device,self.name,unicode(e.message)),AVNWorker.Status.ERROR)
+      self.infoHandler.setInfo('main','%s: error in handler %s: %s'%(self.device,self.name,str(e.message)),AVNWorker.Status.ERROR)
     while( not self.stop):
       time.sleep(0.2)
     self.infoHandler.deleteInfo('main')
   def stopHandler(self):
     self.stop=True
 
-class ExternalRegistration:
+class ExternalRegistration(object):
   def __init__(self,usibid,name,callback):
     self.name=name
     self.usbid=usibid
@@ -162,7 +164,7 @@ class AVNUsbSerialReader(AVNWorker):
     self.maplock.acquire()
     if not isinstance(handler,DummyHandler) and not isinstance(handler,ExternalHandler):
       numActive=0
-      for entry in self.addrmap.values():
+      for entry in list(self.addrmap.values()):
         h=entry[0]
         if isinstance(h,DummyHandler) or isinstance(h,ExternalHandler):
           continue
@@ -199,7 +201,7 @@ class AVNUsbSerialReader(AVNWorker):
   def getStartStopList(self,handlerlist):
     rt={}
     self.maplock.acquire()
-    for h in handlerlist.keys():
+    for h in list(handlerlist.keys()):
       if h in self.addrmap:
         if handlerlist[h] != self.addrmap[h][1]:
           rt['h']='restart'
@@ -207,7 +209,7 @@ class AVNUsbSerialReader(AVNWorker):
           rt[h]='keep'
       else:
         rt[h]='start'
-    for h in self.addrmap.keys():
+    for h in list(self.addrmap.keys()):
       if not h in rt:
         rt[h]='stop'
     self.maplock.release()
@@ -361,7 +363,7 @@ class AVNUsbSerialReader(AVNWorker):
           if dev.parent is None or not (dev.parent.subsystem == "usb-serial" or dev.parent.subsystem == "usb"):
             continue
           usbid=self.usbIdFromPath(dev.device_path)
-          AVNLog.debug("discovered usb serial tty device %s at %s (usbid=%s)",dev.device_node,unicode(dev),usbid)
+          AVNLog.debug("discovered usb serial tty device %s at %s (usbid=%s)",dev.device_node,str(dev),usbid)
           currentDevices[usbid]=dev.device_node
         self.checkDevices(currentDevices)
         if init:
@@ -379,7 +381,7 @@ class AVNUsbSerialReader(AVNWorker):
       rt=self.info.copy()
       st=self.status.copy()
       rta=[]
-      keys=sorted(rt.keys(),key=lambda x: re.sub("^[^-]*[-]","-",x))
+      keys=sorted(list(rt.keys()),key=lambda x: re.sub("^[^-]*[-]","-",x))
       for k in keys:
         try:
           elem={}

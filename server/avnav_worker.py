@@ -1,3 +1,4 @@
+from builtins import str
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
@@ -114,7 +115,7 @@ class AVNWorker(threading.Thread):
       rt=self.info.copy()
       st=self.status.copy()
       rta=[]
-      for k in rt.keys():
+      for k in list(rt.keys()):
         try:
           elem={}
           elem['name']=k
@@ -163,16 +164,16 @@ class AVNWorker(threading.Thread):
     if rt is None:
       return False
     else:
-      return unicode(rt).upper()=='TRUE'
+      return str(rt).upper()=='TRUE'
     
   def getStringParam(self,name,throw=False):
     rt=self.getParamValue(name,throw)
     if rt is None:
       return ""
     else:
-      if (isinstance(rt,unicode)):
+      if (isinstance(rt,str)):
         return rt
-      return unicode(rt,errors='ignore')
+      return str(rt)
   def getFloatParam(self,name,throw=False):
     rt=self.getParamValue(name,throw)
     try:
@@ -187,7 +188,7 @@ class AVNWorker(threading.Thread):
     en=self.getParamValue("enabled")
     if en is None:
       en="True"
-    return unicode(en).upper()!='TRUE'
+    return str(en).upper()!='TRUE'
 
     
   
@@ -323,21 +324,21 @@ class AVNWorker(threading.Thread):
   @classmethod
   def parseConfig(cls,attrs,default):
     sparam=copy.deepcopy(default)
-    if len(sparam.keys()) == 0:
+    if len(list(sparam.keys())) == 0:
       #special case: accept all attributes
-      for k in attrs.keys():
+      for k in list(attrs.keys()):
         v=attrs[k]
-        if v is None or isinstance(v,str) or isinstance(v,unicode):
+        if v is None or isinstance(v,str) or isinstance(v,str):
           sparam[k]=v
         else:
           sparam[k] = v.value
       return sparam
     sparam.update(cls.DEFAULT_CONFIG_PARAM)
-    for k in sparam.keys():
+    for k in list(sparam.keys()):
       dv=sparam[k]
       if (isinstance(dv,str)):
         #potentially we did not declare all defaults as unicode - so convert them
-        dv=unicode(dv,errors='ignore')
+        dv=str(dv,errors='ignore')
         sparam[k]=dv
       v=attrs.get(k)
       if dv is None and v is None:
@@ -345,7 +346,7 @@ class AVNWorker(threading.Thread):
       if v is None:
         sparam[k]=dv
       else:
-        if isinstance(v,str) or isinstance(v,unicode):
+        if isinstance(v,str) or isinstance(v,str):
           sparam[k]=v
         else:
           sparam[k] = v.value

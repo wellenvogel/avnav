@@ -1,3 +1,6 @@
+from __future__ import print_function
+from builtins import range
+from builtins import object
 #! /usr/bin/env python
 import sys
 import os
@@ -7,7 +10,7 @@ import re
 import threading
 import datetime
 
-class CacheEntry():
+class CacheEntry(object):
   #age in seconds
   age=2000
   def __init__(self,key,data):
@@ -29,7 +32,7 @@ class CacheEntry():
     self.data=data
     self.pending=self.time
 
-class WpaControl():
+class WpaControl(object):
   maxReceive=4096
   def __init__(self,wpaAddr,ownAddr):
     self.wpaAddr=wpaAddr
@@ -211,7 +214,7 @@ class WpaControl():
   '''
   unquotedParam=['key_mgmt']
   def configureNetwork(self,id,param):
-    for k in param.keys():
+    for k in list(param.keys()):
       if param[k] is not None:
         if not k in self.unquotedParam:
           self.runSimpleScommand("SET_NETWORK %s %s \"%s\""%(id,k,param[k]),False)
@@ -321,7 +324,7 @@ def isInt(st):
     return False
 
 if __name__=="__main__":
-  print "starting... - wpa=%s,own=%s"%(sys.argv[1],sys.argv[2])
+  print("starting... - wpa=%s,own=%s"%(sys.argv[1],sys.argv[2]))
   w=WpaControl(sys.argv[1],sys.argv[2])
   w.open()
   mode=sys.argv[3]
@@ -333,28 +336,28 @@ if __name__=="__main__":
       w.startScan()
     if rq == "scan_results":
       ok=True
-      print w.scanResults()
+      print(w.scanResults())
     if rq=="scan_info":
       ok=True
-      print w.scanResultWithInfo()
+      print(w.scanResultWithInfo())
     if rq == "status":
       ok=True
-      print w.status()
+      print(w.status())
     if rq == "save":
       ok=True
       w.saveConfig()
     if rq == "list_networks":
       ok=True
-      print w.listNetworks()
+      print(w.listNetworks())
     if rq == "add_network":
       ok=True
-      print w.addNetwork()
+      print(w.addNetwork())
     if rq== "configure_network":
       ok=True
       p={}
       for i in range(6,len(sys.argv)):
         (n,v)=sys.argv[i].split("=")
-        print "param "+n+"="+v
+        print("param "+n+"="+v)
         p[n]=v
       w.configureNetwork(sys.argv[5],p)
     if rq =="remove_network":
@@ -380,15 +383,15 @@ if __name__=="__main__":
       p={}
       for i in range(5,len(sys.argv)):
         (n,v)=sys.argv[i].split("=")
-        print "param "+n+"="+v
+        print("param "+n+"="+v)
         p[n]=v
-      print w.connect(p)
+      print(w.connect(p))
     if ok:
-      print "simple command %s ok"%(rq)
+      print("simple command %s ok"%(rq))
     else:
       raise Exception("unknown command "+rq)
   else:
     w.sendRequest(rq)
     rt=w.receiveData()
-    print "received for %s:%s"%(sys.argv[3],rt)
+    print("received for %s:%s"%(sys.argv[3],rt))
 

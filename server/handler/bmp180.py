@@ -29,6 +29,9 @@
 #
 ###############################################################################
 
+from __future__ import division
+from builtins import str
+from past.utils import old_div
 import time
 import threading
 
@@ -51,7 +54,7 @@ bus=None
 def convertToString(data):
   # Simple function to convert binary data into
   # a string
-  return str((data[1] + (256 * data[0])) / 1.2)
+  return str(old_div((data[1] + (256 * data[0])), 1.2))
 
 def getShort(data, index):
   # return two bytes from data as a signed 16-bit value
@@ -111,7 +114,7 @@ def readBmp180(addr):
 
   # Refine temperature
   X1 = ((UT - AC6) * AC5) >> 15
-  X2 = (MC << 11) / (X1 + MD)
+  X2 = old_div((MC << 11), (X1 + MD))
   B5 = X1 + X2
   temperature = int(B5 + 8) >> 4
 
@@ -129,14 +132,14 @@ def readBmp180(addr):
   B4 = (AC4 * (X3 + 32768)) >> 15
   B7 = (UP - B3) * (50000 >> OVERSAMPLE)
 
-  P = (B7 * 2) / B4
+  P = old_div((B7 * 2), B4)
 
   X1 = (int(P) >> 8) * (int(P) >> 8)
   X1 = (X1 * 3038) >> 16
   X2 = int(-7357 * P) >> 16
   pressure = int(P + ((X1 + X2 + 3791) >> 4))
 
-  return (temperature/10.0,pressure/100.0)
+  return (old_div(temperature,10.0),old_div(pressure,100.0))
 
 
 class AVNBMP180Reader(AVNWorker):
@@ -185,7 +188,7 @@ class AVNBMP180Reader(AVNWorker):
         temperature,pressure = readBmp180(addr)
         if self.getBoolParam('writeMda'):
           """$AVMDA,,,1.00000,B,,,,,,,,,,,,,,,,"""
-          mda = '$AVMDA,,,%.5f,B,,,,,,,,,,,,,,,,' % ( pressure / 1000.)
+          mda = '$AVMDA,,,%.5f,B,,,,,,,,,,,,,,,,' % ( old_div(pressure, 1000.))
           AVNLog.debug("BMP180:MDA %s", mda)
           self.writeData(mda,source,addCheckSum=True)
           """$AVMTA,19.50,C*2B"""
@@ -193,7 +196,7 @@ class AVNBMP180Reader(AVNWorker):
           AVNLog.debug("BMP180:MTA %s", mta)
           self.writeData(mta,source,addCheckSum=True)
         if self.getBoolParam('writeXdr'):
-          xdr = '$AVXDR,P,%.5f,B,Barometer' % (pressure / 1000.)
+          xdr = '$AVXDR,P,%.5f,B,Barometer' % (old_div(pressure, 1000.))
           AVNLog.debug("BMP180:XDR %s", xdr)
           self.writeData(xdr,source,addCheckSum=True)
 

@@ -1,3 +1,4 @@
+from builtins import object
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
@@ -24,7 +25,7 @@
 #
 ###############################################################################
 
-class AVNApi:
+class AVNApi(object):
 
   """
   the API for handlers/decoders that will input data, decode NMEA or output data

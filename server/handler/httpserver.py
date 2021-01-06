@@ -1,3 +1,6 @@
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
@@ -26,11 +29,11 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
 
-import SocketServer
-import BaseHTTPServer
+import socketserver
+import http.server
 import posixpath
-import urllib
-import urlparse
+import urllib.request, urllib.parse, urllib.error
+import urllib.parse
 
 import gemf_reader
 
@@ -54,7 +57,7 @@ import threading
   
 
 #a HTTP server with threads for each request
-class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWorker):
+class AVNHTTPServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorker):
   navxml=AVNUtil.NAVXML
   
   @classmethod
@@ -134,12 +137,12 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     self.addresslist=[]
     self.handlerMap={}
     self.externalHandlers={} #prefixes that will be handled externally
-    BaseHTTPServer.HTTPServer.__init__(self, server_address, RequestHandlerClass, True)
+    http.server.HTTPServer.__init__(self, server_address, RequestHandlerClass, True)
   
   def run(self):
     self.setName(self.getThreadPrefix())
-    AVNLog.info("HTTP server "+self.server_name+", "+unicode(self.server_port)+" started at thread "+self.name)
-    self.setInfo('main',"serving at port %s"%(unicode(self.server_port)),AVNWorker.Status.RUNNING)
+    AVNLog.info("HTTP server "+self.server_name+", "+str(self.server_port)+" started at thread "+self.name)
+    self.setInfo('main',"serving at port %s"%(str(self.server_port)),AVNWorker.Status.RUNNING)
     if hasIfaces:
       self.interfaceReader=threading.Thread(target=self.readInterfaces)
       self.interfaceReader.daemon=True
@@ -148,7 +151,7 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
 
   def handlePathmapping(self,path):
     if not self.pathmappings is None:
-      for mk in self.pathmappings.keys():
+      for mk in list(self.pathmappings.keys()):
         if path.find(mk) == 0:
           path=self.pathmappings[mk]+path[len(mk):]
           AVNLog.ld("remapped path to",path)
@@ -217,7 +220,7 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
     @return: an OS path
     '''
     words = path.split('/')
-    words = filter(None, words)
+    words = [_f for _f in words if _f]
     path = ""
     for word in words:
           drive, word = os.path.splitdrive(word)
@@ -234,12 +237,12 @@ class AVNHTTPServer(SocketServer.ThreadingMixIn,BaseHTTPServer.HTTPServer, AVNWo
   def pathQueryFromUrl(cls,url):
     (path, sep, query) = url.partition('?')
     path = path.split('#', 1)[0]
-    path = posixpath.normpath(urllib.unquote(path).decode('utf-8'))
+    path = posixpath.normpath(urllib.parse.unquote(path).decode('utf-8'))
     return (path,query)
 
   def tryExternalMappings(self,path,query,handler=None):
-    requestParam=requestParam=urlparse.parse_qs(query,True)
-    for prefix in self.externalHandlers.keys():
+    requestParam=requestParam=urllib.parse.parse_qs(query,True)
+    for prefix in list(self.externalHandlers.keys()):
       if path.startswith(prefix):
         # the external handler can either return a mapped path (already
         # converted in an OS path - e.g. using plainUrlToPath)

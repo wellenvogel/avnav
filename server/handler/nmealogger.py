@@ -1,3 +1,4 @@
+from builtins import str
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
@@ -69,8 +70,8 @@ class AVNNmeaLogger(AVNWorker):
     filehandle.write(data)
     filehandle.flush()
   def createFileName(self,dt):
-    str=unicode(dt.strftime("%Y-%m-%d")+".nmea")
-    return str
+    fstr=str(dt.strftime("%Y-%m-%d")+".nmea")
+    return fstr
     
   def run(self):
     self.setName(self.getThreadPrefix())
@@ -113,7 +114,7 @@ class AVNNmeaLogger(AVNWorker):
       try:
         newFile=False
         if not os.path.isdir(self.trackdir):
-          os.makedirs(self.trackdir, 0775)
+          os.makedirs(self.trackdir, 0o775)
         curfname=os.path.join(self.trackdir,self.createFileName(currentTime))
         #we have to consider time shift backward
         if lastcleanup is None or (currentTime > lastcleanup+datetime.timedelta(seconds=60)) or (currentTime < lastcleanup-datetime.timedelta(seconds=5)):

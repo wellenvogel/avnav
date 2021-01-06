@@ -1,3 +1,4 @@
+from builtins import str
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
@@ -94,7 +95,7 @@ class AVNUdpWriter(AVNWorker):
        filterstr=self.getStringParam('filter')
        filter=None
        seq=0
-       AVNLog.info("Sendto %s:%d" % (unicode(addr),port))
+       AVNLog.info("Sendto %s:%d" % (str(addr),port))
        if filterstr != "":
          filter=filterstr.split(",")
        while True:

@@ -1,3 +1,5 @@
+from builtins import range
+from builtins import object
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
@@ -38,7 +40,7 @@ from avnav_worker import *
 #this should not directly be instantiated, instead classes doing socket reading
 #should derive from this
 #the derived class must have the setInfo,writeData methods
-class SocketReader():
+class SocketReader(object):
   def readSocket(self,sock,infoName,sourceName,timeout=None):
     pattern=AVNUtil.getNMEACheck()
     peer = "unknown connection"

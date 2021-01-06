@@ -26,6 +26,8 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
 
+from __future__ import division
+from past.utils import old_div
 import time
 import socket
 import threading
@@ -68,7 +70,7 @@ class AVNUdpReader(AVNWorker, SocketReader):
   def writeData(self,data,source=None):
     AVNWorker.writeData(self,data,source)
     if (self.getIntParam('minTime')):
-      time.sleep(float(self.getIntParam('minTime'))/1000) 
+      time.sleep(old_div(float(self.getIntParam('minTime')),1000)) 
      
   #thread run method - just try forever  
   def run(self):
