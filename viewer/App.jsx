@@ -124,7 +124,7 @@ const ButtonSizer=(props)=>{
         let style={fontSize:fontSize+"px"};
         return(
             <div className="buttonSizer" style={style} ref={props.refFunction}>
-                <Button/>
+                <Button name={"dummy"}/>
             </div>
         )};
 
