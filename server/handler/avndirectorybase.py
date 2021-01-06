@@ -1,8 +1,7 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
 ###############################################################################
-# Copyright (c) 2012,2013-2020 Andreas Vogel andreas@wellenvogel.net
+# Copyright (c) 2012,2013-2021 Andreas Vogel andreas@wellenvogel.net
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a
 #  copy of this software and associated documentation files (the "Software"),
@@ -28,12 +27,7 @@
 #  parts contributed by Matt Hawkins http://www.raspberrypi-spy.co.uk/
 #
 ###############################################################################
-from __future__ import unicode_literals
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import range
-from builtins import object
+
 
 import urllib.request, urllib.parse, urllib.error
 from zipfile import ZipFile

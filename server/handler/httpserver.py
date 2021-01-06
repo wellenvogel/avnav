@@ -1,11 +1,7 @@
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
 ###############################################################################
-# Copyright (c) 2012,2013 Andreas Vogel andreas@wellenvogel.net
+# Copyright (c) 2012,2021 Andreas Vogel andreas@wellenvogel.net
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a
 #  copy of this software and associated documentation files (the "Software"),
@@ -237,11 +233,11 @@ class AVNHTTPServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
   def pathQueryFromUrl(cls,url):
     (path, sep, query) = url.partition('?')
     path = path.split('#', 1)[0]
-    path = posixpath.normpath(urllib.parse.unquote(path).decode('utf-8'))
+    path = posixpath.normpath(urllib.parse.unquote(path))
     return (path,query)
 
   def tryExternalMappings(self,path,query,handler=None):
-    requestParam=requestParam=urllib.parse.parse_qs(query,True)
+    requestParam=urllib.parse.parse_qs(query,True)
     for prefix in list(self.externalHandlers.keys()):
       if path.startswith(prefix):
         # the external handler can either return a mapped path (already

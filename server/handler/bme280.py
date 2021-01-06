@@ -1,8 +1,7 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
 ###############################################################################
-# Copyright (c) 2012,2013-2017 Andreas Vogel andreas@wellenvogel.net
+# Copyright (c) 2012,2013-2021 Andreas Vogel andreas@wellenvogel.net
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a
 #  copy of this software and associated documentation files (the "Software"),
@@ -29,14 +28,7 @@
 #
 ###############################################################################
 
-from __future__ import division
-from past.utils import old_div
-import time
-import threading
-
 from ctypes import c_short
-from ctypes import c_byte
-from ctypes import c_ubyte
 
 hasBME280=False
 try:
@@ -45,7 +37,6 @@ try:
 except:
   pass
 
-from avnav_util import *
 from avnav_nmea import *
 from avnav_worker import *
 import avnav_handlerList
@@ -137,7 +128,7 @@ def readBME280All(addr):
 
   # Wait in ms (Datasheet Appendix B: Measurement time and current calculation)
   wait_time = 1.25 + (2.3 * OVERSAMPLE_TEMP) + ((2.3 * OVERSAMPLE_PRES) + 0.575) + ((2.3 * OVERSAMPLE_HUM)+0.575)
-  time.sleep(old_div(wait_time,1000))  # Wait the required time  
+  time.sleep(wait_time/1000)  # Wait the required time
 
   # Read temperature/pressure/humidity
   data = bus.read_i2c_block_data(addr, REG_DATA, 8)
@@ -152,20 +143,20 @@ def readBME280All(addr):
   temperature = float(((t_fine * 5) + 128) >> 8);
 
   # Refine pressure and adjust for temperature
-  var1 = old_div(t_fine, 2.0) - 64000.0
+  var1 = t_fine / 2.0 - 64000.0
   var2 = var1 * var1 * dig_P6 / 32768.0
   var2 = var2 + var1 * dig_P5 * 2.0
-  var2 = old_div(var2, 4.0) + dig_P4 * 65536.0
-  var1 = old_div((dig_P3 * var1 * var1 / 524288.0 + dig_P2 * var1), 524288.0)
-  var1 = (1.0 + old_div(var1, 32768.0)) * dig_P1
+  var2 = var2 / 4.0 + dig_P4 * 65536.0
+  var1 = (dig_P3 * var1 * var1 / 524288.0 + dig_P2 * var1) / 524288.0
+  var1 = (1.0 + var1 / 32768.0) * dig_P1
   if var1 == 0:
     pressure=0
   else:
     pressure = 1048576.0 - pres_raw
-    pressure = old_div(((pressure - old_div(var2, 4096.0)) * 6250.0), var1)
+    pressure = ((pressure - var2 / 4096.0) * 6250.0) / var1
     var1 = dig_P9 * pressure * pressure / 2147483648.0
     var2 = pressure * dig_P8 / 32768.0
-    pressure = pressure + old_div((var1 + var2 + dig_P7), 16.0)
+    pressure = pressure + (var1 + var2 + dig_P7) / 16.0
 
   # Refine humidity
   humidity = t_fine - 76800.0
@@ -176,7 +167,7 @@ def readBME280All(addr):
   elif humidity < 0:
     humidity = 0
 
-  return old_div(temperature,100.0),old_div(pressure,100.0),humidity
+  return temperature/100.0,pressure/100.0,humidity
 
 
 class AVNBME280Reader(AVNWorker):
@@ -227,7 +218,7 @@ class AVNBME280Reader(AVNWorker):
         temperature,pressure,humidity = readBME280All(addr)
         if self.getBoolParam('writeMda'):
           """$AVMDA,,,1.00000,B,,,,,,,,,,,,,,,,"""
-          mda = '$AVMDA,,,%.5f,B,,,,,,,,,,,,,,,,' % ( old_div(pressure, 1000.))
+          mda = '$AVMDA,,,%.5f,B,,,,,,,,,,,,,,,,' % ( pressure / 1000.)
           AVNLog.debug("BME280:MDA %s", mda)
           self.writeData(mda,source,addCheckSum=True)
           """$AVMTA,19.50,C*2B"""
@@ -235,7 +226,7 @@ class AVNBME280Reader(AVNWorker):
           AVNLog.debug("BME280:MTA %s", mta)
           self.writeData(mta,source,addCheckSum=True)
         if self.getBoolParam('writeXdr'):
-          xdr = '$AVXDR,P,%.5f,B,Barometer' % (old_div(pressure, 1000.))
+          xdr = '$AVXDR,P,%.5f,B,Barometer' % (pressure / 1000.)
           AVNLog.debug("BME280:XDR %s", xdr)
           self.writeData(xdr,source,addCheckSum=True)
 

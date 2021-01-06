@@ -1,9 +1,7 @@
-from builtins import str
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
 ###############################################################################
-# Copyright (c) 2012,2013 Andreas Vogel andreas@wellenvogel.net
+# Copyright (c) 2012,2021 Andreas Vogel andreas@wellenvogel.net
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a
 #  copy of this software and associated documentation files (the "Software"),
@@ -26,6 +24,7 @@ from builtins import str
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
+from builtins import str
 
 hasBluetooth=False
 

@@ -1,7 +1,3 @@
-from future import standard_library
-standard_library.install_aliases()
-from builtins import object
-# !/usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
 ###############################################################################

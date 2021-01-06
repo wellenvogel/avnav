@@ -1,7 +1,3 @@
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import object
 import http.server
 import io
 import cgi
@@ -79,7 +75,7 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
       self.send_error(404, "unsupported post url")
       return
     try:
-      ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
+      ctype, pdict = cgi.parse_header(self.headers.get('content-type'))
       if ctype == 'multipart/form-data':
         postvars = cgi.parse_multipart(self.rfile, pdict)
       elif ctype == 'application/x-www-form-urlencoded':
@@ -100,7 +96,7 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
     except Exception as e:
       txt=traceback.format_exc()
       AVNLog.ld("unable to process request for ",path,query,txt)
-      self.send_response(500,txt);
+      self.send_response(500,txt)
       self.end_headers()
       return
 
@@ -217,10 +213,11 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header("Content-type", "text/javascript")
       else:
         self.send_header("Content-type", "application/json")
-      self.send_header("Content-Length", str(len(rtj)))
+      wbytes=rtj.encode('utf-8')
+      self.send_header("Content-Length", str(len(wbytes)))
       self.send_header("Last-Modified", self.date_time_string())
       self.end_headers()
-      self.wfile.write(rtj)
+      self.wfile.write(wbytes)
       AVNLog.ld("nav response",rtj)
     else:
       raise Exception("empty response")
@@ -444,10 +441,11 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
   def writeData(self,data,mimeType):
     self.send_response(200)
     self.send_header("Content-type", mimeType)
-    self.send_header("Content-Length", len(data))
+    wbytes=data.encode('utf-8')
+    self.send_header("Content-Length", len(wbytes))
     self.send_header("Last-Modified", self.date_time_string())
     self.end_headers()
-    self.wfile.write(data)
+    self.wfile.write(wbytes)
 
   def writeFromDownload(self,download,filename=None,noattach=False):
     # type: (AVNDownload, basestring,bool) -> object or None

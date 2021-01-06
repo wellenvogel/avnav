@@ -1,6 +1,4 @@
-from __future__ import print_function
-from builtins import object
-#! /usr/bin/env python
+#! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
 ###############################################################################
@@ -26,6 +24,9 @@ from builtins import object
 #
 ###############################################################################
 # read mbtiles files and provide them for access via http
+from __future__ import print_function
+from builtins import object
+
 import os
 import sqlite3
 import sys

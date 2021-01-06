@@ -1,16 +1,9 @@
-from __future__ import division
-from future import standard_library
-standard_library.install_aliases()
-from builtins import object
-from past.utils import old_div
 import datetime
 import json
 import re
 import sys
 import threading
 import time
-#the following import is optional
-#it only allows "intelligent" IDEs (like PyCharm) to support you in using it
 import traceback
 import urllib.request, urllib.parse, urllib.error
 hasWebsockets=False
@@ -144,12 +137,12 @@ class Plugin(object):
       port=self.api.getConfigValue('port','3000')
       port=int(port)
       period=self.api.getConfigValue('period','1000')
-      period=old_div(int(period),1000)
-      expiryPeriod=old_div(self.api.getExpiryPeriod(),3)
+      period=int(period)/1000
+      expiryPeriod=self.api.getExpiryPeriod()
       if (period > expiryPeriod):
         period=expiryPeriod
       self.skHost=self.api.getConfigValue('host','localhost')
-      chartQueryPeriod=old_div(int(self.api.getConfigValue('chartQueryPeriod','10000')),1000)
+      chartQueryPeriod=int(self.api.getConfigValue('chartQueryPeriod','10000'))/1000
       self.proxyMode=self.api.getConfigValue('proxyMode','sameHost')
       self.useWebsockets=self.api.getConfigValue('useWebsockets','true').lower() == 'true'
     except:

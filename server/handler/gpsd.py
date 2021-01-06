@@ -1,8 +1,7 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
 ###############################################################################
-# Copyright (c) 2012,2013 Andreas Vogel andreas@wellenvogel.net
+# Copyright (c) 2012,2021 Andreas Vogel andreas@wellenvogel.net
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a
 #  copy of this software and associated documentation files (the "Software"),
@@ -25,13 +24,12 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
+import traceback
 
-from __future__ import division
-from __future__ import print_function
-from builtins import str
-from builtins import object
-from past.utils import old_div
+import serial
 import socket
+import os
+import time
 
 from avnserial import *
 from avnav_worker import *
@@ -118,7 +116,7 @@ class AVNGpsd(AVNWorker):
       if not ( os.path.exists(device) or noCheck):
         self.setInfo('main',"device not visible",AVNWorker.Status.INACTIVE)
         AVNLog.debug("device %s still not visible, continue waiting",device)
-        time.sleep(old_div(timeout,2))
+        time.sleep(timeout/2)
         continue
       else:
         if hasSerial and not noCheck:
@@ -135,12 +133,12 @@ class AVNGpsd(AVNWorker):
               raise Exception("unable to read data from device")
           except:
             AVNLog.debug("open device %s failed: %s",device,traceback.format_exc())
-            time.sleep(old_div(timeout,2))
+            time.sleep(timeout/2)
             continue
         AVNLog.info("device %s became visible, starting gpsd",device)
         self.setInfo('main', "starting gpsd with command %s"%(gpsdcommand), AVNWorker.Status.STARTED)
         try:
-          self.gpsdproc=subprocess.Popen(gpsdcommandli, stdin=None, stdout=None, stderr=None,shell=False,universal_newlines=True,close_fds=True)
+          self.gpsdproc= os.subprocess.Popen(gpsdcommandli, stdin=None, stdout=None, stderr=None, shell=False, universal_newlines=True, close_fds=True)
           reader=GpsdReader(self.navdata, port, "GPSDReader[Reader] %s at %d"%(device,port),self)
           reader.start()
           self.setInfo('main', "gpsd running with command %s"%(gpsdcommand), AVNWorker.Status.STARTED)
@@ -150,8 +148,8 @@ class AVNGpsd(AVNWorker):
             self.gpsdproc.wait()
           except:
             pass
-          self.setInfo('main', "unable to start gpsd with command"%(gpsdcommand), AVNWorker.Status.STARTED)
-          time.sleep(old_div(timeout,2))
+          self.setInfo('main', "unable to start gpsd with command %s"%(gpsdcommand), AVNWorker.Status.STARTED)
+          time.sleep(timeout/2)
           continue
         AVNLog.debug("started gpsd with pid %d",self.gpsdproc.pid)
         while True:
@@ -197,7 +195,7 @@ class AVNGpsd(AVNWorker):
                 AVNLog.error("unable to stop gpsd reader thread within 10s")
             reader=None  
         #end of loop - device available
-        time.sleep(old_div(timeout,2))
+        time.sleep(timeout/2)
 avnav_handlerList.registerHandler(AVNGpsd)
         
       
@@ -583,7 +581,7 @@ class AVNGpsdFeeder(AVNGpsd):
         try:
           self.setInfo('main', "starting gpsd with command %s"%(gpsdcommand), AVNWorker.Status.STARTED)
           AVNLog.debug("starting gpsd with command %s, starting reader",gpsdcommand)
-          self.gpsdproc=subprocess.Popen(gpsdcommandli, stdin=None, stdout=None, stderr=None,shell=False,universal_newlines=True,close_fds=True)
+          self.gpsdproc= os.subprocess.Popen(gpsdcommandli, stdin=None, stdout=None, stderr=None, shell=False, universal_newlines=True, close_fds=True)
           
           reader=GpsdReader(self.navdata, port, "AVNGpsdFeeder[Reader] %s at %d"%(device,port),self,self.gpsdError)
           reader.start()
@@ -595,7 +593,7 @@ class AVNGpsdFeeder(AVNGpsd):
             self.gpsdproc.wait()
           except:
             pass
-          time.sleep(old_div(self.getIntParam('timeout'),2))
+          time.sleep(self.getIntParam('timeout')/2)
           reader.doStop()
           continue
         AVNLog.info("started gpsd with pid %d",self.gpsdproc.pid)

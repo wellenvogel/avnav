@@ -1,8 +1,7 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
 ###############################################################################
-# Copyright (c) 2012,2013 Andreas Vogel andreas@wellenvogel.net
+# Copyright (c) 2012,2021 Andreas Vogel andreas@wellenvogel.net
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a
 #  copy of this software and associated documentation files (the "Software"),
@@ -25,9 +24,6 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
-from __future__ import unicode_literals
-from builtins import str
-from builtins import object
 import codecs
 import shutil
 
@@ -359,10 +355,10 @@ class AVNConfig(object):
     tmpName=self.cfgfileName+".tmp"
     if os.path.exists(tmpName):
       os.unlink(tmpName)
-    fh=codecs.open(tmpName,"w",encoding="utf-8",errors='ignore')
+    fh=open(tmpName,"w",encoding="utf-8",errors='ignore')
     if fh is None:
       raise Exception("unable to open file %s"%tmpName)
-    self.domObject.writexml(fh, encoding="utf-8")
+    self.domObject.writexml(fh)
     fh.close()
     try:
       parser.parse(tmpName)

@@ -164,13 +164,13 @@ ospackage {
     packageGroup='misc'
     packageName='avnav'
     requires('bluetooth')
-    requires('python-bluez')
-    requires('python-pyudev')
-    requires('python-serial')
-    requires('python-gdal')
-    requires('python-imaging').or('python-pil')
-    requires('python-netifaces')
-    requires('python-websocket')
+    requires('python3-pip')
+    requires('python3-pyudev')
+    requires('python3-serial')
+    requires('python3-gdal')
+    requires('python3-imaging').or('python3-pil')
+    requires('python3-netifaces')
+    requires('python3-websocket')
     user='root'
     into ('/usr/lib/avnav') {
         from('viewer/build/release') {

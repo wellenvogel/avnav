@@ -1,5 +1,3 @@
-from builtins import str
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
 ###############################################################################
@@ -27,6 +25,8 @@ from builtins import str
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
+
+from builtins import str
 
 from threading import Thread
 

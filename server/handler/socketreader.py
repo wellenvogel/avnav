@@ -1,8 +1,7 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
 ###############################################################################
-# Copyright (c) 2012,2013 Andreas Vogel andreas@wellenvogel.net
+# Copyright (c) 2012,2021 Andreas Vogel andreas@wellenvogel.net
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a
 #  copy of this software and associated documentation files (the "Software"),
@@ -25,19 +24,12 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
-
-from __future__ import division
-from past.utils import old_div
-import time
 import socket
-import threading
+from socketreaderbase import *
 
-from avnav_util import *
+import avnav_handlerList
 from avnav_nmea import *
 from avnav_worker import *
-from socketreaderbase import *
-import avnav_handlerList
-
 
 
 #a Worker to read from a remote NMEA source via a socket
@@ -72,7 +64,7 @@ class AVNSocketReader(AVNWorker,SocketReader):
   def writeData(self,data,source):
     AVNWorker.writeData(self,data,source)
     if (self.getIntParam('minTime')):
-      time.sleep(old_div(float(self.getIntParam('minTime')),1000)) 
+      time.sleep(float(self.getIntParam('minTime'))/1000)
      
   #thread run method - just try forever  
   def run(self):

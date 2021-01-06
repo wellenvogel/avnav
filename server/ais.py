@@ -1,11 +1,3 @@
-from __future__ import division
-from __future__ import print_function
-from builtins import map
-from builtins import str
-from builtins import range
-from past.utils import old_div
-from builtins import object
-#!/usr/bin/env python
 #
 # A Python AIVDM/AIVDO plugins
 #
@@ -100,10 +92,10 @@ def cnb_rot_format(n):
     elif n == 127:
         return "fastright"
     else:
-        return str((old_div(n, 4.733)) ** 2);
+        return str((n/4.733) ** 2)
 
 def cnb_latlon_format(n):
-    return str(old_div(n, 600000.0))
+    return str(n/600000.0)
 
 def cnb_speed_format(n):
     if n == 1023:
@@ -111,10 +103,10 @@ def cnb_speed_format(n):
     elif n == 1022:
         return "fast"
     else:
-        return str(old_div(n, 10.0));
+        return str(n/10.0)
 
 def cnb_course_format(n):
-    return str(old_div(n, 10.0));
+    return str(n/10.0)
 
 def cnb_second_format(n):
     if n == 60:
@@ -126,7 +118,7 @@ def cnb_second_format(n):
     elif n == 63:
         return "inoperative"
     else:
-        return str(n);
+        return str(n)
 
 # Common Navigation Block is the format for AIS types 1, 2, and 3
 cnb = (
@@ -307,7 +299,7 @@ type5 = (
     bitfield("hour",          5, 'unsigned',   24, "ETA hour"),
     bitfield("minute",        6, 'unsigned',   60, "ETA minute"),
     bitfield("draught",       8, 'unsigned',    0, "Draught",
-             formatter=lambda n: old_div(n,10.0)),
+             formatter=lambda n: n/10.0),
     bitfield("destination", 120, 'string',   None, "Destination"),
     bitfield("dte",           1, 'unsigned', None, "DTE"),
     spare(1),
@@ -369,7 +361,7 @@ type7 = (
 #
 
 def type8_latlon_format(n):
-    return str(old_div(n, 60000.0))
+    return str(n/60000.0)
 
 type8_dac_or_fid_unknown = (
     bitfield("data",           952, 'raw',      None,  "Data"),
@@ -597,7 +589,7 @@ type16 = (
     )
 
 def short_latlon_format(n):
-    return str(old_div(n, 600.0))
+    return str(n/600.0)
 
 type17 = (
     spare(2),
@@ -950,7 +942,7 @@ class BitVector(object):
     def extend_to(self, length):
         "Extend vector to given bitlength."
         if length > self.bitlen:
-            self.bits.extend([0]*(old_div((length - self.bitlen +7 ),8)))
+            self.bits.extend([0]*((length - self.bitlen +7 )//8))
             self.bitlen = length
     def from_sixbit(self, data, pad=0):
         "Initialize bit vector from AIVDM-style six-bit armoring."
@@ -961,13 +953,13 @@ class BitVector(object):
                 ch -= 8
             for i in (5, 4, 3, 2, 1, 0):
                 if (ch >> i) & 0x01:
-                    self.bits[old_div(self.bitlen,8)] |= (1 << (7 - self.bitlen % 8))
+                    self.bits[self.bitlen//8] |= (1 << (7 - self.bitlen % 8))
                 self.bitlen += 1
         self.bitlen -= pad
     def ubits(self, start, width):
         "Extract a (zero-origin) bitfield from the buffer as an unsigned int."
         fld = 0
-        for i in range(old_div(start,BITS_PER_BYTE), old_div((start + width + BITS_PER_BYTE - 1), BITS_PER_BYTE)):
+        for i in range(start//BITS_PER_BYTE, (start + width + BITS_PER_BYTE - 1)//BITS_PER_BYTE):
             fld <<= BITS_PER_BYTE
             fld |= self.bits[i]
         end = (start + width) % BITS_PER_BYTE
@@ -985,11 +977,11 @@ class BitVector(object):
         return self.bitlen
     def __repr__(self):
         "Used for dumping binary data."
-        return str(self.bitlen) + ":" + "".join(["%02x" % d for d in self.bits[:old_div((self.bitlen + 7),8)]])
+        return str(self.bitlen) + ":" + "".join(["%02x" % d for d in self.bits[:(self.bitlen + 7)//8]])
 
-import sys, exceptions, re
+import sys,  re
 
-class AISUnpackingException(exceptions.Exception):
+class AISUnpackingException(Exception):
     def __init__(self, lc, fieldname, value):
         self.lc = lc
         self.fieldname = fieldname
@@ -1021,7 +1013,7 @@ def aivdm_unpack(lc, data, offset, values, instructions):
                 # The try/catch error here is in case we run off the end
                 # of a variable-length string field, as in messages 12 and 14
                 try:
-                    for i in range(old_div(inst.width,6)):
+                    for i in range(inst.width//6):
                         newchar = "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^- !\"#$%&'()*+,-./0123456789:;<=>?"[data.ubits(offset + 6*i, 6)]
                         if newchar == '@':
                             break
@@ -1032,7 +1024,7 @@ def aivdm_unpack(lc, data, offset, values, instructions):
                 value = value.replace("@", " ").rstrip()
             elif inst.type == 'raw':
                 # Note: Doesn't rely on the length.
-                value = BitVector(data.bits[old_div(offset,8):], len(data)-offset)
+                value = BitVector(data.bits[offset//8:], len(data)-offset)
             values[inst.name] = value
             if inst.validator and not inst.validator(value):
                 raise AISUnpackingException(lc, inst.name, value)
@@ -1187,7 +1179,7 @@ def parse_ais_messages(source, scaled=False, skiperr=False, verbose=0):
             if skiperr:
                 continue
             else:
-                raise exc_type, exc_value, exc_traceback
+                raise Exception(exc_value,exc_traceback)
 
 # The rest is just sequencing and report generation.
 

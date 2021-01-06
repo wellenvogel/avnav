@@ -1,9 +1,4 @@
-from __future__ import division
-from __future__ import print_function
-from builtins import range
-from past.utils import old_div
-from builtins import object
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
 
@@ -34,6 +29,7 @@ from builtins import object
 #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 #  DEALINGS IN THE SOFTWARE.
 ###############################################################################
+
 import os
 import sys
 import xml.sax as sax
@@ -248,10 +244,10 @@ class ListHandler(sax.handler.ContentHandler):
       minta=mintile.split('/')
       assert len(maxta) == 2, "invalid format for maxTile %s"%(maxtile,)
       assert len(minta) == 2, "invalid format for minTile %s"%(mintile,)
-      maxx=old_div(int(maxta[0]),256)
-      maxy=old_div(int(maxta[1]),256)
-      minx=old_div(int(minta[0]),256)
-      miny=old_div(int(minta[1]),256)
+      maxx=int(maxta[0])//256
+      maxy=int(maxta[1])//256
+      minx=int(minta[0])//256
+      miny=int(minta[1])//256
       self.currentGroup.addElement(Tileset(attrs['name'], zoom, minx, miny, maxx, maxy))
   def endElement(self, name):
     if name == "Layer":
@@ -333,7 +329,7 @@ def createOverviewSingleLayer(layer,zoomBoundings,options):
   
 def writeOverview(overviewfname,layerlist):
   overviewstr=createOverview(layerlist,None)
-  with open(overviewfname,"w") as f:
+  with open(overviewfname,"w",encoding='utf-8') as f:
     f.write(overviewstr)
   log(overviewfname+" written, successfully finished")
 

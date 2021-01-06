@@ -1,8 +1,7 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
 ###############################################################################
-# Copyright (c) 2012,2013 Andreas Vogel andreas@wellenvogel.net
+# Copyright (c) 2012,2021 Andreas Vogel andreas@wellenvogel.net
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a
 #  copy of this software and associated documentation files (the "Software"),
@@ -27,17 +26,13 @@
 ###############################################################################
 
 from __future__ import division
-from past.utils import old_div
-import time
-import socket
-import threading
 
-from avnav_util import *
+import socket
+from socketreaderbase import *
+
+import avnav_handlerList
 from avnav_nmea import *
 from avnav_worker import *
-from socketreaderbase import *
-import avnav_handlerList
-
 
 
 #a Worker to read  NMEA source from a udp socket
@@ -70,7 +65,7 @@ class AVNUdpReader(AVNWorker, SocketReader):
   def writeData(self,data,source=None):
     AVNWorker.writeData(self,data,source)
     if (self.getIntParam('minTime')):
-      time.sleep(old_div(float(self.getIntParam('minTime')),1000)) 
+      time.sleep(float(self.getIntParam('minTime'))/1000)
      
   #thread run method - just try forever  
   def run(self):

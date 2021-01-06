@@ -1,9 +1,3 @@
-from __future__ import division
-from __future__ import print_function
-from future import standard_library
-standard_library.install_aliases()
-from builtins import range
-from past.utils import old_div
 import urllib.request, urllib.error, urllib.parse
 import xml.etree.ElementTree as ET
 
@@ -17,11 +11,11 @@ def matrix(a,b,c,d,e,f):
   sz=10
   return (a*sz+c*sz+e,b*sz+d*sz+f)
 
-diffy=old_div((BBOX[2]-BBOX[0]),fact)
-diffx=old_div((BBOX[3]-BBOX[1]),fact)
+diffy=(BBOX[2]-BBOX[0])/fact
+diffx=(BBOX[3]-BBOX[1])/fact
 diffy=diffx
-pix=old_div(256,fact)
-step=int(old_div(pix,10))
+pix=256//fact
+step=int(pix/10)
 print("fact:",fact)
 print("sz:",pix)
 for loop in range(0,fact):

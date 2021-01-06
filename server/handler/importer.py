@@ -1,8 +1,7 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
 ###############################################################################
-# Copyright (c) 2012,2015 Andreas Vogel andreas@wellenvogel.net
+# Copyright (c) 2012,2021 Andreas Vogel andreas@wellenvogel.net
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a
 #  copy of this software and associated documentation files (the "Software"),
@@ -23,10 +22,6 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 ###############################################################################
-from __future__ import division
-from __future__ import unicode_literals
-from past.utils import old_div
-import os
 import shutil
 
 import time
@@ -179,7 +174,7 @@ class AVNImporter(AVNWorker):
         AVNLog.debug("conversion(s) running, skip check")
       self.checkConversionFinished()
       if len(list(self.runningConversions.keys())) > 0 or len(list(self.candidateTimes.keys())) == 0:
-        time.sleep(old_div(self.waittime,5))
+        time.sleep(self.waittime/5)
       else:
         time.sleep(1)
   #read the import dir and return a dictionary: key - name of dir or mbtiles file, entry: timestamp

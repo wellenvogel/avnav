@@ -1,5 +1,3 @@
-from builtins import str
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
 ###############################################################################
@@ -26,6 +24,8 @@ from builtins import str
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
+from builtins import str
+
 import re
 import threading
 import copy
@@ -337,8 +337,6 @@ class AVNWorker(threading.Thread):
     for k in list(sparam.keys()):
       dv=sparam[k]
       if (isinstance(dv,str)):
-        #potentially we did not declare all defaults as unicode - so convert them
-        dv=str(dv,errors='ignore')
         sparam[k]=dv
       v=attrs.get(k)
       if dv is None and v is None:

@@ -1,14 +1,7 @@
-from __future__ import division
-from __future__ import print_function
-from builtins import map
-from builtins import str
-from past.utils import old_div
-from builtins import object
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
 ###############################################################################
-# Copyright (c) 2012,2013 Andreas Vogel andreas@wellenvogel.net
+# Copyright (c) 2012,2021 Andreas Vogel andreas@wellenvogel.net
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a
 #  copy of this software and associated documentation files (the "Software"),
@@ -31,6 +24,7 @@ from builtins import object
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
+
 import logging
 import logging.handlers
 import datetime
@@ -197,13 +191,13 @@ class AVNUtil(object):
       return None
     #subtract the EPOCH
     td = (dt - datetime.datetime(1970,1,1, tzinfo=None))
-    ts=old_div(((td.days*24*3600+td.seconds)*10**6 + td.microseconds),1e6)
+    ts=((td.days*24*3600+td.seconds)*10**6 + td.microseconds)/1e6
     return ts
 
   #timedelta total_seconds that is not available in 2.6
   @classmethod
   def total_seconds(cls,td):
-    return old_div((td.microseconds + (td.seconds+td.days*24*3600)*10**6),10**6)
+    return (td.microseconds + (td.seconds+td.days*24*3600)*10**6)/10**6
   
   #now timestamp in utc
   @classmethod
@@ -237,8 +231,8 @@ class AVNUtil(object):
 
     dlat = math.radians(lat2-lat1)
     dlon = math.radians(lon2-lon1)
-    a = math.sin(old_div(dlat,2)) * math.sin(old_div(dlat,2)) + math.cos(math.radians(lat1)) \
-        * math.cos(math.radians(lat2)) * math.sin(old_div(dlon,2)) * math.sin(old_div(dlon,2))
+    a = math.sin(dlat/2) * math.sin(dlat/2) + math.cos(math.radians(lat1)) \
+        * math.cos(math.radians(lat2)) * math.sin(dlon/2) * math.sin(dlon/2)
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
     d = (cls.R * c )
     return d
@@ -247,7 +241,7 @@ class AVNUtil(object):
   @classmethod
   def distance(cls,origin,destination):
     rt=cls.distanceM(origin,destination);
-    return old_div(rt,float(cls.NM));
+    return rt/float(cls.NM);
 
   #XTE - originally from Dirk HH, crosschecked against
   #http://www.movable-type.co.uk/scripts/latlong.html
@@ -257,7 +251,7 @@ class AVNUtil(object):
     d13 = cls.distanceM(startWp,Pp);
     w13 = cls.calcBearing(startWp,Pp)
     w12 = cls.calcBearing(startWp,endWp)
-    return math.asin(math.sin(old_div(d13,cls.R))*math.sin(math.radians(w13)-math.radians(w12))) * cls.R
+    return math.asin(math.sin(d13/cls.R)*math.sin(math.radians(w13)-math.radians(w12))) * cls.R
 
   #bearing from one point the next originally by DirkHH
   #http://www.movable-type.co.uk/scripts/latlong.html
@@ -277,10 +271,10 @@ class AVNUtil(object):
   @classmethod
   def convertAIS(cls,aisdata):
     rt=aisdata.copy()
-    rt['lat']=old_div(float(aisdata.get('lat') or 0),600000)
-    rt['lon']=old_div(float(aisdata.get('lon') or 0),600000)
-    rt['speed']=(old_div(float(aisdata.get('speed') or 0),10)) * cls.NM/3600;
-    rt['course']=old_div(float(aisdata.get('course') or 0),10)
+    rt['lat']=float(aisdata.get('lat') or 0)/600000
+    rt['lon']=float(aisdata.get('lon') or 0)/600000
+    rt['speed']=(float(aisdata.get('speed') or 0)/10) * cls.NM/3600;
+    rt['course']=float(aisdata.get('course') or 0)/10
     rt['mmsi']=str(aisdata['mmsi'])
     return rt
   
@@ -349,7 +343,7 @@ class AVNUtil(object):
         raise Exception("missing parameter %s",name)
       return None
     if isinstance(rt, list):
-      return rt[0].decode('utf-8', errors='ignore')
+      return rt[0]
     return rt
 
   @classmethod

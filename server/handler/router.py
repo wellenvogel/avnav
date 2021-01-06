@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
 ###############################################################################
@@ -26,22 +25,15 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
-from __future__ import unicode_literals
-from __future__ import division
-from builtins import str
-from past.utils import old_div
-from builtins import object
-
-
-
 import os
 import sys
 
 import gpxpy098.parser as gpxparser
 
-from __main__ import traceback
+import traceback
 
 from avnav_config import AVNConfig
+from avnav_util import AVNLog
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__),"..","..","libraries"))
 
@@ -159,7 +151,7 @@ class AVNRouteInfo(AVNDirectoryListEntry):
         else:
           route=gpx.routes[0]
           self.numpoints=len(route.points)
-          self.length=old_div(route.length(),AVNUtil.NM)
+          self.length=route.length()/AVNUtil.NM
     except Exception as e:
       AVNLog.error("error when parsing route %s: %s",routeFile,e.message)
 
@@ -270,7 +262,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
         if self.currentLeg.getTo() is not None:
           distance=AVNUtil.distanceM(self.wpToLatLon(self.currentLeg.getFrom()),self.wpToLatLon(self.currentLeg.getTo()))
           AVNLog.info("read current leg, route=%s, from=%s, to=%s, length=%fNM"%(self.currentLeg.getRouteName(),
-                                                                  str(self.currentLeg.getFrom()),str(self.currentLeg.getTo()),old_div(distance,AVNUtil.NM)))
+                                                                  str(self.currentLeg.getFrom()),str(self.currentLeg.getTo()),distance/AVNUtil.NM))
         else:
           AVNLog.info("read current leg, route=%s, from=%s, to=%s"% (self.currentLeg.getRouteName(),
                                                                                    str(self.currentLeg.getFrom()),
@@ -468,7 +460,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
         #they are basically as decoded by gpsd
         if lat is not None and lon is not None:
           AVNLog.debug("compute route data from %s to %s",str(self.startWp),str(self.endWp))
-          XTE=old_div(AVNUtil.calcXTE((lat,lon), self.wpToLatLon(self.startWp), self.wpToLatLon(self.endWp)),float(AVNUtil.NM))
+          XTE=AVNUtil.calcXTE((lat,lon), self.wpToLatLon(self.startWp), self.wpToLatLon(self.endWp))/float(AVNUtil.NM)
           if XTE > 0:
             LR="L"
           else:

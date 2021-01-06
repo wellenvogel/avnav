@@ -13,4 +13,5 @@ if [ ! -d $BASE ] ; then
 else
     chown -R avnav $BASE
 fi
+/usr/bin/python3 -m pip install pybluez
 exit 0
