@@ -277,6 +277,7 @@ class SrcLayer(object):
                 os.chdir(dst_dir)
 
             dst_drv = gdal.GetDriverByName(out_format)
+            dst_file=os.path.abspath(dst_file)
             dst_ds = dst_drv.CreateCopy(dst_file,
                                         self.raster_ds,0)
             dst_ds.SetProjection(self.srs)
