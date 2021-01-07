@@ -24,28 +24,17 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
-from __future__ import unicode_literals
-from builtins import str
-from builtins import object
+
+import shlex
+import signal
 
 import time
-import subprocess
-import threading
-import os
-import datetime
-import glob
-import sys
-import traceback
-import json
-import datetime
-import threading
-import signal
-import shlex
 
+import avnav_handlerList
 from avnav_config import AVNConfig
 from avnav_util import *
 from avnav_worker import *
-import avnav_handlerList
+
 
 class Handler(object):
   def __init__(self,command,id,callback,parameters=None):

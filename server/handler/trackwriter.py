@@ -24,9 +24,6 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
-from __future__ import unicode_literals
-from builtins import str
-
 
 import glob
 

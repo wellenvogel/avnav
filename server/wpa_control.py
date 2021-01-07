@@ -25,9 +25,6 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py
 ###############################################################################
 
-from __future__ import print_function
-from builtins import range
-from builtins import object
 import sys
 import os
 import socket
@@ -107,13 +104,13 @@ class WpaControl(object):
     ready = select.select([self.socket], [], [], 2)
     if ready[0]:
       data = self.socket.recv(self.maxReceive)
-      return data
+      return data.decode('utf-8')
     self.close(False)
     raise Exception("no response from %s in 2s"%(self.wpaAddr))
   def sendRequest(self,request):
     self.checkOpen()
     try:
-      self.socket.send(request)
+      self.socket.send(request.encode('utf-8'))
     except:
       self.close(False)
       raise

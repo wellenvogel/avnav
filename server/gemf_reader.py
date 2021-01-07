@@ -23,9 +23,6 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 ###############################################################################
-from __future__ import print_function
-from builtins import str
-from builtins import range
 
 # read gemf files and provide them for access via http
 # see http://www.cgtk.co.uk/gemf

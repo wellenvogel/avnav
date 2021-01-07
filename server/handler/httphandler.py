@@ -228,8 +228,8 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
     @param filename:
     @return:
     '''
-    PREFIX="try{(\nfunction(){\nvar AVNAV_BASE_URL=\"%s\";\n"%urllib.parse.quote(baseUrl)
-    SUFFIX="\n})();\n}catch(e){\nwindow.avnav.api.showToast(e.message+\"\\n\"+(e.stack||e));\n }\n"
+    PREFIX=("try{(\nfunction(){\nvar AVNAV_BASE_URL=\"%s\";\n"%urllib.parse.quote(baseUrl)).encode('utf-8')
+    SUFFIX="\n})();\n}catch(e){\nwindow.avnav.api.showToast(e.message+\"\\n\"+(e.stack||e));\n }\n".encode('utf-8')
     if not os.path.exists(filename):
       self.send_error(404,"File not found")
       return
@@ -237,6 +237,7 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
     flen=os.path.getsize(filename)
     dlen=flen+len(PREFIX)+len(SUFFIX)
     if addCode is not None:
+      addCode=addCode.encode('utf-8')
       dlen+=len(addCode)
     self.send_header("Content-type", "text/javascript")
     self.send_header("Content-Length", str(dlen))
@@ -245,7 +246,7 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
     self.wfile.write(PREFIX)
     if addCode is not None:
       self.wfile.write(addCode)
-    fh=open(filename,"r")
+    fh=open(filename,"rb")
     self.writeStream(flen,fh)
     self.wfile.write(SUFFIX)
     return True

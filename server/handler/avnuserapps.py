@@ -27,10 +27,6 @@
 #  parts contributed by Matt Hawkins http://www.raspberrypi-spy.co.uk/
 #
 ###############################################################################
-from __future__ import unicode_literals
-from builtins import str
-from builtins import range
-
 
 import hashlib
 

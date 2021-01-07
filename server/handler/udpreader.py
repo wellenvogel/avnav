@@ -25,9 +25,6 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
 
-from __future__ import division
-
-import socket
 from socketreaderbase import *
 
 import avnav_handlerList
@@ -43,7 +40,7 @@ class AVNUdpReader(AVNWorker, SocketReader):
     return "AVNUdpReader"
   
   @classmethod
-  def getConfigParam(cls,child):
+  def getConfigParam(cls,child=None):
     if not child is None:
       return None
     rt={
