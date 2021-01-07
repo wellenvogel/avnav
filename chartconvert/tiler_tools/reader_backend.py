@@ -83,7 +83,7 @@ class RefPoints(object):
 
         ld('RefPoints',self.__dict__)
 
-        nrefs=len(filter(None,(self.pixels,self.latlong,self.cartesian))[0])
+        nrefs=len(list(filter(None,(self.pixels,self.latlong,self.cartesian)))[0])
         if not self.ids:
             self.ids=list(map(str,list(range(1,nrefs+1))))
 
@@ -99,7 +99,6 @@ class RefPoints(object):
                     i.append(i[1])
             ld('RefPoints extra',self.__dict__)
 
-        self.ids=[s.encode('utf-8') for s in self.ids]
 
     def srs(self):
         return self.owner.srs
@@ -165,16 +164,15 @@ class SrcMap(object):
         gdal.UseExceptions()
 
         self.load_data() # load datum definitions, ellipses, projections
-        self.file=src_file.decode(locale.getpreferredencoding(),'ignore')
+        self.file=src_file
         self.header=self.get_header()       # Read map header
 
     def load_csv(self,csv_file,csv_map):
         'load datum definitions, ellipses, projections from a file'
         csv.register_dialect('strip', skipinitialspace=True)
-        with open(os.path.join(data_dir(),csv_file),'rb') as data_f:
+        with open(os.path.join(data_dir(),csv_file),'r',encoding='utf-8') as data_f:
             data_csv=csv.reader(data_f,'strip')
             for row in data_csv:
-                row=[s.decode('utf-8') for s in row]
                 #ld(row)
                 try:
                     dct,unpack=csv_map[row[0]]
@@ -250,7 +248,7 @@ class SrcLayer(object):
             proj4.extend(datum)
         proj4.extend(['+nodefs']) # '+wktext',
         ld('proj4',proj4)
-        return ' '.join(proj4).encode('utf-8'),dtm
+        return ' '.join(proj4),dtm
 
     def convert(self,dest=None):
         options=self.map.options
@@ -279,7 +277,7 @@ class SrcLayer(object):
                 os.chdir(dst_dir)
 
             dst_drv = gdal.GetDriverByName(out_format)
-            dst_ds = dst_drv.CreateCopy(dst_file.encode(locale.getpreferredencoding()),
+            dst_ds = dst_drv.CreateCopy(dst_file,
                                         self.raster_ds,0)
             dst_ds.SetProjection(self.srs)
 
@@ -293,8 +291,8 @@ class SrcLayer(object):
             if poly:
                 dst_ds.SetMetadataItem('CUTLINE',poly)
             if self.name:
-                dst_ds.SetMetadataItem('DESCRIPTION',self.name.encode('utf-8'))
-
+                dst_ds.SetMetadataItem('DESCRIPTION',self.name)
+            dst_ds.FlushCache()
             del dst_ds # close dataset
 #            re_sub_file(dst_file, [
 #                    ('^.*<GeoTransform>.*\n',''),

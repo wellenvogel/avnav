@@ -475,7 +475,7 @@ class ChartListHandler(sax.handler.ContentHandler):
       self.zoom_layers.append((self.layerZoom,self.layerName))
     elif name == "chart":
       self.fname = attrs["filename"]
-      self.title = attrs["title"].encode('ascii','ignore') 
+      self.title = attrs["title"]
       self.mpp = float(attrs["mpp"])
       ld("Parser chart",self.fname,self.title,self.mpp)
     elif name == "BoundingBox":

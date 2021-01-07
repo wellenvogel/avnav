@@ -399,7 +399,7 @@ class AVNStore(object):
 
 
   
-  def __unicode__(self):
+  def __str__(self):
     rt="%s \n"%self.__class__.__name__
     idx=0
     self.__listLock.acquire()

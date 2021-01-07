@@ -69,7 +69,7 @@ class XmlChartFile(ChartFile):
     else:
       return self.filename
 
-  def __unicode__(self):
+  def __str__(self):
     return "xml %s"%self.filename
 
 

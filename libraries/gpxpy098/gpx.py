@@ -122,7 +122,7 @@ class GPXWaypoint(mod_geo.Location):
         self.vertical_dilution = vertical_dilution
         self.position_dilution = position_dilution
 
-    def __unicode__(self):
+    def __str__(self):
         return '[wpt{%s}:%s,%s@%s]' % (self.name, self.latitude, self.longitude, self.elevation)
 
     def __repr__(self):
@@ -267,7 +267,7 @@ class GPXRoutePoint(mod_geo.Location):
         self.vertical_dilution = vertical_dilution      # Vertical dilution of precision
         self.position_dilution = position_dilution      # Position dilution of precision
 
-    def __unicode__(self):
+    def __str__(self):
         return '[rtept{%s}:%s,%s@%s]' % (self.name, self.latitude, self.longitude, self.elevation)
 
     def __repr__(self):
@@ -410,7 +410,7 @@ class GPXTrackPoint(mod_geo.Location):
 
         return length / float(seconds)
 
-    def __unicode__(self):
+    def __str__(self):
         return '[trkpt:%s,%s@%s@%s]' % (self.latitude, self.longitude, self.elevation, self.time)
 
     def __hash__(self):

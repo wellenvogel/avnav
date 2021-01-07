@@ -457,7 +457,7 @@ class Pyramid(object):
 
                 metadata=src_ds.GetMetadata()
                 if metadata:
-                    mtd_lst=[xml_txt('MDI',metadata[mdkey].encode('utf-8'),4,key=mdkey) for mdkey in metadata]
+                    mtd_lst=[xml_txt('MDI',metadata[mdkey],4,key=mdkey) for mdkey in metadata]
                     meta_txt=meta_templ % '\n'.join(mtd_lst)
                 else:
                     meta_txt=''

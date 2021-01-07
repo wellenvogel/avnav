@@ -49,7 +49,7 @@ class AVNImporter(AVNWorker):
     return "AVNImporter"
   
   @classmethod
-  def getConfigParam(cls,child):
+  def getConfigParam(cls,child=None):
     if not child is None:
       return None
     rt={
@@ -269,6 +269,7 @@ class AVNImporter(AVNWorker):
       if doStart:
         args=[sys.executable,os.path.join(self.converterDir,"read_charts.py"),"-o",name+"-tmp","-b",workdir,"-g","-t","1",fullname]
         tmpOutName=os.path.join(workdir,"out",name+"-tmp.gemf")
+        AVNLog.info("running converter command %s"%" ".join(args))
         po=self.runConverter(name,args)
     elif name.endswith("mbtiles"):
       args=[sys.executable,os.path.join(self.converterDir,"convert_mbtiles.py"),gemfName+".tmp",fullname]

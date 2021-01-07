@@ -289,7 +289,7 @@ class MBTilesFile(ChartFile):
   def getDownloadFile(self):
     return self.filename
 
-  def __unicode__(self):
+  def __str__(self):
     rt="mbtiles %s " %(self.filename)
     return rt
 

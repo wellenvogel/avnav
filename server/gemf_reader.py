@@ -80,6 +80,7 @@ class GemfFile(ChartFile):
       if (namelen > 0):
         buf=handle.read(namelen)
         (name,)=struct.unpack_from("!%ds"%namelen,buf,0)
+        name=name.decode('ascii',errors='ignore')
       source={'num':i,'idx':idx,'name':name}
       self.sources.append(source)
     #rangenum
@@ -230,7 +231,7 @@ class GemfFile(ChartFile):
       if os.path.isfile(aname):
         os.unlink(aname)
 
-  def __unicode__(self):
+  def __str__(self):
     rt="GEMF %s (srcnum=%d:" %(self.filename,self.numsources)
     for s in self.sources:
       rt+="%(num)d,%(idx)d,%(name)s;" % s
@@ -241,7 +242,7 @@ class GemfFile(ChartFile):
       rt+=" flen=%d," % l
     return rt
 
-  def changeScheme(self,schema):
+  def changeScheme(self,schema,createOverview=True):
     raise Exception("change schema not allowed for %s"%self.filename)
   def getScheme(self):
     return None

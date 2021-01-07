@@ -235,7 +235,7 @@ def MakeGEMFFile(mapdir, output_file, options):
     for source in source_order:
         source_list += valto4bytes(source_indices[source])
         source_list += valto4bytes(len(source))
-        source_list += [ord(i) for i in source.encode('ascii', 'ignore')]
+        source_list += [i for i in source.encode('ascii', 'ignore')]
         source_count += 1
 
     source_list_size = len(source_list)
@@ -338,8 +338,8 @@ def MakeGEMFFile(mapdir, output_file, options):
     print("Tile Count is %d (c.f. %d)" % (tile_count, number_of_files))
     print("")
     fhHeader = open(output_file, 'wb')
-    fhHeader.write("".join([chr(i) for i in header]))
-    fhHeader.write("".join([chr(i) for i in data_locations]))
+    fhHeader.write(bytes(header))
+    fhHeader.write(bytes(data_locations))
 
     file_size = len(header) + len(data_locations)
     index = 0

@@ -46,11 +46,11 @@ class_map=(
     )
 
 def proc_src(src):
-    with open(src,'r',encoding="utf-8") as f:
+    with open(src,'rb') as f:
         lines=[f.readline() for i in range(10)]
     for cls in class_map:
         patt=cls.magic
-        if any((l.startswith(patt) for l in lines)):
+        if any((l.startswith(patt.encode('ascii')) for l in lines)):
             break
     else:
         raise Exception(" Invalid file: %s" % src)

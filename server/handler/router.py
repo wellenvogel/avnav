@@ -121,7 +121,7 @@ class AVNRoutingLeg(object):
     self.plain['from']=newFrom
     self.plain['approach']=False
 
-  def __unicode__(self):
+  def __str__(self):
     if self.isAnchorWatch():
       return "AVNRoutingLeg AnchorWatch from=%s,anchorDistanc=%s" \
              % (str(self.getFrom()),str(self.getAnchorDistance()))
@@ -155,7 +155,7 @@ class AVNRouteInfo(AVNDirectoryListEntry):
     except Exception as e:
       AVNLog.error("error when parsing route %s: %s",routeFile,e.message)
 
-  def __unicode__(self):
+  def __str__(self):
     return "Route: %s"%self.name
 
 #routing handler

@@ -135,7 +135,7 @@ class Handler(object):
     return self.id
   def getIdStr(self):
     return str(self.id)
-  def __unicode__(self):
+  def __str__(self):
     return "%s(%d): %s %s, repeat=%d"%(self.name,self.id,self.getCommandStr(),self.parameters,self.repeat)
 
 class AVNCommandHandler(AVNWorker):

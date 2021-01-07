@@ -441,7 +441,11 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
   def writeData(self,data,mimeType):
     self.send_response(200)
     self.send_header("Content-type", mimeType)
-    wbytes=data.encode('utf-8')
+    wbytes=None
+    if type(data) == bytes:
+      wbytes=data
+    else:
+      wbytes=data.encode('utf-8')
     self.send_header("Content-Length", len(wbytes))
     self.send_header("Last-Modified", self.date_time_string())
     self.end_headers()
