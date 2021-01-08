@@ -120,7 +120,7 @@ class ZoomSet(object):
             for z in sorted(new_tilesets): # sorted merge of new and old tilsets
                 tilesets_el.appendChild(new_tilesets[z])
 
-            with open(self.tileset.tilemap,'w') as f:
+            with open(self.tileset.tilemap,'wb') as f:
                 #doc.writexml(f,encoding='utf-8')
                 f.write(doc.toxml('utf-8'))
 

@@ -176,7 +176,7 @@ class AVNLayoutHandler(AVNWorker):
           raise Exception("no data in upload layout")
         handler.writeFileFromInput(fname,kwargs.get('flen'),True)
       else:
-        with open(fname,"w") as fp:
+        with open(fname,"w",encoding='utf-8') as fp:
           fp.write(data)
           fp.close()
       self.updateAllLayouts()

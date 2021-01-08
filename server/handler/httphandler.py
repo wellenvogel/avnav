@@ -82,12 +82,12 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
         length = int(self.headers.get('content-length'))
         if length > maxlen:
           raise Exception("too much data"+str(length))
-        postvars = cgi.parse_qs(self.rfile.read(length), keep_blank_values=1)
+        postvars = cgi.parse_qs(self.rfile.read(length).decode('utf-8'), keep_blank_values=1)
       elif ctype == 'application/json':
         length = int(self.headers.get('content-length'))
         if length > maxlen:
           raise Exception("too much data"+str(length))
-        postvars = { '_json':self.rfile.read(length)}
+        postvars = { '_json':self.rfile.read(length).decode('utf-8')}
       else:
         postvars = {}
       requestParam=urllib.parse.parse_qs(query,True)

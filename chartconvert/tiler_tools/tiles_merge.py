@@ -140,7 +140,7 @@ class MergeSet(object):
             for z in sorted(src.zooms | dst.zooms): # sorted merge of new and old tilsets
                 tilesets_el.appendChild(new_tilesets[z])
 
-        with open(dst.tilemap,'w') as f:
+        with open(dst.tilemap,'wb') as f:
             #doc.writexml(f,encoding='UTF-8')
             f.write(doc.toxml('utf-8'))
 

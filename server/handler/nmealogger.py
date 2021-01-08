@@ -120,12 +120,12 @@ class AVNNmeaLogger(AVNWorker):
           last={}
         if newFile:
           zfname=curfname+".gz"
-          f=open(curfname,"a")
           if os.path.isfile(zfname):
             #we must uncompress first
             AVNLog.info("decompressing existing nmea log %s",zfname)
             try:
               zf=gzip.open(zfname,"rb")
+              f = open(curfname, "wb")
               while True:
                 buf=zf.read(100000)
                 if buf is None or len(buf) == 0:
@@ -138,6 +138,8 @@ class AVNNmeaLogger(AVNWorker):
               os.unlink(zfname)
             except:
               pass
+            f.close()
+          f=open(curfname,"a",encoding='utf-8',errors='ignore')
           newFile=False
           self.setInfo('main', "writing to %s"%(curfname,), AVNWorker.Status.NMEA)
         seq,data=self.feeder.fetchFromHistory(seq,10,nmeafilter=nmeaFilter)

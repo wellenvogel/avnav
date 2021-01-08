@@ -27,8 +27,7 @@
 #  parts contributed by Matt Hawkins http://www.raspberrypi-spy.co.uk/
 #
 ###############################################################################
-
-
+import json
 import urllib.request, urllib.parse, urllib.error
 from zipfile import ZipFile
 
@@ -482,7 +481,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
       fh = open(outname, "wb")
       if fh is None:
         raise Exception("unable to write to %s" % outname)
-      fh.write(decoded.encode('utf-8'))
+      fh.write(data.encode('utf-8'))
       fh.close()
     else:
       handler.writeFileFromInput(outname, rlen, overwrite)

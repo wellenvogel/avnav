@@ -445,7 +445,7 @@ class Plugin(object):
         handler.send_header("Content-Length", len(data))
         handler.send_header("Last-Modified", handler.date_time_string())
         handler.end_headers()
-        handler.wfile.write(data)
+        handler.wfile.write(data.encode('utf-8'))
         return True
       if parr[1] == "sequence":
         return {'status':'OK','sequence':0}

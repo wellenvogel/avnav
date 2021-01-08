@@ -142,7 +142,7 @@ class AVNRouteInfo(AVNDirectoryListEntry):
     try:
       if os.path.isfile(routeFile):
         content=""
-        with open(routeFile,"r") as f:
+        with open(routeFile,"r",encoding='utf-8') as f:
           content=f.read()
         parser = gpxparser.GPXParser(content)
         gpx = parser.parse()
@@ -231,7 +231,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
         AVNLog.info("current leg removed")
       return
     AVNLog.info("new leg %s",str(leg))
-    f=open(self.currentLegFileName,"w")
+    f=open(self.currentLegFileName,"w",encoding='utf-8')
     try:
       f.write(json.dumps(leg.getJson()))
     except:
@@ -256,7 +256,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
     if os.path.exists(self.currentLegFileName):
       f=None
       try:
-        f=open(self.currentLegFileName,"r")
+        f=open(self.currentLegFileName,"r",encoding='utf-8')
         strleg=f.read(self.MAXROUTESIZE+1000)
         self.currentLeg=AVNRoutingLeg(json.loads(strleg))
         if self.currentLeg.getTo() is not None:

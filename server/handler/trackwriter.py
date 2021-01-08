@@ -196,7 +196,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
       os.unlink(filename)
     f=None
     try:
-      f=open(filename,"w")
+      f=open(filename,"w",encoding='utf-8')
     except:
       pass
     if f is None:
@@ -275,7 +275,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
               self.track.append((trkpoint[0], trkpoint[1], trkpoint[2]))
           self.initial = False
       if newFile:
-        self.currentFile = open(realfilename, "a")
+        self.currentFile = open(realfilename, "a",encoding='utf-8')
         self.currentFile.write("#anvnav Trackfile started/continued at %s\n" % (currentTime.isoformat()))
         self.currentFile.flush()
         self.setInfo('main', "writing to %s" % (realfilename,), AVNWorker.Status.NMEA)

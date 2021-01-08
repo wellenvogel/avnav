@@ -542,9 +542,9 @@ class TileStore(object):
     if not os.path.exists(fname):
       ld("unable to load tile ",self.tile,fname)
       return
-    fh=os.open(fname, "r")
-    self.data=os.read(fh,os.path.getsize(fname))
-    os.close(fh)
+    fh=open(fname, "rb")
+    self.data=fh.read(os.path.getsize(fname))
+    fh.close()
     self.mode=TileStore.RAW
   def write(self,basedir):
     fname=self.__getFname__(basedir)
@@ -561,8 +561,8 @@ class TileStore(object):
     if self.mode == TileStore.PIL:
       self.data.save(fname)
       return
-    fh=os.open(fname,"w")
-    os.write(fh, self.data)
+    fh=open(fname,"wb")
+    fh.write(self.data)
   #get the image data as buffer
   def getData(self):
     if self.mode == TileStore.NONE:

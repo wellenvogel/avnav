@@ -396,7 +396,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
           numChanged+=1
           overlayConfig['overlays']=newOverlays
           try:
-            with open(os.path.join(self.baseDir,info.name),"w") as f:
+            with open(os.path.join(self.baseDir,info.name),"w",encoding='utf-8') as f:
               f.write(json.dumps(overlayConfig,indent=2))
               f.close()
           except Exception as e:
