@@ -164,6 +164,7 @@ ospackage {
     packageGroup='misc'
     packageName='avnav'
     requires('bluetooth')
+    requires('libbluetooth-dev')
     requires('python3-pip')
     requires('python3-pyudev')
     requires('python3-serial')
