@@ -246,7 +246,7 @@ class SerialReader(object):
          bytes=0
          try:
            bytes=self.readLine(self.device,timeout)
-           if not bytes.find(b"\n"):
+           if  bytes.find(b"\n") <0:
              raise Exception("no newline in serial data")
          except Exception as e:
            AVNLog.debug("Exception %s in serial read, close and reopen %s",traceback.format_exc(),portname)
