@@ -1,12 +1,4 @@
-from __future__ import print_function
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import map
-from builtins import chr
-from builtins import range
-from builtins import object
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # 2011-05-15 17:27:24 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 ###############################################################################
@@ -22,13 +22,6 @@
 #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 #  DEALINGS IN THE SOFTWARE.
 ###############################################################################
-
-from __future__ import with_statement
-from __future__ import print_function
-from builtins import zip
-from builtins import map
-from builtins import range
-from builtins import object
 
 version='%prog version 2.3'
 

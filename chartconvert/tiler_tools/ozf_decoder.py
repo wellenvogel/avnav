@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # 2011-01-27 11:32:42 
@@ -25,30 +25,16 @@
 #  DEALINGS IN THE SOFTWARE.
 ###############################################################################
 
-from __future__ import with_statement
-from __future__ import print_function
-from builtins import str
-from builtins import hex
-from builtins import zip
-from builtins import map
-from builtins import range
-from builtins import object
-
-import sys
-import os
-import os.path
-import math
-import shutil
-import logging
-from optparse import OptionParser
-#from PIL import Image
-import zlib
-import mmap
-import operator
-import struct
 import glob
+import mmap
+import os.path
+import struct
+# from PIL import Image
+import zlib
+from optparse import OptionParser
 
 from tiler_functions import *
+
 
 class OzfImg(object):
 

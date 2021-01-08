@@ -1,6 +1,4 @@
-from __future__ import print_function
-from builtins import str
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
 

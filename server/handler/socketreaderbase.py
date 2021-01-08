@@ -24,13 +24,6 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
-from builtins import range
-from builtins import object
-
-
-import time
-import socket
-from avnav_util import *
 from avnav_nmea import *
 from avnav_worker import *
 

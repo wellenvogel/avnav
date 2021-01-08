@@ -25,23 +25,11 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
 
-from builtins import str
-import time
-import subprocess
-import threading
-import os
-import datetime
-import glob
-import sys
-import traceback
 import gzip
 
-from avnav_config import AVNConfig
-from avnav_util import *
-from avnav_worker import *
-from avnav_nmea import *
-from trackwriter import *
 import avnav_handlerList
+from trackwriter import *
+
 
 #a writer for our track
 class AVNNmeaLogger(AVNWorker):

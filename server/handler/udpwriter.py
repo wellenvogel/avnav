@@ -26,20 +26,10 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
 
-from builtins import str
-
-from threading import Thread
-
-import time
 import socket
-import threading
-
-from avnav_util import *
-from avnav_nmea import *
-from avnav_worker import *
-from avnav_nmea import *
-from socketreaderbase import *
 import avnav_handlerList
+from socketreaderbase import *
+
 
 #a worker to output data via a UDP socket
 

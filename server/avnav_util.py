@@ -25,20 +25,18 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
 
+import ctypes
 import logging
 import logging.handlers
-import datetime
-import itertools
 import os
-import string
-import threading
-import subprocess
-import math
 import re
+import subprocess
 import sys
-import ctypes
 import traceback
-import unicodedata
+
+import datetime
+import math
+import threading
 
 VERSION="0.9.1"
 

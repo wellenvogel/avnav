@@ -777,14 +777,7 @@ class Pyramid(object):
         # write top-level metadata (html/kml)
         self.write_metadata(None,[ch for img,ch,opacities in top_results])
         self.write_tilemap()
-        
-        # cache back tiles opacity
-        file_opacities=[(self.tile_path(tile),opc)
-            for tile,opc in flatten([opacities for img,ch,opacities in top_results])]
-        try:
-            pickle.dump(dict(file_opacities),open(os.path.join(self.dest, 'merge-cache'),'w'))
-        except:
-            logging.warning("opacity cache save failed")
+
 
     #----------------------------
 

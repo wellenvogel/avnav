@@ -25,12 +25,12 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
+import json
 import os
 import sys
 
 import gpxpy098.parser as gpxparser
 
-import traceback
 
 from avnav_config import AVNConfig
 from avnav_util import AVNLog

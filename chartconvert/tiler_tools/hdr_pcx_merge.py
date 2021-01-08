@@ -1,6 +1,4 @@
-from builtins import range
-from builtins import object
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # 2011-01-27 11:38:30 
