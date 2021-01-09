@@ -23,7 +23,7 @@ $actions=@(
         "name"="mapserver-7.4.3-1900-x64-core.msi";
         target="$targetBase\gdal";
         installCmd="gdal";
-        "exe"="PFiles\GDAL\gdal244.dll"}
+        "exe"="PFiles\GDAL\gdal204.dll"}
     #http://download.gisinternals.com/sdk/downloads/release-1900-x64-gdal-3-2-0-mapserver-7-6-1/mapserver-7.6.1-1900-x64-core.msi
     [PSCustomObject]@{"urlBase"="http://download.gisinternals.com/sdk/downloads/release-1900-x64-gdal-2-4-4-mapserver-7-4-3";
         "name"="GDAL-2.4.4.win-amd64-py3.7.msi";target="$targetBase\gdal";"exe"="Lib\site-packages\osgeo\gdal.py"}
@@ -83,6 +83,12 @@ if ($avnavUrl){
         }
         [IO.Compression.ZipFile]::ExtractToDirectory($downloadName,$targetBase)
         Write-Host "Installation finished"
+        $scriptPath=$targetBase+"\windows\downloadAndInstall.ps1"
+        if ($null=Test-Path "$scriptPath"){
+            Write-Host "calling $scriptPath"
+            $ret=(& "$scriptPath")
+            exit($ret)
+        }
     }
     else{
         Write-Host "Unable to download avnav from $avnavUrl"

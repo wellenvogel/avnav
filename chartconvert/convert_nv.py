@@ -87,7 +87,7 @@ def nvConvert(chart,outdir,outname,tilertools,logf,warn,updateOnly=False):
       break
     if proc.stdout.closed:
       break
-    logf("CONVERTNV: "+line.rstrip('\n'))
+    logf("CONVERTNV: "+line.rstrip(b'\n').decode('utf-8'))
     if proc.poll() is not None:
       break
   rt=proc.wait()

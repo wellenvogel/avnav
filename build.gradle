@@ -364,13 +364,7 @@ task uploadRpm(type: UploadTask){
     dependsOn releaseRpm
     baseDir="daily/${project.avnavVersion}"
 }
-task uploadWindows(type: UploadTask){
-    group=UPLOAD_GROUP
-    def windowsVersion=project.avnavVersion.replaceAll(/(....)(..)(..)/,'$1-$2-$3').replaceAll(/-0([^-])/,'-$1')
-    inputFile=file("windows/build/AvNavSetup-${windowsVersion}-0.exe")
-    dependsOn windowsBuild
-    baseDir="daily/${project.avnavVersion}"
-}
+
 task uploadWindowsNet(type: UploadTask){
     group=UPLOAD_GROUP
     def windowsVersion=project.avnavVersion.replaceAll(/(....)(..)(..)/,'$1-$2-$3').replaceAll(/-0([^-])/,'-$1')
@@ -768,7 +762,7 @@ task upload{
     }
     dependsOn uploadDeb,uploadRaspi,uploadRpm,uploadViewer, uploadAccess,uploadZip
     if (onWindows){
-        dependsOn uploadWindows,uploadWindowsNet
+        dependsOn uploadWindowsNet
     }
     if (buildAndroid){
         dependsOn uploadAndroidBeta
@@ -781,7 +775,7 @@ task uploadRelease{
     }
     dependsOn testGit,uploadDeb,uploadRaspi,uploadRpm,uploadViewerRelease,uploadAccess,uploadZip
     if (onWindows){
-        dependsOn uploadWindows,uploadWindowsNet,uploadAccessWindows
+        dependsOn uploadWindowsNet,uploadAccessWindows
     }
     if (buildAndroid){
         dependsOn uploadAndroidRelease
