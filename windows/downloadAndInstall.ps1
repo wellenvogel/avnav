@@ -20,13 +20,14 @@ $actions=@(
             exe="$pythonDir\Scripts\pip.exe";
             }        
     [PSCustomObject]@{"urlBase"="https://www.wellenvogel.net/software/avnav/downloads/supplement";
-        "name"="mapserver-7.6.1-1900-x64-core.msi";
+        "name"="mapserver-7.4.3-1900-x64-core.msi";
         target="$targetBase\gdal";
         installCmd="gdal";
-        "exe"="PFiles\GDAL\gdal302.dll"}
+        "exe"="PFiles\GDAL\gdal244.dll"}
     #http://download.gisinternals.com/sdk/downloads/release-1900-x64-gdal-3-2-0-mapserver-7-6-1/mapserver-7.6.1-1900-x64-core.msi
-    [PSCustomObject]@{"urlBase"="http://download.gisinternals.com/sdk/downloads/release-1900-x64-gdal-3-2-0-mapserver-7-6-1";
-        "name"="GDAL-3.2.0.win-amd64-py3.7.msi";target="$targetBase\gdal";"exe"="Lib\site-packages\osgeo\gdal.py"}
+    [PSCustomObject]@{"urlBase"="http://download.gisinternals.com/sdk/downloads/release-1900-x64-gdal-2-4-4-mapserver-7-4-3";
+        "name"="GDAL-2.4.4.win-amd64-py3.7.msi";target="$targetBase\gdal";"exe"="Lib\site-packages\osgeo\gdal.py"}
+    #http://download.gisinternals.com/sdk/downloads/release-1900-x64-gdal-3-2-0-mapserver-7-6-1/GDAL-3.2.0.win-amd64-py3.7.msi"  
     [PSCustomObject]@{"urlBase"="https://files.pythonhosted.org/packages/36/fd/f83806d04175c0a58332578143ee7a9c5702e6e0f134e157684c737ae55b";
         "name"="Pillow-7.2.0-cp37-cp37m-win_amd64.whl";target="";"exe"="$pythonDir\Lib\site-packages\Pillow-7.2.0.dist-info\METADATA"}
     [PSCustomObject]@{"urlBase"="https://files.pythonhosted.org/packages/07/bc/587a445451b253b285629263eb51c2d8e9bcea4fc97826266d186f96f558";
