@@ -376,7 +376,7 @@ class ChartList(object):
       if not os.access(sdir,os.F_OK):
         os.makedirs(sdir,0o777)
       fname=os.path.join(sdir,LISTFILE)
-    h=open(fname,"w")
+    h=open(fname,"w",encoding='utf-8')
     print(self.toXML(), file=h)
     log("chartlist saved to "+fname)
     h.close()
@@ -1513,7 +1513,7 @@ def mergeLayerTiles(chartlist,outdir,layerindex,tilespyramid,gemf,onlyOverview=F
                       "tilesets":tilesets}
   if not os.path.exists(layerdir):
     os.makedirs(layerdir,0o777)
-  with open(layerxmlfile,"w") as f:
+  with open(layerxmlfile,"w",encoding='utf-8') as f:
     f.write(outstr)
   log(layerxmlfile+" written")
   return (layerminzoom,layermaxzoom)
@@ -1576,7 +1576,7 @@ def mergeAllTiles(outdir,mercator,gemf=None,onlyOverview=False):
               "tilemaps":tilemaps,
               "bounding":createBoundingsXml(chartlist.getChartsBoundingBox(), "avnav")
                               }
-  with open(overviewfname,"w") as f:
+  with open(overviewfname,"w",encoding='utf-8') as f:
     f.write(overviewstr)
   log(overviewfname+" written, successfully finished")
 
