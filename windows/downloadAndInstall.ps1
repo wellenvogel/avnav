@@ -9,16 +9,24 @@ $pythonDir="python"
 
 $actions=@(
     [PSCustomObject]@{"urlBase"="https://www.python.org/ftp/python/3.7.9";
-            name="python-3.7.9-amd64.exe";
+            name="python-3.7.9-embed-amd64.zip";
             target="$targetBase\$pythonDir";
             exe="python3.dll";
-            installCmd="python-3.7.9-amd64.exe"
+            installCmd="python";
+            pathFile="python37._pth"
             }
-    [PSCustomObject]@{"urlBase"="http://download.gisinternals.com/sdk/downloads/release-1900-x64-gdal-3-2-0-mapserver-7-6-1";
-        "name"="mapserver-7.6.1-1900-x64-core.msi";target="$targetBase\gdal302";"exe"="PFiles\MapServer\gdal302.dll"}
+    [PSCustomObject]@{"urlBase"="https://bootstrap.pypa.io/";
+            name="get-pip.py";
+            exe="$pythonDir\Scripts\pip.exe";
+            }        
+    [PSCustomObject]@{"urlBase"="https://www.wellenvogel.net/software/avnav/downloads/supplement";
+        "name"="mapserver-7.6.1-1900-x64-core.msi";
+        target="$targetBase\gdal";
+        installCmd="gdal";
+        "exe"="PFiles\GDAL\gdal302.dll"}
     #http://download.gisinternals.com/sdk/downloads/release-1900-x64-gdal-3-2-0-mapserver-7-6-1/mapserver-7.6.1-1900-x64-core.msi
     [PSCustomObject]@{"urlBase"="http://download.gisinternals.com/sdk/downloads/release-1900-x64-gdal-3-2-0-mapserver-7-6-1";
-        "name"="GDAL-3.2.0.win-amd64-py3.7.msi";target="$targetBase\gdal302";"exe"="Lib\site-packages\osgeo\gdal.py"}
+        "name"="GDAL-3.2.0.win-amd64-py3.7.msi";target="$targetBase\gdal";"exe"="Lib\site-packages\osgeo\gdal.py"}
     [PSCustomObject]@{"urlBase"="https://files.pythonhosted.org/packages/36/fd/f83806d04175c0a58332578143ee7a9c5702e6e0f134e157684c737ae55b";
         "name"="Pillow-7.2.0-cp37-cp37m-win_amd64.whl";target="";"exe"="$pythonDir\Lib\site-packages\Pillow-7.2.0.dist-info\METADATA"}
     [PSCustomObject]@{"urlBase"="https://files.pythonhosted.org/packages/07/bc/587a445451b253b285629263eb51c2d8e9bcea4fc97826266d186f96f558";
@@ -26,7 +34,7 @@ $actions=@(
 )
 
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::TLS12
-
+$null=[Reflection.Assembly]::LoadWithPartialName('System.IO.Compression.FileSystem')
 if ($avnavUrl){
     Write-Host "Downloading avnav from $avnavUrl"
     $Client = New-Object System.Net.WebClient
@@ -40,7 +48,6 @@ if ($avnavUrl){
         #check if the archive contains at least avnav_server.py
         $checkFiles=@("__avnav_software_archive__")
         $checkResults=@{}
-        $null=[Reflection.Assembly]::LoadWithPartialName('System.IO.Compression.FileSystem')
         $zip=[IO.Compression.ZipFile]::OpenRead($downloadName)
         $subs=Get-ChildItem $targetBase
         $subsToDel=@{}
@@ -107,7 +114,8 @@ foreach ($program in $actions){
             $null=md -Force $target
         }
         $null=md -Force $downloadDir
-        $Client.DownloadFile($url,$downloadDir+"\"+$name)
+        $downloadName=$downloadDir+"\"+$name
+        $Client.DownloadFile($url,$downloadName)
         $res=$null
         if ($target){
             if ($installCmd){
@@ -117,13 +125,33 @@ foreach ($program in $actions){
                         Remove-Item -Path "$target" -Recurse -Force
     
                     }
-                    $res=(Start-Process -WorkingDirectory $downloadDir -FilePath $installCmd -ArgumentList "InstallAllUsers=0", 
-                    "Include_launcher=0","TargetDir=$target", 
-                    "InstallLauncherAllUsers=0", 
-                    "SimpleInstall=1", 
-                    "Include_tcltk=0", 
-                    "Include_test=0",
-                    "Include_pip=1" -PassThru -Wait)
+                    $res=([IO.Compression.ZipFile]::ExtractToDirectory($downloadName,$target))
+                    $pathFile=$program.pathFile
+                    if ($pathFile){
+                        $pathFile=$target+"\"+$pathFile
+                        if (! ($null=Test-Path $pathFile)){
+                            Write-Host "$pathFile not found"
+                        }
+                        else{
+                            Write-Host "removing $pathFile"
+                            Remove-Item -Path "$pathFile" -Force
+                        }
+                    }
+                    
+                }
+                elseif ($installCmd -match '^gdal') {
+                    if ($null=Test-Path $target){
+                        Write-Host "removing existing $target"
+                        Remove-Item -Path "$target" -Recurse -Force
+    
+                    }
+                    $res=(Start-Process -WorkingDirectory $downloadDir -FilePath msiexec -ArgumentList "-a",$name,"-qb","TARGETDIR=$target","INSTALLDIR=$target" -PassThru -Wait)
+                    if ($res.ExitCode -ne 0){
+                        Write-Host "ERROR installing $name $code"
+                        exit(1)
+                    }
+                    Rename-Item "$target\PFiles\MapServer" "$target\PFiles\GDAL"
+                    Copy-Item -Path "$target\System64\*.dll" -Destination "$target\PFiles\GDAL"                   
                 }
                 else{
                     Write-Host "unknown install command $installCmd"
@@ -145,7 +173,7 @@ foreach ($program in $actions){
                 $res=(Start-Process -WorkingDirectory $downloadDir -FilePath "$targetBase\$pythonDir\Scripts\pip.exe" -ArgumentList "install",$name -PassThru -Wait -NoNewWindow)
             }
         }
-        if ($res.ExitCode -ne 0){
+        if (($res -ne $null) -And ($res.ExitCode -ne 0)){
            $code=$res.ExitCode
            Write-Host "ERROR installing $name $code"
            exit(1)
