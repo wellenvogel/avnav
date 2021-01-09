@@ -3,12 +3,7 @@ SETLOCAL
 echo "building windows"
 rem adapt pathes if necessary
 call "c:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat"
-MSBuild AvChartConvert\AvChartConvert.sln /property:Configuration=Release
-if errorlevel 1 goto errexit
 MSBuild AvChartConvert\AvChartConvert.sln /property:Configuration=ReleaseNet
-if errorlevel 1 goto errexit
-echo Building installer (logging to build\iscc.log) ...
-call "ISCC.exe" /O"build" installer\setup.iss > build\iscc.log
 if errorlevel 1 goto errexit
 echo Building Net installer (logging to build\isccNet.log) ...
 call "ISCC.exe" /O"build" installer\setupNet.iss > build\isccNet.log

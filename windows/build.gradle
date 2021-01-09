@@ -11,14 +11,6 @@ buildscript {
 
 apply plugin: 'java'
 
-def downloads=[
-        //those urls must fit toe the names in installer/setup.iss
-        'https://www.python.org/ftp/python/2.7.10/python-2.7.10.msi',
-        'http://download.gisinternals.com/sdk/downloads/release-1500-gdal-1-11-mapserver-6-4/gdal-111-1500-core.msi',
-        'http://download.gisinternals.com/sdk/downloads/release-1500-gdal-1-11-mapserver-6-4/GDAL-1.11.4.win32-py2.7.msi',
-        'https://pypi.python.org/packages/11/5d/df6328b510f150c673414b65550c48415fae1a9dc42eec7ab2afa06b4bb6/Pillow-3.0.0-cp27-none-win32.whl',
-        'https://pypi.python.org/packages/df/c9/d9da7fafaf2a2b323d20eee050503ab08237c16b0119c7bbf1597d53f793/pyserial-2.7.tar.gz'
-]
 
 task buildViewer(type: org.gradle.api.tasks.GradleBuild){
     dir=file("$projectDir/../viewer")
@@ -66,29 +58,10 @@ task updateVersionFiles{
         }
     }
 }
-File libdir=file('installer/library')
-task download{
-    doFirst{
-        if (!libdir.exists()) libdir.mkdirs()
-        downloads.each{ dl->
-            def name=dl.replaceAll('.*/','')
-            File localFile=new File(libdir,name)
-            if (! localFile.exists()){
-                logger.info("downloading $dl to $localFile")
-                new URL(dl).withInputStream{ is -> localFile.withOutputStream{ it << is }}
-            }
-            else{
-                logger.info("$localFile already exists")
-            }
-
-        }
-    }
-
-}
 
 task runBuild(type: org.gradle.api.tasks.Exec){
     commandLine=['cmd','/C','build.cmd']
-    dependsOn updateVersionFiles,buildViewer,download
+    dependsOn updateVersionFiles,buildViewer
     doFirst{
         if (! project.buildDir.isDirectory()) project.buildDir.mkdirs()
     }
