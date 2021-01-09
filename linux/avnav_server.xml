@@ -43,6 +43,7 @@
 	<UsbDevice baud="38400" filter="$RMC" timeout="10" type="combined" usbid="3-4.3.1:1.0" xonxoff="1"/>
 	<!-- a device to be ignored - e.g. for testing -->
 	<UsbDevice baud="38400" type="ignore" usbid="3-10.1:1.0"/>
+	<UsbDevice baud="38400" type="ignore" usbid="3-2.2:1.0"/>
 	<UsbDevice baud="38400" type="ignore" usbid="3-2.1:1.0"/>
 	<UsbDevice baud="38400" type="ignore" usbid="3-2.3.1:1.0"/>
 	<!-- a reader with autobaud and filter - it will filter out any RMC records and all AIS stuff-->

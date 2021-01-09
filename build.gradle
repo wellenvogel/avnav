@@ -298,6 +298,7 @@ task releaseRpm(type: Rpm) {
 task releaseDeb(type: Deb) {
     group taskgroup
     dependsOn 'releaseViewer',pkgVersion
+    recommends 'python3-bluez'
 }
 
 task release{
