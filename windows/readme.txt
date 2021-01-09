@@ -18,7 +18,13 @@
 
 4. hints for installing: https://blogs.msdn.microsoft.com/volkerw/2014/01/24/setup-a-windows-development-environment-in-a-virtual-machine-and-beyond/
    Install chocolatey from admin cmd:
-   @powershell -NoProfile -ExecutionPolicy unrestricted -Command "iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))" && SET PATH=%PATH%;%systemdrive%\chocolatey\bin
+   powershell
+    [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+    iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))
+    exit
+   SET PATH=%PATH%;%systemdrive%\Programdata\chocolatey 
+
+   #@powershell -NoProfile -ExecutionPolicy unrestricted -Command "iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))" && SET PATH=%PATH%;%systemdrive%\chocolatey\bin
    choco install -y VisualStudioExpress2013WindowsDesktop
    choco install -y --ignore-checksums GitHub
    choco install -y InnoSetup
