@@ -1,7 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # vim: ts=2 sw=2 et ai
-from compiler.pyassem import CONV
 
 ###############################################################################
 # Copyright (c) 2012,2013,2014 Andreas Vogel andreas@wellenvogel.net
