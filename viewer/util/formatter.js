@@ -79,7 +79,7 @@ const formatDecimal=function(number,fix,fract,addSpace){
         }
         return rt;
     }
-    if (addSpace != null && addSpace) sign=" ";
+    if (addSpace !== undefined && addSpace) sign=" ";
     if (number < 0) {
         number=-number;
         sign="-";

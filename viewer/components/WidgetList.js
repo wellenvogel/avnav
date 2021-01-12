@@ -246,7 +246,7 @@ let widgetList=[
             visible: keys.properties.showDepth
         },
         formatter: 'formatDecimal',
-        formatterParameters: [3,1]
+        formatterParameters: [3,1,true]
     },
     {
         name: 'XteDisplay',
