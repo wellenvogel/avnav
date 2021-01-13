@@ -241,7 +241,7 @@ class NMEAParser(object):
     valAndSum=data.rstrip().split("*")
     if len(valAndSum) > 1:
       sum=self.nmeaChecksum(valAndSum[0])
-      if sum != valAndSum[1]:
+      if sum != valAndSum[1].upper():
         AVNLog.error("invalid checksum in %s, expected %s"%(data,sum))
         return
     darray=valAndSum[0].split(",")
