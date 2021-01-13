@@ -49,6 +49,7 @@ class AVNUdpReader(AVNWorker, SocketReader):
                'host':'127.0.0.1',
                'port':None,
                'minTime':0,        #if tthis is set, wait this time before reading new data (ms)
+               'filter':''
     }
     return rt
 
@@ -82,7 +83,7 @@ class AVNUdpReader(AVNWorker, SocketReader):
         continue
       AVNLog.info("successfully listening at %s",info)
       try:
-        self.readSocket(sock,'main',self.getSourceName(info))
+        self.readSocket(sock,'main',self.getSourceName(info),self.getParamValue('filter'))
       except:
         AVNLog.info("exception while reading data from %s:%d %s",self.getStringParam('host'),self.getIntParam('port'),traceback.format_exc())
 avnav_handlerList.registerHandler(AVNUdpReader)

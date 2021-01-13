@@ -34,7 +34,10 @@ from avnav_worker import *
 #should derive from this
 #the derived class must have the setInfo,writeData methods
 class SocketReader(object):
-  def readSocket(self,sock,infoName,sourceName,timeout=None):
+  def readSocket(self,sock,infoName,sourceName,filter=None):
+    filterA = None
+    if filter:
+      filterA = filter.split(',')
     pattern=AVNUtil.getNMEACheck()
     peer = "unknown connection"
     try:
@@ -59,6 +62,8 @@ class SocketReader(object):
           for l in lines:
             l=l.translate(NMEAParser.STRIPCHARS)
             if pattern.match(l):
+              if not NMEAParser.checkFilter(l, filterA):
+                continue
               self.writeData(l,source=sourceName)
               if not hasNMEA:
                 self.setInfo(infoName, "NMEA %s"%(peer,), AVNWorker.Status.NMEA)

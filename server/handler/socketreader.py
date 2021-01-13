@@ -50,6 +50,7 @@ class AVNSocketReader(AVNWorker,SocketReader):
                'port':None,
                'timeout': 10,      #timeout for connect and waiting for data
                'minTime':0,        #if tthis is set, wait this time before reading new data (ms)
+               'filter':''
     }
     return rt
 
@@ -86,7 +87,7 @@ class AVNSocketReader(AVNWorker,SocketReader):
       AVNLog.info("successfully connected to %s",info)
       try:
         errorReported=False
-        self.readSocket(sock,'main',self.getSourceName(info))
+        self.readSocket(sock,'main',self.getSourceName(info),self.getParamValue('filter'))
         time.sleep(2)
       except:
         AVNLog.info("exception while reading from %s %s",info,traceback.format_exc())

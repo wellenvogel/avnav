@@ -147,7 +147,7 @@ class AVNSocketWriter(AVNWorker,SocketReader):
     if filterstr != "":
       filter=filterstr.split(',')
     self.readFilter=filter
-    self.readSocket(socket,infoName,self.getSourceName())
+    self.readSocket(socket,infoName,self.getSourceName(),self.getParamValue('filter'))
     self.deleteInfo(infoName)
 
   #if we have writing enabled...

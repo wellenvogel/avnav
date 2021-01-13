@@ -48,6 +48,7 @@ class AVNBlueToothReader(AVNWorker,SocketReader):
         'maxDevices':5,
         'deviceList':'',  #is set (, separated) only connect to those devices
         'feederName':'',  #if set, use this feeder
+        'filter':''
     }
     return rt
   
@@ -95,7 +96,7 @@ class AVNBlueToothReader(AVNWorker,SocketReader):
       sock=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
       sock.connect((host, port))
       AVNLog.info("bluetooth connection to %s established",host)
-      self.readSocket(sock,infoName,self.getSourceName(host))
+      self.readSocket(sock,infoName,self.getSourceName(host),self.getParamValue('filter'))
       sock.close()
     except Exception as e:
       AVNLog.debug("exception from bluetooth device: %s",traceback.format_exc())
