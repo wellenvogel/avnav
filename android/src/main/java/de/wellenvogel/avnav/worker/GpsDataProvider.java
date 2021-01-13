@@ -64,6 +64,7 @@ public abstract class GpsDataProvider {
     public static class Properties{
         int connectTimeout=5;
         long postionAge=10; //max allowed age of position
+        long auxiliaryAge=1200; //20min
         long aisLifetime=1200; //20 min
         long aisCleanupInterval=60; //1min
         boolean readAis=false;

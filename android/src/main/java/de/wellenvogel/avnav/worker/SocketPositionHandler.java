@@ -20,7 +20,9 @@ import net.sf.marineapi.nmea.sentence.Sentence;
 import net.sf.marineapi.nmea.sentence.SentenceValidator;
 import net.sf.marineapi.nmea.sentence.TalkerId;
 import net.sf.marineapi.nmea.sentence.TimeSentence;
+import net.sf.marineapi.nmea.sentence.XDRSentence;
 import net.sf.marineapi.nmea.util.DataStatus;
+import net.sf.marineapi.nmea.util.Measurement;
 import net.sf.marineapi.nmea.util.Position;
 import net.sf.marineapi.nmea.util.Units;
 
@@ -34,6 +36,7 @@ import java.io.InputStreamReader;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 
 import de.wellenvogel.avnav.aislib.messages.message.AisMessage;
 import de.wellenvogel.avnav.aislib.messages.sentence.Abk;
@@ -59,7 +62,7 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
         auxiliaryData.put(key,entry);
     }
     private void mergeAuxiliaryData(JSONObject json) throws JSONException {
-        long minTimestamp=System.currentTimeMillis()-properties.postionAge*1000;
+        long minTimestamp=System.currentTimeMillis()-properties.auxiliaryAge*1000;
         //TODO: consider timestamp
         for (AuxiliaryEntry e: auxiliaryData.values()){
             if (e.timestamp < minTimestamp) continue;
@@ -288,6 +291,21 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
                                         addAuxiliaryData(s.getSentenceId(),e);
                                         continue;
                                     }
+                                    if (s instanceof XDRSentence){
+                                        List<Measurement> transducers=((XDRSentence)s).getMeasurements();
+                                        for (Measurement transducer:transducers){
+                                            String tname=transducer.getName();
+                                            String ttype=transducer.getType();
+                                            String tunit=transducer.getUnits();
+                                            double tval=transducer.getValue();
+                                            if (tname != null && ttype != null && tunit != null){
+                                                AuxiliaryEntry e=new AuxiliaryEntry();
+                                                e.data.put("transducers."+tname,convertTransducerValue(ttype,tunit,tval));
+                                                addAuxiliaryData(s.getSentenceId()+"."+tname,e);
+                                            }
+                                        }
+
+                                    }
                                     Position p = null;
                                     if (s instanceof PositionSentence) {
                                         //we need to verify the position quality
@@ -452,6 +470,17 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
             return true;
         }
     }
+
+    private double convertTransducerValue(String ttype, String tunit, double tval) {
+        if("C".equals(tunit)){
+            return tval+273.15;
+        }
+        if ("B".equals(tunit)){
+            return tval*100000;
+        }
+        return tval;
+    }
+
     public static final String LOGPRFX="AvNav:SocketPh";
     Context context;
     AbstractSocket socket;
