@@ -1,5 +1,6 @@
-#/usr/bin/env python
-#testprog for serial reading
+#!/usr/bin/env python3
+
+#testprog for serial writing
 
 import serial
 import sys
@@ -7,35 +8,44 @@ import time
 
 
 def err(txt):
-  print "ERROR: "+txt
-  exit(1)
+  print("ERROR: %s"%txt)
+  sys.exit(1)
   
-def sendSerial(file,numout,sleeptime,baudout=4800):
+def sendSerial(file,port,sleeptime,baudout=4800):
   firstTry=True
   fout=None
   f=None
-
   try:
-    f=open(file,"r")
-    fout=serial.Serial(numout,timeout=2,baudrate=baudout)
+    port=int(port)
   except:
-    print "Exception on opening: "+str(sys.exc_info()[0])
-    err("unable to open port "+str(numout))
+    pass  
+  try:
+    f=open(file,"rb")
+    fout=serial.Serial(port,timeout=2,baudrate=baudout)
+  except:
+    print("Exception on opening: %s"%str(sys.exc_info()[0]))
+    err("unable to open port %s"%str(port))
     
-  print "Port "+fout.name+" opened"
+  print("Port %s opened"%fout.name)
   while True:
     try:
       bytes=f.readline()
       if len(bytes)> 0:
-        print bytes
+        print(bytes)
         fout.write(bytes)
         time.sleep(sleeptime)
       else:
-        raise "EOF on "+file
+        raise Exception("EOF on "+file)
     except:
-      print "Exception on r/w: "+str(sys.exc_info()[0])
+      print("Exception on r/w: %s"%str(sys.exc_info()[0]))
         
   
 
 if __name__ == "__main__":
-  sendSerial(sys.argv[1],int(sys.argv[2]),float(sys.argv[3]),int(sys.argv[4]))  
+  if len(sys.argv) < 4:
+    print("usage: %s device|port filename sleeptime [baud]")
+    sys.exit(1)
+  baud=4800
+  if len(sys.argv)> 4:
+    baud=int(sys.argv[4])  
+  sendSerial(sys.argv[2],sys.argv[1],float(sys.argv[3]),baud)  

@@ -1,5 +1,5 @@
-#! /usr/bin/env python 
-#testprog for serial reading
+#! /usr/bin/env python3
+#serve a file with lines on a socket with sleep between lines
 
 import sys
 import threading
@@ -11,31 +11,31 @@ import traceback
 
 
 def err(txt):
-  print "ERROR: "+txt
-  exit(1)
+  print("ERROR: %s"%txt)
+  sys.exit(1)
 
 class Reader:
   def __init__(self,sock):
     self.sock=sock
   def readfunction(self):
-    print "reader started"
+    print("reader started")
     while True:
       try:
         data=self.sock.recv(1)
-        if data=='':
-          raise "EOF"
+        if data==b'':
+          raise Exception("EOF")
       except:
-        print "reader stopped"
+        print("reader stopped")
         return
 
 def sendSock(file,sock,sleeptime):
   f=None
   try:
-    f=open(file,"r")
+    f=open(file,"rb")
   except:
     err("Exception on opening: "+traceback.format_exc())
     
-  print "start sending %s"%(file)
+  print("start sending %s"%(file))
   sfail=0
   reader=Reader(sock)
   rthread=Thread(target=reader.readfunction)
@@ -46,11 +46,11 @@ def sendSock(file,sock,sleeptime):
     try:
       try:
         lbytes=f.readline()
-        lbytes=re.sub('[\n\r]','',lbytes)
+        lbytes=re.sub(b'[\n\r]',b'',lbytes)
       except:
-        print "Exception on r: "+traceback.format_exc()
-        f=open(file,"r")
-        print "reopen file"
+        print("Exception on r: "+traceback.format_exc())
+        f=open(file,"rb")
+        print("reopen file")
       doSend=False
       try:
         if lbytes is not None and len(lbytes)> 0:
@@ -59,12 +59,12 @@ def sendSock(file,sock,sleeptime):
         pass
       if doSend:
         try:
-            print lbytes
-            if sock.sendall(lbytes+"\r\n") is not None:
+            print(lbytes)
+            if sock.sendall(lbytes+b"\r\n") is not None:
               raise Exception("Exception in sendall")
             sfail=0
         except:
-            print "Exception on send: "+traceback.format_exc()
+            print("Exception on send: "+traceback.format_exc())
             sfail+=1
             if sfail > 10:
                 raise Exception("Exception on write, error counter exceeded")
@@ -72,7 +72,7 @@ def sendSock(file,sock,sleeptime):
       else:
         raise Exception("EOF on "+file)
     except:
-      print "Exception on r/w: "+traceback.format_exc()
+      print("Exception on r/w: "+traceback.format_exc())
       try:
         sock.close()
       except:
@@ -84,11 +84,11 @@ def listen(port,sfile,sleeptime):
   listener=socket.socket()
   listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
   listener.bind(("0.0.0.0",port))
-  print "Listening at %s:%d"%listener.getsockname()
+  print("Listening at %s:%d"%listener.getsockname())
   listener.listen(1)
   while True:
     client=listener.accept()
-    print "Client connected %s:%d"%client[0].getpeername()
+    print("Client connected %s:%d"%client[0].getpeername())
     writer=threading.Thread(target=sendSock,args=(sfile,client[0],sleeptime))
     writer.setDaemon(True)
     writer.start()
