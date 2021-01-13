@@ -38,14 +38,39 @@ from avnav_util import *
 from avnav_worker import *
 import avnav_handlerList
 
+class AlarmConfig:
+  def __init__(self,name="dummy",command="sound", parameter=None, repeat="1"):
+    self.name=name
+    self.command=command
+    self.parameter=parameter
+    self.repeat=int(repeat)
+  def toDict(self):
+    return self.__dict__
+
 
 class AVNAlarmHandler(AVNWorker):
   CHANGE_KEY='alarm' #key for change counts
+  DEFAULT_ALARMS=[
+    		AlarmConfig(name="waypoint",command="sound",parameter="$BASEDIR/../sounds/waypointAlarm.mp3",repeat="1"),
+  		  AlarmConfig(name="ais",command="sound",parameter="$BASEDIR/../sounds/aisAlarm.mp3",repeat="1"),
+  		  AlarmConfig("anchor",command="sound",parameter="$BASEDIR/../sounds/anchorAlarm.mp3",repeat="20000"),
+  		  AlarmConfig(name="gps",command="sound", parameter="$BASEDIR/../sounds/anchorAlarm.mp3", repeat="20000"),
+  		  AlarmConfig(name="mob", command="sound", parameter="$BASEDIR/../sounds/anchorAlarm.mp3", repeat="2")
+  ]
   """a handler for alarms"""
   def __init__(self,param):
     AVNWorker.__init__(self, param)
     self.runningAlarms={}
     self.commandHandler=None
+    currentAlarms=self.param.get('Alarm')
+    if currentAlarms is None:
+      currentAlarms=[]
+    for da in self.DEFAULT_ALARMS:
+      if any(x for x in currentAlarms if x.get('name') == da.name):
+        continue
+      currentAlarms.append(da.toDict())
+    self.param['Alarm']=currentAlarms
+
   @classmethod
   def getConfigName(cls):
     return "AVNAlarmHandler"
@@ -72,15 +97,8 @@ class AVNAlarmHandler(AVNWorker):
 
   @classmethod
   def autoInstantiate(cls):
-    return '''
-    <AVNAlarmHandler>
-		<Alarm name="waypoint" command="sound" parameter="$BASEDIR/../sounds/waypointAlarm.mp3" repeat="1"/>
-		<Alarm name="ais" command="sound" parameter="$BASEDIR/../sounds/aisAlarm.mp3" repeat="1"/>
-		<Alarm name="anchor" command="sound" parameter="$BASEDIR/../sounds/anchorAlarm.mp3" repeat="20000"/>
-		<Alarm name="gps" command="sound" parameter="$BASEDIR/../sounds/anchorAlarm.mp3" repeat="20000"/>
-		<Alarm name="mob" command="sound" parameter="$BASEDIR/../sounds/anchorAlarm.mp3" repeat="2"/>
-	</AVNAlarmHandler>
-    '''
+    return True
+
 
   def _gpioCmd(self,channel):
     self.stopAll()
@@ -263,7 +281,7 @@ class AVNAlarmHandler(AVNWorker):
       file=alarmInfo.get('parameter')
       if file is None:
         return None
-      fh=open(file)
+      fh=open(file,"rb")
       if fh is None:
         AVNLog.error("unable to find alarm sound %s",file)
         return None
