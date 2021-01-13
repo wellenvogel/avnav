@@ -190,6 +190,12 @@ class ApiImpl(AVNApi):
       raise Exception("no usb handler configured, cannot register %s"%usbid)
     usbhandler.registerExternalHandler(usbid,self.prefix,callback)
 
+  def getAvNavVersion(self):
+    baseConfig=AVNWorker.findHandlerByName("AVNConfig")
+    if baseConfig is None:
+      raise Exception("internal error: no base config")
+    return int(baseConfig.getVersion())
+
 
 class AVNPluginHandler(AVNWorker):
   """a handler for plugins"""
@@ -279,6 +285,15 @@ class AVNPluginHandler(AVNWorker):
             self.pluginDirs[moduleName]=dir
     for name in list(self.createdPlugins.keys()):
       plugin=self.createdPlugins[name]
+      api=self.createdApis[name]
+      if api is None:
+        AVNLog.error("internal error: api not created for plugin %s",name)
+        continue
+      enabled=api.getConfigValue("enabled","true")
+      if enabled.upper() != 'TRUE':
+        AVNLog.info("plugin %s is disabled by config", name)
+        self.setInfo(name,"disabled by config",self.Status.INACTIVE)
+        continue
       AVNLog.info("starting plugin %s",name)
       thread=threading.Thread(target=plugin.run)
       thread.setDaemon(True)
@@ -339,7 +354,7 @@ class AVNPluginHandler(AVNWorker):
           AVNLog.info("created plugin %s",modulename)
           self.createdPlugins[modulename]=pluginInstance
           self.createdApis[modulename]=api
-          self.setInfo(modulename,"started",AVNWorker.Status.STARTED)
+          self.setInfo(modulename,"created",AVNWorker.Status.STARTED)
         except:
           AVNLog.error("cannot start %s:%s" % (modulename, traceback.format_exc()))
 

@@ -256,3 +256,11 @@ class AVNApi(object):
     @param callback:
     @return:
     '''
+    raise NotImplemented()
+
+  def getAvNavVersion(self):
+    '''
+    get the version of AvNav as an int
+    @return:
+    '''
+    raise NotImplemented()

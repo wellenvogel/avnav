@@ -38,7 +38,7 @@ try:
   import create_overview
 except:
   pass
-AVNAV_VERSION="development"
+AVNAV_VERSION=datetime.datetime.now().strftime("%Y%m%d")
 try:
   from avnav_server_version import AVNAV_VERSION
 except:
@@ -57,6 +57,7 @@ class AVNBaseConfig(AVNWorker):
   def __init__(self,param):
     AVNWorker.__init__(self,param)
     self.param=param
+    self.version=None
   @classmethod
   def getConfigName(cls):
     return "AVNConfig"
@@ -81,6 +82,10 @@ class AVNBaseConfig(AVNWorker):
     return True
   def start(self):
     pass
+  def setVersion(self,version):
+    self.version=version
+  def getVersion(self):
+    return self.version
 
 avnav_handlerList.registerHandler(AVNBaseConfig)
 
@@ -164,6 +169,7 @@ def main(argv):
   if baseConfig is None:
     #no entry for base config found - using defaults
     baseConfig=AVNBaseConfig(AVNBaseConfig.getConfigParam())
+  baseConfig.setVersion(AVNAV_VERSION)
   if httpServer is not None and options.chartbase is not None:
     mapurl=httpServer.getStringParam('chartbase')
     if mapurl is not None and mapurl != '':
