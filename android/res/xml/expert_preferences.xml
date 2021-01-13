@@ -27,6 +27,11 @@
         android:inputType="number"
         android:title="@string/labelSettingsPosAge"></de.wellenvogel.avnav.settings.DefaultsEditTextPreference>
     <de.wellenvogel.avnav.settings.DefaultsEditTextPreference
+        android:key="ip.auxAge"
+        android:defaultValue="1200"
+        android:inputType="number"
+        android:title="@string/labelSettingsAuxAge"></de.wellenvogel.avnav.settings.DefaultsEditTextPreference>
+    <de.wellenvogel.avnav.settings.DefaultsEditTextPreference
         android:key="track.distance"
         android:inputType="number"
         android:defaultValue="25"

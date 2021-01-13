@@ -290,6 +290,17 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         }
     }
 
+    private GpsDataProvider.Properties getFilledProperties(){
+        SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
+        GpsDataProvider.Properties prop=new GpsDataProvider.Properties();
+        prop.aisCleanupInterval=1000*AvnUtil.getLongPref(prefs, Constants.IPAISCLEANUPIV, prop.aisCleanupInterval);
+        prop.aisLifetime=1000*AvnUtil.getLongPref(prefs,Constants.AISLIFETIME, prop.aisLifetime);
+        prop.postionAge=1000*AvnUtil.getLongPref(prefs,Constants.IPPOSAGE,prop.postionAge);
+        prop.auxiliaryAge=1000*AvnUtil.getLongPref(prefs,Constants.AUXAGE,prop.auxiliaryAge);
+        prop.connectTimeout=(int)(1000*AvnUtil.getLongPref(prefs,Constants.IPCONNTIMEOUT, prop.connectTimeout));
+        prop.ownMmsi=prefs.getString(Constants.AISOWN,null);
+        return prop;
+    }
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent,flags,startId);
@@ -388,13 +399,8 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
                     InetSocketAddress addr = GpsDataProvider.convertAddress(prefs.getString(Constants.IPADDR, ""),
                             prefs.getString(Constants.IPPORT, ""));
                     AvnLog.d(LOGPRFX,"starting external receiver for "+addr.toString());
-                    GpsDataProvider.Properties prop=new GpsDataProvider.Properties();
-                    prop.aisCleanupInterval=1000*AvnUtil.getLongPref(prefs, Constants.IPAISCLEANUPIV, prop.aisCleanupInterval);
-                    prop.aisLifetime=1000*AvnUtil.getLongPref(prefs,Constants.AISLIFETIME, prop.aisLifetime);
-                    prop.postionAge=1000*AvnUtil.getLongPref(prefs,Constants.IPPOSAGE,prop.postionAge);
-                    prop.connectTimeout=1000*(int)AvnUtil.getLongPref(prefs,Constants.IPCONNTIMEOUT, prop.connectTimeout);
+                    GpsDataProvider.Properties prop=getFilledProperties();
                     prop.timeOffset=1000*AvnUtil.getLongPref(prefs,Constants.IPOFFSET,prop.timeOffset);
-                    prop.ownMmsi=prefs.getString(Constants.AISOWN,null);
                     prop.readAis=aisMode.equals(Constants.MODE_IP);
                     prop.readNmea=nmeaMode.equals(Constants.MODE_IP);
                     prop.nmeaFilter=prefs.getString(Constants.NMEAFILTER,null);
@@ -421,12 +427,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
                         throw new Exception("no bluetooth device found for"+dname);
                     }
                     AvnLog.d(LOGPRFX,"starting bluetooth receiver for "+dname+": "+ dev.getAddress());
-                    GpsDataProvider.Properties prop=new GpsDataProvider.Properties();
-                    prop.aisCleanupInterval=1000*AvnUtil.getLongPref(prefs, Constants.IPAISCLEANUPIV, prop.aisCleanupInterval);
-                    prop.aisLifetime=1000*AvnUtil.getLongPref(prefs,Constants.AISLIFETIME, prop.aisLifetime);
-                    prop.postionAge=1000*AvnUtil.getLongPref(prefs,Constants.IPPOSAGE,prop.postionAge);
-                    prop.connectTimeout=(int)(1000*AvnUtil.getLongPref(prefs,Constants.IPCONNTIMEOUT, prop.connectTimeout));
-                    prop.ownMmsi=prefs.getString(Constants.AISOWN,null);
+                    GpsDataProvider.Properties prop=getFilledProperties();
                     prop.readAis=aisMode.equals(Constants.MODE_BLUETOOTH);
                     prop.readNmea=nmeaMode.equals(Constants.MODE_BLUETOOTH);
                     prop.timeOffset=1000*AvnUtil.getLongPref(prefs,Constants.BTOFFSET,prop.timeOffset);
@@ -455,12 +456,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
                         throw new Exception("no usb device found for"+dname);
                     }
                     AvnLog.d(LOGPRFX,"starting usb serial receiver for "+dname+": "+ dev.getDeviceName());
-                    GpsDataProvider.Properties prop=new GpsDataProvider.Properties();
-                    prop.aisCleanupInterval=1000*AvnUtil.getLongPref(prefs, Constants.IPAISCLEANUPIV, prop.aisCleanupInterval);
-                    prop.aisLifetime=1000*AvnUtil.getLongPref(prefs,Constants.AISLIFETIME, prop.aisLifetime);
-                    prop.postionAge=1000*AvnUtil.getLongPref(prefs,Constants.IPPOSAGE,prop.postionAge);
-                    prop.connectTimeout=(int)(1000*AvnUtil.getLongPref(prefs,Constants.IPCONNTIMEOUT, prop.connectTimeout));
-                    prop.ownMmsi=prefs.getString(Constants.AISOWN,null);
+                    GpsDataProvider.Properties prop=getFilledProperties();
                     prop.readAis=aisMode.equals(Constants.MODE_USB);
                     prop.readNmea=nmeaMode.equals(Constants.MODE_USB);
                     prop.timeOffset=1000*AvnUtil.getLongPref(prefs,Constants.BTOFFSET,prop.timeOffset);

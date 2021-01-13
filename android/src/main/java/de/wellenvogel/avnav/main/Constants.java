@@ -26,6 +26,7 @@ public class Constants {
     public static final String USBBAUD="usb.baud";
     public static final String IPCONNTIMEOUT="ip.conntimeout";
     public static final String IPPOSAGE="ip.posAge";
+    public static final String AUXAGE="ip.auxAge";
     public static final String AISLIFETIME ="ais.Lifetime";
     public static final String AISOWN="ais.own"; //own MMSI to filter
     public static final String IPAISCLEANUPIV="ip.aisCleanupIv";
