@@ -518,7 +518,7 @@ class AVNGpsdFeeder(AVNGpsd):
               data=self.popListEntry(waitTime=waitTime,includeSource=True)
               if not data is None:
                 if not data.omitDecode:
-                  self.gpsdsocket.sendall(data.data)
+                  self.gpsdsocket.sendall(data.data.encode('ascii',errors='ignore'))
           except Exception as e:
             AVNLog.warn("feeder exception - retrying %s",traceback.format_exc())
       except Exception as e:

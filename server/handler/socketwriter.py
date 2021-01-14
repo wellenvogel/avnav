@@ -117,7 +117,7 @@ class AVNSocketWriter(AVNWorker,SocketReader):
       filter=filterstr.split(',')
     try:
       seq=0
-      socket.sendall("avnav_server %s\r\n"%(VERSION))
+      socket.sendall(("avnav_server %s\r\n"%(VERSION)).encode('utf-8'))
       while True:
         hasSend=False
         seq,data=self.feeder.fetchFromHistory(seq,10,nmeafilter=filter,includeSource=True)
@@ -126,7 +126,7 @@ class AVNSocketWriter(AVNWorker,SocketReader):
             if line.source in self.blackList:
               AVNLog.debug("ignore %s:%s due to blacklist",line.source,line.data)
             else:
-              socket.sendall(line.data)
+              socket.sendall(line.data.encode('ascii',errors='ignore'))
               hasSend=True
         if not hasSend:
           #just throw an exception if the reader potentially closed the socket
