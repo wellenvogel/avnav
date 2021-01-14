@@ -65,6 +65,18 @@ class Api{
         WidgetFactory.registerFormatter(name,formatterFunction);
     }
 
+    /**
+     * get the version of AvNav as an int
+     * @returns {number}
+     */
+    getAvNavVersion(){
+        let version=window.avnav.version;
+        if (version.match(/dev-/)){
+            version=version.replace(/dev-/,'').replace(/[-].*/,'');
+        }
+        return parseInt(version);
+    }
+
 }
 
 export default  new Api();
