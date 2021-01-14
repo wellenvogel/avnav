@@ -234,19 +234,25 @@ class Plugin(object):
             lastQuery=0
           if (now - lastQuery) > period or first:
             lastQuery=now
-            response=urllib.request.urlopen(selfUrl)
-            if response is None:
+            response=None
+            try:
+              response=urllib.request.urlopen(selfUrl)
+              if response is None:
+                self.skCharts = []
+                self.api.error("unable to fetch from %s: None", selfUrl)
+            except Exception as e:
               self.skCharts=[]
-              raise Exception("unable to fetch from %s:%s",selfUrl,sys.exc_info()[0])
-            if not first:
-              self.api.setStatus("NMEA", "connected at %s" % apiUrl)
-            data=json.loads(response.read())
-            self.api.debug("read: %s",json.dumps(data))
-            self.storeData(data,self.PATH)
-            first=False
-            name=data.get('name')
-            if name is not None:
-              self.api.addData(self.PATH+".name",name)
+              self.api.error("unable to fetch from %s:%s",selfUrl,str(e))
+            if response is not None:
+              if not first:
+                self.api.setStatus("NMEA", "connected at %s" % apiUrl)
+              data=json.loads(response.read())
+              self.api.debug("read: %s",json.dumps(data))
+              self.storeData(data,self.PATH)
+              first=False
+              name=data.get('name')
+              if name is not None:
+                self.api.addData(self.PATH+".name",name)
           else:
             pass
           if chartQueryPeriod > 0 and lastChartQuery < (now - chartQueryPeriod):
