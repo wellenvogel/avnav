@@ -19,6 +19,7 @@ import keys from '../util/keys';
 import OverlayConfig, {getKeyFromOverlay,OVERLAY_ID} from '../map/overlayconfig';
 import DefaultGpxIcon from '../images/icons-new/DefaultGpxPoint.png'
 import {readFeatureInfoFromGeoJson} from "../map/geojsonchartsource";
+import featureFormatters from '../util/featureFormatter';
 
 const filterOverlayItem=(item,opt_itemInfo)=>{
     let rt=undefined;
@@ -231,6 +232,12 @@ class OverlayItemDialog extends React.Component{
         let defaultColor=(itemInfo.hasRoute)?globalStore.getData(keys.properties.routeColor):
             globalStore.getData(keys.properties.trackColor);
         let iconsReadOnly=Helper.getExt(this.stateHelper.getValue('name')) === 'kmz';
+        let formatters=[{label:'-- none --',value:undefined}];
+        for (let f in featureFormatters){
+            if (typeof(featureFormatters[f]) === 'function'){
+                formatters.push({label:f,value:f});
+            }
+        }
         return(
             <React.Fragment>
                 <div className="selectDialog editOverlayItemDialog">
@@ -333,6 +340,19 @@ class OverlayItemDialog extends React.Component{
                                         value={this.stateHelper.getValue('allowHtml')||false}
                                         onChange={(nv)=>this.stateHelper.setValue('allowHtml',nv)}
                                     />}
+                                    {itemInfo.allowFormatter &&
+                                        <InputSelect
+                                            dialogRow={true}
+                                            showDialogFunction={this.dialogHelper.showDialog}
+                                            label={"featureFormatter"}
+                                            value={this.stateHelper.getValue('featureFormatter')}
+                                            onChange={(nv) => {
+                                                this.stateHelper.setValue('featureFormatter',nv.value);
+                                            }}
+                                            list={formatters}
+                                            />
+
+                                    }
                                     {itemInfo['style.lineWidth'] &&
                                         <Input
                                             dialogRow={true}

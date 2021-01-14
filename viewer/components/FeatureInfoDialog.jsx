@@ -63,6 +63,12 @@ const INFO_ROWS=[
         if (feature.name === v) return;
         return v;
         }},
+    {label:'time',value:'time',formatter:(v)=>{
+        try{
+            let tv=new Date(v);
+            return Formatter.formatDateTime(tv);
+        }catch(e){}
+        }},
     {label:'overlay',value:'overlayName',formatter:(v,overlay)=>{
         if (overlay.overlayType === 'chart') return;
         let prefix="";

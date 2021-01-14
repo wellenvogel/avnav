@@ -34,6 +34,8 @@ import {GPX as olGPXFormat} from 'ol/format';
 import Helper from "../util/helper";
 import globalstore from "../util/globalstore";
 import keys from "../util/keys";
+import {assign} from "ol/obj";
+import featureFormatter from "../util/featureFormatter";
 
 export const stylePrefix="style."; // the prefix for style attributes
 
@@ -220,15 +222,6 @@ class GpxChartSource extends ChartSourceBase{
         if (geometry instanceof olPoint){
             rt.kind='point';
             coordinates=this.mapholder.transformFromMap(geometry.getCoordinates());
-            let sym=feature.get('sym');
-            if (sym && this.chartEntry.icons){
-                rt.icon=this.getSymbolUrl(sym,'.png');
-            }
-            let link=feature.get('link');
-            if (link && this.chartEntry.icons){
-                rt.link=this.getLinkUrl(link);
-                rt.linkText=feature.get('linkText');
-            }
             rt.nextTarget=coordinates;
         }
         else{
@@ -241,9 +234,15 @@ class GpxChartSource extends ChartSourceBase{
             }
         }
         rt.coordinates=coordinates;
-        rt.desc=feature.get('desc');
-        rt.name=feature.get('name');
-        rt.sym=feature.get('sym');
+        let infoItems=['desc','name','sym','time','height','sym','link','linkText'];
+        infoItems.forEach((item)=>rt[item]=feature.get(item));
+        this.formatFeatureInfo(rt,feature);
+        if (rt.sym && this.chartEntry.icons){
+            rt.icon=this.getSymbolUrl(rt.sym,'.png');
+        }
+        if (rt.link && this.chartEntry.icons){
+            rt.link=this.getLinkUrl(rt.link);
+        }
         for (let k in this.chartEntry){
             if (Helper.startsWith(k,stylePrefix)){
                 rt[k]=this.chartEntry[k];
@@ -311,6 +310,7 @@ export const readFeatureInfoFromGpx=(gpx)=>{
             rt.hasAny=true;
         }
     })
+    rt.allowFormatter=true;
     return rt;
 
 }

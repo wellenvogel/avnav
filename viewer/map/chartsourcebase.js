@@ -32,6 +32,7 @@ import keys from '../util/keys.jsx';
 import Helper from '../util/helper.js';
 import CryptHandler from './crypthandler.js';
 import shallowcompare from '../util/shallowcompare.js';
+import featureFormatter from "../util/featureFormatter";
 
 export const getOverlayConfigName=(chartEntry)=>{
     return chartEntry.overlayConfig || chartEntry.chartKey;
@@ -188,6 +189,34 @@ class ChartSourceBase {
         return {};
     }
 
+    /**
+     * call any user defined formatter with the properties
+     * of the feature and merge this with the already fetched items
+     * @param info the info to be merged in
+     * @param feature the ol feature
+     */
+    formatFeatureInfo(info, feature){
+       if (! info || ! feature) return;
+        if (this.chartEntry.featureFormatter){
+            try{
+                let formatter=this.chartEntry.featureFormatter;
+                if (typeof(formatter) === 'string'){
+                    formatter=featureFormatter[formatter];
+                }
+                if (formatter) {
+                    let fProps=assign({}, feature.getProperties());
+                    for (let k in fProps){
+                        if (typeof(fProps[k]) !== 'string' && typeof(fProps[k]) !== 'number'){
+                            delete fProps[k];
+                        }
+                    }
+                    assign(info, formatter(fProps,true));
+                }
+            }catch (e){
+                base.log("error in feature info formatter "+this.chartEntry.featureFormatter+": "+e);
+            }
+        }
+    }
 
     setEnabled(enabled,opt_update){
         this.mapholder.setEnabled(this,enabled,opt_update);

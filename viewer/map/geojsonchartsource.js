@@ -213,6 +213,7 @@ class GeoJsonChartSource extends ChartSourceBase{
                 rt[k]=this.chartEntry[k];
             }
         }
+        this.formatFeatureInfo(rt,feature);
         return rt;
     }
 }
@@ -259,6 +260,7 @@ export const readFeatureInfoFromGeoJson=(doc)=>{
             rt[stylePrefix + k] =true;
         }
     })
+    rt.allowFormatter=true;
     return rt;
 
 }

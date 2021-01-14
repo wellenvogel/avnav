@@ -8,6 +8,7 @@ import base from '../base.js';
 import Formatter from './formatter.js';
 import Helper from './helper.js';
 import Toast from '../components/Toast.jsx';
+import featureFormatter from "./featureFormatter";
 
 class Api{
     constructor(){
@@ -63,6 +64,43 @@ class Api{
      */
     registerFormatter(name,formatterFunction){
         WidgetFactory.registerFormatter(name,formatterFunction);
+    }
+
+    /**
+     * you can register a function that can be used to get values
+     * for the display in the feature info dialog from the selected
+     * feature properties on overlays
+     * @param name
+     * @param formatterFunction a function that will be called with 2 parameters:
+     *                          1. the properties of the feature a (depening on the overlay type)
+     *                             as an object
+     *                          2. a flag - if false just only compute name and sym
+     *                                      must be fast as potentially called for every point
+     *                                      if true you could also compute the other values
+     *                                      this will be called only when clicking on the feature
+     *                          that must return an object with infos to be displayed
+     *                          the following fields are supported:
+     *                          sym - a symbol url (relative to the used icon file)
+     *                          name - the name
+     *                          desc - a description (text)
+     *                          link - a link to some HTML doc (relative to the icon file)
+     *                          htmlInfo - a html text to be shown when clicking the info button
+     *                          time - a time value or text string
+     */
+    registerFeatureFormatter(name,formatterFunction){
+        if (! name){
+            throw new Error("missing name in registerFeatureFormatter");
+        }
+        if (! formatterFunction){
+            throw new Error("missing name in registerFeatureFormatter");
+        }
+        if (typeof(formatterFunction) !== 'function'){
+            throw new Error("formatterFunction is no function in registerFeatureFormatter");
+        }
+        if (featureFormatter[name]){
+            throw new Error("name "+name+" already exists in registerFeatureFormatter");
+        }
+        featureFormatter[name]=formatterFunction;
     }
 
     /**

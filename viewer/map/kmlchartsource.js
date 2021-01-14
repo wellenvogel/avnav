@@ -205,6 +205,7 @@ class KmlChartSource extends ChartSourceBase{
         }
         rt.name=feature.get('name');
         rt.sym=feature.get('sym');
+        this.formatFeatureInfo(rt,feature);
         return rt;
     }
 }
@@ -254,6 +255,7 @@ export const readFeatureInfoFromKml=(kml)=>{
     rt[stylePrefix+'circleWidth']=true;
     rt.allowOnline=true;
     rt.showText=true;
+    rt.allowFormatter=true;
     return rt;
 
 }
