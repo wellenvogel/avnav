@@ -75,6 +75,10 @@ class AVNSocketWriter(AVNWorker,SocketReader):
     self.feederWrite=feeder.addNMEA
     self.maplock=threading.Lock()
     self.addrmap={}
+    self.version='development'
+    baseConfig=self.findHandlerByName('AVNConfig')
+    if baseConfig:
+      self.version=baseConfig.getVersion()
     AVNWorker.start(self) 
    
   #return True if added
@@ -117,7 +121,7 @@ class AVNSocketWriter(AVNWorker,SocketReader):
       filter=filterstr.split(',')
     try:
       seq=0
-      socket.sendall(("avnav_server %s\r\n"%(VERSION)).encode('utf-8'))
+      socket.sendall(("avnav_server %s\r\n"%(self.version)).encode('utf-8'))
       while True:
         hasSend=False
         seq,data=self.feeder.fetchFromHistory(seq,10,nmeafilter=filter,includeSource=True)
