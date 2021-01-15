@@ -219,7 +219,7 @@
     </table>
     <p>After defining a widget you need to register it at AvNav
       (avnav.registerWidget). </p>
-      <a name="widgetparameter" id="widgetparameter"></a>  
+    <a name="widgetparameter" id="widgetparameter"></a>
     <h2>Widget Parameters</h2>
     <p>As a second parameter you can provide an object containing parameters
       that should be shown in the layout editor.</p>
@@ -352,7 +352,15 @@ document.getElementsByTagName("head")[0].appendChild(fileref)</div>
       accessed with AVNAV_BASE_URL+"/"+name.</p>
     <p>If you need to create an additional file in the user directory (e.g. text
       or HTML) you can directly do this using the "+" button (lower right) -
-      afterwards you can directly edit the file.<br>
+      afterwards you can directly edit the file.</p>
+    <h2>Feature Formatter</h2>
+    <p>Since version 20210114 you can register functions that will convert and
+      format data from overlay files for the "Feature Info" dialog.<br>
+      You can implement them in the user.js or inside a plugin.</p>
+    <p>With <br>
     </p>
+    <div class="code">avnav.api.registerFeatureFormatter('myHtmlInfo',myHtmlInfoFunction);</div>
+    <p>you register such a function. For details refer to <a href="overlays.html#adaptation">Overlays</a>.</p>
+    <p> </p>
   </body>
 </html>

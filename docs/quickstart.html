@@ -49,8 +49,9 @@
       mit http://avnav.avnav.de erreichen.<br>
       Wenn man über einen anderen Weg mit dem AvNav Server verbunden ist, kann
       man http://avnav.local:8080 benutzen (oder die IP Adresse ders Servers).<br>
-      Für IOS und Android Geräte ist es empfehlenswerte, einen Bonjour Browser
-      zu nutzen.</p>
+      Für IOS und Android Geräte ist es empfehlenswerte, einen <a href="https://de.wikipedia.org/wiki/Bonjour_%28Apple%29">Bonjour</a>
+      Browser zu nutzen. Dieser kann AvNav im lokalen Netz finden, so dass man
+      ohne Adresseingabe sofort den Browser starten kann.</p>
     <ul>
       <li>IOS: <a href="https://itunes.apple.com/us/app/bonjour-search-for-http-web-in-wi-fi/id1097517829?mt=8"><img
             class="inlineimage" src="https://is4-ssl.mzstatic.com/image/thumb/Purple69/v4/ba/f9/c2/baf9c2dd-656d-c303-fae1-a07310825e72/pr_source.png/246x0w.png"></a></li>
@@ -83,7 +84,29 @@
       Daten von allen angeschlossenen Schnittstellen zu empfangen und <a href="hints/configfile.html">konfigurierbar</a>
       an beliebige Schnittstellen wieder auszusenden.</p>
     <p>Einen Teil der Daten dekodiert AvNav (Positionsdaten, AIS,...) und nutzt
-      sie für die eigenen Anzeige-Funktionen.</p>
+      sie für die eigenen Anzeige-Funktionen.<br>
+      Die folgenden NMEA Datensätze werden von AvNav dekodiert:</p>
+    <ul>
+      <li>!AIVDM</li>
+      <li>$xxGGA</li>
+      <li>$xxGSV</li>
+      <li>$xxGLL</li>
+      <li>$xxVTG</li>
+      <li>$xxRMC</li>
+      <li>$xxMWV</li>
+      <li>$xxDPT</li>
+      <li>$xxDBT</li>
+      <li>$xxXDR (seit 20210114)</li>
+    </ul>
+    <p>Je nach <a href="hints/configfile.html">Konfiguration</a> kann AvNav
+      auch NMEA Daten erzeugen:</p>
+    <ul>
+      <li>$GPRMB</li>
+      <li>$GPAPB</li>
+      <li>$AVXDR</li>
+      <li>$AVMDA</li>
+      <li>$AVMTA</li>
+    </ul>
     <p>In Zusammenarbeit mit <a href="hints/CanboatAndSignalk.html">Canboat and
         SignalK</a> können auch <a href="hints/CanboatAndSignalk.html">NMEA2000</a>
       Daten empfangen und genutzt werden. Ausserdem können alle Daten für das
@@ -93,6 +116,21 @@
       werden. Ausserdem kann eine TCP oder Bluetooth Verbindung zum Empfang von
       GPS oder AIS Daten genutzt werden, auf Geräten mit USB-Host Funktion kann
       auch ein seriell-USB Adapter angeschlossen werden.</p>
+    <p>Es werden die folgenden NMEA Daten dekodiert:</p>
+    <ul>
+      <li>!AIVDM</li>
+      <li>$xxGGA</li>
+      <li>$xxGSV</li>
+      <li>$xxGLL</li>
+      <li>$xxGSA</li>
+      <li>$xxRMC</li>
+      <li>$xxMWV</li>
+      <li>$xxDBT</li>
+      <li>$xxXDR (seit 20210114)</li>
+    </ul>
+    <p>Bei enstprechender Konfiguration kann AvNav $GPRMC Sätze auf einer
+      IP/USB/Bluetooth Verbindung aussenden.</p>
+    <p></p>
     <h2>Karten</h2>
     <p>AvNav verarbeitet grundsätzlich Karten im <a href="charts.html#Intro">Rasterformat</a>.
       Diese können aus verschiedenen Quellen im Netz heruntergeladen werden

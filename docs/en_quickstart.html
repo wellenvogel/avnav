@@ -48,8 +48,9 @@
       If you are connected to the server in a different way you can use
       http://avnav.local:8080 (does not work on android) - or you can use the IP
       of the server.<br>
-      For IOS and Android devices I would recommend using a Bonjour Browser (no
-      need to enter names or IPs).</p>
+      For IOS and Android devices I would recommend using a <a href="https://en.wikipedia.org/wiki/Bonjour_%28software%29">Bonjour</a>
+      Browser. Those tools can find the AvNav servers in the local network and
+      will start a browsers without the need of typing an address.</p>
     <ul>
       <li>IOS: <a href="https://itunes.apple.com/us/app/bonjour-search-for-http-web-in-wi-fi/id1097517829?mt=8"><img
             class="inlineimage" src="https://is4-ssl.mzstatic.com/image/thumb/Purple69/v4/ba/f9/c2/baf9c2dd-656d-c303-fae1-a07310825e72/pr_source.png/246x0w.png"></a></li>
@@ -85,11 +86,50 @@
         SignalK</a> you can also handle <a href="hints/CanboatAndSignalk.html">NMEA2000</a>
       data. Additionally you can use all data from SignalK for the own ship to
       display them within AvNav.</p>
+    <p>The following NMEA sentences are decoded:</p>
+    <ul>
+      <li>!AIVDM</li>
+      <li>$xxGGA</li>
+      <li>$xxGSV</li>
+      <li>$xxGLL</li>
+      <li>$xxVTG</li>
+      <li>$xxRMC</li>
+      <li>$xxMWV</li>
+      <li>$xxDPT</li>
+      <li>$xxDBT</li>
+      <li>$xxXDR (since 20210114)</li>
+    </ul>
+    &nbsp; Depending on the <a href="hints/configfile.html">configuration</a>
+    AvNav is able to create the following NMEA records:
+    <ul>
+      <li>$GPRMB</li>
+      <li>$GPAPB</li>
+      <li>$AVXDR</li>
+      <li>$AVMDA</li>
+      <li>$AVMTA</li>
+    </ul>
     <h3>Android</h3>
     <p>At <a href="android.html">Android</a> you can utilize the internal GPS.
       Additionally you can have a TCP or bluetooth connection for receiving GPS
       or AIS data. If your devices has USB-OTG available you can also connect an
       USB-serial adapter.</p>
+    <p>The following NMEA sentences will be decoded:</p>
+    <ul>
+      <li>!AIVDM</li>
+      <li>$xxGGA</li>
+      <li>$xxGSV</li>
+      <li>$xxGLL</li>
+      <li>$xxGSA</li>
+      <li>$xxRMC</li>
+      <li>$xxMWV</li>
+      <li>$xxDBT</li>
+      <li>$xxXDR (since 20210114)</li>
+    </ul>
+    AvNav is able to send $GPRMC on an IP/USB/Bluetooth connection if
+    configured.<br>
+    <ul>
+    </ul>
+    <p></p>
     <h2>Charts</h2>
     <p>AvNav is handling <a href="charts.html#Intro">raster charts</a>. You can
       download them from various sources in the net (e.g. <a href="https://wiki.openstreetmap.org/wiki/DE:Locus#https://wiki.openstreetmap.org/wiki/DE:Locus#Offline-Karten">OpenSeaMap</a>
@@ -107,7 +147,7 @@
     <p>Charts have to be uploaded to AvNav before being usable - at the&nbsp; <a
         href="userdoc/downloadpage.html">Files/Download page</a>, section charts
       <img src="viewerimages/icons-new/map2.svg" alt="" class="inlineimage">.
-      o-chartshave to be uploaded via the <a href="hints/ocharts.html">o-charts
+      o-charts have to be uploaded via the <a href="hints/ocharts.html">o-charts
         plugin</a>.</p>
     <p>More details in the chapter <a href="charts.html">charts</a>.</p>
     <h2>Displays</h2>

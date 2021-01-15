@@ -6,10 +6,7 @@
   </head>
   <body data-order="5300">
     <h1>Avnav Overlays</h1>
-    <ul>
-      <li><a href="#configuration">Configuration</a></li>
-      <li><a href="#usage">Usage</a></li>
-    </ul>
+    <div class="toc"> </div>
     <p>Since version 20201219 AvNav is able to show additional information
       beside the chart itself in it's chart views. This could be waypoints from
       a GPX file or just available tracks or other data (like e.g. current buoys
@@ -228,9 +225,88 @@
       impact the display performance. There is currently no fixed limit inside
       AvNav for overlay sizes. Files with several 100MB will for sure lead to
       problems, 1000 points within an overlay are ok.</p>
-    <p><br>
+    <a name="adaptation"></a>
+    <h2>Adaptations</h2>
+    <p>Since version 20210114 you can adapt the information that will be
+      extracted from the overlay file and will be shown at "Feature Info". This
+      could make sense as potentially overlay files will contain information
+      that cannot be handled by AvNav on its own.</p>
+    <p>For this purpose you can set a "featureFormatter" function when you <a href="#configuration">configure</a>
+      the overlay. This featureFormatter is a java script function that either
+      is already built in into AvNav that you implemented in your <a href="userjs.html">user.js</a>
+      or that has been provided by a <a href="plugins.html">plugin</a>.</p>
+    <p>This java script function will get all the available parameters of the
+      element from the overlay file that you have clicked on. It can return a
+      couple of properies that will be shown in the "Feature Info" dialog.</p>
+    <p>You can return the following properties:</p>
+    <table border="1" width="100%">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Meaning</td>
+        </tr>
+        <tr>
+          <td>sym</td>
+          <td>The URL for an icon to be shown. This can be a relative URL
+            referencing an icon file within the <a href="#configuration">configured</a>
+            userIcons file. Alternatively it can be an absolute path like
+            /user/images/myImage.png or an external url starting with http: or
+            https: - this one can only be used with an existing internet
+            connection, of course.</td>
+        </tr>
+        <tr>
+          <td>name</td>
+          <td>The name to be displayed</td>
+        </tr>
+        <tr>
+          <td>desc</td>
+          <td>The text for the "description" field.</td>
+        </tr>
+        <tr>
+          <td>htmlInfo</td>
+          <td>A html string, that will be shown when clicking the <img src="../viewerimages/icons-new/ic_info.svg"
+              alt="" class="inlineimage">Info button.</td>
+        </tr>
+        <tr>
+          <td>time</td>
+          <td>A time value (string or java script Date)</td>
+        </tr>
+        <tr>
+          <td>link</td>
+          <td>An URL, that will be shown when clicking the <img src="../viewerimages/icons-new/ic_info.svg"
+              alt="" class="inlineimage">Info button (alternatively to
+            htmlInfo). The same rules apply like for "sym".</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>The parameters that the function will receive depend on the overlay file.
+      Additionally you will always receive "lat" and "lon".</p>
+    <p>An example for the <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/util/featureFormatter.js">built
+        in genericHtmlInfo</a> function that will collect all available
+      parameters and write them as HTML into the htmlInfo property.</p>
+    <div class="code">let genericHtmlInfo=function(properties,extended){
+    if (! extended) return {};
+    let htmlInfo='&lt;div class="featureInfoHtml"&gt;';
+    for (let k in properties){
+        if (!properties[k]) continue;
+        if (htmlInfo !== "") htmlInfo+="&lt;br/&gt;";
+        htmlInfo+=avnav.api.escapeHtml(k)+"="+avnav.api.escapeHtml(properties[k]);
+    }
+    htmlInfo+='&lt;/div&gt;';
+    return {htmlInfo:htmlInfo};
+}</div>
+    <p>The second parameter that this function will receive gives a hint whether
+      to compute all properties or only the "sym" property. If it is set to
+      false you should not execute any time consuming operations as this
+      function will potentially being called for every element from the overlay.</p>
+    <p>To let AvNav know about your own formatter function you need to register
+      it (see <a href="userjs.html">user.js</a>).</p>
+    <div class="code">avnav.api.registerFeatureFormatter('myHtmlInfo',myHtmlInfoFunction);</div>
+    <p>Once being registered you can select this function during overlay <a href="#configuration">configuration</a>.<br>
     </p>
     <p><br>
     </p>
+    <p></p>
+    <p> </p>
   </body>
 </html>

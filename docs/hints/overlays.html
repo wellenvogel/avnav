@@ -6,10 +6,7 @@
   </head>
   <body data-order="5300">
     <h1>Avnav Overlays</h1>
-    <ul>
-      <li><a href="#configuration">Konfiguration</a></li>
-      <li><a href="#usage">Nutzung</a></li>
-    </ul>
+    <div class="toc"> </div>
     <p>Ab der Version 20201219 ist AvNav in der Lage, neben der eigentlichen
       Karte noch Zusatzinformationen anzuzeigen. Das können z.B. Wegepunkte aus
       einer GPX Datei aber auch vorhandene Tracks oder andere Daten (wie z.B.
@@ -88,6 +85,12 @@
           <td>---</td>
           <td>hier wird je nach type die Liste der vorhandenen Elemente zur
             Auswahl angeboten</td>
+        </tr>
+        <tr>
+          <td>featureFormatter</td>
+          <td>---</td>
+          <td>Auswahl einer Java Script Funktion zum Aufbereiten von
+            zusätzlichen Informationen bei Klick auf das Element</td>
         </tr>
         <tr>
           <td>opacity</td>
@@ -238,6 +241,87 @@
       Limit eingebaut, Dateien von einigen 100MB werden allerdings mit
       Sicherheit Probleme bereiten. 1000 Punkte in einem Overlay sind dagegen
       kein Problem.</p>
+    <h2><a name="adaptation"></a>Anpassungen</h2>
+    <p>Ab Version 20210114 kann man die Informationen anpassen, die aus der
+      Overlay-Datei gewonnen werden und die dann bei "Feature Info" angezeigt
+      werden. Das kann sinnvoll sein, da manchmal verfügbare Overlay Dateien
+      Informationen enthalten, die AvNav von sich aus noch nicht kennt.</p>
+    <p>Zu diesem Zweck kann man beim <a href="#configuration">Konfigurieren</a>
+      des Overlays einen "featureFormatter" angeben. Dabei handelt es sich um
+      eine Java Script Funktion, die entweder in AvNav schon vorhanden ist, die
+      in der <a href="userjs.html">user.js</a> eingebaut wird oder die von
+      einem <a href="plugins.html">plugin</a> kommt.</p>
+    <p>Diese Java Script Funktion bekommt als Parameter die in der Overlay Datei
+      vorhandenen Eigenschaften des angeklickten Punktes und kann
+      veränderte/neue Eigenschaften zurückgeben, die dann vom FeatureInfo Dialog
+      angezeigt werden.</p>
+    <p>Die folgenden Eigenschaften können zurückgegeben werden:</p>
+    <table border="1" width="100%">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Bedeutung</td>
+        </tr>
+        <tr>
+          <td>sym</td>
+          <td>die URL für ein anzuzeigendes Icon. Das kann eine relative URL
+            sein, diese ist dann eine Icon Datei innerhalb der <a href="#configuration">konfigurierten</a>
+            userIcons Datei, ein absoluter Pfad wie z.B.
+            /user/images/myImage.png oder eine mit http: beginnende externe URL
+            (natürlich dann nur mit Internet Verbindung nutzbar).</td>
+        </tr>
+        <tr>
+          <td>name</td>
+          <td>der anzuzeigende Name</td>
+        </tr>
+        <tr>
+          <td>desc</td>
+          <td>der unter "description" anzuzeigende Text</td>
+        </tr>
+        <tr>
+          <td>htmlInfo</td>
+          <td>ein html String, der dann bei Klick auf den <img src="../viewerimages/icons-new/ic_info.svg"
+              alt="" class="inlineimage">Info button angezeigt wird.</td>
+        </tr>
+        <tr>
+          <td>time</td>
+          <td>eine Zeitangabe (String oder java script Date)</td>
+        </tr>
+        <tr>
+          <td>link</td>
+          <td>eine URL, die bei Klick auf den <img src="../viewerimages/icons-new/ic_info.svg"
+              alt="" class="inlineimage">Info button angezeigt werden soll
+            (alternativ zu htmlInfo). Es gelten die gleichen Regeln wie für
+            "sym".</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Die übergebenen Parameter hängen von der Overlay Datei ab. Zusätzlich
+      sind in jedem Falle die Werte "lat" und "lon" vorhanden.</p>
+    <p>Ein Beispiel für die <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/util/featureFormatter.js">eingebaute
+        genericHtmlInfo</a> Funktion, die alle vorhandenen Werte als HTML in den
+      Wert htmlInfo schreibt.</p>
+    <div class="code">let genericHtmlInfo=function(properties,extended){
+    if (! extended) return {};
+    let htmlInfo='&lt;div class="featureInfoHtml"&gt;';
+    for (let k in properties){
+        if (!properties[k]) continue;
+        if (htmlInfo !== "") htmlInfo+="&lt;br/&gt;";
+        htmlInfo+=avnav.api.escapeHtml(k)+"="+avnav.api.escapeHtml(properties[k]);
+    }
+    htmlInfo+='&lt;/div&gt;';
+    return {htmlInfo:htmlInfo};
+}</div>
+    <p>Der zweite Parameter, der an die Funktion übergeben wird, gibt einen
+      Hinweis, ob alle Parameter erzeugt werden sollen oder nur der "sym"
+      Parameter. Falls extended auf "false" gesetzt ist, sollte die Funktion
+      keine zeitraubenden Operationen ausführen, da sie potentiell für jedes
+      Element aus dem Overlay aufgerufen wird.</p>
+    <p>Um selbst eine solche Funktion bei AvNav bekannt zu machen, muss sie wie
+      folgt registriert werden (siehe <a href="userjs.html">user.js</a>).</p>
+    <div class="code">avnav.api.registerFeatureFormatter('myHtmlInfo',myHtmlInfoFunction);</div>
+    <p>Nachdem die Funktion registriert wurde, kann sie in der Overlay <a href="#configuration">Konfiguration</a>
+      ausgewählt werden.</p>
     <p><br>
     </p>
     <p><br>
