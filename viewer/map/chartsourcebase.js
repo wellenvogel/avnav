@@ -192,7 +192,7 @@ class ChartSourceBase {
         if (! sym) return;
         if (! sym.match(/\./) && opt_ext) sym+=opt_ext;
         let url;
-        if (sym.match(/^http/)) return sym;
+        if (sym.match(/^https*:/)) return sym;
         if (sym.match(/^\//)) return sym;
         if (this.chartEntry.icons){
             url=this.chartEntry.icons + "/" + sym;
@@ -205,7 +205,7 @@ class ChartSourceBase {
     }
     getLinkUrl(link){
         if (! link) return;
-        if (link.match(/^http/)) return link;
+        if (link.match(/^https*:/)) return link;
         if (link.match(/^\//)) return link;
         if (! this.chartEntry.icons) return;
         return this.chartEntry.icons+"/"+link;
