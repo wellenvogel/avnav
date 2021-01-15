@@ -188,14 +188,35 @@ class ChartSourceBase {
     featureToInfo(feature,pixel,layer){
         return {};
     }
-
+    getSymbolUrl(sym,opt_ext){
+        if (! sym) return;
+        if (! sym.match(/\./) && opt_ext) sym+=opt_ext;
+        let url;
+        if (sym.match(/^http/)) return sym;
+        if (sym.match(/^\//)) return sym;
+        if (this.chartEntry.icons){
+            url=this.chartEntry.icons + "/" + sym;
+            if (this.chartEntry.defaultIcon) url+="?fallback="+encodeURIComponent(this.chartEntry.defaultIcon);
+        }
+        else{
+            return this.chartEntry.defaultIcon;
+        }
+        return url;
+    }
+    getLinkUrl(link){
+        if (! link) return;
+        if (link.match(/^http/)) return link;
+        if (link.match(/^\//)) return link;
+        if (! this.chartEntry.icons) return;
+        return this.chartEntry.icons+"/"+link;
+    }
     /**
      * call any user defined formatter with the properties
      * of the feature and merge this with the already fetched items
      * @param info the info to be merged in
      * @param feature the ol feature
      */
-    formatFeatureInfo(info, feature){
+    formatFeatureInfo(info, feature,coordinates){
        if (! info || ! feature) return;
         if (this.chartEntry.featureFormatter){
             try{
@@ -210,12 +231,25 @@ class ChartSourceBase {
                             delete fProps[k];
                         }
                     }
-                    assign(info, formatter(fProps,true));
+                    if (coordinates){
+                        fProps.lat=coordinates[1];
+                        fProps.lon=coordinates[0];
+                    }
+                    assign(info,Helper.filteredAssign({
+                        sym:true,
+                        name: true,
+                        desc: true,
+                        link: true,
+                        htmlInfo: true,
+                        time: true
+                    },formatter(fProps,true)));
                 }
             }catch (e){
                 base.log("error in feature info formatter "+this.chartEntry.featureFormatter+": "+e);
             }
         }
+        info.icon=this.getSymbolUrl(info.sym,'.png');
+        info.link=this.getLinkUrl(info.link);
     }
 
     setEnabled(enabled,opt_update){

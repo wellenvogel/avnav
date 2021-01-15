@@ -139,11 +139,6 @@ class GeoJsonChartSource extends ChartSourceBase{
         };
 
     }
-
-    getLinkUrl(link){
-        if (! this.chartEntry.icons) return;
-        return this.chartEntry.icons+"/"+link;
-    }
     styleFunction(feature,resolution) {
         let type=feature.getGeometry().getType();
         return this.styles[feature.getGeometry().getType()];
@@ -188,11 +183,6 @@ class GeoJsonChartSource extends ChartSourceBase{
         if (geometry instanceof olPoint){
             rt.kind='point';
             coordinates=this.mapholder.transformFromMap(geometry.getCoordinates());
-            let link=feature.get('link');
-            if (link && this.chartEntry.icons){
-                rt.link=this.getLinkUrl(link);
-                rt.linkText=feature.get('linkText');
-            }
             rt.nextTarget=coordinates;
         }
         else{
@@ -205,15 +195,17 @@ class GeoJsonChartSource extends ChartSourceBase{
             }
         }
         rt.coordinates=coordinates;
-        rt.desc=feature.get('desc');
-        rt.name=feature.get('name');
-        rt.sym=feature.get('sym');
+        let param=['desc','name','sym','link','linkText'];
+        param.forEach((p)=>rt[p]=feature.get(p));
         for (let k in this.chartEntry){
             if (Helper.startsWith(k,stylePrefix)){
                 rt[k]=this.chartEntry[k];
             }
         }
-        this.formatFeatureInfo(rt,feature);
+        this.formatFeatureInfo(rt,feature,coordinates);
+        if (rt.link && this.chartEntry.icons){
+            rt.link=this.getLinkUrl(rt.link);
+        }
         return rt;
     }
 }

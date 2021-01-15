@@ -73,7 +73,7 @@ class Api{
      * @param name
      * @param formatterFunction a function that will be called with 2 parameters:
      *                          1. the properties of the feature a (depening on the overlay type)
-     *                             as an object
+     *                             as an object (this includes lat and lon)
      *                          2. a flag - if false just only compute name and sym
      *                                      must be fast as potentially called for every point
      *                                      if true you could also compute the other values

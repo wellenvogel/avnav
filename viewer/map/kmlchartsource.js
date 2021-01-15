@@ -205,7 +205,7 @@ class KmlChartSource extends ChartSourceBase{
         }
         rt.name=feature.get('name');
         rt.sym=feature.get('sym');
-        this.formatFeatureInfo(rt,feature);
+        this.formatFeatureInfo(rt,feature,coordinates);
         return rt;
     }
 }

@@ -117,6 +117,7 @@ Helper.filteredAssign=function(){
     let rt={};
     for (let k in args){
         let o=args[k];
+        if (! o) continue;
         for (let ok in filter){
             if (o[ok] !== undefined) rt[ok]=o[ok];
         }

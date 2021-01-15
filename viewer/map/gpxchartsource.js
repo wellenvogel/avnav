@@ -97,22 +97,7 @@ class GpxChartSource extends ChartSourceBase{
             })
         };
     }
-    getSymbolUrl(sym,opt_ext){
-        if (! sym.match(/\./) && opt_ext) sym+=opt_ext;
-        let url;
-        if (this.chartEntry.icons){
-            url=this.chartEntry.icons + "/" + sym;
-            if (this.chartEntry.defaultIcon) url+="?fallback="+encodeURIComponent(this.chartEntry.defaultIcon);
-        }
-        else{
-            return this.chartEntry.defaultIcon;
-        }
-        return url;
-    }
-    getLinkUrl(link){
-        if (! this.chartEntry.icons) return;
-        return this.chartEntry.icons+"/"+link;
-    }
+
     styleFunction(feature,resolution) {
 
         let type=feature.getGeometry().getType();
@@ -236,13 +221,7 @@ class GpxChartSource extends ChartSourceBase{
         rt.coordinates=coordinates;
         let infoItems=['desc','name','sym','time','height','sym','link','linkText'];
         infoItems.forEach((item)=>rt[item]=feature.get(item));
-        this.formatFeatureInfo(rt,feature);
-        if (rt.sym && this.chartEntry.icons){
-            rt.icon=this.getSymbolUrl(rt.sym,'.png');
-        }
-        if (rt.link && this.chartEntry.icons){
-            rt.link=this.getLinkUrl(rt.link);
-        }
+        this.formatFeatureInfo(rt,feature,coordinates);
         for (let k in this.chartEntry){
             if (Helper.startsWith(k,stylePrefix)){
                 rt[k]=this.chartEntry[k];
