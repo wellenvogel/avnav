@@ -35,6 +35,46 @@ sudo systemctl start avnav</div>
     <br>
     <div> </div>
     <h2>Versions</h2>
+    <p> <span style="font-weight: bold;">20210115</span> <a title="release/20210115"
+        href="../downloads/release/20210115">link</a> </p>
+    <ul>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/73">#73</a>:
+        shift to python3 (the current python2.7 is out of maintenance)</li>
+      <li><a href="hints/userjs.html">plugin API</a> java script extension for <a
+          href="hints/overlays.html#adaptation">featureFormatter</a></li>
+      <li>decoding of NMEA XDR records</li>
+      <li>formatter for presssure and temperature</li>
+      <li>extension of the java script API - <a href="hints/userjs.html#formatter">registration
+          of formatters</a></li>
+      <li>improved handling of formatterParameters in the <a href="hints/layouts.html">layout
+          editor</a></li>
+      <li><a href="hints/configfile.html#filter">NMEA filter</a> for
+        AVNSocketReader,AVNBluetoothReader and AVNUdpReader</li>
+      <li>the <a href="https://github.com/wellenvogel/avnav-history-plugin">avnav
+          history plugin</a> is now available in the package repository and can
+        be installed with
+        <div class="code"> sudo apt-get install avnav-history-plugin   </div>
+      </li>
+      <li>Bugfixes:</li>
+      <ul>
+        <li><a href="https://github.com/wellenvogel/avnav/issues/97">#97</a>:
+          NMEA checksum in lowercase</li>
+        <li>correct handling of chart dim for night mode</li>
+      </ul>
+      <li><b>Installation Hints</b><br>
+        When installing packages new dependencies are necessary.
+        <div class="code">sudo apt-get update<br>sudo apt-get upgrade   </div>
+        If you are using the headless images you need to set the time before
+        installing.
+        <div class="code">sudo date -s "2021/01/15 15:00"</div>
+        It is important to install the current version for the <a href="hints/ocharts.html">ocharts-plugin</a>
+        (20210115).<br>
+        On Windows a new <a href="../downloads/release/20210115">Installer</a>
+        should be used. <br>
+        If you are running an update with the existing installation you need to
+        run it twice! On the first update there is still no installation of the
+        new python version.</li>
+    </ul>
     <p> <span style="font-weight: bold;">20201227</span> <a title="release/20201227"
         href="../downloads/release/20201227">link</a> </p>
     <ul>

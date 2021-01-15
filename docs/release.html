@@ -36,6 +36,46 @@ sudo systemctl start avnav</div>
     <br>
     <div> </div>
     <h2>Versionen</h2>
+    <p> <span style="font-weight: bold;">20210115</span> <a title="release/20210115"
+        href="../downloads/release/20210115">link</a> </p>
+    <ul>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/73">#73</a>:
+        Umstellung des Servers auf python3 (das bisherige python2.7 wird nicht
+        mehr gepflegt)</li>
+      <li><a href="hints/userjs.html">Plugin API</a> Java Script Erweiterung für
+        <a href="hints/overlays.html#adaptation">featureFormatter</a></li>
+      <li>Dekodierung von XDR Datensätzen</li>
+      <li>Formatter für Druck und Temperatur</li>
+      <li>Erweiterung des Java Script API - <a href="hints/userjs.html#formatter">Registrierung
+          von Formattern</a></li>
+      <li>besseres Handling für formatterParameters im <a href="hints/layouts.html">Layout
+          Editor</a></li>
+      <li><a href="hints/configfile.html#filter">NMEA filter</a> für
+        AVNSocketReader,AVNBluetoothReader und AVNUdpReader</li>
+      <li>das <a href="https://github.com/wellenvogel/avnav-history-plugin">avnav
+          history plugin</a> ist in den Paketquellen enthalten und kann mit
+        <div class="code"> sudo apt-get install avnav-history-plugin   </div>
+        installiert werden. </li>
+      <li>Fehlerkorrekturen:</li>
+      <ul>
+        <li><a href="https://github.com/wellenvogel/avnav/issues/97">#97</a>:
+          NMEA Prüfsummen mit kleinen Buchstaben</li>
+        <li>Korrektes Handling des Dimmfaktors für die Karte im Nachtmodus</li>
+      </ul>
+      <li><b>Installationshinweise</b>:<br>
+        Bei der Installation mit Paketen (apt) müssen neue Abhängigkeiten
+        installiert werden.
+        <div class="code">sudo apt-get update<br>sudo apt-get upgrade   </div>
+        Bei den headless Paketen muss vorher die Zeit gesetzt werden.
+        <div class="code">sudo date -s "2021/01/15 15:00"</div>
+        Es ist wichtig, das auch vom <a href="hints/ocharts.html">ocharts-plugin</a>
+        die aktuelle Version 20210115 installiert wird.<br>
+        Bei der Windows Installation sollte ein neuer <a href="../downloads/release/20210115">Installer</a>
+        genutzt werden. <br>
+        Falls mit dem vorhandenen ein update ausgeführt wird, muss es 2 mal
+        nacheiander durchgeführt werden, da beim ersten Mal die neue Python
+        Version nicht installiert wird.</li>
+    </ul>
     <p> <span style="font-weight: bold;">20201227</span> <a title="release/20201227"
         href="../downloads/release/20201227">link</a> </p>
     <ul>
