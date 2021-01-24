@@ -3,7 +3,9 @@ Options -Indexes
 RewriteEngine on
 RewriteOptions Inherit
 RewriteCond %{REQUEST_URI} "(.*)/latestwindows$" 
-RewriteRule ".*" "%1/latestwindows/" [R,L]
+RewriteRule ".*" "%1/release/VERSION/" [R,L]
+RewriteCond %{REQUEST_URI} "(.*)/latestwindows/$" 
+RewriteRule ".*" "%1/release/VERSION/" [R,L]
 
 RewriteCond %{REQUEST_URI} "(.*)/latestwindows/fr$" 
 RewriteRule ".*" "%1/latestwindows/" [R,L]
