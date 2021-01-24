@@ -181,7 +181,7 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
         #a path to be sent
         extPath=self.server.tryExternalMappings(path,query,handler=self)
       except Exception as e:
-        self.send_error(404,e.message)
+        self.send_error(404,str(e))
         return None
       if isinstance(extPath,AVNDownload):
         self.writeFromDownload(extPath)
