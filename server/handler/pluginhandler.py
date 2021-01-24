@@ -140,7 +140,9 @@ class ApiImpl(AVNApi):
   def setStatus(self,value,info):
     if not value in AVNWorker.Status:
       value=AVNWorker.Status.ERROR
-    self.log("SetStatus: %s %s",value,info)
+    oldStatus=self.phandler.status.get(self.prefix)
+    if value != oldStatus:
+      self.log("SetStatus: %s %s",value,info)
     self.phandler.setInfo(self.prefix,info,value)
 
   def registerUserApp(self, url, iconFile, title=None):
