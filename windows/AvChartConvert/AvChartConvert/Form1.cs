@@ -263,12 +263,10 @@ namespace AvChartConvert
                 if (lbComPort.Items.Count > 0)
                 {
                     string comport = (string)lbComPort.SelectedItem;
-                    comport = comport.Replace("COM", "");
+                    //comport = comport.Replace("COM", "");
                     if (comport != "")
                     {
-                        int comportnum = Convert.ToInt32(comport);
-                        comportnum--;
-                        replace.Add("COMREADER", "<AVNSerialReader useFeeder=\"true\" name=\"com" + comport + "reader\" port=\"" + string.Format("{0}", comportnum) + "\" baud=\"38400\" minbaud=\"4800\"/>");
+                        replace.Add("COMREADER", "<AVNSerialReader useFeeder=\"true\" name=\"com" + comport + "reader\" port=\"" + comport + "\" baud=\"38400\" minbaud=\"4800\"/>");
                     }
                 }
             }

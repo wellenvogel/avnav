@@ -7,9 +7,9 @@
 	debugToLog="true"/>
 <Readers>
 <AVNGpsdFeeder useGpsd="false" listenerPort="0" port="0" />
-<!-- <AVNSerialReader name="com4reader" port="3" useFeeder="true"/>-->
+<!-- <AVNSerialReader name="com4reader" port="com4" useFeeder="true"/>-->
 <!-- add readers here for com ports that you want to listen on -->
-<!--<AVNSerialReader useFeeder="true" name="com8reader" port="7" baud="38400" minbaud="4800"/>-->
+<!--<AVNSerialReader useFeeder="true" name="com8reader" port="com8" baud="38400" minbaud="4800"/>-->
 <!-- the next lines will be replaced by the GUI -->
 <!--COMREADER-->
 <!--IPREADER-->
