@@ -217,7 +217,7 @@ class MBTilesFile(ChartFile):
           el['xmax'] = self.colToX(zl, colmima[1])
         zoomLevelBoundings[zl] = el
     except Exception as e:
-      AVNLog.error("error reading base info from %s:%s", self.filename, e.message)
+      AVNLog.error("error reading base info from %s:%s", self.filename, str(e))
     self.zoomlevels=zoomlevels
     self.zoomLevelBoundings=zoomLevelBoundings
     if cu is not None:
