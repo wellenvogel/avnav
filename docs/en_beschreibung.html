@@ -37,7 +37,7 @@
         </a></li>
     </ul>
     <p>Important Hint:</p>
-    <p><i><b>In no case I can promise or being reliable for a correct function
+    <p><i><b>In no case I promise or can be held responsible for correct function
           of AvNav - especially using it for navigation is at your own risk.
           Before using it I recommend to carefully test the precision of the
           display and the used charts.</b></i></p>
@@ -81,7 +81,7 @@
       a perfect device for my needs.</p>
     <p>After some research (back in 2012...) I found that there was no ready to
       go solution that would perfectly fit my needs. Especially the handling of
-      the serial devices (typically USB-serial converters) is at least tricky
+      serial devices (typically USB-serial converters) is at least tricky
       most of the time on linux.</p>
     <p>So I started this project. I try to provide some description here for
       people that would like to use it. The software is available at an open
@@ -113,7 +113,7 @@
           (tested: InavX,OpenCPN), those access the NMEA data via TCP or UDP. </p>
       </li>
       <li>
-        <p>On the devices there is only a browser. All the navigation is handled
+        <p>On the client devices there is only a browser. All the navigation is handled
           by the AvNav WebApp that is downloaded from the raspi. There is no
           need for any other installed software on the device, only a current
           HTML5 browser (tested: Chrome Windows, OSX, Safari, Android starting
@@ -139,7 +139,7 @@
     <ul>
       <li>
         <p>All chart sources that can be read by <a href="https://gdal.org/">GDAL</a>
-          software lesen kann (especially BSB)</p>
+          software (especially BSB)</p>
       </li>
       <li>
         <p>Charts downloaded with Mobile Atlas Creator</p>
@@ -150,10 +150,10 @@
       Java, the display part is identical.</p>
     <p>The following chapters describe the parts a bit more in detail.</p>
     <h2 class="western">The Server Software (avnav_server.py)</h2>
-    <p>On the pi there is a <a href="http://www.raspberrypi.org/downloads">normal
-        Debian image</a> installed (app. 2GB). Afterwards a couple of additional
+    <p>The pi holds a <a href="http://www.raspberrypi.org/downloads">normal
+        Debian image</a> (app. 2GB). Afterwards a couple of additional
       packages will be installed together with AvNav.</p>
-    <p>The structire of the server software:</p>
+    <p>The structure of the server software:</p>
     <p><img class="fimage" src="software.png" name="Grafik2" border="0" width="600">
     </p>
     <p>The server tries to detect all devices connected via USB-serial and via
@@ -162,20 +162,20 @@
         one</a>. The server scans connected devices (via dbus) and discoveres
       the device nodes. Afterwards it tries to do some auto-bauding (i.e.
       determine the baudrate for the device) between 4800 and 34000 baud and
-      tries to receive NMEA data. If no data is detected it starts over again by
+      tries to receive NMEA data. If no data are detected it starts over again by
       closing and reopening the devices. This way it can cope with disconnecting
       and reconnecting devices.I have connected a AIS VHF that gets GPS data
-      from the Pi and sends AIS data towards it. If bluetooth serial devices are
+      from the pi and sends AIS data to it. If bluetooth serial devices are
       detected it will also try to read from them.</p>
-    <p>You can also configure dvices to output the data and this way have a NMEA
+    <p>You can also configure devices to output the data and this way have a NMEA
       multiplexer.</p>
     <p>All NMEA data internally are stored in a queue and are provided to
       outputs. By default a TCP socket is open that you can connect to (default
       port: 34567).</p>
     <p>Additionally you can configure more outputs (TCP,UDP,serial).</p>
-    <p>Internally the data (including AIS) is also provided towards a decoder
+    <p>Internally the data (including AIS) are also provided towards a decoder
       that will store them in the server software ("NMEA decoded data"). Those
-      data is provided via an HTTP json API for the app. Additionally the server
+      data are provided via an HTTP json API for the app. Additionally the server
       writes track data, computes routing information, handles anchor watch and
       alarms. </p>
     <p>For controlling an auto pilot the server computes RMB data and sends them
@@ -201,10 +201,10 @@
       <tbody>
         <tr valign="TOP">
           <th width="28%">
-            <p>Verzeichnis</p>
+            <p>Directory</p>
           </th>
           <th width="72%">
-            <p>Inhalt</p>
+            <p>Content</p>
           </th>
         </tr>
         <tr>
