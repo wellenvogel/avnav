@@ -46,7 +46,7 @@
     <ul>
       <li>
         <p>Navigation auf kleinen Geräten (Laptop ist immer ein wenig
-          unhandlich) – 7 oder 10 Zoll Tablet wäre Ideal</p>
+          unhandlich) – 7 oder 10 Zoll Tablet wäre ideal</p>
       </li>
       <li>
         <p>Navigation auch im Cockpit</p>
@@ -81,7 +81,7 @@
       Insbesondere die Einbettung der seriellen Schnittstellen (typisch
       Seriell-Usb-Wandler) macht immer wieder Mühe, da Linux hier immer etwas
       kreativ ist... </p>
-    <p>Also habe ich beschlossen mich selbst daran zu machen. Im Folgenden will
+    <p>Also habe ich beschlossen, mich selbst daran zu machen. Im Folgenden will
       ich meine Lösung beschreiben, da es bestimmt Interessierte gibt, die es
       nachnutzen möchten. Die gesamte Software steht zum Download unter einer
       Open Source Lizenz bereit. </p>
@@ -89,7 +89,7 @@
       <br>
     </p>
     <h2 class="western">Überblick </h2>
-    <p><img class="fimage" src="overview.png" name="Grafik1" border="0" width="600"
+    <p><img class="fimage" src="overview.png" name="Grafik1" width="600" border="0"
         align="LEFT">avnav-raspi-2020<br clear="LEFT">
       Wie im Bild zu sehen, besteht die gesamte Lösung aus mehreren Teilen:</p>
     <ul>
@@ -131,7 +131,7 @@
       werden muss (Empfehlung: mindestens 8GB, mehr ist besser...).</p>
     <p>Die Web Applikation bietet eine&nbsp; Navigation mit Rasterkarten (<a href="charts.html#chartformats">gemf,mbtiles</a>)&nbsp;
       oder <a href="hints/ocharts.html">OESenc Vektorkarten</a> inklusive
-      AIS-Darstellung, Wegepunkt-Navigation und Routing. Falls die
+      AIS-Darstellung, Wegpunkt-Navigation und Routing. Falls die
       Web-Applikation verwendet werden soll, müssen die Karten dafür auch auf
       dem Raspberry installiert werden.</p>
     <p><a href="hints/ocharts.html">OESenc Karten</a> können im Shop von <a href="https://www.o-charts.org/">o-charts</a>
@@ -163,7 +163,7 @@
     <p>Der Hauptbestandteil der Sofware auf dem Raspberry pi ist ein in Python
       geschriebener Server. Im Folgenden beschreibe ich in groben Zügen, was
       dieser Server intern tut.</p>
-    <p><img class="fimage" src="software.png" name="Grafik2" border="0" width="600"
+    <p><img class="fimage" src="software.png" name="Grafik2" width="600" border="0"
         align="LEFT"><br clear="LEFT">
       <br>
       Dieser Server versucht alle am Raspberry angeschlossenen seriellen Geräte
@@ -176,10 +176,10 @@
       serielle Klasse und ermittelt deren Schnittstelle (device). Anschliessend
       versucht er ein "auto bauding" zwischen 4800 und 34000 Baud und bemüht
       sich, NMEA Daten zu erkennen. Falls keine Daten empfangen werden, wird die
-      Schnittstelle geschlossen und das Spiel beginnt von vorn. Damit „überlebt“
-      der Server auch das Anschliessen/Abstecken von Wandlern während des
-      Betriebes oder das An- bzw. Abschalten von Geräten. Bei mir hängt ein
-      RO4800 mit AIS Decoder an einem Seriell-USB Wandler , die GPS Daten werden
+      Schnittstelle geschlossen, und das Spiel beginnt von vorn. Damit
+      „überlebt“ der Server auch das Anschliessen/Abstecken von Wandlern während
+      des Betriebes oder das An- bzw. Abschalten von Geräten. Bei mir hängt ein
+      RO4800 mit AIS Decoder an einem Seriell-USB Wandler, die GPS Daten werden
       durchgereicht. Alternativ versucht AvNav auch Kontakt zu seriellen
       Bluetooth-Geräten aufzunehmen. Falls er per "discovery" welche findet,
       versucht er von diesen ebenfalls NMEA Daten zu lesen. Das wurde z.B. mit
@@ -198,7 +198,7 @@
       schreiben.</p>
     <p>Über den integrierten WebServer kann der Zugriff auf diese dekodierten
       Daten erfolgen (per HTTP GET, Antwort als json).</p>
-    <p>Der Route-Handler wertet eingestellte Routen (bzw. Wegepunkte) aus und
+    <p>Der Route-Handler wertet eingestellte Routen (bzw. Wegpunkte) aus und
       berechnet daraus die Daten für eine Autopilot-Steuerung. Diese werden als
       RMB NMEA Datensätze wieder in die internen NMEA Daten eingespeist und
       stehen so an allen Schnittstellen zur Verfügung.</p>
@@ -222,7 +222,7 @@
     <h3 class="western">Software auf dem raspberry</h3>
     <p>Auf dem Raspberry ist die Software in der folgenden Verzeichnisstruktur
       installiert:</p>
-    <table cellspacing="4" cellpadding="4" border="1" width="100%">
+    <table width="100%" cellspacing="4" cellpadding="4" border="1">
       <colgroup><col width="73*"> <col width="183*"> </colgroup>
       <tbody>
         <tr valign="TOP">
@@ -256,7 +256,7 @@
         </tr>
         <tr valign="TOP">
           <td width="28%">
-            <p>.../dava/log</p>
+            <p>.../data/log</p>
           </td>
           <td width="72%">
             <p>logfiles</p>
@@ -290,7 +290,7 @@
     Zur Navigation mit den auf dem Raspberry Pi vorhandenen Karten gibt es eine
     Web App. Diese ist mit <a href="https://reactjs.org/">ReactJs</a>
     realisiert.<br>
-    <p> Die App kommuniziert mit dem in AvNav integrierten Webserver auf dem pi.
+    <p> Die App kommuniziert mit dem in AvNav integrierten Webserver auf dem Pi.
       Die Einstiegsseite ist unter der url <a href="http://avnav.avnav.de/viewer/avnav_viewer.html">http://avnav.avnav.de/viewer/avnav_viewer.html</a>
       erreichbar. Es ist eine sogenannte „single page app“, d.h. die weitere
       Kommunikation mit dem server geschieht per Ajax durch den
