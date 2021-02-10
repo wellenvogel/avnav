@@ -162,7 +162,7 @@
         one</a>. The server scans connected devices (via dbus) and discoveres
       the device nodes. Afterwards it tries to do some auto-bauding (i.e.
       determine the baudrate for the device) between 4800 and 34000 baud and
-      tries to receive NMEA data. If no data are detected it starts over again by
+      tries to receive NMEA data. If no data is detected it starts over again by
       closing and reopening the devices. This way it can cope with disconnecting
       and reconnecting devices. I have connected a AIS VHF that gets GPS data
       from the pi and sends AIS data to it. If bluetooth serial devices are
@@ -173,9 +173,9 @@
       outputs. By default a TCP socket is open that you can connect to (default
       port: 34567).</p>
     <p>Additionally you can configure more outputs (TCP,UDP,serial).</p>
-    <p>Internally the data (including AIS) are also provided towards a decoder
+    <p>Internally the data (including AIS) is also provided towards a decoder
       that will store them in the server software ("NMEA decoded data"). Those
-      data are provided via an HTTP json API for the app. Additionally the server
+      data is provided via an HTTP json API for the app. Additionally the server
       writes track data, computes routing information, handles anchor watch and
       alarms. </p>
     <p>For controlling an auto pilot the server computes RMB data and sends them
