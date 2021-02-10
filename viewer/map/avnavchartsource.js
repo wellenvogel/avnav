@@ -34,7 +34,14 @@ import * as olExtent from 'ol/extent';
 import {XYZ as olXYZSource} from 'ol/source';
 import * as olTransforms  from 'ol/proj/transforms';
 import {Tile as olTileLayer} from 'ol/layer';
+import {listenOnce,unlistenByKey} from 'ol/events';
+import olEventType from 'ol/events/EventType';
+import olImageTile from 'ol/src/ImageTile';
+import olTileState from 'ol/src/TileState';
 import assign from 'object-assign';
+import olCanvasTileLayerRenderer from 'ol/renderer/canvas/TileLayer';
+import {getUid} from "ol/util";
+
 
 //we use a bit a dirty hack here:
 //ol3 nicely shows a lower zoom if the tile cannot be loaded (i.e. has an error)
@@ -117,6 +124,158 @@ const layerUrlFunction=function (layerOptions,coord) {
         return layerOptions.layerurl.replace("{x}", x).replace("{y}", y).replace("{z}", z);
     }
 }
+const tileClassCreator=(tileUrlFunction,maxUpZoom,inversy)=>
+{
+    class AvNavTile extends olImageTile {
+        constructor(tileCoord,
+                    state,
+                    src,
+                    crossOrigin,
+                    tileLoadFunction,
+                    opt_options) {
+            super(...arguments);
+            this.ownImage = new Image();
+            this.ownTileLoadFunction = tileLoadFunction;
+            this.ownSrc = src;
+            this.listenerKeys = [];
+            this.tileUrlFunction=tileUrlFunction;
+            this.downZoom=0;
+        }
+
+        getModifiedUrl(){
+            let coord=this.tileCoord.slice(0);
+            for (let dz=0;dz < this.downZoom;dz++){
+                coord[0]=coord[0]-1;
+                coord[1]=Math.floor(coord[1]/2);
+                coord[2]=Math.floor(coord[2]/2);
+            }
+            return this.tileUrlFunction(coord);
+        }
+        computeImageProps(){
+            let x=this.tileCoord[1];
+            let y=this.tileCoord[2];
+            let fact=1 << this.downZoom;
+            let nx=Math.floor(x/fact);
+            let ny=Math.floor(y/fact);
+            let xsize=this.ownImage.width;
+            let ysize=this.ownImage.height;
+            xsize=Math.floor(xsize/fact);
+            ysize=Math.floor(ysize/fact);
+            let yoffset=inversy?(fact - ((y-ny*fact)%fact)-1)*ysize: ((y-ny*fact)%fact)*ysize;
+            return {
+                x: ((x-nx*fact)%fact)*xsize,
+                y: yoffset,
+                w:xsize,
+                h:ysize
+            }
+        }
+
+        getImage() {
+            return this.ownImage;
+        }
+        getImageProps(){
+            return this.computeImageProps();
+        }
+
+        load() {
+            if (this.state === olTileState.ERROR) {
+                this.state = olTileState.IDLE;
+                this.ownImage = new Image();
+            }
+            if (this.state === olTileState.IDLE || this.downZoom > 0) {
+                this.state = olTileState.LOADING;
+                if (! this.downZoom) this.changed();
+                this.ownTileLoadFunction(this, this.getModifiedUrl());
+                this.listenerKeys = [
+                    listenOnce(this.ownImage, olEventType.LOAD, (ev) => {
+                        if (this.ownImage.naturalWidth && this.ownImage.naturalHeight) {
+                            if (this.downZoom > 0){
+                                base.log("downzoom loaded, dz="+this.downZoom+" for "+this.ownSrc+
+                                ", "+this.tileCoord.join(","));
+                            }
+                            this.state = olTileState.LOADED;
+                        } else {
+                            this.state = olTileState.EMPTY;
+                        }
+                        this.unlisten();
+                        this.changed();
+                    }),
+                    listenOnce(this.ownImage, olEventType.ERROR, (ev) => {
+                        this.unlisten();
+                        if (this.downZoom < maxUpZoom){
+                            this.downZoom++;
+                            let help=this.downZoom;
+                            base.log("dz: "+help+" for "+this.ownSrc);
+                            window.setTimeout(()=>{
+                                this.load();
+                            },1);
+                            return;
+                        }
+                        this.state = olTileState.ERROR;
+                        this.changed();
+                    })
+                ]
+            }
+        }
+
+        unlisten() {
+            this.listenerKeys.forEach((k) => {
+                unlistenByKey(k);
+            })
+        }
+    }
+    return AvNavTile;
+}
+
+class AvNavLayerRenderer extends olCanvasTileLayerRenderer{
+    constructor() {
+        super(...arguments);
+    }
+    drawTileImage(tile, frameState, x, y, w, h, gutter, transition, opacity) {
+        const image = this.getTileImage(tile);
+        if (!image) {
+            return;
+        }
+        const uid = getUid(this);
+        const tileAlpha = transition ? tile.getAlpha(uid, frameState.time) : 1;
+        const alpha = opacity * tileAlpha;
+        const alphaChanged = alpha !== this.context.globalAlpha;
+        if (alphaChanged) {
+            this.context.save();
+            this.context.globalAlpha = alpha;
+        }
+        let imageProps={
+            x:0,
+            y:0,
+            w:image.width,
+            h:image.height
+        };
+        if (tile.getImageProps){
+          imageProps=tile.getImageProps();
+        }
+        this.context.drawImage(
+            image,
+            imageProps.x+gutter,
+            imageProps.y+gutter,
+            imageProps.w - 2 * gutter,
+            imageProps.h - 2 * gutter,
+            x,
+            y,
+            w,
+            h
+        );
+
+        if (alphaChanged) {
+            this.context.restore();
+        }
+        if (tileAlpha !== 1) {
+            frameState.animate = true;
+        } else if (transition) {
+            tile.endTransition(uid);
+        }
+    }
+}
+
 class AvnavChartSource extends ChartSourceBase{
     constructor(mapholer, chartEntry) {
         super(mapholer,chartEntry);
@@ -125,6 +284,18 @@ class AvnavChartSource extends ChartSourceBase{
 
     prepareInternal() {
         let url = this.chartEntry.url;
+        let upZoom=0;
+        if (this.chartEntry.upzoom !== undefined && ! this.chartEntry.upzoom) {
+
+        }
+        else{
+            if (url.match(/^https*[:]/)){
+                upZoom=globalStore.getData(keys.properties.mapOnlineUpZoom);
+            }
+            else{
+                upZoom=globalStore.getData(keys.properties.mapUpZoom);
+            }
+        }
         return new Promise((resolve, reject)=> {
             if (!url) {
                 reject("no map url for "+(this.chartEntry.name||this.chartEntry.chartKey));
@@ -136,7 +307,7 @@ class AvnavChartSource extends ChartSourceBase{
                 timeout: parseInt(globalStore.getData(keys.properties.chartQueryTimeout || 10000))
             })
                 .then((data)=> {
-                    let layers = this.parseLayerlist(data, url);
+                    let layers = this.parseLayerlist(data, url,upZoom);
                     resolve(layers);
                 })
                 .catch((error)=> {
@@ -169,7 +340,7 @@ class AvnavChartSource extends ChartSourceBase{
         }
     }
 ;
-    parseLayerlist(layerdata, baseurl) {
+    parseLayerlist(layerdata, baseurl,upZoom) {
         let self = this;
         let chartKey = baseurl;
         let ll = [];
@@ -318,7 +489,14 @@ class AvnavChartSource extends ChartSourceBase{
                  url:layerurl+'/{z}/{x}/{y}.png'
                  */
             });
-
+            if (upZoom > 0) {
+                source.tileClass = tileClassCreator((coord) => {
+                    return layerUrlFunction(rt, coord);
+                },
+                    upZoom,
+                    rt.inversy
+                )
+            }
             rt.source = source;
             let layerOptions={
                 source: source
@@ -326,6 +504,9 @@ class AvnavChartSource extends ChartSourceBase{
             let extent=rt.extent;
             if (self.chartEntry.opacity !== undefined) layerOptions.opacity=parseFloat(self.chartEntry.opacity);
             let layer = new olTileLayer(layerOptions);
+            if (upZoom > 0) {
+                layer.createRenderer = () => new AvNavLayerRenderer(layer);
+            }
             rt.isTileLayer=true;
             layer.avnavOptions = rt;
             ll.push(layer);
