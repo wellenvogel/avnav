@@ -81,7 +81,8 @@ sudo systemctl stop avnav</div>
     einbinden kann. Das geht auf dem raspberry pi - aber auch auf jeder anderen
     Debian Variante (z.B. Ubuntu). <br>
     Informationen dazu findet man wieder in seiner <a href="https://github.com/free-x/avnav/wiki">Beschreibung</a>.<br>
-    <p>Die Paketquellen bindet man wie folgt ein:</p>
+    <p>Die Paketquellen bindet man wie folgt ein (nur nötig wenn man nicht das
+      headless oder touch image nutzt):</p>
     <div class="code">wget https://www.free-x.de/debian/oss.boating.gpg.key
 sudo apt-key add oss.boating.gpg.key
 wget https://www.free-x.de/debian/boating.list
@@ -115,10 +116,18 @@ sudo apt-get -f</div>
     installieren (dabei das -raspi... Paket nur auf einem raspberry). Die ersten
     Kommandos werden typischerweise Fehler erzeugen, das letzte lädt dann die
     fehlenden Abhängigkeiten.<br>
-    Wenn man auf einem Raspberry installiert, sollte man das avnav-raspi Paket
-    nur dann installieren, wenn man damit einverstanden ist, das die
-    Netzwerk-Konfiguration so geändert wird, wie AvNav das möchte. Sonst sollte
-    man nur das avnav Paket installieren.<br>
+    <p> Wenn man auf einem Raspberry installiert, sollte man das avnav-raspi
+      Paket nur dann installieren, wenn man damit einverstanden ist, das die
+      Netzwerk-Konfiguration so geändert wird, wie AvNav das möchte. Sonst
+      sollte man nur das avnav Paket installieren.</p>
+    <p>Ich würde in jedem Fall empfehlen, das <a href="https://github.com/wellenvogel/avnav-update-plugin">AvNav
+        Update Plugin</a> zu installieren - aus dem Paket Repository mit
+    </p>
+    <div class="code">sudo apt-get install avnav-update-plugin</div>
+    <p>oder mittels download von&nbsp; <a href="https://github.com/wellenvogel/avnav-update-plugin">GitHub.</a></p>
+    <p>Wenn man nicht das avnav-raspi package installiert, braucht man einige
+      zusätzliche Schritte um AvNav unter dem Nutzer pi automatisch starten zu
+      lassen:</p>
     Man kann dann als Nutzer pi avnav einfach von der Kommandozeile starten
     lassen.<br>
     Wenn man es als systemd service laufen lassen möchte, sollte man das

@@ -72,7 +72,8 @@ sudo systemctl stop avnav</div>
     use in your debian based system. This will work on the pi as well as on any
     other debian (like ubuntu).<br>
     Information is available at his <a href="https://github.com/free-x/avnav/wiki">description</a>.
-    <p>To set up the repository on your system run the following commands:</p>
+    <p>To set up the repository on your system run the following commands (only
+      necessary if you do not use the headless or the avnav touch images):</p>
     <div class="code">sudo date -s "2020/12/03 14:30" <br>wget https://www.free-x.de/debian/oss.boating.gpg.key
 sudo apt-key add oss.boating.gpg.key
 wget https://www.free-x.de/debian/boating.list
@@ -105,11 +106,17 @@ sudo systemctl start avnav</div>
     <div class="code">sudo dpkg -i avnav_xxxxxxxx_all,deb
 sudo dpkg -i avnav-raspi_xxxxxxxx_all.deb
 sudo apt-get -f</div>
-    (only use the&nbsp; -raspi... package on a rasberry pi).The firstz commands
+    (only use the&nbsp; -raspi... package on a rasberry pi).The first commands
     will complain about missing dependencies, the last one should fix this.<br>
-    If you install on a pi you should only use the avnav-raspi package if it is
-    ok to you to change your network set up to the AvNav defaults. Otherwise
-    only install the basic avnav package.<br>
+    <p> If you install on a pi you should only use the avnav-raspi package if it
+      is ok to you to change your network set up to the AvNav defaults.
+      Otherwise only install the basic avnav package.</p>
+    <p>I would also recommend to install the <a href="https://github.com/wellenvogel/avnav-update-plugin">AvNav
+        Update plugin</a> - either from the package repositories with</p>
+    <div class="code">sudo apt-get install avnav-update-plugin</div>
+    <p>Or by downloading it directly from <a href="https://github.com/wellenvogel/avnav-update-plugin">GitHub.</a></p>
+    <p>If you do not install the avnav-raspi package you need some additional
+      steps to automatically start up AvNav:</p>
     You could start up avnav as user pi from the command line with avnav.<br>
     If you would like to run it as a system service you need to create the
     directory:<br>
