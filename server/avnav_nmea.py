@@ -35,6 +35,9 @@ except:
 __author__="Andreas"
 __date__ ="$29.06.2014 21:28:01$"
 
+class EmptyPosition(Exception):
+  pass
+
 #an NMEA parser
 #parses some simple NMEA setences and uses ais from the gpsd project to parse AIS setences
 #adds parsed data to a navdata struct
@@ -149,6 +152,8 @@ class NMEAParser(object):
   #direction N,S,E,W - S,W being negative
   @classmethod
   def nmeaPosToFloat(cls,pos,direction):
+    if pos == '' or direction == '':
+      raise EmptyPosition("empty position")
     posa=pos.split('.')
     if len(posa) < 2:
       AVNLog.ld("no decimal in pos",pos)
@@ -387,14 +392,16 @@ class NMEAParser(object):
                   rt["transducers."+tname]=data
                   hasData=True
             except Exception as e:
-              AVNLog.debug("decode %s at pos %d failed: %s"%(data,i,str(e.message)))
+              AVNLog.debug("decode %s at pos %d failed: %s"%(data,i,str(e)))
               pass
             i+=4
         if hasData:
           self.addToNavData(rt, source=source, record=tag)
           return True
         return False
-
+    except EmptyPosition:
+      AVNLog.ld("empty position in %s",str(data))
+      return False
     except Exception:
       AVNLog.info(" error parsing nmea data " + str(data) + "\n" + traceback.format_exc())
 
