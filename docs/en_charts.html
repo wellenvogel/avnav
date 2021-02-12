@@ -23,6 +23,7 @@
       <li><a href="#chartformats">Formats</a></li>
       <li><a href="#overlays">Overlays</a></li>
       <li><a href="hints/ocharts.html">O-Charts</a></li>
+      <li><a href="#mapproxy">Mapproxy</a></li>
       <li><a href="#installation">Installation</a></li>
       <li><a href="#Convert">Converting existing Raster Charts (like BSB)<br>
         </a></li>
@@ -114,6 +115,8 @@
     <p>Since version 202011xx you can use charts from the <a href="https://github.com/SignalK/charts-plugin">signalK
         chart provider</a> &nbsp; (if the <a href="hints/CanboatAndSignalk.html#SignalK">signalK
         integration</a> is active).</p>
+    <p>Using the <a href="#mapproxy">MapProxy Plugin</a> you can utilize and
+      download charts from various online chart sources.</p>
     <h2><a name="installation" id="installation"></a>Installation of Charts</h2>
     <p>After installing AvNav there is only one/a couple of online demo charts
       available. For real usage you have to install charts in AvNav.<br>
@@ -136,8 +139,9 @@
       You can watch the working state of the importer at the <a href="userdoc/statuspage.html">status
         page</a>. You should keep in mind that converting is consuming a lot of
       CPU and can last for hours on the raspberry pi. Potentially it is more
-      efficient to run this on a desktop system.<br>
-    </p>
+      efficient to run this on a desktop system.</p>
+    <p>If the <a href="#mapproxy">MapProxy plugin</a> is installed its charts
+      will directly become visible in AvNav without any further installation. </p>
     <h2><a name="overlays" id="overlays"></a>Overlays</h2>
     <p>Ab Version 20201219 kann AvNav über (und unter) den eigentlichen Karten
       noch weitere Informationen anzeigen bzw. Karten können kombiniert werden.</p>
@@ -245,8 +249,18 @@
 </pre> </blockquote>
       </div>
     </blockquote>
-    <h3 class="western"><a id="Download" name="Download"></a>Download using
-      Mobile Atlas Creator</h3>
+    <h3 class="western"><a id="Download" name="Download"></a></h3>
+    <h2 class="western"><a name="mapproxy" id="mapproxy"></a>MapProxy plugin</h2>
+    <p>A <a href="https://github.com/wellenvogel/avnav-mapproxy-plugin">plugin</a>
+      is available that embeds <a href="https://mapproxy.org/">MapProxy</a> and
+      this way provides access to various online chart sources. The plugin will
+      support you in configuring MapProxy and allows to comfortably download
+      charts. For details refer to the <a href="https://github.com/wellenvogel/avnav-mapproxy-plugin/blob/master/Readme.md">plugin
+        documentation</a>.</p>
+    <p>The plugin provides a lot of functionality very similar to Mobile Atlas
+      Creator and can replace it in most cases.</p>
+    <h3 class="western"></h3>
+    <h2 class="western">Download using Mobile Atlas Creator</h2>
     <p>For using the <a href="https://mobac.sourceforge.io/">Mobile Atlas
         Creators</a> you only Java and the MOBAC itself. It is important to
       follow a certain schem when selecting the ranges for download to make the

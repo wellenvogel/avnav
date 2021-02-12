@@ -23,6 +23,7 @@
       <li><a href="#chartformats">Formate</a></li>
       <li><a href="#overlays">Overlays</a></li>
       <li><a href="hints/ocharts.html">O-Charts</a></li>
+      <li><a href="#mapproxy">Mapproxy</a></li>
       <li><a href="#installation">Installation</a></li>
       <li><a href="#Convert">Konvertieren von vorhandenen Rasterkarten (z.B.
           BSB)<br>
@@ -81,14 +82,18 @@
     <p>Für den Download gilt Vergleichbares - hier muss man geeignet die
       zoomlevel und Bereiche auswählen.</p>
     <p>Das Verfahren dazu hängt von der Quelle ab. Im Moment habe ich support
-      für 2 „Wege“ der Kartenerstellung eingebaut:</p>
+      für 3 „Wege“ der Kartenerstellung eingebaut:</p>
     <ul>
       <li>
         <p>Konvertierung von Karten mittels <a href="http://www.gdal.org/">GDAL</a>
           (z.B. BSB) – hier kann alles gelesen werden, was gdal kann</p>
       </li>
-      <li> Nutzung von downloads mit dem <a href="http://mobac.sourceforge.net/">Mobile
-          Atlas Creator</a>. </li>
+      <li>Nutzung von online Karten (und deren Download) mit Hilfe von <a href="https://mapproxy.org/">MapProxy</a>
+        - über das MapProxy plugin </li>
+      <li>
+        <p>Nutzung von downloads mit dem <a href="http://mobac.sourceforge.net/">Mobile
+            Atlas Creator</a>. </p>
+      </li>
     </ul>
     <h2><a name="chartformats" id="chartformats"></a>Kartenformate</h2>
     <p>AvNav nutzt als primäres Kartenformat das <a href="http://www.cgtk.co.uk/gemf">GEMF</a>
@@ -123,6 +128,8 @@
     <p>Ab Version 202011xx können (wenn die <a href="hints/CanboatAndSignalk.html#SignalK">signalK
         Integration</a> aktiv ist) auch Karten genutzt werden, die im <a href="https://github.com/SignalK/charts-plugin">signalK
         chart provider</a> vorhanden sind.</p>
+    <p>Mit dem <a href="#mapproxy">MapProxy Plugin</a> können online Karten von
+      verschiedenen Quellen eingebunden werden.</p>
     <h2><a name="installation" id="installation"></a>Installation von Karten</h2>
     <p>Nach der Installation ist in AvNav zunächst nur eine/einige
       Online-Demo-Karten vorhanden. Zur realen Nutzung müssen die Karten
@@ -148,6 +155,9 @@
       ein rechenintensiver Prozeß sein kann, der auf einem Raspberry Pi viele
       Stunden dauern kann. Das sollte daher ggf. auf einem Desktop Rechner
       erfolgen.</p>
+    <p>Wenn das <a href="#mapproxy">MapProxy plugin</a> installiert ist, werden
+      dessen Karten in AvNav sofort sichtbar und müssen nicht getrennt
+      installiert werden.</p>
     <h2><a name="overlays" id="overlays"></a>Overlays</h2>
     <p>Ab Version 20201219 kann AvNav über (und unter) den eigentlichen Karten
       noch weitere Informationen anzeigen bzw. Karten können kombiniert werden.</p>
@@ -273,8 +283,17 @@
 </pre> </blockquote>
       </div>
     </blockquote>
-    <h3 class="western"><a id="Download" name="Download"></a>Download von Karten
-      mit dem Mobile Atlas Creator</h3>
+    <a id="Download" name="Download"></a>
+    <h2 class="western"><a name="mapproxy" id="mapproxy"></a>MapProxy plugin</h2>
+    <p>Es gibt ein <a href="https://github.com/wellenvogel/avnav-mapproxy-plugin">plugin</a>,
+      das <a href="https://mapproxy.org/">MapProxy</a> einbindet und damit
+      Zugriff auf viele online Kartenquellen erlaubt. Das plugin unterstützt bei
+      der Konfiguration von MapProxy und erlaubt das komfortable herunterladen
+      von Karten. Für Details siehe die <a href="https://github.com/wellenvogel/avnav-mapproxy-plugin/blob/master/Readme.md">plugin
+        Beschreibung</a>.</p>
+    <p>Es bietet viele Funktionen die dem Mobile Atlas Creator ähneln und kann
+      diesen damit weitgehend ersetzen.</p>
+    <h2 class="western">Download von Karten mit dem Mobile Atlas Creator</h2>
     <p>Für die Nutzung des <a href="https://mobac.sourceforge.io/">Mobile Atlas
         Creators</a> ist ausser Java und dem MOBAC selbst keine weitere Software
       auf dem PC/Laptop nötig. Man muss beim Download der Karten allerdings ein
