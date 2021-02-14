@@ -6,7 +6,7 @@
 	logfile="#DATADIR#/log/avnav.log" 
 	debugToLog="true"/>
 <Readers>
-<AVNGpsdFeeder useGpsd="false" listenerPort="0" port="0" />
+<AVNFeeder/>
 <!-- <AVNSerialReader name="com4reader" port="3" useFeeder="true"/>-->
 <!-- add readers here for com ports that you want to listen on -->
 <!--<AVNSerialReader useFeeder="true" name="com8reader" port="7" baud="38400" minbaud="4800"/>-->

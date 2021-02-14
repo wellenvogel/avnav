@@ -20,12 +20,8 @@
 <!-- the workers section -->
 <Workers>
 <!-- the universal feeder 
-     the gpsd is only here for compatibility with old set ups
-     if you still enable it here, a couple of features will not work
-     as dpsd lacks some decoders we need
-     so leave this entry untouched
 	 -->
-<AVNGpsdFeeder useGpsd="false" listenerPort="4020" port="2948" gpsdcommand="/usr/sbin/gpsd -b -n -N -G"/>
+<AVNFeeder/>
 
 
 
