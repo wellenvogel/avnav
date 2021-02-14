@@ -41,26 +41,50 @@ class AVNSocketReader(AVNWorker,SocketReader):
     return "AVNSocketReader"
   
   @classmethod
-  def getConfigParam(cls,child):
+  def getConfigParam(cls,child=None):
     if not child is None:
       return None
-    rt={
-               'feederName':'',      #if this one is set, we do not use the defaul feeder by this one
-               'host':None,
-               'port':None,
-               'timeout': 10,      #timeout for connect and waiting for data
-               'minTime':0,        #if tthis is set, wait this time before reading new data (ms)
-               'filter':''
-    }
+    rt=[
+               WorkerParameter('feederName','',editable=False),
+               WorkerParameter('host',None),
+               WorkerParameter('port',None,type=WorkerParameter.T_NUMBER),
+               WorkerParameter('timeout',10,type=WorkerParameter.T_FLOAT,
+                               description='timeout in sec for connecting and waiting for data'),
+               WorkerParameter('minTime',0,type=WorkerParameter.T_FLOAT,
+                               description='if this is set, wait this time before reading new data (ms)'),
+               WorkerParameter('filter','',type=WorkerParameter.T_FILTER)
+    ]
     return rt
+
 
   def __init__(self,param):
     for p in ('port','host'):
       if param.get(p) is None:
         raise Exception("missing "+p+" parameter for socket reader")
     self.feederWrite=None
+    self.socket=None
     AVNWorker.__init__(self, param)
 
+  def canEdit(self):
+    return True
+
+  def canDelete(self):
+    return True
+
+  def updateConfig(self, param):
+    checked=self.checkConfig(param)
+    self.changeMultiConfig(checked)
+    try:
+      self.socket.close()
+    except Exception as e:
+      pass
+
+  def stop(self):
+    super().stop()
+    try:
+      self.socket.close()
+    except:
+      pass
 
   def writeData(self,data,source):
     AVNWorker.writeData(self,data,source)
@@ -69,26 +93,26 @@ class AVNSocketReader(AVNWorker,SocketReader):
      
   #thread run method - just try forever  
   def run(self):
-    self.setName("%s-%s:%d"%(self.getThreadPrefix(),self.getStringParam('host'),self.getIntParam('port')))
-    info="%s:%d"%(self.getStringParam('host'),self.getIntParam('port'))
     errorReported=False
-    while True:
+    while not self.shouldStop():
+      self.setName("%s-%s:%d" % (self.getThreadPrefix(), self.getStringParam('host'), self.getIntParam('port')))
+      info = "%s:%d" % (self.getStringParam('host'), self.getIntParam('port'))
       try:
         self.setInfo('main',"trying to connect to %s"%(info,),WorkerStatus.INACTIVE)
-        sock=socket.create_connection((self.getStringParam('host'),self.getIntParam('port')), self.getIntParam('timeout'))
+        self.socket=socket.create_connection((self.getStringParam('host'),self.getIntParam('port')), self.getIntParam('timeout'))
         self.setInfo('main',"connected to %s"%(info,),WorkerStatus.RUNNING)
       except:
         if not errorReported:
           AVNLog.info("exception while trying to connect to %s %s",info,traceback.format_exc())
           errorReported=True
         self.setInfo('main',"unable to connect to %s"%(info,),WorkerStatus.ERROR)
-        time.sleep(2)
+        self.wait(2)
         continue
       AVNLog.info("successfully connected to %s",info)
       try:
         errorReported=False
-        self.readSocket(sock,'main',self.getSourceName(info),self.getParamValue('filter'))
-        time.sleep(2)
+        self.readSocket(self.socket,'main',self.getSourceName(info),self.getParamValue('filter'))
+        self.wait(2)
       except:
         AVNLog.info("exception while reading from %s %s",info,traceback.format_exc())
 avnav_handlerList.registerHandler(AVNSocketReader)

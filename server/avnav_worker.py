@@ -32,8 +32,83 @@ import threading
 import copy
 from avnav_util import Enum, AVNLog
 
-__author__="Andreas"
-__date__ ="$29.06.2014 21:09:10$"
+class ParamValueError(Exception):
+  pass
+
+class WorkerParameter(object):
+  T_STRING='STRING'
+  T_NUMBER='NUMBER'
+  T_FLOAT = 'FLOAT'
+  T_BOOLEAN='BOOLEAN'
+  T_SELECT='SELECT'
+  T_FILTER='FILTER'
+
+  PREDEFINED_DESCRIPTIONS={
+    T_FILTER: 'separated list of sentences either !AIVDM or $RMC - for $ we ignore the 1st 2 characters'
+  }
+
+  def __init__(self,name,default=None,type=None,rangeOrList=None,description=None,editable=True):
+    self.name=name
+    self.type=type if type is not None else self.T_STRING
+    self.default=default
+    self.rangeOrList=rangeOrList
+    if description is None:
+      description=self.PREDEFINED_DESCRIPTIONS.get(type)
+    self.description=description or ''
+    self.editable=editable
+
+  def serialize(self):
+    return self.__dict__
+
+  @classmethod
+  def filterNameDef(cls,plist):
+    rt={}
+    for p in plist:
+      rt[p.name]=p.default
+    return rt
+
+  @classmethod
+  def checkValueFor(cls,plist,name,value):
+    for p in plist:
+      if p.name == name:
+        return p.checkValue(value)
+    raise ParamValueError("%s not found in parameters"%name)
+
+  def checkValue(self,value):
+    if self.type == self.T_STRING:
+      return str(value)
+    if self.type == self.T_NUMBER or self.type == self.T_FLOAT:
+      if self.type == self.T_FLOAT:
+        rv=float(value)
+      else:
+        rv=int(value)
+      if self.rangeOrList is not None and len(self.rangeOrList) == 2:
+        if rv < self.rangeOrList[0] or rv > self.rangeOrList[1]:
+          raise ParamValueError("value %f for %s out of range %s"%(rv,self.name,",".join(self.rangeOrList)))
+      return rv
+    if self.type == self.T_BOOLEAN:
+      if value == True or value == False:
+        return value
+      if type(value) is str:
+        return value.upper()=="TRUE"
+      return True if value else False
+    if self.type == self.T_SELECT:
+      if self.rangeOrList is None:
+        raise ValueError("no select list for %s"%self.name)
+      for cv in self.rangeOrList:
+        if type(cv) is dict:
+          if value == cv.get('value'):
+            return cv
+        else:
+          if value == cv:
+            return value
+      raise ValueError("value %s for %s not in list %s"%(str(value),self.name,",".join(self.rangeOrList)))
+    if self.type == self.T_FILTER:
+      #TODO: some filter checks
+      return str(value)
+    return value
+
+
 
 class WorkerStatus(object):
   INACTIVE='INACTIVE'
@@ -88,6 +163,7 @@ class WorkerStatus(object):
 
 
 class AVNWorker(threading.Thread):
+  handlerListLock=threading.Lock()
   """a base class for all workers
      this provides some config functions and a common interfcace for handling them"""
   allHandlers=[] #the list of all instantiated handlers
@@ -129,6 +205,13 @@ class AVNWorker(threading.Thread):
     return None
 
   @classmethod
+  def findHandlerById(cls,id):
+    for handler in cls.allHandlers:
+      if handler.id == id:
+        return handler
+    return None
+
+  @classmethod
   def getAllHandlers(cls,disabled=False):
     """get the list of all instantiated handlers
     :param disabled if set to true also return disabled handler
@@ -147,7 +230,14 @@ class AVNWorker(threading.Thread):
     return False
   
   def __init__(self,cfgparam):
-    self.allHandlers.append(self) #fill the static list of handlers
+    self.handlerListLock.acquire()
+    id=0
+    try:
+      self.allHandlers.append(self) #fill the static list of handlers
+      id=len(self.allHandlers) - 1
+    finally:
+      self.handlerListLock.release()
+    self.id=id
     self.param=cfgparam
     self.status=False
     threading.Thread.__init__(self)
@@ -193,6 +283,10 @@ class AVNWorker(threading.Thread):
         del self.status[name]
       except:
         pass
+  def getId(self):
+    return self.id
+
+
   def getParam(self):
     try:
       return self.param
@@ -253,18 +347,48 @@ class AVNWorker(threading.Thread):
     return False
   def canDelete(self):
     return False
-  def getEditableParameters(self):
-    return None
 
+  def getEditableParameters(self):
+    if not self.canEdit():
+      return None
+    parameterDescriptions=self.getConfigParam()
+    if type(parameterDescriptions) is not list:
+      return None
+    rt=[]
+    for pd in parameterDescriptions:
+      if not pd.editable:
+        continue
+      current=self.param.get(pd.name)
+      if type(current) is list:
+        continue #child config: TODO
+      rt.append({'description':pd,'current':current})
+    return rt
+
+  def checkConfig(self,param):
+    '''
+    check the config valaues against the defined ones
+    and return a dict with the converted values
+    @param param:
+    @return:
+    '''
+    cfgs=self.getConfigParam()
+    if not type(cfgs) is list:
+      raise Exception("old style config values")
+    rt={}
+    for k,v in param.items():
+      cv=WorkerParameter.checkValueFor(cfgs,k,v)
+      rt[k]=cv
+    return rt
   def updateConfig(self,param):
     '''
     change of config parameters
-    the handler must update its data and store the values using changeConfig, changeChildConfig
+    the handler must update its data and store the values using changeMultiConfig, changeChildConfig
     @param param: a dictonary with the keyes matching the keys from getEditableParameters
     @type param: dict
     @return:
     '''
     raise Exception("not implemented")
+
 
   def shouldStop(self):
     return self._stop
@@ -333,6 +457,21 @@ class AVNWorker(threading.Thread):
     if old != value:
       self.configChanger.changeAttribute(name,value)
       self.param[name] = value
+
+  def changeMultiConfig(self,values):
+    if self.param is None:
+      raise Exception("unable to set param")
+    if self.configChanger is None:
+      raise Exception("unable to store changed config")
+    hasChanges=False
+    for k,v in values.items():
+      old=self.getParamValue(k)
+      if old != v:
+        self.configChanger.changeAttribute(k,v,delayUpdate=True)
+        hasChanges=True
+        self.param[k] = v
+    if hasChanges:
+      self.configChanger.handleChange()
 
   def changeChildConfig(self,childName,childIndex,name,value,delayWriteOut=False):
     if self.param is None:
@@ -441,9 +580,28 @@ class AVNWorker(threading.Thread):
     return sparam
   
   def startInstance(self,navdata):
+    AVNLog.info("starting %s with config %s",self.getName(),self.getConfigString())
     self.navdata=navdata
     self.feeder = self.findFeeder(self.getStringParam('feederName'))
     self.start()
+
+  def getConfigString(self,cfg=None):
+    rt=""
+    if cfg is None:
+      cfg=self.param
+    for k,v in cfg.items():
+      if rt != "":
+        rt+=","
+      if type(v) is dict:
+        rt+="%s=%s"%(k,self.getConfigString(v))
+      elif type(v) is list:
+        rt+="%s=["%k
+        for item in v:
+          rt+=self.getConfigString(item)+","
+        rt+="]"
+      else:
+        rt+="%s=%s"%(k,str(v))
+    return rt
 
   def writeData(self,data,source=None,addCheckSum=False):
     if self.feeder is None:

@@ -44,13 +44,15 @@ class AVNUdpReader(AVNWorker, SocketReader):
   def getConfigParam(cls,child=None):
     if not child is None:
       return None
-    rt={
-               'feederName':'',      #if this one is set, we do not use the defaul feeder by this one
-               'host':'127.0.0.1',
-               'port':None,
-               'minTime':0,        #if tthis is set, wait this time before reading new data (ms)
-               'filter':''
-    }
+    rt=[
+               WorkerParameter('feederName','',editable=False),
+               WorkerParameter('host','127.0.0.1',description="address to listen on, use 0.0.0.0 to allow external access"),
+               WorkerParameter('port',None,type=WorkerParameter.T_NUMBER,
+                               description="the local listener port"),
+               WorkerParameter('minTime',0,type=WorkerParameter.T_FLOAT,
+                               description='wait this time before reading new data (ms)'),
+               WorkerParameter('filter','',type=WorkerParameter.T_FILTER)
+    ]
     return rt
 
   def __init__(self,param):

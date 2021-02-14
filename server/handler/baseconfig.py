@@ -28,7 +28,7 @@
 import logging
 
 import avnav_handlerList
-from avnav_worker import AVNWorker
+from avnav_worker import AVNWorker, WorkerParameter, WorkerStatus
 
 
 class AVNBaseConfig(AVNWorker):
@@ -48,18 +48,29 @@ class AVNBaseConfig(AVNWorker):
   def getConfigParam(cls, child=None):
     if child is not None:
       return None
-    return {
-            'loglevel':logging.INFO,
-            'logfile':"",
-            'expiryTime': 30,
-            'aisExpiryTime': 1200,
-            'ownMMSI':'',        #if set - do not store AIS messages with this MMSI
-            'debugToLog': 'false',
-            'maxtimeback':5,      #how many seconds we allow time to go back before we reset
-            'settimecmd': '',     #if set, use this to set the system time
-            'systimediff':5,      #how many seconds do we allow the system time to be away from us
-            'settimeperiod': 3600 #how often do we set the system time
-    }
+    return [
+            WorkerParameter('loglevel',logging.INFO,type=WorkerParameter.T_SELECT,
+                            rangeOrList=[
+                              {'label':'INFO','value':logging.INFO},
+                              {'label': 'ERROR', 'value': logging.ERROR},
+                              {'label': 'DEBUG', 'value': logging.DEBUG},
+                                         ]),
+            WorkerParameter('logfile',"",editable=False),
+            WorkerParameter('expiryTime',30,type=WorkerParameter.T_FLOAT,
+                            description="expiry in seconds for NMEA data"),
+            WorkerParameter('aisExpiryTime',1200,type=WorkerParameter.T_FLOAT,
+                            description="expiry time in seconds for AIS data"),
+            WorkerParameter('ownMMSI','',type=WorkerParameter.T_NUMBER,
+                            description='if set - do not store AIS messages with this MMSI'),
+            WorkerParameter('debugToLog', False,type=WorkerParameter.T_BOOLEAN,editable=False),
+            WorkerParameter('maxtimeback',5,type=WorkerParameter.T_FLOAT,
+                            description='how many seconds we allow time to go back before we reset'),
+            WorkerParameter('settimecmd','',editable=False,description='if set, use this to set the system time'),
+            WorkerParameter('systimediff',5,type=WorkerParameter.T_FLOAT,
+                            description='how many seconds do we allow the system time to be away from us'),
+            WorkerParameter('settimeperiod', 3600,type=WorkerParameter.T_FLOAT,
+                            description='how often do we set the system time')
+    ]
   @classmethod
   def preventMultiInstance(cls):
     return True

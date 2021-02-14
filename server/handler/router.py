@@ -30,7 +30,7 @@ import os
 import sys
 
 import gpxpy098.parser as gpxparser
-
+from avnav_worker import AVNWorker,WorkerParameter
 
 from avnav_config import AVNConfig
 from avnav_util import AVNLog
@@ -174,13 +174,16 @@ class AVNRouter(AVNDirectoryHandlerBase):
   def getConfigParam(cls, child=None):
     if child is None:
       
-      rt={
-          "routesdir":"",
-          "interval": 5, #interval in seconds for computing route data
-          "feederName":'',
-          "computeRMB":True, #if set we compute AP control data,
-          "computeAPB": False #if set to true, compute APB taking True course as magnetic!
-          }
+      rt=[
+          WorkerParameter("routesdir","",editable=False),
+          WorkerParameter("interval", 5,type=WorkerParameter.T_FLOAT,
+                          description='interval in seconds for computing route data'),
+          WorkerParameter("feederName",'',editable=False),
+          WorkerParameter("computeRMB",True,type=WorkerParameter.T_BOOLEAN,
+                          description='if set we compute AP control data'),
+          WorkerParameter("computeAPB",False,type=WorkerParameter.T_BOOLEAN,
+                          description='if set to true, compute APB taking True course as magnetic!')
+          ]
       return rt
     return None
 

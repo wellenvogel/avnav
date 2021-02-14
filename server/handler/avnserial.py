@@ -48,23 +48,26 @@ import avnav_handlerList
 #it also contains our internal converting routines
 
 class SerialReader(object):
-  
+  BAUDRATES=[115200,57600,38400,19200,9600,4800]
   @classmethod
   def getConfigParam(cls):
-    cfg={
-               'port':None,
-               'timeout': 1,
-               'baud': 4800,
-               'minbaud':0, #if this is set to anything else, try autobauding between baud and minbaud
-               'bytesize': 8,
-               'parity': 'N',
-               'stopbits': 1,
-               'xonxoff': 0,
-               'rtscts': 0,
-               'numerrors': 20, #set this to 0 to avoid any check for NMEA data
-               'autobaudtime': 5, #use that many seconds to read data for autobauding if no newline is found
-               'filter':"" #, separated list of sentences either !AIVDM or $RMC - for $ we ignore the 1st 2 characters
-               }
+    cfg=[
+               WorkerParameter('port',None,type=WorkerParameter.T_SELECT,rangeOrList=[]),
+               WorkerParameter('timeout', 1,type=WorkerParameter.T_FLOAT),
+               WorkerParameter('baud',4800,type=WorkerParameter.T_SELECT,rangeOrList=cls.BAUDRATES),
+               WorkerParameter('minbaud',0,type=WorkerParameter.T_SELECT,rangeOrList=cls.BAUDRATES+[0],
+                              description='if this is set to anything else, try autobauding between baud and minbaud'),
+               WorkerParameter('bytesize', 8,type=WorkerParameter.T_SELECT,rangeOrList=[5,6,7,8]),
+               WorkerParameter('parity','N',type=WorkerParameter.T_SELECT,rangeOrList=['N','E','O','M','S']),
+               WorkerParameter('stopbits', 1,type=WorkerParameter.T_SELECT,rangeOrList=[1,1.5,2]),
+               WorkerParameter('xonxoff', False,type=WorkerParameter.T_BOOLEAN),
+               WorkerParameter('rtscts',False,type=WorkerParameter.T_BOOLEAN),
+               WorkerParameter('numerrors',20,type=WorkerParameter.T_NUMBER,
+                               description='reopen port after that many errors, set this to 0 to avoid any check for NMEA data'),
+               WorkerParameter('autobaudtime', 5,type=WorkerParameter.T_FLOAT,
+                               description='use that many seconds to read data for autobauding if no newline is found'),
+               WorkerParameter('filter',"",type=WorkerParameter.T_FILTER)
+               ]
     return cfg
     
   #parameters:
@@ -94,7 +97,7 @@ class SerialReader(object):
       if self.device is not None:
         self.device.close()
     except Exception as e:
-      AVNLog.debug("unable to close serial device: %s",str(e.message))
+      AVNLog.debug("unable to close serial device: %s",str(e))
    
   # a simple approach for autobauding
   # we try to read some data (~3 lines) and find a 0x0a in it
@@ -196,7 +199,7 @@ class SerialReader(object):
     if filterstr != "":
       filter=filterstr.split(',')
     try:
-      while True and not self.doStop:
+      while not self.doStop:
        name=self.getName()
        timeout=float(self.param['timeout'])
        portname=self.param['port']
@@ -204,7 +207,7 @@ class SerialReader(object):
        baud=int(self.param['baud'])
        maxerrors=int(self.param['numerrors'])
        minbaud=int(self.param.get('minbaud') or baud)
-       rates=(115200,57600,38400,19200,9600,4800)
+       rates=self.BAUDRATES
        autobaud=False
        if minbaud != baud and minbaud != 0:
          autobaud=True
@@ -242,7 +245,7 @@ class SerialReader(object):
        lastTime=time.time()
        numerrors=0
        hasNMEA=False
-       while True and not self.doStop:
+       while not self.doStop:
          bytes=0
          try:
            bytes=self.readLine(self.device,timeout)
@@ -334,16 +337,16 @@ class AVNSerialReader(AVNWorker):
     return "AVNSerialReader"
   
   @classmethod
-  def getConfigParam(cls,child):
+  def getConfigParam(cls,child=None):
     if not child is None:
       return None
     cfg=SerialReader.getConfigParam()
-    rt=cfg.copy()
-    rt.update({
-               'useFeeder':'true', #if set to true, pipe the data trough a feeder instead handling by its own
-               'feederName':''      #if this one is set, we do not use the defaul feeder by this one
-    })
-    return rt
+    ownCfg=[
+               WorkerParameter('feederName','',type=WorkerParameter.T_STRING,
+                              description='if this one is set, we do not use the defaul feeder by this one',
+                              editable=False)
+    ]
+    return cfg+ownCfg
   @classmethod
   def createInstance(cls, cfgparam):
     if not hasSerial:
@@ -357,24 +360,50 @@ class AVNSerialReader(AVNWorker):
       if param.get(p) is None:
         raise Exception("missing "+p+" parameter for serial reader")
     self.writeData=None
+    self.reader=None
     AVNWorker.__init__(self, param)
-    
+
+
+
 
   #make some checks when we have to start
   #we cannot do this on init as we potentiall have tp find the feeder...
   def start(self):
-    if self.getBoolParam('useFeeder'):
-      feedername=self.getStringParam('feederName')
-      feeder=self.findFeeder(feedername)
-      if feeder is None:
-        raise Exception("%s: cannot find a suitable feeder (name %s)",self.getName(),feedername or "")
-      self.writeData=feeder.addNMEA
+    feedername=self.getStringParam('feederName')
+    feeder=self.findFeeder(feedername)
+    if feeder is None:
+      raise Exception("%s: cannot find a suitable feeder (name %s)",self.getName(),feedername or "")
+    self.writeData=feeder.addNMEA
     AVNWorker.start(self) 
      
   #thread run method - just try forever  
   def run(self):
-    self.setName("%s-%s"%(self.getThreadPrefix(),self.getParamValue('port')))
-    reader=SerialReader(self.param, self.writeData,self,self.getSourceName(self.getParamValue('port')))
-    reader.run()
+    while not self.shouldStop():
+      self.setName("%s-%s"%(self.getThreadPrefix(),self.getParamValue('port')))
+      try:
+        self.reader=SerialReader(self.param, self.writeData,self,self.getSourceName(self.getParamValue('port')))
+        self.reader.run()
+      except Exception as e:
+        AVNLog.error("exception in serial reader %s",traceback.format_exc())
+
+  def canEdit(self):
+    return True
+
+  def canDelete(self):
+    return True
+
+  def updateConfig(self, param):
+    checked=self.checkConfig(param)
+    self.changeMultiConfig(checked)
+    self.reader.stopHandler()
+
+  def stop(self):
+    super().stop()
+    try:
+      self.reader.stopHandler()
+    except:
+      pass
+
+
 avnav_handlerList.registerHandler(AVNSerialReader)
 

@@ -69,7 +69,7 @@ class ExternalHandler(object):
       self.callback(self.device)
       self.infoHandler.setInfo('main', '%s: handled by %s' % (self.device,self.name), WorkerStatus.INACTIVE)
     except Exception as e:
-      self.infoHandler.setInfo('main','%s: error in handler %s: %s'%(self.device,self.name,str(e.message)),WorkerStatus.ERROR)
+      self.infoHandler.setInfo('main','%s: error in handler %s: %s'%(self.device,self.name,str(e)),WorkerStatus.ERROR)
     while( not self.stop):
       time.sleep(0.2)
     self.infoHandler.deleteInfo('main')
@@ -93,28 +93,28 @@ class AVNUsbSerialReader(AVNWorker):
   def getConfigParam(cls, child=None):
     if child is None:
       #get the default configuration for a serial reader
-      rt=SerialReader.getConfigParam().copy()
-      rt.update({
-          'port': 0,        #we do not use this
-          'maxDevices':5,   #this includes preconfigured devices!
-          'feederName':'',  #if set, use this feeder
-          'allowUnknown':'true' #allow devices that are not configured
-          })
-      return rt
+      rt=list(filter(lambda p: p.name != 'port',SerialReader.getConfigParam()))
+      ownParameters=[
+          WorkerParameter('maxDevices',5,type=WorkerParameter.T_NUMBER,
+                          description='max number of USB devices, this includes preconfigured devices!'),
+          WorkerParameter('feederName','',type=WorkerParameter.T_STRING,editable=False),
+          WorkerParameter('allowUnknown',True,type=WorkerParameter.T_BOOLEAN,
+                          description='allow devices that are not configured')
+          ]
+      return rt+ownParameters
     if child == "UsbDevice":
       return cls.getSerialParam()
     return None
   #get the parameters for an usb device
   @classmethod
   def getSerialParam(cls):
-    rt=SerialWriter.getConfigParam().copy()
-    rt.update({
-        'port': 0,
-        'usbid':None, #an identifier of the USB device 
-                      #.../1-1.3.1:1.0/ttyUSB2/tty/ttyUSB2 - identifier would be 1-1.3.1
-        'type': 'reader',
-               })
-    return rt
+    rt=list(filter(lambda p:p.name != 'port',SerialWriter.getConfigParam()))
+    ownParam=[
+        WorkerParameter('usbid',None,type=WorkerParameter.T_STRING,
+                        description='an identifier of the USB device\n.../1-1.3.1:1.0/ttyUSB2/tty/ttyUSB2 - identifier would be 1-1.3.1'),
+        WorkerParameter('type', 'reader',type=WorkerParameter.T_SELECT,rangeOrList=['reader','writer','combined','ignored'])
+        ]
+    return rt+ownParam
   
   @classmethod
   def createInstance(cls, cfgparam):
@@ -371,23 +371,5 @@ class AVNUsbSerialReader(AVNWorker):
         AVNLog.debug("exception when querying usb serial devices %s, retrying after 10s",traceback.format_exc())
         context=None
       time.sleep(10)
-  #overloaded info method
-  def getInfo(self):
-    try:
-      rt=self.info.copy()
-      st=self.status.copy()
-      rta=[]
-      keys=sorted(list(rt.keys()),key=lambda x: re.sub("^[^-]*[-]","-",x))
-      for k in keys:
-        try:
-          elem={}
-          elem['name']=k
-          elem['info']=rt[k]
-          elem['status']=st[k]
-          rta.append(elem)
-        except:
-          pass
-      return {'name':self.getName(),'items':rta}
-    except:
-      return {'name':self.getName(),'items':[],'error':"no info available"}
+
 avnav_handlerList.registerHandler(AVNUsbSerialReader)

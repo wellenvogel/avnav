@@ -43,14 +43,16 @@ class AVNNmeaLogger(AVNWorker):
   def getConfigParam(cls, child=None):
     if child is not None:
       return None
-    return {
-            'trackdir':"", #defaults to dir of trackwriter
-            'feederName':'',  #if set, use this feeder
-            'maxfiles':"100", #max number of log files
-            'filter':"$RMC,$DBT,$DBP", #nmea output filter
-            'interval':'5' #interval in seconds
+    return [
+            WorkerParameter('trackdir',"", editable=False),
+            WorkerParameter('feederName','',editable=False),
+            WorkerParameter('maxfiles',100,type=WorkerParameter.T_NUMBER,
+                            description='max number of log files'),
+            WorkerParameter('filter',"$RMC,$DBT,$DBP", type=WorkerParameter.T_FILTER),
+            WorkerParameter('interval',5,type=WorkerParameter.T_FLOAT,
+                            description='interval in seconds between 2 writes of the same record')
 
-    }
+    ]
   #write out the line
   #timestamp is a datetime object
   def writeLine(self,filehandle,data):

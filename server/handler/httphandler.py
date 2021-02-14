@@ -281,6 +281,8 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
         rtj=self.handleAISRequest(requestParam)
       elif requestType=='status':
         rtj=self.handleStatusRequest(requestParam)
+      elif requestType=='config':
+        rtj = self.handleConfigRequest(requestParam)
       elif requestType=='debuglevel' or requestType=='loglevel':
         rtj=self.handleDebugLevelRequest(requestParam)
       elif requestType=='listdir' or requestType == 'list':
@@ -412,9 +414,34 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
              'name':handler.getStatusName(),
              'info':handler.getInfo(),
              'disabled': handler.isDisabled(),
-             'properties':handler.getStatusProperties() if not handler.isDisabled() else {}}
+             'properties':handler.getStatusProperties() if not handler.isDisabled() else {},
+             'canEdit':handler.canEdit(),
+             'id':handler.getId()}
       rt.append(entry)
     return json.dumps({'handler':rt},cls=Encoder)
+
+  def handleConfigRequest(self,requestParam):
+    rt={'status':'OK'}
+    try:
+      command=self.getRequestParam(requestParam,'command',mantadory=True)
+      id=self.getRequestParam(requestParam,'handlerId',mantadory=True)
+      handler=AVNWorker.findHandlerById(int(id))
+      if handler is None:
+        raise Exception("unable to find handler for id %s"%id)
+      if command == 'getEditables':
+        data=handler.getEditableParameters()
+        if data is not None:
+          rt['data']=data
+      elif command=='setConfig':
+        values=self.getRequestParam(requestParam,'_json',mantadory=True)
+        decoded=json.loads(values)
+        handler.updateConfig(decoded)
+        AVNLog.info("updated %s, new config %s", handler.getName(), handler.getConfigString())
+      else:
+        raise Exception("unknown command %s"%command)
+      return json.dumps(rt,cls=Encoder)
+    except Exception as e:
+      return json.dumps({'status':str(e)},cls=Encoder)
   def handleDebugLevelRequest(self,requestParam):
     rt={'status':'ERROR','info':'missing parameter'}
     level=self.getRequestParam(requestParam,'level')

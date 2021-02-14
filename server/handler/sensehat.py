@@ -52,12 +52,12 @@ class AVNSenseHatReader(AVNWorker):
   def getConfigParam(cls, child=None):
     if not child is None:
       return None
-    rt = {
-      'feederName': '',  # if this one is set, we do not use the defaul feeder but this one
-      'interval': '5',
-      'writeMda': 'true',
-      'writeXdr': 'true'
-    }
+    rt = [
+      WorkerParameter('feederName','',editable=False),
+      WorkerParameter('interval', 5,type=WorkerParameter.T_FLOAT),
+      WorkerParameter('writeMda',True,type=WorkerParameter.T_BOOLEAN),
+      WorkerParameter('writeXdr',True,type=WorkerParameter.T_BOOLEAN)
+    ]
     return rt
 
   def isDisabled(self):

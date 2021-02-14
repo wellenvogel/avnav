@@ -54,14 +54,15 @@ class SerialWriter(SerialReader):
 
   @classmethod
   def getConfigParam(cls):
-      rt=SerialReader.getConfigParam().copy();
-      rt.update({
-          'feederName':'',  #if set, use this feeder (if combined use it both for reader and writer)
-          'combined' : False, #if true, also start a reader
-          'readFilter':'',   #filterstring for reading
-          'blackList':''     #, separated list of sources that we will not send out
-          })
-      return rt
+      rt=SerialReader.getConfigParam()
+      ownParam=[
+          WorkerParameter('feederName','', type=WorkerParameter.T_STRING,editable=False),
+          WorkerParameter('combined', False, type=WorkerParameter.T_BOOLEAN,description='if true, also start a reader'),
+          WorkerParameter('readFilter','', type=WorkerParameter.T_FILTER),
+          WorkerParameter('blackList','',type=WorkerParameter.T_STRING,
+                          description=', separated list of sources that we will not send out')
+          ]
+      return rt+ownParam
     
   #parameters:
   #param - the config dict

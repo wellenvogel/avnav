@@ -43,17 +43,24 @@ class AVNSocketWriter(AVNWorker,SocketReader):
   def getConfigParam(cls, child=None):
     if child is None:
       
-      rt={
-          'port': None,       #local listener port
-          'maxDevices':5,     #max external connections
-          'feederName':'',    #if set, use this feeder
-          'filter': '',       #, separated list of sentences either !AIVDM or $RMC - for $ we ignore the 1st 2 characters
-          'address':'',       #the local bind address
-          'read': True,       #allow for reading data
-          'readerFilter':'',
-          'minTime':50,         #if this is set, wait this time before reading new data (ms)
-          'blackList':''      #, separated list of sources we do not send out
-          }
+      rt=[
+          WorkerParameter('port',None,type=WorkerParameter.T_NUMBER,
+                          description='local listener port'),
+          WorkerParameter('maxDevices',5,type=WorkerParameter.T_NUMBER,
+                          description='max external connections'),
+          WorkerParameter('feederName','',editable=False),
+          WorkerParameter('filter','',type=WorkerParameter.T_FILTER,
+                          description=', separated list of sentences either !AIVDM or $RMC - for $ we ignore the 1st 2 characters'),
+          WorkerParameter('address','',type=WorkerParameter.T_STRING,
+                          description='the local bind address'),
+          WorkerParameter('read',True,type=WorkerParameter.T_BOOLEAN,
+                          description='allow for also reading data from connected devices'),
+          WorkerParameter('readerFilter','',type=WorkerParameter.T_FILTER,
+                          description='NMEA filter for incoming data'),
+          WorkerParameter('minTime',50,type=WorkerParameter.T_FLOAT,
+                          description='if this is set, wait this time before reading new data (ms)'),
+          WorkerParameter('blackList','',description=', separated list of sources we do not send out')
+          ]
       return rt
     return None
 
@@ -61,8 +68,10 @@ class AVNSocketWriter(AVNWorker,SocketReader):
   def __init__(self,cfgparam):
     AVNWorker.__init__(self, cfgparam)
     self.readFilter=None
-    self.blackList=self.getStringParam('blackList').split(',')
-    self.blackList.append(self.getSourceName())
+    self.blackList=[]
+    self.listener=None
+    self.addrmap = {}
+    self.maplock = threading.Lock()
 
   
   #make some checks when we have to start
@@ -73,15 +82,28 @@ class AVNSocketWriter(AVNWorker,SocketReader):
       raise Exception("%s: cannot find a suitable feeder (name %s)",self.getName(),self.getStringParam("feederName") or "")
     self.feeder=feeder
     self.feederWrite=feeder.addNMEA
-    self.maplock=threading.Lock()
-    self.addrmap={}
     self.version='development'
     baseConfig=self.findHandlerByName('AVNConfig')
     if baseConfig:
       self.version=baseConfig.getVersion()
     AVNWorker.start(self) 
-   
+
+
+
   #return True if added
+
+  def canEdit(self):
+    return True
+
+  def canDelete(self):
+    return True
+
+  def updateConfig(self, param):
+    checked=self.checkConfig(param)
+    self.changeMultiConfig(checked)
+    self._closeSockets()
+
+
   def checkAndAddHandler(self,addr,handler):
     rt=False
     maxd=self.getIntParam('maxDevices')
@@ -122,7 +144,7 @@ class AVNSocketWriter(AVNWorker,SocketReader):
     try:
       seq=0
       socket.sendall(("avnav_server %s\r\n"%(self.version)).encode('utf-8'))
-      while True:
+      while not self.shouldStop() and socket.fileno() >= 0:
         hasSend=False
         seq,data=self.feeder.fetchFromHistory(seq,10,nmeafilter=filter,includeSource=True)
         if len(data)>0:
@@ -165,28 +187,50 @@ class AVNSocketWriter(AVNWorker,SocketReader):
       self.feederWrite(data,source)
     if (self.getIntParam('minTime')):
       time.sleep(float(self.getIntParam('minTime'))/1000)
-        
+
+  def _closeSockets(self):
+    try:
+      self.listener.close()
+    except:
+      pass
+    self.maplock.acquire()
+    try:
+      for k,v in self.addrmap.items():
+        try:
+          v.close()
+        except:
+          pass
+    finally:
+      self.maplock.release()
+
+  def stop(self):
+    super().stop()
+    self._closeSockets()
+
   #this is the main thread - listener
   def run(self):
     self.setName("%s-listen"%(self.getThreadPrefix()))
-    time.sleep(2) # give a chance to have the feeder socket open...   
-    #now start an endless loop with udev discovery...
-    #any removal will be detected by the monitor (to be fast)
-    #but we have an audit here anyway
-    #the removal will be robust enough to deal with 2 parallel tries
+    self.wait(2)
     init=True
-    listener=None
-    while True:
+    self.listener=None
+    while not self.shouldStop():
+      self.blackList = self.getStringParam('blackList').split(',')
+      self.blackList.append(self.getSourceName())
       try:
-        listener=socket.socket()
-        listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        listener.bind((self.getStringParam('address'),self.getIntParam('port')))
-        listener.listen(1)
-        AVNLog.info("listening at port address %s",str(listener.getsockname()))
-        self.setInfo('main', "listening at %s"%(str(listener.getsockname()),), WorkerStatus.RUNNING)
-        while True:
-          outsock,addr=listener.accept()
+        self.listener=socket.socket()
+        self.listener.settimeout(0.5)
+        self.listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.listener.bind((self.getStringParam('address'),self.getIntParam('port')))
+        self.listener.listen(1)
+        AVNLog.info("listening at port address %s",str(self.listener.getsockname()))
+        self.setInfo('main', "listening at %s"%(str(self.listener.getsockname()),), WorkerStatus.RUNNING)
+        while not self.shouldStop():
+          try:
+            outsock,addr=self.listener.accept()
+          except socket.timeout:
+            continue
           AVNLog.info("connect from %s",str(addr))
+          outsock.settimeout(None)
           allowAccept=self.checkAndAddHandler(addr,outsock)
           if allowAccept:
             clientHandler=threading.Thread(target=self.client,args=(outsock, addr))
@@ -201,9 +245,8 @@ class AVNSocketWriter(AVNWorker,SocketReader):
       except Exception as e:
         AVNLog.warn("exception on listener, retrying %s",traceback.format_exc())
         try:
-          listener.close()
+          self.listener.close()
         except:
           pass
-        break
 avnav_handlerList.registerHandler(AVNSocketWriter)
   

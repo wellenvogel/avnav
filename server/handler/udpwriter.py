@@ -42,14 +42,16 @@ class AVNUdpWriter(AVNWorker):
   def getConfigParam(cls, child=None):
     if child is None:
       
-      rt={
-          'host'      : 'localhost',                 
-          'port'      : 2000,       #port
-          'feederName': '',         #if set, use this feeder
-          'broadcast' : 'true',
-          'filter'    : '',          #, separated list of sentences either !AIVDM or $RMC - for $ we ignore the 1st 2 characters
-          'blackList' : ''          # , separated list of sources we do not send out
-         }
+      rt=[
+          WorkerParameter('host','localhost',description="target host for udp packages"),
+          WorkerParameter('port',2000,type=WorkerParameter.T_NUMBER,
+                          description='port for udp packages'),
+          WorkerParameter('feederName', '',editable=False),
+          WorkerParameter('broadcast', True,type=WorkerParameter.T_BOOLEAN,
+                          description="send broadcast packages"),
+          WorkerParameter('filter','',type=WorkerParameter.T_FILTER),
+          WorkerParameter('blackList' , '',description=', separated list of sources we do not send out')
+         ]
       return rt
     return None
 

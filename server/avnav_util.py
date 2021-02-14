@@ -337,7 +337,7 @@ class AVNUtil(object):
     rt = requestparam.get(name)
     if rt is None:
       if mantadory:
-        raise Exception("missing parameter %s",name)
+        raise Exception("missing parameter %s"%name)
       return None
     if isinstance(rt, list):
       return rt[0]

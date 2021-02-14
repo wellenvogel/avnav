@@ -63,11 +63,12 @@ class ConfigChanger(object):
     self.domBase.documentElement.appendChild(newline)
     self._setDirty()
 
-  def changeAttribute(self,name,value):
+  def changeAttribute(self,name,value,delayUpdate=False):
     self._addToDom()
     self.elementDom.setAttribute(name,str(value))
     self._setDirty()
-    self.handleChange()
+    if not delayUpdate:
+      self.handleChange()
 
   def changeChildAttribute(self,childName,childIndex,name,value,delayUpdate=False):
     if self.childMap is None:
@@ -257,7 +258,10 @@ class AVNConfig(object):
         nextElement=nextElement.nextSibling
 
   def parseHandler(self, element, handlerClass, domAttached=True):
-    cfg=handlerClass.parseConfig(element.attributes,handlerClass.getConfigParam(None))
+    configParam=handlerClass.getConfigParam(None)
+    if type(configParam) is list:
+      configParam=WorkerParameter.filterNameDef(configParam)
+    cfg=handlerClass.parseConfig(element.attributes,configParam)
     childPointer={}
     child=element.firstChild
     while child is not None:
@@ -265,6 +269,8 @@ class AVNConfig(object):
         childName=child.tagName
         cfgDefaults=handlerClass.getConfigParam(childName)
         if cfgDefaults is not None:
+          if type(cfgDefaults) is list:
+            cfgDefaults=WorkerParameter.filterNameDef(cfgDefaults)
           if childPointer.get(childName) is None:
             childPointer[childName]=[]
           if cfg.get(childName) is None:

@@ -57,12 +57,15 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
   def getConfigParam(cls, child=None):
     if child is not None:
       return None
-    return {
-            'interval':10, #write every 10 seconds
-            'trackdir':"", #defaults to pdir/tracks
-            'mindistance': 25, #only write if we at least moved this distance
-            'cleanup': 25, #cleanup in hours
-    }
+    return [
+            WorkerParameter('interval',10,type=WorkerParameter.T_FLOAT,
+                            description='write every nn seconds'),
+            WorkerParameter('trackdir',"",editable=False,description='defaults to datadir/tracks'),
+            WorkerParameter('mindistance',25,type=WorkerParameter.T_FLOAT,
+                            description='only write if we at least moved this distance in m'),
+            WorkerParameter('cleanup',25,type=WorkerParameter.T_FLOAT,
+                          description='cleanup in hours')
+    ]
 
   @classmethod
   def getPrefix(cls):
