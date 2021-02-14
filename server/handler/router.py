@@ -294,7 +294,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
         self.currentLeg.isApproach(), self.currentLeg.getApproachDistance())
       AVNLog.debug(routerInfo)
       self.setInfo("leg", routerInfo
-                   , AVNWorker.Status.RUNNING)
+                   , WorkerStatus.RUNNING)
     try:
       if self.currentLeg is not None and self.currentLeg.getAnchorDistance() is not None:
         self.computeAnchor()
@@ -312,9 +312,9 @@ class AVNRouter(AVNDirectoryHandlerBase):
     except:
       AVNLog.warn("exception in computeApproach %s, retrying", traceback.format_exc())
     if (not hasLeg):
-      self.setInfo("leg", "no leg", AVNWorker.Status.INACTIVE)
+      self.setInfo("leg", "no leg", WorkerStatus.INACTIVE)
     if (not hasRMB):
-      self.setInfo("autopilot", "no autopilot data", AVNWorker.Status.INACTIVE)
+      self.setInfo("autopilot", "no autopilot data", WorkerStatus.INACTIVE)
     try:
       curTPV = self.navdata.getMergedEntries("TPV", [])
       lat = curTPV.data.get('lat')
@@ -480,7 +480,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
           destBearing=AVNUtil.calcBearing((lat,lon),self.wpToLatLon(self.endWp))
           brg=AVNUtil.calcBearing(self.wpToLatLon(self.startWp),self.wpToLatLon(self.endWp))
           self.setInfo("autopilot","RMB=%s,APB=%s:WpNr=%d,XTE=%s%s,DST=%s,BRG=%s,ARR=%s"%
-                      (computeRMB,computeAPB,self.WpNr,XTE,LR,destDis,destBearing,arrival),AVNWorker.Status.NMEA)
+                      (computeRMB,computeAPB,self.WpNr,XTE,LR,destDis,destBearing,arrival),WorkerStatus.NMEA)
           hasRMB=True
           if computeRMB:
             nmeaData = "GPRMB,A,%.2f,%s,%s,%s,%s,%s,%s,%s,%.1f,%.1f,%.1f,%s,A"% (

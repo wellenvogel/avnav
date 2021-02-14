@@ -138,11 +138,6 @@ class ApiImpl(AVNApi):
     return rt
 
   def setStatus(self,value,info):
-    if not value in AVNWorker.Status:
-      value=AVNWorker.Status.ERROR
-    oldStatus=self.phandler.status.get(self.prefix)
-    if value != oldStatus:
-      self.log("SetStatus: %s %s",value,info)
     self.phandler.setInfo(self.prefix,info,value)
 
   def registerUserApp(self, url, iconFile, title=None):
@@ -227,10 +222,7 @@ class AVNPluginHandler(AVNWorker):
 
   @classmethod
   def autoInstantiate(cls):
-    return """
-    <%s>
-	  </%s>
-    """%(cls.getConfigName(),cls.getConfigName())
+    return True
 
   def start(self):
     """
@@ -294,7 +286,7 @@ class AVNPluginHandler(AVNWorker):
       enabled=api.getConfigValue("enabled","true")
       if enabled.upper() != 'TRUE':
         AVNLog.info("plugin %s is disabled by config", name)
-        self.setInfo(name,"disabled by config",self.Status.INACTIVE)
+        self.setInfo(name,"disabled by config",WorkerStatus.INACTIVE)
         continue
       AVNLog.info("starting plugin %s",name)
       thread=threading.Thread(target=plugin.run)
@@ -356,7 +348,7 @@ class AVNPluginHandler(AVNWorker):
           AVNLog.info("created plugin %s",modulename)
           self.createdPlugins[modulename]=pluginInstance
           self.createdApis[modulename]=api
-          self.setInfo(modulename,"created",AVNWorker.Status.STARTED)
+          self.setInfo(modulename,"created",WorkerStatus.STARTED)
         except:
           AVNLog.error("cannot start %s:%s" % (modulename, traceback.format_exc()))
 

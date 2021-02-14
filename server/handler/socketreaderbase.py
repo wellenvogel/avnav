@@ -46,7 +46,7 @@ class SocketReader(object):
     except:
       pass
     AVNLog.info("%s established, start reading",peer)
-    self.setInfo(infoName, "receiving %s"%(peer,), AVNWorker.Status.RUNNING)
+    self.setInfo(infoName, "receiving %s"%(peer,), WorkerStatus.RUNNING)
     buffer=""
     hasNMEA=False
     try:
@@ -66,7 +66,7 @@ class SocketReader(object):
                 continue
               self.writeData(l,source=sourceName)
               if not hasNMEA:
-                self.setInfo(infoName, "NMEA %s"%(peer,), AVNWorker.Status.NMEA)
+                self.setInfo(infoName, "NMEA %s"%(peer,), WorkerStatus.NMEA)
                 hasNMEA=True
             else:
               AVNLog.debug("ignoring unknown data %s",l)
@@ -77,7 +77,7 @@ class SocketReader(object):
             if pattern.match(line):
               self.writeData(line,source=sourceName)
               if not hasNMEA:
-                self.setInfo(infoName, "receiving", AVNWorker.Status.NMEA)
+                self.setInfo(infoName, "receiving", WorkerStatus.NMEA)
                 hasNMEA=True
             else:
               AVNLog.debug("ignoring unknown data %s",lines[i])
@@ -95,7 +95,7 @@ class SocketReader(object):
     except:
       pass
     AVNLog.info("disconnected from socket %s",peer)
-    self.setInfo(infoName, "socket to %s disconnected"%(peer), AVNWorker.Status.ERROR)
+    self.setInfo(infoName, "socket to %s disconnected"%(peer), WorkerStatus.ERROR)
 
 
  

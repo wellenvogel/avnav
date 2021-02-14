@@ -105,6 +105,7 @@ class AVNLog(object):
       cls.fhandler=logging.handlers.TimedRotatingFileHandler(filename=filename,when='midnight',backupCount=7,delay=True)
       cls.fhandler.setFormatter(formatter)
       cls.fhandler.setLevel(logging.INFO if not debugToFile else numeric_level)
+      cls.fhandler.doRollover()
       cls.logger.addHandler(cls.fhandler)
     cls.logger.setLevel(numeric_level)
     cls.debugToFile=debugToFile

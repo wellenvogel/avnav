@@ -72,13 +72,13 @@ class AVNUdpReader(AVNWorker, SocketReader):
     info="%s:%d"%(self.getStringParam('host'),self.getIntParam('port'))
     while True:
       try:
-        self.setInfo('main',"trying udp listen at %s"%(info,),AVNWorker.Status.INACTIVE)
+        self.setInfo('main',"trying udp listen at %s"%(info,),WorkerStatus.INACTIVE)
         sock=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.bind((self.getStringParam('host'), self.getIntParam('port')))
-        self.setInfo('main',"listening at %s"%(info,),AVNWorker.Status.RUNNING)
+        self.setInfo('main',"listening at %s"%(info,),WorkerStatus.RUNNING)
       except:
         AVNLog.info("exception while trying to listen at %s:%d %s",self.getStringParam('host'),self.getIntParam('port'),traceback.format_exc())
-        self.setInfo('main',"unable to listen at %s"%(info,),AVNWorker.Status.ERROR)
+        self.setInfo('main',"unable to listen at %s"%(info,),WorkerStatus.ERROR)
         time.sleep(2)
         continue
       AVNLog.info("successfully listening at %s",info)

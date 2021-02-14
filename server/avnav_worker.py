@@ -26,6 +26,8 @@
 ###############################################################################
 
 import re
+import time
+
 import threading
 import copy
 from avnav_util import Enum, AVNLog
@@ -33,11 +35,62 @@ from avnav_util import Enum, AVNLog
 __author__="Andreas"
 __date__ ="$29.06.2014 21:09:10$"
 
+class WorkerStatus(object):
+  INACTIVE='INACTIVE'
+  STARTED='STARTED'
+  RUNNING='RUNNING'
+  NMEA='NMEA'
+  ERROR='ERROR'
+  ALL_STATES=[INACTIVE,STARTED,RUNNING,NMEA,ERROR]
+  def __init__(self,name,status,info,timeout=None):
+    if not status in self.ALL_STATES:
+      status=self.INACTIVE
+    self.status=status
+    self.info=info
+    self.name=name
+    self.modified=time.time()
+    self.timeout=timeout
+
+  def update(self,status,info,timeout=None):
+    old=self.status
+    if not status in self.ALL_STATES:
+      status=self.INACTIVE
+    rt=False
+    if old != status:
+      rt=True
+    self.status=status
+    self.info=info
+    self.modified=time.time()
+    if timeout is not None:
+      self.timeout=timeout
+    return rt
+
+  def expired(self):
+    if self.timeout is None or self.timeout <=0:
+      return False
+    now = time.time()
+    if now < self.modified or (self.modified + self.timeout):
+      return True
+    return False
+
+  def toDict(self):
+    if self.expired():
+      return None
+    rt={
+      'info':self.info,
+      'status':self.status,
+      'name':self.name
+    }
+    return rt
+
+  def __str__(self) -> str:
+    return "STATUS[%s] %s, %s"%(self.name,self.status,self.info)
+
+
 class AVNWorker(threading.Thread):
   """a base class for all workers
      this provides some config functions and a common interfcace for handling them"""
   allHandlers=[] #the list of all instantiated handlers
-  Status=Enum(['INACTIVE','STARTED','RUNNING','NMEA','ERROR'])
   Type=Enum(['DEFAULT','FEEDER','HTTPSERVER'])
 
   @classmethod
@@ -100,40 +153,46 @@ class AVNWorker(threading.Thread):
     threading.Thread.__init__(self)
     self.setDaemon(True)
     self.setName(self.getName())
-    self.info={'main':"started"}
-    self.status={'main':self.Status.STARTED}
+    self.status={'main':WorkerStatus('main',WorkerStatus.STARTED,"started")}
     self.type=self.Type.DEFAULT
     self.feeder=None
     self.configChanger=None #reference for writing back to the DOM
+    self._stop=False
+    self.condition=threading.Condition()
   def setConfigChanger(self, changer):
     self.configChanger=changer
   def getStatusProperties(self):
     return {}
   def getInfo(self):
     try:
-      rt=self.info.copy()
       st=self.status.copy()
       rta=[]
-      for k in list(rt.keys()):
+      for k,v in st.items():
         try:
-          elem={}
-          elem['name']=k
-          elem['info']=rt[k]
-          elem['status']=st[k]
-          rta.append(elem)
+          elem=v.toDict()
+          if elem is not None:
+            rta.append(elem)
         except:
           pass
       return {'name':self.getStatusName(),'items':rta}
     except:
       return {'name':self.getStatusName(),'items':[],'error':"no info available"}
   def setInfo(self,name,info,status):
-    self.info[name]=info
-    self.status[name]=status
+    existing=self.status.get(name)
+    if existing:
+      if existing.update(status,info):
+        AVNLog.info("%s",str(existing))
+        return True
+    else:
+      ns=WorkerStatus(name,status,info)
+      self.status[name]=ns
+      AVNLog.info("%s",str(ns))
   def deleteInfo(self,name):
-    if self.info.get(name) is not None:
-      del self.info[name]
     if self.status.get(name) is not None:
-      del self.status[name]
+      try:
+        del self.status[name]
+      except:
+        pass
   def getParam(self):
     try:
       return self.param
@@ -189,11 +248,43 @@ class AVNWorker(threading.Thread):
       en="True"
     return str(en).upper()!='TRUE'
 
-    
-  
+
+  def canEdit(self):
+    return False
+  def canDelete(self):
+    return False
+  def getEditableParameters(self):
+    return None
+
+  def updateConfig(self,param):
+    '''
+    change of config parameters
+    the handler must update its data and store the values using changeConfig, changeChildConfig
+    @param param: a dictonary with the keyes matching the keys from getEditableParameters
+    @type param: dict
+    @return:
+    '''
+    raise Exception("not implemented")
+
+  def shouldStop(self):
+    return self._stop
   #stop any child process (will be called by signal handler)
-  def stopChildren(self):
-    pass
+  def stop(self):
+    self._stop=True
+    self.condition.acquire()
+    try:
+      self.condition.notifyAll()
+    finally:
+      self.condition.release()
+
+
+  def wait(self,time):
+    self.condition.acquire()
+    try:
+      self.condition.wait(time)
+    finally:
+      self.condition.release()
+
   #should be overridden
   def getName(self):
     n=self.getParamValue('name')

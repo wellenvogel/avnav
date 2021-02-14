@@ -193,7 +193,8 @@ class AVNConfig(object):
     self.domObject=None
     self.cfgfileName=None
     self.currentCfgFileName=None #potentially this is the fallback file
-    pass
+    self.parseError=None
+
   def setBaseParam(self,name,value):
     if not hasattr(self.BASEPARAM,name):
       raise Exception("invalid parameter for setBaseParam")
@@ -208,8 +209,9 @@ class AVNConfig(object):
     self.currentCfgFileName=filename
     try:
       self.parseDomAndCreateHandlers(filename)
-    except:
+    except Exception as e:
       AVNLog.error("error parsing cfg file %s : %s",filename,traceback.format_exc())
+      self.parseError=str(e)
       return False
     for handler in avnav_handlerList.getAllHandlerClasses():
       name=handler.getConfigName()
@@ -218,19 +220,16 @@ class AVNConfig(object):
         existing=AVNWorker.findHandlerByName(name, True)
         if existing is None:
           AVNLog.info("auto instantiate for %s", name)
-          if isinstance(ai,str):
-            try:
-              node=parser.parseString(ai)
-              if node.documentElement.nodeType != dom.Node.ELEMENT_NODE or node.documentElement.tagName != name:
-                raise Exception("invalid main node or main node name for autoInstantiate")
-              self.parseHandler(node.documentElement,handler,noDom=True)
-            except Exception:
+          if not isinstance(ai,str):
+            ai="<"+name+"/>"
+          try:
+            node=parser.parseString(ai)
+            if node.documentElement.nodeType != dom.Node.ELEMENT_NODE or node.documentElement.tagName != name:
+              raise Exception("invalid main node or main node name for autoInstantiate")
+            self.parseHandler(node.documentElement, handler, domAttached=False)
+          except Exception:
               AVNLog.error("error parsing default config %s for %s:%s",ai,name,sys.exc_info()[1])
               return False
-          else:
-            cfg=handler.parseConfig({}, handler.getConfigParam(None))
-            cfg.update(self.baseParam)
-            handler.createInstance(cfg)
     return len(AVNWorker.getAllHandlers()) > 0
 
 
@@ -257,7 +256,7 @@ class AVNConfig(object):
         self.parseDomNode(nextElement)
         nextElement=nextElement.nextSibling
 
-  def parseHandler(self,element,handlerClass,noDom=False):
+  def parseHandler(self, element, handlerClass, domAttached=True):
     cfg=handlerClass.parseConfig(element.attributes,handlerClass.getConfigParam(None))
     childPointer={}
     child=element.firstChild
@@ -279,7 +278,7 @@ class AVNConfig(object):
     if instance is None:
       AVNLog.error("unable to instantiate handler %s",element.tagName)
     else:
-      instance.setConfigChanger(ConfigChanger(self,self.domObject,not noDom,element, childPointer))
+      instance.setConfigChanger(ConfigChanger(self, self.domObject, domAttached, element, childPointer))
 
   def dataChanged(self):
     #TODO: do some checks?
@@ -336,7 +335,7 @@ class AVNConfig(object):
     try:
       parser.parse(dest)
     except Exception as e:
-      raise Exception("unable to create fallback file %s, no valid xml: %s"%(dest,e.message))
+      raise Exception("unable to create fallback file %s, no valid xml: %s"%(dest,str(e)))
 
   def writeChanges(self):
     if self.cfgfileName is None:
@@ -363,12 +362,12 @@ class AVNConfig(object):
     try:
       parser.parse(tmpName)
     except Exception as e:
-      raise Exception("unable to read config after writing it, xml error: %s"%e.message)
+      raise Exception("unable to read config after writing it, xml error: %s"%str(e))
     os.unlink(self.cfgfileName)
     try:
       os.rename(tmpName,self.cfgfileName)
     except Exception as e:
-      AVNLog.error("exception when finally renaming %s to %s: %s",tmpName,self.cfgfileName,e.message)
+      AVNLog.error("exception when finally renaming %s to %s: %s",tmpName,self.cfgfileName,str(e))
       raise
 
 

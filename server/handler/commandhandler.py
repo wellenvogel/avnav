@@ -185,7 +185,7 @@ class AVNCommandHandler(AVNWorker):
   def updateCommandStatus(self,cmd):
     running=self.findRunningCommandsByName(cmd.get('name'))
     self.setInfo(cmd.get('name'), "param=%s,repeat=%s" % (cmd.get('parameter'), cmd.get('repeat')),
-                 self.Status.INACTIVE if len(running) == 0 else self.Status.NMEA)
+                 WorkerStatus.INACTIVE if len(running) == 0 else WorkerStatus.NMEA)
 
   def findCommand(self,name):
     '''
@@ -227,7 +227,7 @@ class AVNCommandHandler(AVNWorker):
     cmd=self.findCommand(name)
     if cmd is None:
       AVNLog.error("no command \"%s\" configured", name)
-      self.setInfo(name, "no command \"%s\" configured"%name, self.Status.ERROR)
+      self.setInfo(name, "no command \"%s\" configured"%name, WorkerStatus.ERROR)
       return None
     cmd=cmd.copy()
     if repeat is not None:
@@ -237,10 +237,10 @@ class AVNCommandHandler(AVNWorker):
     handler=Handler(cmd,id,self.commandFinished,parameters)
     try:
       handler.start()
-      self.setInfo(id,"running %s"%(str(handler)),self.Status.RUNNING)
+      self.setInfo(id,"running %s"%(str(handler)),WorkerStatus.RUNNING)
     except:
       AVNLog.error("error starting command %s=%s: %s",name,handler.getCommandStr(),traceback.format_exc())
-      self.setInfo(name, "unable to run %s: %s"%(cmd,traceback.format_exc(1)), self.Status.ERROR)
+      self.setInfo(name, "unable to run %s: %s"%(cmd,traceback.format_exc(1)), WorkerStatus.ERROR)
       return None
     self.runningProcesses[id]=handler
     try:
@@ -261,7 +261,7 @@ class AVNCommandHandler(AVNWorker):
         current.stopHandler()
         return True
       except:
-        self.setInfo(id,"unable to stop command %s"%traceback.format_exc(1),self.Status.ERROR)
+        self.setInfo(id,"unable to stop command %s"%traceback.format_exc(1),WorkerStatus.ERROR)
         return False
 
   def isCommandRunning(self,id):

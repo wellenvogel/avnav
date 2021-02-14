@@ -71,10 +71,7 @@ class AVNUserAppHandler(AVNWorker):
     return True
   @classmethod
   def autoInstantiate(cls):
-    return """
-      <%s>
-  	  </%s>
-      """ % (cls.getConfigName(), cls.getConfigName())
+    return True
 
   def __init__(self,param):
     self.userHandler=None   # AVNUserHandler
@@ -100,7 +97,7 @@ class AVNUserAppHandler(AVNWorker):
   def run(self):
     self.setName(self.getThreadPrefix())
     sleepTime=self.getFloatParam('interval')
-    self.setInfo('main', "starting", AVNWorker.Status.STARTED)
+    self.setInfo('main', "starting", WorkerStatus.STARTED)
     self.fillList()
     while True:
       time.sleep(sleepTime)
@@ -179,7 +176,7 @@ class AVNUserAppHandler(AVNWorker):
           AVNLog.error("icon path %s for %s not found, ignoring entry", icon, addon['url'])
           addon['invalid'] = True
     self.addonList=data
-    self.setInfo('main', "active, %d addons"%len(data), AVNWorker.Status.NMEA)
+    self.setInfo('main', "active, %d addons"%len(data), WorkerStatus.NMEA)
     return
 
 

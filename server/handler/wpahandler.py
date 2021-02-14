@@ -92,7 +92,7 @@ class AVNWpaHandler(AVNWorker):
             AVNLog.info("connecting to wpa_supplicant %s",wpaSocket)
             self.wpaHandler=WpaControl(wpaSocket,ownSocket)
             self.wpaHandler.open()
-            self.setInfo('main','connected to %s'%(wpaSocket),AVNWorker.Status.STARTED)
+            self.setInfo('main','connected to %s'%(wpaSocket),WorkerStatus.STARTED)
           else:
             try:
               self.wpaHandler.checkOpen()
@@ -105,7 +105,7 @@ class AVNWpaHandler(AVNWorker):
             self.wpaHandler.close(False)
             self.wpaHandler=None
             AVNLog.info("disconnecting from wpa_supplicant %s",wpaSocket)
-            self.setInfo('main','disconnected from %s'%(wpaSocket),AVNWorker.Status.INACTIVE)
+            self.setInfo('main','disconnected from %s'%(wpaSocket),WorkerStatus.INACTIVE)
           time.sleep(5)
           continue
         #we should have an active wpa handler here...
@@ -124,13 +124,13 @@ class AVNWpaHandler(AVNWorker):
     statusName="FwHandler"
     cmd=self.getStringParam(self.P_FWCOMMAND)
     if cmd is None or cmd == "":
-      self.setInfo(statusName, "no  command", AVNWorker.Status.INACTIVE)
+      self.setInfo(statusName, "no  command", WorkerStatus.INACTIVE)
       return
     cmdparam=cmd.split(" ")
     command=[]
     for par in cmdparam:
       command.append(AVNUtil.replaceParam(par, AVNConfig.filterBaseParam(self.getParam())))
-    self.setInfo(statusName,"running",AVNWorker.Status.NMEA)
+    self.setInfo(statusName,"running",WorkerStatus.NMEA)
     lastNet=None
     lastMode=None
     lastResult=-1
@@ -158,9 +158,9 @@ class AVNWpaHandler(AVNWorker):
               if lastResult is None:
                 lastResult=-1
               AVNLog.error("%s: unable to run firewall command on %s for mode %s, return %d"%(statusName,ssid,mode,lastResult))
-              self.setInfo(statusName,"unable to run firewall command on %s for %s, return %d"%(ssid,mode,lastResult),AVNWorker.Status.ERROR)
+              self.setInfo(statusName,"unable to run firewall command on %s for %s, return %d"%(ssid,mode,lastResult),WorkerStatus.ERROR)
             else:
-              self.setInfo(statusName, "firewall command on %s for %s ok" % (ssid,mode), AVNWorker.Status.NMEA)
+              self.setInfo(statusName, "firewall command on %s for %s ok" % (ssid,mode), WorkerStatus.NMEA)
               lastSuccess=AVNUtil.utcnow()
             self.lastFwInfo=FwInfo(ssid,mode,lastResult)
       except:

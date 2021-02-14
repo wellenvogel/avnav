@@ -91,7 +91,7 @@ class AVNBlueToothReader(AVNWorker,SocketReader):
     infoName="BTReader-%s"%(host)
     threading.current_thread().setName("%s[Reader %s]"%(self.getThreadPrefix(),host))
     AVNLog.debug("started bluetooth reader thread for %s:%s",str(host),str(port))
-    self.setInfo(infoName, "connecting", AVNWorker.Status.STARTED)
+    self.setInfo(infoName, "connecting", WorkerStatus.STARTED)
     try:
       sock=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
       sock.connect((host, port))
@@ -105,7 +105,7 @@ class AVNBlueToothReader(AVNWorker,SocketReader):
       except:
         pass
     AVNLog.info("disconnected from bluetooth device ")
-    self.setInfo(infoName, "dicsonnected", AVNWorker.Status.INACTIVE)
+    self.setInfo(infoName, "dicsonnected", WorkerStatus.INACTIVE)
     self.removeAddr(host)
     self.deleteInfo(infoName)
               
@@ -115,7 +115,7 @@ class AVNBlueToothReader(AVNWorker,SocketReader):
     self.setName("%s-main"%(self.getThreadPrefix()))
     time.sleep(2) # give a chance to have the socket open...   
     #now start an endless loop with BT discovery...
-    self.setInfo('main', "discovering", AVNWorker.Status.RUNNING)
+    self.setInfo('main', "discovering", WorkerStatus.RUNNING)
     while True:
       service_matches=[]
       try:

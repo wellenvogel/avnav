@@ -107,10 +107,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
     return True
   @classmethod
   def autoInstantiate(cls):
-    return """
-      <%s>
-  	  </%s>
-      """ % (cls.getConfigName(), cls.getConfigName())
+    return True
 
   @classmethod
   def getListEntryClass(cls):
@@ -263,12 +260,12 @@ class AVNDirectoryHandlerBase(AVNWorker):
       AVNLog.info("creating user dir %s"%self.baseDir)
       os.makedirs(self.baseDir)
     if not os.path.exists(self.baseDir):
-      self.setInfo("main","unable to create %s"%self.baseDir,AVNWorker.Status.ERROR)
+      self.setInfo("main","unable to create %s"%self.baseDir,WorkerStatus.ERROR)
       AVNLog.error("unable to create user dir %s"%self.baseDir)
       return
     self.onPreRun()
     sleepTime=self.getSleepTime()
-    self.setInfo('main', "handling %s"%self.baseDir, AVNWorker.Status.NMEA)
+    self.setInfo('main', "handling %s"%self.baseDir, WorkerStatus.NMEA)
     while True:
       try:
         if len(self.getAutoScanExtensions()) > 0 or self.autoScanIncludeDirectories():

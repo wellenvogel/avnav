@@ -74,14 +74,14 @@ class AVNSocketReader(AVNWorker,SocketReader):
     errorReported=False
     while True:
       try:
-        self.setInfo('main',"trying to connect to %s"%(info,),AVNWorker.Status.INACTIVE)
+        self.setInfo('main',"trying to connect to %s"%(info,),WorkerStatus.INACTIVE)
         sock=socket.create_connection((self.getStringParam('host'),self.getIntParam('port')), self.getIntParam('timeout'))
-        self.setInfo('main',"connected to %s"%(info,),AVNWorker.Status.RUNNING)
+        self.setInfo('main',"connected to %s"%(info,),WorkerStatus.RUNNING)
       except:
         if not errorReported:
           AVNLog.info("exception while trying to connect to %s %s",info,traceback.format_exc())
           errorReported=True
-        self.setInfo('main',"unable to connect to %s"%(info,),AVNWorker.Status.ERROR)
+        self.setInfo('main',"unable to connect to %s"%(info,),WorkerStatus.ERROR)
         time.sleep(2)
         continue
       AVNLog.info("successfully connected to %s",info)

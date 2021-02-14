@@ -83,7 +83,7 @@ class SerialReader(object):
       raise Exception("writeData has to be set")
     self.startpattern=AVNUtil.getNMEACheck()
     self.doStop=False 
-    self.setInfo("created",AVNWorker.Status.INACTIVE)
+    self.setInfo("created",WorkerStatus.INACTIVE)
     self.device=None
   def getName(self):
     return "SerialReader-"+self.param['name']
@@ -126,9 +126,9 @@ class SerialReader(object):
                    "true" if autobaud else "false")
     lastTime=time.time()
     try:
-      self.setInfo("opening at %d baud"%(baud),AVNWorker.Status.STARTED)
+      self.setInfo("opening at %d baud"%(baud),WorkerStatus.STARTED)
       self.device=serial.Serial(pnum, timeout=timeout, baudrate=baud, bytesize=bytesize, parity=parity, stopbits=stopbits, xonxoff=xonxoff, rtscts=rtscts)
-      self.setInfo("port open at %d baud"%baud,AVNWorker.Status.STARTED)
+      self.setInfo("port open at %d baud"%baud,WorkerStatus.STARTED)
       if autobaud:
         starttime=time.time()
         while time.time() <= (starttime + autobaudtime):
@@ -157,14 +157,14 @@ class SerialReader(object):
               continue
             AVNLog.debug("assumed startpattern %s at baud %d in %s",match.group(0),baud,data)
             AVNLog.info("autobaud successfully finished at baud %d",baud)
-            self.setInfo("NMEA data at %d baud"%(baud),AVNWorker.Status.STARTED)
+            self.setInfo("NMEA data at %d baud"%(baud),WorkerStatus.STARTED)
             return self.device
         self.device.close()
         return None
       #hmm - seems that we have not been able to autobaud - return anyway
       return self.device
     except Exception:
-      self.setInfo("unable to open port",AVNWorker.Status.ERROR)
+      self.setInfo("unable to open port",WorkerStatus.ERROR)
       try:
         tf=traceback.format_exc(3)
       except:
@@ -190,7 +190,7 @@ class SerialReader(object):
     init=True
     isOpen=False
     AVNLog.debug("started with param %s",",".join(str(i)+"="+str(self.param[i]) for i in list(self.param.keys())))
-    self.setInfo("created",AVNWorker.Status.STARTED)
+    self.setInfo("created",WorkerStatus.STARTED)
     filterstr=self.param.get('filter')
     filter=None
     if filterstr != "":
@@ -229,7 +229,7 @@ class SerialReader(object):
          init=False
        if self.doStop:
          AVNLog.info("handler stopped, leaving")
-         self.setInfo("stopped",AVNWorker.Status.INACTIVE)
+         self.setInfo("stopped",WorkerStatus.INACTIVE)
          try:
            self.device.close()
          except:
@@ -258,7 +258,7 @@ class SerialReader(object):
            break
          if not bytes is None and len(bytes)> 0:
            if not hasNMEA:
-             self.setInfo("receiving at %d baud"%self.device.baudrate,AVNWorker.Status.STARTED)
+             self.setInfo("receiving at %d baud"%self.device.baudrate,WorkerStatus.STARTED)
            if not isOpen:
              AVNLog.info("successfully opened %s",self.device.name)
              isOpen=True
@@ -287,7 +287,7 @@ class SerialReader(object):
              if not NMEAParser.checkFilter(data,filter):
                continue
              if not hasNMEA:
-               self.setInfo("receiving at %d baud"%self.device.baudrate,AVNWorker.Status.NMEA)
+               self.setInfo("receiving at %d baud"%self.device.baudrate,WorkerStatus.NMEA)
              hasNMEA=True
              if not self.writeData is None:
                self.writeData(data,source=self.sourceName)
@@ -295,7 +295,7 @@ class SerialReader(object):
                AVNLog.debug("unable to write data")
 
          if (time.time() - lastTime) > porttimeout:
-           self.setInfo("timeout",AVNWorker.Status.ERROR)
+           self.setInfo("timeout",WorkerStatus.ERROR)
            self.device.close()
            self.device=None
            if isOpen:
@@ -308,7 +308,7 @@ class SerialReader(object):
     except:
       AVNLog.info("exception in receiver %s"%traceback.format_exc())
     AVNLog.info("stopping handler")
-    self.setInfo("stopped",AVNWorker.Status.INACTIVE)
+    self.setInfo("stopped",WorkerStatus.INACTIVE)
     self.deleteInfo()
     
         

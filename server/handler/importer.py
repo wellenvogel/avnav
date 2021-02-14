@@ -117,8 +117,8 @@ class AVNImporter(AVNWorker):
   #thread run method - just try forever  
   def run(self):
     self.setName(self.getThreadPrefix())
-    self.setInfo("main","monitoring started for %s"%(self.importDir),AVNWorker.Status.NMEA)
-    self.setInfo("converter","free",AVNWorker.Status.STARTED)
+    self.setInfo("main","monitoring started for %s"%(self.importDir),WorkerStatus.NMEA)
+    self.setInfo("converter","free",WorkerStatus.STARTED)
     infoEntries={}
     while True:
       AVNLog.debug("mainloop")
@@ -148,25 +148,25 @@ class AVNImporter(AVNWorker):
             candidate=self.candidateTimes.get(k)
             if (candidate is None or candidate != currentFileTime):
               self.candidateTimes[k]=currentFileTime
-              self.setInfo(infoKey, "change detected, waiting to settle", AVNWorker.Status.STARTED)
+              self.setInfo(infoKey, "change detected, waiting to settle", WorkerStatus.STARTED)
               infoEntries[infoKey]=now
             else:
               if ((candidate+self.waittime) < currentTime):
                 AVNLog.debug("detected file/directory %s to be new",k)
                 if gemftime is None or gemftime < currentFileTime:
-                  self.setInfo(infoKey, "conversion started", AVNWorker.Status.NMEA)
+                  self.setInfo(infoKey, "conversion started", WorkerStatus.NMEA)
                   infoEntries[infoKey] = now
                   self.startConversion(k)
                   break
                 else:
-                  self.setInfo(infoKey, "gemf is up to date", AVNWorker.Status.STARTED)
+                  self.setInfo(infoKey, "gemf is up to date", WorkerStatus.STARTED)
                   infoEntries[infoKey] = now
                   AVNLog.debug("gemf file is newer, no conversion")
               else:
-                self.setInfo(infoKey, "change detected, waiting to settle" , AVNWorker.Status.STARTED)
+                self.setInfo(infoKey, "change detected, waiting to settle" , WorkerStatus.STARTED)
                 infoEntries[infoKey] = now
           else:
-            self.setInfo(infoKey, "no change", AVNWorker.Status.STARTED)
+            self.setInfo(infoKey, "no change", WorkerStatus.STARTED)
             infoEntries[infoKey] = now
 
         #end for currentKeys
@@ -250,7 +250,7 @@ class AVNImporter(AVNWorker):
     except:
       pass
     now=time.time()
-    self.setInfo("converter","running for %s"%(name),AVNWorker.Status.NMEA)
+    self.setInfo("converter","running for %s"%(name),WorkerStatus.NMEA)
     self.lastTimeStamps[name]=now
     fullname=os.path.join(self.importDir,name)
     gemfName=self.getGemfName(name)
@@ -282,7 +282,7 @@ class AVNImporter(AVNWorker):
 
     if po is None:
       AVNLog.error("unable to start conversion for %s - don't know how to handle it",name)
-      self.setInfo("converter","start for %s failed - don't know how to handle"%(name,),AVNWorker.Status.ERROR)
+      self.setInfo("converter","start for %s failed - don't know how to handle"%(name,),WorkerStatus.ERROR)
       return
     #dummy - simply remember the time when we started
     self.runningConversions[name]=[po,tmpOutName]
@@ -319,9 +319,9 @@ class AVNImporter(AVNWorker):
               AVNLog.error("unable to rename %s to %s: %s",tmpname,gemfname,traceback.format_exc())
               rtc=1
         if rtc == 0:
-          self.setInfo("converter","successful for %s"%(k),AVNWorker.Status.STARTED)
+          self.setInfo("converter","successful for %s"%(k),WorkerStatus.STARTED)
         else:
-          self.setInfo("converter","failed for %s"%(k),AVNWorker.Status.ERROR)
+          self.setInfo("converter","failed for %s"%(k),WorkerStatus.ERROR)
         del(self.runningConversions[k])
 
   #delete an import dir/file
@@ -336,7 +336,7 @@ class AVNImporter(AVNWorker):
         isRunning.kill()
         isRunning.poll()
         del(self.runningConversions[name])
-        self.setInfo("converter","killed for %s"%(name),AVNWorker.Status.ERROR)
+        self.setInfo("converter","killed for %s"%(name),WorkerStatus.ERROR)
       except:
         pass
     try:

@@ -110,7 +110,7 @@ class AVNSocketWriter(AVNWorker,SocketReader):
   def client(self,socket,addr):
     infoName="SocketWriter-%s"%(str(addr),)
     self.setName("%s-Writer %s"%(self.getThreadPrefix(),str(addr)))
-    self.setInfo(infoName,"sending data",AVNWorker.Status.RUNNING)
+    self.setInfo(infoName,"sending data",WorkerStatus.RUNNING)
     if self.getBoolParam('read',False):
       clientHandler=threading.Thread(target=self.clientRead,args=(socket, addr))
       clientHandler.daemon=True
@@ -183,7 +183,7 @@ class AVNSocketWriter(AVNWorker,SocketReader):
         listener.bind((self.getStringParam('address'),self.getIntParam('port')))
         listener.listen(1)
         AVNLog.info("listening at port address %s",str(listener.getsockname()))
-        self.setInfo('main', "listening at %s"%(str(listener.getsockname()),), AVNWorker.Status.RUNNING)
+        self.setInfo('main', "listening at %s"%(str(listener.getsockname()),), WorkerStatus.RUNNING)
         while True:
           outsock,addr=listener.accept()
           AVNLog.info("connect from %s",str(addr))

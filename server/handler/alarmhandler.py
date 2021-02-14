@@ -106,9 +106,9 @@ class AVNAlarmHandler(AVNWorker):
     self.setName(self.getThreadPrefix())
     self.commandHandler=self.findHandlerByName("AVNCommandHandler")
     if self.commandHandler is None:
-      self.setInfo('main',"no command handler found",self.Status.ERROR)
+      self.setInfo('main',"no command handler found",WorkerStatus.ERROR)
       return
-    self.setInfo('main',"running",self.Status.NMEA)
+    self.setInfo('main',"running",WorkerStatus.NMEA)
     gpioPin=self.getIntParam('stopAlarmPin',False)
     if gpioPin != 0:
       if not hasGpio:
@@ -133,7 +133,7 @@ class AVNAlarmHandler(AVNWorker):
         except:
           pass
         self.setInfo(k, "alarm inactive \"%s\" " % k,
-                     self.Status.INACTIVE)
+                     WorkerStatus.INACTIVE)
 
   def getRunningAlarms(self):
     return self.runningAlarms
@@ -187,7 +187,7 @@ class AVNAlarmHandler(AVNWorker):
     cmd=self.findAlarm(name,useDefault)
     if cmd is None:
       AVNLog.error("no alarm \"%s\" configured", name)
-      self.setInfo(name, "no alarm \"%s\" configured"%name, self.Status.ERROR)
+      self.setInfo(name, "no alarm \"%s\" configured"%name, WorkerStatus.ERROR)
       return False
     if self.runningAlarms.get(name) is not None:
       return True
@@ -196,9 +196,9 @@ class AVNAlarmHandler(AVNWorker):
       info=cmd['command']
       if cmd.get('parameter') is not None:
         info+=" "+cmd.get('parameter')
-      self.setInfo(name, "activated %s" % info, self.Status.NMEA)
+      self.setInfo(name, "activated %s" % info, WorkerStatus.NMEA)
     else:
-      self.setInfo(name, "unable to start alarm command \"%s\":\"%s\" " % (name,cmd['command']), self.Status.INACTIVE)
+      self.setInfo(name, "unable to start alarm command \"%s\":\"%s\" " % (name,cmd['command']), WorkerStatus.INACTIVE)
     if alarmid is None:
       alarmid=-1
     self.runningAlarms[name] = alarmid
@@ -228,7 +228,7 @@ class AVNAlarmHandler(AVNWorker):
       self.navdata.updateChangeCounter(self.CHANGE_KEY)
     if alarmid is not None and alarmid >=0:
       self.commandHandler.stopCommand(alarmid)
-    self.setInfo(name, "stopped", self.Status.INACTIVE)
+    self.setInfo(name, "stopped", WorkerStatus.INACTIVE)
     return True
 
   def isAlarmActive(self,name):

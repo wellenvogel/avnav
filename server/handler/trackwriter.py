@@ -269,7 +269,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
         AVNLog.info("new trackfile %s", realfilename)
         if self.initial:
           if os.path.exists(realfilename):
-            self.setInfo('main', "reading old track data", AVNWorker.Status.STARTED)
+            self.setInfo('main', "reading old track data", WorkerStatus.STARTED)
             data = self.readTrackFile(realfilename)
             for trkpoint in data:
               self.track.append((trkpoint[0], trkpoint[1], trkpoint[2]))
@@ -278,7 +278,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
         self.currentFile = open(realfilename, "a",encoding='utf-8')
         self.currentFile.write("#anvnav Trackfile started/continued at %s\n" % (currentTime.isoformat()))
         self.currentFile.flush()
-        self.setInfo('main', "writing to %s" % (realfilename,), AVNWorker.Status.NMEA)
+        self.setInfo('main', "writing to %s" % (realfilename,), WorkerStatus.NMEA)
       if self.loopCount >= 10:
         self.cleanupTrack()
         self.loopCount = 0

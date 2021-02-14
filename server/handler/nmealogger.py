@@ -141,7 +141,7 @@ class AVNNmeaLogger(AVNWorker):
             f.close()
           f=open(curfname,"a",encoding='utf-8',errors='ignore')
           newFile=False
-          self.setInfo('main', "writing to %s"%(curfname,), AVNWorker.Status.NMEA)
+          self.setInfo('main', "writing to %s"%(curfname,), WorkerStatus.NMEA)
         seq,data=self.feeder.fetchFromHistory(seq,10,nmeafilter=nmeaFilter)
         if len(data)>0:
           for line in data:

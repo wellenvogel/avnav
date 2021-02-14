@@ -77,11 +77,7 @@ class AVNLayoutHandler(AVNWorker):
 
   @classmethod
   def autoInstantiate(cls):
-    return """
-      <%s>
-  	  </%s>
-      """ % (cls.getConfigName(), cls.getConfigName())
-
+    return True
   def run(self):
     self.setName(self.getThreadPrefix())
     AVNLog.info("started")

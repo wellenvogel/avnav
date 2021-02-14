@@ -138,7 +138,7 @@ class AVNHTTPServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
   def run(self):
     self.setName(self.getThreadPrefix())
     AVNLog.info("HTTP server "+self.server_name+", "+str(self.server_port)+" started at thread "+self.name)
-    self.setInfo('main',"serving at port %s"%(str(self.server_port)),AVNWorker.Status.RUNNING)
+    self.setInfo('main',"serving at port %s"%(str(self.server_port)),WorkerStatus.RUNNING)
     if hasIfaces:
       self.interfaceReader=threading.Thread(target=self.readInterfaces)
       self.interfaceReader.daemon=True

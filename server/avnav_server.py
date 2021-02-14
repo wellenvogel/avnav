@@ -25,7 +25,7 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
-
+import glob
 import logging.handlers
 import optparse
 import signal
@@ -52,42 +52,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__),"..","libraries"))
 loggingInitialized=False
 
 
-#a dummy worker class to read some basic configurations
-class AVNBaseConfig(AVNWorker):
-  def __init__(self,param):
-    AVNWorker.__init__(self,param)
-    self.param=param
-    self.version=None
-  @classmethod
-  def getConfigName(cls):
-    return "AVNConfig"
-  @classmethod
-  def getConfigParam(cls, child=None):
-    if child is not None:
-      return None
-    return {
-            'loglevel':logging.INFO,
-            'logfile':"",
-            'expiryTime': 30,
-            'aisExpiryTime': 1200,
-            'ownMMSI':'',        #if set - do not store AIS messages with this MMSI
-            'debugToLog': 'false',
-            'maxtimeback':5,      #how many seconds we allow time to go back before we reset
-            'settimecmd': '',     #if set, use this to set the system time
-            'systimediff':5,      #how many seconds do we allow the system time to be away from us
-            'settimeperiod': 3600 #how often do we set the system time
-    }
-  @classmethod
-  def preventMultiInstance(cls):
-    return True
-  def start(self):
-    pass
-  def setVersion(self,version):
-    self.version=version
-  def getVersion(self):
-    return self.version
-
-avnav_handlerList.registerHandler(AVNBaseConfig)
 
 def sighandler(signal,frame):
   for handler in AVNWorker.allHandlers:
@@ -102,6 +66,35 @@ def findHandlerByConfig(list,configName):
     if h.getConfigName()==configName:
       return h
   return None
+
+def getFailedBackupName(fileName):
+  now=datetime.datetime.utcnow()
+  return fileName+"-failed-"+now.strftime("%Y%m%d%H%M%S")
+
+def houseKeepingCfg(cfgFile):
+  backupFiles=glob.glob(cfgFile+"-*")
+  namelen=len(cfgFile)
+  failingFiles=list(filter(lambda x: re.match("^-fail",x[namelen:]),backupFiles))
+  copies=list(filter(lambda x: re.match("^-[0-9]",x[namelen:]),backupFiles))
+  failingFiles.sort()
+  copies.sort()
+  numDeletes=0
+  for f in failingFiles[:-10]:
+    AVNLog.debug("deleting failed config %s",f)
+    try:
+      os.unlink(f)
+      numDeletes+=1
+    except:
+      pass
+  for f in copies[:-10]:
+    AVNLog.debug("deleting config copy %s",f)
+    try:
+      os.unlink(f)
+      numDeletes+=1
+    except:
+      pass
+  AVNLog.info("deleted %s backups/failed configs",numDeletes)
+
 
 def main(argv):
   global loggingInitialized,debugger
@@ -151,14 +144,30 @@ def main(argv):
   cfg.setBaseParam(cfg.BASEPARAM.DATADIR,datadir)
   rt=cfg.readConfigAndCreateHandlers(cfgname)
   fallbackName = AVNConfig.getFallbackName(cfgname)
+  failedBackup=None
+  fallbackTime=None
   if rt is False:
     if os.path.exists(fallbackName) and not options.failOnError:
       AVNLog.error("error when parsing %s, trying fallback %s",cfgname,fallbackName)
+      fallbackStat=os.stat(fallbackName)
+      fallbackTime=time.strftime("%Y/%m/%d %H:%M:%S",time.localtime(fallbackStat.st_mtime))
       rt=cfg.readConfigAndCreateHandlers(fallbackName)
       if not rt:
         AVNLog.error("unable to parse config file %s", fallbackName)
         sys.exit(1)
+      failedBackup=getFailedBackupName(cfgname)
+      try:
+        shutil.copy(cfgname,failedBackup)
+      except:
+        AVNLog.error("unable to create failed backup %s",failedBackup)
+      try:
+        tmpName=cfgname+".tmp"+str(os.getpid())
+        shutil.copyfile(fallbackName,tmpName)
+        os.replace(tmpName,cfgname)
+      except Exception as e:
+        AVNLog.error("unable to create %s from %s: %s",cfgname,fallbackName,str(e))
       cfg.cfgfileName=cfgname #we just did read the fallback - but if we write...
+
     else:
       AVNLog.error("unable to parse config file %s",cfgname)
       sys.exit(1)
@@ -167,9 +176,14 @@ def main(argv):
   baseConfig=AVNWorker.findHandlerByName("AVNConfig")
   httpServer=AVNWorker.findHandlerByName("AVNHttpServer")
   if baseConfig is None:
-    #no entry for base config found - using defaults
-    baseConfig=AVNBaseConfig(AVNBaseConfig.getConfigParam())
+    AVNLog.error("internal error: base config not loaded")
+    sys.exit(1)
   baseConfig.setVersion(AVNAV_VERSION)
+  parseError=cfg.parseError
+  if parseError is not None:
+    baseConfig.setStartupError("parsing config failed: %s, reverting back to fallback config from %s, invalid config moved to %s"%
+                             (parseError,fallbackTime or '',failedBackup or ''))
+  houseKeepingCfg(cfgname)
   if httpServer is not None and options.chartbase is not None:
     mapurl=httpServer.getStringParam('chartbase')
     if mapurl is not None and mapurl != '':

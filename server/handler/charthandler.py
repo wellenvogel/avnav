@@ -33,7 +33,7 @@ import avnav_handlerList
 import gemf_reader
 import mbtiles_reader
 from avnav_util import *
-from avnav_worker import AVNWorker
+from avnav_worker import AVNWorker, WorkerStatus
 from avndirectorybase import AVNDirectoryHandlerBase, AVNDirectoryListEntry
 
 
@@ -316,11 +316,11 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
 
   def periodicRun(self):
     if self.baseDir is None or not os.path.isdir(self.baseDir):
-      self.setInfo("main", "directory %s not found" % self.baseDir, AVNWorker.Status.ERROR)
+      self.setInfo("main", "directory %s not found" % self.baseDir, WorkerStatus.ERROR)
       AVNLog.error("unable to find a valid chart directory %s" % (self.baseDir))
     else:
       self.setInfo("main", "handling directory %s, %d charts" % (self.baseDir, len(self.itemList)),
-                   AVNWorker.Status.NMEA)
+                   WorkerStatus.NMEA)
     for extProvider in list(self.externalProviders.keys()):
       self.externalProviders[extProvider].queryProvider()
 

@@ -119,12 +119,12 @@ class SerialWriter(SerialReader):
       AVNLog.debug("openDevice for port %s, baudrate=%d, timeout=%f",portname,baud,timeout)
     lastTime=time.time()
     try:
-      self.setInfoWithKey("writer","opening %s at %d baud"%(portname,baud),AVNWorker.Status.STARTED)
+      self.setInfoWithKey("writer","opening %s at %d baud"%(portname,baud),WorkerStatus.STARTED)
       f=serial.Serial(pnum, timeout=timeout, baudrate=baud, bytesize=bytesize, parity=parity, stopbits=stopbits, xonxoff=xonxoff, rtscts=rtscts)
-      self.setInfoWithKey("writer","port open",AVNWorker.Status.STARTED)
+      self.setInfoWithKey("writer","port open",WorkerStatus.STARTED)
       return f
     except Exception:
-      self.setInfoWithKey("writer","unable to open port",AVNWorker.Status.ERROR)
+      self.setInfoWithKey("writer","unable to open port",WorkerStatus.ERROR)
       try:
         tf=traceback.format_exc(3)
       except:
@@ -150,7 +150,7 @@ class SerialWriter(SerialReader):
     init=True
     isOpen=False
     AVNLog.debug("started with param %s",",".join(str(i)+"="+str(self.param[i]) for i in list(self.param.keys())))
-    self.setInfoWithKey("writer","created",AVNWorker.Status.STARTED)
+    self.setInfoWithKey("writer","created",WorkerStatus.STARTED)
     startReader=self.param.get('combined')
     if startReader is not None and str(startReader).upper()=='TRUE':
       AVNLog.debug("starting reader")
@@ -172,7 +172,7 @@ class SerialWriter(SerialReader):
       init=False
       if self.doStop:
         AVNLog.info("handler stopped, leaving")
-        self.setInfoWithKey("writer","stopped",AVNWorker.Status.INACTIVE)
+        self.setInfoWithKey("writer","stopped",WorkerStatus.INACTIVE)
         try:
           self.device.close()
           self.device=None
@@ -208,13 +208,13 @@ class SerialWriter(SerialReader):
           break
 
     AVNLog.info("stopping handler")
-    self.setInfoWithKey("writer","stopped",AVNWorker.Status.INACTIVE)
+    self.setInfoWithKey("writer","stopped",WorkerStatus.INACTIVE)
     self.deleteInfo()
 
   #the read method for the combined reader/writer
   def readMethod(self):
     threading.current_thread().setName("[%s]%s-combinedReader"%(AVNLog.getThreadId(),self.getName()))
-    self.setInfoWithKey("reader","started",AVNWorker.Status.STARTED)
+    self.setInfoWithKey("reader","started",WorkerStatus.STARTED)
     AVNLog.info("started")
     filterstr=self.param.get('readFilter')
     filter=None
@@ -243,7 +243,7 @@ class SerialWriter(SerialReader):
               AVNLog.debug("ignore line %s due to not matching filter",data)
               continue
             if not hasNmea:
-              self.setInfoWithKey("reader","receiving data",AVNWorker.Status.NMEA)
+              self.setInfoWithKey("reader","receiving data",WorkerStatus.NMEA)
             if not self.writeData is None:
               self.writeData(data,source)
             else:

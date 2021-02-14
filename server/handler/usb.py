@@ -50,7 +50,7 @@ class DummyHandler(object):
     self.infoHandler=infoHandler
     self.device=device
   def run(self):
-    self.infoHandler.setInfo('main','%s: ignored'%self.device,AVNWorker.Status.INACTIVE)
+    self.infoHandler.setInfo('main','%s: ignored'%self.device,WorkerStatus.INACTIVE)
     while( not self.stop):
       time.sleep(0.2)
     self.infoHandler.deleteInfo('main')
@@ -67,9 +67,9 @@ class ExternalHandler(object):
   def run(self):
     try:
       self.callback(self.device)
-      self.infoHandler.setInfo('main', '%s: handled by %s' % (self.device,self.name), AVNWorker.Status.INACTIVE)
+      self.infoHandler.setInfo('main', '%s: handled by %s' % (self.device,self.name), WorkerStatus.INACTIVE)
     except Exception as e:
-      self.infoHandler.setInfo('main','%s: error in handler %s: %s'%(self.device,self.name,str(e.message)),AVNWorker.Status.ERROR)
+      self.infoHandler.setInfo('main','%s: error in handler %s: %s'%(self.device,self.name,str(e.message)),WorkerStatus.ERROR)
     while( not self.stop):
       time.sleep(0.2)
     self.infoHandler.deleteInfo('main')
@@ -318,7 +318,7 @@ class AVNUsbSerialReader(AVNWorker):
   #start monitoring in separate thread
   #method will never return...
   def monitorDevices(self,context):
-    self.setInfo('monitor', "running", AVNWorker.Status.RUNNING)
+    self.setInfo('monitor', "running", WorkerStatus.RUNNING)
     threading.current_thread().setName("%s[monitor]"%(self.getThreadPrefix()))
     AVNLog.info("start device monitoring")
     while True:
@@ -339,7 +339,7 @@ class AVNUsbSerialReader(AVNWorker):
         
   #this is the main thread - this executes the polling
   def run(self):
-    self.setInfo('main', "discovering", AVNWorker.Status.RUNNING)
+    self.setInfo('main', "discovering", WorkerStatus.RUNNING)
     self.setName("%s-polling"%(self.getThreadPrefix()))
     time.sleep(5) # give a chance to have the feeder socket open...
     #now start an endless loop with udev discovery...
