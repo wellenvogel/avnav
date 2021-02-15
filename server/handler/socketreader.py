@@ -56,6 +56,13 @@ class AVNSocketReader(AVNWorker,SocketReader):
     ]
     return rt
 
+  @classmethod
+  def canEdit(cls):
+    return True
+
+  @classmethod
+  def canDelete(cls):
+    return True
 
   def __init__(self,param):
     for p in ('port','host'):
@@ -65,15 +72,9 @@ class AVNSocketReader(AVNWorker,SocketReader):
     self.socket=None
     AVNWorker.__init__(self, param)
 
-  def canEdit(self):
-    return True
-
-  def canDelete(self):
-    return True
 
   def updateConfig(self, param):
-    checked=self.checkConfig(param)
-    self.changeMultiConfig(checked)
+    super().updateConfig(param)
     try:
       self.socket.close()
     except Exception as e:

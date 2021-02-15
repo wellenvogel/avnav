@@ -228,6 +228,28 @@ class AVNWorker(threading.Thread):
        instantiation can still be prevented by setting enabled=false
     """
     return False
+
+  @classmethod
+  def canEdit(cls):
+    return False
+  @classmethod
+  def canDelete(cls):
+    return False
+
+  @classmethod
+  def getEditableParameters(cls):
+    if not cls.canEdit():
+      return None
+    parameterDescriptions=cls.getConfigParam()
+    if type(parameterDescriptions) is not list:
+      return None
+    rt=[]
+    for pd in parameterDescriptions:
+      if not pd.editable:
+        continue
+      rt.append(pd)
+    return rt
+
   
   def __init__(self,cfgparam):
     self.handlerListLock.acquire()
@@ -343,26 +365,6 @@ class AVNWorker(threading.Thread):
     return str(en).upper()!='TRUE'
 
 
-  def canEdit(self):
-    return False
-  def canDelete(self):
-    return False
-
-  def getEditableParameters(self):
-    if not self.canEdit():
-      return None
-    parameterDescriptions=self.getConfigParam()
-    if type(parameterDescriptions) is not list:
-      return None
-    rt=[]
-    for pd in parameterDescriptions:
-      if not pd.editable:
-        continue
-      current=self.param.get(pd.name)
-      if type(current) is list:
-        continue #child config: TODO
-      rt.append({'description':pd,'current':current})
-    return rt
 
   def checkConfig(self,param):
     '''
@@ -371,9 +373,9 @@ class AVNWorker(threading.Thread):
     @param param:
     @return:
     '''
-    cfgs=self.getConfigParam()
-    if not type(cfgs) is list:
-      raise Exception("old style config values")
+    cfgs=self.getEditableParameters()
+    if cfgs is None:
+      raise Exception("no editable parameters")
     rt={}
     for k,v in param.items():
       cv=WorkerParameter.checkValueFor(cfgs,k,v)
@@ -387,7 +389,8 @@ class AVNWorker(threading.Thread):
     @type param: dict
     @return:
     '''
-    raise Exception("not implemented")
+    checked = self.checkConfig(param)
+    self.changeMultiConfig(checked)
 
 
   def shouldStop(self):

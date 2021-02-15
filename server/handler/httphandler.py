@@ -432,6 +432,7 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
         data=handler.getEditableParameters()
         if data is not None:
           rt['data']=data
+          rt['values']=handler.param
       elif command=='setConfig':
         values=self.getRequestParam(requestParam,'_json',mantadory=True)
         decoded=json.loads(values)

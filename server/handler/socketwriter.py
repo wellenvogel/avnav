@@ -64,6 +64,13 @@ class AVNSocketWriter(AVNWorker,SocketReader):
       return rt
     return None
 
+  @classmethod
+  def canEdit(cls):
+    return True
+
+  @classmethod
+  def canDelete(cls):
+    return True
   
   def __init__(self,cfgparam):
     AVNWorker.__init__(self, cfgparam)
@@ -92,15 +99,10 @@ class AVNSocketWriter(AVNWorker,SocketReader):
 
   #return True if added
 
-  def canEdit(self):
-    return True
 
-  def canDelete(self):
-    return True
 
   def updateConfig(self, param):
-    checked=self.checkConfig(param)
-    self.changeMultiConfig(checked)
+    super().updateConfig(param)
     self._closeSockets()
 
 

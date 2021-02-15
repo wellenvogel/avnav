@@ -386,15 +386,15 @@ class AVNSerialReader(AVNWorker):
       except Exception as e:
         AVNLog.error("exception in serial reader %s",traceback.format_exc())
 
-  def canEdit(self):
+  @classmethod
+  def canEdit(cls):
     return True
-
-  def canDelete(self):
+  @classmethod
+  def canDelete(cls):
     return True
 
   def updateConfig(self, param):
-    checked=self.checkConfig(param)
-    self.changeMultiConfig(checked)
+    super().updateConfig(param)
     self.reader.stopHandler()
 
   def stop(self):
