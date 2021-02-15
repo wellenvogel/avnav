@@ -258,7 +258,7 @@ class AVNConfig(object):
         nextElement=nextElement.nextSibling
 
   def parseHandler(self, element, handlerClass, domAttached=True):
-    configParam=handlerClass.getConfigParam(None)
+    configParam= handlerClass.getConfigParam(None)
     if type(configParam) is list:
       configParam=WorkerParameter.filterNameDef(configParam)
     cfg=handlerClass.parseConfig(element.attributes,configParam)
@@ -267,7 +267,7 @@ class AVNConfig(object):
     while child is not None:
       if child.nodeType == dom.Node.ELEMENT_NODE:
         childName=child.tagName
-        cfgDefaults=handlerClass.getConfigParam(childName)
+        cfgDefaults= handlerClass.getConfigParam(childName)
         if cfgDefaults is not None:
           if type(cfgDefaults) is list:
             cfgDefaults=WorkerParameter.filterNameDef(cfgDefaults)

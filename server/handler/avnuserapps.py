@@ -50,7 +50,7 @@ class AVNUserAppHandler(AVNWorker):
   def getPrefix(cls):
     return None
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, child=None, forEdit=False):
     #we add this to the ones configured at HTTPServer
     if child == cls.CHILDNAME:
       return {

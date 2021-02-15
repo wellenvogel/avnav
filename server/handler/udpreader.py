@@ -41,7 +41,7 @@ class AVNUdpReader(AVNWorker, SocketReader):
     return "AVNUdpReader"
   
   @classmethod
-  def getConfigParam(cls,child=None):
+  def getConfigParam(cls, child=None, forEdit=False):
     if not child is None:
       return None
     rt=[
@@ -85,7 +85,7 @@ class AVNUdpReader(AVNWorker, SocketReader):
     except:
       pass
 
-  def writeData(self,data,source=None):
+  def writeData(self,data,source=None,addCheckSum=False):
     AVNWorker.writeData(self,data,source)
     if (self.getIntParam('minTime')):
       time.sleep(float(self.getIntParam('minTime'))/1000)

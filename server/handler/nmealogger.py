@@ -40,7 +40,7 @@ class AVNNmeaLogger(AVNWorker):
   def getConfigName(cls):
     return "AVNNmeaLogger"
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, child=None, forEdit=False):
     if child is not None:
       return None
     return [

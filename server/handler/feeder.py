@@ -56,7 +56,7 @@ class NmeaEntry(object):
 class AVNFeeder(AVNWorker):
   
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, child=None, forEdit=False):
     return {'maxList': 300,      #len of the input list
             'feederSleep': 0.5,  #time in s the feeder will sleep if there is no data
             'name': '',           #if there should be more then one reader we must set the name

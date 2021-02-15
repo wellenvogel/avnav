@@ -88,6 +88,17 @@ class WorkerParameter(object):
         return p.checkValue(value)
     raise ParamValueError("%s not found in parameters"%name)
 
+  @classmethod
+  def filterByList(cls,plist,pdict,addDefaults=False):
+    rt={}
+    for p in plist:
+      if p.name in pdict:
+        rt[p.name]=pdict.get(p.name)
+      else:
+        if addDefaults and p.default is not None:
+          rt[p.name]=p.default
+    return rt
+
   def checkValue(self,value):
     if value is None and self.default is None:
       raise ParamValueError("missing mandatory parameter %s"%self.name)
@@ -180,8 +191,10 @@ class WorkerStatus(object):
     rt={
       'info':self.info,
       'status':self.status,
-      'name':self.name
+      'name':self.name,
     }
+    if self.id is not None:
+      rt['id']=self.id
     return rt
 
   def __str__(self) -> str:
@@ -266,7 +279,7 @@ class AVNWorker(threading.Thread):
   def getEditableParameters(cls,child=None,makeCopy=True):
     '''
     get the parameters we can edit
-    @param child: a string id:type to identify the child
+    @param child: a string type:id to identify the child
     @return:
     '''
     if not cls.canEdit():
@@ -274,8 +287,8 @@ class AVNWorker(threading.Thread):
     if child is not None:
       if ':' in child:
         cp=child.split(':',1)
-        child=cp[1]
-    parameterDescriptions=cls.getConfigParam(child)
+        child=cp[0]
+    parameterDescriptions= cls.getConfigParam(child,forEdit=True)
     if type(parameterDescriptions) is not list:
       return None
     rt=[]
@@ -327,14 +340,14 @@ class AVNWorker(threading.Thread):
       return {'name':self.getStatusName(),'items':rta}
     except:
       return {'name':self.getStatusName(),'items':[],'error':"no info available"}
-  def setInfo(self,name,info,status):
+  def setInfo(self,name,info,status,childId=None):
     existing=self.status.get(name)
     if existing:
       if existing.update(status,info):
         AVNLog.info("%s",str(existing))
         return True
     else:
-      ns=WorkerStatus(name,status,info)
+      ns=WorkerStatus(name,status,info,childId=childId)
       self.status[name]=ns
       AVNLog.info("%s",str(ns))
   def deleteInfo(self,name):
@@ -347,9 +360,14 @@ class AVNWorker(threading.Thread):
     return self.id
 
 
-  def getParam(self):
+  def getParam(self,child=None,filtered=False):
+    if child is not None:
+      raise Exception("cannot return child parameters")
     try:
-      return self.param
+      if filtered:
+        return WorkerParameter.filterByList(self.getConfigParam(), self.param)
+      else:
+        return self.param
     except:
       return {}
   def getParamValue(self,name,throw=False):
@@ -574,7 +592,7 @@ class AVNWorker(threading.Thread):
   #must be returned, child nodes are added to the parameter dict
   #as an entry with childnodeName=[] - the child node configs being in the list
   @classmethod
-  def getConfigParam(cls,child=None):
+  def getConfigParam(cls, child=None, forEdit=False):
     raise Exception("getConfigParam must be overwritten")
 
   DEFAULT_CONFIG_PARAM={
@@ -601,7 +619,7 @@ class AVNWorker(threading.Thread):
       #special case: accept all attributes
       for k in list(attrs.keys()):
         v=attrs[k]
-        if v is None or isinstance(v,str) or isinstance(v,str):
+        if v is None or isinstance(v,str):
           sparam[k]=v
         else:
           sparam[k] = v.value

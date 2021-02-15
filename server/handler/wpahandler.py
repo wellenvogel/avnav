@@ -58,7 +58,7 @@ class AVNWpaHandler(AVNWorker):
   def getConfigName(cls):
     return "AVNWpaHandler"
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, child=None, forEdit=False):
     if child is not None:
       return None
     return {

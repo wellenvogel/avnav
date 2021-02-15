@@ -54,7 +54,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
   def getConfigName(cls):
     return "AVNTrackWriter"
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, child=None, forEdit=False):
     if child is not None:
       return None
     return [

@@ -45,7 +45,7 @@ class AVNBaseConfig(AVNWorker):
   def autoInstantiate(cls):
     return True
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, child=None, forEdit=False):
     if child is not None:
       return None
     return [

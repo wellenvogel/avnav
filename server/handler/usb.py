@@ -34,47 +34,79 @@ try:
 except:
   pass
 
+CHILD_NAME='UsbDevice'
 
 class InfoHandler(object):
   def __init__(self,name,parent):
     self.name=name
     self.parent=parent
+    self.childId="%s:%s"%(CHILD_NAME,name)
   def setInfo(self,item,text,status):
-    self.parent.setInfo(self.name,text,status)
+    self.parent.setInfo(self.name,text,status,self.childId)
   def deleteInfo(self,item):
     self.parent.deleteInfo(self.name)
 
-class DummyHandler(object):
-  def __init__(self,infoHandler,device):
+class UsbSerialHandler(InfoHandler):
+  T_IGNORE='ignore'
+  T_READER='reader'
+  T_WRITER='writer'
+  T_EXTERNAL='external'
+  T_COMBINED='combined'
+  ALL_TYPES=[T_IGNORE,T_READER,T_WRITER,T_EXTERNAL,T_COMBINED]
+  ALL_INTERNAL_TYPES=[T_IGNORE,T_READER,T_WRITER,T_COMBINED]
+  def __init__(self, name, parent,device,param):
+    super().__init__(name, parent)
+    self.param=param
+    self.type=param['type']
+    self.serialHandler=None
     self.stop=False
-    self.infoHandler=infoHandler
     self.device=device
+
   def run(self):
-    self.infoHandler.setInfo('main','%s: ignored'%self.device,WorkerStatus.INACTIVE)
-    while( not self.stop):
-      time.sleep(0.2)
-    self.infoHandler.deleteInfo('main')
+    if self.device is not None and self.type != self.T_IGNORE:
+      sourceName=self.param.get('name',"%s-%s" % (self.parent.getName(), self.name))
+      if self.type == self.T_WRITER or self.type == self.T_COMBINED:
+        self.serialHandler = SerialWriter(self.param, self.parent.writeData, self, sourceName)
+        if self.type == self.T_COMBINED:
+          self.serialHandler.param["combined"] = True
+      else:
+        self.serialHandler = SerialReader(self.param, self.parent.writeData, self, sourceName)
+        self.serialHandler.run()
+    else:
+      if self.device is None:
+        self.setInfo(None,"%s: not available"%self.device,WorkerStatus.INACTIVE)
+      else:
+        self.setInfo(None, '%s: ignored' % self.device, WorkerStatus.INACTIVE)
+      while (not self.stop):
+        time.sleep(0.2)
+      self.deleteInfo(None)
+
   def stopHandler(self):
     self.stop=True
+    if self.serialHandler:
+      self.serialHandler.stopHandler()
 
-class ExternalHandler(object):
-  def __init__(self,infoHandler,device,callback,name=None):
-    self.stop=False
-    self.infoHandler=infoHandler
-    self.device=device
-    self.callback=callback
-    self.name=name or "extern"
+  def mustCheckLimit(self):
+    if self.device is None:
+      return False
+    return self.type in [self.T_COMBINED,self.T_WRITER,self.T_READER]
+
+class ExternalHandler(UsbSerialHandler):
+  def __init__(self, name, parent, device, param):
+    super().__init__(name, parent, device, param)
+    self.callback=param['callback']
+    self.childId=None #no editing possible
+
   def run(self):
+    handlername = self.param.get('handlername', 'external')
     try:
       self.callback(self.device)
-      self.infoHandler.setInfo('main', '%s: handled by %s' % (self.device,self.name), WorkerStatus.INACTIVE)
+      self.setInfo(None, '%s: handled by %s' % (self.device,handlername), WorkerStatus.INACTIVE)
     except Exception as e:
-      self.infoHandler.setInfo('main','%s: error in handler %s: %s'%(self.device,self.name,str(e)),WorkerStatus.ERROR)
+      self.setInfo(None,'%s: error in handler %s: %s'%(self.device,handlername,str(e)),WorkerStatus.ERROR)
     while( not self.stop):
       time.sleep(0.2)
-    self.infoHandler.deleteInfo('main')
-  def stopHandler(self):
-    self.stop=True
+    self.deleteInfo(None)
 
 class ExternalRegistration(object):
   def __init__(self,usibid,name,callback):
@@ -90,7 +122,7 @@ class AVNUsbSerialReader(AVNWorker):
     return "AVNUsbSerialReader"
   
   @classmethod
-  def getConfigParam(cls, child=None):
+  def getConfigParam(cls, child=None, forEdit=False):
     if child is None:
       #get the default configuration for a serial reader
       rt=list(filter(lambda p: p.name != 'port',SerialReader.getConfigParam()))
@@ -102,7 +134,9 @@ class AVNUsbSerialReader(AVNWorker):
                           description='allow devices that are not configured')
           ]
       return rt+ownParameters
-    if child == "UsbDevice":
+    if child == CHILD_NAME:
+      if not forEdit:
+        return {} #accept all values here and do not apply defaults
       return cls.getSerialParam()
     return None
   #get the parameters for an usb device
@@ -110,9 +144,9 @@ class AVNUsbSerialReader(AVNWorker):
   def getSerialParam(cls):
     rt=list(filter(lambda p:p.name != 'port',SerialWriter.getConfigParam()))
     ownParam=[
-        WorkerParameter('usbid',None,type=WorkerParameter.T_STRING,
+        WorkerParameter('usbid',None,type=WorkerParameter.T_STRING,editable=False,
                         description='an identifier of the USB device\n.../1-1.3.1:1.0/ttyUSB2/tty/ttyUSB2 - identifier would be 1-1.3.1'),
-        WorkerParameter('type', 'reader',type=WorkerParameter.T_SELECT,rangeOrList=['reader','writer','combined','ignored'])
+        WorkerParameter('type', 'reader',type=WorkerParameter.T_SELECT,rangeOrList=UsbSerialHandler.ALL_INTERNAL_TYPES)
         ]
     return rt+ownParam
   
@@ -122,13 +156,83 @@ class AVNUsbSerialReader(AVNWorker):
       raise Exception("no pyudev installed, cannot run %s"%(cls.getConfigName()))
     cls.checkSingleInstance()
     return AVNUsbSerialReader(cfgparam)
-  
+
+  @classmethod
+  def canEdit(cls):
+    return True
+
+
+
   def __init__(self,cfgparam):
     AVNWorker.__init__(self, cfgparam)
     self.maplock=threading.Lock()
     self.addrmap={}
     self.externalHandlers={}
+    #do some late cfg checking here
+    configuredDevices=self.param.get(CHILD_NAME,[])
+    for device in configuredDevices:
+      usbid=device.get('usbid')
+      if usbid is None:
+        raise Exception("missing parameter usbid for configured device %s"%CHILD_NAME)
+      deviceConfig=self.getParamByUsbId(usbid)
+      if deviceConfig.get('type') == UsbSerialHandler.T_EXTERNAL:
+        continue
+      for p in self.getSerialParam():
+        if deviceConfig.get(p.name) is None:
+          raise Exception("missing mandatory parameter %s for %s usbid=%s"%(p.name,CHILD_NAME,usbid))
 
+  def getParam(self, child=None,filtered=False):
+    if child is None:
+      return super().getParam(child,filtered=filtered)
+    if not ':' in child:
+      raise Exception("invalid child id, missing :")
+    (tag, usbid) = child.split(':', 1)
+    if tag != CHILD_NAME:
+      raise Exception("invalid child id, wrong tag %s" % tag)
+    handler=self.addrmap.get(usbid)
+    if handler is None:
+      raise Exception("child %s not found"%child)
+    if filtered:
+      return WorkerParameter.filterByList(self.getSerialParam(),handler.param)
+    return handler.param
+
+  def updateConfig(self, param, child=None):
+    if child is None:
+      return super().updateConfig(param)
+    if not ':' in child:
+      raise Exception("invalid child id, missing :")
+    (tag,usbid)=child.split(':',1)
+    if tag != CHILD_NAME:
+      raise Exception("invalid child id, wrong tag %s"%tag)
+    self.maplock.acquire()
+    handler=None
+    try:
+      handler=self.addrmap.get(usbid)
+    finally:
+      self.maplock.release()
+    if handler is not None:
+      #currently active device
+      if isinstance(handler,ExternalHandler):
+        raise Exception("cannot modify device %s, externally handled"%usbid)
+    config=self.getParamByUsbId(usbid)
+    if config is None and handler is None:
+      raise Exception("cannot configure device %s, not existing and not active"%usbid)
+    checked = self.checkConfig(param, child)
+    if config is not None:
+      childIndex=config.get('childIndex')
+      if childIndex is None:
+        #external device
+        raise Exception("cannot configure externally managed device %s"%usbid)
+    else:
+      childIndex=-1 #add new child
+      config={'type':handler.type,'usbid':usbid}
+      config.update(checked)
+      checked=config
+    for k,v in checked.items():
+      childIndex=self.changeChildConfig(tag,childIndex,k,v,delayWriteOut=True)
+    self.writeConfigChanges()
+    if handler is not None:
+      self.stopHandler(usbid)
 
   def registerExternalHandler(self,usbid,name,callback):
     AVNLog.info("AVNUsbSerialReader: register external handler %s for %s",name,usbid)
@@ -154,22 +258,21 @@ class AVNUsbSerialReader(AVNWorker):
     self.stopHandler(usbid)
 
   #return True if added
-  def checkAndAddHandler(self,addr,handler,device):
+  def checkAndAddHandler(self,handler):
     rt=False
     maxd=self.getIntParam('maxDevices')
     self.maplock.acquire()
-    if not isinstance(handler,DummyHandler) and not isinstance(handler,ExternalHandler):
+    if handler.mustCheckLimit():
       numActive=0
       for entry in list(self.addrmap.values()):
-        h=entry[0]
-        if isinstance(h,DummyHandler) or isinstance(h,ExternalHandler):
+        if not entry.mustCheckLimit():
           continue
         numActive+=1
       if numActive >= maxd:
         self.maplock.release()
         return rt
-    if not addr in self.addrmap:
-      self.addrmap[addr]=(handler,device)
+    if not handler.name in self.addrmap:
+      self.addrmap[handler.name]=handler
       rt=True
     self.maplock.release()
     return rt
@@ -181,16 +284,14 @@ class AVNUsbSerialReader(AVNWorker):
       if handler is not None:
         #if we are called from a handler - only remove exactly this handler
         old=self.addrmap.get(addr)
-        if old is not None and old[0] != handler:
+        if old is not None and old != handler:
           self.maplock.release()
           return
       rt=self.addrmap.pop(addr)
     except:
       pass
     self.maplock.release()
-    if rt is None:
-      return None
-    return rt[0]
+    return rt
     
   #param  a dict of usbid->device
   #returns a dict: usbid->start|stop|keep
@@ -199,7 +300,7 @@ class AVNUsbSerialReader(AVNWorker):
     self.maplock.acquire()
     for h in list(handlerlist.keys()):
       if h in self.addrmap:
-        if handlerlist[h] != self.addrmap[h][1]:
+        if handlerlist[h] != self.addrmap[h].device:
           rt['h']='restart'
         else:
           rt[h]='keep'
@@ -223,12 +324,17 @@ class AVNUsbSerialReader(AVNWorker):
         'callback':externalHandler.callback,
         'handlername':externalHandler.name
       }
-    configuredDevices=self.param.get('UsbDevice')
+    configuredDevices=self.param.get(CHILD_NAME)
     if configuredDevices is None:
       return None
+    childIndex=0
     for dev in configuredDevices:
-      if usbid==dev['usbid']:
-        return dev
+      if usbid==dev.get('usbid'):
+        dev['childIndex']=childIndex
+        config=WorkerParameter.filterByList(self.getSerialParam(),self.param,addDefaults=True)
+        config.update(dev)
+        return config
+      childIndex+=1
     return None
   
   def setParameterForSerial(self,param,usbid,device):
@@ -260,37 +366,28 @@ class AVNUsbSerialReader(AVNWorker):
           #do nothing - potentially we handle it in the next round
           continue
         AVNLog.debug("must start handler for %s at %s",usbid,devicelist[usbid])
-        sourceName="%s-%s"%(self.getName(),usbid)
         param=self.getParamByUsbId(usbid)
         type="anonymous"
         if param is None:
           if not self.getBoolParam('allowUnknown'):
             AVNLog.debug("unknown devices not allowed, skip start of %s at %s",usbid,devicelist[usbid])
             continue
-          param=self.setParameterForSerial(self.getParam(),usbid,devicelist[usbid])
+          param=self.setParameterForSerial(
+            WorkerParameter.filterByList(self.getSerialParam(),self.getParam(),addDefaults=True),
+            usbid,devicelist[usbid])
         else:
           type="known"
-          pn=param.get('name')
-          if pn is not None and pn != '':
-            sourceName=pn
           param=self.setParameterForSerial(param, usbid, devicelist[usbid])
         handlertype="reader"
         if param.get('type') is not None:
           handlertype=param.get('type')
-        if handlertype == 'external':
-          handler=ExternalHandler(InfoHandler(usbid,self),devicelist[usbid],param.get('callback'),param.get('handlername'))
         else:
-          if handlertype == 'writer' or handlertype == "combined":
-            handler=SerialWriter(param,self.writeData,InfoHandler(usbid,self),sourceName)
-            if handlertype == "combined":
-              handler.param["combined"]=True
-          else:
-            if handlertype == 'reader':
-              handler=SerialReader(param, self.writeData, InfoHandler(usbid,self),sourceName)
-            else:
-              AVNLog.info("ignore device %s : type %s",usbid,handlertype)
-              handler=DummyHandler(InfoHandler(usbid,self),devicelist[usbid])
-        res=self.checkAndAddHandler(usbid, handler,devicelist[usbid])
+          param['type']=handlertype
+        if handlertype == 'external':
+          handler=ExternalHandler(usbid,self,devicelist[usbid],param)
+        else:
+          handler=UsbSerialHandler(usbid,self,devicelist[usbid],param)
+        res=self.checkAndAddHandler(handler)
         if not res:
             AVNLog.debug("max number of readers already reached, skip start of %s at %s",usbid,devicelist[usbid])
             continue
@@ -341,7 +438,7 @@ class AVNUsbSerialReader(AVNWorker):
   def run(self):
     self.setInfo('main', "discovering", WorkerStatus.RUNNING)
     self.setName("%s-polling"%(self.getThreadPrefix()))
-    time.sleep(5) # give a chance to have the feeder socket open...
+    self.wait(5) # give a chance to have the feeder socket open...
     #now start an endless loop with udev discovery...
     #any removal will be detected by the monitor (to be fast)
     #but we have an audit here anyway
@@ -361,6 +458,12 @@ class AVNUsbSerialReader(AVNWorker):
           usbid=self.usbIdFromPath(dev.device_path)
           AVNLog.debug("discovered usb serial tty device %s at %s (usbid=%s)",dev.device_node,str(dev),usbid)
           currentDevices[usbid]=dev.device_node
+        configuredDevices=self.param.get(CHILD_NAME)
+        if configuredDevices is not None:
+          for cfg in configuredDevices:
+            usbid=cfg.get('usbid')
+            if usbid is not None and not usbid in currentDevices:
+              currentDevices[usbid]=None
         self.checkDevices(currentDevices)
         if init:
           monitorThread=threading.Thread(target=self.monitorDevices,args=(context,))

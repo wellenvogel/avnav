@@ -49,7 +49,7 @@ class AVNImporter(AVNWorker):
     return "AVNImporter"
   
   @classmethod
-  def getConfigParam(cls,child=None):
+  def getConfigParam(cls, child=None, forEdit=False):
     if not child is None:
       return None
     rt={

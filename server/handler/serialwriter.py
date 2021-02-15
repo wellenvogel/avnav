@@ -287,7 +287,7 @@ class AVNSerialWriter(AVNWorker):
     return "AVNSerialWriter"
   
   @classmethod
-  def getConfigParam(cls,child=None):
+  def getConfigParam(cls, child=None, forEdit=False):
     if not child is None:
       return None
     cfg=SerialWriter.getConfigParam()
