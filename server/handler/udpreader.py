@@ -55,14 +55,36 @@ class AVNUdpReader(AVNWorker, SocketReader):
     ]
     return rt
 
+  @classmethod
+  def canEdit(cls):
+    return True
+
+  @classmethod
+  def canDeleteHandler(cls):
+    return True
+
   def __init__(self,param):
     for p in ('port','host'):
       if param.get(p) is None:
         raise Exception("missing "+p+" parameter for udp reader")
     self.feederWrite=None
+    self.socket=None
     AVNWorker.__init__(self, param)
 
-    
+  def updateConfig(self, param, child=None):
+    super().updateConfig(param, child)
+    try:
+      self.socket.close()
+    except:
+      pass
+
+  def stop(self):
+    super().stop()
+    try:
+      self.socket.close()
+    except:
+      pass
+
   def writeData(self,data,source=None):
     AVNWorker.writeData(self,data,source)
     if (self.getIntParam('minTime')):
@@ -70,22 +92,25 @@ class AVNUdpReader(AVNWorker, SocketReader):
      
   #thread run method - just try forever  
   def run(self):
-    self.setName("%s-%s:%d"%(self.getThreadPrefix(),self.getStringParam('host'),self.getIntParam('port')))
-    info="%s:%d"%(self.getStringParam('host'),self.getIntParam('port'))
-    while True:
+    while not self.shouldStop():
+      info="unknown"
       try:
+        self.setName("%s-%s:%d" % (self.getThreadPrefix(), self.getStringParam('host'), self.getIntParam('port')))
+        info = "%s:%d" % (self.getStringParam('host'), self.getIntParam('port'))
         self.setInfo('main',"trying udp listen at %s"%(info,),WorkerStatus.INACTIVE)
-        sock=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.bind((self.getStringParam('host'), self.getIntParam('port')))
+        self.socket=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.socket.bind((self.getStringParam('host'), self.getIntParam('port')))
         self.setInfo('main',"listening at %s"%(info,),WorkerStatus.RUNNING)
       except:
         AVNLog.info("exception while trying to listen at %s:%d %s",self.getStringParam('host'),self.getIntParam('port'),traceback.format_exc())
         self.setInfo('main',"unable to listen at %s"%(info,),WorkerStatus.ERROR)
-        time.sleep(2)
+        if self.shouldStop():
+          break
+        self.wait(2)
         continue
       AVNLog.info("successfully listening at %s",info)
       try:
-        self.readSocket(sock,'main',self.getSourceName(info),self.getParamValue('filter'))
+        self.readSocket(self.socket,'main',self.getSourceName(info),self.getParamValue('filter'))
       except:
         AVNLog.info("exception while reading data from %s:%d %s",self.getStringParam('host'),self.getIntParam('port'),traceback.format_exc())
 avnav_handlerList.registerHandler(AVNUdpReader)

@@ -380,7 +380,7 @@ class AVNSerialReader(AVNWorker):
   def canEdit(cls):
     return True
   @classmethod
-  def canDelete(cls):
+  def canDeleteHandler(cls):
     return True
 
   def __init__(self,param):

@@ -69,7 +69,7 @@ class AVNSocketWriter(AVNWorker,SocketReader):
     return True
 
   @classmethod
-  def canDelete(cls):
+  def canDeleteHandler(cls):
     return True
   
   def __init__(self,cfgparam):

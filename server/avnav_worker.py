@@ -89,6 +89,8 @@ class WorkerParameter(object):
     raise ParamValueError("%s not found in parameters"%name)
 
   def checkValue(self,value):
+    if value is None and self.default is None:
+      raise ParamValueError("missing mandatory parameter %s"%self.name)
     if self.type == self.T_STRING:
       return str(value)
     if self.type == self.T_NUMBER or self.type == self.T_FLOAT:
@@ -257,7 +259,7 @@ class AVNWorker(threading.Thread):
   def canEdit(cls):
     return False
   @classmethod
-  def canDelete(cls):
+  def canDeleteHandler(cls):
     return False
 
   @classmethod

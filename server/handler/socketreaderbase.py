@@ -24,6 +24,8 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
+import socket
+
 from avnav_nmea import *
 from avnav_worker import *
 
@@ -50,8 +52,12 @@ class SocketReader(object):
     buffer=""
     hasNMEA=False
     try:
-      while True:
-        data = sock.recv(1024)
+      sock.settimeout(1)
+      while sock.fileno() >= 0:
+        try:
+          data = sock.recv(1024)
+        except socket.timeout:
+          continue
         if len(data) == 0:
           AVNLog.info("connection lost")
           break

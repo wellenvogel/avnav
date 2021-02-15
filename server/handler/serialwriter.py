@@ -303,11 +303,11 @@ class AVNSerialWriter(AVNWorker):
 
   @classmethod
   def canEdit(cls):
-    return super().canEdit()
+    return True
 
   @classmethod
-  def canDelete(cls):
-    return super().canDelete()
+  def canDeleteHandler(cls):
+    return True
 
   @classmethod
   def getEditableParameters(cls, child=None, makeCopy=True):

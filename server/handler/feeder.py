@@ -214,6 +214,11 @@ class AVNGpsdFeeder(AVNFeeder):
   '''
   legacy config support with AVNGpsdFeeder
   '''
-  pass
+
+  @classmethod
+  def autoInstantiate(cls):
+    return False
+
+
 avnav_handlerList.registerHandler(AVNGpsdFeeder)
 avnav_handlerList.registerHandler(AVNFeeder)

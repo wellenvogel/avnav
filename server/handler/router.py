@@ -199,6 +199,8 @@ class AVNRouter(AVNDirectoryHandlerBase):
   def getAutoScanExtensions(cls):
     return cls.ALLOWED_EXTENSIONS
 
+
+
   ALARMS=Enum(['gps','waypoint','anchor','mob'])
   
   def __init__(self,cfgparam):
@@ -501,6 +503,12 @@ class AVNRouter(AVNDirectoryHandlerBase):
       will only be called if self.currentLeg.anchorDistance is not none
   '''
 
+  @classmethod
+  def canEdit(cls):
+    return True
+
+  def updateConfig(self, param, child=None):
+    return super().updateConfig(param, child)
 
   def computeAnchor(self):
     curGps = self.navdata.getDataByPrefix(AVNStore.BASE_KEY_GPS,1)

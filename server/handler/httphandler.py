@@ -415,7 +415,7 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
              'info':handler.getInfo(),
              'disabled': handler.isDisabled(),
              'properties':handler.getStatusProperties() if not handler.isDisabled() else {},
-             'canDelete':handler.canDelete(),
+             'canDelete':handler.canDeleteHandler(),
              'id':handler.getId() if handler.canEdit() else None}
       rt.append(entry)
     return json.dumps({'handler':rt},cls=Encoder)
