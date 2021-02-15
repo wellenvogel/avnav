@@ -415,8 +415,8 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
              'info':handler.getInfo(),
              'disabled': handler.isDisabled(),
              'properties':handler.getStatusProperties() if not handler.isDisabled() else {},
-             'canEdit':handler.canEdit(),
-             'id':handler.getId()}
+             'canDelete':handler.canDelete(),
+             'id':handler.getId() if handler.canEdit() else None}
       rt.append(entry)
     return json.dumps({'handler':rt},cls=Encoder)
 
@@ -425,18 +425,19 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
     try:
       command=self.getRequestParam(requestParam,'command',mantadory=True)
       id=self.getRequestParam(requestParam,'handlerId',mantadory=True)
+      child=self.getRequestParam(requestParam,'child',mantadory=False)
       handler=AVNWorker.findHandlerById(int(id))
       if handler is None:
         raise Exception("unable to find handler for id %s"%id)
       if command == 'getEditables':
-        data=handler.getEditableParameters()
+        data=handler.getEditableParameters(child)
         if data is not None:
           rt['data']=data
           rt['values']=handler.param
       elif command=='setConfig':
         values=self.getRequestParam(requestParam,'_json',mantadory=True)
         decoded=json.loads(values)
-        handler.updateConfig(decoded)
+        handler.updateConfig(decoded,child)
         AVNLog.info("updated %s, new config %s", handler.getName(), handler.getConfigString())
       else:
         raise Exception("unknown command %s"%command)

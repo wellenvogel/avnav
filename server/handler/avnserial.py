@@ -33,6 +33,7 @@ hasSerial=False
 
 try:
   import serial
+  import serial.tools.list_ports
   hasSerial=True
 except:
   pass
@@ -69,6 +70,20 @@ class SerialReader(object):
                WorkerParameter('filter',"",type=WorkerParameter.T_FILTER)
                ]
     return cfg
+
+  @classmethod
+  def listSerialPorts(cls):
+    if not hasSerial:
+      return []
+    ports=serial.tools.list_ports.comports()
+    rt=[]
+    for p in ports:
+      if p.vid is not None:
+        #skip USB devices
+        continue
+      rt.append(p.device)
+    return rt
+
     
   #parameters:
   #param - the config dict
@@ -354,7 +369,20 @@ class AVNSerialReader(AVNWorker):
       return None
     rt=AVNSerialReader(cfgparam)
     return rt
-    
+
+  @classmethod
+  def getEditableParameters(cls, child=None, makeCopy=True):
+    rt=super().getEditableParameters(child, makeCopy)
+    WorkerParameter.updateListFor(rt,'port',SerialReader.listSerialPorts())
+    return rt
+
+  @classmethod
+  def canEdit(cls):
+    return True
+  @classmethod
+  def canDelete(cls):
+    return True
+
   def __init__(self,param):
     for p in ('port','timeout'):
       if param.get(p) is None:
@@ -386,14 +414,8 @@ class AVNSerialReader(AVNWorker):
       except Exception as e:
         AVNLog.error("exception in serial reader %s",traceback.format_exc())
 
-  @classmethod
-  def canEdit(cls):
-    return True
-  @classmethod
-  def canDelete(cls):
-    return True
 
-  def updateConfig(self, param):
+  def updateConfig(self, param,child=None):
     super().updateConfig(param)
     self.reader.stopHandler()
 

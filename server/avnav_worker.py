@@ -44,7 +44,7 @@ class WorkerParameter(object):
   T_FILTER='FILTER'
 
   PREDEFINED_DESCRIPTIONS={
-    T_FILTER: 'separated list of sentences either !AIVDM or $RMC - for $ we ignore the 1st 2 characters'
+    T_FILTER: ', separated list of sentences either !AIVDM or $RMC - for $ we ignore the 1st 2 characters'
   }
 
   def __init__(self,name,default=None,type=None,rangeOrList=None,description=None,editable=True):
@@ -60,6 +60,13 @@ class WorkerParameter(object):
   def serialize(self):
     return self.__dict__
 
+  def copy(self):
+    return WorkerParameter(self.name,
+                           default=self.default,
+                           type=self.type,
+                           rangeOrList=[]+self.rangeOrList if self.rangeOrList is not None else None,
+                           description=self.description,
+                           editable=self.editable)
   @classmethod
   def filterNameDef(cls,plist):
     rt={}
@@ -67,6 +74,13 @@ class WorkerParameter(object):
       rt[p.name]=p.default
     return rt
 
+  @classmethod
+  def updateListFor(cls,plist,name,vlist):
+    for p in plist:
+      if p.name == name:
+        if p.type != cls.T_SELECT:
+          raise ParamValueError("cannot update list at %s, type %s"%(name,p.type))
+        p.rangeOrList=vlist
   @classmethod
   def checkValueFor(cls,plist,name,value):
     for p in plist:
@@ -102,7 +116,8 @@ class WorkerParameter(object):
         else:
           if value == cv:
             return value
-      raise ValueError("value %s for %s not in list %s"%(str(value),self.name,",".join(self.rangeOrList)))
+      raise ValueError("value %s for %s not in list %s"%(str(value),self.name,",".join(
+        list(map(lambda x:str(x),self.rangeOrList)))))
     if self.type == self.T_FILTER:
       #TODO: some filter checks
       return str(value)
@@ -117,7 +132,15 @@ class WorkerStatus(object):
   NMEA='NMEA'
   ERROR='ERROR'
   ALL_STATES=[INACTIVE,STARTED,RUNNING,NMEA,ERROR]
-  def __init__(self,name,status,info,timeout=None):
+  def __init__(self,name,status,info,timeout=None,childId=None):
+    '''
+    status for the status page
+    @param name:
+    @param status:
+    @param info:
+    @param timeout:
+    @param childId: if this is set to id:type this child can be edited
+    '''
     if not status in self.ALL_STATES:
       status=self.INACTIVE
     self.status=status
@@ -125,6 +148,7 @@ class WorkerStatus(object):
     self.name=name
     self.modified=time.time()
     self.timeout=timeout
+    self.id=childId
 
   def update(self,status,info,timeout=None):
     old=self.status
@@ -237,17 +261,29 @@ class AVNWorker(threading.Thread):
     return False
 
   @classmethod
-  def getEditableParameters(cls):
+  def getEditableParameters(cls,child=None,makeCopy=True):
+    '''
+    get the parameters we can edit
+    @param child: a string id:type to identify the child
+    @return:
+    '''
     if not cls.canEdit():
       return None
-    parameterDescriptions=cls.getConfigParam()
+    if child is not None:
+      if ':' in child:
+        cp=child.split(':',1)
+        child=cp[1]
+    parameterDescriptions=cls.getConfigParam(child)
     if type(parameterDescriptions) is not list:
       return None
     rt=[]
     for pd in parameterDescriptions:
       if not pd.editable:
         continue
-      rt.append(pd)
+      if makeCopy:
+        rt.append(pd.copy())
+      else:
+        rt.append(pd)
     return rt
 
   
@@ -366,14 +402,14 @@ class AVNWorker(threading.Thread):
 
 
 
-  def checkConfig(self,param):
+  def checkConfig(self,param,child=None):
     '''
     check the config valaues against the defined ones
     and return a dict with the converted values
     @param param:
     @return:
     '''
-    cfgs=self.getEditableParameters()
+    cfgs=self.getEditableParameters(child)
     if cfgs is None:
       raise Exception("no editable parameters")
     rt={}
@@ -381,14 +417,17 @@ class AVNWorker(threading.Thread):
       cv=WorkerParameter.checkValueFor(cfgs,k,v)
       rt[k]=cv
     return rt
-  def updateConfig(self,param):
+  def updateConfig(self,param,child=None):
     '''
     change of config parameters
     the handler must update its data and store the values using changeMultiConfig, changeChildConfig
     @param param: a dictonary with the keyes matching the keys from getEditableParameters
     @type param: dict
+    @param child: a string id:type or None
     @return:
     '''
+    if child is not None:
+      raise Exception("cannot modify child %s"%str(child))
     checked = self.checkConfig(param)
     self.changeMultiConfig(checked)
 

@@ -95,9 +95,13 @@ class SerialWriter(SerialReader):
    
   def stopHandler(self):
     self.doStop=True
+    try:
+      self.device.close()
+    except:
+      pass
 
   
-  def openDevice(self,baud,init=False):
+  def openDevice(self,baud,autobaud,init=False):
     self.buffer=''
     f=None
     try:
@@ -158,7 +162,7 @@ class SerialWriter(SerialReader):
       reader=threading.Thread(target=self.readMethod)
       reader.setDaemon(True)
       reader.start()
-    while True and not self.doStop:
+    while not self.doStop:
       name=self.getName()
       timeout=float(self.param['timeout'])
       portname=self.param['port']
@@ -169,7 +173,7 @@ class SerialWriter(SerialReader):
       filter=None
       if filterstr != "":
         filter=filterstr.split(',')
-      self.device=self.openDevice(baud,init)
+      self.device=self.openDevice(baud,False,init=init)
       init=False
       if self.doStop:
         AVNLog.info("handler stopped, leaving")
@@ -223,7 +227,7 @@ class SerialWriter(SerialReader):
       filter=filterstr.split(',')
     hasNmea=False
     source=self.sourceName
-    while True and not self.doStop:
+    while not self.doStop:
       try:
         if self.device is not None:
           bytes=self.device.readline(300)
@@ -283,7 +287,7 @@ class AVNSerialWriter(AVNWorker):
     return "AVNSerialWriter"
   
   @classmethod
-  def getConfigParam(cls,child):
+  def getConfigParam(cls,child=None):
     if not child is None:
       return None
     cfg=SerialWriter.getConfigParam()
@@ -296,18 +300,44 @@ class AVNSerialWriter(AVNWorker):
       return None
     rt=AVNSerialWriter(cfgparam)
     return rt
-    
+
+  @classmethod
+  def canEdit(cls):
+    return super().canEdit()
+
+  @classmethod
+  def canDelete(cls):
+    return super().canDelete()
+
+  @classmethod
+  def getEditableParameters(cls, child=None, makeCopy=True):
+    rt=super().getEditableParameters(child, makeCopy)
+    WorkerParameter.updateListFor(rt,'port',SerialReader.listSerialPorts())
+    return rt
+
   def __init__(self,param):
     for p in ('port','timeout'):
       if param.get(p) is None:
         raise Exception("missing "+p+" parameter for serial writer")
     AVNWorker.__init__(self, param)
+    self.writer=None
 
      
   #thread run method - just try forever  
   def run(self):
     self.setName(self.getThreadPrefix())
-    writer=SerialWriter(self.param,self.writeData,self,self.getSourceName(self.getParamValue('port')))
-    writer.run()
+    while not self.shouldStop():
+      try:
+        self.writer=SerialWriter(self.param,self.writeData,self,self.getSourceName(self.getParamValue('port')))
+        self.writer.run()
+      except Exception as e:
+        AVNLog.error("exception in serial writer: %s",traceback.format_exc())
+      AVNLog.info("restarting serial writer")
+
+  def updateConfig(self, param, child=None):
+    super().updateConfig(param, child)
+    self.writer.stopHandler()
+
+
 avnav_handlerList.registerHandler(AVNSerialWriter)
 
