@@ -2,6 +2,7 @@
 /viewer/avnav_viewer_old.js
 /viewer/avnav_min.js
 /viewer/avnav_combine.js
+.gitignore
 .classpath
 .settings/**
 .vscode/
@@ -19,6 +20,7 @@ viewer/node_modules
 *.swp
 *.bck
 *.log
+docs/viewerimages
 docs/*docmapdata.json
 avnav_server.xml-????*
 hardware/**/*-cache.lib
