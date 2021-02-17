@@ -275,7 +275,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
   def getConfigName(cls):
     return "AVNChartHandler"
   @classmethod
-  def getConfigParam(cls, child=None, forEdit=False):
+  def getConfigParam(cls, child=None):
     if child is not None:
       return None
     return {

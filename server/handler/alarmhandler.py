@@ -75,7 +75,7 @@ class AVNAlarmHandler(AVNWorker):
   def getConfigName(cls):
     return "AVNAlarmHandler"
   @classmethod
-  def getConfigParam(cls, child=None, forEdit=False):
+  def getConfigParam(cls, child=None):
     if child is None:
       return {
         'defaultCommand':'sound',

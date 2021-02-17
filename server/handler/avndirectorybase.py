@@ -90,7 +90,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
   def getPrefix(cls):
     return None
   @classmethod
-  def getConfigParam(cls, child=None, forEdit=False):
+  def getConfigParam(cls, child=None):
     if not child is None:
       return None
     rt = {

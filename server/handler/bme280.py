@@ -180,7 +180,7 @@ class AVNBME280Reader(AVNWorker):
     return "AVNBME280Reader"
 
   @classmethod
-  def getConfigParam(cls, child=None, forEdit=False):
+  def getConfigParam(cls, child=None):
     if not child is None:
       return None
     rt = {

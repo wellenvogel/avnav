@@ -287,7 +287,7 @@ class AVNSerialWriter(AVNWorker):
     return "AVNSerialWriter"
   
   @classmethod
-  def getConfigParam(cls, child=None, forEdit=False):
+  def getConfigParam(cls, child=None):
     if not child is None:
       return None
     cfg=SerialWriter.getConfigParam()
@@ -310,9 +310,9 @@ class AVNSerialWriter(AVNWorker):
     return True
 
   @classmethod
-  def getEditableParameters(cls, child=None, makeCopy=True):
-    rt=super().getEditableParameters(child, makeCopy)
-    WorkerParameter.updateListFor(rt,'port',SerialReader.listSerialPorts())
+  def getEditableParameters(cls, makeCopy=True):
+    rt= super().getEditableParameters(True)
+    WorkerParameter.updateParamFor(rt, 'port', {'rangeOrList':SerialReader.listSerialPorts()})
     return rt
 
   def __init__(self,param):

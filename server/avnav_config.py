@@ -96,7 +96,7 @@ class ConfigChanger(object):
     self.handleChange(delayUpdate)
     return len(childList)-1
 
-  def removeChild(self,childName,childIndex):
+  def removeChild(self,childName,childIndex,delayUpdate=False):
     if self.childMap is None:
       raise Exception("no dom, cannot change")
     childList=self.childMap.get(childName)
@@ -115,7 +115,8 @@ class ConfigChanger(object):
     childList[childIndex].unlink()
     childList.pop(childIndex)
     self._setDirty()
-    self.handleChange()
+    if not delayUpdate:
+      self.handleChange()
     return
 
 # a class for parsing the config file
@@ -258,7 +259,7 @@ class AVNConfig(object):
         nextElement=nextElement.nextSibling
 
   def parseHandler(self, element, handlerClass, domAttached=True):
-    configParam= handlerClass.getConfigParam(None)
+    configParam= handlerClass.getConfigParam()
     if type(configParam) is list:
       configParam=WorkerParameter.filterNameDef(configParam)
     cfg=handlerClass.parseConfig(element.attributes,configParam)

@@ -41,7 +41,7 @@ class AVNUdpReader(AVNWorker, SocketReader):
     return "AVNUdpReader"
   
   @classmethod
-  def getConfigParam(cls, child=None, forEdit=False):
+  def getConfigParam(cls, child=None):
     if not child is None:
       return None
     rt=[

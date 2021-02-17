@@ -171,7 +171,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
     return "AVNRouter"
   
   @classmethod
-  def getConfigParam(cls, child=None, forEdit=False):
+  def getConfigParam(cls, child=None):
     if child is None:
       
       rt=[

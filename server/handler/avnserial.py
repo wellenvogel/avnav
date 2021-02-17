@@ -254,7 +254,7 @@ class SerialReader(object):
            pass
          break
        if self.device is None:
-         time.sleep(porttimeout/2)
+         time.sleep(min(porttimeout/2,5))
          continue
        AVNLog.debug("%s opened, start receiving data",self.device.name)
        lastTime=time.time()
@@ -352,7 +352,7 @@ class AVNSerialReader(AVNWorker):
     return "AVNSerialReader"
   
   @classmethod
-  def getConfigParam(cls, child=None, forEdit=False):
+  def getConfigParam(cls, child=None):
     if not child is None:
       return None
     cfg=SerialReader.getConfigParam()
@@ -371,9 +371,9 @@ class AVNSerialReader(AVNWorker):
     return rt
 
   @classmethod
-  def getEditableParameters(cls, child=None, makeCopy=True):
-    rt=super().getEditableParameters(child, makeCopy)
-    WorkerParameter.updateListFor(rt,'port',SerialReader.listSerialPorts())
+  def getEditableParameters(cls, makeCopy=True):
+    rt= super().getEditableParameters(True)
+    WorkerParameter.updateParamFor(rt, 'port', {'rangeOrList':SerialReader.listSerialPorts()})
     return rt
 
   @classmethod

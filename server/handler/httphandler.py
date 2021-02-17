@@ -430,7 +430,10 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
       if handler is None:
         raise Exception("unable to find handler for id %s"%id)
       if command == 'getEditables':
-        data=handler.getEditableParameters(child)
+        if child is not None:
+          data=handler.getEditableChildParameters(child)
+        else:
+          data= handler.getEditableParameters()
         if data is not None:
           rt['data']=data
           rt['values']=handler.getParam(child,filtered=True)
@@ -439,6 +442,11 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
         decoded=json.loads(values)
         handler.updateConfig(decoded,child)
         AVNLog.info("updated %s, new config %s", handler.getName(), handler.getConfigString())
+      elif command=='deleteChild':
+        if child is None:
+          raise Exception("missing parameter child")
+        AVNLog.info("deleting child %s for %s",child,handler.getName())
+        handler.deleteChild(child)
       else:
         raise Exception("unknown command %s"%command)
       return json.dumps(rt,cls=Encoder)

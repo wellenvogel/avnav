@@ -206,7 +206,7 @@ class AVNPluginHandler(AVNWorker):
 
 
   @classmethod
-  def getConfigParam(cls, child=None, forEdit=False):
+  def getConfigParam(cls, child=None):
     if child is None:
       return {
         'builtinDir':os.path.join(os.path.dirname(__file__),'..','plugins'),

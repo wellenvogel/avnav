@@ -47,7 +47,7 @@ class WorkerParameter(object):
     T_FILTER: ', separated list of sentences either !AIVDM or $RMC - for $ we ignore the 1st 2 characters'
   }
 
-  def __init__(self,name,default=None,type=None,rangeOrList=None,description=None,editable=True):
+  def __init__(self,name,default=None,type=None,rangeOrList=None,description=None,editable=True,mandatory=None):
     self.name=name
     self.type=type if type is not None else self.T_STRING
     self.default=default
@@ -56,6 +56,7 @@ class WorkerParameter(object):
       description=self.PREDEFINED_DESCRIPTIONS.get(type)
     self.description=description or ''
     self.editable=editable
+    self.mandatory=mandatory if mandatory is not None else default is None
 
   def serialize(self):
     return self.__dict__
@@ -75,18 +76,37 @@ class WorkerParameter(object):
     return rt
 
   @classmethod
-  def updateListFor(cls,plist,name,vlist):
+  def updateParamFor(cls, plist, paramName, vdict):
     for p in plist:
-      if p.name == name:
-        if p.type != cls.T_SELECT:
-          raise ParamValueError("cannot update list at %s, type %s"%(name,p.type))
-        p.rangeOrList=vlist
+      if p.name == paramName:
+        for k,v in vdict.items():
+          if k == 'name':
+            continue
+          p[k]=v
   @classmethod
-  def checkValueFor(cls,plist,name,value):
+  def checkValuesFor(cls,plist,newParam,existingParam=None):
+    rt={}
+    for k,v in newParam.items():
+      param=next((x for x in plist if x.name == k), None)
+      if param is None:
+        continue
+      rt[k]=param.checkValue(v)
     for p in plist:
-      if p.name == name:
-        return p.checkValue(value)
-    raise ParamValueError("%s not found in parameters"%name)
+      if p.mandatory:
+        if not p.name in rt and (existingParam is None or not p.name in existingParam):
+          raise ParamValueError("missing mandatory parameter %s"%p.name)
+    return rt
+
+  @classmethod
+  def filterEditables(clscls,plist,makeCopy=True):
+    rt=[]
+    for p in plist:
+      if p.editable:
+        if makeCopy:
+          rt.append(p.copy())
+        else:
+          rt.append(p)
+    return rt
 
   @classmethod
   def filterByList(cls,plist,pdict,addDefaults=False):
@@ -123,12 +143,13 @@ class WorkerParameter(object):
       if self.rangeOrList is None:
         raise ValueError("no select list for %s"%self.name)
       for cv in self.rangeOrList:
+        cmp=cv
         if type(cv) is dict:
-          if value == cv.get('value'):
-            return cv
-        else:
-          if value == cv:
-            return value
+          cmp=cv.get('value')
+        if type(value) is str:
+          cmp=str(cmp)
+        if value == cmp:
+          return value
       raise ValueError("value %s for %s not in list %s"%(str(value),self.name,",".join(
         list(map(lambda x:str(x),self.rangeOrList)))))
     if self.type == self.T_FILTER:
@@ -145,14 +166,14 @@ class WorkerStatus(object):
   NMEA='NMEA'
   ERROR='ERROR'
   ALL_STATES=[INACTIVE,STARTED,RUNNING,NMEA,ERROR]
-  def __init__(self,name,status,info,timeout=None,childId=None):
+  def __init__(self,name,status,info,timeout=None,childId=None,canDelete=False):
     '''
     status for the status page
     @param name:
     @param status:
     @param info:
     @param timeout:
-    @param childId: if this is set to id:type this child can be edited
+    @param childId: if this is set to some id this child can be edited
     '''
     if not status in self.ALL_STATES:
       status=self.INACTIVE
@@ -162,6 +183,7 @@ class WorkerStatus(object):
     self.modified=time.time()
     self.timeout=timeout
     self.id=childId
+    self.canDelete=canDelete
 
   def update(self,status,info,timeout=None):
     old=self.status
@@ -192,6 +214,7 @@ class WorkerStatus(object):
       'info':self.info,
       'status':self.status,
       'name':self.name,
+      'canDelete':self.canDelete
     }
     if self.id is not None:
       rt['id']=self.id
@@ -276,30 +299,15 @@ class AVNWorker(threading.Thread):
     return False
 
   @classmethod
-  def getEditableParameters(cls,child=None,makeCopy=True):
+  def getEditableParameters(cls, makeCopy=True):
     '''
     get the parameters we can edit
-    @param child: a string type:id to identify the child
     @return:
     '''
     if not cls.canEdit():
       return None
-    if child is not None:
-      if ':' in child:
-        cp=child.split(':',1)
-        child=cp[0]
-    parameterDescriptions= cls.getConfigParam(child,forEdit=True)
-    if type(parameterDescriptions) is not list:
-      return None
-    rt=[]
-    for pd in parameterDescriptions:
-      if not pd.editable:
-        continue
-      if makeCopy:
-        rt.append(pd.copy())
-      else:
-        rt.append(pd)
-    return rt
+    return WorkerParameter.filterEditables(cls.getConfigParam(),makeCopy=makeCopy)
+
 
   
   def __init__(self,cfgparam):
@@ -340,14 +348,14 @@ class AVNWorker(threading.Thread):
       return {'name':self.getStatusName(),'items':rta}
     except:
       return {'name':self.getStatusName(),'items':[],'error':"no info available"}
-  def setInfo(self,name,info,status,childId=None):
+  def setInfo(self,name,info,status,childId=None,canDelete=False):
     existing=self.status.get(name)
     if existing:
       if existing.update(status,info):
         AVNLog.info("%s",str(existing))
         return True
     else:
-      ns=WorkerStatus(name,status,info,childId=childId)
+      ns=WorkerStatus(name,status,info,childId=childId,canDelete=canDelete)
       self.status[name]=ns
       AVNLog.info("%s",str(ns))
   def deleteInfo(self,name):
@@ -420,37 +428,25 @@ class AVNWorker(threading.Thread):
       en="True"
     return str(en).upper()!='TRUE'
 
+  def getEditableChildParameters(self,child):
+    raise Exception("getEditableChildParameters not available for %s"%self.getName())
 
-
-  def checkConfig(self,param,child=None):
-    '''
-    check the config valaues against the defined ones
-    and return a dict with the converted values
-    @param param:
-    @return:
-    '''
-    cfgs=self.getEditableParameters(child)
-    if cfgs is None:
-      raise Exception("no editable parameters")
-    rt={}
-    for k,v in param.items():
-      cv=WorkerParameter.checkValueFor(cfgs,k,v)
-      rt[k]=cv
-    return rt
   def updateConfig(self,param,child=None):
     '''
     change of config parameters
     the handler must update its data and store the values using changeMultiConfig, changeChildConfig
     @param param: a dictonary with the keyes matching the keys from getEditableParameters
     @type param: dict
-    @param child: a string id:type or None
+    @param child: a child id or None
     @return:
     '''
     if child is not None:
       raise Exception("cannot modify child %s"%str(child))
-    checked = self.checkConfig(param)
+    checked = WorkerParameter.checkValuesFor(self.getEditableParameters(), param, self.getParam())
     self.changeMultiConfig(checked)
 
+  def deleteChild(self,child):
+    raise Exception("delete child not allowed for %s"%self.getName())
 
   def shouldStop(self):
     return self._stop
@@ -567,7 +563,7 @@ class AVNWorker(threading.Thread):
       return
     self.configChanger.handleChange()
 
-  def removeChildConfig(self,childName,childIndex):
+  def removeChildConfig(self,childName,childIndex,delayWriteOut=False):
     if self.param is None:
       raise Exception("unable to set param")
     if self.configChanger is None:
@@ -580,7 +576,7 @@ class AVNWorker(threading.Thread):
       raise Exception("param %s is no childlist"%childName)
     if childIndex < 0 or childIndex >= len(childList):
       raise Exception("trying to delete a non existing child %s:%d"%(childName,childIndex))
-    self.configChanger.removeChild(childName,childIndex)
+    self.configChanger.removeChild(childName,childIndex,delayUpdate=delayWriteOut)
     childList.pop(childIndex)
 
   #get the XML tag in the config file that describes this worker
@@ -592,7 +588,7 @@ class AVNWorker(threading.Thread):
   #must be returned, child nodes are added to the parameter dict
   #as an entry with childnodeName=[] - the child node configs being in the list
   @classmethod
-  def getConfigParam(cls, child=None, forEdit=False):
+  def getConfigParam(cls, child=None):
     raise Exception("getConfigParam must be overwritten")
 
   DEFAULT_CONFIG_PARAM={

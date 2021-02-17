@@ -40,7 +40,7 @@ class AVNSocketWriter(AVNWorker,SocketReader):
     return "AVNSocketWriter"
   
   @classmethod
-  def getConfigParam(cls, child=None, forEdit=False):
+  def getConfigParam(cls, child=None):
     if child is None:
       
       rt=[

@@ -63,7 +63,7 @@ class AVNLayoutHandler(AVNWorker):
   def getConfigName(cls):
     return "AVNLayoutHandler"
   @classmethod
-  def getConfigParam(cls, child=None, forEdit=False):
+  def getConfigParam(cls, child=None):
     if child is not None:
       return None
     return {

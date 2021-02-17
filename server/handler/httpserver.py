@@ -64,7 +64,7 @@ class AVNHTTPServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
     cls.checkSingleInstance()
     return AVNHTTPServer(cfgparam, AVNHTTPHandler)
   @classmethod
-  def getConfigParam(cls, child=None, forEdit=False):
+  def getConfigParam(cls, child=None):
     if child == "Directory":
       return {
               "urlpath":None,

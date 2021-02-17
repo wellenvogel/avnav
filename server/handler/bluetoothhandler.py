@@ -43,7 +43,7 @@ class AVNBlueToothReader(AVNWorker,SocketReader):
     return "AVNBlueToothReader"
   
   @classmethod
-  def getConfigParam(cls, child=None, forEdit=False):
+  def getConfigParam(cls, child=None):
     rt={
         'maxDevices':5,
         'deviceList':'',  #is set (, separated) only connect to those devices
