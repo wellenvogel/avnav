@@ -5,6 +5,7 @@
 .classpath
 .settings/**
 .vscode/
+.gitignore
 local.properties
 data_linux/
 data_windows/
