@@ -3,7 +3,7 @@
   //the type can be "c"|"k"
   //value is in kelvin
   var formatTemperature=function(value,type){
-        if (value === undefined) return value;
+    if (! Number.isFinite(value)) return "---";
         if (type === "c"){
             value=value-273.15;
         }
@@ -20,10 +20,11 @@
   @param type: either "h" for hPa, or... for unchanged
   **/
   var formatPressure=function(pressure,type){
+    if (! Number.isFinite(pressure)) return "---";
     var fract=0;
     if (type === "h" || type === 'hpa'){
       pressure=pressure/100;
-      fract=1;
+      fract=0;
     }
     return avnav.api.formatter.formatDecimal(pressure,4,fract);
   }
