@@ -116,6 +116,8 @@ class SerialWriter(SerialReader):
     portname=self.param['port']
     timeout=float(self.param['timeout'])
     name=self.getName()
+    isCombined = self.param.get('combined') or False
+    modeStr='writer' if not isCombined else 'combined'
     if init:
       AVNLog.info("openDevice for port %s, baudrate=%d, timeout=%f",
                   portname,baud,timeout)
@@ -124,12 +126,12 @@ class SerialWriter(SerialReader):
       AVNLog.debug("openDevice for port %s, baudrate=%d, timeout=%f",portname,baud,timeout)
     lastTime=time.time()
     try:
-      self.setInfoWithKey("writer","opening %s at %d baud"%(portname,baud),WorkerStatus.STARTED)
+      self.setInfoWithKey("writer","%s opening %s at %d baud"%(modeStr,portname,baud),WorkerStatus.STARTED)
       f=serial.Serial(pnum, timeout=timeout, baudrate=baud, bytesize=bytesize, parity=parity, stopbits=stopbits, xonxoff=xonxoff, rtscts=rtscts)
-      self.setInfoWithKey("writer","port open",WorkerStatus.STARTED)
+      self.setInfoWithKey("writer","%s port %s open at %d baud"%(modeStr,portname,baud),WorkerStatus.STARTED)
       return f
     except Exception:
-      self.setInfoWithKey("writer","unable to open port",WorkerStatus.ERROR)
+      self.setInfoWithKey("writer","%s unable to open port %s"%(modeStr,portname),WorkerStatus.ERROR)
       try:
         tf=traceback.format_exc(3)
       except:

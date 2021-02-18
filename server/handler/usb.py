@@ -41,9 +41,14 @@ class InfoHandler(object):
     self.name=name
     self.parent=parent
     self.childId="%s:%s"%(CHILD_NAME,name)
+    self.ignoredKeys=[]
   def setInfo(self,item,text,status,canDelete=False):
+    if item in self.ignoredKeys:
+      return
     self.parent.setInfo(self.name,text,status,self.childId,canDelete=canDelete)
   def deleteInfo(self,item):
+    if item in self.ignoredKeys:
+      return
     self.parent.deleteInfo(self.name)
 
 class UsbSerialHandler(InfoHandler):
@@ -73,20 +78,21 @@ class UsbSerialHandler(InfoHandler):
       self.setInfo(None,"starting type %s"%self.type,WorkerStatus.STARTED,
                    canDelete=self.param.get('childIndex',-1) >= 0)
       if self.type == self.T_WRITER or self.type == self.T_COMBINED:
+        self.ignoredKeys=['reader']
         self.serialHandler = SerialWriter(self.param, self.parent.writeData, self, sourceName)
         if self.type == self.T_COMBINED:
           self.serialHandler.param["combined"] = True
       else:
         self.serialHandler = SerialReader(self.param, self.parent.writeData, self, sourceName)
-        self.serialHandler.run()
+      self.serialHandler.run()
     else:
       if device is None:
-        self.setInfo(None,"%s: not available"%self.name,WorkerStatus.INACTIVE,canDelete=True)
+        self.setInfo(None,"configured but not available",WorkerStatus.INACTIVE,canDelete=True)
       else:
         if self.type == self.T_IGNORE:
-          self.setInfo(None, '%s: %s ignored' % (self.name,device), WorkerStatus.INACTIVE,canDelete=True)
+          self.setInfo(None, '%s configured to be ignored' % (device), WorkerStatus.INACTIVE,canDelete=True)
         else:
-          self.setInfo(None, '%s: %s not configured(forbidden)' %(self.name, device), WorkerStatus.INACTIVE)
+          self.setInfo(None, '%s not configured(forbidden)' %(device), WorkerStatus.INACTIVE)
       while (not self.stop):
         time.sleep(0.2)
     self.deleteInfo(None)
@@ -219,7 +225,10 @@ class AVNUsbSerialReader(AVNWorker):
 
   def updateConfig(self, param, child=None):
     if child is None:
-      return super().updateConfig(param)
+      hasChanged=super().updateConfig(param)
+      if hasChanged:
+        self._stopHandlers()
+      return
     (usbid,handler)=self._findHandlerForChild(child)
     checked = WorkerParameter.checkValuesFor(self.getSerialParam(),param,handler.param)
     self.maplock.acquire()
@@ -483,5 +492,15 @@ class AVNUsbSerialReader(AVNWorker):
         AVNLog.debug("exception when querying usb serial devices %s, retrying after 10s",traceback.format_exc())
         context=None
       time.sleep(10)
+
+  def _stopHandlers(self):
+    usbids=[]+list(self.addrmap.keys())
+    for id in usbids:
+      self.stopHandler(id)
+
+  def stop(self):
+    super().stop()
+    self._stopHandlers()
+
 
 avnav_handlerList.registerHandler(AVNUsbSerialReader)

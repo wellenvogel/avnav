@@ -61,6 +61,11 @@ class WorkerParameter(object):
   def serialize(self):
     return self.__dict__
 
+  def setValue(self,name,value):
+    if not hasattr(self,name):
+      raise ParamValueError("invalid parameter %s"%name)
+    return self.__setattr__(name,value)
+
   def copy(self):
     return WorkerParameter(self.name,
                            default=self.default,
@@ -82,7 +87,9 @@ class WorkerParameter(object):
         for k,v in vdict.items():
           if k == 'name':
             continue
-          p[k]=v
+          p.setValue(k,v)
+        return
+
   @classmethod
   def checkValuesFor(cls,plist,newParam,existingParam=None):
     rt={}
@@ -443,7 +450,7 @@ class AVNWorker(threading.Thread):
     if child is not None:
       raise Exception("cannot modify child %s"%str(child))
     checked = WorkerParameter.checkValuesFor(self.getEditableParameters(), param, self.getParam())
-    self.changeMultiConfig(checked)
+    return self.changeMultiConfig(checked)
 
   def deleteChild(self,child):
     raise Exception("delete child not allowed for %s"%self.getName())
@@ -530,6 +537,7 @@ class AVNWorker(threading.Thread):
         self.param[k] = v
     if hasChanges:
       self.configChanger.handleChange()
+    return hasChanges
 
   def changeChildConfig(self,childName,childIndex,name,value,delayWriteOut=False):
     if self.param is None:
