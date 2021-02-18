@@ -28,9 +28,9 @@ const statusTextToImageUrl=(text)=>{
     return rt;
 };
 const EditIcon=(props)=>{
-    return <span className="editIcon" onClick={
-        props.onClick
-    }></span>
+    return <Button
+        name="Edit" className="Edit smallButton editIcon" onClick={props.onClick}/>
+
 }
 const ChildStatus=(props)=>{
     let canEdit=(props.id !== undefined && props.id !== null);
@@ -48,14 +48,16 @@ const ChildStatus=(props)=>{
 const StatusItem=(props)=>{
     let canEdit=(props.id !== undefined && props.id !== null);
     return(
-        <div className="status" >
-            <span className="statusName">{props.name.replace(/\[.*\]/,'')}</span>
-            {canEdit && <EditIcon
-                onClick={
-                    ()=>showEditDialog(props.id)
-                }/>}
+        <div className="status"  key={props.displayKey}>
+            <div className={"statusHeading"}>
+                <span className="statusName">{props.name.replace(/\[.*\]/, '')}</span>
+                {canEdit && <EditIcon
+                    onClick={
+                        () => showEditDialog(props.id)
+                    }/>}
+            </div>
             {props.info && props.info.items && props.info.items.map(function(el){
-                return <ChildStatus {...el} key={el.name} handlerId={props.id}/>
+                return <ChildStatus {...el} key={props.name+el.name} handlerId={props.id}/>
             })}
         </div>
 
@@ -109,6 +111,7 @@ class StatusPage extends React.Component{
                     if (el.configname=="AVNCommandHandler"){
                         if (el.properties && el.properties.shutdown ) storeData.shutdown=true;
                     }
+                    el.key=el.displayKey;
                     storeData.itemList.push(el);
                 });
             }

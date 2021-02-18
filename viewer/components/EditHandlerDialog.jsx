@@ -128,11 +128,15 @@ class EditHandlerDialog extends React.Component{
             window.setTimeout(self.props.updateDimensions,100);
         }
         let currentValues=assign({},this.currentValues.getState(),this.modifiedValues.getState());
+        let name=this.state.name||'';
+        if (this.props.child){
+            name+=":"+this.props.child;
+        }
         return (
             <React.Fragment>
             <div className="selectDialog EditHandlerDialog">
                 <h3 className="dialogTitle">{this.props.title||'Edit Handler'}</h3>
-                <div className="dialogRow">{this.state.name||''}</div>
+                <div className="dialogRow">{name}</div>
                 {!this.state.loaded ?
                     <div className="loadingIndicator"></div>
                     :

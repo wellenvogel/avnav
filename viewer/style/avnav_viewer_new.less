@@ -1056,10 +1056,6 @@ span.valuePrefix{
 
 #statuspage{
   .editIcon {
-    display: inline-block;
-    width: 2em;
-    height: 2em;
-    background-color: black;
     margin-left: 1em;
   }
   .status {
@@ -1068,10 +1064,18 @@ span.valuePrefix{
     padding-left: 1em;
     margin-top: 5px;
     line-height: 2em;
+    .statusHeading{
+      .flex-display();
+      .flex-direction(row);
+    }
   }
   .childStatus {
     padding-left: 1.5em;
     margin-top: 3px;
+    .flex-display();
+    .flex-direction(row);
+    .flex-align-items(center);
+    .flex-wrap(wrap);
     .mdText2();
     img {
       width: 1em;
