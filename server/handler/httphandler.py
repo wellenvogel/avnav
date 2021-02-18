@@ -469,11 +469,15 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
       if command == 'getEditables':
         if child is not None:
           data=handler.getEditableChildParameters(child)
+          canDelete=True
         else:
           data= handler.getEditableParameters()
+          canDelete=handler.canDeleteHandler()
         if data is not None:
           rt['data']=data
           rt['values']=handler.getParam(child,filtered=True)
+          rt['configName']=handler.getConfigName()
+          rt['canDelete']=canDelete
       elif command=='setConfig':
         values=self.getRequestParam(requestParam,'_json',mantadory=True)
         decoded=json.loads(values)

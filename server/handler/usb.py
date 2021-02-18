@@ -230,6 +230,7 @@ class AVNUsbSerialReader(AVNWorker):
         self._stopHandlers()
       return
     (usbid,handler)=self._findHandlerForChild(child)
+    param['usbid']=usbid
     checked = WorkerParameter.checkValuesFor(self.getSerialParam(),param,handler.param)
     self.maplock.acquire()
     try:

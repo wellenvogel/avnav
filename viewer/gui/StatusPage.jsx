@@ -17,27 +17,45 @@ import Requests from '../util/requests.js';
 import OverlayDialog from '../components/OverlayDialog.jsx';
 import GuiHelpers from '../util/GuiHelpers.js';
 import Mob from '../components/Mob.js';
+import EditHandlerDialog from "../components/EditHandlerDialog";
 
+const showEditDialog=(handlerId,child)=>{
+    EditHandlerDialog.createDialog(handlerId,child);
+}
 const statusTextToImageUrl=(text)=>{
     let rt=globalStore.getData(keys.properties.statusIcons[text]);
     if (! rt) rt=globalStore.getData(keys.properties.statusIcons.INACTIVE);
     return rt;
 };
+const EditIcon=(props)=>{
+    return <span className="editIcon" onClick={
+        props.onClick
+    }></span>
+}
 const ChildStatus=(props)=>{
+    let canEdit=(props.id !== undefined && props.id !== null);
     return (
         <div className="childStatus">
             <img src={statusTextToImageUrl(props.status)}/>
             <span className="statusName">{props.name}</span>
             <span className="statusInfo">{props.info}</span>
+            {canEdit && <EditIcon onClick={
+                ()=>showEditDialog(props.handlerId,props.id)
+            }/>}
         </div>
     );
 };
 const StatusItem=(props)=>{
+    let canEdit=(props.id !== undefined && props.id !== null);
     return(
         <div className="status" >
             <span className="statusName">{props.name.replace(/\[.*\]/,'')}</span>
+            {canEdit && <EditIcon
+                onClick={
+                    ()=>showEditDialog(props.id)
+                }/>}
             {props.info && props.info.items && props.info.items.map(function(el){
-                return <ChildStatus {...el} key={el.name}/>
+                return <ChildStatus {...el} key={el.name} handlerId={props.id}/>
             })}
         </div>
 

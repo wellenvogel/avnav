@@ -49,8 +49,8 @@ export const getList=(list,current)=> {
     displayList.sort((a,b)=>{
         if ( ! a || ! a.name) return -1;
         if (! b || ! b.name) return 1;
-        let na=a.name.toUpperCase();
-        let nb=b.name.toUpperCase();
+        let na=(typeof(a.name) === 'string') ? a.name.toUpperCase():a;
+        let nb=(typeof(b.name) === 'string')? b.name.toUpperCase():b;
         if (na<nb) return -1;
         if (na > nb) return 1;
         return 0;
@@ -90,7 +90,7 @@ export const ParamValueInput=(props)=>{
         if (type === EditableParameter.TYPE.SELECT ) {
             ValueInput = InputSelect;
             inputFunction = (val) => {
-                props.onChange(param.setValue({}, val.name));
+                props.onChange(param.setValue(assign({},props.currentValues), val.name));
             };
         }
         if (type === EditableParameter.TYPE.BOOLEAN){

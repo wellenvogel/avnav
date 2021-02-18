@@ -80,9 +80,9 @@ export class EditableParameter{
     }
     getValueForDisplay(param,opt_placeHolder){
         let rt=this.getValue(param);
-        if (rt !== undefined) return rt;
+        if (rt !== undefined && rt !== null) return rt;
         rt=this.default;
-        if (rt !== undefined) return rt;
+        if (rt !== undefined && rt !== null) return rt;
         return opt_placeHolder||"";
     }
     isValid(value){
