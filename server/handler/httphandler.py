@@ -409,8 +409,19 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
 
   def handleStatusRequest(self,requestParam):
     rt=[]
-    for handler in AVNWorker.getAllHandlers(True):
-      entry={'configname':handler.getConfigName(),
+    allHandlers=AVNWorker.getAllHandlers(True)
+    #find for each type the first id
+    typIds={}
+    for h in allHandlers:
+      type=h.getConfigName()
+      if typIds.get(type) is None:
+        typIds[type]=h.getId()
+    #get the sorted list of typeIds
+    typeList=sorted(typIds.keys(),key=lambda k: typIds[k])
+    for type in typeList:
+      for handler in AVNWorker.getAllHandlers(True):
+        if handler.getConfigName() != type: continue
+        entry={'configname':handler.getConfigName(),
              'config': handler.getParam(),
              'name':handler.getStatusName(),
              'info':handler.getInfo(),
@@ -418,7 +429,7 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
              'properties':handler.getStatusProperties() if not handler.isDisabled() else {},
              'canDelete':handler.canDeleteHandler(),
              'id':handler.getId() if handler.canEdit() else None}
-      rt.append(entry)
+        rt.append(entry)
     return json.dumps({'handler':rt},cls=Encoder)
 
   def handleConfigRequest(self,requestParam):
