@@ -205,6 +205,7 @@ def main(argv):
             httpServer.registerRequestHandler(h,handledCommands[h],handler)
         else:
           httpServer.registerRequestHandler('api',handledCommands,handler)
+    httpServer.registerRequestHandler('config','createHandler',cfg)
   navData=AVNStore(float(baseConfig.param['expiryTime']),float(baseConfig.param['aisExpiryTime']),baseConfig.param['ownMMSI'])
   NMEAParser.registerKeys(navData)
   level=logging.INFO
@@ -236,19 +237,7 @@ def main(argv):
   except:
     pass
   try:
-    groups=set()
-    for handler in AVNWorker.getAllHandlers():
-      groups.add(handler.getStartupGroup())
-    grouplist=list(groups)
-    grouplist.sort()
-    for group in grouplist:
-      for handler in AVNWorker.getAllHandlers():
-        try:
-          if handler.getStartupGroup() == group:
-            handler.startInstance(navData)
-        except Exception:
-          AVNLog.warn("unable to start handler : "+traceback.format_exc())
-    AVNLog.info("All Handlers started")
+    cfg.startHandlers(navData)
     
     #---------------------------- main loop --------------------------------
     #check if we have a position and handle time updates

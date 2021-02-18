@@ -10,6 +10,7 @@ import traceback
 import urllib.request, urllib.parse, urllib.error
 import urllib.parse
 
+import avnav_handlerList
 from avnav_store import AVNStore
 from avnav_util import AVNUtil, AVNLog
 from avnav_worker import AVNWorker
@@ -423,7 +424,32 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
   def handleConfigRequest(self,requestParam):
     rt={'status':'OK'}
     try:
-      command=self.getRequestParam(requestParam,'command',mantadory=True)
+      command=self.getRequestParam(requestParam,'type',mantadory=True)
+      externalHandler = self.server.getRequestHandler('config', command)
+      if externalHandler is not None:
+        ert = externalHandler.handleApiRequest('config', command, requestParam, handler=self)
+        if ert == True:
+          return json.dumps(rt)
+        if ert is not None:
+          return json.dumps(ert, cls=Encoder)
+        raise Exception("not found")
+      if command == 'getAddables':
+        allHandlers=avnav_handlerList.getAllHandlerClasses()
+        hlist=[]
+        for h in allHandlers:
+          if h.canDeleteHandler():
+            hlist.append(h.getConfigName())
+        rt['data']=hlist
+        return json.dumps(rt, cls=Encoder)
+      if command == 'getAddAttributes':
+        tagName=self.getRequestParam(requestParam,'handlerName',mantadory=True)
+        handlerClass=avnav_handlerList.findHandlerByConfigName(tagName)
+        if handlerClass is None:
+          raise Exception("unable to find handler for %s"%tagName)
+        if not handlerClass.canDeleteHandler():
+          raise Exception("handler %s cannot be added"%tagName)
+        rt['data']=handlerClass.getConfigParam()
+        return json.dumps(rt, cls=Encoder)
       id=self.getRequestParam(requestParam,'handlerId',mantadory=True)
       child=self.getRequestParam(requestParam,'child',mantadory=False)
       handler=AVNWorker.findHandlerById(int(id))
@@ -447,6 +473,9 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
           raise Exception("missing parameter child")
         AVNLog.info("deleting child %s for %s",child,handler.getName())
         handler.deleteChild(child)
+      elif command == 'deleteHandler':
+        AVNLog.info("removing handler %s",handler.getName())
+        AVNWorker.removeHandler(int(id))
       else:
         raise Exception("unknown command %s"%command)
       return json.dumps(rt,cls=Encoder)

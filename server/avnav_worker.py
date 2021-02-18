@@ -230,13 +230,32 @@ class WorkerStatus(object):
   def __str__(self) -> str:
     return "STATUS[%s] %s, %s"%(self.name,self.status,self.info)
 
+class WorkerId(object):
+  def __init__(self):
+    self.id=0
+    self.lock=threading.Lock()
+  def next(self):
+    self.lock.acquire()
+    try:
+      self.id+=1
+      return self.id
+    finally:
+      self.lock.release()
+
+
 
 class AVNWorker(threading.Thread):
   handlerListLock=threading.Lock()
   """a base class for all workers
      this provides some config functions and a common interfcace for handling them"""
   allHandlers=[] #the list of all instantiated handlers
+  __workerId=WorkerId()
   Type=Enum(['DEFAULT','FEEDER','HTTPSERVER'])
+
+
+  @classmethod
+  def getNextWorkerId(cls):
+    return cls.__workerId.next()
 
   @classmethod
   def findHandlerByTypeAndName(cls, type, name=None):
@@ -316,16 +335,29 @@ class AVNWorker(threading.Thread):
     return WorkerParameter.filterEditables(cls.getConfigParam(),makeCopy=makeCopy)
 
 
+  @classmethod
+  def removeHandler(cls,handlerId):
+    handler=cls.findHandlerById(handlerId)
+    if handler is None:
+      raise Exception("handler for id %s not found"%str(handlerId))
+    if not handler.canDeleteHandler():
+      raise Exception("handler %s cannot be deleted"%str(handlerId))
+    cls.handlerListLock.acquire()
+    try:
+      cls.allHandlers.remove(handler)
+    finally:
+      cls.handlerListLock.release()
+    handler.stop()
+    handler.configChanger.removeSelf()
+
   
   def __init__(self,cfgparam):
     self.handlerListLock.acquire()
-    id=0
     try:
       self.allHandlers.append(self) #fill the static list of handlers
-      id=len(self.allHandlers) - 1
     finally:
       self.handlerListLock.release()
-    self.id=id
+    self.id=self.getNextWorkerId()
     self.param=cfgparam
     self.status=False
     threading.Thread.__init__(self)

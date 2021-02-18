@@ -25,6 +25,8 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
 import codecs
+import json
+
 import shutil
 
 from avnav_util import *
@@ -54,13 +56,30 @@ class ConfigChanger(object):
     if skip:
       return
     self.changeHandler.dataChanged()
+    self.dirty=False
 
   def _addToDom(self):
     if self.isAttached:
       return
-    self.domBase.documentElement.appendChild(self.elementDom)
-    newline=self.domBase.createTextNode("\n")
-    self.domBase.documentElement.appendChild(newline)
+    #we try some "insert before"
+    tagName=self.elementDom.tagName
+    newline = self.domBase.createTextNode("\n")
+    existing=self.domBase.documentElement.getElementsByTagName(tagName)
+    if existing is not None and existing.length > 0:
+      lastExisting=existing[existing.length-1]
+      nextSibling=lastExisting.nextSibling
+      if nextSibling is not None:
+        if nextSibling.nodeType == dom.Node.TEXT_NODE and nextSibling.nodeValue == "\n" and nextSibling.nextSibling is not None:
+          nextSibling=nextSibling.nextSibling
+        lastExisting.parentNode.insertBefore(self.elementDom,nextSibling)
+        lastExisting.parentNode.insertBefore(newline, nextSibling)
+      else:
+        lastExisting.parentNode.appendChild(self.elementDom)
+        lastExisting.parentNode.appendChild(newline)
+    else:
+      self.domBase.documentElement.appendChild(self.elementDom)
+      self.domBase.documentElement.appendChild(newline)
+    self.isAttached=True
     self._setDirty()
 
   def changeAttribute(self,name,value,delayUpdate=False):
@@ -118,6 +137,29 @@ class ConfigChanger(object):
     if not delayUpdate:
       self.handleChange()
     return
+
+  def writeAll(self):
+    self._addToDom()
+    self._setDirty()
+    self.handleChange()
+
+  def removeSelf(self):
+    if not self.isAttached:
+      return
+    parentNode=self.elementDom.parentNode
+    sibling = self.elementDom.nextSibling
+    if sibling is not None:
+      if sibling.nodeType == dom.Node.TEXT_NODE and sibling.nodeValue == "\n":
+        # our inserted newline
+        parentNode.removeChild(sibling)
+    parentNode.removeChild(self.elementDom)
+    self.elementDom.unlink()
+    self._setDirty()
+    self.handleChange()
+    self.isAttached=False
+
+
+
 
 # a class for parsing the config file
 class AVNConfig(object):
@@ -196,11 +238,30 @@ class AVNConfig(object):
     self.cfgfileName=None
     self.currentCfgFileName=None #potentially this is the fallback file
     self.parseError=None
+    self.navData=None
 
   def setBaseParam(self,name,value):
     if not hasattr(self.BASEPARAM,name):
       raise Exception("invalid parameter for setBaseParam")
     self.baseParam[name]=value
+
+  def createHandlerFromScratch(self,tagName,properties=None):
+    ai = "<" + tagName + "/>"
+    node = parser.parseString(ai)
+    if node.documentElement.nodeType != dom.Node.ELEMENT_NODE or node.documentElement.tagName != tagName:
+      raise Exception("invalid main node or main node name for autoInstantiate")
+    for handler in avnav_handlerList.getAllHandlerClasses():
+      name = handler.getConfigName()
+      if name == tagName:
+        if not handler.canDeleteHandler():
+          raise Exception("unable to create handler of type %s"%tagName)
+        if properties is not None:
+          for k,v in properties.items():
+            node.documentElement.setAttribute(k,v)
+        return self.parseHandler(node.documentElement, handler, domAttached=False)
+    raise Exception("handler type %s not found"%tagName)
+
+
   def readConfigAndCreateHandlers(self,filename):
     AVNLog.info("reading config %s",filename)
     AVNWorker.resetHandlerList()
@@ -286,6 +347,7 @@ class AVNConfig(object):
       AVNLog.error("unable to instantiate handler %s",element.tagName)
     else:
       instance.setConfigChanger(ConfigChanger(self, self.domObject, domAttached, element, childPointer))
+    return instance
 
   def dataChanged(self):
     #TODO: do some checks?
@@ -377,4 +439,31 @@ class AVNConfig(object):
       AVNLog.error("exception when finally renaming %s to %s: %s",tmpName,self.cfgfileName,str(e))
       raise
 
+  def startHandlers(self,navData):
+    self.navData=navData
+    groups = set()
+    for handler in AVNWorker.getAllHandlers():
+      groups.add(handler.getStartupGroup())
+    grouplist = list(groups)
+    grouplist.sort()
+    for group in grouplist:
+      for handler in AVNWorker.getAllHandlers():
+        try:
+          if handler.getStartupGroup() == group:
+            handler.startInstance(navData)
+        except Exception:
+          AVNLog.warn("unable to start handler : " + traceback.format_exc())
+    AVNLog.info("All Handlers started")
+
+  def handleApiRequest(self,request,type,requesParam,**kwargs):
+    if request != "config":
+      raise Exception("unknown request %s"%request)
+    if type != 'createHandler':
+      raise Exception("unknown config request %s"%type)
+    tagName=AVNUtil.getHttpRequestParam(requesParam,'handlerName',mantadory=True)
+    config=AVNUtil.getHttpRequestParam(requesParam,'_json',mantadory=True)
+    handler=self.createHandlerFromScratch(tagName,json.loads(config))
+    handler.configChanger.writeAll()
+    handler.startInstance(self.navData)
+    return {'status':'OK'}
 
