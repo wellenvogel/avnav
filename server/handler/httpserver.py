@@ -40,7 +40,7 @@ try:
 except:
   pass
 from wpahandler import *
-from avnav_config import *
+from avnav_manager import *
 hasIfaces=False
 try:
   import netifaces
@@ -96,12 +96,12 @@ class AVNHTTPServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
     return rt
   
   def __init__(self,cfgparam,RequestHandlerClass):
-    replace=AVNConfig.filterBaseParam(cfgparam)
+    replace=AVNHandlerManager.filterBaseParam(cfgparam)
     if cfgparam.get('basedir')== '.':
       #some migration of the older setting - we want to use our global dir function, so consider . to be empty
       cfgparam['basedir']=''
-    self.basedir=AVNConfig.getDirWithDefault(cfgparam,'basedir',defaultSub='',belowData=False)
-    datadir=cfgparam[AVNConfig.BASEPARAM.DATADIR]
+    self.basedir=AVNHandlerManager.getDirWithDefault(cfgparam, 'basedir', defaultSub='', belowData=False)
+    datadir=cfgparam[AVNHandlerManager.BASEPARAM.DATADIR]
     pathmappings=None
     marray=cfgparam.get("Directory")
     if marray is not None:
@@ -115,7 +115,7 @@ class AVNHTTPServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
     if charturl is not None:
       #set a default chart dir if not set via config url mappings
       if self.pathmappings.get(charturl) is None:
-        self.pathmappings[charturl]=os.path.join(cfgparam[AVNConfig.BASEPARAM.DATADIR],"charts")
+        self.pathmappings[charturl]=os.path.join(cfgparam[AVNHandlerManager.BASEPARAM.DATADIR], "charts")
     self.navurl=cfgparam['navurl']
     self.overwrite_map=({
                               '.png': 'image/png',

@@ -33,7 +33,7 @@ const EditIcon=(props)=>{
 
 }
 const ChildStatus=(props)=>{
-    let canEdit=(props.id !== undefined && props.id !== null);
+    let canEdit=props.canEdit;
     return (
         <div className="childStatus">
             <img src={statusTextToImageUrl(props.status)}/>
@@ -46,9 +46,9 @@ const ChildStatus=(props)=>{
     );
 };
 const StatusItem=(props)=>{
-    let canEdit=(props.id !== undefined && props.id !== null);
+    let canEdit=props.canEdit;
     return(
-        <div className="status"  key={props.displayKey}>
+        <div className="status"  key={props.id}>
             <div className={"statusHeading"}>
                 <span className="statusName">{props.name.replace(/\[.*\]/, '')}</span>
                 {canEdit && <EditIcon

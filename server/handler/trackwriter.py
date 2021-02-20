@@ -28,7 +28,7 @@
 import glob
 
 import avnav_handlerList
-from avnav_config import AVNConfig
+from avnav_manager import AVNHandlerManager
 from avndirectorybase import *
 
 
@@ -43,7 +43,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
     self.getFloatParam('mindistance', throw)
     self.getFloatParam('interval', throw)
     self.tracklock=threading.Lock()
-    self.baseDir=AVNConfig.getDirWithDefault(self.param,"trackdir",'tracks')
+    self.baseDir=AVNHandlerManager.getDirWithDefault(self.param, "trackdir", 'tracks')
     self.fname=None
     self.loopCount=0
     self.currentFile=None

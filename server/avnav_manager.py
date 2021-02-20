@@ -162,7 +162,7 @@ class ConfigChanger(object):
 
 
 # a class for parsing the config file
-class AVNConfig(object):
+class AVNHandlerManager(object):
   class BASEPARAM(Enum):
     BASEDIR='BASEDIR' #the base directory for the server - location of the main python file
     DATADIR='DATADIR' #the data directory if not provided on the commandline: either parent dir of chart dir or $HOME/avnav
@@ -320,7 +320,7 @@ class AVNConfig(object):
         nextElement=nextElement.nextSibling
 
   def parseHandler(self, element, handlerClass, domAttached=True):
-    configParam= handlerClass.getConfigParam()
+    configParam= handlerClass.getConfigParamCombined()
     if type(configParam) is list:
       configParam=WorkerParameter.filterNameDef(configParam)
     cfg=handlerClass.parseConfig(element.attributes,configParam)
@@ -329,7 +329,7 @@ class AVNConfig(object):
     while child is not None:
       if child.nodeType == dom.Node.ELEMENT_NODE:
         childName=child.tagName
-        cfgDefaults= handlerClass.getConfigParam(childName)
+        cfgDefaults= handlerClass.getConfigParamCombined(childName)
         if cfgDefaults is not None:
           if type(cfgDefaults) is list:
             cfgDefaults=WorkerParameter.filterNameDef(cfgDefaults)
@@ -455,15 +455,67 @@ class AVNConfig(object):
           AVNLog.warn("unable to start handler : " + traceback.format_exc())
     AVNLog.info("All Handlers started")
 
-  def handleApiRequest(self,request,type,requesParam,**kwargs):
-    if request != "config":
+  def handleApiRequest(self,request,type,requestParam,**kwargs):
+    if request != "api":
       raise Exception("unknown request %s"%request)
-    if type != 'createHandler':
+    if type != 'config':
       raise Exception("unknown config request %s"%type)
-    tagName=AVNUtil.getHttpRequestParam(requesParam,'handlerName',mantadory=True)
-    config=AVNUtil.getHttpRequestParam(requesParam,'_json',mantadory=True)
-    handler=self.createHandlerFromScratch(tagName,json.loads(config))
-    handler.configChanger.writeAll()
-    handler.startInstance(self.navData)
-    return {'status':'OK'}
-
+    command=AVNUtil.getHttpRequestParam(requestParam,'command',mantadory=True)
+    rt={'status':'OK'}
+    if command == 'createHandler':
+      tagName=AVNUtil.getHttpRequestParam(requestParam,'handlerName',mantadory=True)
+      config=AVNUtil.getHttpRequestParam(requestParam,'_json',mantadory=True)
+      handler=self.createHandlerFromScratch(tagName,json.loads(config))
+      handler.configChanger.writeAll()
+      handler.startInstance(self.navData)
+      return rt
+    if command == 'getAddables':
+      allHandlers = avnav_handlerList.getAllHandlerClasses()
+      hlist = []
+      for h in allHandlers:
+        if h.canDeleteHandler():
+          hlist.append(h.getConfigName())
+      rt['data'] = hlist
+      return rt
+    if command == 'getAddAttributes':
+      tagName = AVNUtil.getHttpRequestParam(requestParam, 'handlerName', mantadory=True)
+      handlerClass = avnav_handlerList.findHandlerByConfigName(tagName)
+      if handlerClass is None:
+        raise Exception("unable to find handler for %s" % tagName)
+      if not handlerClass.canDeleteHandler():
+        raise Exception("handler %s cannot be added" % tagName)
+      rt['data'] = handlerClass.getConfigParamCombined()
+      return rt
+    id = AVNUtil.getHttpRequestParam(requestParam, 'handlerId', mantadory=True)
+    child = AVNUtil.getHttpRequestParam(requestParam, 'child', mantadory=False)
+    handler = AVNWorker.findHandlerById(int(id))
+    if handler is None:
+        raise Exception("unable to find handler for id %s" % id)
+    if command == 'getEditables':
+      if child is not None:
+        data = handler.getEditableChildParameters(child)
+        canDelete = True
+      else:
+        data = handler.getEditableParameters()
+        canDelete = handler.canDeleteHandler()
+      if data is not None:
+          rt['data'] = data
+          rt['values'] = handler.getParam(child, filtered=True)
+          rt['configName'] = handler.getConfigName()
+          rt['canDelete'] = canDelete
+    elif command == 'setConfig':
+      values = AVNUtil.getHttpRequestParam(requestParam, '_json', mantadory=True)
+      decoded = json.loads(values)
+      handler.updateConfig(decoded, child)
+      AVNLog.info("updated %s, new config %s", handler.getName(), handler.getConfigString())
+    elif command == 'deleteChild':
+      if child is None:
+        raise Exception("missing parameter child")
+      AVNLog.info("deleting child %s for %s", child, handler.getName())
+      handler.deleteChild(child)
+    elif command == 'deleteHandler':
+      AVNLog.info("removing handler %s", handler.getName())
+      AVNWorker.removeHandler(int(id))
+    else:
+      raise Exception("unknown command %s" % command)
+    return rt

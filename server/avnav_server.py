@@ -44,7 +44,7 @@ try:
 except:
   pass
 from avnav_util import *
-from avnav_config import *
+from avnav_manager import *
 import avnav_handlerList
 from avnav_store import *
 sys.path.insert(0, os.path.join(os.path.dirname(__file__),"..","libraries"))
@@ -139,11 +139,11 @@ def main(argv):
     datadir=os.path.join(os.path.expanduser("~"),"avnav")
   datadir=os.path.abspath(datadir)
   AVNLog.info("basedir=%s,datadir=%s",basedir,datadir)
-  cfg=AVNConfig()
-  cfg.setBaseParam(cfg.BASEPARAM.BASEDIR,basedir)
-  cfg.setBaseParam(cfg.BASEPARAM.DATADIR,datadir)
-  rt=cfg.readConfigAndCreateHandlers(cfgname)
-  fallbackName = AVNConfig.getFallbackName(cfgname)
+  handlerManager=AVNHandlerManager()
+  handlerManager.setBaseParam(handlerManager.BASEPARAM.BASEDIR,basedir)
+  handlerManager.setBaseParam(handlerManager.BASEPARAM.DATADIR,datadir)
+  rt=handlerManager.readConfigAndCreateHandlers(cfgname)
+  fallbackName = AVNHandlerManager.getFallbackName(cfgname)
   failedBackup=None
   fallbackTime=None
   if rt is False:
@@ -151,7 +151,7 @@ def main(argv):
       AVNLog.error("error when parsing %s, trying fallback %s",cfgname,fallbackName)
       fallbackStat=os.stat(fallbackName)
       fallbackTime=time.strftime("%Y/%m/%d %H:%M:%S",time.localtime(fallbackStat.st_mtime))
-      rt=cfg.readConfigAndCreateHandlers(fallbackName)
+      rt=handlerManager.readConfigAndCreateHandlers(fallbackName)
       if not rt:
         AVNLog.error("unable to parse config file %s", fallbackName)
         sys.exit(1)
@@ -166,20 +166,20 @@ def main(argv):
         os.replace(tmpName,cfgname)
       except Exception as e:
         AVNLog.error("unable to create %s from %s: %s",cfgname,fallbackName,str(e))
-      cfg.cfgfileName=cfgname #we just did read the fallback - but if we write...
+      handlerManager.cfgfileName=cfgname #we just did read the fallback - but if we write...
 
     else:
       AVNLog.error("unable to parse config file %s",cfgname)
       sys.exit(1)
   else:
-    cfg.copyFileWithCheck(cfgname,fallbackName,False) #write a "last known good"
+    handlerManager.copyFileWithCheck(cfgname,fallbackName,False) #write a "last known good"
   baseConfig=AVNWorker.findHandlerByName("AVNConfig")
   httpServer=AVNWorker.findHandlerByName("AVNHttpServer")
   if baseConfig is None:
     AVNLog.error("internal error: base config not loaded")
     sys.exit(1)
   baseConfig.setVersion(AVNAV_VERSION)
-  parseError=cfg.parseError
+  parseError=handlerManager.parseError
   if parseError is not None:
     baseConfig.setStartupError("parsing config failed: %s, reverting back to fallback config from %s, invalid config moved to %s"%
                              (parseError,fallbackTime or '',failedBackup or ''))
@@ -205,7 +205,7 @@ def main(argv):
             httpServer.registerRequestHandler(h,handledCommands[h],handler)
         else:
           httpServer.registerRequestHandler('api',handledCommands,handler)
-    httpServer.registerRequestHandler('config','createHandler',cfg)
+    httpServer.registerRequestHandler('api','config',handlerManager)
   navData=AVNStore(float(baseConfig.param['expiryTime']),float(baseConfig.param['aisExpiryTime']),baseConfig.param['ownMMSI'])
   NMEAParser.registerKeys(navData)
   level=logging.INFO
@@ -237,7 +237,7 @@ def main(argv):
   except:
     pass
   try:
-    cfg.startHandlers(navData)
+    handlerManager.startHandlers(navData)
     
     #---------------------------- main loop --------------------------------
     #check if we have a position and handle time updates

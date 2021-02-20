@@ -28,7 +28,7 @@ import json
 import time
 
 import avnav_handlerList
-from avnav_config import AVNConfig
+from avnav_manager import AVNHandlerManager
 from avnav_util import *
 from avnav_worker import *
 from wpa_control import WpaControl
@@ -129,7 +129,7 @@ class AVNWpaHandler(AVNWorker):
     cmdparam=cmd.split(" ")
     command=[]
     for par in cmdparam:
-      command.append(AVNUtil.replaceParam(par, AVNConfig.filterBaseParam(self.getParam())))
+      command.append(AVNUtil.replaceParam(par, AVNHandlerManager.filterBaseParam(self.getParam())))
     self.setInfo(statusName,"running",WorkerStatus.NMEA)
     lastNet=None
     lastMode=None

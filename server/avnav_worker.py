@@ -221,7 +221,8 @@ class WorkerStatus(object):
       'info':self.info,
       'status':self.status,
       'name':self.name,
-      'canDelete':self.canDelete
+      'canDelete':self.canDelete,
+      'canEdit': self.id is not None
     }
     if self.id is not None:
       rt['id']=self.id
@@ -245,6 +246,9 @@ class WorkerId(object):
 
 
 class AVNWorker(threading.Thread):
+  DEFAULT_CONFIG_PARAM = [
+    WorkerParameter('name',default='',type=WorkerParameter.T_STRING)
+  ]
   handlerListLock=threading.Lock()
   """a base class for all workers
      this provides some config functions and a common interfcace for handling them"""
@@ -332,7 +336,7 @@ class AVNWorker(threading.Thread):
     '''
     if not cls.canEdit():
       return None
-    return WorkerParameter.filterEditables(cls.getConfigParam(),makeCopy=makeCopy)
+    return WorkerParameter.filterEditables(cls.getConfigParamCombined(),makeCopy=makeCopy)
 
 
   @classmethod
@@ -412,7 +416,7 @@ class AVNWorker(threading.Thread):
       raise Exception("cannot return child parameters")
     try:
       if filtered:
-        return WorkerParameter.filterByList(self.getConfigParam(), self.param)
+        return WorkerParameter.filterByList(self.getConfigParamCombined(), self.param)
       else:
         return self.param
     except:
@@ -623,6 +627,19 @@ class AVNWorker(threading.Thread):
   @classmethod
   def getConfigName(cls):
     return cls.__name__
+
+  @classmethod
+  def getConfigParamCombined(cls,child=None):
+    if child is None:
+      rt=cls.getConfigParam()
+      if type(rt) is dict:
+        rt.update({'name':''})
+        return rt
+      else:
+        return cls.DEFAULT_CONFIG_PARAM+rt
+    else:
+      return cls.getConfigParam(child)
+
   #return the default cfg values
   #if the parameter child is set, the parameter for a child node
   #must be returned, child nodes are added to the parameter dict
@@ -631,9 +648,7 @@ class AVNWorker(threading.Thread):
   def getConfigParam(cls, child=None):
     raise Exception("getConfigParam must be overwritten")
 
-  DEFAULT_CONFIG_PARAM={
-    'name':''
-  }
+
 
   @classmethod
   def preventMultiInstance(cls):
@@ -660,7 +675,6 @@ class AVNWorker(threading.Thread):
         else:
           sparam[k] = v.value
       return sparam
-    sparam.update(cls.DEFAULT_CONFIG_PARAM)
     for k in list(sparam.keys()):
       dv=sparam[k]
       if (isinstance(dv,str)):

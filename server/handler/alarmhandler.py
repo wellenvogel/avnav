@@ -33,7 +33,7 @@ try:
 except:
   pass
 
-from avnav_config import AVNConfig
+from avnav_manager import AVNHandlerManager
 from avnav_util import *
 from avnav_worker import *
 import avnav_handlerList
@@ -163,7 +163,7 @@ class AVNAlarmHandler(AVNWorker):
           if param=="":
             param=None
           if param is not None:
-            param=AVNUtil.replaceParam(param,AVNConfig.filterBaseParam(self.getParam()))
+            param=AVNUtil.replaceParam(param, AVNHandlerManager.filterBaseParam(self.getParam()))
           rt= {
             'command':cmd.get('command'),
             'autoclean':self.getBoolean(cmd,'autoclean'),

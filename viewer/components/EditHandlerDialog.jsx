@@ -53,8 +53,9 @@ class EditHandlerDialog extends React.Component{
     }
     componentDidMount() {
         let param={
-            request: 'config',
-            type: 'getEditables',
+            request: 'api',
+            type: 'config',
+            command: 'getEditables',
             handlerId: this.props.handlerId
         }
         if (this.props.child !== undefined){
@@ -88,8 +89,9 @@ class EditHandlerDialog extends React.Component{
     }
     getRequestParam(add){
         let rt=assign({
-           request:'config',
-           handlerId: this.props.handlerId
+            request: 'api',
+            type:'config',
+            handlerId: this.props.handlerId
         },add)
         if (this.props.child !== undefined){
             rt.child=this.props.child;
@@ -97,7 +99,7 @@ class EditHandlerDialog extends React.Component{
         return rt;
     }
     updateValues(){
-        let param=this.getRequestParam({type:'setConfig'});
+        let param=this.getRequestParam({command:'setConfig'});
         RequestHandler.postJson('',this.modifiedValues.getState(),undefined,param)
             .then((data)=>{
                 this.props.closeCallback();
@@ -105,7 +107,7 @@ class EditHandlerDialog extends React.Component{
             .catch(e=>Toast(e));
     }
     deleteHandler(){
-        let param=this.getRequestParam({type:this.props.child !== undefined?'deleteChild':'deleteHandler'});
+        let param=this.getRequestParam({command:this.props.child !== undefined?'deleteChild':'deleteHandler'});
         RequestHandler.getJson('',undefined,param)
             .then(()=>this.props.closeCallback())
             .catch(e=>Toast(e))

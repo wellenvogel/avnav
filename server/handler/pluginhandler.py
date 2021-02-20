@@ -31,7 +31,7 @@ import json
 from avnav_api import AVNApi
 from avnav_store import AVNStore
 
-from avnav_config import AVNConfig
+from avnav_manager import AVNHandlerManager
 from avnav_util import *
 from avnav_worker import *
 import avnav_handlerList
@@ -168,7 +168,7 @@ class ApiImpl(AVNApi):
     return AVNUtil.datetimeToTsUTC(dt)
 
   def getDataDir(self):
-    return self.phandler.getParamValue(AVNConfig.BASEPARAM.DATADIR)
+    return self.phandler.getParamValue(AVNHandlerManager.BASEPARAM.DATADIR)
 
   def registerChartProvider(self,callback):
     charthandler = AVNWorker.findHandlerByName(AVNChartHandler.getConfigName())
@@ -239,8 +239,8 @@ class AVNPluginHandler(AVNWorker):
   def run(self):
     self.setName(self.getThreadPrefix())
     builtInDir=self.getStringParam('builtinDir')
-    systemDir=AVNConfig.getDirWithDefault(self.param,'systemDir',defaultSub=os.path.join('..','plugins'),belowData=False)
-    userDir=AVNConfig.getDirWithDefault(self.param,'userDir','plugins')
+    systemDir=AVNHandlerManager.getDirWithDefault(self.param, 'systemDir', defaultSub=os.path.join('..', 'plugins'), belowData=False)
+    userDir=AVNHandlerManager.getDirWithDefault(self.param, 'userDir', 'plugins')
     directories={
       'builtin':{
         'dir':builtInDir,

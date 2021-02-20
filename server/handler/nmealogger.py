@@ -64,7 +64,7 @@ class AVNNmeaLogger(AVNWorker):
     
   def run(self):
     self.setName(self.getThreadPrefix())
-    trackdir=AVNConfig.getDirWithDefault(self.param,"trackdir")
+    trackdir=AVNHandlerManager.getDirWithDefault(self.param, "trackdir")
     filterstr=self.getStringParam("filter")
     if filterstr is None or filterstr == "":
       AVNLog.warn("no filter for NMEA logger, exiting logger")
@@ -80,7 +80,7 @@ class AVNNmeaLogger(AVNWorker):
         trackdir=trackwriter.getTrackDir()
       if trackdir is None or not trackdir :
         #2nd try with a default
-        trackdir = AVNConfig.getDirWithDefault(self.param, "trackdir","tracks")
+        trackdir = AVNHandlerManager.getDirWithDefault(self.param, "trackdir", "tracks")
     self.trackdir=trackdir
     interval=self.getIntParam('interval')
     maxfiles=100

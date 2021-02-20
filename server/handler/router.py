@@ -32,7 +32,7 @@ import sys
 import gpxpy098.parser as gpxparser
 from avnav_worker import AVNWorker,WorkerParameter
 
-from avnav_config import AVNConfig
+from avnav_manager import AVNHandlerManager
 from avnav_util import AVNLog
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__),"..","..","libraries"))
@@ -205,7 +205,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
   
   def __init__(self,cfgparam):
     AVNDirectoryHandlerBase.__init__(self,cfgparam,'route')
-    self.baseDir = AVNConfig.getDirWithDefault(self.param, 'routesdir', 'routes')
+    self.baseDir = AVNHandlerManager.getDirWithDefault(self.param, 'routesdir', 'routes')
     self.currentLeg=None
     self.currentLegFileName=None
     self.feeder=self.findFeeder(self.getStringParam('feederName'))

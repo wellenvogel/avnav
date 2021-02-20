@@ -282,8 +282,6 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
         rtj=self.handleAISRequest(requestParam)
       elif requestType=='status':
         rtj=self.handleStatusRequest(requestParam)
-      elif requestType=='config':
-        rtj = self.handleConfigRequest(requestParam)
       elif requestType=='debuglevel' or requestType=='loglevel':
         rtj=self.handleDebugLevelRequest(requestParam)
       elif requestType=='listdir' or requestType == 'list':
@@ -422,82 +420,18 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
       for handler in AVNWorker.getAllHandlers(True):
         if handler.getConfigName() != type: continue
         entry={'configname':handler.getConfigName(),
-             'config': handler.getParam(),
-             'name':handler.getStatusName(),
-             'info':handler.getInfo(),
-             'disabled': handler.isDisabled(),
-             'properties':handler.getStatusProperties() if not handler.isDisabled() else {},
-             'canDelete':handler.canDeleteHandler(),
-             'id':handler.getId() if handler.canEdit() else None,
-             'displayKey': handler.getId()
+            'config': handler.getParam(),
+            'name':handler.getStatusName(),
+            'info':handler.getInfo(),
+            'disabled': handler.isDisabled(),
+            'properties':handler.getStatusProperties() if not handler.isDisabled() else {},
+            'canDelete':handler.canDeleteHandler(),
+            'canEdit': handler.canEdit(),
+            'id':handler.getId()
               }
         rt.append(entry)
     return json.dumps({'handler':rt},cls=Encoder)
 
-  def handleConfigRequest(self,requestParam):
-    rt={'status':'OK'}
-    try:
-      command=self.getRequestParam(requestParam,'type',mantadory=True)
-      externalHandler = self.server.getRequestHandler('config', command)
-      if externalHandler is not None:
-        ert = externalHandler.handleApiRequest('config', command, requestParam, handler=self)
-        if ert == True:
-          return json.dumps(rt)
-        if ert is not None:
-          return json.dumps(ert, cls=Encoder)
-        raise Exception("not found")
-      if command == 'getAddables':
-        allHandlers=avnav_handlerList.getAllHandlerClasses()
-        hlist=[]
-        for h in allHandlers:
-          if h.canDeleteHandler():
-            hlist.append(h.getConfigName())
-        rt['data']=hlist
-        return json.dumps(rt, cls=Encoder)
-      if command == 'getAddAttributes':
-        tagName=self.getRequestParam(requestParam,'handlerName',mantadory=True)
-        handlerClass=avnav_handlerList.findHandlerByConfigName(tagName)
-        if handlerClass is None:
-          raise Exception("unable to find handler for %s"%tagName)
-        if not handlerClass.canDeleteHandler():
-          raise Exception("handler %s cannot be added"%tagName)
-        rt['data']=handlerClass.getConfigParam()
-        return json.dumps(rt, cls=Encoder)
-      id=self.getRequestParam(requestParam,'handlerId',mantadory=True)
-      child=self.getRequestParam(requestParam,'child',mantadory=False)
-      handler=AVNWorker.findHandlerById(int(id))
-      if handler is None:
-        raise Exception("unable to find handler for id %s"%id)
-      if command == 'getEditables':
-        if child is not None:
-          data=handler.getEditableChildParameters(child)
-          canDelete=True
-        else:
-          data= handler.getEditableParameters()
-          canDelete=handler.canDeleteHandler()
-        if data is not None:
-          rt['data']=data
-          rt['values']=handler.getParam(child,filtered=True)
-          rt['configName']=handler.getConfigName()
-          rt['canDelete']=canDelete
-      elif command=='setConfig':
-        values=self.getRequestParam(requestParam,'_json',mantadory=True)
-        decoded=json.loads(values)
-        handler.updateConfig(decoded,child)
-        AVNLog.info("updated %s, new config %s", handler.getName(), handler.getConfigString())
-      elif command=='deleteChild':
-        if child is None:
-          raise Exception("missing parameter child")
-        AVNLog.info("deleting child %s for %s",child,handler.getName())
-        handler.deleteChild(child)
-      elif command == 'deleteHandler':
-        AVNLog.info("removing handler %s",handler.getName())
-        AVNWorker.removeHandler(int(id))
-      else:
-        raise Exception("unknown command %s"%command)
-      return json.dumps(rt,cls=Encoder)
-    except Exception as e:
-      return json.dumps({'status':str(e)},cls=Encoder)
   def handleDebugLevelRequest(self,requestParam):
     rt={'status':'ERROR','info':'missing parameter'}
     level=self.getRequestParam(requestParam,'level')

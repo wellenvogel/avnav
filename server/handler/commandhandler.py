@@ -31,7 +31,7 @@ import signal
 import time
 
 import avnav_handlerList
-from avnav_config import AVNConfig
+from avnav_manager import AVNHandlerManager
 from avnav_util import *
 from avnav_worker import *
 
@@ -195,7 +195,7 @@ class AVNCommandHandler(AVNWorker):
     '''
     for cmd in self.getConfiguredCommands():
       if cmd.get('name') is not None and cmd.get('name') == name:
-        return {'command':AVNUtil.replaceParam(cmd.get('command'),AVNConfig.filterBaseParam(self.getParam())),'repeat':cmd.get('repeat'),'name':cmd.get('name')}
+        return {'command':AVNUtil.replaceParam(cmd.get('command'), AVNHandlerManager.filterBaseParam(self.getParam())), 'repeat':cmd.get('repeat'), 'name':cmd.get('name')}
   def findRunningCommandsByName(self,name):
     rt=[]
     if name is None:
