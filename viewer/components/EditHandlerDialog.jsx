@@ -66,6 +66,7 @@ class EditHandlerDialog extends React.Component{
                 data.data.forEach((param)=>{
                     let type = param.type;
                     if (type === 'FILTER') type = 'STRING';
+                    if (type === 'FLOAT') type='NUMBER';
                     let description=createEditableParameter(param.name,type,
                         param.rangeOrList,
                         param.name
