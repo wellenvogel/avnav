@@ -54,7 +54,8 @@ class SerialReader(object):
   def getConfigParam(cls):
     cfg=[
                WorkerParameter('port',None,type=WorkerParameter.T_SELECT,rangeOrList=[]),
-               WorkerParameter('timeout', 1,type=WorkerParameter.T_FLOAT),
+               WorkerParameter('timeout', 2,type=WorkerParameter.T_FLOAT,
+                               description="serial receive timeout in s, after 10*timeout port will be reopened"),
                WorkerParameter('baud',4800,type=WorkerParameter.T_SELECT,rangeOrList=cls.BAUDRATES),
                WorkerParameter('minbaud',0,type=WorkerParameter.T_SELECT,rangeOrList=cls.BAUDRATES+[0],
                               description='if this is set to anything else, try autobauding between baud and minbaud'),
@@ -260,11 +261,18 @@ class SerialReader(object):
        lastTime=time.time()
        numerrors=0
        hasNMEA=False
+       MAXLEN=500
+       buffer=b''
        while not self.doStop:
-         bytes=0
+         bytes=b''
          try:
            bytes=self.readLine(self.device,timeout)
-           if  bytes.find(b"\n") <0:
+           if len(buffer) > 0:
+             bytes=buffer+bytes
+             buffer=''
+           if  len(bytes) > 0 and bytes.find(b"\n") <0:
+             if len(bytes) < MAXLEN:
+               continue
              raise Exception("no newline in serial data")
          except Exception as e:
            AVNLog.debug("Exception %s in serial read, close and reopen %s",traceback.format_exc(),portname)
