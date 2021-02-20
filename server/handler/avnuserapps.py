@@ -81,7 +81,7 @@ class AVNUserAppHandler(AVNWorker):
     self.additionalAddOns=[]
     AVNWorker.__init__(self,param)
 
-  def start(self):
+  def startInstance(self, navdata):
     self.userHandler=self.findHandlerByName('AVNUserHandler')
     if self.userHandler is None:
       raise Exception("unable to find a user handler")
@@ -91,7 +91,7 @@ class AVNUserAppHandler(AVNWorker):
     self.httpServer = self.findHandlerByName('AVNHttpServer')
     if self.httpServer is None:
       raise Exception("unable to find AVNHttpServer")
-    AVNWorker.start(self)
+    super().startInstance(navdata)
 
   # thread run method - just try forever
   def run(self):

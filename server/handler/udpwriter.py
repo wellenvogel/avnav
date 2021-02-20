@@ -88,13 +88,13 @@ class AVNUdpWriter(AVNWorker):
 
   # make some checks when we have to start
   # we cannot do this on init as we potentiall have to find the feeder...
-  def start(self):
+  def startInstance(self, navdata):
     feedername = self.getStringParam('feederName')
     feeder = self.findFeeder(feedername)
     if feeder is None:
       raise Exception("%s: cannot find a suitable feeder (name %s)", self.getName(), feedername or "")
     self.feeder=feeder
-    AVNWorker.start(self)
+    super().startInstance(navdata)
   
 
   def run(self):

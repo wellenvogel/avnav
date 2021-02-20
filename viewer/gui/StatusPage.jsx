@@ -47,10 +47,12 @@ const ChildStatus=(props)=>{
 };
 const StatusItem=(props)=>{
     let canEdit=props.canEdit;
+    let isDisabled=props.disabled;
     return(
         <div className="status"  key={props.id}>
-            <div className={"statusHeading"}>
+            <div className={"statusHeading"+ (isDisabled?" disabled":"")}>
                 <span className="statusName">{props.name.replace(/\[.*\]/, '')}</span>
+                {isDisabled && <span className="disabledInfo">[disabled]</span> }
                 {canEdit && <EditIcon
                     onClick={
                         () => showEditDialog(props.id)

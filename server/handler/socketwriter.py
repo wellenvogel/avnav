@@ -80,10 +80,9 @@ class AVNSocketWriter(AVNWorker,SocketReader):
     self.addrmap = {}
     self.maplock = threading.Lock()
 
-  
-  #make some checks when we have to start
-  #we cannot do this on init as we potentially have to find the feeder...
-  def start(self):
+  def startInstance(self, navdata):
+    #make some checks when we have to start
+    #we cannot do this on init as we potentially have to find the feeder...
     feeder=self.findFeeder(self.getStringParam('feederName'))
     if feeder is None:
       raise Exception("%s: cannot find a suitable feeder (name %s)",self.getName(),self.getStringParam("feederName") or "")
@@ -93,7 +92,7 @@ class AVNSocketWriter(AVNWorker,SocketReader):
     baseConfig=self.findHandlerByName('AVNConfig')
     if baseConfig:
       self.version=baseConfig.getVersion()
-    AVNWorker.start(self) 
+    super().startInstance(navdata)
 
 
 
@@ -101,7 +100,7 @@ class AVNSocketWriter(AVNWorker,SocketReader):
 
 
 
-  def updateConfig(self, param):
+  def updateConfig(self, param,child=None):
     super().updateConfig(param)
     self._closeSockets()
 

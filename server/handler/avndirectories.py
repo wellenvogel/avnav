@@ -47,9 +47,10 @@ class AVNUserHandler(AVNDirectoryHandlerBase):
     AVNDirectoryHandlerBase.__init__(self, param, "user")
     self.baseDir = AVNHandlerManager.getDirWithDefault(self.param, 'userDir', os.path.join('user', 'viewer'))
     self.addonHandler=None
-  def start(self):
-    self.addonHandler=self.findHandlerByName("AVNUserAppHandler")
-    AVNDirectoryHandlerBase.start(self)
+
+  def startInstance(self, navdata):
+    self.addonHandler = self.findHandlerByName("AVNUserAppHandler")
+    return super().startInstance(navdata)
 
   def onPreRun(self):
     httpserver=self.findHandlerByName("AVNHttpServer")

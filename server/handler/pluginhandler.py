@@ -224,7 +224,7 @@ class AVNPluginHandler(AVNWorker):
   def autoInstantiate(cls):
     return True
 
-  def start(self):
+  def startInstance(self, navdata):
     """
     we overwrite start to allow for an error stop
     if the feeder is misconfigured
@@ -234,7 +234,7 @@ class AVNPluginHandler(AVNWorker):
     if feeder is None:
       raise Exception("%s: cannot find a suitable feeder (name %s)",self.getName(),self.getStringParam('feederName') or "")
     self.queue=feeder
-    AVNWorker.start(self)
+    super().startInstance(navdata)
 
   def run(self):
     self.setName(self.getThreadPrefix())

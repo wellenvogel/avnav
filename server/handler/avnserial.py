@@ -404,13 +404,13 @@ class AVNSerialReader(AVNWorker):
 
   #make some checks when we have to start
   #we cannot do this on init as we potentiall have tp find the feeder...
-  def start(self):
+  def startInstance(self,navdata):
     feedername=self.getStringParam('feederName')
     feeder=self.findFeeder(feedername)
     if feeder is None:
       raise Exception("%s: cannot find a suitable feeder (name %s)",self.getName(),feedername or "")
     self.writeData=feeder.addNMEA
-    AVNWorker.start(self) 
+    super().startInstance(navdata)
      
   #thread run method - just try forever  
   def run(self):

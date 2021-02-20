@@ -312,7 +312,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
 
   def run(self):
     self.baseDir = self.httpServer.getChartBaseDir()
-    super(AVNChartHandler, self).run()
+    super().run()
 
   def periodicRun(self):
     if self.baseDir is None or not os.path.isdir(self.baseDir):

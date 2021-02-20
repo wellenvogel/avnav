@@ -82,12 +82,9 @@ class AVNImporter(AVNWorker):
       self.converterDir=os.path.join(os.path.dirname(os.path.realpath(__file__)),"../..","chartconvert")
 
 
-    
-  
-
   #make some checks when we have to start
   #we cannot do this on init as we potentiall have to find the feeder...
-  def start(self):
+  def startInstance(self, navdata):
     httpserver=self.findHandlerByName(AVNHTTPServer.getConfigName())
     if httpserver is None:
       raise Exception("unable to find the httpserver")
@@ -112,8 +109,8 @@ class AVNImporter(AVNWorker):
         AVNLog.error("unable to create work directory %s:%s, stopping importer",self.importDir,traceback.format_exc())
         return
     AVNLog.info("starting importer with directory %s, tools dir %s, workdir %s",self.importDir,self.converterDir,self.workDir)
-    AVNWorker.start(self) 
-     
+    super().startInstance(navdata)
+
   #thread run method - just try forever  
   def run(self):
     self.setName(self.getThreadPrefix())

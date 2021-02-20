@@ -74,10 +74,12 @@ class AVNBaseConfig(AVNWorker):
   @classmethod
   def preventMultiInstance(cls):
     return True
-  def start(self):
+
+  def startInstance(self, navdata):
     if self.startupError is not None:
       self.setInfo("startup",self.startupError,WorkerStatus.ERROR)
-    pass
+    super().startInstance(navdata)
+
   def setVersion(self,version):
     self.version=version
   def getVersion(self):

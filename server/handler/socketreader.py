@@ -73,7 +73,7 @@ class AVNSocketReader(AVNWorker,SocketReader):
     AVNWorker.__init__(self, param)
 
 
-  def updateConfig(self, param):
+  def updateConfig(self, param,child=None):
     super().updateConfig(param)
     try:
       self.socket.close()

@@ -245,9 +245,12 @@ class WorkerId(object):
 
 
 
-class AVNWorker(threading.Thread):
+class AVNWorker(object):
   DEFAULT_CONFIG_PARAM = [
     WorkerParameter('name',default='',type=WorkerParameter.T_STRING)
+  ]
+  ENABLE_CONFIG_PARAM=[
+    WorkerParameter('enabled',default=True,type=WorkerParameter.T_BOOLEAN)
   ]
   handlerListLock=threading.Lock()
   """a base class for all workers
@@ -327,6 +330,9 @@ class AVNWorker(threading.Thread):
   @classmethod
   def canDeleteHandler(cls):
     return False
+  @classmethod
+  def canDisable(cls):
+    return False
 
   @classmethod
   def getEditableParameters(cls, makeCopy=True):
@@ -364,15 +370,19 @@ class AVNWorker(threading.Thread):
     self.id=self.getNextWorkerId()
     self.param=cfgparam
     self.status=False
-    threading.Thread.__init__(self)
-    self.setDaemon(True)
-    self.setName(self.getName())
     self.status={'main':WorkerStatus('main',WorkerStatus.STARTED,"started")}
     self.type=self.Type.DEFAULT
     self.feeder=None
     self.configChanger=None #reference for writing back to the DOM
-    self._stop=False
     self.condition=threading.Condition()
+    self.currentThread=None
+    self.name=self.getName()
+
+  def setName(self,name):
+    self.name=name
+    if self.currentThread is not None:
+      self.currentThread.setName(name)
+
   def setConfigChanger(self, changer):
     self.configChanger=changer
   def getStatusProperties(self):
@@ -466,6 +476,8 @@ class AVNWorker(threading.Thread):
         raise e
   def isDisabled(self):
     """is this handler set to disabled?"""
+    if not self.canDisable() and not self.canDeleteHandler():
+      return False
     en=self.getParamValue("enabled")
     if en is None:
       en="True"
@@ -486,16 +498,34 @@ class AVNWorker(threading.Thread):
     if child is not None:
       raise Exception("cannot modify child %s"%str(child))
     checked = WorkerParameter.checkValuesFor(self.getEditableParameters(), param, self.getParam())
-    return self.changeMultiConfig(checked)
+    rt = self.changeMultiConfig(checked)
+    if self.canDisable() or self.canDeleteHandler():
+      if 'enabled' in checked:
+        newVal=checked.get('enabled',True)
+        if type(newVal) is str:
+          newVal=newVal.upper() != 'False'
+        if newVal != self.isDisabled():
+          if not newVal:
+            AVNLog.info("handler disabled, stopping")
+            self.stop()
+          else:
+            AVNLog.info("handler enabled, starting")
+            self.startThread()
+    return rt
 
   def deleteChild(self,child):
     raise Exception("delete child not allowed for %s"%self.getName())
 
   def shouldStop(self):
-    return self._stop
+    current=self.currentThread
+    if current is None:
+      return True
+    if threading.get_ident() != current.ident:
+      return True
+    return False
   #stop any child process (will be called by signal handler)
   def stop(self):
-    self._stop=True
+    self.currentThread=None
     self.condition.acquire()
     try:
       self.condition.notifyAll()
@@ -636,6 +666,8 @@ class AVNWorker(threading.Thread):
         rt.update({'name':''})
         return rt
       else:
+        if cls.canDeleteHandler() or cls.canDisable():
+          rt=cls.ENABLE_CONFIG_PARAM+rt
         return cls.DEFAULT_CONFIG_PARAM+rt
     else:
       return cls.getConfigParam(child)
@@ -690,12 +722,22 @@ class AVNWorker(threading.Thread):
         else:
           sparam[k] = v.value
     return sparam
-  
+
+  def run(self):
+    raise Exception("run must be overloaded")
+
+  def startThread(self):
+    AVNLog.info("starting %s with config %s", self.getName(), self.getConfigString())
+    self.currentThread = threading.Thread(target=self.run, name=self.name or '')
+    self.currentThread.setDaemon(True)
+    self.currentThread.start()
   def startInstance(self,navdata):
-    AVNLog.info("starting %s with config %s",self.getName(),self.getConfigString())
     self.navdata=navdata
     self.feeder = self.findFeeder(self.getStringParam('feederName'))
-    self.start()
+    if not self.isDisabled():
+      self.startThread()
+    else:
+      AVNLog.info("not starting %s (disabled) with config %s", self.getName(), self.getConfigString())
 
   def getConfigString(self,cfg=None):
     rt=""
