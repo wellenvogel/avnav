@@ -484,7 +484,7 @@ class AVNHandlerManager(object):
         raise Exception("unable to find handler for %s" % tagName)
       if not handlerClass.canDeleteHandler():
         raise Exception("handler %s cannot be added" % tagName)
-      rt['data'] = handlerClass.getConfigParamCombined()
+      rt['data'] = handlerClass.getEditableParameters()
       return rt
     id = AVNUtil.getHttpRequestParam(requestParam, 'handlerId', mantadory=True)
     child = AVNUtil.getHttpRequestParam(requestParam, 'child', mantadory=False)

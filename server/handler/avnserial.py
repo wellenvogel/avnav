@@ -58,7 +58,7 @@ class SerialReader(object):
                                description="serial receive timeout in s, after 10*timeout port will be reopened"),
                WorkerParameter('baud',4800,type=WorkerParameter.T_SELECT,rangeOrList=cls.BAUDRATES),
                WorkerParameter('minbaud',0,type=WorkerParameter.T_SELECT,rangeOrList=cls.BAUDRATES+[0],
-                              description='if this is set to anything else, try autobauding between baud and minbaud'),
+                              description='if this is set to anything else then 0, try autobauding between baud and minbaud'),
                WorkerParameter('bytesize', 8,type=WorkerParameter.T_SELECT,rangeOrList=[5,6,7,8]),
                WorkerParameter('parity','N',type=WorkerParameter.T_SELECT,rangeOrList=['N','E','O','M','S']),
                WorkerParameter('stopbits', 1,type=WorkerParameter.T_SELECT,rangeOrList=[1,1.5,2]),

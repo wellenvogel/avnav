@@ -62,7 +62,7 @@ export const ParamValueInput=(props)=>{
     let param=props.param;
     let ValueInput=undefined;
     let current=param.getValueForDisplay(props.currentValues);
-    let addClass="";
+    let addClass=props.className?(" "+props.className):"";
     let inputFunction=(val)=>{
         props.onChange(param.setValue(assign({},props.currentValues),val));
     };
@@ -111,12 +111,13 @@ export const ParamValueInput=(props)=>{
         showUnset={true}
         list={(current)=>getList(param.getList(),current)}
         value={current}
-    />
+    >{props.children}</ValueInput>
 }
 
 ParamValueInput.PropTypes={
     param: PropTypes.object.isRequired,
     currentValues: PropTypes.object.isRequired,
     onChange: PropTypes.func.isRequired,
-    showDialogFunction: PropTypes.func.isRequired
+    showDialogFunction: PropTypes.func.isRequired,
+    className: PropTypes.string
 }

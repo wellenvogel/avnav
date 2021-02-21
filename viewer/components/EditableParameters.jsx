@@ -34,6 +34,8 @@ export class EditableParameter{
         this.list=list;
         this.displayName=displayName||name;
         this.readOnly=false;
+        this.mandatory=false;
+        this.description=undefined;
         this.arrayIndex=undefined; //if set - operate on an array
     }
     canEdit(){
@@ -87,6 +89,12 @@ export class EditableParameter{
     }
     isValid(value){
         return true;
+    }
+    mandatoryOk(param){
+        if (! this.mandatory) return true;
+        let cv=this.getValue(param);
+        if (cv !== undefined && cv !== null && cv !== '') return true;
+        return false;
     }
     isChanged(value){
         return value !== this.default;

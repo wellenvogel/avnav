@@ -98,13 +98,13 @@ class StatusPage extends React.Component{
             self.errors=0;
             if (data.handler) {
                 data.handler.forEach(function(el){
-                    if (el.configname=="AVNHttpServer"){
+                    if (el.configname==="AVNHttpServer"){
                         if (el.properties && el.properties.addresses ) storeData.addresses=true;
                     }
-                    if (el.configname == "AVNWpaHandler"){
+                    if (el.configname === "AVNWpaHandler"){
                         storeData.wpa=true;
                     }
-                    if (el.configname=="AVNCommandHandler"){
+                    if (el.configname==="AVNCommandHandler"){
                         if (el.properties && el.properties.shutdown ) storeData.shutdown=true;
                     }
                     el.key=el.displayKey;
@@ -190,6 +190,13 @@ class StatusPage extends React.Component{
                         history.push('infopage')
                     }
                 },
+                {
+                    name: 'StatusAdd',
+                    visible: props.config,
+                    onClick: ()=>{
+                        EditHandlerDialog.createAddDialog();
+                    }
+                },
                 Mob.mobDefinition,
                 {
                     name: 'Cancel',
@@ -218,6 +225,7 @@ class StatusPage extends React.Component{
             storeKeys:{
                 connected:keys.properties.connectedMode,
                 android:keys.gui.global.onAndroid,
+                config: keys.gui.capabilities.config
             }
         });
         return <Rt/>
