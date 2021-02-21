@@ -182,8 +182,8 @@ class AVNFeeder(AVNWorker):
 
   #a standalone feeder that uses our bultin methods
   
-  def standaloneFeed(self):
-    threading.current_thread().setName("%s[standalone feed]"%(self.getThreadPrefix()))
+  def run(self):
+    self.setName("%s[standalone feed]"%(self.getThreadPrefix()))
     AVNLog.info("standalone feeder started")
     nmeaParser=NMEAParser(self.navdata)
     self.setInfo('main', "running", WorkerStatus.RUNNING)
@@ -203,12 +203,7 @@ class AVNFeeder(AVNWorker):
                   self.setInfo('main',"feeding NMEA",WorkerStatus.NMEA)
       except Exception as e:
         AVNLog.warn("feeder exception - retrying %s",traceback.format_exc())
-    
-    
-  #this is the main thread 
-  def run(self):
-    self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
-    self.standaloneFeed()
+
 
 class AVNGpsdFeeder(AVNFeeder):
   '''
