@@ -165,6 +165,7 @@ let keys={
             uploadOverlays: K,
             uploadTracks: K,
             canConnect: K,
+            config: K
         },
         global:{
             smallDisplay: K,
@@ -199,13 +200,6 @@ let keys={
         },
         addresspage:{
             addressList:K
-        },
-        statuspage:{
-            wpa:K,
-            addresses:K,
-            shutdown: K,
-            statusItems:    K,
-            serverError: K,
         },
         wpapage:{
             interface:K,

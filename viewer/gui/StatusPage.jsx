@@ -66,31 +66,25 @@ const StatusItem=(props)=>{
     );
 };
 
-const MainContent=Dynamic((props)=>{
-    return(
-        <ItemList
-            itemClass={StatusItem}
-            itemList={props.itemList}
-            scrollable={true}
-            />
-    );
-});
-
 
 
 class StatusPage extends React.Component{
     constructor(props){
         super(props);
         let self=this;
-
+        this.state={
+            addresses:false,
+            wpa:false,
+            shutdown:false,
+            itemList:[],
+            serverError:false
+        }
         this.querySequence=1;
         this.doQuery=this.doQuery.bind(this);
         this.queryResult=this.queryResult.bind(this);
         this.errors=0;
-        globalStore.storeData(keys.gui.statuspage.serverError,false);
-        globalStore.storeData(keys.gui.statuspage.statusItems,[]);
         this.timer=GuiHelpers.lifecycleTimer(this,this.doQuery,globalStore.getData(keys.properties.statusQueryTimeout),true);
-
+        this.mainListRef=null;
     }
     queryResult(data){
             let self=this;
@@ -117,13 +111,8 @@ class StatusPage extends React.Component{
                     storeData.itemList.push(el);
                 });
             }
-            globalStore.storeMultiple(storeData,{
-                wpa:keys.gui.statuspage.wpa,
-                addresses:keys.gui.statuspage.addresses,
-                shutdown:keys.gui.statuspage.shutdown,
-                itemList:keys.gui.statuspage.statusItems,
-                serverError:keys.gui.statuspage.serverError
-            });
+            this.setState(storeData);
+
     }
     doQuery(){
         let self=this;
@@ -133,18 +122,31 @@ class StatusPage extends React.Component{
                 self.timer.startTimer();
             },
             (error)=>{
-                globalStore.storeData(keys.gui.statuspage.statusItems,[]);
+                let newState={itemList:[]};
                 self.errors++;
                 if (self.errors > 5){
-                    globalStore.storeData(keys.gui.statuspage.serverError,true);
+                    newState.serverError=true;
                 }
+                this.setState(newState);
                 self.timer.startTimer();
             });
     }
     componentDidMount(){
     }
     componentWillUnmount(){
-        let self=this;
+    }
+    getSnapshotBeforeUpdate(prevProps, prevState) {
+        if (!this.mainListRef) return null;
+        return{
+            x:this.mainListRef.scrollLeft,
+            y:this.mainListRef.scrollTop
+        }
+    }
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if (snapshot && this.mainListRef){
+            this.mainListRef.scrollLeft=snapshot.x;
+            this.mainListRef.scrollTop=snapshot.y;
+        }
     }
     render(){
         let self=this;
@@ -153,12 +155,12 @@ class StatusPage extends React.Component{
             let buttons=[
                 {
                     name:'StatusWpa',
-                    visible: props.wpa && props.connected,
+                    visible: this.state.wpa && props.connected,
                     onClick:()=>{history.push('wpapage');}
                 },
                 {
                     name:'StatusAddresses',
-                    visible:props.addresses,
+                    visible:this.state.addresses,
                     onClick:()=>{history.push("addresspage");}
                 },
                 {
@@ -168,7 +170,7 @@ class StatusPage extends React.Component{
                 },
                 {
                     name: 'StatusShutdown',
-                    visible: !props.android && props.shutdown && props.connected,
+                    visible: !props.android && this.state.shutdown && props.connected,
                     onClick:()=>{
                         OverlayDialog.confirm("really shutdown the server?").then(function(){
                             Requests.getJson("?request=command&start=shutdown").then(
@@ -196,27 +198,26 @@ class StatusPage extends React.Component{
             ];
 
             let className=props.className;
-            if (props.serverError) className+=" serverError";
+            if (this.state.serverError) className+=" serverError";
             return(
             <Page
                 className={className}
                 style={props.style}
                 id="statuspage"
-                title={props.serverError?"Server Connection lost":"Server Status"}
+                title={this.state.serverError?"Server Connection lost":"Server Status"}
                 mainContent={
-                            <MainContent
-                                storeKeys={{itemList:keys.gui.statuspage.statusItems}}
-                            />
-                        }
+                    <ItemList
+                        itemClass={StatusItem}
+                        itemList={this.state.itemList}
+                        scrollable={true}
+                        listRef={(ref)=>this.mainListRef=ref}
+                    />
+                }
                 buttonList={buttons}/>
             )},{
             storeKeys:{
-                wpa:keys.gui.statuspage.wpa,
                 connected:keys.properties.connectedMode,
-                addresses:keys.gui.statuspage.addresses,
-                shutdown:keys.gui.statuspage.shutdown,
                 android:keys.gui.global.onAndroid,
-                serverError: keys.gui.statuspage.serverError
             }
         });
         return <Rt/>
