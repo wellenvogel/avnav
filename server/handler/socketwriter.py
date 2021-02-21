@@ -51,8 +51,8 @@ class AVNSocketWriter(AVNWorker,SocketReader):
           WorkerParameter('feederName','',editable=False),
           WorkerParameter('filter','',type=WorkerParameter.T_FILTER,
                           description=', separated list of sentences either !AIVDM or $RMC - for $ we ignore the 1st 2 characters'),
-          WorkerParameter('address','',type=WorkerParameter.T_STRING,
-                          description='the local bind address'),
+          WorkerParameter('address','0.0.0.0',type=WorkerParameter.T_STRING,
+                          description='the local bind address (0.0.0.0 for external access)'),
           WorkerParameter('read',True,type=WorkerParameter.T_BOOLEAN,
                           description='allow for also reading data from connected devices'),
           WorkerParameter('readerFilter','',type=WorkerParameter.T_FILTER,
@@ -79,8 +79,10 @@ class AVNSocketWriter(AVNWorker,SocketReader):
     self.listener=None
     self.addrmap = {}
     self.maplock = threading.Lock()
+    self.startSequence=0
 
   def startInstance(self, navdata):
+    self.startSequence+=1
     #make some checks when we have to start
     #we cannot do this on init as we potentially have to find the feeder...
     feeder=self.findFeeder(self.getStringParam('feederName'))
@@ -95,10 +97,13 @@ class AVNSocketWriter(AVNWorker,SocketReader):
     super().startInstance(navdata)
 
 
-
-  #return True if added
-
-
+  def sequenceChanged(self,seq):
+    '''
+    used by client threads to check for restart
+    @param seq:
+    @return:
+    '''
+    return self.startSequence != seq
 
   def updateConfig(self, param,child=None):
     super().updateConfig(param)
@@ -130,12 +135,12 @@ class AVNSocketWriter(AVNWorker,SocketReader):
   
 
   #the writer for a connected client
-  def client(self,socket,addr):
+  def client(self,socket,addr,startSequence):
     infoName="SocketWriter-%s"%(str(addr),)
     self.setName("%s-Writer %s"%(self.getThreadPrefix(),str(addr)))
     self.setInfo(infoName,"sending data",WorkerStatus.RUNNING)
     if self.getBoolParam('read',False):
-      clientHandler=threading.Thread(target=self.clientRead,args=(socket, addr))
+      clientHandler=threading.Thread(target=self.clientRead,args=(socket, addr,startSequence))
       clientHandler.daemon=True
       clientHandler.start()
     filterstr=self.getStringParam('filter')
@@ -145,7 +150,7 @@ class AVNSocketWriter(AVNWorker,SocketReader):
     try:
       seq=0
       socket.sendall(("avnav_server %s\r\n"%(self.version)).encode('utf-8'))
-      while not self.shouldStop() and socket.fileno() >= 0:
+      while not self.sequenceChanged(startSequence) and socket.fileno() >= 0:
         hasSend=False
         seq,data=self.feeder.fetchFromHistory(seq,10,nmeafilter=filter,includeSource=True)
         if len(data)>0:
@@ -160,12 +165,12 @@ class AVNSocketWriter(AVNWorker,SocketReader):
           socket.getpeername()
     except Exception as e:
       AVNLog.info("exception in client connection %s",traceback.format_exc())
-    AVNLog.info("client disconnected")
+    AVNLog.info("client disconnected or stop received")
     socket.close()
     self.removeHandler(addr)
     self.deleteInfo(infoName)
 
-  def clientRead(self,socket,addr):
+  def clientRead(self,socket,addr,startSequence):
     infoName="SocketReader-%s"%(str(addr),)
     threading.currentThread().setName("%s-Reader-%s"%(self.getThreadPrefix(),str(addr)))
     #on each newly connected socket we recompute the filter
@@ -190,6 +195,7 @@ class AVNSocketWriter(AVNWorker,SocketReader):
       time.sleep(float(self.getIntParam('minTime'))/1000)
 
   def _closeSockets(self):
+    self.startSequence+=1
     try:
       self.listener.close()
     except:
@@ -234,7 +240,7 @@ class AVNSocketWriter(AVNWorker,SocketReader):
           outsock.settimeout(None)
           allowAccept=self.checkAndAddHandler(addr,outsock)
           if allowAccept:
-            clientHandler=threading.Thread(target=self.client,args=(outsock, addr))
+            clientHandler=threading.Thread(target=self.client,args=(outsock, addr,self.startSequence))
             clientHandler.daemon=True
             clientHandler.start()
           else:
