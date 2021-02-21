@@ -47,7 +47,14 @@ class WorkerParameter(object):
     T_FILTER: ', separated list of sentences either !AIVDM or $RMC - for $ we ignore the 1st 2 characters'
   }
 
-  def __init__(self,name,default=None,type=None,rangeOrList=None,description=None,editable=True,mandatory=None):
+  def __init__(self,name,
+               default=None,
+               type=None,
+               rangeOrList=None,
+               description=None,
+               editable=True,
+               mandatory=None,
+               condition=None):
     self.name=name
     self.type=type if type is not None else self.T_STRING
     self.default=default
@@ -57,6 +64,7 @@ class WorkerParameter(object):
     self.description=description or ''
     self.editable=editable
     self.mandatory=mandatory if mandatory is not None else default is None
+    self.condition=None #a dict with name:value that must match for visbility
 
   def serialize(self):
     return self.__dict__

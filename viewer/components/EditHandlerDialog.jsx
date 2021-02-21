@@ -108,6 +108,7 @@ class EditHandlerDialog extends React.Component{
                     description.default=param.default;
                     description.mandatory=param.mandatory;
                     description.description=param.description;
+                    description.condition=param.condition;
                     parameters.push(description);
                 })
                 this.setState({
@@ -190,6 +191,18 @@ class EditHandlerDialog extends React.Component{
                                 param={param}
                                 showDialog={this.dialogHelper.showDialog}
                             />:null;
+                            if (param.condition){
+                                let show=false;
+                                for (let k in param.condition){
+                                    //TODO: we should use getValue from the
+                                    //other parameters to access the value from current...
+                                    if (currentValues[k] === param.condition[k]){
+                                        show=true;
+                                        break;
+                                    }
+                                }
+                                if (!show) return null;
+                            }
                             return ParamValueInput({
                                 param: param,
                                 currentValues: currentValues,

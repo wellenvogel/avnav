@@ -208,7 +208,11 @@ class AVNUsbSerialReader(AVNWorker):
   def getEditableChildParameters(self, child):
     if not child.startswith(CHILD_NAME+":"):
       raise Exception("unknown child type %s"%child)
-    return WorkerParameter.filterEditables(self.getSerialParam())
+    rt=WorkerParameter.filterEditables(self.getSerialParam(),makeCopy=True)
+    for p in rt:
+      if p.name == 'combined' or p.name == 'readFilter':
+        p.condition={'type':'writer'}
+    return rt
 
   def _findHandlerForChild(self,child,external=False):
     if not ':' in child:
