@@ -637,6 +637,7 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
       'uploadImport': True,
       'uploadOverlays': True,
       'uploadTracks': True,
-      'canConnect': True
+      'canConnect': True,
+      'config': True
     }
     return json.dumps({'status':'OK','data':rt},cls=Encoder)
