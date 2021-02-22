@@ -206,7 +206,10 @@ def main(argv):
         else:
           httpServer.registerRequestHandler('api',handledCommands,handler)
     httpServer.registerRequestHandler('api','config',handlerManager)
-  navData=AVNStore(float(baseConfig.param['expiryTime']),float(baseConfig.param['aisExpiryTime']),baseConfig.param['ownMMSI'])
+  navData=AVNStore(
+    float(baseConfig.param['expiryTime']),
+    float(baseConfig.param['aisExpiryTime']),
+    baseConfig.param['ownMMSI'])
   NMEAParser.registerKeys(navData)
   level=logging.INFO
   filename=os.path.join(datadir,"log","avnav.log")

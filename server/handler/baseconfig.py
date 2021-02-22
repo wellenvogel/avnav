@@ -54,7 +54,8 @@ class AVNBaseConfig(AVNWorker):
                               {'label':'INFO','value':logging.INFO},
                               {'label': 'ERROR', 'value': logging.ERROR},
                               {'label': 'DEBUG', 'value': logging.DEBUG},
-                                         ]),
+                                         ],
+                            editable=False),
             WorkerParameter('logfile',"",editable=False),
             WorkerParameter('expiryTime',30,type=WorkerParameter.T_FLOAT,
                             description="expiry in seconds for NMEA data"),
@@ -75,10 +76,25 @@ class AVNBaseConfig(AVNWorker):
   def preventMultiInstance(cls):
     return True
 
+  @classmethod
+  def canEdit(cls):
+    return True
+
+  def updateConfig(self, param, child=None):
+    super().updateConfig(param, child)
+    if self.navdata is not None:
+      self.navdata.updateBaseConfig(
+        self.getFloatParam('expiryTime'),
+        self.getFloatParam('aisExpiryTime'),
+        self.getParamValue('ownMMSI')
+      )
+
   def startInstance(self, navdata):
     if self.startupError is not None:
       self.setInfo("startup",self.startupError,WorkerStatus.ERROR)
     super().startInstance(navdata)
+
+
 
   def setVersion(self,version):
     self.version=version

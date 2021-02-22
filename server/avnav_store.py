@@ -97,6 +97,11 @@ class AVNStore(object):
   def getExpiryPeriod(self):
     return self.__expiryTime
 
+  def updateBaseConfig(self,expiry,aisExpiry,ownMMSI):
+    self.__expiryTime=expiry
+    self.__aisExpiryTime=aisExpiry
+    self.__ownMMSI=ownMMSI
+
   def updateChangeCounter(self,name):
     if not name in self.CHANGE_COUNTER:
       return False
