@@ -380,7 +380,7 @@ class AVNWorker(object):
     self.id=self.getNextWorkerId()
     self.param=cfgparam
     self.status=False
-    self.status={'main':WorkerStatus('main',WorkerStatus.STARTED,"started")}
+    self.status={'main':WorkerStatus('main',WorkerStatus.STARTED,"created")}
     self.type=self.Type.DEFAULT
     self.feeder=None
     self.configChanger=None #reference for writing back to the DOM
@@ -536,14 +536,17 @@ class AVNWorker(object):
     if threading.get_ident() != current.ident:
       return True
     return False
-  #stop any child process (will be called by signal handler)
-  def stop(self):
-    self.currentThread=None
+
+  def wakeUp(self):
     self.condition.acquire()
     try:
       self.condition.notifyAll()
     finally:
       self.condition.release()
+  #stop any child process (will be called by signal handler)
+  def stop(self):
+    self.currentThread=None
+    self.wakeUp()
 
 
   def wait(self,time):
@@ -749,6 +752,7 @@ class AVNWorker(object):
     if not self.isDisabled():
       self.startThread()
     else:
+      self.setInfo('main','disabled',WorkerStatus.INACTIVE)
       AVNLog.info("not starting %s (disabled) with config %s", self.getName(), self.getConfigString())
 
   def getConfigString(self,cfg=None):

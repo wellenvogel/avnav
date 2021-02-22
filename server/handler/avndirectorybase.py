@@ -142,7 +142,6 @@ class AVNDirectoryHandlerBase(AVNWorker):
     self.baseDir=None
     self.type=type
     self.httpServer=None
-    self.waitCondition = threading.Condition()
     self.itemList={}
 
   def startInstance(self, navdata):
@@ -183,13 +182,6 @@ class AVNDirectoryHandlerBase(AVNWorker):
   def periodicRun(self):
     pass
 
-  def wakeUp(self):
-    self.waitCondition.acquire()
-    try:
-      self.waitCondition.notify_all()
-    except:
-      pass
-    self.waitCondition.release()
 
   def getSleepTime(self):
     return self.getFloatParam('interval')
@@ -263,21 +255,16 @@ class AVNDirectoryHandlerBase(AVNWorker):
       AVNLog.error("unable to create user dir %s"%self.baseDir)
       return
     self.onPreRun()
-    sleepTime=self.getSleepTime()
     self.setInfo('main', "handling %s"%self.baseDir, WorkerStatus.NMEA)
-    while True:
+    while not self.shouldStop():
       try:
         if len(self.getAutoScanExtensions()) > 0 or self.autoScanIncludeDirectories():
           self._scanDirectory()
         self.periodicRun()
       except:
         AVNLog.debug("%s: exception in periodic run: %s",self.getName(),traceback.format_exc())
-      self.waitCondition.acquire()
-      try:
-        self.waitCondition.wait(sleepTime)
-      except:
-        pass
-      self.waitCondition.release()
+      sleepTime = self.getSleepTime()
+      self.wait(sleepTime)
 
   @classmethod
   def canDelete(self):

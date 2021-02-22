@@ -447,7 +447,7 @@ class AVNHandlerManager(object):
     grouplist = list(groups)
     grouplist.sort()
     for group in grouplist:
-      for handler in AVNWorker.getAllHandlers():
+      for handler in AVNWorker.getAllHandlers(disabled=True):
         try:
           if handler.getStartupGroup() == group:
             handler.startInstance(navData)

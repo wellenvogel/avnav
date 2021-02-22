@@ -50,6 +50,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
     self.initial=True
     self.lastlon=None
     self.lastlat=None
+    self.startSequence=0
   @classmethod
   def getConfigName(cls):
     return "AVNTrackWriter"
@@ -59,13 +60,20 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
       return None
     return [
             WorkerParameter('interval',10,type=WorkerParameter.T_FLOAT,
-                            description='write every nn seconds'),
+                            description='time between trackpoints in s'),
             WorkerParameter('trackdir',"",editable=False,description='defaults to datadir/tracks'),
             WorkerParameter('mindistance',25,type=WorkerParameter.T_FLOAT,
                             description='only write if we at least moved this distance in m'),
             WorkerParameter('cleanup',25,type=WorkerParameter.T_FLOAT,
-                          description='cleanup in hours')
+                          description='cleanup in hours'),
+            WorkerParameter('writeFile',True,type=WorkerParameter.T_BOOLEAN,
+                            description="write to track file (otherwise memory only)")
     ]
+
+  @classmethod
+  def canEdit(cls):
+    return True
+
 
   @classmethod
   def getPrefix(cls):
@@ -76,7 +84,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
   #write out the line
   #timestamp is a datetime object
   def writeLine(self,filehandle,timestamp,data):
-    ts=timestamp.isoformat();
+    ts=timestamp.isoformat()
     if not ts[-1:]=="Z":
         ts+="Z"
     str="%s,%f,%f,%f,%f,%f\n"%(ts,data['lat'],data['lon'],(data.get('track') or 0),(data.get('speed') or 0),(data.get('distance') or 0))
@@ -221,10 +229,10 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
 
   #a converter running in a separate thread
   #will convert all found track files to gpx if the gpx file does not exist or is older
-  def converter(self):
+  def converter(self,sequence):
     infoName="TrackWriter:converter"
     AVNLog.info("%s thread started",infoName)
-    while True:
+    while self.startSequence == sequence:
       currentTracks=glob.glob(os.path.join(self.baseDir,"*.avt"))
       for track in currentTracks:
         try:
@@ -241,11 +249,12 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
             self.writeGpx(gpx,data)
         except:
           pass
-      time.sleep(60)
+      self.wait(60)
 
   def onPreRun(self):
     self.fname = None
-    theConverter = threading.Thread(target=self.converter)
+    self.startSequence+=1
+    theConverter = threading.Thread(target=self.converter,args=[self.startSequence])
     theConverter.daemon = True
     theConverter.start()
     AVNLog.info("started with dir=%s,interval=%d, distance=%d",
@@ -256,6 +265,14 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
   def getSleepTime(self):
     return self.getFloatParam("interval")
 
+  def stop(self):
+    super().stop()
+    self.startSequence+=1
+
+  def updateConfig(self, param, child=None):
+    super().updateConfig(param, child)
+    self.wakeUp()
+
   def periodicRun(self):
     try:
       self.loopCount+=1
@@ -263,25 +280,33 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
       curfname = self.createFileName(currentTime)
       newFile=False
       realfilename=None
-      if not curfname == self.fname:
-        self.fname = curfname
-        if not self.currentFile is None:
-          self.currentFile.close()
-        newFile = True
-        realfilename = os.path.join(self.baseDir, curfname + ".avt")
-        AVNLog.info("new trackfile %s", realfilename)
-        if self.initial:
-          if os.path.exists(realfilename):
-            self.setInfo('main', "reading old track data", WorkerStatus.STARTED)
-            data = self.readTrackFile(realfilename)
-            for trkpoint in data:
-              self.track.append((trkpoint[0], trkpoint[1], trkpoint[2]))
-          self.initial = False
-      if newFile:
-        self.currentFile = open(realfilename, "a",encoding='utf-8')
-        self.currentFile.write("#anvnav Trackfile started/continued at %s\n" % (currentTime.isoformat()))
-        self.currentFile.flush()
-        self.setInfo('main', "writing to %s" % (realfilename,), WorkerStatus.NMEA)
+      writeFile=self.getBoolParam('writeFile')
+      if not writeFile and self.currentFile is not None:
+        self.currentFile.close()
+        self.currentFile=None
+        self.initial=True
+      if writeFile:
+        if not curfname == self.fname or self.currentFile is None:
+          self.fname = curfname
+          if not self.currentFile is None:
+            self.currentFile.close()
+          newFile = True
+          realfilename = os.path.join(self.baseDir, curfname + ".avt")
+          AVNLog.info("new trackfile %s", realfilename)
+          if self.initial:
+            if os.path.exists(realfilename):
+              self.setInfo('main', "reading old track data", WorkerStatus.STARTED)
+              data = self.readTrackFile(realfilename)
+              for trkpoint in data:
+                self.track.append((trkpoint[0], trkpoint[1], trkpoint[2]))
+            self.initial = False
+        if newFile:
+          self.currentFile = open(realfilename, "a",encoding='utf-8')
+          self.currentFile.write("#anvnav Trackfile started/continued at %s\n" % (currentTime.isoformat()))
+          self.currentFile.flush()
+          self.setInfo('main', "writing to %s" % (realfilename,), WorkerStatus.NMEA)
+      else:
+        self.setInfo('main','writing to memory only',WorkerStatus.NMEA)
       if self.loopCount >= 10:
         self.cleanupTrack()
         self.loopCount = 0
@@ -291,7 +316,8 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
       if not lat is None and not lon is None:
         if self.lastlat is None or self.lastlon is None:
           AVNLog.ld("write track entry", gpsdata)
-          self.writeLine(self.currentFile, currentTime, gpsdata)
+          if self.currentFile is not None:
+            self.writeLine(self.currentFile, currentTime, gpsdata)
           self.track.append((currentTime, lat, lon))
           self.lastlat = lat
           self.lastlon = lon
@@ -300,7 +326,8 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
           if dist >= self.getFloatParam('mindistance'):
             gpsdata['distance'] = dist
             AVNLog.ld("write track entry", gpsdata)
-            self.writeLine(self.currentFile, currentTime, gpsdata)
+            if self.currentFile is not None:
+              self.writeLine(self.currentFile, currentTime, gpsdata)
             self.track.append((currentTime, lat, lon))
             self.lastlat = lat
             self.lastlon = lon
@@ -326,6 +353,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
           rt.append(item)
           break
     return AVNUtil.getReturnData(items=rt)
+
 
 
 avnav_handlerList.registerHandler(AVNTrackWriter)
