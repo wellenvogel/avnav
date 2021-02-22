@@ -33,7 +33,7 @@ const EditIcon=(props)=>{
 
 }
 const ChildStatus=(props)=>{
-    let canEdit=props.canEdit;
+    let canEdit=props.canEdit && props.connected;
     return (
         <div className="childStatus">
             <img src={statusTextToImageUrl(props.status)}/>
@@ -46,7 +46,7 @@ const ChildStatus=(props)=>{
     );
 };
 const StatusItem=(props)=>{
-    let canEdit=props.canEdit;
+    let canEdit=props.canEdit && props.connected;
     let isDisabled=props.disabled;
     return(
         <div className="status"  key={props.id}>
@@ -59,7 +59,11 @@ const StatusItem=(props)=>{
                     }/>}
             </div>
             {props.info && props.info.items && props.info.items.map(function(el){
-                return <ChildStatus {...el} key={props.name+el.name} handlerId={props.id}/>
+                return <ChildStatus
+                    {...el}
+                    key={props.name+el.name}
+                    connected={props.connected}
+                    handlerId={props.id}/>
             })}
         </div>
 
@@ -192,7 +196,7 @@ class StatusPage extends React.Component{
                 },
                 {
                     name: 'StatusAdd',
-                    visible: props.config,
+                    visible: props.config && props.connected,
                     onClick: ()=>{
                         EditHandlerDialog.createAddDialog();
                     }
@@ -214,7 +218,9 @@ class StatusPage extends React.Component{
                 title={this.state.serverError?"Server Connection lost":"Server Status"}
                 mainContent={
                     <ItemList
-                        itemClass={StatusItem}
+                        itemClass={(iprops)=><StatusItem
+                            connected={props.connected}
+                            {...iprops}/>}
                         itemList={this.state.itemList}
                         scrollable={true}
                         listRef={(ref)=>this.mainListRef=ref}
