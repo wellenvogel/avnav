@@ -223,7 +223,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
   #will convert all found track files to gpx if the gpx file does not exist or is older
   def converter(self):
     infoName="TrackWriter:converter"
-    AVNLog.info("%s thread %s started",infoName,AVNLog.getThreadId())
+    AVNLog.info("%s thread started",infoName)
     while True:
       currentTracks=glob.glob(os.path.join(self.baseDir,"*.avt"))
       for track in currentTracks:

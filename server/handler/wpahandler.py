@@ -72,7 +72,6 @@ class AVNWpaHandler(AVNWorker):
   def preventMultiInstance(cls):
     return True
   def run(self):
-    self.setName(self.getThreadPrefix())
     self.commandHandler = self.findHandlerByName("AVNCommandHandler")
     wpaSocket=self.getStringParam('wpaSocket')
     ownSocket=self.getStringParam('ownSocket')

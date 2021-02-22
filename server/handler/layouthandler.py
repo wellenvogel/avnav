@@ -79,7 +79,6 @@ class AVNLayoutHandler(AVNWorker):
   def autoInstantiate(cls):
     return True
   def run(self):
-    self.setName(self.getThreadPrefix())
     AVNLog.info("started")
     userDir=self.getUserDir()
     if not os.path.isdir(userDir):

@@ -95,8 +95,8 @@ class AVNSocketReader(AVNWorker,SocketReader):
   #thread run method - just try forever  
   def run(self):
     errorReported=False
+    self.setNameIfEmpty("%s-%s:%d" % (self.getName(), self.getStringParam('host'), self.getIntParam('port')))
     while not self.shouldStop():
-      self.setName("%s-%s:%d" % (self.getThreadPrefix(), self.getStringParam('host'), self.getIntParam('port')))
       info = "%s:%d" % (self.getStringParam('host'), self.getIntParam('port'))
       try:
         self.setInfo('main',"trying to connect to %s"%(info,),WorkerStatus.INACTIVE)

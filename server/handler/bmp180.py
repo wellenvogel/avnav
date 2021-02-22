@@ -169,7 +169,6 @@ class AVNBMP180Reader(AVNWorker):
     global bus
     if hasBMP180:
       bus = smbus.SMBus(1)  # Rev 2 Pi, Pi 2 & Pi 3 uses bus 1
-    self.setName(self.getThreadPrefix())
     self.setInfo('main', "reading BMP180", WorkerStatus.NMEA)
     addr = int(self.getStringParam('addr'),16)
     (chip_id,chip_version) = readBmp180Id(addr)

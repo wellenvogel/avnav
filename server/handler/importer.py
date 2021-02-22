@@ -113,7 +113,6 @@ class AVNImporter(AVNWorker):
 
   #thread run method - just try forever  
   def run(self):
-    self.setName(self.getThreadPrefix())
     self.setInfo("main","monitoring started for %s"%(self.importDir),WorkerStatus.NMEA)
     self.setInfo("converter","free",WorkerStatus.STARTED)
     infoEntries={}

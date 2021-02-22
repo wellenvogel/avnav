@@ -89,7 +89,7 @@ class AVNBlueToothReader(AVNWorker,SocketReader):
   #disconnected
   def readBT(self,host,port):
     infoName="BTReader-%s"%(host)
-    threading.current_thread().setName("%s[Reader %s]"%(self.getThreadPrefix(),host))
+    threading.current_thread().setName("%s-reader-%s]"%(self.getName(),host))
     AVNLog.debug("started bluetooth reader thread for %s:%s",str(host),str(port))
     self.setInfo(infoName, "connecting", WorkerStatus.STARTED)
     try:
@@ -112,7 +112,6 @@ class AVNBlueToothReader(AVNWorker,SocketReader):
   
   #this is the main thread - this executes the bluetooth polling
   def run(self):
-    self.setName("%s-main"%(self.getThreadPrefix()))
     time.sleep(2) # give a chance to have the socket open...   
     #now start an endless loop with BT discovery...
     self.setInfo('main', "discovering", WorkerStatus.RUNNING)

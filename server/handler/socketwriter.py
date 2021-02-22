@@ -137,10 +137,13 @@ class AVNSocketWriter(AVNWorker,SocketReader):
   #the writer for a connected client
   def client(self,socket,addr,startSequence):
     infoName="SocketWriter-%s"%(str(addr),)
-    self.setName("%s-Writer %s"%(self.getThreadPrefix(),str(addr)))
     self.setInfo(infoName,"sending data",WorkerStatus.RUNNING)
     if self.getBoolParam('read',False):
-      clientHandler=threading.Thread(target=self.clientRead,args=(socket, addr,startSequence))
+      clientHandler=threading.Thread(
+        target=self.clientRead,
+        args=(socket, addr,startSequence),
+        name="%s-clientread-%s"%(self.getName(),str(addr))
+      )
       clientHandler.daemon=True
       clientHandler.start()
     filterstr=self.getStringParam('filter')
@@ -172,7 +175,7 @@ class AVNSocketWriter(AVNWorker,SocketReader):
 
   def clientRead(self,socket,addr,startSequence):
     infoName="SocketReader-%s"%(str(addr),)
-    threading.currentThread().setName("%s-Reader-%s"%(self.getThreadPrefix(),str(addr)))
+    threading.currentThread().setName("%s-Reader-%s"%(self.getName(),str(addr)))
     #on each newly connected socket we recompute the filter
     filterstr=self.getStringParam('readerFilter')
     filter=None
@@ -216,7 +219,7 @@ class AVNSocketWriter(AVNWorker,SocketReader):
 
   #this is the main thread - listener
   def run(self):
-    self.setName("%s-listen"%(self.getThreadPrefix()))
+    self.setNameIfEmpty("%s-%s"%(self.getName(),str(self.getParamValue('port'))))
     self.wait(2)
     init=True
     self.listener=None
@@ -240,7 +243,11 @@ class AVNSocketWriter(AVNWorker,SocketReader):
           outsock.settimeout(None)
           allowAccept=self.checkAndAddHandler(addr,outsock)
           if allowAccept:
-            clientHandler=threading.Thread(target=self.client,args=(outsock, addr,self.startSequence))
+            clientHandler=threading.Thread(
+              target=self.client,
+              args=(outsock, addr,self.startSequence),
+              name=("%s-client-%s"%(self.getName(),str(addr)))
+            )
             clientHandler.daemon=True
             clientHandler.start()
           else:

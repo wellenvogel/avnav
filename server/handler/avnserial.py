@@ -204,7 +204,7 @@ class SerialReader(object):
    
   #the run method - just try forever  
   def run(self):
-    threading.current_thread().setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
+    threading.current_thread().setName("%s"%self.getName())
     self.device=None
     init=True
     isOpen=False
@@ -415,7 +415,6 @@ class AVNSerialReader(AVNWorker):
   #thread run method - just try forever  
   def run(self):
     while not self.shouldStop():
-      self.setName("%s-%s"%(self.getThreadPrefix(),self.getParamValue('port')))
       try:
         self.reader=SerialReader(self.param, self.writeData,self,self.getSourceName(self.getParamValue('port')))
         self.reader.run()

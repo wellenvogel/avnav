@@ -92,10 +92,10 @@ class AVNUdpReader(AVNWorker, SocketReader):
      
   #thread run method - just try forever  
   def run(self):
+    self.setNameIfEmpty("%s-%s:%d" % (self.getName(), self.getStringParam('host'), self.getIntParam('port')))
     while not self.shouldStop():
       info="unknown"
       try:
-        self.setName("%s-%s:%d" % (self.getThreadPrefix(), self.getStringParam('host'), self.getIntParam('port')))
         info = "%s:%d" % (self.getStringParam('host'), self.getIntParam('port'))
         self.setInfo('main',"trying udp listen at %s"%(info,),WorkerStatus.INACTIVE)
         self.socket=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

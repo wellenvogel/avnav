@@ -98,9 +98,9 @@ class AVNUdpWriter(AVNWorker):
   
 
   def run(self):
+    self.setNameIfEmpty("%s-%s:%s" % (self.getName(), self.param['host'], self.param['port']))
     while not self.shouldStop():
       try:
-        self.setName("%s-host:%s-port%s" % (self.getThreadPrefix(), self.param['host'], self.param['port']))
         self.blackList = self.getStringParam('blackList').split(',')
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)

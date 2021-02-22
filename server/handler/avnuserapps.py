@@ -95,7 +95,6 @@ class AVNUserAppHandler(AVNWorker):
 
   # thread run method - just try forever
   def run(self):
-    self.setName(self.getThreadPrefix())
     sleepTime=self.getFloatParam('interval')
     self.setInfo('main', "starting", WorkerStatus.STARTED)
     self.fillList()

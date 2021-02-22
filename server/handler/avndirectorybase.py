@@ -255,7 +255,6 @@ class AVNDirectoryHandlerBase(AVNWorker):
 
   # thread run method - just try forever
   def run(self):
-    self.setName(self.getThreadPrefix())
     if not os.path.exists(self.baseDir):
       AVNLog.info("creating user dir %s"%self.baseDir)
       os.makedirs(self.baseDir)

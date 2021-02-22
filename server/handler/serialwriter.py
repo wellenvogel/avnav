@@ -153,7 +153,7 @@ class SerialWriter(SerialReader):
    
   #the run method - just try forever  
   def run(self):
-    threading.current_thread().setName("[%s]%s - %s"%(AVNLog.getThreadId(),self.getName(),self.param['port']))
+    threading.current_thread().setName("%s - %s"%(self.getName(),self.param['port']))
     self.device=None
     init=True
     isOpen=False
@@ -221,7 +221,7 @@ class SerialWriter(SerialReader):
 
   #the read method for the combined reader/writer
   def readMethod(self):
-    threading.current_thread().setName("[%s]%s-combinedReader"%(AVNLog.getThreadId(),self.getName()))
+    threading.current_thread().setName("%s-combinedReader"%self.getName())
     self.setInfoWithKey("reader","started",WorkerStatus.STARTED)
     AVNLog.info("started")
     filterstr=self.param.get('readFilter')
@@ -328,7 +328,7 @@ class AVNSerialWriter(AVNWorker):
      
   #thread run method - just try forever  
   def run(self):
-    self.setName(self.getThreadPrefix())
+    self.setNameIfEmpty("%s-%s"%(self.getName(),str(self.getParamValue('port'))))
     while not self.shouldStop():
       try:
         self.writer=SerialWriter(self.param,self.writeData,self,self.getSourceName(self.getParamValue('port')))

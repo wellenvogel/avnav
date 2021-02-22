@@ -74,7 +74,6 @@ class AVNNmeaLogger(AVNWorker):
     self.nmeaFilter = filterstr.split(",")
 
   def run(self):
-    self.setName(self.getThreadPrefix())
     trackdir=AVNHandlerManager.getDirWithDefault(self.param, "trackdir")
     filterstr=self.getStringParam("filter") or ''
     feeder=self.findFeeder(self.getStringParam('feederName'))

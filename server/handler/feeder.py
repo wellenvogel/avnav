@@ -183,7 +183,6 @@ class AVNFeeder(AVNWorker):
   #a standalone feeder that uses our bultin methods
   
   def run(self):
-    self.setName("%s[standalone feed]"%(self.getThreadPrefix()))
     AVNLog.info("standalone feeder started")
     nmeaParser=NMEAParser(self.navdata)
     self.setInfo('main', "running", WorkerStatus.RUNNING)

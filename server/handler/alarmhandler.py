@@ -103,7 +103,6 @@ class AVNAlarmHandler(AVNWorker):
   def _gpioCmd(self,channel):
     self.stopAll()
   def run(self):
-    self.setName(self.getThreadPrefix())
     self.commandHandler=self.findHandlerByName("AVNCommandHandler")
     if self.commandHandler is None:
       self.setInfo('main',"no command handler found",WorkerStatus.ERROR)

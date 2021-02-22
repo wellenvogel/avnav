@@ -439,7 +439,6 @@ class AVNUsbSerialReader(AVNWorker):
   #method will never return...
   def monitorDevices(self,context):
     self.setInfo('monitor', "running", WorkerStatus.RUNNING)
-    threading.current_thread().setName("%s[monitor]"%(self.getThreadPrefix()))
     AVNLog.info("start device monitoring")
     while True:
       try:
@@ -460,7 +459,7 @@ class AVNUsbSerialReader(AVNWorker):
   #this is the main thread - this executes the polling
   def run(self):
     self.setInfo('main', "discovering", WorkerStatus.RUNNING)
-    self.setName("%s-polling"%(self.getThreadPrefix()))
+    self.setNameIfEmpty("%s-polling"%(self.getName()))
     self.wait(5) # give a chance to have the feeder socket open...
     #now start an endless loop with udev discovery...
     #any removal will be detected by the monitor (to be fast)
@@ -489,7 +488,11 @@ class AVNUsbSerialReader(AVNWorker):
               currentDevices[usbid]=None
         self.checkDevices(currentDevices)
         if init:
-          monitorThread=threading.Thread(target=self.monitorDevices,args=(context,))
+          monitorThread=threading.Thread(
+            target=self.monitorDevices,
+            args=(context,),
+            name="%s-monitor"%(self.getName())
+          )
           monitorThread.daemon=True
           monitorThread.start()
           init=False

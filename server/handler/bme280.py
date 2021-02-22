@@ -206,7 +206,6 @@ class AVNBME280Reader(AVNWorker):
     if hasBME280:
       # BME280DEVICE = 0x77 # Default device I2C Address
       bus = smbus.SMBus(1)  # Rev 2 Pi, Pi 2 & Pi 3 uses bus 1
-    self.setName(self.getThreadPrefix())
     self.setInfo('main', "reading BME280", WorkerStatus.NMEA)
     addr = int(self.getStringParam('addr'),16)
     (chip_id, chip_version) = readBME280ID(addr)

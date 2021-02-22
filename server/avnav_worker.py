@@ -386,7 +386,10 @@ class AVNWorker(object):
     self.currentThread=None
     self.name=self.getName()
 
-  def setName(self,name):
+
+  def setNameIfEmpty(self,name):
+    if self.getParamValue('name') is not None:
+      return
     self.name=name
     if self.currentThread is not None:
       self.currentThread.setName(name)
@@ -562,17 +565,6 @@ class AVNWorker(object):
       return "%s(%s)"%(rt,n)
     return rt
 
-  def getThreadPrefix(self):
-    '''
-    nicely compute the name prefix for a thread
-    if we have the default name (just from the config name) - avoid to have this twice
-    @return:
-    '''
-    n=self.getName()
-    if "AVN%s"%n == self.getConfigName():
-      return "[ %s]-%s"%(AVNLog.getThreadId(),n)
-    else:
-      return "[ %s]-%s-%s" % (AVNLog.getThreadId(), self.getConfigName(),n)
 
   def getSourceName(self,defaultSuffix=None):
     '''
@@ -739,6 +731,7 @@ class AVNWorker(object):
     self.currentThread = threading.Thread(target=self.run, name=self.name or '')
     self.currentThread.setDaemon(True)
     self.currentThread.start()
+
   def startInstance(self,navdata):
     self.navdata=navdata
     self.feeder = self.findFeeder(self.getStringParam('feederName'))

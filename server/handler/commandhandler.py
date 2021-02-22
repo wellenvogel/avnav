@@ -88,7 +88,7 @@ class Handler(object):
 
 
   def run(self):
-    threading.current_thread().setName("[%s]cmd: %s" % (AVNLog.getThreadId(), self.name))
+    threading.current_thread().setName("CommandHandler: %s" %  self.name)
     while self.repeat > 0:
       try:
         while True and not self.stop:
@@ -168,7 +168,6 @@ class AVNCommandHandler(AVNWorker):
     self.cntLock.release()
     return rt
   def run(self):
-    self.setName(self.getThreadPrefix())
     for cmd in self.getConfiguredCommands():
       self.updateCommandStatus(cmd)
     while True:

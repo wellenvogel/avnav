@@ -58,15 +58,11 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
     self.wbufsize=-1
     self.id=None
     self.getRequestParam=AVNUtil.getHttpRequestParam
+    threading.current_thread().setName("HTTPHandler")
     AVNLog.ld("receiver thread started",client_address)
     http.server.SimpleHTTPRequestHandler.__init__(self, request, client_address, server)
 
   def log_message(self, format, *args):
-    if self.id is None:
-      self.id=AVNLog.getThreadId()
-      if self.id is None:
-        self.id="?"
-      threading.current_thread().setName("[%s]HTTPHandler"%(self.id))
     AVNLog.debug(format,*args)
 
   def do_POST(self):

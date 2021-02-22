@@ -44,6 +44,12 @@ class Enum(set):
             return name
         raise AttributeError
 
+class AvNavFormatter(logging.Formatter):
+
+  def format(self, record):
+    record.avthread=AVNLog.getThreadId()
+    return super().format(record)
+
 
 class LogFilter(logging.Filter):
   def __init__(self,filter):
@@ -61,18 +67,46 @@ class AVNLog(object):
   fhandler=None
   debugToFile=False
   logDir=None
+  SYS_gettid = 224
+  hasNativeTid=False
+
+  @classmethod
+  def getSyscallId(cls):
+    if hasattr(threading,'get_native_id'):
+      cls.hasNativeTid=True
+      #newer python versions
+      return
+    if sys.platform == 'win32':
+      return
+    try:
+      lines=subprocess.check_output("echo SYS_gettid | cc -include sys/syscall.h -E - ",shell=True)
+      id=None
+      for line in lines.splitlines():
+        line=line.decode('utf-8',errors='ignore')
+        line=line.rstrip()
+        line=re.sub('#.*','',line)
+        if re.match('^ *$',line):
+          continue
+        id=eval(line)
+        if type(id) is int:
+          cls.SYS_gettid=id
+          break
+    except:
+      pass
+
   
   #1st step init of logging - create a console handler
   #will be removed after parsing the cfg file
   @classmethod
   def initLoggingInitial(cls,level):
+    cls.getSyscallId()
     try:
       numeric_level=level+0
     except:
       numeric_level = getattr(logging, level.upper(), None)
       if not isinstance(numeric_level, int):
         raise ValueError('Invalid log level: %s' % level)
-    formatter=logging.Formatter("%(asctime)s-%(process)d-%(threadName)s-%(levelname)s-%(message)s")
+    formatter=AvNavFormatter("%(asctime)s-%(process)d-%(avthread)s-%(threadName)s-%(levelname)s-%(message)s")
     cls.consoleHandler=logging.StreamHandler()
     cls.consoleHandler.setFormatter(formatter)
     cls.logger.propagate=False
@@ -93,7 +127,7 @@ class AVNLog(object):
   @classmethod
   def initLoggingSecond(cls,level,filename,debugToFile=False):
     numeric_level=cls.levelToNumeric(level)
-    formatter=logging.Formatter("%(asctime)s-%(process)d-%(threadName)s-%(levelname)s-%(message)s")
+    formatter=AvNavFormatter("%(asctime)s-%(process)d-%(avthread)s-%(threadName)s-%(levelname)s-%(message)s")
     if not cls.consoleHandler is None :
       cls.consoleHandler.setLevel(numeric_level)
     version="2.7"
@@ -168,9 +202,15 @@ class AVNLog(object):
   @classmethod
   def getThreadId(cls):
     try:
-      SYS_gettid = 224
+      if cls.hasNativeTid:
+        return str(threading.get_native_id())
+    except:
+      pass
+    if sys.platform == 'win32':
+      return "0"
+    try:
       libc = ctypes.cdll.LoadLibrary('libc.so.6')
-      tid = libc.syscall(SYS_gettid)
+      tid = libc.syscall(cls.SYS_gettid)
       return str(tid)
     except:
       return "0"
@@ -301,7 +341,7 @@ class AVNUtil(object):
   @classmethod
   def runCommand(cls,param,threadName=None):
     if not threadName is None:
-      threading.current_thread().setName("[%s]%s"%(AVNLog.getThreadId(),threadName))
+      threading.current_thread().setName("%s"%threadName or '')
     cmd=subprocess.Popen(param,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,close_fds=True)
     while True:
       line=cmd.stdout.readline()

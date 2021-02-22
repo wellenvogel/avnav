@@ -68,7 +68,6 @@ class AVNSenseHatReader(AVNWorker):
 
   # thread run method - just try forever
   def run(self):
-    self.setName(self.getThreadPrefix())
     self.setInfo('main', "reading sense", WorkerStatus.NMEA)
     sense = SenseHat()
     source=self.getSourceName()
