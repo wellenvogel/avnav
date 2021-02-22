@@ -60,6 +60,32 @@ class ApiImpl(AVNApi):
     self.addonIndex=1
     self.fileName=moduleFile
     self.requestHandler=None
+    self.paramChange=None
+    self.editables=None
+    self.stopHandler=None
+
+  def stop(self):
+    if self.stopHandler is None:
+      raise Exception("plugin %s cannot be stopped during runtime"%self.prefix)
+    try:
+      charthandler = AVNWorker.findHandlerByName(AVNChartHandler.getConfigName())
+      charthandler.registerExternalProvider(self.prefix, None)
+    except:
+      pass
+    try:
+      usbhandler = AVNWorker.findHandlerByName(AVNUsbSerialReader.getConfigName())
+      usbhandler.deregisterExternalHandlers(self.prefix)
+    except:
+      pass
+    self.requestHandler=None
+    try:
+      addonhandler = AVNWorker.findHandlerByName(AVNUserAppHandler.getConfigName())
+      for id in range(0,self.addonIndex+1):
+        addonhandler.unregisterAddOn("%s%i"%(self.prefix,id))
+    except:
+      pass
+    self.stopHandler()
+
 
   def log(self, str, *args):
     AVNLog.info("%s",str % args)
@@ -149,8 +175,17 @@ class ApiImpl(AVNApi):
     iconFilePath=os.path.join(os.path.dirname(self.fileName),iconFile)
     if not os.path.exists(iconFilePath):
       raise Exception("icon file %s not found"%iconFilePath)
-    addonhandler.registerAddOn("%s%i"%(self.prefix,self.addonIndex),url,"%s/%s/%s"%(URL_PREFIX,self.prefix,iconFile),title)
+    id = "%s%i"%(self.prefix,self.addonIndex)
+    addonhandler.registerAddOn(id,url,"%s/%s/%s"%(URL_PREFIX,self.prefix,iconFile),
+                               title=title)
     self.addonIndex+=1
+    return id
+
+  def unregisterUserApp(self, id):
+    addonhandler = AVNWorker.findHandlerByName(AVNUserAppHandler.getConfigName())
+    if addonhandler is None:
+      raise Exception("no http server")
+    return addonhandler.unregisterAddOn(id)
 
   def registerLayout(self, name, layoutFile):
     if not os.path.isabs(layoutFile):
@@ -193,8 +228,47 @@ class ApiImpl(AVNApi):
       raise Exception("internal error: no base config")
     return int(baseConfig.getVersion())
 
+  def saveConfigValues(self, configDict):
+    self.log("saving config %s",str(configDict))
+    return self.phandler.changeChildConfigDict(self.prefix,configDict)
+
+  def registerEditableParameters(self, paramList, changeCallback):
+    if type(paramList) is not list:
+      raise Exception("paramList must be a list")
+    editables=[]
+    for p in paramList:
+      if type(p) is not dict:
+        raise Exception("items of paramList must be dictionaries")
+      if p.get('name') is None:
+        raise Exception("missing key name in %s"%str(p))
+      description=WorkerParameter(p['name'],
+                                  default=p.get('default'),
+                                  type=p.get('type'),
+                                  rangeOrList=p.get('rangeOrList'),
+                                  description=p.get('description'))
+      editables.append(description)
+    self.editables=editables
+    self.paramChange=changeCallback
+    self.phandler.setChildEditable(self.prefix,
+                                   self.stopHandler is not None
+                                   or (self.paramChange is not None
+                                   and len(self.editables) > 0)
+                                   )
+
+  def registerRestart(self, stopCallback):
+    self.stopHandler=stopCallback
+    self.phandler.setChildEditable(self.prefix,
+                                   self.stopHandler is not None
+                                   or (self.paramChange is not None
+                                       and len(self.editables) > 0)
+                                   )
 
 class AVNPluginHandler(AVNWorker):
+  ENABLE_PARAMETER=WorkerParameter('enabled',
+                                   type=WorkerParameter.T_BOOLEAN,
+                                   default=True,
+                                   description="enable this plugin")
+
   """a handler for plugins"""
   def __init__(self,param):
     AVNWorker.__init__(self, param)
@@ -203,6 +277,7 @@ class AVNPluginHandler(AVNWorker):
     self.createdApis={}
     self.startedThreads={}
     self.pluginDirs={} #key: moduleName, Value: dir
+    self.configLock=threading.Lock()
 
 
   @classmethod
@@ -277,25 +352,39 @@ class AVNPluginHandler(AVNWorker):
           if os.path.exists(os.path.join(dir,"plugin.js")) or os.path.exists(os.path.join(dir,"plugin.css")):
             self.pluginDirs[moduleName]=dir
     for name in list(self.createdPlugins.keys()):
-      plugin=self.createdPlugins[name]
-      api=self.createdApis[name]
-      if api is None:
-        AVNLog.error("internal error: api not created for plugin %s",name)
-        continue
-      enabled=api.getConfigValue("enabled","true")
-      if enabled.upper() != 'TRUE':
-        AVNLog.info("plugin %s is disabled by config", name)
-        self.setInfo(name,"disabled by config",WorkerStatus.INACTIVE)
-        continue
-      AVNLog.info("starting plugin %s",name)
-      thread=threading.Thread(target=plugin.run)
-      thread.setDaemon(True)
-      thread.setName("Plugin: %s"%(name))
-      thread.start()
-      self.startedThreads[name]=thread
-
+      self.startPluginThread(name)
     AVNLog.info("pluginhandler finished")
 
+  def runPlugin(self,api,plugin):
+    api.log("run started")
+    try:
+      plugin.run()
+      api.log("plugin run finshed")
+      if AVNUtil.getBool(api.getConfigValue('enabled'),True):
+        api.setStatus(WorkerStatus.INACTIVE,"plugin run finished")
+      else:
+        api.setStatus(WorkerStatus.INACTIVE, "plugin disabled")
+    except Exception as e:
+      api.error("plugin run exception: %s",traceback.format_exc())
+      api.setStatus(WorkerStatus.ERROR,"plugin exception %s"%str(e))
+
+  def startPluginThread(self,name):
+    plugin = self.createdPlugins[name]
+    api = self.createdApis[name]
+    if api is None:
+      AVNLog.error("internal error: api not created for plugin %s", name)
+      return
+    enabled = AVNUtil.getBool(api.getConfigValue("enabled"), True)
+    if not enabled:
+      AVNLog.info("plugin %s is disabled by config", name)
+      self.setInfo(name, "disabled by config", WorkerStatus.INACTIVE)
+      return
+    AVNLog.info("starting plugin %s", name)
+    thread = threading.Thread(target=self.runPlugin,args=[api,plugin])
+    thread.setDaemon(True)
+    thread.setName("Plugin: %s" % (name))
+    thread.start()
+    self.startedThreads[name] = thread
 
   def instantiateHandlersFromModule(self,modulename, module):
     MANDATORY_METHODS = ['run']
@@ -368,6 +457,93 @@ class AVNPluginHandler(AVNWorker):
     except:
       AVNLog.error("unable to load %s:%s", moduleFile, traceback.format_exc())
     return None
+
+  def changeChildConfigDict(self, childName, configDict):
+    self.configLock.acquire()
+    hasChanges = False
+    try:
+      childIdx=0
+      currentList=self.param.get(childName)
+      if currentList is None:
+        childIdx=-1
+      for k,v in configDict.items():
+        if currentList is None or len(currentList) < 1 or \
+            currentList[0].get(k) != str(v):
+          hasChanges=True
+          childIdx=self.changeChildConfig(childName, childIdx, k, str(v),delayWriteOut=True)
+    finally:
+      self.configLock.release()
+    if hasChanges:
+      self.writeConfigChanges()
+
+  def setChildEditable(self,child,enable=True):
+    existing=self.status.get(child)
+    if existing:
+      existing.id=child if enable else None
+    else:
+      if enable:
+        self.setInfo(child,'created',WorkerStatus.INACTIVE,childId=child)
+
+  def getEditableChildParameters(self, child):
+    api=self.createdApis.get(child)
+    if api is None:
+      return []
+    editables=api.editables
+    if editables is None:
+      editables=[]
+    if api.stopHandler:
+      editables+=[self.ENABLE_PARAMETER]
+    rt=[]
+    for e in editables:
+      if callable(e.rangeOrList):
+        ne=e.copy()
+        ne.rangeOrList=e.rangeOrList()
+        rt.append(ne)
+      else:
+        rt.append(e)
+    return rt
+
+  def getParam(self, child=None, filtered=False):
+    if child is None:
+      return super().getParam(child, filtered)
+    param=self.getParamValue(child)
+    if param is None or len(param) < 1:
+      param={}
+    else:
+      param=param[0]
+    if filtered:
+      return WorkerParameter.filterByList(
+        self.getEditableChildParameters(child),
+        param
+      )
+    return param
+
+
+  def updateConfig(self, param, child=None):
+    if child is None:
+      return super().updateConfig(param, child)
+    api = self.createdApis.get(child)
+    if api is None:
+      raise Exception("plugin %s not found"%child)
+    checked=WorkerParameter.checkValuesFor(self.getEditableChildParameters(child),param,self.param.get(child))
+    if 'enabled' in checked:
+      newEnabled=AVNUtil.getBool(checked.get('enabled'),True)
+      current=AVNUtil.getBool(api.getConfigValue('enabled'),True)
+      if newEnabled != current:
+        if not newEnabled:
+          if api.stopHandler is None:
+            raise Exception("plugin %s cannot stop during runtime")
+          api.stopHandler()
+        else:
+          self.startPluginThread(child)
+          pass
+        self.changeChildConfigDict(child,{'enabled':newEnabled})
+      del checked['enabled']
+      if len(list(param.keys)) < 2:
+        return
+    if api.paramChange is None:
+      raise Exception("unable to change parameters")
+    api.paramChange(checked)
 
   def getStatusProperties(self):
     rt={}

@@ -59,7 +59,8 @@ class SerialWriter(SerialReader):
           WorkerParameter('feederName','', type=WorkerParameter.T_STRING,editable=False),
           WorkerParameter('combined', False, type=WorkerParameter.T_BOOLEAN,
                           description='if true, also start a reader'),
-          WorkerParameter('readFilter','', type=WorkerParameter.T_FILTER),
+          WorkerParameter('readFilter','', type=WorkerParameter.T_FILTER,
+                          condition={'combined':True}),
           WorkerParameter('blackList','',type=WorkerParameter.T_STRING,
                           description=', separated list of sources that we will not send out')
           ]

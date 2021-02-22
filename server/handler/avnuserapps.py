@@ -267,6 +267,14 @@ class AVNUserAppHandler(AVNWorker):
     }
     self.additionalAddOns.append(newAddon)
 
+  def unregisterAddOn(self,name):
+    if name is None:
+      raise Exception("name cannot be None")
+    for ao in self.additionalAddOns:
+      if ao.get('name') == name:
+        self.additionalAddOns.remove(ao)
+        return True
+
 
   def deleteByUrl(self,url):
     """

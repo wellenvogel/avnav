@@ -440,6 +440,14 @@ class AVNUtil(object):
       filename = filename.replace(r, '_')
     return filename
 
+  @classmethod
+  def getBool(cls,v,default=False):
+    if v is None:
+      return default
+    if type(v) is str:
+      return v.upper() == 'TRUE'
+    return v
+
 
 class ChartFile(object):
   def getScheme(self):

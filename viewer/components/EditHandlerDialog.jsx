@@ -165,6 +165,31 @@ class EditHandlerDialog extends React.Component{
         this.modifiedValues.setState(newState,true);
     }
 
+    checkCondition(condition,values){
+        if (! (condition instanceof Array)){
+            condition=[condition]
+        }
+        for (let i in condition){
+            let matches=true;
+            for (let k in condition[i]){
+                let compare=condition[i][k];
+                let value=undefined;
+                for (let pi in this .state.parameters) {
+                    if (this.state.parameters[pi].name === k){
+                        value=this.state.parameters[pi].getValueForDisplay(values);
+                        break;
+                    }
+                }
+                if (compare !== value){
+                    matches=false;
+                    break;
+                }
+            }
+            if (matches) return true;
+        }
+        return false;
+    }
+
     render () {
         let self=this;
         if (this.sizeCount !== this.state.sizeCount && this.props.updateDimensions){
@@ -192,15 +217,7 @@ class EditHandlerDialog extends React.Component{
                                 showDialog={this.dialogHelper.showDialog}
                             />:null;
                             if (param.condition){
-                                let show=false;
-                                for (let k in param.condition){
-                                    //TODO: we should use getValue from the
-                                    //other parameters to access the value from current...
-                                    if (currentValues[k] === param.condition[k]){
-                                        show=true;
-                                        break;
-                                    }
-                                }
+                                let show=this.checkCondition(param.condition,currentValues);
                                 if (!show) return null;
                             }
                             return ParamValueInput({

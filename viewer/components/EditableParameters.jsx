@@ -82,10 +82,22 @@ export class EditableParameter{
     }
     getValueForDisplay(param,opt_placeHolder){
         let rt=this.getValue(param);
-        if (rt !== undefined && rt !== null) return rt;
-        rt=this.default;
-        if (rt !== undefined && rt !== null) return rt;
-        return opt_placeHolder||"";
+        if (rt === undefined || rt === null) {
+            rt = this.default;
+        }
+        if (rt === undefined || rt === null){
+            rt=opt_placeHolder;
+        }
+        if (rt === undefined || rt === null){
+            if (this.type === EditableParameter.TYPE.BOOLEAN) return false
+            return '';
+        }
+        if (this.type === EditableParameter.TYPE.BOOLEAN){
+            if (typeof(rt)==='string'){
+                return rt.toLowerCase() === 'true';
+            }
+        }
+        return rt;
     }
     isValid(value){
         return true;

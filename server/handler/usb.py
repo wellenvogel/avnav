@@ -158,7 +158,7 @@ class AVNUsbSerialReader(AVNWorker):
   #get the parameters for an usb device
   @classmethod
   def getSerialParam(cls):
-    rt=list(filter(lambda p:p.name != 'port',SerialWriter.getConfigParam()))
+    rt=list(filter(lambda p:p.name != 'port' and p.name != 'combined',SerialWriter.getConfigParam()))
     ownParam=[
         WorkerParameter('usbid',None,type=WorkerParameter.T_STRING,editable=False,
                         description='an identifier of the USB device\n.../1-1.3.1:1.0/ttyUSB2/tty/ttyUSB2 - identifier would be 1-1.3.1'),
@@ -210,8 +210,8 @@ class AVNUsbSerialReader(AVNWorker):
       raise Exception("unknown child type %s"%child)
     rt=WorkerParameter.filterEditables(self.getSerialParam(),makeCopy=True)
     for p in rt:
-      if p.name == 'combined' or p.name == 'readFilter':
-        p.condition={'type':'writer'}
+      if p.name == 'readFilter':
+        p.condition={'type':'combined'}
     return rt
 
   def _findHandlerForChild(self,child,external=False):
@@ -293,6 +293,21 @@ class AVNUsbSerialReader(AVNWorker):
       raise Exception("handler for %s already registered: %s"%(usbid,old.name))
     #potentially we had the device already open - close it now
     self.stopHandler(usbid)
+
+  def deregisterExternalHandlers(self,name):
+    AVNLog.info("AVNUsbSerialReader: deregister external handler %s ", name)
+    self.maplock.acquire()
+    deletes=[]
+    try:
+      for k,v in self.externalHandlers.items():
+        if v.get('name') == name:
+          deletes.append(k)
+      for d in deletes:
+        del self.externalHandlers[d]
+    finally:
+      self.maplock.release()
+    for d in deletes:
+      self.stopHandler(d)
 
   #return True if added
   def checkAndAddHandler(self,handler):

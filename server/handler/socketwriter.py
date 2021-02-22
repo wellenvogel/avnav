@@ -56,7 +56,8 @@ class AVNSocketWriter(AVNWorker,SocketReader):
           WorkerParameter('read',True,type=WorkerParameter.T_BOOLEAN,
                           description='allow for also reading data from connected devices'),
           WorkerParameter('readerFilter','',type=WorkerParameter.T_FILTER,
-                          description='NMEA filter for incoming data'),
+                          description='NMEA filter for incoming data',
+                          condition={'read':True}),
           WorkerParameter('minTime',50,type=WorkerParameter.T_FLOAT,
                           description='if this is set, wait this time before reading new data (ms)'),
           WorkerParameter('blackList','',description=', separated list of sources we do not send out')

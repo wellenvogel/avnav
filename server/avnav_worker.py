@@ -44,7 +44,7 @@ class WorkerParameter(object):
   T_BOOLEAN='BOOLEAN'
   T_SELECT='SELECT'
   T_FILTER='FILTER'
-
+  ALL_TYPES=[T_STRING,T_NUMBER,T_BOOLEAN,T_FLOAT,T_SELECT,T_FILTER]
   PREDEFINED_DESCRIPTIONS={
     T_FILTER: ', separated list of sentences either !AIVDM or $RMC - for $ we ignore the 1st 2 characters'
   }
@@ -59,6 +59,8 @@ class WorkerParameter(object):
                condition=None):
     self.name=name
     self.type=type if type is not None else self.T_STRING
+    if self.type not in self.ALL_TYPES:
+      raise ParamValueError("invalid parameter type %s"%self.type)
     self.default=default
     self.rangeOrList=rangeOrList
     if description is None:
@@ -66,7 +68,7 @@ class WorkerParameter(object):
     self.description=description or ''
     self.editable=editable
     self.mandatory=mandatory if mandatory is not None else default is None
-    self.condition=None #a dict with name:value that must match for visbility
+    self.condition=condition #a dict with name:value that must match for visbility
 
   def serialize(self):
     return self.__dict__
@@ -82,7 +84,9 @@ class WorkerParameter(object):
                            type=self.type,
                            rangeOrList=[]+self.rangeOrList if self.rangeOrList is not None else None,
                            description=self.description,
-                           editable=self.editable)
+                           editable=self.editable,
+                           mandatory=self.mandatory,
+                           condition=self.condition)
   @classmethod
   def filterNameDef(cls,plist):
     rt={}

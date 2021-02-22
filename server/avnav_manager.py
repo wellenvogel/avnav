@@ -45,10 +45,14 @@ class ConfigChanger(object):
     self.dirty=False
     self.changeHandler=changeHandler
 
+  def acquireLock(self):
+    self.changeHandler.acquireLock()
+  def releaseLock(self):
+    self.changeHandler.releaseLock()
   def _setDirty(self):
     self.dirty=True
 
-  def handleChange(self, skip=False):
+  def handleChange(self, skip=False,lock=True):
     if not self.dirty:
       return
     if not self.changeHandler:
@@ -83,80 +87,100 @@ class ConfigChanger(object):
     self._setDirty()
 
   def changeAttribute(self,name,value,delayUpdate=False):
-    self._addToDom()
-    self.elementDom.setAttribute(name,str(value))
-    self._setDirty()
-    if not delayUpdate:
-      self.handleChange()
+    self.acquireLock()
+    try:
+      self._addToDom()
+      self.elementDom.setAttribute(name,str(value))
+      self._setDirty()
+      if not delayUpdate:
+        self.handleChange()
+    finally:
+      self.releaseLock()
 
   def changeChildAttribute(self,childName,childIndex,name,value,delayUpdate=False):
     if self.childMap is None:
       raise Exception("no dom, cannot change")
-    self._addToDom()
-    childList=self.childMap.get(childName)
-    if childList is None:
-      childList=[]
-      self.childMap[childName]=childList
-    if childIndex >= 0:
-      if childIndex >= len(childList):
-        raise Exception("trying to update an non existing child index %s:%d"%(childName,childIndex))
-      childList[childIndex].setAttribute(name,str(value))
+    self.acquireLock()
+    try:
+      self._addToDom()
+      childList=self.childMap.get(childName)
+      if childList is None:
+        childList=[]
+        self.childMap[childName]=childList
+      if childIndex >= 0:
+        if childIndex >= len(childList):
+          raise Exception("trying to update an non existing child index %s:%d"%(childName,childIndex))
+        childList[childIndex].setAttribute(name,str(value))
+        self._setDirty()
+        self.handleChange(delayUpdate,lock=False)
+        return
+      #we must insert
+      newEl=self.domBase.createElement(childName)
+      newEl.setAttribute(name,str(value))
+      self.elementDom.appendChild(newEl)
+      newline = self.domBase.createTextNode("\n")
+      self.elementDom.appendChild(newline)
+      childList.append(newEl)
       self._setDirty()
-      self.handleChange(delayUpdate)
-      return
-    #we must insert
-    newEl=self.domBase.createElement(childName)
-    newEl.setAttribute(name,str(value))
-    self.elementDom.appendChild(newEl)
-    newline = self.domBase.createTextNode("\n")
-    self.elementDom.appendChild(newline)
-    childList.append(newEl)
-    self._setDirty()
-    self.handleChange(delayUpdate)
+      self.handleChange(delayUpdate,lock=False)
+    finally:
+      self.releaseLock()
     return len(childList)-1
 
   def removeChild(self,childName,childIndex,delayUpdate=False):
     if self.childMap is None:
       raise Exception("no dom, cannot change")
-    childList=self.childMap.get(childName)
-    if childList is None:
-      return
-    if childIndex < 0 or childIndex >= len(childList):
-      raise Exception("trying to update an non existing child index %s:%d"%(childName,childIndex))
-    self._addToDom()
-    childNode=childList[childIndex]
-    sibling=childNode.nextSibling
-    if sibling is not None:
-      if sibling.nodeType == dom.Node.TEXT_NODE and sibling.nodeValue == "\n":
-        #our inserted newline
-        self.elementDom.removeChild(sibling)
-    self.elementDom.removeChild(childNode)
-    childList[childIndex].unlink()
-    childList.pop(childIndex)
-    self._setDirty()
-    if not delayUpdate:
-      self.handleChange()
+    self.acquireLock()
+    try:
+      childList=self.childMap.get(childName)
+      if childList is None:
+        return
+      if childIndex < 0 or childIndex >= len(childList):
+        raise Exception("trying to update an non existing child index %s:%d"%(childName,childIndex))
+      self._addToDom()
+      childNode=childList[childIndex]
+      sibling=childNode.nextSibling
+      if sibling is not None:
+        if sibling.nodeType == dom.Node.TEXT_NODE and sibling.nodeValue == "\n":
+          #our inserted newline
+          self.elementDom.removeChild(sibling)
+      self.elementDom.removeChild(childNode)
+      childList[childIndex].unlink()
+      childList.pop(childIndex)
+      self._setDirty()
+      if not delayUpdate:
+        self.handleChange(lock=False)
+    finally:
+      self.releaseLock()
     return
 
   def writeAll(self):
-    self._addToDom()
-    self._setDirty()
-    self.handleChange()
+    self.acquireLock()
+    try:
+      self._addToDom()
+      self._setDirty()
+      self.handleChange()
+    finally:
+      self.releaseLock()
 
   def removeSelf(self):
     if not self.isAttached:
       return
-    parentNode=self.elementDom.parentNode
-    sibling = self.elementDom.nextSibling
-    if sibling is not None:
-      if sibling.nodeType == dom.Node.TEXT_NODE and sibling.nodeValue == "\n":
-        # our inserted newline
-        parentNode.removeChild(sibling)
-    parentNode.removeChild(self.elementDom)
-    self.elementDom.unlink()
-    self._setDirty()
-    self.handleChange()
-    self.isAttached=False
+    self.acquireLock()
+    try:
+      parentNode=self.elementDom.parentNode
+      sibling = self.elementDom.nextSibling
+      if sibling is not None:
+        if sibling.nodeType == dom.Node.TEXT_NODE and sibling.nodeValue == "\n":
+          # our inserted newline
+          parentNode.removeChild(sibling)
+      parentNode.removeChild(self.elementDom)
+      self.elementDom.unlink()
+      self._setDirty()
+      self.handleChange(lock=False)
+      self.isAttached=False
+    finally:
+      self.releaseLock()
 
 
 
@@ -239,6 +263,7 @@ class AVNHandlerManager(object):
     self.currentCfgFileName=None #potentially this is the fallback file
     self.parseError=None
     self.navData=None
+    self.configLock=threading.Lock()
 
   def setBaseParam(self,name,value):
     if not hasattr(self.BASEPARAM,name):
@@ -349,8 +374,12 @@ class AVNHandlerManager(object):
       instance.setConfigChanger(ConfigChanger(self, self.domObject, domAttached, element, childPointer))
     return instance
 
+  def acquireLock(self):
+    self.configLock.acquire()
+
+  def releaseLock(self):
+    self.configLock.release()
   def dataChanged(self):
-    #TODO: do some checks?
     self.writeChanges()
 
   def houseKeepingCfgFiles(self):
