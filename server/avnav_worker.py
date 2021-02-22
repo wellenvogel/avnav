@@ -26,6 +26,8 @@
 ###############################################################################
 
 import re
+import traceback
+
 import time
 
 import threading
@@ -726,9 +728,18 @@ class AVNWorker(object):
   def run(self):
     raise Exception("run must be overloaded")
 
+  def _runInternal(self):
+    AVNLog.info("run started")
+    try:
+      self.run()
+      self.setInfo('main','handler stopped',WorkerStatus.INACTIVE)
+    except Exception as e:
+      self.setInfo('main','handler stopped with %s'%str(e),WorkerStatus.ERROR)
+      AVNLog.error("handler run stopped with exception %s",traceback.format_exc())
+
   def startThread(self):
     AVNLog.info("starting %s with config %s", self.getName(), self.getConfigString())
-    self.currentThread = threading.Thread(target=self.run, name=self.name or '')
+    self.currentThread = threading.Thread(target=self._runInternal, name=self.name or '')
     self.currentThread.setDaemon(True)
     self.currentThread.start()
 

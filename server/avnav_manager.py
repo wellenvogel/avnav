@@ -257,7 +257,7 @@ class AVNHandlerManager(object):
           raise Exception("unable to create handler of type %s"%tagName)
         if properties is not None:
           for k,v in properties.items():
-            node.documentElement.setAttribute(k,v)
+            node.documentElement.setAttribute(k,str(v))
         return self.parseHandler(node.documentElement, handler, domAttached=False)
     raise Exception("handler type %s not found"%tagName)
 
