@@ -15,6 +15,47 @@ class Plugin(object):
   NM = 1852.0
   #PGNS used to set the time
   DEFAULT_PGNS='126992,129029'
+  CONFIG=[
+        {
+          'name':'port',
+          'description':'canbus json port',
+          'default':2598,
+          'type': 'NUMBER'
+        },
+        {
+          'name': 'host',
+          'description': 'canbus json host (default: localhost)',
+          'default': 'localhost'
+        },
+        {
+          'name': 'allowKeyOverride',
+          'description': 'necessary to be able to set our time directly from canboat',
+          'default': False,
+          'type': 'BOOLEAN'
+        },
+        {
+          'name': 'autoSendRMC',
+          'description': 'time in seconds with no RMC to start sending it,0: off',
+          'default': 0,
+          'type': 'NUMBER'
+        },
+        {
+          'name': 'sourceName',
+          'description': 'source name to be set for the generated records (defaults to plugin name)',
+          'default': ''
+        },
+        {
+          'name': 'timeInterval',
+          'description': 'time in seconds to store time received via n2k',
+          'default': 0.5,
+          'type':'FLOAT'
+        },
+        {
+          'name': 'timePGNs',
+          'description':'PGNs used to set time',
+          'default': DEFAULT_PGNS
+        }
+        ]
 
   @classmethod
   def pluginInfo(cls):
@@ -30,49 +71,7 @@ class Plugin(object):
     return {
       'description': 'a plugin that reads some PGNS from canboat. Currently supported: 126992:SystemTime. You need to set allowKeyOverwrite=true',
       'version': '1.0',
-      'config':[
-        {
-          'name':'enabled',
-          'description':'set to true to enable plugin',
-          'default':'false'
-        },
-        {
-          'name':'port',
-          'description':'set to canbus json port',
-          'default':'2598'
-        },
-        {
-          'name': 'host',
-          'description': 'set to canbus json host',
-          'default': 'localhost'
-        },
-        {
-          'name': 'allowKeyOverride',
-          'description': 'necessary to be able to write time',
-          'default': 'false'
-        },
-        {
-          'name': 'autoSendRMC',
-          'description': 'time in seconds with no RMC to start sending it,0: off',
-          'default': '0'
-        },
-        {
-          'name': 'sourceName',
-          'description': 'source name to be set for the generated records',
-          'default': '<plugin-name>'
-        },
-        {
-          'name': 'timeInterval',
-          'description': 'time in seconds to store time received via n2k',
-          'default': '0.5'
-        },
-        {
-          'name': 'timePGNs',
-          'description':'PGNs used to set time',
-          'default': cls.DEFAULT_PGNS
-        }
-
-      ],
+      'config': cls.CONFIG,
       'data': [
         {
           'path': cls.PATH,
@@ -90,10 +89,32 @@ class Plugin(object):
         @type  api: AVNApi
     """
     self.api = api # type: AVNApi
+    self.api.registerRestart(self.stop)
+    self.api.registerEditableParameters(self.CONFIG,self.changeConfig)
+    self.changeSequence=0
+    self.socket=None
 
+  def changeConfig(self,newValues):
+    self.changeSequence+=1
+    self.api.saveConfigValues(newValues)
+    try:
+      self.socket.close()
+    except:
+      pass
 
+  def stop(self):
+    self.changeSequence+=1
+    try:
+      self.socket.close()
+    except:
+      pass
 
   def run(self):
+    while not self.api.shouldStopMainThread():
+      self._runInternal()
+
+  def _runInternal(self):
+    sequence=self.changeSequence
     """
     the run method
     this will be called after successfully instantiating an instance
@@ -128,16 +149,16 @@ class Plugin(object):
     self.api.log("started with host=%s,port %d, autoSendRMC=%d"%(host,port,autoSendRMC))
     source=self.api.getConfigValue("sourceName",None)
     errorReported=False
-    while True:
+    while sequence == self.changeSequence:
       self.api.setStatus("STARTED", "connecting to n2kd at %s:%d"%(host,port))
       try:
-        sock = socket.create_connection((host, port),timeout=1000)
+        self.socket = socket.create_connection((host, port),timeout=1000)
         self.api.setStatus("RUNNING", "connected to n2kd at %s:%d" %(host,port))
         hasNmea=False
         buffer=""
         lastTimeSet=self.api.timestampFromDateTime()
         while True:
-          data = sock.recv(1024)
+          data = self.socket.recv(1024)
           if len(data) == 0:
             raise Exception("connection to n2kd lost")
           buffer = buffer + data.decode('ascii', 'ignore')
@@ -212,7 +233,9 @@ class Plugin(object):
             pass
           sock=None
         self.api.setStatus("STARTED", "connecting to n2kd at %s:%d" % (host, port))
-        time.sleep(5)
+        if sequence != self.changeSequence:
+          return
+        time.sleep(2)
 
   def formatTime(self,ts):
     t = ts.isoformat()

@@ -63,6 +63,7 @@ class ApiImpl(AVNApi):
     self.paramChange=None
     self.editables=None
     self.stopHandler=None
+    self.storeKeys=[]
 
   def stop(self):
     if self.stopHandler is None:
@@ -107,18 +108,25 @@ class ApiImpl(AVNApi):
       source=self.prefix
     return self.queue.addNMEA(nmea,source=source,addCheckSum=addCheckSum,omitDecode=omitDecode)
 
+  def registerKeys(self):
+    if self.storeKeys is None:
+      return
+    for keydata in self.storeKeys:
+      self.addKey(keydata)
+
   def addKey(self,data):
+    keySource="Plugin: %s"%self.prefix
     key=data.get('path')
     if key is None:
       raise Exception("%s: missing path in data entry: %s"%(self.prefix,data))
     AVNLog.info("%s: register key %s"%(self.prefix,key))
-    if self.store.isKeyRegistered(key):
+    if self.store.isKeyRegistered(key,keySource):
       allowOverwrite=self.getConfigValue("allowKeyOverwrite","false")
       if allowOverwrite.lower() != "true":
         self.error("key %s already registered, skipping it"%key)
         return
     else:
-      self.store.registerKey(key,data,"Plugin: %s"%self.prefix)
+      self.store.registerKey(key,data,keySource)
     if key.find('*') >= 0:
       self.wildcardPatterns.append(data)
     else:
@@ -367,6 +375,7 @@ class AVNPluginHandler(AVNWorker):
     api.log("run started")
     api.setStatus(WorkerStatus.INACTIVE, "plugin started")
     try:
+      api.registerKeys()
       plugin.run()
       api.log("plugin run finshed")
       if AVNUtil.getBool(api.getConfigValue('enabled'),True):
@@ -438,9 +447,8 @@ class AVNPluginHandler(AVNWorker):
             for entry in mData:
               path = entry.get('path')
               if path is None:
-                raise Exception("missing path in entry %s" % (entry))
-              else:
-                api.addKey(entry)
+                raise Exception("missing path in entry %s" % (str(entry)))
+          api.storeKeys=mData
           pluginInstance = obj(api)
           AVNLog.info("created plugin %s",modulename)
           self.createdPlugins[modulename]=pluginInstance

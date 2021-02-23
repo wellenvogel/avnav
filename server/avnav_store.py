@@ -363,8 +363,19 @@ class AVNStore(object):
         return True
     return False
 
-  def isKeyRegistered(self,key):
-    return self.__allowedKey(key)
+  def isKeyRegistered(self,key,source=None):
+    '''
+    check if a key is registered
+    @param key:
+    @param source: if not None: only return True if registered by different source
+    @return:
+    '''
+    rt=self.__allowedKey(key)
+    if not rt:
+      return False
+    if source is None:
+      return rt
+    return self.__keySources[key] != source
 
   def registerKey(self,key,keyDescription,source=None):
     """
@@ -375,6 +386,9 @@ class AVNStore(object):
     @return:
     """
     self.__checkKey(key)
+    if source is not None and self.__keySources.get(key) == source:
+      AVNLog.ld("key re-registration - ignore - for %s, source %s",key,source)
+      return
     for existing in list(self.__registeredKeys.keys()):
       if existing == key or key.startswith(existing):
         raise Exception("key %s already registered from %s:%s" % (key,existing,self.__registeredKeys[existing]))

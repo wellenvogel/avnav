@@ -133,23 +133,20 @@ class Plugin(object):
     self.api.registerEditableParameters(self.CONFIG,self.changeParam)
     self.api.registerRestart(self.stop)
     self.startSequence=0
-    self.stopSequence=0
     self.config=None # Config
     self.userAppId=None
 
   def stop(self):
     self.startSequence+=1
-    self.stopSequence+=1
 
   def changeParam(self,param):
     self.api.saveConfigValues(param)
     self.startSequence+=1
 
   def run(self):
-    sequence=self.stopSequence
     self.api.registerLayout("example", "example.json")
     self.api.registerChartProvider(self.listCharts)
-    while sequence == self.stopSequence:
+    while not self.api.shouldStopMainThread():
       self.config=Config(self.api)
       self._runInternal()
       try:
