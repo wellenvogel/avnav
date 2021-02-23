@@ -36,6 +36,7 @@ import xml.dom.minidom as parser
 import avnav_handlerList
 
 
+
 class ConfigChanger(object):
   def __init__(self,changeHandler,domBase,isAttached,elementDom,childMap):
     self.isAttached=isAttached
@@ -484,7 +485,34 @@ class AVNHandlerManager(object):
           AVNLog.warn("unable to start handler : " + traceback.format_exc())
     AVNLog.info("All Handlers started")
 
+  def getConfigName(self):
+    return "Manager"
   def handleApiRequest(self,request,type,requestParam,**kwargs):
+
+    if request == 'download':
+      maxBytes=AVNUtil.getHttpRequestParam(requestParam,'maxBytes')
+      if maxBytes is not None:
+        maxBytes=int(maxBytes)
+      if AVNLog.fhandler is None:
+        raise Exception("logging not initialized")
+      fname=AVNLog.fhandler.baseFilename
+      if fname is None:
+        raise Exception("unable to get log file")
+      if not os.path.exists(fname):
+        raise Exception("log %s not found"%fname)
+      st=os.stat(fname)
+      attachment="avnav.log"
+      fsize=st.st_size
+      fh=open(fname,'rb')
+      if maxBytes is not None:
+        if maxBytes < fsize:
+          fsize=maxBytes
+          fh.seek(maxBytes,os.SEEK_END)
+      return{
+        'mimetype':'application/octet-stream',
+        'size':fsize,
+        'stream':fh
+      }
     if request != "api":
       raise Exception("unknown request %s"%request)
     if type != 'config':
@@ -515,6 +543,9 @@ class AVNHandlerManager(object):
         raise Exception("handler %s cannot be added" % tagName)
       rt['data'] = handlerClass.getEditableParameters()
       return rt
+
+
+
     id = AVNUtil.getHttpRequestParam(requestParam, 'handlerId', mantadory=True)
     child = AVNUtil.getHttpRequestParam(requestParam, 'child', mantadory=False)
     handler = AVNWorker.findHandlerById(int(id))
@@ -545,6 +576,7 @@ class AVNHandlerManager(object):
     elif command == 'deleteHandler':
       AVNLog.info("removing handler %s", handler.getName())
       AVNWorker.removeHandler(int(id))
+
     else:
       raise Exception("unknown command %s" % command)
     return rt

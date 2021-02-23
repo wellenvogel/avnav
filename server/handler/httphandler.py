@@ -431,8 +431,11 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
   def handleDebugLevelRequest(self,requestParam):
     rt={'status':'ERROR','info':'missing parameter'}
     level=self.getRequestParam(requestParam,'level')
+    timeout = self.getRequestParam(requestParam, 'timeout',mantadory=False)
+    if timeout is not None:
+      timeout=float(timeout)
     if not level is None:
-      crt=AVNLog.changeLogLevel(level)
+      crt=AVNLog.changeLogLevel(level,timeout)
       if crt:
         rt['status']='OK'
         rt['info']='set loglevel to '+str(level)
@@ -513,14 +516,14 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
         self.send_response(200)
         fname = self.getRequestParam(requestParam, "filename")
         if fname is not None and fname != "" and self.getRequestParam(requestParam,'noattach') is None:
-          self.send_header("Content-Disposition", "attachment")
+          self.send_header("Content-Disposition", 'attachment;filename="%s"'%fname)
         self.send_header("Content-type", dl['mimetype'])
         self.send_header("Content-Length", dl['size'])
         self.send_header("Last-Modified", self.date_time_string())
         self.end_headers()
         try:
           self.writeStream(dl['size'],dl['stream'])
-        except:
+        except Exception as e:
           try:
             dl['stream'].close()
           except:
@@ -530,7 +533,7 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
     except Exception as e:
       if self.getRequestParam(requestParam,'noattach') is None:
         #send some empty data
-        data = io.StringIO("error: %s"%e.message)
+        data = io.StringIO("error: %s"%str(e))
         data.seek(0)
         self.send_response(200)
         self.send_header("Content-type", "application/octet-stream")

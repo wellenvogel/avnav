@@ -206,6 +206,7 @@ def main(argv):
         else:
           httpServer.registerRequestHandler('api',handledCommands,handler)
     httpServer.registerRequestHandler('api','config',handlerManager)
+    httpServer.registerRequestHandler('download', 'config', handlerManager)
   navData=AVNStore(
     float(baseConfig.param['expiryTime']),
     float(baseConfig.param['aisExpiryTime']),

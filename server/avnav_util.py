@@ -32,6 +32,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 import traceback
 
 import datetime
@@ -52,7 +53,8 @@ class AvNavFormatter(logging.Formatter):
 
 
 class LogFilter(logging.Filter):
-  def __init__(self,filter):
+  def __init__(self, filter):
+    super().__init__()
     self.filterre=re.compile(filter,re.I)
   def filter(self, record):
     if (self.filterre.search(record.msg)):
@@ -69,6 +71,7 @@ class AVNLog(object):
   logDir=None
   SYS_gettid = 224
   hasNativeTid=False
+  tempSequence=0
 
   @classmethod
   def getSyscallId(cls):
@@ -144,12 +147,41 @@ class AVNLog(object):
     cls.logger.setLevel(numeric_level)
     cls.debugToFile=debugToFile
     cls.logDir=os.path.dirname(filename)
-  
+
   @classmethod
-  def changeLogLevel(cls,level):
+  def resetRun(cls,sequence,level,timeout):
+    start=time.time()
+    while sequence == cls.tempSequence:
+      time.sleep(0.5)
+      now=time.time()
+      if sequence != cls.tempSequence:
+        return
+      if now < start or now >= (start+timeout):
+        cls.logger.info("resetting loglevel to %s",str(level))
+        cls.logger.setLevel(level)
+        if not cls.consoleHandler is None:
+          cls.consoleHandler.setLevel(level)
+        if cls.debugToFile:
+          if cls.fhandler is not None:
+            cls.fhandler.setLevel(level)
+        return
+
+  @classmethod
+  def startResetThread(cls,level,timeout):
+    cls.tempSequence+=1
+    sequence=cls.tempSequence
+    thread=threading.Thread(target=cls.resetRun,args=(sequence,level,timeout))
+    thread.setDaemon(True)
+    thread.start()
+
+
+  @classmethod
+  def changeLogLevel(cls,level,timeout=None):
     try:
       numeric_level=cls.levelToNumeric(level)
+      oldlevel=None
       if not cls.logger.getEffectiveLevel() == numeric_level:
+        oldlevel = cls.logger.getEffectiveLevel()
         cls.logger.setLevel(numeric_level)
       if not cls.consoleHandler is None:
         cls.consoleHandler.setLevel(numeric_level)
@@ -157,6 +189,8 @@ class AVNLog(object):
         if cls.fhandler is not None:
           cls.fhandler.setLevel(numeric_level)
         pass
+      if oldlevel is not None and timeout is not None:
+        cls.startResetThread(oldlevel,timeout)
       return True
     except:
       return False
