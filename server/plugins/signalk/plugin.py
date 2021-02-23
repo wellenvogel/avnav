@@ -139,7 +139,7 @@ class Plugin(object):
 
   def stop(self):
     self.startSequence+=1
-    self.startSequence+=1
+    self.stopSequence+=1
 
   def changeParam(self,param):
     self.api.saveConfigValues(param)
@@ -190,7 +190,9 @@ class Plugin(object):
         except:
           pass
         self.webSocket=None
-      while apiUrl is None:
+      while apiUrl is None :
+        if sequence != self.startSequence:
+          return
         self.connected=False
         responseData=None
         try:
@@ -297,6 +299,8 @@ class Plugin(object):
         self.api.log("error when fetching from signalk %s: %s",apiUrl,traceback.format_exc())
         self.api.setStatus("ERROR","error when fetching from signalk %s"%(apiUrl))
         self.connected=False
+        if sequence != self.startSequence:
+          return
         time.sleep(5)
 
   def webSocketRun(self):

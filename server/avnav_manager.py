@@ -523,7 +523,7 @@ class AVNHandlerManager(object):
     if command == 'getEditables':
       if child is not None:
         data = handler.getEditableChildParameters(child)
-        canDelete = True
+        canDelete = handler.canDeleteChild(child)
       else:
         data = handler.getEditableParameters()
         canDelete = handler.canDeleteHandler()

@@ -214,6 +214,9 @@ class AVNUsbSerialReader(AVNWorker):
         p.condition={'type':'combined'}
     return rt
 
+  def canDeleteChild(self, child):
+    return True
+
   def _findHandlerForChild(self,child,external=False):
     if not ':' in child:
       raise Exception("invalid child id, missing :")

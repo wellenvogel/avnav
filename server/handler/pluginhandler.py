@@ -357,6 +357,7 @@ class AVNPluginHandler(AVNWorker):
 
   def runPlugin(self,api,plugin):
     api.log("run started")
+    api.setStatus(WorkerStatus.INACTIVE, "plugin started")
     try:
       plugin.run()
       api.log("plugin run finshed")
@@ -492,7 +493,7 @@ class AVNPluginHandler(AVNWorker):
     if editables is None:
       editables=[]
     if api.stopHandler:
-      editables+=[self.ENABLE_PARAMETER]
+      editables= editables + [self.ENABLE_PARAMETER]
     rt=[]
     for e in editables:
       if callable(e.rangeOrList):
@@ -530,16 +531,16 @@ class AVNPluginHandler(AVNWorker):
       newEnabled=AVNUtil.getBool(checked.get('enabled'),True)
       current=AVNUtil.getBool(api.getConfigValue('enabled'),True)
       if newEnabled != current:
+        self.changeChildConfigDict(child, {'enabled': newEnabled})
         if not newEnabled:
           if api.stopHandler is None:
             raise Exception("plugin %s cannot stop during runtime")
-          api.stopHandler()
+          api.stop()
         else:
           self.startPluginThread(child)
           pass
-        self.changeChildConfigDict(child,{'enabled':newEnabled})
       del checked['enabled']
-      if len(list(param.keys)) < 2:
+      if len(list(checked.keys())) < 2:
         return
     if api.paramChange is None:
       raise Exception("unable to change parameters")

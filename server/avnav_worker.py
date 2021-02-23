@@ -502,6 +502,8 @@ class AVNWorker(object):
 
   def getEditableChildParameters(self,child):
     raise Exception("getEditableChildParameters not available for %s"%self.getName())
+  def canDeleteChild(self,child):
+    return False
 
   def updateConfig(self,param,child=None):
     '''
