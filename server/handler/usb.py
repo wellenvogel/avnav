@@ -152,6 +152,7 @@ class AVNUsbSerialReader(AVNWorker):
   @classmethod
   def getSerialParam(cls):
     rt=list(filter(lambda p:p.name != 'port' and p.name != 'combined',SerialWriter.getConfigParam()))
+    rt = rt+ list(filter(lambda p: p.name == 'minbaud', SerialReader.getConfigParam()))
     ownParam=[
         WorkerParameter('usbid',None,type=WorkerParameter.T_STRING,editable=False,
                         description='an identifier of the USB device\n.../1-1.3.1:1.0/ttyUSB2/tty/ttyUSB2 - identifier would be 1-1.3.1'),
