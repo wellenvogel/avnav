@@ -41,14 +41,9 @@ class InfoHandler(object):
     self.name=name
     self.parent=parent
     self.childId="%s:%s"%(CHILD_NAME,name)
-    self.ignoredKeys=[]
   def setInfo(self,item,text,status,canDelete=False):
-    if item in self.ignoredKeys:
-      return
     self.parent.setInfo(self.name,text,status,self.childId,canDelete=canDelete)
   def deleteInfo(self,item):
-    if item in self.ignoredKeys:
-      return
     self.parent.deleteInfo(self.name)
 
 class UsbSerialHandler(InfoHandler):
@@ -78,10 +73,8 @@ class UsbSerialHandler(InfoHandler):
       self.setInfo(None,"starting type %s"%self.type,WorkerStatus.STARTED,
                    canDelete=self.param.get('childIndex',-1) >= 0)
       if self.type == self.T_WRITER or self.type == self.T_COMBINED:
-        self.ignoredKeys=['reader']
         self.serialHandler = SerialWriter(self.param, self.parent.writeData, self, sourceName)
-        if self.type == self.T_COMBINED:
-          self.serialHandler.param["combined"] = True
+        self.serialHandler.param["combined"] = self.type == self.T_COMBINED
       else:
         self.serialHandler = SerialReader(self.param, self.parent.writeData, self, sourceName)
       self.serialHandler.run()
@@ -212,6 +205,10 @@ class AVNUsbSerialReader(AVNWorker):
     for p in rt:
       if p.name == 'readFilter':
         p.condition={'type':'combined'}
+      if p.name == 'minbaud':
+        p.condition={'type':'reader'}
+      if p.name == 'blackList':
+        p.condition=[{'type':'writer'},{'type':'combined'}]
     return rt
 
   def canDeleteChild(self, child):

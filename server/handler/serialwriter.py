@@ -93,6 +93,7 @@ class SerialWriter(SerialReader):
     if param.get('blacklist') is not None:
       self.blackList =param.get('blacklist').split(',')
     self.blackList.append(sourceName)
+    self.combinedStatus={}
 
    
   def stopHandler(self):
@@ -266,18 +267,34 @@ class SerialWriter(SerialReader):
 
     
         
-  def setInfo(self,txt,status):
+  def _updateStatus(self):
+    finalStatus = WorkerStatus.INACTIVE
+    finalText = ''
+    hasItems=False
+    for k, v in self.combinedStatus.items():
+      hasItems=True
+      if v.status == WorkerStatus.ERROR:
+        finalStatus = WorkerStatus.ERROR
+      elif v.status == WorkerStatus.NMEA and finalStatus != WorkerStatus.ERROR:
+        finalStatus = WorkerStatus.NMEA
+      elif finalStatus == WorkerStatus.INACTIVE and v.status != WorkerStatus.INACTIVE:
+        finalStatus = v.status
+      finalText += "%s:[%s] %s " % (v.name, v.status, v.info)
     if not self.infoHandler is None:
-      self.infoHandler.setInfo(self.getName(),txt,status)
-  def deleteInfo(self):
-    if not self.infoHandler is None:
-      self.infoHandler.deleteInfo(self.getName())
+      if hasItems:
+        self.infoHandler.setInfo(self.getName(), finalText, finalStatus)
+      else:
+        self.infoHandler.deleteInfo(self.getName())
+
   def setInfoWithKey(self,key,txt,status):
-    if not self.infoHandler is None:
-      self.infoHandler.setInfo(self.getName()+"-"+key,txt,status)
+    self.combinedStatus[key]=WorkerStatus(key,status,txt)
+    self._updateStatus()
   def deleteInfoWithKey(self,key):
-    if not self.infoHandler is None:
-      self.infoHandler.deleteInfo(self.getName()+"-"+key)
+    try:
+      del self.combinedStatus[key]
+    except:
+      pass
+    self._updateStatus()
 
 #a Worker to directly write to a serial line using pyserial
 #on windows use an int for the port - e.g. use 4 for COM5

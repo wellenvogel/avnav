@@ -94,7 +94,10 @@ class AVNBaseConfig(AVNWorker):
       self.setInfo("startup",self.startupError,WorkerStatus.ERROR)
     super().startInstance(navdata)
 
-
+  def run(self):
+    self.setInfo('main','running',WorkerStatus.NMEA)
+    while not self.shouldStop():
+      self.wait(10)
 
   def setVersion(self,version):
     self.version=version
