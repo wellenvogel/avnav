@@ -318,3 +318,12 @@ class AVNApi(object):
     @return:
     '''
     raise NotImplemented()
+
+  def shouldStopMainThread(self):
+    '''
+    check if the main thread of the plugin should stop
+    this method will always return True if you call
+    it from a different thread
+    @return:
+    '''
+    raise NotImplemented()

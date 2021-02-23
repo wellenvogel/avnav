@@ -40,13 +40,11 @@ class Plugin(object):
     self.api.registerRequestHandler(self.handleApiRequest)
     self.count=0
     self.api.registerRestart(self.stop)
-    self.startSequence=0
 
   def stop(self):
-    self.startSequence+=1
+    pass
 
   def run(self):
-    sequence=self.startSequence
     """
     the run method
     this will be called after successfully instantiating an instance
@@ -57,7 +55,8 @@ class Plugin(object):
     """
     seq=0
     self.api.log("started")
-    while sequence==self.startSequence:
+    self.api.setStatus('NMEA','running')
+    while not self.api.shouldStopMainThread():
       seq,data=self.api.fetchFromQueue(seq,10)
       if len(data) > 0:
         for line in data:

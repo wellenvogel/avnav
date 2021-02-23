@@ -263,6 +263,14 @@ class ApiImpl(AVNApi):
                                        and len(self.editables) > 0)
                                    )
 
+  def shouldStopMainThread(self):
+    current=threading.get_ident()
+    running=self.phandler.startedThreads.get(self.prefix)
+    if running is None:
+      return True
+    return running.ident != current
+
+
 class AVNPluginHandler(AVNWorker):
   ENABLE_PARAMETER=WorkerParameter('enabled',
                                    type=WorkerParameter.T_BOOLEAN,
@@ -535,6 +543,10 @@ class AVNPluginHandler(AVNWorker):
         if not newEnabled:
           if api.stopHandler is None:
             raise Exception("plugin %s cannot stop during runtime")
+          try:
+            del self.startedThreads[child]
+          except:
+            pass
           api.stop()
         else:
           self.startPluginThread(child)
