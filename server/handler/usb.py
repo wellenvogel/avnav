@@ -273,6 +273,23 @@ class AVNUsbSerialReader(AVNWorker):
       self.writeConfigChanges()
     self.stopHandler(usbid)
 
+  def getUsedResources(self, type=None):
+    if type != UsedResource.T_SERIAL and type != UsedResource.T_USB and type is not None:
+      return []
+    rt=[]
+    self.maplock.acquire()
+    try:
+      for k,v in self.addrmap.items():
+        dev=v.getDevice()
+        if dev is not None and v.param.get('type') != UsbSerialHandler.T_IGNORE:
+          if type is None or type == UsedResource.T_SERIAL:
+            rt.append(UsedResource(UsedResource.T_SERIAL,self.id,dev))
+          if type is None or type == UsedResource.T_USB:
+            rt.append(UsedResource(UsedResource.T_USB,self.id,k))
+    finally:
+      self.maplock.release()
+    return rt
+
   def registerExternalHandler(self,usbid,name,callback):
     AVNLog.info("AVNUsbSerialReader: register external handler %s for %s",name,usbid)
     old=None

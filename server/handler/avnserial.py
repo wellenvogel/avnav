@@ -79,9 +79,6 @@ class SerialReader(object):
     ports=serial.tools.list_ports.comports()
     rt=[]
     for p in ports:
-      if p.vid is not None:
-        #skip USB devices
-        continue
       rt.append(p.device)
     return rt
 
@@ -201,7 +198,7 @@ class SerialReader(object):
     #if not os.name=='posix':
     return serialDevice.readline(300)
 
-   
+
   #the run method - just try forever  
   def run(self):
     threading.current_thread().setName("%s"%self.getName())
@@ -379,9 +376,12 @@ class AVNSerialReader(AVNWorker):
     return rt
 
   @classmethod
-  def getEditableParameters(cls, makeCopy=True):
-    rt= super().getEditableParameters(True)
-    WorkerParameter.updateParamFor(rt, 'port', {'rangeOrList':SerialReader.listSerialPorts()})
+  def getEditableParameters(cls, makeCopy=True,id=None):
+    rt= super().getEditableParameters(True,id=id)
+    slist=SerialReader.listSerialPorts()
+    slist=UsedResource.filterListByUsed(UsedResource.T_SERIAL,slist,
+                                        cls.findUsersOf(UsedResource.T_SERIAL,ownId=id))
+    WorkerParameter.updateParamFor(rt, 'port', {'rangeOrList':slist})
     return rt
 
   @classmethod
@@ -399,8 +399,10 @@ class AVNSerialReader(AVNWorker):
     self.reader=None
     AVNWorker.__init__(self, param)
 
-
-
+  def getUsedResources(self, type=None):
+    if type != UsedResource.T_SERIAL and type is not None:
+      return []
+    return [UsedResource(UsedResource.T_SERIAL,self.id,self.getParamValue('port'))]
 
   #make some checks when we have to start
   #we cannot do this on init as we potentiall have tp find the feeder...
@@ -414,6 +416,7 @@ class AVNSerialReader(AVNWorker):
      
   #thread run method - just try forever  
   def run(self):
+    self.checkUsedResource(UsedResource.T_SERIAL,self.id,self.getParamValue('port'))
     while not self.shouldStop():
       try:
         self.reader=SerialReader(self.param, self.writeData,self,self.getSourceName(self.getParamValue('port')))
@@ -423,6 +426,8 @@ class AVNSerialReader(AVNWorker):
 
 
   def updateConfig(self, param,child=None):
+    if 'port' in param:
+      self.checkUsedResource(UsedResource.T_SERIAL,self.id,param['port'])
     super().updateConfig(param)
     self.reader.stopHandler()
 

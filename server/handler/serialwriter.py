@@ -54,7 +54,7 @@ class SerialWriter(SerialReader):
 
   @classmethod
   def getConfigParam(cls):
-      rt=SerialReader.getConfigParam()
+      rt=list(filter(lambda x: x.name != 'minbaud' ,SerialReader.getConfigParam()))
       ownParam=[
           WorkerParameter('feederName','', type=WorkerParameter.T_STRING,editable=False),
           WorkerParameter('combined', False, type=WorkerParameter.T_BOOLEAN,
@@ -282,9 +282,9 @@ class SerialWriter(SerialReader):
       finalText += "%s:[%s] %s " % (v.name, v.status, v.info)
     if not self.infoHandler is None:
       if hasItems:
-        self.infoHandler.setInfo(self.getName(), finalText, finalStatus)
+        self.infoHandler.setInfo('main', finalText, finalStatus)
       else:
-        self.infoHandler.deleteInfo(self.getName())
+        self.infoHandler.deleteInfo('main')
 
   def setInfoWithKey(self,key,txt,status):
     self.combinedStatus[key]=WorkerStatus(key,status,txt)
@@ -331,9 +331,12 @@ class AVNSerialWriter(AVNWorker):
     return True
 
   @classmethod
-  def getEditableParameters(cls, makeCopy=True):
-    rt= super().getEditableParameters(True)
-    WorkerParameter.updateParamFor(rt, 'port', {'rangeOrList':SerialReader.listSerialPorts()})
+  def getEditableParameters(cls, makeCopy=True,id=None):
+    rt= super().getEditableParameters(True,id=id)
+    slist = SerialReader.listSerialPorts()
+    slist = UsedResource.filterListByUsed(UsedResource.T_SERIAL, slist,
+                                          cls.findUsersOf(UsedResource.T_SERIAL, ownId=id))
+    WorkerParameter.updateParamFor(rt, 'port', {'rangeOrList':slist})
     return rt
 
   def __init__(self,param):
@@ -343,9 +346,14 @@ class AVNSerialWriter(AVNWorker):
     AVNWorker.__init__(self, param)
     self.writer=None
 
+  def getUsedResources(self, type=None):
+    if type != UsedResource.T_SERIAL and type is not None:
+      return []
+    return [UsedResource(UsedResource.T_SERIAL,self.id,self.getParamValue('port'))]
      
   #thread run method - just try forever  
   def run(self):
+    self.checkUsedResource(UsedResource.T_SERIAL,self.id,self.getParamValue('port'))
     self.setNameIfEmpty("%s-%s"%(self.getName(),str(self.getParamValue('port'))))
     while not self.shouldStop():
       try:
@@ -356,8 +364,11 @@ class AVNSerialWriter(AVNWorker):
       AVNLog.info("restarting serial writer")
 
   def updateConfig(self, param, child=None):
+    if 'port' in param:
+      self.checkUsedResource(UsedResource.T_SERIAL,self.id,param['port'])
     super().updateConfig(param, child)
-    self.writer.stopHandler()
+    if self.writer is not None:
+      self.writer.stopHandler()
 
 
 avnav_handlerList.registerHandler(AVNSerialWriter)

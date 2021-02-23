@@ -178,6 +178,43 @@ class WorkerParameter(object):
       return str(value)
     return value
 
+class UsedResource(object):
+  T_SERIAL='serial'
+  T_TCP='tcp'
+  T_UDP='udp'
+  T_USB='usb'
+
+  def __init__(self,type,handlerId,value):
+    self.type=type
+    self.handlerId=handlerId
+    self.value=value
+
+  def usingOther(self,used):
+    return self.type == used.type and str(self.value) == str(used.value)
+
+  def usingTypeValue(self,type,value):
+    return self.type == type and str(self.value) == str(value)
+
+  @classmethod
+  def filterByType(cls,ulist,type):
+    return list(filter(lambda x: x.type == type,ulist))
+
+  @classmethod
+  def toPlain(cls,ulist):
+    return list(map(lambda x:x.value,ulist))
+
+  @classmethod
+  def filterListByUsed(cls,type,ilist,used):
+    rt=[]
+    for item in ilist:
+      itemUsed=False
+      for us in used:
+        if us.usingTypeValue(type,item):
+          itemUsed=True
+          break
+      if not itemUsed:
+        rt.append(item)
+    return rt
 
 
 class WorkerStatus(object):
@@ -349,7 +386,7 @@ class AVNWorker(object):
     return False
 
   @classmethod
-  def getEditableParameters(cls, makeCopy=True):
+  def getEditableParameters(cls, makeCopy=True,id=None):
     '''
     get the parameters we can edit
     @return:
@@ -516,7 +553,7 @@ class AVNWorker(object):
     '''
     if child is not None:
       raise Exception("cannot modify child %s"%str(child))
-    checked = WorkerParameter.checkValuesFor(self.getEditableParameters(), param, self.getParam())
+    checked = WorkerParameter.checkValuesFor(self.getEditableParameters(id=self.id), param, self.getParam())
     rt = self.changeMultiConfig(checked)
     if self.canDisable() or self.canDeleteHandler():
       if 'enabled' in checked:
@@ -784,6 +821,49 @@ class AVNWorker(object):
       raise Exception("no feeder in %s"%(self.getName()))
     self.feeder.addNMEA(data,source,addCheckSum)
 
+  def getUsedResources(self,type=None):
+    '''
+    return a list of UsedResource
+    @param type:
+    @return:
+    '''
+    return []
+
+  @classmethod
+  def findUsersOf(cls,type,ownId=None,value=None,toPlain=False):
+    used=[]
+    for handler in cls.getAllHandlers():
+      if handler.getId() == ownId:
+        continue
+      used+=handler.getUsedResources(type)
+    if value is None:
+      if toPlain:
+        return UsedResource.toPlain(used)
+      return used
+    rt=[]
+    for us in used:
+      if us.usingTypeValue(type,value):
+        rt.append(us)
+    if toPlain:
+      return UsedResource.toPlain(rt)
+    return rt
+
+  @classmethod
+  def checkUsedResource(cls,type,ownId,value,prefix=None):
+    others=cls.findUsersOf(type,ownId=ownId,value=value)
+    if len(others) >0:
+      if prefix is None:
+        prefix = others[0].type
+      h=cls.findHandlerById(others[0].handlerId)
+      if h is None:
+        name='handler %s'%others[0].handlerId
+      else:
+        name=h.getName()
+      raise Exception("%s %s already in use by %s"%(
+        prefix,
+        str(others[0].value),
+        name
+      ))
 
   def getHandledCommands(self):
     """get the API commands that will be handled by this instance

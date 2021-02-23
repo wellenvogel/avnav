@@ -107,6 +107,8 @@ class AVNSocketWriter(AVNWorker,SocketReader):
     return self.startSequence != seq
 
   def updateConfig(self, param,child=None):
+    if 'port' in param:
+      self.checkUsedResource(UsedResource.T_TCP,self.id,param['port'])
     super().updateConfig(param)
     self._closeSockets()
 
@@ -198,6 +200,11 @@ class AVNSocketWriter(AVNWorker,SocketReader):
     if (self.getIntParam('minTime')):
       time.sleep(float(self.getIntParam('minTime'))/1000)
 
+  def getUsedResources(self, type=None):
+    if type != UsedResource.T_TCP and type is not None:
+      return []
+    return [UsedResource(UsedResource.T_TCP,self.id,self.getIntParam('port'))]
+
   def _closeSockets(self):
     self.startSequence+=1
     try:
@@ -220,6 +227,7 @@ class AVNSocketWriter(AVNWorker,SocketReader):
 
   #this is the main thread - listener
   def run(self):
+    self.checkUsedResource(UsedResource.T_TCP,self.id,self.getParamValue('port'))
     self.setNameIfEmpty("%s-%s"%(self.getName(),str(self.getParamValue('port'))))
     self.wait(2)
     init=True

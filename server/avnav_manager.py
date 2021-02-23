@@ -525,7 +525,7 @@ class AVNHandlerManager(object):
         data = handler.getEditableChildParameters(child)
         canDelete = handler.canDeleteChild(child)
       else:
-        data = handler.getEditableParameters()
+        data = handler.getEditableParameters(id=handler.getId())
         canDelete = handler.canDeleteHandler()
       if data is not None:
           rt['data'] = data

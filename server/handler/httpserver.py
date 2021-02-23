@@ -157,6 +157,10 @@ class AVNHTTPServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
     else:
       return path
 
+  def getUsedResources(self, type=None):
+    if type != UsedResource.T_TCP and type is not None:
+      return []
+    return [UsedResource(UsedResource.T_TCP,self.id,self.server_port)]
 
 
   def getChartBaseDir(self):
