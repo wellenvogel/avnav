@@ -142,10 +142,17 @@ class EditHandlerDialog extends React.Component{
             .catch(e=>Toast(e));
     }
     deleteHandler(){
-        let param=this.getRequestParam({command:this.props.child !== undefined?'deleteChild':'deleteHandler'});
-        RequestHandler.getJson('',undefined,param)
-            .then(()=>this.props.closeCallback())
-            .catch(e=>Toast(e))
+        let text="really delete handler "+this.state.name||''+"?";
+        if (this.props.child){
+            text="really delete "+this.props.child+"?";
+        }
+        let confirm=OverlayDialog.createConfirmDialog(text,()=> {
+            let param = this.getRequestParam({command: this.props.child !== undefined ? 'deleteChild' : 'deleteHandler'});
+            RequestHandler.getJson('', undefined, param)
+                .then(() => this.props.closeCallback())
+                .catch(e => Toast(e))
+        });
+        this.dialogHelper.showDialog(confirm);
     }
     addHandler(){
         let param=this.getRequestParam({handlerName:this.props.handlerName,command:'createHandler'});
