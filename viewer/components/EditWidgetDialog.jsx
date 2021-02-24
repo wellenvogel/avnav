@@ -41,12 +41,10 @@ class EditWidgetDialog extends React.Component{
         this.state= {
             panel: props.panel,
             widget:props.current,
-            sizeCount:0,
             parameters:WidgetFactory.getEditableWidgetParameters(props.current.name)};
         this.insert=this.insert.bind(this);
         this.showDialog=this.showDialog.bind(this);
         this.updateWidgetState=this.updateWidgetState.bind(this);
-        this.sizeCount=0;
         this.dialogHelper=dialogHelper(this);
     }
     insert(before){
@@ -63,7 +61,6 @@ class EditWidgetDialog extends React.Component{
             nvalues=values;
             let newState={
                 widget: assign({weight:this.state.widget.weight},nvalues),
-                sizeCount: this.sizeCount + 1,
                 parameters:WidgetFactory.getEditableWidgetParameters(nvalues.name)};
             this.setState(newState);
         }
@@ -77,10 +74,6 @@ class EditWidgetDialog extends React.Component{
         let self=this;
         let hasCurrent=this.props.current.name !== undefined;
         let parameters=this.state.parameters;
-        if (this.sizeCount !== this.state.sizeCount && this.props.updateDimensions){
-            this.sizeCount=this.state.sizeCount;
-            window.setTimeout(self.props.updateDimensions,100);
-        }
         let panelClass="panel";
         if (this.props.panel !== this.state.panel){
             panelClass+=" changed";

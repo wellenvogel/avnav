@@ -68,13 +68,11 @@ class EditHandlerDialog extends React.Component{
         super(props);
         this.state={
             loaded:false,
-            parameters:undefined,
-            sizeCount:0
+            parameters:undefined
         }
         this.currentValues=stateHelper(this,{},'current');
         this.modifiedValues=stateHelper(this,{},'modified');
         this.dialogHelper=dialogHelper(this);
-        this.sizeCount=0;
         this.dialogHelper=dialogHelper(this);
     }
     componentDidMount() {
@@ -115,8 +113,7 @@ class EditHandlerDialog extends React.Component{
                     loaded: true,
                     parameters: parameters,
                     name: data.configName||this.props.handlerName,
-                    canDelete: data.canDelete,
-                    sizeCount:1
+                    canDelete: data.canDelete
                 })
                 this.currentValues.setState(data.values||{});
             })
@@ -199,10 +196,6 @@ class EditHandlerDialog extends React.Component{
 
     render () {
         let self=this;
-        if (this.sizeCount !== this.state.sizeCount && this.props.updateDimensions){
-            this.sizeCount=this.state.sizeCount;
-            window.setTimeout(self.props.updateDimensions,100);
-        }
         let currentValues=assign({},this.currentValues.getState(),this.modifiedValues.getState());
         let name=this.state.name||'';
         if (this.props.child){

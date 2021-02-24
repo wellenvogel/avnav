@@ -283,8 +283,6 @@ export default  class FileDialog extends React.Component{
             scheme:props.current.scheme,
             allowed:allowedItemActions(props.current)
         };
-        this.updateCount=0;
-        this.lastDimensionsCount=0;
         this.onChange=this.onChange.bind(this);
         this.extendedInfo=stateHelper(this,{},'extendedInfo');
     }
@@ -293,14 +291,7 @@ export default  class FileDialog extends React.Component{
         if (f){
             f(this.props.current.name).then((info)=>{
                 this.extendedInfo.setState(info,true);
-                this.updateCount++;
             }).catch(()=>{});
-        }
-    }
-    componentDidUpdate(prevProps, prevState, snapshot) {
-        if (this.updateCount !== this.lastDimensionsCount){
-             this.props.updateDimensions();
-             this.lastDimensionsCount=this.updateCount;
         }
     }
 

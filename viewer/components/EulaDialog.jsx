@@ -13,7 +13,6 @@ class EulaDialog extends React.Component{
         this.state={
             eula:undefined
         };
-        this.lastEula=0;
     }
     componentDidMount(){
         Requests.getHtmlOrText(this.props.eulaUrl)
@@ -23,14 +22,6 @@ class EulaDialog extends React.Component{
             .catch((error)=>{});
     }
     render () {
-        if (this.state.eula && ! this.lastEula && this.props.updateDimensions){
-            let self=this;
-            window.setTimeout(()=>{
-                self.lastEula=1;
-                self.props.updateDimensions();
-            },100);
-
-        }
         return (
             <div className="inner EulaDialog">
                 <h3 className="dialogTitle">{'EULA'}</h3>

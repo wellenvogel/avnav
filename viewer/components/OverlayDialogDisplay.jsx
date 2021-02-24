@@ -24,8 +24,11 @@ const Container=MapEventGuard(React.forwardRef((props,ref)=>{
 class OverlayDialog extends React.Component {
     constructor(props) {
         super(props);
-        this.updateDimensions = this.updateDimensions.bind(this);
         this.container=null;
+        this.state={
+            update:0
+        }
+        this.updateSize=this.updateSize.bind(this);
     }
 
     render() {
@@ -40,80 +43,24 @@ class OverlayDialog extends React.Component {
                     ev.stopPropagation();
                     }
                 }>
-                    <Content closeCallback={this.props.closeCallback} updateDimensions={this.updateDimensions}/></div>
+                    <Content closeCallback={this.props.closeCallback} /></div>
             </Container>
         );
     }
-
+    updateSize(){
+        this.setState({update:this.state.update+1})
+    }
     componentDidMount() {
-        this.updateDimensions();
-        window.addEventListener('resize', this.updateDimensions);
+        window.addEventListener('resize', this.updateSize);
     }
 
     componentWillUnmount() {
-        window.removeEventListener('resize', this.updateDimensions);
+        window.removeEventListener('resize', this.updateSize);
 
     }
 
-    componentDidUpdate() {
-        this.updateDimensions();
-    }
+}
 
-    updateDimensions() {
-        if (!this.props.content) return;
-        if (! this.container) return;
-        let props = this.props;
-        let assingToViewport = true;
-        if (props.parent) {
-            try {
-                //expected to be a dom element
-                let containerRect = props.parent.getBoundingClientRect();
-                assign(this.container.style, {
-                    position: "fixed",
-                    top: containerRect.top + "px",
-                    left: containerRect.left + "px",
-                    width: containerRect.width + "px",
-                    height: containerRect.height + "px"
-                });
-                assingToViewport = false;
-            } catch (e) {
-                base.log("invalid parent for dialog: " + e);
-            }
-        }
-        if (assingToViewport) {
-            assign(this.container.style, {
-                position: "fixed",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0
-            });
-        }
-        if (! this.box) return;
-        let rect = this.container.getBoundingClientRect();
-        assign(this.box.style, {
-            maxWidth: rect.width + "px",
-            maxHeight: rect.height + "px",
-            position: 'fixed',
-            opacity: 0
-        });
-        let self = this;
-        window.setTimeout(function () {
-            if (!self.box) return; //could have become invisible...
-            let boxRect = self.box.getBoundingClientRect();
-            let left=(rect.width - boxRect.width) / 2;
-            let top=(rect.height - boxRect.height) / 2;
-            assign(self.box.style, {
-                left: left + "px",
-                top: top + "px",
-                maxWidth: (rect.width-left)+"px",
-                maxHeight: (rect.height-top)+"px",
-                opacity: 1
-            });
-        }, 0);
-
-    }
-};
 
 OverlayDialog.propTypes={
     parent: PropTypes.element,

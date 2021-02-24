@@ -18,6 +18,82 @@ import OverlayDialog from '../components/OverlayDialog.jsx';
 import GuiHelpers from '../util/GuiHelpers.js';
 import Mob from '../components/Mob.js';
 import EditHandlerDialog from "../components/EditHandlerDialog";
+import DB from '../components/DialogButton';
+import Formatter from '../util/formatter';
+
+class LogDialog extends React.Component{
+    constructor(props) {
+        super(props);
+        this.state={
+            log:undefined,
+            loading: true
+        };
+        this.downloadFrame=null;
+        this.mainref=null;
+        this.getLog=this.getLog.bind(this);
+    }
+    componentDidMount() {
+        this.getLog();
+    }
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if (this.mainref) {
+            this.mainref.scrollTop = this.mainref.scrollHeight
+        }
+    }
+
+    getLog(){
+        Requests.getHtmlOrText('', {useNavUrl:true},{
+            request:'download',
+            type:'config',
+            maxBytes:100000
+        })
+            .then((data)=>{
+                this.setState({log:data});
+            })
+            .catch((e)=>Toast(e))
+    }
+    render(){
+    return <div className="selectDialog LogDialog">
+        <h3 className="dialogTitle">{this.props.title||'AvNav log'}</h3>
+        <div className="logDisplay dialogRow" ref={(el)=>this.mainref=el}>
+            {this.state.log||''}
+        </div>
+        <div className="dialogButtons">
+            <DB
+                name="download"
+                onClick={()=>{
+                    let name="avnav-"+Formatter.formatDateTime(new Date()).replace(/[: /]/g,'-').replace(/--/g,'-')+".log";
+                    let url=globalStore.getData(keys.properties.navUrl)+"?request=download&type=config&filename="+name;
+                    if (this.downloadFrame){
+                        this.downloadFrame.src=url;
+                    }
+                }}
+            >
+                Download
+            </DB>
+            <DB name="reload"
+                onClick={this.getLog}>
+                Reload
+            </DB>
+            <DB
+                name="ok"
+                onClick={this.props.closeCallback}
+            >
+                Ok
+            </DB>
+        </div>
+        <iframe
+            className="downloadFrame"
+            onLoad={(ev)=>{
+                let txt=ev.target.contentDocument.body.textContent;
+                if (! txt) return;
+                Toast(txt);
+            }}
+            src={undefined}
+            ref={(el)=>this.downloadFrame=el}/>
+    </div>
+    }
+}
 
 const showEditDialog=(handlerId,child)=>{
     EditHandlerDialog.createDialog(handlerId,child);
@@ -199,6 +275,13 @@ class StatusPage extends React.Component{
                     visible: props.config && props.connected,
                     onClick: ()=>{
                         EditHandlerDialog.createAddDialog();
+                    }
+                },
+                {
+                    name: 'StatusLog',
+                    visible: props.config,
+                    onClick: ()=>{
+                        OverlayDialog.dialog(LogDialog);
                     }
                 },
                 Mob.mobDefinition,
