@@ -501,13 +501,13 @@ class AVNHandlerManager(object):
       if not os.path.exists(fname):
         raise Exception("log %s not found"%fname)
       st=os.stat(fname)
-      attachment="avnav.log"
       fsize=st.st_size
       fh=open(fname,'rb')
       if maxBytes is not None:
         if maxBytes < fsize:
+          seekVal=fsize-maxBytes
           fsize=maxBytes
-          fh.seek(maxBytes,os.SEEK_END)
+          fh.seek(seekVal)
       return{
         'mimetype':'application/octet-stream',
         'size':fsize,
