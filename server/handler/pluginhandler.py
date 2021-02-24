@@ -454,7 +454,8 @@ class AVNPluginHandler(AVNWorker):
           self.createdPlugins[modulename]=pluginInstance
           self.createdApis[modulename]=api
           self.setInfo(modulename,"created",WorkerStatus.STARTED)
-        except:
+        except Exception as e:
+          self.setInfo(modulename,"unable to create plugin: %s"%str(e), WorkerStatus.ERROR)
           AVNLog.error("cannot start %s:%s" % (modulename, traceback.format_exc()))
 
   def loadPluginFromDir(self, dir, name):
