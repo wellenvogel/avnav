@@ -554,14 +554,19 @@ class AVNWorker(object):
     if child is not None:
       raise Exception("cannot modify child %s"%str(child))
     checked = WorkerParameter.checkValuesFor(self.getEditableParameters(id=self.id), param, self.getParam())
+    newEnable = None
+    if 'enabled' in checked:
+      newEnable=checked.get('enabled',True)
+      if type(newEnable) is str:
+        newEnable=newEnable.upper() != 'FALSE'
+    if newEnable == True or not self.isDisabled():
+      checkConfig=self.param.copy()
+      checkConfig.update(checked)
+      self.checkConfig(checkConfig)
     rt = self.changeMultiConfig(checked)
     if self.canDisable() or self.canDeleteHandler():
-      if 'enabled' in checked:
-        newVal=checked.get('enabled',True)
-        if type(newVal) is str:
-          newVal=newVal.upper() != 'False'
-        if newVal != self.isDisabled():
-          if not newVal:
+        if newEnable != self.isDisabled():
+          if not newEnable:
             AVNLog.info("handler disabled, stopping")
             self.stop()
           else:
@@ -782,7 +787,17 @@ class AVNWorker(object):
     except Exception as e:
       self.setInfo('main','handler stopped with %s'%str(e),WorkerStatus.ERROR)
       AVNLog.error("handler run stopped with exception %s",traceback.format_exc())
+    self.currentThread=None
 
+  def checkConfig(self,param):
+    '''
+    will be called whenever new config parameters
+    are set
+    give the handler a chance to throw an exception
+    @param param:
+    @return:
+    '''
+    pass
   def startThread(self):
     AVNLog.info("starting %s with config %s", self.getName(), self.getConfigString())
     self.currentThread = threading.Thread(target=self._runInternal, name=self.name or '')
@@ -792,6 +807,11 @@ class AVNWorker(object):
   def startInstance(self,navdata):
     self.navdata=navdata
     self.feeder = self.findFeeder(self.getStringParam('feederName'))
+    try:
+      self.checkConfig(self.param)
+    except Exception as e:
+      self.setInfo('main','%s'%str(e),WorkerStatus.ERROR)
+      raise
     if not self.isDisabled():
       self.startThread()
     else:
@@ -830,9 +850,11 @@ class AVNWorker(object):
     return []
 
   @classmethod
-  def findUsersOf(cls,type,ownId=None,value=None,toPlain=False):
+  def findUsersOf(cls,type,ownId=None,value=None,toPlain=False,onlyRunning=True):
     used=[]
     for handler in cls.getAllHandlers():
+      if onlyRunning and handler.currentThread is None:
+        continue
       if handler.getId() == ownId:
         continue
       used+=handler.getUsedResources(type)
@@ -859,10 +881,11 @@ class AVNWorker(object):
         name='handler %s'%others[0].handlerId
       else:
         name=h.getName()
-      raise Exception("%s %s already in use by %s"%(
+      raise Exception("%s %s already in use by %s(%s)"%(
         prefix,
         str(others[0].value),
-        name
+        name,
+        str(others[0].handlerId)
       ))
 
   def getHandledCommands(self):

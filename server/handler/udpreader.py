@@ -94,7 +94,12 @@ class AVNUdpReader(AVNWorker, SocketReader):
     if type != UsedResource.T_UDP and type is not None:
       return []
     return [UsedResource(UsedResource.T_UDP,self.id,self.getParamValue('port'))]
-  #thread run method - just try forever  
+
+  def checkConfig(self, param):
+    if 'port' in param:
+      self.checkUsedResource(UsedResource.T_UDP,self.id,param.get('port'))
+
+  #thread run method - just try forever
   def run(self):
     self.checkUsedResource(UsedResource.T_UDP,self.id,self.getParamValue('port'))
     self.setNameIfEmpty("%s-%s:%d" % (self.getName(), self.getStringParam('host'), self.getIntParam('port')))

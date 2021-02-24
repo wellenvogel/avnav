@@ -152,7 +152,7 @@ class SerialWriter(SerialReader):
 
     return serialDevice.write(data.encode('ascii','ignore'))
 
-   
+
   #the run method - just try forever  
   def run(self):
     threading.current_thread().setName("%s - %s"%(self.getName(),self.param['port']))
@@ -350,7 +350,11 @@ class AVNSerialWriter(AVNWorker):
     if type != UsedResource.T_SERIAL and type is not None:
       return []
     return [UsedResource(UsedResource.T_SERIAL,self.id,self.getParamValue('port'))]
-     
+
+  def checkConfig(self, param):
+    if 'port' in param:
+      self.checkUsedResource(UsedResource.T_SERIAL,self.id,param.get('port'))
+
   #thread run method - just try forever  
   def run(self):
     self.checkUsedResource(UsedResource.T_SERIAL,self.id,self.getParamValue('port'))

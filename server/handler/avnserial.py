@@ -413,7 +413,11 @@ class AVNSerialReader(AVNWorker):
       raise Exception("%s: cannot find a suitable feeder (name %s)",self.getName(),feedername or "")
     self.writeData=feeder.addNMEA
     super().startInstance(navdata)
-     
+
+  def checkConfig(self, param):
+    if 'port' in param:
+      self.checkUsedResource(UsedResource.T_SERIAL,self.id,param.get('port'))
+
   #thread run method - just try forever  
   def run(self):
     self.checkUsedResource(UsedResource.T_SERIAL,self.id,self.getParamValue('port'))

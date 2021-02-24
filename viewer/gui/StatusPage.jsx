@@ -124,10 +124,14 @@ const ChildStatus=(props)=>{
 const StatusItem=(props)=>{
     let canEdit=props.canEdit && props.connected;
     let isDisabled=props.disabled;
+    let name=props.name.replace(/\[.*\]/, '');
+    if (props.id !== undefined){
+        name="["+props.id+"]"+name;
+    }
     return(
         <div className="status"  key={props.id}>
             <div className={"statusHeading"+ (isDisabled?" disabled":"")}>
-                <span className="statusName">{props.name.replace(/\[.*\]/, '')}</span>
+                <span className="statusName">{name}</span>
                 {isDisabled && <span className="disabledInfo">[disabled]</span> }
                 {canEdit && <EditIcon
                     onClick={

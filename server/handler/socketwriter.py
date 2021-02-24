@@ -225,6 +225,10 @@ class AVNSocketWriter(AVNWorker,SocketReader):
     super().stop()
     self._closeSockets()
 
+  def checkConfig(self, param):
+    if 'port' in param:
+      self.checkUsedResource(UsedResource.T_TCP,self.id,param.get('port'))
+
   #this is the main thread - listener
   def run(self):
     self.checkUsedResource(UsedResource.T_TCP,self.id,self.getParamValue('port'))

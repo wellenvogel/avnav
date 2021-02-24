@@ -463,13 +463,13 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
       wbytes=data
     else:
       wbytes=data.encode('utf-8')
-    self.send_header("Content-Length", len(wbytes))
+    self.send_header("Content-Length", str(len(wbytes)))
     self.send_header("Last-Modified", self.date_time_string())
     self.end_headers()
     self.wfile.write(wbytes)
 
   def writeFromDownload(self,download,filename=None,noattach=False):
-    # type: (AVNDownload, basestring,bool) -> object or None
+    # type: (AVNDownload, str,bool) -> object or None
     self.send_response(200)
     size = download.getSize()
     if filename is not None and filename != "" and not noattach:
