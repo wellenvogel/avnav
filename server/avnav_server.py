@@ -123,6 +123,8 @@ def main(argv):
                     help="if set make this the base data dir")
   parser.add_option("-u", "--urlmap", dest="urlmap",
                     help="provide mappings in the form url=path,...")
+  parser.add_option("-r", "--restart", dest="canRestart", action='store_const', const=True,
+                    help="avnav will restart if server exits")
   (options, args) = parser.parse_args(argv[1:])
   if len(args) < 1:
     cfgname=os.path.join(os.path.dirname(argv[0]),"avnav_server.xml")
@@ -139,7 +141,8 @@ def main(argv):
     datadir=os.path.join(os.path.expanduser("~"),"avnav")
   datadir=os.path.abspath(datadir)
   AVNLog.info("basedir=%s,datadir=%s",basedir,datadir)
-  handlerManager=AVNHandlerManager()
+  systemdEnv=os.environ.get('INVOCATION_ID')
+  handlerManager=AVNHandlerManager(options.canRestart or systemdEnv is not None)
   handlerManager.setBaseParam(handlerManager.BASEPARAM.BASEDIR,basedir)
   handlerManager.setBaseParam(handlerManager.BASEPARAM.DATADIR,datadir)
   rt=handlerManager.readConfigAndCreateHandlers(cfgname)
@@ -250,8 +253,8 @@ def main(argv):
     lastutc=datetime.datetime.utcnow()
     timeFalse=False
     
-    while True:
-      time.sleep(3)
+    while not handlerManager.shouldStop:
+      time.sleep(1)
       #query the data to get old entries being removed 
       curutc=datetime.datetime.utcnow()
       delta=curutc-lastutc
@@ -329,6 +332,7 @@ def main(argv):
   except Exception as e:
     AVNLog.error("Exception in main %s",traceback.format_exc())
     sighandler(None, None)
+  AVNLog.info("stopping")
    
 if __name__ == "__main__":
     main(sys.argv)

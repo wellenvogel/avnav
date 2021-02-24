@@ -157,7 +157,8 @@ class StatusPage extends React.Component{
             wpa:false,
             shutdown:false,
             itemList:[],
-            serverError:false
+            serverError:false,
+            canRestart:false
         }
         this.querySequence=1;
         this.doQuery=this.doQuery.bind(this);
@@ -212,6 +213,16 @@ class StatusPage extends React.Component{
             });
     }
     componentDidMount(){
+        if (! globalStore.getData(keys.gui.capabilities.config)) return;
+        Requests.getJson('',undefined,{
+            request:'api',
+            type:'config',
+            command:'canRestart'
+        })
+            .then((data)=>{
+                this.setState({canRestart:data.canRestart});
+            })
+            .catch((e)=>Toast(e))
     }
     componentWillUnmount(){
     }
@@ -227,6 +238,19 @@ class StatusPage extends React.Component{
             this.mainListRef.scrollLeft=snapshot.x;
             this.mainListRef.scrollTop=snapshot.y;
         }
+    }
+    restartServer(){
+        OverlayDialog.confirm("really restart the AvNav server?")
+            .then((v)=>{
+                Requests.getJson('',undefined,{
+                    request:'api',
+                    type:'config',
+                    command:'restartServer'
+                })
+                    .then(()=>Toast("restart triggered"))
+                    .catch((e)=>Toast(e))
+            })
+            .catch((e)=>{})
     }
     render(){
         let self=this;
@@ -248,6 +272,14 @@ class StatusPage extends React.Component{
                     visible: props.android,
                     onClick:()=>{avnav.android.showSettings();}
                 },
+
+                {
+                    name: 'MainInfo',
+                    onClick: ()=> {
+                        history.push('infopage')
+                    },
+                    overflow:true
+                },
                 {
                     name: 'StatusShutdown',
                     visible: !props.android && this.state.shutdown && props.connected,
@@ -265,23 +297,23 @@ class StatusPage extends React.Component{
                     }
                 },
                 {
-                    name: 'MainInfo',
-                    onClick: ()=> {
-                        history.push('infopage')
-                    }
-                },
-                {
-                    name: 'StatusAdd',
-                    visible: props.config && props.connected,
-                    onClick: ()=>{
-                        EditHandlerDialog.createAddDialog();
-                    }
+                    name:'StatusRestart',
+                    visible: this.state.canRestart,
+                    onClick: ()=>this.restartServer()
                 },
                 {
                     name: 'StatusLog',
                     visible: props.config,
                     onClick: ()=>{
                         OverlayDialog.dialog(LogDialog);
+                    },
+                    overflow: true
+                },
+                {
+                    name: 'StatusAdd',
+                    visible: props.config && props.connected,
+                    onClick: ()=>{
+                        EditHandlerDialog.createAddDialog();
                     }
                 },
                 Mob.mobDefinition,

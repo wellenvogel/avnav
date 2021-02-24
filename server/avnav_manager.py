@@ -252,7 +252,7 @@ class AVNHandlerManager(object):
     now = datetime.datetime.utcnow()
     return fileName + ".invalid-" + now.strftime("%Y%m%d%H%M%S")
 
-  def __init__(self):
+  def __init__(self,canRestart=False):
     #global parameters
     self.parameters={
                      "debug":0,
@@ -264,7 +264,9 @@ class AVNHandlerManager(object):
     self.currentCfgFileName=None #potentially this is the fallback file
     self.parseError=None
     self.navData=None
+    self.canRestart=canRestart
     self.configLock=threading.Lock()
+    self.shouldStop=False
 
   def setBaseParam(self,name,value):
     if not hasattr(self.BASEPARAM,name):
@@ -544,7 +546,14 @@ class AVNHandlerManager(object):
       rt['data'] = handlerClass.getEditableParameters()
       return rt
 
-
+    if command == 'canRestart':
+      rt['canRestart']=self.canRestart
+      return rt
+    if command == 'restartServer':
+      if not self.canRestart:
+        raise Exception("AvNav cannot restart")
+      self.shouldStop=True
+      return rt
 
     id = AVNUtil.getHttpRequestParam(requestParam, 'handlerId', mantadory=True)
     child = AVNUtil.getHttpRequestParam(requestParam, 'child', mantadory=False)
