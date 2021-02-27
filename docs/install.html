@@ -8,50 +8,50 @@
     <h1 class="western">AvNav Installation</h1>
     <div class="toc"> </div>
     <h2>Software Versionen</h2>
-    <p>Eine Beschreibung der Versionen und Links zu den Downloads finden sich im
+    <p>Eine Beschreibung der Versionen und links zu den Downloads finden sich im
       <a href="release.html">Release Dokument</a>.</p>
     <h2 class="western"><a name="Headless"></a>Image ohne Bildschirm (Headless)</h2>
     <p>Diese Images werden von <a href="https://www.segeln-forum.de/user/27970-blacksea/">BlackSea</a>
       gepflegt (vielen Dank...). Eine Beschreibung findet sich in auf <a href="https://github.com/free-x/avnav/wiki">seiner
         Seite</a>.</p>
-    <p>Für diese Variante einfach unter Windows/Linux/OSx das Image von <a href="https://www.free-x.de/raspbian/buster/">free-x</a>
+    <p>Für diese Variante einfach unter Windows/Linux/OSx das image von <a href="https://www.free-x.de/raspbian/buster/">free-x</a>
       herunterladen und wie unter <a href="http://www.raspberrypi.org/downloads">http://www.raspberrypi.org/downloads</a>
       (raw images) beschrieben auf eine SD Karte spielen. Danach kann&nbsp; man
-      sich einmal auf dem Pi einloggen und ggf. ein paar Anpassungen vornehmen.
-      Am einfachsten geht das, wenn man den Pi im LAN anschließt und einen
-      Router/dhcp-Server (z.B. Fritz Box) aktiv hat. Dann holt er sich per DHCP
+      sich einmal auf dem pi einloggen und ggf. ein paar Anpassungen vornehmen.
+      Am einfachsten geht das, wenn man den pi im LAN anschließt und einen
+      router/dhcp-server (z.B. Fritz Box) aktiv hat. Dann holt er sich per DHCP
       eine IP Adresse. Diese kann man auf dem Router sehen bzw. unter Linux z.B.
       per ping -b &lt;brodcast-address&gt; herausfinden. Alternativ kann man
       auch Tastatur + Bildschirm an den Pi direkt anschliessen. </p>
-    <p>Die Passworte sind auf Standardwerte gesetzt – also login pi, Passwort
+    <p>Die Paßworte sind auf Standardwerte gesetzt – also login pi, Paßwort
       raspberry. Per sudo -i wechselt man in eine root shell. Man sollte&nbsp;
-      das Passwort für den User pi ändern (passwd).&nbsp;</p>
+      das Paßwort für den user pi ändern (passwd).&nbsp;</p>
     Das Image setzt einen WLAN-accesspoint mit dem internen WLAN des raspberry
     auf (SSID: avnav).<br>
     <br>
-    Das WLAN hat den Adressbereich 192.168.20.0/24. Der Pi selbst ist auf
+    Das WLAN hat den Adressbereich 192.168.20.0/24. Der pi selbst ist auf
     192.168.20.10 erreichbar (ggf. als url im Browser benutzen, wenn die
-    Namensauflösung nicht funktioniert). Auf dem Pi läuft ein dhcp-Server und
-    ein DNS-Server (dnsmasqd). Die Konfiguration kann angepasst werden in
-    /etc/dnsmasqd.conf. Wenn der Pi im LAN angeschlossen ist, versucht er per
-    DHCP eine Adresse zu bekommen. Das WLAN wird per NAT an das LAN Interface
-    weitergereicht (damit kann man den Pi ins Internet bringen - z.B. zum
+    Namensauflösung nicht funktioniert). Auf dem pi läuft ein DHCP server und
+    ein DNS server (dnsmasqd). Die Konfiguration kann angepasst werden in
+    /etc/dnsmasqd.conf. Wenn der pi im LAN angeschlossen ist, versucht er per
+    DHCP eine Adresse zu bekommen, das WLAN wird per NAT an das LAN interface
+    weitergereicht (damit kann man den pi ins Internet bringen - z.B. zum
     Installieren von Software- und auch per Wlan verbundene Geräte haben dann
     Internet-Zugriff).<br>
-    Wenn weitere WLAN-Sticks gesteckt werden, werden weitere Access Points
+    Wenn weitere WLAN sticks gesteckt werden, werden weitere access Points
     aufgemacht.<br>
     <p> Ausnahme: WLAN-Stick wie im Bild - dieser wird zur Verbindung mit einem
       externen WLAN genutzt. Beim Raspberry 4 ist es der blaue Anschluss auf der
-      Platinen-Seite. Intern heißt das Interface dann wlan-av1. </p>
+      Platinen-Seite. Intern heißt das interface dann wlan-av1. </p>
     <img class="fimage" src="raspi3-wlan.jpg">
-    <p>Port 80 ist direkt zum Web-Server von AvNav weitergeleitet (dieser
+    <p>Port 80 ist direkt zum Web server von avnav weitergeleitet (dieser
       lauscht auf port 8080).<br>
       Wenn alles richtig aufgesetzt ist, sollte sich unter der url <a href="http://avnav/">http://avnav.avnav.de</a>
       die Einstiegsseite der WebApp öffnen. <br>
       Avnav meldet sich per Bonjour - mit einer entsprechenden App (<a href="https://play.google.com/store/apps/details?id=de.wellenvogel.bonjourbrowser">Android</a>,
       <a href="https://apps.apple.com/us/app/bonjour-search-for-http-web-in-wi-fi/id1097517829">IOS</a>)
-      kann man so einfach den Server erreichen, ohne eine Adresse eintippen
-      zu müssen. </p>
+      kann man sehr einfach den Server erreichen, ohne eine Adresse eintippen zu
+      müssen. </p>
     <br>
     In der App gibt es eine Seite, um sich mit einem WLAN zu verbinden
     (Status-Seite-&gt;WLAN) - siehe <a href="userdoc/index.html">Beschreibung
@@ -62,7 +62,7 @@
     <div class="code">sudo systemctl status avnav
 sudo systemctl start avnav 
 sudo systemctl stop avnav</div>
-    <p>kann man den Status des Servers prüfen, starten und stoppen. </p>
+    <p>kann man den Status des servers prüfen, starten und stoppen. </p>
     <h2 class="western"><a name="Touch"></a>Image mit Bildschirm</h2>
     <span>Falls man direkt einen Bildschirm an den Pi anschliessen möchte, ist
       dieses Image das Richtige.<br>
@@ -77,25 +77,25 @@ sudo systemctl stop avnav</div>
         dem nächsten Absatz einbinden und die Pakete updaten. Wir arbeiten an
         einer Aktualisierung.</span></p>
     <h2 class="western"><a name="Packages"></a>Paket Installation</h2>
-    Dank Oleg gibt es jetzt fertige Paket-Repositories, die man in sein Debian
-    einbinden kann. Das geht auf dem Raspberry Pi - aber auch auf jeder anderen
+    Dank Oleg gibt es jetzt fertige Paket-Repositories, die man in sein debian
+    einbinden kann. Das geht auf dem raspberry pi - aber auch auf jeder anderen
     Debian Variante (z.B. Ubuntu). <br>
     Informationen dazu findet man wieder in seiner <a href="https://github.com/free-x/avnav/wiki">Beschreibung</a>.<br>
-    <p>Die Paketquellen bindet man wie folgt ein (nur nötig, wenn man nicht das
-      headless oder touch Image nutzt):</p>
+    <p>Die Paketquellen bindet man wie folgt ein (nur nötig wenn man nicht das
+      headless oder touch image nutzt):</p>
     <div class="code">wget https://www.free-x.de/debian/oss.boating.gpg.key
 sudo apt-key add oss.boating.gpg.key
 wget https://www.free-x.de/debian/boating.list
 sudo cp boating.list /etc/apt/sources.list.d/<br>sudo apt-get update</div>
-    <p>Für die Installation auf einem Raspberry System muss man nach Einbindung
+    <p>Für die Installation auf einem raspberry System muss man nach Einbindung
       der Paketquellen die folgenden Schritte ausführen:</p>
     <div class="code">sudo apt-get install avnav avnav-raspi</div>
-    Der Raspberry startet danach AvNav automatisch mit dem Nutzer pi.<br>
+    Der raspberry startet danach avnav automatisch mit dem Nutzer pi.<br>
     <br>
-    Für ein anderes Debian (oder wenn man die Konfigurationsfunktionen für das
+    Für ein anderes debian (oder wenn man die Konfigurationsfunktionen für das
     Betriebssystem von AvNav nicht nutzen möchte) ändert man das zu:<br>
     <div class="code">sudo apt-get install avnav</div>
-    Danach kann als beliebiger Nutzer mit dem Kommando<br>
+    Danach kann man als jeder Nutzer mit dem Kommando<br>
     <div class="code">avnav</div>
     den Server starten.<br>
     Mit <br>
@@ -103,7 +103,7 @@ sudo cp boating.list /etc/apt/sources.list.d/<br>sudo apt-get update</div>
 sudo systemctl start avnav</div>
     kann man avnav mit dem Benutzer avnav automatisch beim Systemstart
     aktivieren.<br>
-    Alternativ kann man auch die Debian Pakete direkt von der Download Seite
+    Alternativ kann man auch die debian Pakete direkt von der download Seite
     herunterladen:<br>
     <ul>
       <li><a title="downloads/releases" href="../downloads/release">Releases</a></li>
@@ -113,11 +113,11 @@ sudo systemctl start avnav</div>
     <div class="code">sudo dpkg -i avnav_xxxxxxxx_all,deb
 sudo dpkg -i avnav-raspi_xxxxxxxx_all.deb
 sudo apt-get -f</div>
-    installieren (dabei das -raspi... Paket nur auf einem Raspberry). Die ersten
+    installieren (dabei das -raspi... Paket nur auf einem raspberry). Die ersten
     Kommandos werden typischerweise Fehler erzeugen, das letzte lädt dann die
     fehlenden Abhängigkeiten.<br>
     <p> Wenn man auf einem Raspberry installiert, sollte man das avnav-raspi
-      Paket nur dann installieren, wenn man damit einverstanden ist, dass die
+      Paket nur dann installieren, wenn man damit einverstanden ist, das die
       Netzwerk-Konfiguration so geändert wird, wie AvNav das möchte. Sonst
       sollte man nur das avnav Paket installieren.</p>
     <p>Ich würde in jedem Fall empfehlen, das <a href="https://github.com/wellenvogel/avnav-update-plugin">AvNav
@@ -128,7 +128,7 @@ sudo apt-get -f</div>
     <p>Wenn man nicht das avnav-raspi package installiert, braucht man einige
       zusätzliche Schritte um AvNav unter dem Nutzer pi automatisch starten zu
       lassen:</p>
-    Man kann dann als Nutzer pi AvNav einfach von der Kommandozeile starten
+    Man kann dann als Nutzer pi avnav einfach von der Kommandozeile starten
     lassen.<br>
     Wenn man es als systemd service laufen lassen möchte, sollte man das
     Verzeichnis:<br>
@@ -141,18 +141,18 @@ sudo apt-get -f</div>
     <div class="code"><span style="color: rgb(36, 41, 46); font-family: SFMono-Regular, Consolas, &quot;Liberation Mono&quot;, Menlo, monospace; font-size: 12px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; white-space: pre; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; background-color: rgb(255, 255, 255); text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none;">ExecStart=/usr/bin/avnav -q -b /home/pi/avnav/data -t /usr/lib/avnav/avnav_template.xml</span></div>
     Danach kann man mit den Kommandos
     <div class="code">sudo systemctl daemon-reload<br>sudo systemctl enable avnav<br>sudo systemctl start avnv</div>
-    <p>Avnav als Systemdienst starten. Wenn man diese Datei nicht anlegt/kopiert,
-      wird AvNav nicht mit den Nutzer pi sondern mit dem Nutzer avnav arbeiten.</p>
+    <p>Avnav als systemdienst starten. Wenn man diese Datei nicht anlegt/kopiert
+      wird avnav nicht mit den Nutzer pi sondern mit dem Nutzer avnav arbeiten.</p>
     <p> Wenn man auch die Karten-Konvertierung auf dem Linux Rechner mit einer
       kleinen GUI machen möchte, muss man zusätz das Paket python-wxgtk3.0
-      installiert werden. Dann muss man AvNav mit</p>
+      installiert werden. Dann muss man avnav mit</p>
     <div class="code">avnav -g</div>
     starten.<br>
     <p> </p>
     <h2>OpenPlotter </h2>
     <p>Für <a href="https://openmarine.net/openplotter">OpenPlotter</a> gibt es
       eine komplette Integration von AvNav (Dank an <a href="https://github.com/e-sailing">e-sailing</a>).
-      Im Repository <a href="https://www.free-x.de/deb4op/">https://www.free-x.de/deb4op/</a>
+      Im repository <a href="https://www.free-x.de/deb4op/">https://www.free-x.de/deb4op/</a>
       (das bereits in OpenPlotter eingerichtet ist) sind die notwendigen Pakete
       bereits vorhanden. Somit kann man sie einfach installieren:</p>
     <div class="code">sudo apt update
@@ -161,8 +161,8 @@ sudo apt install openplotter-avnav</div>
     <p>Das Paket avnav-raspi_xxx.deb sollte man auf OpenPlotter nicht
       installieren, weil es sich nicht mit den Netzwerkeinstellungen von
       OpenPlotter verträgt. Innerhalb der OpenPlotter AvNav Konfiguration kann
-      man den HTTP port für AvNav ändern(default 8080 und 8082 für ocharts),
-      wenn es Probleme mit anderen Apps geben sollte..</p>
+      man den HTTP port für AvNav ändern(default 8080 und 8082 für ocharts) wenn
+      das Probleme mit anderen Apps geben sollte..</p>
     <p>Wenn man AvNav mit der OpenPlotter App installiert, empfängt es alle NMEA
       Daten von SignalK (und sucht nicht selbst nach USB Geräten). Damit kann
       man alle Konfigurationen in OpenPlotter und SignalK machen.</p>
@@ -170,7 +170,7 @@ sudo apt install openplotter-avnav</div>
     <p><br>
     </p>
     <h2><a name="Windows"></a>Windows</h2>
-    Für Windows gibt es einen Installer. Dieser wird nicht bei jedem Release neu
+    Für Windows gibt es einen Installer. Dieser wird nicht bei jeder Release neu
     ausgeliefert. Die aktuelle Version findet man <a href="../downloads/latestwindows">hier</a>.<br>
     Es empfiehlt sicht, den AvNavNetSetup-jjjj-mm-dd-0.exe installer zu
     verwenden, da dieser die eigentliche Software nachlädt und somit eine
