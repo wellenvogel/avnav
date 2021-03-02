@@ -925,5 +925,15 @@ class AVNWorker(object):
     other=cls.findHandlerByName(cls.getConfigName())
     if not other is None:
       raise Exception("there is already a handler with %s, cannot create another one"%(cls.getConfigName()))
+
+  def getRequestIp(self, handler, default="localhost"):
+    hostip = default
+    try:
+      host = handler.headers.get('host')
+      hostparts = host.split(':')
+      hostip = hostparts[0]
+    except:
+      pass
+    return hostip
  
   

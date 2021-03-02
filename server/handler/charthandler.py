@@ -33,7 +33,7 @@ import avnav_handlerList
 import gemf_reader
 import mbtiles_reader
 from avnav_util import *
-from avnav_worker import AVNWorker, WorkerStatus
+from avnav_worker import WorkerStatus
 from avndirectorybase import AVNDirectoryHandlerBase, AVNDirectoryListEntry
 
 
@@ -441,18 +441,8 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
     rt=super(AVNChartHandler, self).handleUpload(name, handler, requestparam)
     return rt
 
-  def _getRequestIp(self,handler,default="localhost"):
-    hostip = default
-    try:
-      host = handler.headers.get('host')
-      hostparts = host.split(':')
-      hostip = hostparts[0]
-    except:
-      pass
-    return hostip
-
   def handleList(self, handler=None):
-    hostip=self._getRequestIp(handler)
+    hostip=self.getRequestIp(handler)
     clist=[entry for entry in list(self.itemList.values()) if entry.isChart()]
     for provider in list(self.externalProviders.values()):
       clist.extend(provider.getList(hostip))
@@ -532,7 +522,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
     return urllib.parse.unquote(parts[0])
 
   def handleSpecialApiRequest(self, command, requestparam, handler):
-    hostip=self._getRequestIp(handler)
+    hostip=self.getRequestIp(handler)
     name=AVNUtil.getHttpRequestParam(requestparam, "name")
     if not name:
       name=self._legacyNameFromUrl(AVNUtil.getHttpRequestParam(requestparam, "url"))

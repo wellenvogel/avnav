@@ -230,6 +230,12 @@ class ApiImpl(AVNApi):
       raise Exception("no usb handler configured, cannot register %s"%usbid)
     usbhandler.registerExternalHandler(usbid,self.prefix,callback)
 
+  def deregisterUsbHandler(self, usbid=None):
+    usbhandler=AVNWorker.findHandlerByName(AVNUsbSerialReader.getConfigName())
+    if usbhandler is None:
+      raise Exception("no usb handler configured, cannot register %s"%usbid)
+    usbhandler.deregisterExternalHandler(self.prefix,usbid)
+
   def getAvNavVersion(self):
     baseConfig=AVNWorker.findHandlerByName("AVNConfig")
     if baseConfig is None:
@@ -563,6 +569,7 @@ class AVNPluginHandler(AVNWorker):
       del checked['enabled']
       if len(list(checked.keys())) < 2:
         return
+
     if api.paramChange is None:
       raise Exception("unable to change parameters")
     api.paramChange(checked)

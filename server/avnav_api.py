@@ -327,3 +327,10 @@ class AVNApi(object):
     @return:
     '''
     raise NotImplemented()
+
+  def deregisterUsbHandler(self,usbid=None):
+    '''
+    deregister previously registered usb devices
+    @param usbid: if None deregister all ids we have registered
+    @return:
+    '''
