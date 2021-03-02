@@ -757,6 +757,9 @@
 <application class="Onboard">
   <desktop>all</desktop>
 </application>
+<application class="Panel1">
+  <desktop>1</desktop>
+</application>
 <application class="AvNavFirefox">
 <maximized>yes</maximized>
     <decor>no</decor>
