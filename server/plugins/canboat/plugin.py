@@ -123,11 +123,6 @@ class Plugin(object):
     and writes them to the store every 10 records
     @return:
     """
-    enabled = self.api.getConfigValue('enabled','false')
-    if enabled.lower() != 'true':
-      self.api.setStatus("INACTIVE","module not enabled in server config")
-      self.api.log("module disabled")
-      return
     port=2598
     sock=None
     host=self.api.getConfigValue('host','localhost')
