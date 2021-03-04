@@ -49,6 +49,19 @@ chown -R pi:pi "$HOME/.mozilla"
 cp $pdir/onboard.conf "$HOME"
 chown pi:pi "$HOME/onboard.conf"
 
+servercfg="$HOME/avnav/data/avnav_server.xml"
+if [ ! -f $servercfg ] ; then
+    if [ ! -d "$HOME/avnav/data" ] ; then
+        mkdir -p "$HOME/avnav/data"
+    fi
+    cp $pdir/../avnav_server.xml $servercfg
+    chown -R pi:pi "$HOME/avnav"
+fi
+
+$pdir/patchServerConfig.py $servercfg desk2 "/usr/lib/avnav/raspberry/xui/switch_desk.sh 2" images/rpi.png || err "unable to patch $servercfg"
+chown pi:pi $servercfg
+
+
 systemctl enable avnav-startx
 
 echo "setup done, use systemctl start avnav-startx after editing /boot/avnav.conf"

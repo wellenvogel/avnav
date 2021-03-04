@@ -59,6 +59,9 @@ ospackage {
             fileMode 0644
         }
     }
+    into('/usr/lib/avnav/raspberry/xui'){
+        from('raspberry/xui')
+    }
     into ('/usr/lib/avnav/raspberry') {
         from(project.buildDir){
             include versionFileName
