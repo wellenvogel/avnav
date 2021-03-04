@@ -39,8 +39,10 @@ class Plugin(object):
     #we register an handler for API requests
     self.api.registerRequestHandler(self.handleApiRequest)
     self.count=0
+    self.api.registerRestart(self.stop)
 
-
+  def stop(self):
+    pass
 
   def run(self):
     """
@@ -53,7 +55,8 @@ class Plugin(object):
     """
     seq=0
     self.api.log("started")
-    while True:
+    self.api.setStatus('NMEA','running')
+    while not self.api.shouldStopMainThread():
       seq,data=self.api.fetchFromQueue(seq,10)
       if len(data) > 0:
         for line in data:

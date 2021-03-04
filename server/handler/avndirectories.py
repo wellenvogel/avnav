@@ -29,7 +29,7 @@
 ###############################################################################
 
 
-from avnav_config import *
+from avnav_manager import *
 from avnav_nmea import *
 from avnav_worker import *
 import avnav_handlerList
@@ -45,11 +45,12 @@ class AVNUserHandler(AVNDirectoryHandlerBase):
     return cls.PREFIX
   def __init__(self,param):
     AVNDirectoryHandlerBase.__init__(self, param, "user")
-    self.baseDir = AVNConfig.getDirWithDefault(self.param, 'userDir', os.path.join('user', 'viewer'))
+    self.baseDir = AVNHandlerManager.getDirWithDefault(self.param, 'userDir', os.path.join('user', 'viewer'))
     self.addonHandler=None
-  def start(self):
-    self.addonHandler=self.findHandlerByName("AVNUserAppHandler")
-    AVNDirectoryHandlerBase.start(self)
+
+  def startInstance(self, navdata):
+    self.addonHandler = self.findHandlerByName("AVNUserAppHandler")
+    return super().startInstance(navdata)
 
   def onPreRun(self):
     httpserver=self.findHandlerByName("AVNHttpServer")
@@ -95,7 +96,7 @@ class AVNImagesHandler(AVNDirectoryHandlerBase):
     return cls.PREFIX
   def __init__(self,param):
     AVNDirectoryHandlerBase.__init__(self, param, "images")
-    self.baseDir = AVNConfig.getDirWithDefault(self.param, 'userDir', os.path.join('user', 'images'))
+    self.baseDir = AVNHandlerManager.getDirWithDefault(self.param, 'userDir', os.path.join('user', 'images'))
 
 
 class AVNOverlayHandler(AVNDirectoryHandlerBase):
@@ -106,7 +107,7 @@ class AVNOverlayHandler(AVNDirectoryHandlerBase):
     return cls.PREFIX
   def __init__(self,param):
     AVNDirectoryHandlerBase.__init__(self, param, "overlay")
-    self.baseDir = AVNConfig.getDirWithDefault(self.param, 'overlayDir', "overlays")
+    self.baseDir = AVNHandlerManager.getDirWithDefault(self.param, 'overlayDir', "overlays")
 
 
 avnav_handlerList.registerHandler(AVNOverlayHandler)

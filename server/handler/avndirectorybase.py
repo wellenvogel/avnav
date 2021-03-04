@@ -90,7 +90,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
   def getPrefix(cls):
     return None
   @classmethod
-  def getConfigParam(cls, child=None, forEdit=False):
+  def getConfigParam(cls, child=None):
     if not child is None:
       return None
     rt = {
@@ -142,14 +142,13 @@ class AVNDirectoryHandlerBase(AVNWorker):
     self.baseDir=None
     self.type=type
     self.httpServer=None
-    self.waitCondition = threading.Condition()
     self.itemList={}
 
-  def start(self):
+  def startInstance(self, navdata):
     self.httpServer=self.findHandlerByName('AVNHttpServer')
     if self.httpServer is None:
       raise Exception("unable to find AVNHttpServer")
-    AVNWorker.start(self)
+    super().startInstance(navdata)
 
   def onItemAdd(self,itemDescription):
     # type: (AVNDirectoryListEntry) -> AVNDirectoryListEntry or None
@@ -183,13 +182,6 @@ class AVNDirectoryHandlerBase(AVNWorker):
   def periodicRun(self):
     pass
 
-  def wakeUp(self):
-    self.waitCondition.acquire()
-    try:
-      self.waitCondition.notify_all()
-    except:
-      pass
-    self.waitCondition.release()
 
   def getSleepTime(self):
     return self.getFloatParam('interval')
@@ -255,7 +247,6 @@ class AVNDirectoryHandlerBase(AVNWorker):
 
   # thread run method - just try forever
   def run(self):
-    self.setName(self.getThreadPrefix())
     if not os.path.exists(self.baseDir):
       AVNLog.info("creating user dir %s"%self.baseDir)
       os.makedirs(self.baseDir)
@@ -264,31 +255,21 @@ class AVNDirectoryHandlerBase(AVNWorker):
       AVNLog.error("unable to create user dir %s"%self.baseDir)
       return
     self.onPreRun()
-    sleepTime=self.getSleepTime()
     self.setInfo('main', "handling %s"%self.baseDir, WorkerStatus.NMEA)
-    while True:
+    while not self.shouldStop():
       try:
         if len(self.getAutoScanExtensions()) > 0 or self.autoScanIncludeDirectories():
           self._scanDirectory()
         self.periodicRun()
       except:
         AVNLog.debug("%s: exception in periodic run: %s",self.getName(),traceback.format_exc())
-      self.waitCondition.acquire()
-      try:
-        self.waitCondition.wait(sleepTime)
-      except:
-        pass
-      self.waitCondition.release()
+      sleepTime = self.getSleepTime()
+      self.wait(sleepTime)
 
   @classmethod
   def canDelete(self):
     return True
 
-
-  def deleteFromOverlays(self,name):
-    chartHandler=self.findHandlerByName('AVNChartHandler')
-    if chartHandler is not None:
-      chartHandler.deleteFromOverlays(self.type,name)
 
   def handleDelete(self,name):
     if not self.canDelete():
@@ -301,7 +282,9 @@ class AVNDirectoryHandlerBase(AVNWorker):
     if not os.path.exists(filename):
       raise Exception("file %s not found" % filename)
     os.unlink(filename)
-    self.deleteFromOverlays(name)
+    chartHandler = self.findHandlerByName('AVNChartHandler')
+    if chartHandler is not None:
+      chartHandler.deleteFromOverlays(self.type, name)
 
   @classmethod
   def canList(cls):

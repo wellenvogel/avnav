@@ -54,10 +54,11 @@ class SerialReader(object):
   def getConfigParam(cls):
     cfg=[
                WorkerParameter('port',None,type=WorkerParameter.T_SELECT,rangeOrList=[]),
-               WorkerParameter('timeout', 1,type=WorkerParameter.T_FLOAT),
+               WorkerParameter('timeout', 2,type=WorkerParameter.T_FLOAT,
+                               description="serial receive timeout in s, after 10*timeout port will be reopened"),
                WorkerParameter('baud',4800,type=WorkerParameter.T_SELECT,rangeOrList=cls.BAUDRATES),
                WorkerParameter('minbaud',0,type=WorkerParameter.T_SELECT,rangeOrList=cls.BAUDRATES+[0],
-                              description='if this is set to anything else, try autobauding between baud and minbaud'),
+                              description='if this is set to anything else then 0, try autobauding between baud and minbaud'),
                WorkerParameter('bytesize', 8,type=WorkerParameter.T_SELECT,rangeOrList=[5,6,7,8]),
                WorkerParameter('parity','N',type=WorkerParameter.T_SELECT,rangeOrList=['N','E','O','M','S']),
                WorkerParameter('stopbits', 1,type=WorkerParameter.T_SELECT,rangeOrList=[1,1.5,2]),
@@ -78,9 +79,6 @@ class SerialReader(object):
     ports=serial.tools.list_ports.comports()
     rt=[]
     for p in ports:
-      if p.vid is not None:
-        #skip USB devices
-        continue
       rt.append(p.device)
     return rt
 
@@ -144,9 +142,9 @@ class SerialReader(object):
                    "true" if autobaud else "false")
     lastTime=time.time()
     try:
-      self.setInfo("opening at %d baud"%(baud),WorkerStatus.STARTED)
+      self.setInfo("reader opening at %d baud"%(baud),WorkerStatus.STARTED)
       self.device=serial.Serial(pnum, timeout=timeout, baudrate=baud, bytesize=bytesize, parity=parity, stopbits=stopbits, xonxoff=xonxoff, rtscts=rtscts)
-      self.setInfo("port open at %d baud"%baud,WorkerStatus.STARTED)
+      self.setInfo("reader port open at %d baud"%baud,WorkerStatus.STARTED)
       if autobaud:
         starttime=time.time()
         while time.time() <= (starttime + autobaudtime):
@@ -175,7 +173,7 @@ class SerialReader(object):
               continue
             AVNLog.debug("assumed startpattern %s at baud %d in %s",match.group(0),baud,data)
             AVNLog.info("autobaud successfully finished at baud %d",baud)
-            self.setInfo("NMEA data at %d baud"%(baud),WorkerStatus.STARTED)
+            self.setInfo("reader receiving at %d baud"%(baud),WorkerStatus.STARTED)
             return self.device
         self.device.close()
         return None
@@ -200,10 +198,10 @@ class SerialReader(object):
     #if not os.name=='posix':
     return serialDevice.readline(300)
 
-   
+
   #the run method - just try forever  
   def run(self):
-    threading.current_thread().setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
+    threading.current_thread().setName("%s"%self.getName())
     self.device=None
     init=True
     isOpen=False
@@ -247,24 +245,31 @@ class SerialReader(object):
          init=False
        if self.doStop:
          AVNLog.info("handler stopped, leaving")
-         self.setInfo("stopped",WorkerStatus.INACTIVE)
+         self.setInfo("reader stopped for %s"%portname,WorkerStatus.INACTIVE)
          try:
            self.device.close()
          except:
            pass
          break
        if self.device is None:
-         time.sleep(porttimeout/2)
+         time.sleep(min(porttimeout/2,5))
          continue
        AVNLog.debug("%s opened, start receiving data",self.device.name)
        lastTime=time.time()
        numerrors=0
        hasNMEA=False
+       MAXLEN=500
+       buffer=b''
        while not self.doStop:
-         bytes=0
+         bytes=b''
          try:
            bytes=self.readLine(self.device,timeout)
-           if  bytes.find(b"\n") <0:
+           if len(buffer) > 0:
+             bytes=buffer+bytes
+             buffer=''
+           if  len(bytes) > 0 and bytes.find(b"\n") <0:
+             if len(bytes) < MAXLEN:
+               continue
              raise Exception("no newline in serial data")
          except Exception as e:
            AVNLog.debug("Exception %s in serial read, close and reopen %s",traceback.format_exc(),portname)
@@ -276,7 +281,7 @@ class SerialReader(object):
            break
          if not bytes is None and len(bytes)> 0:
            if not hasNMEA:
-             self.setInfo("receiving at %d baud"%self.device.baudrate,WorkerStatus.STARTED)
+             self.setInfo("reader receiving %s at %d baud"%(portname,self.device.baudrate),WorkerStatus.STARTED)
            if not isOpen:
              AVNLog.info("successfully opened %s",self.device.name)
              isOpen=True
@@ -305,7 +310,7 @@ class SerialReader(object):
              if not NMEAParser.checkFilter(data,filter):
                continue
              if not hasNMEA:
-               self.setInfo("receiving at %d baud"%self.device.baudrate,WorkerStatus.NMEA)
+               self.setInfo("reader receiving NMEA %s at %d baud"%(portname,self.device.baudrate),WorkerStatus.NMEA)
              hasNMEA=True
              if not self.writeData is None:
                self.writeData(data,source=self.sourceName)
@@ -352,7 +357,7 @@ class AVNSerialReader(AVNWorker):
     return "AVNSerialReader"
   
   @classmethod
-  def getConfigParam(cls, child=None, forEdit=False):
+  def getConfigParam(cls, child=None):
     if not child is None:
       return None
     cfg=SerialReader.getConfigParam()
@@ -371,9 +376,12 @@ class AVNSerialReader(AVNWorker):
     return rt
 
   @classmethod
-  def getEditableParameters(cls, child=None, makeCopy=True):
-    rt=super().getEditableParameters(child, makeCopy)
-    WorkerParameter.updateListFor(rt,'port',SerialReader.listSerialPorts())
+  def getEditableParameters(cls, makeCopy=True,id=None):
+    rt= super().getEditableParameters(True,id=id)
+    slist=SerialReader.listSerialPorts()
+    slist=UsedResource.filterListByUsed(UsedResource.T_SERIAL,slist,
+                                        cls.findUsersOf(UsedResource.T_SERIAL,ownId=id))
+    WorkerParameter.updateParamFor(rt, 'port', {'rangeOrList':slist})
     return rt
 
   @classmethod
@@ -391,23 +399,29 @@ class AVNSerialReader(AVNWorker):
     self.reader=None
     AVNWorker.__init__(self, param)
 
-
-
+  def getUsedResources(self, type=None):
+    if type != UsedResource.T_SERIAL and type is not None:
+      return []
+    return [UsedResource(UsedResource.T_SERIAL,self.id,self.getParamValue('port'))]
 
   #make some checks when we have to start
   #we cannot do this on init as we potentiall have tp find the feeder...
-  def start(self):
+  def startInstance(self,navdata):
     feedername=self.getStringParam('feederName')
     feeder=self.findFeeder(feedername)
     if feeder is None:
       raise Exception("%s: cannot find a suitable feeder (name %s)",self.getName(),feedername or "")
     self.writeData=feeder.addNMEA
-    AVNWorker.start(self) 
-     
+    super().startInstance(navdata)
+
+  def checkConfig(self, param):
+    if 'port' in param:
+      self.checkUsedResource(UsedResource.T_SERIAL,self.id,param.get('port'))
+
   #thread run method - just try forever  
   def run(self):
+    self.checkUsedResource(UsedResource.T_SERIAL,self.id,self.getParamValue('port'))
     while not self.shouldStop():
-      self.setName("%s-%s"%(self.getThreadPrefix(),self.getParamValue('port')))
       try:
         self.reader=SerialReader(self.param, self.writeData,self,self.getSourceName(self.getParamValue('port')))
         self.reader.run()
@@ -416,6 +430,8 @@ class AVNSerialReader(AVNWorker):
 
 
   def updateConfig(self, param,child=None):
+    if 'port' in param:
+      self.checkUsedResource(UsedResource.T_SERIAL,self.id,param['port'])
     super().updateConfig(param)
     self.reader.stopHandler()
 

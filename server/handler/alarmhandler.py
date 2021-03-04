@@ -33,7 +33,7 @@ try:
 except:
   pass
 
-from avnav_config import AVNConfig
+from avnav_manager import AVNHandlerManager
 from avnav_util import *
 from avnav_worker import *
 import avnav_handlerList
@@ -75,7 +75,7 @@ class AVNAlarmHandler(AVNWorker):
   def getConfigName(cls):
     return "AVNAlarmHandler"
   @classmethod
-  def getConfigParam(cls, child=None, forEdit=False):
+  def getConfigParam(cls, child=None):
     if child is None:
       return {
         'defaultCommand':'sound',
@@ -103,7 +103,6 @@ class AVNAlarmHandler(AVNWorker):
   def _gpioCmd(self,channel):
     self.stopAll()
   def run(self):
-    self.setName(self.getThreadPrefix())
     self.commandHandler=self.findHandlerByName("AVNCommandHandler")
     if self.commandHandler is None:
       self.setInfo('main',"no command handler found",WorkerStatus.ERROR)
@@ -163,7 +162,7 @@ class AVNAlarmHandler(AVNWorker):
           if param=="":
             param=None
           if param is not None:
-            param=AVNUtil.replaceParam(param,AVNConfig.filterBaseParam(self.getParam()))
+            param=AVNUtil.replaceParam(param, AVNHandlerManager.filterBaseParam(self.getParam()))
           rt= {
             'command':cmd.get('command'),
             'autoclean':self.getBoolean(cmd,'autoclean'),

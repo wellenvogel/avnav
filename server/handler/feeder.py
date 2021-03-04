@@ -56,7 +56,7 @@ class NmeaEntry(object):
 class AVNFeeder(AVNWorker):
   
   @classmethod
-  def getConfigParam(cls, child=None, forEdit=False):
+  def getConfigParam(cls, child=None):
     return {'maxList': 300,      #len of the input list
             'feederSleep': 0.5,  #time in s the feeder will sleep if there is no data
             'name': '',           #if there should be more then one reader we must set the name
@@ -182,8 +182,7 @@ class AVNFeeder(AVNWorker):
 
   #a standalone feeder that uses our bultin methods
   
-  def standaloneFeed(self):
-    threading.current_thread().setName("%s[standalone feed]"%(self.getThreadPrefix()))
+  def run(self):
     AVNLog.info("standalone feeder started")
     nmeaParser=NMEAParser(self.navdata)
     self.setInfo('main', "running", WorkerStatus.RUNNING)
@@ -203,12 +202,7 @@ class AVNFeeder(AVNWorker):
                   self.setInfo('main',"feeding NMEA",WorkerStatus.NMEA)
       except Exception as e:
         AVNLog.warn("feeder exception - retrying %s",traceback.format_exc())
-    
-    
-  #this is the main thread 
-  def run(self):
-    self.setName("[%s]%s"%(AVNLog.getThreadId(),self.getName()))
-    self.standaloneFeed()
+
 
 class AVNGpsdFeeder(AVNFeeder):
   '''

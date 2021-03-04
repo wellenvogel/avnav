@@ -17,42 +17,138 @@ import Requests from '../util/requests.js';
 import OverlayDialog from '../components/OverlayDialog.jsx';
 import GuiHelpers from '../util/GuiHelpers.js';
 import Mob from '../components/Mob.js';
+import EditHandlerDialog from "../components/EditHandlerDialog";
+import DB from '../components/DialogButton';
+import Formatter from '../util/formatter';
 
+class LogDialog extends React.Component{
+    constructor(props) {
+        super(props);
+        this.state={
+            log:undefined,
+            loading: true
+        };
+        this.downloadFrame=null;
+        this.mainref=null;
+        this.getLog=this.getLog.bind(this);
+    }
+    componentDidMount() {
+        this.getLog();
+    }
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if (this.mainref) {
+            this.mainref.scrollTop = this.mainref.scrollHeight
+        }
+    }
+
+    getLog(){
+        Requests.getHtmlOrText('', {useNavUrl:true},{
+            request:'download',
+            type:'config',
+            maxBytes:100000
+        })
+            .then((data)=>{
+                this.setState({log:data});
+            })
+            .catch((e)=>Toast(e))
+    }
+    render(){
+    return <div className="selectDialog LogDialog">
+        <h3 className="dialogTitle">{this.props.title||'AvNav log'}</h3>
+        <div className="logDisplay dialogRow" ref={(el)=>this.mainref=el}>
+            {this.state.log||''}
+        </div>
+        <div className="dialogButtons">
+            <DB
+                name="download"
+                onClick={()=>{
+                    let name="avnav-"+Formatter.formatDateTime(new Date()).replace(/[: /]/g,'-').replace(/--/g,'-')+".log";
+                    let url=globalStore.getData(keys.properties.navUrl)+"?request=download&type=config&filename="+name;
+                    if (this.downloadFrame){
+                        this.downloadFrame.src=url;
+                    }
+                }}
+            >
+                Download
+            </DB>
+            <DB name="reload"
+                onClick={this.getLog}>
+                Reload
+            </DB>
+            <DB
+                name="ok"
+                onClick={this.props.closeCallback}
+            >
+                Ok
+            </DB>
+        </div>
+        <iframe
+            className="downloadFrame"
+            onLoad={(ev)=>{
+                let txt=ev.target.contentDocument.body.textContent;
+                if (! txt) return;
+                Toast(txt);
+            }}
+            src={undefined}
+            ref={(el)=>this.downloadFrame=el}/>
+    </div>
+    }
+}
+
+const showEditDialog=(handlerId,child)=>{
+    EditHandlerDialog.createDialog(handlerId,child);
+}
 const statusTextToImageUrl=(text)=>{
     let rt=globalStore.getData(keys.properties.statusIcons[text]);
     if (! rt) rt=globalStore.getData(keys.properties.statusIcons.INACTIVE);
     return rt;
 };
+const EditIcon=(props)=>{
+    return <Button
+        name="Edit" className="Edit smallButton editIcon" onClick={props.onClick}/>
+
+}
 const ChildStatus=(props)=>{
+    let canEdit=props.canEdit && props.connected;
     return (
         <div className="childStatus">
             <img src={statusTextToImageUrl(props.status)}/>
             <span className="statusName">{props.name}</span>
             <span className="statusInfo">{props.info}</span>
+            {canEdit && <EditIcon onClick={
+                ()=>showEditDialog(props.handlerId,props.id)
+            }/>}
         </div>
     );
 };
 const StatusItem=(props)=>{
+    let canEdit=props.canEdit && props.connected;
+    let isDisabled=props.disabled;
+    let name=props.name.replace(/\[.*\]/, '');
+    if (props.id !== undefined){
+        name="["+props.id+"]"+name;
+    }
     return(
-        <div className="status" >
-            <span className="statusName">{props.name.replace(/\[.*\]/,'')}</span>
+        <div className="status"  key={props.id}>
+            <div className={"statusHeading"+ (isDisabled?" disabled":"")}>
+                <span className="statusName">{name}</span>
+                {isDisabled && <span className="disabledInfo">[disabled]</span> }
+                {canEdit && <EditIcon
+                    onClick={
+                        () => showEditDialog(props.id)
+                    }/>}
+            </div>
             {props.info && props.info.items && props.info.items.map(function(el){
-                return <ChildStatus {...el} key={el.name}/>
+                return <ChildStatus
+                    {...el}
+                    key={props.name+el.name}
+                    connected={props.connected}
+                    handlerId={props.id}/>
             })}
         </div>
 
     );
 };
-
-const MainContent=Dynamic((props)=>{
-    return(
-        <ItemList
-            itemClass={StatusItem}
-            itemList={props.itemList}
-            scrollable={true}
-            />
-    );
-});
 
 
 
@@ -60,15 +156,20 @@ class StatusPage extends React.Component{
     constructor(props){
         super(props);
         let self=this;
-
+        this.state={
+            addresses:false,
+            wpa:false,
+            shutdown:false,
+            itemList:[],
+            serverError:false,
+            canRestart:false
+        }
         this.querySequence=1;
         this.doQuery=this.doQuery.bind(this);
         this.queryResult=this.queryResult.bind(this);
         this.errors=0;
-        globalStore.storeData(keys.gui.statuspage.serverError,false);
-        globalStore.storeData(keys.gui.statuspage.statusItems,[]);
         this.timer=GuiHelpers.lifecycleTimer(this,this.doQuery,globalStore.getData(keys.properties.statusQueryTimeout),true);
-
+        this.mainListRef=null;
     }
     queryResult(data){
             let self=this;
@@ -82,25 +183,21 @@ class StatusPage extends React.Component{
             self.errors=0;
             if (data.handler) {
                 data.handler.forEach(function(el){
-                    if (el.configname=="AVNHttpServer"){
+                    if (el.configname==="AVNHttpServer"){
                         if (el.properties && el.properties.addresses ) storeData.addresses=true;
                     }
-                    if (el.configname == "AVNWpaHandler"){
+                    if (el.configname === "AVNWpaHandler"){
                         storeData.wpa=true;
                     }
-                    if (el.configname=="AVNCommandHandler"){
+                    if (el.configname==="AVNCommandHandler"){
                         if (el.properties && el.properties.shutdown ) storeData.shutdown=true;
                     }
+                    el.key=el.displayKey;
                     storeData.itemList.push(el);
                 });
             }
-            globalStore.storeMultiple(storeData,{
-                wpa:keys.gui.statuspage.wpa,
-                addresses:keys.gui.statuspage.addresses,
-                shutdown:keys.gui.statuspage.shutdown,
-                itemList:keys.gui.statuspage.statusItems,
-                serverError:keys.gui.statuspage.serverError
-            });
+            this.setState(storeData);
+
     }
     doQuery(){
         let self=this;
@@ -110,18 +207,54 @@ class StatusPage extends React.Component{
                 self.timer.startTimer();
             },
             (error)=>{
-                globalStore.storeData(keys.gui.statuspage.statusItems,[]);
+                let newState={itemList:[]};
                 self.errors++;
                 if (self.errors > 5){
-                    globalStore.storeData(keys.gui.statuspage.serverError,true);
+                    newState.serverError=true;
                 }
+                this.setState(newState);
                 self.timer.startTimer();
             });
     }
     componentDidMount(){
+        if (! globalStore.getData(keys.gui.capabilities.config)) return;
+        Requests.getJson('',undefined,{
+            request:'api',
+            type:'config',
+            command:'canRestart'
+        })
+            .then((data)=>{
+                this.setState({canRestart:data.canRestart});
+            })
+            .catch((e)=>Toast(e))
     }
     componentWillUnmount(){
-        let self=this;
+    }
+    getSnapshotBeforeUpdate(prevProps, prevState) {
+        if (!this.mainListRef) return null;
+        return{
+            x:this.mainListRef.scrollLeft,
+            y:this.mainListRef.scrollTop
+        }
+    }
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if (snapshot && this.mainListRef){
+            this.mainListRef.scrollLeft=snapshot.x;
+            this.mainListRef.scrollTop=snapshot.y;
+        }
+    }
+    restartServer(){
+        OverlayDialog.confirm("really restart the AvNav server?")
+            .then((v)=>{
+                Requests.getJson('',undefined,{
+                    request:'api',
+                    type:'config',
+                    command:'restartServer'
+                })
+                    .then(()=>Toast("restart triggered"))
+                    .catch((e)=>Toast(e))
+            })
+            .catch((e)=>{})
     }
     render(){
         let self=this;
@@ -130,12 +263,12 @@ class StatusPage extends React.Component{
             let buttons=[
                 {
                     name:'StatusWpa',
-                    visible: props.wpa && props.connected,
+                    visible: this.state.wpa && props.connected,
                     onClick:()=>{history.push('wpapage');}
                 },
                 {
                     name:'StatusAddresses',
-                    visible:props.addresses,
+                    visible:this.state.addresses,
                     onClick:()=>{history.push("addresspage");}
                 },
                 {
@@ -143,9 +276,17 @@ class StatusPage extends React.Component{
                     visible: props.android,
                     onClick:()=>{avnav.android.showSettings();}
                 },
+
+                {
+                    name: 'MainInfo',
+                    onClick: ()=> {
+                        history.push('infopage')
+                    },
+                    overflow:true
+                },
                 {
                     name: 'StatusShutdown',
-                    visible: !props.android && props.shutdown && props.connected,
+                    visible: !props.android && this.state.shutdown && props.connected,
                     onClick:()=>{
                         OverlayDialog.confirm("really shutdown the server?").then(function(){
                             Requests.getJson("?request=command&start=shutdown").then(
@@ -160,9 +301,23 @@ class StatusPage extends React.Component{
                     }
                 },
                 {
-                    name: 'MainInfo',
-                    onClick: ()=> {
-                        history.push('infopage')
+                    name:'StatusRestart',
+                    visible: this.state.canRestart,
+                    onClick: ()=>this.restartServer()
+                },
+                {
+                    name: 'StatusLog',
+                    visible: props.config,
+                    onClick: ()=>{
+                        OverlayDialog.dialog(LogDialog);
+                    },
+                    overflow: true
+                },
+                {
+                    name: 'StatusAdd',
+                    visible: props.config && props.connected,
+                    onClick: ()=>{
+                        EditHandlerDialog.createAddDialog();
                     }
                 },
                 Mob.mobDefinition,
@@ -173,27 +328,29 @@ class StatusPage extends React.Component{
             ];
 
             let className=props.className;
-            if (props.serverError) className+=" serverError";
+            if (this.state.serverError) className+=" serverError";
             return(
             <Page
                 className={className}
                 style={props.style}
                 id="statuspage"
-                title={props.serverError?"Server Connection lost":"Server Status"}
+                title={this.state.serverError?"Server Connection lost":"Server Status"}
                 mainContent={
-                            <MainContent
-                                storeKeys={{itemList:keys.gui.statuspage.statusItems}}
-                            />
-                        }
+                    <ItemList
+                        itemClass={(iprops)=><StatusItem
+                            connected={props.connected}
+                            {...iprops}/>}
+                        itemList={this.state.itemList}
+                        scrollable={true}
+                        listRef={(ref)=>this.mainListRef=ref}
+                    />
+                }
                 buttonList={buttons}/>
             )},{
             storeKeys:{
-                wpa:keys.gui.statuspage.wpa,
                 connected:keys.properties.connectedMode,
-                addresses:keys.gui.statuspage.addresses,
-                shutdown:keys.gui.statuspage.shutdown,
                 android:keys.gui.global.onAndroid,
-                serverError: keys.gui.statuspage.serverError
+                config: keys.gui.capabilities.config
             }
         });
         return <Rt/>

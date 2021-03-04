@@ -31,7 +31,7 @@ import signal
 import time
 
 import avnav_handlerList
-from avnav_config import AVNConfig
+from avnav_manager import AVNHandlerManager
 from avnav_util import *
 from avnav_worker import *
 
@@ -88,7 +88,7 @@ class Handler(object):
 
 
   def run(self):
-    threading.current_thread().setName("[%s]cmd: %s" % (AVNLog.getThreadId(), self.name))
+    threading.current_thread().setName("CommandHandler: %s" %  self.name)
     while self.repeat > 0:
       try:
         while True and not self.stop:
@@ -138,7 +138,7 @@ class AVNCommandHandler(AVNWorker):
   def getConfigName(cls):
     return "AVNCommandHandler"
   @classmethod
-  def getConfigParam(cls, child=None, forEdit=False):
+  def getConfigParam(cls, child=None):
     if child is None:
       return {
       }
@@ -168,7 +168,6 @@ class AVNCommandHandler(AVNWorker):
     self.cntLock.release()
     return rt
   def run(self):
-    self.setName(self.getThreadPrefix())
     for cmd in self.getConfiguredCommands():
       self.updateCommandStatus(cmd)
     while True:
@@ -195,7 +194,7 @@ class AVNCommandHandler(AVNWorker):
     '''
     for cmd in self.getConfiguredCommands():
       if cmd.get('name') is not None and cmd.get('name') == name:
-        return {'command':AVNUtil.replaceParam(cmd.get('command'),AVNConfig.filterBaseParam(self.getParam())),'repeat':cmd.get('repeat'),'name':cmd.get('name')}
+        return {'command':AVNUtil.replaceParam(cmd.get('command'), AVNHandlerManager.filterBaseParam(self.getParam())), 'repeat':cmd.get('repeat'), 'name':cmd.get('name')}
   def findRunningCommandsByName(self,name):
     rt=[]
     if name is None:

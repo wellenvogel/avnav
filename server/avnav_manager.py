@@ -25,6 +25,8 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
 import codecs
+import json
+
 import shutil
 
 from avnav_util import *
@@ -32,6 +34,7 @@ from avnav_worker import *
 import xml.dom as dom
 import xml.dom.minidom as parser
 import avnav_handlerList
+
 
 
 class ConfigChanger(object):
@@ -43,10 +46,14 @@ class ConfigChanger(object):
     self.dirty=False
     self.changeHandler=changeHandler
 
+  def acquireLock(self):
+    self.changeHandler.acquireLock()
+  def releaseLock(self):
+    self.changeHandler.releaseLock()
   def _setDirty(self):
     self.dirty=True
 
-  def handleChange(self, skip=False):
+  def handleChange(self, skip=False,lock=True):
     if not self.dirty:
       return
     if not self.changeHandler:
@@ -54,72 +61,133 @@ class ConfigChanger(object):
     if skip:
       return
     self.changeHandler.dataChanged()
+    self.dirty=False
 
   def _addToDom(self):
     if self.isAttached:
       return
-    self.domBase.documentElement.appendChild(self.elementDom)
-    newline=self.domBase.createTextNode("\n")
-    self.domBase.documentElement.appendChild(newline)
+    #we try some "insert before"
+    tagName=self.elementDom.tagName
+    newline = self.domBase.createTextNode("\n")
+    existing=self.domBase.documentElement.getElementsByTagName(tagName)
+    if existing is not None and existing.length > 0:
+      lastExisting=existing[existing.length-1]
+      nextSibling=lastExisting.nextSibling
+      if nextSibling is not None:
+        if nextSibling.nodeType == dom.Node.TEXT_NODE and nextSibling.nodeValue == "\n" and nextSibling.nextSibling is not None:
+          nextSibling=nextSibling.nextSibling
+        lastExisting.parentNode.insertBefore(self.elementDom,nextSibling)
+        lastExisting.parentNode.insertBefore(newline, nextSibling)
+      else:
+        lastExisting.parentNode.appendChild(self.elementDom)
+        lastExisting.parentNode.appendChild(newline)
+    else:
+      self.domBase.documentElement.appendChild(self.elementDom)
+      self.domBase.documentElement.appendChild(newline)
+    self.isAttached=True
     self._setDirty()
 
   def changeAttribute(self,name,value,delayUpdate=False):
-    self._addToDom()
-    self.elementDom.setAttribute(name,str(value))
-    self._setDirty()
-    if not delayUpdate:
-      self.handleChange()
+    self.acquireLock()
+    try:
+      self._addToDom()
+      self.elementDom.setAttribute(name,str(value))
+      self._setDirty()
+      if not delayUpdate:
+        self.handleChange()
+    finally:
+      self.releaseLock()
 
   def changeChildAttribute(self,childName,childIndex,name,value,delayUpdate=False):
     if self.childMap is None:
       raise Exception("no dom, cannot change")
-    self._addToDom()
-    childList=self.childMap.get(childName)
-    if childList is None:
-      childList=[]
-      self.childMap[childName]=childList
-    if childIndex >= 0:
-      if childIndex >= len(childList):
-        raise Exception("trying to update an non existing child index %s:%d"%(childName,childIndex))
-      childList[childIndex].setAttribute(name,str(value))
+    self.acquireLock()
+    try:
+      self._addToDom()
+      childList=self.childMap.get(childName)
+      if childList is None:
+        childList=[]
+        self.childMap[childName]=childList
+      if childIndex >= 0:
+        if childIndex >= len(childList):
+          raise Exception("trying to update an non existing child index %s:%d"%(childName,childIndex))
+        childList[childIndex].setAttribute(name,str(value))
+        self._setDirty()
+        self.handleChange(delayUpdate,lock=False)
+        return
+      #we must insert
+      newEl=self.domBase.createElement(childName)
+      newEl.setAttribute(name,str(value))
+      self.elementDom.appendChild(newEl)
+      newline = self.domBase.createTextNode("\n")
+      self.elementDom.appendChild(newline)
+      childList.append(newEl)
       self._setDirty()
-      self.handleChange(delayUpdate)
-      return
-    #we must insert
-    newEl=self.domBase.createElement(childName)
-    newEl.setAttribute(name,str(value))
-    self.elementDom.appendChild(newEl)
-    newline = self.domBase.createTextNode("\n")
-    self.elementDom.appendChild(newline)
-    childList.append(newEl)
-    self._setDirty()
-    self.handleChange(delayUpdate)
+      self.handleChange(delayUpdate,lock=False)
+    finally:
+      self.releaseLock()
     return len(childList)-1
 
-  def removeChild(self,childName,childIndex):
+  def removeChild(self,childName,childIndex,delayUpdate=False):
     if self.childMap is None:
       raise Exception("no dom, cannot change")
-    childList=self.childMap.get(childName)
-    if childList is None:
-      return
-    if childIndex < 0 or childIndex >= len(childList):
-      raise Exception("trying to update an non existing child index %s:%d"%(childName,childIndex))
-    self._addToDom()
-    childNode=childList[childIndex]
-    sibling=childNode.nextSibling
-    if sibling is not None:
-      if sibling.nodeType == dom.Node.TEXT_NODE and sibling.nodeValue == "\n":
-        #our inserted newline
-        self.elementDom.removeChild(sibling)
-    self.elementDom.removeChild(childNode)
-    childList[childIndex].unlink()
-    childList.pop(childIndex)
-    self._setDirty()
-    self.handleChange()
+    self.acquireLock()
+    try:
+      childList=self.childMap.get(childName)
+      if childList is None:
+        return
+      if childIndex < 0 or childIndex >= len(childList):
+        raise Exception("trying to update an non existing child index %s:%d"%(childName,childIndex))
+      self._addToDom()
+      childNode=childList[childIndex]
+      sibling=childNode.nextSibling
+      if sibling is not None:
+        if sibling.nodeType == dom.Node.TEXT_NODE and sibling.nodeValue == "\n":
+          #our inserted newline
+          self.elementDom.removeChild(sibling)
+      self.elementDom.removeChild(childNode)
+      childList[childIndex].unlink()
+      childList.pop(childIndex)
+      self._setDirty()
+      if not delayUpdate:
+        self.handleChange(lock=False)
+    finally:
+      self.releaseLock()
     return
 
+  def writeAll(self):
+    self.acquireLock()
+    try:
+      self._addToDom()
+      self._setDirty()
+      self.handleChange()
+    finally:
+      self.releaseLock()
+
+  def removeSelf(self):
+    if not self.isAttached:
+      return
+    self.acquireLock()
+    try:
+      parentNode=self.elementDom.parentNode
+      sibling = self.elementDom.nextSibling
+      if sibling is not None:
+        if sibling.nodeType == dom.Node.TEXT_NODE and sibling.nodeValue == "\n":
+          # our inserted newline
+          parentNode.removeChild(sibling)
+      parentNode.removeChild(self.elementDom)
+      self.elementDom.unlink()
+      self._setDirty()
+      self.handleChange(lock=False)
+      self.isAttached=False
+    finally:
+      self.releaseLock()
+
+
+
+
 # a class for parsing the config file
-class AVNConfig(object):
+class AVNHandlerManager(object):
   class BASEPARAM(Enum):
     BASEDIR='BASEDIR' #the base directory for the server - location of the main python file
     DATADIR='DATADIR' #the data directory if not provided on the commandline: either parent dir of chart dir or $HOME/avnav
@@ -184,7 +252,7 @@ class AVNConfig(object):
     now = datetime.datetime.utcnow()
     return fileName + ".invalid-" + now.strftime("%Y%m%d%H%M%S")
 
-  def __init__(self):
+  def __init__(self,canRestart=False):
     #global parameters
     self.parameters={
                      "debug":0,
@@ -195,11 +263,33 @@ class AVNConfig(object):
     self.cfgfileName=None
     self.currentCfgFileName=None #potentially this is the fallback file
     self.parseError=None
+    self.navData=None
+    self.canRestart=canRestart
+    self.configLock=threading.Lock()
+    self.shouldStop=False
 
   def setBaseParam(self,name,value):
     if not hasattr(self.BASEPARAM,name):
       raise Exception("invalid parameter for setBaseParam")
     self.baseParam[name]=value
+
+  def createHandlerFromScratch(self,tagName,properties=None):
+    ai = "<" + tagName + "/>"
+    node = parser.parseString(ai)
+    if node.documentElement.nodeType != dom.Node.ELEMENT_NODE or node.documentElement.tagName != tagName:
+      raise Exception("invalid main node or main node name for autoInstantiate")
+    for handler in avnav_handlerList.getAllHandlerClasses():
+      name = handler.getConfigName()
+      if name == tagName:
+        if not handler.canDeleteHandler():
+          raise Exception("unable to create handler of type %s"%tagName)
+        if properties is not None:
+          for k,v in properties.items():
+            node.documentElement.setAttribute(k,str(v))
+        return self.parseHandler(node.documentElement, handler, domAttached=False)
+    raise Exception("handler type %s not found"%tagName)
+
+
   def readConfigAndCreateHandlers(self,filename):
     AVNLog.info("reading config %s",filename)
     AVNWorker.resetHandlerList()
@@ -258,7 +348,7 @@ class AVNConfig(object):
         nextElement=nextElement.nextSibling
 
   def parseHandler(self, element, handlerClass, domAttached=True):
-    configParam= handlerClass.getConfigParam(None)
+    configParam= handlerClass.getConfigParamCombined()
     if type(configParam) is list:
       configParam=WorkerParameter.filterNameDef(configParam)
     cfg=handlerClass.parseConfig(element.attributes,configParam)
@@ -267,7 +357,7 @@ class AVNConfig(object):
     while child is not None:
       if child.nodeType == dom.Node.ELEMENT_NODE:
         childName=child.tagName
-        cfgDefaults= handlerClass.getConfigParam(childName)
+        cfgDefaults= handlerClass.getConfigParamCombined(childName)
         if cfgDefaults is not None:
           if type(cfgDefaults) is list:
             cfgDefaults=WorkerParameter.filterNameDef(cfgDefaults)
@@ -285,9 +375,14 @@ class AVNConfig(object):
       AVNLog.error("unable to instantiate handler %s",element.tagName)
     else:
       instance.setConfigChanger(ConfigChanger(self, self.domObject, domAttached, element, childPointer))
+    return instance
 
+  def acquireLock(self):
+    self.configLock.acquire()
+
+  def releaseLock(self):
+    self.configLock.release()
   def dataChanged(self):
-    #TODO: do some checks?
     self.writeChanges()
 
   def houseKeepingCfgFiles(self):
@@ -376,4 +471,121 @@ class AVNConfig(object):
       AVNLog.error("exception when finally renaming %s to %s: %s",tmpName,self.cfgfileName,str(e))
       raise
 
+  def startHandlers(self,navData):
+    self.navData=navData
+    groups = set()
+    for handler in AVNWorker.getAllHandlers():
+      groups.add(handler.getStartupGroup())
+    grouplist = list(groups)
+    grouplist.sort()
+    for group in grouplist:
+      for handler in AVNWorker.getAllHandlers(disabled=True):
+        try:
+          if handler.getStartupGroup() == group:
+            handler.startInstance(navData)
+        except Exception:
+          AVNLog.warn("unable to start handler : " + traceback.format_exc())
+    AVNLog.info("All Handlers started")
 
+  def getConfigName(self):
+    return "Manager"
+  def handleApiRequest(self,request,type,requestParam,**kwargs):
+
+    if request == 'download':
+      maxBytes=AVNUtil.getHttpRequestParam(requestParam,'maxBytes')
+      if maxBytes is not None:
+        maxBytes=int(maxBytes)
+      if AVNLog.fhandler is None:
+        raise Exception("logging not initialized")
+      fname=AVNLog.fhandler.baseFilename
+      if fname is None:
+        raise Exception("unable to get log file")
+      if not os.path.exists(fname):
+        raise Exception("log %s not found"%fname)
+      st=os.stat(fname)
+      fsize=st.st_size
+      fh=open(fname,'rb')
+      if maxBytes is not None:
+        if maxBytes < fsize:
+          seekVal=fsize-maxBytes
+          fsize=maxBytes
+          fh.seek(seekVal)
+      return{
+        'mimetype':'application/octet-stream',
+        'size':fsize,
+        'stream':fh
+      }
+    if request != "api":
+      raise Exception("unknown request %s"%request)
+    if type != 'config':
+      raise Exception("unknown config request %s"%type)
+    command=AVNUtil.getHttpRequestParam(requestParam,'command',mantadory=True)
+    rt={'status':'OK'}
+    if command == 'createHandler':
+      tagName=AVNUtil.getHttpRequestParam(requestParam,'handlerName',mantadory=True)
+      config=AVNUtil.getHttpRequestParam(requestParam,'_json',mantadory=True)
+      handler=self.createHandlerFromScratch(tagName,json.loads(config))
+      handler.configChanger.writeAll()
+      handler.startInstance(self.navData)
+      return rt
+    if command == 'getAddables':
+      allHandlers = avnav_handlerList.getAllHandlerClasses()
+      hlist = []
+      for h in allHandlers:
+        if h.canDeleteHandler():
+          hlist.append(h.getConfigName())
+      rt['data'] = hlist
+      return rt
+    if command == 'getAddAttributes':
+      tagName = AVNUtil.getHttpRequestParam(requestParam, 'handlerName', mantadory=True)
+      handlerClass = avnav_handlerList.findHandlerByConfigName(tagName)
+      if handlerClass is None:
+        raise Exception("unable to find handler for %s" % tagName)
+      if not handlerClass.canDeleteHandler():
+        raise Exception("handler %s cannot be added" % tagName)
+      rt['data'] = handlerClass.getEditableParameters()
+      return rt
+
+    if command == 'canRestart':
+      rt['canRestart']=self.canRestart
+      return rt
+    if command == 'restartServer':
+      if not self.canRestart:
+        raise Exception("AvNav cannot restart")
+      self.shouldStop=True
+      return rt
+
+    id = AVNUtil.getHttpRequestParam(requestParam, 'handlerId', mantadory=True)
+    child = AVNUtil.getHttpRequestParam(requestParam, 'child', mantadory=False)
+    handler = AVNWorker.findHandlerById(int(id))
+    if handler is None:
+        raise Exception("unable to find handler for id %s" % id)
+    if command == 'getEditables':
+      if child is not None:
+        data = handler.getEditableChildParameters(child)
+        canDelete = handler.canDeleteChild(child)
+      else:
+        data = handler.getEditableParameters(id=handler.getId())
+        canDelete = handler.canDeleteHandler()
+      if data is not None:
+          rt['data'] = data
+          rt['values'] = handler.getParam(child, filtered=True)
+          rt['configName'] = handler.getConfigName()
+          rt['canDelete'] = canDelete
+    elif command == 'setConfig':
+      values = AVNUtil.getHttpRequestParam(requestParam, '_json', mantadory=True)
+      decoded = json.loads(values)
+      handler.updateConfig(decoded, child)
+      AVNLog.info("updated %s, new config %s", handler.getName(), handler.getConfigString())
+    elif command == 'deleteChild':
+      if child is None:
+        raise Exception("missing parameter child")
+      AVNLog.info("deleting child %s for %s", child, handler.getName())
+      handler.deleteChild(child)
+    elif command == 'deleteHandler':
+      AVNLog.info("removing handler %s", handler.getName())
+      AVNWorker.removeHandler(int(id))
+
+    else:
+      raise Exception("unknown command %s" % command)
+    return rt

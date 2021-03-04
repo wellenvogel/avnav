@@ -50,7 +50,7 @@ class AVNUserAppHandler(AVNWorker):
   def getPrefix(cls):
     return None
   @classmethod
-  def getConfigParam(cls, child=None, forEdit=False):
+  def getConfigParam(cls, child=None):
     #we add this to the ones configured at HTTPServer
     if child == cls.CHILDNAME:
       return {
@@ -81,7 +81,7 @@ class AVNUserAppHandler(AVNWorker):
     self.additionalAddOns=[]
     AVNWorker.__init__(self,param)
 
-  def start(self):
+  def startInstance(self, navdata):
     self.userHandler=self.findHandlerByName('AVNUserHandler')
     if self.userHandler is None:
       raise Exception("unable to find a user handler")
@@ -91,11 +91,10 @@ class AVNUserAppHandler(AVNWorker):
     self.httpServer = self.findHandlerByName('AVNHttpServer')
     if self.httpServer is None:
       raise Exception("unable to find AVNHttpServer")
-    AVNWorker.start(self)
+    super().startInstance(navdata)
 
   # thread run method - just try forever
   def run(self):
-    self.setName(self.getThreadPrefix())
     sleepTime=self.getFloatParam('interval')
     self.setInfo('main', "starting", WorkerStatus.STARTED)
     self.fillList()
@@ -267,6 +266,14 @@ class AVNUserAppHandler(AVNWorker):
       'source':'plugin'
     }
     self.additionalAddOns.append(newAddon)
+
+  def unregisterAddOn(self,name):
+    if name is None:
+      raise Exception("name cannot be None")
+    for ao in self.additionalAddOns:
+      if ao.get('name') == name:
+        self.additionalAddOns.remove(ao)
+        return True
 
 
   def deleteByUrl(self,url):

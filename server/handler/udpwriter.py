@@ -39,7 +39,7 @@ class AVNUdpWriter(AVNWorker):
     return "AVNUdpWriter"
 
   @classmethod
-  def getConfigParam(cls, child=None, forEdit=False):
+  def getConfigParam(cls, child=None):
     if child is None:
       
       rt=[
@@ -88,19 +88,19 @@ class AVNUdpWriter(AVNWorker):
 
   # make some checks when we have to start
   # we cannot do this on init as we potentiall have to find the feeder...
-  def start(self):
+  def startInstance(self, navdata):
     feedername = self.getStringParam('feederName')
     feeder = self.findFeeder(feedername)
     if feeder is None:
       raise Exception("%s: cannot find a suitable feeder (name %s)", self.getName(), feedername or "")
     self.feeder=feeder
-    AVNWorker.start(self)
+    super().startInstance(navdata)
   
 
   def run(self):
+    self.setNameIfEmpty("%s-%s:%s" % (self.getName(), self.param['host'], self.param['port']))
     while not self.shouldStop():
       try:
-        self.setName("%s-host:%s-port%s" % (self.getThreadPrefix(), self.param['host'], self.param['port']))
         self.blackList = self.getStringParam('blackList').split(',')
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)

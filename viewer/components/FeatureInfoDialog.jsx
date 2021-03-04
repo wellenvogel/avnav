@@ -108,8 +108,6 @@ class FeatureInfoDialog extends React.Component{
         this.linkAction=this.linkAction.bind(this);
         this.hideAction=this.hideAction.bind(this);
         this.extendedInfo=stateHelper(this,{},'trackInfo');
-        this.updateCount=0;
-        this.lastDimensionChange=0;
     }
     linkAction(){
         if (! this.props.link && ! this.props.htmlInfo) return;
@@ -134,16 +132,9 @@ class FeatureInfoDialog extends React.Component{
                 new navobjects.WayPoint(infoCoordinates[0],infoCoordinates[1])
                 )
                 .then((info)=>{
-                    this.updateCount++;
                     this.extendedInfo.setState(info,true)
                 })
                 .catch((error)=>Toast(error));
-        }
-    }
-    componentDidUpdate() {
-        if (this.lastDimensionChange !== this.updateCount){
-            if (this.props.updateDimensions) this.props.updateDimensions();
-            this.lastDimensionChange=this.updateCount;
         }
     }
     infoRowDisplay(row,data){

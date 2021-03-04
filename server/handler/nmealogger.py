@@ -36,11 +36,12 @@ class AVNNmeaLogger(AVNWorker):
   def __init__(self,param):
     AVNWorker.__init__(self, param)
     self.trackdir=None
+    self.nmeaFilter=[]
   @classmethod
   def getConfigName(cls):
     return "AVNNmeaLogger"
   @classmethod
-  def getConfigParam(cls, child=None, forEdit=False):
+  def getConfigParam(cls, child=None):
     if child is not None:
       return None
     return [
@@ -53,6 +54,11 @@ class AVNNmeaLogger(AVNWorker):
                             description='interval in seconds between 2 writes of the same record')
 
     ]
+
+  @classmethod
+  def canEdit(cls):
+    return True
+
   #write out the line
   #timestamp is a datetime object
   def writeLine(self,filehandle,data):
@@ -61,37 +67,28 @@ class AVNNmeaLogger(AVNWorker):
   def createFileName(self,dt):
     fstr=str(dt.strftime("%Y-%m-%d")+".nmea")
     return fstr
-    
+
+  def updateConfig(self, param, child=None):
+    super().updateConfig(param, child)
+    filterstr = self.getStringParam("filter") or ''
+    self.nmeaFilter = filterstr.split(",")
+
   def run(self):
-    self.setName(self.getThreadPrefix())
-    trackdir=AVNConfig.getDirWithDefault(self.param,"trackdir")
-    filterstr=self.getStringParam("filter")
-    if filterstr is None or filterstr == "":
-      AVNLog.warn("no filter for NMEA logger, exiting logger")
-      return
+    trackdir=AVNHandlerManager.getDirWithDefault(self.param, "trackdir")
+    filterstr=self.getStringParam("filter") or ''
     feeder=self.findFeeder(self.getStringParam('feederName'))
     if feeder is None:
       raise Exception("%s: cannot find a suitable feeder (name %s)",self.getName(),self.getStringParam("feederName") or "")
     self.feeder=feeder
-    nmeaFilter=filterstr.split(",")
+    self.nmeaFilter=filterstr.split(",")
     if trackdir is None:
       trackwriter=self.findHandlerByName(AVNTrackWriter.getConfigName())
       if trackwriter is not None:
         trackdir=trackwriter.getTrackDir()
       if trackdir is None or not trackdir :
         #2nd try with a default
-        trackdir = AVNConfig.getDirWithDefault(self.param, "trackdir","tracks")
+        trackdir = AVNHandlerManager.getDirWithDefault(self.param, "trackdir", "tracks")
     self.trackdir=trackdir
-    interval=self.getIntParam('interval')
-    maxfiles=100
-    try:
-      mf=self.getIntParam('maxfiles')
-      if mf > 0:
-        maxfiles=mf
-    except:
-      pass
-    self.maxfiles=maxfiles
-    AVNLog.info("starting logger with maxfiles = %d, filter=%s, interval=%ds",maxfiles,filterstr,interval)
     fname=None
     f=None
     lastcleanup=None
@@ -99,6 +96,17 @@ class AVNNmeaLogger(AVNWorker):
     last={}
     initial=True
     while True:
+      interval = self.getIntParam('interval')
+      maxfiles = 100
+      try:
+        mf = self.getIntParam('maxfiles')
+        if mf > 0:
+          maxfiles = mf
+      except:
+        pass
+      self.maxfiles = maxfiles
+      if initial:
+        AVNLog.info("starting logger with maxfiles = %d, filter=%s, interval=%ds", maxfiles, filterstr, interval)
       currentTime=datetime.datetime.utcnow()
       try:
         newFile=False
@@ -144,7 +152,7 @@ class AVNNmeaLogger(AVNWorker):
           f=open(curfname,"a",encoding='utf-8',errors='ignore')
           newFile=False
           self.setInfo('main', "writing to %s"%(curfname,), WorkerStatus.NMEA)
-        seq,data=self.feeder.fetchFromHistory(seq,10,nmeafilter=nmeaFilter)
+        seq,data=self.feeder.fetchFromHistory(seq,10,nmeafilter=self.nmeaFilter)
         if len(data)>0:
           for line in data:
 

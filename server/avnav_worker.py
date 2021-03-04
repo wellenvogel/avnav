@@ -26,6 +26,8 @@
 ###############################################################################
 
 import re
+import traceback
+
 import time
 
 import threading
@@ -42,23 +44,39 @@ class WorkerParameter(object):
   T_BOOLEAN='BOOLEAN'
   T_SELECT='SELECT'
   T_FILTER='FILTER'
-
+  ALL_TYPES=[T_STRING,T_NUMBER,T_BOOLEAN,T_FLOAT,T_SELECT,T_FILTER]
   PREDEFINED_DESCRIPTIONS={
     T_FILTER: ', separated list of sentences either !AIVDM or $RMC - for $ we ignore the 1st 2 characters'
   }
 
-  def __init__(self,name,default=None,type=None,rangeOrList=None,description=None,editable=True):
+  def __init__(self,name,
+               default=None,
+               type=None,
+               rangeOrList=None,
+               description=None,
+               editable=True,
+               mandatory=None,
+               condition=None):
     self.name=name
     self.type=type if type is not None else self.T_STRING
+    if self.type not in self.ALL_TYPES:
+      raise ParamValueError("invalid parameter type %s"%self.type)
     self.default=default
     self.rangeOrList=rangeOrList
     if description is None:
       description=self.PREDEFINED_DESCRIPTIONS.get(type)
     self.description=description or ''
     self.editable=editable
+    self.mandatory=mandatory if mandatory is not None else default is None
+    self.condition=condition #a dict with name:value that must match for visbility
 
   def serialize(self):
     return self.__dict__
+
+  def setValue(self,name,value):
+    if not hasattr(self,name):
+      raise ParamValueError("invalid parameter %s"%name)
+    return self.__setattr__(name,value)
 
   def copy(self):
     return WorkerParameter(self.name,
@@ -66,7 +84,9 @@ class WorkerParameter(object):
                            type=self.type,
                            rangeOrList=[]+self.rangeOrList if self.rangeOrList is not None else None,
                            description=self.description,
-                           editable=self.editable)
+                           editable=self.editable,
+                           mandatory=self.mandatory,
+                           condition=self.condition)
   @classmethod
   def filterNameDef(cls,plist):
     rt={}
@@ -75,18 +95,39 @@ class WorkerParameter(object):
     return rt
 
   @classmethod
-  def updateListFor(cls,plist,name,vlist):
+  def updateParamFor(cls, plist, paramName, vdict):
     for p in plist:
-      if p.name == name:
-        if p.type != cls.T_SELECT:
-          raise ParamValueError("cannot update list at %s, type %s"%(name,p.type))
-        p.rangeOrList=vlist
+      if p.name == paramName:
+        for k,v in vdict.items():
+          if k == 'name':
+            continue
+          p.setValue(k,v)
+        return
+
   @classmethod
-  def checkValueFor(cls,plist,name,value):
+  def checkValuesFor(cls,plist,newParam,existingParam=None):
+    rt={}
+    for k,v in newParam.items():
+      param=next((x for x in plist if x.name == k), None)
+      if param is None:
+        continue
+      rt[k]=param.checkValue(v)
     for p in plist:
-      if p.name == name:
-        return p.checkValue(value)
-    raise ParamValueError("%s not found in parameters"%name)
+      if p.mandatory:
+        if not p.name in rt and (existingParam is None or not p.name in existingParam):
+          raise ParamValueError("missing mandatory parameter %s"%p.name)
+    return rt
+
+  @classmethod
+  def filterEditables(clscls,plist,makeCopy=True):
+    rt=[]
+    for p in plist:
+      if p.editable:
+        if makeCopy:
+          rt.append(p.copy())
+        else:
+          rt.append(p)
+    return rt
 
   @classmethod
   def filterByList(cls,plist,pdict,addDefaults=False):
@@ -123,12 +164,13 @@ class WorkerParameter(object):
       if self.rangeOrList is None:
         raise ValueError("no select list for %s"%self.name)
       for cv in self.rangeOrList:
+        cmp=cv
         if type(cv) is dict:
-          if value == cv.get('value'):
-            return cv
-        else:
-          if value == cv:
-            return value
+          cmp=cv.get('value')
+        if type(value) is str:
+          cmp=str(cmp)
+        if value == cmp:
+          return value
       raise ValueError("value %s for %s not in list %s"%(str(value),self.name,",".join(
         list(map(lambda x:str(x),self.rangeOrList)))))
     if self.type == self.T_FILTER:
@@ -136,6 +178,43 @@ class WorkerParameter(object):
       return str(value)
     return value
 
+class UsedResource(object):
+  T_SERIAL='serial'
+  T_TCP='tcp'
+  T_UDP='udp'
+  T_USB='usb'
+
+  def __init__(self,type,handlerId,value):
+    self.type=type
+    self.handlerId=handlerId
+    self.value=value
+
+  def usingOther(self,used):
+    return self.type == used.type and str(self.value) == str(used.value)
+
+  def usingTypeValue(self,type,value):
+    return self.type == type and str(self.value) == str(value)
+
+  @classmethod
+  def filterByType(cls,ulist,type):
+    return list(filter(lambda x: x.type == type,ulist))
+
+  @classmethod
+  def toPlain(cls,ulist):
+    return list(map(lambda x:x.value,ulist))
+
+  @classmethod
+  def filterListByUsed(cls,type,ilist,used):
+    rt=[]
+    for item in ilist:
+      itemUsed=False
+      for us in used:
+        if us.usingTypeValue(type,item):
+          itemUsed=True
+          break
+      if not itemUsed:
+        rt.append(item)
+    return rt
 
 
 class WorkerStatus(object):
@@ -145,14 +224,14 @@ class WorkerStatus(object):
   NMEA='NMEA'
   ERROR='ERROR'
   ALL_STATES=[INACTIVE,STARTED,RUNNING,NMEA,ERROR]
-  def __init__(self,name,status,info,timeout=None,childId=None):
+  def __init__(self,name,status,info,timeout=None,childId=None,canDelete=False):
     '''
     status for the status page
     @param name:
     @param status:
     @param info:
     @param timeout:
-    @param childId: if this is set to id:type this child can be edited
+    @param childId: if this is set to some id this child can be edited
     '''
     if not status in self.ALL_STATES:
       status=self.INACTIVE
@@ -162,6 +241,7 @@ class WorkerStatus(object):
     self.modified=time.time()
     self.timeout=timeout
     self.id=childId
+    self.canDelete=canDelete
 
   def update(self,status,info,timeout=None):
     old=self.status
@@ -192,6 +272,8 @@ class WorkerStatus(object):
       'info':self.info,
       'status':self.status,
       'name':self.name,
+      'canDelete':self.canDelete,
+      'canEdit': self.id is not None
     }
     if self.id is not None:
       rt['id']=self.id
@@ -200,13 +282,38 @@ class WorkerStatus(object):
   def __str__(self) -> str:
     return "STATUS[%s] %s, %s"%(self.name,self.status,self.info)
 
+class WorkerId(object):
+  def __init__(self):
+    self.id=0
+    self.lock=threading.Lock()
+  def next(self):
+    self.lock.acquire()
+    try:
+      self.id+=1
+      return self.id
+    finally:
+      self.lock.release()
 
-class AVNWorker(threading.Thread):
+
+
+class AVNWorker(object):
+  DEFAULT_CONFIG_PARAM = [
+    WorkerParameter('name',default='',type=WorkerParameter.T_STRING)
+  ]
+  ENABLE_CONFIG_PARAM=[
+    WorkerParameter('enabled',default=True,type=WorkerParameter.T_BOOLEAN)
+  ]
   handlerListLock=threading.Lock()
   """a base class for all workers
      this provides some config functions and a common interfcace for handling them"""
   allHandlers=[] #the list of all instantiated handlers
+  __workerId=WorkerId()
   Type=Enum(['DEFAULT','FEEDER','HTTPSERVER'])
+
+
+  @classmethod
+  def getNextWorkerId(cls):
+    return cls.__workerId.next()
 
   @classmethod
   def findHandlerByTypeAndName(cls, type, name=None):
@@ -274,54 +381,62 @@ class AVNWorker(threading.Thread):
   @classmethod
   def canDeleteHandler(cls):
     return False
+  @classmethod
+  def canDisable(cls):
+    return False
 
   @classmethod
-  def getEditableParameters(cls,child=None,makeCopy=True):
+  def getEditableParameters(cls, makeCopy=True,id=None):
     '''
     get the parameters we can edit
-    @param child: a string type:id to identify the child
     @return:
     '''
     if not cls.canEdit():
       return None
-    if child is not None:
-      if ':' in child:
-        cp=child.split(':',1)
-        child=cp[0]
-    parameterDescriptions= cls.getConfigParam(child,forEdit=True)
-    if type(parameterDescriptions) is not list:
-      return None
-    rt=[]
-    for pd in parameterDescriptions:
-      if not pd.editable:
-        continue
-      if makeCopy:
-        rt.append(pd.copy())
-      else:
-        rt.append(pd)
-    return rt
+    return WorkerParameter.filterEditables(cls.getConfigParamCombined(),makeCopy=makeCopy)
+
+
+  @classmethod
+  def removeHandler(cls,handlerId):
+    handler=cls.findHandlerById(handlerId)
+    if handler is None:
+      raise Exception("handler for id %s not found"%str(handlerId))
+    if not handler.canDeleteHandler():
+      raise Exception("handler %s cannot be deleted"%str(handlerId))
+    cls.handlerListLock.acquire()
+    try:
+      cls.allHandlers.remove(handler)
+    finally:
+      cls.handlerListLock.release()
+    handler.stop()
+    handler.configChanger.removeSelf()
 
   
   def __init__(self,cfgparam):
     self.handlerListLock.acquire()
-    id=0
     try:
       self.allHandlers.append(self) #fill the static list of handlers
-      id=len(self.allHandlers) - 1
     finally:
       self.handlerListLock.release()
-    self.id=id
+    self.id=self.getNextWorkerId()
     self.param=cfgparam
     self.status=False
-    threading.Thread.__init__(self)
-    self.setDaemon(True)
-    self.setName(self.getName())
-    self.status={'main':WorkerStatus('main',WorkerStatus.STARTED,"started")}
+    self.status={'main':WorkerStatus('main',WorkerStatus.STARTED,"created")}
     self.type=self.Type.DEFAULT
     self.feeder=None
     self.configChanger=None #reference for writing back to the DOM
-    self._stop=False
     self.condition=threading.Condition()
+    self.currentThread=None
+    self.name=self.getName()
+
+
+  def setNameIfEmpty(self,name):
+    if self.getParamValue('name') is not None:
+      return
+    self.name=name
+    if self.currentThread is not None:
+      self.currentThread.setName(name)
+
   def setConfigChanger(self, changer):
     self.configChanger=changer
   def getStatusProperties(self):
@@ -340,14 +455,14 @@ class AVNWorker(threading.Thread):
       return {'name':self.getStatusName(),'items':rta}
     except:
       return {'name':self.getStatusName(),'items':[],'error':"no info available"}
-  def setInfo(self,name,info,status,childId=None):
+  def setInfo(self,name,info,status,childId=None,canDelete=False):
     existing=self.status.get(name)
     if existing:
       if existing.update(status,info):
         AVNLog.info("%s",str(existing))
         return True
     else:
-      ns=WorkerStatus(name,status,info,childId=childId)
+      ns=WorkerStatus(name,status,info,childId=childId,canDelete=canDelete)
       self.status[name]=ns
       AVNLog.info("%s",str(ns))
   def deleteInfo(self,name):
@@ -365,7 +480,7 @@ class AVNWorker(threading.Thread):
       raise Exception("cannot return child parameters")
     try:
       if filtered:
-        return WorkerParameter.filterByList(self.getConfigParam(), self.param)
+        return WorkerParameter.filterByList(self.getConfigParamCombined(), self.param)
       else:
         return self.param
     except:
@@ -415,53 +530,71 @@ class AVNWorker(threading.Thread):
         raise e
   def isDisabled(self):
     """is this handler set to disabled?"""
+    if not self.canDisable() and not self.canDeleteHandler():
+      return False
     en=self.getParamValue("enabled")
     if en is None:
       en="True"
     return str(en).upper()!='TRUE'
 
+  def getEditableChildParameters(self,child):
+    raise Exception("getEditableChildParameters not available for %s"%self.getName())
+  def canDeleteChild(self,child):
+    return False
 
-
-  def checkConfig(self,param,child=None):
-    '''
-    check the config valaues against the defined ones
-    and return a dict with the converted values
-    @param param:
-    @return:
-    '''
-    cfgs=self.getEditableParameters(child)
-    if cfgs is None:
-      raise Exception("no editable parameters")
-    rt={}
-    for k,v in param.items():
-      cv=WorkerParameter.checkValueFor(cfgs,k,v)
-      rt[k]=cv
-    return rt
   def updateConfig(self,param,child=None):
     '''
     change of config parameters
     the handler must update its data and store the values using changeMultiConfig, changeChildConfig
     @param param: a dictonary with the keyes matching the keys from getEditableParameters
     @type param: dict
-    @param child: a string id:type or None
+    @param child: a child id or None
     @return:
     '''
     if child is not None:
       raise Exception("cannot modify child %s"%str(child))
-    checked = self.checkConfig(param)
-    self.changeMultiConfig(checked)
+    checked = WorkerParameter.checkValuesFor(self.getEditableParameters(id=self.id), param, self.getParam())
+    newEnable = None
+    if 'enabled' in checked:
+      newEnable=checked.get('enabled',True)
+      if type(newEnable) is str:
+        newEnable=newEnable.upper() != 'FALSE'
+    if newEnable == True or not self.isDisabled():
+      checkConfig=self.param.copy()
+      checkConfig.update(checked)
+      self.checkConfig(checkConfig)
+    rt = self.changeMultiConfig(checked)
+    if self.canDisable() or self.canDeleteHandler():
+        if newEnable != self.isDisabled():
+          if not newEnable:
+            AVNLog.info("handler disabled, stopping")
+            self.stop()
+          else:
+            AVNLog.info("handler enabled, starting")
+            self.startThread()
+    return rt
 
+  def deleteChild(self,child):
+    raise Exception("delete child not allowed for %s"%self.getName())
 
   def shouldStop(self):
-    return self._stop
-  #stop any child process (will be called by signal handler)
-  def stop(self):
-    self._stop=True
+    current=self.currentThread
+    if current is None:
+      return True
+    if threading.get_ident() != current.ident:
+      return True
+    return False
+
+  def wakeUp(self):
     self.condition.acquire()
     try:
       self.condition.notifyAll()
     finally:
       self.condition.release()
+  #stop any child process (will be called by signal handler)
+  def stop(self):
+    self.currentThread=None
+    self.wakeUp()
 
 
   def wait(self,time):
@@ -485,17 +618,6 @@ class AVNWorker(threading.Thread):
       return "%s(%s)"%(rt,n)
     return rt
 
-  def getThreadPrefix(self):
-    '''
-    nicely compute the name prefix for a thread
-    if we have the default name (just from the config name) - avoid to have this twice
-    @return:
-    '''
-    n=self.getName()
-    if "AVN%s"%n == self.getConfigName():
-      return "[ %s]-%s"%(AVNLog.getThreadId(),n)
-    else:
-      return "[ %s]-%s-%s" % (AVNLog.getThreadId(), self.getConfigName(),n)
 
   def getSourceName(self,defaultSuffix=None):
     '''
@@ -534,6 +656,7 @@ class AVNWorker(threading.Thread):
         self.param[k] = v
     if hasChanges:
       self.configChanger.handleChange()
+    return hasChanges
 
   def changeChildConfig(self,childName,childIndex,name,value,delayWriteOut=False):
     if self.param is None:
@@ -567,7 +690,7 @@ class AVNWorker(threading.Thread):
       return
     self.configChanger.handleChange()
 
-  def removeChildConfig(self,childName,childIndex):
+  def removeChildConfig(self,childName,childIndex,delayWriteOut=False):
     if self.param is None:
       raise Exception("unable to set param")
     if self.configChanger is None:
@@ -580,24 +703,37 @@ class AVNWorker(threading.Thread):
       raise Exception("param %s is no childlist"%childName)
     if childIndex < 0 or childIndex >= len(childList):
       raise Exception("trying to delete a non existing child %s:%d"%(childName,childIndex))
-    self.configChanger.removeChild(childName,childIndex)
+    self.configChanger.removeChild(childName,childIndex,delayUpdate=delayWriteOut)
     childList.pop(childIndex)
 
   #get the XML tag in the config file that describes this worker
   @classmethod
   def getConfigName(cls):
     return cls.__name__
+
+  @classmethod
+  def getConfigParamCombined(cls,child=None):
+    if child is None:
+      rt=cls.getConfigParam()
+      if type(rt) is dict:
+        rt.update({'name':''})
+        return rt
+      else:
+        if cls.canDeleteHandler() or cls.canDisable():
+          rt=cls.ENABLE_CONFIG_PARAM+rt
+        return cls.DEFAULT_CONFIG_PARAM+rt
+    else:
+      return cls.getConfigParam(child)
+
   #return the default cfg values
   #if the parameter child is set, the parameter for a child node
   #must be returned, child nodes are added to the parameter dict
   #as an entry with childnodeName=[] - the child node configs being in the list
   @classmethod
-  def getConfigParam(cls, child=None, forEdit=False):
+  def getConfigParam(cls, child=None):
     raise Exception("getConfigParam must be overwritten")
 
-  DEFAULT_CONFIG_PARAM={
-    'name':''
-  }
+
 
   @classmethod
   def preventMultiInstance(cls):
@@ -624,7 +760,6 @@ class AVNWorker(threading.Thread):
         else:
           sparam[k] = v.value
       return sparam
-    sparam.update(cls.DEFAULT_CONFIG_PARAM)
     for k in list(sparam.keys()):
       dv=sparam[k]
       if (isinstance(dv,str)):
@@ -640,12 +775,48 @@ class AVNWorker(threading.Thread):
         else:
           sparam[k] = v.value
     return sparam
-  
+
+  def run(self):
+    raise Exception("run must be overloaded")
+
+  def _runInternal(self):
+    AVNLog.info("run started")
+    try:
+      self.run()
+      self.setInfo('main','handler stopped',WorkerStatus.INACTIVE)
+    except Exception as e:
+      self.setInfo('main','handler stopped with %s'%str(e),WorkerStatus.ERROR)
+      AVNLog.error("handler run stopped with exception %s",traceback.format_exc())
+    self.currentThread=None
+
+  def checkConfig(self,param):
+    '''
+    will be called whenever new config parameters
+    are set
+    give the handler a chance to throw an exception
+    @param param:
+    @return:
+    '''
+    pass
+  def startThread(self):
+    AVNLog.info("starting %s with config %s", self.getName(), self.getConfigString())
+    self.currentThread = threading.Thread(target=self._runInternal, name=self.name or '')
+    self.currentThread.setDaemon(True)
+    self.currentThread.start()
+
   def startInstance(self,navdata):
-    AVNLog.info("starting %s with config %s",self.getName(),self.getConfigString())
     self.navdata=navdata
     self.feeder = self.findFeeder(self.getStringParam('feederName'))
-    self.start()
+    try:
+      self.checkConfig(self.param)
+    except Exception as e:
+      self.setInfo('main','%s'%str(e),WorkerStatus.ERROR)
+      raise
+    if not self.isDisabled():
+      self.startThread()
+    else:
+      self.setInfo('main','disabled',WorkerStatus.INACTIVE)
+      AVNLog.info("not starting %s (disabled) with config %s", self.getName(), self.getConfigString())
 
   def getConfigString(self,cfg=None):
     rt=""
@@ -670,6 +841,52 @@ class AVNWorker(threading.Thread):
       raise Exception("no feeder in %s"%(self.getName()))
     self.feeder.addNMEA(data,source,addCheckSum)
 
+  def getUsedResources(self,type=None):
+    '''
+    return a list of UsedResource
+    @param type:
+    @return:
+    '''
+    return []
+
+  @classmethod
+  def findUsersOf(cls,type,ownId=None,value=None,toPlain=False,onlyRunning=True):
+    used=[]
+    for handler in cls.getAllHandlers():
+      if onlyRunning and handler.currentThread is None:
+        continue
+      if handler.getId() == ownId:
+        continue
+      used+=handler.getUsedResources(type)
+    if value is None:
+      if toPlain:
+        return UsedResource.toPlain(used)
+      return used
+    rt=[]
+    for us in used:
+      if us.usingTypeValue(type,value):
+        rt.append(us)
+    if toPlain:
+      return UsedResource.toPlain(rt)
+    return rt
+
+  @classmethod
+  def checkUsedResource(cls,type,ownId,value,prefix=None):
+    others=cls.findUsersOf(type,ownId=ownId,value=value)
+    if len(others) >0:
+      if prefix is None:
+        prefix = others[0].type
+      h=cls.findHandlerById(others[0].handlerId)
+      if h is None:
+        name='handler %s'%others[0].handlerId
+      else:
+        name=h.getName()
+      raise Exception("%s %s already in use by %s(%s)"%(
+        prefix,
+        str(others[0].value),
+        name,
+        str(others[0].handlerId)
+      ))
 
   def getHandledCommands(self):
     """get the API commands that will be handled by this instance

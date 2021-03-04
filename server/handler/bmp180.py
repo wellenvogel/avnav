@@ -145,38 +145,63 @@ class AVNBMP180Reader(AVNWorker):
     return "AVNBMP180Reader"
 
   @classmethod
-  def getConfigParam(cls, child=None, forEdit=False):
+  def getConfigParam(cls, child=None):
     if not child is None:
       return None
-    rt = {
-      'feederName': '',  # if this one is set, we do not use the defaul feeder but this one
-      'interval': '5',
-      'writeMda': 'true',
-      'writeXdr': 'true',
-      'addr'    : '0x77'
-    }
+    rt = [
+      WorkerParameter('feederName', '', editable=False),
+      # if this one is set, we do not use the defaul feeder but this one
+      WorkerParameter('interval', '5',
+                      type=WorkerParameter.T_FLOAT,
+                      description="interval in seconds between measures"),
+      WorkerParameter('writeMda', True,
+                      type=WorkerParameter.T_BOOLEAN,
+                      description="write MDA records"),
+      WorkerParameter('writeXdr', True,
+                      type=WorkerParameter.T_BOOLEAN,
+                      description="write XDR records"),
+      WorkerParameter('namePress', 'Barometer',
+                      description="XDR transducer name for pressure"),
+      WorkerParameter('nameTemp', 'TempAir',
+                      description="XDR transducer name for temperature"),
+      WorkerParameter('addr', '0x77',
+                      description='I2C address for the BME in 0xnn notation')
+    ]
     return rt
 
+  @classmethod
+  def canEdit(cls):
+    return hasBMP180
+
+  @classmethod
+  def canDeleteHandler(cls):
+    return hasBMP180
+
+  @classmethod
+  def canDisable(cls):
+    return True
 
   def isDisabled(self):
     if not hasBMP180:
       return True
-    return super(AVNBMP180Reader, self).isDisabled()
+    return super().isDisabled()
 
 
   # thread run method - just try forever
   def run(self):
     global bus
-    if hasBMP180:
-      bus = smbus.SMBus(1)  # Rev 2 Pi, Pi 2 & Pi 3 uses bus 1
-    self.setName(self.getThreadPrefix())
+    try:
+      if hasBMP180:
+        bus = smbus.SMBus(1)  # Rev 2 Pi, Pi 2 & Pi 3 uses bus 1
+    except Exception as e:
+      raise Exception("unable to get smbus #1: %s"%str(e))
     self.setInfo('main', "reading BMP180", WorkerStatus.NMEA)
-    addr = int(self.getStringParam('addr'),16)
-    (chip_id,chip_version) = readBmp180Id(addr)
-    info = "Using BMP180 Chip: %d Version: %d " % (chip_id,chip_version)
-    AVNLog.info(info)
-    source=self.getSourceName(addr)
     while True:
+      addr = int(self.getStringParam('addr'), 16)
+      (chip_id, chip_version) = readBmp180Id(addr)
+      info = "Using BMP180 Chip: %d Version: %d " % (chip_id, chip_version)
+      AVNLog.info(info)
+      source = self.getSourceName(addr)
       try:
         temperature,pressure = readBmp180(addr)
         if self.getBoolParam('writeMda'):
@@ -189,11 +214,12 @@ class AVNBMP180Reader(AVNWorker):
           AVNLog.debug("BMP180:MTA %s", mta)
           self.writeData(mta,source,addCheckSum=True)
         if self.getBoolParam('writeXdr'):
-          xdr = '$AVXDR,P,%.5f,B,Barometer' % (pressure / 1000.)
+          tn = self.param.get('namePress', 'Barometer')
+          xdr = '$AVXDR,P,%.5f,B,%s' % (pressure / 1000.,tn)
           AVNLog.debug("BMP180:XDR %s", xdr)
           self.writeData(xdr,source,addCheckSum=True)
-
-          xdr = '$AVXDR,C,%.2f,C,TempAir' % (temperature)
+          tn = self.param.get('nameTemp', 'TempAir')
+          xdr = '$AVXDR,C,%.2f,C,%s' % (temperature,tn)
           AVNLog.debug("BMP180:XDR %s", xdr)
           self.writeData(xdr,source,addCheckSum=True)
       except:
@@ -201,7 +227,7 @@ class AVNBMP180Reader(AVNWorker):
       wt = self.getFloatParam("interval")
       if not wt:
         wt = 5.0
-      time.sleep(wt)
+      self.wait(wt)
 
 
 avnav_handlerList.registerHandler(AVNBMP180Reader)

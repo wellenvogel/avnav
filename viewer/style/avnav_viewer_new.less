@@ -152,13 +152,16 @@ html,body {
 .overlay_cover_active {
   background-color: rgba(0, 0, 0, 0.35);
   display: block;
-  position: absolute;
+  position: fixed;
   left: 0;
   top: 0;
   right: 0;
   bottom: 0;
   overflow: hidden;
   z-index: 120;
+  .flex-display();
+  .flex-justify-content(space-around);
+  .flex-align-items(center);
 }
 
 
@@ -179,6 +182,8 @@ html,body {
     font-size: 1em;
   }
   overflow: auto;
+  max-height: 100%;
+  max-width: 100%;
   .flexInner{
     .flex-display();
     .flex-direction(column);
@@ -217,6 +222,8 @@ html,body {
     margin-right: 0.5em;
     font-size: 0.8em;
     flex-shrink: 0;
+    overflow-x: hidden;
+    text-overflow: fade;
   }
 
 
@@ -263,6 +270,11 @@ html,body {
   .smallButton{
     width: 1.5em;
     height: 1.5em;
+  }
+  .missing {
+    input, .input {
+      .nightBorderFade(@colorRed);
+    }
   }
 
 }
@@ -450,6 +462,29 @@ html,body {
   }
 }
 
+.HelpDialog{
+  max-width: 70vw;
+}
+
+.EditHandlerDialog{
+  .inputLabel{
+    width: 9em;
+  }
+}
+
+.LogDialog{
+  .logDisplay {
+    overflow-y: auto;
+    white-space: pre-line;
+  }
+  .downloadFrame{
+    width:0;
+    height:0;
+    border:0;
+  }
+  max-width: 90vw;
+  max-height: 90vh;
+}
 
 //-- Color Picker
 
@@ -1055,16 +1090,30 @@ span.valuePrefix{
 }
 
 #statuspage{
+  .editIcon {
+    margin-left: 1em;
+  }
   .status {
     .listEntry();
     .flex-direction(column);
     padding-left: 1em;
     margin-top: 5px;
     line-height: 2em;
+    .statusHeading{
+      .flex-display();
+      .flex-direction(row);
+      &.disabled{
+        .mdText2();
+      }
+    }
   }
   .childStatus {
     padding-left: 1.5em;
     margin-top: 3px;
+    .flex-display();
+    .flex-direction(row);
+    .flex-align-items(center);
+    .flex-wrap(wrap);
     .mdText2();
     img {
       width: 1em;

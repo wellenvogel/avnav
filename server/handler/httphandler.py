@@ -10,6 +10,7 @@ import traceback
 import urllib.request, urllib.parse, urllib.error
 import urllib.parse
 
+import avnav_handlerList
 from avnav_store import AVNStore
 from avnav_util import AVNUtil, AVNLog
 from avnav_worker import AVNWorker
@@ -57,15 +58,11 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
     self.wbufsize=-1
     self.id=None
     self.getRequestParam=AVNUtil.getHttpRequestParam
+    threading.current_thread().setName("HTTPHandler")
     AVNLog.ld("receiver thread started",client_address)
     http.server.SimpleHTTPRequestHandler.__init__(self, request, client_address, server)
 
   def log_message(self, format, *args):
-    if self.id is None:
-      self.id=AVNLog.getThreadId()
-      if self.id is None:
-        self.id="?"
-      threading.current_thread().setName("[%s]HTTPHandler"%(self.id))
     AVNLog.debug(format,*args)
 
   def do_POST(self):
@@ -281,8 +278,6 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
         rtj=self.handleAISRequest(requestParam)
       elif requestType=='status':
         rtj=self.handleStatusRequest(requestParam)
-      elif requestType=='config':
-        rtj = self.handleConfigRequest(requestParam)
       elif requestType=='debuglevel' or requestType=='loglevel':
         rtj=self.handleDebugLevelRequest(requestParam)
       elif requestType=='listdir' or requestType == 'list':
@@ -408,47 +403,39 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
 
   def handleStatusRequest(self,requestParam):
     rt=[]
-    for handler in AVNWorker.getAllHandlers(True):
-      entry={'configname':handler.getConfigName(),
-             'config': handler.getParam(),
-             'name':handler.getStatusName(),
-             'info':handler.getInfo(),
-             'disabled': handler.isDisabled(),
-             'properties':handler.getStatusProperties() if not handler.isDisabled() else {},
-             'canDelete':handler.canDeleteHandler(),
-             'id':handler.getId() if handler.canEdit() else None}
-      rt.append(entry)
+    allHandlers=AVNWorker.getAllHandlers(True)
+    #find for each type the first id
+    typIds={}
+    for h in allHandlers:
+      type=h.getConfigName()
+      if typIds.get(type) is None:
+        typIds[type]=h.getId()
+    #get the sorted list of typeIds
+    typeList=sorted(typIds.keys(),key=lambda k: typIds[k])
+    for type in typeList:
+      for handler in AVNWorker.getAllHandlers(True):
+        if handler.getConfigName() != type: continue
+        entry={'configname':handler.getConfigName(),
+            'config': handler.getParam(),
+            'name':handler.getStatusName(),
+            'info':handler.getInfo(),
+            'disabled': handler.isDisabled(),
+            'properties':handler.getStatusProperties() if not handler.isDisabled() else {},
+            'canDelete':handler.canDeleteHandler(),
+            'canEdit': handler.canEdit(),
+            'id':handler.getId()
+              }
+        rt.append(entry)
     return json.dumps({'handler':rt},cls=Encoder)
 
-  def handleConfigRequest(self,requestParam):
-    rt={'status':'OK'}
-    try:
-      command=self.getRequestParam(requestParam,'command',mantadory=True)
-      id=self.getRequestParam(requestParam,'handlerId',mantadory=True)
-      child=self.getRequestParam(requestParam,'child',mantadory=False)
-      handler=AVNWorker.findHandlerById(int(id))
-      if handler is None:
-        raise Exception("unable to find handler for id %s"%id)
-      if command == 'getEditables':
-        data=handler.getEditableParameters(child)
-        if data is not None:
-          rt['data']=data
-          rt['values']=handler.getParam(child,filtered=True)
-      elif command=='setConfig':
-        values=self.getRequestParam(requestParam,'_json',mantadory=True)
-        decoded=json.loads(values)
-        handler.updateConfig(decoded,child)
-        AVNLog.info("updated %s, new config %s", handler.getName(), handler.getConfigString())
-      else:
-        raise Exception("unknown command %s"%command)
-      return json.dumps(rt,cls=Encoder)
-    except Exception as e:
-      return json.dumps({'status':str(e)},cls=Encoder)
   def handleDebugLevelRequest(self,requestParam):
     rt={'status':'ERROR','info':'missing parameter'}
     level=self.getRequestParam(requestParam,'level')
+    timeout = self.getRequestParam(requestParam, 'timeout',mantadory=False)
+    if timeout is not None:
+      timeout=float(timeout)
     if not level is None:
-      crt=AVNLog.changeLogLevel(level)
+      crt=AVNLog.changeLogLevel(level,timeout)
       if crt:
         rt['status']='OK'
         rt['info']='set loglevel to '+str(level)
@@ -476,13 +463,13 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
       wbytes=data
     else:
       wbytes=data.encode('utf-8')
-    self.send_header("Content-Length", len(wbytes))
+    self.send_header("Content-Length", str(len(wbytes)))
     self.send_header("Last-Modified", self.date_time_string())
     self.end_headers()
     self.wfile.write(wbytes)
 
   def writeFromDownload(self,download,filename=None,noattach=False):
-    # type: (AVNDownload, basestring,bool) -> object or None
+    # type: (AVNDownload, str,bool) -> object or None
     self.send_response(200)
     size = download.getSize()
     if filename is not None and filename != "" and not noattach:
@@ -529,14 +516,14 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
         self.send_response(200)
         fname = self.getRequestParam(requestParam, "filename")
         if fname is not None and fname != "" and self.getRequestParam(requestParam,'noattach') is None:
-          self.send_header("Content-Disposition", "attachment")
+          self.send_header("Content-Disposition", 'attachment;filename="%s"'%fname)
         self.send_header("Content-type", dl['mimetype'])
         self.send_header("Content-Length", dl['size'])
         self.send_header("Last-Modified", self.date_time_string())
         self.end_headers()
         try:
           self.writeStream(dl['size'],dl['stream'])
-        except:
+        except Exception as e:
           try:
             dl['stream'].close()
           except:
@@ -546,7 +533,7 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
     except Exception as e:
       if self.getRequestParam(requestParam,'noattach') is None:
         #send some empty data
-        data = io.StringIO("error: %s"%e.message)
+        data = io.StringIO("error: %s"%str(e))
         data.seek(0)
         self.send_response(200)
         self.send_header("Content-type", "application/octet-stream")
@@ -649,6 +636,7 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
       'uploadImport': True,
       'uploadOverlays': True,
       'uploadTracks': True,
-      'canConnect': True
+      'canConnect': True,
+      'config': True
     }
     return json.dumps({'status':'OK','data':rt},cls=Encoder)

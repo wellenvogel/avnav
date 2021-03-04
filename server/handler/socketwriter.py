@@ -40,7 +40,7 @@ class AVNSocketWriter(AVNWorker,SocketReader):
     return "AVNSocketWriter"
   
   @classmethod
-  def getConfigParam(cls, child=None, forEdit=False):
+  def getConfigParam(cls, child=None):
     if child is None:
       
       rt=[
@@ -51,12 +51,13 @@ class AVNSocketWriter(AVNWorker,SocketReader):
           WorkerParameter('feederName','',editable=False),
           WorkerParameter('filter','',type=WorkerParameter.T_FILTER,
                           description=', separated list of sentences either !AIVDM or $RMC - for $ we ignore the 1st 2 characters'),
-          WorkerParameter('address','',type=WorkerParameter.T_STRING,
-                          description='the local bind address'),
+          WorkerParameter('address','0.0.0.0',type=WorkerParameter.T_STRING,
+                          description='the local bind address (0.0.0.0 for external access)'),
           WorkerParameter('read',True,type=WorkerParameter.T_BOOLEAN,
                           description='allow for also reading data from connected devices'),
           WorkerParameter('readerFilter','',type=WorkerParameter.T_FILTER,
-                          description='NMEA filter for incoming data'),
+                          description='NMEA filter for incoming data',
+                          condition={'read':True}),
           WorkerParameter('minTime',50,type=WorkerParameter.T_FLOAT,
                           description='if this is set, wait this time before reading new data (ms)'),
           WorkerParameter('blackList','',description=', separated list of sources we do not send out')
@@ -79,11 +80,12 @@ class AVNSocketWriter(AVNWorker,SocketReader):
     self.listener=None
     self.addrmap = {}
     self.maplock = threading.Lock()
+    self.startSequence=0
 
-  
-  #make some checks when we have to start
-  #we cannot do this on init as we potentially have to find the feeder...
-  def start(self):
+  def startInstance(self, navdata):
+    self.startSequence+=1
+    #make some checks when we have to start
+    #we cannot do this on init as we potentially have to find the feeder...
     feeder=self.findFeeder(self.getStringParam('feederName'))
     if feeder is None:
       raise Exception("%s: cannot find a suitable feeder (name %s)",self.getName(),self.getStringParam("feederName") or "")
@@ -93,15 +95,20 @@ class AVNSocketWriter(AVNWorker,SocketReader):
     baseConfig=self.findHandlerByName('AVNConfig')
     if baseConfig:
       self.version=baseConfig.getVersion()
-    AVNWorker.start(self) 
+    super().startInstance(navdata)
 
 
+  def sequenceChanged(self,seq):
+    '''
+    used by client threads to check for restart
+    @param seq:
+    @return:
+    '''
+    return self.startSequence != seq
 
-  #return True if added
-
-
-
-  def updateConfig(self, param):
+  def updateConfig(self, param,child=None):
+    if 'port' in param:
+      self.checkUsedResource(UsedResource.T_TCP,self.id,param['port'])
     super().updateConfig(param)
     self._closeSockets()
 
@@ -131,12 +138,15 @@ class AVNSocketWriter(AVNWorker,SocketReader):
   
 
   #the writer for a connected client
-  def client(self,socket,addr):
+  def client(self,socket,addr,startSequence):
     infoName="SocketWriter-%s"%(str(addr),)
-    self.setName("%s-Writer %s"%(self.getThreadPrefix(),str(addr)))
     self.setInfo(infoName,"sending data",WorkerStatus.RUNNING)
     if self.getBoolParam('read',False):
-      clientHandler=threading.Thread(target=self.clientRead,args=(socket, addr))
+      clientHandler=threading.Thread(
+        target=self.clientRead,
+        args=(socket, addr,startSequence),
+        name="%s-clientread-%s"%(self.getName(),str(addr))
+      )
       clientHandler.daemon=True
       clientHandler.start()
     filterstr=self.getStringParam('filter')
@@ -146,7 +156,7 @@ class AVNSocketWriter(AVNWorker,SocketReader):
     try:
       seq=0
       socket.sendall(("avnav_server %s\r\n"%(self.version)).encode('utf-8'))
-      while not self.shouldStop() and socket.fileno() >= 0:
+      while not self.sequenceChanged(startSequence) and socket.fileno() >= 0:
         hasSend=False
         seq,data=self.feeder.fetchFromHistory(seq,10,nmeafilter=filter,includeSource=True)
         if len(data)>0:
@@ -161,14 +171,14 @@ class AVNSocketWriter(AVNWorker,SocketReader):
           socket.getpeername()
     except Exception as e:
       AVNLog.info("exception in client connection %s",traceback.format_exc())
-    AVNLog.info("client disconnected")
+    AVNLog.info("client disconnected or stop received")
     socket.close()
     self.removeHandler(addr)
     self.deleteInfo(infoName)
 
-  def clientRead(self,socket,addr):
+  def clientRead(self,socket,addr,startSequence):
     infoName="SocketReader-%s"%(str(addr),)
-    threading.currentThread().setName("%s-Reader-%s"%(self.getThreadPrefix(),str(addr)))
+    threading.currentThread().setName("%s-Reader-%s"%(self.getName(),str(addr)))
     #on each newly connected socket we recompute the filter
     filterstr=self.getStringParam('readerFilter')
     filter=None
@@ -190,7 +200,13 @@ class AVNSocketWriter(AVNWorker,SocketReader):
     if (self.getIntParam('minTime')):
       time.sleep(float(self.getIntParam('minTime'))/1000)
 
+  def getUsedResources(self, type=None):
+    if type != UsedResource.T_TCP and type is not None:
+      return []
+    return [UsedResource(UsedResource.T_TCP,self.id,self.getIntParam('port'))]
+
   def _closeSockets(self):
+    self.startSequence+=1
     try:
       self.listener.close()
     except:
@@ -209,9 +225,14 @@ class AVNSocketWriter(AVNWorker,SocketReader):
     super().stop()
     self._closeSockets()
 
+  def checkConfig(self, param):
+    if 'port' in param:
+      self.checkUsedResource(UsedResource.T_TCP,self.id,param.get('port'))
+
   #this is the main thread - listener
   def run(self):
-    self.setName("%s-listen"%(self.getThreadPrefix()))
+    self.checkUsedResource(UsedResource.T_TCP,self.id,self.getParamValue('port'))
+    self.setNameIfEmpty("%s-%s"%(self.getName(),str(self.getParamValue('port'))))
     self.wait(2)
     init=True
     self.listener=None
@@ -235,7 +256,11 @@ class AVNSocketWriter(AVNWorker,SocketReader):
           outsock.settimeout(None)
           allowAccept=self.checkAndAddHandler(addr,outsock)
           if allowAccept:
-            clientHandler=threading.Thread(target=self.client,args=(outsock, addr))
+            clientHandler=threading.Thread(
+              target=self.client,
+              args=(outsock, addr,self.startSequence),
+              name=("%s-client-%s"%(self.getName(),str(addr)))
+            )
             clientHandler.daemon=True
             clientHandler.start()
           else:

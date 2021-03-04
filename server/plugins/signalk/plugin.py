@@ -15,6 +15,22 @@ except:
 
 from avnav_api import AVNApi
 
+class Config(object):
+  def __init__(self,api):
+    self.port = 3000
+    self.period = 1000
+    self.chartQueryPeriod = 10
+    port = api.getConfigValue('port', '3000')
+    self.port = int(port)
+    period = api.getConfigValue('period', '1000')
+    self.period = int(period) / 1000
+    self.expiryPeriod = api.getExpiryPeriod()
+    if (self.period > self.expiryPeriod):
+      self.period = self.expiryPeriod
+    self.skHost = api.getConfigValue('host', 'localhost')
+    self.chartQueryPeriod = int(api.getConfigValue('chartQueryPeriod', '10000')) / 1000
+    self.proxyMode = api.getConfigValue('proxyMode', 'sameHost')
+    self.useWebsockets = api.getConfigValue('useWebsockets', 'true').lower() == 'true'
 
 class Plugin(object):
   PATH="gps.signalk"
@@ -36,6 +52,46 @@ class Plugin(object):
  </TileMapService>
 
   """
+  CONFIG=[
+        {
+          'name':'port',
+          'description':'set to signalk port',
+          'default':'3000',
+          'type': 'NUMBER'
+        },
+        {
+          'name': 'host',
+          'description': 'set to signalk host',
+          'default': 'localhost'
+        },
+        {
+          'name':'period',
+          'description':'query period in ms',
+          'default':'1000',
+          'type':'NUMBER'
+        },
+        {
+          'name': 'chartQueryPeriod',
+          'description': 'charts query period in ms, 0 to disable',
+          'default': '10000',
+          'type':'NUMBER'
+        },
+        {
+          'name': 'chartProxyMode',
+          'description': 'proxy tile requests: never,always,sameHost',
+          'default': 'sameHost',
+          'type': 'SELECT',
+          'rangeOrList':['never','always','sameHost']
+        },
+        {
+          'name': 'useWebsockets',
+          'description': 'use websockets if the package is available - true or false',
+          'default': True,
+          'type': 'BOOLEAN'
+
+        }
+        ]
+
 
   @classmethod
   def pluginInfo(cls):
@@ -51,44 +107,7 @@ class Plugin(object):
     return {
       'description': 'a plugin that fetches vessels data from signalk',
       'version': '1.0',
-      'config':[
-        {
-          'name':'enabled',
-          'description':'set to true to enable plugin',
-          'default':'false'
-        },
-        {
-          'name':'port',
-          'description':'set to signalk port',
-          'default':'3000'
-        },
-        {
-          'name': 'host',
-          'description': 'set to signalk host',
-          'default': 'localhost'
-        },
-        {
-          'name':'period',
-          'description':'query period in ms',
-          'default':'1000'
-        },
-        {
-          'name': 'chartQueryPeriod',
-          'description': 'charts query period in ms, 0 to disable',
-          'default': '10000'
-        },
-        {
-          'name': 'chartProxyMode',
-          'description': 'proxy tile requests: never,always,sameHost',
-          'default': 'sameHost'
-        },
-        {
-          'name': 'useWebsockets',
-          'description': 'use websockets if the package is available - true or false',
-          'default': 'true'
-        },
-
-      ],
+      'config': cls.CONFIG,
       'data': [
         {
           'path': cls.PATH+".*",
@@ -109,14 +128,35 @@ class Plugin(object):
     self.api.registerRequestHandler(self.requestHandler)
     self.skCharts=[]
     self.connected=False
-    self.skHost='localhost'
-    self.proxyMode='sameHost'
     self.webSocket=None
     self.useWebsockets=True
+    self.api.registerEditableParameters(self.CONFIG,self.changeParam)
+    self.api.registerRestart(self.stop)
+    self.startSequence=0
+    self.config=None # Config
+    self.userAppId=None
 
+  def stop(self):
+    self.startSequence+=1
 
+  def changeParam(self,param):
+    self.api.saveConfigValues(param)
+    self.startSequence+=1
 
   def run(self):
+    self.api.registerLayout("example", "example.json")
+    self.api.registerChartProvider(self.listCharts)
+    while not self.api.shouldStopMainThread():
+      self.config=Config(self.api)
+      self._runInternal()
+      try:
+        self.webSocket.close()
+      except:
+        pass
+
+
+  def _runInternal(self):
+    sequence=self.startSequence
     """
     the run method
     this will be called after successfully instantiating an instance
@@ -125,40 +165,20 @@ class Plugin(object):
     and writes them to the store every 10 records
     @return:
     """
-    enabled = self.api.getConfigValue('enabled','false')
-    if enabled.lower() != 'true':
-      self.api.setStatus("INACTIVE","module not enabled in server config")
-      self.api.log("module disabled")
-      return
-    port=3000
-    period=1000
-    chartQueryPeriod=10
-    try:
-      port=self.api.getConfigValue('port','3000')
-      port=int(port)
-      period=self.api.getConfigValue('period','1000')
-      period=int(period)/1000
-      expiryPeriod=self.api.getExpiryPeriod()
-      if (period > expiryPeriod):
-        period=expiryPeriod
-      self.skHost=self.api.getConfigValue('host','localhost')
-      chartQueryPeriod=int(self.api.getConfigValue('chartQueryPeriod','10000'))/1000
-      self.proxyMode=self.api.getConfigValue('proxyMode','sameHost')
-      self.useWebsockets=self.api.getConfigValue('useWebsockets','true').lower() == 'true'
-    except:
-      self.api.log("exception while reading config values %s",traceback.format_exc())
-      raise
-    self.api.log("started with host %s port %d, period %d"%(self.skHost,port,period))
-    baseUrl="http://%s:%d/signalk"%(self.skHost,port)
-    if self.skHost == "localhost":
-      self.api.registerUserApp("http://$HOST:%s"%port,"signalk.svg")
+    self.api.log("started with host %s port %d, period %d"
+                 %(self.config.skHost,self.config.port,self.config.period))
+    baseUrl="http://%s:%d/signalk"%(self.config.skHost,self.config.port)
+    if self.userAppId is not None:
+      self.api.unregisterUserApp(self.userAppId)
+      self.userAppId=None
+    if self.config.skHost == "localhost":
+      self.userAppId=self.api.registerUserApp("http://$HOST:%s"%self.config.port,"signalk.svg")
     else:
-      self.api.registerUserApp("http://%s:%s" % (self.skHost,port), "signalk.svg")
-    self.api.registerLayout("example","example.json")
-    self.api.registerChartProvider(self.listCharts)
+      self.userAppId=self.api.registerUserApp("http://%s:%s" %
+                               (self.config.skHost,self.config.port), "signalk.svg")
     errorReported=False
     self.api.setStatus("STARTED", "connecting at %s" % baseUrl)
-    while True:
+    while sequence == self.startSequence:
       apiUrl=None
       websocketUrl=None
       if self.webSocket is not None:
@@ -167,7 +187,9 @@ class Plugin(object):
         except:
           pass
         self.webSocket=None
-      while apiUrl is None:
+      while apiUrl is None :
+        if sequence != self.startSequence:
+          return
         self.connected=False
         responseData=None
         try:
@@ -204,9 +226,9 @@ class Plugin(object):
       self.connected = True
       useWebsockets = self.useWebsockets and hasWebsockets and websocketUrl is not None
       if useWebsockets:
-        if period < expiryPeriod:
-          period=expiryPeriod
-        self.api.log("using websockets at %s, querying with period %d", websocketUrl,period)
+        if self.config.period < self.config.expiryPeriod:
+          self.config.period=self.config.expiryPeriod
+        self.api.log("using websockets at %s, querying with period %d", websocketUrl,self.config.period)
         if self.webSocket is not None:
           try:
             self.webSocket.close()
@@ -226,14 +248,14 @@ class Plugin(object):
         lastQuery=0
         first=True # when we newly connect, just query everything once
         errorReported=False
-        while self.connected:
+        while self.connected and self.startSequence == sequence:
           now = time.time()
           #handle time shift backward
           if lastChartQuery > now:
             lastChartQuery=0
           if lastQuery > now:
             lastQuery=0
-          if (now - lastQuery) > period or first:
+          if (now - lastQuery) > self.config.period or first:
             first=False
             lastQuery=now
             response=None
@@ -261,19 +283,21 @@ class Plugin(object):
                 self.api.addData(self.PATH+".name",name)
           else:
             pass
-          if chartQueryPeriod > 0 and lastChartQuery < (now - chartQueryPeriod):
+          if self.config.chartQueryPeriod > 0 and lastChartQuery < (now - self.config.chartQueryPeriod):
             lastChartQuery=now
             try:
-              self.queryCharts(apiUrl,port)
+              self.queryCharts(apiUrl,self.config.port)
             except Exception as e:
               self.skCharts=[]
               self.api.debug("exception while reading chartlist %s",traceback.format_exc())
-          sleepTime=1 if period > 1 else period
+          sleepTime=1 if self.config.period > 1 else self.config.period
           time.sleep(sleepTime)
       except:
         self.api.log("error when fetching from signalk %s: %s",apiUrl,traceback.format_exc())
         self.api.setStatus("ERROR","error when fetching from signalk %s"%(apiUrl))
         self.connected=False
+        if sequence != self.startSequence:
+          return
         time.sleep(5)
 
   def webSocketRun(self):
@@ -373,11 +397,11 @@ class Plugin(object):
         'name': name,
         'url': url,
         'charturl': url,
-        'sequence': 0,  # TODO
+        'sequence': self.startSequence,
         'canDelete': False,
         'icon': pluginUrl+"/signalk.svg",
         'internal': {
-          'url': "http://%s:%d" % (self.skHost, port) + chart.get('tilemapUrl'),
+          'url': "http://%s:%d" % (self.config.skHost, port) + chart.get('tilemapUrl'),
           'minlon': bounds[0],
           'maxlat': bounds[1],
           'maxlon': bounds[2],
@@ -441,7 +465,7 @@ class Plugin(object):
         requestHostAddr = requestHost.split(':')[0]
         url='tiles'
         doProxy=False
-        if self.proxyMode=='always' or ( self.proxyMode=='sameHost' and self.skHost != 'localhost'):
+        if self.config.proxyMode=='always' or ( self.config.proxyMode=='sameHost' and self.config.skHost != 'localhost'):
           doProxy=True
         if not doProxy:
           #no proxying, direct access to sk for charts

@@ -597,7 +597,6 @@ class EditOverlaysDialog extends React.Component{
         this.state.useDefault=this.props.current.getUseDefault();
         this.state.isChanged=false;
         this.dialogHelper=dialogHelper(this);
-        this.sizeCount=0;
         this.reset=this.reset.bind(this);
         this.updateList=this.updateList.bind(this);
         this.hideAll=this.hideAll.bind(this);
@@ -627,11 +626,6 @@ class EditOverlaysDialog extends React.Component{
         if (count < 0) idx = -1;
         this.setState({list: newList, isChanged: true, selectedIndex: idx});
     }
-    updateDimensions(){
-        if (this.props.updateDimensions){
-            this.props.updateDimensions();
-        }
-    }
     showItemDialog(item,opt_forceOk){
         return new Promise((resolve,reject)=>{
             this.dialogHelper.showDialog((props)=>{
@@ -642,7 +636,6 @@ class EditOverlaysDialog extends React.Component{
                         reject(0);
                     }}
                     updateCallback={(changed)=>{
-                        this.updateDimensions();
                         if (!changed.name) {
                             reject("missing overlay name");
                         }
@@ -718,7 +711,6 @@ class EditOverlaysDialog extends React.Component{
             if (isSameItem(overlays[i],item)) {
                 overlays.splice(i, 1);
                 this.updateList(overlays);
-                this.updateDimensions();
             }
         }
     }
@@ -759,10 +751,6 @@ class EditOverlaysDialog extends React.Component{
             return null;
         }
         let hasCurrent=this.props.current.getName() !== undefined;
-        if (this.sizeCount !== this.state.sizeCount && this.props.updateDimensions){
-            this.sizeCount=this.state.sizeCount;
-            window.setTimeout(self.props.updateDimensions,100);
-        }
         let hasOverlays=true; //TODO
         let hasDefaults=this.props.current.hasDefaults();
         let selectedItem;
@@ -785,7 +773,6 @@ class EditOverlaysDialog extends React.Component{
                     label="use default"
                     onChange={(nv)=>{
                         this.setState({useDefault:nv,isChanged:true});
-                        this.updateDimensions();
                         }}
                     value={this.state.useDefault||false}/>}
                 <ItemList

@@ -30,7 +30,7 @@ import time
 
 import avnav_handlerList
 from avnav_worker import AVNWorker
-from avnav_config import AVNConfig
+from avnav_manager import AVNHandlerManager
 from avnav_util import *
 
 class LayoutInfo(object):
@@ -63,7 +63,7 @@ class AVNLayoutHandler(AVNWorker):
   def getConfigName(cls):
     return "AVNLayoutHandler"
   @classmethod
-  def getConfigParam(cls, child=None, forEdit=False):
+  def getConfigParam(cls, child=None):
     if child is not None:
       return None
     return {
@@ -79,7 +79,6 @@ class AVNLayoutHandler(AVNWorker):
   def autoInstantiate(cls):
     return True
   def run(self):
-    self.setName(self.getThreadPrefix())
     AVNLog.info("started")
     userDir=self.getUserDir()
     if not os.path.isdir(userDir):
@@ -88,7 +87,7 @@ class AVNLayoutHandler(AVNWorker):
       self.updateAllLayouts()
       time.sleep(self.getIntParam('period') or 10)
   def getUserDir(self):
-    return AVNConfig.getDirWithDefault(self.param,'userDir','layout')
+    return AVNHandlerManager.getDirWithDefault(self.param, 'userDir', 'layout')
   def updateAllLayouts(self):
     dt = datetime.datetime.now()
     updateCount=dt.microsecond

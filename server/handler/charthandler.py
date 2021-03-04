@@ -275,7 +275,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
   def getConfigName(cls):
     return "AVNChartHandler"
   @classmethod
-  def getConfigParam(cls, child=None, forEdit=False):
+  def getConfigParam(cls, child=None):
     if child is not None:
       return None
     return {
@@ -312,7 +312,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
 
   def run(self):
     self.baseDir = self.httpServer.getChartBaseDir()
-    super(AVNChartHandler, self).run()
+    super().run()
 
   def periodicRun(self):
     if self.baseDir is None or not os.path.isdir(self.baseDir):
@@ -599,9 +599,9 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
           return AVNUtil.getReturnData(error="missing name")
         type=AVNUtil.getHttpRequestParam(requestparam,'itemType')
         rt=self.deleteFromOverlays(type,name)
-        return AVNUtil.getReturnData();
+        return AVNUtil.getReturnData()
     except Exception as e:
-      return AVNUtil.getReturnData(error=e.message)
+      return AVNUtil.getReturnData(error=str(e))
     return super(AVNChartHandler, self).handleSpecialApiRequest(command, requestparam, handler)
 
   def registerExternalProvider(self,name,callback):
