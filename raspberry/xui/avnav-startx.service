@@ -26,9 +26,9 @@ Before=rescue.service
 
 
 [Service]
-ExecPre=-/bin/sh -c "/usr/lib/avnav/raspberry/start_touch.sh prepare"
+ExecStartPre=+/bin/sh -c "/usr/lib/avnav/raspberry/xui/start_touch.sh prepare"
 User=pi
-ExecStart=/bin/sh -c "/usr/lib/avnav/raspberry/start_touch.sh"
+ExecStart=/bin/sh -c "/usr/lib/avnav/raspberry/xui/start_touch.sh"
 Type=idle
 Restart=always
 RestartSec=0

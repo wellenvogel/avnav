@@ -242,8 +242,9 @@
   </keybind>
 
   <!-- Keybindings for window switching -->
-  <keybind key="A-Tab">
+  <keybind key="W-Tab">
     <action name="NextWindow">
+      <dialog>list</dialog>
       <finalactions>
         <action name="Focus"/>
         <action name="Raise"/>
@@ -314,6 +315,9 @@
   </keybind>
   <keybind key="W-2">
     <action name="GoToDesktop"><to>2</to></action>
+  </keybind>
+  <keybind key="W-space">
+    <menu>/Debian</menu>
   </keybind>
   <keybind key="W-0">
     <action name="Execute"><command>xdotool search --class AvNavFirefox windowkill %@</command></action>
@@ -603,12 +607,8 @@
 
   <context name="Root">
     <!-- Menus -->
-    <mousebind button="Middle" action="Press">
-      <action name="ShowMenu"><menu>client-list-combined-menu</menu></action>
-    </mousebind> 
     <mousebind button="Left" action="Press">
-      <action name="ShowMenu"><menu>root</menu></action>
-    </mousebind>
+    </mousebind> 
   </context>
 
   <context name="MoveResize">
@@ -756,9 +756,6 @@
 </application>
 <application class="Onboard">
   <desktop>all</desktop>
-</application>
-<application class="Panel1">
-  <desktop>1</desktop>
 </application>
 <application class="AvNavFirefox">
 <maximized>yes</maximized>

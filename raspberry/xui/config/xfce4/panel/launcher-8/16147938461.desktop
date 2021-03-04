@@ -1,0 +1,16 @@
+[Desktop Entry]
+Type=Application
+Icon=system-file-manager
+Name=File Manager PCManFM
+Name[en_GB]=File Manager
+GenericName=File Manager
+GenericName[en_GB]=File Manager
+Comment=Browse the file system and manage the files
+Comment[en_GB]=Browse the file system and manage the files
+Categories=System;FileTools;FileManager;Utility;Core;GTK;
+Exec=pcmanfm %U
+StartupNotify=true
+Terminal=false
+MimeType=inode/directory;
+X-XFCE-Source=file:///usr/share/applications/pcmanfm.desktop
+Path=

@@ -12,11 +12,11 @@ Xft.dpi: $AVNAV_DPI
 XX
 
 fi
-
-#from avnav touch 
-#https://gitlab.open-mind.space/pandel/avnavtouch/-/blob/master/etc/X11/openbox/autostart
-
-
+MOZ_USE_XINPUT2=1
+export MOZ_USE_XINPUT2
+if [ "$AVNAV_KEYBOARD" != "" ] ; then
+  setxkbmap $AVNAV_KEYBOARD
+fi
 dconf load /org/onboard/ < /home/pi/onboard.conf
 dbus-launch --exit-with-session openbox-session
 

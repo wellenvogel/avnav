@@ -1,0 +1,88 @@
+#https://sylvaindurand.org/launch-chromium-in-kiosk-mode/
+
+sudo apt-get update
+sudo apt-get install --no-install-recommends xserver-xorg-video-all xserver-xorg-input-all xserver-xorg-core xinit x11-xserver-utils
+
+#https://raspberrypi.stackexchange.com/questions/40415/how-to-enable-auto-login
+
+sudo cp /lib/systemd/system/getty@.service  /etc/systemd/system/autologin@.service
+
+sudo ln -s /etc/systemd/system/autologin@.service /etc/systemd/system/getty.target.wants/getty@tty8.service
+
+sudo vi /etc/systemd/system/autologin@.service
+ExecStart=-/bin/sh -c "/usr/lib/avnav/raspberry/start_touch.sh %I $TERM"
+
+
+#groups for /dev/tty0
+sudo usermod -a -G tty pi
+sudo chmod 660 /dev/tty*
+
+#modeset errors
+sudo chmod u+s /usr/lib/xorg/Xorg
+
+#boot/config.txt
+disable_overscan=1
+
+#onboard
+sudo apt-get install -y onboard
+
+
+#gsettings?
+sudo apt-get install libglib2.0-bin
+#openbox
+sudo apt-get install -y openbox
+
+#auto show terminal
+gsettings set org.onboard.auto-show enabled true
+
+#install terminal with gtk for auto show keyboard
+sudo apt-get install -y lxterminal
+
+#firefox
+#USE_   not necessary....
+MOZ_USE_XINPUT2=1 firefox 'http://localhost:8080'
+
+#dconf
+sudo apt-get install dconf-cli
+#dbus
+sudo apt-get install dbus-x11
+
+#run firefox
+firefox --profile /home/pi/.mozilla/firefox/avnav/ --class=AvNavFirefox 'http://localhost:8080'
+
+Pakete:
+nemo - file manager
+xfce4-panel
+xfce4-settings
+xfconf
+lxterminal
+openbox
+xdotool
+onboard
+menu
+libglib2.0-bin
+
+#we need testing - setup see https://tech.borpin.co.uk/2019/12/17/install-a-package-from-the-testing-repository/
+# due to Xserver crashes:
+# https://gitlab.gnome.org/GNOME/gtk/-/issues/1389 - we need xorg-xserver >= 1.20.6
+# gtk 3 not opening menues correctly
+# not working: libgtk-3-bin                       3.24.5-1+rpt2
+# ok: ii  libgtk-3-bin                       3.24.24-1
+# xfce4-panel ? 
+
+#pick xserver from bulseye
+#/etc/apt/sources.list.d/bullseye.list:
+deb http://raspbian.raspberrypi.org/raspbian/ bullseye main contrib non-free rpi
+
+#cat /etc/apt/preferences.d/bullseye
+Package: *
+Pin: release n=bullseye
+Pin-Priority: 300
+
+#will remove avnav....
+apt-get install -t bullseye xserver-xorg-core
+apt-get install -t bullseye libgcc-8-dev gcc-8-base
+apt-get install -t bullseye libbluetooth-dev
+apt-get install -t bullseye python3-gdal
+apt-get install avnav avnav-raspi avnav-update-plugin avnav-ocharts-plugin
+apt-get install -t bullseye python3-mapproxy python3-pyproj python3-yaml python3-lxml python3-shapely

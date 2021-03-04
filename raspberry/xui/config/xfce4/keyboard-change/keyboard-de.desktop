@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Settings
+Name=DE
+Path=/usr/lib
+Exec=setxkbmap de
+

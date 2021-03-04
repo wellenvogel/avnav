@@ -17,7 +17,7 @@
 #xfce-mcs-manager &
 onboard &
 sleep 3
-fbpanel &
+xfce4-panel &
 /usr/lib/avnav/raspberry/xui/start_firefox.sh &
 
 
