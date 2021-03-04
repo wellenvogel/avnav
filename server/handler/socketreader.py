@@ -96,10 +96,13 @@ class AVNSocketReader(AVNWorker,SocketReader):
   def run(self):
     errorReported=False
     self.setNameIfEmpty("%s-%s:%d" % (self.getName(), self.getStringParam('host'), self.getIntParam('port')))
+    lastInfo = None
     while not self.shouldStop():
       info = "%s:%d" % (self.getStringParam('host'), self.getIntParam('port'))
       try:
-        self.setInfo('main',"trying to connect to %s"%(info,),WorkerStatus.INACTIVE)
+        if info != lastInfo:
+          self.setInfo('main',"trying to connect to %s"%(info,),WorkerStatus.INACTIVE)
+          lastInfo=info
         self.socket=socket.create_connection((self.getStringParam('host'),self.getIntParam('port')), self.getIntParam('timeout'))
         self.setInfo('main',"connected to %s"%(info,),WorkerStatus.RUNNING)
       except:

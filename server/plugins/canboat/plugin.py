@@ -144,8 +144,8 @@ class Plugin(object):
     self.api.log("started with host=%s,port %d, autoSendRMC=%d"%(host,port,autoSendRMC))
     source=self.api.getConfigValue("sourceName",None)
     errorReported=False
+    self.api.setStatus("STARTED", "connecting to n2kd at %s:%d"%(host,port))
     while sequence == self.changeSequence:
-      self.api.setStatus("STARTED", "connecting to n2kd at %s:%d"%(host,port))
       try:
         self.socket = socket.create_connection((host, port),timeout=1000)
         self.api.setStatus("RUNNING", "connected to n2kd at %s:%d" %(host,port))
@@ -217,9 +217,9 @@ class Plugin(object):
             pass
           if len(buffer) > 4096:
             raise Exception("no line feed in long data, stopping")
-      except:
+      except Exception as e:
         if not errorReported:
-          self.api.log("error connecting to n2kd %s:%d: %s",host,port,traceback.format_exc())
+          self.api.setStatus("ERROR","connecting to n2kd %s:%d: %s"%(host,port,str(e)))
           errorReported=True
         if sock is not None:
           try:
