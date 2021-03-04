@@ -18,11 +18,11 @@
       in eine Android Applikation - siehe dort auch zum <a href="charts.html">Erzeugen/Konvertieren</a>
       der Karten.</p>
     <p>Es kann das interne GPS des Gerätes genutzt werden. Alternativ können
-      NMEA Daten über TCP/IP, bluetooth oder einen USB-Seriell-Adapter
+      NMEA Daten über TCP/IP, Bluetooth oder einen USB-Seriell-Adapter
       (erfordert USB-OTG) empfangen werden. Die Quelle dafür kann z.B. ein
       Raspberry mit meiner Software sein - aber auch ein beliebiger anderer
       Sender, der die NMEA Daten per WLAN bereitstellt. Auch eine einfache GPS
-      bluetooth "Maus" ist geeignet.</p>
+      Bluetooth "Maus" ist geeignet.</p>
     <p>Damit kann die Software auch auf Tablets ohne eingebautes GPS laufen.</p>
     <p>Die Karten werden im gemf <a href="charts.html#chartformats">Format</a>
       erwartet.Ab Version 20200325 auch als mbtiles oder xml files. Sie können
@@ -43,13 +43,13 @@
     <p>Wenn das gewählte Arbeitsverzeichnis&nbsp; (Standard:
       interne-sd-Karte/avnav) noch nicht da ist, wird es beim ersten Start
       angelegt.</p>
-    <p>Die Track-Daten und logs werden in das Verzeichnis tracks unterhalb des
-      Arbeitsverzeichnisses geschrieben.</p>
+    <p>Die Track-Daten und Log Dateien werden in das Verzeichnis tracks
+      unterhalb des Arbeitsverzeichnisses geschrieben.</p>
     <p>Im Unterverzeichnis routes werden die Routen im gpx Format gespeichert.
       Routen und Tracks können aus der App über die Download Funktion an andere
       Apps weitergegeben werden (siehe Beschreibung der App). Um sie in andere
       Verzeichnisse zu speichern oder Routen aus anderen Verzeichnissen zu laden
-      (upload Funktion) sollte sinnvollerweise ein Dateimanager installiert
+      (upload Funktion), sollte sinnvollerweise ein Dateimanager installiert
       sein.</p>
     <p>Nach dem erstmaligen Start der App befindet man sich auf einer
       Einführungsseite:</p>
@@ -126,8 +126,8 @@
     zugreifen.<br>
     <span style="color:red">Achtung: Das sollte nur in vertrauenswürdigen Netzen
       geschehen, das es hier keinen weiteren Schutz gibt!.</span><br>
-    Die App announciert ihren service per Bonjour, so das sie leicht von anderen
-    gefunden werden kann. <br>
+    Die App announciert ihren Service per Bonjour, so dass sie leicht von
+    anderen gefunden werden kann. <br>
     <br>
     Wenn die App läuft werden die Track-Daten alle 5 Minuten in eine Datei
     geschrieben.<br>
@@ -200,13 +200,13 @@
         </tr>
         <tr>
           <td>NMEA Source</td>
-          <td>Auswahl der Quelle für Positionsdaten (Off,Internal, IP,
+          <td>Auswahl der Quelle für Positionsdaten (Off, Internal, IP,
             Bluetooth)</td>
           <td>Internal</td>
         </tr>
         <tr>
           <td>AIS Source</td>
-          <td>Auswahl der Quelle für AIS Daten (Off,IP,Bluetooth)</td>
+          <td>Auswahl der Quelle für AIS Daten (Off, IP, Bluetooth)</td>
           <td>Off</td>
         </tr>
         <tr>
@@ -269,13 +269,13 @@
         </tr>
         <tr>
           <td>log AIS Data</td>
-          <td>schreibe empfangene AIS Daten in eine log Datein</td>
+          <td>schreibe empfangene AIS Daten in eine Log Datei</td>
           <td><br>
           </td>
         </tr>
         <tr>
           <td>filter NMEA logs</td>
-          <td>ein Filter, welche NMEA Daten in das log geschrieben werden sollen</td>
+          <td>ein Filter, welche NMEA Daten in das Log geschrieben werden sollen</td>
           <td><br>
           </td>
         </tr>
@@ -302,7 +302,7 @@
         </tr>
         <tr>
           <td>offset bluetooth gps time(s)</td>
-          <td>Zeit offset für bluetooth GPS in Sekunden</td>
+          <td>Zeit offset für Bluetooth GPS in Sekunden</td>
           <td>0</td>
         </tr>
         <tr>
@@ -324,10 +324,10 @@
         </tr>
         <tr>
           <td>write track file every (s)</td>
-          <td>Schreibe das trackfile alle n Sekunden in das tracks Verzeichnis.
-            Falls die app abstürzen sollte, sind so die Daten bis zu diesem
-            Zeitpunkt gesichert. Die Trackdaten werden ausserdem beim Beenden
-            geschrieben.</td>
+          <td>Schreibe die Track Datei alle n Sekunden in das tracks
+            Verzeichnis. Falls die App abstürzen sollte, sind so die Daten bis
+            zu diesem Zeitpunkt gesichert. Die Trackdaten werden ausserdem beim
+            Beenden geschrieben.</td>
           <td>300</td>
         </tr>
         <tr>

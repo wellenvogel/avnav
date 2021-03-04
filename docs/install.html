@@ -16,9 +16,9 @@
         Seite</a>.</p>
     <p>Für diese Variante einfach unter Windows/Linux/OSx das Image von <a href="https://www.free-x.de/raspbian/buster/">free-x</a>
       herunterladen und wie unter <a href="http://www.raspberrypi.org/downloads">http://www.raspberrypi.org/downloads</a>
-      (raw images) beschrieben auf eine SD Karte spielen. Danach kann&nbsp; man
-      sich einmal auf dem Pi einloggen und ggf. ein paar Anpassungen vornehmen.
-      Am einfachsten geht das, wenn man den Pi im LAN anschließt und einen
+      (raw images) beschrieben auf eine SD Karte spielen. Danach kann man sich
+      einmal auf dem Pi einloggen und ggf. ein paar Anpassungen vornehmen. Am
+      einfachsten geht das, wenn man den Pi im LAN anschließt und einen
       Router/dhcp-Server (z.B. Fritz Box) aktiv hat. Dann holt er sich per DHCP
       eine IP Adresse. Diese kann man auf dem Router sehen bzw. unter Linux z.B.
       per ping -b &lt;brodcast-address&gt; herausfinden. Alternativ kann man
@@ -26,7 +26,7 @@
     <p>Die Passworte sind auf Standardwerte gesetzt – also login pi, Passwort
       raspberry. Per sudo -i wechselt man in eine root shell. Man sollte&nbsp;
       das Passwort für den User pi ändern (passwd).&nbsp;</p>
-    Das Image setzt einen WLAN-accesspoint mit dem internen WLAN des raspberry
+    Das Image setzt einen WLAN-Access Point mit dem internen WLAN des raspberry
     auf (SSID: avnav).<br>
     <br>
     Das WLAN hat den Adressbereich 192.168.20.0/24. Der Pi selbst ist auf
@@ -35,9 +35,9 @@
     ein DNS-Server (dnsmasqd). Die Konfiguration kann angepasst werden in
     /etc/dnsmasqd.conf. Wenn der Pi im LAN angeschlossen ist, versucht er per
     DHCP eine Adresse zu bekommen. Das WLAN wird per NAT an das LAN Interface
-    weitergereicht (damit kann man den Pi ins Internet bringen - z.B. zum
-    Installieren von Software- und auch per Wlan verbundene Geräte haben dann
-    Internet-Zugriff).<br>
+    weitergereicht. Damit kann man den Pi ins Internet bringen - z.B. zum
+    Installieren von Software - und auch per Wlan verbundene Geräte haben dann
+    Internet-Zugriff.<br>
     Wenn weitere WLAN-Sticks gesteckt werden, werden weitere Access Points
     aufgemacht.<br>
     <p> Ausnahme: WLAN-Stick wie im Bild - dieser wird zur Verbindung mit einem
@@ -50,8 +50,8 @@
       die Einstiegsseite der WebApp öffnen. <br>
       Avnav meldet sich per Bonjour - mit einer entsprechenden App (<a href="https://play.google.com/store/apps/details?id=de.wellenvogel.bonjourbrowser">Android</a>,
       <a href="https://apps.apple.com/us/app/bonjour-search-for-http-web-in-wi-fi/id1097517829">IOS</a>)
-      kann man so einfach den Server erreichen, ohne eine Adresse eintippen
-      zu müssen. </p>
+      kann man so einfach den Server erreichen, ohne eine Adresse eintippen zu
+      müssen. </p>
     <br>
     In der App gibt es eine Seite, um sich mit einem WLAN zu verbinden
     (Status-Seite-&gt;WLAN) - siehe <a href="userdoc/index.html">Beschreibung
@@ -121,8 +121,7 @@ sudo apt-get -f</div>
       Netzwerk-Konfiguration so geändert wird, wie AvNav das möchte. Sonst
       sollte man nur das avnav Paket installieren.</p>
     <p>Ich würde in jedem Fall empfehlen, das <a href="https://github.com/wellenvogel/avnav-update-plugin">AvNav
-        Update Plugin</a> zu installieren - aus dem Paket Repository mit
-    </p>
+        Update Plugin</a> zu installieren - aus dem Paket Repository mit </p>
     <div class="code">sudo apt-get install avnav-update-plugin</div>
     <p>oder mittels download von&nbsp; <a href="https://github.com/wellenvogel/avnav-update-plugin">GitHub.</a></p>
     <p>Wenn man nicht das avnav-raspi package installiert, braucht man einige
@@ -141,8 +140,9 @@ sudo apt-get -f</div>
     <div class="code"><span style="color: rgb(36, 41, 46); font-family: SFMono-Regular, Consolas, &quot;Liberation Mono&quot;, Menlo, monospace; font-size: 12px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; white-space: pre; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; background-color: rgb(255, 255, 255); text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none;">ExecStart=/usr/bin/avnav -q -b /home/pi/avnav/data -t /usr/lib/avnav/avnav_template.xml</span></div>
     Danach kann man mit den Kommandos
     <div class="code">sudo systemctl daemon-reload<br>sudo systemctl enable avnav<br>sudo systemctl start avnv</div>
-    <p>Avnav als Systemdienst starten. Wenn man diese Datei nicht anlegt/kopiert,
-      wird AvNav nicht mit den Nutzer pi sondern mit dem Nutzer avnav arbeiten.</p>
+    <p>Avnav als Systemdienst starten. Wenn man diese Datei nicht
+      anlegt/kopiert, wird AvNav nicht mit den Nutzer pi sondern mit dem Nutzer
+      avnav arbeiten.</p>
     <p> Wenn man auch die Karten-Konvertierung auf dem Linux Rechner mit einer
       kleinen GUI machen möchte, muss man zusätz das Paket python-wxgtk3.0
       installiert werden. Dann muss man AvNav mit</p>

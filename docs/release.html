@@ -11,14 +11,14 @@
     <a href="install.html">Die Installationsanleitung<span style="color: black;"></span></a>
     enthält eine detaillierte Beschreibung der Installationsoptionen. Auf dieser
     Seite finden sich Informationen zu den einzelnen Release-Versionen.<br>
-    Nicht mit jedem update werden neue Images bereitgestellt. Zwischen-Updates
+    Nicht mit jedem Update werden neue Images bereitgestellt. Zwischen-Updates
     sind entweder <a href="../downloads/daily/">Entwickler-Versionen</a> oder <a
       href="../downloads/release/">Releases</a>.<br>
     Um ein solches Update zu installieren, benötigt man eine Kommandozeile auf
     dem pi. Von Windows aus geht das z.B. mit <a href="https://www.putty.org/">putty
       </a>. Dazu die IP Adresse vom pi ermitteln und dann mit putty dorthin
     verbinden. Nutzername: pi, Passwort: raspberry.<br>
-    Wie man die Pakete installiert ist ebenfalls in der <a href="install.html#Packages">Installationsanleitung</a>
+    Wie man die Pakete installiert, ist ebenfalls in der <a href="install.html#Packages">Installationsanleitung</a>
     beschrieben.<br>
     Anschliessend muss man (Hinweise auf dieser Seite beachten) eventuell noch
     die Konfigurationsdatei<br>
@@ -72,13 +72,13 @@ sudo systemctl start avnav</div>
         <div class="code">sudo apt-get update<br>sudo apt-get upgrade   </div>
         Bei den headless Paketen muss vorher die Zeit gesetzt werden.
         <div class="code">sudo date -s "2021/01/15 15:00"</div>
-        Es ist wichtig, das auch vom <a href="hints/ocharts.html">ocharts-plugin</a>
+        Es ist wichtig, dass auch vom <a href="hints/ocharts.html">ocharts-plugin</a>
         die aktuelle Version 20210115 installiert wird.<br>
         Bei der Windows Installation sollte ein neuer <a href="../downloads/release/20210115">Installer</a>
         genutzt werden. <br>
-        Falls mit dem vorhandenen ein update ausgeführt wird, muss es 2 mal
-        nacheiander durchgeführt werden, da beim ersten Mal die neue Python
-        Version nicht installiert wird.</li>
+        Falls mit dem vorhandenen Installer ein Update ausgeführt wird, muss es
+        2 mal nacheinander durchgeführt werden, da beim ersten Mal die neue
+        Python Version nicht installiert wird.</li>
     </ul>
     <p> <span style="font-weight: bold;">20201227</span> <a title="release/20201227"
         href="../downloads/release/20201227">link</a> </p>
@@ -113,12 +113,12 @@ sudo systemctl start avnav</div>
     <ul>
       <li><a href="hints/overlays.html">Karten Overlays</a></li>
       <ul>
-        <li>Man kann&nbsp; gpx,kml,kmz und geojson Dateien über die Karten
-          legen. </li>
-        <li>Mehrere Karten übereinander legen.</li>
+        <li>Man kann&nbsp; gpx,kml,kmz und geojson Dateien über die Karten legen
+        </li>
+        <li>Mehrere Karten übereinander legen</li>
         <li>Anzeige von vorhandenen Tracks und Routen</li>
         <li>Nutzerdefinierte Symbole und links mit HTML Seiten</li>
-        <li>Anzeige von Inofrmationen zu einem Punkt beim Klick</li>
+        <li>Anzeige von Informationen zu einem Punkt beim Klick</li>
       </ul>
       <li><a href="hints/ocharts.html#featureinfo">Anzeige von
           Objekt-Informationen</a> (Feature Query) bei o-charts (erfordert neue
@@ -152,7 +152,7 @@ sudo systemctl start avnav</div>
           Anzeige-Elemente bei hochauflösenden Displays</li>
         <li>"Overlay Info on Click" - Anzeige von Overlay Informationen wenn man
           auf die Karte klickt (default: ein)<br>
-          das steuert auch die Anzeige von Objekt-Informationen bei Ocharts</li>
+          das steuert auch die Anzeige von Objekt-Informationen bei o-charts</li>
         <li>"Always Info on Chart Click" - Anzeige einer Information in
           Bereichen ohne Overlays (default: aus)</li>
       </ul>
@@ -176,10 +176,10 @@ sudo systemctl start avnav</div>
     <p> Fehlerkorrekturversion für 20201105 </p>
     <ul>
       <li>Bug: Die SignalK Verbindung mit WebSockets (neu in 20201105)
-        funktioniert nocht komplett. Nicht geänderte Daten verschwinden nach
-        30s.Man konnte auch die Nutzung von WebSockets nicht abschalten.</li>
+        funktioniert nicht komplett. Nicht geänderte Daten verschwinden nach
+        30s. Man konnte auch die Nutzung von WebSockets nicht abschalten</li>
       <li>Bug: In der Dokumentation war für signalK useWebsockets falsch
-        angegeben. </li>
+        angegeben</li>
     </ul>
     <p> <span style="font-weight: bold;">20201105</span> <a title="release/20201105"
         href="../downloads/release/20201105">link</a> </p>
@@ -207,7 +207,7 @@ sudo systemctl start avnav</div>
           installiert</a> sind <a href="https://github.com/wellenvogel/avnav/issues/76">#76</a>,
         siehe <a href="hints/CanboatAndSignalk.html#SignalKCharts">SignalK
           Karten</a></li>
-      <li>Bug: N2K (canboat) arbeitet weiter auch wenn lange keine Daten
+      <li>Bug: N2K (canboat) arbeitet weiter, auch wenn lange keine Daten
         vorhanden sind</li>
       <li>Bug: Unerwarteter Wechsel von einer Seite zur anderen (doppeltes Klick
         Handling in Listen)</li>
@@ -283,7 +283,7 @@ sudo systemctl start avnav</div>
     <ul>
       <li>Fehlerkorrektur Android ständiger Notification-Ton</li>
       <li>Fehlerkorrektur Routen-Länge auf der Detail-Seite.</li>
-      <li>MOB Handling. Bei Klick auf die MOB Taste wird ein aktuelles routing
+      <li>MOB Handling. Bei Klick auf die MOB Taste wird ein aktuelles Routing
         abgebrochen, die aktuelle Position wird als Wegepunkt "MOB" gesetzt und
         es wird ein Alarm ausgelöst. Die MOB Taste bekommt einen roten Rand.
         Beendet wird das MOB über die MOB Taste oder über das Stoppen der
@@ -348,7 +348,7 @@ sudo systemctl start avnav</div>
         access point. Hier würde das WLAN auch kurzzeitig unterbrochen - Mobile
         Geräte verbinden sich dann gerne mal mit einem anderen. Solange man den
         Access Point ( default ) über das interne WLAN abwickelt, hat man keine
-        Probleme. Da es nur ein wokraround ist, wird der nicht standarmäßig
+        Probleme. Da es nur ein workaround ist, wird der nicht standarmäßig
         aktiviert - nach der Installation des Updates muss man noch den
         entsprechenden service aktivieren und starten:<br>
         <div class="code">sudo systemctl enable avnav-check-wlan
@@ -448,7 +448,7 @@ sudo systemctl start avnav-check-wlan</div>
     schalten. <br>
     Falls man ein anderes Kommando nutzen möchte (z.B. eigenes Shell-Script)
     muss man das als neues Kommando unter AVNCommandHandler eintragen, ihm einen
-    Namen geben und dann bei den alarmen diesen neuen Namen nutzen.<br>
+    Namen geben und dann bei den Alarmen diesen neuen Namen nutzen.<br>
     Man kann natürlich auch das oben angegebene "sound" Kommando durch etwas
     anderes ersetzen.<br>
     Der unter "Alarm" angegebene Parameter wird an das entsprechende Kommando
