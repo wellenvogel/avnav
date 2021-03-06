@@ -51,9 +51,9 @@ except ImportError:
 
 from tiler_functions import *
 
-isGdal2=False
-if re.match("^2",gdal.VersionInfo()):
-    isGdal2=True
+isGdal23=False
+if re.match("^[23]",gdal.VersionInfo()):
+    isGdal23=True
 
 
 #############################
@@ -598,7 +598,7 @@ class Pyramid(object):
 
         if not self.options.tps and src_geotr and src_geotr != (0.0, 1.0, 0.0, 0.0, 0.0, 1.0):
             ok, src_igeotr=(None,None)
-            if isGdal2:
+            if isGdal23:
                 src_igeotr=gdal.InvGeoTransform(src_geotr)
             else:
                 ok, src_igeotr = gdal.InvGeoTransform(src_geotr)
@@ -627,7 +627,7 @@ class Pyramid(object):
                     ul_c[1],    0.0, res[1] )
 
         ok, dst_igeotr = (None, None)
-        if isGdal2:
+        if isGdal23:
             dst_igeotr=gdal.InvGeoTransform(dst_geotr)
         else:
             ok, dst_igeotr = gdal.InvGeoTransform(dst_geotr)
