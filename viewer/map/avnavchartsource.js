@@ -285,7 +285,7 @@ class AvnavChartSource extends ChartSourceBase{
     prepareInternal() {
         let url = this.chartEntry.url;
         let upZoom=0;
-        if (this.chartEntry.upzoom !== undefined && ! this.chartEntry.upzoom) {
+        if (this.chartEntry.upzoom !== undefined && this.chartEntry.upzoom !== null && ! this.chartEntry.upzoom) {
 
         }
         else{

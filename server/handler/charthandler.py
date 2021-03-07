@@ -92,6 +92,7 @@ class ChartDescription(AVNDirectoryListEntry):
                   url=None,
                   icon=None,
                   hasFeatureInfo=None,
+                  upzoom=None,
                  **kwargs):
       super(ChartDescription,self).__init__(type,prefix,name,**kwargs)
       self._chart=None
@@ -114,6 +115,7 @@ class ChartDescription(AVNDirectoryListEntry):
       self.version=version
       self.icon=icon
       self.hasFeatureInfo=hasFeatureInfo
+      self.upzoom=upzoom
       if url is not None:
         self.url=url
 
@@ -350,6 +352,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
           itemDescription.setOverlayData(ovl)
       else:
         itemDescription.setChart(chart,self.getIntParam('upzoom'))
+      itemDescription.upzoom=True
       return itemDescription  
     except Exception as e:
       AVNLog.error("error opening chart %s:%s",itemDescription.name,traceback.format_exc())
