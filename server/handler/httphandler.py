@@ -280,6 +280,8 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
         rtj=self.handleStatusRequest(requestParam)
       elif requestType=='debuglevel' or requestType=='loglevel':
         rtj=self.handleDebugLevelRequest(requestParam)
+      elif requestType=='currentloglevel':
+        rtj=self.handleCurrentLevelRequest(requestParam)
       elif requestType=='listdir' or requestType == 'list':
         rtj=self.handleListDir(requestParam)
       elif requestType=='download':
@@ -434,16 +436,19 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
     timeout = self.getRequestParam(requestParam, 'timeout',mantadory=False)
     if timeout is not None:
       timeout=float(timeout)
+    filter=self.getRequestParam(requestParam,'filter')
     if not level is None:
-      crt=AVNLog.changeLogLevel(level,timeout)
+      crt=AVNLog.changeLogLevelAndFilter(level,filter,timeout)
       if crt:
         rt['status']='OK'
         rt['info']='set loglevel to '+str(level)
       else:
         rt['info']="invalid level "+str(level)
-    filter=self.getRequestParam(requestParam,'filter')
-    AVNLog.setFilter(filter)
     return json.dumps(rt,cls=Encoder)
+
+  def handleCurrentLevelRequest(self,requestParam):
+    (level,filter)=AVNLog.getCurrentLevelAndFilter()
+    return json.dumps({'status':'OK','level':level,'filter':filter},cls=Encoder)
 
   def writeStream(self,bToSend,fh):
     maxread = 1000000
@@ -637,6 +642,7 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
       'uploadOverlays': True,
       'uploadTracks': True,
       'canConnect': True,
-      'config': True
+      'config': True,
+      'debugLevel': True
     }
     return json.dumps({'status':'OK','data':rt},cls=Encoder)

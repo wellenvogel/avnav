@@ -20,6 +20,72 @@ import Mob from '../components/Mob.js';
 import EditHandlerDialog from "../components/EditHandlerDialog";
 import DB from '../components/DialogButton';
 import Formatter from '../util/formatter';
+import {Checkbox, Input} from "../components/Inputs";
+
+class DebugDialog extends React.Component{
+    constructor(props) {
+        super(props);
+        this.state={
+            isDebug:false,
+            pattern:'',
+            timeout:60
+        };
+        this.save=this.save.bind(this);
+    }
+    componentDidMount() {
+        Requests.getJson('',undefined,{
+            request:'currentloglevel'
+        })
+            .then((data)=>{
+                let ns={};
+                ns.isDebug=(data.level && data.level.match(/debug/i));
+                ns.pattern=data.filter||'';
+                this.setState(ns);
+            })
+            .catch((e)=>Toast(e))
+    }
+
+    save(){
+        Requests.getJson('',undefined,{
+            request:'debuglevel',
+            level: this.state.isDebug?'debug':'info',
+            timeout:this.state.timeout,
+            filter:this.state.pattern ||''
+        })
+            .then(()=>this.props.closeCallback())
+            .catch((e)=>Toast(e));
+    }
+    render(){
+        return <div className="selectDialog LogDialog">
+            <h3 className="dialogTitle">{this.props.title||'Enable/Disable Debug'}</h3>
+            <Checkbox
+                dialogRow={true}
+                label={'debug'}
+                value={this.state.isDebug}
+                onChange={(nv)=>this.setState({isDebug:nv})}
+                />
+            <Input
+                type={'number'}
+                label={'timeout(s)'}
+                dialogRow={true}
+                value={this.state.timeout}
+                onChange={(nv)=>this.setState({timeout:nv})}/>
+            <Input
+                label={'pattern'}
+                dialogRow={true}
+                value={this.state.pattern}
+                onChange={(nv)=>this.setState({pattern:nv})}/>
+            <div className="dialogButtons">
+                <DB name={'cancel'}
+                    onClick={this.props.closeCallback}
+                >Cancel</DB>
+                <DB name={'ok'}
+                    onClick={this.save}>Ok</DB>
+            </div>
+        </div>
+    }
+
+}
 
 class LogDialog extends React.Component{
     constructor(props) {
@@ -244,7 +310,7 @@ class StatusPage extends React.Component{
         }
     }
     restartServer(){
-        OverlayDialog.confirm("really restart the AvNav server?")
+        OverlayDialog.confirm("really restart the AvNav server software?")
             .then((v)=>{
                 Requests.getJson('',undefined,{
                     request:'api',
@@ -288,7 +354,7 @@ class StatusPage extends React.Component{
                     name: 'StatusShutdown',
                     visible: !props.android && this.state.shutdown && props.connected,
                     onClick:()=>{
-                        OverlayDialog.confirm("really shutdown the server?").then(function(){
+                        OverlayDialog.confirm("really shutdown the server computer?").then(function(){
                             Requests.getJson("?request=command&start=shutdown").then(
                                 (json)=>{
                                     Toast("shutdown started");
@@ -302,7 +368,7 @@ class StatusPage extends React.Component{
                 },
                 {
                     name:'StatusRestart',
-                    visible: this.state.canRestart,
+                    visible: this.state.canRestart && props.connected,
                     onClick: ()=>this.restartServer()
                 },
                 {
@@ -310,6 +376,14 @@ class StatusPage extends React.Component{
                     visible: props.config,
                     onClick: ()=>{
                         OverlayDialog.dialog(LogDialog);
+                    },
+                    overflow: true
+                },
+                {
+                    name: 'StatusDebug',
+                    visible: props.debugLevel && props.connected,
+                    onClick: ()=>{
+                        OverlayDialog.dialog(DebugDialog);
                     },
                     overflow: true
                 },
@@ -350,7 +424,8 @@ class StatusPage extends React.Component{
             storeKeys:{
                 connected:keys.properties.connectedMode,
                 android:keys.gui.global.onAndroid,
-                config: keys.gui.capabilities.config
+                config: keys.gui.capabilities.config,
+                debugLevel: keys.gui.capabilities.debugLevel
             }
         });
         return <Rt/>

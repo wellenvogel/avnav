@@ -165,7 +165,8 @@ let keys={
             uploadOverlays: K,
             uploadTracks: K,
             canConnect: K,
-            config: K
+            config: K,
+            debugLevel: K
         },
         global:{
             smallDisplay: K,
