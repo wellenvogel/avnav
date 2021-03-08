@@ -24,10 +24,15 @@
 ###############################################################################
 
 class AVNApi(object):
-
   """
   the API for handlers/decoders that will input data, decode NMEA or output data
   """
+
+  ALLOW_KEY_OVERWRITE='allowKeyOverwrite'
+  """
+  parameter that must be set to allow overriding of keys that are set inside AvNav
+  """
+
   def log(self, format, *param):
     """
     log infos

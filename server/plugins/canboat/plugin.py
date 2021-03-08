@@ -95,8 +95,8 @@ class Plugin(object):
     self.socket=None
 
   def changeConfig(self,newValues):
-    self.changeSequence+=1
     self.api.saveConfigValues(newValues)
+    self.changeSequence+=1
     try:
       self.socket.close()
     except:

@@ -122,7 +122,7 @@ class ApiImpl(AVNApi):
       raise Exception("%s: missing path in data entry: %s"%(self.prefix,data))
     AVNLog.info("%s: register key %s"%(self.prefix,key))
     if self.store.isKeyRegistered(key,keySource):
-      allowOverwrite=self.getConfigValue("allowKeyOverwrite","false")
+      allowOverwrite=self.getConfigValue(AVNApi.ALLOW_KEY_OVERWRITE,"false")
       if allowOverwrite.lower() != "true":
         self.error("key %s already registered, skipping it"%key)
         if key.find('*') >= 0:
