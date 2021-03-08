@@ -577,7 +577,7 @@ class AVNPluginHandler(AVNWorker):
           self.startPluginThread(child)
           pass
       del checked['enabled']
-      if len(list(checked.keys())) < 2:
+      if len(list(checked.keys())) < 1:
         return
 
     if api.paramChange is None:
