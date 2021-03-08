@@ -141,6 +141,7 @@ class AVNImporter(AVNWorker):
           lastTime=self.lastTimeStamps.get(k)
           currentlyRunning=self.runningConversions.get(k)
           if currentlyRunning is not None:
+            self.refreshInfo(infoKey)
             AVNLog.debug("conversion for %s currently running, skip",k)
             continue
           gemftime=self.getGemfTimestamp(k)
@@ -167,6 +168,8 @@ class AVNImporter(AVNWorker):
         #end for currentKeys
       else:
         AVNLog.debug("conversion(s) running, skip check")
+        for k,v in self.status.items():
+          v.refresh() #do not let the infos time out
       self.checkConversionFinished()
       if len(list(self.runningConversions.keys())) > 0 or len(list(self.candidateTimes.keys())) == 0:
         self.wait(self.waittime/5)

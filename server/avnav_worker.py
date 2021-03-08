@@ -256,12 +256,15 @@ class WorkerStatus(object):
     if timeout is not None:
       self.timeout=timeout
     return rt
-
+  def refresh(self,timeout=None):
+    self.modified=time.time()
+    if timeout is not None:
+      self.timeout=timeout
   def expired(self):
     if self.timeout is None or self.timeout <=0:
       return False
     now = time.time()
-    if now < self.modified or (self.modified + self.timeout):
+    if now < self.modified or (self.modified + self.timeout) < now:
       return True
     return False
 
@@ -465,6 +468,10 @@ class AVNWorker(object):
       ns=WorkerStatus(name,status,info,childId=childId,canDelete=canDelete,timeout=timeout)
       self.status[name]=ns
       AVNLog.info("%s",str(ns))
+  def refreshInfo(self,name,timeout=None):
+    existing=self.status.get(name)
+    if existing:
+      existing.refresh(timeout=timeout)
   def deleteInfo(self,name):
     if self.status.get(name) is not None:
       try:
