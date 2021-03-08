@@ -26,13 +26,10 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import LayoutHandler from '../util/layouthandler.js';
 import OverlayDialog, {dialogHelper, stateHelper} from './OverlayDialog.jsx';
-import WidgetFactory from '../components/WidgetFactory.jsx';
 import assign from 'object-assign';
-import {Input,InputSelect} from './Inputs.jsx';
 import DB from './DialogButton.jsx';
-import {getList,ParamValueInput} from "./ParamValueInput";
+import {ParamValueInput} from "./ParamValueInput";
 import RequestHandler from "../util/requests";
 import Toast from "./Toast";
 import {createEditableParameter} from "./EditableParameters";
@@ -162,7 +159,7 @@ class EditHandlerDialog extends React.Component{
         let newState=assign(this.modifiedValues.getState(true),newValues)
         let original=this.currentValues.getState()
         for (let k in original){
-            if (newState[k] === original[k]){
+            if (newState[k] === original[k] || (newState[k]+'') === (original[k]+'')){
                 delete newState[k];
             }
         }
@@ -212,10 +209,25 @@ class EditHandlerDialog extends React.Component{
                     <React.Fragment>
                         {this.state.parameters.map((param) => {
                             let notFilled=!param.mandatoryOk(currentValues);
-                            let children=param.description?<HelpButton
-                                param={param}
-                                showDialog={this.dialogHelper.showDialog}
-                            />:null;
+                            let children=
+                                <div className="paramButtons">
+                                    {param.description && <HelpButton
+                                        param={param}
+                                        showDialog={this.dialogHelper.showDialog}
+                                    />
+                                    }
+                                    {param.default !== undefined && <Button
+                                        name={'Delete'}
+                                        className={'smallButton'}
+                                        onClick={(ev) => {
+                                            ev.stopPropagation();
+                                            let nv = {};
+                                            nv[param.name] = param.default;
+                                            this.modifyValues(nv);
+                                        }}
+                                    />
+                                    }
+                                </div>;
                             if (param.condition){
                                 let show=this.checkCondition(param.condition,currentValues);
                                 if (!show) return null;
