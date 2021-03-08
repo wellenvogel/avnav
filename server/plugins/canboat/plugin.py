@@ -28,7 +28,7 @@ class Plugin(object):
           'default': 'localhost'
         },
         {
-          'name': 'allowKeyOverride',
+          'name': 'allowKeyOverwrite',
           'description': 'necessary to be able to set our time directly from canboat',
           'default': False,
           'type': 'BOOLEAN'

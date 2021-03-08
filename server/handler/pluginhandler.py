@@ -27,6 +27,7 @@
 import imp
 import inspect
 import json
+from typing import Dict, Any
 
 from avnav_api import AVNApi
 from avnav_store import AVNStore
@@ -124,24 +125,32 @@ class ApiImpl(AVNApi):
       allowOverwrite=self.getConfigValue("allowKeyOverwrite","false")
       if allowOverwrite.lower() != "true":
         self.error("key %s already registered, skipping it"%key)
+        if key.find('*') >= 0:
+          if key in self.wildcardPatterns:
+            self.wildcardPatterns.remove(key)
+        else:
+          if key in self.patterns:
+            self.patterns.remove(key)
         return
     else:
       self.store.registerKey(key,data,keySource)
     if key.find('*') >= 0:
-      self.wildcardPatterns.append(data)
+      if not key in self.wildcardPatterns:
+        self.wildcardPatterns.append(key)
     else:
-      self.patterns.append(data)
+      if not key in self.patterns:
+        self.patterns.append(key)
   def addData(self,path,value,source=None,record=None):
     if source is None:
       source="plugin-"+self.prefix
     matches=False
     for p in self.patterns:
-      if p.get('path') == path:
+      if p == path:
         matches=True
         break
     if not matches:
       for p in self.wildcardPatterns:
-        if AVNStore.wildCardMatch(path,p.get('path')):
+        if AVNStore.wildCardMatch(path,p):
           matches=True
           break
     if not matches:
@@ -286,6 +295,7 @@ class ApiImpl(AVNApi):
 
 
 class AVNPluginHandler(AVNWorker):
+  createdApis: Dict[str, ApiImpl]
   ENABLE_PARAMETER=WorkerParameter('enabled',
                                    type=WorkerParameter.T_BOOLEAN,
                                    default=True,
@@ -296,7 +306,7 @@ class AVNPluginHandler(AVNWorker):
     AVNWorker.__init__(self, param)
     self.queue=None
     self.createdPlugins={}
-    self.createdApis={}
+    self.createdApis={} 
     self.startedThreads={}
     self.pluginDirs={} #key: moduleName, Value: dir
     self.configLock=threading.Lock()
@@ -573,6 +583,8 @@ class AVNPluginHandler(AVNWorker):
     if api.paramChange is None:
       raise Exception("unable to change parameters")
     api.paramChange(checked)
+    #maybe allowKeyOverrides has changed...
+    api.registerKeys()
 
   def getStatusProperties(self):
     rt={}
