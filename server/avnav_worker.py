@@ -455,14 +455,14 @@ class AVNWorker(object):
       return {'name':self.getStatusName(),'items':rta}
     except:
       return {'name':self.getStatusName(),'items':[],'error':"no info available"}
-  def setInfo(self,name,info,status,childId=None,canDelete=False):
+  def setInfo(self,name,info,status,childId=None,canDelete=False,timeout=None):
     existing=self.status.get(name)
     if existing:
-      if existing.update(status,info):
+      if existing.update(status,info,timeout=timeout):
         AVNLog.info("%s",str(existing))
         return True
     else:
-      ns=WorkerStatus(name,status,info,childId=childId,canDelete=canDelete)
+      ns=WorkerStatus(name,status,info,childId=childId,canDelete=canDelete,timeout=timeout)
       self.status[name]=ns
       AVNLog.info("%s",str(ns))
   def deleteInfo(self,name):

@@ -27,6 +27,7 @@ import DB from '../components/DialogButton.jsx';
 import Addons from '../components/Addons.js';
 import GuiHelpers from '../util/GuiHelpers.js';
 import UploadHandler  from "../components/UploadHandler";
+import chartImage from '../images/Chart60.png';
 import {
     showFileDialog,
     deleteItem,
@@ -206,6 +207,9 @@ const DownloadItem=(props)=>{
         <div className={cls} onClick={function(ev){
             props.onClick('select')
         }}>
+            {(props.icon || props.type === 'chart') &&
+            <span className="icon" style={{backgroundImage:"url('"+(props.icon||chartImage)+"')"}}/>
+            }
             {(showDelete && ! props.active) &&<Button name="Delete" className="Delete smallButton" onClick={(ev)=>{
                 ev.preventDefault();
                 ev.stopPropagation();

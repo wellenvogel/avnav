@@ -3,13 +3,11 @@
  */
 
 import Dynamic from '../hoc/Dynamic.jsx';
-import Visible from '../hoc/Visible.jsx';
 import Button from '../components/Button.jsx';
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import React from 'react';
-import PropertyHandler from '../util/propertyhandler.js';
 import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import Toast from '../components/Toast.jsx';
@@ -19,8 +17,8 @@ import GuiHelpers from '../util/GuiHelpers.js';
 import Mob from '../components/Mob.js';
 import EditHandlerDialog from "../components/EditHandlerDialog";
 import DB from '../components/DialogButton';
-import Formatter from '../util/formatter';
 import {Checkbox, Input} from "../components/Inputs";
+import LogDialog from "../components/LogDialog";
 
 class DebugDialog extends React.Component{
     constructor(props) {
@@ -56,7 +54,7 @@ class DebugDialog extends React.Component{
             .catch((e)=>Toast(e));
     }
     render(){
-        return <div className="selectDialog LogDialog">
+        return <div className="selectDialog DebugDialog">
             <h3 className="dialogTitle">{this.props.title||'Enable/Disable Debug'}</h3>
             <Checkbox
                 dialogRow={true}
@@ -87,79 +85,6 @@ class DebugDialog extends React.Component{
 
 }
 
-class LogDialog extends React.Component{
-    constructor(props) {
-        super(props);
-        this.state={
-            log:undefined,
-            loading: true
-        };
-        this.downloadFrame=null;
-        this.mainref=null;
-        this.getLog=this.getLog.bind(this);
-    }
-    componentDidMount() {
-        this.getLog();
-    }
-    componentDidUpdate(prevProps, prevState, snapshot) {
-        if (this.mainref) {
-            this.mainref.scrollTop = this.mainref.scrollHeight
-        }
-    }
-
-    getLog(){
-        Requests.getHtmlOrText('', {useNavUrl:true},{
-            request:'download',
-            type:'config',
-            maxBytes:100000
-        })
-            .then((data)=>{
-                this.setState({log:data});
-            })
-            .catch((e)=>Toast(e))
-    }
-    render(){
-    return <div className="selectDialog LogDialog">
-        <h3 className="dialogTitle">{this.props.title||'AvNav log'}</h3>
-        <div className="logDisplay dialogRow" ref={(el)=>this.mainref=el}>
-            {this.state.log||''}
-        </div>
-        <div className="dialogButtons">
-            <DB
-                name="download"
-                onClick={()=>{
-                    let name="avnav-"+Formatter.formatDateTime(new Date()).replace(/[: /]/g,'-').replace(/--/g,'-')+".log";
-                    let url=globalStore.getData(keys.properties.navUrl)+"?request=download&type=config&filename="+name;
-                    if (this.downloadFrame){
-                        this.downloadFrame.src=url;
-                    }
-                }}
-            >
-                Download
-            </DB>
-            <DB name="reload"
-                onClick={this.getLog}>
-                Reload
-            </DB>
-            <DB
-                name="ok"
-                onClick={this.props.closeCallback}
-            >
-                Ok
-            </DB>
-        </div>
-        <iframe
-            className="downloadFrame"
-            onLoad={(ev)=>{
-                let txt=ev.target.contentDocument.body.textContent;
-                if (! txt) return;
-                Toast(txt);
-            }}
-            src={undefined}
-            ref={(el)=>this.downloadFrame=el}/>
-    </div>
-    }
-}
 
 const showEditDialog=(handlerId,child)=>{
     EditHandlerDialog.createDialog(handlerId,child);
@@ -375,7 +300,13 @@ class StatusPage extends React.Component{
                     name: 'StatusLog',
                     visible: props.config,
                     onClick: ()=>{
-                        OverlayDialog.dialog(LogDialog);
+                        OverlayDialog.dialog((props)=>{
+                            return <LogDialog
+                                {...props}
+                                baseUrl={globalStore.getData(keys.properties.navUrl)+"?request=download&type=config"}
+                                title={'AvNav Log'}
+                            />
+                        });
                     },
                     overflow: true
                 },

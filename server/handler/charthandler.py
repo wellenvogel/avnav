@@ -116,6 +116,7 @@ class ChartDescription(AVNDirectoryListEntry):
       self.icon=icon
       self.hasFeatureInfo=hasFeatureInfo
       self.upzoom=upzoom
+      self.hasImporterLog=False
       if url is not None:
         self.url=url
 
@@ -272,6 +273,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
   def __init__(self,param):
     self.param=param
     self.externalProviders={}
+    self.importer=None
     AVNDirectoryHandlerBase.__init__(self, param,'chart')
   @classmethod
   def getConfigName(cls):
@@ -314,6 +316,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
 
   def run(self):
     self.baseDir = self.httpServer.getChartBaseDir()
+    self.importer = self.findHandlerByName("AVNImporter")
     super().run()
 
   def periodicRun(self):
@@ -353,6 +356,10 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
       else:
         itemDescription.setChart(chart,self.getIntParam('upzoom'))
       itemDescription.upzoom=True
+      if self.importer is not None:
+        logName=self.importer.getLogFileName(itemDescription.name,checkExistance=True)
+        if logName is not None:
+          itemDescription.hasImporterLog=True
       return itemDescription  
     except Exception as e:
       AVNLog.error("error opening chart %s:%s",itemDescription.name,traceback.format_exc())
@@ -416,9 +423,8 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
       raise Exception("delete for %s not possible" % name)
     self.removeItem(name)
     if chartEntry.isChart():
-      importer = self.findHandlerByName("AVNImporter")  # cannot import this as we would get cycling dependencies...
-      if importer is not None:
-        importer.deleteImport(chartEntry.name)
+      if self.importer is not None:
+        self.importer.deleteImport(chartEntry.name)
       chartEntry.getChart().deleteFiles()
       #for our own files we can safely delete the config...
       #as it is unique for a chart

@@ -10,9 +10,8 @@ import traceback
 import urllib.request, urllib.parse, urllib.error
 import urllib.parse
 
-import avnav_handlerList
 from avnav_store import AVNStore
-from avnav_util import AVNUtil, AVNLog
+from avnav_util import AVNUtil, AVNLog, AVNDownload
 from avnav_worker import AVNWorker
 
 
@@ -25,30 +24,6 @@ class Encoder(json.JSONEncoder):
     if hasattr(o,'serialize'):
       return o.serialize()
     return super(Encoder, self).default(o)
-
-class AVNDownload(object):
-  def __init__(self, filename, size=None, stream=None, mimeType=None):
-    self.filename = filename
-    self.size = size
-    self.stream = stream
-    self.mimeType = mimeType
-
-  def getSize(self):
-    if self.size is None:
-      return os.path.getsize(self.filename)
-    return self.size
-
-  def getStream(self):
-    if self.stream is None:
-      return open(self.filename, 'rb')
-    return self.stream
-
-  def getMimeType(self, handler=None):
-    if self.mimeType is not None:
-      return self.mimeType
-    if handler is None:
-      return "application/octet-stream"
-    return handler.guess_type(self.filename)
 
 
 class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
@@ -180,7 +155,7 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
       except Exception as e:
         self.send_error(404,str(e))
         return None
-      if isinstance(extPath,AVNDownload):
+      if isinstance(extPath, AVNDownload):
         self.writeFromDownload(extPath)
         return None
       if extPath == True:
@@ -502,7 +477,7 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
         dl=handler.handleApiRequest('download',type,requestParam,handler=self)
         if dl is None:
           raise Exception("unable to download %s",type)
-        if isinstance(dl,AVNDownload):
+        if isinstance(dl, AVNDownload):
           try:
             self.writeFromDownload(dl,
               filename=self.getRequestParam(requestParam, "filename")

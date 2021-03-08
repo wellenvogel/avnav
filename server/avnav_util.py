@@ -513,3 +513,40 @@ class ChartFile(object):
   def getAvnavXml(self,upzoom=None):
     return None
 
+
+class AVNDownload(object):
+  def __init__(self, filename, size=None, stream=None, mimeType=None,lastBytes=None):
+    self.filename = filename
+    self.size = size
+    self.originalSize=self.size
+    self.stream = stream
+    self.mimeType = mimeType
+    self.lastBytes=lastBytes
+    if self.lastBytes is not None:
+      self.lastBytes=int(self.lastBytes)
+
+  def getSize(self):
+    if self.size is None:
+      self.size=os.path.getsize(self.filename)
+      self.originalSize=self.size
+      if self.lastBytes is not None and self.lastBytes < self.size:
+        self.size=self.lastBytes
+    return self.size
+
+  def getStream(self):
+    if self.stream is None:
+      self.stream=open(self.filename, 'rb')
+      if self.lastBytes is not None:
+        if self.originalSize is None:
+          self.getSize()
+        seekv=self.originalSize-self.lastBytes
+        if seekv > 0:
+          self.stream.seek(seekv)
+    return self.stream
+
+  def getMimeType(self, handler=None):
+    if self.mimeType is not None:
+      return self.mimeType
+    if handler is None:
+      return "application/octet-stream"
+    return handler.guess_type(self.filename)

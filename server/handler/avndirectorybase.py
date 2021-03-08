@@ -33,8 +33,7 @@ from zipfile import ZipFile
 
 from avnav_nmea import *
 from avnav_worker import *
-from httphandler import AVNDownload
-
+from avnav_util import AVNDownload
 
 
 class AVNDirectoryListEntry(object):

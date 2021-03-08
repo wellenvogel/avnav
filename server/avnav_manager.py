@@ -493,8 +493,6 @@ class AVNHandlerManager(object):
 
     if request == 'download':
       maxBytes=AVNUtil.getHttpRequestParam(requestParam,'maxBytes')
-      if maxBytes is not None:
-        maxBytes=int(maxBytes)
       if AVNLog.fhandler is None:
         raise Exception("logging not initialized")
       fname=AVNLog.fhandler.baseFilename
@@ -502,19 +500,8 @@ class AVNHandlerManager(object):
         raise Exception("unable to get log file")
       if not os.path.exists(fname):
         raise Exception("log %s not found"%fname)
-      st=os.stat(fname)
-      fsize=st.st_size
-      fh=open(fname,'rb')
-      if maxBytes is not None:
-        if maxBytes < fsize:
-          seekVal=fsize-maxBytes
-          fsize=maxBytes
-          fh.seek(seekVal)
-      return{
-        'mimetype':'application/octet-stream',
-        'size':fsize,
-        'stream':fh
-      }
+      rt=AVNDownload(fname,lastBytes=maxBytes)
+      return rt
     if request != "api":
       raise Exception("unknown request %s"%request)
     if type != 'config':
