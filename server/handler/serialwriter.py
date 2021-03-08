@@ -355,6 +355,13 @@ class AVNSerialWriter(AVNWorker):
     if 'port' in param:
       self.checkUsedResource(UsedResource.T_SERIAL,self.id,param.get('port'))
 
+  def stop(self):
+    try:
+      self.writer.stopHandler()
+    except:
+      pass
+    super().stop()
+
   #thread run method - just try forever  
   def run(self):
     self.checkUsedResource(UsedResource.T_SERIAL,self.id,self.getParamValue('port'))
