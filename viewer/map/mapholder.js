@@ -827,9 +827,17 @@ MapHolder.prototype.initMap=function(opt_preventDialog){
         if (this.zoom < this.minzoom) this.zoom=this.minzoom;
         if (this.zoom > (this.maxzoom + globalStore.getData(keys.properties.maxUpscale)))
             this.zoom=this.maxzoom+globalStore.getData(keys.properties.maxUpscale);
-        if (this.zoom >= (this.minzoom+globalStore.getData(keys.properties.slideLevels))){
-            this.zoom-=globalStore.getData(keys.properties.slideLevels);
-            this.doSlide(globalStore.getData(keys.properties.slideLevels));
+        let slideLevels=0;
+        if (globalStore.getData(keys.properties.mapUpZoom) < globalStore.getData(keys.properties.slideLevels)){
+            //TODO: pick the right maxUpZoom depending on the chart
+            //but should be good enough as online maps should have all levels
+            slideLevels=globalStore.getData(keys.properties.slideLevels)-globalStore.getData(keys.properties.mapUpZoom);
+        }
+        if (slideLevels > 0) {
+            if (this.zoom >= (this.minzoom + slideLevels)) {
+                this.zoom -= slideLevels;
+                this.doSlide(slideLevels);
+            }
         }
         this.requiredZoom=this.zoom;
         this.setZoom(this.zoom);
