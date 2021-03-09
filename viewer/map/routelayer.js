@@ -100,8 +100,8 @@ RouteLayer.prototype.setStyle=function(opt_change) {
             color:  globalStore.getData(keys.properties.routeColor),
             width:  globalStore.getData(keys.properties.routeWidth),
             arrow: {
-                width:  globalStore.getData(keys.properties.routeWidth*3),
-                length:  globalStore.getData(keys.properties.routeWidth*7),
+                width:  globalStore.getData(keys.properties.routeWidth)*3,
+                length:  globalStore.getData(keys.properties.routeWidth)*7,
                 offset: 20,
                 open: true
                 }
