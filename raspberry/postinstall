@@ -11,9 +11,6 @@ if [ -f $VERSIONFILE ] ; then
     . $VERSIONFILE
 fi
 systemctl daemon-reload
-#systemctl enable avnav-check-wlan
-#check-parts should not be necessary any more as we do not have small files - and it resizes anyway?!
-#systemctl enable avnav-check-parts
 systemctl enable avnav
 echo stopping and disabling gpsd
 systemctl disable gpsd || echo ' ' > /dev/null
@@ -87,11 +84,9 @@ systemctl stop ntp.service || echo "ntp not running, dont need to disable"
 
 systemctl daemon-reload
 systemctl restart dnsmasq
-#systemctl start avnav-check-parts
+
 systemctl restart avnav
 systemctl enable avnav-iptables
 systemctl start avnav-iptables
-#TODO:
-#ntp setup
-#sudo setup
+
 exit 0

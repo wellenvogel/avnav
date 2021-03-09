@@ -1,2 +1,2 @@
 #!/bin/sh
-sudo -n shutdown -P
+sudo -n halt
