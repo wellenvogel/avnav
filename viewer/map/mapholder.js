@@ -142,6 +142,8 @@ const MapHolder=function(){
 
     this.compassOffset=0;
 
+    this.needsRedraw=false;
+
     let self=this;
     let storeKeys=KeyHelper.flattenedKeys(keys.nav.gps).concat(
         KeyHelper.flattenedKeys(keys.nav.center),
@@ -154,6 +156,7 @@ const MapHolder=function(){
     });
     this.propertyChange=new Callback(()=>{
         self.drawing.setUseHdpi(globalStore.getData(keys.properties.style.useHdpi,false));
+        self.needsRedraw=true;
     });
     this.editMode=new Callback(()=>{
         let isEditing=globalStore.getData(keys.gui.global.layoutEditing);
@@ -510,6 +513,11 @@ MapHolder.prototype.loadMap=function(div,opt_preventDialogs){
                 .catch((error)=>{reject(error)});
         };
         let checkChanges=()=>{
+            if (this.needsRedraw){
+                this.needsRedraw=false;
+                prepareAndCreate(newSources);
+                return;
+            }
             if (this.sources.length !== newSources.length ){
                 prepareAndCreate(newSources);
                 return;

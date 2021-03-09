@@ -357,6 +357,7 @@ let keys={
         showFullScreen: new Property(true,"Show Fullscreen Button",PropertyType.CHECKBOX),
         mapUpZoom: new Property(4,"zoom up lower layers",PropertyType.RANGE,[0,6]),
         mapOnlineUpZoom: new Property(0,"zoom up lower layers for online sources",PropertyType.RANGE,[0,6]),
+        mapScale: new Property(1,"scale the map display",PropertyType.RANGE,[0.3,5]),
 
         style: {
             buttonSize: new Property(60, "Button Size(px)", PropertyType.RANGE, [35, 100]),
