@@ -812,6 +812,10 @@ class AVNWorker(object):
     self.currentThread.start()
 
   def startInstance(self,navdata):
+    """
+
+    @type navdata: AVNStore
+    """
     self.navdata=navdata
     self.feeder = self.findFeeder(self.getStringParam('feederName'))
     try:

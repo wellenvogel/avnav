@@ -132,6 +132,14 @@ class AVNFeeder(AVNWorker):
     AVNLog.debug("addNMEA listlen=%d history=%d data=%s",ll,hl,entry)
     return rt
 
+  def wakeUp(self):
+    super().wakeUp()
+    self.listlock.acquire()
+    try:
+      self.listlock.notifyAll()
+    finally:
+      self.listlock.release()
+
   #fetch entries from the history
   #only return entries with higher sequence
   #return a tuple (lastSequence,[listOfEntries])

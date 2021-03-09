@@ -319,6 +319,17 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
     self.importer = self.findHandlerByName("AVNImporter")
     super().run()
 
+  def wakeUp(self):
+    super().wakeUp()
+    #we need to wake all threads that are sitting at conditions
+    for item in list(self.itemList.values()):
+      chart=item.getChart()
+      if isinstance(chart,ChartFile):
+        try:
+          chart.wakeUp()
+        except:
+          pass
+
   def periodicRun(self):
     if self.baseDir is None or not os.path.isdir(self.baseDir):
       self.setInfo("main", "directory %s not found" % self.baseDir, WorkerStatus.ERROR)

@@ -201,6 +201,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
     self.onItemRemove(item)
 
   def _scanDirectory(self):
+    AVNLog.debug("scan directory %s",self.baseDir)
     if not self.autoScanIncludeDirectories() and len(self.getAutoScanExtensions()) < 1:
       return
     try:
@@ -263,7 +264,9 @@ class AVNDirectoryHandlerBase(AVNWorker):
       except:
         AVNLog.debug("%s: exception in periodic run: %s",self.getName(),traceback.format_exc())
       sleepTime = self.getSleepTime()
+      AVNLog.debug("main loop periodic run sleeping %f seconds",sleepTime)
       self.wait(sleepTime)
+      AVNLog.debug("main loop periodic run")
 
   @classmethod
   def canDelete(self):

@@ -494,6 +494,8 @@ class AVNUtil(object):
 
 
 class ChartFile(object):
+  def wakeUp(self):
+    pass
   def getScheme(self):
     return None
   def close(self):
