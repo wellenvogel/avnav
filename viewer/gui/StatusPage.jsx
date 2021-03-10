@@ -19,6 +19,9 @@ import EditHandlerDialog from "../components/EditHandlerDialog";
 import DB from '../components/DialogButton';
 import {Checkbox, Input} from "../components/Inputs";
 import LogDialog from "../components/LogDialog";
+import assign from "object-assign";
+import ShallowCompare from "../util/shallowcompare";
+import PropTypes from 'prop-types';
 
 class DebugDialog extends React.Component{
     constructor(props) {
@@ -141,53 +144,54 @@ const StatusItem=(props)=>{
     );
 };
 
-
-
-class StatusPage extends React.Component{
-    constructor(props){
+class StatusList extends React.Component{
+    constructor(props) {
         super(props);
-        let self=this;
-        this.state={
-            addresses:false,
-            wpa:false,
-            shutdown:false,
-            itemList:[],
-            serverError:false,
-            canRestart:false
-        }
         this.querySequence=1;
         this.doQuery=this.doQuery.bind(this);
         this.queryResult=this.queryResult.bind(this);
         this.errors=0;
         this.timer=GuiHelpers.lifecycleTimer(this,this.doQuery,globalStore.getData(keys.properties.statusQueryTimeout),true);
         this.mainListRef=null;
+        this.state={
+            itemList:[]
+        }
+        this.notifyProps={
+            addresses:this.props.notifyProps.addresses||false,
+            wpa:this.props.notifyProps.wpa||false,
+            shutdown:this.props.notifyProps.shutdown||false,
+            serverError:this.props.notifyProps.serverError||false,
+            canRestart:this.props.notifyProps.canRestart||false
+        }
     }
     queryResult(data){
-            let self=this;
-            let storeData={
-                addresses:false,
-                wpa:false,
-                shutdown:false,
-                itemList:[],
-                serverError:false
-            };
-            self.errors=0;
-            if (data.handler) {
-                data.handler.forEach(function(el){
-                    if (el.configname==="AVNHttpServer"){
-                        if (el.properties && el.properties.addresses ) storeData.addresses=true;
-                    }
-                    if (el.configname === "AVNWpaHandler"){
-                        storeData.wpa=true;
-                    }
-                    if (el.configname==="AVNCommandHandler"){
-                        if (el.properties && el.properties.shutdown ) storeData.shutdown=true;
-                    }
-                    el.key=el.displayKey;
-                    storeData.itemList.push(el);
-                });
+        let self=this;
+        let itemList=[];
+        let storeData=assign({},this.notifyProps);
+        self.errors=0;
+        if (data.handler) {
+            data.handler.forEach(function(el){
+                if (el.configname==="AVNHttpServer"){
+                    if (el.properties && el.properties.addresses ) storeData.addresses=true;
+                }
+                if (el.configname === "AVNWpaHandler"){
+                    storeData.wpa=true;
+                }
+                if (el.configname==="AVNCommandHandler"){
+                    if (el.properties && el.properties.shutdown ) storeData.shutdown=true;
+                }
+                el.key=el.displayKey||el.id;
+                itemList.push(el);
+            });
+        }
+        if (!ShallowCompare(storeData,this.notifyProps)){
+            if (this.props.onChange){
+                this.props.onChange(storeData);
             }
-            this.setState(storeData);
+            this.notifyProps=storeData;
+        }
+
+        this.setState({itemList:itemList});
 
     }
     doQuery(){
@@ -207,6 +211,49 @@ class StatusPage extends React.Component{
                 self.timer.startTimer();
             });
     }
+    getSnapshotBeforeUpdate(prevProps, prevState) {
+        if (!this.mainListRef) return null;
+        return{
+            x:this.mainListRef.scrollLeft,
+            y:this.mainListRef.scrollTop
+        }
+    }
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if (snapshot && this.mainListRef){
+            this.mainListRef.scrollLeft=snapshot.x;
+            this.mainListRef.scrollTop=snapshot.y;
+        }
+    }
+    render(){
+        return <ItemList
+            itemClass={(iprops)=><StatusItem
+                connected={this.props.connected}
+                {...iprops}/>}
+            itemList={this.state.itemList}
+            scrollable={true}
+            listRef={(ref)=>this.mainListRef=ref}
+        />
+    }
+
+}
+
+StatusList.propTypes={
+    onChange: PropTypes.func,
+    connected: PropTypes.bool
+}
+
+class StatusPage extends React.Component{
+    constructor(props){
+        super(props);
+        let self=this;
+        this.state={
+            addresses:false,
+            wpa:false,
+            shutdown:false,
+            serverError:false,
+            canRestart:false
+        }
+    }
     componentDidMount(){
         if (! globalStore.getData(keys.gui.capabilities.config)) return;
         Requests.getJson('',undefined,{
@@ -220,19 +267,6 @@ class StatusPage extends React.Component{
             .catch((e)=>Toast(e))
     }
     componentWillUnmount(){
-    }
-    getSnapshotBeforeUpdate(prevProps, prevState) {
-        if (!this.mainListRef) return null;
-        return{
-            x:this.mainListRef.scrollLeft,
-            y:this.mainListRef.scrollTop
-        }
-    }
-    componentDidUpdate(prevProps, prevState, snapshot) {
-        if (snapshot && this.mainListRef){
-            this.mainListRef.scrollLeft=snapshot.x;
-            this.mainListRef.scrollTop=snapshot.y;
-        }
     }
     restartServer(){
         OverlayDialog.confirm("really restart the AvNav server software?")
@@ -341,13 +375,10 @@ class StatusPage extends React.Component{
                 id="statuspage"
                 title={this.state.serverError?"Server Connection lost":"Server Status"}
                 mainContent={
-                    <ItemList
-                        itemClass={(iprops)=><StatusItem
-                            connected={props.connected}
-                            {...iprops}/>}
-                        itemList={this.state.itemList}
-                        scrollable={true}
-                        listRef={(ref)=>this.mainListRef=ref}
+                    <StatusList
+                        connected={props.connected}
+                        onChange={(nv)=>this.setState(nv)}
+                        notifyProps={this.state}
                     />
                 }
                 buttonList={buttons}/>
