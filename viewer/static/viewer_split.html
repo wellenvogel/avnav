@@ -81,6 +81,7 @@
   <script type="text/javascript">
       (function(){
           var dragPosition=-1;
+          var dragstartX=-1;
           var mover=document.getElementById('mover');
           var f1=document.getElementById('left');
           var f2=document.getElementById('right');
@@ -97,20 +98,26 @@
               f1.style.width=(percent)+"%";
               f2.style.width=(100-percent)+"%";
               setMover();
+              window.setTimeout(function(){
+                  mover.style.opacity=0.3;
+              },5000)
           }
           var setSplitFromPos=function(pos){
               var r=frame.getBoundingClientRect();
               var percent=pos*100/r.width;
-              if (percent < 10) percent=10;
-              if (percent > 90) percent=90;
+              if (percent < 0) percent=0;
+              if (percent >= 99.999) percent=99.999;
               setSplit(percent);
           }
           mover.addEventListener('dragstart',function(ev){
+              dragstartX=ev.screenX;
+              mover.style.opacity=0.6;
           });
           mover.addEventListener('touchstart',function(ev){
               ev.preventDefault();
               var touchobj = ev.changedTouches[0];    // erster Finger des touchstart-Events
               dragPosition = parseInt(touchobj.screenX);
+              mover.style.opacity=0.6;
               setMover(dragPosition);
           });
           mover.addEventListener('touchmove',function(ev){
@@ -125,7 +132,11 @@
           })
           mover.addEventListener('dragend',function(ev){
               ev.preventDefault();
-              setSplitFromPos(ev.screenX);
+              var left=f1.getBoundingClientRect().width;
+              if (dragstartX < 0) return;
+              left += ev.screenX - dragstartX;
+              dragstartX=-1;
+              setSplitFromPos(left);
           })
 
       var percent=50;
