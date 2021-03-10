@@ -88,6 +88,13 @@ try {
                     .catch((e)=> Toast(e));
             }
         }
+        else if (mode === 'parent'){
+            fullScreenAvailable=()=>true;
+            isFullScreen=()=>{return undefined};
+            toggleFullscreen=()=>{
+                window.parent.postMessage('fullscreen','*');
+            }
+        }
         else{
             fullScreenBlocked=true;
         }
