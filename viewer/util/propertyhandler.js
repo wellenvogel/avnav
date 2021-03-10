@@ -48,6 +48,15 @@ class PropertyHandler {
             return;
         }
         this.incrementSequence();
+        try{
+            window.addEventListener('message',(ev)=>{
+                if (ev.origin !== window.location.origin) return;
+                if (ev.data === 'reloadSettings'){
+                    this.resetToSaved();
+                    this.incrementSequence();
+                }
+            })
+        } catch (e){}
     }
 
     loadUserData(){
@@ -81,6 +90,9 @@ class PropertyHandler {
     saveUserData(data) {
         let raw = JSON.stringify(data);
         localStorage.setItem(globalStore.getData(keys.properties.settingsName), raw);
+        try{
+            window.parent.postMessage('settingsChanged',window.location.origin);
+        }catch (e){}
     }
 
 

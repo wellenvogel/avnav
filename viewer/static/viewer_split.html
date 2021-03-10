@@ -163,6 +163,11 @@
                   document.body.requestFullscreen();
               }
           }
+          if (ev.data === 'settingsChanged'){
+              [f1,f2].forEach(function(frm){
+                  frm.contentWindow.postMessage('reloadSettings',window.location.origin);
+              })
+          }
       })
       })();
   </script>
