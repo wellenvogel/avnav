@@ -333,8 +333,8 @@ let keys={
         nightChartFade: new Property(30, "NightChartDim(%)", PropertyType.RANGE, [1, 99]), //in %
         dimFade: new Property(0,"Dim Fade(%)",PropertyType.RANGE,[0,60]),
         showDimButton: new Property(true,"Show Dim Button",PropertyType.CHECKBOX),
-        baseFontSize: new Property(14, "Base Font(px)", PropertyType.RANGE, [8, 28]),
-        widgetFontSize: new Property(16, "Widget Base Font(px)", PropertyType.RANGE, [8, 28]),
+        baseFontSize: new Property(12, "Base Font(px)", PropertyType.RANGE, [8, 28]),
+        widgetFontSize: new Property(14, "Widget Base Font(px)", PropertyType.RANGE, [8, 28]),
         allowTwoWidgetRows: new Property(true, "2 widget rows", PropertyType.CHECKBOX),
         showClock: new Property(true, "show clock", PropertyType.CHECKBOX),
         showZoom: new Property(true, "show zoom", PropertyType.CHECKBOX),
@@ -360,7 +360,7 @@ let keys={
         mapScale: new Property(1,"scale the map display",PropertyType.RANGE,[0.3,5]),
 
         style: {
-            buttonSize: new Property(60, "Button Size(px)", PropertyType.RANGE, [35, 100]),
+            buttonSize: new Property(50, "Button Size(px)", PropertyType.RANGE, [35, 100]),
             aisWarningColor: new Property("#FA584A", "Warning", PropertyType.COLOR),
             aisNormalColor: new Property("#EBEB55", "Normal", PropertyType.COLOR),
             aisNearestColor: new Property('#70F3AF', "Nearest", PropertyType.COLOR),
