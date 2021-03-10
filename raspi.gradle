@@ -42,20 +42,19 @@ ospackage {
     into ('/usr/lib/avnav/raspberry') {
         from('raspberry'){
             fileMode 0755
-            include 'check_wlan'
             include 'hostapd'
             include 'settime.sh'
-            include 'shutdown.sh'
             include 'restore-iptables.sh'
             include 'sound.sh'
-            include 'check-wlan-av1.pl'
             include 'iptables-ext.sh'
             include 'wpa_supplicant.conf'
+            include 'startup-check.sh'
         }
         from('raspberry') {
             include 'avnav_server.xml'
             include 'hosts'
             include 'ntp.conf'
+            include 'avnav.conf'
             fileMode 0644
         }
     }
@@ -74,8 +73,8 @@ ospackage {
     }
     into('/usr/lib/systemd/system'){
         from('raspberry'){
-            include('avnav-check-wlan.service')
             include('avnav-iptables.service')
+            include('avnav-startup.service')
         }
     }
     into('/etc/network/interfaces.d'){
