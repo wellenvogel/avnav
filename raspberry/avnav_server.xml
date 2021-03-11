@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<AVNServer >
+<?xml version="1.0" ?><AVNServer>
 <!-- some basic configuration
      debugToLog controls whether any debug output will also go to the logfile
      you can change the loglevel by an HTTP request to the navurl:
@@ -10,16 +9,10 @@
      settimeperiod: time in seconds befor we retry setting the systemtime
      ownMMSI: Own ship's MMSI 
 -->
-<AVNConfig debug="0" 
-	logfile="/home/pi/avnav/data/log/avnav.log" 
-	debugToLog="true"
-	maxtimeback="5"
-	settimecmd="/usr/lib/avnav/raspberry/settime.sh"
-    systimediff="5"
-    settimeperiod="3600"/>
+<AVNConfig debug="0" debugToLog="true" maxtimeback="5" settimecmd="/usr/lib/avnav/raspberry/settime.sh" settimeperiod="3600" systimediff="5"/>
 <!-- the workers section -->
 <Workers>
-<!-- the universal feeder 
+<!-- the universal feeder
 	 -->
 <AVNFeeder/>
 
@@ -31,7 +24,7 @@
 	 this avoids the need for more or less broken rfcomm stuff
 	  -->
 
-<AVNBlueToothReader maxDevices="5" >
+<AVNBlueToothReader maxDevices="5">
 </AVNBlueToothReader>
 
 
@@ -49,8 +42,8 @@
 	 We use autobaud between 4800 and 38400 here
 	 The data is feed through the gpsd feeder
 	 -->
-<AVNUsbSerialReader maxDevices="5" allowUnknown="true" baud="38400" minbaud="4800">
-	<UsbDevice usbid="1-1.2.1:1.0" baud="38400" minbaud="4800"/>
+<AVNUsbSerialReader allowUnknown="true" baud="38400" maxDevices="5" minbaud="4800">
+	<UsbDevice baud="38400" minbaud="4800" usbid="1-1.2.1:1.0"/>
     <!-- a serial input + output device at one particular USB port
          with this filter it will output only RMB NMEA records data
 	     use a readerFilter to also apply a filter at the reader
@@ -102,7 +95,7 @@
      by default it will receive data only at localhost (127.0.0.1), you can change this by settintg the host parameter e.g. to 0.0.0.0
      to listen on all interfaces
 -->
-<AVNUdpReader port="34667" minTime="100"></AVNUdpReader>
+<AVNUdpReader minTime="100" port="34667"/>
 
 <!-- UDP Broadcaster for Navionics
      host: destination IP/hostname. Default 127.0.0.1
@@ -142,13 +135,9 @@
      the navurl is the url that is used to control any nav feature
      this of course must fit to the java script part...
 -->
-<AVNHttpServer navurl="/viewer/avnav_navi.php" index="/viewer/avnav_viewer.html" httpPort="8080">
-	<Directory urlpath="maps" path="/home/pi/avnav/data/charts"></Directory>
-	<Directory urlpath="log" path="/home/pi/avnav/data/log"></Directory>
-	<Directory urlpath="tracks" path="/home/pi/avnav/data/tracks"></Directory>
-	<Directory urlpath="routes" path="/home/pi/avnav/data/routes"></Directory>
-	<MimeType extension=".avt" type="text/plain"></MimeType>
-	<MimeType extension=".log" type="text/plain"></MimeType>
+<AVNHttpServer httpPort="8080" index="/viewer/avnav_viewer.html" navurl="/viewer/avnav_navi.php">
+	<MimeType extension=".avt" type="text/plain"/>
+	<MimeType extension=".log" type="text/plain"/>
 </AVNHttpServer>
 <!-- the writer for track data
      tracks are written in a simple file
@@ -158,7 +147,7 @@
      interval is the minimum interval between writing trackpoints
      mindistance is the minimum distance in m before a new trackpoint is written (interval wins)
       -->
-<AVNTrackWriter interval="10" mindistance="50" trackdir="/home/pi/avnav/data/tracks"/>
+<AVNTrackWriter interval="10" mindistance="50" />
 <!-- an TCP writer that will provide data from the feeder input to other systems
 	 port - the listener port
 	 filter can be either $XXX,... - the NMEA setence, in this case the first 2 characters are ignored or
@@ -172,7 +161,7 @@
  -->
 <!-- a tcp socket that will output all NMEA data that AvNav has received
      you can customize it using the filter -->
-<AVNSocketWriter port="34567" maxDevices="5" filter="" read="true" minTime="50" name="allnmea0183"/>
+<AVNSocketWriter filter="" maxDevices="5" minTime="50" name="allnmea0183" port="34567" read="true"/>
 <!-- the following entries provide the integration with signalk and canboat
      we provide a connector to canboat (n2kd) to receive all data that has been translated from nmea2000 to nmea0183
        for the socketreader that connects to 2599 we set a very long timeout (one year) as
@@ -192,10 +181,10 @@
 <AVNSocketReader port="2599" host="localhost" filter="" name="canboatnmea0183" timeout="31104000"/>
  ##SIGNALK CANBOAT-->
 <AVNPluginHandler>
-<!-- ##SIGNALK 
+<!-- ##SIGNALK
         <builtin-signalk enabled="true"/>
  ##SIGNALK -->
-<!-- ##CANBOAT 
+<!-- ##CANBOAT
 	<builtin-canboat enabled="true" allowKeyOverwrite="true" autoSendRMC="30" sourceName="canboatgen"/>
  ##CANBOAT -->
 </AVNPluginHandler>
@@ -207,7 +196,7 @@
       interval: interval in seconds for computing RMB data (default: 5)
       computeRMB: default True, set to false if you do not want RMB computation
 -->
-<AVNRouter routesdir="/home/pi/avnav/data/routes"></AVNRouter>
+<AVNRouter/>
 <!-- log nmea data
      will create .nmea(.gz) files in the tracks directory
      parameters:
@@ -215,14 +204,12 @@
      filter: the filter for the sentences to be written, default "$RMC,$DBT,$DBP" - suitable to help openseamap by logging depth
      interval: minimal interval in seconds between sentences of the same type (default: 5)
 -->
-<AVNNmeaLogger></AVNNmeaLogger>
-<AVNImporter importDir="/home/pi/avnav/data/import"></AVNImporter>
+<AVNNmeaLogger/>
+<AVNImporter />
 <!-- add the following property to AVNWpaHandler to be able to allow external access for wlan client
      firewallCommand="sudo -n $BASEDIR/../raspberry/iptables-ext.sh wlan-av1"
 -->
-<AVNWpaHandler 
-    wpaSocket="/var/run/wpa_supplicant/wlan-av1"
-    >
+<AVNWpaHandler wpaSocket="/var/run/wpa_supplicant/wlan-av1">
 </AVNWpaHandler>
 <AVNCommandHandler >
 	<Command name="shutdown" command="sudo halt"/>
