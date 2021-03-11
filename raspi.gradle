@@ -123,12 +123,7 @@ ospackage {
             include('8192cu.conf')
         }
     }
-    into('/etc/avahi/services'){
-        from('raspberry'){
-            include('avnav-avahi.service')
-        }
-    }
-
+    
     postInstall file('raspberry/postinstall')
     preInstall file('raspberry/preinstall')
 

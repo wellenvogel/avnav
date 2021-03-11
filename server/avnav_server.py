@@ -56,7 +56,7 @@ loggingInitialized=False
 def sighandler(signal,frame):
   for handler in AVNWorker.allHandlers:
     try:
-      handler.stopChildren()
+      handler.stop()
     except:
       pass
   sys.exit(1)

@@ -572,6 +572,7 @@ class AVNWorker(object):
       self.checkConfig(checkConfig)
     rt = self.changeMultiConfig(checked)
     if self.canDisable() or self.canDeleteHandler():
+      if 'enabled' in checked:
         if newEnable != self.isDisabled():
           if not newEnable:
             AVNLog.info("handler disabled, stopping")
