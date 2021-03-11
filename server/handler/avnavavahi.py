@@ -117,6 +117,10 @@ class AVNAvahi(AVNWorker):
     timeout=self.getFloatParam('timeout')
     retries=self.getIntParam('maxRetries')
     num=0
+    try:
+      self.group.Reset()
+    except:
+      pass
     while num < retries:
       name=self.serviceName
       if self.nameSuffixCount is not None:
@@ -128,7 +132,7 @@ class AVNAvahi(AVNWorker):
       self.group.Commit()
       waitTime=timeout*10
       state=self.group.GetState()
-      while state == self.ENTRY_GROUP_REGISTERING and waitTime > 0:
+      while state in [self.ENTRY_GROUP_REGISTERING,self.ENTRY_GROUP_UNCOMMITED] and waitTime > 0:
         waitTime-=1
         time.sleep(0.1)
         state=self.group.GetState()
@@ -140,6 +144,11 @@ class AVNAvahi(AVNWorker):
         num+=1
         continue
       if state != self.ENTRY_GROUP_ESTABLISHED:
+        try:
+          self.group.Reset()
+        except:
+          pass
+        self.group=None
         raise Exception("unable to register service, state=%s"%str(state))
       self.registeredName=name
       return True
