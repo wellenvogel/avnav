@@ -7,33 +7,33 @@
   <body>
     <h1><a name="Mobac"></a>Mobile Atlas Creator Mapsources</h1>
     2020/01/26<br>
-    <p>Some minor modifications to make access to BSH servers working again.</p>
+    <p>Some minor modifications to fix access to BSH servers.</p>
     <h2>Sources</h2>
-    <p>For the <a href="https://mobac.sourceforge.io/">Mobile Atlas Creator</a>
-      I created a coupl of map sources that will give you more control when
-      accessing online map source with some xml config. You need to unpack the
+    <p>For <a href="https://mobac.sourceforge.io/">Mobile Atlas Creator</a> I
+      created a couple of map sources that will give you more control when
+      accessing online map sources with some xml config. You need to unpack the
       file <a href="../downloads/avnav-mapsources.zip">avnav-mapsources.zip</a>
       within the directory "mapsources" of the Mobile Atlas Creator.</p>
     <p>You will get (among others) a "mashUp" with BSH chart services (see <a href="../../bshviewer/bshviewer.html">bsh-viewer</a>)
       and OpenSeaMap ("BSH OpenSeaMap 2014 Extended"). Additionally BSH allone
       ("BSH 2014 Extended") or OpenSeaMap + OpenStreetMap ("OWS OpenSeaMap
       2014").</p>
-    <p>If you want to change - just adapt the .exml files. For the BSH layers
-      you can try them with my <a href="../../bshviewer/bshviewer.html">
-        bsh-viewer</a> (just edit the sources on the right side). Additionally
-      you can adapt the colors (I tried to get some more contrast). To change
-      the color mappings you can open one of the tiles with a painting program
-      and pick up the hex values for the colors you would like to change. Those
-      must be adapted inside the .exml files.</p>
+    <p>If you want to modify - just adapt the .exml files. You can try the BSH
+      layers with my <a href="../../bshviewer/bshviewer.html"> bsh-viewer</a>
+      (just edit the sources on the right side). Additionally you can adjust the
+      colors (I tried to get some more contrast). To change the color mappings
+      you can open one of the tiles with a grafics program and pick up the hex
+      values for the colors you would like to change. Those must be adapted
+      inside the .exml files.</p>
     <p>Typically the download will run for a long time - the BSH servers are
-      slow. If the download stoips, just try again in MOBAC. Set the cache to a
-      sufficient time (e.g. one month). Always use "OsmdroidGEMF" as atlas
-      format.</p>
+      slow. If the download fails, just try again in MOBAC. Set the cache to a
+      sufficient expiration time (e.g. one month). Always use "OsmdroidGEMF" as
+      atlas format.</p>
     <p>If you apply changes to the .exml files you need to delete the databases
-      for this chartsource (below tilestore) and restart MOBAC.</p>
+      for this chartsource (on tilestore tab) and restart MOBAC.</p>
     <p>Source files on <a href="https://github.com/wellenvogel/avnav/tree/master/mobac/testsrc">github</a>.</p>
-    <p>The result could look like...(entrance to Greifswald):</p>
-    <p><img src="MobacExampleBsh.PNG" width="600" height="405"></p>
+    <p>The result could look like this ... (approach to Greifswald):</p>
+    <p><img src="MobacExampleBsh.PNG" height="405" width="600"></p>
     <p>The download:</p>
     <ul>
       <li><a href="../downloads/avnav-mapsources.zip">avnav-mapsources.zip</a>

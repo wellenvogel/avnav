@@ -1,6 +1,7 @@
 <html>
-  <head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+    
     <title>AvNav OCharts</title>
     <link href="../styles.css" rel="stylesheet" type="text/css">
   </head>
@@ -19,9 +20,9 @@
       werden.</p>
     <p>Um die Karten in AvNav darzustellen, müssen sie zunächst einmal in Raster
       Karten umgewandelt werden. Das erledigt ein neues Plugin für AvNav
-      (avnav-ocharts). Die Umwandlung erfolgt dabei im laufenden Betrieb immer
-      dann, wenn die Karten dargestellt werden sollen. Damit kann mit diesen
-      Karten weitgehend normal gearbeitet werden ohne das man sich um diesen
+      (avnav-ocharts). Diese Umwandlung erfolgt in einen Cache-Speicher nach 
+	  dem Herunterladen, und im laufenden Betrieb spätestens dann, wenn die Karten dargestellt werden sollen. Damit kann mit diesen
+      Karten weitgehend normal gearbeitet werden, ohne dass man sich um diesen
       Prozess kümmern muss.</p>
     <p>Das Handling der Karten erfolgt dabei vollständig durch das Plugin - das
       betrifft auch die Installation (die Karten können nicht über die normale <a
@@ -32,7 +33,7 @@
         alt="" class="inlineimage"> erreichbar ist.</p>
     <img src="ocharts-gui-1.png" alt="" class="fimage"><br>
     <h2><a name="Charts"></a>Erwerb und Installation der Karten</h2>
-    <p>Wichtiger Hinweis: <span style="color: #ff6666;">Wenn man keinen dongle
+    <p>Wichtiger Hinweis: <span style="color: #ff6666;">Wenn man keinen Dongle
         von o-charts hat, sind die Karten an das System gebunden. Wenn es daher
         beim Einbringen oder bei der Nutzung der Karten Probleme gibt, bitte <b>nicht</b>
         das System neu aufsetzen - sondern eine Reparatur versuchen. Wenn man
@@ -100,7 +101,7 @@
       letzte abgerufene Version ist 21, verfügbar ist 23).</p>
     <h3>5. Herunterladen der Karten</h3>
     <img src="ocharts-download.png" alt="" class="fimage">
-    <p>Nach kurzer Zeit erhält man von o-charts eine mail mit dem Download-Link.
+    <p>Nach kurzer Zeit erhält man von o-charts eine Mail mit dem Download-Link.
       Diese Datei (zip) herunterladen.</p>
     <p>6. Hochladen der Zip-Datei zu AvNav.</p>
     <p><img src="ocharts-upload1.png" alt="" class="fimage"></p>
@@ -108,16 +109,16 @@
       heruntergeladene Datei zu AvNav hochladen.</p>
     <p>Während des Uploads wird ein Fortschritt angezeigt.</p>
     <p><img src="ocharts-upload2.png" alt="" class="fimage"></p>
-    <p>Am Ende des Uploads wird auf dem AvNav Server die Datei ausgepackt und es
+    <p>Am Ende des Uploads wird auf dem AvNav Server die Datei ausgepackt, und es
       werden einige Prüfungen durchgeführt (das kann einige Sekunden dauern).</p>
     <p>Die Karten werden (falls nicht anders konfiguriert) in das Verzeichnis
       /home/pi/avnav/data/ocharts/charts hochgeladen.</p>
     <p><img src="ocharts-upload3.png" alt="" class="fimage"></p>
     <p>Wenn alle Prüfungen erfolgreich waren, wird angeboten sofort das Plugin
       zu restarten um die Karten nutzen zu können.</p>
-    <p>Falls es sich bei den neu hochgeladenen karten um ein Update schon
+    <p>Falls es sich bei den neu hochgeladenen Karten um ein Update schon
       vorhandener Karten handelt, wírd der vorhandene Satz deaktiviert und der
-      neue Satz aktiviert (beim restart). Das kann in der GUI später geändert
+      neue Satz aktiviert (beim Restart). Das kann in der GUI später geändert
       werden. Nicht mehr benötigte Sätze können hier gelöscht werden.</p>
     <p>Beim Restart kommt es kurzzeitig zu einigen Fehlermeldungen, aber nach
       max. 30s sollte der Status zumindest wieder gelb sein (das Plugin liest
@@ -134,16 +135,16 @@
     <p>Im Bild ist zu sehen, das nach dem Hochladen jetzt automatisch bereits
       eine Erzeugung von Kartenkacheln angelaufen ist ("Cache Prefill"). Das
       sorgt dafür, das die Verzögerungen, die sonst bei der Nutzung durch die
-      begrenzten Resourcen des raspberry pi entstehen können, verringert werden.
+      begrenzten Resourcen des Raspberry Pi entstehen können, verringert werden.
       Dazu wird nach einem bestimmten Verfahren ein Teil der Kacheln im Bereich
       des Kartensatzes vorab erzeugt und in einem Cache File gespeichert.</p>
     <p>Trotzdem können die Karten auch bereits unmittelbar genutzt werden.</p>
     <p><img src="ocharts-mainpage.png" alt="" class="fimage"></p>
     <p><img src="ocharts-navpage.png" alt="" class="fimage"></p>
-    <p>Wie bereits erwähnt kann es bei der erstmaligen Nutzung in einem
+    <p>Wie bereits erwähnt, kann es bei der erstmaligen Nutzung in einem
       bestimmten Bereich zu Verzögerungen kommen (insbesondere auf den
-      kleineren/älteren Pi's) - nach der einmaligen Nutzung sind die Kacheln für
-      den Bereich aber im Cache und die Verzögerungen sind minimal.</p>
+      kleineren/älteren Pi's) - nach der erstmaligen Nutzung sind die Kacheln für
+      den Bereich aber im Cache-Speicher und die Verzögerungen sind minimal.</p>
     <h2><a name="MainSettings"></a>Anpassung des Aussehens</h2>
     <p>Da die O-charts Karten zunächst als Vektorkarten vorhanden sind, kann in
       weiten Bereichen das Aussehen der Karten angepasst werden. Dabei sind
@@ -249,7 +250,7 @@
         </tr>
         <tr>
           <td>Colors</td>
-          <td>Farben (4Color, 2 Color)</td>
+          <td>Farben (4 Color, 2 Color)</td>
           <td>4 Color</td>
         </tr>
         <tr>
@@ -284,7 +285,7 @@
             Erzeugung einer Kachel beteiligt werden müssen. Kleinere Werte
             führen zu weniger Karten (schneller) können aber in bestimmten
             Bereichen zu weissen Flächen zwischen Karten-Teilen führen. Die
-            defaults sollten ein guter Kompromiß sein.</td>
+            Defaults sollten ein guter Kompromiss sein.</td>
           <td>4</td>
         </tr>
         <tr>
@@ -323,7 +324,7 @@
     <p><img src="FeatureInfo-OCharts2.png" alt="" class="fimage"> </p>
     <br>
     <h2><a name="Installation"></a>Installation</h2>
-    <p>Die Installation kann normal als Pakete in den AvNav Images erfolgen. Für
+    <p>Die Installation kann normal als Paket in den AvNav Images erfolgen. Für
       die <a href="../install.html#Headless">Headless Images</a> sind die
       nötigen Pakete bereits installiert. Zusätzlich sind die Pakete auch im
       Repository vorhanden. Es müssen die Pakete</p>
@@ -340,7 +341,7 @@
     <p>Falls auf anderen Images gearbeitet wird, sollte das Repository von
       free-x hinzugefügt werden.</p>
     <div class="code">deb https://www.free-x.de/debian buster main contrib non-free</div>
-    <p>Die Pakete sind auch in der release Liste hier darunter zu finden. Um ein
+    <p>Die Pakete sind auch in der Release Liste hier darunter zu finden. Um ein
       solches Paket zu installieren (falls es noch nicht im Repo ist - oder um
       ein älteres zu verwenden) - das Paket herunterladen und installieren (die
       Version durch die jeweils aktuelle ersetzen).</p>
@@ -373,14 +374,15 @@
       <ul>
         <li>Verbessertes Memory Handling: Der Xvfb wird überwacht und restartet,
           wenn er &gt; 120 MB Speicher braucht</li>
-        <li>Schnellerer Start: Die Karteninformationen werden in einem cache
+        <li>Schnellerer Start: Die Karteninformationen werden in einem Cache
           gehalten, es wird nur neu gelesen, wenn sich an den Karten etwas
           ändert</li>
         <li>Speicherleak im OpenCPN plugin beseitigt (workaround) - damit wächst
           der Speicherverbrauch vom Xvfb nicht mehr so stark</li>
         <li>Hinweis: Nach Installation per Hand mit dpkg (erzeugt einen Fehler)
           müssen ggf mit
-          <div class="code"> sudo apt-get install -f</div>
+          
+<div class="code"> sudo apt-get install -f</div>
           die neuen Abhängigkeiten nachinstalliert werden. </li>
       </ul>
       <li>20200710 <a href="https://www.wellenvogel.net/software/avnav/downloads/release-ochartsplugin/20200710/avnav-ocharts-plugin_20200710-raspbian-buster_armhf.deb">Paket</a></li>
@@ -390,7 +392,7 @@
           </a></li>
         <li>Beim Hochladen von Karten wird jetzt sofort geprüft, ob die Karten
           gelesen werden können, sonst wird das Hochladen verweigert</li>
-        <li>Keine Fehler mehr in der GUI beim restart des Providers</li>
+        <li>Keine Fehler mehr in der GUI beim Restart des Providers</li>
         <li>Funktioniert auch auf einer vfat Partition wie sie von avnav-touch
           genutzt wird</li>
       </ul>
@@ -436,12 +438,12 @@
       unterhalb des Plugin-Managers stattfinden.</p>
     <div class="code">&lt;AVNPluginHandler&gt;<br>...<br>&lt;system-ocharts port="8082".../&gt;<br>&lt;/AVNPluginHandler&gt;</div>
     <p>Für eine Liste der Konfigurationswerte siehe die <a href="https://github.com/wellenvogel/avnav-ocharts-provider/blob/master/avnav-plugin/plugin.py">Beschreibung
-        im code des Plugins</a>.</p>
+        im Code des Plugins</a>.</p>
     <p><a name="Chartconfig"></a>Falls man Karten z.B. gemeinsam mit OpenCPN
       nutzen möchte, können die Verzeichnisse, in denen die o-charts Karten
       liegen beispielsweise mit</p>
     <div class="code">&lt;AVNPluginHandler&gt;<br>...<br>&lt;system-ocharts chartdir="/my/chartdir1,/my/chartdir2"/&gt;<br>&lt;/AVNPluginHandler&gt;</div>
-    <p>konfiguriert werden. Im Normalfall wird allerdings der direkte upload der
+    <p>konfiguriert werden. Im Normalfall wird allerdings der direkte Upload der
       zip Files empfohlen, wie unter <a href="#Charts">Karten</a> beschrieben.</p>
     <p><a name="Upload"></a>Ab Version 20200709 kann auch das Verzeichnis für
       die Karten separat gesetzt werden:</p>
