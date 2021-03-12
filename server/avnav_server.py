@@ -318,9 +318,14 @@ def main(argv):
                     timeFalse=False
                     for h in AVNWorker.allHandlers:
                       try:
+                        h.timeChanged()
+                      except:
+                        pass
+                      try:
                         h.wakeUp()
                       except:
                         pass
+
               else:
                 #time is OK now
                 if timeFalse:

@@ -27,6 +27,8 @@
 #  parts contributed by Matt Hawkins http://www.raspberrypi-spy.co.uk/
 #
 ###############################################################################
+from math import floor
+
 import time
 
 import threading
@@ -58,6 +60,7 @@ class AVNAvahi(AVNWorker):
   ENTRY_GROUP_UNCOMMITED, ENTRY_GROUP_REGISTERING, ENTRY_GROUP_ESTABLISHED, ENTRY_GROUP_COLLISION, ENTRY_GROUP_FAILURE = range(0, 5)
   SERVER_INVALID, SERVER_REGISTERING, SERVER_RUNNING, SERVER_COLLISION, SERVER_FAILURE = range(0, 5)
 
+  S_TYPE='_http._tcp'
   @classmethod
   def autoInstantiate(cls):
     return True
@@ -81,6 +84,7 @@ class AVNAvahi(AVNWorker):
     self.nameSuffixCount=None
     self.server=None
     self.group=None
+    self.hostname=''
 
   @classmethod
   def getConfigParam(cls, child=None):
@@ -94,7 +98,8 @@ class AVNAvahi(AVNWorker):
                       type=WorkerParameter.T_NUMBER),
       WorkerParameter('timeout',10,
                       description="timeout when registering at  avahi",
-                      type=WorkerParameter.T_FLOAT)
+                      type=WorkerParameter.T_FLOAT),
+      WorkerParameter('heartBeatInterval',60,editable=False,type=WorkerParameter.T_FLOAT)
     ]
   @classmethod
   def preventMultiInstance(cls):
@@ -127,7 +132,7 @@ class AVNAvahi(AVNWorker):
         name=name+"-%d"%self.nameSuffixCount
       AVNLog.info("trying to register %s for %s",name,str(self.port))
       self.group.AddService(self.IF_UNSPEC,self.PROTO_UNSPEC,0,
-                    name,'_http._tcp',self.server.GetDomainName(),
+                    name,self.S_TYPE,self.server.GetDomainName(),
                     self.server.GetHostNameFqdn(),self.port,'')
       self.group.Commit()
       waitTime=timeout*10
@@ -151,6 +156,7 @@ class AVNAvahi(AVNWorker):
         self.group=None
         raise Exception("unable to register service, state=%s"%str(state))
       self.registeredName=name
+      self.hostname=self.server.GetHostNameFqdn()
       return True
     raise Exception("unable to register after retries")
 
@@ -165,7 +171,44 @@ class AVNAvahi(AVNWorker):
     AVNLog.info("Avahi server state change %s",str(newState))
     if newState == self.SERVER_RUNNING:
       self.stateSequence+=1
+      try:
+        self.group.Reset()
+        self.group.Free()
+      except:
+        pass
       self.group=None
+
+  def _heartBeat(self):
+    if not self.group:
+      return
+    if self.registeredName is None:
+      return
+    txt="time=%d"%floor(time.time())
+    try:
+      if self.group.IsEmpty():
+        raise Exception("service disappeared, re-register")
+      self.group.UpdateServiceTxt(self.IF_UNSPEC,self.PROTO_UNSPEC,0,
+                                  self.registeredName,self.S_TYPE,
+                                  self.server.GetDomainName(),
+                                  [txt.encode('ascii')])
+    except Exception as e:
+      self.setInfo('main',"error in heartbeat: %s"%str(e),WorkerStatus.ERROR)
+      try:
+        self.group.Reset()
+        self.group.Free()
+      except:
+        pass
+      self.group=None
+      self.stateSequence+=1
+
+  def timeChanged(self):
+    AVNLog.info("%s: time changed, re-register",self.getName())
+    try:
+      self.group.Reset()
+    except:
+      pass
+    self.stateSequence+=1
+
   def run(self):
     if not hasDbus:
       raise Exception("no DBUS found, cannot register avahi")
@@ -193,6 +236,7 @@ class AVNAvahi(AVNWorker):
           self.setInfo('main','unable to get avahi interface %s'%str(e),WorkerStatus.ERROR)
       lastSequence=self.stateSequence
       hasError=False
+      lastHeartBeat=time.time()
       while not self.shouldStop():
         self.serviceName=self.getParamValue('serviceName')
         self.port=httpServer.server_port
@@ -202,20 +246,26 @@ class AVNAvahi(AVNWorker):
           if self.registeredName is not None:
             self._deregister()
             self.registeredName=None
-          lastSequence=self.stateSequence
           try:
             if self.serviceName != lastName:
               self.nameSuffixCount=None
             self._publish()
+            lastSequence=self.stateSequence
             lastName=self.serviceName
             lastPort=self.port
-            self.setInfo('main',"registered %s for %s, port %s"
-                         %(self.registeredName,self.serviceName,str(self.port)),WorkerStatus.NMEA)
+            lastHeartBeat=time.time()
+            self.setInfo('main',"registered %s for %s, host %s, port %s"
+                         %(self.registeredName,self.serviceName,self.hostname,str(self.port)),WorkerStatus.NMEA)
             hasError=False
           except Exception as e:
             hasError=True
             self.setInfo('main','unable to register: %s'%str(e),WorkerStatus.ERROR)
         self.wait(1)
+        now=time.time()
+        hbInterval=self.getFloatParam('heartBeatInterval')
+        if now < lastHeartBeat or now >= (lastHeartBeat + hbInterval):
+          lastHeartBeat=now
+          self._heartBeat()
     except Exception as e:
       self._stopLoop()
       self._deregister()

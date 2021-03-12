@@ -593,6 +593,12 @@ class AVNWorker(object):
       return True
     return False
 
+  def timeChanged(self):
+    '''
+    called when main changes the system time
+    @return:
+    '''
+    pass
   def wakeUp(self):
     self.condition.acquire()
     try:
@@ -603,6 +609,7 @@ class AVNWorker(object):
   def stop(self):
     self.currentThread=None
     self.wakeUp()
+
 
 
   def wait(self,time):
