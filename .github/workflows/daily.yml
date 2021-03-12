@@ -62,7 +62,7 @@ jobs:
           AVNAV_REPO_USER: ${{ secrets.AVNAV_REPO_USER }}
           AVNAV_REPO_PASSWD: ${{ secrets.AVNAV_REPO_PASSWD }}
           AVNAV_REPO_KEY: ${{ secrets.AVNAV_REPO_KEY }}
-          AVNAV_REPO_BASE: ""
+          AVNAV_REPO_BASE: "/downloads"
         run: ./gradlew upload uploadRepoDaily
 
 

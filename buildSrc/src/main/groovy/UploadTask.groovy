@@ -73,6 +73,8 @@ class UploadTask extends DefaultTask{
     private void createRemoteDir(FTPClient client,String path){
         if (createdDirs.contains(path)) {
             client.changeWorkingDirectory(path)
+            String wd=client.printWorkingDirectory()
+            logger.info("current working dir=$wd")
             return
         }
         boolean abs=false
