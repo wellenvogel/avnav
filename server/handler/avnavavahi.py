@@ -164,6 +164,7 @@ class AVNAvahi(AVNWorker):
     if self.group is None:
       return
     try:
+      AVNLog.info("deregister")
       self.group.Reset()
     except Exception as e:
       AVNLog.error("unable to deregister: %s",str(e))
@@ -183,14 +184,17 @@ class AVNAvahi(AVNWorker):
       return
     if self.registeredName is None:
       return
-    txt="time=%d"%floor(time.time())
+    AVNLog.debug("heartbeat, resolving %s",self.registeredName)
     try:
       if self.group.IsEmpty():
         raise Exception("service disappeared, re-register")
-      self.group.UpdateServiceTxt(self.IF_UNSPEC,self.PROTO_UNSPEC,0,
-                                  self.registeredName,self.S_TYPE,
-                                  self.server.GetDomainName(),
-                                  [txt.encode('ascii')])
+      svc=self.server.ResolveService(self.IF_UNSPEC,self.PROTO_UNSPEC,
+                                     self.registeredName,
+                                     self.S_TYPE,self.server.GetDomainName(),
+                                     self.PROTO_UNSPEC,0)
+      if svc[5] != self.hostname:
+        raise Exception("found our name %s from different host %s"%(self.registeredName,svc[5]))
+      AVNLog.debug("resolve ok for %s",self.registeredName)
     except Exception as e:
       self.setInfo('main',"error in heartbeat: %s"%str(e),WorkerStatus.ERROR)
       try:
