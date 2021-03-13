@@ -157,10 +157,10 @@ if [ "$canok" != 1 ] ; then
   echo "$CAN0" > $can || error "unable to create $can"
 fi
 
-scfg="$BASE/$OWIRE_SERVICE"
+scfg="$BASE$OWIRE_SERVICE"
 log "creating $scfg"
 echo "$OWIRE" > "$scfg" ||  error "unable to create $scfg"
-scfg="$BASE/$MCSASD_SERVICE"
+scfg="$BASE$MCSASD_SERVICE"
 log "creating $scfg"
 echo "${MCSASD/@dir@/$MCS_PACKAGE}" > "$scfg" ||  error "unable to create $scfg"
 systemctl --no-ask-password enable mcsowire.service
