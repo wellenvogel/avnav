@@ -1,5 +1,5 @@
 [Unit]
-Description=restore iptables
+Description=handle avnav.conf
 After=syslog.target network.target
 
 
