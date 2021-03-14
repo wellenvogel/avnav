@@ -34,7 +34,10 @@ html,body {
   font-size: 14px;
   .border-box();
 }
-
+//#117: prevent pan zoom
+body{
+  touch-action: none;
+}
 #new_pages, .app, .pageFrame{
   width: 100%;
   height: 100%;
