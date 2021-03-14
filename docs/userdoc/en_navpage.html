@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+    
     <title>AvNav Navigation Page</title>
     <link href="../styles.css" rel="stylesheet" type="text/css">
   </head>
   <body data-order="1200">
     <h1>The Navigation Page</h1>
-    <p>This page is the one normally used for navigation. In the picture there
-      is an active waypoint and the chart is locked to the boat position (i.e.
+    <p>This page is the one normally used for navigation. In the screenshot 
+	an active waypoint is shown and the chart is locked to the boat position (i.e.
       will move with the boat).</p>
     <div><img src="../navi-routing-wp-ais.png" name="Grafik4" class="fimage"></div>
     <div><b><br>
@@ -52,7 +53,7 @@
           <td>StopNav<br>
           </td>
           <td>stop the navigation<br>
-            only visible if there is currently an active waypoint or route<br>
+            only visible if a waypoint or route is active<br>
           </td>
         </tr>
         <tr>
@@ -62,7 +63,7 @@
           </td>
           <td><a href="#waypoint">start waypoint navigation</a>.<br>
             the center of the chart (cross) will become the target waypoint.<br>
-            only visible if there is currently no active route or waypoint<br>
+            only visible if there is no active route or waypoint<br>
           </td>
         </tr>
         <tr>
@@ -78,7 +79,7 @@
           </td>
           <td>ShowRoutePanel<br>
           </td>
-          <td>change to <a href="editroutepage.html">route editor</a> (also by
+          <td>switch to <a href="editroutepage.html">route editor</a> (also by
             clicking on the route display if there is any)<br>
           </td>
         </tr>
@@ -101,7 +102,7 @@
           </td>
           <td>Overflow<br>
           </td>
-          <td>Show a second button list if the screen is too small for all
+          <td>Display a second button list if the screen is too small to fit all
             buttons. Only visible if you did not select "2 button columns" at
             Settings/Layout.<br>
           </td>
@@ -134,43 +135,40 @@
     <p>This is the navigation view. In the middle there is the chart display
       with the boat position (red arrow). The yellow and green symbols are the
       AIS targets in vicinity (10nm, can be changed in settings) together with
-      their current curse and name or MMSI. The orange line is the course
+      their current course as well as name or MMSI. The orange line indicates the course
       towards the current target waypoint. The dotted line show the original
       course from the start of navigation to the target waypoint. You can move
       and zoom the chart with the normal gestures. For zooming you can also use
       the buttons +/- on the right side. If the chart is locked to the boat
       position (like in the picture) it will always jump back there.</p>
-    <p>You can have up to 3 circles being drawn around the boat to be able to
+    <p>You can have up to 3 Navigation Circles being drawn around the boat to be able to
       estimate distances. You can change them via settings-&gt;navigation
       display. Standard values are 300m and 1000m.</p>
-    <p>(since 202011xx) The length of the line showing your current course&nbsp;
-      ("Course Vector") can be adapted in the settings(Navigation/Boat Course
+    <p>(since 202011xx) The length of the line indicating your current course&nbsp;
+      ("Course Vector") can be adapted in the settings (Navigation/Boat Course
       Vector Length). You will set the seconds and the length will be computed
       using your current boat speed (default: 10 minutes). The width of this
       line is controlled by the width for the Navigation Circles. </p>
-    <p>The same settings are also valid for the course vectors of the AIS
-      targets.</p>
+    <p>The same settings also apply to the course vectors of AIS targets.</p>
     <p>At the left side you have (top down):</p>
     <ul>
-      <li>current chart zoom, required in brackets if you have auto zoom active</li>
-      <li>the next AIS target (green), turning red on AIS warning or the
+      <li>current chart zoom, preferred zoom factor in brackets if auto zoom activated</li>
+      <li>the closest AIS target (green), turning red on AIS warning or the
         selected AIS target (yellow)</li>
       <li>current time</li>
     </ul>
-    <p>The display of the next AIS target will turn red if the expected CPA will
-      be less then 500m (can be changed in settings). If the display is yellow
-      it does not show the nearest target but another one you have selected on
+    <p>The display of the closest AIS target will turn red if expected CPA is closer than 500m (can be changed in settings). If the display is yellow
+      it does not show the nearest target but a different one selected on
       the <a href="aisinfopage.html">ais info page</a>. If you click on this
       display you move to the ais info page.</p>
-    <p>(since 202011xx)The icons used for your boat and the AIS targets can be
+    <p>(since 202011xx) The icons used for your boat and the AIS targets can be
       changed using a file <a href="../hints/usericons.html">images.json</a>.
-      Additionally you can scale the AIS symbols(AIS/Icon Scale) and you can
-      give them a border(AIS/Border Width). If your browser is slowed down by
-      the computation and drawing of the AIS course vectors you can switch them
-      off (AIS/AIS Use Course Vector).</p>
-    <p>At the bottom of the navigation page you have the most important
-      instrument data. At the left the data for the current active waypoint (if
-      any):</p>
+      Additionally you can scale the AIS symbols (AIS/Icon Scale) and you can
+	  define a border(AIS/Border Width). You can also switch off AIS/AIS Use Course Vector, if your browser is too much slowed down by
+      the computation and drawing of the AIS course vectors.</p>
+    <p>The most important
+      instrument data are shown at the bottom of the navigation page. At the left, data for currently active waypoint (if
+      any) are displayed</p>
     <ul>
       <li> Position </li>
       <li>ETA </li>
@@ -185,16 +183,16 @@
       <li> local time from GPS </li>
       <li> GPS indicator: green - gps data ok, red: no gps data</li>
     </ul>
-    <p>Depending on the display width and the settings for the font size (widget
+    <p>Depending on display width and font size setting (widget
       font size) you will have 2 rows of data (you can change this in settings
-      at "2 widget rows"). Items that do not fit any more will be hidden
+      at "2 widget rows"). Items that do not fit anymore will be hidden
       completely.</p>
-    <p>For the boat data (position, course, speed) you can set up an averaging
-      (settings-&gt;navigation). If turned on the captions at the displays will
+    <p>You can set up averaging
+      (settings-&gt;navigation) for the boat data (position, course, speed). If turned on the captions at the displays will
       turn red.</p>
     <p>All display can be adapted with the <a href="../hints/layouts.html">layout
         editor</a>.</p>
-    <p>If you click on the lower right displays you will be moved to the <a href="dashboardpage.html">dashboard</a>.</p>
+    <p>If you click on the lower right displays you will be taken to the <a href="dashboardpage.html">dashboard</a>.</p>
     <p>Clicking on the lower left displays will bring up a couple of additional
       waypoint buttons.</p>
     <p><img src="../navpage-waypoint-buttons.png" alt="" class="fimage"> </p>
@@ -222,18 +220,17 @@
           </td>
           <td>WpEdit</td>
           <td>edit waypoint<br>
-            you can change the name and position of the waypoint in the dialog</td>
+            you can change the waypoint's name and position in the dialog</td>
         </tr>
         <tr>
           <td><img src="../viewerimages/icons-new/wpgoto.svg" alt="" class="inlineimage"><br>
           </td>
           <td>WpGoto</td>
-          <td>start navigation to this waypoint<br>
-            will only be visible if there is no current navigation</td>
+          <td>start navigation to this waypoint<br>only visible if there is no active route</td>
         </tr>
       </tbody>
     </table>
-    <p>If currently a route is active, the waypoint buttons will change
+    <p>If a route is active, the waypoint buttons will change
       slightly.</p>
     <p><img src="../navpage-waypoint-buttons-route.png" alt="" class="fimage"><br>
     </p>
@@ -265,22 +262,20 @@
         </tr>
       </tbody>
     </table>
-    <p>If a route is currently active there will be a display for the route data
-      on the left side (name, remaining distance, eta).</p>
-    <p>In routing mode there will be a change of the target waypoint to the next
-      one if the following conditions are met:</p>
+    <p>If a route is active there will be a display for the route data
+      on the left side (name, remaining distance, ETA).</p>
+    <p>In routing mode the next target waypoint will be activated automatically if the following conditions are met:</p>
     <ul>
-      <li>the boat is inside the approach radius to the current target
+      <li>the boat is within the approach radius to the current target
         waypoint&nbsp; (default 200m - settings-&gt;route-&gt;approach)</li>
       <li>the distance to the waypoint starts to increase (and the distance to
         the next one to decrease)</li>
     </ul>
-    <p> In approach the display of the route parameters will turn red and the
+    <p> In approach to the waypoint the display of the route parameters will turn red and the
       course to the next waypoint will be shown additionally. Additionally a
       waypoint alarm is triggered.</p>
-    <p>If the is no automatic movement to the next waypoint, you can click on
-      the waypoint data and use the <img src="../viewerimages/icons-new/nextwp.svg"
-        alt="" class="inlineimage"> button to set the next waypoint as target.</p>
+    <p>If next waypoint is not activated automatically (e.g. because you are too far), you can click on
+      the waypoint data and use the <img src="../viewerimages/icons-new/nextwp.svg" alt="" class="inlineimage"> button to set the next waypoint as target.</p>
     <img src="../navpage-route-waypoint.png" alt="" class="fimage">
     <h2>Special Functions</h2>
     <h3><a name="waypoint" id="waypoint"></a>Simple Waypoint Navigation</h3>

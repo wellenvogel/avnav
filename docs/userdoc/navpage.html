@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+    
     <title>AvNav Navigationsseite</title>
     <link href="../styles.css" rel="stylesheet" type="text/css">
   </head>
@@ -9,7 +10,7 @@
     <h1>Die Navigationsseite </h1>
     <p>Diese Seite ist die im Normalfall für die Navigation genutzte
       Darstellung.<br>
-      Dieses Bild zeigt einen gesetzten Wegepunkt (Marker locked) – das Boot ist
+      Dieses Bild zeigt einen gesetzten Wegpunkt (Marker locked) – das Boot ist
       auf Kurs und der Kartenmittelpunkt wird permanent auf das Boot zentriert.</p>
     <div><img src="../navi-routing-wp-ais.png" name="Grafik4" class="fimage"></div>
     <div><b><br>
@@ -54,7 +55,7 @@
           <td>StopNav<br>
           </td>
           <td>Navigation beenden.<br>
-            Nur sichtbar, wenn momentan ein Wegepunkt oder eine Route aktiv ist.<br>
+            Nur sichtbar, wenn momentan ein Wegpunkt oder eine Route aktiv ist.<br>
           </td>
         </tr>
         <tr>
@@ -63,7 +64,7 @@
           <td>LockMarker<br>
           </td>
           <td><a href="#waypoint">Navigation starten</a>.<br>
-            Der aktuelle Kartenmittelpunkt (Kreuz) wird zum Ziel-Wegepunkt.<br>
+            Der aktuelle Kartenmittelpunkt (Kreuz) wird zum Ziel-Wegpunkt.<br>
             Nur sichtbar, wenn momentan keine Navigation aktiv ist.<br>
           </td>
         </tr>
@@ -138,10 +139,10 @@
       Kartenansicht mit der Schiffsposition (roter Pfeil). Die gelben und grünen
       Dreiecke mit Pfeilspitzen sind empfangene AIS Ziele in der Nähe (10nm,
       einstellbar) mit ihrem aktuellen Kurs sowie Name oder MMSI. Die
-      organgefarbene Linie zeigt zum aktiven Wegepunkt. Die gepunktete Linie
-      zeigt den Kurs vom Start der Navigation zum Wegepunkt (Sollkurs). Die
+      organgefarbene Linie zeigt zum aktiven Wegpunkt. Die gepunktete Linie
+      zeigt den Kurs vom Start der Navigation zum Wegpunkt (Sollkurs). Die
       Karte kann mit den normalen Gesten verschoben oder gezoomt werden, zum
-      zoomen können auch die Buttons +/- auf der rechten Leiste benutzt
+      Zoomen können auch die Buttons +/- auf der rechten Leiste benutzt
       werden.Wenn (wie im Bild) der Schiff-Button einen grünen Rand hat ("Schiff
       lock"), ist die Karten-Mitte auf die Schiffsposition fixiert und springt
       immer wieder dahin zurück.</p>
@@ -156,7 +157,7 @@
     <p>Die gleiche Einstellung gilt auch für die Kursvektoren der AIS Ziele.</p>
     <p>Links befinden sich (von oben nach unten):</p>
     <ul>
-      <li>Die aktuelle Zoom-Stufe der Karte (wenn auto zoom aktive ist in
+      <li>Die aktuelle Zoom-Stufe der Karte (wenn Auto Zoom aktiv, ist in
         Klammern die gewünschte)</li>
       <li>Das nächste AIS Ziel (ggf. rot bei Warnung) oder das ausgewählte AIS
         Ziel (gelb)</li>
@@ -164,20 +165,20 @@
     </ul>
     <p>Die Darstellung des nächsten AIS Zieles (geringste momentane Entfernung)
       färbt sich rot, wenn eine CPA von 500m (einstellbar) unterschritten wird.
-      Gelb bedeuted, dass nicht das nächste Ziel sondern ein separat
+      Gelb bedeuted, dass nicht das nächste Ziel, sondern ein separat
       ausgewähltes Ziel (siehe unten AIS) angezeigt wird. Ein Klick auf diese
       Fläche oder ein AIS Ziel auf der Karte führt auf die <a href="aisinfopage.html">AIS
         Info Seite</a> .</p>
-    <p>(ab 202011xx)Die verwendeten Symbole für das Boot und die AIS Ziele
+    <p>(ab 202011xx) Die verwendeten Symbole für das Boot und die AIS Ziele
       können bei Bedarf über eine Datei <a href="../hints/usericons.html">images.json</a>
       angepasst werden. Ausserdem können die AIS Symbole in den Einstellungen
       (AIS/Icon Scale) in ihrer Größe verändert werden, ein Rand kann ebenfalls
       hinzugefügt werden (AIS/Border Width). Falls die Berechnungen der AIS
-      Kursvektoren zu aufwendig ist (Browser wird zu langsam) kann sie in den
+      Kursvektoren zu aufwändig ist (Browser wird zu langsam), kann sie in den
       Einstellungen abgeschaltet werden (AIS/AIS Use Course Vector).</p>
     <p>Im unteren Bereich der Navigationsseite befindet sich die Anzeige der
       wichtigsten Navigationsdaten ("Widgets"). Links die Daten des aktuellen
-      Wegepunktes (Marker):</p>
+      Wegpunktes (Marker):</p>
     <ul>
       <li> Position </li>
       <li>ETA </li>
@@ -201,9 +202,9 @@
       eingestellt ist, sind die Bezeichner rot.</p>
     <p>Die Anzeigen auf der Seite können über den <a href="../hints/layouts.html">Layout
         Editor</a> angepasst werden.</p>
-    <p>Ein Klick auf die rechte Seite unteren Anzeigen führt zum <a href="dashboardpage.html">Dashboard</a>.</p>
-    <p>Ein Klick auf die linke Seite (Wegepunkt) zeigt einige zusätzliche
-      Wegepunkt-Buttons.</p>
+    <p>Ein Klick auf die rechten unteren Anzeigen führt zum <a href="dashboardpage.html">Dashboard</a>.</p>
+    <p>Ein Klick auf die linke Seite (Wegpunkt) zeigt einige zusätzliche
+      Wegpunkt-Buttons.</p>
     <p><img src="../navpage-waypoint-buttons.png" alt="" class="fimage"> </p>
     <table style="width: 100%" border="1">
       <tbody>
@@ -222,27 +223,27 @@
           <td><img src="../viewerimages/icons-new/center.svg" alt="" class="inlineimage"><br>
           </td>
           <td>WpLocate</td>
-          <td>Zentrieren des Mittelpunktes auf den Wegepunkt</td>
+          <td>Zentrieren des Mittelpunktes auf den Wegpunkt</td>
         </tr>
         <tr>
           <td><img src="../viewerimages/icons-new/ic_edit.svg" alt="" class="inlineimage"><br>
           </td>
           <td>WpEdit</td>
-          <td>Bearbeiten des Wegepunktes.<br>
-            Im angezeigten Dialog kann der Name und die Position des Wegepunktes
+          <td>Bearbeiten des Wegpunktes.<br>
+            Im angezeigten Dialog kann der Name und die Position des Wegpunktes
             editiert werden</td>
         </tr>
         <tr>
           <td><img src="../viewerimages/icons-new/wpgoto.svg" alt="" class="inlineimage"><br>
           </td>
           <td>WpGoto</td>
-          <td>Start der Navigation zu diesem Wegepunkt.<br>
+          <td>Start der Navigation zu diesem Wegpunkt.<br>
             Wir nur angezeigt, wenn noch keine Navigation aktiv ist.</td>
         </tr>
       </tbody>
     </table>
     <p>Falls momentan eine Route aktiv ist, werden etwas andere Buttons beim
-      Klick auf die Wegepunkt-Daten angezeigt.</p>
+      Klick auf die Wegpunkt-Daten angezeigt.</p>
     <p><img src="../navpage-waypoint-buttons-route.png" alt="" class="fimage"><br>
     </p>
     <p>Die zusätzlichen Buttons haben folgende Funktionen</p>
@@ -257,41 +258,41 @@
           <td><img src="../viewerimages/icons-new/nextwp.svg" alt="" class="inlineimage"><br>
           </td>
           <td>NavNext</td>
-          <td>Navigiere zum nächsten Wegepunkt der Route</td>
+          <td>Navigiere zum nächsten Wegpunkt der Route</td>
         </tr>
         <tr>
           <td><img src="../viewerimages/icons-new/ic_arrow_forward.svg" alt="" class="inlineimage"><br>
           </td>
           <td>WpNext</td>
-          <td>Zentriere den Kartenmittelpunkt auf den nächsten Wegepunkt</td>
+          <td>Zentriere den Kartenmittelpunkt auf den nächsten Wegpunkt</td>
         </tr>
         <tr>
           <td><img src="../viewerimages/icons-new/ic_arrow_back.svg" alt="" class="inlineimage"><br>
           </td>
           <td>WpPrevious</td>
-          <td>Zentriere den Kartenmittelpunkt auf den vorigen Wegepunkt</td>
+          <td>Zentriere den Kartenmittelpunkt auf den vorigen Wegpunkt</td>
         </tr>
       </tbody>
     </table>
     <p>Wenn eine Route aktiv ist, hat man wie im Bild links eine Anzeige der
       Daten für die aktuelle Route (Name,verbleibende Distanz, Ankunftszeit).</p>
     <p>In diesem Modus erfolgt eine automatische Weiterschaltung zum nächsten
-      Wegepunkt, wenn die folgenden Bedingungen erfüllt sind:</p>
+      Wegpunkt, wenn die folgenden Bedingungen erfüllt sind:</p>
     <ul>
       <li>Das Boot befindet sich im "Fangbereich" (default 200m -
         settings-&gt;route-&gt;approach)</li>
-      <li>Die Entfernung zum Wegepunkt wird größer</li>
+      <li>Die Entfernung zum Wegpunkt wird größer</li>
     </ul>
     <p> Die Anzeige der Routen-Parameter wird rot und zeigt den Kurs zum
       nächsten WP an, wenn das Boot im "Fangbereich" ist. Ausserdem erfolgt eine
       Alarmierung mit einem akustischen Signal und einer Anzeige.</p>
     <p>Falls keine automatische Weiterschaltung erfolgt (z.B. weil man nicht
-      dicht genug am WP ist), kann man auf den Wegepunkt klicken und mit dem
+      dicht genug am WP ist), kann man auf den Wegpunkt klicken und mit dem
       dann sichtbaren <img src="../viewerimages/icons-new/nextwp.svg" alt="" class="inlineimage">
-      Button weiterschalten.Danach ggf. Boot wieder locken.</p>
+      Button weiterschalten. Danach die Karte ggf. wieder auf die Bootposition fixieren (LockPos).</p>
     <img src="../navpage-route-waypoint.png" alt="" class="fimage">
     <h2>Spezielle Funktionen</h2>
-    <h3><a name="waypoint" id="waypoint"></a>Simple Wegepunkt Navigation</h3>
+    <h3><a name="waypoint" id="waypoint"></a>Simple Wegpunkt Navigation</h3>
     <p>Schritte:</p>
     <ol>
       <li>Unlock Boot (falls an)</li>
@@ -302,10 +303,10 @@
       <li>Lock Boot </li>
     </ol>
     <h3>Peilungen</h3>
-    <p>Wenn man einen Wegepunkt aktiv hat (Marker Button grün) und die Karte
+    <p>Wenn man einen Wegpunkt aktiv hat (Marker Button grün) und die Karte
       nicht auf das Schiff "gelockt" ist (Schiffsbutton nicht grün), wird beim
-      Bewegen der Karte ein Kreuz im Zentrum gezeigt und links erscheint eine
-      Anzeig des aktuellen Abstandes vom Marker bzw. Schiff zum
+      Bewegen der Karte ein Kreuz im Zentrum gezeigt, und links erscheint eine
+      Anzeige des aktuellen Abstandes vom Marker bzw. Schiff zum
       Kartenmittelpunkt. Damit kann man einfache Peilungen machen - Mittelpunkt
       auf Peilziel verschieben und Peilung ablesen.</p>
     <p>Für das Starten einer Route wechselt man zunächst mittels <img src="../viewerimages/icons-new/route.svg"
