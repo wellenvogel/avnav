@@ -56,7 +56,9 @@ class AVNAvahi(AVNWorker):
   DBUS_INTERFACE_SERVER = DBUS_NAME + ".Server"
   IF_UNSPEC = -1
   PROTO_UNSPEC =-1
-  PROTO_INET =0
+  PROTO_INET = 0
+  PROTO_INET6 = 1
+
   ENTRY_GROUP_UNCOMMITED, ENTRY_GROUP_REGISTERING, ENTRY_GROUP_ESTABLISHED, ENTRY_GROUP_COLLISION, ENTRY_GROUP_FAILURE = range(0, 5)
   SERVER_INVALID, SERVER_REGISTERING, SERVER_RUNNING, SERVER_COLLISION, SERVER_FAILURE = range(0, 5)
 
@@ -133,7 +135,7 @@ class AVNAvahi(AVNWorker):
         name=name+"-%d"%self.nameSuffixCount
       AVNLog.info("trying to register %s for %s",name,str(self.port))
       try:
-        self.group.AddService(self.IF_UNSPEC,self.PROTO_UNSPEC,0,
+        self.group.AddService(self.IF_UNSPEC,self.PROTO_INET,0,
                     name,self.S_TYPE,self.server.GetDomainName(),
                     self.server.GetHostNameFqdn(),self.port,'')
         self.group.Commit()
