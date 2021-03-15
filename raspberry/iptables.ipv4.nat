@@ -5,6 +5,12 @@
 :OUTPUT ACCEPT [0:0]
 :POSTROUTING ACCEPT [0:0]
 -A PREROUTING -d 192.168.20.10/32 -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 8080
+-A PREROUTING -d 192.168.30.10/32 -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 8080
+-A PREROUTING -d 192.168.40.10/32 -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 8080
+-A PREROUTING -d 192.168.50.10/32 -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 8080
+-A PREROUTING -d 192.168.60.10/32 -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 8080
+-A PREROUTING -i eth0 -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 8080
+-A OUTPUT -p tcp -o lo --dport 80 -j REDIRECT --to-ports 8080
 -A POSTROUTING -o wlan-av1 -j MASQUERADE
 -A POSTROUTING -o eth0 -j MASQUERADE
 COMMIT
