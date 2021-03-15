@@ -1,0 +1,47 @@
+.configui.container{
+    max-width: 30em;
+    margin-left: auto;
+    margin-right: auto;
+}
+.configui .parameters {
+    border-bottom: 1px solid grey;
+    margin-bottom: 1em;
+}
+.configui .row input {
+    flex-grow: 1;
+    appearance: auto;
+}
+
+.configui .row {
+    display: flex;
+    flex-direction: row;
+    margin: 0.5em;
+    flex-wrap: unset;
+    padding:   0;
+}
+
+.configui .row .label {
+    width: 10em;
+    opacity: 0.6;
+    padding: 0;
+}
+.configui input[type=checkbox] {
+    width: 1.5em;
+    height: 1.5em;
+    opacity: 1;
+    z-index: unset;
+}
+
+.configui .buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+}
+.configui button {
+    padding: 0.5em;
+}
+.configui .footer {
+    text-align: right;
+    margin-top: 1em;
+    font-size: 0.8em;
+}

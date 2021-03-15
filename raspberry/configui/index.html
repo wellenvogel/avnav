@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>avnav.conf Generator</title>
+    <link rel="stylesheet" href="index.css">
+    <script type="text/javascript" src="index.js"></script>
+    <script type="text/javascript" src="sha512.js"></script>
+    <script type="text/javascript" src="sha512crypt.js"></script>
+</head>
+<body>
+<div class="configui container">
+    <h2>avnav.conf Generator</h2>
+    <div class="parameters">
+        <div class="row">
+            <span class="label">Wifi SSID</span>
+            <input type="text" id="AVNAV_SSID" value="avnav" />
+        </div>
+        <div class="row">
+            <span class="label">Wifi Password</span>
+            <input type="text" id="AVNAV_PSK" value="avnav-secret"/>
+        </div>
+        <div class="row">
+            <span class="label">User pi Password</span>
+            <input type="text" id="AVNAV_PASSWD" value="raspberry"/>
+        </div>
+        <div class="row">
+            <span class="label">Configure MCS</span>
+            <input type="checkbox" id="AVNAV_MCS"/>
+        </div>
+    </div>
+    <div class="buttons">
+        <button name="download" id="download">Download</button>
+    </div>
+<div class="footer">
+    SHA512 thanks to https://github.com/mvo5/sha512crypt-node
+</div>
+</div>
+<a id="downloadLink"></a>
+</body>
+</html>

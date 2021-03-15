@@ -761,6 +761,21 @@ task findUnusedImages(type: DefaultTask){
     }
 }
 
+task uploadConfigGen(type: UploadTask){
+    inputFiles=fileTree(
+        'raspberry/configui',{
+            include '*html'
+            include '*js'
+            include '*css'
+            include '*conf'
+        }
+    )
+    deleteTargetDir=false
+    baseDir="../configGen"
+    useHashes=true
+}
+
+
 task upload{
     doLast {
         println "###uploaded artifacts to version dir $project.avnavVersion###"
