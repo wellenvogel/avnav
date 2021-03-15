@@ -91,7 +91,7 @@ class AVNAvahi(AVNWorker):
     if child is not None:
       return super().getConfigParam(child)
     return [
-      WorkerParameter('serviceName','avnav',
+      WorkerParameter('serviceName','avnav-server',
                       description='the name that will be visible in avahi/mdns'),
       WorkerParameter('maxRetries',20,
                       description='how many retries if the name is already existing',
@@ -127,14 +127,23 @@ class AVNAvahi(AVNWorker):
     except:
       pass
     while num < retries:
+      num+=1
       name=self.serviceName
       if self.nameSuffixCount is not None:
         name=name+"-%d"%self.nameSuffixCount
       AVNLog.info("trying to register %s for %s",name,str(self.port))
-      self.group.AddService(self.IF_UNSPEC,self.PROTO_UNSPEC,0,
+      try:
+        self.group.AddService(self.IF_UNSPEC,self.PROTO_UNSPEC,0,
                     name,self.S_TYPE,self.server.GetDomainName(),
                     self.server.GetHostNameFqdn(),self.port,'')
-      self.group.Commit()
+        self.group.Commit()
+      except Exception as e:
+        AVNLog.warn("unable to register avahi service %s, error: %s",name,str(e))
+        if self.nameSuffixCount is None:
+          self.nameSuffixCount=1
+        else:
+          self.nameSuffixCount+=1
+        continue
       waitTime=timeout*10
       state=self.group.GetState()
       while state in [self.ENTRY_GROUP_REGISTERING,self.ENTRY_GROUP_UNCOMMITED] and waitTime > 0:
@@ -146,7 +155,6 @@ class AVNAvahi(AVNWorker):
           self.nameSuffixCount=1
         else:
           self.nameSuffixCount+=1
-        num+=1
         continue
       if state != self.ENTRY_GROUP_ESTABLISHED:
         try:
