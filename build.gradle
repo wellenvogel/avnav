@@ -768,6 +768,7 @@ task uploadConfigGen(type: UploadTask){
             include '*js'
             include '*css'
             include '*conf'
+            include '*.json'
         }
     )
     deleteTargetDir=false

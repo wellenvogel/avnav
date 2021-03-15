@@ -3,6 +3,11 @@
     margin-left: auto;
     margin-right: auto;
 }
+.configui .info{
+    margin-bottom: 1em;
+    opacity: 0.6;
+    white-space: pre-line;
+}
 .configui .parameters {
     border-bottom: 1px solid grey;
     margin-bottom: 1em;

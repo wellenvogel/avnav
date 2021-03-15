@@ -1,0 +1,8 @@
+{
+  "info": "Hier kann eine avnav.conf Datei erzeugt werden, die dann in die erste Partition (boot) der SD Karte für den Pi gespeichert werden muss.\nDie Daten werden nicht auf den Server geladen, sondern verbleiben komplett im Browser.\nAuf jeden Fall sollten die Passworte geändert werden.",
+  "AVNAV_SSID": "Der Name für das WLAN, das durch den Raspberry erzeugt wird. u.U. wird noch eine Ziffer angefügt",
+  "AVNAV_PSK": "Das Passwort für das erzeugte WLAN",
+  "AVNAV_PASSWD": "Das Passwort für den Nutzer pi im System",
+  "AVNAV_MCS": "Wenn aktiviert, wird die nötige Software für den Marine Control Server von GeDad aktiviert",
+  "download": "Erzeugen und Herunterladen der avnav.conf"
+}

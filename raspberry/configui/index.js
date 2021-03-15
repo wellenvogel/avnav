@@ -1,5 +1,23 @@
 (function(){
-
+    let getToolTips=function(lang){
+        let prefix=(lang === 'de' || ! lang)?'':(lang+'_');
+        fetch(prefix+'tooltips.json')
+            .then(function(r){return r.json()})
+            .then(function(tips){
+                for (let k in tips){
+                    let el=document.getElementById(k);
+                    if (el.tagName.toLowerCase() === 'div'){
+                        el.textContent=tips[k];
+                    }
+                    else {
+                        if (el) el.title = tips[k];
+                    }
+                }
+            })
+            .catch(function(e){
+                if (prefix !== '') getToolTips();
+            })
+    }
     let download=function(data,name){
         const blob=new Blob([data],{type:'text/text'});
         const url = URL.createObjectURL(blob);
@@ -85,5 +103,10 @@
                 download(data,'avnav.conf');
            }
        });
+       let lang='';
+       if (window.location.search.match(/lang=/)){
+           lang=window.location.search.replace(/.*lang=/,'').replace('[?&].*','');
+       }
+       getToolTips(lang);
     });
 })()
