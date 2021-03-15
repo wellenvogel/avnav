@@ -3,7 +3,7 @@
 #set -x
 CONFIG=/boot/avnav.conf
 LAST=/etc/avnav-startup-checks
-MCS_INSTALL=`dirname $0`/mcs.sh
+MCS_INSTALL=`dirname $0`/setup-mcs.sh
 log(){
     logger -t 'avnav-startup-check' "$*"
 }

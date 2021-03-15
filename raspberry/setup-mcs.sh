@@ -6,6 +6,14 @@
 BASE=/
 
 MCS_PACKAGE=/home/pi/.signalk/node_modules/signalk-raspberry-mcs
+MCS_SERVICE_SCRIPT=MCS-asd.py
+
+pdir=`dirname $0`
+pdir=`readlink -f "$pdir"`
+
+if [ -f "$pdir/$MCS_SERVICE_SCRIPT" ] ; then
+    MCS_PACKAGE="$pdir"
+fi
 
 PACKAGES="python3 pigpio python3-pigpio python3-rpi.gpio"
 #/boot/config.txt

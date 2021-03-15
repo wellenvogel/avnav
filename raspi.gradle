@@ -49,7 +49,7 @@ ospackage {
             include 'iptables-ext.sh'
             include 'wpa_supplicant.conf'
             include 'startup-check.sh'
-            include 'mcs.sh'
+            include 'setup-mcs.sh'
         }
         from('raspberry') {
             include 'avnav_server.xml'
