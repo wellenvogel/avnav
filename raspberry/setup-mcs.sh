@@ -5,6 +5,8 @@
 #testing
 BASE=/
 
+MCS_COMMENT="#MCS_DO_NOT_DELETE"
+
 MCS_PACKAGE=/home/pi/.signalk/node_modules/signalk-raspberry-mcs
 MCS_SERVICE_SCRIPT=MCS-asd.py
 
@@ -97,7 +99,7 @@ updateConfig(){
             if [ "$found" != 1 ] ; then
                 log "add $line to $cfg"
                 rt=1
-                echo "$line" >> $cfg
+                echo "$line$MCS_COMMENT" >> $cfg
             fi
         fi
     done <<< "$2"
