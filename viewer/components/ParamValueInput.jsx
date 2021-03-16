@@ -30,6 +30,13 @@ import {Input,Checkbox,InputReadOnly,InputSelect,ColorSelector} from './Inputs.j
 import {EditableParameter} from "./EditableParameters";
 
 export const getList=(list,current)=> {
+    if (list instanceof Promise){
+        return new Promise((resolve,reject)=>{
+            list
+                .then((data)=>resolve(getList(data,current)))
+                .catch((e)=>reject(e))
+        })
+    }
     let self=this;
     let idx=0;
     let displayList=[];

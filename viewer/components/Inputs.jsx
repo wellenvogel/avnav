@@ -123,9 +123,18 @@ export const InputSelect=(props)=>{
     let displayList = props.list||props.itemList;
     if (props.onChange && displayList){
         onClick=()=> {
-            let valueChanged = (newValue)=>{
+            const valueChanged = (newValue)=>{
                 props.onChange(props.changeOnlyValue?(newValue||{}).value:newValue);
             };
+            const showDialog=(finalList)=>{
+                let d =OverlayDialog.createSelectDialog(props.label, finalList, valueChanged);
+                if (props.showDialogFunction) {
+                    props.showDialogFunction(d);
+                }
+                else{
+                    OverlayDialog.dialog(d);
+                }
+            }
             let finalList;
             if (typeof(displayList) === 'function') finalList = displayList(props.value);
             else {
@@ -134,13 +143,16 @@ export const InputSelect=(props)=>{
                     if (el.value == value) el.selected = true;
                 });
             }
-            let d =OverlayDialog.createSelectDialog(props.label, finalList, valueChanged);
-            if (props.showDialogFunction) {
-                props.showDialogFunction(d);
+            if (finalList instanceof Promise){
+                finalList
+                    .then((fetchedList)=>showDialog(fetchedList))
+                    .catch((e)=>Toast(e));
+
             }
             else{
-                OverlayDialog.dialog(d);
+                showDialog(finalList);
             }
+
         };
     }
     return <InputReadOnly
