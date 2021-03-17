@@ -52,7 +52,7 @@ export default class LogDialog extends React.Component{
 
     getLog(){
         Requests.getHtmlOrText(this.props.baseUrl, {useNavUrl:false},{
-            maxBytes:100000
+            maxBytes:this.props.maxBytes||500000
         })
             .then((data)=>{
                 this.setState({log:data});
@@ -104,5 +104,6 @@ export default class LogDialog extends React.Component{
 
 LogDialog.propTypes={
     baseUrl: PropTypes.string.isRequired,
-    title: PropTypes.string
+    title: PropTypes.string,
+    maxBytes: PropTypes.number
 }
