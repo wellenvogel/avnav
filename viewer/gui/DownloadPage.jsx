@@ -18,7 +18,6 @@ import routeobjects from '../nav/routeobjects.js';
 import Formatter from '../util/formatter.js';
 import OverlayDialog, {stateHelper} from '../components/OverlayDialog.jsx';
 import Helper from '../util/helper.js';
-import Promise from 'promise';
 import LayoutHandler from '../util/layouthandler.js';
 import Mob from '../components/Mob.js';
 import LayoutNameDialog from '../components/LayoutNameDialog.jsx';

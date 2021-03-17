@@ -1,6 +1,5 @@
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
-import Promise from 'promise';
 import assign from 'object-assign';
 import 'whatwg-fetch-timeout';
 

@@ -8,10 +8,7 @@
  */
 
 import React from 'react';
-import Promise from 'promise';
 import PropTypes from 'prop-types';
-import assign from 'object-assign';
-import base from '../base.js';
 import MapEventGuard from "../hoc/MapEventGuard";
  //"active input" to prevent resizes
 const Container=MapEventGuard(React.forwardRef((props,ref)=>{

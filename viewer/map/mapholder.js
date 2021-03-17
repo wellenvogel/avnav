@@ -13,7 +13,6 @@ import {Drawing,DrawingPositionConverter} from './drawing';
 import Formatter from '../util/formatter';
 import keys,{KeyHelper} from '../util/keys.jsx';
 import globalStore from '../util/globalstore.jsx';
-import Promise from 'promise';
 import Requests from '../util/requests.js';
 import base from '../base.js';
 import northImage from '../images/nadel_mit.png';

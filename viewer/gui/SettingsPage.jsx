@@ -12,7 +12,6 @@ import Page from '../components/Page.jsx';
 import Toast,{hideToast} from '../components/Toast.jsx';
 import assign from 'object-assign';
 import OverlayDialog from '../components/OverlayDialog.jsx';
-import Promise from 'promise';
 import LayoutHandler from '../util/layouthandler.js';
 import Mob from '../components/Mob.js';
 import LayoutNameDialog from '../components/LayoutNameDialog.jsx';

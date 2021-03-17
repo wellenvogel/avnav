@@ -23,7 +23,6 @@
  ###############################################################################
  */
 
-import Promise from 'promise';
 import base from '../base.js';
 import Requests from '../util/requests.js';
 import globalStore from '../util/globalstore.jsx';

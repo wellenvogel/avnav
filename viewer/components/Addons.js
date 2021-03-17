@@ -1,7 +1,6 @@
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import Requests from '../util/requests.js';
-import Promise from 'promise';
 import Toast from './Toast.jsx';
 
 const readAddOns = function (opt_showToast,opt_includeInvalid) {

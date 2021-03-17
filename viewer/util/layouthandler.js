@@ -1,12 +1,9 @@
 import Requests from './requests.js';
-import Promise from 'promise';
-import PropertyHandler from './propertyhandler.js';
 import Helper from './helper.js';
 import globalStore from './globalstore.jsx';
 import keys,{KeyHelper} from './keys.jsx';
 import KeyHandler from './keyhandler.js';
 import base from '../base.js';
-import jsdownload from 'downloadjs';
 import assign from 'object-assign';
 
 import defaultLayout from '../layout/default.json';

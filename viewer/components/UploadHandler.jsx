@@ -31,8 +31,6 @@ import keys from "../util/keys";
 import Requests from "../util/requests";
 import Toast from "./Toast";
 import AndroidEventHandler from "../util/androidEventHandler";
-import Promise from 'promise';
-import Helper from "../util/helper";
 
 const MAXUPLOADSIZE=100000;
 

@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import Promise from 'promise';
 import OverlayDialog,{dialogHelper,stateHelper} from './OverlayDialog.jsx';
 import assign from 'object-assign';
 import {Input,Checkbox,InputReadOnly,InputSelect,ColorSelector,Radio} from './Inputs.jsx';

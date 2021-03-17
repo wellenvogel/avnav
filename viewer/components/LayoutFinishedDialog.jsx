@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import Promise from 'promise';
 import LayoutHandler from '../util/layouthandler.js';
 import OverlayDialog from './OverlayDialog.jsx';
 import DB from './DialogButton.jsx';
