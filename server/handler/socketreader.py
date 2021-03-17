@@ -49,7 +49,7 @@ class AVNSocketReader(AVNWorker,SocketReader):
                WorkerParameter('host',None),
                WorkerParameter('port',None,type=WorkerParameter.T_NUMBER),
                WorkerParameter('timeout',10,type=WorkerParameter.T_FLOAT,
-                               description='timeout in sec for connecting and waiting for data'),
+                               description='timeout in sec for connecting and waiting for data, close connection if no data within 5*timeout'),
                WorkerParameter('minTime',0,type=WorkerParameter.T_FLOAT,
                                description='if this is set, wait this time before reading new data (ms)'),
                WorkerParameter('filter','',type=WorkerParameter.T_FILTER)
@@ -76,6 +76,7 @@ class AVNSocketReader(AVNWorker,SocketReader):
   def updateConfig(self, param,child=None):
     super().updateConfig(param)
     try:
+      self.socket.shutdown(socket.SHUT_RDWR)
       self.socket.close()
     except Exception as e:
       pass
@@ -83,11 +84,12 @@ class AVNSocketReader(AVNWorker,SocketReader):
   def stop(self):
     super().stop()
     try:
+      self.socket.shutdown(socket.SHUT_RDWR)
       self.socket.close()
     except:
       pass
 
-  def writeData(self,data,source):
+  def writeData(self, data, source=None, **kwargs):
     AVNWorker.writeData(self,data,source)
     if (self.getIntParam('minTime')):
       time.sleep(float(self.getIntParam('minTime'))/1000)
@@ -103,7 +105,7 @@ class AVNSocketReader(AVNWorker,SocketReader):
         if info != lastInfo:
           self.setInfo('main',"trying to connect to %s"%(info,),WorkerStatus.INACTIVE)
           lastInfo=info
-        self.socket=socket.create_connection((self.getStringParam('host'),self.getIntParam('port')), self.getIntParam('timeout'))
+        self.socket=socket.create_connection((self.getStringParam('host'),self.getIntParam('port')), self.getFloatParam('timeout'))
         self.setInfo('main',"connected to %s"%(info,),WorkerStatus.RUNNING)
       except:
         if not errorReported:
@@ -115,7 +117,12 @@ class AVNSocketReader(AVNWorker,SocketReader):
       AVNLog.info("successfully connected to %s",info)
       try:
         errorReported=False
-        self.readSocket(self.socket,'main',self.getSourceName(info),self.getParamValue('filter'))
+        timeout=self.getFloatParam('timeout')
+        if timeout != 0:
+          timeout = timeout *5
+        else:
+          timeout=None
+        self.readSocket(self.socket,'main',self.getSourceName(info),self.getParamValue('filter'),timeout=timeout)
         self.wait(2)
       except:
         AVNLog.info("exception while reading from %s %s",info,traceback.format_exc())

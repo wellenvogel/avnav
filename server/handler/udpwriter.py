@@ -74,6 +74,7 @@ class AVNUdpWriter(AVNWorker):
   def updateConfig(self, param, child=None):
     super().updateConfig(param, child)
     try:
+      self.socket.shutdown(socket.SHUT_RDWR)
       self.socket.close()
     except:
       pass
@@ -82,6 +83,7 @@ class AVNUdpWriter(AVNWorker):
   def stop(self):
     super().stop()
     try:
+      self.socket.shutdown(socket.SHUT_RDWR)
       self.socket.close()
     except:
       pass
@@ -122,6 +124,7 @@ class AVNUdpWriter(AVNWorker):
                  AVNLog.debug("ignore line %s:%s due to blacklist",line.source,line.data)
                else:
                  self.socket.sendto(line.data.encode('ascii',errors='ignore'),(addr,port))
+        self.socket.shutdown(socket.SHUT_RDWR)
         self.socket.close()
       except Exception as e:
         self.setInfo('main', "error sending to %s:%s %s" %

@@ -36,7 +36,11 @@ from avnav_worker import *
 #should derive from this
 #the derived class must have the setInfo,writeData methods
 class SocketReader(object):
-  def readSocket(self,sock,infoName,sourceName,filter=None):
+  def setInfo(self,name,text,status):
+    pass
+  def writeData(self,data,source=None):
+    pass
+  def readSocket(self,sock,infoName,sourceName,filter=None,timeout=None):
     filterA = None
     if filter:
       filterA = filter.split(',')
@@ -53,10 +57,19 @@ class SocketReader(object):
     hasNMEA=False
     try:
       sock.settimeout(1)
+      lastReceived=time.time()
       while sock.fileno() >= 0:
         try:
           data = sock.recv(1024)
+          lastReceived=time.time()
         except socket.timeout:
+          if timeout is not None:
+            now=time.time()
+            if now < lastReceived:
+              lastReceived=now
+              continue
+            if now > (lastReceived + timeout):
+              raise Exception("no data received within timeout of %s seconds"%str(timeout))
           continue
         if len(data) == 0:
           AVNLog.info("connection lost")
@@ -92,11 +105,13 @@ class SocketReader(object):
         if len(buffer) > 4096:
           AVNLog.debug("no line feed in long data, stopping")
           break
+      sock.shutdown(socket.SHUT_RDWR)
       sock.close()
     except Exception as e:
       AVNLog.error("exception while reading from socket: %s",traceback.format_exc())
       pass
     try:
+      sock.shutdown(socket.SHUT_RDWR)
       sock.close()
     except:
       pass

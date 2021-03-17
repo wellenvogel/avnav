@@ -172,6 +172,7 @@ class AVNSocketWriter(AVNWorker,SocketReader):
     except Exception as e:
       AVNLog.info("exception in client connection %s",traceback.format_exc())
     AVNLog.info("client disconnected or stop received")
+    socket.shutdown(socket.SHUT_RDWR)
     socket.close()
     self.removeHandler(addr)
     self.deleteInfo(infoName)
@@ -208,6 +209,7 @@ class AVNSocketWriter(AVNWorker,SocketReader):
   def _closeSockets(self):
     self.startSequence+=1
     try:
+      self.listener.shutdown(socket.SHUT_RDWR)
       self.listener.close()
     except:
       pass
@@ -215,6 +217,7 @@ class AVNSocketWriter(AVNWorker,SocketReader):
     try:
       for k,v in self.addrmap.items():
         try:
+          v.shutdown(socket.SHUT_RDWR)
           v.close()
         except:
           pass
@@ -266,6 +269,7 @@ class AVNSocketWriter(AVNWorker,SocketReader):
           else:
             AVNLog.error("connection from %s not allowed", str(addr))
             try:
+              outsock.shutdown(socket.SHUT_RDWR)
               outsock.close()
             except:
               pass
