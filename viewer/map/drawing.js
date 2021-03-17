@@ -33,7 +33,7 @@ DrawingPositionConverter.prototype.pixelToCoord=function(pixel){
  * 2d drawing functions
  * @constructor
  * @param {DrawingPositionConverter} converter
- * @param {number} opt_ratio - device pixel ratio
+ * @param {number} opt_useHdpi - if true, adapt sizes if devPixelratio != 1
  */
 export const Drawing=function(converter,opt_useHdpi){
     /**
@@ -97,7 +97,7 @@ Drawing.prototype.drawCircleToContext=function(center,other,opt_styles){
 
 /**
  * @param {olCoordinate} point the position in map coordinates
- * @param {image} the image to display (must be loaded - no check!)
+ * @param {Image} image image to display (must be loaded - no check!)
  * @param {Object} opt_options handles the same properties like olIcon
  *             currently supported:
  *             anchor[x,y] in pixels
@@ -201,6 +201,7 @@ Drawing.prototype.dashedLine = function (x1, y1, x2, y2, dashLen) {
  * @param x2
  * @param y2
  * @param w
+ * @param l
  * @param pe: pixel from line end for peak
  * @param open: if true - open arrow
  */
@@ -262,24 +263,41 @@ Drawing.prototype.drawLineToContext=function(points,opt_style){
     let nminus1=undefined;
     let arrowStyle;
     if (opt_style && opt_style.arrow){
-       if (typeof opt_style.arrow === "object"){
-           try{
+        //if we compute the arrow from our line width this has been scaled already
+        let scaleWidth=true;
+        let scaleLength=true;
+        if (typeof opt_style.arrow === "object"){
+            try{
                arrowStyle={};
-               arrowStyle.width=opt_style.arrow.width||(this.context.lineWidth||1)*3;
-               arrowStyle.length=opt_style.arrow.length||(this.context.lineWidth||1)*8;
+               if (opt_style.arrow.width !== undefined){
+                   arrowStyle.width=opt_style.arrow.width;
+               }
+               else {
+                   arrowStyle.width = (this.context.lineWidth || 1) * 3;
+                   scaleWidth=false;
+               }
+               if (opt_style.arrow.length !== undefined) {
+                   arrowStyle.length = opt_style.arrow.length;
+               }
+               else{
+                   arrowStyle.length = (this.context.lineWidth || 1) * 8;
+                   scaleLength=false;
+               }
                arrowStyle.offset=opt_style.arrow.offset||10;
                arrowStyle.open=opt_style.arrow.open||false;
-           } catch (e){}
-       } else{
+            } catch (e){}
+        } else{
            arrowStyle={};
            arrowStyle.width=(this.context.lineWidth||1)*3;
+           scaleWidth=false;
            arrowStyle.length=(this.context.lineWidth||1)*8;
+           scaleLength=false;
            arrowStyle.offset=10;
            arrowStyle.open=false;
-       }
+        }
         if (this.useHdpi){
-            arrowStyle.width*=this.devPixelRatio;
-            arrowStyle.length*=this.devPixelRatio;
+            if (scaleWidth) arrowStyle.width*=this.devPixelRatio;
+            if (scaleLength) arrowStyle.length*=this.devPixelRatio;
             //arrowStyle.offset*=this.devPixelRatio;
         }
     }

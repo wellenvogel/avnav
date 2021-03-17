@@ -55,6 +55,12 @@ class QueueEntry(object):
       self.cond.wait(5)
       self.cond.release()
 
+  def wakeUp(self):
+    self.cond.acquire()
+    try:
+      self.cond.notifyAll()
+    finally:
+      self.cond.release()
   def setData(self,data):
     self.cond.acquire()
     self.data=data
@@ -87,6 +93,13 @@ class MBTilesFile(ChartFile):
     if not self.schemeInconsistent:
       return None
     return self.originalScheme
+
+  def wakeUp(self):
+    self.cond.acquire()
+    try:
+      self.cond.notify_all()
+    finally:
+      self.cond.release()
 
   def handleRequests(self):
     connection=sqlite3.connect(self.filename)

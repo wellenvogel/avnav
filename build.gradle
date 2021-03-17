@@ -163,15 +163,13 @@ ospackage {
     os = LINUX // only applied to RPM
     packageGroup='misc'
     packageName='avnav'
-    requires('bluetooth')
-    requires('libbluetooth-dev')
     requires('python3-pip')
     requires('python3-pyudev')
     requires('python3-serial')
     requires('python3-gdal')
     requires('python3-imaging').or('python3-pil')
     requires('python3-netifaces')
-    requires('python3-websocket')
+    requires('python3-pydbus')
     user='root'
     into ('/usr/lib/avnav') {
         from('viewer/build/release') {
@@ -293,11 +291,18 @@ task releaseRpm(type: Rpm) {
     group taskgroup
     arch = NOARCH
     dependsOn 'releaseViewer',pkgVersion
+    requires('gcc')
+    requires('python3-devel')
+    requires('bluez-devel')
+    requires('python3-websocket-client')
 }
 
 task releaseDeb(type: Deb) {
     group taskgroup
     dependsOn 'releaseViewer',pkgVersion
+    requires('bluetooth')
+    requires('libbluetooth-dev')
+    requires('python3-websocket')
     recommends 'python3-bluez'
 }
 
@@ -755,6 +760,22 @@ task findUnusedImages(type: DefaultTask){
         }
     }
 }
+
+task uploadConfigGen(type: UploadTask){
+    inputFiles=fileTree(
+        'raspberry/configui',{
+            include '*html'
+            include '*js'
+            include '*css'
+            include '*conf'
+            include '*.json'
+        }
+    )
+    deleteTargetDir=false
+    baseDir="../configGen"
+    useHashes=true
+}
+
 
 task upload{
     doLast {

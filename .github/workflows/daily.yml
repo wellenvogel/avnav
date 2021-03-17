@@ -61,9 +61,16 @@ jobs:
         env:  
           AVNAV_REPO_USER: ${{ secrets.AVNAV_REPO_USER }}
           AVNAV_REPO_PASSWD: ${{ secrets.AVNAV_REPO_PASSWD }}
+          AVNAV_REPO_BASE: "/downloads"
+        run: ./gradlew upload
+      
+      - name: gradle repo upload
+        env:  
+          AVNAV_REPO_USER: ${{ secrets.AVNAV_REPO_USER }}
+          AVNAV_REPO_PASSWD: ${{ secrets.AVNAV_REPO_PASSWD }}
           AVNAV_REPO_KEY: ${{ secrets.AVNAV_REPO_KEY }}
           AVNAV_REPO_BASE: ""
-        run: ./gradlew upload uploadRepoDaily
+        run: ./gradlew uploadRepoDaily
 
 
         

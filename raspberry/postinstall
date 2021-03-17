@@ -11,9 +11,6 @@ if [ -f $VERSIONFILE ] ; then
     . $VERSIONFILE
 fi
 systemctl daemon-reload
-#systemctl enable avnav-check-wlan
-#check-parts should not be necessary any more as we do not have small files - and it resizes anyway?!
-#systemctl enable avnav-check-parts
 systemctl enable avnav
 echo stopping and disabling gpsd
 systemctl disable gpsd || echo ' ' > /dev/null
@@ -25,8 +22,7 @@ if [ -f $CONFIG ] ; then
         cp $CONFIG $CONFIG.save
         chown pi $CONFIG.save
     fi
-    sed -i -e 's? *shutdowncmd *= *"[^"]*"? ?' $CONFIG
-    sed -i -e 's?settimecmd *= *"[^"]*"?settimecmd="/usr/lib/avnav/raspberry/settime.sh" shutdowncmd="/usr/lib/avnav/raspberry/shutdown.sh"?' $CONFIG
+    sed -i -e 's?settimecmd *= *"[^"]*"?settimecmd="/usr/lib/avnav/raspberry/settime.sh"?' $CONFIG
 else
     echo "no old config $CONFIG found to migrate"
 fi
@@ -76,6 +72,13 @@ fi
 #remove wlan0 config from /etc/network/interfaces
 sed -i -e '/^iface *wlan0/,/^[^ ]/d' -e '/wlan0/d' /etc/network/interfaces
 
+BOOTCFG=/boot/avnav.conf
+
+if [ ! -e "$BOOTCFG" ] ; then
+    echo "creating $BOOTCFG"
+    cp $BASE/avnav.conf $BOOTCFG
+fi    
+
 systemctl disable dhcpd || echo "dhcpd not running, dont need to disable"
 systemctl stop dhcpd || echo "dhcpd not running, dont need to disable"
 systemctl disable dhcpcd || echo "dhcpcd not running, dont need to disable"
@@ -87,11 +90,11 @@ systemctl stop ntp.service || echo "ntp not running, dont need to disable"
 
 systemctl daemon-reload
 systemctl restart dnsmasq
-#systemctl start avnav-check-parts
+
 systemctl restart avnav
 systemctl enable avnav-iptables
 systemctl start avnav-iptables
-#TODO:
-#ntp setup
-#sudo setup
+systemctl enable avnav-startup
+systemctl start avnav-startup
+
 exit 0

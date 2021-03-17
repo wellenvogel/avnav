@@ -27,6 +27,7 @@
 import imp
 import inspect
 import json
+from typing import Dict, Any
 
 from avnav_api import AVNApi
 from avnav_store import AVNStore
@@ -121,27 +122,35 @@ class ApiImpl(AVNApi):
       raise Exception("%s: missing path in data entry: %s"%(self.prefix,data))
     AVNLog.info("%s: register key %s"%(self.prefix,key))
     if self.store.isKeyRegistered(key,keySource):
-      allowOverwrite=self.getConfigValue("allowKeyOverwrite","false")
+      allowOverwrite=self.getConfigValue(AVNApi.ALLOW_KEY_OVERWRITE,"false")
       if allowOverwrite.lower() != "true":
         self.error("key %s already registered, skipping it"%key)
+        if key.find('*') >= 0:
+          if key in self.wildcardPatterns:
+            self.wildcardPatterns.remove(key)
+        else:
+          if key in self.patterns:
+            self.patterns.remove(key)
         return
     else:
       self.store.registerKey(key,data,keySource)
     if key.find('*') >= 0:
-      self.wildcardPatterns.append(data)
+      if not key in self.wildcardPatterns:
+        self.wildcardPatterns.append(key)
     else:
-      self.patterns.append(data)
+      if not key in self.patterns:
+        self.patterns.append(key)
   def addData(self,path,value,source=None,record=None):
     if source is None:
       source="plugin-"+self.prefix
     matches=False
     for p in self.patterns:
-      if p.get('path') == path:
+      if p == path:
         matches=True
         break
     if not matches:
       for p in self.wildcardPatterns:
-        if AVNStore.wildCardMatch(path,p.get('path')):
+        if AVNStore.wildCardMatch(path,p):
           matches=True
           break
     if not matches:
@@ -230,6 +239,12 @@ class ApiImpl(AVNApi):
       raise Exception("no usb handler configured, cannot register %s"%usbid)
     usbhandler.registerExternalHandler(usbid,self.prefix,callback)
 
+  def deregisterUsbHandler(self, usbid=None):
+    usbhandler=AVNWorker.findHandlerByName(AVNUsbSerialReader.getConfigName())
+    if usbhandler is None:
+      raise Exception("no usb handler configured, cannot register %s"%usbid)
+    usbhandler.deregisterExternalHandler(self.prefix,usbid)
+
   def getAvNavVersion(self):
     baseConfig=AVNWorker.findHandlerByName("AVNConfig")
     if baseConfig is None:
@@ -280,6 +295,7 @@ class ApiImpl(AVNApi):
 
 
 class AVNPluginHandler(AVNWorker):
+  createdApis: Dict[str, ApiImpl]
   ENABLE_PARAMETER=WorkerParameter('enabled',
                                    type=WorkerParameter.T_BOOLEAN,
                                    default=True,
@@ -290,7 +306,7 @@ class AVNPluginHandler(AVNWorker):
     AVNWorker.__init__(self, param)
     self.queue=None
     self.createdPlugins={}
-    self.createdApis={}
+    self.createdApis={} 
     self.startedThreads={}
     self.pluginDirs={} #key: moduleName, Value: dir
     self.configLock=threading.Lock()
@@ -454,7 +470,8 @@ class AVNPluginHandler(AVNWorker):
           self.createdPlugins[modulename]=pluginInstance
           self.createdApis[modulename]=api
           self.setInfo(modulename,"created",WorkerStatus.STARTED)
-        except:
+        except Exception as e:
+          self.setInfo(modulename,"unable to create plugin: %s"%str(e), WorkerStatus.ERROR)
           AVNLog.error("cannot start %s:%s" % (modulename, traceback.format_exc()))
 
   def loadPluginFromDir(self, dir, name):
@@ -560,11 +577,14 @@ class AVNPluginHandler(AVNWorker):
           self.startPluginThread(child)
           pass
       del checked['enabled']
-      if len(list(checked.keys())) < 2:
+      if len(list(checked.keys())) < 1:
         return
+
     if api.paramChange is None:
       raise Exception("unable to change parameters")
     api.paramChange(checked)
+    #maybe allowKeyOverrides has changed...
+    api.registerKeys()
 
   def getStatusProperties(self):
     rt={}

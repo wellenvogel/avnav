@@ -1,0 +1,10 @@
+<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
+  "http://www.freedesktop.org/standards/menu-spec/1.0/menu.dtd">
+
+<Menu>
+    <Name>Addon</Name>
+    <AppDir>/home/pi/.config/xfce4/keyboard-change</AppDir>
+    <Include>
+        <All/>
+    </Include>
+</Menu>

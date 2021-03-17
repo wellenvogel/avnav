@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- vim: ts=2 sw=2 et 
+-->
+<html xmlns="http://www.w3.org/1999/xhtml" lang="EN">
+  <head>
+<!--
+###############################################################################
+# Copyright (c) 2014, Andreas Vogel andreas@wellenvogel.net
+#
+#  Permission is hereby granted, free of charge, to any person obtaining a
+#  copy of this software and associated documentation files (the "Software"),
+#  to deal in the Software without restriction, including without limitation
+#  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+#  and/or sell copies of the Software, and to permit persons to whom the
+#  Software is furnished to do so, subject to the following conditions:
+#
+#  The above copyright notice and this permission notice shall be included
+#  in all copies or substantial portions of the Software.
+#
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+#  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+#  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+#  DEALINGS IN THE SOFTWARE.
+###############################################################################
+
+
+-->
+
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+     <meta name="viewport" id="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0"/>
+     <!--<meta name="viewport" id="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, target-densityDpi=device-dpi">-->
+     <meta name="apple-mobile-web-app-capable" content="yes"/>
+     <meta name="mobile-web-app-capable" content="yes"/>
+     <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+     <meta name="apple-mobile-web-app-title" content="avNavSplit"/>
+      <link rel="icon" sizes="512x512" href="images/WebIcon-512.png"/>
+      <link rel="apple-touch-icon" sizes="128x128" href="images/WebIcon-128.png"/>
+	<title>AVNav-Web-Split</title>
+    <style type="text/css">
+        *{
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        html,body{
+            width: 100%;
+            height: 100%;
+        }
+        #split_main{
+            display: flex;
+            flex-direction: row;
+            height:100%;
+            position: relative;
+        }
+        iframe{
+            height: 100%;
+        }
+        #mover{
+            position: absolute;
+            bottom: 5px;
+            font-size: 3rem;
+            background-color: grey;
+            opacity: 0.6;
+            padding: 0.1em;
+            border-radius: 0.1em;
+        }
+    </style>
+	</head>
+
+  <body  >
+  <div id="split_main">
+      <iframe id="left"></iframe>
+      <iframe id="right"></iframe>
+      <p id="mover" draggable="true">&lt;&gt;</p>
+  </div>
+  <script type="text/javascript">
+      (function(){
+          var dragPosition=-1;
+          var dragstartX=-1;
+          var mover=document.getElementById('mover');
+          var f1=document.getElementById('left');
+          var f2=document.getElementById('right');
+          var frame=document.getElementById('split_main');
+          var setMover=function(opt_pos){
+              if (opt_pos === undefined) {
+                  var rect = f1.getBoundingClientRect();
+                  opt_pos=rect.width;
+              }
+              var mrect=mover.getBoundingClientRect();
+              mover.style.left=(opt_pos-mrect.width/2)+'px';
+          }
+          var setSplit=function(percent){
+              f1.style.width=(percent)+"%";
+              f2.style.width=(100-percent)+"%";
+              setMover();
+              window.setTimeout(function(){
+                  mover.style.opacity=0.3;
+              },5000)
+          }
+          var setSplitFromPos=function(pos){
+              var r=frame.getBoundingClientRect();
+              var percent=pos*100/r.width;
+              if (percent < 0) percent=0;
+              if (percent >= 99.999) percent=99.999;
+              setSplit(percent);
+          }
+          mover.addEventListener('dragstart',function(ev){
+              dragstartX=ev.screenX;
+              mover.style.opacity=0.6;
+          });
+          mover.addEventListener('touchstart',function(ev){
+              ev.preventDefault();
+              var touchobj = ev.changedTouches[0];    // erster Finger des touchstart-Events
+              dragPosition = parseInt(touchobj.screenX);
+              mover.style.opacity=0.6;
+              setMover(dragPosition);
+          });
+          mover.addEventListener('touchmove',function(ev){
+              var touchobj = ev.changedTouches[0];
+              dragPosition = parseInt(touchobj.screenX);
+              setMover(dragPosition);
+          })
+          mover.addEventListener('touchend',function(ev){
+              var touchobj = ev.changedTouches[0];
+              dragPosition = parseInt(touchobj.screenX);
+              setSplitFromPos(dragPosition);
+          })
+          mover.addEventListener('dragend',function(ev){
+              ev.preventDefault();
+              var left=f1.getBoundingClientRect().width;
+              if (dragstartX < 0) return;
+              left += ev.screenX - dragstartX;
+              dragstartX=-1;
+              setSplitFromPos(left);
+          })
+
+      var percent=50;
+      var location=window.location.href+'';
+      location=location.replace('viewer_split','avnav_viewer');
+      if (! location.match(/[?]/)) location+='?';
+      location+="&fullscreen=parent";
+      if (window.location.search.match(/split=/)){
+          var np=window.location.search.replace(/.*split=/,'').replace(/[^0-9].*/,'');
+          if (! isNaN(np)){
+              percent=np;
+          }
+      }
+      setSplit(percent);
+      f1.src=location;
+      f2.src=location;
+      window.addEventListener('resize',function(){setMover()});
+      window.addEventListener('message',function(ev){
+          if (ev.data === 'fullscreen'){
+              if (document.fullscreenElement){
+                  document.exitFullscreen()
+              }
+              else {
+                  document.body.requestFullscreen();
+              }
+          }
+          if (ev.data === 'settingsChanged'){
+              [f1,f2].forEach(function(frm){
+                  frm.contentWindow.postMessage('reloadSettings',window.location.origin);
+              })
+          }
+      })
+      })();
+  </script>
+  </body>
+</html>

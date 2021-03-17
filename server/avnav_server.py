@@ -56,7 +56,7 @@ loggingInitialized=False
 def sighandler(signal,frame):
   for handler in AVNWorker.allHandlers:
     try:
-      handler.stopChildren()
+      handler.stop()
     except:
       pass
   sys.exit(1)
@@ -262,6 +262,13 @@ def main(argv):
       if AVNUtil.total_seconds(delta) < -allowedBackTime and allowedBackTime != 0:
         AVNLog.warn("time shift backward (%d seconds) detected, deleting all entries ",AVNUtil.total_seconds(delta))
         navData.reset()
+        #if the time is shifting all condition waits must
+        #be notified...
+        for h in AVNWorker.allHandlers:
+          try:
+            h.wakeUp()
+          except:
+            pass
         hasFix=False
       lastutc=curutc
       lat=None
@@ -302,11 +309,6 @@ def main(argv):
                   cmdThread=threading.Thread(target=AVNUtil.runCommand,args=(cmd,"setTime"))
                   cmdThread.start()
                   cmdThread.join(20)
-                  if cmdThread.isAlive():
-                    #AVNLog.error("unable to finish setting the system time within 40s")
-                    pass
-                  else:
-                    pass
                   curutc=datetime.datetime.utcnow()
                   if abs(AVNUtil.total_seconds(curts-curutc)) > allowedDiff:
                     AVNLog.error("unable to set system time to %s, still above difference",newtime)
@@ -314,6 +316,16 @@ def main(argv):
                     AVNLog.info("setting system time to %s succeeded",newtime)
                     lastsettime=curutc
                     timeFalse=False
+                    for h in AVNWorker.allHandlers:
+                      try:
+                        h.timeChanged()
+                      except:
+                        pass
+                      try:
+                        h.wakeUp()
+                      except:
+                        pass
+
               else:
                 #time is OK now
                 if timeFalse:

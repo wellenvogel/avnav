@@ -102,7 +102,7 @@ class AVNHTTPServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
       cfgparam['basedir']=''
     self.basedir=AVNHandlerManager.getDirWithDefault(cfgparam, 'basedir', defaultSub='', belowData=False)
     datadir=cfgparam[AVNHandlerManager.BASEPARAM.DATADIR]
-    pathmappings=None
+    pathmappings={}
     marray=cfgparam.get("Directory")
     if marray is not None:
       pathmappings={}

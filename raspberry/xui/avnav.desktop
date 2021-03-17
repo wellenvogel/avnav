@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=AvNav
+Path=/usr/lib/avnav
+Exec=/usr/bin/firefox --no-remote --profile /home/pi/.mozilla/firefox/avnav/ --class=AvNavFirefox 'http://localhost:8080'
+Icon=/usr/lib/avnav/viewer/images/WebIcon-512.png
+

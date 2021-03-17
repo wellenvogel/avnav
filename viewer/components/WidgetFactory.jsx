@@ -166,8 +166,9 @@ const WidgetParameter_TYPE={
 
 export const createWidgetParameter=(name,type,list,displayName)=>{
     if (typeof(type) === 'string'){
-        type=WidgetParameter_TYPE[type];
-        if (type === undefined) return createEditableParameter(name,type,list,displayName)
+        let wtype=WidgetParameter_TYPE[type];
+        if (wtype === undefined) return createEditableParameter(name,type,list,displayName)
+        type=wtype;
     }
     switch(type) {
         case WidgetParameter_TYPE.DISPLAY:

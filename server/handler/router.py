@@ -127,7 +127,7 @@ class AVNRoutingLeg(object):
              % (str(self.getFrom()),str(self.getAnchorDistance()))
     else:
       return "AVNRoutingLeg route=%s,from=%s,to=%s,active=%s, target=%d, approachDistance=%s, approach=%s"\
-           %(self.getRouteName(),str(self.getFrom()),str(self.getTo()),self.isActive(),self.getCurrentTarget(),str(self.getApproachDistance()),"True" if self.isApproach() else "False")
+           %(self.getRouteName(),str(self.getFrom()),str(self.getTo()),self.isActive(),self.getCurrentTarget() or 0,str(self.getApproachDistance()),"True" if self.isApproach() else "False")
 
 class AVNRouteInfo(AVNDirectoryListEntry):
   def __init__(self,type,prefix,name,**kwargs):
@@ -153,7 +153,7 @@ class AVNRouteInfo(AVNDirectoryListEntry):
           self.numpoints=len(route.points)
           self.length=route.length()/AVNUtil.NM
     except Exception as e:
-      AVNLog.error("error when parsing route %s: %s",routeFile,e.message)
+      AVNLog.error("error when parsing route %s: %s",routeFile,str(e))
 
   def __str__(self):
     return "Route: %s"%self.name
@@ -247,7 +247,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
       self.computeApproach() #ensure that we immediately switch off alarms
 
   def getSleepTime(self):
-    return self.getIntParam('interval')
+    return self.getFloatParam('interval')
 
 
   def onItemAdd(self, itemDescription):
@@ -321,9 +321,8 @@ class AVNRouter(AVNDirectoryHandlerBase):
     if (not hasRMB):
       self.setInfo("autopilot", "no autopilot data", WorkerStatus.INACTIVE)
     try:
-      curTPV = self.navdata.getMergedEntries("TPV", [])
-      lat = curTPV.data.get('lat')
-      lon = curTPV.data.get('lon')
+      lat = self.navdata.getSingleValue(AVNStore.BASE_KEY_GPS+".lat")
+      lon = self.navdata.getSingleValue(AVNStore.BASE_KEY_GPS+".lon")
       if lat is not None and lon is not None:
         self.startStopAlarm(False, self.ALARMS.gps)
     except:
@@ -335,23 +334,29 @@ class AVNRouter(AVNDirectoryHandlerBase):
     if alert is None:
       return
     if start:
+      if self.activatedAlarms.get(name) is None:
+        AVNLog.info("starting alarm %s",name)
       self.activatedAlarms[name]=True
       alert.startAlarm(name)
     else:
       if self.activatedAlarms.get(name) is not None:
+        AVNLog.info("stopping alarm %s",name)
         del self.activatedAlarms[name]
       alert.stopAlarm(name)
   #compute whether we are approaching the waypoint
   def computeApproach(self):
     if self.currentLeg is None:
+      AVNLog.debug("currentLeg is None")
       self.startStopAlarm(False,self.ALARMS.waypoint)
       self.startStopAlarm(False, self.ALARMS.mob)
       return
     if not self.currentLeg.isActive():
+      AVNLog.debug("currentLeg inactive")
       self.startStopAlarm(False,self.ALARMS.waypoint)
       self.startStopAlarm(False, self.ALARMS.mob)
       return
     if self.currentLeg.isMob():
+      AVNLog.debug("currentLeg MOB")
       self.startStopAlarm(False, self.ALARMS.waypoint)
       if self.activatedAlarms.get(self.ALARMS.mob) is None:
         self.startStopAlarm(True, self.ALARMS.mob)

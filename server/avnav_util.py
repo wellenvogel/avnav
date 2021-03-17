@@ -55,6 +55,7 @@ class AvNavFormatter(logging.Formatter):
 class LogFilter(logging.Filter):
   def __init__(self, filter):
     super().__init__()
+    self.filterText=filter
     self.filterre=re.compile(filter,re.I)
   def filter(self, record):
     if (self.filterre.search(record.msg)):
@@ -72,6 +73,7 @@ class AVNLog(object):
   SYS_gettid = 224
   hasNativeTid=False
   tempSequence=0
+  configuredLevel=0
 
   @classmethod
   def getSyscallId(cls):
@@ -116,6 +118,7 @@ class AVNLog(object):
     cls.logger.addHandler(cls.consoleHandler)
     cls.logger.setLevel(numeric_level)
     cls.filter=None
+    cls.configuredLevel=numeric_level
   
   @classmethod
   def levelToNumeric(cls,level):
@@ -147,9 +150,10 @@ class AVNLog(object):
     cls.logger.setLevel(numeric_level)
     cls.debugToFile=debugToFile
     cls.logDir=os.path.dirname(filename)
+    cls.configuredLevel=numeric_level
 
   @classmethod
-  def resetRun(cls,sequence,level,timeout):
+  def resetRun(cls,sequence,timeout):
     start=time.time()
     while sequence == cls.tempSequence:
       time.sleep(0.5)
@@ -157,26 +161,30 @@ class AVNLog(object):
       if sequence != cls.tempSequence:
         return
       if now < start or now >= (start+timeout):
-        cls.logger.info("resetting loglevel to %s",str(level))
-        cls.logger.setLevel(level)
+        cls.logger.info("resetting loglevel to %s",str(cls.configuredLevel))
+        cls.logger.setLevel(cls.configuredLevel)
+        cls.setFilter(None)
         if not cls.consoleHandler is None:
-          cls.consoleHandler.setLevel(level)
+          cls.consoleHandler.setLevel(cls.configuredLevel)
         if cls.debugToFile:
           if cls.fhandler is not None:
-            cls.fhandler.setLevel(level)
+            cls.fhandler.setLevel(cls.configuredLevel)
         return
 
   @classmethod
-  def startResetThread(cls,level,timeout):
+  def getCurrentLevelAndFilter(cls):
+    return (logging.getLevelName(cls.logger.getEffectiveLevel()),cls.filter.filterText if cls.filter is not None else '')
+  @classmethod
+  def startResetThread(cls,timeout):
     cls.tempSequence+=1
     sequence=cls.tempSequence
-    thread=threading.Thread(target=cls.resetRun,args=(sequence,level,timeout))
+    thread=threading.Thread(target=cls.resetRun,args=(sequence,timeout))
     thread.setDaemon(True)
     thread.start()
 
 
   @classmethod
-  def changeLogLevel(cls,level,timeout=None):
+  def changeLogLevelAndFilter(cls,level,filter,timeout=None):
     try:
       numeric_level=cls.levelToNumeric(level)
       oldlevel=None
@@ -189,25 +197,27 @@ class AVNLog(object):
         if cls.fhandler is not None:
           cls.fhandler.setLevel(numeric_level)
         pass
-      if oldlevel is not None and timeout is not None:
-        cls.startResetThread(oldlevel,timeout)
+      cls.setFilter(filter)
+      if timeout is not None:
+        cls.startResetThread(timeout)
       return True
     except:
       return False
   @classmethod
   def setFilter(cls,filter):
+    oldFilter=cls.filter
     if cls.filter is not None:
       cls.consoleHandler.removeFilter(cls.filter)
       if cls.fhandler is not None:
         cls.fhandler.removeFilter(cls.filter)
       cls.filter=None
     if filter is None:
-      return
+      return oldFilter
     cls.filter=LogFilter(filter)
     cls.consoleHandler.addFilter(cls.filter)
     if cls.fhandler is not None:
       cls.fhandler.addFilter(cls.filter)
-
+    return oldFilter
 
   @classmethod
   def debug(cls,str,*args,**kwargs):
@@ -484,6 +494,8 @@ class AVNUtil(object):
 
 
 class ChartFile(object):
+  def wakeUp(self):
+    pass
   def getScheme(self):
     return None
   def close(self):
@@ -503,3 +515,40 @@ class ChartFile(object):
   def getAvnavXml(self,upzoom=None):
     return None
 
+
+class AVNDownload(object):
+  def __init__(self, filename, size=None, stream=None, mimeType=None,lastBytes=None):
+    self.filename = filename
+    self.size = size
+    self.originalSize=self.size
+    self.stream = stream
+    self.mimeType = mimeType
+    self.lastBytes=lastBytes
+    if self.lastBytes is not None:
+      self.lastBytes=int(self.lastBytes)
+
+  def getSize(self):
+    if self.size is None:
+      self.size=os.path.getsize(self.filename)
+      self.originalSize=self.size
+      if self.lastBytes is not None and self.lastBytes < self.size:
+        self.size=self.lastBytes
+    return self.size
+
+  def getStream(self):
+    if self.stream is None:
+      self.stream=open(self.filename, 'rb')
+      if self.lastBytes is not None:
+        if self.originalSize is None:
+          self.getSize()
+        seekv=self.originalSize-self.lastBytes
+        if seekv > 0:
+          self.stream.seek(seekv)
+    return self.stream
+
+  def getMimeType(self, handler=None):
+    if self.mimeType is not None:
+      return self.mimeType
+    if handler is None:
+      return "application/octet-stream"
+    return handler.guess_type(self.filename)

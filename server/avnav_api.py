@@ -24,10 +24,15 @@
 ###############################################################################
 
 class AVNApi(object):
-
   """
   the API for handlers/decoders that will input data, decode NMEA or output data
   """
+
+  ALLOW_KEY_OVERWRITE='allowKeyOverwrite'
+  """
+  parameter that must be set to allow overriding of keys that are set inside AvNav
+  """
+
   def log(self, format, *param):
     """
     log infos
@@ -327,3 +332,10 @@ class AVNApi(object):
     @return:
     '''
     raise NotImplemented()
+
+  def deregisterUsbHandler(self,usbid=None):
+    '''
+    deregister previously registered usb devices
+    @param usbid: if None deregister all ids we have registered
+    @return:
+    '''

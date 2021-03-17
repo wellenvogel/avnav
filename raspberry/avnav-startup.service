@@ -1,0 +1,12 @@
+[Unit]
+Description=handle avnav.conf
+After=syslog.target network.target
+
+
+[Service]
+User=root
+Type=oneshot
+ExecStart=/usr/lib/avnav/raspberry/startup-check.sh
+
+[Install]
+WantedBy=multi-user.target

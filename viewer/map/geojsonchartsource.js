@@ -23,7 +23,6 @@
  ###############################################################################
  */
 
-import Promise from 'promise';
 import ChartSourceBase from './chartsourcebase.js';
 import {Style as olStyle, Stroke as olStroke, Circle as olCircle, Icon as olIcon, Fill as olFill} from 'ol/style';
 import {Vector as olVectorSource} from 'ol/source';

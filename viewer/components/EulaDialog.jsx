@@ -1,10 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import Promise from 'promise';
 import Requests from '../util/requests.js';
-import LayoutHandler from '../util/layouthandler.js';
 import OverlayDialog from './OverlayDialog.jsx';
-import {Input} from './Inputs.jsx';
 import DB from './DialogButton.jsx';
 
 class EulaDialog extends React.Component{

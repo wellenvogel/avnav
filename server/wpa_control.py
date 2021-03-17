@@ -91,6 +91,7 @@ class WpaControl(object):
       if self.socket is None:
         return
     try:
+      self.socket.shutdown(socket.SHUT_RDWR)
       self.socket.close()
     except:
       pass

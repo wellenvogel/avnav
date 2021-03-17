@@ -42,22 +42,25 @@ ospackage {
     into ('/usr/lib/avnav/raspberry') {
         from('raspberry'){
             fileMode 0755
-            include 'check_wlan'
             include 'hostapd'
             include 'settime.sh'
-            include 'shutdown.sh'
             include 'restore-iptables.sh'
             include 'sound.sh'
-            include 'check-wlan-av1.pl'
             include 'iptables-ext.sh'
             include 'wpa_supplicant.conf'
+            include 'startup-check.sh'
+            include 'setup-mcs.sh'
         }
         from('raspberry') {
             include 'avnav_server.xml'
             include 'hosts'
             include 'ntp.conf'
+            include 'avnav.conf'
             fileMode 0644
         }
+    }
+    into('/usr/lib/avnav/raspberry/xui'){
+        from('raspberry/xui')
     }
     into ('/usr/lib/avnav/raspberry') {
         from(project.buildDir){
@@ -71,8 +74,8 @@ ospackage {
     }
     into('/usr/lib/systemd/system'){
         from('raspberry'){
-            include('avnav-check-wlan.service')
             include('avnav-iptables.service')
+            include('avnav-startup.service')
         }
     }
     into('/etc/network/interfaces.d'){
@@ -121,12 +124,7 @@ ospackage {
             include('8192cu.conf')
         }
     }
-    into('/etc/avahi/services'){
-        from('raspberry'){
-            include('avnav-avahi.service')
-        }
-    }
-
+    
     postInstall file('raspberry/postinstall')
     preInstall file('raspberry/preinstall')
 

@@ -13,7 +13,6 @@ import {Drawing,DrawingPositionConverter} from './drawing';
 import Formatter from '../util/formatter';
 import keys,{KeyHelper} from '../util/keys.jsx';
 import globalStore from '../util/globalstore.jsx';
-import Promise from 'promise';
 import Requests from '../util/requests.js';
 import base from '../base.js';
 import northImage from '../images/nadel_mit.png';
@@ -142,6 +141,8 @@ const MapHolder=function(){
 
     this.compassOffset=0;
 
+    this.needsRedraw=false;
+
     let self=this;
     let storeKeys=KeyHelper.flattenedKeys(keys.nav.gps).concat(
         KeyHelper.flattenedKeys(keys.nav.center),
@@ -154,6 +155,7 @@ const MapHolder=function(){
     });
     this.propertyChange=new Callback(()=>{
         self.drawing.setUseHdpi(globalStore.getData(keys.properties.style.useHdpi,false));
+        self.needsRedraw=true;
     });
     this.editMode=new Callback(()=>{
         let isEditing=globalStore.getData(keys.gui.global.layoutEditing);
@@ -510,6 +512,11 @@ MapHolder.prototype.loadMap=function(div,opt_preventDialogs){
                 .catch((error)=>{reject(error)});
         };
         let checkChanges=()=>{
+            if (this.needsRedraw){
+                this.needsRedraw=false;
+                prepareAndCreate(newSources);
+                return;
+            }
             if (this.sources.length !== newSources.length ){
                 prepareAndCreate(newSources);
                 return;
@@ -827,9 +834,17 @@ MapHolder.prototype.initMap=function(opt_preventDialog){
         if (this.zoom < this.minzoom) this.zoom=this.minzoom;
         if (this.zoom > (this.maxzoom + globalStore.getData(keys.properties.maxUpscale)))
             this.zoom=this.maxzoom+globalStore.getData(keys.properties.maxUpscale);
-        if (this.zoom >= (this.minzoom+globalStore.getData(keys.properties.slideLevels))){
-            this.zoom-=globalStore.getData(keys.properties.slideLevels);
-            this.doSlide(globalStore.getData(keys.properties.slideLevels));
+        let slideLevels=0;
+        if (globalStore.getData(keys.properties.mapUpZoom) < globalStore.getData(keys.properties.slideLevels)){
+            //TODO: pick the right maxUpZoom depending on the chart
+            //but should be good enough as online maps should have all levels
+            slideLevels=globalStore.getData(keys.properties.slideLevels)-globalStore.getData(keys.properties.mapUpZoom);
+        }
+        if (slideLevels > 0) {
+            if (this.zoom >= (this.minzoom + slideLevels)) {
+                this.zoom -= slideLevels;
+                this.doSlide(slideLevels);
+            }
         }
         this.requiredZoom=this.zoom;
         this.setZoom(this.zoom);

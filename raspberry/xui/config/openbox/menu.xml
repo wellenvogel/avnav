@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openbox_menu xmlns="http://openbox.org/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://openbox.org/                 file:///usr/share/openbox/menu.xsd">
+	<menu id="root" label="Root">
+		<item label="terminal">
+			<action name="Execute">
+				<command>lxterminal</command>
+			</action>
+		</item>
+	</menu>
+</openbox_menu>

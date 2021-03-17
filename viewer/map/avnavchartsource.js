@@ -23,7 +23,6 @@
  ###############################################################################
  */
 
-import Promise from 'promise';
 import base from '../base.js';
 import Requests from '../util/requests.js';
 import globalStore from '../util/globalstore.jsx';
@@ -42,6 +41,7 @@ import assign from 'object-assign';
 import olCanvasTileLayerRenderer from 'ol/renderer/canvas/TileLayer';
 import {getUid} from "ol/util";
 
+const NORMAL_TILE_SIZE=256;
 
 //we use a bit a dirty hack here:
 //ol3 nicely shows a lower zoom if the tile cannot be loaded (i.e. has an error)
@@ -285,7 +285,7 @@ class AvnavChartSource extends ChartSourceBase{
     prepareInternal() {
         let url = this.chartEntry.url;
         let upZoom=0;
-        if (this.chartEntry.upzoom !== undefined && ! this.chartEntry.upzoom) {
+        if (this.chartEntry.upzoom !== undefined && this.chartEntry.upzoom !== null && ! this.chartEntry.upzoom) {
 
         }
         else{
@@ -483,7 +483,8 @@ class AvnavChartSource extends ChartSourceBase{
                 extent: rt.extent,
                 tileLoadFunction: function (imageTile, src) {
                     imageTile.getImage().src=self.encryptUrl(src);
-                }
+                },
+                tileSize: NORMAL_TILE_SIZE*globalStore.getData(keys.properties.mapScale,1),
 
                 /*
                  url:layerurl+'/{z}/{x}/{y}.png'

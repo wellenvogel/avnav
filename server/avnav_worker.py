@@ -256,12 +256,15 @@ class WorkerStatus(object):
     if timeout is not None:
       self.timeout=timeout
     return rt
-
+  def refresh(self,timeout=None):
+    self.modified=time.time()
+    if timeout is not None:
+      self.timeout=timeout
   def expired(self):
     if self.timeout is None or self.timeout <=0:
       return False
     now = time.time()
-    if now < self.modified or (self.modified + self.timeout):
+    if now < self.modified or (self.modified + self.timeout) < now:
       return True
     return False
 
@@ -455,16 +458,20 @@ class AVNWorker(object):
       return {'name':self.getStatusName(),'items':rta}
     except:
       return {'name':self.getStatusName(),'items':[],'error':"no info available"}
-  def setInfo(self,name,info,status,childId=None,canDelete=False):
+  def setInfo(self,name,info,status,childId=None,canDelete=False,timeout=None):
     existing=self.status.get(name)
     if existing:
-      if existing.update(status,info):
+      if existing.update(status,info,timeout=timeout):
         AVNLog.info("%s",str(existing))
         return True
     else:
-      ns=WorkerStatus(name,status,info,childId=childId,canDelete=canDelete)
+      ns=WorkerStatus(name,status,info,childId=childId,canDelete=canDelete,timeout=timeout)
       self.status[name]=ns
       AVNLog.info("%s",str(ns))
+  def refreshInfo(self,name,timeout=None):
+    existing=self.status.get(name)
+    if existing:
+      existing.refresh(timeout=timeout)
   def deleteInfo(self,name):
     if self.status.get(name) is not None:
       try:
@@ -565,6 +572,7 @@ class AVNWorker(object):
       self.checkConfig(checkConfig)
     rt = self.changeMultiConfig(checked)
     if self.canDisable() or self.canDeleteHandler():
+      if 'enabled' in checked:
         if newEnable != self.isDisabled():
           if not newEnable:
             AVNLog.info("handler disabled, stopping")
@@ -585,6 +593,12 @@ class AVNWorker(object):
       return True
     return False
 
+  def timeChanged(self):
+    '''
+    called when main changes the system time
+    @return:
+    '''
+    pass
   def wakeUp(self):
     self.condition.acquire()
     try:
@@ -595,6 +609,7 @@ class AVNWorker(object):
   def stop(self):
     self.currentThread=None
     self.wakeUp()
+
 
 
   def wait(self,time):
@@ -805,6 +820,10 @@ class AVNWorker(object):
     self.currentThread.start()
 
   def startInstance(self,navdata):
+    """
+
+    @type navdata: AVNStore
+    """
     self.navdata=navdata
     self.feeder = self.findFeeder(self.getStringParam('feederName'))
     try:
@@ -925,5 +944,15 @@ class AVNWorker(object):
     other=cls.findHandlerByName(cls.getConfigName())
     if not other is None:
       raise Exception("there is already a handler with %s, cannot create another one"%(cls.getConfigName()))
+
+  def getRequestIp(self, handler, default="localhost"):
+    hostip = default
+    try:
+      host = handler.headers.get('host')
+      hostparts = host.split(':')
+      hostip = hostparts[0]
+    except:
+      pass
+    return hostip
  
   

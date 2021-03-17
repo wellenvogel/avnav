@@ -28,7 +28,7 @@ class Plugin(object):
           'default': 'localhost'
         },
         {
-          'name': 'allowKeyOverride',
+          'name': 'allowKeyOverwrite',
           'description': 'necessary to be able to set our time directly from canboat',
           'default': False,
           'type': 'BOOLEAN'
@@ -95,8 +95,8 @@ class Plugin(object):
     self.socket=None
 
   def changeConfig(self,newValues):
-    self.changeSequence+=1
     self.api.saveConfigValues(newValues)
+    self.changeSequence+=1
     try:
       self.socket.close()
     except:
@@ -123,11 +123,6 @@ class Plugin(object):
     and writes them to the store every 10 records
     @return:
     """
-    enabled = self.api.getConfigValue('enabled','false')
-    if enabled.lower() != 'true':
-      self.api.setStatus("INACTIVE","module not enabled in server config")
-      self.api.log("module disabled")
-      return
     port=2598
     sock=None
     host=self.api.getConfigValue('host','localhost')
@@ -149,8 +144,8 @@ class Plugin(object):
     self.api.log("started with host=%s,port %d, autoSendRMC=%d"%(host,port,autoSendRMC))
     source=self.api.getConfigValue("sourceName",None)
     errorReported=False
+    self.api.setStatus("STARTED", "connecting to n2kd at %s:%d"%(host,port))
     while sequence == self.changeSequence:
-      self.api.setStatus("STARTED", "connecting to n2kd at %s:%d"%(host,port))
       try:
         self.socket = socket.create_connection((host, port),timeout=1000)
         self.api.setStatus("RUNNING", "connected to n2kd at %s:%d" %(host,port))
@@ -222,9 +217,9 @@ class Plugin(object):
             pass
           if len(buffer) > 4096:
             raise Exception("no line feed in long data, stopping")
-      except:
+      except Exception as e:
         if not errorReported:
-          self.api.log("error connecting to n2kd %s:%d: %s",host,port,traceback.format_exc())
+          self.api.setStatus("ERROR","connecting to n2kd %s:%d: %s"%(host,port,str(e)))
           errorReported=True
         if sock is not None:
           try:

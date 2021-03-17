@@ -400,6 +400,7 @@ class Plugin(object):
         'sequence': self.startSequence,
         'canDelete': False,
         'icon': pluginUrl+"/signalk.svg",
+        'upzoom': True,
         'internal': {
           'url': "http://%s:%d" % (self.config.skHost, port) + chart.get('tilemapUrl'),
           'minlon': bounds[0],

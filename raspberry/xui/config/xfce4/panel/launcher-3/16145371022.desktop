@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=AvNav
+Comment=
+Exec=xdotool key --clearmodifiers Super_L+1
+Icon=/usr/lib/avnav/viewer/images/WebIcon-512.png
+Path=
+Terminal=false
+StartupNotify=false

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=nemo
+Comment=
+Exec=nemo
+Icon=nemo
+Path=
+Terminal=false
+StartupNotify=false

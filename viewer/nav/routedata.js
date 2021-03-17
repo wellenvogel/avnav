@@ -13,7 +13,6 @@ import RoutEdit from './routeeditor.js';
 import Requests from '../util/requests.js';
 import assign from 'object-assign';
 import base from '../base.js';
-import Promise from 'promise';
 
 const activeRoute=new RoutEdit(RoutEdit.MODES.ACTIVE);
 const editingRoute=new RoutEdit(RoutEdit.MODES.EDIT);

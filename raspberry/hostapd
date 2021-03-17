@@ -1,9 +1,10 @@
-#! /bin/sh
+#! /bin/bash
 #small wrapper around hostapd
 HOSTAPD=/usr/sbin/hostapd
 HOSTAPD_EDI=/usr/sbin/hostapd.edimax
 CONFIGBASE=/etc/hostapd/hostapd.conf
 CONFIGEXTRA=/boot/hostapd.conf
+CONFIGAVNAV=/boot/avnav.conf
 prfx="avnav-hostapd"
 
 if [ "$1" = "-r" ] ; then
@@ -86,16 +87,28 @@ if [ "$hasrtl" != "" ] ; then
         logger -t $prfx "$HOSTAPD_EDI not found, starting normal hostapd"
     fi
 fi
+if [ -f $CONFIGAVNAV ] ; then
+ source <(tr -d '\015' < $CONFIGAVNAV)
+fi 
 tmpf=/etc/hostapd/$net.conf
 rm -f $tmpf
 common=$CONFIGBASE.common
 if [ -f $common ] ; then
   cat $common > $tmpf
 fi
-sed "s/.*interface *=.*/interface=$net/" $CONFIG >> $tmpf
+if [ "$AVNAV_SSID" != "" ]; then
+    logger -t $prfx "using ssid prefix AVNAV_SSID=$AVNAV_SSID for $CONFIGAVNAV"
+    sed -e "s/.*interface *=.*/interface=$net/" -e "s/ssid *= *avnav/ssid=$AVNAV_SSID/" $CONFIG >> $tmpf
+else
+    sed "s/.*interface *=.*/interface=$net/" $CONFIG >> $tmpf
+fi
 if [ -f $CONFIGEXTRA ] ; then
   logger -t $prfx "adding configuration from $CONFIGEXTRA"
   cat $CONFIGEXTRA >> $tmpf
+fi
+if [ "$AVNAV_PSK" != "" ] ; then
+    logger -t $prfx "using AVNAV_PSK from $CONFIGAVNAV"
+    sed -i -e "s/wpa_passphrase *=.*/wpa_passphrase=$AVNAV_PSK/" $tmpf
 fi
 logger -t $prfx "starting normal hostapd"
 $0 -r $HOSTAPD $pidfile $tmpf $net &

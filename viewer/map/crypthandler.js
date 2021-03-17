@@ -23,13 +23,7 @@
  ###############################################################################
  */
 
-import Promise from 'promise';
 import base from '../base.js';
-import assign from 'object-assign';
-import Requests from '../util/requests.js';
-import globalStore from '../util/globalstore.jsx';
-import keys from '../util/keys.jsx';
-import Helper from '../util/helper.js';
 
 const getTokenHandlerKey=(tokenUrl,opt_tokenFunction)=>{
     return (opt_tokenFunction||'none')+"-"+tokenUrl;

@@ -27,6 +27,7 @@
 
 import shlex
 import signal
+import urllib.parse
 
 import time
 
@@ -90,6 +91,7 @@ class Handler(object):
   def run(self):
     threading.current_thread().setName("CommandHandler: %s" %  self.name)
     while self.repeat > 0:
+      status=None
       try:
         while True and not self.stop:
           line = self.subprocess.stdout.readline()
@@ -146,7 +148,9 @@ class AVNCommandHandler(AVNWorker):
       return {
         'name': '',
         'command': '',
-        'repeat':1
+        'repeat':1,
+        'client':'none', #none,local,all
+        'icon':''
       }
   @classmethod
   def preventMultiInstance(cls):
@@ -282,9 +286,63 @@ class AVNCommandHandler(AVNWorker):
       rt[n]=cmd.get('command')
     return rt
 
+  def getIconUrl(self,cmd,handler=None):
+    icon=cmd.get('icon')
+    if icon is None or icon == '':
+      return None
+    if icon[0] != '/':
+      if handler is None:
+        return None
+      baseUrl=handler.getPageRoot()
+      return baseUrl+"/"+icon
+    return icon
+
+  def getClientCommands(self,isLocal,handler=None,addCmd=False):
+    rt=[]
+    commands=self.param.get('Command')
+    if commands is None:
+      return rt
+    for cmd in commands:
+      clientMode=cmd.get('client')
+      if clientMode is None:
+        continue
+      if clientMode == 'all' or (clientMode == 'local' and isLocal):
+        el={
+          'name':cmd.get('name'),
+          'icon': self.getIconUrl(cmd,handler)
+        }
+        if addCmd:
+          el['cmd']=cmd
+        rt.append(el)
+    return rt
+
   def getHandledCommands(self):
     return "command"
   def handleApiRequest(self,type,command,requestparam,**kwargs):
+    if type == 'api':
+      command=AVNUtil.getHttpRequestParam(requestparam,"action",mantadory=False)
+      if command is not None:
+        handler=kwargs.get('handler')
+        isLocal=False
+        try:
+          remoteIp=handler.client_address[0]
+          isLocal=(remoteIp == '127.0.0.1' or remoteIp =='localhost')
+        except Exception as e:
+          pass
+        rt={'status':'unknown action %s'%command}
+        if command == 'getCommands': #get the commands we can trigger from remote
+          rt['status']='OK'
+          rt['data']=self.getClientCommands(isLocal,handler)
+          return rt
+        if command == 'runCommand':
+          name=AVNUtil.getHttpRequestParam(requestparam,'name',mantadory=True)
+          allowedCommands=self.getClientCommands(isLocal,handler)
+          for cmd in allowedCommands:
+            if cmd['name'] == name:
+              self.startCommand(name)
+              return {'status':'OK'}
+          return {'status': 'command %s not found'%name}
+        return rt
     status=AVNUtil.getHttpRequestParam(requestparam,"status")
     if status is not None:
       status=status.split(',')
@@ -313,11 +371,11 @@ class AVNCommandHandler(AVNWorker):
     if mode == "start":
       if not self.startCommand(command):
         rt['status']='error'
-        rt['info']=self.info.get(command)
+        rt['info']=str(self.status.get(command))
       return rt
     if not self.stopCommand(command):
       rt['status'] = 'error'
-      rt['info'] = self.info.get(command)
+      rt['info'] = str(self.status.get(command))
     return rt
 
 

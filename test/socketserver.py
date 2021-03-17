@@ -74,8 +74,10 @@ def sendSock(file,sock,sleeptime):
     except:
       print("Exception on r/w: "+traceback.format_exc())
       try:
+        sock.shutdown(socket.SHUT_RDWR)
         sock.close()
-      except:
+      except Exception as e:
+        print("close Exception: %s"%str(e))
         pass
       break
         

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<channel name="xfce4-panel" version="1.0">
+  <property name="configver" type="int" value="2"/>
+  <property name="panels" type="array">
+    <value type="int" value="1"/>
+    <property name="panel-1" type="empty">
+      <property name="position" type="string" value="p=6;x=100;y=30"/>
+      <property name="mode" type="uint" value="1"/>
+      <property name="position-locked" type="bool" value="true"/>
+      <property name="length" type="uint" value="100"/>
+      <property name="background-style" type="uint" value="1"/>
+      <property name="background-color" type="array">
+        <value type="uint" value="12031"/>
+        <value type="uint" value="10818"/>
+        <value type="uint" value="7787"/>
+        <value type="uint" value="65535"/>
+      </property>
+      <property name="plugin-ids" type="array">
+        <value type="int" value="3"/>
+        <value type="int" value="2"/>
+        <value type="int" value="1"/>
+        <value type="int" value="8"/>
+        <value type="int" value="11"/>
+        <value type="int" value="6"/>
+        <value type="int" value="5"/>
+        <value type="int" value="4"/>
+      </property>
+      <property name="disable-struts" type="bool" value="false"/>
+      <property name="nrows" type="uint" value="1"/>
+      <property name="size" type="uint" value="60"/>
+      <property name="background-rgba" type="array">
+        <value type="double" value="0.466667"/>
+        <value type="double" value="0.462745"/>
+        <value type="double" value="0.482353"/>
+        <value type="double" value="1.000000"/>
+      </property>
+    </property>
+  </property>
+  <property name="plugins" type="empty">
+    <property name="plugin-1" type="string" value="launcher">
+      <property name="items" type="array">
+        <value type="string" value="16145370691.desktop"/>
+      </property>
+    </property>
+    <property name="plugin-2" type="string" value="applicationsmenu">
+      <property name="button-title" type="string" value=""/>
+      <property name="show-button-title" type="bool" value="false"/>
+      <property name="button-icon" type="string" value="debian-logo"/>
+      <property name="custom-menu" type="bool" value="true"/>
+      <property name="custom-menu-file" type="string" value="/home/pi/.config/xfce4/xfce-applications.menu"/>
+      <property name="show-menu-icons" type="bool" value="true"/>
+    </property>
+    <property name="plugin-3" type="string" value="launcher">
+      <property name="items" type="array">
+        <value type="string" value="16145371022.desktop"/>
+      </property>
+    </property>
+    <property name="plugin-5" type="string" value="tasklist">
+      <property name="show-labels" type="bool" value="false"/>
+      <property name="flat-buttons" type="bool" value="true"/>
+      <property name="show-handle" type="bool" value="false"/>
+      <property name="middle-click" type="uint" value="1"/>
+    </property>
+    <property name="plugin-6" type="string" value="separator">
+      <property name="expand" type="bool" value="true"/>
+    </property>
+    <property name="plugin-8" type="string" value="launcher">
+      <property name="items" type="array">
+        <value type="string" value="01614866413.desktop"/>
+      </property>
+    </property>
+    <property name="plugin-11" type="string" value="applicationsmenu">
+      <property name="custom-menu" type="bool" value="true"/>
+      <property name="custom-menu-file" type="string" value="/home/pi/.config/xfce4/keyboard-change.menu"/>
+      <property name="button-icon" type="string" value="preferences-desktop-keyboard"/>
+      <property name="button-title" type="string" value="keyboard"/>
+      <property name="show-button-title" type="bool" value="false"/>
+    </property>
+    <property name="plugin-4" type="string" value="clock">
+      <property name="mode" type="uint" value="0"/>
+      <property name="digital-format" type="string" value="%_H:%M"/>
+    </property>
+  </property>
+</channel>

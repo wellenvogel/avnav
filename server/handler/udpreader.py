@@ -74,6 +74,7 @@ class AVNUdpReader(AVNWorker, SocketReader):
   def updateConfig(self, param, child=None):
     super().updateConfig(param, child)
     try:
+      self.socket.shutdown(socket.SHUT_RDWR)
       self.socket.close()
     except:
       pass
@@ -81,6 +82,7 @@ class AVNUdpReader(AVNWorker, SocketReader):
   def stop(self):
     super().stop()
     try:
+      self.socket.shutdown(socket.SHUT_RDWR)
       self.socket.close()
     except:
       pass

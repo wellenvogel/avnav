@@ -166,12 +166,14 @@ const lifecycleTimer=(thisref,timercallback,interval,opt_autostart)=>{
     let timerData={
         sequence:0,
         timer:undefined,
-        interval:interval
+        interval:interval,
+        unmounted:false
     };
     const startTimer=(sequence)=>{
         if (sequence !== undefined && sequence != timerData.sequence) {
             return;
         }
+        if (timerData.unmounted) return;
         if (timerData.timer) {
             timerData.sequence++;
             window.clearTimeout(timerData.timer);
@@ -180,7 +182,7 @@ const lifecycleTimer=(thisref,timercallback,interval,opt_autostart)=>{
         let currentSequence=timerData.sequence;
         timerData.timer=window.setTimeout(()=>{
             timerData.timer=undefined;
-            if (currentSequence != timerData.sequence) return;
+            if (currentSequence !== timerData.sequence) return;
             timercallback.apply(thisref,[currentSequence]);
         },timerData.interval);
     };
@@ -192,7 +194,7 @@ const lifecycleTimer=(thisref,timercallback,interval,opt_autostart)=>{
         }
     };
     const stopTimer=(sequence)=>{
-        if (sequence !== undefined && sequence != timerData.sequence) {
+        if (sequence !== undefined && sequence !== timerData.sequence) {
             return;
         }
         if (timerData.timer) {
@@ -205,6 +207,7 @@ const lifecycleTimer=(thisref,timercallback,interval,opt_autostart)=>{
         timerData.sequence++;
         if (unmount){
             stopTimer();
+            timerData.unmounted=true;
         }
         else if(opt_autostart){
             timercallback.apply(thisref,[timerData.sequence]);

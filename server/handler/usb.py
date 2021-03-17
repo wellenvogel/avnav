@@ -312,13 +312,13 @@ class AVNUsbSerialReader(AVNWorker):
     #potentially we had the device already open - close it now
     self.stopHandler(usbid)
 
-  def deregisterExternalHandlers(self,name):
+  def deregisterExternalHandlers(self,name,usbid=None):
     AVNLog.info("AVNUsbSerialReader: deregister external handler %s ", name)
     self.maplock.acquire()
     deletes=[]
     try:
       for k,v in self.externalHandlers.items():
-        if v.get('name') == name:
+        if v.get('name') == name and usbid is None or usbid == k:
           deletes.append(k)
       for d in deletes:
         del self.externalHandlers[d]
@@ -357,7 +357,9 @@ class AVNUsbSerialReader(AVNWorker):
         old=self.addrmap.get(addr)
         if old is not None and old != handler:
           return
-      rt=self.addrmap.pop(addr)
+      rt=self.addrmap.get(addr)
+      if rt is not None:
+        self.addrmap.pop(addr)
     finally:
       self.maplock.release()
     return rt
@@ -425,7 +427,7 @@ class AVNUsbSerialReader(AVNWorker):
       AVNLog.info("serial handler stopped with %s",(traceback.format_exc(),))
     AVNLog.debug("serial handler for %s finished",addr)
     self.removeHandler(addr,handler)
-    self.deleteInfo(handler.getName())
+    self.deleteInfo(handler.name)
   
   #param: a dict key being the usb id, value the device node
   def checkDevices(self,devicelist):

@@ -10,9 +10,8 @@ import traceback
 import urllib.request, urllib.parse, urllib.error
 import urllib.parse
 
-import avnav_handlerList
 from avnav_store import AVNStore
-from avnav_util import AVNUtil, AVNLog
+from avnav_util import AVNUtil, AVNLog, AVNDownload
 from avnav_worker import AVNWorker
 
 
@@ -25,30 +24,6 @@ class Encoder(json.JSONEncoder):
     if hasattr(o,'serialize'):
       return o.serialize()
     return super(Encoder, self).default(o)
-
-class AVNDownload(object):
-  def __init__(self, filename, size=None, stream=None, mimeType=None):
-    self.filename = filename
-    self.size = size
-    self.stream = stream
-    self.mimeType = mimeType
-
-  def getSize(self):
-    if self.size is None:
-      return os.path.getsize(self.filename)
-    return self.size
-
-  def getStream(self):
-    if self.stream is None:
-      return open(self.filename, 'rb')
-    return self.stream
-
-  def getMimeType(self, handler=None):
-    if self.mimeType is not None:
-      return self.mimeType
-    if handler is None:
-      return "application/octet-stream"
-    return handler.guess_type(self.filename)
 
 
 class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
@@ -180,7 +155,7 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
       except Exception as e:
         self.send_error(404,str(e))
         return None
-      if isinstance(extPath,AVNDownload):
+      if isinstance(extPath, AVNDownload):
         self.writeFromDownload(extPath)
         return None
       if extPath == True:
@@ -280,6 +255,8 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
         rtj=self.handleStatusRequest(requestParam)
       elif requestType=='debuglevel' or requestType=='loglevel':
         rtj=self.handleDebugLevelRequest(requestParam)
+      elif requestType=='currentloglevel':
+        rtj=self.handleCurrentLevelRequest(requestParam)
       elif requestType=='listdir' or requestType == 'list':
         rtj=self.handleListDir(requestParam)
       elif requestType=='download':
@@ -434,16 +411,19 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
     timeout = self.getRequestParam(requestParam, 'timeout',mantadory=False)
     if timeout is not None:
       timeout=float(timeout)
+    filter=self.getRequestParam(requestParam,'filter')
     if not level is None:
-      crt=AVNLog.changeLogLevel(level,timeout)
+      crt=AVNLog.changeLogLevelAndFilter(level,filter,timeout)
       if crt:
         rt['status']='OK'
         rt['info']='set loglevel to '+str(level)
       else:
         rt['info']="invalid level "+str(level)
-    filter=self.getRequestParam(requestParam,'filter')
-    AVNLog.setFilter(filter)
     return json.dumps(rt,cls=Encoder)
+
+  def handleCurrentLevelRequest(self,requestParam):
+    (level,filter)=AVNLog.getCurrentLevelAndFilter()
+    return json.dumps({'status':'OK','level':level,'filter':filter},cls=Encoder)
 
   def writeStream(self,bToSend,fh):
     maxread = 1000000
@@ -473,7 +453,7 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
     self.send_response(200)
     size = download.getSize()
     if filename is not None and filename != "" and not noattach:
-      self.send_header("Content-Disposition", "attachment")
+      self.send_header("Content-Disposition", "attachment; filename=\"%s\""%filename)
     self.send_header("Content-type", download.getMimeType(self))
     self.send_header("Content-Length", size)
     self.send_header("Last-Modified", self.date_time_string())
@@ -497,7 +477,7 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
         dl=handler.handleApiRequest('download',type,requestParam,handler=self)
         if dl is None:
           raise Exception("unable to download %s",type)
-        if isinstance(dl,AVNDownload):
+        if isinstance(dl, AVNDownload):
           try:
             self.writeFromDownload(dl,
               filename=self.getRequestParam(requestParam, "filename")
@@ -637,6 +617,7 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
       'uploadOverlays': True,
       'uploadTracks': True,
       'canConnect': True,
-      'config': True
+      'config': True,
+      'debugLevel': True
     }
     return json.dumps({'status':'OK','data':rt},cls=Encoder)
