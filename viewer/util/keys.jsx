@@ -300,9 +300,9 @@ let keys={
         aisNormalImage: new Property(aisDefaultImage),
         aisNearestImage: new Property(aisNearestImage),
         aisWarningImage: new Property(aisWarningImage),
-        statusQueryTimeout: new Property(3000), //ms
-        networkTimeout: new Property(3000,"Network timeout(ms)",PropertyType.RANGE,[1000,10000,100]),
-        wpaQueryTimeout: new Property(4000), //ms
+        statusQueryTimeout: new Property(8000), //ms
+        networkTimeout: new Property(8000,"Network timeout(ms)",PropertyType.RANGE,[1000,20000,100]),
+        wpaQueryTimeout: new Property(10000), //ms
         centerDisplayTimeout: new Property(45000), //ms - auto hide measure display (0 - no auto hide)
         navUrl: new Property("/viewer/avnav_navi.php"),
         maxGpsErrors: new Property(3), //after that much invalid responses/timeouts the GPS is dead
