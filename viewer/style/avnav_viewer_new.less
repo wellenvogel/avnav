@@ -26,7 +26,7 @@ input {
 }
 html,body {
   .nightColors();
-  height: 100%;
+  height: 100vh; //strange bug on IOS 13 safari - seems that it does not recompute the height after rotating and hiding address bar...
   width: 100%;
   margin: 0;
   padding: 0;
@@ -1075,6 +1075,8 @@ span.valuePrefix{
   iframe{
     .flex(1);
     height: 100%; /* older microsoft ...*/
+    min-height: 100%; //old safari
+    min-width: 100%; //old safari
   }
 }
 #addonpage{
