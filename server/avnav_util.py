@@ -24,6 +24,7 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
+import urllib.parse
 
 import ctypes
 import logging
@@ -552,3 +553,8 @@ class AVNDownload(object):
     if handler is None:
       return "application/octet-stream"
     return handler.guess_type(self.filename)
+
+  @classmethod
+  def fileToAttach(cls,filename):
+    #see https://stackoverflow.com/questions/93551/how-to-encode-the-filename-parameter-of-content-disposition-header-in-http
+    return 'filename="%s"; filename*=utf-8\'\'%s'%(filename,urllib.parse.quote(filename))
