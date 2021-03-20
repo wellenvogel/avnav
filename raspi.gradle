@@ -33,6 +33,7 @@ ospackage {
     requires 'dnsmasq'
     requires 'mpg123'
     requires 'ntp'
+    requires 'avahi-autoipd'
     packageName='avnav-raspi'
     ['common','wlan0','wlan1','wlan-ap','wlan-ap2'].each { String ext->
         configurationFile("/etc/hostapd/hostapd.conf.$ext")
