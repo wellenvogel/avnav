@@ -35,6 +35,34 @@ except:
 from socketreaderbase import *
 import avnav_handlerList
 
+class OurBtSocket(bluetooth.BluetoothSocket):
+
+  def __init__(self, proto=bluetooth.RFCOMM, _sock=None):
+    super().__init__(proto, _sock)
+    self._closed=False
+
+  def connect(self, addrport):
+    rt=super().connect(addrport)
+    if self._closed:
+      raise Exception("socket closed")
+    return rt
+
+  def send(self, data):
+    if self._closed:
+      raise Exception("socket closed")
+    return super().send(data)
+
+
+  def recv(self, numbytes):
+    if self._closed:
+      raise Exception("socket closed")
+    return super().recv(numbytes)
+
+  def close(self):
+    self._closed=True
+    return super().close()
+
+
 #a Worker for reading bluetooth devices
 #it uses a feeder to handle the received data
 class AVNBlueToothReader(AVNWorker,SocketReader):
@@ -44,12 +72,12 @@ class AVNBlueToothReader(AVNWorker,SocketReader):
   
   @classmethod
   def getConfigParam(cls, child=None):
-    rt={
-        'maxDevices':5,
-        'deviceList':'',  #is set (, separated) only connect to those devices
-        'feederName':'',  #if set, use this feeder
-        'filter':''
-    }
+    rt=[
+        WorkerParameter('maxDevices',5,description="maximal number of bluetooth devices",type=WorkerParameter.T_NUMBER),
+        WorkerParameter('deviceList','',description=", separated list of tdevices. If set - only connect to those devices"),
+        WorkerParameter('feederName','',editable=False,description="if set, use this feeder"),
+        WorkerParameter('filter','',type=WorkerParameter.T_FILTER)
+    ]
     return rt
   
   @classmethod
@@ -57,7 +85,30 @@ class AVNBlueToothReader(AVNWorker,SocketReader):
     if not hasBluetooth:
       raise Exception("no bluetooth installed, cannot run %s"%(cls.getConfigName()))
     return AVNBlueToothReader(cfgparam)
-  
+
+  @classmethod
+  def canEdit(cls):
+    return True
+
+  @classmethod
+  def canDisable(cls):
+    return True
+
+  def _closeSockets(self):
+    for host,sock in list(self.addrmap.items()):
+      try:
+        sock.close()
+      except Exception as e:
+        AVNLog.error("error closing bt socket %s: %s ",host,str(e))
+
+  def updateConfig(self, param, child=None):
+    super().updateConfig(param, child)
+    self._closeSockets()
+
+  def stop(self):
+    self._closeSockets()
+    super().stop()
+
   def __init__(self,cfgparam):
     AVNWorker.__init__(self, cfgparam)
     self.maplock=threading.Lock()
@@ -66,13 +117,13 @@ class AVNBlueToothReader(AVNWorker,SocketReader):
 
    
   #return True if added
-  def checkAndAddAddr(self,addr):
+  def checkAndAddAddr(self,addr,socket):
     rt=False
     maxd=self.getIntParam('maxDevices')
     self.maplock.acquire()
     if len(self.addrmap) < maxd:
       if not addr in self.addrmap:
-        self.addrmap[addr]=1
+        self.addrmap[addr]=socket
         rt=True
     self.maplock.release()
     return rt
@@ -93,7 +144,13 @@ class AVNBlueToothReader(AVNWorker,SocketReader):
     AVNLog.debug("started bluetooth reader thread for %s:%s",str(host),str(port))
     self.setInfo(infoName, "connecting", WorkerStatus.STARTED)
     try:
-      sock=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
+      sock=OurBtSocket( bluetooth.RFCOMM )
+      if not self.checkAndAddAddr(host,sock):
+        try:
+          sock.close()
+        except:
+          pass
+        self.deleteInfo(infoName)
       sock.connect((host, port))
       AVNLog.info("bluetooth connection to %s established",host)
       self.readSocket(sock,infoName,self.getSourceName(host),self.getParamValue('filter'))
@@ -105,17 +162,17 @@ class AVNBlueToothReader(AVNWorker,SocketReader):
       except:
         pass
     AVNLog.info("disconnected from bluetooth device ")
-    self.setInfo(infoName, "dicsonnected", WorkerStatus.INACTIVE)
+    self.setInfo(infoName, "disconnected", WorkerStatus.INACTIVE)
     self.removeAddr(host)
     self.deleteInfo(infoName)
               
   
   #this is the main thread - this executes the bluetooth polling
   def run(self):
-    time.sleep(2) # give a chance to have the socket open...   
+    self.wait(2) # give a chance to have the socket open...
     #now start an endless loop with BT discovery...
     self.setInfo('main', "discovering", WorkerStatus.RUNNING)
-    while True:
+    while not self.shouldStop():
       service_matches=[]
       try:
         AVNLog.debug("starting BT discovery")
@@ -123,7 +180,7 @@ class AVNBlueToothReader(AVNWorker,SocketReader):
       except Exception as e:
         AVNLog.warn("exception when querying BT services %s, retrying after 10s",traceback.format_exc())
       if len(service_matches) == 0:
-        time.sleep(10)
+        self.wait(10)
         continue
       AVNLog.ld("found bluetooth devices",service_matches)
       filter=[]
@@ -142,7 +199,7 @@ class AVNBlueToothReader(AVNWorker,SocketReader):
             AVNLog.debug("ignoring device %s as it is not in the list #%s#",host,filterstr)
         else:
           found=True
-        if found and self.checkAndAddAddr(host):
+        if found:
           try:
             AVNLog.info("found new bluetooth device %s",host)
             handler=threading.Thread(target=self.readBT,args=(host,port))
