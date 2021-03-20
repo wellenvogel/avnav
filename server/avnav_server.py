@@ -48,7 +48,7 @@ from avnav_manager import *
 import avnav_handlerList
 from avnav_store import *
 sys.path.insert(0, os.path.join(os.path.dirname(__file__),"..","libraries"))
-import handler 
+import handler
 
 loggingInitialized=False
 

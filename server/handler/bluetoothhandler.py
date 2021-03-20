@@ -74,7 +74,7 @@ class AVNBlueToothReader(AVNWorker,SocketReader):
   def getConfigParam(cls, child=None):
     rt=[
         WorkerParameter('maxDevices',5,description="maximal number of bluetooth devices",type=WorkerParameter.T_NUMBER),
-        WorkerParameter('deviceList','',description=", separated list of tdevices. If set - only connect to those devices"),
+        WorkerParameter('deviceList','',description=", separated list of devices addresses. If set - only connect to those devices"),
         WorkerParameter('feederName','',editable=False,description="if set, use this feeder"),
         WorkerParameter('filter','',type=WorkerParameter.T_FILTER)
     ]
@@ -106,8 +106,8 @@ class AVNBlueToothReader(AVNWorker,SocketReader):
     self._closeSockets()
 
   def stop(self):
-    self._closeSockets()
     super().stop()
+    self._closeSockets()
 
   def __init__(self,cfgparam):
     AVNWorker.__init__(self, cfgparam)
@@ -179,6 +179,8 @@ class AVNBlueToothReader(AVNWorker,SocketReader):
         service_matches = bluetooth.find_service(uuid = bluetooth.SERIAL_PORT_CLASS)
       except Exception as e:
         AVNLog.warn("exception when querying BT services %s, retrying after 10s",traceback.format_exc())
+      if self.shouldStop():
+        return
       if len(service_matches) == 0:
         self.wait(10)
         continue
@@ -205,10 +207,9 @@ class AVNBlueToothReader(AVNWorker,SocketReader):
             handler=threading.Thread(target=self.readBT,args=(host,port))
             handler.daemon=True
             handler.start()
-            #TDOD: what about join???
           except Exception as e:
             AVNLog.warn("unable to start BT handler %s",traceback.format_exc())
             self.removeAddr(host)
-      time.sleep(10)
+      self.wait(10)
 avnav_handlerList.registerHandler(AVNBlueToothReader)
       
