@@ -6,11 +6,11 @@
     <link href="../styles.css" rel="stylesheet" type="text/css">
   </head>
   <body data-order="1900">
-    <h1>The Status Page </h1>
+    <h1>The Server/Status Page </h1>
     <p> From the <a href="mainpage.html">main page</a> you get here using
       the&nbsp; <img src="../viewerimages/icons-new/status.svg" alt="" class="inlineimage">
       button. You will see internal status information from the server.</p>
-    <div><img src="../statuspage.png" alt="" class="fimage"><br>
+    <div><img src="../statuspage-new-2021.png" class="fimage"><br>
     </div>
     <p>Buttons</p>
     <table style="width: 100%" border="1">
@@ -40,23 +40,50 @@
           <td><img src="../viewerimages/icons-new/ic_android.svg" alt="" class="inlineimage"><br>
           </td>
           <td>StatusAndroid</td>
-          <td>git to <a href="../android.html">android settings</a>
-            (only android in normal mode)</td>
+          <td>git to <a href="../android.html">android settings</a> (only
+            android in normal mode)</td>
         </tr>
         <tr>
           <td><img src="../viewerimages/icons-new/ic_power.svg" alt="" class="inlineimage"><br>
           </td>
           <td>StatusShutdown</td>
-          <td>start the shutdown of the server (not android). There will be a
-            soft shutdown of the server.<br>
+          <td>start the shutdown of the server computer(not android). There will
+            be a soft shutdown of the server.<br>
             There is a safety dialog before the shutdown is initiated. After the
             shutdown has started you should wait for the headline to turn red.</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_refresh.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>StatusRestart</td>
+          <td>restart the avnav server software (new 202103xx)</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_text_snippet.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>StatusLog</td>
+          <td>Show the current server log (app. 300000kByte from the end), also
+            allow to download the log from here (new 202103xx)</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/bug_report.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>StatusDebug</td>
+          <td>shows a dialog to enable debug mode on the server for a certain
+            time. Additionally you can set a filter for the log output.</td>
         </tr>
         <tr>
           <td><img src="../viewerimages/icons-new/ic_info.svg" alt="" class="inlineimage"><br>
           </td>
           <td>MainInfo</td>
           <td>license and privacy information</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_add.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>StatusAdd</td>
+          <td>Add a new handler to the server configuration (like serial
+            input/output, socket connection,...)</td>
         </tr>
         <tr>
           <td><img src="../viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
@@ -75,7 +102,32 @@
     <p>The status informations of the various server parts are shown. You are
       able to see which connections are there and if NMEA data is received. This
       page is important for trouble shooting.<br>
-      The page has an auto update.<br>
-    </p>
+      The page has an auto update.</p>
+    <h2><a name="serverconfig" id="serverconfig"></a>Server Configuration</h2>
+    <p>New 202103xx, not on Android</p>
+    <p>The server has a lot of internal "handlers" that deal with different
+      tasks. Most of them can be configured on this page using the <img src="../viewerimages/icons-new/ic_edit.svg"
+        alt="" class="inlineimage">beside the status information. This will
+      bring up a dialog to configure the handler.</p>
+    <p><img src="../statuspage-edit-socket.png" alt="" class="fimage"> </p>
+    <p>You can adapt various settings for the handler. For most of them there is
+      a help button available giving you some short help. By using the&nbsp;<img
+        src="../viewerimages/icons-new/ic_delete.svg" alt="" class="inlineimage">button
+      you can reset a value to its default. If the handler supports deleting you
+      can also remove it here. Most of the handlers also support enable and
+      disable. So you can typically just disable a handler instead of deleting
+      it. You can find detailed information about the handlers and their
+      parameters at the <a href="../hints/configfile.html">config documentation</a>.</p>
+    <p>All changes that you will make here will be stored in the
+      avnav_server.xml but will become active without a restart. The status page
+      display will typically need a couple of seconds until your changes will
+      become visible there.</p>
+    <p>You can add a new handler using the <img src="../viewerimages/icons-new/ic_add.svg"
+        alt="" class="inlineimage">button.</p>
+    <p>Whenever you select a port for sockets or a serial interface AvNav will
+      check internally to avoid using the same resource multiple times.<br>
+      If for some reason AvNav will corrupt it's config file during the change
+      process it will fallback on the next start to the last working version and
+      will display the error at the Config Handler on this page.</p>
   </body>
 </html>

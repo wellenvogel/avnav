@@ -6,11 +6,11 @@
     <link href="../styles.css" rel="stylesheet" type="text/css">
   </head>
   <body data-order="1900">
-    <h1>Die Status Seite </h1>
+    <h1>Die Server/Status Seite </h1>
     <p> Von der <a href="mainpage.html">Startseite</a> kann man über&nbsp;<img
-        src="../viewerimages/icons-new/status.svg" alt="" class="inlineimage">
-      Status-Seite erreichen – hier werden interne Status-Informationen des
-      Servers angezeigt. </p>
+        src="../viewerimages/icons-new/status.svg" alt="" class="inlineimage">&nbsp;
+      die Server/Status-Seite erreichen – hier werden interne
+      Status-Informationen des Servers angezeigt. </p>
     <div><img src="../statuspage.png" alt="" class="fimage"><br>
     </div>
     <p>Buttons</p>
@@ -54,10 +54,38 @@
             bis die Titelzeile sich rot färbt.</td>
         </tr>
         <tr>
+          <td><img src="../viewerimages/icons-new/ic_refresh.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>StatusRestart</td>
+          <td>Restart der AvNav Server Software (neu 202103xx)</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_text_snippet.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>StatusLog</td>
+          <td>Anzeige des Server Logs (ca. 300000kByte vom Ende), auch ein
+            Download ist möglich (neu 202103xx)</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/bug_report.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>StatusDebug</td>
+          <td>Anzeige eines Dialogs um für eine gewisse Zeit den debug Modus im
+            Server anzuschalten. Ausserdem kann ein Filter für die Log-Ausgabe
+            gesetzt werden.</td>
+        </tr>
+        <tr>
           <td><img src="../viewerimages/icons-new/ic_info.svg" alt="" class="inlineimage"><br>
           </td>
           <td>MainInfo</td>
           <td>Anzeige von Lizenz- und Datenschutz-Informationen</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_add.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>StatusAdd</td>
+          <td>Hinzufügen eines neuen Handlers (z.B. serieller Input/Output,
+            Socket Verbindung,...)</td>
         </tr>
         <tr>
           <td><img src="../viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
@@ -79,5 +107,35 @@
       empfangen werden oder ob bestimmte Vorgänge ablaufen. Das ist insbesondere
       zur Fehlersuche wichtig.<br>
       Die Seite aktualisiert sich ständig.</p>
+    <h2><a name="serverconfig" id="serverconfig"></a>Server Konfiguration</h2>
+    <p>Neu 202103xx, nicht auf Android</p>
+    <p>Der Server hat eine Reihe von internen "Handlern". Die meisten können auf
+      dieser Seite konfiguriert werden. Dazu nutzt man <img src="../viewerimages/icons-new/ic_edit.svg"
+        alt="" class="inlineimage">neben der Status Information. Das erzeugt
+      einen Dialog um die Einstellungen des Handlers anzupassen.</p>
+    <p><img src="../statuspage-edit-socket.png" alt="" class="fimage"> </p>
+    <p>Für die meisten Einstellungen ist ein Hilfe Button verfügbar, der eine
+      kurze Erklärung liefert. Mit dem <img src="../viewerimages/icons-new/ic_delete.svg"
+        alt="" class="inlineimage">Button kann man einen Wert auf seinen Default
+      zurücksetzen. Wenn der Handler das unterstützt, kann er hier auch gelöscht
+      werden. Die meisten Handler untertsützen auch ein enable/disable. So kann
+      man einen Handler meist einfach auf disabled setzen, ohne ihn direkt zu
+      löschen. Eine ausführlichere Beschreibung der Handler und ihrer Parameter
+      findet sich in der <a href="../hints/configfile.html">Konfigurationsbeschreibung</a>.</p>
+    <p>Alle Änderungen, die auf dieser Seite vorgenommen werden, werden in die
+      Datei avnav_server.xml geschrieben, werden aber ohne Restart sofort
+      wirksam. Die Anzeige auf der Seite benötigt typischerweise einige Sekunden
+      bis die neuen Werte sichtbar werden.</p>
+    <p>Ein neuer Handler kann mit dem <img src="../viewerimages/icons-new/ic_add.svg"
+        alt="" class="inlineimage">Button hinzugefügt werden.</p>
+    <p>Wenn man einen Port für eine IP Verbindung oder ein serielles Interface
+      auswählt, prüft AvNav, das diese Resource nicht mehrfach genutzt wird.<br>
+      Wenn die Speicherung unter Umständen zu einer korrupten avnav_server.xml
+      führt, wird AvNav beim nächsten Start auf die letzte funktionierende
+      Version zurückfallen. In der Sektion "Config" wird dann ein entsprechender
+      Fehler angezeigt.</p>
+    <p><br>
+    </p>
+    <p></p>
   </body>
 </html>

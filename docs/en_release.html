@@ -6,44 +6,110 @@
   </head>
   <body data-order="400">
     <h1>Avnav Releases</h1>
-    The directory with all releases you will find <a href="../downloads/release/">here</a>.<br>
+    The directory with all releases can be found <a href="../downloads/release/">here</a>.<br>
     <h2>Hints</h2>
     <a href="install.html">The&nbsp; installation instructions<span style="color: black;"></span></a>
-    have a detailed description on the different options you have to install
-    AvNav. On this page you will find information about the various releases.<br>
-    Not with any update there will be new images (although for most).
-    Intermediate updates are either <a href="../downloads/daily/">developer
-      versions(daily)</a> or <a href="../downloads/release/">releases</a>.<br>
-    To install such an intermediate update you need a command line on the pi.
-    From windows you could e.g. use&nbsp; <a href="https://www.putty.org/">putty
-      </a>. Just get the address of your pi and connect, use pi, paasword:
+    have a detailed description of the different options to install AvNav. On
+    this page you will find information about the various releases.<br>
+    Not every update will be delivered by new images (although available for
+    most). Intermediate updates are either <a href="../downloads/daily/">developer
+      versions (daily)</a> or <a href="../downloads/release/">releases</a>.<br>
+    To install such an intermediate update you need to enter a command line on
+    the pi. From windows you could e.g. use&nbsp; <a href="https://www.putty.org/">putty</a>.
+    Just determine the address of your pi and connect, use pi, password:
     raspberry.<br>
-    How to install the packages you will also find in the&nbsp; <a href="install.html#Packages">installation
+    Information on how to install the packages you will find in the <a href="install.html#Packages">installation
       instructions</a> .<br>
     Afterwards you potentially need to adapt the configuration<br>
     <div class="code">/home/pi/avnav/data/avnav_server.xml</div>
-    This could be done like<br>
+    This could be done by<br>
     <br>
     <div class="code">sudo systemctl stop avnav
-nano /home/pi/avnav/data/avnav_server.xml # dann ändern und speichern
+nano /home/pi/avnav/data/avnav_server.xml # enter modifications and save
 sudo systemctl start avnav</div>
     <br>
     <p>If you have installed the <a href="https://github.com/wellenvogel/avnav-update-plugin">AvNav
-        Update plugin</a> you can edit the configuration from this plugin
-      without the need for a command line.<br>
+        Update plugin</a> you can edit the configuration file from this plugin
+      without the requirement to enter the command line.<br>
     </p>
-    <p>You will find only hints for <a href="../downloads/release/">released
-        versions</a> on this page. For <a href="../downloads/daily/">daily
-        builds</a> refer to the <a href="https://github.com/wellenvogel/avnav/commits/master">commits
+    <p>On this page you will only find notes for <a href="../downloads/release/">released
+        versions</a>. For <a href="../downloads/daily/">daily builds</a> refer
+      to the <a href="https://github.com/wellenvogel/avnav/commits/master">commits
         on GitHub</a> .</p>
     <br>
     <div> </div>
     <h2>Versions</h2>
+    <p> <span style="font-weight: bold;">20210322</span> <a title="release/20210322"
+        href="../downloads/release/20210322">link</a> </p>
+    <p>The biggest chance is the ability to directly change the server
+      configuration (e.g. adding new interfaces) from within AvNav. This
+      requires all plugins to be updated to their newest versions (use the
+      updater plugin).</p>
+    AvNav Core:<br>
+    <ul>
+      <li>You can now edit the configuration of the server in the AvNav App (<a
+          href="userdoc/statuspage.html">Server/Status page</a>), changes will
+        become effective without restart</li>
+      <li>When using charts with empty layers (like many mbtiles files) AvNav
+        will now zoom up lower resolution tiles to avoid empty areas in the
+        display</li>
+      <li>You can now scale the Map display (Settings/Map). This can help to
+        improve the visibility on High DPI displays</li>
+      <li>There is a "technology preview" for a split window mode - access with
+        http://address:port/viewer/viewer_split.html, see <a href="../viewern/viewer_split.html?navurl=../viewer/avnav_navi.php&amp;amp;readOnlyServer=true">demo</a></li>
+      <li>Correct handling of symbol sizes on High DPI displays</li>
+      <li>direct registration at MDNS (Bonjour), you can change the name</li>
+      <li>Extensions in the <a href="hints/plugins.html">plugin API</a></li>
+    </ul>
+    <p>Raspberry Setup (Images)</p>
+    <ul>
+      <li>support for the <a href="https://www.gedad.de/projekte/projekte-f%C3%BCr-privat/gedad-marine-control-server/">MCS
+          from GeDad</a>, see <a href="install.html">image description</a></li>
+      <li>allow for <a href="install.html">some customization of the image</a>
+        with a config file avnav.conf including a GUI to create it</li>
+      <li>ensure Visibility of both AvNav and SignalK in MDNS/Bonjour</li>
+      <li>more stable Wifi by switching of wifi power management</li>
+      <li>automatically set up an IP address on the ethernet interface if not
+        connected to a DHCP server</li>
+      <li>Forward port 80 from all interfaces to AvNav (8080)</li>
+    </ul>
+    <p>Smaller Bugfixes and Addons</p>
+    <ul>
+      <li>handle utf-8 in download names correctly</li>
+      <li>keep status on status page until we get server error, correctly show
+        and hide server error</li>
+      <li>increase network timeout</li>
+      <li>work around strange height bug on ios 12,13 safari</li>
+      <li>always use shutdown when closing sockets, re-enable timeout for socket
+        reader</li>
+      <li>#113: merge pr, correctly handle null values in SK</li>
+      <li>#117: prevent browser 2 finger zoom</li>
+      <li>restart avahi when changing the system time</li>
+      <li>avoid hiding second buttons on status page</li>
+      <li>decrease default font sizes</li>
+      <li>create an error gemf for failed conversions, add importer log display
+        on download page, timeout importer status items</li>
+      <li>allow opensuse install</li>
+      <li>show plugin info in status if startup fails</li>
+      <li>restart server</li>
+      <li>log display</li>
+      <li>server download log</li>
+      <li>cleanup name handling and thread id for logging</li>
+      <li>better timeout handling for serial (avoid reopen after 1s)</li>
+      <li>rename AVNGpsdFeeder to AVNFeeder, completely remove gpsd related code</li>
+      <li>#106: avoid writing errors to the log if empty positions lead to
+        decode errors</li>
+      <li>merge #105</li>
+      <li>adapt to new handling of com port names on windows</li>
+      <li>correct windows download links</li>
+    </ul>
+    <ul>
+    </ul>
     <p> <span style="font-weight: bold;">20210115</span> <a title="release/20210115"
         href="../downloads/release/20210115">link</a> </p>
     <ul>
-      <li><a href="https://github.com/wellenvogel/avnav/issues/73">#73</a>:
-        shift to python3 (the current python2.7 is out of maintenance)</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/73">#73</a>
+        migration to python3 (the current python2.7 is out of maintenance)</li>
       <li><a href="hints/userjs.html">plugin API</a> java script extension for <a
           href="hints/overlays.html#adaptation">featureFormatter</a></li>
       <li>decoding of NMEA XDR records</li>
@@ -75,9 +141,9 @@ sudo systemctl start avnav</div>
         (20210115).<br>
         On Windows a new <a href="../downloads/release/20210115">Installer</a>
         should be used. <br>
-        If you are running an update with the existing installation you need to
-        run it twice! On the first update there is still no installation of the
-        new python version.</li>
+        If you update using the existing installer you need to run it twice! On
+        the first update there is still no installation of the new python
+        version.</li>
     </ul>
     <p> <span style="font-weight: bold;">20201227</span> <a title="release/20201227"
         href="../downloads/release/20201227">link</a> </p>
@@ -96,9 +162,9 @@ sudo systemctl start avnav</div>
         href="../downloads/release/20201226">link</a> </p>
     <ul>
       <li>Fullscreen Button<br>
-        If supported by the used browser there will be a Button to toggle
-        fullscreen on the Mainpage, Navigationpage, Dashboardpage</li>
-      <li>Separate settings category for Buttons</li>
+        If supported by the used browser there will be a button to toggle
+        fullscreen on Mainpage, Navigationpage, Dashboardpage</li>
+      <li>Separate settings category for buttons</li>
       <li>Bug fixes</li>
       <ul>
         <li>OSM online charts</li>
@@ -112,7 +178,7 @@ sudo systemctl start avnav</div>
     <ul>
       <li><a href="hints/overlays.html">Chart Overlays</a></li>
       <ul>
-        <li>show gpx,kml,kmz and geojson files on the chart</li>
+        <li>show gpx, kml, kmz and geojson files on the chart</li>
         <li>stack multiple charts on top of each other</li>
         <li>show available tracks and routes</li>
         <li>user defined symbols and links to HTML pages</li>
@@ -132,7 +198,7 @@ sudo systemctl start avnav</div>
       <li>Improvement in route handling</li>
       <ul>
         <li><a href="userdoc/editroutepage.html#routedialog">New dialog</a> for
-          rename, copy,delete, empty, invert</li>
+          rename, copy, delete, empty, invert</li>
         <li>Combining of routes</li>
         <li><a href="https://github.com/wellenvogel/avnav/issues/9">#9</a> add
           waypoints from a gpx file to routes</li>
@@ -153,7 +219,7 @@ sudo systemctl start avnav</div>
         <li>"Always Info on Chart Click" - Also show a dialog on areas without
           objects (default: off)</li>
       </ul>
-      <li>Improved cocumentation</li>
+      <li>Improved documentation</li>
       <ul>
         <li><a href="hints/keyboard.html">Keyboard support documented</a> </li>
         <li><a href="docmap.html">Index</a></li>
@@ -175,7 +241,7 @@ sudo systemctl start avnav</div>
       <li>Bug: The signalk websockets connection(new in 20201105) does not work.
         Unchanged data will be removed after 30s. Additionally you could not
         unconfigure the use of websockets </li>
-      <li>Bug: The documentation of the paramete useWebsockets for signalk was
+      <li>Bug: The documentation of the parameter useWebsockets for signalk was
         wrong. </li>
     </ul>
     <p> <span style="font-weight: bold;">20201105</span> <a title="release/20201105"
@@ -187,7 +253,7 @@ sudo systemctl start avnav</div>
         see <a href="userdoc/navpage.html">Navigation Page</a> (some new
         Settings)</li>
       <li>Feature: Allow to set AIS symbol size and Border <a href="https://github.com/wellenvogel/avnav/issues/58">#58</a></li>
-      <li>Feature: Allow to set Images for different AIS targets, own boat,
+      <li>Feature: Allow to set images for different AIS targets, own boat,
         marker <a href="https://github.com/wellenvogel/avnav/issues/53">#53</a>,
         see <a href="hints/usericons.html">Description</a></li>
       <li>Feature: Show overflow button if more then 8 Buttons on a page, allow
@@ -211,7 +277,7 @@ sudo systemctl start avnav</div>
       <li>Bug: Correctly handle filters in avnav_server.xml with blacklist only</li>
       <li>Bug: Become more robust against shortened AIS type 5 message&nbsp; (
         no callsign, name,... for some AIS targets)</li>
-      <li>Bug: Reload a chart in the Browser if it has been modified on server
+      <li>Bug: Reload a chart in the browser if it has been modified on server
         (mbtiles, ocharts)</li>
       <li>Bug: (Android only) accept unknown NMEA talker ids</li>
       <li>Bug: Make center to Ais target working again <a href="https://github.com/wellenvogel/avnav/issues/74">#74</a></li>
@@ -245,7 +311,7 @@ sudo systemctl start avnav</div>
     <p><span style="font-weight: bold;">20200401</span> <a title="release/20200401"
         href="../downloads/release/20200401">link</a></p>
     <ul>
-      <li>working connection to oepn external wifi network (without password)</li>
+      <li>fix connection to open external wifi networks (without password)</li>
     </ul>
     <p><span style="font-weight: bold;">20200325</span> <a title="release/20200325"
         href="../downloads/release/20200325">link</a></p>

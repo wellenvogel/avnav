@@ -93,11 +93,18 @@
       SignalK direkt konfiguriert werden (im Image bereits vorhanden). Dazu wird
       bei AvNav der Port 34568 genutzt (siehe oben). Bei SignalK wird ein
       enstprechender Kanal konfiguriert.</p>
+    <p>Wenn AvNav innerhalb von OpenPlotter genutzt wird, ist der Signalfluss
+      anders aufgesetzt. In diesem Falle gehen auch die NMEA0183 Daten zunächst
+      direkt zu SignalK und erst von dort zu AvNav. In diesem Falle sollten in
+      AvNav keine NMEA0183 Schnittstellen konfiguriert werden.</p>
     <p>AvNav pollt 1x pro Sekunde die URL</p>
     <div class="code">http://localhost:3000/signalk/v1/api/vessels/self</div>
     <p>und trägt die empfangenen Daten intern unter</p>
     <div class="code">gps.signalk....</div>
-    <p>ein (nur die values der Werte).</p>
+    <p>ein (nur die values der Werte). Seit Version 20201202 wird falls
+      verfügbar auch eine Websocket-Verbindung aufgesetzt, so das Änderungen
+      schneller bei AvNav verfügbar werden. Das Polling erfolgt dann nur noch
+      alle 10s.</p>
     <p>Damit sind diese Daten in der App anzeigbar. Ein <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/signalk/example.json">entsprechendes
         Layout</a> wird mitgeliefert und kann angepasst werden. Dieses Layout
       kann über die Settings Seite gewählt werden
@@ -121,11 +128,12 @@
       geöffnet werden kann.</p>
     <p>Es sind natürlich auch andere Konfigurationen einstellbar - z.B. AvNav
       empfängt seine NMEA Daten von SignalK und schickt nur RMB (Wegepunkt)
-      dorthin zurück. Dabei muss jedoch sorgfältig konfiguriert werden, um
-      Schleifen zu vermeiden. In AvNav stehen dabei an den SocketReadern die
-      filter- und name-Optionen und an den Writern die filter-,readFilter- und
-      blackList- Optionen zur Verfügung. Auch die canboat Integration kann dann
-      u.U. komplett über signalK abgewickelt werden.</p>
+      dorthin zurück (default on OpenPlotter). Dabei muss jedoch sorgfältig
+      konfiguriert werden, um Schleifen zu vermeiden. In AvNav stehen dabei an
+      den SocketReadern die filter- und name-Optionen und an den Writern die
+      filter-,readFilter- und blackList- Optionen zur Verfügung. Auch die
+      canboat Integration kann dann u.U. komplett über signalK abgewickelt
+      werden.</p>
     <p>Es gibt die folgenden Parameter für das plugin</p>
     <table style="width: 100%" border="1">
       <tbody>

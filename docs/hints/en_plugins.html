@@ -254,7 +254,56 @@ def pluginInfo(cls):<br>  return {
             Using this api a plugin can easily handle a serial device by it's
             own. An example you can find on <a href="https://github.com/wellenvogel/avnav-seatalk-remote-plugin/blob/master/plugin.py">GitHub</a>.</td>
         </tr>
+        <tr>
+          <td>getAvNavVersion<br>
+            (since 20210115)</td>
+          <td>return an int with the current version of AvNav. Can be used to
+            test if certain functions can be expected to be available</td>
+        </tr>
+        <tr>
+          <td>saveConfigValues<br>
+            (since 202103xx)</td>
+          <td>Store config values for the plugin in avnav_server.xml. The
+            parameter must by a dictionary with the values that should be
+            changed. The plugin must ensure that it later on can start with the
+            parameters provided here.</td>
+        </tr>
+        <tr>
+          <td>registerEditableParameters<br>
+            (since 202103xx)</td>
+          <td>This will register a list of config values that can be changed
+            during runtime. The first parameter must be a list of dictionary
+            objects describing the parameters, the second parameter a callback
+            that will be called with the changed parameters (will typically call
+            saveConfigValues).<br>
+            For the parameter descriptions refer to the <a href="https://github.com/wellenvogel/avnav/blob/master/server/avnav_api.py">source
+              code</a>.</td>
+        </tr>
+        <tr>
+          <td>registerRestart<br>
+            (since 202103xx)</td>
+          <td>Register a stopCallback that will allow to disable the plugin.</td>
+        </tr>
+        <tr>
+          <td>unregisterUserApp<br>
+            (since 202103xx)</td>
+          <td>unregister a previously registered user app</td>
+        </tr>
+        <tr>
+          <td>deregisterUsbHandler<br>
+            (since 202103xx)</td>
+          <td>deregister an usb device id (see registerUsbHandler)</td>
+        </tr>
+        <tr>
+          <td>shouldStopMainThread<br>
+            (since 202103xx)</td>
+          <td>can be used in the main loop of the plugin to check if it should
+            stop. Do not call this from other threads as it would always return
+            True.</td>
+        </tr>
       </tbody>
     </table>
+    <p><br>
+    </p>
   </body>
 </html>
