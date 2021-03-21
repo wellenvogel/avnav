@@ -1,15 +1,16 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+    
     <title>AvNav Status Page</title>
     <link href="../styles.css" rel="stylesheet" type="text/css">
   </head>
   <body data-order="1900">
     <h1>The Status Page </h1>
-    <p> From the <a href="mainpage.html">main page</a> you get here using
+    <p> From the <a href="mainpage.html">main page</a> you get here by clicking 
       the&nbsp; <img src="../viewerimages/icons-new/status.svg" alt="" class="inlineimage">
-      button. You will see internal status information from the server.</p>
+      button. You will see some server internal status information.</p>
     <div><img src="../statuspage.png" alt="" class="fimage"><br>
     </div>
     <p>Buttons</p>
@@ -24,32 +25,29 @@
           <td><img src="../viewerimages/icons-new/ic_rss_feed.svg" alt="" class="inlineimage"><br>
           </td>
           <td>StatusWpa</td>
-          <td>got to <a href="wpapage.html">wifi configuration</a> to set up
-            the connection to an external wifi<br>
-            (not on android,only visible if configured)</td>
+          <td>go to <a href="wpapage.html">wifi configuration</a> to set up 
+            an external wifi connection<br>
+            (not on android, only visible if configured)</td>
         </tr>
         <tr>
           <td><img src="../viewerimages/icons-new/qrcode.svg" alt="" class="inlineimage"><br>
           </td>
           <td>StatusAddresses</td>
           <td>go to the&nbsp; <a href="addresspage.html">list of server
-              addresses</a>. QR codes will be shown that allow for scanning by a
-            different device for easily connecting this device</td>
+              addresses</a>. QR codes are displayed, allowing devices to connect by scan</td>
         </tr>
         <tr>
           <td><img src="../viewerimages/icons-new/ic_android.svg" alt="" class="inlineimage"><br>
           </td>
           <td>StatusAndroid</td>
-          <td>git to <a href="../android.html">android settings</a>
+          <td>go to <a href="../android.html">android settings</a>
             (only android in normal mode)</td>
         </tr>
         <tr>
           <td><img src="../viewerimages/icons-new/ic_power.svg" alt="" class="inlineimage"><br>
           </td>
           <td>StatusShutdown</td>
-          <td>start the shutdown of the server (not android). There will be a
-            soft shutdown of the server.<br>
-            There is a safety dialog before the shutdown is initiated. After the
+          <td>gracefully shutdown the server (not android). A confirmation dialog will be displayed. After the
             shutdown has started you should wait for the headline to turn red.</td>
         </tr>
         <tr>
@@ -68,14 +66,13 @@
           <td><img src="../viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage"><br>
           </td>
           <td>Cancel</td>
-          <td>zurück zur vorigen Seite.</td>
+          <td>return to previous page</td>
         </tr>
       </tbody>
     </table>
-    <p>The status informations of the various server parts are shown. You are
-      able to see which connections are there and if NMEA data is received. This
+    <p>Status information of the several server parts are shown. You can check connections and verify if NMEA data are received. This
       page is important for trouble shooting.<br>
-      The page has an auto update.<br>
+      The page updates automatically.<br>
     </p>
   </body>
 </html>
