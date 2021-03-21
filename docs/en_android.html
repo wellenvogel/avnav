@@ -8,111 +8,113 @@
   <body data-order="4000">
     <h1>AvNav Android</h1>
     <p>After having the <a href="beschreibung.html">AvNav web GUI for the
-        Raspberry Pi</a>&nbsp; already in place for some years there is now also
-      a pure android version. It needs android starting from 4.4.(KitKat).</p>
-    <p>The most current version is available at <a href="../downloads/release/latest">downloads</a>
-      . Alternatively in the&nbsp; <a href="https://play.google.com/store/apps/details?id=de.wellenvogel.avnav.main">Play
+        Raspberry Pi</a>&nbsp; already in place for some years, there is now
+      also a genuine android version. It requires android 4.4.(KitKat) or later.</p>
+    <p>The latest version is available at <a href="../downloads/release/latest">downloads</a>.
+      Alternatively in the&nbsp; <a href="https://play.google.com/store/apps/details?id=de.wellenvogel.avnav.main">Play
         Store</a>.<br>
-      Older versions or daily builds you can find via the&nbsp; <a href="install.html">installation
+      You can find previous versions or daily builds via the&nbsp; <a href="install.html">installation
         instructions</a>.</p>
     <p>Basically the app is packaging the WebApp (see <a href="userdoc/index.html">User
         documentation</a>) into an android app. For Charts see the hints at <a
         href="charts.html">creating/converting charts</a>.</p>
-    <p>The app can use the internal GPS of your device. Additionally you can
-      receive NMEA data via TCP/IP, bluetooth or with an USB-serial adapter if
-      your device supports USB OTG. As a sender for NMEA data you can e.g. use
-      the raspberry version - or any other NMEA0183-wifi gateway. You can also
-      use a simple bluetooth GPS mouse if your device does not have an internal
-      GPS.</p>
+    <p>The app can use the device's internal GPS. Additionally you can receive
+      NMEA data via TCP/IP, bluetooth or by an USB-serial adapter if your device
+      supports USB OTG. As a sender for NMEA data you can e.g. use the raspberry
+      version - or any other NMEA0183-wifi gateway. You can also use a plain
+      bluetooth GPS mouse if your device does not have an internal GPS.</p>
     <p>Charts are primarily expected in gemf <a href="charts.html#chartformats">Format</a>.
       Since version 20200325 you can also use mbtiles or xml files for online
-      chart sources. Charts can be located in 2 directories:</p>
+      chart sources. Charts may be located in 2 directories:</p>
     <ul>
-      <li> in the charts folder within the app working directory (choosen at
+      <li> in the charts folder within the app's working directory (choosen at
         start up). As this must be writable it will typically not be possible to
         put this on an SD card in newer android versions. </li>
-      <li>in a freely selectable other directory (also on an SD card)
+      <li>in a freely selectable, different directory (also on an SD card)
         "additional charts dir" in the settings<br>
         In the external charts dir you cannot directly use mbtiles. They must be
         copied into the working directory using <a href="userdoc/downloadpage.html">the
           app</a> .</li>
     </ul>
-    <p>When starting up there are some demo online charts being available.</p>
-    <p>If the choosen working directory is not yet there it will be created on
-      first start up.(default: internal-sd-card/avnav).</p>
-    <p>The track and log data will be written into the track directory below the
+    <p>When starting up there are some demo online charts available.</p>
+    <p>If the chosen working directory is not yet present it will be created on
+      first start up (default: internal-sd-card/avnav).</p>
+    <p>Track and log data will be written into the track directory within the
       working directory.</p>
-    <p>In the routes sub folder the routes will be store in gpx format. Routes
-      and tracks can be provided to other apps using the <a href="userdoc/downloadpage.html">download</a>
+    <p>In the routes sub folder, routes will be stored in gpx format. Routes and
+      tracks can be made available to other apps using the <a href="userdoc/downloadpage.html">download</a>
       function. To save them you need to have a file manager installed.</p>
     <p>After first start up you will see an introduction page:</p>
     <img alt="" src="android-start-first.png" height="400"><br>
-    After clicking ok you will be on the main settings page.<br>
+    After clicking ok you will see the main settings page.<br>
     <img src="android-mainsettings.png" alt="" class="fimage"><br>
     You can select the working directory and the external charts directory.
     Additionally you can select the sources for your NMEA data.<br>
-    A complete list of settings you can find <a href="#Settings">here</a>.<br>
+    A complete list of settings can be found <a href="#Settings">here</a>.<br>
     <br>
     <p> You can leave the settings page with the upper right button or by
-      pressing the back button. In normal mode you will reach the <a href="userdoc/mainpage.html">main
+      pressing the back button. In normal mode you will get to the <a href="userdoc/mainpage.html">main
         page</a> of the app.</p>
     <img src="android-mainpage.png" alt="" class="fimage"><br>
-    In the picture there is a valid internal position (green bubble) but
+    In the figure a valid internal position is shown (green bubble), but
     currently no AIS data (red bubble).<br>
     To go back to the android setting move to the <a href="userdoc/settingspage.html">settings
       page</a> within the app and click the android button there.<br>
-    On further starts you will directly start on the main page.<br>
+    On further starts,&nbsp; the app will directly present the main page.<br>
     <br>
     <h2>Bluetooth</h2>
     <br>
     To connect to a bluetooth device just pair it outside the app before
     starting AvNav.<br>
-    Inside the app go to settings-&gt;bluetooth and select your device.<br>
+    Within the app choose settings-&gt;bluetooth and select your device.<br>
     <br>
     To leave the app use the <img src="viewerimages/icons-new/ic_clear.svg" alt=""
       class="inlineimage">button on the main page. This will shut down the
-    background service that is writing the track even if the app is in
-    background otherwise.<br>
+    background service that is recording the track. Otherwise the app will
+    continue recording trackpoints in background.<br>
     <h2> Modes</h2>
-    The app can run in 2 modes:<br>
+    The app can be run in 2 modes:<br>
     <ul>
       <li>Normal</li>
       <li>External Browser</li>
     </ul>
-    In the normal mode the browser is integrated in the app and it behaves like
-    a normal android app.<br>
-    In external browser mode the app starts up a web server an a port that you
-    can&nbsp; select (default 34567) and shows the following page.<br>
+    In normal mode the browser is integrated and it behaves like a standard
+    android app.<br>
+    In external browser mode the app starts up a web server at a user definable
+    port (default 34567). The following page will be displayed:<br>
     <img src="android-external.png" alt="" class="fimage"><br>
     <br>
-    By clicking on "START BROWSER" you will be presented with a list of
-    installed browsers and can select your favorite. I would recommend chrome.<br>
-    Normally in the browser you will always have the address bar that wastes
-    space. By using "add to home screen" in the settings you can put it on your
-    start screen - and if you start from there it will run full screen.<br>
+    By clicking on "START BROWSER" you will be presented a list of installed
+    browsers. Select your favorite. I would recommend chrome.<br>
+    Normally the browser display will always show an address bar wasting screen
+    space. By using "add to home screen" within the settings you can create a
+    link on your start screen - if you start from there, it will run full
+    screen.<br>
     <br>
     <img style="width: 640px; height: 400px;" alt="" src="android-chrome.png"><br>
     <br>
     <br>
     <img style="width: 640px; height: 400px;" alt="" src="android-chrome2.png"><br>
     <br>
-    To stop the app in this mode use the notification (sailboat) to go back to
-    the app and leave it via "EXIT".<br>
-    On the next start up only start the app and afterwards start your browser
-    via the home screen icon.<br>
+    To stop the app in this mode use the sailboat button to return to the app
+    and leave it via "EXIT".<br>
+    On subsequent starts just invoke the app and start your browser via the home
+    screen icon.<br>
     <p> If you select Settings&gt;Android-&gt;MainSettings "WebServer external
-      access" other devices in the same network can access your app.</p>
-    <span style="color:red">Take care: Never use this in a publci network as
-      there is no protection inside the app. Any user in the same network can
-      access your device!</span><br>
+      access" other devices within the same network can access your app.</p>
+    <span style="color:red">Take care: Never use this in a public network as
+      there is no access restriction builtin to the app. Any user within the
+      network can access your device!</span><br>
     The app will annouce itself via bonjour as avnav-android so other devices
     can easily find it.<br>
     <br>
-    When the app is running the track data will be written to a file every 5
+    Whenever the app is active, track data will be written to a file every 5
     minutes.<br>
     Important Hint:<br>
-    If you start up your browser once from the app and once from the home screen
-    you will end up with different settings in the app.<br>
+    If you invoke your browser within the app one time and from the home screen
+    another time, you will most likely end up with different settings, as these
+    are stored in each browser's storage. So better get used to a consistent
+    invocation method.<br>
     <br>
     <h2> <a id="Settings" name="Settings"></a>Settings</h2>
     <br>
@@ -131,18 +133,18 @@
         </tr>
         <tr>
           <td>working directory</td>
-          <td>working driectory for your data (sub folders charts,tracks,
+          <td>working directory for your data (sub folders charts,tracks,
             routes, user, layout)</td>
           <td>/storage/sdcard/avnav</td>
         </tr>
         <tr>
           <td>additional charts directory</td>
-          <td>external chart directory (not for mbtiles), put this on an SD card</td>
+          <td>external chart directory (not for mbtiles), SD card recommended</td>
           <td>---</td>
         </tr>
         <tr>
           <td>show demo charts</td>
-          <td>demo charts (only with internet connectivity)</td>
+          <td>demo charts (only with internet connected)</td>
           <td>on</td>
         </tr>
         <tr>
@@ -153,8 +155,8 @@
         </tr>
         <tr>
           <td>Alarm sounds</td>
-          <td>switch of alarm sounds. If you run the external browser mode you
-            need to switch them off in your browser additionally.</td>
+          <td>switch off alarm sounds. If you run in external browser mode you
+            need to switch them off in your browser as well.</td>
           <td>on<br>
           </td>
         </tr>
@@ -224,26 +226,26 @@
         </tr>
         <tr>
           <td>filter incoming NMEA</td>
-          <td>set up a filter for NMEA data. If empty all data will be recived.
-            If you provide e.g. $RMC it will receive all $XXRMC records.</td>
+          <td>set up a filter for NMEA data. If empty all data will be received.
+            If you provide e.g. RMC it will receive all $xxRMC records.</td>
           <td><br>
           </td>
         </tr>
         <tr>
           <td>log NMEA Data</td>
-          <td>write an NMEA log in the track directory</td>
+          <td>write a NMEA log in the track directory</td>
           <td><br>
           </td>
         </tr>
         <tr>
           <td>log AIS Data</td>
-          <td>write AIS data to a log in the track directory</td>
+          <td>write AIS data to a logfile in the track directory</td>
           <td><br>
           </td>
         </tr>
         <tr>
           <td>filter NMEA logs</td>
-          <td>a filter for the written log data (similar to NMEA filter)</td>
+          <td>filter for the written log data (analog to NMEA filter)</td>
           <td><br>
           </td>
         </tr>
@@ -275,32 +277,31 @@
         </tr>
         <tr>
           <td style="height: 19px;">AIS info invalid after(s)</td>
-          <td>time after whioch an AIS target si deleted if no update is
+          <td>seconds after which an AIS target is removed if no update is
             received</td>
           <td>1200</td>
         </tr>
         <tr>
           <td>min trackpoint distance(m)</td>
-          <td>write an entry to the track log if this distnace to the last one
-            is exceeded</td>
+          <td>log trackpoint if distance (meters) to the previous entry is
+            exceeded</td>
           <td>25</td>
         </tr>
         <tr>
           <td>time between trackpoints(s)</td>
-          <td>write an entry to the track earliest after that many seconds from
-            the last</td>
+          <td>log trackpoint not earlier than n seconds after previous entry</td>
           <td>10</td>
         </tr>
         <tr>
           <td>write track file every (s)</td>
-          <td>write out the track file after n seconds. Until this time track
-            data is collected in memory only. Tries to give a balance between
-            write access and safety against crashes.</td>
+          <td>write out the track file after n seconds. Timespan to collect data
+            in memory only. Compromise about reducing write access and fail safe
+            tracking</td>
           <td>300</td>
         </tr>
         <tr>
           <td>port for external browser mode</td>
-          <td>change the listener port for the web server</td>
+          <td>set the listener port for the web server</td>
           <td>34567</td>
         </tr>
         <tr>

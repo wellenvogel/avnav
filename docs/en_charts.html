@@ -27,7 +27,7 @@
       <li><a href="#installation">Installation</a></li>
       <li><a href="#Convert">Converting existing Raster Charts (like BSB)<br>
         </a></li>
-      <li><a href="#Download">Downlading of Raster Charts<br>
+      <li><a href="#Download">Downloading Raster Charts<br>
         </a></li>
       <li><a href="hints/CanboatAndSignalk.html#SignalKCharts">SignalK</a></li>
     </ul>
@@ -35,48 +35,49 @@
     <img title="Karten" alt="Karten" src="Karten.png" width="600">
     <p>To use charts in AvNav they have to be available in a tile format. This
       is a format used by services like OpenStreetMaps or GoogleMaps. A tile has
-      (normally) a size of 256x256 pixel. The world will be projected to a flat
-      surface (like a paper cylinder wrapped around the earth at the aequator).
-      Each point with it's coordinates (longitued/latitude) will pe projected at
-      this cylinder. How this is done exactly, which units will be used and if
-      you consider the earth to be a ellipsoid or a sphere is described by the
-      projection. AvNav is using the so called google mercator projection (earth
-      considered a sphere) with the EPSG code 900913. The projected units are
-      always meters (but can be converted to longitude and latitude). If you
-      have charts using a different projection they have to be reprojected
-      before.</p>
-    <p>The whole projection area is split into tiles. The zoom level provides
-      the number of tiles for the complete area. Zoom level 0 means: The
-      complete earth (from -85°...+85°, outside the projection is undefined) is
-      shown in one tile of 256x256 pixel. With every other level there will be
-      more tiles - level 1: 2x2 tiles, level 2: 4x4 tiles. The most relevant
-      zoom levels for our usage typically range from 7 till 18..19. That means
-      at level 19:2^19x2^19 tiles.<br>
-      For display the library <a href="http://www.openlayers.org/">openlayers</a>
-      is used. This library loads the tiles based on the zoom level from the
-      server (raspberry) and displays them on the screen. This library is often
+      (normally) a size of 256x256 pixel. The world is projected to a flat
+      surface (imagine a paper cylinder wrapped around the earth at the
+      aequator). Each point with it's coordinates (longitude/latitude) will pe
+      projected at this cylinder. How this is performed in detail, which units
+      will be used and whether the earth is considered as an ellipsoid or a
+      sphere is described by the projection. AvNav is using the so called google
+      mercator projection (earth considered a sphere) with the EPSG code 900913.
+      The projected units are always meters (but can be converted to longitude
+      and latitude). If you have charts using a different projection they have
+      to be reprojected beforehand.</p>
+    <p>The whole projection area is split into tiles. The zoom level determines
+      the number of tiles for the complete area. Zoom level 0 means:&nbsp;
+      complete earth (from -85°...+85°, outside these limits the projection is
+      undefined) is shown in one tile of 256x256 pixel. With each other level
+      there will be more tiles - level 1: 2x2 tiles, level 2: 4x4 tiles. The
+      most relevant zoom levels for our usage typically range from 7 to 18..19.
+      That means at level 19:2^19x2^19 tiles.<br>
+      The <a href="http://www.openlayers.org/">openlayers</a> library is used
+      to display the charts. This library loads the tiles based on zoom level
+      from the server (raspberry) and displays them on the screen. It is often
       used in OpenStreatMap applications.<br>
-      You can easily imagine that there will be huge numbers of tiles for higher
-      zoom level (if you try e.g. zoom 19 for all). Therefor it makes sense to
-      follow the same approach we have for paper charts: For overview a small
-      zoom level, detail charts a bit more and e.g. port approaches with the
-      highest levels 18 or 19 (60cm/pixel and 30cm/pixel). To still get a nice
-      display experience the different detail levels can be put one on top of
-      the other in layers. If there is a better (higher) zoomlevel for an area
-      this one will be displayed - otherwise the one with a lower zoom level
-      (potentially up scaled). To not overload our display devices the number of
-      layers should be limited to 3...5 (depending on the device). </p>
-    <p>For converting chart the task is to sort available charts into such
-      layers, to potentially reporoject them and afterwards create the chart
-      tiles (maybe together with a description). Typically this requires a lot
-      of computing power (and time) and should be better run on a desktop
-      system. But typically this should be no problem as you will do this only
-      once. Finally you will get a continous displaywithout any breaks in
-      between.<br>
-      For downloading charts you have to consider this, too. You need to select
-      the areas an zoom levels carefully. </p>
-    <p>How you do this depends on the source. I currently have suppor for 2
-      options to create charts for AvNav:</p>
+      You can easily imagine the huge numbers of tiles required for higher zoom
+      levels (if you try e.g. zoom 19 for all). Therefore it makes sense to
+      follow the same approach we take for paper charts: for an overview a small
+      zoom level is used, detail charts a bit more and e.g. port approaches with
+      the highest levels 18 or 19 (60cm/pixel and 30cm/pixel). To still maintain
+      a nice display experience the different detail levels can overlay the
+      other tiles of less detail. If there is a better (higher) zoomlevel for an
+      area this one will be displayed - otherwise the one with a lower zoom
+      level (potentially up scaled). To not overload the display devices, the
+      number of layers should be limited to 3...5 (depending on the device). </p>
+    <p>For chart conversion the goal is to assign available charts to such
+      layers, to potentially reproject them and finally create the chart tiles
+      (maybe together with a description). Typically this requires a lot of
+      computing power (and time) and should be better run on a desktop system.
+      But typically this should be no problem as you will do this only once.
+      After you will be rewarded with a continous chart view with no gaps
+      inbetween.<br>
+      The same has to be considered when it comes to downloading charts. You
+      need to carefully select
+      areas and zoom levels. </p>
+    <p>The download procedure depends on the source. I currently support
+      2 options to create charts for AvNav:</p>
     <ul>
       <li>
         <p>Converting charts using <a href="http://www.gdal.org/">GDAL</a>
@@ -89,70 +90,71 @@
     </ul>
     <h2><a name="chartformats" id="chartformats"></a>Chart Formats</h2>
     <p>AvNav uses <a href="http://www.cgtk.co.uk/gemf">GEMF</a> as its primary
-      format. It is a compact binary format that collects all the tiles into one
-      file together with the necessary meta data. With this format some special
-      function like automatic zoom level adaptation are possible.&nbsp;&nbsp; <br>
+      format. It is a compact binary format merging all tiles into one file with
+      the necessary meta data added. This format permits special functions like
+      automatic zoom level adaptation.&nbsp;&nbsp; <br>
       Since version 20200325 AvNav can directly use the <a href="https://wiki.openstreetmap.org/wiki/MBTiles">mbtiles</a>
-      format. For this format you potentially have to select the correct format
-      for the internal sorting of the tiles. The default formt is "xyz" but
-      there is also a "tms" format available. You can switch the format at the <a
-        href="userdoc/downloadpage.html#mbtiles">Files/Download</a> page.
-      MbTiles you can directly download e.g. from <a href="https://wiki.openstreetmap.org/wiki/DE:Locus#https://wiki.openstreetmap.org/wiki/DE:Locus#Offline-Karten">OpenSeamap</a>.</p>
+      format. To use this format you potentially have to select the correct
+      variant of internal tile sorting. The default format is "xyz" but there is
+      also a "tms" format available. You can switch the format at the <a href="userdoc/downloadpage.html#mbtiles">Files/Download</a>
+      page. You can download MbTiles directly e.g. from <a href="https://wiki.openstreetmap.org/wiki/DE:Locus#https://wiki.openstreetmap.org/wiki/DE:Locus#Offline-Karten">OpenSeamap</a>.</p>
     <p><b>Hint</b>: Up to version 202011xx AvNav was reading an entry "scheme"
       in the mbtiles metadata. Unfortunately the usage of this entry is not well
-      defined and different sources are using this in a different way (see <a href="https://github.com/wellenvogel/avnav/issues/63">Issue
-        #63</a>). Additionally AvNav internally inverted the meaning of xyz and
-      tms. With version 202011xx AvNav now is ignoring this value (and assumes
-      tms). If the value is set in the metadata the chart will be shown in red
-      and you can use the <a href="userdoc/downloadpage.html">Download-Page</a>
-      to choose which type should be applied for this chart.</p>
-    <p>Additionally (since 20200325) you can also use online chart sources if
-      they support the default url format. You have to configure this with an
-      xml file. An example can be found in the provided <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/demo/osm-online.xml">online
+      defined and different sources are using differently (see <a href="https://github.com/wellenvogel/avnav/issues/63">Issue
+        #63</a>). In earlier editions AvNav internally inverted the meaning of
+      xyz and tms. Since version 202011xx AvNav ignores this value (and assumes
+      tms). If the value is set in the metadata, the chart will be displayed in
+      red and you can visit the <a href="userdoc/downloadpage.html">Download-Page</a>
+      to choose the type to be applied for this specific chart.</p>
+    <p>Additionally (since 20200325) you can also use online chart sources,
+      provided they support the default url format. You have to configure this
+      with an xml file. An example can be found in the provided <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/demo/osm-online.xml">online
         source for OpenSeaMap</a>.</p>
     <p>Since version 20200515 you can use a <a href="hints/ocharts.html">plugin</a>
-      to also utilize charts from <a href="https://o-charts.org/">o-charts</a>.</p>
+      to process charts from <a href="https://o-charts.org/">o-charts</a> as
+      well.</p>
     <p>Since version 202011xx you can use charts from the <a href="https://github.com/SignalK/charts-plugin">signalK
         chart provider</a> &nbsp; (if the <a href="hints/CanboatAndSignalk.html#SignalK">signalK
         integration</a> is active).</p>
-    <p>Using the <a href="#mapproxy">MapProxy Plugin</a> you can utilize and
+    <p>With the <a href="#mapproxy">MapProxy Plugin</a> you can utilize and
       download charts from various online chart sources.</p>
     <h2><a name="installation" id="installation"></a>Installation of Charts</h2>
-    <p>After installing AvNav there is only one/a couple of online demo charts
+    <p>After installing AvNav there is one/a couple of online demo charts
       available. For real usage you have to install charts in AvNav.<br>
       You can do this either by directly copying charts into the chart directory
-      (/home/pi/avnav/data/charts) or the external chart directory on android.
-      But you can also upload the charts directly within the WebApp (some only
-      starting from 20200325).The upload can be done on the <a href="userdoc/downloadpage.html#chartupload">Files/Download
+      (/home/pi/avnav/data/charts) or&nbsp; to the external chart directory on
+      android. You can also upload the charts directly within the WebApp (some
+      only starting from 20200325). Upload can be executed via the <a href="userdoc/downloadpage.html#chartupload">Files/Download
         page</a>.<br>
       For android you have to consider that mbtiles can only be handled after
-      uploading them - not from the external chart directory.<br>
-      For mbtiles consider the option for switching the internal scheme <a href="userdoc/downloadpage.html#mbtiles">at
+      explicit upload&nbsp; - instead of simply storing them in the external
+      chart directory.<br>
+      For mbtiles consider the option to switch the internal scheme <a href="userdoc/downloadpage.html#mbtiles">at
         the Files/Download page</a> .</p>
-    <p>In normal versions (not android) starting from 20200325 you can also
-      upload charts that still need a conversion. The converter decsribed
-      at&nbsp; <a href="#Convert">Converting</a> is always&nbsp; part of AvNav.
+    <p>In standard versions (not android) starting from 20200325 you can also
+      upload charts that still require conversion. The converter as described
+      in&nbsp; <a href="#Convert">Converting</a> is always included in AvNav.
       It will read files from it's import directory (/home/pi/avnav/data/import)
-      or from sub directories. If you select a file for <a href="userdoc/downloadpage.html#chartupload">Upload</a>
-      with a name that will be handled by the converter (like .kap) you will be
-      asked if you want this file to be put into the converter import directory.
-      You can watch the working state of the importer at the <a href="userdoc/statuspage.html">status
-        page</a>. You should keep in mind that converting is consuming a lot of
-      CPU and can last for hours on the raspberry pi. Potentially it is more
+      or from sub directories. When <a href="userdoc/downloadpage.html#chartupload">uploading</a>
+      a file with a known filename extension (like .kap) you will be asked if
+      you want this file to be loaded to the converter import directory. You can
+      monitor the working state of the importer at the <a href="userdoc/statuspage.html">status
+        page</a>. You should keep in mind that converting requires a lot of CPU
+      power and can last for hours on the raspberry pi. Probably it is more
       efficient to run this on a desktop system.</p>
     <p>If the <a href="#mapproxy">MapProxy plugin</a> is installed its charts
       will directly become visible in AvNav without any further installation. </p>
     <h2><a name="overlays" id="overlays"></a>Overlays</h2>
-    <p>Ab Version 20201219 kann AvNav über (und unter) den eigentlichen Karten
-      noch weitere Informationen anzeigen bzw. Karten können kombiniert werden.</p>
-    <p>Für Details siehe <a href="hints/overlays.html">Overlays</a>.<br>
+    <p>Since version 20201219 AvNav can display further information as overlay
+      (or underlay). You can as well combine different charts. </p>
+    <p>For details see <a href="hints/overlays.html">Overlays</a>.<br>
     </p>
     <h2><a id="Convert" name="Convert"></a>Converting Charts</h2>
     <p>As described you can run the conversion directly on the pi - but it will
       take time.</p>
     <p>It is potentially more appropriate to run the conversion on a desktop
-      computer. You can do this on Linux or Windows. For the necessary
-      installtions see:</p>
+      computer. You can do this on Linux or Windows machines. For the necessary
+      installations see:</p>
     <ul>
       <li><a href="install.html#Packages">Linux</a></li>
       <li><a href="install.html#Windows">Windows</a></li>
@@ -162,83 +164,82 @@
     On a desktop the charts will be created at
     &lt;UserHome&gt;/AvNavCharts/out&nbsp; (e.g.
     c:\Users\Andreas\AvNavCharts\out). In the UI you can select the output path.
-    For each run normally one gemf file is created. The name is derived from the
+    Normally one gemf file is created per run. The name is derived from the
     first selected input file or directory.<br>
-    There will be a work directory below AvNavCharts - you should not delete
-    this as it would speed up a second conversion run (if you e.g. got some
-    corrected input charts).<br>
+    There will be a work directory within AvNavCharts - you should not delete
+    this as it would speed up subsequent conversion runs (if you e.g. receive
+    some corrective input charts).<br>
     The conversion consists of the steps:
     <ul>
       <li>
         <p>sorting the charts into layers (and potentially converting them)</p>
       </li>
       <li>
-        <p>creation of the tiles</p>
+        <p>creation of tiles</p>
       </li>
       <li>creation of the gemf file</li>
     </ul>
     <p>After creation of the gemf file just <a href="#installation">install</a>
       it on the pi.<br>
       You can also test the created chart directly on your desktop. The
-      converter will bring up the AvNav server and you can connect with a
-      browser.</p>
+      converter will invoke the AvNav server to which you connect by browser.</p>
     <h4><a name="windows" id="windows"></a>Windows</h4>
-    <p>The <a href="install.html#Windows">Net-Installer</a> (AvNavNet...) for
-      windows will install all the necessary software:</p>
+    <p>There is a <a href="install.html#Windows">Net-Installer</a>
+      (AvNavNet...) for windows to install all the necessary software:</p>
     <ul>
       <li>python 2.7.10 (32 Bit)</li>
       <li>GDAL 1.11 for python 2.7 (32 Bit)</li>
       <li>Pillow 2.7.0</li>
       <li>pyserial 2.7</li>
     </ul>
-    The installer will be installed at ProgramFiles\AvNav. If you deinstall
-    AvNav only the installer will be removed.<br>
-    All the downloaded software will be installed at the user home diectory and
-    have to be removed from the UI.<br>
+    The installer will be installed within ProgramFiles\AvNav. If you uninstall
+    AvNav just the installer will be removed.<br>
+    All added components are installed in the user home diectory. They have to
+    be uninstalled via the UI.<br>
     After installation you can start with AvChartConvert. <br>
     <br>
-    There is only one screen:<br>
+    There is just one screen:<br>
     <br>
     <img alt="windows gui" src="avnav-windows-new.png" width="800px"><br>
-    <p>At (1) you can select the files/directories you would like to convert. At
-      (2) the conversion process will start. A logfile will be written that can
-      be shown using the "view" button. If something goes wrong I need this log
-      in any case.<br>
-      With default settings after the conversion has finished the AvNav server
-      will start up and a browser will be brought up that is connected.<br>
-      If the necessary software has not been installed yet a dialog is brought
-      up that asks you if it should be installed right now. At (5) you can
-      repeat this step for an update. At (4) you can remove the downloaded
+    <p>Click (1) to select the files/directories to convert. Click (2) to start
+      the conversion process. The "view" button will display the logfile as the
+      conversion proceeds. That's something you certainly like to see if
+      something goes wrong.<br>
+      Per default the AvNav server will automatically start up and invoke a
+      browser after the conversion has finished.<br>
+      If the necessary software has not yet been installed,&nbsp; a dialog is
+      brought up to prompt if it should be installed right now. Clicking (5) you
+      can repeat this step for an update. At (4) you can remove the downloaded
       software.<br>
-      In the software some demo NMEA data is included (southern baltic,
-      Greifswalder Bodden), You can also use any other NMEA0183 file as an
-      input.<br>
-      As the server is a full featured AvNav you can also read NMEA data from a
-      connected device or from bluetooth or IP. If you have special needs you
-      can create your own avnav_server.xml and set up things there.</p>
+      Some demo NMEA data are included in AvNav installation (southern baltic,
+      Greifswalder Bodden), You may also use any other NMEA0183 file as input.<br>
+      As the server on desktop computer is a fully featured AvNav you can also
+      read NMEA data from connected devices, from bluetooth or IP. To meet
+      special requirements you can even create your own avnav_server.xml and set
+      up things there.</p>
     <p>This way it is also possible to use AvNav e.g. on a laptop on board. <br>
-      If you only want to start up the server - use (3) "startServer". Has to be
-      repeated after every configuration change.<br>
+      If you only want to start up the server - click (3) "startServer". Has to
+      be repeated after every configuration change.<br>
     </p>
     <h4>Linux</h4>
     As described at <a href="install.html#Packages">Installation</a> start up
     AvNav using avnav -g and select the charts you would like to convert.<br>
     <h4>Details</h4>
-    Here are some details about the conversion steps. Normally you do not take
-    care about them. You only need them if some of the default settings do not
-    fit your needs.
+    Here are some details about the conversion steps. Normally you do care about
+    them. You only need them if some of the default settings do not fit your
+    needs.
     <blockquote>
       <div style="font-size:small">
-        <p>The first step is fast. All chart data will be read and resolution
-          and range will be detected. If necessary charts would be
-          converted/reprojected. As a result there will be a chartlist.xml at
+        <p>The first step is fast. All chart data will be read, resolution and
+          range will be detected. If necessary charts would be
+          converted/reprojected. As a result there will be a chartlist.xml in
           workdir/&lt;name&gt; . The command line would be:</p>
         <pre>read_charts.py -o name -m chartlist inputdir [inputdir...]
 </pre>
         <p>Afterwards you can check the chartlist.xml and you could e.g. move
           some charts into a different layer.</p>
-        <p>The second step will take more time - it is the creation of the
-          tiles:</p>
+        <p>The second step will take more time -&nbsp; now the tiles are
+          created:</p>
         <pre>read_charts.py -o name -m generate 
 </pre>
         <p>The file chartlist.xml must already exist at&nbsp;
@@ -252,31 +253,31 @@
     <h3 class="western"><a id="Download" name="Download"></a></h3>
     <h2 class="western"><a name="mapproxy" id="mapproxy"></a>MapProxy plugin</h2>
     <p>A <a href="https://github.com/wellenvogel/avnav-mapproxy-plugin">plugin</a>
-      is available that embeds <a href="https://mapproxy.org/">MapProxy</a> and
-      this way provides access to various online chart sources. The plugin will
-      support you in configuring MapProxy and allows to comfortably download
-      charts. For details refer to the <a href="https://github.com/wellenvogel/avnav-mapproxy-plugin/blob/master/Readme.md">plugin
+      is available to embed <a href="https://mapproxy.org/">MapProxy</a>,&nbsp;
+      providing access to various online chart sources. The plugin will support
+      you in configuring MapProxy and allows to comfortably download charts. For
+      details refer to the <a href="https://github.com/wellenvogel/avnav-mapproxy-plugin/blob/master/Readme.md">plugin
         documentation</a>.</p>
-    <p>The plugin provides a lot of functionality very similar to Mobile Atlas
-      Creator and can replace it in most cases.</p>
+    <p>The plugin offers a lot of functionality very similar to Mobile Atlas
+      Creator and it can replace it in most cases.</p>
     <h3 class="western"></h3>
     <h2 class="western">Download using Mobile Atlas Creator</h2>
-    <p>For using the <a href="https://mobac.sourceforge.io/">Mobile Atlas
-        Creators</a> you only Java and the MOBAC itself. It is important to
-      follow a certain schem when selecting the ranges for download to make the
-      charts fit onto the described layer concept and you limit the amount of
+    <p>To use the <a href="https://mobac.sourceforge.io/">Mobile Atlas Creators</a>
+      you only need Java and the MOBAC itself. It is important to follow a
+      certain procedure when selecting the ranges for download&nbsp; in order to
+      fit the charts to the described layer concept and to limit the amount of
       data. </p>
-    <p>I recommend to typically use 3 layers: overview( zoom level 7-10),
-      navigation (level 10-15), details (Level 16-18). Afterwards just work in
-      MOBAC layer by layer. Select the zoom levels for the layer, select the
+    <p>Typically, I recommend to use 3 layers: overview( zoom level 7-10),
+      navigation (level 10-15), details (Level 16-18). Afterwards just proceed
+      in MOBAC layer by layer. Select the zoom levels for the layer, select the
       areas you want and add them with an arbitrary name. Repeat this for all
-      layers. Now save your selection using a meaningfull name (the xml file
+      layers. Now save your selection using a meaningful name (the xml file
       could be reused later). Select OsmDroid GEMF (File-&gt;convertAtlasFormat)
-      as output format and start the atlas creation. In the output directory a
+      as output format and start atlas creation. In the output directory a
       xxx.gemf file will be created. <a href="#installation">Install</a> this
-      on the pi. Datei.<br>
-      At the <a href="mapsources.html">mapsources page</a> I'm collecting
-      useful map sources.</p>
+      on the pi. <br>
+      At the <a href="mapsources.html">mapsources page</a> I present a
+      collection of useful map sources.</p>
     <p><br>
     </p>
   </body>

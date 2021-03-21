@@ -36,60 +36,60 @@
     <p>Damit Karten in der WebApp verwendet werden können, müssen sie in einem
       „Kachelformat“ vorliegen. Das ist das Format, das durch Dienste wie
       OpenStreetMaps oder GoogleMaps benutzt wird. Eine Kartenkachel ist 256x256
-      Pixel gross. Die Welt wird dabei auf eine ebene Fläche projeziert (kann
-      man sich das wie einen Papierzylinder vorstellen, der senkrecht steht und
+      Pixel gross. Die Welt wird dabei auf eine ebene Fläche projiziert (das
+      kann man sich wie einen Papierzylinder vorstellen, der senkrecht steht und
       am Äquator um die Erde gewickelt wird). Jeder Punkt mit seinen Koordinaten
-      (Länge/Breite) wird dann auf diesen Zylinder projeziert. Wie man das
-      macht, welche Einheiten in der Projektion verwendet werden und ob die Erde
-      als Kugel oder Ellipsoid mit verschiedenen Parametern modelliert wird,
-      beschreiben die verschiedenen Projektionen. Die WebApp benutzt die
+      (Länge/Breite) wird dann auf diesen Zylinder projiziert. Wie man das
+      macht, welche Einheiten in der Projektion verwendet werden, und ob die
+      Erde als Kugel oder Ellipsoid mit verschiedenen Parametern modelliert
+      wird, beschreiben die verschiedenen Projektionen. Die WebApp benutzt die
       sogenannte Google-Mercator Projektion (die Erde wird dabei als Kugel
       betrachtet) - mit dem EPSG code 900913. Die Einheiten auf dem Papier sind
       dabei Meter (die man natürlich in die entsprechenden Koordinaten umrechnen
       kann). Karten in einem anderen Format (z.B. WGS84 – Erde als Ellipsoid,
-      immer in Grad) müssen daher ggf. reprojeziert werden. </p>
-    <p>Die gesamte Projektionsfläche wird bei der google Projektion in Kacheln
-      unterteilt. Der Zoom level gibt an, in wieviele Kacheln die Fläche
-      unterteil wird. Zoom level 0 bedeuted: Die gesamte Erde (von -85° bis +85°
+      immer in Grad) müssen daher ggf. reprojiziert werden. </p>
+    <p>Die gesamte Projektionsfläche wird bei der Google Projektion in Kacheln
+      unterteilt. Der Zoom Level gibt an, in wieviele Kacheln die Fläche
+      unterteilt wird. Zoom Level 0 bedeutet: die gesamte Erde (von -85° bis +85°
       Breite – darüber ist die Projektion nicht definiert) auf einer Kachel von
-      256x256 Pixel. Mit jedem weiteren ZoomLevel wird feiner unterteilt: Zoom
-      level 1: 2x2 Kacheln, 2: 4x4 Kacheln usw. Für uns reichen die
-      interessanten Zoom Level von ca. 7 bis 18..19. Das bedeutet (level 19)
+      256x256 Pixel. Mit jedem weiteren Zoom Level wird feiner unterteilt: Zoom
+      Level 1: 2x2 Kacheln, 2: 4x4 Kacheln usw. Für uns reichen die
+      interessanten Zoom Level von ca. 7 bis 18..19. Das bedeutet (Level 19)
       2^19x2^19 Kacheln.</p>
-    <p>Zur Darstellung wird die library <a href="http://www.openlayers.org/">openlayers</a>
-      verwendet. Diese lädt die entsprchenden Kartenkacheln je nach zoom level
-      vom raspberry und zeigt sie an. OpenStreetMaps verwendet typischerweise
+    <p>Zur Darstellung wird die Library <a href="http://www.openlayers.org/">openlayers</a>
+      verwendet. Diese lädt die entsprechenden Kartenkacheln je nach Zoom Level
+      vom Raspberry und zeigt sie an. OpenStreetMaps verwendet typischerweise
       diese Library.</p>
-    <p>Man kann sich leicht vorstellen, das bei hohen Zoomleveln schnell große
+    <p>Man kann sich leicht vorstellen, dass bei hohen Zoom Levels schnell große
       Datenmengen zusammenkommen. Daher müssen wir für unsere Kartenkacheln
-      ähnlich vorgehen, wie es auch bei den Papierkarten ist: Für Übersichten
+      ähnlich vorgehen, wie es auch bei den Papierkarten ist: für Übersichten
       ein kleinerer Zoom Level, Detailkarten größer und z.B. Hafenpläne dann mit
-      level 18 oder 19 (60cm/pixel bzw. 30cm/pixel). Um damit arbeiten zu
+      Level 18 oder 19 (60cm/pixel bzw. 30cm/pixel). Um damit arbeiten zu
       können, werden die verschiedenen Detailgrade dann in Layern (Schichten)
       übereinandergelegt. Wenn es für ein Gebiet einen Layer mit besserem
-      (grösserem) zoomlevel gibt, wird dieser angezeigt, wenn nicht, der mit der
-      geringeren Auflösung (ggf. noch vergrössert). Um unsere Anzeigegeräte
+      (grösserem) Zoom Level gibt, wird dieser angezeigt - wenn nicht, der mit
+      der geringeren Auflösung (ggf. noch vergrössert). Um unsere Anzeigegeräte
       nicht zu überlasten, kann man typisch mit 3-5 Kartenlayern arbeiten (je
       nach Gerät...).</p>
     <p>Damit besteht für die Kartenkonvertierung die Aufgabe darin, vorhandene
-      Karten in solche Layer einzusortieren, sie ggf zu reprojezieren und dann
+      Karten in solche Layer einzusortieren, sie ggf zu reprojizieren und dann
       die Kartenkacheln (sowie eine Beschreibungsdatei) zu erzeugen. Das
       erfordert meist eine ganze Menge Rechenleistung (und ggf. Zeit), daher ist
-      das etwas, dass auf einem PC oder Laptop laufen sollte (der pi braucht
+      das etwas, das auf einem PC oder Laptop laufen sollte (der Pi braucht
       potentiell sehr lange dafür). Das ist aber nicht schlimm – man muss das ja
       nur einmal machen. Belohnt wird man dafür mit einer sogenannten
       „blattschnittfreien“ Darstellung.</p>
-    <p>Für den Download gilt Vergleichbares - hier muss man geeignet die
-      zoomlevel und Bereiche auswählen.</p>
-    <p>Das Verfahren dazu hängt von der Quelle ab. Im Moment habe ich support
+    <p>Für den Download gilt Vergleichbares - hier muss man geeignet die Zoom
+      Level und Bereiche auswählen.</p>
+    <p>Das Verfahren dazu hängt von der Quelle ab. Im Moment habe ich Support
       für 3 „Wege“ der Kartenerstellung eingebaut:</p>
     <ul>
       <li>
         <p>Konvertierung von Karten mittels <a href="http://www.gdal.org/">GDAL</a>
-          (z.B. BSB) – hier kann alles gelesen werden, was gdal kann</p>
+          (z.B. BSB) – hier kann alles gelesen werden, was GDAL kann</p>
       </li>
       <li>Nutzung von online Karten (und deren Download) mit Hilfe von <a href="https://mapproxy.org/">MapProxy</a>
-        - über das MapProxy plugin </li>
+        - über das MapProxy Plugin </li>
       <li>
         <p>Nutzung von downloads mit dem <a href="http://mobac.sourceforge.net/">Mobile
             Atlas Creator</a>. </p>
@@ -98,9 +98,9 @@
     <h2><a name="chartformats" id="chartformats"></a>Kartenformate</h2>
     <p>AvNav nutzt als primäres Kartenformat das <a href="http://www.cgtk.co.uk/gemf">GEMF</a>
       Format - das ist ein kompaktes Format - anstelle von sehr vielen einzelnen
-      Files sind diese in einem großen File zusammengefaßt. Mit diesem Format
-      können auch spezielle Funktionen wie eine automatische Anpassung des zoom
-      levels ermöglicht werden.&nbsp;&nbsp;&nbsp; <br>
+      Dateien sind diese in einem großen File zusammengefaßt. Mit diesem Format
+      können auch spezielle Funktionen wie eine automatische Anpassung des Zoom
+      Levels ermöglicht werden.&nbsp;&nbsp;&nbsp; <br>
       Ab der Version 20200325 kann AvNav auch direkt das <a href="https://wiki.openstreetmap.org/wiki/MBTiles">mbtiles</a>
       Format lesen. Bei diesem Format muss ggf. noch die richtige interne
       Anordnung der Kacheln gewählt werden - der Standard is "xyz", es gibt aber
@@ -113,11 +113,11 @@
       nicht wirklich klar geregelt und verschiedene Quellen nutzen das
       unterschiedlich (siehe auch <a href="https://github.com/wellenvogel/avnav/issues/63">Issue
         #63</a>). AvNav hat auch intern xyz und tms genau invers verwendet. Mit
-      der Version 202011xx ignoriert jetzt AvNav diesen Wert (und nimmt tms an).
+      der Version 202011xx ignoriert jetzt AvNav diesen Wert und nimmt tms an.
       Falls er in den Metadaten vorhanden ist, wird die Karte in rot angezeigt,
       über die <a href="userdoc/downloadpage.html">Download-Seite</a> kann dann
       gewählt werden, welche interne Kodierung genutzt werden soll. </p>
-    <p> Zusätzlich können (ab 20200325) auch online Kartenquellen eingebunden
+    <p> Zusätzlich können (ab 20200325) auch Online Kartenquellen eingebunden
       werden, wenn sie ein entsprechendes URL Format unterstützen. Die
       Konfiguration erfolgt über XML Dateien. Ein Beispiel ist die mitgelieferte
       <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/demo/osm-online.xml">Quelle
@@ -139,14 +139,15 @@
       Android erfolgen. Alternativ können die Karten auch direkt in der WebApp
       hochgeladen werden (einige erst ab 20200325). Das Hochladen erfolgt auf
       der <a href="userdoc/downloadpage.html#chartupload">Files/Download Seite</a>.<br>
-      Für Android ist zu beachten, das mbtiles Karten nur gelesen werden können,
-      wenn sie hochgeladen wurden, nicht aus dem externen Karten Verzeichnis.<br>
+      Für Android ist zu beachten, dass mbtiles Karten nur gelesen werden
+      können, wenn sie hochgeladen wurden, nicht aus dem externen Karten
+      Verzeichnis.<br>
       Für mbtiles bitte auch diesen <a href="userdoc/downloadpage.html#mbtiles">Hinweis
         auf der Files/Download Seite</a> beachten.</p>
     <p>In den normalen Versionen (nicht Android) können ab 20200325 auch Karten,
       die erst noch konvertiert werden müssen direkt hochgeladen werden. AvNav
       enthält immer auch den unter <a href="#Convert">Konvertierung</a>
-      beschriebenen Konverter. Der liest Dateien aus seinem import Verzeichnis
+      beschriebenen Konverter. Der liest Dateien aus seinem Import Verzeichnis
       (/home/pi/avnav/data/import) bzw. aus Unterverzeichnissen. Wenn beim <a href="userdoc/downloadpage.html#chartupload">Hochladen</a>
       eine Karte mit einem Dateinamen für den Konverter gewählt wird (z.B.
       .kap), dann wird gefragt, ob diese direkt dem Konverter übergeben werden
@@ -178,20 +179,20 @@
     Der Hauptteil der Konvertierung wird durch tiler_tools durchgeführt (<a href="https://code.google.com/p/tilers-tools/">https://code.google.com/p/tilers-tools/</a>)
     diese sind Bestandteil der Software und müssen nicht extra heruntergeladen
     werden..
-    <p>Die Karten werden per default im Verzeichnis
+    <p>Die Karten werden per Default im Verzeichnis
       &lt;UserHome&gt;/AvNavCharts/out erzeugt (also z.B.
       c:\Users\Andreas\AvNavCharts\out). Zumindest in der Windows GUI kann das
       Verzeichnis gewählt werden. Standarmäßig ensteht für jeden Konverter-Lauf
       eine xxx.gemf Datei, xxx ist dabei der Dateiname der ersten Datei oder der
       Name des ersten gewählten Verzeichnisses.</p>
     <p>Im AvNavCharts Verzeichnis gibt es auch noch ein work-Verzeichnis, dieses
-      sollte nicht gelöscht werden, da dann bei einem Update (z.B.
+      sollte nicht gelöscht werden, da dann bei einem Update (z.B. werden
       Berichtigungen eingepflegt) nur die geänderten Karten neu erzeugt werden
       müssen.</p>
     <p>Die Konvertierung verläuft in 2 Schritten:</p>
     <ul>
       <li>
-        <p>Sortierung der Karten in layer (und ggf. soweit nötig Konvertierung
+        <p>Sortierung der Karten in Layer (und ggf. soweit nötig Konvertierung
           der karten). </p>
       </li>
       <li>
@@ -199,13 +200,13 @@
       </li>
       <li>Erzeugung der gemf Datei</li>
     </ul>
-    <p>Wenn die Datei xxx.gemf rezeugt wurde, diese auf den raspberry <a href="#installation">installieren</a>.<br>
-      Man kann auch die Karte direkt auf dem desktop Computer testen, nach
-      Abschluss der Konvertierung wird der AvNav server gestartet und man kann
+    <p>Wenn die Datei xxx.gemf erzeugt wurde, diese auf den raspberry <a href="#installation">installieren</a>.<br>
+      Man kann auch die Karte direkt auf dem Desktop Computer testen - nach
+      Abschluss der Konvertierung wird der AvNav Server gestartet und man kann
       sich mit einem Browser verbinden.</p>
     <h4><a name="windows" id="windows"></a>Windows</h4>
     <p>Der <a href="install.html#Windows">Net-Installer</a> (AvNavNet...) für
-      windows installiert neben der eigentlichen Konverter-Software auch die
+      Windows installiert neben der eigentlichen Konverter-Software auch die
       nötigen Programme:</p>
     <ul>
       <li>python 2.7.10 (32 Bit)</li>
@@ -223,24 +224,24 @@
     <br>
     <img alt="windows gui" src="avnav-windows-new.png" width="800px"><br>
     <p>Bei (1) können die zu konvertierenden Karten gewählt werden, bei (2)
-      startet die Konvertierung. Es wird ein logfile geschrieben, das man mit
+      startet die Konvertierung. Es wird eine Log Datei geschrieben, die man mit
       "view" anschauen kann (das hätte ich auch gerne, wenn etwas nicht
       funktioniert).</p>
-    <p>Mit den default-Einstellungen startet danach sofort der AvNav Server
+    <p>Mit den Default-Einstellungen startet danach sofort der AvNav Server
       (also die Software, die sonst auf dem Raspberry läuft) und ein Browser
       wird geöffnet, der die App anzeigt.</p>
     <p>Wenn die nötige Software noch nicht installiert wurde, öffnet sich ein
       Dialog, der die Installation anbietet und die nötigen Teile aus dem Netz
-      nachlädt. Mit (5) kann das für ein update wiederholt werden (die aktuell
+      nachlädt. Mit (5) kann das für ein Update wiederholt werden (die aktuell
       vorhandene Version wird angezeigt). Mit (4) kann die nachinstallierte
       Software entfernt werden.</p>
-    <p>Wie im Bild zu sehen liefere ich eine Datei mit NMEA Daten mit (vom
+    <p>Wie im Bild zu sehen, liefere ich eine Datei mit NMEA Daten mit (vom
       Greifswalder Bodden). Es kann natürlich zum Test auch jede andere eigene
       NMEA-log Datei gewählt werden.</p>
     <p>Alternativ kann der Server auch direkt die NMEA Daten von einem
       angeschlossenen seriellen Gerät oder Bluetooth lesen (COM port) oder auch
-      z.B. von einem Raspberry (IP). Wenn spezielle setups erforderlich sind,
-      kann man über custom auch die Server-Konfiguration per Hand bearbeiten,
+      z.B. von einem Raspberry (IP). Wenn spezielle Setups erforderlich sind,
+      kann man über 'custom' auch die Server-Konfiguration per Hand bearbeiten,
       eine Vorlage mit Kommentaren wird mitgeliefert.</p>
     <p>Mit diesem Setup kann die Software damit also auch komplett z.B. and Bord
       auf einem Windows-Laptop benutzt werden. Die Funktionen sind die gleichen
@@ -258,7 +259,7 @@
     <blockquote>
       <div style="font-size:small">
         <p>Der erste Schritt geht relativ schnell. Alle Kartendateien werden
-          gelesen und Auflösung und Abdeckung wird ermittelt (falls nötig wird
+          gelesen, Auflösung und Abdeckung werden ermittelt (falls nötig wird
           konvertiert). Im Ergebnis entsteht im workdir/&lt;name&gt; Verzeichnis
           eine Datei chartlist.xml. Der Aufruf dazu lautet:</p>
         <pre>read_charts.py -o name -m chartlist inputdir [inputdir...]
@@ -285,13 +286,13 @@
     </blockquote>
     <a id="Download" name="Download"></a>
     <h2 class="western"><a name="mapproxy" id="mapproxy"></a>MapProxy plugin</h2>
-    <p>Es gibt ein <a href="https://github.com/wellenvogel/avnav-mapproxy-plugin">plugin</a>,
+    <p>Es gibt ein <a href="https://github.com/wellenvogel/avnav-mapproxy-plugin">Plugin</a>,
       das <a href="https://mapproxy.org/">MapProxy</a> einbindet und damit
-      Zugriff auf viele online Kartenquellen erlaubt. Das plugin unterstützt bei
-      der Konfiguration von MapProxy und erlaubt das komfortable herunterladen
+      Zugriff auf viele Online Kartenquellen erlaubt. Das Plugin unterstützt bei
+      der Konfiguration von MapProxy und erlaubt das komfortable Herunterladen
       von Karten. Für Details siehe die <a href="https://github.com/wellenvogel/avnav-mapproxy-plugin/blob/master/Readme.md">plugin
         Beschreibung</a>.</p>
-    <p>Es bietet viele Funktionen die dem Mobile Atlas Creator ähneln und kann
+    <p>Es bietet viele Funktionen, die dem Mobile Atlas Creator ähneln, und kann
       diesen damit weitgehend ersetzen.</p>
     <h2 class="western">Download von Karten mit dem Mobile Atlas Creator</h2>
     <p>Für die Nutzung des <a href="https://mobac.sourceforge.io/">Mobile Atlas
@@ -302,16 +303,16 @@
     <p>Dazu sollte man (je nach Kartenquelle) z.B. 3 Layer vorsehen: Übersicht(
       Zoom Level 7-10) Navigation (level 10-15), Details (Level 16-18).
       Anschliessend sollte man im MOBAC layerweise vorgehen. Dazu jeweils als
-      gewünschte Zoomlevel die zum Layer gehörigen anklicken (links oben),
+      gewünschte Zoom Level die zum Layer gehörigen anklicken (links oben),
       danach alle Teilbereiche jeweils markieren und unter einem beliebigen
       Namen dem Atlas hinzufügen. Das jeweils für die anderen Layer wiederholen
       (dabei sinnvolle Auswahlen treffen). Anschliessend sollte man die
       Atlas-Konfiguration unter einem beliebigen Namen speichern - die kann man
-      ggf. nochg für weitere Versuche brauchen. Als output Format OsmDroid GEMF
+      ggf. noch für weitere Versuche brauchen. Als output Format OsmDroid GEMF
       (File-&gt;convertAtlasFormat) wählen und die Atlas-Erzeugung starten. Im
       output Verzeichnis entsteht eine xxx.gemf Datei. Diese auf den raspberry <a
         href="#installation">installieren</a>. <br>
       Auf der <a href="mapsources.html">Mapsources Seite</a> sammle ich chart
-      sources für den mobac, die für uns nützlich sein lönnten. </p>
+      sources für den mobac, die für uns nützlich sein könnten. </p>
   </body>
 </html>
