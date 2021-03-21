@@ -24,6 +24,7 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
+import urllib.parse
 
 import ctypes
 import logging
@@ -396,27 +397,6 @@ class AVNUtil(object):
     return cmd.returncode
 
   @classmethod
-  def importFromDir(cls,mdir,scope):
-    """import all pythin files in a directory
-       into the callers scope
-       inspired by https://gitlab.com/aurelien-lourot/importdir/tree/master
-       """
-    regexp="(.+)\.py(c?)$"
-    names=set()
-    for entry in os.listdir(mdir):
-      if os.path.isfile(os.path.join(mdir, entry)):
-        regexp_result = re.search(regexp, entry)
-        if regexp_result:  # is a module file name
-          names.add(regexp_result.groups()[0])
-    sys.path.append(mdir)
-    for module_name in sorted(names):  # for each found module...
-      try:
-        scope[module_name] = __import__(module_name)
-      except:
-        print("error importing module %s"%module_name,traceback.format_exc())
-        raise
-
-  @classmethod
   def getHttpRequestParam(cls,requestparam,name,mantadory=False):
     rt = requestparam.get(name)
     if rt is None:
@@ -552,3 +532,8 @@ class AVNDownload(object):
     if handler is None:
       return "application/octet-stream"
     return handler.guess_type(self.filename)
+
+  @classmethod
+  def fileToAttach(cls,filename):
+    #see https://stackoverflow.com/questions/93551/how-to-encode-the-filename-parameter-of-content-disposition-header-in-http
+    return 'filename="%s"; filename*=utf-8\'\'%s'%(filename,urllib.parse.quote(filename))

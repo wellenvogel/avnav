@@ -37,7 +37,7 @@ from avnav_util import *
 from avnav_worker import *
 import avnav_handlerList
 from avnuserapps import AVNUserAppHandler
-from usb import AVNUsbSerialReader
+from avnusb import AVNUsbSerialReader
 from layouthandler import AVNLayoutHandler
 from charthandler import AVNChartHandler
 

@@ -453,7 +453,7 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
     self.send_response(200)
     size = download.getSize()
     if filename is not None and filename != "" and not noattach:
-      self.send_header("Content-Disposition", "attachment; filename=\"%s\""%filename)
+      self.send_header("Content-Disposition", "attachment; %s"%AVNDownload.fileToAttach(filename))
     self.send_header("Content-type", download.getMimeType(self))
     self.send_header("Content-Length", size)
     self.send_header("Last-Modified", self.date_time_string())
@@ -496,7 +496,7 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
         self.send_response(200)
         fname = self.getRequestParam(requestParam, "filename")
         if fname is not None and fname != "" and self.getRequestParam(requestParam,'noattach') is None:
-          self.send_header("Content-Disposition", 'attachment;filename="%s"'%fname)
+          self.send_header("Content-Disposition", 'attachment;%s'%AVNDownload.fileToAttach(fname))
         self.send_header("Content-type", dl['mimetype'])
         self.send_header("Content-Length", dl['size'])
         self.send_header("Last-Modified", self.date_time_string())

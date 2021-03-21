@@ -168,6 +168,7 @@ class StatusList extends React.Component{
         let self=this;
         let itemList=[];
         let storeData=assign({},this.notifyProps);
+        storeData.serverError=false;
         self.errors=0;
         if (data.handler) {
             data.handler.forEach(function(el){
@@ -202,12 +203,15 @@ class StatusList extends React.Component{
                 self.timer.startTimer();
             },
             (error)=>{
-                let newState={itemList:[]};
                 self.errors++;
-                if (self.errors > 5){
+                if (self.errors > 4){
+                    let newState={itemList:[]};
                     newState.serverError=true;
+                    if (this.props.onChange){
+                        this.props.onChange({serverError:true});
+                    }
+                    this.setState(newState);
                 }
-                this.setState(newState);
                 self.timer.startTimer();
             });
     }

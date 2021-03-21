@@ -93,6 +93,12 @@
            for (let k in fields){
                 let el=document.getElementById(k);
                 let value=fields[k](el);
+                if (k === 'AVNAV_SSID'){
+                    if ( ! value || value.length > 32 || value.match(/ /)){
+                        alert("invalid SSID, 1...32 characters, no space");
+                        return;
+                    }
+                }
                 if (value !== undefined){
                     replace[k]=value;
                     hasReplace=true;

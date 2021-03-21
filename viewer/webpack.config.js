@@ -99,7 +99,7 @@ module.exports = {
 
             {
                 test: /.jsx$|.js$/,
-                exclude: /node_modules|version\.js$/,
+                exclude: /version\.js$/,
                 use: {
                     loader: 'babel-loader',
                     options:
