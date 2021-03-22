@@ -273,14 +273,14 @@ def pluginInfo(cls):<br>  return {
         </tr>
         <tr>
           <td>saveConfigValues<br>
-            (ab 202103xx)</td>
+            (ab 20210322)</td>
           <td>Speichere config Werte für das Plugin in avnav_server.xml. Der
             Parameter muss ein dictionary mit den Werten sein. Das Plugin muss
             sicherstellen, das es später mit diesen Werten wieder starten kann.</td>
         </tr>
         <tr>
           <td>registerEditableParameters<br>
-            (ab 202103xx)</td>
+            (ab 20210322)</td>
           <td>Registriert eine Liste mit config Werten, die zur Laufzeit
             geändert werden können. Der erste Parameter ist eine Liste von
             dictionaries mit den Parameter Beschreibungen, der zweite ein
@@ -292,23 +292,23 @@ def pluginInfo(cls):<br>  return {
         </tr>
         <tr>
           <td>registerRestart<br>
-            (ab 202103xx)</td>
+            (ab 20210322)</td>
           <td>Registriere einen Stop Callback. Damit kann das plugin disabled
             werden.</td>
         </tr>
         <tr>
           <td>unregisterUserApp<br>
-            (ab 202103xx)</td>
+            (ab 20210322)</td>
           <td>Deregistriere eine User App.</td>
         </tr>
         <tr>
           <td>deregisterUsbHandler<br>
-            (ab 202103xx)</td>
+            (ab 20210322)</td>
           <td>Deregistriere eine usb device id (siehe registerUsbHandler)</td>
         </tr>
         <tr>
           <td>shouldStopMainThread<br>
-            (ab 202103xx)</td>
+            (ab 20210322)</td>
           <td>Kann in der Hauptschleife genutzt werden um zu prüfen, ob das
             Plugin gestoppt werden soll.In jedem anderen Thread wird immer True
             zurück gegeben.</td>
