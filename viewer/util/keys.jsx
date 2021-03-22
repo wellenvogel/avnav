@@ -333,7 +333,7 @@ let keys={
         nightChartFade: new Property(30, "NightChartDim(%)", PropertyType.RANGE, [1, 99]), //in %
         dimFade: new Property(0,"Dim Fade(%)",PropertyType.RANGE,[0,60]),
         showDimButton: new Property(true,"Show Dim Button",PropertyType.CHECKBOX),
-        baseFontSize: new Property(12, "Base Font(px)", PropertyType.RANGE, [8, 28]),
+        baseFontSize: new Property(13, "Base Font(px)", PropertyType.RANGE, [8, 28]),
         widgetFontSize: new Property(14, "Widget Base Font(px)", PropertyType.RANGE, [8, 28]),
         allowTwoWidgetRows: new Property(true, "2 widget rows", PropertyType.CHECKBOX),
         showClock: new Property(true, "show clock", PropertyType.CHECKBOX),
