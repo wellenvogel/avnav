@@ -35,33 +35,36 @@ except:
 from socketreaderbase import *
 import avnav_handlerList
 
-class OurBtSocket(bluetooth.BluetoothSocket):
+if hasBluetooth:
+  class OurBtSocket(bluetooth.BluetoothSocket):
 
-  def __init__(self, proto=bluetooth.RFCOMM, _sock=None):
-    super().__init__(proto, _sock)
-    self._closed=False
+    def __init__(self, proto=bluetooth.RFCOMM, _sock=None):
+      super().__init__(proto, _sock)
+      self._closed=False
 
-  def connect(self, addrport):
-    rt=super().connect(addrport)
-    if self._closed:
-      raise Exception("socket closed")
-    return rt
+    def connect(self, addrport):
+      rt=super().connect(addrport)
+      if self._closed:
+        raise Exception("socket closed")
+      return rt
 
-  def send(self, data):
-    if self._closed:
-      raise Exception("socket closed")
-    return super().send(data)
+    def send(self, data):
+      if self._closed:
+        raise Exception("socket closed")
+      return super().send(data)
 
 
-  def recv(self, numbytes):
-    if self._closed:
-      raise Exception("socket closed")
-    return super().recv(numbytes)
+    def recv(self, numbytes):
+      if self._closed:
+        raise Exception("socket closed")
+      return super().recv(numbytes)
 
-  def close(self):
-    self._closed=True
-    return super().close()
-
+    def close(self):
+      self._closed=True
+      return super().close()
+else:
+  class OurBtSocket:
+    pass
 
 #a Worker for reading bluetooth devices
 #it uses a feeder to handle the received data
