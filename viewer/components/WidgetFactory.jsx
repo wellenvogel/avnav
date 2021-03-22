@@ -184,25 +184,20 @@ export const createWidgetParameter=(name,type,list,displayName)=>{
     return createEditableParameter(name,type,list,displayName);
 };
 
-const PREDEFINED_PARAMETERS=[
-    createWidgetParameter('caption',EditableParameter.TYPE.STRING),
-    createWidgetParameter('unit',EditableParameter.TYPE.STRING),
-    createWidgetParameter('formatter', EditableParameter.TYPE.SELECT,()=>{
+
+const getDefaultParameter=(name)=>{
+    if (name === 'caption') return createWidgetParameter('caption',EditableParameter.TYPE.STRING);
+    if (name === 'unit') return createWidgetParameter('unit',EditableParameter.TYPE.STRING);
+    if (name === 'formatterParameters') return createWidgetParameter('formatterParameters',WidgetParameter_TYPE.FORMATTER_PARAM,undefined,"formatter parameters");
+    if (name === 'value') return createWidgetParameter('value',WidgetParameter_TYPE.KEY);
+    if (name === 'className') return createWidgetParameter("className",EditableParameter.TYPE.STRING,undefined,"css class");
+    if (name === 'formatter') return createWidgetParameter('formatter', EditableParameter.TYPE.SELECT,()=>{
         let fl=[];
         for (let k in Formatter){
             if (typeof(Formatter[k]) === 'function') fl.push(k);
         }
         return fl;
-    }),
-    createWidgetParameter('formatterParameters',WidgetParameter_TYPE.FORMATTER_PARAM,undefined,"formatter parameters"),
-    createWidgetParameter('value',WidgetParameter_TYPE.KEY),
-    createWidgetParameter("className",EditableParameter.TYPE.STRING,undefined,"css class")
-];
-
-const getDefaultParameter=(name)=>{
-    for (let k in PREDEFINED_PARAMETERS){
-        if (PREDEFINED_PARAMETERS[k].name === name) return PREDEFINED_PARAMETERS[k];
-    }
+    });
 };
 
 
@@ -235,7 +230,7 @@ class WidgetFactory{
     /**
      *
      * @param widget
-     * @return {WidgetParameter[]|undefined}
+     * @return {EditableParameter[]|undefined}
      */
     getEditableWidgetParameters(widget){
         let widgetData=this.findWidget(widget);
@@ -281,7 +276,9 @@ class WidgetFactory{
                 npdefinition.default=pdefinition.default;
                 pdefinition=npdefinition;
             }
-            if (pdefinition.default === undefined) pdefinition.default=pdefinition.getValue(widgetData);
+            if (pdefinition.default === undefined) {
+                pdefinition.default=pdefinition.getValue(widgetData);
+            }
             rt.push(pdefinition);
         }
         return rt;
@@ -318,6 +315,12 @@ class WidgetFactory{
         }
         let mergedProps = assign({}, e, props, opt_properties);
         if (mergedProps.key === undefined) mergedProps.key = props.name;
+        let editables=this.getEditableWidgetParameters(e);
+        if (editables){
+            editables.forEach((p)=>
+                p.ensureValue(mergedProps)
+            );
+        }
         if (mergedProps.formatter) {
             if (typeof mergedProps.formatter === 'string') {
                 let ff = this.formatter[mergedProps.formatter];
