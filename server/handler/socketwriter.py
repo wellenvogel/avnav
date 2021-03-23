@@ -138,13 +138,13 @@ class AVNSocketWriter(AVNWorker,SocketReader):
   
 
   #the writer for a connected client
-  def client(self,socket,addr,startSequence):
+  def client(self, socketConnection, addr, startSequence):
     infoName="SocketWriter-%s"%(str(addr),)
     self.setInfo(infoName,"sending data",WorkerStatus.RUNNING)
     if self.getBoolParam('read',False):
       clientHandler=threading.Thread(
         target=self.clientRead,
-        args=(socket, addr,startSequence),
+        args=(socketConnection, addr, startSequence),
         name="%s-clientread-%s"%(self.getName(),str(addr))
       )
       clientHandler.daemon=True
@@ -155,8 +155,8 @@ class AVNSocketWriter(AVNWorker,SocketReader):
       filter=filterstr.split(',')
     try:
       seq=0
-      socket.sendall(("avnav_server %s\r\n"%(self.version)).encode('utf-8'))
-      while not self.sequenceChanged(startSequence) and socket.fileno() >= 0:
+      socketConnection.sendall(("avnav_server %s\r\n" % (self.version)).encode('utf-8'))
+      while not self.sequenceChanged(startSequence) and socketConnection.fileno() >= 0:
         hasSend=False
         seq,data=self.feeder.fetchFromHistory(seq,10,nmeafilter=filter,includeSource=True)
         if len(data)>0:
@@ -164,16 +164,19 @@ class AVNSocketWriter(AVNWorker,SocketReader):
             if line.source in self.blackList:
               AVNLog.debug("ignore %s:%s due to blacklist",line.source,line.data)
             else:
-              socket.sendall(line.data.encode('ascii',errors='ignore'))
+              socketConnection.sendall(line.data.encode('ascii', errors='ignore'))
               hasSend=True
         if not hasSend:
           #just throw an exception if the reader potentially closed the socket
-          socket.getpeername()
+          socketConnection.getpeername()
     except Exception as e:
       AVNLog.info("exception in client connection %s",traceback.format_exc())
     AVNLog.info("client disconnected or stop received")
-    socket.shutdown(socket.SHUT_RDWR)
-    socket.close()
+    try:
+      socketConnection.shutdown(socket.SHUT_RDWR)
+      socketConnection.close()
+    except Exception as e:
+      AVNLog.error("error closing socket %s",str(e))
     self.removeHandler(addr)
     self.deleteInfo(infoName)
 
@@ -207,12 +210,16 @@ class AVNSocketWriter(AVNWorker,SocketReader):
     return [UsedResource(UsedResource.T_TCP,self.id,self.getIntParam('port'))]
 
   def _closeSockets(self):
+    AVNLog.info("closing all sockets")
     self.startSequence+=1
     try:
       self.listener.shutdown(socket.SHUT_RDWR)
+    except Exception as e:
+      AVNLog.error("unable to shutdown listener: %s",str(e))
+    try:
       self.listener.close()
-    except:
-      pass
+    except Exception as e:
+      AVNLog.error("unable to close listener: %s",str(e))
     self.maplock.acquire()
     try:
       for k,v in self.addrmap.items():
@@ -243,14 +250,19 @@ class AVNSocketWriter(AVNWorker,SocketReader):
       self.blackList = self.getStringParam('blackList').split(',')
       self.blackList.append(self.getSourceName())
       try:
-        self.listener=socket.socket()
-        self.listener.settimeout(0.5)
-        self.listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.listener.bind((self.getStringParam('address'),self.getIntParam('port')))
-        self.listener.listen(1)
-        AVNLog.info("listening at port address %s",str(self.listener.getsockname()))
-        self.setInfo('main', "listening at %s"%(str(self.listener.getsockname()),), WorkerStatus.RUNNING)
-        while not self.shouldStop():
+        try:
+          self.listener=socket.socket()
+          self.listener.settimeout(0.5)
+          self.listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+          self.listener.bind((self.getStringParam('address'),self.getIntParam('port')))
+          self.listener.listen(1)
+          AVNLog.info("listening at port address %s",str(self.listener.getsockname()))
+          self.setInfo('main', "listening at %s"%(str(self.listener.getsockname()),), WorkerStatus.RUNNING)
+        except Exception as e:
+          self.setInfo('main','unable to create listener at port %s:%s'
+                       %(str(self.getIntParam('port')),str(e)),WorkerStatus.ERROR)
+          raise
+        while not self.shouldStop() and self.listener.fileno() >= 0:
           try:
             outsock,addr=self.listener.accept()
           except socket.timeout:
@@ -279,5 +291,8 @@ class AVNSocketWriter(AVNWorker,SocketReader):
           self.listener.close()
         except:
           pass
+        if self.shouldStop():
+          return
+        self.wait(5)
 avnav_handlerList.registerHandler(AVNSocketWriter)
   
