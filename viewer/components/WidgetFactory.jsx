@@ -215,6 +215,7 @@ class WidgetFactory{
             this.widgetDefinitions.push(widgetList[k]);
         }
         this.getAvailableWidgets=this.getAvailableWidgets.bind(this);
+        this.editableParametersCache={};
     }
     /**
      * find a complete widget description
@@ -233,6 +234,13 @@ class WidgetFactory{
      * @return {EditableParameter[]|undefined}
      */
     getEditableWidgetParameters(widget){
+        let name=widget;
+        if (name === undefined) return;
+        if (typeof(name) !== 'string'){
+            name=name.name;
+        }
+        let plist=this.editableParametersCache[name];
+        if (plist) return plist;
         let widgetData=this.findWidget(widget);
         if (! widgetData) return[];
         let rt=[];
@@ -281,6 +289,7 @@ class WidgetFactory{
             }
             rt.push(pdefinition);
         }
+        this.editableParametersCache[name]=rt;
         return rt;
     }
 
