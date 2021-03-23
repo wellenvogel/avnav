@@ -6,7 +6,7 @@
 	logfile="..\data_windows\avnav.log"
 	debugToLog="true"/>
 <Readers>
-<AVNGpsdFeeder useGpsd="false" listenerPort="0" port="0" />
+<AVNFeeder/>
 <!-- <AVNSerialReader name="com4reader" port="com4" useFeeder="true"/>-->
 <!-- add readers here for com ports that you want to listen on -->
 <!--<AVNSerialReader useFeeder="true" name="com8reader" port="com8" baud="38400" minbaud="4800"/>-->
@@ -44,4 +44,9 @@
 		<Alarm name="anchor" command="sound" parameter="$BASEDIR/../sounds/anchorAlarm.mp3" repeat="20000"/>
 	</AVNAlarmHandler>
 <AVNWpaHandler/>
+<AVNPluginHandler>
+	<builtin-canboat enabled="False"/>
+	<builtin-signalk enabled="False"/>
+</AVNPluginHandler>
+<AVNAvahi enabled="False"/>
 </AVNServer>
