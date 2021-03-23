@@ -235,7 +235,7 @@ class WidgetFactory{
      */
     getEditableWidgetParameters(widget){
         let name=widget;
-        if (name === undefined) return;
+        if (name === undefined) return[];
         if (typeof(name) !== 'string'){
             name=name.name;
         }
