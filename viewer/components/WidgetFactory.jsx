@@ -334,7 +334,8 @@ class WidgetFactory{
             if (typeof mergedProps.formatter === 'string') {
                 let ff = this.formatter[mergedProps.formatter];
                 if (typeof ff !== 'function') {
-                    throw new Error("invalid formatter " + mergedProps.formatter)
+                    //return a string indicating a missing formatter
+                    ff=()=>'?#?#';
                 }
                 mergedProps.formatter = function (v) {
                     let param=mergedProps.formatterParameters;
