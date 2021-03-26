@@ -26,6 +26,15 @@
       der xml Datei fehlschlägt, liest er stattdessen die .ok Datei. Diese
       Funktion soll verhindern, das nach einer Änderung, die AvNav in manchen
       Situation selbst vornimmt, der nächste Start ggf. scheitert.</p>
+    <p>Beginnend ab Version 20210322 <b>es ist nocht mehr nötig, die Datei "per
+        Hand" zu bearbeiten</b>. Stattdessen sollte AvNav selbst (<a href="../userdoc/statuspage.html">Server/Status
+        Seite</a>) für die Berabietung der meisten Parameter genutzt werden. Das
+      vermeidet auch die Notwendigkeit eines Restarts nach Änderungen.<br>
+    </p>
+    <p>Wenn parameter geändert werden müssen, die nicht direkt bearbeitbar sind,
+      sollte das <a href="https://github.com/wellenvogel/avnav-update-plugin">avnav-update-plugin</a>
+      genutzt werden, um die Datei direkt im Browser zu bearbeiten.<br>
+      Die Hinweise hier darunter sind also nur noch eine Zusatzinformation.</p>
     <p>Wenn man Änderungen an der Konfiguration vornimmt, muss AvNav danach neu
       gestartet werden. Wenn AvNav als Systemdienst läuft macht man das mit dem
       Kommando</p>
@@ -1220,7 +1229,38 @@
         Apps</a>. Kategorie 2 (einmal, muss nicht enthalten sein)</p>
     <p>Dieser Handler ist etwas speziell. Initial sind hier keine
       Konfigurationen zu finden, über die WebApp können aber Konfigurationen
-      angelegt werden. Eind händische Änderung ist nicht empfohlen.<br>
+      angelegt werden. Eind händische Änderung ist nicht empfohlen.</p>
+    <h3>AVNAvahiHandler</h3>
+    <p>Steuert die Regsitrierung von AvNav bei Avahi(MDNS/Bonjour). </p>
+    <p> </p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Beschreibung</td>
+          <td>default/template</td>
+        </tr>
+        <tr>
+          <td>serviceName</td>
+          <td>Der Name der in tools sichtbar wird.<br>
+            Das ist nicht der host name den man z.B. in avnav.local benutzt!</td>
+          <td>avnav</td>
+        </tr>
+        <tr>
+          <td>maxRetries</td>
+          <td>Wie viele Wiederholungen macht AvNav, wenn der gewählte Name
+            bereits vergeben ist. Wiederholungen hängen ein "-nn" suffix and den
+            Namen an.</td>
+          <td>20</td>
+        </tr>
+        <tr>
+          <td>timout</td>
+          <td>Timeout bei der Verbindung mit dem&nbsp; avahi daemon (s)</td>
+          <td>10</td>
+        </tr>
+      </tbody>
+    </table>
+    <p><br>
     </p>
   </body>
 </html>

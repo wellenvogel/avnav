@@ -44,11 +44,12 @@
       <a href="install.html">Installation</a>.</p>
     <p>Nach der Installation und dem Start kann man sich mit dem Browser zu
       AvNav verbinden und bekommt die <a href="userdoc/index.html">WebApp</a>.<br>
-      Wenn man unsere Images nutzt, erzeugt der Raspberry ein WLAN (avnav...,
-      Passwort: avnav-secret), wenn man sich mit diesem verbindet kann man AvNav
-      mit http://avnav.avnav.de erreichen.<br>
+      Wenn man unsere Images nutzt, erzeugt der Raspberry ein WLAN (Name und
+      Paßwort können angepasst werden). Für Details, wie man sich nach der
+      Installation mit dem Server verbindet, siehe die <a href="install.html#connecting">Image
+        Beschreibung</a>. <br>
       Wenn man über einen anderen Weg mit dem AvNav Server verbunden ist, kann
-      man http://avnav.local:8080 benutzen (oder die IP Adresse ders Servers).<br>
+      man http://avnav.local benutzen (oder die IP Adresse ders Servers).<br>
       Für IOS und Android Geräte ist es empfehlenswerte, einen <a href="https://de.wikipedia.org/wiki/Bonjour_%28Apple%29">Bonjour</a>
       Browser zu nutzen. Dieser kann AvNav im lokalen Netz finden, so dass man
       ohne Adresseingabe sofort den Browser starten kann.</p>
@@ -69,8 +70,8 @@
       werden nach seriellen Schnittstellen abgesucht, und an den gefundenen wird
       die Baudrate automatisch ermittelt. Je nach gewählter Installation ist
       meist ein Empfänger für Udp Daten auf Port 34667 aktiv.</p>
-    <p>Für weitergehende Anforderungen kann eine detaillierte Konfiguration in
-      der Datei <a href="hints/configfile.html">avnav_server.xml</a>
+    <p>Für weitergehende Anforderungen kann eine detaillierte Konfiguration des
+      Servers über die <a href="userdoc/statuspage.html">Server/Status Seite</a>
       vorgenommen werden. Eine Anpassung des Aussehens kann über die <a href="userdoc/settingspage.html">Einstellungen</a>,
       über <a href="hints/layouts.html">Anpassungen des Layouts</a> und über <a
         href="hints/userjs.html">nutzerdefinierten Code</a>/<a href="hints/usercss.html">CSS</a>
@@ -150,6 +151,9 @@
         Seite</a>, Reiter Karten <img src="viewerimages/icons-new/map2.svg" alt=""
         class="inlineimage">. Aussnahme: o-charts Karten, diese werden über das
       <a href="hints/ocharts.html">o-charts Plugin</a> hochgeladen.</p>
+    <p>Mit dem <a href="https://github.com/wellenvogel/avnav-mapproxy-plugin">mapproxy-plugin</a>
+      kann AvNav verschiedene Online-Karten einbinden. Bereiche dieser Karten
+      können mit dem plugin heruntergeladen werden für eine offline Nutzung.</p>
     <p>Weitere Details im Kapitel <a href="charts.html">Karten</a>.</p>
     <h2>Anzeigen</h2>
     <p>Auf der <a href="userdoc/navpage.html">Navigations-Seite</a> werden auf
@@ -251,7 +255,10 @@
     <p>AvNav kann in verschiedener Weise an eigene Bedürfnisse angepasst werden.
       Da die gesamte Darstellung im Browser abläuft, kann man das Aussehen mit <a
         href="hints/usercss.html">CSS</a> anpassen.</p>
-    <p>Die Konfiguration des Servers arfolgt über die Datei <a href="hints/configfile.html">avnav_server.xml</a>.</p>
+    <p>Die Konfiguration des Servers arfolgt über die Datei <a href="hints/configfile.html">avnav_server.xml</a>.
+      Eine Änderung sollte im Normalfall jedoch nicht in der Datei direkt
+      erfolgen, sondern über die Bearbeitungsmöglichkeiten auf der <a href="userdoc/statuspage.html">Server/Status
+        Seite</a>.</p>
     <p>Neben der Anpassung der Layouts im <a href="hints/layouts.html">Layout
         Editor</a> können leicht eigene Anzeigen mit ein wenig <a href="hints/userjs.html">Java
         Script</a> code eingebunden werden.</p>

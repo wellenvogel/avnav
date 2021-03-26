@@ -26,8 +26,16 @@
       parsing of the config file is failing it will fall back to this .ok file.
       With this fallback handling it will be ensured that AvNav can start up
       even if a change of the original config file (what AvNav is doing in some
-      situations) leaves the file in a defect state. If you don't want thsi
+      situations) leaves the file in a defect state. If you don't want this
       fallback (for testing) add the -e command line switch.</p>
+    <p>Starting from 20210322 <b>it should not be necessary any more to change
+        the config file "by hand"</b>. Instead use AvNav itself (<a href="../userdoc/statuspage.html">Server/Status
+        page</a>) to edit most parts of the configuration. This also avoids the
+      need of a restart when changing parameters.</p>
+    <p>If you would have to change parts not being editable there you still can
+      use the <a href="https://github.com/wellenvogel/avnav-update-plugin">avnav-update-plugin</a>
+      to edit it directly from within your browser.<br>
+      So the following part is here just for reference.</p>
     <p>If you change the avnav_server.xml you need to restart AvNav. If it is
       running as a system service you can do this with the command</p>
     <div class="code">sudo systemctl restart avnav
@@ -1192,7 +1200,38 @@
         Apps</a>. category 2 (once, optional)</p>
     <p>This is somehow a special handler. Normally initially there should be no
       configuration. Within the App you can configure the user apps. Manual
-      change of the configuration is not recommended.<br>
-    </p>
+      change of the configuration is not recommended.</p>
+    <h3>AVNAvahiHandler</h3>
+    <p>Controls how AvNav registers at Avahi(MDNS). </p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Description</td>
+          <td>default/template</td>
+        </tr>
+        <tr>
+          <td>serviceName</td>
+          <td>The name that will be visible in tools that are able to browse
+            MDNS information.<br>
+            This is not the host name that you would use in e.g. avnav.local!</td>
+          <td>avnav</td>
+        </tr>
+        <tr>
+          <td>maxRetries</td>
+          <td>How many retries AvNav would make if the name is already used by
+            someone else. Retries would add a "-nn" suffix to the name.</td>
+          <td>20</td>
+        </tr>
+        <tr>
+          <td>timout</td>
+          <td>timeout when connecting to the avahi daemon (s)</td>
+          <td>10</td>
+        </tr>
+      </tbody>
+    </table>
+    <p></p>
+    <p><br>
+       </p>
   </body>
 </html>

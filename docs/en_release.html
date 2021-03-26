@@ -39,6 +39,91 @@ sudo systemctl start avnav</div>
     <br>
     <div> </div>
     <h2>Versions</h2>
+    <p> <br>
+      <span style="font-weight: bold;">20210323</span> <a title="release/20210323"
+        href="../downloads/release/20210323">link</a> </p>
+    <ul>
+    </ul>
+    Bugfixes for 20210322<br>
+    <ul>
+      <li>Windows: AvNav does not start after the update</li>
+      <li>Windows: SocketWriter cannot be modified</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/119">#119</a>:
+        Crash in the app with linear Gauges</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/120">#120</a>:
+        Crash in the app if a formatter is not existing (any more)</li>
+      <li>Defaults for widgets in layout editor are not set correctly (e.g.
+        colors at gauges)</li>
+      <li>Crash in the app with Date/Time formatters if there is no or invalid
+        data</li>
+    </ul>
+    new Windows Installer
+    <p><span style="font-weight: bold;">20210322</span> <a title="release/20210322"
+        href="../downloads/release/20210322">link</a> </p>
+    <p>The biggest change is the ability to directly edit the server
+      configuration (e.g. adding new interfaces) from within AvNav. This
+      requires all plugins to be updated to their newest versions (use the
+      updater plugin).</p>
+    AvNav Core:<br>
+    <ul>
+      <li>You can now edit the configuration of the server in the AvNav App (<a
+          href="userdoc/statuspage.html">Server/Status page</a>), changes will
+        become effective without restart</li>
+      <li>When using charts with empty layers (like many mbtiles files) AvNav
+        will now zoom up lower resolution tiles to avoid empty areas in the
+        display</li>
+      <li>You can now scale the Map display (Settings/Map). This can help to
+        improve the visibility on High DPI displays</li>
+      <li>There is a "technology preview" for a split window mode - access with
+        http://address:port/viewer/viewer_split.html, see <a href="../viewern/viewer_split.html?navurl=../viewer/avnav_navi.php&amp;amp;readOnlyServer=true">demo</a></li>
+      <li>Correct handling of symbol sizes on High DPI displays</li>
+      <li>direct registration at MDNS (Bonjour), you can change the name</li>
+      <li>Extensions in the <a href="hints/plugins.html">plugin API</a></li>
+    </ul>
+    <p>Raspberry Setup (Images)</p>
+    <ul>
+      <li>support for the <a href="https://www.gedad.de/projekte/projekte-f%C3%BCr-privat/gedad-marine-control-server/">MCS
+          from GeDad</a>, see <a href="install.html">image description</a></li>
+      <li>allow for <a href="install.html">some customization of the image</a>
+        with a config file avnav.conf including a GUI to create it</li>
+      <li>ensure Visibility of both AvNav and SignalK in MDNS/Bonjour</li>
+      <li>more stable Wifi by switching of wifi power management</li>
+      <li>automatically set up an IP address on the ethernet interface if not
+        connected to a DHCP server</li>
+      <li>Forward port 80 from all interfaces to AvNav (8080)</li>
+    </ul>
+    <p>Smaller Bugfixes and Addons</p>
+    <ul>
+      <li>handle utf-8 in download names correctly</li>
+      <li>keep status on status page until we get server error, correctly show
+        and hide server error</li>
+      <li>increase network timeout</li>
+      <li>work around strange height bug on ios 12,13 safari</li>
+      <li>always use shutdown when closing sockets, re-enable timeout for socket
+        reader</li>
+      <li>#113: merge pr, correctly handle null values in SK</li>
+      <li>#117: prevent browser 2 finger zoom</li>
+      <li>restart avahi when changing the system time</li>
+      <li>avoid hiding second buttons on status page</li>
+      <li>decrease default font sizes</li>
+      <li>create an error gemf for failed conversions, add importer log display
+        on download page, timeout importer status items</li>
+      <li>allow opensuse install</li>
+      <li>show plugin info in status if startup fails</li>
+      <li>restart server</li>
+      <li>log display</li>
+      <li>server download log</li>
+      <li>cleanup name handling and thread id for logging</li>
+      <li>better timeout handling for serial (avoid reopen after 1s)</li>
+      <li>rename AVNGpsdFeeder to AVNFeeder, completely remove gpsd related code</li>
+      <li>#106: avoid writing errors to the log if empty positions lead to
+        decode errors</li>
+      <li>merge #105</li>
+      <li>adapt to new handling of com port names on windows</li>
+      <li>correct windows download links</li>
+    </ul>
+    <ul>
+    </ul>
     <p> <span style="font-weight: bold;">20210115</span> <a title="release/20210115"
         href="../downloads/release/20210115">link</a> </p>
     <ul>

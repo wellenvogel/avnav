@@ -1,7 +1,6 @@
 <html>
-<head>
-<meta http-equiv="content-type" content="text/html; charset=utf-8">
-    
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <title>AvNav OCharts</title>
     <link href="../styles.css" rel="stylesheet" type="text/css">
   </head>
@@ -20,9 +19,9 @@
       werden.</p>
     <p>Um die Karten in AvNav darzustellen, müssen sie zunächst einmal in Raster
       Karten umgewandelt werden. Das erledigt ein neues Plugin für AvNav
-      (avnav-ocharts). Diese Umwandlung erfolgt in einen Cache-Speicher nach 
-	  dem Herunterladen, und im laufenden Betrieb spätestens dann, wenn die Karten dargestellt werden sollen. Damit kann mit diesen
-      Karten weitgehend normal gearbeitet werden, ohne dass man sich um diesen
+      (avnav-ocharts). Die Umwandlung erfolgt dabei im laufenden Betrieb immer
+      dann, wenn die Karten dargestellt werden sollen (teilweise initial in einen cache). Damit kann mit diesen
+      Karten weitgehend normal gearbeitet werden ohne dass man sich um diesen
       Prozess kümmern muss.</p>
     <p>Das Handling der Karten erfolgt dabei vollständig durch das Plugin - das
       betrifft auch die Installation (die Karten können nicht über die normale <a
@@ -381,8 +380,7 @@
           der Speicherverbrauch vom Xvfb nicht mehr so stark</li>
         <li>Hinweis: Nach Installation per Hand mit dpkg (erzeugt einen Fehler)
           müssen ggf mit
-          
-<div class="code"> sudo apt-get install -f</div>
+          <div class="code"> sudo apt-get install -f</div>
           die neuen Abhängigkeiten nachinstalliert werden. </li>
       </ul>
       <li>20200710 <a href="https://www.wellenvogel.net/software/avnav/downloads/release-ochartsplugin/20200710/avnav-ocharts-plugin_20200710-raspbian-buster_armhf.deb">Paket</a></li>

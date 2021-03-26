@@ -184,25 +184,20 @@ export const createWidgetParameter=(name,type,list,displayName)=>{
     return createEditableParameter(name,type,list,displayName);
 };
 
-const PREDEFINED_PARAMETERS=[
-    createWidgetParameter('caption',EditableParameter.TYPE.STRING),
-    createWidgetParameter('unit',EditableParameter.TYPE.STRING),
-    createWidgetParameter('formatter', EditableParameter.TYPE.SELECT,()=>{
+
+const getDefaultParameter=(name)=>{
+    if (name === 'caption') return createWidgetParameter('caption',EditableParameter.TYPE.STRING);
+    if (name === 'unit') return createWidgetParameter('unit',EditableParameter.TYPE.STRING);
+    if (name === 'formatterParameters') return createWidgetParameter('formatterParameters',WidgetParameter_TYPE.FORMATTER_PARAM,undefined,"formatter parameters");
+    if (name === 'value') return createWidgetParameter('value',WidgetParameter_TYPE.KEY);
+    if (name === 'className') return createWidgetParameter("className",EditableParameter.TYPE.STRING,undefined,"css class");
+    if (name === 'formatter') return createWidgetParameter('formatter', EditableParameter.TYPE.SELECT,()=>{
         let fl=[];
         for (let k in Formatter){
             if (typeof(Formatter[k]) === 'function') fl.push(k);
         }
         return fl;
-    }),
-    createWidgetParameter('formatterParameters',WidgetParameter_TYPE.FORMATTER_PARAM,undefined,"formatter parameters"),
-    createWidgetParameter('value',WidgetParameter_TYPE.KEY),
-    createWidgetParameter("className",EditableParameter.TYPE.STRING,undefined,"css class")
-];
-
-const getDefaultParameter=(name)=>{
-    for (let k in PREDEFINED_PARAMETERS){
-        if (PREDEFINED_PARAMETERS[k].name === name) return PREDEFINED_PARAMETERS[k];
-    }
+    });
 };
 
 
@@ -220,6 +215,7 @@ class WidgetFactory{
             this.widgetDefinitions.push(widgetList[k]);
         }
         this.getAvailableWidgets=this.getAvailableWidgets.bind(this);
+        this.editableParametersCache={};
     }
     /**
      * find a complete widget description
@@ -235,9 +231,16 @@ class WidgetFactory{
     /**
      *
      * @param widget
-     * @return {WidgetParameter[]|undefined}
+     * @return {EditableParameter[]|undefined}
      */
     getEditableWidgetParameters(widget){
+        let name=widget;
+        if (name === undefined) return[];
+        if (typeof(name) !== 'string'){
+            name=name.name;
+        }
+        let plist=this.editableParametersCache[name];
+        if (plist) return plist;
         let widgetData=this.findWidget(widget);
         if (! widgetData) return[];
         let rt=[];
@@ -281,9 +284,12 @@ class WidgetFactory{
                 npdefinition.default=pdefinition.default;
                 pdefinition=npdefinition;
             }
-            if (pdefinition.default === undefined) pdefinition.default=pdefinition.getValue(widgetData);
+            if (pdefinition.default === undefined) {
+                pdefinition.default=pdefinition.getValue(widgetData);
+            }
             rt.push(pdefinition);
         }
+        this.editableParametersCache[name]=rt;
         return rt;
     }
 
@@ -318,11 +324,18 @@ class WidgetFactory{
         }
         let mergedProps = assign({}, e, props, opt_properties);
         if (mergedProps.key === undefined) mergedProps.key = props.name;
+        let editables=this.getEditableWidgetParameters(e);
+        if (editables){
+            editables.forEach((p)=>
+                p.ensureValue(mergedProps)
+            );
+        }
         if (mergedProps.formatter) {
             if (typeof mergedProps.formatter === 'string') {
                 let ff = this.formatter[mergedProps.formatter];
                 if (typeof ff !== 'function') {
-                    throw new Error("invalid formatter " + mergedProps.formatter)
+                    //return a string indicating a missing formatter
+                    ff=()=>'?#?#';
                 }
                 mergedProps.formatter = function (v) {
                     let param=mergedProps.formatterParameters;

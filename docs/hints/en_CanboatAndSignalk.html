@@ -94,10 +94,17 @@
       received from canboat. On the signalk side you have to configure an
       appropriate channel for that (again already available in the images). On
       AvNav side the port is 34568 (see above).</p>
+    <p>If you are using AvNav on OpenPlotter the signal flow will be different.
+      NMEA0183 data will all go directly into SignalK and only from there they
+      will be routed to AvNav. You should not configure any NMEA0183 input
+      devices in AvNav.</p>
     <p>To get all data from signalk AvNav is polling (once per second) the URL</p>
     <div class="code">http://localhost:3000/signalk/v1/api/vessels/self</div>
     <p>and will store all the "value" entries locally below</p>
     <div class="code">gps.signalk....</div>
+    <p>Since Version 20201202 additionally a websocket connection will be
+      created to get the deltas much faster. Polling will still be there but
+      only every 10s.</p>
     <p>This way the data is available to the app and can be displayed in
       widgtes. A ready to go <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/signalk/example.json">layout</a>
       is available and you can adapt this one - or your own - via the <a href="layouts.html">layout

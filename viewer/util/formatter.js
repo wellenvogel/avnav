@@ -181,7 +181,7 @@ formatDirection.parameters=[
  * @returns {string}
  */
 const formatTime=function(curDate){
-    if (! curDate) return "--:--:--";
+    if (! curDate || ! (curDate instanceof Date)) return "--:--:--";
     let datestr=this.formatDecimal(curDate.getHours(),2,0).replace(" ","0")+":"+
         this.formatDecimal(curDate.getMinutes(),2,0).replace(" ","0")+":"+
         this.formatDecimal(curDate.getSeconds(),2,0).replace(" ","0");
@@ -194,7 +194,7 @@ formatTime.parameters=[]
  * @returns {string} hh:mm
  */
 const formatClock=function(curDate){
-    if (! curDate) return "--:--";
+    if (! curDate || ! (curDate instanceof Date)) return "--:--";
     let datestr=this.formatDecimal(curDate.getHours(),2,0).replace(" ","0")+":"+
         this.formatDecimal(curDate.getMinutes(),2,0).replace(" ","0");
     return datestr;
@@ -206,6 +206,7 @@ formatClock.parameters=[]
  * @returns {string}
  */
 const formatDateTime=function(curDate){
+    if (! curDate || ! (curDate instanceof Date)) return "----/--/-- --:--:--";
     let datestr=this.formatDecimal(curDate.getFullYear(),4,0)+"/"+
         this.formatDecimal(curDate.getMonth()+1,2,0)+"/"+
         this.formatDecimal(curDate.getDate(),2,0)+" "+
@@ -217,6 +218,7 @@ const formatDateTime=function(curDate){
 formatDateTime.parameters=[];
 
 const formatDate=function(curDate){
+    if (! curDate || ! (curDate instanceof Date)) return "----/--/--";
     let datestr=this.formatDecimal(curDate.getFullYear(),4,0)+"/"+
         this.formatDecimal(curDate.getMonth()+1,2,0)+"/"+
         this.formatDecimal(curDate.getDate(),2,0);

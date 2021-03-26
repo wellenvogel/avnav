@@ -62,6 +62,9 @@ class EditWidgetDialog extends React.Component{
             let newState={
                 widget: assign({weight:this.state.widget.weight},nvalues),
                 parameters:WidgetFactory.getEditableWidgetParameters(nvalues.name)};
+            newState.parameters.forEach((p)=>{
+                p.setDefault(newState.widget);
+            });
             this.setState(newState);
         }
         else {
