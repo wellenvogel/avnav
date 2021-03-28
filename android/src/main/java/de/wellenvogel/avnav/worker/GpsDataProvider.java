@@ -48,6 +48,9 @@ public abstract class GpsDataProvider {
             this.numUsed=numUsed;
             this.gpsEnabled=(numUsed>0)?true:false;
         }
+        public SatStatus(SatStatus other){
+            this(other.numSat,other.numUsed);
+        }
         public String toString(){
             return "Sat num="+numSat+", used="+numUsed;
         }
@@ -63,7 +66,7 @@ public abstract class GpsDataProvider {
 
     public static class Properties{
         int connectTimeout=5;
-        long postionAge=10; //max allowed age of position
+        long postionAge=10000; //max allowed age of position
         long auxiliaryAge=1200; //20min
         long aisLifetime=1200; //20 min
         long aisCleanupInterval=60; //1min
@@ -73,6 +76,7 @@ public abstract class GpsDataProvider {
         String ownMmsi=null;
         String nmeaFilter=null;
         boolean sendPosition=false;
+        long readWait=1000; //ms
     };
 
     /**

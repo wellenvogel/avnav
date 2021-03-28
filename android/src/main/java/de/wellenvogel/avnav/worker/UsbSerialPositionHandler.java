@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.util.NmeaQueue;
 
 /**
  * Created by andreas on 25.12.14.
@@ -153,8 +154,8 @@ public class UsbSerialPositionHandler extends SocketPositionHandler {
         }
     }
 
-    UsbSerialPositionHandler(Context ctx, UsbDevice device,String baud, Properties prop){
-        super("UsbSerialPositionHandler",ctx,new UsbSerialSocket(ctx,device,baud),prop);
+    UsbSerialPositionHandler(Context ctx, UsbDevice device, String baud, Properties prop, NmeaQueue queue){
+        super("UsbSerialPositionHandler",ctx,new UsbSerialSocket(ctx,device,baud),prop,queue);
     }
 
     public static UsbDevice getDeviceForName(Context ctx,String name){

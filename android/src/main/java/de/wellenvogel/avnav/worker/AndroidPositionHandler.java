@@ -8,6 +8,8 @@ import android.widget.Toast;
 import net.sf.marineapi.nmea.sentence.RMCSentence;
 
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.util.NmeaQueue;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -30,15 +32,15 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
     private Context context;
     private boolean isRegistered=false;
     private long timeOffset=0;
-    private INmeaLogger nmeaLogger;
+    private NmeaQueue queue;
 
 
     private static final String LOGPRFX="Avnav:AndroidPositionHandler";
     private boolean stopped=false;
 
-    AndroidPositionHandler(Context ctx, long timeOffset){
+    AndroidPositionHandler(Context ctx, long timeOffset, NmeaQueue queue){
         this.context=ctx;
-        if (ctx instanceof INmeaLogger) nmeaLogger=(INmeaLogger)ctx;
+        this.queue=queue;
         this.timeOffset=timeOffset;
         locationService=(LocationManager)context.getSystemService(context.LOCATION_SERVICE);
         tryEnableLocation(true);
@@ -73,15 +75,14 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
         AvnLog.d(LOGPRFX, "location: changed, acc=" + location.getAccuracy() + ", provider=" + location.getProvider() +
                 ", date=" + new Date((location != null) ? location.getTime() : 0).toString());
         this.location=new Location(location);
-        if (nmeaLogger != null) {
             try {
                 //build an NMEA RMC record and write out
                 RMCSentence rmc=positionToRmc(location);
-                nmeaLogger.logNmea(rmc.toSentence());
+                queue.add(rmc.toSentence(),getName());
             }catch(Exception e){
                 AvnLog.e("unable to log NMEA data: "+e);
             }
-        }
+
         lastValidLocation=System.currentTimeMillis();
 
     }
@@ -180,18 +181,7 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
         return rt;
     }
 
-    @Override
-    public SatStatus getSatStatus(){
-        SatStatus rt=new SatStatus(0,0);
-        GpsStatus status=locationService.getGpsStatus(null);
-        for (GpsSatellite s: status.getSatellites()){
-            rt.numSat++;
-            if (s.usedInFix()) rt.numUsed++;
-        }
-        rt.gpsEnabled=isRegistered;
-        AvnLog.d(LOGPRFX,"getSatStatus returns "+rt);
-        return rt;
-    }
+
 
     @Override
     public boolean handlesNmea() {
@@ -212,16 +202,6 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
      * get the current position data
      * @return
      */
-    @Override
-    public JSONObject getGpsData() throws JSONException{
-        Location curLoc=getCurrentLocation();
-        return getGpsData(curLoc);
-    }
-
-    @Override
-    public Location getLocation() {
-        return getCurrentLocation();
-    }
 
     @Override
     public void onGpsStatusChanged(int event) {
@@ -232,22 +212,6 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
     JSONObject getHandlerStatus() throws JSONException {
         JSONObject item=new JSONObject();
         item.put("name","internal GPS");
-        GpsDataProvider.SatStatus st=this.getSatStatus();
-        Location loc=this.getLocation();
-        if (loc != null) {
-            item.put("info", "valid position, sats: "+st.numSat+" / "+st.numUsed+", acc="+loc.getAccuracy());
-            item.put("status", GpsDataProvider.STATUS_NMEA);
-        }
-        else {
-            if (st.gpsEnabled) {
-                item.put("info", "sats: " + st.numSat + " / " + st.numUsed);
-                item.put("status", GpsDataProvider.STATUS_STARTED);
-            }
-            else{
-                item.put("info", "disabled");
-                item.put("status", GpsDataProvider.STATUS_ERROR);
-            }
-        }
         return item;
     }
 }

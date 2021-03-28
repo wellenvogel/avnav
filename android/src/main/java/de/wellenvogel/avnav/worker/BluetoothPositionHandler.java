@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.util.NmeaQueue;
 
 import java.io.IOException;
 import java.util.Set;
@@ -13,8 +14,8 @@ import java.util.Set;
  */
 public class BluetoothPositionHandler extends SocketPositionHandler {
 
-    BluetoothPositionHandler(Context ctx, BluetoothDevice device, Properties prop) throws IOException {
-        super("BluetoothPositionHandler",ctx,new AbstractSocket(device,prop.connectTimeout),prop);
+    BluetoothPositionHandler(Context ctx, BluetoothDevice device, Properties prop, NmeaQueue queue) throws IOException {
+        super("BluetoothPositionHandler",ctx,new AbstractSocket(device,prop.connectTimeout),prop,queue);
     }
 
     /**

@@ -34,6 +34,7 @@ import de.wellenvogel.avnav.settings.AudioEditTextPreference;
 import de.wellenvogel.avnav.settings.NmeaSettingsFragment;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
+import de.wellenvogel.avnav.util.NmeaQueue;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -98,6 +99,8 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     private PositionWriter positionWriter;
     private Thread positionWriterThread;
     private RouteHandler.RoutePoint lastAlarmWp=null;
+    private final NmeaQueue queue=new NmeaQueue();
+    private Decoder decoder;
     long trackMintime;
     Alarm lastNotifiedAlarm=null;
     boolean notificationSend=false;
@@ -375,12 +378,13 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
             registerReceiver(usbReceiver, new IntentFilter(UsbManager.ACTION_USB_DEVICE_DETACHED));
             receiverRegistered=true;
         }
+        decoder=new Decoder("decoder",this,queue,new GpsDataProvider.Properties());
         if (nmeaMode.equals(Constants.MODE_INTERNAL)){
             if (internalProvider == null || internalProvider.isStopped()) {
                 AvnLog.d(LOGPRFX,"start internal provider");
                 GpsDataProvider.Properties prop=new GpsDataProvider.Properties();
                 try {
-                    internalProvider = new AndroidPositionHandler(this, 1000 * AvnUtil.getLongPref(prefs, Constants.GPSOFFSET, prop.timeOffset));
+                    internalProvider = new AndroidPositionHandler(this, 1000 * AvnUtil.getLongPref(prefs, Constants.GPSOFFSET, prop.timeOffset),queue);
                 }catch (Exception i){
                     Log.e(LOGPRFX,"unable to start external service: "+i.getLocalizedMessage());
                 }
@@ -405,7 +409,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
                     prop.readNmea=nmeaMode.equals(Constants.MODE_IP);
                     prop.nmeaFilter=prefs.getString(Constants.NMEAFILTER,null);
                     prop.sendPosition=prefs.getBoolean(Constants.AISSENDPOS,false) && (prop.readAis && ! prop.readNmea);
-                    externalProvider=new IpPositionHandler(this,addr,prop);
+                    externalProvider=new IpPositionHandler(this,addr,prop,queue);
                 }catch (Exception i){
                     Log.e(LOGPRFX,"unable to start external service: "+i.getLocalizedMessage());
                 }
@@ -433,7 +437,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
                     prop.timeOffset=1000*AvnUtil.getLongPref(prefs,Constants.BTOFFSET,prop.timeOffset);
                     prop.nmeaFilter=prefs.getString(Constants.NMEAFILTER,null);
                     prop.sendPosition=prefs.getBoolean(Constants.AISSENDPOS,false) && (prop.readAis && ! prop.readNmea);
-                    bluetoothProvider=new BluetoothPositionHandler(this,dev,prop);
+                    bluetoothProvider=new BluetoothPositionHandler(this,dev,prop,queue);
                 }catch (Exception i){
                     Log.e(LOGPRFX,"unable to start external service "+i.getLocalizedMessage());
                 }
@@ -462,7 +466,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
                     prop.timeOffset=1000*AvnUtil.getLongPref(prefs,Constants.BTOFFSET,prop.timeOffset);
                     prop.nmeaFilter=prefs.getString(Constants.NMEAFILTER,null);
                     prop.sendPosition=prefs.getBoolean(Constants.AISSENDPOS,false) && (prop.readAis && ! prop.readNmea);
-                    usbProvider =new UsbSerialPositionHandler(this,dev,prefs.getString(Constants.USBBAUD,"4800"),prop);
+                    usbProvider =new UsbSerialPositionHandler(this,dev,prefs.getString(Constants.USBBAUD,"4800"),prop,queue);
                 }catch (Exception i){
                     Log.e(LOGPRFX,"unable to start external service "+i.getLocalizedMessage());
                 }
@@ -645,6 +649,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
                 provider.stop();
             }
         }
+        decoder.stop();
         //this is not completely OK: we could fail to write our last track points
         //if we still load the track - but otherwise we could reeally empty the track
         try {
@@ -769,16 +774,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
 
 
     public GpsDataProvider.SatStatus getSatStatus(){
-        GpsDataProvider.SatStatus rt=new GpsDataProvider.SatStatus(0,0);
-        if (! isRunning ) return rt;
-        for (GpsDataProvider provider: getAllProviders()){
-            if (isProviderActive(provider) && provider.handlesNmea()){
-                rt=provider.getSatStatus();
-                AvnLog.d(LOGPRFX,"getSatStatus returns "+rt);
-                return rt;
-            }
-        }
-        return rt;
+        return decoder.getSatStatus();
     }
 
 
@@ -866,13 +862,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     }
 
     public JSONObject getGpsData() throws JSONException{
-        JSONObject rt=null;
-        for (GpsDataProvider provider: getAllProviders()){
-            if (isProviderActive(provider) && provider.handlesNmea()){
-                rt=provider.getGpsData();
-                break;
-            }
-        }
+        JSONObject rt=decoder.getGpsData();
         if (rt == null){
             rt=new JSONObject();
         }
@@ -884,28 +874,11 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     }
 
     private Location getLocation(){
-        for (GpsDataProvider provider: getAllProviders()){
-            if (isProviderActive(provider) && provider.handlesNmea()) return provider.getLocation();
-        }
-        return null;
+        return decoder.getLocation();
     }
 
     public JSONArray getAisData(double lat,double lon, double distance){
-        JSONArray rt=new JSONArray();
-        for (GpsDataProvider h: getAllProviders()){
-            if (h != null){
-                try {
-                    JSONArray items = h.getAisData(lat, lon, distance);
-                    if (items == null) continue;
-                    for (int i = 0; i < items.length(); i++) {
-                        rt.put(items.get(i));
-                    }
-                }catch (JSONException e){
-                    Log.e(LOGPRFX,"exception while merging AIS data: "+e.getLocalizedMessage());
-                }
-            }
-        }
-        return rt;
+        return decoder.getAisData(lat,lon,distance);
     }
 
     public void setMediaUpdater(IMediaUpdater u){
@@ -930,56 +903,48 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
      * ais: [ source: IP, status: yellow, info: connected to 10.222.9.1:34567}
      * @throws JSONException
      */
-    public JSONObject getNmeaStatus() throws JSONException{
-        JSONObject nmea=new JSONObject();
-        nmea.put("source","unknown");
-        nmea.put("status","red");
-        nmea.put("info","disabled");
-        JSONObject ais=new JSONObject();
-        ais.put("source","unknown");
-        ais.put("status","red");
-        ais.put("info","disabled");
-        for (GpsDataProvider provider: getAllProviders()) {
-            if (isProviderActive(provider)) {
-                GpsDataProvider.SatStatus st = provider.getSatStatus();
-                Location loc = provider.getLocation();
-                String addr = provider.getConnectionId();
-                if (provider.handlesNmea()) {
-                    nmea.put("source", provider.getName());
-                    if (loc != null) {
-                        nmea.put("status", "green");
-                        nmea.put("info", "(" + addr + ") sats: " + st.numSat + " / " + st.numUsed );
-                    } else {
-                        if (st.gpsEnabled) {
-                            nmea.put("info", "(" + addr + ") con, sats: " + st.numSat + " / " + st.numUsed );
-                            nmea.put("status", "yellow");
-                        } else {
-                            nmea.put("info", "(" + addr + ") disconnected");
-                            nmea.put("status", "red");
-                        }
-                    }
-                }
-                if (provider.handlesAis()) {
-                    ais.put("source", provider.getName());
-                    int aisTargets=provider.numAisData();
-                    if (aisTargets> 0) {
-                        ais.put("status", "green");
-                        ais.put("info", "(" + addr + "), "+aisTargets+" targets");
-                    } else {
-                        if (st.gpsEnabled) {
-                            ais.put("info", "(" + addr + ") connected");
-                            ais.put("status", "yellow");
-                        } else {
-                            ais.put("info", "(" + addr + ") disconnected");
-                            ais.put("status", "red");
-                        }
-                    }
-                }
+    public JSONObject getNmeaStatus() throws JSONException {
+        JSONObject nmea = new JSONObject();
+        nmea.put("source", "unknown");
+        nmea.put("status", "red");
+        nmea.put("info", "disabled");
+        JSONObject ais = new JSONObject();
+        ais.put("source", "unknown");
+        ais.put("status", "red");
+        ais.put("info", "disabled");
+        GpsDataProvider.SatStatus st = decoder.getSatStatus();
+        Location loc = decoder.getLocation();
+        String addr = decoder.getConnectionId();
+        nmea.put("source", decoder.getName());
+        if (loc != null) {
+            nmea.put("status", "green");
+            nmea.put("info", "(" + addr + ") sats: " + st.numSat + " / " + st.numUsed);
+        } else {
+            if (st.gpsEnabled) {
+                nmea.put("info", "(" + addr + ") con, sats: " + st.numSat + " / " + st.numUsed);
+                nmea.put("status", "yellow");
+            } else {
+                nmea.put("info", "(" + addr + ") disconnected");
+                nmea.put("status", "red");
             }
         }
-        JSONObject rt=new JSONObject();
-        rt.put("nmea",nmea);
-        rt.put("ais",ais);
+        ais.put("source", decoder.getName());
+        int aisTargets = decoder.numAisData();
+        if (aisTargets > 0) {
+            ais.put("status", "green");
+            ais.put("info", "(" + addr + "), " + aisTargets + " targets");
+        } else {
+            if (st.gpsEnabled) {
+                ais.put("info", "(" + addr + ") connected");
+                ais.put("status", "yellow");
+            } else {
+                ais.put("info", "(" + addr + ") disconnected");
+                ais.put("status", "red");
+            }
+        }
+        JSONObject rt = new JSONObject();
+        rt.put("nmea", nmea);
+        rt.put("ais", ais);
         return rt;
     }
     public JSONObject getStatus() throws JSONException {
@@ -993,6 +958,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
                 }
             }
         }
+        rt.put(decoder.getHandlerStatus());
         JSONObject out=new JSONObject();
         out.put("name","GPS");
         out.put("items",rt);
