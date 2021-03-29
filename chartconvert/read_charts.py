@@ -54,9 +54,9 @@ import xml.sax as sax
 import xml.sax.saxutils
 from optparse import OptionParser
 
-import osr
+from osgeo import osr
 from PIL import Image
-from gdalconst import *
+from osgeo.gdalconst import *
 # read_charts.py:
 from osgeo import gdal
 
