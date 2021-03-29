@@ -38,33 +38,30 @@
 #"lower" tile means tile of a lower zoomlevel
 
 
-# read_charts.py:
-import gdal
-import osr
-from gdalconst import *
-import os
-import sys
+import io
 import logging
-import shutil
-import itertools
-from optparse import OptionParser
-import xml.sax as sax 
-import xml.sax.saxutils
-from PIL import Image
-import operator
 import math
-import shutil
-from stat import *
+import os
 import queue
+import re
+import shutil
+import subprocess
+import sys
 import threading
 import time
-import site
-import subprocess
-import re
-import generate_efficient_map_file
-import create_gemf
-import io
 import traceback
+import xml.sax as sax
+import xml.sax.saxutils
+from optparse import OptionParser
+
+import osr
+from PIL import Image
+from gdalconst import *
+# read_charts.py:
+from osgeo import gdal
+
+import create_gemf
+import generate_efficient_map_file
 
 hasNvConvert=False
 try:

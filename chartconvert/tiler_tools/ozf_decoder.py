@@ -426,7 +426,7 @@ def make_new_map(src,dest,map_dir):
                 map_lines[2]=os.path.split(dest)[1]+'\r\n'
                 map_lines.extend(f.readlines())
                 dest_map=dest+'.map'
-                with open(dest_map,'w+') as d:
+                with open(dest_map,'w+',encoding='utf-8') as d:
                     d.writelines(map_lines)
                 return dest_map,None
     else:
@@ -460,7 +460,7 @@ def convert(src):
             ozi_err.append(map_err)
 #        pf(map_file)
     if ozi_err:
-        with open(ozi_file+'.errors','w+') as f:
+        with open(ozi_file+'.errors','w+',encoding='utf-8') as f:
             f.write('\n'.join(ozi_err))
         return ozi_file,ozi_err
     else: 
