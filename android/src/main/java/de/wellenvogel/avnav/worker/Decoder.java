@@ -119,11 +119,10 @@ public class Decoder extends GpsDataProvider {
         }
         public int getSatCount(){
             if (! isValid) return 0;
-            int rt=0;
             for (GSVSentence s: sentences.values()){
-                rt+=s.getSatelliteCount();
+                return s.getSatelliteCount();
             }
-            return rt;
+            return 0;
         }
     }
 

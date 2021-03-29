@@ -5,7 +5,14 @@ import android.location.*;
 import android.os.Bundle;
 import android.widget.Toast;
 
+import net.sf.marineapi.nmea.parser.SentenceFactory;
+import net.sf.marineapi.nmea.sentence.GSASentence;
+import net.sf.marineapi.nmea.sentence.GSVSentence;
 import net.sf.marineapi.nmea.sentence.RMCSentence;
+import net.sf.marineapi.nmea.sentence.TalkerId;
+import net.sf.marineapi.nmea.util.FaaMode;
+import net.sf.marineapi.nmea.util.GpsFixStatus;
+import net.sf.marineapi.nmea.util.SatelliteInfo;
 
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.NmeaQueue;
@@ -13,6 +20,8 @@ import de.wellenvogel.avnav.util.NmeaQueue;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 
 /**
@@ -32,11 +41,13 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
     private Context context;
     private boolean isRegistered=false;
     private long timeOffset=0;
+    private final Object waiter = new Object();
     private NmeaQueue queue;
 
 
     private static final String LOGPRFX="Avnav:AndroidPositionHandler";
     private boolean stopped=false;
+    private Thread satStatusProvider;
 
     AndroidPositionHandler(Context ctx, long timeOffset, NmeaQueue queue){
         this.context=ctx;
@@ -44,6 +55,66 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
         this.timeOffset=timeOffset;
         locationService=(LocationManager)context.getSystemService(context.LOCATION_SERVICE);
         tryEnableLocation(true);
+        satStatusProvider=new Thread(new Runnable() {
+            @Override
+            public void run() {
+                SentenceFactory sf=SentenceFactory.getInstance();
+                while (! stopped){
+                    try {
+                        int numSat = 0;
+                        GpsStatus status = locationService.getGpsStatus(null);
+                        ArrayList<SatelliteInfo> sats = new ArrayList<SatelliteInfo>();
+                        ArrayList<String> fixSats = new ArrayList<String>();
+                        for (GpsSatellite s : status.getSatellites()) {
+                            numSat++;
+                            if (s.usedInFix()) fixSats.add(String.format("%02d", s.getPrn()));
+                            SatelliteInfo sat = new SatelliteInfo(String.format("%02d", s.getPrn()),
+                                    (int) Math.round(Math.toDegrees(s.getElevation())),
+                                    (int) Math.round(Math.toDegrees(s.getAzimuth())),
+                                    (int) Math.round(10 * Math.log10(s.getSnr()))
+                            );
+                            sats.add(sat);
+                        }
+                        int numGsv = (numSat + 3) / 4;
+                        for (int i = 0; i < numGsv; i++) {
+                            GSVSentence gsv = (GSVSentence) sf.createParser(TalkerId.GP, "GSV");
+                            gsv.setSentenceCount(numGsv);
+                            gsv.setSentenceIndex(i + 1);
+                            gsv.setSatelliteCount(numSat);
+                            ArrayList<SatelliteInfo> glist = new ArrayList<SatelliteInfo>();
+                            for (int j = i * 4; j < (i + 1) * 4 && j < numSat; j++) {
+                                glist.add(sats.get(j));
+                            }
+                            gsv.setSatelliteInfo(glist);
+                            queue.add(gsv.toSentence(), getName());
+                        }
+                        Location loc = location;
+                        if (loc != null && (System.currentTimeMillis() <= (lastValidLocation + MAXLOCWAIT))) {
+                            GSASentence gsa = (GSASentence) sf.createParser(TalkerId.GP, "GSA");
+                            gsa.setMode(FaaMode.AUTOMATIC);
+                            gsa.setFixStatus(GpsFixStatus.GPS_3D);
+                            String[] fsats = new String[fixSats.size()];
+                            fsats = fixSats.toArray(fsats);
+                            gsa.setSatelliteIds(fsats);
+                            //TODO: XDOP
+                            queue.add(gsa.toSentence(), getName());
+                        }
+                    }catch (Throwable t){
+                        AvnLog.e("error in sat status loop",t);
+                    }
+                    synchronized (waiter){
+                        try {
+                            waiter.wait(1000);
+                        } catch (InterruptedException e) {
+                            break;
+                        }
+                    }
+                }
+                AvnLog.i("sat status thread stopped");
+            }
+        });
+        satStatusProvider.setDaemon(true);
+        satStatusProvider.start();
     }
 
 
@@ -140,47 +211,6 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
                     Toast.LENGTH_SHORT).show();
         }
     }
-
-    /**
-     * get the current location checking for a recent update
-     * we do not directly compare our system time with the location time as this would break test data at all
-     * instead we check that the time elapsed since the last location update is not too far away from the really elapsed time
-     * //TODO: should we make this tread safe?
-     * @return
-     */
-    public Location getCurrentLocation(){
-        Location curloc=location;
-        if (curloc == null) return null;
-        long currtime=System.currentTimeMillis();
-        if ((currtime - lastValidLocation) > MAXLOCWAIT){
-            //no location update during this time - query directly
-            if (! isRegistered){
-                AvnLog.d(LOGPRFX,"location: too old to return and no provider");
-                return null;
-            }
-            Location nlocation = locationService.getLastKnownLocation(currentProvider);
-            if (nlocation == null){
-                location=null;
-                AvnLog.d(LOGPRFX,"location: now new location for too old location");
-                return null;
-            }
-            //the diff in location times must not be too far away from the really elapsed time
-            //we assume at least MAXLOCAGE
-            long locdiff=nlocation.getTime()-curloc.getTime();
-            if (locdiff < (currtime - lastValidLocation - 5*MAXLOCAGE)){
-                AvnLog.d(LOGPRFX,"location: location updates too slow - only "+(locdiff/1000)+" seconds for time diff "+(currtime-lastValidLocation)/1000);
-                return null;
-            }
-            AvnLog.d(LOGPRFX,"location: refreshed location successfully");
-            location=nlocation;
-            lastValidLocation=lastValidLocation+(long)Math.floor(locdiff*1.1); //we allow the gps to be 10% slower than realtime
-        }
-        if (location == null) return location;
-        Location rt=new Location(location);
-        rt.setTime(rt.getTime()+timeOffset);
-        return rt;
-    }
-
 
 
     @Override
