@@ -74,10 +74,9 @@
       After you will be rewarded with a continous chart view with no gaps
       inbetween.<br>
       The same has to be considered when it comes to downloading charts. You
-      need to carefully select
-      areas and zoom levels. </p>
-    <p>The download procedure depends on the source. I currently support
-      2 options to create charts for AvNav:</p>
+      need to carefully select areas and zoom levels. </p>
+    <p>The download procedure depends on the source. I currently support 2
+      options to create charts for AvNav:</p>
     <ul>
       <li>
         <p>Converting charts using <a href="http://www.gdal.org/">GDAL</a>
@@ -234,19 +233,23 @@
           range will be detected. If necessary charts would be
           converted/reprojected. As a result there will be a chartlist.xml in
           workdir/&lt;name&gt; . The command line would be:</p>
-        <pre>read_charts.py -o name -m chartlist inputdir [inputdir...]
+        <pre>read_charts.py -g -o name -m chartlist inputdir [inputdir...]
 </pre>
         <p>Afterwards you can check the chartlist.xml and you could e.g. move
           some charts into a different layer.</p>
         <p>The second step will take more time -&nbsp; now the tiles are
           created:</p>
-        <pre>read_charts.py -o name -m generate 
+        <pre>read_charts.py -g -o name -m generate inputdir [inputdir...]
 </pre>
         <p>The file chartlist.xml must already exist at&nbsp;
           workdir/&lt;name&gt;. The creation will run multi threaded.</p>
-        <p>You could also combine both steps:</p>
+        <p>At the end you need to create the gemf file:</p>
+        <pre>read_charts.py -g -o name -m gemf inputdir [inputdir...]</pre>
+        <p></p>
+        <p>You could also combine all steps:</p>
         <blockquote>
-          <pre>read_charts.py -m all [-o name] inputdir
+          <pre>read_charts.py -g -m all [-o name] inputdir [inputdir...]
+
 </pre> </blockquote>
       </div>
     </blockquote>

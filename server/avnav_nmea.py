@@ -273,7 +273,7 @@ class NMEAParser(object):
         self.addToNavData(rt,source=source,record=tag)
         return True
       if tag=='GSV':
-        rt['satInview']=int(darray[3])
+        rt['satInview']=int(darray[3] or '0')
         self.addToNavData(rt,source=source,record=tag)
         return True
       if tag=='GLL':
@@ -322,7 +322,7 @@ class NMEAParser(object):
         rt['windAngle']=float(darray[1])
         rt['windReference']=darray[2]
         #we keep the speed im m/s
-        windspeed=float(darray[3])
+        windspeed=float(darray[3] or '0')
         if (darray[4] == 'K'):
           windspeed=windspeed/3.6
         if (darray[4] == 'N'):
@@ -343,12 +343,12 @@ class NMEAParser(object):
             negative means distance from transducer to keel
         3) Checksum
         '''
-        rt['depthBelowTransducer'] = float(darray[1])
+        rt['depthBelowTransducer'] = float(darray[1] or '0')
         if len(darray[2]) > 0:
           if float(darray[2]) >= 0:
-            rt['depthBelowWaterline'] = float(darray[1]) + float(darray[2])
+            rt['depthBelowWaterline'] = float(darray[1] or '0') + float(darray[2] or '0')
           else:
-            rt['depthBelowKeel'] = float(darray[1]) + float(darray[2])
+            rt['depthBelowKeel'] = float(darray[1] or '0') + float(darray[2] or '0')
         self.addToNavData(rt,source=source,record=tag)
         return True
       if tag == 'DBT':
@@ -367,7 +367,7 @@ class NMEAParser(object):
          7) Checksum
         '''
         if len(darray[3]) > 0:
-          rt['depthBelowTransducer'] = float(darray[3])
+          rt['depthBelowTransducer'] = float(darray[3] or '0')
           self.addToNavData(rt,source=source,record=tag)
           return True
         return False
@@ -383,7 +383,7 @@ class NMEAParser(object):
               # we need 4 fields
               if darray[i + 1] is not None and darray[i] != "":
                 ttype = darray[i]
-                tdata = float(darray[i + 1])
+                tdata = float(darray[i + 1] or '0')
                 tunit = darray[i + 2]
                 tname = darray[i + 3]
                 data=self.convertXdrValue(tdata,tunit)

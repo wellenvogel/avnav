@@ -70,7 +70,7 @@ class AVNUserHandler(AVNDirectoryHandlerBase):
     for jf in self.EMPTY_JSONS:
       dest=os.path.join(self.baseDir,jf)
       if not os.path.exists(dest):
-        with open(dest,"w") as fh:
+        with open(dest,"w",encoding='utf-8') as fh:
           fh.write("{\n}\n")
 
   def handleDelete(self,name):

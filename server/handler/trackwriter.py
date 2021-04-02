@@ -159,7 +159,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
     if not os.path.exists(filename):
       AVNLog.debug("unable to read track file %s",filename)
       return rt
-    f=open(filename,"r")
+    f=open(filename,"r",encoding='utf-8')
     if f is None:
       AVNLog.debug("unable to open track file %s",filename)
       return rt

@@ -141,7 +141,7 @@ class GeoNosLayer(SrcLayer):
             ld(map_dir, fn)
             img_file=os.path.join(map_dir, fn)
         except:
-            raise Exception("*** Image file not found: %s" % img_path)
+            raise Exception("*** Image file not found: %s" % img_file)
         return img_file
 
     def get_size(self):

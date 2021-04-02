@@ -488,7 +488,7 @@ class Pyramid(object):
                 src_vrt=os.path.join(self.dest,self.base+'.src.vrt') # auxilary VRT file
                 self.temp_files.append(src_vrt)
                 self.src_path=src_vrt
-                with open(src_vrt,'w') as f:
+                with open(src_vrt,'w',encoding='utf-8') as f:
                     f.write(vrt_txt)
 
                 self.src_ds=gdal.Open(src_vrt,GA_ReadOnly)
@@ -706,7 +706,7 @@ class Pyramid(object):
 
         temp_vrt=os.path.join(self.dest,self.base+'.tmp.vrt') # auxilary VRT file
         self.temp_files.append(temp_vrt)
-        with open(temp_vrt,'w') as f:
+        with open(temp_vrt,'w',encoding='utf-8') as f:
             f.write(vrt_text)
 
         # warp base raster
@@ -928,7 +928,7 @@ class Pyramid(object):
             maxy=       bounds[0][1],
             tilesets=   '\n'.join(tilesets),
             )
-        open(os.path.join(self.dest,'tilemap.xml'),'w').write(tilemap_txt)
+        open(os.path.join(self.dest,'tilemap.xml'),'w',encoding='utf-8').write(tilemap_txt)
 
     #----------------------------
     #
@@ -1179,7 +1179,7 @@ class PlateCarree(Pyramid):
             'dbg_start': '' if options.verbose < 2 else '    <!--\n',
             'dbg_end':   '' if options.verbose < 2 else '      -->\n',
             }
-        open(os.path.join(self.dest,rel_path+'.kml'),'w+').write(kml)
+        open(os.path.join(self.dest,rel_path+'.kml'),'w+',encoding='utf-8').write(kml)
 
     def write_metadata(self,tile,children=[]):
         if not tile: # create top level kml

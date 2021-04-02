@@ -20,9 +20,9 @@
     <p>Um die Karten in AvNav darzustellen, müssen sie zunächst einmal in Raster
       Karten umgewandelt werden. Das erledigt ein neues Plugin für AvNav
       (avnav-ocharts). Die Umwandlung erfolgt dabei im laufenden Betrieb immer
-      dann, wenn die Karten dargestellt werden sollen (teilweise initial in einen cache). Damit kann mit diesen
-      Karten weitgehend normal gearbeitet werden ohne dass man sich um diesen
-      Prozess kümmern muss.</p>
+      dann, wenn die Karten dargestellt werden sollen (teilweise initial in
+      einen cache). Damit kann mit diesen Karten weitgehend normal gearbeitet
+      werden ohne dass man sich um diesen Prozess kümmern muss.</p>
     <p>Das Handling der Karten erfolgt dabei vollständig durch das Plugin - das
       betrifft auch die Installation (die Karten können nicht über die normale <a
         href="../userdoc/downloadpage.html">Download-Seite</a> hochgeladen
@@ -108,8 +108,8 @@
       heruntergeladene Datei zu AvNav hochladen.</p>
     <p>Während des Uploads wird ein Fortschritt angezeigt.</p>
     <p><img src="ocharts-upload2.png" alt="" class="fimage"></p>
-    <p>Am Ende des Uploads wird auf dem AvNav Server die Datei ausgepackt, und es
-      werden einige Prüfungen durchgeführt (das kann einige Sekunden dauern).</p>
+    <p>Am Ende des Uploads wird auf dem AvNav Server die Datei ausgepackt, und
+      es werden einige Prüfungen durchgeführt (das kann einige Sekunden dauern).</p>
     <p>Die Karten werden (falls nicht anders konfiguriert) in das Verzeichnis
       /home/pi/avnav/data/ocharts/charts hochgeladen.</p>
     <p><img src="ocharts-upload3.png" alt="" class="fimage"></p>
@@ -142,8 +142,8 @@
     <p><img src="ocharts-navpage.png" alt="" class="fimage"></p>
     <p>Wie bereits erwähnt, kann es bei der erstmaligen Nutzung in einem
       bestimmten Bereich zu Verzögerungen kommen (insbesondere auf den
-      kleineren/älteren Pi's) - nach der erstmaligen Nutzung sind die Kacheln für
-      den Bereich aber im Cache-Speicher und die Verzögerungen sind minimal.</p>
+      kleineren/älteren Pi's) - nach der erstmaligen Nutzung sind die Kacheln
+      für den Bereich aber im Cache-Speicher und die Verzögerungen sind minimal.</p>
     <h2><a name="MainSettings"></a>Anpassung des Aussehens</h2>
     <p>Da die O-charts Karten zunächst als Vektorkarten vorhanden sind, kann in
       weiten Bereichen das Aussehen der Karten angepasst werden. Dabei sind
@@ -359,6 +359,12 @@
     </ul>
     <h3>Release Versionen</h3>
     <ul>
+      <li>20210328 <a href="../../downloads/release-ochartsplugin/20210328">Pakete</a></li>
+      <ul>
+        <li>Parameter handling in AvNav (erfordert AvNav ebenfalls ab 20210322)</li>
+        <li>Limit für Zip-Grösse auf 3GB erweitert</li>
+        <li>Fehler beim Restart behoben</li>
+      </ul>
       <li>20210115 <a href="../../downloads/release-ochartsplugin/20210115/avnav-ocharts-plugin_20210115-raspbian-buster_armhf.deb">Paket</a></li>
       <ul>
         <li>Umstellung auf python3 (erfordert AvNav ebenfalls ab 20210115)</li>
