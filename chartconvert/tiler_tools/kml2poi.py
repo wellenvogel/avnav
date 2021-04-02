@@ -254,7 +254,7 @@ class Poi2Mapper(object):
         with open(self.base+'.categories.gen','w') as f:
             for s in cat_list:
                 print(s, file=f)
-        with open(self.base+'.sh','w') as f:
+        with open(self.base+'.sh','w',encoding='utf-8') as f:
             for ls in [icon_urls,icon_aliases]:
                 for s in ls:
                     print(s, file=f)

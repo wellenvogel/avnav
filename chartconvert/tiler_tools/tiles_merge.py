@@ -219,7 +219,7 @@ class MergeSet(object):
     def upd_stat(self,transparency_data):
         self.src_transp.update(dict(transparency_data))
         try:
-            pickle.dump(self.src_transp,open(self.src_cache_path,'w'))
+            pickle.dump(self.src_transp,open(self.src_cache_path,'w',encoding='utf-8'))
         except:
             ld("cache save failed")
         pf('')
@@ -258,7 +258,7 @@ if __name__=='__main__':
     ld(options)
 
     if options.src_list:
-        src_dirs=[i.rstrip('\n') for i in open(options.src_list,'r')]
+        src_dirs=[i.rstrip('\n') for i in open(options.src_list,'r',encoding='utf-8')]
         try:
             dst_dir=args[-1]
         except:

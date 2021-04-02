@@ -232,7 +232,7 @@ def main(argv):
   AVNLog.initLoggingSecond(level, filename,baseConfig.getParam()['debugToLog'].upper()=='TRUE') 
   AVNLog.info("#### avnserver pid=%d,version=%s,parameters=%s start processing ####",os.getpid(),AVNAV_VERSION," ".join(argv))
   if options.pidfile is not None:
-    f=open(options.pidfile,"w")
+    f=open(options.pidfile,"w",encoding='utf-8')
     if f is not None:
       f.write(str(os.getpid())+"\n")
       f.close()

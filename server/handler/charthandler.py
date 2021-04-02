@@ -54,7 +54,7 @@ class XmlChartFile(ChartFile):
         return None
     else:
       ovname=self.filename
-    with open(ovname,"r") as f:
+    with open(ovname,"r",encoding='utf-8') as f:
       return f.read()
 
   def deleteFiles(self):
@@ -361,7 +361,7 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
       if chart is None:
         if not fullname.endswith(ChartDescription.OVL_EXT):
           return None
-        with open(fullname, "r") as f:
+        with open(fullname, "r",encoding='utf-8') as f:
           ovl = json.load(f)
           itemDescription.setOverlayData(ovl)
       else:

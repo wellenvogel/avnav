@@ -28,8 +28,7 @@
 #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 #  DEALINGS IN THE SOFTWARE.
 ###############################################################################
-import gdal
-import osgeo
+from osgeo import gdal
 import os
 import sys
 import re
@@ -134,13 +133,13 @@ def nvConvert(chart,outdir,outname,tilertools,logf,warn,updateOnly=False):
     return
   #now merge the 2 vrt files
   origvrtdata=None
-  with open(outname,"r") as f:
+  with open(outname,"r",encoding='utf-8') as f:
     origvrtdata=f.read()
   if origvrtdata is None:
     warn("unable to read %s"%(outname,))
     return
   tmpvrtdata=None
-  with open(tifvrt,"r") as f:
+  with open(tifvrt,"r",encoding='utf-8') as f:
     tmpvrtdata=f.read()
   if tmpvrtdata is None:
     warn("unable to read %s"%(tifvrt,))
@@ -158,7 +157,7 @@ def nvConvert(chart,outdir,outname,tilertools,logf,warn,updateOnly=False):
       doAdd=True
       origvrtdata+=mline
   os.unlink(outname)
-  with open(outname,"w") as f:
+  with open(outname,"w",encoding='utf-8') as f:
     f.write(origvrtdata)
   logf("successfully created merged vrt %s"%(chart,))  
   
