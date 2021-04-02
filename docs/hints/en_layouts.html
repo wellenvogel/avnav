@@ -8,8 +8,8 @@
   <body data-order="5400">
     <h1>Layout Adaptation</h1>
     <div class="toc"> </div>
-    <p>The displays (widgets) on the navigation page and the dashboard pages are
-      controlled by a configuration json file ("layout").A couple of predefined
+    <p>The displays (widgets) on navigation and dashboard pages are
+      controlled by a configuration json file ("layout"). A couple of predefined
       layouts are included with AvNav. They all have the "system." name prefix.
       As a user you can define your own layouts and store them (they will have
       the name prefix "user."). Those user layouts will be stored at a folder
@@ -18,72 +18,71 @@
       the layout using the built in layout editor.</p>
     <p>The preferred way of changing a layout should be the layout editor as
       this is the least error prone way.</p>
-    <p>Changing the used layout can be done via Settings <img src="../viewerimages/icons-new/ic_settings.svg"
+    <p>The active layout can be set via Settings <img src="../viewerimages/icons-new/ic_settings.svg"
         alt="" class="inlineimage">/Layout.</p>
     <h2>Layout Editor</h2>
-    <p>You can start the layout editor via the Settings page <img src="../viewerimages/icons-new/ic_settings.svg"
+    <p>You can invoke the layout editor via the Settings page <img src="../viewerimages/icons-new/ic_settings.svg"
         alt="" class="inlineimage">, Layouts <img src="../viewerimages/icons-new/ballot.svg"
         alt="" class="inlineimage">.</p>
     <p><img src="../settingspage-layouteditor.png" alt="" class="fimage"></p>
-    <p>In this dialog you can select a file name for the layout you are going
-      top modify. If currently a system layout was active (that you cannot
-      change) a new user layout with the same name will be created and
+    <p>This dialog asks for a file name for the layout to be modified. 
+      If a system layout is active (that you cannot
+      change) a new 'user' layout with the same name will be created and
       activated. If the layout already exists you can decide to overwrite it -
       or just choose a new name. You can still decide at the end of the editing
       process to discard your changes.</p>
-    <p>After starting the layout editor you will have a red border at AvNav -
-      and you can only see pages where you can adapt the layout on.</p>
+    <p>After starting the layout editor a red frame will be displayed -
+      only pages where you can adapt the layout are visible.</p>
     <img src="../mainpage-layout.png" alt="" class="fimage">
     <p><br>
     </p>
-    <p>By selecting a chart you can reach the navigation page as usual.</p>
+    <p>By selecting a chart you can open the navigation page as usual.</p>
     <p><img src="../navpage-layout.png" alt="" class="fimage"> </p>
-    <p>All widgets are located in so called "panels". Within a panel you cand
-      drag and drop the widgets as long as the editor mode is active (but you
+    <p>All widgets are located in so called "panels". Within a panel you can
+      drag and drop the widgets as long as editor mode is active (but you
       cannot move them from one panel to another one this way).</p>
     <p>On the navigation page you can assign different widgets to the panels
       depending on your display width. On a small display (value can be changed
-      at Settings/small display) you can have different display then on a large
+      at Settings/small display) you can have different panels than on a large
       one.</p>
-    <p>Via <img src="../viewerimages/icons-new/tune.svg" alt="" class="inlineimage">you
-      can bring up a dialog for configuring the panels on a page.</p>
+    <p>Via <img src="../viewerimages/icons-new/tune.svg" alt="" class="inlineimage"> you
+      open a dialog to configure the panels on a page.</p>
     <img src="../navpage-layout-panels-marked.png" alt="" class="fimage">
-    <p>The available panels are marked at the picture. Within the dialog you can
-      select which panels should be visible - deepending on the display mode
-      (small/default). If there is a check in the "small" column it means that
-      you will have a different set up for the small mode. In the example above
+    <p>The available panels are marked red in the screenshot. You can
+      select which panels should be visible - depending on the display mode
+      (small/default). If the "small" checkbox is checked you define a different set up for the small mode. In the example above
       the top panel is not visible in normal mode, the left panel has a
-      different content in normal and small mode but the bottom panels have the
+      different content in normal and small mode, whereas the bottom panels have the
       same content both in normal and small mode. At "current conditions" you
-      can select if you would like to edit the panels for normal or small mode.</p>
-    <p>Both the bottom panels can have 2 rows of widgets (Setting: "2 widget
-      rows") if there are widgets that do not fit any more the will be hidden
+      can select if you are editing the panels for normal or small mode.</p>
+    <p>Both the bottom panels may have 2 rows of widgets (Setting: "2 widget
+      rows"). Widgets that do not fit any more will be hidden
       completely.</p>
     <h2>Widget Dialog</h2>
-    <p>After finishing the panel dialog you can now move the widgets within the
-      panels or click on a widget or free space of a panel to bring up a widget
+    <p>After completing the panel dialog you can move the widgets within the
+      panels or click on a widget or a panel's free space to open the widget
       dialog.</p>
     <img src="../navpage-layout-widget.png" alt="" class="fimage">
     <p>Depending on the kind of widget the dialog will contain different
       settings. </p>
     <p>If you would like to move the widget to another panel you can select the
-      target panel in the top most row of the dialog.</p>
-    <p>With "Update" you will store your changes.</p>
-    <p>At "New Widget" you can select a new widget from a list of available
+      target panel in the top entry of the dialog.</p>
+    <p>"Update" will store your changes.</p>
+    <p>By clicking "New Widget" you can select a new widget from a list of available
       widgets.</p>
-    <p>Each widget needs an information about the data it should display. All
-      displayable data is internally available in a store and each item is
+    <p>Each widget requires information about the data to display. All
+      displayable data are internally available in a store and each item is
       addressed by a key.</p>
-    <p>Depending on the type of widget the key(s) it will use to fetch the data
-      from the store is fixed (i.e. built in) or has to be choosen in the
-      dialog. The caption, unit and the css class can be set at most widgets.
-      Assigning a css class is helpfull if you want to <a href="usercss.html">adapt
-        the look and feel via css</a>).</p>
+    <p>Depending on the type of widget, the key(s) it uses to fetch the data
+      from the store is either fixed (i.e. built in) or has to be chosen in the
+      dialog. Caption, unit and the css class can be set for most widgets.
+      Assigning a css class is useful if you want to <a href="usercss.html">adapt
+        the appearance via css</a>.</p>
     <h2><a name="formatter" id="formatter"></a>Formatter</h2>
-    <p>Most of the widgets need a formatter to convert the data from the
-      internal format into the display format. In most cases the formatter being
-      used by a widget is fixed. But some of the allow some parameters (comma
-      separated list) that you can assign in this dialog - e.g. you can change
+    <p>Most of the widgets need a formatter to convert data from
+      internal format into the display format. In most cases the formatter
+      used by a widget is fixed. Some, however, allow parameters (comma
+      separated list) to be assigned in this dialog - e.g. you can change
       formatSpeed to convert to m/s instead of kn).</p>
     <p>The list of formatters (and their parameters):</p>
     <table style="width: 100%" border="1">
@@ -96,7 +95,7 @@
         <tr>
           <td>formatDecimal</td>
           <td>format a decimal value</td>
-          <td>fix,fract,addSpace<br>
+          <td>fix, fract, addSpace<br>
             e.g.: 3,1</td>
         </tr>
         <tr>
@@ -110,13 +109,13 @@
         <tr>
           <td>formatSpeed</td>
           <td>speed in kn</td>
-          <td>one parameter(unit):<br>
+          <td>one parameter (unit):<br>
             ms - m/s instead of kn<br>
             kmh - km/h instead of kn</td>
         </tr>
         <tr>
           <td>formatDirection</td>
-          <td>formatting a degree</td>
+          <td>formatting degrees</td>
           <td>one parameter:<br>
             inputRadian - input in rad instead of degrees </td>
         </tr>
@@ -140,7 +139,7 @@
         </tr>
         <tr>
           <td>formatDate</td>
-          <td>Date (internal value must be Date</td>
+          <td>Date (internal value must be Date)</td>
           <td><br>
           </td>
         </tr>
@@ -152,70 +151,63 @@
         </tr>
         <tr>
           <td>formatTemperature</td>
-          <td>format a temperature (since 20210106), input in kelvin</td>
-          <td>one Parameter(unit):<br>
-            celsius,kelvin</td>
+          <td>format temperature (since 20210106), input in kelvin</td>
+          <td>one Parameter (unit):<br>
+            celsius, kelvin</td>
         </tr>
         <tr>
           <td>formatPressure</td>
           <td>format a presssure (since 20210106), input in pa</td>
           <td>one Parameter (unit):<br>
-            pa,hpa,bar</td>
+            pa, hpa, bar</td>
         </tr>
       </tbody>
     </table>
-    <p>Plugins or own extensions can potentially add more formatters.</p>
+    <p>Plugins or custom extensions can potentially add more formatters.</p>
     <p>If you do not want to change the existing widget but add a new one - just
-      use "Before" or "After" to insert it.</p>
-    <p>If there are more parameters you will see them in the dialog.</p>
+      select "Before" or "After" to insert it.</p>
+    <p>If the widget supports further parameters they will be displayed in the dialog.</p>
     <p><img src="../dashboard-3-layouit-widget.png" alt="" class="fimage"></p>
     <p>In the example a configuration for a graphics display (internally <a href="https://canvas-gauges.com/">canvas-gauges</a>
       is used).</p>
-    <p>From the navigation page you can change toe the dashboard pages via the
+    <p>From the navigation page you can switch to the dashboard pages via the
       main page.</p>
     <h2>Dashboard Pages</h2>
-    <p>You can configure up to 5 dashboard pages. On each of them you can have
-      up to 5 panels.</p>
-    <p>On an empty dahsboard page you have to start with the panel configuration
+    <p>You can configure up to 5 dashboard pages. Each of them can hold up to 5 panels.</p>
+    <p>On an empty dashboard page you have to start with the panel configuration
       - <img src="../viewerimages/icons-new/tune.svg" alt="" class="inlineimage">.</p>
     <p><img src="../dashboard-4-layout-panel.png" alt="" class="fimage"></p>
-    <p>You can have different display if currently anchor watch is active (in
-      the default layout this is used on page 1).</p>
-    <p>If you have dahsboard pages without panels they will not appear in the
-      display later on.</p>
-    <p>In principle you can also adpat the display on the route editing page (<img
-        src="../viewerimages/icons-new/route.svg" alt="" class="inlineimage">from
-      the navigation page) but the display for the currently editing route and
-      for the list of waypoints has to stay visible there.</p>
+    <p>You can define a different layout for anchor watch state (this feature is used in dashboard page 1 of default layout).</p>
+    <p>Dashboard pages without panels will not appear in the
+      live display.</p>
+    <p>Principally you can also modify the the route editing display (<img src="../viewerimages/icons-new/route.svg" alt="" class="inlineimage">from
+      the navigation page) however the currently edited route and
+      the list of waypoints must remain visible there at all times.</p>
     <p>When you are done with the layout editing you still need to save your
-      layout using the button <img src="../viewerimages/icons-new/ballot.svg" alt=""
-        class="inlineimage">(red border) on each page.</p>
+      layout using the button <img src="../viewerimages/icons-new/ballot.svg" alt="" class="inlineimage">(red border) on each page.</p>
     <p><img src="../dashboard-layout-save.png" alt="" class="fimage"></p>
-    <p>At this point you can still decide to discard all of your changes.</p>
-    <p>When you save the layout it will immediately become active in your
+    <p>At this point you can still decide to discard all changes.</p>
+    <p>The saved layout will immediately become active in your
       current browser (and will be stored at the server). Other browsers will
-      only use the new layout if they reload the app or change the layout.</p>
+      only use the new layout after reloading the app or changing their active layout.</p>
     <h2>Layout Download/Upload</h2>
-    <p>Via the Files/Download page <img src="../viewerimages/icons-new/ic_file_download.svg"
-        alt="" class="inlineimage">, subpage <img src="../viewerimages/icons-new/ballot.svg"
-        alt="" class="inlineimage"> you can download/upload/edit and delete the
+    <p>Via the Files/Download page <img src="../viewerimages/icons-new/ic_file_download.svg" alt="" class="inlineimage">, subpage <img src="../viewerimages/icons-new/ballot.svg" alt="" class="inlineimage"> you can download/upload/edit and delete the
       layout files. The currently active layout and system layouts can only be
       downloaded.</p>
-    <p>If you are deleting a layout that is currently used within another
-      browser and this browser reloads the app it will write this layout back to
-      the server - so it will re-apply.</p>
+    <p>If you delete a layout currently loaded by another
+      browser, this browser will write the layout back to
+      the server when it reloads the app - so the layout will reappear.</p>
     <h2>Special Widgets</h2>
-    <p>Despite a long list of predefined widgets (like SOG, COG, BRG,
-      AisTargetWidget,...) where you can only change the caption, unit,
-      formatterParameters and css class there are a couple of special widgets.</p>
+    <p>In addition to a long list of predefined widgets (like SOG, COG, BRG,
+      AisTargetWidget, ...&nbsp; where you can only change the caption, unit,
+      formatterParameters and css class) there are a couple of special widgets.</p>
     <h3>Default</h3>
     <img src="../dashboard-3-layout-default.png" alt="" class="fimage">
-    <p>This widget internally is the basis for most of the simple display
-      widgets. But you also use it to define some displays in the layout editor.</p>
-    <p>In any case you need to select a value (the key for the store) and a
+    <p>This widget internally serves as basis for most simple display
+      widgets. But you can also use in the layout editor it to display custom values.</p>
+    <p>In any case you need to select a value (the key for the data store) and a
       formatter.</p>
-    <p>When clicking on value you will be prompted with a list of available data
-      for display.</p>
+    <p>When clicking "value" you will be prompted to choose from a list of available data.</p>
     <p><img src="../dashboard-3-layout-value.png" alt="" class="fimage"><br>
     </p>
     <p>First of all those are the values predefined internally in AvNav. If you
@@ -225,7 +217,7 @@
     <p>You have to take care to select a formatter that fits the value you
       selected.</p>
     <h3><a name="gauges" id="gauges"></a>Gauges</h3>
-    <p>As already mentioned avnav integrates <a href="https://canvas-gauges.com/">canvas-gauges</a>.
+    <p>As already mentioned AvNav integrates <a href="https://canvas-gauges.com/">canvas-gauges</a>.
       AvNav preconfigures a couple of widgets based on this library. Their
       parameters can be set in the layout editor.</p>
     <p>There are linear gauges (linGauge...) or radial gauges (radGauge...).<br>
@@ -237,11 +229,11 @@
     <h3>SignalK</h3>
     <p>The signalk plugin also provides a couple of widgets - they especially
       contain formatters for values that are otherwise not included in AvNav
-      like signalKCelsius for displaying temperatures in °C.</p>
+      like signalKCelsius to display temperatures in °C.</p>
     <p>They only make sense if you have appropriate signalk data, of course.</p>
     <h2>Adapting the Look and Feel of a Widget</h2>
     <p>If you would like to adapt the look and feel of a widget you should add
-      an on css class to it. Afterwards you can assign rules to it in your <a href="usercss.html">user
+      a css class to it. Afterwards you can assign rules to it in your <a href="usercss.html">user
         css</a>.</p>
     <h2>Own Widgets</h2>
     <p>With <a href="userjs.html">user defined Java Script Code</a> you can
