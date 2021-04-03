@@ -4,6 +4,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,6 +24,12 @@ public abstract class Worker {
             new EditableParameter.StringParameter("ipaddress","ip address to connect",null);
     static final EditableParameter.IntegerParameter IPPORT_PARAMETER=
             new EditableParameter.IntegerParameter("port","ip port to connect",null);
+    static final EditableParameter.StringParameter SOURCENAME_PARAMETER=
+            new EditableParameter.StringParameter("source Name","name of this data source","");
+    static final EditableParameter.StringListParameter BAUDRATE_PARAMETER=
+            new EditableParameter.StringListParameter("baud rate","serial baud rate","9600",
+                    "1200","2400","4800","9600","14400","19200","28800","38400","57600","115200","230400");
+
 
 
 
@@ -113,7 +120,7 @@ public abstract class Worker {
         paramSequence++;
     }
 
-    public abstract void run() throws JSONException;
+    public abstract void run() throws JSONException, IOException;
 
     /**
      * stop the service and free all resources

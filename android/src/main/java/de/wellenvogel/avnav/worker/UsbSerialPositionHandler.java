@@ -12,9 +12,13 @@ import com.felhr.usbserial.UsbSerialInterface;
 
 import net.sf.marineapi.nmea.sentence.RMCSentence;
 
+import org.json.JSONException;
+
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import de.wellenvogel.avnav.util.AvnLog;
@@ -23,8 +27,8 @@ import de.wellenvogel.avnav.util.NmeaQueue;
 /**
  * Created by andreas on 25.12.14.
  */
-public class UsbSerialPositionHandler extends ConnectionHandler {
-
+public class UsbSerialPositionHandler extends SingleConnectionHandler {
+    private Context ctx;
     void deviceDetach(UsbDevice dev) {
         UsbSerialConnection usb=(UsbSerialConnection) connection;
         if (usb != null && usb.dev.equals(dev)){
@@ -42,7 +46,7 @@ public class UsbSerialPositionHandler extends ConnectionHandler {
         String baud;
         UsbSerialDevice serialPort;
         ArrayList<Byte> buffer=new ArrayList<Byte>();
-        Object bufferLock=new Object();
+        final Object bufferLock=new Object();
 
         private void notifyWaiters(){
             synchronized (bufferLock){
@@ -134,6 +138,18 @@ public class UsbSerialPositionHandler extends ConnectionHandler {
         }
 
         @Override
+        public OutputStream getOutputStream() throws IOException {
+            return new OutputStream() {
+                @Override
+                public void write(int b) throws IOException {
+                    byte [] buffer=new byte[1];
+                    buffer[0]=(byte)b;
+                    serialPort.write(buffer);
+                }
+            };
+        }
+
+        @Override
         public void close() throws IOException {
             AvnLog.i(PREFIX,"close connection to "+dev.getDeviceName());
             if (serialPort == null) return;
@@ -147,37 +163,37 @@ public class UsbSerialPositionHandler extends ConnectionHandler {
             return dev.getDeviceName();
         }
 
-        @Override
-        public void sendData(String data) throws IOException {
-            if (serialPort == null) return;
-            serialPort.write(data.getBytes());
-        }
+
+    }
+    EditableParameter.StringListParameter deviceSelect=
+            new EditableParameter.StringListParameter("device","usb device");
+    UsbSerialPositionHandler(Context ctx, UsbDevice device, NmeaQueue queue) throws JSONException {
+        super("UsbSerialPositionHandler",ctx,queue);
+        parameterDescriptions.add(BAUDRATE_PARAMETER);
+        deviceSelect.listBuilder=new EditableParameter.ListBuilder<String>() {
+            @Override
+            public List<String> buildList(EditableParameter.StringListParameter param) {
+                UsbManager manager=(UsbManager) ctx.getSystemService(Context.USB_SERVICE);
+                Map<String,UsbDevice> devices=manager.getDeviceList();
+                ArrayList<String> rt = new ArrayList<String>(devices.keySet());
+                return rt;
+            }
+        };
+        parameterDescriptions.add(deviceSelect);
+        this.ctx=ctx;
     }
 
-    UsbSerialPositionHandler(Context ctx, UsbDevice device, String baud, Properties prop, NmeaQueue queue){
-        super("UsbSerialPositionHandler",ctx,new UsbSerialConnection(ctx,device,baud),prop,queue);
+
+    @Override
+    public void run() throws JSONException, IOException {
+        String deviceName=deviceSelect.fromJson(parameters);
+        runInternal(new UsbSerialConnection(ctx,getDeviceForName(ctx,deviceName),BAUDRATE_PARAMETER.fromJson(parameters)));
     }
 
     public static UsbDevice getDeviceForName(Context ctx,String name){
         UsbManager manager=(UsbManager) ctx.getSystemService(Context.USB_SERVICE);
         Map<String,UsbDevice> devices=manager.getDeviceList();
         return devices.get(name);
-    }
-
-    @Override
-    public String getName() {
-        return "USBSerial";
-    }
-    @Override
-    public void sendPosition(Location curLoc) {
-        if (! properties.sendPosition) return;
-        if (curLoc == null) return;
-        RMCSentence out= positionToRmc(curLoc);
-        try {
-            connection.sendData(out.toSentence()+"\r\n");
-        } catch (IOException e) {
-            Log.e(LOGPRFX,"unable to send position",e);
-        }
     }
 
 

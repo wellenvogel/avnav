@@ -3,19 +3,43 @@ package de.wellenvogel.avnav.worker;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
+
+import org.json.JSONException;
+
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.NmeaQueue;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 /**
  * Created by andreas on 25.12.14.
  */
-public class BluetoothPositionHandler extends ConnectionHandler {
+public class BluetoothPositionHandler extends SingleConnectionHandler {
+    private final EditableParameter.StringListParameter deviceSelect=new EditableParameter.StringListParameter(
+            "device",
+            "bluetooth device",
+            null,
+            null
+    );
+    BluetoothPositionHandler(Context ctx, NmeaQueue queue) throws IOException, JSONException {
+        super("BluetoothPositionHandler",ctx,queue);
+        deviceSelect.listBuilder=new EditableParameter.ListBuilder<String>() {
+            @Override
+            public List<String> buildList(EditableParameter.StringListParameter param) {
+                return getBluetoothDevices();
+            }
+        };
+        parameterDescriptions.add(deviceSelect);
+    }
 
-    BluetoothPositionHandler(Context ctx, BluetoothDevice device, Properties prop, NmeaQueue queue) throws IOException {
-        super("BluetoothPositionHandler",ctx,new AbstractConnection(device,prop.connectTimeout),prop,queue);
+
+    @Override
+    public void run() throws JSONException, IOException {
+        String deviceName=deviceSelect.fromJson(parameters);
+        runInternal(new BluetoothConnection(getDeviceForName(deviceName)));
     }
 
     /**
@@ -42,8 +66,18 @@ public class BluetoothPositionHandler extends ConnectionHandler {
         return null;
     }
 
-    @Override
-    public String getName() {
-        return "Bluetooth";
+    private static List<String> getBluetoothDevices(){
+        ArrayList<String> rt=new ArrayList<String>();
+        BluetoothAdapter adapter=BluetoothAdapter.getDefaultAdapter();
+        if (adapter == null){
+            AvnLog.i("no bluetooth adapter found");
+            return rt;
+        }
+        Set<BluetoothDevice> devices=adapter.getBondedDevices();
+        for (BluetoothDevice d: devices){
+            rt.add(d.getName());
+        }
+        return rt;
     }
+
 }

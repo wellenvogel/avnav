@@ -5,6 +5,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import de.wellenvogel.avnav.util.AvnUtil;
@@ -137,6 +138,14 @@ public class EditableParameter {
         StringListParameter(String name, String description, String defaultValue,List<String> values) {
             super(name, description, defaultValue);
             list=values;
+        }
+        StringListParameter(String name,String description){
+            super(name,description,null);
+        }
+        StringListParameter(String name, String description, String defaultValue,String... values) {
+            super(name, description, defaultValue);
+            list=new ArrayList<String>();
+            list.addAll(Arrays.asList(values));
         }
         StringListParameter(String name,List<String> values) {
             super(name);

@@ -11,7 +11,7 @@ import de.wellenvogel.avnav.util.NmeaQueue;
 /**
  * Created by andreas on 25.12.14.
  */
-public class SocketReader extends ConnectionHandler {
+public class SocketReader extends SingleConnectionHandler {
 
     SocketReader(Context ctx, NmeaQueue queue) throws JSONException {
         super("SocketReader",ctx,queue);

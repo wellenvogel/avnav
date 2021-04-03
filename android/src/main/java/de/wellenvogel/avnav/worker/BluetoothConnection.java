@@ -55,7 +55,7 @@ public class BluetoothConnection extends AbstractConnection {
 
 
     public static String RFCOMM_UUID="00001101-0000-1000-8000-00805F9B34FB"; //the somehow magic id..
-    public BluetoothConnection(BluetoothDevice device, int connectTimeout) throws IOException {
+    public BluetoothConnection(BluetoothDevice device) throws IOException {
         btDevice=device;
         createBtSocket();
     }
