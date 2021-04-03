@@ -57,7 +57,14 @@ if hasBluetooth:
     def recv(self, numbytes):
       if self._closed:
         raise Exception("socket closed")
-      return super().recv(numbytes)
+      try:
+        return super().recv(numbytes)
+      except Exception as e:
+        if isinstance(e,bluetooth.btcommon.BluetoothError):
+          if re.match("timed* *out",str(e)):
+            raise socket.timeout()
+          AVNLog.info("bluetooth socket error: ",str(e))
+          raise
 
     def close(self):
       self._closed=True
@@ -144,8 +151,6 @@ class AVNBlueToothReader(AVNWorker,SocketReader):
   def readBT(self,host,port):
     infoName="BTReader-%s"%(host)
     threading.current_thread().setName("%s-reader-%s]"%(self.getName(),host))
-    AVNLog.debug("started bluetooth reader thread for %s:%s",str(host),str(port))
-    self.setInfo(infoName, "connecting", WorkerStatus.STARTED)
     try:
       sock=OurBtSocket( bluetooth.RFCOMM )
       if not self.checkAndAddAddr(host,sock):
@@ -153,7 +158,9 @@ class AVNBlueToothReader(AVNWorker,SocketReader):
           sock.close()
         except:
           pass
-        self.deleteInfo(infoName)
+        return
+      AVNLog.debug("started bluetooth reader thread for %s:%s",str(host),str(port))
+      self.setInfo(infoName, "connecting", WorkerStatus.STARTED)
       sock.connect((host, port))
       AVNLog.info("bluetooth connection to %s established",host)
       self.readSocket(sock,infoName,self.getSourceName(host),self.getParamValue('filter'))
