@@ -212,17 +212,6 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
         }
     }
 
-
-    @Override
-    public boolean handlesNmea() {
-        return true;
-    }
-
-    @Override
-    public boolean handlesAis() {
-        return false;
-    }
-
     @Override
     public String getName() {
         return "internal";

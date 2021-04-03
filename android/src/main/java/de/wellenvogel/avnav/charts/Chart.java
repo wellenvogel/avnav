@@ -13,10 +13,10 @@ import java.io.InputStream;
 
 import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
 import de.wellenvogel.avnav.main.Constants;
-import de.wellenvogel.avnav.appapi.INavRequestHandler;
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.util.AvnUtil;
 
-public class Chart implements INavRequestHandler.IJsonObect {
+public class Chart implements AvnUtil.IJsonObect {
     static final int TYPE_GEMF=1;
     static final int TYPE_MBTILES=2;
     static final int TYPE_XML=3;

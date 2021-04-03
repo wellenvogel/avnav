@@ -158,15 +158,6 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
     }
 
 
-    @Override
-    public boolean handlesNmea() {
-        return properties.readNmea;
-    }
-
-    @Override
-    public boolean handlesAis() {
-        return properties.readAis;
-    }
 
     @Override
     public synchronized void stop() {

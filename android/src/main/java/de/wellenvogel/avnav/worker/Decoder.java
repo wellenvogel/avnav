@@ -29,7 +29,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -323,7 +322,7 @@ public class Decoder extends GpsDataProvider {
                                         lastPositionReceived = System.currentTimeMillis();
                                         newLocation.setLatitude(p.getLatitude());
                                         newLocation.setLongitude(p.getLongitude());
-                                        newLocation.setTime(toTimeStamp(lastDate, time));
+                                        newLocation.setTime(AvnUtil.toTimeStamp(lastDate, time));
                                         location = newLocation;
                                         if (s.getSentenceId().equals("RMC")) {
                                             try {
@@ -428,20 +427,10 @@ public class Decoder extends GpsDataProvider {
         this.receiverThread.start();
     }
 
-    @Override
     SatStatus getSatStatus() {
         return new SatStatus(stat);
     }
 
-    @Override
-    public boolean handlesNmea() {
-        return true;
-    }
-
-    @Override
-    public boolean handlesAis() {
-        return true;
-    }
 
     @Override
     public String getName() {
@@ -462,7 +451,6 @@ public class Decoder extends GpsDataProvider {
         return stopped;
     }
 
-    @Override
     public Location getLocation() {
         long current=System.currentTimeMillis();
         if (current > (lastPositionReceived+properties.postionAge)){
@@ -475,21 +463,35 @@ public class Decoder extends GpsDataProvider {
         return rt;
     }
 
-    @Override
-    public JSONObject getGpsData() throws JSONException {
-        JSONObject rt=getGpsData(getLocation());
+    public static final String G_LON="lon";
+    public static final String G_LAT="lat";
+    public static final String G_COURSE="course";
+    public static final String G_SPEED="speed";
+    public static final String G_MODE="mode";
+    public static final String G_TIME="time";
+    /**
+     * service function to convert an android location
+     * @return
+     * @throws JSONException
+     */
+    JSONObject getGpsData() throws JSONException{
+        Location curLoc=getLocation();
+        if (curLoc == null) {
+            AvnLog.d(LOGPRFX, "getGpsData returns empty data");
+            return null;
+        }
+        JSONObject rt=new JSONObject();
+        rt.put(G_MODE,1);
+        rt.put(G_LAT,curLoc.getLatitude());
+        rt.put(G_LON,curLoc.getLongitude());
+        rt.put(G_COURSE,curLoc.getBearing());
+        rt.put(G_SPEED,curLoc.getSpeed());
+        rt.put(G_TIME,dateFormat.format(new Date(curLoc.getTime())));
         mergeAuxiliaryData(rt);
+        AvnLog.d(LOGPRFX,"getGpsData: "+rt.toString());
         return rt;
     }
 
-
-    @Override
-    JSONObject getGpsData(Location curLoc) throws JSONException {
-        JSONObject rt= super.getGpsData(curLoc);
-        if (rt == null) rt=new JSONObject();
-        mergeAuxiliaryData(rt);
-        return rt;
-    }
 
     /**
      * get AIS data (limited to distance)
@@ -498,7 +500,6 @@ public class Decoder extends GpsDataProvider {
      * @param distance in nm
      * @return
      */
-    @Override
     public JSONArray  getAisData(double lat,double lon,double distance){
         if (store != null) return store.getAisData(lat,lon,distance);
         return new JSONArray();
@@ -532,7 +533,7 @@ public class Decoder extends GpsDataProvider {
             } else {
                 if (st.gpsEnabled) {
                     String info="(" + addr + ") connected";
-                    if (handler.handlesNmea()) info+=", sats: " + st.numSat + " available / " + st.numUsed + " used";
+                    info+=", sats: " + st.numSat + " available / " + st.numUsed + " used";
                     item.put("info", info);
                     item.put("status", GpsDataProvider.STATUS_STARTED);
                 } else {

@@ -5,11 +5,14 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Calendar;
+import java.util.TimeZone;
 
 import de.wellenvogel.avnav.main.Constants;
 
@@ -109,5 +112,24 @@ public class AvnUtil {
             throw new Exception("unable to read all bytes for " + file.getAbsolutePath());
         JSONObject rt = new JSONObject(new String(buffer, StandardCharsets.UTF_8));
         return rt;
+    }
+
+    public static long toTimeStamp(net.sf.marineapi.nmea.util.Date date, net.sf.marineapi.nmea.util.Time time){
+        if (date == null) return 0;
+        Calendar cal=Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        cal.set(Calendar.YEAR, date.getYear());
+        cal.set(Calendar.MONTH, date.getMonth()-1); //!!! the java calendar counts from 0
+        cal.set(Calendar.DAY_OF_MONTH, date.getDay());
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        cal.add(Calendar.MILLISECOND, (int) (time.getMilliseconds()));
+        long millis=cal.getTime().getTime();
+        return millis;
+    }
+
+    public static interface IJsonObect{
+        JSONObject toJson() throws JSONException;
     }
 }

@@ -168,17 +168,9 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         @Override
         public void run() {
             while (! stop) {
-                GpsDataProvider locationProvider = null;
-                Location location = null;
+                Location location = decoder.getLocation();
                 for (GpsDataProvider provider : getAllProviders()) {
-                    if (isProviderActive(provider) && provider.handlesNmea()) {
-                        location = provider.getLocation();
-                        locationProvider = provider;
-                        break;
-                    }
-                }
-                for (GpsDataProvider provider : getAllProviders()) {
-                    if (provider != null && provider != locationProvider) {
+                    if (provider != null ) {
                         try {
                             if (location != null) provider.sendPosition(location);
                         }catch (Throwable t){

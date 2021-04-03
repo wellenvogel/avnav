@@ -5,13 +5,11 @@ import android.net.Uri;
 import android.util.Log;
 
 import de.wellenvogel.avnav.appapi.DirectoryRequestHandler;
-import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
-import de.wellenvogel.avnav.appapi.PostVars;
 import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.main.IMediaUpdater;
-import de.wellenvogel.avnav.appapi.INavRequestHandler;
 import de.wellenvogel.avnav.main.ISO8601DateParser;
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.util.AvnUtil;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -60,7 +58,7 @@ public class TrackWriter extends DirectoryRequestHandler {
     }
 
 
-    public static class TrackInfo implements INavRequestHandler.IJsonObect{
+    public static class TrackInfo implements AvnUtil.IJsonObect {
         public String name;
         public long mtime;
         public String url;

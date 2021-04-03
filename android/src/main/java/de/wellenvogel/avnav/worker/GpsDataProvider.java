@@ -42,7 +42,7 @@ public abstract class GpsDataProvider {
         public int numSat=0;
         public int numUsed=0;
         public boolean gpsEnabled; //for external connections this shows if it is connected
-        public String statusText=null;
+
         public SatStatus(int numSat,int numUsed){
             this.numSat=numSat;
             this.numUsed=numUsed;
@@ -56,12 +56,7 @@ public abstract class GpsDataProvider {
         }
     }
 
-    SatStatus getSatStatus(){return null;}
-
-    public abstract boolean handlesNmea();
-    public abstract boolean handlesAis();
     public abstract String getName();
-    public int numAisData(){return 0;}
     public String getConnectionId(){ return "";}
 
     public static class Properties{
@@ -93,29 +88,6 @@ public abstract class GpsDataProvider {
         return false;
     }
 
-    /**<EditTextPreference
-        android:key="gps.offset"
-        android:defaultValue="0"
-        android:inputType="numberSigned"
-        android:title="@string/labelSettingsGpsOffset"></EditTextPreference>
-     * get the current location if any available or null
-     * @return
-     */
-    public Location getLocation() {return null;}
-
-    /**
-     * get the GPS data the same way as we return it in the Json response
-     * (i.e. the format used by gpsd)
-     * @return
-     */
-    public JSONObject getGpsData() throws JSONException{ return null;}
-
-    /**
-     * get the AIS data the same way as we return it in the Json response
-     * (i.e. the format used by gpsd)
-     * @return
-     */
-    public JSONArray getAisData(double lat,double lon,double distance) throws JSONException{ return null;}
 
 
     /**
@@ -132,84 +104,16 @@ public abstract class GpsDataProvider {
 
     }
 
-    /**
-     * service function to convert an android location
-     * @param curLoc
-     * @return
-     * @throws JSONException
-     */
-    JSONObject getGpsData(Location curLoc) throws JSONException{
-        if (curLoc == null) {
-            AvnLog.d(LOGPRFX, "getGpsData returns empty data");
-            return null;
-        }
-        JSONObject rt=new JSONObject();
-        rt.put(G_CLASS, GV_CLASS_TPV);
-        rt.put(G_TAG,GV_TAG_RMC);
-        rt.put(G_MODE,1);
-        rt.put(G_LAT,curLoc.getLatitude());
-        rt.put(G_LON,curLoc.getLongitude());
-        rt.put(G_COURSE,curLoc.getBearing());
-        rt.put(G_SPEED,curLoc.getSpeed());
-        rt.put(G_TIME,dateFormat.format(new Date(curLoc.getTime())));
-        AvnLog.d(LOGPRFX,"getGpsData: "+rt.toString());
-        return rt;
-    }
+
 
     JSONObject getHandlerStatus() throws JSONException {
         return new JSONObject();
     };
 
-    //GPS position data
-    public static final String G_CLASS="class";
-    public static final String G_TAG="tag";
-    public static final String GV_CLASS_TPV="TPV";
-    //simple gps position reports
-    public static final String GV_TAG_RMC="RMC";
-    public static final String G_LON="lon";
-    public static final String G_LAT="lat";
-    public static final String G_COURSE="course";
-    public static final String G_SPEED="speed";
-    public static final String G_MODE="mode";
-    public static final String G_TIME="time";
 
-
-    public static String formatCoord(double coord,boolean isLat){
-        StringBuilder rt=new StringBuilder();
-        String dir=isLat?"N":"E";
-        if (coord < 0){
-            dir=isLat?"S":"W";
-            coord=-coord;
-        }
-        double deg=Math.floor(coord);
-        double min=(coord-deg)*60;
-        DecimalFormat degFormat=isLat?new DecimalFormat("00"):new DecimalFormat("000");
-        rt.append(degFormat.format(deg));
-        rt.append("°");
-        rt.append(" ");
-        DecimalFormat minFormat=new DecimalFormat("00.000");
-        rt.append(minFormat.format(min));
-        rt.append("'").append(dir);
-        return rt.toString();
-    }
 
     public static InetSocketAddress convertAddress(String host, String port) {
         return new InetSocketAddress(host,Integer.parseInt(port));
-    }
-
-    public static long toTimeStamp(net.sf.marineapi.nmea.util.Date date,net.sf.marineapi.nmea.util.Time time){
-        if (date == null) return 0;
-        Calendar cal=Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        cal.set(Calendar.YEAR, date.getYear());
-        cal.set(Calendar.MONTH, date.getMonth()-1); //!!! the java calendar counts from 0
-        cal.set(Calendar.DAY_OF_MONTH, date.getDay());
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
-        cal.add(Calendar.MILLISECOND, (int) (time.getMilliseconds()));
-        long millis=cal.getTime().getTime();
-        return millis;
     }
 
     public static net.sf.marineapi.nmea.util.Date toSfDate(long timestamp){

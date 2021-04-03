@@ -21,7 +21,7 @@ import de.wellenvogel.avnav.util.AvnUtil;
 
 public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
 
-    static class AddonInfo implements IJsonObect {
+    static class AddonInfo implements AvnUtil.IJsonObect {
         public String name;
         public String url;
         public String icon;

@@ -27,7 +27,7 @@ public class LayoutHandler implements INavRequestHandler{
     Activity activity=null;
 
 
-    static class LayoutInfo implements INavRequestHandler.IJsonObect {
+    static class LayoutInfo implements AvnUtil.IJsonObect {
         public static final String USERPREFIX="user.";
         public static final String SYSTEMPREFIX="system.";
         public String name;
@@ -71,7 +71,7 @@ public class LayoutHandler implements INavRequestHandler{
     @Override
     public JSONArray handleList(Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception{
             JSONArray li=readDir(userDir,true);
-            for (IJsonObect o: readAssetsDir()){
+            for (AvnUtil.IJsonObect o: readAssetsDir()){
                 li.put(o.toJson());
             }
             return li;
@@ -109,8 +109,8 @@ public class LayoutHandler implements INavRequestHandler{
         return null;
     }
 
-    private ArrayList<IJsonObect> readAssetsDir() throws Exception {
-        ArrayList<IJsonObect> rt=new ArrayList<>();
+    private ArrayList<AvnUtil.IJsonObect> readAssetsDir() throws Exception {
+        ArrayList<AvnUtil.IJsonObect> rt=new ArrayList<>();
         String [] list;
         list=activity.getAssets().list(systemDir);
         for (String name :list){
