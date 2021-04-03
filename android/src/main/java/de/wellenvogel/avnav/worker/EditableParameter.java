@@ -31,7 +31,7 @@ public class EditableParameter {
             this.name = name;
             this.description = description;
             this.defaultValue = defaultValue;
-            mandatory = defaultValue != null;
+            mandatory = defaultValue == null;
 
         }
         EditableParameterBase(String name) {
@@ -95,7 +95,7 @@ public class EditableParameter {
 
         @Override
         Integer fromJson(JSONObject o) throws JSONException {
-            return mandatory?o.getInt(name):o.optInt(name,defaultValue);
+            return (mandatory||o.has(name))?o.getInt(name):o.optInt(name,defaultValue);
         }
     }
     public static class BooleanParameter extends EditableParameterBase<Boolean>{
@@ -112,7 +112,7 @@ public class EditableParameter {
 
         @Override
         Boolean fromJson(JSONObject o) throws JSONException {
-            return mandatory?o.getBoolean(name):o.optBoolean(name,defaultValue);
+            return (mandatory||o.has(name))?o.getBoolean(name):o.optBoolean(name,defaultValue);
         }
     }
     public static class FloatParameter extends EditableParameterBase<Float>{
@@ -129,7 +129,7 @@ public class EditableParameter {
 
         @Override
         Float fromJson(JSONObject o) throws JSONException {
-            return mandatory?(float)o.getDouble(name):(float)o.optDouble(name,defaultValue);
+            return (mandatory||o.has(name))?(float)o.getDouble(name):(float)o.optDouble(name,defaultValue);
         }
     }
     public static class StringListParameter extends EditableParameterBase<String>{
@@ -191,9 +191,10 @@ public class EditableParameter {
             }
         }
         public ParameterList(EditableParameterInterface... param){
-            for (EditableParameterInterface i:param){
-                add(i);
-            }
+            this.addAll(Arrays.asList(param));
+        }
+        public void addParams(EditableParameterInterface... param){
+            this.addAll(Arrays.asList(param));
         }
     }
 }

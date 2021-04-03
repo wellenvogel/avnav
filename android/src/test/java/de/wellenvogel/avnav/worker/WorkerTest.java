@@ -12,8 +12,7 @@ import static org.junit.Assert.*;
 public class WorkerTest {
     @Test
     public void toJson() throws JSONException {
-        Worker.WorkerStatus st=new Worker.WorkerStatus();
-        st.name="test1";
+        Worker.WorkerStatus st=new Worker.WorkerStatus("test1");
         JSONObject o=st.toJson();
         assertEquals(false,o.getBoolean("canEdit"));
         assertEquals(false,o.getBoolean("canDelete"));
@@ -22,7 +21,7 @@ public class WorkerTest {
     }
     @Test
     public void toJsonEditDelete() throws JSONException {
-        Worker.WorkerStatus st=new Worker.WorkerStatus();
+        Worker.WorkerStatus st=new Worker.WorkerStatus("test2");
         st.canDelete=true;
         st.canEdit=true;
         JSONObject o=st.toJson();
@@ -31,7 +30,7 @@ public class WorkerTest {
     }
     @Test
     public void toJsonStatusNMEA() throws JSONException {
-        Worker.WorkerStatus st=new Worker.WorkerStatus();
+        Worker.WorkerStatus st=new Worker.WorkerStatus("test3");
         st.status= Worker.WorkerStatus.Status.NMEA;
         st.info="test2";
         JSONObject o=st.toJson();

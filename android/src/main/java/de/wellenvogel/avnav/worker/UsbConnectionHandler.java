@@ -4,13 +4,9 @@ import android.content.Context;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
-import android.location.Location;
-import android.util.Log;
 
 import com.felhr.usbserial.UsbSerialDevice;
 import com.felhr.usbserial.UsbSerialInterface;
-
-import net.sf.marineapi.nmea.sentence.RMCSentence;
 
 import org.json.JSONException;
 
@@ -27,7 +23,7 @@ import de.wellenvogel.avnav.util.NmeaQueue;
 /**
  * Created by andreas on 25.12.14.
  */
-public class UsbSerialPositionHandler extends SingleConnectionHandler {
+public class UsbConnectionHandler extends SingleConnectionHandler {
     private Context ctx;
     void deviceDetach(UsbDevice dev) {
         UsbSerialConnection usb=(UsbSerialConnection) connection;
@@ -167,8 +163,8 @@ public class UsbSerialPositionHandler extends SingleConnectionHandler {
     }
     EditableParameter.StringListParameter deviceSelect=
             new EditableParameter.StringListParameter("device","usb device");
-    UsbSerialPositionHandler(Context ctx, UsbDevice device, NmeaQueue queue) throws JSONException {
-        super("UsbSerialPositionHandler",ctx,queue);
+    private UsbConnectionHandler(String name, Context ctx, NmeaQueue queue) throws JSONException {
+        super(name,ctx,queue);
         parameterDescriptions.add(BAUDRATE_PARAMETER);
         deviceSelect.listBuilder=new EditableParameter.ListBuilder<String>() {
             @Override
@@ -194,6 +190,15 @@ public class UsbSerialPositionHandler extends SingleConnectionHandler {
         UsbManager manager=(UsbManager) ctx.getSystemService(Context.USB_SERVICE);
         Map<String,UsbDevice> devices=manager.getDeviceList();
         return devices.get(name);
+    }
+
+    public static void register(WorkerFactory factory,String name){
+        factory.registerCreator(new WorkerCreator(name) {
+            @Override
+            Worker create(Context ctx, NmeaQueue queue) throws JSONException {
+                return new UsbConnectionHandler(name,ctx,queue);
+            }
+        });
     }
 
 

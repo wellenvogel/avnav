@@ -513,9 +513,8 @@ public class Decoder extends GpsDataProvider {
 
     @Override
     JSONObject getHandlerStatus() throws JSONException {
+        Worker.WorkerStatus workerStatus=new Worker.WorkerStatus(name);
         Decoder handler=this;
-        JSONObject item = new JSONObject();
-        item.put("name", handler.getName());
         String addr = name;
         SatStatus st = handler.getSatStatus();
         Location loc = handler.getLocation();
@@ -523,26 +522,26 @@ public class Decoder extends GpsDataProvider {
         if (loc != null ) {
             String info = "(" + addr + ") valid position, sats: " + st.numSat + " / " + st.numUsed;
             if (numAis > 0) info += ", valid AIS data, " + numAis + " targets";
-            item.put("info", info);
-            item.put("status", GpsDataProvider.STATUS_NMEA);
+            workerStatus.info=info;
+            workerStatus.status= Worker.WorkerStatus.Status.NMEA;
         } else {
             if ( numAis > 0) {
-                item.put("info", "(" + addr + ") valid AIS data, " + numAis + " targets");
-                item.put("status", GpsDataProvider.STATUS_NMEA);
+                workerStatus.info= "(" + addr + ") valid AIS data, " + numAis + " targets";
+                workerStatus.status= Worker.WorkerStatus.Status.NMEA;
 
             } else {
                 if (st.gpsEnabled) {
                     String info="(" + addr + ") connected";
                     info+=", sats: " + st.numSat + " available / " + st.numUsed + " used";
-                    item.put("info", info);
-                    item.put("status", GpsDataProvider.STATUS_STARTED);
+                    workerStatus.info=info;
+                    workerStatus.status= Worker.WorkerStatus.Status.STARTED;
                 } else {
-                    item.put("info", "(" + addr + ") disconnected");
-                    item.put("status", GpsDataProvider.STATUS_ERROR);
+                    workerStatus.info= "(" + addr + ") disconnected";
+                    workerStatus.status= Worker.WorkerStatus.Status.ERROR;
                 }
             }
         }
-        return item;
+        return workerStatus.toJson();
     }
 
 }

@@ -67,8 +67,8 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     private final IBinder mBinder = new GpsServiceBinder();
     private GpsDataProvider internalProvider=null;
     private SocketReader externalProvider=null;
-    private BluetoothPositionHandler bluetoothProvider=null;
-    private UsbSerialPositionHandler usbProvider =null;
+    private BluetoothConnectionHandler bluetoothProvider=null;
+    private UsbConnectionHandler usbProvider =null;
 
     private boolean isRunning;  //this is our view whether we are running or not
                                 //running means that we are registered for updates and have our timer active
@@ -96,8 +96,6 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     PendingIntent watchdogIntent=null;
     private static final String WATCHDOGACTION="restart";
 
-    private PositionWriter positionWriter;
-    private Thread positionWriterThread;
     private RouteHandler.RoutePoint lastAlarmWp=null;
     private final NmeaQueue queue=new NmeaQueue();
     private Decoder decoder;
@@ -105,6 +103,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     Alarm lastNotifiedAlarm=null;
     boolean notificationSend=false;
     private long alarmSequence=System.currentTimeMillis();
+    private final ArrayList<Worker> workers=new ArrayList<>();
 
     private final BroadcastReceiver usbReceiver = new BroadcastReceiver() {
         @Override
@@ -124,16 +123,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
 
     private static final String LOGPRFX="Avnav:GpsService";
 
-    /**
-     * get the providers in the correct order of their priority
-     * @return
-     */
-    private GpsDataProvider[] getAllProviders(){
-        return new GpsDataProvider[]{internalProvider,externalProvider,bluetoothProvider, usbProvider};
-    }
-    private boolean isProviderActive(GpsDataProvider provider){
-        return (provider != null) && ! provider.isStopped();
-    }
+
     @Override
     public void logNmea(String data) {
         synchronized (loggerLock){
@@ -162,37 +152,6 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     {
         return mBinder;
     }
-
-    private class PositionWriter implements Runnable{
-        private boolean stop=false;
-        @Override
-        public void run() {
-            while (! stop) {
-                Location location = decoder.getLocation();
-                for (GpsDataProvider provider : getAllProviders()) {
-                    if (provider != null ) {
-                        try {
-                            if (location != null) provider.sendPosition(location);
-                        }catch (Throwable t){
-                            AvnLog.e("error when writing position at "+provider.getName(),t);
-                        }
-                    }
-                }
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    return;
-                }
-            }
-        }
-        public void doStop(){
-            stop=true;
-        }
-        public boolean isStopped(){
-            return stop;
-        }
-    }
-
 
     private void createNotificationChannel() {
         // Create the NotificationChannel, but only on API 26+ because
@@ -296,6 +255,24 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         prop.ownMmsi=prefs.getString(Constants.AISOWN,null);
         return prop;
     }
+
+    private JSONArray getHandlerConfig() throws JSONException {
+        JSONArray rt=new JSONArray();
+        JSONObject h1=new JSONObject();
+        h1.put("name",WorkerFactory.ANDROID_NAME);
+        rt.put(h1);
+        return rt;
+    }
+    private void stopWorkers(){
+        for (Worker w:workers){
+            try{
+                w.stop();
+            }catch (Throwable t){
+                AvnLog.e("unable to stop worker "+w.getStatus().toString());
+            }
+        }
+        workers.clear();
+    }
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent,flags,startId);
@@ -307,6 +284,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         }
         SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
         handleNotification(true,true);
+        stopWorkers();
         //we rely on the activity to check before...
         File newTrackDir=new File(AvnUtil.getWorkDir(prefs,this),"tracks");
         boolean loadTrack=true;
@@ -371,112 +349,29 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
             receiverRegistered=true;
         }
         decoder=new Decoder("decoder",this,queue,new GpsDataProvider.Properties());
-        if (nmeaMode.equals(Constants.MODE_INTERNAL)){
-            if (internalProvider == null || internalProvider.isStopped()) {
-                AvnLog.d(LOGPRFX,"start internal provider");
-                GpsDataProvider.Properties prop=new GpsDataProvider.Properties();
-                try {
-                    internalProvider = new AndroidPositionHandler(this, 1000 * AvnUtil.getLongPref(prefs, Constants.GPSOFFSET, prop.timeOffset),queue);
-                }catch (Exception i){
-                    Log.e(LOGPRFX,"unable to start external service: "+i.getLocalizedMessage());
-                }
-            }
-        }
-        else {
-            if (internalProvider != null){
-                AvnLog.d(LOGPRFX,"stopping internal provider");
-                internalProvider.stop();
-                internalProvider=null;
-            }
-        }
-        if (aisMode.equals(Constants.MODE_IP) || nmeaMode.equals(Constants.MODE_IP)){
-            if (externalProvider == null|| externalProvider.isStopped()){
-                try {
-                    InetSocketAddress addr = GpsDataProvider.convertAddress(prefs.getString(Constants.IPADDR, ""),
-                            prefs.getString(Constants.IPPORT, ""));
-                    AvnLog.d(LOGPRFX,"starting external receiver for "+addr.toString());
-                    GpsDataProvider.Properties prop=getFilledProperties();
-                    prop.timeOffset=1000*AvnUtil.getLongPref(prefs,Constants.IPOFFSET,prop.timeOffset);
-                    prop.readAis=aisMode.equals(Constants.MODE_IP);
-                    prop.readNmea=nmeaMode.equals(Constants.MODE_IP);
-                    prop.nmeaFilter=prefs.getString(Constants.NMEAFILTER,null);
-                    prop.sendPosition=prefs.getBoolean(Constants.AISSENDPOS,false) && (prop.readAis && ! prop.readNmea);
-                    externalProvider=new SocketReader(this,addr,prop,queue);
-                }catch (Exception i){
-                    Log.e(LOGPRFX,"unable to start external service: "+i.getLocalizedMessage());
-                }
-
-            }
-        }
-        else{
-            if (externalProvider != null){
-                AvnLog.d(LOGPRFX,"stopping external service");
-                externalProvider.stop();
-            }
-        }
-        if (aisMode.equals(Constants.MODE_BLUETOOTH) || nmeaMode.equals(Constants.MODE_BLUETOOTH)){
-            if (bluetoothProvider == null|| bluetoothProvider.isStopped()){
-                try {
-                    String dname=prefs.getString(Constants.BTDEVICE, "");
-                    BluetoothDevice dev=BluetoothPositionHandler.getDeviceForName(dname);
-                    if (dev == null){
-                        throw new Exception("no bluetooth device found for"+dname);
+        try {
+            JSONArray handlerConfig = getHandlerConfig();
+            for (int i=0;i<handlerConfig.length();i++){
+                try{
+                    JSONObject config=handlerConfig.getJSONObject(i);
+                    Worker worker=WorkerFactory.getInstance().createWorker(config.getString("name"),this,queue);
+                    worker.setId(i);
+                    worker.setParameters(config);
+                    if (Worker.ENABLED_PARAMETER.fromJson(config)){
+                        worker.run();
                     }
-                    AvnLog.d(LOGPRFX,"starting bluetooth receiver for "+dname+": "+ dev.getAddress());
-                    GpsDataProvider.Properties prop=getFilledProperties();
-                    prop.readAis=aisMode.equals(Constants.MODE_BLUETOOTH);
-                    prop.readNmea=nmeaMode.equals(Constants.MODE_BLUETOOTH);
-                    prop.timeOffset=1000*AvnUtil.getLongPref(prefs,Constants.BTOFFSET,prop.timeOffset);
-                    prop.nmeaFilter=prefs.getString(Constants.NMEAFILTER,null);
-                    prop.sendPosition=prefs.getBoolean(Constants.AISSENDPOS,false) && (prop.readAis && ! prop.readNmea);
-                    bluetoothProvider=new BluetoothPositionHandler(this,dev,prop,queue);
-                }catch (Exception i){
-                    Log.e(LOGPRFX,"unable to start external service "+i.getLocalizedMessage());
-                }
-
-            }
-        }
-        else{
-            if (bluetoothProvider != null){
-                AvnLog.d(LOGPRFX,"stopping bluetooth service");
-                bluetoothProvider.stop();
-            }
-        }
-
-        if (aisMode.equals(Constants.MODE_USB) || nmeaMode.equals(Constants.MODE_USB)){
-            if (usbProvider == null || usbProvider.isStopped()){
-                try {
-                    String dname=prefs.getString(Constants.USBDEVICE, "");
-                    UsbDevice dev=UsbSerialPositionHandler.getDeviceForName(this,dname);
-                    if (dev == null){
-                        throw new Exception("no usb device found for"+dname);
+                    else{
+                        worker.setStatus(Worker.WorkerStatus.Status.INACTIVE,"disabled");
                     }
-                    AvnLog.d(LOGPRFX,"starting usb serial receiver for "+dname+": "+ dev.getDeviceName());
-                    GpsDataProvider.Properties prop=getFilledProperties();
-                    prop.readAis=aisMode.equals(Constants.MODE_USB);
-                    prop.readNmea=nmeaMode.equals(Constants.MODE_USB);
-                    prop.timeOffset=1000*AvnUtil.getLongPref(prefs,Constants.BTOFFSET,prop.timeOffset);
-                    prop.nmeaFilter=prefs.getString(Constants.NMEAFILTER,null);
-                    prop.sendPosition=prefs.getBoolean(Constants.AISSENDPOS,false) && (prop.readAis && ! prop.readNmea);
-                    usbProvider =new UsbSerialPositionHandler(this,dev,prefs.getString(Constants.USBBAUD,"4800"),prop,queue);
-                }catch (Exception i){
-                    Log.e(LOGPRFX,"unable to start external service "+i.getLocalizedMessage());
+                    workers.add(worker);
+                }catch (Throwable t){
+                    AvnLog.e("unable to create handler "+i,t);
                 }
+            }
+        }catch (Throwable t){
+            AvnLog.e("unable to create channels",t);
+        }
 
-            }
-        }
-        else{
-            if (usbProvider != null){
-                AvnLog.d(LOGPRFX,"stopping usbProvider service");
-                usbProvider.stop();
-            }
-        }
-        if (positionWriter == null || positionWriter.isStopped()) {
-            positionWriter = new PositionWriter();
-            positionWriterThread = new Thread(positionWriter);
-            positionWriterThread.setDaemon(true);
-            positionWriterThread.start();
-        }
         isRunning=true;
         return Service.START_REDELIVER_INTENT;
     }
@@ -562,9 +457,13 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         checkMob();
         handleNotification(true,false);
         checkTrackWriter();
-        for (GpsDataProvider provider: getAllProviders()) {
-            if (provider != null) {
-                provider.check();
+        for (Worker w: workers) {
+            if (w != null) {
+                try {
+                    w.check();
+                } catch (JSONException e) {
+                    AvnLog.e("error in check for "+w.status.name,e);
+                }
             }
         }
         SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
@@ -636,11 +535,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
      * will be called whe we intend to really stop
      */
     private void handleStop(boolean emptyTrack) {
-        for (GpsDataProvider provider : getAllProviders()) {
-            if (provider != null) {
-                provider.stop();
-            }
-        }
+        stopWorkers();
         decoder.stop();
         //this is not completely OK: we could fail to write our last track points
         //if we still load the track - but otherwise we could reeally empty the track
@@ -656,7 +551,6 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
             trackDir = null;
         }
         if (routeHandler != null) routeHandler.stop();
-        if (positionWriter != null) positionWriter.doStop();
         isRunning = false;
         handleNotification(false, false);
         AvnLog.i(LOGPRFX, "service stopped");
@@ -939,28 +833,23 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         rt.put("ais", ais);
         return rt;
     }
-    public JSONObject getStatus() throws JSONException {
+    public JSONArray getStatus() throws JSONException {
         JSONArray rt=new JSONArray();
-        for (GpsDataProvider handler: getAllProviders()) {
-            if (isProviderActive(handler)) {
-                try {
-                    rt.put(handler.getHandlerStatus());
-                }catch (JSONException e){
-                    AvnLog.d("exception while querying handler status: "+e);
-                }
-            }
+        for (Worker w :workers){
+            rt.put(w.getStatus().toJson());
         }
+
         rt.put(decoder.getHandlerStatus());
-        JSONObject out=new JSONObject();
-        out.put("name","GPS");
-        out.put("items",rt);
-        return out;
+        if (trackWriter != null){
+            JSONObject ts=new JSONObject();
+            JSONObject rs=trackWriter.getTrackStatus();
+            ts.put("name",rs.getString("name"));
+            ts.put("info",rs);
+            rt.put(ts);
+        }
+        return rt;
     }
 
-    public JSONObject getTrackStatus() throws JSONException {
-        if (trackWriter == null) return new JSONObject();
-        return trackWriter.getTrackStatus();
-    }
 
     public RouteHandler getRouteHandler(){
         return routeHandler;

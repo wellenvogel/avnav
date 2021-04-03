@@ -587,15 +587,10 @@ public class RequestHandler {
                 JSONObject o=new JSONObject();
                 JSONArray items=new JSONArray();
                 if (getGpsService() != null) {
-                    //internal GPS
-                    JSONObject gps = new JSONObject();
-                    gps.put("name", "GPS");
-                    gps.put("info", getGpsService().getStatus());
-                    items.put(gps);
-                    JSONObject tw=new JSONObject();
-                    tw.put("name","TrackWriter");
-                    tw.put("info",getGpsService().getTrackStatus());
-                    items.put(tw);
+                    JSONArray gpsStatus=getGpsService().getStatus();
+                    for (int i=0;i<gpsStatus.length();i++){
+                        items.put(gpsStatus.get(i));
+                    }
                 }
                 if (serverInfo != null){
                     //we are queried from the WebServer - just return all network interfaces

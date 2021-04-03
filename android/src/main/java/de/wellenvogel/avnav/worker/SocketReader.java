@@ -12,9 +12,17 @@ import de.wellenvogel.avnav.util.NmeaQueue;
  * Created by andreas on 25.12.14.
  */
 public class SocketReader extends SingleConnectionHandler {
+    static void register(WorkerFactory factory, String name){
+        factory.registerCreator(new WorkerCreator(name) {
+            @Override
+            Worker create(Context ctx,NmeaQueue queue) throws JSONException {
+                return new SocketReader(name,ctx,queue);
+            }
+        });
+    }
 
-    SocketReader(Context ctx, NmeaQueue queue) throws JSONException {
-        super("SocketReader",ctx,queue);
+    private SocketReader(String name,Context ctx, NmeaQueue queue) throws JSONException {
+        super(name,ctx,queue);
         parameterDescriptions.add(IPADDRESS_PARAMETER);
         parameterDescriptions.add(IPPORT_PARAMETER);
     }

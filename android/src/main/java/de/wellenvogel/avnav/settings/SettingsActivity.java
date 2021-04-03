@@ -7,7 +7,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.os.Build;
@@ -36,9 +35,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import de.wellenvogel.avnav.worker.BluetoothPositionHandler;
+import de.wellenvogel.avnav.worker.BluetoothConnectionHandler;
 import de.wellenvogel.avnav.worker.GpsDataProvider;
-import de.wellenvogel.avnav.worker.UsbSerialPositionHandler;
+import de.wellenvogel.avnav.worker.UsbConnectionHandler;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.Info;
 import de.wellenvogel.avnav.main.R;
@@ -286,14 +285,14 @@ public class SettingsActivity extends PreferenceActivity {
         }
         if (sharedPrefs.getBoolean(Constants.BTAIS,false)||sharedPrefs.getBoolean(Constants.BTNMEA,false)){
             String btdevice=sharedPrefs.getString(Constants.BTDEVICE,"");
-            if (BluetoothPositionHandler.getDeviceForName(btdevice) == null){
+            if (BluetoothConnectionHandler.getDeviceForName(btdevice) == null){
                 if (showToasts)Toast.makeText(activity, activity.getText(R.string.noSuchBluetoothDevice)+":"+btdevice, Toast.LENGTH_SHORT).show();
                 return false;
             }
         }
         if (sharedPrefs.getBoolean(Constants.USBNMEA,false)||sharedPrefs.getBoolean(Constants.USBAIS,false)){
             String usbDevice=sharedPrefs.getString(Constants.USBDEVICE,"");
-            if (UsbSerialPositionHandler.getDeviceForName(activity,usbDevice) == null){
+            if (UsbConnectionHandler.getDeviceForName(activity,usbDevice) == null){
                 if (showToasts)Toast.makeText(activity, activity.getText(R.string.noSuchUsbDevice)+":"+usbDevice, Toast.LENGTH_SHORT).show();
                 return false;
             }

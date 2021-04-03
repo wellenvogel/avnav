@@ -20,14 +20,17 @@ import de.wellenvogel.avnav.util.NmeaQueue;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 
+import static de.wellenvogel.avnav.worker.GpsDataProvider.positionToRmc;
+
 /**
  * Created by andreas on 12.12.14.
  */
-public class AndroidPositionHandler extends GpsDataProvider implements LocationListener , GpsStatus.Listener {
+public class AndroidPositionHandler extends Worker implements LocationListener , GpsStatus.Listener {
 
 
     private static final long MAXLOCAGE=10000; //max age of location in milliseconds
@@ -49,10 +52,28 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
     private boolean stopped=false;
     private Thread satStatusProvider;
 
-    AndroidPositionHandler(Context ctx, long timeOffset, NmeaQueue queue){
-        this.context=ctx;
-        this.queue=queue;
-        this.timeOffset=timeOffset;
+    private AndroidPositionHandler(String name,Context ctx, NmeaQueue queue) {
+        super(name);
+        this.context = ctx;
+        this.queue = queue;
+        parameterDescriptions.addParams(
+                ENABLED_PARAMETER,
+                SOURCENAME_PARAMETER,
+                TIMEOFFSET_PARAMETER);
+    }
+
+    public static void register(WorkerFactory factory,String name){
+        factory.registerCreator(new WorkerCreator(name) {
+            @Override
+            Worker create(Context ctx, NmeaQueue queue) throws JSONException, IOException {
+                return new AndroidPositionHandler(name,ctx,queue);
+            }
+        });
+    }
+
+    @Override
+    public void run() throws JSONException, IOException {
+        this.timeOffset=TIMEOFFSET_PARAMETER.fromJson(parameters);
         locationService=(LocationManager)context.getSystemService(context.LOCATION_SERVICE);
         tryEnableLocation(true);
         satStatusProvider=new Thread(new Runnable() {
@@ -86,7 +107,7 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
                                 glist.add(sats.get(j));
                             }
                             gsv.setSatelliteInfo(glist);
-                            queue.add(gsv.toSentence(), getName());
+                            queue.add(gsv.toSentence(), getSourceName());
                         }
                         Location loc = location;
                         if (loc != null && (System.currentTimeMillis() <= (lastValidLocation + MAXLOCWAIT))) {
@@ -97,7 +118,7 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
                             fsats = fixSats.toArray(fsats);
                             gsa.setSatelliteIds(fsats);
                             //TODO: XDOP
-                            queue.add(gsa.toSentence(), getName());
+                            queue.add(gsa.toSentence(), getSourceName());
                         }
                     }catch (Throwable t){
                         AvnLog.e("error in sat status loop",t);
@@ -116,9 +137,6 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
         satStatusProvider.setDaemon(true);
         satStatusProvider.start();
     }
-
-
-
 
     /**
      * will be called whe we intend to really stop
@@ -146,10 +164,11 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
         AvnLog.d(LOGPRFX, "location: changed, acc=" + location.getAccuracy() + ", provider=" + location.getProvider() +
                 ", date=" + new Date((location != null) ? location.getTime() : 0).toString());
         this.location=new Location(location);
+        setStatus(WorkerStatus.Status.NMEA,"location available, acc="+location.getAccuracy());
             try {
                 //build an NMEA RMC record and write out
                 RMCSentence rmc=positionToRmc(location);
-                queue.add(rmc.toSentence(),getName());
+                queue.add(rmc.toSentence(),getSourceName());
             }catch(Exception e){
                 AvnLog.e("unable to log NMEA data: "+e);
             }
@@ -180,6 +199,7 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
             locationService.removeUpdates(this);
             locationService.removeGpsStatusListener(this);
             isRegistered=false;
+            setStatus(WorkerStatus.Status.INACTIVE,"deregistered");
         }
     }
     private synchronized void tryEnableLocation(){
@@ -193,12 +213,8 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
                 locationService.addGpsStatusListener(this);
                 location=null;
                 lastValidLocation=0;
-                /*
-                location = locationService.getLastKnownLocation(currentProvider);
-                if (location != null) lastValidLocation = System.currentTimeMillis();
-                AvnLog.d(LOGPRFX, "location: location provider=" + currentProvider + " location acc=" + ((location != null) ? location.getAccuracy() : "<null>") + ", date=" + new Date((location != null) ? location.getTime() : 0).toString());
-                */
                 isRegistered=true;
+                setStatus(WorkerStatus.Status.STARTED,"waiting for position");
             }
 
         }
@@ -207,15 +223,12 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
             location=null;
             lastValidLocation=0;
             isRegistered=false;
+            setStatus(WorkerStatus.Status.ERROR,"no gps");
             if (notify)Toast.makeText(context, "no gps ",
                     Toast.LENGTH_SHORT).show();
         }
     }
 
-    @Override
-    public String getName() {
-        return "internal";
-    }
 
     /**
      * get the current position data
@@ -224,13 +237,5 @@ public class AndroidPositionHandler extends GpsDataProvider implements LocationL
 
     @Override
     public void onGpsStatusChanged(int event) {
-
-    }
-
-    @Override
-    JSONObject getHandlerStatus() throws JSONException {
-        JSONObject item=new JSONObject();
-        item.put("name","internal GPS");
-        return item;
     }
 }

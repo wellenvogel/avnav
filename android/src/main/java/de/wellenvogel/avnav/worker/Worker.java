@@ -1,5 +1,7 @@
 package de.wellenvogel.avnav.worker;
 
+import android.content.Context;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -10,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import de.wellenvogel.avnav.util.AvnUtil;
+import de.wellenvogel.avnav.util.NmeaQueue;
 
 public abstract class Worker {
     static final EditableParameter.StringParameter FILTER_PARAM=
@@ -29,9 +32,17 @@ public abstract class Worker {
     static final EditableParameter.StringListParameter BAUDRATE_PARAMETER=
             new EditableParameter.StringListParameter("baud rate","serial baud rate","9600",
                     "1200","2400","4800","9600","14400","19200","28800","38400","57600","115200","230400");
+    static final EditableParameter.IntegerParameter TIMEOFFSET_PARAMETER=
+            new EditableParameter.IntegerParameter("timeOffset","timeOffset(s)",0);
 
 
-
+    abstract static class WorkerCreator{
+        protected String name;
+        WorkerCreator(String name){
+            this.name=name;
+        }
+        abstract Worker create(Context ctx, NmeaQueue queue) throws JSONException, IOException;
+    }
 
 
     public static class WorkerStatus implements AvnUtil.IJsonObect {
@@ -88,11 +99,20 @@ public abstract class Worker {
 
     protected WorkerStatus status;
     protected JSONObject parameters=new JSONObject();
-    protected EditableParameter.ParameterList parameterDescriptions;
+    protected EditableParameter.ParameterList parameterDescriptions=new EditableParameter.ParameterList();
     protected int paramSequence=0;
 
     protected Worker(String name){
         status=new WorkerStatus(name);
+    }
+    protected String getSourceName(){
+        String n=null;
+        try {
+            n=SOURCENAME_PARAMETER.fromJson(parameters);
+        } catch (JSONException e) {
+        }
+        if (n == null || n.isEmpty()) return status.name;
+        return n;
     }
 
     public synchronized WorkerStatus getStatus(){
@@ -103,7 +123,12 @@ public abstract class Worker {
         this.status.status=status;
         this.status.info=info;
     }
-
+    public synchronized void setId(int id){
+        status.id=id;
+    }
+    public synchronized int getId(){
+        return status.id;
+    }
     public synchronized JSONObject getEditableParameters(boolean includeCurrent) throws JSONException {
         JSONObject rt=new JSONObject();
         if (parameterDescriptions != null) rt.put("data",parameterDescriptions.toJson());

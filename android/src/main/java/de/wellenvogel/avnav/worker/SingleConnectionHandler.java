@@ -20,15 +20,13 @@ import de.wellenvogel.avnav.util.NmeaQueue;
 public abstract class SingleConnectionHandler extends Worker {
     private boolean stopped=false;
     private NmeaQueue queue;
-
     private ConnectionHandler.ConnectionProperties getConnectionProperties() throws JSONException {
         ConnectionHandler.ConnectionProperties rt=new ConnectionHandler.ConnectionProperties();
         rt.readData=true;
         rt.writeData=SEND_DATA_PARAMETER.fromJson(parameters);
         rt.readFilter=AvnUtil.splitNmeaFilter(FILTER_PARAM.fromJson(parameters));
         rt.writeFilter=AvnUtil.splitNmeaFilter(SEND_FILTER_PARAM.fromJson(parameters));
-        rt.sourceName=SOURCENAME_PARAMETER.fromJson(parameters);
-        if (rt.sourceName == null || rt.sourceName.isEmpty()) rt.sourceName=name;
+        rt.sourceName=getSourceName();
         return rt;
     }
     class ReceiverRunnable implements Runnable{
@@ -120,7 +118,7 @@ public abstract class SingleConnectionHandler extends Worker {
     ReceiverRunnable runnable;
     SingleConnectionHandler(String name, Context ctx, NmeaQueue queue) throws JSONException {
         super(name);
-        parameterDescriptions=new EditableParameter.ParameterList(
+        parameterDescriptions.addParams(
                 ENABLED_PARAMETER,
                 SOURCENAME_PARAMETER,
                 FILTER_PARAM,
@@ -130,7 +128,7 @@ public abstract class SingleConnectionHandler extends Worker {
         context=ctx;
         this.queue=queue;
         this.name=name;
-        this.connection = connection;
+        status.canDelete=true;
     }
 
     public void runInternal(AbstractConnection con) throws JSONException {

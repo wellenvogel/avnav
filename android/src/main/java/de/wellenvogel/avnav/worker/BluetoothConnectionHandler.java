@@ -17,15 +17,13 @@ import java.util.Set;
 /**
  * Created by andreas on 25.12.14.
  */
-public class BluetoothPositionHandler extends SingleConnectionHandler {
-    private final EditableParameter.StringListParameter deviceSelect=new EditableParameter.StringListParameter(
+public class BluetoothConnectionHandler extends SingleConnectionHandler {
+    private EditableParameter.StringListParameter deviceSelect=new EditableParameter.StringListParameter(
             "device",
-            "bluetooth device",
-            null,
-            null
+            "bluetooth device"
     );
-    BluetoothPositionHandler(Context ctx, NmeaQueue queue) throws IOException, JSONException {
-        super("BluetoothPositionHandler",ctx,queue);
+    private BluetoothConnectionHandler(String name,Context ctx, NmeaQueue queue) throws IOException, JSONException {
+        super(name,ctx,queue);
         deviceSelect.listBuilder=new EditableParameter.ListBuilder<String>() {
             @Override
             public List<String> buildList(EditableParameter.StringListParameter param) {
@@ -35,7 +33,14 @@ public class BluetoothPositionHandler extends SingleConnectionHandler {
         parameterDescriptions.add(deviceSelect);
     }
 
-
+    public static void register(WorkerFactory factory,String name) {
+        factory.registerCreator(new WorkerCreator(name) {
+            @Override
+            Worker create(Context ctx, NmeaQueue queue) throws JSONException, IOException {
+                return new BluetoothConnectionHandler(name, ctx, queue);
+            }
+        });
+    }
     @Override
     public void run() throws JSONException, IOException {
         String deviceName=deviceSelect.fromJson(parameters);
