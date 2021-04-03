@@ -397,7 +397,7 @@ class AVNImporter(AVNWorker):
       if logdir is not None:
         logfilename=self.getLogFileName(name)
         try:
-          logfile=open(logfilename,"w")
+          logfile=open(logfilename,"w",encoding='utf-8')
         except:
           AVNLog.error("unable to open logile %s: %s",logfilename,traceback.format_exc())
       if logfile is not None:

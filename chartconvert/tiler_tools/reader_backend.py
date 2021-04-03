@@ -306,7 +306,7 @@ class SrcLayer(object):
             print(poly)
             return
         if gmt_data and options.cut_file: # create shapefile with a cut polygon
-            with open(base+'.gmt','w+') as f:
+            with open(base+'.gmt','w+',encoding='utf-8') as f:
                 f.write(gmt_data)
 
     gmt_templ='''# @VGMT1.0 @GPOLYGON

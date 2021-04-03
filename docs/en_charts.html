@@ -233,22 +233,22 @@
           range will be detected. If necessary charts would be
           converted/reprojected. As a result there will be a chartlist.xml in
           workdir/&lt;name&gt; . The command line would be:</p>
-        <pre>read_charts.py -o name -m chartlist inputdir [inputdir...]
+        <pre>read_charts.py -g -o name -m chartlist inputdir [inputdir...]
 </pre>
         <p>Afterwards you can check the chartlist.xml and you could e.g. move
           some charts into a different layer.</p>
         <p>The second step will take more time -&nbsp; now the tiles are
           created:</p>
-        <pre>read_charts.py -o name -m generate inputdir [inputdir...]
+        <pre>read_charts.py -g -o name -m generate inputdir [inputdir...]
 </pre>
         <p>The file chartlist.xml must already exist at&nbsp;
           workdir/&lt;name&gt;. The creation will run multi threaded.</p>
         <p>At the end you need to create the gemf file:</p>
-        <pre>read_charts.py -o name -m gemf inputdir [inputdir...]</pre>
+        <pre>read_charts.py -g -o name -m gemf inputdir [inputdir...]</pre>
         <p></p>
         <p>You could also combine all steps:</p>
         <blockquote>
-          <pre>read_charts.py -m all [-o name] inputdir [inputdir...]
+          <pre>read_charts.py -g -m all [-o name] inputdir [inputdir...]
 
 </pre> </blockquote>
       </div>
