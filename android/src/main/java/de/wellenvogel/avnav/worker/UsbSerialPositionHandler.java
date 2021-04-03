@@ -23,12 +23,12 @@ import de.wellenvogel.avnav.util.NmeaQueue;
 /**
  * Created by andreas on 25.12.14.
  */
-public class UsbSerialPositionHandler extends SocketPositionHandler {
+public class UsbSerialPositionHandler extends ConnectionHandler {
 
     void deviceDetach(UsbDevice dev) {
-        UsbSerialSocket usb=(UsbSerialSocket)socket;
+        UsbSerialConnection usb=(UsbSerialConnection) connection;
         if (usb != null && usb.dev.equals(dev)){
-            AvnLog.i(UsbSerialSocket.PREFIX,"device "+usb.getId()+" detached, closing");
+            AvnLog.i(UsbSerialConnection.PREFIX,"device "+usb.getId()+" detached, closing");
             try {
                 usb.close();
             } catch (IOException e) {
@@ -36,7 +36,7 @@ public class UsbSerialPositionHandler extends SocketPositionHandler {
         }
     }
 
-    static private class UsbSerialSocket extends AbstractSocket{
+    static private class UsbSerialConnection extends AbstractConnection {
         UsbDevice dev;
         UsbDeviceConnection connection;
         String baud;
@@ -61,7 +61,7 @@ public class UsbSerialPositionHandler extends SocketPositionHandler {
             }
         };
         final static String PREFIX="AvnUsbSerial";
-        UsbSerialSocket(Context ctx,UsbDevice dev,String baud)
+        UsbSerialConnection(Context ctx, UsbDevice dev, String baud)
         {
             super();
             this.dev=dev;
@@ -155,7 +155,7 @@ public class UsbSerialPositionHandler extends SocketPositionHandler {
     }
 
     UsbSerialPositionHandler(Context ctx, UsbDevice device, String baud, Properties prop, NmeaQueue queue){
-        super("UsbSerialPositionHandler",ctx,new UsbSerialSocket(ctx,device,baud),prop,queue);
+        super("UsbSerialPositionHandler",ctx,new UsbSerialConnection(ctx,device,baud),prop,queue);
     }
 
     public static UsbDevice getDeviceForName(Context ctx,String name){
@@ -174,7 +174,7 @@ public class UsbSerialPositionHandler extends SocketPositionHandler {
         if (curLoc == null) return;
         RMCSentence out= positionToRmc(curLoc);
         try {
-            socket.sendData(out.toSentence()+"\r\n");
+            connection.sendData(out.toSentence()+"\r\n");
         } catch (IOException e) {
             Log.e(LOGPRFX,"unable to send position",e);
         }

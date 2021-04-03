@@ -66,7 +66,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
 
     private final IBinder mBinder = new GpsServiceBinder();
     private GpsDataProvider internalProvider=null;
-    private IpPositionHandler externalProvider=null;
+    private SocketReader externalProvider=null;
     private BluetoothPositionHandler bluetoothProvider=null;
     private UsbSerialPositionHandler usbProvider =null;
 
@@ -401,7 +401,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
                     prop.readNmea=nmeaMode.equals(Constants.MODE_IP);
                     prop.nmeaFilter=prefs.getString(Constants.NMEAFILTER,null);
                     prop.sendPosition=prefs.getBoolean(Constants.AISSENDPOS,false) && (prop.readAis && ! prop.readNmea);
-                    externalProvider=new IpPositionHandler(this,addr,prop,queue);
+                    externalProvider=new SocketReader(this,addr,prop,queue);
                 }catch (Exception i){
                     Log.e(LOGPRFX,"unable to start external service: "+i.getLocalizedMessage());
                 }

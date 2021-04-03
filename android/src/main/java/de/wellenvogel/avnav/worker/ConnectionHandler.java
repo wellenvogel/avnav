@@ -1,17 +1,14 @@
 package de.wellenvogel.avnav.worker;
 
 import android.content.Context;
-import android.location.Location;
 import android.util.Log;
 
-import net.sf.marineapi.nmea.sentence.RMCSentence;
-
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
@@ -20,24 +17,61 @@ import de.wellenvogel.avnav.util.NmeaQueue;
 /**
  * Created by andreas on 25.12.14.
  */
-public abstract class SocketPositionHandler extends GpsDataProvider {
+public abstract class ConnectionHandler extends Worker {
     private boolean stopped=false;
     private NmeaQueue queue;
+    class WriterRunnable implements Runnable{
+        AbstractConnection socket;
+        String [] nmeaFilter;
+        long lastWrite=0;
+        boolean doStop=false;
+        WriterRunnable(AbstractConnection socket) throws JSONException {
+            this.socket=socket;
+            nmeaFilter=AvnUtil.splitNmeaFilter(SEND_FILTER_PARAM.fromJson(parameters));
+        }
+        @Override
+        public void run() {
+            try {
+                OutputStream os=socket.getOutputStream();
+                int sequence=-1;
+                while (!doStop){
+                    NmeaQueue.Entry e=queue.fetch(sequence,1000);
+                    if (e != null){
+                        sequence=e.sequence;
+                        if (!AvnUtil.matchesNmeaFilter(e.data, nmeaFilter)) {
+                            AvnLog.d("ignore " + e.data + " due to filter");
+                            continue;
+                        }
+                        lastWrite=System.currentTimeMillis();
+                        os.write(e.data.getBytes());
+                        lastWrite=0;
+                    }
+                }
+            } catch (IOException | InterruptedException e) {
+                AvnLog.e("writer "+name+": ",e);
+                try {
+                    socket.close();
+                } catch (IOException ioException) {
+
+                }
+            }
+        }
+
+        public void stop(){
+            doStop=true;
+        }
+    }
 
     class ReceiverRunnable implements Runnable{
-        String status="disconnected";
-        AbstractSocket socket;
-        private Location location=null;
-        private Properties properties;
+        AbstractConnection socket;
         private boolean isRunning=true;
         private boolean isConnected=false;
         private boolean doStop;
         private Object waiter=new Object();
         private String nmeaFilter[]=null;
-        ReceiverRunnable(AbstractSocket socket,Properties prop){
-            properties=prop;
+        ReceiverRunnable(AbstractConnection socket) throws JSONException {
             this.socket=socket;
-            nmeaFilter=AvnUtil.splitNmeaFilter(prop.nmeaFilter);
+            nmeaFilter=AvnUtil.splitNmeaFilter(FILTER_PARAM.fromJson(parameters));
         }
         @Override
         public void run() {
@@ -49,7 +83,7 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
                     socket.connect();
                 } catch (Exception e) {
                     Log.e(LOGPRFX, name + ": Exception during connect " + e.getLocalizedMessage());
-                    status = "connect error " + e;
+                    setStatus(WorkerStatus.Status.ERROR,"connect error " + e);
                     try {
                         socket.close();
                     }catch (Exception i){}
@@ -63,40 +97,41 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
                     continue;
                 }
                 AvnLog.d(LOGPRFX, name + ": connected to " + socket.getId());
+                setStatus(WorkerStatus.Status.NMEA,"connected to "+socket.getId());
+                try {
+                    startWriter(socket);
+                } catch (JSONException e) {
+                    AvnLog.e("error starting writer for "+name+":_ ",e);
+                }
                 try {
                     BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()),8);
-                    status = "receiving";
                     isConnected = true;
                     while (!doStop) {
                         String line = in.readLine();
                         AvnLog.d(LOGPRFX, name + ": received: " + line);
                         if (line == null) {
-                            status = "disconnected, EOF";
+                            setStatus(WorkerStatus.Status.ERROR,"disconnected, EOF");
                             try {
                                 socket.close();
+                                stopWriter();
                             } catch (Exception i) {
                             }
                             isConnected = false;
                             break;
                         }
                         line=AvnUtil.removeNonNmeaChars(line);
-                        if (line.startsWith("$") && properties.readNmea) {
-                            if (!AvnUtil.matchesNmeaFilter(line, nmeaFilter)) {
-                                AvnLog.d("ignore " + line + " due to filter");
-                                continue;
-                            }
-                            queue.add(line, name);
+                        if (!AvnUtil.matchesNmeaFilter(line, nmeaFilter)) {
+                            AvnLog.d("ignore " + line + " due to filter");
+                            continue;
                         }
-                        if (line.startsWith("!") && properties.readAis) {
-                            queue.add(line,name);
-                        }
-
+                        queue.add(line, name);
                     }
                 } catch (IOException e) {
                     Log.e(LOGPRFX, name + ": Exception during read " + e.getLocalizedMessage());
-                    status = "read exception " + e;
+                    setStatus(WorkerStatus.Status.ERROR,"read exception " + e);
                     try {
                         socket.close();
+                        stopWriter();
                     } catch (Exception i) {
                     }
                     isConnected = false;
@@ -138,31 +173,66 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
 
     }
 
-    public static final String LOGPRFX="AvNav:SocketPh";
+    private void stopWriter(){
+        if (writer != null){
+            writer.stop();
+            writer=null;
+            if (writerThread != null) writerThread.interrupt();
+        }
+    }
+    private void startWriter(AbstractConnection socket) throws JSONException {
+        stopWriter();
+        if (SEND_DATA_PARAMETER.fromJson(parameters)){
+            AvnLog.i(LOGPRFX,name+":starting sender for "+socket.getId());
+            this.writer=new WriterRunnable(socket);
+            this.writerThread=new Thread(writer);
+            this.writerThread.setDaemon(true);
+            this.writerThread.start();
+        }
+    }
+
+    public static final String LOGPRFX="AvNav:ConnectionHandler";
     Context context;
-    AbstractSocket socket;
+    AbstractConnection connection;
     String name;
     Thread receiverThread;
     ReceiverRunnable runnable;
-    Properties properties;
-    SocketPositionHandler(String name,Context ctx, AbstractSocket socket, Properties prop,NmeaQueue queue){
+    WriterRunnable writer;
+    Thread writerThread;
+    ConnectionHandler(String name, Context ctx, NmeaQueue queue) throws JSONException {
+        super(name);
+        parameterDescriptions=new EditableParameter.ParameterList(
+                ENABLED_PARAMETER,
+                FILTER_PARAM,
+                SEND_DATA_PARAMETER,
+                SEND_FILTER_PARAM
+        );
         context=ctx;
         this.queue=queue;
         this.name=name;
-        this.socket=socket;
-        properties=prop;
-        this.runnable=new ReceiverRunnable(socket,properties);
-        this.receiverThread=new Thread(this.runnable);
-        AvnLog.d(LOGPRFX,name+":starting receiver for "+socket.getId());
-        this.receiverThread.start();
+        this.connection = connection;
     }
 
-
+    public void runInternal(AbstractConnection con) throws JSONException {
+        this.connection =con;
+        stopWriter();
+        this.runnable=new ReceiverRunnable(connection);
+        this.receiverThread=new Thread(this.runnable);
+        AvnLog.i(LOGPRFX,name+":starting receiver for "+ connection.getId());
+        this.receiverThread.setDaemon(true);
+        this.receiverThread.start();
+    }
 
     @Override
     public synchronized void stop() {
         this.stopped=true;
+        stopWriter();
+        try {
+            this.connection.close();
+        } catch (IOException e) {
+        }
         this.runnable.stop();
+        this.runnable=null;
     }
 
     @Override
@@ -172,51 +242,18 @@ public abstract class SocketPositionHandler extends GpsDataProvider {
 
 
     @Override
-    public synchronized void check() {
+    public synchronized void check() throws JSONException {
         if (this.isStopped()) return;
         if (this.runnable == null || ! this.runnable.getRunning()){
-            this.runnable=new ReceiverRunnable(this.socket,properties);
+            this.runnable=new ReceiverRunnable(this.connection);
             this.receiverThread=new Thread(this.runnable);
-            AvnLog.d(LOGPRFX,name+": restarting receiver thread for "+this.socket.getId());
+            AvnLog.d(LOGPRFX,name+": restarting receiver thread for "+this.connection.getId());
             this.receiverThread.start();
         }
-        if(socket.check()){
+        if(connection.check()){
             AvnLog.e(name+": closing socket due to write timeout");
+            stopWriter();
         }
     }
 
-
-    @Override
-    public String getConnectionId() {
-        return socket.getId();
-    }
-
-    @Override
-    JSONObject getHandlerStatus() throws JSONException {
-        SocketPositionHandler handler=this;
-        JSONObject item = new JSONObject();
-        item.put("name", handler.getName());
-        String addr = handler.socket.getId();
-        if (runnable != null && runnable.getConnected()) {
-            String info = "(" + addr + ") connected";
-            item.put("info", info);
-            item.put("status", GpsDataProvider.STATUS_NMEA);
-        } else {
-            item.put("info", "(" + addr + ") disconnected");
-            item.put("status", GpsDataProvider.STATUS_ERROR);
-        }
-        return item;
-    }
-
-    @Override
-    public void sendPosition(Location curLoc) {
-        if (! properties.sendPosition) return;
-        if (curLoc == null) return;
-        RMCSentence out= positionToRmc(curLoc);
-        try {
-            socket.sendData(out.toSentence()+"\r\n");
-        } catch (IOException e) {
-            Log.e(LOGPRFX,"unable to send position",e);
-        }
-    }
 }

@@ -12,10 +12,10 @@ import java.util.Set;
 /**
  * Created by andreas on 25.12.14.
  */
-public class BluetoothPositionHandler extends SocketPositionHandler {
+public class BluetoothPositionHandler extends ConnectionHandler {
 
     BluetoothPositionHandler(Context ctx, BluetoothDevice device, Properties prop, NmeaQueue queue) throws IOException {
-        super("BluetoothPositionHandler",ctx,new AbstractSocket(device,prop.connectTimeout),prop,queue);
+        super("BluetoothPositionHandler",ctx,new AbstractConnection(device,prop.connectTimeout),prop,queue);
     }
 
     /**

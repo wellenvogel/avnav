@@ -5,11 +5,28 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import de.wellenvogel.avnav.util.AvnUtil;
 
 public abstract class Worker {
+    static final EditableParameter.StringParameter FILTER_PARAM=
+            new EditableParameter.StringParameter("filter","an NMEA filter, use e.g. $RMC or ^$RMC, !AIVDM","");
+    static final EditableParameter.StringParameter SEND_FILTER_PARAM=
+            new EditableParameter.StringParameter("sendFilter","an NMEA filter for send, use e.g. $RMC or ^$RMC, !AIVDM","");
+    static final EditableParameter.BooleanParameter SEND_DATA_PARAMETER=
+            new EditableParameter.BooleanParameter("sendOut","send out NMEA on this connection",false);
+    static final EditableParameter.BooleanParameter ENABLED_PARAMETER=
+            new EditableParameter.BooleanParameter("enabled","enabled",true);
+    static final EditableParameter.StringParameter IPADDRESS_PARAMETER=
+            new EditableParameter.StringParameter("ipaddress","ip address to connect",null);
+    static final EditableParameter.IntegerParameter IPPORT_PARAMETER=
+            new EditableParameter.IntegerParameter("port","ip port to connect",null);
+
+
+
+
     public static class WorkerStatus implements AvnUtil.IJsonObect {
         WorkerStatus(String name){
             this.name=name;
@@ -62,41 +79,10 @@ public abstract class Worker {
 
     }
 
-    public static class EditableParameter{
-        String name;
-        enum Type{
-            NUMBER,
-            FLOAT,
-            STRING,
-            BOOLEAN,
-            LIST
-        };
-        Type type;
-        List<String> list;
-        String defaultValue;
-        String description;
-        EditableParameter(String name,Type type,String description,String defaultValue){
-            this.name=name;
-            this.type=type;
-            this.description=description;
-            this.defaultValue=defaultValue;
-            if (type == Type.LIST) this.list=new ArrayList<String>();
-        }
-        EditableParameter(String name,Type type,String description,String defaultValue,List<String> list) throws Exception {
-            this.name=name;
-            this.type=type;
-            this.description=description;
-            this.defaultValue=defaultValue;
-            if (type != Type.LIST) throw new Exception("list parameter only for type list");
-            this.list=list;
-        }
-        EditableParameter(String name){
-            this.name=name;
-            this.type=Type.BOOLEAN;
-        }
-        
-    }
     protected WorkerStatus status;
+    protected JSONObject parameters=new JSONObject();
+    protected EditableParameter.ParameterList parameterDescriptions;
+    protected int paramSequence=0;
 
     protected Worker(String name){
         status=new WorkerStatus(name);
@@ -110,6 +96,24 @@ public abstract class Worker {
         this.status.status=status;
         this.status.info=info;
     }
+
+    public synchronized JSONObject getEditableParameters(boolean includeCurrent) throws JSONException {
+        JSONObject rt=new JSONObject();
+        if (parameterDescriptions != null) rt.put("data",parameterDescriptions.toJson());
+        if (includeCurrent) rt.put("values",parameters!=null?parameters:new JSONObject());
+        rt.put("configName",status.name);
+        rt.put("canDelete",status.canDelete);
+        return rt;
+    }
+
+    public synchronized void setParameters(JSONObject newParam) throws JSONException {
+        if (parameterDescriptions == null) throw new JSONException("no parameters defined");
+        parameterDescriptions.check(newParam);
+        parameters=newParam;
+        paramSequence++;
+    }
+
+    public abstract void run() throws JSONException;
 
     /**
      * stop the service and free all resources
@@ -128,5 +132,5 @@ public abstract class Worker {
      * will be called from a timer in regular intervals
      * should be used to check (e.g. check if provider enabled or socket can be opened)
      */
-    public void check(){}
+    public void check() throws JSONException {}
 }
