@@ -25,6 +25,7 @@ public class ConnectionHandler implements Runnable {
         public String[] readFilter;
         public String[] writeFilter;
         public int readTimeout = 0;
+        public int noDataTime=10000;
     }
 
     private static final String LOGPRFX = "ConnectionHandler";
@@ -36,6 +37,7 @@ public class ConnectionHandler implements Runnable {
     private String name;
     WriterRunnable writer;
     Thread writerThread;
+    long lastReceived=0;
 
     public ConnectionHandler(AbstractConnection connection, ConnectionProperties properties, String name, NmeaQueue queue) {
         this.connection = connection;
@@ -76,7 +78,7 @@ public class ConnectionHandler implements Runnable {
     }
 
     boolean hasNmea() {
-        return dataAvailable;
+        return dataAvailable && (System.currentTimeMillis() < (lastReceived+properties.noDataTime));
     }
 
     @Override
@@ -104,6 +106,7 @@ public class ConnectionHandler implements Runnable {
                             AvnLog.d("ignore " + line + " due to filter");
                             continue;
                         }
+                        lastReceived=System.currentTimeMillis();
                         queue.add(line, name);
                     }
                 }

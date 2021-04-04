@@ -71,7 +71,7 @@ public abstract class SingleConnectionHandler extends Worker {
             AvnLog.d(LOGPRFX, name + ": connected to " + connection.getId());
             setStatus(WorkerStatus.Status.NMEA,"connected to "+connection.getId());
             try{
-                handler=new ConnectionHandler(connection,getConnectionProperties(),name,queue);
+                handler=new ConnectionHandler(connection,getConnectionProperties(),getSourceName(),queue);
                 handler.run();
             } catch (JSONException e) {
                 Log.e(LOGPRFX, name + ": Exception during read " + e.getLocalizedMessage());
@@ -106,6 +106,16 @@ public abstract class SingleConnectionHandler extends Worker {
         if (this.isStopped()) return;
         if(connection.check()){
             AvnLog.e(name+": closing socket due to write timeout");
+        }
+        if ( handler == null || ! handler.hasNmea()){
+            if (status.status == WorkerStatus.Status.NMEA) {
+                setStatus(WorkerStatus.Status.STARTED, "no data timeout");
+            }
+        }
+        if (handler != null && handler.hasNmea()){
+            if (status.status != WorkerStatus.Status.NMEA) {
+                setStatus(WorkerStatus.Status.NMEA, "connected to " + connection.getId());
+            }
         }
     }
 
