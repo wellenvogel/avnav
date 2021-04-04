@@ -20,7 +20,9 @@ import de.wellenvogel.avnav.main.Constants;
  * Created by andreas on 26.11.15.
  */
 public class AvnUtil {
-    public static long getLongPref(SharedPreferences prefs,String key,long defaultValue){
+    public static final double msToKn=3600.0/1852.0;
+
+    public static long getLongPref(SharedPreferences prefs, String key, long defaultValue){
         try{
             return prefs.getLong(key,defaultValue);
         }catch (Throwable x){}

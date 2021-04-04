@@ -181,9 +181,21 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
 
 
     @Override
-    public void run() throws JSONException, IOException {
+    public void run(int startSequence) throws JSONException, IOException {
         String deviceName=deviceSelect.fromJson(parameters);
-        runInternal(new UsbSerialConnection(ctx,getDeviceForName(ctx,deviceName),BAUDRATE_PARAMETER.fromJson(parameters)));
+        UsbDevice device=null;
+        while (device == null && ! shouldStop(startSequence)){
+            device=getDeviceForName(ctx,deviceName);
+            if (device == null){
+                setStatus(WorkerStatus.Status.ERROR,"device "+deviceName+" not available");
+                sleep(2000);
+            }
+            else{
+                setStatus(WorkerStatus.Status.STARTED,"connecting to "+deviceName);
+                runInternal(new UsbSerialConnection(ctx,device,BAUDRATE_PARAMETER.fromJson(parameters)),startSequence);
+                device=null;
+            }
+        }
     }
 
     public static UsbDevice getDeviceForName(Context ctx,String name){

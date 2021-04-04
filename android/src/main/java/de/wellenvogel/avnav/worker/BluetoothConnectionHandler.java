@@ -42,9 +42,21 @@ public class BluetoothConnectionHandler extends SingleConnectionHandler {
         });
     }
     @Override
-    public void run() throws JSONException, IOException {
+    public void run(int startSequence) throws JSONException, IOException {
         String deviceName=deviceSelect.fromJson(parameters);
-        runInternal(new BluetoothConnection(getDeviceForName(deviceName)));
+        BluetoothDevice device=null;
+        while (device == null && ! shouldStop(startSequence)){
+            device=getDeviceForName(deviceName);
+            if (device == null){
+                setStatus(WorkerStatus.Status.ERROR,"device "+deviceName+" not available");
+                sleep(2000);
+            }
+            else{
+                runInternal(new BluetoothConnection(device),startSequence);
+                device=null;
+            }
+        }
+
     }
 
     /**

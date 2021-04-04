@@ -3,6 +3,8 @@ package de.wellenvogel.avnav.worker;
 import android.content.Context;
 import android.location.*;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.widget.Toast;
 
 import net.sf.marineapi.nmea.parser.SentenceFactory;
@@ -10,22 +12,24 @@ import net.sf.marineapi.nmea.sentence.GSASentence;
 import net.sf.marineapi.nmea.sentence.GSVSentence;
 import net.sf.marineapi.nmea.sentence.RMCSentence;
 import net.sf.marineapi.nmea.sentence.TalkerId;
+import net.sf.marineapi.nmea.util.DataStatus;
 import net.sf.marineapi.nmea.util.FaaMode;
 import net.sf.marineapi.nmea.util.GpsFixStatus;
+import net.sf.marineapi.nmea.util.Position;
 import net.sf.marineapi.nmea.util.SatelliteInfo;
 
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.NmeaQueue;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 
-import static de.wellenvogel.avnav.worker.GpsDataProvider.positionToRmc;
 
 /**
  * Created by andreas on 12.12.14.
@@ -33,7 +37,6 @@ import static de.wellenvogel.avnav.worker.GpsDataProvider.positionToRmc;
 public class AndroidPositionHandler extends Worker implements LocationListener , GpsStatus.Listener {
 
 
-    private static final long MAXLOCAGE=10000; //max age of location in milliseconds
     private static final long MAXLOCWAIT=2000; //max time we wait until we explicitely query the location again
 
     //location data
@@ -44,8 +47,8 @@ public class AndroidPositionHandler extends Worker implements LocationListener ,
     private Context context;
     private boolean isRegistered=false;
     private long timeOffset=0;
-    private final Object waiter = new Object();
     private NmeaQueue queue;
+    private Handler handler=new Handler(Looper.getMainLooper());
 
 
     private static final String LOGPRFX="Avnav:AndroidPositionHandler";
@@ -77,7 +80,7 @@ public class AndroidPositionHandler extends Worker implements LocationListener ,
     }
 
     @Override
-    public void run() throws JSONException, IOException {
+    public void run(int startSequence) throws JSONException, IOException {
         this.timeOffset=TIMEOFFSET_PARAMETER.fromJson(parameters);
         locationService=(LocationManager)context.getSystemService(context.LOCATION_SERVICE);
         tryEnableLocation(true);
@@ -85,7 +88,7 @@ public class AndroidPositionHandler extends Worker implements LocationListener ,
             @Override
             public void run() {
                 SentenceFactory sf=SentenceFactory.getInstance();
-                while (! stopped){
+                while (! shouldStop(startSequence)){
                     try {
                         int numSat = 0;
                         GpsStatus status = locationService.getGpsStatus(null);
@@ -128,37 +131,18 @@ public class AndroidPositionHandler extends Worker implements LocationListener ,
                     }catch (Throwable t){
                         AvnLog.e("error in sat status loop",t);
                     }
-                    synchronized (waiter){
-                        try {
-                            waiter.wait(1000);
-                        } catch (InterruptedException e) {
-                            break;
-                        }
-                    }
+                    if (!sleep(1000)) break;
                 }
                 AvnLog.i("sat status thread stopped");
             }
         });
         satStatusProvider.setDaemon(true);
         satStatusProvider.start();
+        while (! shouldStop(startSequence)){
+            if (!sleep(10000)) break;
+        }
     }
 
-    /**
-     * will be called whe we intend to really stop
-     * after a call to this method the object is not working any more
-     */
-    @Override
-    public void stop(){
-        deregister();
-        location=null;
-        lastValidLocation=0;
-        AvnLog.d(LOGPRFX,"stopped");
-        stopped=true;
-    }
-    @Override
-    public boolean isStopped(){
-        return this.stopped;
-    }
 
     public void check(){
         if (! isRegistered) tryEnableLocation();
@@ -201,9 +185,14 @@ public class AndroidPositionHandler extends Worker implements LocationListener ,
     }
     private void deregister(){
         if (locationService != null) {
-            locationService.removeUpdates(this);
-            locationService.removeGpsStatusListener(this);
-            isRegistered=false;
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    locationService.removeUpdates(AndroidPositionHandler.this);
+                    locationService.removeGpsStatusListener(AndroidPositionHandler.this);
+                    isRegistered=false;
+                }
+            });
             setStatus(WorkerStatus.Status.INACTIVE,"deregistered");
         }
     }
@@ -214,8 +203,13 @@ public class AndroidPositionHandler extends Worker implements LocationListener ,
         AvnLog.d(LOGPRFX,"tryEnableLocation");
         if (locationService != null && locationService.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             if (! isRegistered) {
-                locationService.requestLocationUpdates(currentProvider, 400, 0, this);
-                locationService.addGpsStatusListener(this);
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        locationService.requestLocationUpdates(currentProvider, 400, 0, AndroidPositionHandler.this);
+                        locationService.addGpsStatusListener(AndroidPositionHandler.this);
+                    }
+                });
                 location=null;
                 lastValidLocation=0;
                 isRegistered=true;
@@ -234,6 +228,11 @@ public class AndroidPositionHandler extends Worker implements LocationListener ,
         }
     }
 
+    @Override
+    public void stop() {
+        super.stop();
+        deregister();
+    }
 
     /**
      * get the current position data
@@ -242,5 +241,32 @@ public class AndroidPositionHandler extends Worker implements LocationListener ,
 
     @Override
     public void onGpsStatusChanged(int event) {
+    }
+    private static net.sf.marineapi.nmea.util.Date toSfDate(long timestamp){
+        Calendar cal=Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        cal.setTimeInMillis(timestamp);
+        net.sf.marineapi.nmea.util.Date rt=new net.sf.marineapi.nmea.util.Date(cal.get(Calendar.YEAR),cal.get(Calendar.MONTH)+1,cal.get(Calendar.DAY_OF_MONTH));
+        return rt;
+    }
+
+    private static net.sf.marineapi.nmea.util.Time toSfTime(long timestamp){
+        Calendar cal=Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        cal.setTimeInMillis(timestamp);
+        net.sf.marineapi.nmea.util.Time rt=new net.sf.marineapi.nmea.util.Time(cal.get(Calendar.HOUR_OF_DAY),cal.get(Calendar.MINUTE)+1,cal.get(Calendar.SECOND));
+        return rt;
+    }
+
+    private static RMCSentence positionToRmc(Location location){
+        SentenceFactory sf = SentenceFactory.getInstance();
+        RMCSentence rmc = (RMCSentence) sf.createParser(TalkerId.GP, "RMC");
+        Position pos = new Position(location.getLatitude(), location.getLongitude());
+        rmc.setPosition(pos);
+        rmc.setSpeed(location.getSpeed() * AvnUtil.msToKn);
+        rmc.setCourse(location.getBearing());
+        rmc.setMode(FaaMode.DGPS);
+        rmc.setDate(toSfDate(location.getTime()));
+        rmc.setTime(toSfTime(location.getTime()));
+        rmc.setStatus(DataStatus.ACTIVE);
+        return rmc;
     }
 }

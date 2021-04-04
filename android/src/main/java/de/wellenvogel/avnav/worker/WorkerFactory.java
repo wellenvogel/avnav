@@ -35,7 +35,7 @@ public class WorkerFactory {
     public Worker.WorkerCreator getCreator(String name){
         return workers.get(name);
     }
-    public Worker createWorker(String name,Context ctx, NmeaQueue queue) throws WorkerNotFound, JSONException, IOException {
+    public IWorker createWorker(String name,Context ctx, NmeaQueue queue) throws WorkerNotFound, JSONException, IOException {
         Worker.WorkerCreator cr=getCreator(name);
         if ( cr == null) throw new WorkerNotFound(name);
         return cr.create(ctx,queue);

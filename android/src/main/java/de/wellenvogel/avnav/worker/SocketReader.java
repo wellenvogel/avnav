@@ -28,10 +28,10 @@ public class SocketReader extends SingleConnectionHandler {
     }
 
     @Override
-    public void run() throws JSONException {
+    public void run(int startSequence) throws JSONException {
         String target=IPADDRESS_PARAMETER.fromJson(parameters);
         InetSocketAddress address=new InetSocketAddress(target,IPPORT_PARAMETER.fromJson(parameters));
         IpConnection con=new IpConnection(address);
-        runInternal(con);
+        runInternal(con,startSequence);
     }
 }

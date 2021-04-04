@@ -36,7 +36,6 @@ public abstract class GpsDataProvider {
     public static final String STATUS_NMEA="NMEA";
     public static final String STATUS_ERROR="ERROR";
 
-    public static final double msToKn=3600.0/1852.0;
     private static final String LOGPRFX="GpsDataProvider";
     public static class SatStatus{
         public int numSat=0;
@@ -116,32 +115,5 @@ public abstract class GpsDataProvider {
         return new InetSocketAddress(host,Integer.parseInt(port));
     }
 
-    public static net.sf.marineapi.nmea.util.Date toSfDate(long timestamp){
-        Calendar cal=Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        cal.setTimeInMillis(timestamp);
-        net.sf.marineapi.nmea.util.Date rt=new net.sf.marineapi.nmea.util.Date(cal.get(Calendar.YEAR),cal.get(Calendar.MONTH)+1,cal.get(Calendar.DAY_OF_MONTH));
-        return rt;
-    }
-
-    public static net.sf.marineapi.nmea.util.Time toSfTime(long timestamp){
-        Calendar cal=Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-        cal.setTimeInMillis(timestamp);
-        net.sf.marineapi.nmea.util.Time rt=new net.sf.marineapi.nmea.util.Time(cal.get(Calendar.HOUR_OF_DAY),cal.get(Calendar.MINUTE)+1,cal.get(Calendar.SECOND));
-        return rt;
-    }
-
-    public static RMCSentence positionToRmc(Location location){
-        SentenceFactory sf = SentenceFactory.getInstance();
-        RMCSentence rmc = (RMCSentence) sf.createParser(TalkerId.GP, "RMC");
-        Position pos = new Position(location.getLatitude(), location.getLongitude());
-        rmc.setPosition(pos);
-        rmc.setSpeed(location.getSpeed() * msToKn);
-        rmc.setCourse(location.getBearing());
-        rmc.setMode(FaaMode.DGPS);
-        rmc.setDate(toSfDate(location.getTime()));
-        rmc.setTime(toSfTime(location.getTime()));
-        rmc.setStatus(DataStatus.ACTIVE);
-        return rmc;
-    }
 
 }

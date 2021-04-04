@@ -6,7 +6,6 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -22,7 +21,6 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
-import android.util.Log;
 import android.view.View;
 import android.widget.RemoteViews;
 
@@ -43,7 +41,6 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -103,7 +100,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     Alarm lastNotifiedAlarm=null;
     boolean notificationSend=false;
     private long alarmSequence=System.currentTimeMillis();
-    private final ArrayList<Worker> workers=new ArrayList<>();
+    private final ArrayList<IWorker> workers =new ArrayList<>();
 
     private final BroadcastReceiver usbReceiver = new BroadcastReceiver() {
         @Override
@@ -264,7 +261,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         return rt;
     }
     private void stopWorkers(){
-        for (Worker w:workers){
+        for (IWorker w: workers){
             try{
                 w.stop();
             }catch (Throwable t){
@@ -284,7 +281,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         }
         SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
         handleNotification(true,true);
-        stopWorkers();
+        if (! isWatchdog) stopWorkers();
         //we rely on the activity to check before...
         File newTrackDir=new File(AvnUtil.getWorkDir(prefs,this),"tracks");
         boolean loadTrack=true;
@@ -348,28 +345,27 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
             registerReceiver(usbReceiver, new IntentFilter(UsbManager.ACTION_USB_DEVICE_DETACHED));
             receiverRegistered=true;
         }
-        decoder=new Decoder("decoder",this,queue,new GpsDataProvider.Properties());
-        try {
-            JSONArray handlerConfig = getHandlerConfig();
-            for (int i=0;i<handlerConfig.length();i++){
-                try{
-                    JSONObject config=handlerConfig.getJSONObject(i);
-                    Worker worker=WorkerFactory.getInstance().createWorker(config.getString("name"),this,queue);
-                    worker.setId(i);
-                    worker.setParameters(config);
-                    if (Worker.ENABLED_PARAMETER.fromJson(config)){
-                        worker.run();
+        if (! isWatchdog || decoder == null) {
+            decoder = new Decoder("decoder", this, queue, new GpsDataProvider.Properties());
+        }
+        if (! isWatchdog || workers.size() == 0) {
+            try {
+                JSONArray handlerConfig = getHandlerConfig();
+                for (int i = 0; i < handlerConfig.length(); i++) {
+                    try {
+                        JSONObject config = handlerConfig.getJSONObject(i);
+                        IWorker worker = WorkerFactory.getInstance().createWorker(config.getString("name"), this, queue);
+                        worker.setId(i);
+                        worker.setParameters(config);
+                        worker.start();
+                        workers.add(worker);
+                    } catch (Throwable t) {
+                        AvnLog.e("unable to create handler " + i, t);
                     }
-                    else{
-                        worker.setStatus(Worker.WorkerStatus.Status.INACTIVE,"disabled");
-                    }
-                    workers.add(worker);
-                }catch (Throwable t){
-                    AvnLog.e("unable to create handler "+i,t);
                 }
+            } catch (Throwable t) {
+                AvnLog.e("unable to create channels", t);
             }
-        }catch (Throwable t){
-            AvnLog.e("unable to create channels",t);
         }
 
         isRunning=true;
@@ -457,12 +453,12 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         checkMob();
         handleNotification(true,false);
         checkTrackWriter();
-        for (Worker w: workers) {
+        for (IWorker w: workers) {
             if (w != null) {
                 try {
                     w.check();
                 } catch (JSONException e) {
-                    AvnLog.e("error in check for "+w.status.name,e);
+                    AvnLog.e("error in check for "+w.getTypeName());
                 }
             }
         }
@@ -835,7 +831,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     }
     public JSONArray getStatus() throws JSONException {
         JSONArray rt=new JSONArray();
-        for (Worker w :workers){
+        for (IWorker w : workers){
             rt.put(w.getStatus().toJson());
         }
 

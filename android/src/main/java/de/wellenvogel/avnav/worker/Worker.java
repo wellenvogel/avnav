@@ -2,19 +2,15 @@ package de.wellenvogel.avnav.worker;
 
 import android.content.Context;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
-import de.wellenvogel.avnav.util.AvnUtil;
+import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.NmeaQueue;
 
-public abstract class Worker {
+public abstract class Worker implements IWorker {
     static final EditableParameter.StringParameter FILTER_PARAM=
             new EditableParameter.StringParameter("filter","an NMEA filter, use e.g. $RMC or ^$RMC, !AIVDM","");
     static final EditableParameter.StringParameter SEND_FILTER_PARAM=
@@ -46,62 +42,14 @@ public abstract class Worker {
     }
 
 
-    public static class WorkerStatus implements AvnUtil.IJsonObect {
-        WorkerStatus(String name){
-            this.name=name;
-        }
-        WorkerStatus(WorkerStatus other){
-            name=other.name;
-            canEdit=other.canEdit;
-            canDelete=other.canDelete;
-            id=other.id;
-            name=other.name;
-            status=other.status;
-            info=other.info;
-        }
-        boolean canEdit=false;
-        boolean canDelete=false;
-        boolean disabled=false;
-        int id;
-        String name;
-        public static enum Status{
-            INACTIVE,
-            STARTED,
-            RUNNING,
-            NMEA,
-            ERROR
-        }
-        Status status=Status.INACTIVE;
-        String info;
-
-        @Override
-        public JSONObject toJson() throws JSONException {
-            JSONObject rt=new JSONObject();
-            rt.put("canEdit",canEdit);
-            rt.put("canDelete",canDelete);
-            rt.put("disabled",disabled);
-            rt.put("id",id);
-            rt.put("name",name);
-            JSONObject sto=new JSONObject();
-            sto.put("name",name);
-            //currently we do not have children - but the JS side expects an array
-            JSONArray children=new JSONArray();
-            JSONObject main=new JSONObject(); //WorkerStatus in python
-            main.put("name","main");
-            main.put("info",info);
-            main.put("status",status.toString());
-            children.put(main);
-            sto.put("items",children);
-            rt.put("info",sto);
-            return rt;
-        }
-
-    }
-
     protected WorkerStatus status;
     protected JSONObject parameters=new JSONObject();
     protected EditableParameter.ParameterList parameterDescriptions=new EditableParameter.ParameterList();
     protected int paramSequence=0;
+    protected Thread mainThread;
+    private   boolean running=false;
+    private   int startSequence;
+    protected final Object waiter=new Object();
 
     protected Worker(String name){
         status=new WorkerStatus(name);
@@ -116,6 +64,7 @@ public abstract class Worker {
         return n;
     }
 
+    @Override
     public synchronized WorkerStatus getStatus(){
         return new WorkerStatus(status);
     }
@@ -124,12 +73,15 @@ public abstract class Worker {
         this.status.status=status;
         this.status.info=info;
     }
+    @Override
     public synchronized void setId(int id){
         status.id=id;
     }
+    @Override
     public synchronized int getId(){
         return status.id;
     }
+    @Override
     public synchronized JSONObject getEditableParameters(boolean includeCurrent) throws JSONException {
         JSONObject rt=new JSONObject();
         if (parameterDescriptions != null) rt.put("data",parameterDescriptions.toJson());
@@ -139,6 +91,7 @@ public abstract class Worker {
         return rt;
     }
 
+    @Override
     public synchronized void setParameters(JSONObject newParam) throws JSONException {
         if (parameterDescriptions == null) throw new JSONException("no parameters defined");
         parameterDescriptions.check(newParam);
@@ -146,24 +99,91 @@ public abstract class Worker {
         paramSequence++;
     }
 
-    public abstract void run() throws JSONException, IOException;
+    @Override
+    public String getTypeName() {
+        return status.name;
+    }
+
+    public void start(){
+        if (mainThread != null){
+            stop();
+        }
+        try {
+            if (Worker.ENABLED_PARAMETER.fromJson(parameters)) {
+                running = true;
+                mainThread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        setStatus(WorkerStatus.Status.STARTED, "started");
+                        try {
+                            Worker.this.run(startSequence);
+                            setStatus(WorkerStatus.Status.INACTIVE, "stopped");
+                        } catch (Throwable t) {
+                            setStatus(WorkerStatus.Status.ERROR, "error: " + t.getMessage());
+                        }
+                        running = false;
+                    }
+                });
+                mainThread.setDaemon(true);
+                mainThread.start();
+            }
+            else{
+                setStatus(WorkerStatus.Status.INACTIVE,"disabled");
+            }
+        } catch (JSONException e) {
+            setStatus(WorkerStatus.Status.ERROR,"error: "+e.getMessage());
+        }
+    }
+
+    protected boolean shouldStop(int sequence){
+        return sequence != startSequence;
+    }
+
+    protected boolean sleep(long millis){
+        synchronized (waiter){
+            try {
+                waiter.wait(millis);
+            } catch (InterruptedException e) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    protected abstract void run(int startSequence) throws JSONException, IOException;
 
     /**
      * stop the service and free all resources
      * afterwards the provider will not be used any more
      */
-    public void stop(){}
+    @Override
+    public void stop(){
+        startSequence++;
+        if (mainThread != null){
+            try{
+                synchronized (waiter){
+                    waiter.notifyAll();
+                }
+                mainThread.interrupt();
+            }catch (Throwable t){
+                AvnLog.e("unable to stop "+getTypeName()+": ",t);
+            }
+            mainThread=null;
+        }
+    }
     /**
      * check if the handler is stopped and should be reinitialized
      * @return
      */
+    @Override
     public boolean isStopped(){
-        return false;
+        return !running;
     }
 
     /**
      * will be called from a timer in regular intervals
      * should be used to check (e.g. check if provider enabled or socket can be opened)
      */
+    @Override
     public void check() throws JSONException {}
 }

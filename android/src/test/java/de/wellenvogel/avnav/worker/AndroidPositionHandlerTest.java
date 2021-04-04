@@ -18,7 +18,7 @@ public class AndroidPositionHandlerTest {
     public final ExpectedException exception=ExpectedException.none();
     @Test
     public void createHandler() throws WorkerFactory.WorkerNotFound, JSONException, IOException {
-        Worker h=WorkerFactory.getInstance().createWorker(WorkerFactory.ANDROID_NAME,null,null);
+        IWorker h=WorkerFactory.getInstance().createWorker(WorkerFactory.ANDROID_NAME,null,null);
         assert(h instanceof AndroidPositionHandler);
     }
     @Test
@@ -43,7 +43,7 @@ public class AndroidPositionHandlerTest {
     @Test
     public void setParameterFailInt() throws WorkerFactory.WorkerNotFound, JSONException, IOException {
         String sname="wrongNumber";
-        Worker h=WorkerFactory.getInstance().createWorker(WorkerFactory.ANDROID_NAME,null,null);
+        IWorker h=WorkerFactory.getInstance().createWorker(WorkerFactory.ANDROID_NAME,null,null);
         JSONObject p=new JSONObject();
         p.put("name",WorkerFactory.ANDROID_NAME);
         p.put(Worker.TIMEOFFSET_PARAMETER.name,sname);

@@ -326,7 +326,7 @@ public class Decoder extends GpsDataProvider {
                                         location = newLocation;
                                         if (s.getSentenceId().equals("RMC")) {
                                             try {
-                                                location.setSpeed((float) (((RMCSentence) s).getSpeed() / msToKn));
+                                                location.setSpeed((float) (((RMCSentence) s).getSpeed() / AvnUtil.msToKn));
                                             } catch (Exception i) {
                                                 AvnLog.d(name + ": Exception querying speed: " + i.getLocalizedMessage());
                                             }
@@ -513,7 +513,7 @@ public class Decoder extends GpsDataProvider {
 
     @Override
     JSONObject getHandlerStatus() throws JSONException {
-        Worker.WorkerStatus workerStatus=new Worker.WorkerStatus(name);
+        WorkerStatus workerStatus=new WorkerStatus(name);
         Decoder handler=this;
         String addr = name;
         SatStatus st = handler.getSatStatus();
@@ -523,21 +523,21 @@ public class Decoder extends GpsDataProvider {
             String info = "(" + addr + ") valid position, sats: " + st.numSat + " / " + st.numUsed;
             if (numAis > 0) info += ", valid AIS data, " + numAis + " targets";
             workerStatus.info=info;
-            workerStatus.status= Worker.WorkerStatus.Status.NMEA;
+            workerStatus.status= WorkerStatus.Status.NMEA;
         } else {
             if ( numAis > 0) {
                 workerStatus.info= "(" + addr + ") valid AIS data, " + numAis + " targets";
-                workerStatus.status= Worker.WorkerStatus.Status.NMEA;
+                workerStatus.status= WorkerStatus.Status.NMEA;
 
             } else {
                 if (st.gpsEnabled) {
                     String info="(" + addr + ") connected";
                     info+=", sats: " + st.numSat + " available / " + st.numUsed + " used";
                     workerStatus.info=info;
-                    workerStatus.status= Worker.WorkerStatus.Status.STARTED;
+                    workerStatus.status= WorkerStatus.Status.STARTED;
                 } else {
                     workerStatus.info= "(" + addr + ") disconnected";
-                    workerStatus.status= Worker.WorkerStatus.Status.ERROR;
+                    workerStatus.status= WorkerStatus.Status.ERROR;
                 }
             }
         }
