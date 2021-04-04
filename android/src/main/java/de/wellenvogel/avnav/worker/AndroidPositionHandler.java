@@ -60,6 +60,7 @@ public class AndroidPositionHandler extends Worker implements LocationListener ,
                 ENABLED_PARAMETER,
                 SOURCENAME_PARAMETER,
                 TIMEOFFSET_PARAMETER);
+        status.canEdit=true;
     }
 
     public static void register(WorkerFactory factory,String name){
@@ -67,6 +68,10 @@ public class AndroidPositionHandler extends Worker implements LocationListener ,
             @Override
             Worker create(Context ctx, NmeaQueue queue) throws JSONException, IOException {
                 return new AndroidPositionHandler(name,ctx,queue);
+            }
+            @Override
+            boolean canAdd() {
+                return false;
             }
         });
     }

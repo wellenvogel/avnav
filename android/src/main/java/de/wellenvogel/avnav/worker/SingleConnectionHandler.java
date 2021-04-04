@@ -129,6 +129,7 @@ public abstract class SingleConnectionHandler extends Worker {
         this.queue=queue;
         this.name=name;
         status.canDelete=true;
+        status.canEdit=true;
     }
 
     public void runInternal(AbstractConnection con) throws JSONException {

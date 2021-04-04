@@ -42,6 +42,7 @@ public abstract class Worker {
             this.name=name;
         }
         abstract Worker create(Context ctx, NmeaQueue queue) throws JSONException, IOException;
+        boolean canAdd(){return true;}
     }
 
 

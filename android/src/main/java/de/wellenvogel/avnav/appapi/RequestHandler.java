@@ -691,6 +691,7 @@ public class RequestHandler {
                 o.put("uploadImages",true);
                 o.put("uploadOverlays",true);
                 o.put("uploadTracks",true);
+                o.put("config",true);
                 fout=getReturn(new KeyValue<JSONObject>("data",o));
             }
             if (type.equals("api")){
