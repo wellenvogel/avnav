@@ -52,7 +52,7 @@ public class AndroidPositionHandler extends Worker implements LocationListener ,
 
 
     private static final String LOGPRFX="Avnav:AndroidPositionHandler";
-    private boolean stopped=false;
+    private boolean stopped=true;
     private Thread satStatusProvider;
 
     private AndroidPositionHandler(String name,Context ctx, NmeaQueue queue) {
@@ -70,7 +70,7 @@ public class AndroidPositionHandler extends Worker implements LocationListener ,
         factory.registerCreator(new WorkerCreator(name) {
             @Override
             Worker create(Context ctx, NmeaQueue queue) throws JSONException, IOException {
-                return new AndroidPositionHandler(name,ctx,queue);
+                return new AndroidPositionHandler(typeName,ctx,queue);
             }
             @Override
             boolean canAdd() {
@@ -81,6 +81,7 @@ public class AndroidPositionHandler extends Worker implements LocationListener ,
 
     @Override
     public void run(int startSequence) throws JSONException, IOException {
+        stopped=false;
         this.timeOffset=TIMEOFFSET_PARAMETER.fromJson(parameters);
         locationService=(LocationManager)context.getSystemService(context.LOCATION_SERVICE);
         tryEnableLocation(true);
@@ -145,6 +146,7 @@ public class AndroidPositionHandler extends Worker implements LocationListener ,
 
 
     public void check(){
+        if (stopped) return;
         if (! isRegistered) tryEnableLocation();
     }
 
@@ -200,6 +202,7 @@ public class AndroidPositionHandler extends Worker implements LocationListener ,
         tryEnableLocation(false);
     }
     private synchronized void tryEnableLocation(boolean notify){
+        if (stopped) return;
         AvnLog.d(LOGPRFX,"tryEnableLocation");
         if (locationService != null && locationService.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             if (! isRegistered) {
@@ -230,6 +233,7 @@ public class AndroidPositionHandler extends Worker implements LocationListener ,
 
     @Override
     public void stop() {
+        stopped=true;
         super.stop();
         deregister();
     }

@@ -5,7 +5,9 @@ import android.content.Context;
 import org.json.JSONException;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import de.wellenvogel.avnav.util.NmeaQueue;
 
@@ -30,7 +32,7 @@ public class WorkerFactory {
     }
     private HashMap<String, Worker.WorkerCreator> workers=new HashMap<>();
     void registerCreator(Worker.WorkerCreator creator){
-        workers.put(creator.name,creator);
+        workers.put(creator.typeName,creator);
     }
     public Worker.WorkerCreator getCreator(String name){
         return workers.get(name);
@@ -39,5 +41,14 @@ public class WorkerFactory {
         Worker.WorkerCreator cr=getCreator(name);
         if ( cr == null) throw new WorkerNotFound(name);
         return cr.create(ctx,queue);
+    }
+    public List<String> getKnownTypes(boolean addOnly){
+        ArrayList<String> rt=new ArrayList<>();
+        for (String n:workers.keySet()){
+            if (!addOnly || workers.get(n).canAdd()){
+                rt.add(n);
+            }
+        }
+        return rt;
     }
 }

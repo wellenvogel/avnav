@@ -26,7 +26,7 @@ public class AndroidPositionHandlerTest {
         Worker h=WorkerFactory.getInstance().createWorker(WorkerFactory.ANDROID_NAME,null,null);
         JSONObject p=new JSONObject();
         p.put("name",WorkerFactory.ANDROID_NAME);
-        h.setParameters(p);
+        h.setParameters(p, true);
         assertEquals(true,Worker.ENABLED_PARAMETER.fromJson(h.parameters));
     }
     @Test
@@ -36,7 +36,7 @@ public class AndroidPositionHandlerTest {
         JSONObject p=new JSONObject();
         p.put("name",WorkerFactory.ANDROID_NAME);
         p.put(Worker.SOURCENAME_PARAMETER.name,sname);
-        h.setParameters(p);
+        h.setParameters(p, true);
         assertEquals(true,Worker.ENABLED_PARAMETER.fromJson(h.parameters));
         assertEquals(sname,Worker.SOURCENAME_PARAMETER.fromJson(h.parameters));
     }
@@ -48,7 +48,7 @@ public class AndroidPositionHandlerTest {
         p.put("name",WorkerFactory.ANDROID_NAME);
         p.put(Worker.TIMEOFFSET_PARAMETER.name,sname);
         exception.expect(org.json.JSONException.class);
-        h.setParameters(p);
+        h.setParameters(p, true);
     }
 
 }

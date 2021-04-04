@@ -14,6 +14,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
@@ -77,6 +78,7 @@ public class RequestHandler {
     public static String TYPE_IMAGE="images";
     public static String TYPE_OVERLAY="overlay";
     public static String TYPE_ADDON="addon";
+    public static String TYPE_CONFIG="config";
 
     public static class KeyValue<VT>{
         String key;
@@ -151,6 +153,7 @@ public class RequestHandler {
         rt.put("status",error == null?"OK":error);
         return rt;
     }
+
 
     public static JSONObject getErrorReturn(String error,KeyValue ...data) throws JSONException {
         JSONObject rt=new JSONObject();
@@ -239,6 +242,12 @@ public class RequestHandler {
             @Override
             public INavRequestHandler getHandler() {
                 return addonHandler;
+            }
+        });
+        handlerMap.put(TYPE_CONFIG, new LazyHandlerAccess() {
+            @Override
+            public INavRequestHandler getHandler() {
+                return getGpsService();
             }
         });
 
@@ -405,6 +414,24 @@ public class RequestHandler {
         return handleNavRequest(uri,postData,null);
     }
     ExtendedWebResourceResponse handleNavRequest(Uri uri, PostVars postData,ServerInfo serverInfo) throws Exception {
+        return handleNavRequestInternal(uri,postData,serverInfo).getResponse();
+    }
+    static class NavResponse{
+        private ExtendedWebResourceResponse response;
+        private Object jsonResponse;
+        NavResponse(Object o){jsonResponse=o;}
+        NavResponse(ExtendedWebResourceResponse r){response=r;}
+        ExtendedWebResourceResponse getResponse() throws UnsupportedEncodingException {
+            if (response != null) return response;
+            byte o[]=jsonResponse.toString().getBytes("UTF-8");
+            long len=o.length;
+            InputStream is = new ByteArrayInputStream(o);
+            return new ExtendedWebResourceResponse(len,"application/json","UTF-8",is);
+        }
+        boolean isJson(){return jsonResponse != null;}
+        Object getJson(){return jsonResponse;}
+    }
+    NavResponse handleNavRequestInternal(Uri uri, PostVars postData,ServerInfo serverInfo) throws Exception {
         if (uri.getPath() == null) return null;
         String remain=uri.getPath();
         if (remain.startsWith("/")) remain=remain.substring(1);
@@ -550,7 +577,7 @@ public class RequestHandler {
                     resp.setHeader("Content-Disposition", value);
                 }
                 resp.setHeader("Content-Type",resp.getMimeType());
-                return resp;
+                return new NavResponse(resp);
             }
             if (type.equals("delete")) {
                 JSONObject o=new JSONObject();
@@ -714,17 +741,11 @@ public class RequestHandler {
             if (!handled){
                 AvnLog.d(Constants.LOGPRFX,"unhandled nav request "+type);
             }
-            String outstring="";
-            if (fout != null) outstring=fout.toString();
-            byte o[]=outstring.getBytes("UTF-8");
-            len=o.length;
-            is = new ByteArrayInputStream(o);
+            if (fout != null) return new NavResponse(fout);
+            return new NavResponse(getErrorReturn("request not handled"));
         } catch (JSONException jse) {
-            jse.printStackTrace();
-            is=new ByteArrayInputStream(new byte[]{});
-            len=0;
+            return new NavResponse(getErrorReturn(jse.getMessage()));
         }
-        return new ExtendedWebResourceResponse(len,"application/json","UTF-8",is);
     }
 
 

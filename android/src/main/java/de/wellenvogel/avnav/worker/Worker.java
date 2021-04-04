@@ -2,10 +2,12 @@ package de.wellenvogel.avnav.worker;
 
 import android.content.Context;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.NmeaQueue;
@@ -24,7 +26,9 @@ public abstract class Worker implements IWorker {
     static final EditableParameter.IntegerParameter IPPORT_PARAMETER=
             new EditableParameter.IntegerParameter("port","ip port to connect",null);
     static final EditableParameter.StringParameter SOURCENAME_PARAMETER=
-            new EditableParameter.StringParameter("source Name","name of this data source","");
+            new EditableParameter.StringParameter("name","name of this data source","");
+    static final EditableParameter.StringParameter TYPENAME_PARAMETER=
+            new EditableParameter.StringParameter("typeName"); //not intended to be edited
     static final EditableParameter.StringListParameter BAUDRATE_PARAMETER=
             new EditableParameter.StringListParameter("baud rate","serial baud rate","9600",
                     "1200","2400","4800","9600","14400","19200","28800","38400","57600","115200","230400");
@@ -33,9 +37,9 @@ public abstract class Worker implements IWorker {
 
 
     abstract static class WorkerCreator{
-        protected String name;
-        WorkerCreator(String name){
-            this.name=name;
+        protected String typeName;
+        WorkerCreator(String typeName){
+            this.typeName = typeName;
         }
         abstract Worker create(Context ctx, NmeaQueue queue) throws JSONException, IOException;
         boolean canAdd(){return true;}
@@ -51,8 +55,8 @@ public abstract class Worker implements IWorker {
     private   int startSequence;
     protected final Object waiter=new Object();
 
-    protected Worker(String name){
-        status=new WorkerStatus(name);
+    protected Worker(String typeName){
+        status=new WorkerStatus(typeName);
     }
     protected String getSourceName(){
         String n=null;
@@ -60,13 +64,22 @@ public abstract class Worker implements IWorker {
             n=SOURCENAME_PARAMETER.fromJson(parameters);
         } catch (JSONException e) {
         }
-        if (n == null || n.isEmpty()) return status.name;
+        if (n == null || n.isEmpty()) return status.typeName;
         return n;
     }
 
     @Override
     public synchronized WorkerStatus getStatus(){
         return new WorkerStatus(status);
+    }
+    @Override
+    public synchronized JSONObject getJsonStatus() throws JSONException {
+        WorkerStatus rt=new WorkerStatus(status);
+        JSONObject ro=rt.toJson();
+        if (!getTypeName().equals(getSourceName())){
+            ro.put("name",rt.typeName +"("+getSourceName()+")");
+        }
+        return ro;
     }
 
     protected synchronized void setStatus(WorkerStatus.Status status,String info){
@@ -86,14 +99,24 @@ public abstract class Worker implements IWorker {
         JSONObject rt=new JSONObject();
         if (parameterDescriptions != null) rt.put("data",parameterDescriptions.toJson());
         if (includeCurrent) rt.put("values",parameters!=null?parameters:new JSONObject());
-        rt.put("configName",status.name);
+        rt.put("configName",status.typeName);
         rt.put("canDelete",status.canDelete);
         return rt;
     }
+    @Override
+    public JSONArray getParameterDescriptions() throws JSONException {
+        return parameterDescriptions.toJson();
+    }
 
     @Override
-    public synchronized void setParameters(JSONObject newParam) throws JSONException {
+    public synchronized void setParameters(JSONObject newParam, boolean replace) throws JSONException {
         if (parameterDescriptions == null) throw new JSONException("no parameters defined");
+        if (! replace){
+            for (Iterator<String> it = parameters.keys(); it.hasNext(); ) {
+                String k = it.next();
+                if (! newParam.has(k)) newParam.put(k,parameters.get(k));
+            }
+        }
         parameterDescriptions.check(newParam);
         parameters=newParam;
         paramSequence++;
@@ -101,7 +124,12 @@ public abstract class Worker implements IWorker {
 
     @Override
     public String getTypeName() {
-        return status.name;
+        return status.typeName;
+    }
+
+    @Override
+    public JSONObject getConfig() {
+        return parameters;
     }
 
     public void start(){

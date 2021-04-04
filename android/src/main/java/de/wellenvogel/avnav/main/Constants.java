@@ -48,6 +48,8 @@ public class Constants {
     public static final String GPS_PERMISSION_REQUESTED_NUM="permissions.numgps";
     public static final String STORAGE_PERMISSION_REQUESTED_NUM="permissions.numstorage";
     public static final String ADDON_CONFIG="addon.config";
+    //new handler config
+    public static final String HANDLER_CONFIG="internal.handler";
 
     public static final String REALCHARTS="charts";
     public static final String CHARTPREFIX="charts";

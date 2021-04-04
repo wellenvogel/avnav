@@ -81,14 +81,14 @@ public class ConnectionHandler implements Runnable {
 
     @Override
     public void run() {
+        try {
+            startWriter();
+        } catch (JSONException e) {
+            AvnLog.e("error starting writer for " + name + ":_ ", e);
+            stopped = true;
+            return;
+        }
         while (!stopped) {
-            try {
-                startWriter();
-            } catch (JSONException e) {
-                AvnLog.e("error starting writer for " + name + ":_ ", e);
-                stopped = true;
-                return;
-            }
             try {
                 BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()), 8);
                 while (!stopped) {

@@ -16,7 +16,7 @@ public class SocketReader extends SingleConnectionHandler {
         factory.registerCreator(new WorkerCreator(name) {
             @Override
             Worker create(Context ctx,NmeaQueue queue) throws JSONException {
-                return new SocketReader(name,ctx,queue);
+                return new SocketReader(typeName,ctx,queue);
             }
         });
     }

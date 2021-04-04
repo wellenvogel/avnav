@@ -37,7 +37,7 @@ public class BluetoothConnectionHandler extends SingleConnectionHandler {
         factory.registerCreator(new WorkerCreator(name) {
             @Override
             Worker create(Context ctx, NmeaQueue queue) throws JSONException, IOException {
-                return new BluetoothConnectionHandler(name, ctx, queue);
+                return new BluetoothConnectionHandler(typeName, ctx, queue);
             }
         });
     }

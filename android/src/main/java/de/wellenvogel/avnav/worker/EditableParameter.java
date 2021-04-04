@@ -153,7 +153,7 @@ public class EditableParameter {
         }
         @Override
         public String getType() {
-            return "LIST";
+            return "SELECT";
         }
 
         @Override

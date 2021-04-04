@@ -7,15 +7,15 @@ import org.json.JSONObject;
 import de.wellenvogel.avnav.util.AvnUtil;
 
 public class WorkerStatus implements AvnUtil.IJsonObect {
-    WorkerStatus(String name){
-        this.name=name;
+    WorkerStatus(String typeName){
+        this.typeName = typeName;
     }
     WorkerStatus(WorkerStatus other){
-        name=other.name;
+        typeName =other.typeName;
         canEdit=other.canEdit;
         canDelete=other.canDelete;
         id=other.id;
-        name=other.name;
+        typeName =other.typeName;
         status=other.status;
         info=other.info;
     }
@@ -23,7 +23,7 @@ public class WorkerStatus implements AvnUtil.IJsonObect {
     boolean canDelete=false;
     boolean disabled=false;
     int id;
-    String name;
+    String typeName;
     public static enum Status{
         INACTIVE,
         STARTED,
@@ -41,9 +41,10 @@ public class WorkerStatus implements AvnUtil.IJsonObect {
         rt.put("canDelete",canDelete);
         rt.put("disabled",disabled);
         rt.put("id",id);
-        rt.put("name",name);
+        rt.put("name", typeName);
+        rt.put("configName",typeName);
         JSONObject sto=new JSONObject();
-        sto.put("name",name);
+        sto.put("name", typeName);
         //currently we do not have children - but the JS side expects an array
         JSONArray children=new JSONArray();
         JSONObject main=new JSONObject(); //WorkerStatus in python

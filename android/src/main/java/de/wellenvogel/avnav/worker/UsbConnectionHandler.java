@@ -208,7 +208,7 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
         factory.registerCreator(new WorkerCreator(name) {
             @Override
             Worker create(Context ctx, NmeaQueue queue) throws JSONException {
-                return new UsbConnectionHandler(name,ctx,queue);
+                return new UsbConnectionHandler(typeName,ctx,queue);
             }
         });
     }

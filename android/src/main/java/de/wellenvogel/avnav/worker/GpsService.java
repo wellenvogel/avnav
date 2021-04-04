@@ -16,6 +16,7 @@ import android.hardware.usb.UsbManager;
 import android.location.*;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Handler;
@@ -24,6 +25,10 @@ import android.support.v4.app.NotificationCompat;
 import android.view.View;
 import android.widget.RemoteViews;
 
+import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
+import de.wellenvogel.avnav.appapi.INavRequestHandler;
+import de.wellenvogel.avnav.appapi.PostVars;
+import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.Dummy;
 import de.wellenvogel.avnav.main.IMediaUpdater;
@@ -49,14 +54,12 @@ import java.util.Map;
 /**
  * Created by andreas on 12.12.14.
  */
-public class GpsService extends Service implements INmeaLogger, RouteHandler.UpdateReceiver {
+public class GpsService extends Service implements INmeaLogger, RouteHandler.UpdateReceiver, INavRequestHandler {
 
 
     private static final String CHANNEL_ID = "main" ;
     private static final String CHANNEL_ID_NEW = "main_new" ;
     public static String PROP_TRACKDIR="track.dir";
-    private static final long MAXLOCAGE=10000; //max age of location in milliseconds
-    private static final long MAXLOCWAIT=2000; //max time we wait until we explicitely query the location again
 
 
     private Context ctx;
@@ -101,6 +104,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     boolean notificationSend=false;
     private long alarmSequence=System.currentTimeMillis();
     private final ArrayList<IWorker> workers =new ArrayList<>();
+    private int workerId=1;
 
     private final BroadcastReceiver usbReceiver = new BroadcastReceiver() {
         @Override
@@ -136,6 +140,87 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         handler.post(runnable);
         sendBroadcast(new Intent(Constants.BC_RELOAD_DATA));
 
+    }
+
+    @Override
+    public ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception {
+        return null;
+    }
+
+    @Override
+    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
+        return false;
+    }
+
+    @Override
+    public JSONArray handleList(Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception {
+        return null;
+    }
+
+    @Override
+    public boolean handleDelete(String name, Uri uri) throws Exception {
+        return false;
+    }
+
+    @Override
+    public JSONObject handleApiRequest(Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
+        String command=AvnUtil.getMandatoryParameter(uri,"command");
+        if ("createHandler".equals(command)){
+            String typeName=AvnUtil.getMandatoryParameter(uri,"handlerName");
+            String config=postData.getAsString();
+            addWorker(typeName,new JSONObject(config));
+            return RequestHandler.getReturn();
+        }
+        if ("getAddables".equals(command)){
+            List<String> names=WorkerFactory.getInstance().getKnownTypes(true);
+            JSONArray data=new JSONArray(names);
+            return RequestHandler.getReturn(new RequestHandler.KeyValue<JSONArray>("data",data));
+        }
+        if ("getAddAttributes".equals(command)){
+            String typeName=AvnUtil.getMandatoryParameter(uri,"handlerName");
+            try{
+                IWorker w=WorkerFactory.getInstance().createWorker(typeName,this,null);
+                return RequestHandler.getReturn(new RequestHandler.KeyValue<JSONArray>("data",w.getParameterDescriptions()));
+            }catch (WorkerFactory.WorkerNotFound e){
+                return RequestHandler.getErrorReturn("not handler of type "+typeName+" found");
+            }
+        }
+        if ("canRestart".equals(command)){
+            return RequestHandler.getReturn(new RequestHandler.KeyValue<Boolean>("canRestart",false));
+        }
+        int id=Integer.parseInt(AvnUtil.getMandatoryParameter(uri,"handlerId"));
+        IWorker worker=findWorkerById(id);
+        if (worker == null){
+            return RequestHandler.getErrorReturn("worker with id "+id+" not found");
+        }
+        if ("getEditables".equals(command)){
+            JSONObject rt=worker.getEditableParameters(true);
+            rt.put("status","OK");
+            return rt;
+        }
+        if ("setConfig".equals(command)){
+            String config=postData.getAsString();
+            updateWorkerConfig(worker,new JSONObject(config));
+            return RequestHandler.getReturn();
+        }
+        if ("deleteHandler".equals(command)){
+            if (! worker.getStatus().canDelete){
+                return RequestHandler.getErrorReturn("handler "+id+" cannot be deleted");
+            }
+            deleteWorker(worker);
+            return RequestHandler.getReturn();
+        }
+        return RequestHandler.getErrorReturn("invalid command "+command);
+    }
+
+    @Override
+    public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler) throws Exception {
+        return null;
+    }
+
+    @Override
+    public String getPrefix() {
+        return null;
     }
 
     public class GpsServiceBinder extends Binder{
@@ -252,13 +337,110 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         prop.ownMmsi=prefs.getString(Constants.AISOWN,null);
         return prop;
     }
-
-    private JSONArray getHandlerConfig() throws JSONException {
-        JSONArray rt=new JSONArray();
+    private synchronized int getNextWorkerId(){
+        workerId++;
+        return workerId;
+    }
+    private synchronized IWorker findWorkerById(int id){
+        for (IWorker w:workers){
+            if (w.getId() == id) return w;
+        }
+        return null;
+    }
+    private JSONArray getWorkerConfig() throws JSONException {
+        SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
+        String config=prefs.getString(Constants.HANDLER_CONFIG,null);
+        JSONArray rt=null;
+        boolean hasNewConfig=false;
+        if (config != null){
+            hasNewConfig=true;
+            try{
+                rt=new JSONArray(config);
+            }catch (Throwable t){
+                AvnLog.e("unable to parse Handler config "+config,t);
+            }
+        }
+        if (rt != null) {
+            //ensure to have the internal handler in any case
+            //ans make some checks
+            boolean hasInternal=false;
+            for (int i=0;i<rt.length();i++){
+                try {
+                    JSONObject o = rt.getJSONObject(i);
+                    if (Worker.TYPENAME_PARAMETER.fromJson(o).equals(WorkerFactory.ANDROID_NAME)){
+                        hasInternal=true;
+                    }
+                }catch(Throwable t){
+                    AvnLog.e("error parsing handler config",t);
+                    rt=null;
+                    break;
+                }
+            }
+            if (rt != null && ! hasInternal){
+                JSONObject intGps=new JSONObject();
+                intGps.put(Worker.TYPENAME_PARAMETER.name,WorkerFactory.ANDROID_NAME);
+                rt.put(intGps);
+            }
+            if (rt != null) return rt;
+        }
+        rt=new JSONArray();
+        if (! hasNewConfig) {
+            //TODO: migrate from old config
+        }
         JSONObject h1=new JSONObject();
-        h1.put("name",WorkerFactory.ANDROID_NAME);
+        h1.put(Worker.TYPENAME_PARAMETER.name,WorkerFactory.ANDROID_NAME);
         rt.put(h1);
+        prefs.edit().putString(Constants.HANDLER_CONFIG,rt.toString()).apply();
         return rt;
+    }
+
+    private void saveWorkerConfig() throws JSONException {
+        JSONArray newConfig=new JSONArray();
+        for (IWorker w:workers){
+            JSONObject wc=w.getConfig();
+            wc.put(Worker.TYPENAME_PARAMETER.name,w.getTypeName());
+            newConfig.put(wc);
+        }
+        SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
+        prefs.edit().putString(Constants.HANDLER_CONFIG,newConfig.toString()).commit();
+    }
+    private synchronized void updateWorkerConfig(IWorker worker, JSONObject newConfig) throws JSONException {
+        worker.setParameters(newConfig, false);
+        worker.start(); //will restart
+        saveWorkerConfig();
+    }
+    private synchronized void addWorker(String typeName, JSONObject newConfig) throws WorkerFactory.WorkerNotFound, JSONException, IOException {
+        IWorker newWorker=WorkerFactory.getInstance().createWorker(typeName,this,queue);
+        newWorker.setId(getNextWorkerId());
+        newWorker.setParameters(newConfig, true);
+        newWorker.start();
+        String currentType=null;
+        boolean inserted=false;
+        for (int i=0;i<workers.size();i++){
+            if (typeName.equals(currentType) && !workers.get(i).getTypeName().equals(typeName)){
+                inserted=true;
+                workers.add(i,newWorker);
+                break;
+            }
+        }
+        if (! inserted){
+            workers.add(newWorker);
+        }
+        saveWorkerConfig();
+    }
+    private synchronized void deleteWorker(IWorker worker) throws JSONException {
+        worker.stop();
+        int workerId=-1;
+        for (int i=0;i<workers.size();i++){
+            if (worker.getId() == workers.get(i).getId()){
+                workerId=i;
+                break;
+            }
+        }
+        if (workerId >= 0){
+            workers.remove(workerId);
+        }
+        saveWorkerConfig();
     }
     private void stopWorkers(){
         for (IWorker w: workers){
@@ -270,6 +452,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         }
         workers.clear();
     }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent,flags,startId);
@@ -350,13 +533,14 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         }
         if (! isWatchdog || workers.size() == 0) {
             try {
-                JSONArray handlerConfig = getHandlerConfig();
+                JSONArray handlerConfig = getWorkerConfig();
                 for (int i = 0; i < handlerConfig.length(); i++) {
                     try {
                         JSONObject config = handlerConfig.getJSONObject(i);
-                        IWorker worker = WorkerFactory.getInstance().createWorker(config.getString("name"), this, queue);
-                        worker.setId(i);
-                        worker.setParameters(config);
+                        IWorker worker = WorkerFactory.getInstance().createWorker(
+                                Worker.TYPENAME_PARAMETER.fromJson(config), this, queue);
+                        worker.setId(getNextWorkerId());
+                        worker.setParameters(config, true);
                         worker.start();
                         workers.add(worker);
                     } catch (Throwable t) {
@@ -832,7 +1016,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     public JSONArray getStatus() throws JSONException {
         JSONArray rt=new JSONArray();
         for (IWorker w : workers){
-            rt.put(w.getStatus().toJson());
+            rt.put(w.getJsonStatus());
         }
 
         rt.put(decoder.getHandlerStatus());

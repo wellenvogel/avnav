@@ -95,8 +95,11 @@ public class JavaScriptApi {
     public String handleUpload(String url,String data){
         if (detached) return null;
         try {
-            JSONObject rt= requestHandler.handleUploadRequest(Uri.parse(url),new PostVars(data));
-            return rt.getString("status");
+            RequestHandler.NavResponse rt= requestHandler.handleNavRequestInternal(Uri.parse(url),new PostVars(data),null);
+            if (! rt.isJson() || ! (rt.getJson() instanceof JSONObject)){
+                return "invalid post request";
+            }
+            return ((JSONObject)(rt.getJson())).getString("status");
         } catch (Exception e) {
             AvnLog.e("error in upload request for "+url+":",e);
             return e.getMessage();
