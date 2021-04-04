@@ -29,10 +29,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.TimeZone;
 
 import de.wellenvogel.avnav.aislib.messages.message.AisMessage;
 import de.wellenvogel.avnav.aislib.messages.sentence.Abk;
@@ -45,9 +47,9 @@ import de.wellenvogel.avnav.util.NmeaQueue;
 /**
  * Created by andreas on 25.12.14.
  */
-public class Decoder extends GpsDataProvider {
+public class Decoder extends Worker {
+    public SimpleDateFormat dateFormat=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
     private long lastAisCleanup=0;
-    private boolean stopped=false;
     private AisStore store=null;
     private GSVStore currentGsvStore=null;
     private GSVStore validGsvStore=null;
@@ -56,25 +58,35 @@ public class Decoder extends GpsDataProvider {
     private long lastPositionReceived=0;
     public static final String LOGPRFX="AvNav:Decoder";
     private Context context;
-    private String name;
-    private Thread receiverThread;
-    private ReceiverRunnable runnable;
-    private Properties properties;
     private INmeaLogger nmeaLogger;
     private NmeaQueue queue;
-    private final Object waiter=new Object();
-    class AuxiliaryEntry{
+    private static final long AIS_CLEANUP_INTERVAL=60000;
+
+    private static final EditableParameter.IntegerParameter POSITION_AGE= new
+            EditableParameter.IntegerParameter("posAge","max age of gps position(s)",10);
+    private static final EditableParameter.IntegerParameter GPS_AGE= new
+            EditableParameter.IntegerParameter("gpsAge","max age of non position NMEA data(s)",600);
+    private static final EditableParameter.IntegerParameter AIS_AGE= new
+            EditableParameter.IntegerParameter("aisAge","max age of ais data(s)",1200);
+    private static final EditableParameter.IntegerParameter TIME_OFFSET= new
+            EditableParameter.IntegerParameter("timeOffset","set a timne offset to decoded data(s)",0);
+    private static final EditableParameter.StringParameter OWN_MMSI= new
+            EditableParameter.StringParameter("ownMMSI","filter own MMSI if set","");
+    private void addParameters(){
+        parameterDescriptions.addParams(OWN_MMSI,POSITION_AGE,GPS_AGE,AIS_AGE);
+    }
+    static class AuxiliaryEntry{
         public long timestamp;
         public JSONObject data=new JSONObject();
     }
-    private HashMap<String,AuxiliaryEntry> auxiliaryData=new HashMap<String,AuxiliaryEntry>();
+    private final HashMap<String,AuxiliaryEntry> auxiliaryData=new HashMap<String,AuxiliaryEntry>();
 
     private void addAuxiliaryData(String key, AuxiliaryEntry entry){
         entry.timestamp=System.currentTimeMillis();
         auxiliaryData.put(key,entry);
     }
     private void mergeAuxiliaryData(JSONObject json) throws JSONException {
-        long minTimestamp=System.currentTimeMillis()-properties.auxiliaryAge*1000;
+        long minTimestamp=System.currentTimeMillis()-GPS_AGE.fromJson(parameters)*1000;
         //TODO: consider timestamp
         for (AuxiliaryEntry e: auxiliaryData.values()){
             if (e.timestamp < minTimestamp) continue;
@@ -87,7 +99,7 @@ public class Decoder extends GpsDataProvider {
         }
     }
 
-    class GSVStore{
+    static class GSVStore{
         public static final int MAXGSV=20; //max number of gsv sentences without one that is the last
         public static final int GSVAGE=60000; //max age of gsv data in ms
         int numGsv=0;
@@ -124,7 +136,7 @@ public class Decoder extends GpsDataProvider {
             return 0;
         }
     }
-
+    private net.sf.marineapi.nmea.util.Date lastDate;
     private double convertTransducerValue(String ttype, String tunit, double tval) {
         if("C".equals(tunit)){
             return tval+273.15;
@@ -135,12 +147,7 @@ public class Decoder extends GpsDataProvider {
         return tval;
     }
 
-    class ReceiverRunnable implements Runnable{
-        String status="disconnected";
-        private net.sf.marineapi.nmea.util.Date lastDate=null;
-        private boolean isRunning=true;
-        ReceiverRunnable(){
-        }
+
         private String correctTalker(String nmea){
             try{
                 //if we have no exceptionthe talker is ok
@@ -159,24 +166,38 @@ public class Decoder extends GpsDataProvider {
             }
         }
         @Override
-        public void run() {
+        public void run(int startSequence) throws JSONException {
+            store=new AisStore(OWN_MMSI.fromJson(parameters));
             int numGsv = 0; //number of gsv sentences without being the last
             long lastConnect = 0;
             int sequence = -1;
             SentenceFactory factory = SentenceFactory.getInstance();
             AisPacketParser aisparser = new AisPacketParser();
-            while (!stopped) {
+            Thread cleanupThread=new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while (! shouldStop(startSequence)) {
+                        AvnLog.d(LOGPRFX, getTypeName() + ": cleanup AIS data");
+                        try {
+                            cleanupAis(AIS_AGE.fromJson(parameters));
+                        } catch (Throwable t) {
+                            AvnLog.e("exception in AIS cleanup", t);
+                        }
+                        sleep(10000);
+                        if (shouldStop(startSequence)) break;
+                    }
+                    AvnLog.i(LOGPRFX,"Ais cleanup finished");
+                }
+            });
+            cleanupThread.start();
+            AvnLog.d(LOGPRFX,getTypeName()+":starting decoder");
+            while (!shouldStop(startSequence)) {
                 NmeaQueue.Entry entry;
                 try {
-                    entry = queue.fetch(sequence, properties.readWait);
+                    entry = queue.fetch(sequence, 2000);
                 } catch (InterruptedException e) {
-                    if (stopped) return;
-                    synchronized (waiter) {
-                        try {
-                            waiter.wait(properties.readWait);
-                        } catch (InterruptedException interruptedException) {
-                        }
-                    }
+                    if (shouldStop(startSequence)) return;
+                    sleep(2000);
                     continue;
                 }
                 if (entry == null) {
@@ -200,7 +221,7 @@ public class Decoder extends GpsDataProvider {
                                     if (currentGsvStore == null) currentGsvStore = new GSVStore();
                                     GSVSentence gsv = (GSVSentence) s;
                                     currentGsvStore.addSentence(gsv);
-                                    AvnLog.d(name + ": GSV sentence (" + gsv.getSentenceIndex() + "/" + gsv.getSentenceCount() +
+                                    AvnLog.d(getTypeName() + ": GSV sentence (" + gsv.getSentenceIndex() + "/" + gsv.getSentenceCount() +
                                             "), numSat=" + gsv.getSatelliteCount());
                                     if (currentGsvStore.getValid()) {
                                         numGsv = 0;
@@ -208,10 +229,10 @@ public class Decoder extends GpsDataProvider {
                                         currentGsvStore = new GSVStore();
                                         stat.numSat = validGsvStore.getSatCount();
                                         //TODO: aging of validGSVStore
-                                        AvnLog.d(name + ": GSV sentence last, numSat=" + stat.numSat);
+                                        AvnLog.d(getTypeName() + ": GSV sentence last, numSat=" + stat.numSat);
                                     }
                                     if (numGsv > GSVStore.MAXGSV) {
-                                        AvnLog.e(name + ": to many gsv sentences without a final one " + numGsv);
+                                        AvnLog.e(getTypeName() + ": to many gsv sentences without a final one " + numGsv);
                                         stat.numSat = 0;
                                         validGsvStore = null;
                                     }
@@ -220,12 +241,12 @@ public class Decoder extends GpsDataProvider {
                                 }
                                 if (s instanceof GSASentence) {
                                     stat.numUsed = ((GSASentence) s).getSatelliteIds().length;
-                                    AvnLog.d(name + ": GSA sentence, used=" + stat.numUsed);
+                                    AvnLog.d(getTypeName() + ": GSA sentence, used=" + stat.numUsed);
                                     continue;
                                 }
                                 if (s instanceof MWVSentence) {
                                     MWVSentence m = (MWVSentence) s;
-                                    AvnLog.d(name + ": MWV sentence");
+                                    AvnLog.d(getTypeName() + ": MWV sentence");
                                     AuxiliaryEntry e = new AuxiliaryEntry();
                                     e.data.put("windAngle", m.getAngle());
                                     e.data.put("windReference", m.isTrue() ? "T" : "R");
@@ -242,7 +263,7 @@ public class Decoder extends GpsDataProvider {
                                 }
                                 if (s instanceof DPTSentence) {
                                     DPTSentence d = (DPTSentence) s;
-                                    AvnLog.d(name + ": DPT sentence");
+                                    AvnLog.d(getTypeName() + ": DPT sentence");
                                     AuxiliaryEntry e = new AuxiliaryEntry();
                                     double depth = d.getDepth();
                                     e.data.put("depthBelowTransducer", depth);
@@ -257,7 +278,7 @@ public class Decoder extends GpsDataProvider {
                                 }
                                 if (s instanceof DBTSentence) {
                                     DBTSentence d = (DBTSentence) s;
-                                    AvnLog.d(name + ": DBT sentence");
+                                    AvnLog.d(getTypeName() + ": DBT sentence");
                                     AuxiliaryEntry e = new AuxiliaryEntry();
                                     double depth = d.getDepth();
                                     e.data.put("depthBelowTransducer", depth);
@@ -286,20 +307,20 @@ public class Decoder extends GpsDataProvider {
                                     boolean isValid = false;
                                     if (s instanceof RMCSentence) {
                                         isValid = ((RMCSentence) s).getStatus() == DataStatus.ACTIVE;
-                                        AvnLog.d(name + ": RMC sentence, valid=" + isValid);
+                                        AvnLog.d(getTypeName() + ": RMC sentence, valid=" + isValid);
                                     }
                                     if (s instanceof GLLSentence) {
                                         isValid = ((GLLSentence) s).getStatus() == DataStatus.ACTIVE;
-                                        AvnLog.d(name + ": GLL sentence, valid=" + isValid);
+                                        AvnLog.d(getTypeName() + ": GLL sentence, valid=" + isValid);
                                     }
                                     if (s instanceof GGASentence) {
                                         int qual = ((GGASentence) s).getFixQuality().toInt();
                                         isValid = qual > 0;
-                                        AvnLog.d(name + ": GGA sentence, quality=" + qual + ", valid=" + isValid);
+                                        AvnLog.d(getTypeName() + ": GGA sentence, quality=" + qual + ", valid=" + isValid);
                                     }
                                     if (isValid) {
                                         p = ((PositionSentence) s).getPosition();
-                                        AvnLog.d(LOGPRFX, name + ": external position " + p);
+                                        AvnLog.d(LOGPRFX, getTypeName() + ": external position " + p);
                                     }
                                 }
                                 net.sf.marineapi.nmea.util.Time time = null;
@@ -328,103 +349,86 @@ public class Decoder extends GpsDataProvider {
                                             try {
                                                 location.setSpeed((float) (((RMCSentence) s).getSpeed() / AvnUtil.msToKn));
                                             } catch (Exception i) {
-                                                AvnLog.d(name + ": Exception querying speed: " + i.getLocalizedMessage());
+                                                AvnLog.d(getTypeName() + ": Exception querying speed: " + i.getLocalizedMessage());
                                             }
                                             try {
                                                 location.setBearing((float) (((RMCSentence) s).getCourse()));
                                             } catch (Exception i) {
-                                                AvnLog.d(name + ": Exception querying bearing: " + i.getLocalizedMessage());
+                                                AvnLog.d(getTypeName() + ": Exception querying bearing: " + i.getLocalizedMessage());
                                             }
                                         }
-                                        AvnLog.d(LOGPRFX, name + ": location: " + location);
+                                        AvnLog.d(LOGPRFX, getTypeName() + ": location: " + location);
                                     }
                                 } else {
-                                    AvnLog.d(LOGPRFX, name + ": ignoring sentence " + line + " - no position or time");
+                                    AvnLog.d(LOGPRFX, getTypeName() + ": ignoring sentence " + line + " - no position or time");
                                 }
                             } catch (Exception i) {
-                                Log.e(LOGPRFX, name + ": exception in NMEA parser " + i.getLocalizedMessage());
+                                Log.e(LOGPRFX, getTypeName() + ": exception in NMEA parser " + i.getLocalizedMessage());
                                 i.printStackTrace();
                             }
                         } else {
-                            AvnLog.d(LOGPRFX, name + ": ignore invalid nmea");
+                            AvnLog.d(LOGPRFX, getTypeName() + ": ignore invalid nmea");
                         }
                     }
                     if (line.startsWith("!")) {
                         if (nmeaLogger != null) nmeaLogger.logNmea(line);
                         if (Abk.isAbk(line)) {
                             aisparser.newVdm();
-                            AvnLog.i(LOGPRFX, name + ": ignore abk line " + line);
+                            AvnLog.i(LOGPRFX, getTypeName() + ": ignore abk line " + line);
                         }
                         try {
                             AisPacket p = aisparser.readLine(line);
                             if (p != null) {
                                 AisMessage m = p.getAisMessage();
-                                AvnLog.i(LOGPRFX, name + ": AisPacket received: " + m.toString());
+                                AvnLog.i(LOGPRFX, getTypeName() + ": AisPacket received: " + m.toString());
                                 store.addAisMessage(m);
                             }
                         } catch (Exception e) {
-                            Log.e(LOGPRFX, name + ": AIS exception while parsing " + line);
+                            Log.e(LOGPRFX, getTypeName() + ": AIS exception while parsing " + line);
                             e.printStackTrace();
                         }
                     }
 
                 } catch (Throwable e) {
-                    Log.e(LOGPRFX, name + ": Exception during decode " + e.getLocalizedMessage());
-                    status = "read exception " + e;
+                    Log.e(LOGPRFX, getTypeName() + ": Exception during decode " + e.getLocalizedMessage());
                 }
             }
-            isRunning = false;
         }
 
-
-        public boolean getRunning() {
-            return isRunning;
-        }
-    }
 
     public void cleanupAis(long lifetime){
         if (store != null) {
             long now=System.currentTimeMillis();
-            if (now > (lastAisCleanup+properties.aisCleanupInterval)) {
+            if (now > (lastAisCleanup+AIS_CLEANUP_INTERVAL)) {
                 lastAisCleanup=now;
                 store.cleanup(lifetime);
             }
         }//satellite view
     }
 
-    Decoder(String name, Context ctx, NmeaQueue queue,Properties prop){
+    Decoder(String name, Context ctx, NmeaQueue queue){
+        super(name);
         context=ctx;
         if (ctx instanceof INmeaLogger) nmeaLogger=(INmeaLogger)ctx;
-        this.name=name;
         this.queue=queue;
-        properties=prop;
-        this.runnable=new ReceiverRunnable();
-        this.receiverThread=new Thread(this.runnable);
-        store=new AisStore(prop.ownMmsi);
-        Thread cleanupThread=new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (! stopped) {
-                    AvnLog.d(LOGPRFX, name + ": cleanup AIS data");
-                    try {
-                        cleanupAis(properties.aisLifetime);
-                    } catch (Throwable t) {
-                        AvnLog.e("exception in AIS cleanup", t);
-                    }
-                    synchronized (waiter) {
-                        try {
-                            waiter.wait(properties.readWait);
-                        } catch (InterruptedException e) {
-                        }
-                    }
-                    if (stopped) break;
-                }
-                AvnLog.i(LOGPRFX,"Ais cleanup finished");
+        addParameters();
+        status.canEdit=true;
+        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+    }
+
+    @Override
+    public synchronized void setParameters(JSONObject newParam, boolean replace) throws JSONException {
+        if (replace){
+            try{
+                super.setParameters(newParam,true);
+            }catch (JSONException e){
+                AvnLog.e(getTypeName()+": config error",e);
+                //we fall back to save settings
+                super.setParameters(new JSONObject(),true);
             }
-        });
-        cleanupThread.start();
-        AvnLog.d(LOGPRFX,name+":starting decoder");
-        this.receiverThread.start();
+            return;
+        }
+        super.setParameters(newParam, replace);
     }
 
     SatStatus getSatStatus() {
@@ -433,33 +437,21 @@ public class Decoder extends GpsDataProvider {
 
 
     @Override
-    public String getName() {
-        return name;
-    }
-
-    @Override
     public synchronized void stop() {
-        this.stopped=true;
+        super.stop();
         queue.clear();
-        synchronized (waiter) {
-            waiter.notifyAll();
-        }
     }
 
-    @Override
-    public boolean isStopped() {
-        return stopped;
-    }
 
-    public Location getLocation() {
+    public Location getLocation() throws JSONException {
         long current=System.currentTimeMillis();
-        if (current > (lastPositionReceived+properties.postionAge)){
+        if (current > (lastPositionReceived+POSITION_AGE.fromJson(parameters)*1000)){
             return null;
         }
         Location rt=location;
         if (rt == null) return rt;
         rt=new Location(rt);
-        rt.setTime(rt.getTime()+properties.timeOffset);
+        rt.setTime(rt.getTime()+TIME_OFFSET.fromJson(parameters)*1000);
         return rt;
     }
 
@@ -486,7 +478,7 @@ public class Decoder extends GpsDataProvider {
         rt.put(G_LON,curLoc.getLongitude());
         rt.put(G_COURSE,curLoc.getBearing());
         rt.put(G_SPEED,curLoc.getSpeed());
-        rt.put(G_TIME,dateFormat.format(new Date(curLoc.getTime())));
+        rt.put(G_TIME, dateFormat.format(new Date(curLoc.getTime())));
         mergeAuxiliaryData(rt);
         AvnLog.d(LOGPRFX,"getGpsData: "+rt.toString());
         return rt;
@@ -512,31 +504,31 @@ public class Decoder extends GpsDataProvider {
 
 
     @Override
-    JSONObject getHandlerStatus() throws JSONException {
-        WorkerStatus workerStatus=new WorkerStatus(name);
+    public synchronized JSONObject getJsonStatus() throws JSONException {
+        WorkerStatus workerStatus=new WorkerStatus(status);
         Decoder handler=this;
-        String addr = name;
+        String addr = getTypeName();
         SatStatus st = handler.getSatStatus();
         Location loc = handler.getLocation();
         int numAis = handler.numAisData();
         if (loc != null ) {
-            String info = "(" + addr + ") valid position, sats: " + st.numSat + " / " + st.numUsed;
+            String info = "valid position, sats: " + st.numSat + " / " + st.numUsed;
             if (numAis > 0) info += ", valid AIS data, " + numAis + " targets";
             workerStatus.info=info;
             workerStatus.status= WorkerStatus.Status.NMEA;
         } else {
             if ( numAis > 0) {
-                workerStatus.info= "(" + addr + ") valid AIS data, " + numAis + " targets";
+                workerStatus.info= "valid AIS data, " + numAis + " targets";
                 workerStatus.status= WorkerStatus.Status.NMEA;
 
             } else {
                 if (st.gpsEnabled) {
-                    String info="(" + addr + ") connected";
+                    String info=" connected";
                     info+=", sats: " + st.numSat + " available / " + st.numUsed + " used";
                     workerStatus.info=info;
                     workerStatus.status= WorkerStatus.Status.STARTED;
                 } else {
-                    workerStatus.info= "(" + addr + ") disconnected";
+                    workerStatus.info= "error";
                     workerStatus.status= WorkerStatus.Status.ERROR;
                 }
             }
@@ -544,4 +536,21 @@ public class Decoder extends GpsDataProvider {
         return workerStatus.toJson();
     }
 
+    public static class SatStatus{
+        public int numSat=0;
+        public int numUsed=0;
+        public boolean gpsEnabled; //for external connections this shows if it is connected
+
+        public SatStatus(int numSat,int numUsed){
+            this.numSat=numSat;
+            this.numUsed=numUsed;
+            this.gpsEnabled=(numUsed>0)?true:false;
+        }
+        public SatStatus(SatStatus other){
+            this(other.numSat,other.numUsed);
+        }
+        public String toString(){
+            return "Sat num="+numSat+", used="+numUsed;
+        }
+    }
 }

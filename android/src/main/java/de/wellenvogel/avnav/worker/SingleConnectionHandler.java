@@ -5,8 +5,6 @@ import android.util.Log;
 
 import org.json.JSONException;
 
-import java.io.IOException;
-
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.NmeaQueue;
@@ -16,9 +14,9 @@ import de.wellenvogel.avnav.util.NmeaQueue;
  */
 public abstract class SingleConnectionHandler extends Worker {
     private final NmeaQueue queue;
-    private ConnectionHandler handler;
-    private ConnectionHandler.ConnectionProperties getConnectionProperties() throws JSONException {
-        ConnectionHandler.ConnectionProperties rt=new ConnectionHandler.ConnectionProperties();
+    private ConnectionReaderWriter handler;
+    private ConnectionReaderWriter.ConnectionProperties getConnectionProperties() throws JSONException {
+        ConnectionReaderWriter.ConnectionProperties rt=new ConnectionReaderWriter.ConnectionProperties();
         rt.readData=true;
         rt.writeData=SEND_DATA_PARAMETER.fromJson(parameters);
         rt.readFilter=AvnUtil.splitNmeaFilter(FILTER_PARAM.fromJson(parameters));
@@ -71,7 +69,7 @@ public abstract class SingleConnectionHandler extends Worker {
             AvnLog.d(LOGPRFX, name + ": connected to " + connection.getId());
             setStatus(WorkerStatus.Status.NMEA,"connected to "+connection.getId());
             try{
-                handler=new ConnectionHandler(connection,getConnectionProperties(),getSourceName(),queue);
+                handler=new ConnectionReaderWriter(connection,getConnectionProperties(),getSourceName(),queue);
                 handler.run();
             } catch (JSONException e) {
                 Log.e(LOGPRFX, name + ": Exception during read " + e.getLocalizedMessage());

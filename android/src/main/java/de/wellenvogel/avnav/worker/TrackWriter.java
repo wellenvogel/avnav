@@ -217,11 +217,11 @@ public class TrackWriter extends DirectoryRequestHandler {
         item.put("name","Writer");
         if (lastTrackWrite != 0){
             item.put("info",trackpoints.size()+" points, writing to "+getTrackFile(new Date(lastTrackWrite)).getAbsolutePath());
-            item.put("status",GpsDataProvider.STATUS_NMEA);
+            item.put("status",WorkerStatus.Status.NMEA.toString());
         }
         else {
             item.put("info","waiting");
-            item.put("status",GpsDataProvider.STATUS_INACTIVE);
+            item.put("status",WorkerStatus.Status.INACTIVE.toString());
         }
         rt.put(item);
         JSONObject out = new JSONObject();

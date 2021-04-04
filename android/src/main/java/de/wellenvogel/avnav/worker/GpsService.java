@@ -65,11 +65,6 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     private Context ctx;
 
     private final IBinder mBinder = new GpsServiceBinder();
-    private GpsDataProvider internalProvider=null;
-    private SocketReader externalProvider=null;
-    private BluetoothConnectionHandler bluetoothProvider=null;
-    private UsbConnectionHandler usbProvider =null;
-
     private boolean isRunning;  //this is our view whether we are running or not
                                 //running means that we are registered for updates and have our timer active
 
@@ -104,7 +99,10 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     boolean notificationSend=false;
     private long alarmSequence=System.currentTimeMillis();
     private final ArrayList<IWorker> workers =new ArrayList<>();
-    private int workerId=1;
+    private final ArrayList<IWorker> internalWorkers=new ArrayList<>();
+    private static final int MIN_WORKER_ID=10;
+    private int workerId=MIN_WORKER_ID; //1-9 reserverd for fixed workers like decoder,...
+    private static final int DECODER_ID=1;
 
     private final BroadcastReceiver usbReceiver = new BroadcastReceiver() {
         @Override
@@ -112,10 +110,13 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
 
             if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_DETACHED)) {
                 UsbDevice dev = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
-                if (dev != null && usbProvider != null) {
-                    usbProvider.deviceDetach(dev);
+                if (dev != null) {
+                    for (IWorker w : workers) {
+                        if (w instanceof UsbConnectionHandler){
+                            ((UsbConnectionHandler)w).deviceDetach(dev);
+                        }
+                    }
                 }
-
             }
         }
     };
@@ -326,23 +327,16 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         }
     }
 
-    private GpsDataProvider.Properties getFilledProperties(){
-        SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
-        GpsDataProvider.Properties prop=new GpsDataProvider.Properties();
-        prop.aisCleanupInterval=1000*AvnUtil.getLongPref(prefs, Constants.IPAISCLEANUPIV, prop.aisCleanupInterval);
-        prop.aisLifetime=1000*AvnUtil.getLongPref(prefs,Constants.AISLIFETIME, prop.aisLifetime);
-        prop.postionAge=1000*AvnUtil.getLongPref(prefs,Constants.IPPOSAGE,prop.postionAge);
-        prop.auxiliaryAge=1000*AvnUtil.getLongPref(prefs,Constants.AUXAGE,prop.auxiliaryAge);
-        prop.connectTimeout=(int)(1000*AvnUtil.getLongPref(prefs,Constants.IPCONNTIMEOUT, prop.connectTimeout));
-        prop.ownMmsi=prefs.getString(Constants.AISOWN,null);
-        return prop;
-    }
+
     private synchronized int getNextWorkerId(){
         workerId++;
         return workerId;
     }
     private synchronized IWorker findWorkerById(int id){
         for (IWorker w:workers){
+            if (w.getId() == id) return w;
+        }
+        for (IWorker w:internalWorkers){
             if (w.getId() == id) return w;
         }
         return null;
@@ -394,20 +388,30 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         return rt;
     }
 
-    private void saveWorkerConfig() throws JSONException {
-        JSONArray newConfig=new JSONArray();
-        for (IWorker w:workers){
-            JSONObject wc=w.getConfig();
-            wc.put(Worker.TYPENAME_PARAMETER.name,w.getTypeName());
-            newConfig.put(wc);
+    private void saveWorkerConfig(int id) throws JSONException {
+        SharedPreferences prefs = getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor edit=prefs.edit();
+        if (id >= MIN_WORKER_ID) {
+            JSONArray newConfig = new JSONArray();
+            for (IWorker w : workers) {
+                JSONObject wc = w.getConfig();
+                wc.put(Worker.TYPENAME_PARAMETER.name, w.getTypeName());
+                newConfig.put(wc);
+            }
+            edit.putString(Constants.HANDLER_CONFIG, newConfig.toString());
         }
-        SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
-        prefs.edit().putString(Constants.HANDLER_CONFIG,newConfig.toString()).commit();
+        else{
+            if (id == DECODER_ID){
+                JSONObject o=decoder.getConfig();
+                edit.putString(Constants.DECODER_CONFIG,o.toString());
+            }
+        }
+        edit.commit();
     }
     private synchronized void updateWorkerConfig(IWorker worker, JSONObject newConfig) throws JSONException {
         worker.setParameters(newConfig, false);
         worker.start(); //will restart
-        saveWorkerConfig();
+        saveWorkerConfig(worker.getId());
     }
     private synchronized void addWorker(String typeName, JSONObject newConfig) throws WorkerFactory.WorkerNotFound, JSONException, IOException {
         IWorker newWorker=WorkerFactory.getInstance().createWorker(typeName,this,queue);
@@ -426,7 +430,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         if (! inserted){
             workers.add(newWorker);
         }
-        saveWorkerConfig();
+        saveWorkerConfig(newWorker.getId());
     }
     private synchronized void deleteWorker(IWorker worker) throws JSONException {
         worker.stop();
@@ -440,7 +444,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         if (workerId >= 0){
             workers.remove(workerId);
         }
-        saveWorkerConfig();
+        saveWorkerConfig(worker.getId());
     }
     private void stopWorkers(){
         for (IWorker w: workers){
@@ -529,7 +533,19 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
             receiverRegistered=true;
         }
         if (! isWatchdog || decoder == null) {
-            decoder = new Decoder("decoder", this, queue, new GpsDataProvider.Properties());
+            decoder = new Decoder("decoder", this, queue);
+            String decoderParameters=prefs.getString(Constants.DECODER_CONFIG,null);
+            if (decoderParameters != null){
+                try{
+                    JSONObject po=new JSONObject(decoderParameters);
+                    decoder.setParameters(po,true);
+                }catch (JSONException e){
+                    AvnLog.e("error parsing decoder parameters",e);
+                }
+            }
+            decoder.setId(DECODER_ID);
+            decoder.start();
+            internalWorkers.add(decoder);
         }
         if (! isWatchdog || workers.size() == 0) {
             try {
@@ -626,12 +642,16 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         public void run(){
             if (! isRunning) return;
             if (timerSequence != sequence) return;
-            timerAction();
+            try {
+                timerAction();
+            } catch (JSONException e) {
+                AvnLog.e("error in timer",e);
+            }
             handler.postDelayed(this, trackMintime);
         }
-    };
+    }
 
-    public void timerAction(){
+    public void timerAction() throws JSONException {
         checkAnchor();
         checkApproach();
         checkMob();
@@ -656,7 +676,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         }
     }
 
-    private void checkAnchor(){
+    private void checkAnchor() throws JSONException {
         if (routeHandler == null) return;
         if (! routeHandler.anchorWatchActive()){
             resetAlarm(Alarm.GPS.name);
@@ -680,7 +700,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         }
         setAlarm(Alarm.ANCHOR.name);
     }
-    private void checkApproach(){
+    private void checkApproach() throws JSONException {
         if (routeHandler == null) return;
         Location current=getLocation();
         if (current == null){
@@ -717,6 +737,8 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     private void handleStop(boolean emptyTrack) {
         stopWorkers();
         decoder.stop();
+        decoder=null;
+        internalWorkers.clear();
         //this is not completely OK: we could fail to write our last track points
         //if we still load the track - but otherwise we could reeally empty the track
         try {
@@ -789,7 +811,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
      * check if position has changed and write track entries
      * write out the track file in regular intervals
      */
-    private void checkTrackWriter(){
+    private void checkTrackWriter() throws JSONException {
         if (! isRunning) return;
         Location l=getLocation();
         trackWriter.checkWrite(l,mediaUpdater);
@@ -839,7 +861,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
 
 
 
-    public GpsDataProvider.SatStatus getSatStatus(){
+    public Decoder.SatStatus getSatStatus(){
         return decoder.getSatStatus();
     }
 
@@ -939,7 +961,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         return rt;
     }
 
-    private Location getLocation(){
+    private Location getLocation() throws JSONException {
         return decoder.getLocation();
     }
 
@@ -978,10 +1000,10 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         ais.put("source", "unknown");
         ais.put("status", "red");
         ais.put("info", "disabled");
-        GpsDataProvider.SatStatus st = decoder.getSatStatus();
+        Decoder.SatStatus st = decoder.getSatStatus();
         Location loc = decoder.getLocation();
-        String addr = decoder.getConnectionId();
-        nmea.put("source", decoder.getName());
+        String addr = "decoder";
+        nmea.put("source", decoder.getSourceName());
         if (loc != null) {
             nmea.put("status", "green");
             nmea.put("info", "(" + addr + ") sats: " + st.numSat + " / " + st.numUsed);
@@ -994,7 +1016,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
                 nmea.put("status", "red");
             }
         }
-        ais.put("source", decoder.getName());
+        ais.put("source", addr);
         int aisTargets = decoder.numAisData();
         if (aisTargets > 0) {
             ais.put("status", "green");
@@ -1018,8 +1040,9 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         for (IWorker w : workers){
             rt.put(w.getJsonStatus());
         }
-
-        rt.put(decoder.getHandlerStatus());
+        for (IWorker w: internalWorkers){
+            rt.put(w.getJsonStatus());
+        }
         if (trackWriter != null){
             JSONObject ts=new JSONObject();
             JSONObject rs=trackWriter.getTrackStatus();

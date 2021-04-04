@@ -29,14 +29,12 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
 import de.wellenvogel.avnav.worker.BluetoothConnectionHandler;
-import de.wellenvogel.avnav.worker.GpsDataProvider;
 import de.wellenvogel.avnav.worker.UsbConnectionHandler;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.Info;
@@ -275,9 +273,7 @@ public class SettingsActivity extends PreferenceActivity {
         }
         if (sharedPrefs.getBoolean(Constants.IPAIS,false)||sharedPrefs.getBoolean(Constants.IPNMEA, false)) {
             try {
-                InetSocketAddress addr = GpsDataProvider.convertAddress(
-                        sharedPrefs.getString(Constants.IPADDR, ""),
-                        sharedPrefs.getString(Constants.IPPORT, ""));
+
             } catch (Exception i) {
                 if (showToasts)Toast.makeText(activity, R.string.invalidIp, Toast.LENGTH_SHORT).show();
                 return false;

@@ -35,9 +35,9 @@ import de.wellenvogel.avnav.settings.AudioEditTextPreference;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.worker.Alarm;
-import de.wellenvogel.avnav.worker.GpsDataProvider;
 import de.wellenvogel.avnav.worker.GpsService;
 import de.wellenvogel.avnav.worker.RouteHandler;
+import de.wellenvogel.avnav.worker.WorkerStatus;
 
 /**
  * Created by andreas on 22.11.15.
@@ -628,7 +628,7 @@ public class RequestHandler {
                     JSONObject serverStatus=new JSONObject();
                     serverStatus.put("info","listening on "+serverInfo.address.toString());
                     serverStatus.put("name","HttpServer");
-                    serverStatus.put("status", GpsDataProvider.STATUS_NMEA);
+                    serverStatus.put("status", WorkerStatus.Status.NMEA.toString());
                     status.put(serverStatus);
                     JSONObject info=new JSONObject();
                     info.put("items",status);

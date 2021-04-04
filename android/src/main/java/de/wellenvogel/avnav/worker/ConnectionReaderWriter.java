@@ -17,7 +17,7 @@ import de.wellenvogel.avnav.util.NmeaQueue;
 /**
  * Created by andreas on 25.12.14.
  */
-public class ConnectionHandler implements Runnable {
+public class ConnectionReaderWriter{
     public static class ConnectionProperties {
         public String sourceName;
         public boolean readData;
@@ -39,7 +39,7 @@ public class ConnectionHandler implements Runnable {
     Thread writerThread;
     long lastReceived=0;
 
-    public ConnectionHandler(AbstractConnection connection, ConnectionProperties properties, String name, NmeaQueue queue) {
+    public ConnectionReaderWriter(AbstractConnection connection, ConnectionProperties properties, String name, NmeaQueue queue) {
         this.connection = connection;
         this.properties = properties;
         this.name = name;
@@ -81,7 +81,7 @@ public class ConnectionHandler implements Runnable {
         return dataAvailable && (System.currentTimeMillis() < (lastReceived+properties.noDataTime));
     }
 
-    @Override
+
     public void run() {
         try {
             startWriter();
@@ -115,11 +115,7 @@ public class ConnectionHandler implements Runnable {
                 break;
             }
         }
-        stopped = true;
-        try {
-            connection.close();
-        } catch (Exception i) {
-        }
+        stop();
         AvnLog.i("connection handler " + properties.sourceName + " stopped");
     }
 
@@ -128,10 +124,15 @@ public class ConnectionHandler implements Runnable {
         stopped = true;
         if (connection != null) {
             try {
-                AvnLog.d(LOGPRFX, name + ": closing socket");
+                AvnLog.d(LOGPRFX, name + ": closing connection");
                 connection.close();
             } catch (Exception i) {
             }
+        }
+        if (writerThread != null){
+            try{
+                writerThread.interrupt();
+            }catch(Throwable t){}
         }
     }
 
