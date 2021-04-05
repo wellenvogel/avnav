@@ -718,7 +718,11 @@ public class RequestHandler {
                 o.put("uploadImages",true);
                 o.put("uploadOverlays",true);
                 o.put("uploadTracks",true);
-                o.put("config",true);
+                if (serverInfo == null) {
+                    //we can only handle the config stuff internally
+                    //as potentially there are permission dialogs
+                    o.put("config", true);
+                }
                 fout=getReturn(new KeyValue<JSONObject>("data",o));
             }
             if (type.equals("api")){

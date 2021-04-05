@@ -163,6 +163,9 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
 
     @Override
     public JSONObject handleApiRequest(Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
+        if (serverInfo != null){
+            return RequestHandler.getErrorReturn("can only handle config locally");
+        }
         String command=AvnUtil.getMandatoryParameter(uri,"command");
         if ("createHandler".equals(command)){
             String typeName=AvnUtil.getMandatoryParameter(uri,"handlerName");
