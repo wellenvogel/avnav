@@ -53,6 +53,10 @@ public class BluetoothConnection extends AbstractConnection {
         return btDevice.getName();
     }
 
+    @Override
+    public boolean shouldFail() {
+        return true; //we do the retry loop by our own
+    }
 
     public static String RFCOMM_UUID="00001101-0000-1000-8000-00805F9B34FB"; //the somehow magic id..
     public BluetoothConnection(BluetoothDevice device) throws IOException {

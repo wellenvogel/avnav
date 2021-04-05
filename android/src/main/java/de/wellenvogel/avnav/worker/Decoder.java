@@ -40,6 +40,7 @@ import de.wellenvogel.avnav.aislib.messages.message.AisMessage;
 import de.wellenvogel.avnav.aislib.messages.sentence.Abk;
 import de.wellenvogel.avnav.aislib.packet.AisPacket;
 import de.wellenvogel.avnav.aislib.packet.AisPacketParser;
+import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.NmeaQueue;
@@ -61,6 +62,7 @@ public class Decoder extends Worker {
     private INmeaLogger nmeaLogger;
     private NmeaQueue queue;
     private static final long AIS_CLEANUP_INTERVAL=60000;
+    private long lastReceived=0;
 
     private static final EditableParameter.IntegerParameter POSITION_AGE= new
             EditableParameter.IntegerParameter("posAge","max age of gps position(s)",10);
@@ -197,6 +199,9 @@ public class Decoder extends Worker {
                     entry = queue.fetch(sequence, 2000);
                 } catch (InterruptedException e) {
                     if (shouldStop(startSequence)) return;
+                    if ((lastReceived+ Constants.NO_DATA_TIME) > System.currentTimeMillis()){
+                        stat.gpsEnabled=false;
+                    }
                     sleep(2000);
                     continue;
                 }
@@ -204,12 +209,17 @@ public class Decoder extends Worker {
                     continue;
                 }
                 sequence = entry.sequence;
+                if ((lastReceived+ Constants.NO_DATA_TIME) > System.currentTimeMillis()){
+                    stat.gpsEnabled=false;
+                }
                 try {
                     String line = entry.data;
                     if (line.startsWith("$")) {
                         if (nmeaLogger != null) nmeaLogger.logNmea(line);
                         //NMEA
                         if (SentenceValidator.isValid(line)) {
+                            stat.gpsEnabled=true;
+                            lastReceived=System.currentTimeMillis();
                             try {
                                 line = correctTalker(line);
                                 Sentence s = factory.createParser(line);
@@ -528,8 +538,8 @@ public class Decoder extends Worker {
                     workerStatus.info=info;
                     workerStatus.status= WorkerStatus.Status.STARTED;
                 } else {
-                    workerStatus.info= "error";
-                    workerStatus.status= WorkerStatus.Status.ERROR;
+                    workerStatus.info= "no NMEA data";
+                    workerStatus.status= WorkerStatus.Status.INACTIVE;
                 }
             }
         }
@@ -547,7 +557,9 @@ public class Decoder extends Worker {
             this.gpsEnabled=(numUsed>0)?true:false;
         }
         public SatStatus(SatStatus other){
+
             this(other.numSat,other.numUsed);
+            this.gpsEnabled=other.gpsEnabled;
         }
         public String toString(){
             return "Sat num="+numSat+", used="+numUsed;

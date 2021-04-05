@@ -41,6 +41,12 @@ public abstract class AbstractConnection {
     public void setTimeout(int to){
         timeout=to;
     }
+
+    /**
+     * give the abstract connection a chance to let the retry connect loop finally fail
+     * @return true if no connect retries any more
+     */
+    public boolean shouldFail(){return false;}
     /**
      * write timeout check
      * closes the socket on timeout

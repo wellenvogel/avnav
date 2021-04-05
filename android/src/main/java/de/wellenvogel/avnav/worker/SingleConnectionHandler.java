@@ -5,6 +5,9 @@ import android.util.Log;
 
 import org.json.JSONException;
 
+import java.io.IOException;
+
+import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.NmeaQueue;
@@ -22,6 +25,7 @@ public abstract class SingleConnectionHandler extends Worker {
         rt.readFilter=AvnUtil.splitNmeaFilter(FILTER_PARAM.fromJson(parameters));
         rt.writeFilter=AvnUtil.splitNmeaFilter(SEND_FILTER_PARAM.fromJson(parameters));
         rt.sourceName=getSourceName();
+        rt.noDataTime= Constants.NO_DATA_TIME;
         return rt;
     }
     private static final String LOGPRFX="SingleConnectionHandler";
@@ -54,6 +58,15 @@ public abstract class SingleConnectionHandler extends Worker {
             } catch (Exception e) {
                 Log.e(LOGPRFX, name + ": Exception during connect " + e.getLocalizedMessage());
                 setStatus(WorkerStatus.Status.ERROR,"connect error " + e);
+                if (connection.shouldFail()){
+                    try {
+                        connection.close();
+                    } catch (IOException ioException) {
+                    }
+                    stopHandler();
+                    setStatus(WorkerStatus.Status.ERROR,"failing with connect error " + e);
+                    break;
+                }
                 try {
                     connection.close();
                 }catch (Exception i){}
@@ -86,24 +99,31 @@ public abstract class SingleConnectionHandler extends Worker {
         }
     }
 
-    @Override
-    public void stop() {
-        super.stop();
+    private void stopHandler(){
         if (handler != null){
             try{
                 handler.stop();
             }catch (Throwable t){
                 AvnLog.e(getTypeName()+" error stopping handler",t);
             }
+            handler=null;
         }
+    }
+
+    @Override
+    public void stop() {
+        super.stop();
+        stopHandler();
 
     }
 
     @Override
     public synchronized void check() throws JSONException {
         if (this.isStopped()) return;
-        if(connection.check()){
-            AvnLog.e(name+": closing socket due to write timeout");
+        if (connection != null) {
+            if (connection.check()) {
+                AvnLog.e(name + ": closing socket due to write timeout");
+            }
         }
         if ( handler == null || ! handler.hasNmea()){
             if (status.status == WorkerStatus.Status.NMEA) {

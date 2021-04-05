@@ -1000,34 +1000,36 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         ais.put("source", "unknown");
         ais.put("status", "red");
         ais.put("info", "disabled");
-        Decoder.SatStatus st = decoder.getSatStatus();
-        Location loc = decoder.getLocation();
-        String addr = "decoder";
-        nmea.put("source", decoder.getSourceName());
-        if (loc != null) {
-            nmea.put("status", "green");
-            nmea.put("info", "(" + addr + ") sats: " + st.numSat + " / " + st.numUsed);
-        } else {
-            if (st.gpsEnabled) {
-                nmea.put("info", "(" + addr + ") con, sats: " + st.numSat + " / " + st.numUsed);
-                nmea.put("status", "yellow");
+        if (decoder != null) {
+            Decoder.SatStatus st = decoder.getSatStatus();
+            Location loc = decoder.getLocation();
+            String addr = "decoder";
+            nmea.put("source", decoder.getSourceName());
+            if (loc != null) {
+                nmea.put("status", "green");
+                nmea.put("info", "(" + addr + ") sats: " + st.numSat + " / " + st.numUsed);
             } else {
-                nmea.put("info", "(" + addr + ") disconnected");
-                nmea.put("status", "red");
+                if (st.gpsEnabled) {
+                    nmea.put("info", "(" + addr + ") con, sats: " + st.numSat + " / " + st.numUsed);
+                    nmea.put("status", "yellow");
+                } else {
+                    nmea.put("info", "(" + addr + ") disconnected");
+                    nmea.put("status", "red");
+                }
             }
-        }
-        ais.put("source", addr);
-        int aisTargets = decoder.numAisData();
-        if (aisTargets > 0) {
-            ais.put("status", "green");
-            ais.put("info", "(" + addr + "), " + aisTargets + " targets");
-        } else {
-            if (st.gpsEnabled) {
-                ais.put("info", "(" + addr + ") connected");
-                ais.put("status", "yellow");
+            ais.put("source", addr);
+            int aisTargets = decoder.numAisData();
+            if (aisTargets > 0) {
+                ais.put("status", "green");
+                ais.put("info", "(" + addr + "), " + aisTargets + " targets");
             } else {
-                ais.put("info", "(" + addr + ") disconnected");
-                ais.put("status", "red");
+                if (st.gpsEnabled) {
+                    ais.put("info", "(" + addr + ") connected");
+                    ais.put("status", "yellow");
+                } else {
+                    ais.put("info", "(" + addr + ") disconnected");
+                    ais.put("status", "red");
+                }
             }
         }
         JSONObject rt = new JSONObject();

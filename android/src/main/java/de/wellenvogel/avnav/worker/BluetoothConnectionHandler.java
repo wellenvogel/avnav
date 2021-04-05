@@ -32,12 +32,18 @@ public class BluetoothConnectionHandler extends SingleConnectionHandler {
         };
         parameterDescriptions.add(deviceSelect);
     }
-
     public static void register(WorkerFactory factory,String name) {
         factory.registerCreator(new WorkerCreator(name) {
             @Override
             Worker create(Context ctx, NmeaQueue queue) throws JSONException, IOException {
                 return new BluetoothConnectionHandler(typeName, ctx, queue);
+            }
+
+            @Override
+            boolean canAdd() {
+                BluetoothAdapter adapter=BluetoothAdapter.getDefaultAdapter();
+                if (adapter == null) return false;
+                return adapter.isEnabled();
             }
         });
     }
@@ -46,9 +52,18 @@ public class BluetoothConnectionHandler extends SingleConnectionHandler {
         String deviceName=deviceSelect.fromJson(parameters);
         BluetoothDevice device=null;
         while (device == null && ! shouldStop(startSequence)){
-            device=getDeviceForName(deviceName);
-            if (device == null){
-                setStatus(WorkerStatus.Status.ERROR,"device "+deviceName+" not available");
+            BluetoothAdapter adapter=BluetoothAdapter.getDefaultAdapter();
+            String error=null;
+            if (adapter == null) error="no bluetooth available";
+            else {
+                if (!adapter.isEnabled()) error = "bluetooth disabled";
+            }
+            if (error == null) {
+                device = getDeviceForName(deviceName);
+                if (device == null) error = "device " + deviceName + " not available";
+            }
+            if (error != null){
+                setStatus(WorkerStatus.Status.ERROR,error);
                 sleep(2000);
             }
             else{
