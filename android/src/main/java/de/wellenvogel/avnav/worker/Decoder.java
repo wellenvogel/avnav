@@ -199,14 +199,14 @@ public class Decoder extends Worker {
                     entry = queue.fetch(sequence, 2000);
                 } catch (InterruptedException e) {
                     if (shouldStop(startSequence)) return;
-                    if ((lastReceived+ Constants.NO_DATA_TIME) > System.currentTimeMillis()){
+                    if ((lastReceived+ Constants.NO_DATA_TIME) < System.currentTimeMillis()){
                         stat.gpsEnabled=false;
                         setStatus(WorkerStatus.Status.INACTIVE,"no NMEA data");
                     }
                     sleep(2000);
                     continue;
                 }
-                if ((lastReceived+ Constants.NO_DATA_TIME) > System.currentTimeMillis()){
+                if ((lastReceived+ Constants.NO_DATA_TIME) < System.currentTimeMillis()){
                     stat.gpsEnabled=false;
                     setStatus(WorkerStatus.Status.INACTIVE,"no NMEA data");
                 }
