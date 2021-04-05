@@ -42,10 +42,10 @@ public class WorkerFactory {
         if ( cr == null) throw new WorkerNotFound(name);
         return cr.create(ctx,queue);
     }
-    public List<String> getKnownTypes(boolean addOnly){
+    public List<String> getKnownTypes(boolean addOnly,Context ctx){
         ArrayList<String> rt=new ArrayList<>();
         for (String n:workers.keySet()){
-            if (!addOnly || workers.get(n).canAdd()){
+            if (!addOnly || workers.get(n).canAdd(ctx)){
                 rt.add(n);
             }
         }

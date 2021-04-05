@@ -6,6 +6,7 @@ import android.content.Context;
 
 import org.json.JSONException;
 
+import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.NmeaQueue;
 
@@ -20,7 +21,7 @@ import java.util.Set;
 public class BluetoothConnectionHandler extends SingleConnectionHandler {
     private EditableParameter.StringListParameter deviceSelect=new EditableParameter.StringListParameter(
             "device",
-            "bluetooth device"
+            R.string.labelSettingsBtDevice
     );
     private BluetoothConnectionHandler(String name,Context ctx, NmeaQueue queue) throws IOException, JSONException {
         super(name,ctx,queue);
@@ -40,7 +41,7 @@ public class BluetoothConnectionHandler extends SingleConnectionHandler {
             }
 
             @Override
-            boolean canAdd() {
+            boolean canAdd(Context ctx) {
                 BluetoothAdapter adapter=BluetoothAdapter.getDefaultAdapter();
                 if (adapter == null) return false;
                 return adapter.isEnabled();

@@ -1,6 +1,9 @@
 package de.wellenvogel.avnav.worker;
 
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
@@ -17,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.NmeaQueue;
 
@@ -25,6 +29,9 @@ import de.wellenvogel.avnav.util.NmeaQueue;
  */
 public class UsbConnectionHandler extends SingleConnectionHandler {
     private Context ctx;
+    private boolean permissionRequested=false;
+    private static final String ACTION_USB_PERMISSION =
+            "com.android.example.USB_PERMISSION";
     void deviceDetach(UsbDevice dev) {
         UsbSerialConnection usb=(UsbSerialConnection) connection;
         if (usb != null && usb.dev.equals(dev)){
@@ -61,13 +68,13 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
             }
         };
         final static String PREFIX="AvnUsbSerial";
-        UsbSerialConnection(Context ctx, UsbDevice dev, String baud)
-        {
+        UsbSerialConnection(Context ctx, UsbDevice dev, String baud) throws Exception {
             super();
             this.dev=dev;
             this.baud=baud;
             UsbManager manager=(UsbManager) ctx.getSystemService(Context.USB_SERVICE);
             connection=manager.openDevice(dev);
+            if (connection == null) throw new Exception(dev.getDeviceName());
             //TODO: handle open connection error
         }
         @Override
@@ -91,6 +98,11 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
             else{
                 throw new IOException(PREFIX + ": unable to open serial device " + dev.getDeviceName());
             }
+        }
+
+        @Override
+        public boolean shouldFail() {
+            return true;
         }
 
         @Override
@@ -149,7 +161,11 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
         public void close() throws IOException {
             AvnLog.i(PREFIX,"close connection to "+dev.getDeviceName());
             if (serialPort == null) return;
-            serialPort.close();
+            try {
+                serialPort.close();
+            }catch (Throwable t){
+                AvnLog.e("error closing usb connection",t);
+            }
             serialPort=null;
             notifyWaiters();
         }
@@ -162,7 +178,7 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
 
     }
     EditableParameter.StringListParameter deviceSelect=
-            new EditableParameter.StringListParameter("device","usb device");
+            new EditableParameter.StringListParameter("device", R.string.labelSettingsUsbDevice);
     private UsbConnectionHandler(String name, Context ctx, NmeaQueue queue) throws JSONException {
         super(name,ctx,queue);
         parameterDescriptions.add(BAUDRATE_PARAMETER);
@@ -185,14 +201,37 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
         String deviceName=deviceSelect.fromJson(parameters);
         UsbDevice device=null;
         while (device == null && ! shouldStop(startSequence)){
-            device=getDeviceForName(ctx,deviceName);
+            UsbManager manager=(UsbManager) ctx.getSystemService(Context.USB_SERVICE);
+            Map<String,UsbDevice> devices=manager.getDeviceList();
+            device=devices.get(deviceName);
             if (device == null){
                 setStatus(WorkerStatus.Status.ERROR,"device "+deviceName+" not available");
                 sleep(2000);
             }
             else{
+                if (! manager.hasPermission(device)){
+                    if (! permissionRequested){
+                        setStatus(WorkerStatus.Status.ERROR,"requested permissions for "+ device.getDeviceName());
+                        PendingIntent permissionIntent = PendingIntent.getBroadcast(ctx, 0, new Intent(ACTION_USB_PERMISSION), 0);
+                        manager.requestPermission(device,permissionIntent);
+                        permissionRequested=true;
+
+                    }
+                    else {
+                        setStatus(WorkerStatus.Status.ERROR, "no permission for device" + device.getDeviceName());
+                    }
+                    device=null;
+                    sleep(5000);
+                    continue;
+                }
                 setStatus(WorkerStatus.Status.STARTED,"connecting to "+deviceName);
-                runInternal(new UsbSerialConnection(ctx,device,BAUDRATE_PARAMETER.fromJson(parameters)),startSequence);
+                try {
+                    runInternal(new UsbSerialConnection(ctx, device, BAUDRATE_PARAMETER.fromJson(parameters)), startSequence);
+                }catch(Throwable t){
+                    setStatus(WorkerStatus.Status.ERROR,"unable to open device"+t.getMessage());
+                    AvnLog.e("error opening usb device",t);
+                    sleep(5000);
+                }
                 device=null;
             }
         }
@@ -209,6 +248,11 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
             @Override
             Worker create(Context ctx, NmeaQueue queue) throws JSONException {
                 return new UsbConnectionHandler(typeName,ctx,queue);
+            }
+
+            @Override
+            boolean canAdd(Context ctx) {
+                return ctx.getPackageManager().hasSystemFeature(PackageManager.FEATURE_USB_HOST);
             }
         });
     }

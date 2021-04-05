@@ -28,7 +28,7 @@ public class ConnectionReaderWriter{
         public int noDataTime=10000;
     }
 
-    private static final String LOGPRFX = "ConnectionHandler";
+    private static final String LOGPRFX = "ConnectionReaderWriter";
     private boolean stopped = false;
     private NmeaQueue queue;
     private AbstractConnection connection;
@@ -93,23 +93,23 @@ public class ConnectionReaderWriter{
         while (!stopped) {
             try {
                 BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()), 8);
-                while (!stopped) {
-                    //TODO:timeout exception
-                    String line = in.readLine();
-                    AvnLog.d(LOGPRFX, name + ": received: " + line);
-                    if (line == null) {
-                        break;
-                    }
-                    if (properties.readData) {
-                        line = AvnUtil.removeNonNmeaChars(line);
-                        if (!AvnUtil.matchesNmeaFilter(line, properties.readFilter)) {
-                            AvnLog.d("ignore " + line + " due to filter");
-                            continue;
-                        }
-                        lastReceived=System.currentTimeMillis();
-                        queue.add(line, name);
-                    }
+
+                //TODO:timeout exception
+                String line = in.readLine();
+                AvnLog.d(LOGPRFX, name + ": received: " + line);
+                if (line == null) {
+                    break;
                 }
+                if (properties.readData) {
+                    line = AvnUtil.removeNonNmeaChars(line);
+                    if (!AvnUtil.matchesNmeaFilter(line, properties.readFilter)) {
+                        AvnLog.d("ignore " + line + " due to filter");
+                        continue;
+                    }
+                    lastReceived = System.currentTimeMillis();
+                    queue.add(line, name);
+                }
+
             } catch (IOException e) {
                 Log.e(LOGPRFX, name + ": Exception during read " + e.getLocalizedMessage());
                 break;

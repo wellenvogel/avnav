@@ -9,31 +9,32 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.Iterator;
 
+import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.NmeaQueue;
 
 public abstract class Worker implements IWorker {
     static final EditableParameter.StringParameter FILTER_PARAM=
-            new EditableParameter.StringParameter("filter","an NMEA filter, use e.g. $RMC or ^$RMC, !AIVDM","");
+            new EditableParameter.StringParameter("filter", R.string.labelSettingsNmeaFilter,"");
     static final EditableParameter.StringParameter SEND_FILTER_PARAM=
-            new EditableParameter.StringParameter("sendFilter","an NMEA filter for send, use e.g. $RMC or ^$RMC, !AIVDM","");
+            new EditableParameter.StringParameter("sendFilter",R.string.labelSettingsNmeaOutFilter,"");
     static final EditableParameter.BooleanParameter SEND_DATA_PARAMETER=
-            new EditableParameter.BooleanParameter("sendOut","send out NMEA on this connection",false);
+            new EditableParameter.BooleanParameter("sendOut",R.string.labelSettingsSendData,false);
     public static final EditableParameter.BooleanParameter ENABLED_PARAMETER=
-            new EditableParameter.BooleanParameter("enabled","enabled",true);
+            new EditableParameter.BooleanParameter("enabled",R.string.labelSettingsEnabled,true);
     static final EditableParameter.StringParameter IPADDRESS_PARAMETER=
-            new EditableParameter.StringParameter("ipaddress","ip address to connect",null);
+            new EditableParameter.StringParameter("ipaddress",R.string.labelSettingsIpAddress,null);
     static final EditableParameter.IntegerParameter IPPORT_PARAMETER=
-            new EditableParameter.IntegerParameter("port","ip port to connect",null);
+            new EditableParameter.IntegerParameter("port",R.string.labelSettingsIpPort,null);
     static final EditableParameter.StringParameter SOURCENAME_PARAMETER=
-            new EditableParameter.StringParameter("name","name of this data source","");
+            new EditableParameter.StringParameter("name",R.string.labelSettingsSource,"");
     static final EditableParameter.StringParameter TYPENAME_PARAMETER=
             new EditableParameter.StringParameter("typeName"); //not intended to be edited
     static final EditableParameter.StringListParameter BAUDRATE_PARAMETER=
-            new EditableParameter.StringListParameter("baud rate","serial baud rate","9600",
+            new EditableParameter.StringListParameter("baud rate",R.string.labelSettingsBaud,"9600",
                     "1200","2400","4800","9600","14400","19200","28800","38400","57600","115200","230400");
     static final EditableParameter.IntegerParameter TIMEOFFSET_PARAMETER=
-            new EditableParameter.IntegerParameter("timeOffset","timeOffset(s)",0);
+            new EditableParameter.IntegerParameter("timeOffset",R.string.labelSettingsTimeOffset,0);
 
 
     abstract static class WorkerCreator{
@@ -42,7 +43,7 @@ public abstract class Worker implements IWorker {
             this.typeName = typeName;
         }
         abstract Worker create(Context ctx, NmeaQueue queue) throws JSONException, IOException;
-        boolean canAdd(){return true;}
+        boolean canAdd(Context ctx){return true;}
     }
 
 

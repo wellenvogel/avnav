@@ -171,7 +171,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
             return RequestHandler.getReturn();
         }
         if ("getAddables".equals(command)){
-            List<String> names=WorkerFactory.getInstance().getKnownTypes(true);
+            List<String> names=WorkerFactory.getInstance().getKnownTypes(true,this);
             JSONArray data=new JSONArray(names);
             return RequestHandler.getReturn(new RequestHandler.KeyValue<JSONArray>("data",data));
         }
@@ -179,7 +179,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
             String typeName=AvnUtil.getMandatoryParameter(uri,"handlerName");
             try{
                 IWorker w=WorkerFactory.getInstance().createWorker(typeName,this,null);
-                return RequestHandler.getReturn(new RequestHandler.KeyValue<JSONArray>("data",w.getParameterDescriptions(null)));
+                return RequestHandler.getReturn(new RequestHandler.KeyValue<JSONArray>("data",w.getParameterDescriptions(this)));
             }catch (WorkerFactory.WorkerNotFound e){
                 return RequestHandler.getErrorReturn("not handler of type "+typeName+" found");
             }

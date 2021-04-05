@@ -30,13 +30,6 @@ public class EditableParameter {
         int descriptionId=-1;
         boolean mandatory=false;
 
-        EditableParameterBase(String name, String description, T defaultValue) {
-            this.name = name;
-            this.description = description;
-            this.defaultValue = defaultValue;
-            mandatory = defaultValue == null;
-
-        }
         EditableParameterBase(String name, int descriptionId, T defaultValue) {
             this.name = name;
             this.descriptionId = descriptionId;
@@ -72,9 +65,6 @@ public class EditableParameter {
         }
     }
     public static class StringParameter extends EditableParameterBase<String>{
-        StringParameter(String name, String description, String defaultValue) {
-            super(name, description, defaultValue);
-        }
 
         public StringParameter(String name, int descriptionId, String defaultValue) {
             super(name, descriptionId, defaultValue);
@@ -95,9 +85,6 @@ public class EditableParameter {
         }
     }
     public static class IntegerParameter extends EditableParameterBase<Integer>{
-        IntegerParameter(String name, String description, Integer defaultValue) {
-            super(name, description, defaultValue);
-        }
 
         public IntegerParameter(String name, int descriptionId, Integer defaultValue) {
             super(name, descriptionId, defaultValue);
@@ -118,9 +105,6 @@ public class EditableParameter {
         }
     }
     public static class BooleanParameter extends EditableParameterBase<Boolean>{
-        BooleanParameter(String name, String description, Boolean defaultValue) {
-            super(name, description, defaultValue);
-        }
 
         public BooleanParameter(String name, int descriptionId, Boolean defaultValue) {
             super(name, descriptionId, defaultValue);
@@ -140,10 +124,6 @@ public class EditableParameter {
         }
     }
     public static class FloatParameter extends EditableParameterBase<Float>{
-        FloatParameter(String name, String description, Float defaultValue) {
-            super(name, description, defaultValue);
-        }
-
         public FloatParameter(String name, int descriptionId, Float defaultValue) {
             super(name, descriptionId, defaultValue);
         }
@@ -164,19 +144,17 @@ public class EditableParameter {
     public static class StringListParameter extends EditableParameterBase<String>{
         public List<String> list;
         public ListBuilder<String> listBuilder=null;
-        StringListParameter(String name, String description, String defaultValue,List<String> values) {
-            super(name, description, defaultValue);
-            list=values;
-        }
+
         StringListParameter(String name, int descriptionId,String defaultValue){
             super(name,descriptionId,defaultValue);
         }
-
-        StringListParameter(String name,String description){
-            super(name,description,null);
+        StringListParameter(String name, int descriptionId){
+            super(name,descriptionId,null);
         }
-        StringListParameter(String name, String description, String defaultValue,String... values) {
-            super(name, description, defaultValue);
+
+
+        StringListParameter(String name, int descriptionId, String defaultValue,String... values) {
+            super(name, descriptionId, defaultValue);
             list=new ArrayList<String>();
             list.addAll(Arrays.asList(values));
         }

@@ -41,6 +41,7 @@ import de.wellenvogel.avnav.aislib.messages.sentence.Abk;
 import de.wellenvogel.avnav.aislib.packet.AisPacket;
 import de.wellenvogel.avnav.aislib.packet.AisPacketParser;
 import de.wellenvogel.avnav.main.Constants;
+import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.NmeaQueue;
@@ -65,15 +66,13 @@ public class Decoder extends Worker {
     private long lastReceived=0;
 
     private static final EditableParameter.IntegerParameter POSITION_AGE= new
-            EditableParameter.IntegerParameter("posAge","max age of gps position(s)",10);
+            EditableParameter.IntegerParameter("posAge",R.string.labelSettingsPosAge,10);
     private static final EditableParameter.IntegerParameter GPS_AGE= new
-            EditableParameter.IntegerParameter("gpsAge","max age of non position NMEA data(s)",600);
+            EditableParameter.IntegerParameter("gpsAge",R.string.labelSettingsAuxAge,600);
     private static final EditableParameter.IntegerParameter AIS_AGE= new
-            EditableParameter.IntegerParameter("aisAge","max age of ais data(s)",1200);
-    private static final EditableParameter.IntegerParameter TIME_OFFSET= new
-            EditableParameter.IntegerParameter("timeOffset","set a timne offset to decoded data(s)",0);
+            EditableParameter.IntegerParameter("aisAge", R.string.labelSettingsAisLifetime,1200);
     private static final EditableParameter.StringParameter OWN_MMSI= new
-            EditableParameter.StringParameter("ownMMSI","filter own MMSI if set","");
+            EditableParameter.StringParameter("ownMMSI",R.string.labelSettingsOwnMMSI,"");
     private void addParameters(){
         parameterDescriptions.addParams(OWN_MMSI,POSITION_AGE,GPS_AGE,AIS_AGE);
     }
@@ -467,7 +466,7 @@ public class Decoder extends Worker {
         Location rt=location;
         if (rt == null) return rt;
         rt=new Location(rt);
-        rt.setTime(rt.getTime()+TIME_OFFSET.fromJson(parameters)*1000);
+        rt.setTime(rt.getTime()+TIMEOFFSET_PARAMETER.fromJson(parameters)*1000);
         return rt;
     }
 

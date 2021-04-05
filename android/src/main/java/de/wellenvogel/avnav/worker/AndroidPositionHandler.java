@@ -73,7 +73,7 @@ public class AndroidPositionHandler extends Worker implements LocationListener ,
                 return new AndroidPositionHandler(typeName,ctx,queue);
             }
             @Override
-            boolean canAdd() {
+            boolean canAdd(Context ctx) {
                 return false;
             }
         });
