@@ -39,7 +39,7 @@ import de.wellenvogel.avnav.worker.GpsService;
 /**
  * Created by andreas on 06.01.15.
  */
-public class MainActivity extends Activity implements IDialogHandler,IMediaUpdater,SharedPreferences.OnSharedPreferenceChangeListener {
+public class MainActivity extends Activity implements IDialogHandler, IMediaUpdater, SharedPreferences.OnSharedPreferenceChangeListener, GpsService.MainActivityActions {
 
     private String lastStartMode=null; //The last mode we used to select the fragment
     SharedPreferences sharedPrefs;
@@ -170,17 +170,36 @@ public class MainActivity extends Activity implements IDialogHandler,IMediaUpdat
         startActivityForResult(sintent,Constants.SETTINGS_REQUEST);
     }
 
+    @Override
+    public void mainGoBack() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                goBack();
+            }
+        });
+    }
+
     //to be called e.g. from js
     public void goBack(){
         try {
-            DialogBuilder.confirmDialog(this, 0, R.string.endApplication, new DialogInterface.OnClickListener() {
+            DialogBuilder builder=new DialogBuilder(this,R.layout.dialog_confirm);
+            builder.createDialog();
+            builder.setText(R.id.title,0);
+            builder.setText(R.id.question,R.string.endApplication);
+            builder.setButton(R.string.ok,DialogInterface.BUTTON_POSITIVE);
+            builder.setButton(R.string.cancel,DialogInterface.BUTTON_NEUTRAL);
+            builder.setButton(R.string.cancel,DialogInterface.BUTTON_NEGATIVE);
+            builder.setOnClickListener(new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
                     if (which == DialogInterface.BUTTON_POSITIVE){
                         endApp();
                     }
                 }
             });
+            builder.show();
         } catch(Throwable i){
             //sometime a second call (e.g. when the JS code was too slow) will throw an exception
             Log.e(AvnLog.LOGPREFIX,"exception in goBack:"+i.getLocalizedMessage());
@@ -192,7 +211,7 @@ public class MainActivity extends Activity implements IDialogHandler,IMediaUpdat
         finish();
     }
 
-
+    private GpsService.GpsServiceBinder binder;
 
     /** Defines callbacks for service binding, passed to bindService() */
     private ServiceConnection mConnection = new ServiceConnection() {
@@ -201,11 +220,15 @@ public class MainActivity extends Activity implements IDialogHandler,IMediaUpdat
         public void onServiceConnected(ComponentName className,
                                        IBinder service) {
             // We've bound to LocalService, cast the IBinder and get LocalService instance
-            GpsService.GpsServiceBinder binder = (GpsService.GpsServiceBinder) service;
+            binder = (GpsService.GpsServiceBinder) service;
             gpsService = binder.getService();
             if (gpsService !=null) {
                 gpsService.setMediaUpdater(MainActivity.this);
+                if (requestHandler == null) {
+                    requestHandler = new RequestHandler(gpsService);
+                }
             }
+            binder.registerCallback(MainActivity.this);
             AvnLog.d(Constants.LOGPRFX, "gps service connected");
 
         }
@@ -213,8 +236,11 @@ public class MainActivity extends Activity implements IDialogHandler,IMediaUpdat
         @Override
         public void onServiceDisconnected(ComponentName arg0) {
             gpsService=null;
+            if (binder != null) binder.deregisterCallback();
+            binder=null;
             AvnLog.d(Constants.LOGPRFX,"gps service disconnected");
         }
+
     };
 
     @Override
@@ -353,9 +379,9 @@ public class MainActivity extends Activity implements IDialogHandler,IMediaUpdat
         if (requestHandler != null && restartHandler) {
             requestHandler.stop();
             requestHandler=null;
-        }
-        if (requestHandler == null) {
-            requestHandler = new RequestHandler(this);
+            if (gpsService != null) {
+                requestHandler=new RequestHandler(gpsService);
+            }
         }
         startFragmentOrActivity(false);
     }

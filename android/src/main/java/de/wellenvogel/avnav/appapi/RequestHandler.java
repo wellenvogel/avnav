@@ -29,7 +29,6 @@ import java.util.Map;
 
 import de.wellenvogel.avnav.charts.ChartHandler;
 import de.wellenvogel.avnav.main.Constants;
-import de.wellenvogel.avnav.main.MainActivity;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.settings.AudioEditTextPreference;
 import de.wellenvogel.avnav.util.AvnLog;
@@ -56,7 +55,7 @@ public class RequestHandler {
     public static final String ROOT_PATH="/viewer";
     protected static final String NAVURL="viewer/avnav_navi.php";
     private SimpleDateFormat dateFormat=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
-    MainActivity activity;
+    GpsService service;
     private SharedPreferences preferences;
     private MimeTypeMap mime = MimeTypeMap.getSingleton();
     private final Object handlerMonitor =new Object();
@@ -170,13 +169,13 @@ public class RequestHandler {
         return new File(getWorkDir(),subDir.value.getPath());
     }
 
-    public RequestHandler(MainActivity activity){
-        this.activity=activity;
-        this.gemfHandler =new ChartHandler(activity,this);
+    public RequestHandler(GpsService service){
+        this.service = service;
+        this.gemfHandler =new ChartHandler(service,this);
         this.gemfHandler.updateChartList();
-        this.addonHandler= new AddonHandler(activity,this);
+        this.addonHandler= new AddonHandler(service,this);
         startHandler();
-        layoutHandler=new LayoutHandler(activity,"viewer/layout",
+        layoutHandler=new LayoutHandler(service,"viewer/layout",
                 new File(getWorkDir(),typeDirs.get(TYPE_LAYOUT).value.getPath()));
         handlerMap.put(TYPE_LAYOUT, new LazyHandlerAccess() {
             @Override
@@ -300,14 +299,14 @@ public class RequestHandler {
     }
 
     protected File getWorkDir(){
-        return AvnUtil.getWorkDir(getSharedPreferences(),activity);
+        return AvnUtil.getWorkDir(getSharedPreferences(), service);
     }
     GpsService getGpsService(){
-        return activity.getGpsService();
+        return service;
     }
     public synchronized  SharedPreferences getSharedPreferences(){
         if (preferences != null) return preferences;
-        preferences=AvnUtil.getSharedPreferences(activity);
+        preferences=AvnUtil.getSharedPreferences(service);
         return preferences;
     }
 
@@ -346,7 +345,7 @@ public class RequestHandler {
                 }
                 ExtendedWebResourceResponse rt=tryDirectRequest(uri);
                 if (rt != null) return rt;
-                InputStream is=activity.getAssets().open(path);
+                InputStream is= service.getAssets().open(path);
                 return new ExtendedWebResourceResponse(-1,mimeType(path),"",is);
             } catch (Throwable e) {
                 e.printStackTrace();
@@ -374,7 +373,7 @@ public class RequestHandler {
         InputStream input;
         String htmlPage=null;
         try {
-            input = activity.getAssets().open("viewer/avnav_viewer.html");
+            input = service.getAssets().open("viewer/avnav_viewer.html");
 
             int size = input.available();
             byte[] buffer = new byte[size];
@@ -553,9 +552,9 @@ public class RequestHandler {
                     }
                 }
                 if (!handled && dltype != null && dltype.equals("alarm") && name != null) {
-                    AudioEditTextPreference.AudioInfo info=AudioEditTextPreference.getAudioInfoForAlarmName(name,activity);
+                    AudioEditTextPreference.AudioInfo info=AudioEditTextPreference.getAudioInfoForAlarmName(name, service);
                     if (info != null){
-                        AudioEditTextPreference.AudioStream stream=AudioEditTextPreference.getAlarmAudioStream(info,activity);
+                        AudioEditTextPreference.AudioStream stream=AudioEditTextPreference.getAlarmAudioStream(info, service);
                         if (stream == null){
                             AvnLog.e("unable to get audio stream for "+info.uri.toString());
                         }

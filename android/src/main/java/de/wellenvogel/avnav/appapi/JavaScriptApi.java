@@ -78,8 +78,8 @@ public class JavaScriptApi {
         if (type.equals("route") || type.equals("track")) {
             shareIntent.setType("application/gpx+xml");
         }
-        String title = requestHandler.activity.getText(R.string.selectApp) + " " + name;
-        requestHandler.activity.startActivity(Intent.createChooser(shareIntent, title));
+        String title = requestHandler.service.getText(R.string.selectApp) + " " + name;
+        requestHandler.service.startActivity(Intent.createChooser(shareIntent, title));
         return true;
     }
 
@@ -228,13 +228,7 @@ public class JavaScriptApi {
     @JavascriptInterface
     public void goBack() {
         if (detached) return;
-        requestHandler.activity.runOnUiThread(
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        requestHandler.activity.goBack();
-                    }
-                });
+        requestHandler.service.mainGoBack();
     }
 
     @JavascriptInterface
@@ -248,7 +242,7 @@ public class JavaScriptApi {
     @JavascriptInterface
     public void showSettings(){
         if (detached) return;
-        requestHandler.activity.showSettings(false);
+        requestHandler.service.mainShowSettings(false);
     }
 
     @JavascriptInterface
@@ -262,9 +256,9 @@ public class JavaScriptApi {
         Intent goDownload = new Intent(Intent.ACTION_VIEW);
         goDownload.setData(Uri.parse(url));
         try {
-            requestHandler.activity.startActivity(goDownload);
+            requestHandler.service.startActivity(goDownload);
         } catch (Exception e) {
-            Toast.makeText(requestHandler.activity, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(requestHandler.service, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
             return;
         }
     }
@@ -272,8 +266,8 @@ public class JavaScriptApi {
     public String getVersion(){
         if (detached) return null;
         try {
-            String versionName = requestHandler.activity.getPackageManager()
-                    .getPackageInfo(requestHandler.activity.getPackageName(), 0).versionName;
+            String versionName = requestHandler.service.getPackageManager()
+                    .getPackageInfo(requestHandler.service.getPackageName(), 0).versionName;
             return versionName;
         } catch (PackageManager.NameNotFoundException e) {
             return "<unknown>";

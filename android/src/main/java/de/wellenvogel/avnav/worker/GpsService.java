@@ -66,7 +66,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
 
     private Context ctx;
 
-    private final IBinder mBinder = new GpsServiceBinder();
+    private final GpsServiceBinder mBinder = new GpsServiceBinder();
     private boolean isRunning;  //this is our view whether we are running or not
                                 //running means that we are registered for updates and have our timer active
 
@@ -225,10 +225,24 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         return null;
     }
 
+    public static interface MainActivityActions{
+        void showSettings(boolean force);
+        void mainGoBack();
+    }
     public class GpsServiceBinder extends Binder{
-      public GpsService getService(){
-          return GpsService.this;
-      }
+        MainActivityActions mainCallback;
+        public GpsService getService(){
+            return GpsService.this;
+        }
+        synchronized public void registerCallback(MainActivityActions cb){
+            mainCallback=cb;
+        }
+        synchronized public void deregisterCallback(){
+            mainCallback=null;
+        }
+        synchronized MainActivityActions getCallback(){
+            return mainCallback;
+        }
     };
 
     @Override
@@ -236,6 +250,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     {
         return mBinder;
     }
+
 
     private void createNotificationChannel() {
         // Create the NotificationChannel, but only on API 26+ because
@@ -1096,6 +1111,15 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
             rt.put(w.getJsonStatus());
         }
         return rt;
+    }
+
+    public void mainGoBack(){
+        MainActivityActions main=mBinder.getCallback();
+        if (main != null) main.mainGoBack();
+    }
+    public void mainShowSettings(boolean force){
+        MainActivityActions main=mBinder.getCallback();
+        if (main != null) main.showSettings(force);
     }
 
 }

@@ -1,6 +1,7 @@
 package de.wellenvogel.avnav.appapi;
 
 import android.app.Activity;
+import android.content.Context;
 import android.net.Uri;
 
 import org.json.JSONArray;
@@ -24,7 +25,7 @@ import de.wellenvogel.avnav.util.AvnUtil;
 public class LayoutHandler implements INavRequestHandler{
     String systemDir=null; //base path at assets
     File userDir=null;
-    Activity activity=null;
+    Context context =null;
 
 
     static class LayoutInfo implements AvnUtil.IJsonObect {
@@ -112,7 +113,7 @@ public class LayoutHandler implements INavRequestHandler{
     private ArrayList<AvnUtil.IJsonObect> readAssetsDir() throws Exception {
         ArrayList<AvnUtil.IJsonObect> rt=new ArrayList<>();
         String [] list;
-        list=activity.getAssets().list(systemDir);
+        list= context.getAssets().list(systemDir);
         for (String name :list){
             if (!name.endsWith(".json")) continue;
             if (name.equals("keys.json")) continue;
@@ -134,10 +135,10 @@ public class LayoutHandler implements INavRequestHandler{
     }
 
 
-    public LayoutHandler(Activity activity,String systemDir, File userDir){
+    public LayoutHandler(Context context, String systemDir, File userDir){
         this.systemDir=systemDir;
         this.userDir=userDir;
-        this.activity=activity;
+        this.context = context;
         if (! userDir.isDirectory()){
             userDir.mkdirs();
         }
@@ -147,7 +148,7 @@ public class LayoutHandler implements INavRequestHandler{
         if (name.startsWith(LayoutInfo.SYSTEMPREFIX)){
             name=name.substring(LayoutInfo.SYSTEMPREFIX.length());
             String filename=name+".json";
-            return activity.getAssets().open(systemDir+"/"+filename);
+            return context.getAssets().open(systemDir+"/"+filename);
         }
         if (name.startsWith(LayoutInfo.USERPREFIX)){
             name=name.substring(LayoutInfo.USERPREFIX.length());

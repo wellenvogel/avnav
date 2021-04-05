@@ -67,7 +67,7 @@ public class UserDirectoryRequestHandler extends DirectoryRequestHandler {
     };
     public UserDirectoryRequestHandler(RequestHandler handler, IDeleteByUrl deleter) throws Exception {
         super(RequestHandler.TYPE_USER, handler.getWorkDirFromType(RequestHandler.TYPE_USER), "user/viewer", deleter);
-        AssetManager assets=handler.activity.getAssets();
+        AssetManager assets=handler.service.getAssets();
         for (String filename : templateFiles){
             File file=new File(workDir,filename);
             if (! file.exists()){
