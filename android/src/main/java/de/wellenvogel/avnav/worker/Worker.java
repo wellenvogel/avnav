@@ -7,7 +7,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
@@ -45,6 +49,78 @@ public abstract class Worker implements IWorker {
         abstract Worker create(Context ctx, NmeaQueue queue) throws JSONException, IOException;
         boolean canAdd(Context ctx){return true;}
     }
+
+    private static class ResourceClaim{
+        String kind;
+        String name;
+        Worker ref;
+        ResourceClaim(Worker ref,String kind,String name){
+            this.kind=kind;
+            this.name=name;
+            this.ref=ref;
+        }
+    }
+    private static final ArrayList<ResourceClaim> resourceClaims=new ArrayList<>();
+
+    protected void removeClaims(){
+        synchronized (resourceClaims){
+            for (int i=resourceClaims.size()-1;i>=0;i--){
+                if (resourceClaims.get(i).ref == this){
+                    resourceClaims.remove(i);
+                }
+            }
+        }
+    }
+
+    /**
+     * add a claim
+     * @param kind
+     * @param name
+     * @return null if ok, the worker that currently has the claim otherwise
+     */
+    protected Worker addClaim(String kind,String name,boolean doThrow) throws IOException {
+        synchronized (resourceClaims){
+            Worker rt=checkClaimInternal(kind,name,doThrow);
+            if (rt != null) return rt;
+            resourceClaims.add(new ResourceClaim(this,kind,name));
+        }
+        return null;
+    }
+    private Worker checkClaimInternal(String kind,String name,boolean doThrow) throws IOException {
+        for (ResourceClaim cl:resourceClaims){
+            if (cl.kind.equals(kind) && cl.name.equals(name)){
+                if (cl.ref == this) return null;
+                else {
+                    if (doThrow){
+                        throw new IOException("device "+name+" already in use by "+cl.ref.getTypeName()+"-"+cl.ref.getId());
+                    }
+                    return cl.ref;
+                }
+            }
+        }
+        return null;
+    }
+    protected Worker checkClaim(String kind,String name,boolean doThrow) throws IOException {
+        synchronized (resourceClaims){
+            return checkClaimInternal(kind,name,doThrow);
+        }
+    }
+    protected List<String> filterByClaims(String kind,List<String> values,boolean includeOwn){
+        ArrayList<String> rt=new ArrayList<>();
+        synchronized (resourceClaims){
+            for (String v:values){
+                boolean doAdd=true;
+                for (ResourceClaim cl:resourceClaims){
+                    if (cl.kind.equals(kind) && cl.name.equals(v)){
+                        if (!includeOwn || cl.ref != this) doAdd=false;
+                    }
+                }
+                if (doAdd) rt.add(v);
+            }
+        }
+        return rt;
+    }
+
 
 
     protected WorkerStatus status;
@@ -110,7 +186,7 @@ public abstract class Worker implements IWorker {
     }
 
     @Override
-    public synchronized void setParameters(JSONObject newParam, boolean replace) throws JSONException {
+    public synchronized void setParameters(JSONObject newParam, boolean replace) throws JSONException, IOException {
         if (parameterDescriptions == null) throw new JSONException("no parameters defined");
         if (! replace){
             for (Iterator<String> it = parameters.keys(); it.hasNext(); ) {
@@ -202,6 +278,7 @@ public abstract class Worker implements IWorker {
             mainThread=null;
         }
         running=false;
+        removeClaims();
     }
     /**
      * check if the handler is stopped and should be reinitialized

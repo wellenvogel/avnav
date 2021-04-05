@@ -23,22 +23,22 @@ public class AndroidPositionHandlerTest {
     }
     @Test
     public void setParameterOk() throws WorkerFactory.WorkerNotFound, JSONException, IOException {
-        Worker h=WorkerFactory.getInstance().createWorker(WorkerFactory.ANDROID_NAME,null,null);
+        IWorker h=WorkerFactory.getInstance().createWorker(WorkerFactory.ANDROID_NAME,null,null);
         JSONObject p=new JSONObject();
         p.put("name",WorkerFactory.ANDROID_NAME);
         h.setParameters(p, true);
-        assertEquals(true,Worker.ENABLED_PARAMETER.fromJson(h.parameters));
+        assertEquals(true,Worker.ENABLED_PARAMETER.fromJson(h.getConfig()));
     }
     @Test
     public void setParameterOkSource() throws WorkerFactory.WorkerNotFound, JSONException, IOException {
         String sname="test123";
-        Worker h=WorkerFactory.getInstance().createWorker(WorkerFactory.ANDROID_NAME,null,null);
+        IWorker h=WorkerFactory.getInstance().createWorker(WorkerFactory.ANDROID_NAME,null,null);
         JSONObject p=new JSONObject();
         p.put("name",WorkerFactory.ANDROID_NAME);
         p.put(Worker.SOURCENAME_PARAMETER.name,sname);
         h.setParameters(p, true);
-        assertEquals(true,Worker.ENABLED_PARAMETER.fromJson(h.parameters));
-        assertEquals(sname,Worker.SOURCENAME_PARAMETER.fromJson(h.parameters));
+        assertEquals(true,Worker.ENABLED_PARAMETER.fromJson(h.getConfig()));
+        assertEquals(sname,Worker.SOURCENAME_PARAMETER.fromJson(h.getConfig()));
     }
     @Test
     public void setParameterFailInt() throws WorkerFactory.WorkerNotFound, JSONException, IOException {

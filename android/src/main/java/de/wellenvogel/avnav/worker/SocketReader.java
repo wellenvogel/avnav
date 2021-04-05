@@ -3,7 +3,9 @@ package de.wellenvogel.avnav.worker;
 import android.content.Context;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 
 import de.wellenvogel.avnav.util.NmeaQueue;
@@ -28,9 +30,10 @@ public class SocketReader extends SingleConnectionHandler {
     }
 
     @Override
-    public void run(int startSequence) throws JSONException {
+    public void run(int startSequence) throws JSONException, IOException {
         String target=IPADDRESS_PARAMETER.fromJson(parameters);
-        InetSocketAddress address=new InetSocketAddress(target,IPPORT_PARAMETER.fromJson(parameters));
+        Integer port=IPPORT_PARAMETER.fromJson(parameters);
+        InetSocketAddress address=new InetSocketAddress(target,port);
         IpConnection con=new IpConnection(address);
         runInternal(con,startSequence);
     }

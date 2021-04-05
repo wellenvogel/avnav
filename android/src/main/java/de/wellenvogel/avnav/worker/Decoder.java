@@ -29,6 +29,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -432,11 +433,11 @@ public class Decoder extends Worker {
     }
 
     @Override
-    public synchronized void setParameters(JSONObject newParam, boolean replace) throws JSONException {
+    public synchronized void setParameters(JSONObject newParam, boolean replace) throws JSONException, IOException {
         if (replace){
             try{
                 super.setParameters(newParam,true);
-            }catch (JSONException e){
+            }catch (JSONException | IOException e){
                 AvnLog.e(getTypeName()+": config error",e);
                 //we fall back to save settings
                 super.setParameters(new JSONObject(),true);

@@ -6,6 +6,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.junit.Assert.*;
 
 @RunWith(RobolectricTestRunner.class)
@@ -36,5 +40,33 @@ public class WorkerTest {
         JSONObject o=st.toJson();
         assertEquals("NMEA",o.getJSONObject("info").getJSONArray("items").getJSONObject(0).getString("status"));
         assertEquals("test2",o.getJSONObject("info").getJSONArray("items").getJSONObject(0).getString("info"));
+    }
+    @Test
+    public void addRemoveClaim(){
+        String testKind="test";
+        String testName="name";
+        class TWorker extends Worker{
+            protected TWorker(String typeName) {
+                super(typeName);
+            }
+            @Override
+            protected void run(int startSequence) throws JSONException, IOException {
+            }
+            public void testAddClaim(){
+                addClaim(testKind,testName);
+            }
+        }
+        TWorker tw=new TWorker("test");
+        tw.testAddClaim();
+        List<String> tlist=new ArrayList<String>();
+        tlist.add(testName);
+        tlist.add("test2");
+        List<String> filtered=tw.filterByClaims(testKind,tlist,false);
+        assertEquals(1,filtered.size());
+        assertEquals("test2",filtered.get(0));
+        tw.stop();
+        filtered=tw.filterByClaims(testKind,tlist,false);
+        assertEquals(2,filtered.size());
+        assertEquals(testName,filtered.get(0));
     }
 }

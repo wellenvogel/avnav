@@ -464,7 +464,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         }
         edit.commit();
     }
-    private synchronized void updateWorkerConfig(IWorker worker, JSONObject newConfig) throws JSONException {
+    private synchronized void updateWorkerConfig(IWorker worker, JSONObject newConfig) throws JSONException, IOException {
         worker.setParameters(newConfig, false);
         worker.start(); //will restart
         saveWorkerConfig(worker);
@@ -603,6 +603,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
             }
         }
         if (! isWatchdog || workers.size() == 0) {
+            workerId=MIN_WORKER_ID;
             try {
                 JSONArray handlerConfig = getWorkerConfig();
                 for (int i = 0; i < handlerConfig.length(); i++) {

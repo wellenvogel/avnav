@@ -6,6 +6,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
+
 public interface IWorker {
     WorkerStatus getStatus();
 
@@ -18,7 +20,7 @@ public interface IWorker {
 
     JSONArray getParameterDescriptions(Context context) throws JSONException;
 
-    void setParameters(JSONObject newParam, boolean replace) throws JSONException;
+    void setParameters(JSONObject newParam, boolean replace) throws JSONException, IOException;
     void stop();
     boolean isStopped();
     void check() throws JSONException;

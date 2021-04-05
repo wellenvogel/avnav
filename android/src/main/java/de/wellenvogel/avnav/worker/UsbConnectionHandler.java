@@ -32,6 +32,7 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
     private boolean permissionRequested=false;
     private static final String ACTION_USB_PERMISSION =
             "com.android.example.USB_PERMISSION";
+    private static String CLAIM="usb";
     void deviceDetach(UsbDevice dev) {
         UsbSerialConnection usb=(UsbSerialConnection) connection;
         if (usb != null && usb.dev.equals(dev)){
@@ -189,7 +190,7 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
                 UsbManager manager=(UsbManager) ctx.getSystemService(Context.USB_SERVICE);
                 Map<String,UsbDevice> devices=manager.getDeviceList();
                 ArrayList<String> rt = new ArrayList<String>(devices.keySet());
-                return rt;
+                return filterByClaims(CLAIM,rt,false);
             }
         };
         parameterDescriptions.add(deviceSelect);
@@ -200,6 +201,7 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
     @Override
     public void run(int startSequence) throws JSONException, IOException {
         String deviceName=deviceSelect.fromJson(parameters);
+        addClaim(CLAIM,deviceName,true);
         UsbDevice device=null;
         while (device == null && ! shouldStop(startSequence)){
             UsbManager manager=(UsbManager) ctx.getSystemService(Context.USB_SERVICE);
