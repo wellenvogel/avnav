@@ -40,6 +40,7 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
                 usb.close();
             } catch (IOException e) {
             }
+            permissionRequested=false;
         }
     }
 
