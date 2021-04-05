@@ -201,23 +201,26 @@ public class Decoder extends Worker {
                     if (shouldStop(startSequence)) return;
                     if ((lastReceived+ Constants.NO_DATA_TIME) > System.currentTimeMillis()){
                         stat.gpsEnabled=false;
+                        setStatus(WorkerStatus.Status.INACTIVE,"no NMEA data");
                     }
                     sleep(2000);
                     continue;
+                }
+                if ((lastReceived+ Constants.NO_DATA_TIME) > System.currentTimeMillis()){
+                    stat.gpsEnabled=false;
+                    setStatus(WorkerStatus.Status.INACTIVE,"no NMEA data");
                 }
                 if (entry == null) {
                     continue;
                 }
                 sequence = entry.sequence;
-                if ((lastReceived+ Constants.NO_DATA_TIME) > System.currentTimeMillis()){
-                    stat.gpsEnabled=false;
-                }
                 try {
                     String line = entry.data;
                     if (line.startsWith("$")) {
                         if (nmeaLogger != null) nmeaLogger.logNmea(line);
                         //NMEA
                         if (SentenceValidator.isValid(line)) {
+                            setStatus(WorkerStatus.Status.NMEA,"receiving NMEA data");
                             stat.gpsEnabled=true;
                             lastReceived=System.currentTimeMillis();
                             try {
@@ -392,6 +395,9 @@ public class Decoder extends Worker {
                                 AisMessage m = p.getAisMessage();
                                 AvnLog.i(LOGPRFX, getTypeName() + ": AisPacket received: " + m.toString());
                                 store.addAisMessage(m);
+                                lastReceived= System.currentTimeMillis();
+                                stat.gpsEnabled=true;
+                                setStatus(WorkerStatus.Status.NMEA,"receiving NMEA");
                             }
                         } catch (Exception e) {
                             Log.e(LOGPRFX, getTypeName() + ": AIS exception while parsing " + line);
@@ -515,33 +521,21 @@ public class Decoder extends Worker {
 
     @Override
     public synchronized JSONObject getJsonStatus() throws JSONException {
-        WorkerStatus workerStatus=new WorkerStatus(status);
-        Decoder handler=this;
-        String addr = getTypeName();
-        SatStatus st = handler.getSatStatus();
-        Location loc = handler.getLocation();
-        int numAis = handler.numAisData();
-        if (loc != null ) {
+        WorkerStatus workerStatus = new WorkerStatus(status);
+        SatStatus st = getSatStatus();
+        Location loc = getLocation();
+        int numAis = numAisData();
+        if (loc != null) {
             String info = "valid position, sats: " + st.numSat + " / " + st.numUsed;
-            if (numAis > 0) info += ", valid AIS data, " + numAis + " targets";
-            workerStatus.info=info;
-            workerStatus.status= WorkerStatus.Status.NMEA;
+            workerStatus.setChildStatus("position", WorkerStatus.Status.NMEA, info);
         } else {
-            if ( numAis > 0) {
-                workerStatus.info= "valid AIS data, " + numAis + " targets";
-                workerStatus.status= WorkerStatus.Status.NMEA;
-
-            } else {
-                if (st.gpsEnabled) {
-                    String info=" connected";
-                    info+=", sats: " + st.numSat + " available / " + st.numUsed + " used";
-                    workerStatus.info=info;
-                    workerStatus.status= WorkerStatus.Status.STARTED;
-                } else {
-                    workerStatus.info= "no NMEA data";
-                    workerStatus.status= WorkerStatus.Status.INACTIVE;
-                }
-            }
+            String info = "no position, sats: " + st.numSat + " / " + st.numUsed;
+            workerStatus.setChildStatus("position", WorkerStatus.Status.INACTIVE, info);
+        }
+        if (numAis > 0) {
+            workerStatus.setChildStatus("ais", WorkerStatus.Status.NMEA,"valid AIS data, " + numAis + " targets");
+        } else {
+            workerStatus.setChildStatus("ais", WorkerStatus.Status.INACTIVE,"no AIS data");
         }
         return workerStatus.toJson();
     }

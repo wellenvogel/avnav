@@ -4,6 +4,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.HashMap;
+
 import de.wellenvogel.avnav.util.AvnUtil;
 
 public class WorkerStatus implements AvnUtil.IJsonObect {
@@ -18,6 +20,10 @@ public class WorkerStatus implements AvnUtil.IJsonObect {
         typeName =other.typeName;
         status=other.status;
         info=other.info;
+        disabled=other.disabled;
+        for (String k:other.children.keySet()){
+            children.put(k,other.children.get(k));
+        }
     }
     boolean canEdit=false;
     boolean canDelete=false;
@@ -33,6 +39,28 @@ public class WorkerStatus implements AvnUtil.IJsonObect {
     }
     Status status= Status.INACTIVE;
     String info;
+    private static class Child{
+        Status status;
+        String info;
+        Child(Child other){
+            status=other.status;
+            info=other.info;
+        }
+        Child(){}
+    }
+    private final HashMap<String,Child> children=new HashMap<>();
+    synchronized void setChildStatus(String name,Status status,String info){
+        Child child=children.get(name);
+        if (child == null){
+            child=new Child();
+            children.put(name,child);
+        }
+        child.status=status;
+        child.info=info;
+    }
+    synchronized void unsetChildStatus(String name){
+        children.remove(name);
+    }
 
     @Override
     public JSONObject toJson() throws JSONException {
@@ -45,14 +73,21 @@ public class WorkerStatus implements AvnUtil.IJsonObect {
         rt.put("configName",typeName);
         JSONObject sto=new JSONObject();
         sto.put("name", typeName);
-        //currently we do not have children - but the JS side expects an array
-        JSONArray children=new JSONArray();
+        JSONArray cha=new JSONArray();
         JSONObject main=new JSONObject(); //WorkerStatus in python
         main.put("name","main");
         main.put("info",info);
         main.put("status",status.toString());
-        children.put(main);
-        sto.put("items",children);
+        cha.put(main);
+        for (String k :children.keySet()){
+            JSONObject cho=new JSONObject();
+            cho.put("name",k);
+            Child ch=children.get(k);
+            cho.put("info",ch.info);
+            cho.put("status",ch.status.toString());
+            cha.put(cho);
+        }
+        sto.put("items",cha);
         rt.put("info",sto);
         return rt;
     }
