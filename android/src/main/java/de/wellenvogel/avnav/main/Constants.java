@@ -50,7 +50,6 @@ public class Constants {
     public static final String ADDON_CONFIG="addon.config";
     //new handler config
     public static final String HANDLER_CONFIG="internal.handler";
-    public static final String DECODER_CONFIG ="internal.decoder" ;
 
     public static final String REALCHARTS="charts";
     public static final String CHARTPREFIX="charts";
