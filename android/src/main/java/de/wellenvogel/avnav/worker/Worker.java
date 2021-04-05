@@ -19,7 +19,7 @@ public abstract class Worker implements IWorker {
             new EditableParameter.StringParameter("sendFilter","an NMEA filter for send, use e.g. $RMC or ^$RMC, !AIVDM","");
     static final EditableParameter.BooleanParameter SEND_DATA_PARAMETER=
             new EditableParameter.BooleanParameter("sendOut","send out NMEA on this connection",false);
-    static final EditableParameter.BooleanParameter ENABLED_PARAMETER=
+    public static final EditableParameter.BooleanParameter ENABLED_PARAMETER=
             new EditableParameter.BooleanParameter("enabled","enabled",true);
     static final EditableParameter.StringParameter IPADDRESS_PARAMETER=
             new EditableParameter.StringParameter("ipaddress","ip address to connect",null);
@@ -95,17 +95,17 @@ public abstract class Worker implements IWorker {
         return status.id;
     }
     @Override
-    public synchronized JSONObject getEditableParameters(boolean includeCurrent) throws JSONException {
+    public synchronized JSONObject getEditableParameters(boolean includeCurrent,Context context) throws JSONException {
         JSONObject rt=new JSONObject();
-        if (parameterDescriptions != null) rt.put("data",parameterDescriptions.toJson());
+        if (parameterDescriptions != null) rt.put("data",parameterDescriptions.toJson(context));
         if (includeCurrent) rt.put("values",parameters!=null?parameters:new JSONObject());
         rt.put("configName",status.typeName);
         rt.put("canDelete",status.canDelete);
         return rt;
     }
     @Override
-    public JSONArray getParameterDescriptions() throws JSONException {
-        return parameterDescriptions.toJson();
+    public JSONArray getParameterDescriptions(Context context) throws JSONException {
+        return parameterDescriptions.toJson(context);
     }
 
     @Override
@@ -146,6 +146,7 @@ public abstract class Worker implements IWorker {
                         try {
                             Worker.this.run(startSequence);
                             setStatus(WorkerStatus.Status.INACTIVE, "stopped");
+                            status.removeChildren();
                         } catch (Throwable t) {
                             setStatus(WorkerStatus.Status.ERROR, "error: " + t.getMessage());
                         }
@@ -157,6 +158,7 @@ public abstract class Worker implements IWorker {
             }
             else{
                 setStatus(WorkerStatus.Status.INACTIVE,"disabled");
+                status.removeChildren();
             }
         } catch (JSONException e) {
             setStatus(WorkerStatus.Status.ERROR,"error: "+e.getMessage());
@@ -198,6 +200,7 @@ public abstract class Worker implements IWorker {
             }
             mainThread=null;
         }
+        running=false;
     }
     /**
      * check if the handler is stopped and should be reinitialized

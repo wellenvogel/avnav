@@ -1,5 +1,7 @@
 package de.wellenvogel.avnav.worker;
 
+import android.content.Context;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -25,11 +27,19 @@ public class EditableParameter {
         String name;
         T defaultValue;
         String description;
+        int descriptionId=-1;
         boolean mandatory=false;
 
         EditableParameterBase(String name, String description, T defaultValue) {
             this.name = name;
             this.description = description;
+            this.defaultValue = defaultValue;
+            mandatory = defaultValue == null;
+
+        }
+        EditableParameterBase(String name, int descriptionId, T defaultValue) {
+            this.name = name;
+            this.descriptionId = descriptionId;
             this.defaultValue = defaultValue;
             mandatory = defaultValue == null;
 
@@ -57,12 +67,17 @@ public class EditableParameter {
             rt.put("editable",true);
             rt.put("mandatory",mandatory);
             if (description != null) rt.put("description",description);
+            if (descriptionId >= 0) rt.put("descriptionId",descriptionId);
             return rt;
         }
     }
     public static class StringParameter extends EditableParameterBase<String>{
         StringParameter(String name, String description, String defaultValue) {
             super(name, description, defaultValue);
+        }
+
+        public StringParameter(String name, int descriptionId, String defaultValue) {
+            super(name, descriptionId, defaultValue);
         }
 
         StringParameter(String name) {
@@ -84,6 +99,10 @@ public class EditableParameter {
             super(name, description, defaultValue);
         }
 
+        public IntegerParameter(String name, int descriptionId, Integer defaultValue) {
+            super(name, descriptionId, defaultValue);
+        }
+
         IntegerParameter(String name) {
             super(name);
         }
@@ -102,6 +121,11 @@ public class EditableParameter {
         BooleanParameter(String name, String description, Boolean defaultValue) {
             super(name, description, defaultValue);
         }
+
+        public BooleanParameter(String name, int descriptionId, Boolean defaultValue) {
+            super(name, descriptionId, defaultValue);
+        }
+
         BooleanParameter(String name) {
             super(name);
         }
@@ -119,6 +143,11 @@ public class EditableParameter {
         FloatParameter(String name, String description, Float defaultValue) {
             super(name, description, defaultValue);
         }
+
+        public FloatParameter(String name, int descriptionId, Float defaultValue) {
+            super(name, descriptionId, defaultValue);
+        }
+
         FloatParameter(String name) {
             super(name);
         }
@@ -139,6 +168,10 @@ public class EditableParameter {
             super(name, description, defaultValue);
             list=values;
         }
+        StringListParameter(String name, int descriptionId,String defaultValue){
+            super(name,descriptionId,defaultValue);
+        }
+
         StringListParameter(String name,String description){
             super(name,description,null);
         }
@@ -178,10 +211,14 @@ public class EditableParameter {
         }
     }
     public static class ParameterList extends ArrayList<EditableParameterInterface>{
-        public JSONArray toJson() throws JSONException {
+        public JSONArray toJson(Context context) throws JSONException {
             JSONArray rt=new JSONArray();
             for (EditableParameterInterface i : this){
-                rt.put(i.toJson());
+                JSONObject jp=i.toJson();
+                if (! jp.has("description") && jp.has("descriptionId")){
+                    jp.put("description",context.getString(jp.getInt("descriptionId")));
+                }
+                rt.put(jp);
             }
             return rt;
         }

@@ -13,7 +13,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
-import android.location.*;
+import android.location.Location;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -25,6 +25,19 @@ import android.support.v4.app.NotificationCompat;
 import android.view.View;
 import android.widget.RemoteViews;
 import android.widget.Toast;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
 import de.wellenvogel.avnav.appapi.INavRequestHandler;
@@ -39,20 +52,6 @@ import de.wellenvogel.avnav.settings.NmeaSettingsFragment;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.NmeaQueue;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Created by andreas on 12.12.14.
@@ -74,7 +73,6 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     //properties
     private File trackDir=null;
 
-    private TrackWriter trackWriter;
     private NmeaLogger nmeaLogger;
     private Handler handler = new Handler();
     private long timerSequence=1;
@@ -181,7 +179,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
             String typeName=AvnUtil.getMandatoryParameter(uri,"handlerName");
             try{
                 IWorker w=WorkerFactory.getInstance().createWorker(typeName,this,null);
-                return RequestHandler.getReturn(new RequestHandler.KeyValue<JSONArray>("data",w.getParameterDescriptions()));
+                return RequestHandler.getReturn(new RequestHandler.KeyValue<JSONArray>("data",w.getParameterDescriptions(null)));
             }catch (WorkerFactory.WorkerNotFound e){
                 return RequestHandler.getErrorReturn("not handler of type "+typeName+" found");
             }
@@ -195,7 +193,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
             return RequestHandler.getErrorReturn("worker with id "+id+" not found");
         }
         if ("getEditables".equals(command)){
-            JSONObject rt=worker.getEditableParameters(true);
+            JSONObject rt=worker.getEditableParameters(true,this);
             rt.put("status","OK");
             return rt;
         }
@@ -345,7 +343,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     }
 
     private final WorkerConfig WDECODER=new WorkerConfig("Decoder",Decoder.class,1);
-    private final WorkerConfig WROUTER=new WorkerConfig("Decoder",RouteHandler.class,2){
+    private final WorkerConfig WROUTER=new WorkerConfig("Router",RouteHandler.class,2){
         @Override
         IWorker createWorker(Context ctx, NmeaQueue queue) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, IOException {
             SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
@@ -355,7 +353,16 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
             return rt;
         }
     };
-    private final WorkerConfig[] INTERNAL_WORKERS ={WDECODER,WROUTER};
+    private final WorkerConfig WTRACK=new WorkerConfig("Track",TrackWriter.class,3){
+        @Override
+        IWorker createWorker(Context ctx, NmeaQueue queue) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, IOException {
+            SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
+            File newTrackDir=new File(AvnUtil.getWorkDir(prefs,GpsService.this),"tracks");
+            TrackWriter rt=new TrackWriter(newTrackDir,mediaUpdater);
+            return rt;
+        }
+    };
+    private final WorkerConfig[] INTERNAL_WORKERS ={WDECODER,WROUTER,WTRACK};
 
     private synchronized int getNextWorkerId(){
         workerId++;
@@ -428,6 +435,10 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     public RouteHandler getRouteHandler(){
         IWorker handler=findWorkerById(WROUTER.id);
         return (RouteHandler)handler;
+    }
+    public TrackWriter getTrackWriter(){
+        IWorker writer=findWorkerById(WTRACK.id);
+        return (TrackWriter)writer;
     }
 
     private void saveWorkerConfig(IWorker worker) throws JSONException {
@@ -558,14 +569,6 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
                     nmeaLogger = null;
                 }
             }
-        }
-        if (loadTrack) {
-            try {
-                trackWriter = new TrackWriter(trackDir,trackTime,trackDistance,trackMintime,trackInterval);
-            } catch (IOException e) {
-                AvnLog.e("unable to create track writer",e);
-            }
-            timerSequence++;
         }
         if (! isWatchdog || runnable == null) {
             runnable = new TimerRunnable(timerSequence);
@@ -792,19 +795,6 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
      */
     private void handleStop(boolean emptyTrack) {
         stopWorkers();
-        //this is not completely OK: we could fail to write our last track points
-        //if we still load the track - but otherwise we could reeally empty the track
-        try {
-            //when we shut down completely we have to wait until the track is written
-            //if we only restart, we write the track in background
-            trackWriter.writeSync(mediaUpdater);
-        } catch (FileNotFoundException e) {
-            AvnLog.d(LOGPRFX, "Exception while finally writing trackfile: " + e.getLocalizedMessage());
-        }
-        if (emptyTrack) {
-            trackWriter.clearTrack();
-            trackDir = null;
-        }
         isRunning = false;
         handleNotification(false, false);
         AvnLog.i(LOGPRFX, "service stopped");
@@ -866,7 +856,8 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     private void checkTrackWriter() throws JSONException {
         if (! isRunning) return;
         Location l=getLocation();
-        trackWriter.checkWrite(l,mediaUpdater);
+        TrackWriter trackWriter=getTrackWriter();
+        if (trackWriter != null) trackWriter.checkWrite(l,mediaUpdater);
 
     }
 
@@ -878,6 +869,8 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
      */
     public synchronized  ArrayList<Location> getTrack(int maxnum, long interval){
         ArrayList<Location> rt=new ArrayList<Location>();
+        TrackWriter trackWriter=getTrackWriter();
+        if (trackWriter == null) return rt;
         List<Location> trackpoints=trackWriter.getTrackPoints(true);
         if (! isRunning) return rt;
         long currts=-1;
@@ -1098,15 +1091,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         for (IWorker w: internalWorkers){
             rt.put(w.getJsonStatus());
         }
-        if (trackWriter != null){
-            JSONObject ts=new JSONObject();
-            JSONObject rs=trackWriter.getTrackStatus();
-            ts.put("name",rs.getString("name"));
-            ts.put("info",rs);
-            rt.put(ts);
-        }
         return rt;
     }
 
-    public TrackWriter getTrackWriter(){ return trackWriter;}
 }

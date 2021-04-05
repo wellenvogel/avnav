@@ -61,6 +61,9 @@ public class WorkerStatus implements AvnUtil.IJsonObect {
     synchronized void unsetChildStatus(String name){
         children.remove(name);
     }
+    synchronized void removeChildren(){
+        children.clear();
+    }
 
     @Override
     public JSONObject toJson() throws JSONException {
