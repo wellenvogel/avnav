@@ -75,14 +75,13 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     private File trackDir=null;
 
     private TrackWriter trackWriter;
-    private RouteHandler routeHandler;
     private NmeaLogger nmeaLogger;
     private Handler handler = new Handler();
     private long timerSequence=1;
     private Runnable runnable;
     private IMediaUpdater mediaUpdater;
     private static final int NOTIFY_ID=Constants.LOCALNOTIFY;
-    private Object loggerLock=new Object();
+    private final Object loggerLock=new Object();
     private HashMap<String,Alarm> alarmStatus=new HashMap<String, Alarm>();
     private MediaPlayer mediaPlayer=null;
     private int mediaRepeatCount=0;
@@ -339,14 +338,24 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
             this.configName="internal."+typeName;
             this.typeName=typeName;
         }
-        IWorker createWorker(Context ctx,NmeaQueue queue) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+        IWorker createWorker(Context ctx,NmeaQueue queue) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, IOException {
             Constructor<IWorker> ctor =wclass.getDeclaredConstructor(String.class,Context.class,NmeaQueue.class);
             return (IWorker)(ctor.newInstance(typeName,ctx,queue));
         }
     }
 
-    private static final WorkerConfig WDECODER=new WorkerConfig("Decoder",Decoder.class,1);
-    private static final WorkerConfig[] INTERNAL_WORKERS ={WDECODER};
+    private final WorkerConfig WDECODER=new WorkerConfig("Decoder",Decoder.class,1);
+    private final WorkerConfig WROUTER=new WorkerConfig("Decoder",RouteHandler.class,2){
+        @Override
+        IWorker createWorker(Context ctx, NmeaQueue queue) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, IOException {
+            SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
+            File routeDir=new File(AvnUtil.getWorkDir(prefs,GpsService.this),"routes");
+            RouteHandler rt=new RouteHandler(routeDir,GpsService.this);
+            rt.setMediaUpdater(mediaUpdater);
+            return rt;
+        }
+    };
+    private final WorkerConfig[] INTERNAL_WORKERS ={WDECODER,WROUTER};
 
     private synchronized int getNextWorkerId(){
         workerId++;
@@ -415,6 +424,10 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     private Decoder getDecoder(){
         IWorker decoder=findWorkerById(WDECODER.id);
         return (Decoder)decoder;
+    }
+    public RouteHandler getRouteHandler(){
+        IWorker handler=findWorkerById(WROUTER.id);
+        return (RouteHandler)handler;
     }
 
     private void saveWorkerConfig(IWorker worker) throws JSONException {
@@ -554,16 +567,6 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
             }
             timerSequence++;
         }
-        File routeDir=new File(AvnUtil.getWorkDir(prefs,this),"routes");
-        if (routeHandler == null || routeHandler.isStopped()) {
-            try {
-                routeHandler = new RouteHandler(routeDir,this);
-                routeHandler.setMediaUpdater(mediaUpdater);
-                routeHandler.start();
-            } catch (IOException e) {
-                AvnLog.e("unable to create route handler:",e);
-            }
-        }
         if (! isWatchdog || runnable == null) {
             runnable = new TimerRunnable(timerSequence);
             handler.postDelayed(runnable, trackMintime);
@@ -658,6 +661,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         triggerReceiver=new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
+                RouteHandler routeHandler=getRouteHandler();
                 if (routeHandler != null) routeHandler.triggerParser();
             }
         };
@@ -726,6 +730,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     }
 
     private void checkAnchor() throws JSONException {
+        RouteHandler routeHandler=getRouteHandler();
         if (routeHandler == null) return;
         if (! routeHandler.anchorWatchActive()){
             resetAlarm(Alarm.GPS.name);
@@ -750,6 +755,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         setAlarm(Alarm.ANCHOR.name);
     }
     private void checkApproach() throws JSONException {
+        RouteHandler routeHandler=getRouteHandler();
         if (routeHandler == null) return;
         Location current=getLocation();
         if (current == null){
@@ -769,6 +775,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     }
 
     private void checkMob(){
+        RouteHandler routeHandler=getRouteHandler();
         if (routeHandler == null) return;
         if (! routeHandler.mobActive()){
             mobAlarm=false;
@@ -798,7 +805,6 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
             trackWriter.clearTrack();
             trackDir = null;
         }
-        if (routeHandler != null) routeHandler.stop();
         isRunning = false;
         handleNotification(false, false);
         AvnLog.i(LOGPRFX, "service stopped");
@@ -999,6 +1005,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         }
         rt.put("updatealarm",alarmSequence);
         long legSequence=-1;
+        RouteHandler routeHandler=getRouteHandler();
         if (routeHandler != null) legSequence=routeHandler.getLegSequence();
         rt.put("updateleg",legSequence);
         return rt;
@@ -1101,9 +1108,5 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         return rt;
     }
 
-
-    public RouteHandler getRouteHandler(){
-        return routeHandler;
-    }
     public TrackWriter getTrackWriter(){ return trackWriter;}
 }

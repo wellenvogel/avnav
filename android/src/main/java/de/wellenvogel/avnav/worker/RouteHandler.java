@@ -1,5 +1,6 @@
 package de.wellenvogel.avnav.worker;
 
+import android.content.Context;
 import android.location.Location;
 import android.net.Uri;
 import android.util.Log;
@@ -29,11 +30,12 @@ import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.IMediaUpdater;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
+import de.wellenvogel.avnav.util.NmeaQueue;
 
 /**
  * Created by andreas on 12.12.14.
  */
-public class RouteHandler extends DirectoryRequestHandler {
+public class RouteHandler extends DirectoryRequestHandler  {
 
     public static interface UpdateReceiver{
         public void updated();
@@ -42,15 +44,10 @@ public class RouteHandler extends DirectoryRequestHandler {
     private static final String LEGFILE="currentLeg.json";
     private static final long MAXROUTESIZE= Constants.MAXFILESIZE;
     private UpdateReceiver updateReceiver;
-    private long startSequence=1;
 
     private Float lastDistanceToCurrent=null;
     private Float lastDistanceToNext=null;
 
-    private static String escapeXml(String in){
-        String rt=in.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;").replace("\"","&quot;").replace("'","&apos;");
-        return rt;
-    }
 
     public static class RouteInfo implements AvnUtil.IJsonObect {
         public String name;
@@ -281,111 +278,85 @@ public class RouteHandler extends DirectoryRequestHandler {
 
     private File routedir;
     private HashMap<String,RouteInfo> routeInfos=new HashMap<String, RouteInfo>();
-    private boolean stopParser;
-    private final Object parserLock=new Object();
     private RoutingLeg currentLeg;
     private long legSequence=System.currentTimeMillis();
-
     public RouteHandler(File routedir,UpdateReceiver updater) throws IOException {
         super(RequestHandler.TYPE_ROUTE,routedir,"route",null);
         this.routedir=routedir;
-        stopParser=true;
         updateReceiver=updater;
     }
 
-    public void stop(){
-        stopParser=true;
-        synchronized (parserLock){
-            AvnLog.i("stopping parser");
-            parserLock.notifyAll();
-        }
-    }
 
     public void triggerParser(){
-        if (stopParser) return;
         AvnLog.i("retrigger parser");
-        synchronized (parserLock){
-            parserLock.notifyAll();
+        synchronized (waiter){
+            waiter.notifyAll();
         }
     }
 
-    public void start() {
-        if (! stopParser) return;
-        startSequence++;
-        stopParser=false;
+
+    @Override
+    public void run(int startSequence) {
         try {
             getLeg(); //trigger creation if it does not exist
         } catch (Exception e) {
-            AvnLog.e("Exception when initially creating currentLeg",e);
+            AvnLog.e("Exception when initially creating currentLeg", e);
         }
-        Thread t=new Thread(new DirectoryReader(startSequence));
-        t.start();
-    }
-    public boolean isStopped(){
-        return stopParser;
-    }
-    private class DirectoryReader implements  Runnable{
-        private long sequence;
-        public DirectoryReader(long startsequence){
-            sequence=startsequence;
+        AvnLog.i("routes directory parser started");
+        if (routedir.isDirectory()) {
+            status.setChildStatus("directory", WorkerStatus.Status.NMEA, routedir.getAbsolutePath());
         }
-        @Override
-        public void run() {
-            AvnLog.i("routes directory parser started");
-            HashMap<String,RouteInfo> localList=new HashMap<String, RouteInfo>();
-            while (! stopParser && sequence == startSequence){
-                boolean mustUpdate=false;
-                if (routedir.isDirectory()) {
-                    for (File f : routedir.listFiles()) {
-                        if (!f.isFile()) continue;
-                        if (!f.getName().endsWith(".gpx")) continue;
-                        boolean mustParse = false;
-                        String name = f.getName().replaceAll("\\.gpx$", "");
-                        if (routeInfos.containsKey(name)) {
-                            RouteInfo old = routeInfos.get(name);
-                            long currmtime = f.lastModified();
-                            if (currmtime == old.mtime) {
-                                localList.put(name, old);
-                            } else {
-                                mustParse = true;
-                            }
+        else{
+            status.setChildStatus("directory", WorkerStatus.Status.ERROR,routedir.getAbsolutePath()+" does not exist");
+        }
+        HashMap<String, RouteInfo> localList = new HashMap<String, RouteInfo>();
+        while (!shouldStop(startSequence)) {
+            boolean mustUpdate = false;
+            if (routedir.isDirectory()) {
+                for (File f : routedir.listFiles()) {
+                    if (!f.isFile()) continue;
+                    if (!f.getName().endsWith(".gpx")) continue;
+                    boolean mustParse = false;
+                    String name = f.getName().replaceAll("\\.gpx$", "");
+                    if (routeInfos.containsKey(name)) {
+                        RouteInfo old = routeInfos.get(name);
+                        long currmtime = f.lastModified();
+                        if (currmtime == old.mtime) {
+                            localList.put(name, old);
                         } else {
                             mustParse = true;
                         }
-                        if (mustParse) {
-                            try {
-                                Route rt = new RouteParser().parseRouteFile(new FileInputStream(f));
-                                RouteInfo info = rt.getInfo();
-                                if (!rt.name.equals(name)) {
-                                    //TODO: make this more robust!
-                                    throw new Exception("name in route " + rt.name + " does not match route file name");
-                                }
-                                info.mtime = f.lastModified();
-                                localList.put(name, info);
-                                mustUpdate=true;
-                                AvnLog.d("parsed route: " + info.toString());
-                            } catch (Exception e) {
-                                Log.e(AvnLog.LOGPREFIX, "Exception parsing route " + f.getAbsolutePath() + ": " + e.getLocalizedMessage());
+                    } else {
+                        mustParse = true;
+                    }
+                    if (mustParse) {
+                        try {
+                            Route rt = new RouteParser().parseRouteFile(new FileInputStream(f));
+                            RouteInfo info = rt.getInfo();
+                            if (!rt.name.equals(name)) {
+                                //TODO: make this more robust!
+                                throw new Exception("name in route " + rt.name + " does not match route file name");
                             }
+                            info.mtime = f.lastModified();
+                            localList.put(name, info);
+                            mustUpdate = true;
+                            AvnLog.d("parsed route: " + info.toString());
+                        } catch (Exception e) {
+                            Log.e(AvnLog.LOGPREFIX, "Exception parsing route " + f.getAbsolutePath() + ": " + e.getLocalizedMessage());
                         }
                     }
                 }
-                synchronized (parserLock){
-                    routeInfos=localList;
-                    if (mustUpdate){
-                        update();
-                    }
-                    try {
-                        parserLock.wait(5000);
-                    } catch (InterruptedException e) {
-                    }
-                }
             }
+            synchronized (this){
+                routeInfos=localList;
+            }
+            setStatus(WorkerStatus.Status.NMEA,localList.size()+" routes");
+            if (mustUpdate) {
+                update();
+            }
+            sleep(5000);
         }
     }
-
-
-
     public static Route parseRouteStream(InputStream is,boolean returnEmpty){
         return new RouteParser().parseRouteFile(is,returnEmpty);
     }
@@ -483,15 +454,13 @@ public class RouteHandler extends DirectoryRequestHandler {
     }
 
     private void deleteRouteInfo(String name){
-        synchronized (parserLock){
+        synchronized (this){
             routeInfos.remove(name);
         }
         update();
     }
-    public Map<String,RouteInfo> getRouteInfo(){
-        synchronized (parserLock) {
-            return routeInfos;
-        }
+    public synchronized Map<String,RouteInfo> getRouteInfo(){
+        return routeInfos;
     }
 
     @Override
