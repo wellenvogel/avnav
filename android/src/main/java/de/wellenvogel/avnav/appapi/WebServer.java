@@ -7,7 +7,10 @@ package de.wellenvogel.avnav.appapi;
 
 
 import android.app.NotificationManager;
+import android.content.Context;
 import android.net.Uri;
+import android.net.nsd.NsdManager;
+import android.net.nsd.NsdServiceInfo;
 import android.util.Log;
 
 import org.apache.http.ConnectionClosedException;
@@ -37,6 +40,7 @@ import org.apache.http.protocol.ResponseConnControl;
 import org.apache.http.protocol.ResponseContent;
 import org.apache.http.protocol.ResponseDate;
 import org.apache.http.protocol.ResponseServer;
+import org.json.JSONException;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -49,15 +53,17 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
-import java.net.URLDecoder;
 import java.util.HashSet;
 import java.util.Locale;
 
-import de.wellenvogel.avnav.main.MainActivity;
+import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.worker.EditableParameter;
 import de.wellenvogel.avnav.worker.GpsService;
+import de.wellenvogel.avnav.worker.Worker;
+import de.wellenvogel.avnav.worker.WorkerStatus;
 
-public class WebServer {
+public class WebServer extends Worker {
 
     static final String NAME="AvNavWebServer";
 
@@ -67,8 +73,9 @@ public class WebServer {
     private HttpRequestHandlerRegistry registry = null;
     private NotificationManager notifyManager = null;
 
-    protected MainActivity activity;
+    protected GpsService gpsService;
     private boolean running;
+    private NsdManager.RegistrationListener registrationListener;
 
     public RequestHandler.ServerInfo getServerInfo(){
         RequestHandler.ServerInfo info=null;
@@ -82,6 +89,30 @@ public class WebServer {
         }
         return info;
     };
+
+    private static final EditableParameter.BooleanParameter ANY_ADDRESS=
+            new EditableParameter.BooleanParameter("external",R.string.enableExternalAccess,false);
+    private static final EditableParameter.IntegerParameter PORT=
+            new EditableParameter.IntegerParameter("port",R.string.labelSettingsServerPort,34567);
+
+
+    public WebServer(GpsService controller) {
+        super("WebServer");
+        parameterDescriptions.addParams(Worker.ENABLED_PARAMETER.clone(false),PORT,ANY_ADDRESS);
+        gpsService =controller;
+        status.canEdit=true;
+    }
+    @Override
+    protected void run(int startSequence) throws JSONException, IOException {
+        Integer port=PORT.fromJson(parameters);
+        Boolean anyAddress=ANY_ADDRESS.fromJson(parameters);
+        addClaim("tcpport",port.toString(),true);
+        registerAvahi(port);
+        setStatus(WorkerStatus.Status.STARTED,"starting with port "+port+", external access "+anyAddress);
+        running=true;
+        listener=new Listener(anyAddress,port);
+        listener.run(startSequence);
+    }
 
     class NavRequestHandler implements HttpRequestHandler{
 
@@ -104,8 +135,8 @@ public class WebServer {
             }
             ExtendedWebResourceResponse resp=null;
             try {
-                if (activity.getRequestHandler() != null) {
-                    resp = activity.getRequestHandler().handleNavRequest(uri,
+                if (gpsService.getRequestHandler() != null) {
+                    resp = gpsService.getRequestHandler().handleNavRequest(uri,
                             postData,
                             getServerInfo());
                 }
@@ -213,7 +244,7 @@ public class WebServer {
             path=path.replaceAll("^/*","");
             //TODO: restrict access
             try {
-                InputStream is=activity.getAssets().open(path);
+                InputStream is= gpsService.getAssets().open(path);
                 httpResponse.setStatusCode(HttpStatus.SC_OK);
                 httpResponse.setEntity(new InputStreamEntity(is,-1));
                 httpResponse.addHeader("content-type", RequestHandler.mimeType(path));
@@ -244,12 +275,6 @@ public class WebServer {
     private Listener listener;
 
 
-    public WebServer(MainActivity controller) {
-
-        activity=controller;
-
-    }
-
     public int getPort(){
         if (listener != null){
             return listener.getPort();
@@ -263,16 +288,13 @@ public class WebServer {
     }
 
 
-    class Listener extends Thread{
+    class Listener{
         private ServerSocket serversocket;
         private BasicHttpParams params;
         private HttpService httpService;
         private boolean any; //bind to any
         private int port;
         private String lastError=null;
-        private boolean gpsServiceConnected=false;
-        private boolean doStop=false;
-        private final Object waiter=new Object();
         private HashSet<String> registeredHandlerPrefixes=new HashSet<String>();
 
 
@@ -300,11 +322,10 @@ public class WebServer {
             httpService.setParams(params);
             registry = new HttpRequestHandlerRegistry();
             registry.register("/"+ RequestHandler.NAVURL+"*",navRequestHandler);
-            gpsServiceConnected=activity.getGpsService()!=null;
-            for (INavRequestHandler h: activity.getRequestHandler().getHandlers()){
+            for (INavRequestHandler h: gpsService.getRequestHandler().getHandlers()){
                 String prefix=h.getPrefix();
                 if (prefix == null) continue;
-                DirectoryRequestHandler handler=new DirectoryRequestHandler(prefix,activity.getRequestHandler());
+                DirectoryRequestHandler handler=new DirectoryRequestHandler(prefix, gpsService.getRequestHandler());
                 registeredHandlerPrefixes.add(prefix);
                 registry.register("/"+h.getPrefix()+"/*",handler);
             }
@@ -312,27 +333,6 @@ public class WebServer {
             registry.register("*",baseRequestHandler);
 
             httpService.setHandlerResolver(registry);
-            if (! gpsServiceConnected) {
-                Thread retryHandlers = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        while (!doStop) {
-                            synchronized (waiter) {
-                                try {
-                                    waiter.wait(100);
-                                } catch (InterruptedException e) {
-                                    return;
-                                }
-                                if (timerCall()) {
-                                    return;
-                                }
-                            }
-                        }
-                    }
-                });
-                retryHandlers.setDaemon(true);
-                retryHandlers.start();
-            }
         }
 
         int getPort(){
@@ -346,43 +346,16 @@ public class WebServer {
             return new InetSocketAddress(serversocket.getInetAddress(),port);
         }
 
-
-
-        public boolean timerCall(){
-            if (gpsServiceConnected) return true;
-            GpsService service=activity.getGpsService();
-            if (service != null){
-                gpsServiceConnected=true;
-                AvnLog.i("gps service active now, updating handlers in WebServer");
-                for (INavRequestHandler h: activity.getRequestHandler().getHandlers()){
-                    String prefix=h.getPrefix();
-                    if (prefix == null) continue;
-                    if (registeredHandlerPrefixes.contains(prefix)) continue;
-                    DirectoryRequestHandler handler=new DirectoryRequestHandler(h.getPrefix(),activity.getRequestHandler());
-                    registry.register("/"+prefix+"/*",handler);
-
-                }
-                return true;
-            }
-            return false;
-        }
-
         boolean getAny(){
             return any;
         }
-
         void close(){
             try {
                 serversocket.close();
-                doStop=true;
-                synchronized (waiter){
-                    waiter.notifyAll();
-                }
             }catch(Exception i){}
         }
 
-        @Override
-        public void run(){
+        public void run(int startSequence) throws IOException {
             AvnLog.i(NAME,"Listening on port " + this.serversocket.getLocalPort());
             lastError=null;
             try {
@@ -398,15 +371,16 @@ public class WebServer {
                     if (local == null) local=InetAddress.getLocalHost();
                     serversocket.bind(new InetSocketAddress(local.getHostAddress(),port));
                 }
+                setStatus(WorkerStatus.Status.NMEA,"active on port "+port+", external access "+any);
             }catch (IOException ex){
                 AvnLog.e("Exception while starting server "+ex);
                 lastError=ex.getLocalizedMessage();
                 try {
                     serversocket.close();
                 }catch (IOException i){}
-                return;
+               throw ex;
             }
-            while (!Thread.interrupted()) {
+            while (!shouldStop(startSequence)) {
                 try {
                     Socket socket = this.serversocket.accept();
                     DefaultHttpServerConnection conn = new DefaultHttpServerConnection();
@@ -476,35 +450,51 @@ public class WebServer {
             }
         }
     }
-
-    public void stopServer() {
-        if (! running) return;
-        AvnLog.d(NAME,"stop");
+    @Override
+    public void stop() {
+        super.stop();
         running=false;
+        AvnLog.d(NAME,"stop");
         listener.close();
         listener=null;
+        unregisterAvahi();
+    }
+    private void registerAvahi(int port){
+        NsdServiceInfo info=new NsdServiceInfo();
+        info.setPort(port);
+        info.setServiceType("_http._tcp");
+        info.setServiceName("avnav-android");
+        NsdManager manager= (NsdManager) gpsService.getSystemService(Context.NSD_SERVICE);
+        registrationListener=new NsdManager.RegistrationListener() {
+            @Override
+            public void onRegistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
+                AvnLog.e("registering avahi service failed: "+errorCode);
+            }
+
+            @Override
+            public void onUnregistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
+
+            }
+
+            @Override
+            public void onServiceRegistered(NsdServiceInfo serviceInfo) {
+                AvnLog.i("registered avahi "+serviceInfo.getServiceName());
+            }
+
+            @Override
+            public void onServiceUnregistered(NsdServiceInfo serviceInfo) {
+
+            }
+        };
+        manager.registerService(info, NsdManager.PROTOCOL_DNS_SD,registrationListener);
     }
 
-    public int startServer(String port, boolean anyAddress) throws Exception {
-        int newPort=Integer.parseInt(port);
-        if (running && listener != null) {
-            int oldPort=listener.getPort();
-            boolean oldAny=listener.getAny();
-            if (oldPort == newPort && oldAny == anyAddress) return oldPort;
-            AvnLog.d(NAME,"stop");
-            running=false;
-            listener.close();
-            listener=null;
-        }
-        AvnLog.d(NAME,"start");
-        running=true;
-        listener=new Listener(anyAddress,newPort);
-        listener.setDaemon(true);
-        listener.start();
-        return listener.getPort();
+    private void unregisterAvahi(){
+        if (registrationListener == null) return;
+        NsdManager manager=(NsdManager)gpsService.getSystemService(Context.NSD_SERVICE);
+        manager.unregisterService(registrationListener);
+        registrationListener=null;
     }
-
-
 
 }
 

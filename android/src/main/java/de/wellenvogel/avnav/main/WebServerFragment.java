@@ -119,7 +119,7 @@ public class WebServerFragment extends Fragment {
                 }
             }
         });
-        if (webServer == null) webServer=new WebServer((MainActivity)getActivity());
+        //if (webServer == null) webServer=new WebServer((MainActivity)getActivity());
         startWebServer(true);
         timerSequence++;
         runnable=new TimerRunnable(timerSequence);
@@ -183,7 +183,7 @@ public class WebServerFragment extends Fragment {
         int port=-1;
         try {
             SharedPreferences prefs=((MainActivity)getActivity()).sharedPrefs;
-            port=webServer.startServer(prefs.getString(Constants.WEBSERVERPORT,"34567"),prefs.getBoolean(Constants.EXTERNALACCESS,false));
+            //port=webServer.startServer(prefs.getString(Constants.WEBSERVERPORT,"34567"),prefs.getBoolean(Constants.EXTERNALACCESS,false));
         } catch (Exception e) {
             e.printStackTrace();
             return;
@@ -239,7 +239,7 @@ public class WebServerFragment extends Fragment {
         serverRunning=false;
         AvnLog.d(LOGPRFX,"stopping webserver");
         unregisterAvahi();
-        webServer.stopServer();
+        //webServer.stopServer();
         txServer.setText("server stopped");
         btLaunch.setEnabled(false);
         btServer.setText(R.string.startServer);

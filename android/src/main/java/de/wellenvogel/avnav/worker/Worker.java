@@ -214,7 +214,15 @@ public abstract class Worker implements IWorker {
             stop();
         }
         try {
-            if (Worker.ENABLED_PARAMETER.fromJson(parameters)) {
+            //check if we have a defined enabled parameter
+            //otherwise use the generic one
+            EditableParameter.BooleanParameter enabled=Worker.ENABLED_PARAMETER;
+            for (EditableParameter.EditableParameterInterface p:parameterDescriptions){
+                if (p.getName().equals(ENABLED_PARAMETER.name) && p instanceof EditableParameter.BooleanParameter){
+                    enabled=(EditableParameter.BooleanParameter)p;
+                }
+            }
+            if (enabled.fromJson(parameters)) {
                 running = true;
                 mainThread = new Thread(new Runnable() {
                     @Override

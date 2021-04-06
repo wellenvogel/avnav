@@ -40,16 +40,14 @@ import de.wellenvogel.avnav.worker.GpsService;
  * Created by andreas on 06.01.15.
  */
 public class MainActivity extends Activity implements IDialogHandler, IMediaUpdater, SharedPreferences.OnSharedPreferenceChangeListener, GpsService.MainActivityActions {
-
-    private String lastStartMode=null; //The last mode we used to select the fragment
+    //The last mode we used to select the fragment
     SharedPreferences sharedPrefs;
     protected final Activity activity=this;
     AssetManager assetManager;
-    private String workdir;
-    private File workBase;
     GpsService gpsService=null;
-    int goBackSequence;
     private ActionBarHandler mToolbar;
+    private boolean fragmentStarted=false;
+
     public ActionBarHandler getToolbar(){
         return mToolbar;
     }
@@ -378,7 +376,6 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
         boolean startPendig = sharedPrefs.getBoolean(Constants.WAITSTART, false);
         if (mode.isEmpty() || startPendig) {
             //TODO: show info dialog
-            lastStartMode = null;
             showSettings(false);
             return;
         }
@@ -398,8 +395,9 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
             gpsService.restart();
             AvnLog.d(Constants.LOGPRFX, "MainActivity:onResume serviceRestart");
         }
-        if (lastStartMode == null || !lastStartMode.equals(mode)) {
+        if (!fragmentStarted) {
             startFragment();
+            fragmentStarted=true;
         } else {
             sendEventToJs(Constants.JS_PROPERTY_CHANGE, 0); //this will some pages cause to reload...
         }
@@ -408,21 +406,12 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
 
 
     private void startFragment(){
-        String mode=sharedPrefs.getString(Constants.RUNMODE, "");
         sharedPrefs.edit().putBoolean(Constants.WAITSTART,true).commit();
         FragmentManager fragmentManager = getFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        //TODO: select right fragment based on mode
-        Fragment fragment=null;
-        if (mode.equals(Constants.MODE_SERVER)){
-            fragment= new WebServerFragment();
-        }
-        if (fragment == null) {
-            fragment=new WebViewFragment();
-        }
+        Fragment fragment=new WebViewFragment();
         fragmentTransaction.replace(R.id.webmain, fragment);
         fragmentTransaction.commit();
-        lastStartMode=mode;
     }
 
 

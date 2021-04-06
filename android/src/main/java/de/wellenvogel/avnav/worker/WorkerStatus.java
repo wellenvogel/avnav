@@ -25,7 +25,7 @@ public class WorkerStatus implements AvnUtil.IJsonObect {
             children.put(k,other.children.get(k));
         }
     }
-    boolean canEdit=false;
+    public boolean canEdit=false;
     boolean canDelete=false;
     boolean disabled=false;
     int id;

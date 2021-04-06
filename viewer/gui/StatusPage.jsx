@@ -116,7 +116,7 @@ const ChildStatus=(props)=>{
     );
 };
 const StatusItem=(props)=>{
-    let canEdit=props.canEdit && props.connected;
+    let canEdit=props.canEdit && props.connected && props.allowEdit;
     let isDisabled=props.disabled;
     let name=props.name.replace(/\[.*\]/, '');
     if (props.id !== undefined){
@@ -232,6 +232,7 @@ class StatusList extends React.Component{
         return <ItemList
             itemClass={(iprops)=><StatusItem
                 connected={this.props.connected}
+                allowEdit={this.props.allowEdit}
                 {...iprops}/>}
             itemList={this.state.itemList}
             scrollable={true}
@@ -243,7 +244,8 @@ class StatusList extends React.Component{
 
 StatusList.propTypes={
     onChange: PropTypes.func,
-    connected: PropTypes.bool
+    connected: PropTypes.bool,
+    allowEdit: PropTypes.bool
 }
 
 class StatusPage extends React.Component{
@@ -381,6 +383,7 @@ class StatusPage extends React.Component{
                 mainContent={
                     <StatusList
                         connected={props.connected}
+                        allowEdit={props.config}
                         onChange={(nv)=>this.setState(nv)}
                         notifyProps={this.state}
                     />

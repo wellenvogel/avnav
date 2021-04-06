@@ -41,6 +41,7 @@ import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
 import de.wellenvogel.avnav.appapi.INavRequestHandler;
 import de.wellenvogel.avnav.appapi.PostVars;
 import de.wellenvogel.avnav.appapi.RequestHandler;
+import de.wellenvogel.avnav.appapi.WebServer;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.Dummy;
 import de.wellenvogel.avnav.main.IMediaUpdater;
@@ -374,7 +375,13 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             return new NmeaLogger(newTrackDir,queue,null);
         }
     };
-    private final WorkerConfig[] INTERNAL_WORKERS ={WDECODER,WROUTER,WTRACK,WLOGGER};
+    private final WorkerConfig WSERVER= new WorkerConfig("WebServer",5) {
+        @Override
+        IWorker createWorker(Context ctx, NmeaQueue queue) throws IOException {
+            return new WebServer(GpsService.this);
+        }
+    };
+    private final WorkerConfig[] INTERNAL_WORKERS ={WDECODER,WROUTER,WTRACK,WLOGGER,WSERVER};
 
     private synchronized int getNextWorkerId(){
         workerId++;

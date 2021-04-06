@@ -41,6 +41,13 @@ public class EditableParameter {
             this.name = name;
             mandatory=true;
         }
+        EditableParameterBase(EditableParameterBase<T> other){
+            name=other.name;
+            defaultValue=other.defaultValue;
+            description=other.description;
+            descriptionId=other.descriptionId;
+            mandatory=other.mandatory;
+        }
         @Override
         public String getName() {
             return name;
@@ -50,7 +57,7 @@ public class EditableParameter {
             fromJson(o);
         }
         public abstract String getType();
-        abstract T fromJson(JSONObject o) throws JSONException;
+        abstract public T fromJson(JSONObject o) throws JSONException;
         @Override
         public JSONObject toJson() throws JSONException {
             JSONObject rt = new JSONObject();
@@ -80,7 +87,7 @@ public class EditableParameter {
         }
 
         @Override
-        String fromJson(JSONObject o) throws JSONException {
+        public String fromJson(JSONObject o) throws JSONException {
             return mandatory?o.getString(name):o.optString(name,defaultValue);
         }
     }
@@ -100,7 +107,7 @@ public class EditableParameter {
         }
 
         @Override
-        Integer fromJson(JSONObject o) throws JSONException {
+        public Integer fromJson(JSONObject o) throws JSONException {
             return (mandatory||o.has(name))?o.getInt(name):o.optInt(name,defaultValue);
         }
     }
@@ -119,8 +126,17 @@ public class EditableParameter {
         }
 
         @Override
-        Boolean fromJson(JSONObject o) throws JSONException {
+        public Boolean fromJson(JSONObject o) throws JSONException {
             return (mandatory||o.has(name))?o.getBoolean(name):o.optBoolean(name,defaultValue);
+        }
+
+        BooleanParameter(EditableParameterBase<Boolean> other) {
+            super(other);
+        }
+        public BooleanParameter clone(Boolean newDefault){
+            BooleanParameter rt=new BooleanParameter(this);
+            rt.defaultValue=newDefault;
+            return rt;
         }
     }
     public static class FloatParameter extends EditableParameterBase<Float>{
@@ -137,7 +153,7 @@ public class EditableParameter {
         }
 
         @Override
-        Float fromJson(JSONObject o) throws JSONException {
+        public Float fromJson(JSONObject o) throws JSONException {
             return (mandatory||o.has(name))?(float)o.getDouble(name):(float)o.optDouble(name,defaultValue);
         }
     }
@@ -168,7 +184,7 @@ public class EditableParameter {
         }
 
         @Override
-        String fromJson(JSONObject o) throws JSONException {
+        public String fromJson(JSONObject o) throws JSONException {
             return mandatory?o.getString(name):o.optString(name,defaultValue);
         }
 

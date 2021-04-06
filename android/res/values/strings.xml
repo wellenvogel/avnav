@@ -126,13 +126,13 @@
         You can reach the settings via the settings page, android button.
         Click Settings to go to the settings now.</string>
     <string name="loading">AvNav is loading...</string>
-    <string name="labelSettingsServerPort">port for external browser mode</string>
+    <string name="labelSettingsServerPort">port for WebServer</string>
     <string name="labelSettingsAnchorAlarm">Sound for anchor alarm</string>
     <string name="labelSettingsGpsAlarm">Sound for gps alarm</string>
     <string name="labelSettingsWpAlarm">Sound for waypoint alarm</string>
     <string name="reset">Reset</string>
     <string name="webserver">AvNav Server</string>
-    <string name="enableExternalAccess">WebServer External Access</string>
+    <string name="enableExternalAccess">allow WebServer External Access</string>
     <string name="alarmSounds">Alarm sounds</string>
     <string name="select">Select</string>
     <string name="channel_name">Information</string>
