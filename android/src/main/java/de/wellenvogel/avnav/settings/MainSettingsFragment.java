@@ -140,40 +140,13 @@ public class MainSettingsFragment extends SettingsFragment {
 
     @Override
     protected boolean updatePreferenceSummary(Preference pref, SharedPreferences prefs) {
-        if (pref instanceof ListPreference && pref.getKey().equals(Constants.RUNMODE)){
-            updateListSummary((ListPreference)pref);
-            return false;
-        }
         if (pref.getKey().equals(Constants.WORKDIR)){
             updateListSummary((ListPreference)pref);
         }
         return true;
     }
 
-    private ListPreference getRunMode(){
-        Preference p = getPreferenceScreen().findPreference(Constants.RUNMODE);
-        if (p != null) return (ListPreference)p;
-        return null;
-    }
-
-
     private void fillData() {
-        ListPreference l = getRunMode();
-        if (l != null) {
-            Resources r = getResources();
-            l.setEntryValues(new String[]{Constants.MODE_NORMAL,  Constants.MODE_SERVER});
-            String e[]=new String[l.getEntryValues().length];
-            int index=0;
-            SharedPreferences prefs = getActivity().getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
-            String runMode = prefs.getString(Constants.RUNMODE, Constants.MODE_NORMAL);
-            for (int i=0;i<l.getEntryValues().length;i++){
-                e[i]=modeToLabel(getActivity(),l.getEntryValues()[i]);
-                if (l.getEntryValues()[i].equals(runMode)) index=i;
-            }
-            l.setEntries(e);
-            l.setValueIndex(index);
-            updateListSummary(l);
-        }
         ListPreference wd=(ListPreference)getPreferenceScreen().findPreference(Constants.WORKDIR);
         if (wd != null){
             wd.setEntryValues(new String[]{Constants.INTERNAL_WORKDIR,Constants.EXTERNAL_WORKDIR});
@@ -191,18 +164,9 @@ public class MainSettingsFragment extends SettingsFragment {
     private void updateListSummary(ListPreference l){
         l.setSummary(l.getEntry());
     }
-    private static String modeToLabel(Activity a,CharSequence mode){
-        if (mode == null) return "";
-        Resources r=a.getResources();
-        if (mode.equals(Constants.MODE_NORMAL)) return r.getString(R.string.runNormal);
-        if (mode.equals(Constants.MODE_SERVER)) return r.getString(R.string.useExtBrowser);
-        return "";
-    }
 
     public static String getSummary(Activity a){
-        SharedPreferences prefs = a.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
-        String runMode = prefs.getString(Constants.RUNMODE, Constants.MODE_NORMAL);
-        return a.getResources().getString(R.string.runMode)+":"+modeToLabel(a,runMode);
+        return "";
     }
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {

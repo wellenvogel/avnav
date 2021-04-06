@@ -44,8 +44,6 @@ import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.DialogBuilder;
 
-import static de.wellenvogel.avnav.main.Constants.MODE_INTERNAL;
-
 /**
  * Created by andreas on 03.09.15.
  */
@@ -96,8 +94,7 @@ public class SettingsActivity extends PreferenceActivity {
     }
 
     private static void handleMigrations(Activity activity){
-        PreferenceManager.setDefaultValues(activity,Constants.PREFNAME,Context.MODE_PRIVATE,R.xml.expert_preferences,true);
-        PreferenceManager.setDefaultValues(activity,Constants.PREFNAME,Context.MODE_PRIVATE,R.xml.nmea_preferences,true);
+        PreferenceManager.setDefaultValues(activity,Constants.PREFNAME,Context.MODE_PRIVATE,R.xml.sound_preferences,true);
         final SharedPreferences sharedPrefs=activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         final SharedPreferences.Editor edit=sharedPrefs.edit();
         String mode=sharedPrefs.getString(Constants.RUNMODE,"");
@@ -199,10 +196,6 @@ public class SettingsActivity extends PreferenceActivity {
 
     public static boolean checkGpsEnabled(final Activity activity, boolean force,boolean doRequest,boolean showToasts) {
         SharedPreferences prefs = activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
-        if (! force) {
-            String nmeaMode = NmeaSettingsFragment.getNmeaMode(prefs);
-            if (!nmeaMode.equals(MODE_INTERNAL)) return true;
-        }
         LocationManager locationService = (LocationManager) activity.getSystemService(activity.LOCATION_SERVICE);
         boolean enabled = locationService.isProviderEnabled(LocationManager.GPS_PROVIDER);
         if (Build.VERSION.SDK_INT >= 23) {
@@ -423,11 +416,6 @@ public class SettingsActivity extends PreferenceActivity {
         e.putString(Constants.WORKDIR, workdir);
         e.putString(Constants.CHARTDIR, chartdir);
         e.apply();
-        //for robustness update all modes matching the current settings and version
-        String nmeaMode=NmeaSettingsFragment.getNmeaMode(sharedPrefs);
-        NmeaSettingsFragment.updateNmeaMode(sharedPrefs,nmeaMode);
-        String aisMode=NmeaSettingsFragment.getAisMode(sharedPrefs);
-        NmeaSettingsFragment.updateAisMode(sharedPrefs,aisMode);
         try {
             int version = getPackageManager()
                     .getPackageInfo(getPackageName(), 0).versionCode;
@@ -527,9 +515,6 @@ public class SettingsActivity extends PreferenceActivity {
         for (Header h: headers){
             String newSummary=null;
             if (h == null || h.fragment == null) continue;
-            if (h.fragment.equals(NmeaSettingsFragment.class.getName())){
-                newSummary= NmeaSettingsFragment.getSummary(this);
-            }
             if (h.fragment.equals(MainSettingsFragment.class.getName())){
                 newSummary= MainSettingsFragment.getSummary(this);
             }

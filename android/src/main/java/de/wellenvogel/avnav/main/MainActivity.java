@@ -86,6 +86,7 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
                     endApp();
                     return;
                 }
+                serviceNeedsRestart=true;
                 break;
             default:
                 AvnLog.e("unknown activity result " + requestCode);
@@ -193,7 +194,6 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
 
 
     public void showSettings(boolean initial){
-        serviceNeedsRestart=true;
         Intent sintent= new Intent(this,SettingsActivity.class);
         sintent.putExtra(Constants.EXTRA_INITIAL,initial);
         startActivityForResult(sintent,Constants.SETTINGS_REQUEST);
@@ -299,7 +299,7 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
         setContentView(R.layout.viewcontainer);
         mToolbar=new ActionBarHandler(this,R.menu.main_activity_actions);
         sharedPrefs=getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
-        PreferenceManager.setDefaultValues(this,Constants.PREFNAME,Context.MODE_PRIVATE, R.xml.expert_preferences, false);
+        PreferenceManager.setDefaultValues(this,Constants.PREFNAME,Context.MODE_PRIVATE, R.xml.sound_preferences, false);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         assetManager=getAssets();
         sharedPrefs.registerOnSharedPreferenceChangeListener(this);
@@ -321,15 +321,14 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
     }
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        if (! key.equals(Constants.WAITSTART)) {
-            serviceNeedsRestart = true;
-        }
         Log.d(Constants.LOGPRFX, "preferences changed");
         if (key.equals(Constants.WORKDIR)){
             updateWorkDir(AvnUtil.getWorkDir(sharedPreferences,this));
+            serviceNeedsRestart=true;
         }
         if (key.equals(Constants.CHARTDIR)){
             updateWorkDir(sharedPreferences.getString(Constants.CHARTDIR,""));
+            serviceNeedsRestart=true;
         }
     }
 

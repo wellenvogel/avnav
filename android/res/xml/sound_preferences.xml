@@ -1,16 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-    android:title="@string/labelSettingsExpert">
-    <de.wellenvogel.avnav.settings.DefaultsEditTextPreference
-        android:key="ip.conntimeout"
-        android:defaultValue="5"
-        android:inputType="numberSigned"
-        android:title="@string/labelSettingsIpConnectTime"></de.wellenvogel.avnav.settings.DefaultsEditTextPreference>
-    <de.wellenvogel.avnav.settings.CheckEditTextPreference
-        android:key="web.port"
-        android:defaultValue="34567"
-        android:inputType="number"
-        android:title="@string/labelSettingsServerPort"></de.wellenvogel.avnav.settings.CheckEditTextPreference>
+    android:title="@string/labelSettingsSound">
     <de.wellenvogel.avnav.settings.AudioEditTextPreference
         android:key="alarm.anchor"
         android:defaultValue="anchorAlarm.mp3"

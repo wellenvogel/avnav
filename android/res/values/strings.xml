@@ -82,7 +82,7 @@
     <string name="labelSettingsAisInput">AIS Source</string>
     <string name="labelSettingsAisSendPos">send own position on AIS device</string>
     <string name="labelSettingsNone">Off</string>
-    <string name="labelSettingsExpert">Expert Settings</string>
+    <string name="labelSettingsSound">Sound Settings</string>
     <string name="labelSettingsGpsOffset">offset internal gps by(s)</string>
     <string name="labelSettingsIpGpsOffset">offset IP gps time by(s)</string>
     <string name="labelSettingsBtGpsOffset">offset bluetooth gps time by(s)</string>
