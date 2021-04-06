@@ -150,5 +150,6 @@
     <string name="receiveAlreadyExists">Route already exists</string>
     <string name="labelSettingsMobAlarm">Sound for MOB alarm</string>
     <string name="hideBars">Hide System Bars</string>
+    <string name="background">Background</string>
 
 </resources>

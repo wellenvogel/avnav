@@ -66,7 +66,6 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
             updateMtp(f);
         }
     };
-    RequestHandler requestHandler=null;
     private boolean serviceNeedsRestart=false;
 
 
@@ -96,6 +95,39 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
         }
     }
 
+    private GpsService.GpsServiceBinder binder;
+    private Runnable bindAction;
+
+    /** Defines callbacks for service binding, passed to bindService() */
+    private ServiceConnection mConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName className,
+                                       IBinder service) {
+            // We've bound to LocalService, cast the IBinder and get LocalService instance
+            binder = (GpsService.GpsServiceBinder) service;
+            gpsService = binder.getService();
+            if (gpsService !=null) {
+                gpsService.setMediaUpdater(MainActivity.this);
+                if (bindAction != null){
+                    bindAction.run();
+                    bindAction=null;
+                }
+            }
+            binder.registerCallback(MainActivity.this);
+            AvnLog.d(Constants.LOGPRFX, "gps service connected");
+
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+            gpsService=null;
+            if (binder != null) binder.deregisterCallback();
+            binder=null;
+            AvnLog.d(Constants.LOGPRFX,"gps service disconnected");
+        }
+
+    };
     private boolean startGpsService(){
         if (Build.VERSION.SDK_INT >= 26) {
             ActivityManager activityManager = (ActivityManager) this.getSystemService(Context.ACTIVITY_SERVICE);
@@ -112,33 +144,32 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
 
         if (! SettingsActivity.checkSettings(this,false,true)) return false;
 
-        File trackDir=new File(AvnUtil.getWorkDir(sharedPrefs,this),"tracks");
         Intent intent = new Intent(this, GpsService.class);
-        intent.putExtra(GpsService.PROP_TRACKDIR, trackDir.getAbsolutePath());
         if (Build.VERSION.SDK_INT >= 26){
             startForegroundService(intent);
         }
         else {
             startService(intent);
         }
-        bindService(intent,mConnection,BIND_AUTO_CREATE);
         serviceNeedsRestart=false;
         return true;
     }
 
 
-    private void stopGpsService(boolean unbind){
+    private void stopGpsService(){
         if (gpsService !=null){
-            gpsService.stopMe(unbind);
+            gpsService.stopMe();
         }
-        if (unbind) {
-            Intent intent = new Intent(this, GpsService.class);
-            try {
-                unbindService(mConnection);
-                stopService(intent);
-            }catch (Exception e){}
-        }
+        Intent intent = new Intent(this, GpsService.class);
+        binder.deregisterCallback();
+        gpsService=null;
+        try {
+             unbindService(mConnection);
+             stopService(intent);
+        }catch (Exception e){}
+
     }
+
 
     /**
      * IDialogHandler
@@ -188,7 +219,7 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
             builder.setText(R.id.title,0);
             builder.setText(R.id.question,R.string.endApplication);
             builder.setButton(R.string.ok,DialogInterface.BUTTON_POSITIVE);
-            builder.setButton(R.string.cancel,DialogInterface.BUTTON_NEUTRAL);
+            builder.setButton(R.string.background,DialogInterface.BUTTON_NEUTRAL);
             builder.setButton(R.string.cancel,DialogInterface.BUTTON_NEGATIVE);
             builder.setOnClickListener(new DialogInterface.OnClickListener() {
                 @Override
@@ -196,6 +227,9 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
                     dialog.dismiss();
                     if (which == DialogInterface.BUTTON_POSITIVE){
                         endApp();
+                    }
+                    if (which == DialogInterface.BUTTON_NEUTRAL){
+                        finish();
                     }
                 }
             });
@@ -211,37 +245,7 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
         finish();
     }
 
-    private GpsService.GpsServiceBinder binder;
 
-    /** Defines callbacks for service binding, passed to bindService() */
-    private ServiceConnection mConnection = new ServiceConnection() {
-
-        @Override
-        public void onServiceConnected(ComponentName className,
-                                       IBinder service) {
-            // We've bound to LocalService, cast the IBinder and get LocalService instance
-            binder = (GpsService.GpsServiceBinder) service;
-            gpsService = binder.getService();
-            if (gpsService !=null) {
-                gpsService.setMediaUpdater(MainActivity.this);
-                if (requestHandler == null) {
-                    requestHandler = new RequestHandler(gpsService);
-                }
-            }
-            binder.registerCallback(MainActivity.this);
-            AvnLog.d(Constants.LOGPRFX, "gps service connected");
-
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName arg0) {
-            gpsService=null;
-            if (binder != null) binder.deregisterCallback();
-            binder=null;
-            AvnLog.d(Constants.LOGPRFX,"gps service disconnected");
-        }
-
-    };
 
     @Override
     protected void onStart() {
@@ -253,7 +257,6 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
     protected void onStop() {
         super.onStop();
         //stopGpsService(false);
-        if (requestHandler != null) requestHandler.stop();
     }
 
     @Override
@@ -267,16 +270,15 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
         if (reloadReceiver != null){
             unregisterReceiver(reloadReceiver);
         }
+        try {
+            unbindService(mConnection);
+        }catch (Exception e){}
         if (exitRequested) {
-            stopGpsService(true);
+            stopGpsService();
             System.exit(0);
         }
         else{
             AvnLog.e("main unintentionally stopped");
-            Intent intent = new Intent(this, GpsService.class);
-            try {
-                unbindService(mConnection);
-            }catch (Exception e){}
         }
     }
 
@@ -312,6 +314,8 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
         IntentFilter triggerFilter=new IntentFilter((Constants.BC_RELOAD_DATA));
         registerReceiver(reloadReceiver,triggerFilter);
         running=true;
+        Intent intent = new Intent(this, GpsService.class);
+        bindService(intent,mConnection,0);
     }
 
     void hideToolBar(){
@@ -365,68 +369,61 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
     protected void onResume() {
         super.onResume();
         AvnLog.d("main: onResume");
-        if (!SettingsActivity.checkSettings(this,false,false)){
+        if (!SettingsActivity.checkSettings(this, false, false)) {
             showSettings(true);
             return;
         }
-        boolean restartHandler=serviceNeedsRestart;
-        if (! handleRestart()){
-            showSettings(true);
-            return;
-        }
-        updateWorkDir(AvnUtil.getWorkDir(null,this));
-        updateWorkDir(sharedPrefs.getString(Constants.CHARTDIR,""));
-        if (requestHandler != null && restartHandler) {
-            requestHandler.stop();
-            requestHandler=null;
-            if (gpsService != null) {
-                requestHandler=new RequestHandler(gpsService);
-            }
-        }
-        startFragmentOrActivity(false);
-    }
-
-    private boolean handleRestart(){
-        if (!serviceNeedsRestart) return true;
-        AvnLog.d(Constants.LOGPRFX,"MainActivity:onResume serviceRestart");
-        stopGpsService(false);
-        sendEventToJs(Constants.JS_RELOAD,0);
-        return startGpsService();
-    }
-
-    /**
-     * when the activity becomes visible (onResume) we either
-     * start a fragment or we go to a new activity (like settings)
-     */
-    void startFragmentOrActivity(boolean forceSettings){
-        String mode=sharedPrefs.getString(Constants.RUNMODE, "");
-        boolean startPendig=sharedPrefs.getBoolean(Constants.WAITSTART, false);
-        if (mode.isEmpty() || startPendig || forceSettings){
+        String mode = sharedPrefs.getString(Constants.RUNMODE, "");
+        boolean startPendig = sharedPrefs.getBoolean(Constants.WAITSTART, false);
+        if (mode.isEmpty() || startPendig) {
             //TODO: show info dialog
-            lastStartMode=null;
+            lastStartMode = null;
             showSettings(false);
             return;
         }
-        if (lastStartMode == null || !lastStartMode.equals(mode)){
-            sharedPrefs.edit().putBoolean(Constants.WAITSTART,true).commit();
-            FragmentManager fragmentManager = getFragmentManager();
-            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-            //TODO: select right fragment based on mode
-            Fragment fragment=null;
-            if (mode.equals(Constants.MODE_SERVER)){
-                fragment= new WebServerFragment();
-            }
-            if (fragment == null) {
-                fragment=new WebViewFragment();
-            }
-            fragmentTransaction.replace(R.id.webmain, fragment);
-            fragmentTransaction.commit();
-            lastStartMode=mode;
+        updateWorkDir(AvnUtil.getWorkDir(null, this));
+        updateWorkDir(sharedPrefs.getString(Constants.CHARTDIR, ""));
+        if (gpsService == null) {
+            bindAction = new Runnable() {
+                @Override
+                public void run() {
+                    startFragment();
+                }
+            };
+            startGpsService();
+            return;
         }
-        else{
-            sendEventToJs(Constants.JS_PROPERTY_CHANGE,0); //this will some pages cause to reload...
+        if (serviceNeedsRestart) {
+            gpsService.restart();
+            AvnLog.d(Constants.LOGPRFX, "MainActivity:onResume serviceRestart");
+        }
+        if (lastStartMode == null || !lastStartMode.equals(mode)) {
+            startFragment();
+        } else {
+            sendEventToJs(Constants.JS_PROPERTY_CHANGE, 0); //this will some pages cause to reload...
         }
     }
+
+
+
+    private void startFragment(){
+        String mode=sharedPrefs.getString(Constants.RUNMODE, "");
+        sharedPrefs.edit().putBoolean(Constants.WAITSTART,true).commit();
+        FragmentManager fragmentManager = getFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        //TODO: select right fragment based on mode
+        Fragment fragment=null;
+        if (mode.equals(Constants.MODE_SERVER)){
+            fragment= new WebServerFragment();
+        }
+        if (fragment == null) {
+            fragment=new WebViewFragment();
+        }
+        fragmentTransaction.replace(R.id.webmain, fragment);
+        fragmentTransaction.commit();
+        lastStartMode=mode;
+    }
+
 
     @Override
     public void onBackPressed(){
@@ -452,7 +449,8 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
 
 
     public RequestHandler getRequestHandler(){
-        return requestHandler;
+        GpsService service=getGpsService();
+        return service!=null?service.getRequestHandler():null;
     }
 
     @Override

@@ -87,10 +87,9 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     private boolean mobAlarm=false;
     private BroadcastReceiver broadCastReceiver;
     private BroadcastReceiver triggerReceiver; //trigger rescans...
-    private boolean shouldStop=false;
     PendingIntent watchdogIntent=null;
     private static final String WATCHDOGACTION="restart";
-
+    private RequestHandler requestHandler;
     private RouteHandler.RoutePoint lastAlarmWp=null;
     private final NmeaQueue queue=new NmeaQueue();
     long trackMintime;
@@ -223,6 +222,10 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     @Override
     public String getPrefix() {
         return null;
+    }
+
+    public RequestHandler getRequestHandler() {
+        return requestHandler;
     }
 
     public static interface MainActivityActions{
@@ -539,44 +542,17 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         internalWorkers.clear();
     }
 
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        super.onStartCommand(intent,flags,startId);
-        boolean isWatchdog=false;
-        if (intent != null && intent.getAction() != null && intent.getAction().equals(WATCHDOGACTION)) isWatchdog=true;
-        if (isWatchdog) AvnLog.i("service onStartCommand, watchdog=true");
-        else {
-            AvnLog.i("service onStartCommand");
-        }
+    private void handleStartup(boolean isWatchdog){
         SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
-        handleNotification(true,true);
-        if (! isWatchdog) stopWorkers();
-        //we rely on the activity to check before...
-        File newTrackDir=new File(AvnUtil.getWorkDir(prefs,this),"tracks");
-        boolean loadTrack=true;
-        if (trackDir != null && trackDir.getAbsolutePath().equals(newTrackDir.getAbsolutePath())){
-            //seems to be a restart - so do not load again
-            loadTrack=false;
-            AvnLog.d(LOGPRFX,"restart: do not load track data");
-        }
-
-        long trackInterval=1000* AvnUtil.getLongPref(prefs, Constants.TRACKINTERVAL, 300);
-        long trackDistance=AvnUtil.getLongPref(prefs, Constants.TRACKDISTANCE, 25);
-        trackMintime=1000*AvnUtil.getLongPref(prefs, Constants.TRACKMINTIME, 10);
-        long trackTime=1000*60*60*AvnUtil.getLongPref(prefs, Constants.TRACKTIME, 25); //25h - to ensure that we at least have the whole day...
-        String aisMode= NmeaSettingsFragment.getAisMode(prefs);
-        String nmeaMode=NmeaSettingsFragment.getNmeaMode(prefs);
         Properties loggerProperties=new Properties();
         loggerProperties.logAis=prefs.getBoolean(Constants.AISLOG,false);
         loggerProperties.logNmea=prefs.getBoolean(Constants.NMEALOG,false);
         loggerProperties.nmeaFilter=prefs.getString(Constants.NMEALOGFILTER,null);
-        AvnLog.d(LOGPRFX,"started with dir="+newTrackDir.getAbsolutePath()+", interval="+(trackInterval/1000)+
-                ", distance="+trackDistance+", mintime="+(trackMintime/1000)+
-                ", maxtime(h)="+(trackTime/3600/1000)+
-                ", AISmode="+aisMode+
-                ", NmeaMode="+nmeaMode
-                );
-        trackDir = newTrackDir;
+        AvnLog.d(LOGPRFX,"started");
+        if (! isWatchdog || requestHandler == null){
+            if (requestHandler != null) requestHandler.stop();
+            requestHandler=new RequestHandler(this);
+        }
         synchronized (loggerLock) {
             if (! isWatchdog || nmeaLogger == null) {
                 if (loggerProperties.logNmea || loggerProperties.logAis) {
@@ -587,14 +563,6 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
                     nmeaLogger = null;
                 }
             }
-        }
-        if (! isWatchdog || runnable == null) {
-            runnable = new TimerRunnable(timerSequence);
-            handler.postDelayed(runnable, trackMintime);
-        }
-        if (! receiverRegistered) {
-            registerReceiver(usbReceiver, new IntentFilter(UsbManager.ACTION_USB_DEVICE_DETACHED));
-            receiverRegistered=true;
         }
         if (! isWatchdog || internalWorkers.size() == 0) {
             for (WorkerConfig cfg : INTERNAL_WORKERS){
@@ -643,8 +611,37 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         }
 
         isRunning=true;
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        super.onStartCommand(intent,flags,startId);
+        boolean isWatchdog=false;
+        if (intent != null && intent.getAction() != null && intent.getAction().equals(WATCHDOGACTION)) isWatchdog=true;
+        if (isWatchdog) AvnLog.i("service onStartCommand, watchdog=true");
+        else {
+            AvnLog.i("service onStartCommand");
+        }
+        if (! isWatchdog && isRunning) return Service.START_REDELIVER_INTENT;
+        handleNotification(true,true);
+        if (! isWatchdog) stopWorkers();;
+        handleStartup(isWatchdog);
+        if (! isWatchdog || runnable == null) {
+            runnable = new TimerRunnable(timerSequence);
+            handler.postDelayed(runnable, trackMintime);
+        }
+        if (! receiverRegistered) {
+            registerReceiver(usbReceiver, new IntentFilter(UsbManager.ACTION_USB_DEVICE_DETACHED));
+            receiverRegistered=true;
+        }
         return Service.START_REDELIVER_INTENT;
     }
+
+    public void restart(){
+        stopWorkers();
+        handleStartup(false);
+    }
+
     public void onCreate()
     {
         super.onCreate();
@@ -812,35 +809,15 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     /**
      * will be called whe we intend to really stop
      */
-    private void handleStop(boolean emptyTrack) {
+    private void handleStop() {
         stopWorkers();
+        if (requestHandler != null) requestHandler.stop();
+        requestHandler=null;
         isRunning = false;
         handleNotification(false, false);
-        AvnLog.i(LOGPRFX, "service stopped");
-    }
-
-    public void stopMe(boolean doShutdown){
-        shouldStop=doShutdown;
-        handleStop(doShutdown);
-        if (shouldStop){
-            ((AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE)).
-                    cancel(watchdogIntent);
-            AvnLog.i(LOGPRFX,"alarm deregistered");
-        }
-        stopSelf();
-    }
-
-    @Override
-    public boolean onUnbind(Intent intent) {
-        AvnLog.i("service unbind");
-        return super.onUnbind(intent);
-    }
-
-    @Override
-    public void onDestroy()
-    {
-        super.onDestroy();
-        handleStop(true);
+        ((AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE)).
+                cancel(watchdogIntent);
+        AvnLog.i(LOGPRFX,"alarm deregistered");
         if (receiverRegistered) {
             unregisterReceiver(usbReceiver);
             receiverRegistered=false;
@@ -858,12 +835,22 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         if (triggerReceiver != null){
             unregisterReceiver(triggerReceiver);
         }
-        if (shouldStop){
-            ((AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE)).
-                    cancel(watchdogIntent);
-        }
         lastNotifiedAlarm=null;
         notificationSend=false;
+        AvnLog.i(LOGPRFX, "service stopped");
+    }
+
+    public void stopMe(){
+        handleStop();
+        stopSelf();
+    }
+
+
+    @Override
+    public void onDestroy()
+    {
+        super.onDestroy();
+        handleStop();
     }
 
 
