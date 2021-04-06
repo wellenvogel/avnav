@@ -53,6 +53,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.Locale;
 
@@ -107,7 +108,7 @@ public class WebServer extends Worker {
         Integer port=PORT.fromJson(parameters);
         Boolean anyAddress=ANY_ADDRESS.fromJson(parameters);
         addClaim("tcpport",port.toString(),true);
-        registerAvahi(port);
+        registerAvahi(port,anyAddress);
         setStatus(WorkerStatus.Status.STARTED,"starting with port "+port+", external access "+anyAddress);
         running=true;
         listener=new Listener(anyAddress,port);
@@ -287,6 +288,16 @@ public class WebServer extends Worker {
         return running;
     }
 
+    private InetAddress getLocalHost() throws UnknownHostException {
+        InetAddress local=null;
+        try {
+            local = InetAddress.getByName("localhost");
+        }catch(Exception ex){
+            AvnLog.e("Exception getting localhost: "+ex);
+        }
+        if (local == null) local=InetAddress.getLocalHost();
+        return local;
+    }
 
     class Listener{
         private ServerSocket serversocket;
@@ -362,13 +373,7 @@ public class WebServer extends Worker {
                 serversocket.setReuseAddress(true);
                 if (any) serversocket.bind(new InetSocketAddress(port));
                 else {
-                    InetAddress local=null;
-                    try {
-                        local = InetAddress.getByName("localhost");
-                    }catch(Exception ex){
-                        AvnLog.e("Exception getting localhost: "+ex);
-                    }
-                    if (local == null) local=InetAddress.getLocalHost();
+                    InetAddress local=getLocalHost();
                     serversocket.bind(new InetSocketAddress(local.getHostAddress(),port));
                 }
                 setStatus(WorkerStatus.Status.NMEA,"active on port "+port+", external access "+any);
@@ -459,11 +464,14 @@ public class WebServer extends Worker {
         listener=null;
         unregisterAvahi();
     }
-    private void registerAvahi(int port){
+    private void registerAvahi(int port,boolean any) throws UnknownHostException {
         NsdServiceInfo info=new NsdServiceInfo();
         info.setPort(port);
         info.setServiceType("_http._tcp");
         info.setServiceName("avnav-android");
+        if (! any){
+            info.setHost(getLocalHost());
+        }
         NsdManager manager= (NsdManager) gpsService.getSystemService(Context.NSD_SERVICE);
         registrationListener=new NsdManager.RegistrationListener() {
             @Override

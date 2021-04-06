@@ -276,7 +276,6 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
     protected void onDestroy() {
         super.onDestroy();
         running=false;
-        serviceNeedsRestart = true;
         if (reloadReceiver != null){
             unregisterReceiver(reloadReceiver);
         }
@@ -288,8 +287,9 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
             //System.exit(0);
         }
         else{
-            AvnLog.e("main unintentionally stopped");
+            AvnLog.e("main stopped");
         }
+        gpsService=null;
     }
 
     @Override
@@ -302,7 +302,6 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
         PreferenceManager.setDefaultValues(this,Constants.PREFNAME,Context.MODE_PRIVATE, R.xml.expert_preferences, false);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         assetManager=getAssets();
-        serviceNeedsRestart=true;
         sharedPrefs.registerOnSharedPreferenceChangeListener(this);
         reloadReceiver =new BroadcastReceiver() {
             @Override
@@ -322,7 +321,9 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
     }
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        if (! key.equals(Constants.WAITSTART)) serviceNeedsRestart = true;
+        if (! key.equals(Constants.WAITSTART)) {
+            serviceNeedsRestart = true;
+        }
         Log.d(Constants.LOGPRFX, "preferences changed");
         if (key.equals(Constants.WORKDIR)){
             updateWorkDir(AvnUtil.getWorkDir(sharedPreferences,this));
@@ -385,7 +386,10 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
             bindAction = new Runnable() {
                 @Override
                 public void run() {
-                    startFragment();
+                    if (! fragmentStarted) {
+                        startFragment();
+                        fragmentStarted=true;
+                    }
                 }
             };
             startGpsService();
@@ -393,6 +397,7 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
         }
         if (serviceNeedsRestart) {
             gpsService.restart();
+            serviceNeedsRestart=false;
             AvnLog.d(Constants.LOGPRFX, "MainActivity:onResume serviceRestart");
         }
         if (!fragmentStarted) {
