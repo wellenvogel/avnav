@@ -169,12 +169,11 @@ class StatusList extends React.Component{
         let itemList=[];
         let storeData=assign({},this.notifyProps);
         storeData.serverError=false;
+        storeData.addresses=false;
         self.errors=0;
         if (data.handler) {
             data.handler.forEach(function(el){
-                if (el.configname==="AVNHttpServer"){
-                    if (el.properties && el.properties.addresses ) storeData.addresses=true;
-                }
+                if (el.properties && el.properties.addresses ) storeData.addresses=true;
                 if (el.configname === "AVNWpaHandler"){
                     storeData.wpa=true;
                 }
@@ -307,6 +306,11 @@ class StatusPage extends React.Component{
                     visible: props.android,
                     onClick:()=>{avnav.android.showSettings();}
                 },
+                {
+                    name:'AndroidBrowser',
+                    visible: props.android && this.state.addresses,
+                    onClick:()=>{avnav.android.launchBrowser();}
+                },
 
                 {
                     name: 'MainInfo',
@@ -338,7 +342,7 @@ class StatusPage extends React.Component{
                 },
                 {
                     name: 'StatusLog',
-                    visible: props.config,
+                    visible: props.log,
                     onClick: ()=>{
                         OverlayDialog.dialog((props)=>{
                             return <LogDialog
@@ -394,6 +398,7 @@ class StatusPage extends React.Component{
                 connected:keys.properties.connectedMode,
                 android:keys.gui.global.onAndroid,
                 config: keys.gui.capabilities.config,
+                log: keys.gui.capabilities.log,
                 debugLevel: keys.gui.capabilities.debugLevel
             }
         });

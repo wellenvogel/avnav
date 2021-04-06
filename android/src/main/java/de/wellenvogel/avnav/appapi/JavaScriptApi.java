@@ -278,6 +278,10 @@ public class JavaScriptApi {
         fragment.setBrightness(percent);
         return true;
     }
+    @JavascriptInterface
+    public void launchBrowser(){
+        fragment.launchBrowser();
+    }
 
 
 }

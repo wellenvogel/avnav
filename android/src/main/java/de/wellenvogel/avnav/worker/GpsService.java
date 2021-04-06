@@ -6,6 +6,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -42,6 +43,7 @@ import de.wellenvogel.avnav.appapi.INavRequestHandler;
 import de.wellenvogel.avnav.appapi.PostVars;
 import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.appapi.WebServer;
+import de.wellenvogel.avnav.main.BuildConfig;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.Dummy;
 import de.wellenvogel.avnav.main.IMediaUpdater;
@@ -463,6 +465,11 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         IWorker logger=findWorkerById(WLOGGER.id);
         return (NmeaLogger)logger;
     }
+    public WebServer getWebServer() {
+        IWorker server=findWorkerById(WSERVER.id);
+        return (WebServer)server;
+    }
+
 
     private void saveWorkerConfig(IWorker worker) throws JSONException {
         SharedPreferences prefs = getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
@@ -1106,5 +1113,6 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         MainActivityActions main=mBinder.getCallback();
         if (main != null) main.showSettings(force);
     }
+
 
 }

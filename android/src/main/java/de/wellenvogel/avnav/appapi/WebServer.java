@@ -40,7 +40,9 @@ import org.apache.http.protocol.ResponseConnControl;
 import org.apache.http.protocol.ResponseContent;
 import org.apache.http.protocol.ResponseDate;
 import org.apache.http.protocol.ResponseServer;
+import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -49,11 +51,13 @@ import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Locale;
 
@@ -76,6 +80,7 @@ public class WebServer extends Worker {
 
     protected GpsService gpsService;
     private boolean running;
+    private boolean listenAny;
     private NsdManager.RegistrationListener registrationListener;
 
     public RequestHandler.ServerInfo getServerInfo(){
@@ -106,13 +111,50 @@ public class WebServer extends Worker {
     @Override
     protected void run(int startSequence) throws JSONException, IOException {
         Integer port=PORT.fromJson(parameters);
-        Boolean anyAddress=ANY_ADDRESS.fromJson(parameters);
+        listenAny=ANY_ADDRESS.fromJson(parameters);
         addClaim("tcpport",port.toString(),true);
-        registerAvahi(port,anyAddress);
-        setStatus(WorkerStatus.Status.STARTED,"starting with port "+port+", external access "+anyAddress);
+        registerAvahi(port,listenAny);
+        setStatus(WorkerStatus.Status.STARTED,"starting with port "+port+", external access "+listenAny);
         running=true;
-        listener=new Listener(anyAddress,port);
+        listener=new Listener(listenAny,port);
         listener.run(startSequence);
+    }
+
+    @Override
+    public synchronized JSONObject getJsonStatus() throws JSONException {
+        JSONObject rt=super.getJsonStatus();
+        int port=getPort();
+        if (isRunning() && port != 0){
+            JSONObject props=new JSONObject();
+            JSONArray addr=new JSONArray();
+            if (listenAny) {
+                try {
+                    Enumeration<NetworkInterface> intfs = NetworkInterface.getNetworkInterfaces();
+                    while (intfs.hasMoreElements()) {
+                        NetworkInterface intf = intfs.nextElement();
+                        Enumeration<InetAddress> ifaddresses = intf.getInetAddresses();
+                        while (ifaddresses.hasMoreElements()) {
+                            InetAddress ifaddress = ifaddresses.nextElement();
+                            if (ifaddress.getHostAddress().contains(":"))
+                                continue; //skip IPV6 for now
+                            String ifurl = ifaddress.getHostAddress() + ":" + port;
+                            addr.put(ifurl);
+                        }
+                    }
+                } catch (SocketException e1) {
+                }
+            }
+            else{
+                try {
+                    addr.put(getLocalHost().getHostAddress()+":"+port);
+                } catch (UnknownHostException e) {
+
+                }
+            }
+            props.put("addresses",addr);
+            rt.put("properties",props);
+        }
+        return rt;
     }
 
     class NavRequestHandler implements HttpRequestHandler{

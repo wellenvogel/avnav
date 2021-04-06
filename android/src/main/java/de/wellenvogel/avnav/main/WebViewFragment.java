@@ -22,9 +22,12 @@ import java.util.HashMap;
 
 import de.wellenvogel.avnav.appapi.JavaScriptApi;
 import de.wellenvogel.avnav.appapi.RequestHandler;
+import de.wellenvogel.avnav.appapi.WebServer;
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.worker.GpsService;
 
 import static android.app.Activity.RESULT_OK;
+import static de.wellenvogel.avnav.main.Constants.LOGPRFX;
 
 /**
  * Created by andreas on 04.12.14.
@@ -99,6 +102,31 @@ public class WebViewFragment extends Fragment {
 
     public void jsGoBackAccepted(int id){
         goBackSequence=id;
+    }
+
+    public void launchBrowser() {
+        try {
+            GpsService service = getMainActivity().getGpsService();
+            WebServer webServer = service.getWebServer();
+            if (webServer == null) return;
+            if (!webServer.isRunning()) return;
+            int port = webServer.getPort();
+            if (port == 0) return;
+            String start = "http://localhost:" + port + "/viewer/avnav_viewer.html";
+            if (BuildConfig.DEBUG) start += "?log=1";
+            AvnLog.d(LOGPRFX, "start browser with " + start);
+            try {
+                Intent myIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(start));
+                startActivity(Intent.createChooser(myIntent, "Chose browser"));
+
+            } catch (ActivityNotFoundException e) {
+                Toast.makeText(getMainActivity(), "No application can handle this request."
+                        + " Please install a webbrowser", Toast.LENGTH_LONG).show();
+                e.printStackTrace();
+            }
+
+        } catch (Throwable t) {
+        }
     }
 
     @Override

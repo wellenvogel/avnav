@@ -618,47 +618,6 @@ public class RequestHandler {
                         items.put(gpsStatus.get(i));
                     }
                 }
-                if (serverInfo != null){
-                    //we are queried from the WebServer - just return all network interfaces
-                    JSONObject http=new JSONObject();
-                    http.put("name","AVNHttpServer");
-                    http.put("configname","AVNHttpServer"); //this is the part the GUI looks for
-                    JSONArray status=new JSONArray();
-                    JSONObject serverStatus=new JSONObject();
-                    serverStatus.put("info","listening on "+serverInfo.address.toString());
-                    serverStatus.put("name","HttpServer");
-                    serverStatus.put("status", WorkerStatus.Status.NMEA.toString());
-                    status.put(serverStatus);
-                    JSONObject info=new JSONObject();
-                    info.put("items",status);
-                    http.put("info",info);
-                    JSONObject props=new JSONObject();
-                    JSONArray addr=new JSONArray();
-                    if (serverInfo.listenAny) {
-                        try {
-                            Enumeration<NetworkInterface> intfs = NetworkInterface.getNetworkInterfaces();
-                            while (intfs.hasMoreElements()) {
-                                NetworkInterface intf = intfs.nextElement();
-                                Enumeration<InetAddress> ifaddresses = intf.getInetAddresses();
-                                while (ifaddresses.hasMoreElements()) {
-                                    InetAddress ifaddress = ifaddresses.nextElement();
-                                    if (ifaddress.getHostAddress().contains(":"))
-                                        continue; //skip IPV6 for now
-                                    String ifurl = ifaddress.getHostAddress() + ":" + serverInfo.address.getPort();
-                                    addr.put(ifurl);
-                                }
-                            }
-                        } catch (SocketException e1) {
-                        }
-                    }
-                    else{
-                        addr.put(serverInfo.address.getAddress().getHostAddress()+":"+serverInfo.address.getPort());
-                    }
-                    props.put("addresses",addr);
-                    http.put("properties",props);
-                    items.put(http);
-
-                }
                 o.put("handler",items);
                 fout=o;
             }
