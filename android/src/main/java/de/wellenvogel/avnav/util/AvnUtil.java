@@ -40,19 +40,43 @@ public class AvnUtil {
         }
         return defaultValue;
     }
-    public static boolean matchesNmeaFilter(String record, String [] nmeaFilter){
-        if (record == null || ! record.startsWith("$")) return true;
-        boolean matches=true;
-        if (nmeaFilter != null && nmeaFilter.length > 0){
-            matches=false;
-            for (String f: nmeaFilter){
-                if (record.substring(3,3+f.length()).equals(f)){
-                    matches=true;
-                    break;
+
+    public static boolean matchesNmeaFilter(String record, String[] nmeaFilter) {
+        if (record == null || nmeaFilter == null || nmeaFilter.length < 1) return true;
+        boolean matches = false;
+        boolean hasPositiveCondition = false;
+        for (String f : nmeaFilter) {
+            boolean inverse = false;
+            if (f.startsWith("^")) {
+                inverse = true;
+                f = f.substring(1);
+            } else {
+                hasPositiveCondition = true;
+            }
+            if (f.startsWith("$")) {
+                if (!record.startsWith("$")) continue;
+                if (record.substring(3).startsWith(f.substring(1))) {
+                    if (!inverse) {
+                        matches = true;
+                    } else {
+                        //an inverse match always wins
+                        return false;
+                    }
+                }
+            } else {
+                if (record.startsWith(f)) {
+                    if (!inverse) {
+                        matches = true;
+                    } else {
+                        return false;
+                    }
                 }
             }
         }
-        return matches;
+        if (matches) return true;
+        //we consider the check to fail if there was no match
+        //but we had at least a positive condition
+        return ! hasPositiveCondition;
     }
     public static String[] splitNmeaFilter(String nmeaFilter){
         if (nmeaFilter != null && ! nmeaFilter.isEmpty()){
