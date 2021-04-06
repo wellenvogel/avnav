@@ -97,11 +97,6 @@ public class SettingsActivity extends PreferenceActivity {
         PreferenceManager.setDefaultValues(activity,Constants.PREFNAME,Context.MODE_PRIVATE,R.xml.sound_preferences,true);
         final SharedPreferences sharedPrefs=activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         final SharedPreferences.Editor edit=sharedPrefs.edit();
-        String mode=sharedPrefs.getString(Constants.RUNMODE,"");
-        if (mode.equals(Constants.MODE_XWALK)){
-            AvnLog.i("changing xwalk mode to normal");
-            edit.putString(Constants.RUNMODE,Constants.MODE_NORMAL).apply();
-        }
         //set default values for settings
         final Map<String,?> currentValues=sharedPrefs.getAll();
         String workDir=sharedPrefs.getString(Constants.WORKDIR,"");
@@ -136,17 +131,7 @@ public class SettingsActivity extends PreferenceActivity {
         resultHandler.clear();
         injectToolbar();
         getToolbar().setOnMenuItemClickListener(this);
-        //migrate if there was Xwalk
-        SharedPreferences sharedPrefs=getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
-        String mode=sharedPrefs.getString(Constants.RUNMODE,"");
-        if (mode.equals(Constants.MODE_XWALK)){
-            AvnLog.i("changing xwalk mode to normal");
-            sharedPrefs.edit().putString(Constants.RUNMODE,Constants.MODE_NORMAL).apply();
-        }
         updateHeaderSummaries(true);
-        if (checkForInitialDialogs()){
-            return;
-        }
         checkSettings(this,true,true);
     }
 
@@ -240,13 +225,6 @@ public class SettingsActivity extends PreferenceActivity {
     public static boolean checkSettings(Activity activity, boolean startDialogs, boolean showToasts){
         handleMigrations(activity);
         SharedPreferences sharedPrefs=activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
-        if (! sharedPrefs.getBoolean(Constants.BTNMEA,false) &&
-                ! sharedPrefs.getBoolean(Constants.IPNMEA,false) &&
-                ! sharedPrefs.getBoolean(Constants.INTERNALGPS,false) &&
-                ! sharedPrefs.getBoolean(Constants.USBNMEA,false)){
-            if (showToasts) Toast.makeText(activity, R.string.noGpsSelected, Toast.LENGTH_SHORT).show();
-            return false;
-        }
         if (! checkOrCreateWorkDir(AvnUtil.getWorkDir(sharedPrefs,activity))){
             if (showToasts)Toast.makeText(activity, R.string.selectWorkDirWritable, Toast.LENGTH_SHORT).show();
             return false;
@@ -264,28 +242,6 @@ public class SettingsActivity extends PreferenceActivity {
                 }
             }
         }
-        if (sharedPrefs.getBoolean(Constants.IPAIS,false)||sharedPrefs.getBoolean(Constants.IPNMEA, false)) {
-            try {
-
-            } catch (Exception i) {
-                if (showToasts)Toast.makeText(activity, R.string.invalidIp, Toast.LENGTH_SHORT).show();
-                return false;
-            }
-        }
-        if (sharedPrefs.getBoolean(Constants.BTAIS,false)||sharedPrefs.getBoolean(Constants.BTNMEA,false)){
-            String btdevice=sharedPrefs.getString(Constants.BTDEVICE,"");
-            if (BluetoothConnectionHandler.getDeviceForName(btdevice) == null){
-                if (showToasts)Toast.makeText(activity, activity.getText(R.string.noSuchBluetoothDevice)+":"+btdevice, Toast.LENGTH_SHORT).show();
-                return false;
-            }
-        }
-        if (sharedPrefs.getBoolean(Constants.USBNMEA,false)||sharedPrefs.getBoolean(Constants.USBAIS,false)){
-            String usbDevice=sharedPrefs.getString(Constants.USBDEVICE,"");
-            if (UsbConnectionHandler.getDeviceForName(activity,usbDevice) == null){
-                if (showToasts)Toast.makeText(activity, activity.getText(R.string.noSuchUsbDevice)+":"+usbDevice, Toast.LENGTH_SHORT).show();
-                return false;
-            }
-        }
         if (! checkGpsEnabled(activity,false,startDialogs,showToasts)) return false;
         return true;
     }
@@ -301,66 +257,6 @@ public class SettingsActivity extends PreferenceActivity {
     }
 
 
-    private boolean checkForInitialDialogs(){
-        boolean showsDialog=false;
-        SharedPreferences sharedPrefs = getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
-        String mode=sharedPrefs.getString(Constants.RUNMODE, "");
-        boolean startPendig=sharedPrefs.getBoolean(Constants.WAITSTART, false);
-        if (mode.isEmpty() || startPendig) {
-            showsDialog=true;
-            int title;
-            int message;
-            if (startPendig) {
-                title=R.string.somethingWrong;
-                message=R.string.somethingWrongMessage;
-            } else {
-                handleInitialSettings();
-                title=R.string.firstStart;
-                message=R.string.firstStartMessage;
-            }
-            DialogBuilder.alertDialog(this,title,message, new DialogInterface.OnClickListener(){
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    checkSettings(SettingsActivity.this,true,true);
-                }
-            });
-            if (startPendig)sharedPrefs.edit().putBoolean(Constants.WAITSTART,false).commit();
-        }
-        int version=0;
-        try {
-            version = getPackageManager()
-                    .getPackageInfo(getPackageName(), 0).versionCode;
-        } catch (PackageManager.NameNotFoundException e) {
-        }
-        if (showsDialog) return true;
-        if (version != 0 ){
-            try {
-                int lastVersion = sharedPrefs.getInt(Constants.VERSION, 0);
-                //TODO: handle other version changes
-                if (lastVersion == 0 ){
-                    sharedPrefs.edit().putInt(Constants.VERSION,version).commit();
-                    showsDialog=true;
-                    DialogBuilder builder=new DialogBuilder(this,R.layout.dialog_confirm);
-                    builder.setTitle(R.string.newVersionTitle);
-                    builder.setText(R.id.question,R.string.newVersionMessage);
-                    builder.setNegativeButton(R.string.settings, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            resultNok();
-                        }
-                    });
-                    builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            checkResult();
-                        }
-                    });
-                    builder.show();
-                }
-            }catch (Exception e){}
-        }
-        return showsDialog;
-    }
 
     private static void createWorkingDir(File workdir) throws Exception{
         if (! workdir.isDirectory()){
@@ -383,49 +279,6 @@ public class SettingsActivity extends PreferenceActivity {
     }
 
 
-
-    /**
-     * check the current settings
-     * @return false when a new dialog had been opened
-     */
-    private void handleInitialSettings(){
-        final SharedPreferences sharedPrefs = getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
-        final SharedPreferences.Editor e=sharedPrefs.edit();
-        if (! sharedPrefs.contains(Constants.ALARMSOUNDS)){
-            e.putBoolean(Constants.ALARMSOUNDS,true);
-        }
-        String mode=sharedPrefs.getString(Constants.RUNMODE,"");
-        if (mode.equals("")){
-            e.putBoolean(Constants.SHOWDEMO,true);
-            e.putString(Constants.IPADDR, "192.168.20.10");
-            e.putString(Constants.IPPORT,"34567");
-            e.putBoolean(Constants.INTERNALGPS,true);
-            mode=Constants.MODE_NORMAL;
-        }
-        else {
-            if (mode.equals(Constants.MODE_XWALK)){
-                mode= Constants.MODE_NORMAL;
-            }
-        }
-        String workdir=sharedPrefs.getString(Constants.WORKDIR, "");
-        String chartdir=sharedPrefs.getString(Constants.CHARTDIR, "");
-        e.putString(Constants.RUNMODE, mode);
-        if (workdir.isEmpty()){
-            workdir=Constants.INTERNAL_WORKDIR;
-        }
-        e.putString(Constants.WORKDIR, workdir);
-        e.putString(Constants.CHARTDIR, chartdir);
-        e.apply();
-        try {
-            int version = getPackageManager()
-                    .getPackageInfo(getPackageName(), 0).versionCode;
-            if (sharedPrefs.getInt(Constants.VERSION,-1)!= version){
-                e.putInt(Constants.VERSION,version);
-            }
-        } catch (Exception ex) {
-        }
-        e.commit();
-    }
 
     @Override
     public void onBackPressed(){

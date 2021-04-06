@@ -48,6 +48,9 @@ public class EditableParameter {
             descriptionId=other.descriptionId;
             mandatory=other.mandatory;
         }
+        public void write(JSONObject target,T value) throws JSONException {
+            target.put(name,value);
+        }
         @Override
         public String getName() {
             return name;

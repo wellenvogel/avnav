@@ -122,9 +122,9 @@
     <string name="setDefault">Default</string>
     <string name="invalidParameterValue">invalid parameter value</string>
     <string name="newVersionTitle">New App Version</string>
-    <string name="newVersionMessage">This version will directly start into the application.
+    <string name="newVersionMessage">This version will always directly start into the application.
         You can reach the settings via the status page and via the android button there.
-        Click Settings to go to the settings now.</string>
+    </string>
     <string name="loading">AvNav is loading...</string>
     <string name="labelSettingsServerPort">port for WebServer</string>
     <string name="labelSettingsAnchorAlarm">Sound for anchor alarm</string>

@@ -65,13 +65,13 @@ public class Decoder extends Worker {
     private static final long AIS_CLEANUP_INTERVAL=60000;
     private long lastReceived=0;
 
-    private static final EditableParameter.IntegerParameter POSITION_AGE= new
+    public static final EditableParameter.IntegerParameter POSITION_AGE= new
             EditableParameter.IntegerParameter("posAge",R.string.labelSettingsPosAge,10);
-    private static final EditableParameter.IntegerParameter GPS_AGE= new
+    public static final EditableParameter.IntegerParameter GPS_AGE= new
             EditableParameter.IntegerParameter("gpsAge",R.string.labelSettingsAuxAge,600);
-    private static final EditableParameter.IntegerParameter AIS_AGE= new
+    public static final EditableParameter.IntegerParameter AIS_AGE= new
             EditableParameter.IntegerParameter("aisAge", R.string.labelSettingsAisLifetime,1200);
-    private static final EditableParameter.StringParameter OWN_MMSI= new
+    public static final EditableParameter.StringParameter OWN_MMSI= new
             EditableParameter.StringParameter("ownMMSI",R.string.labelSettingsOwnMMSI,"");
     private void addParameters(){
         parameterDescriptions.addParams(OWN_MMSI,POSITION_AGE,GPS_AGE,AIS_AGE);

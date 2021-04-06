@@ -96,9 +96,9 @@ public class WebServer extends Worker {
         return info;
     };
 
-    private static final EditableParameter.BooleanParameter ANY_ADDRESS=
+    public static final EditableParameter.BooleanParameter ANY_ADDRESS=
             new EditableParameter.BooleanParameter("external",R.string.enableExternalAccess,false);
-    private static final EditableParameter.IntegerParameter PORT=
+    public static final EditableParameter.IntegerParameter PORT=
             new EditableParameter.IntegerParameter("port",R.string.labelSettingsServerPort,34567);
 
 

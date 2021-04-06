@@ -13,6 +13,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
@@ -35,6 +36,8 @@ import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.DialogBuilder;
 import de.wellenvogel.avnav.worker.GpsService;
+
+import static de.wellenvogel.avnav.settings.SettingsActivity.checkSettings;
 
 /**
  * Created by andreas on 06.01.15.
@@ -140,7 +143,7 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
             }
         }
 
-        if (! SettingsActivity.checkSettings(this,false,true)) return false;
+        if (! checkSettings(this,false,true)) return false;
 
         Intent intent = new Intent(this, GpsService.class);
         if (Build.VERSION.SDK_INT >= 26){
@@ -357,6 +360,95 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
         });
         initialUpdater.start();
     }
+    /**
+     * check the current settings
+     */
+    private void handleInitialSettings(){
+        final SharedPreferences sharedPrefs = getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+        final SharedPreferences.Editor e=sharedPrefs.edit();
+        if (! sharedPrefs.contains(Constants.ALARMSOUNDS)){
+            e.putBoolean(Constants.ALARMSOUNDS,true);
+        }
+        String workdir=sharedPrefs.getString(Constants.WORKDIR, "");
+        String chartdir=sharedPrefs.getString(Constants.CHARTDIR, "");
+        if (workdir.isEmpty()){
+            workdir=Constants.INTERNAL_WORKDIR;
+        }
+        e.putString(Constants.WORKDIR, workdir);
+        e.putString(Constants.CHARTDIR, chartdir);
+        e.apply();
+        try {
+            int version = getPackageManager()
+                    .getPackageInfo(getPackageName(), 0).versionCode;
+            if (sharedPrefs.getInt(Constants.VERSION,-1)!= version){
+                e.putInt(Constants.VERSION,version);
+            }
+        } catch (Exception ex) {
+        }
+        e.commit();
+    }
+
+    private boolean checkForInitialDialogs(){
+        boolean showsDialog=false;
+        SharedPreferences sharedPrefs = getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+        int oldVersion=sharedPrefs.getInt(Constants.VERSION, -1);
+        boolean startPendig=sharedPrefs.getBoolean(Constants.WAITSTART, false);
+        int version=0;
+        try {
+            version = getPackageManager()
+                    .getPackageInfo(getPackageName(), 0).versionCode;
+        } catch (PackageManager.NameNotFoundException e) {
+        }
+        if (oldVersion < 0 || startPendig) {
+            showsDialog=true;
+            int title;
+            int message;
+            if (startPendig) {
+                title=R.string.somethingWrong;
+                message=R.string.somethingWrongMessage;
+            } else {
+                handleInitialSettings();
+                title=R.string.firstStart;
+                message=R.string.firstStartMessage;
+            }
+            DialogBuilder.alertDialog(this,title,message, new DialogInterface.OnClickListener(){
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                        showSettings(false);
+                }
+            });
+            if (startPendig)sharedPrefs.edit().putBoolean(Constants.WAITSTART,false).commit();
+        }
+        if (showsDialog) return true;
+        if (version != 0 ){
+            try {
+                int lastVersion = sharedPrefs.getInt(Constants.VERSION, 0);
+                //TODO: handle other version changes
+                if (lastVersion <20210406 ){
+                    final int newVersion=version;
+                    showsDialog=true;
+                    DialogBuilder builder=new DialogBuilder(this,R.layout.dialog_confirm);
+                    builder.setTitle(R.string.newVersionTitle);
+                    builder.setText(R.id.question,R.string.newVersionMessage);
+                    builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            sharedPrefs.edit().putInt(Constants.VERSION,newVersion).commit();
+                            onResumeInternal();
+                        }
+                    });
+                    builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            endApp();
+                        }
+                    });
+                    builder.show();
+                }
+            }catch (Exception e){}
+        }
+        return showsDialog;
+    }
 
     @Override
     protected void onPause() {
@@ -364,19 +456,9 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
         AvnLog.d("main: pause");
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        AvnLog.d("main: onResume");
-        if (!SettingsActivity.checkSettings(this, false, false)) {
+    private void onResumeInternal(){
+        if (!checkSettings(this, false, false)) {
             showSettings(true);
-            return;
-        }
-        String mode = sharedPrefs.getString(Constants.RUNMODE, "");
-        boolean startPendig = sharedPrefs.getBoolean(Constants.WAITSTART, false);
-        if (mode.isEmpty() || startPendig) {
-            //TODO: show info dialog
-            showSettings(false);
             return;
         }
         updateWorkDir(AvnUtil.getWorkDir(null, this));
@@ -404,6 +486,15 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
             fragmentStarted=true;
         } else {
             sendEventToJs(Constants.JS_PROPERTY_CHANGE, 0); //this will some pages cause to reload...
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        AvnLog.d("main: onResume");
+        if (! checkForInitialDialogs()){
+            onResumeInternal();
         }
     }
 

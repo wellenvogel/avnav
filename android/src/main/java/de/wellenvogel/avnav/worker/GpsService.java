@@ -448,6 +448,70 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         prefs.edit().putString(Constants.HANDLER_CONFIG,rt.toString()).apply();
         return rt;
     }
+    private void handleMigration(){
+        try {
+            SharedPreferences prefs = getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+            String config = prefs.getString(Constants.HANDLER_CONFIG, null);
+            if (config != null) return;
+            AvnLog.i("running config migration");
+            SharedPreferences.Editor edit=prefs.edit();
+            int webServerPort = -1;
+            if (Constants.MODE_SERVER.equals(prefs.getString(Constants.RUNMODE, null))) {
+                webServerPort = Integer.parseInt(prefs.getString(Constants.WEBSERVERPORT, "34567"));
+            }
+
+            String ip = null;
+            int port = -1;
+            boolean ipais = false;
+            boolean ipnmea = false;
+            String ipFilter = "";
+            ipais = prefs.getBoolean(Constants.IPAIS, false);
+            ipnmea = prefs.getBoolean(Constants.IPNMEA, false);
+            if (ipais || ipnmea) {
+                ip = prefs.getString(Constants.IPADDR, null);
+                port = Integer.parseInt(prefs.getString(Constants.IPPORT, "-1"));
+            }
+            if (!ipais) {
+                ipFilter = "$";
+            }
+            if (!ipnmea) {
+                ipFilter = "!";
+            }
+            //step1: internal receiver
+            JSONArray newConfig = new JSONArray();
+            JSONObject handler=new JSONObject();
+            Worker.TYPENAME_PARAMETER.write(handler,WorkerFactory.ANDROID_NAME);
+            newConfig.put(handler);
+            //if we need ip
+            if (ip != null && port >= 0) {
+                handler = new JSONObject();
+                Worker.TYPENAME_PARAMETER.write(handler,WorkerFactory.SOCKETREADER_NAME);
+                Worker.IPADDRESS_PARAMETER.write(handler,ip);
+                Worker.IPPORT_PARAMETER.write(handler,port);
+                if (ipFilter != null) Worker.FILTER_PARAM.write(handler,ipFilter);
+                newConfig.put(handler);
+                AvnLog.i("adding ip connection to "+ip+":"+port);
+            }
+            edit.putString(Constants.HANDLER_CONFIG,newConfig.toString());
+            if (webServerPort > 0){
+                boolean externalAccess=prefs.getBoolean(Constants.EXTERNALACCESS,false);
+                handler=new JSONObject();
+                WebServer.ENABLED_PARAMETER.write(handler,true);
+                WebServer.ANY_ADDRESS.write(handler,externalAccess);
+                WebServer.PORT.write(handler,webServerPort);
+                edit.putString(WSERVER.configName,handler.toString());
+                AvnLog.i("adding webserver, port "+webServerPort);
+            }
+            String MMSI=prefs.getString(Constants.AISOWN,null);
+            if (MMSI != null){
+                handler=new JSONObject();
+                Decoder.OWN_MMSI.write(handler,MMSI);
+                edit.putString(WDECODER.configName,handler.toString());
+            }
+            edit.commit();
+        } catch (Throwable t) {
+        }
+    }
 
     private Decoder getDecoder(){
         IWorker decoder=findWorkerById(WDECODER.id);
@@ -618,7 +682,10 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         }
         if (! isWatchdog && isRunning) return Service.START_REDELIVER_INTENT;
         handleNotification(true,true);
-        if (! isWatchdog) stopWorkers();;
+        if (! isWatchdog) {
+            stopWorkers();
+            handleMigration();
+        };
         handleStartup(isWatchdog);
         if (! isWatchdog || runnable == null) {
             timerSequence++;
