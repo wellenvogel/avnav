@@ -55,7 +55,6 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
     }
     private boolean exitRequested=false;
     private boolean running=false;
-    private BroadcastReceiver broadCastReceiverStop;
     private BroadcastReceiver reloadReceiver;
     private Handler mediaUpdateHandler=new Handler(){
         @Override
@@ -157,12 +156,13 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
 
 
     private void stopGpsService(){
-        if (gpsService !=null){
-            gpsService.stopMe();
+        GpsService service=gpsService;
+        if (service !=null){
+            binder.deregisterCallback();
+            gpsService=null;
+            service.stopMe();
         }
         Intent intent = new Intent(this, GpsService.class);
-        binder.deregisterCallback();
-        gpsService=null;
         try {
              unbindService(mConnection);
              stopService(intent);
@@ -209,6 +209,21 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
                 goBack();
             }
         });
+    }
+
+    @Override
+    public void mainShutdown() {
+        if (!exitRequested){
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    try{
+                        finishActivity(Constants.SETTINGS_REQUEST);
+                    }catch(Throwable t){}
+                    MainActivity.this.finish();
+                }
+            });
+        }
     }
 
     //to be called e.g. from js
@@ -264,9 +279,6 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
         super.onDestroy();
         running=false;
         serviceNeedsRestart = true;
-        if  (broadCastReceiverStop != null){
-            unregisterReceiver(broadCastReceiverStop);
-        }
         if (reloadReceiver != null){
             unregisterReceiver(reloadReceiver);
         }
@@ -275,7 +287,7 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
         }catch (Exception e){}
         if (exitRequested) {
             stopGpsService();
-            System.exit(0);
+            //System.exit(0);
         }
         else{
             AvnLog.e("main unintentionally stopped");
@@ -294,17 +306,6 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
         assetManager=getAssets();
         serviceNeedsRestart=true;
         sharedPrefs.registerOnSharedPreferenceChangeListener(this);
-        IntentFilter filterStop=new IntentFilter(Constants.BC_STOPAPPL);
-        broadCastReceiverStop=new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                AvnLog.i("received stop appl");
-                MainActivity.this.exitRequested=true;
-                MainActivity.this.finish();
-
-            }
-        };
-        registerReceiver(broadCastReceiverStop,filterStop);
         reloadReceiver =new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {

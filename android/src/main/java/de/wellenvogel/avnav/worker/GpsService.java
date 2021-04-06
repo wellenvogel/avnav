@@ -46,6 +46,7 @@ import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.Dummy;
 import de.wellenvogel.avnav.main.IMediaUpdater;
+import de.wellenvogel.avnav.main.MainActivity;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.settings.AudioEditTextPreference;
 import de.wellenvogel.avnav.settings.NmeaSettingsFragment;
@@ -121,6 +122,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
 
 
     private static final String LOGPRFX="Avnav:GpsService";
+    private BroadcastReceiver broadCastReceiverStop;
 
 
     @Override
@@ -231,6 +233,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     public static interface MainActivityActions{
         void showSettings(boolean force);
         void mainGoBack();
+        void mainShutdown();
     }
     public class GpsServiceBinder extends Binder{
         MainActivityActions mainCallback;
@@ -686,6 +689,15 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         };
         IntentFilter triggerFilter=new IntentFilter((Constants.BC_TRIGGER));
         registerReceiver(triggerReceiver,triggerFilter);
+        IntentFilter filterStop=new IntentFilter(Constants.BC_STOPAPPL);
+        broadCastReceiverStop = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                AvnLog.i("received stop appl");
+                GpsService.this.stopMe();
+            }
+        };
+        registerReceiver(broadCastReceiverStop,filterStop);
         Intent watchdog = new Intent(getApplicationContext(), GpsService.class);
         watchdog.setAction(WATCHDOGACTION);
         watchdogIntent=PendingIntent.getService(
@@ -818,10 +830,6 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         ((AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE)).
                 cancel(watchdogIntent);
         AvnLog.i(LOGPRFX,"alarm deregistered");
-        if (receiverRegistered) {
-            unregisterReceiver(usbReceiver);
-            receiverRegistered=false;
-        }
         if (mediaPlayer != null){
             try{
                 mediaPlayer.release();
@@ -829,14 +837,19 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
 
             }
         }
-        if (broadCastReceiver != null){
-            unregisterReceiver(broadCastReceiver);
-        }
-        if (triggerReceiver != null){
-            unregisterReceiver(triggerReceiver);
+        for (BroadcastReceiver r: new BroadcastReceiver[]{broadCastReceiver,triggerReceiver,broadCastReceiverStop,usbReceiver}){
+            if (r != null){
+                try{
+                    unregisterReceiver(r);
+                }catch(Throwable t){}
+            }
         }
         lastNotifiedAlarm=null;
         notificationSend=false;
+        MainActivityActions cb=mBinder.getCallback();
+        if (cb != null){
+            cb.mainShutdown();
+        }
         AvnLog.i(LOGPRFX, "service stopped");
     }
 
