@@ -61,7 +61,6 @@ public class Decoder extends Worker {
     private long lastPositionReceived=0;
     public static final String LOGPRFX="AvNav:Decoder";
     private Context context;
-    private INmeaLogger nmeaLogger;
     private NmeaQueue queue;
     private static final long AIS_CLEANUP_INTERVAL=60000;
     private long lastReceived=0;
@@ -217,7 +216,6 @@ public class Decoder extends Worker {
                 try {
                     String line = entry.data;
                     if (line.startsWith("$")) {
-                        if (nmeaLogger != null) nmeaLogger.logNmea(line);
                         //NMEA
                         if (SentenceValidator.isValid(line)) {
                             setStatus(WorkerStatus.Status.NMEA,"receiving NMEA data");
@@ -384,7 +382,6 @@ public class Decoder extends Worker {
                         }
                     }
                     if (line.startsWith("!")) {
-                        if (nmeaLogger != null) nmeaLogger.logNmea(line);
                         if (Abk.isAbk(line)) {
                             aisparser.newVdm();
                             AvnLog.i(LOGPRFX, getTypeName() + ": ignore abk line " + line);
@@ -425,7 +422,6 @@ public class Decoder extends Worker {
     Decoder(String name, Context ctx, NmeaQueue queue){
         super(name);
         context=ctx;
-        if (ctx instanceof INmeaLogger) nmeaLogger=(INmeaLogger)ctx;
         this.queue=queue;
         addParameters();
         status.canEdit=true;

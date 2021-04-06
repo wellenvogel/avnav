@@ -32,8 +32,6 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -46,10 +44,8 @@ import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.Dummy;
 import de.wellenvogel.avnav.main.IMediaUpdater;
-import de.wellenvogel.avnav.main.MainActivity;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.settings.AudioEditTextPreference;
-import de.wellenvogel.avnav.settings.NmeaSettingsFragment;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.NmeaQueue;
@@ -57,12 +53,11 @@ import de.wellenvogel.avnav.util.NmeaQueue;
 /**
  * Created by andreas on 12.12.14.
  */
-public class GpsService extends Service implements INmeaLogger, RouteHandler.UpdateReceiver, INavRequestHandler {
+public class GpsService extends Service implements RouteHandler.UpdateReceiver, INavRequestHandler {
 
 
     private static final String CHANNEL_ID = "main" ;
     private static final String CHANNEL_ID_NEW = "main_new" ;
-    public static String PROP_TRACKDIR="track.dir";
 
 
     private Context ctx;
@@ -72,15 +67,11 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
                                 //running means that we are registered for updates and have our timer active
 
     //properties
-    private File trackDir=null;
-
-    private NmeaLogger nmeaLogger;
     private Handler handler = new Handler();
     private long timerSequence=1;
     private Runnable runnable;
     private IMediaUpdater mediaUpdater;
     private static final int NOTIFY_ID=Constants.LOCALNOTIFY;
-    private final Object loggerLock=new Object();
     private HashMap<String,Alarm> alarmStatus=new HashMap<String, Alarm>();
     private MediaPlayer mediaPlayer=null;
     private int mediaRepeatCount=0;
@@ -93,7 +84,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     private RequestHandler requestHandler;
     private RouteHandler.RoutePoint lastAlarmWp=null;
     private final NmeaQueue queue=new NmeaQueue();
-    long trackMintime;
+    long trackMintime=1000;
     Alarm lastNotifiedAlarm=null;
     boolean notificationSend=false;
     private long alarmSequence=System.currentTimeMillis();
@@ -123,17 +114,6 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
 
     private static final String LOGPRFX="Avnav:GpsService";
     private BroadcastReceiver broadCastReceiverStop;
-
-
-    @Override
-    public void logNmea(String data) {
-        synchronized (loggerLock){
-            if (nmeaLogger != null){
-                nmeaLogger.addRecord(data);
-            }
-        }
-
-    }
 
     @Override
     public void updated() {
@@ -349,27 +329,27 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         }
     }
 
-    private static class WorkerConfig{
-        Class wclass;
+    private abstract static class WorkerConfig{
         int id;
         String configName;
         String typeName;
-        WorkerConfig(String typeName,Class wclass,int id){
-            this.wclass=wclass;
+        WorkerConfig(String typeName,int id){
             this.id=id;
             this.configName="internal."+typeName;
             this.typeName=typeName;
         }
-        IWorker createWorker(Context ctx,NmeaQueue queue) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, IOException {
-            Constructor<IWorker> ctor =wclass.getDeclaredConstructor(String.class,Context.class,NmeaQueue.class);
-            return (IWorker)(ctor.newInstance(typeName,ctx,queue));
-        }
+        abstract IWorker createWorker(Context ctx,NmeaQueue queue) throws IOException;
     }
 
-    private final WorkerConfig WDECODER=new WorkerConfig("Decoder",Decoder.class,1);
-    private final WorkerConfig WROUTER=new WorkerConfig("Router",RouteHandler.class,2){
+    private final WorkerConfig WDECODER= new WorkerConfig("Decoder", 1) {
         @Override
-        IWorker createWorker(Context ctx, NmeaQueue queue) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, IOException {
+        IWorker createWorker(Context ctx, NmeaQueue queue) {
+            return new Decoder(typeName,ctx,queue);
+        }
+    };
+    private final WorkerConfig WROUTER=new WorkerConfig("Router",2){
+        @Override
+        IWorker createWorker(Context ctx, NmeaQueue queue) throws IOException {
             SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
             File routeDir=new File(AvnUtil.getWorkDir(prefs,GpsService.this),"routes");
             RouteHandler rt=new RouteHandler(routeDir,GpsService.this);
@@ -377,16 +357,24 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
             return rt;
         }
     };
-    private final WorkerConfig WTRACK=new WorkerConfig("Track",TrackWriter.class,3){
+    private final WorkerConfig WTRACK=new WorkerConfig("Track",3){
         @Override
-        IWorker createWorker(Context ctx, NmeaQueue queue) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, IOException {
+        IWorker createWorker(Context ctx, NmeaQueue queue) throws IOException {
             SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
             File newTrackDir=new File(AvnUtil.getWorkDir(prefs,GpsService.this),"tracks");
             TrackWriter rt=new TrackWriter(newTrackDir,mediaUpdater);
             return rt;
         }
     };
-    private final WorkerConfig[] INTERNAL_WORKERS ={WDECODER,WROUTER,WTRACK};
+    private final WorkerConfig WLOGGER= new WorkerConfig("Logger", 4) {
+        @Override
+        IWorker createWorker(Context ctx, NmeaQueue queue) throws IOException {
+            SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
+            File newTrackDir=new File(AvnUtil.getWorkDir(prefs,GpsService.this),"tracks");
+            return new NmeaLogger(newTrackDir,queue,null);
+        }
+    };
+    private final WorkerConfig[] INTERNAL_WORKERS ={WDECODER,WROUTER,WTRACK,WLOGGER};
 
     private synchronized int getNextWorkerId(){
         workerId++;
@@ -463,6 +451,10 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     public TrackWriter getTrackWriter(){
         IWorker writer=findWorkerById(WTRACK.id);
         return (TrackWriter)writer;
+    }
+    public NmeaLogger getNmeaLogger(){
+        IWorker logger=findWorkerById(WLOGGER.id);
+        return (NmeaLogger)logger;
     }
 
     private void saveWorkerConfig(IWorker worker) throws JSONException {
@@ -547,25 +539,10 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
 
     private void handleStartup(boolean isWatchdog){
         SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
-        Properties loggerProperties=new Properties();
-        loggerProperties.logAis=prefs.getBoolean(Constants.AISLOG,false);
-        loggerProperties.logNmea=prefs.getBoolean(Constants.NMEALOG,false);
-        loggerProperties.nmeaFilter=prefs.getString(Constants.NMEALOGFILTER,null);
         AvnLog.d(LOGPRFX,"started");
         if (! isWatchdog || requestHandler == null){
             if (requestHandler != null) requestHandler.stop();
             requestHandler=new RequestHandler(this);
-        }
-        synchronized (loggerLock) {
-            if (! isWatchdog || nmeaLogger == null) {
-                if (loggerProperties.logNmea || loggerProperties.logAis) {
-                    if (nmeaLogger != null) nmeaLogger.stop();
-                    nmeaLogger = new NmeaLogger(trackDir, mediaUpdater, loggerProperties);
-                } else {
-                    if (nmeaLogger != null) nmeaLogger.stop();
-                    nmeaLogger = null;
-                }
-            }
         }
         if (! isWatchdog || internalWorkers.size() == 0) {
             for (WorkerConfig cfg : INTERNAL_WORKERS){
@@ -630,6 +607,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         if (! isWatchdog) stopWorkers();;
         handleStartup(isWatchdog);
         if (! isWatchdog || runnable == null) {
+            timerSequence++;
             runnable = new TimerRunnable(timerSequence);
             handler.postDelayed(runnable, trackMintime);
         }
@@ -939,12 +917,14 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     }
 
     public void resetAlarm(String type){
-        AvnLog.i("reset alarm "+type);
         Alarm a=alarmStatus.get(type);
         if (a != null && a.isPlaying){
             if (mediaPlayer != null) mediaPlayer.stop();
             mediaRepeatCount=0;
             alarmSequence++;
+        }
+        if (a != null)  {
+            AvnLog.i("reset alarm "+type);
         }
         alarmStatus.remove(type);
     }
@@ -1033,13 +1013,11 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         return dec != null?dec.getAisData(lat,lon,distance):null;
     }
 
-    public void setMediaUpdater(IMediaUpdater u){
-
-        mediaUpdater=u;
-        synchronized (loggerLock) {
-            if (mediaUpdater != null && nmeaLogger != null) {
-                nmeaLogger.setMediaUpdater(mediaUpdater);
-            }
+    public void setMediaUpdater(IMediaUpdater u) {
+        mediaUpdater = u;
+        NmeaLogger logger = getNmeaLogger();
+        if (mediaUpdater != null && logger != null) {
+            logger.setMediaUpdater(mediaUpdater);
         }
     }
 
