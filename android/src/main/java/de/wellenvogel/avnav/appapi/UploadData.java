@@ -14,7 +14,7 @@ import java.io.InterruptedIOException;
 import java.nio.charset.StandardCharsets;
 
 import de.wellenvogel.avnav.main.Constants;
-import de.wellenvogel.avnav.main.WebViewFragment;
+import de.wellenvogel.avnav.main.MainActivity;
 import de.wellenvogel.avnav.util.AvnLog;
 
 
@@ -26,15 +26,15 @@ public class UploadData{
     String name;
     String fileData;
     Uri fileUri;
-    WebViewFragment fragment;
+    MainActivity mainActivity;
     INavRequestHandler targetHandler;
     Thread copyThread;
     boolean noResults=false;
     long size;
-    public UploadData(WebViewFragment fragment, INavRequestHandler targetHandler, long id, boolean doRead){
+    public UploadData(MainActivity mainActivity, INavRequestHandler targetHandler, long id, boolean doRead){
         this.id=id;
         this.doRead=doRead;
-        this.fragment=fragment;
+        this.mainActivity = mainActivity;
         this.targetHandler=targetHandler;
     }
 
@@ -45,12 +45,12 @@ public class UploadData{
     }
 
     public void saveFile(Uri uri) {
-        if (noResults || fragment.getActivity() == null) return;
+        if (noResults ) return;
         try {
             AvnLog.i("importing file: " + uri);
             fileUri=uri;
-            DocumentFile df = DocumentFile.fromSingleUri(fragment.getActivity(), uri);
-            ParcelFileDescriptor pfd = fragment.getActivity().getContentResolver().openFileDescriptor(uri, "r");
+            DocumentFile df = DocumentFile.fromSingleUri(mainActivity, uri);
+            ParcelFileDescriptor pfd = mainActivity.getContentResolver().openFileDescriptor(uri, "r");
             if (pfd == null){
                 throw new IOException("unable to open "+uri.getLastPathSegment());
             }
@@ -73,12 +73,12 @@ public class UploadData{
                 pfd.close();
             }
             name = df.getName();
-            fragment.sendEventToJs(doRead?
+            mainActivity.sendEventToJs(doRead?
                             Constants.JS_UPLOAD_AVAILABLE:
                             Constants.JS_FILE_COPY_READY
                     , id);
         } catch (Throwable e) {
-            Toast.makeText(fragment.getActivity().getApplicationContext(), "unable to copy file: " + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(mainActivity.getApplicationContext(), "unable to copy file: " + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
             e.printStackTrace();
             Log.e(Constants.LOGPRFX, "unable to read file: " + e.getLocalizedMessage());
             return;
@@ -89,10 +89,9 @@ public class UploadData{
         if (doRead) return false;
         if (name == null || fileUri == null || targetHandler==null) return false;
         if (newName != null) name=newName;
-        if (fragment.getActivity()==null) return false;
         try {
-            final DocumentFile df = DocumentFile.fromSingleUri(fragment.getActivity(), fileUri);
-            final ParcelFileDescriptor pfd = fragment.getActivity().getContentResolver().openFileDescriptor(fileUri, "r");
+            final DocumentFile df = DocumentFile.fromSingleUri(mainActivity, fileUri);
+            final ParcelFileDescriptor pfd = mainActivity.getContentResolver().openFileDescriptor(fileUri, "r");
             if (pfd == null) {
                 throw new Exception("unable to open: " + fileUri.getLastPathSegment());
             }
@@ -116,10 +115,10 @@ public class UploadData{
                                     if (bytesSinceReport >= reportInterval) {
                                         bytesSinceReport=0;
                                         final int percent = (int) ((bytesRead * 100) / size);
-                                        fragment.getActivity().runOnUiThread(new Runnable() {
+                                        mainActivity.runOnUiThread(new Runnable() {
                                             @Override
                                             public void run() {
-                                                fragment.sendEventToJs(Constants.JS_FILE_COPY_PERCENT, percent);
+                                                mainActivity.sendEventToJs(Constants.JS_FILE_COPY_PERCENT, percent);
                                             }
                                         });
                                     }
@@ -128,27 +127,26 @@ public class UploadData{
                             }
                         };
                         targetHandler.handleUpload(new PostVars(is,size),name,false);
-                        if (! noResults) fragment.getActivity().runOnUiThread(new Runnable() {
+                        if (! noResults) mainActivity.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                fragment.sendEventToJs(Constants.JS_FILE_COPY_DONE,0);
+                                mainActivity.sendEventToJs(Constants.JS_FILE_COPY_DONE,0);
                             }
                         });
                     } catch (final Throwable e) {
-                        if (fragment.getActivity() == null) return;
                         try{
                             targetHandler.handleDelete(df.getName(),null);
                         }catch(Throwable t){}
-                        if (! noResults) fragment.getActivity().runOnUiThread(new Runnable() {
+                        if (! noResults) mainActivity.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                Toast.makeText(fragment.getActivity(), "unable to copy: " + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                                Toast.makeText(mainActivity, "unable to copy: " + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
                             }
                         });
-                        if (! noResults) fragment.getActivity().runOnUiThread(new Runnable() {
+                        if (! noResults) mainActivity.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                fragment.sendEventToJs(Constants.JS_FILE_COPY_DONE,1);
+                                mainActivity.sendEventToJs(Constants.JS_FILE_COPY_DONE,1);
                             }
                         });
                     }
@@ -157,7 +155,7 @@ public class UploadData{
             copyThread.setDaemon(true);
             copyThread.start();
         } catch (Throwable t) {
-            if (! noResults) Toast.makeText(fragment.getActivity(), "unable to copy: " + t.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+            if (! noResults) Toast.makeText(mainActivity, "unable to copy: " + t.getLocalizedMessage(), Toast.LENGTH_LONG).show();
             return false;
         }
         return true;

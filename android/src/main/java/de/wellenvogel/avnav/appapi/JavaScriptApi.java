@@ -12,8 +12,8 @@ import org.json.JSONObject;
 
 import de.wellenvogel.avnav.fileprovider.UserFileProvider;
 import de.wellenvogel.avnav.main.Constants;
+import de.wellenvogel.avnav.main.MainActivity;
 import de.wellenvogel.avnav.main.R;
-import de.wellenvogel.avnav.main.WebViewFragment;
 import de.wellenvogel.avnav.util.AvnLog;
 
 //potentially the Javascript interface code is called from the Xwalk app package
@@ -22,12 +22,12 @@ import de.wellenvogel.avnav.util.AvnLog;
 public class JavaScriptApi {
     private UploadData uploadData=null;
     private RequestHandler requestHandler;
-    private WebViewFragment fragment;
+    private MainActivity mainActivity;
     private boolean detached=false;
 
-    public JavaScriptApi(WebViewFragment fragment, RequestHandler requestHandler) {
+    public JavaScriptApi(MainActivity mainActivity, RequestHandler requestHandler) {
         this.requestHandler = requestHandler;
-        this.fragment=fragment;
+        this.mainActivity = mainActivity;
     }
 
     public void saveFile(Uri uri){
@@ -135,21 +135,20 @@ public class JavaScriptApi {
             return false;
         }
         if (uploadData != null) uploadData.interruptCopy(true);
-        if (fragment.getActivity() == null) return false;
-        uploadData=new UploadData(fragment, requestHandler.getHandler(type),id,readFile);
+        uploadData=new UploadData(mainActivity, requestHandler.getHandler(type),id,readFile);
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("*/*");
         intent.addCategory(Intent.CATEGORY_OPENABLE);
-        Resources res=fragment.getResources();
+        Resources res= mainActivity.getResources();
         try {
-            fragment.startActivityForResult(
+            mainActivity.startActivityForResult(
                     Intent.createChooser(intent,
                             //TODO: be more flexible for types...
                             res.getText(title.value)),
                     Constants.FILE_OPEN);
         } catch (android.content.ActivityNotFoundException ex) {
             // Potentially direct the user to the Market with a Dialog
-            Toast.makeText(fragment.getActivity(), res.getText(R.string.installFileManager), Toast.LENGTH_SHORT).show();
+            Toast.makeText(mainActivity, res.getText(R.string.installFileManager), Toast.LENGTH_SHORT).show();
             return false;
         }
         return true;
@@ -235,7 +234,7 @@ public class JavaScriptApi {
     public void acceptEvent(String key,int num){
         if (detached) return;
         if (key != null && key.equals("backPressed")) {
-           fragment.jsGoBackAccepted(num);
+           mainActivity.jsGoBackAccepted(num);
         }
     }
 
@@ -275,12 +274,12 @@ public class JavaScriptApi {
     }
     @JavascriptInterface
     public boolean dimScreen(int percent){
-        fragment.setBrightness(percent);
+        mainActivity.setBrightness(percent);
         return true;
     }
     @JavascriptInterface
     public void launchBrowser(){
-        fragment.launchBrowser();
+        mainActivity.launchBrowser();
     }
 
 

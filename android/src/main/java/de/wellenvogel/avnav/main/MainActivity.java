@@ -2,9 +2,12 @@ package de.wellenvogel.avnav.main;
 
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.Dialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.app.ProgressDialog;
+import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -24,12 +27,26 @@ import android.os.IBinder;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.ViewGroup;
+import android.view.Window;
 import android.view.WindowManager;
+import android.webkit.WebChromeClient;
+import android.webkit.WebResourceResponse;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.widget.Toast;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.InputStream;
+import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.List;
 
+import de.wellenvogel.avnav.appapi.JavaScriptApi;
 import de.wellenvogel.avnav.appapi.RequestHandler;
+import de.wellenvogel.avnav.appapi.WebServer;
 import de.wellenvogel.avnav.settings.SettingsActivity;
 import de.wellenvogel.avnav.util.ActionBarHandler;
 import de.wellenvogel.avnav.util.AvnLog;
@@ -37,23 +54,19 @@ import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.DialogBuilder;
 import de.wellenvogel.avnav.worker.GpsService;
 
+import static de.wellenvogel.avnav.main.Constants.LOGPRFX;
 import static de.wellenvogel.avnav.settings.SettingsActivity.checkSettings;
 
 /**
  * Created by andreas on 06.01.15.
  */
-public class MainActivity extends Activity implements IDialogHandler, IMediaUpdater, SharedPreferences.OnSharedPreferenceChangeListener, GpsService.MainActivityActions {
+public class MainActivity extends Activity implements IMediaUpdater, SharedPreferences.OnSharedPreferenceChangeListener, GpsService.MainActivityActions {
     //The last mode we used to select the fragment
     SharedPreferences sharedPrefs;
     protected final Activity activity=this;
     AssetManager assetManager;
     GpsService gpsService=null;
-    private ActionBarHandler mToolbar;
-    private boolean fragmentStarted=false;
 
-    public ActionBarHandler getToolbar(){
-        return mToolbar;
-    }
     private boolean exitRequested=false;
     private boolean running=false;
     private BroadcastReceiver reloadReceiver;
@@ -67,6 +80,10 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
         }
     };
     private boolean serviceNeedsRestart=false;
+    private WebView webView;
+    private ProgressDialog pd;
+    private JavaScriptApi jsInterface;
+    private int goBackSequence=0;
 
 
     public void updateMtp(File file){
@@ -91,6 +108,14 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
                 }
                 serviceNeedsRestart=true;
                 break;
+            case Constants.FILE_OPEN:
+                if (resultCode != RESULT_OK) {
+                    // Exit without doing anything else
+                    return;
+                } else {
+                    Uri returnUri = data.getData();
+                    if (jsInterface != null) jsInterface.saveFile(returnUri);
+                }
             default:
                 AvnLog.e("unknown activity result " + requestCode);
         }
@@ -173,23 +198,6 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
     }
 
 
-    /**
-     * IDialogHandler
-     */
-    @Override
-    public boolean onCancel(int dialogId) {
-        return true;
-    }
-
-    @Override
-    public boolean onOk(int dialogId) {
-        return true;
-    }
-
-    @Override
-    public boolean onNeutral(int dialogId) {
-        return true;
-    }
 
     /**
      * end IDialogHandler
@@ -261,24 +269,17 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
         finish();
     }
 
-
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        //stopGpsService(false);
-    }
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
         running=false;
+        if (pd != null){
+            try{
+                pd.dismiss();
+            }catch (Throwable t){}
+        }
+        jsInterface.onDetach();
+        webView.destroy();
         if (reloadReceiver != null){
             unregisterReceiver(reloadReceiver);
         }
@@ -295,12 +296,116 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
         gpsService=null;
     }
 
+    private void initializeWebView(){
+        if (webView != null) return;
+        sharedPrefs.edit().putBoolean(Constants.WAITSTART,true).commit();
+        pd = ProgressDialog.show(this, "", getString(R.string.loading), true);
+        jsInterface=new JavaScriptApi(this,getRequestHandler());
+        webView=(WebView)findViewById(R.id.webmain);
+        webView.getSettings().setJavaScriptEnabled(true);
+        webView.getSettings().setAllowFileAccess(true);
+        if (Build.VERSION.SDK_INT >= 16){
+            try {
+                WebSettings settings = webView.getSettings();
+                Method m = WebSettings.class.getDeclaredMethod("setAllowUniversalAccessFromFileURLs", boolean.class);
+                m.setAccessible(true);
+                m.invoke(settings, true);
+            }catch (Exception e){}
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && BuildConfig.DEBUG) {
+            try {
+                Method m=WebView.class.getDeclaredMethod("setWebContentsDebuggingEnabled",boolean.class);
+                m.setAccessible(true);
+                m.invoke(webView,true);
+                m=WebSettings.class.getDeclaredMethod("setMediaPlaybackRequiresUserGesture",boolean.class);
+                m.setAccessible(true);
+                m.invoke(webView.getSettings(),false);
+            } catch (Exception e) {
+            }
+        }
+        String htmlPage = null;
+        RequestHandler handler=getRequestHandler();
+        if (handler != null) htmlPage=handler.getStartPage();
+        webView.setWebViewClient(new WebViewClient() {
+            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+                Toast.makeText(MainActivity.this, "Oh no! " + description, Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
+                RequestHandler handler= getRequestHandler();
+                WebResourceResponse rt=null;
+                if (handler != null) {
+                    try {
+                        rt = handler.handleRequest(view,url);
+                    }catch (Throwable t){
+                        AvnLog.e("web request for "+url+" failed",t);
+                        InputStream is=new ByteArrayInputStream(new byte[]{});
+                        if (Build.VERSION.SDK_INT >= 21){
+                            return new WebResourceResponse("application/octet-stream", "UTF-8",500,"error "+t.getMessage(),new HashMap<String, String>(),is);
+                        }
+                        else {
+                            return new WebResourceResponse("application/octet-stream", "UTF-8", is);
+                        }
+                    }
+                }
+                if (rt==null) return super.shouldInterceptRequest(view, url);
+                return rt;
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                if (pd.isShowing()) pd.dismiss();
+
+            }
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                if (url != null && (url.startsWith("http://")||url.startsWith("https://") )) {
+                    view.getContext().startActivity(
+                            new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+
+
+
+        });
+        webView.setWebChromeClient(new WebChromeClient() {
+            public void onConsoleMessage(String message, int lineNumber, String sourceID) {
+                AvnLog.d("AvNav", message + " -- From line "
+                        + lineNumber + " of "
+                        + sourceID);
+            }
+
+        });
+        webView.getSettings().setDomStorageEnabled(true);
+        webView.getSettings().setDatabaseEnabled(true);
+        webView.getSettings().setTextZoom(100);
+        String databasePath = webView.getContext().getDir("databases",
+                Context.MODE_PRIVATE).getPath();
+        webView.getSettings().setDatabasePath(databasePath);
+        webView.addJavascriptInterface(jsInterface,"avnavAndroid");
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+
+
+        //we nedd to add a filename to the base to make local storage working...
+        //http://stackoverflow.com/questions/8390985/android-4-0-1-breaks-webview-html-5-local-storage
+        String start= RequestHandler.INTERNAL_URL_PREFIX +RequestHandler.ROOT_PATH+"/dummy.html?navurl=avnav_navi.php";
+        if (BuildConfig.DEBUG) start+="&logNmea=1";
+        if (htmlPage != null) {
+            webView.loadDataWithBaseURL(start, htmlPage, "text/html", "UTF-8", null);
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (running) return;
-        setContentView(R.layout.viewcontainer);
-        mToolbar=new ActionBarHandler(this,R.menu.main_activity_actions);
+        setContentView(R.layout.main);
         sharedPrefs=getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         PreferenceManager.setDefaultValues(this,Constants.PREFNAME,Context.MODE_PRIVATE, R.xml.sound_preferences, false);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -319,9 +424,6 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
         bindService(intent,mConnection,0);
     }
 
-    void hideToolBar(){
-        if (mToolbar != null) mToolbar.hide();
-    }
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         Log.d(Constants.LOGPRFX, "preferences changed");
@@ -467,10 +569,7 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
             bindAction = new Runnable() {
                 @Override
                 public void run() {
-                    if (! fragmentStarted) {
-                        startFragment();
-                        fragmentStarted=true;
-                    }
+                    initializeWebView();
                 }
             };
             startGpsService();
@@ -481,9 +580,8 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
             serviceNeedsRestart=false;
             AvnLog.d(Constants.LOGPRFX, "MainActivity:onResume serviceRestart");
         }
-        if (!fragmentStarted) {
-            startFragment();
-            fragmentStarted=true;
+        if (webView == null) {
+            initializeWebView();
         } else {
             sendEventToJs(Constants.JS_PROPERTY_CHANGE, 0); //this will some pages cause to reload...
         }
@@ -498,37 +596,71 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
         }
     }
 
-
-
-    private void startFragment(){
-        sharedPrefs.edit().putBoolean(Constants.WAITSTART,true).commit();
-        FragmentManager fragmentManager = getFragmentManager();
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        Fragment fragment=new WebViewFragment();
-        fragmentTransaction.replace(R.id.webmain, fragment);
-        fragmentTransaction.commit();
-    }
-
-
     @Override
     public void onBackPressed(){
-        Fragment current=getFragmentManager().findFragmentById(R.id.webmain);
-        if (current instanceof WebViewFragment){
-            ((WebViewFragment) current).onBackPressed();
-            return;
-        }
-        goBack();
+        final int num=goBackSequence+1;
+        sendEventToJs(Constants.JS_BACK,num);
+        //as we cannot be sure that the JS code will for sure handle
+        //our back pressed (maybe a different page has been loaded) , we wait at most 200ms for it to ack this
+        //otherwise we really go back here
+        Thread waiter=new Thread(new Runnable() {
+            @Override
+            public void run() {
+                long wait=200;
+                while (wait>0) {
+                    long current = System.currentTimeMillis();
+                    if (goBackSequence == num) break;
+                    try {
+                        Thread.sleep(10);
+                    } catch (InterruptedException e) {
+                    }
+                    wait-=10;
+                }
+                if (wait == 0) {
+                    Log.e(AvnLog.LOGPREFIX,"go back handler did not fire");
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            goBack();
+                        }
+                    });
+                }
+            }
+        });
+        waiter.start();
     }
-
+    public void jsGoBackAccepted(int id){
+        goBackSequence=id;
+    }
+    public void setBrightness(int percent){
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                float newBrightness;
+                if (percent >= 100){
+                    newBrightness= WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE;
+                }
+                else {
+                    newBrightness = (float) percent / 100;
+                    if (newBrightness < 0.01f) newBrightness = 0.01f;
+                    if (newBrightness > 1) newBrightness = 1;
+                }
+                Window w=getWindow();
+                WindowManager.LayoutParams lp=w.getAttributes();
+                lp.screenBrightness=newBrightness;
+                w.setAttributes(lp);
+            }
+        });
+    }
 
     /**
      * @param key
      * @param id
      */
-    public void sendEventToJs(String key, int id){
-        Fragment current=getFragmentManager().findFragmentById(R.id.webmain);
-        if (current instanceof WebViewFragment){
-            ((WebViewFragment)current).sendEventToJs(key,id);
+    public void sendEventToJs(String key, long id){
+        AvnLog.i("js event key="+key+", id="+id);
+        if (webView != null) {
+            webView.loadUrl("javascript:if (avnav && avnav.android) avnav.android.receiveEvent('" + key + "'," + id + ")");
         }
     }
 
@@ -536,6 +668,30 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
     public RequestHandler getRequestHandler(){
         GpsService service=getGpsService();
         return service!=null?service.getRequestHandler():null;
+    }
+    public void launchBrowser() {
+        try {
+            GpsService service = getGpsService();
+            WebServer webServer = service.getWebServer();
+            if (webServer == null) return;
+            if (!webServer.isRunning()) return;
+            int port = webServer.getPort();
+            if (port == 0) return;
+            String start = "http://localhost:" + port + "/viewer/avnav_viewer.html";
+            if (BuildConfig.DEBUG) start += "?log=1";
+            AvnLog.d(LOGPRFX, "start browser with " + start);
+            try {
+                Intent myIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(start));
+                startActivity(Intent.createChooser(myIntent, "Chose browser"));
+
+            } catch (ActivityNotFoundException e) {
+                Toast.makeText(this, "No application can handle this request."
+                        + " Please install a webbrowser", Toast.LENGTH_LONG).show();
+                e.printStackTrace();
+            }
+
+        } catch (Throwable t) {
+        }
     }
 
     @Override
@@ -549,6 +705,8 @@ public class MainActivity extends Activity implements IDialogHandler, IMediaUpda
     public GpsService getGpsService() {
         return gpsService;
     }
+
+
 
 
 }
