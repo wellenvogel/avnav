@@ -133,7 +133,6 @@ public class WebViewFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
-        pd = ProgressDialog.show(getActivity(), "", getString(R.string.loading), true);
         ((MainActivity)getActivity()).hideToolBar();
         jsInterface=new JavaScriptApi(this,getRequestHandler());
     }
@@ -150,6 +149,12 @@ public class WebViewFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
+        if (pd != null){
+            try{
+                pd.dismiss();
+            }catch (Throwable t){}
+        }
+        pd = ProgressDialog.show(getActivity(), "", getString(R.string.loading), true);
         webView = new WebView(inflater.getContext());
         webView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         webView.getSettings().setJavaScriptEnabled(true);
@@ -207,6 +212,7 @@ public class WebViewFragment extends Fragment {
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
                 if (pd.isShowing()) pd.dismiss();
+
             }
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
@@ -292,6 +298,11 @@ public class WebViewFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        if (pd != null){
+            try{
+                pd.dismiss();
+            }catch (Throwable t){}
+        }
         webView.destroy();
     }
     @Override
