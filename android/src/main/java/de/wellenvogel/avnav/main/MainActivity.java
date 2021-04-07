@@ -85,6 +85,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
     private ProgressDialog pd;
     private JavaScriptApi jsInterface;
     private int goBackSequence=0;
+    private boolean checkSettings=true;
 
 
     public void updateMtp(File file){
@@ -491,6 +492,14 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         e.commit();
     }
 
+    private boolean checkSettingsInternal(){
+        if (checkSettings && !checkSettings(this, false, false)) {
+            checkSettings=false;
+            showSettings(true);
+            return false;
+        }
+        return true;
+    }
     private boolean checkForInitialDialogs(){
         boolean showsDialog=false;
         SharedPreferences sharedPrefs = getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
@@ -514,6 +523,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                 title=R.string.firstStart;
                 message=R.string.firstStartMessage;
             }
+            sharedPrefs.edit().putInt(Constants.VERSION,version).commit();
             DialogBuilder.alertDialog(this,title,message, new DialogInterface.OnClickListener(){
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
@@ -537,6 +547,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             sharedPrefs.edit().putInt(Constants.VERSION,newVersion).commit();
+                            if (!checkSettingsInternal()) return;
                             onResumeInternal();
                         }
                     });
@@ -550,7 +561,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                 }
             }catch (Exception e){}
         }
-        return showsDialog;
+        return showsDialog || !checkSettingsInternal();
     }
 
     @Override
@@ -560,10 +571,6 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
     }
 
     private void onResumeInternal(){
-        if (!checkSettings(this, false, false)) {
-            showSettings(true);
-            return;
-        }
         if (webView == null){
             shoLoading();
         }
