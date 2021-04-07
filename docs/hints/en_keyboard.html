@@ -1,65 +1,64 @@
 <!DOCTYPE html>
 <html dir="ltr" lang="de">
-  <head>
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    
     <title>Keybord Support</title>
     <link href="../styles.css" rel="stylesheet" type="text/css">
   </head>
   <body data-order="6400">
     <h1>Keyboard Support</h1>
     <div class="toc"> </div>
-    <p>AvNav&nbsp; has support for keyboard short cuts for important functions.<br>
-      You can make free assignments between keys and the functions inside AvNav.
+    <p>AvNav supports keyboard shortcuts for important functions.<br>
+      You can freely assign keys to functions inside AvNav.
     </p>
     <h2>Concept</h2>
-    <p>The assignment happens in 3 steps:</p>
+    <p>The assignment is defined in 3 levels (columns):</p>
     <ol>
       <li>Page<br>
-        This is the currently shown view in AvNav (see <a href="../userdoc/index.html">user
-          documentation</a>). With the special name "all" you can assign the
+        This is the page shown in AvNav (see <a href="../userdoc/index.html">user
+          documentation</a>). By using the keyword "all" you can assign the
         function to all pages.</li>
       <li>Group<br>
         This just groups the functionality.</li>
       <li>Function<br>
-        The particular action that you will trigger (like the click on a
+        The particular function to be triggered (like the click on a
         button).</li>
     </ol>
     <p>You can assign one or multiple keys to each of those triples (page,
-      group, function). A more specific configuration will win (e.g. an
+      group, function). The more specific configuration will take effect (e.g. an
       assigment for navpage will win against an assignment for all).</p>
     <h2>Configuration</h2>
-    <p>The assignment is handled with a file keys.json in the <a href="../userdoc/downloadpage.html#userfiles">user
+    <p>The assignment is handled via a file keys.json in the <a href="../userdoc/downloadpage.html#userfiles">user
         directory</a>. This file can be edited directly there. Additionally
-      there is a&nbsp; <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/keys.json">build
-        in&nbsp;</a> with defaults.</p>
-    <p>With the keys.json in the user directory you can overwrite the defaults.</p>
+      there is a&nbsp; <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/keys.json">builtin keys.json</a> file holding the defaults.</p>
+    <p>The keys.json in the user directory overwrites the defaults.</p>
     <p> <img src="Keyboard-Mob.png" alt="" class="fimage"> </p>
-    <p>In this example I created a keyboard assignment for "man over board" with
+    <p>In this example I created a keyboard assignment for "man over board" to
       the keys Ctrl-Space and Ctrl-x.</p>
-    <p>If you only assign one key the square brackets are not necessary. After
+    <p>If you just assign a single key the square brackets are not necessary. After
       you saved your changes you must reload the AvNav page.</p>
     <h2>Pages Groups and Functions</h2>
-    <p>The list of pages, groups and functions just below will only show the
+    <p>The list of pages, groups and functions below will reflect the
       current state when creating this documentation. Step by step new ones will
       be added.</p>
-    <p>The names you have to use for the keys refer to the <a href="https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key">documentation</a>.
+    <p>For the names to be used for the keys refer to the <a href="https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key">documentation</a>.
       If the Control key is pressed additionally the string "Control-" will be
       prepended.</p>
-    <p>The function names within the group "button" are the names that you will
+    <p>The function names within the group "button" are the names you 
       find beside the buttons in the <a href="../userdoc/index.html">user
         documentation</a>.<br>
-      Clicking on a widget can be achieved by using the group "widgets" and the
-      name of the widget as the function (the name you will see in the <a href="layouts.html">layout
+      Clicking a widget can be achieved by using the group "widgets" and entering the
+      name of the widget as the function (the name as displayed in the <a href="layouts.html">layout
         editor</a>). A SOG widget could be triggered with</p>
     <div class="code">"all":{<br>   "widgets": {<br>      "SOG": "s"<br>   }<br>}</div>
     <p>using the key "s" on all pages.</p>
     <p>The dialog buttons can be assigned using the group "dialogButton" and the
-      name of the button as function. The name you can easily find out using the
-      developer tools of your browser ("inspect element"). You should be careful
-      to only assign special keys to dialog buttons - otherwise you will not be
-      able to make normal inputs.</p>
-    <p>In the table below I listed the groups and functions that either already
-      have a default key assignment - or are neither buttons nor widgets. The
+      name of the button as function. To determine the name you can use the
+      developer tools of your browser (e.g. "inspect element"). You should be careful
+      to only assign special keys to dialog buttons - otherwise you might not be
+      able anymore to make normal inputs.</p>
+    <p>In the table below I listed the groups and functions that either have a default key assignment - or are neither buttons nor widgets. The
       texts in brackets are just hints about the functionality.</p>
     <h2>Assignments</h2>
     <table style="width: 100%" border="1">
@@ -281,8 +280,8 @@
           <td><br>
           </td>
           <td>COG</td>
-          <td>"d" (goes to the <a href="../userdoc/dashboardpage.html">Dashboard</a>,
-            with the key d you can this way toglle between navigation page and
+          <td>"d" (switches to the <a href="../userdoc/dashboardpage.html">Dashboard</a>,
+            with the key d you can so toggle between navigation page and
             dashboard page)</td>
         </tr>
         <tr>
