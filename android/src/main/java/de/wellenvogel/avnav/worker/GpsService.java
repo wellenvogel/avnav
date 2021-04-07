@@ -214,7 +214,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
     }
 
     public static interface MainActivityActions{
-        void showSettings(boolean force);
+        void showSettings(boolean checkInitially);
         void mainGoBack();
         void mainShutdown();
     }
@@ -1178,9 +1178,9 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         MainActivityActions main=mBinder.getCallback();
         if (main != null) main.mainGoBack();
     }
-    public void mainShowSettings(boolean force){
+    public void mainShowSettings(boolean checkInitially){
         MainActivityActions main=mBinder.getCallback();
-        if (main != null) main.showSettings(force);
+        if (main != null) main.showSettings(checkInitially);
     }
 
 

@@ -2,6 +2,7 @@ package de.wellenvogel.avnav.settings;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -29,10 +30,12 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import de.wellenvogel.avnav.worker.BluetoothConnectionHandler;
 import de.wellenvogel.avnav.worker.UsbConnectionHandler;
@@ -68,6 +71,17 @@ public class SettingsActivity extends PreferenceActivity {
 
     private HashSet<ActivityResultCallback> callbacks=new HashSet<ActivityResultCallback>();
 
+    private static class DialogRequest{
+        int requestCode;
+        Runnable callback;
+        DialogRequest(int requestCode,Runnable callback){
+            this.requestCode=requestCode;
+            this.callback=callback;
+        }
+    }
+
+    private ArrayList<DialogRequest> openRequests=new ArrayList<DialogRequest>();
+
     private List<Header> headers=null;
     private ActionBarHandler mToolbar;
     private HashMap<Integer,PermissionResult> resultHandler=new HashMap<>();
@@ -87,6 +101,12 @@ public class SettingsActivity extends PreferenceActivity {
         root.removeAllViews();
         toolbarContainer.addView(content);
         root.addView(toolbarContainer);
+    }
+    private boolean runNextDialog(){
+        if (openRequests.size() < 1) return false;
+        DialogRequest rq=openRequests.remove(0);
+        rq.callback.run();
+        return true;
     }
     @Override
     public boolean isValidFragment(String n){
@@ -128,121 +148,173 @@ public class SettingsActivity extends PreferenceActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        openRequests.clear();
         resultHandler.clear();
         injectToolbar();
         getToolbar().setOnMenuItemClickListener(this);
         updateHeaderSummaries(true);
-        checkSettings(this,true,true);
+        boolean checkInitially=false;
+        Bundle b=getIntent() != null?getIntent().getExtras():null;
+        if (b != null){
+            checkInitially=b.getBoolean(Constants.EXTRA_INITIAL,false);
+        }
+        if (checkInitially) {
+            if (!checkSettings(this)){
+                Toast.makeText(this,R.string.requiredSettings,Toast.LENGTH_LONG).show();
+                runPermissionDialogs(true);
+            }
+        }
+    }
+
+    private void runPermissionDialogs(boolean initial){
+        final int storage=needsStoragePermissions(this);
+        if (storage >0 && ! checkStoragePermission(this)){
+            int request=getNextPermissionRequestCode();
+            openRequests.add(new DialogRequest(request, new Runnable() {
+                @Override
+                public void run() {
+                    requestPermission(Manifest.permission.READ_EXTERNAL_STORAGE, new PermissionResult() {
+                        @Override
+                        public void result(String[] permissions, int[] grantResults) {
+                            boolean newDialog=false;
+                            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                            }
+                            else{
+                                if (! initial && (storage & 1) != 0){
+                                    newDialog=true;
+                                    DialogBuilder.confirmDialog(SettingsActivity.this, 0, R.string.selectWorkDirWritable, new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            if (which == DialogInterface.BUTTON_NEGATIVE){
+                                                resultNok();
+                                            }
+                                            openRequests.clear();
+                                        }
+                                    });
+                                }
+                            }
+                            if (! newDialog && !runNextDialog() && ! initial) resultOk();
+                        }
+                    });
+                }
+            }));
+        }
+        if (!checkGpsPermission(this)){
+            int request=getNextPermissionRequestCode();
+            openRequests.add(new DialogRequest(request, new Runnable() {
+                @Override
+                public void run() {
+                    requestPermission(Manifest.permission.ACCESS_FINE_LOCATION, new PermissionResult() {
+                        @Override
+                        public void result(String[] permissions, int[] grantResults) {
+                            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                            }
+                            else{
+                                if (! initial) Toast.makeText(SettingsActivity.this,R.string.noGpsSelected,Toast.LENGTH_LONG).show();
+                            }
+                            if (!runNextDialog() && ! initial) resultOk();
+                        }
+                    });
+                }
+            }));
+        }
+        if (! checkGpsEnabled(this)){
+            int request=getNextPermissionRequestCode();
+            openRequests.add(new DialogRequest(request, new Runnable() {
+                @Override
+                public void run() {
+                        DialogBuilder.confirmDialog(SettingsActivity.this, 0, R.string.noLocation, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                if (which == DialogInterface.BUTTON_POSITIVE){
+                                    Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                                    startActivity(intent);
+                                }
+                                else{
+                                    if (! initial) resultOk();
+                                }
+                            }
+                        });
+                }
+            }));
+        }
+        if (! runNextDialog() && !initial) resultOk();
     }
 
     public interface PermissionResult{
         void result(String[] permissions, int[] grantResults);
     }
-    public boolean checkStoragePermssionWitResult(boolean doRequest,boolean showToasts, PermissionResult handler){
-        int requestCode=getNextPermissionRequestCode();
-        if (handler != null){
-            resultHandler.put(requestCode,handler);
+
+    public int requestPermission(String permission,PermissionResult result){
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return -1;
+        int request=getNextPermissionRequestCode();
+        if (result != null){
+            resultHandler.put(request,result);
         }
-        return checkStoragePermission(this,doRequest,showToasts,requestCode);
+        requestPermissions(new String[]{permission}, request);
+        return request;
     }
-    public static boolean checkStoragePermission(final Activity activity,boolean doRequest, boolean showToasts){
-        return checkStoragePermission(activity,doRequest,showToasts, getNextPermissionRequestCode());
-    }
-    private static long getInstallTs(Activity activity){
-        long ts=1L;
-        try {
-            ApplicationInfo info=activity.getPackageManager().getApplicationInfo(activity.getApplicationContext().getPackageName(),0);
-            String src=info.sourceDir;
-            ts=new File(src).lastModified();
-        } catch (Exception e) {
-            AvnLog.e("unable to get package info",e);
-        }
-        return ts;
-    }
-    private static boolean checkStoragePermission(final Activity activity,boolean doRequest, boolean showToasts, int requestCode){
+
+
+
+    public static boolean checkStoragePermission(final Context context) {
         if (Build.VERSION.SDK_INT < 23) return true;
-        if (ContextCompat.checkSelfPermission(activity, Manifest.permission.READ_EXTERNAL_STORAGE) !=
-                PackageManager.PERMISSION_GRANTED) {
-            long ts=getInstallTs(activity);
-            SharedPreferences prefs = activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
-            long alreadyAsked=prefs.getLong(Constants.STORAGE_PERMISSION_REQUESTED_NUM,0L);
-            if (((alreadyAsked != ts) || ActivityCompat.shouldShowRequestPermissionRationale(activity,Manifest.permission.READ_EXTERNAL_STORAGE) )&& doRequest)
-            {
-                prefs.edit().putLong(Constants.STORAGE_PERMISSION_REQUESTED_NUM,ts).apply();
-                activity.requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, requestCode);
-                return false;
-            }
-            if (showToasts)Toast.makeText(activity,R.string.needsStoragePermisssions,Toast.LENGTH_LONG).show();
-            return false;
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) ==
+                PackageManager.PERMISSION_GRANTED) return true;
 
-        }
-        return true;
+        return false;
     }
 
-    public static boolean checkGpsEnabled(final Activity activity, boolean force,boolean doRequest,boolean showToasts) {
-        SharedPreferences prefs = activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+    public static boolean checkGpsEnabled(final Activity activity) {
         LocationManager locationService = (LocationManager) activity.getSystemService(activity.LOCATION_SERVICE);
-        boolean enabled = locationService.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        return locationService.isProviderEnabled(LocationManager.GPS_PROVIDER);
+    }
+    public static boolean checkGpsPermission(final Activity activity) {
         if (Build.VERSION.SDK_INT >= 23) {
             if (ContextCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) !=
-                    PackageManager.PERMISSION_GRANTED) {
-                long ts=getInstallTs(activity);
-                long alreadyAsked=prefs.getLong(Constants.GPS_PERMISSION_REQUESTED_NUM,0L);
-                if (( (alreadyAsked != ts) || ActivityCompat.shouldShowRequestPermissionRationale(activity,Manifest.permission.ACCESS_FINE_LOCATION) )&& doRequest)
-                {
-                    prefs.edit().putLong(Constants.GPS_PERMISSION_REQUESTED_NUM,ts).apply();
-                    activity.requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 99);
-                    return false;
-                }
-                if (showToasts)Toast.makeText(activity,R.string.needsGpsPermisssions,Toast.LENGTH_LONG).show();
+                    PackageManager.PERMISSION_GRANTED)
                 return false;
-
-            }
-        }
-        // check if enabled and if not send user to the GSP settings
-        // Better solution would be to display a dialog and suggesting to
-        // go to the settings
-        if (!enabled && doRequest) {
-            DialogBuilder.confirmDialog(activity, 0, R.string.noLocation, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    if (which == DialogInterface.BUTTON_POSITIVE){
-                        Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                        activity.startActivity(intent);
-                    }
-                }
-            });
-            return false;
         }
         return true;
+    }
+
+
+    /**
+     * check if we need storage permissions
+     * @param ctx
+     * @return 0 - no, 1-workdir,2-chartdir, 3-both
+     */
+    private static int needsStoragePermissions(Context ctx){
+        SharedPreferences sharedPrefs=ctx.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+        String chartDir=sharedPrefs.getString(Constants.CHARTDIR,"");
+        if (! chartDir.isEmpty()){
+            //no permissions if below our app dirs
+            int checkPermissions=1;
+            if (chartDir.startsWith(AvnUtil.workdirStringToFile(Constants.INTERNAL_WORKDIR,ctx).getAbsolutePath())) checkPermissions=0;
+            File externalDir=AvnUtil.workdirStringToFile(Constants.EXTERNAL_WORKDIR,ctx);
+            if (externalDir != null && chartDir.startsWith(externalDir.getAbsolutePath())) checkPermissions+=2;
+            return checkPermissions;
+        }
+        return 0;
     }
     /**
      * check if all settings are correct
      * @param activity
-     * @param startDialogs if this is set, start permission or other dialogs, otherwise check only
      * @return true if settings are ok
      */
-    public static boolean checkSettings(Activity activity, boolean startDialogs, boolean showToasts){
+    public static boolean checkSettings(Activity activity){
         handleMigrations(activity);
         SharedPreferences sharedPrefs=activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         if (! checkOrCreateWorkDir(AvnUtil.getWorkDir(sharedPrefs,activity))){
-            if (showToasts)Toast.makeText(activity, R.string.selectWorkDirWritable, Toast.LENGTH_SHORT).show();
             return false;
         }
-        String chartDir=sharedPrefs.getString(Constants.CHARTDIR,"");
-        if (! chartDir.isEmpty()){
-            //no permissions if below our app dirs
-            boolean checkPermissions=true;
-            if (chartDir.startsWith(AvnUtil.workdirStringToFile(Constants.INTERNAL_WORKDIR,activity).getAbsolutePath())) checkPermissions=false;
-            File externalDir=AvnUtil.workdirStringToFile(Constants.EXTERNAL_WORKDIR,activity);
-            if (externalDir != null && chartDir.startsWith(externalDir.getAbsolutePath())) checkPermissions=false;
-            if (checkPermissions){
-                if (! checkStoragePermission(activity,startDialogs,showToasts)){
-                    return false;
-                }
+        if (needsStoragePermissions(activity) >0){
+            if (! checkStoragePermission(activity)){
+                return false;
             }
         }
-        if (! checkGpsEnabled(activity,false,startDialogs,showToasts)) return false;
+        if (! checkGpsEnabled(activity)) return false;
+        if (! checkGpsPermission(activity)) return false;
         return true;
     }
 
@@ -331,7 +403,13 @@ public class SettingsActivity extends PreferenceActivity {
         setIntent(intent);
     }
     private void checkResult(){
-        if (! checkSettings(this,true,true)) return;
+        if (! checkSettings(this)) {
+            runPermissionDialogs(false);
+            return;
+        }
+        resultOk();
+    }
+    private void resultOk(){
         Intent result=new Intent();
         setResult(Activity.RESULT_OK,result);
         finish();

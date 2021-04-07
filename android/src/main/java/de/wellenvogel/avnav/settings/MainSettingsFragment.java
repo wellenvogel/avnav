@@ -1,5 +1,6 @@
 package de.wellenvogel.avnav.settings;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -52,14 +53,14 @@ public class MainSettingsFragment extends SettingsFragment {
         if (myChartPref != null) {
             myChartPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 public boolean onPreferenceClick(final Preference preference) {
-                    if (! ((SettingsActivity)getActivity()).checkStoragePermssionWitResult(true,true, new SettingsActivity.PermissionResult() {
-                        @Override
-                        public void result(String[] permissions, int[] grantResults) {
-                            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
-                                runCharDirRequest(myChartPref);
-                        }
-                    }))
-                    {
+                    if (! SettingsActivity.checkStoragePermission(getActivity())){
+                        ((SettingsActivity)getActivity()).requestPermission(Manifest.permission.READ_EXTERNAL_STORAGE, new SettingsActivity.PermissionResult() {
+                            @Override
+                            public void result(String[] permissions, int[] grantResults) {
+                                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                                    runCharDirRequest(myChartPref);
+                            }
+                        });
                         return true;
                     }
                     if (Build.VERSION.SDK_INT >= 21) {

@@ -12,6 +12,7 @@
     <string name="back">Back</string>
     <string name="selectWorkDir">select working Dir</string>
     <string name="selectWorkDirWritable">Your old workdir ist not writable/does not exist, select a new one</string>
+    <string name="requiredSettings">You miss some required settings</string>
     <string name="selectChartDir">select additional chart dir</string>
     <string name="internalStorage">Internal Storage</string>
     <string name="externalStorage">External Storage</string>
@@ -42,17 +43,6 @@
     <string name="startServer">Start</string>
     <string name="notifyTitle">AvNav</string>
     <string name="notifyText">AvNav running</string>
-    <string name="xwalkDownloadFromUrl">Apk Download</string>
-    <string name="xwalkDownloadFromPlaystore">Google Play</string>
-    <string name="xwalkNotFoundTitle">AvNavXwalk not found</string>
-    <string name="xwalkShouldUse">You are running on a rather old android version
-        and should install the AvNavXwalk runtime for the app to work properly.
-        Do you want to install it now?
-        Required runtime version=</string>
-    <string name="xwalkNotFoundText">You selected to run with the xwalk runtime but it is not installed yet.
-        Do you want to install it now?
-        Required runtime version=</string>
-    <string name="btXwalDownload">Download</string>
     <string name="btShowInfo">Info/Licenses</string>
     <string name="btShowPrivacy">PrivacyInfo</string>
     <string name="selectApp">Select Application to handle</string>
@@ -137,7 +127,7 @@
     <string name="select">Select</string>
     <string name="channel_name">Information</string>
     <string name="channel_description">All app notifications</string>
-    <string name="needsGpsPermisssions">avnav needs location access</string>
+    <string name="needsGpsPermisssions">no internal gps access</string>
     <string name="needsStoragePermisssions">avnav needs external storage access for chart dir</string>
     <string name="importRouteTitle">Avnav Import Route</string>
     <string name="importRouteText">Import Route?</string>

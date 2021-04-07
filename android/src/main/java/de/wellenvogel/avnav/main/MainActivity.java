@@ -80,6 +80,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             updateMtp(f);
         }
     };
+    private Handler retryHandler=new Handler();
     private boolean serviceNeedsRestart=false;
     private WebView webView;
     private ProgressDialog pd;
@@ -165,12 +166,18 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                 // higher importance has lower number (?)
                 if (importance > ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND){
                     AvnLog.e("still in background while trying to start service");
+                    retryHandler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            startGpsService();
+                        }
+                    },1000);
                     return false;
                 }
             }
         }
 
-        if (! checkSettings(this,false,true)) return false;
+        if (! checkSettings(this)) return false;
 
         Intent intent = new Intent(this, GpsService.class);
         if (Build.VERSION.SDK_INT >= 26){
@@ -493,7 +500,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
     }
 
     private boolean checkSettingsInternal(){
-        if (checkSettings && !checkSettings(this, false, false)) {
+        if (checkSettings && !checkSettings(this)) {
             checkSettings=false;
             showSettings(true);
             return false;
