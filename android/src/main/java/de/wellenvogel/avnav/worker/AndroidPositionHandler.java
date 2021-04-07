@@ -1,10 +1,14 @@
 package de.wellenvogel.avnav.worker;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.location.*;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.v4.content.ContextCompat;
 import android.widget.Toast;
 
 import net.sf.marineapi.nmea.parser.SentenceFactory;
@@ -205,7 +209,19 @@ public class AndroidPositionHandler extends Worker implements LocationListener ,
         if (stopped) return;
         AvnLog.d(LOGPRFX,"tryEnableLocation");
         if (locationService != null && locationService.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            if (! isRegistered) {
+            if (!isRegistered) {
+                if (Build.VERSION.SDK_INT >= 23) {
+                    if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) !=
+                            PackageManager.PERMISSION_GRANTED) {
+                        location = null;
+                        lastValidLocation = 0;
+                        isRegistered = false;
+                        setStatus(WorkerStatus.Status.ERROR, "no gps permission");
+                        if (notify) Toast.makeText(context, "no gps permission",
+                                Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                }
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
@@ -213,10 +229,10 @@ public class AndroidPositionHandler extends Worker implements LocationListener ,
                         locationService.addGpsStatusListener(AndroidPositionHandler.this);
                     }
                 });
-                location=null;
-                lastValidLocation=0;
-                isRegistered=true;
-                setStatus(WorkerStatus.Status.STARTED,"waiting for position");
+                location = null;
+                lastValidLocation = 0;
+                isRegistered = true;
+                setStatus(WorkerStatus.Status.STARTED, "waiting for position");
             }
 
         }
@@ -225,7 +241,7 @@ public class AndroidPositionHandler extends Worker implements LocationListener ,
             location=null;
             lastValidLocation=0;
             isRegistered=false;
-            setStatus(WorkerStatus.Status.ERROR,"no gps");
+            setStatus(WorkerStatus.Status.ERROR,"no gps enabled");
             if (notify)Toast.makeText(context, "no gps ",
                     Toast.LENGTH_SHORT).show();
         }

@@ -310,6 +310,7 @@ public class ChartHandler implements INavRequestHandler {
     @Override
     public JSONArray handleList(Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception {
         //here we will have more dirs in the future...
+        AvnLog.i(Constants.LOGPRFX,"start chartlist request "+Thread.currentThread().getId());
         JSONArray rt=new JSONArray();
         try {
             for (String url : chartList.keySet()) {
@@ -341,6 +342,7 @@ public class ChartHandler implements INavRequestHandler {
                 rt.put(e);
             }
         }
+        AvnLog.i(Constants.LOGPRFX,"finish chartlist request "+Thread.currentThread().getId());
         return rt;
     }
 

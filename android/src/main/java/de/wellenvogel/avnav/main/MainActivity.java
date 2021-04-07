@@ -27,6 +27,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
@@ -102,7 +103,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode) {
             case Constants.SETTINGS_REQUEST:
-                if (resultCode != RESULT_OK){
+                if (resultCode == RESULT_FIRST_USER){
                     endApp();
                     return;
                 }
@@ -183,6 +184,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
 
 
     private void stopGpsService(){
+        AvnLog.i(LOGPRFX,"stop gps service");
         GpsService service=gpsService;
         if (service !=null){
             binder.deregisterCallback();
@@ -278,8 +280,8 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                 pd.dismiss();
             }catch (Throwable t){}
         }
-        jsInterface.onDetach();
-        webView.destroy();
+        if (jsInterface != null) jsInterface.onDetach();
+        if (webView != null) webView.destroy();
         if (reloadReceiver != null){
             unregisterReceiver(reloadReceiver);
         }
@@ -299,7 +301,6 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
     private void initializeWebView(){
         if (webView != null) return;
         sharedPrefs.edit().putBoolean(Constants.WAITSTART,true).commit();
-        pd = ProgressDialog.show(this, "", getString(R.string.loading), true);
         jsInterface=new JavaScriptApi(this,getRequestHandler());
         webView=(WebView)findViewById(R.id.webmain);
         webView.getSettings().setJavaScriptEnabled(true);
@@ -563,6 +564,9 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             showSettings(true);
             return;
         }
+        if (webView == null){
+            shoLoading();
+        }
         updateWorkDir(AvnUtil.getWorkDir(null, this));
         updateWorkDir(sharedPrefs.getString(Constants.CHARTDIR, ""));
         if (gpsService == null) {
@@ -587,9 +591,24 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         }
     }
 
+    private void shoLoading() {
+        pd = ProgressDialog.show(this, "", getString(R.string.loading), true);
+    }
+    private void handleBars(){
+        SharedPreferences sharedPrefs=getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+        boolean hideStatus=sharedPrefs.getBoolean(Constants.HIDE_BARS,false);
+        if (hideStatus ) {
+            View decorView = getWindow().getDecorView();
+            int flags=View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+            flags+=View.SYSTEM_UI_FLAG_FULLSCREEN;
+            flags+=View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
+            decorView.setSystemUiVisibility(flags);
+        }
+    }
     @Override
     protected void onResume() {
         super.onResume();
+        handleBars();
         AvnLog.d("main: onResume");
         if (! checkForInitialDialogs()){
             onResumeInternal();

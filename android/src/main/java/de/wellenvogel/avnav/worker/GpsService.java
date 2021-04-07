@@ -881,6 +881,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
      * will be called whe we intend to really stop
      */
     private void handleStop() {
+        AvnLog.i(LOGPRFX,"handle stop");
         stopWorkers();
         if (requestHandler != null) requestHandler.stop();
         requestHandler=null;
@@ -913,6 +914,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
     }
 
     public void stopMe(){
+        AvnLog.i(LOGPRFX,"stopMe");
         handleStop();
         stopSelf();
     }

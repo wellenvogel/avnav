@@ -338,7 +338,7 @@ public class SettingsActivity extends PreferenceActivity {
     }
     private void resultNok(){
         Intent result=new Intent();
-        setResult(Activity.RESULT_CANCELED,result);
+        setResult(Activity.RESULT_FIRST_USER,result);
         finish();
     }
     @Override
