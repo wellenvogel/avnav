@@ -53,16 +53,6 @@ public class MainSettingsFragment extends SettingsFragment {
         if (myChartPref != null) {
             myChartPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 public boolean onPreferenceClick(final Preference preference) {
-                    if (! SettingsActivity.checkStoragePermission(getActivity())){
-                        ((SettingsActivity)getActivity()).requestPermission(Manifest.permission.READ_EXTERNAL_STORAGE, new SettingsActivity.PermissionResult() {
-                            @Override
-                            public void result(String[] permissions, int[] grantResults) {
-                                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
-                                    runCharDirRequest(myChartPref);
-                            }
-                        });
-                        return true;
-                    }
                     if (Build.VERSION.SDK_INT >= 21) {
                         runCharDirRequest(myChartPref);
                         return true;
@@ -167,7 +157,11 @@ public class MainSettingsFragment extends SettingsFragment {
     }
 
     public static String getSummary(Activity a){
-        return "";
+        SharedPreferences prefs = a.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+        String workdir = prefs.getString(Constants.WORKDIR, Constants.INTERNAL_WORKDIR);
+        return workdir.equals(Constants.INTERNAL_WORKDIR)?
+                a.getResources().getString(R.string.internalStorage):
+                a.getResources().getString(R.string.externalStorage);
     }
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {

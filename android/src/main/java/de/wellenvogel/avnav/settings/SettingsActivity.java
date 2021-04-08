@@ -167,38 +167,7 @@ public class SettingsActivity extends PreferenceActivity {
     }
 
     private void runPermissionDialogs(boolean initial){
-        final int storage=needsStoragePermissions(this);
-        if (storage >0 && ! checkStoragePermission(this)){
-            int request=getNextPermissionRequestCode();
-            openRequests.add(new DialogRequest(request, new Runnable() {
-                @Override
-                public void run() {
-                    requestPermission(Manifest.permission.READ_EXTERNAL_STORAGE, new PermissionResult() {
-                        @Override
-                        public void result(String[] permissions, int[] grantResults) {
-                            boolean newDialog=false;
-                            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                            }
-                            else{
-                                if (! initial && (storage & 1) != 0){
-                                    newDialog=true;
-                                    DialogBuilder.confirmDialog(SettingsActivity.this, 0, R.string.selectWorkDirWritable, new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            if (which == DialogInterface.BUTTON_NEGATIVE){
-                                                resultNok();
-                                            }
-                                            openRequests.clear();
-                                        }
-                                    });
-                                }
-                            }
-                            if (! newDialog && !runNextDialog() && ! initial) resultOk();
-                        }
-                    });
-                }
-            }));
-        }
+        SharedPreferences sharedPrefs=getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         if (!checkGpsPermission(this)){
             int request=getNextPermissionRequestCode();
             openRequests.add(new DialogRequest(request, new Runnable() {
@@ -229,12 +198,30 @@ public class SettingsActivity extends PreferenceActivity {
                                 if (which == DialogInterface.BUTTON_POSITIVE){
                                     Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
                                     startActivity(intent);
+                                    openRequests.clear();
                                 }
                                 else{
                                     if (! initial) resultOk();
                                 }
                             }
                         });
+                }
+            }));
+        }
+        if (!checkOrCreateWorkDir(AvnUtil.getWorkDir(sharedPrefs, this))) {
+            int request = getNextPermissionRequestCode();
+            openRequests.add(new DialogRequest(request, new Runnable() {
+                @Override
+                public void run() {
+                    DialogBuilder.confirmDialog(SettingsActivity.this, 0, R.string.selectWorkDirWritable, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            if (which == DialogInterface.BUTTON_NEGATIVE) {
+                                resultNok();
+                            }
+                            openRequests.clear();
+                        }
+                    });
                 }
             }));
         }
@@ -256,15 +243,6 @@ public class SettingsActivity extends PreferenceActivity {
     }
 
 
-
-    public static boolean checkStoragePermission(final Context context) {
-        if (Build.VERSION.SDK_INT < 23) return true;
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) ==
-                PackageManager.PERMISSION_GRANTED) return true;
-
-        return false;
-    }
-
     public static boolean checkGpsEnabled(final Activity activity) {
         LocationManager locationService = (LocationManager) activity.getSystemService(activity.LOCATION_SERVICE);
         return locationService.isProviderEnabled(LocationManager.GPS_PROVIDER);
@@ -279,24 +257,7 @@ public class SettingsActivity extends PreferenceActivity {
     }
 
 
-    /**
-     * check if we need storage permissions
-     * @param ctx
-     * @return 0 - no, 1-workdir,2-chartdir, 3-both
-     */
-    private static int needsStoragePermissions(Context ctx){
-        SharedPreferences sharedPrefs=ctx.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
-        String chartDir=sharedPrefs.getString(Constants.CHARTDIR,"");
-        if (! chartDir.isEmpty()){
-            //no permissions if below our app dirs
-            int checkPermissions=1;
-            if (chartDir.startsWith(AvnUtil.workdirStringToFile(Constants.INTERNAL_WORKDIR,ctx).getAbsolutePath())) checkPermissions=0;
-            File externalDir=AvnUtil.workdirStringToFile(Constants.EXTERNAL_WORKDIR,ctx);
-            if (externalDir != null && chartDir.startsWith(externalDir.getAbsolutePath())) checkPermissions+=2;
-            return checkPermissions;
-        }
-        return 0;
-    }
+
     /**
      * check if all settings are correct
      * @param activity
@@ -307,11 +268,6 @@ public class SettingsActivity extends PreferenceActivity {
         SharedPreferences sharedPrefs=activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         if (! checkOrCreateWorkDir(AvnUtil.getWorkDir(sharedPrefs,activity))){
             return false;
-        }
-        if (needsStoragePermissions(activity) >0){
-            if (! checkStoragePermission(activity)){
-                return false;
-            }
         }
         if (! checkGpsEnabled(activity)) return false;
         if (! checkGpsPermission(activity)) return false;
