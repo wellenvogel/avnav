@@ -6,6 +6,7 @@ import android.app.Dialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
@@ -18,6 +19,8 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
+import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbManager;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
@@ -38,6 +41,9 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
@@ -54,6 +60,9 @@ import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.DialogBuilder;
 import de.wellenvogel.avnav.worker.GpsService;
+import de.wellenvogel.avnav.worker.IWorker;
+import de.wellenvogel.avnav.worker.UsbConnectionHandler;
+import de.wellenvogel.avnav.worker.WorkerFactory;
 
 import static de.wellenvogel.avnav.main.Constants.LOGPRFX;
 import static de.wellenvogel.avnav.settings.SettingsActivity.checkSettings;
@@ -87,6 +96,22 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
     private JavaScriptApi jsInterface;
     private int goBackSequence=0;
     private boolean checkSettings=true;
+
+    private static class AttachedDevice{
+        String type;
+        String name;
+        JSONObject toJson() throws JSONException {
+            JSONObject rt=new JSONObject();
+            rt.put("typeName",type);
+            rt.put("device",name);
+            return rt;
+        }
+        AttachedDevice(String type, String name){
+            this.type=type;
+            this.name=name;
+        }
+    }
+    private AttachedDevice attachedDevice=null;
 
 
     public void updateMtp(File file){
@@ -409,6 +434,27 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             webView.loadDataWithBaseURL(start, htmlPage, "text/html", "UTF-8", null);
         }
     }
+    public synchronized String getAttachedDevice(){
+        AttachedDevice device=attachedDevice;
+        attachedDevice=null;
+        if (device == null) return null;
+        try {
+            return device.toJson().toString();
+        } catch (JSONException e) {
+        }
+        return null;
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        String usbDevice=intent.getStringExtra(Constants.USB_DEVICE_EXTRA);
+        if (usbDevice != null){
+            attachedDevice=new AttachedDevice(WorkerFactory.USB_NAME,usbDevice);
+            sendEventToJs(Constants.JS_DEVICE_ADDED,1);
+        }
+
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -431,6 +477,13 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         running=true;
         Intent intent = new Intent(this, GpsService.class);
         bindService(intent,mConnection,0);
+        Intent intent1=getIntent();
+        String usbDevice=intent1.getStringExtra(Constants.USB_DEVICE_EXTRA);
+        if (usbDevice != null){
+            attachedDevice=new AttachedDevice(WorkerFactory.USB_NAME,usbDevice);
+            sendEventToJs(Constants.JS_DEVICE_ADDED,1);
+        }
+
     }
 
     @Override

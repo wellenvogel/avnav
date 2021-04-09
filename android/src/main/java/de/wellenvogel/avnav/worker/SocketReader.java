@@ -14,14 +14,13 @@ import de.wellenvogel.avnav.util.NmeaQueue;
  * Created by andreas on 25.12.14.
  */
 public class SocketReader extends SingleConnectionHandler {
-    static void register(WorkerFactory factory, String name){
-        factory.registerCreator(new WorkerCreator(name) {
-            @Override
-            Worker create(Context ctx,NmeaQueue queue) throws JSONException {
-                return new SocketReader(typeName,ctx,queue);
-            }
-        });
+    static class Creator extends WorkerFactory.Creator{
+        @Override
+        ChannelWorker create(String name, Context ctx, NmeaQueue queue) throws JSONException {
+            return new SocketReader(name,ctx,queue);
+        }
     }
+
 
     private SocketReader(String name,Context ctx, NmeaQueue queue) throws JSONException {
         super(name,ctx,queue);

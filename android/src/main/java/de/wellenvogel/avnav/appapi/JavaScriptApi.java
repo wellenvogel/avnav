@@ -282,5 +282,15 @@ public class JavaScriptApi {
         mainActivity.launchBrowser();
     }
 
+    /**
+     * get a newly attached device
+     * will be called by js code after startup and after a reload event
+     * @return a json string with typeName and device
+     */
+    @JavascriptInterface
+    public String getAttachedDevice(){
+        return mainActivity.getAttachedDevice();
+    }
+
 
 }

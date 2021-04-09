@@ -15,8 +15,7 @@ import de.wellenvogel.avnav.util.NmeaQueue;
 /**
  * Created by andreas on 25.12.14.
  */
-public abstract class SingleConnectionHandler extends Worker {
-    private final NmeaQueue queue;
+public abstract class SingleConnectionHandler extends ChannelWorker {
     private ConnectionReaderWriter handler;
     private ConnectionReaderWriter.ConnectionProperties getConnectionProperties() throws JSONException {
         ConnectionReaderWriter.ConnectionProperties rt=new ConnectionReaderWriter.ConnectionProperties();
@@ -29,11 +28,10 @@ public abstract class SingleConnectionHandler extends Worker {
         return rt;
     }
     private static final String LOGPRFX="SingleConnectionHandler";
-    Context context;
     AbstractConnection connection;
     String name;
     SingleConnectionHandler(String name, Context ctx, NmeaQueue queue) throws JSONException {
-        super(name);
+        super(name,ctx,queue);
         parameterDescriptions.addParams(
                 ENABLED_PARAMETER,
                 SOURCENAME_PARAMETER,

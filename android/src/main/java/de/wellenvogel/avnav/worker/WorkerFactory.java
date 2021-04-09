@@ -23,24 +23,25 @@ public class WorkerFactory {
             super("Worker "+name+" not found");
         }
     }
+    static abstract class Creator{
+        abstract ChannelWorker create(String name,Context ctx,NmeaQueue queue) throws JSONException, IOException;
+        boolean canAdd(Context ctx){return true;}
+    }
     public WorkerFactory(){
-        AndroidPositionHandler.register(this,ANDROID_NAME);
-        SocketReader.register(this,SOCKETREADER_NAME);
-        UsbConnectionHandler.register(this,USB_NAME);
-        BluetoothConnectionHandler.register(this,BLUETOOTH_NAME);
+        registerCreator(ANDROID_NAME,new AndroidPositionHandler.Creator());
+        registerCreator(SOCKETREADER_NAME,new SocketReader.Creator());
+        registerCreator(USB_NAME,new UsbConnectionHandler.Creator());
+        registerCreator(BLUETOOTH_NAME, new BluetoothConnectionHandler.Creator());
 
     }
-    private HashMap<String, Worker.WorkerCreator> workers=new HashMap<>();
-    void registerCreator(Worker.WorkerCreator creator){
-        workers.put(creator.typeName,creator);
+    private HashMap<String, Creator> workers=new HashMap<>();
+    void registerCreator(String typeName,Creator creator){
+        workers.put(typeName,creator);
     }
-    public Worker.WorkerCreator getCreator(String name){
-        return workers.get(name);
-    }
-    public IWorker createWorker(String name,Context ctx, NmeaQueue queue) throws WorkerNotFound, JSONException, IOException {
-        Worker.WorkerCreator cr=getCreator(name);
+    public ChannelWorker createWorker(String name,Context ctx, NmeaQueue queue) throws WorkerNotFound, JSONException, IOException {
+        Creator cr=workers.get(name);
         if ( cr == null) throw new WorkerNotFound(name);
-        return cr.create(ctx,queue);
+        return cr.create(name,ctx,queue);
     }
     public List<String> getKnownTypes(boolean addOnly,Context ctx){
         ArrayList<String> rt=new ArrayList<>();

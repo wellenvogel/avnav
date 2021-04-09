@@ -179,11 +179,13 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
 
 
     }
-    EditableParameter.StringListParameter deviceSelect=
+    public static EditableParameter.StringListParameter DEVICE_SELECT=
             new EditableParameter.StringListParameter("device", R.string.labelSettingsUsbDevice);
+    private EditableParameter.StringListParameter deviceSelect;
     private UsbConnectionHandler(String name, Context ctx, NmeaQueue queue) throws JSONException {
         super(name,ctx,queue);
         parameterDescriptions.add(BAUDRATE_PARAMETER);
+        deviceSelect=new EditableParameter.StringListParameter(DEVICE_SELECT);
         deviceSelect.listBuilder=new EditableParameter.ListBuilder<String>() {
             @Override
             public List<String> buildList(EditableParameter.StringListParameter param) {
@@ -197,6 +199,13 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
         this.ctx=ctx;
     }
 
+    @Override
+    public void setDefaultDevice(String device) throws JSONException {
+        DEVICE_SELECT.write(parameters,device);
+        if (deviceSelect != null) {
+            deviceSelect.defaultValue=device;
+        }
+    }
 
     @Override
     public void run(int startSequence) throws JSONException, IOException {
@@ -245,20 +254,15 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
         Map<String,UsbDevice> devices=manager.getDeviceList();
         return devices.get(name);
     }
-
-    public static void register(WorkerFactory factory,String name){
-        factory.registerCreator(new WorkerCreator(name) {
-            @Override
-            Worker create(Context ctx, NmeaQueue queue) throws JSONException {
-                return new UsbConnectionHandler(typeName,ctx,queue);
-            }
-
-            @Override
-            boolean canAdd(Context ctx) {
-                return ctx.getPackageManager().hasSystemFeature(PackageManager.FEATURE_USB_HOST);
-            }
-        });
+    static class Creator extends WorkerFactory.Creator{
+        @Override
+        ChannelWorker create(String name, Context ctx, NmeaQueue queue) throws JSONException {
+            return new UsbConnectionHandler(name,ctx,queue);
+        }
+        @Override
+        boolean canAdd(Context ctx) {
+            return ctx.getPackageManager().hasSystemFeature(PackageManager.FEATURE_USB_HOST);
+        }
     }
-
 
 }

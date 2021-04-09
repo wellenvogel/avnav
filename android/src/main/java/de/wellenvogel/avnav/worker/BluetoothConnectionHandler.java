@@ -34,21 +34,20 @@ public class BluetoothConnectionHandler extends SingleConnectionHandler {
         };
         parameterDescriptions.add(deviceSelect);
     }
-    public static void register(WorkerFactory factory,String name) {
-        factory.registerCreator(new WorkerCreator(name) {
-            @Override
-            Worker create(Context ctx, NmeaQueue queue) throws JSONException, IOException {
-                return new BluetoothConnectionHandler(typeName, ctx, queue);
-            }
+    public static class Creator extends WorkerFactory.Creator{
 
-            @Override
-            boolean canAdd(Context ctx) {
-                BluetoothAdapter adapter=BluetoothAdapter.getDefaultAdapter();
-                if (adapter == null) return false;
-                return adapter.isEnabled();
-            }
-        });
+        @Override
+        ChannelWorker create(String name, Context ctx, NmeaQueue queue) throws JSONException, IOException {
+            return new BluetoothConnectionHandler(name, ctx, queue);
+        }
+        @Override
+        boolean canAdd(Context ctx) {
+            BluetoothAdapter adapter=BluetoothAdapter.getDefaultAdapter();
+            if (adapter == null) return false;
+            return adapter.isEnabled();
+        }
     }
+
     @Override
     public void run(int startSequence) throws JSONException, IOException {
         String deviceName=deviceSelect.fromJson(parameters);

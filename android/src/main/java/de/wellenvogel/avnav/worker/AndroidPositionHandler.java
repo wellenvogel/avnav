@@ -38,7 +38,7 @@ import java.util.TimeZone;
 /**
  * Created by andreas on 12.12.14.
  */
-public class AndroidPositionHandler extends Worker implements LocationListener , GpsStatus.Listener {
+public class AndroidPositionHandler extends ChannelWorker implements LocationListener , GpsStatus.Listener {
 
 
     private static final long MAXLOCWAIT=2000; //max time we wait until we explicitely query the location again
@@ -48,10 +48,8 @@ public class AndroidPositionHandler extends Worker implements LocationListener ,
     private Location location=null;
     private String currentProvider=LocationManager.GPS_PROVIDER;
     private long lastValidLocation=0;
-    private Context context;
     private boolean isRegistered=false;
     private long timeOffset=0;
-    private NmeaQueue queue;
     private Handler handler=new Handler(Looper.getMainLooper());
 
 
@@ -60,9 +58,7 @@ public class AndroidPositionHandler extends Worker implements LocationListener ,
     private Thread satStatusProvider;
 
     private AndroidPositionHandler(String name,Context ctx, NmeaQueue queue) {
-        super(name);
-        this.context = ctx;
-        this.queue = queue;
+        super(name,ctx,queue);
         parameterDescriptions.addParams(
                 ENABLED_PARAMETER,
                 SOURCENAME_PARAMETER,
@@ -70,17 +66,15 @@ public class AndroidPositionHandler extends Worker implements LocationListener ,
         status.canEdit=true;
     }
 
-    public static void register(WorkerFactory factory,String name){
-        factory.registerCreator(new WorkerCreator(name) {
-            @Override
-            Worker create(Context ctx, NmeaQueue queue) throws JSONException, IOException {
-                return new AndroidPositionHandler(typeName,ctx,queue);
-            }
-            @Override
-            boolean canAdd(Context ctx) {
-                return false;
-            }
-        });
+    public static class Creator extends WorkerFactory.Creator{
+        @Override
+        ChannelWorker create(String name, Context ctx, NmeaQueue queue) {
+            return new AndroidPositionHandler(name,ctx,queue);
+        }
+        @Override
+        boolean canAdd(Context ctx) {
+            return false;
+        }
     }
 
     @Override

@@ -58,6 +58,7 @@ public class Constants {
     public final static String ASSETS_PROVIDER_AUTHORITY=BuildConfig.APPLICATION_ID+".assetsprovider";
     public final static String USER_PROVIDER_AUTHORITY=BuildConfig.APPLICATION_ID+".userprovider";
     public static final int NO_DATA_TIME = 10000; //revert status to inactive...
+    public static final String USB_DEVICE_EXTRA = "usbDevice" ;
     //list of audio settings
     //used to retrieve the request code for a get audio file
     public static String[] audioPreferenceCodes=new String[]{
@@ -92,6 +93,7 @@ public class Constants {
     public static final String BC_STOPAPPL="de.wellenvogel.avnav.STOPAPPL";
     public static final String BC_TRIGGER="de.wellenvogel.avnav.TRIGGER";
     public static final String BC_RELOAD_DATA ="de.wellenvogel.avnav.RELOAD_DATA";
+    public static final String BC_USB_ATTACH ="de.wellenvogel.avnav.USBATTACH";
 
     public static final int LOCALNOTIFY=1;
 
@@ -114,4 +116,5 @@ public class Constants {
     public static final String JS_FILE_COPY_READY="fileCopyReady";
     public static final String JS_FILE_COPY_PERCENT="fileCopyPercent"; //id will be percent
     public static final String JS_FILE_COPY_DONE="fileCopyDone"; //id will be: 0 for success, 1 for error
+    public static final String JS_DEVICE_ADDED="deviceAdded";
 }

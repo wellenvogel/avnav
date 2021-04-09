@@ -181,6 +181,13 @@ public class EditableParameter {
             super(name);
             list=values;
         }
+
+        public StringListParameter(StringListParameter stringListParameter) {
+            super(stringListParameter);
+            list=stringListParameter.list;
+        }
+
+
         @Override
         public String getType() {
             return "SELECT";

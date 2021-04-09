@@ -6,7 +6,6 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -43,7 +42,6 @@ import de.wellenvogel.avnav.appapi.INavRequestHandler;
 import de.wellenvogel.avnav.appapi.PostVars;
 import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.appapi.WebServer;
-import de.wellenvogel.avnav.main.BuildConfig;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.Dummy;
 import de.wellenvogel.avnav.main.IMediaUpdater;
@@ -164,11 +162,16 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         }
         if ("getAddAttributes".equals(command)){
             String typeName=AvnUtil.getMandatoryParameter(uri,"handlerName");
+            String deviceName=uri.getQueryParameter("defaultDevice");
             try{
-                IWorker w=WorkerFactory.getInstance().createWorker(typeName,this,null);
-                return RequestHandler.getReturn(new RequestHandler.KeyValue<JSONArray>("data",w.getParameterDescriptions(this)));
+                ChannelWorker w=WorkerFactory.getInstance().createWorker(typeName,this,null);
+                if (deviceName != null) w.setDefaultDevice(deviceName);
+                return RequestHandler.getReturn(
+                        new RequestHandler.KeyValue<JSONArray>("data",w.getParameterDescriptions(this)),
+                        new RequestHandler.KeyValue<JSONObject>("values",w.parameters)
+                );
             }catch (WorkerFactory.WorkerNotFound e){
-                return RequestHandler.getErrorReturn("not handler of type "+typeName+" found");
+                return RequestHandler.getErrorReturn("no handler of type "+typeName+" found");
             }
         }
         if ("canRestart".equals(command)){
@@ -402,8 +405,8 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         }
         return null;
     }
-    private JSONArray getWorkerConfig() throws JSONException {
-        SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
+    private static JSONArray getWorkerConfig(Context ctx) throws JSONException {
+        SharedPreferences prefs=ctx.getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
         String config=prefs.getString(Constants.HANDLER_CONFIG,null);
         JSONArray rt=null;
         boolean hasNewConfig=false;
@@ -439,9 +442,6 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             if (rt != null) return rt;
         }
         rt=new JSONArray();
-        if (! hasNewConfig) {
-            //TODO: migrate from old config
-        }
         JSONObject h1=new JSONObject();
         h1.put(Worker.TYPENAME_PARAMETER.name,WorkerFactory.ANDROID_NAME);
         rt.put(h1);
@@ -615,6 +615,24 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         internalWorkers.clear();
     }
 
+    public static boolean handlesUsbDevice(Context ctx,String deviceName){
+        try {
+            JSONArray workers = getWorkerConfig(ctx);
+            for (int i = 0; i < workers.length(); i++) {
+                JSONObject wc = workers.getJSONObject(i);
+                try {
+                    if (WorkerFactory.USB_NAME.equals(Worker.TYPENAME_PARAMETER.fromJson(wc))) {
+                        if (UsbConnectionHandler.DEVICE_SELECT.fromJson(wc).equals(deviceName)) {
+                            return true;
+                        }
+                    }
+                }
+                catch (Throwable t){}
+            }
+        }catch (Throwable t){}
+        return false;
+    }
+
     private void handleStartup(boolean isWatchdog){
         SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
         AvnLog.d(LOGPRFX,"started");
@@ -649,7 +667,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         if (! isWatchdog || workers.size() == 0) {
             workerId=MIN_WORKER_ID;
             try {
-                JSONArray handlerConfig = getWorkerConfig();
+                JSONArray handlerConfig = getWorkerConfig(this);
                 for (int i = 0; i < handlerConfig.length(); i++) {
                     try {
                         JSONObject config = handlerConfig.getJSONObject(i);
@@ -685,7 +703,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         if (! isWatchdog) {
             stopWorkers();
             handleMigration();
-        };
+        }
         handleStartup(isWatchdog);
         if (! isWatchdog || runnable == null) {
             timerSequence++;

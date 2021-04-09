@@ -41,14 +41,6 @@ public abstract class Worker implements IWorker {
             new EditableParameter.IntegerParameter("timeOffset",R.string.labelSettingsTimeOffset,0);
 
 
-    abstract static class WorkerCreator{
-        protected String typeName;
-        WorkerCreator(String typeName){
-            this.typeName = typeName;
-        }
-        abstract Worker create(Context ctx, NmeaQueue queue) throws JSONException, IOException;
-        boolean canAdd(Context ctx){return true;}
-    }
 
     private static class ResourceClaim{
         String kind;
