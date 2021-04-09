@@ -2,23 +2,17 @@ package de.wellenvogel.avnav.worker;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
-import android.util.Log;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.util.UUID;
-
-import de.wellenvogel.avnav.util.AvnLog;
 
 /**
  * Created by andreas on 12.03.15.
  * a class to unify Bluetooth sockets and IP sockets
  */
 public class BluetoothConnection extends AbstractConnection {
-    private int timeout;
     private BluetoothSocket btSocket;
     private BluetoothDevice btDevice;
 
@@ -30,16 +24,15 @@ public class BluetoothConnection extends AbstractConnection {
         btSocket.connect();
     }
 
-    public InputStream getInputStream() throws IOException {
+    public InputStream getInputStreamImpl() throws IOException {
         return btSocket.getInputStream();
     }
 
-    public OutputStream getOutputStream() throws IOException {
+    public OutputStream getOutputStreamImpl() throws IOException {
         return btSocket.getOutputStream();
     }
 
-    public void close() throws IOException {
-        lastWrite=0;
+    public void closeImpl() throws IOException {
         try {
             btSocket.close();
         }catch (IOException e){

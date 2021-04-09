@@ -24,8 +24,11 @@ public class SocketReader extends SingleConnectionHandler {
 
     private SocketReader(String name,Context ctx, NmeaQueue queue) throws JSONException {
         super(name,ctx,queue);
-        parameterDescriptions.add(IPADDRESS_PARAMETER);
-        parameterDescriptions.add(IPPORT_PARAMETER);
+        parameterDescriptions.addParams(IPADDRESS_PARAMETER,
+                IPPORT_PARAMETER,
+                WRITE_TIMEOUT_PARAMETER,
+                CONNECT_TIMEOUT_PARAMETER,
+                READ_TIMEOUT_PARAMETER);
     }
 
     @Override

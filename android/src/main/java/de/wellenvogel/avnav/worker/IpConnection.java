@@ -1,17 +1,10 @@
 package de.wellenvogel.avnav.worker;
 
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
-import android.util.Log;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.util.UUID;
-
-import de.wellenvogel.avnav.util.AvnLog;
 
 /**
  * Created by andreas on 12.03.15.
@@ -24,20 +17,27 @@ public class IpConnection extends AbstractConnection {
      * connect the socket
      * @throws IOException
      */
+    @Override
     public void connect() throws IOException{
-        ipSocket.connect(ipAddr,timeout);
+        if (ipSocket != null){
+            try{
+                ipSocket.close();
+            }catch (Throwable t){}
+            ipSocket=null;
+        }
+        ipSocket=new Socket();
+        ipSocket.connect(ipAddr,properties.connectTimeout);
     }
-
-    public InputStream getInputStream() throws IOException {
+    @Override
+    public InputStream getInputStreamImpl() throws IOException {
         return ipSocket.getInputStream();
     }
 
-    public OutputStream getOutputStream() throws IOException {
+    public OutputStream getOutputStreamImpl() throws IOException {
         return ipSocket.getOutputStream();
     }
 
-    public void close() throws IOException {
-        lastWrite=0;
+    public void closeImpl() throws IOException {
         if (ipSocket!=null) {
             try {
                 ipSocket.close();
@@ -45,7 +45,7 @@ public class IpConnection extends AbstractConnection {
                 ipSocket=new Socket();
                 throw e;
             }
-            ipSocket=new Socket();
+            ipSocket=null;
         }
     }
 
@@ -57,7 +57,6 @@ public class IpConnection extends AbstractConnection {
     }
 
     public IpConnection(InetSocketAddress addr){
-        ipSocket=new Socket();
         ipAddr=addr;
     }
 

@@ -39,6 +39,12 @@ public abstract class Worker implements IWorker {
                     "1200","2400","4800","9600","14400","19200","28800","38400","57600","115200","230400");
     static final EditableParameter.IntegerParameter TIMEOFFSET_PARAMETER=
             new EditableParameter.IntegerParameter("timeOffset",R.string.labelSettingsTimeOffset,0);
+    static final EditableParameter.IntegerParameter CONNECT_TIMEOUT_PARAMETER=
+            new EditableParameter.IntegerParameter("connectTimeout",R.string.labelSettingsConnectTimeout,0);
+    static final EditableParameter.IntegerParameter READ_TIMEOUT_PARAMETER=
+            new EditableParameter.IntegerParameter("readTimeout",R.string.labelSettingsReadTimeout,0);
+    static final EditableParameter.IntegerParameter WRITE_TIMEOUT_PARAMETER=
+            new EditableParameter.IntegerParameter("writeTimeout",R.string.labelSettingsWriteTimeout,5000);
 
 
 

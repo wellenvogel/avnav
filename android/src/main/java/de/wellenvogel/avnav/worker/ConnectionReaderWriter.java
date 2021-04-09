@@ -1,6 +1,5 @@
 package de.wellenvogel.avnav.worker;
 
-import android.content.Context;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -20,12 +19,14 @@ import de.wellenvogel.avnav.util.NmeaQueue;
 public class ConnectionReaderWriter{
     public static class ConnectionProperties {
         public String sourceName;
-        public boolean readData;
-        public boolean writeData;
+        public boolean readData=true;
+        public boolean writeData=false;
         public String[] readFilter;
         public String[] writeFilter;
         public int readTimeout = 0;
         public int noDataTime=10000;
+        public int connectTimeout =0;
+        public int writeTimeout=0;
     }
 
     private static final String LOGPRFX = "ConnectionReaderWriter";
@@ -39,9 +40,9 @@ public class ConnectionReaderWriter{
     Thread writerThread;
     long lastReceived=0;
 
-    public ConnectionReaderWriter(AbstractConnection connection, ConnectionProperties properties, String name, NmeaQueue queue) {
+    public ConnectionReaderWriter(AbstractConnection connection, String name, NmeaQueue queue) {
         this.connection = connection;
-        this.properties = properties;
+        this.properties = connection.properties;
         this.name = name;
         this.queue = queue;
     }
@@ -60,9 +61,7 @@ public class ConnectionReaderWriter{
                             AvnLog.d("ignore " + e.data + " due to filter");
                             continue;
                         }
-                        connection.startWrite();
                         os.write(e.data.getBytes());
-                        connection.finishWrite();
                     }
                 }
             } catch (IOException | InterruptedException e) {

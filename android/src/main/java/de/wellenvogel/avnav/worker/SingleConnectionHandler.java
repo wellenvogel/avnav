@@ -18,14 +18,17 @@ import de.wellenvogel.avnav.util.NmeaQueue;
 public abstract class SingleConnectionHandler extends ChannelWorker {
     private ConnectionReaderWriter handler;
     private ConnectionReaderWriter.ConnectionProperties getConnectionProperties() throws JSONException {
-        ConnectionReaderWriter.ConnectionProperties rt=new ConnectionReaderWriter.ConnectionProperties();
-        rt.readData=true;
-        rt.writeData=SEND_DATA_PARAMETER.fromJson(parameters);
-        rt.readFilter=AvnUtil.splitNmeaFilter(FILTER_PARAM.fromJson(parameters));
-        rt.writeFilter=AvnUtil.splitNmeaFilter(SEND_FILTER_PARAM.fromJson(parameters));
-        rt.sourceName=getSourceName();
-        rt.noDataTime= Constants.NO_DATA_TIME;
-        return rt;
+            ConnectionReaderWriter.ConnectionProperties rt=new ConnectionReaderWriter.ConnectionProperties();
+            rt.readData=true;
+            if (parameterDescriptions.has(SEND_DATA_PARAMETER))rt.writeData=Worker.SEND_DATA_PARAMETER.fromJson(parameters);
+            if (parameterDescriptions.has(FILTER_PARAM)) rt.readFilter=AvnUtil.splitNmeaFilter(Worker.FILTER_PARAM.fromJson(parameters));
+            if (parameterDescriptions.has(SEND_FILTER_PARAM)) rt.writeFilter=AvnUtil.splitNmeaFilter(Worker.SEND_FILTER_PARAM.fromJson(parameters));
+            rt.sourceName=getSourceName();
+            rt.noDataTime= Constants.NO_DATA_TIME;
+            if (parameterDescriptions.has(READ_TIMEOUT_PARAMETER)) rt.readTimeout=Worker.READ_TIMEOUT_PARAMETER.fromJson(parameters);
+            if (parameterDescriptions.has(CONNECT_TIMEOUT_PARAMETER)) rt.connectTimeout =Worker.CONNECT_TIMEOUT_PARAMETER.fromJson(parameters);
+            if (parameterDescriptions.has(WRITE_TIMEOUT_PARAMETER)) rt.writeTimeout=Worker.WRITE_TIMEOUT_PARAMETER.fromJson(parameters);
+            return rt;
     }
     private static final String LOGPRFX="SingleConnectionHandler";
     AbstractConnection connection;
@@ -47,6 +50,7 @@ public abstract class SingleConnectionHandler extends ChannelWorker {
     }
 
     public void runInternal(AbstractConnection con,int startSequence) throws JSONException {
+        con.setProperties(getConnectionProperties());
         this.connection =con;
         long lastConnect=0;
         while (! shouldStop(startSequence)) {
@@ -68,28 +72,13 @@ public abstract class SingleConnectionHandler extends ChannelWorker {
                 try {
                     connection.close();
                 }catch (Exception i){}
-                try {
-                    synchronized (waiter) {
-                        waiter.wait(5000);
-                    }
-                } catch (InterruptedException e1) {
-
-                }
+                sleep(5000);
                 continue;
             }
             AvnLog.d(LOGPRFX, name + ": connected to " + connection.getId());
             setStatus(WorkerStatus.Status.NMEA,"connected to "+connection.getId());
-            try{
-                handler=new ConnectionReaderWriter(connection,getConnectionProperties(),getSourceName(),queue);
-                handler.run();
-            } catch (JSONException e) {
-                Log.e(LOGPRFX, name + ": Exception during read " + e.getLocalizedMessage());
-                setStatus(WorkerStatus.Status.ERROR,"read exception " + e);
-                try {
-                    connection.close();
-                } catch (Exception i) {
-                }
-            }
+            handler=new ConnectionReaderWriter(connection,getSourceName(),queue);
+            handler.run();
             long current=System.currentTimeMillis();
             if ((current-lastConnect) < 3000){
                 if (!sleep(3000)) break;
@@ -120,6 +109,7 @@ public abstract class SingleConnectionHandler extends ChannelWorker {
         if (this.isStopped()) return;
         if (connection != null) {
             if (connection.check()) {
+                setStatus(WorkerStatus.Status.ERROR,"closed due to timeout");
                 AvnLog.e(name + ": closing socket due to write timeout");
             }
         }

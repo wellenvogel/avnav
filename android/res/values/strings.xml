@@ -87,5 +87,8 @@
     <string name="labelSettingsMobAlarm">Sound for MOB alarm</string>
     <string name="hideBars">Hide System Bars</string>
     <string name="background">Background</string>
+    <string name="labelSettingsConnectTimeout">Timeout(ms) for connecting to remote server use 0 for none</string>
+    <string name="labelSettingsReadTimeout">Close connection if no data for this time (ms), use 0 for none</string>
+    <string name="labelSettingsWriteTimeout">timeout (ms) for sending data to the remote server, use 0 for none</string>
 
 </resources>

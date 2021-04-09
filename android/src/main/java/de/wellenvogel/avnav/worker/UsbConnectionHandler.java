@@ -116,7 +116,7 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
         }
 
         @Override
-        public InputStream getInputStream() throws IOException {
+        public InputStream getInputStreamImpl() throws IOException {
             return new InputStream() {
                 @Override
                 public int read() throws IOException {
@@ -156,7 +156,7 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
         }
 
         @Override
-        public OutputStream getOutputStream() throws IOException {
+        public OutputStream getOutputStreamImpl() throws IOException {
             return new OutputStream() {
                 @Override
                 public void write(int b) throws IOException {
@@ -168,7 +168,7 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
         }
 
         @Override
-        public void close() throws IOException {
+        public void closeImpl() throws IOException {
             AvnLog.i(PREFIX,"close connection to "+dev.getDeviceName());
             if (serialPort == null) return;
             try {
