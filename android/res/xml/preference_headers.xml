@@ -9,8 +9,7 @@
     <header
         android:fragment="de.wellenvogel.avnav.settings.SoundSettingsFragment"
         android:title="@string/labelSettingsSound"
-        android:summary=""
-        android:id="@+id/sound_settings">
+        android:summary="">
 
     </header>
 

@@ -2,7 +2,6 @@
 <resources>
     <!-- the colors here should match the less -->
     <color name="colorMain">#546e7a</color>
-    <color name="colorSecond">#CFD8DC</color>
     <color name="colorSelection">#ECEFF1</color>
     <color name="colorPressed">#797979</color>
     <color name="colorTextWhite">#FFFFFF</color>
