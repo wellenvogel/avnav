@@ -95,7 +95,7 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
                         ArrayList<String> fixSats = new ArrayList<String>();
                         for (GpsSatellite s : status.getSatellites()) {
                             numSat++;
-                            if (s.usedInFix()) fixSats.add(String.format("%02d", s.getPrn()));
+                            if (s.usedInFix() && fixSats.size() < 12) fixSats.add(String.format("%02d", s.getPrn()));
                             SatelliteInfo sat = new SatelliteInfo(String.format("%02d", s.getPrn()),
                                     (int) Math.round(Math.toDegrees(s.getElevation())),
                                     (int) Math.round(Math.toDegrees(s.getAzimuth())),
