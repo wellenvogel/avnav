@@ -36,6 +36,9 @@ import Mob from './components/Mob.js';
 import Dimmer from './util/dimhandler.js';
 import Button from './components/Button.jsx';
 import LeaveHandler from './util/leavehandler';
+import EditHandlerDialog from "./components/EditHandlerDialog";
+import AndroidEventHandler from './util/androidEventHandler';
+import And from "ol/format/filter/And";
 
 
 const DynamicSound=Dynamic(SoundHandler);
@@ -177,7 +180,19 @@ class App extends React.Component {
                 history.push("addonpage", {activeAddOn: addon});
             }
         },'addon',['0','1','2','3','4','5','6','7']);
+        this.newDeviceHandler=this.newDeviceHandler.bind(this);
+        this.subscription=AndroidEventHandler.subscribe('deviceAdded',this.newDeviceHandler);
 
+    }
+    newDeviceHandler(){
+        try{
+            let devData=avnav.android.getAttachedDevice();
+            if (! devData) return;
+            let config=JSON.parse(devData);
+            if (config.typeName && config.device){
+                EditHandlerDialog.createNewHandlerDialog(config.typeName,config.device);
+            }
+        }catch(e){}
     }
     static getDerivedStateFromError(error) {
         lastError.error=error;
@@ -215,10 +230,12 @@ class App extends React.Component {
         this.setState({interval:iv});
         window.addEventListener('resize',this.checkSizes);
         AlarmHandler.start();
+        this.newDeviceHandler();
 
 
     }
     componentWillUnmount(){
+        AndroidEventHandler.unsubscribe(this.subscription);
         document.removeEventListener("keydown",this.keyDown);
         window.removeEventListener('resize',this.checkSizes);
         if (this.state.interval){
