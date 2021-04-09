@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
+import android.os.Build;
 
 import com.felhr.usbserial.UsbSerialDevice;
 import com.felhr.usbserial.UsbSerialInterface;
@@ -57,6 +58,13 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
             synchronized (bufferLock){
                 bufferLock.notifyAll();
             }
+        }
+        static String getProductName(UsbDevice device){
+            if (device == null) return "";
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                return device.getProductName();
+            }
+            return "";
         }
         final UsbSerialInterface.UsbReadCallback callback=new UsbSerialInterface.UsbReadCallback() {
             @Override
@@ -174,7 +182,7 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
 
         @Override
         public String getId() {
-            return dev.getDeviceName();
+            return dev.getDeviceName()+ " "+getProductName(dev);
         }
 
 
@@ -216,6 +224,7 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
             UsbManager manager=(UsbManager) ctx.getSystemService(Context.USB_SERVICE);
             Map<String,UsbDevice> devices=manager.getDeviceList();
             device=devices.get(deviceName);
+            String name=UsbSerialConnection.getProductName(device);
             if (device == null){
                 setStatus(WorkerStatus.Status.ERROR,"device "+deviceName+" not available");
                 sleep(2000);
@@ -236,11 +245,11 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
                     sleep(5000);
                     continue;
                 }
-                setStatus(WorkerStatus.Status.STARTED,"connecting to "+deviceName);
+                setStatus(WorkerStatus.Status.STARTED,"connecting to "+deviceName+" "+name);
                 try {
                     runInternal(new UsbSerialConnection(ctx, device, BAUDRATE_PARAMETER.fromJson(parameters)), startSequence);
                 }catch(Throwable t){
-                    setStatus(WorkerStatus.Status.ERROR,"unable to open device"+t.getMessage());
+                    setStatus(WorkerStatus.Status.ERROR,"unable to open device "+deviceName+" "+t.getMessage());
                     AvnLog.e("error opening usb device",t);
                     sleep(5000);
                 }
@@ -249,11 +258,7 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
         }
     }
 
-    public static UsbDevice getDeviceForName(Context ctx,String name){
-        UsbManager manager=(UsbManager) ctx.getSystemService(Context.USB_SERVICE);
-        Map<String,UsbDevice> devices=manager.getDeviceList();
-        return devices.get(name);
-    }
+
     static class Creator extends WorkerFactory.Creator{
         @Override
         ChannelWorker create(String name, Context ctx, NmeaQueue queue) throws JSONException {
