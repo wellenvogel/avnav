@@ -383,7 +383,13 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             return new WebServer(GpsService.this);
         }
     };
-    private final WorkerConfig[] INTERNAL_WORKERS ={WDECODER,WROUTER,WTRACK,WLOGGER,WSERVER};
+    private final WorkerConfig WGPS= new WorkerConfig("InternalGPS", 6) {
+        @Override
+        IWorker createWorker(Context ctx, NmeaQueue queue) {
+            return new AndroidPositionHandler(typeName,ctx,queue);
+        }
+    };
+    private final WorkerConfig[] INTERNAL_WORKERS ={WDECODER,WROUTER,WTRACK,WLOGGER,WSERVER,WGPS};
 
     private synchronized int getNextWorkerId(){
         workerId++;
@@ -406,9 +412,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         SharedPreferences prefs=ctx.getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
         String config=prefs.getString(Constants.HANDLER_CONFIG,null);
         JSONArray rt=null;
-        boolean hasNewConfig=false;
         if (config != null){
-            hasNewConfig=true;
             try{
                 rt=new JSONArray(config);
             }catch (Throwable t){
@@ -416,33 +420,9 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             }
         }
         if (rt != null) {
-            //ensure to have the internal handler in any case
-            //ans make some checks
-            boolean hasInternal=false;
-            for (int i=0;i<rt.length();i++){
-                try {
-                    JSONObject o = rt.getJSONObject(i);
-                    if (Worker.TYPENAME_PARAMETER.fromJson(o).equals(WorkerFactory.ANDROID_NAME)){
-                        hasInternal=true;
-                    }
-                }catch(Throwable t){
-                    AvnLog.e("error parsing handler config",t);
-                    rt=null;
-                    break;
-                }
-            }
-            if (rt != null && ! hasInternal){
-                JSONObject intGps=new JSONObject();
-                intGps.put(Worker.TYPENAME_PARAMETER.name,WorkerFactory.ANDROID_NAME);
-                rt.put(intGps);
-            }
-            if (rt != null) return rt;
+            return rt;
         }
         rt=new JSONArray();
-        JSONObject h1=new JSONObject();
-        h1.put(Worker.TYPENAME_PARAMETER.name,WorkerFactory.ANDROID_NAME);
-        rt.put(h1);
-        prefs.edit().putString(Constants.HANDLER_CONFIG,rt.toString()).apply();
         return rt;
     }
     private void handleMigration(){
@@ -475,10 +455,14 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
                 ipFilter = "!";
             }
             //step1: internal receiver
+            if (ipais && ipnmea){
+                //internal gps disabled
+                JSONObject internal=new JSONObject();
+                Worker.ENABLED_PARAMETER.write(internal,false);
+                edit.putString(WGPS.typeName,internal.toString());
+            }
             JSONArray newConfig = new JSONArray();
-            JSONObject handler=new JSONObject();
-            Worker.TYPENAME_PARAMETER.write(handler,WorkerFactory.ANDROID_NAME);
-            newConfig.put(handler);
+            JSONObject handler=null;
             //if we need ip
             if (ip != null && port >= 0) {
                 handler = new JSONObject();
@@ -1180,10 +1164,10 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
     }
     public JSONArray getStatus() throws JSONException {
         JSONArray rt=new JSONArray();
-        for (IWorker w : workers){
+        for (IWorker w: internalWorkers){
             rt.put(w.getJsonStatus());
         }
-        for (IWorker w: internalWorkers){
+        for (IWorker w : workers){
             rt.put(w.getJsonStatus());
         }
         return rt;

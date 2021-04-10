@@ -57,7 +57,7 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
     private boolean stopped=true;
     private Thread satStatusProvider;
 
-    private AndroidPositionHandler(String name,Context ctx, NmeaQueue queue) {
+    AndroidPositionHandler(String name, Context ctx, NmeaQueue queue) {
         super(name,ctx,queue);
         parameterDescriptions.addParams(
                 ENABLED_PARAMETER,
