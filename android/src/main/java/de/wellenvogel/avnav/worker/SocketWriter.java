@@ -73,13 +73,17 @@ public class SocketWriter extends ChannelWorker {
 
     private SocketWriter(String name, Context ctx, NmeaQueue queue) throws JSONException {
         super(name,ctx,queue);
-        parameterDescriptions.addParams(PORT_PARAMETER,
+        parameterDescriptions.addParams(
+                ENABLED_PARAMETER,
+                PORT_PARAMETER,
                 EXTERNAL_ACCESS,
                 WRITE_TIMEOUT_PARAMETER,
                 SEND_FILTER_PARAM,
                 READ_DATA_PARAMETER,
                 FILTER_PARAM
                 );
+        status.canEdit=true;
+        status.canDelete=true;
     }
     private InetAddress getLocalHost() throws UnknownHostException {
         InetAddress local=null;
