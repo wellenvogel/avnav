@@ -660,6 +660,11 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
     }
 
     private void shoLoading() {
+        if (pd != null){
+            try{
+                pd.dismiss();
+            }catch(Throwable t){}
+        }
         pd = ProgressDialog.show(this, "", getString(R.string.loading), true);
     }
     private void handleBars(){
