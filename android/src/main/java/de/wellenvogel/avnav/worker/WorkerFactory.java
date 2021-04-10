@@ -15,6 +15,7 @@ public class WorkerFactory {
     public static final String ANDROID_NAME="InternalGPS";
     public static final String USB_NAME="UsbConnection";
     public static final String SOCKETREADER_NAME="SocketReader";
+    public static final String SOCKETWRITER_NAME="SocketWriter";
     public static final String BLUETOOTH_NAME="Bluetooth";
     private static final WorkerFactory instance=new WorkerFactory();
     public static WorkerFactory getInstance(){return instance;}
@@ -30,6 +31,7 @@ public class WorkerFactory {
     public WorkerFactory(){
         registerCreator(ANDROID_NAME,new AndroidPositionHandler.Creator());
         registerCreator(SOCKETREADER_NAME,new SocketReader.Creator());
+        registerCreator(SOCKETWRITER_NAME, new SocketWriter.Creator());
         registerCreator(USB_NAME,new UsbConnectionHandler.Creator());
         registerCreator(BLUETOOTH_NAME, new BluetoothConnectionHandler.Creator());
 

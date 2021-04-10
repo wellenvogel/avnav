@@ -61,7 +61,7 @@ public class ConnectionReaderWriter{
                             AvnLog.d("ignore " + e.data + " due to filter");
                             continue;
                         }
-                        os.write(e.data.getBytes());
+                        os.write((e.data+"\r\n").getBytes());
                         dataAvailable=true;
                     }
                 }

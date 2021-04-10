@@ -24,6 +24,8 @@ public abstract class Worker implements IWorker {
             new EditableParameter.StringParameter("sendFilter",R.string.labelSettingsNmeaOutFilter,"");
     static final EditableParameter.BooleanParameter SEND_DATA_PARAMETER=
             new EditableParameter.BooleanParameter("sendOut",R.string.labelSettingsSendData,false);
+    static final EditableParameter.BooleanParameter READ_DATA_PARAMETER=
+            new EditableParameter.BooleanParameter("readData",R.string.labelSettingsReadData,false);
     public static final EditableParameter.BooleanParameter ENABLED_PARAMETER=
             new EditableParameter.BooleanParameter("enabled",R.string.labelSettingsEnabled,true);
     static final EditableParameter.StringParameter IPADDRESS_PARAMETER=
