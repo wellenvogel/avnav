@@ -285,7 +285,7 @@ public class JavaScriptApi {
     /**
      * get a newly attached device
      * will be called by js code after startup and after a reload event
-     * @return a json string with typeName and device
+     * @return a json string with typeName and initialParameters (see {@link de.wellenvogel.avnav.main.MainActivity.AttachedDevice}
      */
     @JavascriptInterface
     public String getAttachedDevice(){

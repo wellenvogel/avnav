@@ -162,13 +162,10 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         }
         if ("getAddAttributes".equals(command)){
             String typeName=AvnUtil.getMandatoryParameter(uri,"handlerName");
-            String deviceName=uri.getQueryParameter("defaultDevice");
             try{
                 ChannelWorker w=WorkerFactory.getInstance().createWorker(typeName,this,null);
-                if (deviceName != null) w.setDefaultDevice(deviceName);
                 return RequestHandler.getReturn(
-                        new RequestHandler.KeyValue<JSONArray>("data",w.getParameterDescriptions(this)),
-                        new RequestHandler.KeyValue<JSONObject>("values",w.parameters)
+                        new RequestHandler.KeyValue<JSONArray>("data",w.getParameterDescriptions(this))
                 );
             }catch (WorkerFactory.WorkerNotFound e){
                 return RequestHandler.getErrorReturn("no handler of type "+typeName+" found");

@@ -13,6 +13,7 @@ import com.felhr.usbserial.UsbSerialDevice;
 import com.felhr.usbserial.UsbSerialInterface;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -207,13 +208,6 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
         this.ctx=ctx;
     }
 
-    @Override
-    public void setDefaultDevice(String device) throws JSONException {
-        DEVICE_SELECT.write(parameters,device);
-        if (deviceSelect != null) {
-            deviceSelect.defaultValue=device;
-        }
-    }
 
     @Override
     public void run(int startSequence) throws JSONException, IOException {
@@ -268,6 +262,19 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
         boolean canAdd(Context ctx) {
             return ctx.getPackageManager().hasSystemFeature(PackageManager.FEATURE_USB_HOST);
         }
+    }
+
+    /**
+     * fill in initial parameters that we would use if android has detected
+     * a device we still do not know
+     * @param deviceName
+     * @return
+     * @throws JSONException
+     */
+    public static JSONObject getInitialParameters(String deviceName) throws JSONException {
+        JSONObject rt=new JSONObject();
+        DEVICE_SELECT.write(rt,deviceName);
+        return rt;
     }
 
 }

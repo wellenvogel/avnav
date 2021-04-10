@@ -99,16 +99,16 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
 
     private static class AttachedDevice{
         String type;
-        String name;
+        JSONObject parameters;
         JSONObject toJson() throws JSONException {
             JSONObject rt=new JSONObject();
             rt.put("typeName",type);
-            rt.put("device",name);
+            rt.put("initialParameters",parameters);
             return rt;
         }
-        AttachedDevice(String type, String name){
+        AttachedDevice(String type, JSONObject parameters){
             this.type=type;
-            this.name=name;
+            this.parameters=parameters;
         }
     }
     private AttachedDevice attachedDevice=null;
@@ -445,15 +445,22 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         return null;
     }
 
+    private void handleUsbDeviceAttach(Intent intent){
+        String usbDevice=intent.getStringExtra(Constants.USB_DEVICE_EXTRA);
+        if (usbDevice != null){
+            try {
+                attachedDevice=new AttachedDevice(WorkerFactory.USB_NAME,
+                        UsbConnectionHandler.getInitialParameters(usbDevice));
+            } catch (JSONException e) {
+                AvnLog.e("unable to get parameters for usb device",e);
+            }
+            sendEventToJs(Constants.JS_DEVICE_ADDED,1);
+        }
+    }
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        String usbDevice=intent.getStringExtra(Constants.USB_DEVICE_EXTRA);
-        if (usbDevice != null){
-            attachedDevice=new AttachedDevice(WorkerFactory.USB_NAME,usbDevice);
-            sendEventToJs(Constants.JS_DEVICE_ADDED,1);
-        }
-
+        handleUsbDeviceAttach(intent);
     }
 
     @Override
@@ -477,13 +484,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         running=true;
         Intent intent = new Intent(this, GpsService.class);
         bindService(intent,mConnection,0);
-        Intent intent1=getIntent();
-        String usbDevice=intent1.getStringExtra(Constants.USB_DEVICE_EXTRA);
-        if (usbDevice != null){
-            attachedDevice=new AttachedDevice(WorkerFactory.USB_NAME,usbDevice);
-            sendEventToJs(Constants.JS_DEVICE_ADDED,1);
-        }
-
+        handleUsbDeviceAttach(getIntent());
     }
 
     @Override

@@ -14,13 +14,4 @@ public abstract class ChannelWorker extends Worker{
         this.context=ctx;
         this.queue=queue;
     }
-
-    /**
-     * to be able to add a channel for a newly detected device
-     * we can set this at the worker before we call getParameterDescriptions
-     * if supported it should also set the real value at the handler
-     * @param device
-     * @throws JSONException
-     */
-    public void setDefaultDevice(String device) throws JSONException{}
 }

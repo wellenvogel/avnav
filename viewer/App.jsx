@@ -189,8 +189,8 @@ class App extends React.Component {
             let devData=avnav.android.getAttachedDevice();
             if (! devData) return;
             let config=JSON.parse(devData);
-            if (config.typeName && config.device){
-                EditHandlerDialog.createNewHandlerDialog(config.typeName,config.device);
+            if (config.typeName && config.initialParameters){
+                EditHandlerDialog.createNewHandlerDialog(config.typeName,config.initialParameters);
             }
         }catch(e){}
     }

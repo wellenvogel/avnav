@@ -87,7 +87,6 @@ class EditHandlerDialog extends React.Component{
         else{
             param.command='getAddAttributes';
             param.handlerName=this.props.handlerName;
-            if (this.props.defaultDevice) param.defaultDevice=this.props.defaultDevice;
         }
         RequestHandler.getJson('',undefined,param)
             .then((data)=>{
@@ -114,10 +113,8 @@ class EditHandlerDialog extends React.Component{
                     canDelete: data.canDelete
                 })
                 this.currentValues.setState(data.values||{});
-                if (this.props.handlerName && data.values){
-                    //if the server prefilled some values when adding
-                    //we treat them as modified so that we send them back
-                    this.modifiedValues.setState(data.values);
+                if (this.props.initialValues){
+                    this.modifiedValues.setState(this.props.initialValues);
                 }
             })
             .catch((e)=>Toast(e));
@@ -274,7 +271,7 @@ EditHandlerDialog.propTypes={
     handlerName: PropTypes.string, //if this is set the handlerId and childId are ignored
                                    //and we create a new handler
     closeCallback: PropTypes.func.isRequired,
-    defaultDevice: PropTypes.string //if set for the add dialog send this to the server as defaultDevice
+    initialValues: PropTypes.object
 };
 
 const filterObject=(data)=>{
@@ -302,13 +299,13 @@ EditHandlerDialog.createDialog=(handlerId,opt_child)=>{
     return true;
 };
 
-EditHandlerDialog.createNewHandlerDialog=(typeName,opt_device)=>{
+EditHandlerDialog.createNewHandlerDialog=(typeName,opt_initialParameters)=>{
     OverlayDialog.dialog((props)=> {
         return <EditHandlerDialog
             {...props}
             title="Add Handler"
             handlerName={typeName}
-            defaultDevice={opt_device}
+            initialValues={opt_initialParameters}
         />
     });
 }
