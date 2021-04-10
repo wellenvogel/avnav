@@ -18,10 +18,10 @@ public class IpConnection extends AbstractConnection {
      * @throws IOException
      */
     @Override
-    public void connect() throws IOException{
+    public void connectImpl() throws IOException{
         if (ipSocket != null){
             try{
-                ipSocket.close();
+                closeImpl();
             }catch (Throwable t){}
             ipSocket=null;
         }
@@ -30,11 +30,15 @@ public class IpConnection extends AbstractConnection {
     }
     @Override
     public InputStream getInputStreamImpl() throws IOException {
-        return ipSocket.getInputStream();
+        Socket socket=ipSocket;
+        if (socket == null) throw new IOException("connection closed");
+        return socket.getInputStream();
     }
 
     public OutputStream getOutputStreamImpl() throws IOException {
-        return ipSocket.getOutputStream();
+        Socket socket=ipSocket;
+        if (socket == null) throw new IOException("connection closed");
+        return socket.getOutputStream();
     }
 
     public void closeImpl() throws IOException {
@@ -42,7 +46,7 @@ public class IpConnection extends AbstractConnection {
             try {
                 ipSocket.close();
             }catch (IOException e){
-                ipSocket=new Socket();
+                ipSocket=null;
                 throw e;
             }
             ipSocket=null;
@@ -50,10 +54,8 @@ public class IpConnection extends AbstractConnection {
     }
 
     public String getId(){
-        if (ipSocket!=null) {
-            return ipAddr.toString();
-        }
-        return "unknown";
+        return ipAddr.toString();
+
     }
 
     public IpConnection(InetSocketAddress addr){

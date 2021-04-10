@@ -20,7 +20,7 @@ public class BluetoothConnection extends AbstractConnection {
      * connect the socket
      * @throws IOException
      */
-    public void connect() throws IOException{
+    public void connectImpl() throws IOException{
         btSocket.connect();
     }
 

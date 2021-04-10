@@ -34,7 +34,7 @@ public class ConnectionReaderWriter{
     private NmeaQueue queue;
     private AbstractConnection connection;
     private ConnectionProperties properties;
-    private boolean dataAvailable = true;
+    private boolean dataAvailable = false;
     private String name;
     WriterRunnable writer;
     Thread writerThread;
@@ -62,6 +62,7 @@ public class ConnectionReaderWriter{
                             continue;
                         }
                         os.write(e.data.getBytes());
+                        dataAvailable=true;
                     }
                 }
             } catch (IOException | InterruptedException e) {
@@ -77,11 +78,12 @@ public class ConnectionReaderWriter{
     }
 
     boolean hasNmea() {
-        return dataAvailable && (System.currentTimeMillis() < (lastReceived+properties.noDataTime));
+        return ! stopped && ! connection.isClosed() && dataAvailable && (System.currentTimeMillis() < (lastReceived+properties.noDataTime));
     }
 
 
     public void run() {
+        dataAvailable=false;
         try {
             startWriter();
         } catch (JSONException e) {
@@ -99,6 +101,7 @@ public class ConnectionReaderWriter{
                 if (line == null) {
                     break;
                 }
+                dataAvailable=true;
                 if (properties.readData) {
                     line = AvnUtil.removeNonNmeaChars(line);
                     if (!AvnUtil.matchesNmeaFilter(line, properties.readFilter)) {

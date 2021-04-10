@@ -89,7 +89,7 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
             //TODO: handle open connection error
         }
         @Override
-        public void connect() throws IOException {
+        public void connectImpl() throws IOException {
             buffer.clear();
             notifyWaiters();
             AvnLog.i(PREFIX,"connect to "+dev.getDeviceName());

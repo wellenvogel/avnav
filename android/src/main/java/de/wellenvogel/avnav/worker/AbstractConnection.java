@@ -16,12 +16,17 @@ public abstract class AbstractConnection {
     protected ConnectionReaderWriter.ConnectionProperties properties;
     private GuardedInputStream inputStream;
     private GuardedOutputStream outputStream;
+    private boolean closed=true;
 
     /**
      * connect the socket
      * @throws IOException
      */
-    abstract public void connect() throws IOException;
+    public void connect() throws IOException{
+        connectImpl();
+        closed=false;
+    }
+    abstract protected void connectImpl() throws IOException;
 
     private static class GuardedInputStream extends InputStream{
         //not thread safe!
@@ -176,11 +181,15 @@ public abstract class AbstractConnection {
             if (outputStream != null) outputStream.close();
         }catch (Throwable t){}
         outputStream=null;
+        closed=true;
         closeImpl();
     }
     abstract protected void closeImpl() throws IOException;
 
     abstract public String getId();
 
+    public boolean isClosed(){
+        return closed;
+    }
 
 }

@@ -30,6 +30,7 @@ public abstract class SingleConnectionHandler extends ChannelWorker {
             if (parameterDescriptions.has(WRITE_TIMEOUT_PARAMETER)) rt.writeTimeout=Worker.WRITE_TIMEOUT_PARAMETER.fromJson(parameters);
             return rt;
     }
+    private int connects=0;
     private static final String LOGPRFX="SingleConnectionHandler";
     AbstractConnection connection;
     String name;
@@ -53,10 +54,16 @@ public abstract class SingleConnectionHandler extends ChannelWorker {
         con.setProperties(getConnectionProperties());
         this.connection =con;
         long lastConnect=0;
+        connects=0;
         while (! shouldStop(startSequence)) {
+            if (status.status != WorkerStatus.Status.ERROR) {
+                setStatus(WorkerStatus.Status.STARTED, "connecting " + connection.getId());
+            }
             try {
                 lastConnect=System.currentTimeMillis();
                 connection.connect();
+                connects++;
+                setStatus(WorkerStatus.Status.STARTED, "("+connects+") waiting for data from/to " + connection.getId());
             } catch (Exception e) {
                 Log.e(LOGPRFX, name + ": Exception during connect " + e.getLocalizedMessage());
                 setStatus(WorkerStatus.Status.ERROR,"connect error " + e);
@@ -76,7 +83,6 @@ public abstract class SingleConnectionHandler extends ChannelWorker {
                 continue;
             }
             AvnLog.d(LOGPRFX, name + ": connected to " + connection.getId());
-            setStatus(WorkerStatus.Status.NMEA,"connected to "+connection.getId());
             handler=new ConnectionReaderWriter(connection,getSourceName(),queue);
             handler.run();
             long current=System.currentTimeMillis();
@@ -100,17 +106,25 @@ public abstract class SingleConnectionHandler extends ChannelWorker {
     @Override
     public void stop() {
         super.stop();
+        try{
+            connection.close();
+        }catch (Throwable t){}
         stopHandler();
 
     }
 
     @Override
     public synchronized void check() throws JSONException {
-        if (this.isStopped()) return;
+        if (this.isStopped()) {
+            if (status.status == WorkerStatus.Status.NMEA) {
+                setStatus(WorkerStatus.Status.ERROR,"stopped");
+            }
+        }
         if (connection != null) {
             if (connection.check()) {
                 setStatus(WorkerStatus.Status.ERROR,"closed due to timeout");
                 AvnLog.e(name + ": closing socket due to write timeout");
+                return;
             }
         }
         if ( handler == null || ! handler.hasNmea()){
@@ -120,7 +134,7 @@ public abstract class SingleConnectionHandler extends ChannelWorker {
         }
         if (handler != null && handler.hasNmea()){
             if (status.status != WorkerStatus.Status.NMEA) {
-                setStatus(WorkerStatus.Status.NMEA, "connected to " + connection.getId());
+                setStatus(WorkerStatus.Status.NMEA, "("+connects+") connected to " + connection.getId());
             }
         }
     }
