@@ -8,21 +8,21 @@
   <body data-order="7300">
     <h1>User Spezifischer Java Script Code</h1>
     <div class="toc"> </div>
-    <p>Um eine einfache Möglichkeit zu bieten, avnav an seine Bedürfnisse
+    <p>Um eine einfache Möglichkeit zu bieten, AvNav an seine Bedürfnisse
       anzupassen, kann man mit ein wenig Java Script Code AvNav relativ einfach
       erweitern.</p>
     <p>Dabei ist es zunächst einmal möglich, neue Anzeigen zu definieren, die
       dann im Layout Editor ausgewählt werden können. Prinzipiell kann man dort
-      natürlich beliebigen Java Script code ausführen - muss dabei aber
-      natürlich sehen, die Funktionen von avnav nicht zu stören.</p>
-    <p>Der Java Script code liegt in der Datei user.js im Verzeichnis
+      natürlich beliebigen Java Script Code ausführen - muss dabei aber
+      natürlich zusehen, die Funktionen von AvNav nicht zu stören.</p>
+    <p>Der Java Script Code liegt in der Datei user.js im Verzeichnis
       BASEDIR/user/viewer.<br>
       BASEDIR ist z.B. auf dem pi /home/pi/avnav/data.</p>
     <h2>Bearbeitung</h2>
     <p>Um die Bearbeitung zu erleichtern, kann man über die Files/Download Seite
       <img src="../viewerimages/icons-new/ic_file_download.svg" alt="" class="inlineimage">und
       die Unterseite <img src="../viewerimages/icons-new/folder_shared.svg" alt=""
-        class="inlineimage">auf die Dateien in diesem Verzeichnis zugreifen.</p>
+        class="inlineimage"> auf die Dateien in diesem Verzeichnis zugreifen.</p>
     <p><img src="../downloadpage-user.png" alt="" class="fimage"></p>
     <p>Wie im Bild zu sehen, existiert dort bereits eine Datei user.js. Diese
       wird beim erstmaligen Start aus einem Template erzeugt.</p>
@@ -31,10 +31,10 @@
     <p><img src="../viewpage-edit-user.png" alt="" class="fimage"></p>
     <p>In der Datei sind bereits Beispiele vorhanden für die Möglichkeiten der
       Anpassung. Nach dem Bearbeiten die Datei speichern <img src="../viewerimages/icons-new/save.svg"
-        alt="" class="inlineimage">und avnav neu laden.</p>
+        alt="" class="inlineimage"> und AvNav neu laden.</p>
     <p>Es empfiehlt sich, die Datei in regelmäßigen Abständen nach dem
       Bearbeiten herunterzuladen und noch einmal irgenwo zu speichern - es gibt
-      keine Versionsverwaltung in avnav.</p>
+      keine Versionsverwaltung in AvNav.</p>
     <p>Das aktuelle Template kann man auch <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">auf
         github</a> finden.</p>
     <h2>Anzeigen (Widgets)</h2>
@@ -48,17 +48,17 @@
           gauges</a> (Beispiel 2 - <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">user.js</a>:
         rpmGauge)<br>
         Hiermit ist es auch möglich, Parameter zugänglich zu machen, die in den
-        bisher vorhandenen Widgets nicht enthalten sind.</li>
+        bisher vorhandenen Widgets nicht enthalten sind</li>
       <li>Widgets mit eigenem HTML code (Beispiel 3 - <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">user.js</a>:
         userSpecialRpm, <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/testPlugin/plugin.js">TestPlugin</a>:
         testPlugin_courseWidget)</li>
       <li>Widgets mit Grafik in einem Canvas Element (Beispiel im <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/testPlugin/plugin.js">TestPlugin:</a>
         testPlugin_courseWidget)</li>
-      <li>Widgets mit eigenem HTML, die mit dem Server Teil eines plugins
-        interagieren(<a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/testPlugin/plugin.js">TestPlugin</a>:
+      <li>Widgets mit eigenem HTML, die mit dem Server Teil eines Plugins
+        interagieren (<a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/testPlugin/plugin.js">TestPlugin</a>:
         testPlugin_serverWidget)</li>
     </ul>
-    <p>Das Interface, über das mit avnav kommuniziert wird, findet sich <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/util/api.js">auf
+    <p>Das Interface, über das mit AvNav kommuniziert wird, findet sich <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/util/api.js">auf
         github</a> bzw. im Template Code.</p>
     <p>Für ein selbst geschriebenes Widget können die folgenden
       Funktionen/Eigenschaften implementiert werden:</p>
@@ -99,7 +99,7 @@
             code einfach mit<br>
             <div class="code">&lt;button onclick="myHandler"&gt;Click!&lt;/button&gt;
               </div>
-            angegeben (das ist keine exakte HTML Syntax da nur der Name des
+            angegeben (das ist keine exakte HTML Syntax, da nur der Name des
             event handlers angegeben wird, kein java script code).<br>
             <br>
             Die "this" variable innerhalb von renderHtml zeigt auf ein Objekt,
@@ -134,7 +134,7 @@
           <td>Object</td>
           <td>alle</td>
           <td>Hier müssen die Daten angegeben werden, die aus dem zentralen
-            Speicher gelesen&nbsp; und als Parameter den renderXXX Funktionen
+            Speicher gelesen und als Parameter den renderXXX Funktionen
             mitgegeben werden sollen<br>
           </td>
         </tr>
@@ -167,7 +167,7 @@
             (optional)</td>
           <td>alle</td>
           <td>Diese Funktion wird mit den aktuellen Werten als Parameter
-            aufgerufen (so wie bei storeKeys angegeben) und muss die daruas
+            aufgerufen (so wie bei storeKeys angegeben) und muss die daraus
             berechneten Werte zurückgeben.<br>
             Falls keine eigene renderXXX Funktion genutzt werden soll, kann hier
             vor dem Rendern eine Umrechnung von Werten erfolgen - siehe <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">Beispiel</a>.</td>
@@ -180,7 +180,7 @@
           <td>Falls vorhanden, wird diese Funktion einmalig aufgerufen, wenn das
             Widget erzeugt wird. Als Parameter (und als this) ist der Widget
             Context vorhanden.<br>
-            Diese Objekt hat eine eventHandler Eigenschaft - hier müssen die im
+            Dieses Objekt hat eine eventHandler Eigenschaft - hier müssen die im
             renderHTML genutzten eventHandler eingetragen werden.<br>
             Mit der Funktion triggerRedraw am Widget Kontext kann ein erneuter
             Aufruf der renderXXX Funktionen erzwungen werden </td>
@@ -190,7 +190,7 @@
           <td>Funktion<br>
             (optional)</td>
           <td>userWidget</td>
-          <td>Fall vorhanden, wird diese Funktion gerufen, bevor das Widget
+          <td>Falls vorhanden, wird diese Funktion aufgerufen, bevor das Widget
             nicht mehr genutzt wird. Die "this" Variable zeigt wieder auf den
             Widget Kontext.</td>
         </tr>
@@ -210,7 +210,7 @@
           <td>die URL zum Verzeichnis, aus dem die Java script Datei geladen
             wurde. Diese kann z.B. verwendet werden, um weitere Elemente von
             dort zu laden. Für die user.js können Dateien aus dem images
-            Verzeichnis über AVNAV_BASE_URL+"../mages" erreicht werden.<br>
+            Verzeichnis über AVNAV_BASE_URL+"../images" erreicht werden.<br>
             Für plugins kann über AVNAV_BASE_URL+"/api" die Kommunikation mit
             dem Python Anteil erreicht werden.</td>
         </tr>
@@ -221,7 +221,7 @@
         </tr>
       </tbody>
     </table>
-    <p>Nach der definition muss das Widget bei AvNav bekannt gemacht werden
+    <p>Nach der Definition muss das Widget bei AvNav bekannt gemacht werden
       (avnav.registerWidget). </p>
     <h2><a name="widgetparameter" id="widgetparameter"></a>Widget Parameter</h2>
     <p>Neben der Widget Definition können hier noch Parameter angegeben werden,
@@ -244,18 +244,18 @@
           </td>
           <td>key</td>
           <td>Der Name des Parameters so wie er im Layout Editor angezeigt
-            werden soll und wie er den renderXXX Funktionen zur Verfügung stehen
+            werden soll, und wie er den renderXXX Funktionen zur Verfügung stehen
             soll.</td>
         </tr>
         <tr>
           <td>type</td>
           <td>String</td>
-          <td>STRING, NUMBER,KEY, SELECT,ARRAY, BOOLEAN,COLOR<br>
+          <td>STRING, NUMBER, KEY, SELECT, ARRAY, BOOLEAN, COLOR<br>
             Der Typ für den Parameter. Je nach Typ wird er dem Nutzer
             unterschiedlich angezeigt.<br>
             Für COLOR eine Farb-Auswahl, für SELECT eine AuswahlListe und für
             KEY die Liste der momentan verfügbaren Werte im Store.<br>
-            Für Array kann eine durch Komma getrennte Liste angegeben werden.</td>
+            Für ein Array kann eine durch Komma getrennte Liste angegeben werden.</td>
         </tr>
         <tr>
           <td>default</td>
@@ -299,7 +299,7 @@
     maxValue: {type: 'NUMBER', default: 4000},
    };
 </div>
-    <h2> <a name="formatter" id="formatter"></a>Formatierer(Formatter) </h2>
+    <h2> <a name="formatter" id="formatter"></a>Formatierer (Formatter) </h2>
     <p>Neben den eigentlichen Anzeigen können auch eigene Formatierer
       geschrieben werden, die die Werte für die Anzeige aufbereiten.<br>
       Im System sind bereits eine Reihe von Formatierern vorhanden - siehe <a href="layouts.html#formatter">Layout
@@ -361,7 +361,7 @@ document.getElementsByTagName("head")[0].appendChild(fileref)</div>
       direkt mit dem "+" Button unten rechts erledigen - die Datei kann dann
       natürlich ebenfalls direkt bearbeitet werden. </p>
     <h2>Feature Formatierer (featureFormatter)</h2>
-    <p>Ab Version 20210114 gibt es die Möglichkeit eigene Funktionen zu
+    <p>Ab Version 20210114 gibt es die Möglichkeit, eigene Funktionen zu
       registrieren, die die Anzeige von Daten aus Overlays aufbereiten.<br>
       Solche Funktionen können in der user.js oder in Plugins implementiert
       werden.</p>

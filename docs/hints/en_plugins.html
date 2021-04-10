@@ -8,27 +8,27 @@
     <h1>Avnav Plugins</h1>
     <p>=== not for android ===</p>
     <div class="toc"></div>
-    <p>To extend the functionality of AvNav you have plugins. Plugins can extend
-      the server functions (using python code) or / and they can extend the
+    <p>Plugins extend the functionality of AvNav. They can extend
+      server functions (using python code) as well as the
       WebApp using Java Script or CSS.</p>
-    <p>Each plugin has to reside in an own directory. The name of this directory
-      will become the plugin name. There are 2 root directories that AvNav scans
+    <p>Each plugin has to reside in a separate directory. The directory
+      name defines the plugin name. 2 root directories are scanned by AvNav in search
       for plugins:</p>
     <ul>
-      <li>"systemdir" - a directory for plugins that are installed for all users
-        of a system (e.g. via a package). This one is /usr/lib/avnav/plugins.</li>
+      <li>"systemdir" - a directory to hold plugins installed for all users
+        of a system (e.g. via a package). This is /usr/lib/avnav/plugins.</li>
       <li>"userdir" - a directory for plugins specific for a particular user.
-        This is a sub dir of the "data dir" - /home/pi/avnav/data/plugins on the
+        This is a sub directory of the user's "data dir" - /home/pi/avnav/data/plugins on the
         pi, $HOME/avnav/plugins on other Linux systems.</li>
     </ul>
-    <p>Beside those two there is an additional directory for internal plugins
+    <p>Beside those two an additional directory holds internal plugins
       (builtin).</p>
-    <p>Basically a plugin server part can read and write data from/to AvNav at a
-      couple of points. The WebApp parts would normally display such values or
-      simply add new display functions to AvNav or adapt the look and feel.</p>
-    <p>There can be up to 3 files in a plugin directory that are honored by
-      AvNav. Additional files in the directory will not be handled by AvNav -
-      but maybe needed by the plugin itself.</p>
+    <p>In principle a plugin's server part can read and write data from/to AvNav at 
+      various interfaces. The WebApp parts would normally display such values or
+      simply add new display functions to AvNav or adapt its look and feel.</p>
+    <p>Up to 3 files within a plugin directory are processed by
+      AvNav. Additional files in the directory will be ignored by AvNav -
+      however they can be required by the plugin itself.</p>
     <p>Those files are:</p>
     <ul>
       <li>plugin.py -&nbsp; the server parts, optional</li>
@@ -39,30 +39,29 @@
     <h2>List of Plugins</h2>
     <ul>
       <li><a href="https://github.com/wellenvogel/avnav-seatalk-remote-plugin">Seatalk
-          Remote</a> - in combination with the setalk remote from <a href="https://github.com/AK-Homberger/Seatalk-Autopilot-Remote-Control">AK-Homberger</a></li>
+          Remote</a> - in combination with the seatalk remote control from <a href="https://github.com/AK-Homberger/Seatalk-Autopilot-Remote-Control">AK-Homberger</a></li>
       <li><a href="https://github.com/wellenvogel/avnav-history-plugin">History</a>
         - Data history and display</li>
       <li><a href="https://github.com/wellenvogel/avnav-update-plugin">Update</a>
-        - update AvNav (and related packages) without the need for command line
+        - update AvNav (and related packages) eliminating the need for command line
         access<br>
         Also integrates a config file editor and a log viewer for AvNav</li>
       <li><a href="https://github.com/wellenvogel/avnav-mapproxy-plugin">MapProxy</a>
-        - integrate <a href="https://mapproxy.org/">MapProxy</a> for access to
+        - integrate <a href="https://mapproxy.org/">MapProxy</a> to access 
         and download from various online chart sources</li>
     </ul>
     <p></p>
     <h2>plugin.js</h2>
-    <p>In the Java Script code you have the same functions as described at <a href="userjs.html">user
+    <p>Java Script code file offering same functions as described in <a href="userjs.html">user
         specific Java Script code</a> .</p>
     <h2>plugin.css</h2>
-    <p>In the CSS code you have the same options like described at <a href="usercss.html">user
-        specific CSS</a> beschrieben.</p>
+    <p>CSS code file offering same options as described in <a href="usercss.html">user
+        specific CSS</a>.</p>
     <h2>plugin.py</h2>
     <img src="../software-with-plugin.png" alt="" class="fimage">
-    <p>The drawing provides a rough overview about the internal structure of the
-      AvNav server together with the points (interfaces) at which plugins can
+    <p>The diagram provides a rough overview of the AvNav server's internal structure together with the points (interfaces) where plugins can
       interact.</p>
-    <table border="1" width="100%">
+    <table width="100%" border="1">
       <tbody>
         <tr>
           <td>Point</td>
@@ -71,30 +70,29 @@
         </tr>
         <tr>
           <td>A</td>
-          <td>Write NMEA date into the internal list. This data is available at
+          <td>Feed NMEA data to the internal list. These become available at
             all outputs.<br>
-            Hint: As long as there is no decoder those data will not become
-            available to the WebApp.</td>
+            Hint: a decoder is required for the WebApp to access them</td>
           <td>Read from a sensor and generate the correct NMEA0183 sentence.</td>
         </tr>
         <tr>
           <td>B</td>
-          <td>Reading of received NMEA data. At this point you can fetch
-            (potentially using a filter) all the NMEA data that is passing
+          <td>Reading of inbound NMEA data. Here you can access
+            (potentially using a filter) all NMEA data passing
             through AvNav.</td>
           <td>Together with point "C": decoding of NMEA sentences.</td>
         </tr>
         <tr>
           <td>C</td>
-          <td>Write data into the internal store of AvNav. Data in the internal
+          <td>Feed data into the internal store of AvNav. Data in the internal
             store is available in a tree like structure. Each leaf has a key in
             the form of "a.b.c....". Example: "gps.lat".<br>
-            All keys that start with "gps...." will automatically be sent to the
-            WebApp and will be available there at "nav.gps...." - see <a href="layouts.html">layout
+            All keys starting with "gps...." are sent to the
+            WebApp automatically and become available there as "nav.gps...." - see <a href="layouts.html">layout
               editor</a> and <a href="userjs.html">user specific Java Script</a>.<br>
             Keys need to be registered by the plugin before using them. It is
-            not possible to override keys being defined by AvNav itself.
-            Exception: The user configures "allowKeyOverride" to true.</td>
+            not possible to override keys defined by AvNav itself.
+            Exception: "allowKeyOverride" set to true by user.</td>
           <td>Write the data from a sensor like&nbsp; gps.temperature.outside or
             write decoded NMEA data</td>
         </tr>
@@ -107,9 +105,8 @@
         <tr>
           <td>E</td>
           <td>Handling of HTTP requests</td>
-          <td>The java script parts can send a HTTP request that can be handled
-            in the python code. Normally you will return a dictionary (send back
-            as json).</td>
+          <td>The java script parts may send a HTTP request to be handled
+            in the python code. Normally a dictionary will be returned (as json).</td>
         </tr>
       </tbody>
     </table>
@@ -117,7 +114,7 @@
     <p>To be recognized by AvNav the plugin has to provide:</p>
     <ol>
       <li>A class within plugin.py (the name should be Plugin)</li>
-      <li>The class must have a static method (@classmethod) with the name
+      <li>The class must contain a static method (@classmethod) with the name
         pluginInfo. It must return a dictionary.<br>
         <div class="code">* description (mandatory)
 * data: list of keys to be stored (optional)
@@ -142,16 +139,14 @@ def pluginInfo(cls):<br>  return {
         When calling the constructor AvNav will provide an instance of the <a href="https://github.com/wellenvogel/avnav/blob/master/server/avnav_api.py">API</a>
         as the parameter.</li>
       <li>The class must implement a run method (without parameters).<br>
-        This method will be called within an own thread after the initialization
-        finished.<br>
+        After initialization this method will be called in a separate thread.<br>
         Normally you would have an endless loop here to provide the plugin
         functionality.</li>
     </ol>
-    <p>You can provide parameters for the plugin in <a href="configfile.html#plugins">avnav_server.xml.</a>
-      In the code you can fetch them at the API using getConfigValue.</p>
+    <p>You can provide parameters for the plugin in <a href="configfile.html#plugins">avnav_server.xml.</a> They can be read at the API using getConfigValue.</p>
     <p>The <a href="https://github.com/wellenvogel/avnav/blob/master/server/avnav_api.py">API</a>
       provides the following functions:</p>
-    <table border="1" width="100%">
+    <table width="100%" border="1">
       <tbody>
         <tr>
           <td>Function</td>
@@ -160,8 +155,8 @@ def pluginInfo(cls):<br>  return {
         <tr>
           <td>log,debug,error</td>
           <td>Logging functions. Lines will be written to the AvNav log file.
-            Avoid writing large amounts of logs at log and error. This would
-            flood the log and hide important entries (exampl: do not write an
+            Avoid writing too many log and error entries. This would
+            flood the log and obfuscate important entries (example: do not write an
             error every second)</td>
         </tr>
         <tr>
@@ -172,25 +167,25 @@ def pluginInfo(cls):<br>  return {
           <td>fetchFromQueue</td>
           <td>Interface B: read data from the internal NMEA list. There is an
             example in the API code. The filter option is working the same way
-            like in&nbsp; <a href="configfile.html#filter">avnav_server.xml</a>.</td>
+            as in&nbsp; <a href="configfile.html#filter">avnav_server.xml</a>.</td>
         </tr>
         <tr>
           <td>addNMEA</td>
-          <td>Interface A: write a NMEA record into the internal list. You can
-            leave the check sum computation to AvNav and you can prevent the
-            decoding inside AvNav. The source parameter is the channel name you
+          <td>Interface A: feed a NMEA record to the internal list. You can
+            leave the check sum to be computed by AvNav. You can also block 
+            decoding within AvNav. The source parameter is the channel name you
             would use in <a href="configfile.html#blackList">blackList
               parameters</a> .</td>
         </tr>
         <tr>
           <td>addData</td>
-          <td>Interface C: write data into the internal store. You can only
+          <td>Interface C: feed data into the internal store. You can only
             write data with keys that have been announced by the return values
             of the pluginInfo method.</td>
         </tr>
         <tr>
           <td>getSingleValue</td>
-          <td>Interface D: read data from the internal store. For combining
+          <td>Interface D: read data from the internal store. To combine
             multiple reads there is the method getDataByPrefix</td>
         </tr>
         <tr>
@@ -200,19 +195,19 @@ def pluginInfo(cls):<br>  return {
         </tr>
         <tr>
           <td>registerUserApp</td>
-          <td>As a plugin you can register a <a href="../userdoc/addonconfigpage.html">user
-              app</a>.&nbsp; You need an URL and an icon file. The icon file
-            should be located inside the plugin directory. You can use $HOST
-            inside the URL. It will be replaced by the AvNav servers address.
-            Exasmple in the <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/signalk/plugin.py">signalk
+          <td>You can register a <a href="../userdoc/addonconfigpage.html">user
+              app</a> as a plugin. You need an URL and an icon file. The icon file
+            should be located in the plugin directory. You can use $HOST
+            inside the URL. It will be replaced by the AvNav server's address.
+            Example in the <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/signalk/plugin.py">signalk
               plugin</a>.</td>
         </tr>
         <tr>
           <td>registerLayout</td>
-          <td>If the plugin provides own widgets it could make sense to provide
-            an own layout that the user can select. Just save the layout in the
+          <td>If the plugin provides its own widgets it could make sense to provide
+            a layout for the user to select. Just save the layout in the
             plugin directory after creating it with the <a href="layouts.html">layout
-              editor</a>. Example again within the <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/signalk/plugin.py">signalk
+              editor</a>. Example within the <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/signalk/plugin.py">signalk
               plugin</a>.</td>
         </tr>
         <tr>
@@ -221,13 +216,13 @@ def pluginInfo(cls):<br>  return {
         </tr>
         <tr>
           <td>registerChartProvider</td>
-          <td>If the plugin is going to provide charts you will register a
-            callback here that returns a list of charts.</td>
+          <td>If the plugin provides charts you need to register a
+            callback here to return a list of charts.</td>
         </tr>
         <tr>
           <td>registerRequestHandler</td>
-          <td>If the plugin is going to handle HTTP requests (interface E) you
-            need to register a callback here. The url that will trigger the
+          <td>If the plugin handles HTTP requests (interface E) you
+            need to register a callback here. The URL triggering the
             callback is:<br>
             &lt;pluginBase&gt;/api<br>
             pluginBase is the value returned by getBaseUrl
@@ -235,7 +230,7 @@ def pluginInfo(cls):<br>  return {
             The <a href="userjs.html">java script parts</a> can compute the API
             url using the variable AVNAV_BASE_URL: AVNAV_BASE_URL+"/api"<br>
             In the simple case your callback should return a dictionary that is
-            send back as json.</td>
+            sent back as json.</td>
         </tr>
         <tr>
           <td>getBaseUrl</td>
@@ -244,37 +239,36 @@ def pluginInfo(cls):<br>  return {
         <tr>
           <td>registerUsbHandler<br>
             (since 20201227)</td>
-          <td>registers a callback for an USB device. With this registration
-            AvNav will not handle this particular device. The provided callback
-            will be called with the device path bas a parameter when the USB
+          <td>registers a callback for an USB device. With this registration in place
+            AvNav will not further care about this particular device. The provided callback
+            will be called with the device path as a parameter as soon as the USB
             device has been detected.<br>
             You can easily figure out the USB id by watching the status page
             when connecting the device. The USB id is bound to the USB socket -
             see <a href="configfile.html?lang=en#AVNUsbSerialReader">AVNUsbSerialReader</a>.
-            Using this api a plugin can easily handle a serial device by it's
+            Using this api a plugin can easily handle a serial device by its
             own. An example you can find on <a href="https://github.com/wellenvogel/avnav-seatalk-remote-plugin/blob/master/plugin.py">GitHub</a>.</td>
         </tr>
         <tr>
           <td>getAvNavVersion<br>
             (since 20210115)</td>
-          <td>return an int with the current version of AvNav. Can be used to
+          <td>return the current version of AvNav (integer value). Can be used to
             test if certain functions can be expected to be available</td>
         </tr>
         <tr>
           <td>saveConfigValues<br>
             (since 20210322)</td>
-          <td>Store config values for the plugin in avnav_server.xml. The
-            parameter must by a dictionary with the values that should be
-            changed. The plugin must ensure that it later on can start with the
+          <td>Store the plugin's config values in avnav_server.xml. The
+            parameter must by a dictionary holding the values to be
+            changed. The plugin must ensure that it can restart with the
             parameters provided here.</td>
         </tr>
         <tr>
           <td>registerEditableParameters<br>
             (since 20210322)</td>
-          <td>This will register a list of config values that can be changed
+          <td>This registers a list of config values which can be changed
             during runtime. The first parameter must be a list of dictionary
-            objects describing the parameters, the second parameter a callback
-            that will be called with the changed parameters (will typically call
+            objects describing the parameters, the second parameter provides a callback to be called with the changed parameters (will typically call
             saveConfigValues).<br>
             For the parameter descriptions refer to the <a href="https://github.com/wellenvogel/avnav/blob/master/server/avnav_api.py">source
               code</a>.</td>
@@ -292,13 +286,13 @@ def pluginInfo(cls):<br>  return {
         <tr>
           <td>deregisterUsbHandler<br>
             (since 20210322)</td>
-          <td>deregister an usb device id (see registerUsbHandler)</td>
+          <td>unregister an usb device id (see registerUsbHandler)</td>
         </tr>
         <tr>
           <td>shouldStopMainThread<br>
             (since 20210322)</td>
           <td>can be used in the main loop of the plugin to check if it should
-            stop. Do not call this from other threads as it would always return
+            stop. Do not call this from other threads as it always returns
             True.</td>
         </tr>
       </tbody>
