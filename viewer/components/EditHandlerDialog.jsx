@@ -287,7 +287,7 @@ const filterObject=(data)=>{
  * @param opt_child: the child identifier
  * @return {boolean}
  */
-EditHandlerDialog.createDialog=(handlerId,opt_child)=>{
+EditHandlerDialog.createDialog=(handlerId,opt_child,opt_doneCallback)=>{
     OverlayDialog.dialog((props)=> {
         return <EditHandlerDialog
             {...props}
@@ -295,11 +295,11 @@ EditHandlerDialog.createDialog=(handlerId,opt_child)=>{
             handlerId={handlerId}
             child={opt_child}
             />
-    });
+    },undefined,opt_doneCallback);
     return true;
 };
 
-EditHandlerDialog.createNewHandlerDialog=(typeName,opt_initialParameters)=>{
+EditHandlerDialog.createNewHandlerDialog=(typeName,opt_initialParameters,opt_doneCallback)=>{
     OverlayDialog.dialog((props)=> {
         return <EditHandlerDialog
             {...props}
@@ -307,10 +307,10 @@ EditHandlerDialog.createNewHandlerDialog=(typeName,opt_initialParameters)=>{
             handlerName={typeName}
             initialValues={opt_initialParameters}
         />
-    });
+    },undefined,opt_doneCallback);
 }
 
-EditHandlerDialog.createAddDialog=()=>{
+EditHandlerDialog.createAddDialog=(opt_doneCallback)=>{
     RequestHandler.getJson('',undefined,{
         request:'api',
         type: 'config',
@@ -325,7 +325,7 @@ EditHandlerDialog.createAddDialog=()=>{
             data.data.forEach((h)=>list.push({label:h,value:h}));
             OverlayDialog.selectDialogPromise('Select Handler to Add',list)
                 .then((selected)=>{
-                    EditHandlerDialog.createNewHandlerDialog(selected.value);
+                    EditHandlerDialog.createNewHandlerDialog(selected.value,undefined,opt_doneCallback);
                 })
                 .catch((e)=>{})
         })

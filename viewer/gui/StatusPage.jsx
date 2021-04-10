@@ -23,6 +23,21 @@ import assign from "object-assign";
 import ShallowCompare from "../util/shallowcompare";
 import PropTypes from 'prop-types';
 
+class Notifier{
+    constructor() {
+        this.callbacks={}
+    }
+    register(cb){
+        if (cb) this.callbacks[cb]=cb;
+        else delete this.callbacks[cb];
+    }
+    trigger(data){
+        for (let k in this.callbacks){
+            if (this.callbacks[k]) this.callbacks[k](data);
+        }
+    }
+}
+
 class DebugDialog extends React.Component{
     constructor(props) {
         super(props);
@@ -89,8 +104,8 @@ class DebugDialog extends React.Component{
 }
 
 
-const showEditDialog=(handlerId,child)=>{
-    EditHandlerDialog.createDialog(handlerId,child);
+const showEditDialog=(handlerId,child,opt_doneCallback)=>{
+    EditHandlerDialog.createDialog(handlerId,child,opt_doneCallback);
 }
 const statusTextToImageUrl=(text)=>{
     let rt=globalStore.getData(keys.properties.statusIcons[text]);
@@ -110,7 +125,7 @@ const ChildStatus=(props)=>{
             <span className="statusName">{props.name}</span>
             <span className="statusInfo">{props.info}</span>
             {canEdit && <EditIcon onClick={
-                ()=>showEditDialog(props.handlerId,props.id)
+                ()=>showEditDialog(props.handlerId,props.id,props.finishCallback)
             }/>}
         </div>
     );
@@ -129,7 +144,7 @@ const StatusItem=(props)=>{
                 {isDisabled && <span className="disabledInfo">[disabled]</span> }
                 {canEdit && <EditIcon
                     onClick={
-                        () => showEditDialog(props.id)
+                        () => showEditDialog(props.id,undefined,props.finishCallback)
                     }/>}
             </div>
             {props.info && props.info.items && props.info.items.map(function(el){
@@ -137,7 +152,9 @@ const StatusItem=(props)=>{
                     {...el}
                     key={props.name+el.name}
                     connected={props.connected}
-                    handlerId={props.id}/>
+                    handlerId={props.id}
+                    finishCallback={props.finishCallback}
+                />
             })}
         </div>
 
@@ -163,7 +180,14 @@ class StatusList extends React.Component{
             serverError:this.props.notifyProps.serverError||false,
             canRestart:this.props.notifyProps.canRestart||false
         }
+        if (this.props.reloadNotifier){
+            this.props.reloadNotifier.register(()=>this.doQuery())
+        }
     }
+    componentWillUnmount() {
+        if (this.props.reloadNotifier) this.props.reloadNotifier.register(undefined);
+    }
+
     queryResult(data){
         let self=this;
         let itemList=[];
@@ -232,6 +256,11 @@ class StatusList extends React.Component{
             itemClass={(iprops)=><StatusItem
                 connected={this.props.connected}
                 allowEdit={this.props.allowEdit}
+                finishCallback={
+                    ()=>{
+                        this.doQuery();
+                    }
+                }
                 {...iprops}/>}
             itemList={this.state.itemList}
             scrollable={true}
@@ -244,7 +273,8 @@ class StatusList extends React.Component{
 StatusList.propTypes={
     onChange: PropTypes.func,
     connected: PropTypes.bool,
-    allowEdit: PropTypes.bool
+    allowEdit: PropTypes.bool,
+    reloadNotifier: PropTypes.instanceOf(Notifier)
 }
 
 class StatusPage extends React.Component{
@@ -258,6 +288,7 @@ class StatusPage extends React.Component{
             serverError:false,
             canRestart:false
         }
+        this.reloadNotifier=new Notifier();
     }
     componentDidMount(){
         if (! globalStore.getData(keys.gui.capabilities.config)) return;
@@ -366,7 +397,7 @@ class StatusPage extends React.Component{
                     name: 'StatusAdd',
                     visible: props.config && props.connected,
                     onClick: ()=>{
-                        EditHandlerDialog.createAddDialog();
+                        EditHandlerDialog.createAddDialog(()=>this.reloadNotifier.trigger());
                     }
                 },
                 Mob.mobDefinition,
@@ -390,6 +421,7 @@ class StatusPage extends React.Component{
                         allowEdit={props.config}
                         onChange={(nv)=>this.setState(nv)}
                         notifyProps={this.state}
+                        reloadNotifier={this.reloadNotifier}
                     />
                 }
                 buttonList={buttons}/>
