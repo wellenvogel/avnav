@@ -23,8 +23,8 @@ public class ConnectionReaderWriter{
         public boolean writeData=false;
         public String[] readFilter;
         public String[] writeFilter;
-        public int readTimeout = 0;
-        public int noDataTime=10000;
+        public boolean closeOnReadTimeout=false;
+        public int noDataTime=0;
         public int connectTimeout =0;
         public int writeTimeout=0;
     }
@@ -78,7 +78,7 @@ public class ConnectionReaderWriter{
     }
 
     boolean hasNmea() {
-        return ! stopped && ! connection.isClosed() && dataAvailable && (System.currentTimeMillis() < (lastReceived+properties.noDataTime));
+        return ! stopped && ! connection.isClosed() && dataAvailable && (System.currentTimeMillis() < (lastReceived+properties.noDataTime*1000));
     }
 
 

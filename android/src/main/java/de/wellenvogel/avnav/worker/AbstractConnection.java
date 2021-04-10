@@ -77,13 +77,13 @@ public abstract class AbstractConnection {
         public boolean hasTimeout(long now){
             long lastStart=lastReadStart;
             if (timeout <= 0 || lastStart <= 0) return false;
-            return ((lastStart+timeout) < now);
+            return ((lastStart+timeout*1000) < now);
         }
 
     }
     public synchronized InputStream getInputStream() throws IOException{
         if (inputStream != null) return  inputStream;
-        inputStream=new GuardedInputStream(getInputStreamImpl(),properties.readTimeout);
+        inputStream=new GuardedInputStream(getInputStreamImpl(),properties.closeOnReadTimeout?properties.noDataTime:0);
         return inputStream;
     };
     abstract InputStream getInputStreamImpl() throws IOException;
@@ -124,7 +124,7 @@ public abstract class AbstractConnection {
         public boolean hasTimeout(long now){
             long writeStart=lastWriteStart;
             if (timeout <=0 || writeStart <=0) return false;
-            return ((lastWriteStart+timeout) < now);
+            return ((lastWriteStart+timeout*1000) < now);
         }
 
     }

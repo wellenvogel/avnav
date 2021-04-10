@@ -26,7 +26,7 @@ public class IpConnection extends AbstractConnection {
             ipSocket=null;
         }
         ipSocket=new Socket();
-        ipSocket.connect(ipAddr,properties.connectTimeout);
+        ipSocket.connect(ipAddr,properties.connectTimeout*1000);
     }
     @Override
     public InputStream getInputStreamImpl() throws IOException {

@@ -24,8 +24,8 @@ public abstract class SingleConnectionHandler extends ChannelWorker {
             if (parameterDescriptions.has(FILTER_PARAM)) rt.readFilter=AvnUtil.splitNmeaFilter(Worker.FILTER_PARAM.fromJson(parameters));
             if (parameterDescriptions.has(SEND_FILTER_PARAM)) rt.writeFilter=AvnUtil.splitNmeaFilter(Worker.SEND_FILTER_PARAM.fromJson(parameters));
             rt.sourceName=getSourceName();
-            rt.noDataTime= Constants.NO_DATA_TIME;
-            if (parameterDescriptions.has(READ_TIMEOUT_PARAMETER)) rt.readTimeout=Worker.READ_TIMEOUT_PARAMETER.fromJson(parameters);
+            if (parameterDescriptions.has(READ_TIMEOUT_PARAMETER)) rt.noDataTime=Worker.READ_TIMEOUT_PARAMETER.fromJson(parameters);
+            if (parameterDescriptions.has(READTIMEOUT_CLOSE_PARAMETER)) rt.closeOnReadTimeout=READTIMEOUT_CLOSE_PARAMETER.fromJson(parameters);
             if (parameterDescriptions.has(CONNECT_TIMEOUT_PARAMETER)) rt.connectTimeout =Worker.CONNECT_TIMEOUT_PARAMETER.fromJson(parameters);
             if (parameterDescriptions.has(WRITE_TIMEOUT_PARAMETER)) rt.writeTimeout=Worker.WRITE_TIMEOUT_PARAMETER.fromJson(parameters);
             return rt;
@@ -41,7 +41,8 @@ public abstract class SingleConnectionHandler extends ChannelWorker {
                 SOURCENAME_PARAMETER,
                 FILTER_PARAM,
                 SEND_DATA_PARAMETER,
-                SEND_FILTER_PARAM
+                SEND_FILTER_PARAM,
+                READ_TIMEOUT_PARAMETER
         );
         context=ctx;
         this.queue=queue;

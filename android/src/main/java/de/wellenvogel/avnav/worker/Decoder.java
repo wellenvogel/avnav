@@ -74,7 +74,7 @@ public class Decoder extends Worker {
     public static final EditableParameter.StringParameter OWN_MMSI= new
             EditableParameter.StringParameter("ownMMSI",R.string.labelSettingsOwnMMSI,"");
     private void addParameters(){
-        parameterDescriptions.addParams(OWN_MMSI,POSITION_AGE,GPS_AGE,AIS_AGE);
+        parameterDescriptions.addParams(OWN_MMSI,POSITION_AGE,GPS_AGE,AIS_AGE,READ_TIMEOUT_PARAMETER);
     }
     static class AuxiliaryEntry{
         public long timestamp;
@@ -169,6 +169,7 @@ public class Decoder extends Worker {
         @Override
         public void run(int startSequence) throws JSONException {
             store=new AisStore(OWN_MMSI.fromJson(parameters));
+            int noDataTime=READ_TIMEOUT_PARAMETER.fromJson(parameters)*1000;
             int numGsv = 0; //number of gsv sentences without being the last
             long lastConnect = 0;
             int sequence = -1;
@@ -198,14 +199,14 @@ public class Decoder extends Worker {
                     entry = queue.fetch(sequence, 2000);
                 } catch (InterruptedException e) {
                     if (shouldStop(startSequence)) return;
-                    if ((lastReceived+ Constants.NO_DATA_TIME) < System.currentTimeMillis()){
+                    if ((lastReceived+ noDataTime) < System.currentTimeMillis()){
                         stat.gpsEnabled=false;
                         setStatus(WorkerStatus.Status.INACTIVE,"no NMEA data");
                     }
                     sleep(2000);
                     continue;
                 }
-                if ((lastReceived+ Constants.NO_DATA_TIME) < System.currentTimeMillis()){
+                if ((lastReceived+ noDataTime) < System.currentTimeMillis()){
                     stat.gpsEnabled=false;
                     setStatus(WorkerStatus.Status.INACTIVE,"no NMEA data");
                 }

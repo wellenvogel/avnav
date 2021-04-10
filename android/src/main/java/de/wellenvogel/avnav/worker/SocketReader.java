@@ -28,7 +28,7 @@ public class SocketReader extends SingleConnectionHandler {
                 IPPORT_PARAMETER,
                 WRITE_TIMEOUT_PARAMETER,
                 CONNECT_TIMEOUT_PARAMETER,
-                READ_TIMEOUT_PARAMETER);
+                READTIMEOUT_CLOSE_PARAMETER);
     }
 
     @Override
