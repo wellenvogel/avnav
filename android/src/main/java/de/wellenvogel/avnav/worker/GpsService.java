@@ -557,6 +557,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
                 workers.add(i,newWorker);
                 break;
             }
+            currentType=workers.get(i).getTypeName();
         }
         if (! inserted){
             workers.add(newWorker);
