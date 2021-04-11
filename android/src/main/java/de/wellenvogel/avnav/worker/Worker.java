@@ -50,7 +50,9 @@ public abstract class Worker implements IWorker {
     static final EditableParameter.IntegerParameter WRITE_TIMEOUT_PARAMETER=
             new EditableParameter.IntegerParameter("writeTimeout",R.string.labelSettingsWriteTimeout,5);
 
-
+    static final String CLAIM_BLUETOOTH ="bluetooth";
+    static final String CLAIM_USB ="usb";
+    protected static final String CLAIM_TCPPORT = "tcpport";
 
     private static class ResourceClaim{
         String kind;
@@ -161,7 +163,8 @@ public abstract class Worker implements IWorker {
         return ro;
     }
 
-    protected synchronized void setStatus(WorkerStatus.Status status,String info){
+    @Override
+    public synchronized void setStatus(WorkerStatus.Status status, String info){
         this.status.status=status;
         this.status.info=info;
     }
@@ -188,7 +191,7 @@ public abstract class Worker implements IWorker {
     }
 
     @Override
-    public synchronized void setParameters(JSONObject newParam, boolean replace) throws JSONException, IOException {
+    public synchronized void setParameters(JSONObject newParam, boolean replace,boolean check) throws JSONException, IOException {
         if (parameterDescriptions == null) throw new JSONException("no parameters defined");
         if (! replace){
             for (Iterator<String> it = parameters.keys(); it.hasNext(); ) {
@@ -197,9 +200,14 @@ public abstract class Worker implements IWorker {
             }
         }
         parameterDescriptions.check(newParam);
+        if (check) {
+            checkParameters(newParam);
+        }
         parameters=newParam;
         paramSequence++;
     }
+
+    protected void checkParameters(JSONObject newParam) throws JSONException,IOException{}
 
     @Override
     public String getTypeName() {
@@ -213,7 +221,7 @@ public abstract class Worker implements IWorker {
 
     public void start(){
         if (mainThread != null){
-            stop();
+            stopAndWait();
         }
         try {
             //check if we have a defined enabled parameter
@@ -289,6 +297,17 @@ public abstract class Worker implements IWorker {
         }
         running=false;
         removeClaims();
+    }
+    @Override
+    public void stopAndWait(){
+        Thread oldMain=mainThread;
+        stop();
+        if (oldMain == null) return;
+        try {
+            oldMain.join(2000);
+        } catch (InterruptedException e) {
+            AvnLog.e("unable to stop worker main thread for "+getSourceName(),e);
+        }
     }
     /**
      * check if the handler is stopped and should be reinitialized

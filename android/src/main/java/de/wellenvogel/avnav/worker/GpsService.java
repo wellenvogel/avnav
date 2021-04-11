@@ -540,14 +540,14 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         edit.commit();
     }
     private synchronized void updateWorkerConfig(IWorker worker, JSONObject newConfig) throws JSONException, IOException {
-        worker.setParameters(newConfig, false);
+        worker.setParameters(newConfig, false,true);
         worker.start(); //will restart
         saveWorkerConfig(worker);
     }
     private synchronized void addWorker(String typeName, JSONObject newConfig) throws WorkerFactory.WorkerNotFound, JSONException, IOException {
         IWorker newWorker=WorkerFactory.getInstance().createWorker(typeName,this,queue);
         newWorker.setId(getNextWorkerId());
-        newWorker.setParameters(newConfig, true);
+        newWorker.setParameters(newConfig, true,true);
         newWorker.start();
         String currentType=null;
         boolean inserted=false;
@@ -564,7 +564,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         saveWorkerConfig(newWorker);
     }
     private synchronized void deleteWorker(IWorker worker) throws JSONException {
-        worker.stop();
+        worker.stopAndWait();
         int workerId=-1;
         for (int i=0;i<workers.size();i++){
             if (worker.getId() == workers.get(i).getId()){
@@ -630,7 +630,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
                     if (parameters != null){
                         try{
                             JSONObject po=new JSONObject(parameters);
-                            worker.setParameters(po,true);
+                            worker.setParameters(po,true,false);
                         }catch (JSONException e){
                             //all internal workers must be able to run with empty parameters
                             AvnLog.e("error parsing decoder parameters",e);
@@ -655,8 +655,12 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
                         IWorker worker = WorkerFactory.getInstance().createWorker(
                                 Worker.TYPENAME_PARAMETER.fromJson(config), this, queue);
                         worker.setId(getNextWorkerId());
-                        worker.setParameters(config, true);
-                        worker.start();
+                        try {
+                            worker.setParameters(config, true,false);
+                            worker.start();
+                        }catch (Throwable t){
+                            worker.setStatus(WorkerStatus.Status.ERROR,"unable to set parameters: "+t.getMessage());
+                        }
                         workers.add(worker);
                     } catch (Throwable t) {
                         AvnLog.e("unable to create handler " + i, t);

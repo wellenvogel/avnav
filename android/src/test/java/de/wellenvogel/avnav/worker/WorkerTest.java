@@ -42,7 +42,7 @@ public class WorkerTest {
         assertEquals("test2",o.getJSONObject("info").getJSONArray("items").getJSONObject(0).getString("info"));
     }
     @Test
-    public void addRemoveClaim(){
+    public void addRemoveClaim() throws IOException {
         String testKind="test";
         String testName="name";
         class TWorker extends Worker{
@@ -52,8 +52,8 @@ public class WorkerTest {
             @Override
             protected void run(int startSequence) throws JSONException, IOException {
             }
-            public void testAddClaim(){
-                addClaim(testKind,testName);
+            public void testAddClaim() throws IOException {
+                addClaim(testKind,testName,true);
             }
         }
         TWorker tw=new TWorker("test");

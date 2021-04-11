@@ -3,6 +3,7 @@ package de.wellenvogel.avnav.worker;
 import android.content.Context;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -144,10 +145,28 @@ public class SocketWriter extends ChannelWorker {
         clients.clear();
         status.removeChildren();
     }
+
+    @Override
+    protected void checkParameters(JSONObject newParam) throws JSONException, IOException {
+        Integer port=PORT_PARAMETER.fromJson(newParam);
+        checkClaim(CLAIM_TCPPORT,port.toString(),true);
+    }
+
+    @Override
+    public void stop() {
+        super.stop();
+        try{
+            serversocket.close();
+            serversocket=null;
+        }catch (Throwable t){}
+        stopClients();
+    }
+
     @Override
     public void run(int startSequence) throws JSONException, IOException {
         stopClients();
-        int port = PORT_PARAMETER.fromJson(parameters);
+        Integer port = PORT_PARAMETER.fromJson(parameters);
+        addClaim(CLAIM_TCPPORT,port.toString(),true);
         boolean allowExternal=EXTERNAL_ACCESS.fromJson(parameters);
         if (serversocket != null){
             try{
@@ -163,8 +182,17 @@ public class SocketWriter extends ChannelWorker {
         }
         setStatus(WorkerStatus.Status.NMEA,"listening on "+port+", external access "+allowExternal);
         while (! shouldStop(startSequence)){
+            Socket client=null;
+            try {
+                client = serversocket.accept();
+            }catch (Throwable t) {
+                AvnLog.e("accept error", t);
+                try {
+                    client.close();
+                } catch (Throwable t1) {}
+                break;
+            }
             try{
-                Socket client=serversocket.accept();
                 String remote=client.getRemoteSocketAddress().toString();
                 AvnLog.i("new client connected: "+remote);
                 ClientConnection connection=new ClientConnection(client,remote);
@@ -175,12 +203,20 @@ public class SocketWriter extends ChannelWorker {
                 synchronized (this) {
                     clients.put(remote, new Client(connection));
                 }
-            }catch (Throwable t){
-                AvnLog.e("error in accept",t);
+            }catch (Throwable tc){
+                AvnLog.e("unable to run client",tc);
+                try{
+                    client.close();
+                }catch (Throwable tx){}
             }
         }
         stopClients();
         setStatus(WorkerStatus.Status.INACTIVE,"stopped");
+        removeClaims();
+        try{
+            serversocket.close();
+            serversocket=null;
+        }catch(Throwable t){}
     }
 
     @Override

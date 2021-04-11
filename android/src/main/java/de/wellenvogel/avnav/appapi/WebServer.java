@@ -108,11 +108,19 @@ public class WebServer extends Worker {
         gpsService =controller;
         status.canEdit=true;
     }
+
+    @Override
+    protected void checkParameters(JSONObject newParam) throws JSONException, IOException {
+        super.checkParameters(newParam);
+        Integer port=PORT.fromJson(newParam);
+        checkClaim(CLAIM_TCPPORT,port.toString(),true);
+    }
+
     @Override
     protected void run(int startSequence) throws JSONException, IOException {
         Integer port=PORT.fromJson(parameters);
         listenAny=ANY_ADDRESS.fromJson(parameters);
-        addClaim("tcpport",port.toString(),true);
+        addClaim(CLAIM_TCPPORT,port.toString(),true);
         registerAvahi(port,listenAny);
         setStatus(WorkerStatus.Status.STARTED,"starting with port "+port+", external access "+listenAny);
         running=true;

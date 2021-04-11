@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
@@ -19,7 +20,6 @@ import java.util.Set;
  * Created by andreas on 25.12.14.
  */
 public class BluetoothConnectionHandler extends SingleConnectionHandler {
-    private static final String CLAIM="bluetooth";
     private EditableParameter.StringListParameter deviceSelect=new EditableParameter.StringListParameter(
             "device",
             R.string.labelSettingsBtDevice
@@ -29,7 +29,7 @@ public class BluetoothConnectionHandler extends SingleConnectionHandler {
         deviceSelect.listBuilder=new EditableParameter.ListBuilder<String>() {
             @Override
             public List<String> buildList(EditableParameter.StringListParameter param) {
-                return filterByClaims(CLAIM,getBluetoothDevices(),false);
+                return filterByClaims(CLAIM_BLUETOOTH,getBluetoothDevices(),false);
             }
         };
         parameterDescriptions.add(deviceSelect);
@@ -49,9 +49,16 @@ public class BluetoothConnectionHandler extends SingleConnectionHandler {
     }
 
     @Override
+    protected void checkParameters(JSONObject newParam) throws JSONException, IOException {
+        super.checkParameters(newParam);
+        String deviceName=deviceSelect.fromJson(newParam);
+        checkClaim(CLAIM_BLUETOOTH,deviceName,true);
+    }
+
+    @Override
     public void run(int startSequence) throws JSONException, IOException {
         String deviceName=deviceSelect.fromJson(parameters);
-        addClaim(CLAIM,deviceName,true);
+        addClaim(CLAIM_BLUETOOTH,deviceName,true);
         BluetoothDevice device=null;
         while (device == null && ! shouldStop(startSequence)){
             BluetoothAdapter adapter=BluetoothAdapter.getDefaultAdapter();

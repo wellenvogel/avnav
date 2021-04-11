@@ -13,6 +13,8 @@ public interface IWorker {
 
     JSONObject getJsonStatus() throws JSONException;
 
+    void setStatus(WorkerStatus.Status status, String info);
+
     void setId(int id);
     int getId();
     JSONObject getEditableParameters(boolean includeCurrent,Context context) throws JSONException;
@@ -20,10 +22,14 @@ public interface IWorker {
 
     JSONArray getParameterDescriptions(Context context) throws JSONException;
 
-    void setParameters(JSONObject newParam, boolean replace) throws JSONException, IOException;
+    void setParameters(JSONObject newParam, boolean replace,boolean check) throws JSONException, IOException;
     void stop();
+
+    void stopAndWait();
+
     boolean isStopped();
     void check() throws JSONException;
     String getTypeName();
     void start();
+
 }
