@@ -19,6 +19,7 @@ import java.net.InetAddress;
 import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 import java.util.Enumeration;
@@ -163,6 +164,17 @@ public class AvnUtil {
         cal.add(Calendar.MILLISECOND, (int) (time.getMilliseconds()));
         long millis=cal.getTime().getTime();
         return millis;
+    }
+
+    public static InetAddress getLocalHost() throws UnknownHostException {
+        InetAddress local=null;
+        try {
+            local = InetAddress.getByName("localhost");
+        }catch(Exception ex){
+            AvnLog.e("Exception getting localhost: "+ex);
+        }
+        if (local == null) local=InetAddress.getLocalHost();
+        return local;
     }
 
     public static interface IJsonObect{

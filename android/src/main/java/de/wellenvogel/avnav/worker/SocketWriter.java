@@ -8,16 +8,16 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.NmeaQueue;
 
 /**
@@ -67,14 +67,11 @@ public class SocketWriter extends ChannelWorker {
             return true;
         }
     }
-    static EditableParameter.IntegerParameter PORT_PARAMETER=
-            new EditableParameter.IntegerParameter("port", R.string.labelSettingsBindPort,null);
-    static EditableParameter.BooleanParameter EXTERNAL_ACCESS=
-            new EditableParameter.BooleanParameter("externalAccess",R.string.labelSettingsExternalAccess,false);
 
     private SocketWriter(String name, Context ctx, NmeaQueue queue) throws JSONException {
         super(name,ctx,queue);
         parameterDescriptions.addParams(
+                SOURCENAME_PARAMETER,
                 ENABLED_PARAMETER,
                 PORT_PARAMETER,
                 EXTERNAL_ACCESS,
@@ -87,16 +84,7 @@ public class SocketWriter extends ChannelWorker {
         status.canEdit=true;
         status.canDelete=true;
     }
-    private InetAddress getLocalHost() throws UnknownHostException {
-        InetAddress local=null;
-        try {
-            local = InetAddress.getByName("localhost");
-        }catch(Exception ex){
-            AvnLog.e("Exception getting localhost: "+ex);
-        }
-        if (local == null) local=InetAddress.getLocalHost();
-        return local;
-    }
+
     private ServerSocket serversocket;
     private class Client{
         ConnectionReaderWriter handler;
@@ -176,9 +164,9 @@ public class SocketWriter extends ChannelWorker {
         }
         serversocket=new ServerSocket();
         serversocket.setReuseAddress(true);
-        if (allowExternal) serversocket.bind(new InetSocketAddress(port));
+        if (allowExternal) serversocket.bind(new InetSocketAddress(Inet4Address.getByName("0.0.0.0"),port));
         else {
-            InetAddress local=getLocalHost();
+            InetAddress local= AvnUtil.getLocalHost();
             serversocket.bind(new InetSocketAddress(local.getHostAddress(),port));
         }
         setStatus(WorkerStatus.Status.NMEA,"listening on "+port+", external access "+allowExternal);

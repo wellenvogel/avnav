@@ -51,10 +51,15 @@ public abstract class Worker implements IWorker {
             new EditableParameter.IntegerParameter("writeTimeout",R.string.labelSettingsWriteTimeout,5);
     static final EditableParameter.StringParameter BLACKLIST_PARAMETER =
             new EditableParameter.StringParameter("blacklist",R.string.labelSettingsBlacklist,"");
+    static EditableParameter.IntegerParameter PORT_PARAMETER=
+            new EditableParameter.IntegerParameter("port", R.string.labelSettingsBindPort,null);
+    static EditableParameter.BooleanParameter EXTERNAL_ACCESS=
+            new EditableParameter.BooleanParameter("externalAccess",R.string.labelSettingsExternalAccess,false);
 
     static final String CLAIM_BLUETOOTH ="bluetooth device";
     static final String CLAIM_USB ="usb device";
     protected static final String CLAIM_TCPPORT = "tcp port";
+    protected static final String CLAIM_UDPPORT ="udp port";
     private static final String CLAIM_NAME = "name" ;
 
     private static class ResourceClaim{
@@ -86,6 +91,7 @@ public abstract class Worker implements IWorker {
      * @return null if ok, the worker that currently has the claim otherwise
      */
     protected Worker addClaim(String kind,String name,boolean doThrow) throws IOException {
+        if (name == null || name.isEmpty()) return null;
         synchronized (resourceClaims){
             Worker rt=checkClaimInternal(kind,name,doThrow);
             if (rt != null) return rt;
@@ -94,6 +100,7 @@ public abstract class Worker implements IWorker {
         return null;
     }
     private Worker checkClaimInternal(String kind,String name,boolean doThrow) throws IOException {
+        if (name == null || name.isEmpty()) return null;
         for (ResourceClaim cl:resourceClaims){
             if (cl.kind.equals(kind) && cl.name.equals(name)){
                 if (cl.ref == this) return null;
