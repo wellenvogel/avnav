@@ -52,9 +52,10 @@ public abstract class Worker implements IWorker {
     static final EditableParameter.StringParameter BLACKLIST_PARAMETER =
             new EditableParameter.StringParameter("blacklist",R.string.labelSettingsBlacklist,"");
 
-    static final String CLAIM_BLUETOOTH ="bluetooth";
-    static final String CLAIM_USB ="usb";
-    protected static final String CLAIM_TCPPORT = "tcpport";
+    static final String CLAIM_BLUETOOTH ="bluetooth device";
+    static final String CLAIM_USB ="usb device";
+    protected static final String CLAIM_TCPPORT = "tcp port";
+    private static final String CLAIM_NAME = "name" ;
 
     private static class ResourceClaim{
         String kind;
@@ -98,7 +99,7 @@ public abstract class Worker implements IWorker {
                 if (cl.ref == this) return null;
                 else {
                     if (doThrow){
-                        throw new IOException("device "+name+" already in use by "+cl.ref.getTypeName()+"-"+cl.ref.getId());
+                        throw new IOException(kind+" "+name+" already in use by "+cl.ref.getTypeName()+"-"+cl.ref.getId());
                     }
                     return cl.ref;
                 }
@@ -203,6 +204,9 @@ public abstract class Worker implements IWorker {
         }
         parameterDescriptions.check(newParam);
         if (check) {
+            if (parameterDescriptions.has(SOURCENAME_PARAMETER)){
+                checkClaim(CLAIM_NAME,SOURCENAME_PARAMETER.fromJson(newParam),true);
+            }
             checkParameters(newParam);
         }
         parameters=newParam;
@@ -241,9 +245,13 @@ public abstract class Worker implements IWorker {
                     public void run() {
                         setStatus(WorkerStatus.Status.STARTED, "started");
                         try {
+                            if (parameterDescriptions.has(SOURCENAME_PARAMETER)){
+                                addClaim(CLAIM_NAME,SOURCENAME_PARAMETER.fromJson(parameters),true);
+                            }
                             Worker.this.run(startSequence);
                             setStatus(WorkerStatus.Status.INACTIVE, "stopped");
                             status.removeChildren();
+                            removeClaims();
                         } catch (Throwable t) {
                             setStatus(WorkerStatus.Status.ERROR, "error: " + t.getMessage());
                         }
