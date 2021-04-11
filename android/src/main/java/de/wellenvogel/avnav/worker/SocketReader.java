@@ -36,7 +36,7 @@ public class SocketReader extends SingleConnectionHandler {
         String target=IPADDRESS_PARAMETER.fromJson(parameters);
         Integer port=IPPORT_PARAMETER.fromJson(parameters);
         InetSocketAddress address=new InetSocketAddress(target,port);
-        IpConnection con=new IpConnection(address);
+        IpConnection con=new IpConnection(address,context);
         runInternal(con,startSequence);
     }
 }

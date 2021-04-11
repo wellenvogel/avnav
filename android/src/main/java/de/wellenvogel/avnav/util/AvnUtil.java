@@ -3,15 +3,25 @@ package de.wellenvogel.avnav.util;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.LinkProperties;
+import android.net.Network;
 import android.net.Uri;
+import android.os.Build;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.InterfaceAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
+import java.util.Enumeration;
 import java.util.TimeZone;
 
 import de.wellenvogel.avnav.main.Constants;
@@ -157,5 +167,70 @@ public class AvnUtil {
 
     public static interface IJsonObect{
         JSONObject toJson() throws JSONException;
+    }
+
+    public static boolean belongsToNet(Inet4Address addr1,Inet4Address addr2,short prefixLen){
+        byte [] baddr1=addr1.getAddress();
+        byte [] baddr2=addr2.getAddress();
+        int iaadr1=(baddr1[0]&0xff) << 24 | (baddr1[1]&0xff) << 16 | (baddr1[2] & 0xff) << 8 | (baddr1[3]&0xff);
+        int iaadr2=(baddr2[0]&0xff) << 24 | (baddr2[1]&0xff) << 16 | (baddr2[2] & 0xff) << 8 | (baddr2[3]&0xff);
+        int mask = -(1 << (32 - prefixLen));
+        return ((iaadr1 & mask) == (iaadr2 & mask));
+    }
+    public static InetAddress getLocalIpForRemote(InetAddress remote) throws SocketException {
+        if (! (remote instanceof Inet4Address)) return null;
+        Inet4Address remote4=(Inet4Address)remote;
+        Enumeration<NetworkInterface> intfs = NetworkInterface.getNetworkInterfaces();
+        while (intfs.hasMoreElements()) {
+            NetworkInterface intf = intfs.nextElement();
+            for (InterfaceAddress addr:intf.getInterfaceAddresses()){
+                InetAddress ip=addr.getAddress();
+                if (! (ip instanceof Inet4Address)) continue;
+                short plen=addr.getNetworkPrefixLength();
+                Inet4Address ip4=(Inet4Address)ip;
+                if (belongsToNet(ip4,remote4,plen)){
+                    return ip4;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * get the network for a remote ip address
+     * that belongs to one of the networks we are directly connected to
+     * it does not consider the routing!
+     * only ipv4
+     * @param remote the remote ipv4 address
+     * @param ctx
+     * @return
+     * @throws SocketException
+     */
+    public static Network getNetworkForRemote(InetAddress remote, Context ctx) throws SocketException {
+        if (! (remote instanceof Inet4Address)) return null;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            return null;
+        }
+        Inet4Address remote4=(Inet4Address)remote;
+        Enumeration<NetworkInterface> intfs = NetworkInterface.getNetworkInterfaces();
+        while (intfs.hasMoreElements()) {
+            NetworkInterface intf = intfs.nextElement();
+            for (InterfaceAddress addr:intf.getInterfaceAddresses()){
+                InetAddress ip=addr.getAddress();
+                if (! (ip instanceof Inet4Address)) continue;
+                short plen=addr.getNetworkPrefixLength();
+                Inet4Address ip4=(Inet4Address)ip;
+                if (belongsToNet(ip4,remote4,plen)){
+                    ConnectivityManager connectivityManager=(ConnectivityManager)ctx.getSystemService(Context.CONNECTIVITY_SERVICE);
+                    for (Network n:connectivityManager.getAllNetworks()){
+                        LinkProperties props=connectivityManager.getLinkProperties(n);
+                        if (intf.getName().equals(props.getInterfaceName())){
+                            return n;
+                        }
+                    }
+                }
+            }
+        }
+        return null;
     }
 }

@@ -1,16 +1,26 @@
 package de.wellenvogel.avnav.worker;
 
+import android.content.Context;
+import android.net.Network;
+import android.os.Build;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+
+import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.util.AvnUtil;
 
 /**
  * Created by andreas on 12.03.15.
  * a class to unify Bluetooth sockets and IP sockets
  */
 public class IpConnection extends AbstractConnection {
+    private final Context ctx;
     private Socket ipSocket;
     private InetSocketAddress ipAddr;
     /**
@@ -26,6 +36,17 @@ public class IpConnection extends AbstractConnection {
             ipSocket=null;
         }
         ipSocket=new Socket();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            try {
+                Network network = AvnUtil.getNetworkForRemote(ipAddr.getAddress(), ctx);
+                if (network != null) {
+                    AvnLog.i("found network " + network + " for remote " + ipAddr);
+                    network.bindSocket(ipSocket);
+                }
+            } catch (Throwable t) {
+                AvnLog.e("unable to get network for remote " + ipAddr);
+            }
+        }
         ipSocket.connect(ipAddr,properties.connectTimeout*1000);
     }
     @Override
@@ -58,8 +79,9 @@ public class IpConnection extends AbstractConnection {
 
     }
 
-    public IpConnection(InetSocketAddress addr){
+    public IpConnection(InetSocketAddress addr, Context ctx){
         ipAddr=addr;
+        this.ctx=ctx;
     }
 
 }
