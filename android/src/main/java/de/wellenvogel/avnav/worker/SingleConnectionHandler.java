@@ -7,9 +7,7 @@ import org.json.JSONException;
 
 import java.io.IOException;
 
-import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.util.AvnLog;
-import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.NmeaQueue;
 
 /**
@@ -29,7 +27,8 @@ public abstract class SingleConnectionHandler extends ChannelWorker {
                 FILTER_PARAM,
                 SEND_DATA_PARAMETER,
                 SEND_FILTER_PARAM,
-                READ_TIMEOUT_PARAMETER
+                READ_TIMEOUT_PARAMETER,
+                BLACKLIST_PARAMETER
         );
         context=ctx;
         this.queue=queue;

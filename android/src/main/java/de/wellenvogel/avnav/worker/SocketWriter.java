@@ -80,6 +80,7 @@ public class SocketWriter extends ChannelWorker {
                 EXTERNAL_ACCESS,
                 WRITE_TIMEOUT_PARAMETER,
                 SEND_FILTER_PARAM,
+                BLACKLIST_PARAMETER,
                 READ_DATA_PARAMETER,
                 FILTER_PARAM
                 );

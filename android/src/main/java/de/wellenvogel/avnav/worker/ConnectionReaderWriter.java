@@ -27,6 +27,7 @@ public class ConnectionReaderWriter{
         public int noDataTime=0;
         public int connectTimeout =0;
         public int writeTimeout=0;
+        public String[] blacklist;
     }
 
     private static final String LOGPRFX = "ConnectionReaderWriter";
@@ -60,6 +61,17 @@ public class ConnectionReaderWriter{
                         if (!AvnUtil.matchesNmeaFilter(e.data, properties.writeFilter)) {
                             AvnLog.d("ignore " + e.data + " due to filter");
                             continue;
+                        }
+                        if (properties.blacklist != null){
+                            boolean blackListed=false;
+                            for (String bl:properties.blacklist){
+                                if (bl.equals(e.source)){
+                                    AvnLog.d("ignore "+e.data+" due to blacklist entry "+bl);
+                                    blackListed=true;
+                                    break;
+                                }
+                            }
+                            if (blackListed) continue;
                         }
                         os.write((e.data+"\r\n").getBytes());
                         dataAvailable=true;

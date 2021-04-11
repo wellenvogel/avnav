@@ -49,6 +49,8 @@ public abstract class Worker implements IWorker {
             new EditableParameter.BooleanParameter("closeOnTimeout",R.string.labelSettingsCloseOnTimeout,true);
     static final EditableParameter.IntegerParameter WRITE_TIMEOUT_PARAMETER=
             new EditableParameter.IntegerParameter("writeTimeout",R.string.labelSettingsWriteTimeout,5);
+    static final EditableParameter.StringParameter BLACKLIST_PARAMETER =
+            new EditableParameter.StringParameter("blacklist",R.string.labelSettingsBlacklist,"");
 
     static final String CLAIM_BLUETOOTH ="bluetooth";
     static final String CLAIM_USB ="usb";
@@ -304,7 +306,7 @@ public abstract class Worker implements IWorker {
         stop();
         if (oldMain == null) return;
         try {
-            oldMain.join(2000);
+            oldMain.join(3000);
         } catch (InterruptedException e) {
             AvnLog.e("unable to stop worker main thread for "+getSourceName(),e);
         }
