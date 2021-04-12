@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.PortUnreachableException;
 import java.net.SocketAddress;
 import java.net.SocketOptions;
 import java.net.StandardProtocolFamily;
@@ -49,10 +50,27 @@ public class UdpWriter extends ChannelWorker {
 
 
     @Override
-    protected void run(int startSequence) throws JSONException, IOException { int MAXSIZE=10000;
+    protected void run(int startSequence) throws JSONException, IOException {
+        while (! shouldStop(startSequence)){
+            Integer port=IPPORT_PARAMETER.fromJson(parameters);
+            String ipAddress=IPADDRESS_PARAMETER.fromJson(parameters);
+            InetSocketAddress addr=resolveAddress(ipAddress,port,startSequence,true);
+            if (addr == null){
+                setStatus(WorkerStatus.Status.ERROR,"unable to resolve "+ipAddress);
+                sleep(5000);
+                continue;
+            }
+            try {
+                runInternal(startSequence, addr);
+            }catch (Throwable t){
+                setStatus(WorkerStatus.Status.ERROR,"error in send "+t.getMessage());
+                sleep(1000);
+            }
+        }
+    }
+
+    protected void runInternal(int startSequence,InetSocketAddress target) throws JSONException, IOException { int MAXSIZE=10000;
         lastSend=0;
-        Integer port=IPPORT_PARAMETER.fromJson(parameters);
-        String ipAddress=IPADDRESS_PARAMETER.fromJson(parameters);
         if (channel != null){
             try{
                 channel.close();
@@ -67,11 +85,12 @@ public class UdpWriter extends ChannelWorker {
         if (BROADCAST_PARAMETER.fromJson(parameters)){
             channel.socket().setBroadcast(true);
         }
+        channel.connect(target);
         String [] blacklist=AvnUtil.splitNmeaFilter(BLACKLIST_PARAMETER.fromJson(parameters));
-        SocketAddress target=new InetSocketAddress(InetAddress.getByName(ipAddress),port);
         AvnLog.ifs("udpwriter start to %s",target);
         setStatus(WorkerStatus.Status.STARTED,"sending to "+target);
         int sequence=-1;
+        int numOk=0;
         while (! shouldStop(startSequence) && channel.isOpen()){
             NmeaQueue.Entry entry;
             try {
@@ -95,15 +114,18 @@ public class UdpWriter extends ChannelWorker {
             }
             sequence=entry.sequence;
             ByteBuffer buffer = ByteBuffer.wrap((entry.data + "\r\n").getBytes());
-            try{
-                channel.send(buffer,target);
+            try {
+                channel.write(buffer);
                 lastSend=System.currentTimeMillis();
-                setStatus(WorkerStatus.Status.NMEA,"sending to "+target);
-            }catch (Throwable t){
-                AvnLog.e("error in udp send ",t);
-                setStatus(WorkerStatus.Status.ERROR,"send error:"+t.getMessage());
-                target=new InetSocketAddress(InetAddress.getByName(ipAddress),port);
-                sleep(3000);
+                numOk++;
+                //we get an error on every xx packet if the target is not reachable...
+                if (numOk >= 50) {
+                    setStatus(WorkerStatus.Status.NMEA,"sending to "+target);
+                }
+            }catch (PortUnreachableException p){
+                numOk=0;
+                setStatus(WorkerStatus.Status.STARTED,"receiver port not open at "+target);
+                continue;
             }
         }
 

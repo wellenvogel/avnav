@@ -324,6 +324,16 @@ public class Resolver implements Runnable{
         waitingServices.clear();
         hostAddresses.clear();
         openRequests.clear();
-        openHostRequests.clear();
+        ArrayList<HostRequest> cancelRequests=new ArrayList<>();
+        synchronized (openHostRequests) {
+            for (HostRequest  hr: openHostRequests) {
+                cancelRequests.add(hr);
+            }
+            openHostRequests.clear();
+        }
+        for (HostRequest hr:cancelRequests){
+            AvnLog.dfs("Resolver %s: cancel host request for %s",intf,hr.name);
+            hr.callback.resolve(hr.name,null);
+        }
     }
 }

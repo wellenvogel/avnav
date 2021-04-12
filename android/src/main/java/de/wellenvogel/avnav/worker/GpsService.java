@@ -653,6 +653,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             requestHandler=new RequestHandler(this);
         }
         if (! isWatchdog || internalWorkers.size() == 0) {
+            checkMdnsResolvers(true);
             for (WorkerConfig cfg : INTERNAL_WORKERS){
                 try {
                     IWorker worker=cfg.createWorker(this,queue);
@@ -835,7 +836,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         checkMob();
         handleNotification(true,false);
         checkTrackWriter();
-        checkMdnsResolvers();
+        checkMdnsResolvers(false);
         for (IWorker w: workers) {
             if (w != null) {
                 try {
@@ -913,9 +914,9 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         mobAlarm=true;
     }
 
-    private void checkMdnsResolvers(){
+    private void checkMdnsResolvers(boolean waitForResult){
         if (mdnsUpdateRunning) return;
-        Thread thr=new Thread(new Runnable() {
+        Runnable checker=new Runnable() {
             @Override
             public void run() {
                 //no real need for sync here
@@ -995,7 +996,12 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
                 }
                 mdnsUpdateRunning=false;
             }
-        });
+        };
+        if (waitForResult){
+            checker.run();
+            return;
+        }
+        Thread thr=new Thread(checker);
         thr.setDaemon(true);
         thr.start();
     }
