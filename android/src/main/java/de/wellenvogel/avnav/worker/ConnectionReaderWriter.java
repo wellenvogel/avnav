@@ -59,14 +59,14 @@ public class ConnectionReaderWriter{
                     if (e != null) {
                         sequence = e.sequence;
                         if (!AvnUtil.matchesNmeaFilter(e.data, properties.writeFilter)) {
-                            AvnLog.d("ignore " + e.data + " due to filter");
+                            AvnLog.dfs("ignore %s due to filter",e.data);
                             continue;
                         }
                         if (properties.blacklist != null){
                             boolean blackListed=false;
                             for (String bl:properties.blacklist){
                                 if (bl.equals(e.source)){
-                                    AvnLog.d("ignore "+e.data+" due to blacklist entry "+bl);
+                                    AvnLog.dfs("ignore %s due to blacklist entry %s",e.data,bl);
                                     blackListed=true;
                                     break;
                                 }
@@ -117,7 +117,7 @@ public class ConnectionReaderWriter{
                 if (properties.readData) {
                     line = AvnUtil.removeNonNmeaChars(line);
                     if (!AvnUtil.matchesNmeaFilter(line, properties.readFilter)) {
-                        AvnLog.d("ignore " + line + " due to filter");
+                        AvnLog.dfs("ignore %s due to filter",line);
                         continue;
                     }
                     lastReceived = System.currentTimeMillis();

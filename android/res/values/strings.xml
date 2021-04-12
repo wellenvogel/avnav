@@ -95,5 +95,6 @@
     <string name="labelSettingsExternalAccess">allow external systems to connect to this port (use with caution!)</string>
     <string name="labelSettingsReadData">also read data on this connection</string>
     <string name="labelSettingsBlacklist">a , separated list of source names that we do not send out on this connection</string>
+    <string name="labelSettingsSendBroadcast">send data as broadcast</string>
 
 </resources>

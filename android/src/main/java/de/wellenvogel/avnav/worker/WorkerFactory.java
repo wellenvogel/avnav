@@ -17,6 +17,7 @@ public class WorkerFactory {
     public static final String SOCKETREADER_NAME="SocketReader";
     public static final String SOCKETWRITER_NAME="SocketWriter";
     public static final String UDPREADER_NAME="UdpReader";
+    public static final String UDPWRITER_NAME="UdpWriter";
     public static final String BLUETOOTH_NAME="Bluetooth";
     private static final WorkerFactory instance=new WorkerFactory();
     public static WorkerFactory getInstance(){return instance;}
@@ -36,6 +37,7 @@ public class WorkerFactory {
         registerCreator(USB_NAME,new UsbConnectionHandler.Creator());
         registerCreator(BLUETOOTH_NAME, new BluetoothConnectionHandler.Creator());
         registerCreator(UDPREADER_NAME,new UdpReceiver.Creator());
+        registerCreator(UDPWRITER_NAME, new UdpWriter.Creator());
 
     }
     private HashMap<String, Creator> workers=new HashMap<>();

@@ -233,15 +233,16 @@ public class Decoder extends Worker {
                                     if (currentGsvStore == null) currentGsvStore = new GSVStore();
                                     GSVSentence gsv = (GSVSentence) s;
                                     currentGsvStore.addSentence(gsv);
-                                    AvnLog.d(getTypeName() + ": GSV sentence (" + gsv.getSentenceIndex() + "/" + gsv.getSentenceCount() +
-                                            "), numSat=" + gsv.getSatelliteCount());
+                                    AvnLog.dfs("%s: GSV sentence (%d/%d) numSat=%d" ,
+                                            getTypeName() ,gsv.getSentenceIndex(),
+                                            gsv.getSentenceCount(),gsv.getSatelliteCount());
                                     if (currentGsvStore.getValid()) {
                                         numGsv = 0;
                                         validGsvStore = currentGsvStore;
                                         currentGsvStore = new GSVStore();
                                         stat.numSat = validGsvStore.getSatCount();
                                         //TODO: aging of validGSVStore
-                                        AvnLog.d(getTypeName() + ": GSV sentence last, numSat=" + stat.numSat);
+                                        AvnLog.dfs("%s: GSV sentence last, numSat=%d",getTypeName(),stat.numSat);
                                     }
                                     if (numGsv > GSVStore.MAXGSV) {
                                         AvnLog.e(getTypeName() + ": to many gsv sentences without a final one " + numGsv);
@@ -253,12 +254,13 @@ public class Decoder extends Worker {
                                 }
                                 if (s instanceof GSASentence) {
                                     stat.numUsed = ((GSASentence) s).getSatelliteIds().length;
-                                    AvnLog.d(getTypeName() + ": GSA sentence, used=" + stat.numUsed);
+                                    AvnLog.dfs("%s: GSA sentence, used=%d",
+                                            getTypeName(),stat.numUsed);
                                     continue;
                                 }
                                 if (s instanceof MWVSentence) {
                                     MWVSentence m = (MWVSentence) s;
-                                    AvnLog.d(getTypeName() + ": MWV sentence");
+                                    AvnLog.d("%s: MWV sentence",getTypeName() );
                                     AuxiliaryEntry e = new AuxiliaryEntry();
                                     e.data.put("windAngle", m.getAngle());
                                     e.data.put("windReference", m.isTrue() ? "T" : "R");
@@ -275,7 +277,7 @@ public class Decoder extends Worker {
                                 }
                                 if (s instanceof DPTSentence) {
                                     DPTSentence d = (DPTSentence) s;
-                                    AvnLog.d(getTypeName() + ": DPT sentence");
+                                    AvnLog.d("%s: DPT sentence",getTypeName() );
                                     AuxiliaryEntry e = new AuxiliaryEntry();
                                     double depth = d.getDepth();
                                     e.data.put("depthBelowTransducer", depth);
@@ -290,7 +292,7 @@ public class Decoder extends Worker {
                                 }
                                 if (s instanceof DBTSentence) {
                                     DBTSentence d = (DBTSentence) s;
-                                    AvnLog.d(getTypeName() + ": DBT sentence");
+                                    AvnLog.d("%s: DBT sentence",getTypeName() );
                                     AuxiliaryEntry e = new AuxiliaryEntry();
                                     double depth = d.getDepth();
                                     e.data.put("depthBelowTransducer", depth);
@@ -319,20 +321,21 @@ public class Decoder extends Worker {
                                     boolean isValid = false;
                                     if (s instanceof RMCSentence) {
                                         isValid = ((RMCSentence) s).getStatus() == DataStatus.ACTIVE;
-                                        AvnLog.d(getTypeName() + ": RMC sentence, valid=" + isValid);
+                                        AvnLog.dfs("%s: RMC sentence, valid=%s",getTypeName() ,isValid);
                                     }
                                     if (s instanceof GLLSentence) {
                                         isValid = ((GLLSentence) s).getStatus() == DataStatus.ACTIVE;
-                                        AvnLog.d(getTypeName() + ": GLL sentence, valid=" + isValid);
+                                        AvnLog.dfs("%s: GLL sentence, valid=%s",
+                                                getTypeName() , isValid);
                                     }
                                     if (s instanceof GGASentence) {
                                         int qual = ((GGASentence) s).getFixQuality().toInt();
                                         isValid = qual > 0;
-                                        AvnLog.d(getTypeName() + ": GGA sentence, quality=" + qual + ", valid=" + isValid);
+                                        AvnLog.dfs("%s: GGA sentence, quality=%d, valid=%s",getTypeName() ,qual,isValid);
                                     }
                                     if (isValid) {
                                         p = ((PositionSentence) s).getPosition();
-                                        AvnLog.d(LOGPRFX, getTypeName() + ": external position " + p);
+                                        AvnLog.dfs( "%s: external position %s",getTypeName() ,p);
                                     }
                                 }
                                 net.sf.marineapi.nmea.util.Time time = null;
@@ -361,12 +364,12 @@ public class Decoder extends Worker {
                                             try {
                                                 location.setSpeed((float) (((RMCSentence) s).getSpeed() / AvnUtil.msToKn));
                                             } catch (Exception i) {
-                                                AvnLog.d(getTypeName() + ": Exception querying speed: " + i.getLocalizedMessage());
+                                                AvnLog.dfs("%s: Exception querying speed: %s",getTypeName() ,i.getLocalizedMessage());
                                             }
                                             try {
                                                 location.setBearing((float) (((RMCSentence) s).getCourse()));
                                             } catch (Exception i) {
-                                                AvnLog.d(getTypeName() + ": Exception querying bearing: " + i.getLocalizedMessage());
+                                                AvnLog.dfs("%s: Exception querying bearing: %s",getTypeName() , i.getLocalizedMessage());
                                             }
                                         }
                                         AvnLog.d(LOGPRFX, getTypeName() + ": location: " + location);

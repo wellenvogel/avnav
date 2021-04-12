@@ -340,7 +340,7 @@ public class RouteHandler extends DirectoryRequestHandler  {
                             info.mtime = f.lastModified();
                             localList.put(name, info);
                             mustUpdate = true;
-                            AvnLog.d("parsed route: " + info.toString());
+                            AvnLog.ifs("parsed route: %s" ,info);
                         } catch (Exception e) {
                             Log.e(AvnLog.LOGPREFIX, "Exception parsing route " + f.getAbsolutePath() + ": " + e.getLocalizedMessage());
                         }
