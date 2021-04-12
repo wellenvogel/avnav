@@ -191,7 +191,7 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
     public static EditableParameter.StringListParameter DEVICE_SELECT=
             new EditableParameter.StringListParameter("device", R.string.labelSettingsUsbDevice);
     private EditableParameter.StringListParameter deviceSelect;
-    private UsbConnectionHandler(String name, Context ctx, NmeaQueue queue) throws JSONException {
+    private UsbConnectionHandler(String name, GpsService ctx, NmeaQueue queue) throws JSONException {
         super(name,ctx,queue);
         parameterDescriptions.add(BAUDRATE_PARAMETER);
         deviceSelect=new EditableParameter.StringListParameter(DEVICE_SELECT);
@@ -261,7 +261,7 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
 
     static class Creator extends WorkerFactory.Creator{
         @Override
-        ChannelWorker create(String name, Context ctx, NmeaQueue queue) throws JSONException {
+        ChannelWorker create(String name, GpsService ctx, NmeaQueue queue) throws JSONException {
             return new UsbConnectionHandler(name,ctx,queue);
         }
         @Override

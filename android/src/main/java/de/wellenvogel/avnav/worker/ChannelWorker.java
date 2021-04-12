@@ -1,18 +1,16 @@
 package de.wellenvogel.avnav.worker;
 
-import android.content.Context;
-
 import org.json.JSONException;
 
 import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.NmeaQueue;
 
 public abstract class ChannelWorker extends Worker{
-    protected Context context;
+    protected GpsService gpsService;
     protected NmeaQueue queue;
-    ChannelWorker(String name, Context ctx, NmeaQueue queue){
+    ChannelWorker(String name, GpsService ctx, NmeaQueue queue){
         super(name);
-        this.context=ctx;
+        this.gpsService =ctx;
         this.queue=queue;
     }
 

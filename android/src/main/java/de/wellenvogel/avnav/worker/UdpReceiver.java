@@ -22,12 +22,12 @@ public class UdpReceiver extends ChannelWorker {
     static class Creator extends WorkerFactory.Creator{
 
         @Override
-        ChannelWorker create(String name, Context ctx, NmeaQueue queue) throws JSONException, IOException {
+        ChannelWorker create(String name, GpsService ctx, NmeaQueue queue) throws JSONException, IOException {
             return new UdpReceiver(name,ctx,queue);
         }
     }
     long lastReceived=0;
-    UdpReceiver(String name, Context ctx, NmeaQueue queue) {
+    UdpReceiver(String name, GpsService ctx, NmeaQueue queue) {
         super(name, ctx, queue);
         parameterDescriptions.addParams(SOURCENAME_PARAMETER,
                 ENABLED_PARAMETER,

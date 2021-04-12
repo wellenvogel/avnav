@@ -26,7 +26,7 @@ import de.wellenvogel.avnav.util.NmeaQueue;
 public class SocketWriter extends ChannelWorker {
     static class Creator extends WorkerFactory.Creator{
         @Override
-        ChannelWorker create(String name, Context ctx, NmeaQueue queue) throws JSONException {
+        ChannelWorker create(String name, GpsService ctx, NmeaQueue queue) throws JSONException {
             return new SocketWriter(name,ctx,queue);
         }
     }
@@ -68,7 +68,7 @@ public class SocketWriter extends ChannelWorker {
         }
     }
 
-    private SocketWriter(String name, Context ctx, NmeaQueue queue) throws JSONException {
+    private SocketWriter(String name, GpsService ctx, NmeaQueue queue) throws JSONException {
         super(name,ctx,queue);
         parameterDescriptions.addParams(
                 SOURCENAME_PARAMETER,

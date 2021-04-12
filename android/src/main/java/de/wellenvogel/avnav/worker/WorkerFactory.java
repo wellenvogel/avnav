@@ -27,7 +27,7 @@ public class WorkerFactory {
         }
     }
     static abstract class Creator{
-        abstract ChannelWorker create(String name,Context ctx,NmeaQueue queue) throws JSONException, IOException;
+        abstract ChannelWorker create(String name,GpsService ctx,NmeaQueue queue) throws JSONException, IOException;
         boolean canAdd(Context ctx){return true;}
     }
     public WorkerFactory(){
@@ -44,7 +44,7 @@ public class WorkerFactory {
     void registerCreator(String typeName,Creator creator){
         workers.put(typeName,creator);
     }
-    public ChannelWorker createWorker(String name,Context ctx, NmeaQueue queue) throws WorkerNotFound, JSONException, IOException {
+    public ChannelWorker createWorker(String name,GpsService ctx, NmeaQueue queue) throws WorkerNotFound, JSONException, IOException {
         Creator cr=workers.get(name);
         if ( cr == null) throw new WorkerNotFound(name);
         return cr.create(name,ctx,queue);

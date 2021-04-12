@@ -84,4 +84,8 @@ public class IpConnection extends AbstractConnection {
         this.ctx=ctx;
     }
 
+    @Override
+    public boolean shouldFail() {
+        return true;
+    }
 }

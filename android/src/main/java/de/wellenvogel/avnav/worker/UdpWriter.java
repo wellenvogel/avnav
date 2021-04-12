@@ -25,14 +25,14 @@ public class UdpWriter extends ChannelWorker {
     static class Creator extends WorkerFactory.Creator{
 
         @Override
-        ChannelWorker create(String name, Context ctx, NmeaQueue queue) throws JSONException, IOException {
+        ChannelWorker create(String name, GpsService ctx, NmeaQueue queue) throws JSONException, IOException {
             return new UdpWriter(name,ctx,queue);
         }
     }
     long lastSend=0;
     static final EditableParameter.BooleanParameter BROADCAST_PARAMETER=
             new EditableParameter.BooleanParameter("sendBroadcast", R.string.labelSettingsSendBroadcast,false);
-    UdpWriter(String name, Context ctx, NmeaQueue queue) {
+    UdpWriter(String name, GpsService ctx, NmeaQueue queue) {
         super(name, ctx, queue);
         parameterDescriptions.addParams(
                 ENABLED_PARAMETER,

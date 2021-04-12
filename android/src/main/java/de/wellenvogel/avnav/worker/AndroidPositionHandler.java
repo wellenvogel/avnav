@@ -57,7 +57,7 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
     private boolean stopped=true;
     private Thread satStatusProvider;
 
-    AndroidPositionHandler(String name, Context ctx, NmeaQueue queue) {
+    AndroidPositionHandler(String name, GpsService ctx, NmeaQueue queue) {
         super(name,ctx,queue);
         parameterDescriptions.addParams(
                 ENABLED_PARAMETER,
@@ -68,7 +68,7 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
 
     public static class Creator extends WorkerFactory.Creator{
         @Override
-        ChannelWorker create(String name, Context ctx, NmeaQueue queue) {
+        ChannelWorker create(String name, GpsService ctx, NmeaQueue queue) {
             return new AndroidPositionHandler(name,ctx,queue);
         }
         @Override
@@ -81,7 +81,7 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
     public void run(int startSequence) throws JSONException, IOException {
         stopped=false;
         this.timeOffset=TIMEOFFSET_PARAMETER.fromJson(parameters);
-        locationService=(LocationManager)context.getSystemService(context.LOCATION_SERVICE);
+        locationService=(LocationManager) gpsService.getSystemService(gpsService.LOCATION_SERVICE);
         tryEnableLocation(true);
         satStatusProvider=new Thread(new Runnable() {
             @Override
@@ -205,13 +205,13 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
         if (locationService != null && locationService.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             if (!isRegistered) {
                 if (Build.VERSION.SDK_INT >= 23) {
-                    if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) !=
+                    if (ContextCompat.checkSelfPermission(gpsService, Manifest.permission.ACCESS_FINE_LOCATION) !=
                             PackageManager.PERMISSION_GRANTED) {
                         location = null;
                         lastValidLocation = 0;
                         isRegistered = false;
                         setStatus(WorkerStatus.Status.ERROR, "no gps permission");
-                        if (notify) Toast.makeText(context, "no gps permission",
+                        if (notify) Toast.makeText(gpsService, "no gps permission",
                                 Toast.LENGTH_SHORT).show();
                         return;
                     }
@@ -236,7 +236,7 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
             lastValidLocation=0;
             isRegistered=false;
             setStatus(WorkerStatus.Status.ERROR,"no gps enabled");
-            if (notify)Toast.makeText(context, "no gps ",
+            if (notify)Toast.makeText(gpsService, "no gps ",
                     Toast.LENGTH_SHORT).show();
         }
     }

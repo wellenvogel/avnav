@@ -19,7 +19,7 @@ public abstract class SingleConnectionHandler extends ChannelWorker {
     private static final String LOGPRFX="SingleConnectionHandler";
     AbstractConnection connection;
     String name;
-    SingleConnectionHandler(String name, Context ctx, NmeaQueue queue) throws JSONException {
+    SingleConnectionHandler(String name, GpsService ctx, NmeaQueue queue) throws JSONException {
         super(name,ctx,queue);
         parameterDescriptions.addParams(
                 ENABLED_PARAMETER,
@@ -30,7 +30,7 @@ public abstract class SingleConnectionHandler extends ChannelWorker {
                 READ_TIMEOUT_PARAMETER,
                 BLACKLIST_PARAMETER
         );
-        context=ctx;
+        gpsService =ctx;
         this.queue=queue;
         this.name=name;
         status.canDelete=true;

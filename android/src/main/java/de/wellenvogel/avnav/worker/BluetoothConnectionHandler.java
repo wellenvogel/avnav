@@ -24,7 +24,7 @@ public class BluetoothConnectionHandler extends SingleConnectionHandler {
             "device",
             R.string.labelSettingsBtDevice
     );
-    private BluetoothConnectionHandler(String name,Context ctx, NmeaQueue queue) throws IOException, JSONException {
+    private BluetoothConnectionHandler(String name,GpsService ctx, NmeaQueue queue) throws IOException, JSONException {
         super(name,ctx,queue);
         deviceSelect.listBuilder=new EditableParameter.ListBuilder<String>() {
             @Override
@@ -37,7 +37,7 @@ public class BluetoothConnectionHandler extends SingleConnectionHandler {
     public static class Creator extends WorkerFactory.Creator{
 
         @Override
-        ChannelWorker create(String name, Context ctx, NmeaQueue queue) throws JSONException, IOException {
+        ChannelWorker create(String name, GpsService ctx, NmeaQueue queue) throws JSONException, IOException {
             return new BluetoothConnectionHandler(name, ctx, queue);
         }
         @Override
