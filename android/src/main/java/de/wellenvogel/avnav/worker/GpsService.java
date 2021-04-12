@@ -118,7 +118,16 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
 
     @Override
     public void updated() {
-        handler.post(runnable);
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    timerAction();
+                } catch (JSONException e) {
+                    AvnLog.e("error in timer action",e);
+                }
+            }
+        });
         sendBroadcast(new Intent(Constants.BC_RELOAD_DATA));
 
     }
@@ -799,6 +808,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
     }
 
     public void timerAction() throws JSONException {
+        AvnLog.i(LOGPRFX,"timer action");
         checkAnchor();
         checkApproach();
         checkMob();
