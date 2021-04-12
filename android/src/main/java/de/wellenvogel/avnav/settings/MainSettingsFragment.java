@@ -3,6 +3,7 @@ package de.wellenvogel.avnav.settings;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -22,6 +23,8 @@ import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
+import de.wellenvogel.avnav.util.DialogBuilder;
+import de.wellenvogel.avnav.worker.GpsService;
 
 /**
  * Created by andreas on 24.10.15.
@@ -108,6 +111,22 @@ public class MainSettingsFragment extends SettingsFragment {
                 }
             });
         }
+        Preference setDefaultPref=getPreferenceScreen().findPreference("prefs.default");
+        setDefaultPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                DialogBuilder.confirmDialog(MainSettingsFragment.this.getActivity(), R.string.reset,
+                        R.string.reallyResetHandlers, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                if (which == DialogInterface.BUTTON_POSITIVE){
+                                    GpsService.resetWorkerConfig(MainSettingsFragment.this.getActivity());
+                                }
+                            }
+                        });
+                return false;
+            }
+        });
         setDefaults(R.xml.main_preferences,true);
     }
 

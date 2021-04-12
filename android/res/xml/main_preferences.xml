@@ -24,4 +24,7 @@
         android:title="@string/hideBars"
         android:widgetLayout="@layout/preference_checkbox">
     </CheckBoxPreference>
+    <Preference
+        android:title="@string/labelSettingsDefaults"
+        android:key="prefs.default"></Preference>
 </PreferenceScreen>

@@ -350,55 +350,55 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             this.configName="internal."+typeName;
             this.typeName=typeName;
         }
-        abstract IWorker createWorker(Context ctx,NmeaQueue queue) throws IOException;
+        abstract IWorker createWorker(GpsService ctx, NmeaQueue queue) throws IOException;
     }
 
-    private final WorkerConfig WDECODER= new WorkerConfig("Decoder", 1) {
+    private static final WorkerConfig WDECODER= new WorkerConfig("Decoder", 1) {
         @Override
-        IWorker createWorker(Context ctx, NmeaQueue queue) {
+        IWorker createWorker(GpsService ctx, NmeaQueue queue) {
             return new Decoder(typeName,ctx,queue);
         }
     };
-    private final WorkerConfig WROUTER=new WorkerConfig("Router",2){
+    private static final WorkerConfig WROUTER=new WorkerConfig("Router",2){
         @Override
-        IWorker createWorker(Context ctx, NmeaQueue queue) throws IOException {
-            SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
-            File routeDir=new File(AvnUtil.getWorkDir(prefs,GpsService.this),"routes");
-            RouteHandler rt=new RouteHandler(routeDir,GpsService.this,queue);
-            rt.setMediaUpdater(mediaUpdater);
+        IWorker createWorker(GpsService ctx, NmeaQueue queue) throws IOException {
+            SharedPreferences prefs=ctx.getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
+            File routeDir=new File(AvnUtil.getWorkDir(prefs,ctx),"routes");
+            RouteHandler rt=new RouteHandler(routeDir,ctx,queue);
+            rt.setMediaUpdater(ctx.getMediaUpdater());
             return rt;
         }
     };
-    private final WorkerConfig WTRACK=new WorkerConfig("Track",3){
+    private static final WorkerConfig WTRACK=new WorkerConfig("Track",3){
         @Override
-        IWorker createWorker(Context ctx, NmeaQueue queue) throws IOException {
-            SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
-            File newTrackDir=new File(AvnUtil.getWorkDir(prefs,GpsService.this),"tracks");
-            TrackWriter rt=new TrackWriter(newTrackDir,mediaUpdater);
+        IWorker createWorker(GpsService ctx, NmeaQueue queue) throws IOException {
+            SharedPreferences prefs=ctx.getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
+            File newTrackDir=new File(AvnUtil.getWorkDir(prefs,ctx),"tracks");
+            TrackWriter rt=new TrackWriter(newTrackDir,ctx.getMediaUpdater());
             return rt;
         }
     };
-    private final WorkerConfig WLOGGER= new WorkerConfig("Logger", 4) {
+    private static final WorkerConfig WLOGGER= new WorkerConfig("Logger", 4) {
         @Override
-        IWorker createWorker(Context ctx, NmeaQueue queue) throws IOException {
-            SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
-            File newTrackDir=new File(AvnUtil.getWorkDir(prefs,GpsService.this),"tracks");
+        IWorker createWorker(GpsService ctx, NmeaQueue queue) throws IOException {
+            SharedPreferences prefs=ctx.getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
+            File newTrackDir=new File(AvnUtil.getWorkDir(prefs,ctx),"tracks");
             return new NmeaLogger(newTrackDir,queue,null);
         }
     };
-    private final WorkerConfig WSERVER= new WorkerConfig("WebServer",5) {
+    private static final WorkerConfig WSERVER= new WorkerConfig("WebServer",5) {
         @Override
-        IWorker createWorker(Context ctx, NmeaQueue queue) throws IOException {
-            return new WebServer(GpsService.this);
+        IWorker createWorker(GpsService ctx, NmeaQueue queue) throws IOException {
+            return new WebServer(ctx);
         }
     };
-    private final WorkerConfig WGPS= new WorkerConfig("InternalGPS", 6) {
+    private static final WorkerConfig WGPS= new WorkerConfig("InternalGPS", 6) {
         @Override
-        IWorker createWorker(Context ctx, NmeaQueue queue) {
+        IWorker createWorker(GpsService ctx, NmeaQueue queue) {
             return new AndroidPositionHandler(typeName,ctx,queue);
         }
     };
-    private final WorkerConfig[] INTERNAL_WORKERS ={WDECODER,WROUTER,WTRACK,WLOGGER,WSERVER,WGPS};
+    private static final WorkerConfig[] INTERNAL_WORKERS ={WDECODER,WROUTER,WTRACK,WLOGGER,WSERVER,WGPS};
 
     private synchronized int getNextWorkerId(){
         workerId++;
@@ -501,6 +501,16 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             edit.commit();
         } catch (Throwable t) {
         }
+    }
+
+    public static void resetWorkerConfig(Context ctx){
+        SharedPreferences prefs = ctx.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor edit=prefs.edit();
+        edit.putString(Constants.HANDLER_CONFIG,(new JSONArray()).toString());
+        for (WorkerConfig iw:INTERNAL_WORKERS){
+            edit.putString(iw.configName,null);
+        }
+        edit.commit();
     }
 
     private Decoder getDecoder(){
