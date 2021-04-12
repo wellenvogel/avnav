@@ -96,5 +96,6 @@
     <string name="labelSettingsReadData">also read data on this connection</string>
     <string name="labelSettingsBlacklist">a , separated list of source names that we do not send out on this connection</string>
     <string name="labelSettingsSendBroadcast">send data as broadcast</string>
+    <string name="labelSettingsComputeRMB">compute RMB seentences if a waypoint or route is active</string>
 
 </resources>

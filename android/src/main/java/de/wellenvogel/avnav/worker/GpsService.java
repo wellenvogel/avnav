@@ -85,7 +85,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
     private RequestHandler requestHandler;
     private RouteHandler.RoutePoint lastAlarmWp=null;
     private final NmeaQueue queue=new NmeaQueue();
-    long trackMintime=1000;
+    long timerInterval =1000;
     Alarm lastNotifiedAlarm=null;
     boolean notificationSend=false;
     private long alarmSequence=System.currentTimeMillis();
@@ -355,7 +355,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         IWorker createWorker(Context ctx, NmeaQueue queue) throws IOException {
             SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
             File routeDir=new File(AvnUtil.getWorkDir(prefs,GpsService.this),"routes");
-            RouteHandler rt=new RouteHandler(routeDir,GpsService.this);
+            RouteHandler rt=new RouteHandler(routeDir,GpsService.this,queue);
             rt.setMediaUpdater(mediaUpdater);
             return rt;
         }
@@ -694,7 +694,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         if (! isWatchdog || runnable == null) {
             timerSequence++;
             runnable = new TimerRunnable(timerSequence);
-            handler.postDelayed(runnable, trackMintime);
+            handler.postDelayed(runnable, timerInterval);
         }
         if (! receiverRegistered) {
             registerReceiver(usbReceiver, new IntentFilter(UsbManager.ACTION_USB_DEVICE_DETACHED));
@@ -794,7 +794,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             } catch (JSONException e) {
                 AvnLog.e("error in timer",e);
             }
-            handler.postDelayed(this, trackMintime);
+            handler.postDelayed(this, timerInterval);
         }
     }
 

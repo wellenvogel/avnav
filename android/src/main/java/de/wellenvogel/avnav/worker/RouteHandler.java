@@ -3,7 +3,16 @@ package de.wellenvogel.avnav.worker;
 import android.content.Context;
 import android.location.Location;
 import android.net.Uri;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
+
+import net.sf.marineapi.nmea.parser.SentenceFactory;
+import net.sf.marineapi.nmea.sentence.RMBSentence;
+import net.sf.marineapi.nmea.sentence.TalkerId;
+import net.sf.marineapi.nmea.util.DataStatus;
+import net.sf.marineapi.nmea.util.Direction;
+import net.sf.marineapi.nmea.util.Waypoint;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -28,6 +37,7 @@ import de.wellenvogel.avnav.appapi.PostVars;
 import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.IMediaUpdater;
+import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.NmeaQueue;
@@ -36,6 +46,12 @@ import de.wellenvogel.avnav.util.NmeaQueue;
  * Created by andreas on 12.12.14.
  */
 public class RouteHandler extends DirectoryRequestHandler  {
+
+    private RoutePoint lastRMBfrom;
+    private RoutePoint lastRMBto;
+    private int rmbWpId=0;
+    private static final String CHILD_LEG="leg";
+    private static final String CHILD_RMB="RMB";
 
     public static interface UpdateReceiver{
         public void updated();
@@ -92,6 +108,14 @@ public class RouteHandler extends DirectoryRequestHandler  {
         public String name;
         public double lat;
         public double lon;
+
+        public RoutePoint(RoutePoint from) {
+            this.name=from.name;
+            this.lat=from.lat;
+            this.lon=from.lon;
+        }
+        public RoutePoint(){}
+
         JSONObject toJson() throws JSONException{
             JSONObject rt=new JSONObject();
             rt.put("lat",lat);
@@ -111,6 +135,23 @@ public class RouteHandler extends DirectoryRequestHandler  {
             rt.setLatitude(lat);
             rt.setLongitude(lon);
             return rt;
+        }
+
+        @Override
+        public boolean equals(@Nullable Object obj) {
+            if (! (obj instanceof RoutePoint)) return false;
+            RoutePoint other=(RoutePoint)obj;
+            if (other.name != null) {
+                if (name == null) return false;
+                if (!name.equals(other.name)) return false;
+            }
+            return lat == other.lat && lon==other.lon;
+        }
+
+        @NonNull
+        @Override
+        public String toString() {
+            return String.format("WP: %s lat=%2.9f lon=%2.9f",(name != null)?name:"",lat,lon);
         }
 
         /**
@@ -280,10 +321,17 @@ public class RouteHandler extends DirectoryRequestHandler  {
     private HashMap<String,RouteInfo> routeInfos=new HashMap<String, RouteInfo>();
     private RoutingLeg currentLeg;
     private long legSequence=System.currentTimeMillis();
-    public RouteHandler(File routedir,UpdateReceiver updater) throws IOException {
+    private SentenceFactory factory=SentenceFactory.getInstance();
+    private NmeaQueue queue;
+    static EditableParameter.BooleanParameter COMPUTE_RMB=
+            new EditableParameter.BooleanParameter("computeRMB", R.string.labelSettingsComputeRMB,true);
+    public RouteHandler(File routedir,UpdateReceiver updater,NmeaQueue queue) throws IOException {
         super(RequestHandler.TYPE_ROUTE,routedir,"route",null);
         this.routedir=routedir;
         updateReceiver=updater;
+        parameterDescriptions.addParams(COMPUTE_RMB);
+        status.canEdit=true;
+        this.queue=queue;
     }
 
 
@@ -559,13 +607,59 @@ public class RouteHandler extends DirectoryRequestHandler  {
         lastDistanceToNext=null;
         lastDistanceToCurrent=null;
     }
+    private void computeRMB(RoutingLeg leg,Location currentPosition){
+        boolean computeRMB=false;
+        try {
+            computeRMB=COMPUTE_RMB.fromJson(parameters);
+        } catch (JSONException e) {
+        }
+        if (! computeRMB){
+            status.setChildStatus(CHILD_RMB, WorkerStatus.Status.INACTIVE,"no RMB");
+        }
+        try {
+            Location target = leg.to.toLocation();
+            Location start = leg.from.toLocation();
+            double xte = AvnUtil.calcXTE(start, target, currentPosition) / AvnUtil.NM;
+            double distance = currentPosition.distanceTo(target);
+            float destBearing = currentPosition.bearingTo(target);
+
+            if (!leg.from.equals(lastRMBfrom) || !leg.to.equals(lastRMBto)) {
+                rmbWpId++;
+                lastRMBfrom = new RoutePoint(leg.from);
+                lastRMBto = new RoutePoint(leg.to);
+            }
+            RMBSentence rmb = (RMBSentence) factory.createParser(TalkerId.GP, "RMB");
+            rmb.setArrivalStatus((distance <= leg.approachDistance) ? DataStatus.ACTIVE : DataStatus.VOID);
+            if (destBearing < 0) destBearing=360+destBearing;
+            rmb.setBearing(destBearing);
+            rmb.setVelocity(AvnUtil.msToKn * currentPosition.getSpeed());
+            rmb.setSteerTo((xte > 0) ? Direction.LEFT : Direction.RIGHT);
+            distance=distance/AvnUtil.NM;
+            rmb.setRange((distance < 999.9) ? distance : 999.9);
+            xte = Math.abs(xte);
+            if (xte > 9.99) xte = 9.99;
+            rmb.setCrossTrackError(xte);
+            rmb.setOriginId(String.valueOf(rmbWpId));
+            rmb.setDestination(new Waypoint(String.valueOf(rmbWpId + 1), leg.to.lat, leg.to.lon));
+            rmb.setStatus(DataStatus.ACTIVE);
+            String sentence=rmb.toSentence();
+            status.setChildStatus(CHILD_RMB, WorkerStatus.Status.NMEA,sentence);
+            queue.add(sentence, getSourceName());
+        }catch (Throwable t){
+            AvnLog.e("error computing RMB",t);
+        }
+    }
     public boolean handleApproach(Location currentPosition){
         RoutingLeg leg=this.currentLeg;
         if (leg == null || ! leg.active ||currentPosition == null ) {
+            status.setChildStatus(CHILD_LEG, WorkerStatus.Status.INACTIVE,"no leg");
+            status.setChildStatus(CHILD_RMB, WorkerStatus.Status.INACTIVE,"no RMB");
             resetLast();
             return false;
         }
+        computeRMB(leg,currentPosition);
         if (leg.isMob()){
+            status.setChildStatus(CHILD_LEG, WorkerStatus.Status.NMEA,"MOB to"+ leg.getTo().toString());
             resetLast();
             return false;
         }
@@ -578,6 +672,10 @@ public class RouteHandler extends DirectoryRequestHandler  {
         int nextIdx=-1;
         if (leg.getRoute() != null) {
             nextIdx=leg.getRoute().getNextTarget(leg.currentTarget);
+            status.setChildStatus(CHILD_LEG, WorkerStatus.Status.NMEA,String.format("Route %s , next %s",leg.getRoute().name,leg.to.toString()));
+        }
+        else{
+            status.setChildStatus(CHILD_LEG, WorkerStatus.Status.NMEA,String.format("to %s",leg.to.toString()));
         }
         float nextDistance=0;
         RoutePoint nextTarget=null;

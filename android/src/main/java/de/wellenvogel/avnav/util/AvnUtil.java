@@ -3,6 +3,7 @@ package de.wellenvogel.avnav.util;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.LinkProperties;
 import android.net.Network;
@@ -31,7 +32,8 @@ import de.wellenvogel.avnav.main.Constants;
  * Created by andreas on 26.11.15.
  */
 public class AvnUtil {
-    public static final double msToKn=3600.0/1852.0;
+    public static final double NM=1852.0;
+    public static final double msToKn=3600.0/NM;
 
     public static long getLongPref(SharedPreferences prefs, String key, long defaultValue){
         try{
@@ -245,4 +247,20 @@ public class AvnUtil {
         }
         return null;
     }
+
+    /**
+     * calculate the XTE, see avnav_util.py
+     * @param start
+     * @param end
+     * @param current
+     * @return
+     */
+    public static double calcXTE(Location start,Location end,Location current){
+        float d13=start.distanceTo(current);
+        float w13=start.bearingTo(current);
+        float w12=start.bearingTo(end);
+        double rt=Math.asin(Math.sin(d13/R)*Math.sin(Math.toRadians(w13)-Math.toRadians(w12)))*R;
+        return rt;
+    }
+    public static final double R=6371000; //app. earth radius
 }
