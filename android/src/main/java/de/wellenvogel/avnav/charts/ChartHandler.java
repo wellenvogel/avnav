@@ -113,7 +113,7 @@ public class ChartHandler implements INavRequestHandler {
     }
 
 
-    public synchronized void updateChartList(){
+    public void updateChartList(){
         HashMap<String, Chart> newGemfFiles=new HashMap<String, Chart>();
         SharedPreferences prefs=AvnUtil.getSharedPreferences(context);
         File workDir=AvnUtil.getWorkDir(prefs, context);
@@ -125,36 +125,37 @@ public class ChartHandler implements INavRequestHandler {
                 readChartDir(secondChartDirStr, INDEX_EXTERNAL,newGemfFiles);
             }
         }
-        //now we have all current charts - compare to the existing list and create/delete entries
-        //currently we assume only one thread to change the chartlist...
-        boolean modified=false;
-        for (String url : newGemfFiles.keySet()){
-            Chart chart=newGemfFiles.get(url);
-            long lastModified=chart.getLastModified();
-            if (chartList.get(url) == null ){
-                chartList.put(url,chart);
-                modified=true;
-            }
-            else{
-                if (chartList.get(url).getLastModified() < lastModified){
-                    modified=true;
-                    chartList.get(url).close();
-                    chartList.put(url,chart);
+        boolean modified = false;
+        synchronized (this) {
+            //now we have all current charts - compare to the existing list and create/delete entries
+            //currently we assume only one thread to change the chartlist...
+            for (String url : newGemfFiles.keySet()) {
+                Chart chart = newGemfFiles.get(url);
+                long lastModified = chart.getLastModified();
+                if (chartList.get(url) == null) {
+                    chartList.put(url, chart);
+                    modified = true;
+                } else {
+                    if (chartList.get(url).getLastModified() < lastModified) {
+                        modified = true;
+                        chartList.get(url).close();
+                        chartList.put(url, chart);
+                    }
                 }
             }
-        }
-        Iterator<String> it= chartList.keySet().iterator();
-        while (it.hasNext()){
-            String url=it.next();
-            if (newGemfFiles.get(url) == null){
-                it.remove();
-                modified=true;
-            }
-            else{
-                Chart chart= chartList.get(url);
-                if (chart.closeInactive()){
-                    AvnLog.i("closing gemf file "+url);
-                    modified=true;
+
+            Iterator<String> it = chartList.keySet().iterator();
+            while (it.hasNext()) {
+                String url = it.next();
+                if (newGemfFiles.get(url) == null) {
+                    it.remove();
+                    modified = true;
+                } else {
+                    Chart chart = chartList.get(url);
+                    if (chart.closeInactive()) {
+                        AvnLog.i("closing gemf file " + url);
+                        modified = true;
+                    }
                 }
             }
         }
