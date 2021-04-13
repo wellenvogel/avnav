@@ -118,7 +118,7 @@ public class Resolver implements Runnable{
                 }
             }
             for (QRequest<T> sr:outdated){
-                openRequests.remove(sr);
+                queue.remove(sr);
             }
         }
         protected abstract void resolve(T r) throws IOException;
@@ -138,14 +138,6 @@ public class Resolver implements Runnable{
             }
         }).run();
 
-    }
-
-    public static Resolver createResolver(NetworkInterface intf, Callback<Target.ServiceTarget> defaultCallback) throws IOException {
-        Resolver r=new Resolver(intf,defaultCallback);
-        Thread thr=new Thread(r);
-        thr.setDaemon(true);
-        thr.start();
-        return r;
     }
 
     static String hostnameFromMdns(String mdnsName){

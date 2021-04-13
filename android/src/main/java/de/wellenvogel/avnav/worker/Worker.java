@@ -61,7 +61,7 @@ public abstract class Worker implements IWorker {
     protected static final String CLAIM_TCPPORT = "tcp port";
     protected static final String CLAIM_UDPPORT ="udp port";
     private static final String CLAIM_NAME = "name" ;
-
+    protected static final String CLAIM_SERVICE="service";
     private static class ResourceClaim{
         String kind;
         String name;

@@ -1,7 +1,6 @@
 package de.wellenvogel.avnav.worker;
 
 import android.Manifest;
-import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.*;
 import android.os.Build;
@@ -72,7 +71,7 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
             return new AndroidPositionHandler(name,ctx,queue);
         }
         @Override
-        boolean canAdd(Context ctx) {
+        boolean canAdd(GpsService ctx) {
             return false;
         }
     }

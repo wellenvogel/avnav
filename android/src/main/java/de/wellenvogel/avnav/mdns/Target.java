@@ -1,5 +1,7 @@
 package de.wellenvogel.avnav.mdns;
 
+import android.support.annotation.NonNull;
+
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.URI;
@@ -81,6 +83,12 @@ public class Target {
         public InetAddress getAddress() {
             return address;
         }
+
+        @NonNull
+        @Override
+        public String toString() {
+            return String.format("Service %s %s %s:%s",name,host,address,port);
+        }
     }
     public static class HostTarget implements ResolveTarget{
         public String name;
@@ -113,6 +121,11 @@ public class Target {
         @Override
         public InetAddress getAddress() {
             return address;
+        }
+        @NonNull
+        @Override
+        public String toString() {
+            return String.format("Host %s %s",name,address);
         }
     }
 }

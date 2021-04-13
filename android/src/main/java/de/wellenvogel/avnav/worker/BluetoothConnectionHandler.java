@@ -2,7 +2,6 @@ package de.wellenvogel.avnav.worker;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.Context;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -41,7 +40,7 @@ public class BluetoothConnectionHandler extends SingleConnectionHandler {
             return new BluetoothConnectionHandler(name, ctx, queue);
         }
         @Override
-        boolean canAdd(Context ctx) {
+        boolean canAdd(GpsService ctx) {
             BluetoothAdapter adapter=BluetoothAdapter.getDefaultAdapter();
             if (adapter == null) return false;
             return adapter.isEnabled();

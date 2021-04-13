@@ -265,7 +265,7 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
             return new UsbConnectionHandler(name,ctx,queue);
         }
         @Override
-        boolean canAdd(Context ctx) {
+        boolean canAdd(GpsService ctx) {
             return ctx.getPackageManager().hasSystemFeature(PackageManager.FEATURE_USB_HOST);
         }
     }

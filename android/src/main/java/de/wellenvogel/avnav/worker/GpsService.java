@@ -107,9 +107,8 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
     private int workerId=MIN_WORKER_ID; //1-9 reserverd for fixed workers like decoder,...
     private final HashMap<String, Resolver> mdnsResolvers=new HashMap<>();
     private final ArrayList<InetAddress> interfaceAddresses=new ArrayList<>();
-    private NsdManager.DiscoveryListener discoveryListener;
+    private HashSet<NsdManager.DiscoveryListener> discoveryListeners=new HashSet<>();
     private NsdManager nsdManager;
-    private static final String[] KNOWN_SERVICES=new String[]{"_nmea-0183._tcp"};
     private final HashSet<NsdServiceInfo> services=new HashSet<>();
 
     private final BroadcastReceiver usbReceiver = new BroadcastReceiver() {
@@ -748,55 +747,82 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             registerReceiver(usbReceiver, new IntentFilter(UsbManager.ACTION_USB_DEVICE_DETACHED));
             receiverRegistered=true;
         }
-        if (discoveryListener == null){
-            discoveryListener = new NsdManager.DiscoveryListener() {
-                @Override
-                public void onStartDiscoveryFailed(String serviceType, int errorCode) {
-
-                }
-
-                @Override
-                public void onStopDiscoveryFailed(String serviceType, int errorCode) {
-
-                }
-
-                @Override
-                public void onDiscoveryStarted(String serviceType) {
-
-                }
-
-                @Override
-                public void onDiscoveryStopped(String serviceType) {
-
-                }
-
-                @Override
-                public void onServiceFound(NsdServiceInfo serviceInfo) {
-                    synchronized (services){
-                        services.add(serviceInfo);
-                    }
-
-                }
-
-                @Override
-                public void onServiceLost(NsdServiceInfo serviceInfo) {
-
-                }
-            };
+        if (discoveryListeners.size() == 0) {
+            startDiscovery();
         }
-        startDiscovery();
         return Service.START_REDELIVER_INTENT;
     }
 
-    private void startDiscovery(){
+    private void stopDiscovery(){
         if (nsdManager == null){
-            nsdManager = (NsdManager)getSystemService(Context.NSD_SERVICE);
-            if (nsdManager != null) {
-                for (String s : KNOWN_SERVICES) {
-                    nsdManager.discoverServices(s, NsdManager.PROTOCOL_DNS_SD, discoveryListener);
+            discoveryListeners.clear();
+            return;
+        }
+        for (NsdManager.DiscoveryListener l:discoveryListeners){
+            nsdManager.stopServiceDiscovery(l);
+        }
+        discoveryListeners.clear();
+    }
+
+    private void startDiscovery() {
+        if (nsdManager == null) {
+            nsdManager = (NsdManager) getSystemService(Context.NSD_SERVICE);
+        }
+        if (nsdManager != null) {
+            for (TcpServiceReader.Description d : TcpServiceReader.SERVICES) {
+                NsdManager.DiscoveryListener discoveryListener = new NsdManager.DiscoveryListener() {
+                    @Override
+                    public void onStartDiscoveryFailed(String serviceType, int errorCode) {
+
+                    }
+
+                    @Override
+                    public void onStopDiscoveryFailed(String serviceType, int errorCode) {
+
+                    }
+
+                    @Override
+                    public void onDiscoveryStarted(String serviceType) {
+
+                    }
+
+                    @Override
+                    public void onDiscoveryStopped(String serviceType) {
+
+                    }
+
+                    @Override
+                    public void onServiceFound(NsdServiceInfo serviceInfo) {
+                        synchronized (services) {
+                            services.add(serviceInfo);
+                        }
+
+                    }
+
+                    @Override
+                    public void onServiceLost(NsdServiceInfo serviceInfo) {
+                        synchronized (services) {
+                            services.remove(serviceInfo);
+                        }
+                    }
+                };
+                discoveryListeners.add(discoveryListener);
+                nsdManager.discoverServices(d.serviceType, NsdManager.PROTOCOL_DNS_SD, discoveryListener);
+            }
+        }
+    }
+
+
+    public List<String> discoveredServices(String type){
+        ArrayList<String> rt=new ArrayList<>();
+        synchronized (services){
+            for (NsdServiceInfo info:services){
+                if (type.equals(info.getServiceType())){
+                    rt.add(info.getServiceName());
                 }
             }
         }
+        return rt;
     }
 
     public void restart(){
@@ -1030,10 +1056,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             cb.mainShutdown();
         }
         AvnLog.i(LOGPRFX, "service stopped");
-        if (nsdManager != null){
-            nsdManager.stopServiceDiscovery(discoveryListener);
-            nsdManager=null;
-        }
+        stopDiscovery();
     }
 
     public void stopMe(){

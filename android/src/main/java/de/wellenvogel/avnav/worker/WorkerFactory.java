@@ -1,7 +1,5 @@
 package de.wellenvogel.avnav.worker;
 
-import android.content.Context;
-
 import org.json.JSONException;
 
 import java.io.IOException;
@@ -28,7 +26,7 @@ public class WorkerFactory {
     }
     static abstract class Creator{
         abstract ChannelWorker create(String name,GpsService ctx,NmeaQueue queue) throws JSONException, IOException;
-        boolean canAdd(Context ctx){return true;}
+        boolean canAdd(GpsService ctx){return true;}
     }
     public WorkerFactory(){
         registerCreator(ANDROID_NAME,new AndroidPositionHandler.Creator());
@@ -38,6 +36,9 @@ public class WorkerFactory {
         registerCreator(BLUETOOTH_NAME, new BluetoothConnectionHandler.Creator());
         registerCreator(UDPREADER_NAME,new UdpReceiver.Creator());
         registerCreator(UDPWRITER_NAME, new UdpWriter.Creator());
+        for (TcpServiceReader.Description d:TcpServiceReader.SERVICES){
+            registerCreator(d.displayName,d.getCreator());
+        }
 
     }
     private HashMap<String, Creator> workers=new HashMap<>();
@@ -49,7 +50,7 @@ public class WorkerFactory {
         if ( cr == null) throw new WorkerNotFound(name);
         return cr.create(name,ctx,queue);
     }
-    public List<String> getKnownTypes(boolean addOnly,Context ctx){
+    public List<String> getKnownTypes(boolean addOnly,GpsService ctx){
         ArrayList<String> rt=new ArrayList<>();
         for (String n:workers.keySet()){
             if (!addOnly || workers.get(n).canAdd(ctx)){

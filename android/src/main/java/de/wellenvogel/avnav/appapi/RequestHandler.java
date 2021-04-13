@@ -80,7 +80,7 @@ public class RequestHandler {
     public static String TYPE_CONFIG="config";
 
     public static class KeyValue<VT>{
-        String key;
+        public String key;
         public VT value;
         public KeyValue(String key, VT v){
             this.key=key;

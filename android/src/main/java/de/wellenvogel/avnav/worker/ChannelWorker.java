@@ -55,7 +55,7 @@ public abstract class ChannelWorker extends Worker{
                 InetAddress ip= Inet4Address.getByName(target.getHostName());
                 address=new InetSocketAddress(ip, getPort(target));
             }catch(UnknownHostException e){
-                if (target.getHostName().endsWith("local")) {
+                if (! nslookup || target.getHostName().endsWith("local")) {
                     setStatus(WorkerStatus.Status.STARTED, "waiting for MDNS resolve for " + target);
                     try {
                         final Target.Resolved<T> resolved =
