@@ -615,6 +615,7 @@ public class RouteHandler extends DirectoryRequestHandler  {
         }
         if (! computeRMB){
             status.setChildStatus(CHILD_RMB, WorkerStatus.Status.INACTIVE,"no RMB");
+            return;
         }
         try {
             Location target = leg.to.toLocation();
@@ -663,6 +664,12 @@ public class RouteHandler extends DirectoryRequestHandler  {
             resetLast();
             return false;
         }
+        if (leg.getRoute() != null) {
+            status.setChildStatus(CHILD_LEG, WorkerStatus.Status.NMEA,String.format("Route %s , next %s",leg.getRoute().name,leg.to.toString()));
+        }
+        else{
+            status.setChildStatus(CHILD_LEG, WorkerStatus.Status.NMEA,String.format("to %s",leg.to.toString()));
+        }
         float currentDistance=leg.to.distanceTo(currentPosition);
         if (currentDistance > leg.approachDistance){
             resetLast();
@@ -672,10 +679,6 @@ public class RouteHandler extends DirectoryRequestHandler  {
         int nextIdx=-1;
         if (leg.getRoute() != null) {
             nextIdx=leg.getRoute().getNextTarget(leg.currentTarget);
-            status.setChildStatus(CHILD_LEG, WorkerStatus.Status.NMEA,String.format("Route %s , next %s",leg.getRoute().name,leg.to.toString()));
-        }
-        else{
-            status.setChildStatus(CHILD_LEG, WorkerStatus.Status.NMEA,String.format("to %s",leg.to.toString()));
         }
         float nextDistance=0;
         RoutePoint nextTarget=null;
