@@ -2,12 +2,14 @@ package de.wellenvogel.avnav.worker;
 
 import org.json.JSONException;
 
+import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 
 import de.wellenvogel.avnav.mdns.Resolver;
+import de.wellenvogel.avnav.mdns.Target;
 import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.NmeaQueue;
 
@@ -45,31 +47,36 @@ public abstract class ChannelWorker extends Worker{
         }catch(UnknownHostException e){
             if (target.endsWith("local")) {
                 setStatus(WorkerStatus.Status.STARTED, "waiting for MDNS resolve for " + target);
-                final AddressHolder resolved= new AddressHolder(null);
-                gpsService.resolveMdnsHost(target, new Resolver.ResolveHostCallback() {
-                    @Override
-                    public void resolve(String name, InetAddress host) {
-                        if (name.equals(target)) {
-                            resolved.setAddress(host);
+                try {
+                    final Target.Resolved<Target.HostTarget> resolved =
+                            new Target.Resolved<Target.HostTarget>(new Target.HostTarget(target));
+                    gpsService.resolveMdnsHost(target, new Resolver.Callback<Target.HostTarget>() {
+                        @Override
+                        public void resolve(Target.HostTarget target) {
+                            resolved.resolve(target);
                             synchronized (waiter) {
                                 waiter.notifyAll();
                             }
                         }
+                    }, forceNew);
+                    long start = System.currentTimeMillis();
+                    InetAddress ip = null;
+                    while ((start + MAXWAIT) > System.currentTimeMillis() && !shouldStop(startSequence)) {
+                        if (resolved.isResolved()) {
+                            ip = resolved.getResult().address;
+                            break;
+                        }
+                        sleep(1000);
                     }
-                }, forceNew);
-                long start = System.currentTimeMillis();
-                InetAddress ip = null;
-                while ((start + MAXWAIT) > System.currentTimeMillis() && ! shouldStop(startSequence)) {
-                    if (resolved.isResolved()) {
-                        ip = resolved.getAddress();
-                        break;
+                    if (ip == null) {
+                        return null;
                     }
-                    sleep(1000);
-                }
-                if (ip == null) {
+                    address = new InetSocketAddress(ip, port);
+                }catch (IOException ex){
+                    setStatus(WorkerStatus.Status.ERROR,"unable to resolve MDNS"+e.getMessage());
+                    if (! shouldStop(startSequence)) sleep(5000);
                     return null;
                 }
-                address=new InetSocketAddress(ip,port);
             }
             else{
                 setStatus(WorkerStatus.Status.ERROR,"unable to resolve "+target);
@@ -78,23 +85,5 @@ public abstract class ChannelWorker extends Worker{
             }
         }
         return address;
-    }
-
-    static class AddressHolder{
-        InetAddress address;
-        boolean isResolved;
-        AddressHolder(InetAddress address){
-            this.address=address;
-        }
-        synchronized InetAddress getAddress(){
-            return address;
-        }
-        synchronized void setAddress(InetAddress address){
-            this.address=address;
-            this.isResolved=true;
-        }
-        synchronized boolean isResolved(){
-            return isResolved;
-        }
     }
 }

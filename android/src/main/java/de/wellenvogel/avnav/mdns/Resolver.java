@@ -37,68 +37,47 @@ public class Resolver implements Runnable{
     public static final long RETRIGGER_TIME=6000; //6s
     public static final int MAX_RETRIGGER=5;
     static final String SERVICE_TYPE="_http._tcp";
-    static class Host{
-        InetAddress address;
-        String name;
-        long ttl;
-        long updated;
-        public Host(String name, InetAddress address,long ttl){
-            updated=System.currentTimeMillis()*1000;
-            this.ttl=ttl;
-            this.name=name;
-            this.address=address;
-        }
-        public Host(ARecord record){
-            this(record.getName(),record.getAddress(),record.getTTL());
-        }
+    private final Callback<Target.ServiceTarget> defaultCallback;
+
+    private static void fillHost(Target.HostTarget host,ARecord record){
+        host.address=record.getAddress();
+        host.ttl=record.getTTL();
+        host.updated=System.currentTimeMillis()*1000;
     }
     static final String LPRFX="InternalReceiver";
     static final String SUFFIX=SERVICE_TYPE+Domain.LOCAL.getName();
-    ResolveCallback resolveCallback;
     private SocketAddress mdnsGroupIPv4;
     private NetworkInterface intf;
     DatagramChannel channel;
-    HashMap<String,Host> hostAddresses=new HashMap<>();
-    HashSet<SrvRecord> waitingServices=new HashSet<>();
-    public static interface ResolveCallback{
-        public void resolve(Target target);
+
+    HashMap<String, Target.HostTarget> resolvedHosts=new HashMap<>();
+    public static interface Callback<T>{
+        public void resolve(T target);
     }
-    public static interface ResolveHostCallback{
-        public void resolve(String name,InetAddress host);
-    }
-    static class ServiceRequest{
+
+    static class QRequest<T extends Target.ResolveTarget>{
         String name;
         long requestTime;
         int retries=0;
-        ServiceRequest(String name){
-            this.name=name;
-            requestTime=System.currentTimeMillis();
-        }
-        boolean expired(long now){
-            if ((requestTime+RETRIGGER_TIME) < now) return true;
-            return false;
-        }
-    }
-    final HashSet<ServiceRequest> openRequests=new HashSet<>();
-    static class HostRequest{
-        String name;
-        long requestTime;
-        int retries=0;
-        ResolveHostCallback callback;
-        InetAddress address;
-        HostRequest(String name,ResolveHostCallback callback){
-            this.name=name;
-            requestTime=System.currentTimeMillis();
+        T request;
+        Callback<T> callback;
+        QRequest(T r,Callback<T> callback){
+            request=r;
             this.callback=callback;
         }
         boolean expired(long now){
             if ((requestTime+RETRIGGER_TIME) < now) return true;
             return false;
         }
+        boolean outdated(){
+            return retries > MAX_RETRIGGER;
+        }
     }
-    final HashSet<HostRequest> openHostRequests=new HashSet<>();
 
-    public Resolver(ResolveCallback resolveCallback, NetworkInterface intf) throws IOException {
+    final HashSet<QRequest<Target.ServiceTarget>> openRequests=new HashSet<>();
+    final HashSet<QRequest<Target.HostTarget>> openHostRequests=new HashSet<>();
+
+    public Resolver(NetworkInterface intf, Callback<Target.ServiceTarget> defaultCallback) throws IOException {
         this.intf=intf;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && intf != null) {
             channel =DatagramChannel.open(StandardProtocolFamily.INET);
@@ -110,78 +89,110 @@ public class Resolver implements Runnable{
         //without this bind we continously receive 0 length packages (most probably until we send)
         channel.socket().bind(new InetSocketAddress(Inet4Address.getByName("0.0.0.0"),0));
         mdnsGroupIPv4 = new InetSocketAddress(InetAddress.getByName(MDNS_IP4_ADDRESS),MDNS_PORT);
-        this.resolveCallback = resolveCallback;
+        this.defaultCallback=defaultCallback;
     }
 
-    public void checkRetrigger(){
-        long now=System.currentTimeMillis();
-        synchronized (openRequests){
-            ArrayList<ServiceRequest> outdated=new ArrayList<>();
-            for (ServiceRequest r:openRequests){
-                if (r.expired(now)){
-                    if( r.retries < MAX_RETRIGGER) {
-                        Log.i(LPRFX, "retrigger query for " + r.name);
-                        resolveService(r.name, false);
-                        r.requestTime = now;
-                        r.retries++;
-                    }
-                    else{
-                        outdated.add(r);
+
+    private abstract class Retrigger<T extends Target.ResolveTarget>{
+        final HashSet<QRequest<T>> queue;
+        Retrigger(HashSet<QRequest<T>> queue){
+            this.queue=queue;
+        }
+        void run(){
+            long now=System.currentTimeMillis();
+            ArrayList<QRequest<T>> outdated=new ArrayList<>();
+            synchronized (queue) {
+                for (QRequest<T> r : queue) {
+                    if (r.expired(now)) {
+                        if (!r.outdated()) {
+                            Log.i(LPRFX, "retrigger query for " + r.name);
+                            try {
+                                resolve(r.request);
+                            }catch(Throwable t){
+                                AvnLog.dfs("error when trying to retrigger: %s",t);
+                            }
+                            r.requestTime = now;
+                            r.retries++;
+                        } else {
+                            outdated.add(r);
+                        }
                     }
                 }
             }
-            for (ServiceRequest sr:outdated){
+            for (QRequest<T> sr:outdated){
                 openRequests.remove(sr);
             }
         }
-        synchronized (openHostRequests){
-            ArrayList<HostRequest> outdated=new ArrayList<>();
-            for (HostRequest r:openHostRequests){
-                if (r.expired(now)){
-                    if (r.retries < MAX_RETRIGGER) {
-                        Log.i(LPRFX, "retrigger query for " + r.name);
-                        resolveHost(r.name, null, true);
-                        r.requestTime = now;
-                        r.retries++;
-                    }
-                    else{
-                        outdated.add(r);
-                    }
-                }
-            }
-            for (HostRequest hr:outdated){
-                openHostRequests.remove(hr);
-            }
-        }
+        protected abstract void resolve(T r) throws IOException;
     }
 
-    public static Resolver createResolver(ResolveCallback callback, NetworkInterface intf) throws IOException {
-        Resolver r=new Resolver(callback,intf);
+    public void checkRetrigger(){
+        (new Retrigger<Target.HostTarget>(openHostRequests) {
+            @Override
+            protected void resolve(Target.HostTarget r) throws IOException {
+                Resolver.this.resolve(r);
+            }
+        }).run();
+        (new Retrigger<Target.ServiceTarget>(openRequests) {
+            @Override
+            protected void resolve(Target.ServiceTarget r) throws IOException {
+                Resolver.this.resolve(r);
+            }
+        }).run();
+
+    }
+
+    public static Resolver createResolver(NetworkInterface intf, Callback<Target.ServiceTarget> defaultCallback) throws IOException {
+        Resolver r=new Resolver(intf,defaultCallback);
         Thread thr=new Thread(r);
         thr.setDaemon(true);
         thr.start();
         return r;
     }
-    private void sendResolved(SrvRecord srv, Host host){
-        Target target=new Target();
-        target.name=srv.getName().substring(0,srv.getName().length()-SUFFIX.length()-1);
-        target.host=srv.getTarget();
-        target.intf=intf;
-        synchronized (openRequests){
-            ArrayList<ServiceRequest> finished=new ArrayList<>();
-            for (ServiceRequest r:openRequests){
-                if (r.name.equals(target.name)) finished.add(r);
-            }
-            for (ServiceRequest r: finished){
-                openRequests.remove(r);
-            }
+
+    static String hostnameFromMdns(String mdnsName){
+        if (mdnsName == null) return null;
+        if (mdnsName.endsWith(".")) return mdnsName.substring(0,mdnsName.length()-1);
+        return mdnsName;
+    }
+    static String getNameFromSrv(SrvRecord srv, String type){
+        //must have checked type before...
+        String suffix=type+"."+Domain.LOCAL.getName();
+        return srv.getName().substring(0,srv.getName().length()-suffix.length()-1);
+    }
+    static String getTypeFromSrv(SrvRecord srv){
+        String suffix=Domain.LOCAL.getName();
+        String nameAndType=srv.getName().substring(0,srv.getName().length()-suffix.length()-1);
+        if (nameAndType.endsWith(".")) nameAndType=nameAndType.substring(0,nameAndType.length()-1);
+        String [] parts=nameAndType.split("\\.");
+        if (parts.length >= 2){
+            return parts[parts.length-2]+"."+parts[parts.length-1];
         }
-        try {
-            target.uri = new URI("http", null, host.address.getHostAddress(), srv.getPort(), null, null, null);
-            Log.i(LPRFX, "resolve success for " + target.name+" "+target.uri);
-            resolveCallback.resolve(target);
-        } catch (URISyntaxException e) {
-            Log.e(LPRFX, e.getMessage());
+        return "";
+    }
+    private class HostAvailableResolver<T extends Target.ResolveTarget>{
+        void resolve(HashSet<QRequest<T>> list, HashMap<String, Target.HostTarget> resolved) throws URISyntaxException {
+            ArrayList<QRequest<T>> finished=new ArrayList<>();
+            synchronized (list) {
+                for (QRequest<T> r : list) {
+                    String name = hostnameFromMdns(r.request.getHostName());
+                    if (name == null) continue;
+                    Target.HostTarget resolvedHost = resolved.get(name);
+                    if (resolvedHost != null) {
+                        r.request.setAddress(resolvedHost.address,intf);
+                        if (r.request.isResolved()) {
+                            finished.add(r);
+                        }
+                    }
+                }
+                for (QRequest<T> r:finished){
+                    list.remove(r);
+                }
+            }
+            for (QRequest<T> r:finished){
+                if (r.callback != null)
+                r.callback.resolve(r.request);
+            }
         }
     }
     @Override
@@ -203,60 +214,58 @@ public class Resolver implements Runnable{
                 for (Record record : resp.getRecords()){
                     if (record instanceof ARecord){
                         hasA=true;
-                        hostAddresses.put(record.getName(),new Host((ARecord)record));
+                        String name=hostnameFromMdns(record.getName());
+                        Target.HostTarget host=new Target.HostTarget(name);
+                        fillHost(host,(ARecord)record);
+                        resolvedHosts.put(name,host);
                     }
                 }
                 if (hasA){
-                    ArrayList<SrvRecord> resolved=new ArrayList<>();
-                    for (SrvRecord record:waitingServices){
-                        Host host=hostAddresses.get(record.getTarget());
-                        if (host != null){
-                            sendResolved(record,host);
-                            resolved.add(record);
-                        }
-                    }
-                    for (SrvRecord record:resolved){
-                        waitingServices.remove(record);
-                    }
-                    ArrayList<HostRequest> resolvedHosts=new ArrayList<>();
-                    synchronized (openHostRequests){
-                        for (HostRequest hr:openHostRequests){
-                            Host h=hostAddresses.get(hr.name+".");
-                            if (h != null){
-                                hr.address=h.address;
-                                resolvedHosts.add(hr);
-                            }
-                        }
-                        for (HostRequest hr:resolvedHosts){
-                            openHostRequests.remove(hr);
-                        }
-                    }
-                    for (HostRequest hr:resolvedHosts){
-                        try {
-                            hr.callback.resolve(hr.name, hr.address);
-                        }catch (Throwable t){
-                            AvnLog.e("error in host resolve callback for "+hr.name,t);
-                        }
-                    }
+                    (new HostAvailableResolver<Target.ServiceTarget>()).resolve(openRequests,resolvedHosts);
+                    (new HostAvailableResolver<Target.HostTarget>()).resolve(openHostRequests,resolvedHosts);
+
                 }
                 for (Record record:resp.getRecords()){
                     if (record instanceof SrvRecord){
                         SrvRecord srv=(SrvRecord)record;
-                        Host host=hostAddresses.get(srv.getTarget());
-                        if (host != null){
-                            sendResolved(srv,host);
-                        }
-                        else{
-                            waitingServices.add(srv);
-                            Question q=hostQuestion(srv.getTarget());
-                            try{
-                                sendQuestion(q);
-                            }catch (Exception e){
-                                Log.e(LPRFX,"exception when sending aquery",e);
+                        String serviceType=getTypeFromSrv(srv);
+                        String serviceName=getNameFromSrv(srv,serviceType);
+                        QRequest<Target.ServiceTarget> request=null;
+                        synchronized (openRequests) {
+                            for (QRequest<Target.ServiceTarget> r : openRequests) {
+                                if (r.request.name.equals(serviceName) && r.request.type.equals(serviceType)){
+                                    request=r;
+                                    break;
+                                }
                             }
-
+                            if (request == null){
+                                request=new QRequest<Target.ServiceTarget>(new Target.ServiceTarget(serviceType,serviceName),defaultCallback);
+                                openRequests.add(request);
+                            }
+                            request.request.host=hostnameFromMdns(srv.getTarget());
+                            request.request.port=srv.getPort();
+                            Target.HostTarget host=resolvedHosts.get(request.request.host);
+                            if (host != null) request.request.setAddress(host.address,intf);
                         }
                     }
+                }
+                //now check if we can resolve service requests
+                ArrayList<QRequest<Target.ServiceTarget>> finished=new ArrayList<>();
+                synchronized (openRequests){
+                    for (QRequest<Target.ServiceTarget> r:openRequests){
+                        if (r.request.isResolved()){
+                            finished.add(r);
+                        }
+                    }
+                    for (QRequest<Target.ServiceTarget> r:finished){
+                        openRequests.remove(r);
+                    }
+                }
+                for (QRequest<Target.ServiceTarget> r:finished){
+                    if (r.callback != null){
+                        r.callback.resolve(r.request);
+                    }
+                    //TODO: default callback
                 }
             } catch (Throwable e) {
                 Log.e(LPRFX,"exception in receive",e);
@@ -265,52 +274,42 @@ public class Resolver implements Runnable{
         Log.i(LPRFX,"resolver thread finished");
     }
 
-    private Question serviceQuestion(String name){
-        return new Question(name+"."+SUFFIX, Question.QType.SRV, Question.QClass.IN);
+    private Question serviceQuestion(String name,String type){
+        return new Question(name+"."+type+"."+Domain.LOCAL.getName(), Question.QType.SRV, Question.QClass.IN);
     }
     private Question hostQuestion(String name){
         return new Question(name, net.straylightlabs.hola.dns.Question.QType.A, net.straylightlabs.hola.dns.Question.QClass.IN);
     }
-    public void resolveService(String name,boolean storeRequest){
-        Question q= serviceQuestion(name);
-        if (storeRequest){
-            synchronized (openRequests){
-                openRequests.add(new ServiceRequest(name));
-            }
-        }
-        Thread st=new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    sendQuestion(q);
-                } catch (IOException e) {
-                    Log.e(LPRFX,"unable to send query",e);
-                }
-            }
-        });
-        st.setDaemon(true);
-        st.start();
+    private void resolve(Target.ServiceTarget service) throws IOException {
+        Question q= serviceQuestion(service.name,service.type);
+        sendQuestion(q);
     }
-    public void resolveHost(String name,ResolveHostCallback callback,boolean forceNew) {
+    private void resolve(Target.HostTarget host) throws IOException {
+        Question q= hostQuestion(host.name);
+        sendQuestion(q);
+    }
+    public void resolveService(String name, Callback<Target.ServiceTarget> callback) throws IOException {
+        AvnLog.ifs("resolve service %s",name);
+        QRequest<Target.ServiceTarget> r=new QRequest<>(new Target.ServiceTarget(name),callback);
+        synchronized (openRequests){
+            openRequests.add(r);
+        }
+        resolve(r.request);
+    }
+    public void resolveHost(String name, Callback<Target.HostTarget> callback, boolean forceNew) throws IOException {
         if (! forceNew){
-            Host h=hostAddresses.get(name);
+            Target.HostTarget h=resolvedHosts.get(name);
             if (h!=null) {
-                callback.resolve(name,h.address);
+                callback.resolve(h);
                 return;
             }
 
         }
-        Question q= hostQuestion(name);
-        if (callback != null){
-            synchronized (openHostRequests){
-                openHostRequests.add(new HostRequest(name,callback));
-            }
+        QRequest<Target.HostTarget> request=new QRequest<>(new Target.HostTarget(name),callback);
+        synchronized (openHostRequests){
+            openHostRequests.add(request);
         }
-        try {
-            sendQuestion(q);
-        }catch (IOException e){
-            AvnLog.e("unable to send host query for "+name,e);
-        }
+        resolve(request.request);
     }
 
     public void sendQuestion(Question question) throws IOException {
@@ -319,21 +318,21 @@ public class Resolver implements Runnable{
         channel.send(buffer,mdnsGroupIPv4);
     }
 
+    private class CancelResolver<T extends Target.ResolveTarget>{
+        void resolve(HashSet<QRequest<T>> list){
+            ArrayList<QRequest<T>> finished=new ArrayList<>();
+            synchronized (list) {
+                for (QRequest<T> r : list) {
+                    if (r.callback != null) r.callback.resolve(r.request);
+                }
+            }
+        }
+    }
     public void stop() throws IOException {
         channel.close();
-        waitingServices.clear();
-        hostAddresses.clear();
+        (new CancelResolver<Target.ServiceTarget>()).resolve(openRequests);
+        (new CancelResolver<Target.HostTarget>()).resolve(openHostRequests);
         openRequests.clear();
-        ArrayList<HostRequest> cancelRequests=new ArrayList<>();
-        synchronized (openHostRequests) {
-            for (HostRequest  hr: openHostRequests) {
-                cancelRequests.add(hr);
-            }
-            openHostRequests.clear();
-        }
-        for (HostRequest hr:cancelRequests){
-            AvnLog.dfs("Resolver %s: cancel host request for %s",intf,hr.name);
-            hr.callback.resolve(hr.name,null);
-        }
+        openHostRequests.clear();
     }
 }

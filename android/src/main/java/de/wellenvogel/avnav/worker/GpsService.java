@@ -977,12 +977,13 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
                             }
                             mdnsResolvers.clear();
                             for (String ifname : interfaces.keySet()) {
-                                mdnsResolvers.put(ifname, Resolver.createResolver(new Resolver.ResolveCallback() {
+                                mdnsResolvers.put(ifname, Resolver.createResolver(interfaces.get(ifname),new Resolver.Callback<Target.ServiceTarget>() {
                                     @Override
-                                    public void resolve(Target target) {
-
+                                    public void resolve(Target.ServiceTarget target) {
+                                        AvnLog.ifs("resolved service name=%s,host=%s,port=%d",
+                                                target.name,target.host,target.port);
                                     }
-                                }, interfaces.get(ifname)));
+                                }));
                             }
                         }
                     }
@@ -1006,7 +1007,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         thr.start();
     }
 
-    public void resolveMdnsHost(String hostname,Resolver.ResolveHostCallback callback,boolean force){
+    public void resolveMdnsHost(String hostname, Resolver.Callback<Target.HostTarget> callback, boolean force) throws IOException {
         synchronized (mdnsResolvers){
             for (Resolver r:mdnsResolvers.values()){
                 r.resolveHost(hostname,callback,force);
