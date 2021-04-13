@@ -8,6 +8,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -119,13 +120,13 @@ public abstract class Worker implements IWorker {
             return checkClaimInternal(kind,name,doThrow);
         }
     }
-    protected List<String> filterByClaims(String kind,List<String> values,boolean includeOwn){
+    protected List<String> filterByClaims(String kind, List<String> values, boolean includeOwn, Comparator<String> cmp){
         ArrayList<String> rt=new ArrayList<>();
         synchronized (resourceClaims){
             for (String v:values){
                 boolean doAdd=true;
                 for (ResourceClaim cl:resourceClaims){
-                    if (cl.kind.equals(kind) && cl.name.equals(v)){
+                    if (cl.kind.equals(kind) && cmp.compare(cl.name,v) == 0){
                         if (!includeOwn || cl.ref != this) doAdd=false;
                     }
                 }
@@ -134,7 +135,15 @@ public abstract class Worker implements IWorker {
         }
         return rt;
     }
-
+    protected List<String> filterByClaims(String kind,List<String> values,boolean includeOwn){
+        return filterByClaims(kind, values, includeOwn, new Comparator<String>() {
+            @Override
+            public int compare(String o1, String o2) {
+                if (o1 == null) return (o2 == null)?0:1;
+                return o1.equals(o2)?0:1;
+            }
+        });
+    }
 
 
     protected WorkerStatus status;

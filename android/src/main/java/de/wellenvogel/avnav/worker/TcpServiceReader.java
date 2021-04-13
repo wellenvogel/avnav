@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.security.Key;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
@@ -57,7 +58,14 @@ public class TcpServiceReader extends SingleConnectionHandler {
             @Override
             public List<String> buildList(EditableParameter.StringListParameter param) {
                 List<String> rt=gpsService.discoveredServices(serviceType);
-                return filterByClaims(CLAIM_SERVICE,rt,false);
+                return filterByClaims(CLAIM_SERVICE, rt, true, new Comparator<String>() {
+                    @Override
+                    public int compare(String o1, String o2) {
+                        o2=getClaimName(o2);
+                        if (o1 == null) return (o2==null)?0:1;
+                        return o1.equals(o2)?0:1;
+                    }
+                });
             }
         };
         parameterDescriptions.addParams(servicesParameter,

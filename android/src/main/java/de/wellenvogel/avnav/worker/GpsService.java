@@ -794,6 +794,16 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
                     @Override
                     public void onServiceFound(NsdServiceInfo serviceInfo) {
                         synchronized (services) {
+                            ArrayList<NsdServiceInfo> toRemove=new ArrayList<>();
+                            for (NsdServiceInfo si:services){
+                                if (si.getServiceType().equals(serviceInfo.getServiceType()) &&
+                                    si.getServiceName().equals(serviceInfo.getServiceName())){
+                                    toRemove.add(si);
+                                }
+                            }
+                            for (NsdServiceInfo si:toRemove){
+                                services.remove(si);
+                            }
                             services.add(serviceInfo);
                         }
 
