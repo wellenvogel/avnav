@@ -49,7 +49,7 @@ public class Resolver implements Runnable{
     DatagramChannel channel;
 
     HashMap<String, Target.HostTarget> resolvedHosts=new HashMap<>();
-    public static interface Callback<T>{
+    public static interface Callback<T extends Target.ResolveTarget>{
         public void resolve(T target);
     }
 
@@ -286,35 +286,25 @@ public class Resolver implements Runnable{
         Question q= hostQuestion(host.name);
         sendQuestion(q);
     }
-    public void resolveService(String name, String type, Callback<Target.ServiceTarget> callback) throws IOException {
-        AvnLog.ifs("resolve service %s",name);
-        QRequest<Target.ServiceTarget> r=new QRequest<>(new Target.ServiceTarget(name,type),callback);
+
+    public void resolve(Target.ServiceTarget target, Callback<Target.ServiceTarget> callback, boolean force) throws IOException {
+        QRequest<Target.ServiceTarget> r=new QRequest<>(target,callback);
         synchronized (openRequests){
             openRequests.add(r);
         }
         resolve(r.request);
     }
-    public void resolveHost(String name, Callback<Target.HostTarget> callback, boolean forceNew) throws IOException {
+
+    public void resolve(Target.HostTarget target, Callback<Target.HostTarget> callback, boolean forceNew) throws IOException {
         if (! forceNew){
-            Target.HostTarget h=resolvedHosts.get(name);
-            if (h!=null) {
+            Target.HostTarget h=resolvedHosts.get(target.name);
+            if (h!=null && callback != null) {
                 callback.resolve(h);
                 return;
             }
 
         }
-        QRequest<Target.HostTarget> request=new QRequest<>(new Target.HostTarget(name),callback);
-        resolveHost(request,true);
-    }
-    public void resolveHost(QRequest<Target.HostTarget> request, boolean forceNew) throws IOException {
-        if (! forceNew){
-            Target.HostTarget h=resolvedHosts.get(request.request.name);
-            if (h!=null && request.callback != null) {
-                request.callback.resolve(h);
-                return;
-            }
-
-        }
+        QRequest<Target.HostTarget> request=new QRequest<>(target,callback);
         synchronized (openHostRequests){
             openHostRequests.add(request);
         }
@@ -327,7 +317,7 @@ public class Resolver implements Runnable{
         channel.send(buffer,mdnsGroupIPv4);
     }
 
-    private class CancelResolver<T extends Target.ResolveTarget>{
+    private static class CancelResolver<T extends Target.ResolveTarget>{
         void resolve(HashSet<QRequest<T>> list){
             ArrayList<QRequest<T>> finished=new ArrayList<>();
             synchronized (list) {

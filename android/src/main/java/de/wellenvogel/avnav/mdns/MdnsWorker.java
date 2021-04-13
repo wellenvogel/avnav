@@ -17,6 +17,7 @@ import de.wellenvogel.avnav.worker.Worker;
 import de.wellenvogel.avnav.worker.WorkerStatus;
 
 public class MdnsWorker extends Worker {
+
     private static class ResolverWrapper{
         Resolver resolver;
         Thread thread;
@@ -128,7 +129,7 @@ public class MdnsWorker extends Worker {
                     if (mdnsResolvers.size() > 0) {
                         for (Resolver.QRequest<Target.HostTarget> str : storedRequests) {
                             for (ResolverWrapper r : mdnsResolvers.values()) {
-                                r.resolver.resolveHost(str, false);
+                                r.resolver.resolve(str.request,str.callback, false);
                             }
                         }
                         storedRequests.clear();
@@ -186,8 +187,8 @@ public class MdnsWorker extends Worker {
         stopInternal();
     }
 
-    public void resolveMdnsHost(String hostname, Resolver.Callback<Target.HostTarget> callback, boolean force) throws IOException {
-        Resolver.QRequest<Target.HostTarget> request= new Resolver.QRequest<>(new Target.HostTarget(hostname),callback);
+    public void resolveMdns(Target.HostTarget target,Resolver.Callback<Target.HostTarget> callback, boolean force) throws IOException {
+        Resolver.QRequest<Target.HostTarget> request= new Resolver.QRequest<>(target,callback);
         synchronized (mdnsResolvers){
             if (mdnsResolvers.size() < 1){
                 storedRequests.add(request);
@@ -197,18 +198,20 @@ public class MdnsWorker extends Worker {
             }
             else{
                 for (ResolverWrapper r:mdnsResolvers.values()){
-                    r.resolver.resolveHost(request,force);
+                    r.resolver.resolve(target,callback,force);
                 }
             }
         }
     }
-
-    public boolean resolveMdnsService(String name, String type, Resolver.Callback<Target.ServiceTarget> callback) throws IOException {
+    public void resolveMdns(Target.ServiceTarget target,Resolver.Callback<Target.ServiceTarget> callback, boolean force) throws IOException {
         synchronized (mdnsResolvers){
-            for (ResolverWrapper r:mdnsResolvers.values()){
-                    r.resolver.resolveService(name,type,callback);
+                for (ResolverWrapper r:mdnsResolvers.values()){
+                    r.resolver.resolve(target,callback,force);
                 }
-            return mdnsResolvers.size() > 0;
+
         }
     }
+
+
+
 }

@@ -10,6 +10,7 @@ public class Target {
         boolean isResolved();
         String getHostName();
         void setAddress(InetAddress addr,NetworkInterface intf) throws URISyntaxException;
+        InetAddress getAddress();
     }
     public static class Resolved<T>{
         private T request;
@@ -41,7 +42,7 @@ public class Target {
         ServiceTarget(String name) {
             this.name=name;
         }
-        ServiceTarget(String type,String name){
+        public ServiceTarget(String type, String name){
             this.type=type;
             this.name=name;
         }
@@ -75,6 +76,11 @@ public class Target {
             buildUri();
             this.intf=intf;
         }
+
+        @Override
+        public InetAddress getAddress() {
+            return address;
+        }
     }
     public static class HostTarget implements ResolveTarget{
         public String name;
@@ -102,6 +108,11 @@ public class Target {
         public void setAddress(InetAddress addr,NetworkInterface intf) throws URISyntaxException {
             this.address=addr;
             this.intf=intf;
+        }
+
+        @Override
+        public InetAddress getAddress() {
+            return address;
         }
     }
 }

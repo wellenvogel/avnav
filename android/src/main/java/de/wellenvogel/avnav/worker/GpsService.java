@@ -18,6 +18,8 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.InetAddresses;
 import android.net.Uri;
+import android.net.nsd.NsdManager;
+import android.net.nsd.NsdServiceInfo;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Handler;
@@ -40,6 +42,7 @@ import java.net.NetworkInterface;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -104,6 +107,10 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
     private int workerId=MIN_WORKER_ID; //1-9 reserverd for fixed workers like decoder,...
     private final HashMap<String, Resolver> mdnsResolvers=new HashMap<>();
     private final ArrayList<InetAddress> interfaceAddresses=new ArrayList<>();
+    private NsdManager.DiscoveryListener discoveryListener;
+    private NsdManager nsdManager;
+    private static final String[] KNOWN_SERVICES=new String[]{"_nmea-0183._tcp"};
+    private final HashSet<NsdServiceInfo> services=new HashSet<>();
 
     private final BroadcastReceiver usbReceiver = new BroadcastReceiver() {
         @Override
@@ -741,11 +748,63 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             registerReceiver(usbReceiver, new IntentFilter(UsbManager.ACTION_USB_DEVICE_DETACHED));
             receiverRegistered=true;
         }
+        if (discoveryListener == null){
+            discoveryListener = new NsdManager.DiscoveryListener() {
+                @Override
+                public void onStartDiscoveryFailed(String serviceType, int errorCode) {
+
+                }
+
+                @Override
+                public void onStopDiscoveryFailed(String serviceType, int errorCode) {
+
+                }
+
+                @Override
+                public void onDiscoveryStarted(String serviceType) {
+
+                }
+
+                @Override
+                public void onDiscoveryStopped(String serviceType) {
+
+                }
+
+                @Override
+                public void onServiceFound(NsdServiceInfo serviceInfo) {
+                    synchronized (services){
+                        services.add(serviceInfo);
+                    }
+
+                }
+
+                @Override
+                public void onServiceLost(NsdServiceInfo serviceInfo) {
+
+                }
+            };
+        }
+        startDiscovery();
         return Service.START_REDELIVER_INTENT;
+    }
+
+    private void startDiscovery(){
+        if (nsdManager == null){
+            nsdManager = (NsdManager)getSystemService(Context.NSD_SERVICE);
+            if (nsdManager != null) {
+                for (String s : KNOWN_SERVICES) {
+                    nsdManager.discoverServices(s, NsdManager.PROTOCOL_DNS_SD, discoveryListener);
+                }
+            }
+        }
     }
 
     public void restart(){
         stopWorkers();
+        synchronized (services){
+            services.clear();
+        }
+        startDiscovery();
         handleStartup(false);
     }
 
@@ -923,12 +982,19 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         mobAlarm=true;
     }
 
-
-    public void resolveMdnsHost(String hostname, Resolver.Callback<Target.HostTarget> callback, boolean force) throws IOException {
+    public void resolveMdns(Target.HostTarget target, Resolver.Callback<Target.HostTarget> callback,boolean force) throws IOException {
         MdnsWorker mdns=getMdnsResolver();
         if (mdns == null) return;
-        mdns.resolveMdnsHost(hostname,callback,force);
+        mdns.resolveMdns(target,callback,force);
     }
+
+    public void resolveMdns(Target.ServiceTarget target, Resolver.Callback<Target.ServiceTarget> callback,boolean force) throws IOException {
+        MdnsWorker mdns=getMdnsResolver();
+        if (mdns == null) return;
+        mdns.resolveMdns(target,callback,force);
+    }
+
+
 
     /**
      * will be called whe we intend to really stop
@@ -964,6 +1030,10 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             cb.mainShutdown();
         }
         AvnLog.i(LOGPRFX, "service stopped");
+        if (nsdManager != null){
+            nsdManager.stopServiceDiscovery(discoveryListener);
+            nsdManager=null;
+        }
     }
 
     public void stopMe(){
