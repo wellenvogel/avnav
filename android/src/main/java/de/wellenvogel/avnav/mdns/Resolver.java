@@ -36,7 +36,6 @@ import static net.straylightlabs.hola.sd.Query.MDNS_PORT;
 public class Resolver implements Runnable{
     public static final long RETRIGGER_TIME=6000; //6s
     public static final int MAX_RETRIGGER=5;
-    static final String SERVICE_TYPE="_http._tcp";
     private final Callback<Target.ServiceTarget> defaultCallback;
 
     private static void fillHost(Target.HostTarget host,ARecord record){
@@ -45,7 +44,6 @@ public class Resolver implements Runnable{
         host.updated=System.currentTimeMillis()*1000;
     }
     static final String LPRFX="InternalReceiver";
-    static final String SUFFIX=SERVICE_TYPE+Domain.LOCAL.getName();
     private SocketAddress mdnsGroupIPv4;
     private NetworkInterface intf;
     DatagramChannel channel;
@@ -157,7 +155,7 @@ public class Resolver implements Runnable{
     }
     static String getNameFromSrv(SrvRecord srv, String type){
         //must have checked type before...
-        String suffix=type+"."+Domain.LOCAL.getName();
+        String suffix=type+Domain.LOCAL.getName();
         return srv.getName().substring(0,srv.getName().length()-suffix.length()-1);
     }
     static String getTypeFromSrv(SrvRecord srv){
@@ -166,7 +164,7 @@ public class Resolver implements Runnable{
         if (nameAndType.endsWith(".")) nameAndType=nameAndType.substring(0,nameAndType.length()-1);
         String [] parts=nameAndType.split("\\.");
         if (parts.length >= 2){
-            return parts[parts.length-2]+"."+parts[parts.length-1];
+            return parts[parts.length-2]+"."+parts[parts.length-1]+".";
         }
         return "";
     }
@@ -275,7 +273,7 @@ public class Resolver implements Runnable{
     }
 
     private Question serviceQuestion(String name,String type){
-        return new Question(name+"."+type+"."+Domain.LOCAL.getName(), Question.QType.SRV, Question.QClass.IN);
+        return new Question(name+"."+type+Domain.LOCAL.getName(), Question.QType.SRV, Question.QClass.IN);
     }
     private Question hostQuestion(String name){
         return new Question(name, net.straylightlabs.hola.dns.Question.QType.A, net.straylightlabs.hola.dns.Question.QClass.IN);

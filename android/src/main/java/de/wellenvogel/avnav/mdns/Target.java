@@ -30,7 +30,7 @@ public class Target {
         }
     }
     public static class ServiceTarget implements ResolveTarget {
-        public static final String  DEFAULT_TYPE="_http._tcp";
+        public static final String  DEFAULT_TYPE="_http._tcp.";
         public String name;
         public String host;
         public InetAddress address;
