@@ -49,7 +49,7 @@ public class WorkerStatus implements AvnUtil.IJsonObect {
         Child(){}
     }
     private final HashMap<String,Child> children=new HashMap<>();
-    synchronized void setChildStatus(String name,Status status,String info){
+    public  synchronized void setChildStatus(String name,Status status,String info){
         Child child=children.get(name);
         if (child == null){
             child=new Child();
@@ -58,10 +58,10 @@ public class WorkerStatus implements AvnUtil.IJsonObect {
         child.status=status;
         child.info=info;
     }
-    synchronized void unsetChildStatus(String name){
+    public synchronized void unsetChildStatus(String name){
         children.remove(name);
     }
-    synchronized void removeChildren(){
+    public synchronized void removeChildren(){
         children.clear();
     }
 

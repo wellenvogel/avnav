@@ -286,9 +286,9 @@ public class Resolver implements Runnable{
         Question q= hostQuestion(host.name);
         sendQuestion(q);
     }
-    public void resolveService(String name, Callback<Target.ServiceTarget> callback) throws IOException {
+    public void resolveService(String name, String type, Callback<Target.ServiceTarget> callback) throws IOException {
         AvnLog.ifs("resolve service %s",name);
-        QRequest<Target.ServiceTarget> r=new QRequest<>(new Target.ServiceTarget(name),callback);
+        QRequest<Target.ServiceTarget> r=new QRequest<>(new Target.ServiceTarget(name,type),callback);
         synchronized (openRequests){
             openRequests.add(r);
         }
@@ -304,6 +304,17 @@ public class Resolver implements Runnable{
 
         }
         QRequest<Target.HostTarget> request=new QRequest<>(new Target.HostTarget(name),callback);
+        resolveHost(request,true);
+    }
+    public void resolveHost(QRequest<Target.HostTarget> request, boolean forceNew) throws IOException {
+        if (! forceNew){
+            Target.HostTarget h=resolvedHosts.get(request.request.name);
+            if (h!=null && request.callback != null) {
+                request.callback.resolve(h);
+                return;
+            }
+
+        }
         synchronized (openHostRequests){
             openHostRequests.add(request);
         }

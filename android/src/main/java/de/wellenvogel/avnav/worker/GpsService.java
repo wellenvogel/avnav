@@ -52,6 +52,7 @@ import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.Dummy;
 import de.wellenvogel.avnav.main.IMediaUpdater;
 import de.wellenvogel.avnav.main.R;
+import de.wellenvogel.avnav.mdns.MdnsWorker;
 import de.wellenvogel.avnav.mdns.Resolver;
 import de.wellenvogel.avnav.mdns.Target;
 import de.wellenvogel.avnav.settings.AudioEditTextPreference;
@@ -409,7 +410,13 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             return new AndroidPositionHandler(typeName,ctx,queue);
         }
     };
-    private static final WorkerConfig[] INTERNAL_WORKERS ={WDECODER,WROUTER,WTRACK,WLOGGER,WSERVER,WGPS};
+    private static final WorkerConfig WMDNS=new WorkerConfig("MDNSresolver",7) {
+        @Override
+        IWorker createWorker(GpsService ctx, NmeaQueue queue) throws IOException {
+            return new MdnsWorker(typeName);
+        }
+    };
+    private static final WorkerConfig[] INTERNAL_WORKERS ={WDECODER,WROUTER,WTRACK,WLOGGER,WSERVER,WGPS,WMDNS};
 
     private synchronized int getNextWorkerId(){
         workerId++;
@@ -544,6 +551,10 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         IWorker server=findWorkerById(WSERVER.id);
         return (WebServer)server;
     }
+    public MdnsWorker getMdnsResolver(){
+        IWorker mdns=findWorkerById(WMDNS.id);
+        return (MdnsWorker) mdns;
+    }
 
 
     private void saveWorkerConfig(IWorker worker) throws JSONException {
@@ -653,7 +664,6 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             requestHandler=new RequestHandler(this);
         }
         if (! isWatchdog || internalWorkers.size() == 0) {
-            checkMdnsResolvers(true);
             for (WorkerConfig cfg : INTERNAL_WORKERS){
                 try {
                     IWorker worker=cfg.createWorker(this,queue);
@@ -836,7 +846,6 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         checkMob();
         handleNotification(true,false);
         checkTrackWriter();
-        checkMdnsResolvers(false);
         for (IWorker w: workers) {
             if (w != null) {
                 try {
@@ -914,105 +923,11 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         mobAlarm=true;
     }
 
-    private void checkMdnsResolvers(boolean waitForResult){
-        if (mdnsUpdateRunning) return;
-        Runnable checker=new Runnable() {
-            @Override
-            public void run() {
-                //no real need for sync here
-                //if we miss one cycle we do it in the next...
-                if (mdnsUpdateRunning) return;
-                mdnsUpdateRunning=true;
-                try {
-                    ArrayList<InetAddress> newAddresses=new ArrayList<>();
-                    HashMap<String,NetworkInterface> interfaces=new HashMap<>();
-                    Enumeration<NetworkInterface> intfs = NetworkInterface.getNetworkInterfaces();
-                    while (intfs.hasMoreElements()) {
-                        NetworkInterface intf = intfs.nextElement();
-                        if (! intf.isUp() || ! intf.supportsMulticast()) continue;
-                        boolean hasIp4=false;
-                        for (InterfaceAddress addr : intf.getInterfaceAddresses()) {
-                            InetAddress ip = addr.getAddress();
-                            if (!(ip instanceof Inet4Address)) continue;
-                            newAddresses.add(ip);
-                            hasIp4=true;
-                        }
-                        if (! hasIp4) continue;
-                        interfaces.put(intf.getName(),intf);
-                    }
-                    boolean mustRenew=false;
-                    synchronized (interfaceAddresses){
-                        if (newAddresses.size() != interfaceAddresses.size()){
-                            mustRenew=true;
-                        }
-                        else{
-                            for (InetAddress a:newAddresses){
-                                if (interfaceAddresses.indexOf(a) <0){
-                                    mustRenew=true;
-                                    break;
-                                }
-                            }
-                            if (! mustRenew){
-                                for (InetAddress a:interfaceAddresses){
-                                    if (newAddresses.indexOf(a) <0){
-                                        mustRenew=true;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                        if (mustRenew){
-                            interfaceAddresses.clear();
-                            interfaceAddresses.addAll(newAddresses);
-                        }
-                    }
-                    if (! mustRenew){
-                        AvnLog.d("network check - no change");
-                    }
-                    else {
-                        AvnLog.i("must renew mdns resolvers");
-                        synchronized (mdnsResolvers) {
-                            for (Resolver r : mdnsResolvers.values()) {
-                                r.stop();
-                            }
-                            mdnsResolvers.clear();
-                            for (String ifname : interfaces.keySet()) {
-                                mdnsResolvers.put(ifname, Resolver.createResolver(interfaces.get(ifname),new Resolver.Callback<Target.ServiceTarget>() {
-                                    @Override
-                                    public void resolve(Target.ServiceTarget target) {
-                                        AvnLog.ifs("resolved service name=%s,host=%s,port=%d",
-                                                target.name,target.host,target.port);
-                                    }
-                                }));
-                            }
-                        }
-                    }
-                    synchronized (mdnsResolvers){
-                        for (Resolver r:mdnsResolvers.values()){
-                            r.checkRetrigger();
-                        }
-                    }
-                }catch(Throwable t){
-                    AvnLog.e("error checking mdns",t);
-                }
-                mdnsUpdateRunning=false;
-            }
-        };
-        if (waitForResult){
-            checker.run();
-            return;
-        }
-        Thread thr=new Thread(checker);
-        thr.setDaemon(true);
-        thr.start();
-    }
 
     public void resolveMdnsHost(String hostname, Resolver.Callback<Target.HostTarget> callback, boolean force) throws IOException {
-        synchronized (mdnsResolvers){
-            for (Resolver r:mdnsResolvers.values()){
-                r.resolveHost(hostname,callback,force);
-            }
-        }
+        MdnsWorker mdns=getMdnsResolver();
+        if (mdns == null) return;
+        mdns.resolveMdnsHost(hostname,callback,force);
     }
 
     /**
