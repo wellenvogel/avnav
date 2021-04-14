@@ -2,71 +2,88 @@ package de.wellenvogel.avnav.mdns;
 
 import android.support.annotation.NonNull;
 
+import java.io.IOException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
+import java.net.SocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 
 public class Target {
-    public static interface ResolveTarget{
-        boolean isResolved();
-        String getHostName();
-        void setAddress(InetAddress addr,NetworkInterface intf) throws URISyntaxException;
-        InetAddress getAddress();
+    public interface IResolver{
+        void resolve(ServiceTarget t, Callback callback, boolean force) throws IOException;
+        void resolve(HostTarget t, Callback callback, boolean force) throws IOException;
     }
-    public static class Resolved<T>{
-        private T request;
-        private T result;
+
+    public static interface Callback{
+        public void resolve(ResolveTarget target);
+    }
+
+    public static abstract class ResolveTarget{
+        String hostname;
+        InetAddress address;
+        NetworkInterface intf;
+        int port=0;
+        abstract boolean isResolved();
+        public String getHostName(){return hostname;}
+        void setAddress(InetAddress addr,NetworkInterface intf) throws URISyntaxException{
+            this.address=addr;
+            this.intf=intf;
+        }
+        public InetAddress getAddress(){
+            return address;
+        };
+        public InetSocketAddress getSocketAddress(){
+            if (address == null) return null;
+            return new InetSocketAddress(address,getPort());
+        }
+
+        void copyFrom(ResolveTarget other){
+            this.hostname=other.hostname;
+            this.intf=other.intf;
+            this.address=other.address;
+            this.port=other.port;
+        }
+        public int getPort(){ return port;}
+        public abstract void resolve(IResolver res,Callback callback,boolean force) throws IOException;
+    }
+    public static class Resolved{
+        private ResolveTarget request;
+        private ResolveTarget result;
         private boolean resolved=false;
-        public Resolved(T r){
+        public Resolved(ResolveTarget r){
             request=r;
         }
         public synchronized boolean isResolved(){
             return resolved;
         }
-        public synchronized T getResult(){
+        public synchronized ResolveTarget getResult(){
             return result;
         }
-        public synchronized void resolve(T r){
+        public synchronized void resolve(ResolveTarget r){
             resolved=true;
             result=r;
         }
     }
-    public static class ServiceTarget implements ResolveTarget {
+    public static class ServiceTarget extends ResolveTarget {
         public static final String  DEFAULT_TYPE="_http._tcp.";
         public String name;
-        public String host;
-        public InetAddress address;
         public URI uri;
-        public int port;
-        public NetworkInterface intf;
         public String type=DEFAULT_TYPE;
-        ServiceTarget(String name) {
-            this.name=name;
-        }
         public ServiceTarget(String type, String name){
             this.type=type;
             this.name=name;
         }
-        ServiceTarget(String name, String host, URI uri) {
-            this.name = name;
-            this.host = host;
-            this.uri = uri;
-        }
+
         ServiceTarget(ServiceTarget other){
+            copyFrom(other);
             name=other.name;
             type=other.type;
-            host=other.host;
             uri=other.uri;
-            intf=other.intf;
-            port=other.port;
-            address=other.address;
         }
         public boolean isResolved(){
             return uri != null;
-        }
-        public String getHostName(){
-            return host;
         }
         protected void buildUri() throws URISyntaxException {
             if (address == null) return;
@@ -74,58 +91,54 @@ public class Target {
         }
         @Override
         public void setAddress(InetAddress addr,NetworkInterface intf) throws URISyntaxException {
-            this.address=addr;
+            super.setAddress(addr,intf);
             buildUri();
-            this.intf=intf;
         }
 
+
         @Override
-        public InetAddress getAddress() {
-            return address;
+        public void resolve(IResolver res, Callback callback, boolean force) throws IOException {
+            res.resolve(this,callback,force);
         }
 
         @NonNull
         @Override
         public String toString() {
-            return String.format("Service %s %s %s:%s",name,host,address,port);
+            if (hostname == null) return String.format("Service: %s [unresolved]",name);
+            if (address == null) return String.format("Service %s %s [no address]",name,hostname);
+            return String.format("Service %s %s %s:%s",name,hostname,address,port);
         }
     }
-    public static class HostTarget implements ResolveTarget{
-        public String name;
-        public NetworkInterface intf;
-        public InetAddress address;
+    public static class HostTarget extends ResolveTarget{
         public long ttl;
         public long updated;
         public HostTarget(String name){
-            this.name=name;
+            this.hostname=name;
         }
         HostTarget(HostTarget other){
-            name=other.name;
-            intf=other.intf;
-            address=other.address;
+            copyFrom(other);
             ttl=other.ttl;
             updated=other.updated;
+        }
+        public HostTarget(String hostname, int port){
+            this.hostname=hostname;
+            this.port=port;
         }
         public boolean isResolved(){
             return address != null;
         }
-        public String getHostName(){
-            return name;
-        }
-        @Override
-        public void setAddress(InetAddress addr,NetworkInterface intf) throws URISyntaxException {
-            this.address=addr;
-            this.intf=intf;
-        }
+
 
         @Override
-        public InetAddress getAddress() {
-            return address;
+        public void resolve(IResolver res, Callback callback, boolean force) throws IOException {
+            res.resolve(this,callback,force);
         }
+
         @NonNull
         @Override
         public String toString() {
-            return String.format("Host %s %s",name,address);
+            if (address == null) return String.format("Host %s [unresolved]",hostname);
+            return String.format("Host %s %s",hostname,address);
         }
     }
 }

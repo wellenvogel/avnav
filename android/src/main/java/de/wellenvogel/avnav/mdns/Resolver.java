@@ -1,7 +1,7 @@
 package de.wellenvogel.avnav.mdns;
 
 import android.os.Build;
-import android.util.Log;
+import android.support.annotation.NonNull;
 
 import net.straylightlabs.hola.dns.ARecord;
 import net.straylightlabs.hola.dns.Domain;
@@ -11,7 +11,6 @@ import net.straylightlabs.hola.dns.Response;
 import net.straylightlabs.hola.dns.SrvRecord;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.net.DatagramPacket;
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -20,7 +19,6 @@ import java.net.NetworkInterface;
 import java.net.SocketAddress;
 import java.net.StandardProtocolFamily;
 import java.net.StandardSocketOptions;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
@@ -33,33 +31,29 @@ import de.wellenvogel.avnav.util.AvnLog;
 import static net.straylightlabs.hola.sd.Query.MDNS_IP4_ADDRESS;
 import static net.straylightlabs.hola.sd.Query.MDNS_PORT;
 
-public class Resolver implements Runnable{
+public class Resolver implements Runnable, Target.IResolver {
     public static final long RETRIGGER_TIME=6000; //6s
     public static final int MAX_RETRIGGER=5;
-    private final Callback<Target.ServiceTarget> defaultCallback;
+    private final Target.Callback defaultCallback;
 
     private static void fillHost(Target.HostTarget host,ARecord record){
         host.address=record.getAddress();
         host.ttl=record.getTTL();
         host.updated=System.currentTimeMillis()*1000;
     }
-    static final String LPRFX="InternalReceiver";
+    static final String LPRFX="MDNS resolver";
     private SocketAddress mdnsGroupIPv4;
     private NetworkInterface intf;
     DatagramChannel channel;
 
     HashMap<String, Target.HostTarget> resolvedHosts=new HashMap<>();
-    public static interface Callback<T extends Target.ResolveTarget>{
-        public void resolve(T target);
-    }
 
     static class QRequest<T extends Target.ResolveTarget>{
-        String name;
         long requestTime;
         int retries=0;
         T request;
-        Callback<T> callback;
-        QRequest(T r,Callback<T> callback){
+        Target.Callback callback;
+        QRequest(T r, Target.Callback callback){
             request=r;
             this.callback=callback;
         }
@@ -70,12 +64,18 @@ public class Resolver implements Runnable{
         boolean outdated(){
             return retries > MAX_RETRIGGER;
         }
+
+        @NonNull
+        @Override
+        public String toString() {
+            return String.format("Request %s",request.toString());
+        }
     }
 
     final HashSet<QRequest<Target.ServiceTarget>> openRequests=new HashSet<>();
     final HashSet<QRequest<Target.HostTarget>> openHostRequests=new HashSet<>();
 
-    public Resolver(NetworkInterface intf, Callback<Target.ServiceTarget> defaultCallback) throws IOException {
+    public Resolver(NetworkInterface intf, Target.Callback defaultCallback) throws IOException {
         this.intf=intf;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && intf != null) {
             channel =DatagramChannel.open(StandardProtocolFamily.INET);
@@ -103,7 +103,7 @@ public class Resolver implements Runnable{
                 for (QRequest<T> r : queue) {
                     if (r.expired(now)) {
                         if (!r.outdated()) {
-                            Log.i(LPRFX, "retrigger query for " + r.name);
+                            AvnLog.ifk(LPRFX, "retrigger query for " + r);
                             try {
                                 resolve(r.request);
                             }catch(Throwable t){
@@ -199,7 +199,7 @@ public class Resolver implements Runnable{
                 responseBuffer.get(bytes, 0, responseBuffer.limit());
                 DatagramPacket responsePacket=new DatagramPacket(bytes,bytes.length);
                 Response resp=Response.createFrom(responsePacket);
-                Log.i(LPRFX,"response: "+resp);
+                AvnLog.ifk(LPRFX,"response: %s",resp);
                 boolean hasA=false;
                 for (Record record : resp.getRecords()){
                     if (record instanceof ARecord){
@@ -232,9 +232,9 @@ public class Resolver implements Runnable{
                                 request=new QRequest<Target.ServiceTarget>(new Target.ServiceTarget(serviceType,serviceName),defaultCallback);
                                 openRequests.add(request);
                             }
-                            request.request.host=hostnameFromMdns(srv.getTarget());
+                            request.request.hostname=hostnameFromMdns(srv.getTarget());
                             request.request.port=srv.getPort();
-                            Target.HostTarget host=resolvedHosts.get(request.request.host);
+                            Target.HostTarget host=resolvedHosts.get(request.request.hostname);
                             if (host != null) request.request.setAddress(host.address,intf);
                         }
                     }
@@ -258,10 +258,10 @@ public class Resolver implements Runnable{
                     //TODO: default callback
                 }
             } catch (Throwable e) {
-                Log.e(LPRFX,"exception in receive",e);
+                AvnLog.e("exception in receive",e);
             }
         }
-        Log.i(LPRFX,"resolver thread finished");
+        AvnLog.i(LPRFX,"resolver thread finished");
     }
 
     private Question serviceQuestion(String name,String type){
@@ -275,11 +275,11 @@ public class Resolver implements Runnable{
         sendQuestion(q);
     }
     private void resolve(Target.HostTarget host) throws IOException {
-        Question q= hostQuestion(host.name);
+        Question q= hostQuestion(host.hostname);
         sendQuestion(q);
     }
 
-    public void resolve(Target.ServiceTarget target, Callback<Target.ServiceTarget> callback, boolean force) throws IOException {
+    public void resolve(Target.ServiceTarget target, Target.Callback callback, boolean force) throws IOException {
         QRequest<Target.ServiceTarget> r=new QRequest<>(target,callback);
         synchronized (openRequests){
             openRequests.add(r);
@@ -287,9 +287,9 @@ public class Resolver implements Runnable{
         resolve(r.request);
     }
 
-    public void resolve(Target.HostTarget target, Callback<Target.HostTarget> callback, boolean forceNew) throws IOException {
+    public void resolve(Target.HostTarget target, Target.Callback callback, boolean forceNew) throws IOException {
         if (! forceNew){
-            Target.HostTarget h=resolvedHosts.get(target.name);
+            Target.HostTarget h=resolvedHosts.get(target.hostname);
             if (h!=null && callback != null) {
                 callback.resolve(h);
                 return;

@@ -16,7 +16,6 @@ import android.hardware.usb.UsbManager;
 import android.location.Location;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.net.InetAddresses;
 import android.net.Uri;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
@@ -35,12 +34,8 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.Inet4Address;
 import java.net.InetAddress;
-import java.net.InterfaceAddress;
-import java.net.NetworkInterface;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -812,7 +807,16 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
                     @Override
                     public void onServiceLost(NsdServiceInfo serviceInfo) {
                         synchronized (services) {
-                            services.remove(serviceInfo);
+                            ArrayList<NsdServiceInfo> toRemove=new ArrayList<>();
+                            for (NsdServiceInfo si:services){
+                                if (si.getServiceType().equals(serviceInfo.getServiceType()) &&
+                                        si.getServiceName().equals(serviceInfo.getServiceName())){
+                                    toRemove.add(si);
+                                }
+                            }
+                            for (NsdServiceInfo si:toRemove){
+                                services.remove(si);
+                            }
                         }
                     }
                 };
@@ -1017,19 +1021,6 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         setAlarm(Alarm.MOB.name);
         mobAlarm=true;
     }
-
-    public void resolveMdns(Target.HostTarget target, Resolver.Callback<Target.HostTarget> callback,boolean force) throws IOException {
-        MdnsWorker mdns=getMdnsResolver();
-        if (mdns == null) return;
-        mdns.resolveMdns(target,callback,force);
-    }
-
-    public void resolveMdns(Target.ServiceTarget target, Resolver.Callback<Target.ServiceTarget> callback,boolean force) throws IOException {
-        MdnsWorker mdns=getMdnsResolver();
-        if (mdns == null) return;
-        mdns.resolveMdns(target,callback,force);
-    }
-
 
 
     /**

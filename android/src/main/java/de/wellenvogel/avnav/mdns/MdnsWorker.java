@@ -16,7 +16,8 @@ import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.worker.Worker;
 import de.wellenvogel.avnav.worker.WorkerStatus;
 
-public class MdnsWorker extends Worker {
+public class MdnsWorker extends Worker implements Target.IResolver {
+
 
     private static class ResolverWrapper{
         Resolver resolver;
@@ -34,7 +35,7 @@ public class MdnsWorker extends Worker {
     private final ArrayList<InetAddress> interfaceAddresses=new ArrayList<>();
     private final HashMap<String, ResolverWrapper> mdnsResolvers=new HashMap<>();
     private final ArrayList<Resolver.QRequest<Target.HostTarget>> storedRequests=new ArrayList<>();
-    private final HashSet<Target.ServiceTarget> resolvedServices=new HashSet<>();
+    private final HashSet<Target.ResolveTarget> resolvedServices=new HashSet<>();
 
     public MdnsWorker(String typeName) {
         super(typeName);
@@ -100,13 +101,12 @@ public class MdnsWorker extends Worker {
                     resolvedServices.clear();
                     status.removeChildren();
                     for (String ifname : interfaces.keySet()) {
-                        Resolver resolver=new Resolver(interfaces.get(ifname), new Resolver.Callback<Target.ServiceTarget>() {
+                        Resolver resolver=new Resolver(interfaces.get(ifname), new Target.Callback() {
                             @Override
-                            public void resolve(Target.ServiceTarget target) {
+                            public void resolve(Target.ResolveTarget target) {
                                 synchronized (mdnsResolvers){
                                     resolvedServices.add(target);
                                 }
-
                             }
                         });
                         Thread resolverThread=new Thread(new Runnable() {
@@ -187,7 +187,10 @@ public class MdnsWorker extends Worker {
         stopInternal();
     }
 
-    public void resolveMdns(Target.HostTarget target,Resolver.Callback<Target.HostTarget> callback, boolean force) throws IOException {
+
+
+    @Override
+    public void resolve(Target.HostTarget target, Target.Callback callback, boolean force) throws IOException {
         Resolver.QRequest<Target.HostTarget> request= new Resolver.QRequest<>(target,callback);
         synchronized (mdnsResolvers){
             if (mdnsResolvers.size() < 1){
@@ -203,7 +206,9 @@ public class MdnsWorker extends Worker {
             }
         }
     }
-    public void resolveMdns(Target.ServiceTarget target,Resolver.Callback<Target.ServiceTarget> callback, boolean force) throws IOException {
+
+    @Override
+    public void resolve(Target.ServiceTarget target, Target.Callback callback, boolean force) throws IOException {
         synchronized (mdnsResolvers){
                 for (ResolverWrapper r:mdnsResolvers.values()){
                     r.resolver.resolve(target,callback,force);
