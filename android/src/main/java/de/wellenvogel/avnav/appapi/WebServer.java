@@ -99,7 +99,7 @@ public class WebServer extends Worker {
     public static final EditableParameter.BooleanParameter ANY_ADDRESS=
             new EditableParameter.BooleanParameter("external",R.string.enableExternalAccess,false);
     public static final EditableParameter.IntegerParameter PORT=
-            new EditableParameter.IntegerParameter("port",R.string.labelSettingsServerPort,34567);
+            new EditableParameter.IntegerParameter("port",R.string.labelSettingsServerPort,8080);
 
 
     public WebServer(GpsService controller) {
