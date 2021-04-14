@@ -5,13 +5,9 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.security.Key;
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 
-import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.NmeaQueue;
 
@@ -68,7 +64,8 @@ public class TcpServiceReader extends SingleConnectionHandler {
                 });
             }
         };
-        parameterDescriptions.addParams(servicesParameter,
+        parameterDescriptions.insertParams(servicesParameter);
+        parameterDescriptions.addParams(
                 WRITE_TIMEOUT_PARAMETER,
                 CONNECT_TIMEOUT_PARAMETER,
                 READTIMEOUT_CLOSE_PARAMETER);

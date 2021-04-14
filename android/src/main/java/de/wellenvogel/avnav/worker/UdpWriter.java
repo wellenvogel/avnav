@@ -36,9 +36,9 @@ public class UdpWriter extends ChannelWorker {
     UdpWriter(String name, GpsService ctx, NmeaQueue queue) {
         super(name, ctx, queue);
         parameterDescriptions.addParams(
-                ENABLED_PARAMETER,
                 IPADDRESS_PARAMETER,
                 IPPORT_PARAMETER,
+                ENABLED_PARAMETER,
                 SEND_FILTER_PARAM,
                 BLACKLIST_PARAMETER,
                 BROADCAST_PARAMETER

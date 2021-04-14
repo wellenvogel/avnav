@@ -29,9 +29,10 @@ public class UdpReceiver extends ChannelWorker {
     long lastReceived=0;
     UdpReceiver(String name, GpsService ctx, NmeaQueue queue) {
         super(name, ctx, queue);
-        parameterDescriptions.addParams(SOURCENAME_PARAMETER,
-                ENABLED_PARAMETER,
+        parameterDescriptions.addParams(
                 PORT_PARAMETER,
+                ENABLED_PARAMETER,
+                SOURCENAME_PARAMETER,
                 EXTERNAL_ACCESS,
                 FILTER_PARAM,
                 READ_TIMEOUT_PARAMETER

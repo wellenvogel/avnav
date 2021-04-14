@@ -237,6 +237,9 @@ public class EditableParameter {
         public void addParams(EditableParameterInterface... param){
             this.addAll(Arrays.asList(param));
         }
+        public void insertParams(EditableParameterInterface ...param){
+            this.addAll(0,Arrays.asList(param));
+        }
         public boolean has(EditableParameterInterface parameter){
             for (EditableParameterInterface p:this){
                 if (p.getName().equals(parameter.getName())) return true;

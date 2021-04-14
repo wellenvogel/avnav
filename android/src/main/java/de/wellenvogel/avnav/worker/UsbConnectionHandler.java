@@ -193,7 +193,6 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
     private EditableParameter.StringListParameter deviceSelect;
     private UsbConnectionHandler(String name, GpsService ctx, NmeaQueue queue) throws JSONException {
         super(name,ctx,queue);
-        parameterDescriptions.add(BAUDRATE_PARAMETER);
         deviceSelect=new EditableParameter.StringListParameter(DEVICE_SELECT);
         deviceSelect.listBuilder=new EditableParameter.ListBuilder<String>() {
             @Override
@@ -204,7 +203,7 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
                 return filterByClaims(CLAIM_USB,rt,false);
             }
         };
-        parameterDescriptions.add(deviceSelect);
+        parameterDescriptions.insertParams(deviceSelect,BAUDRATE_PARAMETER);
         this.ctx=ctx;
     }
 

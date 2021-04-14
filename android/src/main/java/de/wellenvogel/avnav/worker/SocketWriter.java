@@ -71,9 +71,9 @@ public class SocketWriter extends ChannelWorker {
     private SocketWriter(String name, GpsService ctx, NmeaQueue queue) throws JSONException {
         super(name,ctx,queue);
         parameterDescriptions.addParams(
-                SOURCENAME_PARAMETER,
-                ENABLED_PARAMETER,
                 PORT_PARAMETER,
+                ENABLED_PARAMETER,
+                SOURCENAME_PARAMETER,
                 EXTERNAL_ACCESS,
                 WRITE_TIMEOUT_PARAMETER,
                 SEND_FILTER_PARAM,
