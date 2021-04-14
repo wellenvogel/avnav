@@ -265,7 +265,12 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
         }
         @Override
         boolean canAdd(GpsService ctx) {
-            return ctx.getPackageManager().hasSystemFeature(PackageManager.FEATURE_USB_HOST);
+            if (! ctx.getPackageManager().hasSystemFeature(PackageManager.FEATURE_USB_HOST)) return false;
+            UsbManager manager=(UsbManager) ctx.getSystemService(Context.USB_SERVICE);
+            if (manager == null) return false;
+            Map<String,UsbDevice> devices=manager.getDeviceList();
+            return devices.size() > 0;
+
         }
     }
 
