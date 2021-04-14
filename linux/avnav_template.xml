@@ -59,7 +59,7 @@
 	<AVNUdpReader port="34667" minTime="100"></AVNUdpReader>
 </Readers>
 <!-- provide your data at this port for e.g. OpenCPN -->
-<AVNSocketWriter port="34567" maxDevices="5" filter="" read="true" minTime="100"/>
+<AVNSocketWriter port="34567" maxDevices="5" filter="" read="true" minTime="100" avahiName="avnav-server"/>
 <AVNTrackWriter interval="10" distance="100" trackdir="#DATADIR#/tracks"/>
 <AVNHttpServer navurl="/viewer/avnav_navi.php" httpPort="8080" upzoom="0"
                chartbase="maps" empty="nonexistent">
