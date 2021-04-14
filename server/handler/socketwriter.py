@@ -25,6 +25,8 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
 import socket
+
+from avnavavahi import AVNAvahi
 from socketreaderbase import *
 
 import avnav_handlerList
@@ -60,7 +62,8 @@ class AVNSocketWriter(AVNWorker,SocketReader):
                           condition={'read':True}),
           WorkerParameter('minTime',50,type=WorkerParameter.T_FLOAT,
                           description='if this is set, wait this time before reading new data (ms)'),
-          WorkerParameter('blackList','',description=', separated list of sources we do not send out')
+          WorkerParameter('blackList','',description=', separated list of sources we do not send out'),
+          WorkerParameter('avahiName','',description='If set make this port available via Mdns (Bonjour/Avahi) with this name')
           ]
       return rt
     return None
@@ -246,6 +249,7 @@ class AVNSocketWriter(AVNWorker,SocketReader):
     self.wait(2)
     init=True
     self.listener=None
+    avahi=self.findHandlerByName(AVNAvahi.getConfigName())
     while not self.shouldStop():
       self.blackList = self.getStringParam('blackList').split(',')
       self.blackList.append(self.getSourceName())
@@ -262,6 +266,9 @@ class AVNSocketWriter(AVNWorker,SocketReader):
           self.setInfo('main','unable to create listener at port %s:%s'
                        %(str(self.getIntParam('port')),str(e)),WorkerStatus.ERROR)
           raise
+        serviceName=self.getStringParam('avahiName')
+        if serviceName is not None and avahi is not None:
+          avahi.registerService(self.getId(),"_avnav-nmea-0183._tcp",serviceName,self.getIntParam('port'))
         while not self.shouldStop() and self.listener.fileno() >= 0:
           try:
             outsock,addr=self.listener.accept()
@@ -292,7 +299,10 @@ class AVNSocketWriter(AVNWorker,SocketReader):
         except:
           pass
         if self.shouldStop():
-          return
+          break
         self.wait(5)
+    AVNLog.info("main stopped")
+    if avahi is not None:
+      avahi.registerService(self.getId(),None,None,None)
 avnav_handlerList.registerHandler(AVNSocketWriter)
   
