@@ -101,10 +101,9 @@ public class WebServer extends Worker {
     public static final EditableParameter.IntegerParameter PORT=
             new EditableParameter.IntegerParameter("port",R.string.labelSettingsServerPort,8080);
 
-
     public WebServer(GpsService controller) {
         super("WebServer");
-        parameterDescriptions.addParams(Worker.ENABLED_PARAMETER.clone(false),PORT,ANY_ADDRESS);
+        parameterDescriptions.addParams(PORT,Worker.ENABLED_PARAMETER.clone(false),ANY_ADDRESS,MDNS_NAME.clone("avnav-android"));
         gpsService =controller;
         status.canEdit=true;
     }
@@ -114,6 +113,7 @@ public class WebServer extends Worker {
         super.checkParameters(newParam);
         Integer port=PORT.fromJson(newParam);
         checkClaim(CLAIM_TCPPORT,port.toString(),true);
+        checkClaim(CLAIM_SERVICE,MDNS_NAME.fromJson(parameters),true);
     }
 
     @Override
@@ -121,7 +121,8 @@ public class WebServer extends Worker {
         Integer port=PORT.fromJson(parameters);
         listenAny=ANY_ADDRESS.fromJson(parameters);
         addClaim(CLAIM_TCPPORT,port.toString(),true);
-        registerAvahi(port,listenAny);
+        addClaim(CLAIM_SERVICE,MDNS_NAME.fromJson(parameters),true);
+        registerAvahi(port,MDNS_NAME.fromJson(parameters));
         setStatus(WorkerStatus.Status.STARTED,"starting with port "+port+", external access "+listenAny);
         running=true;
         listener=new Listener(listenAny,port);
@@ -514,14 +515,12 @@ public class WebServer extends Worker {
         listener=null;
         unregisterAvahi();
     }
-    private void registerAvahi(int port,boolean any) throws UnknownHostException {
+    private void registerAvahi(int port,String name) throws UnknownHostException {
+        if (name == null || name.isEmpty()) return;
         NsdServiceInfo info=new NsdServiceInfo();
         info.setPort(port);
         info.setServiceType("_http._tcp");
-        info.setServiceName("avnav-android");
-        if (! any){
-            info.setHost(getLocalHost());
-        }
+        info.setServiceName(name);
         NsdManager manager= (NsdManager) gpsService.getSystemService(Context.NSD_SERVICE);
         registrationListener=new NsdManager.RegistrationListener() {
             @Override

@@ -56,6 +56,9 @@ public abstract class Worker implements IWorker {
             new EditableParameter.IntegerParameter("port", R.string.labelSettingsBindPort,null);
     static EditableParameter.BooleanParameter EXTERNAL_ACCESS=
             new EditableParameter.BooleanParameter("externalAccess",R.string.labelSettingsExternalAccess,false);
+    public static EditableParameter.StringParameter MDNS_NAME=
+            new EditableParameter.StringParameter("mdnsService", R.string.labelSettingsMdnsName,"");
+
 
     static final String CLAIM_BLUETOOTH ="bluetooth device";
     static final String CLAIM_USB ="usb device";
@@ -63,6 +66,7 @@ public abstract class Worker implements IWorker {
     protected static final String CLAIM_UDPPORT ="udp port";
     private static final String CLAIM_NAME = "name" ;
     protected static final String CLAIM_SERVICE="service";
+
     private static class ResourceClaim{
         String kind;
         String name;

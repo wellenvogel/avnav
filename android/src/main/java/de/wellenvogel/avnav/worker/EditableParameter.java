@@ -84,6 +84,10 @@ public class EditableParameter {
             super(name);
         }
 
+        public StringParameter(EditableParameterBase<String> other) {
+            super(other);
+        }
+
         @Override
         public String getType() {
             return "STRING";
@@ -92,6 +96,11 @@ public class EditableParameter {
         @Override
         public String fromJson(JSONObject o) throws JSONException {
             return mandatory?o.getString(name):o.optString(name,defaultValue);
+        }
+        public StringParameter clone(String newDefault){
+            StringParameter rt=new StringParameter(this);
+            rt.defaultValue=newDefault;
+            return rt;
         }
     }
     public static class IntegerParameter extends EditableParameterBase<Integer>{

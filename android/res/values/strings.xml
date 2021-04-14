@@ -100,5 +100,6 @@
     <string name="labelSettingsComputeRMB">compute RMB seentences if a waypoint or route is active</string>
     <string name="reallyResetHandlers">Really reset the handler configuration?</string>
     <string name="labelSettingsSelectService">Select the service you would like to connect to</string>
+    <string name="labelSettingsMdnsName">If not empty this connection will be announced via Mdns (Bonjour/Avahi) with the provided name.</string>
 
 </resources>

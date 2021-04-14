@@ -1,6 +1,8 @@
 package de.wellenvogel.avnav.worker;
 
 import android.content.Context;
+import android.net.nsd.NsdManager;
+import android.net.nsd.NsdServiceInfo;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -13,6 +15,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -67,6 +70,49 @@ public class SocketWriter extends ChannelWorker {
             return true;
         }
     }
+    private NsdManager nsdManager;
+    private NsdManager.RegistrationListener registrationListener;
+    private void registerAvahi(int port,String name) throws UnknownHostException {
+        if (name == null || name.isEmpty()) return;
+        NsdServiceInfo info=new NsdServiceInfo();
+        info.setPort(port);
+        info.setServiceType(TcpServiceReader.AVNAV_SERVICE_TYPE);
+        info.setServiceName(name);
+        NsdManager manager= (NsdManager) gpsService.getSystemService(Context.NSD_SERVICE);
+        if (manager == null){
+            AvnLog.e("unable to get nsd manager");
+            return;
+        }
+        registrationListener=new NsdManager.RegistrationListener() {
+            @Override
+            public void onRegistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
+                AvnLog.e("registering avahi service failed: "+errorCode);
+            }
+
+            @Override
+            public void onUnregistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
+
+            }
+
+            @Override
+            public void onServiceRegistered(NsdServiceInfo serviceInfo) {
+                AvnLog.i("registered avahi "+serviceInfo.getServiceName());
+            }
+
+            @Override
+            public void onServiceUnregistered(NsdServiceInfo serviceInfo) {
+
+            }
+        };
+        manager.registerService(info, NsdManager.PROTOCOL_DNS_SD,registrationListener);
+    }
+
+    private void unregisterAvahi(){
+        if (registrationListener == null) return;
+        NsdManager manager=(NsdManager)gpsService.getSystemService(Context.NSD_SERVICE);
+        if (manager != null) manager.unregisterService(registrationListener);
+        registrationListener=null;
+    }
 
     private SocketWriter(String name, GpsService ctx, NmeaQueue queue) throws JSONException {
         super(name,ctx,queue);
@@ -79,7 +125,8 @@ public class SocketWriter extends ChannelWorker {
                 SEND_FILTER_PARAM,
                 BLACKLIST_PARAMETER,
                 READ_DATA_PARAMETER,
-                FILTER_PARAM
+                FILTER_PARAM,
+                MDNS_NAME
                 );
         status.canEdit=true;
         status.canDelete=true;
@@ -139,6 +186,7 @@ public class SocketWriter extends ChannelWorker {
     protected void checkParameters(JSONObject newParam) throws JSONException, IOException {
         Integer port=PORT_PARAMETER.fromJson(newParam);
         checkClaim(CLAIM_TCPPORT,port.toString(),true);
+        checkClaim(CLAIM_SERVICE,MDNS_NAME.fromJson(parameters),true);
     }
 
     @Override
@@ -147,6 +195,7 @@ public class SocketWriter extends ChannelWorker {
         try{
             serversocket.close();
             serversocket=null;
+            unregisterAvahi();
         }catch (Throwable t){}
         stopClients();
     }
@@ -156,6 +205,7 @@ public class SocketWriter extends ChannelWorker {
         stopClients();
         Integer port = PORT_PARAMETER.fromJson(parameters);
         addClaim(CLAIM_TCPPORT,port.toString(),true);
+        addClaim(CLAIM_SERVICE,MDNS_NAME.fromJson(parameters),true);
         boolean allowExternal=EXTERNAL_ACCESS.fromJson(parameters);
         if (serversocket != null){
             try{
@@ -169,6 +219,7 @@ public class SocketWriter extends ChannelWorker {
             InetAddress local= AvnUtil.getLocalHost();
             serversocket.bind(new InetSocketAddress(local.getHostAddress(),port));
         }
+        registerAvahi(port,MDNS_NAME.fromJson(parameters));
         setStatus(WorkerStatus.Status.NMEA,"listening on "+port+", external access "+allowExternal);
         while (! shouldStop(startSequence)){
             Socket client=null;
