@@ -178,7 +178,7 @@ class EditHandlerDialog extends React.Component{
             for (let k in condition[i]){
                 let compare=condition[i][k];
                 let value=undefined;
-                for (let pi in this .state.parameters) {
+                for (let pi in this.state.parameters) {
                     if (this.state.parameters[pi].name === k){
                         value=this.state.parameters[pi].getValueForDisplay(values);
                         break;
