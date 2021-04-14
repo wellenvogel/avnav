@@ -620,10 +620,11 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         }
         saveWorkerConfig(worker);
     }
-    private void stopWorkers(){
+    private void stopWorkers(boolean wait){
         for (IWorker w: workers){
             try{
-                w.stop();
+                if (wait) w.stopAndWait();
+                else w.stop();
             }catch (Throwable t){
                 AvnLog.e("unable to stop worker "+w.getStatus().toString());
             }
@@ -729,7 +730,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         if (! isWatchdog && isRunning) return Service.START_REDELIVER_INTENT;
         handleNotification(true,true);
         if (! isWatchdog) {
-            stopWorkers();
+            stopWorkers(true);
             handleMigration();
         }
         handleStartup(isWatchdog);
@@ -840,7 +841,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
     }
 
     public void restart(){
-        stopWorkers();
+        stopWorkers(true);
         synchronized (services){
             services.clear();
         }
@@ -1028,7 +1029,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
      */
     private void handleStop() {
         AvnLog.i(LOGPRFX,"handle stop");
-        stopWorkers();
+        stopWorkers(false);
         if (requestHandler != null) requestHandler.stop();
         requestHandler=null;
         isRunning = false;
