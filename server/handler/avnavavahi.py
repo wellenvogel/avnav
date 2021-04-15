@@ -332,9 +332,13 @@ class AVNAvahi(AVNWorker):
       if existing is not None:
         existing.update(description)
       else:
-        self.services[index]=description
+        if name is not None and type is not None:
+          self.services[index]=description
     finally:
       self.lock.release()
     return index
+
+  def unregisterService(self,id):
+    self.registerService(id,None,None,None)
 
 avnav_handlerList.registerHandler(AVNAvahi)

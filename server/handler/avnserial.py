@@ -399,10 +399,6 @@ class AVNSerialReader(AVNWorker):
     self.reader=None
     AVNWorker.__init__(self, param)
 
-  def getUsedResources(self, type=None):
-    if type != UsedResource.T_SERIAL and type is not None:
-      return []
-    return [UsedResource(UsedResource.T_SERIAL,self.id,self.getParamValue('port'))]
 
   #make some checks when we have to start
   #we cannot do this on init as we potentiall have tp find the feeder...
@@ -416,12 +412,13 @@ class AVNSerialReader(AVNWorker):
 
   def checkConfig(self, param):
     if 'port' in param:
-      self.checkUsedResource(UsedResource.T_SERIAL,self.id,param.get('port'))
+      self.checkUsedResource(UsedResource.T_SERIAL,param.get('port'))
 
   #thread run method - just try forever  
   def run(self):
-    self.checkUsedResource(UsedResource.T_SERIAL,self.id,self.getParamValue('port'))
     while not self.shouldStop():
+      self.freeAllUsedResources()
+      self.claimUsedResource(UsedResource.T_SERIAL,self.getParamValue('port'))
       try:
         self.reader=SerialReader(self.param, self.writeData,self,self.getSourceName(self.getParamValue('port')))
         self.reader.run()
@@ -431,7 +428,7 @@ class AVNSerialReader(AVNWorker):
 
   def updateConfig(self, param,child=None):
     if 'port' in param:
-      self.checkUsedResource(UsedResource.T_SERIAL,self.id,param['port'])
+      self.checkUsedResource(UsedResource.T_SERIAL,param['port'])
     super().updateConfig(param)
     self.reader.stopHandler()
 

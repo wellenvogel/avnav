@@ -163,7 +163,8 @@ class WorkerParameter(object):
     if self.type == self.T_SELECT:
       if self.rangeOrList is None:
         raise ValueError("no select list for %s"%self.name)
-      for cv in self.rangeOrList:
+      checkList=self.rangeOrList if not callable(self.rangeOrList) else self.rangeOrList()
+      for cv in checkList:
         cmp=cv
         if type(cv) is dict:
           cmp=cv.get('value')
@@ -172,17 +173,28 @@ class WorkerParameter(object):
         if value == cmp:
           return value
       raise ValueError("value %s for %s not in list %s"%(str(value),self.name,",".join(
-        list(map(lambda x:str(x),self.rangeOrList)))))
+        list(map(lambda x:str(x),checkList)))))
     if self.type == self.T_FILTER:
       #TODO: some filter checks
       return str(value)
     return value
+
+  def fromDict(self,valueDict,check=False):
+    rt=valueDict.get(self.name)
+    if rt is None:
+      rt=self.default
+    if check:
+      return self.checkValue(rt)
+    return rt
+
+
 
 class UsedResource(object):
   T_SERIAL='serial'
   T_TCP='tcp'
   T_UDP='udp'
   T_USB='usb'
+  T_SERVICE='service'
 
   def __init__(self,type,handlerId,value):
     self.type=type
@@ -431,6 +443,7 @@ class AVNWorker(object):
     self.condition=threading.Condition()
     self.currentThread=None
     self.name=self.getName()
+    self.usedResources=[]
 
 
   def setNameIfEmpty(self,name):
@@ -795,6 +808,7 @@ class AVNWorker(object):
     raise Exception("run must be overloaded")
 
   def _runInternal(self):
+    self.usedResources=[]
     AVNLog.info("run started")
     try:
       self.run()
@@ -802,6 +816,7 @@ class AVNWorker(object):
     except Exception as e:
       self.setInfo('main','handler stopped with %s'%str(e),WorkerStatus.ERROR)
       AVNLog.error("handler run stopped with exception %s",traceback.format_exc())
+    self.usedResources=[]
     self.currentThread=None
 
   def checkConfig(self,param):
@@ -889,13 +904,14 @@ class AVNWorker(object):
       return UsedResource.toPlain(rt)
     return rt
 
-  @classmethod
-  def checkUsedResource(cls,type,ownId,value,prefix=None):
-    others=cls.findUsersOf(type,ownId=ownId,value=value)
+  def checkUsedResource(self,type,value,prefix=None):
+    if value is None:
+      return
+    others=self.findUsersOf(type,ownId=self.id,value=value)
     if len(others) >0:
       if prefix is None:
         prefix = others[0].type
-      h=cls.findHandlerById(others[0].handlerId)
+      h=self.findHandlerById(others[0].handlerId)
       if h is None:
         name='handler %s'%others[0].handlerId
       else:
@@ -906,6 +922,21 @@ class AVNWorker(object):
         name,
         str(others[0].handlerId)
       ))
+  def claimUsedResource(self,type,value,force=False):
+    if not force:
+      self.checkUsedResource(type,value)
+    res=UsedResource(type,self.id,value)
+    self.usedResources.append(res)
+
+  def freeUsedResource(self,type,name):
+    newRes=[]
+    for res in self.usedResources:
+      if not res.usingTypeValue(type,name):
+        newRes.append(res)
+    self.usedResources=newRes
+
+  def freeAllUsedResources(self):
+    self.usedResources=[]
 
   def getHandledCommands(self):
     """get the API commands that will be handled by this instance
