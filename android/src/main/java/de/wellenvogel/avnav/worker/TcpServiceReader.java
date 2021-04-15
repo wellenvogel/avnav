@@ -5,7 +5,6 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.Comparator;
 import java.util.List;
 
 import de.wellenvogel.avnav.main.R;
@@ -37,10 +36,9 @@ public class TcpServiceReader extends SingleConnectionHandler {
             };
         }
     }
-    static final String AVNAV_SERVICE_TYPE="_avnav-nmea-0183._tcp.";
+    static final String NMEA_SERVICE_TYPE ="_nmea-0183._tcp.";
     static Description[] SERVICES = new Description[]{
-            new Description("_nmea-0183._tcp.", "SignalK NMEA0183"),
-            new Description(AVNAV_SERVICE_TYPE, "AvNav NMEA0183")
+            new Description(NMEA_SERVICE_TYPE, "NMEA0183 service")
     };
 
     private EditableParameter.StringListParameter servicesParameter=

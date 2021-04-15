@@ -71,6 +71,8 @@ import de.wellenvogel.avnav.worker.WorkerStatus;
 public class WebServer extends Worker {
 
     static final String NAME="AvNavWebServer";
+    private final EditableParameter.StringParameter mdnsNameParameter;
+    private final EditableParameter.BooleanParameter mdnsEnabledParameter;
 
     private BasicHttpProcessor httpproc = null;
     private BasicHttpContext httpContext = null;
@@ -103,7 +105,15 @@ public class WebServer extends Worker {
 
     public WebServer(GpsService controller) {
         super("WebServer");
-        parameterDescriptions.addParams(PORT,Worker.ENABLED_PARAMETER.clone(false),ANY_ADDRESS,MDNS_NAME.clone("avnav-android"));
+        mdnsEnabledParameter=MDNS_ENABLED.clone(true);
+        mdnsNameParameter=MDNS_NAME.clone("avnav-android");
+        parameterDescriptions.addParams(
+                PORT,
+                Worker.ENABLED_PARAMETER.clone(false),
+                ANY_ADDRESS,
+                mdnsEnabledParameter,
+                mdnsNameParameter
+        );
         gpsService =controller;
         status.canEdit=true;
     }
@@ -113,7 +123,14 @@ public class WebServer extends Worker {
         super.checkParameters(newParam);
         Integer port=PORT.fromJson(newParam);
         checkClaim(CLAIM_TCPPORT,port.toString(),true);
-        checkClaim(CLAIM_SERVICE,MDNS_NAME.fromJson(parameters),true);
+        if (newParam.has(mdnsEnabledParameter.name) && mdnsEnabledParameter.fromJson(newParam)) {
+            String mdnsName=null;
+            if (newParam.has(mdnsNameParameter.name)) mdnsName=mdnsNameParameter.fromJson(newParam);
+            else mdnsName=mdnsNameParameter.fromJson(parameters);
+            if (mdnsName == null || mdnsName.isEmpty())
+                throw new JSONException(MDNS_NAME.name+" cannot be empty when "+MDNS_ENABLED.name+" is set");
+            checkClaim(CLAIM_SERVICE, mdnsName, true);
+        }
     }
 
     @Override

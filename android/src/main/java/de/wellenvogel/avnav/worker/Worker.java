@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.NmeaQueue;
@@ -56,9 +57,13 @@ public abstract class Worker implements IWorker {
             new EditableParameter.IntegerParameter("port", R.string.labelSettingsBindPort,null);
     static EditableParameter.BooleanParameter EXTERNAL_ACCESS=
             new EditableParameter.BooleanParameter("externalAccess",R.string.labelSettingsExternalAccess,false);
+    public static EditableParameter.BooleanParameter MDNS_ENABLED=
+            new EditableParameter.BooleanParameter("mdnsEnabled", R.string.labelSettingsMdnsEnabled,false);
     public static EditableParameter.StringParameter MDNS_NAME=
-            new EditableParameter.StringParameter("mdnsService", R.string.labelSettingsMdnsName,"");
-
+            new EditableParameter.StringParameter("mdnsService", R.string.labelSettingsMdnsName,"",
+                    new EditableParameter.EditableParameterBase.ConditionList(
+                            new RequestHandler.KeyValue<Boolean>(MDNS_ENABLED.name,true)
+                    ));
 
     static final String CLAIM_BLUETOOTH ="bluetooth device";
     static final String CLAIM_USB ="usb device";

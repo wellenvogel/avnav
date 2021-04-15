@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.util.AvnUtil;
 
 public class EditableParameter {
@@ -24,11 +25,33 @@ public class EditableParameter {
         public void checkJson(JSONObject o) throws JSONException;
     }
     public static abstract class EditableParameterBase<T> implements AvnUtil.IJsonObect,EditableParameterInterface {
-        String name;
+        public static class Condition extends ArrayList<RequestHandler.KeyValue>{
+            Condition(RequestHandler.KeyValue...parameter){
+                addAll(Arrays.asList(parameter));
+            }
+            JSONObject toJson() throws JSONException {
+                JSONObject rt=new JSONObject();
+                for (RequestHandler.KeyValue kv:this){
+                    rt.put(kv.key,kv.value);
+                }
+                return rt;
+            }
+        }
+        public static class ConditionList extends ArrayList<Condition>{
+            ConditionList(Condition ...parameters){
+                addAll(Arrays.asList(parameters));
+            }
+            ConditionList(RequestHandler.KeyValue...parameters){
+                Condition c=new Condition(parameters);
+                add(c);
+            }
+        }
+        public String name;
         T defaultValue;
         String description;
         int descriptionId=-1;
         boolean mandatory=false;
+        public ConditionList conditions;
 
         EditableParameterBase(String name, int descriptionId, T defaultValue) {
             this.name = name;
@@ -36,6 +59,10 @@ public class EditableParameter {
             this.defaultValue = defaultValue;
             mandatory = defaultValue == null;
 
+        }
+        EditableParameterBase(String name, int descriptionId,T defaultValue, ConditionList conditions){
+            this(name,descriptionId,defaultValue);
+            this.conditions=conditions;
         }
         EditableParameterBase(String name) {
             this.name = name;
@@ -47,6 +74,13 @@ public class EditableParameter {
             description=other.description;
             descriptionId=other.descriptionId;
             mandatory=other.mandatory;
+            conditions=other.conditions;
+        }
+        public void setConditions(RequestHandler.KeyValue...paramters){
+            conditions=new ConditionList(paramters);
+        }
+        public void setConditions(Condition ...parameters){
+            conditions=new ConditionList(parameters);
         }
         public void write(JSONObject target,T value) throws JSONException {
             target.put(name,value);
@@ -71,6 +105,13 @@ public class EditableParameter {
             rt.put("mandatory",mandatory);
             if (description != null) rt.put("description",description);
             if (descriptionId >= 0) rt.put("descriptionId",descriptionId);
+            if (conditions != null && conditions.size() > 0){
+                JSONArray ca=new JSONArray();
+                for (Condition c:conditions){
+                    ca.put(c.toJson());
+                }
+                rt.put("condition",ca);
+            }
             return rt;
         }
     }
@@ -86,6 +127,10 @@ public class EditableParameter {
 
         public StringParameter(EditableParameterBase<String> other) {
             super(other);
+        }
+
+        StringParameter(String name, int descriptionId, String defaultValue, ConditionList conditions) {
+            super(name, descriptionId, defaultValue, conditions);
         }
 
         @Override

@@ -19,6 +19,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.NmeaQueue;
@@ -27,6 +28,9 @@ import de.wellenvogel.avnav.util.NmeaQueue;
  * Created by andreas on 25.12.14.
  */
 public class SocketWriter extends ChannelWorker {
+    private final EditableParameter.StringParameter mdnsNameParameter;
+    private final EditableParameter.BooleanParameter mdnsEnableParameter;
+
     static class Creator extends WorkerFactory.Creator{
         @Override
         ChannelWorker create(String name, GpsService ctx, NmeaQueue queue) throws JSONException {
@@ -76,7 +80,7 @@ public class SocketWriter extends ChannelWorker {
         if (name == null || name.isEmpty()) return;
         NsdServiceInfo info=new NsdServiceInfo();
         info.setPort(port);
-        info.setServiceType(TcpServiceReader.AVNAV_SERVICE_TYPE);
+        info.setServiceType(TcpServiceReader.NMEA_SERVICE_TYPE);
         info.setServiceName(name);
         NsdManager manager= (NsdManager) gpsService.getSystemService(Context.NSD_SERVICE);
         if (manager == null){
@@ -116,6 +120,10 @@ public class SocketWriter extends ChannelWorker {
 
     private SocketWriter(String name, GpsService ctx, NmeaQueue queue) throws JSONException {
         super(name,ctx,queue);
+        EditableParameter.StringParameter filter=FILTER_PARAM.clone("");
+        filter.setConditions(new RequestHandler.KeyValue<Boolean>(READ_DATA_PARAMETER.name,true));
+        mdnsNameParameter=MDNS_NAME.clone(getTypeName()+"-android");
+        mdnsEnableParameter =MDNS_ENABLED.clone(false);
         parameterDescriptions.addParams(
                 PORT_PARAMETER,
                 ENABLED_PARAMETER,
@@ -125,8 +133,9 @@ public class SocketWriter extends ChannelWorker {
                 SEND_FILTER_PARAM,
                 BLACKLIST_PARAMETER,
                 READ_DATA_PARAMETER,
-                FILTER_PARAM,
-                MDNS_NAME
+                filter,
+                mdnsEnableParameter,
+                mdnsNameParameter
                 );
         status.canEdit=true;
         status.canDelete=true;
@@ -186,7 +195,14 @@ public class SocketWriter extends ChannelWorker {
     protected void checkParameters(JSONObject newParam) throws JSONException, IOException {
         Integer port=PORT_PARAMETER.fromJson(newParam);
         checkClaim(CLAIM_TCPPORT,port.toString(),true);
-        checkClaim(CLAIM_SERVICE,MDNS_NAME.fromJson(parameters),true);
+        if (newParam.has(mdnsEnableParameter.name) && mdnsEnableParameter.fromJson(newParam)) {
+            String mdnsName=null;
+            if (newParam.has(mdnsNameParameter.name)) mdnsName=mdnsNameParameter.fromJson(newParam);
+            else mdnsName=mdnsNameParameter.fromJson(parameters);
+            if (mdnsName == null || mdnsName.isEmpty())
+                throw new JSONException(MDNS_NAME.name+" cannot be empty when "+MDNS_ENABLED.name+" is set");
+            checkClaim(CLAIM_SERVICE, mdnsName, true);
+        }
     }
 
     @Override
@@ -205,7 +221,9 @@ public class SocketWriter extends ChannelWorker {
         stopClients();
         Integer port = PORT_PARAMETER.fromJson(parameters);
         addClaim(CLAIM_TCPPORT,port.toString(),true);
-        addClaim(CLAIM_SERVICE,MDNS_NAME.fromJson(parameters),true);
+        if (mdnsEnableParameter.fromJson(parameters)) {
+            addClaim(CLAIM_SERVICE, MDNS_NAME.fromJson(parameters), true);
+        }
         boolean allowExternal=EXTERNAL_ACCESS.fromJson(parameters);
         if (serversocket != null){
             try{
@@ -219,7 +237,9 @@ public class SocketWriter extends ChannelWorker {
             InetAddress local= AvnUtil.getLocalHost();
             serversocket.bind(new InetSocketAddress(local.getHostAddress(),port));
         }
-        registerAvahi(port,MDNS_NAME.fromJson(parameters));
+        if (mdnsEnableParameter.fromJson(parameters)) {
+            registerAvahi(port, mdnsNameParameter.fromJson(parameters));
+        }
         setStatus(WorkerStatus.Status.NMEA,"listening on "+port+", external access "+allowExternal);
         while (! shouldStop(startSequence)){
             Socket client=null;
