@@ -201,6 +201,8 @@ class AVNAvahi(AVNWorker):
         description.group.Commit()
       except Exception as e:
         AVNLog.warn("unable to register avahi service %s, error: %s",description.currentName,str(e))
+        if description.retry(retries):
+          retry=True
         continue
       waitTime=timeout*10
       state=description.group.GetState()

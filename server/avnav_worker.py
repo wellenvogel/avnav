@@ -315,8 +315,9 @@ class AVNWorker(object):
   DEFAULT_CONFIG_PARAM = [
     WorkerParameter('name',default='',type=WorkerParameter.T_STRING)
   ]
+  ENABLE_PARAM_DESCRIPTION=WorkerParameter('enabled',default=True,type=WorkerParameter.T_BOOLEAN)
   ENABLE_CONFIG_PARAM=[
-    WorkerParameter('enabled',default=True,type=WorkerParameter.T_BOOLEAN)
+    ENABLE_PARAM_DESCRIPTION
   ]
   handlerListLock=threading.Lock()
   """a base class for all workers
@@ -593,6 +594,11 @@ class AVNWorker(object):
           else:
             AVNLog.info("handler enabled, starting")
             self.startThread()
+    if self.ENABLE_PARAM_DESCRIPTION.fromDict(self.param,True) and self.currentThread is None:
+      #was not running - start now
+      AVNLog.info("handler was stopped, starting now")
+      self.startThread()
+
     return rt
 
   def deleteChild(self,child):
@@ -881,7 +887,7 @@ class AVNWorker(object):
     @param type:
     @return:
     '''
-    return []
+    return self.usedResources
 
   @classmethod
   def findUsersOf(cls,type,ownId=None,value=None,toPlain=False,onlyRunning=True):

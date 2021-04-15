@@ -210,10 +210,6 @@ class AVNSocketWriter(AVNWorker,SocketReader):
     if (self.getIntParam('minTime')):
       time.sleep(float(self.getIntParam('minTime'))/1000)
 
-  def getUsedResources(self, type=None):
-    if type != UsedResource.T_TCP and type is not None:
-      return []
-    return [UsedResource(UsedResource.T_TCP,self.id,self.getIntParam('port'))]
 
   def _closeSockets(self):
     AVNLog.info("closing all sockets")
@@ -248,7 +244,8 @@ class AVNSocketWriter(AVNWorker,SocketReader):
   def checkConfig(self, param):
     if 'port' in param:
       self.checkUsedResource(UsedResource.T_TCP,param.get('port'))
-    if self.AVAHI_ENABLED.name in param and self.AVAHI_ENABLED.fromDict(param,True):
+    if ( self.AVAHI_ENABLED.name in param and self.AVAHI_ENABLED.fromDict(param,True)) or \
+        ( self.AVAHI_ENABLED.name not in param and self.AVAHI_ENABLED.fromDict(self.param,True)):
       avahiName=None
       if self.AVAHI_NAME.name in param:
         avahiName=self.AVAHI_NAME.fromDict(param)
