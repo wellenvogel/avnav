@@ -15,6 +15,7 @@ import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.MainActivity;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.util.AvnUtil;
 
 //potentially the Javascript interface code is called from the Xwalk app package
 //so we have to be careful to always access the correct resource manager when accessing resources!
@@ -129,7 +130,7 @@ public class JavaScriptApi {
     @JavascriptInterface
     public boolean requestFile(String type,long id,boolean readFile){
         if (detached) return false;
-        RequestHandler.KeyValue<Integer> title= RequestHandler.typeHeadings.get(type);
+        AvnUtil.KeyValue<Integer> title= RequestHandler.typeHeadings.get(type);
         if (title == null){
             AvnLog.e("unknown type for request file "+type);
             return false;

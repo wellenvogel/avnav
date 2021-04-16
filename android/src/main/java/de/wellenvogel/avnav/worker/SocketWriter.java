@@ -1,7 +1,5 @@
 package de.wellenvogel.avnav.worker;
 
-import android.content.Context;
-import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
 
 import org.json.JSONException;
@@ -15,11 +13,9 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.NmeaQueue;
@@ -78,7 +74,7 @@ public class SocketWriter extends ChannelWorker {
     private SocketWriter(String name, GpsService ctx, NmeaQueue queue) throws JSONException {
         super(name,ctx,queue);
         EditableParameter.StringParameter filter=FILTER_PARAM.clone("");
-        filter.setConditions(new RequestHandler.KeyValue<Boolean>(READ_DATA_PARAMETER.name,true));
+        filter.setConditions(new AvnUtil.KeyValue<Boolean>(READ_DATA_PARAMETER.name,true));
         mdnsNameParameter=MDNS_NAME.clone("avnav-android");
         mdnsEnableParameter =MDNS_ENABLED.clone(false);
         parameterDescriptions.addParams(

@@ -1,6 +1,5 @@
 package de.wellenvogel.avnav.util;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.location.Location;
@@ -22,8 +21,12 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
 import java.util.TimeZone;
 
 import de.wellenvogel.avnav.main.Constants;
@@ -263,4 +266,40 @@ public class AvnUtil {
         return rt;
     }
     public static final double R=6371000; //app. earth radius
+
+    public static class KeyValueList extends ArrayList<KeyValue> {
+        public KeyValueList(KeyValue... parameter){
+            addAll(Arrays.asList(parameter));
+        }
+        public JSONObject toJson() throws JSONException {
+            JSONObject rt=new JSONObject();
+            for (KeyValue kv:this){
+                rt.put(kv.key,kv.value);
+            }
+            return rt;
+        }
+    }
+    public static class KeyValueMap<T> extends HashMap<String,T> {
+        public KeyValueMap(KeyValue<T>...parameter){
+            for (KeyValue<T> kv:parameter){
+                put(kv.key,kv.value);
+            }
+        }
+        JSONObject toJson() throws JSONException {
+            JSONObject rt=new JSONObject();
+            for (String k:this.keySet()){
+                rt.put(k,get(k));
+            }
+            return rt;
+        }
+    }
+
+    public static class KeyValue<VT>{
+        public String key;
+        public VT value;
+        public KeyValue(String key, VT v){
+            this.key=key;
+            this.value=v;
+        }
+    }
 }

@@ -52,7 +52,6 @@ import de.wellenvogel.avnav.main.IMediaUpdater;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.mdns.MdnsWorker;
 import de.wellenvogel.avnav.mdns.Resolver;
-import de.wellenvogel.avnav.mdns.Target;
 import de.wellenvogel.avnav.settings.AudioEditTextPreference;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
@@ -189,21 +188,21 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         if ("getAddables".equals(command)){
             List<String> names=WorkerFactory.getInstance().getKnownTypes(true,this);
             JSONArray data=new JSONArray(names);
-            return RequestHandler.getReturn(new RequestHandler.KeyValue<JSONArray>("data",data));
+            return RequestHandler.getReturn(new AvnUtil.KeyValue<JSONArray>("data",data));
         }
         if ("getAddAttributes".equals(command)){
             String typeName=AvnUtil.getMandatoryParameter(uri,"handlerName");
             try{
                 ChannelWorker w=WorkerFactory.getInstance().createWorker(typeName,this,null);
                 return RequestHandler.getReturn(
-                        new RequestHandler.KeyValue<JSONArray>("data",w.getParameterDescriptions(this))
+                        new AvnUtil.KeyValue<JSONArray>("data",w.getParameterDescriptions(this))
                 );
             }catch (WorkerFactory.WorkerNotFound e){
                 return RequestHandler.getErrorReturn("no handler of type "+typeName+" found");
             }
         }
         if ("canRestart".equals(command)){
-            return RequestHandler.getReturn(new RequestHandler.KeyValue<Boolean>("canRestart",false));
+            return RequestHandler.getReturn(new AvnUtil.KeyValue<Boolean>("canRestart",false));
         }
         int id=Integer.parseInt(AvnUtil.getMandatoryParameter(uri,"handlerId"));
         IWorker worker=findWorkerById(id);

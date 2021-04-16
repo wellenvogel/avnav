@@ -8,9 +8,9 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
-import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.util.AvnUtil;
 
 public class EditableParameter {
@@ -25,24 +25,12 @@ public class EditableParameter {
         public void checkJson(JSONObject o) throws JSONException;
     }
     public static abstract class EditableParameterBase<T> implements AvnUtil.IJsonObect,EditableParameterInterface {
-        public static class Condition extends ArrayList<RequestHandler.KeyValue>{
-            Condition(RequestHandler.KeyValue...parameter){
-                addAll(Arrays.asList(parameter));
-            }
-            JSONObject toJson() throws JSONException {
-                JSONObject rt=new JSONObject();
-                for (RequestHandler.KeyValue kv:this){
-                    rt.put(kv.key,kv.value);
-                }
-                return rt;
-            }
-        }
-        public static class ConditionList extends ArrayList<Condition>{
-            ConditionList(Condition ...parameters){
+        public static class ConditionList extends ArrayList<AvnUtil.KeyValueList>{
+            ConditionList(AvnUtil.KeyValueList...parameters){
                 addAll(Arrays.asList(parameters));
             }
-            ConditionList(RequestHandler.KeyValue...parameters){
-                Condition c=new Condition(parameters);
+            ConditionList(AvnUtil.KeyValue...parameters){
+                AvnUtil.KeyValueList c=new AvnUtil.KeyValueList(parameters);
                 add(c);
             }
         }
@@ -76,10 +64,10 @@ public class EditableParameter {
             mandatory=other.mandatory;
             conditions=other.conditions;
         }
-        public void setConditions(RequestHandler.KeyValue...paramters){
+        public void setConditions(AvnUtil.KeyValue...paramters){
             conditions=new ConditionList(paramters);
         }
-        public void setConditions(Condition ...parameters){
+        public void setConditions(AvnUtil.KeyValueList...parameters){
             conditions=new ConditionList(parameters);
         }
         public void write(JSONObject target,T value) throws JSONException {
@@ -107,7 +95,7 @@ public class EditableParameter {
             if (descriptionId >= 0) rt.put("descriptionId",descriptionId);
             if (conditions != null && conditions.size() > 0){
                 JSONArray ca=new JSONArray();
-                for (Condition c:conditions){
+                for (AvnUtil.KeyValueList c:conditions){
                     ca.put(c.toJson());
                 }
                 rt.put("condition",ca);
@@ -230,6 +218,11 @@ public class EditableParameter {
             super(name, descriptionId, defaultValue);
             list=new ArrayList<String>();
             list.addAll(Arrays.asList(values));
+        }
+        StringListParameter(String name, int descriptionId, String defaultValue, Collection<String> values) {
+            super(name, descriptionId, defaultValue);
+            list=new ArrayList<String>();
+            list.addAll(values);
         }
         StringListParameter(String name,List<String> values) {
             super(name);

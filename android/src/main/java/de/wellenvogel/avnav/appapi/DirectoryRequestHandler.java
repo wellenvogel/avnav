@@ -109,7 +109,7 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
     public JSONObject handleApiRequest(Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
         String command=AvnUtil.getMandatoryParameter(uri,"command");
         if (command.equals("list")){
-            return RequestHandler.getReturn(new RequestHandler.KeyValue("items",handleList(uri, serverInfo)));
+            return RequestHandler.getReturn(new AvnUtil.KeyValue("items",handleList(uri, serverInfo)));
         }
         if (command.equals("delete")){
             String name=AvnUtil.getMandatoryParameter(uri,"name");

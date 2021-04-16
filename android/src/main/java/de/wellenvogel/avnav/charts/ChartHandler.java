@@ -505,7 +505,7 @@ public class ChartHandler implements INavRequestHandler {
                 overlay.put("name",f.getName());
                 rt.put(overlay);
             }
-            return RequestHandler.getReturn(new RequestHandler.KeyValue("data",rt));
+            return RequestHandler.getReturn(new AvnUtil.KeyValue("data",rt));
 
         }
         return RequestHandler.getErrorReturn("unknown request");
@@ -608,7 +608,7 @@ public class ChartHandler implements INavRequestHandler {
                     return new ExtendedWebResourceResponse(len, mimeType, "", rt);
                 }
                 else if (kp.parts[1].equals("sequence")){
-                    JSONObject sq= RequestHandler.getReturn(new RequestHandler.KeyValue("sequence",0));
+                    JSONObject sq= RequestHandler.getReturn(new AvnUtil.KeyValue("sequence",0));
                     byte o[]=sq.toString().getBytes("UTF-8");
                     return new ExtendedWebResourceResponse(o.length,"application/json","UTF-8",new ByteArrayInputStream(o));
                 }
@@ -626,7 +626,7 @@ public class ChartHandler implements INavRequestHandler {
                     Log.e(Constants.LOGPRFX, "unable to read chart file " + fname + ": " + e.getLocalizedMessage());
                 }
             } else if (kp.parts[0].equals("sequence")){
-                JSONObject sq= RequestHandler.getReturn(new RequestHandler.KeyValue("sequence",chart.getSequence()));
+                JSONObject sq= RequestHandler.getReturn(new AvnUtil.KeyValue("sequence",chart.getSequence()));
                 byte o[]=sq.toString().getBytes("UTF-8");
                 return new ExtendedWebResourceResponse(o.length,"application/json","UTF-8",new ByteArrayInputStream(o));
             }

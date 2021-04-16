@@ -9,15 +9,12 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
-import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
-import de.wellenvogel.avnav.util.NmeaQueue;
+import de.wellenvogel.avnav.util.AvnUtil;
 
 public abstract class Worker implements IWorker {
     static final EditableParameter.StringParameter FILTER_PARAM=
@@ -62,7 +59,7 @@ public abstract class Worker implements IWorker {
     public static EditableParameter.StringParameter MDNS_NAME=
             new EditableParameter.StringParameter("mdnsService", R.string.labelSettingsMdnsName,"",
                     new EditableParameter.EditableParameterBase.ConditionList(
-                            new RequestHandler.KeyValue<Boolean>(MDNS_ENABLED.name,true)
+                            new AvnUtil.KeyValue<Boolean>(MDNS_ENABLED.name,true)
                     ));
 
     static final String CLAIM_BLUETOOTH ="bluetooth device";

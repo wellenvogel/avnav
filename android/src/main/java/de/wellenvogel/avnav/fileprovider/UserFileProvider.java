@@ -87,7 +87,7 @@ public class UserFileProvider extends ContentProvider {
         List<String> segments=uri.getPathSegments();
         if (segments.size() != 2) return null;
         String safeName=DirectoryRequestHandler.safeName(segments.get(1),false);
-        RequestHandler.KeyValue<File> base=RequestHandler.typeDirs.get(segments.get(0));
+        AvnUtil.KeyValue<File> base=RequestHandler.typeDirs.get(segments.get(0));
         if (base == null || base.value == null) return null;
         File rt= new File(AvnUtil.getWorkDir(null,getContext()),new File(base.value,safeName).getPath());
         if (! rt.exists() || ! rt.isFile() || ! rt.canRead()) return null;

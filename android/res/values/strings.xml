@@ -102,5 +102,6 @@
     <string name="labelSettingsSelectService">Select the service you would like to connect to</string>
     <string name="labelSettingsMdnsName">Name for Mdns (Bonjour/Avahi) announcement</string>
     <string name="labelSettingsMdnsEnabled">Enable announcement via MDNS (Bonjour/Avahi)</string>
+    <string name="labelSettingsFlowControl">flow control for the serial connection</string>
 
 </resources>

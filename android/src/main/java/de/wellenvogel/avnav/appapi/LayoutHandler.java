@@ -1,6 +1,5 @@
 package de.wellenvogel.avnav.appapi;
 
-import android.app.Activity;
 import android.content.Context;
 import android.net.Uri;
 
@@ -95,7 +94,7 @@ public class LayoutHandler implements INavRequestHandler{
     public JSONObject handleApiRequest(Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
         String command= AvnUtil.getMandatoryParameter(uri,"command");
         if (command.equals("list")){
-            RequestHandler.getReturn(new RequestHandler.KeyValue("data",handleList(uri, serverInfo)));
+            RequestHandler.getReturn(new AvnUtil.KeyValue("data",handleList(uri, serverInfo)));
         }
         return null;
     }
