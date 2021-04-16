@@ -179,7 +179,7 @@ class WorkerParameter(object):
       return str(value)
     return value
 
-  def fromDict(self,valueDict,check=False):
+  def fromDict(self,valueDict,check=True):
     rt=valueDict.get(self.name)
     if rt is None:
       rt=self.default

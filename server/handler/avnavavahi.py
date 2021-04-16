@@ -87,6 +87,8 @@ class ServiceDescription:
       return False
     return True
   def update(self,other):
+    if other.port == self.port and other.type == self.type and other.name == self.name:
+      return
     self.oldKey=self.getKey()
     self.name=other.name
     self.type=other.type

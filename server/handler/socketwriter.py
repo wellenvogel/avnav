@@ -255,6 +255,17 @@ class AVNSocketWriter(AVNWorker,SocketReader):
         raise ValueError("%s cannot be empty with %s enabled"%(self.AVAHI_NAME.name,self.AVAHI_ENABLED.name))
       self.checkUsedResource(UsedResource.T_SERVICE,self.getResourceFromName(avahiName))
 
+  def registerAvahi(self):
+    avahi=self.findHandlerByName(AVNAvahi.getConfigName())
+    if avahi is None:
+      return
+    if self.AVAHI_ENABLED.fromDict(self.param):
+      serviceName=self.AVAHI_NAME.fromDict(self.param)
+      if serviceName is not None and avahi is not None:
+        try:
+          avahi.registerService(self.getId(),self.NMEA_SERVICE,serviceName,self.getIntParam('port'))
+        except:
+          pass
 
   #this is the main thread - listener
   def run(self):
@@ -285,11 +296,8 @@ class AVNSocketWriter(AVNWorker,SocketReader):
           self.setInfo('main','unable to create listener at port %s:%s'
                        %(str(self.getIntParam('port')),str(e)),WorkerStatus.ERROR)
           raise
-        if self.AVAHI_ENABLED.fromDict(self.param):
-          serviceName=self.AVAHI_NAME.fromDict(self.param)
-          if serviceName is not None and avahi is not None:
-            avahi.registerService(self.getId(),self.NMEA_SERVICE,serviceName,self.getIntParam('port'))
         while not self.shouldStop() and self.listener.fileno() >= 0:
+          self.registerAvahi() #we redo this all the time as potentially the avahi handler has stopped/restarted
           try:
             outsock,addr=self.listener.accept()
           except socket.timeout:
