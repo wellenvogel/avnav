@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.worker.GpsService;
 import de.wellenvogel.avnav.worker.Worker;
 import de.wellenvogel.avnav.worker.WorkerStatus;
 
@@ -37,8 +38,8 @@ public class MdnsWorker extends Worker implements Target.IResolver {
     private final ArrayList<Resolver.QRequest<Target.HostTarget>> storedRequests=new ArrayList<>();
     private final HashSet<Target.ResolveTarget> resolvedServices=new HashSet<>();
 
-    public MdnsWorker(String typeName) {
-        super(typeName);
+    public MdnsWorker(String typeName, GpsService ctx) {
+        super(typeName,ctx);
         parameterDescriptions.addParams(ENABLED_PARAMETER);
         status.canEdit=true;
     }

@@ -14,6 +14,7 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.worker.GpsService;
 
 public class UserDirectoryRequestHandler extends DirectoryRequestHandler {
     private static final byte[] PREFIX="try{(\nfunction(){\n".getBytes(StandardCharsets.UTF_8);
@@ -65,8 +66,8 @@ public class UserDirectoryRequestHandler extends DirectoryRequestHandler {
             mode=3;
         }
     };
-    public UserDirectoryRequestHandler(RequestHandler handler, IDeleteByUrl deleter) throws Exception {
-        super(RequestHandler.TYPE_USER, handler.getWorkDirFromType(RequestHandler.TYPE_USER), "user/viewer", deleter);
+    public UserDirectoryRequestHandler(RequestHandler handler, GpsService ctx,IDeleteByUrl deleter) throws Exception {
+        super(RequestHandler.TYPE_USER, ctx,handler.getWorkDirFromType(RequestHandler.TYPE_USER), "user/viewer", deleter);
         AssetManager assets=handler.service.getAssets();
         for (String filename : templateFiles){
             File file=new File(workDir,filename);

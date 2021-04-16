@@ -15,11 +15,9 @@ import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.NmeaQueue;
 
 public abstract class ChannelWorker extends Worker{
-    protected GpsService gpsService;
     protected NmeaQueue queue;
     ChannelWorker(String name, GpsService ctx, NmeaQueue queue){
-        super(name);
-        this.gpsService =ctx;
+        super(name, ctx);
         this.queue=queue;
     }
 

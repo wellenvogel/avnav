@@ -83,7 +83,6 @@ public class WebServer extends Worker {
     protected GpsService gpsService;
     private boolean running;
     private boolean listenAny;
-    private NsdManager.RegistrationListener registrationListener;
 
     public RequestHandler.ServerInfo getServerInfo(){
         RequestHandler.ServerInfo info=null;
@@ -104,7 +103,7 @@ public class WebServer extends Worker {
             new EditableParameter.IntegerParameter("port",R.string.labelSettingsServerPort,8080);
 
     public WebServer(GpsService controller) {
-        super("WebServer");
+        super("WebServer",controller);
         mdnsEnabledParameter=MDNS_ENABLED.clone(true);
         mdnsNameParameter=MDNS_NAME.clone("avnav-android");
         parameterDescriptions.addParams(
@@ -139,7 +138,7 @@ public class WebServer extends Worker {
         listenAny=ANY_ADDRESS.fromJson(parameters);
         addClaim(CLAIM_TCPPORT,port.toString(),true);
         addClaim(CLAIM_SERVICE,MDNS_NAME.fromJson(parameters),true);
-        registerAvahi(port,MDNS_NAME.fromJson(parameters));
+        gpsService.registerService(getId(),"_http._tcp",MDNS_NAME.fromJson(parameters),port);
         setStatus(WorkerStatus.Status.STARTED,"starting with port "+port+", external access "+listenAny);
         running=true;
         listener=new Listener(listenAny,port);
@@ -530,45 +529,8 @@ public class WebServer extends Worker {
         AvnLog.d(NAME,"stop");
         listener.close();
         listener=null;
-        unregisterAvahi();
-    }
-    private void registerAvahi(int port,String name) throws UnknownHostException {
-        if (name == null || name.isEmpty()) return;
-        NsdServiceInfo info=new NsdServiceInfo();
-        info.setPort(port);
-        info.setServiceType("_http._tcp");
-        info.setServiceName(name);
-        NsdManager manager= (NsdManager) gpsService.getSystemService(Context.NSD_SERVICE);
-        registrationListener=new NsdManager.RegistrationListener() {
-            @Override
-            public void onRegistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
-                AvnLog.e("registering avahi service failed: "+errorCode);
-            }
-
-            @Override
-            public void onUnregistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
-
-            }
-
-            @Override
-            public void onServiceRegistered(NsdServiceInfo serviceInfo) {
-                AvnLog.i("registered avahi "+serviceInfo.getServiceName());
-            }
-
-            @Override
-            public void onServiceUnregistered(NsdServiceInfo serviceInfo) {
-
-            }
-        };
-        manager.registerService(info, NsdManager.PROTOCOL_DNS_SD,registrationListener);
     }
 
-    private void unregisterAvahi(){
-        if (registrationListener == null) return;
-        NsdManager manager=(NsdManager)gpsService.getSystemService(Context.NSD_SERVICE);
-        manager.unregisterService(registrationListener);
-        registrationListener=null;
-    }
 
 }
 

@@ -74,55 +74,12 @@ public class SocketWriter extends ChannelWorker {
             return true;
         }
     }
-    private NsdManager nsdManager;
-    private NsdManager.RegistrationListener registrationListener;
-    private void registerAvahi(int port,String name) throws UnknownHostException {
-        if (name == null || name.isEmpty()) return;
-        NsdServiceInfo info=new NsdServiceInfo();
-        info.setPort(port);
-        info.setServiceType(TcpServiceReader.NMEA_SERVICE_TYPE);
-        info.setServiceName(name);
-        NsdManager manager= (NsdManager) gpsService.getSystemService(Context.NSD_SERVICE);
-        if (manager == null){
-            AvnLog.e("unable to get nsd manager");
-            return;
-        }
-        registrationListener=new NsdManager.RegistrationListener() {
-            @Override
-            public void onRegistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
-                AvnLog.e("registering avahi service failed: "+errorCode);
-            }
-
-            @Override
-            public void onUnregistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
-
-            }
-
-            @Override
-            public void onServiceRegistered(NsdServiceInfo serviceInfo) {
-                AvnLog.i("registered avahi "+serviceInfo.getServiceName());
-            }
-
-            @Override
-            public void onServiceUnregistered(NsdServiceInfo serviceInfo) {
-
-            }
-        };
-        manager.registerService(info, NsdManager.PROTOCOL_DNS_SD,registrationListener);
-    }
-
-    private void unregisterAvahi(){
-        if (registrationListener == null) return;
-        NsdManager manager=(NsdManager)gpsService.getSystemService(Context.NSD_SERVICE);
-        if (manager != null) manager.unregisterService(registrationListener);
-        registrationListener=null;
-    }
 
     private SocketWriter(String name, GpsService ctx, NmeaQueue queue) throws JSONException {
         super(name,ctx,queue);
         EditableParameter.StringParameter filter=FILTER_PARAM.clone("");
         filter.setConditions(new RequestHandler.KeyValue<Boolean>(READ_DATA_PARAMETER.name,true));
-        mdnsNameParameter=MDNS_NAME.clone(getTypeName()+"-android");
+        mdnsNameParameter=MDNS_NAME.clone("avnav-android");
         mdnsEnableParameter =MDNS_ENABLED.clone(false);
         parameterDescriptions.addParams(
                 PORT_PARAMETER,
@@ -195,7 +152,8 @@ public class SocketWriter extends ChannelWorker {
     protected void checkParameters(JSONObject newParam) throws JSONException, IOException {
         Integer port=PORT_PARAMETER.fromJson(newParam);
         checkClaim(CLAIM_TCPPORT,port.toString(),true);
-        if (newParam.has(mdnsEnableParameter.name) && mdnsEnableParameter.fromJson(newParam)) {
+        if ((newParam.has(mdnsEnableParameter.name) && mdnsEnableParameter.fromJson(newParam))
+        || (!newParam.has(mdnsEnableParameter.name) && mdnsEnableParameter.fromJson(parameters))){
             String mdnsName=null;
             if (newParam.has(mdnsNameParameter.name)) mdnsName=mdnsNameParameter.fromJson(newParam);
             else mdnsName=mdnsNameParameter.fromJson(parameters);
@@ -211,7 +169,6 @@ public class SocketWriter extends ChannelWorker {
         try{
             serversocket.close();
             serversocket=null;
-            unregisterAvahi();
         }catch (Throwable t){}
         stopClients();
     }
@@ -238,7 +195,8 @@ public class SocketWriter extends ChannelWorker {
             serversocket.bind(new InetSocketAddress(local.getHostAddress(),port));
         }
         if (mdnsEnableParameter.fromJson(parameters)) {
-            registerAvahi(port, mdnsNameParameter.fromJson(parameters));
+            gpsService.registerService(getId(),TcpServiceReader.NMEA_SERVICE_TYPE,
+                    mdnsNameParameter.fromJson(parameters),port);
         }
         setStatus(WorkerStatus.Status.NMEA,"listening on "+port+", external access "+allowExternal);
         while (! shouldStop(startSequence)){
@@ -302,6 +260,13 @@ public class SocketWriter extends ChannelWorker {
                 clients.remove(rm);
                 status.unsetChildStatus(rm);
             }
+        }
+        NsdServiceInfo service=gpsService.getRegisteredService(getId());
+        if (service == null){
+            status.unsetChildStatus("mdns");
+        }
+        else{
+            status.setChildStatus("mdns", WorkerStatus.Status.NMEA,service.getServiceName());
         }
     }
 }

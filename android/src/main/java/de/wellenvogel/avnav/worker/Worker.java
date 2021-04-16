@@ -71,6 +71,7 @@ public abstract class Worker implements IWorker {
     protected static final String CLAIM_UDPPORT ="udp port";
     private static final String CLAIM_NAME = "name" ;
     protected static final String CLAIM_SERVICE="service";
+    protected GpsService gpsService;
 
     private static class ResourceClaim{
         String kind;
@@ -164,8 +165,9 @@ public abstract class Worker implements IWorker {
     private   int startSequence;
     protected final Object waiter=new Object();
 
-    protected Worker(String typeName){
+    protected Worker(String typeName, GpsService ctx){
         status=new WorkerStatus(typeName);
+        this.gpsService =ctx;
     }
     protected String getSourceName(){
         String n=null;
@@ -275,11 +277,12 @@ public abstract class Worker implements IWorker {
                             }
                             Worker.this.run(startSequence);
                             setStatus(WorkerStatus.Status.INACTIVE, "stopped");
-                            status.removeChildren();
-                            removeClaims();
                         } catch (Throwable t) {
                             setStatus(WorkerStatus.Status.ERROR, "error: " + t.getMessage());
                         }
+                        status.removeChildren();
+                        removeClaims();
+                        gpsService.unregisterService(Worker.this.getId());
                         running = false;
                     }
                 });

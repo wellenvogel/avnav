@@ -202,7 +202,7 @@ public class RequestHandler {
             }
         });
         try{
-            final DirectoryRequestHandler userHandler=new UserDirectoryRequestHandler(this,
+            final DirectoryRequestHandler userHandler=new UserDirectoryRequestHandler(this,service,
                     addonHandler);
             handlerMap.put(TYPE_USER, new LazyHandlerAccess() {
                 @Override
@@ -214,7 +214,7 @@ public class RequestHandler {
             AvnLog.e("unable to create user handler",e);
         }
         try {
-            final DirectoryRequestHandler imageHandler=new DirectoryRequestHandler(TYPE_IMAGE,
+            final DirectoryRequestHandler imageHandler=new DirectoryRequestHandler(TYPE_IMAGE,service,
                     getWorkDirFromType(TYPE_IMAGE), "user/images",null);
             handlerMap.put(TYPE_IMAGE, new LazyHandlerAccess() {
                 @Override
@@ -226,7 +226,7 @@ public class RequestHandler {
             AvnLog.e("unable to create images handler",e);
         }
         try {
-            final DirectoryRequestHandler overlayHandler=new DirectoryRequestHandler(TYPE_OVERLAY,
+            final DirectoryRequestHandler overlayHandler=new DirectoryRequestHandler(TYPE_OVERLAY,service,
                     getWorkDirFromType(TYPE_OVERLAY), "user/overlays",null);
             handlerMap.put(TYPE_OVERLAY, new LazyHandlerAccess() {
                 @Override

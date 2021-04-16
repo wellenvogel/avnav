@@ -153,10 +153,10 @@ public class TrackWriter extends DirectoryRequestHandler {
         }
     }
 
-    TrackWriter(File trackdir,IMediaUpdater updater) throws IOException {
-        super(RequestHandler.TYPE_TRACK,trackdir,"track",null);
+    TrackWriter(File trackdir,GpsService ctx) throws IOException {
+        super(RequestHandler.TYPE_TRACK,ctx,trackdir,"track",null);
         this.trackdir=trackdir;
-        this.updater=updater;
+        this.updater=ctx.getMediaUpdater();
         parameterDescriptions.addParams(ENABLED_PARAMETER,PARAM_INTERVAL,PARAM_DISTANCE,PARAM_MINTIME,PARAM_LENGTH);
         status.canEdit=true;
     }

@@ -423,9 +423,8 @@ public class Decoder extends Worker {
         }//satellite view
     }
 
-    Decoder(String name, Context ctx, NmeaQueue queue){
-        super(name);
-        context=ctx;
+    Decoder(String name, GpsService ctx, NmeaQueue queue){
+        super(name,ctx);
         this.queue=queue;
         addParameters();
         status.canEdit=true;
