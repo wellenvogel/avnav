@@ -18,6 +18,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -59,6 +60,7 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
 
     static private class UsbSerialConnection extends AbstractConnection {
         UsbDevice dev;
+        int MAXBUFFER=20000;
         UsbDeviceConnection connection;
         String baud;
         UsbSerialDevice serialPort;
@@ -81,11 +83,19 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
         final UsbSerialInterface.UsbReadCallback callback=new UsbSerialInterface.UsbReadCallback() {
             @Override
             public void onReceivedData(byte[] bytes) {
+                int dropCount=0;
                 synchronized (bufferLock) {
                     for (byte b : bytes) {
                         buffer.add(b);
+                        if (buffer.size() > MAXBUFFER){
+                            buffer.remove(0);
+                            dropCount++;
+                        }
                     }
                     bufferLock.notifyAll();
+                }
+                if (dropCount > 0){
+                    AvnLog.dfs("UsbSerial: buffer overflow, dropped %d bytes",dropCount);
                 }
             }
         };
