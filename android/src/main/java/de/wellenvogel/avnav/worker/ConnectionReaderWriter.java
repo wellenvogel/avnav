@@ -57,6 +57,9 @@ public class ConnectionReaderWriter{
                 while (!stopped) {
                     NmeaQueue.Entry e = queue.fetch(sequence, 1000);
                     if (e != null) {
+                        if (sequence != -1 && e.sequence != (sequence+1)){
+                            AvnLog.d(name,"queue data loss");
+                        }
                         sequence = e.sequence;
                         if (!AvnUtil.matchesNmeaFilter(e.data, properties.writeFilter)) {
                             AvnLog.dfs("ignore %s due to filter",e.data);
@@ -113,9 +116,13 @@ public class ConnectionReaderWriter{
                 if (line == null) {
                     break;
                 }
+                if (line.isEmpty()) continue;
                 dataAvailable=true;
                 if (properties.readData) {
                     line = AvnUtil.removeNonNmeaChars(line);
+                    if (! line.startsWith("!") && ! line.startsWith("$") ){
+                        AvnLog.dfs("broken line \"%s\"",line);
+                    }
                     if (!AvnUtil.matchesNmeaFilter(line, properties.readFilter)) {
                         AvnLog.dfs("ignore %s due to filter",line);
                         continue;

@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import de.wellenvogel.avnav.main.BuildConfig;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.NmeaQueue;
@@ -102,6 +103,7 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
                     serialPort.setParity(UsbSerialInterface.PARITY_NONE);
                     serialPort.setFlowControl(UsbSerialInterface.FLOW_CONTROL_OFF);
                     serialPort.read(callback);
+                    serialPort.debug(BuildConfig.DEBUG);
                 } else {
                     throw new IOException(PREFIX + ": unable to open serial device " + dev.getDeviceName());
                 }

@@ -59,6 +59,7 @@ public abstract class SingleConnectionHandler extends ChannelWorker {
                         connection.close();
                     } catch (IOException ioException) {
                     }
+                    if (! shouldStop(startSequence))sleep(2000);
                     stopHandler();
                     setStatus(WorkerStatus.Status.ERROR,"failing with connect error " + e);
                     break;

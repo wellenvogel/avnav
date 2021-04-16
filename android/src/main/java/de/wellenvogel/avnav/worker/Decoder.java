@@ -214,8 +214,8 @@ public class Decoder extends Worker {
                     continue;
                 }
                 sequence = entry.sequence;
+                String line = entry.data;
                 try {
-                    String line = entry.data;
                     if (line.startsWith("$")) {
                         //NMEA
                         if (SentenceValidator.isValid(line)) {
@@ -378,8 +378,7 @@ public class Decoder extends Worker {
                                     AvnLog.d(LOGPRFX, getTypeName() + ": ignoring sentence " + line + " - no position or time");
                                 }
                             } catch (Exception i) {
-                                Log.e(LOGPRFX, getTypeName() + ": exception in NMEA parser " + i.getLocalizedMessage());
-                                i.printStackTrace();
+                                AvnLog.e(getTypeName() + ": exception in NMEA parser "+line ,i);
                             }
                         } else {
                             AvnLog.d(LOGPRFX, getTypeName() + ": ignore invalid nmea");
@@ -483,17 +482,15 @@ public class Decoder extends Worker {
      */
     JSONObject getGpsData() throws JSONException{
         Location curLoc=getLocation();
-        if (curLoc == null) {
-            AvnLog.d(LOGPRFX, "getGpsData returns empty data");
-            return null;
-        }
         JSONObject rt=new JSONObject();
         rt.put(G_MODE,1);
-        rt.put(G_LAT,curLoc.getLatitude());
-        rt.put(G_LON,curLoc.getLongitude());
-        rt.put(G_COURSE,curLoc.getBearing());
-        rt.put(G_SPEED,curLoc.getSpeed());
-        rt.put(G_TIME, dateFormat.format(new Date(curLoc.getTime())));
+        if (curLoc != null) {
+            rt.put(G_LAT, curLoc.getLatitude());
+            rt.put(G_LON, curLoc.getLongitude());
+            rt.put(G_COURSE, curLoc.getBearing());
+            rt.put(G_SPEED, curLoc.getSpeed());
+            rt.put(G_TIME, dateFormat.format(new Date(curLoc.getTime())));
+        }
         mergeAuxiliaryData(rt);
         AvnLog.d(LOGPRFX,"getGpsData: "+rt.toString());
         return rt;
