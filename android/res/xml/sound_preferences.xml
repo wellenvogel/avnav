@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:title="@string/labelSettingsSound">
+    <de.wellenvogel.avnav.settings.AudioEditTextPreference
+        android:key="alarm.anchor"
+        android:defaultValue="anchorAlarm.mp3"
+        android:inputType="text"
+        android:title="@string/labelSettingsAnchorAlarm"></de.wellenvogel.avnav.settings.AudioEditTextPreference>
+    <de.wellenvogel.avnav.settings.AudioEditTextPreference
+        android:key="alarm.gps"
+        android:defaultValue="anchorAlarm.mp3"
+        android:inputType="text"
+        android:title="@string/labelSettingsGpsAlarm"/>
+    <de.wellenvogel.avnav.settings.AudioEditTextPreference
+        android:key="alarm.mob"
+        android:defaultValue="anchorAlarm.mp3"
+        android:inputType="text"
+        android:title="@string/labelSettingsMobAlarm"/>
+    <de.wellenvogel.avnav.settings.AudioEditTextPreference
+        android:key="alarm.waypoint"
+        android:defaultValue="waypointAlarm.mp3"
+        android:inputType="text"
+        android:title="@string/labelSettingsWpAlarm"/>
+    <Preference
+        android:title="@string/labelSettingsDefaults"
+        android:key="prefs.default"></Preference>
+</PreferenceScreen>

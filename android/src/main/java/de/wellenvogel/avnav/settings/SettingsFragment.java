@@ -1,6 +1,7 @@
 package de.wellenvogel.avnav.settings;
 
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.content.res.XmlResourceParser;
@@ -13,7 +14,11 @@ import android.preference.PreferenceGroup;
 import org.xmlpull.v1.XmlPullParser;
 
 import de.wellenvogel.avnav.main.Constants;
+import de.wellenvogel.avnav.main.R;
+import de.wellenvogel.avnav.util.AvnDialogHandler;
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.util.DialogBuilder;
+import de.wellenvogel.avnav.worker.GpsService;
 
 /**
  * Created by andreas on 24.10.15.

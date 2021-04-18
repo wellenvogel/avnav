@@ -30,7 +30,6 @@
         >
 
         <TextView
-            android:id="@+id/notificationTitle"
             style="@style/notifyTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

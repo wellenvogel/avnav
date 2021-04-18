@@ -5,6 +5,7 @@
 .classpath
 .settings/**
 .vscode/
+.gitgnore
 local.properties
 data_linux/
 data_windows/
@@ -19,6 +20,7 @@ viewer/node_modules
 *.swp
 *.bck
 *.log
+docs/viewerimages
 docs/*docmapdata.json
 avnav_server.xml-????*
 hardware/**/*-cache.lib

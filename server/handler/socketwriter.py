@@ -25,6 +25,8 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
 import socket
+
+from avnavavahi import AVNAvahi
 from socketreaderbase import *
 
 import avnav_handlerList
@@ -38,7 +40,10 @@ class AVNSocketWriter(AVNWorker,SocketReader):
   @classmethod
   def getConfigName(cls):
     return "AVNSocketWriter"
-  
+
+  AVAHI_ENABLED=WorkerParameter('avahiEnabled',False,description='If set make this port available via Mdns (Bonjour/Avahi)',type=WorkerParameter.T_BOOLEAN)
+  AVAHI_NAME=WorkerParameter('avahiName','avnav-server',description='Name for this connection when anncounced via Mdns (Bonjour/Avahi)',
+                             condition={AVAHI_ENABLED.name:True})
   @classmethod
   def getConfigParam(cls, child=None):
     if child is None:
@@ -60,7 +65,9 @@ class AVNSocketWriter(AVNWorker,SocketReader):
                           condition={'read':True}),
           WorkerParameter('minTime',50,type=WorkerParameter.T_FLOAT,
                           description='if this is set, wait this time before reading new data (ms)'),
-          WorkerParameter('blackList','',description=', separated list of sources we do not send out')
+          WorkerParameter('blackList','',description=', separated list of sources we do not send out'),
+          cls.AVAHI_ENABLED,
+          cls.AVAHI_NAME
           ]
       return rt
     return None
@@ -107,8 +114,6 @@ class AVNSocketWriter(AVNWorker,SocketReader):
     return self.startSequence != seq
 
   def updateConfig(self, param,child=None):
-    if 'port' in param:
-      self.checkUsedResource(UsedResource.T_TCP,self.id,param['port'])
     super().updateConfig(param)
     self._closeSockets()
 
@@ -204,10 +209,6 @@ class AVNSocketWriter(AVNWorker,SocketReader):
     if (self.getIntParam('minTime')):
       time.sleep(float(self.getIntParam('minTime'))/1000)
 
-  def getUsedResources(self, type=None):
-    if type != UsedResource.T_TCP and type is not None:
-      return []
-    return [UsedResource(UsedResource.T_TCP,self.id,self.getIntParam('port'))]
 
   def _closeSockets(self):
     AVNLog.info("closing all sockets")
@@ -235,18 +236,50 @@ class AVNSocketWriter(AVNWorker,SocketReader):
     super().stop()
     self._closeSockets()
 
+  def getResourceFromName(self,avahiName):
+    if avahiName is None or avahiName == '':
+      return None
+    return avahiName+"."+AVNUtil.NMEA_SERVICE
   def checkConfig(self, param):
     if 'port' in param:
-      self.checkUsedResource(UsedResource.T_TCP,self.id,param.get('port'))
+      self.checkUsedResource(UsedResource.T_TCP,param.get('port'))
+    if ( self.AVAHI_ENABLED.name in param and self.AVAHI_ENABLED.fromDict(param,True)) or \
+        ( self.AVAHI_ENABLED.name not in param and self.AVAHI_ENABLED.fromDict(self.param,True)):
+      avahiName=None
+      if self.AVAHI_NAME.name in param:
+        avahiName=self.AVAHI_NAME.fromDict(param)
+      else:
+        avahiName=self.AVAHI_NAME.fromDict(self.param)
+      if avahiName is None or avahiName == '':
+        raise ValueError("%s cannot be empty with %s enabled"%(self.AVAHI_NAME.name,self.AVAHI_ENABLED.name))
+      self.checkUsedResource(UsedResource.T_SERVICE,self.getResourceFromName(avahiName))
+
+  def registerAvahi(self):
+    avahi=self.findHandlerByName(AVNAvahi.getConfigName())
+    if avahi is None:
+      return
+    if self.AVAHI_ENABLED.fromDict(self.param):
+      serviceName=self.AVAHI_NAME.fromDict(self.param)
+      if serviceName is not None and avahi is not None:
+        try:
+          avahi.registerService(self.getId(),AVNUtil.NMEA_SERVICE,serviceName,self.getIntParam('port'))
+        except:
+          pass
 
   #this is the main thread - listener
   def run(self):
-    self.checkUsedResource(UsedResource.T_TCP,self.id,self.getParamValue('port'))
-    self.setNameIfEmpty("%s-%s"%(self.getName(),str(self.getParamValue('port'))))
     self.wait(2)
     init=True
     self.listener=None
+    avahi=self.findHandlerByName(AVNAvahi.getConfigName())
     while not self.shouldStop():
+      self.freeAllUsedResources()
+      self.claimUsedResource(UsedResource.T_TCP,self.getParamValue('port'))
+      if avahi is not None:
+        avahi.unregisterService(self.getId())
+      if self.AVAHI_ENABLED.fromDict(self.param):
+        self.claimUsedResource(UsedResource.T_SERVICE,self.getResourceFromName(self.AVAHI_NAME.fromDict(self.param)))
+      self.setNameIfEmpty("%s-%s"%(self.getName(),str(self.getParamValue('port'))))
       self.blackList = self.getStringParam('blackList').split(',')
       self.blackList.append(self.getSourceName())
       try:
@@ -263,6 +296,7 @@ class AVNSocketWriter(AVNWorker,SocketReader):
                        %(str(self.getIntParam('port')),str(e)),WorkerStatus.ERROR)
           raise
         while not self.shouldStop() and self.listener.fileno() >= 0:
+          self.registerAvahi() #we redo this all the time as potentially the avahi handler has stopped/restarted
           try:
             outsock,addr=self.listener.accept()
           except socket.timeout:
@@ -292,7 +326,10 @@ class AVNSocketWriter(AVNWorker,SocketReader):
         except:
           pass
         if self.shouldStop():
-          return
+          break
         self.wait(5)
+    AVNLog.info("main stopped")
+    if avahi is not None:
+      avahi.registerService(self.getId(),None,None,None)
 avnav_handlerList.registerHandler(AVNSocketWriter)
   

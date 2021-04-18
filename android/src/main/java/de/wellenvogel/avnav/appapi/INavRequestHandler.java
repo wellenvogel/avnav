@@ -9,9 +9,6 @@ import org.json.JSONObject;
 import java.io.FileNotFoundException;
 
 public interface INavRequestHandler {
-    interface IJsonObect{
-        JSONObject toJson() throws JSONException;
-    }
 
     ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception;
 

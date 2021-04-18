@@ -78,15 +78,26 @@ class WorkerParameter(object):
       raise ParamValueError("invalid parameter %s"%name)
     return self.__setattr__(name,value)
 
-  def copy(self):
-    return WorkerParameter(self.name,
+  def copy(self,resolveList=True):
+    rt= WorkerParameter(self.name,
                            default=self.default,
                            type=self.type,
-                           rangeOrList=[]+self.rangeOrList if self.rangeOrList is not None else None,
+                           rangeOrList=None,
                            description=self.description,
                            editable=self.editable,
                            mandatory=self.mandatory,
                            condition=self.condition)
+    if resolveList:
+      if callable(self.rangeOrList):
+        rt.rangeOrList=self.rangeOrList()
+      else:
+        rt.rangeOrList=[]+self.rangeOrList if self.rangeOrList is not None else None,
+    else:
+      if callable(self.rangeOrList):
+        rt.rangeOrList=self.rangeOrList
+      else:
+        rt.rangeOrList=[]+self.rangeOrList if self.rangeOrList is not None else None,
+    return rt
   @classmethod
   def filterNameDef(cls,plist):
     rt={}
@@ -123,10 +134,13 @@ class WorkerParameter(object):
     rt=[]
     for p in plist:
       if p.editable:
-        if makeCopy:
+        if callable(p.rangeOrList):
           rt.append(p.copy())
         else:
-          rt.append(p)
+          if makeCopy:
+            rt.append(p.copy())
+          else:
+            rt.append(p)
     return rt
 
   @classmethod
@@ -140,7 +154,7 @@ class WorkerParameter(object):
           rt[p.name]=p.default
     return rt
 
-  def checkValue(self,value):
+  def checkValue(self,value,rangeOrListCheck=True):
     if value is None and self.default is None:
       raise ParamValueError("missing mandatory parameter %s"%self.name)
     if self.type == self.T_STRING:
@@ -150,7 +164,7 @@ class WorkerParameter(object):
         rv=float(value)
       else:
         rv=int(value)
-      if self.rangeOrList is not None and len(self.rangeOrList) == 2:
+      if rangeOrListCheck and self.rangeOrList is not None and len(self.rangeOrList) == 2:
         if rv < self.rangeOrList[0] or rv > self.rangeOrList[1]:
           raise ParamValueError("value %f for %s out of range %s"%(rv,self.name,",".join(self.rangeOrList)))
       return rv
@@ -161,9 +175,12 @@ class WorkerParameter(object):
         return value.upper()=="TRUE"
       return True if value else False
     if self.type == self.T_SELECT:
+      if not rangeOrListCheck:
+        return str(value)
       if self.rangeOrList is None:
         raise ValueError("no select list for %s"%self.name)
-      for cv in self.rangeOrList:
+      checkList=self.rangeOrList if not callable(self.rangeOrList) else self.rangeOrList()
+      for cv in checkList:
         cmp=cv
         if type(cv) is dict:
           cmp=cv.get('value')
@@ -172,17 +189,28 @@ class WorkerParameter(object):
         if value == cmp:
           return value
       raise ValueError("value %s for %s not in list %s"%(str(value),self.name,",".join(
-        list(map(lambda x:str(x),self.rangeOrList)))))
+        list(map(lambda x:str(x),checkList)))))
     if self.type == self.T_FILTER:
       #TODO: some filter checks
       return str(value)
     return value
+
+  def fromDict(self,valueDict,check=True,rangeOrListCheck=True):
+    rt=valueDict.get(self.name)
+    if rt is None:
+      rt=self.default
+    if check:
+      return self.checkValue(rt,rangeOrListCheck=rangeOrListCheck)
+    return rt
+
+
 
 class UsedResource(object):
   T_SERIAL='serial'
   T_TCP='tcp'
   T_UDP='udp'
   T_USB='usb'
+  T_SERVICE='service'
 
   def __init__(self,type,handlerId,value):
     self.type=type
@@ -303,8 +331,9 @@ class AVNWorker(object):
   DEFAULT_CONFIG_PARAM = [
     WorkerParameter('name',default='',type=WorkerParameter.T_STRING)
   ]
+  ENABLE_PARAM_DESCRIPTION=WorkerParameter('enabled',default=True,type=WorkerParameter.T_BOOLEAN)
   ENABLE_CONFIG_PARAM=[
-    WorkerParameter('enabled',default=True,type=WorkerParameter.T_BOOLEAN)
+    ENABLE_PARAM_DESCRIPTION
   ]
   handlerListLock=threading.Lock()
   """a base class for all workers
@@ -431,6 +460,7 @@ class AVNWorker(object):
     self.condition=threading.Condition()
     self.currentThread=None
     self.name=self.getName()
+    self.usedResources=[]
 
 
   def setNameIfEmpty(self,name):
@@ -580,6 +610,11 @@ class AVNWorker(object):
           else:
             AVNLog.info("handler enabled, starting")
             self.startThread()
+    if self.ENABLE_PARAM_DESCRIPTION.fromDict(self.param,True) and self.currentThread is None:
+      #was not running - start now
+      AVNLog.info("handler was stopped, starting now")
+      self.startThread()
+
     return rt
 
   def deleteChild(self,child):
@@ -795,6 +830,7 @@ class AVNWorker(object):
     raise Exception("run must be overloaded")
 
   def _runInternal(self):
+    self.usedResources=[]
     AVNLog.info("run started")
     try:
       self.run()
@@ -802,6 +838,7 @@ class AVNWorker(object):
     except Exception as e:
       self.setInfo('main','handler stopped with %s'%str(e),WorkerStatus.ERROR)
       AVNLog.error("handler run stopped with exception %s",traceback.format_exc())
+    self.usedResources=[]
     self.currentThread=None
 
   def checkConfig(self,param):
@@ -866,7 +903,7 @@ class AVNWorker(object):
     @param type:
     @return:
     '''
-    return []
+    return self.usedResources
 
   @classmethod
   def findUsersOf(cls,type,ownId=None,value=None,toPlain=False,onlyRunning=True):
@@ -889,13 +926,14 @@ class AVNWorker(object):
       return UsedResource.toPlain(rt)
     return rt
 
-  @classmethod
-  def checkUsedResource(cls,type,ownId,value,prefix=None):
-    others=cls.findUsersOf(type,ownId=ownId,value=value)
+  def checkUsedResource(self,type,value,prefix=None):
+    if value is None:
+      return
+    others=self.findUsersOf(type,ownId=self.id,value=value)
     if len(others) >0:
       if prefix is None:
         prefix = others[0].type
-      h=cls.findHandlerById(others[0].handlerId)
+      h=self.findHandlerById(others[0].handlerId)
       if h is None:
         name='handler %s'%others[0].handlerId
       else:
@@ -906,6 +944,21 @@ class AVNWorker(object):
         name,
         str(others[0].handlerId)
       ))
+  def claimUsedResource(self,type,value,force=False):
+    if not force:
+      self.checkUsedResource(type,value)
+    res=UsedResource(type,self.id,value)
+    self.usedResources.append(res)
+
+  def freeUsedResource(self,type,name):
+    newRes=[]
+    for res in self.usedResources:
+      if not res.usingTypeValue(type,name):
+        newRes.append(res)
+    self.usedResources=newRes
+
+  def freeAllUsedResources(self):
+    self.usedResources=[]
 
   def getHandledCommands(self):
     """get the API commands that will be handled by this instance

@@ -2,9 +2,13 @@ package de.wellenvogel.avnav.main;
 
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.Dialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.app.PendingIntent;
+import android.app.ProgressDialog;
+import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -13,7 +17,10 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
+import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbManager;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
@@ -23,39 +30,55 @@ import android.os.IBinder;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
 import android.view.WindowManager;
+import android.webkit.WebChromeClient;
+import android.webkit.WebResourceResponse;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.widget.Toast;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.InputStream;
+import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.List;
 
+import de.wellenvogel.avnav.appapi.JavaScriptApi;
 import de.wellenvogel.avnav.appapi.RequestHandler;
+import de.wellenvogel.avnav.appapi.WebServer;
 import de.wellenvogel.avnav.settings.SettingsActivity;
 import de.wellenvogel.avnav.util.ActionBarHandler;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.DialogBuilder;
 import de.wellenvogel.avnav.worker.GpsService;
+import de.wellenvogel.avnav.worker.IWorker;
+import de.wellenvogel.avnav.worker.UsbConnectionHandler;
+import de.wellenvogel.avnav.worker.WorkerFactory;
+
+import static de.wellenvogel.avnav.main.Constants.LOGPRFX;
+import static de.wellenvogel.avnav.settings.SettingsActivity.checkSettings;
 
 /**
  * Created by andreas on 06.01.15.
  */
-public class MainActivity extends Activity implements IDialogHandler,IMediaUpdater,SharedPreferences.OnSharedPreferenceChangeListener {
-
-    private String lastStartMode=null; //The last mode we used to select the fragment
+public class MainActivity extends Activity implements IMediaUpdater, SharedPreferences.OnSharedPreferenceChangeListener, GpsService.MainActivityActions {
+    //The last mode we used to select the fragment
     SharedPreferences sharedPrefs;
     protected final Activity activity=this;
     AssetManager assetManager;
-    private String workdir;
-    private File workBase;
     GpsService gpsService=null;
-    int goBackSequence;
-    private ActionBarHandler mToolbar;
-    public ActionBarHandler getToolbar(){
-        return mToolbar;
-    }
+
     private boolean exitRequested=false;
     private boolean running=false;
-    private BroadcastReceiver broadCastReceiverStop;
     private BroadcastReceiver reloadReceiver;
     private Handler mediaUpdateHandler=new Handler(){
         @Override
@@ -66,8 +89,31 @@ public class MainActivity extends Activity implements IDialogHandler,IMediaUpdat
             updateMtp(f);
         }
     };
-    RequestHandler requestHandler=null;
+    private Handler retryHandler=new Handler();
     private boolean serviceNeedsRestart=false;
+    private WebView webView;
+    private ProgressDialog pd;
+    private JavaScriptApi jsInterface;
+    private int goBackSequence=0;
+    private boolean checkSettings=true;
+    private boolean showsDialog = false;
+
+
+    private static class AttachedDevice{
+        String type;
+        JSONObject parameters;
+        JSONObject toJson() throws JSONException {
+            JSONObject rt=new JSONObject();
+            rt.put("typeName",type);
+            rt.put("initialParameters",parameters);
+            return rt;
+        }
+        AttachedDevice(String type, JSONObject parameters){
+            this.type=type;
+            this.parameters=parameters;
+        }
+    }
+    private AttachedDevice attachedDevice=null;
 
 
     public void updateMtp(File file){
@@ -86,16 +132,58 @@ public class MainActivity extends Activity implements IDialogHandler,IMediaUpdat
         super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode) {
             case Constants.SETTINGS_REQUEST:
-                if (resultCode != RESULT_OK){
+                if (resultCode == RESULT_FIRST_USER){
                     endApp();
                     return;
                 }
+                serviceNeedsRestart=true;
                 break;
+            case Constants.FILE_OPEN:
+                if (resultCode != RESULT_OK) {
+                    // Exit without doing anything else
+                    return;
+                } else {
+                    Uri returnUri = data.getData();
+                    if (jsInterface != null) jsInterface.saveFile(returnUri);
+                }
             default:
                 AvnLog.e("unknown activity result " + requestCode);
         }
     }
 
+    private GpsService.GpsServiceBinder binder;
+    private Runnable bindAction;
+
+    /** Defines callbacks for service binding, passed to bindService() */
+    private ServiceConnection mConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName className,
+                                       IBinder service) {
+            // We've bound to LocalService, cast the IBinder and get LocalService instance
+            binder = (GpsService.GpsServiceBinder) service;
+            gpsService = binder.getService();
+            if (gpsService !=null) {
+                gpsService.setMediaUpdater(MainActivity.this);
+                if (bindAction != null){
+                    bindAction.run();
+                    bindAction=null;
+                }
+            }
+            binder.registerCallback(MainActivity.this);
+            AvnLog.d(Constants.LOGPRFX, "gps service connected");
+
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+            gpsService=null;
+            if (binder != null) binder.deregisterCallback();
+            binder=null;
+            AvnLog.d(Constants.LOGPRFX,"gps service disconnected");
+        }
+
+    };
     private boolean startGpsService(){
         if (Build.VERSION.SDK_INT >= 26) {
             ActivityManager activityManager = (ActivityManager) this.getSystemService(Context.ACTIVITY_SERVICE);
@@ -105,58 +193,48 @@ public class MainActivity extends Activity implements IDialogHandler,IMediaUpdat
                 // higher importance has lower number (?)
                 if (importance > ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND){
                     AvnLog.e("still in background while trying to start service");
+                    retryHandler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            startGpsService();
+                        }
+                    },1000);
                     return false;
                 }
             }
         }
 
-        if (! SettingsActivity.checkSettings(this,false,true)) return false;
+        if (! checkSettings(this)) return false;
 
-        File trackDir=new File(AvnUtil.getWorkDir(sharedPrefs,this),"tracks");
         Intent intent = new Intent(this, GpsService.class);
-        intent.putExtra(GpsService.PROP_TRACKDIR, trackDir.getAbsolutePath());
         if (Build.VERSION.SDK_INT >= 26){
             startForegroundService(intent);
         }
         else {
             startService(intent);
         }
-        bindService(intent,mConnection,BIND_AUTO_CREATE);
         serviceNeedsRestart=false;
         return true;
     }
 
 
-    private void stopGpsService(boolean unbind){
-        if (gpsService !=null){
-            gpsService.stopMe(unbind);
+    private void stopGpsService(){
+        AvnLog.i(LOGPRFX,"stop gps service");
+        GpsService service=gpsService;
+        if (service !=null){
+            binder.deregisterCallback();
+            gpsService=null;
+            service.stopMe();
         }
-        if (unbind) {
-            Intent intent = new Intent(this, GpsService.class);
-            try {
-                unbindService(mConnection);
-                stopService(intent);
-            }catch (Exception e){}
-        }
+        Intent intent = new Intent(this, GpsService.class);
+        try {
+             unbindService(mConnection);
+             stopService(intent);
+        }catch (Exception e){}
+
     }
 
-    /**
-     * IDialogHandler
-     */
-    @Override
-    public boolean onCancel(int dialogId) {
-        return true;
-    }
 
-    @Override
-    public boolean onOk(int dialogId) {
-        return true;
-    }
-
-    @Override
-    public boolean onNeutral(int dialogId) {
-        return true;
-    }
 
     /**
      * end IDialogHandler
@@ -164,23 +242,59 @@ public class MainActivity extends Activity implements IDialogHandler,IMediaUpdat
 
 
     public void showSettings(boolean initial){
-        serviceNeedsRestart=true;
         Intent sintent= new Intent(this,SettingsActivity.class);
         sintent.putExtra(Constants.EXTRA_INITIAL,initial);
         startActivityForResult(sintent,Constants.SETTINGS_REQUEST);
     }
 
+    @Override
+    public void mainGoBack() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                goBack();
+            }
+        });
+    }
+
+    @Override
+    public void mainShutdown() {
+        if (!exitRequested){
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    try{
+                        finishActivity(Constants.SETTINGS_REQUEST);
+                    }catch(Throwable t){}
+                    MainActivity.this.finish();
+                }
+            });
+        }
+    }
+
     //to be called e.g. from js
     public void goBack(){
         try {
-            DialogBuilder.confirmDialog(this, 0, R.string.endApplication, new DialogInterface.OnClickListener() {
+            DialogBuilder builder=new DialogBuilder(this,R.layout.dialog_confirm);
+            builder.createDialog();
+            builder.setText(R.id.title,0);
+            builder.setText(R.id.question,R.string.endApplication);
+            builder.setButton(R.string.ok,DialogInterface.BUTTON_POSITIVE);
+            builder.setButton(R.string.background,DialogInterface.BUTTON_NEUTRAL);
+            builder.setButton(R.string.cancel,DialogInterface.BUTTON_NEGATIVE);
+            builder.setOnClickListener(new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
                     if (which == DialogInterface.BUTTON_POSITIVE){
                         endApp();
                     }
+                    if (which == DialogInterface.BUTTON_NEUTRAL){
+                        finish();
+                    }
                 }
             });
+            builder.show();
         } catch(Throwable i){
             //sometime a second call (e.g. when the JS code was too slow) will throw an exception
             Log.e(AvnLog.LOGPREFIX,"exception in goBack:"+i.getLocalizedMessage());
@@ -192,91 +306,177 @@ public class MainActivity extends Activity implements IDialogHandler,IMediaUpdat
         finish();
     }
 
-
-
-    /** Defines callbacks for service binding, passed to bindService() */
-    private ServiceConnection mConnection = new ServiceConnection() {
-
-        @Override
-        public void onServiceConnected(ComponentName className,
-                                       IBinder service) {
-            // We've bound to LocalService, cast the IBinder and get LocalService instance
-            GpsService.GpsServiceBinder binder = (GpsService.GpsServiceBinder) service;
-            gpsService = binder.getService();
-            if (gpsService !=null) {
-                gpsService.setMediaUpdater(MainActivity.this);
-            }
-            AvnLog.d(Constants.LOGPRFX, "gps service connected");
-
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName arg0) {
-            gpsService=null;
-            AvnLog.d(Constants.LOGPRFX,"gps service disconnected");
-        }
-    };
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        //stopGpsService(false);
-        if (requestHandler != null) requestHandler.stop();
-    }
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
         running=false;
-        serviceNeedsRestart = true;
-        if  (broadCastReceiverStop != null){
-            unregisterReceiver(broadCastReceiverStop);
+        showsDialog=false;
+        if (pd != null){
+            try{
+                pd.dismiss();
+            }catch (Throwable t){}
         }
+        if (jsInterface != null) jsInterface.onDetach();
+        if (webView != null) webView.destroy();
         if (reloadReceiver != null){
             unregisterReceiver(reloadReceiver);
         }
+        try {
+            unbindService(mConnection);
+        }catch (Exception e){}
         if (exitRequested) {
-            stopGpsService(true);
-            System.exit(0);
+            stopGpsService();
+            //System.exit(0);
         }
         else{
-            AvnLog.e("main unintentionally stopped");
-            Intent intent = new Intent(this, GpsService.class);
+            AvnLog.e("main stopped");
+        }
+        gpsService=null;
+    }
+
+    private void initializeWebView(){
+        if (webView != null) return;
+        sharedPrefs.edit().putBoolean(Constants.WAITSTART,true).commit();
+        jsInterface=new JavaScriptApi(this,getRequestHandler());
+        webView=(WebView)findViewById(R.id.webmain);
+        webView.getSettings().setJavaScriptEnabled(true);
+        webView.getSettings().setAllowFileAccess(true);
+        if (Build.VERSION.SDK_INT >= 16){
             try {
-                unbindService(mConnection);
+                WebSettings settings = webView.getSettings();
+                Method m = WebSettings.class.getDeclaredMethod("setAllowUniversalAccessFromFileURLs", boolean.class);
+                m.setAccessible(true);
+                m.invoke(settings, true);
             }catch (Exception e){}
         }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && BuildConfig.DEBUG) {
+            try {
+                Method m=WebView.class.getDeclaredMethod("setWebContentsDebuggingEnabled",boolean.class);
+                m.setAccessible(true);
+                m.invoke(webView,true);
+                m=WebSettings.class.getDeclaredMethod("setMediaPlaybackRequiresUserGesture",boolean.class);
+                m.setAccessible(true);
+                m.invoke(webView.getSettings(),false);
+            } catch (Exception e) {
+            }
+        }
+        String htmlPage = null;
+        RequestHandler handler=getRequestHandler();
+        if (handler != null) htmlPage=handler.getStartPage();
+        webView.setWebViewClient(new WebViewClient() {
+            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+                Toast.makeText(MainActivity.this, "Oh no! " + description, Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
+                RequestHandler handler= getRequestHandler();
+                WebResourceResponse rt=null;
+                if (handler != null) {
+                    try {
+                        rt = handler.handleRequest(view,url);
+                    }catch (Throwable t){
+                        AvnLog.e("web request for "+url+" failed",t);
+                        InputStream is=new ByteArrayInputStream(new byte[]{});
+                        if (Build.VERSION.SDK_INT >= 21){
+                            return new WebResourceResponse("application/octet-stream", "UTF-8",500,"error "+t.getMessage(),new HashMap<String, String>(),is);
+                        }
+                        else {
+                            return new WebResourceResponse("application/octet-stream", "UTF-8", is);
+                        }
+                    }
+                }
+                if (rt==null) return super.shouldInterceptRequest(view, url);
+                return rt;
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                if (pd.isShowing()) pd.dismiss();
+
+            }
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                if (url != null && (url.startsWith("http://")||url.startsWith("https://") )) {
+                    view.getContext().startActivity(
+                            new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+
+
+
+        });
+        webView.setWebChromeClient(new WebChromeClient() {
+            public void onConsoleMessage(String message, int lineNumber, String sourceID) {
+                AvnLog.d("AvNav", message + " -- From line "
+                        + lineNumber + " of "
+                        + sourceID);
+            }
+
+        });
+        webView.getSettings().setDomStorageEnabled(true);
+        webView.getSettings().setDatabaseEnabled(true);
+        webView.getSettings().setTextZoom(100);
+        String databasePath = webView.getContext().getDir("databases",
+                Context.MODE_PRIVATE).getPath();
+        webView.getSettings().setDatabasePath(databasePath);
+        webView.addJavascriptInterface(jsInterface,"avnavAndroid");
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+
+
+        //we nedd to add a filename to the base to make local storage working...
+        //http://stackoverflow.com/questions/8390985/android-4-0-1-breaks-webview-html-5-local-storage
+        String start= RequestHandler.INTERNAL_URL_PREFIX +RequestHandler.ROOT_PATH+"/dummy.html?navurl=avnav_navi.php";
+        if (BuildConfig.DEBUG) start+="&logNmea=1";
+        if (htmlPage != null) {
+            webView.loadDataWithBaseURL(start, htmlPage, "text/html", "UTF-8", null);
+        }
+    }
+    public synchronized String getAttachedDevice(){
+        AttachedDevice device=attachedDevice;
+        attachedDevice=null;
+        if (device == null) return null;
+        try {
+            return device.toJson().toString();
+        } catch (JSONException e) {
+        }
+        return null;
+    }
+
+    private void handleUsbDeviceAttach(Intent intent){
+        String usbDevice=intent.getStringExtra(Constants.USB_DEVICE_EXTRA);
+        if (usbDevice != null){
+            try {
+                attachedDevice=new AttachedDevice(WorkerFactory.USB_NAME,
+                        UsbConnectionHandler.getInitialParameters(usbDevice));
+            } catch (JSONException e) {
+                AvnLog.e("unable to get parameters for usb device",e);
+            }
+            sendEventToJs(Constants.JS_DEVICE_ADDED,1);
+        }
+    }
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        handleUsbDeviceAttach(intent);
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (running) return;
-        setContentView(R.layout.viewcontainer);
-        mToolbar=new ActionBarHandler(this,R.menu.main_activity_actions);
+        showsDialog=false;
+        setContentView(R.layout.main);
         sharedPrefs=getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
-        PreferenceManager.setDefaultValues(this,Constants.PREFNAME,Context.MODE_PRIVATE, R.xml.expert_preferences, false);
+        PreferenceManager.setDefaultValues(this,Constants.PREFNAME,Context.MODE_PRIVATE, R.xml.sound_preferences, false);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         assetManager=getAssets();
-        serviceNeedsRestart=true;
         sharedPrefs.registerOnSharedPreferenceChangeListener(this);
-        IntentFilter filterStop=new IntentFilter(Constants.BC_STOPAPPL);
-        broadCastReceiverStop=new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                AvnLog.i("received stop appl");
-                MainActivity.this.exitRequested=true;
-                MainActivity.this.finish();
-
-            }
-        };
-        registerReceiver(broadCastReceiverStop,filterStop);
         reloadReceiver =new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -286,20 +486,21 @@ public class MainActivity extends Activity implements IDialogHandler,IMediaUpdat
         IntentFilter triggerFilter=new IntentFilter((Constants.BC_RELOAD_DATA));
         registerReceiver(reloadReceiver,triggerFilter);
         running=true;
+        Intent intent = new Intent(this, GpsService.class);
+        bindService(intent,mConnection,0);
+        handleUsbDeviceAttach(getIntent());
     }
 
-    void hideToolBar(){
-        if (mToolbar != null) mToolbar.hide();
-    }
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        if (! key.equals(Constants.WAITSTART)) serviceNeedsRestart = true;
         Log.d(Constants.LOGPRFX, "preferences changed");
         if (key.equals(Constants.WORKDIR)){
             updateWorkDir(AvnUtil.getWorkDir(sharedPreferences,this));
+            serviceNeedsRestart=true;
         }
         if (key.equals(Constants.CHARTDIR)){
             updateWorkDir(sharedPreferences.getString(Constants.CHARTDIR,""));
+            serviceNeedsRestart=true;
         }
     }
 
@@ -328,6 +529,108 @@ public class MainActivity extends Activity implements IDialogHandler,IMediaUpdat
         });
         initialUpdater.start();
     }
+    /**
+     * check the current settings
+     */
+    private void handleInitialSettings(){
+        final SharedPreferences sharedPrefs = getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+        final SharedPreferences.Editor e=sharedPrefs.edit();
+        if (! sharedPrefs.contains(Constants.ALARMSOUNDS)){
+            e.putBoolean(Constants.ALARMSOUNDS,true);
+        }
+        String workdir=sharedPrefs.getString(Constants.WORKDIR, "");
+        String chartdir=sharedPrefs.getString(Constants.CHARTDIR, "");
+        if (workdir.isEmpty()){
+            workdir=Constants.INTERNAL_WORKDIR;
+        }
+        e.putString(Constants.WORKDIR, workdir);
+        e.putString(Constants.CHARTDIR, chartdir);
+        e.apply();
+        try {
+            int version = getPackageManager()
+                    .getPackageInfo(getPackageName(), 0).versionCode;
+            if (sharedPrefs.getInt(Constants.VERSION,-1)!= version){
+                e.putInt(Constants.VERSION,version);
+            }
+        } catch (Exception ex) {
+        }
+        e.commit();
+    }
+
+    private boolean checkSettingsInternal(){
+        if (checkSettings && !checkSettings(this)) {
+            checkSettings=false;
+            showSettings(true);
+            return false;
+        }
+        return true;
+    }
+    private boolean checkForInitialDialogs(){
+        if (showsDialog) return true;
+        SharedPreferences sharedPrefs = getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+        int oldVersion=sharedPrefs.getInt(Constants.VERSION, -1);
+        boolean startPendig=sharedPrefs.getBoolean(Constants.WAITSTART, false);
+        int version=0;
+        try {
+            version = getPackageManager()
+                    .getPackageInfo(getPackageName(), 0).versionCode;
+        } catch (PackageManager.NameNotFoundException e) {
+        }
+        if (oldVersion < 0 || startPendig) {
+            showsDialog =true;
+            int title;
+            int message;
+            if (startPendig) {
+                title=R.string.somethingWrong;
+                message=R.string.somethingWrongMessage;
+            } else {
+                handleInitialSettings();
+                title=R.string.firstStart;
+                message=R.string.firstStartMessage;
+            }
+            sharedPrefs.edit().putInt(Constants.VERSION,version).commit();
+            DialogBuilder.alertDialog(this,title,message, new DialogInterface.OnClickListener(){
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    showsDialog=false;
+                    showSettings(false);
+                }
+            });
+            if (startPendig)sharedPrefs.edit().putBoolean(Constants.WAITSTART,false).commit();
+        }
+        if (showsDialog) return true;
+        if (version != 0 ){
+            try {
+                int lastVersion = sharedPrefs.getInt(Constants.VERSION, 0);
+                //TODO: handle other version changes
+                if (lastVersion <20210406 ){
+                    final int newVersion=version;
+                    showsDialog =true;
+                    DialogBuilder builder=new DialogBuilder(this,R.layout.dialog_confirm);
+                    builder.setTitle(R.string.newVersionTitle);
+                    builder.setText(R.id.question,R.string.newVersionMessage);
+                    builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            sharedPrefs.edit().putInt(Constants.VERSION,newVersion).commit();
+                            showsDialog=false;
+                            if (!checkSettingsInternal()) return;
+                            onResumeInternal();
+                        }
+                    });
+                    builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            showsDialog=false;
+                            endApp();
+                        }
+                    });
+                    builder.show();
+                }
+            }catch (Exception e){}
+        }
+        return showsDialog || !checkSettingsInternal();
+    }
 
     @Override
     protected void onPause() {
@@ -335,98 +638,159 @@ public class MainActivity extends Activity implements IDialogHandler,IMediaUpdat
         AvnLog.d("main: pause");
     }
 
+    private void onResumeInternal(){
+        if (webView == null){
+            shoLoading();
+        }
+        updateWorkDir(AvnUtil.getWorkDir(null, this));
+        updateWorkDir(sharedPrefs.getString(Constants.CHARTDIR, ""));
+        if (gpsService == null) {
+            bindAction = new Runnable() {
+                @Override
+                public void run() {
+                    initializeWebView();
+                }
+            };
+            startGpsService();
+            return;
+        }
+        if (serviceNeedsRestart) {
+            gpsService.restart();
+            serviceNeedsRestart=false;
+            AvnLog.d(Constants.LOGPRFX, "MainActivity:onResume serviceRestart");
+        }
+        if (webView == null) {
+            initializeWebView();
+        } else {
+            sendEventToJs(Constants.JS_PROPERTY_CHANGE, 0); //this will some pages cause to reload...
+        }
+    }
+
+    private void shoLoading() {
+        if (pd != null){
+            try{
+                pd.dismiss();
+            }catch(Throwable t){}
+        }
+        pd = ProgressDialog.show(this, "", getString(R.string.loading), true);
+    }
+    private void handleBars(){
+        SharedPreferences sharedPrefs=getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+        boolean hideStatus=sharedPrefs.getBoolean(Constants.HIDE_BARS,false);
+        if (hideStatus ) {
+            View decorView = getWindow().getDecorView();
+            int flags=View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+            flags+=View.SYSTEM_UI_FLAG_FULLSCREEN;
+            flags+=View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
+            decorView.setSystemUiVisibility(flags);
+        }
+    }
     @Override
     protected void onResume() {
         super.onResume();
+        handleBars();
         AvnLog.d("main: onResume");
-        if (!SettingsActivity.checkSettings(this,false,false)){
-            showSettings(true);
-            return;
-        }
-        boolean restartHandler=serviceNeedsRestart;
-        if (! handleRestart()){
-            showSettings(true);
-            return;
-        }
-        updateWorkDir(AvnUtil.getWorkDir(null,this));
-        updateWorkDir(sharedPrefs.getString(Constants.CHARTDIR,""));
-        if (requestHandler != null && restartHandler) {
-            requestHandler.stop();
-            requestHandler=null;
-        }
-        if (requestHandler == null) {
-            requestHandler = new RequestHandler(this);
-        }
-        startFragmentOrActivity(false);
-    }
-
-    private boolean handleRestart(){
-        if (!serviceNeedsRestart) return true;
-        AvnLog.d(Constants.LOGPRFX,"MainActivity:onResume serviceRestart");
-        stopGpsService(false);
-        sendEventToJs(Constants.JS_RELOAD,0);
-        return startGpsService();
-    }
-
-    /**
-     * when the activity becomes visible (onResume) we either
-     * start a fragment or we go to a new activity (like settings)
-     */
-    void startFragmentOrActivity(boolean forceSettings){
-        String mode=sharedPrefs.getString(Constants.RUNMODE, "");
-        boolean startPendig=sharedPrefs.getBoolean(Constants.WAITSTART, false);
-        if (mode.isEmpty() || startPendig || forceSettings){
-            //TODO: show info dialog
-            lastStartMode=null;
-            showSettings(false);
-            return;
-        }
-        if (lastStartMode == null || !lastStartMode.equals(mode)){
-            sharedPrefs.edit().putBoolean(Constants.WAITSTART,true).commit();
-            FragmentManager fragmentManager = getFragmentManager();
-            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-            //TODO: select right fragment based on mode
-            Fragment fragment=null;
-            if (mode.equals(Constants.MODE_SERVER)){
-                fragment= new WebServerFragment();
-            }
-            if (fragment == null) {
-                fragment=new WebViewFragment();
-            }
-            fragmentTransaction.replace(R.id.webmain, fragment);
-            fragmentTransaction.commit();
-            lastStartMode=mode;
-        }
-        else{
-            sendEventToJs(Constants.JS_PROPERTY_CHANGE,0); //this will some pages cause to reload...
+        if (! checkForInitialDialogs()){
+            onResumeInternal();
         }
     }
 
     @Override
     public void onBackPressed(){
-        Fragment current=getFragmentManager().findFragmentById(R.id.webmain);
-        if (current instanceof WebViewFragment){
-            ((WebViewFragment) current).onBackPressed();
-            return;
-        }
-        goBack();
+        final int num=goBackSequence+1;
+        sendEventToJs(Constants.JS_BACK,num);
+        //as we cannot be sure that the JS code will for sure handle
+        //our back pressed (maybe a different page has been loaded) , we wait at most 200ms for it to ack this
+        //otherwise we really go back here
+        Thread waiter=new Thread(new Runnable() {
+            @Override
+            public void run() {
+                long wait=200;
+                while (wait>0) {
+                    long current = System.currentTimeMillis();
+                    if (goBackSequence == num) break;
+                    try {
+                        Thread.sleep(10);
+                    } catch (InterruptedException e) {
+                    }
+                    wait-=10;
+                }
+                if (wait == 0) {
+                    Log.e(AvnLog.LOGPREFIX,"go back handler did not fire");
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            goBack();
+                        }
+                    });
+                }
+            }
+        });
+        waiter.start();
     }
-
+    public void jsGoBackAccepted(int id){
+        goBackSequence=id;
+    }
+    public void setBrightness(int percent){
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                float newBrightness;
+                if (percent >= 100){
+                    newBrightness= WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE;
+                }
+                else {
+                    newBrightness = (float) percent / 100;
+                    if (newBrightness < 0.01f) newBrightness = 0.01f;
+                    if (newBrightness > 1) newBrightness = 1;
+                }
+                Window w=getWindow();
+                WindowManager.LayoutParams lp=w.getAttributes();
+                lp.screenBrightness=newBrightness;
+                w.setAttributes(lp);
+            }
+        });
+    }
 
     /**
      * @param key
      * @param id
      */
-    public void sendEventToJs(String key, int id){
-        Fragment current=getFragmentManager().findFragmentById(R.id.webmain);
-        if (current instanceof WebViewFragment){
-            ((WebViewFragment)current).sendEventToJs(key,id);
+    public void sendEventToJs(String key, long id){
+        AvnLog.i("js event key="+key+", id="+id);
+        if (webView != null) {
+            webView.loadUrl("javascript:if (avnav && avnav.android) avnav.android.receiveEvent('" + key + "'," + id + ")");
         }
     }
 
 
     public RequestHandler getRequestHandler(){
-        return requestHandler;
+        GpsService service=getGpsService();
+        return service!=null?service.getRequestHandler():null;
+    }
+    public void launchBrowser() {
+        try {
+            GpsService service = getGpsService();
+            WebServer webServer = service.getWebServer();
+            if (webServer == null) return;
+            if (!webServer.isRunning()) return;
+            int port = webServer.getPort();
+            if (port == 0) return;
+            String start = "http://localhost:" + port + "/viewer/avnav_viewer.html";
+            if (BuildConfig.DEBUG) start += "?log=1";
+            AvnLog.d(LOGPRFX, "start browser with " + start);
+            try {
+                Intent myIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(start));
+                startActivity(Intent.createChooser(myIntent, "Chose browser"));
+
+            } catch (ActivityNotFoundException e) {
+                Toast.makeText(this, "No application can handle this request."
+                        + " Please install a webbrowser", Toast.LENGTH_LONG).show();
+                e.printStackTrace();
+            }
+
+        } catch (Throwable t) {
+        }
     }
 
     @Override
@@ -439,6 +803,15 @@ public class MainActivity extends Activity implements IDialogHandler,IMediaUpdat
     }
     public GpsService getGpsService() {
         return gpsService;
+    }
+
+    public void dialogClosed() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                handleBars();
+            }
+        });
     }
 
 
