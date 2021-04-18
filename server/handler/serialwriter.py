@@ -114,8 +114,8 @@ class SerialWriter(SerialReader):
     bytesize=int(self.param['bytesize'])
     parity=self.param['parity']
     stopbits=int(self.param['stopbits'])
-    xonxoff=int(self.param['xonxoff'])
-    rtscts=int(self.param['rtscts'])
+    xonxoff=self.P_XONOFF.fromDict(self.param)
+    rtscts=self.P_RTSCTS.fromDict(self.param)
     portname=self.param['port']
     timeout=float(self.param['timeout'])
     name=self.getName()

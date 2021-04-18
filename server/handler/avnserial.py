@@ -50,6 +50,8 @@ import avnav_handlerList
 
 class SerialReader(object):
   BAUDRATES=[115200,57600,38400,19200,9600,4800]
+  P_XONOFF=WorkerParameter('xonxoff', False,type=WorkerParameter.T_BOOLEAN)
+  P_RTSCTS=WorkerParameter('rtscts',False,type=WorkerParameter.T_BOOLEAN)
   @classmethod
   def getConfigParam(cls):
     cfg=[
@@ -62,8 +64,8 @@ class SerialReader(object):
                WorkerParameter('bytesize', 8,type=WorkerParameter.T_SELECT,rangeOrList=[5,6,7,8]),
                WorkerParameter('parity','N',type=WorkerParameter.T_SELECT,rangeOrList=['N','E','O','M','S']),
                WorkerParameter('stopbits', 1,type=WorkerParameter.T_SELECT,rangeOrList=[1,1.5,2]),
-               WorkerParameter('xonxoff', False,type=WorkerParameter.T_BOOLEAN),
-               WorkerParameter('rtscts',False,type=WorkerParameter.T_BOOLEAN),
+               cls.P_XONOFF,
+               cls.P_RTSCTS,
                WorkerParameter('numerrors',20,type=WorkerParameter.T_NUMBER,
                                description='reopen port after that many errors, set this to 0 to avoid any check for NMEA data'),
                WorkerParameter('autobaudtime', 5,type=WorkerParameter.T_FLOAT,
@@ -127,8 +129,8 @@ class SerialReader(object):
     bytesize=int(self.param['bytesize'])
     parity=self.param['parity']
     stopbits=int(self.param['stopbits'])
-    xonxoff=int(self.param['xonxoff'])
-    rtscts=int(self.param['rtscts'])
+    xonxoff=self.P_XONOFF.fromDict(self.param)
+    rtscts=self.P_RTSCTS.fromDict(self.param)
     portname=self.param['port']
     timeout=float(self.param['timeout'])
     autobaudtime=float(self.param['autobaudtime'])
