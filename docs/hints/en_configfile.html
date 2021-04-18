@@ -9,8 +9,8 @@
     <h1>AvNav Server Configuration</h1>
     <p>== not for <a href="../android.html#Settings">Android</a> ==</p>
     <h2>Introduction</h2>
-    <p>The AvNav server is reading its configuration from an xml file -
-      avnav_server.xml on start up.<br>
+    <p> On start up the AvNav server reads its configuration from an xml file -
+      avnav_server.xml.<br>
       This file normally is located at /home/pi/avnav/data on the raspberry,
       otherwise at $HOME/avnav - see <a href="../install.html">installation</a>.</p>
     <p>If this file still does not exist on start up it will be created from a
@@ -21,21 +21,21 @@
       Potentially it could be necessary to add some entries to enable new
       functions. In this case you will find some hints in the <a href="../release.html">release
         notes</a>.</p>
-    <p>With every successful start up AvNav (from version 20200325) will write a
-      copy of this file with the extension .ok. If during the next start up the
-      parsing of the config file is failing it will fall back to this .ok file.
-      With this fallback handling it will be ensured that AvNav can start up
+    <p>With every successful start AvNav (from version 20200325) creates a
+      copy of this file with the extension .ok. If during the next start up 
+      parsing of the config file fails, AvNav will fall back to this .ok file.
+      With this fallback handling it will be ensured that AvNav can start up,
       even if a change of the original config file (what AvNav is doing in some
       situations) leaves the file in a defect state. If you don't want this
       fallback (for testing) add the -e command line switch.</p>
-    <p>Starting from 20210322 <b>it should not be necessary any more to change
+    <p>Starting from 20210322 <b>it should not be necessary anymore to modify
         the config file "by hand"</b>. Instead use AvNav itself (<a href="../userdoc/statuspage.html">Server/Status
-        page</a>) to edit most parts of the configuration. This also avoids the
-      need of a restart when changing parameters.</p>
-    <p>If you would have to change parts not being editable there you still can
+        page</a>) to edit most parts of the configuration. This also eliminates the
+      need of a manual restart when changing parameters.</p>
+    <p>If you need to change sections not editable there, you still can
       use the <a href="https://github.com/wellenvogel/avnav-update-plugin">avnav-update-plugin</a>
       to edit it directly from within your browser.<br>
-      So the following part is here just for reference.</p>
+      So the following text simply serves as reference.</p>
     <p>If you change the avnav_server.xml you need to restart AvNav. If it is
       running as a system service you can do this with the command</p>
     <div class="code">sudo systemctl restart avnav
@@ -45,7 +45,7 @@
       changed the config file to watch for serious errors. The commands would
       be:</p>
     <div class="code">sudo systemctl stop avnav<br>avnav -e<br>^C<br>sudo systemctl start avnav</div>
-    <p> Option -e only starting with version 20200325. It prevents the fallback
+    <p> Option -e, since version 20200325. It prevents the fallback
       to avnav_server.xml.ok (what would hide your errors). ^C interrupts the
       running AvNav.</p>
     <h2>Content</h2>
@@ -56,14 +56,13 @@
       <li>parts that have to occur exactly once.<br>
         example: AVNConfig, AVNHttpServer,...</li>
       <li>parts that normally don't need to be part of avnav_server.xml. You
-        only need them there if you would like to change some of the defaults.<br>
+        only insert them if you want to change some of the defaults.<br>
         example: AVNAlarmHandler, AVNChartHandler,...</li>
       <li>parts that can be contained once or multiple times. This includes all
         the input and output channels. If no entry is present the functionality
-        will not be there.</li>
+        will not be available.</li>
     </ol>
-    <p>Some property will be available at multiple parts - a description form
-      them:</p>
+    <p>Some properties will be available at various parts - as described here:</p>
     <table style="width: 100%" border="1">
       <tbody>
         <tr>
@@ -81,9 +80,9 @@
         </tr>
         <tr>
           <td><a name="filter" id="filter"></a>filter</td>
-          <td>Filtering of NMEA date. You can provide filters separated by ,.
+          <td>Filtering of NMEA date. You can provide filters separated by comma.
             Only matching NMEA data will pass this filter. To make them
-            independent of talker ids the 2 characters after a $ will not be
+            independent of talker ids, the 2 characters following a $ will not be
             considered. To e.g. only pass $GPRMC sentences (and any other
             $xxRMC) the filter would be: $RMC.<br>
             If you prefix the filter with a ^ it will be negated, i.e. ^$RMC
@@ -92,14 +91,14 @@
         </tr>
         <tr>
           <td>readFilter</td>
-          <td>If the channel is a combined reader / writer you this will be the
+          <td>If the channel is a combined reader/writer this is the
             <a href="#filter">filter</a> for the input path</td>
           <td><br>
           </td>
         </tr>
         <tr>
           <td><a name="blackList" id="blackList"></a>blackList</td>
-          <td>List of channel names (separated by ,). Data coming from those
+          <td>List of channel names (separated by comma). Data originating from those
             channels will not be sent out. Consider the camel case - i.e.
             capital L.</td>
           <td>nmea0183tosignalk</td>
@@ -108,11 +107,11 @@
     </table>
     <p><br>
     </p>
-    <p>The following list contains the main parts together with their
-      parameters. If there are some properties in a template that are not listed
+    <p>The following tables list the main parts together with their
+      parameters. If some properties in a template are not listed
       here, just leave them as they are.</p>
     <h3>AVNConfig</h3>
-    <p>Base configuration, category 1 (1x,mandatory)</p>
+    <p>Base configuration, category 1 (1x, mandatory)</p>
     <table style="width: 100%" border="1">
       <tbody>
         <tr>
@@ -127,7 +126,7 @@
         </tr>
         <tr>
           <td>logfile</td>
-          <td>Name of the&nbsp; log file</td>
+          <td>Name of the log file</td>
           <td>&lt;datadir&gt;/log/avnav.log</td>
         </tr>
         <tr>
@@ -138,13 +137,13 @@
         </tr>
         <tr>
           <td>systimediff</td>
-          <td>maximal difference (in seconds) between system time and gps time
+          <td>maximum delta (in seconds) between system time and gps time
             before the system time is set.</td>
           <td>5</td>
         </tr>
         <tr>
           <td>settimecmd</td>
-          <td>command for setting the system time</td>
+          <td>command to set the system time</td>
           <td>/usr/lib/avnav/raspberry/settime.sh </td>
         </tr>
         <tr>
@@ -161,15 +160,15 @@
       </tbody>
     </table>
     <h3>AVNGpsdFeeder</h3>
-    <p>The internal NMEA lsit and decoder. category 2 (1x, not mandatory since
+    <p>The internal NMEA list and decoder unit. category 2 (once, optional since
       version 20200325).</p>
-    <p>This part now has no parameters any more. In previous versions you could
-      configure gpsd here so potentially there still will be some parameters in
-      your configuration. In newer versions ensure that you include
+    <p>This part has no parameters anymore. In previous versions you could
+      configure gpsd here, so potentially there still will be some parameters in
+      your configuration. In newer versions make sure to include
       useGpsd="false".</p>
     <h3>AVNHttpServer</h3>
     <p>The internal HTTP server. category 1 (once, mandatory).</p>
-    <p>Besode the parameters for the AVNHttpServer there are some child entries
+    <p>Apart from parameters for the AVNHttpServer there are some child entries
       that could be repeated multiple times. Normally there is no need for any
       change at those entries (Directory,MimeType).</p>
     <p>Beside the httpPort you would normally not change anything.</p>
@@ -198,7 +197,7 @@
         </tr>
         <tr>
           <td>httpHost</td>
-          <td>bind address fro the server</td>
+          <td>bind address for the server</td>
           <td>0.0.0.0</td>
         </tr>
         <tr>
@@ -233,8 +232,8 @@
       </tbody>
     </table>
     <h4>Parameters for MimeType</h4>
-    <p>You configure (additional) mime types for the server. Potentially your
-      own application would need some extension here if you have special files.</p>
+    <p>You may configure (additional) mime types for the server. Potentially your
+      own application requires some extension here if you have special files.</p>
     <table style="width: 100%" border="1">
       <tbody>
         <tr>
@@ -259,8 +258,7 @@
     <p><br>
     </p>
     <h3>AVNBlueToothReader</h3>
-    <p>Reading of bluetooth devices that have a serial profile. category 3 (once
-      , optional)<br>
+    <p>Reading of bluetooth devices that have a serial profile. category 3 (once, optional)<br>
       Only possible if your server has a bluetooth device.</p>
     <table style="width: 100%" border="1">
       <tbody>
@@ -327,7 +325,7 @@
         <tr>
           <td>timeout</td>
           <td>Timeout in s, if no data received within this time the device will
-            be closed and re opened.</td>
+            be closed and reopened.</td>
           <td>1</td>
         </tr>
         <tr>
@@ -357,7 +355,7 @@
         </tr>
         <tr>
           <td>numerrors</td>
-          <td>After that many errors the device will be closed and re opened.</td>
+          <td>After that number of errors the device will be closed and re opened.</td>
           <td>20</td>
         </tr>
         <tr>
@@ -377,7 +375,7 @@
     <h3><a name="AVNSerialWriter" id="AVNSerialWriter"></a>AVNSerialWriter</h3>
     <p>Output via a serial device. Could also read from this device. category 3
       (optional)<br>
-      Only use this for direct serial devices, for USB&nbsp; devices use<a href="#AVNUsbSerialReader">
+      Only use this for direct serial devices, for USB devices use<a href="#AVNUsbSerialReader">
         AVNUsbSerialReader</a></p>
     <table style="width: 100%" border="1">
       <tbody>
@@ -420,16 +418,15 @@
     </table>
     <a name="AVNUsbSerialReader"></a>
     <h3>AVNUsbSerialReader</h3>
-    <p>Handles serial devices connected via USB. category 3(once, optional).<br>
-      This worker scans all USB connected devices and for all of them with a
-      serail profile it tries to open them, detect the serial baud rate and read
-      NMEA data from them. Thsi way AvNav normally auto detects all such
+    <p>Handles serial devices connected via USB. category 3 (once, optional).<br>
+      This worker process scans all connected USB devices. It tries to open those with a serial profile, detect their baud rate and read
+      NMEA data. This way AvNav normally auto detects all such
       devices.<br>
-      You can define separate rules for dedicated devices, As a device
-      identification we use an ID that is related to the USB port that the
-      device is plugged in. To find out this Id simple watch the <a href="../userdoc/statuspage.html">status
+      You can define separate rules for individual devices. As device
+      identification we use the USB port id where the
+      device is plugged into. To find out this id simply watch the <a href="../userdoc/statuspage.html">status
         page</a> when you connect the device.</p>
-    <p>The parameters are separated into 2 pieces: </p>
+    <p>The parameters consist of 2 parts: </p>
     <ul>
       <li>Attributes for the entry itself</li>
       <li>Child entries of type UsbDevice</li>
@@ -452,15 +449,14 @@
         </tr>
         <tr>
           <td>allowUnknown</td>
-          <td>only if this attribute is true onknonw devices (i.e. without any
+          <td>only if this attribute is true, unknown devices (i.e. lacking an
             UsbDevice entry) will be handled</td>
           <td>true</td>
         </tr>
         <tr>
           <td>...</td>
           <td>all parameters from <a href="#AVNSerialReader">AVNSerialReader</a>
-            except port. Those parameters will be used for devices without an
-            UsbDevice entry.</td>
+            except port. Those parameters will be used for unknown devices.</td>
           <td><br>
           </td>
         </tr>
@@ -535,7 +531,7 @@
         </tr>
         <tr>
           <td>minTime</td>
-          <td>if set: time in s before the next record is received</td>
+          <td>if set: time in s before the next record is read</td>
           <td>0</td>
         </tr>
         <tr>
@@ -653,7 +649,7 @@
       </tbody>
     </table>
     <h3>AVNSocketReader</h3>
-    <p>Input. Connects with a TCP server and reads data from it.(TCP client).
+    <p>Input. Connects to TCP server reading data from it (TCP client).
       category 3 (multiple times, optional)</p>
     <table style="width: 100%" border="1">
       <tbody>
@@ -836,15 +832,15 @@
         </tr>
         <tr>
           <td>cleanup</td>
-          <td>maximal length (in hours) for the track data that is sent to the
-            WebApp. Still files are there for older data but not for the app.</td>
+          <td>maximum age (in hours) for track data sent to the
+            WebApp. Still files are stored to hold older data but these are not available to the WebApp.</td>
           <td>25</td>
         </tr>
       </tbody>
     </table>
     <h3>AVNRouter</h3>
     <p>Handling of routing data (waypoints, routes, anchor alarm). Computing of
-      RMB, APB. category 1(once, mandatory).</p>
+      RMB, APB. category 1 (once, mandatory).</p>
     <table style="width: 100%" border="1">
       <tbody>
         <tr>
@@ -891,7 +887,7 @@
         </tr>
         <tr>
           <td>maxfiles</td>
-          <td>number of files (1 per day) that is kept.</td>
+          <td>number of files (1 per day) that are kept.</td>
           <td>100</td>
         </tr>
         <tr>
@@ -908,7 +904,7 @@
       </tbody>
     </table>
     <h3>AVNImporter</h3>
-    <p>Imports Charts, that still need conversion. category 2 (once, optional)</p>
+    <p>Import Charts that still need conversion. category 2 (once, optional)</p>
     <table style="width: 100%" border="1">
       <tbody>
         <tr>
@@ -928,19 +924,19 @@
         </tr>
         <tr>
           <td>waittime</td>
-          <td>time in seconds that the importer waits after an new/changed file
-            has been detected before the conversion starts.</td>
+          <td>converter waittime in seconds to start conversion after a new/changed file
+            has been detected </td>
           <td>30</td>
         </tr>
         <tr>
           <td>knownExtensions</td>
-          <td>list of extensions that the WebApp will offer to upload to the
+          <td>list of extensions the WebApp offers to upload to the
             importer.</td>
           <td>kap,map,geo</td>
         </tr>
         <tr>
           <td>keepInfoTime</td>
-          <td>time in seconds an information for an input is kept after removal</td>
+          <td>time in seconds an information on import is kept </td>
           <td>30</td>
         </tr>
       </tbody>
@@ -966,16 +962,16 @@
         </tr>
         <tr>
           <td>firewallCommand</td>
-          <td>if configured you can enable access to the pi from the connected
+          <td>if configured, you can enable access to the pi from the connected
             wifi network </td>
           <td>sudo -n $BASEDIR/../raspberry/iptables-ext.sh wlan-av1</td>
         </tr>
       </tbody>
     </table>
     <h3>AVNCommandHandler</h3>
-    <p>Execute commands (e.g. for alarms). category2 (once,optional).</p>
+    <p>Execute commands (e.g. for alarms). category2 (once, optional).</p>
     <p>AVNCommandHandler itself has no parameters. There can be child
-      configurations for various commands. The defualt configuration is:</p>
+      configurations for various commands. The default configuration is:</p>
     <div class="code">&lt;AVNCommandHandler&gt;
      &lt;Command name="sound" command="mpg123 -q" repeat="1"/&gt;
 &lt;/AVNCommandHandler&gt;</div>
@@ -1019,18 +1015,18 @@
     <p>AVNAlarmHandler has one parameter: stopAlarmPin. If this is set (pin
       number - i.e. mode board, only Raspberry) you can stop an alarm by using
       an "L" potential at this pin (e.g. with a simple button).<br>
-      The parameters set at the alarms will additionally be used for the sound
+      The parameters set at the alarms will also be used for the sound
       in the WebApp.</p>
     <h3><a name="plugins" id="plugins"></a>AVNPluginHandler</h3>
     <p>Management of plugins. category 2 (once, optional).<br>
-      AVNPluginHandler is handling <a href="plugins.html">plugins</a> that can
-      be installed into different directories:</p>
+      AVNPluginHandler is handling <a href="plugins.html">plugins</a>. They can
+      be installed in different directories:</p>
     <ul>
       <li>builtin: /usr/lib/avnav/server/plugins</li>
       <li>system: /user/lib/avnav/plugins</li>
       <li>user: /home/pi/avnav/data/plugins</li>
     </ul>
-    <p>Beside the parameters for the plugin handler itself each plugin could
+    <p>Beside the parameters for the plugin handler itself, each plugin could
       expect parameters. The name of the plugin consists of the category and the
       plugin directory name. Example:</p>
     <div class="code">&lt;AVNPluginHandler&gt;
@@ -1102,7 +1098,7 @@
         </tr>
         <tr>
           <td>allowKeyOverride</td>
-          <td>set to true to allow the plugin to set data and time in the
+          <td>set to true to allow the plugin to set date and time in the
             internal store</td>
           <td>false</td>
         </tr>
@@ -1118,9 +1114,9 @@
         </tr>
         <tr>
           <td>autoSendRMC</td>
-          <td>if no RMC record is seen in the NMEA data for this time (in
-            seconds) but we received valid data/time from n2k and valid position
-            data in the NMEA - generate an RMC record (important to have date
+          <td>if no RMC record is seen in the NMEA data within this period (in
+            seconds) but valid position and date/time data were received from n2k
+          - generate a RMC record (important to have date
             and time on NMEA0183)</td>
           <td>30</td>
         </tr>

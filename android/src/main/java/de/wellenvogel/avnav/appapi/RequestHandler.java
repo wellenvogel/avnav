@@ -14,27 +14,22 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
+import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
 import de.wellenvogel.avnav.charts.ChartHandler;
 import de.wellenvogel.avnav.main.Constants;
-import de.wellenvogel.avnav.main.MainActivity;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.settings.AudioEditTextPreference;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.worker.Alarm;
-import de.wellenvogel.avnav.worker.GpsDataProvider;
 import de.wellenvogel.avnav.worker.GpsService;
 import de.wellenvogel.avnav.worker.RouteHandler;
 
@@ -55,7 +50,7 @@ public class RequestHandler {
     public static final String ROOT_PATH="/viewer";
     protected static final String NAVURL="viewer/avnav_navi.php";
     private SimpleDateFormat dateFormat=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
-    MainActivity activity;
+    GpsService service;
     private SharedPreferences preferences;
     private MimeTypeMap mime = MimeTypeMap.getSingleton();
     private final Object handlerMonitor =new Object();
@@ -77,44 +72,36 @@ public class RequestHandler {
     public static String TYPE_IMAGE="images";
     public static String TYPE_OVERLAY="overlay";
     public static String TYPE_ADDON="addon";
-
-    public static class KeyValue<VT>{
-        String key;
-        public VT value;
-        public KeyValue(String key, VT v){
-            this.key=key;
-            this.value=v;
-        }
-    }
+    public static String TYPE_CONFIG="config";
 
 
-    public static class TypeItemMap<VT> extends HashMap<String, KeyValue<VT>>{
-        public TypeItemMap(KeyValue<VT>...list){
-            for (KeyValue<VT> i : list){
+    public static class TypeItemMap<VT> extends HashMap<String, AvnUtil.KeyValue<VT>>{
+        public TypeItemMap(AvnUtil.KeyValue<VT>...list){
+            for (AvnUtil.KeyValue<VT> i : list){
                 put(i.key,i);
             }
         }
     }
 
     public static TypeItemMap<Integer> typeHeadings=new TypeItemMap<Integer>(
-            new KeyValue<Integer>(TYPE_ROUTE, R.string.uploadRoute),
-            new KeyValue<Integer>(TYPE_CHART,R.string.uploadChart),
-            new KeyValue<Integer>(TYPE_IMAGE,R.string.uploadImage),
-            new KeyValue<Integer>(TYPE_USER,R.string.uploadUser),
-            new KeyValue<Integer>(TYPE_LAYOUT,R.string.uploadLayout),
-            new KeyValue<Integer>(TYPE_OVERLAY,R.string.uploadOverlay),
-            new KeyValue<Integer>(TYPE_TRACK,R.string.uploadTrack)
+            new AvnUtil.KeyValue<Integer>(TYPE_ROUTE, R.string.uploadRoute),
+            new AvnUtil.KeyValue<Integer>(TYPE_CHART,R.string.uploadChart),
+            new AvnUtil.KeyValue<Integer>(TYPE_IMAGE,R.string.uploadImage),
+            new AvnUtil.KeyValue<Integer>(TYPE_USER,R.string.uploadUser),
+            new AvnUtil.KeyValue<Integer>(TYPE_LAYOUT,R.string.uploadLayout),
+            new AvnUtil.KeyValue<Integer>(TYPE_OVERLAY,R.string.uploadOverlay),
+            new AvnUtil.KeyValue<Integer>(TYPE_TRACK,R.string.uploadTrack)
     );
 
     //directories below workdir
     public static TypeItemMap<File> typeDirs=new TypeItemMap<File>(
-            new KeyValue<File>(TYPE_ROUTE,new File("routes")),
-            new KeyValue<File>(TYPE_CHART,new File("charts")),
-            new KeyValue<File>(TYPE_TRACK,new File("tracks")),
-            new KeyValue<File>(TYPE_LAYOUT,new File("layout")),
-            new KeyValue<File>(TYPE_USER,new File(new File("user"),"viewer")),
-            new KeyValue<File>(TYPE_IMAGE,new File(new File("user"),"images")),
-            new KeyValue<File>(TYPE_OVERLAY,new File("overlays"))
+            new AvnUtil.KeyValue<File>(TYPE_ROUTE,new File("routes")),
+            new AvnUtil.KeyValue<File>(TYPE_CHART,new File("charts")),
+            new AvnUtil.KeyValue<File>(TYPE_TRACK,new File("tracks")),
+            new AvnUtil.KeyValue<File>(TYPE_LAYOUT,new File("layout")),
+            new AvnUtil.KeyValue<File>(TYPE_USER,new File(new File("user"),"viewer")),
+            new AvnUtil.KeyValue<File>(TYPE_IMAGE,new File(new File("user"),"images")),
+            new AvnUtil.KeyValue<File>(TYPE_OVERLAY,new File("overlays"))
 
     );
 
@@ -131,20 +118,20 @@ public class RequestHandler {
 
     private HashMap<String,LazyHandlerAccess> handlerMap=new HashMap<>();
 
-    public static JSONObject getReturn(KeyValue ...data) throws JSONException {
+    public static JSONObject getReturn(AvnUtil.KeyValue...data) throws JSONException {
         JSONObject rt=new JSONObject();
         Object error=null;
-        for (KeyValue kv : data){
+        for (AvnUtil.KeyValue kv : data){
             if ("error".equals(kv.key)) error=kv.value;
             else rt.put(kv.key,kv.value);
         }
         rt.put("status",error == null?"OK":error);
         return rt;
     }
-    public static JSONObject getReturn(ArrayList<KeyValue> data) throws JSONException {
+    public static JSONObject getReturn(ArrayList<AvnUtil.KeyValue> data) throws JSONException {
         JSONObject rt=new JSONObject();
         Object error=null;
-        for (KeyValue kv : data){
+        for (AvnUtil.KeyValue kv : data){
             if ("error".equals(kv.key)) error=kv.value;
             else rt.put(kv.key,kv.value);
         }
@@ -152,28 +139,29 @@ public class RequestHandler {
         return rt;
     }
 
-    public static JSONObject getErrorReturn(String error,KeyValue ...data) throws JSONException {
+
+    public static JSONObject getErrorReturn(String error, AvnUtil.KeyValue...data) throws JSONException {
         JSONObject rt=new JSONObject();
         rt.put("status",error == null?"OK":error);
-        for (KeyValue kv : data){
+        for (AvnUtil.KeyValue kv : data){
             if (!"error".equals(kv.key)) rt.put(kv.key,kv.value);
         }
         return rt;
     }
 
     public File getWorkDirFromType(String type) throws Exception {
-        KeyValue<File>subDir=typeDirs.get(type);
+        AvnUtil.KeyValue<File> subDir=typeDirs.get(type);
         if (subDir == null) throw new Exception("invalid type "+type);
         return new File(getWorkDir(),subDir.value.getPath());
     }
 
-    public RequestHandler(MainActivity activity){
-        this.activity=activity;
-        this.gemfHandler =new ChartHandler(activity,this);
+    public RequestHandler(GpsService service){
+        this.service = service;
+        this.gemfHandler =new ChartHandler(service,this);
         this.gemfHandler.updateChartList();
-        this.addonHandler= new AddonHandler(activity,this);
+        this.addonHandler= new AddonHandler(service,this);
         startHandler();
-        layoutHandler=new LayoutHandler(activity,"viewer/layout",
+        layoutHandler=new LayoutHandler(service,"viewer/layout",
                 new File(getWorkDir(),typeDirs.get(TYPE_LAYOUT).value.getPath()));
         handlerMap.put(TYPE_LAYOUT, new LazyHandlerAccess() {
             @Override
@@ -200,7 +188,7 @@ public class RequestHandler {
             }
         });
         try{
-            final DirectoryRequestHandler userHandler=new UserDirectoryRequestHandler(this,
+            final DirectoryRequestHandler userHandler=new UserDirectoryRequestHandler(this,service,
                     addonHandler);
             handlerMap.put(TYPE_USER, new LazyHandlerAccess() {
                 @Override
@@ -212,7 +200,7 @@ public class RequestHandler {
             AvnLog.e("unable to create user handler",e);
         }
         try {
-            final DirectoryRequestHandler imageHandler=new DirectoryRequestHandler(TYPE_IMAGE,
+            final DirectoryRequestHandler imageHandler=new DirectoryRequestHandler(TYPE_IMAGE,service,
                     getWorkDirFromType(TYPE_IMAGE), "user/images",null);
             handlerMap.put(TYPE_IMAGE, new LazyHandlerAccess() {
                 @Override
@@ -224,7 +212,7 @@ public class RequestHandler {
             AvnLog.e("unable to create images handler",e);
         }
         try {
-            final DirectoryRequestHandler overlayHandler=new DirectoryRequestHandler(TYPE_OVERLAY,
+            final DirectoryRequestHandler overlayHandler=new DirectoryRequestHandler(TYPE_OVERLAY,service,
                     getWorkDirFromType(TYPE_OVERLAY), "user/overlays",null);
             handlerMap.put(TYPE_OVERLAY, new LazyHandlerAccess() {
                 @Override
@@ -239,6 +227,12 @@ public class RequestHandler {
             @Override
             public INavRequestHandler getHandler() {
                 return addonHandler;
+            }
+        });
+        handlerMap.put(TYPE_CONFIG, new LazyHandlerAccess() {
+            @Override
+            public INavRequestHandler getHandler() {
+                return getGpsService();
             }
         });
 
@@ -291,14 +285,14 @@ public class RequestHandler {
     }
 
     protected File getWorkDir(){
-        return AvnUtil.getWorkDir(getSharedPreferences(),activity);
+        return AvnUtil.getWorkDir(getSharedPreferences(), service);
     }
     GpsService getGpsService(){
-        return activity.getGpsService();
+        return service;
     }
     public synchronized  SharedPreferences getSharedPreferences(){
         if (preferences != null) return preferences;
-        preferences=AvnUtil.getSharedPreferences(activity);
+        preferences=AvnUtil.getSharedPreferences(service);
         return preferences;
     }
 
@@ -337,7 +331,7 @@ public class RequestHandler {
                 }
                 ExtendedWebResourceResponse rt=tryDirectRequest(uri);
                 if (rt != null) return rt;
-                InputStream is=activity.getAssets().open(path);
+                InputStream is= service.getAssets().open(path);
                 return new ExtendedWebResourceResponse(-1,mimeType(path),"",is);
             } catch (Throwable e) {
                 e.printStackTrace();
@@ -365,7 +359,7 @@ public class RequestHandler {
         InputStream input;
         String htmlPage=null;
         try {
-            input = activity.getAssets().open("viewer/avnav_viewer.html");
+            input = service.getAssets().open("viewer/avnav_viewer.html");
 
             int size = input.available();
             byte[] buffer = new byte[size];
@@ -405,6 +399,24 @@ public class RequestHandler {
         return handleNavRequest(uri,postData,null);
     }
     ExtendedWebResourceResponse handleNavRequest(Uri uri, PostVars postData,ServerInfo serverInfo) throws Exception {
+        return handleNavRequestInternal(uri,postData,serverInfo).getResponse();
+    }
+    static class NavResponse{
+        private ExtendedWebResourceResponse response;
+        private Object jsonResponse;
+        NavResponse(Object o){jsonResponse=o;}
+        NavResponse(ExtendedWebResourceResponse r){response=r;}
+        ExtendedWebResourceResponse getResponse() throws UnsupportedEncodingException {
+            if (response != null) return response;
+            byte o[]=jsonResponse.toString().getBytes("UTF-8");
+            long len=o.length;
+            InputStream is = new ByteArrayInputStream(o);
+            return new ExtendedWebResourceResponse(len,"application/json","UTF-8",is);
+        }
+        boolean isJson(){return jsonResponse != null;}
+        Object getJson(){return jsonResponse;}
+    }
+    NavResponse handleNavRequestInternal(Uri uri, PostVars postData,ServerInfo serverInfo) throws Exception {
         if (uri.getPath() == null) return null;
         String remain=uri.getPath();
         if (remain.startsWith("/")) remain=remain.substring(1);
@@ -505,7 +517,7 @@ public class RequestHandler {
                 INavRequestHandler handler=getHandler(dirtype);
                 if (handler != null){
                     handled=true;
-                    fout=getReturn(new KeyValue<JSONArray>("items",handler.handleList(uri, serverInfo)));
+                    fout=getReturn(new AvnUtil.KeyValue<JSONArray>("items",handler.handleList(uri, serverInfo)));
                 }
 
             }
@@ -526,9 +538,9 @@ public class RequestHandler {
                     }
                 }
                 if (!handled && dltype != null && dltype.equals("alarm") && name != null) {
-                    AudioEditTextPreference.AudioInfo info=AudioEditTextPreference.getAudioInfoForAlarmName(name,activity);
+                    AudioEditTextPreference.AudioInfo info=AudioEditTextPreference.getAudioInfoForAlarmName(name, service);
                     if (info != null){
-                        AudioEditTextPreference.AudioStream stream=AudioEditTextPreference.getAlarmAudioStream(info,activity);
+                        AudioEditTextPreference.AudioStream stream=AudioEditTextPreference.getAlarmAudioStream(info, service);
                         if (stream == null){
                             AvnLog.e("unable to get audio stream for "+info.uri.toString());
                         }
@@ -550,7 +562,7 @@ public class RequestHandler {
                     resp.setHeader("Content-Disposition", value);
                 }
                 resp.setHeader("Content-Type",resp.getMimeType());
-                return resp;
+                return new NavResponse(resp);
             }
             if (type.equals("delete")) {
                 JSONObject o=new JSONObject();
@@ -587,56 +599,10 @@ public class RequestHandler {
                 JSONObject o=new JSONObject();
                 JSONArray items=new JSONArray();
                 if (getGpsService() != null) {
-                    //internal GPS
-                    JSONObject gps = new JSONObject();
-                    gps.put("name", "GPS");
-                    gps.put("info", getGpsService().getStatus());
-                    items.put(gps);
-                    JSONObject tw=new JSONObject();
-                    tw.put("name","TrackWriter");
-                    tw.put("info",getGpsService().getTrackStatus());
-                    items.put(tw);
-                }
-                if (serverInfo != null){
-                    //we are queried from the WebServer - just return all network interfaces
-                    JSONObject http=new JSONObject();
-                    http.put("name","AVNHttpServer");
-                    http.put("configname","AVNHttpServer"); //this is the part the GUI looks for
-                    JSONArray status=new JSONArray();
-                    JSONObject serverStatus=new JSONObject();
-                    serverStatus.put("info","listening on "+serverInfo.address.toString());
-                    serverStatus.put("name","HttpServer");
-                    serverStatus.put("status", GpsDataProvider.STATUS_NMEA);
-                    status.put(serverStatus);
-                    JSONObject info=new JSONObject();
-                    info.put("items",status);
-                    http.put("info",info);
-                    JSONObject props=new JSONObject();
-                    JSONArray addr=new JSONArray();
-                    if (serverInfo.listenAny) {
-                        try {
-                            Enumeration<NetworkInterface> intfs = NetworkInterface.getNetworkInterfaces();
-                            while (intfs.hasMoreElements()) {
-                                NetworkInterface intf = intfs.nextElement();
-                                Enumeration<InetAddress> ifaddresses = intf.getInetAddresses();
-                                while (ifaddresses.hasMoreElements()) {
-                                    InetAddress ifaddress = ifaddresses.nextElement();
-                                    if (ifaddress.getHostAddress().contains(":"))
-                                        continue; //skip IPV6 for now
-                                    String ifurl = ifaddress.getHostAddress() + ":" + serverInfo.address.getPort();
-                                    addr.put(ifurl);
-                                }
-                            }
-                        } catch (SocketException e1) {
-                        }
+                    JSONArray gpsStatus=getGpsService().getStatus();
+                    for (int i=0;i<gpsStatus.length();i++){
+                        items.put(gpsStatus.get(i));
                     }
-                    else{
-                        addr.put(serverInfo.address.getAddress().getHostAddress()+":"+serverInfo.address.getPort());
-                    }
-                    props.put("addresses",addr);
-                    http.put("properties",props);
-                    items.put(http);
-
                 }
                 o.put("handler",items);
                 fout=o;
@@ -696,7 +662,12 @@ public class RequestHandler {
                 o.put("uploadImages",true);
                 o.put("uploadOverlays",true);
                 o.put("uploadTracks",true);
-                fout=getReturn(new KeyValue<JSONObject>("data",o));
+                if (serverInfo == null) {
+                    //we can only handle the config stuff internally
+                    //as potentially there are permission dialogs
+                    o.put("config", true);
+                }
+                fout=getReturn(new AvnUtil.KeyValue<JSONObject>("data",o));
             }
             if (type.equals("api")){
                 try {
@@ -718,17 +689,11 @@ public class RequestHandler {
             if (!handled){
                 AvnLog.d(Constants.LOGPRFX,"unhandled nav request "+type);
             }
-            String outstring="";
-            if (fout != null) outstring=fout.toString();
-            byte o[]=outstring.getBytes("UTF-8");
-            len=o.length;
-            is = new ByteArrayInputStream(o);
+            if (fout != null) return new NavResponse(fout);
+            return new NavResponse(getErrorReturn("request not handled"));
         } catch (JSONException jse) {
-            jse.printStackTrace();
-            is=new ByteArrayInputStream(new byte[]{});
-            len=0;
+            return new NavResponse(getErrorReturn(jse.getMessage()));
         }
-        return new ExtendedWebResourceResponse(len,"application/json","UTF-8",is);
     }
 
 

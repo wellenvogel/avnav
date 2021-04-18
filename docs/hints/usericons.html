@@ -10,12 +10,12 @@
     <p>Seit Version 20201030.</p>
     <p>Eine Reihe der in AvNav genutzten Symbole kann man an die eigenen
       Bedürfnisse anpassen. Man kann die vorhanden Symbole in ihrer Größe
-      ändern, verschiedene Eigenschaften einstellen oder sie durch eigene
+      ändern, verschiedene Eigenschaften einstellen, oder sie durch eigene
       Symbole ersetzen.</p>
     <p>Falls man eigene Symbole nutzen möchte, müssen diese als .png Dateien in
       das Images Verzeichnis hochgeladen werden - siehe bei der <a href="../userdoc/downloadpage.html#userfiles">Beschreibung
         zu Nutzer-Dateien</a>.</p>
-    <p>Welche Symbole verändert werden sollen (und wie) wird in einer Json Datei
+    <p>Welche Symbole verändert werden sollen (und wie), wird in einer JSON Datei
       im Nutzer Verzeichnis beschrieben - images.json.</p>
     <p>Diese Datei hat den folgenden Aufbau (Beispiel):</p>
     <div class="code">{
@@ -54,7 +54,7 @@
         </tr>
         <tr>
           <td>aisNormalImage</td>
-          <td>Das Symbol für ein AIS Ziel das nicht das nächste oder eines mit
+          <td>Das Symbol für ein AIS Ziel, das nicht das nächste oder eines mit
             Warnung ist</td>
         </tr>
         <tr>
@@ -68,7 +68,7 @@
       </tbody>
     </table>
     <p>Bei den AisImages kann mit -shiptype noch ausgewählt, für welchen der
-      verschiedenen angezeigten Typen diese Image gelten soll. Falls für einen
+      verschiedenen angezeigten Typen dieses Image gelten soll. Falls für einen
       Type kein spezifisches Image definiert wurde, wird das jeweilige
       Basis-Image (also ohne -shiptype) bzw. das eingebaute Image genutzt.</p>
     <p>Die folgende werte werden für shiptype unterstützt:</p>
@@ -112,8 +112,8 @@
         </tr>
         <tr>
           <td>rotate</td>
-          <td>true oder false - wenn auf false gesetzt, wrid das Symbol nicht
-            entsprechend des aktuellen Kurses rotatiert</td>
+          <td>true oder false - wenn auf false gesetzt, wird das Symbol nicht
+            entsprechend des aktuellen Kurses rotiert</td>
           <td>nicht für markerImage</td>
         </tr>
         <tr>
@@ -131,7 +131,7 @@
         </tr>
       </tbody>
     </table>
-    <p>Bei der Bearbeitung der images.json muss darauf geachtet werden valides
+    <p>Bei der Bearbeitung der images.json muss darauf geachtet werden, valides
       json zu erzeugen. Wenn man es innerhalb von AvNav auf der Files/Download
       Seite <img src="../viewerimages/icons-new/ic_file_download.svg" alt="" class="inlineimage">(Unterseite
       <img src="../viewerimages/icons-new/folder_shared.svg" alt="" class="inlineimage">)

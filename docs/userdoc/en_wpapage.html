@@ -8,38 +8,35 @@
   <body data-order="2400">
     <h1> The Wifi Configuration Page</h1>
     <p>- not on android -</p>
-    <p>From the <a href="statuspage.html">status page</a> you get here using
-      the <img src="../viewerimages/icons-new/ic_rss_feed.svg" alt="" class="inlineimage">button.</p>
-    <p><img src="../wpapage.png" alt="" class="fimage"></p>
-    <p>This page will only be shown if the wifi client handling is configured
+    <p>This page is accessible by clicking the <img src="../viewerimages/icons-new/ic_rss_feed.svg" alt="" class="inlineimage">button on the <a href="statuspage.html">status page</a>.</p>
+    <p><img src="wpapage.png" alt="" class="fimage"></p>
+    <p>This page will only be visible if wifi client handling is configured
       and a wifi adapter is plugged into the correct USB port.</p>
     <p><img src="../raspi3-wlan.jpg" alt="" class="fimage"></p>
-    <p>In the picture a Raspberry Pi 3 is shown, For newer ones with blue USB3.0
-      sockets you must connect to the blue socket that is closed to the pcb.</p>
-    <p>On the OS level on the pi a network interface "wlan-av1" must be shown.
+    <p>In the picture a Raspberry Pi 3 is shown. Newer ones are equipped with blue USB3.0
+      sockets. You must connect to the blue socket that is close to the mainboard.</p>
+    <p>On the Pi's OS level a network interface "wlan-av1" must be visible.
       In the configuration (avnav_server.xml) an entry</p>
     <div class="code">&lt;AVNWpaHandler wpaSocket="/var/run/wpa_supplicant/wlan-av1"&gt;
 &lt;/AVNWpaHandler&gt;</div>
     <p>must exist.</p>
-    <p>On the page all wifi networks in range and the configured networks are
-      shown.<br>
-      By clicking on an entry you can connect to this network.</p>
-    <p><img src="../wpa-connect.png" alt="" class="fimage"></p>
-    <p>If you would like to allow an access from this network to your rasp you
-      must switch on "external access".</p>
+    <p>The page displays all wifi networks in range and all configured networks.<br>
+      By clicking an entry you can connect to this network.</p>
+    <p><img src="wpa-connect.png" alt="" class="fimage"></p>
+    <p>Check "external access" to allow external access from this network to your Pi.</p>
     <p><b>Warning: Never enable external access in a public wifi network! There
         is no protection in AvNav and anybody within the same network could
         access your system.</b> <br>
-      But you can use it if you e.g. use an own LTE router and would like to
-      allow your devices connected to this router to access AvNav.</p>
-    <p>If the connection has been established it will be shown and the network
-      will have a grey background in the lsist.</p>
-    <p><img src="../wpapage-connected.png" alt="" class="fimage"></p>
-    <p>During connection set up some status information will be visible close to
+      However you may use it if you e.g. run your own LTE router and would like to
+      allow your connected devices to access AvNav.</p>
+    <p>An established connection will be indicated and the active network
+      is marked by a grey background in the list.</p>
+    <p><img src="wpapage-connected.png" alt="" class="fimage"></p>
+    <p>While connecting some status information will be visible close to
       "Interface".</p>
-    <p>If you would like to disconnect you can click again on the network and
-      can disable it or remove it from the configuration completely.</p>
-    <p><img src="../wpapage-modify.png" alt="" class="fimage"></p>
+    <p>To disconnect you can click the network again. You
+      can disable it or completely remove it from the configuration.</p>
+    <p><img src="wpapage-modify.png" alt="" class="fimage"></p>
     <p>All the wifi information is stored in the file
       /etc/wpa_supplicant/wpa_supplicant.conf.</p>
     <p><br>

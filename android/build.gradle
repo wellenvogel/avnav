@@ -33,7 +33,11 @@ dependencies {
     implementation "com.android.support:support-compat:26.0.0"
     implementation 'com.android.support:appcompat-v7:26.0.0'
     implementation 'com.github.felHR85:UsbSerial:4.5'
+    implementation group: 'net.straylightlabs', name: 'hola', version: '0.2.2'
     implementation group: 'org.apache.httpcomponents', name: 'httpcore', version: '4.0'
+    testImplementation 'junit:junit:4.12'
+    testImplementation 'org.robolectric:robolectric:4.4'
+
 }
 
 File srcBase = new File(project.rootDir, "src" + File.separator + "main")

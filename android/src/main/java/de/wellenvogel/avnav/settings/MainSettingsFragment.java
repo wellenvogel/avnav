@@ -1,7 +1,9 @@
 package de.wellenvogel.avnav.settings;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -21,6 +23,8 @@ import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
+import de.wellenvogel.avnav.util.DialogBuilder;
+import de.wellenvogel.avnav.worker.GpsService;
 
 /**
  * Created by andreas on 24.10.15.
@@ -52,16 +56,6 @@ public class MainSettingsFragment extends SettingsFragment {
         if (myChartPref != null) {
             myChartPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 public boolean onPreferenceClick(final Preference preference) {
-                    if (! ((SettingsActivity)getActivity()).checkStoragePermssionWitResult(true,true, new SettingsActivity.PermissionResult() {
-                        @Override
-                        public void result(String[] permissions, int[] grantResults) {
-                            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
-                                runCharDirRequest(myChartPref);
-                        }
-                    }))
-                    {
-                        return true;
-                    }
                     if (Build.VERSION.SDK_INT >= 21) {
                         runCharDirRequest(myChartPref);
                         return true;
@@ -117,6 +111,22 @@ public class MainSettingsFragment extends SettingsFragment {
                 }
             });
         }
+        Preference setDefaultPref=getPreferenceScreen().findPreference("prefs.default");
+        setDefaultPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                DialogBuilder.confirmDialog(MainSettingsFragment.this.getActivity(), R.string.reset,
+                        R.string.reallyResetHandlers, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                if (which == DialogInterface.BUTTON_POSITIVE){
+                                    GpsService.resetWorkerConfig(MainSettingsFragment.this.getActivity());
+                                }
+                            }
+                        });
+                return false;
+            }
+        });
         setDefaults(R.xml.main_preferences,true);
     }
 
@@ -140,40 +150,13 @@ public class MainSettingsFragment extends SettingsFragment {
 
     @Override
     protected boolean updatePreferenceSummary(Preference pref, SharedPreferences prefs) {
-        if (pref instanceof ListPreference && pref.getKey().equals(Constants.RUNMODE)){
-            updateListSummary((ListPreference)pref);
-            return false;
-        }
         if (pref.getKey().equals(Constants.WORKDIR)){
             updateListSummary((ListPreference)pref);
         }
         return true;
     }
 
-    private ListPreference getRunMode(){
-        Preference p = getPreferenceScreen().findPreference(Constants.RUNMODE);
-        if (p != null) return (ListPreference)p;
-        return null;
-    }
-
-
     private void fillData() {
-        ListPreference l = getRunMode();
-        if (l != null) {
-            Resources r = getResources();
-            l.setEntryValues(new String[]{Constants.MODE_NORMAL,  Constants.MODE_SERVER});
-            String e[]=new String[l.getEntryValues().length];
-            int index=0;
-            SharedPreferences prefs = getActivity().getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
-            String runMode = prefs.getString(Constants.RUNMODE, Constants.MODE_NORMAL);
-            for (int i=0;i<l.getEntryValues().length;i++){
-                e[i]=modeToLabel(getActivity(),l.getEntryValues()[i]);
-                if (l.getEntryValues()[i].equals(runMode)) index=i;
-            }
-            l.setEntries(e);
-            l.setValueIndex(index);
-            updateListSummary(l);
-        }
         ListPreference wd=(ListPreference)getPreferenceScreen().findPreference(Constants.WORKDIR);
         if (wd != null){
             wd.setEntryValues(new String[]{Constants.INTERNAL_WORKDIR,Constants.EXTERNAL_WORKDIR});
@@ -191,18 +174,13 @@ public class MainSettingsFragment extends SettingsFragment {
     private void updateListSummary(ListPreference l){
         l.setSummary(l.getEntry());
     }
-    private static String modeToLabel(Activity a,CharSequence mode){
-        if (mode == null) return "";
-        Resources r=a.getResources();
-        if (mode.equals(Constants.MODE_NORMAL)) return r.getString(R.string.runNormal);
-        if (mode.equals(Constants.MODE_SERVER)) return r.getString(R.string.useExtBrowser);
-        return "";
-    }
 
     public static String getSummary(Activity a){
         SharedPreferences prefs = a.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
-        String runMode = prefs.getString(Constants.RUNMODE, Constants.MODE_NORMAL);
-        return a.getResources().getString(R.string.runMode)+":"+modeToLabel(a,runMode);
+        String workdir = prefs.getString(Constants.WORKDIR, Constants.INTERNAL_WORKDIR);
+        return workdir.equals(Constants.INTERNAL_WORKDIR)?
+                a.getResources().getString(R.string.internalStorage):
+                a.getResources().getString(R.string.externalStorage);
     }
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {

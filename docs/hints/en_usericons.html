@@ -8,7 +8,7 @@
   <body data-order="6000">
     <h1>User Symbols</h1>
     <p>Since version 20201030.</p>
-    <p>A couple of the symbols that are used within AvNav can be adapted to your
+    <p>A couple of the symbols used in AvNav can be adapted to your
       preferences. You can resize the existing symbols, set a couple of
       properties or replace them by own symbols.</p>
     <p>If you are going to use your own symbols you need to upload them as .png
@@ -39,7 +39,7 @@
     "size":[64,120]
   }
 }</div>
-    <p>For each symbol that you want to replace there must be an entry with the
+    <p>For each symbol you want to replace there must be an entry with the
       correct name.</p>
     <table style="width: 100%" border="1">
       <tbody>
@@ -84,7 +84,7 @@
             If you do not specify this parameter the system will use the built
             in symbol. You still can e.g. alter the size.<br>
             Your image files should have a reasonable size (e.g. 2x the
-            specified size) - but not to big as otherwise the performance could
+            specified size) - but not too large as otherwise the performance could
             suffer. If you have vector graphics (like svg) you can use a program
             like <a href="https://inkscape.org">inkscape</a> to create png's
             from them.</td>
@@ -94,46 +94,45 @@
         <tr>
           <td>size</td>
           <td>[width,height] - must be specified as an array - see the example.
-            This defines the size that the image will be scaled to.<br>
-            If you did not specify the src parameter you will scale the built in
+            This defines the size the image will be scaled to.<br>
+            If you did not specify the src parameter, size applies to the built in
             image.</td>
           <td><br>
           </td>
         </tr>
         <tr>
           <td>anchor</td>
-          <td>[x,y] - the point (related to with, height) of the image that
-            should be put at the position of the item on the map.</td>
+          <td>[x,y] - the point (related to the image's width, height coordinates) to be anchored at the item's position on the map.</td>
           <td><br>
           </td>
         </tr>
         <tr>
           <td>rotate</td>
           <td>true or false - if you set this to false the symbol will not be
-            rotated depending on its course.</td>
+            rotated according to its course.</td>
           <td>not for markerImage</td>
         </tr>
         <tr>
           <td>courseVector</td>
-          <td>true or false - if you set this to false there will be no course
-            vector for this symbol.</td>
+          <td>true or false - if you set this to false, no course
+            vector for this symbol is displayed.</td>
           <td>not for markerImage</td>
         </tr>
         <tr>
           <td>courseVectorColor</td>
-          <td>the color for the course vector. This allows you to align the
+          <td>the color for the course vector. This allows you to adjust the
             course vector color to the image colors.</td>
           <td>not for markerImage</td>
         </tr>
       </tbody>
     </table>
     <p>When you edit the images.json you have to be careful to create valid
-      json. If you use the edit function inside AvNav at the Files/Download page
+      json. When using the AvNav edit function at the Files/Download page
       <img src="../viewerimages/icons-new/ic_file_download.svg" alt="" class="inlineimage">(sub
       page <img src="../viewerimages/icons-new/folder_shared.svg" alt="" class="inlineimage">)
-      there will be an automatic check when you try to save the file.</p>
+      syntax will be automatically checked when saving the file.</p>
     <p><img src="edit-images.png" alt="" class="image"></p>
-    <p>After you saved the file you need to reload AvNav.</p>
+    <p>After you saved the file, you need to reload AvNav.</p>
     <p><br>
     </p>
     <br>

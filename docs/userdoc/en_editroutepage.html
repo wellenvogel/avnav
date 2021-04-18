@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+
     <title>AvNav Route Editor</title>
     <link href="../styles.css" rel="stylesheet" type="text/css">
   </head>
@@ -9,13 +10,12 @@
     <h1>The Route Editor </h1>
     <div class="toc"> </div>
     <h2>Overview</h2>
-    <p>You will reach the route editor with the&nbsp; <img src="../viewerimages/icons-new/route.svg"
-        alt="" class="inlineimage"> button from the <a href="navpage.html">navigation
-        page</a> . Additionally you can reach it via the <img src="../viewerimages/icons-new/ic_edit.svg"
-        alt="" class="inlineimage">Edit button within the info dialog for a
-      route on the <a href="downloadpage.html#filedialog">Files/Download</a>
+    <p>You will enter the route editor by clicking the&nbsp; <img src="../viewerimages/icons-new/route.svg"
+        alt="" class="inlineimage"> button on the <a href="navpage.html">navigation
+        page</a> . Additionally you can get to it via the <img src="../viewerimages/icons-new/ic_edit.svg"
+		 alt="" class="inlineimage">Edit button in the route's info dialog on the <a href="downloadpage.html#filedialog">Files/Download</a>
       page.</p>
-    <div> <img src="../routeedit-demo-start.png" alt="" class="fimage"><span style="font-weight: bold;"><br>
+    <div> <img src="routeedit-demo-start.png" alt="" class="fimage"><span style="font-weight: bold;"><br>
       </span></div>
     <div><span style="font-weight: bold;"><br>
       </span></div>
@@ -101,47 +101,47 @@
       </tbody>
     </table>
     <p>At this page you can create and edit a route.</p>
-    <p>At each point in time there is a currently selected point within the
+    <p>There is always a currently selected point within the
       route. It is marked red on the chart and marked grey in the list on the
-      left side. You can change the selected point by clicking on a different
+      left side. You can change the selected point by clicking a different
       point on the chart or in the list on the left side.<br>
       If you are editing the currently active route, the route info at the left
-      side will have a red border (otherwise green).<br>
-      If you leave the editor the display will go back to the active route.</p>
-    <p>All changes will become effective immediately - there is no fallback.</p>
-    <p>At the left side you have the list of all points in the route with
-      courses and distances. In the upper display you have the overall route
-      length and the estimated ETA (if the route is active).<br>
-      By clicking on an already selected waypoint in the list you can open an
-      edit dialog to change the name or position.</p>
+      side will display a red border (otherwise green).<br>
+      Leaving the editor will take you back to the active route.</p>
+    <p>All changes become effective immediately - there is no undo.</p>
+    <p>At the left side you see a list of all the route's waypoints including
+      courses and distances. On top of the list the number of waypoints, the overall route
+      length and - if the route is active - the estimated ETA are displayed.<br>
+      By clicking an already selected waypoint in the list you open an
+      edit dialog to change its name or position.</p>
     <h2><a name="routedialog" id="routedialog"></a>Route Dialog</h2>
-    <p> Clicking on the route info on the left side willbring up a dialog.</p>
-    <p><img src="../editroutepage-editroutedialog.png" alt="" class="fimage"></p>
-    <p>Within this dialog you can change the name of the route, you can select a
-      new route to be edited, you can copy the route, delete it or empty or
+    <p> Clicking on the route info on the left side opens a dialog.</p>
+    <p><img src="editroutepage-editroutedialog.png" alt="" class="fimage"></p>
+    <p>Within this dialog you can change the name of the route, select a
+      new route to be edited, copy the route, delete it, empty or
       invert it. </p>
-    <p>Clicking Edit will move you to the <a href="routepage.html">route list</a>.
+    <p>Clicking Edit will take you to the <a href="routepage.html">route list</a>.
       At this page you can delete and edit all points, change the name, invert
       or load a new route.</p>
-    <p>Clicking on the lower left panel will bring up some additional buttons.</p>
-    <p><img src="../editroute-wpbuttons.png" alt="" class="fimage"></p>
+    <p>Clicking the bottom left panel activates some additional buttons.</p>
+    <p><img src="editroute-wpbuttons.png" alt="" class="fimage"></p>
     <p>Using those buttons you can move between the points in the route or you
-      can edit the selected point.<br>
-      Clicking on the lower right will center the chart to the boat position.</p>
+      can edit the selected waypoint.<br>
+      Clicking the bottom right panel centers the chart at the boat's position.</p>
     <h2>Using Overlays</h2>
-    <p>If there is an <a href="../hints/overlays.html">overlay</a> visible
+    <p>If an <a href="../hints/overlays.html">overlay</a> is visible
       (like in the picture) - or within <a href="../hints/ocharts.html">ocharts</a>
-      you can bring up a new dialog by clicking on an object on the chart. This
-      dialog will provide some additional functions. </p>
+      you can open a dialog by clicking an object on the chart. This
+      dialog provides some additional functions. </p>
     <p><img src="../hints/Overlay-Example-InfoDialogRouting.png" alt="" class="fimage">
     </p>
-    <p>You can now insert the point you have clicked into the route (befor or
+    <p>You can insert the object you clicked into the route (befor or
       after the current red point). This way you can easily e.g. use points from
       a waypoint file to create your routes.</p>
     <p>If the overlay is a route you can insert the part after the clicked point
       into your current route.</p>
     <img src="../hints/Overlay-Example-InfoDialogRouting2.png" alt="" class="fimage">
-    <p>The dialog will show you the selected start point of the route and you
+    <p>The dialog shows the selected start point of the route and you
       can decide to insert before or after your current red point.</p>
     <p><br>
     </p>

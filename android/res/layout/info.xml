@@ -16,8 +16,8 @@
             android:paddingLeft="10dp"
             android:paddingRight="10dp"
             android:paddingBottom="10dp">
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/txAvnav"
-                  android:text="AvNav Android version "/>
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="AvNav Android version "/>
         <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

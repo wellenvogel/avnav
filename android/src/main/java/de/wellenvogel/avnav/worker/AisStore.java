@@ -211,7 +211,7 @@ public class AisStore {
     }
 
     public synchronized void cleanup(long lifetime){
-        long cleanupTime=System.currentTimeMillis()-lifetime;
+        long cleanupTime=System.currentTimeMillis()-lifetime*1000;
         Iterator<Map.Entry<Integer,JSONObject>> it=aisData.entrySet().iterator();
         while (it.hasNext()){
             Map.Entry<Integer,JSONObject>et=it.next();

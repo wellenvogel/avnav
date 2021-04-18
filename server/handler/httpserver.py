@@ -136,6 +136,8 @@ class AVNHTTPServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
     http.server.HTTPServer.__init__(self, server_address, RequestHandlerClass, True)
   
   def run(self):
+    self.freeAllUsedResources()
+    self.claimUsedResource(UsedResource.T_TCP,self.server_port,force=True)
     self.setNameIfEmpty("%s-%d"%(self.getName(),self.server_port))
     AVNLog.info("HTTP server "+self.server_name+", "+str(self.server_port)+" started at thread "+self.name)
     self.setInfo('main',"serving at port %s"%(str(self.server_port)),WorkerStatus.RUNNING)
@@ -156,12 +158,6 @@ class AVNHTTPServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
       return path
     else:
       return path
-
-  def getUsedResources(self, type=None):
-    if type != UsedResource.T_TCP and type is not None:
-      return []
-    return [UsedResource(UsedResource.T_TCP,self.id,self.server_port)]
-
 
   def getChartBaseDir(self):
     chartbaseurl=self.getStringParam('chartbase')

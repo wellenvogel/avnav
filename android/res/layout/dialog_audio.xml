@@ -23,7 +23,6 @@
     android:padding="24dp">
 
     <LinearLayout
-        android:id="@+id/selectaudio_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
@@ -51,7 +50,6 @@
             android:background="@android:color/darker_gray"/>
 
         <LinearLayout
-            android:id="@+id/edpButtonContainerSelect"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="fill_horizontal"
@@ -102,7 +100,6 @@
             android:background="@android:color/darker_gray"/>
 
         <LinearLayout
-            android:id="@+id/edpButtonContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="right"

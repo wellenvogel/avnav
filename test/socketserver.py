@@ -46,7 +46,6 @@ def sendSock(file,sock,sleeptime):
     try:
       try:
         lbytes=f.readline()
-        lbytes=re.sub(b'[\n\r]',b'',lbytes)
       except:
         print("Exception on r: "+traceback.format_exc())
         f=open(file,"rb")
@@ -59,8 +58,8 @@ def sendSock(file,sock,sleeptime):
         pass
       if doSend:
         try:
-            print(lbytes)
-            if sock.sendall(lbytes+b"\r\n") is not None:
+            print(re.sub(b'[\n\r]',b'',lbytes))
+            if sock.sendall(lbytes) is not None:
               raise Exception("Exception in sendall")
             sfail=0
         except:

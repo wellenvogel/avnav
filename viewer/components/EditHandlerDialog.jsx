@@ -113,6 +113,9 @@ class EditHandlerDialog extends React.Component{
                     canDelete: data.canDelete
                 })
                 this.currentValues.setState(data.values||{});
+                if (this.props.initialValues){
+                    this.modifiedValues.setState(this.props.initialValues);
+                }
             })
             .catch((e)=>Toast(e));
     }
@@ -175,7 +178,7 @@ class EditHandlerDialog extends React.Component{
             for (let k in condition[i]){
                 let compare=condition[i][k];
                 let value=undefined;
-                for (let pi in this .state.parameters) {
+                for (let pi in this.state.parameters) {
                     if (this.state.parameters[pi].name === k){
                         value=this.state.parameters[pi].getValueForDisplay(values);
                         break;
@@ -267,7 +270,8 @@ EditHandlerDialog.propTypes={
     childId: PropTypes.string,
     handlerName: PropTypes.string, //if this is set the handlerId and childId are ignored
                                    //and we create a new handler
-    closeCallback: PropTypes.func.isRequired
+    closeCallback: PropTypes.func.isRequired,
+    initialValues: PropTypes.object
 };
 
 const filterObject=(data)=>{
@@ -283,7 +287,7 @@ const filterObject=(data)=>{
  * @param opt_child: the child identifier
  * @return {boolean}
  */
-EditHandlerDialog.createDialog=(handlerId,opt_child)=>{
+EditHandlerDialog.createDialog=(handlerId,opt_child,opt_doneCallback)=>{
     OverlayDialog.dialog((props)=> {
         return <EditHandlerDialog
             {...props}
@@ -291,11 +295,22 @@ EditHandlerDialog.createDialog=(handlerId,opt_child)=>{
             handlerId={handlerId}
             child={opt_child}
             />
-    });
+    },undefined,opt_doneCallback);
     return true;
 };
 
-EditHandlerDialog.createAddDialog=()=>{
+EditHandlerDialog.createNewHandlerDialog=(typeName,opt_initialParameters,opt_doneCallback)=>{
+    OverlayDialog.dialog((props)=> {
+        return <EditHandlerDialog
+            {...props}
+            title="Add Handler"
+            handlerName={typeName}
+            initialValues={opt_initialParameters}
+        />
+    },undefined,opt_doneCallback);
+}
+
+EditHandlerDialog.createAddDialog=(opt_doneCallback)=>{
     RequestHandler.getJson('',undefined,{
         request:'api',
         type: 'config',
@@ -310,13 +325,7 @@ EditHandlerDialog.createAddDialog=()=>{
             data.data.forEach((h)=>list.push({label:h,value:h}));
             OverlayDialog.selectDialogPromise('Select Handler to Add',list)
                 .then((selected)=>{
-                    OverlayDialog.dialog((props)=> {
-                        return <EditHandlerDialog
-                            {...props}
-                            title="Add Handler"
-                            handlerName={selected.value}
-                        />
-                    });
+                    EditHandlerDialog.createNewHandlerDialog(selected.value,undefined,opt_doneCallback);
                 })
                 .catch((e)=>{})
         })

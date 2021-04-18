@@ -7,7 +7,10 @@ package de.wellenvogel.avnav.appapi;
 
 
 import android.app.NotificationManager;
+import android.content.Context;
 import android.net.Uri;
+import android.net.nsd.NsdManager;
+import android.net.nsd.NsdServiceInfo;
 import android.util.Log;
 
 import org.apache.http.ConnectionClosedException;
@@ -37,6 +40,9 @@ import org.apache.http.protocol.ResponseConnControl;
 import org.apache.http.protocol.ResponseContent;
 import org.apache.http.protocol.ResponseDate;
 import org.apache.http.protocol.ResponseServer;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -45,21 +51,28 @@ import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
-import java.net.URLDecoder;
+import java.net.UnknownHostException;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Locale;
 
-import de.wellenvogel.avnav.main.MainActivity;
+import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.worker.EditableParameter;
 import de.wellenvogel.avnav.worker.GpsService;
+import de.wellenvogel.avnav.worker.Worker;
+import de.wellenvogel.avnav.worker.WorkerStatus;
 
-public class WebServer {
+public class WebServer extends Worker {
 
     static final String NAME="AvNavWebServer";
+    private final EditableParameter.StringParameter mdnsNameParameter;
+    private final EditableParameter.BooleanParameter mdnsEnabledParameter;
 
     private BasicHttpProcessor httpproc = null;
     private BasicHttpContext httpContext = null;
@@ -67,8 +80,9 @@ public class WebServer {
     private HttpRequestHandlerRegistry registry = null;
     private NotificationManager notifyManager = null;
 
-    protected MainActivity activity;
+    protected GpsService gpsService;
     private boolean running;
+    private boolean listenAny;
 
     public RequestHandler.ServerInfo getServerInfo(){
         RequestHandler.ServerInfo info=null;
@@ -82,6 +96,91 @@ public class WebServer {
         }
         return info;
     };
+
+    public static final EditableParameter.BooleanParameter ANY_ADDRESS=
+            new EditableParameter.BooleanParameter("external",R.string.enableExternalAccess,false);
+    public static final EditableParameter.IntegerParameter PORT=
+            new EditableParameter.IntegerParameter("port",R.string.labelSettingsServerPort,8080);
+
+    public WebServer(GpsService controller) {
+        super("WebServer",controller);
+        mdnsEnabledParameter=MDNS_ENABLED.clone(true);
+        mdnsNameParameter=MDNS_NAME.clone("avnav-android");
+        parameterDescriptions.addParams(
+                PORT,
+                Worker.ENABLED_PARAMETER.clone(false),
+                ANY_ADDRESS,
+                mdnsEnabledParameter,
+                mdnsNameParameter
+        );
+        gpsService =controller;
+        status.canEdit=true;
+    }
+
+    @Override
+    protected void checkParameters(JSONObject newParam) throws JSONException, IOException {
+        super.checkParameters(newParam);
+        Integer port=PORT.fromJson(newParam);
+        checkClaim(CLAIM_TCPPORT,port.toString(),true);
+        if (newParam.has(mdnsEnabledParameter.name) && mdnsEnabledParameter.fromJson(newParam)) {
+            String mdnsName=null;
+            if (newParam.has(mdnsNameParameter.name)) mdnsName=mdnsNameParameter.fromJson(newParam);
+            else mdnsName=mdnsNameParameter.fromJson(parameters);
+            if (mdnsName == null || mdnsName.isEmpty())
+                throw new JSONException(MDNS_NAME.name+" cannot be empty when "+MDNS_ENABLED.name+" is set");
+            checkClaim(CLAIM_SERVICE, mdnsName, true);
+        }
+    }
+
+    @Override
+    protected void run(int startSequence) throws JSONException, IOException {
+        Integer port=PORT.fromJson(parameters);
+        listenAny=ANY_ADDRESS.fromJson(parameters);
+        addClaim(CLAIM_TCPPORT,port.toString(),true);
+        addClaim(CLAIM_SERVICE,MDNS_NAME.fromJson(parameters),true);
+        gpsService.registerService(getId(),"_http._tcp",MDNS_NAME.fromJson(parameters),port);
+        setStatus(WorkerStatus.Status.STARTED,"starting with port "+port+", external access "+listenAny);
+        running=true;
+        listener=new Listener(listenAny,port);
+        listener.run(startSequence);
+    }
+
+    @Override
+    public synchronized JSONObject getJsonStatus() throws JSONException {
+        JSONObject rt=super.getJsonStatus();
+        int port=getPort();
+        if (isRunning() && port != 0){
+            JSONObject props=new JSONObject();
+            JSONArray addr=new JSONArray();
+            if (listenAny) {
+                try {
+                    Enumeration<NetworkInterface> intfs = NetworkInterface.getNetworkInterfaces();
+                    while (intfs.hasMoreElements()) {
+                        NetworkInterface intf = intfs.nextElement();
+                        Enumeration<InetAddress> ifaddresses = intf.getInetAddresses();
+                        while (ifaddresses.hasMoreElements()) {
+                            InetAddress ifaddress = ifaddresses.nextElement();
+                            if (ifaddress.getHostAddress().contains(":"))
+                                continue; //skip IPV6 for now
+                            String ifurl = ifaddress.getHostAddress() + ":" + port;
+                            addr.put(ifurl);
+                        }
+                    }
+                } catch (SocketException e1) {
+                }
+            }
+            else{
+                try {
+                    addr.put(getLocalHost().getHostAddress()+":"+port);
+                } catch (UnknownHostException e) {
+
+                }
+            }
+            props.put("addresses",addr);
+            rt.put("properties",props);
+        }
+        return rt;
+    }
 
     class NavRequestHandler implements HttpRequestHandler{
 
@@ -104,8 +203,8 @@ public class WebServer {
             }
             ExtendedWebResourceResponse resp=null;
             try {
-                if (activity.getRequestHandler() != null) {
-                    resp = activity.getRequestHandler().handleNavRequest(uri,
+                if (gpsService.getRequestHandler() != null) {
+                    resp = gpsService.getRequestHandler().handleNavRequest(uri,
                             postData,
                             getServerInfo());
                 }
@@ -213,7 +312,7 @@ public class WebServer {
             path=path.replaceAll("^/*","");
             //TODO: restrict access
             try {
-                InputStream is=activity.getAssets().open(path);
+                InputStream is= gpsService.getAssets().open(path);
                 httpResponse.setStatusCode(HttpStatus.SC_OK);
                 httpResponse.setEntity(new InputStreamEntity(is,-1));
                 httpResponse.addHeader("content-type", RequestHandler.mimeType(path));
@@ -244,12 +343,6 @@ public class WebServer {
     private Listener listener;
 
 
-    public WebServer(MainActivity controller) {
-
-        activity=controller;
-
-    }
-
     public int getPort(){
         if (listener != null){
             return listener.getPort();
@@ -262,17 +355,24 @@ public class WebServer {
         return running;
     }
 
+    private InetAddress getLocalHost() throws UnknownHostException {
+        InetAddress local=null;
+        try {
+            local = InetAddress.getByName("localhost");
+        }catch(Exception ex){
+            AvnLog.e("Exception getting localhost: "+ex);
+        }
+        if (local == null) local=InetAddress.getLocalHost();
+        return local;
+    }
 
-    class Listener extends Thread{
+    class Listener{
         private ServerSocket serversocket;
         private BasicHttpParams params;
         private HttpService httpService;
         private boolean any; //bind to any
         private int port;
         private String lastError=null;
-        private boolean gpsServiceConnected=false;
-        private boolean doStop=false;
-        private final Object waiter=new Object();
         private HashSet<String> registeredHandlerPrefixes=new HashSet<String>();
 
 
@@ -300,11 +400,10 @@ public class WebServer {
             httpService.setParams(params);
             registry = new HttpRequestHandlerRegistry();
             registry.register("/"+ RequestHandler.NAVURL+"*",navRequestHandler);
-            gpsServiceConnected=activity.getGpsService()!=null;
-            for (INavRequestHandler h: activity.getRequestHandler().getHandlers()){
+            for (INavRequestHandler h: gpsService.getRequestHandler().getHandlers()){
                 String prefix=h.getPrefix();
                 if (prefix == null) continue;
-                DirectoryRequestHandler handler=new DirectoryRequestHandler(prefix,activity.getRequestHandler());
+                DirectoryRequestHandler handler=new DirectoryRequestHandler(prefix, gpsService.getRequestHandler());
                 registeredHandlerPrefixes.add(prefix);
                 registry.register("/"+h.getPrefix()+"/*",handler);
             }
@@ -312,27 +411,6 @@ public class WebServer {
             registry.register("*",baseRequestHandler);
 
             httpService.setHandlerResolver(registry);
-            if (! gpsServiceConnected) {
-                Thread retryHandlers = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        while (!doStop) {
-                            synchronized (waiter) {
-                                try {
-                                    waiter.wait(100);
-                                } catch (InterruptedException e) {
-                                    return;
-                                }
-                                if (timerCall()) {
-                                    return;
-                                }
-                            }
-                        }
-                    }
-                });
-                retryHandlers.setDaemon(true);
-                retryHandlers.start();
-            }
         }
 
         int getPort(){
@@ -346,67 +424,35 @@ public class WebServer {
             return new InetSocketAddress(serversocket.getInetAddress(),port);
         }
 
-
-
-        public boolean timerCall(){
-            if (gpsServiceConnected) return true;
-            GpsService service=activity.getGpsService();
-            if (service != null){
-                gpsServiceConnected=true;
-                AvnLog.i("gps service active now, updating handlers in WebServer");
-                for (INavRequestHandler h: activity.getRequestHandler().getHandlers()){
-                    String prefix=h.getPrefix();
-                    if (prefix == null) continue;
-                    if (registeredHandlerPrefixes.contains(prefix)) continue;
-                    DirectoryRequestHandler handler=new DirectoryRequestHandler(h.getPrefix(),activity.getRequestHandler());
-                    registry.register("/"+prefix+"/*",handler);
-
-                }
-                return true;
-            }
-            return false;
-        }
-
         boolean getAny(){
             return any;
         }
-
         void close(){
             try {
                 serversocket.close();
-                doStop=true;
-                synchronized (waiter){
-                    waiter.notifyAll();
-                }
             }catch(Exception i){}
         }
 
-        @Override
-        public void run(){
+        public void run(int startSequence) throws IOException {
             AvnLog.i(NAME,"Listening on port " + this.serversocket.getLocalPort());
             lastError=null;
             try {
                 serversocket.setReuseAddress(true);
                 if (any) serversocket.bind(new InetSocketAddress(port));
                 else {
-                    InetAddress local=null;
-                    try {
-                        local = InetAddress.getByName("localhost");
-                    }catch(Exception ex){
-                        AvnLog.e("Exception getting localhost: "+ex);
-                    }
-                    if (local == null) local=InetAddress.getLocalHost();
+                    InetAddress local=getLocalHost();
                     serversocket.bind(new InetSocketAddress(local.getHostAddress(),port));
                 }
+                setStatus(WorkerStatus.Status.NMEA,"active on port "+port+", external access "+any);
             }catch (IOException ex){
                 AvnLog.e("Exception while starting server "+ex);
                 lastError=ex.getLocalizedMessage();
                 try {
                     serversocket.close();
                 }catch (IOException i){}
-                return;
+               throw ex;
             }
-            while (!Thread.interrupted()) {
+            while (!shouldStop(startSequence)) {
                 try {
                     Socket socket = this.serversocket.accept();
                     DefaultHttpServerConnection conn = new DefaultHttpServerConnection();
@@ -476,34 +522,14 @@ public class WebServer {
             }
         }
     }
-
-    public void stopServer() {
-        if (! running) return;
-        AvnLog.d(NAME,"stop");
+    @Override
+    public void stop() {
+        super.stop();
         running=false;
+        AvnLog.d(NAME,"stop");
         listener.close();
         listener=null;
     }
-
-    public int startServer(String port, boolean anyAddress) throws Exception {
-        int newPort=Integer.parseInt(port);
-        if (running && listener != null) {
-            int oldPort=listener.getPort();
-            boolean oldAny=listener.getAny();
-            if (oldPort == newPort && oldAny == anyAddress) return oldPort;
-            AvnLog.d(NAME,"stop");
-            running=false;
-            listener.close();
-            listener=null;
-        }
-        AvnLog.d(NAME,"start");
-        running=true;
-        listener=new Listener(anyAddress,newPort);
-        listener.setDaemon(true);
-        listener.start();
-        return listener.getPort();
-    }
-
 
 
 }
