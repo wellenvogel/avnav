@@ -1,6 +1,6 @@
 package de.wellenvogel.avnav.appapi;
 
-import android.app.Activity;
+import android.content.Context;
 import android.net.Uri;
 
 import org.json.JSONArray;
@@ -24,10 +24,10 @@ import de.wellenvogel.avnav.util.AvnUtil;
 public class LayoutHandler implements INavRequestHandler{
     String systemDir=null; //base path at assets
     File userDir=null;
-    Activity activity=null;
+    Context context =null;
 
 
-    static class LayoutInfo implements INavRequestHandler.IJsonObect {
+    static class LayoutInfo implements AvnUtil.IJsonObect {
         public static final String USERPREFIX="user.";
         public static final String SYSTEMPREFIX="system.";
         public String name;
@@ -71,7 +71,7 @@ public class LayoutHandler implements INavRequestHandler{
     @Override
     public JSONArray handleList(Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception{
             JSONArray li=readDir(userDir,true);
-            for (IJsonObect o: readAssetsDir()){
+            for (AvnUtil.IJsonObect o: readAssetsDir()){
                 li.put(o.toJson());
             }
             return li;
@@ -94,7 +94,7 @@ public class LayoutHandler implements INavRequestHandler{
     public JSONObject handleApiRequest(Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
         String command= AvnUtil.getMandatoryParameter(uri,"command");
         if (command.equals("list")){
-            RequestHandler.getReturn(new RequestHandler.KeyValue("data",handleList(uri, serverInfo)));
+            RequestHandler.getReturn(new AvnUtil.KeyValue("data",handleList(uri, serverInfo)));
         }
         return null;
     }
@@ -109,10 +109,10 @@ public class LayoutHandler implements INavRequestHandler{
         return null;
     }
 
-    private ArrayList<IJsonObect> readAssetsDir() throws Exception {
-        ArrayList<IJsonObect> rt=new ArrayList<>();
+    private ArrayList<AvnUtil.IJsonObect> readAssetsDir() throws Exception {
+        ArrayList<AvnUtil.IJsonObect> rt=new ArrayList<>();
         String [] list;
-        list=activity.getAssets().list(systemDir);
+        list= context.getAssets().list(systemDir);
         for (String name :list){
             if (!name.endsWith(".json")) continue;
             if (name.equals("keys.json")) continue;
@@ -134,10 +134,10 @@ public class LayoutHandler implements INavRequestHandler{
     }
 
 
-    public LayoutHandler(Activity activity,String systemDir, File userDir){
+    public LayoutHandler(Context context, String systemDir, File userDir){
         this.systemDir=systemDir;
         this.userDir=userDir;
-        this.activity=activity;
+        this.context = context;
         if (! userDir.isDirectory()){
             userDir.mkdirs();
         }
@@ -147,7 +147,7 @@ public class LayoutHandler implements INavRequestHandler{
         if (name.startsWith(LayoutInfo.SYSTEMPREFIX)){
             name=name.substring(LayoutInfo.SYSTEMPREFIX.length());
             String filename=name+".json";
-            return activity.getAssets().open(systemDir+"/"+filename);
+            return context.getAssets().open(systemDir+"/"+filename);
         }
         if (name.startsWith(LayoutInfo.USERPREFIX)){
             name=name.substring(LayoutInfo.USERPREFIX.length());

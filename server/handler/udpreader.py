@@ -92,20 +92,17 @@ class AVNUdpReader(AVNWorker, SocketReader):
     if (self.getIntParam('minTime')):
       time.sleep(float(self.getIntParam('minTime'))/1000)
 
-  def getUsedResources(self, type=None):
-    if type != UsedResource.T_UDP and type is not None:
-      return []
-    return [UsedResource(UsedResource.T_UDP,self.id,self.getParamValue('port'))]
 
   def checkConfig(self, param):
     if 'port' in param:
-      self.checkUsedResource(UsedResource.T_UDP,self.id,param.get('port'))
+      self.checkUsedResource(UsedResource.T_UDP,param.get('port'))
 
   #thread run method - just try forever
   def run(self):
-    self.checkUsedResource(UsedResource.T_UDP,self.id,self.getParamValue('port'))
-    self.setNameIfEmpty("%s-%s:%d" % (self.getName(), self.getStringParam('host'), self.getIntParam('port')))
     while not self.shouldStop():
+      self.freeAllUsedResources()
+      self.claimUsedResource(UsedResource.T_UDP,self.getParamValue('port'))
+      self.setNameIfEmpty("%s-%s:%d" % (self.getName(), self.getStringParam('host'), self.getIntParam('port')))
       info="unknown"
       try:
         info = "%s:%d" % (self.getStringParam('host'), self.getIntParam('port'))

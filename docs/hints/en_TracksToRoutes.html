@@ -8,48 +8,45 @@
   <body data-order="1550">
     <h1>Converting Tracks to Routes</h1>
     <div class="toc"> </div>
-    <p>AvNav is permanently recording <a href="../quickstart.html#tracks">tracks</a>.
-      For every day a new track file (gpx) is written.</p>
-    <p>Those tracks (or tracks that have been uploaded at the <a href="../userdoc/downloadpage.html">Files/Download</a>
-      page) can be converted to routes to use them in navigation.</p>
+    <p>AvNav continously records <a href="../quickstart.html#tracks">tracks</a>. A new track file (gpx) is generated every day.</p>
+    <p>Those tracks (or tracks uploaded via <a href="../userdoc/downloadpage.html">Files/Download</a>
+      page) can be converted to routes to be used in navigation.</p>
     <h2>Concept</h2>
-    <p>For this conversion you typically need to reduce the number of points in
-      the track as they often have more then 1000 points. Otherwise use such a
-      route is nearly impossible.</p>
-    <p>AvNav is using an algorithm that is taken from <a href="https://www.gpsbabel.org/htmldoc-development/filter_simplify.html">GPS
-        Babel</a>. One after the other the points will be removed that have the
-      least significant distance from the line between the two neighboring
-      points.</p>
-    <p>You can provide a parameter to define the maximum tolerable distance. The
-      larger distance you allow the fewer points the created route will contain.
-      You should try to keep your routes below 50 points to make them nicely
-      usable.</p>
+    <p>This conversion typically requires to reduce the number of points in
+      the track as they often contain more than 1000 points. Otherwise using such a
+      route is unfeasible.</p>
+    <p>AvNav is using an algorithm similar to <a href="https://www.gpsbabel.org/htmldoc-development/filter_simplify.html">GPS
+        Babel</a>. One by one, points with
+      smallest distance from the vector between the two neighboring
+      points are eliminated.</p>
+    <p>You can provide a parameter (Xte) to define the maximum tolerable distance. The
+      larger distance you allow, the fewer points the created route will contain.
+      For usabilty reasons, you should try to keep your routes below 50 waypoints.</p>
     <p>After the conversion you can fine tune the route in the <a href="../userdoc/editroutepage.html">Route-Editor</a>.</p>
     <h2>Handling</h2>
-    <p>You can reach the conversion dialog either from the Files/Download page
+    <p>You enter the conversion dialog either from the Files/Download page
       from within the <a href="../userdoc/downloadpage.html#tracks">Track Info
         Dialog</a> (<img src="../viewerimages/icons-new/route.svg" alt="" class="inlineimage">Convert
       Button) or from the info dialog if you have the track selected as an <a href="overlays.html#usage">Overlay</a>
-      on the chart and click on a point within it. Again you have the&nbsp; <img
+      on the chart and click on a point within it. Again, you press the&nbsp; <img
         src="../viewerimages/icons-new/route.svg" alt="" class="inlineimage">Convert
       Button - see picture.</p>
     <img src="FeatureInfo-Track.png" alt="" class="fimage">
-    <p>After clicking "Convert" you will get the donversion dialog.</p>
+    <p>After clicking "Convert" the conversion dialog pops up.</p>
     <img src="TracksToRoutes1.png" alt="" class="fimage">
-    <p>Normally (as in the picture) you will get a warning about your point
-      caount being above 50.</p>
-    <p>Using "max Xte" you conmfigure the converter and start the conversion
-      using "Compute". If the number of points still does not fit you can tray
-      again with a changed xte.</p>
+    <p>Normally (as in the picture) you will see a warning about point
+      count exceeding 50.</p>
+    <p>Using "max Xte" you configure the converter and start the conversion
+      clicking "Compute". If the number of points still does not fit you can try
+      again with a different Xte.</p>
     <img src="TracksToRoutes2.png" alt="" class="fimage">
-    <p>In the example a xte of 22m gave me a good route.</p>
-    <p>Within the dialog you can still change the name for the new route (and
+    <p>In above example a max Xte of 22m produced a good route.</p>
+    <p>Within the dialog you can change the name for the new route (and
       decide to potentially overwrite an existing one with the same name).</p>
     <p>After saving you can directly start editing the route.</p>
     <img src="TracksToRoutes3.png" alt="" class="fimage">
-    <p>At this point it counts if you had the track as an overlay at the chart
-      as you can now easily check if all important points from the track are
-      available in the route.</p>
+    <p>At this point you preferrably had the track displayed as an overlay to the chart,
+      so you can easily check if all the important track waypoints are included in the route.</p>
     <img src="TracksToRoutes4.png" alt="" class="fimage">
     <p><br>
     </p>

@@ -114,8 +114,8 @@ class SerialWriter(SerialReader):
     bytesize=int(self.param['bytesize'])
     parity=self.param['parity']
     stopbits=int(self.param['stopbits'])
-    xonxoff=int(self.param['xonxoff'])
-    rtscts=int(self.param['rtscts'])
+    xonxoff=self.P_XONOFF.fromDict(self.param)
+    rtscts=self.P_RTSCTS.fromDict(self.param)
     portname=self.param['port']
     timeout=float(self.param['timeout'])
     name=self.getName()
@@ -346,14 +346,9 @@ class AVNSerialWriter(AVNWorker):
     AVNWorker.__init__(self, param)
     self.writer=None
 
-  def getUsedResources(self, type=None):
-    if type != UsedResource.T_SERIAL and type is not None:
-      return []
-    return [UsedResource(UsedResource.T_SERIAL,self.id,self.getParamValue('port'))]
-
   def checkConfig(self, param):
     if 'port' in param:
-      self.checkUsedResource(UsedResource.T_SERIAL,self.id,param.get('port'))
+      self.checkUsedResource(UsedResource.T_SERIAL,param.get('port'))
 
   def stop(self):
     try:
@@ -364,19 +359,21 @@ class AVNSerialWriter(AVNWorker):
 
   #thread run method - just try forever  
   def run(self):
-    self.checkUsedResource(UsedResource.T_SERIAL,self.id,self.getParamValue('port'))
-    self.setNameIfEmpty("%s-%s"%(self.getName(),str(self.getParamValue('port'))))
     while not self.shouldStop():
+      self.setNameIfEmpty("%s-%s"%(self.getName(),str(self.getParamValue('port'))))
+      self.freeAllUsedResources()
+      self.claimUsedResource(UsedResource.T_SERIAL,self.getParamValue('port'))
       try:
         self.writer=SerialWriter(self.param,self.writeData,self,self.getSourceName(self.getParamValue('port')))
         self.writer.run()
       except Exception as e:
         AVNLog.error("exception in serial writer: %s",traceback.format_exc())
+        self.wait(2000)
       AVNLog.info("restarting serial writer")
 
   def updateConfig(self, param, child=None):
     if 'port' in param:
-      self.checkUsedResource(UsedResource.T_SERIAL,self.id,param['port'])
+      self.checkUsedResource(UsedResource.T_SERIAL,param['port'])
     super().updateConfig(param, child)
     if self.writer is not None:
       self.writer.stopHandler()

@@ -50,6 +50,8 @@ import avnav_handlerList
 
 class SerialReader(object):
   BAUDRATES=[115200,57600,38400,19200,9600,4800]
+  P_XONOFF=WorkerParameter('xonxoff', False,type=WorkerParameter.T_BOOLEAN)
+  P_RTSCTS=WorkerParameter('rtscts',False,type=WorkerParameter.T_BOOLEAN)
   @classmethod
   def getConfigParam(cls):
     cfg=[
@@ -62,8 +64,8 @@ class SerialReader(object):
                WorkerParameter('bytesize', 8,type=WorkerParameter.T_SELECT,rangeOrList=[5,6,7,8]),
                WorkerParameter('parity','N',type=WorkerParameter.T_SELECT,rangeOrList=['N','E','O','M','S']),
                WorkerParameter('stopbits', 1,type=WorkerParameter.T_SELECT,rangeOrList=[1,1.5,2]),
-               WorkerParameter('xonxoff', False,type=WorkerParameter.T_BOOLEAN),
-               WorkerParameter('rtscts',False,type=WorkerParameter.T_BOOLEAN),
+               cls.P_XONOFF,
+               cls.P_RTSCTS,
                WorkerParameter('numerrors',20,type=WorkerParameter.T_NUMBER,
                                description='reopen port after that many errors, set this to 0 to avoid any check for NMEA data'),
                WorkerParameter('autobaudtime', 5,type=WorkerParameter.T_FLOAT,
@@ -127,8 +129,8 @@ class SerialReader(object):
     bytesize=int(self.param['bytesize'])
     parity=self.param['parity']
     stopbits=int(self.param['stopbits'])
-    xonxoff=int(self.param['xonxoff'])
-    rtscts=int(self.param['rtscts'])
+    xonxoff=self.P_XONOFF.fromDict(self.param)
+    rtscts=self.P_RTSCTS.fromDict(self.param)
     portname=self.param['port']
     timeout=float(self.param['timeout'])
     autobaudtime=float(self.param['autobaudtime'])
@@ -399,10 +401,6 @@ class AVNSerialReader(AVNWorker):
     self.reader=None
     AVNWorker.__init__(self, param)
 
-  def getUsedResources(self, type=None):
-    if type != UsedResource.T_SERIAL and type is not None:
-      return []
-    return [UsedResource(UsedResource.T_SERIAL,self.id,self.getParamValue('port'))]
 
   #make some checks when we have to start
   #we cannot do this on init as we potentiall have tp find the feeder...
@@ -416,12 +414,13 @@ class AVNSerialReader(AVNWorker):
 
   def checkConfig(self, param):
     if 'port' in param:
-      self.checkUsedResource(UsedResource.T_SERIAL,self.id,param.get('port'))
+      self.checkUsedResource(UsedResource.T_SERIAL,param.get('port'))
 
   #thread run method - just try forever  
   def run(self):
-    self.checkUsedResource(UsedResource.T_SERIAL,self.id,self.getParamValue('port'))
     while not self.shouldStop():
+      self.freeAllUsedResources()
+      self.claimUsedResource(UsedResource.T_SERIAL,self.getParamValue('port'))
       try:
         self.reader=SerialReader(self.param, self.writeData,self,self.getSourceName(self.getParamValue('port')))
         self.reader.run()
@@ -431,7 +430,7 @@ class AVNSerialReader(AVNWorker):
 
   def updateConfig(self, param,child=None):
     if 'port' in param:
-      self.checkUsedResource(UsedResource.T_SERIAL,self.id,param['port'])
+      self.checkUsedResource(UsedResource.T_SERIAL,param['port'])
     super().updateConfig(param)
     self.reader.stopHandler()
 
