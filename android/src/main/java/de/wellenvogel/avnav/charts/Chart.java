@@ -1,6 +1,6 @@
 package de.wellenvogel.avnav.charts;
 
-import android.app.Activity;
+import android.content.Context;
 import android.support.v4.provider.DocumentFile;
 
 import org.json.JSONException;
@@ -13,16 +13,16 @@ import java.io.InputStream;
 
 import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
 import de.wellenvogel.avnav.main.Constants;
-import de.wellenvogel.avnav.appapi.INavRequestHandler;
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.util.AvnUtil;
 
-public class Chart implements INavRequestHandler.IJsonObect {
+public class Chart implements AvnUtil.IJsonObect {
     static final int TYPE_GEMF=1;
     static final int TYPE_MBTILES=2;
     static final int TYPE_XML=3;
     static final String CFG_EXTENSION=".cfg";
     private static final long INACTIVE_CLOSE=100000; //100s
-    private Activity activity;
+    private Context context;
     private File realFile;
     private DocumentFile documentFile; //alternative to realFile
     private ChartFileReader chartReader;
@@ -30,16 +30,16 @@ public class Chart implements INavRequestHandler.IJsonObect {
     private long lastModified;
     private long lastTouched;
     private int type;
-    public Chart(int type,Activity activity, File f, String key, long last){
-        this.activity=activity;
+    public Chart(int type, Context context, File f, String key, long last){
+        this.context = context;
         realFile=f;
         this.key=key;
         this.lastModified=last;
         this.lastTouched=System.currentTimeMillis();
         this.type=type;
     }
-    public Chart(int type,Activity activity, DocumentFile f, String key, long last){
-        this.activity = activity;
+    public Chart(int type, Context context, DocumentFile f, String key, long last){
+        this.context = context;
         documentFile =f;
         this.key=key;
         this.lastModified=last;
@@ -52,7 +52,7 @@ public class Chart implements INavRequestHandler.IJsonObect {
         if (chartReader == null){
             AvnLog.i("RequestHandler","open chart file "+key);
             if (documentFile != null){
-                ChartFile cf=(type == TYPE_MBTILES)?null:new GEMFFile(documentFile, activity);
+                ChartFile cf=(type == TYPE_MBTILES)?null:new GEMFFile(documentFile, context);
                 chartReader =new ChartFileReader(cf,key);
             }
             else {
@@ -131,7 +131,7 @@ public class Chart implements INavRequestHandler.IJsonObect {
                 return new ExtendedWebResourceResponse((int)realFile.length(),"text/xml","",new FileInputStream(realFile));
             }
             else{
-                InputStream is=activity.getContentResolver().openInputStream(documentFile.getUri());
+                InputStream is= context.getContentResolver().openInputStream(documentFile.getUri());
                 return new ExtendedWebResourceResponse(-1,"text/xml","",is);
             }
         }

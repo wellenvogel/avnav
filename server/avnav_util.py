@@ -264,8 +264,9 @@ class AVNLog(object):
 
 class AVNUtil(object):
   NAVXML="avnav.xml"
-  NM=1852.0; #convert nm into m
-  R=6371000; #earth radius in m
+  NM=1852.0 #convert nm into m
+  R=6371000 #earth radius in m
+  NMEA_SERVICE="_nmea-0183._tcp" #avahi service for NMEA
   #convert a datetime UTC to a timestamp in seconds
   @classmethod
   def datetimeToTsUTC(cls,dt):

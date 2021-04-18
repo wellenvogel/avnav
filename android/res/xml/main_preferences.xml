@@ -2,10 +2,6 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     android:title="@string/labelSettingsMain">
     <de.wellenvogel.avnav.settings.OwnDialogListPreference
-        android:key="runmode"
-        android:title="@string/runMode">
-    </de.wellenvogel.avnav.settings.OwnDialogListPreference>
-    <de.wellenvogel.avnav.settings.OwnDialogListPreference
         android:key="workdir"
         android:title="@string/selectDirLabel">
     </de.wellenvogel.avnav.settings.OwnDialogListPreference>
@@ -19,11 +15,6 @@
         android:widgetLayout="@layout/preference_checkbox">
     </CheckBoxPreference>
     <CheckBoxPreference
-        android:key="externalaccess"
-        android:title="@string/enableExternalAccess"
-        android:widgetLayout="@layout/preference_checkbox">
-    </CheckBoxPreference>
-    <CheckBoxPreference
         android:key="alarmSounds"
         android:title="@string/alarmSounds"
         android:widgetLayout="@layout/preference_checkbox">
@@ -33,4 +24,7 @@
         android:title="@string/hideBars"
         android:widgetLayout="@layout/preference_checkbox">
     </CheckBoxPreference>
+    <Preference
+        android:title="@string/labelSettingsDefaults"
+        android:key="prefs.default"></Preference>
 </PreferenceScreen>

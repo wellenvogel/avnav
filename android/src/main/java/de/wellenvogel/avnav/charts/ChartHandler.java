@@ -1,6 +1,5 @@
 package de.wellenvogel.avnav.charts;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -56,15 +55,15 @@ public class ChartHandler implements INavRequestHandler {
     public static final String INDEX_EXTERNAL = "2";
     private static final String DEFAULT_CFG="default.cfg";
     private static final long MAX_CONFIG_SIZE=100000;
-    private Activity activity;
+    private Context context;
     private RequestHandler handler;
     //mapping of url name to char descriptors
     private HashMap<String, Chart> chartList =new HashMap<String, Chart>();
     private boolean isStopped=false;
 
-    public ChartHandler(Activity a, RequestHandler h){
+    public ChartHandler(Context a, RequestHandler h){
         handler=h;
-        activity=a;
+        context =a;
 
     }
 
@@ -114,11 +113,11 @@ public class ChartHandler implements INavRequestHandler {
     }
 
 
-    public synchronized void updateChartList(){
+    public void updateChartList(){
         HashMap<String, Chart> newGemfFiles=new HashMap<String, Chart>();
-        SharedPreferences prefs=AvnUtil.getSharedPreferences(activity);
-        File workDir=AvnUtil.getWorkDir(prefs,activity);
-        File chartDir = getInternalChartsDir(activity);
+        SharedPreferences prefs=AvnUtil.getSharedPreferences(context);
+        File workDir=AvnUtil.getWorkDir(prefs, context);
+        File chartDir = getInternalChartsDir(context);
         readChartDir(chartDir.getAbsolutePath(), INDEX_INTERNAL,newGemfFiles);
         String secondChartDirStr=prefs.getString(Constants.CHARTDIR,"");
         if (! secondChartDirStr.isEmpty()){
@@ -126,41 +125,42 @@ public class ChartHandler implements INavRequestHandler {
                 readChartDir(secondChartDirStr, INDEX_EXTERNAL,newGemfFiles);
             }
         }
-        //now we have all current charts - compare to the existing list and create/delete entries
-        //currently we assume only one thread to change the chartlist...
-        boolean modified=false;
-        for (String url : newGemfFiles.keySet()){
-            Chart chart=newGemfFiles.get(url);
-            long lastModified=chart.getLastModified();
-            if (chartList.get(url) == null ){
-                chartList.put(url,chart);
-                modified=true;
-            }
-            else{
-                if (chartList.get(url).getLastModified() < lastModified){
-                    modified=true;
-                    chartList.get(url).close();
-                    chartList.put(url,chart);
+        boolean modified = false;
+        synchronized (this) {
+            //now we have all current charts - compare to the existing list and create/delete entries
+            //currently we assume only one thread to change the chartlist...
+            for (String url : newGemfFiles.keySet()) {
+                Chart chart = newGemfFiles.get(url);
+                long lastModified = chart.getLastModified();
+                if (chartList.get(url) == null) {
+                    chartList.put(url, chart);
+                    modified = true;
+                } else {
+                    if (chartList.get(url).getLastModified() < lastModified) {
+                        modified = true;
+                        chartList.get(url).close();
+                        chartList.put(url, chart);
+                    }
                 }
             }
-        }
-        Iterator<String> it= chartList.keySet().iterator();
-        while (it.hasNext()){
-            String url=it.next();
-            if (newGemfFiles.get(url) == null){
-                it.remove();
-                modified=true;
-            }
-            else{
-                Chart chart= chartList.get(url);
-                if (chart.closeInactive()){
-                    AvnLog.i("closing gemf file "+url);
-                    modified=true;
+
+            Iterator<String> it = chartList.keySet().iterator();
+            while (it.hasNext()) {
+                String url = it.next();
+                if (newGemfFiles.get(url) == null) {
+                    it.remove();
+                    modified = true;
+                } else {
+                    Chart chart = chartList.get(url);
+                    if (chart.closeInactive()) {
+                        AvnLog.i("closing gemf file " + url);
+                        modified = true;
+                    }
                 }
             }
         }
         if (modified){
-            activity.sendBroadcast(new Intent(Constants.BC_RELOAD_DATA));
+            context.sendBroadcast(new Intent(Constants.BC_RELOAD_DATA));
             Thread overviewCreator=new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -210,12 +210,12 @@ public class ChartHandler implements INavRequestHandler {
                 //see https://github.com/googlesamples/android-DirectorySelection/blob/master/Application/src/main/java/com/example/android/directoryselection/DirectorySelectionFragment.java
                 //and https://stackoverflow.com/questions/36862675/android-sd-card-write-permission-using-saf-storage-access-framework
                 Uri dirUri = Uri.parse(chartDirStr);
-                DocumentFile dirFile=DocumentFile.fromTreeUri(activity,dirUri);
+                DocumentFile dirFile=DocumentFile.fromTreeUri(context,dirUri);
                 for (DocumentFile f : dirFile.listFiles()){
                     try {
                         if (f.getName().endsWith(GEMFEXTENSION)) {
                             String urlName = Constants.REALCHARTS + "/" + index + "/"+TYPE_GEMF+"/" + URLEncoder.encode(f.getName(), "UTF-8");
-                            arr.put(urlName, new Chart(Chart.TYPE_GEMF,activity, f, urlName, f.lastModified()));
+                            arr.put(urlName, new Chart(Chart.TYPE_GEMF, context, f, urlName, f.lastModified()));
                             AvnLog.d(Constants.LOGPRFX, "readCharts: adding gemf url " + urlName + " for " + f.getUri());
                         }
                         if (f.getName().endsWith(MBTILESEXTENSION)){
@@ -225,7 +225,7 @@ public class ChartHandler implements INavRequestHandler {
                         if (f.getName().endsWith(XMLEXTENSION)) {
                             String name = f.getName();
                             String urlName = Constants.REALCHARTS + "/" + index + "/"+TYPE_XML+"/" + URLEncoder.encode(name, "UTF-8");
-                            Chart newChart = new Chart(Chart.TYPE_XML,activity, f, urlName, f.lastModified());
+                            Chart newChart = new Chart(Chart.TYPE_XML, context, f, urlName, f.lastModified());
                             arr.put(urlName, newChart);
                             AvnLog.d(Constants.LOGPRFX, "readCharts: adding xml url " + urlName + " for " + f.getUri());
                         }
@@ -245,20 +245,20 @@ public class ChartHandler implements INavRequestHandler {
                 if (f.getName().endsWith(GEMFEXTENSION)){
                     String gemfName = f.getName();
                     String urlName= Constants.REALCHARTS + "/"+index+"/"+TYPE_GEMF+"/" + URLEncoder.encode(gemfName,"UTF-8");
-                    arr.put(urlName,new Chart(Chart.TYPE_GEMF,activity, f,urlName,f.lastModified()));
+                    arr.put(urlName,new Chart(Chart.TYPE_GEMF, context, f,urlName,f.lastModified()));
                     AvnLog.d(Constants.LOGPRFX,"readCharts: adding gemf url "+urlName+" for "+f.getAbsolutePath());
                 }
                 if (f.getName().endsWith(MBTILESEXTENSION)){
                     String name = f.getName();
                     String urlName= Constants.REALCHARTS + "/"+index+"/"+TYPE_MBTILES+"/" + URLEncoder.encode(name,"UTF-8");
-                    arr.put(urlName,new Chart(Chart.TYPE_MBTILES,activity, f,urlName,f.lastModified()));
+                    arr.put(urlName,new Chart(Chart.TYPE_MBTILES, context, f,urlName,f.lastModified()));
                     AvnLog.d(Constants.LOGPRFX,"readCharts: adding mbtiles url "+urlName+" for "+f.getAbsolutePath());
 
                 }
                 if (f.getName().endsWith(XMLEXTENSION)){
                     String name=f.getName();
                     String urlName=Constants.REALCHARTS+"/"+index+"/"+TYPE_XML+"/"+URLEncoder.encode(name,"UTF-8");
-                    Chart newChart=new Chart(Chart.TYPE_XML,activity, f,urlName,f.lastModified());
+                    Chart newChart=new Chart(Chart.TYPE_XML, context, f,urlName,f.lastModified());
                     arr.put(urlName,newChart);
                     AvnLog.d(Constants.LOGPRFX,"readCharts: adding xml url "+urlName+" for "+f.getAbsolutePath());
                 }
@@ -280,7 +280,7 @@ public class ChartHandler implements INavRequestHandler {
     @Override
     public ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception {
         String url=AvnUtil.getMandatoryParameter(uri,"url");
-        ParcelFileDescriptor fd=getFileFromUri(url,activity);
+        ParcelFileDescriptor fd=getFileFromUri(url, context);
         if (fd == null) return null;
         return new ExtendedWebResourceResponse(fd.getStatSize(),
                 "application/octet-stream",
@@ -294,7 +294,7 @@ public class ChartHandler implements INavRequestHandler {
         if (! safeName.endsWith(GEMFEXTENSION) && ! safeName.endsWith(MBTILESEXTENSION)
                 && ! safeName.endsWith(XMLEXTENSION) && ! safeName.endsWith(CFG_EXTENSION))
             throw new Exception("only "+GEMFEXTENSION+" or "+MBTILESEXTENSION+" or "+XMLEXTENSION+" or "+CFG_EXTENSION+" files allowed");
-        File outFile=new File(getInternalChartsDir(activity),safeName);
+        File outFile=new File(getInternalChartsDir(context),safeName);
         if (outFile.exists() && !ignoreExisting){
             throw new Exception("file already exists");
         }
@@ -311,6 +311,7 @@ public class ChartHandler implements INavRequestHandler {
     @Override
     public JSONArray handleList(Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception {
         //here we will have more dirs in the future...
+        AvnLog.i(Constants.LOGPRFX,"start chartlist request "+Thread.currentThread().getId());
         JSONArray rt=new JSONArray();
         try {
             for (String url : chartList.keySet()) {
@@ -325,7 +326,7 @@ public class ChartHandler implements INavRequestHandler {
             Log.e(Constants.LOGPRFX, "exception reading chartlist:", e);
         }
         if (handler.getSharedPreferences().getBoolean(Constants.SHOWDEMO,false)){
-            String demoCharts[]=activity.getAssets().list("charts");
+            String demoCharts[]= context.getAssets().list("charts");
             for (String demo: demoCharts){
                 if (! demo.endsWith(".xml")) continue;
                 String name=demo.replaceAll("\\.xml$", "");
@@ -342,6 +343,7 @@ public class ChartHandler implements INavRequestHandler {
                 rt.put(e);
             }
         }
+        AvnLog.i(Constants.LOGPRFX,"finish chartlist request "+Thread.currentThread().getId());
         return rt;
     }
 
@@ -349,7 +351,7 @@ public class ChartHandler implements INavRequestHandler {
     public boolean handleDelete(String name, Uri uri) throws Exception {
         if (name.endsWith(CFG_EXTENSION)){
             name=DirectoryRequestHandler.safeName(name,true);
-            File cfgFile=new File(getInternalChartsDir(this.activity),name);
+            File cfgFile=new File(getInternalChartsDir(this.context),name);
             if (cfgFile.isFile()){
                 return cfgFile.delete();
             }
@@ -364,7 +366,7 @@ public class ChartHandler implements INavRequestHandler {
         else {
             File chartfile=chart.deleteFile();
             String cfgName=chart.getConfigName();
-            File cfgFile=new File(getInternalChartsDir(this.activity),cfgName);
+            File cfgFile=new File(getInternalChartsDir(this.context),cfgName);
             if (cfgFile.exists()) cfgFile.delete();
             deleteFromOverlays("chart",chart.getChartKey());
             updateChartList();
@@ -388,7 +390,7 @@ public class ChartHandler implements INavRequestHandler {
     public int deleteFromOverlays(String type, String name){
         int numChanges=0;
         if (type == null || name == null) return numChanges;
-        File baseDir=getInternalChartsDir(this.activity);
+        File baseDir=getInternalChartsDir(this.context);
         for (File f : baseDir.listFiles()){
             if (!f.getName().endsWith(CFG_EXTENSION)) continue;
             try{
@@ -442,7 +444,7 @@ public class ChartHandler implements INavRequestHandler {
             boolean expandCharts=AvnUtil.getFlagParameter(uri,"expandCharts",false);
             boolean mergeDefault=AvnUtil.getFlagParameter(uri,"mergeDefault",false);
             if (configName.equals(DEFAULT_CFG)) mergeDefault=false;
-            File cfgFile=new File(getInternalChartsDir(this.activity),configName);
+            File cfgFile=new File(getInternalChartsDir(this.context),configName);
             JSONObject localConfig=new JSONObject();
             JSONObject globalConfig=new JSONObject();
             if (cfgFile.exists()){
@@ -454,7 +456,7 @@ public class ChartHandler implements INavRequestHandler {
                 }
             }
             localConfig.put("name",configName);
-            File globalCfgFile=new File(getInternalChartsDir(this.activity),DEFAULT_CFG);
+            File globalCfgFile=new File(getInternalChartsDir(this.context),DEFAULT_CFG);
             if (mergeDefault && globalCfgFile.exists()){
                 try{
                     globalConfig=AvnUtil.readJsonFile(globalCfgFile,MAX_CONFIG_SIZE);
@@ -496,14 +498,14 @@ public class ChartHandler implements INavRequestHandler {
         }
         if (command.equals("listOverlays")){
            JSONArray rt=new JSONArray();
-            File baseDir=getInternalChartsDir(this.activity);
+            File baseDir=getInternalChartsDir(this.context);
             for (File f : baseDir.listFiles()) {
                 if (!f.getName().endsWith(CFG_EXTENSION)) continue;
                 JSONObject overlay=new JSONObject();
                 overlay.put("name",f.getName());
                 rt.put(overlay);
             }
-            return RequestHandler.getReturn(new RequestHandler.KeyValue("data",rt));
+            return RequestHandler.getReturn(new AvnUtil.KeyValue("data",rt));
 
         }
         return RequestHandler.getErrorReturn("unknown request");
@@ -601,12 +603,12 @@ public class ChartHandler implements INavRequestHandler {
                     AvnLog.d(Constants.LOGPRFX, "overview request " + fname);
                     String safeName = DirectoryRequestHandler.safeName(kp.parts[0], true);
                     safeName += ".xml";
-                    rt = activity.getAssets().open(Constants.CHARTPREFIX + "/" + safeName);
+                    rt = context.getAssets().open(Constants.CHARTPREFIX + "/" + safeName);
                     len = -1;
                     return new ExtendedWebResourceResponse(len, mimeType, "", rt);
                 }
                 else if (kp.parts[1].equals("sequence")){
-                    JSONObject sq= RequestHandler.getReturn(new RequestHandler.KeyValue("sequence",0));
+                    JSONObject sq= RequestHandler.getReturn(new AvnUtil.KeyValue("sequence",0));
                     byte o[]=sq.toString().getBytes("UTF-8");
                     return new ExtendedWebResourceResponse(o.length,"application/json","UTF-8",new ByteArrayInputStream(o));
                 }
@@ -624,7 +626,7 @@ public class ChartHandler implements INavRequestHandler {
                     Log.e(Constants.LOGPRFX, "unable to read chart file " + fname + ": " + e.getLocalizedMessage());
                 }
             } else if (kp.parts[0].equals("sequence")){
-                JSONObject sq= RequestHandler.getReturn(new RequestHandler.KeyValue("sequence",chart.getSequence()));
+                JSONObject sq= RequestHandler.getReturn(new AvnUtil.KeyValue("sequence",chart.getSequence()));
                 byte o[]=sq.toString().getBytes("UTF-8");
                 return new ExtendedWebResourceResponse(o.length,"application/json","UTF-8",new ByteArrayInputStream(o));
             }

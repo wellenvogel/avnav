@@ -12,9 +12,10 @@ import org.json.JSONObject;
 
 import de.wellenvogel.avnav.fileprovider.UserFileProvider;
 import de.wellenvogel.avnav.main.Constants;
+import de.wellenvogel.avnav.main.MainActivity;
 import de.wellenvogel.avnav.main.R;
-import de.wellenvogel.avnav.main.WebViewFragment;
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.util.AvnUtil;
 
 //potentially the Javascript interface code is called from the Xwalk app package
 //so we have to be careful to always access the correct resource manager when accessing resources!
@@ -22,12 +23,12 @@ import de.wellenvogel.avnav.util.AvnLog;
 public class JavaScriptApi {
     private UploadData uploadData=null;
     private RequestHandler requestHandler;
-    private WebViewFragment fragment;
+    private MainActivity mainActivity;
     private boolean detached=false;
 
-    public JavaScriptApi(WebViewFragment fragment, RequestHandler requestHandler) {
+    public JavaScriptApi(MainActivity mainActivity, RequestHandler requestHandler) {
         this.requestHandler = requestHandler;
-        this.fragment=fragment;
+        this.mainActivity = mainActivity;
     }
 
     public void saveFile(Uri uri){
@@ -78,8 +79,8 @@ public class JavaScriptApi {
         if (type.equals("route") || type.equals("track")) {
             shareIntent.setType("application/gpx+xml");
         }
-        String title = requestHandler.activity.getText(R.string.selectApp) + " " + name;
-        requestHandler.activity.startActivity(Intent.createChooser(shareIntent, title));
+        String title = requestHandler.service.getText(R.string.selectApp) + " " + name;
+        requestHandler.service.startActivity(Intent.createChooser(shareIntent, title));
         return true;
     }
 
@@ -95,8 +96,11 @@ public class JavaScriptApi {
     public String handleUpload(String url,String data){
         if (detached) return null;
         try {
-            JSONObject rt= requestHandler.handleUploadRequest(Uri.parse(url),new PostVars(data));
-            return rt.getString("status");
+            RequestHandler.NavResponse rt= requestHandler.handleNavRequestInternal(Uri.parse(url),new PostVars(data),null);
+            if (! rt.isJson() || ! (rt.getJson() instanceof JSONObject)){
+                return "invalid post request";
+            }
+            return ((JSONObject)(rt.getJson())).getString("status");
         } catch (Exception e) {
             AvnLog.e("error in upload request for "+url+":",e);
             return e.getMessage();
@@ -126,27 +130,26 @@ public class JavaScriptApi {
     @JavascriptInterface
     public boolean requestFile(String type,long id,boolean readFile){
         if (detached) return false;
-        RequestHandler.KeyValue<Integer> title= RequestHandler.typeHeadings.get(type);
+        AvnUtil.KeyValue<Integer> title= RequestHandler.typeHeadings.get(type);
         if (title == null){
             AvnLog.e("unknown type for request file "+type);
             return false;
         }
         if (uploadData != null) uploadData.interruptCopy(true);
-        if (fragment.getActivity() == null) return false;
-        uploadData=new UploadData(fragment, requestHandler.getHandler(type),id,readFile);
+        uploadData=new UploadData(mainActivity, requestHandler.getHandler(type),id,readFile);
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("*/*");
         intent.addCategory(Intent.CATEGORY_OPENABLE);
-        Resources res=fragment.getResources();
+        Resources res= mainActivity.getResources();
         try {
-            fragment.startActivityForResult(
+            mainActivity.startActivityForResult(
                     Intent.createChooser(intent,
                             //TODO: be more flexible for types...
                             res.getText(title.value)),
                     Constants.FILE_OPEN);
         } catch (android.content.ActivityNotFoundException ex) {
             // Potentially direct the user to the Market with a Dialog
-            Toast.makeText(fragment.getActivity(), res.getText(R.string.installFileManager), Toast.LENGTH_SHORT).show();
+            Toast.makeText(mainActivity, res.getText(R.string.installFileManager), Toast.LENGTH_SHORT).show();
             return false;
         }
         return true;
@@ -225,27 +228,21 @@ public class JavaScriptApi {
     @JavascriptInterface
     public void goBack() {
         if (detached) return;
-        requestHandler.activity.runOnUiThread(
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        requestHandler.activity.goBack();
-                    }
-                });
+        requestHandler.service.mainGoBack();
     }
 
     @JavascriptInterface
     public void acceptEvent(String key,int num){
         if (detached) return;
         if (key != null && key.equals("backPressed")) {
-           fragment.jsGoBackAccepted(num);
+           mainActivity.jsGoBackAccepted(num);
         }
     }
 
     @JavascriptInterface
     public void showSettings(){
         if (detached) return;
-        requestHandler.activity.showSettings(false);
+        requestHandler.service.mainShowSettings(false);
     }
 
     @JavascriptInterface
@@ -259,9 +256,9 @@ public class JavaScriptApi {
         Intent goDownload = new Intent(Intent.ACTION_VIEW);
         goDownload.setData(Uri.parse(url));
         try {
-            requestHandler.activity.startActivity(goDownload);
+            requestHandler.service.startActivity(goDownload);
         } catch (Exception e) {
-            Toast.makeText(requestHandler.activity, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(requestHandler.service, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
             return;
         }
     }
@@ -269,8 +266,8 @@ public class JavaScriptApi {
     public String getVersion(){
         if (detached) return null;
         try {
-            String versionName = requestHandler.activity.getPackageManager()
-                    .getPackageInfo(requestHandler.activity.getPackageName(), 0).versionName;
+            String versionName = requestHandler.service.getPackageManager()
+                    .getPackageInfo(requestHandler.service.getPackageName(), 0).versionName;
             return versionName;
         } catch (PackageManager.NameNotFoundException e) {
             return "<unknown>";
@@ -278,9 +275,27 @@ public class JavaScriptApi {
     }
     @JavascriptInterface
     public boolean dimScreen(int percent){
-        fragment.setBrightness(percent);
+        mainActivity.setBrightness(percent);
         return true;
     }
+    @JavascriptInterface
+    public void launchBrowser(){
+        mainActivity.launchBrowser();
+    }
 
+    /**
+     * get a newly attached device
+     * will be called by js code after startup and after a reload event
+     * @return a json string with typeName and initialParameters
+     */
+    @JavascriptInterface
+    public String getAttachedDevice(){
+        return mainActivity.getAttachedDevice();
+    }
+
+    @JavascriptInterface
+    public void dialogClosed(){
+        mainActivity.dialogClosed();
+    }
 
 }

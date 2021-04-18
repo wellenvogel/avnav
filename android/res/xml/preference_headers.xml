@@ -7,16 +7,9 @@
 
     </header>
     <header
-        android:fragment="de.wellenvogel.avnav.settings.NmeaSettingsFragment"
-        android:title="@string/labelSettingsNmea"
-        android:summary="" >
-
-    </header>
-    <header
-        android:fragment="de.wellenvogel.avnav.settings.ExpertSettingsFragment"
-        android:title="@string/labelSettingsExpert"
-        android:summary=""
-        android:id="@+id/expert_settings">
+        android:fragment="de.wellenvogel.avnav.settings.SoundSettingsFragment"
+        android:title="@string/labelSettingsSound"
+        android:summary="">
 
     </header>
 

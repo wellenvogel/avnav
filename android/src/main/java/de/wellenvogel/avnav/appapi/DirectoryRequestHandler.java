@@ -3,6 +3,7 @@ package de.wellenvogel.avnav.appapi;
 import android.net.Uri;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -17,13 +18,16 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import de.wellenvogel.avnav.util.AvnUtil;
+import de.wellenvogel.avnav.worker.GpsService;
+import de.wellenvogel.avnav.worker.Worker;
 
-public class DirectoryRequestHandler implements INavRequestHandler{
+public class DirectoryRequestHandler extends Worker implements INavRequestHandler{
     protected File workDir;
     protected String urlPrefix;
     protected String type;
     protected IDeleteByUrl deleter;
-    public DirectoryRequestHandler(String type, File workDir, String urlPrefrix, IDeleteByUrl deleter) throws IOException {
+    public DirectoryRequestHandler(String type, GpsService ctx,File workDir, String urlPrefrix, IDeleteByUrl deleter) throws IOException {
+        super(type,ctx);
         this.type=type;
         this.urlPrefix=urlPrefrix;
         this.workDir=workDir;
@@ -34,6 +38,17 @@ public class DirectoryRequestHandler implements INavRequestHandler{
             throw new IOException("directory "+workDir.getPath()+" does not exist and cannot be created");
         }
         this.deleter=deleter;
+    }
+
+
+    protected void setWorkDir(File workDir) throws IOException {
+        this.workDir=workDir;
+        if (! workDir.exists()){
+            workDir.mkdirs();
+        }
+        if (!workDir.exists() || ! workDir.isDirectory()){
+            throw new IOException("directory "+workDir.getPath()+" does not exist and cannot be created");
+        }
     }
 
     @Override
@@ -94,7 +109,7 @@ public class DirectoryRequestHandler implements INavRequestHandler{
     public JSONObject handleApiRequest(Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
         String command=AvnUtil.getMandatoryParameter(uri,"command");
         if (command.equals("list")){
-            return RequestHandler.getReturn(new RequestHandler.KeyValue("items",handleList(uri, serverInfo)));
+            return RequestHandler.getReturn(new AvnUtil.KeyValue("items",handleList(uri, serverInfo)));
         }
         if (command.equals("delete")){
             String name=AvnUtil.getMandatoryParameter(uri,"name");
@@ -127,7 +142,8 @@ public class DirectoryRequestHandler implements INavRequestHandler{
         return RequestHandler.getErrorReturn("unknonw api request "+command);
     }
 
-    private File findLocalFile(String name){
+    private File findLocalFile(String name) throws IOException {
+        if (workDir == null) throw new IOException("workdir for "+type+" not set");
         for (File localFile: workDir.listFiles()) {
             if (localFile.isFile()
                     &&localFile.canRead()
@@ -137,6 +153,11 @@ public class DirectoryRequestHandler implements INavRequestHandler{
         }
         return null;
     }
+
+    @Override
+    protected void run(int startSequence) throws JSONException, IOException {
+    }
+
     static class CloseHelperStream extends InputStream {
         private InputStream is;
         private ZipFile zf;
