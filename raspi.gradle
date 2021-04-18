@@ -34,6 +34,7 @@ ospackage {
     requires 'mpg123'
     requires 'ntp'
     requires 'avahi-autoipd'
+    requires 'python3-smbus' //could basically also directly go to avnav - but outside rpi there is no use case
     packageName='avnav-raspi'
     ['common','wlan0','wlan1','wlan-ap','wlan-ap2'].each { String ext->
         configurationFile("/etc/hostapd/hostapd.conf.$ext")
@@ -83,6 +84,7 @@ ospackage {
         from('raspberry'){
             include('lo')
             include('eth0')
+            include('usb0')
             include('wlan0')
             include('wlan1')
             include('wlan-av1')

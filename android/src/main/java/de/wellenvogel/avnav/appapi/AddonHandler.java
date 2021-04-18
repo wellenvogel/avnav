@@ -21,7 +21,7 @@ import de.wellenvogel.avnav.util.AvnUtil;
 
 public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
 
-    static class AddonInfo implements IJsonObect {
+    static class AddonInfo implements AvnUtil.IJsonObect {
         public String name;
         public String url;
         public String icon;
@@ -188,7 +188,7 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
     public JSONObject handleApiRequest(Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
         String command= AvnUtil.getMandatoryParameter(uri,"command");
         if (command.equals("list")){
-            return RequestHandler.getReturn(new RequestHandler.KeyValue("items",handleList(uri, serverInfo)));
+            return RequestHandler.getReturn(new AvnUtil.KeyValue("items",handleList(uri, serverInfo)));
         }
         if (command.equals("update")){
             String name=uri.getQueryParameter("name");

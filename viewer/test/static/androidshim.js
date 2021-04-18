@@ -155,6 +155,10 @@ console.log("android shim loaded");
         dimScreen:function(percent){
             log("dimScreen",percent);
             return true;
+        },
+        dialogClosed:function(){
+            log("dialogClosed");
         }
+
     };
 })();

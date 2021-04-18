@@ -6,7 +6,6 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -14,76 +13,72 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
-import android.location.*;
+import android.location.Location;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.net.Uri;
+import android.net.nsd.NsdManager;
+import android.net.nsd.NsdServiceInfo;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
-import android.util.Log;
 import android.view.View;
 import android.widget.RemoteViews;
-
-import de.wellenvogel.avnav.main.Constants;
-import de.wellenvogel.avnav.main.Dummy;
-import de.wellenvogel.avnav.main.IMediaUpdater;
-import de.wellenvogel.avnav.main.R;
-import de.wellenvogel.avnav.settings.AudioEditTextPreference;
-import de.wellenvogel.avnav.settings.NmeaSettingsFragment;
-import de.wellenvogel.avnav.util.AvnLog;
-import de.wellenvogel.avnav.util.AvnUtil;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.InetSocketAddress;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+
+import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
+import de.wellenvogel.avnav.appapi.INavRequestHandler;
+import de.wellenvogel.avnav.appapi.PostVars;
+import de.wellenvogel.avnav.appapi.RequestHandler;
+import de.wellenvogel.avnav.appapi.WebServer;
+import de.wellenvogel.avnav.main.Constants;
+import de.wellenvogel.avnav.main.Dummy;
+import de.wellenvogel.avnav.main.IMediaUpdater;
+import de.wellenvogel.avnav.main.R;
+import de.wellenvogel.avnav.mdns.MdnsWorker;
+import de.wellenvogel.avnav.mdns.Resolver;
+import de.wellenvogel.avnav.settings.AudioEditTextPreference;
+import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.util.AvnUtil;
+import de.wellenvogel.avnav.util.NmeaQueue;
 
 /**
  * Created by andreas on 12.12.14.
  */
-public class GpsService extends Service implements INmeaLogger, RouteHandler.UpdateReceiver {
+public class GpsService extends Service implements RouteHandler.UpdateReceiver, INavRequestHandler {
 
 
     private static final String CHANNEL_ID = "main" ;
     private static final String CHANNEL_ID_NEW = "main_new" ;
-    public static String PROP_TRACKDIR="track.dir";
-    private static final long MAXLOCAGE=10000; //max age of location in milliseconds
-    private static final long MAXLOCWAIT=2000; //max time we wait until we explicitely query the location again
 
 
     private Context ctx;
 
-    private final IBinder mBinder = new GpsServiceBinder();
-    private GpsDataProvider internalProvider=null;
-    private IpPositionHandler externalProvider=null;
-    private BluetoothPositionHandler bluetoothProvider=null;
-    private UsbSerialPositionHandler usbProvider =null;
-
+    private final GpsServiceBinder mBinder = new GpsServiceBinder();
     private boolean isRunning;  //this is our view whether we are running or not
                                 //running means that we are registered for updates and have our timer active
 
     //properties
-    private File trackDir=null;
-
-    private TrackWriter trackWriter;
-    private RouteHandler routeHandler;
-    private NmeaLogger nmeaLogger;
     private Handler handler = new Handler();
     private long timerSequence=1;
     private Runnable runnable;
     private IMediaUpdater mediaUpdater;
     private static final int NOTIFY_ID=Constants.LOCALNOTIFY;
-    private Object loggerLock=new Object();
     private HashMap<String,Alarm> alarmStatus=new HashMap<String, Alarm>();
     private MediaPlayer mediaPlayer=null;
     private int mediaRepeatCount=0;
@@ -91,28 +86,47 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     private boolean mobAlarm=false;
     private BroadcastReceiver broadCastReceiver;
     private BroadcastReceiver triggerReceiver; //trigger rescans...
-    private boolean shouldStop=false;
     PendingIntent watchdogIntent=null;
     private static final String WATCHDOGACTION="restart";
-
-    private PositionWriter positionWriter;
-    private Thread positionWriterThread;
+    private RequestHandler requestHandler;
     private RouteHandler.RoutePoint lastAlarmWp=null;
-    long trackMintime;
+    private final NmeaQueue queue=new NmeaQueue();
+    long timerInterval =1000;
     Alarm lastNotifiedAlarm=null;
     boolean notificationSend=false;
     private long alarmSequence=System.currentTimeMillis();
+    private final ArrayList<IWorker> workers =new ArrayList<>();
+    private final ArrayList<IWorker> internalWorkers=new ArrayList<>();
+    private static final int MIN_WORKER_ID=10;
+    private int workerId=MIN_WORKER_ID; //1-9 reserverd for fixed workers like decoder,...
+    private final HashMap<String, Resolver> mdnsResolvers=new HashMap<>();
+    private final ArrayList<InetAddress> interfaceAddresses=new ArrayList<>();
+    private HashSet<NsdManager.DiscoveryListener> discoveryListeners=new HashSet<>();
+    private NsdManager nsdManager;
+    private final HashSet<NsdServiceInfo> services=new HashSet<>();
+    private final HashMap<Integer,Registration> registeredServices= new HashMap<>();
 
+    private static class Registration{
+        NsdManager.RegistrationListener listener;
+        NsdServiceInfo info;
+        Registration(NsdServiceInfo info, NsdManager.RegistrationListener listener){
+            this.listener=listener;
+            this.info=info;
+        }
+    }
     private final BroadcastReceiver usbReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context ctx, Intent intent) {
 
             if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_DETACHED)) {
                 UsbDevice dev = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
-                if (dev != null && usbProvider != null) {
-                    usbProvider.deviceDetach(dev);
+                if (dev != null) {
+                    for (IWorker w : workers) {
+                        if (w instanceof UsbConnectionHandler){
+                            ((UsbConnectionHandler)w).deviceDetach(dev);
+                        }
+                    }
                 }
-
             }
         }
     };
@@ -120,82 +134,140 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
 
 
     private static final String LOGPRFX="Avnav:GpsService";
-
-    /**
-     * get the providers in the correct order of their priority
-     * @return
-     */
-    private GpsDataProvider[] getAllProviders(){
-        return new GpsDataProvider[]{internalProvider,externalProvider,bluetoothProvider, usbProvider};
-    }
-    private boolean isProviderActive(GpsDataProvider provider){
-        return (provider != null) && ! provider.isStopped();
-    }
-    @Override
-    public void logNmea(String data) {
-        synchronized (loggerLock){
-            if (nmeaLogger != null){
-                nmeaLogger.addRecord(data);
-            }
-        }
-
-    }
+    private BroadcastReceiver broadCastReceiverStop;
+    private boolean mdnsUpdateRunning;
 
     @Override
     public void updated() {
-        handler.post(runnable);
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    timerAction();
+                } catch (JSONException e) {
+                    AvnLog.e("error in timer action",e);
+                }
+            }
+        });
         sendBroadcast(new Intent(Constants.BC_RELOAD_DATA));
 
     }
 
+    @Override
+    public ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception {
+        return null;
+    }
+
+    @Override
+    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
+        return false;
+    }
+
+    @Override
+    public JSONArray handleList(Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception {
+        return null;
+    }
+
+    @Override
+    public boolean handleDelete(String name, Uri uri) throws Exception {
+        return false;
+    }
+
+    @Override
+    public JSONObject handleApiRequest(Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
+        if (serverInfo != null){
+            return RequestHandler.getErrorReturn("can only handle config locally");
+        }
+        String command=AvnUtil.getMandatoryParameter(uri,"command");
+        if ("createHandler".equals(command)){
+            String typeName=AvnUtil.getMandatoryParameter(uri,"handlerName");
+            String config=postData.getAsString();
+            addWorker(typeName,new JSONObject(config));
+            return RequestHandler.getReturn();
+        }
+        if ("getAddables".equals(command)){
+            List<String> names=WorkerFactory.getInstance().getKnownTypes(true,this);
+            JSONArray data=new JSONArray(names);
+            return RequestHandler.getReturn(new AvnUtil.KeyValue<JSONArray>("data",data));
+        }
+        if ("getAddAttributes".equals(command)){
+            String typeName=AvnUtil.getMandatoryParameter(uri,"handlerName");
+            try{
+                ChannelWorker w=WorkerFactory.getInstance().createWorker(typeName,this,null);
+                return RequestHandler.getReturn(
+                        new AvnUtil.KeyValue<JSONArray>("data",w.getParameterDescriptions(this))
+                );
+            }catch (WorkerFactory.WorkerNotFound e){
+                return RequestHandler.getErrorReturn("no handler of type "+typeName+" found");
+            }
+        }
+        if ("canRestart".equals(command)){
+            return RequestHandler.getReturn(new AvnUtil.KeyValue<Boolean>("canRestart",false));
+        }
+        int id=Integer.parseInt(AvnUtil.getMandatoryParameter(uri,"handlerId"));
+        IWorker worker=findWorkerById(id);
+        if (worker == null){
+            return RequestHandler.getErrorReturn("worker with id "+id+" not found");
+        }
+        if ("getEditables".equals(command)){
+            JSONObject rt=worker.getEditableParameters(true,this);
+            rt.put("status","OK");
+            return rt;
+        }
+        if ("setConfig".equals(command)){
+            String config=postData.getAsString();
+            updateWorkerConfig(worker,new JSONObject(config));
+            return RequestHandler.getReturn();
+        }
+        if ("deleteHandler".equals(command)){
+            if (! worker.getStatus().canDelete){
+                return RequestHandler.getErrorReturn("handler "+id+" cannot be deleted");
+            }
+            deleteWorker(worker);
+            return RequestHandler.getReturn();
+        }
+        return RequestHandler.getErrorReturn("invalid command "+command);
+    }
+
+    @Override
+    public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler) throws Exception {
+        return null;
+    }
+
+    @Override
+    public String getPrefix() {
+        return null;
+    }
+
+    public RequestHandler getRequestHandler() {
+        return requestHandler;
+    }
+
+    public static interface MainActivityActions{
+        void showSettings(boolean checkInitially);
+        void mainGoBack();
+        void mainShutdown();
+    }
     public class GpsServiceBinder extends Binder{
-      public GpsService getService(){
-          return GpsService.this;
-      }
+        MainActivityActions mainCallback;
+        public GpsService getService(){
+            return GpsService.this;
+        }
+        synchronized public void registerCallback(MainActivityActions cb){
+            mainCallback=cb;
+        }
+        synchronized public void deregisterCallback(){
+            mainCallback=null;
+        }
+        synchronized MainActivityActions getCallback(){
+            return mainCallback;
+        }
     };
 
     @Override
     public IBinder onBind(Intent arg0)
     {
         return mBinder;
-    }
-
-    private class PositionWriter implements Runnable{
-        private boolean stop=false;
-        @Override
-        public void run() {
-            while (! stop) {
-                GpsDataProvider locationProvider = null;
-                Location location = null;
-                for (GpsDataProvider provider : getAllProviders()) {
-                    if (isProviderActive(provider) && provider.handlesNmea()) {
-                        location = provider.getLocation();
-                        locationProvider = provider;
-                        break;
-                    }
-                }
-                for (GpsDataProvider provider : getAllProviders()) {
-                    if (provider != null && provider != locationProvider) {
-                        try {
-                            if (location != null) provider.sendPosition(location);
-                        }catch (Throwable t){
-                            AvnLog.e("error when writing position at "+provider.getName(),t);
-                        }
-                    }
-                }
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    return;
-                }
-            }
-        }
-        public void doStop(){
-            stop=true;
-        }
-        public boolean isStopped(){
-            return stop;
-        }
     }
 
 
@@ -290,17 +362,370 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         }
     }
 
-    private GpsDataProvider.Properties getFilledProperties(){
-        SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
-        GpsDataProvider.Properties prop=new GpsDataProvider.Properties();
-        prop.aisCleanupInterval=1000*AvnUtil.getLongPref(prefs, Constants.IPAISCLEANUPIV, prop.aisCleanupInterval);
-        prop.aisLifetime=1000*AvnUtil.getLongPref(prefs,Constants.AISLIFETIME, prop.aisLifetime);
-        prop.postionAge=1000*AvnUtil.getLongPref(prefs,Constants.IPPOSAGE,prop.postionAge);
-        prop.auxiliaryAge=1000*AvnUtil.getLongPref(prefs,Constants.AUXAGE,prop.auxiliaryAge);
-        prop.connectTimeout=(int)(1000*AvnUtil.getLongPref(prefs,Constants.IPCONNTIMEOUT, prop.connectTimeout));
-        prop.ownMmsi=prefs.getString(Constants.AISOWN,null);
-        return prop;
+    private abstract static class WorkerConfig{
+        int id;
+        String configName;
+        String typeName;
+        WorkerConfig(String typeName,int id){
+            this.id=id;
+            this.configName="internal."+typeName;
+            this.typeName=typeName;
+        }
+        abstract IWorker createWorker(GpsService ctx, NmeaQueue queue) throws IOException;
     }
+
+    private static final WorkerConfig WDECODER= new WorkerConfig("Decoder", 1) {
+        @Override
+        IWorker createWorker(GpsService ctx, NmeaQueue queue) {
+            return new Decoder(typeName,ctx,queue);
+        }
+    };
+    private static final WorkerConfig WROUTER=new WorkerConfig("Router",2){
+        @Override
+        IWorker createWorker(GpsService ctx, NmeaQueue queue) throws IOException {
+            SharedPreferences prefs=ctx.getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
+            File routeDir=new File(AvnUtil.getWorkDir(prefs,ctx),"routes");
+            RouteHandler rt=new RouteHandler(routeDir,ctx,queue);
+            rt.setMediaUpdater(ctx.getMediaUpdater());
+            return rt;
+        }
+    };
+    private static final WorkerConfig WTRACK=new WorkerConfig("Track",3){
+        @Override
+        IWorker createWorker(GpsService ctx, NmeaQueue queue) throws IOException {
+            SharedPreferences prefs=ctx.getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
+            File newTrackDir=new File(AvnUtil.getWorkDir(prefs,ctx),"tracks");
+            TrackWriter rt=new TrackWriter(newTrackDir,ctx);
+            return rt;
+        }
+    };
+    private static final WorkerConfig WLOGGER= new WorkerConfig("Logger", 4) {
+        @Override
+        IWorker createWorker(GpsService ctx, NmeaQueue queue) throws IOException {
+            SharedPreferences prefs=ctx.getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
+            File newTrackDir=new File(AvnUtil.getWorkDir(prefs,ctx),"tracks");
+            return new NmeaLogger(newTrackDir,ctx,queue,null);
+        }
+    };
+    private static final WorkerConfig WSERVER= new WorkerConfig("WebServer",5) {
+        @Override
+        IWorker createWorker(GpsService ctx, NmeaQueue queue) throws IOException {
+            return new WebServer(ctx);
+        }
+    };
+    private static final WorkerConfig WGPS= new WorkerConfig("InternalGPS", 6) {
+        @Override
+        IWorker createWorker(GpsService ctx, NmeaQueue queue) {
+            return new AndroidPositionHandler(typeName,ctx,queue);
+        }
+    };
+    private static final WorkerConfig WMDNS=new WorkerConfig("MDNSresolver",7) {
+        @Override
+        IWorker createWorker(GpsService ctx, NmeaQueue queue) throws IOException {
+            return new MdnsWorker(typeName,ctx);
+        }
+    };
+    private static final WorkerConfig[] INTERNAL_WORKERS ={WDECODER,WROUTER,WTRACK,WLOGGER,WSERVER,WGPS,WMDNS};
+
+    private synchronized int getNextWorkerId(){
+        workerId++;
+        return workerId;
+    }
+    private synchronized IWorker findWorkerById(int id){
+        if (id >= MIN_WORKER_ID) {
+            for (IWorker w : workers) {
+                if (w.getId() == id) return w;
+            }
+        }
+        else {
+            for (IWorker w : internalWorkers) {
+                if (w.getId() == id) return w;
+            }
+        }
+        return null;
+    }
+    private static JSONArray getWorkerConfig(Context ctx) throws JSONException {
+        SharedPreferences prefs=ctx.getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
+        String config=prefs.getString(Constants.HANDLER_CONFIG,null);
+        JSONArray rt=null;
+        if (config != null){
+            try{
+                rt=new JSONArray(config);
+            }catch (Throwable t){
+                AvnLog.e("unable to parse Handler config "+config,t);
+            }
+        }
+        if (rt != null) {
+            return rt;
+        }
+        rt=new JSONArray();
+        return rt;
+    }
+    private void handleMigration(){
+        try {
+            SharedPreferences prefs = getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+            String config = prefs.getString(Constants.HANDLER_CONFIG, null);
+            if (config != null) return;
+            AvnLog.i("running config migration");
+            SharedPreferences.Editor edit=prefs.edit();
+            int webServerPort = -1;
+            if (Constants.MODE_SERVER.equals(prefs.getString(Constants.RUNMODE, null))) {
+                webServerPort = Integer.parseInt(prefs.getString(Constants.WEBSERVERPORT, "34567"));
+            }
+
+            String ip = null;
+            int port = -1;
+            boolean ipais = false;
+            boolean ipnmea = false;
+            String ipFilter = "";
+            ipais = prefs.getBoolean(Constants.IPAIS, false);
+            ipnmea = prefs.getBoolean(Constants.IPNMEA, false);
+            if (ipais || ipnmea) {
+                ip = prefs.getString(Constants.IPADDR, null);
+                port = Integer.parseInt(prefs.getString(Constants.IPPORT, "-1"));
+            }
+            if (!ipais) {
+                ipFilter = "$";
+            }
+            if (!ipnmea) {
+                ipFilter = "!";
+            }
+            //step1: internal receiver
+            if (ipais && ipnmea){
+                //internal gps disabled
+                JSONObject internal=new JSONObject();
+                Worker.ENABLED_PARAMETER.write(internal,false);
+                edit.putString(WGPS.typeName,internal.toString());
+            }
+            JSONArray newConfig = new JSONArray();
+            JSONObject handler=null;
+            //if we need ip
+            if (ip != null && port >= 0) {
+                handler = new JSONObject();
+                Worker.TYPENAME_PARAMETER.write(handler,WorkerFactory.SOCKETREADER_NAME);
+                Worker.IPADDRESS_PARAMETER.write(handler,ip);
+                Worker.IPPORT_PARAMETER.write(handler,port);
+                if (ipFilter != null) Worker.FILTER_PARAM.write(handler,ipFilter);
+                newConfig.put(handler);
+                AvnLog.i("adding ip connection to "+ip+":"+port);
+            }
+            edit.putString(Constants.HANDLER_CONFIG,newConfig.toString());
+            if (webServerPort > 0){
+                boolean externalAccess=prefs.getBoolean(Constants.EXTERNALACCESS,false);
+                handler=new JSONObject();
+                WebServer.ENABLED_PARAMETER.write(handler,true);
+                WebServer.ANY_ADDRESS.write(handler,externalAccess);
+                WebServer.PORT.write(handler,webServerPort);
+                edit.putString(WSERVER.configName,handler.toString());
+                AvnLog.i("adding webserver, port "+webServerPort);
+            }
+            String MMSI=prefs.getString(Constants.AISOWN,null);
+            if (MMSI != null){
+                handler=new JSONObject();
+                Decoder.OWN_MMSI.write(handler,MMSI);
+                edit.putString(WDECODER.configName,handler.toString());
+            }
+            edit.commit();
+        } catch (Throwable t) {
+        }
+    }
+
+    public static void resetWorkerConfig(Context ctx){
+        SharedPreferences prefs = ctx.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor edit=prefs.edit();
+        edit.putString(Constants.HANDLER_CONFIG,(new JSONArray()).toString());
+        for (WorkerConfig iw:INTERNAL_WORKERS){
+            edit.putString(iw.configName,null);
+        }
+        edit.commit();
+    }
+
+    private Decoder getDecoder(){
+        IWorker decoder=findWorkerById(WDECODER.id);
+        return (Decoder)decoder;
+    }
+    public RouteHandler getRouteHandler(){
+        IWorker handler=findWorkerById(WROUTER.id);
+        return (RouteHandler)handler;
+    }
+    public TrackWriter getTrackWriter(){
+        IWorker writer=findWorkerById(WTRACK.id);
+        return (TrackWriter)writer;
+    }
+    public NmeaLogger getNmeaLogger(){
+        IWorker logger=findWorkerById(WLOGGER.id);
+        return (NmeaLogger)logger;
+    }
+    public WebServer getWebServer() {
+        IWorker server=findWorkerById(WSERVER.id);
+        return (WebServer)server;
+    }
+    public MdnsWorker getMdnsResolver(){
+        IWorker mdns=findWorkerById(WMDNS.id);
+        return (MdnsWorker) mdns;
+    }
+
+
+    private void saveWorkerConfig(IWorker worker) throws JSONException {
+        SharedPreferences prefs = getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor edit=prefs.edit();
+        if (worker == null || worker.getId() >= MIN_WORKER_ID) {
+            JSONArray newConfig = new JSONArray();
+            for (IWorker w : workers) {
+                JSONObject wc = w.getConfig();
+                wc.put(Worker.TYPENAME_PARAMETER.name, w.getTypeName());
+                newConfig.put(wc);
+            }
+            edit.putString(Constants.HANDLER_CONFIG, newConfig.toString());
+        }
+        else if (worker != null){
+            for (WorkerConfig cfg: INTERNAL_WORKERS){
+                if (cfg.id == worker.getId()){
+                    JSONObject jo=worker.getConfig();
+                    edit.putString(cfg.configName,jo.toString());
+                    break;
+                }
+            }
+        }
+        edit.commit();
+    }
+    private synchronized void updateWorkerConfig(IWorker worker, JSONObject newConfig) throws JSONException, IOException {
+        worker.setParameters(newConfig, false,true);
+        worker.start(); //will restart
+        saveWorkerConfig(worker);
+    }
+    private synchronized void addWorker(String typeName, JSONObject newConfig) throws WorkerFactory.WorkerNotFound, JSONException, IOException {
+        IWorker newWorker=WorkerFactory.getInstance().createWorker(typeName,this,queue);
+        newWorker.setId(getNextWorkerId());
+        newWorker.setParameters(newConfig, true,true);
+        newWorker.start();
+        String currentType=null;
+        boolean inserted=false;
+        for (int i=0;i<workers.size();i++){
+            if (typeName.equals(currentType) && !workers.get(i).getTypeName().equals(typeName)){
+                inserted=true;
+                workers.add(i,newWorker);
+                break;
+            }
+            currentType=workers.get(i).getTypeName();
+        }
+        if (! inserted){
+            workers.add(newWorker);
+        }
+        saveWorkerConfig(newWorker);
+    }
+    private synchronized void deleteWorker(IWorker worker) throws JSONException {
+        worker.stopAndWait();
+        int workerId=-1;
+        for (int i=0;i<workers.size();i++){
+            if (worker.getId() == workers.get(i).getId()){
+                workerId=i;
+                break;
+            }
+        }
+        if (workerId >= 0){
+            workers.remove(workerId);
+        }
+        saveWorkerConfig(worker);
+    }
+    private void stopWorkers(boolean wait){
+        for (IWorker w: workers){
+            try{
+                if (wait) w.stopAndWait();
+                else w.stop();
+            }catch (Throwable t){
+                AvnLog.e("unable to stop worker "+w.getStatus().toString());
+            }
+        }
+        workers.clear();
+        for (IWorker w: internalWorkers){
+            try{
+                w.stop();
+            }catch (Throwable t){
+                AvnLog.e("unable to stop worker "+w.getStatus().toString());
+            }
+        }
+        internalWorkers.clear();
+    }
+
+    public static boolean handlesUsbDevice(Context ctx,String deviceName){
+        try {
+            JSONArray workers = getWorkerConfig(ctx);
+            for (int i = 0; i < workers.length(); i++) {
+                JSONObject wc = workers.getJSONObject(i);
+                try {
+                    if (WorkerFactory.USB_NAME.equals(Worker.TYPENAME_PARAMETER.fromJson(wc))) {
+                        if (UsbConnectionHandler.DEVICE_SELECT.fromJson(wc).equals(deviceName)) {
+                            return true;
+                        }
+                    }
+                }
+                catch (Throwable t){}
+            }
+        }catch (Throwable t){}
+        return false;
+    }
+
+    private void handleStartup(boolean isWatchdog){
+        SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
+        AvnLog.d(LOGPRFX,"started");
+        if (! isWatchdog || requestHandler == null){
+            if (requestHandler != null) requestHandler.stop();
+            requestHandler=new RequestHandler(this);
+        }
+        if (! isWatchdog || internalWorkers.size() == 0) {
+            for (WorkerConfig cfg : INTERNAL_WORKERS){
+                try {
+                    IWorker worker=cfg.createWorker(this,queue);
+                    worker.setId(cfg.id);
+                    String parameters=prefs.getString(cfg.configName,null);
+                    if (parameters != null){
+                        try{
+                            JSONObject po=new JSONObject(parameters);
+                            worker.setParameters(po,true,false);
+                        }catch (JSONException e){
+                            //all internal workers must be able to run with empty parameters
+                            AvnLog.e("error parsing decoder parameters",e);
+                        }
+                    }
+                    worker.start();
+                    internalWorkers.add(worker);
+                } catch (Throwable t) {
+                    AvnLog.e("unable to create worker "+cfg.typeName,t);
+                    Toast.makeText(this,"Unable to create "+cfg.typeName+": "+t.getMessage(),Toast.LENGTH_LONG).show();
+                }
+
+            }
+        }
+        if (! isWatchdog || workers.size() == 0) {
+            workerId=MIN_WORKER_ID;
+            try {
+                JSONArray handlerConfig = getWorkerConfig(this);
+                for (int i = 0; i < handlerConfig.length(); i++) {
+                    try {
+                        JSONObject config = handlerConfig.getJSONObject(i);
+                        IWorker worker = WorkerFactory.getInstance().createWorker(
+                                Worker.TYPENAME_PARAMETER.fromJson(config), this, queue);
+                        worker.setId(getNextWorkerId());
+                        try {
+                            worker.setParameters(config, true,false);
+                            worker.start();
+                        }catch (Throwable t){
+                            worker.setStatus(WorkerStatus.Status.ERROR,"unable to set parameters: "+t.getMessage());
+                        }
+                        workers.add(worker);
+                    } catch (Throwable t) {
+                        AvnLog.e("unable to create handler " + i, t);
+                    }
+                }
+            } catch (Throwable t) {
+                AvnLog.e("unable to create channels", t);
+            }
+        }
+
+        isRunning=true;
+    }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent,flags,startId);
@@ -310,180 +735,237 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         else {
             AvnLog.i("service onStartCommand");
         }
-        SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
+        if (! isWatchdog && isRunning) return Service.START_REDELIVER_INTENT;
         handleNotification(true,true);
-        //we rely on the activity to check before...
-        File newTrackDir=new File(AvnUtil.getWorkDir(prefs,this),"tracks");
-        boolean loadTrack=true;
-        if (trackDir != null && trackDir.getAbsolutePath().equals(newTrackDir.getAbsolutePath())){
-            //seems to be a restart - so do not load again
-            loadTrack=false;
-            AvnLog.d(LOGPRFX,"restart: do not load track data");
+        if (! isWatchdog) {
+            stopWorkers(true);
+            handleMigration();
         }
-
-        long trackInterval=1000* AvnUtil.getLongPref(prefs, Constants.TRACKINTERVAL, 300);
-        long trackDistance=AvnUtil.getLongPref(prefs, Constants.TRACKDISTANCE, 25);
-        trackMintime=1000*AvnUtil.getLongPref(prefs, Constants.TRACKMINTIME, 10);
-        long trackTime=1000*60*60*AvnUtil.getLongPref(prefs, Constants.TRACKTIME, 25); //25h - to ensure that we at least have the whole day...
-        String aisMode= NmeaSettingsFragment.getAisMode(prefs);
-        String nmeaMode=NmeaSettingsFragment.getNmeaMode(prefs);
-        Properties loggerProperties=new Properties();
-        loggerProperties.logAis=prefs.getBoolean(Constants.AISLOG,false);
-        loggerProperties.logNmea=prefs.getBoolean(Constants.NMEALOG,false);
-        loggerProperties.nmeaFilter=prefs.getString(Constants.NMEALOGFILTER,null);
-        AvnLog.d(LOGPRFX,"started with dir="+newTrackDir.getAbsolutePath()+", interval="+(trackInterval/1000)+
-                ", distance="+trackDistance+", mintime="+(trackMintime/1000)+
-                ", maxtime(h)="+(trackTime/3600/1000)+
-                ", AISmode="+aisMode+
-                ", NmeaMode="+nmeaMode
-                );
-        trackDir = newTrackDir;
-        synchronized (loggerLock) {
-            if (! isWatchdog || nmeaLogger == null) {
-                if (loggerProperties.logNmea || loggerProperties.logAis) {
-                    if (nmeaLogger != null) nmeaLogger.stop();
-                    nmeaLogger = new NmeaLogger(trackDir, mediaUpdater, loggerProperties);
-                } else {
-                    if (nmeaLogger != null) nmeaLogger.stop();
-                    nmeaLogger = null;
-                }
-            }
+        if (discoveryListeners.size() == 0) {
+            startDiscovery();
         }
-        if (loadTrack) {
-            try {
-                trackWriter = new TrackWriter(trackDir,trackTime,trackDistance,trackMintime,trackInterval);
-            } catch (IOException e) {
-                AvnLog.e("unable to create track writer",e);
-            }
-            timerSequence++;
-        }
-        File routeDir=new File(AvnUtil.getWorkDir(prefs,this),"routes");
-        if (routeHandler == null || routeHandler.isStopped()) {
-            try {
-                routeHandler = new RouteHandler(routeDir,this);
-                routeHandler.setMediaUpdater(mediaUpdater);
-                routeHandler.start();
-            } catch (IOException e) {
-                AvnLog.e("unable to create route handler:",e);
-            }
-        }
+        handleStartup(isWatchdog);
         if (! isWatchdog || runnable == null) {
+            timerSequence++;
             runnable = new TimerRunnable(timerSequence);
-            handler.postDelayed(runnable, trackMintime);
+            handler.postDelayed(runnable, timerInterval);
         }
         if (! receiverRegistered) {
             registerReceiver(usbReceiver, new IntentFilter(UsbManager.ACTION_USB_DEVICE_DETACHED));
             receiverRegistered=true;
         }
-        if (nmeaMode.equals(Constants.MODE_INTERNAL)){
-            if (internalProvider == null || internalProvider.isStopped()) {
-                AvnLog.d(LOGPRFX,"start internal provider");
-                GpsDataProvider.Properties prop=new GpsDataProvider.Properties();
-                try {
-                    internalProvider = new AndroidPositionHandler(this, 1000 * AvnUtil.getLongPref(prefs, Constants.GPSOFFSET, prop.timeOffset));
-                }catch (Exception i){
-                    Log.e(LOGPRFX,"unable to start external service: "+i.getLocalizedMessage());
-                }
-            }
-        }
-        else {
-            if (internalProvider != null){
-                AvnLog.d(LOGPRFX,"stopping internal provider");
-                internalProvider.stop();
-                internalProvider=null;
-            }
-        }
-        if (aisMode.equals(Constants.MODE_IP) || nmeaMode.equals(Constants.MODE_IP)){
-            if (externalProvider == null|| externalProvider.isStopped()){
-                try {
-                    InetSocketAddress addr = GpsDataProvider.convertAddress(prefs.getString(Constants.IPADDR, ""),
-                            prefs.getString(Constants.IPPORT, ""));
-                    AvnLog.d(LOGPRFX,"starting external receiver for "+addr.toString());
-                    GpsDataProvider.Properties prop=getFilledProperties();
-                    prop.timeOffset=1000*AvnUtil.getLongPref(prefs,Constants.IPOFFSET,prop.timeOffset);
-                    prop.readAis=aisMode.equals(Constants.MODE_IP);
-                    prop.readNmea=nmeaMode.equals(Constants.MODE_IP);
-                    prop.nmeaFilter=prefs.getString(Constants.NMEAFILTER,null);
-                    prop.sendPosition=prefs.getBoolean(Constants.AISSENDPOS,false) && (prop.readAis && ! prop.readNmea);
-                    externalProvider=new IpPositionHandler(this,addr,prop);
-                }catch (Exception i){
-                    Log.e(LOGPRFX,"unable to start external service: "+i.getLocalizedMessage());
-                }
-
-            }
-        }
-        else{
-            if (externalProvider != null){
-                AvnLog.d(LOGPRFX,"stopping external service");
-                externalProvider.stop();
-            }
-        }
-        if (aisMode.equals(Constants.MODE_BLUETOOTH) || nmeaMode.equals(Constants.MODE_BLUETOOTH)){
-            if (bluetoothProvider == null|| bluetoothProvider.isStopped()){
-                try {
-                    String dname=prefs.getString(Constants.BTDEVICE, "");
-                    BluetoothDevice dev=BluetoothPositionHandler.getDeviceForName(dname);
-                    if (dev == null){
-                        throw new Exception("no bluetooth device found for"+dname);
-                    }
-                    AvnLog.d(LOGPRFX,"starting bluetooth receiver for "+dname+": "+ dev.getAddress());
-                    GpsDataProvider.Properties prop=getFilledProperties();
-                    prop.readAis=aisMode.equals(Constants.MODE_BLUETOOTH);
-                    prop.readNmea=nmeaMode.equals(Constants.MODE_BLUETOOTH);
-                    prop.timeOffset=1000*AvnUtil.getLongPref(prefs,Constants.BTOFFSET,prop.timeOffset);
-                    prop.nmeaFilter=prefs.getString(Constants.NMEAFILTER,null);
-                    prop.sendPosition=prefs.getBoolean(Constants.AISSENDPOS,false) && (prop.readAis && ! prop.readNmea);
-                    bluetoothProvider=new BluetoothPositionHandler(this,dev,prop);
-                }catch (Exception i){
-                    Log.e(LOGPRFX,"unable to start external service "+i.getLocalizedMessage());
-                }
-
-            }
-        }
-        else{
-            if (bluetoothProvider != null){
-                AvnLog.d(LOGPRFX,"stopping bluetooth service");
-                bluetoothProvider.stop();
-            }
-        }
-
-        if (aisMode.equals(Constants.MODE_USB) || nmeaMode.equals(Constants.MODE_USB)){
-            if (usbProvider == null || usbProvider.isStopped()){
-                try {
-                    String dname=prefs.getString(Constants.USBDEVICE, "");
-                    UsbDevice dev=UsbSerialPositionHandler.getDeviceForName(this,dname);
-                    if (dev == null){
-                        throw new Exception("no usb device found for"+dname);
-                    }
-                    AvnLog.d(LOGPRFX,"starting usb serial receiver for "+dname+": "+ dev.getDeviceName());
-                    GpsDataProvider.Properties prop=getFilledProperties();
-                    prop.readAis=aisMode.equals(Constants.MODE_USB);
-                    prop.readNmea=nmeaMode.equals(Constants.MODE_USB);
-                    prop.timeOffset=1000*AvnUtil.getLongPref(prefs,Constants.BTOFFSET,prop.timeOffset);
-                    prop.nmeaFilter=prefs.getString(Constants.NMEAFILTER,null);
-                    prop.sendPosition=prefs.getBoolean(Constants.AISSENDPOS,false) && (prop.readAis && ! prop.readNmea);
-                    usbProvider =new UsbSerialPositionHandler(this,dev,prefs.getString(Constants.USBBAUD,"4800"),prop);
-                }catch (Exception i){
-                    Log.e(LOGPRFX,"unable to start external service "+i.getLocalizedMessage());
-                }
-
-            }
-        }
-        else{
-            if (usbProvider != null){
-                AvnLog.d(LOGPRFX,"stopping usbProvider service");
-                usbProvider.stop();
-            }
-        }
-        if (positionWriter == null || positionWriter.isStopped()) {
-            positionWriter = new PositionWriter();
-            positionWriterThread = new Thread(positionWriter);
-            positionWriterThread.setDaemon(true);
-            positionWriterThread.start();
-        }
-        isRunning=true;
         return Service.START_REDELIVER_INTENT;
     }
+
+    private void stopDiscovery(){
+        if (nsdManager == null){
+            discoveryListeners.clear();
+            return;
+        }
+        for (NsdManager.DiscoveryListener l:discoveryListeners){
+            nsdManager.stopServiceDiscovery(l);
+        }
+        discoveryListeners.clear();
+    }
+
+    private void startDiscovery() {
+        if (nsdManager == null) {
+            nsdManager = (NsdManager) getSystemService(Context.NSD_SERVICE);
+        }
+        if (nsdManager != null) {
+            for (TcpServiceReader.Description d : TcpServiceReader.SERVICES) {
+                NsdManager.DiscoveryListener discoveryListener = new NsdManager.DiscoveryListener() {
+                    @Override
+                    public void onStartDiscoveryFailed(String serviceType, int errorCode) {
+
+                    }
+
+                    @Override
+                    public void onStopDiscoveryFailed(String serviceType, int errorCode) {
+
+                    }
+
+                    @Override
+                    public void onDiscoveryStarted(String serviceType) {
+
+                    }
+
+                    @Override
+                    public void onDiscoveryStopped(String serviceType) {
+
+                    }
+
+                    @Override
+                    public void onServiceFound(NsdServiceInfo serviceInfo) {
+                        synchronized (services) {
+                            ArrayList<NsdServiceInfo> toRemove=new ArrayList<>();
+                            for (NsdServiceInfo si:services){
+                                if (si.getServiceType().equals(serviceInfo.getServiceType()) &&
+                                    si.getServiceName().equals(serviceInfo.getServiceName())){
+                                    toRemove.add(si);
+                                }
+                            }
+                            for (NsdServiceInfo si:toRemove){
+                                services.remove(si);
+                            }
+                            services.add(serviceInfo);
+                        }
+
+                    }
+
+                    @Override
+                    public void onServiceLost(NsdServiceInfo serviceInfo) {
+                        synchronized (services) {
+                            ArrayList<NsdServiceInfo> toRemove=new ArrayList<>();
+                            for (NsdServiceInfo si:services){
+                                if (si.getServiceType().equals(serviceInfo.getServiceType()) &&
+                                        si.getServiceName().equals(serviceInfo.getServiceName())){
+                                    toRemove.add(si);
+                                }
+                            }
+                            for (NsdServiceInfo si:toRemove){
+                                services.remove(si);
+                            }
+                        }
+                    }
+                };
+                discoveryListeners.add(discoveryListener);
+                nsdManager.discoverServices(d.serviceType, NsdManager.PROTOCOL_DNS_SD, discoveryListener);
+            }
+        }
+    }
+
+
+    public List<String> discoveredServices(String type){
+        ArrayList<String> rt=new ArrayList<>();
+        ArrayList<NsdServiceInfo> foundServices=new ArrayList<>();
+        synchronized (services){
+            for (NsdServiceInfo info:services){
+                if (type.equals(info.getServiceType())){
+                    foundServices.add(info);
+                }
+            }
+        }
+        synchronized (registeredServices){
+            for (NsdServiceInfo info:foundServices){
+                boolean isOwn=false;
+                for (Registration r:registeredServices.values()){
+                    try {
+                        if (r.info.getServiceName().equals(info.getServiceName())
+                                && r.info.getServiceType().equals(info.getServiceType())
+                        ) {
+                            isOwn = true;
+                            break;
+                        }
+                    }catch (Throwable t){}
+                }
+                if (! isOwn){
+                    rt.add(info.getServiceName());
+                }
+            }
+        }
+        return rt;
+    }
+
+    public void registerService(int workerId,String type,String name, int port){
+        if (nsdManager == null) return;
+        AvnLog.ifs("register mdns name=%s,type=%s,port=%s",name,type,port);
+        Registration old=null;
+        synchronized (registeredServices){
+            old=registeredServices.get(workerId);
+            if (old != null){
+                registeredServices.remove(workerId);
+            }
+            //we are sure that each worker regsitration can only run in one thread
+        }
+        if (old != null){
+            try{
+                unregisterService(old);
+            }catch (Throwable t){
+                AvnLog.e("error in unregisterAvahi",t);
+            }
+        }
+        final NsdServiceInfo info=new NsdServiceInfo();
+        info.setPort(port);
+        info.setServiceType(type);
+        info.setServiceName(name);
+        NsdManager.RegistrationListener listener = new NsdManager.RegistrationListener() {
+            @Override
+            public void onRegistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
+
+            }
+
+            @Override
+            public void onUnregistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
+
+            }
+
+            @Override
+            public void onServiceRegistered(NsdServiceInfo serviceInfo) {
+                AvnLog.ifs("registerd service %s",serviceInfo);
+                info.setHost(serviceInfo.getHost());
+                info.setServiceName(serviceInfo.getServiceName());//maybe the name changed due to conflict
+            }
+
+            @Override
+            public void onServiceUnregistered(NsdServiceInfo serviceInfo) {
+
+            }
+        };
+        nsdManager.registerService(info,NsdManager.PROTOCOL_DNS_SD,listener);
+        synchronized (registeredServices) {
+            registeredServices.put(workerId, new Registration(info, listener));
+        }
+    }
+
+    public NsdServiceInfo getRegisteredService(int workerId){
+        synchronized (registeredServices){
+            Registration reg=registeredServices.get(workerId);
+            if (reg == null) return null;
+            return reg.info;
+        }
+    }
+    public void unregisterService(int id){
+        if (nsdManager == null) return;
+        Registration reg=null;
+        synchronized (registeredServices){
+            reg=registeredServices.get(id);
+            registeredServices.remove(id);
+        }
+        if (reg == null) return;
+        try {
+            nsdManager.unregisterService(reg.listener);
+        }catch (Throwable t){}
+    }
+
+    private void unregisterService(Registration reg){
+        if (nsdManager == null) return;
+        nsdManager.unregisterService(reg.listener);
+    }
+    private void unregisterAllServices(){
+        ArrayList<Registration> registrations=null;
+        synchronized (registeredServices){
+            registrations=new ArrayList<>(registeredServices.values());
+            registeredServices.clear();
+        }
+        for (Registration r:registrations){
+            try{
+                unregisterService(r);
+            }catch(Throwable t){}
+        }
+    }
+
+    public void restart(){
+        stopWorkers(true);
+        stopDiscovery();
+        synchronized (services){
+            services.clear();
+        }
+        unregisterAllServices();
+        startDiscovery();
+        handleStartup(false);
+    }
+
     public void onCreate()
     {
         super.onCreate();
@@ -522,11 +1004,21 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         triggerReceiver=new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
+                RouteHandler routeHandler=getRouteHandler();
                 if (routeHandler != null) routeHandler.triggerParser();
             }
         };
         IntentFilter triggerFilter=new IntentFilter((Constants.BC_TRIGGER));
         registerReceiver(triggerReceiver,triggerFilter);
+        IntentFilter filterStop=new IntentFilter(Constants.BC_STOPAPPL);
+        broadCastReceiverStop = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                AvnLog.i("received stop appl");
+                GpsService.this.stopMe();
+            }
+        };
+        registerReceiver(broadCastReceiverStop,filterStop);
         Intent watchdog = new Intent(getApplicationContext(), GpsService.class);
         watchdog.setAction(WATCHDOGACTION);
         watchdogIntent=PendingIntent.getService(
@@ -555,20 +1047,29 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         public void run(){
             if (! isRunning) return;
             if (timerSequence != sequence) return;
-            timerAction();
-            handler.postDelayed(this, trackMintime);
+            try {
+                timerAction();
+            } catch (JSONException e) {
+                AvnLog.e("error in timer",e);
+            }
+            handler.postDelayed(this, timerInterval);
         }
-    };
+    }
 
-    public void timerAction(){
+    public void timerAction() throws JSONException {
+        AvnLog.i(LOGPRFX,"timer action");
         checkAnchor();
         checkApproach();
         checkMob();
         handleNotification(true,false);
         checkTrackWriter();
-        for (GpsDataProvider provider: getAllProviders()) {
-            if (provider != null) {
-                provider.check();
+        for (IWorker w: workers) {
+            if (w != null) {
+                try {
+                    w.check();
+                } catch (JSONException e) {
+                    AvnLog.e("error in check for "+w.getTypeName());
+                }
             }
         }
         SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
@@ -581,7 +1082,8 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         }
     }
 
-    private void checkAnchor(){
+    private void checkAnchor() throws JSONException {
+        RouteHandler routeHandler=getRouteHandler();
         if (routeHandler == null) return;
         if (! routeHandler.anchorWatchActive()){
             resetAlarm(Alarm.GPS.name);
@@ -605,7 +1107,8 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         }
         setAlarm(Alarm.ANCHOR.name);
     }
-    private void checkApproach(){
+    private void checkApproach() throws JSONException {
+        RouteHandler routeHandler=getRouteHandler();
         if (routeHandler == null) return;
         Location current=getLocation();
         if (current == null){
@@ -625,6 +1128,7 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     }
 
     private void checkMob(){
+        RouteHandler routeHandler=getRouteHandler();
         if (routeHandler == null) return;
         if (! routeHandler.mobActive()){
             mobAlarm=false;
@@ -636,61 +1140,20 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
         mobAlarm=true;
     }
 
+
     /**
      * will be called whe we intend to really stop
      */
-    private void handleStop(boolean emptyTrack) {
-        for (GpsDataProvider provider : getAllProviders()) {
-            if (provider != null) {
-                provider.stop();
-            }
-        }
-        //this is not completely OK: we could fail to write our last track points
-        //if we still load the track - but otherwise we could reeally empty the track
-        try {
-            //when we shut down completely we have to wait until the track is written
-            //if we only restart, we write the track in background
-            trackWriter.writeSync(mediaUpdater);
-        } catch (FileNotFoundException e) {
-            AvnLog.d(LOGPRFX, "Exception while finally writing trackfile: " + e.getLocalizedMessage());
-        }
-        if (emptyTrack) {
-            trackWriter.clearTrack();
-            trackDir = null;
-        }
-        if (routeHandler != null) routeHandler.stop();
-        if (positionWriter != null) positionWriter.doStop();
+    private void handleStop() {
+        AvnLog.i(LOGPRFX,"handle stop");
+        stopWorkers(false);
+        if (requestHandler != null) requestHandler.stop();
+        requestHandler=null;
         isRunning = false;
         handleNotification(false, false);
-        AvnLog.i(LOGPRFX, "service stopped");
-    }
-
-    public void stopMe(boolean doShutdown){
-        shouldStop=doShutdown;
-        handleStop(doShutdown);
-        if (shouldStop){
-            ((AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE)).
-                    cancel(watchdogIntent);
-            AvnLog.i(LOGPRFX,"alarm deregistered");
-        }
-        stopSelf();
-    }
-
-    @Override
-    public boolean onUnbind(Intent intent) {
-        AvnLog.i("service unbind");
-        return super.onUnbind(intent);
-    }
-
-    @Override
-    public void onDestroy()
-    {
-        super.onDestroy();
-        handleStop(true);
-        if (receiverRegistered) {
-            unregisterReceiver(usbReceiver);
-            receiverRegistered=false;
-        }
+        ((AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE)).
+                cancel(watchdogIntent);
+        AvnLog.i(LOGPRFX,"alarm deregistered");
         if (mediaPlayer != null){
             try{
                 mediaPlayer.release();
@@ -698,18 +1161,35 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
 
             }
         }
-        if (broadCastReceiver != null){
-            unregisterReceiver(broadCastReceiver);
-        }
-        if (triggerReceiver != null){
-            unregisterReceiver(triggerReceiver);
-        }
-        if (shouldStop){
-            ((AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE)).
-                    cancel(watchdogIntent);
+        for (BroadcastReceiver r: new BroadcastReceiver[]{broadCastReceiver,triggerReceiver,broadCastReceiverStop,usbReceiver}){
+            if (r != null){
+                try{
+                    unregisterReceiver(r);
+                }catch(Throwable t){}
+            }
         }
         lastNotifiedAlarm=null;
         notificationSend=false;
+        MainActivityActions cb=mBinder.getCallback();
+        if (cb != null){
+            cb.mainShutdown();
+        }
+        AvnLog.i(LOGPRFX, "service stopped");
+        stopDiscovery();
+    }
+
+    public void stopMe(){
+        AvnLog.i(LOGPRFX,"stopMe");
+        handleStop();
+        stopSelf();
+    }
+
+
+    @Override
+    public void onDestroy()
+    {
+        super.onDestroy();
+        handleStop();
     }
 
 
@@ -718,10 +1198,11 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
      * check if position has changed and write track entries
      * write out the track file in regular intervals
      */
-    private void checkTrackWriter(){
+    private void checkTrackWriter() throws JSONException {
         if (! isRunning) return;
         Location l=getLocation();
-        trackWriter.checkWrite(l,mediaUpdater);
+        TrackWriter trackWriter=getTrackWriter();
+        if (trackWriter != null) trackWriter.checkWrite(l,mediaUpdater);
 
     }
 
@@ -733,6 +1214,8 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
      */
     public synchronized  ArrayList<Location> getTrack(int maxnum, long interval){
         ArrayList<Location> rt=new ArrayList<Location>();
+        TrackWriter trackWriter=getTrackWriter();
+        if (trackWriter == null) return rt;
         List<Location> trackpoints=trackWriter.getTrackPoints(true);
         if (! isRunning) return rt;
         long currts=-1;
@@ -768,19 +1251,6 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
 
 
 
-    public GpsDataProvider.SatStatus getSatStatus(){
-        GpsDataProvider.SatStatus rt=new GpsDataProvider.SatStatus(0,0);
-        if (! isRunning ) return rt;
-        for (GpsDataProvider provider: getAllProviders()){
-            if (isProviderActive(provider) && provider.handlesNmea()){
-                rt=provider.getSatStatus();
-                AvnLog.d(LOGPRFX,"getSatStatus returns "+rt);
-                return rt;
-            }
-        }
-        return rt;
-    }
-
 
     public Map<String,Alarm> getAlarmStatus() {
         return alarmStatus;
@@ -795,12 +1265,14 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     }
 
     public void resetAlarm(String type){
-        AvnLog.i("reset alarm "+type);
         Alarm a=alarmStatus.get(type);
         if (a != null && a.isPlaying){
             if (mediaPlayer != null) mediaPlayer.stop();
             mediaRepeatCount=0;
             alarmSequence++;
+        }
+        if (a != null)  {
+            AvnLog.i("reset alarm "+type);
         }
         alarmStatus.remove(type);
     }
@@ -866,55 +1338,34 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
     }
 
     public JSONObject getGpsData() throws JSONException{
-        JSONObject rt=null;
-        for (GpsDataProvider provider: getAllProviders()){
-            if (isProviderActive(provider) && provider.handlesNmea()){
-                rt=provider.getGpsData();
-                break;
-            }
-        }
+        Decoder dec=getDecoder();
+        JSONObject rt=dec!=null?dec.getGpsData():null;
         if (rt == null){
             rt=new JSONObject();
         }
         rt.put("updatealarm",alarmSequence);
         long legSequence=-1;
+        RouteHandler routeHandler=getRouteHandler();
         if (routeHandler != null) legSequence=routeHandler.getLegSequence();
         rt.put("updateleg",legSequence);
         return rt;
     }
 
-    private Location getLocation(){
-        for (GpsDataProvider provider: getAllProviders()){
-            if (isProviderActive(provider) && provider.handlesNmea()) return provider.getLocation();
-        }
-        return null;
+    private Location getLocation() throws JSONException {
+        Decoder dec=getDecoder();
+        return dec!=null?dec.getLocation():null;
     }
 
     public JSONArray getAisData(double lat,double lon, double distance){
-        JSONArray rt=new JSONArray();
-        for (GpsDataProvider h: getAllProviders()){
-            if (h != null){
-                try {
-                    JSONArray items = h.getAisData(lat, lon, distance);
-                    if (items == null) continue;
-                    for (int i = 0; i < items.length(); i++) {
-                        rt.put(items.get(i));
-                    }
-                }catch (JSONException e){
-                    Log.e(LOGPRFX,"exception while merging AIS data: "+e.getLocalizedMessage());
-                }
-            }
-        }
-        return rt;
+        Decoder dec=getDecoder();
+        return dec != null?dec.getAisData(lat,lon,distance):null;
     }
 
-    public void setMediaUpdater(IMediaUpdater u){
-
-        mediaUpdater=u;
-        synchronized (loggerLock) {
-            if (mediaUpdater != null && nmeaLogger != null) {
-                nmeaLogger.setMediaUpdater(mediaUpdater);
-            }
+    public void setMediaUpdater(IMediaUpdater u) {
+        mediaUpdater = u;
+        NmeaLogger logger = getNmeaLogger();
+        if (mediaUpdater != null && logger != null) {
+            logger.setMediaUpdater(mediaUpdater);
         }
     }
 
@@ -930,82 +1381,72 @@ public class GpsService extends Service implements INmeaLogger, RouteHandler.Upd
      * ais: [ source: IP, status: yellow, info: connected to 10.222.9.1:34567}
      * @throws JSONException
      */
-    public JSONObject getNmeaStatus() throws JSONException{
-        JSONObject nmea=new JSONObject();
-        nmea.put("source","unknown");
-        nmea.put("status","red");
-        nmea.put("info","disabled");
-        JSONObject ais=new JSONObject();
-        ais.put("source","unknown");
-        ais.put("status","red");
-        ais.put("info","disabled");
-        for (GpsDataProvider provider: getAllProviders()) {
-            if (isProviderActive(provider)) {
-                GpsDataProvider.SatStatus st = provider.getSatStatus();
-                Location loc = provider.getLocation();
-                String addr = provider.getConnectionId();
-                if (provider.handlesNmea()) {
-                    nmea.put("source", provider.getName());
-                    if (loc != null) {
-                        nmea.put("status", "green");
-                        nmea.put("info", "(" + addr + ") sats: " + st.numSat + " / " + st.numUsed );
-                    } else {
-                        if (st.gpsEnabled) {
-                            nmea.put("info", "(" + addr + ") con, sats: " + st.numSat + " / " + st.numUsed );
-                            nmea.put("status", "yellow");
-                        } else {
-                            nmea.put("info", "(" + addr + ") disconnected");
-                            nmea.put("status", "red");
-                        }
-                    }
+    public JSONObject getNmeaStatus() throws JSONException {
+        JSONObject nmea = new JSONObject();
+        nmea.put("source", "unknown");
+        nmea.put("status", "red");
+        nmea.put("info", "disabled");
+        JSONObject ais = new JSONObject();
+        ais.put("source", "unknown");
+        ais.put("status", "red");
+        ais.put("info", "disabled");
+        Decoder decoder=getDecoder();
+        if (decoder != null) {
+            Decoder.SatStatus st = decoder.getSatStatus();
+            Location loc = decoder.getLocation();
+            String addr = "decoder";
+            nmea.put("source", decoder.getSourceName());
+            if (loc != null) {
+                nmea.put("status", "green");
+                nmea.put("info", "(" + addr + ") sats: " + st.numSat + " / " + st.numUsed);
+            } else {
+                if (st.gpsEnabled) {
+                    nmea.put("info", "(" + addr + ") con, sats: " + st.numSat + " / " + st.numUsed);
+                    nmea.put("status", "yellow");
+                } else {
+                    nmea.put("info", "(" + addr + ") disconnected");
+                    nmea.put("status", "red");
                 }
-                if (provider.handlesAis()) {
-                    ais.put("source", provider.getName());
-                    int aisTargets=provider.numAisData();
-                    if (aisTargets> 0) {
-                        ais.put("status", "green");
-                        ais.put("info", "(" + addr + "), "+aisTargets+" targets");
-                    } else {
-                        if (st.gpsEnabled) {
-                            ais.put("info", "(" + addr + ") connected");
-                            ais.put("status", "yellow");
-                        } else {
-                            ais.put("info", "(" + addr + ") disconnected");
-                            ais.put("status", "red");
-                        }
-                    }
+            }
+            ais.put("source", addr);
+            int aisTargets = decoder.numAisData();
+            if (aisTargets > 0) {
+                ais.put("status", "green");
+                ais.put("info", "(" + addr + "), " + aisTargets + " targets");
+            } else {
+                if (st.gpsEnabled) {
+                    ais.put("info", "(" + addr + ") connected");
+                    ais.put("status", "yellow");
+                } else {
+                    ais.put("info", "(" + addr + ") disconnected");
+                    ais.put("status", "red");
                 }
             }
         }
-        JSONObject rt=new JSONObject();
-        rt.put("nmea",nmea);
-        rt.put("ais",ais);
+        JSONObject rt = new JSONObject();
+        rt.put("nmea", nmea);
+        rt.put("ais", ais);
         return rt;
     }
-    public JSONObject getStatus() throws JSONException {
+    public JSONArray getStatus() throws JSONException {
         JSONArray rt=new JSONArray();
-        for (GpsDataProvider handler: getAllProviders()) {
-            if (isProviderActive(handler)) {
-                try {
-                    rt.put(handler.getHandlerStatus());
-                }catch (JSONException e){
-                    AvnLog.d("exception while querying handler status: "+e);
-                }
-            }
+        for (IWorker w: internalWorkers){
+            rt.put(w.getJsonStatus());
         }
-        JSONObject out=new JSONObject();
-        out.put("name","GPS");
-        out.put("items",rt);
-        return out;
+        for (IWorker w : workers){
+            rt.put(w.getJsonStatus());
+        }
+        return rt;
     }
 
-    public JSONObject getTrackStatus() throws JSONException {
-        if (trackWriter == null) return new JSONObject();
-        return trackWriter.getTrackStatus();
+    public void mainGoBack(){
+        MainActivityActions main=mBinder.getCallback();
+        if (main != null) main.mainGoBack();
+    }
+    public void mainShowSettings(boolean checkInitially){
+        MainActivityActions main=mBinder.getCallback();
+        if (main != null) main.showSettings(checkInitially);
     }
 
-    public RouteHandler getRouteHandler(){
-        return routeHandler;
-    }
-    public TrackWriter getTrackWriter(){ return trackWriter;}
+
 }

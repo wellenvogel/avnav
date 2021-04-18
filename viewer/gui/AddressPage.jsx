@@ -34,6 +34,11 @@ class AddressPage extends React.Component{
         super(props);
         let self=this;
         this.buttons=[
+            {
+                name:'AndroidBrowser',
+                visible: globalStore.getData(keys.gui.global.onAndroid),
+                onClick:()=>{avnav.android.launchBrowser();}
+            },
             Mob.mobDefinition,
             {
                 name: 'Cancel',

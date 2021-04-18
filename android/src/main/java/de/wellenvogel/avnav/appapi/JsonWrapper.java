@@ -3,7 +3,9 @@ package de.wellenvogel.avnav.appapi;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class JsonWrapper implements INavRequestHandler.IJsonObect {
+import de.wellenvogel.avnav.util.AvnUtil;
+
+public class JsonWrapper implements AvnUtil.IJsonObect {
     JSONObject o;
     public JsonWrapper(JSONObject o){
         this.o=o;

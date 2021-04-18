@@ -169,7 +169,7 @@ ospackage {
     requires('python3-gdal')
     requires('python3-imaging').or('python3-pil')
     requires('python3-netifaces')
-    requires('python3-pydbus')
+    requires('python3-dbus')
     user='root'
     into ('/usr/lib/avnav') {
         from('viewer/build/release') {
