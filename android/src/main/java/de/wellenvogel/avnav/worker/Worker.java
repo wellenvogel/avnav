@@ -289,6 +289,7 @@ public abstract class Worker implements IWorker {
             else{
                 setStatus(WorkerStatus.Status.INACTIVE,"disabled");
                 status.removeChildren();
+                gpsService.unregisterService(Worker.this.getId());
             }
         } catch (JSONException e) {
             setStatus(WorkerStatus.Status.ERROR,"error: "+e.getMessage());

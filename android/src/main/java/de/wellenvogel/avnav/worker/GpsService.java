@@ -930,9 +930,12 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         Registration reg=null;
         synchronized (registeredServices){
             reg=registeredServices.get(id);
+            registeredServices.remove(id);
         }
         if (reg == null) return;
-        nsdManager.unregisterService(reg.listener);
+        try {
+            nsdManager.unregisterService(reg.listener);
+        }catch (Throwable t){}
     }
 
     private void unregisterService(Registration reg){
