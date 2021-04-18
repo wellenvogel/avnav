@@ -37,7 +37,6 @@ from avnav_worker import *
 #a worker to output data via a socket
 
 class AVNSocketWriter(AVNWorker,SocketReader):
-  NMEA_SERVICE="_nmea-0183._tcp"
   @classmethod
   def getConfigName(cls):
     return "AVNSocketWriter"
@@ -240,7 +239,7 @@ class AVNSocketWriter(AVNWorker,SocketReader):
   def getResourceFromName(self,avahiName):
     if avahiName is None or avahiName == '':
       return None
-    return avahiName+"."+self.NMEA_SERVICE
+    return avahiName+"."+AVNUtil.NMEA_SERVICE
   def checkConfig(self, param):
     if 'port' in param:
       self.checkUsedResource(UsedResource.T_TCP,param.get('port'))
@@ -263,7 +262,7 @@ class AVNSocketWriter(AVNWorker,SocketReader):
       serviceName=self.AVAHI_NAME.fromDict(self.param)
       if serviceName is not None and avahi is not None:
         try:
-          avahi.registerService(self.getId(),self.NMEA_SERVICE,serviceName,self.getIntParam('port'))
+          avahi.registerService(self.getId(),AVNUtil.NMEA_SERVICE,serviceName,self.getIntParam('port'))
         except:
           pass
 

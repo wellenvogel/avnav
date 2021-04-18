@@ -35,7 +35,7 @@ import threading
 from typing import Set, Any, Dict
 
 import avnav_handlerList
-from avnav_util import AVNLog
+from avnav_util import AVNLog, AVNUtil
 from avnav_worker import AVNWorker, WorkerParameter, WorkerStatus
 
 #taken from https://github.com/carlosefr/mdns-publisher/tree/master/mpublisher
@@ -43,7 +43,8 @@ from avnav_worker import AVNWorker, WorkerParameter, WorkerStatus
 hasDbus=False
 Glib=None
 try:
-  import pydbus as dbus
+  import dbus.glib
+  from dbus import DBusException
   hasDbus=True
   from gi.repository import GLib
 except:
@@ -104,6 +105,8 @@ class AVNAvahi(AVNWorker):
   DBUS_NAME = "org.freedesktop.Avahi"
   DBUS_PATH_SERVER = "/"
   DBUS_INTERFACE_SERVER = DBUS_NAME + ".Server"
+  DBUS_INTERFACE_SERVICE_BROWSER = DBUS_NAME + ".ServiceBrowser"
+  DBUS_INTERFACE_ENTRY_GROUP = DBUS_NAME + ".EntryGroup"
   IF_UNSPEC = -1
   PROTO_UNSPEC =-1
   PROTO_INET = 0
@@ -113,6 +116,7 @@ class AVNAvahi(AVNWorker):
   SERVER_INVALID, SERVER_REGISTERING, SERVER_RUNNING, SERVER_COLLISION, SERVER_FAILURE = range(0, 5)
 
   S_TYPE='_http._tcp'
+  S_YTPE_NMEA=AVNUtil.NMEA_SERVICE
   @classmethod
   def autoInstantiate(cls):
     return True
@@ -133,6 +137,7 @@ class AVNAvahi(AVNWorker):
     self.stateSequence=0
     self.server=None
     self.hostname=''
+    self.serviceBrowser=None
     self.services= {}
     self.externalServicesIndex=1 #-1 is reserved for internal
     self.lock=threading.Lock()
@@ -156,6 +161,12 @@ class AVNAvahi(AVNWorker):
   def preventMultiInstance(cls):
     return True
 
+  def _newService(self, interface, protocol, name, stype, domain, flags):
+    AVNLog.info("detected new service %s.%s at %i.%i",stype,name,interface,protocol)
+
+  def _removedService(self,interface, protocol, name, stype, domain, flags):
+    AVNLog.info("detected removed service %s.%s at %i.%i",stype,name,interface,protocol)
+
   def _nextIndex(self):
     self.lock.acquire()
     try:
@@ -175,7 +186,13 @@ class AVNAvahi(AVNWorker):
     if description.group is not None:
       try:
         description.group.Reset()
+      except:
+        pass
+      try:
         description.group.Free()
+      except:
+        pass
+      try:
         description.group=None
         if description.oldKey is not None:
           self.deleteInfo(description.oldKey)
@@ -185,9 +202,11 @@ class AVNAvahi(AVNWorker):
         pass
     if description.name is None or description.name == '':
       return False
-    bus=dbus.SystemBus()
-    gr=self.server.EntryGroupNew()
-    description.group=bus.get(self.DBUS_NAME,gr)
+    description.group = dbus.Interface(
+      dbus.SystemBus().get_object(
+        self.DBUS_NAME,
+        self.server.EntryGroupNew()),
+      self.DBUS_INTERFACE_ENTRY_GROUP)
     timeout=self.getFloatParam('timeout')
     retries=self.getIntParam('maxRetries')
     num=0
@@ -197,7 +216,7 @@ class AVNAvahi(AVNWorker):
       retry=False
       AVNLog.info("trying to register %s for %s",description.currentName,str(self.port))
       try:
-        description.group.AddService(self.IF_UNSPEC,self.PROTO_INET,0,
+        description.group.AddService(self.IF_UNSPEC,self.PROTO_INET,dbus.UInt32(0),
                     description.currentName,description.type,self.server.GetDomainName(),
                     self.server.GetHostNameFqdn(),description.port,'')
         description.group.Commit()
@@ -252,10 +271,19 @@ class AVNAvahi(AVNWorker):
       self._deregister(description)
 
 
+  def _startServiceBrowser(self):
+    self.serviceBrowser=dbus.Interface(dbus.SystemBus().get_object(
+      self.DBUS_NAME, self.server.ServiceBrowserNew(
+        self.IF_UNSPEC,
+        self.PROTO_UNSPEC, self.S_YTPE_NMEA,
+        "local",
+        dbus.UInt32(0))),
+      self.DBUS_INTERFACE_SERVICE_BROWSER)
+
+
   def _serverStateChange(self,newState,p):
     AVNLog.info("Avahi server state change %s",str(newState))
     if newState == self.SERVER_RUNNING:
-      self._deregisterAll()
       self.stateSequence+=1
 
 
@@ -268,6 +296,7 @@ class AVNAvahi(AVNWorker):
     self.stateSequence+=1
 
   def run(self):
+    sequence=self.stateSequence
     if not hasDbus:
       raise Exception("no DBUS found, cannot register avahi")
     httpServer=self.findHandlerByName('AVNHttpServer')
@@ -280,17 +309,36 @@ class AVNAvahi(AVNWorker):
       loopThread=threading.Thread(target=self.loop.run,daemon=True,name="AVNAvahi DBUS loop")
       loopThread.start()
       bus = dbus.SystemBus()
+      bus.add_signal_receiver(self._newService,
+                              dbus_interface=self.DBUS_INTERFACE_SERVICE_BROWSER,
+                              signal_name="ItemNew")
+      bus.add_signal_receiver(self._removedService,
+                              dbus_interface=self.DBUS_INTERFACE_SERVICE_BROWSER,
+                              signal_name="ItemRemove")
+      bus.add_signal_receiver(self._serverStateChange,
+                              dbus_interface=self.DBUS_INTERFACE_SERVER,
+                              signal_name="StateChanged")
       self.setInfo('main','get avahi interface',WorkerStatus.INACTIVE)
       self.server=None
       while self.server is None and not self.shouldStop():
         try:
-          self.server=bus.get(self.DBUS_NAME, self.DBUS_PATH_SERVER)
-          self.server.onStateChanged=self._serverStateChange
+          self.server=dbus.Interface(bus.get_object(self.DBUS_NAME, self.DBUS_PATH_SERVER),
+                                     self.DBUS_INTERFACE_SERVER)
+          #self.server.connect_to_signal("StateChanged",self._serverStateChange)
+          self._startServiceBrowser()
         except Exception as e:
           self.setInfo('main','unable to get avahi interface %s'%str(e),WorkerStatus.ERROR)
           self.wait(3000)
       hasError=False
       while not self.shouldStop():
+        if self.stateSequence != sequence:
+          sequence=self.stateSequence
+          AVNLog.info("daemon restart detected")
+          self.server=dbus.Interface(dbus.SystemBus().get_object(self.DBUS_NAME, self.DBUS_PATH_SERVER),
+                                     self.DBUS_INTERFACE_SERVER)
+          self._deregisterAll()
+          self._startServiceBrowser()
+
         #compute the entry for the web service
         webService=ServiceDescription(self.type,self.getParamValue('serviceName'),httpServer.server_port)
         existing=self.services.get(-1)
@@ -303,7 +351,11 @@ class AVNAvahi(AVNWorker):
           self.setInfo('main','running',WorkerStatus.NMEA)
           for key,description in list(self.services.items()):
             if not description.isRegistered:
-              self._publish(description)
+              try:
+                self._publish(description)
+              except Exception as e:
+                self.setInfo(description.getKey(),"error: "+str(e),WorkerStatus.ERROR)
+                description.isRegistered=False
             if description.name is None or description.name == '':
               self.lock.acquire()
               try:
