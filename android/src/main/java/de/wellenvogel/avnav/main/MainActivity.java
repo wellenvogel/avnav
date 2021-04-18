@@ -98,6 +98,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
     private boolean checkSettings=true;
     private boolean showsDialog = false;
 
+
     private static class AttachedDevice{
         String type;
         JSONObject parameters;
@@ -804,7 +805,14 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         return gpsService;
     }
 
-
+    public void dialogClosed() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                handleBars();
+            }
+        });
+    }
 
 
 }
