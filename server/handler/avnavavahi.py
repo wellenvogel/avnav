@@ -97,6 +97,22 @@ class ServiceDescription:
     self.reset()
 
 
+class FoundService:
+  def __init__(self,type,name,intf,proto):
+    self.type=type
+    self.name=name
+    self.intf=intf
+    self.proto=proto
+  def __hash__(self):
+    return hash((self.type,self.name,self.intf,self.proto))
+
+  def __str__(self):
+    return "Service %s.%s"%(self.type,self.name)
+  def __eq__(self, other):
+    return self.type == other.type \
+           and self.name == other.name \
+           and self.intf == other.intf \
+           and self.proto == other.proto
 
 
 class AVNAvahi(AVNWorker):
@@ -116,7 +132,7 @@ class AVNAvahi(AVNWorker):
   SERVER_INVALID, SERVER_REGISTERING, SERVER_RUNNING, SERVER_COLLISION, SERVER_FAILURE = range(0, 5)
 
   S_TYPE='_http._tcp'
-  S_YTPE_NMEA=AVNUtil.NMEA_SERVICE
+  S_TYPE_NMEA=AVNUtil.NMEA_SERVICE
   @classmethod
   def autoInstantiate(cls):
     return True
@@ -139,6 +155,7 @@ class AVNAvahi(AVNWorker):
     self.hostname=''
     self.serviceBrowser=None
     self.services= {}
+    self.foundServices=set()
     self.externalServicesIndex=1 #-1 is reserved for internal
     self.lock=threading.Lock()
 
@@ -163,9 +180,14 @@ class AVNAvahi(AVNWorker):
 
   def _newService(self, interface, protocol, name, stype, domain, flags):
     AVNLog.info("detected new service %s.%s at %i.%i",stype,name,interface,protocol)
+    try:
+      self.foundServices.add(FoundService(stype,name,interface,protocol))
+    except Exception as e:
+      AVNLog.error("unable to add service: %s",e)
 
   def _removedService(self,interface, protocol, name, stype, domain, flags):
     AVNLog.info("detected removed service %s.%s at %i.%i",stype,name,interface,protocol)
+    self.foundServices.remove(FoundService(stype,name,interface,protocol))
 
   def _nextIndex(self):
     self.lock.acquire()
@@ -275,7 +297,7 @@ class AVNAvahi(AVNWorker):
     self.serviceBrowser=dbus.Interface(dbus.SystemBus().get_object(
       self.DBUS_NAME, self.server.ServiceBrowserNew(
         self.IF_UNSPEC,
-        self.PROTO_UNSPEC, self.S_YTPE_NMEA,
+        self.PROTO_INET, self.S_TYPE_NMEA,
         "local",
         dbus.UInt32(0))),
       self.DBUS_INTERFACE_SERVICE_BROWSER)
@@ -396,5 +418,45 @@ class AVNAvahi(AVNWorker):
 
   def unregisterService(self,id):
     self.registerService(id,None,None,None)
+
+  def listFoundServices(self,stype=None,includeOwn=False):
+    '''
+    return list of discovered services
+    @param stype: if set, just return a simple list of service names for thsi type
+                  otherwise return a list of (type,name)
+    @param includeOwn: if set to True also include service we have registered
+    @return:
+    '''
+    rt=set()
+    for s in self.foundServices:
+      if stype is None or s.type == stype:
+        rt.add((s.type,s.name))
+    if not includeOwn:
+      for s in self.services.values():
+        if s.currentName is not None:
+          toremove=(s.type,s.currentName)
+          if toremove in rt:
+            rt.remove(toremove)
+    if stype is None:
+      return list(rt)
+    else:
+      return list(map(lambda a:a[1],rt))
+
+  def resolveService(self,type,name):
+    '''
+    resove a service (IPv4)
+    @param type: the service type
+    @param name: the service name
+    @return: a tuple (hostname,ip,port) if found or None otherwise
+    '''
+    if self.server is None:
+      return None
+    try:
+      res=self.server.ResolveService(self.IF_UNSPEC,
+                                   self.PROTO_INET,name,type,"local",self.PROTO_INET,0)
+      return (str(res[5]),str(res[7]),int(res[8]))
+    except Exception as e:
+      AVNLog.error("unable to resolve service %s.%s: %s",type,name,str(e))
+      return None
 
 avnav_handlerList.registerHandler(AVNAvahi)

@@ -78,15 +78,26 @@ class WorkerParameter(object):
       raise ParamValueError("invalid parameter %s"%name)
     return self.__setattr__(name,value)
 
-  def copy(self):
-    return WorkerParameter(self.name,
+  def copy(self,resolveList=True):
+    rt= WorkerParameter(self.name,
                            default=self.default,
                            type=self.type,
-                           rangeOrList=[]+self.rangeOrList if self.rangeOrList is not None else None,
+                           rangeOrList=None,
                            description=self.description,
                            editable=self.editable,
                            mandatory=self.mandatory,
                            condition=self.condition)
+    if resolveList:
+      if callable(self.rangeOrList):
+        rt.rangeOrList=self.rangeOrList()
+      else:
+        rt.rangeOrList=[]+self.rangeOrList if self.rangeOrList is not None else None,
+    else:
+      if callable(self.rangeOrList):
+        rt.rangeOrList=self.rangeOrList
+      else:
+        rt.rangeOrList=[]+self.rangeOrList if self.rangeOrList is not None else None,
+    return rt
   @classmethod
   def filterNameDef(cls,plist):
     rt={}
@@ -123,10 +134,13 @@ class WorkerParameter(object):
     rt=[]
     for p in plist:
       if p.editable:
-        if makeCopy:
+        if callable(p.rangeOrList):
           rt.append(p.copy())
         else:
-          rt.append(p)
+          if makeCopy:
+            rt.append(p.copy())
+          else:
+            rt.append(p)
     return rt
 
   @classmethod
@@ -140,7 +154,7 @@ class WorkerParameter(object):
           rt[p.name]=p.default
     return rt
 
-  def checkValue(self,value):
+  def checkValue(self,value,rangeOrListCheck=True):
     if value is None and self.default is None:
       raise ParamValueError("missing mandatory parameter %s"%self.name)
     if self.type == self.T_STRING:
@@ -150,7 +164,7 @@ class WorkerParameter(object):
         rv=float(value)
       else:
         rv=int(value)
-      if self.rangeOrList is not None and len(self.rangeOrList) == 2:
+      if rangeOrListCheck and self.rangeOrList is not None and len(self.rangeOrList) == 2:
         if rv < self.rangeOrList[0] or rv > self.rangeOrList[1]:
           raise ParamValueError("value %f for %s out of range %s"%(rv,self.name,",".join(self.rangeOrList)))
       return rv
@@ -161,6 +175,8 @@ class WorkerParameter(object):
         return value.upper()=="TRUE"
       return True if value else False
     if self.type == self.T_SELECT:
+      if not rangeOrListCheck:
+        return str(value)
       if self.rangeOrList is None:
         raise ValueError("no select list for %s"%self.name)
       checkList=self.rangeOrList if not callable(self.rangeOrList) else self.rangeOrList()
@@ -179,12 +195,12 @@ class WorkerParameter(object):
       return str(value)
     return value
 
-  def fromDict(self,valueDict,check=True):
+  def fromDict(self,valueDict,check=True,rangeOrListCheck=True):
     rt=valueDict.get(self.name)
     if rt is None:
       rt=self.default
     if check:
-      return self.checkValue(rt)
+      return self.checkValue(rt,rangeOrListCheck=rangeOrListCheck)
     return rt
 
 
