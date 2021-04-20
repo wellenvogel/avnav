@@ -1,6 +1,9 @@
 #! /bin/sh
 sudo -n date -u "$*" || exit 1
-sudo -n systemctl mask ntp
+if [ $(sudo systemctl is-enabled ntp) != "masked" ]
+then
+  sudo -n systemctl mask ntp
+fi
 sudo -n /sbin/fake-hwclock save force
 sudo -n systemctl restart fake-hwclock
 #we must restart avahi as otherwise it will not respond any more
