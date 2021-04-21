@@ -8,6 +8,7 @@ import org.json.JSONException;
 import java.io.IOException;
 
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.NmeaQueue;
 
 /**
@@ -26,9 +27,9 @@ public abstract class SingleConnectionHandler extends ChannelWorker {
                 SOURCENAME_PARAMETER,
                 FILTER_PARAM,
                 SEND_DATA_PARAMETER,
-                SEND_FILTER_PARAM,
+                SEND_FILTER_PARAM.cloneCondition(new AvnUtil.KeyValue<Boolean>(SEND_DATA_PARAMETER.name,true)),
                 READ_TIMEOUT_PARAMETER,
-                BLACKLIST_PARAMETER
+                BLACKLIST_PARAMETER.cloneCondition(new AvnUtil.KeyValue<Boolean>(SEND_DATA_PARAMETER.name,true))
         );
         gpsService =ctx;
         this.queue=queue;

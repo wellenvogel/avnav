@@ -48,7 +48,6 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
     private String currentProvider=LocationManager.GPS_PROVIDER;
     private long lastValidLocation=0;
     private boolean isRegistered=false;
-    private long timeOffset=0;
     private Handler handler=new Handler(Looper.getMainLooper());
 
 
@@ -60,8 +59,8 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
         super(name,ctx,queue);
         parameterDescriptions.addParams(
                 ENABLED_PARAMETER,
-                SOURCENAME_PARAMETER,
-                TIMEOFFSET_PARAMETER);
+                SOURCENAME_PARAMETER
+                );
         status.canEdit=true;
     }
 
@@ -79,7 +78,6 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
     @Override
     public void run(int startSequence) throws JSONException, IOException {
         stopped=false;
-        this.timeOffset=TIMEOFFSET_PARAMETER.fromJson(parameters);
         locationService=(LocationManager) gpsService.getSystemService(gpsService.LOCATION_SERVICE);
         tryEnableLocation(true);
         satStatusProvider=new Thread(new Runnable() {

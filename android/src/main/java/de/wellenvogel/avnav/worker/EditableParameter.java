@@ -135,6 +135,11 @@ public class EditableParameter {
             rt.defaultValue=newDefault;
             return rt;
         }
+        public StringParameter cloneCondition(AvnUtil.KeyValue ...conditions){
+            StringParameter rt=new StringParameter(this);
+            rt.conditions=new ConditionList(conditions);
+            return rt;
+        }
     }
     public static class IntegerParameter extends EditableParameterBase<Integer>{
 
@@ -146,6 +151,10 @@ public class EditableParameter {
             super(name);
         }
 
+        public IntegerParameter(IntegerParameter integerParameter) {
+            super(integerParameter);
+        }
+
         @Override
         public String getType() {
             return "NUMBER";
@@ -154,6 +163,16 @@ public class EditableParameter {
         @Override
         public Integer fromJson(JSONObject o) throws JSONException {
             return (mandatory||o.has(name))?o.getInt(name):o.optInt(name,defaultValue);
+        }
+        public IntegerParameter clone(Integer newDefault){
+            IntegerParameter rt=new IntegerParameter(this);
+            rt.defaultValue=newDefault;
+            return rt;
+        }
+        public IntegerParameter cloneCondition(AvnUtil.KeyValue ...conditions){
+            IntegerParameter rt=new IntegerParameter(this);
+            rt.conditions=new ConditionList(conditions);
+            return rt;
         }
     }
     public static class BooleanParameter extends EditableParameterBase<Boolean>{

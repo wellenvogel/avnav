@@ -41,7 +41,6 @@ import de.wellenvogel.avnav.aislib.messages.message.AisMessage;
 import de.wellenvogel.avnav.aislib.messages.sentence.Abk;
 import de.wellenvogel.avnav.aislib.packet.AisPacket;
 import de.wellenvogel.avnav.aislib.packet.AisPacketParser;
-import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
@@ -67,14 +66,14 @@ public class Decoder extends Worker {
 
     public static final EditableParameter.IntegerParameter POSITION_AGE= new
             EditableParameter.IntegerParameter("posAge",R.string.labelSettingsPosAge,10);
-    public static final EditableParameter.IntegerParameter GPS_AGE= new
-            EditableParameter.IntegerParameter("gpsAge",R.string.labelSettingsAuxAge,600);
+    public static final EditableParameter.IntegerParameter NMEA_AGE = new
+            EditableParameter.IntegerParameter("nmeaAge",R.string.labelSettingsAuxAge,600);
     public static final EditableParameter.IntegerParameter AIS_AGE= new
             EditableParameter.IntegerParameter("aisAge", R.string.labelSettingsAisLifetime,1200);
     public static final EditableParameter.StringParameter OWN_MMSI= new
             EditableParameter.StringParameter("ownMMSI",R.string.labelSettingsOwnMMSI,"");
     private void addParameters(){
-        parameterDescriptions.addParams(OWN_MMSI,POSITION_AGE,GPS_AGE,AIS_AGE,READ_TIMEOUT_PARAMETER);
+        parameterDescriptions.addParams(OWN_MMSI,POSITION_AGE, NMEA_AGE,AIS_AGE,READ_TIMEOUT_PARAMETER);
     }
     static class AuxiliaryEntry{
         public long timestamp;
@@ -87,7 +86,7 @@ public class Decoder extends Worker {
         auxiliaryData.put(key,entry);
     }
     private void mergeAuxiliaryData(JSONObject json) throws JSONException {
-        long minTimestamp=System.currentTimeMillis()-GPS_AGE.fromJson(parameters)*1000;
+        long minTimestamp=System.currentTimeMillis()- NMEA_AGE.fromJson(parameters)*1000;
         //TODO: consider timestamp
         for (AuxiliaryEntry e: auxiliaryData.values()){
             if (e.timestamp < minTimestamp) continue;
