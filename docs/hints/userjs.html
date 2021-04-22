@@ -183,7 +183,10 @@
             Dieses Objekt hat eine eventHandler Eigenschaft - hier müssen die im
             renderHTML genutzten eventHandler eingetragen werden.<br>
             Mit der Funktion triggerRedraw am Widget Kontext kann ein erneuter
-            Aufruf der renderXXX Funktionen erzwungen werden </td>
+            Aufruf der renderXXX Funktionen erzwungen werden,<br>
+            Ab Version 20210422 erhält die initFunction einen 2. Parameter, der
+            die Eigenschaften des Widgets enthält. Das sind insbesondere auch
+            alle editierbaren Widget Parameter, die definiert wurden.</td>
         </tr>
         <tr>
           <td>finalizeFunktion</td>
@@ -192,7 +195,12 @@
           <td>userWidget</td>
           <td>Falls vorhanden, wird diese Funktion aufgerufen, bevor das Widget
             nicht mehr genutzt wird. Die "this" Variable zeigt wieder auf den
-            Widget Kontext.</td>
+            Widget Kontext.<br>
+            Ausserdem ist der Kontext auch als erster Parameter vorhanden - wie
+            bei der initFunction.<br>
+            Ab Version 20210422 erhält die initFunction einen 2. Parameter, der
+            die Eigenschaften des Widgets enthält. Das sind insbesondere auch
+            alle editierbaren Widget Parameter, die definiert wurden.</td>
         </tr>
       </tbody>
     </table>
@@ -244,8 +252,8 @@
           </td>
           <td>key</td>
           <td>Der Name des Parameters so wie er im Layout Editor angezeigt
-            werden soll, und wie er den renderXXX Funktionen zur Verfügung stehen
-            soll.</td>
+            werden soll, und wie er den renderXXX Funktionen zur Verfügung
+            stehen soll.</td>
         </tr>
         <tr>
           <td>type</td>
@@ -255,7 +263,8 @@
             unterschiedlich angezeigt.<br>
             Für COLOR eine Farb-Auswahl, für SELECT eine AuswahlListe und für
             KEY die Liste der momentan verfügbaren Werte im Store.<br>
-            Für ein Array kann eine durch Komma getrennte Liste angegeben werden.</td>
+            Für ein Array kann eine durch Komma getrennte Liste angegeben
+            werden.</td>
         </tr>
         <tr>
           <td>default</td>
