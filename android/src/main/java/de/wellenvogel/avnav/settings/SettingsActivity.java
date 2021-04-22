@@ -159,7 +159,7 @@ public class SettingsActivity extends PreferenceActivity {
             checkInitially=b.getBoolean(Constants.EXTRA_INITIAL,false);
         }
         if (checkInitially) {
-            if (!checkSettings(this)){
+            if (!checkSettings(this,true)){
                 Toast.makeText(this,R.string.requiredSettings,Toast.LENGTH_LONG).show();
                 runPermissionDialogs(true);
             }
@@ -263,12 +263,13 @@ public class SettingsActivity extends PreferenceActivity {
      * @param activity
      * @return true if settings are ok
      */
-    public static boolean checkSettings(Activity activity){
+    public static boolean checkSettings(Activity activity, boolean checkGps){
         handleMigrations(activity);
         SharedPreferences sharedPrefs=activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         if (! checkOrCreateWorkDir(AvnUtil.getWorkDir(sharedPrefs,activity))){
             return false;
         }
+        if (! checkGps) return true;
         if (! checkGpsEnabled(activity)) return false;
         if (! checkGpsPermission(activity)) return false;
         return true;
@@ -359,7 +360,7 @@ public class SettingsActivity extends PreferenceActivity {
         setIntent(intent);
     }
     private void checkResult(){
-        if (! checkSettings(this)) {
+        if (! checkSettings(this,true)) {
             runPermissionDialogs(false);
             return;
         }

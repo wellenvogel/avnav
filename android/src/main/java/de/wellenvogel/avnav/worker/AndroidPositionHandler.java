@@ -79,7 +79,7 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
     public void run(int startSequence) throws JSONException, IOException {
         stopped=false;
         locationService=(LocationManager) gpsService.getSystemService(gpsService.LOCATION_SERVICE);
-        tryEnableLocation(true);
+        tryEnableLocation();
         satStatusProvider=new Thread(new Runnable() {
             @Override
             public void run() {
@@ -193,10 +193,8 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
             setStatus(WorkerStatus.Status.INACTIVE,"deregistered");
         }
     }
+
     private synchronized void tryEnableLocation(){
-        tryEnableLocation(false);
-    }
-    private synchronized void tryEnableLocation(boolean notify){
         if (stopped) return;
         AvnLog.d(LOGPRFX,"tryEnableLocation");
         if (locationService != null && locationService.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
@@ -208,8 +206,6 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
                         lastValidLocation = 0;
                         isRegistered = false;
                         setStatus(WorkerStatus.Status.ERROR, "no gps permission");
-                        if (notify) Toast.makeText(gpsService, "no gps permission",
-                                Toast.LENGTH_SHORT).show();
                         return;
                     }
                 }
@@ -233,8 +229,6 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
             lastValidLocation=0;
             isRegistered=false;
             setStatus(WorkerStatus.Status.ERROR,"no gps enabled");
-            if (notify)Toast.makeText(gpsService, "no gps ",
-                    Toast.LENGTH_SHORT).show();
         }
     }
 

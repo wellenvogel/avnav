@@ -122,12 +122,13 @@ public class WebServer extends Worker {
         super.checkParameters(newParam);
         Integer port=PORT.fromJson(newParam);
         checkClaim(CLAIM_TCPPORT,port.toString(),true);
-        if (newParam.has(mdnsEnabledParameter.name) && mdnsEnabledParameter.fromJson(newParam)) {
+        if ((newParam.has(mdnsEnabledParameter.name) && mdnsEnabledParameter.fromJson(newParam))
+            || (! newParam.has(mdnsEnabledParameter.name) && mdnsEnabledParameter.fromJson(parameters))) {
             String mdnsName=null;
             if (newParam.has(mdnsNameParameter.name)) mdnsName=mdnsNameParameter.fromJson(newParam);
             else mdnsName=mdnsNameParameter.fromJson(parameters);
             if (mdnsName == null || mdnsName.isEmpty())
-                throw new JSONException(MDNS_NAME.name+" cannot be empty when "+MDNS_ENABLED.name+" is set");
+                throw new JSONException(mdnsNameParameter.name+" cannot be empty when "+mdnsEnabledParameter.name+" is set");
             checkClaim(CLAIM_SERVICE, mdnsName, true);
         }
     }
@@ -137,8 +138,10 @@ public class WebServer extends Worker {
         Integer port=PORT.fromJson(parameters);
         listenAny=ANY_ADDRESS.fromJson(parameters);
         addClaim(CLAIM_TCPPORT,port.toString(),true);
-        addClaim(CLAIM_SERVICE,MDNS_NAME.fromJson(parameters),true);
-        gpsService.registerService(getId(),"_http._tcp",MDNS_NAME.fromJson(parameters),port);
+        if (mdnsEnabledParameter.fromJson(parameters)) {
+            addClaim(CLAIM_SERVICE, mdnsNameParameter.fromJson(parameters), true);
+            gpsService.registerService(getId(), "_http._tcp", mdnsNameParameter.fromJson(parameters), port);
+        }
         setStatus(WorkerStatus.Status.STARTED,"starting with port "+port+", external access "+listenAny);
         running=true;
         listener=new Listener(listenAny,port);

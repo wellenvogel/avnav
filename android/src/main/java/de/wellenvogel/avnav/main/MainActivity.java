@@ -204,8 +204,6 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             }
         }
 
-        if (! checkSettings(this)) return false;
-
         Intent intent = new Intent(this, GpsService.class);
         if (Build.VERSION.SDK_INT >= 26){
             startForegroundService(intent);
@@ -538,6 +536,9 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         if (! sharedPrefs.contains(Constants.ALARMSOUNDS)){
             e.putBoolean(Constants.ALARMSOUNDS,true);
         }
+        if (! sharedPrefs.contains(Constants.SHOWDEMO)){
+            e.putBoolean(Constants.SHOWDEMO,true);
+        }
         String workdir=sharedPrefs.getString(Constants.WORKDIR, "");
         String chartdir=sharedPrefs.getString(Constants.CHARTDIR, "");
         if (workdir.isEmpty()){
@@ -557,8 +558,8 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         e.commit();
     }
 
-    private boolean checkSettingsInternal(){
-        if (checkSettings && !checkSettings(this)) {
+    private boolean checkSettingsInternal(boolean checkGps){
+        if (checkSettings && !checkSettings(this,checkGps)) {
             checkSettings=false;
             showSettings(true);
             return false;
@@ -614,7 +615,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                         public void onClick(DialogInterface dialog, int which) {
                             sharedPrefs.edit().putInt(Constants.VERSION,newVersion).commit();
                             showsDialog=false;
-                            if (!checkSettingsInternal()) return;
+                            if (!checkSettingsInternal(true)) return;
                             onResumeInternal();
                         }
                     });
@@ -629,7 +630,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                 }
             }catch (Exception e){}
         }
-        return showsDialog || !checkSettingsInternal();
+        return showsDialog || !checkSettingsInternal(false);
     }
 
     @Override
@@ -690,7 +691,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         super.onResume();
         handleBars();
         AvnLog.d("main: onResume");
-        if (! checkForInitialDialogs()){
+        if (! checkForInitialDialogs() && checkSettingsInternal(false)){
             onResumeInternal();
         }
     }

@@ -185,7 +185,7 @@ public class RouteReceiver extends Activity {
                 buttonAction();
             }
         });
-        if (!SettingsActivity.checkSettings(this)) {
+        if (!SettingsActivity.checkSettings(this,false)) {
             Toast.makeText(this, R.string.receiveMustStart, Toast.LENGTH_LONG).show();
             finish();
             return;
