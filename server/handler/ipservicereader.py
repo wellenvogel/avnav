@@ -208,12 +208,12 @@ class AVNIpServiceReader(AVNWorker,SocketReader):
       except:
         AVNLog.info("exception while reading from %s %s",info,traceback.format_exc())
 
-class NMEA0183ServiceReader(AVNIpServiceReader):
+class AVNNmea0183ServiceReader(AVNIpServiceReader):
   @classmethod
   def getServiceType(cls):
     return AVNUtil.NMEA_SERVICE
 
-avnav_handlerList.registerHandler(NMEA0183ServiceReader)
+avnav_handlerList.registerHandler(AVNNmea0183ServiceReader)
         
         
                                         
