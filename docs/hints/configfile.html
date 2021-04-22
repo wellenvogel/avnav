@@ -18,9 +18,9 @@
       oder <a href="https://github.com/wellenvogel/avnav/blob/master/linux/avnav_template.xml">andere
         Systeme</a>.<br>
       Bei Updates der AvNav Software wird diese Datei im Allgemeinen nicht
-      geändert. Es kann aber sein, dass für neue Funktionen neue
-      Einträge nötig werden. Dann wird in den <a href="../release.html">Release
-        Notes</a> darauf hingewiesen.</p>
+      geändert. Es kann aber sein, dass für neue Funktionen neue Einträge nötig
+      werden. Dann wird in den <a href="../release.html">Release Notes</a>
+      darauf hingewiesen.</p>
     <p>Mit jedem erfolgreichen Start (ab Version 20200325) schreibt AvNav eine
       Kopie diese Datei mit der Endung .ok. Falls beim nächsten Start das Parsen
       der xml Datei fehlschlägt, liest er stattdessen die .ok Datei. Diese
@@ -431,10 +431,10 @@
     <h3>AVNUsbSerialReader</h3>
     <p>Behandelt über USB angeschlossene serielle Geräte. Kategorie 3(einmal,
       optional).<br>
-      Dieser Worker sucht alle über USB verbundenen Geräte. Solche mit
-      einem seriellen Profil versucht er zu öffnen, automatische die
-      Baudrate einzustellen und dann NMEA Daten zu lesen. Damit werden solche
-      Geräte normalerweise komplett automatisch von AvNav erkannt.<br>
+      Dieser Worker sucht alle über USB verbundenen Geräte. Solche mit einem
+      seriellen Profil versucht er zu öffnen, automatische die Baudrate
+      einzustellen und dann NMEA Daten zu lesen. Damit werden solche Geräte
+      normalerweise komplett automatisch von AvNav erkannt.<br>
       Man kann für einzelne Geräte Regeln definieren, um sie speziell zu
       behandeln. Als Identifikation für ein Gerät wird dabei eine ID genutzt,
       die die enstprechende USB Buchse identifiziert. Mann kann diese ID am
@@ -645,8 +645,8 @@
         </tr>
         <tr>
           <td>readFilter</td>
-          <td>falls auch gelesen wird, NMEA <a href="#filter">filter</a> für die
-            Eingangsrichtung</td>
+          <td>falls auch gelesen wird, NMEA <a href="#filter">filter</a> für
+            die Eingangsrichtung</td>
           <td><br>
           </td>
         </tr>
@@ -705,13 +705,81 @@
         <tr>
           <td>filter</td>
           <td><a href="#filter">filter</a> für NMEA Daten</td>
-          <td><br>
+          <td>leer<br>
           </td>
+        </tr>
+        <tr>
+          <td>writeOut</td>
+          <td>sende NMEA Daten auf dieser Verbindung</td>
+          <td>aus</td>
+        </tr>
+        <tr>
+          <td>writeFilter</td>
+          <td><a href="#filter">Filter</a> für gesendete NMEA Daten</td>
+          <td>leer</td>
+        </tr>
+        <tr>
+          <td>blackList</td>
+          <td>, separierte Liste von Source-Namen, deren Daten nicht gesendet
+            werden</td>
+          <td>leer</td>
         </tr>
       </tbody>
     </table>
-    <p><br>
-    </p>
+    <h3>AVNNmea0183ServiceReader</h3>
+    <p>Dieser handler ist dem AVNSocketReader sehr ähnlich. Aber anstelle der
+      Konfiguration von host und port wird hier der Name des Services
+      konfiguriert. AvNav sucht im Netz nach (MDNS/Bonjour/Avahi) Services vom
+      Typ_nmea-0183._tcp . Wenn der Eintrag über die Web Oberfläche erfolgt,
+      bietet AvNav die Liste der gefundenen Services zur Auswahl an. MIt diesem
+      Handler kann eine Verbindung auch dann wieder aufgebaut werden, wenn sich
+      z.B. die IP Adressen ändern.</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Description</td>
+          <td>default/template</td>
+        </tr>
+        <tr>
+          <td>serviceName</td>
+          <td>Der Name des Services (AvNav bietet eine Liste)</td>
+          <td>--</td>
+        </tr>
+        <tr>
+          <td>timeout</td>
+          <td>Verbindungstimeout in Sekunden</td>
+          <td>10</td>
+        </tr>
+        <tr>
+          <td>minTime</td>
+          <td>minimale Zeit zwischen 2 empfangenen Nachrichten.</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td>filter</td>
+          <td><a href="#filter">Filter</a> für NMEA Daten</td>
+          <td>leer</td>
+        </tr>
+        <tr>
+          <td>writeOut</td>
+          <td>sende NMEA Daten auf dieser Verbindung</td>
+          <td>aus</td>
+        </tr>
+        <tr>
+          <td>writeFilter</td>
+          <td><a href="#filter">Filter</a> für gesendete NMEA Daten</td>
+          <td>leer</td>
+        </tr>
+        <tr>
+          <td>blackList</td>
+          <td>, separierte Liste von Source-Namen, deren Daten nicht gesendet
+            werden</td>
+          <td>leer</td>
+        </tr>
+      </tbody>
+    </table>
+    <p> </p>
     <h3>AVNBME280Reader</h3>
     <p>Reader für BME280 per I2C. Kategorie 3 (optional)<br>
       Schreibt MDA und XDR Datensätze.</p>
@@ -1054,7 +1122,8 @@
       <li>system: /user/lib/avnav/plugins</li>
       <li>user: /home/pi/avnav/data/plugins</li>
     </ul>
-    <p>Neben den Parametern für den Plugin Handler selbst können die jeweiligen Plugins Parameter erwarten. Der Name für das Plugin ergibt sich dabei aus
+    <p>Neben den Parametern für den Plugin Handler selbst können die jeweiligen
+      Plugins Parameter erwarten. Der Name für das Plugin ergibt sich dabei aus
       der Kategorie und dem plugin Verzeichnis. Beispiel:</p>
     <div class="code">&lt;AVNPluginHandler&gt;
         &lt;builtin-signalk enabled="true"/&gt;
@@ -1143,8 +1212,8 @@
         <tr>
           <td>autoSendRMC</td>
           <td>falls für diese Zeit in Sekunden kein RMC im NMEA-Datenstrom
-            gesehen wird, aber gültige Positionsdaten + Zeit von canboat vorhanden
-            sind: sende RMC (ist wichtig für Datum/Zeit auf NMEA0183)</td>
+            gesehen wird, aber gültige Positionsdaten + Zeit von canboat
+            vorhanden sind: sende RMC (ist wichtig für Datum/Zeit auf NMEA0183)</td>
           <td>0 (aus)</td>
         </tr>
         <tr>

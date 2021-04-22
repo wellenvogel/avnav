@@ -21,19 +21,19 @@
       Potentially it could be necessary to add some entries to enable new
       functions. In this case you will find some hints in the <a href="../release.html">release
         notes</a>.</p>
-    <p>With every successful start AvNav (from version 20200325) creates a
-      copy of this file with the extension .ok. If during the next start up 
-      parsing of the config file fails, AvNav will fall back to this .ok file.
-      With this fallback handling it will be ensured that AvNav can start up,
-      even if a change of the original config file (what AvNav is doing in some
+    <p>With every successful start AvNav (from version 20200325) creates a copy
+      of this file with the extension .ok. If during the next start up parsing
+      of the config file fails, AvNav will fall back to this .ok file. With this
+      fallback handling it will be ensured that AvNav can start up, even if a
+      change of the original config file (what AvNav is doing in some
       situations) leaves the file in a defect state. If you don't want this
       fallback (for testing) add the -e command line switch.</p>
     <p>Starting from 20210322 <b>it should not be necessary anymore to modify
         the config file "by hand"</b>. Instead use AvNav itself (<a href="../userdoc/statuspage.html">Server/Status
-        page</a>) to edit most parts of the configuration. This also eliminates the
-      need of a manual restart when changing parameters.</p>
-    <p>If you need to change sections not editable there, you still can
-      use the <a href="https://github.com/wellenvogel/avnav-update-plugin">avnav-update-plugin</a>
+        page</a>) to edit most parts of the configuration. This also eliminates
+      the need of a manual restart when changing parameters.</p>
+    <p>If you need to change sections not editable there, you still can use the
+      <a href="https://github.com/wellenvogel/avnav-update-plugin">avnav-update-plugin</a>
       to edit it directly from within your browser.<br>
       So the following text simply serves as reference.</p>
     <p>If you change the avnav_server.xml you need to restart AvNav. If it is
@@ -45,8 +45,8 @@
       changed the config file to watch for serious errors. The commands would
       be:</p>
     <div class="code">sudo systemctl stop avnav<br>avnav -e<br>^C<br>sudo systemctl start avnav</div>
-    <p> Option -e, since version 20200325. It prevents the fallback
-      to avnav_server.xml.ok (what would hide your errors). ^C interrupts the
+    <p> Option -e, since version 20200325. It prevents the fallback to
+      avnav_server.xml.ok (what would hide your errors). ^C interrupts the
       running AvNav.</p>
     <h2>Content</h2>
     <p>Within avnav_server.xml there are entries for the various parts of AvNav.
@@ -80,10 +80,10 @@
         </tr>
         <tr>
           <td><a name="filter" id="filter"></a>filter</td>
-          <td>Filtering of NMEA date. You can provide filters separated by comma.
-            Only matching NMEA data will pass this filter. To make them
-            independent of talker ids, the 2 characters following a $ will not be
-            considered. To e.g. only pass $GPRMC sentences (and any other
+          <td>Filtering of NMEA date. You can provide filters separated by
+            comma. Only matching NMEA data will pass this filter. To make them
+            independent of talker ids, the 2 characters following a $ will not
+            be considered. To e.g. only pass $GPRMC sentences (and any other
             $xxRMC) the filter would be: $RMC.<br>
             If you prefix the filter with a ^ it will be negated, i.e. ^$RMC
             means. No $xxRMC records. For AIS data you can use "!" or "!AIVDM" .</td>
@@ -91,15 +91,15 @@
         </tr>
         <tr>
           <td>readFilter</td>
-          <td>If the channel is a combined reader/writer this is the
-            <a href="#filter">filter</a> for the input path</td>
+          <td>If the channel is a combined reader/writer this is the <a href="#filter">filter</a>
+            for the input path</td>
           <td><br>
           </td>
         </tr>
         <tr>
           <td><a name="blackList" id="blackList"></a>blackList</td>
-          <td>List of channel names (separated by comma). Data originating from those
-            channels will not be sent out. Consider the camel case - i.e.
+          <td>List of channel names (separated by comma). Data originating from
+            those channels will not be sent out. Consider the camel case - i.e.
             capital L.</td>
           <td>nmea0183tosignalk</td>
         </tr>
@@ -107,9 +107,9 @@
     </table>
     <p><br>
     </p>
-    <p>The following tables list the main parts together with their
-      parameters. If some properties in a template are not listed
-      here, just leave them as they are.</p>
+    <p>The following tables list the main parts together with their parameters.
+      If some properties in a template are not listed here, just leave them as
+      they are.</p>
     <h3>AVNConfig</h3>
     <p>Base configuration, category 1 (1x, mandatory)</p>
     <table style="width: 100%" border="1">
@@ -137,8 +137,8 @@
         </tr>
         <tr>
           <td>systimediff</td>
-          <td>maximum delta (in seconds) between system time and gps time
-            before the system time is set.</td>
+          <td>maximum delta (in seconds) between system time and gps time before
+            the system time is set.</td>
           <td>5</td>
         </tr>
         <tr>
@@ -159,13 +159,13 @@
         </tr>
       </tbody>
     </table>
-    <h3>AVNGpsdFeeder</h3>
+    <h3>AVNFeeder</h3>
     <p>The internal NMEA list and decoder unit. category 2 (once, optional since
       version 20200325).</p>
     <p>This part has no parameters anymore. In previous versions you could
       configure gpsd here, so potentially there still will be some parameters in
-      your configuration. In newer versions make sure to include
-      useGpsd="false".</p>
+      your configuration. When you previously had an old version installed this
+      entity will be named AVNGpsdFeeder.</p>
     <h3>AVNHttpServer</h3>
     <p>The internal HTTP server. category 1 (once, mandatory).</p>
     <p>Apart from parameters for the AVNHttpServer there are some child entries
@@ -232,8 +232,9 @@
       </tbody>
     </table>
     <h4>Parameters for MimeType</h4>
-    <p>You may configure (additional) mime types for the server. Potentially your
-      own application requires some extension here if you have special files.</p>
+    <p>You may configure (additional) mime types for the server. Potentially
+      your own application requires some extension here if you have special
+      files.</p>
     <table style="width: 100%" border="1">
       <tbody>
         <tr>
@@ -258,7 +259,8 @@
     <p><br>
     </p>
     <h3>AVNBlueToothReader</h3>
-    <p>Reading of bluetooth devices that have a serial profile. category 3 (once, optional)<br>
+    <p>Reading of bluetooth devices that have a serial profile. category 3
+      (once, optional)<br>
       Only possible if your server has a bluetooth device.</p>
     <table style="width: 100%" border="1">
       <tbody>
@@ -355,7 +357,8 @@
         </tr>
         <tr>
           <td>numerrors</td>
-          <td>After that number of errors the device will be closed and re opened.</td>
+          <td>After that number of errors the device will be closed and re
+            opened.</td>
           <td>20</td>
         </tr>
         <tr>
@@ -419,12 +422,12 @@
     <a name="AVNUsbSerialReader"></a>
     <h3>AVNUsbSerialReader</h3>
     <p>Handles serial devices connected via USB. category 3 (once, optional).<br>
-      This worker process scans all connected USB devices. It tries to open those with a serial profile, detect their baud rate and read
-      NMEA data. This way AvNav normally auto detects all such
-      devices.<br>
+      This worker process scans all connected USB devices. It tries to open
+      those with a serial profile, detect their baud rate and read NMEA data.
+      This way AvNav normally auto detects all such devices.<br>
       You can define separate rules for individual devices. As device
-      identification we use the USB port id where the
-      device is plugged into. To find out this id simply watch the <a href="../userdoc/statuspage.html">status
+      identification we use the USB port id where the device is plugged into. To
+      find out this id simply watch the <a href="../userdoc/statuspage.html">status
         page</a> when you connect the device.</p>
     <p>The parameters consist of 2 parts: </p>
     <ul>
@@ -646,11 +649,22 @@
           <td>minimal time in s between 2 consecutive NMEA messages</td>
           <td>0</td>
         </tr>
+        <tr>
+          <td>avahiEnabled</td>
+          <td>if activated the server will announce this service via MDNS
+            (Bonjour/Avahi). The service tpye is _nmea-0183._tcp</td>
+          <td>false</td>
+        </tr>
+        <tr>
+          <td>avahiName</td>
+          <td>the name that this service will be visible with in MDNS</td>
+          <td>avnav-server</td>
+        </tr>
       </tbody>
     </table>
     <h3>AVNSocketReader</h3>
-    <p>Input. Connects to TCP server reading data from it (TCP client).
-      category 3 (multiple times, optional)</p>
+    <p>Input. Connects to TCP server reading data from it (TCP client). category
+      3 (multiple times, optional)</p>
     <table style="width: 100%" border="1">
       <tbody>
         <tr>
@@ -672,7 +686,7 @@
         </tr>
         <tr>
           <td>host</td>
-          <td>TCP destination address</td>
+          <td>TCP destination address (ip or hostname)</td>
           <td><br>
           </td>
         </tr>
@@ -691,6 +705,72 @@
           <td><a href="#filter">filter</a> for NMEA data</td>
           <td><br>
           </td>
+        </tr>
+        <tr>
+          <td>writeOut</td>
+          <td>send out NMEA data on this connection</td>
+          <td>false</td>
+        </tr>
+        <tr>
+          <td>writeFilter</td>
+          <td><a href="#filter">filter</a> for the sent NMEA data</td>
+          <td>empty</td>
+        </tr>
+        <tr>
+          <td>blackList</td>
+          <td>, separated list of source names that will not be sent out</td>
+          <td>empty</td>
+        </tr>
+      </tbody>
+    </table>
+    <h3>AVNNmea0183ServiceReader</h3>
+    <p>This reader is very similar to the AVNSocketReader. But instead of
+      configuring host and port you will configure the serviceName. AvNav will
+      search for services of type _nmea-0183._tcp and will provide you a list of
+      available services. Using this reader will give you connectivity even if
+      the network topology potentially will change.</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Description</td>
+          <td>default/template</td>
+        </tr>
+        <tr>
+          <td>serviceName</td>
+          <td>The name of the service (AvNav will provide a list of found
+            services)</td>
+          <td>--</td>
+        </tr>
+        <tr>
+          <td>timeout</td>
+          <td>connect timeout in seconds</td>
+          <td>10</td>
+        </tr>
+        <tr>
+          <td>minTime</td>
+          <td>min time between 2 received messages</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td>filter</td>
+          <td><a href="#filter">filter</a> for NMEA data</td>
+          <td>empty</td>
+        </tr>
+        <tr>
+          <td>writeOut</td>
+          <td>send out NMEA data on this connection</td>
+          <td>false</td>
+        </tr>
+        <tr>
+          <td>writeFilter</td>
+          <td><a href="#filter">filter</a> for the sent NMEA data</td>
+          <td>empty</td>
+        </tr>
+        <tr>
+          <td>blackList</td>
+          <td>, separated list of source names that will not be sent out</td>
+          <td>empty</td>
         </tr>
       </tbody>
     </table>
@@ -832,8 +912,9 @@
         </tr>
         <tr>
           <td>cleanup</td>
-          <td>maximum age (in hours) for track data sent to the
-            WebApp. Still files are stored to hold older data but these are not available to the WebApp.</td>
+          <td>maximum age (in hours) for track data sent to the WebApp. Still
+            files are stored to hold older data but these are not available to
+            the WebApp.</td>
           <td>25</td>
         </tr>
       </tbody>
@@ -924,14 +1005,13 @@
         </tr>
         <tr>
           <td>waittime</td>
-          <td>converter waittime in seconds to start conversion after a new/changed file
-            has been detected </td>
+          <td>converter waittime in seconds to start conversion after a
+            new/changed file has been detected </td>
           <td>30</td>
         </tr>
         <tr>
           <td>knownExtensions</td>
-          <td>list of extensions the WebApp offers to upload to the
-            importer.</td>
+          <td>list of extensions the WebApp offers to upload to the importer.</td>
           <td>kap,map,geo</td>
         </tr>
         <tr>
@@ -1015,8 +1095,8 @@
     <p>AVNAlarmHandler has one parameter: stopAlarmPin. If this is set (pin
       number - i.e. mode board, only Raspberry) you can stop an alarm by using
       an "L" potential at this pin (e.g. with a simple button).<br>
-      The parameters set at the alarms will also be used for the sound
-      in the WebApp.</p>
+      The parameters set at the alarms will also be used for the sound in the
+      WebApp.</p>
     <h3><a name="plugins" id="plugins"></a>AVNPluginHandler</h3>
     <p>Management of plugins. category 2 (once, optional).<br>
       AVNPluginHandler is handling <a href="plugins.html">plugins</a>. They can
@@ -1115,9 +1195,9 @@
         <tr>
           <td>autoSendRMC</td>
           <td>if no RMC record is seen in the NMEA data within this period (in
-            seconds) but valid position and date/time data were received from n2k
-          - generate a RMC record (important to have date
-            and time on NMEA0183)</td>
+            seconds) but valid position and date/time data were received from
+            n2k - generate a RMC record (important to have date and time on
+            NMEA0183)</td>
           <td>30</td>
         </tr>
         <tr>
@@ -1228,6 +1308,6 @@
     </table>
     <p></p>
     <p><br>
-       </p>
+    </p>
   </body>
 </html>
