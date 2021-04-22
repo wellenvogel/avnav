@@ -383,6 +383,7 @@ class AVNPluginHandler(AVNWorker):
         else:
           if os.path.exists(os.path.join(dir,"plugin.js")) or os.path.exists(os.path.join(dir,"plugin.css")):
             self.pluginDirs[moduleName]=dir
+            self.setInfo(moduleName,"java script/css only",WorkerStatus.STARTED)
     for name in list(self.createdPlugins.keys()):
       self.startPluginThread(name)
     AVNLog.info("pluginhandler finished")
