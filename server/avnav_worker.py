@@ -91,12 +91,14 @@ class WorkerParameter(object):
       if callable(self.rangeOrList):
         rt.rangeOrList=self.rangeOrList()
       else:
-        rt.rangeOrList=[]+self.rangeOrList if self.rangeOrList is not None else None,
+        if self.rangeOrList is not None:
+          rt.rangeOrList=list(self.rangeOrList)
     else:
       if callable(self.rangeOrList):
         rt.rangeOrList=self.rangeOrList
       else:
-        rt.rangeOrList=[]+self.rangeOrList if self.rangeOrList is not None else None,
+        if self.rangeOrList is not None:
+          rt.rangeOrList=list(self.rangeOrList)
     return rt
   @classmethod
   def filterNameDef(cls,plist):
