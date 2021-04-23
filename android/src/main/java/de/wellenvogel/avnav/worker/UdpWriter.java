@@ -91,11 +91,18 @@ public class UdpWriter extends ChannelWorker {
         setStatus(WorkerStatus.Status.STARTED,"sending to "+target);
         int sequence=-1;
         int numOk=0;
+        String[] nmeaFilter=AvnUtil.splitNmeaFilter(SEND_FILTER_PARAM.fromJson(parameters));
         while (! shouldStop(startSequence) && channel.isOpen()){
             NmeaQueue.Entry entry;
             try {
                 entry = queue.fetch(sequence, 2000);
                 if (entry == null) continue;
+                if (! AvnUtil.matchesNmeaFilter(entry.data,nmeaFilter)){
+                    AvnLog.dfs("udpwriter: skipping record %s due to filter",
+                            entry.data);
+                    continue;
+
+                }
                 if (blacklist != null){
                     boolean blackListed=false;
                     for (String be:blacklist){
