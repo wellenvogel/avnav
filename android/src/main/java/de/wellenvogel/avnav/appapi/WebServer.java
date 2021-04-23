@@ -71,6 +71,8 @@ import de.wellenvogel.avnav.worker.WorkerStatus;
 public class WebServer extends Worker {
 
     static final String NAME="AvNavWebServer";
+    private final EditableParameter.StringParameter mdnsNameParameter;
+    private final EditableParameter.BooleanParameter mdnsEnabledParameter;
 
     private BasicHttpProcessor httpproc = null;
     private BasicHttpContext httpContext = null;
@@ -81,7 +83,6 @@ public class WebServer extends Worker {
     protected GpsService gpsService;
     private boolean running;
     private boolean listenAny;
-    private NsdManager.RegistrationListener registrationListener;
 
     public RequestHandler.ServerInfo getServerInfo(){
         RequestHandler.ServerInfo info=null;
@@ -99,21 +100,38 @@ public class WebServer extends Worker {
     public static final EditableParameter.BooleanParameter ANY_ADDRESS=
             new EditableParameter.BooleanParameter("external",R.string.enableExternalAccess,false);
     public static final EditableParameter.IntegerParameter PORT=
-            new EditableParameter.IntegerParameter("port",R.string.labelSettingsServerPort,34567);
-
+            new EditableParameter.IntegerParameter("port",R.string.labelSettingsServerPort,8080);
 
     public WebServer(GpsService controller) {
-        super("WebServer");
-        parameterDescriptions.addParams(Worker.ENABLED_PARAMETER.clone(false),PORT,ANY_ADDRESS);
+        super("WebServer",controller);
+        mdnsEnabledParameter=MDNS_ENABLED.clone(true);
+        mdnsNameParameter=MDNS_NAME.clone("avnav-android");
+        parameterDescriptions.addParams(
+                PORT,
+                Worker.ENABLED_PARAMETER.clone(false),
+                ANY_ADDRESS,
+                mdnsEnabledParameter,
+                mdnsNameParameter
+        );
         gpsService =controller;
         status.canEdit=true;
     }
+    private static final String SERVICE_TYPE="_http._tcp";
 
     @Override
     protected void checkParameters(JSONObject newParam) throws JSONException, IOException {
         super.checkParameters(newParam);
         Integer port=PORT.fromJson(newParam);
         checkClaim(CLAIM_TCPPORT,port.toString(),true);
+        if ((newParam.has(mdnsEnabledParameter.name) && mdnsEnabledParameter.fromJson(newParam))
+            || (! newParam.has(mdnsEnabledParameter.name) && mdnsEnabledParameter.fromJson(parameters))) {
+            String mdnsName=null;
+            if (newParam.has(mdnsNameParameter.name)) mdnsName=mdnsNameParameter.fromJson(newParam);
+            else mdnsName=mdnsNameParameter.fromJson(parameters);
+            if (mdnsName == null || mdnsName.isEmpty())
+                throw new JSONException(mdnsNameParameter.name+" cannot be empty when "+mdnsEnabledParameter.name+" is set");
+            checkClaim(CLAIM_SERVICE, SERVICE_TYPE+"."+mdnsName, true);
+        }
     }
 
     @Override
@@ -121,7 +139,10 @@ public class WebServer extends Worker {
         Integer port=PORT.fromJson(parameters);
         listenAny=ANY_ADDRESS.fromJson(parameters);
         addClaim(CLAIM_TCPPORT,port.toString(),true);
-        registerAvahi(port,listenAny);
+        if (mdnsEnabledParameter.fromJson(parameters)) {
+            addClaim(CLAIM_SERVICE, SERVICE_TYPE+"."+mdnsNameParameter.fromJson(parameters), true);
+            gpsService.registerService(getId(), SERVICE_TYPE, mdnsNameParameter.fromJson(parameters), port);
+        }
         setStatus(WorkerStatus.Status.STARTED,"starting with port "+port+", external access "+listenAny);
         running=true;
         listener=new Listener(listenAny,port);
@@ -512,47 +533,8 @@ public class WebServer extends Worker {
         AvnLog.d(NAME,"stop");
         listener.close();
         listener=null;
-        unregisterAvahi();
-    }
-    private void registerAvahi(int port,boolean any) throws UnknownHostException {
-        NsdServiceInfo info=new NsdServiceInfo();
-        info.setPort(port);
-        info.setServiceType("_http._tcp");
-        info.setServiceName("avnav-android");
-        if (! any){
-            info.setHost(getLocalHost());
-        }
-        NsdManager manager= (NsdManager) gpsService.getSystemService(Context.NSD_SERVICE);
-        registrationListener=new NsdManager.RegistrationListener() {
-            @Override
-            public void onRegistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
-                AvnLog.e("registering avahi service failed: "+errorCode);
-            }
-
-            @Override
-            public void onUnregistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
-
-            }
-
-            @Override
-            public void onServiceRegistered(NsdServiceInfo serviceInfo) {
-                AvnLog.i("registered avahi "+serviceInfo.getServiceName());
-            }
-
-            @Override
-            public void onServiceUnregistered(NsdServiceInfo serviceInfo) {
-
-            }
-        };
-        manager.registerService(info, NsdManager.PROTOCOL_DNS_SD,registrationListener);
     }
 
-    private void unregisterAvahi(){
-        if (registrationListener == null) return;
-        NsdManager manager=(NsdManager)gpsService.getSystemService(Context.NSD_SERVICE);
-        manager.unregisterService(registrationListener);
-        registrationListener=null;
-    }
 
 }
 

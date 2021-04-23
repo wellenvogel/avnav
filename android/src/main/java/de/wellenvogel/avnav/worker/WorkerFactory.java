@@ -12,8 +12,8 @@ import de.wellenvogel.avnav.util.NmeaQueue;
 public class WorkerFactory {
     public static final String ANDROID_NAME="InternalGPS";
     public static final String USB_NAME="UsbConnection";
-    public static final String SOCKETREADER_NAME="SocketReader";
-    public static final String SOCKETWRITER_NAME="SocketWriter";
+    public static final String SOCKETREADER_NAME="TcpReader";
+    public static final String SOCKETWRITER_NAME="TcpWriter";
     public static final String UDPREADER_NAME="UdpReader";
     public static final String UDPWRITER_NAME="UdpWriter";
     public static final String BLUETOOTH_NAME="Bluetooth";

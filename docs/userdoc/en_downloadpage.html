@@ -8,11 +8,10 @@
   <body data-order="1400">
     <h1>The Files/Download Page </h1>
     <div class="toc" data-maxlevel="3"></div>
-    <p>From the <a href="mainpage.html">mainpage</a> you will get here using
-      the<img src="../viewerimages/icons-new/ic_file_download.svg" alt="" class="inlineimage">
-      button. At this page you can download/upload/delete/edit/view
+    <p>This page is accessed by clicking the<img src="../viewerimages/icons-new/ic_file_download.svg" alt="" class="inlineimage">
+      button on the <a href="mainpage.html">mainpage</a>. Here you can download/upload/delete/edit/view
       charts,tracks,routes, user files and images.</p>
-    <p> <img src="../downloadpage-charts.png" alt="" class="fimage"> </p>
+    <p> <img src="downloadpage-charts.png" alt="" class="fimage"> </p>
     <h2>Buttons</h2>
     <table style="width: 100%" border="1">
       <tbody>
@@ -66,7 +65,7 @@
           <td><img src="../viewerimages/icons-new/ic_file_upload.svg" alt="" class="inlineimage"><br>
           </td>
           <td>DownloadPageUpload</td>
-          <td>upload a file to the currently show category</td>
+          <td>upload a file to the currently shown category</td>
         </tr>
         <tr>
           <td><img src="../viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
@@ -82,79 +81,69 @@
         </tr>
       </tbody>
     </table>
-    <p>For each entry in the list there will be a couple of informations and
-      there is a <img src="../viewerimages/icons-new/ic_delete.svg" alt="" class="inlineimage">delete
+    <p>For each entry some information is displayed along with a <img src="../viewerimages/icons-new/ic_delete.svg" alt="" class="inlineimage">delete
       and a <img src="../viewerimages/icons-new/ic_file_download.svg" alt="" class="inlineimage">download
-      button. They are only visible if the operation is permitted for the
+      button. They are only visible however if the operation is permitted for the
       particular element (e.g. no deletion of demo charts or system layouts).<br>
-      <a name="filedialog" id="filedialog"></a>Potentially there will be more
-      icons to give you a hint which operations are possible for this element.
-      By clicking on the element a dialog will be shown with the available
+      <a name="filedialog" id="filedialog"></a> Eventually more
+      icons indicate operations valid for this element.
+      By clicking the element a dialog will open displaying available
       actions for the element.</p>
-    <p><img src="../downloadpage-user-dialog.png" alt="" class="fimage"></p>
-    <p>If available ("Edit" / "View") you can move to an edit/show view. For
+    <p><img src="downloadpage-user-dialog.png" alt="" class="fimage"></p>
+    <p>If available ("Edit" / "View") you can switch to an edit/show view. For
       routes "Edit" will bring up the <a href="editroutepage.html">Route-Editor</a>.</p>
-    <p><img src="../viewpage-edit-layout.png" alt="" class="fimage">In this view
-      you can make changes - if "Editing" is shown or the content is shown. By
-      clicking on <img src="../viewerimages/icons-new/save.svg" alt="" class="inlineimage">the
+    <p><img src="viewpage-edit-layout.png" alt="" class="fimage">In this view
+      you can make changes - (caption "Editing" ) or the content is dispayed. By
+      clicking <img src="../viewerimages/icons-new/save.svg" alt="" class="inlineimage">the
       changes will be stored.</p>
     <h2>Special Functions</h2>
     <h3><a name="userfiles" id="userfiles"></a>User Files</h3>
-    <p>By changing to <img src="../viewerimages/icons-new/folder_shared.svg" alt=""
-        class="inlineimage">user files you can e.g. edit <a href="../hints/userjs.html">user.js</a>
+    <p>Switching to <img src="../viewerimages/icons-new/folder_shared.svg" alt="" class="inlineimage"> user files permits to e.g. edit <a href="../hints/userjs.html">user.js</a>
       and <a href="../hints/usercss.html">user.css</a>. The file keys.json
       contains <a href="../hints/keyboard.html">user defined keyboard shortcuts</a>.
     </p>
     <p>The file images.json can be used to <a href="../hints/usericons.html">adapt
         some of the symbols in AvNav</a>.</p>
-    <p><img src="../downloadpage-user.png" alt="" class="fimage"></p>
-    <p>Ypu can also upload additional files here that you need to adapt AvNav
-      (e.g. css files, java script files or HTML files). Those files you can
-      reach via the url /user/viewer/&lt;name&gt;.<br>
-      Images should be uploaded using the Images <img src="../viewerimages/icons-new/image-icon.svg"
-        alt="" class="inlineimage">category. They will be reachable via
+    <p><img src="downloadpage-user.png" alt="" class="fimage"></p>
+    <p>Here you can also upload additional files needed to adapt AvNav
+      (e.g. css files, java script files or HTML files). These files can be accessed via the url /user/viewer/&lt;name&gt;.<br>
+      Images should be uploaded in the Images <img src="../viewerimages/icons-new/image-icon.svg" alt="" class="inlineimage">category. They will be accessible via
       /user/images/&lt;name&gt;.</p>
-    <p>Using the "+" button (lower right) you can create a new file. This could
-      be an HTML file that you later on would use to create a <a href="addonconfigpage.html">User
+    <p>Clicking the "+" button (lower right) you can create a new file. This could
+      be a HTML file to create a <a href="addonconfigpage.html">User
         App</a> .</p>
-    <p>For a HTML file the action dialog will contain an "<img src="../viewerimages/icons-new/apps.svg"
-        alt="" class="inlineimage">App" button that you can use to directly
+    <p>For a HTML file the action dialog contains an "<img src="../viewerimages/icons-new/apps.svg" alt="" class="inlineimage">App" button that you can click to directly
       create a <a href="addonconfigpage.html">User App</a>. You have to be sure
       to upload an Icon image file beforehand.</p>
-    <p><img src="../downloadpage-user-dialog-html.png" alt="" class="fimage"></p>
+    <p><img src="downloadpage-user-dialog-html.png" alt="" class="fimage"></p>
     <h3><a name="mbtiles" id="mbtiles"></a>Charts - mbtiles Format</h3>
-    <p>Using a chart in <a href="https://wiki.openstreetmap.org/wiki/MBTiles">mbtiles</a>
-      could lead to problems if the tiles internally are not ordered using the
-      default "xyz" format and there is no hint in the meta data about that. If
-      you experience display problems with an mbtiles chart you can try to
-      switch the format in the action dialog to "tms". This change will be
+    <p>Using a <a href="https://wiki.openstreetmap.org/wiki/MBTiles">mbtiles</a>
+      chart could lead to problems if the tiles internally are not ordered according to the
+      default "xyz" format. Unless valid information is provided in meta data, AvNav assumes "xyz". If
+      you experience display problems with a mbtiles chart you can try to set the format to "tms" within the action dialog. This change will be
       written to the chart file.</p>
-    <p><img src="../downloadpage-charts-mbtiles.png" alt="" class="fimage"></p>
+    <p><img src="downloadpage-charts-mbtiles.png" alt="" class="fimage"></p>
     <h3><a name="chartupload" id="chartupload"></a>Chart Upload</h3>
     <p>At the category <img src="../viewerimages/icons-new/map2.svg" alt="" class="inlineimage">
       you can directly upload <a href="../charts.html#chartformats">chart files</a>.
       Files that can be handled by AvNav will be uploaded directly into the
       charts directory and will be available immediately (gemf, mbtiles, xml
       files).</p>
-    <p>For charts that will be usable after <a href="../charts.html#Convert">Conversion</a>
-      you will be asked if they should be put into the input directory of the
-      importer (not on android).</p>
-    <p><img src="../downloadpage-upload-import-set.png" alt="" class="fimage"> </p>
-    <p>You can optionally select a "set" name - this will become the name of the
-      created gemf file. This way you can add multiple chart files into one gemf
-      file. The state of the conversion can be checked at the <a href="statuspage.html">status
+    <p>For charts requiring <a href="../charts.html#Convert">Conversion</a>
+      you will be asked if they should be put into the importer's input directory (not on android).</p>
+    <p><img src="downloadpage-upload-import-set.png" alt="" class="fimage"> </p>
+    <p>You can optionally select a "set" name - this determines name of the
+      gemf file to be created. This way you can merge multiple chart files into a single gemf
+      file. The state of conversion can be checked at the <a href="statuspage.html">status
         page</a> at "importer".<br>
-      After an upload to the importer it will still wait some time to allow you
-      to upload more files to the same set. They all will be handled with one
+      After an upload the importer still waits some time allowing more files to be uploaded and included in the same set. They all will be handled with one
       conversion.</p>
     <h3><a name="tracks" id="tracks"></a>Tracks</h3>
     <p>The info dialog for tracks contains some additional information.</p>
-    <p><img src="../downloadpage-track-dialog.png" alt="" class="fimage"> <br>
+    <p><img src="downloadpage-track-dialog.png" alt="" class="fimage"> <br>
     </p>
-    <p>Additionally you can start with the&nbsp; <img src="../viewerimages/icons-new/route.svg"
-        alt="" class="inlineimage">Convert button the <a href="../hints/TracksToRoutes.html">conversion
-        of the track to a route</a>. Using the <img src="../viewerimages/icons-new/layers-black.svg"
-        alt="" class="inlineimage">overlay button you can add the track to <a href="../hints/overlays.html">overlays</a>
+    <p>Additionally the <a href="../hints/TracksToRoutes.html">conversion
+        of the track to a route</a> can be started with the&nbsp; <img src="../viewerimages/icons-new/route.svg" alt="" class="inlineimage">Convert button. Clicking the <img src="../viewerimages/icons-new/layers-black.svg" alt="" class="inlineimage">overlay button you can add the track to <a href="../hints/overlays.html">overlays</a>
       or remove it from them.<br>
     </p>
     <p></p>

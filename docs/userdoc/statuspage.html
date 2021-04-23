@@ -11,7 +11,7 @@
         src="../viewerimages/icons-new/status.svg" alt="" class="inlineimage">&nbsp;
       die Server/Status-Seite erreichen – hier werden interne
       Status-Informationen des Servers angezeigt. </p>
-    <div><img src="../statuspage.png" alt="" class="fimage"><br>
+    <div><img src="statuspage.png" alt="" class="fimage"><br>
     </div>
     <p>Buttons</p>
     <table style="width: 100%" border="1">
@@ -41,8 +41,8 @@
           <td><img src="../viewerimages/icons-new/ic_android.svg" alt="" class="inlineimage"><br>
           </td>
           <td>StatusAndroid</td>
-          <td>Zu den <a href="../android.html">Android Einstellungen</a>
-            wechseln (nur Android im Normalmodus)</td>
+          <td>Zu den <a href="../android/android.html">Android Einstellungen</a>
+            wechseln (nur Android)</td>
         </tr>
         <tr>
           <td><img src="../viewerimages/icons-new/ic_power.svg" alt="" class="inlineimage"><br>
@@ -57,14 +57,14 @@
           <td><img src="../viewerimages/icons-new/ic_refresh.svg" alt="" class="inlineimage"><br>
           </td>
           <td>StatusRestart</td>
-          <td>Restart der AvNav Server Software (neu 20210322)</td>
+          <td>Restart der AvNav Server Software (neu 20210322, nicht Android)</td>
         </tr>
         <tr>
           <td><img src="../viewerimages/icons-new/ic_text_snippet.svg" alt="" class="inlineimage"><br>
           </td>
           <td>StatusLog</td>
           <td>Anzeige des Server Logs (ca. 300000kByte vom Ende), auch ein
-            Download ist möglich (neu 20210322)</td>
+            Download ist möglich (neu 20210322, nicht Android)</td>
         </tr>
         <tr>
           <td><img src="../viewerimages/icons-new/bug_report.svg" alt="" class="inlineimage"><br>
@@ -72,7 +72,7 @@
           <td>StatusDebug</td>
           <td>Anzeige eines Dialogs um für eine gewisse Zeit den debug Modus im
             Server anzuschalten. Ausserdem kann ein Filter für die Log-Ausgabe
-            gesetzt werden.</td>
+            gesetzt werden. (nicht Android)</td>
         </tr>
         <tr>
           <td><img src="../viewerimages/icons-new/ic_info.svg" alt="" class="inlineimage"><br>
@@ -108,12 +108,12 @@
       zur Fehlersuche wichtig.<br>
       Die Seite aktualisiert sich ständig.</p>
     <h2><a name="serverconfig" id="serverconfig"></a>Server Konfiguration</h2>
-    <p>Neu 20210322, nicht auf Android</p>
+    <p>Neu 20210322, Android ab 202104xx - siehe <a href="../android/android.html#MuxConfig">Android-Beschreibung.</a></p>
     <p>Der Server hat eine Reihe von internen "Handlern". Die meisten können auf
       dieser Seite konfiguriert werden. Dazu nutzt man <img src="../viewerimages/icons-new/ic_edit.svg"
         alt="" class="inlineimage">neben der Status Information. Das erzeugt
       einen Dialog um die Einstellungen des Handlers anzupassen.</p>
-    <p><img src="../statuspage-edit-socket.png" alt="" class="fimage"> </p>
+    <p><img src="statuspage-edit-socket.png" alt="" class="fimage"> </p>
     <p>Für die meisten Einstellungen ist ein Hilfe Button verfügbar, der eine
       kurze Erklärung liefert. Mit dem <img src="../viewerimages/icons-new/ic_delete.svg"
         alt="" class="inlineimage">Button kann man einen Wert auf seinen Default

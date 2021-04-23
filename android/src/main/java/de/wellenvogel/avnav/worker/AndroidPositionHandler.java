@@ -48,7 +48,6 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
     private String currentProvider=LocationManager.GPS_PROVIDER;
     private long lastValidLocation=0;
     private boolean isRegistered=false;
-    private long timeOffset=0;
     private Handler handler=new Handler(Looper.getMainLooper());
 
 
@@ -60,8 +59,8 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
         super(name,ctx,queue);
         parameterDescriptions.addParams(
                 ENABLED_PARAMETER,
-                SOURCENAME_PARAMETER,
-                TIMEOFFSET_PARAMETER);
+                SOURCENAME_PARAMETER
+                );
         status.canEdit=true;
     }
 
@@ -79,9 +78,8 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
     @Override
     public void run(int startSequence) throws JSONException, IOException {
         stopped=false;
-        this.timeOffset=TIMEOFFSET_PARAMETER.fromJson(parameters);
         locationService=(LocationManager) gpsService.getSystemService(gpsService.LOCATION_SERVICE);
-        tryEnableLocation(true);
+        tryEnableLocation();
         satStatusProvider=new Thread(new Runnable() {
             @Override
             public void run() {
@@ -158,7 +156,7 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
                 RMCSentence rmc=positionToRmc(location);
                 queue.add(rmc.toSentence(),getSourceName());
             }catch(Exception e){
-                AvnLog.e("unable to log NMEA data: "+e);
+                AvnLog.e("unable to create RMC from position: "+e);
             }
 
         lastValidLocation=System.currentTimeMillis();
@@ -195,10 +193,8 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
             setStatus(WorkerStatus.Status.INACTIVE,"deregistered");
         }
     }
+
     private synchronized void tryEnableLocation(){
-        tryEnableLocation(false);
-    }
-    private synchronized void tryEnableLocation(boolean notify){
         if (stopped) return;
         AvnLog.d(LOGPRFX,"tryEnableLocation");
         if (locationService != null && locationService.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
@@ -210,8 +206,6 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
                         lastValidLocation = 0;
                         isRegistered = false;
                         setStatus(WorkerStatus.Status.ERROR, "no gps permission");
-                        if (notify) Toast.makeText(gpsService, "no gps permission",
-                                Toast.LENGTH_SHORT).show();
                         return;
                     }
                 }
@@ -235,8 +229,6 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
             lastValidLocation=0;
             isRegistered=false;
             setStatus(WorkerStatus.Status.ERROR,"no gps enabled");
-            if (notify)Toast.makeText(gpsService, "no gps ",
-                    Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -265,7 +257,7 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
     private static net.sf.marineapi.nmea.util.Time toSfTime(long timestamp){
         Calendar cal=Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         cal.setTimeInMillis(timestamp);
-        net.sf.marineapi.nmea.util.Time rt=new net.sf.marineapi.nmea.util.Time(cal.get(Calendar.HOUR_OF_DAY),cal.get(Calendar.MINUTE)+1,cal.get(Calendar.SECOND));
+        net.sf.marineapi.nmea.util.Time rt=new net.sf.marineapi.nmea.util.Time(cal.get(Calendar.HOUR_OF_DAY),cal.get(Calendar.MINUTE),cal.get(Calendar.SECOND));
         return rt;
     }
 

@@ -16,7 +16,6 @@ import android.hardware.usb.UsbManager;
 import android.location.Location;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.net.InetAddresses;
 import android.net.Uri;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
@@ -35,12 +34,8 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.Inet4Address;
 import java.net.InetAddress;
-import java.net.InterfaceAddress;
-import java.net.NetworkInterface;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -57,7 +52,6 @@ import de.wellenvogel.avnav.main.IMediaUpdater;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.mdns.MdnsWorker;
 import de.wellenvogel.avnav.mdns.Resolver;
-import de.wellenvogel.avnav.mdns.Target;
 import de.wellenvogel.avnav.settings.AudioEditTextPreference;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
@@ -110,7 +104,16 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
     private HashSet<NsdManager.DiscoveryListener> discoveryListeners=new HashSet<>();
     private NsdManager nsdManager;
     private final HashSet<NsdServiceInfo> services=new HashSet<>();
+    private final HashMap<Integer,Registration> registeredServices= new HashMap<>();
 
+    private static class Registration{
+        NsdManager.RegistrationListener listener;
+        NsdServiceInfo info;
+        Registration(NsdServiceInfo info, NsdManager.RegistrationListener listener){
+            this.listener=listener;
+            this.info=info;
+        }
+    }
     private final BroadcastReceiver usbReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context ctx, Intent intent) {
@@ -185,21 +188,21 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         if ("getAddables".equals(command)){
             List<String> names=WorkerFactory.getInstance().getKnownTypes(true,this);
             JSONArray data=new JSONArray(names);
-            return RequestHandler.getReturn(new RequestHandler.KeyValue<JSONArray>("data",data));
+            return RequestHandler.getReturn(new AvnUtil.KeyValue<JSONArray>("data",data));
         }
         if ("getAddAttributes".equals(command)){
             String typeName=AvnUtil.getMandatoryParameter(uri,"handlerName");
             try{
                 ChannelWorker w=WorkerFactory.getInstance().createWorker(typeName,this,null);
                 return RequestHandler.getReturn(
-                        new RequestHandler.KeyValue<JSONArray>("data",w.getParameterDescriptions(this))
+                        new AvnUtil.KeyValue<JSONArray>("data",w.getParameterDescriptions(this))
                 );
             }catch (WorkerFactory.WorkerNotFound e){
                 return RequestHandler.getErrorReturn("no handler of type "+typeName+" found");
             }
         }
         if ("canRestart".equals(command)){
-            return RequestHandler.getReturn(new RequestHandler.KeyValue<Boolean>("canRestart",false));
+            return RequestHandler.getReturn(new AvnUtil.KeyValue<Boolean>("canRestart",false));
         }
         int id=Integer.parseInt(AvnUtil.getMandatoryParameter(uri,"handlerId"));
         IWorker worker=findWorkerById(id);
@@ -392,7 +395,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         IWorker createWorker(GpsService ctx, NmeaQueue queue) throws IOException {
             SharedPreferences prefs=ctx.getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
             File newTrackDir=new File(AvnUtil.getWorkDir(prefs,ctx),"tracks");
-            TrackWriter rt=new TrackWriter(newTrackDir,ctx.getMediaUpdater());
+            TrackWriter rt=new TrackWriter(newTrackDir,ctx);
             return rt;
         }
     };
@@ -401,7 +404,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         IWorker createWorker(GpsService ctx, NmeaQueue queue) throws IOException {
             SharedPreferences prefs=ctx.getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
             File newTrackDir=new File(AvnUtil.getWorkDir(prefs,ctx),"tracks");
-            return new NmeaLogger(newTrackDir,queue,null);
+            return new NmeaLogger(newTrackDir,ctx,queue,null);
         }
     };
     private static final WorkerConfig WSERVER= new WorkerConfig("WebServer",5) {
@@ -419,7 +422,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
     private static final WorkerConfig WMDNS=new WorkerConfig("MDNSresolver",7) {
         @Override
         IWorker createWorker(GpsService ctx, NmeaQueue queue) throws IOException {
-            return new MdnsWorker(typeName);
+            return new MdnsWorker(typeName,ctx);
         }
     };
     private static final WorkerConfig[] INTERNAL_WORKERS ={WDECODER,WROUTER,WTRACK,WLOGGER,WSERVER,WGPS,WMDNS};
@@ -625,10 +628,11 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         }
         saveWorkerConfig(worker);
     }
-    private void stopWorkers(){
+    private void stopWorkers(boolean wait){
         for (IWorker w: workers){
             try{
-                w.stop();
+                if (wait) w.stopAndWait();
+                else w.stop();
             }catch (Throwable t){
                 AvnLog.e("unable to stop worker "+w.getStatus().toString());
             }
@@ -734,8 +738,11 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         if (! isWatchdog && isRunning) return Service.START_REDELIVER_INTENT;
         handleNotification(true,true);
         if (! isWatchdog) {
-            stopWorkers();
+            stopWorkers(true);
             handleMigration();
+        }
+        if (discoveryListeners.size() == 0) {
+            startDiscovery();
         }
         handleStartup(isWatchdog);
         if (! isWatchdog || runnable == null) {
@@ -746,9 +753,6 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         if (! receiverRegistered) {
             registerReceiver(usbReceiver, new IntentFilter(UsbManager.ACTION_USB_DEVICE_DETACHED));
             receiverRegistered=true;
-        }
-        if (discoveryListeners.size() == 0) {
-            startDiscovery();
         }
         return Service.START_REDELIVER_INTENT;
     }
@@ -812,7 +816,16 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
                     @Override
                     public void onServiceLost(NsdServiceInfo serviceInfo) {
                         synchronized (services) {
-                            services.remove(serviceInfo);
+                            ArrayList<NsdServiceInfo> toRemove=new ArrayList<>();
+                            for (NsdServiceInfo si:services){
+                                if (si.getServiceType().equals(serviceInfo.getServiceType()) &&
+                                        si.getServiceName().equals(serviceInfo.getServiceName())){
+                                    toRemove.add(si);
+                                }
+                            }
+                            for (NsdServiceInfo si:toRemove){
+                                services.remove(si);
+                            }
                         }
                     }
                 };
@@ -825,9 +838,28 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
 
     public List<String> discoveredServices(String type){
         ArrayList<String> rt=new ArrayList<>();
+        ArrayList<NsdServiceInfo> foundServices=new ArrayList<>();
         synchronized (services){
             for (NsdServiceInfo info:services){
                 if (type.equals(info.getServiceType())){
+                    foundServices.add(info);
+                }
+            }
+        }
+        synchronized (registeredServices){
+            for (NsdServiceInfo info:foundServices){
+                boolean isOwn=false;
+                for (Registration r:registeredServices.values()){
+                    try {
+                        if (r.info.getServiceName().equals(info.getServiceName())
+                                && r.info.getServiceType().equals(info.getServiceType())
+                        ) {
+                            isOwn = true;
+                            break;
+                        }
+                    }catch (Throwable t){}
+                }
+                if (! isOwn){
                     rt.add(info.getServiceName());
                 }
             }
@@ -835,11 +867,101 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         return rt;
     }
 
+    public void registerService(int workerId,String type,String name, int port){
+        if (nsdManager == null) return;
+        AvnLog.ifs("register mdns name=%s,type=%s,port=%s",name,type,port);
+        Registration old=null;
+        synchronized (registeredServices){
+            old=registeredServices.get(workerId);
+            if (old != null){
+                registeredServices.remove(workerId);
+            }
+            //we are sure that each worker regsitration can only run in one thread
+        }
+        if (old != null){
+            try{
+                unregisterService(old);
+            }catch (Throwable t){
+                AvnLog.e("error in unregisterAvahi",t);
+            }
+        }
+        final NsdServiceInfo info=new NsdServiceInfo();
+        info.setPort(port);
+        info.setServiceType(type);
+        info.setServiceName(name);
+        NsdManager.RegistrationListener listener = new NsdManager.RegistrationListener() {
+            @Override
+            public void onRegistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
+
+            }
+
+            @Override
+            public void onUnregistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
+
+            }
+
+            @Override
+            public void onServiceRegistered(NsdServiceInfo serviceInfo) {
+                AvnLog.ifs("registerd service %s",serviceInfo);
+                info.setHost(serviceInfo.getHost());
+                info.setServiceName(serviceInfo.getServiceName());//maybe the name changed due to conflict
+            }
+
+            @Override
+            public void onServiceUnregistered(NsdServiceInfo serviceInfo) {
+
+            }
+        };
+        nsdManager.registerService(info,NsdManager.PROTOCOL_DNS_SD,listener);
+        synchronized (registeredServices) {
+            registeredServices.put(workerId, new Registration(info, listener));
+        }
+    }
+
+    public NsdServiceInfo getRegisteredService(int workerId){
+        synchronized (registeredServices){
+            Registration reg=registeredServices.get(workerId);
+            if (reg == null) return null;
+            return reg.info;
+        }
+    }
+    public void unregisterService(int id){
+        if (nsdManager == null) return;
+        Registration reg=null;
+        synchronized (registeredServices){
+            reg=registeredServices.get(id);
+            registeredServices.remove(id);
+        }
+        if (reg == null) return;
+        try {
+            nsdManager.unregisterService(reg.listener);
+        }catch (Throwable t){}
+    }
+
+    private void unregisterService(Registration reg){
+        if (nsdManager == null) return;
+        nsdManager.unregisterService(reg.listener);
+    }
+    private void unregisterAllServices(){
+        ArrayList<Registration> registrations=null;
+        synchronized (registeredServices){
+            registrations=new ArrayList<>(registeredServices.values());
+            registeredServices.clear();
+        }
+        for (Registration r:registrations){
+            try{
+                unregisterService(r);
+            }catch(Throwable t){}
+        }
+    }
+
     public void restart(){
-        stopWorkers();
+        stopWorkers(true);
+        stopDiscovery();
         synchronized (services){
             services.clear();
         }
+        unregisterAllServices();
         startDiscovery();
         handleStartup(false);
     }
@@ -1018,26 +1140,13 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         mobAlarm=true;
     }
 
-    public void resolveMdns(Target.HostTarget target, Resolver.Callback<Target.HostTarget> callback,boolean force) throws IOException {
-        MdnsWorker mdns=getMdnsResolver();
-        if (mdns == null) return;
-        mdns.resolveMdns(target,callback,force);
-    }
-
-    public void resolveMdns(Target.ServiceTarget target, Resolver.Callback<Target.ServiceTarget> callback,boolean force) throws IOException {
-        MdnsWorker mdns=getMdnsResolver();
-        if (mdns == null) return;
-        mdns.resolveMdns(target,callback,force);
-    }
-
-
 
     /**
      * will be called whe we intend to really stop
      */
     private void handleStop() {
         AvnLog.i(LOGPRFX,"handle stop");
-        stopWorkers();
+        stopWorkers(false);
         if (requestHandler != null) requestHandler.stop();
         requestHandler=null;
         isRunning = false;
@@ -1328,15 +1437,6 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             rt.put(w.getJsonStatus());
         }
         return rt;
-    }
-
-    public void mainGoBack(){
-        MainActivityActions main=mBinder.getCallback();
-        if (main != null) main.mainGoBack();
-    }
-    public void mainShowSettings(boolean checkInitially){
-        MainActivityActions main=mBinder.getCallback();
-        if (main != null) main.showSettings(checkInitially);
     }
 
 

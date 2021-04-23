@@ -5,13 +5,8 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.security.Key;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 
-import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.NmeaQueue;
 
@@ -41,10 +36,9 @@ public class TcpServiceReader extends SingleConnectionHandler {
             };
         }
     }
-
+    static final String NMEA_SERVICE_TYPE ="_nmea-0183._tcp.";
     static Description[] SERVICES = new Description[]{
-            new Description("_nmea-0183._tcp.", "SignalK NMEA0183"),
-            new Description("_avnav-nmea-0183._tcp.", "AvNav NMEA0183")
+            new Description(NMEA_SERVICE_TYPE, "NMEA0183 service")
     };
 
     private EditableParameter.StringListParameter servicesParameter=
@@ -57,18 +51,11 @@ public class TcpServiceReader extends SingleConnectionHandler {
         servicesParameter.listBuilder= new EditableParameter.ListBuilder<String>() {
             @Override
             public List<String> buildList(EditableParameter.StringListParameter param) {
-                List<String> rt=gpsService.discoveredServices(serviceType);
-                return filterByClaims(CLAIM_SERVICE, rt, true, new Comparator<String>() {
-                    @Override
-                    public int compare(String o1, String o2) {
-                        o2=getClaimName(o2);
-                        if (o1 == null) return (o2==null)?0:1;
-                        return o1.equals(o2)?0:1;
-                    }
-                });
+                return gpsService.discoveredServices(serviceType);
             }
         };
-        parameterDescriptions.addParams(servicesParameter,
+        parameterDescriptions.insertParams(servicesParameter);
+        parameterDescriptions.addParams(
                 WRITE_TIMEOUT_PARAMETER,
                 CONNECT_TIMEOUT_PARAMETER,
                 READTIMEOUT_CLOSE_PARAMETER);
@@ -80,13 +67,11 @@ public class TcpServiceReader extends SingleConnectionHandler {
     @Override
     protected void checkParameters(JSONObject newParam) throws JSONException, IOException {
         super.checkParameters(newParam);
-        checkClaim(CLAIM_SERVICE,getClaimName(servicesParameter.fromJson(newParam)),true);
     }
 
     @Override
     public void run(int startSequence) throws JSONException, IOException {
         String target=servicesParameter.fromJson(parameters);
-        addClaim(CLAIM_SERVICE,getClaimName(target),true);
         while (! shouldStop(startSequence)) {
             InetSocketAddress address=resolveService(serviceType,target,startSequence,true);
             if (address == null){

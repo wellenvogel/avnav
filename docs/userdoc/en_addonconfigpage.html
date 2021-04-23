@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+
     <title>AvNav Configuration User Apps</title>
     <link href="../styles.css" rel="stylesheet" type="text/css">
   </head>
   <body data-order="2100">
     <h1>Configuration of User Apps</h1>
-    <p>From the <a href="settingspage.html">settings page</a> you will get here
-      using the <img src="../viewerimages/icons-new/apps.svg" alt="" class="inlineimage">button.</p>
-    <p>A user app is an external or internal HTML page that will be shown at the
+    <p>You will get here by clicking the <img src="../viewerimages/icons-new/apps.svg" alt="" class="inlineimage">button on the <a href="settingspage.html">settings page</a> </p>
+    <p>A user app is an external or internal HTML page to be shown at the
       <a href="addonpage.html">user app page</a> in an iframe.</p>
-    <p><img src="../addonpage.png" alt="" class="fimage"></p>
+    <p><img src="addonpage.png" alt="" class="fimage"></p>
     <p>All configured user apps will be shown.</p>
     <h2>Buttons</h2>
     <table style="width: 100%" border="1">
@@ -46,44 +46,37 @@
         </tr>
       </tbody>
     </table>
-    <p>For each configuration the url and an optional title will be shown.
-      Additionally there will be a hint where this configuration has been
-      created (plugin in the picture). If the configuration currently does not
-      work (e.g. missing icon) "invalid" will be shown. By clicking on the
-      configuration you can modify it. Clicking on <img src="../viewerimages/icons-new/visibility.svg"
-        alt="" class="inlineimage"> will move you to the <a href="addonpage.html">user
-        app page</a> an the selected configuration will be shown there.<br>
-      When adding or editing a configuration a dialog will be shown.</p>
-    <p><img src="../addonpage-dialog.png" alt="" class="fimage"></p>
-    <p>You can select whether you would like to use an internal or external HTML
-      page (check box), in th epicture an internal page is selected. If you
-      select an external page you need to provide the complete url in the form
-      http(s)://.... If the page is located at the same server like AvNav (like
+    <p>For each configuration the url and an optional title are displayed.
+      Additionally the origin of this configuration is indicated (plugin in the screenshot). For defunct configurations (e.g. missing icon) "invalid" will be shown. By clicking the
+      configuration you can modify it. Clicking on <img src="../viewerimages/icons-new/visibility.svg" alt="" class="inlineimage"> will take you to the <a href="addonpage.html">user
+        app page</a> and the selected configuration will be displayed there.<br>
+      When adding or editing a configuration a dialog will open.</p>
+    <p><img src="addonpage-dialog.png" alt="" class="fimage"></p>
+    <p>You can select to use either an internal or external HTML
+      page (check box). In the screenshot an internal page is selected. If you
+      select an external page you need to provide the complete url as
+      http(s)://.... If the page lives on the same server as AvNav (like
       the signalk Web UI) you should replace the hostname with $HOST in your
       url. AvNav will automatically use the correct ip address in this case.</p>
-    <p><img src="../addonpage-dialog-extern.png" alt="" class="fimage">Internal
-      html pages need to be uploaded beforehand into the <a href="downloadpage.html#userfiles">user
-        file directory</a>.</p>
-    <p>For each of the user apps you need an icon file (svg, png, jpeg). The
-      alos have to be uploaded via the <a href="downloadpage.html">Files/Download</a>
-      page either to the user files or to the images category.<br>
-      After selecting the url and the icon you can provide a title. If you leave
-      the title empty there will be no header at the page.<br>
+    <p><img src="addonpage-dialog-extern.png" alt="" class="fimage"><br></p>
+<p>Internal HTML pages must be uploaded to the <a href="downloadpage.html#userfiles">user
+        file directory</a> prior to defining them as user app.</p>
+    <p>For each user app an icon file (svg, png, jpeg) is required. This
+      also has to be uploaded via the <a href="downloadpage.html">Files/Download</a>
+      page, either to the user files or to the images category.<br>
+      After selecting the url and the icon you can provide a title. An empty
+      title empty will result in no caption at the page.<br>
       After saving you can directly test it using the <img src="../viewerimages/icons-new/visibility.svg"
         alt="" class="inlineimage"> button.</p>
-    <p><img src="../userapps-homepage.png" alt="" class="fimage">If you used an
-      internal url and later in delete the HTML file on the <a href="downloadpage.html#userfiles">files/download
-        page</a> the user app configuration will be removed too.<br>
-      If a used icon file will be deleted the user app configuration will remain
-      but will get invalid. Invalid configurations will not be shown at the <a
-        href="addonpage.html">user app page.</a><br>
-      But you still can change the configuration on this page an make it valid
+    <p><img src="userapps-homepage.png" alt="" class="fimage"><br></p>
+<p>Deleting a HTML file on the <a href="downloadpage.html#userfiles">files/download
+        page</a> will also remove any user app configuration holding an internal URL referring to it.<br>
+      If a icon file is deleted, the user app configuration referencing it will remain, however it will turn invalid. Invalid configurations will not be displayed at the <a href="addonpage.html">user app page.</a><br>
+      But you still can modify the configuration on this page to make it valid
       again.</p>
-    <p>If a user app configuration is store, the server will write back it's
-      avnav_server.xml file. To avoid situations that AvNav cannot start the
-      next time because something went wrong during this writing back there is
-      an avnav_server.xml.ok that is written on every successful start of AvNav.<br>
-      If AvNav later on is unable to start due to a corrupted avnav_server.xml
-      if will read this fallback file instead.</p>
-  </body>
-</html>
+    <p>Whenever a user app configuration is stored, the server updates its
+      avnav_server.xml file. To avoid situations of AvNav not starting next time (because something went wrong during this writing back), an avnav_server.xml.ok file is written on every successful start of AvNav.<br>
+      If AvNav is unable to start at a later point (due to a corrupted avnav_server.xml) this fallback file will be read instead.</p>
+
+
+</body></html>

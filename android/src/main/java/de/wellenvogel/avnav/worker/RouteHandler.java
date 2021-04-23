@@ -325,10 +325,10 @@ public class RouteHandler extends DirectoryRequestHandler  {
     private NmeaQueue queue;
     static EditableParameter.BooleanParameter COMPUTE_RMB=
             new EditableParameter.BooleanParameter("computeRMB", R.string.labelSettingsComputeRMB,true);
-    public RouteHandler(File routedir,UpdateReceiver updater,NmeaQueue queue) throws IOException {
-        super(RequestHandler.TYPE_ROUTE,routedir,"route",null);
+    public RouteHandler(File routedir,GpsService ctx,NmeaQueue queue) throws IOException {
+        super(RequestHandler.TYPE_ROUTE,ctx,routedir,"route",null);
         this.routedir=routedir;
-        updateReceiver=updater;
+        updateReceiver=ctx;
         parameterDescriptions.addParams(COMPUTE_RMB);
         status.canEdit=true;
         this.queue=queue;

@@ -24,8 +24,8 @@ public class NmeaLogger extends Worker {
     private IMediaUpdater updater;
 
 
-    NmeaLogger(File trackdir, NmeaQueue queue,IMediaUpdater updater){
-        super("Logger");
+    NmeaLogger(File trackdir,GpsService ctx,NmeaQueue queue,IMediaUpdater updater){
+        super("Logger",ctx);
         this.trackdir=trackdir;
         this.queue=queue;
         this.updater=updater;

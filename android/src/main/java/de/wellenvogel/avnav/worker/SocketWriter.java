@@ -1,6 +1,6 @@
 package de.wellenvogel.avnav.worker;
 
-import android.content.Context;
+import android.net.nsd.NsdServiceInfo;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -24,6 +24,9 @@ import de.wellenvogel.avnav.util.NmeaQueue;
  * Created by andreas on 25.12.14.
  */
 public class SocketWriter extends ChannelWorker {
+    private final EditableParameter.StringParameter mdnsNameParameter;
+    private final EditableParameter.BooleanParameter mdnsEnableParameter;
+
     static class Creator extends WorkerFactory.Creator{
         @Override
         ChannelWorker create(String name, GpsService ctx, NmeaQueue queue) throws JSONException {
@@ -70,16 +73,22 @@ public class SocketWriter extends ChannelWorker {
 
     private SocketWriter(String name, GpsService ctx, NmeaQueue queue) throws JSONException {
         super(name,ctx,queue);
+        EditableParameter.StringParameter filter=FILTER_PARAM.clone("");
+        filter.setConditions(new AvnUtil.KeyValue<Boolean>(READ_DATA_PARAMETER.name,true));
+        mdnsNameParameter=MDNS_NAME.clone("avnav-android");
+        mdnsEnableParameter =MDNS_ENABLED.clone(false);
         parameterDescriptions.addParams(
-                SOURCENAME_PARAMETER,
-                ENABLED_PARAMETER,
                 PORT_PARAMETER,
+                ENABLED_PARAMETER,
+                SOURCENAME_PARAMETER,
                 EXTERNAL_ACCESS,
                 WRITE_TIMEOUT_PARAMETER,
                 SEND_FILTER_PARAM,
                 BLACKLIST_PARAMETER,
                 READ_DATA_PARAMETER,
-                FILTER_PARAM
+                filter,
+                mdnsEnableParameter,
+                mdnsNameParameter
                 );
         status.canEdit=true;
         status.canDelete=true;
@@ -139,6 +148,15 @@ public class SocketWriter extends ChannelWorker {
     protected void checkParameters(JSONObject newParam) throws JSONException, IOException {
         Integer port=PORT_PARAMETER.fromJson(newParam);
         checkClaim(CLAIM_TCPPORT,port.toString(),true);
+        if ((newParam.has(mdnsEnableParameter.name) && mdnsEnableParameter.fromJson(newParam))
+        || (!newParam.has(mdnsEnableParameter.name) && mdnsEnableParameter.fromJson(parameters))){
+            String mdnsName=null;
+            if (newParam.has(mdnsNameParameter.name)) mdnsName=mdnsNameParameter.fromJson(newParam);
+            else mdnsName=mdnsNameParameter.fromJson(parameters);
+            if (mdnsName == null || mdnsName.isEmpty())
+                throw new JSONException(MDNS_NAME.name+" cannot be empty when "+MDNS_ENABLED.name+" is set");
+            checkClaim(CLAIM_SERVICE, TcpServiceReader.NMEA_SERVICE_TYPE+"."+mdnsName, true);
+        }
     }
 
     @Override
@@ -156,6 +174,9 @@ public class SocketWriter extends ChannelWorker {
         stopClients();
         Integer port = PORT_PARAMETER.fromJson(parameters);
         addClaim(CLAIM_TCPPORT,port.toString(),true);
+        if (mdnsEnableParameter.fromJson(parameters)) {
+            addClaim(CLAIM_SERVICE, TcpServiceReader.NMEA_SERVICE_TYPE+"."+mdnsNameParameter.fromJson(parameters), true);
+        }
         boolean allowExternal=EXTERNAL_ACCESS.fromJson(parameters);
         if (serversocket != null){
             try{
@@ -168,6 +189,10 @@ public class SocketWriter extends ChannelWorker {
         else {
             InetAddress local= AvnUtil.getLocalHost();
             serversocket.bind(new InetSocketAddress(local.getHostAddress(),port));
+        }
+        if (mdnsEnableParameter.fromJson(parameters)) {
+            gpsService.registerService(getId(),TcpServiceReader.NMEA_SERVICE_TYPE,
+                    mdnsNameParameter.fromJson(parameters),port);
         }
         setStatus(WorkerStatus.Status.NMEA,"listening on "+port+", external access "+allowExternal);
         while (! shouldStop(startSequence)){
@@ -231,6 +256,13 @@ public class SocketWriter extends ChannelWorker {
                 clients.remove(rm);
                 status.unsetChildStatus(rm);
             }
+        }
+        NsdServiceInfo service=gpsService.getRegisteredService(getId());
+        if (service == null){
+            status.unsetChildStatus("mdns");
+        }
+        else{
+            status.setChildStatus("mdns", WorkerStatus.Status.NMEA,service.getServiceName());
         }
     }
 }

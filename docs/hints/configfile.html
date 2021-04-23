@@ -7,36 +7,36 @@
   </head>
   <body data-order="6600">
     <h1>AvNav Server Konfiguration</h1>
-    <p>== nicht für <a href="../android.html#Settings">Android</a> ==</p>
+    <p>== nicht für <a href="../android/android.html#Settings">Android</a> ==</p>
     <h2>Einführung</h2>
-    <p>Der AvNav server liest beim start seine Konfiguration aus einer xml Datei
+    <p>Der AvNav server liest beim Start seine Konfiguration aus einer xml Datei
       - avnav_server.xml.<br>
       Diese Datei befindet sich normalerweise unter /home/pi/avnav/data auf dem
-      raspberry, sonst unter $HOME/avnav - siehe <a href="../install.html">Installation</a>.</p>
+      Raspberry, sonst unter $HOME/avnav - siehe <a href="../install.html">Installation</a>.</p>
     <p>Wenn diese Datei beim ersten Start noch nicht existiert, wird sie aus
-      einem Template erzeugt - passend für den <a href="https://github.com/wellenvogel/avnav/blob/master/raspberry/avnav_server.xml">raspberry</a>
+      einem Template erzeugt - passend für den <a href="https://github.com/wellenvogel/avnav/blob/master/raspberry/avnav_server.xml">Raspberry</a>
       oder <a href="https://github.com/wellenvogel/avnav/blob/master/linux/avnav_template.xml">andere
         Systeme</a>.<br>
-      Bei updates der AvNav Software wird diese Datei im Allgemeinen nicht
-      geändert. Es kann aber notwendig sein, das für neue Funktionen neue
-      Einträge nötig werden. Dann wird in den <a href="../release.html">Release
-        Notes</a> darauf hingewiesen.</p>
+      Bei Updates der AvNav Software wird diese Datei im Allgemeinen nicht
+      geändert. Es kann aber sein, dass für neue Funktionen neue Einträge nötig
+      werden. Dann wird in den <a href="../release.html">Release Notes</a>
+      darauf hingewiesen.</p>
     <p>Mit jedem erfolgreichen Start (ab Version 20200325) schreibt AvNav eine
       Kopie diese Datei mit der Endung .ok. Falls beim nächsten Start das Parsen
       der xml Datei fehlschlägt, liest er stattdessen die .ok Datei. Diese
-      Funktion soll verhindern, das nach einer Änderung, die AvNav in manchen
+      Funktion soll verhindern, dass nach einer Änderung, die AvNav in manchen
       Situation selbst vornimmt, der nächste Start ggf. scheitert.</p>
-    <p>Beginnend ab Version 20210322 <b>es ist nocht mehr nötig, die Datei "per
+    <p>Beginnend ab Version 20210322 <b>es ist nicht mehr nötig, die Datei "per
         Hand" zu bearbeiten</b>. Stattdessen sollte AvNav selbst (<a href="../userdoc/statuspage.html">Server/Status
-        Seite</a>) für die Berabietung der meisten Parameter genutzt werden. Das
+        Seite</a>) für die Bearbeitung der meisten Parameter genutzt werden. Das
       vermeidet auch die Notwendigkeit eines Restarts nach Änderungen.<br>
     </p>
-    <p>Wenn parameter geändert werden müssen, die nicht direkt bearbeitbar sind,
+    <p>Wenn Parameter geändert werden müssen, die nicht direkt bearbeitbar sind,
       sollte das <a href="https://github.com/wellenvogel/avnav-update-plugin">avnav-update-plugin</a>
       genutzt werden, um die Datei direkt im Browser zu bearbeiten.<br>
       Die Hinweise hier darunter sind also nur noch eine Zusatzinformation.</p>
     <p>Wenn man Änderungen an der Konfiguration vornimmt, muss AvNav danach neu
-      gestartet werden. Wenn AvNav als Systemdienst läuft macht man das mit dem
+      gestartet werden. Wenn AvNav als Systemdienst läuft, macht man das mit dem
       Kommando</p>
     <div class="code">sudo systemctl restart avnav
     </div>
@@ -45,7 +45,7 @@
       von der Kommandozeile zu starten, um zu sehen, ob es schwerwiegende Fehler
       gibt. Die Kommandofolge ist dann</p>
     <div class="code">sudo systemctl stop avnav<br>avnav -e<br>^C<br>sudo systemctl start avnav</div>
-    <p> Die option -e erst ab Version 20200325. Sie verhindert, das im
+    <p> Die option -e gilt erst ab Version 20200325. Sie verhindert, dass im
       Fehlerfall die avnav_server.xml.ok geladen wird. ^C bricht das laufende
       AvNav wieder ab.</p>
     <h2>Inhalt</h2>
@@ -76,7 +76,7 @@
         <tr>
           <td>name</td>
           <td>Name eines Input oder Output Kanals. Dieser wird auf der
-            Status-Seite angezeigt und kann auch im parameter <a href="#blackList">blackList</a>
+            Status-Seite angezeigt und kann auch im Parameter <a href="#blackList">blackList</a>
             für Filterungen genutzt werden</td>
           <td>nmea0183tosignalk</td>
         </tr>
@@ -94,7 +94,7 @@
         </tr>
         <tr>
           <td>readFilter</td>
-          <td>Für kombinierte Reader/Writer ein filter für die Eingangsseite.
+          <td>Für kombinierte Reader/Writer ein Filter für die Eingangsseite.
             Siehe <a href="#filter">filter</a></td>
           <td><br>
           </td>
@@ -109,7 +109,7 @@
     </table>
     <p><br>
     </p>
-    <p>Im Folgenden sind die wichtigsten Bestandteile mit ihren Parameterns
+    <p>Im Folgenden sind die wichtigsten Bestandteile mit ihren Parametern
       aufgeführt. Falls Parameter hier nicht beschrieben sind, aber ggf. in
       einem Template auftauchen, sollte sie so belassen werden, wie sie dort
       sind.<br>
@@ -130,7 +130,7 @@
         </tr>
         <tr>
           <td>logfile</td>
-          <td>Name des logfiles.</td>
+          <td>Name der Logdatei.</td>
           <td>&lt;datadir&gt;/log/avnav.log</td>
         </tr>
         <tr>
@@ -169,7 +169,7 @@
     <p>Diese Einheit hat keine Parameter mehr. In früheren Versionen wurde hier
       der gpsd für die Dekodierung genutzt, daher sind u.U. noch Parameter zu
       finden, die sich darauf beziehen. In neueren Versionen sollte der Eintrag
-      so geändert werden, das useGpsd="false" enthalten ist.</p>
+      so geändert werden, dass useGpsd="false" enthalten ist.</p>
     <h3>AVNHttpServer</h3>
     <p>Der interne HTTP server. Kategorie 1 (einmal, erforderlich).</p>
     <p>Neben den Parametern für AVNHttpServer gibt es einige Unter-Einträge, die
@@ -320,7 +320,7 @@
         </tr>
         <tr>
           <td>baud</td>
-          <td>Baudrate. Wenn minBaud auch angegeben ist, die maximale Baudrate
+          <td>Baudrate. Wenn minBaud auch angegeben ist, die maximale Baudrate,
             die für das automatische Feststellen der Baudrate genutzt wird</td>
           <td>4800</td>
         </tr>
@@ -364,14 +364,14 @@
         </tr>
         <tr>
           <td>numerrors</td>
-          <td>Anzahl der Fehler, nach der Das Gerät geschlossen und neu geöffnet
+          <td>Anzahl der Fehler, nach der das Gerät geschlossen und neu geöffnet
             wird.</td>
           <td>20</td>
         </tr>
         <tr>
           <td>autobaudtime</td>
-          <td>Zeit in s, die versucht wird ein Newline in den Daten zu erkennen
-            während der automatischen Baudraten-Erkennung</td>
+          <td>Zeit in s, die versucht wird, ein Newline in den Daten zu erkennen
+            (während der automatischen Baudraten-Erkennung)</td>
           <td>5</td>
         </tr>
         <tr>
@@ -431,10 +431,10 @@
     <h3>AVNUsbSerialReader</h3>
     <p>Behandelt über USB angeschlossene serielle Geräte. Kategorie 3(einmal,
       optional).<br>
-      Dieser Worker sucht alle über USB verbundenen Geräte und für solche mit
-      einem seriellen Profil versucht er diese zu öffnen, automatische die
-      Baudrate einzustellen und dann NMEA Daten zu lesen. Damit werden solche
-      Geräte normalerweise komplett automatisch von AvNav erkannt.<br>
+      Dieser Worker sucht alle über USB verbundenen Geräte. Solche mit einem
+      seriellen Profil versucht er zu öffnen, automatische die Baudrate
+      einzustellen und dann NMEA Daten zu lesen. Damit werden solche Geräte
+      normalerweise komplett automatisch von AvNav erkannt.<br>
       Man kann für einzelne Geräte Regeln definieren, um sie speziell zu
       behandeln. Als Identifikation für ein Gerät wird dabei eine ID genutzt,
       die die enstprechende USB Buchse identifiziert. Mann kann diese ID am
@@ -546,7 +546,7 @@
         </tr>
         <tr>
           <td>minTime</td>
-          <td>wenn gesetzt: Wartezeit in s bevore ein weiterer Datensatz
+          <td>wenn gesetzt: Wartezeit in s bevor ein weiterer Datensatz
             empfangen wird. Hiermit kann u.U. die Datenrate begrenzt werden.</td>
           <td>0</td>
         </tr>
@@ -645,8 +645,8 @@
         </tr>
         <tr>
           <td>readFilter</td>
-          <td>falls auch gelsen wird, NMEA <a href="#filter">filter</a> für die
-            Eingangsrichtung</td>
+          <td>falls auch gelesen wird, NMEA <a href="#filter">filter</a> für
+            die Eingangsrichtung</td>
           <td><br>
           </td>
         </tr>
@@ -666,7 +666,7 @@
       </tbody>
     </table>
     <h3>AVNSocketReader</h3>
-    <p>Ein Eingang, der sich mit einem TCP server verbindet und von dort Daten
+    <p>Ein Eingang, der sich mit einem TCP Server verbindet und von dort Daten
       liest (TCP client). Kategorie 3 (mehrfach, optional)</p>
     <table style="width: 100%" border="1">
       <tbody>
@@ -682,7 +682,7 @@
         </tr>
         <tr>
           <td>port</td>
-          <td>TCP Port zu dem eine Verbiundung aufgebaut wird</td>
+          <td>TCP Port zu dem eine Verbindung aufgebaut wird</td>
           <td><br>
           </td>
         </tr>
@@ -705,13 +705,81 @@
         <tr>
           <td>filter</td>
           <td><a href="#filter">filter</a> für NMEA Daten</td>
-          <td><br>
+          <td>leer<br>
           </td>
+        </tr>
+        <tr>
+          <td>writeOut</td>
+          <td>sende NMEA Daten auf dieser Verbindung</td>
+          <td>aus</td>
+        </tr>
+        <tr>
+          <td>writeFilter</td>
+          <td><a href="#filter">Filter</a> für gesendete NMEA Daten</td>
+          <td>leer</td>
+        </tr>
+        <tr>
+          <td>blackList</td>
+          <td>, separierte Liste von Source-Namen, deren Daten nicht gesendet
+            werden</td>
+          <td>leer</td>
         </tr>
       </tbody>
     </table>
-    <p><br>
-    </p>
+    <h3>AVNNmea0183ServiceReader</h3>
+    <p>Dieser handler ist dem AVNSocketReader sehr ähnlich. Aber anstelle der
+      Konfiguration von host und port wird hier der Name des Services
+      konfiguriert. AvNav sucht im Netz nach (MDNS/Bonjour/Avahi) Services vom
+      Typ_nmea-0183._tcp . Wenn der Eintrag über die Web Oberfläche erfolgt,
+      bietet AvNav die Liste der gefundenen Services zur Auswahl an. MIt diesem
+      Handler kann eine Verbindung auch dann wieder aufgebaut werden, wenn sich
+      z.B. die IP Adressen ändern.</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Description</td>
+          <td>default/template</td>
+        </tr>
+        <tr>
+          <td>serviceName</td>
+          <td>Der Name des Services (AvNav bietet eine Liste)</td>
+          <td>--</td>
+        </tr>
+        <tr>
+          <td>timeout</td>
+          <td>Verbindungstimeout in Sekunden</td>
+          <td>10</td>
+        </tr>
+        <tr>
+          <td>minTime</td>
+          <td>minimale Zeit zwischen 2 empfangenen Nachrichten.</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td>filter</td>
+          <td><a href="#filter">Filter</a> für NMEA Daten</td>
+          <td>leer</td>
+        </tr>
+        <tr>
+          <td>writeOut</td>
+          <td>sende NMEA Daten auf dieser Verbindung</td>
+          <td>aus</td>
+        </tr>
+        <tr>
+          <td>writeFilter</td>
+          <td><a href="#filter">Filter</a> für gesendete NMEA Daten</td>
+          <td>leer</td>
+        </tr>
+        <tr>
+          <td>blackList</td>
+          <td>, separierte Liste von Source-Namen, deren Daten nicht gesendet
+            werden</td>
+          <td>leer</td>
+        </tr>
+      </tbody>
+    </table>
+    <p> </p>
     <h3>AVNBME280Reader</h3>
     <p>Reader für BME280 per I2C. Kategorie 3 (optional)<br>
       Schreibt MDA und XDR Datensätze.</p>
@@ -853,8 +921,8 @@
       </tbody>
     </table>
     <h3>AVNRouter</h3>
-    <p>Verwalten von Routing Daten (Wegepunkte, Routen, Ankeralarm). Berechnung
-      der AP Daten. Kategorie 1(einmal, erforderlich).</p>
+    <p>Verwalten von Routing Daten (Wegpunkte, Routen, Ankeralarm). Berechnung
+      der AP Daten. Kategorie 1 (einmal, erforderlich).</p>
     <table style="width: 100%" border="1">
       <tbody>
         <tr>
@@ -879,7 +947,7 @@
         </tr>
         <tr>
           <td>computeRMB</td>
-          <td>berechne einen RMB Datensatz wenn ein Wegepunkt aktiv ist</td>
+          <td>berechne einen RMB Datensatz wenn ein Wegpunkt aktiv ist</td>
           <td>true</td>
         </tr>
         <tr>
@@ -901,7 +969,7 @@
         </tr>
         <tr>
           <td>maxfiles</td>
-          <td>Anzahl der Dateien (1 pro Tag), die aufgeoben werden</td>
+          <td>Anzahl der Dateien (1 pro Tag), die aufgehoben werden</td>
           <td>100</td>
         </tr>
         <tr>
@@ -911,7 +979,7 @@
         </tr>
         <tr>
           <td>interval</td>
-          <td>Minimale Zeit in s bevor ein satz des gleichen Types erneut
+          <td>Minimale Zeit in s bevor ein Satz des gleichen Typs erneut
             geschrieben wird</td>
           <td>5</td>
         </tr>
@@ -939,7 +1007,7 @@
         </tr>
         <tr>
           <td>waittime</td>
-          <td>Zeit in s die nach dem Finden einer Datei im Import-Verzeichnis
+          <td>Zeit in s, die nach dem Finden einer Datei im Import-Verzeichnis
             gewartet wird, bevor der Konverter startet</td>
           <td>30</td>
         </tr>
@@ -958,7 +1026,7 @@
       </tbody>
     </table>
     <h3>AVNWpaHandler</h3>
-    <p>Konfiguration von externen WLAN Verbindungen. Kategorie3 (einmalig,
+    <p>Konfiguration von externen WLAN Verbindungen. Kategorie 3 (einmalig,
       optional)</p>
     <table style="width: 100%" border="1">
       <tbody>
@@ -979,7 +1047,7 @@
         </tr>
         <tr>
           <td>firewallCommand</td>
-          <td>wenn konfiguriert kann damit der externe Zugriff über ein WLAN
+          <td>wenn konfiguriert, kann damit der externe Zugriff über ein WLAN
             freigeschaltet werden</td>
           <td>sudo -n $BASEDIR/../raspberry/iptables-ext.sh wlan-av1</td>
         </tr>
@@ -994,7 +1062,7 @@
       </tbody>
     </table>
     <h3>AVNCommandHandler</h3>
-    <p>Ausführen von Kommandos, u.a. für Alarme. Kategorie2 (einmalig,nicht
+    <p>Ausführen von Kommandos, u.a. für Alarme. Kategorie 2 (einmalig, nicht
       notwendig).</p>
     <p>Der AVNCommandHandler selbst hat keine Parameter. Es können jedoch
       verschiedene Kommandos konfiguriert werden, die dann jeweils per Name
@@ -1040,22 +1108,22 @@
 	&lt;Alarm name="mob" command="sound" parameter="$BASEDIR/../sounds/anchorAlarm.mp3" repeat="2"/&gt;<br>&lt;/AVNAlarmHandler&gt;
     </div>
     <p>AVNAlarmHandler hat einen Parameter: stopAlarmPin. Wenn dieser gesetzt
-      wird (die Pin-Nummer - mode "Board" , nur Raspberry) kann ein Alarm mit
-      einem L signal an diesem GPIO Pin abgeschaltet werden.<br>
+      wird (die Pin-Nummer - mode "Board", nur Raspberry) kann ein Alarm mit
+      einem L Signal an diesem GPIO Pin abgeschaltet werden.<br>
       Die bei den Alarmen gesetzten Parameter werden auch gleichzeitig als die
       Sounds für die Alarme in der WebApp genutzt.</p>
     <h3><a name="plugins" id="plugins"></a>AVNPluginHandler</h3>
     <p>Management von plugins. Kategorie 2 (einmalig, optional).<br>
-      Der AVNPluginHandler verwaltet <a href="plugins.html">plugins</a>, die in
-      verschiedenen Verzeichnissen installiert werden können.Es gibt 3
-      Verzeichnisse in denen plugins gesucht werden:</p>
+      Der AVNPluginHandler verwaltet <a href="plugins.html">Plugins</a>, die in
+      verschiedenen Verzeichnissen installiert werden können. Es gibt 3
+      Verzeichnisse in denen Plugins gesucht werden:</p>
     <ul>
       <li>builtin: /usr/lib/avnav/server/plugins</li>
       <li>system: /user/lib/avnav/plugins</li>
       <li>user: /home/pi/avnav/data/plugins</li>
     </ul>
     <p>Neben den Parametern für den Plugin Handler selbst können die jeweiligen
-      plugins Parameter erwarten. Der Name für das plugin ergibt sich dabei aus
+      Plugins Parameter erwarten. Der Name für das Plugin ergibt sich dabei aus
       der Kategorie und dem plugin Verzeichnis. Beispiel:</p>
     <div class="code">&lt;AVNPluginHandler&gt;
         &lt;builtin-signalk enabled="true"/&gt;
@@ -1071,12 +1139,12 @@
         </tr>
         <tr>
           <td>builtinDir</td>
-          <td>Verzeichnis für eingebaute plugins, nicht änderbar</td>
+          <td>Verzeichnis für eingebaute Plugins, nicht änderbar</td>
           <td>/usr/lib/avnav/server/plugins</td>
         </tr>
         <tr>
           <td>systemDir</td>
-          <td>Verzeichnis für plugins, die als separate Pakete installiert
+          <td>Verzeichnis für Plugins, die als separate Pakete installiert
             werden</td>
           <td>/usr/lib/avnav/plugins</td>
         </tr>
@@ -1097,7 +1165,7 @@
         </tr>
         <tr>
           <td>enabled</td>
-          <td>Nur wenn auf true ist das plugin aktiv</td>
+          <td>Nur wenn auf true, ist das Plugin aktiv</td>
           <td>false</td>
         </tr>
         <tr>
@@ -1122,7 +1190,7 @@
         </tr>
         <tr>
           <td>enabled</td>
-          <td>Nur wenn auf true ist das plugin aktiv</td>
+          <td>Nur wenn auf true, ist das Plugin aktiv</td>
           <td>false</td>
         </tr>
         <tr>
@@ -1144,24 +1212,24 @@
         <tr>
           <td>autoSendRMC</td>
           <td>falls für diese Zeit in Sekunden kein RMC im NMEA-Datenstrom
-            gesehen wird und gültige Positionsdaten + Zeit von canboat vorhanden
-            sind: sende RMC (ist wichtig für Datum/Zeit auf NMEA0183)</td>
+            gesehen wird, aber gültige Positionsdaten + Zeit von canboat
+            vorhanden sind: sende RMC (ist wichtig für Datum/Zeit auf NMEA0183)</td>
           <td>0 (aus)</td>
         </tr>
         <tr>
           <td>sourceName</td>
-          <td>Kanalname der für RMC genutzt wird</td>
+          <td>Kanalname, der für RMC genutzt wird</td>
           <td>plugin-Name</td>
         </tr>
         <tr>
           <td>timeInterval</td>
-          <td>minimale Zeit zwischen 2 NMEA2000 Zeit Werten bevor diese
+          <td>minimale Zeit zwischen 2 NMEA2000 Zeit Werten, bevor diese
             gespeichert werden (Sekunden)</td>
           <td>0.5</td>
         </tr>
         <tr>
           <td>timePGNs</td>
-          <td>PGNs die für das Setzen der Zeit genutzt werden</td>
+          <td>PGNs, die für das Setzen der Zeit genutzt werden</td>
           <td>126992,129029</td>
         </tr>
       </tbody>
@@ -1229,9 +1297,9 @@
         Apps</a>. Kategorie 2 (einmal, muss nicht enthalten sein)</p>
     <p>Dieser Handler ist etwas speziell. Initial sind hier keine
       Konfigurationen zu finden, über die WebApp können aber Konfigurationen
-      angelegt werden. Eind händische Änderung ist nicht empfohlen.</p>
+      angelegt werden. Eine händische Änderung ist nicht empfohlen.</p>
     <h3>AVNAvahiHandler</h3>
-    <p>Steuert die Regsitrierung von AvNav bei Avahi(MDNS/Bonjour). </p>
+    <p>Steuert die Registrierung von AvNav bei Avahi(MDNS/Bonjour). </p>
     <p> </p>
     <table style="width: 100%" border="1">
       <tbody>
@@ -1242,14 +1310,14 @@
         </tr>
         <tr>
           <td>serviceName</td>
-          <td>Der Name der in tools sichtbar wird.<br>
-            Das ist nicht der host name den man z.B. in avnav.local benutzt!</td>
+          <td>Der Name der in Tools sichtbar wird.<br>
+            Das ist nicht der Host Name, den man z.B. in avnav.local benutzt!</td>
           <td>avnav</td>
         </tr>
         <tr>
           <td>maxRetries</td>
           <td>Wie viele Wiederholungen macht AvNav, wenn der gewählte Name
-            bereits vergeben ist. Wiederholungen hängen ein "-nn" suffix and den
+            bereits vergeben ist. Wiederholungen hängen ein "-nn" suffix an den
             Namen an.</td>
           <td>20</td>
         </tr>

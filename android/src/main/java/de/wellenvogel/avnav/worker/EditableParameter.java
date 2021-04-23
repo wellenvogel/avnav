@@ -8,6 +8,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import de.wellenvogel.avnav.util.AvnUtil;
@@ -24,11 +25,21 @@ public class EditableParameter {
         public void checkJson(JSONObject o) throws JSONException;
     }
     public static abstract class EditableParameterBase<T> implements AvnUtil.IJsonObect,EditableParameterInterface {
-        String name;
+        public static class ConditionList extends ArrayList<AvnUtil.KeyValueList>{
+            ConditionList(AvnUtil.KeyValueList...parameters){
+                addAll(Arrays.asList(parameters));
+            }
+            ConditionList(AvnUtil.KeyValue...parameters){
+                AvnUtil.KeyValueList c=new AvnUtil.KeyValueList(parameters);
+                add(c);
+            }
+        }
+        public String name;
         T defaultValue;
         String description;
         int descriptionId=-1;
         boolean mandatory=false;
+        public ConditionList conditions;
 
         EditableParameterBase(String name, int descriptionId, T defaultValue) {
             this.name = name;
@@ -36,6 +47,10 @@ public class EditableParameter {
             this.defaultValue = defaultValue;
             mandatory = defaultValue == null;
 
+        }
+        EditableParameterBase(String name, int descriptionId,T defaultValue, ConditionList conditions){
+            this(name,descriptionId,defaultValue);
+            this.conditions=conditions;
         }
         EditableParameterBase(String name) {
             this.name = name;
@@ -47,6 +62,13 @@ public class EditableParameter {
             description=other.description;
             descriptionId=other.descriptionId;
             mandatory=other.mandatory;
+            conditions=other.conditions;
+        }
+        public void setConditions(AvnUtil.KeyValue...paramters){
+            conditions=new ConditionList(paramters);
+        }
+        public void setConditions(AvnUtil.KeyValueList...parameters){
+            conditions=new ConditionList(parameters);
         }
         public void write(JSONObject target,T value) throws JSONException {
             target.put(name,value);
@@ -71,6 +93,13 @@ public class EditableParameter {
             rt.put("mandatory",mandatory);
             if (description != null) rt.put("description",description);
             if (descriptionId >= 0) rt.put("descriptionId",descriptionId);
+            if (conditions != null && conditions.size() > 0){
+                JSONArray ca=new JSONArray();
+                for (AvnUtil.KeyValueList c:conditions){
+                    ca.put(c.toJson());
+                }
+                rt.put("condition",ca);
+            }
             return rt;
         }
     }
@@ -84,6 +113,14 @@ public class EditableParameter {
             super(name);
         }
 
+        public StringParameter(EditableParameterBase<String> other) {
+            super(other);
+        }
+
+        StringParameter(String name, int descriptionId, String defaultValue, ConditionList conditions) {
+            super(name, descriptionId, defaultValue, conditions);
+        }
+
         @Override
         public String getType() {
             return "STRING";
@@ -92,6 +129,16 @@ public class EditableParameter {
         @Override
         public String fromJson(JSONObject o) throws JSONException {
             return mandatory?o.getString(name):o.optString(name,defaultValue);
+        }
+        public StringParameter clone(String newDefault){
+            StringParameter rt=new StringParameter(this);
+            rt.defaultValue=newDefault;
+            return rt;
+        }
+        public StringParameter cloneCondition(AvnUtil.KeyValue ...conditions){
+            StringParameter rt=new StringParameter(this);
+            rt.conditions=new ConditionList(conditions);
+            return rt;
         }
     }
     public static class IntegerParameter extends EditableParameterBase<Integer>{
@@ -104,6 +151,10 @@ public class EditableParameter {
             super(name);
         }
 
+        public IntegerParameter(IntegerParameter integerParameter) {
+            super(integerParameter);
+        }
+
         @Override
         public String getType() {
             return "NUMBER";
@@ -112,6 +163,16 @@ public class EditableParameter {
         @Override
         public Integer fromJson(JSONObject o) throws JSONException {
             return (mandatory||o.has(name))?o.getInt(name):o.optInt(name,defaultValue);
+        }
+        public IntegerParameter clone(Integer newDefault){
+            IntegerParameter rt=new IntegerParameter(this);
+            rt.defaultValue=newDefault;
+            return rt;
+        }
+        public IntegerParameter cloneCondition(AvnUtil.KeyValue ...conditions){
+            IntegerParameter rt=new IntegerParameter(this);
+            rt.conditions=new ConditionList(conditions);
+            return rt;
         }
     }
     public static class BooleanParameter extends EditableParameterBase<Boolean>{
@@ -177,6 +238,11 @@ public class EditableParameter {
             list=new ArrayList<String>();
             list.addAll(Arrays.asList(values));
         }
+        StringListParameter(String name, int descriptionId, String defaultValue, Collection<String> values) {
+            super(name, descriptionId, defaultValue);
+            list=new ArrayList<String>();
+            list.addAll(values);
+        }
         StringListParameter(String name,List<String> values) {
             super(name);
             list=values;
@@ -236,6 +302,9 @@ public class EditableParameter {
         }
         public void addParams(EditableParameterInterface... param){
             this.addAll(Arrays.asList(param));
+        }
+        public void insertParams(EditableParameterInterface ...param){
+            this.addAll(0,Arrays.asList(param));
         }
         public boolean has(EditableParameterInterface parameter){
             for (EditableParameterInterface p:this){

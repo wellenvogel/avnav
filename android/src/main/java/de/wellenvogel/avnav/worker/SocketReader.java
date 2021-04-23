@@ -5,6 +5,7 @@ import org.json.JSONException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
+import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.NmeaQueue;
 
 /**
@@ -19,12 +20,12 @@ public class SocketReader extends SingleConnectionHandler {
         }
     }
 
-
     private SocketReader(String name,GpsService ctx, NmeaQueue queue) throws JSONException {
         super(name,ctx,queue);
-        parameterDescriptions.addParams(IPADDRESS_PARAMETER,
-                IPPORT_PARAMETER,
-                WRITE_TIMEOUT_PARAMETER,
+        parameterDescriptions.insertParams(IPADDRESS_PARAMETER,
+                IPPORT_PARAMETER);
+        parameterDescriptions.addParams(
+                WRITE_TIMEOUT_PARAMETER.cloneCondition(new AvnUtil.KeyValue<Boolean>(SEND_DATA_PARAMETER.name,true)),
                 CONNECT_TIMEOUT_PARAMETER,
                 READTIMEOUT_CLOSE_PARAMETER);
     }

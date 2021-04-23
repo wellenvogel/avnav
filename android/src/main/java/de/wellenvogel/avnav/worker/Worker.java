@@ -9,14 +9,12 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
-import de.wellenvogel.avnav.util.NmeaQueue;
+import de.wellenvogel.avnav.util.AvnUtil;
 
 public abstract class Worker implements IWorker {
     static final EditableParameter.StringParameter FILTER_PARAM=
@@ -56,6 +54,13 @@ public abstract class Worker implements IWorker {
             new EditableParameter.IntegerParameter("port", R.string.labelSettingsBindPort,null);
     static EditableParameter.BooleanParameter EXTERNAL_ACCESS=
             new EditableParameter.BooleanParameter("externalAccess",R.string.labelSettingsExternalAccess,false);
+    public static EditableParameter.BooleanParameter MDNS_ENABLED=
+            new EditableParameter.BooleanParameter("mdnsEnabled", R.string.labelSettingsMdnsEnabled,false);
+    public static EditableParameter.StringParameter MDNS_NAME=
+            new EditableParameter.StringParameter("mdnsService", R.string.labelSettingsMdnsName,"",
+                    new EditableParameter.EditableParameterBase.ConditionList(
+                            new AvnUtil.KeyValue<Boolean>(MDNS_ENABLED.name,true)
+                    ));
 
     static final String CLAIM_BLUETOOTH ="bluetooth device";
     static final String CLAIM_USB ="usb device";
@@ -63,6 +68,8 @@ public abstract class Worker implements IWorker {
     protected static final String CLAIM_UDPPORT ="udp port";
     private static final String CLAIM_NAME = "name" ;
     protected static final String CLAIM_SERVICE="service";
+    protected GpsService gpsService;
+
     private static class ResourceClaim{
         String kind;
         String name;
@@ -155,8 +162,9 @@ public abstract class Worker implements IWorker {
     private   int startSequence;
     protected final Object waiter=new Object();
 
-    protected Worker(String typeName){
+    protected Worker(String typeName, GpsService ctx){
         status=new WorkerStatus(typeName);
+        this.gpsService =ctx;
     }
     protected String getSourceName(){
         String n=null;
@@ -266,11 +274,12 @@ public abstract class Worker implements IWorker {
                             }
                             Worker.this.run(startSequence);
                             setStatus(WorkerStatus.Status.INACTIVE, "stopped");
-                            status.removeChildren();
-                            removeClaims();
                         } catch (Throwable t) {
                             setStatus(WorkerStatus.Status.ERROR, "error: " + t.getMessage());
                         }
+                        status.removeChildren();
+                        removeClaims();
+                        gpsService.unregisterService(Worker.this.getId());
                         running = false;
                     }
                 });
@@ -280,6 +289,7 @@ public abstract class Worker implements IWorker {
             else{
                 setStatus(WorkerStatus.Status.INACTIVE,"disabled");
                 status.removeChildren();
+                gpsService.unregisterService(Worker.this.getId());
             }
         } catch (JSONException e) {
             setStatus(WorkerStatus.Status.ERROR,"error: "+e.getMessage());

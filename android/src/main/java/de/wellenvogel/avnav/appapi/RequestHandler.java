@@ -15,15 +15,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,7 +32,6 @@ import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.worker.Alarm;
 import de.wellenvogel.avnav.worker.GpsService;
 import de.wellenvogel.avnav.worker.RouteHandler;
-import de.wellenvogel.avnav.worker.WorkerStatus;
 
 /**
  * Created by andreas on 22.11.15.
@@ -79,43 +74,34 @@ public class RequestHandler {
     public static String TYPE_ADDON="addon";
     public static String TYPE_CONFIG="config";
 
-    public static class KeyValue<VT>{
-        public String key;
-        public VT value;
-        public KeyValue(String key, VT v){
-            this.key=key;
-            this.value=v;
-        }
-    }
 
-
-    public static class TypeItemMap<VT> extends HashMap<String, KeyValue<VT>>{
-        public TypeItemMap(KeyValue<VT>...list){
-            for (KeyValue<VT> i : list){
+    public static class TypeItemMap<VT> extends HashMap<String, AvnUtil.KeyValue<VT>>{
+        public TypeItemMap(AvnUtil.KeyValue<VT>...list){
+            for (AvnUtil.KeyValue<VT> i : list){
                 put(i.key,i);
             }
         }
     }
 
     public static TypeItemMap<Integer> typeHeadings=new TypeItemMap<Integer>(
-            new KeyValue<Integer>(TYPE_ROUTE, R.string.uploadRoute),
-            new KeyValue<Integer>(TYPE_CHART,R.string.uploadChart),
-            new KeyValue<Integer>(TYPE_IMAGE,R.string.uploadImage),
-            new KeyValue<Integer>(TYPE_USER,R.string.uploadUser),
-            new KeyValue<Integer>(TYPE_LAYOUT,R.string.uploadLayout),
-            new KeyValue<Integer>(TYPE_OVERLAY,R.string.uploadOverlay),
-            new KeyValue<Integer>(TYPE_TRACK,R.string.uploadTrack)
+            new AvnUtil.KeyValue<Integer>(TYPE_ROUTE, R.string.uploadRoute),
+            new AvnUtil.KeyValue<Integer>(TYPE_CHART,R.string.uploadChart),
+            new AvnUtil.KeyValue<Integer>(TYPE_IMAGE,R.string.uploadImage),
+            new AvnUtil.KeyValue<Integer>(TYPE_USER,R.string.uploadUser),
+            new AvnUtil.KeyValue<Integer>(TYPE_LAYOUT,R.string.uploadLayout),
+            new AvnUtil.KeyValue<Integer>(TYPE_OVERLAY,R.string.uploadOverlay),
+            new AvnUtil.KeyValue<Integer>(TYPE_TRACK,R.string.uploadTrack)
     );
 
     //directories below workdir
     public static TypeItemMap<File> typeDirs=new TypeItemMap<File>(
-            new KeyValue<File>(TYPE_ROUTE,new File("routes")),
-            new KeyValue<File>(TYPE_CHART,new File("charts")),
-            new KeyValue<File>(TYPE_TRACK,new File("tracks")),
-            new KeyValue<File>(TYPE_LAYOUT,new File("layout")),
-            new KeyValue<File>(TYPE_USER,new File(new File("user"),"viewer")),
-            new KeyValue<File>(TYPE_IMAGE,new File(new File("user"),"images")),
-            new KeyValue<File>(TYPE_OVERLAY,new File("overlays"))
+            new AvnUtil.KeyValue<File>(TYPE_ROUTE,new File("routes")),
+            new AvnUtil.KeyValue<File>(TYPE_CHART,new File("charts")),
+            new AvnUtil.KeyValue<File>(TYPE_TRACK,new File("tracks")),
+            new AvnUtil.KeyValue<File>(TYPE_LAYOUT,new File("layout")),
+            new AvnUtil.KeyValue<File>(TYPE_USER,new File(new File("user"),"viewer")),
+            new AvnUtil.KeyValue<File>(TYPE_IMAGE,new File(new File("user"),"images")),
+            new AvnUtil.KeyValue<File>(TYPE_OVERLAY,new File("overlays"))
 
     );
 
@@ -132,20 +118,20 @@ public class RequestHandler {
 
     private HashMap<String,LazyHandlerAccess> handlerMap=new HashMap<>();
 
-    public static JSONObject getReturn(KeyValue ...data) throws JSONException {
+    public static JSONObject getReturn(AvnUtil.KeyValue...data) throws JSONException {
         JSONObject rt=new JSONObject();
         Object error=null;
-        for (KeyValue kv : data){
+        for (AvnUtil.KeyValue kv : data){
             if ("error".equals(kv.key)) error=kv.value;
             else rt.put(kv.key,kv.value);
         }
         rt.put("status",error == null?"OK":error);
         return rt;
     }
-    public static JSONObject getReturn(ArrayList<KeyValue> data) throws JSONException {
+    public static JSONObject getReturn(ArrayList<AvnUtil.KeyValue> data) throws JSONException {
         JSONObject rt=new JSONObject();
         Object error=null;
-        for (KeyValue kv : data){
+        for (AvnUtil.KeyValue kv : data){
             if ("error".equals(kv.key)) error=kv.value;
             else rt.put(kv.key,kv.value);
         }
@@ -154,17 +140,17 @@ public class RequestHandler {
     }
 
 
-    public static JSONObject getErrorReturn(String error,KeyValue ...data) throws JSONException {
+    public static JSONObject getErrorReturn(String error, AvnUtil.KeyValue...data) throws JSONException {
         JSONObject rt=new JSONObject();
         rt.put("status",error == null?"OK":error);
-        for (KeyValue kv : data){
+        for (AvnUtil.KeyValue kv : data){
             if (!"error".equals(kv.key)) rt.put(kv.key,kv.value);
         }
         return rt;
     }
 
     public File getWorkDirFromType(String type) throws Exception {
-        KeyValue<File>subDir=typeDirs.get(type);
+        AvnUtil.KeyValue<File> subDir=typeDirs.get(type);
         if (subDir == null) throw new Exception("invalid type "+type);
         return new File(getWorkDir(),subDir.value.getPath());
     }
@@ -202,7 +188,7 @@ public class RequestHandler {
             }
         });
         try{
-            final DirectoryRequestHandler userHandler=new UserDirectoryRequestHandler(this,
+            final DirectoryRequestHandler userHandler=new UserDirectoryRequestHandler(this,service,
                     addonHandler);
             handlerMap.put(TYPE_USER, new LazyHandlerAccess() {
                 @Override
@@ -214,7 +200,7 @@ public class RequestHandler {
             AvnLog.e("unable to create user handler",e);
         }
         try {
-            final DirectoryRequestHandler imageHandler=new DirectoryRequestHandler(TYPE_IMAGE,
+            final DirectoryRequestHandler imageHandler=new DirectoryRequestHandler(TYPE_IMAGE,service,
                     getWorkDirFromType(TYPE_IMAGE), "user/images",null);
             handlerMap.put(TYPE_IMAGE, new LazyHandlerAccess() {
                 @Override
@@ -226,7 +212,7 @@ public class RequestHandler {
             AvnLog.e("unable to create images handler",e);
         }
         try {
-            final DirectoryRequestHandler overlayHandler=new DirectoryRequestHandler(TYPE_OVERLAY,
+            final DirectoryRequestHandler overlayHandler=new DirectoryRequestHandler(TYPE_OVERLAY,service,
                     getWorkDirFromType(TYPE_OVERLAY), "user/overlays",null);
             handlerMap.put(TYPE_OVERLAY, new LazyHandlerAccess() {
                 @Override
@@ -531,7 +517,7 @@ public class RequestHandler {
                 INavRequestHandler handler=getHandler(dirtype);
                 if (handler != null){
                     handled=true;
-                    fout=getReturn(new KeyValue<JSONArray>("items",handler.handleList(uri, serverInfo)));
+                    fout=getReturn(new AvnUtil.KeyValue<JSONArray>("items",handler.handleList(uri, serverInfo)));
                 }
 
             }
@@ -681,7 +667,7 @@ public class RequestHandler {
                     //as potentially there are permission dialogs
                     o.put("config", true);
                 }
-                fout=getReturn(new KeyValue<JSONObject>("data",o));
+                fout=getReturn(new AvnUtil.KeyValue<JSONObject>("data",o));
             }
             if (type.equals("api")){
                 try {

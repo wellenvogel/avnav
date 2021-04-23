@@ -7,34 +7,34 @@
   </head>
   <body data-order="7200">
     <h1>Zusammenwirken mit Canboat und SignalK</h1>
-    <p>Ab der release 20200204 kann avnav mit <a href="#Canboat">canboat</a>
-      (NMEA2000) und <a href="#SignalK">signalk</a> zusammenarbeiten.</p>
+    <p>Ab Release 20200204 kann AvNav mit <a href="#Canboat">canboat</a>
+      (NMEA2000) und <a href="#SignalK">SignalK</a> zusammenarbeiten.</p>
     <h2><a name="Canboat" id="Canboat"></a>Canboat (NMEA2000)</h2>
     <p>Mit <a href="https://github.com/canboat/canboat">canboat</a> können an
       den Raspberry angeschlossene CAN Adapter (z.B. mit <a href="https://www.reichelt.de/entwicklerboards-can-modul-mcp2515-mcp2562-debo-can-modul-p239277.html">MCP2515</a>
       oder ein <a href="https://www.waveshare.com/wiki/RS485_CAN_HAT">Waveshare
         RS485 CAN-HAT</a> ) oder per USB angeschlossene Adapter (z.B. Actisene
       NGT-1) genutzt werden. Für die einfachen CAN-Adapter muss darauf geachtet
-      werden, das sie 2 Spannungsversorgungen haben (3,3V und 5V) - viele ganz
+      werden, dass sie 2 Spannungsversorgungen haben (3,3V und 5V) - viele ganz
       einfache haben das nicht!</p>
     <img title="Canboat" alt="" src="Canboat.png" width="800">
-    <p>Im Bild ist das prinzipielle set up zu sehen, so wie es von den <a href="../install.html#Headless">headless
+    <p>Im Bild ist das prinzipielle Setup zu sehen, so wie es von den <a href="../install.html#Headless">headless
         Images</a> bereitgestellt wird. </p>
     <p>Für einen per <a href="https://www.raspberrypi.org/documentation/hardware/raspberrypi/spi/README.md">SPI</a>
       angeschlossenen <a href="https://www.raspberrypi.org/forums/viewtopic.php?t=141052">CAN-Adapter</a>
-      muss meist noch ein overlay in /boot/config.txt eingeschaltet werden. Für
-      den MCP2515 sind enstprechende Einträge bereits vorbereitet, diese müssen
+      muss meist noch ein Overlay in /boot/config.txt eingeschaltet werden. Für
+      den MCP2515 sind entsprechende Einträge bereits vorbereitet, diese müssen
       auskommentiert und ggf. muss die Taktfrequenz und der für den Interrupt
       genutzte GPIO Pin geändert werden.</p>
-    <p>Dieser can-Adapter erscheint dann als Netzwerk-Interface (ggf. muss er
-      noch entsprechend konfiguriert werden - in den images ist das bereits
+    <p>Dieser CAN-Adapter erscheint dann als Netzwerk-Interface (ggf. muss er
+      noch entsprechend konfiguriert werden - in den Images ist das bereits
       vorbereitet).</p>
-    <p>Das interface sollte mit</p>
+    <p>Das Interface sollte mit</p>
     <div class="code">ifconfig can0</div>
     <p>sichtbar sein.</p>
     <p>Für einen per USB angeschlossenen Actisense NGT-1 siehe die <a href="https://github.com/canboat/canboat/wiki/actisense-serial">Beschreibung
         bei canboat</a>.</p>
-    <p>Avnav kommuniziert mit dem <a href="https://github.com/canboat/canboat/wiki/n2kd">n2kd</a>.
+    <p>AvNav kommuniziert mit dem <a href="https://github.com/canboat/canboat/wiki/n2kd">n2kd</a>.
       Dieser konvertiert empfangene NMEA2000 Daten in NMEA0183 (nicht ganz
       vollständig). Die Konfiguration für n2kd erfolgt über die Datei</p>
     <div class="code">/etc/default/n2kd</div>
@@ -47,7 +47,7 @@
     <div class="code">&lt;AVNUsbSerialReader .....&gt;<br>&lt;UsbDevice usbid="x:y.z" type="ignore"/&gt; <br>....</div>
     <p>Wenn alles korrekt konfiguriert ist, sollten auf den ports 2599 und 2598
       NMEA-Daten bzw. json Daten zu sehen sein, wenn auf dem Bus NMEA2000
-      traffic vorhanden ist. Kontrolle z.B.</p>
+      Datenverkehr vorhanden ist. Kontrolle z.B.</p>
     <div class="code">nc localhost 2599</div>
     <p>Sonst den Zustand von canboat mit</p>
     <div class="code">sudo systemctl status canboat</div>
@@ -56,7 +56,7 @@
       Verbindung (Port 2599) empfängt er die NMEA0183 Daten und über die andere
       Verbindung (Port 2598)&nbsp; direkt einige JSON Daten. Das ist notwendig,
       da n2kd keinen NMEA-Datensatz mit Datum ausgibt (z.B. RMC). Um das Datum
-      zu erhalten, kann avnav direkt die pgns 126992,129029 lesen um intern
+      zu erhalten, kann AvNav direkt die pgns 126992,129029 lesen, um intern
       Datum und Zeit zu setzen und kann daraus auch einen RMC Datensatz
       generieren (wenn über NMEA gültige Positionsdaten empfangen werden).</p>
     <p>Dazu sind in der avnav_server.xml einige Konfigurationen nötig. Diese
@@ -72,12 +72,12 @@
       NMEA2000 Daten bereits selbst empfängt.</p>
     <p>Der Socketreader localhost:2599 empfängt die konvertierten Daten vom
       n2kd.</p>
-    <p>Die direkte Abfrage der NMEA2000 daten erfolgt über ein plugin, daher
+    <p>Die direkte Abfrage der NMEA2000 Daten erfolgt über ein Plugin, daher
       muss ein Eintrag unter AVNPluginHandler gemacht werden. Mit den Settings
-      im Beispiel wird das plugin aktiviert, allowKeyOverwrite erlaubt das
-      Überschreiben der internen Zeit durch das plugin und autoSendRMC=30 sorgt
+      im Beispiel wird das Plugin aktiviert, allowKeyOverwrite erlaubt das
+      Überschreiben der internen Zeit durch das Plugin und autoSendRMC=30 sorgt
       dafür, das (wenn 30s kein RMC im NMEA Datenstrom aufgetaucht ist) im
-      Intervall 1s ein RMC geschrieben wird. Für die Parameter des plugins siehe
+      Intervall 1s ein RMC geschrieben wird. Für die Parameter des Plugins siehe
       den <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/canboat/plugin.py">source
         code</a>.&nbsp;</p>
     <p>Ein Senden von Daten über NMEA2000 ist bisher nicht vorgesehen, dass kann
@@ -88,7 +88,7 @@
     <p>Mit dem Stand 20200204 ist ein erster Schritt der <a href="http://signalk.org/">SignalK</a>
       Integration möglich.</p>
     <img alt="SignalK" src="SignalK.png" width="800">
-    <p>Im default set up schickt AvNav alle seine Daten an SignalK weiter (per
+    <p>Im Default Setup schickt AvNav alle seine Daten an SignalK weiter (per
       NMEA0183), nicht jedoch die per canboat empfangenen Daten. Dafür sollte
       SignalK direkt konfiguriert werden (im Image bereits vorhanden). Dazu wird
       bei AvNav der Port 34568 genutzt (siehe oben). Bei SignalK wird ein
@@ -101,8 +101,8 @@
     <div class="code">http://localhost:3000/signalk/v1/api/vessels/self</div>
     <p>und trägt die empfangenen Daten intern unter</p>
     <div class="code">gps.signalk....</div>
-    <p>ein (nur die values der Werte). Seit Version 20201202 wird falls
-      verfügbar auch eine Websocket-Verbindung aufgesetzt, so das Änderungen
+    <p>ein (nur die values der Werte). Seit Version 20201202 wird (falls
+      verfügbar) auch eine Websocket-Verbindung aufgesetzt, sodass Änderungen
       schneller bei AvNav verfügbar werden. Das Polling erfolgt dann nur noch
       alle 10s.</p>
     <p>Damit sind diese Daten in der App anzeigbar. Ein <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/signalk/example.json">entsprechendes
@@ -110,31 +110,31 @@
       kann über die Settings Seite gewählt werden
       (system.plugin.builtin-signalk.example) - es ist aber nur sichtbar, wenn
       das Plugin aktiv ist. Alternativ kann man auch sein eigenes Layout mit dem
-      <a href="layouts.html">Layout Editor</a> erstellen, das signalk Werte
+      <a href="layouts.html">Layout Editor</a> erstellen, das SignalK Werte
       anzeigt.</p>
-    <p>Die Kommunikation mit SignalK erfolgt über ein plugin, das entsprechend
+    <p>Die Kommunikation mit SignalK erfolgt über ein Plugin, das entsprechend
       konfiguriert werden muss (in den Images entsprechend vorbereitet, Beispiel
       sonst wieder unter /usr/lib/avnav/raspberry/avnav_server.xml):</p>
     <div class="code">&lt;AVNSocketWriter port="34568" maxDevices="5" filter="" read="true" minTime="50" name="nmea0183tosignalk" blackList="canboatnmea0183,canboatgen"/&gt;
 &lt;AVNPluginHandler&gt;
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;builtin-signalk enabled="true"/&gt;
 &lt;/AVNPluginHandler&gt;</div>
-    <p>Wenn die canboat Integration ebenfalls genutzt wird, dann bitte beide
-      plugins gemeinsam unter einem AVNPluginHandler Eintrag konfigurieren.</p>
+    <p>Wenn die canboat Integration ebenfalls genutzt wird, dann bitte beide 
+     Plugins gemeinsam unter einem AVNPluginHandler Eintrag konfigurieren.</p>
     <p>Da SignalK alle NMEA Daten von AvNav empfängt, ist beispielsweise auch
-      ein aktiver Wegepunkt dort sichtbar.</p>
-    <p>Wenn das plugin enabled wurde ist bei AvNav unter <a href="../userdoc/addonpage.html">User-Apps
-        </a>ein Eintrag für SignalK vorhanden, so das die Web Oberfläche
+      ein aktiver Wegpunkt dort sichtbar.</p>
+    <p>Wenn das Plugin enabled wurde, ist bei AvNav unter <a href="../userdoc/addonpage.html">User-Apps
+        </a>ein Eintrag für SignalK vorhanden, sodass die Web Oberfläche
       geöffnet werden kann.</p>
     <p>Es sind natürlich auch andere Konfigurationen einstellbar - z.B. AvNav
-      empfängt seine NMEA Daten von SignalK und schickt nur RMB (Wegepunkt)
-      dorthin zurück (default on OpenPlotter). Dabei muss jedoch sorgfältig
+      empfängt seine NMEA Daten von SignalK und schickt nur RMB (Wegpunkt)
+      dorthin zurück (Default on OpenPlotter). Dabei muss jedoch sorgfältig
       konfiguriert werden, um Schleifen zu vermeiden. In AvNav stehen dabei an
       den SocketReadern die filter- und name-Optionen und an den Writern die
-      filter-,readFilter- und blackList- Optionen zur Verfügung. Auch die
+      filter-, readFilter- und blackList-Optionen zur Verfügung. Auch die
       canboat Integration kann dann u.U. komplett über signalK abgewickelt
       werden.</p>
-    <p>Es gibt die folgenden Parameter für das plugin</p>
+    <p>Es gibt die folgenden Parameter für das Plugin</p>
     <table style="width: 100%" border="1">
       <tbody>
         <tr>
@@ -206,7 +206,7 @@
           <td>Entscheidet, ob die Requests für die Karten direkt zu SignalK
             gehen oder über AvNav geleitet werden.<br>
             sameHost: direkt zu SignalK, wenn dieses auf dem gleichen Rechner
-            läuft, wie AvNav, sonst über AvNav<br>
+            läuft wie AvNav, sonst über AvNav<br>
             never: immer direkt zu SignalK<br>
             always: immer über AvNav</td>
         </tr>

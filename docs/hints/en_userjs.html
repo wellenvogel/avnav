@@ -10,11 +10,11 @@
     <div class="toc"> </div>
     <p>To adapt AvNav to your needs you can extend it with some java script
       code.</p>
-    <p>It is possible to define new data displays (widgets) that later on can be
-      placed using the <a href="layouts.html">layout editor</a>. In principle
-      you can run arbitrary java script code but you have to take care not to
-      disturb the AvNav main functions.</p>
-    <p>The jave script code has to be located at user.js in the directory
+    <p>It is possible to define new data displays (widgets) to be placed using
+      the <a href="layouts.html">layout editor</a>. In principle you can run
+      any java script code but you have to take care not to disturb the AvNav
+      main functions.</p>
+    <p>The java script code has to be located at user.js in the directory
       BASEDIR/user/viewer.<br>
       (e.g. on the pi BASEDIR is /home/pi/avnav/data).</p>
     <h2>Editing</h2>
@@ -22,25 +22,24 @@
       directory via Files/Download page <img src="../viewerimages/icons-new/ic_file_download.svg"
         alt="" class="inlineimage">, subpage <img src="../viewerimages/icons-new/folder_shared.svg"
         alt="" class="inlineimage">.</p>
-    <p><img src="../downloadpage-user.png" alt="" class="fimage"></p>
-    <p>As you can se in the picture initially a file user.js will already be
-      there - being created from a template on the first start of the server.</p>
-    <p>By clicking on the file and selecting "Edit" in the dialog you can
+    <p><img src="../userdoc/downloadpage-user.png" alt="" class="fimage"></p>
+    <p>In the screenshot you see a file user.js&nbsp; - initally created from a
+      template on the first start of the server.</p>
+    <p>By clicking the file and selecting "Edit" from the dialog you can
       immediately start working on the file.</p>
     <p><img src="../viewpage-edit-user.png" alt="" class="fimage"></p>
-    <p>There is a couple of examples already included in the file. They will
-      show you various means of adding new widgets. After editing use<img src="../viewerimages/icons-new/save.svg"
-        alt="" class="inlineimage">to store the file and realod AvNav to see
+    <p>There are a couple of examples already included in the file. They
+      demonstrate some variants of new widgets. After editing use<img src="../viewerimages/icons-new/save.svg"
+        alt="" class="inlineimage">to store the file and reload AvNav to watch
       your changes in action.</p>
-    <p>I would recommend to download and store the file regularly after editing
-      it as there is no version control included in AvNav.</p>
-    <p>The current template for the file you can also find on <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">github</a>.</p>
+    <p>I would recommend to download and backup the file regularily after
+      editing since there is no version control included in AvNav.</p>
+    <p>The current file template you can also find on <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">github</a>.</p>
     <h2>Widgets</h2>
     <p>Basically you can add the following types of widgets:</p>
     <ul>
-      <li>widgets with an own formatter (and potentially fixed values they will
-        fetch from the store)basing on the default widget (example 1-&nbsp; <a
-          href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">user.js</a>:
+      <li>widgets with an own formatter (and potentially fixed values retrieved
+        from the store) based on the default widget (example 1-&nbsp; <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">user.js</a>:
         rpmWidget, <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/testPlugin/plugin.js">testPlugin</a>:
         testPluing_simpleWidget)</li>
       <li>adaptations and extensions of the graphics widgets (<a href="https://canvas-gauges.com/">canvas
@@ -57,7 +56,7 @@
         plugin (<a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/testPlugin/plugin.js">TestPlugin</a>:
         testPlugin_serverWidget</li>
     </ul>
-    <p>The interface to communicate with avnav is available <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/util/api.js">at
+    <p>The interface to communicate with AvNav is available <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/util/api.js">at
         github</a> and in the example code.</p>
     <p>For an own widget the following functions/properties can be implemented:</p>
     <table style="width: 100%" border="1">
@@ -81,7 +80,7 @@
           <td>alle</td>
           <td>defines which type of widget should be created<br>
             Values: radialGauge, linearGauge<br>
-            If you do not set the type either the defaul widget will be used (no
+            If you don't set the type either the default widget will be used (no
             renderHtml and no renderCanvas provided) or a special userWidget
             will be used.</td>
         </tr>
@@ -90,24 +89,23 @@
           <td>function<br>
             (optional)</td>
           <td>userWidget</td>
-          <td>This method must return&nbsp; a string that contains valid HTML.
-            It will be injected into the widget.<br>
-            If you would like to use event handlers for your elements you have
-            to register them before (see initFunction) and in the HTML you will
+          <td>This method must return a string containing valid HTML. It will be
+            injected into the widget. To attach event handlers to your elements
+            you have to register them (see initFunction). In the HTML you will
             assign them with:<br>
             <div class="code">&lt;button onclick="myHandler"&gt;Click!&lt;/button&gt;
               </div>
             Note that is is not exactly strict HTML as you only provide the name
             of the event handler - no java script code! <br>
             <br>
-            The "this" inside renderHtml points to the widget context (an object
+            The "this" inside renderHtml refers to the widget context (an object
             that is specific for the particular widget).<br>
-            If the event handler is being called, the "this" will also point to
-            the context.<br>
+            If the event handler is called, the "this" will also point to the
+            context.<br>
             <br>
-            The parameter of renderHtml contains all parameters of teh widget
+            The parameter of renderHtml contains all parameters of the widget
             and the values defined at storeKeys.<br>
-            The function will be called each time the values have changed.</td>
+            The function will be called every time the values change.</td>
         </tr>
         <tr>
           <td>renderCanvas<br>
@@ -116,10 +114,10 @@
             (optional)</td>
           <td>userWidget</td>
           <td>With this function you can draw to the provided canvas object.<br>
-            The second parameter of renderCanvas contains all parameters of teh
+            The second parameter of renderCanvas contains all parameters of the
             widget and the values defined at storeKeys.<br>
-            The function will be called each time the values have changed.<br>
-            The "this" inside renderCanvas points to the widget context (an
+            The function will be called every time the values change.<br>
+            The "this" inside renderCanvas refers to the widget context (an
             object that is specific for the particular widget).<br>
           </td>
         </tr>
@@ -128,9 +126,8 @@
           </td>
           <td>object</td>
           <td>all</td>
-          <td>You have to provide the parameters that you would like being read
-            from the internal store and becoming properties for the renderXXX
-            function parameters.<br>
+          <td>You have to provide the data to be read from the internal store
+            serving as parameters for the renderXXX function.<br>
           </td>
         </tr>
         <tr>
@@ -153,7 +150,7 @@
             (optional)</td>
           <td>defaultWidget,<br>
             radialGauge, linearGauge</td>
-          <td>A formatter for the value. For teh defaultWidget this function is
+          <td>A formatter for the value. For the defaultWidget this function is
             mandatory.</td>
         </tr>
         <tr>
@@ -161,34 +158,40 @@
           <td>function<br>
             (optional)</td>
           <td>alle</td>
-          <td>This function will be called with the current values of the
-            parameters and must return an object with all the computed values
-            derived.<br>
-            Make mainly senso if yo do not have own renderXXX functions to be
-            able to combine/compute the values that should be displayed - see <a
-              href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">example</a>.</td>
+          <td>This function is called with the current values as parameters and
+            must return an object containing the derived values.<br>
+            This may be used to transform values before rendering if no own
+            renderXXX is implemented - see <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">example</a>.</td>
         </tr>
         <tr>
           <td>initFunction</td>
           <td>function<br>
             (optional)</td>
           <td>userWidget</td>
-          <td>If this function is available it will be called once the widget
-            has been created before any renderXXX function. The widget context
-            will be provided as a parameter and as the "this" variable.<br>
-            The widget context has an eventHandler Property. At this object you
-            have to define all event handlers that you would like to use in your
-            HTML code.<br>
-            With a triggerRedraw function you can force a new rendering of the
-            widget causing the renderXXX functions to be called again.</td>
+          <td>If defined, this function will be called once after creating the
+            widget before any renderXXX function. The widget context is provided
+            as a parameter and as the "this" variable.<br>
+            The widget context has an eventHandler Property. Here you have to
+            define all event handlers to be used in your HTML code.<br>
+            With a triggerRedraw function that is also available at the context
+            you can force a new rendering of the widget causing the renderXXX
+            functions to be called again.<br>
+            Starting with version 20210422&nbsp; the init function will receive
+            a second parameter that has the properties of the widget (including
+            all parameters that you defined as editable widget parameters).</td>
         </tr>
         <tr>
           <td>finalizeFunktion</td>
           <td>function<br>
             (optional)</td>
           <td>userWidget</td>
-          <td>If available this function will get called before the widget is
-            removed. The "this" points to the widget context.</td>
+          <td>If defined, this function will be called before the widget is
+            removed. The "this" refers to the widget context. Additionally the
+            context will also provided as the first parameter (like in the
+            initFunction).<br>
+            Starting with version 20210422&nbsp; the init function will receive
+            a second parameter that has the properties of the widget (including
+            all parameters that you defined as editable widget parameters).</td>
         </tr>
       </tbody>
     </table>
@@ -204,11 +207,11 @@
           <td>AVNAV_BASE_URL</td>
           <td>both</td>
           <td>The URL to the directory from where the java script code has been
-            loaded. This can be used to load other elements from there. For the
-            user.js you can reach files from the images directory with
-            AVNAV_BASE_URL+"../mages".<br>
-            For plugins AVNAV_BASE_URL+"/api" will give you the base URL to
-            trigger the communication with the python side.</td>
+            loaded. This can be used to load other elements from there. From
+            user.js you can access files from the images directory with
+            AVNAV_BASE_URL+"../images".<br>
+            AVNAV_BASE_URL+"/api" will give you the base URL for plugins to
+            maintain communication with the python side.</td>
         </tr>
         <tr>
           <td>AVNAV_PLUGIN_NAME</td>
@@ -221,10 +224,10 @@
       (avnav.registerWidget). </p>
     <a name="widgetparameter" id="widgetparameter"></a>
     <h2>Widget Parameters</h2>
-    <p>As a second parameter you can provide an object containing parameters
-      that should be shown in the layout editor.</p>
-    <p>Examples are inside the <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">user.js
-        template</a>. The values that a user selects in the Layout editor will
+    <p>As a second parameter you can provide an object containing parameters to
+      be displayed in the layout editor.</p>
+    <p>Examples can be found in the <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">user.js
+        template</a>. Values selected by the user in the Layout editor will
       become part of the properties provided to the renderHtml and renderCanvas
       functions (except for parameters of type KEY: the values read from the
       store will be provided).<br>
@@ -240,19 +243,18 @@
           <td><br>
           </td>
           <td>key</td>
-          <td>The name of the parameter as to be shown in the layout editor and
-            as it should appear for the renderXXX functions.</td>
+          <td>The name of the parameter as to be displayed in the layout editor
+            and as to be available for the renderXXX functions.</td>
         </tr>
         <tr>
           <td>type</td>
           <td>string</td>
-          <td>STRING, NUMBER,KEY, SELECT,ARRAY, BOOLEAN,COLOR<br>
+          <td>STRING, NUMBER, KEY, SELECT, ARRAY, BOOLEAN, COLOR<br>
             The type of the parameter. Depending on the type a different user
-            dialog will be shown.<br>
-            For COLOR this will be a color selector, for SELECT a select list
+            dialog will be shown:<br>
+            for COLOR this will be a color selector, for SELECT a select list
             and for KEY the list of known items in the global store.<br>
-            For an array the user can provide a list of values separated by
-            comma.</td>
+            For an array you can provide a list of values, separated by comma.</td>
         </tr>
         <tr>
           <td>default</td>
@@ -265,14 +267,13 @@
           <td>Array<br>
             (only for type SELECT)</td>
           <td>An array of strings or objects {name:'xxx',value:'yyy'} - they
-            will be shown in the select list.</td>
+            will be displayed in the select list.</td>
         </tr>
       </tbody>
     </table>
-    <p>There is a couple of predefined parameters for the layout editor. For
-      those you do not provide a describing object with properties but instead
-      only true or false(this will define whether they will be shown in the
-      editor or not).</p>
+    <p>There are some predefined parameters for the layout editor. For those no
+      describing object with properties should be provided, just true or false
+      (this defines whether or not they will be prompted in the layout editor).</p>
     <p>Those are:</p>
     <ul>
       <li>caption (STRING)</li>
@@ -296,17 +297,17 @@
    };
 </div>
     <h2><a name="formatter" id="formatter"></a>Formatter </h2>
-    <p>Beside the widgets you can implement formatter that will prepare the
-      values for being displayed.<br>
-      There is already a couple of formatters being available in the system -
-      see <a href="layouts.html#formatter">Layout Editor</a>.</p>
-    <p>Since version 20210106 you can register your own formatters in AvNav and
-      this way make them available for other widgets. Basically a formatter is a
-      function that will get the value to be formatted as first parameter and
-      has to return a string.<br>
-      The length of the string should be independent from the current value
-      (using space padding if necessary) to avoid interfering with the automatic
-      sizing on the dashboard pages.</p>
+    <p>Beside the widgets you can implement your own formatters preparing values
+      for display.<br>
+      Many formatters already are available in the system - see <a href="layouts.html#formatter">Layout
+        Editor</a>.</p>
+    <p>Since version 20210106 you can register your own formatters in AvNav and,
+      by this, make them available to all other widgets. Basically a formatter
+      is a function accepting the value to be formatted as first parameter and
+      returning a string result.<br>
+      The length of the string should be constant and independent from the
+      current value (use space padding if necessary). This is to avoid
+      interfering with automatic sizing on dashboard pages.</p>
     <p>A formatter can accept additional parameters to control the output. Those
       parameters can be set with the widget property "formatterParameters" -
       typically in the <a href="layouts.html#formatter">Layout Editor</a>.</p>
@@ -327,36 +328,36 @@ formatTemperature.parameters=[
     {name:'unit',type:'SELECT',list:['celsius','kelvin'],default:'celsius'}
 ]</div>
     <div class="code">avnav.api.registerFormatter("mySpecialTemperature",formatTemperature);</div>
-    <p>If there is already a formatter with the same name registerFormatter will
-      throw an exception.</p>
-    <p>Ech formatter function should have a property "parameters". This property
-      describes the values that will be presented to the user in the layout
-      editor as formatterParameters. The values in this definition follow the
-      same syntax as for <a href="#widgetparameter">editable widget parameters</a>.</p>
+    <p>registerFormatter will throw an exception if a formatter with the same
+      name already exists.</p>
+    <p>Each formatter function should carry a "parameters" property. This
+      property describes the values presented to the user in the layout editor
+      as formatterParameters. The values in this definition follow the same
+      syntax as for <a href="#widgetparameter">editable widget parameters</a>.</p>
     <p></p>
     <h2>Libraries and Images</h2>
-    <p>If you need to access libraries or images in your java script code you
-      can upload they into the same directory- images additionally also into the
-      images <img src="../viewerimages/icons-new/image-icon.svg" alt="" class="inlineimage">directory.</p>
+    <p>Images and libaries uploaded to the same directory can be accessed by
+      your java script code. Images additionally can be accessed in the images <img
+        src="../viewerimages/icons-new/image-icon.svg" alt="" class="inlineimage">directory.</p>
     <p>Embedding of libraries can be done like this:</p>
     <div class="code">var fileref=document.createElement('script');
 fileref.setAttribute("type","text/javascript");
 fileref.setAttribute("src", "my_nice_lib.js");
 document.getElementsByTagName("head")[0].appendChild(fileref)</div>
-    <p>I recommend to assign css classes to your own widgets to provide easy
-      means of adapting their look and feel later on with <a href="usercss.html">user
+    <p>I recommend to assign css classes to your own widgets so to provide easy
+      means of adapting their look and feel later on by <a href="usercss.html">user
         defined CSS</a>. You should not use HTML ids in your code as the widgets
-      potentially will be instantiated multiple times on one page.</p>
-    <p>If you need to download data from the server I recommend using <a href="https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch">fetch</a>.All
-      files in the user directory (or the plugin directory for plugin.js) can be
-      accessed with AVNAV_BASE_URL+"/"+name.</p>
+      might be instantiated multiple times on one page.</p>
+    <p>If you need to download data from the server I recommend using <a href="https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch">fetch</a>.
+      All files in the user directory (or the plugin directory for plugin.js)
+      can be accessed with AVNAV_BASE_URL+"/"+name.</p>
     <p>If you need to create an additional file in the user directory (e.g. text
       or HTML) you can directly do this using the "+" button (lower right) -
       afterwards you can directly edit the file.</p>
     <h2>Feature Formatter</h2>
-    <p>Since version 20210114 you can register functions that will convert and
-      format data from overlay files for the "Feature Info" dialog.<br>
-      You can implement them in the user.js or inside a plugin.</p>
+    <p>Since version 20210114 you can register functions to convert and format
+      data from overlay files for the "Feature Info" dialog.<br>
+      You can implement them in the user.js or by a plugin.</p>
     <p>With <br>
     </p>
     <div class="code">avnav.api.registerFeatureFormatter('myHtmlInfo',myHtmlInfoFunction);</div>

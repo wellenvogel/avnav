@@ -29,7 +29,8 @@
     <string name="uploadTrack">Select a track to upload</string>
     <string name="installFileManager">Please install a file manager</string>
     <string name="androidSettings">Android Settings</string>
-    <string name="labelSettingsIpAddress">IP Address to connect</string>
+    <string name="labelSettingsIpAddress">IP Address to connect. Can also be a hostname
+    or a mnds name like avnav.local</string>
     <string name="labelSettingsIpPort">IP Port to connect</string>
     <string name="labelSettingsActivity">Android Settings</string>
     <string name="labelSettingsMain">Main Settings</string>
@@ -99,5 +100,8 @@
     <string name="labelSettingsComputeRMB">compute RMB seentences if a waypoint or route is active</string>
     <string name="reallyResetHandlers">Really reset the handler configuration?</string>
     <string name="labelSettingsSelectService">Select the service you would like to connect to</string>
+    <string name="labelSettingsMdnsName">Name for Mdns (Bonjour/Avahi) announcement</string>
+    <string name="labelSettingsMdnsEnabled">Enable announcement via MDNS (Bonjour/Avahi)</string>
+    <string name="labelSettingsFlowControl">flow control for the serial connection</string>
 
 </resources>

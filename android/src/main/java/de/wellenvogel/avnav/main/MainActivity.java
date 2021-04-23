@@ -96,6 +96,8 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
     private JavaScriptApi jsInterface;
     private int goBackSequence=0;
     private boolean checkSettings=true;
+    private boolean showsDialog = false;
+
 
     private static class AttachedDevice{
         String type;
@@ -202,8 +204,6 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             }
         }
 
-        if (! checkSettings(this)) return false;
-
         Intent intent = new Intent(this, GpsService.class);
         if (Build.VERSION.SDK_INT >= 26){
             startForegroundService(intent);
@@ -308,6 +308,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
     protected void onDestroy() {
         super.onDestroy();
         running=false;
+        showsDialog=false;
         if (pd != null){
             try{
                 pd.dismiss();
@@ -467,6 +468,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (running) return;
+        showsDialog=false;
         setContentView(R.layout.main);
         sharedPrefs=getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         PreferenceManager.setDefaultValues(this,Constants.PREFNAME,Context.MODE_PRIVATE, R.xml.sound_preferences, false);
@@ -534,6 +536,9 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         if (! sharedPrefs.contains(Constants.ALARMSOUNDS)){
             e.putBoolean(Constants.ALARMSOUNDS,true);
         }
+        if (! sharedPrefs.contains(Constants.SHOWDEMO)){
+            e.putBoolean(Constants.SHOWDEMO,true);
+        }
         String workdir=sharedPrefs.getString(Constants.WORKDIR, "");
         String chartdir=sharedPrefs.getString(Constants.CHARTDIR, "");
         if (workdir.isEmpty()){
@@ -553,8 +558,8 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         e.commit();
     }
 
-    private boolean checkSettingsInternal(){
-        if (checkSettings && !checkSettings(this)) {
+    private boolean checkSettingsInternal(boolean checkGps){
+        if (checkSettings && !checkSettings(this,checkGps)) {
             checkSettings=false;
             showSettings(true);
             return false;
@@ -562,7 +567,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         return true;
     }
     private boolean checkForInitialDialogs(){
-        boolean showsDialog=false;
+        if (showsDialog) return true;
         SharedPreferences sharedPrefs = getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         int oldVersion=sharedPrefs.getInt(Constants.VERSION, -1);
         boolean startPendig=sharedPrefs.getBoolean(Constants.WAITSTART, false);
@@ -573,7 +578,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         } catch (PackageManager.NameNotFoundException e) {
         }
         if (oldVersion < 0 || startPendig) {
-            showsDialog=true;
+            showsDialog =true;
             int title;
             int message;
             if (startPendig) {
@@ -588,7 +593,8 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             DialogBuilder.alertDialog(this,title,message, new DialogInterface.OnClickListener(){
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                        showSettings(false);
+                    showsDialog=false;
+                    showSettings(false);
                 }
             });
             if (startPendig)sharedPrefs.edit().putBoolean(Constants.WAITSTART,false).commit();
@@ -600,7 +606,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                 //TODO: handle other version changes
                 if (lastVersion <20210406 ){
                     final int newVersion=version;
-                    showsDialog=true;
+                    showsDialog =true;
                     DialogBuilder builder=new DialogBuilder(this,R.layout.dialog_confirm);
                     builder.setTitle(R.string.newVersionTitle);
                     builder.setText(R.id.question,R.string.newVersionMessage);
@@ -608,13 +614,15 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             sharedPrefs.edit().putInt(Constants.VERSION,newVersion).commit();
-                            if (!checkSettingsInternal()) return;
+                            showsDialog=false;
+                            if (!checkSettingsInternal(true)) return;
                             onResumeInternal();
                         }
                     });
                     builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
+                            showsDialog=false;
                             endApp();
                         }
                     });
@@ -622,7 +630,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                 }
             }catch (Exception e){}
         }
-        return showsDialog || !checkSettingsInternal();
+        return showsDialog || !checkSettingsInternal(false);
     }
 
     @Override
@@ -683,7 +691,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         super.onResume();
         handleBars();
         AvnLog.d("main: onResume");
-        if (! checkForInitialDialogs()){
+        if (! checkForInitialDialogs() && checkSettingsInternal(false)){
             onResumeInternal();
         }
     }
@@ -798,7 +806,14 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         return gpsService;
     }
 
-
+    public void dialogClosed() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                handleBars();
+            }
+        });
+    }
 
 
 }

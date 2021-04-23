@@ -46,7 +46,7 @@ class ExternalWidget extends React.Component{
             triggerRedraw: ()=>{self.setState({updateCount:self.state.updateCount+1})}
         };
         if (typeof(this.props.initFunction) === 'function'){
-            this.props.initFunction.call(this.userData,this.userData);
+            this.props.initFunction.call(this.userData,this.userData,this.props);
         }
     }
     render(){
@@ -85,7 +85,7 @@ class ExternalWidget extends React.Component{
     }
     componentWillUnmount(){
         if (typeof(this.props.finalizeFunction) === 'function'){
-            this.props.finalizeFunction.call(this.userData,this.userData);
+            this.props.finalizeFunction.call(this.userData,this.userData,this.props);
         }
     }
     canvasRef(item){

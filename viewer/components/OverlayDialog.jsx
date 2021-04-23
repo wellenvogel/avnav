@@ -20,7 +20,11 @@ import DB from './DialogButton.jsx';
 import shallowcompare from '../util/shallowcompare.js';
 
 let id=1;
-
+const notifyClosed=()=>{
+    if (window.avnav.android && window.avnav.android.dialogClosed){
+        window.avnav.android.dialogClosed();
+    }
+}
 const nextId=()=> {
     id++;
     return id;
@@ -64,6 +68,7 @@ const removeDialog=(key,opt_omitCancel)=> {
         //if someone calls removeDialog in the cancel callback
         old.cancelCallback();
     }
+    notifyClosed();
     return old !== undefined;
 };
 
@@ -389,6 +394,7 @@ export const dialogHelper=(thisref,stateName)=>{
             let state={};
             state[stateName]=undefined;
             thisref.setState(state);
+            notifyClosed();
         },
         filterState:(state)=>{
             let rt=assign({},state);

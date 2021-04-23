@@ -18,6 +18,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import de.wellenvogel.avnav.util.AvnUtil;
+import de.wellenvogel.avnav.worker.GpsService;
 import de.wellenvogel.avnav.worker.Worker;
 
 public class DirectoryRequestHandler extends Worker implements INavRequestHandler{
@@ -25,8 +26,8 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
     protected String urlPrefix;
     protected String type;
     protected IDeleteByUrl deleter;
-    public DirectoryRequestHandler(String type, File workDir, String urlPrefrix, IDeleteByUrl deleter) throws IOException {
-        super(type);
+    public DirectoryRequestHandler(String type, GpsService ctx,File workDir, String urlPrefrix, IDeleteByUrl deleter) throws IOException {
+        super(type,ctx);
         this.type=type;
         this.urlPrefix=urlPrefrix;
         this.workDir=workDir;
@@ -38,12 +39,7 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
         }
         this.deleter=deleter;
     }
-    public DirectoryRequestHandler(String type, String urlPrefrix, IDeleteByUrl deleter) throws IOException {
-        super("Directory-"+type);
-        this.type=type;
-        this.urlPrefix=urlPrefrix;
-        this.deleter=deleter;
-    }
+
 
     protected void setWorkDir(File workDir) throws IOException {
         this.workDir=workDir;
@@ -113,7 +109,7 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
     public JSONObject handleApiRequest(Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
         String command=AvnUtil.getMandatoryParameter(uri,"command");
         if (command.equals("list")){
-            return RequestHandler.getReturn(new RequestHandler.KeyValue("items",handleList(uri, serverInfo)));
+            return RequestHandler.getReturn(new AvnUtil.KeyValue("items",handleList(uri, serverInfo)));
         }
         if (command.equals("delete")){
             String name=AvnUtil.getMandatoryParameter(uri,"name");
