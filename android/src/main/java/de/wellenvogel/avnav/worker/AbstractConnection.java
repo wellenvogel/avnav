@@ -124,7 +124,7 @@ public abstract class AbstractConnection {
         public boolean hasTimeout(long now){
             long writeStart=lastWriteStart;
             if (timeout <=0 || writeStart <=0) return false;
-            return ((lastWriteStart+timeout*1000) < now);
+            return ((writeStart+timeout*1000) < now);
         }
 
     }
