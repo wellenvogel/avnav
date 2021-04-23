@@ -116,6 +116,7 @@ public class WebServer extends Worker {
         gpsService =controller;
         status.canEdit=true;
     }
+    private static final String SERVICE_TYPE="_http._tcp";
 
     @Override
     protected void checkParameters(JSONObject newParam) throws JSONException, IOException {
@@ -129,7 +130,7 @@ public class WebServer extends Worker {
             else mdnsName=mdnsNameParameter.fromJson(parameters);
             if (mdnsName == null || mdnsName.isEmpty())
                 throw new JSONException(mdnsNameParameter.name+" cannot be empty when "+mdnsEnabledParameter.name+" is set");
-            checkClaim(CLAIM_SERVICE, mdnsName, true);
+            checkClaim(CLAIM_SERVICE, SERVICE_TYPE+"."+mdnsName, true);
         }
     }
 
@@ -139,8 +140,8 @@ public class WebServer extends Worker {
         listenAny=ANY_ADDRESS.fromJson(parameters);
         addClaim(CLAIM_TCPPORT,port.toString(),true);
         if (mdnsEnabledParameter.fromJson(parameters)) {
-            addClaim(CLAIM_SERVICE, mdnsNameParameter.fromJson(parameters), true);
-            gpsService.registerService(getId(), "_http._tcp", mdnsNameParameter.fromJson(parameters), port);
+            addClaim(CLAIM_SERVICE, SERVICE_TYPE+"."+mdnsNameParameter.fromJson(parameters), true);
+            gpsService.registerService(getId(), SERVICE_TYPE, mdnsNameParameter.fromJson(parameters), port);
         }
         setStatus(WorkerStatus.Status.STARTED,"starting with port "+port+", external access "+listenAny);
         running=true;

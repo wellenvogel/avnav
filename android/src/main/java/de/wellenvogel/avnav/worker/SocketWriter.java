@@ -155,7 +155,7 @@ public class SocketWriter extends ChannelWorker {
             else mdnsName=mdnsNameParameter.fromJson(parameters);
             if (mdnsName == null || mdnsName.isEmpty())
                 throw new JSONException(MDNS_NAME.name+" cannot be empty when "+MDNS_ENABLED.name+" is set");
-            checkClaim(CLAIM_SERVICE, mdnsName, true);
+            checkClaim(CLAIM_SERVICE, TcpServiceReader.NMEA_SERVICE_TYPE+"."+mdnsName, true);
         }
     }
 
@@ -175,7 +175,7 @@ public class SocketWriter extends ChannelWorker {
         Integer port = PORT_PARAMETER.fromJson(parameters);
         addClaim(CLAIM_TCPPORT,port.toString(),true);
         if (mdnsEnableParameter.fromJson(parameters)) {
-            addClaim(CLAIM_SERVICE, MDNS_NAME.fromJson(parameters), true);
+            addClaim(CLAIM_SERVICE, TcpServiceReader.NMEA_SERVICE_TYPE+"."+mdnsNameParameter.fromJson(parameters), true);
         }
         boolean allowExternal=EXTERNAL_ACCESS.fromJson(parameters);
         if (serversocket != null){
