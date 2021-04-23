@@ -54,12 +54,10 @@ public class Decoder extends Worker {
     private long lastAisCleanup=0;
     private AisStore store=null;
     private GSVStore currentGsvStore=null;
-    private GSVStore validGsvStore=null;
-    private SatStatus stat=new SatStatus(0,0);
+    private final SatStatus stat=new SatStatus(0,0);
     private Location location=null;
     private long lastPositionReceived=0;
     public static final String LOGPRFX="AvNav:Decoder";
-    private Context context;
     private NmeaQueue queue;
     private static final long AIS_CLEANUP_INTERVAL=60000;
     private long lastReceived=0;
@@ -105,27 +103,33 @@ public class Decoder extends Worker {
         int numGsv=0;
         int lastReceived=0;
         boolean isValid=false;
-        Date validDate=null;
+        long validDate=0;
+        long lastReceivedTime=System.currentTimeMillis();
+
         HashMap<Integer,GSVSentence> sentences=new HashMap<Integer,GSVSentence>();
         public void addSentence(GSVSentence gsv){
+            lastReceivedTime=System.currentTimeMillis();
             if (gsv.isFirst()){
                 numGsv=gsv.getSentenceCount();
                 sentences.clear();
                 isValid=false;
-                validDate=null;
-            }
-            if (gsv.isLast()){
-                isValid=true;
-                validDate=new Date();
+                validDate=0;
             }
             lastReceived=gsv.getSentenceIndex();
             sentences.put(gsv.getSentenceIndex(),gsv);
+            if (gsv.isLast()){
+                if (sentences.size() != numGsv){
+                    AvnLog.e("missing GSV sentence expected count="+numGsv+", has="+sentences.size());
+                }
+                isValid=true;
+                validDate=System.currentTimeMillis();
+            }
         }
         public boolean getValid(){
             if (! isValid) return false;
-            if (validDate == null) return false;
-            Date now=new Date();
-            if ((now.getTime()-validDate.getTime()) > GSVAGE) return false;
+            if (validDate == 0) return false;
+            long now=System.currentTimeMillis();
+            if ((now-validDate) > GSVAGE) return false;
             return true;
         }
         public int getSatCount(){
@@ -134,6 +138,10 @@ public class Decoder extends Worker {
                 return s.getSatelliteCount();
             }
             return 0;
+        }
+        public boolean isOutDated(){
+            long now=System.currentTimeMillis();
+            return ((now-lastReceivedTime) > GSVAGE);
         }
     }
     private net.sf.marineapi.nmea.util.Date lastDate;
@@ -209,6 +217,12 @@ public class Decoder extends Worker {
                     stat.gpsEnabled=false;
                     setStatus(WorkerStatus.Status.INACTIVE,"no NMEA data");
                 }
+                if (currentGsvStore == null || currentGsvStore.isOutDated()){
+                    synchronized (stat){
+                        stat.numSat=0;
+                        stat.numUsed=0;
+                    }
+                }
                 if (entry == null) {
                     continue;
                 }
@@ -237,16 +251,19 @@ public class Decoder extends Worker {
                                             gsv.getSentenceCount(),gsv.getSatelliteCount());
                                     if (currentGsvStore.getValid()) {
                                         numGsv = 0;
-                                        validGsvStore = currentGsvStore;
+                                        synchronized (stat){
+                                            stat.numSat=currentGsvStore.getSatCount();
+                                        }
                                         currentGsvStore = new GSVStore();
-                                        stat.numSat = validGsvStore.getSatCount();
-                                        //TODO: aging of validGSVStore
                                         AvnLog.dfs("%s: GSV sentence last, numSat=%d",getTypeName(),stat.numSat);
                                     }
                                     if (numGsv > GSVStore.MAXGSV) {
                                         AvnLog.e(getTypeName() + ": to many gsv sentences without a final one " + numGsv);
-                                        stat.numSat = 0;
-                                        validGsvStore = null;
+                                        synchronized (stat) {
+                                            stat.numSat = 0;
+                                            stat.numUsed=0;
+                                        }
+                                        currentGsvStore=null;
                                     }
 
                                     continue;
@@ -445,7 +462,9 @@ public class Decoder extends Worker {
     }
 
     SatStatus getSatStatus() {
-        return new SatStatus(stat);
+        synchronized (stat) {
+            return new SatStatus(stat);
+        }
     }
 
 
@@ -543,7 +562,7 @@ public class Decoder extends Worker {
         public SatStatus(int numSat,int numUsed){
             this.numSat=numSat;
             this.numUsed=numUsed;
-            this.gpsEnabled=(numUsed>0)?true:false;
+            this.gpsEnabled=false;
         }
         public SatStatus(SatStatus other){
 
