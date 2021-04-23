@@ -1439,14 +1439,5 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         return rt;
     }
 
-    public void mainGoBack(){
-        MainActivityActions main=mBinder.getCallback();
-        if (main != null) main.mainGoBack();
-    }
-    public void mainShowSettings(boolean checkInitially){
-        MainActivityActions main=mBinder.getCallback();
-        if (main != null) main.showSettings(checkInitially);
-    }
-
 
 }
