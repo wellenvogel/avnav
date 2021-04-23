@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 
 import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
 import de.wellenvogel.avnav.main.Constants;
@@ -22,7 +23,7 @@ public class Chart implements AvnUtil.IJsonObect {
     static final int TYPE_XML=3;
     static final String CFG_EXTENSION=".cfg";
     private static final long INACTIVE_CLOSE=100000; //100s
-    private Context context;
+    protected Context context;
     private File realFile;
     private DocumentFile documentFile; //alternative to realFile
     private ChartFileReader chartReader;
@@ -46,6 +47,11 @@ public class Chart implements AvnUtil.IJsonObect {
         this.lastTouched=System.currentTimeMillis();
         this.type=type;
     }
+
+    protected Chart(Context ctx) {
+        this.context=ctx;
+    }
+
     private synchronized ChartFileReader getChartFileReader() throws Exception {
         if (isXml())
             throw new IOException("unable to get chart file from xml");
@@ -100,16 +106,7 @@ public class Chart implements AvnUtil.IJsonObect {
         }
     }
 
-    /**
-     * check if this chart file belongs to the internal chart with the name provided
-     * @param fileName
-     * @return
-     */
-    public boolean isName(String fileName){
-        if (realFile == null) return false;
-        if (realFile.getName().equals(fileName)) return true;
-        return false;
-    }
+
     public File deleteFile() throws Exception {
         if (!canDelete()) return null;
         if (! isXml()) {
@@ -145,7 +142,7 @@ public class Chart implements AvnUtil.IJsonObect {
         return chartReader.getChartData(x,y,z,sourceIndex);
     }
 
-    public JSONObject toJson() throws JSONException {
+    public JSONObject toJson() throws JSONException, UnsupportedEncodingException {
         JSONObject e = new JSONObject();
         int numFiles=0;
         long sequence=0;

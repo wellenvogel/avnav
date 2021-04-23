@@ -14,6 +14,7 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InterfaceAddress;
@@ -183,7 +184,7 @@ public class AvnUtil {
     }
 
     public static interface IJsonObect{
-        JSONObject toJson() throws JSONException;
+        JSONObject toJson() throws JSONException, UnsupportedEncodingException;
     }
 
     public static boolean belongsToNet(Inet4Address addr1,Inet4Address addr2,short prefixLen){

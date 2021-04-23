@@ -125,6 +125,18 @@ public class ChartHandler implements INavRequestHandler {
                 readChartDir(secondChartDirStr, INDEX_EXTERNAL,newGemfFiles);
             }
         }
+        if (handler.getSharedPreferences().getBoolean(Constants.SHOWDEMO,false)) {
+            try {
+                for (String demo : context.getAssets().list("charts")) {
+                    if (!demo.endsWith(".xml")) continue;
+                    String name = demo.replaceAll("\\.xml$", "");
+                    DemoChart demoChart = new DemoChart(name, context);
+                    newGemfFiles.put(demoChart.getChartKey(),demoChart);
+                }
+            }catch(Exception e){
+                AvnLog.e("error when adding demo charts",e);
+            }
+        }
         boolean modified = false;
         synchronized (this) {
             //now we have all current charts - compare to the existing list and create/delete entries
@@ -324,25 +336,6 @@ public class ChartHandler implements INavRequestHandler {
             }
         } catch (Exception e) {
             Log.e(Constants.LOGPRFX, "exception reading chartlist:", e);
-        }
-        if (handler.getSharedPreferences().getBoolean(Constants.SHOWDEMO,false)){
-            String demoCharts[]= context.getAssets().list("charts");
-            for (String demo: demoCharts){
-                if (! demo.endsWith(".xml")) continue;
-                String name=demo.replaceAll("\\.xml$", "");
-                AvnLog.d(Constants.LOGPRFX,"found demo chart "+demo);
-                String url="/"+ Constants.CHARTPREFIX+"/"+Constants.DEMOCHARTS+"/"+URLEncoder.encode(name,"UTF-8");
-                JSONObject e = new JSONObject();
-                e.put("name", name);
-                e.put("url",url);
-                e.put("charturl",url);
-                e.put("canDelete",false);
-                e.put("canDownload",false);
-                e.put("time", BuildConfig.TIMESTAMP/1000);
-                e.put("sequence",0);
-                e.put("overlayConfig",url.replace('/','@')+CFG_EXTENSION);
-                rt.put(e);
-            }
         }
         AvnLog.i(Constants.LOGPRFX,"finish chartlist request "+Thread.currentThread().getId());
         return rt;
@@ -573,8 +566,9 @@ public class ChartHandler implements INavRequestHandler {
         }
         if (parts[1].equals(DEMOCHARTS)){
             if (noDemo) throw new Exception("not permitted for demo charts");
-            if (parts.length < 4) throw new Exception("invaldi chart url");
-            KeyAndParts rt=new KeyAndParts(null,parts,2);
+            if (parts.length < 4) throw new Exception("invalid chart url");
+            String key=parts[1]+"/"+parts[2];
+            KeyAndParts rt=new KeyAndParts(key,parts,3);
             rt.isDemo=true;
             return rt;
         }
@@ -592,30 +586,10 @@ public class ChartHandler implements INavRequestHandler {
     }
 
     private ExtendedWebResourceResponse handleChartRequest(Uri uri) throws Exception {
-        InputStream rt = null;
         String fname=uri.getPath();
         if (fname == null) return null;
         KeyAndParts kp = urlToKey(fname,false);
-        String mimeType = RequestHandler.mimeType(fname);
-        int len = 0;
         try {
-            if (kp.isDemo) {
-                if (kp.parts[1].equals(CHARTOVERVIEW)) {
-                    AvnLog.d(Constants.LOGPRFX, "overview request " + fname);
-                    String safeName = DirectoryRequestHandler.safeName(kp.parts[0], true);
-                    safeName += ".xml";
-                    rt = context.getAssets().open(Constants.CHARTPREFIX + "/" + safeName);
-                    len = -1;
-                    return new ExtendedWebResourceResponse(len, mimeType, "", rt);
-                }
-                else if (kp.parts[1].equals("sequence")){
-                    JSONObject sq= RequestHandler.getReturn(new AvnUtil.KeyValue("sequence",0));
-                    byte o[]=sq.toString().getBytes("UTF-8");
-                    return new ExtendedWebResourceResponse(o.length,"application/json","UTF-8",new ByteArrayInputStream(o));
-                }
-                else
-                    throw new FileNotFoundException("unable to handle demo request for " + fname);
-            }
             Chart chart = getChartDescription(kp.key);
             if (chart == null) {
                 throw new Exception("request a file that is not in the list: " + fname);
