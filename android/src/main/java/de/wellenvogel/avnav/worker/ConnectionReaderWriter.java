@@ -97,7 +97,7 @@ public class ConnectionReaderWriter{
     }
 
 
-    public void run() {
+    public void run() throws IOException {
         dataAvailable=false;
         try {
             startWriter();
@@ -106,10 +106,9 @@ public class ConnectionReaderWriter{
             stopped = true;
             return;
         }
+        BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()), 8);
         while (!stopped) {
             try {
-                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()), 8);
-
                 //TODO:timeout exception
                 String line = in.readLine();
                 AvnLog.d(LOGPRFX, name + ": received: " + line);

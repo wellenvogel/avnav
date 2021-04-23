@@ -73,7 +73,11 @@ public abstract class SingleConnectionHandler extends ChannelWorker {
             }
             AvnLog.d(LOGPRFX, name + ": connected to " + connection.getId());
             handler=new ConnectionReaderWriter(connection,getSourceName(),queue);
-            handler.run();
+            try {
+                handler.run();
+            }catch (Throwable t){
+                AvnLog.e("error in connection run",t);
+            }
             long current=System.currentTimeMillis();
             if ((current-lastConnect) < 3000){
                 if (!sleep(3000)) break;
