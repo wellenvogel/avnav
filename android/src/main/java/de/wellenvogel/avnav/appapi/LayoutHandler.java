@@ -25,6 +25,7 @@ public class LayoutHandler implements INavRequestHandler{
     String systemDir=null; //base path at assets
     File userDir=null;
     Context context =null;
+    static final String PREFIX="layout";
 
 
     static class LayoutInfo implements AvnUtil.IJsonObect {
@@ -32,18 +33,19 @@ public class LayoutHandler implements INavRequestHandler{
         public static final String SYSTEMPREFIX="system.";
         public String name;
         public long mtime;
-        public boolean canDelete;
+        public boolean isUser;
         @Override
         public JSONObject toJson() throws JSONException {
             JSONObject rt=new JSONObject();
-            rt.put("name",(canDelete?USERPREFIX:SYSTEMPREFIX)+name);
-            rt.put("canDelete",canDelete);
+            rt.put("name",(isUser?USERPREFIX:SYSTEMPREFIX)+name);
+            rt.put("url",PREFIX+"/"+(isUser?USERPREFIX:SYSTEMPREFIX)+name+".json");
+            rt.put("canDelete",isUser);
             rt.put("time",mtime/1000);
             return rt;
         }
-        public LayoutInfo(String name, boolean canDelete,long mtime){
+        public LayoutInfo(String name, boolean isUser,long mtime){
             this.name=name;
-            this.canDelete=canDelete;
+            this.isUser=isUser;
             this.mtime=mtime;
         }
     }
@@ -59,7 +61,7 @@ public class LayoutHandler implements INavRequestHandler{
     public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
         if (postData == null) throw new Exception("no data");
         if (!userDir.isDirectory()) throw new IOException("user dir is no directory");
-        String fileName = name + ".json";
+        String fileName =DirectoryRequestHandler.safeName(name,true) + ".json";
         File of = new File(userDir, fileName);
         if (!userDir.canWrite()) throw new IOException("unable to write layout " + fileName);
         FileOutputStream os = new FileOutputStream(of);
@@ -70,7 +72,7 @@ public class LayoutHandler implements INavRequestHandler{
 
     @Override
     public JSONArray handleList(Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception{
-            JSONArray li=readDir(userDir,true);
+            JSONArray li=readDir(userDir);
             for (AvnUtil.IJsonObect o: readAssetsDir()){
                 li.put(o.toJson());
             }
@@ -121,13 +123,13 @@ public class LayoutHandler implements INavRequestHandler{
         }
         return rt;
     }
-    private JSONArray readDir(File dir,boolean canDelete) throws JSONException {
+    private JSONArray readDir(File dir) throws JSONException {
         JSONArray rt=new JSONArray();
         if (!dir.isDirectory()) return rt;
         for (File f: dir.listFiles()){
             if (!f.getName().endsWith(".json")) continue;
             if (! f.isFile()) continue;
-            LayoutInfo li=new LayoutInfo(f.getName().replaceAll("\\.json$",""),canDelete,f.lastModified());
+            LayoutInfo li=new LayoutInfo(f.getName().replaceAll("\\.json$",""),true,f.lastModified());
             rt.put(li.toJson());
         }
         return rt;
@@ -159,16 +161,18 @@ public class LayoutHandler implements INavRequestHandler{
         throw new IOException("neither system nor user layout: "+name);
     }
 
-    public static Uri getUriForLayout(String name){
-        if (name.startsWith("system.")){
-            return AssetsProvider.createContentUri("layout",name.replaceAll("^system\\.",""));
+    public static Uri getUriForLayout(String url){
+        if (! url.startsWith(PREFIX)) return null;
+        url=url.substring(PREFIX.length()+1);
+        if (url.startsWith("system.")){
+            return AssetsProvider.createContentUri(PREFIX,url.replaceAll("^system\\.",""));
         }
         else{
             try {
-                Uri rt = UserFileProvider.createContentUri("layout",name.replaceAll("^user\\.",""),null);
+                Uri rt = UserFileProvider.createContentUri(PREFIX,url.replaceAll("^user\\.",""),null);
                 return rt;
             }catch (Throwable t){
-                AvnLog.e("error creating uri for layout "+name,t);
+                AvnLog.e("error creating uri for layout "+url,t);
                 return null;
             }
         }

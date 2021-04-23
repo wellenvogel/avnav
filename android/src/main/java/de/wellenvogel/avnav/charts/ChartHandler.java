@@ -337,6 +337,7 @@ public class ChartHandler implements INavRequestHandler {
                 e.put("url",url);
                 e.put("charturl",url);
                 e.put("canDelete",false);
+                e.put("canDownload",false);
                 e.put("time", BuildConfig.TIMESTAMP/1000);
                 e.put("sequence",0);
                 e.put("overlayConfig",url.replace('/','@')+CFG_EXTENSION);

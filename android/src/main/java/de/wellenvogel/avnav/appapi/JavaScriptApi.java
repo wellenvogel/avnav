@@ -59,12 +59,12 @@ public class JavaScriptApi {
         }
         Uri data = null;
         if (type.equals("layout")) {
-            data = LayoutHandler.getUriForLayout(name);
+            data = LayoutHandler.getUriForLayout(url);
         } else {
             try {
                 data = UserFileProvider.createContentUri(type, name,url);
             } catch (Exception e) {
-                AvnLog.e("unable to create content uri for " + name);
+                AvnLog.e("unable to create content uri for " + name,e);
             }
         }
         if (data == null) return false;
@@ -79,8 +79,8 @@ public class JavaScriptApi {
         if (type.equals("route") || type.equals("track")) {
             shareIntent.setType("application/gpx+xml");
         }
-        String title = requestHandler.service.getText(R.string.selectApp) + " " + name;
-        requestHandler.service.startActivity(Intent.createChooser(shareIntent, title));
+        String title = mainActivity.getText(R.string.selectApp) + " " + name;
+        mainActivity.startActivity(Intent.createChooser(shareIntent, title));
         return true;
     }
 
@@ -228,7 +228,7 @@ public class JavaScriptApi {
     @JavascriptInterface
     public void goBack() {
         if (detached) return;
-        requestHandler.service.mainGoBack();
+        mainActivity.mainGoBack();
     }
 
     @JavascriptInterface
@@ -242,7 +242,7 @@ public class JavaScriptApi {
     @JavascriptInterface
     public void showSettings(){
         if (detached) return;
-        requestHandler.service.mainShowSettings(false);
+        mainActivity.showSettings(false);
     }
 
     @JavascriptInterface
@@ -256,9 +256,9 @@ public class JavaScriptApi {
         Intent goDownload = new Intent(Intent.ACTION_VIEW);
         goDownload.setData(Uri.parse(url));
         try {
-            requestHandler.service.startActivity(goDownload);
+            mainActivity.startActivity(goDownload);
         } catch (Exception e) {
-            Toast.makeText(requestHandler.service, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(mainActivity, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
             return;
         }
     }
@@ -266,8 +266,8 @@ public class JavaScriptApi {
     public String getVersion(){
         if (detached) return null;
         try {
-            String versionName = requestHandler.service.getPackageManager()
-                    .getPackageInfo(requestHandler.service.getPackageName(), 0).versionName;
+            String versionName = mainActivity.getPackageManager()
+                    .getPackageInfo(mainActivity.getPackageName(), 0).versionName;
             return versionName;
         } catch (PackageManager.NameNotFoundException e) {
             return "<unknown>";
