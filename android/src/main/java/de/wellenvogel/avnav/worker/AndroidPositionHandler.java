@@ -156,7 +156,7 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
                 RMCSentence rmc=positionToRmc(location);
                 queue.add(rmc.toSentence(),getSourceName());
             }catch(Exception e){
-                AvnLog.e("unable to log NMEA data: "+e);
+                AvnLog.e("unable to create RMC from position: "+e);
             }
 
         lastValidLocation=System.currentTimeMillis();
@@ -257,7 +257,7 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
     private static net.sf.marineapi.nmea.util.Time toSfTime(long timestamp){
         Calendar cal=Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         cal.setTimeInMillis(timestamp);
-        net.sf.marineapi.nmea.util.Time rt=new net.sf.marineapi.nmea.util.Time(cal.get(Calendar.HOUR_OF_DAY),cal.get(Calendar.MINUTE)+1,cal.get(Calendar.SECOND));
+        net.sf.marineapi.nmea.util.Time rt=new net.sf.marineapi.nmea.util.Time(cal.get(Calendar.HOUR_OF_DAY),cal.get(Calendar.MINUTE),cal.get(Calendar.SECOND));
         return rt;
     }
 
