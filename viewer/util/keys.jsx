@@ -31,14 +31,16 @@ export const PropertyType={
  * @param opt_label
  * @param opt_type
  * @param opt_values either min,max,[step],[decimal] for range or a list of value:label for list
+ * @param opt_initial value to be set on first start
  * @constructor
  */
-export const Property=function(defaultv,opt_label,opt_type,opt_values){
+export const Property=function(defaultv,opt_label,opt_type,opt_values,opt_initial){
     this.defaultv=defaultv;
     this.label=opt_label;
     this.type=(opt_type !== undefined)?opt_type:PropertyType.RANGE;
     this.values=(opt_values !== undefined)?opt_values:[0,1000]; //assume range 0...1000
     this.canChange=opt_type !== undefined;
+    this.initialValue=opt_initial;
 };
 
 /**
@@ -352,7 +354,7 @@ let keys={
         layoutName: new Property("system.default","Layout name",PropertyType.LAYOUT),
         mobMinZoom: new Property(16,"minzoom for MOB",PropertyType.RANGE,[8,20]),
         buttonCols: new Property(false,"2 button columns",PropertyType.CHECKBOX),
-        cancelTop: new Property(false,"Back button top",PropertyType.CHECKBOX),
+        cancelTop: new Property(false,"Back button top",PropertyType.CHECKBOX,undefined,true),
         featureInfo: new Property(true,"Overlay Info on Click",PropertyType.CHECKBOX),
         emptyFeatureInfo: new Property(true,"Always Info on Chart Click",PropertyType.CHECKBOX),
         showFullScreen: new Property(true,"Show Fullscreen Button",PropertyType.CHECKBOX),
@@ -368,7 +370,7 @@ let keys={
             aisTrackingColor: new Property('#CAD5BE', "Tracking", PropertyType.COLOR),
             routeApproachingColor: new Property('#FA584A', "Approach", PropertyType.COLOR),
             widgetMargin: new Property(3, "Widget Margin(px)", PropertyType.RANGE, [1, 20]),
-            useHdpi: new Property(false,"Increase Fonts on High Res",PropertyType.CHECKBOX)
+            useHdpi: new Property(false,"Increase Fonts on High Res",PropertyType.CHECKBOX,undefined,true)
         }
 
     }
