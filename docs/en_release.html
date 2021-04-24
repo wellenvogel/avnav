@@ -40,6 +40,72 @@ sudo systemctl start avnav</div>
     <div> </div>
     <h2>Versions</h2>
     <p> <br>
+      <span style="font-weight: bold;">20210424</span> <a title="release/20210424"
+        href="../downloads/release/20210424">link</a> </p>
+    <p>Main Focus: <a href="android/android.html">Android App</a></p>
+    <ul>
+      <li>The Android App now integrates a full NMEA0183 multiplexer - very
+        similar to the server variant</li>
+      <li>you can:</li>
+      <ul>
+        <li>connect to multiple TCP/UDP NMEA0183 data sources</li>
+        <li>send out NMEA to TCP/UDP</li>
+        <li>use multiple USB-serial devices to send and receive NMEA data</li>
+        <li>send and receive NMEA via Bluetooth</li>
+        <li>send out own GPS data</li>
+        <li>run multiplexer in background and provide the NMEA data to other
+          apps</li>
+        <li>use mdns (Bonjour/Ahavi) to easily connect to NMEA data sources even
+          in changing networks</li>
+        <li>one click connect using mdns (Bonjour/Ahavi) e.g. to the NMEA0183
+          output of a SignalK server</li>
+        <li>announce own NMEA outputs via mdns</li>
+        <li>filter NMEA data in and out with filterstrings and blacklists</li>
+        <li>log NMEA data to files</li>
+        <li>view the status of all connections on the Status/Server page</li>
+      </ul>
+      <li>Android now integrates the WebServer in the normal mode (was named
+        "external browser mode" bevor)</li>
+      <ul>
+        <li>access from local device or from other devices</li>
+        <li>default port now 8080</li>
+      </ul>
+      <li>compute RMB records when routing (can be send out to control an auto
+        pilot)&nbsp; </li>
+      <li>the configuration of the Android App to most parts is similar now
+        to the server version - using the Status/Server page</li>
+      <ul>
+        <li>HINT: some configuration is migrated automatically but not all</li>
+      </ul>
+    </ul>
+    <p>For the Raspberry Version (when using the Headless images):</p>
+    <ul>
+      <li>support USB tethering to connect an android device via USB and have
+        internet access this way on the raspberry - or connect to the AvNav
+        server (easily when using the BonjourBrowser)</li>
+    </ul>
+    <p>For all Server Versions (Headless Images, OpenPlotter,...):</p>
+    <ul>
+      <li>announce TCP NMEA outputs via Avahi (mdns/Bonjour) - another AvNav
+        server or the Android app can easily connect </li>
+      <li>AVNNmea0183ServiceReader to connect to Avahi (mdns/Bonjour) NMEA
+        services (like SignalK)</li>
+      <li>Extension in the <a href="hints/userjs.html">plugin API</a> -
+        initFunction does now receive the widget parameters &nbsp; </li>
+    </ul>
+    <p>BugFixes:</p>
+    <ul>
+      <li>#123: bluetooth disconnects</li>
+      <li>adapt to newer gdal versions for importer</li>
+      <li>correctly always use utf-8 for file reading and writing in chart
+        converter</li>
+      <li>adapt CSS for better compatibility to older browsers</li>
+      <li>better robustness againts NMEA messages with missing elements</li>
+      <li>sometimes changing one widget in the layout editor also changes the
+        one it was copied from &nbsp; </li>
+    </ul>
+    
+    <p> <br>
       <span style="font-weight: bold;">20210323</span> <a title="release/20210323"
         href="../downloads/release/20210323">link</a> </p>
     <ul>
