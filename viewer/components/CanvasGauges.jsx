@@ -141,7 +141,7 @@ Gauge.propTypes={
     value: PropTypes.number,
     drawValue: PropTypes.bool,
     colorText: PropTypes.string,
-    formatter: PropTypes.string,
+    formatter: PropTypes.oneOf([PropTypes.string,PropTypes.func]),
     formatterParameters: PropTypes.array,
     translateFunction: PropTypes.func, //if set: a function to translate options
     valueFontFactor: PropTypes.number

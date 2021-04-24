@@ -16,7 +16,7 @@ class Button extends React.Component {
         if (this.props.toggle !== undefined) {
             className += this.props.toggle ? " active" : " inactive";
         }
-        let {toggle,icon,style,disabled,overflow,editDisable,editOnly,visible,...forward}=this.props;
+        let {toggle,icon,style,disabled,overflow,editDisable,editOnly,visible,dummy,...forward}=this.props;
         let spanStyle={};
         if (icon !== undefined) {
             spanStyle.backgroundImage = "url(" + icon + ")";
