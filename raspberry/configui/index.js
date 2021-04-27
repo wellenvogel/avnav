@@ -52,11 +52,21 @@
         if (el.value === '') return;
         return el.value;
     }
+    let selectValue=function(el){
+        if (!el) return;
+        let v=el.options[el.selectedIndex].value;
+        return v;
+    }
     let fields={
         AVNAV_SSID: getValue,
         AVNAV_PSK: getValue,
         AVNAV_PASSWD: encryptPass,
-        AVNAV_MCS: checkBox
+        AVNAV_MCS: checkBox,
+        AVNAV_WLAN_CLIENT: checkBox,
+        AVNAV_HOSTNAME: getValue,
+        AVNAV_TIMEZONE: selectValue,
+        AVNAV_KBLAYOUT: selectValue,
+        AVNAV_KBMODEL: selectValue
     };
     let templateReplace=function(template,replace){
         if (! template) return;
@@ -76,12 +86,53 @@
         return rt.join("\n");
     }
     let template=undefined;
+    let fillKbSelect=function(parent,data){
+        if (! parent || ! data) return;
+        let defaultL=parent.getAttribute('data-default');
+        let keys=Object.keys(data);
+        keys.sort();
+        for (let li in keys){
+            let lname=keys[li];
+            let entry=document.createElement('option');
+            entry.setAttribute('value',data[lname]);
+            if (data[lname] === defaultL) entry.setAttribute('selected',true);
+            entry.textContent=lname;
+            parent.appendChild(entry);
+        }
+    }
     window.addEventListener('load',function(){
        console.log("loaded");
        fetch("avnav.conf")
            .then(function(r){return r.text()})
            .then(function(td){template=td;})
            .catch(function(err){alert(err)});
+       fetch("timezones.json")
+            .then(function(r){return r.json()})
+            .then(function(tzdata){
+                let parent=document.getElementById('AVNAV_TIMEZONE');
+                if (parent){
+                    let defaultTz=parent.getAttribute('data-default');
+                    if (! defaultTz) defaultTz='Europe/Berlin';
+                    tzdata.forEach(function(name){
+                        let entry=document.createElement('option');
+                        entry.setAttribute('value',name);
+                        entry.textContent=name;
+                        if (name == defaultTz){
+                            entry.setAttribute('selected',true);
+                        }
+                        parent.appendChild(entry);
+                    })
+                }
+            })
+            .catch(function(err){alert("unable to load timezones: "+err)});
+       this.fetch("keyboards.json")
+            .then(function(r){return r.json()})
+            .then(function(kbdata){
+                fillKbSelect(document.getElementById('AVNAV_KBLAYOUT'),kbdata.layouts);
+                fillKbSelect(document.getElementById('AVNAV_KBMODEL'),kbdata.models);
+                //TODO: variants
+            })
+            .catch(function(err){alert("unable to load keyboard data: "+err)})         
        let bt=document.getElementById('download');
        bt.addEventListener('click',function(){
            if (!template) {
@@ -96,6 +147,13 @@
                 if (k === 'AVNAV_SSID'){
                     if ( ! value || value.length > 32 || value.match(/ /)){
                         alert("invalid SSID, 1...32 characters, no space");
+                        return;
+                    }
+                }
+                if ( k === 'AVNAV_HOSTNAME'){
+                    let allowed=value.replace(/[^a-zA-Z0-9-]/g,'');
+                    if (allowed !== value ){
+                        alert("invalid hostname - only a-zA-Z0-9 and -");
                         return;
                     }
                 }

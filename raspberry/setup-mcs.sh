@@ -84,22 +84,39 @@ error(){
 }
 
 updateConfig(){
-    local cfg rt found
+    local cfg rt found noCom
     cfg=$1
+    noCom=$3
     rt=0 #no change, 1- change, -1 error
     if [ ! -w "$cfg" ] ; then
         log "ERROR: cannot write $cfg"
         return -1
+    fi
+    if [ "$noCom" = 1 ] ; then
+      #fix broken...
+      if grep "$MCS_COMMENT" $cfg > /dev/null ; then
+        log "must fix $cfg"
+        sed -i "/$MCS_COMMENT/d" $cfg
+        rt=1
+      fi
     fi    
     while read line
     do
         if [ "$line" != "" ] ; then
             found=0
-            grep -F "$line" $cfg > /dev/null 2>&1 && found=1
+            if [ "$noCom" = 1 ] ; then
+                grep -v "$MCS_COMMENT" $cfg | grep -F "$line" > /dev/null 2>&1 && found=1
+            else
+                grep -F "$line" $cfg > /dev/null 2>&1 && found=1
+            fi
             if [ "$found" != 1 ] ; then
                 log "add $line to $cfg"
                 rt=1
-                echo "$line$MCS_COMMENT" >> $cfg
+                if [ "$noCom" = 1 ] ; then
+                    echo "$line" >> $cfg
+                else
+                    echo "$line$MCS_COMMENT" >> $cfg
+                fi
             fi
         fi
     done <<< "$2"
@@ -157,7 +174,7 @@ fi
 
 updateConfig "$BASE/boot/config.txt" "$CFGPAR"
 res $? "modify config.txt"
-updateConfig "$BASE/etc/modules" "$MODULES"
+updateConfig "$BASE/etc/modules" "$MODULES" 1
 res $? "update /etc/modules"
 can="$BASE/etc/network/interfaces.d/can0"
 canok=0
@@ -181,6 +198,18 @@ if [ "$installPackages" = 1 ] ; then
     apt-get install -y $PACKAGES
 fi
 systemctl --no-ask-password enable pigpiod
+
+PIGPIO_OVERRIDE=/etc/systemd/system/pigpiod.service.d/stop-timeout.conf
+if [ ! -f "$PIGPIO_OVERRIDE" ] ; then
+    log "creating $PIGPIO_OVERRIDE"
+    dn=`dirname "$PIGPIO_OVERRIDE"`
+    if [ ! -d "$dn" ]; then
+        mkdir -p $dn
+    fi
+    echo "[Service]" > "$PIGPIO_OVERRIDE"
+    echo "TimeoutStopSec=5" >> "$PIGPIO_OVERRIDE"
+fi
+
 if [ $doReboot = 0 ]; then
     log "daemon reload"
     systemctl --no-ask-password daemon-reload

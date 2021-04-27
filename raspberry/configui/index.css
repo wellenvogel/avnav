@@ -1,5 +1,5 @@
 .configui.container{
-    max-width: 30em;
+    max-width: 35em;
     margin-left: auto;
     margin-right: auto;
 }
@@ -12,7 +12,7 @@
     border-bottom: 1px solid grey;
     margin-bottom: 1em;
 }
-.configui .row input {
+.configui .row input,select {
     flex-grow: 1;
     appearance: auto;
 }

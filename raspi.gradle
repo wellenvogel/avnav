@@ -52,6 +52,8 @@ ospackage {
             include 'wpa_supplicant.conf'
             include 'startup-check.sh'
             include 'setup-mcs.sh'
+            include 'wpa_action.sh'
+            include 'rename-interface.sh'
         }
         from('raspberry') {
             include 'avnav_server.xml'
