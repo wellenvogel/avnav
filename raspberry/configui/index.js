@@ -62,11 +62,12 @@
         AVNAV_PSK: getValue,
         AVNAV_PASSWD: encryptPass,
         AVNAV_MCS: checkBox,
-        AVNAV_WLAN_CLIENT: checkBox,
+        AVNAV_WIFI_CLIENT: checkBox,
         AVNAV_HOSTNAME: getValue,
         AVNAV_TIMEZONE: selectValue,
         AVNAV_KBLAYOUT: selectValue,
-        AVNAV_KBMODEL: selectValue
+        AVNAV_KBMODEL: selectValue,
+        AVNAV_WIFI_COUNTRY: selectValue
     };
     let templateReplace=function(template,replace){
         if (! template) return;
@@ -86,7 +87,7 @@
         return rt.join("\n");
     }
     let template=undefined;
-    let fillKbSelect=function(parent,data){
+    let fillSelect=function(parent,data){
         if (! parent || ! data) return;
         let defaultL=parent.getAttribute('data-default');
         let keys=Object.keys(data);
@@ -128,11 +129,17 @@
        this.fetch("keyboards.json")
             .then(function(r){return r.json()})
             .then(function(kbdata){
-                fillKbSelect(document.getElementById('AVNAV_KBLAYOUT'),kbdata.layouts);
-                fillKbSelect(document.getElementById('AVNAV_KBMODEL'),kbdata.models);
+                fillSelect(document.getElementById('AVNAV_KBLAYOUT'),kbdata.layouts);
+                fillSelect(document.getElementById('AVNAV_KBMODEL'),kbdata.models);
                 //TODO: variants
             })
-            .catch(function(err){alert("unable to load keyboard data: "+err)})         
+            .catch(function(err){alert("unable to load keyboard data: "+err)})
+       this.fetch("countryCodes.json")
+            .then(function(r){return r.json()})
+            .then(function(countries){
+                fillSelect(document.getElementById('AVNAV_WIFI_COUNTRY'),countries);
+            })
+            .catch(function(err){alert("unable to fill country list: "+err)});              
        let bt=document.getElementById('download');
        bt.addEventListener('click',function(){
            if (!template) {

@@ -12,7 +12,7 @@ log "started"
 
 LAST_PASSWD=""
 LAST_MCS=""
-LAST_WLAN_CLIENT=""
+LAST_WIFI_CLIENT=""
 
 if [ -f $LAST ] ; then
     source $LAST
@@ -43,13 +43,13 @@ else
     log "AVNAV_PASSWD not set"
 fi
 
-if [ "$AVNAV_WLAN_CLIENT" != "$LAST_WLAN_CLIENT" ] ; then
-    log "AVNAV_WLAN_CLIENT=$AVNAV_WLAN_CLIENT"
+if [ "$AVNAV_WIFI_CLIENT" != "$LAST_WIFI_CLIENT" ] ; then
+    log "AVNAV_WIFI_CLIENT=$AVNAV_WIFI_CLIENT"
     hasChanges=1
     needsReboot=1
-    LAST_WLAN_CLIENT="$AVNAV_WLAN_CLIENT"
+    LAST_WIFI_CLIENT="$AVNAV_WIFI_CLIENT"
 else
-    log "AVNAV_WLAN_CLIENT unchanged"
+    log "AVNAV_WIFI_CLIENT unchanged"
 fi
 
 if [ "$AVNAV_HOSTNAME" != "$LAST_HOSTNAME" -a "$AVNAV_HOSTNAME" != "" ] ; then
@@ -60,9 +60,9 @@ if [ "$AVNAV_HOSTNAME" != "$LAST_HOSTNAME" -a "$AVNAV_HOSTNAME" != "" ] ; then
     else
         echo "$AVNAV_HOSTNAME" > /etc/hostname
         sed -i "s/127.0.1.1.*$current/127.0.1.1\t$AVNAV_HOSTNAME/g" /etc/hosts
-        hasChanges=1
         needsReboot=1
     fi
+    hasChanges=1
     LAST_HOSTNAME="$AVNAV_HOSTNAME"
 else
     log "AVNAV_HOSTNAME unchanged"
@@ -85,7 +85,7 @@ if [ "$AVNAV_KBLAYOUT" != "$LAST_KBLAYOUT" -o "$AVNAV_KBMODEL" != "$LAST_KBMODEL
             echo "XKBOPTIONS=\"\"" >> $kbfile
             dpkg-reconfigure -f noninteractive keyboard-configuration
         fi
-        
+        hasChanges=1
         LAST_KBLAYOUT="$AVNAV_KBLAYOUT"
         LAST_KBMODEL="$AVNAV_KBMODEL"
     fi    
@@ -101,20 +101,45 @@ if [ "$AVNAV_TIMEZONE" != "$LAST_TIMEZONE" -a "$AVNAV_TIMEZONE" != "" ] ; then
     else
         log "change time zone"
         rm -f /etc/localtime
-        hasChanges=1
         needsReboot=1
         echo "$AVNAV_TIMEZONE" > /etc/timezone
         dpkg-reconfigure -f noninteractive tzdata
     fi
+    hasChanges=1
     LAST_TIMEZONE="$AVNAV_TIMEZONE"
 else
     log "timezone unchanged"
 fi
 
+if [ "$AVNAV_WIFI_COUNTRY" != "$LAST_WIFI_COUNTRY" -a "$AVNAV_WIFI_COUNTRY" != "" ]; then
+    log "AVNAV_WIFI_COUNTRY changed to $AVNAV_WIFI_COUNTRY"
+    cfgfile=/etc/wpa_supplicant/wpa_supplicant.conf
+    current=`sed -n 's/^ *country *= *//p' $cfgfile | sed 's/#.*//'| tr -d '" \n\r'`
+    if [ "$current" = "$AVNAV_WIFI_COUNTRY" ] ; then
+        log "AVNAV_WIFI_COUNTRY already correctly set in system"
+    else
+        if [ "$current" != "" ] ; then
+            sed -i "s/^ *country *=.*/country=$AVNAV_WIFI_COUNTRY/" $cfgfile
+        else
+            echo "" >> $cfgfile
+            echo "country=$AVNAV_WIFI_COUNTRY" >> $cfgfile
+        fi
+        needsReboot=1
+    fi
+    hasChanges=1
+    LAST_WIFI_COUNTRY="$AVNAV_WIFI_COUNTRY"
+else
+    log "AVNAV_WIFI_COUNTRY unchanged"
+fi
+
 runMcs=0
 if [ "$AVNAV_MCS" = "yes" ] ; then
-    if grep MCS_DO_NOT_DELETE /etc/modules > /dev/null ; then
+    if grep MCS_DO_NOT_DELETE /etc/modules > /dev/null 2>&1 ; then
         log "must correct /etc/modules"
+        LAST_MCS=""
+    fi
+    if grep "txqueuelen *10000" /etc/network/interfaces.d/can0 > /dev/null 2>&1 ; then
+        log "must correct can0 txqueuelen"
         LAST_MCS=""
     fi
     if [ "$LAST_MCS" = "yes" ] ; then
@@ -151,11 +176,12 @@ if [ "$hasChanges" = 1 ]; then
     log "writing back $LAST"
     echo "LAST_MCS=$LAST_MCS" > $LAST
     echo "LAST_PASSWD='$LAST_PASSWD'" >> $LAST
-    echo "LAST_WLAN_CLIENT='$LAST_WLAN_CLIENT'" >> $LAST
+    echo "LAST_WIFI_CLIENT='$LAST_WIFI_CLIENT'" >> $LAST
     echo "LAST_HOSTNAME='$LAST_HOSTNAME'" >> $LAST
     echo "LAST_KBLAYOUT='$LAST_KBLAYOUT'" >> $LAST
     echo "LAST_KBMODEL='$LAST_KBMODEL'" >> $LAST
     echo "LAST_TIMEZONE='$LAST_TIMEZONE'" >> $LAST
+    echo "LAST_WIFI_COUNTRY='$LAST_WIFI_COUNTRY'" >> $LAST
     chmod 600 $LAST
 fi
 if [ $needsReboot = 1 ] ; then
