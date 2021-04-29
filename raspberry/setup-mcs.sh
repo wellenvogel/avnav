@@ -35,7 +35,7 @@ allow-hotplug can0
 iface can0 can static
 bitrate 250000
 down /sbin/ip link set $IFACE down
-up /sbin/ifconfig $IFACE txqueuelen 10000'
+up /sbin/ifconfig $IFACE txqueuelen 200
 CAN0
 
 #/etc/modules
@@ -179,6 +179,10 @@ res $? "update /etc/modules"
 can="$BASE/etc/network/interfaces.d/can0"
 canok=0
 grep -F "$CAN0CHECK" "$can" > /dev/null 2>&1 && canok=1
+if [ "$canok" = 1 ] ; then
+    #correct the large queue to avoid blocking of SK
+    grep "txqueuelen *10000" "$can" > /dev/null 2>&1 && canok=0
+fi
 if [ "$canok" != 1 ] ; then
   log "creating $can"
   echo "$CAN0" > $can || error "unable to create $can"
