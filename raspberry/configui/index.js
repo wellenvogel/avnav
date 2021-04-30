@@ -53,6 +53,7 @@
         }
         let salt=Math.floor((new Date()).getTime())+"";
         let hash=sha512crypt(el.value,salt);
+        el.setAttribute('data-encrypted',hash);
         return hash;
     }
     let hiddenPass="*************************";
