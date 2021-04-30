@@ -10,6 +10,5 @@
   "AVNAV_WIFI_CLIENT": "Wenn gesetzt, erzeugt der interne WLAN Adapter kein eigenes WLAN mehr(!) sondern steht für eine externe Verbindung zur Verfügung. Man benötigt dann unbedingt noch einen USB WLAN Adapter - dieser erzeugt dann das WLAN.",
   "AVNAV_KBLAYOUT": "Das Tastaturlayout für den Raspberry für eine direkt angeschlossene Tastatur",
   "AVNAV_KBMODEL": "Das Tastaturmodell.",
-  "AVNAV_WIFI_TIMEZONE": "Das Land für die Einstellung des WLAN Adapters"
-
+  "AVNAV_WIFI_COUNTRY": "Das Land für die Einstellung des WLAN Adapters"
 }

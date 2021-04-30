@@ -138,10 +138,6 @@ if [ "$AVNAV_MCS" = "yes" ] ; then
         log "must correct /etc/modules"
         LAST_MCS=""
     fi
-    if grep "txqueuelen *10000" /etc/network/interfaces.d/can0 > /dev/null 2>&1 ; then
-        log "must correct can0 txqueuelen"
-        LAST_MCS=""
-    fi
     if [ "$LAST_MCS" = "yes" ] ; then
         log "AVNAV_MCS is set but unchanged"
     else
