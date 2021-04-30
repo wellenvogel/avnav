@@ -442,7 +442,7 @@ class AVNAvahi(AVNWorker):
     else:
       return list(map(lambda a:a[1],rt))
 
-  def resolveService(self,type,name):
+  def resolveService(self,type,name,logError=False):
     '''
     resove a service (IPv4)
     @param type: the service type
@@ -456,7 +456,10 @@ class AVNAvahi(AVNWorker):
                                    self.PROTO_INET,name,type,"local",self.PROTO_INET,0)
       return (str(res[5]),str(res[7]),int(res[8]))
     except Exception as e:
-      AVNLog.error("unable to resolve service %s.%s: %s",type,name,str(e))
+      if logError:
+        AVNLog.error("unable to resolve service %s.%s: %s",type,name,str(e))
+      else:
+        AVNLog.debug("unable to resolve service %s.%s: %s",type,name,str(e))
       return None
 
 avnav_handlerList.registerHandler(AVNAvahi)
