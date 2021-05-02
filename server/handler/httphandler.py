@@ -12,7 +12,27 @@ import urllib.parse
 
 from avnav_store import AVNStore
 from avnav_util import AVNUtil, AVNLog, AVNDownload
+from avnav_websocket import HTTPWebSocketsHandler
 from avnav_worker import AVNWorker
+
+class WebSocketHandler(object):
+  def __init__(self,handler):
+    """
+
+    @type handler: AVNHTTPHandler
+    """
+    self.handler=handler
+    self.connected=False
+  def send_message(self,message):
+    if self.connected:
+      self.handler.send_message(message)
+  def on_ws_message(self, message):
+    """Override this handler to process incoming websocket messages."""
+    pass
+  def on_ws_connected(self):
+    self.connected=True
+  def on_ws_closed(self):
+    self.connected=False
 
 
 class Encoder(json.JSONEncoder):
@@ -26,7 +46,9 @@ class Encoder(json.JSONEncoder):
     return super(Encoder, self).default(o)
 
 
-class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
+class AVNHTTPHandler(HTTPWebSocketsHandler):
+  wsHandler: WebSocketHandler
+  protocol_version = "HTTP/1.1" #necessary for websockets!
   def __init__(self,request,client_address,server):
     #allow write buffering
     #see https://lautaportti.wordpress.com/2011/04/01/basehttprequesthandler-wastes-tcp-packets/
@@ -36,9 +58,37 @@ class AVNHTTPHandler(http.server.SimpleHTTPRequestHandler):
     threading.current_thread().setName("HTTPHandler")
     AVNLog.ld("receiver thread started",client_address)
     http.server.SimpleHTTPRequestHandler.__init__(self, request, client_address, server)
+    self.wsHandler=None
 
   def log_message(self, format, *args):
     AVNLog.debug(format,*args)
+
+  def allow_ws(self):
+    (path,query) = self.server.pathQueryFromUrl(self.path)
+    try:
+      #handlers will either return
+      #True if already done
+      #None if no mapping found (404)
+      #a path to be sent
+      self.wsHandler=self.server.getWebSocketsHandler(path,query,handler=self)
+      return True
+    except Exception as e:
+      return False
+
+  def on_ws_message(self, message):
+    if self.wsHandler is None:
+      raise Exception("no websocket handler")
+    self.wsHandler.on_ws_message(message)
+
+  def on_ws_connected(self):
+    if self.wsHandler is None:
+      raise Exception("no websocket handler")
+    self.wsHandler.on_ws_connected()
+
+  def on_ws_closed(self):
+    if self.wsHandler is None:
+      raise Exception("no websocket handler")
+    self.wsHandler.on_ws_closed()
 
   def do_POST(self):
     maxlen=5000000
