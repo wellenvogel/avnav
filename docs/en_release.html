@@ -39,7 +39,26 @@ sudo systemctl start avnav</div>
     <br>
     <div> </div>
     <h2>Versions</h2>
-    <p> <br>
+    <p> <span style="font-weight: bold;">20210502</span> <a title="release/20210502"
+        href="../downloads/release/2021002">link</a> </p>
+    <p>New Functions</p>
+    <ul>
+      <li>Extending the <a href="../configGen/index.html">configuration</a> for
+        headless images (hostname, keyboard, different Wifi modes for the
+        internal adapter)</li>
+      <li>Faster connection to other Wifi networks (faster getting of an IP
+        address)</li>
+    </ul>
+    <p>Bug fixes:</p>
+    <ul>
+      <li>Show button icons correctly in chrome lite mode on Android (<a href="https://github.com/wellenvogel/avnav/issues/128">#128</a>)</li>
+      <li>Some MCS modules for one wire have not been loaded correctly (headless
+        images only)<br>
+      </li>
+      <li>The name resolution for NMEA0183 services only happened once, now it
+        gets correctly repeated on error</li>
+    </ul>
+    <p><br>
       <span style="font-weight: bold;">20210424</span> <a title="release/20210424"
         href="../downloads/release/20210424">link</a> </p>
     <p>Main Focus: <a href="android/android.html">Android App</a></p>
@@ -72,8 +91,8 @@ sudo systemctl start avnav</div>
       </ul>
       <li>compute RMB records when routing (can be send out to control an auto
         pilot)&nbsp; </li>
-      <li>the configuration of the Android App to most parts is similar now
-        to the server version - using the Status/Server page</li>
+      <li>the configuration of the Android App to most parts is similar now to
+        the server version - using the Status/Server page</li>
       <ul>
         <li>HINT: some configuration is migrated automatically but not all</li>
       </ul>
@@ -104,7 +123,6 @@ sudo systemctl start avnav</div>
       <li>sometimes changing one widget in the layout editor also changes the
         one it was copied from &nbsp; </li>
     </ul>
-    
     <p> <br>
       <span style="font-weight: bold;">20210323</span> <a title="release/20210323"
         href="../downloads/release/20210323">link</a> </p>
