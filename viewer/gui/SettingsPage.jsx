@@ -35,7 +35,8 @@ const settingsSections={
         keys.properties.anchorCircleColor,keys.properties.windKnots,keys.properties.windScaleAngle],
     Map:        [keys.properties.mapScale,keys.properties.mapUpZoom,keys.properties.mapOnlineUpZoom],
     Track:      [keys.properties.trackColor,keys.properties.trackWidth,keys.properties.trackInterval,keys.properties.initialTrackLength],
-    Route:      [keys.properties.routeColor,keys.properties.routeWidth,keys.properties.routeWpSize,keys.properties.routingTextSize,keys.properties.routeApproach,keys.properties.routeShowLL]
+    Route:      [keys.properties.routeColor,keys.properties.routeWidth,keys.properties.routeWpSize,keys.properties.routingTextSize,keys.properties.routeApproach,keys.properties.routeShowLL],
+    Remote:     [keys.properties.remoteChannelName,keys.properties.remoteChannelRead,keys.properties.remoteChannelWrite]
 };
 
 const settingsConditions={

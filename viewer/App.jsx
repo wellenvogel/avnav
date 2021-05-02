@@ -39,6 +39,7 @@ import LeaveHandler from './util/leavehandler';
 import EditHandlerDialog from "./components/EditHandlerDialog";
 import AndroidEventHandler from './util/androidEventHandler';
 import And from "ol/format/filter/And";
+import remotechannel from "./util/remotechannel";
 
 
 const DynamicSound=Dynamic(SoundHandler);
@@ -182,6 +183,8 @@ class App extends React.Component {
         },'addon',['0','1','2','3','4','5','6','7']);
         this.newDeviceHandler=this.newDeviceHandler.bind(this);
         this.subscription=AndroidEventHandler.subscribe('deviceAdded',this.newDeviceHandler);
+        this.remoteChannel=remotechannel;
+        this.remoteChannel.start();
 
     }
     newDeviceHandler(){

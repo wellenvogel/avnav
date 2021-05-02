@@ -191,6 +191,7 @@ let keys={
             computedButtonHeight: K,
             computedButtonWidth: K,
             isFullScreen: K,
+            remoteChannelState:K,
 
         },
         gpspage:{
@@ -361,6 +362,15 @@ let keys={
         mapUpZoom: new Property(4,"zoom up lower layers",PropertyType.RANGE,[0,6]),
         mapOnlineUpZoom: new Property(0,"zoom up lower layers for online sources",PropertyType.RANGE,[0,6]),
         mapScale: new Property(1,"scale the map display",PropertyType.RANGE,[0.3,5]),
+        remoteChannelName: new Property('channel-0','name of the remote control channel',PropertyType.LIST,[
+            'channel-0',
+            'channel-1',
+            'channel-2',
+            'channel-3',
+            'channel-4'
+        ]),
+        remoteChannelRead: new Property(false,'read from remote channel',PropertyType.CHECKBOX),
+        remoteChannelWrite: new Property(false,'write to remote channel',PropertyType.CHECKBOX),
 
         style: {
             buttonSize: new Property(50, "Button Size(px)", PropertyType.RANGE, [35, 100]),

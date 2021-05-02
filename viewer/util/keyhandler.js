@@ -1,4 +1,5 @@
 import base from '../base.js';
+import remotechannel from "./remotechannel";
 
 class Mapping{
     constructor(component,action){
@@ -17,6 +18,10 @@ class KeyHandler{
         this.ALLPAGES="all";
         this.enabled=true;
         this.dialogComponents=[]; //components registered here will be handled in dialogs
+        this.remoteSubscription=remotechannel.subscribe('K',(msg)=>{
+            msg=msg.replace(/^K */,'');
+            this.handleKey(msg);
+        })
     }
     disable(){
         this.enabled=false;
@@ -151,21 +156,26 @@ class KeyHandler{
         }
     }
 
-    handleKeyEvent(keyEvent,opt_inDialog){
-        if (! this.enabled) return;
-        if (! keyEvent) return;
-        let key=keyEvent.key;
-        if (! key) return;
-        if (keyEvent.ctrlKey){
-            key="Control-"+key;
+    handleKeyEvent(keyEvent,opt_inDialog) {
+        if (!this.enabled) return;
+        if (!keyEvent) return;
+        let key = keyEvent.key;
+        if (!key) return;
+        if (keyEvent.ctrlKey) {
+            key = "Control-" + key;
         }
+        return this.handleKey(key, opt_inDialog, keyEvent)
+    }
+    handleKey(key,opt_inDialog,opt_keyEvent){
         base.log("handle key: "+key);
         if (! this.keymappings) return;
         let page=this.page;
         let mapping=this.findMappingForPage(key,page,opt_inDialog);
         if (! mapping) return;
-        keyEvent.preventDefault();
-        keyEvent.stopPropagation();
+        if (opt_keyEvent) {
+            opt_keyEvent.preventDefault();
+            opt_keyEvent.stopPropagation();
+        }
         base.log("found keymapping, page="+page+", component="+mapping.component+", action="+mapping.action);
         let regComponent=this.registrations[mapping.component];
         if (! regComponent) return;
