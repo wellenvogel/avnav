@@ -45,16 +45,30 @@ class OurWebSocketHandler(WebSocketHandler):
 
 
 class Channel(object):
-  def __init__(self,enabled=True):
+  def __init__(self,id,statusCallback,enabled=True):
     self.connections=[]
     self.lock=threading.Lock()
     self.enabled=enabled
+    self.id=id
+    self.statusCallback=statusCallback
+    self.numMessages=0
+  def _setStatus(self):
+    cl=0
+    with self.lock:
+      cl=len(self.connections)
+    st=WorkerStatus.INACTIVE
+    if self.enabled:
+      st=WorkerStatus.NMEA if cl > 0 else WorkerStatus.RUNNING
+    m='enabled' if self.enabled else 'disabled'
+    self.statusCallback(self.id,"%s %d connections"%(m,cl),st)
+
   def send_message(self,message,sender=None):
     if not self.enabled:
       return
     connections=None
     with self.lock:
       connections=self.connections.copy()
+      self.numMessages+=1
     for c in connections:
       if sender is None or sender != c:
         c.send_message(message)
@@ -62,21 +76,25 @@ class Channel(object):
     newCon=OurWebSocketHandler(handler,self)
     with self.lock:
       self.connections.append(newCon)
+    self._setStatus()
     return newCon
   def on_message(self,message,sender):
     self.send_message(message,sender)
   def remove_connection(self,connection):
     with self.lock:
       self.connections.remove(connection)
+    self._setStatus()
   def clear(self):
     connections=None
     with self.lock:
       connections=self.connections
       self.connections.clear()
-    for c in self.connections:
+    for c in connections:
       c.close()
+    self._setStatus()
   def setEnabled(self,enabled):
     self.enabled=enabled
+    self._setStatus()
 
 
 class AVNRemoteChannelHandler(AVNWorker):
@@ -85,11 +103,11 @@ class AVNRemoteChannelHandler(AVNWorker):
   def __init__(self, cfgparam):
     super().__init__(cfgparam)
     self.configSequence=1
-    self.channels={}
+    self.channels=[]
     self.socket=None
     enabled=self.ENABLE_PARAM_DESCRIPTION.fromDict(cfgparam)
     for i in range(0,self.NUM_CHANNELS):
-      self.channels[self.NAME_PREFIX+str(i)]=Channel(enabled)
+      self.channels.append(Channel(str(i),self.setInfo,enabled))
 
   @classmethod
   def autoInstantiate(cls):
@@ -107,7 +125,7 @@ class AVNRemoteChannelHandler(AVNWorker):
     rt=super().updateConfig(param, child)
     enabled=self.ENABLE_PARAM_DESCRIPTION.fromDict(self.param)
     for i in range(0,self.NUM_CHANNELS):
-      self.channels[self.NAME_PREFIX+str(i)].setEnabled(enabled)
+      self.channels[i].setEnabled(enabled)
     self.configSequence+=1
     try:
       self.socket.close()
@@ -122,7 +140,6 @@ class AVNRemoteChannelHandler(AVNWorker):
       pass
 
 
-  NAME_D="channel name"
   PORT_PARAM=WorkerParameter('port',34668,type=WorkerParameter.T_NUMBER,
                              description="udp port to listen for events for the main channel, use 0 for none")
   HOST_PARAM=WorkerParameter('host',"127.0.0.1",type=WorkerParameter.T_STRING,
@@ -130,11 +147,6 @@ class AVNRemoteChannelHandler(AVNWorker):
   @classmethod
   def getConfigParam(cls, child=None):
     return [
-      WorkerParameter(cls.NAME_PREFIX+'0','main',description=cls.NAME_D),
-      WorkerParameter(cls.NAME_PREFIX+'1','channel1',description=cls.NAME_D),
-      WorkerParameter(cls.NAME_PREFIX+'2','channel2',description=cls.NAME_D),
-      WorkerParameter(cls.NAME_PREFIX+'3','channel3',description=cls.NAME_D),
-      WorkerParameter(cls.NAME_PREFIX+'4','channel4',description=cls.NAME_D),
       cls.PORT_PARAM,
       cls.HOST_PARAM
     ]
@@ -146,6 +158,13 @@ class AVNRemoteChannelHandler(AVNWorker):
   def checkConfig(self, param):
     if self.PORT_PARAM.name in param:
       self.checkUsedResource(UsedResource.T_UDP,self.PORT_PARAM.fromDict(param))
+
+  def sendMessage(self,message,channel=0):
+    if channel < 0 or channel >= self.NUM_CHANNELS:
+      raise Exception("invalid channel %d"%str(channel))
+    channelHandler=self.channels[channel]
+    AVNLog.debug("sending channel %d message: %s",channel,message)
+    channelHandler.send_message(message)
 
   def run(self):
     self.setInfo('main','started',WorkerStatus.STARTED)
@@ -174,10 +193,7 @@ class AVNRemoteChannelHandler(AVNWorker):
               continue
             data=data.decode('utf-8','ignore')
             data=data.strip()
-            channel=self.channels.get(self.NAME_PREFIX+'0')
-            if channel:
-              AVNLog.debug("sending channel message: %s",data)
-              channel.send_message(data)
+            self.sendMessage(data)
           except Exception as e:
             self.setInfo('udp',"read exception %s"%e,WorkerStatus.ERROR)
             if not self.shouldStop():
@@ -210,12 +226,11 @@ class AVNRemoteChannelHandler(AVNWorker):
     if not path.startswith('/'):
       raise Exception("unknown channel")
     path=path[1:]
-    for i in range(0,self.NUM_CHANNELS):
-      name=self.NAME_PREFIX+str(i)
-      if path == name:
-        AVNLog.info("added channel connection for %s",path)
-        return self.channels[path].add_connection(handler)
-    return None
+    chnum=int(path)
+    if chnum < 0 or chnum >= self.NUM_CHANNELS:
+      raise Exception("invalid channel %d"%chnum)
+    AVNLog.info("added channel connection for %s",path)
+    return self.channels[chnum].add_connection(handler)
 
 avnav_handlerList.registerHandler(AVNRemoteChannelHandler)
 
