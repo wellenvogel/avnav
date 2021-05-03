@@ -30,11 +30,13 @@ import base from "../base";
 import PubSub from "PubSub";
 const PSTOPIC="remote.";
 export const COMMANDS={
-    setPage:'CP',
-    key:'K',
-    setChart: 'CM',
-    setCenter: 'CC',
-    setZoom: 'CZ'
+    setPage:'CP', //str page
+    key:'K', //str key
+    setChart: 'CM', //json chartEntry
+    setCenter: 'CC', //json lat,lon
+    setZoom: 'CZ', //float zoom
+    lock: 'CL', //str true|false
+    courseUp: 'CU' //str true|false
 };
 class RemoteChannel{
     constructor(props) {
@@ -56,10 +58,11 @@ class RemoteChannel{
         this.timer=window.setInterval(this.timerCall,1000);
     }
     onMessage(data){
-        console.log("message",data);
+        base.log("message",data);
         if (! globalstore.getData(keys.properties.remoteChannelRead,false)) return;
         let parts=data.split(/  */);
         if (parts.length < 2) return;
+        if (! parts[0] in COMMANDS) return;
         data=data.replace(/^[^ ]* */,'');
         window.setTimeout(()=> {
             this.pubsub.publish(PSTOPIC + parts[0], data);
@@ -101,14 +104,19 @@ class RemoteChannel{
             this.websocket=undefined;
         }
     }
-    sendMessage(msg){
+    sendMessage(msg,param){
         if (! this.websocket) return;
         if (! globalstore.getData(keys.properties.remoteChannelWrite,false)) return;
         try {
+            if (param !== undefined) msg+=" "+param;
             this.websocket.send(msg);
         }catch (e){
 
         }
+    }
+    sendJsonMessage(command,data){
+        let p=JSON.stringify(data);
+        this.sendMessage(command,p);
     }
     subscribe(type,callback){
         return this.pubsub.subscribe(PSTOPIC+type,callback);

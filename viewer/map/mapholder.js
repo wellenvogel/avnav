@@ -252,6 +252,18 @@ const MapHolder=function(){
             this.changeZoom(diff,false,true);
         }catch (e){}
     })
+    this.remoteChannel.subscribe(COMMANDS.courseUp,(msg)=>{
+        if (this.isInUserActionGuard()) return;
+        try{
+            this.setCourseUp(msg === 'true',true);
+        }catch (e){}
+    })
+    this.remoteChannel.subscribe(COMMANDS.lock,(msg)=>{
+        if (this.isInUserActionGuard()) return;
+        try{
+            this.setGpsLock(msg === 'true',true);
+        }catch (e){}
+    })
     /**
      * registered guards will be called back on some handled map events (click,dblclick) with the event type
      * this call is synchronous
@@ -1107,7 +1119,7 @@ MapHolder.prototype.navEvent = function () {
     let gps = globalStore.getMultiple(keys.nav.gps);
     if (!gps.valid) return;
     if (this.gpsLocked) {
-        this.setCenter(gps);
+        this.setCenter(gps,true);
         if (this.courseUp) {
             let diff = (gps.course - this.averageCourse);
             let tol = globalStore.getData(keys.properties.courseAverageTolerance);
@@ -1287,11 +1299,15 @@ MapHolder.prototype.moveCenterPercent=function(deltax,deltay){
 /**
  * set the course up display mode
  * @param on
+ * @param opt_noRemote
  * @returns {boolean} the newl set value
  */
-MapHolder.prototype.setCourseUp=function(on){
+MapHolder.prototype.setCourseUp=function(on,opt_noRemote){
+    if (! opt_noRemote){
+        remotechannel.sendMessage(COMMANDS.courseUp,on?'true':'false');
+    }
     let old=this.courseUp;
-    if (old == on) return on;
+    if (old === on) return on;
     if (on){
         let gps=globalStore.getMultiple(keys.nav.gps);
         if (! gps.valid) return false;
@@ -1309,14 +1325,17 @@ MapHolder.prototype.setCourseUp=function(on){
     }
 };
 
-MapHolder.prototype.setGpsLock=function(lock){
-    if (lock == this.gpsLocked) return;
+MapHolder.prototype.setGpsLock=function(lock,opt_noRemote){
+    if (! opt_noRemote){
+        remotechannel.sendMessage(COMMANDS.lock,lock?'true':'false');
+    }
+    if (lock === this.gpsLocked) return;
     if (! globalStore.getData(keys.nav.gps.valid) && lock) return;
     //we do not lock if the nav layer is not visible
     if (! globalStore.getData(keys.properties.layers.boat) && lock) return;
     this.gpsLocked=lock;
     globalStore.storeData(keys.map.lockPosition,lock);
-    if (lock) this.setCenter(globalStore.getData(keys.nav.gps.position));
+    if (lock) this.setCenter(globalStore.getData(keys.nav.gps.position),opt_noRemote);
     this.checkAutoZoom();
 };
 
