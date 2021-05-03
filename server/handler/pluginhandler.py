@@ -36,6 +36,7 @@ from avnav_manager import AVNHandlerManager
 from avnav_util import *
 from avnav_worker import *
 import avnav_handlerList
+from avnremotechannel import AVNRemoteChannelHandler
 from avnuserapps import AVNUserAppHandler
 from avnusb import AVNUsbSerialReader
 from layouthandler import AVNLayoutHandler
@@ -292,6 +293,12 @@ class ApiImpl(AVNApi):
     if running is None:
       return True
     return running.ident != current
+
+  def sendRemoteCommand(self, command, param, channel=0):
+    channelhandler=AVNWorker.findHandlerByName(AVNRemoteChannelHandler.getConfigName())
+    if channelhandler is None:
+      raise Exception("no remote channel handler configured")
+    channelhandler.sendMessage(command+" "+param,channel=channel)
 
 
 class AVNPluginHandler(AVNWorker):
