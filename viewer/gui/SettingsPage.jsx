@@ -46,6 +46,8 @@ settingsConditions[keys.properties.dimFade]=()=>DimHandler.canHandle();
 settingsConditions[keys.properties.showDimButton]=()=>DimHandler.canHandle();
 settingsConditions[keys.properties.showFullScreen]=()=>FullScreen.fullScreenAvailable();
 
+const sectionConditions={};
+sectionConditions.Remote=()=>globalStore.getData(keys.gui.capabilities.remoteChannel) && window.WebSocket !== undefined;
 
 /**
  * will fire a confirm dialog and resolve to 1 on changes, resolve to 0 on no changes
@@ -485,9 +487,24 @@ class SettingsPage extends React.Component{
             let currentSection = globalStore.getData(keys.gui.settingspage.section, 'Layer');
             let sectionItems = [];
             for (let s in settingsSections) {
+                let sectionCondition=sectionConditions[s];
+                if (sectionCondition !== undefined){
+                    if (! sectionCondition()) continue;
+                }
                 let item = {name: s};
                 if (s === currentSection) item.activeItem = true;
                 sectionItems.push(item);
+            }
+            let hasCurrentSection=false;
+            sectionItems.forEach((item)=>{
+                if (item.name === currentSection){
+                    hasCurrentSection=true;
+                }
+            });
+            if (! hasCurrentSection){
+                currentSection=sectionItems[0].name;
+                sectionItems[0].activeItem=true;
+                globalStore.storeData(keys.gui.settingspage.section,currentSection);
             }
             let settingsItems = [];
             if (settingsSections[currentSection]) {

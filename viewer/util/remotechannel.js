@@ -36,7 +36,8 @@ export const COMMANDS={
     setCenter: 'CC', //json lat,lon
     setZoom: 'CZ', //float zoom
     lock: 'CL', //str true|false
-    courseUp: 'CU' //str true|false
+    courseUp: 'CU', //str true|false
+    gpsNum: 'CN' //num number gpspage number
 };
 class RemoteChannel{
     constructor(props) {
@@ -44,22 +45,52 @@ class RemoteChannel{
         this.timer=undefined;
         this.websocket=undefined;
         this.pubsub=new PubSub();
+        this.channel=globalstore.getData(keys.properties.remoteChannelName,'0');
+        this.channelChanged=this.channelChanged.bind(this);
+        this.id=0;
+    }
+    close(){
+        if (this.websocket !== undefined){
+            try{
+                this.websocket.close();
+            }catch (e){}
+            this.websocket=undefined;
+        }
+    }
+    channelChanged(){
+       let nc=globalstore.getData(keys.properties.remoteChannelName,'0');
+       if (nc !== this.channel){
+           this.channel=nc;
+           this.close();
+           this.openWebSocket();
+       }
+
     }
     timerCall(){
         if (this.websocket === undefined){
             this.openWebSocket();
         }
+        else{
+            if (!globalstore.getData(keys.gui.capabilities.remoteChannel)){
+                this.close();
+            }
+        }
         globalstore.storeData(keys.gui.global.remoteChannelState,{
-            connected: this.websocket !== undefined
+            connected: this.websocket !== undefined,
+            channel: this.channel
         })
     }
     start(){
+        if (window.WebSocket === undefined) return;
+        globalstore.register(this.channelChanged,[keys.properties.remoteChannelName]);
+        this.channel=globalstore.getData(keys.properties.remoteChannelName,'0');
         this.openWebSocket();
         this.timer=window.setInterval(this.timerCall,1000);
     }
     onMessage(data){
         base.log("message",data);
         if (! globalstore.getData(keys.properties.remoteChannelRead,false)) return;
+        if (! globalstore.getDataLocal(keys.properties.connectedMode,false)) return;
         let parts=data.split(/  */);
         if (parts.length < 2) return;
         if (! parts[0] in COMMANDS) return;
@@ -69,20 +100,32 @@ class RemoteChannel{
         },0);
     }
     openWebSocket(){
-        this.websocket=undefined;
+        if (! globalstore.getData(keys.gui.capabilities.remoteChannel)) return;
+        this.close();
+        this.id++;
+        let connectionId=this.id;
         let url='ws://'+window.location.host+
-            "/remotechannels/"+globalstore.getData(keys.properties.remoteChannelName)
+            "/remotechannels/"+this.channel;
         try{
+            console.log("opening websocket to ",url);
             this.websocket=new WebSocket(url);
             this.websocket.addEventListener('message',(msg)=>{
-                this.onMessage(msg.data);
+                if (connectionId === this.id) {
+                    this.onMessage(msg.data);
+                }
             });
             this.websocket.addEventListener('close',()=>{
                 console.log("websocket closed");
-                this.websocket=undefined;
+                if (connectionId !== this.id) {
+                    return;
+                }
+                this.websocket = undefined;
             })
             this.websocket.addEventListener('error',()=>{
                 console.log("websocket error");
+                if (connectionId !== this.id){
+                    return;
+                }
                 try{
                     this.websocket.close();
                 }catch (e){}
@@ -93,20 +136,17 @@ class RemoteChannel{
         }
     }
     stop(){
+        globalstore.deregister(this.channelChanged);
         if (this.timer !== undefined) {
             window.clearInterval(this.timer);
             this.timer=undefined;
         }
-        if (this.websocket){
-            try{
-                this.websocket.close();
-            }catch (e){}
-            this.websocket=undefined;
-        }
+        this.close();
     }
     sendMessage(msg,param){
         if (! this.websocket) return;
         if (! globalstore.getData(keys.properties.remoteChannelWrite,false)) return;
+        if (! globalstore.getDataLocal(keys.properties.connectedMode,false)) return;
         try {
             if (param !== undefined) msg+=" "+param;
             this.websocket.send(msg);
