@@ -1,5 +1,5 @@
 import base from '../base.js';
-import remotechannel from "./remotechannel";
+import remotechannel, {COMMANDS} from "./remotechannel";
 
 class Mapping{
     constructor(component,action){
@@ -18,8 +18,7 @@ class KeyHandler{
         this.ALLPAGES="all";
         this.enabled=true;
         this.dialogComponents=[]; //components registered here will be handled in dialogs
-        this.remoteSubscription=remotechannel.subscribe('K',(msg)=>{
-            msg=msg.replace(/^K */,'');
+        this.remoteSubscription=remotechannel.subscribe(COMMANDS.key,(msg)=>{
             this.handleKey(msg);
         })
     }

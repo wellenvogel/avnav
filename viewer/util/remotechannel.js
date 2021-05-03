@@ -29,6 +29,13 @@ import keys from "./keys";
 import base from "../base";
 import PubSub from "PubSub";
 const PSTOPIC="remote.";
+export const COMMANDS={
+    setPage:'CP',
+    key:'K',
+    setChart: 'CM',
+    setCenter: 'CC',
+    setZoom: 'CZ'
+};
 class RemoteChannel{
     constructor(props) {
         this.timerCall=this.timerCall.bind(this);
@@ -53,6 +60,7 @@ class RemoteChannel{
         if (! globalstore.getData(keys.properties.remoteChannelRead,false)) return;
         let parts=data.split(/  */);
         if (parts.length < 2) return;
+        data=data.replace(/^[^ ]* */,'');
         window.setTimeout(()=> {
             this.pubsub.publish(PSTOPIC + parts[0], data);
         },0);

@@ -54,6 +54,12 @@ navobjects.Point.prototype.assign=function(point){
     return point;
 };
 
+navobjects.Point.prototype.fromPlain=function(point){
+    this.lon=point.lon;
+    this.lat=point.lat;
+    return this;
+};
+
 navobjects.Point.prototype.compare=function(point){
     if (! point) return false;
     if (point.lon == this.lon && point.lat == this.lat)return true;

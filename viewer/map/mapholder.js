@@ -40,6 +40,8 @@ import GeoJsonChartSource from "./geojsonchartsource";
 import pepjsdispatcher from '@openlayers/pepjs/src/dispatcher';
 import pepjstouch from '@openlayers/pepjs/src/touch';
 import pepjsmouse from '@openlayers/pepjs/src/mouse';
+import remotechannel, {COMMANDS} from "../util/remotechannel";
+import {MouseWheelZoom} from "ol/interaction";
 
 
 const PSTOPIC="mapevent";
@@ -224,6 +226,32 @@ const MapHolder=function(){
     KeyHandler.registerHandler(()=>{self.moveCenterPercent(0,10)},"map","down");
     KeyHandler.registerHandler(()=>{self.setCourseUp(!self.getCourseUp())},"map","toggleCourseUp");
     KeyHandler.registerHandler(()=>{self.centerToGps()},"map","centerToGps");
+
+    this.remoteChannel=remotechannel;
+    this.remoteChannel.subscribe(COMMANDS.setChart,(chartmsg)=>{
+        try{
+            let entry=JSON.parse(chartmsg);
+            this.setChartEntry(entry,true);
+        }catch (e){
+            base.log("unable to decode chartEntry");
+        }
+    })
+    this.remoteChannel.subscribe(COMMANDS.setCenter,(msg)=>{
+        if (this.isInUserActionGuard()) return;
+        try{
+            let center=new navobjects.Point();
+            center.fromPlain(JSON.parse(msg));
+            this.setCenter(center,true);
+        }catch (e){}
+    })
+    this.remoteChannel.subscribe(COMMANDS.setZoom,(msg)=>{
+        if (this.isInUserActionGuard()) return;
+        try{
+            let nz=parseFloat(msg);
+            let diff=nz-this.requiredZoom;
+            this.changeZoom(diff,false,true);
+        }catch (e){}
+    })
     /**
      * registered guards will be called back on some handled map events (click,dblclick) with the event type
      * this call is synchronous
@@ -245,6 +273,14 @@ const MapHolder=function(){
      * @type {undefined}
      */
     this.evDispatcher=undefined;
+    /**
+     * timestamp of the last user action that we detected
+     * will be used to guard the remote control stuff
+     * only send out map move/center within guard time
+     * do not accept remote actions during guard time
+     * @type {number}
+     */
+    this.lastUserAction=0;
 };
 
 base.inherits(MapHolder,DrawingPositionConverter);
@@ -320,6 +356,13 @@ MapHolder.prototype.getZoom=function(){
     return {required:this.requiredZoom,current: v.getZoom()};
 };
 
+MapHolder.prototype.userAction=function(){
+    this.lastUserAction=(new Date()).getTime();
+}
+MapHolder.prototype.isInUserActionGuard=function(){
+    let now=(new Date()).getTime();
+    return now <= (this.lastUserAction + globalStore.getData(keys.properties.remoteGuardTime,2)*1000);
+}
 /**
  * render the map to a new div
  * @param div if null - render to a default div (i.e. invisible)
@@ -379,12 +422,17 @@ MapHolder.prototype.renderTo=function(div){
 
 
 
-MapHolder.prototype.setChartEntry=function(entry){
+MapHolder.prototype.setChartEntry=function(entry,opt_noRemote){
     //set the new base chart
     this._baseChart=this.createChartSource(assign({},entry,{type:'chart',enabled:true,baseChart:true}));
     try{
         localStorage.setItem(globalStore.getData(keys.properties.chartDataName),this._baseChart.getChartKey());
     }catch(e){}
+    if (! opt_noRemote){
+        try {
+            this.remoteChannel.sendMessage(COMMANDS.setChart + " " + JSON.stringify(entry));
+        }catch(e){}
+    }
 };
 
 MapHolder.prototype.getLastChartKey=function (){
@@ -781,14 +829,22 @@ MapHolder.prototype.initMap=function(opt_preventDialog){
         }catch (e){
             console.log("unable to detect transform feature");
         }
+        let interactions=olInteraction.defaults({
+            altShiftDragRotate: false,
+            pinchRotate: false,
+            mouseWheelZoom: false
+        });
+        interactions.push(new MouseWheelZoom({
+           condition: (ev)=>{
+               this.userAction();
+               return true;
+           }
+        }));
         this.olmap = new olMap({
             pixelRatio: pixelRatio,
             target: div ? div : self.defaultDiv,
             layers: base.concat(layers),
-            interactions: olInteraction.defaults({
-                altShiftDragRotate: false,
-                pinchRotate: false
-            }),
+            interactions: interactions,
             controls: [],
             view: new olView({
                 center: this.transformToMap([13.8, 54.1]),
@@ -806,12 +862,17 @@ MapHolder.prototype.initMap=function(opt_preventDialog){
         });
         this.olmap.on('click', function(evt) {
             self._callGuards('click');
+            self.userAction();
             return self.onClick(evt);
         });
         this.olmap.on('dblclick', function(evt) {
+            self.userAction();
             self._callGuards('dblclick');
             return self.onDoubleClick(evt);
         });
+        this.olmap.on('pointerdrag',()=>self.userAction());
+        this.olmap.on('pointermove',()=>self.userAction());
+        this.olmap.on('singleclick',()=>self.userAction());
         this.olmap.getView().on('change:resolution',function(evt){
             return self.onZoomChange(evt);
         });
@@ -918,7 +979,8 @@ MapHolder.prototype.timerFunction=function(){
  * increase/decrease the map zoom
  * @param number
  */
-MapHolder.prototype.changeZoom=function(number,opt_force){
+MapHolder.prototype.changeZoom=function(number,opt_force,opt_noUserAction){
+    if (! opt_noUserAction) this.userAction();
     let curzoom=this.requiredZoom; //this.getView().getZoom();
     curzoom+=number;
     if (curzoom < this.minzoom ) curzoom=this.minzoom;
@@ -935,6 +997,7 @@ MapHolder.prototype.changeZoom=function(number,opt_force){
  * set the zoom at the map and remember the zoom we required
  * @private
  * @param newZoom
+ * @param opt_noRemo
  */
 MapHolder.prototype.setZoom=function(newZoom){
     if (! this.olmap) return;
@@ -1161,9 +1224,11 @@ MapHolder.prototype.pointFromMap=function(point){
 /**
  * set the map center
  * @param {navobjects.Point} point
+ * @param opt_noRemote
  */
-MapHolder.prototype.setCenter=function(point){
+MapHolder.prototype.setCenter=function(point,opt_noUserAction){
     if (! point) return;
+    if (! opt_noUserAction) this.userAction();
     if (this.gpsLocked){
         let p=navobjects.WayPoint.fromPlain(point);
         globalStore.storeData(keys.map.centerPosition,p);
@@ -1441,6 +1506,9 @@ MapHolder.prototype.onZoomChange=function(evt){
             this.requiredZoom = vZoom;
             if (vZoom != this.getView().getZoom()) this.getView().setZoom(vZoom);
         }
+        if (this.isInUserActionGuard()){
+            this.remoteChannel.sendMessage(COMMANDS.setZoom+" "+vZoom);
+        }
     }
 };
 /**
@@ -1490,7 +1558,6 @@ MapHolder.prototype.onMoveEnd=function(evt){
         this.saveCenter();
         base.log("moveend:"+this.center[0]+","+this.center[1]+",z="+this.zoom);
     }
-
 };
 
 /**
@@ -1513,6 +1580,10 @@ MapHolder.prototype.setCenterFromMove=function(newCenter,force){
         //mode
         //instead we already set the position directly from the gps
         globalStore.storeData(keys.map.centerPosition,p);
+        if (this.isInUserActionGuard()) {
+            this.remoteChannel.sendMessage(COMMANDS.setCenter + " " + JSON.stringify({lat: p.lat, lon: p.lon}));
+        }
+
     }
     return true;
 };
@@ -1545,7 +1616,7 @@ MapHolder.prototype.onPostCompose=function(evt){
 MapHolder.prototype.doSlide=function(start){
     if (! start) {
         if (! this.slideIn) return;
-        this.changeZoom(1);
+        this.changeZoom(1,false,true);
         this.slideIn--;
         if (!this.slideIn) return;
     }
