@@ -669,6 +669,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
       'canConnect': True,
       'config': True,
       'debugLevel': True,
-      'log': True
+      'log': True,
+      'remoteChannel': True
     }
     return json.dumps({'status':'OK','data':rt},cls=Encoder)

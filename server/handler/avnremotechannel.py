@@ -52,6 +52,7 @@ class Channel(object):
     self.id=id
     self.statusCallback=statusCallback
     self.numMessages=0
+    self._setStatus()
   def _setStatus(self):
     cl=0
     with self.lock:
