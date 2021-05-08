@@ -269,7 +269,8 @@ class ApiImpl(AVNApi):
                                   default=p.get('default'),
                                   type=p.get('type'),
                                   rangeOrList=p.get('rangeOrList'),
-                                  description=p.get('description'))
+                                  description=p.get('description'),
+                                  condition=p.get('condition'))
       editables.append(description)
     self.editables=editables
     self.paramChange=changeCallback
