@@ -1,7 +1,7 @@
 
 
 /**
-* Created by kds on 10.2.2021
+* Created by kds on 10.2.2021 modified 06.05.2021
 */
 
 
@@ -120,7 +120,7 @@ this.Position= 0	//nav.gps.position,
 	this.symbolStyles = {};
 	//this.calc_LaylineAreas(60);//globalStore.getData(keys.properties.sailsteerrefresh)*60);
 	this.createInternalIcons();
-	this.loadBoatData();
+	//this.loadBoatData();
 
 
 	/**
@@ -360,7 +360,7 @@ DisplayLayer.prototype.xml2json = function(xml) {
 	}
 }
 
-
+/*
 DisplayLayer.prototype.loadBoatData = function() {
 	var xmlFile = 'polare.xml'
 	var loadXML = new XMLHttpRequest()
@@ -371,7 +371,7 @@ DisplayLayer.prototype.loadBoatData = function() {
 		this.Polare = this.xml2json(loadXML.responseXML).Data
 	}
 }
-
+*/
 
 DisplayLayer.prototype.loop = function() {
 	// wird mit aktualisierungsfrequenz aufgerufen

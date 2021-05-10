@@ -6,16 +6,84 @@ import time
 import os
 from datetime import date
 import xml.etree.ElementTree as ET
+#from xml.etree import cElementTree as ElementTree
 #import xmltodict
 #import numpy as np
 import urllib.request, urllib.parse, urllib.error
 import json
+
+
+class XmlListConfig(list):
+    def __init__(self, aList):
+        for element in aList:
+            if element:
+                # treat like dict
+                if len(element) == 1 or element[0].tag != element[1].tag:
+                    self.append(XmlDictConfig(element))
+                # treat like list
+                elif element[0].tag == element[1].tag:
+                    self.append(XmlListConfig(element))
+            elif element.text:
+                text = element.text.strip()
+                if text:
+                    self.append(text)
+
+
+class XmlDictConfig(dict):
+    '''
+    Example usage:
+
+    >>> tree = ElementTree.parse('your_file.xml')
+    >>> root = tree.getroot()
+    >>> xmldict = XmlDictConfig(root)
+
+    Or, if you want to use an XML string:
+
+    >>> root = ElementTree.XML(xml_string)
+    >>> xmldict = XmlDictConfig(root)
+
+    And then use xmldict for what it is... a dict.
+    '''
+    def __init__(self, parent_element):
+        if parent_element.items():
+            self.update(dict(parent_element.items()))
+        for element in parent_element:
+            if element:
+                # treat like dict - we assume that if the first two tags
+                # in a series are different, then they are all different.
+                if len(element) == 1 or element[0].tag != element[1].tag:
+                    aDict = XmlDictConfig(element)
+                # treat like list - we assume that if the first two tags
+                # in a series are the same, then the rest are the same.
+                else:
+                    # here, we put the list in dictionary; the key is the
+                    # tag name the list elements all share in common, and
+                    # the value is the list itself 
+                    aDict = {element[0].tag: XmlListConfig(element)}
+                # if the tag has attributes, add those to the dict
+                if element.items():
+                    aDict.update(dict(element.items()))
+                self.update({element.tag: aDict})
+            # this assumes that if you've got an attribute in a tag,
+            # you won't be having any text. This may or may not be a 
+            # good idea -- time will tell. It works for the way we are
+            # currently doing XML configuration files...
+            elif element.items():
+                self.update({element.tag: dict(element.items())})
+            # finally, if there are no child tags and no attributes, extract
+            # the text
+            else:
+                self.update({element.tag: element.text})
+
+
 class Plugin(object):
   PATHTWDSS="gps.TSS"
   PATHTLL_SB="gps.LLSB"
   PATHTLL_BB="gps.LLBB"
   PATHTLL_VPOL="gps.VPOL"
 
+
+  
   @classmethod
   def pluginInfo(cls):
     """
@@ -50,6 +118,9 @@ class Plugin(object):
 
       ]
     }
+
+
+
 
   def __init__(self,api):
     """
@@ -101,34 +172,45 @@ class Plugin(object):
 
 
     self.api.log("no more running")
+
+  
+  
+  
   def Polare(self, f_name):
     polare_filename = os.path.join(os.path.dirname(__file__), f_name)
     tree = ET.parse(polare_filename)
     root = tree.getroot()
+    xmldict = XmlDictConfig(root)
     x=ET.tostring(root, encoding='utf8').decode('utf8')
-    #print(ET.tostring(root, encoding='utf8').decode('utf8'))
-    #print(root.tag)
-    #for child in root:
-      #print(child.tag, child.attrib)
-      #print(child.text)
 
-    x=root.find('windspeedvector')
-    self.polare['windspeedvector']=list(map(float,x.text.strip('][').split(',')))
-    x=root.find('windanglevector')
-    self.polare['windanglevector']=list(map(float,x.text.strip('][').split(',')))
+    x=root.find('windspeedvector').text
+    # whitespaces entfernen
+    x="".join(x.split())
+    self.polare['windspeedvector']=list(map(float,x.strip('][').split(',')))
+    x=root.find('windanglevector').text
+    # whitespaces entfernen
+    x="".join(x.split())
+    self.polare['windanglevector']=list(map(float,x.strip('][').split(',')))
         
-    x=root.find('boatspeed')
-    z=x.text.split('],[')
+    x=root.find('boatspeed').text
+    # whitespaces entfernen
+    z="".join(x.split())
+    
+    z=z.split('],[')
     boatspeed=[]
     for elem in z:
         zz=elem.strip('][').split(',')
         boatspeed.append(list(map(float,zz)))
     self.polare['boatspeed']=boatspeed
     x=root.find('wendewinkel')
-    y=x.find('upwind')
-    self.polare['ww_upwind']=list(map(float,y.text.strip('][\t').split(',')))
-    y=x.find('downwind')
-    self.polare['ww_downwind']=list(map(float,y.text.strip('][\t').split(',')))
+    y=x.find('upwind').text
+    # whitespaces entfernen
+    y="".join(y.split())
+    self.polare['ww_upwind']=list(map(float,y.strip('][').split(',')))
+    y=x.find('downwind').text
+    # whitespaces entfernen
+    y="".join(y.split())
+    self.polare['ww_downwind']=list(map(float,y.strip('][').split(',')))
     
     
 #https://appdividend.com/2019/11/12/how-to-convert-python-string-to-list-example/#:~:text=To%20convert%20string%20to%20list,delimiter%E2%80%9D%20as%20the%20delimiter%20string.        

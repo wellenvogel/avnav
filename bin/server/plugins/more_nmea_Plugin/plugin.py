@@ -1,12 +1,11 @@
  # software includes geomag.py
 # by Christopher Weiss cmweiss@gmail.com
 # https://github.com/cmweiss/geomag
-# https://github.com/cmweiss/geomag
+
  
  
  
 
-from avnav_api import AVNApi
 import math
 import time
 import os
@@ -15,7 +14,7 @@ hasgeomag = False
 import sys
 try:
   # add current directory to sys.path to import library from there
-  sys.path.insert(0, os.path.dirname(__file__))
+  sys.path.insert(0, os.path.dirname(__file__)+'/lib')
   import geomag as geomag    
   hasgeomag = True
 except:
@@ -39,7 +38,7 @@ class Plugin(object):
   PATHSTW = "gps.STW"
   PATHGMM = "gps.MagVar"
   WMM_FILE = 'WMM2020.COF'
-  
+  FILTER= '$HDG,$HDM,$HDT,$VHW'
   CONFIG = [
       {
       'name':'WMM_FILE',
@@ -49,8 +48,15 @@ class Plugin(object):
       {
       'name':'WMM_PERIOD',
       'description':'Time in sec to recalculate magnetic deviation',
-      'default':'3600'
+      'default':3600,
+      'type': 'NUMBER'
       },
+      {
+        'name':'period',
+        'description': 'Compute period (s) for wind data',
+        'type': 'FLOAT',
+        'default': 0.5
+      }
       ]
 
   @classmethod
@@ -112,7 +118,7 @@ class Plugin(object):
         @param api: the api to communicate with avnav
         @type  api: AVNApi
     """
-    self.api = api  # type: AVNApi
+    self.api = api
     self.api.registerEditableParameters(self.CONFIG, self.changeParam)
     self.api.registerRestart(self.stop)
     self.oldtime = 0
@@ -122,6 +128,7 @@ class Plugin(object):
 
     self.config = None 
     self.userAppId = None
+    self.startSequence=0
 
   def stop(self):
     pass
@@ -135,41 +142,76 @@ class Plugin(object):
     the run method
     @return:
     """
+    startSequence=None
     seq = 0
     self.api.log("started")
-    self.api.setStatus('MORE-NMEA', 'running')
-    self.config = Config(self.api)
-    if hasgeomag:
-        wmm_filename = os.path.join(os.path.dirname(__file__), self.config.WMM_FILE)
-        self.gm = geomag.GeoMag(wmm_filename)
+    self.api.setStatus('STARTED', 'running')
+    gm=None
+    computePeriod=0.5
     while not self.api.shouldStopMainThread():
-      try: 
-          gpsdata = self.api.getDataByPrefix('gps')
-          if 'lat' in gpsdata:
-              now = time.time()
-              if now - self.variation_time > int(self.config.WMM_PERIOD):
-                variation = self.gm.GeoMag(gpsdata['lat'], gpsdata['lon'])
-                self.variation_time = now
-                self.variation_val = variation.dec
-                self.api.addData(self.PATHGMM, self.variation_val)
-              elif not 'MagVar' in gpsdata:
-                self.api.addData(self.PATHGMM, self.variation_val)
+      if startSequence != self.startSequence:
+        self.config = Config(self.api)
+        try:
+          computePeriod = float(self.api.getConfigValue('computePeriod', 0.5))
+        except:
+          pass
+        startSequence = self.startSequence
+        if hasgeomag:
+          wmm_filename = os.path.join(os.path.dirname(__file__)+'/lib', self.config.WMM_FILE)
+          gm = geomag.GeoMag(wmm_filename)
+      lastTime = time.time()
+      gpsdata = {}
+      computesVar = False
+      computesWind = False
+      try:
+        gpsdata = self.api.getDataByPrefix('gps')
+        if 'lat' in gpsdata and 'lon' in gpsdata and gm is not None:
+          computesVar = True
+          now = time.time()
+          if now - self.variation_time > int(self.config.WMM_PERIOD) or now < self.variation_time:
+            variation = gm.GeoMag(gpsdata['lat'], gpsdata['lon'])
+            self.variation_time = now
+            self.variation_val = variation.dec
+            self.api.addData(self.PATHGMM, self.variation_val)
+          else:
+            self.api.addData(self.PATHGMM, self.variation_val)
       except Exception:
-          self.api.error(" error in calculation of magnetic Deviation\n")
-      
+        self.api.error(" error in calculation of magnetic Variation")
+
       if 'windSpeed' in gpsdata:
+        computesWind=True
         if gpsdata['windReference'] == 'R':
-            if(self.calcTrueWind(gpsdata)):
-                self.api.addData(self.PATHAWD, gpsdata['AWD'])
-                self.api.addData(self.PATHTWD, gpsdata['TWD'])
-                self.api.addData(self.PATHTWS, gpsdata['TWS'])
-                self.api.addData(self.PATHTWA, gpsdata['TWA'])
-      
-      seq, data = self.api.fetchFromQueue(seq)
-      if len(data) > 0:
-        for line in data:
-          self.parseData(line)
-      time.sleep(0.1)
+          if (self.calcTrueWind(gpsdata)):
+            self.api.addData(self.PATHAWD, gpsdata['AWD'])
+            self.api.addData(self.PATHTWD, gpsdata['TWD'])
+            self.api.addData(self.PATHTWS, gpsdata['TWS'])
+            self.api.addData(self.PATHTWA, gpsdata['TWA'])
+      if computesVar or computesWind:
+        stText='computing '
+        if computesVar:
+          stText+='variation '
+        if computesWind:
+          stText+='wind'
+        self.api.setStatus('NMEA',stText )
+      else:
+        self.api.setStatus('STARTED', 'running')
+      runNext = False
+      # fetch from queue till next compute period
+      while not runNext:
+        now = time.time()
+        if now < lastTime:
+          # timeShift back
+          runNext = True
+          continue
+        if ((now - lastTime) < computePeriod):
+          waitTime = computePeriod - (now - lastTime)
+        else:
+          waitTime = 0.01
+          runNext = True
+        seq, data = self.api.fetchFromQueue(seq, waitTime=waitTime,filter=self.FILTER)
+        if len(data) > 0:
+          for line in data:
+            self.parseData(line)
 
   def nmeaChecksum(cls, part):
     chksum = 0
@@ -214,13 +256,15 @@ class Plugin(object):
             heading_m = heading_m - rt['MagDeviation']
         self.api.addData(self.PATHHDG_M, heading_m)
         # Wahrer Kurs unter Berücksichtigung der Missweisung
+        heading_t=None
         if(rt['MagVarDir'] == 'E'):
             heading_t = heading_m + rt['MagVariation']
             self.variation_val = rt['MagVariation']
         elif(rt['MagVarDir'] == 'W'): 
             heading_t = heading_m - rt['MagVariation']
             self.variation_val = -rt['MagVariation']
-        self.api.addData(self.PATHHDG_T, heading_t)
+        if heading_t is not None:
+          self.api.addData(self.PATHHDG_T, heading_t)
         return True
 
       if tag == 'HDM' or tag == 'HDT':
@@ -263,10 +307,10 @@ class Plugin(object):
             return False
         try:
             gpsdata['AWD'] = (gpsdata['windAngle'] + gpsdata['track']) % 360
-            KaW = self.toKartesisch(gpsdata['AWD']);
+            KaW = self.toKartesisch(gpsdata['AWD'])
             KaW['x'] *= gpsdata['windSpeed']  # 'm/s'
             KaW['y'] *= gpsdata['windSpeed']  # 'm/s'
-            KaB = self.toKartesisch(gpsdata['track']);
+            KaB = self.toKartesisch(gpsdata['track'])
             KaB['x'] *= gpsdata['speed']  # 'm/s'
             KaB['y'] *= gpsdata['speed']  # 'm/s'
 
