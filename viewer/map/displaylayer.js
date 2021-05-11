@@ -11,7 +11,6 @@ import keys from '../util/keys.jsx';
 import globalStore from '../util/globalstore.jsx';
 import assign from 'object-assign';
 
-
 const StyleEntry = function(src, style) {
 	this.style = assign({}, style);
 	this.src = src;
@@ -75,24 +74,8 @@ const DisplayLayer = function(mapholder) {
 
 	};
 
-this.TWD_Abweichung= [0, 0]
-this.Position=0
+this.TWD_Abweichung= [0, 0]	// in deg
 this.Polare=null
-
-/*
-this.wendewinkel=0
-this.SOGPOLvar= 0
-this.VMGvar= 0
-this.Route= {
-			latlonTo: 0,
-			active: false,
-			dir: 0,
-			dist: 0,
-			name: '',
-			wp_name: '',
-			VMCvar: 0
-		}
-		*/
 this.Position= 0	//nav.gps.position,
 
 
@@ -150,47 +133,59 @@ DisplayLayer.prototype.drawTargetSymbol = function(drawing, xy, rotation) {
 		style.anchor = [style.anchor[0] * scale, style.anchor[1] * scale];
 		if (style.rotation !== undefined && !style.rotateWithView) {
 			style.rotateWithView = false;
-			rotation=0
+			rotation = 0
 			style.rotation *= Math.PI / 180;
 		}
 		else {
-			style.rotation += rotation 
+			style.rotation += rotation
 			style.rotation *= Math.PI / 180;
 		}
 
 		drawing.drawImageToContext(xy, this.symbolStyles[symbol].image, style);
-//		NOW THE DYNAMIC CONTENT TO BE DIRECTLY DRAWN ONTO CANVAS;
-/*
-		if( symbol == "WindM")
-			{
+		//		NOW THE DYNAMIC CONTENT TO BE DIRECTLY DRAWN ONTO CANVAS;
+		if (symbol == "LaylineBB" || symbol == "LaylineSB") {
 			this.calc_LaylineAreas()
 			drawing.context.save()
-			this.DrawLaylineArea(drawing, xy, "blue",style) 
+			this.DrawLaylineArea(drawing, xy, symbol == "LaylineBB" ? "red" : "green", style)
 			drawing.context.restore()
-			}					
-		else if( symbol == "LaylineBB")
-*/		
-		if( symbol == "LaylineBB")
-			{
-			this.calc_LaylineAreas()
-			drawing.context.save()
-			this.DrawLaylineArea(drawing, xy, "red",style) 
-			drawing.context.restore()
-			drawing.drawImageToContext(xy, this.symbolStyles[symbol].image, style);
-			}					
-		else if( symbol == "LaylineSB")
-			{
-			this.calc_LaylineAreas()
-			drawing.context.save()
-			this.DrawLaylineArea(drawing, xy, "green",style) 
-			drawing.context.restore()
-			drawing.drawImageToContext(xy, this.symbolStyles[symbol].image, style);
-			}
-		else
-			drawing.drawImageToContext(xy, this.symbolStyles[symbol].image, style);
 
+			//TODO
+			//wenn wegpunkt AND NOT globalStore.getData(keys.properties.sailsteeroverlap) -> Laylinelinie nur bis zum Schnittpunkt zeichnen
+			// Berechnung aus der for Schleife nehmen
+			let dist_SB = globalStore.getData(keys.properties.sailsteerlength)
+			let dist_BB = dist_SB
+			if (this.gps.waypoint.position) {
+				let is_BB = LatLon.intersection(new LatLon(this.gps.position.lat, this.gps.position.lon), this.gps.LLSB, new LatLon(this.gps.waypoint.position.lat, this.gps.waypoint.position.lon), this.gps.LLBB + 180)
+				let is_SB = LatLon.intersection(new LatLon(this.gps.position.lat, this.gps.position.lon), this.gps.LLBB, new LatLon(this.gps.waypoint.position.lat, this.gps.waypoint.position.lon), this.gps.LLSB + 180)
+				let WP_PostionPoint = new navobjects.Point(this.gps.waypoint.position.lon, this.gps.waypoint.position.lat)
+				let WP_PostionMap = this.mapholder.pointToMap(WP_PostionPoint.toCoord());
+
+				// Wende/Halse-Punkte berechnen
+				if (is_SB != null && is_BB != null) {
+					let pos_SB = this.mapholder.pointToMap((new navobjects.Point(is_SB._lon, is_SB._lat)).toCoord());
+					dist_SB = NavCompute.computeDistance(new navobjects.Point(is_SB._lon, is_SB._lat), WP_PostionPoint).dts
+					let pos_BB = this.mapholder.pointToMap((new navobjects.Point(is_BB._lon, is_BB._lat)).toCoord());
+					dist_BB = NavCompute.computeDistance(new navobjects.Point(is_BB._lon, is_BB._lat), WP_PostionPoint).dts
+				}
+
+				//Laylines vom Wegpunkt zeichnen
+				let targetWP = this.computeTarget(WP_PostionMap, style.rotation * 180 / Math.PI + 180, globalStore.getData(keys.properties.sailsteerlength))
+				if (globalStore.getData(keys.properties.sailsteermarke))
+					drawing.drawLineToContext([WP_PostionMap, targetWP], { color: symbol == "LaylineBB" ? "red" : "green", width: 5, dashed: true });
+				// Only for testing purposes
+				//if (is_SB != null && is_BB != null)
+				//drawing.drawLineToContext([pos_SB, pos_BB], { color: "blue", width: 5 });
+			}
+
+			//Laylines vom Boot zeichnen
+			let targetboat = this.computeTarget(xy, style.rotation * 180 / Math.PI, globalStore.getData(keys.properties.sailsteerlength))
+			if (globalStore.getData(keys.properties.sailsteerboot))
+				drawing.drawLineToContext([xy, targetboat], { color: symbol == "LaylineBB" ? "red" : "green", width: 5, dashed: true });
+			drawing.drawImageToContext(xy, this.symbolStyles[symbol].image, style);
 		}
+
 	}
+}
 
 
 
