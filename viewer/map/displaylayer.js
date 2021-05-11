@@ -150,37 +150,41 @@ DisplayLayer.prototype.drawTargetSymbol = function(drawing, xy, rotation) {
 			drawing.context.restore()
 
 			//TODO
-			//wenn wegpunkt AND NOT globalStore.getData(keys.properties.sailsteeroverlap) -> Laylinelinie nur bis zum Schnittpunkt zeichnen
 			// Berechnung aus der for Schleife nehmen
 			let dist_SB = globalStore.getData(keys.properties.sailsteerlength)
 			let dist_BB = dist_SB
 			if (this.gps.waypoint.position) {
 				let is_BB = LatLon.intersection(new LatLon(this.gps.position.lat, this.gps.position.lon), this.gps.LLSB, new LatLon(this.gps.waypoint.position.lat, this.gps.waypoint.position.lon), this.gps.LLBB + 180)
 				let is_SB = LatLon.intersection(new LatLon(this.gps.position.lat, this.gps.position.lon), this.gps.LLBB, new LatLon(this.gps.waypoint.position.lat, this.gps.waypoint.position.lon), this.gps.LLSB + 180)
-				let WP_PostionPoint = new navobjects.Point(this.gps.waypoint.position.lon, this.gps.waypoint.position.lat)
-				let WP_PostionMap = this.mapholder.pointToMap(WP_PostionPoint.toCoord());
+				let WP_Point = new navobjects.Point(this.gps.waypoint.position.lon, this.gps.waypoint.position.lat)
+				let WP_Map = this.mapholder.pointToMap(WP_Point.toCoord());
+				let BP_Point = this.mapholder.pointFromMap(xy)
+				let BP_Map = xy;
 
 				// Wende/Halse-Punkte berechnen
 				if (is_SB != null && is_BB != null) {
 					let pos_SB = this.mapholder.pointToMap((new navobjects.Point(is_SB._lon, is_SB._lat)).toCoord());
-					dist_SB = NavCompute.computeDistance(new navobjects.Point(is_SB._lon, is_SB._lat), WP_PostionPoint).dts
 					let pos_BB = this.mapholder.pointToMap((new navobjects.Point(is_BB._lon, is_BB._lat)).toCoord());
-					dist_BB = NavCompute.computeDistance(new navobjects.Point(is_BB._lon, is_BB._lat), WP_PostionPoint).dts
+					dist_SB = NavCompute.computeDistance(new navobjects.Point(is_SB._lon, is_SB._lat), WP_Point).dts
+					dist_BB = NavCompute.computeDistance(new navobjects.Point(is_BB._lon, is_BB._lat), WP_Point).dts
 				}
 
 				//Laylines vom Wegpunkt zeichnen
-				let targetWP = this.computeTarget(WP_PostionMap, style.rotation * 180 / Math.PI + 180, globalStore.getData(keys.properties.sailsteerlength))
+				let draw_distance = globalStore.getData(keys.properties.sailsteeroverlap) ? globalStore.getData(keys.properties.sailsteerlength):Math.min(symbol == "LaylineBB" ? dist_BB : dist_SB,globalStore.getData(keys.properties.sailsteerlength))
+				let targetWP = this.computeTarget(WP_Map, style.rotation * 180 / Math.PI + 180, draw_distance)
 				if (globalStore.getData(keys.properties.sailsteermarke))
-					drawing.drawLineToContext([WP_PostionMap, targetWP], { color: symbol == "LaylineBB" ? "red" : "green", width: 5, dashed: true });
+					drawing.drawLineToContext([WP_Map, targetWP], { color: symbol == "LaylineBB" ? "red" : "green", width: 5, dashed: false });
 				// Only for testing purposes
 				//if (is_SB != null && is_BB != null)
 				//drawing.drawLineToContext([pos_SB, pos_BB], { color: "blue", width: 5 });
 			}
 
 			//Laylines vom Boot zeichnen
-			let targetboat = this.computeTarget(xy, style.rotation * 180 / Math.PI, globalStore.getData(keys.properties.sailsteerlength))
+			let test=globalStore.getData(keys.properties.sailsteeroverlap)
+			let draw_distance = globalStore.getData(keys.properties.sailsteeroverlap) ? globalStore.getData(keys.properties.sailsteerlength):Math.min(symbol == "LaylineBB" ? dist_BB : dist_SB,globalStore.getData(keys.properties.sailsteerlength))
+			let targetboat = this.computeTarget(xy, style.rotation * 180 / Math.PI, draw_distance)
 			if (globalStore.getData(keys.properties.sailsteerboot))
-				drawing.drawLineToContext([xy, targetboat], { color: symbol == "LaylineBB" ? "red" : "green", width: 5, dashed: true });
+				drawing.drawLineToContext([xy, targetboat], { color: symbol == "LaylineBB" ? "red" : "green", width: 5, dashed: false });
 			drawing.drawImageToContext(xy, this.symbolStyles[symbol].image, style);
 		}
 
@@ -772,8 +776,6 @@ Number.prototype.mod = function(a) {
 
 DisplayLayer.prototype.calc_LaylineAreas = function() {
 	
-	let TWD = (this.gps.TWA + this.gps.course) % 360
-
 	let reduktionszeit = globalStore.getData(keys.properties.sailsteerrefresh) * 60
 	let difftime = globalStore.getData(keys.properties.positionQueryTimeout) / 1000;
 
@@ -789,7 +791,7 @@ DisplayLayer.prototype.calc_LaylineAreas = function() {
 		this.TWD_Abweichung[i] *= reduktionsfaktor;
 
 	let winkelabweichung = 0;
-	winkelabweichung = TWD - this.gps.TSS
+	winkelabweichung = this.gps.TWD - this.gps.TSS
 	winkelabweichung = winkelabweichung.mod(360)
 	if (Math.abs(winkelabweichung) > 180)
 		var tst = 1
