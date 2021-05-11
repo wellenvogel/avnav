@@ -232,6 +232,12 @@
                         return;
                     }
                 }
+                if (k === 'AVNAV_PSK'){
+                    if ( ! value || value.length > 63 || value.length < 8){
+                        alert("invalid Wifi Password, 8...63 characters");
+                        return;
+                    }
+                }
                 if ( k === 'AVNAV_HOSTNAME'){
                     let allowed=value.replace(/[^a-zA-Z0-9-]/g,'');
                     if (allowed !== value ){
