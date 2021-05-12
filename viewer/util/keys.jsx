@@ -386,7 +386,7 @@ let keys={
         sailsteerlength: new Property(100,"Legt die Länge der Anlieger (Laylines) fest [m]",PropertyType.RANGE,[0,10000]),
         //sailsteerlimits: new Property(2,"Legt die minimale und maximale Dauer der Wende/Halse fest [min]",PropertyType.RANGE,[0,30]),
 		sailsteertransparency: new Property(20,"Transparenz des Sailsteerdisplays [%]",PropertyType.RANGE,[0,100]),
-		sailsteerPT1_frequenz: new Property(0.02,"Grenzfrequenz des TWD PT1 Filters [Hz]",PropertyType.RANGE,[0,10]),
+		//sailsteerPT1_frequenz: new Property(0.02,"Grenzfrequenz des TWD PT1 Filters [Hz]",PropertyType.RANGE,[0,10]),
 		
         style: {
             buttonSize: new Property(50, "Button Size(px)", PropertyType.RANGE, [35, 100]),

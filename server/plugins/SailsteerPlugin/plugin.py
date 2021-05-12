@@ -13,6 +13,11 @@ import urllib.request, urllib.parse, urllib.error
 import json
 
 
+    #// https://www.rainerstumpe.de/HTML/wind02.html
+    #// https://www.segeln-forum.de/board1-rund-ums-segeln/board4-seemannschaft/46849-frage-zu-windberechnung/#post1263721
+
+"""
+
 class XmlListConfig(list):
     def __init__(self, aList):
         for element in aList:
@@ -74,13 +79,14 @@ class XmlDictConfig(dict):
             # the text
             else:
                 self.update({element.tag: element.text})
+"""
 
 
 class Plugin(object):
-  PATHTWDSS="gps.TSS"
-  PATHTLL_SB="gps.LLSB"
-  PATHTLL_BB="gps.LLBB"
-  PATHTLL_VPOL="gps.VPOL"
+  PATHTWDSS="gps.TSS"   #    TrueWindAngle PT1 gefiltert
+  PATHTLL_SB="gps.LLSB" #    Winkel Layline Steuerbord
+  PATHTLL_BB="gps.LLBB" #    Winkel Layline Backbord
+  PATHTLL_VPOL="gps.VPOL" #  Geschwindigkeit aus Polardiagramm basierend auf TWS und TWA 
 
 
   
@@ -171,7 +177,6 @@ class Plugin(object):
                 calc_Laylines(self,gpsdata)  
 
 
-    self.api.log("no more running")
 
   
   
@@ -180,7 +185,7 @@ class Plugin(object):
     polare_filename = os.path.join(os.path.dirname(__file__), f_name)
     tree = ET.parse(polare_filename)
     root = tree.getroot()
-    xmldict = XmlDictConfig(root)
+    #xmldict = XmlDictConfig(root)
     x=ET.tostring(root, encoding='utf8').decode('utf8')
 
     x=root.find('windspeedvector').text
@@ -342,13 +347,14 @@ def calc_Laylines(self,gpsdata):# // [grad]
 
     ## avnav_navi.php?request=route&command=getleg
     #//      Route: {latlon: 0, active: false, dir:0,dist: 0, name:"",wp_name:"",}
+    """
+
         VMGvar = ((gpsdata['speed'] * 1.94384) * math.cos(gpsdata['TWA'] * math.pi) / 180)
     rueckgabewert = urllib.request.urlopen('http://localhost:8081/viewer/avnav_navi.php?request=route&command=getleg')
     route=rueckgabewert.read()
     inhalt_text = route.decode("UTF-8")
     d = json.loads(inhalt_text)
     #print(d)
-    """
 
     if (this.Route.active) {
         mySVG.get('pathWP').style('display', null)
@@ -385,7 +391,8 @@ def calcSailsteer(self, gpsdata):
         t_abtast=(time.time()-self.oldtime)
         freq=1/t_abtast
         self.oldtime=time.time()
-        fgrenz=0.02
+# TODO: Grenzfrequenz sollte aus key vom Viewer oder der server.xml geladen werden
+        fgrenz=0.02 #lobalStore.getData(keys.properties.sailsteerPT1_frequenz)
         self.windAngleSailsteer['x']=self.PT_1funk(fgrenz, t_abtast, self.windAngleSailsteer['x'], KaW['x'] - KaB['x'])
         self.windAngleSailsteer['y']=self.PT_1funk(fgrenz, t_abtast, self.windAngleSailsteer['y'], KaW['y'] - KaB['y'])
       # zurück in Polaren Winkel
@@ -398,36 +405,3 @@ def calcSailsteer(self, gpsdata):
         self.api.error(" error calculating TSS " + str(gpsdata) + "\n")
         return False
     
-    """
-
-
-        var anglew = this.gps.TWA > 180 ? 360 - this.gps.TWA : this.gps.TWA
-        this.SOGPOLvar = this.bilinear(
-            this.Polare.windspeedvector,
-            this.Polare.windanglevector,
-            this.Polare.boatspeed,
-            (this.gps.TWS / 0.514),
-            anglew
-        )
-        // for testing puposes replace measured speed by calc. speed from polare
-        //        (this.gps.speed * 1.94384) = (this.gps.speed * 1.94384) = this.BoatData.SOGPOLvar
-
-    }
-    //      Route: {latlon: 0, active: false, dir:0,dist: 0, name:"",wp_name:"",}
-    this.VMGvar = ((this.gps.speed * 1.94384) * Math.cos(this.gps.TWA * Math.PI) / 180)
-    if (this.Route.active) {
-        mySVG.get('pathWP').style('display', null)
-        this.Route.dir = this.Position.bearingTo(this.Route.latlonTo)
-        this.Route.dist =
-            this.Position.distanceTo(this.Route.latlonTo) * 0.539957
-        this.Route.VMCvar =
-            (this.gps.speed * 1.94384) *
-            Math.cos(((this.Route.dir - this.gps.course) * Math.PI) / 180)
-    } else {
-        //      mySVG.get('pathWP').style('display', 'none')
-        this.Route.VMCvar = NaN
-    }
-    //    console.log(this.BoatData)
-}
-    """
-

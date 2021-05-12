@@ -250,69 +250,6 @@ DisplayLayer.prototype.read_nmea_values = function() {
 }
 
 
-DisplayLayer.prototype.calc_values = function() {
-	// https://www.rainerstumpe.de/HTML/wind02.html
-	// https://www.segeln-forum.de/board1-rund-ums-segeln/board4-seemannschaft/46849-frage-zu-windberechnung/#post1263721
-	//var d = new Date();
-	//var now = d.getTime();
-
-
-
-//console.log("display "+ "TWD "+TWD.toFixed(1)+ " TWS "+TWS.toFixed(1))
-		
-
-	if (this.Polare) {
-		// LAYLINES
-		if (Math.abs(this.gps.TWA) > 90 && Math.abs(this.gps.TWA) < 270) {
-			var wendewinkel =
-				this.linear(
-					(this.gps.TWS / 0.514),
-					this.Polare.windspeedvector,
-					this.Polare.wendewinkel.downwind
-				) * 2
-		} else {
-			var wendewinkel =
-				this.linear(
-					(this.gps.TWS / 0.514),
-					this.Polare.windspeedvector,
-					this.Polare.wendewinkel.upwind
-				) * 2
-		}
-		this.wendewinkel = wendewinkel;
-
-		this.LL_SB = (this.gps.TWD + this.wendewinkel / 2) % 360
-		this.LL_BB = (this.gps.TWD - this.wendewinkel / 2) % 360
-
-
-
-		var anglew = this.gps.TWA > 180 ? 360 - this.gps.TWA : this.gps.TWA
-		this.SOGPOLvar = this.bilinear(
-			this.Polare.windspeedvector,
-			this.Polare.windanglevector,
-			this.Polare.boatspeed,
-			(this.gps.TWS / 0.514),
-			anglew
-		)
-		// for testing puposes replace measured speed by calc. speed from polare
-		//		(this.gps.speed * 1.94384) = (this.gps.speed * 1.94384) = this.BoatData.SOGPOLvar
-
-	}
-	//      Route: {latlon: 0, active: false, dir:0,dist: 0, name:"",wp_name:"",}
-	this.VMGvar = ((this.gps.speed * 1.94384) * Math.cos(this.gps.TWA * Math.PI) / 180)
-	if (this.Route.active) {
-		mySVG.get('pathWP').style('display', null)
-		this.Route.dir = this.Position.bearingTo(this.Route.latlonTo)
-		this.Route.dist =
-			this.Position.distanceTo(this.Route.latlonTo) * 0.539957
-		this.Route.VMCvar =
-			(this.gps.speed * 1.94384) *
-			Math.cos(((this.Route.dir - this.gps.course) * Math.PI) / 180)
-	} else {
-		//      mySVG.get('pathWP').style('display', 'none')
-		this.Route.VMCvar = NaN
-	}
-	//	console.log(this.BoatData)
-}
 
 DisplayLayer.prototype.xml2json = function(xml) {
 	try {
@@ -343,94 +280,20 @@ DisplayLayer.prototype.xml2json = function(xml) {
 	}
 }
 
-/*
-DisplayLayer.prototype.loadBoatData = function() {
-	var xmlFile = 'polare.xml'
-	var loadXML = new XMLHttpRequest()
-	//    loadXML.onload = callback
-	loadXML.open('GET', xmlFile, false)
-	loadXML.send();
-	if (loadXML.status === 200) {
-		this.Polare = this.xml2json(loadXML.responseXML).Data
-	}
-}
-*/
 
 DisplayLayer.prototype.loop = function() {
 	// wird mit aktualisierungsfrequenz aufgerufen
 
 	if (this.gps.valid) {
-//		this.Position = new LatLon(this.gps.position.lat, this.gps.position.lon)
 		this.Position = LatLon(this.gps.position.lat, this.gps.position.lon)
-//		this.calc_values();
-		//	var tn = formatNumber(this.gps.course.toString(), '000')
-		//	var m = SVG.get('Kurstext')
-		//m.text(tn)
 		this.symbolStyles.KompassRing.style.rotation = -this.gps.course;
 		this.symbolStyles.WindT.style.rotation = this.gps.TWA;
 		this.symbolStyles.WindA.style.rotation = this.gps.windangle;
 		this.symbolStyles.WindM.style.rotation = this.gps.TSS - this.gps.course;
-		//	this.symbolStyles.WindA.style.rotation=this.gps.windangle;
 		this.symbolStyles.LaylineSB.style.rotation = this.gps.LLSB - this.gps.course;
 		this.symbolStyles.LaylineBB.style.rotation = this.gps.LLBB - this.gps.course;
-		/*
-		if (this.Route.active) {
-			SVG.get('pathWP').rotate(
-				this.BoatData.Route.dir - this.gps.course,
-				SVG.get('circle-LL').cx(),
-				SVG.get('circle-LL').cy()
-		}
-		*/
 	}
 }
-
-DisplayLayer.prototype.checkfunc = function(currentValue, index) {
-	return currentValue > this
-}
-
-DisplayLayer.prototype.linear = function(x, xv, yv) {
-	var x_vector = JSON.parse(xv)
-	var y_vector = JSON.parse(yv)
-	var x2i = x_vector.findIndex(this.checkfunc, x)
-
-	// y_vector = BoatData.Polare.wendewinkel.upwind;
-	x2i = x2i < 1 ? 1 : x2i
-	var x2 = x_vector[x2i]
-	var y2 = y_vector[x2i]
-	var x1i = x2i - 1
-	var x1 = x_vector[x1i]
-	var y1 = y_vector[x1i]
-	var y = ((x2 - x) / (x2 - x1)) * y1 + ((x - x1) / (x2 - x1)) * y2
-	return y
-}
-
-DisplayLayer.prototype.bilinear = function(xv, yv, zv, x, y) {
-	var ws = JSON.parse(xv)
-	var angle = JSON.parse(yv)
-	var speed = JSON.parse(zv)
-
-	var x2i = ws.findIndex(this.checkfunc, x)
-	x2i = x2i < 1 ? 1 : x2i
-	var x2 = ws[x2i]
-	var x1i = x2i - 1
-	var x1 = ws[x1i]
-
-	var y2i = angle.findIndex(this.checkfunc, y)
-	y2i = y2i < 1 ? 1 : y2i
-	var y2 = angle[y2i]
-	var y1i = y2i - 1
-	var y1 = angle[y2i - 1]
-
-	var ret =
-			/* f(x,y)= */ ((y2 - y) / (y2 - y1)) *
-		(((x2 - x) / (x2 - x1)) * speed[y1i][x1i] /* f(x1,y1) */ +
-			((x - x1) / (x2 - x1)) * speed[y1i][x2i]) /* f(x1,y2) */ +
-		((y - y1) / (y2 - y1)) *
-		(((x2 - x) / (x2 - x1)) * speed[y2i][x1i] /* f(x1,y2) */ +
-			((x - x1) / (x2 - x1)) * speed[y2i][x2i]) /* f(x2,y2) */
-	return ret
-}
-
 
 
 DisplayLayer.prototype.CreateOuterRingIcon = function() {
@@ -658,43 +521,6 @@ DisplayLayer.prototype.createLaylineArea = function(color, MinMax) {
 
 
 
-DisplayLayer.prototype.DrawKompassring = function(ctx) {
-
-	if (!ctx.canvas) return undefined;
-	ctx.save()
-
-	var x = ctx.canvas.width / 2;
-	var y = ctx.canvas.height / 2;
-	var radius = 105;
-
-	ctx.beginPath();
-	ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
-	ctx.lineWidth = 20;
-	ctx.strokeStyle = "rgb(255,255,255)";
-	ctx.stroke();
-
-	ctx.translate(x, y); // Nullpunkt auf den Mittelpunkt des Canvas setzen
-	for (var i = 0; i < 360; i += 10) {
-		//ctx.restore();
-		ctx.translate(x, y); // Nullpunkt auf den Mittelpunkt des Canvas setzen
-		ctx.rotate((i / 180) * Math.PI);
-		if (i % 30 == 0) {
-			ctx.fillStyle = "rgb(00,00,0)";
-			ctx.textAlign = "center";
-			ctx.font = "bold 12px Arial";
-			ctx.fillText(i.toString().padStart(3, "0"), 0, -radius + 3);
-		} else {
-			ctx.beginPath();
-			ctx.fillStyle = "rgb(100,100,100)";
-			ctx.arc(0, -radius, 2, 0, 2 * Math.PI, false);
-			ctx.fill();
-			ctx.lineWidth = 1;
-			ctx.strokeStyle = "rgb(100,100,100)";
-			ctx.stroke();
-		}
-	}
-	ctx.restore();
-}; // Ende Kompassring
 
 DisplayLayer.prototype.DrawLaylineArea = function(drawing, center, color, opt_options) {
     if (opt_options && opt_options.fixX !== undefined) {
@@ -731,17 +557,6 @@ DisplayLayer.prototype.DrawLaylineArea = function(drawing, center, color, opt_op
 	ctx.fillStyle = color;
 	ctx.fill()
 
-
-/*
-	ctx.rotate(-angle)
-	ctx.globalAlpha = 1;
-	ctx.fillStyle = "rgb(00,00,0)";
-	ctx.textAlign = "center";
-	ctx.font = "bold 12px Arial";
-	ctx.fillText(this.TWD_Abweichung[0].toFixed(2).toString(), 200, -100);
-	ctx.fillText(this.TWD_Abweichung[1].toFixed(2).toString(), 200, -90);
-	ctx.fillStyle = "rgb(00,00,0)";
-*/	
 	ctx.restore()
 };
 
@@ -760,45 +575,26 @@ Number.prototype.mod = function(a) {
 
 DisplayLayer.prototype.calc_LaylineAreas = function(center) {
 
-	//TODO
-	// Berechnung aus der for Schleife nehmen
-	let dist_SB = globalStore.getData(keys.properties.sailsteerlength)
-	let dist_BB = dist_SB
+	this.dist_SB = this.dist_BB=globalStore.getData(keys.properties.sailsteerlength)
 	if (this.gps.waypoint.position) {
 		let is_BB = LatLon.intersection(new LatLon(this.gps.position.lat, this.gps.position.lon), this.gps.LLSB, new LatLon(this.gps.waypoint.position.lat, this.gps.waypoint.position.lon), this.gps.LLBB + 180)
 		let is_SB = LatLon.intersection(new LatLon(this.gps.position.lat, this.gps.position.lon), this.gps.LLBB, new LatLon(this.gps.waypoint.position.lat, this.gps.waypoint.position.lon), this.gps.LLSB + 180)
 		let WP_Point = new navobjects.Point(this.gps.waypoint.position.lon, this.gps.waypoint.position.lat)
 		this.WP_Map = this.mapholder.pointToMap(WP_Point.toCoord());
-		let BP_Point = this.mapholder.pointFromMap(center)
-		let BP_Map = center;
 
 		// Wende/Halse-Punkte berechnen
 		if (is_SB != null && is_BB != null) {
-			let pos_SB = this.mapholder.pointToMap((new navobjects.Point(is_SB._lon, is_SB._lat)).toCoord());
-			let pos_BB = this.mapholder.pointToMap((new navobjects.Point(is_BB._lon, is_BB._lat)).toCoord());
 			this.dist_SB = NavCompute.computeDistance(new navobjects.Point(is_SB._lon, is_SB._lat), WP_Point).dts
 			this.dist_BB = NavCompute.computeDistance(new navobjects.Point(is_BB._lon, is_BB._lat), WP_Point).dts
 		}
-
-		//Laylines vom Wegpunkt zeichnen
-		//this.targetWP = this.computeTarget(WP_Map, style.rotation * 180 / Math.PI + 180, draw_distance)
-		// Only for testing purposes
-		//if (is_SB != null && is_BB != null)
-		//drawing.drawLineToContext([pos_SB, pos_BB], { color: "blue", width: 5 });
 	}
 
-	//Laylines vom Boot zeichnen
-	let test = globalStore.getData(keys.properties.sailsteeroverlap)
-	//this.targetboat = this.computeTarget(center, style.rotation * 180 / Math.PI, draw_distance)
-
-
+// Berechnungen für die Laylineareas
+// Die Breite der Areas (Winkelbereich) wird über die Refreshzeit abgebaut
 
 
 	let reduktionszeit = globalStore.getData(keys.properties.sailsteerrefresh) * 60
 	let difftime = globalStore.getData(keys.properties.positionQueryTimeout) / 1000;
-
-	// Mittelwert TWD berechnen mit Grenzfrequenz 0.01Hz
-	// in kartesische Koordinaten umrechnen
 
 	let reduktionsfaktor = 1.
 	if (reduktionszeit)
