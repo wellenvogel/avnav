@@ -37,7 +37,7 @@ const settingsSections={
     Track:      [keys.properties.trackColor,keys.properties.trackWidth,keys.properties.trackInterval,keys.properties.initialTrackLength],
     Route:      [keys.properties.routeColor,keys.properties.routeWidth,keys.properties.routeWpSize,keys.properties.routingTextSize,keys.properties.routeApproach,keys.properties.routeShowLL],
     Remote:     [keys.properties.remoteChannelName,keys.properties.remoteChannelRead,keys.properties.remoteChannelWrite,keys.properties.remoteGuardTime],
-    SailSteer:      [keys.properties.sailsteerboot,keys.properties.sailsteermarke,keys.properties.sailsteerrefresh,keys.properties.sailsteertide,keys.properties.sailsteeroverlap,keys.properties.sailsteerlength,keys.properties.sailsteerlimits,keys.properties.sailsteertransparency,keys.properties.sailsteerPT1_frequenz]
+    Segelinstrument:      [keys.properties.sailsteerboot,keys.properties.sailsteermarke,keys.properties.sailsteerrefresh,keys.properties.sailsteertide,keys.properties.sailsteeroverlap,keys.properties.sailsteerlength,keys.properties.sailsteerlimits,keys.properties.sailsteertransparency,keys.properties.sailsteerPT1_frequenz]
 
 };
 

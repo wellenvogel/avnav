@@ -121,11 +121,13 @@ this.Position= 0	//nav.gps.position,
 }
 
 
-DisplayLayer.prototype.drawTargetSymbol = function(drawing, xy, rotation) {
+DisplayLayer.prototype.drawTargetSymbol = function(drawing, center, boatPosition, rotation) {
 	//    let scale=globalStore.getData(keys.properties.aisIconScale,1);
 	//KDS		let rotation=current.course||0;
 
-	for (var symbol in this.symbolStyles) {
+	this.calc_LaylineAreas(center)
+	for (var symbol in this.symbolStyles) 
+	{
 		let style = assign({}, this.symbolStyles[symbol].style);
 		let scale = 1.0//KDSglobalStore.getData(keys.properties.aisIconScale,1);
 
@@ -141,53 +143,33 @@ DisplayLayer.prototype.drawTargetSymbol = function(drawing, xy, rotation) {
 			style.rotation *= Math.PI / 180;
 		}
 
-		drawing.drawImageToContext(xy, this.symbolStyles[symbol].image, style);
+		drawing.drawImageToContext(center, this.symbolStyles[symbol].image, style);
+
 		//		NOW THE DYNAMIC CONTENT TO BE DIRECTLY DRAWN ONTO CANVAS;
-		if (symbol == "LaylineBB" || symbol == "LaylineSB") {
-			this.calc_LaylineAreas()
+		if (symbol == "LaylineBB" || symbol == "LaylineSB") 
+		{
 			drawing.context.save()
-			this.DrawLaylineArea(drawing, xy, symbol == "LaylineBB" ? "red" : "green", style)
+			this.DrawLaylineArea(drawing, center, symbol == "LaylineBB" ? "red" : "green", style)
 			drawing.context.restore()
 
-			//TODO
-			// Berechnung aus der for Schleife nehmen
-			let dist_SB = globalStore.getData(keys.properties.sailsteerlength)
-			let dist_BB = dist_SB
 			if (this.gps.waypoint.position) {
-				let is_BB = LatLon.intersection(new LatLon(this.gps.position.lat, this.gps.position.lon), this.gps.LLSB, new LatLon(this.gps.waypoint.position.lat, this.gps.waypoint.position.lon), this.gps.LLBB + 180)
-				let is_SB = LatLon.intersection(new LatLon(this.gps.position.lat, this.gps.position.lon), this.gps.LLBB, new LatLon(this.gps.waypoint.position.lat, this.gps.waypoint.position.lon), this.gps.LLSB + 180)
-				let WP_Point = new navobjects.Point(this.gps.waypoint.position.lon, this.gps.waypoint.position.lat)
-				let WP_Map = this.mapholder.pointToMap(WP_Point.toCoord());
-				let BP_Point = this.mapholder.pointFromMap(xy)
-				let BP_Map = xy;
-
-				// Wende/Halse-Punkte berechnen
-				if (is_SB != null && is_BB != null) {
-					let pos_SB = this.mapholder.pointToMap((new navobjects.Point(is_SB._lon, is_SB._lat)).toCoord());
-					let pos_BB = this.mapholder.pointToMap((new navobjects.Point(is_BB._lon, is_BB._lat)).toCoord());
-					dist_SB = NavCompute.computeDistance(new navobjects.Point(is_SB._lon, is_SB._lat), WP_Point).dts
-					dist_BB = NavCompute.computeDistance(new navobjects.Point(is_BB._lon, is_BB._lat), WP_Point).dts
-				}
-
 				//Laylines vom Wegpunkt zeichnen
-				let draw_distance = globalStore.getData(keys.properties.sailsteeroverlap) ? globalStore.getData(keys.properties.sailsteerlength):Math.min(symbol == "LaylineBB" ? dist_BB : dist_SB,globalStore.getData(keys.properties.sailsteerlength))
-				let targetWP = this.computeTarget(WP_Map, style.rotation * 180 / Math.PI + 180, draw_distance)
+				let draw_distance = globalStore.getData(keys.properties.sailsteeroverlap) ? globalStore.getData(keys.properties.sailsteerlength) : Math.min(symbol == "LaylineBB" ? this.dist_BB : this.dist_SB, globalStore.getData(keys.properties.sailsteerlength))
+				let targetWP = this.computeTarget(this.WP_Map, style.rotation * 180 / Math.PI + 180, draw_distance)
 				if (globalStore.getData(keys.properties.sailsteermarke))
-					drawing.drawLineToContext([WP_Map, targetWP], { color: symbol == "LaylineBB" ? "red" : "green", width: 5, dashed: false });
+					drawing.drawLineToContext([this.WP_Map, targetWP], { color: symbol == "LaylineBB" ? "red" : "green", width: 5, dashed: true });
 				// Only for testing purposes
 				//if (is_SB != null && is_BB != null)
 				//drawing.drawLineToContext([pos_SB, pos_BB], { color: "blue", width: 5 });
 			}
 
-			//Laylines vom Boot zeichnen
-			let test=globalStore.getData(keys.properties.sailsteeroverlap)
-			let draw_distance = globalStore.getData(keys.properties.sailsteeroverlap) ? globalStore.getData(keys.properties.sailsteerlength):Math.min(symbol == "LaylineBB" ? dist_BB : dist_SB,globalStore.getData(keys.properties.sailsteerlength))
-			let targetboat = this.computeTarget(xy, style.rotation * 180 / Math.PI, draw_distance)
-			if (globalStore.getData(keys.properties.sailsteerboot))
-				drawing.drawLineToContext([xy, targetboat], { color: symbol == "LaylineBB" ? "red" : "green", width: 5, dashed: false });
-			drawing.drawImageToContext(xy, this.symbolStyles[symbol].image, style);
+		//Laylines vom Boot zeichnen
+		let draw_distance = globalStore.getData(keys.properties.sailsteeroverlap) ? globalStore.getData(keys.properties.sailsteerlength) : Math.min(symbol == "LaylineBB" ? this.dist_BB : this.dist_SB, globalStore.getData(keys.properties.sailsteerlength))
+		let targetboat = this.computeTarget(boatPosition, style.rotation * 180 / Math.PI, draw_distance)
+		if (globalStore.getData(keys.properties.sailsteerboot))
+			drawing.drawLineToContext([boatPosition, targetboat], { color: symbol == "LaylineBB" ? "red" : "green", width: 5, dashed: true });
+		drawing.drawImageToContext(center, this.symbolStyles[symbol].image, style);
 		}
-
 	}
 }
 
@@ -206,11 +188,13 @@ DisplayLayer.prototype.onPostCompose = function(center, drawing, devpixelRatio) 
 	this.devPixelRatio=devpixelRatio
 	let course = this.gps.course;
 	let rotation = 0
+    let boatPosition = this.mapholder.transformToMap(this.gps.position.toCoord());
+
 	if (this.gps.valid) {
 		this.deltat = performance.now() - this.oldtime
 		this.oldtime = performance.now()
 		this.loop();
-		this.drawTargetSymbol(drawing, center,this.gps.course);
+		this.drawTargetSymbol(drawing, center, boatPosition, this.gps.course);
 	}
 }
 
@@ -712,12 +696,12 @@ DisplayLayer.prototype.DrawKompassring = function(ctx) {
 	ctx.restore();
 }; // Ende Kompassring
 
-DisplayLayer.prototype.DrawLaylineArea = function(drawing, xy, color, opt_options) {
+DisplayLayer.prototype.DrawLaylineArea = function(drawing, center, color, opt_options) {
     if (opt_options && opt_options.fixX !== undefined) {
-        xy[0]=opt_options.fixX*this.devPixelRatio;
+        center[0]=opt_options.fixX*this.devPixelRatio;
     }
     if (opt_options &&  opt_options.fixY !== undefined) {
-        xy[1]=opt_options.fixY*this.devPixelRatio;
+        center[1]=opt_options.fixY*this.devPixelRatio;
     }
 	let ctx=drawing.context
     ctx.save();
@@ -774,8 +758,42 @@ Number.prototype.mod = function(a) {
 
 
 
-DisplayLayer.prototype.calc_LaylineAreas = function() {
-	
+DisplayLayer.prototype.calc_LaylineAreas = function(center) {
+
+	//TODO
+	// Berechnung aus der for Schleife nehmen
+	let dist_SB = globalStore.getData(keys.properties.sailsteerlength)
+	let dist_BB = dist_SB
+	if (this.gps.waypoint.position) {
+		let is_BB = LatLon.intersection(new LatLon(this.gps.position.lat, this.gps.position.lon), this.gps.LLSB, new LatLon(this.gps.waypoint.position.lat, this.gps.waypoint.position.lon), this.gps.LLBB + 180)
+		let is_SB = LatLon.intersection(new LatLon(this.gps.position.lat, this.gps.position.lon), this.gps.LLBB, new LatLon(this.gps.waypoint.position.lat, this.gps.waypoint.position.lon), this.gps.LLSB + 180)
+		let WP_Point = new navobjects.Point(this.gps.waypoint.position.lon, this.gps.waypoint.position.lat)
+		this.WP_Map = this.mapholder.pointToMap(WP_Point.toCoord());
+		let BP_Point = this.mapholder.pointFromMap(center)
+		let BP_Map = center;
+
+		// Wende/Halse-Punkte berechnen
+		if (is_SB != null && is_BB != null) {
+			let pos_SB = this.mapholder.pointToMap((new navobjects.Point(is_SB._lon, is_SB._lat)).toCoord());
+			let pos_BB = this.mapholder.pointToMap((new navobjects.Point(is_BB._lon, is_BB._lat)).toCoord());
+			this.dist_SB = NavCompute.computeDistance(new navobjects.Point(is_SB._lon, is_SB._lat), WP_Point).dts
+			this.dist_BB = NavCompute.computeDistance(new navobjects.Point(is_BB._lon, is_BB._lat), WP_Point).dts
+		}
+
+		//Laylines vom Wegpunkt zeichnen
+		//this.targetWP = this.computeTarget(WP_Map, style.rotation * 180 / Math.PI + 180, draw_distance)
+		// Only for testing purposes
+		//if (is_SB != null && is_BB != null)
+		//drawing.drawLineToContext([pos_SB, pos_BB], { color: "blue", width: 5 });
+	}
+
+	//Laylines vom Boot zeichnen
+	let test = globalStore.getData(keys.properties.sailsteeroverlap)
+	//this.targetboat = this.computeTarget(center, style.rotation * 180 / Math.PI, draw_distance)
+
+
+
+
 	let reduktionszeit = globalStore.getData(keys.properties.sailsteerrefresh) * 60
 	let difftime = globalStore.getData(keys.properties.positionQueryTimeout) / 1000;
 
@@ -794,7 +812,6 @@ DisplayLayer.prototype.calc_LaylineAreas = function() {
 	winkelabweichung = this.gps.TWD - this.gps.TSS
 	winkelabweichung = winkelabweichung.mod(360)
 	if (Math.abs(winkelabweichung) > 180)
-		var tst = 1
 	winkelabweichung = winkelabweichung < -180 ? winkelabweichung % 180 + 180 : winkelabweichung
 	winkelabweichung = winkelabweichung > 180 ? winkelabweichung % 180 - 180 : winkelabweichung
 
