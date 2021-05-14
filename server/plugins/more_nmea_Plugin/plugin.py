@@ -24,8 +24,9 @@ except:
 class Config(object):
 
   def __init__(self, api):
-    self.WMM_FILE = api.getConfigValue('WMM_FILE', 'WMM2020.COF')
-    self.WMM_PERIOD = api.getConfigValue('WMM_PERIOD', '3600')
+    #self.WMM_FILE = api.getConfigValue('WMM_FILE', 'WMM2020.COF')
+    #self.WMM_PERIOD = api.getConfigValue('WMM_PERIOD', '3600')
+    pass
 
 
 class Plugin(object):
@@ -136,6 +137,10 @@ class Plugin(object):
     self.userAppId = None
     self.startSequence=0
     self.receivedTags=[]
+    self.saveAllConfig()
+    #nc={item['name']:item for item in self.CONFIG}
+    #self.changeConfig(nc)
+    
   def stop(self):
     pass
   
@@ -145,6 +150,18 @@ class Plugin(object):
       if cf['name'] == name:
         return self.api.getConfigValue(name,cf.get('default'))
     return self.api.getConfigValue(name)
+  
+  def saveAllConfig(self):
+    d={}
+    defaults=self.pluginInfo()['config']
+    for cf in defaults:
+      v=self.getConfigValue(cf.get('name'))
+      d.update({cf.get('name'):v})
+    self.api.saveConfigValues(d)
+    return 
+  
+  def changeConfig(self,newValues):
+    self.api.saveConfigValues(newValues)
   
   def changeParam(self, param):
     self.api.saveConfigValues(param)
@@ -259,7 +276,8 @@ class Plugin(object):
     # print(tag)
     try:
       if tag == 'HDG':
-        self.receivedTags.append(tag)
+        if not tag in self.receivedTags:  
+            self.receivedTags.append(tag)
         rt['MagDevDir'] = 'X'
         rt['MagVarDir'] = 'X'  
         rt['SensorHeading'] = float(darray[1] or '0') 
@@ -290,7 +308,8 @@ class Plugin(object):
         return True
 
       if tag == 'HDM' or tag == 'HDT':
-        self.receivedTags.append(tag)
+        if not tag in self.receivedTags:  
+            self.receivedTags.append(tag)
         rt['Heading'] = float(darray[1] or '0')
         rt['magortrue'] = darray[2]
         if(rt['magortrue'] == 'T'):
@@ -302,7 +321,8 @@ class Plugin(object):
 
       # print(tag)
       if tag == 'VHW':
-        self.receivedTags.append(tag)
+        if not tag in self.receivedTags:  
+            self.receivedTags.append(tag)
         if(len(darray[1]) > 0):  # Heading True
             rt['Heading'] = float(darray[1] or '0')
             self.api.addData(self.PATHHDG_T, rt['Heading'])
