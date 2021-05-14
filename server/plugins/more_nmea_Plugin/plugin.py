@@ -38,6 +38,7 @@ class Plugin(object):
   PATHSTW = "gps.STW"
   PATHGMM = "gps.MagVar"
   WMM_FILE = 'WMM2020.COF'
+  #FILTER= ['$HDG','$HDM','$HDT','$VHW']
   FILTER= '$HDG,$HDM,$HDT,$VHW'
   CONFIG = [
       {
@@ -52,10 +53,16 @@ class Plugin(object):
       'type': 'NUMBER'
       },
       {
-        'name':'period',
+        'name':'computePeriod',
         'description': 'Compute period (s) for wind data',
         'type': 'FLOAT',
-        'default': 0.5
+        'default': 1.0
+      },
+      {
+        'name':'NewNMEAPeriod',
+        'description': 'period (s) for NMEA records',
+        'type': 'FLOAT',
+        'default': 1
       }
       ]
 
@@ -126,12 +133,18 @@ class Plugin(object):
     self.variation_val = 0
     self.MissweisungFromSensor = False
 
-    self.config = None 
     self.userAppId = None
     self.startSequence=0
-
+    self.receivedTags=[]
   def stop(self):
     pass
+  
+  def getConfigValue(self,name):
+    defaults=self.pluginInfo()['config']
+    for cf in defaults:
+      if cf['name'] == name:
+        return self.api.getConfigValue(name,cf.get('default'))
+    return self.api.getConfigValue(name)
   
   def changeParam(self, param):
     self.api.saveConfigValues(param)
@@ -142,6 +155,7 @@ class Plugin(object):
     the run method
     @return:
     """
+    lastnmea=0
     startSequence=None
     seq = 0
     self.api.log("started")
@@ -150,14 +164,13 @@ class Plugin(object):
     computePeriod=0.5
     while not self.api.shouldStopMainThread():
       if startSequence != self.startSequence:
-        self.config = Config(self.api)
         try:
-          computePeriod = float(self.api.getConfigValue('computePeriod', 0.5))
+          computePeriod = float(self.getConfigValue('computePeriod'))
         except:
           pass
         startSequence = self.startSequence
         if hasgeomag:
-          wmm_filename = os.path.join(os.path.dirname(__file__)+'/lib', self.config.WMM_FILE)
+          wmm_filename = os.path.join(os.path.dirname(__file__)+'/lib', self.getConfigValue('WMM_FILE'))
           gm = geomag.GeoMag(wmm_filename)
       lastTime = time.time()
       gpsdata = {}
@@ -168,7 +181,7 @@ class Plugin(object):
         if 'lat' in gpsdata and 'lon' in gpsdata and gm is not None:
           computesVar = True
           now = time.time()
-          if now - self.variation_time > int(self.config.WMM_PERIOD) or now < self.variation_time:
+          if now - self.variation_time > int(self.getConfigValue('WMM_PERIOD')) or now < self.variation_time:
             variation = gm.GeoMag(gpsdata['lat'], gpsdata['lon'])
             self.variation_time = now
             self.variation_val = variation.dec
@@ -179,13 +192,13 @@ class Plugin(object):
         self.api.error(" error in calculation of magnetic Variation")
 
       if 'windSpeed' in gpsdata:
-        computesWind=True
         if gpsdata['windReference'] == 'R':
-          if (self.calcTrueWind(gpsdata)):
-            self.api.addData(self.PATHAWD, gpsdata['AWD'])
-            self.api.addData(self.PATHTWD, gpsdata['TWD'])
-            self.api.addData(self.PATHTWS, gpsdata['TWS'])
-            self.api.addData(self.PATHTWA, gpsdata['TWA'])
+            computesWind=True
+            if (self.calcTrueWind(gpsdata)):
+                self.api.addData(self.PATHAWD, gpsdata['AWD'])
+                self.api.addData(self.PATHTWD, gpsdata['TWD'])
+                self.api.addData(self.PATHTWS, gpsdata['TWS'])
+                self.api.addData(self.PATHTWA, gpsdata['TWA'])
       if computesVar or computesWind:
         stText='computing '
         if computesVar:
@@ -208,10 +221,19 @@ class Plugin(object):
         else:
           waitTime = 0.01
           runNext = True
-        seq, data = self.api.fetchFromQueue(seq, waitTime=waitTime,filter=self.FILTER)
+        seq, data = self.api.fetchFromQueue(seq,number=100, waitTime=waitTime, filter=self.FILTER)
         if len(data) > 0:
           for line in data:
             self.parseData(line)
+      if((time.time()-lastnmea) > float(self.getConfigValue('NewNMEAPeriod'))):
+          print(now,self.receivedTags)
+          # schreibe MWD ODER MWV 0 f(TWA) 
+          # schreibe VHW f(STW und oder Variation) 
+          # schreibe HDT, HDM f(HDGt oder HDGm) 
+          # schreibe HDG f(HDGt und HDGm und Variation) 
+          self.api.addNMEA("$KSKDS,,,,,", True, True, 'GG')
+          self.receivedTags=[]
+          lastnmea=now
 
   def nmeaChecksum(cls, part):
     chksum = 0
@@ -235,9 +257,9 @@ class Plugin(object):
     tag = darray[0][3:]
     rt = {}
     # print(tag)
-
     try:
       if tag == 'HDG':
+        self.receivedTags.append(tag)
         rt['MagDevDir'] = 'X'
         rt['MagVarDir'] = 'X'  
         rt['SensorHeading'] = float(darray[1] or '0') 
@@ -268,6 +290,7 @@ class Plugin(object):
         return True
 
       if tag == 'HDM' or tag == 'HDT':
+        self.receivedTags.append(tag)
         rt['Heading'] = float(darray[1] or '0')
         rt['magortrue'] = darray[2]
         if(rt['magortrue'] == 'T'):
@@ -279,6 +302,7 @@ class Plugin(object):
 
       # print(tag)
       if tag == 'VHW':
+        self.receivedTags.append(tag)
         if(len(darray[1]) > 0):  # Heading True
             rt['Heading'] = float(darray[1] or '0')
             self.api.addData(self.PATHHDG_T, rt['Heading'])

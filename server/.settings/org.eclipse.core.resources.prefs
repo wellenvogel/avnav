@@ -1,4 +1,9 @@
 eclipse.preferences.version=1
+encoding//handler/feeder.py=utf-8
 encoding//handler/pluginhandler.py=utf-8
+encoding//handler/socketreaderbase.py=utf-8
+encoding/avnav_api.py=utf-8
+encoding/avnav_manager.py=utf-8
+encoding/avnav_nmea.py=utf-8
 encoding/avnav_server.py=utf-8
 encoding/avnav_util.py=utf-8
