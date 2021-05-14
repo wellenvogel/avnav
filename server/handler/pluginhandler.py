@@ -101,6 +101,7 @@ class ApiImpl(AVNApi):
 
   def fetchFromQueue(self, sequence, number=10,includeSource=False,waitTime=0.5,filter=None):
     if filter is not None:
+      filter=filter.split(',')  
       if not (isinstance(filter,list)):
         filter=[filter]
     return self.queue.fetchFromHistory(sequence,number,includeSource=includeSource,waitTime=waitTime,nmeafilter=filter)
