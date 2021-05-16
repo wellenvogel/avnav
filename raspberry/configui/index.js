@@ -118,7 +118,7 @@
     let findInCurrent=function(current,key,includeComment){
         if (! current) return;
         let lines=current.split('\n');
-        for (let i=0;i< includeComment?1:2;i++){
+        for (let i=0;i< (includeComment?1:2);i++){
             let r;
             if (i == 0 ){
                 //1st try without comment lines
