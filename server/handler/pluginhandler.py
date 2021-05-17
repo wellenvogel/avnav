@@ -102,7 +102,7 @@ class ApiImpl(AVNApi):
   def fetchFromQueue(self, sequence, number=10,includeSource=False,waitTime=0.5,filter=None):
     if filter is not None:
       if not (isinstance(filter,list)):
-        filter=[filter]
+        filter=filter.split(',')
     return self.queue.fetchFromHistory(sequence,number,includeSource=includeSource,waitTime=waitTime,nmeafilter=filter)
 
   def addNMEA(self, nmea, addCheckSum=False,omitDecode=True,source=None):
