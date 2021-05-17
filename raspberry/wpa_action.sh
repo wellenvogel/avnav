@@ -3,7 +3,7 @@
 
 logger -t 'avnav-wpa' $1 $2
 if [ "$2" = "CONNECTED" ] ; then
-	dhclient -nw $1 
+	dhclient -nw -e IF_METRIC=10 $1 
 fi
 if [ "$2" = "DISCONNECTED" ] ; then
 	dhclient -x $1 
