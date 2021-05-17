@@ -10,7 +10,7 @@
 # omit the # at the beginning
 # /usr/lib/avnav/raspberry/checkLink.sh &
 
-set -x
+#set -x
 dev=eth0
 count=0
 down=0
