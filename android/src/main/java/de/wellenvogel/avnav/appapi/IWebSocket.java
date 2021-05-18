@@ -9,6 +9,8 @@ public interface IWebSocket {
     static final int opcodeClose = 0x8;
     static final int opcodePing = 0x9;
     static final int opcodePong = 0xa;
+    String getUrl();
     boolean send(String msg) throws IOException;
-    long getId();
+    int getId();
+    void close(boolean callHandler);
 }

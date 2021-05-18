@@ -19,7 +19,8 @@ import de.wellenvogel.avnav.util.AvnLog;
 
 
 public class WebSocket implements IWebSocket{
-
+    private static int id=0;
+    private static Object idLock=new Object();
     private static final String GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
     private static final int MAXLEN=8000000; //max message len
@@ -27,16 +28,25 @@ public class WebSocket implements IWebSocket{
     private HttpResponse httpResponse;
     private HttpContext httpContext;
     private WebServer.AvNavHttpServerConnection connection;
-    private WebSocketHandler handler;
+    private IWebSocketHandler handler;
     private final Object outLock=new Object();
+    private int ownId=-1;
     ArrayBlockingQueue<String> sendQueue=new ArrayBlockingQueue<>(10);
-    WebSocket(HttpRequest httpRequest, HttpResponse httpResponse, HttpContext httpContext,WebSocketHandler handler){
+    private int getNextId(){
+        synchronized (idLock){
+            id++;
+            return id;
+        }
+    }
+    WebSocket(HttpRequest httpRequest, HttpResponse httpResponse, HttpContext httpContext, IWebSocketHandler handler){
         this.httpRequest=httpRequest;
         this.httpResponse=httpResponse;
         this.httpContext=httpContext;
         this.handler=handler;
         this.connection=(WebServer.AvNavHttpServerConnection)httpContext.getAttribute(ExecutionContext.HTTP_CONNECTION);
+        ownId=getNextId();
     }
+
     private void handshake() throws NoSuchAlgorithmException, IOException, HttpException {
         connection.setSocketTimeout(0);
         String key=httpRequest.getFirstHeader("Sec-WebSocket-Key").getValue();
@@ -181,6 +191,11 @@ public class WebSocket implements IWebSocket{
     }
 
     @Override
+    public String getUrl() {
+        return httpRequest.getRequestLine().getUri();
+    }
+
+    @Override
     public boolean send(String msg) throws IOException {
         if (!sendQueue.offer(msg)){
             AvnLog.dfs("unable to enqueue ws message %s",msg);
@@ -190,7 +205,17 @@ public class WebSocket implements IWebSocket{
     }
 
     @Override
-    public long getId() {
-        return 0;
+    public int getId() {
+        return ownId;
+    }
+
+    @Override
+    public void close(boolean callHandler) {
+        try{
+            connection.close();
+            connection.shutdown();
+            connection.setClosed();
+        }catch (Throwable t){}
+        if (callHandler) handler.onClose(this);
     }
 }

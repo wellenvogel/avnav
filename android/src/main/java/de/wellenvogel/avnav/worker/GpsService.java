@@ -425,7 +425,13 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             return new MdnsWorker(typeName,ctx);
         }
     };
-    private static final WorkerConfig[] INTERNAL_WORKERS ={WDECODER,WROUTER,WTRACK,WLOGGER,WSERVER,WGPS,WMDNS};
+    private static final WorkerConfig WREMOTE=new WorkerConfig("RemoteChannel",8) {
+        @Override
+        IWorker createWorker(GpsService ctx, NmeaQueue queue) throws IOException {
+            return new RemoteChannel(typeName,ctx);
+        }
+    };
+    private static final WorkerConfig[] INTERNAL_WORKERS ={WDECODER,WROUTER,WTRACK,WLOGGER,WSERVER,WGPS,WMDNS,WREMOTE};
 
     private synchronized int getNextWorkerId(){
         workerId++;
@@ -563,6 +569,11 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
     public MdnsWorker getMdnsResolver(){
         IWorker mdns=findWorkerById(WMDNS.id);
         return (MdnsWorker) mdns;
+    }
+
+    public RemoteChannel getRemoteChannel(){
+        IWorker rc=findWorkerById(WREMOTE.id);
+        return (RemoteChannel) rc;
     }
 
 

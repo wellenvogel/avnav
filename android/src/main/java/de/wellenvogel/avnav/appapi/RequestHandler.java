@@ -73,6 +73,7 @@ public class RequestHandler {
     public static String TYPE_OVERLAY="overlay";
     public static String TYPE_ADDON="addon";
     public static String TYPE_CONFIG="config";
+    public static String TYPE_REMOTE="remotechannel";
 
 
     public static class TypeItemMap<VT> extends HashMap<String, AvnUtil.KeyValue<VT>>{
@@ -395,12 +396,18 @@ public class RequestHandler {
         return null;
     }
 
-    WebSocketHandler getWebSocketHandler(Uri uri){
+    IWebSocketHandler getWebSocketHandler(Uri uri){
+        //for now limited to one handler
+        //can be extended with the same pattern like for normal handlers
+        if (uri.getPath().startsWith("/"+TYPE_REMOTE)){
+            GpsService service=getGpsService();
+            if (service != null) return service.getRemoteChannel();
+            return null;
+        }
         if (uri.getPath().equals("/viewer/wstest")){
-            return new WebSocketHandler(){
+            return new IWebSocketHandler(){
                 @Override
                 public void onReceive(int opCode, byte[] msg, IWebSocket socket) {
-                    super.onReceive(opCode, msg, socket);
                     AvnLog.ifs("ws: %d %s",opCode,new String(msg));
                     try {
                         socket.send("reply: "+new String(msg));
@@ -411,7 +418,6 @@ public class RequestHandler {
 
                 @Override
                 public void onConnect(IWebSocket socket) {
-                    super.onConnect(socket);
                     AvnLog.ifs("ws connect");
                     try {
                         socket.send("hello");
@@ -422,12 +428,12 @@ public class RequestHandler {
 
                 @Override
                 public void onClose(IWebSocket socket) {
-                    super.onClose(socket);
+                    AvnLog.dfs("ws close");
                 }
 
                 @Override
                 public void onError(String error, IWebSocket socket) {
-                    super.onError(error, socket);
+                    AvnLog.dfs("ws error %s",error);
                 }
             };
 
@@ -702,6 +708,7 @@ public class RequestHandler {
                 o.put("uploadImages",true);
                 o.put("uploadOverlays",true);
                 o.put("uploadTracks",true);
+                o.put("remoteChannel",true);
                 if (serverInfo == null) {
                     //we can only handle the config stuff internally
                     //as potentially there are permission dialogs

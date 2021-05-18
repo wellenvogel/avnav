@@ -56,7 +56,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
-import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -500,7 +499,7 @@ public class WebServer extends Worker {
                             response.setReasonPhrase("no handler for websocket request");
                             return;
                         }
-                        WebSocketHandler wsHandler=handler.getWebSocketHandler(Uri.parse(url));
+                        IWebSocketHandler wsHandler=handler.getWebSocketHandler(Uri.parse(url));
                         if (wsHandler == null){
                             response.setStatusCode(404);
                             response.setReasonPhrase("no websocket handler for "+url);
