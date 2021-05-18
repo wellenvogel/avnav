@@ -1063,11 +1063,14 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         checkMob();
         handleNotification(true,false);
         checkTrackWriter();
-        for (IWorker w: workers) {
+        ArrayList<IWorker> allWorkers=new ArrayList<>();
+        allWorkers.addAll(workers);
+        allWorkers.addAll(internalWorkers);
+        for (IWorker w: allWorkers) {
             if (w != null) {
                 try {
                     w.check();
-                } catch (JSONException e) {
+                } catch (Throwable t) {
                     AvnLog.e("error in check for "+w.getTypeName());
                 }
             }

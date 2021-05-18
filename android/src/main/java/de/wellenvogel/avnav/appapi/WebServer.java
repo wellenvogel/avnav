@@ -61,6 +61,8 @@ import java.net.UnknownHostException;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
+import java.util.WeakHashMap;
 
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
@@ -84,6 +86,22 @@ public class WebServer extends Worker {
     protected GpsService gpsService;
     private boolean running;
     private boolean listenAny;
+
+    private final WeakHashMap<AvNavHttpServerConnection,Boolean> connections=new WeakHashMap<>();
+
+    private void storeConnection(AvNavHttpServerConnection connection){
+        synchronized (connections){
+            connections.put(connection,true);
+        }
+    }
+
+    private Set<AvNavHttpServerConnection> getConnections(){
+        synchronized (connections){
+            HashSet<AvNavHttpServerConnection> rt=new HashSet<>(connections.keySet());
+            return rt;
+        }
+    }
+
 
     public RequestHandler.ServerInfo getServerInfo(){
         RequestHandler.ServerInfo info=null;
@@ -135,6 +153,37 @@ public class WebServer extends Worker {
         }
     }
 
+    private void closeConnections(){
+        Set<AvNavHttpServerConnection> current=getConnections();
+        for (AvNavHttpServerConnection connection:current){
+            try{
+                connection.close();
+                connection.shutdown();
+                connection.setClosed();
+            }catch(Throwable t){
+                AvnLog.dfs("exception closing connection %s:%s",connection,t);
+            }
+        }
+        synchronized(connections){
+            for (AvNavHttpServerConnection connection:current){
+                connections.remove(connection);
+            }
+        }
+    }
+
+    @Override
+    public void check() throws JSONException {
+        super.check();
+        Set<AvNavHttpServerConnection> current=getConnections();
+        synchronized (connections) {
+            for (AvNavHttpServerConnection connection : current) {
+                if (connection.isClosed || ! connection.isOpen()) {
+                    connections.remove(connection);
+                }
+            }
+        }
+    }
+
     @Override
     protected void run(int startSequence) throws JSONException, IOException {
         Integer port=PORT.fromJson(parameters);
@@ -148,6 +197,7 @@ public class WebServer extends Worker {
         running=true;
         listener=new Listener(listenAny,port);
         listener.run(startSequence);
+        closeConnections();
     }
 
     @Override
@@ -455,12 +505,13 @@ public class WebServer extends Worker {
                             response.setStatusCode(404);
                             response.setReasonPhrase("no websocket handler for "+url);
                         }
+                        AvNavHttpServerConnection con=(AvNavHttpServerConnection) context.getAttribute(ExecutionContext.HTTP_CONNECTION);
+                        storeConnection(con);
                         WebSocket ws=new WebSocket(request,response,context,wsHandler);
                         try {
                             ws.handle();
                         }catch (Throwable t){
                             AvnLog.e("error in websocket handling",t);
-                            AvNavHttpServerConnection con=(AvNavHttpServerConnection) context.getAttribute(ExecutionContext.HTTP_CONNECTION);
                             con.close();
                             con.setClosed();
 
@@ -602,6 +653,7 @@ public class WebServer extends Worker {
         AvnLog.d(NAME,"stop");
         listener.close();
         listener=null;
+        closeConnections();
     }
 
 
