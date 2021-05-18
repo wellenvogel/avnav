@@ -31,7 +31,7 @@ public class WebSocket implements IWebSocket{
     private IWebSocketHandler handler;
     private final Object outLock=new Object();
     private int ownId=-1;
-    ArrayBlockingQueue<String> sendQueue=new ArrayBlockingQueue<>(10);
+    ArrayBlockingQueue<String> sendQueue=new ArrayBlockingQueue<>(100);
     private int getNextId(){
         synchronized (idLock){
             id++;
@@ -140,9 +140,10 @@ public class WebSocket implements IWebSocket{
             sendMessage(opcodePong,buffer);
             return true;
         }
-        if (opcode == opcodeBinary || opcode == opcodeText || opcode == opcodeContinue){
-            handler.onReceive(opcode,buffer,this);
+        if (opcode == opcodeText || opcode == opcodeContinue){
+            handler.onReceive(new String(buffer),this);
         }
+        //TODO: other opcodes
         return true;
     }
     void handle() throws NoSuchAlgorithmException, IOException, HttpException {
@@ -217,5 +218,10 @@ public class WebSocket implements IWebSocket{
             connection.setClosed();
         }catch (Throwable t){}
         if (callHandler) handler.onClose(this);
+    }
+
+    @Override
+    public boolean isOpen() {
+        return connection.isOpen();
     }
 }

@@ -13,4 +13,5 @@ public interface IWebSocket {
     boolean send(String msg) throws IOException;
     int getId();
     void close(boolean callHandler);
+    boolean isOpen();
 }

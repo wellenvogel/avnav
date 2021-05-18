@@ -407,10 +407,9 @@ public class RequestHandler {
         if (uri.getPath().equals("/viewer/wstest")){
             return new IWebSocketHandler(){
                 @Override
-                public void onReceive(int opCode, byte[] msg, IWebSocket socket) {
-                    AvnLog.ifs("ws: %d %s",opCode,new String(msg));
+                public void onReceive(String msg, IWebSocket socket) {
                     try {
-                        socket.send("reply: "+new String(msg));
+                        socket.send("reply: "+msg);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

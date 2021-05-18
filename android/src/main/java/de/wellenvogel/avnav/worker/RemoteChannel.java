@@ -44,11 +44,19 @@ public class RemoteChannel extends Worker implements IWebSocketHandler {
     }
 
     @Override
-    public void onReceive(int opCode, byte[] msg, IWebSocket socket) {
-        if (opCode != IWebSocket.opcodeText){
-            AvnLog.e("remote: can only handle text messages");
-            return;
+    public void check() throws JSONException {
+        super.check();
+        HashSet<IWebSocket> current=null;
+        synchronized (clients){
+            current=new HashSet<>(clients);
+            for (IWebSocket socket:current) {
+                if (!socket.isOpen()) clients.remove(socket);
+            }
         }
+    }
+
+    @Override
+    public void onReceive(String msg, IWebSocket socket) {
         try {
             if (! ENABLED_PARAMETER.fromJson(parameters)) return;
         } catch (JSONException e) {
@@ -56,16 +64,15 @@ public class RemoteChannel extends Worker implements IWebSocketHandler {
         }
         String channel=channelFromWs(socket);
         if (channel == null) return;
-        String tmsg=new String(msg);
-        AvnLog.ifs("remote message %s",tmsg);
+        AvnLog.ifs("remote message %s",msg);
         synchronized (clients){
             for (IWebSocket target:clients){
                 if (target.getId() == socket.getId()) continue;
                 if (! channel.equals(channelFromWs(target))) continue;
                 try {
-                    target.send(tmsg);
+                    target.send(msg);
                 } catch (IOException e) {
-                    AvnLog.dfs("error sending message %s to client %d",tmsg,target.getId());
+                    AvnLog.dfs("error sending message %s to client %d",msg,target.getId());
                 }
             }
         }

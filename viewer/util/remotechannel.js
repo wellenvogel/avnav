@@ -28,6 +28,7 @@ import globalstore from "./globalstore";
 import keys from "./keys";
 import base from "../base";
 import PubSub from "PubSub";
+import androidEventHandler from "./androidEventHandler";
 const PSTOPIC="remote.";
 export const COMMANDS={
     setPage:'CP', //str page
@@ -47,9 +48,32 @@ class RemoteChannel{
         this.pubsub=new PubSub();
         this.channel=globalstore.getData(keys.properties.remoteChannelName,'0');
         this.channelChanged=this.channelChanged.bind(this);
+        this.android=window.avnavAndroid;
+        if (this.android){
+            this.token=androidEventHandler.subscribe('remoteMessage',()=>{
+                window.setTimeout(()=>{
+                    while (true) {
+                        let msg = this.android.getRemoteMessage();
+                        if (msg) {
+                            this.onMessage(msg);
+                        }
+                        else{
+                            break;
+                        }
+                    }
+                },0);
+            })
+        }
         this.id=0;
     }
     close(){
+        if (this.android){
+            try{
+                this.android.remoteChannel(null,false);
+            }catch (e){}
+            this.websocket=undefined;
+            return;
+        }
         if (this.websocket !== undefined){
             try{
                 this.websocket.close();
@@ -102,6 +126,11 @@ class RemoteChannel{
     openWebSocket(){
         if (! globalstore.getData(keys.gui.capabilities.remoteChannel)) return;
         this.close();
+        if (this.android){
+            this.android.remoteChannel(this.channel,true);
+            this.websocket=true;
+            return;
+        }
         this.id++;
         let connectionId=this.id;
         let url='ws://'+window.location.host+
@@ -149,7 +178,12 @@ class RemoteChannel{
         if (! globalstore.getDataLocal(keys.properties.connectedMode,false)) return;
         try {
             if (param !== undefined) msg+=" "+param;
-            this.websocket.send(msg);
+            if (this.android){
+                this.android.sendRemoteMessage(msg);
+            }
+            else {
+                this.websocket.send(msg);
+            }
         }catch (e){
 
         }

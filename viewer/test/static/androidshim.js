@@ -158,7 +158,18 @@ console.log("android shim loaded");
         },
         dialogClosed:function(){
             log("dialogClosed");
+        },
+        remoteChannel:function(name,on){
+            log("remote channel "+name+" "+on);
+        },
+        getRemoteMessage:function(){
+            log("getRemoteMessage");
+            return null;
+        },
+        sendRemoteMessage:function(msg){
+            console.log("sendRemoteMessage: "+msg);
         }
+
 
     };
 })();
