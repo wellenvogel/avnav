@@ -7,10 +7,7 @@ package de.wellenvogel.avnav.appapi;
 
 
 import android.app.NotificationManager;
-import android.content.Context;
 import android.net.Uri;
-import android.net.nsd.NsdManager;
-import android.net.nsd.NsdServiceInfo;
 import android.util.Log;
 
 import org.apache.http.ConnectionClosedException;
@@ -26,9 +23,12 @@ import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.DefaultConnectionReuseStrategy;
 import org.apache.http.impl.DefaultHttpResponseFactory;
 import org.apache.http.impl.DefaultHttpServerConnection;
+import org.apache.http.io.SessionInputBuffer;
+import org.apache.http.io.SessionOutputBuffer;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.CoreConnectionPNames;
 import org.apache.http.params.CoreProtocolPNames;
+import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.BasicHttpProcessor;
 import org.apache.http.protocol.ExecutionContext;
@@ -56,6 +56,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -193,6 +194,7 @@ public class WebServer extends Worker {
             AvnLog.d(NAME,"nav request"+httpRequest.getRequestLine());
             String url = httpRequest.getRequestLine().getUri();
             String method = httpRequest.getRequestLine().getMethod().toUpperCase(Locale.ENGLISH);
+            RequestHandler handler=gpsService.getRequestHandler();
             if (!method.equals("GET") && !method.equals("HEAD")  && ! method.equals("POST")) {
                 throw new MethodNotSupportedException(method + " method not supported");
             }
@@ -207,8 +209,8 @@ public class WebServer extends Worker {
             }
             ExtendedWebResourceResponse resp=null;
             try {
-                if (gpsService.getRequestHandler() != null) {
-                    resp = gpsService.getRequestHandler().handleNavRequest(uri,
+                if (handler!= null) {
+                    resp = handler.handleNavRequest(uri,
                             postData,
                             getServerInfo());
                 }
@@ -370,6 +372,40 @@ public class WebServer extends Worker {
         return local;
     }
 
+    static class AvNavHttpServerConnection extends DefaultHttpServerConnection{
+        SessionInputBuffer avInputBuffer;
+        SessionOutputBuffer avOutputBuffer;
+        //prevent the final request processing when we are done with the websocket
+        private boolean isClosed=false;
+        @Override
+        protected void init(SessionInputBuffer inbuffer, SessionOutputBuffer outbuffer, HttpParams params) {
+            avInputBuffer=inbuffer;
+            avOutputBuffer=outbuffer;
+            super.init(inbuffer, outbuffer, params);
+        }
+
+        @Override
+        public void sendResponseHeader(HttpResponse response) throws HttpException, IOException {
+            if (isClosed) return;
+            super.sendResponseHeader(response);
+        }
+
+        @Override
+        public void sendResponseEntity(HttpResponse response) throws HttpException, IOException {
+            if (isClosed) return;
+            super.sendResponseEntity(response);
+        }
+
+        @Override
+        public void flush() throws IOException {
+            if (isClosed) return;
+            super.flush();
+        }
+
+        public void setClosed(){
+            isClosed=true;
+        }
+    }
     class Listener{
         private ServerSocket serversocket;
         private BasicHttpParams params;
@@ -400,7 +436,40 @@ public class WebServer extends Worker {
 
             httpService = new HttpService(httpproc,
                     new DefaultConnectionReuseStrategy(),
-                    new DefaultHttpResponseFactory());
+                    new DefaultHttpResponseFactory()){
+                @Override
+                protected void doService(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
+                    String url = request.getRequestLine().getUri();
+                    String method = request.getRequestLine().getMethod().toUpperCase(Locale.ENGLISH);
+                    if (method.equals("GET") &&
+                            request.containsHeader("Upgrade")
+                            && "websocket".equals(request.getFirstHeader("Upgrade").getValue())){
+                        RequestHandler handler=gpsService.getRequestHandler();
+                        if (handler == null){
+                            response.setStatusCode(500);
+                            response.setReasonPhrase("no handler for websocket request");
+                            return;
+                        }
+                        WebSocketHandler wsHandler=handler.getWebSocketHandler(Uri.parse(url));
+                        if (wsHandler == null){
+                            response.setStatusCode(404);
+                            response.setReasonPhrase("no websocket handler for "+url);
+                        }
+                        WebSocket ws=new WebSocket(request,response,context,wsHandler);
+                        try {
+                            ws.handle();
+                        }catch (Throwable t){
+                            AvnLog.e("error in websocket handling",t);
+                            AvNavHttpServerConnection con=(AvNavHttpServerConnection) context.getAttribute(ExecutionContext.HTTP_CONNECTION);
+                            con.close();
+                            con.setClosed();
+
+                        }
+                        return;
+                    }
+                    super.doService(request, response, context);
+                }
+            };
             httpService.setParams(params);
             registry = new HttpRequestHandlerRegistry();
             registry.register("/"+ RequestHandler.NAVURL+"*",navRequestHandler);
@@ -459,7 +528,7 @@ public class WebServer extends Worker {
             while (!shouldStop(startSequence)) {
                 try {
                     Socket socket = this.serversocket.accept();
-                    DefaultHttpServerConnection conn = new DefaultHttpServerConnection();
+                    AvNavHttpServerConnection conn = new AvNavHttpServerConnection();
                     AvnLog.i(NAME, "con " + socket.getInetAddress());
                     conn.bind(socket, this.params);
 
@@ -489,12 +558,12 @@ public class WebServer extends Worker {
     class WorkerThread extends Thread {
 
         private final HttpService httpservice;
-        private final HttpServerConnection conn;
+        private final AvNavHttpServerConnection conn;
         private final Socket socket;
 
         public WorkerThread(
                 final HttpService httpservice,
-                final HttpServerConnection conn,
+                final AvNavHttpServerConnection conn,
                 final Socket socket) {
             super();
             this.httpservice = httpservice;

@@ -395,6 +395,46 @@ public class RequestHandler {
         return null;
     }
 
+    WebSocketHandler getWebSocketHandler(Uri uri){
+        if (uri.getPath().equals("/viewer/wstest")){
+            return new WebSocketHandler(){
+                @Override
+                public void onReceive(int opCode, byte[] msg, IWebSocket socket) {
+                    super.onReceive(opCode, msg, socket);
+                    AvnLog.ifs("ws: %d %s",opCode,new String(msg));
+                    try {
+                        socket.send("reply: "+new String(msg));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void onConnect(IWebSocket socket) {
+                    super.onConnect(socket);
+                    AvnLog.ifs("ws connect");
+                    try {
+                        socket.send("hello");
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void onClose(IWebSocket socket) {
+                    super.onClose(socket);
+                }
+
+                @Override
+                public void onError(String error, IWebSocket socket) {
+                    super.onError(error, socket);
+                }
+            };
+
+        }
+        return null;
+    }
+
     ExtendedWebResourceResponse handleNavRequest(Uri uri, PostVars postData) throws Exception{
         return handleNavRequest(uri,postData,null);
     }
