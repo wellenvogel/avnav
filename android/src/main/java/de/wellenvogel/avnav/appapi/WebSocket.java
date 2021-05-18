@@ -12,11 +12,14 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import de.wellenvogel.avnav.util.AvnLog;
 
 
 public class WebSocket implements IWebSocket{
+
     private static final String GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
     private static final int MAXLEN=8000000; //max message len
@@ -26,6 +29,7 @@ public class WebSocket implements IWebSocket{
     private WebServer.AvNavHttpServerConnection connection;
     private WebSocketHandler handler;
     private final Object outLock=new Object();
+    ArrayBlockingQueue<String> sendQueue=new ArrayBlockingQueue<>(10);
     WebSocket(HttpRequest httpRequest, HttpResponse httpResponse, HttpContext httpContext,WebSocketHandler handler){
         this.httpRequest=httpRequest;
         this.httpResponse=httpResponse;
@@ -134,19 +138,55 @@ public class WebSocket implements IWebSocket{
     void handle() throws NoSuchAlgorithmException, IOException, HttpException {
         AvnLog.dfs("WebSocket starting for %s",httpRequest.getRequestLine());
         handshake();
+        Thread sender=new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try{
+                    while (connection.isOpen()){
+                        String msg=sendQueue.poll(1000, TimeUnit.MILLISECONDS);
+                        if (msg == null) continue;
+                        try{
+                            sendMessage(opcodeText,msg.getBytes(StandardCharsets.UTF_8));
+                        }catch (Throwable t){
+                            AvnLog.e("error sending ws",t);
+                        }
+                    }
+                } catch (InterruptedException e) {
+                    AvnLog.dfs("exception in ws sender: %s",e);
+                }
+                AvnLog.dfs("stopping ws sender");
+            }
+        });
+        sender.setDaemon(true);
+        sender.start();
         AvnLog.dfs("Websocket handshake complete");
-        while (true){
-            if (! readNextMessage()){
-                AvnLog.dfs("finished websocket");
-                connection.setClosed();
-                return;
+        while (connection.isOpen()){
+            try {
+                if (!readNextMessage()) {
+                    AvnLog.dfs("finished websocket");
+                    connection.setClosed();
+                    break;
+                }
+            }catch (Throwable t){
+                AvnLog.dfs("exception in websocket: %s",t);
+                try{
+                    connection.close();
+                    connection.shutdown();
+                    connection.setClosed();
+                }catch (Throwable x){}
+                break;
             }
         }
+        sender.interrupt();
     }
 
     @Override
-    public void send(String msg) throws IOException {
-        sendMessage(opcodeText,msg.getBytes(StandardCharsets.UTF_8));
+    public boolean send(String msg) throws IOException {
+        if (!sendQueue.offer(msg)){
+            AvnLog.dfs("unable to enqueue ws message %s",msg);
+            return false;
+        }
+        return true;
     }
 
     @Override
