@@ -38,7 +38,8 @@ export const COMMANDS={
     setZoom: 'CZ', //float zoom
     lock: 'CL', //str true|false
     courseUp: 'CU', //str true|false
-    gpsNum: 'CN' //num number gpspage number
+    gpsNum: 'CN', //num number gpspage number
+    addOn: 'CA' //the add on number
 };
 class RemoteChannel{
     constructor(props) {
