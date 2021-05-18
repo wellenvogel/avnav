@@ -124,7 +124,7 @@ class MapPage extends React.Component{
                     setShown(chartEntry.url,INFO_TYPES.info);
                 }
             }
-            MapHolder.loadMap(this.refs.map).
+            MapHolder.loadMap(this.refs.map, this.props.preventCenterDialog).
                 then((result)=>{
                 }).
                 catch((error)=>{Toast(error)});
@@ -226,7 +226,9 @@ MapPage.propertyTypes={
     mapEventCallback:   PropTypes.func,
     id:                 PropTypes.string,
     overlayContent:     PropTypes.any,               //overlay in the map container
-    mapLoadCallback:    PropTypes.func
+    mapLoadCallback:    PropTypes.func,
+    preventCenterDialog: PropTypes.bool
+
 };
 
 export const overlayDialog=(opt_chartName,opt_updateCallback)=>{

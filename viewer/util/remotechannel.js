@@ -114,7 +114,7 @@ class RemoteChannel{
     onMessage(data){
         base.log("message",data);
         if (! globalstore.getData(keys.properties.remoteChannelRead,false)) return;
-        if (! globalstore.getDataLocal(keys.properties.connectedMode,false)) return;
+        if (! globalstore.getData(keys.properties.connectedMode,false)) return;
         let parts=data.split(/  */);
         if (parts.length < 2) return;
         if (! parts[0] in COMMANDS) return;
@@ -175,7 +175,7 @@ class RemoteChannel{
     sendMessage(msg,param){
         if (! this.websocket) return;
         if (! globalstore.getData(keys.properties.remoteChannelWrite,false)) return;
-        if (! globalstore.getDataLocal(keys.properties.connectedMode,false)) return;
+        if (! globalstore.getData(keys.properties.connectedMode,false)) return;
         try {
             if (param !== undefined) msg+=" "+param;
             if (this.android){

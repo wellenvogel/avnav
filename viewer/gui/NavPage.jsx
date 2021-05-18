@@ -447,6 +447,7 @@ class NavPage extends React.Component{
                             className="overlayContainer"
                         />:null}
                 buttonList={self.getButtons()}
+                preventCenterDialog={(self.props.options||{}).remote}
                 />
         );
     }
