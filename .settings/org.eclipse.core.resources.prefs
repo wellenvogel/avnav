@@ -1,6 +1,12 @@
 eclipse.preferences.version=1
 encoding//chartconvert/convert_nv.py=utf-8
 encoding//chartconvert/read_charts.py=utf-8
+encoding//server/avnav_nmea.py=utf-8
 encoding//server/avnav_server.py=utf-8
 encoding//server/create_overview.py=utf-8
 encoding//server/gemf_reader.py=utf-8
+encoding//server/handler/avnserial.py=utf-8
+encoding//server/handler/feeder.py=utf-8
+encoding//server/handler/serialwriter.py=utf-8
+encoding//server/handler/socketreaderbase.py=utf-8
+encoding//server/handler/socketwriter.py=utf-8

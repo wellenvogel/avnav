@@ -77,5 +77,11 @@
     "tinycolor2": "^1.4.1",
     "whatwg-fetch-timeout": "^2.0.2-timeout",
     "xml-writer": "^1.7.0"
+  },
+  "bin": {
+    "avnav-viewer": "avnav_viewer.js"
+  },
+  "directories": {
+    "test": "test"
   }
 }

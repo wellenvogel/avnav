@@ -1,11 +1,12 @@
  # software includes geomag.py
 # by Christopher Weiss cmweiss@gmail.com
 # https://github.com/cmweiss/geomag
+# Infos on NMEA0183 from:
+      # https://github.com/mak08/VRDashboard/issues/31
+      # https://www.nmea.org/Assets/100108_nmea_0183_sentences_not_recommended_for_new_designs.pdf
+      # http://www.plaisance-pratique.com/IMG/pdf/NMEA0183-2.pdf
 
- 
- 
- 
-
+from avnav_nmea import NMEAParser
 import math
 import time
 import os
@@ -14,7 +15,7 @@ hasgeomag = False
 import sys
 try:
   # add current directory to sys.path to import library from there
-  sys.path.insert(0, os.path.dirname(__file__)+'/lib')
+  sys.path.insert(0, os.path.dirname(__file__) + '/lib')
   import geomag as geomag    
   hasgeomag = True
 except:
@@ -24,12 +25,13 @@ except:
 class Config(object):
 
   def __init__(self, api):
-    self.WMM_FILE = api.getConfigValue('WMM_FILE', 'WMM2020.COF')
-    self.WMM_PERIOD = api.getConfigValue('WMM_PERIOD', '3600')
+    pass
 
 
 class Plugin(object):
+  PATHAWA = "gps.AWA"
   PATHAWD = "gps.AWD"
+  PATHAWS = "gps.AWS"
   PATHTWD = "gps.TWD"
   PATHTWS = "gps.TWS"
   PATHTWA = "gps.TWA"
@@ -38,8 +40,9 @@ class Plugin(object):
   PATHSTW = "gps.STW"
   PATHGMM = "gps.MagVar"
   WMM_FILE = 'WMM2020.COF'
-  #FILTER= ['$HDG','$HDM','$HDT','$VHW']
-  FILTER= '$HDG,$HDM,$HDT,$VHW'
+  OWNID = 'IN'
+  outFilter = [] 
+  FILTER = ['$HDG','$HDM','$HDT','$VHW']
   CONFIG = [
       {
       'name':'WMM_FILE',
@@ -49,21 +52,26 @@ class Plugin(object):
       {
       'name':'WMM_PERIOD',
       'description':'Time in sec to recalculate magnetic deviation',
-      'default':3600,
+      'default':10,
       'type': 'NUMBER'
       },
       {
         'name':'computePeriod',
         'description': 'Compute period (s) for wind data',
         'type': 'FLOAT',
-        'default': 1.0
+        'default': 0.5
       },
       {
         'name':'NewNMEAPeriod',
         'description': 'period (s) for NMEA records',
         'type': 'FLOAT',
         'default': 1
-      }
+      },
+      {
+        'name':'FILTER_NMEA_OUT',
+        'description': 'Filter  für auszugebende NMEA records',
+        'default': ""
+      },
       ]
 
   @classmethod
@@ -85,6 +93,14 @@ class Plugin(object):
         {
           'path': cls.PATHAWD,
           'description': 'apparent Wind direction',
+        },
+        {
+          'path': cls.PATHAWA,
+          'description': 'apparent Wind angle',
+        },
+        {
+          'path': cls.PATHAWS,
+          'description': 'apparent Wind speed',
         },
         {
           'path': cls.PATHTWD,
@@ -130,21 +146,36 @@ class Plugin(object):
     self.api.registerRestart(self.stop)
     self.oldtime = 0
     self.variation_time = 0
-    self.variation_val = 0
-    self.MissweisungFromSensor = False
+    self.variation_val = None
 
     self.userAppId = None
-    self.startSequence=0
-    self.receivedTags=[]
+    self.startSequence = 0
+    self.receivedTags = []
+    #self.source=self.api.getConfigValue("sourceName",None)
+
+    self.saveAllConfig()
+    
   def stop(self):
     pass
   
-  def getConfigValue(self,name):
-    defaults=self.pluginInfo()['config']
+  def getConfigValue(self, name):
+    defaults = self.pluginInfo()['config']
     for cf in defaults:
       if cf['name'] == name:
-        return self.api.getConfigValue(name,cf.get('default'))
+        return self.api.getConfigValue(name, cf.get('default'))
     return self.api.getConfigValue(name)
+  
+  def saveAllConfig(self):
+    d = {}
+    defaults = self.pluginInfo()['config']
+    for cf in defaults:
+      v = self.getConfigValue(cf.get('name'))
+      d.update({cf.get('name'):v})
+    self.api.saveConfigValues(d)
+    return 
+  
+  def changeConfig(self, newValues):
+    self.api.saveConfigValues(newValues)
   
   def changeParam(self, param):
     self.api.saveConfigValues(param)
@@ -155,23 +186,26 @@ class Plugin(object):
     the run method
     @return:
     """
-    lastnmea=0
-    startSequence=None
+    lastnmea = 0
+    startSequence = None
     seq = 0
     self.api.log("started")
     self.api.setStatus('STARTED', 'running')
-    gm=None
-    computePeriod=0.5
+    gm = None
+    computePeriod = 0.5
     while not self.api.shouldStopMainThread():
       if startSequence != self.startSequence:
+        self.outFilter = self.getConfigValue('FILTER_NMEA_OUT')
+        if not (isinstance(self.outFilter, list)):
+            self.outFilter = self.outFilter.split(',')
         try:
           computePeriod = float(self.getConfigValue('computePeriod'))
+          startSequence = self.startSequence
+          if hasgeomag:
+              wmm_filename = os.path.join(os.path.dirname(__file__) + '/lib', self.getConfigValue('WMM_FILE'))
+              gm = geomag.GeoMag(wmm_filename)
         except:
-          pass
-        startSequence = self.startSequence
-        if hasgeomag:
-          wmm_filename = os.path.join(os.path.dirname(__file__)+'/lib', self.getConfigValue('WMM_FILE'))
-          gm = geomag.GeoMag(wmm_filename)
+          self.api.error(" WMM-File " + wmm_filename + 'nicht gefunden!')
       lastTime = time.time()
       gpsdata = {}
       computesVar = False
@@ -192,20 +226,23 @@ class Plugin(object):
         self.api.error(" error in calculation of magnetic Variation")
 
       if 'windSpeed' in gpsdata:
+        computesWind = True
         if gpsdata['windReference'] == 'R':
-            computesWind=True
+            computesWind = True
             if (self.calcTrueWind(gpsdata)):
+                self.api.addData(self.PATHAWA, gpsdata['AWA'])
                 self.api.addData(self.PATHAWD, gpsdata['AWD'])
+                self.api.addData(self.PATHAWS, gpsdata['AWS'])
                 self.api.addData(self.PATHTWD, gpsdata['TWD'])
                 self.api.addData(self.PATHTWS, gpsdata['TWS'])
                 self.api.addData(self.PATHTWA, gpsdata['TWA'])
       if computesVar or computesWind:
-        stText='computing '
+        stText = 'computing '
         if computesVar:
-          stText+='variation '
+          stText += 'variation '
         if computesWind:
-          stText+='wind'
-        self.api.setStatus('NMEA',stText )
+          stText += 'wind'
+        self.api.setStatus('NMEA', stText)
       else:
         self.api.setStatus('STARTED', 'running')
       runNext = False
@@ -221,20 +258,65 @@ class Plugin(object):
         else:
           waitTime = 0.01
           runNext = True
-        seq, data = self.api.fetchFromQueue(seq,number=100, waitTime=waitTime, filter=self.FILTER)
+        self.variation_FromSensor = False
+        seq, data = self.api.fetchFromQueue(seq, number=100, waitTime=waitTime, filter=self.FILTER)
         if len(data) > 0:
           for line in data:
             self.parseData(line)
-      if((time.time()-lastnmea) > float(self.getConfigValue('NewNMEAPeriod'))):
-          print(now,self.receivedTags)
-          # schreibe MWD ODER MWV 0 f(TWA) 
-          # schreibe VHW f(STW und oder Variation) 
-          # schreibe HDT, HDM f(HDGt oder HDGm) 
-          # schreibe HDG f(HDGt und HDGm und Variation) 
-          self.api.addNMEA("$KSKDS,,,,,", True, True, 'GG')
-          self.receivedTags=[]
-          lastnmea=now
+      if((time.time() - lastnmea) > float(self.getConfigValue('NewNMEAPeriod'))):
+          self.write_NMEA_records(gpsdata)
+          self.receivedTags = []
+          lastnmea = now
 
+  def write_NMEA_records(self, gpsdata):
+    if('TWA' in gpsdata and 'AWA' in gpsdata):  # empfange scheinbare Winddaten
+        # $MWD = TWD & TWS          
+        if not ('MWD' in self.receivedTags):
+            if('MagVar' in gpsdata):
+                s = self.make_sentence('MWD', gpsdata['TWD'], 'T', gpsdata['TWD'] - gpsdata['MagVar'], 'M', gpsdata['TWS'] * 1.94384, 'N', gpsdata['TWS'], 'M')
+            else:
+                s = self.make_sentence('MWD', gpsdata['TWD'], 'T', '', 'M', gpsdata['TWS'] * 1.94384, 'N', gpsdata['TWS'], 'M')
+            if NMEAParser.checkFilter(s, self.outFilter):
+                self.api.addNMEA(s, addCheckSum=True)
+        # $MWV = TWA & TWS (T),  AWA & AWS (R)
+        # MWV (T)
+        if not ('MWV' in self.receivedTags):
+            s = self.make_sentence('MWV', gpsdata['TWA'], 'T', gpsdata['TWS'], 'M')
+            if NMEAParser.checkFilter(s, self.outFilter):
+                self.api.addNMEA(s, addCheckSum=True)
+        # MWV (R)
+            s = self.make_sentence('MWV', gpsdata['AWA'], 'R', gpsdata['AWS'], 'R')
+            # self.api.addNMEA(s, addCheckSum=True)
+
+        if('HDGt' in gpsdata):
+            if not ('HDM' in self.receivedTags):
+                if('HDGm' in gpsdata):
+                    s = self.make_sentence('HDM', gpsdata['HDGm'], 'M')              
+                    if NMEAParser.checkFilter(s, self.outFilter):
+                        self.api.addNMEA(s, addCheckSum=True)
+            if not ('HDT' in self.receivedTags):
+                s = self.make_sentence('HDT', gpsdata['HDGt'], 'T')              
+                if NMEAParser.checkFilter(s, self.outFilter):
+                   self.api.addNMEA(s, addCheckSum=True)
+            if not ('HDG' in self.receivedTags):
+                if('MagVar' in gpsdata):
+                    s = self.make_sentence('HDG', gpsdata['HDGt'] - gpsdata['MagVar'], '', '', gpsdata['MagVar'], 'E')
+                    if NMEAParser.checkFilter(s, self.outFilter):
+                        self.api.addNMEA(s, addCheckSum=True)
+                elif('HDGm' in gpsdata):
+                    s = self.make_sentence('HDG', gpsdata['HDGm'], '', '', '', '')      
+                    if NMEAParser.checkFilter(s, self.outFilter):
+                        self.api.addNMEA(s, addCheckSum=True)
+      
+  def make_sentence(self, title, *keys):
+      s = '$' + self.OWNID + title
+      for arg in keys:
+          if(type(arg) == float or type(arg) == int):
+              s = s + ',' + arg.__format__('06.2f')
+          else:
+              s = s + ',' + arg
+      return(s)
+  
   def nmeaChecksum(cls, part):
     chksum = 0
     if part[0] == "$" or part[0] == "!":
@@ -256,10 +338,10 @@ class Plugin(object):
       return False
     tag = darray[0][3:]
     rt = {}
-    # print(tag)
     try:
       if tag == 'HDG':
-        self.receivedTags.append(tag)
+        if not tag in self.receivedTags: 
+            self.receivedTags.append(tag)
         rt['MagDevDir'] = 'X'
         rt['MagVarDir'] = 'X'  
         rt['SensorHeading'] = float(darray[1] or '0') 
@@ -276,49 +358,70 @@ class Plugin(object):
             heading_m = heading_m + rt['MagDeviation']
         elif(rt['MagDevDir'] == 'W'): 
             heading_m = heading_m - rt['MagDeviation']
-        self.api.addData(self.PATHHDG_M, heading_m)
+        self.receivedTags.append(tag + '-M')
+        self.api.addData(self.PATHHDG_M, self.LimitWinkel(heading_m))
         # Wahrer Kurs unter Berücksichtigung der Missweisung
-        heading_t=None
+        heading_t = None
         if(rt['MagVarDir'] == 'E'):
             heading_t = heading_m + rt['MagVariation']
             self.variation_val = rt['MagVariation']
+            self.variation_time = time.time()
+            if(darray[0][1:3] != self.OWNID):
+                self.api.addData(self.PATHGMM, self.variation_val)
         elif(rt['MagVarDir'] == 'W'): 
             heading_t = heading_m - rt['MagVariation']
             self.variation_val = -rt['MagVariation']
+            self.variation_time = time.time()
+            if(darray[0][1:3] != self.OWNID):
+                self.api.addData(self.PATHGMM, self.variation_val)
         if heading_t is not None:
-          self.api.addData(self.PATHHDG_T, heading_t)
+          self.receivedTags.append(tag + '-T')
+          self.api.addData(self.PATHHDG_T, self.LimitWinkel(heading_t))
         return True
 
       if tag == 'HDM' or tag == 'HDT':
-        self.receivedTags.append(tag)
+        if not tag in self.receivedTags: 
+            self.receivedTags.append(tag)
         rt['Heading'] = float(darray[1] or '0')
         rt['magortrue'] = darray[2]
         if(rt['magortrue'] == 'T'):
-          self.api.addData(self.PATHHDG_T, rt['Heading'])
+          self.api.addData(self.PATHHDG_T, self.LimitWinkel(rt['Heading']))
+          if(self.variation_val):
+              self.api.addData(self.PATHHDG_M, self.LimitWinkel(rt['Heading'] - self.variation_val))
         else:
-          self.api.addData(self.PATHHDG_M, rt['Heading'])
-          self.api.addData(self.PATHHDG_T, rt['Heading'] + self.variation_val)
+          self.api.addData(self.PATHHDG_M, self.LimitWinkel(rt['Heading']))
+          if(self.variation_val):
+              self.api.addData(self.PATHHDG_T, self.LimitWinkel(rt['Heading'] + self.variation_val))
         return True
-
-      # print(tag)
       if tag == 'VHW':
-        self.receivedTags.append(tag)
+        if not tag in self.receivedTags: 
+            self.receivedTags.append(tag)
         if(len(darray[1]) > 0):  # Heading True
             rt['Heading'] = float(darray[1] or '0')
-            self.api.addData(self.PATHHDG_T, rt['Heading'])
+            self.api.addData(self.PATHHDG_T, self.LimitWinkel(rt['Heading']))
+            if not (tag + '-T') in self.receivedTags: 
+                self.receivedTags.append(tag + '-T')
         if(len(darray[3]) > 0): 
             rt['Heading'] = float(darray[3] or '0')  # Heading magnetic
-            self.api.addData(self.PATHHDG_M, rt['Heading'])
+            self.api.addData(self.PATHHDG_M, self.LimitWinkel(rt['Heading']))
+            if not (tag + '-R') in self.receivedTags: 
+                self.receivedTags.append(tag + '-R')
             if(len(darray[1]) == 0):
-                self.api.addData(self.PATHHDG_T, rt['Heading'] + self.variation_val)
+                self.api.addData(self.PATHHDG_T, self.LimitWinkel(rt['Heading'] + self.variation_val))
         if(len(darray[7]) > 0):  # Speed of vessel relative to the water, km/hr 
             rt['STW'] = float(darray[7] or '0')  # km/h
             rt['STW'] = rt['STW'] / 3.6  # m/s
             self.api.addData(self.PATHSTW, rt['STW'])
+            if not (tag + '-S') in self.receivedTags: 
+                self.receivedTags.append(tag + '-S')
+
         elif(len(darray[5]) > 0):  # Speed of vessel relative to the water, knots
             rt['STW'] = float(darray[7] or '0')  # kn
             rt['STW'] = rt['STW'] * 0.514444  # m/s
             self.api.addData(self.PATHSTW, rt['STW'])
+            if not (tag + '-S') in self.receivedTags: 
+                self.receivedTags.append(tag + '-S')
+
       return True
     
     except Exception:
@@ -330,6 +433,9 @@ class Plugin(object):
         if not 'track' in gpsdata or not 'windAngle' in gpsdata:
             return False
         try:
+            gpsdata['AWA'] = self.LimitWinkel(gpsdata['windAngle'])
+            
+            gpsdata['AWS'] = gpsdata['windSpeed']
             gpsdata['AWD'] = (gpsdata['windAngle'] + gpsdata['track']) % 360
             KaW = self.toKartesisch(gpsdata['AWD'])
             KaW['x'] *= gpsdata['windSpeed']  # 'm/s'
@@ -339,17 +445,23 @@ class Plugin(object):
             KaB['y'] *= gpsdata['speed']  # 'm/s'
 
             if(gpsdata['speed'] == 0 or gpsdata['windSpeed'] == 0):
-                gpsdata['TWD'] = gpsdata['AWD']
+                gpsdata['TWD'] = gpsdata['AWD'] 
             else:
                 gpsdata['TWD'] = (self.toPolWinkel(KaW['x'] - KaB['x'], KaW['y'] - KaB['y'])) % 360
 
             gpsdata['TWS'] = math.sqrt((KaW['x'] - KaB['x']) * (KaW['x'] - KaB['x']) + (KaW['y'] - KaB['y']) * (KaW['y'] - KaB['y']))
-            gpsdata['TWA'] = (gpsdata['TWD'] - gpsdata['track']) % 360
+            gpsdata['TWA'] = self.LimitWinkel(gpsdata['TWD'] - gpsdata['track'])
 
             return True
         except Exception:
             self.api.error(" error calculating TrueWind-Data " + str(gpsdata) + "\n")
         return False
+    
+  def LimitWinkel(self, alpha):  # [grad]   
+    alpha %= 360
+    if (alpha > 180): 
+        alpha -= 360;
+    return(alpha)  
 
   def toPolWinkel(self, x, y):  # [grad]
         return(180 * math.atan2(y, x) / math.pi)

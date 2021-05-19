@@ -101,9 +101,8 @@ class ApiImpl(AVNApi):
 
   def fetchFromQueue(self, sequence, number=10,includeSource=False,waitTime=0.5,filter=None):
     if filter is not None:
-      filter=filter.split(',')  
       if not (isinstance(filter,list)):
-        filter=[filter]
+        filter=filter.split(',')
     return self.queue.fetchFromHistory(sequence,number,includeSource=includeSource,waitTime=waitTime,nmeafilter=filter)
 
   def addNMEA(self, nmea, addCheckSum=False,omitDecode=True,source=None):
@@ -270,7 +269,8 @@ class ApiImpl(AVNApi):
                                   default=p.get('default'),
                                   type=p.get('type'),
                                   rangeOrList=p.get('rangeOrList'),
-                                  description=p.get('description'))
+                                  description=p.get('description'),
+                                  condition=p.get('condition'))
       editables.append(description)
     self.editables=editables
     self.paramChange=changeCallback
