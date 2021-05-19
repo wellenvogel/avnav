@@ -290,6 +290,8 @@ class App extends React.Component {
         }
         const Dialogs = OverlayDialog.getDialogContainer;
         let appClass="app";
+        let layoutClass=(this.props.layoutName||"").replace(/[^0-9a-zA-Z]/g,'_');
+        appClass+=" "+layoutClass;
         if (this.props.smallDisplay) appClass+=" smallDisplay";
         return <div
             className={appClass}
@@ -331,5 +333,6 @@ export default   Dynamic(App,{
       fontSize: keys.properties.baseFontSize,
       smallDisplay: keys.gui.global.smallDisplay,
       nightMode: keys.properties.nightMode,
+      layoutName: keys.properties.layoutName
   }
 });
