@@ -31,6 +31,10 @@ class WindWidget extends React.Component{
             if (windSpeed < 10) windSpeed=Formatter.formatDecimal(windSpeed,2,1);
             else windSpeed=Formatter.formatDecimal(windSpeed,3,0);
         }catch(e){}
+        let windAngle=this.props.windAngle;
+        if (! this.props.show360){
+            if (windAngle > 180) windAngle-=360;
+        }
         return (
             <div className={classes} onClick={this.props.onClick} style={style}>
                 {(this.props.mode == 'horizontal') ?
@@ -47,7 +51,7 @@ class WindWidget extends React.Component{
                     <React.Fragment>
                         <div className="resize">
                             <div className="windInner">
-                                <div className='widgetData'>{Formatter.formatDirection(this.props.windAngle)}</div>
+                                <div className='widgetData'>{Formatter.formatDirection(windAngle)}</div>
                                 <div className='infoLeft'>WD</div>
                                 <div className='infoRight'>°</div>
                             </div>
@@ -84,5 +88,8 @@ WindWidget.storeKeys={
     visible: keys.properties.showWind,
     showKnots: keys.properties.windKnots
 };
+WindWidget.editableParameters={
+    show360: {type:'BOOLEAN',default:false}
+}
 
 export default WindWidget;
