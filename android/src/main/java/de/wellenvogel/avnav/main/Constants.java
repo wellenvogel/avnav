@@ -78,5 +78,6 @@ public class Constants {
     public static final String JS_FILE_COPY_DONE="fileCopyDone"; //id will be: 0 for success, 1 for error
     public static final String JS_DEVICE_ADDED="deviceAdded";
     public static final String JS_REMOTE_MESSAGE="remoteMessage";
+    public static final String JS_REMOTE_CLOSE="channelClose";
 
 }

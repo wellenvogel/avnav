@@ -51,10 +51,10 @@ class RemoteChannel{
         this.channelChanged=this.channelChanged.bind(this);
         this.android=window.avnavAndroid;
         if (this.android){
-            this.token=androidEventHandler.subscribe('remoteMessage',()=>{
+            this.token=androidEventHandler.subscribe('remoteMessage',(ev)=>{
                 window.setTimeout(()=>{
                     while (true) {
-                        let msg = this.android.getRemoteMessage();
+                        let msg = this.android.readChannelMessage(this.websocket);
                         if (msg) {
                             this.onMessage(msg);
                         }
@@ -64,18 +64,23 @@ class RemoteChannel{
                     }
                 },0);
             })
+            this.closeToken=androidEventHandler.subscribe('channelClose',(ev)=>{
+               if (ev.id === this.websocket){
+                   this.close();
+               }
+            });
         }
         this.id=0;
     }
     close(){
-        if (this.android){
-            try{
-                this.android.remoteChannel(null,false);
-            }catch (e){}
-            this.websocket=undefined;
-            return;
-        }
         if (this.websocket !== undefined){
+            if (this.android){
+                try{
+                    this.android.channelClose(this.websocket);
+                }catch (e){}
+                this.websocket=undefined;
+                return;
+            }
             try{
                 this.websocket.close();
             }catch (e){}
@@ -128,8 +133,8 @@ class RemoteChannel{
         if (! globalstore.getData(keys.gui.capabilities.remoteChannel)) return;
         this.close();
         if (this.android){
-            this.android.remoteChannel(this.channel,true);
-            this.websocket=true;
+            this.websocket=this.android.channelOpen("/remotechannels/"+this.channel);
+            if (this.websocket < 0) this.websocket=undefined;
             return;
         }
         this.id++;
@@ -180,7 +185,7 @@ class RemoteChannel{
         try {
             if (param !== undefined) msg+=" "+param;
             if (this.android){
-                this.android.sendRemoteMessage(msg);
+                this.android.sendChannelMessage(this.websocket,msg);
             }
             else {
                 this.websocket.send(msg);

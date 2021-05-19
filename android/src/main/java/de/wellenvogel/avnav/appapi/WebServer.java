@@ -499,7 +499,7 @@ public class WebServer extends Worker {
                             response.setReasonPhrase("no handler for websocket request");
                             return;
                         }
-                        IWebSocketHandler wsHandler=handler.getWebSocketHandler(Uri.parse(url));
+                        IWebSocketHandler wsHandler=handler.getWebSocketHandler(url);
                         if (wsHandler == null){
                             response.setStatusCode(404);
                             response.setReasonPhrase("no websocket handler for "+url);

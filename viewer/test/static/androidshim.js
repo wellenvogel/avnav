@@ -159,16 +159,26 @@ console.log("android shim loaded");
         dialogClosed:function(){
             log("dialogClosed");
         },
-        remoteChannel:function(name,on){
-            log("remote channel "+name+" "+on);
+        channelOpen:function(url){
+            let rt=(new Date()).getTime();
+            log("channelOpen "+url+" -> "+rt);
+            return rt;
         },
-        getRemoteMessage:function(){
-            log("getRemoteMessage");
-            return null;
+        channelClose:function(id){
+            log("channelClose "+id);
         },
-        sendRemoteMessage:function(msg){
-            console.log("sendRemoteMessage: "+msg);
+        sendChannelMessage:function(id,msg){
+            log("sendRemoteMessage: "+id+" "+msg);
+        },
+        readChannelMessage:function(id){
+            log("readChannelMessage: "+id);
+            return "hello";
+        },
+        isChannelOpen:function(id){
+            log("isChannelOpen: "+id);
+            return true;
         }
+
 
 
     };

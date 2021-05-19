@@ -32,7 +32,7 @@ public class WebSocket implements IWebSocket{
     private final Object outLock=new Object();
     private int ownId=-1;
     ArrayBlockingQueue<String> sendQueue=new ArrayBlockingQueue<>(100);
-    private int getNextId(){
+    public static int getNextId(){
         synchronized (idLock){
             id++;
             return id;

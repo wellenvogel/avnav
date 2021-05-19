@@ -396,15 +396,15 @@ public class RequestHandler {
         return null;
     }
 
-    IWebSocketHandler getWebSocketHandler(Uri uri){
+    IWebSocketHandler getWebSocketHandler(String path){
         //for now limited to one handler
         //can be extended with the same pattern like for normal handlers
-        if (uri.getPath().startsWith("/"+TYPE_REMOTE)){
+        if (path.startsWith("/"+TYPE_REMOTE)){
             GpsService service=getGpsService();
             if (service != null) return service.getRemoteChannel();
             return null;
         }
-        if (uri.getPath().equals("/viewer/wstest")){
+        if (path.equals("/viewer/wstest")){
             return new IWebSocketHandler(){
                 @Override
                 public void onReceive(String msg, IWebSocket socket) {
