@@ -2,6 +2,7 @@
 import globalStore from './globalstore.jsx';
 import keys from './keys.jsx';
 import remotechannel, {COMMANDS} from "./remotechannel";
+import assign from "object-assign";
 const REMOTE_CMD=COMMANDS.setPage;
 class History{
     constructor(store,startlocation,startoptions){
@@ -18,7 +19,7 @@ class History{
     }
     setFromRemote(location,options){
         this.history.splice(1, this.history.length);
-        this.history.push({location:location,options:options||{}});
+        this.history.push({location:location,options:assign({},options,{remote:true})});
         this.updateStore(false, true);
     }
     replace(location,options){

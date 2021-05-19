@@ -118,7 +118,7 @@
     let findInCurrent=function(current,key,includeComment){
         if (! current) return;
         let lines=current.split('\n');
-        for (let i=0;i< includeComment?1:2;i++){
+        for (let i=0;i< (includeComment?1:2);i++){
             let r;
             if (i == 0 ){
                 //1st try without comment lines
@@ -229,6 +229,12 @@
                 if (k === 'AVNAV_SSID'){
                     if ( ! value || value.length > 32 || value.match(/ /)){
                         alert("invalid SSID, 1...32 characters, no space");
+                        return;
+                    }
+                }
+                if (k === 'AVNAV_PSK'){
+                    if ( ! value || value.length > 63 || value.length < 8){
+                        alert("invalid Wifi Password, 8...63 characters");
                         return;
                     }
                 }

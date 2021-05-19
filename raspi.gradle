@@ -54,6 +54,7 @@ ospackage {
             include 'setup-mcs.sh'
             include 'wpa_action.sh'
             include 'rename-interface.sh'
+            include 'checkLink.sh'
         }
         from('raspberry') {
             include 'avnav_server.xml'
