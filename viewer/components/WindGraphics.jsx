@@ -42,6 +42,7 @@ class WindGraphics extends React.Component{
                 <div className='infoLeft'>Wind</div>
                 <div className='infoRight'>{showKnots?"kn":"m/s"}</div>
                 <div className="windSpeed">{windSpeed}</div>
+                <div className="windReference">{this.props.windReference}</div>
             </div>
 
         );
@@ -95,7 +96,7 @@ class WindGraphics extends React.Component{
         // Write inner circle in center position
         ctx.beginPath();
         ctx.lineWidth = circle_linewidth;
-        ctx.arc(width / 2 ,height / 2,radius,0,2*Math.PI);
+        ctx.arc(width / 2 ,height / 2,radius*0.97,0,2*Math.PI);
         ctx.stroke();
         // Write left partial circle
         ctx.beginPath();
@@ -167,6 +168,7 @@ WindGraphics.propTypes={
 WindGraphics.storeKeys={
     windSpeed:  keys.nav.gps.windSpeed,
     windAngle:  keys.nav.gps.windAngle,
+    windReference: keys.nav.gps.windReference,
     visible:    keys.properties.showWind,
     showKnots:  keys.properties.windKnots,
     scaleAngle: keys.properties.windScaleAngle

@@ -321,6 +321,9 @@ class NMEAParser(object):
         '''
         rt['windAngle']=float(darray[1])
         rt['windReference']=darray[2]
+        priority=1
+        if darray[2] != 'R':
+          priority=0
         #we keep the speed im m/s
         windspeed=float(darray[3] or '0')
         if (darray[4] == 'K'):
@@ -328,7 +331,7 @@ class NMEAParser(object):
         if (darray[4] == 'N'):
           windspeed=windspeed*self.NM/3600
         rt['windSpeed']=windspeed
-        self.addToNavData(rt,source=source,record=tag)
+        self.addToNavData(rt,source=source,record=tag,priority=priority)
         return True
       if tag == 'DPT':
         '''
