@@ -29,6 +29,7 @@ import keys from "./keys";
 import base from "../base";
 import PubSub from "PubSub";
 import androidEventHandler from "./androidEventHandler";
+import dimhandler from "./dimhandler";
 const PSTOPIC="remote.";
 export const COMMANDS={
     setPage:'CP', //str page
@@ -126,6 +127,7 @@ class RemoteChannel{
         if (! parts[0] in COMMANDS) return;
         data=data.replace(/^[^ ]* */,'');
         window.setTimeout(()=> {
+            dimhandler.trigger(); //get us out of dim mode
             this.pubsub.publish(PSTOPIC + parts[0], data);
         },0);
     }
