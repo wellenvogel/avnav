@@ -10,25 +10,23 @@
     <div class="toc"> </div>
     <p>Nachdem die Navigations-App für die <a href="../beschreibung.html">Nutzung
         mit dem Raspberry Pi</a>&nbsp; bereits einige Jahre erfolgreich im
-      Einsatz ist, gibt es jetzt auch eine Version, die direkt (ohne einen
-      Raspberry) auf Android läuft. Sie erfordert Android ab 4.4 (KitKat).</p>
+      Einsatz ist, gibt es jetzt auch eine Version, die direkt auf Geräten mit Android läuft, z.B Tablets oder Handys. Diese AvNav-App erfordert Android ab 4.4 (KitKat).</p>
     <p>Die aktuellste Version kann man unter <a href="../../downloads/release/latest">Downloads</a>
-      herunterladen. Oder im <a href="https://play.google.com/store/apps/details?id=de.wellenvogel.avnav.main">AppStore</a>.<br>
-      Ältere Versionen oder daily builds findet man über die <a href="../install.html">Installationsbeschreibung</a>.</p>
+      herunterladen oder im <a href="https://play.google.com/store/apps/details?id=de.wellenvogel.avnav.main">AppStore</a>.<br>
+      Ältere Versionen oder "daily builds" findet man über die <a href="../install.html">Installationsbeschreibung</a>.</p>
     <p>Sie verpackt im Wesentlichen die Web-App (siehe <a href="../userdoc/index.html">Beschreibung</a>)
-      in eine Android Applikation - siehe dort auch zum <a href="../charts.html">Erzeugen/Konvertieren</a>
+      in eine Android Applikation - siehe dort auch die Verfahren zum <a href="../charts.html">Erzeugen/Konvertieren</a>
       der Karten.</p>
     <h2>Funktion&nbsp;</h2>
     <p>(neu ab 202104xx)</p>
     <p>Die App besteht intern aus mehreren Funktionsblöcken .</p>
     <img src="software-android.png" alt="" class="fimage">
-    <p>Der NMEA Multiplexer verarbeitet NMEA0183 Daten von den verschiedenen
-      Quellen. Neben dem internen GPS können die Daten von Quellen wie TCP
-      Verbindunge, UDP Ports, USB Geräten oder Bluetooth Verbindungen kommen.
+    <p>Der NMEA Multiplexer verarbeitet NMEA0183-Daten von verschiedenen
+      Quellen. Neben dem internen Geräte-GPS können die Daten von verschiedenen Quellen kommen,  z.B. über TCP/IP-Verbindungen, per UDP, von anderen USB Geräten oder über Bluetooth-Verbindungen.
       Die meisten Quellen unterstützen das gleichzeitige Senden und Empfangen
       von Daten. Es können jeweils mehrere Quellen des gleichen Typs
-      konfiguriert werden (in der App Konfiguration existiert für jede Quelle
-      ein "Handler").</p>
+      konfiguriert werden (in der App-Konfiguration existiert für jede Quelle
+      ein sogenannter "Handler").</p>
     <table style="width: 100%" border="1">
       <tbody>
         <tr>
@@ -37,93 +35,91 @@
         </tr>
         <tr>
           <td>InternalGPS</td>
-          <td>Die Daten des internen GPS werden als NMEA Daten eingespeist.</td>
+          <td>Die Daten des internen GPS werden als NMEA-Daten eingespeist.</td>
         </tr>
         <tr>
           <td>TcpReader</td>
-          <td>Eine TCP Verbindung zu einem externen System. AvNav ist dabei ein
-            TCP client und öffnet die Verbindung.<br>
-            Als Adresse kann sowohl eine IP Adresse als auch ein hostname (auch
-            ein mdns Name wie avnav.local) angegeben werden.</td>
+          <td>Eine TCP-Verbindung zu einem externen System. AvNav ist dabei ein
+            TCP-Client und öffnet die Verbindung.<br>
+            Als Adresse kann sowohl eine IP-Adresse, als auch ein Hostname angegeben werden. Auch
+            ein mDNS-Name wie avnav.local kann benutzt werden, wenn auf dem System ein Bonjour-Browser zur Anzeige von AvNav genutzt wird.</td>
         </tr>
         <tr>
           <td>TcpWriter</td>
-          <td>AvNav ermöglicht es einer anderen App oder einem anderen System
-            sich zu verbinden und Daten zu empfangen. AvNav ist hier der TCP
-            Server.</td>
+          <td>AvNav ermöglicht es einer anderen App oder einem anderen System,
+            sich zu verbinden und Daten zu empfangen. AvNav ist hier der TCP-Server.</td>
         </tr>
         <tr>
           <td>UdpReader</td>
-          <td>AvNav empfängt UDP Daten auf dem konfigurierten Port</td>
+          <td>AvNav empfängt UDP-Daten auf dem konfigurierten Port.</td>
         </tr>
         <tr>
           <td>UdpWriter</td>
-          <td>AvNav sendet UDP Daten zur konfigurierten Adresse und dem
-            konfigurierten Port</td>
+          <td>AvNav sendet UDP-Daten zur konfigurierten Adresse und zum
+            konfigurierten Port.</td>
         </tr>
         <tr>
           <td>UsbConnection</td>
-          <td>Daten können über einen angeschlossenen USB-Seriell Wandler
-            gesendet umd empfangen werden (erfordert USB-OTG Funktionalität auf
-            dem Gerät)</td>
+          <td>Daten können über einen angeschlossenen USB-Seriell-Wandler
+            gesendet umd empfangen werden. Das erfordert allerdings USB-OTG-Funktionalität auf
+            dem Gerät.</td>
         </tr>
         <tr>
           <td>Bluetooth</td>
-          <td>Eine Verbindung zu einem Bluetooth Gerät. Das Pairing des Gerätes
-            muss vorher ausserhalb von AvNav erfolgen.</td>
+          <td>Eine Verbindung zu einem Bluetooth-Gerät. Das Pairing des Gerätes
+            muss vorher außerhalb von AvNav erfolgen.</td>
         </tr>
         <tr>
           <td>NMEA0183 service</td>
-          <td>Eine Verbindung zu einem System, das seine NMEA0183 Daten als TCP
-            Service über mdns (Bonjour/<a href="https://de.wikipedia.org/wiki/Avahi_%28Software%29">Avahi</a>)
-            bereitstellt. <br>
-            AvNav öffnet eine TCP Verbindung zu einem solchen Gerät.</td>
+          <td>Eine Verbindung zu einem System, das seine NMEA0183 Daten als TCP-Service über mDNS (Bonjour/<a href="https://de.wikipedia.org/wiki/Avahi_%28Software%29">Avahi</a>)
+            bereit stellt. <br>
+            AvNav öffnet eine TCP-Verbindung zu einem solchen Gerät.</td>
         </tr>
       </tbody>
     </table>
     <br>
-    <p>Der NMEA Multiplexer kann sehr flexibel konfiguriert werden. Zu jeder
+    <p>Der NMEA-Multiplexer kann sehr flexibel konfiguriert werden. Zu jeder
       Verbindung lassen sich Eingangs- und Ausgangsfilter festlegen.</p>
-    <p>Der Mulitplexer reicht intern die Daten auch an die anderen Bestandteile
-      weiter. Der Dekoder bereitet die Daten für die Nutzung innerhalb der App
+    <p>Der Multiplexer reicht intern die Daten auch an die anderen Bereiche der App
+      weiter. Der Dekoder bereitet die Daten dann für die Nutzung innerhalb der App
       auf.</p>
     <p>Die eigentliche App mit der Kartendarstellung und den Anzeigen kann
-      einerseits ganz normal als Android App genutzt werden. Parallel dazu kann
-      der integrierte Web Server aktiviert werden. Das ermöglicht den Zugriff
-      mit einem Browser von weiteren Geräten (so wie auch in der <a href="../beschreibung.html">Server-Variante</a>).</p>
-    <p>Der Anzeige-Teil der App kann beendet werden, so das der Multiplexer
-      alleine im Hintegrund weiter läuft. Damit kann AvNav auch genutzt werden,
-      um NMEA Daten für andere Android Apps bereitzustellen. In AvNav
-      konfiguriert man dazu einen TcpWriter und in den anderen Apps verbindet
-      man sicht dann mit 127.0.0.1 und dem konfigurierten Port).</p>
+      einerseits ganz normal als Android-App genutzt werden. Parallel dazu kann
+      der integrierte Webserver aktiviert werden. Das ermöglicht den Zugriff
+      mit einem Browser von weiteren Geräten aus, so wie auch in der <a href="../beschreibung.html">Server-Variante</a>.</p>
+    <p>Der Anzeige-Teil der App kann beendet werden, sodass der Multiplexer
+      allein im Hintergrund weiter läuft. Damit kann AvNav auch genutzt werden,
+      um NMEA-Daten für andere Android-Apps bereitzustellen. In AvNav
+      konfiguriert man dazu einen TcpWriter, in den zugreifenden Apps verbindet
+      man sich über die Adresse 127.0.0.1 und den vorher konfigurierten Port).</p>
     <h2>Karten und gespeicherte Daten</h2>
-    <p>Die Karten werden im gemf <a href="../charts.html#chartformats">Format</a>
-      erwartet.Ab Version 20200325 auch als mbtiles oder xml files. Sie können
+    <p>Die Karten werden im gemf- <a href="../charts.html#chartformats">Format</a>
+      erwartet.Ab Version 20200325 auch als "mbtiles" oder "*.xml files". Sie können
       in 2 Verzeichnissen liegen:</p>
     <ul>
-      <li> im charts Verzeichnis unterhalb des Arbeitsverzeichnisses (kann beim
-        Start gewählt werden). Dieses muß beschreibbar sein und wird daher bei
+      <li> im "Charts"- Verzeichnis unterhalb des Arbeitsverzeichnisses. Das Verzeichnis kann beim
+        Start der App ausgewählt werden. Das Verzeichnis muß beschreibbar sein, es wird daher ab
         Android 4.4 und höher auf dem internen Speicher liegen müssen</li>
-      <li>in einem beliebigen anderen Verzeichnis (vorzugsweise auf der SD
-        Karte) - "additional charts dir" in den Einstellungen<br>
-        Hier können allerdings keine mbtiles Karten genutzt werden, diese müssen
-        erst in das interne Verzeichnis <a href="../userdoc/downloadpage.html">hochgeladen</a>
+      <li>in einem beliebigen anderen Verzeichnis, vorzugsweise auf der SD
+        Karte, als  - "additional charts dir" in den Einstellungen<br>
+        Hier können allerdings keine "mbtiles"-Karten genutzt werden, diese müssen
+        zwingend in das interne Verzeichnis <a href="../userdoc/downloadpage.html">hochgeladen</a>
         werden.</li>
     </ul>
     <p>Die Karten müssen auf das Gerät in eines der Verzeichnisse kopiert oder <a
         href="../userdoc/downloadpage.html">in der App hochgeladen</a> werden .
-      Zusätzlich sind einige Demo-Karten vorhanden, die allerdings eine
+      Zusätzlich sind einige Demo-Karten vorinstalliert, die allerdings eine
       Online-Verbindung erfordern.</p>
     <p>Wenn das gewählte Arbeitsverzeichnis&nbsp; (Standard:
-      interne-sd-Karte/avnav) noch nicht da ist, wird es beim ersten Start
+      interne-sd-Karte/avnav) noch nicht existiert, wird es beim ersten Start
       angelegt.</p>
-    <p>Die Track-Daten und Log Dateien werden in das Verzeichnis tracks
+    <p>Die Track-Daten und Log-Dateien werden in das Verzeichnis "tracks"
       unterhalb des Arbeitsverzeichnisses geschrieben.</p>
-    <p>Im Unterverzeichnis routes werden die Routen im gpx Format gespeichert.
-      Routen und Tracks können aus der App über die Download Funktion an andere
-      Apps weitergegeben werden (siehe Beschreibung der App). Um sie in andere
+    <p>Im Unterverzeichnis "routes" werden die Routen im "gpx"-Format gespeichert.
+      Routen und Tracks können aus der App über die Download-Funktion an andere
+      Apps weitergegeben werden (siehe auch >>LINK: Beschreibung der App). Um sie in andere
       Verzeichnisse zu speichern oder Routen aus anderen Verzeichnissen zu laden
-      (upload Funktion), sollte sinnvollerweise ein Dateimanager installiert
+      (Upload-Funktion), sollte sinnvollerweise ein Dateimanager auf dem Android-Gerät installiert
       sein.</p>
     <h2>Benutzung</h2>
     <p>Nach dem erstmaligen Start der App befindet man sich auf einer
@@ -131,32 +127,30 @@
     <img alt="" src="android-start-first.png" class="fimage"><br>
     Nach dem Klick kommt man auf die Einstellungsseite:<br>
     <img src="android-settings-main.png" alt="" class="fimage"><br>
-    Hier können z.B. die Verzeichnisse&nbsp; für Karten und Tracks gewählt
-    werden, sowie einige weitere Einstellungen.<br>
-    Eine Liste der Einstellungen findet sich <a href="#Settings">hier</a>.<br>
-    Die Einstellungen für die NMEA Datenquellen (und einige weitere) erreicht
-    man in der App über die <a href="../userdoc/statuspage.html">Server/Status
-      Seite</a> <img src="../viewerimages/icons-new/status.svg" alt="" class="inlineimage">.<br>
+    Hier können neben anderen Einstellungen z. B. die Verzeichnisse&nbsp; für Karten und Tracks gesetzt 
+    werden.<br>
+    Eine Liste aller Einstellungen findet sich <a href="#Settings">hier</a>.<br>
+    Die Einstellungen für die NMEA-Datenquellen und weitereDatenquellen erreicht
+    man in der App über die <a href="../userdoc/statuspage.html">"Server/Status"-Seite</a> <img src="../viewerimages/icons-new/status.svg" alt="" class="inlineimage">.<br>
     <br>
-    <p> Die Settings Seite kann über den OK button (oben rechts) oder über den
-      Zurück-Button verlassen werden. Man erreicht die <a href="../userdoc/mainpage.html">Hauptseite</a>
+    <p> Die "Settings"-Seite kann über den "OK"-Button (oben rechts) oder über den
+      "Zurück"-Button verlassen werden. Man erreicht dadurch die <a href="../userdoc/mainpage.html">Hauptseite</a>
       der App.</p>
     <img src="android-mainpage.png" alt="" class="fimage"><br>
-    Im Bild ist wird eine gültige Position (oberer grüner Punkt) und bisher noch
-    keine gültigen AIS Daten (unterer roter Punkt) empfangen.<br>
-    Um zu den Android Einstellungen zu gelangen, zunächst die <a href="../userdoc/settingspage.html">Einstellungsseite</a>
-    in der App aufrufen, dort dann auf den Android Button klicken.<br>
-    Bei weiteren Starts erreicht man sofort die Hauptseite der App.<br>
+    Im Bild wird eine gültige Position als grüner Punkt im oberen Bereich dargestellt. Wenn bisher noch
+    keine gültigen AIS Daten empfangen wurden, zeigt das unten ein roter Punkt an.<br>
+    Um zu den Android-Einstellungen zu gelangen, muss zunächst die <a href="../userdoc/settingspage.html">Einstellungsseite</a>
+    in der App aufgerufen werden, dort klickt man dann auf den "Android"-Button.<br>
+    Nach wiederholten Starts der App wird die Einstellungs-Seite übersprungen, die Hauptseite erscheint sofort.<br>
     <br>
     <h2>Externer Zugriff</h2>
-    <p> (neu ab 202104xx).</p>
-    <p>Die App ermöglicht es, das man sich mit einem Browser von anderen Geräten
-      verbinden kann. Dazu muss in der App der Web Server aktiviert werden (<a href="../userdoc/statuspage.html">Status/Server
+    <p> </p>
+    <p>Ab der Version 202104xx lässt sich die App über den Browser anderer Geräten erreichen. Dazu muss in der App der Web-Server aktiviert werden (<a href="../userdoc/statuspage.html">Status/Server
         Seite</a> <img src="../viewerimages/icons-new/status.svg" alt="" class="inlineimage">).<br>
-      Bei der Aktivierung des Web Servers muss dann "externalAccess" aktiviert
-      werden. Mit "mdnsEnabled wird dafür gesorgt, das eine Bonjour-fähige App
-      (z.B. <a href="https://play.google.com/store/apps/details?id=de.wellenvogel.bonjourbrowser">BonjourBrowser</a>)sich
-      mit dem Server verbinden kann.</p>
+      Bei der Aktivierung des Web-Servers muss zunächst der "externalAccess" aktiviert
+      werden. Mit "mdnsEnabled" wird dafür gesorgt, dass sich eine Bonjour-fähige App
+      (z.B. <a href="https://play.google.com/store/apps/details?id=de.wellenvogel.bonjourbrowser">BonjourBrowser</a>)
+      mit dem Server der App verbinden kann.</p>
     <p>In älteren Versionen hat die App dafür 2 Modi genutzt.<span style="color: #cccccc;"><br>
       </span></p>
     <span style="color: #cccccc;"> </span>
@@ -164,33 +158,32 @@
       <li><span style="color: #cccccc;">Normal</span></li>
       <li><span style="color: #cccccc;">External Browser</span></li>
     </ul>
-    <span style="color: #cccccc;"> Im Normal-Modus ist der Browser in der App
-      integriert und sie wird wie eine normale Android App genutzt.<br>
-      Im External-Browser Mode startet die App einen kleinen Webserver (also
-      spielt so ein wenig Raspberry...) auf einem einstellbaren Port (34567).</span><br>
+    <span style="color: #cccccc;"> Im Normal-Modus ist der Browser in die App
+      integriert, sie wird wie eine normale Android-App genutzt.<br>
+      Im "External-Browser"-Modus startet die App einen kleinen Webserverauf über einen einstellbaren Port (voreingestellt: 34567).</span><br>
     <br>
     <br>
     <h2>Hintergrund</h2>
-    <p>Der NMEA Multiplexer (und auch der Web Server) von AvNav kann im
-      Hintergrund laufen. Das kann genuzt werden, wenn die eigentliche Anzeige
+    <p>Der NMEA-Multiplexer und auch der Web Server von AvNav können ohne Anzeige nur im
+      Hintergrund laufen. Das kann genuzt werden, wenn die Anzeige für Benutzer
       auf einem anderen Gerät erfolgen soll - oder wenn eine andere App für die
       Navigation genutzt wird und nur der Multiplexer von AvNav benötigt wird.</p>
-    <p>Dazu nach dem Start auf der Hauptseite über <img src="../viewerimages/icons-new/ic_clear.svg"
-        alt="" class="inlineimage">den Beenden-Dialog aufrufen und dort
-      "BACKGROUND" auswählen.</p>
-    <p>Über die Benachrichtigung (in der Android Nachrichten Zeile) kann die App
-      wieder in den Vordergrund geholt - oder direkt beendet werden.</p>
+    <p>Dazu nach dem Start wird auf der Hauptseite über <img src="../viewerimages/icons-new/ic_clear.svg"
+        alt="" class="inlineimage">der "Beenden"-Dialog aufgerufen und dort
+      "BACKGROUND" ausgewählt.</p>
+    <p>Über eine Benachrichtigung in der Android-Nachrichtenzeile kann die App
+      wieder in den Vordergrund geholt oder direkt beendet werden.</p>
     <br>
     <h2> <a id="Settings" name="Settings"></a>Einstellungen</h2>
     <p>Die Einstellungen gliedern sich in zwei Teile:</p>
     <ul>
-      <li>Spezielle Android Einstellungen</li>
+      <li>Spezielle Android-Einstellungen</li>
       <li>Einstellungen für den Multiplexer und andere Hauptbestandteile</li>
     </ul>
     <p>Die Android-Einstellungen erreicht man über den <img src="../viewerimages/icons-new/ic_android.svg"
         alt="" class="inlineimage">Button auf der <a href="../userdoc/settingspage.html">Einstellungsseite</a>
       bzw. der <a href="../userdoc/statuspage.html">Server/Status</a> Seite.</p>
-    <h3>Android Main Einstellungen</h3>
+    <h3>Android Main >> Einstellungen</h3>
     <table style="width: 100%" border="1">
       <tbody>
         <tr>
@@ -206,33 +199,33 @@
         </tr>
         <tr>
           <td>additional charts directory</td>
-          <td>ein zusätzliches Kartenverzeichnis (sinnvoll auf der externen SD
-            Karte)</td>
+          <td>ein zusätzliches Kartenverzeichnis, das sinnvollerweise auf einer externen SD-Karte angelegt werden sollte
+            </td>
           <td>/storage/sdcard/avnav/charts</td>
         </tr>
         <tr>
           <td>show demo charts</td>
-          <td>Anzeige der Demo Karten (erfordert Internet Verbindung)</td>
+          <td>Anzeige der Demo-Karten. Das erfordert eine aktive Internetverbindung)</td>
           <td>ein<br>
           </td>
         </tr>
         <tr>
-          <td>Alarm sounds</td>
+          <td>Alarm-Sounds</td>
           <td>Hier können die durch den Server erzeugten Alarm-Sounds
-            abgeschaltet werden. Im external Browser mode müssen diese im
+            abgeschaltet werden. Im "external browser mode" müssen diese im
             Browser ggf. zusätzlich abgeschaltet werden.</td>
           <td><br>
           </td>
         </tr>
         <tr>
           <td>Hide System Bars</td>
-          <td>Verberge die Android Kopf- und Fusszeile</td>
+          <td>Verbergen der Android Kopf- und Fusszeile</td>
           <td><br>
           </td>
         </tr>
         <tr>
           <td>reset to defaults</td>
-          <td>Rücksetzen der Multiplexer-Einstellungen auf default-Werte</td>
+          <td>Rücksetzen der Multiplexer-Einstellungen auf Default-Werte</td>
           <td><br>
           </td>
         </tr>
@@ -240,7 +233,7 @@
     </table>
     <p><br>
     </p>
-    <h3>Android Sound Einstellungen</h3>
+    <h3>Android Sound-Einstellungen</h3>
     <table style="width: 100%;" border="1">
       <tbody>
         <tr>
@@ -268,20 +261,19 @@
     <p>(neu ab 202104xx)</p>
     <p>Die Einstellungen für den Multiplexer sind auf der <a href="../userdoc/statuspage.html">Status/Server
         Seite</a> <img src="../viewerimages/icons-new/status.svg" alt="" class="inlineimage">verfügbar.
-      Für jede Funktion (z.B. für jede Quelle im Multiplexer) ist ein
+      Für jede Funktion, z.B. für jede Quelle im Multiplexer, ist ein
       sogenannter "Handler" vorhanden, der hier konfiguriert werden kann.</p>
     <p>Weitere Quellen können über den <img src="../viewerimages/icons-new/ic_add.svg"
         alt="" class="inlineimage">Button hinzugefügt werden. Es werden dann die
-      Handler angeboten, die möglich sind (z.B. UsbConnection nur, wenn ein USB
-      Gerät angeschlossen ist).</p>
+      Handler angeboten, die möglich sind, z.B. wird "UsbConnection" nur angezeigt, wenn auch ein USB-Gerät angeschlossen ist.</p>
     <img src="android-status-add.png" alt="" class="fimage">
-    <p>Neben den angezeigten Handlern in der Status übersicht existiert im
+    <p>Neben den angezeigten Handlern in der Statusübersicht existiert im
       Normalfall ein <img src="../viewerimages/icons-new/ic_edit.svg" alt="" class="inlineimage">Button,
       mit dem man den Handler bearbeiten kann.<br>
       Die im Bearbeitungs-Dialog angezeigten Parameter haben meist einen <img src="../viewerimages/icons-new/ic_help_outline.svg"
         alt=""> Button, über den eine Hilfe angezeigt wird. Mit dem Button <img
         src="../viewerimages/icons-new/ic_delete.svg" alt="" class="inlineimage">kann
-      der jeweile Parameter auf seinen default Wert zurückgesetzt werden.</p>
+      der jeweilige Parameter auf seinen Default-Wert zurückgesetzt werden.</p>
     <p> Einige Parameter tauchen bei mehreren Handlern auf:</p>
     <table style="width: 100%" border="1">
       <tbody>
@@ -292,48 +284,48 @@
         </tr>
         <tr>
           <td>enabled</td>
-          <td>Aktviert/Deaktiviert diesen Handler</td>
-          <td>ja nach Handler</td>
+          <td>aktviert/deaktiviert diesen Handler</td>
+          <td>ja??? nach Handler</td>
         </tr>
         <tr>
           <td>name</td>
-          <td>Name für den Handler. Dieser kann in blacklists verwendet werden.</td>
+          <td>Name für den Handler. Dieser kann in Blacklists verwendet werden.</td>
           <td>leer</td>
         </tr>
         <tr>
           <td>port</td>
-          <td>TCP oder UDP port</td>
+          <td>TCP- oder UDP-Port</td>
           <td><br>
           </td>
         </tr>
         <tr>
           <td>filter/readerFilter/ sendFilter</td>
-          <td>ein NMEA filter. Hier kann definiert werden, welche NMEA Daten
-            durchgelassen werden sollen. Mehrere Filter werden durch , getrennt.
-            Für Datensätze, die mit $ beginnen, werden die nächsten beiden
-            Zeichen ignoriert (die Talker Id). Ein Filter für alle RMC Sätze
+          <td>Das ist ein NMEA-Filter. Hier kann definiert werden, welche NMEA-Daten
+            durchgelassen werden sollen. Mehrere Filter werden durch ein Komma (,) getrennt.
+            Für Datensätze, die mit dem Dollarzeichen ($) beginnen, werden die nächsten beiden
+            Zeichen ignoriert (die Talker-Id). Ein Filter für alle RMC-Sätze
             sieht z.B. so aus:<br>
             $RMC<br>
-            Für alle AIS Daten (aber keine anderen NMEA Daten):<br>
+            Ausschließlich für alle AIS-Daten:<br>
             !<br>
-            Alle RMC und RMB Sätze:<br>
+            Alle RMC- und RMB-Sätze:<br>
             $RMC,$RMB<br>
-            Falls der Filter negiert werden soll, muss ein ^ dem Ausdruck
+            Falls der Filter negiert werden soll, muss dem Ausdruck ein "^"" 
             vorangestellt werden.<br>
             ^$RMB,^$APB</td>
           <td>leer</td>
         </tr>
         <tr>
           <td>blacklist</td>
-          <td>eine durch , getrennte Liste von Namen. NMEA Daten von diesen
+          <td>eine durch Kommas (,) getrennte Liste von NMEA-Sätzen. NMEA-Daten von diesen
             Quellen werden nicht ausgesendet.</td>
           <td><br>
           </td>
         </tr>
       </tbody>
     </table>
-    <p>Die vorhandenen "Handler" und ihre Parameter (es werden nur die
-      spezifischen Parameter beschrieben)</p>
+    <p>Die vorhandenen "Handler" und ihre Parameter. Es werden nur die
+      spezifischen Parameter beschrieben.</p>
     <h4>Decoder</h4>
     <table style="width: 100%" border="1">
       <tbody>
@@ -344,28 +336,28 @@
         </tr>
         <tr>
           <td>ownMMSI</td>
-          <td>eigene MMSi, diese wird in der AIS Anzeige ausgeblendet</td>
+          <td>eigene MMSi, diese wird in der AIS-Anzeige ausgeblendet</td>
           <td>leer</td>
         </tr>
         <tr>
           <td>posAge</td>
-          <td>erlaubtes Alter (in s) für die GPS Position, nach dieser Zeit wird
-            sie gelöscht, wenn keine neue empfangen wurde</td>
+          <td>erlaubtes Alter für die GPS-Position (in sec), nach dieser Zeit wird
+            der Eintrag gelöscht, wenn keine neuen GPS-Daten empfangen wurden</td>
           <td>10</td>
         </tr>
         <tr>
           <td>nmeaAge</td>
-          <td>erlaubtes Alter (in s) für NMEA Daten, die keine Position sind</td>
+          <td>erlaubtes Alter für NMEA-Daten (in sec), die keine Positionsdaten enthalten</td>
           <td>600</td>
         </tr>
         <tr>
           <td>aisAge</td>
-          <td>erlaubtes Alter für AIS Daten</td>
+          <td>erlaubtes Alter für AIS-Daten</td>
           <td>1200</td>
         </tr>
         <tr>
           <td>readTimeout</td>
-          <td>Timeout in s für die Anzeige pb valide NMEA Daten empfangen werden</td>
+          <td>Timeout für die Anzeige (in sec), solange valide NMEA-Daten empfangen werden. ????</td>
           <td>10</td>
         </tr>
       </tbody>
@@ -380,7 +372,7 @@
         </tr>
         <tr>
           <td>computeRMB</td>
-          <td>erzeuge NMEA RMB Datensätze, wenn ein Routing aktiv ist</td>
+          <td>erzeuge NMEA-RMB-Datensätze, wenn ein Routing aktiv ist.</td>
           <td>an</td>
         </tr>
       </tbody>
@@ -395,28 +387,28 @@
         </tr>
         <tr>
           <td>interval</td>
-          <td>Intervall in s für das Schreiben des Tracks als gpx Datei.</td>
+          <td>Intervall (in sec) für das Schreiben des Tracks als "gpx"-Datei.</td>
           <td>300</td>
         </tr>
         <tr>
           <td>distance</td>
-          <td>Minimaler Abstand in m bevor ein neuer Trackpunkt geschrieben wird</td>
+          <td>Minimaler Abstand (in m), bevor ein neuer Wegepunkt geschrieben wird.</td>
           <td>25</td>
         </tr>
         <tr>
           <td>minTime</td>
-          <td>Minimale Zeit in s bevor ein neuer Trackpunkt geschrieben wird</td>
+          <td>Minimale Zeit (in sec), bevor ein neuer Wegepunkt geschrieben wird</td>
           <td>10</td>
         </tr>
         <tr>
           <td>length</td>
-          <td>Länge des angezeigten Tracks in h</td>
+          <td>Länge des angezeigten Tracks in Stunden (h).</td>
           <td>25</td>
         </tr>
       </tbody>
     </table>
     <h4>Logger</h4>
-    <p>NMEA logger</p>
+    <p>NMEA-Logger</p>
     <h4>WebServer</h4>
     <img src="android-status-webserver.png" alt="" class="fimage">
     <table style="width: 100%" border="1">
@@ -428,26 +420,25 @@
         </tr>
         <tr>
           <td>port</td>
-          <td>der TCP Port, auf dem der Server Verbindungen annimmt</td>
+          <td>der TCP-Port, auf dem der Server Verbindungen annimmt.</td>
           <td>8080</td>
         </tr>
         <tr>
           <td>external</td>
-          <td>Wenn aktiv, dann können auch andere Geräte sich verbinden (sonst
+          <td>Wenn aktiv, dann können sich auch andere Geräte verbinden (sonst
             nur auf dem eigenen Gerät). <br>
-            <span style="color: red;">Hinweis: Das sollte mit Vorsicht aktiviert
-              werden (nur in vetrauenswürdigen Netzen). Innerhalb der App gibt
-              es keinen weiteren Schutz!</span></td>
+            <span style="color: red;">Hinweis: Dieser Parameter sollte mit Vorsicht und nur in vetrauenswürdigen Netzen aktiviert
+              werden (). Innerhalb der App gibt es keinen weiteren Schutz!</span></td>
           <td>aus</td>
         </tr>
         <tr>
           <td>mdnsEnabled</td>
-          <td>mache den Service per mdns bekannt</td>
+          <td>macht den Service per "mDNS" bekannt.</td>
           <td>an</td>
         </tr>
         <tr>
           <td>mdnsService</td>
-          <td>Der Name unter dem die App per mdns erreichbar ist</td>
+          <td>Der Name unter dem die App per mDNS erreichbar ist.</td>
           <td>avnav-android</td>
         </tr>
       </tbody>
@@ -455,7 +446,7 @@
     <h4>InternalGPS</h4>
     <p>Das GPS des Gerätes.</p>
     <h4>MDNSResolver</h4>
-    <p>Der Handler für die Auflösung und das Bekanntmachen von MDNS
+    <p>Der Handler für die Auflösung und das Bekanntmachen von mDNS
       (Bonjour/Avahi) Services.</p>
     <h4>TcpReader</h4>
     <table style="width: 100%" border="1">
@@ -467,48 +458,46 @@
         </tr>
         <tr>
           <td>ipAddress</td>
-          <td>Die IP Adresse oder der Hostname für den Server, der kontaktiert
-            werden soll. Das kann auch ein MDNS Name wie z.B. avnav.local sein.</td>
+          <td>Die IP-Adresse oder der Hostname für den Server, der kontaktiert
+            werden soll. Das kann auch ein mDNS Name wie z.B. avnav.local sein.</td>
           <td>---</td>
         </tr>
         <tr>
           <td>port</td>
-          <td>Der Ip Port zu dem eine Verbindung aufgebaut werden soll.</td>
+          <td>Der Ip-Port, zu dem eine Verbindung aufgebaut werden soll.</td>
           <td>---</td>
         </tr>
         <tr>
           <td>sendOut</td>
-          <td>Wenn aktiviert, werden auch NMEA Daten gesendet (sonst nur
-            emfangen)</td>
+          <td>Wenn aktiviert, werden auch NMEA-Daten gesendet. Ansonsten wird nur
+            emfangen.</td>
           <td>aus</td>
         </tr>
         <tr>
           <td>readTimeout</td>
-          <td>Zeige die Verbindung inaktiv, wenn keine Daten nach dieser Zeit
-            (Sekunden)</td>
+          <td>Markiere die Verbindung als inaktiv, wenn keine Daten nach der eingestellten Zeit (sec) eingegangen sind.</td>
           <td>10</td>
         </tr>
         <tr>
           <td>writeTimeout</td>
-          <td>Schliesse die Verbidung, wenn ein Satz nicht innerhalb dieser Zeit
-            (Sekunden) geschrieben werden konnte</td>
+          <td>Schliesse die Verbindung, wenn ein NMEA-Datensatz nicht innerhalb der eingestellten Zeit (sec) geschrieben werden konnte.</td>
           <td>5</td>
         </tr>
         <tr>
           <td>connectTimeout</td>
-          <td>Timeout für den Verbindungsaufbau (Sekunden, 0 - System-default)</td>
+          <td>Timeout für den Verbindungsaufbau (in sec, 0 = System-default)</td>
           <td>0</td>
         </tr>
         <tr>
           <td>closeOnTimeout</td>
-          <td>Schliesse die Verbindung (und öffne sie erneut) wenn das
-            readTimeout erreicht wird</td>
+          <td>Schliesse die Verbindung und öffne sie erneut, wenn das
+            readTimeout erreicht wird.</td>
           <td>an</td>
         </tr>
       </tbody>
     </table>
     <h4>TcpWriter</h4>
-    <p>Ein TCPWriter stellt die NMEA Daten für andere Anwendungen bereit.</p>
+    <p>Ein TCPWriter stellt die NMEA-Daten für andere Anwendungen bereit.</p>
     <img src="android-status-tcpwriter-intern.png" alt="" class="fimage">
     <table style="width: 100%" border="1">
       <tbody>
@@ -524,37 +513,35 @@
         </tr>
         <tr>
           <td>externalAccess</td>
-          <td>Wenn aktiv können andere Geräte sich verbinden (sonst nur Apps auf
-            dem gleichen Gerät).</td>
+          <td>Wenn aktiv, können auch andere Geräte sich verbinden. Andernfalls können sich nur Apps auf dem selben Gerät verbinden.</td>
           <td>aus</td>
         </tr>
         <tr>
           <td>writeTimeout</td>
-          <td>Schliesse die Verbidung, wenn ein Satz nicht innerhalb dieser Zeit
-            (Sekunden) geschrieben werden konnte</td>
+          <td>Schliesse die Verbindung, wenn ein NMEA-Datensatz nicht innerhalb der eingestellten Zeit (sec) geschrieben werden konnte.</td>
           <td>5</td>
         </tr>
         <tr>
           <td>readData</td>
-          <td>Wenn aktiv, empfängt AvNav auch NMEA Daten über eine aufgebaute
+          <td>Wenn aktiv, empfängt AvNav auch NMEA-Daten über eine aufgebaute
             Verbindung</td>
           <td>aus</td>
         </tr>
         <tr>
           <td>mdnsEnabled</td>
-          <td>mache den Service per mdns bekannt (type: _nmea-0183._tcp)</td>
+          <td>mache den Service per mDNS im Netz bekannt (type: _nmea-0183._tcp)</td>
           <td>aus</td>
         </tr>
         <tr>
           <td>mdnsService</td>
-          <td>Der Name unter dem dieser Server per mdns erreichbar ist</td>
+          <td>Der Name, unter dem dieser Server (die App) per mDNS erreichbar ist</td>
           <td><br>
           </td>
         </tr>
       </tbody>
     </table>
     <h4>UdpReader</h4>
-    <p>Ein UDP Reader empfängt Daten von anderen Apps/Systemen.</p>
+    <p>Ein UDP-Reader empfängt Daten von anderen Apps/Systemen.</p>
     <table style="width: 100%" border="1">
       <tbody>
         <tr>
@@ -564,25 +551,25 @@
         </tr>
         <tr>
           <td>port</td>
-          <td>der UDP port, uaf dem Daten empfangen werden</td>
+          <td>der UDP-Port, auf dem Daten empfangen werden</td>
           <td>---</td>
         </tr>
         <tr>
           <td>externalAccess</td>
-          <td>wenn aktiv können Daten von anderen Geräten empfangen werden,
-            sonst nur innerhalb des Gerätes</td>
+          <td>wenn aktiv, können Daten von anderen Geräten empfangen werden,
+            sonst nur innerhalb des selben Gerätes.</td>
           <td>aus</td>
         </tr>
         <tr>
           <td>readTimeout</td>
-          <td>zeige die Verbindung als inaktive, wenn für diese Zeit (Sekunden)
+          <td>zeige die Verbindung als inaktiv, wenn für die eingestellte Zeit (sec)
             keine Daten empfangen wurden.</td>
           <td>10</td>
         </tr>
       </tbody>
     </table>
     <h4>UdpWriter</h4>
-    <p>Ein UdpWriter sendet NMEA Daten per UDP an eine andere App.</p>
+    <p>Ein UDP-Writer sendet NMEA-Daten per UDP an eine andere App.</p>
     <table style="width: 100%" border="1">
       <tbody>
         <tr>
@@ -592,8 +579,8 @@
         </tr>
         <tr>
           <td>ipaddress</td>
-          <td>die IP Adresse oder der Hostname des Ziel-Computers. Es kann auch
-            ein mdns Name wie avnav.local genutzt werden</td>
+          <td>die IP-Adresse oder der Hostname des Ziel-Computers. Es kann auch
+            ein mDNS-Name wie "avnav.local" genutzt werden.</td>
           <td>---</td>
         </tr>
         <tr>
@@ -603,22 +590,21 @@
         </tr>
         <tr>
           <td>broadcast</td>
-          <td>Sende die Daten als Broadcast (Adresse muss dann eine gültige
-            Broadcast Adresse sein)</td>
+          <td>Sende die Daten als Broadcast, die IP-Adresse muss dann eine gültige
+            Broadcast-Adresse sein.</td>
           <td>aus</td>
         </tr>
       </tbody>
     </table>
     <h4>NMEA0183 Service</h4>
-    <p>Ein NMEA0183 Service arbeitet im Wesentlichen wie ein TcpReader.
+    <p>Ein NMEA0183-Service arbeitet im Wesentlichen wie ein TcpReader.
       Allerdings werden hier nicht Zieladresse und Port vorgegeben. Stattdessen
-      wird der Name eines (MDNS) Services (type: _nmea-0183._tcp) aus einer
-      Liste der verfügbaren Services gewählt. Falls z.B. im Netz ein SignalK
-      server oder ein AvNav Server (&gt; 20210415) vorhanden ist, machen diese
-      ihre NMEA Ausgänge auf diese Weise bekannt.<br>
-      Der Vorteil ist, das auch bei Wechsel des Netzwerkes der Zugriff im
-      Normalfall wieder funktionieren wird und die Verbindung wieder aufgebaut
-      werden kann.</p>
+      wird der Name eines (mDNS) Services (type: _nmea-0183._tcp) aus einer
+      Liste der verfügbaren Services gewählt. Falls z.B. im Netz ein SignalK-Server oder ein AvNav-Server (&gt; 20210415) vorhanden sind, geben diese
+      ihre NMEA-Ausgänge auf diese Weise im Netzwerk bekannt.<br>
+      Der Vorteil ist, dass auch bei Wechsel des Netzwerkes der Zugriff im
+      Normalfall wieder funktionieren wird und Verbindungen so ohne Umwege wieder aufgebaut
+      werden können.</p>
     <img src="android-status-add-nmea0183.png" alt="" class="fimage">
     <table style="width: 100%" border="1">
       <tbody>
@@ -634,40 +620,38 @@
         </tr>
         <tr>
           <td>sendOut</td>
-          <td>sende NMEA Daten auf dieser Verbindung</td>
+          <td>sende NMEA-Daten auf dieser Verbindung</td>
           <td><br>
           </td>
         </tr>
         <tr>
           <td>readTimeout</td>
-          <td>Zeige die Verbindung inaktiv, wenn keine Daten nach dieser Zeit
-            (Sekunden)</td>
+          <td>Zeige die Verbindung inaktiv, wenn keine Daten nach der eingestellten Zeit (sec) aufgelaufen sind.</td>
           <td>10</td>
         </tr>
         <tr>
           <td>writeTimeout</td>
-          <td>Schliesse die Verbidung, wenn ein Satz nicht innerhalb dieser Zeit
-            (Sekunden) geschrieben werden konnte</td>
+          <td>Schliesse die Verbidung, wenn ein Satz nicht innerhalb der eingestellten Zeit (sec) geschrieben werden konnte</td>
           <td>5</td>
         </tr>
         <tr>
           <td>connectTimeout</td>
-          <td>Timeout für den Verbindungsaufbau (Sekunden, 0 - System-default)</td>
+          <td>Timeout für den Verbindungsaufbau (in sec, 0 = System-default)</td>
           <td>0</td>
         </tr>
         <tr>
           <td>closeOnTimeout</td>
-          <td>Schliesse die Verbindung (und öffne sie erneut) wenn das
-            readTimeout erreicht wird</td>
+          <td>Schliesse die Verbindung und öffne sie erneut, wenn das
+            readTimeout erreicht wird.</td>
           <td>an</td>
         </tr>
       </tbody>
     </table>
     <h4>UsbConnection</h4>
-    <p>AvNav wird aktiv, wenn ein USB Gerät engeschlossen wird. Es ist sinnvoll
-      zunächst AvNav zu starten und danach das USB Gerät anzustecken. Es kann
-      dann direkt ausgewählt werden, das AvNav immer auf dieses Gerät zugreifen
-      darf und AvNav startet auch sofort den Dialog zur Konfiguration des
+    <p>AvNav wird aktiv, wenn ein USB-Gerät angeschlossen wird. Es ist daher sinnvoll,
+      zunächst AvNav zu starten und danach das USB-Gerät anzuschließen. Das Gerät kann
+      dann direkt so konfiguriert werden, dass AvNav immer auf dieses Gerät zugreifen
+      darf. AvNav startet daher sofort den Dialog zur Konfiguration des
       Gerätes.</p>
     <p><img src="android-connect-usb.png" alt="" class="fimage"></p>
     <table style="width: 100%" border="1">
@@ -679,7 +663,7 @@
         </tr>
         <tr>
           <td>device</td>
-          <td>Das angeschlossene USB Gerät (genauer: der Anschluss des Gerätes),
+          <td>Das angeschlossene USB-Gerät, genauer: der Anschluss des Gerätes,
             Auswahl aus einer Liste</td>
           <td>---</td>
         </tr>
@@ -696,20 +680,19 @@
         </tr>
         <tr>
           <td>sendOut</td>
-          <td>sende NMEA Daten auf dieser Verbindung</td>
+          <td>sende NMEA-Daten auf dieser Verbindung</td>
           <td>aus</td>
         </tr>
         <tr>
           <td>readTimeout</td>
-          <td>Zeige die Verbindung inaktiv, wenn keine Daten nach dieser Zeit
-            (Sekunden)</td>
+          <td>Markiere die Verbindung als inaktiv, wenn keine Daten nach der eingestellten Zeit (sec) aufgelaufen sind.</td>
           <td>10</td>
         </tr>
       </tbody>
     </table>
     <h4>Bluetooth</h4>
-    Zum Verbinden z.B.&nbsp; mit einem Bluetooth GPS, dieses zunächst über die
-    Bluetooth Einstellungen (ausserhalb der Applikation) "pairen".<br>
+    Zum Verbinden z.B.&nbsp; mit einem Bluetooth-GPS. Das Gerät muss zunächst über die
+    Bluetooth-Einstellungen des Android-Geräts verbunden werden ("pairen").<br>
     <table style="width: 100%" border="1">
       <tbody>
         <tr>
@@ -719,20 +702,19 @@
         </tr>
         <tr>
           <td>device</td>
-          <td>Das Bluetooth Gerät. Bei der Einrichtung werden alle Geräte
+          <td>Das Bluetooth-Gerät. Bei der Einrichtung werden alle Geräte
             angeboten, die bereits bekannt sind, erst danach wird versucht, das
             Gerät zu erreichen.</td>
           <td>---</td>
         </tr>
         <tr>
           <td>sendOut</td>
-          <td>sende NMEA Daten auf dieser Verbindung</td>
+          <td>sende NMEA-Daten auf dieser Verbindung</td>
           <td>aus</td>
         </tr>
         <tr>
           <td>readTimeout</td>
-          <td>Zeige die Verbindung inaktiv, wenn keine Daten nach dieser Zeit
-            (Sekunden)</td>
+          <td>Markiere die Verbindung als inaktiv, wenn keine Daten nach der eingestellten Zeit (sec) aufgelaufen sind.</td>
           <td>10</td>
         </tr>
       </tbody>
