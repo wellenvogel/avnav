@@ -64,7 +64,7 @@ class DimmHandler{
     trigger(){
         this._setLastTrigger();
         globalStore.storeData(KEY,false);
-        this.actionFunction(100);
+        if (this.actionFunction) this.actionFunction(100);
     }
     isActive(){
         return globalStore.getData(KEY,false);
