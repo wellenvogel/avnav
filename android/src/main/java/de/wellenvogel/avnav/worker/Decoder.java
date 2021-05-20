@@ -1,6 +1,5 @@
 package de.wellenvogel.avnav.worker;
 
-import android.content.Context;
 import android.location.Location;
 import android.util.Log;
 
@@ -74,20 +73,29 @@ public class Decoder extends Worker {
         parameterDescriptions.addParams(OWN_MMSI,POSITION_AGE, NMEA_AGE,AIS_AGE,READ_TIMEOUT_PARAMETER);
     }
     static class AuxiliaryEntry{
-        public long timestamp;
+        public long timeout;
         public JSONObject data=new JSONObject();
+        public int priority=0;
     }
     private final HashMap<String,AuxiliaryEntry> auxiliaryData=new HashMap<String,AuxiliaryEntry>();
 
-    private void addAuxiliaryData(String key, AuxiliaryEntry entry){
-        entry.timestamp=System.currentTimeMillis();
+    private void addAuxiliaryData(String key, AuxiliaryEntry entry,long maxAge){
+        long now=System.currentTimeMillis();
+        entry.timeout=now+maxAge;
+        AuxiliaryEntry current=auxiliaryData.get(key);
+        if (current != null){
+            //if not expired and higher prio - keep current
+            if (current.timeout > now
+                    && current.priority > entry.priority
+            ) return;
+        }
         auxiliaryData.put(key,entry);
     }
     private void mergeAuxiliaryData(JSONObject json) throws JSONException {
-        long minTimestamp=System.currentTimeMillis()- NMEA_AGE.fromJson(parameters)*1000;
+        long now=System.currentTimeMillis();
         //TODO: consider timestamp
         for (AuxiliaryEntry e: auxiliaryData.values()){
-            if (e.timestamp < minTimestamp) continue;
+            if (e.timeout < now) continue;
             Iterator<String> akeys=e.data.keys();
             while (akeys.hasNext()){
                 String k=akeys.next();
@@ -200,6 +208,8 @@ public class Decoder extends Worker {
             });
             cleanupThread.start();
             AvnLog.d(LOGPRFX,getTypeName()+":starting decoder");
+            long auxAge= NMEA_AGE.fromJson(parameters)*1000;
+            long posAge= POSITION_AGE.fromJson(parameters) *1000;
             while (!shouldStop(startSequence)) {
                 NmeaQueue.Entry entry;
                 try {
@@ -288,7 +298,8 @@ public class Decoder extends Worker {
                                         speed = speed / 3600.0 * 1852.0;
                                     }
                                     e.data.put("windSpeed", speed);
-                                    addAuxiliaryData(s.getSentenceId(), e);
+                                    if (!m.isTrue()) e.priority=1; //prefer apparent if it is there
+                                    addAuxiliaryData(s.getSentenceId(), e,posAge);
                                     continue;
                                 }
                                 if (s instanceof DPTSentence) {
@@ -303,7 +314,7 @@ public class Decoder extends Worker {
                                     } else {
                                         e.data.put("depthBelowKeel", depth + offset);
                                     }
-                                    addAuxiliaryData(s.getSentenceId(), e);
+                                    addAuxiliaryData(s.getSentenceId(), e,posAge);
                                     continue;
                                 }
                                 if (s instanceof DBTSentence) {
@@ -312,7 +323,7 @@ public class Decoder extends Worker {
                                     AuxiliaryEntry e = new AuxiliaryEntry();
                                     double depth = d.getDepth();
                                     e.data.put("depthBelowTransducer", depth);
-                                    addAuxiliaryData(s.getSentenceId(), e);
+                                    addAuxiliaryData(s.getSentenceId(), e,posAge);
                                     continue;
                                 }
                                 if (s instanceof XDRSentence) {
@@ -325,7 +336,7 @@ public class Decoder extends Worker {
                                         if (tname != null && ttype != null && tunit != null) {
                                             AuxiliaryEntry e = new AuxiliaryEntry();
                                             e.data.put("transducers." + tname, convertTransducerValue(ttype, tunit, tval));
-                                            addAuxiliaryData(s.getSentenceId() + "." + tname, e);
+                                            addAuxiliaryData(s.getSentenceId() + "." + tname, e,auxAge);
                                         }
                                     }
 
