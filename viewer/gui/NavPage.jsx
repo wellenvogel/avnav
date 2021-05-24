@@ -434,6 +434,10 @@ class NavPage extends React.Component{
     }
     render(){
         let self=this;
+        let autohide=undefined;
+        if (globalStore.getData(keys.properties.autoHideNavPage)){
+            autohide=globalStore.getData(keys.properties.hideButtonTime,30)*1000;
+        }
         return (
             <MapPage
                 className={self.props.className}
@@ -448,6 +452,7 @@ class NavPage extends React.Component{
                         />:null}
                 buttonList={self.getButtons()}
                 preventCenterDialog={(self.props.options||{}).remote}
+                autoHideButtons={autohide}
                 />
         );
     }

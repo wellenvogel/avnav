@@ -252,6 +252,10 @@ class GpsPage extends React.Component{
     }
     render(){
         let self=this;
+        let autohide=undefined;
+        if (globalStore.getData(keys.properties.autoHideGpsPage)){
+            autohide=globalStore.getData(keys.properties.hideButtonTime,30)*1000;
+        }
         let MainContent=(props)=> {
             let fontSize = layoutBaseParam.baseWidgetFontSize;
             let dimensions = globalStore.getData(keys.gui.global.windowDimensions);
@@ -306,6 +310,7 @@ class GpsPage extends React.Component{
                             <MainContent/>
                         }
                 buttonList={self.getButtons()}
+                autoHideButtons={autohide}
                 />;
 
     }

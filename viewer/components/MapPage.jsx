@@ -211,6 +211,7 @@ class MapPage extends React.Component{
                 buttonWidthChanged={()=>{
                     mapholder.updateSize();
                 }}
+                autoHideButtons={self.props.autoHideButtons}
                 />
 
         );
@@ -227,7 +228,8 @@ MapPage.propertyTypes={
     id:                 PropTypes.string,
     overlayContent:     PropTypes.any,               //overlay in the map container
     mapLoadCallback:    PropTypes.func,
-    preventCenterDialog: PropTypes.bool
+    preventCenterDialog: PropTypes.bool,
+    autoHideButtons:    PropTypes.any
 
 };
 

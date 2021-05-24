@@ -50,6 +50,7 @@ body{
     color: @nightColor;
   }
 }
+
 .dimm {
   position: fixed;
   top: 0;
@@ -109,6 +110,12 @@ body{
   .flex-direction(column);
   min-width: 0;
   position: relative;
+  .hiddenButtons &{
+    pointer-events: none;
+  }
+  .hiddenButtons & .widget{
+    pointer-events: none;
+  }
 }
 
 .header{
