@@ -1,6 +1,6 @@
 #! /bin/sh
 #rename the interface depending on the config
-#AVNAV_WLAN_CLIENT (LAST_WLAN_CLIENT)
+#AVNAV_WIFI_CLIENT (LAST_WIFI_CLIENT)
 #if not set or not true - normal behavior
 #internal WLAN will become wlan-ap, one external wlan-av1
 #if set - internal chip will become wlan-av1
@@ -13,7 +13,7 @@ config=/etc/avnav-startup-checks
 [ -f $config ] && . $config
 
 swap=0
-if [ "$LAST_WLAN_CLIENT" = "yes" ] ; then
+if [ "$LAST_WIFI_CLIENT" = "yes" ] ; then
   swap=1
 fi
 log "if=$1, modul=$2, swap=$swap"
