@@ -418,6 +418,17 @@ class NavPage extends React.Component{
                     visible:keys.gui.capabilities.uploadOverlays
                 }
             },
+            {
+                name: 'Night',
+                storeKeys: {toggle: keys.properties.nightMode},
+                onClick: ()=> {
+                    let mode = globalStore.getData(keys.properties.nightMode, false);
+                    mode = !mode;
+                    globalStore.storeData(keys.properties.nightMode, mode);
+                },
+                editDisable: true,
+                overflow: true
+            },
             Mob.mobDefinition,
             EditPageDialog.getButtonDef(PAGENAME,
                 MapPage.PANELS,

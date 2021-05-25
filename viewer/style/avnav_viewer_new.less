@@ -1518,6 +1518,9 @@ span.valuePrefix{
     top: 0;
     bottom: 0;
   }
+  &.mapFloat .map{
+    z-index: 1;
+  }
   .leftSection{
     .flex-display();
     .flex(1);
@@ -1563,5 +1566,9 @@ span.valuePrefix{
   }
   &.mapFloat .buttonContainer{
     background-color: unset;
+    z-index: 2;
+  }
+  &.mapFloat .buttonShade{
+    z-index: 2;
   }
 }
