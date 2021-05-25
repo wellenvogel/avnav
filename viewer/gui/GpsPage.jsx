@@ -102,7 +102,9 @@ class GpsPage extends React.Component{
                 onClick: ()=>{history.pop()}
             }
         ];
-        this.state={};
+        this.state={
+            update:1
+        };
 
         this.onItemClick=this.onItemClick.bind(this);
         if (props.options && props.options.widget && ! props.options.returning) {
@@ -311,6 +313,10 @@ class GpsPage extends React.Component{
                         }
                 buttonList={self.getButtons()}
                 autoHideButtons={autohide}
+                buttonWidthChanged={()=>{
+                    resizeFont();
+                    this.setState({update:this.state.update+1});
+                }}
                 />;
 
     }

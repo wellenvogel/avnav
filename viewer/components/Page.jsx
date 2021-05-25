@@ -52,9 +52,11 @@ class Page extends React.Component {
             if (globalStore.getData(keys.gui.global.hasActiveInputs)){
                 this.lastUserAction=now;
             }
-            if (this.lastUserAction < (now - this.props.autoHideButtons)){
-                this.setState({hideButtons: true})
-                if (this.props.buttonWidthChanged) this.props.buttonWidthChanged();
+            if (! this.state.hideButtons) {
+                if (this.lastUserAction < (now - this.props.autoHideButtons)) {
+                    this.setState({hideButtons: true})
+                    if (this.props.buttonWidthChanged) this.props.buttonWidthChanged();
+                }
             }
         }
         this.timer.startTimer(sequence);
