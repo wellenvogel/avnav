@@ -420,7 +420,10 @@ class NavPage extends React.Component{
             },
             {
                 name: 'Night',
-                storeKeys: {toggle: keys.properties.nightMode},
+                storeKeys: {
+                    toggle: keys.properties.nightMode,
+                    visible: keys.properties.nightModeNavPage
+                },
                 onClick: ()=> {
                     let mode = globalStore.getData(keys.properties.nightMode, false);
                     mode = !mode;

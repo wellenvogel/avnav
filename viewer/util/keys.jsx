@@ -351,6 +351,7 @@ let keys={
         smallBreak: new Property(480, "portrait layout below (px)", PropertyType.RANGE, [200, 9999]),
         mapClickWorkaroundTime: new Property(300, "time to ignore events map click", PropertyType.RANGE, [0, 1000]),
         wpButtonTimeout: new Property(30,"time(s) for auto hiding wp buttons",PropertyType.RANGE,[2,3600]),
+        nightModeNavPage: new Property(true,"show night mode on navpage",PropertyType.CHECKBOX),
         hideButtonTime: new Property(30,"time(s) to hide buttons on enabled pages",PropertyType.RANGE,[2,90]),
         showButtonShade: new Property(true,"show shade when buttons hidden",PropertyType.CHECKBOX),
         autoHideNavPage: new Property(false,"auto hide buttons on NavPage",PropertyType.CHECKBOX),
