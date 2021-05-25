@@ -103,6 +103,16 @@ body{
     .flex-grow(1);
   }
 }
+.buttonShade {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 101; //above widgets
+  &.shade{
+    background-image: linear-gradient(to right,fade(@colorMain,10), fade(@colorMain,20));
+  }
+}
 
 .leftPart{
   .flex(1);
@@ -110,12 +120,6 @@ body{
   .flex-direction(column);
   min-width: 0;
   position: relative;
-  .hiddenButtons &{
-    pointer-events: none;
-  }
-  .hiddenButtons & .widget{
-    pointer-events: none;
-  }
 }
 
 .header{

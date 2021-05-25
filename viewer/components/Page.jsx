@@ -20,6 +20,20 @@ const alarmClick =function(){
         AlarmHandler.stopAlarm(k);
     }
 };
+const ButtonShade=Dynamic((props)=>{
+    let {buttonWidth,...forward}=props;
+    let style={
+        width: buttonWidth
+    };
+    let className="buttonShade";
+    if (props.showShade) className+=" shade";
+    return <div className={className} style={style} {...forward}/>;
+},{
+    storeKeys:{
+        buttonWidth: keys.gui.global.computedButtonWidth,
+        showShade: keys.properties.showButtonShade
+    }
+});
 class Page extends React.Component {
     constructor(props){
         super(props);
@@ -75,6 +89,13 @@ class Page extends React.Component {
                 <Alarm onClick={alarmClick}/>
             </div>
             {! this.state.hideButtons && <ButtonList itemList={props.buttonList} widthChanged={props.buttonWidthChanged}/>}
+            { this.state.hideButtons && <ButtonShade onClick={
+                (ev)=>{
+                    ev.stopPropagation();
+                    ev.preventDefault();
+                    this.userEvent(ev);
+                }
+            }/>}
         </div>
     }
     componentDidMount(){

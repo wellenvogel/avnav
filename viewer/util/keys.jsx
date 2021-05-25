@@ -151,8 +151,7 @@ let keys={
         courseUp: K,
         currentZoom:K,
         requiredZoom:K,
-        centerPosition:K,
-        lastClickTime: K
+        centerPosition:K
         },
     gui:{
         capabilities:{
@@ -353,6 +352,7 @@ let keys={
         mapClickWorkaroundTime: new Property(300, "time to ignore events map click", PropertyType.RANGE, [0, 1000]),
         wpButtonTimeout: new Property(30,"time(s) for auto hiding wp buttons",PropertyType.RANGE,[2,3600]),
         hideButtonTime: new Property(30,"time(s) to hide buttons on enabled pages",PropertyType.RANGE,[2,90]),
+        showButtonShade: new Property(true,"show shade when buttons hidden",PropertyType.CHECKBOX),
         autoHideNavPage: new Property(false,"auto hide buttons on NavPage",PropertyType.CHECKBOX),
         autoHideGpsPage: new Property(false,"auto hide buttons on Dashboard Pages",PropertyType.CHECKBOX),
         toastTimeout: new Property(15,"time(s) to display messages",PropertyType.RANGE,[2,3600]),
