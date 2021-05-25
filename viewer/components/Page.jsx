@@ -21,12 +21,12 @@ const alarmClick =function(){
     }
 };
 const ButtonShade=Dynamic((props)=>{
-    let {buttonWidth,...forward}=props;
+    let {buttonWidth,showShade,...forward}=props;
     let style={
         width: buttonWidth
     };
     let className="buttonShade";
-    if (props.showShade) className+=" shade";
+    if (showShade) className+=" shade";
     return <div className={className} style={style} {...forward}/>;
 },{
     storeKeys:{

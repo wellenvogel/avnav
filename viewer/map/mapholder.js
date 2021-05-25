@@ -1110,6 +1110,15 @@ MapHolder.prototype.getGpsLock=function(){
     return this.gpsLocked;
 };
 
+MapHolder.prototype.getBoatOffset=function(){
+    let x=parseInt(globalStore.getData(keys.properties.mapBoatX,50));
+    if (x < 1 ) x=1;
+    if (x>99) x=99;
+    let y=parseInt(globalStore.getData(keys.properties.mapBoatY,50));
+    if (y < 1 ) y=1;
+    if (y>99) y=99;
+    return {x:x,y:y};
+}
 /**
  * called with updates from nav
  *
@@ -1119,7 +1128,6 @@ MapHolder.prototype.navEvent = function () {
     let gps = globalStore.getMultiple(keys.nav.gps);
     if (!gps.valid) return;
     if (this.gpsLocked) {
-        this.setCenter(gps,true);
         if (this.courseUp) {
             let diff = (gps.course - this.averageCourse);
             let tol = globalStore.getData(keys.properties.courseAverageTolerance);
@@ -1127,6 +1135,7 @@ MapHolder.prototype.navEvent = function () {
             this.averageCourse += diff * globalStore.getData(keys.properties.courseAverageFactor);
             this.setMapRotation(this.averageCourse);
         }
+        this.setCenter(gps,true,this.getBoatOffset());
     }
     this.checkAutoZoom();
     if (this.olmap) this.olmap.render();
@@ -1236,9 +1245,10 @@ MapHolder.prototype.pointFromMap=function(point){
 /**
  * set the map center
  * @param {navobjects.Point} point
- * @param opt_noRemote
+ * @param opt_noUserAction
+ * @param opt_offset
  */
-MapHolder.prototype.setCenter=function(point,opt_noUserAction){
+MapHolder.prototype.setCenter=function(point,opt_noUserAction,opt_offset){
     if (! point) return;
     if (! opt_noUserAction) this.userAction();
     if (this.gpsLocked){
@@ -1246,7 +1256,24 @@ MapHolder.prototype.setCenter=function(point,opt_noUserAction){
         globalStore.storeData(keys.map.centerPosition,p);
     }
     if (! this.getView()) return;
-    this.getView().setCenter(this.pointToMap([point.lon,point.lat]))
+    let coordinates=this.pointToMap([point.lon,point.lat]);
+    let pixel=this.coordToPixel(coordinates);
+    let mapSize=this.olmap.getSize();
+    if (! opt_offset) {
+        this.getView().setCenter(coordinates);
+    }
+    else{
+        if (pixel != null && (opt_offset.x !== 50 || opt_offset.y !== 50)){
+            let tpixel=[mapSize[0]*opt_offset.x/100,mapSize[1]*opt_offset.y/100];
+            let tcoord=this.pixelToCoord(tpixel);
+            let center=this.getView().getCenter();
+            let fcoord=[coordinates[0]+tcoord[0]-center[0],coordinates[1]+tcoord[1]-center[1]]
+            this.getView().setCenter(fcoord);
+        }
+        else {
+            this.getView().setCenter(coordinates);
+        }
+    }
 };
 
 /**
@@ -1335,7 +1362,7 @@ MapHolder.prototype.setGpsLock=function(lock,opt_noRemote){
     if (! globalStore.getData(keys.properties.layers.boat) && lock) return;
     this.gpsLocked=lock;
     globalStore.storeData(keys.map.lockPosition,lock);
-    if (lock) this.setCenter(globalStore.getData(keys.nav.gps.position),opt_noRemote);
+    if (lock) this.setCenter(globalStore.getData(keys.nav.gps.position),opt_noRemote,this.getBoatOffset());
     this.checkAutoZoom();
 };
 
