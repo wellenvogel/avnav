@@ -13,17 +13,29 @@ import assign from 'object-assign';
 //refer to https://canvas-gauges.com/documentation/user-guide/configuration
 const defaultTranslateFunction=(props)=>{
     let rt=props;
+    let defaultColors=props.nightMode?nightColors:normalColors;
+    if (! rt.colorText) rt.colorText=defaultColors.text;
     let textColorNames=['colorTitle','colorUnits','colorNumbers','colorStrokeTicks','colorMajorTicks','colorMinorTicks','colorValueText'];
-    if (props.colorText !== undefined){
+    if (rt.colorText !== undefined){
         textColorNames.forEach((cn)=>{
-            if (rt[cn] === undefined) rt[cn]=props.colorText;
+            if (rt[cn] === undefined) rt[cn]=rt.colorText;
         })
     }
-    if (props.colorNeedle !== undefined){
-        if (rt.colorNeedleEnd === undefined) rt.colorNeedleEnd=props.colorNeedle;
+    if (rt.colorNeedle === undefined) rt.colorNeedle=defaultColors.needle;
+    if (rt.colorNeedle !== undefined){
+        if (rt.colorNeedleEnd === undefined) rt.colorNeedleEnd=rt.colorNeedle;
     }
     return rt;
 };
+
+const normalColors={
+    text:  '#000000',
+    needle: '#c71d1d'
+}
+const nightColors={
+    text: 'rgba(252, 11, 11, 0.6)',
+    needle: 'rgba(252, 11, 11, 0.6)'
+}
 
 class Gauge extends React.Component{
     constructor(props){
@@ -43,6 +55,7 @@ class Gauge extends React.Component{
     }
     render(){
         let props=this.getProps();
+        let defaultColors=props.nightMode?nightColors:normalColors;
         let classes="widget canvasGauge";
         if (props.className) classes+=" "+props.className;
         if (props.typeClass) classes+=" "+props.typeClass;
@@ -51,7 +64,8 @@ class Gauge extends React.Component{
         if (typeof (this.props.formatter) === 'function'){
             value=this.props.formatter(value);
         }
-        let textStyle={color:props.colorText};
+        let textColor=props.colorText?props.colorText:defaultColors.text;
+        let textStyle={color:textColor};
         return (
         <div className={classes} onClick={props.onClick} style={style}>
             <div className="canvasFrame" ref="frame">
