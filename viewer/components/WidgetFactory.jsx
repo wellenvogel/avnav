@@ -387,9 +387,18 @@ class WidgetFactory{
                     RenderWidget=Visible(RenderWidget);
                     delete wprops.handleVisible;
                 }
+                if (wprops.nightMode === undefined && (storeKeys === undefined || storeKeys.nightMode === undefined)){
+                    if (storeKeys === undefined){
+                        storeKeys={nightMode:keys.properties.nightMode}
+                    }
+                    else{
+                        storeKeys=assign({nightMode: keys.properties.nightMode},storeKeys)
+                    }
+                }
                 if (storeKeys) {
                     RenderWidget = Dynamic(RenderWidget, {storeKeys:storeKeys});
                 }
+                delete wprops.storeKeys;
                 return <RenderWidget {...wprops}/>
             }
         };

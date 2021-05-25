@@ -11,6 +11,22 @@ import Helper from '../util/helper.js';
 import GuiHelper from '../util/GuiHelpers.js';
 import WindWidget from "./WindWidget";
 
+const normalColors={
+    green:  'rgba(5, 128, 30, 0.57)',
+    red: 'rgba(255, 20, 7, 0.54)',
+    circle: '#888888', // gray
+    scale: '#666666', // dark gray
+    pointer: '#000000',
+    text: '#000000'
+};
+const nightColors={
+    green:  'rgba(5, 128, 30, 0.57)',
+    red: 'rgba(255, 20, 7, 0.54)',
+    circle: '#888888', // gray
+    scale: '#666666', // dark gray
+    pointer: 'rgba(252, 11, 11, 0.6)',
+    text: 'rgba(252, 11, 11, 0.6)'
+};
 class WindGraphics extends React.Component{
     constructor(props){
         super(props);
@@ -54,6 +70,7 @@ class WindGraphics extends React.Component{
         setTimeout(self.drawWind,0);
     }
     drawWind(){
+        let colors=this.props.nightMode?nightColors:normalColors;
         let canvas=this.canvas;
         if (! canvas) return;
         let ctx=canvas.getContext('2d');
@@ -100,7 +117,7 @@ class WindGraphics extends React.Component{
         ctx.stroke();
         // Write left partial circle
         ctx.beginPath();
-        ctx.strokeStyle = 'rgba(255, 20, 7, 0.54)'; // red
+        ctx.strokeStyle = colors.red; // red
         ctx.lineWidth = 15;
         let start = 270-scaleAngle;
         let end = 250;
@@ -108,7 +125,7 @@ class WindGraphics extends React.Component{
         ctx.stroke();
         // Write right partial circle
         ctx.beginPath();
-        ctx.strokeStyle = 'rgba(5, 128, 30, 0.57)'; // green
+        ctx.strokeStyle = colors.green; // green
         ctx.lineWidth = 15;
         start = 290;
         end = 270+scaleAngle;
@@ -116,7 +133,7 @@ class WindGraphics extends React.Component{
         ctx.stroke();
         // Write partial circle
         ctx.beginPath();
-        ctx.strokeStyle = '#888888'; // gray
+        ctx.strokeStyle = colors.circle; // gray
         ctx.lineWidth = 15;
         start = 40;
         end = 140;
@@ -125,7 +142,7 @@ class WindGraphics extends React.Component{
         // Write scale
         for (let i = 0; i < 12; i++){
             ctx.beginPath();
-            ctx.strokeStyle = '#666666'; // dark gray
+            ctx.strokeStyle =colors.scale; // dark gray
             ctx.lineWidth = 10;
             start = i*30-1;
             end = i*30+1;
@@ -142,6 +159,7 @@ class WindGraphics extends React.Component{
         let txt=Formatter.formatDirection(winddirection).replace(/ /g,"0");
         let xFactor=-0.8;
         if (winddirection < 0) xFactor=-1.0;
+        ctx.fillStyle=colors.text;
         ctx.fillText(txt,xFactor*fontSize,0.4*fontSize);
         // Rotate
         ctx.rotate(angle * Math.PI / 180);
@@ -149,7 +167,7 @@ class WindGraphics extends React.Component{
         ctx.beginPath();
         ctx.lineWidth = pointer_linewidth;
         ctx.lineCap = 'round';
-        ctx.strokeStyle = '#000000';
+        ctx.strokeStyle = colors.pointer;
         ctx.moveTo(0,-40);
         ctx.lineTo(0,-40-pointer_lenght);
         ctx.stroke();
@@ -163,7 +181,8 @@ WindGraphics.propTypes={
     windSpeed: PropTypes.number,
     windAngle: PropTypes.number,
     showKnots:  PropTypes.bool,
-    scaleAngle: PropTypes.number
+    scaleAngle: PropTypes.number,
+    nightMode: PropTypes.bool
 };
 WindGraphics.storeKeys={
     windSpeed:  keys.nav.gps.windSpeed,
