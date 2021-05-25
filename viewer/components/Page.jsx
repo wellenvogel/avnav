@@ -82,6 +82,7 @@ class Page extends React.Component {
                     onMouseMove={this.userEvent}
                     onWheel={this.userEvent}
             >
+            {props.floatContent && props.floatContent}
             <div className="leftPart">
                 {props.title ? <Headline title={props.title}/> : null}
                 {props.mainContent ? props.mainContent : null}
@@ -112,6 +113,7 @@ Page.propTypes={
     className: PropTypes.string,
     title: PropTypes.string,
     mainContent: PropTypes.any,
+    floatContent: PropTypes.any,
     bottomContent: PropTypes.any,
     buttonList: PropTypes.any,
     style: PropTypes.object,

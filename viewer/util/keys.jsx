@@ -366,6 +366,7 @@ let keys={
         mapUpZoom: new Property(4,"zoom up lower layers",PropertyType.RANGE,[0,6]),
         mapOnlineUpZoom: new Property(0,"zoom up lower layers for online sources",PropertyType.RANGE,[0,6]),
         mapScale: new Property(1,"scale the map display",PropertyType.RANGE,[0.3,5]),
+        mapFloat: new Property(false,"float map behind buttons",PropertyType.CHECKBOX),
         remoteChannelName: new Property('0','remote control channel',PropertyType.LIST,['0','1','2','3','4']),
         remoteChannelRead: new Property(false,'read from remote channel',PropertyType.CHECKBOX),
         remoteChannelWrite: new Property(false,'write to remote channel',PropertyType.CHECKBOX),
