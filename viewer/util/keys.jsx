@@ -89,6 +89,8 @@ let keys={
             speedAverageOn: K,
             courseAverageOn: K,
             depthBelowTransducer: V,
+            headingMag: V,
+            headingTrue: V,
             sequence: K, //will be incremented as last operation on each receive
             connectionLost: K,
             updatealarm: new D("update counter for alarms"),
@@ -281,6 +283,8 @@ let keys={
         navCircle2Radius: new Property(1000, "Circle 2 Radius(m)", PropertyType.RANGE, [0, 5000, 10]),
         navCircle3Radius: new Property(0, "Circle 3 Radius(m)", PropertyType.RANGE, [0, 10000, 10]),
         boatIconScale: new Property(1,"Boat Icon Scale",PropertyType.RANGE, [0.5,5,0.1]),
+        boatDirectionMode: new Property('cog','boat direction',PropertyType.LIST,['cog','hdt','hdm']),
+        boatDirectionVector: new Property(true,'add dashed vector for hdt/hdm',PropertyType.CHECKBOX),
         windScaleAngle: new Property(50, "red/green Angle Wind", PropertyType.RANGE, [5, 90, 1]),
         anchorWatchDefault: new Property(300, "AnchorWatch(m)", PropertyType.RANGE, [0, 1000, 1]),
         gpsXteMax: new Property(1, "XTE(nm)", PropertyType.RANGE, [0.1, 5, 0.1, 1]),

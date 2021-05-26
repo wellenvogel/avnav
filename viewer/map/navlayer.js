@@ -101,7 +101,9 @@ const positionKeys={
     course:     keys.nav.gps.course,
     speed:      keys.nav.gps.speed,
     position:   keys.nav.gps.position,
-    valid:      keys.nav.gps.valid
+    valid:      keys.nav.gps.valid,
+    hdm:        keys.nav.gps.headingMag,
+    hdt:        keys.nav.gps.headingTrue,
 };
 /**
  * draw the marker and course
@@ -112,13 +114,26 @@ const positionKeys={
 NavLayer.prototype.onPostCompose=function(center,drawing){
     let anchorDistance=activeRoute.anchorWatch();
     let gps=globalStore.getMultiple(positionKeys);
+    let boatDirectionMode=globalStore.getData(keys.properties.boatDirectionMode,'cog');
     let course=gps.course;
+    let boatRotation=undefined;
+    if (boatDirectionMode === 'hdt' && gps.hdt !== undefined){
+        boatRotation=gps.hdt;
+    }
+    if (boatDirectionMode === 'hdm' && gps.hdm !== undefined){
+        boatRotation=gps.hdm;
+    }
     if (course === undefined) course=0;
     if (this.boatStyle.rotate === false){
         this.boatStyle.rotation=0;
     }
     else {
-        this.boatStyle.rotation = course * Math.PI / 180;
+        if (boatRotation !== undefined){
+            this.boatStyle.rotation = boatRotation  * Math.PI / 180;
+        }
+        else{
+            this.boatStyle.rotation = course  * Math.PI / 180;
+        }
     }
     let boatPosition = this.mapholder.transformToMap(gps.position.toCoord());
     if (globalStore.getData(keys.properties.layers.boat) && gps.valid) {
@@ -137,6 +152,10 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
         if (courseVetcorDistance > 0 && this.boatStyle.courseVector !== false){
             other=this.computeTarget(boatPosition,course,courseVetcorDistance);
             drawing.drawLineToContext([boatPosition,other],courseVectorStyle);
+            if (boatRotation !== undefined && globalStore.getData(keys.properties.boatDirectionVector)){
+                other=this.computeTarget(boatPosition,boatRotation,courseVetcorDistance);
+                drawing.drawLineToContext([boatPosition,other],assign({dashed:true},courseVectorStyle));
+            }
         }
         if (! anchorDistance) {
             let radius1 = parseInt(globalStore.getData(keys.properties.navCircle1Radius));

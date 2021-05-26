@@ -46,6 +46,8 @@ class Key(object):
     self.key=key
     self.description=description
     self.unit=unit
+  def getKey(self):
+    return AVNStore.BASE_KEY_GPS+"."+self.key
 
 class NMEAParser(object):
   SKY_BASE_KEYS = ['gdop', 'tdop', 'vdop', 'hdop', 'pdop']
@@ -55,7 +57,8 @@ class NMEAParser(object):
   STRIPCHARS={i:None for i in range(0,32)}
   #AIS field translations
   aisFieldTranslations={'msgtype':'type'}
-
+  K_HDGM=Key('headingMag','magnetic heading','\N{DEGREE SIGN}')
+  K_HDGT=Key('headingTrue','true heading','\N{DEGREE SIGN}')
   #we will add the GPS base to all entries
   GPS_DATA=[
     Key('lat','gps latitude'),
@@ -74,14 +77,15 @@ class NMEAParser(object):
     Key('time','the received GPS time'),
     Key('satInview', 'number of Sats in view'),
     Key('satUsed', 'number of Sats in use'),
-    Key('transducers.*','transducer data from xdr')
+    Key('transducers.*','transducer data from xdr'),
+    K_HDGM,
+    K_HDGT
   ]
 
   @classmethod
   def registerKeys(cls,navdata):
     for key in cls.GPS_DATA:
-      key.key=AVNStore.BASE_KEY_GPS+"."+key.key
-      navdata.registerKey(key.key,key.__dict__,cls.__name__)
+      navdata.registerKey(key.getKey(),key.__dict__,cls.__name__)
     #TODO: add description for sat keys
     for key in cls.SKY_BASE_KEYS:
       navdata.registerKey(AVNStore.BASE_KEY_SKY + "."+key, {'description': 'sat base info'}, cls.__name__)
@@ -375,6 +379,94 @@ class NMEAParser(object):
           return True
         return False
 
+      #HDG - Heading - Deviation & Variation
+      #
+      #        1   2   3 4   5 6
+      #        |   |   | |   | |
+      # $--HDG,x.x,x.x,a,x.x,a*hh<CR><LF>
+
+      #Field Number:
+      # 1) Magnetic Sensor heading in degrees
+      #  2) Magnetic Deviation, degrees
+      #  3) Magnetic Deviation direction, E = Easterly, W = Westerly
+      #  4) Magnetic Variation degrees
+      #  5) Magnetic Variation direction, E = Easterly, W = Westerly
+      #  6) Checksum
+
+      if tag == 'HDG':
+        MagDevDir=None
+        heading=None
+        MagDeviation=0
+        MagVarDir=None
+        MagVariation=None
+        if(len(darray[1]) > 0):
+          heading = float(darray[1] or '0')
+        if(len(darray[2]) > 0):
+          MagDeviation = float(darray[2] or '0')  # --> Ablenkung
+          if(len(darray[3]) > 0):
+            MagDevDir = darray[3] or 'X'
+        if(len(darray[4]) > 0):
+          MagVariation = float(darray[4] or '0')  # --> Missweisung
+          if(len(darray[5]) > 0):
+            MagVarDir = darray[5] or 'X'
+        # Kompassablenkung korrigieren
+        if MagDevDir == 'E':
+           heading= heading + MagDeviation
+        elif MagDevDir == 'W':
+          heading = heading - MagDeviation
+        rt[self.K_HDGM.key] = heading
+
+        # Wahrer Kurs unter Berücksichtigung der Missweisung
+        heading_t = None
+        if MagVarDir is not None and MagVariation is not None:
+          if MagVarDir == 'E':
+            heading_t = heading + MagVariation
+          elif MagVarDir == 'W':
+            heading_t = heading - MagVariation
+        if heading_t is not None:
+          rt[self.K_HDGT.key]=heading_t
+        self.addToNavData(rt,source=source,record=tag)
+        return True
+
+      if tag == 'HDM' or tag == 'HDT':
+        heading=None
+        if len(darray[1]) > 0:
+          heading = float(darray[1] or '0')
+        magortrue = darray[2]
+        if heading is not None:
+          if magortrue == 'T':
+            rt[self.K_HDGT.key]=heading
+          else:
+            rt[self.K_HDGM.key]=heading
+        self.addToNavData(rt,source=source,record=tag)
+        return True
+
+      #VHW - Water speed and heading
+
+      #        1   2 3   4 5   6 7   8 9
+      #        |   | |   | |   | |   | |
+      # $--VHW,x.x,T,x.x,M,x.x,N,x.x,K*hh<CR><LF>
+
+      # Field Number:
+      #  1) Degress True
+      #  2) T = True
+      #  3) Degrees Magnetic
+      #  4) M = Magnetic
+      #  5) Knots (speed of vessel relative to the water)
+      #  6) N = Knots
+      #  7) Kilometers (speed of vessel relative to the water)
+      #  8) K = Kilometers
+      #  9) Checksum
+
+
+      if tag == 'VHW':
+        if len(darray[1]) > 0:  # Heading True
+          rt[self.K_HDGT.key] = float(darray[1] or '0')
+        if(len(darray[3]) > 0):
+          rt[self.K_HDGM.key] = float(darray[3] or '0')  # Heading magnetic
+        self.addToNavData(rt,source=source,record=tag)
+        return True
+
       if tag == 'XDR':
         # $--XDR,a,x.x,a,c--c, ..... *hh<CR><LF>
         lf = len(darray)
@@ -404,7 +496,7 @@ class NMEAParser(object):
     except EmptyPosition:
       AVNLog.ld("empty position in %s",str(data))
       return False
-    except Exception:
+    except Exception as e:
       AVNLog.info(" error parsing nmea data " + str(data) + "\n" + traceback.format_exc())
 
   @classmethod

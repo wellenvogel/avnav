@@ -31,7 +31,8 @@ const settingsSections={
         keys.properties.nightChartFade,keys.properties.dimFade,keys.properties.localAlarmSound ],
     AIS:        [keys.properties.aisDistance,keys.properties.aisWarningCpa,keys.properties.aisWarningTpa,keys.properties.aisTextSize,keys.properties.aisUseCourseVector,keys.properties.style.aisNormalColor,keys.properties.style.aisNearestColor,keys.properties.style.aisWarningColor,keys.properties.aisIconBorderWidth,keys.properties.aisIconScale],
     Navigation: [keys.properties.bearingColor,keys.properties.bearingWidth,keys.properties.navCircleColor,keys.properties.navCircleWidth,keys.properties.navCircle1Radius,keys.properties.navCircle2Radius,keys.properties.navCircle3Radius,
-        keys.properties.navBoatCourseTime,keys.properties.boatIconScale,keys.properties.courseAverageTolerance,keys.properties.gpsXteMax,keys.properties.courseAverageInterval,keys.properties.speedAverageInterval,keys.properties.positionAverageInterval,keys.properties.anchorWatchDefault,keys.properties.anchorCircleWidth,
+        keys.properties.navBoatCourseTime,keys.properties.boatIconScale,keys.properties.boatDirectionMode,
+        keys.properties.boatDirectionVector,keys.properties.courseAverageTolerance,keys.properties.gpsXteMax,keys.properties.courseAverageInterval,keys.properties.speedAverageInterval,keys.properties.positionAverageInterval,keys.properties.anchorWatchDefault,keys.properties.anchorCircleWidth,
         keys.properties.anchorCircleColor,keys.properties.windKnots,keys.properties.windScaleAngle],
     Map:        [keys.properties.mobMinZoom,keys.properties.style.useHdpi,keys.properties.clickTolerance,keys.properties.featureInfo,keys.properties.emptyFeatureInfo,keys.properties.mapFloat,keys.properties.mapScale,keys.properties.mapUpZoom,keys.properties.mapOnlineUpZoom,
         keys.properties.mapLockMode],
@@ -46,6 +47,10 @@ const settingsConditions={
 settingsConditions[keys.properties.dimFade]=()=>DimHandler.canHandle();
 settingsConditions[keys.properties.showDimButton]=()=>DimHandler.canHandle();
 settingsConditions[keys.properties.showFullScreen]=()=>FullScreen.fullScreenAvailable();
+settingsConditions[keys.properties.boatDirectionVector]=()=>{
+    let cur=globalStore.getData(keys.gui.settingspage.values,{})
+    return cur[keys.properties.boatDirectionMode]!== 'cog';
+}
 
 const sectionConditions={};
 sectionConditions.Remote=()=>globalStore.getData(keys.gui.capabilities.remoteChannel) && window.WebSocket !== undefined;
