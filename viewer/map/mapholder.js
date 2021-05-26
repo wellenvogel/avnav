@@ -1119,6 +1119,22 @@ MapHolder.prototype.getBoatOffset=function(){
     if (y>99) y=99;
     return {x:x,y:y};
 }
+MapHolder.prototype.setBoatOffset=function(point){
+    if (! point){
+        globalStore.storeData(keys.properties.mapBoatX,50);
+        globalStore.storeData(keys.properties.mapBoatY,50);
+        return true;
+    }
+    let pix=this.olmap.getPixelFromCoordinate(this.pointToMap([point.lon,point.lat]));
+    let mapSize=this.olmap.getSize();
+    if (pix && mapSize && mapSize[0] > 0 && mapSize[1] > 0){
+        if (pix[0] < 0 || pix[0] > mapSize[0]) return;
+        if (pix[1] < 0 || pix[1] > mapSize[1]) return;
+        globalStore.storeData(keys.properties.mapBoatX,pix[0]*100/mapSize[0]);
+        globalStore.storeData(keys.properties.mapBoatY,pix[1]*100/mapSize[1]);
+        return true;
+    }
+}
 /**
  * called with updates from nav
  *

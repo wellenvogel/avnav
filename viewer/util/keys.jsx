@@ -368,6 +368,7 @@ let keys={
         mapOnlineUpZoom: new Property(0,"zoom up lower layers for online sources",PropertyType.RANGE,[0,6]),
         mapScale: new Property(1,"scale the map display",PropertyType.RANGE,[0.3,5]),
         mapFloat: new Property(false,"float map behind buttons",PropertyType.CHECKBOX),
+        mapLockMode: new Property('center','lock boat mode',PropertyType.LIST,['center','current','ask']),
         mapBoatX: new Property(50,"boat position x(%)",PropertyType.RANGE,[1,99]),
         mapBoatY: new Property(50,"boat position y(%)",PropertyType.RANGE,[1,99]),
         remoteChannelName: new Property('0','remote control channel',PropertyType.LIST,['0','1','2','3','4']),
