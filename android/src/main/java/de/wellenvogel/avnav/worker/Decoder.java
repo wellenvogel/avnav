@@ -11,6 +11,9 @@ import net.sf.marineapi.nmea.sentence.GGASentence;
 import net.sf.marineapi.nmea.sentence.GLLSentence;
 import net.sf.marineapi.nmea.sentence.GSASentence;
 import net.sf.marineapi.nmea.sentence.GSVSentence;
+import net.sf.marineapi.nmea.sentence.HDGSentence;
+import net.sf.marineapi.nmea.sentence.HDMSentence;
+import net.sf.marineapi.nmea.sentence.HDTSentence;
 import net.sf.marineapi.nmea.sentence.MWVSentence;
 import net.sf.marineapi.nmea.sentence.PositionSentence;
 import net.sf.marineapi.nmea.sentence.RMCSentence;
@@ -18,6 +21,7 @@ import net.sf.marineapi.nmea.sentence.Sentence;
 import net.sf.marineapi.nmea.sentence.SentenceValidator;
 import net.sf.marineapi.nmea.sentence.TalkerId;
 import net.sf.marineapi.nmea.sentence.TimeSentence;
+import net.sf.marineapi.nmea.sentence.VHWSentence;
 import net.sf.marineapi.nmea.sentence.XDRSentence;
 import net.sf.marineapi.nmea.util.DataStatus;
 import net.sf.marineapi.nmea.util.Measurement;
@@ -340,6 +344,59 @@ public class Decoder extends Worker {
                                         }
                                     }
 
+                                }
+                                if (s instanceof HDMSentence ){
+                                    HDMSentence sh=(HDMSentence)s;
+                                    AvnLog.dfs("%s: HDM sentence",getTypeName() );
+                                    AuxiliaryEntry e = new AuxiliaryEntry();
+                                    e.data.put("headingMag",sh.getHeading());
+                                    addAuxiliaryData(s.getSentenceId(),e,posAge);
+                                    continue;
+                                }
+                                if (s instanceof HDTSentence ){
+                                    HDTSentence sh=(HDTSentence)s;
+                                    AvnLog.dfs("%s: %s sentence",getTypeName(),s.getSentenceId() );
+                                    AuxiliaryEntry e = new AuxiliaryEntry();
+                                    e.data.put("headingTrue",sh.getHeading());
+                                    addAuxiliaryData(s.getSentenceId(),e,posAge);
+                                    continue;
+                                }
+                                if (s instanceof VHWSentence){
+                                    VHWSentence sv=(VHWSentence)s;
+                                    AvnLog.dfs("%s: %s sentence",getTypeName(), s.getSentenceId());
+                                    AuxiliaryEntry e = new AuxiliaryEntry();
+                                    boolean hasData=false;
+                                    try {
+                                        e.data.put("headingMag", sv.getMagneticHeading());
+                                        hasData=true;
+                                    }catch (Exception sv1){}
+                                    try {
+                                        e.data.put("headingTrue", sv.getHeading());
+                                        hasData=true;
+                                    }catch(Exception sv2){}
+                                    if (hasData) {
+                                        addAuxiliaryData(s.getSentenceId(), e, posAge);
+                                    }
+                                    else{
+                                        AvnLog.dfs("no data in %s",s.getSentenceId());
+                                    }
+                                    continue;
+                                }
+                                if (s instanceof HDGSentence){
+                                    HDGSentence sh=(HDGSentence)s;
+                                    AvnLog.dfs("%s: %s sentence",getTypeName(),s.getSentenceId() );
+                                    AuxiliaryEntry e = new AuxiliaryEntry();
+                                    double heading=sh.getHeading();
+                                    try{
+                                        heading+=sh.getDeviation();
+                                    }catch (Exception he){}
+                                    e.data.put("headingMag", heading);
+                                    try{
+                                        heading+=sh.getVariation();
+                                        e.data.put("headingTrue",heading);
+                                    }catch(Exception h2e){}
+                                    addAuxiliaryData(s.getSentenceId(),e,posAge);
+                                    continue;
                                 }
                                 Position p = null;
                                 if (s instanceof PositionSentence) {
