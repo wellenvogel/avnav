@@ -1263,12 +1263,9 @@ MapHolder.prototype.setCenter=function(point,opt_noUserAction,opt_offset){
         this.getView().setCenter(coordinates);
     }
     else{
-        if (pixel != null && (opt_offset.x !== 50 || opt_offset.y !== 50)){
+        if (mapSize != null && (opt_offset.x !== 50 || opt_offset.y !== 50)){
             let tpixel=[mapSize[0]*opt_offset.x/100,mapSize[1]*opt_offset.y/100];
-            let tcoord=this.pixelToCoord(tpixel);
-            let center=this.getView().getCenter();
-            let fcoord=[coordinates[0]+tcoord[0]-center[0],coordinates[1]+tcoord[1]-center[1]]
-            this.getView().setCenter(fcoord);
+            this.getView().centerOn(coordinates,mapSize,tpixel);
         }
         else {
             this.getView().setCenter(coordinates);
@@ -1309,6 +1306,12 @@ MapHolder.prototype.pixelDistance=function(point1,point2){
  */
 MapHolder.prototype.setMapRotation=function(rotation){
     this.getView().setRotation(rotation==0?0:(360-rotation)*Math.PI/180);
+    if (this.gpsLocked){
+        let boat=globalStore.getData(keys.map.centerPosition);
+        if (boat) {
+            this.setCenter(boat,true,this.getBoatOffset());
+        }
+    }
 };
 
 MapHolder.prototype.moveCenterPercent=function(deltax,deltay){
