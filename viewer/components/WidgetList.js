@@ -48,6 +48,32 @@ let widgetList=[
 
     },
     {
+        name: 'HDM',
+        default: "---",
+        unit: "\u00b0",
+        caption: 'HDM',
+        storeKeys:{
+            value: keys.nav.gps.headingMag
+        },
+        formatter: 'formatDirection',
+        editableParameters: {
+            formatterParameters: false
+        }
+    },
+    {
+        name: 'HDT',
+        default: "---",
+        unit: "\u00b0",
+        caption: 'HDT',
+        storeKeys:{
+            value: keys.nav.gps.headingTrue
+        },
+        formatter: 'formatDirection',
+        editableParameters: {
+            formatterParameters: false
+        }
+    },
+    {
         name: 'Position',
         default: "-------------",
         caption: 'BOAT',
