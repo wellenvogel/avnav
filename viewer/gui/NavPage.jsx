@@ -256,6 +256,9 @@ class NavPage extends React.Component{
                 navToWp(!activeRoute.hasActiveTarget())
             }
         },"page",["centerToTarget","navNext","toggleNav"])
+        if (globalStore.getData(keys.properties.mapLockMode) === 'center'){
+            MapHolder.setBoatOffset();
+        }
     }
     widgetClick(item,data,panel,invertEditDirection){
         if (EditWidgetDialog.createDialog(item,PAGENAME,panel,invertEditDirection)) return;

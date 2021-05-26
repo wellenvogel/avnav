@@ -293,6 +293,14 @@ const MapHolder=function(){
      * @type {number}
      */
     this.lastUserAction=0;
+    /**
+     * the boat position on the display in percent
+     * @type {{x: number, y: number}}
+     */
+    this.boatOffset={
+        x:50,
+        y:50
+    }
 };
 
 base.inherits(MapHolder,DrawingPositionConverter);
@@ -1111,18 +1119,14 @@ MapHolder.prototype.getGpsLock=function(){
 };
 
 MapHolder.prototype.getBoatOffset=function(){
-    let x=parseInt(globalStore.getData(keys.properties.mapBoatX,50));
-    if (x < 1 ) x=1;
-    if (x>99) x=99;
-    let y=parseInt(globalStore.getData(keys.properties.mapBoatY,50));
-    if (y < 1 ) y=1;
-    if (y>99) y=99;
-    return {x:x,y:y};
+    return this.boatOffset;
 }
 MapHolder.prototype.setBoatOffset=function(point){
     if (! point){
-        globalStore.storeData(keys.properties.mapBoatX,50);
-        globalStore.storeData(keys.properties.mapBoatY,50);
+        this.boatOffset={
+            x:50,
+            y:50
+        }
         return true;
     }
     let pix=this.olmap.getPixelFromCoordinate(this.pointToMap([point.lon,point.lat]));
@@ -1130,8 +1134,16 @@ MapHolder.prototype.setBoatOffset=function(point){
     if (pix && mapSize && mapSize[0] > 0 && mapSize[1] > 0){
         if (pix[0] < 0 || pix[0] > mapSize[0]) return;
         if (pix[1] < 0 || pix[1] > mapSize[1]) return;
-        globalStore.storeData(keys.properties.mapBoatX,pix[0]*100/mapSize[0]);
-        globalStore.storeData(keys.properties.mapBoatY,pix[1]*100/mapSize[1]);
+        let x=pix[0]*100/mapSize[0];
+        if (x < 1 ) x=1;
+        if (x>99) x=99;
+        let y=pix[1]*100/mapSize[1];
+        if (y < 1 ) y=1;
+        if (y>99) y=99;
+        this.boatOffset={
+            x:x,
+            y:y
+        }
         return true;
     }
 }
