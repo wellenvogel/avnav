@@ -9,21 +9,20 @@
     <h1>AvNav Android</h1>
     <p>After having the <a href="../beschreibung.html">AvNav web GUI for the
         Raspberry Pi</a>&nbsp; already in place for some years, there is now
-      also a genuine android version. It requires android 4.4.(KitKat) or later.</p>
+      also a genuine android version. It requires android 4.4 (KitKat) or later.</p>
     <p>The latest version is available at <a href="../../downloads/release/latest">downloads</a>.
       Alternatively in the&nbsp; <a href="https://play.google.com/store/apps/details?id=de.wellenvogel.avnav.main">Play
         Store</a>.<br>
       You can find previous versions or daily builds via the&nbsp; <a href="../install.html">installation
         instructions</a>.</p>
     <p>Basically the app is packaging the WebApp (see <a href="../userdoc/index.html">User
-        documentation</a>) into an android app. For Charts see the hints at <a
-        href="../charts.html">creating/converting charts</a>.</p>
+        documentation</a>) into an android app. For Charts check the hints at <a href="../charts.html">creating/converting charts</a>.</p>
     <h2>Functions </h2>
     <p>(new since 20210424)</p>
-    <p>Internally the app consist of a couple of functional entities.</p>
+    <p>Internally the app consists of a couple of functional entities.</p>
     <img src="software-android.png" alt="" class="fimage">
     <p>The NMEA multiplexer handles NMEA0183 data from various sources. Beside
-      the internal GPS the data can be read of sources like TCP connections, UDP
+      the internal GPS data can be read from sources like TCP connections, UDP
       ports, USB devices, Bluetooth... Most sources support sending and
       receiving of NMEA data at the same time. You can configure multiple
       sources of each type (within the app configuration there is a "handler"
@@ -31,7 +30,7 @@
     <table style="width: 100%" border="1">
       <tbody>
         <tr>
-          <td>name inside the app</td>
+          <td>name within the app</td>
           <td>description</td>
         </tr>
         <tr>
@@ -41,19 +40,19 @@
         </tr>
         <tr>
           <td>TcpReader</td>
-          <td>A TCP connection to an external system. AvNav is the TCP client
+          <td>A TCP connection to an external system. AvNav acts as TCP client
             and will open up the connection.<br>
             You can either use a plain IP address or a hostname as destination
-            (there is also support for mdns names like avnav.local).</td>
+            (mdns names like avnav.local are supported).</td>
         </tr>
         <tr>
           <td>TcpWriter</td>
           <td>AvNav listens for connections from other apps or systems and sends
-            out the NMEA data from the multiplexer. AvNav is the TCP server.</td>
+            out the NMEA data from the multiplexer. AvNav acts as TCP server.</td>
         </tr>
         <tr>
           <td>UdpReader</td>
-          <td>AvNav is receiving UDP data at the configured port.</td>
+          <td>AvNav receives UDP data at the configured port.</td>
         </tr>
         <tr>
           <td>UdpWriter</td>
@@ -75,23 +74,23 @@
           <td>A connection to a system the provides its NMEA data as a TCP
             service via mdns (Bonjour/<a href="https://de.wikipedia.org/wiki/Avahi_%28Software%29">Avahi</a>)
             - like e.g. SignalK. <br>
-            AvNav opens a TCP connection to this device.</td>
+            AvNav establishes a TCP connection to this device.</td>
         </tr>
       </tbody>
     </table>
     <br>
     <p>You can configure the NMEA multiplexer in a very flexible manner. For
       each connection you can define input and output filters or blacklists.</p>
-    <p>Internally the multiplexer hands over its data to the other parts of the
-      app. The dekoder prepares the NMEA data for further usage inside the app.</p>
+    <p>Internally the multiplexer hands over its data to the other modules of the
+      app. The decoder prepares the NMEA data for further usage inside the app.</p>
     <p>The app itself with the chart display and the dashboards can be used as a
       normal android app. Additionally you can activate the integrated web
       server. This allows access to all app functions from a browsers on the
       same or a different device (similar to the AvNav <a href="../beschreibung.html">server
         variant</a>).</p>
-    <p>The display part of the app can be terminated and teh multiplexer can
-      continue to run in the background. This way AvNav can act as a NMEA data
-      provider for other navigation apps- You would configure a TcpWriter in
+    <p>The display part of the app can be terminated while the multiplexer 
+      continues to run in background. So AvNav can act as a NMEA data
+      provider for other navigation apps. You would configure a TcpWriter within
       AvNav and connect from the other app to localhost (127.0.0.1) and the
       configured port.</p>
     <h2></h2>
@@ -102,11 +101,11 @@
       version - or any other NMEA0183-wifi gateway. You can also use a plain
       bluetooth GPS mouse if your device does not have an internal GPS.</p>
     <h2>Charts and stored Data</h2>
-    <p>Charts are primarily expected in gemf <a href="../charts.html#chartformats">Format</a>.
+    <p>Charts are primarily expected in gemf <a href="../charts.html#chartformats">format</a>.
       Since version 20200325 you can also use mbtiles or xml files for online
       chart sources. Charts may be located in 2 directories: </p>
     <ul>
-      <li> in the charts folder within the app's working directory (choosen at
+      <li> in the 'charts' folder within the app's working directory (choosen at
         start up). As this must be writable it will typically not be possible to
         put this on an SD card in newer android versions. </li>
       <li>in a freely selectable, different directory (also on an SD card)
@@ -115,40 +114,42 @@
         copied into the working directory using <a href="../userdoc/downloadpage.html">the
           app</a> .</li>
     </ul>
-    When starting up there are some demo online charts available.
+    Charts have to be copied to either directory or uploaded by the app. Initially there are some demo charts available, however they require an online internet connection.
     <p>If the chosen working directory is not yet present it will be created on
       first start up (default: internal-sd-card/avnav).</p>
-    <p>Track and log data will be written into the track directory within the
+    <p>Track and log data will be written to the track directory within the
       working directory.</p>
     <p>In the routes sub folder, routes will be stored in gpx format. Routes and
       tracks can be made available to other apps using the <a href="../userdoc/downloadpage.html">download</a>
       function. To save them you need to have a file manager installed.</p>
+<h2>Usage</h2>
+<p></p>
     <p>After first start up you will see an introduction page:</p>
     <img alt="" src="android-start-first.png" class="fimage"><br>
     After clicking ok you will see the main settings page.<br>
     <img src="android-settings-main.png" class="fimage"><br>
-    You can select the working directory and the external charts directory. <br>
+    Amongst other settings, you can select the working directory and the external charts directory. <br>
     A complete list of settings can be found <a href="#Settings">here</a>.<br>
     <br>
     <p> You can leave the settings page with the upper right button or by
       pressing the back button. You will get to the <a href="../userdoc/mainpage.html">main
         page</a> of the app.</p>
     <img src="android-mainpage.png" alt="" class="fimage"><br>
-    In the figure a valid internal position is shown (green bubble), but
+    In the screenshot a valid internal position is shown (green bubble), but
     currently no AIS data (red bubble).<br>
-    To go back to the android setting move to the <a href="../userdoc/settingspage.html">settings
+    To return to the android setting move to the <a href="../userdoc/settingspage.html">settings
       page</a> within the app and click the android button there.<br>
     On further starts,&nbsp; the app will directly present the main page.<br>
     <p> </p>
     <br>
     <h2>External Access</h2>
     <p> (new since 20210424).</p>
-    <p>AvNav allows you to connect from other devices using a web browser. To
+    <p>AvNav supports being accessed from other devices using a web browser. To
       provide this function you need to enable the WebServer in the settings of
       the app (<a href="../userdoc/statuspage.html">Status/Server Page</a> <img
         src="../viewerimages/icons-new/status.svg" alt="" class="inlineimage">).<br>
       You need to switch on "externalAccess" (only do this in trusted networks).
-      With "mdnsEnabled a bonhour enabled app(like <a href="https://play.google.com/store/apps/details?id=de.wellenvogel.bonjourbrowser">BonjourBrowser</a>)
+      With 'mdnsEnabled' a bonjour enabled app (like <a href="https://play.google.com/store/apps/details?id=de.wellenvogel.bonjourbrowser">BonjourBrowser</a>)
       can directly connect to the server.</p>
     <p>In previous versions AvNav was using different modes for that.<span style="color: #cccccc;"><br>
       </span></p>
@@ -165,20 +166,18 @@
     <h2>Background</h2>
     <p>The NMEA multiplexer (and the Web Server) of AvNav can run in background.
       You would e.g. use this if your display is on a different device.</p>
-    <p>To enter the background mode open the close dialog on the main page <img
-        src="../viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage">and
+    <p>To enter the background mode open the close dialog on the main page <img src="../viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage">and
       select "BACKGROUND".</p>
     <p>Via the android notification (in the Android notification bar) you can
-      bring back the app to fore ground - or close it completely.</p>
+      bring back the app to foreground - or close it completely.</p>
     <br>
     <h2> <a id="Settings" name="Settings"></a>Settings</h2>
-    <p>The settings are split into two separate pieces:</p>
+    <p>The settings are split into two separate categories:</p>
     <ul>
-      <li>Special Android settings</li>
+      <li>Specific Android settings</li>
       <li>Settings for the multiplexer and other main parts</li>
     </ul>
-    <p>The android settings you will reach via the <img src="../viewerimages/icons-new/ic_android.svg"
-        alt="" class="inlineimage">button on the <a href="../userdoc/settingspage.html">settings
+    <p>The android settings can be accessed via the <img src="../viewerimages/icons-new/ic_android.svg" alt="" class="inlineimage">button on the <a href="../userdoc/settingspage.html">settings
         page</a> or on the&nbsp; <a href="../userdoc/statuspage.html">server/status</a>
       page.</p>
     <h3></h3>
@@ -210,7 +209,7 @@
         <tr>
           <td>Alarm sounds</td>
           <td>switch off alarm sounds. If you run in external browser mode you
-            need to switch them off in your browser as well.</td>
+            may need to switch them off in your browser as well.</td>
           <td>on<br>
           </td>
         </tr>
@@ -254,22 +253,18 @@
     <h3>Multiplexer Settings</h3>
     <p>(new since 20210424)</p>
     <p>The multiplexer settings are available on the <a href="../userdoc/statuspage.html">Status/Server
-        Seite</a> <img src="../viewerimages/icons-new/status.svg" alt="" class="inlineimage">.
+        Page</a> <img src="../viewerimages/icons-new/status.svg" alt="" class="inlineimage">.
       For each function (e.g. for each data source of the multiplexer) a so
-      called handler is available. You can see the status of the handlers and
+      called 'handler' is available. You can check the status of the handlers and
       change their configuration.</p>
-    <p>New data sources (or targets) can be added using the <img src="../viewerimages/icons-new/ic_add.svg"
-        alt="" class="inlineimage">button. A select dialog will provide all
+    <p>New data sources (or targets) can be added using the <img src="../viewerimages/icons-new/ic_add.svg" alt="" class="inlineimage">button. A select dialog will provide all
       handlers that can be currently added (you will e.g. see an USBConnection
-      only if there is an USB device connected currently).</p>
+      only if there is an USB device actually connected).</p>
     <img src="android-status-add.png" alt="" class="fimage">
-    <p>At the displayed handlers in the status list there is a <img src="../viewerimages/icons-new/ic_edit.svg"
-        alt="" class="inlineimage">button that you will use to edit the
+    <p>Next to handlers in the status list a <img src="../viewerimages/icons-new/ic_edit.svg" alt="" class="inlineimage"> button permits to to edit the
       configuration of the handler.<br>
-      Most of the parameters show in the edit dialog will have a&nbsp; <img src="../viewerimages/icons-new/ic_help_outline.svg"
-        alt="" class="inlineimage"> button that will show a short help for the
-      parameter. Using the <img src="../viewerimages/icons-new/ic_delete.svg" alt=""
-        class="inlineimage">button you can reset the particular parameter to
+      Most of the parameters shown in the edit dialog have a&nbsp; <img src="../viewerimages/icons-new/ic_help_outline.svg" alt="" class="inlineimage"> button providing a short help for the
+      parameter. Using the <img src="../viewerimages/icons-new/ic_delete.svg" alt="" class="inlineimage">button you can reset the particular parameter to
       it's default value.</p>
     <p> Some of the parameters are common for multiple handlers:</p>
     <table style="width: 100%" border="1">
@@ -286,7 +281,7 @@
         </tr>
         <tr>
           <td>name</td>
-          <td>Name for the handler. Can bs used in black lists.</td>
+          <td>Name of the handler. Can be used in black lists.</td>
           <td>empty</td>
         </tr>
         <tr>
@@ -297,8 +292,8 @@
         </tr>
         <tr>
           <td>filter/readerFilter/ sendFilter</td>
-          <td>A NMEA filter. You can define which NMEA sentences should pass.
-            Multiple filters have to be separated by ,.<br>
+          <td>A NMEA filter. You can define the NMEA sentences to pass.
+            Multiple filters have to be separated by comma.<br>
             For records starting with a $ the next 2 characters will be ignored
             (the talker id). A filter for all $XXRMC records will look like:<br>
             $RMC<br>
@@ -312,7 +307,7 @@
         </tr>
         <tr>
           <td>blacklist</td>
-          <td>A , separated list of names. NMEA data from this names will not be
+          <td>A comma separated list of names. NMEA data holding these names will not be
             sent out.</td>
           <td>empty<br>
           </td>
@@ -330,7 +325,7 @@
         </tr>
         <tr>
           <td>ownMMSI</td>
-          <td>Own MMSI, will be filtered out in AIS displays</td>
+          <td>Own MMSI, will be suppressed in AIS displays</td>
           <td>empty</td>
         </tr>
         <tr>
@@ -383,7 +378,7 @@
         </tr>
         <tr>
           <td>interval</td>
-          <td>Interval in sseconds for writing the track as gpx file.</td>
+          <td>Interval in seconds for writing the track as gpx file.</td>
           <td>300</td>
         </tr>
         <tr>
@@ -454,7 +449,7 @@
         </tr>
         <tr>
           <td>ipAddress</td>
-          <td>The ip address or the hostname for the server you want to connect
+          <td>The ip address or the hostname of the server you want to connect
             to. This can also be a MDNS name like avnav.local .</td>
           <td>---</td>
         </tr>
@@ -471,7 +466,7 @@
         </tr>
         <tr>
           <td>readTimeout</td>
-          <td>Show the connection to be inactive if no NMEA data has been
+          <td>Mark the connection as inactive if no NMEA data are
             received for this time (seconds).</td>
           <td>10</td>
         </tr>
@@ -483,7 +478,7 @@
         </tr>
         <tr>
           <td>connectTimeout</td>
-          <td>Timeout for connecting.(seconds, 0 - system-default)</td>
+          <td>Timeout for connecting (seconds, 0 - system-default).</td>
           <td>0</td>
         </tr>
         <tr>
@@ -506,7 +501,7 @@
         </tr>
         <tr>
           <td>port</td>
-          <td>The IP port that the server will listen on</td>
+          <td>The IP port to connect to the AvNav server</td>
           <td>---</td>
         </tr>
         <tr>
@@ -520,8 +515,8 @@
         </tr>
         <tr>
           <td>writeTimeout</td>
-          <td>Write timeout for one NMEA record (in seconds). Close and reopen
-            the connection. Use 0 to disable writeTimeout.</td>
+          <td>Write timeout for a NMEA record (in seconds). Close and reopen
+            the connection, choose 0 to disable writeTimeout.</td>
           <td>5</td>
         </tr>
         <tr>
@@ -537,14 +532,14 @@
         </tr>
         <tr>
           <td>mdnsService</td>
-          <td>The name for this service on mdns</td>
+          <td>The name of this service on mdns</td>
           <td><br>
           </td>
         </tr>
       </tbody>
     </table>
     <h4>UdpReader</h4>
-    <p>An UDP Reader will receive data on a UDP port.</p>
+    <p>An UDP Reader receives data from an UDP port.</p>
     <table style="width: 100%" border="1">
       <tbody>
         <tr>
@@ -559,7 +554,7 @@
         </tr>
         <tr>
           <td>externalAccess</td>
-          <td>If active other devices can send data. Otherwise only apps from
+          <td>If active external devices can send data. Otherwise only apps from
             the same device.<br>
             <span style="color: red;">Hint: Be careful to only use this in a
               trusted network. There is no further protection against
@@ -568,14 +563,14 @@
         </tr>
         <tr>
           <td>readTimeout</td>
-          <td>Show the connection to be inactive if no NMEA data has been
+          <td>Show the connection to be inactive if no NMEA data have been
             received for this time (seconds).</td>
           <td>10</td>
         </tr>
       </tbody>
     </table>
     <h4>UdpWriter</h4>
-    <p>An UdpWriter will send out NMEA data via udo to another app.</p>
+    <p>An UdpWriter will send out NMEA data via UDP to another app.</p>
     <table style="width: 100%" border="1">
       <tbody>
         <tr>
@@ -603,13 +598,13 @@
       </tbody>
     </table>
     <h4>NMEA0183 Service</h4>
-    <p>A NMEA0183 service mainly works like a Tcptreader. But you will not
-      provide IP address and port of the target. Instead you will select the
-      name of a MDNS service that provides NMEA data from a list of detected
+    <p>A NMEA0183 service mainly works like a TcpReader, without the need to 
+      define IP address and port of the origin. Instead you select the
+      name of a MDNS service providing NMEA data from a list of detected
       services (type:&nbsp; _nmea-0183._tcp). If there is e.g. a SignalK server
       or an AvNav server (&gt; 20210415) in your network - they will announce
-      their services this way.</p>
-    <p>An advantage of using a service is that it will continue to work if you
+      their services this way (if configured to do so).</p>
+    <p>Advantage of using a service: it will continue to work if you
       change your network topology.</p>
     <img src="android-status-add-nmea0183.png" alt="" class="fimage">
     <table style="width: 100%" border="1">
@@ -632,24 +627,24 @@
         </tr>
         <tr>
           <td>readTimeout</td>
-          <td>Show the connection to be inactive if no NMEA data has been
+          <td>Mark the connection as inactive if no NMEA data were
             received for this time (seconds).</td>
           <td>10</td>
         </tr>
         <tr>
           <td>writeTimeout</td>
-          <td>Write timeout for one NMEA record (in seconds). Close and reopen
-            the connection. Use 0 to disable writeTimeout.</td>
+          <td>Write timeout for a NMEA record (in seconds). Close and reopen
+            the connection, choose 0 to disable writeTimeout.</td>
           <td>5</td>
         </tr>
         <tr>
           <td>connectTimeout</td>
-          <td>Timeout for connecting.(seconds, 0 - system-default).</td>
+          <td>Timeout for connecting (seconds, 0 - system-default).</td>
           <td>0</td>
         </tr>
         <tr>
           <td>closeOnTimeout</td>
-          <td>Close (and reopen) the connection if no NMEA data has been
+          <td>Close (and reopen) the connection if no NMEA data were
             received within readTimeout.</td>
           <td>on</td>
         </tr>
@@ -657,7 +652,7 @@
     </table>
     <h4>UsbConnection</h4>
     <p>AvNav will get activated when an USB device is connected. Typically it
-      makes more sense to start AvNav first and afterwards connect the USB
+      makes sense to start AvNav first and afterwards connect the USB
       device. This way you can allow permanent access to the USB device for
       AvNav. AvNav will immediately start up the configuration dialog for the
       newly connected device.</p>
@@ -692,7 +687,7 @@
         </tr>
         <tr>
           <td>readTimeout</td>
-          <td>Show the connection to be inactive if no NMEA data has been
+          <td>Mark connection as inactive if no NMEA data were
             received for this time (seconds).</td>
           <td>10</td>
         </tr>
@@ -710,7 +705,7 @@
         <tr>
           <td>device</td>
           <td>The bluetooth device. When creating the handler you can select
-            from a list of all paired devices. Only afterwards AvNav will really
+            from a list of all paired devices. Only after pairing AvNav will actually
             try to connect to the device.</td>
           <td>---</td>
         </tr>
@@ -721,7 +716,7 @@
         </tr>
         <tr>
           <td>readTimeout</td>
-          <td>Show the connection to be inactive if no NMEA data has been
+          <td>Mark the connection as inactive if no NMEA data were
             received for this time (seconds).</td>
           <td>10</td>
         </tr>
