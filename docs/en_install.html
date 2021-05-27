@@ -8,7 +8,8 @@
     <h1 class="western">AvNav Installation</h1>
     <div class="toc"> </div>
     <h2> Releases </h2>
-    <p>A description of the releases and download links can be found in the <a href="release.html">releases document</a>.</p>
+    <p>A description of the releases and download links can be found in the
+        <a href="release.html">releases document</a>.</p>
     <p>To provide a "ready to go" solution there are some images for
       the raspberry pi you can use. The kind of image we recommend
       mainly depends on your intended usage.</p>
@@ -16,17 +17,19 @@
       display on some mobile device) you should use the <a href="#headless">headless
         images</a>. For those images a raspberry pi 3B(+) gives a sufficient
       hardware basis. If you would like to have a monitor directly connected to
-      your pi (and potentially also keyboard and mouse) just have a look at <a href="#openplotter">OpenPlotter</a>. For OpenPlotter we recommend a Pi4
+      your pi (and potentially also keyboard and mouse)
+        just have a look at <a href="#openplotter">OpenPlotter</a>. For OpenPlotter we recommend a Pi4
       with at least 4GB of memory (potentially 2GB will be sufficient but there
       is not much room for future needs). There are also dedicated AvNav touch
       images - but currently they are outdated.</p>
-    <h2 class="western"><a name="Headless"></a><a name="headless"></a>Image
+    <h2><a name="Headless"></a><a name="headless"></a>Image
       without attached display (Headless)</h2>
     <p>Those images are maintained by <a href="https://www.segeln-forum.de/user/27970-blacksea/">BlackSea</a>
       (many thanks...). A description is available on<a href="https://github.com/free-x/avnav/wiki">
         his page</a>.<br>
       The images can be downloaded from&nbsp; <a href="https://www.free-x.de/raspbian/buster/">free-x</a>
-      and installed on a SD card as described at <a href="http://www.raspberrypi.org/downloads">http://www.raspberrypi.org/downloads</a>
+      and installed on a SD card as described at
+        <a href="http://www.raspberrypi.org/downloads">http://www.raspberrypi.org/downloads</a>
       (raw images). <br>
       The images come with </p>
     <ul>
@@ -46,7 +49,7 @@
     NMEA2000 data will flow via Canboat to SignalK and in parallel to AvNav.<br>
     For details refer to <a href="hints/CanboatAndSignalk.html">CanBoatAndSignalK</a>.<br>
     <h3>Image Preparation</h3>
-    <p>new as of&nbsp; 20210322</p>
+    <p>new as of 20210322</p>
     <p>Before inserting the SD card into your Raspberry (after you wrote the
       image to it) you should adapt a couple of settings (especially passwords).<br>
       The images hold a configuration file "avnav.conf" in the first partition
@@ -109,7 +112,8 @@
       on your card. If you selected the MCS it will reboot twice.</p>
     <p>Now you will be able to connect to your pi.</p>
     <h3><a name="connecting"></a>Connecting to your Raspberry Pi</h3>
-    <p>Basically you can connect to the Wifi network established by the raspberry (you have just defined name and password for it) - or you
+    <p>Basically you can connect to the Wifi network established by the raspberry
+        (you have just defined name and password for it) - or you
       can use an ethernet cable.<br>
       To connect to AvNav you need to find the address of the raspberry. <br>
       The most simple approach is to use <a href="https://en.wikipedia.org/wiki/Multicast_DNS">MDNS</a>
@@ -146,7 +150,7 @@
     <p>If this does not work the last resort is always to use the ip address.<br>
       For the wifi connection the primary ip would be</p>
     <div class="code">http://192.168.20.10</div>
-    <p>If this fails too you may try:&nbsp; 192.168.30.10, 192.168.40.10, 192.168.50.10.<br>
+    <p>If this fails too you may try: 192.168.30.10, 192.168.40.10, 192.168.50.10.<br>
       If you are connected with an ethernet cable you only will be able to
       determine the IP if you have access to the router/dhcp server of your
       network. You need to check there for the ip address of the pi.</p>
@@ -177,16 +181,17 @@
     <p>Port 80 is forwarded to the standard listener port of AvNav (8080).</p>
     <p>If you are connected to the pi via ssh you can check the
       status/start/stop with </p>
-    <div class="code">sudo systemctl status avnav </div>
-<div class="code">sudo systemctl start avnav </div>
-<div class="code">sudo systemctl stop avnav</div>
+    <div class="code">sudo systemctl status avnav
+sudo systemctl start avnav
+sudo systemctl stop avnav</div>
     <p> </p>
     <h2 class="western"><a name="Touch"></a></h2>
     <p>For most actions ssh access to the pi is not required.
-      To update you should use the preinstalled&nbsp; <a href="https://github.com/wellenvogel/avnav-update-plugin">Update
-        Plugin</a> . The server configuration can now be accomplished within the AvNav app - at the <a href="userdoc/statuspage.html">Server/Status</a>
+      To update you should use the preinstalled <a href="https://github.com/wellenvogel/avnav-update-plugin">Update
+        Plugin</a> . The server configuration can now be accomplished within
+        the AvNav app - at the <a href="userdoc/statuspage.html">Server/Status</a>
       page.</p>
-    <h2 class="western">Image with Display (avnav-touch)</h2>
+    <h2>Image with Display (avnav-touch)</h2>
     <span>If you prefer to directly connect a display to your pi, this image is
       for you. </span>Holger (<a href="https://www.segeln-forum.de/user/13545-pandel/">pandel</a>)
     is maintaining an own image line for this set up. Great documentation is
@@ -205,10 +210,11 @@
     Information is available at his github <a href="https://github.com/free-x/avnav/wiki">wiki</a>.
     <p>To set up the repository on your system, run the following commands (only
       required if you don't use the headless or the AvNav touch images):</p>
-    <div class="code">sudo date -s "2020/12/03 14:30" <br>wget https://www.free-x.de/debian/oss.boating.gpg.key </div>
-<div class="code">sudo apt-key add oss.boating.gpg.key </div>
-<div class="code">wget https://www.free-x.de/debian/boating.list </div>
-<div class="code">sudo cp boating.list /etc/apt/sources.list.d/<br>sudo apt-get update</div>
+    <div class="code">sudo date -s "2020/12/03 14:30" <br>wget https://www.free-x.de/debian/oss.boating.gpg.key
+sudo apt-key add oss.boating.gpg.key
+wget https://www.free-x.de/debian/boating.list
+sudo cp boating.list /etc/apt/sources.list.d/
+sudo apt-get update</div>
     <p>The first line (date -s...) is only necessary if you start e.g. with the
       headless image or another images that lacks time synchronization. Change
       date and time to your current time.<br>

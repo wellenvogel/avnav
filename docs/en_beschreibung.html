@@ -7,11 +7,29 @@
   </head>
   <body data-order="100">
     <h1>Navigation in the Browser</h1>
-<p>AvNav is a free of charge, open source navigation software for recreational boaters. Like similar applications in this area, AvNav displays nautical charts and marks the boat's position using GPS devices attached to the system. Markers, waypoints, routes, tracks, AIS, external sensors and many more features are supported. The server concept is one of it's key features: AvNav installs on any Raspberry Pi, Windows or Android device acting as 'navigation server'. It collects relevant data from various sources and administers nautical charts. Server access and graphical represention can be realised on any device running a modern web browser, irrespective of it's operating system. AvNav is consequently optimised to be used on touchscreens. Different layouts can be defined to adapt the user interface e.g. to meet special user requirements or to fit specific screen dimensions.</p>
-<h2 class="western">Charts</h2>
-      <p>Any raster charts (RNC), not encrypted by their author, can be used. Vector charts (ENC) are supported too,&nbsp; oeSENC charts in particular. They are, however, not free of charge and need to be acquired at the o-charts shop.</p>
+<p>AvNav is a free of charge, open source navigation software for recreational boaters.
+    Like similar applications in this area, AvNav displays nautical charts and marks
+    the boat's position using GPS devices attached to the system. Markers, waypoints, routes,
+    tracks, AIS, external sensors and many more features are supported.
+    The server concept is one of it's key features: AvNav installs on any Raspberry Pi, Windows or Android
+    device acting as 'navigation server'.
+    It collects relevant data from various sources and administers nautical charts.
+    Server access and graphical represention can be realised on any device running a modern web browser,
+    irrespective of it's operating system.
+    AvNav is consequently optimised to be used on touchscreens.
+    Different layouts can be defined to adapt the user interface e.g. to meet special user requirements
+    or to fit specific screen dimensions.</p>
+<h2>Charts</h2>
+      <p>Any raster charts (RNC), not encrypted by their author, can be used.
+          Vector charts of type oeSENC can also be used.
+          They are, however, not free of charge and need to be acquired at the o-charts shop.</p>
     <h2 class="western">Variants</h2>
-    <p>There is more than AvNav's server variant: as an alternative a stand alone version is offered for Rapberri Pi (AvNav Touch) as well as an Android app. On top of that: 'AvNav for OpenPlotter' integrates seamlessly into the OpenPlotter 2 image with all necessary connections to SignalK server configured out of the box.<br><br>All software is available for download under an open source license.</p>
+    <p>There is more than AvNav's server variant:
+        as an alternative a stand alone version is offered for Rapberri Pi (AvNav Touch)
+        as well as an Android app.
+        On top of that: 'AvNav for OpenPlotter' integrates seamlessly into the OpenPlotter 2 image
+        with all necessary connections to SignalK server configured out of the box.
+        <br>All software is available for download under an open source license.</p>
 <p><a href="en_quickstart.html">Quickstart</a></p>
 <p><br></p>
 <p>15.12.2020</p>
@@ -47,13 +65,13 @@
           of AvNav - especially using it for navigation is at your own risk.
           Before using it I recommend to carefully test the precision of the
           display and the used charts.</b></i><br>
-    <h2 class="western">Overview</h2>
+    <h2>Overview</h2>
     <p><img class="fimage" src="overview.png" name="Grafik1" border="0" width="600"
         align="LEFT">avnav-raspi-2020<br clear="LEFT">
       The whole solution consists of different parts:</p>
     <ul>
       <li>
-        <p>A Raspberry Pi with the server software (avnav_server.py) 
+        <p>A Raspberry Pi with the server software
           reading the connected devices (e.g. NMEA via serial-USB converter – like PL
           2303), Bluetooth GPS, multiplexing and storing the data and providing
           them via WLAN</p>
@@ -67,7 +85,8 @@
       it's data:</p>
     <ul>
       <li>
-        <p>Variant 1: the client (lie laptop or iPad) runs some (other) navigation software (tested: InavX, OpenCPN), those access the NMEA data via TCP or UDP. </p>
+        <p>Variant 1: the client (lie laptop or iPad) runs some (other) navigation software
+            (tested: InavX, OpenCPN), those access the NMEA data via TCP or UDP. </p>
       </li>
       <li>
         <p>Variant 2: the client device just runs a browser. All the navigation is handled

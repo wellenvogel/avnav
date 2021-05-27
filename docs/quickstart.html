@@ -13,7 +13,8 @@
           Risiko. In jedem Falle empfehle ich einen intensiven Test der
           Genauigkeit der Darstellung und des verwendeten Kartenmaterials.</b></i></p>
     <div class="toc"></div>
-    <p class="western">Eine ausführliche Beschreibung der Konzepte findet man im Kapitel <a href="beschreibung.html">Einführung</a>.</p>
+    <p class="western">Eine ausführliche Beschreibung der Konzepte findet man im Kapitel
+      <a href="beschreibung.html">Einführung</a>.</p>
     <h2 class="western">Generelles</h2>
     <p>AvNav ist primär ausgelegt für die Bedienung auf Touch-Geräten (auch mit
       relativ kleinen Bildschirmen). Es wurde versucht, die Bedienelemente und
@@ -26,7 +27,7 @@
       <li>Client-Server Variante.<br>
         Dabei wird der Server auf einem Linux- oder Windows-System installiert
         (z.B. einem Raspberry Pi). Als "Client" für die Bedienung dient ein
-        beliebiger Browser z.B. auf einem weiteren Tablet.</li>
+        beliebiger Browser z.B. auf einem Tablet.</li>
       <li>Android App<br>
         Hier ist die gesamte Funktionalität in einer App gebündelt. Auch hier
         können weitere Geräte per Browser zusätzlich zugreifen.</li>
@@ -49,7 +50,8 @@
         Beschreibung</a>. <br>
       Wenn man über einen anderen Weg mit dem AvNav-Server verbunden ist, kann
       man http://avnav.local benutzen (oder die IP Adresse des Servers).<br>
-      Für IOS- und Android-Geräte ist es empfehlenswert, einen <a href="https://de.wikipedia.org/wiki/Bonjour_%28Apple%29">Bonjour</a>
+      Für IOS- und Android-Geräte ist es empfehlenswert, einen
+      <a href="https://de.wikipedia.org/wiki/Bonjour_%28Apple%29">Bonjour</a>
       Browser zu nutzen. Dieser kann AvNav im lokalen Netz finden, so dass man
       ohne Adresseingabe sofort den Browser starten kann.</p>
     <ul>
@@ -73,9 +75,9 @@
       über <a href="hints/layouts.html">Anpassungen des Layouts</a> und über <a
         href="hints/userjs.html">nutzerdefinierten Code</a>/<a href="hints/usercss.html">CSS</a>
       sowie <a href="hints/plugins.html">Plugins</a> vorgenommen werden.</p>
-    <p>Unter Android sind die Einstellungen direkt in der App integriert.</p>
+
     <h2>NMEA-Daten</h2>
-    <p><img class="fimage" src="avnav_schnittstellen.png" name="Datenim- und Export" width="600" border="0"
+    <p><img class="fimage" src="avnav_schnittstellen.png" name="Datenim- und Export" width="600" border="0">
     <h3>Client Server Variante</h3>
     <p>AvNav verarbeitet NMEA0183-Daten, die über angeschlossene USB-Geräte,
       serielle Schnittstellen, Bluetooth-Geräte,&nbsp; TCP (Client und Server)
@@ -127,8 +129,7 @@
       <li>$xxDBT</li>
       <li>$xxXDR (seit 20210114)</li>
     </ul>
-    <p>Bei enstprechender Konfiguration kann AvNav $GPRMC-Sätze auf einer
-      IP/USB/Bluetooth Verbindung aussenden.</p>
+    <p>Bei enstprechender Konfiguration kann AvNav $GPRMC-Sätze erzeugen und aussenden.</p>
     <p></p>
     <h2>Karten</h2>
     <p>AvNav verarbeitet grundsätzlich Karten im <a href="charts.html#Intro">Rasterformat</a>.
@@ -139,21 +140,26 @@
       oder <a href="https://wiki.openstreetmap.org/wiki/SAS_Planet">SASPlanet</a>
       aus Quellen im Netz erstellt werden.</p>
     <p>Unmittelbar verarbeiten kann AvNav Karten im <a href="charts.html#chartformats">"gemf"-
-        und "mbtiles"-Format</a>. Daneben können Karten z.B. in das BSB-Format (kap) <a
+        und "mbtiles"-Format</a>. Daneben können Karten z.B. im BSB-Format (kap) in das gemf Format <a
         href="charts.html#Convert">konvertiert</a> werden, entweder direkt auf
       dem Raspberry - oder besser vorher auf einem Desktop-System.</p>
     <p>Karten müssen zur Benutzung in AvNav "hochgeladen" werden - dies geschieht auf der <a href="userdoc/downloadpage.html">Files/Download-Seite</a>, dort den Reiter "Karten" <img src="viewerimages/icons-new/map2.svg" alt=""
         class="inlineimage"> anklicken. 
-    <p>Außerdem kann AvNav <a href="hints/ocharts.html">o-charts</a>-Karten verarbeiten, unter Android allerdings nicht. Der O-Charts-Shop bietet Karten für Open-Source-Software zu sehr günstigen Preisen an.</p>O-charts Karten werden über das
+    <p>Außerdem kann AvNav <a href="hints/ocharts.html">o-charts</a>-
+      Karten verarbeiten, unter Android allerdings nicht.
+      Der O-Charts-Shop bietet Karten für Open-Source-Software zu sehr günstigen Preisen an.</p>
+    O-charts Karten werden über das
       <a href="hints/ocharts.html">o-charts-Plugin</a> hochgeladen.</p>
     <p>Mit dem <a href="https://github.com/wellenvogel/avnav-mapproxy-plugin">mapproxy-plugin</a>
-      kann AvNav darüber hinaus verschiedene Online-Karten einbinden. Für die Offline-Nutzung einzelner Bereiche von Online-Karten kann das Plugin ebenfalls genutzt werden.</p>
+      kann AvNav darüber hinaus verschiedene Online-Karten einbinden.
+      Für die Offline-Nutzung einzelner Bereiche von Online-Karten kann das Plugin ebenfalls genutzt werden.</p>
     <p>Weitere Details herzu finden sich im Kapitel <a href="charts.html">Karten</a>.</p>
     <h2>Anzeigen</h2>
-    <p>Auf der <a href="userdoc/navpage.html">Seite "Navigation"</a> werden dargestellt: Die aktuelle Boots-Position, der Kurs, die Route zum nächsten
+    <p>Auf der <a href="userdoc/navpage.html">Seite "Navigation"</a> werden dargestellt:
+      Die aktuelle Boots-Position, der Kurs, die Route zum nächsten
       Wegepunkt, die aktuelle Route, AIS Ziele und deren Kurse,
       Navigationskreise und definierte <a href="hints/overlays.html">Overlays</a>.</p>
-    <p>Weitere Navigationsdaten können dargestellt werden auf der <a href="userdoc/navpage.html">Seite §Navigation"</a>, im <a href="userdoc/editroutepage.html">Routen-Editor</a>
+    <p>Weitere Navigationsdaten können dargestellt werden auf der <a href="userdoc/navpage.html">Seite "Navigation"</a>, im <a href="userdoc/editroutepage.html">Routen-Editor</a>
       und auf bis zu 5 <a href="userdoc/dashboardpage.html">Dashboard-Seiten, die selbst konfiguriert werden können.</a>
       Das schließt auch die in <a href="hints/CanboatAndSignalk.html">SignalK</a>vorhandenen Werte ein.</p>
     <p>Es können einfache Zahlenwerte, <a href="hints/layouts.html#gauges">analoge
@@ -166,7 +172,7 @@
     <p>In AvNav können sehr einfach Routen erstellt und bearbeitet werden. Das
       erfolgt in der Kartenansicht im <a href="userdoc/editroutepage.html">Routen-Editor</a>.
       Im Normalfall verschiebt man die Karte so, dass der Mittelpunkt auf dem
-      gewünschten Wegepunkt liegt, und fügt diesen dann mit einem Klick auf das Icon (>Icon hinzufügen>) der Route
+      gewünschten Wegepunkt liegt, und fügt diesen dann mit einem Klick der Route
       hinzu. Punkte der Route können verschoben, gelöscht und bearbeitet werden.</p>
     <p>Wegepunkte oder andere Routen, die als <a href="hints/overlays.html">Overlays</a>
       angezeigt werden, können im Routen-Editor der aktuellen Route hinzugefügt
@@ -175,7 +181,7 @@
       werden. Routen werden in AvNav als "gpx"-Dateien gespeichert. Sie können
       über die <a href="userdoc/downloadpage.html">Files/Download-Seite</a>
       importiert und exportiert werden. Aus dem Routen-Editor kann die
-      Navigation direkt gestartet werden durch Klick auf das "Icon" (>Icon hinzufügen>). Innerhalb einer Route
+      Navigation direkt gestartet werden. Innerhalb einer Route
       erfolgt eine Alarmierung, wenn der nächste Wegepunkt erreicht wird bzw.
       sobald man sich innerhalb des "approach" genannten Umkreises befindet. Es
       erfolgt ein automatisches Weiterschalten zum nächsten Wegpunkt.</p>

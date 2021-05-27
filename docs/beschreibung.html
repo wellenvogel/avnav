@@ -7,16 +7,29 @@
   </head>
   <body data-order="100">
     <h1>Navigation im Browser </h1>
-    <p>AvNav ist eine kostenlose Navigationssoftware für Sportbootfahrer. Wie andere Anwendungen in diesem Bereich kann man elektronische Seekarten laden und mit angeschlossenen GPS-Geräten schauen, wo sich das eigene Boot befindet. Es ist natürlich möglich, Marker zu setzen, Routen zu erstellen und AIS-Signale einzubinden.
-      Besonderes Merkmal von AvNav ist das Serverkonzept: AvNav  lässt sich auf einem Raspberry oder einem Windows-Gerät installieren und als Navigationszentrale betreiben, die alle relevanten Daten einsammelt und Seekarten bereit stellt. Der Zugriff auf den Server im Boots-Netz und damit die eigentliche Darstellung von Karten und Daten läuft auf einem Webbrowser und ist so unabhängig vom jeweiligen Betriebssystem der zugreifenden Geräte.
-      AvNav ist konsequent für die Bedienung per Touchscreen ausgelegt  Darüber hinaus bietet AvNav die Möglichkeit, für jedes Gerät, das man benutzen möchte, Layouts zu definieren, um so das Aussehen der App z.B.  auf unterschiedliche Bildschirmgrößen anzupassen.</p>
-      <h2 class="western">Karten</h2>
+    <p>AvNav ist eine kostenlose Navigationssoftware für Sportbootfahrer.
+      Wie andere Anwendungen in diesem Bereich kann man elektronische Seekarten laden und mit
+      angeschlossenen GPS-Geräten schauen, wo sich das eigene Boot befindet.
+      Es ist natürlich möglich, Marker zu setzen, Routen zu erstellen und AIS-Signale einzubinden.
+      Besonderes Merkmal von AvNav ist das Serverkonzept: AvNav  lässt sich auf einem Raspberry oder
+      einem Windows-Gerät installieren und als Navigationszentrale betreiben,
+      die alle relevanten Daten einsammelt und Seekarten bereit stellt.
+      Der Zugriff auf den Server im Boots-Netz und damit die eigentliche Darstellung von Karten und Daten
+      läuft auf einem Webbrowser und ist so unabhängig vom jeweiligen Betriebssystem der zugreifenden Geräte.
+      AvNav ist konsequent für die Bedienung per Touchscreen ausgelegt
+      Darüber hinaus bietet AvNav die Möglichkeit, für jedes Gerät, das man benutzen möchte,
+      Layouts zu definieren, um so das Aussehen der App z.B.  auf unterschiedliche Bildschirmgrößen anzupassen.</p>
+      <h2>Karten</h2>
       <p>Einmal können Rasterkarten, die nicht herstellerverschlüsselt sind, verwendet werden.
-        Vektorkarten Typs OESenc können ebenfalls genutzt werden. Sie sind allerdings nicht kostenlos und können über den O-Charts-Shop bezogen werden.  ideal</p>
-    <h2 class="western">Varianten</h2>
-    <p> Es gibt nicht nur die Server-Variante von AvNav: Ebenfalls zur Verfügung stehen ein „StandAlone-AvNav“ für den Raspberry (AvNav Touch) und eine Android-App.
-      Eine Besonderheit ergibt sich beim Einsatz eines OpenPlotter-Image auf einem Raspberry:  Die Installationsvariante „AvNav für Openplotter“ sorgt automatisch für die richtigen Verbindungen zwischen dem Herzstück von Openplotter, dem SignalK-Server und AvNav. könnte. Die gesamte Software steht zum Download unter einer
-      Open Source Lizenz bereit. </p>
+        Vektorkarten Typs OESenc können ebenfalls genutzt werden.
+        Sie sind allerdings nicht kostenlos und können über den O-Charts-Shop bezogen werden.</p>
+    <h2>Varianten</h2>
+    <p> Es gibt nicht nur die Server-Variante von AvNav:
+      Ebenfalls zur Verfügung stehen ein „StandAlone-AvNav“ für den Raspberry (AvNav Touch) und eine Android-App.
+      Eine Besonderheit ergibt sich beim Einsatz eines OpenPlotter-Image auf einem Raspberry:
+      Die Installationsvariante „AvNav für Openplotter“ sorgt automatisch für die richtigen Verbindungen
+      zwischen dem Herzstück von Openplotter, dem SignalK-Server und AvNav.
+      Die gesamte Software steht zum Download unter einer  Open Source Lizenz bereit. </p>
       <p>Für einen schnellen Einstieg: <a href="quickstart.html">Quickstart</a></p>
     15.12.2020
     <ul class="mainlist">
@@ -51,7 +64,7 @@
       Wie im Bild zu sehen, besteht die gesamte Lösung aus mehreren Teilen:</p>
     <ul>
       <li>
-        <p>Raspberry Pi mit einer Server-Software (avnav_server.py), die
+        <p>Raspberry Pi mit einer Server-Software, die
           die angeschlossenen Geräte abfragt, die Daten aufbereitet und per WLAN
           zur Verfügung stellt</p>
       </li>
@@ -80,13 +93,14 @@
           WebBrowser mini).</p>
       </li>
     </ul>
-    <h2 class="western">"Unter der Haube" </h2>
+    <h2>"Unter der Haube" </h2>
     <p>Die Server Software auf dem Raspberry ist in Python geschrieben und über
       eine XML-Datei konfigurierbar - was im Normalfall aber nicht notwendig
       sein sollte. Neben dieser Software steht auch ein fertiges Image für
       den Raspberry zur Verfügung, das nur noch auf eine SD-Karte installiert
       werden muss (Empfehlung: mindestens 8GB, mehr ist besser...).</p>
-    <p>Die Web Applikation bietet eine&nbsp; Navigation mit Rasterkarten (<a href="charts.html#chartformats">gemf,mbtiles</a>)&nbsp;
+    <p>Die Web Applikation bietet eine&nbsp; Navigation mit Rasterkarten
+      (<a href="charts.html#chartformats">gemf,mbtiles</a>)&nbsp;
       oder <a href="hints/ocharts.html">OESenc Vektorkarten</a> inklusive
       AIS-Darstellung, Wegpunkt-Navigation und Routing. Falls die
       Web-Applikation verwendet werden soll, müssen die Karten dafür auch auf
@@ -113,7 +127,7 @@
       zur Raspberry-Variante.</p>
     <p>In den folgenden Abschnitten gehe ich auf die Funktion der einzelnen
       Teile ein wenig genauer ein.</p>
-    <h2 class="western">Die Server-Software (avnav_server.py)</h2>
+    <h2>Die Server-Software (avnav_server.py)</h2>
     <p>Auf dem Raspberry Pi ist zunächst ein<a href="http://www.raspberrypi.org/downloads">
         ganz normales Debian Image</a> installiert (ca. 2GB). Dazu kommen einige
       Zusatzpakete (Liste siehe unten) und meine AvNav-Software. </p>
@@ -166,17 +180,19 @@
       beenden.</p>
     <p>Da der gesamte Server in Python geschrieben ist, kann er auch (vor allem
       zu Testzwecken) unter Windows, Osx (Mac) oder Linux laufen. Dazu muss
-      Python ab 2.7 installiert sein. Falls reale serielle Daten gelesen werden
+      Python ab 3.7 installiert sein (die Windows Installation bringt das selbst mit).
+      Falls reale serielle Daten gelesen werden
       sollen, muss dazu noch <a href="http://pyserial.sourceforge.net/">pyserial</a>
       installiert werden.</p>
     <p>Der Server kann in weiten Grenzen durch eine XML-Datei konfiguriert
       werden, für die verschiedenen Nutzungsfälle liegen dokumentierte Beispiele
-      vor.</p>
+      vor. In den Versionen ab 20210322 können die meisten Einstellungen
+      auch direkt in der App vorgenommen werden.</p>
     Die ausgelieferte avnav_server.xml Datei enthält Kommentare, so dass
     Anpassungen an die eigenen Bedürfnisse einfach möglich sein sollten.
     <p>Die Software ist auf <a href="https://github.com/wellenvogel/avnav">github</a>
       verfügbar - für die Installation sei die separate <a href="install.html">Beschreibung verwiesen.</a>.</p>
-    <h3 class="western">Software auf dem Raspberry</h3>
+    <h3 >Software auf dem Raspberry</h3>
     <p>Auf dem Raspberry ist die Software in der folgenden Verzeichnisstruktur
       installiert:</p>
     <table width="100%" cellspacing="4" cellpadding="4" border="1">

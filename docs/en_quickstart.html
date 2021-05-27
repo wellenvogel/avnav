@@ -34,7 +34,7 @@
     <p>AvNav is available as <a href="install.html#Packages">package for
         various Linux distributions</a> (Debian packages, Rpm) and as a <a href="install.html#Windows">Windows
         installer</a>.<br>
-      The Debian packages are hosted in a <a href="https://github.com/free-x/avnav/wiki">repository</a>&nbsp; but they can be downloaded from the <a href="release.html">release page</a> as well.<br>
+      The Debian packages are hosted in a <a href="https://github.com/free-x/avnav/wiki">repository</a> but they can be downloaded from the <a href="release.html">release page</a> as well.<br>
       Additionally we maintain <a href="install.html#Headless">images for the
         Raspberry Pi</a>. A detailed documentation is available in the chapter <a href="install.html">installation</a>.</p>
     <p>After installing and starting up you can use your browser to connect to
@@ -52,10 +52,6 @@
       <li>IOS: <a href="https://itunes.apple.com/us/app/bonjour-search-for-http-web-in-wi-fi/id1097517829?mt=8"><img class="inlineimage" src="https://is4-ssl.mzstatic.com/image/thumb/Purple69/v4/ba/f9/c2/baf9c2dd-656d-c303-fae1-a07310825e72/pr_source.png/246x0w.png"></a></li>
       <li>Android: <a href="https://play.google.com/store/apps/details?id=de.wellenvogel.bonjourbrowser"><img src="https://lh3.googleusercontent.com/sOV0YDqS3VNhTd4PfLB4PKj89_bbP8MtFHCVydjSp1-zLMyc8LB_z_HFVsZQEFgINQ=s180-rw" alt="" class="inlineimage"></a> </li>
     </ul>
-    <p>In Zusammenarbeit mit <a href="hints/CanboatAndSignalk.html">Canboat and
-        SignalK</a> können auch <a href="hints/CanboatAndSignalk.html">NMEA2000-</a>
-      Daten empfangen und genutzt werden. Außerdem können alle Daten für das
-      eigene Schiff, die in SignalK verfügbar sind, in AvNav angezeigt werden.</p>    
     <h3>Android App</h3>
     <p>The <a href="android/android.html">App</a> is available in the Play Store <a href="https://play.google.com/store/apps/details?id=de.wellenvogel.avnav.main"><img
           src="sailboat512r.png" alt="" class="inlineimage"> </a></p>
@@ -74,10 +70,10 @@
     <h2>NMEA Data</h2>
     <h3>Client Server</h3>
     <p>AvNav processes NMEA0183 Data from connected USB devices,
-      serial ports, bluetooth devices,&nbsp; TCP (client and server) or UDP. A
+      serial ports, bluetooth devices, TCP (client and server) or UDP. A
       NMEA multiplexer is integrated allowing for flexible <a href="hints/configfile.html">configuration</a>
       of the flow of received and sent data.</p>
-    <p>A couple of NMEA sentences are decoded within AvNav (position daten,
+    <p>A couple of NMEA sentences are decoded within AvNav (position data,
       AIS,...) and used for it's display and routing functions.</p>
     <p>In combination with <a href="hints/CanboatAndSignalk.html">Canboat and
         SignalK</a> you can also handle <a href="hints/CanboatAndSignalk.html">NMEA2000</a>
@@ -106,7 +102,8 @@
       <li>$AVMTA</li>
     </ul>
     <p>In combination with <a href="hints/en_CanboatAndSignalk.html">Canboat and
-        SignalK</a> NMEA2000 data can be received and processed too. All own vessel data available in SignalK can be displayed in AvNav.</p>    
+        SignalK</a> NMEA2000 data can be received and processed too.
+      All own vessel data available in SignalK can be displayed in AvNav.</p>
     <h3>Android</h3>
     <p>On <a href="android/android.html">Android</a> you can utilize the internal GPS.
       Additionally you can have a TCP or bluetooth connection for receiving GPS
@@ -124,7 +121,7 @@
       <li>$xxDBT</li>
       <li>$xxXDR (since 20210114)</li>
     </ul>
-    AvNav is able to send $GPRMC on an IP/USB/Bluetooth connection if
+    AvNav is able to create and send out $GPRMC if
     configured.<br>
     <ul>
     </ul>
