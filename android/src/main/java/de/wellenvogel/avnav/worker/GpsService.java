@@ -425,7 +425,13 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             return new MdnsWorker(typeName,ctx);
         }
     };
-    private static final WorkerConfig[] INTERNAL_WORKERS ={WDECODER,WROUTER,WTRACK,WLOGGER,WSERVER,WGPS,WMDNS};
+    private static final WorkerConfig WREMOTE=new WorkerConfig("RemoteChannel",8) {
+        @Override
+        IWorker createWorker(GpsService ctx, NmeaQueue queue) throws IOException {
+            return new RemoteChannel(typeName,ctx);
+        }
+    };
+    private static final WorkerConfig[] INTERNAL_WORKERS ={WDECODER,WROUTER,WTRACK,WLOGGER,WSERVER,WGPS,WMDNS,WREMOTE};
 
     private synchronized int getNextWorkerId(){
         workerId++;
@@ -563,6 +569,11 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
     public MdnsWorker getMdnsResolver(){
         IWorker mdns=findWorkerById(WMDNS.id);
         return (MdnsWorker) mdns;
+    }
+
+    public RemoteChannel getRemoteChannel(){
+        IWorker rc=findWorkerById(WREMOTE.id);
+        return (RemoteChannel) rc;
     }
 
 
@@ -1063,11 +1074,14 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         checkMob();
         handleNotification(true,false);
         checkTrackWriter();
-        for (IWorker w: workers) {
+        ArrayList<IWorker> allWorkers=new ArrayList<>();
+        allWorkers.addAll(workers);
+        allWorkers.addAll(internalWorkers);
+        for (IWorker w: allWorkers) {
             if (w != null) {
                 try {
                     w.check();
-                } catch (JSONException e) {
+                } catch (Throwable t) {
                     AvnLog.e("error in check for "+w.getTypeName());
                 }
             }

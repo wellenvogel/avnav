@@ -50,6 +50,7 @@ body{
     color: @nightColor;
   }
 }
+
 .dimm {
   position: fixed;
   top: 0;
@@ -100,6 +101,16 @@ body{
   .flex-direction(row-reverse);
   .buttonContainer.scroll{
     .flex-grow(1);
+  }
+}
+.buttonShade {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 101; //above widgets
+  &.shade{
+    background-image: linear-gradient(to right,fade(@colorMain,10), fade(@colorMain,20));
   }
 }
 
@@ -1495,23 +1506,27 @@ span.valuePrefix{
 
 //-------------- pages with map and widgets ----------------------------
 .mapPage{
+  .map{
+    .flex(1);
+    overflow: hidden;
+    /* position absolute contradicts somehow the flex approach
+       but otherwise the map will not show on old Safari (IPad 4, safari 9)
+     */
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+  }
+  &.mapFloat .map{
+    z-index: 1;
+  }
   .leftSection{
     .flex-display();
     .flex(1);
     .flex-direction(column);
     position: relative;
-    .map{
-      .flex(1);
-      overflow: hidden;
-      /* position absolute contradicts somehow the flex approach
-         but otherwise the map will not show on old Safari (IPad 4, safari 9)
-       */
-      position: absolute;
-      left: 0;
-      right: 0;
-      top: 0;
-      bottom: 0;
-    }
+
     min-width: 0;
     min-height: 0;
   }
@@ -1548,5 +1563,12 @@ span.valuePrefix{
     right: 0;
     bottom: 0;
     background-color: inherit;
+  }
+  &.mapFloat .buttonContainer{
+    background-color: unset;
+    z-index: 2;
+  }
+  &.mapFloat .buttonShade{
+    z-index: 2;
   }
 }

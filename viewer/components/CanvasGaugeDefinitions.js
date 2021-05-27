@@ -102,7 +102,8 @@ export default  ()=>{
         "valueBox": false,
         "ticksAngle": 360,
         "startAngle": 180,
-        "animationTarget": "plate"
+        "animationTarget": "plate",
+        colorPlate:"rgba(255, 255, 255, 0)",
     });
 
     WidgetFactory.registerWidget({
@@ -140,7 +141,7 @@ export default  ()=>{
         highlights:[
             {"from": 6, "to": 16, "color": "rgba(200, 50, 50, .75)"}
             ],
-        colorPlate:"#fff",
+        colorPlate:"rgba(255, 255, 255, 0)",
         borderShadowWidth:"0",
         borders:false,
         needleType:"arrow",
@@ -174,7 +175,7 @@ export default  ()=>{
         strokeTicks:true,
         highlights:[
         ],
-        colorPlate:"#fff",
+        colorPlate:"rgba(255, 255, 255, 0)",
         borderShadowWidth:"0",
         borders:false,
         needleType:"arrow",
@@ -211,7 +212,7 @@ export default  ()=>{
         strokeTicks:true,
         highlights:[
         ],
-        colorPlate:"#fff",
+        colorPlate:"rgba(255, 255, 255, 0)",
         borderShadowWidth:"0",
         borders:false,
         needleType:"arrow",
@@ -273,7 +274,8 @@ export default  ()=>{
             "valueBox": false,
             "ticksAngle": 360,
             "startAngle": 180,
-            "animationTarget": "plate"
+            "animationTarget": "plate",
+            colorPlate:"rgba(255, 255, 255, 0)",
         });
 
     WidgetFactory.registerWidget(
@@ -304,7 +306,8 @@ export default  ()=>{
             needleStart:0,
             needleEnd:100,
             "borderShadowWidth":0,
-            "valueBox": false
+            "valueBox": false,
+            colorPlate:"rgba(255, 255, 255, 0)",
         },{
             formatter: false,
             formatterParameters: false,
@@ -339,7 +342,7 @@ export default  ()=>{
         barProgress:false,
         barWidth:0,
         barStrokeWidth:0,
-        colorPlate:"#fff",
+        colorPlate:"rgba(255, 255, 255, 0)",
         borderShadowWidth:0,
         needleType:"line",
         needleWidth:4,

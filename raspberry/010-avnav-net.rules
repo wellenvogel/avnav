@@ -5,9 +5,9 @@
 #lower left: 1-1.3:1.0
 #lower right: 1-1.5:1.0
 #currently we use upper left
-KERNELS=="1-1.2:1.0",SUBSYSTEM=="net",NAME="wlan-av1"
+KERNELS=="1-1.2:1.0",SUBSYSTEM=="net",PROGRAM="/usr/lib/avnav/raspberry/rename-interface.sh %k %b", NAME="%c"
 #for pi3B+ - thanks to free-x
-KERNELS=="1-1.1.2:1.0",SUBSYSTEM=="net",NAME="wlan-av1"
+KERNELS=="1-1.1.2:1.0",SUBSYSTEM=="net",PROGRAM="/usr/lib/avnav/raspberry/rename-interface.sh %k %b", NAME="%c"
 
 #to fix a dongle to also work as access point if there are some conflicts
 #just select an USB port that you would like to plug it
@@ -17,4 +17,4 @@ KERNELS=="1-1.1.2:1.0",SUBSYSTEM=="net",NAME="wlan-av1"
 #an entry to bring the build in adapter of the rapsi3
 #to a separate wlan - this should avoid conflicts
 #with an adapter that has been plugged in
-KERNELS=="mmc1:0001:1",NAME="wlan-ap"
+KERNELS=="mmc1:0001:1", SUBSYSTEM=="net", PROGRAM="/usr/lib/avnav/raspberry/rename-interface.sh %k %b", NAME="%c"

@@ -508,8 +508,8 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
     }
 
     private void updateWorkDir(File workDir){
-        if (workDir == null) return;
         final File baseDir=workDir;
+        if (baseDir == null) return;
         if (! baseDir.isDirectory()) return;
         Thread initialUpdater=new Thread(new Runnable() {
             @Override

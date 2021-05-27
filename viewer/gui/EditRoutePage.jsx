@@ -598,7 +598,7 @@ class EditRoutePage extends React.Component{
     }
     componentWillUnmount(){
         MapHolder.setRoutingActive(false);
-        MapHolder.setGpsLock(this.lastGpsLock);
+        MapHolder.setGpsLock(this.lastGpsLock,true);
         RouteHandler.unsetCurrentRoutePage(PAGENAME);
     }
     componentDidMount(){

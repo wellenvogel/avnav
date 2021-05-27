@@ -73,6 +73,7 @@ public class RequestHandler {
     public static String TYPE_OVERLAY="overlay";
     public static String TYPE_ADDON="addon";
     public static String TYPE_CONFIG="config";
+    public static String TYPE_REMOTE="remotechannel";
 
 
     public static class TypeItemMap<VT> extends HashMap<String, AvnUtil.KeyValue<VT>>{
@@ -395,6 +396,50 @@ public class RequestHandler {
         return null;
     }
 
+    IWebSocketHandler getWebSocketHandler(String path){
+        //for now limited to one handler
+        //can be extended with the same pattern like for normal handlers
+        if (path.startsWith("/"+TYPE_REMOTE)){
+            GpsService service=getGpsService();
+            if (service != null) return service.getRemoteChannel();
+            return null;
+        }
+        if (path.equals("/viewer/wstest")){
+            return new IWebSocketHandler(){
+                @Override
+                public void onReceive(String msg, IWebSocket socket) {
+                    try {
+                        socket.send("reply: "+msg);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void onConnect(IWebSocket socket) {
+                    AvnLog.ifs("ws connect");
+                    try {
+                        socket.send("hello");
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void onClose(IWebSocket socket) {
+                    AvnLog.dfs("ws close");
+                }
+
+                @Override
+                public void onError(String error, IWebSocket socket) {
+                    AvnLog.dfs("ws error %s",error);
+                }
+            };
+
+        }
+        return null;
+    }
+
     ExtendedWebResourceResponse handleNavRequest(Uri uri, PostVars postData) throws Exception{
         return handleNavRequest(uri,postData,null);
     }
@@ -662,6 +707,7 @@ public class RequestHandler {
                 o.put("uploadImages",true);
                 o.put("uploadOverlays",true);
                 o.put("uploadTracks",true);
+                o.put("remoteChannel",true);
                 if (serverInfo == null) {
                     //we can only handle the config stuff internally
                     //as potentially there are permission dialogs

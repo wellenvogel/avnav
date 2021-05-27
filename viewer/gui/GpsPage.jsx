@@ -21,6 +21,7 @@ import anchorWatch from '../components/AnchorWatchDialog.jsx';
 import Mob from '../components/Mob.js';
 import Dimmer from '../util/dimhandler.js';
 import FullScreen from '../components/Fullscreen';
+import remotechannel, {COMMANDS} from "../util/remotechannel";
 
 const PANEL_LIST=['left','m1','m2','m3','right'];
 //from https://stackoverflow.com/questions/16056591/font-scaling-based-on-width-of-container
@@ -101,7 +102,9 @@ class GpsPage extends React.Component{
                 onClick: ()=>{history.pop()}
             }
         ];
-        this.state={};
+        this.state={
+            update:1
+        };
 
         this.onItemClick=this.onItemClick.bind(this);
         if (props.options && props.options.widget && ! props.options.returning) {
@@ -114,7 +117,17 @@ class GpsPage extends React.Component{
         if (oldNum === undefined || ! hasPageEntries(oldNum)){
             globalStore.storeData(keys.gui.gpspage.pageNumber,1);
         }
+        this.remoteToken=remotechannel.subscribe(COMMANDS.gpsNum,(number)=>{
+            let pn=parseInt(number);
+            if (pn < 1 || pn > 5) return;
+            if (! hasPageEntries(pn)) return;
+            this.setPageNumber(pn,true);
+        })
     }
+    componentWillUnmount() {
+        remotechannel.unsubscribe(this.remoteToken);
+    }
+
     getButtons(){
         let self=this;
         return[
@@ -137,7 +150,7 @@ class GpsPage extends React.Component{
                     visible: hasPageEntries(1) || state.isEditing
                 }},
                 onClick:()=>{
-                    globalStore.storeData(keys.gui.gpspage.pageNumber,1);
+                    self.setPageNumber(1);
                 },
                 overflow: true
             },
@@ -152,7 +165,7 @@ class GpsPage extends React.Component{
                     visible: hasPageEntries(2) || state.isEditing
                 }},
                 onClick:()=>{
-                    globalStore.storeData(keys.gui.gpspage.pageNumber,2);
+                    self.setPageNumber(2);
                 },
                 overflow: true
             },
@@ -167,7 +180,7 @@ class GpsPage extends React.Component{
                     visible: hasPageEntries(3) || state.isEditing
                 }},
                 onClick:()=>{
-                    globalStore.storeData(keys.gui.gpspage.pageNumber,3);
+                    self.setPageNumber(3);
                 },
                 overflow: true
             },
@@ -182,7 +195,7 @@ class GpsPage extends React.Component{
                     visible: hasPageEntries(4) || state.isEditing
                 }},
                 onClick:()=>{
-                    globalStore.storeData(keys.gui.gpspage.pageNumber,4);
+                    self.setPageNumber(4);
                 },
                 overflow: true
             },
@@ -197,7 +210,7 @@ class GpsPage extends React.Component{
                     visible: hasPageEntries(5) || state.isEditing
                 }},
                 onClick:()=>{
-                    globalStore.storeData(keys.gui.gpspage.pageNumber,5);
+                    self.setPageNumber(5);
                 },
                 overflow: true
             },
@@ -233,8 +246,18 @@ class GpsPage extends React.Component{
     componentDidUpdate(){
         resizeFont();
     }
+    setPageNumber(num,opt_noRemote){
+        globalStore.storeData(keys.gui.gpspage.pageNumber,num);
+        if (! opt_noRemote){
+            remotechannel.sendMessage(COMMANDS.gpsNum,num);
+        }
+    }
     render(){
         let self=this;
+        let autohide=undefined;
+        if (globalStore.getData(keys.properties.autoHideGpsPage)){
+            autohide=globalStore.getData(keys.properties.hideButtonTime,30)*1000;
+        }
         let MainContent=(props)=> {
             let fontSize = layoutBaseParam.baseWidgetFontSize;
             let dimensions = globalStore.getData(keys.gui.global.windowDimensions);
@@ -289,6 +312,11 @@ class GpsPage extends React.Component{
                             <MainContent/>
                         }
                 buttonList={self.getButtons()}
+                autoHideButtons={autohide}
+                buttonWidthChanged={()=>{
+                    resizeFont();
+                    this.setState({update:this.state.update+1});
+                }}
                 />;
 
     }

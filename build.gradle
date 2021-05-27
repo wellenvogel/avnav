@@ -761,6 +761,14 @@ task findUnusedImages(type: DefaultTask){
     }
 }
 
+task getTimeZones{
+    doLast{
+        def url="https://raw.githubusercontent.com/vvo/tzdb/master/time-zones-names.json"
+        def tzfile=file('raspberry/configui/timezones.json')
+        new URL(url).withInputStream{ i -> tzfile.withOutputStream{ it << i }}
+    }
+}
+
 task uploadConfigGen(type: UploadTask){
     inputFiles=fileTree(
         'raspberry/configui',{
@@ -774,6 +782,7 @@ task uploadConfigGen(type: UploadTask){
     deleteTargetDir=false
     baseDir="../configGen"
     useHashes=true
+    dependsOn getTimeZones
 }
 
 

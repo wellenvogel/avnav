@@ -45,7 +45,6 @@ class MyNpm extends NpmTask{
     }
 }
 project.ext.avnavVersion=null
-File versionFile=new File(project.buildDir,"version.js")
 task pkgVersion {
     doLast {
         if (!project.hasProperty('packageVersion')) {
@@ -54,10 +53,6 @@ task pkgVersion {
         } else {
             project.avnavVersion = packageVersion
         }
-        if (!versionFile.getParentFile().isDirectory()) versionFile.getParentFile().mkdirs()
-        versionFile.withWriter { wr ->
-            wr.println("export default   \"$project.avnavVersion\";")
-        }
     }
 }
 
@@ -65,7 +60,7 @@ task release(type: MyNpm){
     subDir="release"
 	args=["run","production"]
     setExecOverrides({
-        it.environment.put('AVNAV_VERSION_FILE',versionFile.getCanonicalPath())
+        it.environment.put('AVNAV_VERSION',project.avnavVersion)
     })
 	dependsOn npmInstall,pkgVersion
 }
@@ -73,7 +68,7 @@ task debug(type: MyNpm){
     subDir="debug"
 	args=["run","debug"]
     setExecOverrides({
-        it.environment.put('AVNAV_VERSION_FILE',versionFile.getCanonicalPath())
+        it.environment.put('AVNAV_VERSION',project.avnavVersion)
     })
 	dependsOn npmInstall,pkgVersion
 }

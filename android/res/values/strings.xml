@@ -41,8 +41,8 @@
     <string name="labelSettingsTrackLength">track length(h)</string>
     <string name="labelSettingsDefaults">reset to defaults</string>
     <string name="labelSettingsAisLifetime">AIS info invalid after (s)</string>
-    <string name="labelSettingsPosAge">NMEA Position invalid after(s)</string>
-    <string name="labelSettingsAuxAge">NMEA Non Position invalid after(s)</string>
+    <string name="labelSettingsPosAge">NMEA position, wind, depth invalid after(s)</string>
+    <string name="labelSettingsAuxAge">NMEA non position invalid after(s)</string>
     <string name="labelSettingsOwnMMSI">filter own MMSI</string>
     <string name="labelSettingsEnabled">enable this channel</string>
     <string name="labelSettingsSource">name for this channel</string>

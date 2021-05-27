@@ -7,10 +7,7 @@ package de.wellenvogel.avnav.appapi;
 
 
 import android.app.NotificationManager;
-import android.content.Context;
 import android.net.Uri;
-import android.net.nsd.NsdManager;
-import android.net.nsd.NsdServiceInfo;
 import android.util.Log;
 
 import org.apache.http.ConnectionClosedException;
@@ -26,9 +23,12 @@ import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.DefaultConnectionReuseStrategy;
 import org.apache.http.impl.DefaultHttpResponseFactory;
 import org.apache.http.impl.DefaultHttpServerConnection;
+import org.apache.http.io.SessionInputBuffer;
+import org.apache.http.io.SessionOutputBuffer;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.CoreConnectionPNames;
 import org.apache.http.params.CoreProtocolPNames;
+import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.BasicHttpProcessor;
 import org.apache.http.protocol.ExecutionContext;
@@ -60,6 +60,8 @@ import java.net.UnknownHostException;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
+import java.util.WeakHashMap;
 
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
@@ -83,6 +85,22 @@ public class WebServer extends Worker {
     protected GpsService gpsService;
     private boolean running;
     private boolean listenAny;
+
+    private final WeakHashMap<AvNavHttpServerConnection,Boolean> connections=new WeakHashMap<>();
+
+    private void storeConnection(AvNavHttpServerConnection connection){
+        synchronized (connections){
+            connections.put(connection,true);
+        }
+    }
+
+    private Set<AvNavHttpServerConnection> getConnections(){
+        synchronized (connections){
+            HashSet<AvNavHttpServerConnection> rt=new HashSet<>(connections.keySet());
+            return rt;
+        }
+    }
+
 
     public RequestHandler.ServerInfo getServerInfo(){
         RequestHandler.ServerInfo info=null;
@@ -134,6 +152,37 @@ public class WebServer extends Worker {
         }
     }
 
+    private void closeConnections(){
+        Set<AvNavHttpServerConnection> current=getConnections();
+        for (AvNavHttpServerConnection connection:current){
+            try{
+                connection.close();
+                connection.shutdown();
+                connection.setClosed();
+            }catch(Throwable t){
+                AvnLog.dfs("exception closing connection %s:%s",connection,t);
+            }
+        }
+        synchronized(connections){
+            for (AvNavHttpServerConnection connection:current){
+                connections.remove(connection);
+            }
+        }
+    }
+
+    @Override
+    public void check() throws JSONException {
+        super.check();
+        Set<AvNavHttpServerConnection> current=getConnections();
+        synchronized (connections) {
+            for (AvNavHttpServerConnection connection : current) {
+                if (connection.isClosed || ! connection.isOpen()) {
+                    connections.remove(connection);
+                }
+            }
+        }
+    }
+
     @Override
     protected void run(int startSequence) throws JSONException, IOException {
         Integer port=PORT.fromJson(parameters);
@@ -147,6 +196,7 @@ public class WebServer extends Worker {
         running=true;
         listener=new Listener(listenAny,port);
         listener.run(startSequence);
+        closeConnections();
     }
 
     @Override
@@ -193,6 +243,7 @@ public class WebServer extends Worker {
             AvnLog.d(NAME,"nav request"+httpRequest.getRequestLine());
             String url = httpRequest.getRequestLine().getUri();
             String method = httpRequest.getRequestLine().getMethod().toUpperCase(Locale.ENGLISH);
+            RequestHandler handler=gpsService.getRequestHandler();
             if (!method.equals("GET") && !method.equals("HEAD")  && ! method.equals("POST")) {
                 throw new MethodNotSupportedException(method + " method not supported");
             }
@@ -207,8 +258,8 @@ public class WebServer extends Worker {
             }
             ExtendedWebResourceResponse resp=null;
             try {
-                if (gpsService.getRequestHandler() != null) {
-                    resp = gpsService.getRequestHandler().handleNavRequest(uri,
+                if (handler!= null) {
+                    resp = handler.handleNavRequest(uri,
                             postData,
                             getServerInfo());
                 }
@@ -370,6 +421,40 @@ public class WebServer extends Worker {
         return local;
     }
 
+    static class AvNavHttpServerConnection extends DefaultHttpServerConnection{
+        SessionInputBuffer avInputBuffer;
+        SessionOutputBuffer avOutputBuffer;
+        //prevent the final request processing when we are done with the websocket
+        private boolean isClosed=false;
+        @Override
+        protected void init(SessionInputBuffer inbuffer, SessionOutputBuffer outbuffer, HttpParams params) {
+            avInputBuffer=inbuffer;
+            avOutputBuffer=outbuffer;
+            super.init(inbuffer, outbuffer, params);
+        }
+
+        @Override
+        public void sendResponseHeader(HttpResponse response) throws HttpException, IOException {
+            if (isClosed) return;
+            super.sendResponseHeader(response);
+        }
+
+        @Override
+        public void sendResponseEntity(HttpResponse response) throws HttpException, IOException {
+            if (isClosed) return;
+            super.sendResponseEntity(response);
+        }
+
+        @Override
+        public void flush() throws IOException {
+            if (isClosed) return;
+            super.flush();
+        }
+
+        public void setClosed(){
+            isClosed=true;
+        }
+    }
     class Listener{
         private ServerSocket serversocket;
         private BasicHttpParams params;
@@ -400,7 +485,41 @@ public class WebServer extends Worker {
 
             httpService = new HttpService(httpproc,
                     new DefaultConnectionReuseStrategy(),
-                    new DefaultHttpResponseFactory());
+                    new DefaultHttpResponseFactory()){
+                @Override
+                protected void doService(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
+                    String url = request.getRequestLine().getUri();
+                    String method = request.getRequestLine().getMethod().toUpperCase(Locale.ENGLISH);
+                    if (method.equals("GET") &&
+                            request.containsHeader("Upgrade")
+                            && "websocket".equals(request.getFirstHeader("Upgrade").getValue())){
+                        RequestHandler handler=gpsService.getRequestHandler();
+                        if (handler == null){
+                            response.setStatusCode(500);
+                            response.setReasonPhrase("no handler for websocket request");
+                            return;
+                        }
+                        IWebSocketHandler wsHandler=handler.getWebSocketHandler(url);
+                        if (wsHandler == null){
+                            response.setStatusCode(404);
+                            response.setReasonPhrase("no websocket handler for "+url);
+                        }
+                        AvNavHttpServerConnection con=(AvNavHttpServerConnection) context.getAttribute(ExecutionContext.HTTP_CONNECTION);
+                        storeConnection(con);
+                        WebSocket ws=new WebSocket(request,response,context,wsHandler);
+                        try {
+                            ws.handle();
+                        }catch (Throwable t){
+                            AvnLog.e("error in websocket handling",t);
+                            con.close();
+                            con.setClosed();
+
+                        }
+                        return;
+                    }
+                    super.doService(request, response, context);
+                }
+            };
             httpService.setParams(params);
             registry = new HttpRequestHandlerRegistry();
             registry.register("/"+ RequestHandler.NAVURL+"*",navRequestHandler);
@@ -459,7 +578,7 @@ public class WebServer extends Worker {
             while (!shouldStop(startSequence)) {
                 try {
                     Socket socket = this.serversocket.accept();
-                    DefaultHttpServerConnection conn = new DefaultHttpServerConnection();
+                    AvNavHttpServerConnection conn = new AvNavHttpServerConnection();
                     AvnLog.i(NAME, "con " + socket.getInetAddress());
                     conn.bind(socket, this.params);
 
@@ -489,12 +608,12 @@ public class WebServer extends Worker {
     class WorkerThread extends Thread {
 
         private final HttpService httpservice;
-        private final HttpServerConnection conn;
+        private final AvNavHttpServerConnection conn;
         private final Socket socket;
 
         public WorkerThread(
                 final HttpService httpservice,
-                final HttpServerConnection conn,
+                final AvNavHttpServerConnection conn,
                 final Socket socket) {
             super();
             this.httpservice = httpservice;
@@ -533,6 +652,7 @@ public class WebServer extends Worker {
         AvnLog.d(NAME,"stop");
         listener.close();
         listener=null;
+        closeConnections();
     }
 
 

@@ -1,3 +1,4 @@
 allow-hotplug wlan-av1
-iface wlan-av1 inet dhcp
+iface wlan-av1 inet manual
 wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
+up wpa_cli -i wlan-av1 -a /usr/lib/avnav/raspberry/wpa_action.sh &

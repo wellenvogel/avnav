@@ -1,6 +1,9 @@
 
 import globalStore from './globalstore.jsx';
 import keys from './keys.jsx';
+import remotechannel, {COMMANDS} from "./remotechannel";
+import assign from "object-assign";
+const REMOTE_CMD=COMMANDS.setPage;
 class History{
     constructor(store,startlocation,startoptions){
         this.history=[];
@@ -9,9 +12,15 @@ class History{
         this.push=this.push.bind(this);
         this.updateStore=this.updateStore.bind(this);
         this.reset=this.reset.bind(this);
+        this.remoteChannel=remotechannel;
         if (startlocation){
             this.push(startlocation,startoptions);
         }
+    }
+    setFromRemote(location,options){
+        this.history.splice(1, this.history.length);
+        this.history.push({location:location,options:assign({},options,{remote:true})});
+        this.updateStore(false, true);
     }
     replace(location,options){
         if (this.history.length < 1){
@@ -46,8 +55,9 @@ class History{
     /**
      *
      * @param opt_returning - legacy support with returning flag
+     * @param opt_noremote
      */
-    updateStore(opt_returning){
+    updateStore(opt_returning,opt_noremote){
         let topEntry={};
         if (this.history.length > 0){
             topEntry=this.history[this.history.length-1];
@@ -61,6 +71,9 @@ class History{
         this.store.storeMultiple(topEntry,{
             location:keys.gui.global.pageName,
             options:keys.gui.global.pageOptions});
+        if (! opt_noremote){
+            this.remoteChannel.sendMessage(REMOTE_CMD+' '+topEntry.location+' '+JSON.stringify(topEntry.options))
+        }
     }
 }
 export default new History(globalStore);

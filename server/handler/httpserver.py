@@ -30,10 +30,11 @@ import http.server
 import posixpath
 import urllib.request, urllib.parse, urllib.error
 import urllib.parse
+from typing import Dict, Any
 
 import gemf_reader
 
-from httphandler import AVNHTTPHandler
+from httphandler import AVNHTTPHandler, WebSocketHandler
 
 try:
   import create_overview
@@ -49,11 +50,11 @@ except:
   pass
 import threading
 
- 
-  
+
 
 #a HTTP server with threads for each request
 class AVNHTTPServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorker):
+  webSocketHandlers: Dict[str, WebSocketHandler]
   navxml=AVNUtil.NAVXML
   
   @classmethod
@@ -133,6 +134,7 @@ class AVNHTTPServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
     self.addresslist=[]
     self.handlerMap={}
     self.externalHandlers={} #prefixes that will be handled externally
+    self.webSocketHandlers={}
     http.server.HTTPServer.__init__(self, server_address, RequestHandlerClass, True)
   
   def run(self):
@@ -198,6 +200,9 @@ class AVNHTTPServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
     if type == 'path':
       self.externalHandlers[command]=handler
       return
+    if type == 'websocket':
+      self.webSocketHandlers[command]=handler
+      return
     if self.handlerMap.get(type) is None:
       self.handlerMap[type]={}
     self.handlerMap[type][command]=handler
@@ -259,7 +264,18 @@ class AVNHTTPServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
           return osPath
         return self.plainUrlToPath("/viewer/images/"+path[len(cp)+1:],True)
 
-
+  def getWebSocketsHandler(self,path,query,handler):
+    requestParam=urllib.parse.parse_qs(query,True)
+    for prefix in list(self.webSocketHandlers.keys()):
+      if path.startswith(prefix):
+        # the external handler can either return a mapped path (already
+        # converted in an OS path - e.g. using plainUrlToPath)
+        # or just do the handling by its own and return None
+        try:
+          return self.webSocketHandlers[prefix].handleApiRequest('websocket', path, requestParam, server=self,handler=handler)
+        except:
+          AVNLog.error("no websocket handler %s: %s",path,traceback.format_exc())
+        return None
 
 
 avnav_handlerList.registerHandler(AVNHTTPServer)

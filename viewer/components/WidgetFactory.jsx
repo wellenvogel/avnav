@@ -14,6 +14,23 @@ import base from '../base.js';
 import {GaugeRadial,GaugeLinear} from './CanvasGauges.jsx';
 import {createEditableParameter, EditableParameter} from "./EditableParameters";
 
+export const filterByEditables=(editableParameters,values)=>{
+    let rt={};
+    if (! editableParameters) return rt;
+    editableParameters.forEach((param)=>{
+        let v=param.getValue(values);
+        param.setValue(rt,v);
+    });
+    let fixed=['name','weight'];
+    fixed.forEach((fp)=>{
+        if (values[fp] !== undefined) rt[fp]=values[fp];
+    });
+    for (let k in rt){
+        if (typeof(rt[k]) === 'function') delete rt[k];
+        if (rt[k] === undefined) delete rt[k];
+    }
+    return rt;
+}
 class KeyWidgetParameter extends EditableParameter {
     constructor(name, type, list, displayName) {
         super(name, type, list, displayName);
@@ -322,14 +339,13 @@ class WidgetFactory{
         if (!e ) {
             return;
         }
-        let mergedProps = assign({}, e, props, opt_properties);
-        if (mergedProps.key === undefined) mergedProps.key = props.name;
         let editables=this.getEditableWidgetParameters(e);
+        let filteredProps=props;
         if (editables){
-            editables.forEach((p)=>
-                p.ensureValue(mergedProps)
-            );
+            filteredProps=filterByEditables(editables,props);
         }
+        let mergedProps = assign({}, e, filteredProps, opt_properties);
+        if (mergedProps.key === undefined) mergedProps.key = props.name;
         if (mergedProps.formatter) {
             if (typeof mergedProps.formatter === 'string') {
                 let ff = this.formatter[mergedProps.formatter];
@@ -371,9 +387,18 @@ class WidgetFactory{
                     RenderWidget=Visible(RenderWidget);
                     delete wprops.handleVisible;
                 }
+                if (wprops.nightMode === undefined && (storeKeys === undefined || storeKeys.nightMode === undefined)){
+                    if (storeKeys === undefined){
+                        storeKeys={nightMode:keys.properties.nightMode}
+                    }
+                    else{
+                        storeKeys=assign({nightMode: keys.properties.nightMode},storeKeys)
+                    }
+                }
                 if (storeKeys) {
                     RenderWidget = Dynamic(RenderWidget, {storeKeys:storeKeys});
                 }
+                delete wprops.storeKeys;
                 return <RenderWidget {...wprops}/>
             }
         };

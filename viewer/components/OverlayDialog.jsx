@@ -403,8 +403,9 @@ export const dialogHelper=(thisref,stateName)=>{
         },
         getRender(){
             if (!thisref.state[stateName]) return null;
+            let Display=InputMonitor(DialogDisplay);
             return(
-                <DialogDisplay
+                <Display
                     className="nested"
                     content={thisref.state[stateName]}
                     closeCallback={()=>{

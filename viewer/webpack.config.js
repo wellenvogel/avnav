@@ -21,10 +21,18 @@ var formatDate = function (date) {
     return "".concat(yyyymmdd).concat("-").concat(hh).concat(min);
 
 };
+var avnavVersion=process.env.AVNAV_VERSION?process.env.AVNAV_VERSION:(isProduction?"":"dev-")+(formatDate(new Date()));
+console.log("VERSION="+avnavVersion);
 
+var replaceSuffix=function(content,path){
+    //console.log("suffix replace "+path);
+    return content.toString()
+        .replace(/SUFFIX=1/,"SUFFIX='"+avnavVersion+"'")
+        .replace(/_SFX=1/,"_SFX="+avnavVersion);
+}
 var copyList=[
-    {from: './static/'},
-    {from: './webpack-loader.js',to:'loader.js'},
+    {from: './static/',transform: replaceSuffix},
+    {from: './webpack-loader.js',to:'loader.js',transform:replaceSuffix},
     {from: './util/polyfill.js',to:'polyfill.js'},
     {from: '../libraries/movable-type/geo.js', to: 'libraries'},
     {from: '../libraries/movable-type/latlon.js',to: 'libraries'},
@@ -67,10 +75,7 @@ var plugins = [
         }
     })
 ];
-if (process.env.AVNAV_VERSION_FILE){
-    plugins.push(new webpack.NormalModuleReplacementPlugin(/version\.js/,process.env.AVNAV_VERSION_FILE));
-    console.log("using version "+process.env.AVNAV_VERSION_FILE);
-}
+
 //console.log(process.env);
 
 module.exports = {
@@ -90,10 +95,10 @@ module.exports = {
     module: {
         rules: [
             {
-                test: process.env.AVNAV_VERSION_FILE?/NOTHING/:/version\.js$/,
+                test: /version\.js$/,
                 loader: 'val-loader',
                 options:{
-                    version: (isProduction?"":"dev-")+(formatDate(new Date()))
+                    version: avnavVersion
                 }
             },
 
