@@ -498,7 +498,6 @@ class NavPage extends React.Component{
                     mode = !mode;
                     globalStore.storeData(keys.properties.nightMode, mode);
                 },
-                editDisable: true,
                 overflow: true
             },
             Mob.mobDefinition,
