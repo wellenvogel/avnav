@@ -11,6 +11,12 @@ import Helper from '../util/helper.js';
 import GuiHelper from '../util/GuiHelpers.js';
 import navcompute from '../nav/navcompute.js';
 
+const normalColors={
+    all: '#000000'
+};
+const nightColors={
+    all: 'rgba(252, 11, 11, 0.6)'
+}
 
 class XteWidget extends React.Component{
 
@@ -49,8 +55,9 @@ class XteWidget extends React.Component{
         let xteMax=this.props.xteMax;
         let xteText=Formatter.formatDecimal(xteMax,1,1);
         let color=canvas.style.color;
-        context.fillStyle =color;
-        context.strokeStyle=color;
+        if (! color){
+            color=this.props.nightMode?nightColors.all:normalColors.all;
+        }
         let crect=canvas.getBoundingClientRect();
         let w=crect.width;
         let h=crect.height;
@@ -62,6 +69,8 @@ class XteWidget extends React.Component{
         context.canvas.style.visibility ='hidden'; // Force a change in DOM
         context.canvas.offsetHeight; // Cause a repaint to take play
         context.canvas.style.visibility = 'inherit'; // Make visible again
+        context.fillStyle =color;
+        context.strokeStyle=color;
         let textBase=h*0.9;
         let textSize=h*0.2;
         let left=w*0.1;
