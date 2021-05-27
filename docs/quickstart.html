@@ -13,8 +13,8 @@
           Risiko. In jedem Falle empfehle ich einen intensiven Test der
           Genauigkeit der Darstellung und des verwendeten Kartenmaterials.</b></i></p>
     <div class="toc"></div>
-    <p class="western">Eine ausführliche Beschreibung der Konzepte findet man im Kapitel
-      <a href="beschreibung.html">Einführung</a>.</p>
+    <p class="western">Eine ausführliche Beschreibung der Konzepte findet man im
+      Kapitel <a href="beschreibung.html">Einführung</a>.</p>
     <h2 class="western">Generelles</h2>
     <p>AvNav ist primär ausgelegt für die Bedienung auf Touch-Geräten (auch mit
       relativ kleinen Bildschirmen). Es wurde versucht, die Bedienelemente und
@@ -50,8 +50,7 @@
         Beschreibung</a>. <br>
       Wenn man über einen anderen Weg mit dem AvNav-Server verbunden ist, kann
       man http://avnav.local benutzen (oder die IP Adresse des Servers).<br>
-      Für IOS- und Android-Geräte ist es empfehlenswert, einen
-      <a href="https://de.wikipedia.org/wiki/Bonjour_%28Apple%29">Bonjour</a>
+      Für IOS- und Android-Geräte ist es empfehlenswert, einen <a href="https://de.wikipedia.org/wiki/Bonjour_%28Apple%29">Bonjour</a>
       Browser zu nutzen. Dieser kann AvNav im lokalen Netz finden, so dass man
       ohne Adresseingabe sofort den Browser starten kann.</p>
     <ul>
@@ -62,22 +61,24 @@
             alt="" class="inlineimage"></a> </li>
     </ul>
     <h3>Android App</h3>
-    <p>Die <a href="android/android.html">App</a> steht im Play Store zur Verfügung <a
-        href="https://play.google.com/store/apps/details?id=de.wellenvogel.avnav.main"><img
+    <p>Die <a href="android/android.html">App</a> steht im Play Store zur
+      Verfügung <a href="https://play.google.com/store/apps/details?id=de.wellenvogel.avnav.main"><img
           src="sailboat512r.png" alt="" class="inlineimage"> </a></p>
     <h2>Konfiguration</h2>
-    <p>Nach der Installation oder der Nutzung eines Images wird AvNav in der Regel ohne weitere Konfiguration starten. An den USB-Anschlüsse
-      werden serielle Schnittstellen mit ihren Baudraten automatisch ermittelt. Je nach gewählter Installation ist
-      meist ein Empfänger für UDP-Daten auf Port 34667 aktiv.</p>
+    <p>Nach der Installation oder der Nutzung eines Images wird AvNav in der
+      Regel ohne weitere Konfiguration starten. An den USB-Anschlüsse werden
+      serielle Schnittstellen mit ihren Baudraten automatisch ermittelt. Je nach
+      gewählter Installation ist meist ein Empfänger für UDP-Daten auf Port
+      34667 aktiv.</p>
     <p>Für weitergehende Anforderungen kann eine detaillierte Konfiguration des
       Servers über die <a href="userdoc/statuspage.html">Server/Status Seite</a>
       vorgenommen werden. Eine Anpassung des Aussehens kann über die <a href="userdoc/settingspage.html">Einstellungen</a>,
       über <a href="hints/layouts.html">Anpassungen des Layouts</a> und über <a
         href="hints/userjs.html">nutzerdefinierten Code</a>/<a href="hints/usercss.html">CSS</a>
       sowie <a href="hints/plugins.html">Plugins</a> vorgenommen werden.</p>
-
     <h2>NMEA-Daten</h2>
-    <p><img class="fimage" src="avnav_schnittstellen.png" name="Datenim- und Export" width="600" border="0">
+    <p><img class="fimage" src="avnav_schnittstellen.png" name="Datenim- und Export"
+        border="0" width="600"> </p>
     <h3>Client Server Variante</h3>
     <p>AvNav verarbeitet NMEA0183-Daten, die über angeschlossene USB-Geräte,
       serielle Schnittstellen, Bluetooth-Geräte,&nbsp; TCP (Client und Server)
@@ -113,10 +114,10 @@
       Daten empfangen und genutzt werden. Außerdem können alle Daten für das
       eigene Schiff, die in SignalK verfügbar sind, in AvNav angezeigt werden.</p>
     <h3>Android</h3>
-    <p>Unter <a href="android/android.html">Android</a> kann das interne GPS genutzt
-      werden. Außerdem kann eine TCP- oder Bluetooth-Verbindung zum Empfang von
-      GPS- oder AIS-Daten genutzt werden. Auf Geräten mit USB-Host-Funktion kann
-      auch ein Seriell-USB-Adapter angeschlossen werden.</p>
+    <p>Unter <a href="android/android.html">Android</a> kann das interne GPS
+      genutzt werden. Außerdem kann eine TCP- oder Bluetooth-Verbindung zum
+      Empfang von GPS- oder AIS-Daten genutzt werden. Auf Geräten mit
+      USB-Host-Funktion kann auch ein Seriell-USB-Adapter angeschlossen werden.</p>
     <p>Es werden die folgenden NMEA-Daten dekodiert:</p>
     <ul>
       <li>!AIVDM</li>
@@ -129,7 +130,8 @@
       <li>$xxDBT</li>
       <li>$xxXDR (seit 20210114)</li>
     </ul>
-    <p>Bei enstprechender Konfiguration kann AvNav $GPRMC-Sätze erzeugen und aussenden.</p>
+    <p>Bei enstprechender Konfiguration kann AvNav $GPRMC-Sätze erzeugen und
+      aussenden.</p>
     <p></p>
     <h2>Karten</h2>
     <p>AvNav verarbeitet grundsätzlich Karten im <a href="charts.html#Intro">Rasterformat</a>.
@@ -140,40 +142,50 @@
       oder <a href="https://wiki.openstreetmap.org/wiki/SAS_Planet">SASPlanet</a>
       aus Quellen im Netz erstellt werden.</p>
     <p>Unmittelbar verarbeiten kann AvNav Karten im <a href="charts.html#chartformats">"gemf"-
-        und "mbtiles"-Format</a>. Daneben können Karten z.B. im BSB-Format (kap) in das gemf Format <a
-        href="charts.html#Convert">konvertiert</a> werden, entweder direkt auf
-      dem Raspberry - oder besser vorher auf einem Desktop-System.</p>
-    <p>Karten müssen zur Benutzung in AvNav "hochgeladen" werden - dies geschieht auf der <a href="userdoc/downloadpage.html">Files/Download-Seite</a>, dort den Reiter "Karten" <img src="viewerimages/icons-new/map2.svg" alt=""
-        class="inlineimage"> anklicken. 
-    <p>Außerdem kann AvNav <a href="hints/ocharts.html">o-charts</a>-
-      Karten verarbeiten, unter Android allerdings nicht.
-      Der O-Charts-Shop bietet Karten für Open-Source-Software zu sehr günstigen Preisen an.</p>
-    O-charts Karten werden über das
-      <a href="hints/ocharts.html">o-charts-Plugin</a> hochgeladen.</p>
+        und "mbtiles"-Format</a>. Daneben können Karten z.B. im BSB-Format (kap)
+      in das gemf Format <a href="charts.html#Convert">konvertiert</a> werden,
+      entweder direkt auf dem Raspberry - oder besser vorher auf einem
+      Desktop-System.</p>
+    <p>Karten müssen zur Benutzung in AvNav "hochgeladen" werden - dies
+      geschieht auf der <a href="userdoc/downloadpage.html">Files/Download-Seite</a>,
+      dort den Reiter "Karten" <img src="viewerimages/icons-new/map2.svg" alt=""
+        class="inlineimage"> anklicken. </p>
+    <p>Außerdem kann AvNav <a href="hints/ocharts.html">o-charts</a>- Karten
+      verarbeiten, unter Android allerdings nicht. Der O-Charts-Shop bietet
+      Karten für Open-Source-Software zu sehr günstigen Preisen an.</p>
+    O-charts Karten werden über das <a href="hints/ocharts.html">o-charts-Plugin</a>
+    hochgeladen.
+    <p></p>
     <p>Mit dem <a href="https://github.com/wellenvogel/avnav-mapproxy-plugin">mapproxy-plugin</a>
-      kann AvNav darüber hinaus verschiedene Online-Karten einbinden.
-      Für die Offline-Nutzung einzelner Bereiche von Online-Karten kann das Plugin ebenfalls genutzt werden.</p>
+      kann AvNav darüber hinaus verschiedene Online-Karten einbinden. Für die
+      Offline-Nutzung einzelner Bereiche von Online-Karten kann das Plugin
+      ebenfalls genutzt werden.</p>
     <p>Weitere Details herzu finden sich im Kapitel <a href="charts.html">Karten</a>.</p>
     <h2>Anzeigen</h2>
-    <p>Auf der <a href="userdoc/navpage.html">Seite "Navigation"</a> werden dargestellt:
-      Die aktuelle Boots-Position, der Kurs, die Route zum nächsten
+    <p>Auf der <a href="userdoc/navpage.html">Seite "Navigation"</a> werden
+      dargestellt: Die aktuelle Boots-Position, der Kurs, die Route zum nächsten
       Wegepunkt, die aktuelle Route, AIS Ziele und deren Kurse,
       Navigationskreise und definierte <a href="hints/overlays.html">Overlays</a>.</p>
-    <p>Weitere Navigationsdaten können dargestellt werden auf der <a href="userdoc/navpage.html">Seite "Navigation"</a>, im <a href="userdoc/editroutepage.html">Routen-Editor</a>
-      und auf bis zu 5 <a href="userdoc/dashboardpage.html">Dashboard-Seiten, die selbst konfiguriert werden können.</a>
-      Das schließt auch die in <a href="hints/CanboatAndSignalk.html">SignalK</a>vorhandenen Werte ein.</p>
+    <p>Weitere Navigationsdaten können dargestellt werden auf der <a href="userdoc/navpage.html">Seite
+        "Navigation"</a>, im <a href="userdoc/editroutepage.html">Routen-Editor</a>
+      und auf bis zu 5 <a href="userdoc/dashboardpage.html">Dashboard-Seiten,
+        die selbst konfiguriert werden können.</a> Das schließt auch die in <a
+        href="hints/CanboatAndSignalk.html">SignalK</a>vorhandenen Werte ein.</p>
     <p>Es können einfache Zahlenwerte, <a href="hints/layouts.html#gauges">analoge
         Anzeigen</a> oder auch Grafik-Anzeigen realisiert werden.</p>
-    <p>Die Darstellung der Navigationsdaten kann in weiten Grenzen an eigene Bedürfnisse angepasst werden. Dazu dient der <a href="hints/layouts.html">Layout-Editor</a>
-      Eigene Anzeige-Layouts können mit ein wenig <a href="hints/userjs.html">JavaScript-Code</a> und mit <a href="hints/usercss.html">CSS</a> erstellt
-      werden.</p>
-    <p>Diese Layouts beinhalten auch eine Anpassung an unterschiedliche Bildschirm-Ausrichtungen und -auflösungen.</p>
+    <p>Die Darstellung der Navigationsdaten kann in weiten Grenzen an eigene
+      Bedürfnisse angepasst werden. Dazu dient der <a href="hints/layouts.html">Layout-Editor</a>
+      Eigene Anzeige-Layouts können mit ein wenig <a href="hints/userjs.html">JavaScript-Code</a>
+      und mit <a href="hints/usercss.html">CSS</a> erstellt werden.</p>
+    <p>Diese Layouts beinhalten auch eine Anpassung an unterschiedliche
+      Bildschirm-Ausrichtungen und -auflösungen.</p>
     <h2>Routen</h2>
     <p>In AvNav können sehr einfach Routen erstellt und bearbeitet werden. Das
       erfolgt in der Kartenansicht im <a href="userdoc/editroutepage.html">Routen-Editor</a>.
       Im Normalfall verschiebt man die Karte so, dass der Mittelpunkt auf dem
-      gewünschten Wegepunkt liegt, und fügt diesen dann mit einem Klick der Route
-      hinzu. Punkte der Route können verschoben, gelöscht und bearbeitet werden.</p>
+      gewünschten Wegepunkt liegt, und fügt diesen dann mit einem Klick der
+      Route hinzu. Punkte der Route können verschoben, gelöscht und bearbeitet
+      werden.</p>
     <p>Wegepunkte oder andere Routen, die als <a href="hints/overlays.html">Overlays</a>
       angezeigt werden, können im Routen-Editor der aktuellen Route hinzugefügt
       werden.</p>
@@ -181,20 +193,21 @@
       werden. Routen werden in AvNav als "gpx"-Dateien gespeichert. Sie können
       über die <a href="userdoc/downloadpage.html">Files/Download-Seite</a>
       importiert und exportiert werden. Aus dem Routen-Editor kann die
-      Navigation direkt gestartet werden. Innerhalb einer Route
-      erfolgt eine Alarmierung, wenn der nächste Wegepunkt erreicht wird bzw.
-      sobald man sich innerhalb des "approach" genannten Umkreises befindet. Es
-      erfolgt ein automatisches Weiterschalten zum nächsten Wegpunkt.</p>
+      Navigation direkt gestartet werden. Innerhalb einer Route erfolgt eine
+      Alarmierung, wenn der nächste Wegepunkt erreicht wird bzw. sobald man sich
+      innerhalb des "approach" genannten Umkreises befindet. Es erfolgt ein
+      automatisches Weiterschalten zum nächsten Wegpunkt.</p>
     <h2><a name="tracks"></a>Tracks</h2>
     <p>AvNav zeichnet beständig den aktuellen Track auf und zeigt ihn auf der
       Karte. Dabei wird versucht, die Zahl der Trackpunkte zu begrenzen, indem
       nur bei größeren Änderungen oder nach einer bestimmten Zeit erneut ein
       Trackpunkt geschrieben wird (Siehe <a href="hints/configfile.html?lang=en#h3:AVNTrackWriter">Konfiguration
         ANVTrackWriter </a>). Die Tracks werden in regelmäßigen Abständen als
-      "gpx"-Datei gespeichert und können auf der <a href="userdoc/downloadpage.html#tracks">Files/Download-Seite</a> exportiert und importiert werden (dort ist auch eine Anzeige
-      ihrer Daten - also Strecke, Zeit, usw. möglich). Pro Tag wird eine
-      separate "gpx"-Datei erzeugt. Außerdem können vorhandene Tracks auf der
-      Karte als <a href="hints/overlays.html">Overlay</a> dargestellt werden.</p>
+      "gpx"-Datei gespeichert und können auf der <a href="userdoc/downloadpage.html#tracks">Files/Download-Seite</a>
+      exportiert und importiert werden (dort ist auch eine Anzeige ihrer Daten -
+      also Strecke, Zeit, usw. möglich). Pro Tag wird eine separate "gpx"-Datei
+      erzeugt. Außerdem können vorhandene Tracks auf der Karte als <a href="hints/overlays.html">Overlay</a>
+      dargestellt werden.</p>
     <p>Vorhandene <a href="hints/TracksToRoutes.html">Tracks können in Routen</a>
       umgewandelt werden. Dabei wird über einen Reduktionsalgorithmus die Zahl
       der Wegepunkte automatisch reduziert.</p>
@@ -202,28 +215,32 @@
     <p>In der Kartendarstellung werden AIS-Ziele in einem bestimmten Umkreis
       (default: 20nm) mit ihren Positionen und ihren Kursen dargestellt.
       Außerdem erfolgt eine Berechnung des nächsten Zieles und eine Warnung,
-      falls eine einstellbare minimale Begegnungsentfernung unterschritten wird (CPA).</p>
+      falls eine einstellbare minimale Begegnungsentfernung unterschritten wird
+      (CPA).</p>
     <p>Die Symbole für die AIS-Ziele können durch <a href="hints/usericons.html">eigene
-        Smybole</a> angepasst werden, bei Bedarf unterschiedlich je nach AIS-Schiffsklasse. Für das eigene Boot und für die AIS-Ziele wird ein Kurs-Vektor
-      gezeichnet, dessen Ende die Position nach 10 Minuten (einstellbar)
-      markiert.</p>
-    <p>Durch Klick auf ein AIS-Ziel (oder auf die Anzeige des nächsten Zieles
-      in den Anzeige-Bereichen) erhält man alle <a href="userdoc/aisinfopage.html">Informationen</a>
+        Smybole</a> angepasst werden, bei Bedarf unterschiedlich je nach
+      AIS-Schiffsklasse. Für das eigene Boot und für die AIS-Ziele wird ein
+      Kurs-Vektor gezeichnet, dessen Ende die Position nach 10 Minuten
+      (einstellbar) markiert.</p>
+    <p>Durch Klick auf ein AIS-Ziel (oder auf die Anzeige des nächsten Zieles in
+      den Anzeige-Bereichen) erhält man alle <a href="userdoc/aisinfopage.html">Informationen</a>
       zu diesem Ziel und kann zur <a href="userdoc/aispage.html">Liste aller
         AIS-Ziele</a> navigieren.</p>
     <h2>Alarme</h2>
     <p>AvNav kann Alarme erzeugen für:</p>
     <ul>
       <li>eine Ankerwache<br>
-        Sie kann auf den <a href="userdoc/dashboardpage.html#anchorwatch">Dashboard-Seiten</a> aktiviert werden. Abhängig vom Layout werden die Anzeigen
-        angepasst. Bei Verlassen des vorgegebenen Bereiches (oder bei Ausfall
-        des GPS-Signals) erfolgt eine Alarmierung</li>
+        Sie kann auf den <a href="userdoc/dashboardpage.html#anchorwatch">Dashboard-Seiten</a>
+        aktiviert werden. Abhängig vom Layout werden die Anzeigen angepasst. Bei
+        Verlassen des vorgegebenen Bereiches (oder bei Ausfall des GPS-Signals)
+        erfolgt eine Alarmierung</li>
       <li>bei Erreichen des nächsten Wegepunktes</li>
       <li>"Mensch über Bord" (MOB)<br>
-        Für das Auslösen eines MOB-Alarms ist in allen Ansichten von AvNav eine separate<img src="viewerimages/icons-new/drowning.svg"
-          alt="" class="inlineimage"> <a href="userdoc/mainpage.html#mob">MOB-Taste</a> vorhanden. Durch diese wird die aktuelle Position zum neuen
-        Zielpunkt, alle anderen Routings werden beendet. Außerdem wird der
-        Alarm ausgelöst.</li>
+        Für das Auslösen eines MOB-Alarms ist in allen Ansichten von AvNav eine
+        separate<img src="viewerimages/icons-new/drowning.svg" alt="" class="inlineimage">
+        <a href="userdoc/mainpage.html#mob">MOB-Taste</a> vorhanden. Durch diese
+        wird die aktuelle Position zum neuen Zielpunkt, alle anderen Routings
+        werden beendet. Außerdem wird der Alarm ausgelöst.</li>
     </ul>
     <p>Alarme werden in AvNav auf dem Server erzeugt und verwaltet. Insbesondere
       z.B. für die Ankerwache können alle Anzeige-Geräte abgeschaltet werden,
@@ -238,20 +255,24 @@
       einen Nachtmodus <img src="viewerimages/icons-new/night.svg" alt="" class="inlineimage">
       geschaltet werden. Dann sind alle Anzeigen entsprechend angepasst.</p>
     <h2>Anpassung</h2>
-    <p>AvNav kann in unterschiedlicher Weise an eigene Bedürfnisse angepasst werden.
-      Da die gesamte Darstellung im Browser abläuft, kann man das Aussehen mit <a
-        href="hints/usercss.html">CSS</a> anpassen.</p>
+    <p>AvNav kann in unterschiedlicher Weise an eigene Bedürfnisse angepasst
+      werden. Da die gesamte Darstellung im Browser abläuft, kann man das
+      Aussehen mit <a href="hints/usercss.html">CSS</a> anpassen.</p>
     <p>Die Konfiguration des Servers arfolgt über die Datei <a href="hints/configfile.html">avnav_server.xml</a>.
       Eine Änderung sollte im Normalfall jedoch nicht in der Datei direkt
       erfolgen, sondern über die Bearbeitungsmöglichkeiten auf der <a href="userdoc/statuspage.html">Server/Status-Seite</a>.</p>
-    <p>Neben der bereits beschriebenen Anpassung der Layouts im <a href="hints/layouts.html">Layout-Editor</a> können ohne größeren Aufwand eigene Anzeigen mit ein wenig <a href="hints/userjs.html">Java
+    <p>Neben der bereits beschriebenen Anpassung der Layouts im <a href="hints/layouts.html">Layout-Editor</a>
+      können ohne größeren Aufwand eigene Anzeigen mit ein wenig <a href="hints/userjs.html">Java
         Script</a> Code eingebunden werden.</p>
-    <p>Es ist auch möglich, weitere externe oder AvNav-interne Webseiten als "<a href="userdoc/addonconfigpage.html">User Apps</a>"
-      einzubinden und anzuzeigen.</p>
-    <p>Die zur Darstellung genutzten Symbole können über eine <a href="hints/usericons.html">Json-Datei </a>angepasst werden, ebenso die <a href="hints/keyboard.html">Tastaturkürzel
+    <p>Es ist auch möglich, weitere externe oder AvNav-interne Webseiten als "<a
+        href="userdoc/addonconfigpage.html">User Apps</a>" einzubinden und
+      anzuzeigen.</p>
+    <p>Die zur Darstellung genutzten Symbole können über eine <a href="hints/usericons.html">Json-Datei
+        </a>angepasst werden, ebenso die <a href="hints/keyboard.html">Tastaturkürzel
         für Aktionen</a>.</p>
-    <p>Mit Python, JavaScript und CSS können <a href="hints/plugins.html">eigene Plugins</a>
-      geschrieben werden, die die Funktionalität von AvNav erweitern.</p>
+    <p>Mit Python, JavaScript und CSS können <a href="hints/plugins.html">eigene
+        Plugins</a> geschrieben werden, die die Funktionalität von AvNav
+      erweitern.</p>
     <p><br>
     </p>
   </body>
