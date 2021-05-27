@@ -33,20 +33,20 @@ import React from 'react';
 import keys from '../util/keys.jsx';
 import MapHolder from '../map/mapholder';
 
+let lastMapClickTime=undefined;
 MapHolder.registerEventGuard((eventName)=>{
     if (eventName === 'click'){
-        globalStore.storeData(keys.map.lastClickTime,(new Date()).getTime());
+        lastMapClickTime=(new Date()).getTime();
     }
 });
 export default  (Component,opt_store)=>{
     return React.forwardRef((props,ref)=>{
         let {onClick,...forwards}=props;
         let clickHandler=onClick?function() {
-            let lastMapClick = globalStore.getData(keys.map.lastClickTime);
             let timeDiff = globalStore.getData(keys.properties.mapClickWorkaroundTime, 300);
-            if (lastMapClick !== undefined) {
+            if (lastMapClickTime !== undefined) {
                 let now = (new Date()).getTime();
-                if ((now - timeDiff) <= lastMapClick) return;
+                if ((now - timeDiff) <= lastMapClickTime) return;
             }
             if (props.onClick) {
                 props.onClick.apply(this, [...arguments]);

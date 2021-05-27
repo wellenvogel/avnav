@@ -162,6 +162,18 @@ class PropertyHandler {
         }
     }
 
+    firstStart(){
+        let changes={};
+        for (let path in this.propertyDescriptions){
+            let pd=this.propertyDescriptions[path];
+            if (pd.initialValue !== undefined){
+                changes[path]=pd.initialValue;
+            }
+        }
+        globalStore.storeMultiple(changes);
+        //set some initial properties
+    }
+
 }
 
 export default new PropertyHandler();

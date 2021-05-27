@@ -10,22 +10,111 @@ import android.widget.Toast;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+
 import de.wellenvogel.avnav.fileprovider.UserFileProvider;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.MainActivity;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
+import de.wellenvogel.avnav.worker.RemoteChannel;
 
 //potentially the Javascript interface code is called from the Xwalk app package
 //so we have to be careful to always access the correct resource manager when accessing resources!
 //to make this visible we pass a resource manager to functions called from here that open dialogs
 public class JavaScriptApi {
+    private class ChannelSocket implements IWebSocket{
+        private String url;
+        private IWebSocketHandler handler;
+        int id;
+        private final ArrayList<String> remoteMessages=new ArrayList<>();
+        private boolean open=true;
+        ChannelSocket(String url,IWebSocketHandler handler,int id){
+            this.url = url;
+            this.handler=handler;
+            this.id=id;
+            synchronized (remoteMessages){
+                remoteMessages.clear();
+            }
+            handler.onConnect(this);
+        }
+        @Override
+        public String getUrl() {
+            return url;
+        }
+
+        @Override
+        public boolean send(String msg) throws IOException {
+            synchronized (remoteMessages){
+                if (remoteMessages.size() < 10) remoteMessages.add(msg);
+                else return false;
+            }
+            mainActivity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mainActivity.sendEventToJs(Constants.JS_REMOTE_MESSAGE,id);
+                }
+            });
+            return true;
+        }
+
+        @Override
+        public int getId() {
+            return id;
+        }
+
+        @Override
+        public void close(boolean callHandler) {
+            localClose(callHandler);
+            synchronized (sockets){
+                sockets.remove(getId());
+            }
+
+        }
+
+        public void localClose(boolean callHandler){
+            open=false;
+            if (callHandler) handler.onClose(this);
+            synchronized (remoteMessages){
+                remoteMessages.clear();
+            }
+            mainActivity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mainActivity.sendEventToJs(Constants.JS_REMOTE_CLOSE,id);
+                }
+            });
+        }
+
+        @Override
+        public boolean isOpen() {
+            return open;
+        }
+
+        public String getMessage(){
+           synchronized (remoteMessages){
+               if (remoteMessages.size()>0){
+                   return remoteMessages.remove(0);
+               }
+               return null;
+           }
+        }
+        public void msgFromJs(String msg){
+            if (! isOpen()) return;
+            handler.onReceive(msg,this);
+        }
+    }
     private UploadData uploadData=null;
     private RequestHandler requestHandler;
     private MainActivity mainActivity;
     private boolean detached=false;
-
+    final HashMap<Integer,ChannelSocket> sockets=new HashMap<>();
+    private int getNextSocketId(){
+        return WebSocket.getNextId();
+    }
     public JavaScriptApi(MainActivity mainActivity, RequestHandler requestHandler) {
         this.requestHandler = requestHandler;
         this.mainActivity = mainActivity;
@@ -39,6 +128,12 @@ public class JavaScriptApi {
         detached=true;
         if (uploadData != null){
             uploadData.interruptCopy(true);
+        }
+        synchronized (sockets){
+            for (ChannelSocket socket:sockets.values()){
+                socket.localClose(true);
+            }
+            sockets.clear();
         }
     }
 
@@ -296,6 +391,55 @@ public class JavaScriptApi {
     @JavascriptInterface
     public void dialogClosed(){
         mainActivity.dialogClosed();
+    }
+
+    @JavascriptInterface
+    public int channelOpen(String url){
+        IWebSocketHandler handler=requestHandler.getWebSocketHandler(url);
+        if (handler == null) return -1;
+        ChannelSocket socket=new ChannelSocket(url,handler,getNextSocketId());
+        synchronized (sockets){
+            sockets.put(socket.getId(),socket);
+        }
+        return socket.getId();
+    }
+    @JavascriptInterface
+    public void channelClose(int id){
+        ChannelSocket socket;
+        synchronized (sockets) {
+            socket = sockets.get(id);
+        }
+        if (socket == null) return;
+        socket.close(true);
+    }
+    @JavascriptInterface
+    public String readChannelMessage(int id){
+        ChannelSocket socket;
+        synchronized (sockets) {
+            socket = sockets.get(id);
+        }
+        if (socket == null) return null;
+        return socket.getMessage();
+
+    }
+    @JavascriptInterface
+    public boolean sendChannelMessage(int id,String msg){
+        ChannelSocket socket;
+        synchronized (sockets) {
+            socket = sockets.get(id);
+        }
+        if (socket == null) return false;
+        socket.msgFromJs(msg);
+        return true;
+    }
+    @JavascriptInterface
+    public boolean isChannelOpen(int id){
+        ChannelSocket socket;
+        synchronized (sockets) {
+            socket = sockets.get(id);
+        }
+        if (socket == null) return false;
+        return socket.isOpen();
     }
 
 }

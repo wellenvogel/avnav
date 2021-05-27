@@ -28,11 +28,12 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import LayoutHandler from '../util/layouthandler.js';
 import OverlayDialog,{dialogHelper} from './OverlayDialog.jsx';
-import WidgetFactory from '../components/WidgetFactory.jsx';
+import WidgetFactory, {filterByEditables} from '../components/WidgetFactory.jsx';
 import assign from 'object-assign';
 import {Input,InputSelect} from './Inputs.jsx';
 import DB from './DialogButton.jsx';
 import {getList,ParamValueInput} from "./ParamValueInput";
+import cloneDeep from 'clone-deep';
 
 
 class EditWidgetDialog extends React.Component{
@@ -40,7 +41,7 @@ class EditWidgetDialog extends React.Component{
         super(props);
         this.state= {
             panel: props.panel,
-            widget:props.current,
+            widget:cloneDeep(props.current),
             parameters:WidgetFactory.getEditableWidgetParameters(props.current.name)};
         this.insert=this.insert.bind(this);
         this.showDialog=this.showDialog.bind(this);
@@ -139,7 +140,7 @@ class EditWidgetDialog extends React.Component{
                     {this.props.updateCallback?
                         <DB name="ok" onClick={()=>{
                         this.props.closeCallback();
-                        let changes=this.state.widget;
+                        let changes=filterByEditables(this.state.parameters,this.state.widget);
                         if (this.props.weight){
                             if (changes.weight !== undefined) changes.weight=parseFloat(changes.weight)
                         }

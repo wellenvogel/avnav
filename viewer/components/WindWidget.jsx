@@ -31,11 +31,16 @@ class WindWidget extends React.Component{
             if (windSpeed < 10) windSpeed=Formatter.formatDecimal(windSpeed,2,1);
             else windSpeed=Formatter.formatDecimal(windSpeed,3,0);
         }catch(e){}
+        let windAngle=this.props.windAngle;
+        if (! this.props.show360){
+            if (windAngle > 180) windAngle-=360;
+        }
+        let suffix=(this.props.windReference === 'R')?'':'(T)';
         return (
             <div className={classes} onClick={this.props.onClick} style={style}>
                 {(this.props.mode == 'horizontal') ?
                     <React.Fragment>
-                        <div className='infoLeft'>W</div>
+                        <div className='infoLeft'>{'W'+suffix}</div>
                         <div className="widgetData">
                             {Formatter.formatDirection(this.props.windAngle)}
                             <span className="unit">°</span>
@@ -47,13 +52,13 @@ class WindWidget extends React.Component{
                     <React.Fragment>
                         <div className="resize">
                             <div className="windInner">
-                                <div className='widgetData'>{Formatter.formatDirection(this.props.windAngle)}</div>
-                                <div className='infoLeft'>WD</div>
+                                <div className='widgetData'>{Formatter.formatDirection(windAngle)}</div>
+                                <div className='infoLeft'>{'WD'+suffix}</div>
                                 <div className='infoRight'>°</div>
                             </div>
                             <div className="windInner">
                                 <div className='widgetData'>{windSpeed}</div>
-                                <div className='infoLeft'>WS</div>
+                                <div className='infoLeft'>{'WS'+suffix}</div>
                                 <div className='infoRight'>{this.props.showKnots ? "kn" : "m/s"}</div>
                             </div>
                         </div>
@@ -84,5 +89,8 @@ WindWidget.storeKeys={
     visible: keys.properties.showWind,
     showKnots: keys.properties.windKnots
 };
+WindWidget.editableParameters={
+    show360: {type:'BOOLEAN',default:false}
+}
 
 export default WindWidget;

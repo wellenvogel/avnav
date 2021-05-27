@@ -136,10 +136,15 @@ avnav.main=function() {
         };
     }
     let startpage="warningpage";
+    let firstStart=true;
     if (typeof window.localStorage === 'object'){
         if (localStorage.getItem(globalStore.getData(keys.properties.licenseAcceptedName)) === 'true'){
             startpage="mainpage";
+            firstStart=false;
         }
+    }
+    if (firstStart){
+        propertyHandler.firstStart();
     }
     history.push(startpage);
     const loadScripts=(loadList)=>{

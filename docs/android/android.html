@@ -10,7 +10,8 @@
     <div class="toc"> </div>
     <p>Nachdem die Navigations-App für die <a href="../beschreibung.html">Nutzung
         mit dem Raspberry Pi</a>&nbsp; bereits einige Jahre erfolgreich im
-      Einsatz ist, gibt es jetzt auch eine Version, die direkt auf Geräten mit Android läuft, z.B Tablets oder Handys. Diese AvNav-App erfordert Android ab 4.4 (KitKat).</p>
+      Einsatz ist, gibt es jetzt auch eine Version, die direkt (ohne einen
+      Raspberry) Geräten mit Android läuft, z.B Tablets oder Handys. Sie erfordert Android ab 4.4 (KitKat).</p>
     <p>Die aktuellste Version kann man unter <a href="../../downloads/release/latest">Downloads</a>
       herunterladen oder im <a href="https://play.google.com/store/apps/details?id=de.wellenvogel.avnav.main">AppStore</a>.<br>
       Ältere Versionen oder "daily builds" findet man über die <a href="../install.html">Installationsbeschreibung</a>.</p>
@@ -18,11 +19,12 @@
       in eine Android Applikation - siehe dort auch die Verfahren zum <a href="../charts.html">Erzeugen/Konvertieren</a>
       der Karten.</p>
     <h2>Funktion&nbsp;</h2>
-    <p>(neu ab 202104xx)</p>
+    <p>(neu ab 20210424)</p>
     <p>Die App besteht intern aus mehreren Funktionsblöcken .</p>
     <img src="software-android.png" alt="" class="fimage">
-    <p>Der NMEA Multiplexer verarbeitet NMEA0183-Daten von verschiedenen
-      Quellen. Neben dem internen Geräte-GPS können die Daten von verschiedenen Quellen kommen,  z.B. über TCP/IP-Verbindungen, per UDP, von anderen USB Geräten oder über Bluetooth-Verbindungen.
+    <p>Der NMEA Multiplexer verarbeitet NMEA0183 Daten von den verschiedenen
+      Quellen. Neben dem internen Geräte-GPS können die Daten von Quellen wie TCP
+      Verbindungen, UDP Ports, USB Geräten oder Bluetooth Verbindungen kommen.
       Die meisten Quellen unterstützen das gleichzeitige Senden und Empfangen
       von Daten. Es können jeweils mehrere Quellen des gleichen Typs
       konfiguriert werden (in der App-Konfiguration existiert für jede Quelle
@@ -42,7 +44,7 @@
           <td>Eine TCP-Verbindung zu einem externen System. AvNav ist dabei ein
             TCP-Client und öffnet die Verbindung.<br>
             Als Adresse kann sowohl eine IP-Adresse, als auch ein Hostname angegeben werden. Auch
-            ein mDNS-Name wie avnav.local kann benutzt werden, wenn auf dem System ein Bonjour-Browser zur Anzeige von AvNav genutzt wird.</td>
+            ein mDNS-Name wie avnav.local kann benutzt werden.</td>
         </tr>
         <tr>
           <td>TcpWriter</td>
@@ -117,7 +119,7 @@
       unterhalb des Arbeitsverzeichnisses geschrieben.</p>
     <p>Im Unterverzeichnis "routes" werden die Routen im "gpx"-Format gespeichert.
       Routen und Tracks können aus der App über die Download-Funktion an andere
-      Apps weitergegeben werden (siehe auch >>LINK: Beschreibung der App). Um sie in andere
+      Apps weitergegeben werden (siehe auch die Beschreibung der App). Um sie in andere
       Verzeichnisse zu speichern oder Routen aus anderen Verzeichnissen zu laden
       (Upload-Funktion), sollte sinnvollerweise ein Dateimanager auf dem Android-Gerät installiert
       sein.</p>
@@ -127,29 +129,30 @@
     <img alt="" src="android-start-first.png" class="fimage"><br>
     Nach dem Klick kommt man auf die Einstellungsseite:<br>
     <img src="android-settings-main.png" alt="" class="fimage"><br>
-    Hier können neben anderen Einstellungen z. B. die Verzeichnisse&nbsp; für Karten und Tracks gesetzt 
+    Hier können neben anderen Einstellungen z. B. die Verzeichnisse&nbsp; für Karten und Tracks gesetzt
     werden.<br>
     Eine Liste aller Einstellungen findet sich <a href="#Settings">hier</a>.<br>
-    Die Einstellungen für die NMEA-Datenquellen und weitereDatenquellen erreicht
+    Die Einstellungen für die NMEA-Datenquellen und einige Weitere erreicht
     man in der App über die <a href="../userdoc/statuspage.html">"Server/Status"-Seite</a> <img src="../viewerimages/icons-new/status.svg" alt="" class="inlineimage">.<br>
     <br>
     <p> Die "Settings"-Seite kann über den "OK"-Button (oben rechts) oder über den
       "Zurück"-Button verlassen werden. Man erreicht dadurch die <a href="../userdoc/mainpage.html">Hauptseite</a>
       der App.</p>
     <img src="android-mainpage.png" alt="" class="fimage"><br>
-    Im Bild wird eine gültige Position als grüner Punkt im oberen Bereich dargestellt. Wenn bisher noch
-    keine gültigen AIS Daten empfangen wurden, zeigt das unten ein roter Punkt an.<br>
-    Um zu den Android-Einstellungen zu gelangen, muss zunächst die <a href="../userdoc/settingspage.html">Einstellungsseite</a>
+    Im Bild ist wird eine gültige Position (oberer grüner Punkt) und bisher noch
+    keine gültigen AIS Daten (unterer roter Punkt) empfangen.<br>
+    Um zu den Android Einstellungen zu gelangen, muss zunächst die <a href="../userdoc/settingspage.html">Einstellungsseite</a>
     in der App aufgerufen werden, dort klickt man dann auf den "Android"-Button.<br>
-    Nach wiederholten Starts der App wird die Einstellungs-Seite übersprungen, die Hauptseite erscheint sofort.<br>
+    Bei weiteren Starts erreicht man sofort die Hauptseite der App.<br>
     <br>
     <h2>Externer Zugriff</h2>
-    <p> </p>
-    <p>Ab der Version 202104xx lässt sich die App über den Browser anderer Geräten erreichen. Dazu muss in der App der Web-Server aktiviert werden (<a href="../userdoc/statuspage.html">Status/Server
+    <p> (neu ab 20210424).</p>
+    <p>Die App ermöglicht es, das man sich mit einem Browser von anderen Geräten
+      verbinden kann. Dazu muss in der App der Web-Server aktiviert werden (<a href="../userdoc/statuspage.html">Status/Server
         Seite</a> <img src="../viewerimages/icons-new/status.svg" alt="" class="inlineimage">).<br>
-      Bei der Aktivierung des Web-Servers muss zunächst der "externalAccess" aktiviert
-      werden. Mit "mdnsEnabled" wird dafür gesorgt, dass sich eine Bonjour-fähige App
-      (z.B. <a href="https://play.google.com/store/apps/details?id=de.wellenvogel.bonjourbrowser">BonjourBrowser</a>)
+      Bei der Aktivierung des Web Servers muss zunächst "externalAccess" aktiviert
+      werden. Mit "mdnsEnabled wird dafür gesorgt, dass sich eine Bonjour-fähige App
+      (z.B. <a href="https://play.google.com/store/apps/details?id=de.wellenvogel.bonjourbrowser">BonjourBrowser</a>)sich
       mit dem Server der App verbinden kann.</p>
     <p>In älteren Versionen hat die App dafür 2 Modi genutzt.<span style="color: #cccccc;"><br>
       </span></p>
@@ -168,11 +171,11 @@
       Hintergrund laufen. Das kann genuzt werden, wenn die Anzeige für Benutzer
       auf einem anderen Gerät erfolgen soll - oder wenn eine andere App für die
       Navigation genutzt wird und nur der Multiplexer von AvNav benötigt wird.</p>
-    <p>Dazu nach dem Start wird auf der Hauptseite über <img src="../viewerimages/icons-new/ic_clear.svg"
-        alt="" class="inlineimage">der "Beenden"-Dialog aufgerufen und dort
+    <p>Dazu wird nach dem Start auf der Hauptseite über <img src="../viewerimages/icons-new/ic_clear.svg"
+        alt="" class="inlineimage">der Beenden-Dialog aufgerufen und dort
       "BACKGROUND" ausgewählt.</p>
-    <p>Über eine Benachrichtigung in der Android-Nachrichtenzeile kann die App
-      wieder in den Vordergrund geholt oder direkt beendet werden.</p>
+    <p>Über die Benachrichtigung (in der Android-Nachrichtenzeile) kann die App
+      wieder in den Vordergrund geholt - oder direkt beendet werden.</p>
     <br>
     <h2> <a id="Settings" name="Settings"></a>Einstellungen</h2>
     <p>Die Einstellungen gliedern sich in zwei Teile:</p>
@@ -183,7 +186,7 @@
     <p>Die Android-Einstellungen erreicht man über den <img src="../viewerimages/icons-new/ic_android.svg"
         alt="" class="inlineimage">Button auf der <a href="../userdoc/settingspage.html">Einstellungsseite</a>
       bzw. der <a href="../userdoc/statuspage.html">Server/Status</a> Seite.</p>
-    <h3>Android Main >> Einstellungen</h3>
+    <h3>Android Main Einstellungen</h3>
     <table style="width: 100%" border="1">
       <tbody>
         <tr>
@@ -212,8 +215,7 @@
         <tr>
           <td>Alarm-Sounds</td>
           <td>Hier können die durch den Server erzeugten Alarm-Sounds
-            abgeschaltet werden. Im "external browser mode" müssen diese im
-            Browser ggf. zusätzlich abgeschaltet werden.</td>
+            abgeschaltet werden. Im Browser müssen diese ggf. zusätzlich abgeschaltet werden.</td>
           <td><br>
           </td>
         </tr>
@@ -258,7 +260,7 @@
     <p> </p>
     <p> </p>
     <h3><a name="MuxConfig" id="MuxConfig"></a>Multiplexer Einstellungen</h3>
-    <p>(neu ab 202104xx)</p>
+    <p>(neu ab 20210424)</p>
     <p>Die Einstellungen für den Multiplexer sind auf der <a href="../userdoc/statuspage.html">Status/Server
         Seite</a> <img src="../viewerimages/icons-new/status.svg" alt="" class="inlineimage">verfügbar.
       Für jede Funktion, z.B. für jede Quelle im Multiplexer, ist ein
@@ -285,7 +287,7 @@
         <tr>
           <td>enabled</td>
           <td>aktviert/deaktiviert diesen Handler</td>
-          <td>ja??? nach Handler</td>
+          <td>je nach Handler</td>
         </tr>
         <tr>
           <td>name</td>
@@ -310,14 +312,14 @@
             !<br>
             Alle RMC- und RMB-Sätze:<br>
             $RMC,$RMB<br>
-            Falls der Filter negiert werden soll, muss dem Ausdruck ein "^"" 
+            Falls der Filter negiert werden soll, muss ein ^ dem Ausdruck
             vorangestellt werden.<br>
             ^$RMB,^$APB</td>
           <td>leer</td>
         </tr>
         <tr>
           <td>blacklist</td>
-          <td>eine durch Kommas (,) getrennte Liste von NMEA-Sätzen. NMEA-Daten von diesen
+          <td>eine durch Kommas (,) getrennte Liste von Namen. NMEA Daten von diesen
             Quellen werden nicht ausgesendet.</td>
           <td><br>
           </td>
@@ -357,7 +359,7 @@
         </tr>
         <tr>
           <td>readTimeout</td>
-          <td>Timeout für die Anzeige (in sec), solange valide NMEA-Daten empfangen werden. ????</td>
+          <td>Timeout in s für die Anzeige ob valide NMEA Daten empfangen werden</td>
           <td>10</td>
         </tr>
       </tbody>
@@ -392,12 +394,12 @@
         </tr>
         <tr>
           <td>distance</td>
-          <td>Minimaler Abstand (in m), bevor ein neuer Wegepunkt geschrieben wird.</td>
+          <td>Minimaler Abstand (in m) bevor ein neuer Trackpunkt geschrieben wird</td>
           <td>25</td>
         </tr>
         <tr>
           <td>minTime</td>
-          <td>Minimale Zeit (in sec), bevor ein neuer Wegepunkt geschrieben wird</td>
+          <td>Minimale Zeit (in sec) bevor ein neuer Trackpunkt geschrieben wird</td>
           <td>10</td>
         </tr>
         <tr>
@@ -428,7 +430,7 @@
           <td>Wenn aktiv, dann können sich auch andere Geräte verbinden (sonst
             nur auf dem eigenen Gerät). <br>
             <span style="color: red;">Hinweis: Dieser Parameter sollte mit Vorsicht und nur in vetrauenswürdigen Netzen aktiviert
-              werden (). Innerhalb der App gibt es keinen weiteren Schutz!</span></td>
+              werden. Innerhalb der App gibt es keinen weiteren Schutz!</span></td>
           <td>aus</td>
         </tr>
         <tr>
@@ -438,7 +440,7 @@
         </tr>
         <tr>
           <td>mdnsService</td>
-          <td>Der Name unter dem die App per mDNS erreichbar ist.</td>
+          <td>Der Name unter dem die App per "mDNS" erreichbar ist.</td>
           <td>avnav-android</td>
         </tr>
       </tbody>
@@ -446,7 +448,7 @@
     <h4>InternalGPS</h4>
     <p>Das GPS des Gerätes.</p>
     <h4>MDNSResolver</h4>
-    <p>Der Handler für die Auflösung und das Bekanntmachen von mDNS
+    <p>Der Handler für die Auflösung und das Bekanntmachen von "mDNS"
       (Bonjour/Avahi) Services.</p>
     <h4>TcpReader</h4>
     <table style="width: 100%" border="1">
@@ -534,7 +536,7 @@
         </tr>
         <tr>
           <td>mdnsService</td>
-          <td>Der Name, unter dem dieser Server (die App) per mDNS erreichbar ist</td>
+          <td>Der Name, unter dem dieser Server per mDNS erreichbar ist</td>
           <td><br>
           </td>
         </tr>
@@ -603,7 +605,7 @@
       Liste der verfügbaren Services gewählt. Falls z.B. im Netz ein SignalK-Server oder ein AvNav-Server (&gt; 20210415) vorhanden sind, geben diese
       ihre NMEA-Ausgänge auf diese Weise im Netzwerk bekannt.<br>
       Der Vorteil ist, dass auch bei Wechsel des Netzwerkes der Zugriff im
-      Normalfall wieder funktionieren wird und Verbindungen so ohne Umwege wieder aufgebaut
+      Normalfall wieder funktionieren wird und Verbindungen so automatisch wieder aufgebaut
       werden können.</p>
     <img src="android-status-add-nmea0183.png" alt="" class="fimage">
     <table style="width: 100%" border="1">
@@ -651,7 +653,7 @@
     <p>AvNav wird aktiv, wenn ein USB-Gerät angeschlossen wird. Es ist daher sinnvoll,
       zunächst AvNav zu starten und danach das USB-Gerät anzuschließen. Das Gerät kann
       dann direkt so konfiguriert werden, dass AvNav immer auf dieses Gerät zugreifen
-      darf. AvNav startet daher sofort den Dialog zur Konfiguration des
+      darf. AvNav startet dann sofort den Dialog zur Konfiguration des
       Gerätes.</p>
     <p><img src="android-connect-usb.png" alt="" class="fimage"></p>
     <table style="width: 100%" border="1">

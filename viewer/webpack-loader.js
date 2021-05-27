@@ -30,7 +30,7 @@
  */
 
 (function () {
-
+    var SUFFIX=1; //will be changed by copy-webpack-plugin
     var scripts = [
         'libraries/geo.js',
         'libraries/latlon.js',
@@ -45,10 +45,10 @@
     for (var i in scripts) {
         var scriptname = scripts[i];
         if (scriptname.match(/\.css/)){
-            document.write('<link rel="stylesheet" type="text/css" href="'+scriptname+'"/>');
+            document.write('<link rel="stylesheet" type="text/css" href="'+scriptname+'?_='+SUFFIX+'"/>');
         }
         else {
-            document.write('<scr' + 'ipt type="text/javascript" src="' + scriptname + '"></scr' + 'ipt>');
+            document.write('<scr' + 'ipt type="text/javascript" src="' + scriptname + '?_='+SUFFIX+'"></scr' + 'ipt>');
         }
     }
 }());

@@ -31,14 +31,16 @@ export const PropertyType={
  * @param opt_label
  * @param opt_type
  * @param opt_values either min,max,[step],[decimal] for range or a list of value:label for list
+ * @param opt_initial value to be set on first start
  * @constructor
  */
-export const Property=function(defaultv,opt_label,opt_type,opt_values){
+export const Property=function(defaultv,opt_label,opt_type,opt_values,opt_initial){
     this.defaultv=defaultv;
     this.label=opt_label;
     this.type=(opt_type !== undefined)?opt_type:PropertyType.RANGE;
     this.values=(opt_values !== undefined)?opt_values:[0,1000]; //assume range 0...1000
     this.canChange=opt_type !== undefined;
+    this.initialValue=opt_initial;
 };
 
 /**
@@ -87,6 +89,8 @@ let keys={
             speedAverageOn: K,
             courseAverageOn: K,
             depthBelowTransducer: V,
+            headingMag: V,
+            headingTrue: V,
             sequence: K, //will be incremented as last operation on each receive
             connectionLost: K,
             updatealarm: new D("update counter for alarms"),
@@ -149,8 +153,7 @@ let keys={
         courseUp: K,
         currentZoom:K,
         requiredZoom:K,
-        centerPosition:K,
-        lastClickTime: K
+        centerPosition:K
         },
     gui:{
         capabilities:{
@@ -167,7 +170,8 @@ let keys={
             canConnect: K,
             config: K,
             debugLevel: K,
-            log: K
+            log: K,
+            remoteChannel: K
         },
         global:{
             smallDisplay: K,
@@ -189,6 +193,7 @@ let keys={
             computedButtonHeight: K,
             computedButtonWidth: K,
             isFullScreen: K,
+            remoteChannelState:K,
 
         },
         gpspage:{
@@ -278,6 +283,8 @@ let keys={
         navCircle2Radius: new Property(1000, "Circle 2 Radius(m)", PropertyType.RANGE, [0, 5000, 10]),
         navCircle3Radius: new Property(0, "Circle 3 Radius(m)", PropertyType.RANGE, [0, 10000, 10]),
         boatIconScale: new Property(1,"Boat Icon Scale",PropertyType.RANGE, [0.5,5,0.1]),
+        boatDirectionMode: new Property('cog','boat direction',PropertyType.LIST,['cog','hdt','hdm']),
+        boatDirectionVector: new Property(true,'add dashed vector for hdt/hdm',PropertyType.CHECKBOX),
         windScaleAngle: new Property(50, "red/green Angle Wind", PropertyType.RANGE, [5, 90, 1]),
         anchorWatchDefault: new Property(300, "AnchorWatch(m)", PropertyType.RANGE, [0, 1000, 1]),
         gpsXteMax: new Property(1, "XTE(nm)", PropertyType.RANGE, [0.1, 5, 0.1, 1]),
@@ -286,7 +293,7 @@ let keys={
         trackInterval: new Property(30, "Point Dist.(s)", PropertyType.RANGE, [5, 300]), //seconds
         initialTrackLength: new Property(24, "Length(h)", PropertyType.RANGE, [1, 48]), //in h
         aisQueryTimeout: new Property(5000, "AIS (ms)", PropertyType.RANGE, [1000, 10000, 10]), //ms
-        aisDistance: new Property(20, "AIS-Range(nm)", PropertyType.RANGE, [1, 100]), //distance for AIS query in nm
+        aisDistance: new Property(20, "AIS-Range(nm)", PropertyType.RANGE, [1, 1000]), //distance for AIS query in nm
         aisUseCourseVector: new Property(true, "AIS Use Course Vector", PropertyType.CHECKBOX),
         aisIconBorderWidth: new Property(3, "Border Width", PropertyType.RANGE, [0, 10]),
         aisIconScale: new Property(1,"Icon Scale",PropertyType.RANGE, [0.5,5,0.1]),
@@ -348,17 +355,30 @@ let keys={
         smallBreak: new Property(480, "portrait layout below (px)", PropertyType.RANGE, [200, 9999]),
         mapClickWorkaroundTime: new Property(300, "time to ignore events map click", PropertyType.RANGE, [0, 1000]),
         wpButtonTimeout: new Property(30,"time(s) for auto hiding wp buttons",PropertyType.RANGE,[2,3600]),
+        nightModeNavPage: new Property(true,"show night mode on navpage",PropertyType.CHECKBOX),
+        hideButtonTime: new Property(30,"time(s) to hide buttons on enabled pages",PropertyType.RANGE,[2,90]),
+        showButtonShade: new Property(true,"show shade when buttons hidden",PropertyType.CHECKBOX),
+        autoHideNavPage: new Property(false,"auto hide buttons on NavPage",PropertyType.CHECKBOX),
+        autoHideGpsPage: new Property(false,"auto hide buttons on Dashboard Pages",PropertyType.CHECKBOX),
         toastTimeout: new Property(15,"time(s) to display messages",PropertyType.RANGE,[2,3600]),
         layoutName: new Property("system.default","Layout name",PropertyType.LAYOUT),
         mobMinZoom: new Property(16,"minzoom for MOB",PropertyType.RANGE,[8,20]),
         buttonCols: new Property(false,"2 button columns",PropertyType.CHECKBOX),
-        cancelTop: new Property(false,"Back button top",PropertyType.CHECKBOX),
+        cancelTop: new Property(false,"Back button top",PropertyType.CHECKBOX,undefined,true),
         featureInfo: new Property(true,"Overlay Info on Click",PropertyType.CHECKBOX),
         emptyFeatureInfo: new Property(true,"Always Info on Chart Click",PropertyType.CHECKBOX),
         showFullScreen: new Property(true,"Show Fullscreen Button",PropertyType.CHECKBOX),
         mapUpZoom: new Property(4,"zoom up lower layers",PropertyType.RANGE,[0,6]),
         mapOnlineUpZoom: new Property(0,"zoom up lower layers for online sources",PropertyType.RANGE,[0,6]),
         mapScale: new Property(1,"scale the map display",PropertyType.RANGE,[0.3,5]),
+        mapFloat: new Property(false,"float map behind buttons",PropertyType.CHECKBOX),
+        mapLockMode: new Property('center','lock boat mode',PropertyType.LIST,['center','current','ask']),
+        mapBoatX: new Property(50,"boat position x(%)",PropertyType.RANGE,[1,99]),
+        mapBoatY: new Property(50,"boat position y(%)",PropertyType.RANGE,[1,99]),
+        remoteChannelName: new Property('0','remote control channel',PropertyType.LIST,['0','1','2','3','4']),
+        remoteChannelRead: new Property(false,'read from remote channel',PropertyType.CHECKBOX),
+        remoteChannelWrite: new Property(false,'write to remote channel',PropertyType.CHECKBOX),
+        remoteGuardTime: new Property(2,'time(s) to switch read/write',PropertyType.RANGE,[1,10]),
 
         style: {
             buttonSize: new Property(50, "Button Size(px)", PropertyType.RANGE, [35, 100]),
@@ -368,7 +388,7 @@ let keys={
             aisTrackingColor: new Property('#CAD5BE', "Tracking", PropertyType.COLOR),
             routeApproachingColor: new Property('#FA584A', "Approach", PropertyType.COLOR),
             widgetMargin: new Property(3, "Widget Margin(px)", PropertyType.RANGE, [1, 20]),
-            useHdpi: new Property(false,"Increase Fonts on High Res",PropertyType.CHECKBOX)
+            useHdpi: new Property(false,"Increase Fonts on High Res",PropertyType.CHECKBOX,undefined,true)
         }
 
     }

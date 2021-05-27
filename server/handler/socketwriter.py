@@ -82,7 +82,6 @@ class AVNSocketWriter(AVNWorker,SocketReader):
   
   def __init__(self,cfgparam):
     AVNWorker.__init__(self, cfgparam)
-    self.readFilter=None
     self.blackList=[]
     self.listener=None
     self.addrmap = {}
@@ -190,22 +189,12 @@ class AVNSocketWriter(AVNWorker,SocketReader):
     threading.currentThread().setName("%s-Reader-%s"%(self.getName(),str(addr)))
     #on each newly connected socket we recompute the filter
     filterstr=self.getStringParam('readerFilter')
-    filter=None
-    if filterstr != "":
-      filter=filterstr.split(',')
-    self.readFilter=filter
-    self.readSocket(socket,infoName,self.getSourceName(),self.getParamValue('filter'))
+    self.readSocket(socket,infoName,self.getSourceName(),filterstr)
     self.deleteInfo(infoName)
 
-  #if we have writing enabled...
+  #if we have reading enabled...
   def writeData(self,data,source=None):
-    doFeed=True
-    if self.readFilter is not None:
-      if not NMEAParser.checkFilter(data,self.readFilter):
-        doFeed=False
-        AVNLog.debug("ingoring line %s due to filter",data)
-    if doFeed:
-      self.feederWrite(data,source)
+    self.feederWrite(data,source)
     if (self.getIntParam('minTime')):
       time.sleep(float(self.getIntParam('minTime'))/1000)
 

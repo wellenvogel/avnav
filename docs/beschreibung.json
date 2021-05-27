@@ -11,7 +11,7 @@
         {"title":"Installation und Updates","en_title":"Installation and Updates","url":"install.html"},
         {"title":"Karten","en_title":"Charts","url":"charts.html"},
         {"title":"Benutzung","en_title":"Usage","url":"userdoc/index.html"},
-        {"title":"Android","url":"android.html"},
+        {"title":"Android","url":"android/android.html"},
         {"title":"Import und Export","en_title":"Import and Export","url":"userdoc/downloadpage.html"},
         {"title":"Konfiguration und Anpassung","en_title":"Configuration and Adaptation","url":"hints/index.html"},
         {"title":"Erweiterungen und Zusätze","en_title":"Extensions and AddOns","url":"hints/extensions.html"},

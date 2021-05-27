@@ -213,8 +213,7 @@ class MainPage extends React.Component {
                     let mode = globalStore.getData(keys.properties.nightMode, false);
                     mode = !mode;
                     globalStore.storeData(keys.properties.nightMode, mode);
-                },
-                editDisable: true
+                }
             },
             Mob.mobDefinition,
             LayoutFinishedDialog.getButtonDef(),

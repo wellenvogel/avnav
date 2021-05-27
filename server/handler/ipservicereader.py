@@ -157,19 +157,25 @@ class AVNIpServiceReader(AVNWorker,SocketReader):
       self.version=baseConfig.getVersion()
     errorReported=False
     lastInfo = None
+    lastName=None
     while not self.shouldStop():
       avahi=self.findHandlerByName(AVNAvahi.getConfigName())
       if avahi is None:
         raise Exception("no avahi handler found")
       serviceName=self.P_SERVICE_NAME.fromDict(self.param,rangeOrListCheck=False)
-      self.setInfo('main',"resolving %s.%s"%(self.getServiceType(),serviceName),WorkerStatus.STARTED)
+      if lastName != serviceName:
+        self.setInfo('main',"resolving %s.%s"%(self.getServiceType(),serviceName),WorkerStatus.STARTED)
+        lastName=serviceName
+      else:
+        AVNLog.debug("trying to re-resolve service %s",serviceName)
       resolved=avahi.resolveService(self.getServiceType(),serviceName)
       if resolved is None:
         self.setInfo('main',"unable to resolve %s.%s"%(self.getServiceType(),serviceName),WorkerStatus.ERROR)
         if (self.shouldStop()):
           break
-        self.wait(3000)
+        self.wait(3)
         continue
+      lastName=None
       host=resolved[1]
       port=resolved[2]
       self.setNameIfEmpty("%s-%s:%d" % (self.getName(), host,port))

@@ -39,6 +39,7 @@ import LeaveHandler from './util/leavehandler';
 import EditHandlerDialog from "./components/EditHandlerDialog";
 import AndroidEventHandler from './util/androidEventHandler';
 import And from "ol/format/filter/And";
+import remotechannel, {COMMANDS} from "./util/remotechannel";
 
 
 const DynamicSound=Dynamic(SoundHandler);
@@ -182,6 +183,22 @@ class App extends React.Component {
         },'addon',['0','1','2','3','4','5','6','7']);
         this.newDeviceHandler=this.newDeviceHandler.bind(this);
         this.subscription=AndroidEventHandler.subscribe('deviceAdded',this.newDeviceHandler);
+        this.remoteChannel=remotechannel;
+        this.remoteChannel.start();
+        this.remoteChannel.subscribe(COMMANDS.setPage,(msg)=>{
+            let parts=msg.split(/  */);
+            try {
+                let location = parts[0];
+                let options={};
+                if (parts.length > 1) {
+                    options = JSON.parse(parts[1]);
+                }
+                if (pages[location] === undefined){
+                    return;
+                }
+                history.setFromRemote(location,options);
+            }catch (e){}
+        });
 
     }
     newDeviceHandler(){
@@ -273,6 +290,8 @@ class App extends React.Component {
         }
         const Dialogs = OverlayDialog.getDialogContainer;
         let appClass="app";
+        let layoutClass=(this.props.layoutName||"").replace(/[^0-9a-zA-Z]/g,'_');
+        appClass+=" "+layoutClass;
         if (this.props.smallDisplay) appClass+=" smallDisplay";
         return <div
             className={appClass}
@@ -314,5 +333,6 @@ export default   Dynamic(App,{
       fontSize: keys.properties.baseFontSize,
       smallDisplay: keys.gui.global.smallDisplay,
       nightMode: keys.properties.nightMode,
+      layoutName: keys.properties.layoutName
   }
 });

@@ -339,3 +339,14 @@ class AVNApi(object):
     @param usbid: if None deregister all ids we have registered
     @return:
     '''
+    raise NotImplemented()
+  def sendRemoteCommand(self,command,param,channel=0):
+    '''
+    send a remote channel command
+    this will be sent to all connected displays listening on this channel
+    @param command: K or one of Cx - see viewer/util/remotechannel.js:COMMANDS
+    @param param: the command parameter, for K: the key code
+    @param channel: the channel id (0...4)
+    @return:
+    '''
+    raise NotImplemented()

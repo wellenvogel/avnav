@@ -16,6 +16,7 @@ import Requests from '../util/requests.js';
 import InputMonitor from '../hoc/InputMonitor.jsx';
 import Mob from '../components/Mob.js';
 import Addons from '../components/Addons.js';
+import remotechannel, {COMMANDS} from "../util/remotechannel";
 
 
 class AddOnPage extends React.Component{
@@ -43,7 +44,19 @@ class AddOnPage extends React.Component{
         if (globalStore.getData(keys.gui.addonpage.activeAddOn) === undefined){
             globalStore.storeData(keys.gui.addonpage.activeAddOn,0);
         }
+        this.remoteToken=remotechannel.subscribe(COMMANDS.addOn,(number)=>{
+            let i=parseInt(number);
+            if (i < 0 || i >= this.state.addOns.length) return;
+            globalStore.storeData(keys.gui.addonpage.activeAddOn, -1);
+            window.setTimeout(()=> {
+                globalStore.storeData(keys.gui.addonpage.activeAddOn, i);
+            },100);
+        })
     }
+    componentWillUnmount() {
+        remotechannel.unsubscribe(this.remoteToken);
+    }
+
     componentDidMount(){
         let self=this;
         Addons.readAddOns(true)
@@ -76,6 +89,7 @@ class AddOnPage extends React.Component{
                     name: addOn.key,
                     icon: addOn.icon,
                     onClick: ()=> {
+                        remotechannel.sendMessage(COMMANDS.addOn,i);
                         //first unload the iframe completely to avoid pushing to the history
                         globalStore.storeData(keys.gui.addonpage.activeAddOn, -1);
                         window.setTimeout(()=> {
