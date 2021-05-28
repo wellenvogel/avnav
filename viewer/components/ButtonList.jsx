@@ -24,11 +24,18 @@ class ButtonList extends React.Component{
         this.buttonList=undefined;
         this.buttonListWidth=0;
     }
-    itemSort(a,b){
-        if (! this.props.cancelTop) return 0;
-        if (a.name === 'Cancel') return -1;
-        if (b.name === 'Cancel') return 1;
-        return 0;
+    itemSort(items){
+        if (! this.props.cancelTop) return items;
+        let rt=[];
+        for (let round=0;round < 2;round++){
+            items.forEach((item)=>{
+                if ((round === 0 && item.name === 'Cancel')
+                    ||(round !== 0 && item.name !== 'Cancel')){
+                    rt.push(item);
+                }
+            })
+        }
+        return rt;
     }
     getStateKey(props){
         if (!props || ! props.name) return;
@@ -96,7 +103,7 @@ class ButtonList extends React.Component{
                 invisibleItems.push(this.props.itemList[k]);
             }
         }
-        items.sort(this.itemSort);
+        items=this.itemSort(items);
         let maxButtons=this.props.maxButtons;
         if (this.props.buttonCols) maxButtons=Math.ceil(maxButtons/2);
         let scale=1;
