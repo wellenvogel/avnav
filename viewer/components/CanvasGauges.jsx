@@ -51,6 +51,8 @@ class Gauge extends React.Component{
         for (let k in rt){
             if (rt[k] === undefined) delete rt[k];
         }
+        if (props.minValue !== undefined) props.minValue=parseFloat(props.minValue);
+        if (props.maxValue !== undefined) props.maxValue=parseFloat(props.maxValue);
         return rt;
     }
     render(){
