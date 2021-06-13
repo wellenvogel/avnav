@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Fernsteuerung</title>
+    <link href="../styles.css" rel="stylesheet" type="text/css">
+  </head>
+  <body data-order="1550">
+    <h1>Fernsteuerung</h1>
+    <div class="toc"> </div>
+    <p>Ab Version 202106xx bietet AvNav die Möglichkeit, die Anzeige auf einem
+      Display-Gerät durch ein anderes Gerät oder vom Server aus fernzusteuern.</p>
+    <p>Das kann man beispielsweise nutzen, wenn man ein Gerät zur Anzeige in der
+      Plicht verwendet, dieses jedoch nicht in Griffweite ist. Dann kann man
+      z.B. mit einem am Körper befindlichen anderen Gerät - oder mit einer
+      Fernsteuerung - die Anzeige auf dem Display umschalten.</p>
+    <h2>Funktionen</h2>
+    <p>Per Fernsteuerung können Seiten umgeschaltet werden und auf den Seiten
+      kann teilweise die Anzeige verändert werden (z.B. Auswahl der angezeigten
+      Dashboard Seite oder Auswahl der Karte).</p>
+    <p>In der Navigationsansicht wird das Verschieben der Karte, das Zentrieren
+      und das Zoomen übertragen.</p>
+    <h2>Konfiguration</h2>
+    <p>Insgesamt bietet AvNav 5 Fernsteuerungskanäle an. Für jedes Gerät kann
+      ausgewählt werden, welchen Kanal es nutzen soll und ob es auf diesem Kanal
+      Kommandos senden oder empfangen soll (<a href="../userdoc/settingspage.html">Einstellungen</a>/Remote).
+      Für eine funktionierende Fernsteuerung müssen also mindestens 2 Display
+      Geräte auf den gleichen Kanal eingestellt werden und eines davon muss
+      senden und das andere empfangen.</p>
+    <p>Man kann auch die Geräte so einstellen, das sie sowohl senden als auch
+      empfangen. Hier wird nach einer Wartezeit nach einer lokalen Bedieung
+      jeweils automatisch in den Empfangsmodus geschaltet.</p>
+    <p>Im Server muss der Handler für die Fernsteuerung aktiv sein
+      (standardmässig an).</p>
+    <p>In der Server Variante (nicht Android) können Fernsteuerungskommandos
+      auch per UDP empfangen werden (nur Kanal 0) - oder über ein Plugin.</p>
+    <p>Es existiert ein Plugin für die <a href="https://github.com/wellenvogel/avnav-obp-rc-remote-plugin">Open
+        Boat Projects IR Fernbedienung</a> von <a href="https://www.segeln-forum.de/user/19350-chrhartz">chrhartz</a>.</p>
+    <p>Per UDP oder über ein Plugin können verschiedene Fernsteuerungs-Kommandos
+      gesendet werden (siehe unter Technik).</p>
+    <h2>Technik</h2>
+    <p>Intern verbindet sich jeder Browser mit dem konfigurierten
+      Fernsteuerungskanal auf dem Server (unter Nutzung von WebSockets). Auf
+      diesem Kanal sendet oder/und empfängt er dann Kommandos (je nach
+      Konfiguration).</p>
+    <p>Diese Kommandos sind entweder Tastendrücke oder etwas komplexere
+      Funktionen&nbsp; z.B. zum Umschalten einer Seite.</p>
+    <p>Die Kommandos werden jeweils als String erwartet, über UDP mit einem
+      abschliessenden NewLine.<br>
+      Sie bestehen jeweils aus einem Typ und Parametern.</p>
+    <h3>Tasten-Kommandos</h3>
+    <p>Ein Tasten-Kommando besteht aus einem "K", einem Leerzeichen und dem
+      Tastencode. </p>
+    <div class="code">K Ctrl-<br>K a</div>
+    <p>Die Tasten lösen die Aktion entsprechend ihrer Konfiguration aus ( siehe
+      <a href="keyboard.html">Tastatur-Steuerung</a>).</p>
+    <h3>Komplexe Kommandos</h3>
+    <p>Diese Kommandos lösen direkt bestimmte Aktionen in AvNav aus. Die
+      Parameter sind meist in JSON kodiert.<br>
+      Sie sind primär zur Steuerung von einem Display zu einem anderen gedacht
+      und ihre Form kann sich durchaus ändern.<br>
+      Prinzipiell sehen sie wie folgt aus:</p>
+    <div class="code">CP navpage</div>
+    <p>In diesem Falle: setze die Seite "navpage". Eine Liste der Kommandos
+      findet sich im source code unter <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/util/remotechannel.js">remotechannel.js</a>.</p>
+  </body>
+</html>

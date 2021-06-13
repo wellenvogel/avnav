@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Remote Control</title>
+    <link href="../styles.css" rel="stylesheet" type="text/css">
+  </head>
+  <body data-order="1550">
+    <h1>Remote Control</h1>
+    <div class="toc"> </div>
+    Since version 202106xx AvNav has the ability to control the display on one
+    device from another one - or from the server.
+    <p>You could e.g.utilize this function if you have a display in your cockpit
+      - but you cannot directly reach it with your hands. So you could have
+      another device (like a smart phone or a real remote control) in reach and
+      use this one to change the display.</p>
+    <h2>Functions</h2>
+    <p>You can switch pages via remite control and you can trigger some other
+      actions on a page (like selecting the chart or changing to another
+      dahsboard page).</p>
+    <p>In the navigation view the moving and centering of the map or the zoom in
+      / zoom out will be transferred.</p>
+    <h2>Configuration</h2>
+    <p>AvNav has 5 remote control channels. For every display device you can
+      select which channel it should use and whether it should send or receive
+      on this channel (<a href="../userdoc/settingspage.html">Settings</a>/Remote).
+      For a remote connection to become active you need to assign at least 2
+      devices to one channel and have one of them enabled sending and one of
+      them receiving.</p>
+    <p>You can also enable both sending and receiving on one device. Such a
+      device will send out local actions and receive remote ones (after a "dead
+      time" after each local action).</p>
+    <p>At the server you need to enable the remote channel handler /default:
+      active).</p>
+    <p>In the server version (not on Android) remote control commands can also
+      be received via UDP or by a plugin.</p>
+    <p>There is a plugin for the&nbsp; <a href="https://github.com/wellenvogel/avnav-obp-rc-remote-plugin">Open
+        Boat Projects IR Remote</a> from <a href="https://www.segeln-forum.de/user/19350-chrhartz">chrhartz</a>.</p>
+    <p>Via UDP or by a plugin various remote control commands can be received
+      (see at Details).</p>
+    <h2>Details</h2>
+    <p>Internally each browser will connect to the configured remote control
+      channel on the server /using WebSockets).On this channel it will send
+      and/or receive commands (depending on it's configuration).</p>
+    <p>Remote control commands are either key presses or some more complex
+      commands like switching a page.</p>
+    <p>The commands are expected to be strings, at the UDP API terminated by a
+      NewLine.<br>
+      They consist of a type and parameters.</p>
+    <h3>Key-Commands</h3>
+    <p>A key command consists of a "K" a space and the key code. </p>
+    <div class="code">K Ctrl-<br>K a</div>
+    <p>The keys will trigger actions according to their configuration( see <a href="keyboard.html">Keyboard-Control</a>).</p>
+    <h3>Complex Commands</h3>
+    <p>Those commands directly trigger various actions within AvNav. Parameters
+      are often encoded in JSON.<br>
+      They are inteded to be used for controlling one display from another - and
+      there format can easily change in the future.<br>
+      Basically the look like:</p>
+    <div class="code">CP navpage</div>
+    <p>In this example: Switch to page "navpage". A current list of commands can
+      be found in the source code at <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/util/remotechannel.js">remotechannel.js</a>.</p>
+    <p><br>
+    </p>
+  </body>
+</html>
