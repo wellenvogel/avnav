@@ -56,12 +56,158 @@
         </tr>
       </tbody>
     </table>
-    <p>You can set many parameters affecting your display. All those
-      settings are stored in the current browser (associated with the URL you 
-      used to open AvNav). They are not stored on the server!</p>
-    <p>For most values there is a separate reset button. 
-	Globally you can reset to defaults using the <img src="../viewerimages/icons-new/ic_delete.svg"
-	 alt="" class="inlineimage">button. A confirmation dialog is displayed when leaving the
-	  page without saving.</p>
+    <p>You can set many parameters affecting your display. All those settings
+      are stored in the current browser (associated with the URL you used to
+      open AvNav). They are not stored on the server!</p>
+    <p>For most values there is a separate reset button. Globally you can reset
+      to defaults using the <img src="../viewerimages/icons-new/ic_delete.svg"
+        alt="" class="inlineimage">button. A confirmation dialog is displayed
+      when leaving the page without saving.</p>
+    <p>Most of the settings should be self explanatory. Some more sophisticated
+      ones are described below.
+    </p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Category</td>
+          <td>Value</td>
+          <td>Description</td>
+          <td>Default</td>
+        </tr>
+        <tr>
+          <td>Buttons</td>
+          <td>auto hide buttons on NavPage</td>
+          <td>Hide the buttons on the navigation page after a timeout (can be
+            configured). <br>
+            Clicking on the right border will bring the buttons back.</td>
+          <td>off</td>
+        </tr>
+        <tr>
+          <td>Buttons</td>
+          <td>auto hide buttons on Dashboard Pages</td>
+          <td>Hide the buttons on the navigation page after a timeout (can be
+            configured). <br>
+            Clicking on the right border will bring the buttons back.</td>
+          <td>off</td>
+        </tr>
+        <tr>
+          <td>Buttons</td>
+          <td>time(s) to hide buttons on enabled pages</td>
+          <td>Time (in seconds) until the buttons are hidden on the pages where
+            this is configured.</td>
+          <td>30</td>
+        </tr>
+        <tr>
+          <td>Buttons</td>
+          <td>show shade when buttons hidden</td>
+          <td>Show a shadow area on the right side when the buttons are
+            invisible. You need to click on this are to bring the buttons back.</td>
+          <td>on</td>
+        </tr>
+        <tr>
+          <td>Navigation</td>
+          <td>boat direction</td>
+          <td>Define which NMEA value will be used to draw the boat symbol
+            orientation.: COG, HDT, HDM. If you configure HDT or HDM and this
+            value is not being received it will fall back to COG. The course
+            vector will be determined by COG in any case.</td>
+          <td>COG</td>
+        </tr>
+        <tr>
+          <td>Navigation</td>
+          <td>add dashed vector for hdt/hdm</td>
+          <td>Show an additional dashed course vector if you configured HDM or
+            HDT for the boat orientation.</td>
+          <td>on</td>
+        </tr>
+        <tr>
+          <td>Navigation</td>
+          <td>Rotation Tolerance</td>
+          <td>If you configured "course up" for the map display it will not be
+            rotated immediately for course changes below this value. This will
+            make the map display more readable.</td>
+          <td>15</td>
+        </tr>
+        <tr>
+          <td>Map</td>
+          <td>automatic zoom</td>
+          <td>If you have locked the map to the boat position the zoom level
+            will be automatically adapted to the available tiles in the area of
+            the current display. So if you e.g. move from an area with higher
+            zoom levels available (like a port) to an area where only lower zoom
+            levels ara available the map display will zoom out automatically
+            (not for o-charts).</td>
+          <td>on</td>
+        </tr>
+        <tr>
+          <td>Map</td>
+          <td>float map behind buttons</td>
+          <td>If you activate this setting the buttons and widgets will "float"
+            on top of the map without a fixed background.</td>
+          <td>off</td>
+        </tr>
+        <tr>
+          <td>Map</td>
+          <td>Increase Fonts on High Res</td>
+          <td>Increase the symbol sizes and text fonts on high resolution
+            displays.</td>
+          <td>on</td>
+        </tr>
+        <tr>
+          <td>Map</td>
+          <td>scale the map display</td>
+          <td>Some raster charts have a display with very small fonts and symbol
+            sizes. This sometimes is hardly readable. With this setting you can
+            scale up (or down) the display of the chart tiles to adapt to your
+            personal preferences.</td>
+          <td>1</td>
+        </tr>
+        <tr>
+          <td>Map</td>
+          <td>zoom up lower layers</td>
+          <td>If there is no tile for the selected zoom level available just try
+            to load tiles from lower levels and scale them up. As this requires
+            addtional communication with the server it could impact the
+            performance. The value defines how many lower levels will be tried
+            to find a tile.</td>
+          <td>4</td>
+        </tr>
+        <tr>
+          <td>Map</td>
+          <td>zoom up lower layers for online sources</td>
+          <td>The same behavior like "zoom up lower layers" for charts that are
+            directly loaded from the net (also for o-charts). Typically it does
+            not make a lot of sense for such charts - so the default is off(0).</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td>Map</td>
+          <td>Click Tolerance</td>
+          <td>The "catching area" in pixels for the click on chart objects.
+            A large area would potentially select the wron object, smaller areas
+            could make touch actions difficult.</td>
+          <td>60</td>
+        </tr>
+        <tr>
+          <td>Route</td>
+          <td>Approach</td>
+          <td>Destination to waypoint (in meters) for potential switching to
+            next waypoint if:<br>
+            - the distance to the current target waypoint increases and<br>
+            - the distance to the next waypoint decreases</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>Remote</td>
+          <td>...</td>
+          <td>See the <a href="../hints/RemoteControl.html">description</a></td>
+          <td><br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p><br>
+    </p>
   </body>
-  </html>
+</html>

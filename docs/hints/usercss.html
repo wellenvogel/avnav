@@ -19,6 +19,13 @@
     <p>Durch Klick auf die Datei und Auswahl von "Edit" kann die Datei
       bearbeitet werden. Bei der Installation wurde ein Template eingebracht,
       das ein Beispiel enthält.</p>
+    <p>Ab Version 202106xx wird der Name des aktuellen Layouts als CSS Klasse an
+      der Applikation gesetzt. Dabei werden alle Sonderzeichen durch einen "_"
+      ersetzt. Das Layout user.default führt somit zu einer CSS Klasse
+      user_default. Man kann damit CSS Einstellungen vornehmen, die spezifisch
+      für ein bestimmtes Layout sind (damit kann man für unterschiedliche Geräte
+      auch unterschiedliche CSS Einstellunegn nutzen).</p>
+    <div class="code">.user_default .widget .COG {<br>  color: green;<br>}<br>.user_special .widget .COG {<br>  color: red;<br>}</div>
     <p>Eine sinnvolle Vorgehensweise ist die Nutzung der Developer Tools
       (Chrome, Firefox,...), die Auswahl des Elementes, das angepasst werden
       soll und ein Test der Änderungen in den Tools.</p>

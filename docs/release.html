@@ -40,6 +40,63 @@ sudo systemctl start avnav</div>
     <br>
     <div> </div>
     <h2>Versionen</h2>
+    <p> <span style="font-weight: bold;">202106xx</span> <a title="release/202106xx"
+        href="../downloads/release/202106xx">link</a> </p>
+    <p>Neue Funktionen</p>
+    <ul>
+      <li>&nbsp;zeige den Nachtmodus Button auch im Layout Editor</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/88">#88</a>:
+        dekodiere HDG,HDT,HDM,VHW (teilweise) auf dem Server und unter&nbsp;
+        Android</li>
+      <li>HDT,HDM widgets</li>
+      <li>ermögliche die Nutzung von HDT oder HDM für die Richtungsanzeige des
+        Boot-Symbols (<a href="userdoc/settingspage.html">Einstellungen</a>/navigation/boat
+        direction )</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/138">#138</a>
+        ermögliche das Boot auf jeder beliebigen Position auf dem Bildschirm zu
+        fixieren(<a href="userdoc/settingspage.html">Einstellungen</a>/map/lock
+        boat mode)</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/139">#139</a>
+        zeige den Nachtmodus Button auch auf der Navigationsseite</li>
+      <li>Erlaube einen "schwebenden" Mode der Buttons und Anzeigen über der
+        Karte (<a href="userdoc/settingspage.html">Einstellungen</a>/map/float
+        map behind buttons)</li>
+      <li>Verberge die Buttons auf der Navigationsseite und auf den Dashboard
+        Seiten nach einer einstellbaren Zeit (<a href="userdoc/settingspage.html">Einstellungen</a>/buttons/auto
+        hide buttons...)</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/132">#132</a>
+        zeige +/- 180 im Wind Widget (einstellbar im Layout Editor), kleinere
+        Verbesserungen am Wind Graphics Widget</li>
+      <li>setze den Layout-Namen als CSS KLasse an der Applikation um <a href="hints/usercss.html">CSS
+          Stile</a> für verschiedene Layouts zu ermöglichen</li>
+      <li><a href="hints/RemoteControl.html">Fernsteuerung</a></li>
+      <ul>
+        <li>Steuere ein Display von einem anderen oder vom Server</li>
+        <li>5 Kanäle, jedes Display kann auf einem davon senden oder/und
+          empfangen</li>
+        <li>UDP Port für den Empfang von Fernsteuerkommandos</li>
+        <li><a href="https://github.com/wellenvogel/avnav-obp-rc-remote-plugin">Plugin</a>
+          für die Zusammenarbeit mit der obp-rc-remote Fernbedienung</li>
+      </ul>
+      <li>Interface Wichtungen für eine einfache Umschaltung zwischen ethernet
+        und WLAN für den Internet-Zugang (avnav-raspi)</li>
+    </ul>
+    &nbsp; Fehlerkorrekturen:
+    <ul>
+      <li>Einfrieren bei der Nutzung von Linear Gauges</li>
+      <li>Falsche Button-Sortierung auf alten Browsern</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/140">#140</a>:
+        Nachtmodus für XTE Widget, Wind Graphics, einige Gauges</li>
+      <li>Umschaltung zwischen Access Point und WLAN client über die Config GUI
+        funktionierte nicht</li>
+      <li>Wenn gleichzeitig apparent und true Wind vorhanden sind, springt die
+        Anzeige zwischen beiden. Jetzt wird "apparent" bevorzugt und nur wenn
+        das nicht empfangen wird, wird "true" genutzt. Es erfolgt eine Anzeige
+        welcher Wert genutzt wird.</li>
+      <li>Korrektur das Filter Handlings für Komma separierte Filter am Plugin
+        API</li>
+      <li>Korrektur des read filter Handling am SocketWriter</li>
+    </ul>
     <p> <span style="font-weight: bold;">20210502</span> <a title="release/20210502"
         href="../downloads/release/20210502">link</a> </p>
     <p>Neue Funktionen</p>

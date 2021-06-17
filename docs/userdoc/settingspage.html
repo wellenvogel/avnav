@@ -65,5 +65,152 @@
       das globale Rücksetzen kann über <img src="../viewerimages/icons-new/ic_delete.svg"
         alt="" class="inlineimage">erfolgen. Wenn die Seite ohne Speichern
       verlassen werden soll, erfolgt eine Rückfrage.</p>
+    <p>Viele Einstellungen sollten selbst erklärend sein, einige etwas
+      speziellere Einstellungen werden hier beschrieben.</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Kategorie</td>
+          <td>Wert</td>
+          <td>Beschreibung</td>
+          <td>Default</td>
+        </tr>
+        <tr>
+          <td>Buttons</td>
+          <td>auto hide buttons on NavPage</td>
+          <td>Verberge die Button-Leiste auf der Navigationsseite nach einer
+            einstellbaren Zeit<br>
+            Ein Klick auf den rechten Rand bringt dann die Button-Leiste zurück.</td>
+          <td>aus</td>
+        </tr>
+        <tr>
+          <td>Buttons</td>
+          <td>auto hide buttons on Dashboard Pages</td>
+          <td>Verberge die Button-Leiste auf den Dashboard-Seiten nach einer
+            einstellbaren Zeit<br>
+            Ein Klick auf den rechten Rand bringt dann die Button-Leiste zurück.</td>
+          <td>aus</td>
+        </tr>
+        <tr>
+          <td>Buttons</td>
+          <td>time(s) to hide buttons on enabled pages</td>
+          <td>Zeit (in Sekunden) für das Verbergen der Button Leiste auf der
+            Navigationsseite oder den Dashboard-Seiten</td>
+          <td>30</td>
+        </tr>
+        <tr>
+          <td>Buttons</td>
+          <td>show shade when buttons hidden</td>
+          <td>Zeige einen abgdunkelten Bereich auf der rechten Seite, wenn die
+            Button-Leiste unsichtbar ist. Das markiert den Bereich auf der
+            Karte, der geklickt werden muss, um die Button-Leiste zurück zu
+            holen.</td>
+          <td>an</td>
+        </tr>
+        <tr>
+          <td>Navigation</td>
+          <td>boat direction</td>
+          <td>Bestimmt, welcher NMEA Wert für die Anzeige der Richtung des
+            Boot-Symbols genutzt wird. COG, HDT,HDM. Wenn HDT oder HDM gewählt
+            wurde, aber der Wert nicht verfügbar ist, wird COG genutzt. Der
+            Kursvektor wird in jedem Falle durch COG bestimmt!</td>
+          <td>COG</td>
+        </tr>
+        <tr>
+          <td>Navigation</td>
+          <td>add dashed vector for hdt/hdm</td>
+          <td>Zeige einen gestrichelten Kursvektor für HDT/HDM am Boot-Symbol
+            an, wenn HDT/HDM für "boat direction" gewählt wurde</td>
+          <td>an</td>
+        </tr>
+        <tr>
+          <td>Navigation</td>
+          <td>Rotation Tolerance</td>
+          <td>Wenn Course Up gewählt wurde, wird die Kartenausrichtung nicht
+            immer schnell an den aktuellen Kurs angepasst, solange die
+            Kurs-Änderung unter diesem Wert bleibt. Das führt zu einer deutlich
+            ruhigeren Anzeige.</td>
+          <td>15</td>
+        </tr>
+        <tr>
+          <td>Map</td>
+          <td>automatic zoom</td>
+          <td>Wenn die Karte mit der Boot-Position verschoben wird, wird der
+            Zoom angepasst, wenn sie in einen Bereich bewegt wird, auf dem z.B.
+            auf demn aktuellen Zoom Level keine Kacheln vorhanden sind.</td>
+          <td>an</td>
+        </tr>
+        <tr>
+          <td>Map</td>
+          <td>float map behind buttons</td>
+          <td>Wenn dieser Schalter aktiv ist, "schweben" die Buttons und
+            Anzeigen über der Karte und haben keinen dunklen Hintergrund.</td>
+          <td>aus</td>
+        </tr>
+        <tr>
+          <td>Map</td>
+          <td>Increase Fonts on High Res</td>
+          <td>Vergrößere die Symbole und Texte auf hochauflösenden Displays</td>
+          <td>an</td>
+        </tr>
+        <tr>
+          <td>Map</td>
+          <td>scale the map display</td>
+          <td>Manche Rasterkarten haben eine sehr feine Darstellung, so das u.U.
+            Schrift schlecht lesbar ist. Mit dieser Einstellung kann die Anzeige
+            der Karten-Kacheln vergrößert (oder auch verkleinert) werden, um sie
+            an die eigenen Bedürfnisse anzupassen.</td>
+          <td>1</td>
+        </tr>
+        <tr>
+          <td>Map</td>
+          <td>zoom up lower layers</td>
+          <td>Wenn in einer Karte für den aktuell gewählten Zoom-Level keine
+            Kacheln vorhanden sind, werden niedriger aufgelöste Kacheln geladen
+            und enstprechend vergrößert. Da das jeweils neue Abfragen zum Server
+            erfordert, kann das u.U. die Performance beeinflussen. Der Wert gibt
+            an, wieviele kleinere Zoom-Level probiert werden, um eine Kachel zu
+            finden.</td>
+          <td>4</td>
+        </tr>
+        <tr>
+          <td>Map</td>
+          <td>zoom up lower layers for online sources</td>
+          <td>Das gleiche Verhalten wie "zoom up lower layers" für Karten, die
+            direkt aus dem Netz geladen werden (wirkt auch für o-charts). In den
+            meisten Fällen macht es für solche Quellen keinen Sinn - daher im
+            default aus (0).</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td>Map</td>
+          <td>Click Tolerance</td>
+          <td>Der "Einfangbereich" in Pixeln für den Click auf Kartenobjekte.
+            Ein grosser Bereich führt u.U. dazu, das die falschen Objekte
+            angeklickt werden. Ein zu kleiner Bereich macht den Klick sehr
+            mühsam auf touch-Geräten.</td>
+          <td>60</td>
+        </tr>
+        <tr>
+          <td>Route</td>
+          <td>Approach</td>
+          <td>Entfernung zum Wegpunkt (in Metern) ab der ein potentielles
+            Weiterschalten zum nächsten Wegpunkt erfolgt wenn:<br>
+            - die Entfernung zum Wegepunkt&nbsp; zunimmt<br>
+            - die Entfernung zum nächsten Wegepunkt abnimmt</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>Remote</td>
+          <td>...</td>
+          <td>Siehe die <a href="../hints/RemoteControl.html">Beschreibung</a></td>
+          <td><br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p><br>
+    </p>
   </body>
 </html>

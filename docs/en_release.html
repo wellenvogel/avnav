@@ -39,6 +39,54 @@ sudo systemctl start avnav</div>
     <br>
     <div> </div>
     <h2>Versions</h2>
+    <p> <span style="font-weight: bold;">202106xx</span> <a title="release/202106xx"
+        href="../downloads/release/202106xx">link</a> </p>
+    <p>New Functions</p>
+    <ul>
+      <li>&nbsp;show night mode button during layout editing</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/88">#88</a>:
+        decode HDG,HDT,HDM,VHW (part) on server and android</li>
+      <li>add HDT,HDM widgets</li>
+      <li>allow to use HDT or HDM for boat direction display (<a href="userdoc/settingspage.html">settings</a>/navigation/boat
+        direction )</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/138">#138</a>
+        lock the boat on any point on the screen (<a href="userdoc/settingspage.html">settings</a>/map/lock
+        boat mode)</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/139">#139</a>
+        show night mode on NavPage</li>
+      <li>float map behind buttons on NavPage (<a href="userdoc/settingspage.html">settings</a>/map/float
+        map behind buttons)</li>
+      <li>auto hide buttons on NavPage and Dashboard Pages (<a href="userdoc/settingspage.html">settings</a>/buttons/auto
+        hide buttons...)</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/132">#132</a>
+        show +/- 180 in wind widgets (configure in layout editor), small wind
+        graphics improvements</li>
+      <li>add the layout name as a css class to the app to allow to style for
+        different layouts</li>
+      <li><a href="hints/RemoteControl.html">remote control</a></li>
+      <ul>
+        <li>control one display from another or from the server</li>
+        <li>5 channels, each display can send and/or receive on one of them</li>
+        <li>UDP port to receive remote control commands</li>
+        <li><a href="https://github.com/wellenvogel/avnav-obp-rc-remote-plugin">plugin</a>
+          to interwork with obp-rf-remote</li>
+      </ul>
+      <li>add interface metrics to allow for easy switching between internet
+        access via ethernet or wifi client (avnav-raspi)</li>
+    </ul>
+    Bug fixes:
+    <ul>
+      <li>freeze when using linear gauges</li>
+      <li>correctly sort buttons on older browsers</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/140">#140</a>:
+        night mode for xte widget, wind graphics, various gauges</li>
+      <li>make switching between access point and wifi client for the internal
+        rpi adapter working againg (Config Gui)</li>
+      <li>when both apparent and true wind are available prefer apparent in wind
+        widgets, show which one is being used (avoid toggle between them)</li>
+      <li>correctly handle filters separated by comma in the plugin API</li>
+      <li>correct read filter handling for SocketWriter</li>
+    </ul>
     <p> <span style="font-weight: bold;">20210502</span> <a title="release/20210502"
         href="../downloads/release/20210502">link</a> </p>
     <p>New Functions</p>

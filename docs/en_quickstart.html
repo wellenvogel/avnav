@@ -77,8 +77,8 @@
     <p>With the Android installation, all settings are directly integrated in
       the App.</p>
     <h2>NMEA Data</h2>
-    <p><img class="fimage" src="en_avnav_schnittstellen.png" 
-        border="0" width="600"> </p>
+    <p><img class="fimage" src="en_avnav_schnittstellen.png" width="600" border="0">
+    </p>
     <h3>Client Server</h3>
     <p>AvNav processes NMEA0183 Data from connected USB devices, serial ports,
       bluetooth devices, TCP (client and server) or UDP. A NMEA multiplexer is
@@ -102,6 +102,11 @@
       <li>$xxDPT</li>
       <li>$xxDBT</li>
       <li>$xxXDR (since 20210114)</li>
+      <li>$xxHDG (since 210106xx)</li>
+      <li>$xxHDT (since 202106xx)</li>
+      <li>$xxHDM (since 202106xx) <br>
+      </li>
+      <li>$xxVHW partial (since 202106xx)</li>
     </ul>
     &nbsp; Depending on the <a href="hints/configfile.html">configuration</a>
     AvNav is able to generate following NMEA sentences:
@@ -131,8 +136,13 @@
       <li>$xxMWV</li>
       <li>$xxDBT</li>
       <li>$xxXDR (since 20210114)</li>
+      <li>$xxHDG (since 210106xx)</li>
+      <li>$xxHDT (since 202106xx)</li>
+      <li>$xxHDM (since 202106xx) <br>
+      </li>
+      <li>$xxVHW partial (since 202106xx)</li>
     </ul>
-    AvNav is able to create and send out $GPRMC if configured.<br>
+    AvNav is able to create and send out $GPRMC and $GPRMB if configured.<br>
     <ul>
     </ul>
     <p></p>
@@ -246,6 +256,12 @@
     <p>At the <a href="userdoc/mainpage.html">Main page</a> you can active the
       night mode <img src="viewerimages/icons-new/night.svg" alt="" class="inlineimage">.
       All pages will be adapted accordingly.</p>
+    <h2>Remote Control</h2>
+    <p>AvNav is able to control display functions on one device from another one
+      - or from the server. For details refer to the <a href="hints/RemoteControl.html">description</a>
+      .</p>
+    <h2></h2>
+    <p></p>
     <h2>Adaptations</h2>
     <p>You can adapt AvNav to your personal needs by various means. As all pages
       are handled within a browser you can use <a href="hints/usercss.html">CSS</a>

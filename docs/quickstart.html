@@ -78,7 +78,7 @@
       sowie <a href="hints/plugins.html">Plugins</a> vorgenommen werden.</p>
     <h2>NMEA-Daten</h2>
     <p><img class="fimage" src="avnav_schnittstellen.png" name="Datenim- und Export"
-        border="0" width="600"> </p>
+        width="600" border="0"> </p>
     <h3>Client Server Variante</h3>
     <p>AvNav verarbeitet NMEA0183-Daten, die über angeschlossene USB-Geräte,
       serielle Schnittstellen, Bluetooth-Geräte,&nbsp; TCP (Client und Server)
@@ -99,6 +99,10 @@
       <li>$xxDPT</li>
       <li>$xxDBT</li>
       <li>$xxXDR (seit 20210114)</li>
+      <li>$xxHDG (seit 210106xx)</li>
+      <li>$xxHDT (seit 202106xx)</li>
+      <li>$xxHDM (seit 202106xx) </li>
+      <li>$xxVHW partiell (seit 202106xx)</li>
     </ul>
     <p>Je nach <a href="hints/configfile.html">Konfiguration</a> kann AvNav
       auch NMEA-Daten erzeugen:</p>
@@ -129,9 +133,14 @@
       <li>$xxMWV</li>
       <li>$xxDBT</li>
       <li>$xxXDR (seit 20210114)</li>
+      <li>$xxHDG (seit 210106xx)</li>
+      <li>$xxHDT (seit 202106xx)</li>
+      <li>$xxHDM (seit 202106xx) <br>
+      </li>
+      <li>$xxVHW partiell (seit 202106xx)</li>
     </ul>
-    <p>Bei enstprechender Konfiguration kann AvNav $GPRMC-Sätze erzeugen und
-      aussenden.</p>
+    <p>Bei enstprechender Konfiguration kann AvNav $GPRMC und $GPRMB-Sätze
+      erzeugen und aussenden.</p>
     <p></p>
     <h2>Karten</h2>
     <p>AvNav verarbeitet grundsätzlich Karten im <a href="charts.html#Intro">Rasterformat</a>.
@@ -254,6 +263,10 @@
     <p>AvNav kann auf der <a href="userdoc/mainpage.html">Hauptseite</a> in
       einen Nachtmodus <img src="viewerimages/icons-new/night.svg" alt="" class="inlineimage">
       geschaltet werden. Dann sind alle Anzeigen entsprechend angepasst.</p>
+    <h2>Fernsteuerung</h2>
+    <p>AvNav kann die Anzeige Funktionen auf einem Gerät von einem anderen Gerät
+      oder vom Server aus steuern. Für Details siehe die <a href="hints/RemoteControl.html">Beschreibung</a>
+      dazu.</p>
     <h2>Anpassung</h2>
     <p>AvNav kann in unterschiedlicher Weise an eigene Bedürfnisse angepasst
       werden. Da die gesamte Darstellung im Browser abläuft, kann man das
