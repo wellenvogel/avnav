@@ -45,11 +45,17 @@
       <li><a href="https://github.com/wellenvogel/avnav-history-plugin">History</a>
         - Datenspeicherung und Anzeige</li>
       <li><a href="https://github.com/wellenvogel/avnav-update-plugin">Update</a>
-        - Update von AvNav (und den dazugehörigen Paketen) ohne die Kommandozeile
-        nutzen zu müssen.<br>
+        - Update von AvNav (und den dazugehörigen Paketen) ohne die
+        Kommandozeile nutzen zu müssen.<br>
         Konfig-Editor und Log-Viewer für AvNav</li>
       <li><a href="https://github.com/wellenvogel/avnav-mapproxy-plugin">MapProxy</a>
-        - integriert <a href="https://mapproxy.org/">MapProxy</a> für Zugriff und Download verschiedener online Kartenquellen</li>
+        - integriert <a href="https://mapproxy.org/">MapProxy</a> für Zugriff
+        und Download verschiedener online Kartenquellen</li>
+      <li><a href="https://github.com/wellenvogel/avnav-obp-rc-remote-plugin">Obp-RC-Remote</a>
+        - plugin für die Nutzung der <a href="https://www.segeln-forum.de/board194-boot-technik/board195-open-boat-projects-org/78328-fernbedienung-f%C3%BCr-den-raspberry/">Fernbedienung</a>
+        von <a href="https://www.segeln-forum.de/user/19350-chrhartz">Christian</a></li>
+      <li><a href="https://github.com/kdschmidt1/avnav-more-nmea-plugin">More-NMEA-Plugin</a>
+        - Dekodierung und Berechnung von weiteren Kurs- und Winddaten</li>
     </ul>
     <h2>plugin.js</h2>
     <p>Im Java script code sind genau die gleichen Funktionen verfügbar wie
@@ -88,12 +94,12 @@
         <tr>
           <td>C</td>
           <td>Einspeisen von Daten in den internen Speicher von AvNav. Die Daten
-            im internen Speicher sind in einer Baumstruktur abgelegt. Jedes Element ist
-            durch einen Schlüssel der Form "a.b.c...." adressiert. Beispiel:
-            "gps.lat".<br>
+            im internen Speicher sind in einer Baumstruktur abgelegt. Jedes
+            Element ist durch einen Schlüssel der Form "a.b.c...." adressiert.
+            Beispiel: "gps.lat".<br>
             Alle Schlüsselwerte, die mit "gps." starten, werden automatisch an
             die WebApp übertragen und sind dann dort unter "nav.gps...."
-            verfügbar. (siehe <a href="layouts.html">Layout Editor</a> und <a 
+            verfügbar. (siehe <a href="layouts.html">Layout Editor</a> und <a
               href="userjs.html">nutzerspezifisches Java Script</a>).<br>
             Schlüsselwerte müssen vorher durch das Plugin angemeldet werden, es
             ist nicht möglich, bereits im System genutzte Schlüssel zu
