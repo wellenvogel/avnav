@@ -79,31 +79,22 @@ if [ ! -e "$BOOTCFG" ] ; then
     cp $BASE/avnav.conf $BOOTCFG
 fi    
 
-if [ ! -z $(systemctl list-unit-files | grep dhcpd) ]
-then
-  systemctl disable --now dhcpd || echo "dhcpd not running, dont need to disable"
-fi
-if [ $(systemctl is-enabled dhcpcd) != "disabled" ]
-then
-  systemctl disable --now dhcpcd || echo "dhcpcd not running, dont need to disable"
-fi
-if [ $(systemctl is-enabled ntp) != "masked" ]
-then
-  systemctl mask --now ntp || echo "ntp not running, dont need to mask"
-fi
+systemctl disable dhcpd || echo "dhcpd not running, dont need to disable"
+systemctl stop dhcpd || echo "dhcpd not running, dont need to disable"
+systemctl disable dhcpcd || echo "dhcpcd not running, dont need to disable"
+systemctl stop dhcpcd || echo "dhcpcd not running, dont need to disable"
+systemctl disable ntp || echo "ntp not running, dont need to disable"
+systemctl mask ntp || echo "ntp not running, dont need to mask"
+systemctl stop ntp.service || echo "ntp not running, dont need to disable"
+
 
 systemctl daemon-reload
 systemctl restart dnsmasq
 
 systemctl restart avnav
-
-if [ $(systemctl is-enabled avnav-iptables) != "enabled" ]
-then
-  systemctl enable --now avnav-iptables
-fi
-if [ $(systemctl is-enabled avnav-startup) != "enabled" ]
-then
-  systemctl enable --now avnav-startup
-fi
+systemctl enable avnav-iptables
+systemctl start avnav-iptables
+systemctl enable avnav-startup
+systemctl start avnav-startup
 
 exit 0
