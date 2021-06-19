@@ -153,6 +153,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
             self.send_response(301)
             self.send_header("Location", self.path + "/")
             self.end_headers()
+            self.close_connection=True
             return None
         for index in "index.html", "index.htm":
             index = os.path.join(path, index)
@@ -221,6 +222,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
         self.send_response(301)
         self.send_header("Location", path)
         self.end_headers()
+        self.close_connection=True
         return None
 
       return self.server.plainUrlToPath(path)
