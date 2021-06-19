@@ -9,6 +9,7 @@ import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import Requests from '../util/requests.js';
 import base from '../base.js';
+import assign from "object-assign";
 
 
 const AisTarget=navobjects.Ais;
@@ -45,6 +46,17 @@ let AisData=function( opt_noQuery){
      * @type {number}
      */
     this.trackedAIStarget=null;
+
+    /**
+     * the mmsi of the computed nearest target
+     * @type {null}
+     */
+    this.computedNearestMmsi=null;
+    /**
+     * the mmsi we have computed for a warning
+     * @type {null}
+     */
+    this.computedWarningMmsi=null;
 
 
     /**
@@ -113,64 +125,74 @@ AisData.prototype.handleAisData=function() {
     let boatPos = globalStore.getMultiple(keys.nav.gps);
     let trackedTarget=null; //ref to tracked target
     let aisWarningAis = null;
-    if (boatPos.valid) {
-        let foundTrackedTarget = false;
-        for (let aisidx in this.currentAis) {
-            let ais = this.currentAis[aisidx];
-            this._computeAisTarget(boatPos,ais);
-            let warningCpa=globalStore.getData(keys.properties.aisWarningCpa);
+    let aisTargets=[];
+    let onlyMoving=globalStore.getData(keys.properties.aisOnlyShowMoving,false);
+    let aisMinSpeed = parseFloat(globalStore.getData(keys.properties.aisMinDisplaySpeed, 0));
+    let foundTrackedTarget = false;
+    for (let aisidx in this.currentAis) {
+        let ais =this.currentAis[aisidx];
+        let shouldHandle = !onlyMoving || (parseFloat(ais.speed) >= aisMinSpeed);
+        if (!shouldHandle) continue;
+        aisTargets.push(ais);
+        if (boatPos.valid) {
+            this._computeAisTarget(boatPos, ais);
+            let warningCpa = globalStore.getData(keys.properties.aisWarningCpa);
             if (ais.cpa && ais.cpa < warningCpa && ais.tcpa && Math.abs(ais.tcpa) < globalStore.getData(keys.properties.aisWarningTpa)) {
                 if (aisWarningAis) {
-                    if (ais.tcpa >=0) {
+                    if (ais.tcpa >= 0) {
                         if (aisWarningAis.tcpa > ais.tcpa || aisWarningAis.tcpa < 0) aisWarningAis = ais;
+                    } else {
+                        if (aisWarningAis.tcpa < 0 && aisWarningAis.tcpa < ais.tcpa) aisWarningAis = ais;
                     }
-                    else{
-                        if (aisWarningAis.tcpa < 0 && aisWarningAis.tcpa < ais.tcpa) aisWarningAis=ais;
-                    }
-                }
-                else aisWarningAis = ais;
-            }
-            if (ais.mmsi == this.trackedAIStarget) {
-                foundTrackedTarget = true;
-                ais.tracking=true;
-                trackedTarget=ais;
+                } else aisWarningAis = ais;
             }
         }
-        if (!foundTrackedTarget) this.trackedAIStarget = null;
+        if (ais.mmsi == this.trackedAIStarget) {
+            foundTrackedTarget = true;
+            ais.tracking = true;
+            trackedTarget = ais;
+        }
     }
-    if (this.currentAis) {
-        this.currentAis.sort(this.aisSort);
-        if (this.currentAis.length) {
-            this.currentAis[0].nearest = true;
+    if (!foundTrackedTarget) this.trackedAIStarget = null;
+    if (aisTargets) {
+        aisTargets.sort(this.aisSort);
+        if (aisTargets.length) {
+            aisTargets[0].nearest = true;
+            this.computedNearestMmsi=aisTargets[0].mmsi;
         }
     }
     if (aisWarningAis) {
-        aisWarningAis.warning=true;
+        aisWarningAis.warning = true;
+        this.computedWarningMmsi=aisWarningAis.mmsi;
+    }
+    else{
+        this.computedWarningMmsi=null;
     }
     //handling of the nearest target
     //warning active - this one
     //no tracked target set - nearest
     //tracked set - this one
-    if (this.currentAis.length) {
+    if (aisTargets.length) {
         if (aisWarningAis) this.nearestAisTarget = aisWarningAis;
         else {
             if (trackedTarget) this.nearestAisTarget = trackedTarget;
-            else this.nearestAisTarget = this.currentAis[0];
+            else this.nearestAisTarget = aisTargets[0];
         }
+    } else {
+        this.nearestAisTarget = {};
+        this.computedWarningMmsi=null;
+        this.computedNearestMmsi=null;
     }
-    else {
-        this.nearestAisTarget={};
-    }
-    let storeKeys={
-        nearestAisTarget:   keys.nav.ais.nearest,
-        currentAis:         keys.nav.ais.list,
-        updateCount:        keys.nav.ais.updateCount
+    let storeKeys = {
+        nearestAisTarget: keys.nav.ais.nearest,
+        currentAis: keys.nav.ais.list,
+        updateCount: keys.nav.ais.updateCount
     };
     globalStore.storeMultiple({
-        nearestAisTarget:   this.nearestAisTarget,
-        currentAis:         this.currentAis.slice(0),
-        updateCount:        globalStore.getData(keys.nav.ais.updateCount,0)+1
-    },storeKeys);
+        nearestAisTarget: this.nearestAisTarget,
+        currentAis: aisTargets,
+        updateCount: globalStore.getData(keys.nav.ais.updateCount, 0) + 1
+    }, storeKeys);
 
 };
 
@@ -249,11 +271,21 @@ AisData.prototype.startQuery=function() {
  * @returns {*}
  */
 AisData.prototype.getAisByMmsi=function(mmsi){
+    let rt=undefined;
     if (mmsi == 0 || mmsi == null){
-        return this.nearestAisTarget;
+        rt=assign({},this.nearestAisTarget);
     }
-    for (let i in this.currentAis){
-        if (this.currentAis[i].mmsi == mmsi) return this.currentAis[i];
+    if (! rt) {
+        for (let i in this.currentAis) {
+            if (this.currentAis[i].mmsi === mmsi) {
+                rt = assign({}, this.currentAis[i]);
+            }
+        }
+    }
+    if (rt){
+        if (this.computedNearestMmsi === rt.mmsi) rt.nearest = true;
+        if (this.computedWarningMmsi === rt.mmsi) rt.warning = true;
+        return rt;
     }
     return undefined;
 };

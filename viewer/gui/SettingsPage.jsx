@@ -29,7 +29,10 @@ const settingsSections={
         keys.properties.hideButtonTime,keys.properties.showButtonShade, keys.properties.autoHideNavPage,keys.properties.autoHideGpsPage,keys.properties.nightModeNavPage],
     Layout:     [keys.properties.layoutName,keys.properties.baseFontSize,keys.properties.smallBreak,keys.properties.nightFade,
         keys.properties.nightChartFade,keys.properties.dimFade,keys.properties.localAlarmSound ],
-    AIS:        [keys.properties.aisDistance,keys.properties.aisWarningCpa,keys.properties.aisWarningTpa,keys.properties.aisTextSize,keys.properties.aisUseCourseVector,keys.properties.style.aisNormalColor,keys.properties.style.aisNearestColor,keys.properties.style.aisWarningColor,keys.properties.aisIconBorderWidth,keys.properties.aisIconScale],
+    AIS:        [keys.properties.aisDistance,keys.properties.aisWarningCpa,keys.properties.aisWarningTpa,
+        keys.properties.aisMinDisplaySpeed,keys.properties.aisOnlyShowMoving,
+        keys.properties.aisTextSize,keys.properties.aisUseCourseVector,keys.properties.style.aisNormalColor,keys.properties.style.aisNearestColor,
+        keys.properties.style.aisWarningColor,keys.properties.aisIconBorderWidth,keys.properties.aisIconScale],
     Navigation: [keys.properties.bearingColor,keys.properties.bearingWidth,keys.properties.navCircleColor,keys.properties.navCircleWidth,keys.properties.navCircle1Radius,keys.properties.navCircle2Radius,keys.properties.navCircle3Radius,
         keys.properties.navBoatCourseTime,keys.properties.boatIconScale,keys.properties.boatDirectionMode,
         keys.properties.boatDirectionVector,keys.properties.courseAverageTolerance,keys.properties.gpsXteMax,keys.properties.courseAverageInterval,keys.properties.speedAverageInterval,keys.properties.positionAverageInterval,keys.properties.anchorWatchDefault,keys.properties.anchorCircleWidth,
@@ -51,6 +54,7 @@ settingsConditions[keys.properties.boatDirectionVector]=()=>{
     let cur=globalStore.getData(keys.gui.settingspage.values,{})
     return cur[keys.properties.boatDirectionMode]!== 'cog';
 }
+settingsConditions[keys.properties.aisMinDisplaySpeed]=()=>globalStore.getData(keys.gui.settingspage.values,{})[keys.properties.aisOnlyShowMoving]
 
 const sectionConditions={};
 sectionConditions.Remote=()=>globalStore.getData(keys.gui.capabilities.remoteChannel) && window.WebSocket !== undefined;
