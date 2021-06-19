@@ -36,7 +36,7 @@ const settingsSections={
     Navigation: [keys.properties.bearingColor,keys.properties.bearingWidth,keys.properties.navCircleColor,keys.properties.navCircleWidth,keys.properties.navCircle1Radius,keys.properties.navCircle2Radius,keys.properties.navCircle3Radius,
         keys.properties.navBoatCourseTime,keys.properties.boatIconScale,keys.properties.boatDirectionMode,
         keys.properties.boatDirectionVector,keys.properties.courseAverageTolerance,keys.properties.gpsXteMax,keys.properties.courseAverageInterval,keys.properties.speedAverageInterval,keys.properties.positionAverageInterval,keys.properties.anchorWatchDefault,keys.properties.anchorCircleWidth,
-        keys.properties.anchorCircleColor,keys.properties.windKnots,keys.properties.windScaleAngle],
+        keys.properties.anchorCircleColor,keys.properties.windKnots,keys.properties.windScaleAngle,keys.properties.measureColor],
     Map:        [keys.properties.autoZoom,keys.properties.mobMinZoom,keys.properties.style.useHdpi,keys.properties.clickTolerance,keys.properties.featureInfo,keys.properties.emptyFeatureInfo,keys.properties.mapFloat,keys.properties.mapScale,keys.properties.mapUpZoom,keys.properties.mapOnlineUpZoom,
         keys.properties.mapLockMode],
     Track:      [keys.properties.trackColor,keys.properties.trackWidth,keys.properties.trackInterval,keys.properties.initialTrackLength],

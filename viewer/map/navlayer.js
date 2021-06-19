@@ -12,6 +12,7 @@ import boatImage from '../images/Boat-NoNeedle.png';
 import markerImage from '../images/Marker2.png';
 import assign from 'object-assign';
 
+
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE,true);
 
 
@@ -51,7 +52,7 @@ const NavLayer=function(mapholder){
      */
     this.circleStyle={};
     this.anchorCircleStyle={};
-    this.setStyle();
+    this.measureLineStyle={};
 
 
     /**
@@ -74,11 +75,42 @@ const NavLayer=function(mapholder){
         image: new Image()
     };
     this.anchorStyle.image.src=this.anchorStyle.src;
-
-
+    this.measureStyle={
+        anchor: [18,38],
+        size: [40,40],
+        image: new Image()
+    };
+    this.setStyle();
     globalStore.register(this,keys.gui.global.propertySequence);
 
 };
+
+NavLayer.prototype.createMeasureIcon = function (color) {
+    let canvas = document.createElement("canvas");
+    if (!canvas) return undefined;
+    canvas.width = 40;
+    canvas.height = 40;
+    let ctx = canvas.getContext('2d');
+    ctx.fillStyle = color;
+    ctx.strokeStyle=color;
+    ctx.beginPath();
+    ctx.moveTo(0.000000, 16.000000);
+    ctx.lineTo(24.000000, 16.000000);
+    ctx.lineTo(24.000000, 40.000000);
+    ctx.lineTo(0.000000, 40.000000);
+
+// #path878
+    ctx.beginPath();
+    ctx.lineWidth = 1.000000;
+    ctx.moveTo(32.370073, 9.248207);
+    ctx.lineTo(16.524340, 2.990461);
+    ctx.lineTo(16.524340, 31.725013);
+    ctx.bezierCurveTo(18.552835, 41.380464, 18.963427, 35.621636, 20.034636, 31.693153);
+    ctx.lineTo(20.485773, 14.133077);
+    ctx.fill();
+    ctx.stroke();
+    return canvas.toDataURL();
+}
 
 /**
  * set the style(s)
@@ -93,6 +125,13 @@ NavLayer.prototype.setStyle=function() {
         color: globalStore.getData(keys.properties.anchorCircleColor),
         width: globalStore.getData(keys.properties.anchorCircleWidth)
     };
+    this.measureLineStyle={
+        color: globalStore.getData(keys.properties.measureColor),
+        width: globalStore.getData(keys.properties.navCircleWidth)
+    }
+    let measureSrc=this.createMeasureIcon(globalStore.getData(keys.properties.measureColor));
+    this.measureStyle.src=measureSrc;
+    this.measureStyle.image.src=measureSrc;
 };
 
 //we do not explicitely register for those keys as we rely on the mapholder
@@ -177,6 +216,12 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
     }
     if (!globalStore.getData(keys.map.lockPosition,false)) {
         drawing.drawImageToContext(center, this.centerStyle.image, this.centerStyle);
+        let measurePos=globalStore.getData(keys.map.measurePosition);
+        if (measurePos && measurePos.lat && measurePos.lon){
+            let measure=this.mapholder.transformToMap((new navobjects.Point(measurePos.lon,measurePos.lat)).toCoord());
+            drawing.drawImageToContext(measure,this.measureStyle.image,this.measureStyle);
+            drawing.drawLineToContext([measure,center],this.measureLineStyle);
+        }
     }
     if (anchorDistance){
         let p=activeRoute.getCurrentFrom();
@@ -187,6 +232,7 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
             drawing.drawCircleToContext(c,other,this.anchorCircleStyle);
         }
     }
+
 
 
 

@@ -153,7 +153,8 @@ let keys={
         courseUp: K,
         currentZoom:K,
         requiredZoom:K,
-        centerPosition:K
+        centerPosition:K,
+        measurePosition: K,
         },
     gui:{
         capabilities:{
@@ -285,6 +286,7 @@ let keys={
         boatIconScale: new Property(1,"Boat Icon Scale",PropertyType.RANGE, [0.5,5,0.1]),
         boatDirectionMode: new Property('cog','boat direction',PropertyType.LIST,['cog','hdt','hdm']),
         boatDirectionVector: new Property(true,'add dashed vector for hdt/hdm',PropertyType.CHECKBOX),
+        measureColor: new Property('red','Measure display color',PropertyType.COLOR),
         windScaleAngle: new Property(50, "red/green Angle Wind", PropertyType.RANGE, [5, 90, 1]),
         anchorWatchDefault: new Property(300, "AnchorWatch(m)", PropertyType.RANGE, [0, 1000, 1]),
         gpsXteMax: new Property(1, "XTE(nm)", PropertyType.RANGE, [0.1, 5, 0.1, 1]),

@@ -1388,6 +1388,7 @@ MapHolder.prototype.setGpsLock=function(lock,opt_noRemote){
         remotechannel.sendMessage(COMMANDS.lock,lock?'true':'false');
     }
     if (lock === this.gpsLocked) return;
+    if (lock) globalStore.storeData(keys.map.measurePosition,undefined);
     if (! globalStore.getData(keys.nav.gps.valid) && lock) return;
     //we do not lock if the nav layer is not visible
     if (! globalStore.getData(keys.properties.layers.boat) && lock) return;

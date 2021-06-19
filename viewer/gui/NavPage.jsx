@@ -159,6 +159,7 @@ class NavPage extends React.Component{
         };
         this.showWpButtons=this.showWpButtons.bind(this);
         this.widgetClick=this.widgetClick.bind(this);
+        globalStore.storeData(keys.map.measurePosition,undefined);
         this.waypointButtons=[
             anchorWatch(),
             {
@@ -385,6 +386,7 @@ class NavPage extends React.Component{
         }
     }
     componentWillUnmount(){
+        globalStore.storeData(keys.map.measurePosition,undefined);
     }
     componentDidMount(){
         MapHolder.showEditingRoute(false);
@@ -499,6 +501,25 @@ class NavPage extends React.Component{
                     globalStore.storeData(keys.properties.nightMode, mode);
                 },
                 overflow: true
+            },
+            {
+                name: 'Measure',
+                storeKeys: {
+                    toggle: keys.map.measurePosition
+                },
+                overflow: true,
+                onClick: ()=>{
+                    let current=globalStore.getData(keys.map.measurePosition);
+                    if (current){
+                        globalStore.storeData(keys.map.measurePosition,undefined);
+                        MapHolder.triggerRender();
+                        return;
+                    }
+                    if (MapHolder.getGpsLock()) return;
+                    let center = globalStore.getData(keys.map.centerPosition);
+                    globalStore.storeData(keys.map.measurePosition,center);
+                    MapHolder.triggerRender();
+                }
             },
             Mob.mobDefinition,
             EditPageDialog.getButtonDef(PAGENAME,
