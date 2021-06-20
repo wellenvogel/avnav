@@ -103,5 +103,6 @@
     <string name="labelSettingsMdnsName">Name for Mdns (Bonjour/Avahi) announcement</string>
     <string name="labelSettingsMdnsEnabled">Enable announcement via MDNS (Bonjour/Avahi)</string>
     <string name="labelSettingsFlowControl">flow control for the serial connection</string>
+    <string name="noFileManager">unable to open a file manager</string>
 
 </resources>

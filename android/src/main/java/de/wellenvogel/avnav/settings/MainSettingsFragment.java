@@ -16,6 +16,7 @@ import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.provider.DocumentsContract;
+import android.widget.Toast;
 
 import java.io.File;
 
@@ -44,7 +45,11 @@ public class MainSettingsFragment extends SettingsFragment {
                     AvnLog.e("unable to set old storage root: " + t);
                 }
             }
-            startActivityForResult(intent, CHARTDIR_REQUEST);
+            try {
+                startActivityForResult(intent, CHARTDIR_REQUEST);
+            }catch (Throwable t){
+                Toast.makeText(getActivity(), R.string.noFileManager,Toast.LENGTH_LONG).show();
+            }
         }
     }
     @Override
