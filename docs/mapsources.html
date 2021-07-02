@@ -7,33 +7,31 @@
   <body>
     <h1><a name="Mobac"></a>Mobile Atlas Creator Mapsources</h1>
     2020/01/26<br>
-    <p>Wieder mal ein paar kleine Modifikationen an den Map-Sources, damit der
-      Zugriff auf die BSH Server wieder funktioniert.</p>
+    <p>Es gibt wieder einmal ein paar kleine Modifikationen an den Map-Sources, damit der
+      Zugriff auf die BSH-Server wieder funktioniert.</p>
     <h2>Sourcen</h2>
     <p>Für den <a href="https://mobac.sourceforge.io/">Mobile Atlas Creator</a>
       habe ich einige Map-Sources erzeugt, die es erlauben, etwas flexibler per
-      xml den Zugriff auf Kartendienste zu definieren. Dazu die Datei <a href="../downloads/avnav-mapsources.zip">avnav-mapsources.zip</a>
+      XML den Zugriff auf Kartendienste zu definieren. Dazu die Datei <a href="../downloads/avnav-mapsources.zip">avnav-mapsources.zip</a>
       im Verzeichnis "mapsources" des Mobile Atlas Creator entpacken.<br>
-      Dann erhält man u.a. ein "mashUp" aus den BSH-Kartendiensten (siehe auch <a
+      Dann erhält man u.a. ein "meshUp" aus den BSH-Kartendiensten (siehe auch <a
         href="../../bshviewer/bshviewer.html">bsh-viewer</a>)
-      und OpenSeaMap ("BSH OpenSeaMap 2014 Extended"). Außerdem noch BSH alleine
+      und OpenSeaMap ("BSH OpenSeaMap 2014 Extended"). Außerdem erhäalt man noch BSH allein
       ("BSH 2014 Extended") oder OpenSeaMap + OpenStreetMap ("OWS OpenSeaMap
-      2014"). Wenn jemand "spielen" möchte, kann man die .exml entsprechend
-      anpassen. Spannend sind insbesondere die Layer für die BSH-Abfrage. Die
-      kann man mit meinem<a href="../../bshviewer/bshviewer.html">
+      2014"). Wenn jemand "spielen" möchte, kann man die Datei *.exml entsprechend
+      anpassen. Spannend sind insbesondere die Layer für die BSH-Abfrage. Man kann sie mit meinem<a href="../../bshviewer/bshviewer.html">
         bsh-viewer</a> ausprobieren (jeweils rechts in der Quelle editieren).
       Außerdem kann man bei Bedarf die Farben noch etwas anpassen - ich habe
-      mich bemüht, etwas mehr Kontrast zu erzeugen. Wenn man etwas ändern will -
-      eine der Karten z.B. mit paint.net öffnen und dann die Hex-Werte für die
-      Farben aussuchen und in der .exml Datei eintragen.</p>
+      mich bemüht, etwas mehr Kontrast zu erzeugen. Wenn man etwas ändern will, geht das so: Eine der Karten z.B. mit paint.net öffnen und dann die Hex-Werte für die
+      Farben aussuchen und in die *.exml Datei eintragen.</p>
     <p>Der Download dauert meist ziemlich lange - oft ist der BSH-Server sehr
-      langsam oder stürzt auch gerne mal ab. Dann einfach wieder neu versuchen
-      (dazu im Mobac die cache Einstellungen so setzen, dass er die Karten z.B.
-      1 Monat im Cache lässt) - irgendwann sind sie alle heruntergeladen. Als
-      Format jetzt immer "OsmdroidGEMF" wählen (das kann man übrigens auch in
-      anderen Programmen nutzen...).</p>
-    <p>Wenn man in den exml Dateien ändert (insbesondere bei den Layern) muss
-      man allerdings unter Tilestore die enstprechenden Caches löschen - sonst
+      langsam oder stürzt auch gerne mal ab. Dann einfach wieder neu versuchen:
+      Dazu sollten im Mobac die Cache-Einstellungen so gesetzt werden, dass die Karten z.B.
+      1 Monat im Cache bleiben sollen. Irgendwann sind die Karten dann alle heruntergeladen. Als
+      Format jetzt immer "OsmdroidGEMF" wählen. Das kann man übrigens auch in
+      anderen Programmen nutzen...</p>
+    <p>Wenn man in den *.exml-Dateien ändert (insbesondere bei den Layern) muss
+      man allerdings unter "Tilestore" die enstprechenden Caches löschen - sonst
       werden die Änderungen nicht wirksam.</p>
     <p>Source files auf <a href="https://github.com/wellenvogel/avnav/tree/master/mobac/testsrc">github</a>.</p>
     <p>Das Ergebnis sieht z.B. so aus (das ist die Einfahrt nach Greifswald):</p>
