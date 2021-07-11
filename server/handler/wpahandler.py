@@ -77,7 +77,7 @@ class AVNWpaHandler(AVNWorker):
     ownSocket=self.getStringParam('ownSocket')
     watcherThread=threading.Thread(target=self.allowDenyWatcher,name="firewallWatcher")
     watcherThread.start()
-    while True:
+    while not self.shouldStop():
       try:
         newWpaSocket=self.getStringParam('wpaSocket')
         if newWpaSocket != wpaSocket:

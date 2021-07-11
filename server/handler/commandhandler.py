@@ -174,9 +174,9 @@ class AVNCommandHandler(AVNWorker):
   def run(self):
     for cmd in self.getConfiguredCommands():
       self.updateCommandStatus(cmd)
-    while True:
+    while not self.shouldStop():
       #self.startCommand("test")
-      time.sleep(10)
+      self.wait(10)
 
   def getConfiguredCommands(self):
     rt=[]

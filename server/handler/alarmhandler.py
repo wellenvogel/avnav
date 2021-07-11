@@ -117,7 +117,7 @@ class AVNAlarmHandler(AVNWorker):
         GPIO.setup(gpioPin,GPIO.IN,pull_up_down=GPIO.PUD_UP)
         GPIO.add_event_detect(gpioPin,GPIO.FALLING,callback=self._gpioCmd,bouncetime=100)
         AVNLog.info("set gpio pin %d as reset alarm",gpioPin)
-    while True:
+    while not self.shouldStop():
       time.sleep(0.5)
       deletes=[]
       for k in list(self.runningAlarms.keys()):

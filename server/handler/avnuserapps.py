@@ -98,8 +98,8 @@ class AVNUserAppHandler(AVNWorker):
     sleepTime=self.getFloatParam('interval')
     self.setInfo('main', "starting", WorkerStatus.STARTED)
     self.fillList()
-    while True:
-      time.sleep(sleepTime)
+    while not self.shouldStop():
+      self.wait(sleepTime)
 
 
   def computeKey(self,entry):

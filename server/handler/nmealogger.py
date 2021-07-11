@@ -95,7 +95,7 @@ class AVNNmeaLogger(AVNWorker):
     seq=0
     last={}
     initial=True
-    while True:
+    while not self.shouldStop():
       interval = self.getIntParam('interval')
       maxfiles = 100
       try:

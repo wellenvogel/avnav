@@ -53,6 +53,10 @@ import handler
 loggingInitialized=False
 
 
+def forceExit():
+  time.sleep(8)
+  AVNLog.info("forced exit")
+  os._exit(1)
 
 def sighandler(signal,frame):
   for handler in AVNWorker.allHandlers:
@@ -60,6 +64,8 @@ def sighandler(signal,frame):
       handler.stop()
     except:
       pass
+  fe=threading.Thread(target=forceExit)
+  fe.start()
   sys.exit(1)
         
 def findHandlerByConfig(list,configName):
@@ -344,8 +350,8 @@ def main(argv):
 
   except Exception as e:
     AVNLog.error("Exception in main %s",traceback.format_exc())
-    sighandler(None, None)
   AVNLog.info("stopping")
+  sighandler(None, None)
    
 if __name__ == "__main__":
     main(sys.argv)

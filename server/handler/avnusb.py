@@ -502,7 +502,7 @@ class AVNUsbSerialReader(AVNWorker):
     #the removal will be robust enough to deal with 2 parallel tries
     context=None
     init=True
-    while True:
+    while not self.shouldStop():
       currentDevices={}
       try:
         AVNLog.debug("starting udev discovery")
@@ -534,7 +534,7 @@ class AVNUsbSerialReader(AVNWorker):
       except Exception as e:
         AVNLog.debug("exception when querying usb serial devices %s, retrying after 10s",traceback.format_exc())
         context=None
-      time.sleep(10)
+      self.wait(10)
 
   def _stopHandlers(self):
     usbids=[]+list(self.addrmap.keys())
