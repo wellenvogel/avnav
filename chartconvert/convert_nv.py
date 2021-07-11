@@ -86,7 +86,7 @@ def nvConvert(chart,outdir,outname,tilertools,logf,warn,updateOnly=False):
       break
     if proc.stdout.closed:
       break
-    logf("CONVERTNV: "+line.rstrip(b'\n').decode('utf-8'))
+    logf("CONVERTNV: "+line.rstrip(b'\n').decode('utf-8',errors='ignore'))
     if proc.poll() is not None:
       break
   rt=proc.wait()
@@ -126,14 +126,14 @@ def nvConvert(chart,outdir,outname,tilertools,logf,warn,updateOnly=False):
     srcds=None
     dstds=None
   except:
-    warn("error in hdal convert handling")
+    warn("error in gdal convert handling")
     return
   if not os.path.exists(tifvrt):
     warn("temp vrt file %s not created"%(tifvrt,))
     return
   #now merge the 2 vrt files
   origvrtdata=None
-  with open(outname,"r",encoding='utf-8') as f:
+  with open(outname,"r",encoding='utf-8',errors='ignore') as f:
     origvrtdata=f.read()
   if origvrtdata is None:
     warn("unable to read %s"%(outname,))
