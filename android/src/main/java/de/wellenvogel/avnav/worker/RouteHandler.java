@@ -76,7 +76,7 @@ public class RouteHandler extends DirectoryRequestHandler  {
             StringBuilder sb=new StringBuilder();
             sb.append("Route: name=").append(name);
             sb.append(", length=").append(length);
-            sb.append(", numpoints=").append(numpoints);
+            sb.append(", numpoints=").append(numpoints);https://www.engelvoelkers.com/eigentuemer-app/dashboard
             sb.append(", mtime=").append(new Date(mtime).toLocaleString());
             return sb.toString();
         }
@@ -502,13 +502,14 @@ public class RouteHandler extends DirectoryRequestHandler  {
     }
 
     private void deleteRouteInfo(String name){
+        if (name.endsWith(".gpx")) name=name.substring(0,name.length()-4);
         synchronized (this){
             routeInfos.remove(name);
         }
         update();
     }
     public synchronized Map<String,RouteInfo> getRouteInfo(){
-        return routeInfos;
+        return (HashMap<String,RouteInfo>)(routeInfos.clone());
     }
 
     @Override
