@@ -85,6 +85,7 @@ class EditRouteDialog extends React.Component{
         }
         this.changeName=this.changeName.bind(this);
         this.dialog=dialogHelper(this);
+        this.loadNewRoute=this.loadNewRoute.bind(this);
     }
     componentDidMount() {
         RouteHandler.listRoutes(true)
@@ -183,6 +184,32 @@ class EditRouteDialog extends React.Component{
             .catch(() => {
             })
     }
+    loadNewRoute(){
+        let finalList=[];
+        this.state.currentRoutes.forEach((route)=>{
+            let name=route.name.replace(/\.gpx/,'');
+            //mark the route we had been editing on the page before
+            let selected=getCurrentEditor().getRouteName() === name;
+            finalList.push({label:name,value:name,key:name,originalName:route.name,selected:selected});
+        });
+
+        let d =OverlayDialog.createSelectDialog("load route", finalList, (entry)=>{
+            if (entry.name === this.state.route.name) return;
+            RouteHandler.fetchRoute(entry.originalName,false,
+                (route)=>{
+                    this.setState({
+                        route:route.clone(),
+                        changed:true,
+                        name: route.name,
+                        unchangedName: route.name,
+                        nameChanged: false,
+                        inverted: false
+                    })
+                },
+                (error)=>{Toast(error)});
+        });
+        this.dialog.showDialog(d);
+    }
     render() {
         let existingName=this.existsRoute(this.state.name) && this.state.nameChanged;
         let canDelete=! this.isActiveRoute() && ! this.state.nameChanged && this.state.name !== DEFAULT_ROUTE;
@@ -197,38 +224,7 @@ class EditRouteDialog extends React.Component{
             >
             </Input>
             {existingName && <div className="warning">Name already exists</div>}
-            <InputSelect
-                dialogRow={true}
-                label="edit new"
-                itemList={(selected)=>{
-                    let li=[];
-                    this.state.currentRoutes.forEach((route)=>{
-                        let name=route.name.replace(/\.gpx/,'');
-                        //mark the route we had been editing on the page before
-                        let selected=getCurrentEditor().getRouteName() === name;
-                        li.push({label:name,value:name,key:name,originalName:route.name,selected:selected});
-                    })
-                    return li;
-                }}
-                value={""}
-                showDialogFunction={this.dialog.showDialog}
-                onChange={(entry)=>{
-                    if (entry.name === this.state.route.name) return;
-                    RouteHandler.fetchRoute(entry.originalName,false,
-                        (route)=>{
-                            this.setState({
-                                route:route.clone(),
-                                changed:true,
-                                name: route.name,
-                                unchangedName: route.name,
-                                nameChanged: false,
-                                inverted: false
-                            })
-                        },
-                        (error)=>{Toast(error)});
-                }}
-
-            />
+            
             {INFO_ROWS.map((description)=>{
                 return InfoItem.show(info,description);
             })}
@@ -270,6 +266,9 @@ class EditRouteDialog extends React.Component{
                 </DB>}
             </div>
             <div className="dialogButtons">
+                < DB name="load"
+                     onClick={this.loadNewRoute}
+                     >Load</DB>
                 { canDelete && <DB name="delete"
                     onClick={() => {this.delete(); }}
                 >Delete</DB>}
@@ -277,7 +276,7 @@ class EditRouteDialog extends React.Component{
                     onClick={() => this.save(true)}
                     disabled={(!this.state.nameChanged || existingName)}
                 >
-                    Copy
+                    Save As
                 </DB>
                 <DB name="cancel"
                     onClick={this.props.closeCallback}
