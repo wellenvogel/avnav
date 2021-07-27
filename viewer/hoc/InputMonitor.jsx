@@ -23,11 +23,11 @@ export default  function(Component,opt_store){
             currentId++;
             this.id=currentId;
             activeInputs[this.id]=true;
-            store.storeData(keys.gui.global.hasActiveInputs,Object.keys(activeInputs) > 0);
+            store.storeData(keys.gui.global.hasActiveInputs,Object.keys(activeInputs).length > 0);
         }
         componentWillUnmount(){
             delete activeInputs[this.id];
-            store.storeData(keys.gui.global.hasActiveInputs,Object.keys(activeInputs) > 0);
+            store.storeData(keys.gui.global.hasActiveInputs,Object.keys(activeInputs).length > 0);
         }
         render(){
             return <Component {...this.props}/>

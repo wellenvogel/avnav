@@ -25,7 +25,6 @@ class OverlayDialog extends React.Component {
         this.state={
             update:0
         }
-        this.updateSize=this.updateSize.bind(this);
     }
 
     render() {
@@ -43,17 +42,6 @@ class OverlayDialog extends React.Component {
                     <Content closeCallback={this.props.closeCallback} /></div>
             </Container>
         );
-    }
-    updateSize(){
-        this.setState({update:this.state.update+1})
-    }
-    componentDidMount() {
-        window.addEventListener('resize', this.updateSize);
-    }
-
-    componentWillUnmount() {
-        window.removeEventListener('resize', this.updateSize);
-
     }
 
 }
