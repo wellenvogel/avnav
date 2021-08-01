@@ -40,7 +40,7 @@ const PAGENAME='navpage';
 
 
 const getPanelList=(panel)=>{
-    return LayoutHandler.getPanelData(PAGENAME,panel,LayoutHandler.getOptionValues([LayoutHandler.OPTIONS.SMALL]));
+    return LayoutHandler.getPanelData(PAGENAME,panel,LayoutHandler.getOptionValues([LayoutHandler.OPTIONS.SMALL,LayoutHandler.OPTIONS.ANCHOR]));
 };
 /**
  *
@@ -280,7 +280,7 @@ class NavPage extends React.Component{
             MapHolder.checkAutoZoom(true);
             return;
         }
-        if (panel == 'bottomLeft'){
+        if (panel && panel.match(/^bottomLeft/)){
             activeRoute.setIndexToTarget();
             this.showWpButtons(true);
             return;
@@ -505,7 +505,8 @@ class NavPage extends React.Component{
             {
                 name: 'Measure',
                 storeKeys: {
-                    toggle: keys.map.measurePosition
+                    toggle: keys.map.measurePosition,
+                    visible: keys.properties.showMeasure
                 },
                 overflow: true,
                 onClick: ()=>{
@@ -524,7 +525,7 @@ class NavPage extends React.Component{
             Mob.mobDefinition,
             EditPageDialog.getButtonDef(PAGENAME,
                 MapPage.PANELS,
-                [LayoutHandler.OPTIONS.SMALL]),
+                [LayoutHandler.OPTIONS.SMALL,LayoutHandler.OPTIONS.ANCHOR]),
             LayoutFinishedDialog.getButtonDef(),
             FullScreen.fullScreenDefinition,
             Dimmer.buttonDef(),

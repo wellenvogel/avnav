@@ -291,6 +291,30 @@
         {
           "name": "Position"
         }
+      ],
+      "bottomLeft_anchor": [
+        {
+          "name": "AnchorBearing",
+          "caption": "ACHR-BRG",
+          "unit": "°"
+        },
+        {
+          "name": "AnchorDistance",
+          "caption": "ACHR-DST",
+          "unit": "m",
+          "formatterParameters": [
+            "m"
+          ]
+        },
+        {
+          "name": "AnchorWatchDistance",
+          "caption": "ACHR-WATCH",
+          "unit": "m",
+          "formatterParameters": [
+            3,
+            1
+          ]
+        }
       ]
     },
     "editroutepage": {
