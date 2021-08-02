@@ -10,6 +10,7 @@ import globalStore from '../util/globalstore.jsx';
 import RouteEdit from '../nav/routeeditor.js';
 import boatImage from '../images/Boat-NoNeedle.png';
 import markerImage from '../images/Marker2.png';
+import measureImage from '../images/measure.png';
 import assign from 'object-assign';
 
 
@@ -76,41 +77,17 @@ const NavLayer=function(mapholder){
     };
     this.anchorStyle.image.src=this.anchorStyle.src;
     this.measureStyle={
-        anchor: [18,38],
+        anchor: [17,38],
         size: [40,40],
+        src: measureImage,
         image: new Image()
     };
+    this.measureStyle.image.src=this.measureStyle.src;
     this.setStyle();
     globalStore.register(this,keys.gui.global.propertySequence);
 
 };
 
-NavLayer.prototype.createMeasureIcon = function (color) {
-    let canvas = document.createElement("canvas");
-    if (!canvas) return undefined;
-    canvas.width = 40;
-    canvas.height = 40;
-    let ctx = canvas.getContext('2d');
-    ctx.fillStyle = color;
-    ctx.strokeStyle=color;
-    ctx.beginPath();
-    ctx.moveTo(0.000000, 16.000000);
-    ctx.lineTo(24.000000, 16.000000);
-    ctx.lineTo(24.000000, 40.000000);
-    ctx.lineTo(0.000000, 40.000000);
-
-// #path878
-    ctx.beginPath();
-    ctx.lineWidth = 1.000000;
-    ctx.moveTo(32.370073, 9.248207);
-    ctx.lineTo(16.524340, 2.990461);
-    ctx.lineTo(16.524340, 31.725013);
-    ctx.bezierCurveTo(18.552835, 41.380464, 18.963427, 35.621636, 20.034636, 31.693153);
-    ctx.lineTo(20.485773, 14.133077);
-    ctx.fill();
-    ctx.stroke();
-    return canvas.toDataURL();
-}
 
 /**
  * set the style(s)
@@ -122,16 +99,13 @@ NavLayer.prototype.setStyle=function() {
             width: globalStore.getData(keys.properties.navCircleWidth)
     };
     this.anchorCircleStyle={
-        color: globalStore.getData(keys.properties.anchorCircleColor),
+        color: this.anchorStyle.courseVectorColor?this.anchorStyle.courseVectorColor:globalStore.getData(keys.properties.anchorCircleColor),
         width: globalStore.getData(keys.properties.anchorCircleWidth)
     };
     this.measureLineStyle={
-        color: globalStore.getData(keys.properties.measureColor),
+        color: this.measureStyle.courseVectorColor?this.measureStyle.courseVectorColor:globalStore.getData(keys.properties.measureColor),
         width: globalStore.getData(keys.properties.navCircleWidth)
     }
-    let measureSrc=this.createMeasureIcon(globalStore.getData(keys.properties.measureColor));
-    this.measureStyle.src=measureSrc;
-    this.measureStyle.image.src=measureSrc;
 };
 
 //we do not explicitely register for those keys as we rely on the mapholder
@@ -261,20 +235,29 @@ NavLayer.prototype.dataChanged=function(){
 };
 
 NavLayer.prototype.setImageStyles=function(styles){
-    if (styles.boatImage){
-        let boat=styles.boatImage;
-        if (typeof(boat) === 'object'){
-            if (boat.src) {
-                this.boatStyle.image.src=boat.src;
-                this.boatStyle.src=boat.src;
+    let otherStyles={
+        anchorImage:'anchorStyle',
+        measureImage:'measureStyle',
+        boatImage: 'boatStyle'
+    };
+    for (let style in otherStyles){
+        let target=otherStyles[style];
+        if (styles[style]){
+            let styleDef=styles[style];
+            if (typeof(styleDef) === 'object'){
+                if (styleDef.src) {
+                    this[target].image.src = styleDef.src;
+                    this[target].src = styleDef.src;
+                }
+                if (styleDef.anchor && styleDef.anchor instanceof Array && styleDef.anchor.length===2) this[target].anchor=styleDef.anchor;
+                if (styleDef.size && styleDef.size instanceof Array && styleDef.size.length === 2) this[target].size=styleDef.size;
+                if (styleDef.rotate !== undefined) this[target].rotate=styleDef.rotate;
+                if (styleDef.courseVector !== undefined) this[target].courseVector=styleDef.courseVector;
+                if (styleDef.courseVectorColor !== undefined) this[target].courseVectorColor=styleDef.courseVectorColor;
             }
-            if (boat.anchor && boat.anchor instanceof Array && boat.anchor.length==2) this.boatStyle.anchor=boat.anchor;
-            if (boat.size && boat.size instanceof Array && boat.size.length == 2) this.boatStyle.size=boat.size;
-            if (boat.rotate !== undefined) this.boatStyle.rotate=boat.rotate;
-            if (boat.courseVector !== undefined) this.boatStyle.courseVector=boat.courseVector;
-            if (boat.courseVectorColor !== undefined) this.boatStyle.courseVectorColor=boat.courseVectorColor;
         }
     }
+    this.setStyle();
 };
 
 export default NavLayer;

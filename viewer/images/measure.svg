@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:drawsvg="http://www.drawsvg.org"
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="100%"
+   height="100%"
+   viewBox="0 0 40 40"
+   preserveAspectRatio="xMinYMin meet"
+   version="1.1"
+   id="svg976"
+   sodipodi:docname="measure.svg"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"
+   inkscape:export-filename="/home/andreas/projects/avnav/viewer/images/measure.png"
+   inkscape:export-xdpi="158"
+   inkscape:export-ydpi="158">
+  <metadata
+     id="metadata980">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1680"
+     inkscape:window-height="1026"
+     id="namedview978"
+     showgrid="false"
+     inkscape:zoom="14.52253"
+     inkscape:cx="8.5909713"
+     inkscape:cy="20"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg976" />
+  <defs
+     id="drawsvgConstraints">
+    <defs
+       id="constraint1"
+       drawsvg:constraint="{'type':'connectPoints', 'ids':['xe1_4','xc1'], 'priority':0, 'index-p1':0, 'index-p2':1}" />
+  </defs>
+  <rect
+     id="svgEditorBackground"
+     x="0"
+     y="0"
+     width="40"
+     height="40"
+     style="fill: none; stroke: none;" />
+  <g
+     id="e2_layer"
+     style="fill:#ff0000;fill-opacity:1;stroke:#ff0000;stroke-linecap:round"
+     transform="translate(-0.27543409,0.61972671)">
+    <path
+       id="e1_line"
+       style="fill:#ff0000;fill-opacity:1;stroke:#ff0000;stroke-width:1px;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+       d="m 16.5,31.700001 c 2,9.8 2.4,4.1 3.5,-0.01828 L 20.465571,14.58201 32.127499,8.8180199 16.5,2.9000001 m 0,0 V 31.700001 m 0,-28.8000009 V 31.700001"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="ccccccccc" />
+  </g>
+</svg>
