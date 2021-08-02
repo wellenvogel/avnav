@@ -118,7 +118,12 @@ const showLockDialog=()=>{
 
 const setCenterToTarget=()=>{
     MapHolder.setGpsLock(false);
-    MapHolder.setCenter(activeRoute.hasRoute()?activeRoute.getPointAt():activeRoute.getCurrentTarget());
+    if (globalStore.getData(keys.nav.anchor.watchDistance) !== undefined){
+        MapHolder.setCenter(activeRoute.getCurrentFrom());
+    }
+    else {
+        MapHolder.setCenter(activeRoute.hasRoute() ? activeRoute.getPointAt() : activeRoute.getCurrentTarget());
+    }
 };
 
 const navNext=()=>{
@@ -180,26 +185,35 @@ class NavPage extends React.Component{
                         startWaypointDialog(activeRoute.getCurrentTarget());
                     }
                     this.showWpButtons(false);
-                }
+                },
+                storeKeys: {watchDistance:keys.nav.anchor.watchDistance},
+                updateFunction:(state)=>{
+                    return {visible:! (state.watchDistance !== undefined)}
+                },
+
             },
             {
                 name:'WpGoto',
-                storeKeys:activeRoute.getStoreKeys(),
+                storeKeys:activeRoute.getStoreKeys({watchDistance:keys.nav.anchor.watchDistance}),
                 updateFunction: (state)=> {
-                    return {visible: !StateHelper.selectedIsActiveTarget(state)}
+                    return {visible: !StateHelper.selectedIsActiveTarget(state) && ! (state.watchDistance !== undefined)}
                 },
                 onClick:()=>{
                     let selected=activeRoute.getPointAt();
                     this.showWpButtons(false);
                     if (selected) RouteHandler.wpOn(selected);
-                }
+                },
+
 
             },
             {
                 name:'NavNext',
-                storeKeys:activeRoute.getStoreKeys(),
+                storeKeys:activeRoute.getStoreKeys({watchDistance:keys.nav.anchor.watchDistance}),
                 updateFunction: (state)=> {
-                    return {visible:  StateHelper.selectedIsActiveTarget(state) &&  StateHelper.hasPointAtOffset(state,1)};
+                    return {visible:  StateHelper.selectedIsActiveTarget(state)
+                            &&  StateHelper.hasPointAtOffset(state,1)
+                            && ! (state.watchDistance !== undefined)
+                    };
                 },
                 onClick:()=>{
                     self.showWpButtons(false);
@@ -210,11 +224,11 @@ class NavPage extends React.Component{
             },
             {
                 name:'WpNext',
-                storeKeys:activeRoute.getStoreKeys(),
+                storeKeys:activeRoute.getStoreKeys({watchDistance:keys.nav.anchor.watchDistance}),
                 updateFunction: (state)=> {
                     return {
                         disabled:!StateHelper.hasPointAtOffset(state,1),
-                        visible: StateHelper.hasRoute(state)
+                        visible: StateHelper.hasRoute(state) && ! (state.watchDistance !== undefined)
                     };
                 },
                 onClick:()=>{
@@ -227,11 +241,11 @@ class NavPage extends React.Component{
             },
             {
                 name:'WpPrevious',
-                storeKeys:activeRoute.getStoreKeys(),
+                storeKeys:activeRoute.getStoreKeys({watchDistance:keys.nav.anchor.watchDistance}),
                 updateFunction: (state)=> {
                     return {
                         disabled:!StateHelper.hasPointAtOffset(state,-1),
-                        visible: StateHelper.hasRoute(state)
+                        visible: StateHelper.hasRoute(state) && ! (state.watchDistance !== undefined)
                     }
                 },
                 onClick:()=>{
