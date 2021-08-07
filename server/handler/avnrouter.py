@@ -387,7 +387,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
       self.currentLeg.setApproach(True)
       #save the leg
       self.setCurrentLeg(self.currentLeg)
-    AVNLog.info("Route: approaching wp %d (%s) currentDistance=%f",self.currentLeg.currentTarget,str(self.currentLeg.toWP),float(dst))
+    AVNLog.info("Route: approaching wp %d (%s) currentDistance=%f",self.currentLeg.getCurrentTarget(),str(self.currentLeg.getTo()),float(dst))
     route=self.currentLeg.getCurrentRoute()
     if route is None or route.get('points') is None:
       AVNLog.debug("Approach: no route active")
