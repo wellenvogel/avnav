@@ -12,16 +12,16 @@
       <a href="release.html">Release Dokument</a>.</p>
     <p>Um den Start zu vereinfachen, gibt es einige fertige Images für den
       Raspberry Pi. Die Art des Images hängt vom geplanten Anwendungsfall ab.
-      Wenn der Raspberry nur als Server eingesetzt wird, die Anzeige
-      dann z.B. auf Mobilgerätenerfolgen soll, sollte das&nbsp; <a href="#Headless">"headless"-Image</a> genutzt werden.
-        Für diese Image reicht ein Raspberry Pi 3B(+).
-        Wenn ein Monitor und Peripherie wie Tastatur und Maus direkt an den Raspberry angeschlossen werden sollen,
-        kann die <a href="#openplotter">OpenPlotter</a>-Variante
+      Wenn der Raspberry nur als Server eingesetzt wird, die Anzeige dann z.B.
+      auf Mobilgerätenerfolgen soll, sollte das&nbsp; <a href="#Headless">"headless"-Image</a>
+      genutzt werden. Für diese Image reicht ein Raspberry Pi 3B(+). Wenn ein
+      Monitor und Peripherie wie Tastatur und Maus direkt an den Raspberry
+      angeschlossen werden sollen, kann die <a href="#openplotter">OpenPlotter</a>-Variante
       eine gute Basis sein. Für OpenPlotter empfiehlt sich ein Pi4 mit 4GB
-      Speicher. Auch 2GB Arbeitsspeicher wird ausreichen - dann bleibt aber nicht
-      viel Raum für zukünftige Anforderungen. Es gibt auch spezielle Images für
-      AvNav mit einem Tochscreen - diese sind allerdings nicht immer auf dem
-      aktuellen Stand.</p>
+      Speicher. Auch 2GB Arbeitsspeicher wird ausreichen - dann bleibt aber
+      nicht viel Raum für zukünftige Anforderungen. Es gibt auch spezielle
+      Images für AvNav mit einem Tochscreen - diese sind allerdings nicht immer
+      auf dem aktuellen Stand.</p>
     <h2><a name="Headless"></a>Image ohne Bildschirm (Headless)</h2>
     <p>Diese Images werden von <a href="https://www.segeln-forum.de/user/27970-blacksea/">BlackSea</a>
       gepflegt (vielen Dank...). Eine Beschreibung findet sich auf <a href="https://github.com/free-x/avnav/wiki">seiner
@@ -40,19 +40,20 @@
       <li><a href="hints/CanboatAndSignalk.html">Canboat</a></li>
       <li>Support for <a href="https://www.gedad.de/projekte/projekte-f%C3%BCr-privat/gedad-marine-control-server/">MCS</a></li>
     </ul>
-    Die Images sind so vorkonfiguriert, dass NMEA0183-Daten von allen Interfaces zu
-    AvNav und von dort zu <a href="hints/CanboatAndSignalk.html">SignalK</a>
+    Die Images sind so vorkonfiguriert, dass NMEA0183-Daten von allen Interfaces
+    zu AvNav und von dort zu <a href="hints/CanboatAndSignalk.html">SignalK</a>
     geleitet werden. AvNav holt sich zusätzlich alle Daten von SignalK und kann
     diese anzeigen.<br>
     NMEA2000-Daten laufen über Canboat zu SignalK und zu AvNav.<br>
     Für Details siehe <a href="hints/CanboatAndSignalk.html">CanBoatAndSignalK</a>.
     <h3>Image Vorbereitung</h3>
     <p>neu ab Version "20210322"</p>
-    <p>Bevor die fertig vorbereitete SD-Karte im Raspberry verwendet wird, sollte man einige Einstellungen anpassen.
-        Das gilt vor allem für Passworte:<br>
-      Die Images haben eine Konfigurationsdatei "avnav.conf". Sie findet sich in der ersten
-      Partition der SD-Karte (Boot-Partition). Diese Datei kann mit einem
-      Texteditor angepasst werden.</p>
+    <p>Bevor die fertig vorbereitete SD-Karte im Raspberry verwendet wird,
+      sollte man einige Einstellungen anpassen. Das gilt vor allem für
+      Passworte:<br>
+      Die Images haben eine Konfigurationsdatei "avnav.conf". Sie findet sich in
+      der ersten Partition der SD-Karte (Boot-Partition). Diese Datei kann mit
+      einem Texteditor angepasst werden.</p>
     <p>Einfacher geht es mit einer kleinen Web-Oberfläche <a href="../configGen/index.html">hier</a>.
     </p>
     <a href="../configGen/index.html"><img src="ConfigImagesUi.png" class="fimage"></a>
@@ -76,48 +77,55 @@
           <td>Wifi Password</td>
           <td>avnav-secret</td>
           <td>Das Passwort für das WLAN-Netzwerk. Das sollte in jedem Falle
-            geändert werden. Jeder, der sich mit dem WLAN verbinden kann, kann damit auch
-            die Navigation beeinflussen!</td>
+            geändert werden. Jeder, der sich mit dem WLAN verbinden kann, kann
+            damit auch die Navigation beeinflussen!</td>
         </tr>
         <tr>
           <td>User pi password</td>
           <td>raspberry</td>
-          <td>Das ist das Passwort für den Nutzer "pi". Dieser Standard- User wird genutzt, wenn man sich per SSH
-            verbindet oder wenn man direkt per Monitor und Tastatur auf den Raspberry zugreift.
-            Das Passwort für den User "pi"
-            sollte ebenfalls unbedingt geändert werden.</td>
+          <td>Das ist das Passwort für den Nutzer "pi". Dieser Standard- User
+            wird genutzt, wenn man sich per SSH verbindet oder wenn man direkt
+            per Monitor und Tastatur auf den Raspberry zugreift. Das Passwort
+            für den User "pi" sollte ebenfalls unbedingt geändert werden.</td>
         </tr>
         <tr>
           <td>Configure MCS</td>
           <td>aus</td>
-          <td>Wenn diese Optoin aktiviert ist, wird beim nächsten Bootvorgang die notwendige
-            Software für den <a href="https://www.gedad.de/projekte/projekte-f%C3%BCr-privat/gedad-marine-control-server/">Marine Control Server von GeDad</a> aktiviert. Die Änderung der Einstellung führt dann zu einem
-            automatischen Reboot, wenn der Raspberry das erste mal mit dieser
-            Einstellung startet.</td>
+          <td>Wenn diese Optoin aktiviert ist, wird beim nächsten Bootvorgang
+            die notwendige Software für den <a href="https://www.gedad.de/projekte/projekte-f%C3%BCr-privat/gedad-marine-control-server/">Marine
+              Control Server von GeDad</a> aktiviert. Die Änderung der
+            Einstellung führt dann zu einem automatischen Reboot, wenn der
+            Raspberry das erste mal mit dieser Einstellung startet.</td>
         </tr>
       </tbody>
     </table>
-    <p>Nach dem Eintragen der Werte kann man durch Klick auf den "download"-Button die "avnav.conf"-Datei herunterladen. Diese muss in die erste
-      Partition der SD-Karte gespeichert werden. Eine eventuell dort vorhandene
-      Beispieldatei muss überschrieben werden! Diese Partition muss dazu natürlich auf
-      dem Computer sichtbar sein. Unter Windows wird man in der Regel nur die erste
-      Partition sehen können. [Eventuell muss man dazu nach dem Schreiben des Images die SD-Karte noch einmal enfernen und wieder einstecken.] unklarer Satz, warum muss man das?</p>
-    <p>Es empfiehlt sich daher, die "avnav.conf"-Date noch einmal an einem sicheren
-      Platz zu speichern, um sie ggf. beim Erzeugen einer neuen SD-Karte
-      wiederverwenden zu können.</p>
+    <p>Nach dem Eintragen der Werte kann man durch Klick auf den
+      "download"-Button die "avnav.conf"-Datei herunterladen. Diese muss in die
+      erste Partition der SD-Karte gespeichert werden. Eine eventuell dort
+      vorhandene Beispieldatei muss überschrieben werden! Diese Partition muss
+      dazu natürlich auf dem Computer sichtbar sein. Unter Windows wird man in
+      der Regel nur die erste Partition sehen können. [Eventuell muss man dazu
+      nach dem Schreiben des Images die SD-Karte noch einmal enfernen und wieder
+      einstecken.] unklarer Satz, warum muss man das?</p>
+    <p>Es empfiehlt sich daher, die "avnav.conf"-Date noch einmal an einem
+      sicheren Platz zu speichern, um sie ggf. beim Erzeugen einer neuen
+      SD-Karte wiederverwenden zu können.</p>
     <p>Nun kann man die SD-Karte in den Raspberry stecken und ihn starten. Der
-      erste Boot kann einige Zeit dauern, da das gesamte Dateisystem auf der SD-Karte erzeugt werden muss. Wenn man
-      die MCS-Software selektiert hat, wird der Raspberry noch ein weiteres Mal neu
-      starten.</p>
-    <p>Wenn der Raspberry seine Systemeinrichtung endgültig abgeschlossen hat, kann man sich mit ihm verbinden.</p>
+      erste Boot kann einige Zeit dauern, da das gesamte Dateisystem auf der
+      SD-Karte erzeugt werden muss. Wenn man die MCS-Software selektiert hat,
+      wird der Raspberry noch ein weiteres Mal neu starten.</p>
+    <p>Wenn der Raspberry seine Systemeinrichtung endgültig abgeschlossen hat,
+      kann man sich mit ihm verbinden.</p>
     <h3><a name="connecting"></a>Verbinden mit dem Raspberry Pi</h3>
-    <p>Man kann das WLAN-Netzwerk verwenden, das der Raspberry erzeugt
-      hat. Die SSID und das Passwort wurden wie oben beschrieben in der Datei "avnav.conf" definiert. Auch eine 
-      Verbindung über ein Ethernet-Kabel ist möglich und wird sofort funktionieren.<br>
+    <p>Man kann das WLAN-Netzwerk verwenden, das der Raspberry erzeugt hat. Die
+      SSID und das Passwort wurden wie oben beschrieben in der Datei
+      "avnav.conf" definiert. Auch eine Verbindung über ein Ethernet-Kabel ist
+      möglich und wird sofort funktionieren.<br>
       Um sich zu verbinden, muss man zuächst die Adresse für den Raspberry
       herausfinden.<br>
-      Am einfachsten geht das per <a href="https://en.wikipedia.org/wiki/Multicast_DNS">mDNS</a>, auch als "Bonjour" oder "Avahi" bezeichnet.
-      Das wird auf allen Desktop-Systemen unterstützt. So kann man einfach in die Adresszeile des
+      Am einfachsten geht das per <a href="https://en.wikipedia.org/wiki/Multicast_DNS">mDNS</a>,
+      auch als "Bonjour" oder "Avahi" bezeichnet. Das wird auf allen
+      Desktop-Systemen unterstützt. So kann man einfach in die Adresszeile des
       Browsers eingeben:</p>
     <div class="code">http://avnav.local</div>
     <p>Das sollte die <a href="userdoc/index.html">Hauptseite</a> von AvNav
@@ -128,7 +136,8 @@
       unterscheiden:</p>
     <ol>
       <li>Direkte Verbindung vom Computer zum Raspberry</li>
-      <li>Beide sind mit einem Netzwerk verbunden, in dem auch ein Router/DHCP Server arbeitet.</li>
+      <li>Beide sind mit einem Netzwerk verbunden, in dem auch ein Router/DHCP
+        Server arbeitet.</li>
     </ol>
     <p>Im ersten Fall muss man prüfen, ob der eigene Computer automatisch eine
       IP-Adresse auf dem Interface erzeugt (Bereich 169....). Das kann
@@ -136,23 +145,25 @@
       Verbindung per avnav.local möglich sein.<br>
       Im anderen Fall sollte es schneller gehen, allerdings müssen sich der
       Raspberry und der sich verbindende Computer im gleichen Netz befinden.<br>
-      Auf Images, die älter als Version "20210322" sind, muss man eventuell die Portadresse ":8080" an die IP-Adresse im
-      Browser anfügen.</p>
-    <p>Eine Einschränkung bleibt: Leider funktioniert avnav.local nicht auf Android-Geräten. Daher empfehle
-      ich, dort ein Tool zu nutzen, das mDNS nutzen kann - einen <a href="https://play.google.com/store/apps/details?id=de.wellenvogel.bonjourbrowser">
+      Auf Images, die älter als Version "20210322" sind, muss man eventuell die
+      Portadresse ":8080" an die IP-Adresse im Browser anfügen.</p>
+    <p>Eine Einschränkung bleibt: Leider funktioniert avnav.local nicht auf
+      Android-Geräten. Daher empfehle ich, dort ein Tool zu nutzen, das mDNS
+      nutzen kann - einen <a href="https://play.google.com/store/apps/details?id=de.wellenvogel.bonjourbrowser">
         BonjourBrowser </a>. Für IOS gibt es ein&nbsp; <a href="https://play.google.com/store/apps/details?id=de.wellenvogel.bonjourbrowser">vergleichbares
-        Tool</a> - auch wenn dort der Eintrag "avnav.local" im Brwoser funktioniert. Man wird seinen
-      Raspberry mit dem AvNav-Image in den Browsern unter dem Namen
-      "avnav-server" finden. Typischerweise wird man noch einen zweiten Eintrag
-      "avnav" sehen - dahinter verbirgt sich der  <a href="hints/CanboatAndSignalk.html">SignalK</a>-Server
-      auf dem Raspberry.<br>
+        Tool</a> - auch wenn dort der Eintrag "avnav.local" im Brwoser
+      funktioniert. Man wird seinen Raspberry mit dem AvNav-Image in den
+      Browsern unter dem Namen "avnav-server" finden. Typischerweise wird man
+      noch einen zweiten Eintrag "avnav" sehen - dahinter verbirgt sich der <a
+        href="hints/CanboatAndSignalk.html">SignalK</a>-Server auf dem
+      Raspberry.<br>
       Wenn man seinen Raspberry im Bonjour-Browser sehen kann, der Aufruf der
       Seite dann aber fehlschlägt, kann es an einer Besonderheit von Android
-      liegen, wenn zusätzlich z.B. per Mobilfunk eine Internet-Verbindung
-      aktiv ist. In diesem Falle sollte man mobile Daten zeitweilig abschalten.</p>
+      liegen, wenn zusätzlich z.B. per Mobilfunk eine Internet-Verbindung aktiv
+      ist. In diesem Falle sollte man mobile Daten zeitweilig abschalten.</p>
     <p>Wenn man ein System hat, das <b>nur</b> mit dem WLAN-Netzwerk des
-      Raspberry verbunden ist, ohne dass eine weitere Internetverbindung aktiv ist, sollte man sich
-      auch per</p>
+      Raspberry verbunden ist, ohne dass eine weitere Internetverbindung aktiv
+      ist, sollte man sich auch per</p>
     <div class="code">http://avnav.avnav.de</div>
     <p>verbinden können.<br>
       Wenn das nicht funktioniert, ist der letzte Weg immer die IP-Adresse.<br>
@@ -162,12 +173,11 @@
       probieren: 192.168.30.10, 192.168.40.10, 192.168.50.10.<br>
       Wenn man mit einem Ethernet-Kabel verbunden ist, kann man die IP-Adresse
       nur ermitteln, wenn man Zugriff auf den Router/DHCP Server im Netz hat.</p>
-    <p>Wenn man sich per SSH verbindet, ist der Nutzername "pi".
-        Das Nutzer-Passwort wurde in der Datei "avnav.conf" (hoffentlich) gesetzt.
-      .<br>
+    <p>Wenn man sich per SSH verbindet, ist der Nutzername "pi". Das
+      Nutzer-Passwort wurde in der Datei "avnav.conf" (hoffentlich) gesetzt. .<br>
       Wenn das in der Konfiguration gesetzte Passwort nicht funktioniert, kann
       man noch einmal das Default-Passwort versuchen. Es lautet "raspberry".
-        Eventuell wurde die avnav.conf zuvor nicht korrekt gespeichert.<br>
+      Eventuell wurde die avnav.conf zuvor nicht korrekt gespeichert.<br>
       Eine Root-Shell kann man mit sudo -i erhalten.</p>
     <h3>Technische Details<br>
     </h3>
@@ -176,10 +186,13 @@
       Diese Netzwerke haben die Adressen:192.168.20.0/24, 192.168.30.0/24,
       192.168.40.0/24, 192.168.50.0/24. Der Raspberry selbst hat dabei jeweils
       die Adresse 192.168.x.10.</p>
-    <p>Auf dem Raspberry wird dazu ein DHCP-Server und ein DNS-Server eingerichtet (dnsmasqd). </p>
+    <p>Auf dem Raspberry wird dazu ein DHCP-Server und ein DNS-Server
+      eingerichtet (dnsmasqd). </p>
     <p>Wenn der Raspberry über ein Ethernet-Kabel verbunden wird, versucht er
-      per DHCP eine Adresse aus dem Netzwerk zu erhalten. Er setzt dann eine NAT-Weiterleitung aus
-      seinem WLAN-Netz zum Ethernet auf. So kann z.B. eine Internetverbindung aufgebaut werden, während man in das WLAN des Raspberry eingewählt ist.</p>
+      per DHCP eine Adresse aus dem Netzwerk zu erhalten. Er setzt dann eine
+      NAT-Weiterleitung aus seinem WLAN-Netz zum Ethernet auf. So kann z.B. eine
+      Internetverbindung aufgebaut werden, während man in das WLAN des Raspberry
+      eingewählt ist.</p>
     <h3>WLAN Client Verbindung</h3>
     <p>Ein WLAN Stick der wie im Bild angeschlossen ist (auf dem Pi4 die blaue
       USB Buchse an der Platinen-Seite) erlaubt es, sich zusätzlich mit anderen
@@ -196,27 +209,29 @@ sudo systemctl start avnav
 sudo systemctl stop avnav</div>
     <p>den Status des Servers prüfen, ihn starten oder stoppen. </p>
     <p>Für die meisten Aktionen sollte ein Kommandozeilen-Zugang jedoch nicht
-      erforderlich sein. Für Updates nutzt man das bereits vorinstallierte <a href="https://github.com/wellenvogel/avnav-update-plugin">Update-Plugin</a>. Die Server-Konfiguration kann
-      innerhalb der App auf der <a href="userdoc/statuspage.html">Server/Status</a>-Seite vorgenommen werden.</p>
+      erforderlich sein. Für Updates nutzt man das bereits vorinstallierte <a href="https://github.com/wellenvogel/avnav-update-plugin">Update-Plugin</a>.
+      Die Server-Konfiguration kann innerhalb der App auf der <a href="userdoc/statuspage.html">Server/Status</a>-Seite
+      vorgenommen werden.</p>
     <h2><a name="Touch"></a>Image mit Bildschirm</h2>
-    <span>Falls man einen Bildschirm an den Raspberry Pi anschliessen möchte, ist
-      dieses Image das richtige.<br>
+    <span>Falls man einen Bildschirm an den Raspberry Pi anschliessen möchte,
+      ist dieses Image das richtige.<br>
       Für&nbsp;</span> diese Variante hat Holger (<a href="https://www.segeln-forum.de/user/13545-pandel/">pandel</a>)
     dankenswerterweise eine eigene Image-Linie aufgesetzt. Die tollen
-    Beschreibungen dazu findet man auf seiner <a href="https://open-mind.space/">AvNav-Touch-Webseite</a>. Herunterladen kann man die Images von der <a href="https://open-mind.space/download/">download
+    Beschreibungen dazu findet man auf seiner <a href="https://open-mind.space/">AvNav-Touch-Webseite</a>.
+    Herunterladen kann man die Images von der <a href="https://open-mind.space/download/">download
       Seite</a>.<br>
     <p> Natürlich kann man auch hier weitere externe (Display-)Geräte nutzen.</p>
     <p><b>Wichtiger Hinweis</b>: <span style="color: red;">Momentan (12/2020)
-        sind diese Images nicht mehr aktuell. Man müsste für eine Aktualisierung händisch die Paketquellen aus
-        dem nächsten Absatz einbinden und die Pakete updaten. Wir arbeiten zur Zeit an
-        einer Aktualisierung.</span></p>
+        sind diese Images nicht mehr aktuell. Man müsste für eine Aktualisierung
+        händisch die Paketquellen aus dem nächsten Absatz einbinden und die
+        Pakete updaten. Wir arbeiten zur Zeit an einer Aktualisierung.</span></p>
     <h2 class="western"><a name="Packages"></a>Paket Installation</h2>
-    Dank Oleg gibt es jetzt fertige Paket-Repositories, die man in sein Debian-Linux
-    einbinden kann. Das geht auf dem Raspberry Pi - aber auch auf jeder anderen
-    Debian-Variante (z.B. Ubuntu). <br>
+    Dank Oleg gibt es jetzt fertige Paket-Repositories, die man in sein
+    Debian-Linux einbinden kann. Das geht auf dem Raspberry Pi - aber auch auf
+    jeder anderen Debian-Variante (z.B. Ubuntu). <br>
     Informationen dazu findet man wieder in seiner <a href="https://github.com/free-x/avnav/wiki">Beschreibung</a>.<br>
-    <p>Die Paketquellen bindet man wie folgt ein. Das ist nur nötig, wenn man nicht das
-      "headless"- oder "touch"-Image nutzt):</p>
+    <p>Die Paketquellen bindet man wie folgt ein. Das ist nur nötig, wenn man
+      nicht das "headless"- oder "touch"-Image nutzt):</p>
     <div class="code">wget https://www.free-x.de/debian/oss.boating.gpg.key
 sudo apt-key add oss.boating.gpg.key
 wget https://www.free-x.de/debian/boating.list
@@ -243,23 +258,27 @@ sudo systemctl start avnav</div>
       <li><a title="downloads/releases" href="../downloads/release">Releases</a></li>
       <li><a href="../downloads/daily">Tägliche Builds</a></li>
     </ul>
-    Nach dem Herunterladen kann man die Pakete mit<br>
+    <p> Nach dem Herunterladen kann man die Pakete auf einem raspberry pi mit<br>
+    </p>
     <div class="code">sudo dpkg -i avnav_xxxxxxxx_all,deb
 sudo dpkg -i avnav-raspi_xxxxxxxx_all.deb
-sudo apt-get -f</div>
-    installieren ????(dabei das -raspi... Paket nur auf einem Raspberry) ????. Die ersten
-    Kommandos werden typischerweise Fehler erzeugen, das letzte lädt dann die
-    fehlenden Abhängigkeiten.<br>
-    <p> Wenn man auf einem Raspberry installiert, sollte man das "avnav-raspi"-Paket nur dann installieren, wenn man damit einverstanden ist, dass die
-      Netzwerk-Konfiguration so geändert wird, wie AvNav das möchte. Sonst
-      sollte man nur das "avnav"-Paket installieren.</p>
+sudo apt-get install -f</div>
+    installieren.<br>
+    <p> Die ersten Kommandos werden typischerweise Fehler erzeugen, das letzte
+      lädt dann die fehlenden Abhängigkeiten.<br>
+      Das "avnav-raspi"-Paket sollte man nur dann installieren, wenn man damit
+      einverstanden ist, dass die Netzwerk-Konfiguration so geändert wird, wie
+      AvNav das möchte. Sonst sollte man nur das "avnav"-Paket installieren.</p>
+    <p>Auf einem anderen Linux installiert man mit:</p>
+    <div class="code">sudo dpkg -i avnav_xxxxxxxx_all,deb
+sudo apt-get install -f</div>
     <p>Ich würde in jedem Fall empfehlen, das <a href="https://github.com/wellenvogel/avnav-update-plugin">AvNav
         Update-Plugin</a> zu installieren - aus dem Paket Repository mit </p>
     <div class="code">sudo apt-get install avnav-update-plugin</div>
     <p>oder mittels Download von&nbsp; <a href="https://github.com/wellenvogel/avnav-update-plugin">GitHub.</a></p>
     <p>Wenn man nicht das "avnav-raspi"-Paket installiert, braucht man einige
-      zusätzliche Schritte, um AvNav unter dem Nutzer "pi" automatisch starten zu
-      lassen:</p>
+      zusätzliche Schritte, um AvNav unter dem Nutzer "pi" automatisch starten
+      zu lassen:</p>
     Man kann dann als Nutzer "pi" AvNav einfach von der Kommandozeile starten
     lassen.<br>
     Wenn man AvNav als "systemd service" laufen lassen möchte, sollte man das
@@ -274,8 +293,8 @@ sudo apt-get -f</div>
     Danach kann man mit den Kommandos
     <div class="code">sudo systemctl daemon-reload<br>sudo systemctl enable avnav<br>sudo systemctl start avnv</div>
     <p>Avnav als Systemdienst starten. Wenn man diese Datei nicht
-      anlegt/kopiert, wird AvNav nicht mit den Nutzer "pi", sondern mit dem Nutzer
-      "avnav" arbeiten.</p>
+      anlegt/kopiert, wird AvNav nicht mit den Nutzer "pi", sondern mit dem
+      Nutzer "avnav" arbeiten.</p>
     <p> Wenn man auch die Karten-Konvertierung auf dem Linuxrechner mit einer
       kleinen GUI machen möchte, muss zusätzlich das Paket "python-wxgtk3.0"
       installiert werden. Dann muss man AvNav mit</p>
@@ -287,8 +306,8 @@ sudo apt-get -f</div>
     <p>Für <a href="https://openmarine.net/openplotter">OpenPlotter</a> gibt es
       eine komplette Integration von AvNav (Dank an <a href="https://github.com/e-sailing">e-sailing</a>).
       Im Repository <a href="https://www.free-x.de/deb4op/">https://www.free-x.de/deb4op/</a>
-      , das bereits standardmäßig mit OpenPlotter 2 kommt, sind die notwendigen Pakete
-      bereits vorhanden. Somit kann man sie einfach installieren:</p>
+      , das bereits standardmäßig mit OpenPlotter 2 kommt, sind die notwendigen
+      Pakete bereits vorhanden. Somit kann man sie einfach installieren:</p>
     <div class="code">sudo apt update
 sudo apt install openplotter-avnav</div>
     <p> </p>
@@ -297,11 +316,13 @@ sudo apt install openplotter-avnav</div>
     <p>Das Paket "avnav-raspi_xxx.deb" sollte man auf OpenPlotter nicht
       installieren, weil es sich nicht mit den Netzwerkeinstellungen von
       OpenPlotter verträgt. Innerhalb der OpenPlotter-AvNav-Konfiguration kann
-      man den HTTP-Port für AvNav ändern, wenn es Probleme mit anderen Apps geben sollte.
-        Die Defaultwerte sind: :8080 für den Browserzugriff, :8082 für ocharts.</p>
-    <p>Wenn man AvNav mit der OpenPlotter-App installiert, empfängt AvNav alle NMEA-Daten von SignalK und
-        sucht nicht selbst nach USB Geräten. Alle Geräte-Konfigurationen oder Schnittstellen-Einrichtungen
-     können so direkt in OpenPlotter und SignalK vorgenommen werden.</p>
+      man den HTTP-Port für AvNav ändern, wenn es Probleme mit anderen Apps
+      geben sollte. Die Defaultwerte sind: :8080 für den Browserzugriff, :8082
+      für ocharts.</p>
+    <p>Wenn man AvNav mit der OpenPlotter-App installiert, empfängt AvNav alle
+      NMEA-Daten von SignalK und sucht nicht selbst nach USB Geräten. Alle
+      Geräte-Konfigurationen oder Schnittstellen-Einrichtungen können so direkt
+      in OpenPlotter und SignalK vorgenommen werden.</p>
     <p></p>
     <p><br>
     </p>
@@ -314,9 +335,9 @@ sudo apt install openplotter-avnav</div>
     den Installer selbst neu herunterladen zu müssen.<br>
     Die Windows-Version ist primär auf die <a href="charts.html#windows">Karten-Konvertierung</a>
     ausgelegt, bietet aber die volle Funktionalität und kann somit auch zur
-    Navigation unter Windows verwendet werden.
-    Wie bei allen anderen Versionen bietet auch die Windwos-Version den Zugriff
-    per Browser von anderen Geräten aus über das Netzwerk..<br>
+    Navigation unter Windows verwendet werden. Wie bei allen anderen Versionen
+    bietet auch die Windwos-Version den Zugriff per Browser von anderen Geräten
+    aus über das Netzwerk..<br>
     <br>
     <br>
   </body>

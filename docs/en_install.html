@@ -8,28 +8,27 @@
     <h1 class="western">AvNav Installation</h1>
     <div class="toc"> </div>
     <h2> Releases </h2>
-    <p>A description of the releases and download links can be found in the
-        <a href="release.html">releases document</a>.</p>
-    <p>To provide a "ready to go" solution there are some images for
-      the raspberry pi you can use. The kind of image we recommend
-      mainly depends on your intended usage.</p>
-    <p>For the "classical" approach (raspberry pi only used as a server,
-      display on some mobile device) you should use the <a href="#headless">headless
+    <p>A description of the releases and download links can be found in the <a
+        href="release.html">releases document</a>.</p>
+    <p>To provide a "ready to go" solution there are some images for the
+      raspberry pi you can use. The kind of image we recommend mainly depends on
+      your intended usage.</p>
+    <p>For the "classical" approach (raspberry pi only used as a server, display
+      on some mobile device) you should use the <a href="#headless">headless
         images</a>. For those images a raspberry pi 3B(+) gives a sufficient
       hardware basis. If you would like to have a monitor directly connected to
-      your pi (and potentially also keyboard and mouse)
-        just have a look at <a href="#openplotter">OpenPlotter</a>. For OpenPlotter we recommend a Pi4
+      your pi (and potentially also keyboard and mouse) just have a look at <a
+        href="#openplotter">OpenPlotter</a>. For OpenPlotter we recommend a Pi4
       with at least 4GB of memory (potentially 2GB will be sufficient but there
       is not much room for future needs). There are also dedicated AvNav touch
       images - but currently they are outdated.</p>
-    <h2><a name="Headless"></a><a name="headless"></a>Image
-      without attached display (Headless)</h2>
+    <h2><a name="Headless"></a><a name="headless"></a>Image without attached
+      display (Headless)</h2>
     <p>Those images are maintained by <a href="https://www.segeln-forum.de/user/27970-blacksea/">BlackSea</a>
       (many thanks...). A description is available on<a href="https://github.com/free-x/avnav/wiki">
         his page</a>.<br>
       The images can be downloaded from&nbsp; <a href="https://www.free-x.de/raspbian/buster/">free-x</a>
-      and installed on a SD card as described at
-        <a href="http://www.raspberrypi.org/downloads">http://www.raspberrypi.org/downloads</a>
+      and installed on a SD card as described at <a href="http://www.raspberrypi.org/downloads">http://www.raspberrypi.org/downloads</a>
       (raw images). <br>
       The images come with </p>
     <ul>
@@ -69,8 +68,8 @@
         <tr>
           <td style="width: 187px;">Wifi SSID</td>
           <td style="margin-left: 112px; width: 229px;">avnav</td>
-          <td style="margin-left: 127px;">The name of the Wifi network created by the
-            raspberry. The images are prepared to create multiple
+          <td style="margin-left: 127px;">The name of the Wifi network created
+            by the raspberry. The images are prepared to create multiple
             networks - if you e.g. decide to add an additional Wifi stick, the
             software will append a 1 digit number to this name</td>
         </tr>
@@ -102,27 +101,28 @@
       the file avnav.conf into the first partition of your SD card (overwriting
       the existing example there!). To be able to do this, your SD card must be
       visible on your computer (on Windows you will only see the first
-      partition). Potentially it could be necessary to eject, remove and reinsert the
-      SD card after you have written the image before the card becomes visible.</p>
+      partition). Potentially it could be necessary to eject, remove and
+      reinsert the SD card after you have written the image before the card
+      becomes visible.</p>
     <p>It would also be a a good idea to additionally backup the downloaded file
       at a safe place to be able to use it again whenever you need to create a
       new SD card.</p>
-    <p>You can now insert the SD card into your raspberry and power it on. The first
-      boot will take some time as it is rebooting once to enlarge the file system
-      on your card. If you selected the MCS it will reboot twice.</p>
+    <p>You can now insert the SD card into your raspberry and power it on. The
+      first boot will take some time as it is rebooting once to enlarge the file
+      system on your card. If you selected the MCS it will reboot twice.</p>
     <p>Now you will be able to connect to your pi.</p>
     <h3><a name="connecting"></a>Connecting to your Raspberry Pi</h3>
-    <p>Basically you can connect to the Wifi network established by the raspberry
-        (you have just defined name and password for it) - or you
-      can use an ethernet cable.<br>
+    <p>Basically you can connect to the Wifi network established by the
+      raspberry (you have just defined name and password for it) - or you can
+      use an ethernet cable.<br>
       To connect to AvNav you need to find the address of the raspberry. <br>
       The most simple approach is to use <a href="https://en.wikipedia.org/wiki/Multicast_DNS">MDNS</a>
       (also named Bonjour or Avahi). This is supported on all desktop systems.
       So you can just type into the address bar of your browser:</p>
     <div class="code">http://avnav.local</div>
-    <p>This should take you to the <a href="userdoc/index.html">start page</a> of
-      AvNav. You should also be able to use avnav.local if you want to connect
-      to the raspberry using some SSH terminal software (e.g. <a href="https://www.putty.org/">putty</a>
+    <p>This should take you to the <a href="userdoc/index.html">start page</a>
+      of AvNav. You should also be able to use avnav.local if you want to
+      connect to the raspberry using some SSH terminal software (e.g. <a href="https://www.putty.org/">putty</a>
       on Windows).<br>
       If you try to connect using an ethernet cable it depends whether you only
       directly connect your computer with the pi - or if you have a home network
@@ -142,15 +142,19 @@
       your pi with the avnav image with the service name "avnav-server".
       Typically you will also see a second entry "avnav" - this is <a href="hints/CanboatAndSignalk.html">SignalK</a>
       on the raspberry.<br>
-      If you can see your pi in the BonjourBrowser but failing to connect this could be caused by some strange behavior of Android when connected to the internet by mobile data. In this case you
-      should switch off mobile data on your device.</p>
+      If you can see your pi in the BonjourBrowser but failing to connect this
+      could be caused by some strange behavior of Android when connected to the
+      internet by mobile data. In this case you should switch off mobile data on
+      your device.</p>
     <p>If you have a system that is just connected to the Wifi network of the pi
-      (with no other internet connection established) it should also be possible to connect using</p>
+      (with no other internet connection established) it should also be possible
+      to connect using</p>
     <div class="code">http://avnav.avnav.de</div>
     <p>If this does not work the last resort is always to use the ip address.<br>
       For the wifi connection the primary ip would be</p>
     <div class="code">http://192.168.20.10</div>
-    <p>If this fails too you may try: 192.168.30.10, 192.168.40.10, 192.168.50.10.<br>
+    <p>If this fails too you may try: 192.168.30.10, 192.168.40.10,
+      192.168.50.10.<br>
       If you are connected with an ethernet cable you only will be able to
       determine the IP if you have access to the router/dhcp server of your
       network. You need to check there for the ip address of the pi.</p>
@@ -170,7 +174,8 @@
       DHCP. It has (NAT) forwarding from it's wifi to the wired network. This
       way you can easily connect to the internet if you are in the wifi network
       of the pi.<br>
-      If you connect additional wifi sticks, more access points will be established.</p>
+      If you connect additional wifi sticks, more access points will be
+      established.</p>
     <h3>Wifi Client Connection</h3>
     <p> A wifi stick like in the picture (on newer Pi4 use the blue socket close
       to the PCB) will allow you to connect to another wifi network - i.e. you
@@ -186,10 +191,10 @@ sudo systemctl start avnav
 sudo systemctl stop avnav</div>
     <p> </p>
     <h2 class="western"><a name="Touch"></a></h2>
-    <p>For most actions ssh access to the pi is not required.
-      To update you should use the preinstalled <a href="https://github.com/wellenvogel/avnav-update-plugin">Update
-        Plugin</a> . The server configuration can now be accomplished within
-        the AvNav app - at the <a href="userdoc/statuspage.html">Server/Status</a>
+    <p>For most actions ssh access to the pi is not required. To update you
+      should use the preinstalled <a href="https://github.com/wellenvogel/avnav-update-plugin">Update
+        Plugin</a> . The server configuration can now be accomplished within the
+      AvNav app - at the <a href="userdoc/statuspage.html">Server/Status</a>
       page.</p>
     <h2>Image with Display (avnav-touch)</h2>
     <span>If you prefer to directly connect a display to your pi, this image is
@@ -200,13 +205,13 @@ sudo systemctl stop avnav</div>
       page</a>.<br>
     You still will be able to connect additional external displays.<br>
     <b>Important Hint</b>: <span style="color: red;">Currently (12/2020) those
-      images are outdated. You need to set up the package repository
-      as described in the next chapter and update the packages from there. We are
+      images are outdated. You need to set up the package repository as
+      described in the next chapter and update the packages from there. We are
       working on an update.</span><br>
     <h2 class="western"><a name="Packages"></a>Package Installation</h2>
-    Thanks to Oleg there are ready to go package repositories you can use
-    in your debian based system. This will work on the pi as well as on any
-    other debian (like ubuntu).<br>
+    Thanks to Oleg there are ready to go package repositories you can use in
+    your debian based system. This will work on the pi as well as on any other
+    debian (like ubuntu).<br>
     Information is available at his github <a href="https://github.com/free-x/avnav/wiki">wiki</a>.
     <p>To set up the repository on your system, run the following commands (only
       required if you don't use the headless or the AvNav touch images):</p>
@@ -240,16 +245,18 @@ sudo systemctl start avnav</div>
       <li><a title="downloads/releases" href="../downloads/release">Releases</a></li>
       <li><a href="../downloads/daily">Daily Builds</a></li>
     </ul>
-    After downloading you can install them<br>
+    After downloading you can install them on a raspberry pi with:<br>
     <div class="code">sudo dpkg -i avnav_xxxxxxxx_all,deb
-      sudo dpkg -i avnav-raspi_xxxxxxxx_all.deb
-      sudo apt-get -f</div>
-    (only use the&nbsp; -raspi... package on a rasberry pi). The first commands
-    will usually complain about missing dependencies, the last one should fix
-    these.<br>
-    <p> On a pi you should install the avnav-raspi package only if you agree to
-      the network settings being changed to AvNav's defaults. Otherwise pick the
+sudo dpkg -i avnav-raspi_xxxxxxxx_all.deb
+sudo apt-get install -f</div>
+    The first commands will usually complain about missing dependencies, the
+    last one should fix these.<br>
+    <p> You should install the avnav-raspi package only if you agree to the
+      network settings being changed to AvNav's defaults. Otherwise pick the
       basic avnav package.</p>
+    <p>On any other linux just install with:</p>
+    <div class="code">sudo dpkg -i avnav_xxxxxxxx_all.deb
+sudo apt-get install -f</div>
     <p>I would also recommend to install the <a href="https://github.com/wellenvogel/avnav-update-plugin">AvNav
         Update plugin</a> - either from the package repositories with</p>
     <div class="code">sudo apt-get install avnav-update-plugin</div>
@@ -284,21 +291,21 @@ sudo systemctl start avnv</div>
     <div class="code">sudo apt update
 sudo apt install openplotter-avnav</div>
     <p> </p>
-    <p>Since 2021/03 AvNav is already officially available in
-      OpenPlotter. Sou if you update OpenPlotter you should already have
-      openplotter-avnav being included.</p>
+    <p>Since 2021/03 AvNav is already officially available in OpenPlotter. Sou
+      if you update OpenPlotter you should already have openplotter-avnav being
+      included.</p>
     <p>Do not install avnav-raspi_xxx.deb on OpenPlotter as this will interfere
       with the OpenPlotter network configuration. Within the OpenPlotter AvNav
       configuration you can change the port for AvNav (default 8080 and 8082 for
       ocharts) if this conflicts with other applications.</p>
-    <p>When installing AvNav this way it will receive all NMEA data from
-      SignalK (and will not open up any USB devices on its own). So you can make
-      any interface configuration changes in OpenPlotter or SignalK.</p>
+    <p>When installing AvNav this way it will receive all NMEA data from SignalK
+      (and will not open up any USB devices on its own). So you can make any
+      interface configuration changes in OpenPlotter or SignalK.</p>
     <p><br>
     </p>
     <h2><a name="Windows"></a>Windows</h2>
-    For Windows there is an installer, however it will not be updated on
-    every release. The current version is <a href="../downloads/latestwindows">here</a>.<br>
+    For Windows there is an installer, however it will not be updated on every
+    release. The current version is <a href="../downloads/latestwindows">here</a>.<br>
     I recommend to use the AvNavNetSetup-jjjj-mm-dd-0.exe installer as this one
     will download the AvNav software directly and is able to update it without a
     new installer.<br>
