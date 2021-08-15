@@ -4,8 +4,16 @@ apply plugin: 'java'
 def revision="4"
 def mobacJar="Mobile_Atlas_Creator.jar"
 
+repositories {
+    mavenCentral()
+    maven {
+        // required for javax.media:jai-core:1.1.3
+        url "https://repository.jboss.org/nexus/content/repositories/thirdparty-releases/"
+    }
+}
 dependencies{
     compile files("$rootDir"+File.separator+"lib"+File.separator+mobacJar)
+    compile([name:"jakarta.xml.bind-api",group:"jakarta.xml.bind",  version:"3.0.0"])
 }
 def srcbase=new File(project.rootDir,"src")
 def srcsub="mobac"+File.separator+"mapsources"+File.separator+"mappacks"+File.separator+"avnavbase"

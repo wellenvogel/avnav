@@ -1,42 +1,24 @@
 package mobac.mapsources.mappacks.avnavbase;
 
-import java.awt.AlphaComposite;
-import java.awt.Color;
-import java.awt.Graphics2D;
+import jakarta.xml.bind.Unmarshaller;
+import jakarta.xml.bind.annotation.*;
+import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import mobac.exceptions.TileException;
+import mobac.mapsources.AbstractMultiLayerMapSource;
+import mobac.mapsources.custom.*;
+import mobac.program.interfaces.MapSource;
+import mobac.program.jaxb.ColorAdapter;
+import mobac.program.model.TileImageType;
+
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.Unmarshaller;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlElements;
-import javax.xml.bind.annotation.XmlList;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlSeeAlso;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-
-import mobac.exceptions.TileException;
-import mobac.mapsources.AbstractMultiLayerMapSource;
-import mobac.mapsources.custom.CustomCloudMade;
-import mobac.mapsources.custom.CustomLocalTileFilesMapSource;
-import mobac.mapsources.custom.CustomLocalTileSQliteMapSource;
-import mobac.mapsources.custom.CustomLocalTileZipMapSource;
-import mobac.mapsources.custom.CustomMapSource;
-import mobac.mapsources.custom.CustomMultiLayerMapSource;
-import mobac.mapsources.custom.CustomWmsMapSource;
-import mobac.mapsources.custom.StandardMapSourceLayer;
-import mobac.program.interfaces.MapSource;
-import mobac.program.interfaces.MapSource.LoadMethod;
-import mobac.program.jaxb.ColorAdapter;
-import mobac.program.model.TileImageType;
-
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-@XmlSeeAlso({ CustomMultiLayerMapSource.class })
+//@XmlSeeAlso({ CustomMultiLayerMapSource.class })
 public class ExCustomMultiLayerMapSource extends AbstractMultiLayerMapSource {
 	@XmlElementWrapper(name = "layers")
 	@XmlElements({ @XmlElement(name = "customMapSource", type = CustomMapSource.class),
@@ -44,7 +26,6 @@ public class ExCustomMultiLayerMapSource extends AbstractMultiLayerMapSource {
 			@XmlElement(name = "customWmsMapSource", type = CustomWmsMapSource.class),
 			@XmlElement(name = "exCustomWmsMapSource", type = ExCustomWmsMapSource.class),
 			@XmlElement(name = "mapSource", type = StandardMapSourceLayer.class),
-			@XmlElement(name = "cloudMade", type = CustomCloudMade.class),
 			@XmlElement(name = "localTileSQLite", type = CustomLocalTileSQliteMapSource.class),
 			@XmlElement(name = "localTileFiles", type = CustomLocalTileFilesMapSource.class),
 			@XmlElement(name = "localTileZip", type = CustomLocalTileZipMapSource.class) })
@@ -87,7 +68,6 @@ public class ExCustomMultiLayerMapSource extends AbstractMultiLayerMapSource {
 	public String getMLName() {
 		return name;
 	}
-
 	public void setMLName(String name) {
 		this.name = name;
 	}
