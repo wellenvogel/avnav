@@ -22,8 +22,10 @@ import net.sf.marineapi.nmea.sentence.SentenceValidator;
 import net.sf.marineapi.nmea.sentence.TalkerId;
 import net.sf.marineapi.nmea.sentence.TimeSentence;
 import net.sf.marineapi.nmea.sentence.VHWSentence;
+import net.sf.marineapi.nmea.sentence.VWRSentence;
 import net.sf.marineapi.nmea.sentence.XDRSentence;
 import net.sf.marineapi.nmea.util.DataStatus;
+import net.sf.marineapi.nmea.util.Direction;
 import net.sf.marineapi.nmea.util.Measurement;
 import net.sf.marineapi.nmea.util.Position;
 import net.sf.marineapi.nmea.util.Units;
@@ -303,6 +305,27 @@ public class Decoder extends Worker {
                                     }
                                     e.data.put("windSpeed", speed);
                                     if (!m.isTrue()) e.priority=1; //prefer apparent if it is there
+                                    addAuxiliaryData(s.getSentenceId(), e,posAge);
+                                    continue;
+                                }
+                                if (s instanceof VWRSentence){
+                                    VWRSentence w=(VWRSentence)s;
+                                    AvnLog.d("%s: VWR sentence",getTypeName() );
+                                    AuxiliaryEntry e = new AuxiliaryEntry();
+                                    double wangle=w.getWindAngle();
+                                    Direction wdir=w.getDirectionLeftRight();
+                                    if (wdir == Direction.LEFT) wangle=360-wangle;
+                                    e.data.put("windAngle",wangle);
+                                    e.data.put("windReference","R");
+                                    try{
+                                        double speed=w.getSpeedKnots();
+                                        e.data.put("windSpeed",speed/3600.0*1852.0);
+                                    }catch (Throwable t){
+                                        try{
+                                            double speed=w.getSpeedKmh();
+                                            e.data.put("windSpeed",speed/3.6);
+                                        }catch (Throwable x){}
+                                    }
                                     addAuxiliaryData(s.getSentenceId(), e,posAge);
                                     continue;
                                 }

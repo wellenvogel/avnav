@@ -312,6 +312,42 @@ class NMEAParser(object):
           rt['time']=self.formatTime(self.gpsTimeToTime(gpstime, gpsdate))
         self.addToNavData(rt,source=source,priority=1,record=tag)
         return True
+      if tag == 'VWR':
+        '''
+        VWR - Relative Wind Speed and Angle
+         1  2  3  4  5  6  7  8 9
+         |  |  |  |  |  |  |  | |
+        $--VWR,x.x,a,x.x,N,x.x,M,x.x,K*hh<CR><LF>
+      Field Number:
+      1 Wind direction magnitude in degrees
+      2 Wind direction Left/Right of bow
+      3 Speed(Knots)
+      4 N = Knots
+      5 Speed (m/s)
+      6 M = Meters Per Second
+      7 Speed (km/h)
+      8 K = Kilometers Per Hour
+        Checksum
+        '''
+        windAngle=float(darray[1] or '0')
+        dir=darray[2]
+        rt['windAngle']= 360-windAngle if ( dir == 'L' or dir == 'l') else windAngle
+        rt['windReference']='R'
+        priority=0
+        #we keep the speed im m/s
+        windspeed=None
+        if darray[3] != '':
+          windspeed=float(darray[3] or '0')
+          windspeed=windspeed*self.NM/3600
+        elif darray[5] != '':
+          windspeed=float(darray[5] or '0')
+          windspeed=windspeed/3.6
+        elif darray[7] != '':
+          windspeed=float(darray[7] or '0')
+        if windspeed is not None:
+          rt['windSpeed']=windspeed
+        self.addToNavData(rt,source=source,record=tag,priority=priority)
+        return True
       if tag == 'MWV':
         '''
         $--MWV,x.x,a,x.x,a*hh<CR><LF>
