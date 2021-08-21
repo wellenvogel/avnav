@@ -1,15 +1,19 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <exCustomMultiLayerMapSource>
-<name>OWS OpenSeaMap 2014 Extended</name>
+<name>OWS OpenSeaMap 2021</name>
 <tileType>png</tileType>
 <backgroundColor>#ffffff</backgroundColor>
 <layers>
-<exCustomMapSource>
-<name>OSM</name>
+<exCustomWmsMapSource>
+<name>OWS</name>
 <minZoom>6</minZoom>
 <maxZoom>20</maxZoom>
-<url>https://b.tile.geofabrik.de/23228979966ae9040ceb0597251e12a2/{$z}/{$x}/{$y}.png</url>
-</exCustomMapSource>
+<version>1.1.1</version>
+<layers>OSM-WMS</layers>
+<url>https://ows.terrestris.de/osm/service?</url>
+<coordinatesystem>EPSG:4326</coordinatesystem>
+<aditionalparameters><![CDATA[&SERVICE=WMS&STYLES=&BGCOLOR=0xFFFFFF&TRANSPARENT=TRUE]]></aditionalparameters>
+</exCustomWmsMapSource>
 <exCustomMapSource>
 <retries>1</retries>
 <name>OpenSeamap</name>

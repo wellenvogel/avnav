@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<exCustomMultiLayerMapSource>
+<name>BSH2021-OSM</name>
+<tileType>png</tileType>
+<backgroundColor>#000000</backgroundColor>
+<layers>
+<exCustomWmsMapSource>
+<name>OWS</name>
+<minZoom>6</minZoom>
+<maxZoom>20</maxZoom>
+<version>1.1.1</version>
+<layers>OSM-WMS</layers>
+<url>https://ows.terrestris.de/osm/service?</url>
+<coordinatesystem>EPSG:4326</coordinatesystem>
+<aditionalparameters><![CDATA[&SERVICE=WMS&STYLES=&BGCOLOR=0xFFFFFF&TRANSPARENT=TRUE]]></aditionalparameters>
+</exCustomWmsMapSource>
+<exCustomWmsMapSource>
+<name>BSHSkinOfTheEarth</name>
+<minZoom>10</minZoom>
+<maxZoom>20</maxZoom>
+<version>1.1.1</version>
+<layers>NAUTHIS_SkinOfTheEarth:Overview_Depth_area,NAUTHIS_SkinOfTheEarth:General_Depth_area,NAUTHIS_SkinOfTheEarth:Coastal_Dredged_area,NAUTHIS_SkinOfTheEarth:Coastal_Depth_area,NAUTHIS_SkinOfTheEarth:Coastal_Floating_Dock,NAUTHIS_SkinOfTheEarth:Approach_Dredged_area,NAUTHIS_SkinOfTheEarth:Approach_Depth_area,NAUTHIS_SkinOfTheEarth:Approach_Hulkes_and_Pontoons,NAUTHIS_SkinOfTheEarth:Approach_Floating_Dock,NAUTHIS_SkinOfTheEarth:Harbour_Dredged_area,NAUTHIS_SkinOfTheEarth:Harbour_Depth_area,NAUTHIS_SkinOfTheEarth:Harbour_Hulkes_and_Pontoons,NAUTHIS_SkinOfTheEarth:Harbour_Floating_Dock,NAUTHIS_SkinOfTheEarth:Berthing_Dredged_area,NAUTHIS_SkinOfTheEarth:Berthing_Depth_area,NAUTHIS_SkinOfTheEarth:Berthing_Hulkes_and_Pontoons,NAUTHIS_SkinOfTheEarth:Berthing_Floating_Dock</layers>
+<url>https://www.geoseaportal.de/wss/service/NAUTHIS_SkinOfTheEarth/guest?</url>
+<coordinatesystem>EPSG:4326</coordinatesystem>
+<aditionalparameters><![CDATA[&SERVICE=WMS&STYLES=&BGCOLOR=0xFFFFFF&TRANSPARENT=TRUE]]></aditionalparameters>
+<colorMappings>
+	<colorMapping>
+		<in>#ABD2FF</in>
+		<out>#FFFFFF</out>
+	</colorMapping>
+	<colorMapping>
+		<in>#A1C8FF</in>
+		<out>#DDEBFF</out>
+	</colorMapping>
+	<colorMapping>
+		<in>#9CC3FF</in>
+		<out>#BAD5FF</out>
+	</colorMapping>
+	<colorMapping>
+		<in>#96A1FF</in>
+		<out>#799FD8</out>
+	</colorMapping>
+	<colorMapping>
+		<in>#87B3FF</in>
+		<out>#5883CE</out>
+	</colorMapping>
+</colorMappings>
+</exCustomWmsMapSource>
+<exCustomWmsMapSource>
+<name>BSHNavigationalAids</name>
+<minZoom>10</minZoom>
+<maxZoom>20</maxZoom>
+<version>1.1.1</version>
+<layers>NAUTHIS_AidsAndServices:Overview_Lights,NAUTHIS_AidsAndServices:Overview_All_Other_Buoys,NAUTHIS_AidsAndServices:Overview_Fog_Signals_Daymarks,NAUTHIS_AidsAndServices:Overview_Radio_Radar_Equipment,NAUTHIS_AidsAndServices:Overview_Services,NAUTHIS_AidsAndServices:Overview_Facility_Point_Feature,NAUTHIS_AidsAndServices:Overview_Pilot_Office_Point,NAUTHIS_AidsAndServices:General_Lights,NAUTHIS_AidsAndServices:General_All_Other_Beacons,NAUTHIS_AidsAndServices:General_Lateral_Buoys,NAUTHIS_AidsAndServices:General_Cardinal_Buoys,NAUTHIS_AidsAndServices:General_All_Other_Buoys,NAUTHIS_AidsAndServices:General_Fog_Signals_Daymarks,NAUTHIS_AidsAndServices:General_Radio_Radar_Equipment,NAUTHIS_AidsAndServices:General_Services,NAUTHIS_AidsAndServices:General_Signal_Stations,NAUTHIS_AidsAndServices:General_Facility_Point_Feature,NAUTHIS_AidsAndServices:General_Facility_Area_Feature,NAUTHIS_AidsAndServices:General_Facility_Area_Feature_Label,NAUTHIS_AidsAndServices:General_Pilot_Office_Point,NAUTHIS_AidsAndServices:General_Pilot_Office_Area,NAUTHIS_AidsAndServices:Coastal_Lights,NAUTHIS_AidsAndServices:Coastal_Lateral_Beacons,NAUTHIS_AidsAndServices:Coastal_Cardinal_Beacons,NAUTHIS_AidsAndServices:Coastal_All_Other_Beacons,NAUTHIS_AidsAndServices:Coastal_Lateral_Buoys,NAUTHIS_AidsAndServices:Coastal_Cardinal_Buoys,NAUTHIS_AidsAndServices:Coastal_All_Other_Buoys,NAUTHIS_AidsAndServices:Coastal_Mooring_Warping_Facility,NAUTHIS_AidsAndServices:Coastal_Fog_Signals_Daymarks,NAUTHIS_AidsAndServices:Coastal_Radio_Radar_Equipment,NAUTHIS_AidsAndServices:Coastal_Services,NAUTHIS_AidsAndServices:Coastal_Signal_Stations,NAUTHIS_AidsAndServices:Coastal_Facility_Point_Feature,NAUTHIS_AidsAndServices:Coastal_Facility_Area_Feature,NAUTHIS_AidsAndServices:Coastal_Facility_Area_Feature_Label,NAUTHIS_AidsAndServices:Coastal_Pilot_Office_Point,NAUTHIS_AidsAndServices:Coastal_Pilot_Office_Area,NAUTHIS_AidsAndServices:Approach_Lights,NAUTHIS_AidsAndServices:Approach_Lateral_Beacons,NAUTHIS_AidsAndServices:Approach_Cardinal_Beacons,NAUTHIS_AidsAndServices:Approach_All_Other_Beacons,NAUTHIS_AidsAndServices:Approach_Lateral_Buoys,NAUTHIS_AidsAndServices:Approach_Cardinal_Buoys,NAUTHIS_AidsAndServices:Approach_All_Other_Buoys,NAUTHIS_AidsAndServices:Approach_Mooring_Warping_Facility,NAUTHIS_AidsAndServices:Approach_Fog_Signals_Daymarks,NAUTHIS_AidsAndServices:Approach_Radio_Radar_Equipment,NAUTHIS_AidsAndServices:Approach_Services,NAUTHIS_AidsAndServices:Approach_Signal_Stations,NAUTHIS_AidsAndServices:Approach_Facility_Point_Feature,NAUTHIS_AidsAndServices:Approach_Facility_Area_Feature,NAUTHIS_AidsAndServices:Approach_Facility_Area_Feature_Label,NAUTHIS_AidsAndServices:Approach_Pilot_Office_Point,NAUTHIS_AidsAndServices:Approach_Pilot_Office_Area,NAUTHIS_AidsAndServices:Harbour_Lights,NAUTHIS_AidsAndServices:Harbour_Lateral_Beacons,NAUTHIS_AidsAndServices:Harbour_Cardinal_Beacons,NAUTHIS_AidsAndServices:Harbour_All_Other_Beacons,NAUTHIS_AidsAndServices:Harbour_Lateral_Buoys,NAUTHIS_AidsAndServices:Harbour_Cardinal_Buoys,NAUTHIS_AidsAndServices:Harbour_All_Other_Buoys,NAUTHIS_AidsAndServices:Harbour_Mooring_Warping_Facility,NAUTHIS_AidsAndServices:Harbour_Fog_Signals_Daymarks,NAUTHIS_AidsAndServices:Harbour_Radio_Radar_Equipment,NAUTHIS_AidsAndServices:Harbour_Services,NAUTHIS_AidsAndServices:Harbour_Signal_Stations,NAUTHIS_AidsAndServices:Harbour_Facility_Point_Feature,NAUTHIS_AidsAndServices:Harbour_Facility_Area_Feature,NAUTHIS_AidsAndServices:Harbour_Facility_Area_Feature_Label,NAUTHIS_AidsAndServices:Harbour_Pilot_Office_Point,NAUTHIS_AidsAndServices:Harbour_Pilot_Office_Area,NAUTHIS_AidsAndServices:Berthing_Lights,NAUTHIS_AidsAndServices:Berthing_Lateral_Beacons,NAUTHIS_AidsAndServices:Berthing_Cardinal_Beacons,NAUTHIS_AidsAndServices:Berthing_All_Other_Beacons,NAUTHIS_AidsAndServices:Berthing_Lateral_Buoys,NAUTHIS_AidsAndServices:Berthing_Cardinal_Buoys,NAUTHIS_AidsAndServices:Berthing_All_Other_Buoys,NAUTHIS_AidsAndServices:Berthing_Mooring_Warping_Facility,NAUTHIS_AidsAndServices:Berthing_Fog_Signals_Daymarks,NAUTHIS_AidsAndServices:Berthing_Radio_Radar_Equipment,NAUTHIS_AidsAndServices:Berthing_Services,NAUTHIS_AidsAndServices:Berthing_Signal_Stations,NAUTHIS_AidsAndServices:Berthing_Facility_Point_Feature,NAUTHIS_AidsAndServices:Berthing_Facility_Area_Feature,NAUTHIS_AidsAndServices:Berthing_Facility_Area_Feature_Label,NAUTHIS_AidsAndServices:Berthing_Pilot_Office_Point</layers>
+<url>https://www.geoseaportal.de/wss/service/NAUTHIS_AidsAndServices/guest?</url>
+<coordinatesystem>EPSG:4326</coordinatesystem>
+<aditionalparameters><![CDATA[&SERVICE=WMS&STYLES=&BGCOLOR=0xFFFFFF&TRANSPARENT=TRUE]]></aditionalparameters>
+</exCustomWmsMapSource>
+<exCustomWmsMapSource>
+<name>BSHRocksWrecks</name>
+<minZoom>10</minZoom>
+<maxZoom>20</maxZoom>
+<version>1.1.1</version>
+<layers>2_General,3_Coastal,4_Approach,5_Harbour,6_Berthing</layers>
+<url>https://www.geoseaportal.de/wss/service/NAUTHIS_RocksWrecksObstructions/guest?</url>
+<coordinatesystem>EPSG:4326</coordinatesystem>
+<aditionalparameters><![CDATA[&SERVICE=WMS&STYLES=&BGCOLOR=0x777777&TRANSPARENT=TRUE]]></aditionalparameters>
+</exCustomWmsMapSource>
+<exCustomWmsMapSource>
+<name>BSHHydrography</name>
+<minZoom>10</minZoom>
+<maxZoom>20</maxZoom>
+<version>1.1.1</version>
+<layers>1_Overview,2_General,3_Coastel,4_Approach,5_Harbour,6_Berthing</layers>
+<url>https://www.geoseaportal.de/wss/service/NAUTHIS_Hydrography/guest?</url>
+<coordinatesystem>EPSG:4326</coordinatesystem>
+<aditionalparameters><![CDATA[&SERVICE=WMS&STYLES=&BGCOLOR=0x777777&TRANSPARENT=TRUE]]></aditionalparameters>
+</exCustomWmsMapSource>
+<exCustomMapSource>
+<name>OpenSeamap</name>
+<minZoom>10</minZoom>
+<maxZoom>20</maxZoom>
+<ignoreErrors>true</ignoreErrors>
+<url>http://t1.openseamap.org/seamark//{$z}/{$x}/{$y}.png</url>
+</exCustomMapSource>
+
+</layers>
+</exCustomMultiLayerMapSource>
