@@ -77,7 +77,7 @@ class AVNFeeder(AVNWorker):
     self.listlock=threading.Condition()
     self.list=[]
     self.history=[]
-    self.sequence=0
+    self.sequence=1
     self.readConfig()
 
   def readConfig(self):
@@ -155,13 +155,14 @@ class AVNFeeder(AVNWorker):
       sequence=0
     stop = time.time() + waitTime
     self.listlock.acquire()
+    if sequence <= 0:
+      #if a new connection is opened - always wait for a new entry before sending out
+      #sequence = 0 or sequence = None is a new connection
+      #self.sequence starts at 1
+      sequence=self.sequence
     try:
       while len(list) < 1:
         seq=self.sequence
-        if sequence==0:
-          sequence=seq-maxEntries
-        if sequence < 0:
-          sequence=0
         if seq > sequence:
           if (seq-sequence) > maxEntries:
             seq=sequence+maxEntries
@@ -184,7 +185,7 @@ class AVNFeeder(AVNWorker):
     else:
       rt=[]
       for le in list:
-        if nmeafilter is None or NMEAParser.checkFilter(le.data,nmeafilter):
+        if NMEAParser.checkFilter(le.data,nmeafilter):
           rt.append(le.data)
       return (seq,rt)
 
