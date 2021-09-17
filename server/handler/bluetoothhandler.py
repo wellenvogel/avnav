@@ -32,7 +32,7 @@ try:
   hasBluetooth=True
 except:
   pass
-from socketreaderbase import *
+from socketbase import *
 import avnav_handlerList
 
 if hasBluetooth:
@@ -75,7 +75,7 @@ else:
 
 #a Worker for reading bluetooth devices
 #it uses a feeder to handle the received data
-class AVNBlueToothReader(AVNWorker,SocketReader):
+class AVNBlueToothReader(AVNWorker):
   @classmethod
   def getConfigName(cls):
     return "AVNBlueToothReader"
@@ -163,7 +163,8 @@ class AVNBlueToothReader(AVNWorker,SocketReader):
       self.setInfo(infoName, "connecting", WorkerStatus.STARTED)
       sock.connect((host, port))
       AVNLog.info("bluetooth connection to %s established",host)
-      self.readSocket(sock,infoName,self.getSourceName(host),self.getParamValue('filter'))
+      client=SocketReader(sock,self.writeData,None,self.setInfo,shouldStop=self.shouldStop)
+      client.readSocket(infoName,self.getSourceName(host),self.getParamValue('filter'))
       sock.close()
     except Exception as e:
       AVNLog.debug("exception from bluetooth device: %s",traceback.format_exc())

@@ -26,7 +26,7 @@
 ###############################################################################
 import socket
 
-from socketreaderbase import *
+from socketbase import *
 
 import avnav_handlerList
 from avnav_nmea import *
@@ -34,7 +34,7 @@ from avnav_worker import *
 
 
 #a Worker to read  NMEA source from a udp socket
-class AVNUdpReader(AVNWorker, SocketReader):
+class AVNUdpReader(AVNWorker):
   
   @classmethod
   def getConfigName(cls):
@@ -117,7 +117,8 @@ class AVNUdpReader(AVNWorker, SocketReader):
         continue
       AVNLog.info("successfully listening at %s",info)
       try:
-        self.readSocket(self.socket,'main',self.getSourceName(info),self.getParamValue('filter'))
+        reader=SocketReader(self.socket,self.writeData,None,self.setInfo,shouldStop=self.shouldStop)
+        reader.readSocket('main',self.getSourceName(info),self.getParamValue('filter'))
       except:
         AVNLog.info("exception while reading data from %s:%d %s",self.getStringParam('host'),self.getIntParam('port'),traceback.format_exc())
 avnav_handlerList.registerHandler(AVNUdpReader)

@@ -31,16 +31,31 @@ from avnav_worker import *
 
   
 
-#a base class for socket readers
-#this should not directly be instantiated, instead classes doing socket reading
-#should derive from this
-#the derived class must have the setInfo,writeData methods
+#a base class for socket readers and writers
+
 class SocketReader(object):
-  def setInfo(self,name,text,status):
-    pass
-  def writeData(self,data,source=None):
-    pass
-  def readSocket(self,sock,infoName,sourceName,filter=None,timeout=None):
+  def __init__(self,socket,writeData,queue,setInfo,shouldStop=None):
+    self.feeder=None
+    self.writeData=writeData
+    self.feeder=queue
+    self.socket=socket
+    self.stopFlag=False
+    self.setInfo=setInfo
+    self.shouldStop=shouldStop if shouldStop is not None else self.shouldStopInternal
+
+
+  def shouldStopInternal(self):
+    return self.stopFlag
+  def stop(self):
+    self.stopFlag=True
+    try:
+      self.socket.shutdown(socket.SHUT_RDWR)
+    except:
+      pass
+    self.socket.close()
+
+  def readSocket(self,infoName,sourceName,filter=None,timeout=None):
+    sock=self.socket
     filterA = None
     if filter:
       filterA = filter.split(',')
@@ -58,7 +73,7 @@ class SocketReader(object):
     try:
       sock.settimeout(1)
       lastReceived=time.time()
-      while sock.fileno() >= 0:
+      while sock.fileno() >= 0 and not self.shouldStop():
         try:
           data = sock.recv(1024)
           lastReceived=time.time()
@@ -111,12 +126,48 @@ class SocketReader(object):
       AVNLog.error("exception while reading from socket: %s",traceback.format_exc())
       pass
     try:
-      sock.shutdown(socket.SHUT_RDWR)
-      sock.close()
+      self.stop()
     except:
       pass
     AVNLog.info("disconnected from socket %s",peer)
     self.setInfo(infoName, "socket to %s disconnected"%(peer), WorkerStatus.ERROR)
 
+  def writeSocket(self,infoName,filterstr,version,blacklist):
+    '''
+    write method
+    there is no stop handling so the socket must be closed from another thread
+    :param infoName:
+    :param filterstr:
+    :param version:
+    :param blacklist:
+    :return:
+    '''
+    filter = None
+    if filterstr != "":
+      filter = filterstr.split(',')
+    self.setInfo(infoName, "sending data", WorkerStatus.RUNNING)
+    try:
+      seq = 0
+      self.socket.sendall(("avnav_server %s\r\n" % (version)).encode('utf-8'))
+      while self.socket.fileno() >= 0:
+        hasSend = False
+        seq, data = self.feeder.fetchFromHistory(seq, 10, nmeafilter=filter, includeSource=True)
+        if len(data) > 0:
+          for line in data:
+            if line.source in blacklist:
+              AVNLog.debug("ignore %s:%s due to blacklist", line.source, line.data)
+            else:
+              self.socket.sendall(line.data.encode('ascii', errors='ignore'))
+              hasSend = True
+        if not hasSend:
+          # just throw an exception if the reader potentially closed the socket
+          self.socket.getpeername()
+    except Exception as e:
+      AVNLog.info("exception in client connection %s", traceback.format_exc())
+    AVNLog.info("client disconnected or stop received")
+    try:
+      self.stop()
+    except Exception as e:
+      AVNLog.error("error closing socket %s", str(e))
 
  

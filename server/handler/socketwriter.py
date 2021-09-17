@@ -27,7 +27,7 @@
 import socket
 
 from avnavavahi import AVNAvahi
-from socketreaderbase import *
+from socketbase import *
 
 import avnav_handlerList
 from avnav_nmea import *
@@ -36,7 +36,7 @@ from avnav_worker import *
 
 #a worker to output data via a socket
 
-class AVNSocketWriter(AVNWorker,SocketReader):
+class AVNSocketWriter(AVNWorker):
   @classmethod
   def getConfigName(cls):
     return "AVNSocketWriter"
@@ -90,13 +90,6 @@ class AVNSocketWriter(AVNWorker,SocketReader):
 
   def startInstance(self, navdata):
     self.startSequence+=1
-    #make some checks when we have to start
-    #we cannot do this on init as we potentially have to find the feeder...
-    feeder=self.findFeeder(self.getStringParam('feederName'))
-    if feeder is None:
-      raise Exception("%s: cannot find a suitable feeder (name %s)",self.getName(),self.getStringParam("feederName") or "")
-    self.feeder=feeder
-    self.feederWrite=feeder.addNMEA
     self.version='development'
     baseConfig=self.findHandlerByName('AVNConfig')
     if baseConfig:
@@ -111,6 +104,7 @@ class AVNSocketWriter(AVNWorker,SocketReader):
     @return:
     '''
     return self.startSequence != seq
+
 
   def updateConfig(self, param,child=None):
     super().updateConfig(param)
@@ -143,58 +137,33 @@ class AVNSocketWriter(AVNWorker,SocketReader):
 
   #the writer for a connected client
   def client(self, socketConnection, addr, startSequence):
+    clientConnection=SocketReader(socketConnection,self.writeData,self.feeder,self.setInfo)
     infoName="SocketWriter-%s"%(str(addr),)
     self.setInfo(infoName,"sending data",WorkerStatus.RUNNING)
     if self.getBoolParam('read',False):
       clientHandler=threading.Thread(
         target=self.clientRead,
-        args=(socketConnection, addr, startSequence),
+        args=(clientConnection, addr, startSequence),
         name="%s-clientread-%s"%(self.getName(),str(addr))
       )
       clientHandler.daemon=True
       clientHandler.start()
     filterstr=self.getStringParam('filter')
-    filter=None
-    if filterstr != "":
-      filter=filterstr.split(',')
-    try:
-      seq=0
-      socketConnection.sendall(("avnav_server %s\r\n" % (self.version)).encode('utf-8'))
-      while not self.sequenceChanged(startSequence) and socketConnection.fileno() >= 0:
-        hasSend=False
-        seq,data=self.feeder.fetchFromHistory(seq,10,nmeafilter=filter,includeSource=True)
-        if len(data)>0:
-          for line in data:
-            if line.source in self.blackList:
-              AVNLog.debug("ignore %s:%s due to blacklist",line.source,line.data)
-            else:
-              socketConnection.sendall(line.data.encode('ascii', errors='ignore'))
-              hasSend=True
-        if not hasSend:
-          #just throw an exception if the reader potentially closed the socket
-          socketConnection.getpeername()
-    except Exception as e:
-      AVNLog.info("exception in client connection %s",traceback.format_exc())
-    AVNLog.info("client disconnected or stop received")
-    try:
-      socketConnection.shutdown(socket.SHUT_RDWR)
-      socketConnection.close()
-    except Exception as e:
-      AVNLog.error("error closing socket %s",str(e))
+    clientConnection.writeSocket(infoName,filterstr,self.version,self.blackList)
     self.removeHandler(addr)
     self.deleteInfo(infoName)
 
-  def clientRead(self,socket,addr,startSequence):
+  def clientRead(self,connection,addr,startSequence):
     infoName="SocketReader-%s"%(str(addr),)
     threading.currentThread().setName("%s-Reader-%s"%(self.getName(),str(addr)))
     #on each newly connected socket we recompute the filter
     filterstr=self.getStringParam('readerFilter')
-    self.readSocket(socket,infoName,self.getSourceName(),filterstr)
+    connection.readSocket(infoName,self.getSourceName(),filterstr)
     self.deleteInfo(infoName)
 
   #if we have reading enabled...
   def writeData(self,data,source=None):
-    self.feederWrite(data,source)
+    super().writeData(data,source)
     if (self.getIntParam('minTime')):
       time.sleep(float(self.getIntParam('minTime'))/1000)
 

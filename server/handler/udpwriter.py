@@ -28,7 +28,7 @@
 
 import socket
 import avnav_handlerList
-from socketreaderbase import *
+from socketbase import *
 
 
 #a worker to output data via a UDP socket
