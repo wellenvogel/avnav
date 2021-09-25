@@ -49,7 +49,7 @@ import avnav_handlerList
 #it also contains our internal converting routines
 
 class SerialReader(object):
-  BAUDRATES=[115200,57600,38400,19200,9600,4800]
+  BAUDRATES=[460800,230400,115200,57600,38400,19200,9600,4800]
   P_XONOFF=WorkerParameter('xonxoff', False,type=WorkerParameter.T_BOOLEAN)
   P_RTSCTS=WorkerParameter('rtscts',False,type=WorkerParameter.T_BOOLEAN)
   @classmethod
