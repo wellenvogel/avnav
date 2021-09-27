@@ -506,7 +506,7 @@ class NMEAParser(object):
       if tag == 'MTW':
         # $--MTW,x.x,C*hh<CR><LF>
         if len(darray[1]) > 0:
-          rt["transducers.waterTemp"] = float(darray[1])
+          rt["transducers.MTWwaterTemp"] = float(darray[1])
         self.addToNavData(rt,source=source,record=tag)
         return True
 
