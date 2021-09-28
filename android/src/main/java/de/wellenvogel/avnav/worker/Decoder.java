@@ -358,7 +358,7 @@ public class Decoder extends Worker {
                                     MTWSentence d = (MTWSentence) s;
                                     AvnLog.d("%s: MTW sentence",getTypeName() );
                                     AuxiliaryEntry e = new AuxiliaryEntry();
-                                    double waterTemp = d.getTemperature();
+                                    double waterTemp = d.getTemperature() + 273.15;
                                     e.data.put("transducers.MTWwaterTemp", waterTemp);
                                     addAuxiliaryData(s.getSentenceId(), e,posAge);
                                     continue;
