@@ -25,7 +25,7 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
 import socket
-from socketreaderbase import *
+from socketbase import *
 
 import avnav_handlerList
 from avnav_nmea import *
@@ -39,7 +39,14 @@ class AVNSocketReader(AVNWorker,SocketReader):
   @classmethod
   def getConfigName(cls):
     return "AVNSocketReader"
-  
+
+  P_WRITE_OUT = WorkerParameter('writeOut', False, type=WorkerParameter.T_BOOLEAN,
+                                description="if set also write data on this connection")
+  P_WRITE_FILTER = WorkerParameter('writeFilter', '', type=WorkerParameter.T_FILTER,
+                                   condition={P_WRITE_OUT.name: True})
+  P_BLACKLIST = WorkerParameter('blackList', '',
+                                description=', separated list of sources we do not send out',
+                                condition={P_WRITE_OUT.name: True})
   @classmethod
   def getConfigParam(cls, child=None):
     if not child is None:
@@ -52,7 +59,10 @@ class AVNSocketReader(AVNWorker,SocketReader):
                                description='timeout in sec for connecting and waiting for data, close connection if no data within 5*timeout'),
                WorkerParameter('minTime',0,type=WorkerParameter.T_FLOAT,
                                description='if this is set, wait this time before reading new data (ms)'),
-               WorkerParameter('filter','',type=WorkerParameter.T_FILTER)
+               WorkerParameter('filter','',type=WorkerParameter.T_FILTER),
+               cls.P_WRITE_OUT,
+               cls.P_WRITE_FILTER,
+               cls.P_BLACKLIST
     ]
     return rt
 
@@ -96,6 +106,10 @@ class AVNSocketReader(AVNWorker,SocketReader):
      
   #thread run method - just try forever  
   def run(self):
+    self.version = 'development'
+    baseConfig = self.findHandlerByName('AVNConfig')
+    if baseConfig:
+      self.version = baseConfig.getVersion()
     errorReported=False
     self.setNameIfEmpty("%s-%s:%d" % (self.getName(), self.getStringParam('host'), self.getIntParam('port')))
     lastInfo = None
@@ -122,10 +136,27 @@ class AVNSocketReader(AVNWorker,SocketReader):
           timeout = timeout *5
         else:
           timeout=None
-        self.readSocket(self.socket,'main',self.getSourceName(info),self.getParamValue('filter'),timeout=timeout)
+        connection = SocketReader(self.socket, self.writeData, self.feeder, self.setInfo, shouldStop=self.shouldStop)
+        if self.P_WRITE_OUT.fromDict(self.param):
+          clientHandler = threading.Thread(
+            target=self._writer,
+            args=(connection,),
+            name="%s-writer" % (self.getName())
+          )
+          clientHandler.daemon = True
+          clientHandler.start()
+        connection.readSocket('main', self.getSourceName(info), self.getParamValue('filter'), timeout=timeout)
         self.wait(2)
       except:
         AVNLog.info("exception while reading from %s %s",info,traceback.format_exc())
+
+  def _writer(self, socketConnection):
+    infoName="writer"
+    socketConnection.writeSocket(infoName,
+                                 self.P_WRITE_FILTER.fromDict(self.param),
+                                 self.version,
+                                 blacklist=self.P_BLACKLIST.fromDict(self.param).split(','))
+    self.deleteInfo(infoName)
 avnav_handlerList.registerHandler(AVNSocketReader)
         
         

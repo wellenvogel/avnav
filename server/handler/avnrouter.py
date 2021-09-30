@@ -499,7 +499,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
             AVNLog.debug("adding NMEA %s",nmeaData)
             self.feeder.addNMEA(nmeaData,source="router")
           if computeAPB:
-            nmeaData = "GPAPB,A,A,%.2f,%s,N,%s,,%.1f,M,%s,%.1f,M,%.1f,M" % (XTE,LR,arrival,brg,self.WpNr + 1,destBearing,destBearing)
+            nmeaData = "GPAPB,A,A,%.2f,%s,N,%s,,%.1f,T,%s,%.1f,T,%.1f,T" % (XTE,LR,arrival,brg,self.WpNr + 1,destBearing,destBearing)
             nmeaData = "$" + nmeaData + "*" + NMEAParser.nmeaChecksum(nmeaData) + "\r\n"
             AVNLog.debug("adding NMEA %s", nmeaData, )
             self.feeder.addNMEA(nmeaData,source="router")

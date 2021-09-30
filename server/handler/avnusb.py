@@ -124,6 +124,22 @@ class ExternalRegistration(object):
     self.usbid=usibid
     self.callback=callback
 
+class Observer(pyudev.MonitorObserver):
+
+
+  def __init__(self,infoHandler, monitor, event_handler=None, callback=None, *args, **kwargs):
+    super().__init__(monitor, event_handler, callback, *args, **kwargs)
+    self.infoHandler=infoHandler
+
+  def run(self):
+    self.infoHandler.setInfo("monitor","running",WorkerStatus.NMEA)
+    try:
+      super().run()
+    except:
+      pass
+    self.infoHandler.deleteInfo('monitor')
+
+
 #a worker that will use udev to find serial devices
 #based on the configuration it will open available devices and read data from them
 class AVNUsbSerialReader(AVNWorker):
@@ -171,13 +187,16 @@ class AVNUsbSerialReader(AVNWorker):
   def canEdit(cls):
     return True
 
-
+  @classmethod
+  def canDisable(cls):
+    return True
 
   def __init__(self,cfgparam):
     AVNWorker.__init__(self, cfgparam)
     self.maplock=threading.Lock()
     self.addrmap={}
     self.externalHandlers={}
+    self.monitor=None
     #do some late cfg checking here
     configuredDevices=self.param.get(CHILD_NAME,[])
     for device in configuredDevices:
@@ -469,27 +488,13 @@ class AVNUsbSerialReader(AVNWorker):
     except:
       pass
     
-        
-  #start monitoring in separate thread
-  #method will never return...
-  def monitorDevices(self,context):
-    self.setInfo('monitor', "running", WorkerStatus.RUNNING)
-    AVNLog.info("start device monitoring")
-    while True:
-      try:
-        monitor = pyudev.Monitor.from_netlink(context)
-        monitor.filter_by(subsystem='tty')
-        AVNLog.info("start monitor loop")
-        for deviceaction in monitor:
-          action,device=deviceaction
-          if action=='remove':
-            usbid=self.usbIdFromPath(device.device_path)
-            AVNLog.info("device removal detected %s",usbid)
-            self.stopHandler(usbid)
-      except:
-        AVNLog.error("error in usb monitor loop: ",traceback.format_exc(1))
-        time.sleep(2)
-          #any start handling we leave to the audit...
+
+  def monitorAction(self,action,device):
+    if action == 'remove':
+      usbid = self.usbIdFromPath(device.device_path)
+      AVNLog.info("device removal detected %s", usbid)
+      self.stopHandler(usbid)
+
         
   #this is the main thread - this executes the polling
   def run(self):
@@ -523,18 +528,24 @@ class AVNUsbSerialReader(AVNWorker):
               currentDevices[usbid]=None
         self.checkDevices(currentDevices)
         if init:
-          monitorThread=threading.Thread(
-            target=self.monitorDevices,
-            args=(context,),
-            name="%s-monitor"%(self.getName())
-          )
-          monitorThread.daemon=True
-          monitorThread.start()
+          if self.monitor is not None:
+            try:
+              self.monitor.stop()
+            except:
+              pass
+          monitor = pyudev.Monitor.from_netlink(context)
+          monitor.filter_by(subsystem='tty')
+          self.monitor=Observer(self,monitor,self.monitorAction)
+          self.monitor.start()
           init=False
       except Exception as e:
         AVNLog.debug("exception when querying usb serial devices %s, retrying after 10s",traceback.format_exc())
-        context=None
+
       self.wait(10)
+    try:
+      self.monitor.stop()
+    except:
+      pass
 
   def _stopHandlers(self):
     usbids=[]+list(self.addrmap.keys())

@@ -27,7 +27,7 @@
 import socket
 
 from avnavavahi import AVNAvahi
-from socketreaderbase import *
+from socketbase import *
 
 import avnav_handlerList
 from avnav_nmea import *
@@ -36,7 +36,7 @@ from avnav_worker import *
 
 #a Worker to read from a remote NMEA source via a socket
 #can be used to chain avnav servers...
-class AVNIpServiceReader(AVNWorker,SocketReader):
+class AVNIpServiceReader(AVNWorker):
 
   @classmethod
   def getServiceType(cls):
@@ -116,37 +116,10 @@ class AVNIpServiceReader(AVNWorker,SocketReader):
 
   def _writer(self, socketConnection):
     infoName="writer"
-    self.setInfo(infoName,"sending data",WorkerStatus.RUNNING)
-    filterstr=self.P_WRITE_FILTER.fromDict(self.param)
-    filter=None
-    if filterstr != "":
-      filter=filterstr.split(',')
-    blacklist=self.P_BLACKLIST.fromDict(self.param).split(',')
-    try:
-      seq=0
-      socketConnection.sendall(("avnav_server %s\r\n" % (self.version)).encode('utf-8'))
-      while socketConnection.fileno() >= 0:
-        hasSend=False
-        seq,data=self.feeder.fetchFromHistory(seq,10,nmeafilter=filter,includeSource=True)
-        if len(data)>0:
-          for line in data:
-            if line.source in blacklist:
-              AVNLog.debug("ignore %s:%s due to blacklist",line.source,line.data)
-            else:
-              socketConnection.sendall(line.data.encode('ascii', errors='ignore'))
-              hasSend=True
-              self.setInfo(infoName,"sending data",WorkerStatus.NMEA)
-        if not hasSend:
-          #just throw an exception if the reader potentially closed the socket
-          socketConnection.getpeername()
-    except Exception as e:
-      AVNLog.info("exception in client connection %s",traceback.format_exc())
-    AVNLog.info("client disconnected or stop received")
-    try:
-      socketConnection.shutdown(socket.SHUT_RDWR)
-      socketConnection.close()
-    except Exception as e:
-      AVNLog.error("error closing socket %s",str(e))
+    socketConnection.writeSocket(infoName,
+                                 self.P_WRITE_FILTER.fromDict(self.param),
+                                 self.version,
+                                 blacklist=self.P_BLACKLIST.fromDict(self.param).split(','))
     self.deleteInfo(infoName)
 
   #thread run method - just try forever  
@@ -201,15 +174,16 @@ class AVNIpServiceReader(AVNWorker,SocketReader):
           timeout = timeout *5
         else:
           timeout=None
+        connection=SocketReader(self.socket,self.writeData,self.feeder,self.setInfo,shouldStop=self.shouldStop)
         if self.P_WRITE_OUT.fromDict(self.param):
           clientHandler=threading.Thread(
             target=self._writer,
-            args=(self.socket,),
+            args=(connection,),
             name="%s-writer"%(self.getName())
           )
           clientHandler.daemon=True
           clientHandler.start()
-        self.readSocket(self.socket,'main',self.getSourceName(info),self.getParamValue('filter'),timeout=timeout)
+        connection.readSocket('main',self.getSourceName(info),self.getParamValue('filter'),timeout=timeout)
         self.wait(2)
       except:
         AVNLog.info("exception while reading from %s %s",info,traceback.format_exc())
