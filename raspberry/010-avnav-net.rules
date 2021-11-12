@@ -6,6 +6,8 @@
 #lower right: 1-1.5:1.0
 #currently we use upper left
 KERNELS=="1-1.2:1.0",SUBSYSTEM=="net",PROGRAM="/usr/lib/avnav/raspberry/rename-interface.sh %k %b", NAME="%c"
+#workaround for bullseye
+KERNELS=="1-1.2",SUBSYSTEM=="net",PROGRAM="/usr/lib/avnav/raspberry/rename-interface.sh %k %b", NAME="%c"
 #for pi3B+ - thanks to free-x
 KERNELS=="1-1.1.2:1.0",SUBSYSTEM=="net",PROGRAM="/usr/lib/avnav/raspberry/rename-interface.sh %k %b", NAME="%c"
 
