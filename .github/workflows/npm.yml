@@ -29,7 +29,7 @@ jobs:
       
       - name: npm
         
-        run: cd viewer && npm install --verbose&& npm run production
+        run: cd viewer && npm set audit false && npm install --verbose&& npm run production
       
 
         
