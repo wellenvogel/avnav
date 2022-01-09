@@ -9,6 +9,7 @@ import Value from './Value.jsx';
 import GuiHelper from '../util/GuiHelpers.js';
 import ReactHtmlParser,{convertNodeToElement} from 'react-html-parser/dist/react-html-parser.min.js';
 import base from '../base.js';
+import assign from 'object-assign';
 
 
 const transform=(self,node,index)=>{
@@ -49,14 +50,23 @@ class ExternalWidget extends React.Component{
             this.props.initFunction.call(this.userData,this.userData,this.props);
         }
     }
+    getProps(){
+        if (! this.props.translateFunction){
+            return this.props;
+        }
+        else{
+            return this.props.translateFunction(assign({},this.props));
+        }
+    }
     render(){
+        let convertedProps=this.getProps()
         let classes="widget externalWidget";
-        if (this.props.className) classes+=" "+this.props.className;
-        let style=this.props.style||{};
+        if (convertedProps.className) classes+=" "+convertedProps.className;
+        let style=convertedProps.style||{};
         let innerHtml=null;
         if (this.props.renderHtml){
             try {
-                innerHtml = this.props.renderHtml.apply(this.userData,[this.props]);
+                innerHtml = this.props.renderHtml.apply(this.userData,[convertedProps]);
             }catch (e){
                 base.log("External Widget: render error "+e);
                 innerHtml="<p>render error </p>";
@@ -73,9 +83,9 @@ class ExternalWidget extends React.Component{
             <div className="resize">
                 {userHtml}
             </div>
-            {(this.props.caption !== undefined )?<div className='infoLeft'>{this.props.caption}</div>:null}
-            {(this.props.unit !== undefined)?
-                <div className='infoRight'>{this.props.unit}</div>
+            {(convertedProps.caption !== undefined )?<div className='infoLeft'>{convertedProps.caption}</div>:null}
+            {(convertedProps.unit !== undefined)?
+                <div className='infoRight'>{convertedProps.unit}</div>
                 :null}
         </div>
         );
@@ -85,7 +95,7 @@ class ExternalWidget extends React.Component{
     }
     componentWillUnmount(){
         if (typeof(this.props.finalizeFunction) === 'function'){
-            this.props.finalizeFunction.call(this.userData,this.userData,this.props);
+            this.props.finalizeFunction.call(this.userData,this.userData,this.getProps());
         }
     }
     canvasRef(item){
@@ -95,7 +105,7 @@ class ExternalWidget extends React.Component{
     renderCanvas(){
         if (! this.canvas) return;
         try {
-            this.props.renderCanvas.apply(this.userData,[this.canvas, this.props]);
+            this.props.renderCanvas.apply(this.userData,[this.canvas, this.getProps()]);
         }catch (e){
             base.log("GaugeRadial: canvas render error "+e);
         }
@@ -113,7 +123,8 @@ ExternalWidget.propTypes={
     renderHtml: PropTypes.func,
     renderCanvas: PropTypes.func,
     initFunction: PropTypes.func,
-    finalizeFunction: PropTypes.func
+    finalizeFunction: PropTypes.func,
+    translateFunction: PropTypes.func
 };
 ExternalWidget.editableParameters={
     caption:true,

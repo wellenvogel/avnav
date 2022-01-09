@@ -51,7 +51,7 @@
 	<!-- a pure writer that outputs RMB -->
 	<UsbDevice baud="4800" filter="$RMB" minbaud="4800" type="writer" usbid="3-10.3.1:1.0"/>
 	<!--<UsbDevice usbid="3-4.3.2:1.0" baud="38400" minbaud="4800" type="ignore" filter=""/>-->
-<UsbDevice type="ignore" usbid="2-2:1.0"/>
+<UsbDevice baud="115200" type="reader" usbid="2-2:1.0"/>
 </AVNUsbSerialReader>
 
 
