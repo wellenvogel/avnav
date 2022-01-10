@@ -89,12 +89,7 @@ class AVNBlueToothReader(AVNWorker):
         WorkerParameter('filter','',type=WorkerParameter.T_FILTER)
     ]
     return rt
-  
-  @classmethod
-  def createInstance(cls, cfgparam):
-    if not hasBluetooth:
-      raise Exception("no bluetooth installed, cannot run %s"%(cls.getConfigName()))
-    return AVNBlueToothReader(cfgparam)
+
 
   @classmethod
   def canEdit(cls):
@@ -180,6 +175,11 @@ class AVNBlueToothReader(AVNWorker):
   
   #this is the main thread - this executes the bluetooth polling
   def run(self):
+    if not hasBluetooth:
+      self.setInfo('main','no bluetooth installed',WorkerStatus.ERROR)
+      while not self.shouldStop():
+        self.wait(10)
+      return
     self.wait(2) # give a chance to have the socket open...
     #now start an endless loop with BT discovery...
     self.setInfo('main', "discovering", WorkerStatus.RUNNING)
