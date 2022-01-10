@@ -33,6 +33,8 @@ import time
 import threading
 import copy
 from avnav_util import Enum, AVNLog
+import sys
+import os
 
 class ParamValueError(Exception):
   pass
@@ -327,6 +329,11 @@ class WorkerId(object):
     finally:
       self.lock.release()
 
+def forceExit():
+  time.sleep(8)
+  AVNLog.info("forced exit")
+  os._exit(1)
+
 
 
 class AVNWorker(object):
@@ -445,6 +452,16 @@ class AVNWorker(object):
     handler.stop()
     handler.configChanger.removeSelf()
 
+  @classmethod
+  def shutdownServer(cls):
+    for handler in cls.allHandlers:
+      try:
+        handler.stop()
+      except:
+        pass
+    fe = threading.Thread(target=forceExit)
+    fe.start()
+    sys.exit(1)
   
   def __init__(self,cfgparam):
     self.handlerListLock.acquire()

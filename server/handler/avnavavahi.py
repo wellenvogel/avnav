@@ -317,6 +317,15 @@ class AVNAvahi(AVNWorker):
       pass
     self.stateSequence+=1
 
+  def _dbusLoop(self):
+    if self.loop is None:
+      return
+    try:
+      self.loop.run()
+    except KeyboardInterrupt:
+      AVNLog.error("Keyboard interrupt in DBUS loop, shutting down")
+      self.shutdownServer()
+
   def run(self):
     sequence=self.stateSequence
     if not hasDbus:
@@ -328,7 +337,7 @@ class AVNAvahi(AVNWorker):
     self.loop=None
     try:
       self.loop=GLib.MainLoop()
-      loopThread=threading.Thread(target=self.loop.run,daemon=True,name="AVNAvahi DBUS loop")
+      loopThread=threading.Thread(target=self._dbusLoop,daemon=True,name="AVNAvahi DBUS loop")
       loopThread.start()
       bus = dbus.SystemBus()
       bus.add_signal_receiver(self._newService,
