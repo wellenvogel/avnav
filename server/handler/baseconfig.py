@@ -37,6 +37,7 @@ class AVNBaseConfig(AVNWorker):
     self.param=param
     self.version=None
     self.startupError=None
+    self.configInfo=None
   @classmethod
   def getConfigName(cls):
     return "AVNConfig"
@@ -92,6 +93,8 @@ class AVNBaseConfig(AVNWorker):
   def startInstance(self, navdata):
     if self.startupError is not None:
       self.setInfo("startup",self.startupError,WorkerStatus.ERROR)
+    if self.configInfo is not None:
+      self.setInfo("config",self.configInfo,WorkerStatus.STARTED)
     super().startInstance(navdata)
 
   def run(self):
@@ -105,5 +108,7 @@ class AVNBaseConfig(AVNWorker):
     return self.version
   def setStartupError(self,error):
     self.startupError=error
+  def setConfigInfo(self,info):
+    self.configInfo=info
 
 avnav_handlerList.registerHandler(AVNBaseConfig)

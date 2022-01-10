@@ -132,11 +132,11 @@ class AVNLog(object):
     return numeric_level
     
   @classmethod
-  def initLoggingSecond(cls,level,filename,debugToFile=False):
+  def initLoggingSecond(cls,level,filename,debugToFile=False,consoleOff=False):
     numeric_level=cls.levelToNumeric(level)
     formatter=AvNavFormatter("%(asctime)s-%(process)d-%(avthread)s-%(threadName)s-%(levelname)s-%(message)s")
     if not cls.consoleHandler is None :
-      cls.consoleHandler.setLevel(numeric_level)
+      cls.consoleHandler.setLevel(numeric_level if not consoleOff else logging.CRITICAL+1)
     version="2.7"
     try:
       version=sys.version.split(" ")[0][0:3]
@@ -388,14 +388,19 @@ class AVNUtil(object):
   def runCommand(cls,param,threadName=None):
     if not threadName is None:
       threading.current_thread().setName("%s"%threadName or '')
-    cmd=subprocess.Popen(param,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,close_fds=True)
-    while True:
-      line=cmd.stdout.readline()
-      if not line:
-        break
-      AVNLog.debug("[cmd]%s",line.strip())
-    cmd.poll()
-    return cmd.returncode
+    try:
+        cmd=subprocess.Popen(param,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,close_fds=True)
+        while True:
+            line=cmd.stdout.readline()
+            if not line:
+                break
+            AVNLog.debug("[cmd]%s",line.strip())
+        cmd.poll()
+        return cmd.returncode
+    except Exception as e:
+        AVNLog.error("unable to start command %s:%s"," ".join(param),str(e))
+        return -255
+
 
   @classmethod
   def getHttpRequestParam(cls,requestparam,name,mantadory=False):
