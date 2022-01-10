@@ -115,9 +115,14 @@ def createFailedBackup(cfgname):
 def setLogFile(filename,level,consoleOff=False):
   if not os.path.exists(os.path.dirname(filename)):
     os.makedirs(os.path.dirname(filename), 0o777)
-  AVNLog.initLoggingSecond(level, filename, debugToFile=True,consoleOff=consoleOff)
+  firstLevel=level
+  if firstLevel > logging.INFO:
+    firstLevel=logging.INFO
+  AVNLog.initLoggingSecond(firstLevel, filename, debugToFile=True,consoleOff=consoleOff)
   AVNLog.info("#### avnserver pid=%d,version=%s,parameters=%s start processing ####", os.getpid(), AVNAV_VERSION,
               " ".join(sys.argv))
+  if firstLevel != level:
+    AVNLog.setLogLevel(level)
 
 LOGFILE="avnav.log"
 def writeStderr(txt):
@@ -176,8 +181,9 @@ def main(argv):
     logFile=os.path.join(logDir, LOGFILE)
     AVNLog.info("####start processing (version=%s, logging to %s, parameters=%s)####", AVNAV_VERSION, logFile,
                 " ".join(argv))
-    setLogFile(logFile,logging.DEBUG if options.verbose else options.loglevel,consoleOff=True)
-  #AVNUtil.importFromDir(os.path.join(os.path.dirname(__file__), "handler"), globals())
+    loglevel=logging.DEBUG if options.verbose else options.loglevel
+    setLogFile(logFile,loglevel,consoleOff=True)
+
   canRestart=options.canRestart or systemdEnv is not None
   handlerManager=AVNHandlerManager(canRestart)
   handlerManager.setBaseParam(handlerManager.BASEPARAM.BASEDIR,basedir)
@@ -186,7 +192,6 @@ def main(argv):
   rt=handlerManager.readConfigAndCreateHandlers(cfgname)
   fallbackName = AVNHandlerManager.getFallbackName(cfgname)
   failedBackup=None
-  fallbackTime=None
   if rt is False:
     if os.path.exists(fallbackName) and not options.failOnError:
       AVNLog.error("error when parsing %s, trying fallback %s",cfgname,fallbackName)

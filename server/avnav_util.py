@@ -75,6 +75,7 @@ class AVNLog(object):
   hasNativeTid=False
   tempSequence=0
   configuredLevel=0
+  consoleOff=False
 
   @classmethod
   def getSyscallId(cls):
@@ -135,6 +136,7 @@ class AVNLog(object):
   def initLoggingSecond(cls,level,filename,debugToFile=False,consoleOff=False):
     numeric_level=level
     formatter=AvNavFormatter("%(asctime)s-%(process)d-%(avthread)s-%(threadName)s-%(levelname)s-%(message)s")
+    cls.consoleOff=consoleOff
     if not cls.consoleHandler is None :
       cls.consoleHandler.setLevel(numeric_level if not consoleOff else logging.CRITICAL+1)
     version="2.7"
@@ -145,13 +147,27 @@ class AVNLog(object):
     if version != '2.6':
       cls.fhandler=logging.handlers.TimedRotatingFileHandler(filename=filename,when='midnight',backupCount=7,delay=True)
       cls.fhandler.setFormatter(formatter)
-      cls.fhandler.setLevel(logging.INFO if not debugToFile else numeric_level)
+      flevel=numeric_level
+      if flevel < logging.DEBUG and not debugToFile:
+          flevel=logging.INFO
+      cls.fhandler.setLevel(flevel)
       cls.fhandler.doRollover()
       cls.logger.addHandler(cls.fhandler)
     cls.logger.setLevel(numeric_level)
     cls.debugToFile=debugToFile
     cls.logDir=os.path.dirname(filename)
     cls.configuredLevel=numeric_level
+
+  @classmethod
+  def setLogLevel(cls,level):
+    if cls.consoleHandler and not cls.consoleOff:
+        cls.consoleHandler.setLevel(level)
+    if cls.fhandler:
+        flevel = level
+        if flevel < logging.DEBUG and not cls.debugToFile:
+            flevel = logging.INFO
+        cls.fhandler.setLevel(flevel)
+    cls.logger.setLevel(level)
 
   @classmethod
   def resetRun(cls,sequence,timeout):
