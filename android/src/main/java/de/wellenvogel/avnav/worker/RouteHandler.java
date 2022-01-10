@@ -8,6 +8,7 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import net.sf.marineapi.nmea.parser.SentenceFactory;
+import net.sf.marineapi.nmea.sentence.APBSentence;
 import net.sf.marineapi.nmea.sentence.RMBSentence;
 import net.sf.marineapi.nmea.sentence.TalkerId;
 import net.sf.marineapi.nmea.util.DataStatus;
@@ -52,6 +53,7 @@ public class RouteHandler extends DirectoryRequestHandler  {
     private int rmbWpId=0;
     private static final String CHILD_LEG="leg";
     private static final String CHILD_RMB="RMB";
+    private static final String CHILD_APB="APB";
 
     public static interface UpdateReceiver{
         public void updated();
@@ -325,11 +327,13 @@ public class RouteHandler extends DirectoryRequestHandler  {
     private NmeaQueue queue;
     static EditableParameter.BooleanParameter COMPUTE_RMB=
             new EditableParameter.BooleanParameter("computeRMB", R.string.labelSettingsComputeRMB,true);
+    static EditableParameter.BooleanParameter COMPUTE_APB=
+            new EditableParameter.BooleanParameter("computeAPB", R.string.labelSettingsComputeAPB,true);
     public RouteHandler(File routedir,GpsService ctx,NmeaQueue queue) throws IOException {
         super(RequestHandler.TYPE_ROUTE,ctx,routedir,"route",null);
         this.routedir=routedir;
         updateReceiver=ctx;
-        parameterDescriptions.addParams(COMPUTE_RMB);
+        parameterDescriptions.addParams(COMPUTE_RMB, COMPUTE_APB);
         status.canEdit=true;
         this.queue=queue;
     }
@@ -610,12 +614,19 @@ public class RouteHandler extends DirectoryRequestHandler  {
     }
     private void computeRMB(RoutingLeg leg,Location currentPosition){
         boolean computeRMB=false;
+        boolean computeAPB=false;
         try {
             computeRMB=COMPUTE_RMB.fromJson(parameters);
+            computeAPB=COMPUTE_APB.fromJson(parameters);
         } catch (JSONException e) {
         }
         if (! computeRMB){
             status.setChildStatus(CHILD_RMB, WorkerStatus.Status.INACTIVE,"no RMB");
+        }
+        if (! computeAPB){
+            status.setChildStatus(CHILD_RMB, WorkerStatus.Status.INACTIVE,"no RMB");
+        }
+        if (! computeAPB && ! computeRMB){
             return;
         }
         try {
@@ -630,25 +641,50 @@ public class RouteHandler extends DirectoryRequestHandler  {
                 lastRMBfrom = new RoutePoint(leg.from);
                 lastRMBto = new RoutePoint(leg.to);
             }
-            RMBSentence rmb = (RMBSentence) factory.createParser(TalkerId.GP, "RMB");
-            rmb.setArrivalStatus((distance <= leg.approachDistance) ? DataStatus.ACTIVE : DataStatus.VOID);
-            if (destBearing < 0) destBearing=360+destBearing;
-            rmb.setBearing(destBearing);
-            rmb.setVelocity(AvnUtil.msToKn * currentPosition.getSpeed());
-            rmb.setSteerTo((xte > 0) ? Direction.LEFT : Direction.RIGHT);
-            distance=distance/AvnUtil.NM;
-            rmb.setRange((distance < 999.9) ? distance : 999.9);
+            if (destBearing < 0) destBearing = 360 + destBearing;
+            Direction steerTo=(xte > 0) ? Direction.LEFT : Direction.RIGHT;
             xte = Math.abs(xte);
             if (xte > 9.99) xte = 9.99;
-            rmb.setCrossTrackError(xte);
-            rmb.setOriginId(String.valueOf(rmbWpId));
-            rmb.setDestination(new Waypoint(String.valueOf(rmbWpId + 1), leg.to.lat, leg.to.lon));
-            rmb.setStatus(DataStatus.ACTIVE);
-            String sentence=rmb.toSentence();
-            status.setChildStatus(CHILD_RMB, WorkerStatus.Status.NMEA,sentence);
-            queue.add(sentence, getSourceName());
+            double sDistance=distance / AvnUtil.NM;
+            if (computeRMB) {
+                RMBSentence rmb = (RMBSentence) factory.createParser(TalkerId.GP, "RMB");
+                rmb.setArrivalStatus((distance <= leg.approachDistance) ? DataStatus.ACTIVE : DataStatus.VOID);
+                rmb.setBearing(destBearing);
+                rmb.setVelocity(AvnUtil.msToKn * currentPosition.getSpeed());
+                rmb.setSteerTo(steerTo);
+                rmb.setRange((sDistance < 999.9) ? sDistance : 999.9);
+                rmb.setCrossTrackError(xte);
+                rmb.setOriginId(String.valueOf(rmbWpId));
+                rmb.setDestination(new Waypoint(String.valueOf(rmbWpId + 1), leg.to.lat, leg.to.lon));
+                rmb.setStatus(DataStatus.ACTIVE);
+                String sentence = rmb.toSentence();
+                status.setChildStatus(CHILD_RMB, WorkerStatus.Status.NMEA, sentence);
+                queue.add(sentence, getSourceName());
+            }
+            if (computeAPB){
+                APBSentence apb=(APBSentence) factory.createParser(TalkerId.GP,"APB");
+                apb.setArrivalCircleEntered(distance <= leg.approachDistance);
+                apb.setPerpendicularPassed(false); //TODO
+                apb.setBearingPositionToDestinationTrue(true);
+                apb.setBearingPositionToDestination(destBearing);
+                double startBearing=start.bearingTo(target);
+                if (startBearing < 0) startBearing+=360;
+                apb.setBearingOriginToDestination(startBearing);
+                apb.setBearingPositionToDestinationTrue(true);
+                apb.setCrossTrackError(xte);
+                apb.setSteerTo(steerTo);
+                apb.setCrossTrackUnits(APBSentence.NM);
+                apb.setHeadingToDestination(destBearing);
+                apb.setHeadingToDestinationTrue(true);
+                apb.setDestinationWaypointId(String.valueOf(rmbWpId + 1));
+                apb.setStatus(DataStatus.ACTIVE);
+                apb.setCycleLockStatus(DataStatus.ACTIVE);
+                String sentence = apb.toSentence();
+                status.setChildStatus(CHILD_APB, WorkerStatus.Status.NMEA, sentence);
+                queue.add(sentence, getSourceName());
+            }
         }catch (Throwable t){
-            AvnLog.e("error computing RMB",t);
+            AvnLog.e("error computing RMB/APB",t);
         }
     }
     public boolean handleApproach(Location currentPosition){
