@@ -1,5 +1,6 @@
 <?xml version="1.0" ?><!-- configuration for avnav_server on windows
-     we do not have a gpsd and we can only directly use serial readers --><AVNServer>
+we do not have a gpsd and we can only directly use serial readers -->
+<AVNServer>
 <AVNConfig debugToLog="true" loglevel="DEBUG" settimecmd="beep" settimeperiod="3600" systimediff="5"/>
 <Readers>
 <!--<AVNGpsdFeeder useGpsd="false" listenerPort="0" port="0" />-->
@@ -78,9 +79,8 @@
 <!-- create chart overview files -->
 <AVNChartHandler/>
     <!--  routing handler -->
-<AVNRouter computeAPB="true"/>
-<AVNNmeaLogger filter="$RMC" interval="0"/>--&gt;
-<AVNNmeaLogger/>
+<AVNRouter computeAPB="true" computeRMB="true"/>
+<AVNNmeaLogger filter="$RMC" />
 <AVNImporter/>
 <AVNWpaHandler allowDenyCommand="sudo $BASEDIR/../raspberry/iptables-ext.sh wlx0013eff503f2" wpaSocket="/var/run/wpa_supplicant/wlx0013eff503f2"/>
 <AVNCommandHandler>
