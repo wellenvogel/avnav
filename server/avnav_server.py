@@ -138,9 +138,8 @@ def main(argv):
         version=AVNAV_VERSION,
         description='av navserver')
   parser.add_option("-q", "--quiet", action="store_const", 
-        const=100, default=logging.INFO, dest="verbose")
-  parser.add_option("-d", "--debug", action="store_const", 
-        const=logging.DEBUG, dest="verbose")
+        const=logging.ERROR, default=logging.INFO, dest="loglevel")
+  parser.add_option("-d", "--debug",dest="verbose")
   parser.add_option("-e", "--error", action="store_const",
                     const=True, dest="failOnError")
   parser.add_option("-p", "--pidfile", dest="pidfile", help="if set, write own pid to this file")
@@ -157,7 +156,7 @@ def main(argv):
     cfgname=os.path.join(os.path.dirname(argv[0]),"avnav_server.xml")
   else:
     cfgname=args[0]
-  AVNLog.initLoggingInitial(options.verbose if not options.verbose is None else logging.INFO)
+  AVNLog.initLoggingInitial(logging.DEBUG if options.verbose else logging.INFO)
   basedir = os.path.abspath(os.path.dirname(__file__))
   datadir = options.datadir
   if datadir is None:
@@ -177,7 +176,7 @@ def main(argv):
     logFile=os.path.join(logDir, LOGFILE)
     AVNLog.info("####start processing (version=%s, logging to %s, parameters=%s)####", AVNAV_VERSION, logFile,
                 " ".join(argv))
-    setLogFile(logFile,"DEBUG" if options.verbose else "INFO",consoleOff=True)
+    setLogFile(logFile,logging.DEBUG if options.verbose else options.loglevel,consoleOff=True)
   #AVNUtil.importFromDir(os.path.join(os.path.dirname(__file__), "handler"), globals())
   canRestart=options.canRestart or systemdEnv is not None
   handlerManager=AVNHandlerManager(canRestart)
@@ -272,7 +271,7 @@ def main(argv):
     if not baseConfig.param.get("logfile") == "":
       filename=os.path.expanduser(baseConfig.param.get("logfile"))
     AVNLog.info("####start processing (version=%s, logging to %s, parameters=%s)####",AVNAV_VERSION,filename," ".join(argv))
-    setLogFile(filename,level)
+    setLogFile(filename,AVNLog.levelToNumeric(level))
   if options.pidfile is not None:
     f=open(options.pidfile,"w",encoding='utf-8')
     if f is not None:

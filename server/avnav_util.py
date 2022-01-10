@@ -133,7 +133,7 @@ class AVNLog(object):
     
   @classmethod
   def initLoggingSecond(cls,level,filename,debugToFile=False,consoleOff=False):
-    numeric_level=cls.levelToNumeric(level)
+    numeric_level=level
     formatter=AvNavFormatter("%(asctime)s-%(process)d-%(avthread)s-%(threadName)s-%(levelname)s-%(message)s")
     if not cls.consoleHandler is None :
       cls.consoleHandler.setLevel(numeric_level if not consoleOff else logging.CRITICAL+1)
