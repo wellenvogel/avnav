@@ -59,6 +59,10 @@ class AVNNmeaLogger(AVNWorker):
   def canEdit(cls):
     return True
 
+  @classmethod
+  def canDisable(cls):
+    return True
+
   #write out the line
   #timestamp is a datetime object
   def writeLine(self,filehandle,data):
