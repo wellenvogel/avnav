@@ -151,7 +151,7 @@ else
   if [ "$silent" = 0 ] ; then
     exec $startprog  $logdir -c "$chartdir" -w "$basedir" -u "viewer=$viewer,libraries=$avnavdir/viewer/libraries,sounds=$avnavdir/sounds" $dopt $eopt "$xmlfile"
   else
-    exec $startprog  $logdir -c "$chartdir" -w "$basedir" -u "viewer=$viewer,libraries=$avnavdir/viewer/libraries,sounds=$avnavdir/sounds" $dopt $eopt "$xmlfile"  > /dev/null 2>&1
+    exec $startprog  -q $logdir -c "$chartdir" -w "$basedir" -u "viewer=$viewer,libraries=$avnavdir/viewer/libraries,sounds=$avnavdir/sounds" $dopt $eopt "$xmlfile" 
   fi
 fi
 
