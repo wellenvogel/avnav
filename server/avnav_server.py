@@ -137,14 +137,12 @@ def main(argv):
     pass
   debugger=sys.gettrace()
   cfgname=None
-  usage="usage: %s [-q][-d][-p pidfile] [-c mapdir] [-l logdir] [configfile] " % (argv[0])
+  usage="usage: %s [-q][-d][-p pidfile] [-c mapdir] [-l loglevel] [configfile] " % (argv[0])
   parser = optparse.OptionParser(
         usage = usage,
         version=AVNAV_VERSION,
         description='av navserver')
-  parser.add_option("-q", "--quiet", action="store_const", 
-        const=logging.ERROR, default=logging.INFO, dest="loglevel")
-  parser.add_option("-d", "--debug",dest="verbose")
+  parser.add_option("-q", "--quiet",  dest="quiet", action="store_true" ,help="do not log to stderr")
   parser.add_option("-e", "--error", action="store_const",
                     const=True, dest="failOnError")
   parser.add_option("-p", "--pidfile", dest="pidfile", help="if set, write own pid to this file")
@@ -155,13 +153,14 @@ def main(argv):
                     help="provide mappings in the form url=path,...")
   parser.add_option("-r", "--restart", dest="canRestart", action='store_const', const=True,
                     help="avnav will restart if server exits")
-  parser.add_option("-l", "--logdir", dest="logdir", help="immediately start logging to this directory, do not log to stdout")
+  parser.add_option("-l", "--loglevel", dest="loglevel", default="INFO", help="loglevel, default INFO")
+  parser.add_option("-d","--debug",dest="loglevel", action="store_const", const="DEBUG")
   (options, args) = parser.parse_args(argv[1:])
   if len(args) < 1:
     cfgname=os.path.join(os.path.dirname(argv[0]),"avnav_server.xml")
   else:
     cfgname=args[0]
-  AVNLog.initLoggingInitial(logging.DEBUG if options.verbose else logging.INFO)
+  AVNLog.initLoggingInitial(AVNLog.levelToNumeric(options.loglevel))
   basedir = os.path.abspath(os.path.dirname(__file__))
   datadir = options.datadir
   if datadir is None:
@@ -172,18 +171,15 @@ def main(argv):
   datadir = os.path.abspath(datadir)
   AVNLog.info("basedir=%s,datadir=%s", basedir, datadir)
   systemdEnv = os.environ.get('INVOCATION_ID')
-  logFile=None
-  if options.logdir or systemdEnv is not None:
-    logDir=options.logdir
-    if logDir is None:
-      #in systemd mode use datadir/log
-      logDir=os.path.join(datadir,"log")
-    logFile=os.path.join(logDir, LOGFILE)
-    AVNLog.info("####start processing (version=%s, logging to %s, parameters=%s)####", AVNAV_VERSION, logFile,
+  quiet=False
+  if options.quiet or systemdEnv is not None:
+    quiet=True
+  logDir = os.path.join(datadir, "log")
+  logFile = os.path.join(logDir, LOGFILE)
+  AVNLog.info("####start processing (version=%s, logging to %s, parameters=%s)####", AVNAV_VERSION, logFile,
                 " ".join(argv))
-    loglevel=logging.DEBUG if options.verbose else options.loglevel
-    setLogFile(logFile,loglevel,consoleOff=True)
 
+  setLogFile(logFile,AVNLog.levelToNumeric(options.loglevel),consoleOff=quiet)
   canRestart=options.canRestart or systemdEnv is not None
   handlerManager=AVNHandlerManager(canRestart)
   handlerManager.setBaseParam(handlerManager.BASEPARAM.BASEDIR,basedir)
@@ -263,20 +259,6 @@ def main(argv):
     float(baseConfig.param['aisExpiryTime']),
     baseConfig.param['ownMMSI'])
   NMEAParser.registerKeys(navData)
-  if logFile is None:
-    #lazy switch to logfile
-    level=logging.INFO
-    filename=os.path.join(datadir,"log","avnav.log")
-    if not options.verbose is None:
-      level=options.verbose
-    else:
-      if not baseConfig.param.get("loglevel") is None:
-        level=baseConfig.param.get("loglevel")
-    AVNLog.ld("baseconfig",baseConfig.param)
-    if not baseConfig.param.get("logfile") == "":
-      filename=os.path.expanduser(baseConfig.param.get("logfile"))
-    AVNLog.info("####start processing (version=%s, logging to %s, parameters=%s)####",AVNAV_VERSION,filename," ".join(argv))
-    setLogFile(filename,AVNLog.levelToNumeric(level))
   if options.pidfile is not None:
     f=open(options.pidfile,"w",encoding='utf-8')
     if f is not None:

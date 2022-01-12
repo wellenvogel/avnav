@@ -7,14 +7,13 @@ pdir=$avnavdir
 #if also copying the template
 DEMOCHART="osm-online.xml"
 
-dopt=""
 basedir=""
 chartdir=""
 xmlfile=""
 viewer=""
 silent=0
 gui=0
-logdir=""
+loglevel="INFO"
 template="$avnavdir/avnav_template.xml"
 
 usage(){
@@ -23,10 +22,11 @@ usage(){
   echo "       -c chartdir    : separate dir for charts (instead of basedir/charts)"
   echo "       -x cfgfile     :  start the server directly with this config (not for gui)"
   echo "       -t template    : create basedir/avnav_server.xml from this if not found"
-  echo "       -l logdir      : immediately start logging to this dir and do not log to console"
+  echo "       -l loglevel    : set the log level (ERROR|INFO|DEBUG)"
   echo "       -e             : directly fail on any errors in avnav_server.xml instead of trying avnav_server.xml.ok"
   echo "       -d             : start with loglevel debug"
   echo "       -g             : start with GUI instead of normal server mode"
+  echo "       -q             : do not log to stderr"
   echo "       -------------- some development options --------------"
   echo "       -a softwareBase: find the server software at this directory"
   echo "       -v viewerDir   : find the viewer software at this directory"
@@ -41,7 +41,7 @@ err(){
 while getopts dec:b:x:qgt:a:v:l: opt; do
 case $opt in
   d)
-    dopt="-d"
+    loglevel="DEBUG"
     ;;
   e)
     eopt="-e"
@@ -73,7 +73,7 @@ case $opt in
     viewer="$OPTARG"
     ;;
   l)
-    logdir="$OPTARG"
+    loglevel="$OPTARG"
     ;;
   \?)
     echo "invalid option $opt"
@@ -139,9 +139,6 @@ if [ "$xmlfile" = "" ] ; then
     fi  
   fi
 fi
-if [ "$logdir" != "" ] ; then
-    logdir="-l $logdir"
-fi
 if [ "$gui" != 0 ] ; then
   python3 -c 'import wx' > /dev/null 2>&1
   [ $? != 0 ] && err "missing package python3-wxgtkn.n, please install a valid version of this package (e.g. python3-wxgtk3.0)"
@@ -149,9 +146,9 @@ if [ "$gui" != 0 ] ; then
 else
   echo "chartdir=$chartdir, basedir=$basedir, config=$xmlfile, starting server..."
   if [ "$silent" = 0 ] ; then
-    exec $startprog  $logdir -c "$chartdir" -w "$basedir" -u "viewer=$viewer,libraries=$avnavdir/viewer/libraries,sounds=$avnavdir/sounds" $dopt $eopt "$xmlfile"
+    exec $startprog  -l $loglevel -c "$chartdir" -w "$basedir" -u "viewer=$viewer,libraries=$avnavdir/viewer/libraries,sounds=$avnavdir/sounds" $dopt $eopt "$xmlfile"
   else
-    exec $startprog  -q $logdir -c "$chartdir" -w "$basedir" -u "viewer=$viewer,libraries=$avnavdir/viewer/libraries,sounds=$avnavdir/sounds" $dopt $eopt "$xmlfile" 
+    exec $startprog  -q  -l $loglevel -c "$chartdir" -w "$basedir" -u "viewer=$viewer,libraries=$avnavdir/viewer/libraries,sounds=$avnavdir/sounds" $dopt $eopt "$xmlfile" 
   fi
 fi
 

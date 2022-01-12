@@ -50,14 +50,6 @@ class AVNBaseConfig(AVNWorker):
     if child is not None:
       return None
     return [
-            WorkerParameter('loglevel',logging.INFO,type=WorkerParameter.T_SELECT,
-                            rangeOrList=[
-                              {'label':'INFO','value':logging.INFO},
-                              {'label': 'ERROR', 'value': logging.ERROR},
-                              {'label': 'DEBUG', 'value': logging.DEBUG},
-                                         ],
-                            editable=False),
-            WorkerParameter('logfile',"",editable=False),
             WorkerParameter('expiryTime',30,type=WorkerParameter.T_FLOAT,
                             description="expiry in seconds for NMEA data"),
             WorkerParameter('aisExpiryTime',1200,type=WorkerParameter.T_FLOAT,
