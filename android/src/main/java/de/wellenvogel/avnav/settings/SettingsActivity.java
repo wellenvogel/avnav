@@ -13,6 +13,7 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.PowerManager;
 import android.preference.*;
 
 import android.provider.Settings;
@@ -225,6 +226,26 @@ public class SettingsActivity extends PreferenceActivity {
                 }
             }));
         }
+        if (! checkPowerSavingMode(this)){
+            int request = getNextPermissionRequestCode();
+            openRequests.add(new DialogRequest(request, new Runnable() {
+                @Override
+                public void run() {
+                    DialogBuilder.confirmDialog(SettingsActivity.this, 0, R.string.powerSafer, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            openRequests.clear();
+                            if (i == DialogInterface.BUTTON_POSITIVE) {
+                                startActivity(new Intent(Settings.ACTION_SETTINGS));
+                            }
+                            else {
+                                resultOk();
+                            }
+                        }
+                    });
+                }
+            }));
+        }
         if (! runNextDialog() && !initial) resultOk();
     }
 
@@ -256,6 +277,15 @@ public class SettingsActivity extends PreferenceActivity {
         return true;
     }
 
+    public static boolean checkPowerSavingMode(final Context context){
+        PowerManager pm= (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+            int mode=pm.getLocationPowerSaveMode();
+            if (mode != PowerManager.LOCATION_MODE_NO_CHANGE) return false;
+        }
+        return true;
+    }
+
 
 
     /**
@@ -272,6 +302,7 @@ public class SettingsActivity extends PreferenceActivity {
         if (! checkGps) return true;
         if (! checkGpsEnabled(activity)) return false;
         if (! checkGpsPermission(activity)) return false;
+        if (! checkPowerSavingMode(activity)) return false;
         return true;
     }
 

@@ -21,6 +21,8 @@ import net.sf.marineapi.nmea.util.GpsFixStatus;
 import net.sf.marineapi.nmea.util.Position;
 import net.sf.marineapi.nmea.util.SatelliteInfo;
 
+import de.wellenvogel.avnav.main.R;
+import de.wellenvogel.avnav.settings.SettingsActivity;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.NmeaQueue;
@@ -75,11 +77,22 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
         }
     }
 
+    private void checkBackgroundGps(){
+        boolean backgroundOk= SettingsActivity.checkPowerSavingMode(gpsService);
+        if (! backgroundOk){
+            status.setChildStatus("background", WorkerStatus.Status.ERROR,gpsService.getString(R.string.backgroundGpsDisabled));
+        }
+        else{
+            status.setChildStatus("background", WorkerStatus.Status.NMEA,gpsService.getString(R.string.backgroundGpsEnabled));
+        }
+    }
+
     @Override
     public void run(int startSequence) throws JSONException, IOException {
         stopped=false;
         locationService=(LocationManager) gpsService.getSystemService(gpsService.LOCATION_SERVICE);
         tryEnableLocation();
+        checkBackgroundGps();
         satStatusProvider=new Thread(new Runnable() {
             @Override
             public void run() {
@@ -135,7 +148,8 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
         satStatusProvider.setDaemon(true);
         satStatusProvider.start();
         while (! shouldStop(startSequence)){
-            if (!sleep(10000)) break;
+            if (!sleep(5000)) break;
+            checkBackgroundGps();
         }
     }
 

@@ -105,5 +105,8 @@
     <string name="labelSettingsFlowControl">flow control for the serial connection</string>
     <string name="noFileManager">unable to open a file manager</string>
     <string name="labelSettingsComputeAPB">compute APB sentences if a waypoint or route is active</string>
+    <string name="powerSafer">You have power saving enabled on your device. This will turn off the GPS in background. Please consider turning this off to ensure location updates while the screen is off.</string>
+    <string name="backgroundGpsDisabled">gps disabled by power saving</string>
+    <string name="backgroundGpsEnabled">gps enabled</string>
 
 </resources>
