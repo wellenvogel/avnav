@@ -220,9 +220,13 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,computeTargetFun
     let useCourseVector=globalStore.getData(keys.properties.aisUseCourseVector,false);
     let courseVectorWidth=globalStore.getData(keys.properties.navCircleWidth);
     let scale=globalStore.getData(keys.properties.aisIconScale,1);
+    let classbShrink=globalStore.getData(keys.properties.aisClassbShrink,1);
     let rotation=current.course||0;
     let symbol=this.getStyleEntry(current);
     let style=assign({},symbol.style);
+    if (classbShrink != 1 && AisFormatter.format('clazz',current) === 'B'){
+        scale=scale*classbShrink;
+    }
     if (scale != 1){
         style.size=[style.size[0]*scale,style.size[1]*scale];
         style.anchor=[style.anchor[0]*scale,style.anchor[1]*scale];

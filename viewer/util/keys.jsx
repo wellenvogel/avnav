@@ -301,6 +301,7 @@ let keys={
         aisUseCourseVector: new Property(true, "AIS Use Course Vector", PropertyType.CHECKBOX),
         aisIconBorderWidth: new Property(3, "Border Width", PropertyType.RANGE, [0, 10]),
         aisIconScale: new Property(1,"Icon Scale",PropertyType.RANGE, [0.5,5,0.1]),
+        aisClassbShrink: new Property(0.6,"Class B rel size",PropertyType.RANGE, [0.1,2,0.1]),
         aisMinDisplaySpeed: new Property(0.5,"min speed (kn) for AIS target display",PropertyType.RANGE,[0.1,40]),
         aisOnlyShowMoving: new Property(false,"only show moving AIS targets",PropertyType.CHECKBOX),
         clickTolerance: new Property(60, "Click Tolerance", PropertyType.RANGE, [10, 120]),
