@@ -314,10 +314,6 @@ let keys={
         aisFirstLabel: new Property('nameOrmmsi','First AIS label',PropertyType.SELECT,['--none--'].concat(AisFormatter.getLabels())),
         aisSecondLabel: new Property('--none--','Second AIS label',PropertyType.SELECT,['--none--'].concat(AisFormatter.getLabels())),
         aisThirdLabel: new Property('--none--','Third AIS label',PropertyType.SELECT,['--none--'].concat(AisFormatter.getLabels())),
-        //images are not used any more, just keeping for fallback
-        aisNormalImage: new Property(aisDefaultImage),
-        aisNearestImage: new Property(aisNearestImage),
-        aisWarningImage: new Property(aisWarningImage),
         statusQueryTimeout: new Property(8000), //ms
         networkTimeout: new Property(8000,"Network timeout(ms)",PropertyType.RANGE,[1000,20000,100]),
         wpaQueryTimeout: new Property(10000), //ms
@@ -396,7 +392,7 @@ let keys={
             aisWarningColor: new Property("#FA584A", "Warning", PropertyType.COLOR),
             aisNormalColor: new Property("#EBEB55", "Normal", PropertyType.COLOR),
             aisNearestColor: new Property('#70F3AF', "Nearest", PropertyType.COLOR),
-            aisTrackingColor: new Property('#CAD5BE', "Tracking", PropertyType.COLOR),
+            aisTrackingColor: new Property('#f8a601', "Tracking", PropertyType.COLOR),
             routeApproachingColor: new Property('#FA584A', "Approach", PropertyType.COLOR),
             widgetMargin: new Property(3, "Widget Margin(px)", PropertyType.RANGE, [1, 20]),
             useHdpi: new Property(false,"Increase Fonts on High Res",PropertyType.CHECKBOX,undefined,true)

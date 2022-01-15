@@ -125,21 +125,16 @@ class PropertyHandler {
         let color = "";
         if (currentObject.warning) {
             color = this.getColor('aisWarningColor');
-        }
-        else {
-            if (currentObject.tracking) {
+        } else {
+            if (currentObject.nearest) {
+                color = this.getColor('aisNearestColor');
+            } else if (currentObject.tracking) {
                 color = this.getColor('aisTrackingColor');
-            }
-            else {
-                if (currentObject.nearest) {
-                    color = this.getColor('aisNearestColor');
-                }
-                else {
-                    color = this.getColor('aisNormalColor');
-                }
+            } else {
+                color = this.getColor('aisNormalColor');
             }
         }
-        return color;
+    return color;
     }
 
 

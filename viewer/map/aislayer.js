@@ -39,6 +39,9 @@ const mergeStyles=function(){
 
 const styleKeyFromItem=(item,useDefault,useInternal)=>{
     let rt="normal";
+    if (item.mmsi === globalStore.getData(keys.nav.ais.trackedMmsi)){
+        rt="tracking";
+    }
     if (item.warning){
       rt="warning";
     }
@@ -160,6 +163,9 @@ AisLayer.prototype.createInternalIcons = function () {
     this.symbolStyles.internalnormal = new StyleEntry(
         this.createIcon(style.aisNormalColor, useCourseVector),
         assign({}, symbolStyle, {courseVectorColor: style.aisNormalColor}));
+    this.symbolStyles.internaltracking = new StyleEntry(
+        this.createIcon(style.aisTrackingColor, useCourseVector),
+        assign({}, symbolStyle, {courseVectorColor: style.aisTrackingColor}));
 
 };
 /**
@@ -340,7 +346,7 @@ AisLayer.prototype.computeTarget=function(pos,course,dist){
  * @param styles
  */
 AisLayer.prototype.setImageStyles=function(styles){
-    let names=['Normal','Warning','Nearest'];
+    let names=['Normal','Warning','Nearest','Tracking'];
     let allowedStyles={
         anchor:true,
         size: true,

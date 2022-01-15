@@ -34,6 +34,7 @@ class AisTargetWidget extends React.Component{
         if (current.mmsi && current.mmsi !== "") {
             aisProperties.warning = current.warning || false;
             aisProperties.nearest = current.nearest || false;
+            aisProperties.tracking = (current.mmsi === this.props.trackedMmsi);
             color=PropertyHandler.getAisColor(aisProperties);
         }
         let front=AisFormatter.format('passFront',current);
@@ -88,7 +89,8 @@ class AisTargetWidget extends React.Component{
 
 AisTargetWidget.storeKeys={
     current: keys.nav.ais.nearest,
-    isEditing: keys.gui.global.layoutEditing
+    isEditing: keys.gui.global.layoutEditing,
+    trackedMmsi: keys.nav.ais.trackedMmsi
 };
 
 AisTargetWidget.propTypes={
