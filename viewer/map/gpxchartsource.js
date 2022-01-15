@@ -182,7 +182,7 @@ class GpxChartSource extends ChartSourceBase{
             let layerOptions={
                 source: vectorSource,
                 style: this.styleFunction,
-                opacity: this.chartEntry.opacity!==undefined?this.chartEntry.opacity:1
+                opacity: this.chartEntry.opacity!==undefined?parseFloat(this.chartEntry.opacity):1
             };
             if (this.chartEntry.minZoom !== undefined) layerOptions.minZoom=this.chartEntry.minZoom;
             if (this.chartEntry.maxZoom !== undefined) layerOptions.maxZoom=this.chartEntry.maxZoom;
