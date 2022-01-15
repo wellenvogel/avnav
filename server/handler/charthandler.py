@@ -27,7 +27,7 @@
 import json
 import shutil
 import urllib.request, urllib.parse, urllib.error
-
+import hashlib
 
 import avnav_handlerList
 import gemf_reader
@@ -589,6 +589,35 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
     rt['name'] = configName
     return rt
 
+  def getOverlaySequence(self,overlayList):
+    '''
+    build a sequence from the names and timestamps of the overlays
+    :param overlayList:
+    :return:
+    '''
+    md5=hashlib.md5()
+    for item in overlayList:
+      name=item.get('name')
+      type=item.get('type')
+      url=item.get('url')
+      enabled=item.get('enabled')
+      if not enabled:
+        continue
+      if name is None or type is None or url is None:
+        continue
+      md5.update(name.encode(errors="ignore"))
+      try:
+        filePath=self.httpServer.tryExternalMappings(url,"")
+        if not os.path.exists(filePath):
+          AVNLog.debug("cannot stat overlay %s for %s",filePath,url)
+          continue
+        st=os.stat(filePath)
+        md5.update(str(st.st_mtime).encode(errors="ignore"))
+      except Exception as e:
+        AVNLog.debug("exception when trying to stat overlay %s",url)
+      #TODO: get timestamp
+    return md5.hexdigest()
+
   def handleSpecialApiRequest(self, command, requestparam, handler):
     hostip=self.getRequestIp(handler)
     name=AVNUtil.getHttpRequestParam(requestparam, "name")
@@ -629,7 +658,12 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
         chart=self.getChartDescriptionByKey(name)
         if chart is None:
           return AVNUtil.getReturnData(error="chart not found")
-        return AVNUtil.getReturnData(sequence=chart.getSequence())
+        overlayConfig=self.buildOverlayConfig(chart.overlayConfig,"localhost",True,True)
+        sequence=chart.getSequence()
+        overlays=overlayConfig.get('overlays')
+        if overlays is not None:
+          sequence=str(sequence)+"-"+self.getOverlaySequence(overlays)
+        return AVNUtil.getReturnData(sequence=sequence)
     except Exception as e:
       return AVNUtil.getReturnData(error=str(e))
     return super(AVNChartHandler, self).handleSpecialApiRequest(command, requestparam, handler)
