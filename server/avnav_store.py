@@ -175,7 +175,7 @@ class AVNStore(object):
     @param data:
     @return:
     """
-    AVNLog.debug("AVNavData add ais %s",mmsi)
+    AVNLog.debug("AVNavData add ais %s(%s)",mmsi,data.get('type')or "?")
     if self.__ownMMSI != '' and mmsi is not None and self.__ownMMSI == mmsi:
       AVNLog.debug("omitting own AIS message mmsi %s", self.__ownMMSI)
       return

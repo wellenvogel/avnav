@@ -661,7 +661,7 @@ class NMEAParser(object):
         val=str(bfe[1])
         rt[name]=val
       except:
-        pass
+        AVNLog.debug("exception in getting AIS message: %s",traceback.format_exc())
     mmsi=rt.get('mmsi')
     if mmsi is None:
       AVNLog.debug("ignoring AIS data without mmsi, %s"%rt)
