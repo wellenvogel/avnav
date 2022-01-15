@@ -4,7 +4,6 @@
 
 
 import navobjects from '../nav/navobjects';
-import OverlayDialog from '../components/OverlayDialog.jsx';
 import AisLayer from './aislayer';
 import NavLayer from './navlayer';
 import TrackLayer from './tracklayer';
@@ -464,7 +463,7 @@ MapHolder.prototype.getLastChartKey=function (){
 }
 
 
-MapHolder.prototype.prepareSourcesAndCreate=function(newSources,opt_preventDialog){
+MapHolder.prototype.prepareSourcesAndCreate=function(newSources){
     return new Promise((resolve,reject)=> {
         for (let k in this.sources) {
             this.sources[k].destroy();
@@ -492,7 +491,7 @@ MapHolder.prototype.prepareSourcesAndCreate=function(newSources,opt_preventDialo
                     }
                     if (ready) {
                         this.updateOverlayConfig();
-                        this.initMap(opt_preventDialog);
+                        this.initMap();
                         resolve(1);
                     }
                     else {
@@ -550,7 +549,7 @@ MapHolder.prototype.getBaseChart=function(){
         }
     }
 }
-MapHolder.prototype.loadMap=function(div,opt_preventDialogs){
+MapHolder.prototype.loadMap=function(div){
    if (div) this._lastMapDiv=div;
     let self=this;
     return new Promise((resolve,reject)=> {
@@ -571,7 +570,7 @@ MapHolder.prototype.loadMap=function(div,opt_preventDialogs){
             resetOverrides=true;
         }
         let prepareAndCreate=(newSources)=>{
-            this.prepareSourcesAndCreate(newSources,opt_preventDialogs)
+            this.prepareSourcesAndCreate(newSources)
                 .then((res)=>{
                     self.updateOverlayConfig(); //update all sources with existing config
                     this._callHandlers({type:this.EventTypes.RELOAD});
@@ -771,7 +770,7 @@ MapHolder.prototype.getMapOutlineLayer = function (layers,visible) {
  * init the map (deinit an old one...)
  */
 
-MapHolder.prototype.initMap=function(opt_preventDialog){
+MapHolder.prototype.initMap=function(){
     let div=this._lastMapDiv;
     let self=this;
     let layers=[];
@@ -933,23 +932,20 @@ MapHolder.prototype.initMap=function(opt_preventDialog){
         let lext=undefined;
         if (baseLayers.length > 0) {
             lext=baseLayers[0].avnavOptions.extent;
-            if (! opt_preventDialog && lext !== undefined && !olExtent.containsCoordinate(lext,this.pointToMap(this.center))){
-                let ok=OverlayDialog.confirm("Position outside map, center to map now?");
-                ok.then(function(){
-                    if (baseLayers.length > 0) {
-                        let view = self.getView();
-                        lext = baseLayers[0].avnavOptions.extent;
-                        if (lext !== undefined) view.fit(lext,self.olmap.getSize());
-                        self.setZoom(self.minzoom);
-                        self.center = self.pointFromMap(view.getCenter());
-                        self.zoom = view.getZoom();
+            if (lext !== undefined && !olExtent.containsCoordinate(lext, this.pointToMap(this.center))) {
+                if (baseLayers.length > 0) {
+                    let view = self.getView();
+                    lext = baseLayers[0].avnavOptions.extent;
+                    if (lext !== undefined) view.fit(lext, self.olmap.getSize());
+                    self.setZoom(self.minzoom);
+                    self.center = self.pointFromMap(view.getCenter());
+                    self.zoom = view.getZoom();
 
 
-                    }
-                    self.saveCenter();
-                    let newCenter = self.pointFromMap(self.getView().getCenter());
-                    self.setCenterFromMove(newCenter, true);
-                });
+                }
+                self.saveCenter();
+                let newCenter = self.pointFromMap(self.getView().getCenter());
+                self.setCenterFromMove(newCenter, true);
             }
         }
     }
@@ -986,7 +982,7 @@ MapHolder.prototype.timerFunction=function(){
                 this.sources[k].checkSequence()
                     .then((res)=>{
                         if (res){
-                            self.prepareSourcesAndCreate(undefined,true);
+                            self.prepareSourcesAndCreate(undefined);
                         }
                     })
                     .catch((error)=>{})
