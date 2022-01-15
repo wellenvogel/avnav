@@ -14,7 +14,6 @@ import Helper from '../util/helper.js';
 import GuiHelpers from '../util/GuiHelpers.js';
 import MapHolder from '../map/mapholder.js';
 import navobjects from '../nav/navobjects.js';
-import AisData from '../nav/aisdata.js';
 import ButtonList from '../components/ButtonList.jsx';
 import WayPointDialog from '../components/WaypointDialog.jsx';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
@@ -317,7 +316,6 @@ class NavPage extends React.Component{
             let aisparam=evdata.aisparam;
             if (!aisparam) return;
             if (aisparam.mmsi){
-                AisData.setTrackedTarget(aisparam.mmsi);
                 history.push('aisinfopage',{mmsi:aisparam.mmsi});
                 return true;
             }

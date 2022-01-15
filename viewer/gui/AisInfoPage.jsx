@@ -3,13 +3,11 @@
  */
 
 import Dynamic from '../hoc/Dynamic.jsx';
-import Visible from '../hoc/Visible.jsx';
-import Button from '../components/Button.jsx';
+import AisData from '../nav/aisdata.js';
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import React from 'react';
-import PropertyHandler from '../util/propertyhandler.js';
 import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import AisHandler from '../nav/aisdata.js';
@@ -81,6 +79,7 @@ class AisInfoPage extends React.Component{
                 name: 'AisInfoLocate',
                 onClick:()=>{
                     if (!self.props.options || ! self.props.options.mmsi) return;
+                    AisData.setTrackedTarget(self.props.options.mmsi);
                     let pos=AisHandler.getAisPositionByMmsi(self.props.options.mmsi);
                     if (pos) {
                         MapHolder.setCenter(pos);
