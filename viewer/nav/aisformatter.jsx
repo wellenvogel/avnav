@@ -136,6 +136,15 @@ const aisparam={
             format: function (v) {
             return v.nearest || false
         }
+    },
+    clazz: {
+        headline: 'class',
+        format: function(v){
+            if (v.type == 1 || v.type == 2 || v.type == 3) return "A";
+            if (v.type == 18 || v.type == 19) return "B";
+            if (v.type == 4) return "S";
+            return "";
+        }
     }
 
 };

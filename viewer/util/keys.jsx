@@ -308,6 +308,7 @@ let keys={
         aisWarningCpa: new Property(500, "AIS Warning-CPA(m)", PropertyType.RANGE, [100, 5000, 10]), //m for AIS warning (500m)
         aisWarningTpa: new Property(900, "AIS-Warning-TPA(s)", PropertyType.RANGE, [30, 3600, 10]), //in s - max time for tpa warning (15min)
         aisTextSize: new Property(14, "Text Size(px)", PropertyType.RANGE, [8, 24]), //in px
+        aisShowOnlyAB: new Property(true,"Show only class A/B",PropertyType.CHECKBOX),
         //images are not used any more, just keeping for fallback
         aisNormalImage: new Property(aisDefaultImage),
         aisNearestImage: new Property(aisNearestImage),

@@ -10,6 +10,7 @@ import keys from '../util/keys.jsx';
 import Requests from '../util/requests.js';
 import base from '../base.js';
 import assign from "object-assign";
+import aisformatter from './aisformatter';
 
 
 const AisTarget=navobjects.Ais;
@@ -127,11 +128,18 @@ AisData.prototype.handleAisData=function() {
     let aisWarningAis = null;
     let aisTargets=[];
     let onlyMoving=globalStore.getData(keys.properties.aisOnlyShowMoving,false);
+    let onlyAB=globalStore.getData(keys.properties.aisShowOnlyAB,true);
     let aisMinSpeed = parseFloat(globalStore.getData(keys.properties.aisMinDisplaySpeed, 0));
     let foundTrackedTarget = false;
     for (let aisidx in this.currentAis) {
         let ais =this.currentAis[aisidx];
         let shouldHandle = !onlyMoving || (parseFloat(ais.speed) >= aisMinSpeed);
+        if (shouldHandle && onlyAB){
+            let clazz=aisformatter.format('clazz',ais);
+            if (clazz !== "A" && clazz !== "B"){
+                shouldHandle=false;
+            }
+        }
         if (!shouldHandle) continue;
         aisTargets.push(ais);
         if (boatPos.valid) {

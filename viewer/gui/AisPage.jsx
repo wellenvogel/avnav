@@ -166,6 +166,8 @@ class AisPage extends React.Component{
             let cl=props.addClass;
             if (props.warning) cl+=" "+WARNING_CLASS;
             let aisInfoKey=1;
+            let clazz=fmt.format('clazz',props);
+            if (clazz !== '') clazz="["+clazz+"]";
             return ( <div className={"aisListItem "+cl} onClick={props.onClick}>
                     <div className="aisItemFB" style={style}>
                         <span className="fb1">{fb.substr(0,1)}</span>{fb.substr(1)}
@@ -173,7 +175,8 @@ class AisPage extends React.Component{
                     <div className="aisData">
                         <div className="aisData1">
                             {fmt.format('mmsi',props)}&nbsp;
-                            {fmt.format('shipname',props)}
+                            {fmt.format('shipname',props)}&nbsp;
+                            {clazz}
                         </div>
                         { aisInfos.map(function(info1){
                             aisInfoKey++;

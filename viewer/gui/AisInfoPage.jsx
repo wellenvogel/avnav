@@ -33,7 +33,8 @@ const displayItems = [
     {name: 'destination', label: 'Destination'},
     {name: 'shiptype', label: 'Type'},
     {name: 'passFront', label: 'we pass', addClass: 'aisFront'},
-    {name: 'position', label: 'Position'}
+    {name: 'position', label: 'Position'},
+    {name: 'clazz', label: 'Class'}
 ];
 
 const createUpdateFunction=(config,mmsi)=>{
