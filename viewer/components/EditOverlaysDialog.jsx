@@ -168,7 +168,7 @@ class OverlayItemDialog extends React.Component{
         };
         this.stateHelper.setState(newState);
     }
-    analyseOverlay(url){
+    analyseOverlay(url,initial){
         this.setState({loading:true,itemInfo:undefined});
         Requests.getHtmlOrText(url)
             .then((data)=>{
@@ -189,16 +189,18 @@ class OverlayItemDialog extends React.Component{
                         this.setState({loading:false,itemInfo:{}});
                         this.stateHelper.setValue('name',undefined);
                     }
-                    let newState={loading:false,itemInfo: featureInfo}
-                    let newItemState={};
-                    newItemState['style.lineWidth']=(featureInfo.hasRoute)?globalStore.getData(keys.properties.routeWidth):
-                        globalStore.getData(keys.properties.trackWidth);
-                    newItemState['style.lineColor']=(featureInfo.hasRoute)?globalStore.getData(keys.properties.routeColor):
-                        globalStore.getData(keys.properties.trackColor);
-                    newItemState['style.fillColor']=newItemState['style.lineColor'];
-                    newItemState['style.circleWidth']=newItemState['style.lineWidth']*3;
+                    let newState={loading:false,itemInfo: featureInfo};
                     this.setState(newState);
-                    this.stateHelper.setState(newItemState);
+                    if (initial) {
+                        let newItemState = {};
+                        newItemState['style.lineWidth'] = (featureInfo.hasRoute) ? globalStore.getData(keys.properties.routeWidth) :
+                            globalStore.getData(keys.properties.trackWidth);
+                        newItemState['style.lineColor'] = (featureInfo.hasRoute) ? globalStore.getData(keys.properties.routeColor) :
+                            globalStore.getData(keys.properties.trackColor);
+                        newItemState['style.fillColor'] = newItemState['style.lineColor'];
+                        newItemState['style.circleWidth'] = newItemState['style.lineWidth'] * 3;
+                        this.stateHelper.setState(newItemState);
+                    }
                 }catch (e){
                     Toast(url+" is no valid xml: "+e.message);
                     this.setState({loading:false,itemInfo:{}});
@@ -266,7 +268,7 @@ class OverlayItemDialog extends React.Component{
                                 dialogRow={true}
                                 label="opacity"
                                 value={this.stateHelper.getValue('opacity')}
-                                onChange={(nv) => this.stateHelper.setValue('opacity', nv)}
+                                onChange={(nv) => this.stateHelper.setValue('opacity', parseFloat(nv))}
                                 type="number"
                             />
                             {(currentType == 'chart') ?
@@ -300,8 +302,9 @@ class OverlayItemDialog extends React.Component{
                                                 newState.icons=nv.url;
                                                 newState.url+="/doc.kml";
                                             }
+                                            let initial=this.stateHelper.getValue('name') === undefined;
                                             this.stateHelper.setState(newState);
-                                            this.analyseOverlay(newState.url);
+                                            this.analyseOverlay(newState.url,initial);
                                         }}
                                     />
                                     {!iconsReadOnly && (itemInfo.hasSymbols || itemInfo.hasLinks) && <InputSelect
@@ -443,6 +446,7 @@ class OverlayItemDialog extends React.Component{
                                 name="ok"
                                 onClick={() => {
                                     let changes = this.stateHelper.getValues(true);
+                                    changes.opacity=parseFloat(changes.opacity);
                                     if (changes.opacity < 0) changes.opacity = 0;
                                     if (changes.opacity > 1) changes.opacity = 1;
                                     this.props.updateCallback(changes);
