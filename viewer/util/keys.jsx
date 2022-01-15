@@ -10,6 +10,7 @@ import yellowBubble from '../images/YellowBubble40.png';
 import aisDefaultImage from '../images/ais-default.png';
 import aisNearestImage from '../images/ais-nearest.png';
 import aisWarningImage from '../images/ais-warning.png';
+import AisFormatter from "../nav/aisformatter";
 
 const K=999; //the real value does not matter
 const V=888; //keys that can be used as value display
@@ -22,7 +23,8 @@ export const PropertyType={
     RANGE:1,
     LIST:2,
     COLOR:3,
-    LAYOUT:4
+    LAYOUT:4,
+    SELECT: 5
 };
 
 /**
@@ -309,6 +311,9 @@ let keys={
         aisWarningTpa: new Property(900, "AIS-Warning-TPA(s)", PropertyType.RANGE, [30, 3600, 10]), //in s - max time for tpa warning (15min)
         aisTextSize: new Property(14, "Text Size(px)", PropertyType.RANGE, [8, 24]), //in px
         aisShowOnlyAB: new Property(true,"Show only class A/B",PropertyType.CHECKBOX),
+        aisFirstLabel: new Property('nameOrmmsi','First AIS label',PropertyType.SELECT,['--none--'].concat(AisFormatter.getLabels())),
+        aisSecondLabel: new Property('--none--','Second AIS label',PropertyType.SELECT,['--none--'].concat(AisFormatter.getLabels())),
+        aisThirdLabel: new Property('--none--','Third AIS label',PropertyType.SELECT,['--none--'].concat(AisFormatter.getLabels())),
         //images are not used any more, just keeping for fallback
         aisNormalImage: new Property(aisDefaultImage),
         aisNearestImage: new Property(aisNearestImage),

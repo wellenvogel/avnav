@@ -91,9 +91,10 @@ const Dialogs = {
      * @param list
      * @param okCallback
      * @param cancelCallback
+     * @param optResetCallback
      * @return {Function}
      */
-    createSelectDialog: (title,list,okCallback,cancelCallback)=> {
+    createSelectDialog: (title,list,okCallback,cancelCallback,optResetCallback)=> {
         return (props)=> {
             return (
                 <div className="selectDialog inner">
@@ -110,6 +111,13 @@ const Dialogs = {
                         })}
                     </div>
                     <div className="dialogButtons">
+                        {optResetCallback && <DB
+                            name="reset"
+                            onClick={(ev)=>{
+                                if (props.closeCallback) props.closeCallback();
+                                optResetCallback(ev);
+                            }}
+                        >Reset</DB>}
                         <DB name="cancel"
                                 onClick={(ev)=>{
                                     if (props.closeCallback) props.closeCallback();

@@ -16,7 +16,7 @@ import LayoutHandler from '../util/layouthandler.js';
 import Mob from '../components/Mob.js';
 import LayoutNameDialog from '../components/LayoutNameDialog.jsx';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
-import {Input,ColorSelector,Checkbox,Radio} from '../components/Inputs.jsx';
+import {Input,ColorSelector,Checkbox,Radio,InputSelect} from '../components/Inputs.jsx';
 import DB from '../components/DialogButton.jsx';
 import DimHandler from '../util/dimhandler';
 import FullScreen from '../components/Fullscreen';
@@ -31,6 +31,7 @@ const settingsSections={
         keys.properties.nightChartFade,keys.properties.dimFade,keys.properties.localAlarmSound ],
     AIS:        [keys.properties.aisDistance,keys.properties.aisWarningCpa,keys.properties.aisWarningTpa,
         keys.properties.aisMinDisplaySpeed,keys.properties.aisOnlyShowMoving,
+        keys.properties.aisFirstLabel,keys.properties.aisSecondLabel,keys.properties.aisThirdLabel,
         keys.properties.aisTextSize,keys.properties.aisUseCourseVector,keys.properties.style.aisNormalColor,keys.properties.style.aisNearestColor,
         keys.properties.style.aisWarningColor,keys.properties.aisIconBorderWidth,keys.properties.aisIconScale,keys.properties.aisShowOnlyAB],
     Navigation: [keys.properties.bearingColor,keys.properties.bearingWidth,keys.properties.navCircleColor,keys.properties.navCircleWidth,keys.properties.navCircle1Radius,keys.properties.navCircle2Radius,keys.properties.navCircle3Radius,
@@ -182,6 +183,44 @@ const ListSettingsItem=(properties)=> {
           </div>
 };
 
+const SelectSettingsItem=(properties)=> {
+    let items=[];
+    let value=properties.value;
+    for (let k in properties.values){
+        let cv=properties.values[k];
+        if (typeof(cv) !== 'object') {
+            let nv = cv.split(":");
+            if (nv.length > 1) {
+                cv={label: nv[0], value: nv[1]};
+            } else {
+                cv={label: nv[0], value: nv[0]};
+            }
+        }
+        items.push({label:cv.label,value:cv.value});
+        if (cv.value === properties.value){
+            value={label:cv.label,value:cv.value};
+        }
+    }
+    return(
+        <InputSelect
+            className={properties.className+ " listEntry"}
+            onChange={function(newVal){
+                properties.onClick(newVal);
+            }}
+            itemList={items}
+            changeOnlyValue={true}
+            value={value}
+            label={properties.label}
+            resetCallback={(ev)=>{
+                properties.onClick(properties.defaultv);
+            }}
+        >
+        </InputSelect>
+    )
+};
+
+
+
 
 const ColorSettingsItem=(properties)=>{
     let style={
@@ -213,6 +252,9 @@ const createSettingsItem=(item)=>{
     }
     if (item.type == PropertyType.LIST){
         return ListSettingsItem;
+    }
+    if (item.type == PropertyType.SELECT){
+        return SelectSettingsItem;
     }
     return (props)=>{
         return (<div className="listEntry">

@@ -105,9 +105,10 @@ export const InputReadOnly=(props)=>{
     let className=props.dialogRow?"dialogRow":"";
     if (props.className) className+=" "+props.className;
     if (! props.onClick) className+=" disabled";
-    return <div className={className} key={props.key}>
+    let frameClick=props.frameClick?props.onClick:undefined;
+    return <div className={className} key={props.key} onClick={frameClick}>
         <span className="inputLabel">{props.label}</span>
-        <div className="input" onClick={props.onClick}>{props.value}</div>
+        <div className="input" onClick={frameClick?undefined:props.onClick}>{props.value}</div>
         {props.children}
         </div>
 };
@@ -126,8 +127,9 @@ export const InputSelect=(props)=>{
             const valueChanged = (newValue)=>{
                 props.onChange(props.changeOnlyValue?(newValue||{}).value:newValue);
             };
+            let resetCallback= props.resetCallback?props.resetCallback:undefined;
             const showDialog=(finalList)=>{
-                let d =OverlayDialog.createSelectDialog(props.label, finalList, valueChanged);
+                let d =OverlayDialog.createSelectDialog(props.label, finalList, valueChanged,undefined,resetCallback);
                 if (props.showDialogFunction) {
                     props.showDialogFunction(d);
                 }
@@ -159,6 +161,7 @@ export const InputSelect=(props)=>{
         {...forwardProps}
         onClick={onClick}
         value={label}
+        frameClick={true}
         />
 };
 
@@ -166,7 +169,8 @@ InputSelect.propTypes=assign({},DEFAULT_TYPES,{
     onChange: PropTypes.func, //if set  and if prop.list is set: show the select dialog
     list: PropTypes.any,      //array of items to show or a function to create the list
     showDialogFunction: PropTypes.func, //if set: use this function to display the select dialog
-    changeOnlyValue: PropTypes.bool //only return the value property of the list element in onChange
+    changeOnlyValue: PropTypes.bool, //only return the value property of the list element in onChange
+    resetCallback: PropTypes.func //if set - show a reset button an call this on reset
 });
 
 
