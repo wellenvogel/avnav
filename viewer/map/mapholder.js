@@ -975,7 +975,7 @@ MapHolder.prototype.timerFunction=function(){
     });
     let self=this;
     let now=(new Date()).getTime();
-    if (this._lastSequenceQuery < (now -5000)){
+    if (this._lastSequenceQuery < (now - globalStore.getData(keys.properties.mapSequenceTime,5000))){
         this._lastSequenceQuery=now;
         if (this.sources.length > 0 && this._lastMapDiv) {
             for (let k in this.sources){

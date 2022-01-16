@@ -29,6 +29,7 @@ import Helper from '../util/helper.js';
 import CryptHandler from './crypthandler.js';
 import shallowcompare from '../util/shallowcompare.js';
 import featureFormatter from "../util/featureFormatter";
+import RequestHandler from "../util/requests";
 
 export const getOverlayConfigName=(chartEntry)=>{
     return chartEntry.overlayConfig || chartEntry.chartKey;
@@ -69,8 +70,12 @@ class ChartSourceBase {
          * @protected
          * @type {boolean}
          */
-        ;
+
         this.layers = [];
+
+        this.sequence='';
+
+        this.removeSequence=0;
     }
     getConfig(){
         return(assign({},this.chartEntry));
@@ -91,9 +96,23 @@ class ChartSourceBase {
     /**
      * returns a promise that resolves to 1 for changed
      */
-    checkSequence(){
+    checkSequence(force){
+        let lastRemoveSequence=this.removeSequence;
         return new Promise((resolve,reject)=>{
-           resolve(0);
+            fetch(this.getUrl(),{method:'HEAD'})
+                .then((response)=>{
+                    if (this.removeSequence !== lastRemoveSequence || (! this.isReady() && ! force)) {
+                        resolve(0);
+                        return;
+                    }
+                    let newSequence=response.headers.get('last-modified');
+                    if (newSequence !== this.sequence) {
+                        this.sequence=newSequence;
+                        resolve(1);
+                    }
+                    else resolve(0)
+                })
+                .catch((e)=>resolve(0))
         });
     }
 
@@ -122,45 +141,38 @@ class ChartSourceBase {
     }
 
     prepare() {
+
+        const runPrepare=(resolve,reject)=>{
+            this.checkSequence(true)
+                .then((r)=> {
+                    this.prepareInternal()
+                        .then((layers) => {
+                            this.layers = layers;
+                            if (!this.chartEntry.enabled) {
+                                this.layers.forEach((layer) => layer.setVisible(false));
+                            }
+                            this.isReadyFlag = true;
+                            resolve(this.layers);
+                        })
+                        .catch((error) => {
+                            reject(error);
+                        });
+                })
+                .catch((e)=>reject(e));
+        };
         return new Promise((resolve, reject)=> {
             if (this.chartEntry.tokenUrl) {
                 CryptHandler.createOrActivateEncrypt(this.getChartKey(), this.chartEntry.tokenUrl, this.chartEntry.tokenFunction)
                     .then((result)=> {
                         this.encryptFunction = result.encryptFunction;
-                        this.prepareInternal()
-                            .then((layers)=> {
-                                this.layers = layers;
-                                if (! this.chartEntry.enabled){
-                                    this.layers.forEach((layer)=>layer.setVisible(false));
-                                }
-                                this.isReadyFlag = true;
-                                resolve(this.layers);
-                            })
-                            .catch((error)=> {
-                                reject(error);
-                            })
+                        runPrepare(resolve,reject)
                     })
                     .catch((error)=> {
                         reject(error)
                     });
                 return;
             }
-            this.prepareInternal()
-                .then((layers)=> {
-                    layers.forEach((layer)=>{
-                        if (!layer.avnavOptions) layer.avnavOptions={};
-                        layer.avnavOptions.chartSource=this;
-                    })
-                    this.layers = layers;
-                    if (! this.chartEntry.enabled){
-                        this.layers.forEach((layer)=>layer.setVisible(false));
-                    }
-                    this.isReadyFlag = true;
-                    resolve(this.layers);
-                })
-                .catch((error)=> {
-                    reject(error);
-                })
+            runPrepare(resolve,reject);
         });
     }
 
@@ -170,6 +182,7 @@ class ChartSourceBase {
         CryptHandler.removeChartEntry(this.getChartKey());
         this.isReadyFlag=false;
         this.layers=[];
+        this.removeSequence++;
     }
 
     setVisible(visible){
