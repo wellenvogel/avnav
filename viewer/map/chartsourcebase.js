@@ -29,7 +29,8 @@ import Helper from '../util/helper.js';
 import CryptHandler from './crypthandler.js';
 import shallowcompare from '../util/shallowcompare.js';
 import featureFormatter from "../util/featureFormatter";
-import RequestHandler from "../util/requests";
+import globalstore from "../util/globalstore";
+import keys from '../util/keys';
 
 export const getOverlayConfigName=(chartEntry)=>{
     return chartEntry.overlayConfig || chartEntry.chartKey;
@@ -99,6 +100,9 @@ class ChartSourceBase {
     checkSequence(force){
         let lastRemoveSequence=this.removeSequence;
         return new Promise((resolve,reject)=>{
+            if (! globalstore.getData(keys.gui.capabilities.fetchHead,false)){
+                resolve(0);
+            }
             fetch(this.getUrl(),{method:'HEAD'})
                 .then((response)=>{
                     if (this.removeSequence !== lastRemoveSequence || (! this.isReady() && ! force)) {

@@ -316,13 +316,19 @@ public class WebServer extends Worker {
                 }
                 String method = request.getRequestLine().getMethod().toUpperCase(Locale.ENGLISH);
                 if (method.equals("GET") || method.equals("HEAD")) {
-                    ExtendedWebResourceResponse resp = handler.tryDirectRequest(uri);
+                    ExtendedWebResourceResponse resp = handler.tryDirectRequest(uri,method);
                     if (resp != null) {
+                        for (String n : resp.getHeaders().keySet()){
+                            response.setHeader(n,resp.getHeaders().get(n));
+                        }
                         response.setHeader("content-type", resp.getMimeType());
-                        if (resp.getLength() < 0) {
-                            response.setEntity(streamToEntity(resp.getData()));
-                        } else {
-                            response.setEntity(new InputStreamEntity(resp.getData(), resp.getLength()));
+                        InputStream ris=resp.getData();
+                        if (ris != null) {
+                            if (resp.getLength() < 0) {
+                                response.setEntity(streamToEntity(resp.getData()));
+                            } else {
+                                response.setEntity(new InputStreamEntity(resp.getData(), resp.getLength()));
+                            }
                         }
                     } else {
                         AvnLog.d(NAME, "no data for " + url);

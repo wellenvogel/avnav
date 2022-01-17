@@ -308,6 +308,10 @@ public class RequestHandler {
         return mimeType;
     }
 
+    public ExtendedWebResourceResponse handleRequest(View view, String url) throws Exception {
+        return handleRequest(view,url,"GET");
+    }
+
     /**
      * used for the internal requests from our WebView
      * @param view
@@ -315,7 +319,7 @@ public class RequestHandler {
      * @return
      * @throws Exception
      */
-    public ExtendedWebResourceResponse handleRequest(View view, String url) throws Exception {
+    public ExtendedWebResourceResponse handleRequest(View view, String url,String method) throws Exception {
         Uri uri=null;
         try {
             uri = Uri.parse(url);
@@ -330,7 +334,7 @@ public class RequestHandler {
                 if (path.startsWith(NAVURL)){
                     return handleNavRequest(uri,null);
                 }
-                ExtendedWebResourceResponse rt=tryDirectRequest(uri);
+                ExtendedWebResourceResponse rt=tryDirectRequest(uri,method);
                 if (rt != null) return rt;
                 InputStream is= service.getAssets().open(path);
                 return new ExtendedWebResourceResponse(-1,mimeType(path),"",is);
@@ -345,13 +349,13 @@ public class RequestHandler {
         }
     }
 
-    public ExtendedWebResourceResponse tryDirectRequest(Uri uri) throws Exception {
+    public ExtendedWebResourceResponse tryDirectRequest(Uri uri,String method) throws Exception {
         String path=uri.getPath();
         if (path == null) return null;
         if (path.startsWith("/")) path=path.substring(1);
         INavRequestHandler handler=getPrefixHandler(path);
         if (handler != null){
-            return handler.handleDirectRequest(uri,this );
+            return handler.handleDirectRequest(uri,this, method);
         }
         return null;
     }
@@ -708,6 +712,7 @@ public class RequestHandler {
                 o.put("uploadOverlays",true);
                 o.put("uploadTracks",true);
                 o.put("remoteChannel",true);
+                o.put("fetchHead",Constants.HAS_HEAD_SUPPORT|| serverInfo != null);
                 if (serverInfo == null) {
                     //we can only handle the config stuff internally
                     //as potentially there are permission dialogs
