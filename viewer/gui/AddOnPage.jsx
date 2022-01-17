@@ -90,6 +90,10 @@ class AddOnPage extends React.Component{
                     icon: addOn.icon,
                     onClick: ()=> {
                         remotechannel.sendMessage(COMMANDS.addOn,i);
+                        if (addOn.newWindow === 'true'){
+                            window.open(addOn.url,'_blank');
+                            return;
+                        }
                         //first unload the iframe completely to avoid pushing to the history
                         globalStore.storeData(keys.gui.addonpage.activeAddOn, -1);
                         window.setTimeout(()=> {
@@ -97,7 +101,8 @@ class AddOnPage extends React.Component{
                         },100);
                     },
                     toggle: activeIndex == i,
-                    overflow: true
+                    overflow: true,
+                    visible: addOn.newWindow !== 'true' || addOn.url.match(/^http/) || ! globalStore.getData(keys.gui.global.onAndroid,false)
                 };
                 rt.push(button);
             }
@@ -117,16 +122,17 @@ class AddOnPage extends React.Component{
                     if (url.match(/\?/)) url+="&"+urladd;
                     else url+="?"+urladd;
                 }
+                let showInWindow=currentAddOn.newWindow === 'true';
                 let MainContent= InputMonitor((props)=>
                     <div className="addOnFrame">
-                        {currentAddOn.url?<iframe src={url} className="addOn"/>:null}
+                        {(currentAddOn.url && ! showInWindow)?<iframe src={url} className="addOn"/>:null}
                     </div>);
                 return (
                     <Page
                         className={self.props.className}
                         style={self.props.style}
                         id="addonpage"
-                        title={currentAddOn.title}
+                        title={showInWindow?'':currentAddOn.title}
                         mainContent={
                             <MainContent/>
                         }

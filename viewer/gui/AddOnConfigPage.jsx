@@ -20,6 +20,7 @@ const AddonItem=(props)=>{
     if (props.className) className+=" "+props.className;
     let source=props.source||'user';
     if (props.invalid) source+=", invalid";
+    if (props.newWindow === 'true') source+=", new window";
     let url=(props.originalUrl!==undefined)?props.originalUrl:props.url;
     return (
         <div className={className} onClick={props.onClick}>

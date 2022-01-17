@@ -178,6 +178,15 @@ export default  class UserAppDialog extends React.Component{
                             {this.stateHelper.getValue('icon') && <img className="appIcon" src={this.stateHelper.getValue('icon')}/>}
                          </InputReadOnly>
                     }
+                    {canEdit&&<Checkbox
+                        dialogRow={true}
+                        label={'newWindow'}
+                        value={this.stateHelper.getValue('newWindow') === 'true'}
+                        onChange={(nv)=>{
+                            this.stateHelper.setState({newWindow:nv?'true':'false'});
+                        }}
+                    />}
+
 
                     <div className="dialogButtons">
                         {(this.stateHelper.getValue('name') && this.stateHelper.getValue('canDelete') && canEdit) && <DB name="delete" onClick={()=>{
@@ -224,7 +233,7 @@ UserAppDialog.showUserAppDialog=(item,fixed,opt_showToasts)=>{
                 <UserAppDialog
                     {...props}
                     okFunction={(addon)=>{
-                        Addons.updateAddon(addon.name,addon.url,addon.icon,addon.title)
+                        Addons.updateAddon(addon.name,addon.url,addon.icon,addon.title,addon.newWindow)
                             .then((data)=>{resolve(data)})
                             .catch((error)=>{
                                 if (opt_showToasts) Toast("unable to add/update: "+error);

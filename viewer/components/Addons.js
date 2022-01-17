@@ -48,12 +48,13 @@ const findAddonByUrl=(addons,url)=>{
  * @param title
  * @returns {*}
  */
-const updateAddon=(name,url,icon,title)=>{
+const updateAddon=(name,url,icon,title,newWindow)=>{
    return Requests.getJson("?request=api&type=addon&command=update",{},{
        url:url,
        title: title,
        icon:icon,
-       name:name
+       name:name,
+       newWindow: newWindow
    });
 };
 
