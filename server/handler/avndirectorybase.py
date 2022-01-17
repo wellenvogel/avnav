@@ -395,14 +395,13 @@ class AVNDirectoryHandlerBase(AVNWorker):
       originalPath = os.path.join(self.baseDir, subPath)
       return originalPath
     currentPath=self.baseDir
-    if handler is not None:
-      for k in range(0,len(pathParts)):
-        part=pathParts[k]
-        currentPath=os.path.join(currentPath,part)
-        if not os.path.exists(currentPath):
-          return None
-        if (part.lower().endswith(".zip") or part.lower().endswith('.kmz')) and k < (len(pathParts)-1):
-          return self.getZipEntry(currentPath,"/".join(pathParts[k+1:]),handler,requestParam)
+    for k in range(0,len(pathParts)):
+      part=pathParts[k]
+      currentPath=os.path.join(currentPath,part)
+      if not os.path.exists(currentPath):
+        return None
+      if (part.lower().endswith(".zip") or part.lower().endswith('.kmz')) and k < (len(pathParts)-1):
+        return self.getZipEntry(currentPath,"/".join(pathParts[k+1:]),handler,requestParam)
     originalPath = os.path.join(self.baseDir,subPath)
     return originalPath
 

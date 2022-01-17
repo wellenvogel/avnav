@@ -28,7 +28,7 @@ import Requests from '../util/requests.js';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import Helper from '../util/helper.js';
-import ChartSourceBase, {getOverlayConfigName} from './chartsourcebase.js';
+import ChartSourceBase from './chartsourcebase.js';
 import * as olExtent from 'ol/extent';
 import {XYZ as olXYZSource} from 'ol/source';
 import * as olTransforms  from 'ol/proj/transforms';
@@ -524,14 +524,9 @@ class AvnavChartSource extends ChartSourceBase{
         let destroySequence=this.destroySequence;
         return new Promise((resolve,reject)=>{
             if (! self.isReady() || destroySequence !== this.destroySequence) resolve(0);
+            let url = this.chartEntry.url + "/sequence?_="+(new Date()).getTime();
             //set noCache to false to avoid pragma in header (CORS...)
-            let getParameters={
-                request: 'api',
-                type: 'chart',
-                command: 'sequence',
-                name: self.getChartKey()
-            };
-            Requests.getJson("", {},getParameters)
+            Requests.getJson(url, {useNavUrl: false,noCache:false})
                 .then((data)=> {
                     if (!data.sequence || this.destroySequence !== destroySequence) {
                         resolve(0);
