@@ -93,6 +93,8 @@ let keys={
             depthBelowTransducer: V,
             headingMag: V,
             headingTrue: V,
+            waterTemp: V,
+            waterSpeed: V,
             sequence: K, //will be incremented as last operation on each receive
             connectionLost: K,
             updatealarm: new D("update counter for alarms"),

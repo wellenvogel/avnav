@@ -132,6 +132,16 @@ let widgetList=[
 
     },
     {
+        name: 'STW',
+        default: '0.0',
+        unit: 'kn',
+        caption: 'STW',
+        storeKeys:{
+            value: keys.nav.gps.waterSpeed
+        },
+        formatter: 'formatSpeed'
+    },
+    {
         name: 'WindAngle',
         default: "---",
         unit: "\u00b0",
@@ -154,6 +164,17 @@ let widgetList=[
         },
         formatter: 'formatDecimal',
         formatterParameters: [2,1]
+    },
+    {
+        name: 'WaterTemp',
+        default: '---',
+        unit: '°',
+        caption: 'Water Temp',
+        storeKeys: {
+            value: keys.nav.gps.waterTemp
+        },
+        formatter: 'formatTemperature',
+        formatterParameters: 'celsius'
     },
     {
         name: 'AnchorBearing',
