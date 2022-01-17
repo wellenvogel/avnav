@@ -14,6 +14,7 @@ import net.sf.marineapi.nmea.sentence.GSVSentence;
 import net.sf.marineapi.nmea.sentence.HDGSentence;
 import net.sf.marineapi.nmea.sentence.HDMSentence;
 import net.sf.marineapi.nmea.sentence.HDTSentence;
+import net.sf.marineapi.nmea.sentence.MTWSentence;
 import net.sf.marineapi.nmea.sentence.MWVSentence;
 import net.sf.marineapi.nmea.sentence.PositionSentence;
 import net.sf.marineapi.nmea.sentence.RMCSentence;
@@ -350,6 +351,15 @@ public class Decoder extends Worker {
                                     AuxiliaryEntry e = new AuxiliaryEntry();
                                     double depth = d.getDepth();
                                     e.data.put("depthBelowTransducer", depth);
+                                    addAuxiliaryData(s.getSentenceId(), e,posAge);
+                                    continue;
+                                }
+                                if (s instanceof MTWSentence) {
+                                    MTWSentence d = (MTWSentence) s;
+                                    AvnLog.d("%s: MTW sentence",getTypeName() );
+                                    AuxiliaryEntry e = new AuxiliaryEntry();
+                                    double waterTemp = d.getTemperature() + 273.15;
+                                    e.data.put("transducers.MTWwaterTemp", waterTemp);
                                     addAuxiliaryData(s.getSentenceId(), e,posAge);
                                     continue;
                                 }
