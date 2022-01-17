@@ -110,7 +110,7 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
                             else url="viewer/"+url;
                             INavRequestHandler nrh = handler.getPrefixHandler(url);
                             try {
-                                ExtendedWebResourceResponse resp = nrh.handleDirectRequest(Uri.parse(url), handler);
+                                ExtendedWebResourceResponse resp = nrh.handleDirectRequest(Uri.parse(url), handler, null);
                                 if (resp == null) {
                                     throw new Exception("not found");
                                 }
@@ -232,7 +232,7 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
     }
 
     @Override
-    public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler) throws FileNotFoundException {
+    public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler, String method) throws FileNotFoundException {
         return null;
     }
 

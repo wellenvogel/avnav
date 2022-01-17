@@ -14,6 +14,7 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.util.Date;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -188,7 +189,7 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
         return handler.handleRequest(null,fallback);
     }
     @Override
-    public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler) throws Exception {
+    public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler, String method) throws Exception {
         String path=uri.getPath();
         if (path == null) return null;
         if (path.startsWith("/")) path=path.substring(1);
@@ -196,26 +197,29 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
         path = path.substring((urlPrefix.length()+1));
         String[] parts = path.split("/");
         if (parts.length < 1) return null;
-        if (parts[0].endsWith(".zip") || parts[0].endsWith(".kmz")){
-            String name= URLDecoder.decode(parts[0],"UTF-8");
-            File foundFile = findLocalFile(name);
-            if (foundFile == null) return tryFallbackOrFail(uri,handler);
-            ZipFile zf=new ZipFile(foundFile);
-            String entryPath= path.replaceFirst("[^/]*/","");
-            ZipEntry entry=zf.getEntry(entryPath);
-            if (entry == null) return tryFallbackOrFail(uri,handler);
-            return new ExtendedWebResourceResponse(entry.getSize(),
-                    RequestHandler.mimeType(entryPath),
-                    "",new CloseHelperStream(zf.getInputStream(entry),zf));
+        if (method.equalsIgnoreCase("GET")) {
+            if (parts[0].endsWith(".zip") || parts[0].endsWith(".kmz")) {
+                String name = URLDecoder.decode(parts[0], "UTF-8");
+                File foundFile = findLocalFile(name);
+                if (foundFile == null) return tryFallbackOrFail(uri, handler);
+                ZipFile zf = new ZipFile(foundFile);
+                String entryPath = path.replaceFirst("[^/]*/", "");
+                ZipEntry entry = zf.getEntry(entryPath);
+                if (entry == null) return tryFallbackOrFail(uri, handler);
+                return new ExtendedWebResourceResponse(entry.getSize(),
+                        RequestHandler.mimeType(entryPath),
+                        "", new CloseHelperStream(zf.getInputStream(entry), zf));
+            }
         }
         String name= URLDecoder.decode(parts[parts.length - 1],"UTF-8");
         File foundFile = findLocalFile(name);
         if (foundFile != null) {
-            return new ExtendedWebResourceResponse(
+            ExtendedWebResourceResponse rt=new ExtendedWebResourceResponse(
                     foundFile.length(),
                     RequestHandler.mimeType(foundFile.getName()),
-                    "", new FileInputStream(foundFile));
-
+                    "", method.equalsIgnoreCase("GET")?new FileInputStream(foundFile):null);
+            rt.setDateHeader("Last-Modified",new Date(foundFile.lastModified()));
+            return rt;
         }
         return null;
     }

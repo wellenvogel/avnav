@@ -208,6 +208,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
     self.baseDir = AVNHandlerManager.getDirWithDefault(self.param, 'routesdir', 'routes')
     self.currentLeg=None
     self.currentLegFileName=None
+    self.currentLegTimestamp = None
     self.feeder=self.findFeeder(self.getStringParam('feederName'))
     #approach handling
     self.lastDistanceToCurrent=None
@@ -224,7 +225,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
 
   LEG_CHANGE_KEY='leg'
 
-  def setCurrentLeg(self,leg):
+  def setCurrentLeg(self,leg,writeBack=True):
     # type: (AVNRoutingLeg) -> object
     changed=self.currentLeg == None or not self.currentLeg.equal(leg)
     if changed:
@@ -235,14 +236,16 @@ class AVNRouter(AVNDirectoryHandlerBase):
         os.unlink(self.currentLegFileName)
         AVNLog.info("current leg removed")
       return
-    AVNLog.info("new leg %s",str(leg))
-    f=open(self.currentLegFileName,"w",encoding='utf-8')
-    try:
-      f.write(json.dumps(leg.getJson()))
-    except:
+    if writeBack:
+      AVNLog.info("new leg %s",str(leg))
+      f=open(self.currentLegFileName,"w",encoding='utf-8')
+      try:
+        f.write(json.dumps(leg.getJson()))
+      except:
+        f.close()
+        raise
       f.close()
-      raise
-    f.close()
+      self.currentLegTimestamp=os.stat(self.currentLegFileName).st_mtime
     if not leg.isActive():
       self.computeApproach() #ensure that we immediately switch off alarms
 
@@ -255,29 +258,36 @@ class AVNRouter(AVNDirectoryHandlerBase):
     itemDescription.fillInfo(self.baseDir)
     return itemDescription
 
+  def readCurrentLeg(self):
+    if os.path.exists(self.currentLegFileName):
+      f = None
+      try:
+        self.currentLegTimestamp=os.stat(self.currentLegFileName).st_mtime
+        f = open(self.currentLegFileName, "r", encoding='utf-8')
+        strleg = f.read(self.MAXROUTESIZE + 1000)
+        currentLeg = AVNRoutingLeg(json.loads(strleg))
+        if currentLeg.getTo() is not None:
+          distance = AVNUtil.distanceM(self.wpToLatLon(currentLeg.getFrom()),
+                                       self.wpToLatLon(currentLeg.getTo()))
+          AVNLog.info("read current leg, route=%s, from=%s, to=%s, length=%fNM" % (currentLeg.getRouteName(),
+                                                                                   str(currentLeg.getFrom()),
+                                                                                   str(currentLeg.getTo()),
+                                                                                   distance / AVNUtil.NM))
+        else:
+          AVNLog.info("read current leg, route=%s, from=%s, to=%s" % (currentLeg.getRouteName(),
+                                                                      str(currentLeg.getFrom()),
+                                                                      "NONE",                                                              ))
+        return currentLeg
+      except:
+        AVNLog.error("unable to read current leg %s:%s",self.currentLegFileName,traceback.format_exc())
+        self.currentLegTimestamp=None
+
   #this is the main thread - listener
   def onPreRun(self):
     self.currentLegFileName=os.path.join(self.baseDir,self.currentLegName)
-    if os.path.exists(self.currentLegFileName):
-      f=None
-      try:
-        f=open(self.currentLegFileName,"r",encoding='utf-8')
-        strleg=f.read(self.MAXROUTESIZE+1000)
-        self.currentLeg=AVNRoutingLeg(json.loads(strleg))
-        if self.currentLeg.getTo() is not None:
-          distance=AVNUtil.distanceM(self.wpToLatLon(self.currentLeg.getFrom()),self.wpToLatLon(self.currentLeg.getTo()))
-          AVNLog.info("read current leg, route=%s, from=%s, to=%s, length=%fNM"%(self.currentLeg.getRouteName(),
-                                                                  str(self.currentLeg.getFrom()),str(self.currentLeg.getTo()),distance/AVNUtil.NM))
-        else:
-          AVNLog.info("read current leg, route=%s, from=%s, to=%s"% (self.currentLeg.getRouteName(),
-                                                                                   str(self.currentLeg.getFrom()),
-                                                                                   "NONE",
-                                                                                   ))
-        self.setCurrentLeg(self.currentLeg)
-      except:
-        AVNLog.error("error parsing current leg %s: %s"%(self.currentLegFileName,traceback.format_exc()))
-      if f is not None:
-        f.close()
+    currentLeg=self.readCurrentLeg()
+    if currentLeg is not None:
+      self.setCurrentLeg(currentLeg,False)
     else:
       AVNLog.info("no current leg %s found"%(self.currentLegFileName,))
       self.setCurrentLeg(AVNRoutingLeg({}))
@@ -286,6 +296,15 @@ class AVNRouter(AVNDirectoryHandlerBase):
   def periodicRun(self):
     hasLeg = False
     hasRMB = False
+    if os.path.exists(self.currentLegFileName):
+      newTime=os.stat(self.currentLegFileName).st_mtime
+      if newTime != self.currentLegTimestamp:
+        AVNLog.info("current leg %s changed timestamp, reload",self.currentLegFileName)
+        currentLeg=self.readCurrentLeg()
+        if currentLeg:
+          self.setCurrentLeg(currentLeg,False)
+
+
     if self.currentLeg and self.currentLeg.isActive():
       hasLeg = True
       if self.currentLeg.getAnchorDistance() is not None:

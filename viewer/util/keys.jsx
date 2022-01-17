@@ -174,7 +174,8 @@ let keys={
             config: K,
             debugLevel: K,
             log: K,
-            remoteChannel: K
+            remoteChannel: K,
+            fetchHead: K
         },
         global:{
             smallDisplay: K,

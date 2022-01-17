@@ -29,12 +29,14 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.preference.PreferenceManager;
+import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -366,13 +368,24 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                 Toast.makeText(MainActivity.this, "Oh no! " + description, Toast.LENGTH_SHORT).show();
             }
 
+            @Nullable
             @Override
-            public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
+            public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    if (request.getMethod().equalsIgnoreCase("head")){
+                        WebResourceResponse rt=handleRequest(view,request.getUrl().toString(),request.getMethod());
+                        if (rt != null) return rt;
+                    }
+                }
+                return super.shouldInterceptRequest(view, request);
+            }
+
+            private WebResourceResponse handleRequest(WebView view, String url, String method){
                 RequestHandler handler= getRequestHandler();
                 WebResourceResponse rt=null;
                 if (handler != null) {
                     try {
-                        rt = handler.handleRequest(view,url);
+                        rt = handler.handleRequest(view,url,method);
                     }catch (Throwable t){
                         AvnLog.e("web request for "+url+" failed",t);
                         InputStream is=new ByteArrayInputStream(new byte[]{});
@@ -384,6 +397,12 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                         }
                     }
                 }
+                return rt;
+            }
+
+            @Override
+            public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
+                WebResourceResponse rt=handleRequest(view,url,"GET");
                 if (rt==null) return super.shouldInterceptRequest(view, url);
                 return rt;
             }

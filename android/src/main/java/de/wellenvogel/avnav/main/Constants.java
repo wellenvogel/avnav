@@ -1,5 +1,7 @@
 package de.wellenvogel.avnav.main;
 
+import android.os.Build;
+
 /**
  * Created by andreas on 24.10.15.
  */
@@ -67,6 +69,8 @@ public class Constants {
 
     //max size for files being transferred as string between js and android
     public static final long MAXFILESIZE=500000;
+
+    public static final boolean HAS_HEAD_SUPPORT=(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP);
 
     //js events
     public static final String JS_RELOAD="reloadData";

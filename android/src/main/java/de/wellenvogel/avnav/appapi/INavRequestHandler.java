@@ -3,7 +3,6 @@ package de.wellenvogel.avnav.appapi;
 import android.net.Uri;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.FileNotFoundException;
@@ -45,10 +44,11 @@ public interface INavRequestHandler {
      * handle a direct request if our prefix matches
      * @param uri
      * @param handler
+     * @param method
      * @return
      * @throws FileNotFoundException
      */
-    ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler) throws Exception;
+    ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler, String method) throws Exception;
 
     /**
      * get the prefix string we handle
