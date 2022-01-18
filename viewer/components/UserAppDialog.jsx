@@ -118,7 +118,7 @@ export default  class UserAppDialog extends React.Component{
                                 value={this.state.internal}
                                 onChange={(nv)=>{
                                     this.setState({internal:nv});
-                                    this.stateHelper.setState({url:undefined});
+                                    this.stateHelper.setState({url:undefined,newWindow:false});
                                     }
                                 }/>}
                             {!this.state.internal ?
@@ -178,7 +178,7 @@ export default  class UserAppDialog extends React.Component{
                             {this.stateHelper.getValue('icon') && <img className="appIcon" src={this.stateHelper.getValue('icon')}/>}
                          </InputReadOnly>
                     }
-                    {canEdit&&<Checkbox
+                    {canEdit && ! this.state.internal &&<Checkbox
                         dialogRow={true}
                         label={'newWindow'}
                         value={this.stateHelper.getValue('newWindow') === 'true'}
