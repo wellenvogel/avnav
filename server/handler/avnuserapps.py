@@ -302,10 +302,12 @@ class AVNUserAppHandler(AVNWorker):
         url=AVNUtil.getHttpRequestParam(requestparam,'url',True)
         icon=AVNUtil.getHttpRequestParam(requestparam,'icon',True)
         title=AVNUtil.getHttpRequestParam(requestparam,'title')
+        newWindow=AVNUtil.getHttpRequestParam(requestparam,'newWindow')
         param = {}
         param['icon'] = icon
         param['title'] = title
         param['url'] = url
+        param['newWindow']=newWindow
         param['keepUrl'] = url.startswith("http")
         doAdd=False
         if name is None:

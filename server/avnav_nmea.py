@@ -59,6 +59,8 @@ class NMEAParser(object):
   aisFieldTranslations={'msgtype':'type'}
   K_HDGM=Key('headingMag','magnetic heading','\N{DEGREE SIGN}')
   K_HDGT=Key('headingTrue','true heading','\N{DEGREE SIGN}')
+  K_VWTT=Key('waterTemp','water temparature','k')
+  K_VHWS=Key('waterSpeed','speed through water','m/s')
   #we will add the GPS base to all entries
   GPS_DATA=[
     Key('lat','gps latitude'),
@@ -79,7 +81,9 @@ class NMEAParser(object):
     Key('satUsed', 'number of Sats in use'),
     Key('transducers.*','transducer data from xdr'),
     K_HDGM,
-    K_HDGT
+    K_HDGT,
+    K_VWTT,
+    K_VHWS
   ]
 
   @classmethod
@@ -500,6 +504,15 @@ class NMEAParser(object):
           rt[self.K_HDGT.key] = float(darray[1] or '0')
         if(len(darray[3]) > 0):
           rt[self.K_HDGM.key] = float(darray[3] or '0')  # Heading magnetic
+        if len(darray[5]) > 0:
+          rt[self.K_VHWS.key]= float(darray[5] or '0')*self.NM/3600
+        self.addToNavData(rt,source=source,record=tag)
+        return True
+
+      if tag == 'MTW':
+        # $--MTW,x.x,C*hh<CR><LF>
+        if len(darray[1]) > 0:
+          rt[self.K_VWTT.key] = float(darray[1])+273.15
         self.addToNavData(rt,source=source,record=tag)
         return True
 

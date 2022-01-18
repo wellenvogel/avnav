@@ -14,6 +14,7 @@ import net.sf.marineapi.nmea.sentence.GSVSentence;
 import net.sf.marineapi.nmea.sentence.HDGSentence;
 import net.sf.marineapi.nmea.sentence.HDMSentence;
 import net.sf.marineapi.nmea.sentence.HDTSentence;
+import net.sf.marineapi.nmea.sentence.MTWSentence;
 import net.sf.marineapi.nmea.sentence.MWVSentence;
 import net.sf.marineapi.nmea.sentence.PositionSentence;
 import net.sf.marineapi.nmea.sentence.RMCSentence;
@@ -169,6 +170,10 @@ public class Decoder extends Worker {
         return tval;
     }
 
+    private static double knToMs(double v){
+        return v/3600.0*AvnUtil.NM;
+    }
+
 
         private String correctTalker(String nmea){
             try{
@@ -301,7 +306,7 @@ public class Decoder extends Worker {
                                         speed = speed / 3.6;
                                     }
                                     if (m.getSpeedUnit().equals(Units.KNOT)) {
-                                        speed = speed / 3600.0 * 1852.0;
+                                        speed = knToMs(speed);
                                     }
                                     e.data.put("windSpeed", speed);
                                     if (!m.isTrue()) e.priority=1; //prefer apparent if it is there
@@ -319,7 +324,7 @@ public class Decoder extends Worker {
                                     e.data.put("windReference","R");
                                     try{
                                         double speed=w.getSpeedKnots();
-                                        e.data.put("windSpeed",speed/3600.0*1852.0);
+                                        e.data.put("windSpeed",knToMs(speed));
                                     }catch (Throwable t){
                                         try{
                                             double speed=w.getSpeedKmh();
@@ -350,6 +355,15 @@ public class Decoder extends Worker {
                                     AuxiliaryEntry e = new AuxiliaryEntry();
                                     double depth = d.getDepth();
                                     e.data.put("depthBelowTransducer", depth);
+                                    addAuxiliaryData(s.getSentenceId(), e,posAge);
+                                    continue;
+                                }
+                                if (s instanceof MTWSentence) {
+                                    MTWSentence d = (MTWSentence) s;
+                                    AvnLog.d("%s: MTW sentence",getTypeName() );
+                                    AuxiliaryEntry e = new AuxiliaryEntry();
+                                    double waterTemp = d.getTemperature() + 273.15;
+                                    e.data.put("waterTemp", waterTemp);
                                     addAuxiliaryData(s.getSentenceId(), e,posAge);
                                     continue;
                                 }
@@ -397,6 +411,10 @@ public class Decoder extends Worker {
                                         e.data.put("headingTrue", sv.getHeading());
                                         hasData=true;
                                     }catch(Exception sv2){}
+                                    try {
+                                        e.data.put("waterSpeed", knToMs(sv.getSpeedKnots()));
+                                        hasData=true;
+                                    }catch(Exception sv3){}
                                     if (hasData) {
                                         addAuxiliaryData(s.getSentenceId(), e, posAge);
                                     }

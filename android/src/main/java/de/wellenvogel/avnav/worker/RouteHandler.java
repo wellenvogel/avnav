@@ -197,7 +197,7 @@ public class RouteHandler extends DirectoryRequestHandler  {
             Location last=points.get(0).toLocation();
             for (int i=1;i<points.size();i++){
                 Location next=points.get(i).toLocation();
-                rt+=next.distanceTo(last)/1852.0;
+                rt+=next.distanceTo(last)/AvnUtil.NM;
                 last=next;
             }
             return rt;

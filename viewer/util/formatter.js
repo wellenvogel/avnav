@@ -260,7 +260,7 @@ const formatTemperature=function(data,opt_unit){
     }
 }
 formatTemperature.parameters=[
-    {name:'unit',type:'SELECT',list:['celsius','kelvin'],default:'celsius'}
+    {name:'unit',type:'SELECT',list:['celsius','kelvin'],default:'kelvin'}
 ]
 
 export default {
