@@ -66,7 +66,7 @@ class ChartSourceBase {
          * @protected
          * @type {boolean}
          */
-        this.isReadyFlag = false
+        this.isReadyFlag = false;
         /**
          * @protected
          * @type {boolean}
@@ -151,6 +151,10 @@ class ChartSourceBase {
                 .then((r)=> {
                     this.prepareInternal()
                         .then((layers) => {
+                            layers.forEach((layer)=>{
+                                if (!layer.avnavOptions) layer.avnavOptions={};
+                                layer.avnavOptions.chartSource=this;
+                            });
                             this.layers = layers;
                             if (!this.chartEntry.enabled) {
                                 this.layers.forEach((layer) => layer.setVisible(false));
