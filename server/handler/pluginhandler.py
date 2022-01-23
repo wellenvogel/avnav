@@ -44,6 +44,16 @@ from charthandler import AVNChartHandler
 
 URL_PREFIX= "/plugins"
 
+class UserApp(object):
+  def __init__(self,url,icon,title):
+    self.url=url
+    self.title=title
+    self.icon=icon
+  def __eq__(self, other):
+    return self.__dict__ == other.__dict__
+
+
+
 class ApiImpl(AVNApi):
   def __init__(self,parent,store,queue,prefix,moduleFile):
     """
@@ -66,6 +76,7 @@ class ApiImpl(AVNApi):
     self.editables=None
     self.stopHandler=None
     self.storeKeys=[]
+    self.userApps=[]
 
   def stop(self):
     if self.stopHandler is None:
@@ -82,6 +93,7 @@ class ApiImpl(AVNApi):
       pass
     self.requestHandler=None
     try:
+      self.userApps=[]
       addonhandler = AVNWorker.findHandlerByName(AVNUserAppHandler.getConfigName())
       for id in range(0,self.addonIndex+1):
         addonhandler.unregisterAddOn("%s%i"%(self.prefix,id))
@@ -194,6 +206,11 @@ class ApiImpl(AVNApi):
     if not os.path.exists(iconFilePath):
       raise Exception("icon file %s not found"%iconFilePath)
     id = "%s%i"%(self.prefix,self.addonIndex)
+    userApp=UserApp(url,iconFile,title)
+    if userApp in self.userApps:
+      self.log("trying to re-register user app url=%s, ignore",url)
+      return
+    self.userApps.append(userApp)
     addonhandler.registerAddOn(id,url,"%s/%s/%s"%(URL_PREFIX,self.prefix,iconFile),
                                title=title)
     self.addonIndex+=1
