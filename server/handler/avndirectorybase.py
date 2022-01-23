@@ -371,7 +371,8 @@ class AVNDirectoryHandlerBase(AVNWorker):
     fs = os.stat(zipname)
     handler.send_header("Last-Modified", handler.date_time_string(fs.st_mtime))
     handler.end_headers()
-    handler.wfile.write(zip.read(entry))
+    if handler.command.lower() != 'head':
+      handler.wfile.write(zip.read(entry))
     return True
 
   def getPathFromUrl(self,path,handler=None,requestParam=None):
