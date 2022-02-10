@@ -8,7 +8,6 @@ import Formatter from '../util/formatter';
 import Visible from '../hoc/Visible.jsx';
 import ExternalWidget from './ExternalWidget.jsx';
 import keys,{KeyHelper} from '../util/keys.jsx';
-import Formatters from '../util/formatter';
 import Requests from '../util/requests.js';
 import base from '../base.js';
 import {GaugeRadial,GaugeLinear} from './CanvasGauges.jsx';
@@ -18,6 +17,8 @@ export const filterByEditables=(editableParameters,values)=>{
     let rt={};
     if (! editableParameters) return rt;
     editableParameters.forEach((param)=>{
+        if ( ! param.name in values) return;
+        if (! param.canEdit()) return;
         let v=param.getValue(values);
         param.setValue(rt,v);
     });
@@ -108,7 +109,7 @@ class FormatterParamWidgetParameter extends EditableParameter {
     }
     getValue(widget){
         let rt=widget[this.name];
-        if (! rt) return [];
+        if (! rt) return;
         if (typeof(rt) === 'string') return rt.split(",");
         return rt;
     }
@@ -128,7 +129,7 @@ class FormatterParamWidgetParameter extends EditableParameter {
         let formatter=widget.formatter;
         if (formatter){
             if (typeof(formatter) !== 'function'){
-                formatter = Formatters[formatter];
+                formatter = Formatter[formatter];
             }
             if (formatter && formatter.parameters){
                 parameterDescriptions=formatter.parameters;
