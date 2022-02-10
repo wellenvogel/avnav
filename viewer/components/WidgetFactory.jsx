@@ -18,6 +18,7 @@ export const filterByEditables=(editableParameters,values)=>{
     if (! editableParameters) return rt;
     editableParameters.forEach((param)=>{
         if ( ! param.name in values) return;
+        if (! param.canEdit()) return;
         let v=param.getValue(values);
         param.setValue(rt,v);
     });

@@ -28,12 +28,13 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import LayoutHandler from '../util/layouthandler.js';
 import OverlayDialog,{dialogHelper} from './OverlayDialog.jsx';
-import WidgetFactory, {filterByEditables} from '../components/WidgetFactory.jsx';
+import WidgetFactory from '../components/WidgetFactory.jsx';
 import assign from 'object-assign';
 import {Input,InputSelect} from './Inputs.jsx';
 import DB from './DialogButton.jsx';
 import {getList,ParamValueInput} from "./ParamValueInput";
 import cloneDeep from 'clone-deep';
+import ShallowCompare from "../util/shallowcompare";
 
 
 class EditWidgetDialog extends React.Component{
@@ -74,6 +75,35 @@ class EditWidgetDialog extends React.Component{
         }
     }
 
+    changedParameters(){
+        /**
+         * we need to compare
+         * the current values (state.widget) and the default values (from state.parameters)
+         * the rule is to include in the output anything that differs from the defaults
+         * and the name and weight in any case
+         */
+        let defaultValues={};
+        let editableNames={};
+        if (! this.state.parameters) return this.state.widget;
+        this.state.parameters.forEach((p)=>{
+            p.setDefault(defaultValues);
+            if (p.canEdit()) editableNames[p.name]=true;
+        });
+        let rt={};
+        let fixed=['name','weight'];
+        for (let k in this.state.widget){
+            let v=this.state.widget[k];
+            if (fixed.indexOf(k) >= 0){
+                rt[k]=v;
+            }
+            else{
+                if (! (k in editableNames)) continue;
+                if ( ShallowCompare(defaultValues[k],v)) continue;
+                rt[k]=v;
+            }
+        }
+        return rt;
+    }
     render () {
         let self=this;
         let hasCurrent=this.props.current.name !== undefined;
@@ -140,7 +170,7 @@ class EditWidgetDialog extends React.Component{
                     {this.props.updateCallback?
                         <DB name="ok" onClick={()=>{
                         this.props.closeCallback();
-                        let changes=filterByEditables(this.state.parameters,this.state.widget);
+                        let changes=this.changedParameters();
                         if (this.props.weight){
                             if (changes.weight !== undefined) changes.weight=parseFloat(changes.weight)
                         }
