@@ -279,8 +279,7 @@ class WpaPage extends React.Component{
 
         return (
             <Page
-                className={this.props.className}
-                style={this.props.style}
+                {...this.props}
                 id="wpapage"
                 title="Wifi Client connection"
                 mainContent={

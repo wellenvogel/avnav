@@ -167,8 +167,7 @@ class AisInfoPage extends React.Component{
 
         return (
             <Page
-                className={this.props.className}
-                style={this.props.style}
+                {...self.props}
                 id="aisinfopage"
                 title="AIS Info"
                 mainContent={

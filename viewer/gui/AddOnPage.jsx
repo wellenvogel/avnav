@@ -3,16 +3,11 @@
  */
 
 import Dynamic from '../hoc/Dynamic.jsx';
-import Visible from '../hoc/Visible.jsx';
-import Button from '../components/Button.jsx';
-import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import React from 'react';
-import PropertyHandler from '../util/propertyhandler.js';
 import history from '../util/history.js';
 import Page from '../components/Page.jsx';
-import Requests from '../util/requests.js';
 import InputMonitor from '../hoc/InputMonitor.jsx';
 import Mob from '../components/Mob.js';
 import Addons from '../components/Addons.js';
@@ -129,8 +124,7 @@ class AddOnPage extends React.Component{
                     </div>);
                 return (
                     <Page
-                        className={self.props.className}
-                        style={self.props.style}
+                        {...self.props}
                         id="addonpage"
                         title={showInWindow?'':currentAddOn.title}
                         mainContent={

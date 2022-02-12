@@ -575,8 +575,7 @@ class DownloadPage extends React.Component{
         let localDoneFunction=this.getLocalUploadFunction();
         return (
             <DynamicPage
-                className={self.props.className}
-                style={self.props.style}
+                {...self.props}
                 id="downloadpage"
                 mainContent={<React.Fragment>
                         <DynamicList

@@ -355,8 +355,7 @@ class MainPage extends React.Component {
         let self = this;
         return (
             <Page
-                  className={this.props.className}
-                  style={this.props.style}
+                {...self.props}
                   id="mainpage"
                   title="AvNav"
                   mainContent={

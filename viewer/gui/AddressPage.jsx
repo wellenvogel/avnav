@@ -107,8 +107,7 @@ class AddressPage extends React.Component{
 
         return (
             <Page
-                className={this.props.className}
-                style={this.props.style}
+                {...self.props}
                 id="addresspage"
                 title="Server Addresses"
                 mainContent={

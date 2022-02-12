@@ -717,10 +717,10 @@ class EditRoutePage extends React.Component{
             />
             :
             null;
+        let pageProperties=Helper.filteredAssign(MapPage.propertyTypes,self.props);
         return (
             <MapPage
-                className={self.props.className}
-                style={self.props.style}
+                {...pageProperties}
                 id={PAGENAME}
                 mapEventCallback={self.mapEvent}
                 onItemClick={this.widgetClick}

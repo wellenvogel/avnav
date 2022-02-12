@@ -76,8 +76,7 @@ class InfoPage extends React.Component{
 
         return (
             <Page
-                className={this.props.className}
-                style={this.props.style}
+                {...self.props}
                 id="infopage"
                 title="License and Privacy Info"
                 mainContent={

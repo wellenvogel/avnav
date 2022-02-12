@@ -587,10 +587,9 @@ class SettingsPage extends React.Component{
                         /> : null}
                 </div>);
         };
-        let pageOptions=Helper.filteredAssign(Page.pageProperties,self.props);
         return (
             <Page
-                {...pageOptions}
+                {...self.props}
                 id="settingspage"
                 mainContent={
                             <MainContent

@@ -12,6 +12,7 @@ import Page from '../components/Page.jsx';
 import Mob from '../components/Mob.js';
 import Addons from '../components/Addons.js';
 import UserAppDialog from '../components/UserAppDialog.jsx';
+import Helper from "../util/helper";
 
 
 const AddonItem=(props)=>{
@@ -100,8 +101,7 @@ class AddonConfigPage extends React.Component{
                 />;
         return (
             <Page
-                className={self.props.className}
-                style={self.props.style}
+                {...self.props}
                 id="addonconfigpage"
                 title="Configure UserApps"
                 mainContent={

@@ -6,11 +6,11 @@ import {hideToast} from '../components/Toast.jsx';
 import WidgetFactory from './WidgetFactory.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
-import NavData from '../nav/navdata.js';
 import KeyHandler from '../util/keyhandler.js';
 import AlarmHandler from '../nav/alarmhandler.js';
 import Dynamic from '../hoc/Dynamic.jsx';
 import GuiHelpers from "../util/GuiHelpers";
+import assign from 'object-assign';
 
 const alarmClick =function(){
     let alarms=globalStore.getData(keys.nav.alarms.all,"");
@@ -110,9 +110,16 @@ class Page extends React.Component {
 
 }
 
-Page.propTypes={
-    id: PropTypes.string.isRequired,
+Page.pageProperties={
     className: PropTypes.string,
+    style: PropTypes.object,
+    options: PropTypes.object,
+    location: PropTypes.string.isRequired,
+    history: PropTypes.object.isRequired,
+    small: PropTypes.bool.isRequired
+}
+Page.propTypes=assign({},Page.pageProperties,{
+    id: PropTypes.string.isRequired,
     title: PropTypes.string,
     mainContent: PropTypes.any,
     floatContent: PropTypes.any,
@@ -122,14 +129,8 @@ Page.propTypes={
     isEditing: PropTypes.bool,
     buttonWidthChanged: PropTypes.func,
     autoHideButtons: PropTypes.any // number of ms or undefined
-};
+});
 
-Page.pageProperties={
-    style: PropTypes.object,
-    options: PropTypes.object,
-    location: PropTypes.string.isRequired,
-    history: PropTypes.object.isRequired,
-    small: PropTypes.bool.isRequired
-}
+
 
 export default Page;

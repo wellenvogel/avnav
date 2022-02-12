@@ -305,8 +305,7 @@ class GpsPage extends React.Component{
         };
 
         return <Page
-                className={self.props.className}
-                style={self.props.style}
+                {...self.props}
                 id="gpspage"
                 mainContent={
                             <MainContent/>

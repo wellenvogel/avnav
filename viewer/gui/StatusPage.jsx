@@ -22,6 +22,7 @@ import LogDialog from "../components/LogDialog";
 import assign from "object-assign";
 import ShallowCompare from "../util/shallowcompare";
 import PropTypes from 'prop-types';
+import Helper from "../util/helper";
 
 class Notifier{
     constructor() {
@@ -409,10 +410,11 @@ class StatusPage extends React.Component{
 
             let className=props.className;
             if (this.state.serverError) className+=" serverError";
+            let pageProperties=Helper.filteredAssign(Page.pageProperties,props);
             return(
             <Page
+                {...pageProperties}
                 className={className}
-                style={props.style}
                 id="statuspage"
                 title={this.state.serverError?"Server Connection lost":"Server Status"}
                 mainContent={

@@ -3,13 +3,10 @@
  */
 
 import Dynamic from '../hoc/Dynamic.jsx';
-import Visible from '../hoc/Visible.jsx';
-import Button from '../components/Button.jsx';
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys,{KeyHelper} from '../util/keys.jsx';
 import React from 'react';
-import PropertyHandler from '../util/propertyhandler.js';
 import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import Toast from '../components/Toast.jsx';
@@ -22,7 +19,6 @@ import Formatter from '../util/formatter.js';
 import OverlayDialog from '../components/OverlayDialog.jsx';
 import NavHandler from '../nav/navdata.js';
 import assign from 'object-assign';
-import RouteObjects from '../nav/routeobjects.js';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
 import navobjects from '../nav/navobjects.js';
 import DB from '../components/DialogButton.jsx';
@@ -334,7 +330,7 @@ class RoutePage extends React.Component{
         });
         return (
             <DynamicPage
-                style={this.props.style}
+                {...this.props}
                 id={PAGENAME}
                 mainContent={
                             <MainContent

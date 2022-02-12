@@ -554,10 +554,10 @@ class NavPage extends React.Component{
         if (globalStore.getData(keys.properties.autoHideNavPage)){
             autohide=globalStore.getData(keys.properties.hideButtonTime,30)*1000;
         }
+        let pageProperties=Helper.filteredAssign(MapPage.propertyTypes,self.props);
         return (
             <MapPage
-                className={self.props.className}
-                style={self.props.style}
+                {...pageProperties}
                 id={PAGENAME}
                 mapEventCallback={self.mapEvent}
                 onItemClick={self.widgetClick}

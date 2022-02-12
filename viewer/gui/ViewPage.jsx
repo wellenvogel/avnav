@@ -238,8 +238,7 @@ class ViewPageBase extends React.Component{
 
         return (
             <Page
-                className={this.props.className}
-                style={this.props.style}
+                {...this.props}
                 id="viewpage"
                 title={(this.state.readOnly?"Showing":"Editing")+": "+this.name}
                 mainContent={
