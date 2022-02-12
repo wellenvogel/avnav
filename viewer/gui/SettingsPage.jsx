@@ -66,7 +66,7 @@ sectionConditions.Remote=()=>globalStore.getData(keys.gui.capabilities.remoteCha
 
 
 const SectionItem=(props)=>{
-    let className=props.className?props.className+" listEntry":"listEntry";
+    let className=(props.className||"")+" listEntry";
     if (props.activeItem) className+=" activeEntry";
     return(
         <div className={className} onClick={props.onClick}>{props.name}</div>
@@ -76,7 +76,7 @@ const SectionItem=(props)=>{
 const CheckBoxSettingsItem=(props)=>{
     return (
         <Checkbox
-            className={props.classsName+ " listEntry"}
+            className={props.className}
             onChange={props.onClick}
             label={props.label}
             value={props.value}/>
@@ -141,7 +141,7 @@ const rangeItemDialog=(item)=>{
     OverlayDialog.dialog(Dialog);
 };
 const RangeSettingsItem=(properties)=> {
-    return <div className={properties.className+ " listEntry"}
+    return <div className={properties.className}
                 onClick={function(ev){
                             rangeItemDialog(properties);
                         }}>
@@ -161,7 +161,7 @@ const ListSettingsItem=(properties)=> {
             items.push( {label:nv[0],value:nv[0]});
         }
     }
-    return <div className={properties.className+ " listEntry"}>
+    return <div className={properties.className}>
             <div className="label">{properties.label}</div>
             <Radio
                 onChange={function(newVal){
@@ -193,7 +193,7 @@ const SelectSettingsItem=(properties)=> {
     }
     return(
         <InputSelect
-            className={properties.className+ " listEntry"}
+            className={properties.className}
             onChange={function(newVal){
                 properties.onClick(newVal);
             }}
@@ -218,7 +218,7 @@ const ColorSettingsItem=(properties)=>{
     };
 
     return <ColorSelector
-               className={properties.className+ " listEntry"}
+               className={properties.className}
                onChange={properties.onClick}
                label={properties.label}
                default={properties.defaultv}
@@ -247,7 +247,7 @@ const createSettingsItem=(item)=>{
         return SelectSettingsItem;
     }
     return (props)=>{
-        return (<div className="listEntry">
+        return (<div className={props.className}>
             <div className="label">{props.label}</div>
             <div className="value">{props.value}</div>
         </div>)
@@ -263,7 +263,7 @@ const LayoutItem=(props)=>
         props=assign({},props,
             {value:LayoutHandler.name});
         return <InputReadOnly
-            className={props.className+ " listEntry"}
+            className={props.className}
             label={props.label}
             value={props.value}
             onClick={isEditing}
@@ -283,7 +283,7 @@ const LayoutItem=(props)=>
             })
     };
     return <InputSelect
-            className={props.className+ " listEntry"}
+            className={props.className}
             onChange={changeFunction}
             itemList={(currentLayout)=>{
                 return new Promise((resolve,reject)=>{
@@ -415,6 +415,13 @@ class SettingsPage extends React.Component{
             section:'Layer'
         };
         this.values=stateHelper(this,globalStore.getMultiple(this.flattenedKeys));
+        this.defaultValues={};
+        this.flattenedKeys.forEach((key)=>{
+            let description=KeyHelper.getKeyDescriptions()[key];
+            if (description){
+                this.defaultValues[key] = description.defaultv;
+            }
+        })
 
     }
     /**
@@ -489,15 +496,8 @@ class SettingsPage extends React.Component{
     };
 
     resetData(){
-        let values=this.values.getValues(true);
-        this.flattenedKeys.forEach((key)=>{
-            let description=KeyHelper.getKeyDescriptions()[key];
-            if (description){
-                if (values[key] !== description.defaultv) {
-                    values[key] = description.defaultv;
-                }
-            }
-        });
+        let values=assign({},this.defaultValues);
+
         this.values.setState(values,true);
     }
     hasChanges(){
@@ -555,20 +555,48 @@ class SettingsPage extends React.Component{
                 //TODO: send up
             }
             let settingsItems = [];
-            if (settingsSections[currentSection]) {
-                for (let s in settingsSections[currentSection]) {
-                    let key = settingsSections[currentSection][s];
+            let sectionChanges={};
+            for (let section in settingsSections) {
+                for (let s in settingsSections[section]) {
+                    let key = settingsSections[section][s];
                     if (settingsConditions[key] !== undefined){
                         if (! settingsConditions[key](self.values.getValues())) continue;
                     }
                     let description = KeyHelper.getKeyDescriptions()[key];
-                    let item = assign({}, description, {
-                        name: key,
-                        value: self.values.getValue(key)
-                    });
-                    settingsItems.push(item);
+                    let value=self.values.getValue(key);
+                    let className="listEntry";
+                    if (value === this.defaultValues[key]){
+                        className+=" defaultValue";
+                    }
+                    else{
+                        if (! sectionChanges[section]) sectionChanges[section]={};
+                        sectionChanges[section].isDefault=false;
+                    }
+                    if (this.values.isItemChanged(key)) {
+                        className+=" changed";
+                        if (! sectionChanges[section]) sectionChanges[section]={};
+                        sectionChanges[section].isChanged=true;
+                    }
+                    if (section === currentSection) {
+                        let item = assign({}, description, {
+                            name: key,
+                            value: value,
+                            className: className
+                        });
+                        settingsItems.push(item);
+                    }
                 }
             }
+            sectionItems.forEach((sitem) => {
+                let className = "listEntry";
+                if ((sectionChanges[sitem.name] || {}).isChanged) {
+                    className += " changed";
+                }
+                if ((sectionChanges[sitem.name] || {}).isDefault !== false) {
+                    className += " defaultValue";
+                }
+                sitem.className = className;
+            });
             return (
                 <div className="leftSection">
                     { leftVisible ? <ItemList

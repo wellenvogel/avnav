@@ -318,6 +318,9 @@ export const stateHelper=(thisref,initialValues,opt_namePrefix)=>{
         isChanged(){
             return thisref.state[changedName]||false;
         },
+        isItemChanged(name){
+            return ! shallowcompare(rt.getValue(name),initialValues[name]);
+        },
         reset(){
             let newState={};
             newState[valueName]=assign({},initialValues);
