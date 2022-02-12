@@ -16,7 +16,7 @@ import assign from 'object-assign';
 import NavHandler from '../nav/navdata.js';
 import routeobjects from '../nav/routeobjects.js';
 import Formatter from '../util/formatter.js';
-import OverlayDialog, {stateHelper} from '../components/OverlayDialog.jsx';
+import OverlayDialog from '../components/OverlayDialog.jsx';
 import Helper from '../util/helper.js';
 import LayoutHandler from '../util/layouthandler.js';
 import Mob from '../components/Mob.js';

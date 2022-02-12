@@ -29,7 +29,7 @@ import DB from "./DialogButton";
 import Requests from "../util/requests";
 import Toast from "./Toast";
 import EditOverlaysDialog, {KNOWN_OVERLAY_EXTENSIONS,DEFAULT_OVERLAY_CHARTENTRY} from "./EditOverlaysDialog";
-import OverlayDialog, {dialogHelper, InfoItem, stateHelper} from "./OverlayDialog";
+import OverlayDialog, {dialogHelper, InfoItem} from "./OverlayDialog";
 import globalStore from "../util/globalstore";
 import ViewPage from "../gui/ViewPage";
 import assign from 'object-assign';
@@ -46,6 +46,7 @@ import {getRouteInfo,INFO_ROWS as ROUTE_INFO_ROWS} from "./RouteInfoDialog";
 import RouteEdit from "../nav/routeeditor";
 import mapholder from "../map/mapholder";
 import LogDialog from "./LogDialog";
+import {stateHelper} from "../util/GuiHelpers";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 /**

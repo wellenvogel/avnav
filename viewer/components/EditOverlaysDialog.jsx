@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import OverlayDialog,{dialogHelper,stateHelper} from './OverlayDialog.jsx';
+import OverlayDialog,{dialogHelper} from './OverlayDialog.jsx';
 import assign from 'object-assign';
 import {Input,Checkbox,InputReadOnly,InputSelect,ColorSelector,Radio} from './Inputs.jsx';
 import DB from './DialogButton.jsx';
@@ -9,7 +9,7 @@ import ItemList from './ItemList.jsx';
 import Requests from '../util/requests.js';
 import Toast from './Toast.jsx';
 import Helper from '../util/helper.js';
-import GuiHelpers from '../util/GuiHelpers.js';
+import GuiHelpers, {stateHelper} from '../util/GuiHelpers.js';
 import {readFeatureInfoFromGpx} from '../map/gpxchartsource';
 import {readFeatureInfoFromKml} from '../map/kmlchartsource';
 import {getOverlayConfigName} from '../map/chartsourcebase'

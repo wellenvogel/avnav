@@ -27,7 +27,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import DB from "./DialogButton";
-import OverlayDialog, {dialogHelper, stateHelper,InfoItem} from "./OverlayDialog";
+import OverlayDialog, {InfoItem} from "./OverlayDialog";
 import Requests from '../util/requests';
 import Toast from "./Toast";
 import Helper from "../util/helper";
@@ -44,6 +44,7 @@ import routeobjects from "../nav/routeobjects";
 import RouteEdit from "../nav/routeeditor";
 import history from "../util/history";
 import mapholder from "../map/mapholder";
+import {stateHelper} from "../util/GuiHelpers";
 
 const RouteHandler=navdata.getRoutingHandler();
 

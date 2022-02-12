@@ -119,7 +119,7 @@ Helper.filteredAssign=function(){
         let o=args[k];
         if (! o) continue;
         for (let ok in filter){
-            if (o[ok] !== undefined) rt[ok]=o[ok];
+            if (ok in o ) rt[ok]=o[ok];
         }
     }
     return rt;

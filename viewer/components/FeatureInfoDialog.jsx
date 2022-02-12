@@ -29,7 +29,7 @@ import PropTypes from 'prop-types';
 import Formatter from '../util/formatter';
 import DB from './DialogButton';
 import history from "../util/history";
-import OverlayDialog, {stateHelper,InfoItem} from "./OverlayDialog";
+import OverlayDialog, {InfoItem} from "./OverlayDialog";
 import NavHandler from "../nav/navdata";
 import navobjects from "../nav/navobjects";
 import globalstore from "../util/globalstore";
@@ -39,6 +39,7 @@ import {getTrackInfo,INFO_ROWS as TRACK_INFO_ROWS} from "./TrackInfoDialog";
 import {getRouteInfo,INFO_ROWS as ROUTE_INFO_ROWS} from "./RouteInfoDialog";
 import Toast from "./Toast";
 import assign from 'object-assign';
+import {stateHelper} from "../util/GuiHelpers";
 NavHandler.getRoutingHandler();
 
 

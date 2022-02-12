@@ -114,9 +114,18 @@ class Router extends Component {
         let style={};
         if (this.props.nightMode) style['opacity']=globalStore.getData(keys.properties.nightFade)/100;
         let dimStyle={opacity: 0.5};
+        let small = (this.props.dimensions||{}).width
+            < globalStore.getData(keys.properties.smallBreak);
         return <div className={className}>
             {this.props.dim ? <div className="dimm" style={dimStyle} onClick={Dimmer.trigger}></div>:null}
-                <Page style={style} options={this.props.options} location={this.props.location}/>
+                <Page
+                    style={style}
+                    options={this.props.options}
+                    location={this.props.location}
+                    history={history}
+                    small={small}
+                    isEditing={this.props.isEditing}
+                />
             </div>
     }
 }
@@ -305,7 +314,8 @@ class App extends React.Component {
                 options: keys.gui.global.pageOptions,
                 sequence: keys.gui.global.propertySequence,
                 dimensions: keys.gui.global.windowDimensions,
-                dim: keys.gui.global.dimActive
+                dim: keys.gui.global.dimActive,
+                isEditing:keys.gui.global.layoutEditing
                 },keys.gui.capabilities)
             }
                 nightMode={this.props.nightMode}

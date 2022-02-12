@@ -124,4 +124,12 @@ Page.propTypes={
     autoHideButtons: PropTypes.any // number of ms or undefined
 };
 
-export default Dynamic(Page,{storeKeys:{isEditing:keys.gui.global.layoutEditing}});
+Page.pageProperties={
+    style: PropTypes.object,
+    options: PropTypes.object,
+    location: PropTypes.string.isRequired,
+    history: PropTypes.object.isRequired,
+    small: PropTypes.bool.isRequired
+}
+
+export default Page;
