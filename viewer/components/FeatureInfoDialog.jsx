@@ -28,7 +28,6 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Formatter from '../util/formatter';
 import DB from './DialogButton';
-import history from "../util/history";
 import OverlayDialog, {InfoItem} from "./OverlayDialog";
 import NavHandler from "../nav/navdata";
 import navobjects from "../nav/navobjects";
@@ -115,10 +114,10 @@ class FeatureInfoDialog extends React.Component{
         this.props.closeCallback();
         let url=this.props.link;
         if (this.props.htmlInfo){
-            history.push('viewpage',{html:this.props.htmlInfo,name:this.props.name||'featureInfo'});
+            this.props.history.push('viewpage',{html:this.props.htmlInfo,name:this.props.name||'featureInfo'});
             return;
         }
-        history.push('viewpage',{url:url,name:this.props.name,useIframe:true});
+        this.props.history.push('viewpage',{url:url,name:this.props.name,useIframe:true});
     }
     hideAction(){
         if (! this.props.overlaySource) return;
@@ -196,6 +195,7 @@ class FeatureInfoDialog extends React.Component{
 }
 
 FeatureInfoDialog.propTypes={
+    history: PropTypes.object.isRequired,
     info: PropTypes.string,
     link: PropTypes.string,
     coordinates: PropTypes.array,
@@ -207,13 +207,14 @@ FeatureInfoDialog.propTypes={
     additionalInfoRows: PropTypes.array //array of name,value,formatter
 }
 
-FeatureInfoDialog.showDialog=(info,opt_showDialogFunction)=>{
+FeatureInfoDialog.showDialog=(history,info,opt_showDialogFunction)=>{
     if (!opt_showDialogFunction) {
         opt_showDialogFunction = OverlayDialog.dialog;
     }
     return opt_showDialogFunction((props)=>{
             return <FeatureInfoDialog
                 {...info}
+                history={history}
                 {...props}/>
         });
 }

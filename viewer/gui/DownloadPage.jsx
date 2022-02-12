@@ -8,7 +8,6 @@ import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import React from 'react';
-import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import Toast from '../components/Toast.jsx';
 import Requests from '../util/requests.js';
@@ -442,10 +441,10 @@ class DownloadPage extends React.Component{
                     this.setState({uploadSequence:this.state.uploadSequence+1});
                 }
             },
-            Mob.mobDefinition,
+            Mob.mobDefinition(this.props.history),
             {
                 name: 'Cancel',
-                onClick: ()=>{history.pop()}
+                onClick: ()=>{this.props.history.pop()}
             }
         ];
         return rt;
@@ -600,7 +599,7 @@ class DownloadPage extends React.Component{
                                     EditOverlaysDialog.createDialog(item,()=>fillData());
                                     return;
                                 }
-                                showFileDialog(item,
+                                showFileDialog(this.props.history,item,
                                     (action,item)=>{
                                         if (action === 'userapp') readAddOns()
                                         else fillData();

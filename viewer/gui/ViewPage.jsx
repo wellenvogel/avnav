@@ -2,15 +2,10 @@
  * Created by andreas on 02.05.14.
  */
 
-import Dynamic from '../hoc/Dynamic.jsx';
-import Visible from '../hoc/Visible.jsx';
-import Button from '../components/Button.jsx';
-import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import helper from '../util/helper.js';
 import React from 'react';
-import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import Requests from '../util/requests.js';
 import Mob from '../components/Mob.js';
@@ -47,7 +42,7 @@ class ViewPageBase extends React.Component{
             readOnly:false
         };
         if (! this.props.options ) {
-            history.pop();
+            this.props.history.pop();
         }
         this.type=this.props.options.type;
         this.name=this.props.options.name;
@@ -68,7 +63,7 @@ class ViewPageBase extends React.Component{
     buttons() {
         let self=this;
         return [
-            Mob.mobDefinition,
+            Mob.mobDefinition(this.props.history),
             {
                 name: 'ViewPageView',
                 visible: this.canChangeMode(),
@@ -138,11 +133,11 @@ class ViewPageBase extends React.Component{
                 onClick: ()=> {
                     if (this.state.changed){
                         OverlayDialog.confirm("Discard Changes?")
-                            .then((data)=>{history.pop();})
+                            .then((data)=>{this.props.history.pop();})
                             .catch((e)=>{});
                         return;
                     }
-                    history.pop()
+                    this.props.history.pop()
                 }
             }
         ];

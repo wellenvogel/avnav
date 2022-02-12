@@ -6,7 +6,6 @@ import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys,{KeyHelper,PropertyType} from '../util/keys.jsx';
 import React from 'react';
-import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import Toast,{hideToast} from '../components/Toast.jsx';
 import assign from 'object-assign';
@@ -19,7 +18,6 @@ import {ColorSelector, Checkbox, Radio, InputSelect, InputReadOnly} from '../com
 import DB from '../components/DialogButton.jsx';
 import DimHandler from '../util/dimhandler';
 import FullScreen from '../components/Fullscreen';
-import Helper from "../util/helper";
 import {stateHelper} from "../util/GuiHelpers";
 
 const settingsSections={
@@ -323,7 +321,7 @@ class SettingsPage extends React.Component{
                         return;
                     }
                     if (!self.hasChanges()){
-                        history.pop();
+                        this.props.history.pop();
                         return;
                     }
                     let values=self.values.getValues(true);
@@ -336,7 +334,7 @@ class SettingsPage extends React.Component{
                         LayoutHandler.activateLayout();
                     }
                     globalStore.storeMultiple(values);
-                    history.pop();
+                    this.props.history.pop();
                 }
             },
             {
@@ -353,7 +351,7 @@ class SettingsPage extends React.Component{
                 onClick:()=>{
                     self.confirmAbortOrDo().then(()=> {
                         self.resetChanges();
-                        history.pop();
+                        this.props.history.pop();
                         avnav.android.showSettings();
                     });
                 }
@@ -380,14 +378,14 @@ class SettingsPage extends React.Component{
                 onClick:()=>{
                     self.confirmAbortOrDo().then(()=>{
                         self.resetChanges();
-                        history.push("addonconfigpage");
+                        this.props.history.push("addonconfigpage");
                     });
                 },
                 storeKeys:{
                     visible:keys.properties.connectedMode
                 }
             },
-            Mob.mobDefinition,
+            Mob.mobDefinition(this.props.history),
             {
                 name: 'Cancel',
                 onClick: ()=>{
@@ -396,7 +394,7 @@ class SettingsPage extends React.Component{
                         return;
                     }
                     self.confirmAbortOrDo().then(()=> {
-                    history.pop();
+                        this.props.history.pop();
                 });
                 }
             }
@@ -467,7 +465,7 @@ class SettingsPage extends React.Component{
                             .then((newName)=> {
                                 let layoutName = LayoutHandler.fileNameToServerName(newName);
                                 LayoutHandler.startEditing(layoutName);
-                                history.pop();
+                                this.props.history.pop();
                             })
                             .catch(()=> {
                             })

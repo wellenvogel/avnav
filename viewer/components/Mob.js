@@ -4,14 +4,13 @@ import navobjects from '../nav/navobjects.js';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
-import history from '../util/history.js';
 import LayoutHandler from '../util/layouthandler.js';
 
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE,true);
 
 
-const controlMob=(start)=>{
+const controlMob=(start,history)=>{
     let Router=NavData.getRoutingHandler();
     let isActive=StateHelper.targetName(activeRoute.getRawData()) === navobjects.WayPoint.MOB;
     if (start){
@@ -43,12 +42,12 @@ const controlMob=(start)=>{
     }
 };
 
-const toggleMob=()=>{
+const toggleMob=(history)=>{
     let isActive=StateHelper.targetName(activeRoute.getRawData()) === navobjects.WayPoint.MOB;
-    controlMob(!isActive);
+    controlMob(!isActive, history);
 };
 
-const mobDefinition={
+const mobDefinition=(history)=>{return {
     name: "MOB",
     storeKeys: activeRoute.getStoreKeys({visible:keys.properties.connectedMode, hasGps: keys.nav.gps.valid}),
     updateFunction:(state)=>{
@@ -59,10 +58,10 @@ const mobDefinition={
         }
     },
     onClick:()=>{
-        toggleMob();
+        toggleMob(history);
     },
     editDisable:true
-};
+}};
 
 
 export default {

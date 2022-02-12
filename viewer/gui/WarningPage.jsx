@@ -5,7 +5,6 @@
 
 import Button from '../components/Button.jsx';
 import React from 'react';
-import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import Requests from '../util/requests.js';
 import keys from '../util/keys.jsx';
@@ -37,7 +36,7 @@ class WarningPage extends React.Component{
                             if (window.localStorage){
                                 window.localStorage.setItem(globalStore.getData(keys.properties.licenseAcceptedName),"true");
                             }
-                            history.replace('mainpage');
+                            this.props.history.replace('mainpage');
                         }
                     }
                         />

@@ -33,7 +33,6 @@ import OverlayDialog, {dialogHelper, InfoItem} from "./OverlayDialog";
 import globalStore from "../util/globalstore";
 import ViewPage from "../gui/ViewPage";
 import assign from 'object-assign';
-import history from "../util/history";
 import LayoutHandler from "../util/layouthandler";
 import base from "../base";
 import NavHandler from "../nav/navdata";
@@ -105,6 +104,11 @@ const getDownloadUrl=(item)=>{
     return url;
 }
 
+const showConvertFunctions = {
+    track: (history,item) => {
+        TrackConvertDialog.showDialog(history,item.name);
+    }
+}
 
 export const allowedItemActions=(props)=>{
     if (! props) return {};
@@ -130,7 +134,7 @@ export const allowedItemActions=(props)=>{
             ) &&
         globalStore.getData(keys.gui.capabilities.uploadOverlays));
     let showScheme=(props.type === 'chart' && props.url && props.url.match(/.*mbtiles.*/));
-    let showConvert=(props.type === 'track' && ext === 'gpx');
+    let showConvert= (showConvertFunctions[props.type] && ext === 'gpx');
     return {
         showEdit:showEdit,
         showView:showView,
@@ -150,11 +154,6 @@ const getImportLogUrl=(name)=>{
         "?request=api&type=import&command=getlog&name="+encodeURIComponent(name);
 }
 
-const showConvertFunctions = {
-    track: (item) => {
-        TrackConvertDialog.showDialog(item.name);
-    }
-}
 
 class AddRemoveOverlayDialog extends React.Component{
     constructor(props) {
@@ -434,11 +433,8 @@ export default  class FileDialog extends React.Component{
                         {this.state.allowed.showConvert &&
                             <DB name="toroute"
                                 onClick={()=>{
-                                    let convertFunction=showConvertFunctions[this.props.current.type];
-                                    if (convertFunction){
-                                        this.props.closeCallback()
-                                        convertFunction(this.props.current);
-                                    }
+                                    this.props.closeCallback()
+                                    this.props.okFunction('convert',this.props.current);
                                 }}
                                 >Convert</DB>
                         }
@@ -569,7 +565,7 @@ export const deleteItem=(info,opt_resultCallback)=> {
     });
 };
 
-export const showFileDialog=(item,opt_doneCallback,opt_checkExists)=>{
+export const showFileDialog=(history,item,opt_doneCallback,opt_checkExists)=>{
     let actionFunction=(action,newItem)=>{
         let doneAction=()=>{
             if (opt_doneCallback){
@@ -653,6 +649,13 @@ export const showFileDialog=(item,opt_doneCallback,opt_checkExists)=>{
                 });
                 return;
             }
+        }
+        if ( action === 'convert'){
+            let convertFunction=showConvertFunctions[newItem];
+            if (convertFunction){
+                convertFunction(history,newItem);
+            }
+            return;
         }
     };
     OverlayDialog.dialog((props)=>{

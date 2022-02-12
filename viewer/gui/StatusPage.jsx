@@ -8,7 +8,6 @@ import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import React from 'react';
-import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import Toast from '../components/Toast.jsx';
 import Requests from '../util/requests.js';
@@ -326,12 +325,12 @@ class StatusPage extends React.Component{
                 {
                     name:'StatusWpa',
                     visible: this.state.wpa && props.connected,
-                    onClick:()=>{history.push('wpapage');}
+                    onClick:()=>{this.props.history.push('wpapage');}
                 },
                 {
                     name:'StatusAddresses',
                     visible:this.state.addresses,
-                    onClick:()=>{history.push("addresspage");}
+                    onClick:()=>{this.props.history.push("addresspage");}
                 },
                 {
                     name:'StatusAndroid',
@@ -347,7 +346,7 @@ class StatusPage extends React.Component{
                 {
                     name: 'MainInfo',
                     onClick: ()=> {
-                        history.push('infopage')
+                        this.props.history.push('infopage')
                     },
                     overflow:true
                 },
@@ -401,10 +400,10 @@ class StatusPage extends React.Component{
                         EditHandlerDialog.createAddDialog(()=>this.reloadNotifier.trigger());
                     }
                 },
-                Mob.mobDefinition,
+                Mob.mobDefinition(this.props.history),
                 {
                     name: 'Cancel',
-                    onClick: ()=>{history.pop()}
+                    onClick: ()=>{this.props.history.pop()}
                 }
             ];
 

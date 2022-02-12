@@ -4,15 +4,11 @@
 
 import Button from '../components/Button.jsx';
 import ItemList from '../components/ItemList.jsx';
-import globalStore from '../util/globalstore.jsx';
-import keys from '../util/keys.jsx';
 import React from 'react';
-import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import Mob from '../components/Mob.js';
 import Addons from '../components/Addons.js';
 import UserAppDialog from '../components/UserAppDialog.jsx';
-import Helper from "../util/helper";
 
 
 const AddonItem=(props)=>{
@@ -35,7 +31,7 @@ const AddonItem=(props)=>{
                                       onClick={(ev)=>{
                                         ev.preventDefault();
                                         ev.stopPropagation();
-                                        history.push("addonpage",{addonName:props.name})
+                                        props.history.push("addonpage",{addonName:props.name})
                                       }
                 }/>}
         </div>
@@ -47,7 +43,7 @@ class AddonConfigPage extends React.Component{
         super(props);
         let self=this;
         this.buttons=[
-            Mob.mobDefinition,
+            Mob.mobDefinition(this.props.history),
             {
                 name: 'AddonConfigPlus',
                 onClick: ()=> {
@@ -60,13 +56,13 @@ class AddonConfigPage extends React.Component{
             {
                 name: 'AddonConfigAddOns',
                 onClick: ()=> {
-                    history.push('addonpage')
+                    self.props.history.push('addonpage')
                 }
 
             },
             {
                 name: 'Cancel',
-                onClick: ()=>{history.pop()}
+                onClick: ()=>{self.props.history.pop()}
             }
         ];
         this.state={
@@ -92,7 +88,12 @@ class AddonConfigPage extends React.Component{
                 className="addonItems"
                 scrollable={true}
                 itemList={props.items}
-                itemClass={AddonItem}
+                itemClass={(iprops)=>{
+                    return <AddonItem
+                        {...iprops}
+                        history={self.props.history}
+                        />
+                }}
                 onItemClick={(item)=>{
                     UserAppDialog.showUserAppDialog(item,{name:item.name},true)
                         .then(()=>self.readAddons())

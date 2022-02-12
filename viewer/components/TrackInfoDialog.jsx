@@ -42,7 +42,6 @@ import SimpleRouteFilter from "../nav/simpleroutefilter";
 import navdata from "../nav/navdata";
 import routeobjects from "../nav/routeobjects";
 import RouteEdit from "../nav/routeeditor";
-import history from "../util/history";
 import mapholder from "../map/mapholder";
 import {stateHelper} from "../util/GuiHelpers";
 
@@ -248,7 +247,7 @@ const AskEditRoute=(props)=>{
                     props.closeCallback();
                     let editor=new RouteEdit(RouteEdit.MODES.EDIT);
                     editor.setNewRoute(props.route,0);
-                    history.push('editroutepage',{center:true});
+                    this.props.history.push('editroutepage',{center:true});
                 }}
             >Edit</DB>
         </div>
@@ -401,11 +400,12 @@ export class TrackConvertDialog extends React.Component{
 }
 
 TrackConvertDialog.propTypes={
+    history: PropTypes.object.isRequired,
     points: PropTypes.array.isRequired,
     name: PropTypes.string.isRequired
 }
 
-TrackConvertDialog.showDialog=(name,opt_showDialogFunction)=>{
+TrackConvertDialog.showDialog=(history,name,opt_showDialogFunction)=>{
     if (!opt_showDialogFunction){
         opt_showDialogFunction=OverlayDialog.dialog;
     }
@@ -414,6 +414,7 @@ TrackConvertDialog.showDialog=(name,opt_showDialogFunction)=>{
             opt_showDialogFunction((props) => {
                 return <TrackConvertDialog
                     {...props}
+                    history={history}
                     points={info.points} name={name}/>;
             });
         })

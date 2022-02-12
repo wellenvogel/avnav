@@ -7,7 +7,6 @@ import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys,{KeyHelper} from '../util/keys.jsx';
 import React from 'react';
-import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import Toast from '../components/Toast.jsx';
 import MapHolder from '../map/mapholder.js';
@@ -228,7 +227,7 @@ class RoutePage extends React.Component{
             {
                 name:'RoutePageDownload',
                 onClick:()=>{
-                    history.push("downloadpage",{
+                    this.props.history.push("downloadpage",{
                         downloadtype:'route',
                         allowChange: false,
                         selectItemCallback: (item)=>{
@@ -236,7 +235,7 @@ class RoutePage extends React.Component{
                                 (route)=>{
                                     editor.setRouteAndIndex(route,0);
                                     globalStore.storeData(keys.gui.routepage.initialName,route.name);
-                                    history.pop();
+                                    this.props.history.pop();
                                 },
                                 function(err){
                                     Toast("unable to load route");
@@ -246,10 +245,10 @@ class RoutePage extends React.Component{
                     });
                 }
             },
-            Mob.mobDefinition,
+            Mob.mobDefinition(this.props.history),
             {
                 name: 'Cancel',
-                onClick: ()=>{history.pop()}
+                onClick: ()=>{this.props.history.pop()}
             }
         ];
         this.storeRouteAndReturn=this.storeRouteAndReturn.bind(this);
@@ -273,7 +272,7 @@ class RoutePage extends React.Component{
 
     storeRouteAndReturn(startNav){
         if (!editor.hasRoute()){
-            history.pop();
+            this.props.history.pop();
             return;
         }
         let currentName=editor.getRouteName();
@@ -285,11 +284,11 @@ class RoutePage extends React.Component{
                     Toast("route with name "+currentName+" already exists");
                 },
                 function(er){
-                    if(storeRoute(current.clone(),startNav)) history.pop();
+                    if(storeRoute(current.clone(),startNav)) this.props.history.pop();
                 });
             return;
         }
-        if (storeRoute(current.clone(),startNav)) history.pop();
+        if (storeRoute(current.clone(),startNav)) this.props.history.pop();
         return true;
     }
 

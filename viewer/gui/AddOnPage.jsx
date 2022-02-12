@@ -6,7 +6,6 @@ import Dynamic from '../hoc/Dynamic.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import React from 'react';
-import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import InputMonitor from '../hoc/InputMonitor.jsx';
 import Mob from '../components/Mob.js';
@@ -19,14 +18,14 @@ class AddOnPage extends React.Component{
         super(props);
         let self=this;
         this.buttons=[
-            Mob.mobDefinition,
+            Mob.mobDefinition(this.props.history),
             {
                 name: 'Back',
                 onClick: ()=>{window.history.back();}
             },
             {
                 name: 'Cancel',
-                onClick: ()=>{history.pop()}
+                onClick: ()=>{self.props.history.pop()}
             }
         ];
         this.state={
