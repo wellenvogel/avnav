@@ -8,7 +8,6 @@ import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import React from 'react';
 import PropTypes from 'prop-types';
-import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import MapHolder from '../map/mapholder.js';
 import GuiHelpers from '../util/GuiHelpers.js';
@@ -99,7 +98,7 @@ class GpsPage extends React.Component{
         this.buttons=[
             {
                 name: 'Cancel',
-                onClick: ()=>{history.pop()}
+                onClick: ()=>{this.props.history.pop()}
             }
         ];
         this.state={
@@ -135,7 +134,7 @@ class GpsPage extends React.Component{
                 name:'GpsCenter',
                 onClick:()=>{
                     MapHolder.centerToGps();
-                    history.pop();
+                    this.props.history.pop();
                 },
                 editDisable: true
             },
@@ -215,7 +214,7 @@ class GpsPage extends React.Component{
                 overflow: true
             },
             anchorWatch(),
-            Mob.mobDefinition,
+            Mob.mobDefinition(this.props.history),
             EditPageDialog.getButtonDef('gpspage'+globalStore.getData(keys.gui.gpspage.pageNumber,0),
                 PANEL_LIST,
                 [LayoutHandler.OPTIONS.ANCHOR]),
@@ -224,7 +223,7 @@ class GpsPage extends React.Component{
             Dimmer.buttonDef(),
             {
                 name:'Cancel',
-                onClick:()=>{history.pop();}
+                onClick:()=>{this.props.history.pop();}
             }
         ];
     }
@@ -232,10 +231,10 @@ class GpsPage extends React.Component{
         if (EditWidgetDialog.createDialog(item,panelInfo.page,panelInfo.name,false,true)) return;
         if (item && item.name=== "AisTarget"){
             let mmsi=(data && data.mmsi)?data.mmsi:item.mmsi;
-            history.push("aisinfopage",{mmsi:mmsi});
+            this.props.history.push("aisinfopage",{mmsi:mmsi});
             return;
         }
-        history.pop();
+        this.props.history.pop();
     }
 
     componentDidMount(){
@@ -305,8 +304,7 @@ class GpsPage extends React.Component{
         };
 
         return <Page
-                className={self.props.className}
-                style={self.props.style}
+                {...self.props}
                 id="gpspage"
                 mainContent={
                             <MainContent/>

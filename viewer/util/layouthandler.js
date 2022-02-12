@@ -259,21 +259,6 @@ class LayoutHandler{
         return;
     }
 
-    /**
-     * get the properties from the layout
-     * @returns a flattened object with the properties
-     */
-    getLayoutProperties(){
-        if (! this.layout || ! this.layout.properties) return {};
-        let rt=[];
-        Helper.filterObjectTree(this.layout.properties,(item,path)=>{
-            let description=this.propertyDescriptions[path];
-            if(description !== undefined && description.canChange){
-                rt[path]=item;
-            }
-        },KeyHelper.keyNodeToString(keys.properties));
-        return rt;
-    }
 
     getLayoutWidgets(){
         if (! this.layout || ! this.layout.widgets) return {};

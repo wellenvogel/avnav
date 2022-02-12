@@ -2,16 +2,11 @@
  * Created by andreas on 02.05.14.
  */
 
-import navobjects from '../nav/navobjects';
-import Dynamic from '../hoc/Dynamic.jsx';
-import Visible from '../hoc/Visible.jsx';
 import Button from '../components/Button.jsx';
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import React from 'react';
-import PropertyHandler from '../util/propertyhandler.js';
-import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import Toast from '../components/Toast.jsx';
 import Requests from '../util/requests.js';
@@ -147,7 +142,7 @@ class MainPage extends React.Component {
                 let chartlist=this.state.chartList;
                 let selected=this.state.selectedChart||0;
                 if (chartlist && chartlist[selected]){
-                    showNavpage(chartlist[selected]);
+                    this.showNavpage(chartlist[selected]);
                 }
             }
             if (action == "nextChart"){
@@ -157,29 +152,41 @@ class MainPage extends React.Component {
                 self.selectChart(-1);
             }
         },"page",["selectChart","nextChart","previousChart"]);
+        this.showNavpage=this.showNavpage.bind(this);
 
     }
+
+    /**
+     * the click handler for the charts
+     * @param entry - the chart entry
+     */
+    showNavpage(entry) {
+        base.log("activating navpage with url " + entry.url);
+        MapHolder.setChartEntry(entry);
+        this.props.history.push('navpage');
+    };
+
 
     getButtons() {
         return [
             {
                 name: 'ShowStatus',
                 onClick: ()=> {
-                    history.push('statuspage')
+                    this.props.history.push('statuspage')
                 },
                 editDisable: true
             },
             {
                 name: 'ShowSettings',
                 onClick: ()=> {
-                    history.push('settingspage')
+                    this.props.history.push('settingspage')
                 },
                 overflow: true
             },
             {
                 name: 'ShowDownload',
                 onClick: ()=> {
-                    history.push('downloadpage')
+                    this.props.history.push('downloadpage')
                 },
                 editDisable: true
             },
@@ -203,7 +210,7 @@ class MainPage extends React.Component {
             {
                 name: 'ShowGps',
                 onClick: ()=> {
-                    history.push('gpspage')
+                    this.props.history.push('gpspage')
                 }
             },
             {
@@ -215,7 +222,7 @@ class MainPage extends React.Component {
                     globalStore.storeData(keys.properties.nightMode, mode);
                 }
             },
-            Mob.mobDefinition,
+            Mob.mobDefinition(this.props.history),
             LayoutFinishedDialog.getButtonDef(),
 
             {
@@ -238,7 +245,7 @@ class MainPage extends React.Component {
             {
                 name: 'MainAddOns',
                 onClick: ()=> {
-                    history.push('addonpage')
+                    this.props.history.push('addonpage')
                 },
                 visible: this.state.addOns.length > 0,
                 editDisable: true
@@ -355,14 +362,13 @@ class MainPage extends React.Component {
         let self = this;
         return (
             <Page
-                  className={this.props.className}
-                  style={this.props.style}
+                {...self.props}
                   id="mainpage"
                   title="AvNav"
                   mainContent={
                     <ItemList className="mainContent"
                                itemClass={ChartItem}
-                               onItemClick={showNavpage}
+                               onItemClick={this.showNavpage}
                                itemList={this.state.chartList}
                                selectedIndex={this.state.selectedChart}
                                scrollable={true}
@@ -392,16 +398,6 @@ class MainPage extends React.Component {
 
 
 
-/**
- * the click handler for the charts
- * @param entry - the chart entry
- */
-const showNavpage = function (entry) {
-    base.log("activating navpage with url " + entry.url);
-    MapHolder.setChartEntry(entry);
-    history.push('navpage');
-
-};
 
 
 

@@ -76,4 +76,4 @@ class History{
         }
     }
 }
-export default new History(globalStore);
+export default History;

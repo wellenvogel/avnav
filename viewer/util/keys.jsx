@@ -233,12 +233,6 @@ let keys={
             addOns:K,
             chartImportExtensions:K,
             chartImportSubDir:K
-        },
-        settingspage:{
-            hasChanges:K,
-            values:K,
-            section:K,
-            leftPanelVisible: K
         }
 
     },

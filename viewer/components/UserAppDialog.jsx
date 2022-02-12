@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import OverlayDialog, {dialogHelper,stateHelper} from './OverlayDialog.jsx';
+import OverlayDialog, {dialogHelper} from './OverlayDialog.jsx';
 import Toast from './Toast.jsx';
 import assign from 'object-assign';
 import {Checkbox,Input,InputReadOnly,InputSelect} from './Inputs.jsx';
@@ -8,7 +8,7 @@ import DB from './DialogButton.jsx';
 import Addons from './Addons.js';
 import Helper from '../util/helper.js';
 import Requests from '../util/requests.js';
-import GuiHelpers from '../util/GuiHelpers.js';
+import GuiHelpers, {stateHelper} from '../util/GuiHelpers.js';
 
 export default  class UserAppDialog extends React.Component{
     constructor(props){

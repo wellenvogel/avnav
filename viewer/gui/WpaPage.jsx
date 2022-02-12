@@ -3,18 +3,13 @@
  */
 
 import Dynamic from '../hoc/Dynamic.jsx';
-import Visible from '../hoc/Visible.jsx';
-import Button from '../components/Button.jsx';
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import React from 'react';
 import PropTypes from 'prop-types';
-import PropertyHandler from '../util/propertyhandler.js';
-import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import Toast from '../components/Toast.jsx';
-import MapHolder from '../map/mapholder.js';
 import GuiHelpers from '../util/GuiHelpers.js';
 import Requests from '../util/requests.js';
 import Helper from '../util/helper.js';
@@ -140,10 +135,10 @@ class WpaPage extends React.Component{
         super(props);
         let self=this;
         this.buttons=[
-            Mob.mobDefinition,
+            Mob.mobDefinition(this.props.history),
             {
                 name: 'Cancel',
-                onClick: ()=>{history.pop()}
+                onClick: ()=>{this.props.history.pop()}
             }
         ];
         this.itemClick=this.itemClick.bind(this);
@@ -279,8 +274,7 @@ class WpaPage extends React.Component{
 
         return (
             <Page
-                className={this.props.className}
-                style={this.props.style}
+                {...this.props}
                 id="wpapage"
                 title="Wifi Client connection"
                 mainContent={

@@ -5,7 +5,6 @@
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import React from 'react';
-import history from '../util/history.js';
 import MapPage, {overlayDialog} from '../components/MapPage.jsx';
 import Toast from '../components/Toast.jsx';
 import NavHandler from '../nav/navdata.js';
@@ -306,17 +305,7 @@ const getPanelList=(panel)=>{
     return LayoutHandler.getPanelData(PAGENAME,panel,LayoutHandler.getOptionValues([LayoutHandler.OPTIONS.SMALL]));
 };
 
-const checkRouteWritable=function(opt_noDialog){
-    let currentEditor=getCurrentEditor();
-    if (currentEditor.isRouteWritable()) return true;
-    if (opt_noDialog) return false;
-    let ok=OverlayDialog.confirm("you cannot edit this route as you are disconnected. OK to select a new name");
-    ok.then(function(){
-        currentEditor.syncTo(RouteEdit.MODES.PAGE);
-        history.push('routepage');
-    });
-    return false;
-};
+
 
 
 const DEFAULT_ROUTE="default";
@@ -342,6 +331,17 @@ class EditRoutePage extends React.Component{
             activeRouteName: keys.nav.routeHandler.activeName,
             dimensions:keys.gui.global.windowDimensions
         });
+    }
+    checkRouteWritable(opt_noDialog){
+        let currentEditor=getCurrentEditor();
+        if (currentEditor.isRouteWritable()) return true;
+        if (opt_noDialog) return false;
+        let ok=OverlayDialog.confirm("you cannot edit this route as you are disconnected. OK to select a new name");
+        ok.then(()=>{
+            currentEditor.syncTo(RouteEdit.MODES.PAGE);
+            this.props.history.push('routepage');
+        });
+        return false;
     }
     checkEmptyRoute(){
         if (!editor.hasRoute()){
@@ -375,7 +375,7 @@ class EditRoutePage extends React.Component{
                     route={currentEditor.getRoute().clone()}
                     editAction={()=>{
                         currentEditor.syncTo(RouteEdit.MODES.PAGE);
-                        history.push("routepage");
+                        this.props.history.push("routepage");
                     }}
                     updateCallback={()=>{this.checkEmptyRoute()}}
                     />
@@ -529,7 +529,7 @@ class EditRoutePage extends React.Component{
         if (evdata.type === MapHolder.EventTypes.FEATURE){
             let feature=evdata.feature;
             if (! feature) return;
-            if (feature.nextTarget && checkRouteWritable(true)){
+            if (feature.nextTarget && this.checkRouteWritable(true)){
                 feature.additionalActions=[
                     {name:'insert',label:'Before',onClick:()=>{
                             let currentEditor=getCurrentEditor();
@@ -569,7 +569,7 @@ class EditRoutePage extends React.Component{
             if (feature.overlayType === 'route'){
                 let routeName=feature.overlayName;
                 if (routeName && routeName.replace(/\.gpx$/,'') !== currentEditor.getRouteName() &&
-                    checkRouteWritable(true)
+                    this.checkRouteWritable(true)
                 ){
                     feature.additionalActions = [
                         {
@@ -590,7 +590,7 @@ class EditRoutePage extends React.Component{
                     }
                 }
             }
-            FeatureInfoDialog.showDialog(feature);
+            FeatureInfoDialog.showDialog(this.props.history,feature);
             return true;
         }
 
@@ -619,7 +619,7 @@ class EditRoutePage extends React.Component{
             {
                 name:"NavAddAfter",
                 onClick:()=>{
-                    if (!checkRouteWritable()) return;
+                    if (!this.checkRouteWritable()) return;
                     let center=MapHolder.getCenter();
                     if (!center) return;
                     let currentEditor=getCurrentEditor();
@@ -636,7 +636,7 @@ class EditRoutePage extends React.Component{
             {
                 name:"NavAdd",
                 onClick:()=>{
-                    if (!checkRouteWritable()) return;
+                    if (! this.checkRouteWritable()) return;
                     let center=MapHolder.getCenter();
                     if (!center) return;
                     let currentEditor=getCurrentEditor();
@@ -653,7 +653,7 @@ class EditRoutePage extends React.Component{
             {
                 name:"NavDelete",
                 onClick:()=>{
-                    if (!checkRouteWritable()) return;
+                    if (! this.checkRouteWritable()) return;
                     getCurrentEditor().deleteWaypoint();
                     let newIndex=getCurrentEditor().getIndex();
                     let currentPoint=getCurrentEditor().getPointAt(newIndex);
@@ -667,7 +667,7 @@ class EditRoutePage extends React.Component{
             {
                 name:"NavToCenter",
                 onClick:()=>{
-                    if (!checkRouteWritable()) return;
+                    if (! this.checkRouteWritable()) return;
                     let center=MapHolder.getCenter();
                     if (!center) return;
                     let currentEditor=getCurrentEditor();
@@ -680,9 +680,9 @@ class EditRoutePage extends React.Component{
             {
                 name:"NavGoto",
                 onClick:()=>{
-                    if (!checkRouteWritable()) return;
+                    if (! this.checkRouteWritable()) return;
                     RouteHandler.wpOn(getCurrentEditor().getPointAt());
-                    history.pop();
+                    this.props.history.pop();
                 },
                 editDisable: true,
                 overflow: true
@@ -695,13 +695,13 @@ class EditRoutePage extends React.Component{
                     visible:keys.gui.capabilities.uploadOverlays
                 }
             },
-            Mob.mobDefinition,
+            Mob.mobDefinition(this.props.history),
             EditPageDialog.getButtonDef(PAGENAME,
                 MapPage.PANELS,[LayoutHandler.OPTIONS.SMALL]),
             LayoutFinishedDialog.getButtonDef(),
             {
                 name: 'Cancel',
-                onClick: ()=>{history.pop()}
+                onClick: ()=>{this.props.history.pop()}
             }
         ];
         return rt;
@@ -717,10 +717,10 @@ class EditRoutePage extends React.Component{
             />
             :
             null;
+        let pageProperties=Helper.filteredAssign(MapPage.propertyTypes,self.props);
         return (
             <MapPage
-                className={self.props.className}
-                style={self.props.style}
+                {...pageProperties}
                 id={PAGENAME}
                 mapEventCallback={self.mapEvent}
                 onItemClick={this.widgetClick}

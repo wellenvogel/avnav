@@ -3,6 +3,7 @@ import keys from '../util/keys.jsx';
 import KeyHandler from './keyhandler.js';
 import LayoutHandler from './layouthandler.js';
 import assign from 'object-assign';
+import shallowcompare from "./shallowcompare";
 
 
 
@@ -271,6 +272,81 @@ const scrollInContainer=(parent, element)=> {
 
 const IMAGES=['png','jpg','svg','bmp','tiff','gif'];
 
+/**
+ * helper for maintaining an object inside a components state
+ * it will add 2 fields to the state:
+ *   values - the current values
+ *   changed - a flag that is true if the values differ from the initialValues
+ *             compared with shallowcompare
+ * create a instance in the constructor:
+ *    this.stateHelper=stateHelper(this,props.current);
+ * later call it using
+ *    this.stateHelper.changeValue(key,value)
+ * @param thisref
+ * @param initialValues
+ * @param opt_namePrefix - prefix for the state variabe names
+ */
+export const stateHelper=(thisref,initialValues,opt_namePrefix)=>{
+    let valueName="values";
+    let changedName="changed";
+    if (opt_namePrefix){
+        valueName=opt_namePrefix+valueName;
+        changedName=opt_namePrefix+changedName;
+    }
+    if (! thisref.state) thisref.state={};
+    thisref.state[valueName]=assign({},initialValues);
+    thisref.state[changedName]=false;
+    let rt={
+        setValue:(key,value)=>{
+            let values=assign({},thisref.state[valueName]);
+            if (values[key] == value) return;
+            values[key]=value;
+            let newState={};
+            newState[valueName]=values;
+            newState[changedName]=!shallowcompare(values,initialValues);
+            thisref.setState(newState);
+        },
+        setState:(partialState,opt_overwrite)=>{
+            let values;
+            if (! opt_overwrite) values=assign({},thisref.state[valueName],partialState);
+            else values=partialState;
+            let newState={};
+            newState[valueName]=values;
+            newState[changedName]=!shallowcompare(values,initialValues);
+            thisref.setState(newState);
+        },
+        isChanged(){
+            return thisref.state[changedName]||false;
+        },
+        isItemChanged(name){
+            return ! shallowcompare(rt.getValue(name),initialValues[name]);
+        },
+        reset(){
+            let newState={};
+            newState[valueName]=assign({},initialValues);
+            newState[changedName]=false;
+            thisref.setState(newState);
+        },
+        getValues(opt_copy){
+            if (opt_copy){
+                return assign({},thisref.state[valueName]);
+            }
+            return thisref.state[valueName]||{};
+        },
+        getState(opt_copy){
+            return rt.getValues(opt_copy)
+        },
+        getValue(key,opt_default){
+            let v=rt.getValues()[key];
+            if (v === undefined && opt_default !== undefined){
+                v=opt_default;
+            }
+            return v;
+        }
+    };
+    return rt;
+
+};
 
 
 export default {
@@ -283,5 +359,6 @@ export default {
     nameKeyEventHandler,
     IMAGES,
     storeHelper,
-    storeHelperState
+    storeHelperState,
+    stateHelper
 };

@@ -659,7 +659,7 @@ span.valuePrefix{
     width: 8em;
     min-width: 8em;
     margin-left: 1em;
-    white-space: nowrap;
+    white-space: pre-wrap;
     margin-right: 1em;
   }
   .info{
@@ -1375,6 +1375,14 @@ span.valuePrefix{
       }
       .listEntry{
         .flex-align-items(center)
+      }
+    }
+    .sectionList,.settingsList{
+      .listEntry.changed{
+        font-weight: bold;
+      }
+      .listEntry.defaultValue{
+        font-style: italic;
       }
     }
 }

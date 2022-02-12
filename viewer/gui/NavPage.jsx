@@ -5,7 +5,6 @@
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import React from 'react';
-import history from '../util/history.js';
 import MapPage,{overlayDialog} from '../components/MapPage.jsx';
 import Toast from '../components/Toast.jsx';
 import NavHandler from '../nav/navdata.js';
@@ -279,14 +278,14 @@ class NavPage extends React.Component{
         if (item.name == "AisTarget"){
             let mmsi=(data && data.mmsi)?data.mmsi:item.mmsi;
             if (! mmsi) return;
-            history.push("aisinfopage",{mmsi:mmsi});
+            this.props.history.push("aisinfopage",{mmsi:mmsi});
             return;
         }
         if (item.name == "ActiveRoute"){
             if (!activeRoute.hasRoute()) return;
             activeRoute.setIndexToTarget();
             activeRoute.syncTo(RouteEdit.MODES.EDIT);
-            history.push("editroutepage");
+            this.props.history.push("editroutepage");
             return;
         }
         if (item.name == "Zoom"){
@@ -298,7 +297,7 @@ class NavPage extends React.Component{
             this.showWpButtons(true);
             return;
         }
-        history.push("gpspage",{widget:item.name});
+        this.props.history.push("gpspage",{widget:item.name});
 
     };
     showWpButtons(on){
@@ -316,7 +315,7 @@ class NavPage extends React.Component{
             let aisparam=evdata.aisparam;
             if (!aisparam) return;
             if (aisparam.mmsi){
-                history.push('aisinfopage',{mmsi:aisparam.mmsi});
+                this.props.history.push('aisinfopage',{mmsi:aisparam.mmsi});
                 return true;
             }
             return;
@@ -339,7 +338,7 @@ class NavPage extends React.Component{
                         }
                     );
                 }
-                FeatureInfoDialog.showDialog(feature);
+                FeatureInfoDialog.showDialog(this.props.history,feature);
             }
             if (feature.overlayType === 'route' && ! feature.activeRoute){
                 let currentRouteName=activeRoute.getRouteName();
@@ -354,7 +353,7 @@ class NavPage extends React.Component{
                    name:'toroute',
                    label: 'Convert',
                    onClick:(props)=>{
-                       TrackConvertDialog.showDialog(props.overlayName)
+                       TrackConvertDialog.showDialog(this.props.history, props.overlayName)
                    }
                 });
             }
@@ -385,7 +384,7 @@ class NavPage extends React.Component{
                                 let idx=route.findBestMatchingIdx(feature.nextTarget);
                                 let editor=new RouteEdit(RouteEdit.MODES.EDIT);
                                 editor.setNewRoute(route,idx >= 0?idx:undefined);
-                                history.push("editroutepage");
+                                this.props.history.push("editroutepage");
                             },
                             (error)=> {
                                 if (error) Toast(error);
@@ -479,7 +478,7 @@ class NavPage extends React.Component{
                 onClick:()=>{
                     if (activeRoute.getIndex() < 0 ) activeRoute.setIndexToTarget();
                     activeRoute.syncTo(RouteEdit.MODES.EDIT);
-                    history.push("editroutepage");
+                    this.props.history.push("editroutepage");
                 },
                 overflow: true
 
@@ -534,7 +533,7 @@ class NavPage extends React.Component{
                     MapHolder.triggerRender();
                 }
             },
-            Mob.mobDefinition,
+            Mob.mobDefinition(this.props.history),
             EditPageDialog.getButtonDef(PAGENAME,
                 MapPage.PANELS,
                 [LayoutHandler.OPTIONS.SMALL,LayoutHandler.OPTIONS.ANCHOR]),
@@ -543,7 +542,7 @@ class NavPage extends React.Component{
             Dimmer.buttonDef(),
             {
                 name: 'Cancel',
-                onClick: ()=>{history.pop()}
+                onClick: ()=>{this.props.history.pop()}
             }
         ];
         return rt;
@@ -554,10 +553,10 @@ class NavPage extends React.Component{
         if (globalStore.getData(keys.properties.autoHideNavPage)){
             autohide=globalStore.getData(keys.properties.hideButtonTime,30)*1000;
         }
+        let pageProperties=Helper.filteredAssign(MapPage.propertyTypes,self.props);
         return (
             <MapPage
-                className={self.props.className}
-                style={self.props.style}
+                {...pageProperties}
                 id={PAGENAME}
                 mapEventCallback={self.mapEvent}
                 onItemClick={self.widgetClick}

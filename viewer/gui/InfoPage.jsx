@@ -2,15 +2,7 @@
  * Created by andreas on 02.05.14.
  */
 
-import Dynamic from '../hoc/Dynamic.jsx';
-import Visible from '../hoc/Visible.jsx';
-import Button from '../components/Button.jsx';
-import ItemList from '../components/ItemList.jsx';
-import globalStore from '../util/globalstore.jsx';
-import keys from '../util/keys.jsx';
 import React from 'react';
-import PropertyHandler from '../util/propertyhandler.js';
-import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import Requests from '../util/requests.js';
 import Mob from '../components/Mob.js';
@@ -19,10 +11,10 @@ class InfoPage extends React.Component{
     constructor(props){
         super(props);
         this.buttons=[
-            Mob.mobDefinition,
+            Mob.mobDefinition(this.props.history),
             {
                 name: 'Cancel',
-                onClick: ()=>{history.pop()}
+                onClick: ()=>{this.props.history.pop()}
             }
         ];
         this.showLicense=this.showLicense.bind(this);
@@ -76,8 +68,7 @@ class InfoPage extends React.Component{
 
         return (
             <Page
-                className={this.props.className}
-                style={this.props.style}
+                {...self.props}
                 id="infopage"
                 title="License and Privacy Info"
                 mainContent={

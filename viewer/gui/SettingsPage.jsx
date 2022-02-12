@@ -2,12 +2,10 @@
  * Created by andreas on 02.05.14.
  */
 
-import Dynamic from '../hoc/Dynamic.jsx';
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys,{KeyHelper,PropertyType} from '../util/keys.jsx';
 import React from 'react';
-import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import Toast,{hideToast} from '../components/Toast.jsx';
 import assign from 'object-assign';
@@ -16,10 +14,11 @@ import LayoutHandler from '../util/layouthandler.js';
 import Mob from '../components/Mob.js';
 import LayoutNameDialog from '../components/LayoutNameDialog.jsx';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
-import {Input,ColorSelector,Checkbox,Radio,InputSelect} from '../components/Inputs.jsx';
+import {ColorSelector, Checkbox, Radio, InputSelect, InputReadOnly} from '../components/Inputs.jsx';
 import DB from '../components/DialogButton.jsx';
 import DimHandler from '../util/dimhandler';
 import FullScreen from '../components/Fullscreen';
+import {stateHelper} from "../util/GuiHelpers";
 
 const settingsSections={
     Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,keys.properties.layers.grid,keys.properties.layers.compass],
@@ -52,32 +51,20 @@ const settingsConditions={
 settingsConditions[keys.properties.dimFade]=()=>DimHandler.canHandle();
 settingsConditions[keys.properties.showDimButton]=()=>DimHandler.canHandle();
 settingsConditions[keys.properties.showFullScreen]=()=>FullScreen.fullScreenAvailable();
-settingsConditions[keys.properties.boatDirectionVector]=()=>{
-    let cur=globalStore.getData(keys.gui.settingspage.values,{})
+settingsConditions[keys.properties.boatDirectionVector]=(values)=>{
+    let cur=(values||{})
     return cur[keys.properties.boatDirectionMode]!== 'cog';
 }
-settingsConditions[keys.properties.aisMinDisplaySpeed]=()=>globalStore.getData(keys.gui.settingspage.values,{})[keys.properties.aisOnlyShowMoving]
+settingsConditions[keys.properties.aisMinDisplaySpeed]=(values)=>
+    (values||{})[keys.properties.aisOnlyShowMoving]
 
 const sectionConditions={};
 sectionConditions.Remote=()=>globalStore.getData(keys.gui.capabilities.remoteChannel) && window.WebSocket !== undefined;
 
-/**
- * will fire a confirm dialog and resolve to 1 on changes, resolve to 0 on no changes
- * @returns {Promise}
- */
-const confirmAbortOrDo=()=> {
-    if (globalStore.getData(keys.gui.settingspage.hasChanges)) {
-        return OverlayDialog.confirm("discard changes?");
-    }
-    else {
-        return new Promise((resolve,reject)=>{
-            resolve(0);
-        });
-    }
-};
+
 
 const SectionItem=(props)=>{
-    let className=props.className?props.className+" listEntry":"listEntry";
+    let className=(props.className||"")+" listEntry";
     if (props.activeItem) className+=" activeEntry";
     return(
         <div className={className} onClick={props.onClick}>{props.name}</div>
@@ -87,7 +74,7 @@ const SectionItem=(props)=>{
 const CheckBoxSettingsItem=(props)=>{
     return (
         <Checkbox
-            className={props.classsName+ " listEntry"}
+            className={props.className}
             onChange={props.onClick}
             label={props.label}
             value={props.value}/>
@@ -152,7 +139,7 @@ const rangeItemDialog=(item)=>{
     OverlayDialog.dialog(Dialog);
 };
 const RangeSettingsItem=(properties)=> {
-    return <div className={properties.className+ " listEntry"}
+    return <div className={properties.className}
                 onClick={function(ev){
                             rangeItemDialog(properties);
                         }}>
@@ -172,7 +159,7 @@ const ListSettingsItem=(properties)=> {
             items.push( {label:nv[0],value:nv[0]});
         }
     }
-    return <div className={properties.className+ " listEntry"}>
+    return <div className={properties.className}>
             <div className="label">{properties.label}</div>
             <Radio
                 onChange={function(newVal){
@@ -204,7 +191,7 @@ const SelectSettingsItem=(properties)=> {
     }
     return(
         <InputSelect
-            className={properties.className+ " listEntry"}
+            className={properties.className}
             onChange={function(newVal){
                 properties.onClick(newVal);
             }}
@@ -229,7 +216,7 @@ const ColorSettingsItem=(properties)=>{
     };
 
     return <ColorSelector
-               className={properties.className+ " listEntry"}
+               className={properties.className}
                onChange={properties.onClick}
                label={properties.label}
                default={properties.defaultv}
@@ -258,7 +245,7 @@ const createSettingsItem=(item)=>{
         return SelectSettingsItem;
     }
     return (props)=>{
-        return (<div className="listEntry">
+        return (<div className={props.className}>
             <div className="label">{props.label}</div>
             <div className="value">{props.value}</div>
         </div>)
@@ -267,68 +254,60 @@ const createSettingsItem=(item)=>{
 
 const LayoutItem=(props)=>
 {
+    const isEditing=()=>{
+        Toast("cannot change layout during editing");
+    }
     if (LayoutHandler.isEditing()){
         props=assign({},props,
             {value:LayoutHandler.name});
+        return <InputReadOnly
+            className={props.className}
+            label={props.label}
+            value={props.value}
+            onClick={isEditing}
+        />
     }
-    return ValueSetting(props, (item)=> {
+    const changeFunction=(newVal)=>{
         if (LayoutHandler.isEditing()) {
-            Toast("cannot change layout during editing");
+            isEditing();
             return;
         }
-        history.push("downloadpage", {
-                downloadtype: 'layout',
-                allowChange: false,
-                selectItemCallback: (item)=> {
-                    if (item.name == props.value) {
-                        history.pop();
-                        return;
-                    }
-                    //we selected a new layout
-                    LayoutHandler.loadLayout(item.name)
-                        .then((layout)=>{
-                            let layoutProps=LayoutHandler.getLayoutProperties();
-                            for (let k in layoutProps){
-                                changeItem({name:k},layoutProps[k])
-                            }
-                            changeItem(props,item.name);
-                            history.pop();
-                        })
-                        .catch((error)=>{
-                            Toast(error+"");
-                        })
-
-                }
-            }
-        );
-    });
-};
-
-const ValueSetting=(properties,clickHandler)=> {
-    return <div className={properties.className+ " listEntry"}
-                onClick={function(ev){
-                            clickHandler(properties);
-                        }}>
-        <div className="label">{properties.label}</div>
-        <div className="value">{properties.value}</div>
-    </div>;
-};
-
-const changeItem=(item,value,opt_omitFlag)=>{
-    let old=globalStore.getData(keys.gui.settingspage.values,{});
-    let hasChanged=old[item.name]!== value;
-    if (hasChanged){
-        let changed={};
-        changed[item.name]=value;
-        globalStore.storeData(keys.gui.settingspage.values,assign({},old,changed));
-        if (! opt_omitFlag) globalStore.storeData(keys.gui.settingspage.hasChanges,true);
-    }
+        LayoutHandler.loadLayout(newVal)
+            .then((layout)=>{
+                props.onClick(newVal);
+            })
+            .catch((error)=>{
+                Toast(error+"");
+            })
+    };
+    return <InputSelect
+            className={props.className}
+            onChange={changeFunction}
+            itemList={(currentLayout)=>{
+                return new Promise((resolve,reject)=>{
+                   LayoutHandler.listLayouts()
+                       .then((list)=>{
+                           let displayList=[];
+                           list.forEach((el)=>{
+                               let le={label:el.name,value:el.name};
+                               if (currentLayout === el.name ) le.selected=true;
+                               displayList.push(le);
+                           });
+                           resolve(displayList);
+                       })
+                       .catch((e)=>reject(e))
+                });
+            }}
+            changeOnlyValue={true}
+            value={props.value}
+            label={props.label}
+            resetCallback={(ev)=>{
+                props.onClick(props.defaultv)
+            }}
+        />;
 };
 
 
-
-
-const DynamicPage=Dynamic(Page);
 class SettingsPage extends React.Component{
     constructor(props){
         super(props);
@@ -342,10 +321,10 @@ class SettingsPage extends React.Component{
                         return;
                     }
                     if (!self.hasChanges()){
-                        history.pop();
+                        this.props.history.pop();
                         return;
                     }
-                    let values=globalStore.getData(keys.gui.settingspage.values);
+                    let values=self.values.getValues(true);
                     //if the layout changed we need to set it
                     if (values[keys.properties.layoutName] != globalStore.getData(keys.properties.layoutName)){
                         if (! LayoutHandler.hasLoaded(values[keys.properties.layoutName])){
@@ -355,13 +334,13 @@ class SettingsPage extends React.Component{
                         LayoutHandler.activateLayout();
                     }
                     globalStore.storeMultiple(values);
-                    history.pop();
+                    this.props.history.pop();
                 }
             },
             {
                 name: 'SettingsDefaults',
                 onClick:()=> {
-                    confirmAbortOrDo().then(()=> {
+                    self.confirmAbortOrDo().then(()=> {
                         self.resetData();
                     });
                 }
@@ -370,9 +349,9 @@ class SettingsPage extends React.Component{
                 name:'SettingsAndroid',
                 visible: globalStore.getData(keys.gui.global.onAndroid,false),
                 onClick:()=>{
-                    confirmAbortOrDo().then(()=> {
+                    self.confirmAbortOrDo().then(()=> {
                         self.resetChanges();
-                        history.pop();
+                        this.props.history.pop();
                         avnav.android.showSettings();
                     });
                 }
@@ -397,16 +376,16 @@ class SettingsPage extends React.Component{
             {
                 name: 'SettingsAddons',
                 onClick:()=>{
-                    confirmAbortOrDo().then(()=>{
+                    self.confirmAbortOrDo().then(()=>{
                         self.resetChanges();
-                        history.push("addonconfigpage");
+                        this.props.history.push("addonconfigpage");
                     });
                 },
                 storeKeys:{
                     visible:keys.properties.connectedMode
                 }
             },
-            Mob.mobDefinition,
+            Mob.mobDefinition(this.props.history),
             {
                 name: 'Cancel',
                 onClick: ()=>{
@@ -414,36 +393,59 @@ class SettingsPage extends React.Component{
                         self.handlePanel(undefined);
                         return;
                     }
-                    confirmAbortOrDo().then(()=> {
-                    history.pop();
+                    self.confirmAbortOrDo().then(()=> {
+                        this.props.history.pop();
                 });
                 }
             }
         ];
-        this.state={};
         this.resetData=this.resetData.bind(this);
         this.hasChanges=this.hasChanges.bind(this);
         this.leftPanelVisible=this.leftPanelVisible.bind(this);
         this.handlePanel=this.handlePanel.bind(this);
         this.sectionClick=this.sectionClick.bind(this);
         this.handleLayoutClick=this.handleLayoutClick.bind(this);
+        this.changeItem=this.changeItem.bind(this);
+        this.confirmAbortOrDo=this.confirmAbortOrDo.bind(this);
         this.flattenedKeys=KeyHelper.flattenedKeys(keys.properties);
-        if (! (this.props.options && this.props.options.returning)) {
-            globalStore.storeData(keys.gui.settingspage.leftPanelVisible, true);
-            this.leftVisible = true;
-            this.resetChanges();
-            globalStore.storeData(keys.gui.settingspage.section, 'Layer');
-        }
+        this.state={
+            leftPanelVisible:true,
+            section:'Layer'
+        };
+        this.values=stateHelper(this,globalStore.getMultiple(this.flattenedKeys));
+        this.defaultValues={};
+        this.flattenedKeys.forEach((key)=>{
+            let description=KeyHelper.getKeyDescriptions()[key];
+            if (description){
+                this.defaultValues[key] = description.defaultv;
+            }
+        })
 
+    }
+    /**
+     * will fire a confirm dialog and resolve to 1 on changes, resolve to 0 on no changes
+     * @returns {Promise}
+     */
+    confirmAbortOrDo(){
+        if (this.hasChanges()) {
+            return OverlayDialog.confirm("discard changes?");
+        }
+        else {
+            return new Promise((resolve,reject)=>{
+                resolve(0);
+            });
+        }
+    }
+    changeItem(item,value){
+        this.values.setValue(item.name,value);
     }
 
     resetChanges(){
-        let values = globalStore.getMultiple(this.flattenedKeys);
-        globalStore.storeData(keys.gui.settingspage.values, values);
-        globalStore.storeData(keys.gui.settingspage.hasChanges, false);
+        this.values.setState(globalStore.getMultiple(this.flattenedKeys),true);
     }
 
     handleLayoutClick(){
+        let self=this;
         let isEditing=LayoutHandler.isEditing();
         if (! isEditing){
             let startDialog=()=> {
@@ -463,7 +465,7 @@ class SettingsPage extends React.Component{
                             .then((newName)=> {
                                 let layoutName = LayoutHandler.fileNameToServerName(newName);
                                 LayoutHandler.startEditing(layoutName);
-                                history.pop();
+                                this.props.history.pop();
                             })
                             .catch(()=> {
                             })
@@ -476,7 +478,7 @@ class SettingsPage extends React.Component{
                 startDialog();
                 return;
             }
-            confirmAbortOrDo().then(()=>{
+            self.confirmAbortOrDo().then(()=>{
                 this.resetChanges();
                 startDialog();
             }).catch(()=>{});
@@ -485,40 +487,34 @@ class SettingsPage extends React.Component{
             LayoutFinishedDialog.createDialog()
                 .then((result)=>{
                     //we need to write the changed value also in our display values
-                    changeItem({name:keys.properties.layoutName},LayoutHandler.name,true);
+                    self.changeItem({name:keys.properties.layoutName},LayoutHandler.name);
                 })
                 .catch((error)=>{});
         }
     };
 
     resetData(){
-        let values=assign({},globalStore.getData(keys.gui.settingspage.values));
-        let hasChanges=false;
-        this.flattenedKeys.forEach((key)=>{
-            let description=KeyHelper.getKeyDescriptions()[key];
-            if (description){
-                if (values[key] !== description.defaultv) {
-                    hasChanges=true;
-                    values[key] = description.defaultv;
-                }
-            }
-        });
-        globalStore.storeData(keys.gui.settingspage.values,values);
-        globalStore.storeData(keys.gui.settingspage.hasChanges,hasChanges);
+        let values=assign({},this.defaultValues);
+
+        this.values.setState(values,true);
     }
     hasChanges(){
-        return globalStore.getData(keys.gui.settingspage.hasChanges);
+        return this.values.isChanged();
     }
     leftPanelVisible(){
-        return this.leftVisible;
+        return this.state.leftPanelVisible;
     }
     handlePanel(section){
         if (section === undefined){
-            globalStore.storeData(keys.gui.settingspage.leftPanelVisible,true);
+            this.setState({
+                leftPanelVisible:true
+            });
         }
         else {
-            globalStore.storeData(keys.gui.settingspage.section, section);
-            globalStore.storeData(keys.gui.settingspage.leftPanelVisible,false);
+            this.setState({
+                leftPanelVisible: ! this.props.small,
+                section:section
+            });
         }
     }
     sectionClick(item){
@@ -530,14 +526,11 @@ class SettingsPage extends React.Component{
     render() {
         let self = this;
         let MainContent = (props)=> {
-            let small = globalStore.getData(keys.gui.global.windowDimensions, {}).width
-                < globalStore.getData(keys.properties.smallBreak);
-            let leftVisible = !small || props.leftPanelVisible;
-            self.leftVisible = leftVisible; //intentionally no state - but we exactly need to know how this looked at the last render
-            let rightVisible = !small || !props.leftPanelVisible;
+            let leftVisible = props.leftPanelVisible;
+            let rightVisible = !self.props.small || !props.leftPanelVisible;
             let leftClass = "sectionList";
             if (!rightVisible) leftClass += " expand";
-            let currentSection = globalStore.getData(keys.gui.settingspage.section, 'Layer');
+            let currentSection = props.section|| 'Layer';
             let sectionItems = [];
             for (let s in settingsSections) {
                 let sectionCondition=sectionConditions[s];
@@ -557,23 +550,51 @@ class SettingsPage extends React.Component{
             if (! hasCurrentSection){
                 currentSection=sectionItems[0].name;
                 sectionItems[0].activeItem=true;
-                globalStore.storeData(keys.gui.settingspage.section,currentSection);
+                //TODO: send up
             }
             let settingsItems = [];
-            if (settingsSections[currentSection]) {
-                for (let s in settingsSections[currentSection]) {
-                    let key = settingsSections[currentSection][s];
+            let sectionChanges={};
+            for (let section in settingsSections) {
+                for (let s in settingsSections[section]) {
+                    let key = settingsSections[section][s];
                     if (settingsConditions[key] !== undefined){
-                        if (! settingsConditions[key]()) continue;
+                        if (! settingsConditions[key](self.values.getValues())) continue;
                     }
                     let description = KeyHelper.getKeyDescriptions()[key];
-                    let item = assign({}, description, {
-                        name: key,
-                        value: props.values[key]
-                    });
-                    settingsItems.push(item);
+                    let value=self.values.getValue(key);
+                    let className="listEntry";
+                    if (value === this.defaultValues[key]){
+                        className+=" defaultValue";
+                    }
+                    else{
+                        if (! sectionChanges[section]) sectionChanges[section]={};
+                        sectionChanges[section].isDefault=false;
+                    }
+                    if (this.values.isItemChanged(key)) {
+                        className+=" changed";
+                        if (! sectionChanges[section]) sectionChanges[section]={};
+                        sectionChanges[section].isChanged=true;
+                    }
+                    if (section === currentSection) {
+                        let item = assign({}, description, {
+                            name: key,
+                            value: value,
+                            className: className
+                        });
+                        settingsItems.push(item);
+                    }
                 }
             }
+            sectionItems.forEach((sitem) => {
+                let className = "listEntry";
+                if ((sectionChanges[sitem.name] || {}).isChanged) {
+                    className += " changed";
+                }
+                if ((sectionChanges[sitem.name] || {}).isDefault !== false) {
+                    className += " defaultValue";
+                }
+                sitem.className = className;
+            });
             return (
                 <div className="leftSection">
                     { leftVisible ? <ItemList
@@ -588,43 +609,24 @@ class SettingsPage extends React.Component{
                         scrollable={true}
                         itemCreator={createSettingsItem}
                         itemList={settingsItems}
-                        onItemClick={changeItem}
+                        onItemClick={self.changeItem}
                         /> : null}
                 </div>);
         };
-        let DynamicMain = Dynamic(MainContent);
-
         return (
-            <DynamicPage
-                className={self.props.className}
-                style={self.props.style}
+            <Page
+                {...self.props}
                 id="settingspage"
                 mainContent={
-                            <DynamicMain
-                                storeKeys={{
-                                    leftPanelVisible: keys.gui.settingspage.leftPanelVisible,
-                                    section: keys.gui.settingspage.section,
-                                    values: keys.gui.settingspage.values,
-                                    isEditing: keys.gui.global.layoutEditing
-                                }}
+                            <MainContent
+                                section={self.state.section}
+                                leftPanelVisible={self.state.leftPanelVisible}
                             />
                         }
                 buttonList={self.buttons}
-                storeKeys={{
-                        leftPanelVisible: keys.gui.settingspage.leftPanelVisible,
-                        section: keys.gui.settingspage.section
-                        }}
-                updateFunction={(state)=>{
-                    let small = globalStore.getData(keys.gui.global.windowDimensions, {}).width
-                        < globalStore.getData(keys.properties.smallBreak);
-                    let title="Settings";
-                    if (small && ! state.leftPanelVisible) title +=" "+state.section;
-                    return {
-                        title: title
-                    }
-                }}
+                title={"Settings"+((self.props.small && self.state.leftPanelVisible)?" "+self.state.section:"")}
                 />);
     }
 }
-
+SettingsPage.propTypes=Page.pageProperties;
 export default SettingsPage;

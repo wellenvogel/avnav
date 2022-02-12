@@ -1,7 +1,7 @@
 //avnav (C) wellenvogel 2019
 
 import React, { Component } from 'react';
-import history from './util/history.js';
+import History from './util/history.js';
 import Dynamic from './hoc/Dynamic.jsx';
 import keys,{KeyHelper} from './util/keys.jsx';
 import MainPage from './gui/MainPage.jsx';
@@ -38,8 +38,10 @@ import Button from './components/Button.jsx';
 import LeaveHandler from './util/leavehandler';
 import EditHandlerDialog from "./components/EditHandlerDialog";
 import AndroidEventHandler from './util/androidEventHandler';
-import And from "ol/format/filter/And";
 import remotechannel, {COMMANDS} from "./util/remotechannel";
+import base from "./base";
+import propertyHandler from "./util/propertyhandler";
+import MapHolder from "./map/mapholder";
 
 
 const DynamicSound=Dynamic(SoundHandler);
@@ -82,7 +84,7 @@ class MainWrapper extends React.Component{
         return <MainPage {...this.props}/>
     }
     componentDidMount(){
-        history.reset(); //reset history if we reach the mainpage
+        this.props.history.reset(); //reset history if we reach the mainpage
     }
 }
 const pages={
@@ -105,6 +107,9 @@ const pages={
     addonconfigpage: AddonConfigPage
 };
 class Router extends Component {
+    constructor(props) {
+        super(props);
+    }
     render() {
         let Page=pages[this.props.location];
         if (Page === undefined){
@@ -114,9 +119,18 @@ class Router extends Component {
         let style={};
         if (this.props.nightMode) style['opacity']=globalStore.getData(keys.properties.nightFade)/100;
         let dimStyle={opacity: 0.5};
+        let small = (this.props.dimensions||{}).width
+            < globalStore.getData(keys.properties.smallBreak);
         return <div className={className}>
             {this.props.dim ? <div className="dimm" style={dimStyle} onClick={Dimmer.trigger}></div>:null}
-                <Page style={style} options={this.props.options} location={this.props.location}/>
+                <Page
+                    style={style}
+                    options={this.props.options}
+                    location={this.props.location}
+                    history={this.props.history}
+                    small={small}
+                    isEditing={this.props.isEditing}
+                />
             </div>
     }
 }
@@ -141,10 +155,65 @@ class App extends React.Component {
         super(props);
         this.checkSizes=this.checkSizes.bind(this);
         this.keyDown=this.keyDown.bind(this);
+        this.history=new History(globalStore);
         this.buttonSizer=null;
         this.state={
             error:0
         };
+        globalStore.storeData(keys.gui.global.onAndroid,false,true);
+        //make the android API available as avnav.android
+        if (window.avnavAndroid){
+            base.log("android integration enabled");
+            globalStore.storeData(keys.gui.global.onAndroid,true,true);
+            avnav.android=window.avnavAndroid;
+            globalStore.storeData(keys.properties.routingServerError,false,true);
+            globalStore.storeData(keys.properties.connectedMode,true,true);
+            avnav.version=avnav.android.getVersion();
+            avnav.android.applicationStarted();
+            avnav.android.receiveEvent=(key,id)=>{
+                try {
+                    //inform the android part that we noticed the event
+                    avnav.android.acceptEvent(key, id);
+                } catch (e) {
+                }
+                if (key == 'backPressed'){
+                    let currentPage=globalStore.getData(keys.gui.global.pageName);
+                    if (currentPage == "mainpage"){
+                        avnav.android.goBack();
+                        return;
+                    }
+                    this.history.pop();
+                }
+                if (key == 'propertyChange'){
+                    globalStore.storeData(keys.gui.global.propertySequence,
+                        globalStore.getData(keys.gui.global.propertySequence,0)+1);
+                }
+                if (key == "reloadData"){
+                    globalStore.storeData(keys.gui.global.reloadSequence,
+                        globalStore.getData(keys.gui.global.reloadSequence,0)+1);
+                }
+                AndroidEventHandler.handleEvent(key,id);
+            };
+        }
+        let startpage="warningpage";
+        let firstStart=true;
+        if (typeof window.localStorage === 'object'){
+            if (localStorage.getItem(globalStore.getData(keys.properties.licenseAcceptedName)) === 'true'){
+                startpage="mainpage";
+                firstStart=false;
+            }
+        }
+        if (firstStart){
+            propertyHandler.firstStart();
+        }
+        this.history.push(startpage);
+        Requests.getJson("/user/viewer/images.json",{useNavUrl:false,checkOk:false})
+            .then((data)=>{
+                MapHolder.setImageStyles(data);
+            })
+            .catch((error)=> {
+                Toast("unable to load user image definitions: " + error);
+            });
         Requests.getJson("keys.json",{useNavUrl:false,checkOk:false}).then(
             (json)=>{
                 KeyHandler.registerMappings(json);
@@ -174,11 +243,11 @@ class App extends React.Component {
         },'global','mobtoggle');
         GuiHelpers.keyEventHandler(this,(component,action)=>{
             let addon=parseInt(action);
-            if (history.currentLocation() === "addonpage"){
-                history.replace("addonpage",{activeAddOn:addon});
+            if (this.history.currentLocation() === "addonpage"){
+                this.history.replace("addonpage",{activeAddOn:addon});
             }
             else {
-                history.push("addonpage", {activeAddOn: addon});
+                this.history.push("addonpage", {activeAddOn: addon});
             }
         },'addon',['0','1','2','3','4','5','6','7']);
         this.newDeviceHandler=this.newDeviceHandler.bind(this);
@@ -196,7 +265,7 @@ class App extends React.Component {
                 if (pages[location] === undefined){
                     return;
                 }
-                history.setFromRemote(location,options);
+                this.history.setFromRemote(location,options);
             }catch (e){}
         });
 
@@ -305,9 +374,11 @@ class App extends React.Component {
                 options: keys.gui.global.pageOptions,
                 sequence: keys.gui.global.propertySequence,
                 dimensions: keys.gui.global.windowDimensions,
-                dim: keys.gui.global.dimActive
+                dim: keys.gui.global.dimActive,
+                isEditing:keys.gui.global.layoutEditing
                 },keys.gui.capabilities)
             }
+                history={this.history}
                 nightMode={this.props.nightMode}
                 />
             <Dialogs

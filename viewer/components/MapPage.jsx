@@ -24,6 +24,8 @@ import EulaDialog from './EulaDialog.jsx';
 import EditOverlaysDialog from './EditOverlaysDialog.jsx';
 import {getOverlayConfigName} from "../map/chartsourcebase";
 import mapholder from "../map/mapholder.js";
+import Helper from "../util/helper";
+import assign from 'object-assign';
 
 const SHOW_MODE={
     never:0,
@@ -173,11 +175,11 @@ class MapPage extends React.Component{
         let map=<div className="map" ref="map" style={{opacity:mapOpacity}}/>;
         let className=self.props.className?self.props.className+" mapPage":"mapPage";
         if (this.props.mapFloat) className+=" mapFloat";
+        let pageProperties=Helper.filteredAssign(Page.propTypes,self.props);
         return (
             <Page
+                {...pageProperties}
                 className={className}
-                style={self.props.style}
-                id={self.props.id}
                 floatContent={this.props.mapFloat?map:undefined}
                 mainContent={
                     <React.Fragment>
@@ -223,9 +225,8 @@ class MapPage extends React.Component{
     }
 }
 
-MapPage.propertyTypes={
+MapPage.propertyTypes=assign({},Page.pageProperties,{
     buttonList:         PropTypes.array,
-    className:          PropTypes.string,
     panelCreator:       PropTypes.func.isRequired,  //will be called with the panel name
                                                     //and must return {name: panelName, list:widget list}
     onItemClick:        PropTypes.func.isRequired,  //like ItemList
@@ -238,7 +239,7 @@ MapPage.propertyTypes={
     widgetFontSize:     PropTypes.number,
     mapFloat:           PropTypes.bool
 
-};
+});
 
 export const overlayDialog=(opt_chartName,opt_updateCallback)=>{
     let current=MapHolder.getCurrentMergedOverlayConfig();
@@ -281,4 +282,5 @@ let DynamicPage=Dynamic(MapPage,{
     })
 });
 DynamicPage.PANELS=['left','top','bottomLeft','bottomRight'];
+DynamicPage.propertyTypes=MapPage.propertyTypes
 export default DynamicPage;

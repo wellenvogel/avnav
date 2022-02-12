@@ -26,7 +26,7 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import OverlayDialog, {dialogHelper, stateHelper} from './OverlayDialog.jsx';
+import OverlayDialog, {dialogHelper} from './OverlayDialog.jsx';
 import assign from 'object-assign';
 import DB from './DialogButton.jsx';
 import {ParamValueInput} from "./ParamValueInput";
@@ -34,6 +34,7 @@ import RequestHandler from "../util/requests";
 import Toast from "./Toast";
 import {createEditableParameter} from "./EditableParameters";
 import Button from "./Button";
+import {stateHelper} from "../util/GuiHelpers";
 
 const HelpButton=(props)=>{
     let InfoDialog=(dprops)=>{

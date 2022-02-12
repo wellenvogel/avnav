@@ -8,7 +8,6 @@ import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import React from 'react';
 import PropertyHandler from '../util/propertyhandler.js';
-import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import AisFormatter from '../nav/aisformatter.jsx';
 import AisData from '../nav/aisdata.js';
@@ -127,7 +126,7 @@ class AisPage extends React.Component{
                 name:"AisNearest",
                 onClick:()=>{
                     AisData.setTrackedTarget(0);
-                    history.pop();
+                    self.props.history.pop();
                 }
             },
             {
@@ -135,10 +134,10 @@ class AisPage extends React.Component{
                 onClick:sortDialog
 
             },
-            Mob.mobDefinition,
+            Mob.mobDefinition(this.props.history),
             {
                 name: 'Cancel',
-                onClick: ()=>{history.pop()}
+                onClick: ()=>{self.props.history.pop()}
             }
         ];
         this.scrollWarning=this.scrollWarning.bind(this);
@@ -223,7 +222,7 @@ class AisPage extends React.Component{
                 <AisList
                     itemClass={AisItem}
                     onItemClick={function (item) {
-                                    history.replace('aisinfopage', {mmsi: item.mmsi});
+                        self.props.history.replace('aisinfopage', {mmsi: item.mmsi});
                                 }}
                     className="aisList"
                     storeKeys={{
@@ -239,8 +238,7 @@ class AisPage extends React.Component{
 
         return (
             <Page
-                className={this.props.className}
-                style={this.props.style}
+                {...this.props}
                 id="aispage"
                 title="Ais"
                 mainContent={
