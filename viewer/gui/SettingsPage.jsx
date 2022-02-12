@@ -2,7 +2,6 @@
  * Created by andreas on 02.05.14.
  */
 
-import Dynamic from '../hoc/Dynamic.jsx';
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys,{KeyHelper,PropertyType} from '../util/keys.jsx';
@@ -16,7 +15,7 @@ import LayoutHandler from '../util/layouthandler.js';
 import Mob from '../components/Mob.js';
 import LayoutNameDialog from '../components/LayoutNameDialog.jsx';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
-import {Input,ColorSelector,Checkbox,Radio,InputSelect} from '../components/Inputs.jsx';
+import {ColorSelector, Checkbox, Radio, InputSelect, InputReadOnly} from '../components/Inputs.jsx';
 import DB from '../components/DialogButton.jsx';
 import DimHandler from '../util/dimhandler';
 import FullScreen from '../components/Fullscreen';
@@ -257,51 +256,58 @@ const createSettingsItem=(item)=>{
 
 const LayoutItem=(props)=>
 {
+    const isEditing=()=>{
+        Toast("cannot change layout during editing");
+    }
     if (LayoutHandler.isEditing()){
         props=assign({},props,
             {value:LayoutHandler.name});
+        return <InputReadOnly
+            className={props.className+ " listEntry"}
+            label={props.label}
+            value={props.value}
+            onClick={isEditing}
+        />
     }
-    return ValueSetting(props, (item)=> {
+    const changeFunction=(newVal)=>{
         if (LayoutHandler.isEditing()) {
-            Toast("cannot change layout during editing");
+            isEditing();
             return;
         }
-        history.push("downloadpage", {
-                downloadtype: 'layout',
-                allowChange: false,
-                selectItemCallback: (item)=> {
-                    if (item.name == props.value) {
-                        history.pop();
-                        return;
-                    }
-                    //we selected a new layout
-                    LayoutHandler.loadLayout(item.name)
-                        .then((layout)=>{
-                            changeItem(props,item.name);
-                            history.pop();
-                        })
-                        .catch((error)=>{
-                            Toast(error+"");
-                        })
-
-                }
-            }
-        );
-    });
+        LayoutHandler.loadLayout(newVal)
+            .then((layout)=>{
+                props.onClick(newVal);
+            })
+            .catch((error)=>{
+                Toast(error+"");
+            })
+    };
+    return <InputSelect
+            className={props.className+ " listEntry"}
+            onChange={changeFunction}
+            itemList={(currentLayout)=>{
+                return new Promise((resolve,reject)=>{
+                   LayoutHandler.listLayouts()
+                       .then((list)=>{
+                           let displayList=[];
+                           list.forEach((el)=>{
+                               let le={label:el.name,value:el.name};
+                               if (currentLayout === el.name ) le.selected=true;
+                               displayList.push(le);
+                           });
+                           resolve(displayList);
+                       })
+                       .catch((e)=>reject(e))
+                });
+            }}
+            changeOnlyValue={true}
+            value={props.value}
+            label={props.label}
+            resetCallback={(ev)=>{
+                props.onClick(props.defaultv)
+            }}
+        />;
 };
-
-const ValueSetting=(properties,clickHandler)=> {
-    return <div className={properties.className+ " listEntry"}
-                onClick={function(ev){
-                            clickHandler(properties);
-                        }}>
-        <div className="label">{properties.label}</div>
-        <div className="value">{properties.value}</div>
-    </div>;
-};
-
-
-
 
 
 class SettingsPage extends React.Component{
@@ -405,7 +411,6 @@ class SettingsPage extends React.Component{
         this.confirmAbortOrDo=this.confirmAbortOrDo.bind(this);
         this.flattenedKeys=KeyHelper.flattenedKeys(keys.properties);
         this.state={
-            hasChanges:false,
             leftPanelVisible:true,
             section:'Layer'
         };
@@ -509,7 +514,7 @@ class SettingsPage extends React.Component{
         }
         else {
             this.setState({
-                leftPanelVisible: false,
+                leftPanelVisible: ! this.props.small,
                 section:section
             });
         }
@@ -523,7 +528,7 @@ class SettingsPage extends React.Component{
     render() {
         let self = this;
         let MainContent = (props)=> {
-            let leftVisible = !self.props.small || props.leftPanelVisible;
+            let leftVisible = props.leftPanelVisible;
             let rightVisible = !self.props.small || !props.leftPanelVisible;
             let leftClass = "sectionList";
             if (!rightVisible) leftClass += " expand";
