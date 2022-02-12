@@ -287,10 +287,6 @@ const LayoutItem=(props)=>
                     //we selected a new layout
                     LayoutHandler.loadLayout(item.name)
                         .then((layout)=>{
-                            let layoutProps=LayoutHandler.getLayoutProperties();
-                            for (let k in layoutProps){
-                                changeItem({name:k},layoutProps[k])
-                            }
                             changeItem(props,item.name);
                             history.pop();
                         })
