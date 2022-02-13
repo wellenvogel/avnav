@@ -31,182 +31,175 @@ import time
 import avnav_handlerList
 from avnav_worker import AVNWorker
 from avnav_manager import AVNHandlerManager
+from avndirectorybase import *
 from avnav_util import *
 
-class LayoutInfo(object):
-  def __init__(self,name,filename,time,isSystem=False):
-    self.filename=filename
-    self.time=time
-    self.canDelete=not isSystem
-    self.type="layout"
-    self.name = self.getKey(name,isSystem)
-    self.updateCount=0
-  def toJson(self):
-    return json.dumps(self.__dict__)
-  def toPlain(self):
-    return self.__dict__
-  @classmethod
-  def getKey(cls,name,isSystem):
-    rt="system." if isSystem else "user."
-    rt=rt+name
+TYPE="layout"
+PREFIX="/layouts"
+class LayoutInfo(AVNDirectoryListEntry):
+  T_SYSTEM='system'
+  T_USER='user'
+  T_PLUGIN='plugin'
+  T_ALL=[T_SYSTEM,T_USER,T_PLUGIN]
+  def __init__(self, type,prefix,name, **kwargs):
+    super().__init__(type, prefix, name,
+                     **kwargs)
+    self.baseDir=kwargs.get('baseDir')
+    self.layoutName=None
+    self.layoutType=self.T_USER
+  def setName(self,ltype,prefix=None):
+    if not ltype in self.T_ALL:
+      ltype=self.T_USER
+    self.layoutType=ltype
+    if prefix is not None:
+      self.layoutName=ltype+"."+prefix+"."+self.name
+    else:
+      self.layoutName=ltype+"."+self.name
+    self.canDelete=ltype == self.T_USER
+
+  def serialize(self):
+    '''
+    when we send to the client it expects
+    the full name in the name field
+    @return:
+    '''
+    rt=super().serialize()
+    name=rt.get('layoutName')
+    if name:
+      if name.endswith('.json'):
+        name=name[0:-5]
+      rt['name']=name
     return rt
 
+  def toPlain(self):
+    return self.__dict__
 
-class AVNLayoutHandler(AVNWorker):
-  """a worker to check the chart dirs
-     and create avnav.xml..."""
-  def __init__(self,param):
-    self.param=param
-    AVNWorker.__init__(self, param)
-    self.layouts={}
-  @classmethod
-  def getConfigName(cls):
-    return "AVNLayoutHandler"
-  @classmethod
-  def getConfigParam(cls, child=None):
-    if child is not None:
-      return None
-    return {
-        'systemDir': '',
-        'userDir':'',
-        'period': 10
-    }
-  @classmethod
-  def preventMultiInstance(cls):
-    return True
+  def getKey(self):
+    return self.layoutName
 
   @classmethod
-  def autoInstantiate(cls):
-    return True
-  def run(self):
-    AVNLog.info("started")
-    userDir=self.getUserDir()
-    if not os.path.isdir(userDir):
-      os.makedirs(userDir)
-    while True:
-      self.updateAllLayouts()
-      time.sleep(self.getIntParam('period') or 10)
-  def getUserDir(self):
-    return AVNHandlerManager.getDirWithDefault(self.param, 'userDir', 'layout')
-  def updateAllLayouts(self):
-    dt = datetime.datetime.now()
-    updateCount=dt.microsecond
-    httpServer = self.findHandlerByName("AVNHttpServer")
-    if httpServer is None:
-      AVNLog.error("unable to find AVNHttpServer")
-      return
-    systemDir = self.getStringParam('systemDir')
-    if systemDir is None or systemDir == "":
-      systemDir = os.path.join(httpServer.handlePathmapping("viewer"), 'layout')
-    userDir=self.getUserDir()
-    try:
-      self.readLayouts(systemDir, updateCount, True)
-      self.readLayouts(userDir, updateCount, False)
-      # remove disappaearing
-      deleteKeys = []
-      for key in self.layouts:
-        if self.layouts[key].updateCount != updateCount:
-          #if we did not re-read the layout (e.g. plugin) but it is still there - we keep it
-          if not os.path.exists(self.layouts[key].filename):
-            deleteKeys.append(key)
-          else:
-            self.layouts[key].mtime=os.path.getmtime(self.layouts[key].filename)
-      for key in deleteKeys:
-        del self.layouts[key]
-    except:
-      AVNLog.error("error while trying to update layouts %s", traceback.format_exc())
+  def stripPrefix(cls,name):
+    if not name:
+      return name
+    for p in cls.T_ALL:
+      if name.startswith(p+"."):
+        return name[len(p)+1:]
+    return name
 
-  def readLayouts(self,baseDir,updateCount,isSystem=False):
-    if os.path.isdir(baseDir):
-      for f in os.listdir(baseDir):
-        if not f[-5:] == ".json":
-          continue
-        if f =="keys.json":
-          continue
-        file=os.path.join(baseDir,f)
-        if not os.path.isfile(file):
-          continue
-        name=f[0:-5]
-        key=LayoutInfo.getKey(name,isSystem)
-        mtime=os.path.getmtime(file)
-        if self.layouts.get(key):
-          self.layouts[key].time=mtime
-          self.layouts[key].updateCount=updateCount
-        else:
-          info=LayoutInfo(name,file,mtime,isSystem)
-          info.updateCount=updateCount
-          self.layouts[key]=info
+  @classmethod
+  def getType(cls,name):
+    if not name:
+      return cls.T_USER
+    for p in cls.T_ALL:
+      if name.startswith(p+"."):
+        return p
+    return cls.T_USER
+
+
+class AVNLayoutHandler(AVNDirectoryHandlerBase):
+  ALLOWED_EXTENSIONS=['.json']
+
+  def __init__(self, param):
+    super().__init__(param, TYPE)
+    self.baseDir= AVNHandlerManager.getDirWithDefault(self.param,'userDir',TYPE)
+    self.type=TYPE
+    self.systemDir=None
+    self.systemItems =[]
+    self.pluginItems=[]
+
+  @classmethod
+  def getAutoScanExtensions(cls):
+    return cls.ALLOWED_EXTENSIONS
+
+  @classmethod
+  def getListEntryClass(cls):
+    return LayoutInfo
+
+  @classmethod
+  def getPrefix(cls):
+    return PREFIX
+
+  def onPreRun(self):
+    super().onPreRun()
+    self.systemDir = os.path.join(self.httpServer.handlePathmapping("viewer"), TYPE)
+    self.systemItems=self.listDirectory(baseDir=self.systemDir)
+    for item in self.systemItems:
+      item.setName(LayoutInfo.T_SYSTEM)
+
+  def onItemAdd(self, itemDescription: LayoutInfo):
+    '''automatically added items are from the user dir'''
+    itemDescription.setName(LayoutInfo.T_USER)
+    return itemDescription
+
+  def handleList(self, handler=None):
+    items=self.systemItems+self.pluginItems+list(self.itemList.values())
+    return AVNUtil.getReturnData(items=items)
+
+  def findItem(self,name)-> LayoutInfo:
+    for item in self.systemItems+self.pluginItems+list(self.itemList.values()):
+      if item.layoutName == name:
+        return item
+
+  def correctName(self,clientName):
+    if clientName.endswith('.json'):
+      return clientName
+    return clientName+".json"
+
+  def handleDelete(self, name):
+    name=self.correctName(name)
+    item=self.findItem(name)
+    if not item:
+      return AVNUtil.getReturnData(error="%s %s not found"%(TYPE,name))
+    if not item.canDelete:
+      return AVNUtil.getReturnData(error="unable to delete %s "%(name))
+    return super().handleDelete(LayoutInfo.stripPrefix(name))
+
+  def handleRename(self, name, newName, requestparam):
+    name=self.correctName(name)
+    item=self.findItem(name)
+    if not item:
+      return AVNUtil.getReturnData(error="%s %s not found"%(TYPE,name))
+    if not item.canDelete:
+      return AVNUtil.getReturnData(error="unable to rename %s "%(name))
+    return super().handleRename(
+      LayoutInfo.stripPrefix(name),
+      LayoutInfo.stripPrefix(self.correctName(newName))
+      , requestparam)
+
+  def handleUpload(self, name, handler, requestparam):
+    name=self.correctName(name)
+    if LayoutInfo.getType(name) != LayoutInfo.T_USER:
+      return AVNUtil.getReturnData(error="cannot upload %s"%name)
+    return super().handleUpload(LayoutInfo.stripPrefix(name), handler, requestparam)
+
+  def handleDownload(self, name, handler, requestparam, **kwargs):
+    name=self.correctName(name)
+    item=self.findItem(name)
+    if not item:
+      raise Exception("%s %s not found"%(TYPE,name))
+    return super().handleDownload(item.name, handler, requestparam,item.baseDir)
 
   def registerPluginLayout(self,pluginName,name,fileName):
     if not os.path.exists(fileName):
       return False
-    name="plugin.%s.%s"%(pluginName,name)
-    key=LayoutInfo.getKey(name,True)
-    if self.layouts.get(key) is not None:
+    name=self.correctName(name)
+    info=LayoutInfo(self.type,self.getPrefix(),name,time=os.path.getmtime(fileName),baseDir=os.path.dirname(fileName))
+    info.setName(LayoutInfo.T_PLUGIN,prefix=pluginName)
+    if self.findItem(info.layoutName) is not None:
       AVNLog.error("trying to register an already existing plugin layout %s",name)
       return False
-    self.layouts[key]=LayoutInfo(name,fileName,os.path.getmtime(fileName),True)
+    self.pluginItems.append(info)
 
-  def getHandledCommands(self):
-    return {"api": "layout",'list':'layout','upload':'layout','download':'layout','delete':'layout' }
+  def deregisterPluginLayout(self,pluginName,name):
+    name=self.correctName(name)
+    info=LayoutInfo(self.type,self.getPrefix(),name)
+    info.setName(LayoutInfo.T_PLUGIN,prefix=pluginName)
+    existing=self.findItem(info.layoutName)
+    if not existing:
+      AVNLog.error("item %s not found",name)
+      return False
+    self.pluginItems.remove(existing)
+    return True
 
-  def handleApiRequest(self, type, command, requestparam, **kwargs):
-    if type == 'list':
-      rt=[]
-      for v in list(self.layouts.values()):
-        rt.append(v.toPlain())
-      return {'status':'OK','items':rt}
-    if type == 'upload':
-      name=AVNUtil.getHttpRequestParam(requestparam,'name')
-      if name is None:
-        raise Exception("missing parameter name")
-      userDir=self.getUserDir()
-      if not os.path.isdir(userDir):
-        raise Exception("no user dir %s found"%userDir)
-      fname=os.path.join(userDir,name+".json")
-      data=AVNUtil.getHttpRequestParam(requestparam,'_json')
-      if data is None:
-        handler=kwargs.get('handler')
-        if handler is None:
-          raise Exception("no data in upload layout")
-        handler.writeFileFromInput(fname,kwargs.get('flen'),True)
-      else:
-        with open(fname,"w",encoding='utf-8') as fp:
-          fp.write(data)
-          fp.close()
-      self.updateAllLayouts()
-      return AVNUtil.getReturnData()
-
-    if type == 'download':
-      name=AVNUtil.getHttpRequestParam(requestparam,'name')
-      noAttach=AVNUtil.getHttpRequestParam(requestparam,'noattach')
-      if name is None:
-        raise Exception("missing parameter name")
-      info=self.layouts.get(name)
-      if info is None:
-        raise Exception("layout %s not found"%name)
-      fname=info.filename
-      if fname is None:
-        raise Exception("no layout file")
-      len=os.path.getsize(fname)
-      stream=open(fname,"rb")
-      rt={'size':len,'mimetype':'application/json','stream':stream}
-      if noAttach is not None:
-        rt['noattach']=True
-      return rt
-    if type == 'delete':
-      name=AVNUtil.getHttpRequestParam(requestparam,'name')
-      if name is None:
-        raise Exception("missing parameter name")
-      info=self.layouts.get(name)
-      if info is None:
-        raise Exception("layout %s not found"%name)
-      if not info.canDelete:
-        raise Exception("cannot delete this layout")
-      fname=info.filename
-      if fname is None:
-        raise Exception("no layout file")
-      os.unlink(fname)
-      self.updateAllLayouts()
 
 avnav_handlerList.registerHandler(AVNLayoutHandler)

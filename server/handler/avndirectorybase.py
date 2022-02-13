@@ -293,13 +293,15 @@ class AVNDirectoryHandlerBase(AVNWorker):
     return True
 
 
-  def listDirectory(self,includeDirs=False):
+  def listDirectory(self,includeDirs=False,baseDir=None):
     # type: (bool) -> list[AVNDirectoryListEntry]
     data = []
-    if not os.path.exists(self.baseDir):
+    if baseDir is None:
+      baseDir=self.baseDir
+    if not os.path.exists(baseDir):
       return []
-    for f in os.listdir(str(self.baseDir)):
-      fullname = os.path.join(str(self.baseDir), f)
+    for f in os.listdir(str(baseDir)):
+      fullname = os.path.join(str(baseDir), f)
       isDir=False
       if not os.path.isfile(fullname):
         if not includeDirs:
@@ -308,6 +310,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
       element = self.getListEntryClass()(self.type, self.getPrefix(), f,
                                       time=os.path.getmtime(fullname),
                                       size=os.path.getsize(fullname),
+                                      baseDir=baseDir,
                                       canDelete=True,isDir=isDir)
       data.append(element)
     return data
@@ -472,11 +475,13 @@ class AVNDirectoryHandlerBase(AVNWorker):
     self._scanDirectory()
     return AVNUtil.getReturnData()
 
-  def handleDownload(self,name,handler,requestparam):
+  def handleDownload(self,name,handler,requestparam,baseDir=None):
     if name is None:
       raise Exception("missing name")
     name = AVNUtil.clean_filename(name)
-    filename = os.path.join(self.baseDir, name)
+    if baseDir is None:
+      baseDir=self.baseDir
+    filename = os.path.join(baseDir, name)
     if not os.path.exists(filename):
       raise Exception("file %s not found" % filename)
     return AVNDownload(filename)
