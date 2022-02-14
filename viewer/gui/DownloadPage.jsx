@@ -31,7 +31,8 @@ import {
     ItemDownloadButton, ItemActions
 } from '../components/FileDialog';
 import EditOverlaysDialog, {DEFAULT_OVERLAY_CHARTENTRY} from '../components/EditOverlaysDialog';
-import {getOverlayConfigName} from "../map/chartsourcebase";
+import {getOverlayConfigName} from "../map/chartsourcebase"
+import PropertyHandler from '../util/propertyhandler';
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -539,6 +540,17 @@ class DownloadPage extends React.Component{
                         Toast("unable to upload layout: " + error);
                     }
                 )
+            }
+        }
+        if (this.state.type === 'settings') {
+            return (obj) => {
+                if (!obj) {
+                    Toast("no data available after upload");
+                    return;
+                }
+                PropertyHandler.verifyPropertyData(obj.data, true)
+                    .then((res) => alert("properties ok"))
+                    .catch((e) => Toast(e));
             }
         }
     }

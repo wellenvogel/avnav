@@ -4,10 +4,11 @@
 
 import Toast from '../components/Toast.jsx';
 import globalStore from './globalstore.jsx';
-import keys,{KeyHelper} from './keys.jsx';
+import keys, {KeyHelper, PropertyType} from './keys.jsx';
 import base from '../base.js';
 import merge from 'lodash.merge';
 import Helper from './helper.js';
+import LayoutHandler from './layouthandler';
 
 
 const hex2rgba= (hex, opacity)=> {
@@ -167,6 +168,160 @@ class PropertyHandler {
         }
         globalStore.storeMultiple(changes);
         //set some initial properties
+    }
+
+    /**
+     * verify the property data we have loaded from a file
+     * raise an exception if invalid
+     * the input expects the following form:
+     * {
+     *     "version":nnn
+     *     "properties": {
+     *         "layers.ais":true,
+     *         ...
+     *     }
+     * }
+     * With the keys below the properties are the flattened keys
+     * without the leading "keys.properties"
+     * @param data
+     * @param opt_checkValues if set - reject on invalid values, otherwise correct them
+     * @return the checked (and potentially corrected) flattend properties
+     */
+    verifyPropertyData(data, opt_checkValues) {
+        return new Promise((resolve, reject) => {
+            if (typeof (data) === 'string') {
+                try {
+                    data = JSON.parse(data);
+                }catch (e){
+                    reject("unable to parse json: "+e);
+                    return;
+                }
+            }
+            if (data.settingsVersion === undefined) {
+                reject("no settings version found");
+                return;
+            }
+            if (typeof (data.properties) !== 'object') {
+                reject("no properties found");
+                return;
+            }
+            const prefix = "properties.";
+            let rt = {};
+            let descriptions = KeyHelper.getKeyDescriptions(true);
+            let promises=[];
+            for (let dk in data.properties) {
+                let key = prefix + dk;
+                if (!(key in descriptions)) {
+                    continue; //silently ignore non existing
+                    //throw new Error("no property dk is defined")
+                }
+                let des = descriptions[key];
+                let v = data.properties[dk];
+                switch (des.type) {
+                    case PropertyType.CHECKBOX:
+                        if (typeof (v) !== 'boolean') {
+                            if (opt_checkValues) {
+                                reject("invalid boolean " + v + " for " + dk);
+                                return;
+                            }
+                            if (typeof (v) === 'string') v = v.toLowerCase() === 'true';
+                            else v = !!v;
+                        }
+                        rt[key] = v;
+                        break;
+                    case PropertyType.RANGE:
+                        if (typeof (v) !== 'number') {
+                            if (opt_checkValues) {
+                                reject("invalid number " + v + " for " + dk);
+                                return;
+                            }
+                            v = parseFloat(v);
+                            if (isNaN(v)) {
+                                if (opt_checkValues) {
+                                    reject("nan " + v + " for " + dk);
+                                    return;
+                                }
+                                v = values[0];
+                            }
+                        }
+                        if (v > values[1]) {
+                            if (opt_checkValues) {
+                                reject(v + " to big for " + dk);
+                                return;
+                            }
+                            v = values[1];
+                        }
+                        if (v < values[0]) {
+                            if (opt_checkValues) {
+                                reject(v + " to small for " + dk);
+                                return;
+                            }
+                            v = values[0];
+                        }
+                        rt[key] = v;
+                        break;
+                    case PropertyType.COLOR:
+                        if (typeof (v) !== 'string') {
+                            if (opt_checkValues) {
+                                reject("invalid color " + v + " for " + dk);
+                                return;
+                            }
+                            v = v + "";
+                        }
+                        rt[key] = v;
+                        break;
+                    case PropertyType.LIST:
+                    case PropertyType.SELECT:
+                        let found = false;
+                        des.values.forEach((le) => {
+                            if (le === v) found = true;
+                        })
+                        if (!found) {
+                            if (opt_checkValues) {
+                                reject(v + " is not a valid value for " + dk);
+                                return;
+                            }
+                            v = des.values[0];
+                        }
+                        rt[key] = v;
+                        break;
+                    case PropertyType.LAYOUT:
+                        promises.push(
+                            new Promise((lresolve,lreject)=> {
+                                LayoutHandler.loadLayout(v)
+                                    .then((o) => {
+                                        let rt={};
+                                        rt[key]=v;
+                                        lresolve(rt);
+                                    })
+                                    .catch((error) => {
+                                        if (opt_checkValues) {
+                                            lreject(dk + ": unable to load layout " + v + ": " + error);
+                                        }
+                                        else{
+                                            lresolve({});
+                                        }
+                                    })
+                            })
+                        );
+                        break;
+                    default:
+                        //silently ignore this
+                        break;
+                }
+            }
+            Promise.all(promises)
+                .then((values)=>{
+                    values.forEach((v)=>{
+                        for (let k in v){
+                            rt[k]=v[k];
+                        }
+                    })
+                    resolve(rt);
+                })
+                .catch((error)=>reject(error));
+        })
+
     }
 
 }
