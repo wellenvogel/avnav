@@ -384,6 +384,14 @@ class AVNDirectoryHandlerBase(AVNWorker):
       handler.wfile.write(zip.read(entry))
     return True
 
+  def convertLocalPath(self,path) -> (str,str or None):
+    '''
+    helper for getPathFromUrl
+    @param path:
+    @return: tuple name,basedir
+             basedir can be None
+    '''
+    return (path,None)
   def getPathFromUrl(self,path,handler=None,requestParam=None):
     """
     the path is already unqouted and utf8-decoded here
@@ -395,6 +403,11 @@ class AVNDirectoryHandlerBase(AVNWorker):
     #TODO: should we limit this to only one level?
     #we could use checkName and this way ensure that we only have one level
     subPath=self.httpServer.plainUrlToPath(path, False)
+    (subPath,baseDir)=self.convertLocalPath(subPath)
+    if subPath is None:
+      return #not found
+    if baseDir is None:
+      baseDir=self.baseDir
     #check for zip files in the path
     pathParts=subPath.split(os.path.sep)
     hasZip=False
@@ -403,9 +416,9 @@ class AVNDirectoryHandlerBase(AVNWorker):
         hasZip=True
         break
     if not hasZip:
-      originalPath = os.path.join(self.baseDir, subPath)
+      originalPath = os.path.join(baseDir, subPath)
       return originalPath
-    currentPath=self.baseDir
+    currentPath=baseDir
     for k in range(0,len(pathParts)):
       part=pathParts[k]
       currentPath=os.path.join(currentPath,part)
@@ -413,7 +426,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
         return None
       if (part.lower().endswith(".zip") or part.lower().endswith('.kmz')) and k < (len(pathParts)-1):
         return self.getZipEntry(currentPath,"/".join(pathParts[k+1:]),handler,requestParam)
-    originalPath = os.path.join(self.baseDir,subPath)
+    originalPath = os.path.join(baseDir,subPath)
     return originalPath
 
   def handleSpecialApiRequest(self,command,requestparam,handler):
@@ -624,7 +637,7 @@ class AVNScopedDirectoryHandler(AVNDirectoryHandlerBase):
     self.pluginItems : List[AVNScopedDirectoryEntry] =[]
 
   @classmethod
-  def getListEntryClass(cls)-> AVNScopedDirectoryEntry:
+  def getListEntryClass(cls):
     return AVNScopedDirectoryEntry
 
   def getSystemDir(self):
@@ -659,6 +672,13 @@ class AVNScopedDirectoryHandler(AVNDirectoryHandlerBase):
 
   def clientNameToScopedName(self, clientName: str):
     return self.getListEntryClass().clientNameToName(clientName)
+
+  def convertLocalPath(self, path) -> (str, str or None):
+    name=self.clientNameToScopedName(path)
+    item=self.findItem(name)
+    if not item:
+      return (None,None)
+    return (item.name,item.baseDir)
 
   def handleDelete(self, name):
     name=self.clientNameToScopedName(name)
