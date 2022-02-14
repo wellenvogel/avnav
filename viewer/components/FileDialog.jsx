@@ -81,15 +81,8 @@ const getLocalDataFunction=(item)=>{
     }
 }
 const getDownloadFileName=(item)=>{
-    if (item.type === 'layout') return LayoutHandler.nameToBaseName(item.name)+".json";
-    if (item.type === 'settings') {
-        return item.name.replace(/^user\./,'').replace(/^system\./,'').replace(/^plugin/,'')+".json";
-    }
-    if (item.type === 'route'){
-        if (! item.name.match(/\.gpx$/)) return item.name+".gpx";
-        return item.name;
-    }
-    return item.name;
+    let actions=ItemActions.create(item,false);
+    return actions.nameForDownload(item.name);
 }
 const getDownloadUrl=(item)=>{
     let name=item.name;
@@ -133,6 +126,18 @@ export class ItemActions{
         this.timeText='';
         this.infoText='';
         this.className='';
+        /**
+         * convert an entity name as received from the server to a name we offer when downloading
+         * @param name
+         * @returns {*}
+         */
+        this.nameForDownload=(name)=>name;
+        /**
+         * convert a local file name into an entity name as the server would create
+         * @param name
+         * @returns {*}
+         */
+        this.nameForUpload=(name)=>name;
     }
     static create(props,isConnected){
         if (! props || ! props.type){
@@ -181,6 +186,13 @@ export class ItemActions{
                 rt.showDownload=true;
                 rt.infoText+=","+Formatter.formatDecimal(props.length,4,2)+
                     " nm, "+props.numpoints+" points";
+                rt.nameForDownload=(name)=>{
+                    if (! name.match(/\.gpx$/)) name+=".gpx";
+                    return name;
+                }
+                rt.nameForUpload=(name)=>{
+                    return name.replace(/\.gpx$/,'');
+                }
                 break;
             case 'layout':
                 rt.headline='Layouts';
@@ -188,6 +200,12 @@ export class ItemActions{
                 rt.showView = true;
                 rt.showEdit = isConnected && editableSize && props.canDelete;
                 rt.showDownload = true;
+                rt.nameForDownload=(name)=>{
+                    return LayoutHandler.nameToBaseName(name)+".json";
+                }
+                rt.nameForUpload=(name)=>{
+                    return LayoutHandler.fileNameToServerName(name);
+                }
                 break;
             case 'settings':
                 rt.headline='Settings';
@@ -195,6 +213,18 @@ export class ItemActions{
                 rt.showView = true;
                 rt.showEdit = isConnected && editableSize && props.canDelete;
                 rt.showDownload = true;
+                rt.nameForDownload=(name)=>{
+                    return name.replace(/^user\./,'').replace(/^system\./,'').replace(/^plugin/,'')+".json";
+                }
+                rt.nameForUpload=(name)=>{
+                    let serverName=name;
+                    ['user','system','plugin'].forEach((prefix)=>{
+                        if (serverName.indexOf(prefix+".") === 0){
+                            serverName=serverName.substr(prefix.length+1);
+                        }
+                    });
+                    return 'user.'+serverName.replace(/\.json$/,'');
+                }
                 break;
             case 'user':
                 rt.headline='User';

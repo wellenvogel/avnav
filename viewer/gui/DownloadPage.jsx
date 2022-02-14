@@ -410,6 +410,7 @@ class DownloadPage extends React.Component{
      */
     checkNameForUpload(name){
         return new Promise((resolve,reject)=>{
+            let actions=ItemActions.create({type:this.state.type},false);
             let ext=Helper.getExt(name);
             let rt={name:name};
             if (this.state.type === 'route'){
@@ -431,18 +432,11 @@ class DownloadPage extends React.Component{
                 }
             }
             if (this.state.type === 'settings'){
-                //TODO!
                 if (ext !== 'json'){
                     reject("only .json files allowed for settings");
                     return;
                 }
-                let serverName=name;
-                ['user','system','plugin'].forEach((prefix)=>{
-                    if (serverName.indexOf(prefix+".") === 0){
-                        serverName=serverName.substr(prefix.length+1);
-                    }
-                });
-                serverName='user.'+serverName.replace(/\.json$/,'');
+                let serverName=actions.nameForUpload(name);
                 if (this.entryExists(serverName)){
                     reject(serverName+" already exists");
                     return;
