@@ -38,6 +38,7 @@ var copyList=[
     {from: '../libraries/movable-type/latlon.js',to: 'libraries'},
     {from: '../sounds/1-minute-of-silence.mp3',to: 'sounds'},
     {from: './layout',to:'layout'},
+    {from: './settings',to:'settings'},
     {context: './demo',from: '*.xml',to:'demo/'}
     ];
 var images=[

@@ -46,6 +46,7 @@ import RouteEdit from "../nav/routeeditor";
 import mapholder from "../map/mapholder";
 import LogDialog from "./LogDialog";
 import {stateHelper} from "../util/GuiHelpers";
+import Formatter from '../util/formatter';
 
 const RouteHandler=NavHandler.getRoutingHandler();
 /**
@@ -109,6 +110,120 @@ const showConvertFunctions = {
         TrackConvertDialog.showDialog(history,item.name);
     }
 }
+
+export class ItemActions{
+    constructor(type) {
+        this.type=type;
+        this.headline=type
+        this.showEdit=false;
+        this.showView=false;
+        this.showDelete=false;
+        this.showRename=false;
+        this.showApp=false;
+        this.isApp=false;
+        this.showOverlay=false;
+        this.showScheme=false;
+        this.showConvertFunction=undefined;
+        this.showImportLog=false;
+        this.showDownload=false;
+        this.showIsServer=false;
+        this.timeText='';
+        this.infoText='';
+        this.className='';
+    }
+    static create(props,isConnected){
+        if (! props || ! props.type){
+            return new ItemActions();
+        }
+        let rt=new ItemActions(props.type);
+        let ext=Helper.getExt(props.name);
+        let viewable=ViewPage.VIEWABLES.indexOf(ext)>=0;
+        let editableSize=props.size !== undefined && props.size < ViewPage.MAXEDITSIZE;
+        let allowedOverlay=KNOWN_OVERLAY_EXTENSIONS.indexOf(Helper.getExt(props.name,true)) >= 0;
+        let canEditOverlays=globalStore.getData(keys.gui.capabilities.uploadOverlays) && isConnected;
+        if (props.time !== undefined) {
+            rt.timeText=Formatter.formatDateTime(new Date(props.time*1000));
+        }
+        rt.infoText=props.name;
+        if (props.active){
+            rt.className+=' activeEntry';
+        }
+        switch (props.type){
+            case 'chart':
+                rt.headline='Charts';
+                rt.showDelete=props.canDelete && isConnected;
+                rt.showOverlay=canEditOverlays;
+                rt.showScheme=isConnected && props.url && props.url.match(/.*mbtiles.*/);
+                rt.showImportLog=props.hasImportLog;
+                rt.showDownload=props.canDelete;
+                if (props.originalScheme){
+                    rt.className+=' userAction';
+                }
+                break;
+            case 'track':
+                rt.headline='Tracks';
+                rt.showDelete=true;
+                rt.showDownload=true;
+                rt.showView=viewable;
+                rt.showConvertFunction=ext === 'gpx'?showConvertFunctions[props.type]:undefined;
+                rt.showOverlay=allowedOverlay && canEditOverlays;
+                break;
+            case 'route':
+                rt.headline='Routes';
+                rt.showIsServer=props.isServer;
+                rt.showDelete= ! props.active &&  props.canDelete !== false  && ( ! props.isServer || isConnected);
+                rt.showView=viewable;
+                rt.showEdit=mapholder.getCurrentChartEntry() !== undefined;
+                rt.showOverlay=canEditOverlays;
+                rt.showDownload=true;
+                rt.infoText+=","+Formatter.formatDecimal(props.length,4,2)+
+                    " nm, "+props.numpoints+" points";
+                break;
+            case 'layout':
+                rt.headline='Layouts';
+                rt.showDelete=isConnected && props.canDelete !== false && ! props.active;
+                rt.showView = viewable;
+                rt.showEdit = isConnected && editableSize && props.canDelete;
+                rt.showDownload = true;
+                break;
+            case 'settings':
+                rt.headline='Settings';
+                rt.showDelete=isConnected && props.canDelete !== false && ! props.active;
+                rt.showView = viewable;
+                rt.showEdit = isConnected && editableSize && props.canDelete;
+                rt.showDownload = true;
+                break;
+            case 'user':
+                rt.headline='User';
+                rt.showDelete=isConnected && props.canDelete;
+                rt.showRename=isConnected && props.canDelete;
+                rt.showView=viewable;
+                rt.showEdit=editableSize && ViewPage.EDITABLES.indexOf(ext) >=0 && props.canDelete && isConnected;
+                rt.showDownload=true;
+                rt.showApp=isConnected && ext === 'html' && globalStore.getData(keys.gui.capabilities.addons);
+                rt.isApp=rt.showApp && props.isAddon;
+                break;
+            case 'images':
+                rt.headline='Images';
+                rt.showDelete = isConnected && props.canDelete !== false;
+                rt.showView = viewable;
+                rt.showRename = isConnected && props.canDelete !== false;
+                rt.showDownload=true;
+                break;
+            case 'overlay':
+                rt.headline='Overlays';
+                rt.showDelete = isConnected && props.canDelete !== false;
+                rt.showView = viewable;
+                rt.showRename = isConnected && props.canDelete !== false;
+                rt.showDownload=true;
+                rt.showEdit= editableSize && ViewPage.EDITABLES.indexOf(ext) >=0 && isConnected;
+                rt.showOverlay = canEditOverlays && allowedOverlay;
+                break;
+        }
+        return rt;
+    }
+}
+
 
 export const allowedItemActions=(props)=>{
     if (! props) return {};

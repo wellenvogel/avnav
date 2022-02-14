@@ -14,7 +14,6 @@ import Requests from '../util/requests.js';
 import assign from 'object-assign';
 import NavHandler from '../nav/navdata.js';
 import routeobjects from '../nav/routeobjects.js';
-import Formatter from '../util/formatter.js';
 import OverlayDialog from '../components/OverlayDialog.jsx';
 import Helper from '../util/helper.js';
 import LayoutHandler from '../util/layouthandler.js';
@@ -29,25 +28,12 @@ import chartImage from '../images/Chart60.png';
 import {
     showFileDialog,
     deleteItem,
-    allowedItemActions,
-    ItemDownloadButton
+    ItemDownloadButton, ItemActions
 } from '../components/FileDialog';
 import EditOverlaysDialog, {DEFAULT_OVERLAY_CHARTENTRY} from '../components/EditOverlaysDialog';
 import {getOverlayConfigName} from "../map/chartsourcebase";
 
 const RouteHandler=NavHandler.getRoutingHandler();
-
-const headlines={
-    track: "Tracks",
-    chart: "Charts",
-    route: "Routes",
-    layout:"Layouts",
-    user: "User",
-    images: "Images",
-    overlay: "Overlays"
-};
-const DynamicPage=Dynamic(Page);
-const DynamicList=Dynamic(ItemList);
 
 class FileInfo{
     constructor(name,type,time) {
@@ -72,13 +58,9 @@ class FileInfo{
     }
 }
 
-const findAddon=(item)=>{
-    if (item.type !== 'user') return;
-    let addons=globalStore.getData(keys.gui.downloadpage.addOns);
-    return Addons.findAddonByUrl(addons,item.url);
-};
 
 const fillDataServer=(type)=>{
+    return new Promise((resolve,reject)=>{
     Requests.getJson("?request=listdir&type="+type).then((json)=>{
         let list=[];
         if (type === 'chart'){
@@ -90,17 +72,17 @@ const fillDataServer=(type)=>{
             if (fi.name === undefined) continue;
             fi.type=type;
             fi.server=true;
-            if (fi.canDelete === undefined) fi.canDelete=false;
-            let addon=findAddon(fi);
-            if (addon){
-                fi.isAddon=true;
+            if (! fi.icon && type === 'chart'){
+                fi.icon=chartImage;
             }
+            if (fi.canDelete === undefined) fi.canDelete=false;
             list.push(fi);
         }
-        addItems(list,true);
+        resolve(list);
+        return;
     }).catch((error)=>{
-        addItems([],true);
-        Toast("unable to load list of "+type+" from server: "+error);
+        reject(error);
+    });
     });
 };
 
@@ -119,110 +101,40 @@ const itemSort=(a,b)=>{
     if (a.name < b.name) return -1;
     return 0;
 };
-const addItems=(items,opt_empty)=>{
-    let current=opt_empty?[]:globalStore.getData(keys.gui.downloadpage.currentItems,[]);
-    let newItems=[];
-    for (let i in current){
-        newItems.push(current[i]);
-    }
-    for (let i in items){
-        let existingIdx=findInfo(newItems,items[i]);
-        if (existingIdx >= 0){
-            //update
-            newItems[existingIdx]=items[i];
-        }
-        else{
-            newItems.push(items[i]);
-        }
-    }
-    newItems.sort(itemSort);
-    globalStore.storeData(keys.gui.downloadpage.currentItems,newItems);
-};
-
-
-const fillDataRoutes = ()=> {
-    RouteHandler.listRoutes(true)
-        .then((items)=>{
-            addItems(items,true);
-        }).catch((error)=>{
-            Toast(error);
-    });
-};
-
-const fillData=()=>{
-    let type=globalStore.getData(keys.gui.downloadpage.type,'chart');
-    if (type == 'route') return fillDataRoutes();
-    if (type == 'layout') {
-        LayoutHandler.listLayouts()
-            .then((list)=>{
-               addItems(list,true);
-            })
-            .catch((error)=>{
-            Toast("unable to load layouts "+error);
-            });
-        return;
-    }
-    return fillDataServer(type);
-};
-
-const changeType=(newType)=>{
-    globalStore.storeData(keys.gui.downloadpage.type, newType);
-};
 
 
 
-const readAddOns = function () {
-    Addons.readAddOns(true)
-        .then((items)=>{
-            globalStore.storeData(keys.gui.downloadpage.addOns, items);
-            fillData();
-        })
-        .catch(()=>{});
-};
+
 
 
 const DownloadItem=(props)=>{
-    let dp={};
-    dp.timeText=Formatter.formatDateTime(new Date(props.time*1000));
-    dp.infoText=props.name;
-    let showRas=false;
-    if (props.type == "route"){
-        dp.infoText+=","+Formatter.formatDecimal(props.length,4,2)+
-            " nm, "+props.numpoints+" points";
-        if (props.server) showRas=true;
-    }
-    let {showView,showEdit,showDelete,showApp,isApp}=allowedItemActions(props);
-    let  cls="listEntry";
-    if (props.active){
-        cls+=" activeEntry";
-    }
-    if (props.type == "chart" && props.originalScheme){
-        cls+=" userAction";
-    }
+
+    let actions=ItemActions.create(props,globalStore.getData(keys.properties.connectedMode,false));
+    let  cls="listEntry "+actions.className;
     let dataClass="downloadItemData";
-    if (!(showDelete && ! props.active)) dataClass+=" noDelete";
+    if (! actions.showDelete ) dataClass+=" noDelete";
     return(
         <div className={cls} onClick={function(ev){
             props.onClick('select')
         }}>
-            {(props.icon || props.type === 'chart') &&
-            <span className="icon" style={{backgroundImage:"url('"+(props.icon||chartImage)+"')"}}/>
+            {(props.icon) &&
+            <span className="icon" style={{backgroundImage:"url('"+(props.icon)+"')"}}/>
             }
-            {(showDelete && ! props.active) &&<Button name="Delete" className="Delete smallButton" onClick={(ev)=>{
+            {actions.showDelete &&<Button name="Delete" className="Delete smallButton" onClick={(ev)=>{
                 ev.preventDefault();
                 ev.stopPropagation();
                 props.onClick('delete');
             }}/>}
             <div className="itemMain">
                 <div className={dataClass}>
-                    <div className="date">{dp.timeText}</div>
-                    <div className="info">{dp.infoText}</div>
+                    <div className="date">{actions.timeText}</div>
+                    <div className="info">{actions.infoText}</div>
                 </div>
                 <div className="infoImages">
-                    { showView && <div className="viewimage"></div>}
-                    { showEdit && <div className="editimage"></div>}
-                    {showRas && <div className="listrasimage"></div>}
-                    {isApp && <div className="appimage"></div>}
+                    { actions.showView && <div className="viewimage"></div>}
+                    { actions.showEdit && <div className="editimage"></div>}
+                    { actions.showIsServer && <div className="listrasimage"></div>}
+                    { actions.isApp && <div className="appimage"></div>}
                 </div>
             </div>
             <ItemDownloadButton
@@ -235,38 +147,32 @@ const DownloadItem=(props)=>{
 };
 
 
-const uploadRouteData=(filename,data)=>{
-    let route = undefined;
-    try {
-        route = new routeobjects.Route("");
-        route.fromXml(data);
-    } catch (e) {
-        Toast("unable to parse route , error: " + e);
-        return;
-    }
-    if (!route.name || route.name == "") {
-        Toast("route has no route name");
-        return;
-    }
-    if (entryExists(route.name) || entryExists(route.name+".gpx")) {
-        Toast("route with name " + route.name + " already exists");
-        return false;
-    }
-    if (globalStore.getData(keys.properties.connectedMode, false)) route.server = true;
-    RouteHandler.saveRoute(route)
-        .then(()=> {
-            fillData();
-            return true;})
-        .catch((error)=>Toast(error));
+const uploadRouteData = (filename, data, checkExistance) => {
+    return new Promise((resolve, reject) => {
+        let route = undefined;
+        try {
+            route = new routeobjects.Route("");
+            route.fromXml(data);
+        } catch (e) {
+            reject("unable to parse route , error: " + e);
+            return;
+        }
+        if (!route.name || route.name === "") {
+            reject("route has no route name");
+            return;
+        }
+        if (checkExistance(route.name) || checkExistance(route.name + ".gpx")) {
+            reject("route with name " + route.name + " already exists");
+            return false;
+        }
+        if (globalStore.getData(keys.properties.connectedMode, false)) route.server = true;
+        RouteHandler.saveRoute(route)
+            .then(() => {
+                resolve(true);
+            })
+            .catch((error) => reject(error));
+    });
 };
-
-
-const userlayoutExists=(name)=>{
-    let itemName=LayoutHandler.fileNameToServerName(name);
-    return entryExists(itemName);
-};
-
-
 
 class ImportDialog extends React.Component{
     constructor(props){
@@ -323,38 +229,6 @@ class ImportDialog extends React.Component{
 }
 
 
-const entryExists=(name)=>{
-    let current=globalStore.getData(keys.gui.downloadpage.currentItems,[]);
-    return findInfo(current,{name:name})>=0;
-};
-
-
-
-const createItem=(type)=>{
-    OverlayDialog.valueDialogPromise('enter filename','')
-        .then((name)=>{
-            if (entryExists(name)) {
-                Toast("already exists");
-                return;
-            }
-            let data="";
-            Requests.postPlain("?request=upload&type=" + type + "&name=" + encodeURIComponent(name), data)
-                .then((res)=>{fillData();})
-                .catch((error)=>{
-                    Toast("creation failed: "+error);
-                    fillData();
-                });
-        })
-        .catch(()=>{})
-};
-
-const readImportExtensions=()=>{
-    if (!globalStore.getData(keys.gui.capabilities.uploadImport)) return;
-    Requests.getJson("?request=api",undefined,{type:'import',command:'extensions'})
-        .then((data)=>{globalStore.storeData(keys.gui.downloadpage.chartImportExtensions,data.items)})
-        .catch();
-};
-
 
 class DownloadPage extends React.Component{
     constructor(props){
@@ -364,78 +238,153 @@ class DownloadPage extends React.Component{
         if (props.options && props.options.downloadtype){
             type=props.options.downloadtype;
         }
-        if (globalStore.getData(keys.gui.downloadpage.type) === undefined || ! (props.options && props.options.returning)) {
-            globalStore.storeData(keys.gui.downloadpage.type, type);
-        }
         this.state={
-            uploadSequence:0
+            uploadSequence:0,
+            type:type,
+            items:[],
+            addOns:[],
+            chartImportExtensions:['kap'],
+            importSubDir:''
         };
-        GuiHelpers.storeHelperState(this,{type:keys.gui.downloadpage.type});
-        globalStore.storeData(keys.gui.downloadpage.downloadParameters,{});
-        globalStore.storeData(keys.gui.downloadpage.enableUpload,false);
-        globalStore.storeData(keys.gui.downloadpage.uploadInfo,{});
-        readAddOns();
-        fillData();
-        readImportExtensions();
         this.checkNameForUpload=this.checkNameForUpload.bind(this);
+        this.changeType=this.changeType.bind(this);
+        this.entryExists=this.entryExists.bind(this);
+        this.fillData=this.fillData.bind(this);
+        this.readAddOns();
+        this.fillData();
+    }
+    componentDidMount() {
+        if (!globalStore.getData(keys.gui.capabilities.uploadImport)) return;
+        Requests.getJson("?request=api",undefined,{type:'import',command:'extensions'})
+            .then((data)=>{
+                this.setState({chartImportExtensions:data.items});
+            })
+            .catch();
     }
 
-    getButtons(type){
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if (prevState.type !== this.state.type){
+            this.fillData();
+        }
+    }
+
+    readAddOns () {
+        Addons.readAddOns(true)
+            .then((items)=>{
+                this.setState({addOns:items});
+                this.fillData();
+            })
+            .catch(()=>{});
+    };
+
+    addItems(items,opt_empty){
+        let current=opt_empty?[]:this.state.items||[];
+        let newItems=[];
+        for (let i in current){
+            newItems.push(current[i]);
+        }
+        for (let i in items){
+            let existingIdx=findInfo(newItems,items[i]);
+            if (existingIdx >= 0){
+                //update
+                newItems[existingIdx]=items[i];
+            }
+            else{
+                newItems.push(items[i]);
+            }
+        }
+        newItems.sort(itemSort);
+        this.setState({items:newItems});
+    };
+
+    fillData(){
+        let type=this.state.type;
+        if (type === 'route') {
+            RouteHandler.listRoutes(true)
+                .then((items)=>{
+                    this.addItems(items,true);
+                }).catch((error)=>{
+                    this.addItems([],true);
+                    Toast(error);
+            });
+            return;
+        }
+        if (type === 'layout') {
+            LayoutHandler.listLayouts()
+                .then((list)=>{
+                    this.addItems(list,true);
+                })
+                .catch((error)=>{
+                    Toast("unable to load layouts "+error);
+                });
+            return;
+        }
+        fillDataServer(type)
+            .then((items)=>{
+                let addons=this.state.addOns;
+                items.forEach((item)=>{
+                    if (item.type !== 'user') return;
+                    if (Addons.findAddonByUrl(addons,item.url)){
+                        item.isAddon=true;
+                    }
+                });
+                this.addItems(items,true);
+            })
+            .catch((error)=>{
+                Toast("unable to load list of "+type+" from server: "+error);
+                this.addItems([],true);
+            })
+    };
+
+
+    changeType(newType){
+        if (newType === this.state.type) return;
+        this.setState({
+            type:newType,
+            items: []
+        });
+        //store the new type to have this available if we come back
+        this.props.history.replace(
+            this.props.history.currentLocation(),
+            {
+                downloadtype:newType
+            }
+        )
+    }
+    entryExists(name){
+        let current=this.state.items;
+        return findInfo(current,{name:name})>=0;
+    };
+
+    getButtonParam(bName,bType,overflow){
+        return {
+            name: bName,
+            toggle:  this.state.type === bType,
+            visible:  this.state.type === bType || ! (this.props.options && this.props.options.allowChange === false),
+            onClick: () => this.changeType(bType),
+            overflow: overflow === true
+        };
+    }
+    getButtons(){
         let allowTypeChange=! (this.props.options && this.props.options.allowChange === false);
         let rt=[
-            {
-                name:'DownloadPageCharts',
-                toggle: type=='chart',
-                visible: type=='chart'|| allowTypeChange,
-                onClick:()=>{changeType('chart')}
-            },
-            {
-                name:'DownloadPageTracks',
-                toggle: type =='track',
-                visible: type == 'track' || allowTypeChange,
-                onClick:()=>{changeType('track')}
-            },
-            {
-                name:'DownloadPageRoutes',
-                toggle: type == 'route',
-                visible: type == 'route'|| allowTypeChange,
-                onClick:()=>{changeType('route')}
-            },
-            {
-                name:'DownloadPageLayouts',
-                toggle: type == 'layout',
-                visible: type == 'layout'|| allowTypeChange ,
-                onClick:()=>{changeType('layout')}
-            },
-            {
-                name:'DownloadPageUser',
-                toggle: type == 'user',
-                visible: (type == 'user'|| allowTypeChange) && globalStore.getData(keys.gui.capabilities.uploadUser,false),
-                onClick:()=>{changeType('user')},
-                overflow:true
-            },
-            {
-                name:'DownloadPageImages',
-                toggle: type == 'images',
-                visible: (type == 'images'|| allowTypeChange) && globalStore.getData(keys.gui.capabilities.uploadImages,false),
-                onClick:()=>{changeType('images')},
-                overflow: true
-            },
-            {
-                name:'DownloadPageOverlays',
-                toggle: type == 'overlay',
-                visible: (type == 'overlay'|| allowTypeChange) && globalStore.getData(keys.gui.capabilities.uploadOverlays,false),
-                onClick:()=>{changeType('overlay')},
-                overflow: true
-            },
+            this.getButtonParam('DownloadPageCharts','chart'),
+            this.getButtonParam('DownloadPageTracks','track'),
+            this.getButtonParam('DownloadPageRoutes','route'),
+            this.getButtonParam('DownloadPageLayouts','layout'),
+            this.getButtonParam('DownloadPageSettings','settings'),
+            this.getButtonParam('DownloadPageUser','user',true),
+            this.getButtonParam('DownloadPageImages','images',true),
+            this.getButtonParam('DownloadPageOverlays','overlay',true),
             {
                 name:'DownloadPageUpload',
-                visible: (type === 'route' || type === 'layout'
-                    || (type ==='chart' && globalStore.getData(keys.gui.capabilities.uploadCharts,false))
-                    || (type === 'user' && globalStore.getData(keys.gui.capabilities.uploadUser,false))
-                    || (type === 'images' && globalStore.getData(keys.gui.capabilities.uploadImages,false))
-                    || (type === 'overlay' && globalStore.getData(keys.gui.capabilities.uploadOverlays,false))
-                    || (type === 'track' && globalStore.getData(keys.gui.capabilities.uploadTracks,false))) &&
+                visible: (this.state.type === 'route' || this.state.type.type === 'layout'
+                    || (this.state.type ==='chart' && globalStore.getData(keys.gui.capabilities.uploadCharts,false))
+                    || (this.state.type === 'user' && globalStore.getData(keys.gui.capabilities.uploadUser,false))
+                    || (this.state.type === 'images' && globalStore.getData(keys.gui.capabilities.uploadImages,false))
+                    || (this.state.type === 'overlay' && globalStore.getData(keys.gui.capabilities.uploadOverlays,false))
+                    || (this.state.type === 'settings' && globalStore.getData(keys.gui.capabilities.uploadOverlays,false))
+                    || (this.state.type === 'track' && globalStore.getData(keys.gui.capabilities.uploadTracks,false))) &&
                     globalStore.getData(keys.properties.connectedMode,true),
                 onClick:()=>{
                     this.setState({uploadSequence:this.state.uploadSequence+1});
@@ -482,6 +431,10 @@ class DownloadPage extends React.Component{
                 }
             }
             if (this.state.type === 'layout'){
+                const userlayoutExists=(name)=>{
+                    let itemName=LayoutHandler.fileNameToServerName(name);
+                    return this.entryExists(itemName);
+                };
                 if (userlayoutExists(name)) {
                     let baseName=LayoutHandler.nameToBaseName(name);
                     LayoutNameDialog.createDialog(baseName,userlayoutExists,"Layout exists, select new name")
@@ -499,19 +452,21 @@ class DownloadPage extends React.Component{
                 let directExtensions=['gemf','mbtiles','xml'];
                 if (directExtensions.indexOf(ext) < 0) {
                     //check for import
-                    let importExtensions=globalStore.getData(keys.gui.downloadpage.chartImportExtensions,[]);
+                    let importExtensions=this.state.chartImportExtensions;
                     if (importExtensions.indexOf(ext)>=0 && ! avnav.android) {
                         OverlayDialog.dialog((props)=>{
                             return(
                                 <ImportDialog
                                     {...props}
                                     okFunction={(props,subdir)=>{
-                                        globalStore.storeData(keys.gui.downloadpage.chartImportSubDir,subdir);
+                                        if (subdir !== this.state.importSubDir){
+                                            this.setState({importSubDir: subdir});
+                                        }
                                         resolve({name:name,type:'import',uploadParameters:{subdir:subdir}});
                                     }}
                                     cancelFunction={()=>reject("canceled")}
                                     name={name}
-                                    subdir={globalStore.getData(keys.gui.downloadpage.chartImportSubDir)}
+                                    subdir={this.state.importSubDir}
                                 />
                             );
                         });
@@ -524,7 +479,7 @@ class DownloadPage extends React.Component{
                 }
                 //fallthrough to check existing...
             }
-            if (entryExists(name)){
+            if (this.entryExists(name)){
                 reject("already exists");
             }
             else{
@@ -546,8 +501,12 @@ class DownloadPage extends React.Component{
                     Toast("no data available after upload");
                     return;
                 }
-                uploadRouteData(obj.name,obj.data);
-                fillData();
+                uploadRouteData(obj.name,obj.data, this.entryExists)
+                    .then((r)=>this.fillData())
+                    .catch((e)=>{
+                        Toast(e);
+                        this.fillData();
+                    });
             }
         }
         if (this.state.type === 'layout'){
@@ -559,7 +518,7 @@ class DownloadPage extends React.Component{
                 LayoutHandler.uploadLayout(obj.name, obj.data, true)
                     .then(
                         (result)=> {
-                            fillData();
+                            this.fillData();
                         }
                     ).catch(
                     (error)=> {
@@ -569,25 +528,43 @@ class DownloadPage extends React.Component{
             }
         }
     }
+
+    createItem(){
+        OverlayDialog.valueDialogPromise('enter filename','')
+            .then((name)=>{
+                if (this.entryExists(name)) {
+                    Toast("already exists");
+                    return;
+                }
+                let data="";
+                Requests.postPlain("?request=upload&type=" + this.state.type + "&name=" + encodeURIComponent(name), data)
+                    .then((res)=>{
+                        this.fillData();
+                    })
+                    .catch((error)=>{
+                        Toast("creation failed: "+error);
+                        this.fillData();
+                    });
+            })
+            .catch(()=>{})
+    };
+
     render(){
         let self=this;
         let localDoneFunction=this.getLocalUploadFunction();
         return (
-            <DynamicPage
+            <Page
                 {...self.props}
                 id="downloadpage"
                 mainContent={<React.Fragment>
-                        <DynamicList
+                        <ItemList
                             itemClass={DownloadItem}
                             scrollable={true}
-                            storeKeys={{
-                                itemList:keys.gui.downloadpage.currentItems,
-                                type:keys.gui.downloadpage.type
-                            }}
+                            itemList={this.state.items}
                             onItemClick={(item,data)=>{
                                 console.log("click on "+item.name+" type="+data);
                                 if (data === 'delete'){
-                                    return deleteItem(item,fillData);
+                                    return deleteItem(item,this.fillData);
                                 }
                                 if (data === 'download'){
                                     return this.download(item);
@@ -596,25 +573,25 @@ class DownloadPage extends React.Component{
                                     return self.props.options.selectItemCallback(item);
                                 }
                                 if (item.type === 'chart' && getOverlayConfigName(item) === getOverlayConfigName(DEFAULT_OVERLAY_CHARTENTRY)){
-                                    EditOverlaysDialog.createDialog(item,()=>fillData());
+                                    EditOverlaysDialog.createDialog(item,()=>this.fillData());
                                     return;
                                 }
                                 showFileDialog(this.props.history,item,
                                     (action,item)=>{
-                                        if (action === 'userapp') readAddOns()
-                                        else fillData();
+                                        if (action === 'userapp') this.readAddOns()
+                                        else this.fillData();
                                     },
                                     (newName)=>{
                                         //checkExisting
-                                        return entryExists(newName);
+                                        return this.entryExists(newName);
                                     });
                             }}
                         />
                         <UploadHandler
                             local={localDoneFunction||false}
                             type={this.state.type}
-                            doneCallback={localDoneFunction?localDoneFunction:fillData}
-                            errorCallback={(err)=>{if (err) Toast(err);fillData();}}
+                            doneCallback={localDoneFunction?localDoneFunction:this.fillData}
+                            errorCallback={(err)=>{if (err) Toast(err);this.fillData();}}
                             uploadSequence={this.state.uploadSequence}
                             checkNameCallback={this.checkNameForUpload}
                         />
@@ -623,30 +600,20 @@ class DownloadPage extends React.Component{
                                 className="fab"
                                 name="DownloadPageCreate"
                                 onClick={()=>{
-                                    createItem("user");
+                                    this.createItem();
                                 }}
                             />
                             :
                             null}
                     </React.Fragment>
                 }
-                storeKeys={{
-                    type:keys.gui.downloadpage.type,
-                    reloadSequence:keys.gui.global.reloadSequence
-                }}
-                updateFunction={(state)=>{
-                    let rt={};
-                    rt.title=headlines[state.type];
-                    rt.buttonList=self.getButtons(state.type);
-                    rt.type=state.type;
-                    //as we will only be called if the type really changes - we can fill the display...
-                    addItems([],true);
-                    fillData();
-                    return rt;
-                }}
+                title={ItemActions.create({type:this.state.type}).headline}
+                buttonList={this.getButtons()}
                 />
         );
     }
 }
 
-export default DownloadPage;
+export default Dynamic(DownloadPage,{storeKeys:{
+        reloadSequence:keys.gui.global.reloadSequence
+    }});

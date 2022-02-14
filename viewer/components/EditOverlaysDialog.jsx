@@ -19,7 +19,7 @@ import OverlayConfig, {getKeyFromOverlay,OVERLAY_ID} from '../map/overlayconfig'
 import DefaultGpxIcon from '../images/icons-new/DefaultGpxPoint.png'
 import {readFeatureInfoFromGeoJson} from "../map/geojsonchartsource";
 import featureFormatters from '../util/featureFormatter';
-
+import chartImage from '../images/Chart60.png';
 const filterOverlayItem=(item,opt_itemInfo)=>{
     let rt=undefined;
     if (item.type === 'chart') {
@@ -974,7 +974,8 @@ export const DEFAULT_OVERLAY_CHARTENTRY={
     overlayConfig: DEFAULT_OVERLAY_CONFIG,
     canDelete: false,
     canDownload:false,
-    time: (new Date()).getTime()/1000
+    time: (new Date()).getTime()/1000,
+    icon: chartImage
 };
 
 

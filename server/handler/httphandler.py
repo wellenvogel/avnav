@@ -668,6 +668,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
       'uploadImport': True,
       'uploadOverlays': True,
       'uploadTracks': True,
+      'uploadSettings': True,
       'canConnect': True,
       'config': True,
       'debugLevel': True,

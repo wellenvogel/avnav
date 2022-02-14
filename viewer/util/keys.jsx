@@ -172,6 +172,7 @@ let keys={
             uploadImport: K,
             uploadOverlays: K,
             uploadTracks: K,
+            uploadSettings: K,
             canConnect: K,
             config: K,
             debugLevel: K,
@@ -221,18 +222,6 @@ let keys={
         },
         routepage:{
             initialName:K,
-        },
-        downloadpage:{
-            type:K,
-            currentItems:K,
-            downloadParameters:K,
-            fileInputKey:K,
-            enableUpload:K,
-            uploadInfo:K,
-            requestedUploadId: new D("the last requested upload for android"),
-            addOns:K,
-            chartImportExtensions:K,
-            chartImportSubDir:K
         }
 
     },
