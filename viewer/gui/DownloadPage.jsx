@@ -430,6 +430,26 @@ class DownloadPage extends React.Component{
                     return;
                 }
             }
+            if (this.state.type === 'settings'){
+                //TODO!
+                if (ext !== 'json'){
+                    reject("only .json files allowed for settings");
+                    return;
+                }
+                let serverName=name;
+                ['user','system','plugin'].forEach((prefix)=>{
+                    if (serverName.indexOf(prefix+".") === 0){
+                        serverName=serverName.substr(prefix.length+1);
+                    }
+                });
+                serverName='user.'+serverName.replace(/\.json$/,'');
+                if (this.entryExists(serverName)){
+                    reject(serverName+" already exists");
+                    return;
+                }
+                resolve(rt);
+                return;
+            }
             if (this.state.type === 'layout'){
                 const userlayoutExists=(name)=>{
                     let itemName=LayoutHandler.fileNameToServerName(name);

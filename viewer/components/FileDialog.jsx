@@ -82,6 +82,9 @@ const getLocalDataFunction=(item)=>{
 }
 const getDownloadFileName=(item)=>{
     if (item.type === 'layout') return LayoutHandler.nameToBaseName(item.name)+".json";
+    if (item.type === 'settings') {
+        return item.name.replace(/^user\./,'').replace(/^system\./,'').replace(/^plugin/,'')+".json";
+    }
     if (item.type === 'route'){
         if (! item.name.match(/\.gpx$/)) return item.name+".gpx";
         return item.name;
@@ -96,7 +99,7 @@ const getDownloadUrl=(item)=>{
     }
     let url=globalStore.getData(keys.properties.navUrl)+"?request=download&type="+
         encodeURIComponent(item.type)+"&name="+
-        encodeURIComponent(name)+"&filename="+encodeURIComponent(name);
+        encodeURIComponent(name)+"&filename="+encodeURIComponent(getDownloadFileName(item));
     for (let k in additionalUrlParameters){
         if (item[k] !== undefined){
             url+="&"+k+"="+encodeURIComponent(item[k])
@@ -182,14 +185,14 @@ export class ItemActions{
             case 'layout':
                 rt.headline='Layouts';
                 rt.showDelete=isConnected && props.canDelete !== false && ! props.active;
-                rt.showView = viewable;
+                rt.showView = true;
                 rt.showEdit = isConnected && editableSize && props.canDelete;
                 rt.showDownload = true;
                 break;
             case 'settings':
                 rt.headline='Settings';
                 rt.showDelete=isConnected && props.canDelete !== false && ! props.active;
-                rt.showView = viewable;
+                rt.showView = true;
                 rt.showEdit = isConnected && editableSize && props.canDelete;
                 rt.showDownload = true;
                 break;
@@ -223,46 +226,6 @@ export class ItemActions{
         return rt;
     }
 }
-
-
-export const allowedItemActions=(props)=>{
-    if (! props) return {};
-    let isConnected=globalStore.getData(keys.properties.connectedMode,true);
-    let ext=Helper.getExt(props.name);
-    if (props.type === 'route') ext="gpx";
-    if (props.type === 'layout') ext="json";
-    let showView=(props.type === 'overlay' || props.type === 'user' || props.type==='images' || (props.type === 'route' && props.server) || props.type === 'track' || props.type === 'layout') && ViewPage.VIEWABLES.indexOf(ext)>=0;
-    let showEdit=(isConnected && (((props.type === 'overlay' || props.type === 'user') && props.size !== undefined && props.size < ViewPage.MAXEDITSIZE)|| (props.type === 'layout' && props.canDelete)  ) && ViewPage.EDITABLES.indexOf(ext) >=0);
-    if (props.type === 'route' && mapholder.getCurrentChartEntry()) showEdit=true;
-    let showDelete=!props.active;
-    if (props.canDelete !== undefined){
-        showDelete=props.canDelete && ! props.active;
-    }
-    if (! isConnected && (props.type !== 'route' || props.isServer)) showDelete=false;
-    let showRename=isConnected && (props.type === 'user' || props.type === 'images' || props.type === 'overlay' );
-    let showApp=isConnected && (props.type === 'user' && ext === 'html' && globalStore.getData(keys.gui.capabilities.addons));
-    let isApp=(showApp && props.isAddon);
-    let showOverlay=(isConnected &&
-            (props.type === 'chart' ||
-            (['overlay','route','track'].indexOf(props.type) >= 0
-                && KNOWN_OVERLAY_EXTENSIONS.indexOf(Helper.getExt(props.name,true)) >= 0)
-            ) &&
-        globalStore.getData(keys.gui.capabilities.uploadOverlays));
-    let showScheme=(props.type === 'chart' && props.url && props.url.match(/.*mbtiles.*/));
-    let showConvert= (showConvertFunctions[props.type] && ext === 'gpx');
-    return {
-        showEdit:showEdit,
-        showView:showView,
-        showDelete:showDelete,
-        showRename:showRename,
-        showApp:showApp,
-        isApp:isApp,
-        showOverlay: showOverlay,
-        showScheme: showScheme,
-        showConvert: showConvert,
-        showImportLog: props.hasImporterLog
-    };
-};
 
 const getImportLogUrl=(name)=>{
     return globalStore.getData(keys.properties.navUrl)+
@@ -403,7 +366,7 @@ export default  class FileDialog extends React.Component{
             existingName:false,
             name:props.current.name,
             scheme:props.current.scheme,
-            allowed:allowedItemActions(props.current)
+            allowed:ItemActions.create(props.current,globalStore.getData(keys.properties.connectedMode,true))
         };
         this.onChange=this.onChange.bind(this);
         this.extendedInfo=stateHelper(this,{},'extendedInfo');
