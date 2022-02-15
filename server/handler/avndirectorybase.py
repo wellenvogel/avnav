@@ -473,7 +473,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
     overwrite = overwrite.lower() == 'true' if overwrite is not None else False
     filename = name
     if filename is None:
-      raise Exception("missing filename in upload request")
+      raise Exception("missing name in upload request")
     self.checkName(filename)
     rlen = handler.headers.get("Content-Length")
     if rlen is None:
