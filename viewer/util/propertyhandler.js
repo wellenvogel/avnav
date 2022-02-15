@@ -237,15 +237,11 @@ class PropertyHandler {
                         if (typeof (v) !== 'boolean') {
                             if (typeof (v) === 'string') v = v.toLowerCase() === 'true';
                             else v = !!v;
-                            if (eHandler("invalid boolean " + ov + "(=>"+v+") for " + dk)) return;
                         }
                         rt[dk] = v;
                         break;
                     case PropertyType.RANGE:
                         if (typeof (v) !== 'number') {
-                            if (opt_checkValues) {
-                                if (eHandler("invalid number " + v + " for " + dk)) return;
-                            }
                             v = parseFloat(v);
                             if (isNaN(v)) {
                                 v = des.values[0];
@@ -357,14 +353,21 @@ class PropertyHandler {
 
     exportSettings(current){
         let descriptions = KeyHelper.getKeyDescriptions(true);
+        let values = {};
         if (! current) {
-            let values = {};
             let keys = KeyHelper.flattenedKeys(keys.properties);
             current = globalStore.getMultiple(keys);
         }
         for (let dk in descriptions){
             let des=descriptions[dk];
-            if (! (des.type in PropertyType) || des.type === PropertyType.INTERNAL){
+            let found=false;
+            for (let k in PropertyType){
+                if (PropertyType[k] === des.type && PropertyType[k] !== PropertyType.INTERNAL){
+                    found=true;
+                    break;
+                }
+            }
+            if (! found){
                 continue;
             }
             if (current[dk] === des.defaultv) continue;

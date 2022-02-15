@@ -369,8 +369,6 @@ let keys={
         mapScale: new Property(1,"scale the map display",PropertyType.RANGE,[0.3,5]),
         mapFloat: new Property(false,"float map behind buttons",PropertyType.CHECKBOX),
         mapLockMode: new Property('center','lock boat mode',PropertyType.LIST,['center','current','ask']),
-        mapBoatX: new Property(50,"boat position x(%)",PropertyType.RANGE,[1,99]),
-        mapBoatY: new Property(50,"boat position y(%)",PropertyType.RANGE,[1,99]),
         mapSequenceTime: new Property(2000,"change check interval(ms)",PropertyType.RANGE,[500,10000,100]),
         remoteChannelName: new Property('0','remote control channel',PropertyType.LIST,['0','1','2','3','4']),
         remoteChannelRead: new Property(false,'read from remote channel',PropertyType.CHECKBOX),

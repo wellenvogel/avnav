@@ -8,14 +8,26 @@ import assign from 'object-assign';
 class SaveItemDialog extends React.Component{
     constructor(props){
         super(props);
+        let value=this.externalNameToName(props.value);
         this.state=assign({
-            value: props.value
+            value: value
             },
-            props.checkFunction(props.value));
+            props.checkFunction(this.nameToExternalName(value)));
         this.valueChanged=this.valueChanged.bind(this);
     }
+    nameToExternalName(name){
+        if (this.props.fixedPrefix) return this.props.fixedPrefix+name;
+        return name;
+    }
+    externalNameToName(name){
+        if (this.props.fixedPrefix){
+            let l=this.props.fixedPrefix.length;
+            if (name.substr(0,l) === this.props.fixedPrefix) return name.substr(l);
+            return name;
+        }
+    }
     valueChanged(value) {
-        let nstate=assign({value:value},this.props.checkFunction(value));
+        let nstate=assign({value:value},this.props.checkFunction(this.nameToExternalName(value)));
         this.setState(nstate);
     }
     render () {
@@ -38,16 +50,18 @@ class SaveItemDialog extends React.Component{
                     <div className="dialogRow">
                         <Input
                             className="saveName"
-                            label={'user.'}
+                            label={this.props.fixedPrefix||''}
                             value={this.state.value} onChange={this.valueChanged}/>
                     </div>
                 </div>
                 <div className="dialogButtons">
                     <DB name="cancel" onClick={this.props.closeCallback}>Cancel</DB>
                     <DB name="ok" onClick={() => {
-                        this.props.okCallback(this.state.value);
+                        this.props.okCallback(this.nameToExternalName(this.state.value));
                         this.props.closeCallback();
-                    }}>{this.state.existing ? "Overwrite" : "Ok"}</DB>
+                        }}
+                        disabled={this.state.existing && ! this.props.allowOverwrite}
+                    >{(this.state.existing && this.props.allowOverwrite) ? "Overwrite" : "Ok"}</DB>
                 </div>
             </div>
         );
@@ -58,8 +72,10 @@ SaveItemDialog.propTypes={
     title: PropTypes.string,
     subTitle: PropTypes.string,
     className: PropTypes.string,
+    fixedPrefix: PropTypes.string,
     checkFunction: PropTypes.func.isRequired, //return an object with existing, active
     itemLabel: PropTypes.string.isRequired,
+    allowOverwrite: PropTypes.bool,
     value: PropTypes.string,
     okCallback: PropTypes.func.isRequired,
     closeCallback: PropTypes.func.isRequired
@@ -68,7 +84,7 @@ SaveItemDialog.propTypes={
  *
  * @param name
  * @param checkFunction
- * @param properties object with: title, itemLabel, subtitle
+ * @param properties object with: title, itemLabel, subtitle, fixedPrefix
  * @return {*}
  */
 SaveItemDialog.createDialog=(name,checkFunction,properties)=>{
@@ -76,6 +92,7 @@ SaveItemDialog.createDialog=(name,checkFunction,properties)=>{
     return new Promise((resolve,reject)=>{
         OverlayDialog.dialog((props)=> {
             return <SaveItemDialog
+                {...properties}
                 {...props}
                 value={name}
                 okCallback={(newName)=>{
@@ -88,9 +105,6 @@ SaveItemDialog.createDialog=(name,checkFunction,properties)=>{
                         return false;
                     }
                 }
-                title={properties.title}
-                subTitle={properties.subTitle}
-                itemLabel={properties.itemLabel}
                 />
         },undefined,()=>{reject("")});
     });
@@ -152,14 +166,12 @@ LoadItemDialog.createDialog=(name,itemList,properties)=>{
     return new Promise((resolve,reject)=>{
         OverlayDialog.dialog((props)=> {
             return <SaveItemDialog
+                {...properties}
                 {...props}
                 value={name}
                 okCallback={(newName)=>{
                     resolve(newName)
                 }}
-                title={properties.title}
-                subTitle={properties.subTitle}
-                itemLabel={properties.itemLabel}
                 itemList={itemList}
             />
         },undefined,()=>{reject("")});

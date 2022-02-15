@@ -357,6 +357,7 @@ class DownloadPage extends React.Component{
                     || (this.state.type === 'images' && globalStore.getData(keys.gui.capabilities.uploadImages,false))
                     || (this.state.type === 'overlay' && globalStore.getData(keys.gui.capabilities.uploadOverlays,false))
                     || (this.state.type === 'settings' && globalStore.getData(keys.gui.capabilities.uploadOverlays,false))
+                    || (this.state.type === 'layout' && globalStore.getData(keys.gui.capabilities.uploadLayout,false))
                     || (this.state.type === 'track' && globalStore.getData(keys.gui.capabilities.uploadTracks,false))) &&
                     globalStore.getData(keys.properties.connectedMode,true),
                 onClick:()=>{
@@ -386,6 +387,7 @@ class DownloadPage extends React.Component{
             let actions=ItemActions.create({type:this.state.type},false);
             let ext=Helper.getExt(name);
             let rt={name:name};
+            let serverName=actions.nameForUpload(name);
             if (this.state.type === 'route'){
                 if (ext !== "gpx") {
                     reject("only gpx for routes");
@@ -409,27 +411,35 @@ class DownloadPage extends React.Component{
                     reject("only .json files allowed for settings");
                     return;
                 }
-                let serverName=actions.nameForUpload(name);
                 if (this.entryExists(serverName)){
-                    reject(serverName+" already exists");
+                    SaveItemDialog.createDialog(serverName,(newName)=>{
+                        return {
+                            existing : this.entryExists(newName)
+                        };
+                    },{
+                        title: "Settings file exists, select new name",
+                        itemLabel: 'Settings',
+                        fixedPrefix: 'user.'
+                    })
+                        .then((newName)=>{
+                            resolve({name:newName});
+                        })
+                        .catch((error)=>{reject(error)})
                     return;
                 }
                 resolve(rt);
                 return;
             }
             if (this.state.type === 'layout'){
-                const userlayoutExists=(name)=>{
-                    let itemName=LayoutHandler.fileNameToServerName(name);
-                    return this.entryExists(itemName);
-                };
-                if (userlayoutExists(name)) {
-                    let baseName=LayoutHandler.nameToBaseName(name);
-                    SaveItemDialog.createDialog(baseName,(newName)=>{
-                        let existing=userlayoutExists(newName);
-                        return {existing:existing};
+                if (this.entryExists(serverName)) {
+                    SaveItemDialog.createDialog(serverName,(newName)=>{
+                        return {
+                            existing : this.entryExists(newName)
+                        };
                     },{
                         title: "Layout exists, select new name",
-                        itemLabel: 'Layout'
+                        itemLabel: 'Layout',
+                        fixedPrefix: 'user.'
                     })
                         .then((newName)=>{
                             resolve({name:newName});

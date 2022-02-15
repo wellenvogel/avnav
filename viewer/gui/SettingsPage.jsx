@@ -20,6 +20,8 @@ import FullScreen from '../components/Fullscreen';
 import {stateHelper} from "../util/GuiHelpers";
 import Formatter from "../util/formatter";
 import {SaveItemDialog} from "../components/SettingsNameDialogs";
+import PropertyHandler from '../util/propertyhandler';
+import {ItemActions} from "../components/FileDialog";
 
 const settingsSections={
     Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,keys.properties.layers.grid,keys.properties.layers.compass],
@@ -453,9 +455,33 @@ class SettingsPage extends React.Component{
         }
     }
     saveSettings(){
+        let actions=ItemActions.create('settings');
         let oldName=globalStore.getData(keys.properties.lastLoadedName).replace(/-[0-9]*$/,'');
         let suffix=Formatter.formatDateTime(new Date()).replace(/[: /]/g,'-').replace(/--/g,'-');
-        let proposedName=oldName+"-"+suffix;
+        let proposedName=actions.nameForUpload(oldName+"-"+suffix);
+        PropertyHandler.listSettings(true)
+            .then((settings)=>{
+                const checkFunction=(newName)=>{
+                    for (let idx in settings){
+                        if (settings[idx].value === newName) return {existing:true};
+                    }
+                    return {}
+                }
+                return SaveItemDialog.createDialog(proposedName,checkFunction,{
+                    title: "Select Name to save settings",
+                    itemLabel: 'Settings',
+                    fixedPrefix: 'user.'
+                })
+            })
+            .then((settingsName)=>{
+                return PropertyHandler.uploadSettingsData(
+                    settingsName,
+                    PropertyHandler.exportSettings(this.values.getValues(true)),
+                    true
+                )
+            })
+            .then((res)=> Toast("settings saved"))
+            .catch((e)=>Toast(e))
 
     }
     changeItem(item,value){
@@ -477,29 +503,20 @@ class SettingsPage extends React.Component{
         let isEditing=LayoutHandler.isEditing();
         if (! isEditing){
             let startDialog=()=> {
-                let currentLayouts = [];
-                let checkName = (name)=> {
-                    name = LayoutHandler.fileNameToServerName(name);
-                    for (let i = 0; i < currentLayouts.length; i++) {
-                        if (currentLayouts[i].name === name) return true;
-                    }
-                    return false;
-                };
                 LayoutHandler.listLayouts()
                     .then((list)=> {
-                        currentLayouts = list;
                         let name = LayoutHandler.nameToBaseName(LayoutHandler.name);
                         SaveItemDialog.createDialog(name,(newName)=>{
-                            let existing=checkName(newName);
-                            return {existing:existing};
+                            return {existing:list.indexOf(newName) >= 0};
                         },{
                             title: "Start Layout Editor",
                             itemLabel: 'Layout',
-                            subtitle: "save changes to"
+                            subtitle: "save changes to",
+                            fixedPrefix: 'user.',
+                            allowOverwrite: true
                         })
                             .then((newName)=> {
-                                let layoutName = LayoutHandler.fileNameToServerName(newName);
-                                LayoutHandler.startEditing(layoutName);
+                                LayoutHandler.startEditing(newName);
                                 this.props.history.pop();
                             })
                             .catch(()=> {

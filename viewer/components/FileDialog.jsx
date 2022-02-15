@@ -254,8 +254,22 @@ export class ItemActions{
                     return 'user.'+serverName.replace(/\.json$/,'');
                 }
                 rt.localUploadFunction=(name,data,overwrite)=>{
+                    const doUpload=(name,data,overwrite)=>{
+                        return PropertyHandler.uploadSettingsData(name,data,overwrite);
+                    }
                    return PropertyHandler.verifySettingsData(data, true,true)
-                       .then((res) => PropertyHandler.uploadSettingsData(name,data,overwrite));
+                       .then(
+                           (res) => doUpload(name,res.data,overwrite),
+                           (error)=>{
+                               return OverlayDialog.confirm("Error: "+error,undefined,"Try again with ignore?")
+                                   .then((r)=>{
+                                       return PropertyHandler.verifySettingsData(data)
+                                           .then((res)=>doUpload(name,res.data,overwrite));
+                                   },
+                                       (x)=> Promise.reject("aborted")
+                                   )
+                           }
+                       );
                 }
                 break;
             case 'user':
