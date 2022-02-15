@@ -440,6 +440,12 @@ class SettingsPage extends React.Component{
         this.values.setValue(item.name,value);
     }
 
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if (this.props.small !== prevProps.small && prevProps.small && ! this.state.leftPanelVisible){
+            this.setState({leftPanelVisible: true});
+        }
+    }
+
     resetChanges(){
         this.values.setState(globalStore.getMultiple(this.flattenedKeys),true);
     }
@@ -527,7 +533,7 @@ class SettingsPage extends React.Component{
         let self = this;
         let MainContent = (props)=> {
             let leftVisible = props.leftPanelVisible;
-            let rightVisible = !self.props.small || !props.leftPanelVisible;
+            let rightVisible = !props.small || !props.leftPanelVisible;
             let leftClass = "sectionList";
             if (!rightVisible) leftClass += " expand";
             let currentSection = props.section|| 'Layer';
@@ -621,10 +627,11 @@ class SettingsPage extends React.Component{
                             <MainContent
                                 section={self.state.section}
                                 leftPanelVisible={self.state.leftPanelVisible}
+                                small={self.props.small}
                             />
                         }
                 buttonList={self.buttons}
-                title={"Settings"+((self.props.small && self.state.leftPanelVisible)?" "+self.state.section:"")}
+                title={"Settings"+((self.props.small && !self.state.leftPanelVisible)?" "+self.state.section:"")}
                 />);
     }
 }
