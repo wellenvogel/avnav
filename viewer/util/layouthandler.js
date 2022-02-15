@@ -129,23 +129,26 @@ class LayoutHandler{
      * loads a layout but still does not activate it
      * @param name
      */
-    loadLayout(name){
+    loadLayout(name, opt_checkOnly){
         let self=this;
-        this.layout=undefined;
-        this.name=name;
-        this._setEditing(false);
+        if (! opt_checkOnly) {
+            this.layout=undefined;
+            this.name=name;
+            this._setEditing(false);
+        }
         return new Promise((resolve,reject)=> {
             if (this.storeLocally){
                 if (!this.temporaryLayouts[name]) {
                     reject("layout "+name+" not found");
                 }
                 else {
-                    this.layout=this.temporaryLayouts[name];
-                    resolve(this.temporaryLayouts[name]);
+                    let layout=this.temporaryLayouts[name];
+                    if (! opt_checkOnly) this.layout=layout;
+                    resolve(layout);
                 }
                 return;
             }
-            Requests.getJson("?request=download&type=layout&name=" +
+            Requests.getJson("?request=download&noattach=true&type=layout&name=" +
                 encodeURIComponent(name), {checkOk: false}).then(
                 (json)=> {
                     let error=self.checkLayout(json);
@@ -153,7 +156,7 @@ class LayoutHandler{
                         reject("layout error: "+error);
                         return;
                     }
-                    this.layout = json;
+                    if (! opt_checkOnly) this.layout = json;
                     resolve(json);
                 },
                 (error)=> {
@@ -164,11 +167,15 @@ class LayoutHandler{
                         if (raw) {
                             let layoutData=JSON.parse(raw);
                             if (layoutData.name == name && layoutData.data){
-                                this.layout=layoutData.data;
-                                if (name.match(/^user\./)) {
-                                    self.uploadLayout(name.replace(/^user\./,''), this.layout)
-                                        .then(()=>{})
-                                        .catch(()=>{});
+                                if (! opt_checkOnly) {
+                                    this.layout = layoutData.data;
+                                    if (name.match(/^user\./)) {
+                                        self.uploadLayout(name.replace(/^user\./, ''), this.layout)
+                                            .then(() => {
+                                            })
+                                            .catch(() => {
+                                            });
+                                    }
                                 }
                                 resolve(layoutData.data);
                                 return;

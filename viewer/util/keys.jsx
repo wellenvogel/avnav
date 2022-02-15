@@ -24,7 +24,8 @@ export const PropertyType={
     LIST:2,
     COLOR:3,
     LAYOUT:4,
-    SELECT: 5
+    SELECT: 5,
+    INTERNAL: 6
 };
 
 /**
@@ -39,7 +40,7 @@ export const PropertyType={
 export const Property=function(defaultv,opt_label,opt_type,opt_values,opt_initial){
     this.defaultv=defaultv;
     this.label=opt_label;
-    this.type=(opt_type !== undefined)?opt_type:PropertyType.RANGE;
+    this.type=(opt_type !== undefined)?opt_type:PropertyType.INTERNAL;
     this.values=(opt_values !== undefined)?opt_values:[0,1000]; //assume range 0...1000
     this.canChange=opt_type !== undefined;
     this.initialValue=opt_initial;
@@ -229,6 +230,7 @@ let keys={
     //they will be written to local storage on change
     //and the store will be filled with initial values on start
     properties: {
+        lastLoadedName: new Property('system.default'),
         layers: {
             ais: new Property(true, "AIS", PropertyType.CHECKBOX),
             track: new Property(true, "Track", PropertyType.CHECKBOX),

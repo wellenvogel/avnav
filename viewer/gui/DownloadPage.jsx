@@ -548,8 +548,9 @@ class DownloadPage extends React.Component{
                     Toast("no data available after upload");
                     return;
                 }
-                PropertyHandler.verifyPropertyData(obj.data, true)
-                    .then((res) => alert("properties ok"))
+                PropertyHandler.verifySettingsData(obj.data, true,true)
+                    .then((res) => PropertyHandler.uploadSettingsData(res.data,obj.name))
+                    .then((res)=>this.fillData())
                     .catch((e) => Toast(e));
             }
         }

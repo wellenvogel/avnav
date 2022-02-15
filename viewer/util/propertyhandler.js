@@ -9,6 +9,8 @@ import base from '../base.js';
 import merge from 'lodash.merge';
 import Helper from './helper.js';
 import LayoutHandler from './layouthandler';
+import RequestHandler from "./requests";
+import Requests from "./requests";
 
 
 const hex2rgba= (hex, opacity)=> {
@@ -185,10 +187,20 @@ class PropertyHandler {
      * without the leading "keys.properties"
      * @param data
      * @param opt_checkValues if set - reject on invalid values, otherwise correct them
+     * @param opt_errorNonExistent treat non existing properties as error
      * @return the checked (and potentially corrected) flattend properties
      */
-    verifyPropertyData(data, opt_checkValues) {
+    verifySettingsData(data, opt_checkValues, opt_errorNonExistent) {
+
         return new Promise((resolve, reject) => {
+            let warnings=[];
+            const eHandler=(txt,nonExistant)=>{
+                if ((nonExistant && opt_errorNonExistent) || (! nonExistant && opt_checkValues)){
+                    reject(txt);
+                    return true;
+                }
+                warnings.push(txt);
+            }
             if (typeof (data) === 'string') {
                 try {
                     data = JSON.parse(data);
@@ -197,7 +209,8 @@ class PropertyHandler {
                     return;
                 }
             }
-            if (data.settingsVersion === undefined) {
+            let version=data.settingsVersion;
+            if (version === undefined) {
                 reject("no settings version found");
                 return;
             }
@@ -212,63 +225,51 @@ class PropertyHandler {
             for (let dk in data.properties) {
                 let key = prefix + dk;
                 if (!(key in descriptions)) {
+                    if (eHandler(dk+" is no existing property",true)) return;
                     continue; //silently ignore non existing
                     //throw new Error("no property dk is defined")
                 }
                 let des = descriptions[key];
                 let v = data.properties[dk];
+                let ov=v;
                 switch (des.type) {
                     case PropertyType.CHECKBOX:
                         if (typeof (v) !== 'boolean') {
-                            if (opt_checkValues) {
-                                reject("invalid boolean " + v + " for " + dk);
-                                return;
-                            }
                             if (typeof (v) === 'string') v = v.toLowerCase() === 'true';
                             else v = !!v;
+                            if (eHandler("invalid boolean " + ov + "(=>"+v+") for " + dk)) return;
                         }
-                        rt[key] = v;
+                        rt[dk] = v;
                         break;
                     case PropertyType.RANGE:
                         if (typeof (v) !== 'number') {
                             if (opt_checkValues) {
-                                reject("invalid number " + v + " for " + dk);
-                                return;
+                                if (eHandler("invalid number " + v + " for " + dk)) return;
                             }
                             v = parseFloat(v);
                             if (isNaN(v)) {
-                                if (opt_checkValues) {
-                                    reject("nan " + v + " for " + dk);
-                                    return;
-                                }
-                                v = values[0];
+                                v = des.values[0];
+                                if (eHandler("nan " + ov + "(=>"+v+") for " + dk)) return;
                             }
                         }
-                        if (v > values[1]) {
-                            if (opt_checkValues) {
-                                reject(v + " to big for " + dk);
-                                return;
-                            }
-                            v = values[1];
+                        if (v > des.values[1]) {
+                            ov=v;
+                            v = des.values[1];
+                            if (eHandler(ov + " to big (=>"+v+") for " + dk)) return;
                         }
-                        if (v < values[0]) {
-                            if (opt_checkValues) {
-                                reject(v + " to small for " + dk);
-                                return;
-                            }
-                            v = values[0];
+                        if (v < des.values[0]) {
+                            ov=v;
+                            v = des.values[0];
+                            if (eHandler(ov + " to small (=>"+v+") for " + dk)) return;
                         }
-                        rt[key] = v;
+                        rt[dk] = v;
                         break;
                     case PropertyType.COLOR:
                         if (typeof (v) !== 'string') {
-                            if (opt_checkValues) {
-                                reject("invalid color " + v + " for " + dk);
-                                return;
-                            }
                             v = v + "";
+                            if (eHandler("invalid color " + ov + "(=>"+v+") for " + dk)) return;
                         }
-                        rt[key] = v;
+                        rt[dk] = v;
                         break;
                     case PropertyType.LIST:
                     case PropertyType.SELECT:
@@ -277,36 +278,32 @@ class PropertyHandler {
                             if (le === v) found = true;
                         })
                         if (!found) {
-                            if (opt_checkValues) {
-                                reject(v + " is not a valid value for " + dk);
-                                return;
-                            }
                             v = des.values[0];
+                            if (eHandler(ov + " is not a valid value (=>"+v+") for " + dk)) return;
                         }
-                        rt[key] = v;
+                        rt[dk] = v;
                         break;
                     case PropertyType.LAYOUT:
                         promises.push(
-                            new Promise((lresolve,lreject)=> {
-                                LayoutHandler.loadLayout(v)
-                                    .then((o) => {
-                                        let rt={};
-                                        rt[key]=v;
-                                        lresolve(rt);
-                                    })
-                                    .catch((error) => {
+                            LayoutHandler.loadLayout(v,true)
+                                .then((o) => {
+                                        let rt = {};
+                                        rt[dk] = v;
+                                        return rt;
+                                    },
+                                    (error) => {
+                                        let e=dk + ": " + v + ": " + error;
                                         if (opt_checkValues) {
-                                            lreject(dk + ": unable to load layout " + v + ": " + error);
-                                        }
-                                        else{
-                                            lresolve({});
+                                            return Promise.reject(e);
+                                        } else {
+                                            warnings.push(e);
+                                            return {};
                                         }
                                     })
-                            })
                         );
                         break;
                     default:
-                        //silently ignore this
+                        if (eHandler(dk+": cannot be set",true)) return;
                         break;
                 }
             }
@@ -317,12 +314,120 @@ class PropertyHandler {
                             rt[k]=v[k];
                         }
                     })
-                    resolve(rt);
+                    resolve({warnings:warnings,data: {settingsVersion:version,properties:rt}});
                 })
                 .catch((error)=>reject(error));
         })
 
     }
+
+    /**
+     * upload settings to the server
+     * @param data the settings data
+     * @param fileName
+     * @param opt_check check values before
+     * @param opt_overwrite overwrite on server
+     * @return {Promise<* | void>}
+     */
+    uploadSettingsData(data, fileName, opt_check,opt_overwrite){
+        if (!globalStore.getData(keys.properties.connectedMode,false)){
+            return Promise.reject("not in connected mode, cannot upload");
+        }
+        const upload=(data)=>{
+            if (typeof(data) !== 'string'){
+                data=JSON.stringify(data,undefined,2);
+            }
+            return Requests.postPlain({
+                request:'upload',
+                type:'settings',
+                name: fileName,
+                overwrite: !!opt_overwrite
+            },data);
+        }
+        if (opt_check) {
+            return this.verifySettingsData(data, true, true)
+                .then((result) => {
+                    return upload(result.data);
+                })
+        }
+        else{
+            return upload(data);
+        }
+    }
+
+    exportSettings(current){
+        let descriptions = KeyHelper.getKeyDescriptions(true);
+        if (! current) {
+            let values = {};
+            let keys = KeyHelper.flattenedKeys(keys.properties);
+            current = globalStore.getMultiple(keys);
+        }
+        for (let dk in descriptions){
+            let des=descriptions[dk];
+            if (! (des.type in PropertyType) || des.type === PropertyType.INTERNAL){
+                continue;
+            }
+            if (current[dk] === des.defaultv) continue;
+            let okey=dk.replace(/^properties\./,'');
+            values[okey]=current[dk];
+        }
+        return {settingsVersion:1,properties:values}
+    }
+
+    /**
+     * create a list of properties (for the settings page)
+     * with filtered properties from the input
+     * @param propertyData
+     * @param currentValues
+     * @param opt_setDefaults if true it will set all values that are different from default
+     * @return {Promise}
+     */
+    importSettings(propertyData, currentValues, opt_setDefaults) {
+        return new Promise((resolve, reject) => {
+            if (propertyData.settingsVersion === undefined) {
+                reject("missing settingsVersion");
+                return;
+            }
+            if (typeof (propertyData.properties) !== 'object') {
+                reject("missing or invalid properties");
+                return;
+            }
+            let newValues=propertyData.properties;
+            let descriptions = KeyHelper.getKeyDescriptions(true);
+            let values = {};
+            let newLayout;
+            for (let dk in descriptions) {
+                let des = descriptions[dk];
+                if (!(des.type in PropertyType) || des.type === PropertyType.INTERNAL) {
+                    continue;
+                }
+                let okey=dk.replace(/^properties\./,'');
+                if (okey in newValues) {
+                    if(newValues[okey] !== current[dk]) {
+                        values[dk] = newValues[okey];
+                        if (des.type === PropertyType.LAYOUT) newLayout=values[dk];
+                    }
+                }
+                else{
+                    if (opt_setDefaults && current[dk] !== des.defaultv){
+                        values[dk]=des.defaultv;
+                        if (des.type === PropertyType.LAYOUT) newLayout=values[dk];
+                    }
+                }
+
+            }
+            if (newLayout){
+                LayoutHandler.loadLayout(newLayout)
+                    .then((ok)=>{
+                        resolve(values);
+                    })
+                    .catch((e)=>reject("unable to load layout: "+e));
+                //load layout
+            }
+            resolve(values);
+        });
+    }
+
 
 }
 
