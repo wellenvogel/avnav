@@ -329,7 +329,7 @@ class PropertyHandler {
      * @param opt_overwrite overwrite on server
      * @return {Promise<* | void>}
      */
-    uploadSettingsData(data, fileName, opt_check,opt_overwrite){
+    uploadSettingsData(fileName, data,opt_check,opt_overwrite){
         if (!globalStore.getData(keys.properties.connectedMode,false)){
             return Promise.reject("not in connected mode, cannot upload");
         }
@@ -425,6 +425,21 @@ class PropertyHandler {
                 //load layout
             }
             resolve(values);
+        });
+    }
+
+    listSettings(opt_forSelect){
+        if ( !globalStore.getData(keys.gui.capabilities.uploadSettings,false)){
+            return Promise.resolve([]);
+        }
+        return RequestHandler.getJson({
+            request: 'listdir',
+            type: 'settings'
+        }).then((json)=>{
+            if (!opt_forSelect) return json.items;
+            let rt=[];
+            json.items.forEach((item)=>rt.push({label:item.name,value:item.name}));
+            return rt;
         });
     }
 

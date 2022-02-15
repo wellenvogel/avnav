@@ -61,8 +61,10 @@ class FileInfo{
 
 
 const fillDataServer=(type)=>{
-    return new Promise((resolve,reject)=>{
-    Requests.getJson("?request=listdir&type="+type).then((json)=>{
+    return Requests.getJson({
+        request:'listdir',
+        type: type
+    }).then((json)=>{
         let list=[];
         if (type === 'chart'){
             list.push(assign({},DEFAULT_OVERLAY_CHARTENTRY));
@@ -79,11 +81,7 @@ const fillDataServer=(type)=>{
             if (fi.canDelete === undefined) fi.canDelete=false;
             list.push(fi);
         }
-        resolve(list);
-        return;
-    }).catch((error)=>{
-        reject(error);
-    });
+        return(list);
     });
 };
 
@@ -256,7 +254,11 @@ class DownloadPage extends React.Component{
     }
     componentDidMount() {
         if (!globalStore.getData(keys.gui.capabilities.uploadImport)) return;
-        Requests.getJson("?request=api",undefined,{type:'import',command:'extensions'})
+        Requests.getJson({
+            request:'api',
+            type:'import',
+            command:'extensions'
+        })
             .then((data)=>{
                 this.setState({chartImportExtensions:data.items});
             })
@@ -300,39 +302,32 @@ class DownloadPage extends React.Component{
 
     fillData(){
         let type=this.state.type;
-        if (type === 'route') {
-            RouteHandler.listRoutes(true)
-                .then((items)=>{
-                    this.addItems(items,true);
-                }).catch((error)=>{
-                    this.addItems([],true);
-                    Toast(error);
-            });
-            return;
-        }
-        if (type === 'layout') {
-            LayoutHandler.listLayouts()
-                .then((list)=>{
-                    this.addItems(list,true);
-                })
-                .catch((error)=>{
-                    Toast("unable to load layouts "+error);
+        const loadFunction=()=> {
+            if (type === 'route') {
+                return RouteHandler.listRoutes(true);
+            }
+            if (type === 'layout') {
+                return LayoutHandler.listLayouts()
+            }
+            if (type === 'settings'){
+                return PropertyHandler.listSettings();
+            }
+            return fillDataServer(type)
+                .then((items) => {
+                    let addons = this.state.addOns;
+                    items.forEach((item) => {
+                        if (item.type !== 'user') return;
+                        if (Addons.findAddonByUrl(addons, item.url)) {
+                            item.isAddon = true;
+                        }
+                    });
+                    return items;
                 });
-            return;
-        }
-        fillDataServer(type)
-            .then((items)=>{
-                let addons=this.state.addOns;
-                items.forEach((item)=>{
-                    if (item.type !== 'user') return;
-                    if (Addons.findAddonByUrl(addons,item.url)){
-                        item.isAddon=true;
-                    }
-                });
-                this.addItems(items,true);
-            })
+        };
+        loadFunction()
+            .then((items)=>this.addItems(items,true))
             .catch((error)=>{
-                Toast("unable to load list of "+type+" from server: "+error);
+                Toast("unable to load "+type+": "+error);
                 this.addItems([],true);
             })
     };
@@ -510,48 +505,19 @@ class DownloadPage extends React.Component{
      *          if no function is returned, the upload will go to the server
      */
     getLocalUploadFunction(){
-        if (this.state.type === 'route'){
-            return (obj)=>{
+        let actions=ItemActions.create(this.state.type);
+        if (actions.localUploadFunction){
+            return (obj)=> {
                 if (!obj) {
                     Toast("no data available after upload");
                     return;
                 }
-                uploadRouteData(obj.name,obj.data, this.entryExists)
-                    .then((r)=>this.fillData())
+                actions.localUploadFunction(obj.name, obj.data)
+                    .then((ok) => this.fillData())
                     .catch((e)=>{
                         Toast(e);
                         this.fillData();
-                    });
-            }
-        }
-        if (this.state.type === 'layout'){
-            return (obj)=>{
-                if (!obj) {
-                    Toast("no data available after upload");
-                    return;
-                }
-                LayoutHandler.uploadLayout(obj.name, obj.data, true)
-                    .then(
-                        (result)=> {
-                            this.fillData();
-                        }
-                    ).catch(
-                    (error)=> {
-                        Toast("unable to upload layout: " + error);
-                    }
-                )
-            }
-        }
-        if (this.state.type === 'settings') {
-            return (obj) => {
-                if (!obj) {
-                    Toast("no data available after upload");
-                    return;
-                }
-                PropertyHandler.verifySettingsData(obj.data, true,true)
-                    .then((res) => PropertyHandler.uploadSettingsData(res.data,obj.name))
-                    .then((res)=>this.fillData())
-                    .catch((e) => Toast(e));
+                    })
             }
         }
     }
@@ -564,7 +530,11 @@ class DownloadPage extends React.Component{
                     return;
                 }
                 let data="";
-                Requests.postPlain("?request=upload&type=" + this.state.type + "&name=" + encodeURIComponent(name), data)
+                Requests.postPlain({
+                    request:'upload',
+                    type: this.state.type,
+                    name: name
+                }, data)
                     .then((res)=>{
                         this.fillData();
                     })

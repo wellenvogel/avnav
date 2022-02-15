@@ -47,6 +47,8 @@ import mapholder from "../map/mapholder";
 import LogDialog from "./LogDialog";
 import {stateHelper} from "../util/GuiHelpers";
 import Formatter from '../util/formatter';
+import routeobjects from "../nav/routeobjects";
+import PropertyHandler from "../util/propertyhandler";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 /**
@@ -127,6 +129,15 @@ export class ItemActions{
         this.infoText='';
         this.className='';
         /**
+         * if this is set call this function to upload a new item
+         * instead of the normal server upload
+         * the function must expect name and data and optonally an overwrite flag
+         * as parameters and return a promise
+         * the resolves true when the upload succeeds
+         * @type {undefined}
+         */
+        this.localUploadFunction=undefined;
+        /**
          * convert an entity name as received from the server to a name we offer when downloading
          * @param name
          * @returns {*}
@@ -140,6 +151,7 @@ export class ItemActions{
         this.nameForUpload=(name)=>name;
     }
     static create(props,isConnected){
+        if (typeof(props) === 'string') props={type:props};
         if (! props || ! props.type){
             return new ItemActions();
         }
@@ -193,6 +205,19 @@ export class ItemActions{
                 rt.nameForUpload=(name)=>{
                     return name.replace(/\.gpx$/,'');
                 }
+                rt.localUploadFunction=(name,data)=>{
+                    //name is ignored
+                    try{
+                        let route=new routeobjects.Route("");
+                        route.fromXml(data);
+                        if (! route.name){
+                            return Promise.reject("route has no name");
+                        }
+                        return RouteHandler.saveRoute(route);
+                    } catch(e){
+                        return Promise.reject(e);
+                    }
+                }
                 break;
             case 'layout':
                 rt.headline='Layouts';
@@ -205,6 +230,9 @@ export class ItemActions{
                 }
                 rt.nameForUpload=(name)=>{
                     return LayoutHandler.fileNameToServerName(name);
+                }
+                rt.localUploadFunction=(name,data,overwrite)=>{
+                    return LayoutHandler.uploadLayout(name,data,overwrite);
                 }
                 break;
             case 'settings':
@@ -224,6 +252,10 @@ export class ItemActions{
                         }
                     });
                     return 'user.'+serverName.replace(/\.json$/,'');
+                }
+                rt.localUploadFunction=(name,data,overwrite)=>{
+                   return PropertyHandler.verifySettingsData(data, true,true)
+                       .then((res) => PropertyHandler.uploadSettingsData(name,data,overwrite));
                 }
                 break;
             case 'user':

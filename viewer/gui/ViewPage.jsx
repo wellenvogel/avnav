@@ -17,6 +17,7 @@ import Prism from 'prismjs';
 import GuiHelpers from '../util/GuiHelpers.js';
 import InputMonitor from '../hoc/InputMonitor.jsx';
 import Helper from "../util/helper.js";
+import {ItemActions} from "../components/FileDialog";
 
 //add all extensions here that we can edit
 //if set to undefined we will edit them but without highlighting
@@ -117,14 +118,24 @@ class ViewPageBase extends React.Component{
                         }catch(e){
                         }
                     }
-                    Requests.postPlain("?request=upload&type=" + self.type + "&overwrite=true&name=" + encodeURIComponent(self.name), data)
-                        .then((result)=> {
-                            this.setState({changed: false});
-                        })
-                        .catch((error)=> {
-                            Toast("unable to save: " + error)
-                        });
-
+                    let actions=ItemActions.create({type:self.type,name:self.name});
+                    let uploadFunction;
+                    if (actions.localUploadFunction){
+                        uploadFunction=actions.localUploadFunction;
+                    }
+                    else{
+                        uploadFunction=(name,data,overwrite)=>{
+                            return Requests.postPlain({
+                                request:'upload',
+                                type:self.type,
+                                overwrite: overwrite,
+                                name: name
+                            },data)
+                        }
+                    }
+                    uploadFunction(self.name,data,true)
+                        .then((ok)=>this.setState({changed: false}))
+                        .catch((error)=>Toast("unable to save: " + error));
                 }
 
             },
@@ -149,6 +160,7 @@ class ViewPageBase extends React.Component{
     getExt(){
         if (this.type == 'route') return "gpx";
         if (this.type == 'layout') return 'json';
+        if (this.type == 'settings') return 'json';
         if (this.url) return Helper.getExt(this.url);
         if (this.html) return 'html';
         return Helper.getExt(this.name);

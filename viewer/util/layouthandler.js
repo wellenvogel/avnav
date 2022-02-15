@@ -195,7 +195,7 @@ class LayoutHandler{
         return name.replace(/^user\./,'').replace(/^system\./,'').replace(/^plugin\./,'').replace(/\.json$/,'').replace(/.*\./,'');
     }
 
-    uploadLayout(name,layout,isString){
+    uploadLayout(name,layout,opt_overwrite){
         if (! name || ! layout){
             return new Promise((resolve,reject)=>{
                reject("missing parameter name or layout");
@@ -206,7 +206,7 @@ class LayoutHandler{
         name=this.nameToBaseName(name);
         return new Promise((resolve, reject)=> {
             try {
-                if (isString) {
+                if (typeof(layout) === 'string') {
                     layout = JSON.parse(layout);
                 }
                 let error = this.checkLayout(layout);
@@ -230,7 +230,12 @@ class LayoutHandler{
                 resolve({status:'OK'});
                 return;
             }
-            Requests.postPlain("?request=upload&type=layout&name=" + encodeURIComponent(name), JSON.stringify(layout,undefined,2)).
+            Requests.postPlain({
+                request:'upload',
+                type:'layout',
+                name: layoutName,
+                overwrite: !! opt_overwrite
+            }, JSON.stringify(layout,undefined,2)).
                 then((result)=>{
                     if (isActive){
                         this.name=layoutName;
