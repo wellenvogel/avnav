@@ -13,12 +13,10 @@ import Toast from '../components/Toast.jsx';
 import Requests from '../util/requests.js';
 import assign from 'object-assign';
 import NavHandler from '../nav/navdata.js';
-import routeobjects from '../nav/routeobjects.js';
 import OverlayDialog from '../components/OverlayDialog.jsx';
 import Helper from '../util/helper.js';
 import LayoutHandler from '../util/layouthandler.js';
 import Mob from '../components/Mob.js';
-import LayoutNameDialog from '../components/LayoutNameDialog.jsx';
 import {Input,InputReadOnly,Checkbox} from '../components/Inputs.jsx';
 import DB from '../components/DialogButton.jsx';
 import Addons from '../components/Addons.js';
@@ -33,6 +31,7 @@ import {
 import EditOverlaysDialog, {DEFAULT_OVERLAY_CHARTENTRY} from '../components/EditOverlaysDialog';
 import {getOverlayConfigName} from "../map/chartsourcebase"
 import PropertyHandler from '../util/propertyhandler';
+import {SaveItemDialog} from "../components/SettingsNameDialogs";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -425,7 +424,13 @@ class DownloadPage extends React.Component{
                 };
                 if (userlayoutExists(name)) {
                     let baseName=LayoutHandler.nameToBaseName(name);
-                    LayoutNameDialog.createDialog(baseName,userlayoutExists,"Layout exists, select new name")
+                    SaveItemDialog.createDialog(baseName,(newName)=>{
+                        let existing=userlayoutExists(newName);
+                        return {existing:existing};
+                    },{
+                        title: "Layout exists, select new name",
+                        itemLabel: 'Layout'
+                    })
                         .then((newName)=>{
                             resolve({name:newName});
                         })

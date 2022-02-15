@@ -294,7 +294,7 @@ class LayoutHandler{
         globalStore.storeData(keys.properties.layoutName,this.name);
         this.incrementSequence();
         if (upload){
-            this.uploadLayout(this.name,this.layout).then(()=>{}).catch((error)=>{
+            this.uploadLayout(this.name,this.layout,true).then(()=>{}).catch((error)=>{
                base.log("unable to upload layout "+error);
             });
         }

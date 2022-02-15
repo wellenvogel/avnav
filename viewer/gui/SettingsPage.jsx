@@ -12,13 +12,14 @@ import assign from 'object-assign';
 import OverlayDialog from '../components/OverlayDialog.jsx';
 import LayoutHandler from '../util/layouthandler.js';
 import Mob from '../components/Mob.js';
-import LayoutNameDialog from '../components/LayoutNameDialog.jsx';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 import {ColorSelector, Checkbox, Radio, InputSelect, InputReadOnly} from '../components/Inputs.jsx';
 import DB from '../components/DialogButton.jsx';
 import DimHandler from '../util/dimhandler';
 import FullScreen from '../components/Fullscreen';
 import {stateHelper} from "../util/GuiHelpers";
+import Formatter from "../util/formatter";
+import {SaveItemDialog} from "../components/SettingsNameDialogs";
 
 const settingsSections={
     Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,keys.properties.layers.grid,keys.properties.layers.compass],
@@ -385,6 +386,21 @@ class SettingsPage extends React.Component{
                     visible:keys.properties.connectedMode
                 }
             },
+            {
+                name: 'SettingsSave',
+                onClick:()=>this.saveSettings(),
+                visible: globalStore.getData(keys.properties.connectedMode,false) && globalStore.getData(keys.gui.capabilities.uploadSettings)
+            },
+            {
+                name: 'SettingsLoad',
+                onClick:()=>{
+                    self.confirmAbortOrDo().then(()=>{
+                        self.resetChanges();
+                        this.loadSettings();
+                    });
+                },
+                visible: globalStore.getData(keys.properties.connectedMode,false) && globalStore.getData(keys.gui.capabilities.uploadSettings)
+            },
             Mob.mobDefinition(this.props.history),
             {
                 name: 'Cancel',
@@ -436,6 +452,12 @@ class SettingsPage extends React.Component{
             });
         }
     }
+    saveSettings(){
+        let oldName=globalStore.getData(keys.properties.lastLoadedName).replace(/-[0-9]*$/,'');
+        let suffix=Formatter.formatDateTime(new Date()).replace(/[: /]/g,'-').replace(/--/g,'-');
+        let proposedName=oldName+"-"+suffix;
+
+    }
     changeItem(item,value){
         this.values.setValue(item.name,value);
     }
@@ -467,7 +489,14 @@ class SettingsPage extends React.Component{
                     .then((list)=> {
                         currentLayouts = list;
                         let name = LayoutHandler.nameToBaseName(LayoutHandler.name);
-                        LayoutNameDialog.createDialog(name, checkName, "Start Layout Editor", "save changes to")
+                        SaveItemDialog.createDialog(name,(newName)=>{
+                            let existing=checkName(newName);
+                            return {existing:existing};
+                        },{
+                            title: "Start Layout Editor",
+                            itemLabel: 'Layout',
+                            subtitle: "save changes to"
+                        })
                             .then((newName)=> {
                                 let layoutName = LayoutHandler.fileNameToServerName(newName);
                                 LayoutHandler.startEditing(layoutName);
