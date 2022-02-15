@@ -146,32 +146,6 @@ const DownloadItem=(props)=>{
 };
 
 
-const uploadRouteData = (filename, data, checkExistance) => {
-    return new Promise((resolve, reject) => {
-        let route = undefined;
-        try {
-            route = new routeobjects.Route("");
-            route.fromXml(data);
-        } catch (e) {
-            reject("unable to parse route , error: " + e);
-            return;
-        }
-        if (!route.name || route.name === "") {
-            reject("route has no route name");
-            return;
-        }
-        if (checkExistance(route.name) || checkExistance(route.name + ".gpx")) {
-            reject("route with name " + route.name + " already exists");
-            return false;
-        }
-        if (globalStore.getData(keys.properties.connectedMode, false)) route.server = true;
-        RouteHandler.saveRoute(route)
-            .then(() => {
-                resolve(true);
-            })
-            .catch((error) => reject(error));
-    });
-};
 
 class ImportDialog extends React.Component{
     constructor(props){
@@ -352,11 +326,15 @@ class DownloadPage extends React.Component{
         return findInfo(current,{name:name})>=0;
     };
 
-    getButtonParam(bName,bType,overflow){
+    getButtonParam(bName,bType,overflow, opt_capability){
+        let visible=this.state.type === bType || ! (this.props.options && this.props.options.allowChange === false);
+        if (opt_capability){
+            visible = visible && globalStore.getData(opt_capability,false);
+        }
         return {
             name: bName,
             toggle:  this.state.type === bType,
-            visible:  this.state.type === bType || ! (this.props.options && this.props.options.allowChange === false),
+            visible:  visible,
             onClick: () => this.changeType(bType),
             overflow: overflow === true
         };
@@ -368,7 +346,7 @@ class DownloadPage extends React.Component{
             this.getButtonParam('DownloadPageTracks','track'),
             this.getButtonParam('DownloadPageRoutes','route'),
             this.getButtonParam('DownloadPageLayouts','layout'),
-            this.getButtonParam('DownloadPageSettings','settings'),
+            this.getButtonParam('DownloadPageSettings','settings',true,keys.gui.capabilities.uploadSettings),
             this.getButtonParam('DownloadPageUser','user',true),
             this.getButtonParam('DownloadPageImages','images',true),
             this.getButtonParam('DownloadPageOverlays','overlay',true),
@@ -585,7 +563,7 @@ class DownloadPage extends React.Component{
                             }}
                         />
                         <UploadHandler
-                            local={localDoneFunction||false}
+                            local={localDoneFunction !== undefined}
                             type={this.state.type}
                             doneCallback={localDoneFunction?localDoneFunction:this.fillData}
                             errorCallback={(err)=>{if (err) Toast(err);this.fillData();}}
