@@ -1,33 +1,32 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import OverlayDialog from './OverlayDialog.jsx';
+import OverlayDialog, {dialogHelper} from './OverlayDialog.jsx';
 import {Input, InputSelect} from './Inputs.jsx';
 import DB from './DialogButton.jsx';
 import assign from 'object-assign';
-
+const nameToExternalName=(name,fixedPrefix)=>{
+    if (fixedPrefix) return fixedPrefix+name;
+    return name;
+}
+const externalNameToName=(name,fixedPrefix)=>{
+    if (fixedPrefix){
+        let l=fixedPrefix.length;
+        if (name.substr(0,l) === fixedPrefix) return name.substr(l);
+        return name;
+    }
+}
 class SaveItemDialog extends React.Component{
     constructor(props){
         super(props);
-        let value=this.externalNameToName(props.value);
+        let value=externalNameToName(props.value);
         this.state=assign({
             value: value
             },
-            props.checkFunction(this.nameToExternalName(value)));
+            props.checkFunction(nameToExternalName(value,this.props.fixedPrefix)));
         this.valueChanged=this.valueChanged.bind(this);
     }
-    nameToExternalName(name){
-        if (this.props.fixedPrefix) return this.props.fixedPrefix+name;
-        return name;
-    }
-    externalNameToName(name){
-        if (this.props.fixedPrefix){
-            let l=this.props.fixedPrefix.length;
-            if (name.substr(0,l) === this.props.fixedPrefix) return name.substr(l);
-            return name;
-        }
-    }
     valueChanged(value) {
-        let nstate=assign({value:value},this.props.checkFunction(this.nameToExternalName(value)));
+        let nstate=assign({value:value},this.props.checkFunction(nameToExternalName(value,this.props.fixedPrefix)));
         this.setState(nstate);
     }
     render () {
@@ -57,7 +56,7 @@ class SaveItemDialog extends React.Component{
                 <div className="dialogButtons">
                     <DB name="cancel" onClick={this.props.closeCallback}>Cancel</DB>
                     <DB name="ok" onClick={() => {
-                        this.props.okCallback(this.nameToExternalName(this.state.value));
+                        this.props.okCallback(nameToExternalName(this.state.value,this.props.fixedPrefix));
                         this.props.closeCallback();
                         }}
                         disabled={this.state.existing && ! this.props.allowOverwrite}
@@ -117,6 +116,7 @@ class LoadItemDialog extends React.Component{
                 value: props.value
             };
         this.valueChanged=this.valueChanged.bind(this);
+        this.dialog=dialogHelper(this);
     }
     valueChanged(value) {
         let nstate={value:value};
@@ -128,14 +128,16 @@ class LoadItemDialog extends React.Component{
                 <h3 className="dialogTitle">{this.props.title||('Select '+this.props.itemLabel)}</h3>
                 {this.props.subTitle?<p>{this.props.subTitle}</p>:null}
                 <div>
-                    <div className="dialogRow"><span className="wideLabel">{info}</span></div>
                     <div className="dialogRow">
                         <InputSelect
                             className="loadName"
                             label={this.props.itemLabel}
                             value={this.state.value}
                             itemList={this.props.itemList}
-                            onChange={this.valueChanged}/>
+                            onChange={this.valueChanged}
+                            changeOnlyValue={true}
+                            showDialogFunction={this.dialog.showDialog}
+                        />
                     </div>
                 </div>
                 <div className="dialogButtons">
@@ -165,7 +167,7 @@ LoadItemDialog.createDialog=(name,itemList,properties)=>{
     if (! properties) properties={}
     return new Promise((resolve,reject)=>{
         OverlayDialog.dialog((props)=> {
-            return <SaveItemDialog
+            return <LoadItemDialog
                 {...properties}
                 {...props}
                 value={name}

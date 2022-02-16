@@ -6,7 +6,7 @@ import Toast from '../components/Toast.jsx';
 import globalStore from './globalstore.jsx';
 import keys, {KeyHelper, PropertyType} from './keys.jsx';
 import base from '../base.js';
-import merge from 'lodash.merge';
+import assign from 'object-assign';
 import Helper from './helper.js';
 import LayoutHandler from './layouthandler';
 import RequestHandler from "./requests";
@@ -397,22 +397,27 @@ class PropertyHandler {
             }
             let newValues=propertyData.properties;
             let descriptions = KeyHelper.getKeyDescriptions(true);
-            let values = {};
+            let values = assign({},currentValues);
             let newLayout;
             for (let dk in descriptions) {
                 let des = descriptions[dk];
-                if (!(des.type in PropertyType) || des.type === PropertyType.INTERNAL) {
+                let found=false;
+                for (let pk in PropertyType){
+                    if (PropertyType[pk] === des.type && des.type !== PropertyType.INTERNAL){
+                        found=true;
+                        break;
+                    }
+                }
+                if (!found) {
                     continue;
                 }
                 let okey=dk.replace(/^properties\./,'');
                 if (okey in newValues) {
-                    if(newValues[okey] !== current[dk]) {
-                        values[dk] = newValues[okey];
-                        if (des.type === PropertyType.LAYOUT) newLayout=values[dk];
-                    }
+                    values[dk] = newValues[okey];
+                    if (des.type === PropertyType.LAYOUT) newLayout=values[dk];
                 }
                 else{
-                    if (opt_setDefaults && current[dk] !== des.defaultv){
+                    if (opt_setDefaults ){
                         values[dk]=des.defaultv;
                         if (des.type === PropertyType.LAYOUT) newLayout=values[dk];
                     }

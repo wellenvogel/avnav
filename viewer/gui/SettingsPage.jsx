@@ -19,9 +19,10 @@ import DimHandler from '../util/dimhandler';
 import FullScreen from '../components/Fullscreen';
 import {stateHelper} from "../util/GuiHelpers";
 import Formatter from "../util/formatter";
-import {SaveItemDialog} from "../components/SettingsNameDialogs";
+import {LoadItemDialog, SaveItemDialog} from "../components/SettingsNameDialogs";
 import PropertyHandler from '../util/propertyhandler';
 import {ItemActions} from "../components/FileDialog";
+import RequestHandler from "../util/requests";
 
 const settingsSections={
     Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,keys.properties.layers.grid,keys.properties.layers.compass],
@@ -474,15 +475,69 @@ class SettingsPage extends React.Component{
                 })
             })
             .then((settingsName)=>{
+                proposedName=settingsName;
                 return PropertyHandler.uploadSettingsData(
                     settingsName,
                     PropertyHandler.exportSettings(this.values.getValues(true)),
                     true
                 )
             })
-            .then((res)=> Toast("settings saved"))
+            .then((res)=> {
+                globalStore.storeData(keys.properties.lastLoadedName,proposedName);
+                Toast("settings saved");
+            })
             .catch((e)=>Toast(e))
 
+    }
+    loadSettings(){
+        const setSettings=(checkedValues)=>{
+            let current=this.values.getState();
+            return PropertyHandler.importSettings(checkedValues,current,true)
+                .then((imported)=>this.values.setState(imported,true));
+        }
+        this.confirmAbortOrDo()
+            .then(()=>{
+                return LoadItemDialog.createDialog(
+                    globalStore.getData(keys.properties.lastLoadedName),
+                    (current)=> PropertyHandler.listSettings(true),
+                    {
+                        title: 'Select Settings to load',
+                        itemLabel: 'Settings'
+                    }
+                )
+            })
+            .then(
+                (selected) => RequestHandler.getJson({
+                        request: 'download',
+                        type: 'settings',
+                        noattach: true,
+                        name: selected
+                    },
+                    {
+                        checkOk: false
+                    }
+                ),
+                (error) => Promise.reject("unable to download settings from server: " + error)
+            )
+            .then((settings)=> {
+                    return PropertyHandler.verifySettingsData(settings, false, false)
+                }
+            )
+            .then((result)=>{
+                if (result.warnings && result.warnings.length){
+                    return OverlayDialog.confirm(result.warnings.join('\n'),undefined,'Import anyway?')
+                        .then(
+                            ()=>setSettings(result.data),
+                            ()=>0
+                            )
+                }
+                else{
+                    return setSettings(result.data);
+                }
+            })
+            .catch((e)=> {
+                if (e) Toast(e)
+            });
     }
     changeItem(item,value){
         this.values.setValue(item.name,value);
