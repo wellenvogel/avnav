@@ -31,7 +31,7 @@ import KeyHandler from './util/keyhandler.js';
 import LayoutHandler from './util/layouthandler.js';
 import assign from 'object-assign';
 import AlarmHandler from './nav/alarmhandler.js';
-import GuiHelpers from './util/GuiHelpers.js';
+import GuiHelpers, {stateHelper} from './util/GuiHelpers.js';
 import Mob from './components/Mob.js';
 import Dimmer from './util/dimhandler.js';
 import Button from './components/Button.jsx';
@@ -155,11 +155,12 @@ class App extends React.Component {
         super(props);
         this.checkSizes=this.checkSizes.bind(this);
         this.keyDown=this.keyDown.bind(this);
-        this.history=new History(globalStore);
-        this.buttonSizer=null;
         this.state={
             error:0
         };
+        this.history=new History();
+        this.rightHistory=new History();
+        this.buttonSizer=null;
         globalStore.storeData(keys.gui.global.onAndroid,false,true);
         //make the android API available as avnav.android
         if (window.avnavAndroid){
@@ -177,7 +178,7 @@ class App extends React.Component {
                 } catch (e) {
                 }
                 if (key == 'backPressed'){
-                    let currentPage=globalStore.getData(keys.gui.global.pageName);
+                    let currentPage=this.history.currentLocation()
                     if (currentPage == "mainpage"){
                         avnav.android.goBack();
                         return;
@@ -207,6 +208,11 @@ class App extends React.Component {
             propertyHandler.firstStart();
         }
         this.history.push(startpage);
+        this.rightHistory.push(startpage);
+        this.leftHistoryState=stateHelper(this,this.history.currentLocation(true),'leftHistory');
+        this.rightHistoryState=stateHelper(this,this.rightHistory.currentLocation(true),'rightHistory');
+        this.history.setCallback((topEntry)=>this.leftHistoryState.setState(topEntry,true));
+        this.rightHistory.setCallback((topEntry)=>this.rightHistoryState.setState(topEntry,true));
         Requests.getJson("/user/viewer/images.json",{useNavUrl:false,checkOk:false})
             .then((data)=>{
                 MapHolder.setImageStyles(data);
@@ -370,14 +376,14 @@ class App extends React.Component {
             >
             <DynamicRouter
                 storeKeys={assign({
-                location: keys.gui.global.pageName,
-                options: keys.gui.global.pageOptions,
                 sequence: keys.gui.global.propertySequence,
                 dimensions: keys.gui.global.windowDimensions,
                 dim: keys.gui.global.dimActive,
                 isEditing:keys.gui.global.layoutEditing
                 },keys.gui.capabilities)
             }
+                location={this.leftHistoryState.getValue('location')}
+                options={this.leftHistoryState.getValue('options')}
                 history={this.history}
                 nightMode={this.props.nightMode}
                 />

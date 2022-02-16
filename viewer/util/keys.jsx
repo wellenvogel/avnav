@@ -183,8 +183,6 @@ let keys={
         },
         global:{
             smallDisplay: K,
-            pageName: K,
-            pageOptions:K,
             onAndroid:K,
             propertySequence:K,
             hasActiveInputs: K,
