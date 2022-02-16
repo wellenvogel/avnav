@@ -128,6 +128,7 @@ export class ItemActions{
         this.timeText='';
         this.infoText='';
         this.className='';
+        this.extForView='';
         /**
          * if this is set call this function to upload a new item
          * instead of the normal server upload
@@ -168,6 +169,7 @@ export class ItemActions{
         if (props.active){
             rt.className+=' activeEntry';
         }
+        rt.extForView=ext;
         switch (props.type){
             case 'chart':
                 rt.headline='Charts';
@@ -196,6 +198,7 @@ export class ItemActions{
                 rt.showEdit=mapholder.getCurrentChartEntry() !== undefined;
                 rt.showOverlay=canEditOverlays;
                 rt.showDownload=true;
+                rt.extForView='gpx';
                 rt.infoText+=","+Formatter.formatDecimal(props.length,4,2)+
                     " nm, "+props.numpoints+" points";
                 rt.nameForDownload=(name)=>{
@@ -225,6 +228,7 @@ export class ItemActions{
                 rt.showView = true;
                 rt.showEdit = isConnected && editableSize && props.canDelete;
                 rt.showDownload = true;
+                rt.extForView='json';
                 rt.nameForDownload=(name)=>{
                     return LayoutHandler.nameToBaseName(name)+".json";
                 }
@@ -241,6 +245,7 @@ export class ItemActions{
                 rt.showView = true;
                 rt.showEdit = isConnected && editableSize && props.canDelete;
                 rt.showDownload = true;
+                rt.extForView='json';
                 rt.nameForDownload=(name)=>{
                     return name.replace(/^user\./,'').replace(/^system\./,'').replace(/^plugin/,'')+".json";
                 }
@@ -254,22 +259,8 @@ export class ItemActions{
                     return 'user.'+serverName.replace(/\.json$/,'');
                 }
                 rt.localUploadFunction=(name,data,overwrite)=>{
-                    const doUpload=(name,data,overwrite)=>{
-                        return PropertyHandler.uploadSettingsData(name,data,overwrite);
-                    }
                    return PropertyHandler.verifySettingsData(data, true,true)
-                       .then(
-                           (res) => doUpload(name,res.data,overwrite),
-                           (error)=>{
-                               return OverlayDialog.confirm("Error: "+error,undefined,"Try again with ignore?")
-                                   .then((r)=>{
-                                       return PropertyHandler.verifySettingsData(data)
-                                           .then((res)=>doUpload(name,res.data,overwrite));
-                                   },
-                                       (x)=> Promise.reject("aborted")
-                                   )
-                           }
-                       );
+                       .then((res) => PropertyHandler.uploadSettingsData(name,res.data,false,overwrite));
                 }
                 break;
             case 'user':
