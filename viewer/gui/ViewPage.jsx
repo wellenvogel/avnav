@@ -158,12 +158,10 @@ class ViewPageBase extends React.Component{
         this.setState({changed:true});
     }
     getExt(){
-        if (this.type == 'route') return "gpx";
-        if (this.type == 'layout') return 'json';
-        if (this.type == 'settings') return 'json';
         if (this.url) return Helper.getExt(this.url);
         if (this.html) return 'html';
-        return Helper.getExt(this.name);
+        let actions=ItemActions.create({type:this.type,name:this.name});
+        return actions.extForView;
     }
     isImage(){
         let ext=this.getExt().toLowerCase();
