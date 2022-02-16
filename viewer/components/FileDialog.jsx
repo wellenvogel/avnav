@@ -245,6 +245,7 @@ export class ItemActions{
                 rt.showView = true;
                 rt.showEdit = isConnected && editableSize && props.canDelete;
                 rt.showDownload = true;
+                rt.showRename=isConnected && props.canDelete;
                 rt.extForView='json';
                 rt.nameForDownload=(name)=>{
                     return name.replace(/^user\./,'').replace(/^system\./,'').replace(/^plugin/,'')+".json";
