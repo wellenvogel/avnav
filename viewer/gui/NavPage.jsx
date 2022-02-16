@@ -342,7 +342,7 @@ class NavPage extends React.Component{
             }
             if (feature.overlayType === 'route' && ! feature.activeRoute){
                 let currentRouteName=activeRoute.getRouteName();
-                if (Helper.getExt(currentRouteName) !== '.gpx') currentRouteName+='.gpx';
+                if (Helper.getExt(currentRouteName) !== 'gpx') currentRouteName+='.gpx';
                 if (activeRoute.hasActiveTarget() && currentRouteName === feature.overlayName){
                     //do not show a feature pop up if we have an overlay that exactly has the current route
                     return false;
