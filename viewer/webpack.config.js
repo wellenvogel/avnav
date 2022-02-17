@@ -1,9 +1,10 @@
-var path = require('path');
-var webpack = require('webpack');
-var CopyWebpackPlugin= require('copy-webpack-plugin');
-var MiniCssExtractPlugin=require('mini-css-extract-plugin');
-var generateLicense=require('./collectLicense');
-var GenerateFilePlugin=require('generate-file-webpack-plugin');
+const path = require('path');
+const webpack = require('webpack');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const generateLicense = require('./collectLicense');
+const GenerateFilePlugin = require('generate-file-webpack-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 var outDir="build/debug";
 var isProduction=(process.env.NODE_ENV === 'production') || (process.argv.indexOf('-p') !== -1);
@@ -31,7 +32,7 @@ var replaceSuffix=function(content,path){
         .replace(/_SFX=1/,"_SFX="+avnavVersion);
 }
 var copyList=[
-    {from: './static/',transform: replaceSuffix},
+    {from: './static/',transform: replaceSuffix,globOptions:{ignore:['**/avnav_viewer.html']}},
     {from: './webpack-loader.js',to:'loader.js',transform:replaceSuffix},
     {from: './util/polyfill.js',to:'polyfill.js'},
     {from: '../libraries/movable-type/geo.js', to: 'libraries'},
@@ -74,6 +75,11 @@ var plugins = [
     new GenerateFilePlugin({
         file: 'license.html',
         content: generateLicense()
+    }),
+    new HtmlWebpackPlugin({
+        template: 'static/avnav_viewer.html',
+        filename: 'avnav_viewer.html',
+        hash: true
     })
 ];
 
@@ -82,7 +88,6 @@ var plugins = [
 module.exports = {
 
     entry: {
-        babel: { import: '@babel/polyfill', filename: 'babel.js'},
         main: { import: './webpack-main.js', filename: 'avnav_min.js'},
         style: { import: './style/avnav_viewer_new.less'}
     },
@@ -163,9 +168,9 @@ module.exports = {
 
             {
                 test: /images[\\\/].*\.png$|images[\\\/].*\.svg$/,
-                loader: 'file-loader',
-                options:{
-                    name: "images/[name].[ext]"
+                type: 'asset/resource',
+                generator: {
+                    filename: 'images/[name][ext]'
                 }
             }
 

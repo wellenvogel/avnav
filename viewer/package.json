@@ -30,6 +30,7 @@
     "file-loader": "^6.2.0",
     "fs": "0.0.2",
     "generate-file-webpack-plugin": "^1.0.1",
+    "html-webpack-plugin": "^5.5.0",
     "less": "^4.1.2",
     "less-loader": "^10.2.0",
     "loader-utils": "^3.2.0",
@@ -55,7 +56,6 @@
     "webpack-cli": "^4.9.2"
   },
   "dependencies": {
-    "@babel/polyfill": "^7.7.0",
     "@braintree/browser-detection": "^1.12.1",
     "@openlayers/pepjs": "^0.5.4",
     "PubSub": "^4.0.0",
