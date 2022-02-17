@@ -27,6 +27,11 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
+      # install nodejs
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+
       #set a date parameter
       - name: Get current date
         id: date
