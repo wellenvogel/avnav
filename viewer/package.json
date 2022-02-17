@@ -70,7 +70,7 @@
     "ol": "^6.12.0",
     "prismjs": "^1.26.0",
     "react": "^17.0",
-    "react-html-parser": "git+https://github.com/wellenvogel/react-html-parser.git#av-20220217",
+    "react-html-parser": "git+https://github.com/wellenvogel/react-html-parser.git#av-20220217-2",
     "react-measure": "^2.5.2",
     "react-sortable-hoc": "^2.0.0",
     "shallow-equal": "^1.2.1",
