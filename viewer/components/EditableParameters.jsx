@@ -25,6 +25,7 @@
  */
 
 import React from "react";
+import CloneDeep from 'clone-deep';
 
 export class EditableParameter{
     constructor(name,type,list,displayName){
@@ -69,7 +70,7 @@ export class EditableParameter{
     setDefault(param){
         let current=this.getValue(param);
         if (this.default !== undefined){
-            this.setValue(param,this.default);
+            this.setValue(param,CloneDeep(this.default));
         }
     }
     getValue(param){
@@ -83,7 +84,7 @@ export class EditableParameter{
     getValueForDisplay(param,opt_placeHolder){
         let rt=this.getValue(param);
         if (rt === undefined || rt === null) {
-            rt = this.default;
+            rt = CloneDeep(this.default);
         }
         if (rt === undefined || rt === null){
             rt=opt_placeHolder;

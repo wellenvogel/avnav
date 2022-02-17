@@ -28,7 +28,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import LayoutHandler from '../util/layouthandler.js';
 import OverlayDialog,{dialogHelper} from './OverlayDialog.jsx';
-import WidgetFactory from '../components/WidgetFactory.jsx';
+import WidgetFactory, {filterByEditables} from '../components/WidgetFactory.jsx';
 import assign from 'object-assign';
 import {Input,InputSelect} from './Inputs.jsx';
 import DB from './DialogButton.jsx';
@@ -82,26 +82,8 @@ class EditWidgetDialog extends React.Component{
          * the rule is to include in the output anything that differs from the defaults
          * and the name and weight in any case
          */
-        let defaultValues={};
-        let editableNames={};
         if (! this.state.parameters) return this.state.widget;
-        this.state.parameters.forEach((p)=>{
-            p.setDefault(defaultValues);
-            if (p.canEdit()) editableNames[p.name]=true;
-        });
-        let rt={};
-        let fixed=['name','weight'];
-        for (let k in this.state.widget){
-            let v=this.state.widget[k];
-            if (fixed.indexOf(k) >= 0){
-                rt[k]=v;
-            }
-            else{
-                if (! (k in editableNames)) continue;
-                if ( ShallowCompare(defaultValues[k],v)) continue;
-                rt[k]=v;
-            }
-        }
+        let rt=filterByEditables(this.state.parameters,this.state.widget,true);
         return rt;
     }
     render () {
@@ -112,7 +94,7 @@ class EditWidgetDialog extends React.Component{
         if (this.props.panel !== this.state.panel){
             panelClass+=" changed";
         }
-        let completeWidgetData=assign({},WidgetFactory.findWidget(this.state.widget.name),this.state.widget);
+        let completeWidgetData=assign({},cloneDeep(WidgetFactory.findWidget(this.state.widget.name)),this.state.widget);
         return (
             <React.Fragment>
             <div className="selectDialog editWidgetDialog">
