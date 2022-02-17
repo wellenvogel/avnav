@@ -14,11 +14,12 @@ const externalNameToName=(name,fixedPrefix)=>{
         if (name.substr(0,l) === fixedPrefix) return name.substr(l);
         return name;
     }
+    return name;
 }
 class SaveItemDialog extends React.Component{
     constructor(props){
         super(props);
-        let value=externalNameToName(props.value);
+        let value=externalNameToName(props.value,props.fixedPrefix);
         this.state=assign({
             value: value
             },
