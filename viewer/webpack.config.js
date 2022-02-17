@@ -90,8 +90,11 @@ module.exports = {
         main: { import: './webpack-main.js', filename: 'avnav_min.js'},
         style: { import: './style/avnav_viewer_new.less'}
     },
-    //entry: './app/main.jsx',
-    //publicPath: 'http://localhost:8081/viewer',
+    optimization: {
+        splitChunks: {
+            chunks: "all"
+        }
+    },
     output: { path: __dirname+"/"+outDir },
     resolve: {
         extensions: ['.jsx', '.scss', '.js', '.json'],
