@@ -33,8 +33,7 @@ var replaceSuffix=function(content,path){
 }
 var copyList=[
     {from: './static/',transform: replaceSuffix,globOptions:{ignore:['**/avnav_viewer.html']}},
-    {from: './webpack-loader.js',to:'loader.js',transform:replaceSuffix},
-    {from: './util/polyfill.js',to:'polyfill.js'},
+    //{from: './webpack-loader.js',to:'loader.js',transform:replaceSuffix},
     {from: '../libraries/movable-type/geo.js', to: 'libraries'},
     {from: '../libraries/movable-type/latlon.js',to: 'libraries'},
     {from: '../sounds/1-minute-of-silence.mp3',to: 'sounds'},
