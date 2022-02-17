@@ -6,182 +6,184 @@ const generateLicense = require('./collectLicense');
 const GenerateFilePlugin = require('generate-file-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
-var outDir="build/debug";
-var isProduction=(process.env.NODE_ENV === 'production') || (process.argv.indexOf('-p') !== -1);
-if (isProduction) {
-    outDir="build/release";
-}
+module.exports = (env, argv) => {
+    var outDir = "build/debug";
+    var isProduction = argv.mode === 'production';
+    if (isProduction) {
+        outDir = "build/release";
+    }
 
-var formatDate = function (date) {
-    var yyyy = date.getFullYear();
-    var mm = date.getMonth() < 9 ? "0" + (date.getMonth() + 1) : (date.getMonth() + 1); // getMonth() is zero-based
-    var dd = date.getDate() < 10 ? "0" + date.getDate() : date.getDate();
-    var yyyymmdd= "".concat(yyyy).concat(mm).concat(dd);
-    var hh = date.getHours() < 10 ? "0" + date.getHours() : date.getHours();
-    var min = date.getMinutes() < 10 ? "0" + date.getMinutes() : date.getMinutes();
-    return "".concat(yyyymmdd).concat("-").concat(hh).concat(min);
+    var formatDate = function (date) {
+        var yyyy = date.getFullYear();
+        var mm = date.getMonth() < 9 ? "0" + (date.getMonth() + 1) : (date.getMonth() + 1); // getMonth() is zero-based
+        var dd = date.getDate() < 10 ? "0" + date.getDate() : date.getDate();
+        var yyyymmdd = "".concat(yyyy).concat(mm).concat(dd);
+        var hh = date.getHours() < 10 ? "0" + date.getHours() : date.getHours();
+        var min = date.getMinutes() < 10 ? "0" + date.getMinutes() : date.getMinutes();
+        return "".concat(yyyymmdd).concat("-").concat(hh).concat(min);
 
-};
-var avnavVersion=process.env.AVNAV_VERSION?process.env.AVNAV_VERSION:(isProduction?"":"dev-")+(formatDate(new Date()));
-console.log("VERSION="+avnavVersion);
+    };
+    var avnavVersion = process.env.AVNAV_VERSION ? process.env.AVNAV_VERSION : (isProduction ? "" : "dev-") + (formatDate(new Date()));
+    console.log("VERSION=" + avnavVersion);
+    console.log("isProduction=", isProduction);
 
-var replaceSuffix=function(content,path){
-    //console.log("suffix replace "+path);
-    return content.toString()
-        .replace(/SUFFIX=1/,"SUFFIX='"+avnavVersion+"'")
-        .replace(/_SFX=1/,"_SFX="+avnavVersion);
-}
-var copyList=[
-    {from: './static/',transform: replaceSuffix,globOptions:{ignore:['**/avnav_viewer.html']}},
-    //{from: './webpack-loader.js',to:'loader.js',transform:replaceSuffix},
-    {from: '../libraries/movable-type/geo.js', to: 'libraries'},
-    {from: '../libraries/movable-type/latlon.js',to: 'libraries'},
-    {from: '../sounds/1-minute-of-silence.mp3',to: 'sounds'},
-    {from: './layout',to:'layout'},
-    {from: './settings',to:'settings'},
-    {context: './demo',from: '*.xml',to:'demo/'}
+    var replaceSuffix = function (content, path) {
+        //console.log("suffix replace "+path);
+        return content.toString()
+            .replace(/SUFFIX=1/, "SUFFIX='" + avnavVersion + "'")
+            .replace(/_SFX=1/, "_SFX=" + avnavVersion);
+    }
+    var copyList = [
+        {from: './static/', transform: replaceSuffix, globOptions: {ignore: ['**/avnav_viewer.html']}},
+        //{from: './webpack-loader.js',to:'loader.js',transform:replaceSuffix},
+        {from: '../libraries/movable-type/geo.js', to: 'libraries'},
+        {from: '../libraries/movable-type/latlon.js', to: 'libraries'},
+        {from: '../sounds/1-minute-of-silence.mp3', to: 'sounds'},
+        {from: './layout', to: 'layout'},
+        {from: './settings', to: 'settings'},
+        {context: './demo', from: '*.xml', to: 'demo/'}
     ];
-var images=[
-    'WebIcon-512.png'
+    var images = [
+        'WebIcon-512.png'
 
-];
-images.forEach(function(el){
-   copyList.push({from: "./images/"+el,to:'images'});
-});
-if (!isProduction) {
-    copyList.push({
-        from: 'test/static',
-        to: 'test'
-    })
-}
+    ];
+    images.forEach(function (el) {
+        copyList.push({from: "./images/" + el, to: 'images'});
+    });
+    if (!isProduction) {
+        copyList.push({
+            from: 'test/static',
+            to: 'test'
+        })
+    }
 
-var devtool="inline-source-map";
-var resolveAlias={
+    var devtool = "inline-source-map";
+    var resolveAlias = {};
+    resolveAlias['React$'] = __dirname + "/node_modules/react/index.js";
+    if (isProduction) {
+        devtool = undefined;
+    }
 
-};
-resolveAlias['React$']=__dirname+"/node_modules/react/index.js";
-if (isProduction) {
-    devtool="";
-}
-
-var plugins = [
-    new CopyWebpackPlugin({
-        patterns: copyList
-    }),
-    new MiniCssExtractPlugin({
-        filename: "avnav_viewer.css",
+    var plugins = [
+        new CopyWebpackPlugin({
+            patterns: copyList
         }),
-    new GenerateFilePlugin({
-        file: 'license.html',
-        content: generateLicense()
-    }),
-    new HtmlWebpackPlugin({
-        template: 'static/avnav_viewer.html',
-        filename: 'avnav_viewer.html',
-        hash: true
-    })
-];
+        new MiniCssExtractPlugin({
+            filename: "avnav_viewer.css",
+        }),
+        new GenerateFilePlugin({
+            file: 'license.html',
+            content: generateLicense()
+        }),
+        new HtmlWebpackPlugin({
+            template: 'static/avnav_viewer.html',
+            filename: 'avnav_viewer.html',
+            hash: true
+        })
+    ];
 
 //console.log(process.env);
 
-module.exports = {
-
-    entry: {
-        main: { import: './webpack-main.js', filename: 'avnav_min.js'},
-        style: { import: './style/avnav_viewer_new.less'}
-    },
-    optimization: {
-        splitChunks: {
-            chunks: "all"
-        }
-    },
-    output: { path: __dirname+"/"+outDir },
-    resolve: {
-        extensions: ['.jsx', '.scss', '.js', '.json'],
-        alias: resolveAlias
-    },
-    module: {
-        rules: [
-            {
-                test: /version\.js$/,
-                loader: 'val-loader',
-                options:{
-                    version: avnavVersion
-                }
-            },
-
-            {
-                test: /.jsx$|.js$/,
-                exclude: /version\.js$/,
-                use: {
-                    loader: 'babel-loader',
-                    options:
-                    {
-                        presets: ['@babel/preset-react', ["@babel/preset-env",
-                            { targets: {
-                                browsers: "> 0.25%, not dead, safari 9, safari 10, safari 11"
-                                }
-                            }
-                            ]],
-                        plugins: [
-                            ["prismjs", {
-                                "languages": ["javascript", "css", "markup","json"],
-                                "plugins": ["line-numbers"],
-                                "theme": "default",
-                                "css": false
-                            }]
-                        ]
-                    }
-                }
-
-            },
-
-            {
-                test: /\.css$/,
-                use:[
-                    {
-                        loader: MiniCssExtractPlugin.loader
-                    },
-                    'css-loader'
-                ]
-            },
-
-
-            {
-                test: /avnav_viewer.*\.less$/,
-                use:[
-                    {
-                        loader: MiniCssExtractPlugin.loader
-                    },
-                    {
-                        loader: 'css-loader',
-                        options:{
-                            url:true
-                        }
-                    },
-                    {
-                        loader: 'less-loader',
-                        options:{
-                            lessOptions:{javascriptEnabled: true}
-                        }
-                    }
-                    ]
-            },
-
-            {
-                test: /images[\\\/].*\.png$|images[\\\/].*\.svg$/,
-                type: 'asset/resource',
-                generator: {
-                    filename: 'images/[name][ext]'
-                }
+    var config = {
+        entry: {
+            main: {import: './webpack-main.js', filename: 'avnav_min.js'},
+            style: {import: './style/avnav_viewer_new.less'}
+        },
+        optimization: {
+            splitChunks: {
+                chunks: "all"
             }
+        },
+        output: {path: __dirname + "/" + outDir},
+        resolve: {
+            extensions: ['.jsx', '.scss', '.js', '.json'],
+            alias: resolveAlias
+        },
+        module: {
+            rules: [
+                {
+                    test: /version\.js$/,
+                    loader: 'val-loader',
+                    options: {
+                        version: avnavVersion
+                    }
+                },
+
+                {
+                    test: /.jsx$|.js$/,
+                    exclude: /version\.js$/,
+                    use: {
+                        loader: 'babel-loader',
+                        options:
+                            {
+                                presets: ['@babel/preset-react', ["@babel/preset-env",
+                                    {
+                                        targets: {
+                                            browsers: "> 0.25%, not dead, safari 9, safari 10, safari 11"
+                                        }
+                                    }
+                                ]],
+                                plugins: [
+                                    ["prismjs", {
+                                        "languages": ["javascript", "css", "markup", "json"],
+                                        "plugins": ["line-numbers"],
+                                        "theme": "default",
+                                        "css": false
+                                    }]
+                                ]
+                            }
+                    }
+
+                },
+
+                {
+                    test: /\.css$/,
+                    use: [
+                        {
+                            loader: MiniCssExtractPlugin.loader
+                        },
+                        'css-loader'
+                    ]
+                },
 
 
-        ]
-    },
-    plugins:plugins,
-    devtool:devtool,
-    mode: isProduction?'production':'development'
+                {
+                    test: /avnav_viewer.*\.less$/,
+                    use: [
+                        {
+                            loader: MiniCssExtractPlugin.loader
+                        },
+                        {
+                            loader: 'css-loader',
+                            options: {
+                                url: true
+                            }
+                        },
+                        {
+                            loader: 'less-loader',
+                            options: {
+                                lessOptions: {javascriptEnabled: true}
+                            }
+                        }
+                    ]
+                },
+
+                {
+                    test: /images[\\\/].*\.png$|images[\\\/].*\.svg$/,
+                    type: 'asset/resource',
+                    generator: {
+                        filename: 'images/[name][ext]'
+                    }
+                }
+
+
+            ]
+        },
+        plugins: plugins,
+        devtool: devtool,
+        mode: isProduction ? 'production' : 'development'
+    }
+    return config;
 };
 
 

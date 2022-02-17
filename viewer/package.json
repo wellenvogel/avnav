@@ -7,7 +7,7 @@
     "watch": "webpack --progress --stats-error-details --watch",
     "watch-aistest": "webpack --config ./test/webpack.aistest.js --progress --watch",
     "debug": "webpack",
-    "production": "webpack -p"
+    "production": "webpack --mode=production"
   },
   "repository": {
     "type": "git",

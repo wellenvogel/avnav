@@ -63,6 +63,15 @@ task pkgVersion {
         }
     }
 }
+task touchLock {
+    doLast{
+       File f=file('package-lock.json')
+       if (!f.exists()){
+           f.withWriter { it << ''}
+       } 
+    }
+}
+npmInstall.dependsOn(touchLock)
 
 task release(type: MyNpm){
     subDir="release"
