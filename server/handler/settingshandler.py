@@ -34,11 +34,11 @@ from avnav_manager import AVNHandlerManager
 from avndirectorybase import *
 from avnav_util import *
 
-TYPE="layout"
-PREFIX="/layouts"
+TYPE="settings"
+PREFIX="/settings"
 
 
-class AVNLayoutHandler(AVNScopedDirectoryHandler):
+class AVNSettingsHandler(AVNScopedDirectoryHandler):
   ALLOWED_EXTENSIONS=['.json']
 
   def __init__(self, param):
@@ -57,10 +57,10 @@ class AVNLayoutHandler(AVNScopedDirectoryHandler):
   def getSystemDir(self):
     return os.path.join(self.httpServer.handlePathmapping("viewer"), TYPE)
 
-  def registerPluginLayout(self,pluginName,name,fileName):
+  def registerPluginSettings(self,pluginName,name,fileName):
     return self.registerPluginItem(pluginName,name,fileName)
 
-  def deregisterPluginLayout(self,pluginName,name):
+  def deregisterPluginSettings(self,pluginName,name):
     return self.deregisterPluginItem(pluginName,name)
 
-avnav_handlerList.registerHandler(AVNLayoutHandler)
+avnav_handlerList.registerHandler(AVNSettingsHandler)

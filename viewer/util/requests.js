@@ -8,9 +8,15 @@ const prepare=(url,options,defaults)=>{
     if (url === undefined) {
         return [undefined,undefined];
     }
+    let rurl="";
+    if (typeof(url) === 'string') rurl=url;
     let ioptions=assign({},defaults,options);
-    if ( !(ioptions && ioptions.useNavUrl !== undefined && !ioptions.useNavUrl)){
-        url=globalStore.getData(keys.properties.navUrl)+url;
+    if ( ioptions.useNavUrl !== false){
+        rurl=globalStore.getData(keys.properties.navUrl)+rurl;
+    }
+    //new syntax for parametr object instead of url
+    if (typeof(url) === 'object'){
+        rurl=addParameters(rurl,url);
     }
     if (ioptions.timeout === undefined) ioptions.timeout=parseInt(globalStore.getData(keys.properties.networkTimeout));
     let headers=undefined;
@@ -22,7 +28,7 @@ const prepare=(url,options,defaults)=>{
     let requestOptions={};
     if (headers) requestOptions.headers=headers;
     requestOptions.timeout=ioptions.timeout;
-    return [url,requestOptions];
+    return [rurl,requestOptions];
 };
 
 const handleJson=(rurl,requestOptions,options)=>{
@@ -87,7 +93,7 @@ const addParameters=(url,parameters)=>{
 let RequestHandler={
     /**
      * do a json get request
-     * @param url
+     * @param url - either string or object with request parameters
      * @param options:
      *        useNavUrl - (default: true) - prepend the navUrl to the provided url
      *        checkOk   - (default: true) - check if the response has a status field and this is set to "OK"
@@ -96,6 +102,7 @@ let RequestHandler={
      *        sequenceFunction - if set: a function to return a sequence - if the one returned from start
      *                           does not match the on at the result we reject
      *        opt_parameter - object with request parameters
+     * @param opt_parameter
      */
     getJson:(url,options,opt_parameter)=>{
         let [rurl,requestOptions]=prepare(url,options);
@@ -150,10 +157,11 @@ let RequestHandler={
     },
     /**
      * do a json get request
-     * @param url
+     * @param url either string or object with request parameters
      * @param options:
      *        useNavUrl - (default: false) - prepend the navUrl to the provided url
      *        noCache   - (default: false) - prevent caching
+     * @param opt_parameter request parameters
      */
     getHtmlOrText:(url,options,opt_parameter)=>{
         let [rurl,requestOptions]=prepare(url,options,{useNavUrl:false,noCache:false});

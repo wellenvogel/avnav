@@ -12,13 +12,17 @@ import assign from 'object-assign';
 import OverlayDialog from '../components/OverlayDialog.jsx';
 import LayoutHandler from '../util/layouthandler.js';
 import Mob from '../components/Mob.js';
-import LayoutNameDialog from '../components/LayoutNameDialog.jsx';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 import {ColorSelector, Checkbox, Radio, InputSelect, InputReadOnly} from '../components/Inputs.jsx';
 import DB from '../components/DialogButton.jsx';
 import DimHandler from '../util/dimhandler';
 import FullScreen from '../components/Fullscreen';
 import {stateHelper} from "../util/GuiHelpers";
+import Formatter from "../util/formatter";
+import {LoadItemDialog, SaveItemDialog} from "../components/SettingsNameDialogs";
+import PropertyHandler from '../util/propertyhandler';
+import {ItemActions} from "../components/FileDialog";
+import RequestHandler from "../util/requests";
 
 const settingsSections={
     Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,keys.properties.layers.grid,keys.properties.layers.compass],
@@ -385,6 +389,21 @@ class SettingsPage extends React.Component{
                     visible:keys.properties.connectedMode
                 }
             },
+            {
+                name: 'SettingsSave',
+                onClick:()=>this.saveSettings(),
+                visible: globalStore.getData(keys.properties.connectedMode,false) && globalStore.getData(keys.gui.capabilities.uploadSettings)
+            },
+            {
+                name: 'SettingsLoad',
+                onClick:()=>{
+                    self.confirmAbortOrDo().then(()=>{
+                        self.resetChanges();
+                        this.loadSettings();
+                    });
+                },
+                visible: globalStore.getData(keys.properties.connectedMode,false) && globalStore.getData(keys.gui.capabilities.uploadSettings)
+            },
             Mob.mobDefinition(this.props.history),
             {
                 name: 'Cancel',
@@ -436,8 +455,98 @@ class SettingsPage extends React.Component{
             });
         }
     }
+    saveSettings(){
+        let actions=ItemActions.create('settings');
+        let oldName=globalStore.getData(keys.properties.lastLoadedName).replace(/-[0-9]*$/,'');
+        let suffix=Formatter.formatDateTime(new Date()).replace(/[: /]/g,'-').replace(/--/g,'-');
+        let proposedName=actions.nameForUpload(oldName+"-"+suffix);
+        PropertyHandler.listSettings(true)
+            .then((settings)=>{
+                const checkFunction=(newName)=>{
+                    for (let idx in settings){
+                        if (settings[idx].value === newName) return {existing:true};
+                    }
+                    return {}
+                }
+                return SaveItemDialog.createDialog(proposedName,checkFunction,{
+                    title: "Select Name to save settings",
+                    itemLabel: 'Settings',
+                    fixedPrefix: 'user.'
+                })
+            })
+            .then((settingsName)=>{
+                proposedName=settingsName;
+                return PropertyHandler.uploadSettingsData(
+                    settingsName,
+                    PropertyHandler.exportSettings(this.values.getValues(true)),
+                    true
+                )
+            })
+            .then((res)=> {
+                globalStore.storeData(keys.properties.lastLoadedName,proposedName);
+                Toast("settings saved");
+            })
+            .catch((e)=>Toast(e))
+
+    }
+    loadSettings(){
+        const setSettings=(checkedValues)=>{
+            let current=this.values.getState();
+            return PropertyHandler.importSettings(checkedValues,current,true)
+                .then((imported)=>this.values.setState(imported,true));
+        }
+        this.confirmAbortOrDo()
+            .then(()=>{
+                return LoadItemDialog.createDialog(
+                    globalStore.getData(keys.properties.lastLoadedName),
+                    (current)=> PropertyHandler.listSettings(true),
+                    {
+                        title: 'Select Settings to load',
+                        itemLabel: 'Settings'
+                    }
+                )
+            })
+            .then(
+                (selected) => RequestHandler.getJson({
+                        request: 'download',
+                        type: 'settings',
+                        noattach: true,
+                        name: selected
+                    },
+                    {
+                        checkOk: false
+                    }
+                ),
+                (error) => Promise.reject("unable to download settings from server: " + error)
+            )
+            .then((settings)=> {
+                    return PropertyHandler.verifySettingsData(settings, false, false)
+                }
+            )
+            .then((result)=>{
+                if (result.warnings && result.warnings.length){
+                    return OverlayDialog.confirm(result.warnings.join('\n'),undefined,'Import anyway?')
+                        .then(
+                            ()=>setSettings(result.data),
+                            ()=>0
+                            )
+                }
+                else{
+                    return setSettings(result.data);
+                }
+            })
+            .catch((e)=> {
+                if (e) Toast(e)
+            });
+    }
     changeItem(item,value){
         this.values.setValue(item.name,value);
+    }
+
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if (this.props.small !== prevProps.small && prevProps.small && ! this.state.leftPanelVisible){
+            this.setState({leftPanelVisible: true});
+        }
     }
 
     resetChanges(){
@@ -449,22 +558,20 @@ class SettingsPage extends React.Component{
         let isEditing=LayoutHandler.isEditing();
         if (! isEditing){
             let startDialog=()=> {
-                let currentLayouts = [];
-                let checkName = (name)=> {
-                    name = LayoutHandler.fileNameToServerName(name);
-                    for (let i = 0; i < currentLayouts.length; i++) {
-                        if (currentLayouts[i].name === name) return true;
-                    }
-                    return false;
-                };
                 LayoutHandler.listLayouts()
                     .then((list)=> {
-                        currentLayouts = list;
                         let name = LayoutHandler.nameToBaseName(LayoutHandler.name);
-                        LayoutNameDialog.createDialog(name, checkName, "Start Layout Editor", "save changes to")
+                        SaveItemDialog.createDialog(name,(newName)=>{
+                            return {existing:list.indexOf(newName) >= 0};
+                        },{
+                            title: "Start Layout Editor",
+                            itemLabel: 'Layout',
+                            subtitle: "save changes to",
+                            fixedPrefix: 'user.',
+                            allowOverwrite: true
+                        })
                             .then((newName)=> {
-                                let layoutName = LayoutHandler.fileNameToServerName(newName);
-                                LayoutHandler.startEditing(layoutName);
+                                LayoutHandler.startEditing(newName);
                                 this.props.history.pop();
                             })
                             .catch(()=> {
@@ -527,7 +634,7 @@ class SettingsPage extends React.Component{
         let self = this;
         let MainContent = (props)=> {
             let leftVisible = props.leftPanelVisible;
-            let rightVisible = !self.props.small || !props.leftPanelVisible;
+            let rightVisible = !props.small || !props.leftPanelVisible;
             let leftClass = "sectionList";
             if (!rightVisible) leftClass += " expand";
             let currentSection = props.section|| 'Layer';
@@ -621,10 +728,11 @@ class SettingsPage extends React.Component{
                             <MainContent
                                 section={self.state.section}
                                 leftPanelVisible={self.state.leftPanelVisible}
+                                small={self.props.small}
                             />
                         }
                 buttonList={self.buttons}
-                title={"Settings"+((self.props.small && self.state.leftPanelVisible)?" "+self.state.section:"")}
+                title={"Settings"+((self.props.small && !self.state.leftPanelVisible)?" "+self.state.section:"")}
                 />);
     }
 }

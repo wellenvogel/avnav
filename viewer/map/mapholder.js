@@ -1419,7 +1419,7 @@ MapHolder.prototype.onClick=function(evt){
         }
         let routeName=wp.routeName;
         if (routeName) {
-            if (Helper.getExt(routeName) !== '.gpx') routeName += ".gpx";
+            if (Helper.getExt(routeName) !== 'gpx') routeName += ".gpx";
             assign(feature,{
                 overlayType: 'route',
                 overlayName: routeName,

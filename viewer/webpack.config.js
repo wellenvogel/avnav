@@ -1,9 +1,10 @@
-var path = require('path');
-var webpack = require('webpack');
-var CopyWebpackPlugin= require('copy-webpack-plugin');
-var MiniCssExtractPlugin=require('mini-css-extract-plugin');
-var generateLicense=require('./collectLicense');
-var GenerateAssetsPlugin=require('generate-asset-webpack-plugin');
+const path = require('path');
+const webpack = require('webpack');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const generateLicense = require('./collectLicense');
+const GenerateFilePlugin = require('generate-file-webpack-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 var outDir="build/debug";
 var isProduction=(process.env.NODE_ENV === 'production') || (process.argv.indexOf('-p') !== -1);
@@ -31,13 +32,13 @@ var replaceSuffix=function(content,path){
         .replace(/_SFX=1/,"_SFX="+avnavVersion);
 }
 var copyList=[
-    {from: './static/',transform: replaceSuffix},
-    {from: './webpack-loader.js',to:'loader.js',transform:replaceSuffix},
-    {from: './util/polyfill.js',to:'polyfill.js'},
+    {from: './static/',transform: replaceSuffix,globOptions:{ignore:['**/avnav_viewer.html']}},
+    //{from: './webpack-loader.js',to:'loader.js',transform:replaceSuffix},
     {from: '../libraries/movable-type/geo.js', to: 'libraries'},
     {from: '../libraries/movable-type/latlon.js',to: 'libraries'},
     {from: '../sounds/1-minute-of-silence.mp3',to: 'sounds'},
     {from: './layout',to:'layout'},
+    {from: './settings',to:'settings'},
     {context: './demo',from: '*.xml',to:'demo/'}
     ];
 var images=[
@@ -64,30 +65,37 @@ if (isProduction) {
 }
 
 var plugins = [
-    new CopyWebpackPlugin(copyList),
+    new CopyWebpackPlugin({
+        patterns: copyList
+    }),
     new MiniCssExtractPlugin({
         filename: "avnav_viewer.css",
-        allChunks: true}),
-    new GenerateAssetsPlugin({
-        filename: 'license.html',
-        fn: function (compilation, cb) {
-            generateLicense(function(data){cb(null,data)});
-        }
+        }),
+    new GenerateFilePlugin({
+        file: 'license.html',
+        content: generateLicense()
+    }),
+    new HtmlWebpackPlugin({
+        template: 'static/avnav_viewer.html',
+        filename: 'avnav_viewer.html',
+        hash: true
     })
 ];
 
 //console.log(process.env);
 
 module.exports = {
-    //see http://humaan.com/getting-started-with-webpack-and-react-es6-style/
-    entry: getEntrySources([
-        '@babel/polyfill',
-        './webpack-main.js',
-        './style/avnav_viewer_new.less'
-    ]),
-    //entry: './app/main.jsx',
-    //publicPath: 'http://localhost:8081/viewer',
-    output: { path: __dirname+"/"+outDir, filename: 'avnav_min.js' },
+
+    entry: {
+        main: { import: './webpack-main.js', filename: 'avnav_min.js'},
+        style: { import: './style/avnav_viewer_new.less'}
+    },
+    optimization: {
+        splitChunks: {
+            chunks: "all"
+        }
+    },
+    output: { path: __dirname+"/"+outDir },
     resolve: {
         extensions: ['.jsx', '.scss', '.js', '.json'],
         alias: resolveAlias
@@ -152,16 +160,19 @@ module.exports = {
                         }
                     },
                     {
-                        loader: 'less-loader'
+                        loader: 'less-loader',
+                        options:{
+                            lessOptions:{javascriptEnabled: true}
+                        }
                     }
                     ]
             },
 
             {
                 test: /images[\\\/].*\.png$|images[\\\/].*\.svg$/,
-                loader: 'file-loader',
-                options:{
-                    name: "images/[name].[ext]"
+                type: 'asset/resource',
+                generator: {
+                    filename: 'images/[name][ext]'
                 }
             }
 
@@ -173,10 +184,4 @@ module.exports = {
     mode: isProduction?'production':'development'
 };
 
-function getEntrySources(sources) {
-    if (isProduction) {
-        //sources.push('webpack-dev-server/client?http://localhost:8082');
-    }
 
-    return sources;
-};

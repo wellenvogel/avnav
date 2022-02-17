@@ -565,16 +565,18 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
     except Exception as e:
       if self.getRequestParam(requestParam,'noattach') is None:
         #send some empty data
-        data = io.StringIO("error: %s"%str(e))
+        data = io.BytesIO(("error: %s"%str(e)).encode(errors='ignore'))
         data.seek(0)
         self.send_response(200)
         self.send_header("Content-type", "application/octet-stream")
+        self.end_headers()
         try:
           self.copyfile(data, self.wfile)
         finally:
           data.close()
+          self.close_connection=True
       else:
-        self.send_error(404,traceback.format_exc(1))
+        self.send_error(404,message=str(e),explain=traceback.format_exc(1))
       return
     self.send_error(404, "invalid download request %s"%type)
 
@@ -668,6 +670,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
       'uploadImport': True,
       'uploadOverlays': True,
       'uploadTracks': True,
+      'uploadSettings': True,
       'canConnect': True,
       'config': True,
       'debugLevel': True,

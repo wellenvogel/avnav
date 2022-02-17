@@ -24,7 +24,8 @@ export const PropertyType={
     LIST:2,
     COLOR:3,
     LAYOUT:4,
-    SELECT: 5
+    SELECT: 5,
+    INTERNAL: 6
 };
 
 /**
@@ -39,7 +40,7 @@ export const PropertyType={
 export const Property=function(defaultv,opt_label,opt_type,opt_values,opt_initial){
     this.defaultv=defaultv;
     this.label=opt_label;
-    this.type=(opt_type !== undefined)?opt_type:PropertyType.RANGE;
+    this.type=(opt_type !== undefined)?opt_type:PropertyType.INTERNAL;
     this.values=(opt_values !== undefined)?opt_values:[0,1000]; //assume range 0...1000
     this.canChange=opt_type !== undefined;
     this.initialValue=opt_initial;
@@ -172,6 +173,7 @@ let keys={
             uploadImport: K,
             uploadOverlays: K,
             uploadTracks: K,
+            uploadSettings: K,
             canConnect: K,
             config: K,
             debugLevel: K,
@@ -181,8 +183,6 @@ let keys={
         },
         global:{
             smallDisplay: K,
-            pageName: K,
-            pageOptions:K,
             onAndroid:K,
             propertySequence:K,
             hasActiveInputs: K,
@@ -221,18 +221,6 @@ let keys={
         },
         routepage:{
             initialName:K,
-        },
-        downloadpage:{
-            type:K,
-            currentItems:K,
-            downloadParameters:K,
-            fileInputKey:K,
-            enableUpload:K,
-            uploadInfo:K,
-            requestedUploadId: new D("the last requested upload for android"),
-            addOns:K,
-            chartImportExtensions:K,
-            chartImportSubDir:K
         }
 
     },
@@ -240,6 +228,7 @@ let keys={
     //they will be written to local storage on change
     //and the store will be filled with initial values on start
     properties: {
+        lastLoadedName: new Property('system.default'),
         layers: {
             ais: new Property(true, "AIS", PropertyType.CHECKBOX),
             track: new Property(true, "Track", PropertyType.CHECKBOX),
@@ -378,8 +367,6 @@ let keys={
         mapScale: new Property(1,"scale the map display",PropertyType.RANGE,[0.3,5]),
         mapFloat: new Property(false,"float map behind buttons",PropertyType.CHECKBOX),
         mapLockMode: new Property('center','lock boat mode',PropertyType.LIST,['center','current','ask']),
-        mapBoatX: new Property(50,"boat position x(%)",PropertyType.RANGE,[1,99]),
-        mapBoatY: new Property(50,"boat position y(%)",PropertyType.RANGE,[1,99]),
         mapSequenceTime: new Property(2000,"change check interval(ms)",PropertyType.RANGE,[500,10000,100]),
         remoteChannelName: new Property('0','remote control channel',PropertyType.LIST,['0','1','2','3','4']),
         remoteChannelRead: new Property(false,'read from remote channel',PropertyType.CHECKBOX),

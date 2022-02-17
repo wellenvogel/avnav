@@ -353,6 +353,9 @@ button{
   &.DownloadPageLayouts{
     .iconButton('ballot.svg');
   }
+  &.DownloadPageSettings{
+    .iconButton('ic_settings.svg');
+  }
   &.DownloadPageImages{
     .iconButton('image-icon.svg');
   }
@@ -389,6 +392,12 @@ button{
     &.button.active{
       border-color: @editingColor;
     }
+  }
+  &.SettingsSave{
+    .iconButton('save.svg')
+  }
+  &.SettingsLoad{
+    .iconButton('ic_open.svg')
   }
 
   &.SettingsAddons {

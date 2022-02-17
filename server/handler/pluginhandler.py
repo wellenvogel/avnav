@@ -39,7 +39,7 @@ import avnav_handlerList
 from avnremotechannel import AVNRemoteChannelHandler
 from avnuserapps import AVNUserAppHandler
 from avnusb import AVNUsbSerialReader
-from layouthandler import AVNLayoutHandler
+from layouthandler import AVNScopedDirectoryHandler
 from charthandler import AVNChartHandler
 
 URL_PREFIX= "/plugins"
@@ -227,7 +227,7 @@ class ApiImpl(AVNApi):
       layoutFile=os.path.join(os.path.dirname(self.fileName),layoutFile)
     if not os.path.exists(layoutFile):
       raise Exception("layout file %s not found",layoutFile)
-    layoutHandler=AVNWorker.findHandlerByName(AVNLayoutHandler.getConfigName()) #type: AVNLayoutHandler
+    layoutHandler=AVNWorker.findHandlerByName(AVNScopedDirectoryHandler.getConfigName()) #type: AVNScopedDirectoryHandler
     if layoutHandler is None:
       raise Exception("no layout handler")
     layoutHandler.registerPluginLayout(re.sub(".*\.","",self.prefix),name,layoutFile)
