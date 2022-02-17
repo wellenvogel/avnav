@@ -70,7 +70,7 @@ function getParam(key)
  * main function called when dom is loaded
  *
  */
-avnav.main=function() {
+export default function() {
     //some workaround for lees being broken on IOS browser
     //less.modifyVars();
     let body=document.querySelector('body');

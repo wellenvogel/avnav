@@ -32,6 +32,7 @@
 (function () {
     var SUFFIX=1; //will be changed by copy-webpack-plugin
     var scripts = [
+        'babel.js',
         'libraries/geo.js',
         'libraries/latlon.js',
         'avnav_min.js',

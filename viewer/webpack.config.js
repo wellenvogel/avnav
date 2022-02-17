@@ -3,7 +3,7 @@ var webpack = require('webpack');
 var CopyWebpackPlugin= require('copy-webpack-plugin');
 var MiniCssExtractPlugin=require('mini-css-extract-plugin');
 var generateLicense=require('./collectLicense');
-var GenerateAssetsPlugin=require('generate-asset-webpack-plugin');
+var GenerateFilePlugin=require('generate-file-webpack-plugin');
 
 var outDir="build/debug";
 var isProduction=(process.env.NODE_ENV === 'production') || (process.argv.indexOf('-p') !== -1);
@@ -65,30 +65,30 @@ if (isProduction) {
 }
 
 var plugins = [
-    new CopyWebpackPlugin(copyList),
+    new CopyWebpackPlugin({
+        patterns: copyList
+    }),
     new MiniCssExtractPlugin({
         filename: "avnav_viewer.css",
-        allChunks: true}),
-    new GenerateAssetsPlugin({
-        filename: 'license.html',
-        fn: function (compilation, cb) {
-            generateLicense(function(data){cb(null,data)});
-        }
+        }),
+    new GenerateFilePlugin({
+        file: 'license.html',
+        content: generateLicense()
     })
 ];
 
 //console.log(process.env);
 
 module.exports = {
-    //see http://humaan.com/getting-started-with-webpack-and-react-es6-style/
-    entry: getEntrySources([
-        '@babel/polyfill',
-        './webpack-main.js',
-        './style/avnav_viewer_new.less'
-    ]),
+
+    entry: {
+        babel: { import: '@babel/polyfill', filename: 'babel.js'},
+        main: { import: './webpack-main.js', filename: 'avnav_min.js'},
+        style: { import: './style/avnav_viewer_new.less'}
+    },
     //entry: './app/main.jsx',
     //publicPath: 'http://localhost:8081/viewer',
-    output: { path: __dirname+"/"+outDir, filename: 'avnav_min.js' },
+    output: { path: __dirname+"/"+outDir },
     resolve: {
         extensions: ['.jsx', '.scss', '.js', '.json'],
         alias: resolveAlias
@@ -153,7 +153,10 @@ module.exports = {
                         }
                     },
                     {
-                        loader: 'less-loader'
+                        loader: 'less-loader',
+                        options:{
+                            lessOptions:{javascriptEnabled: true}
+                        }
                     }
                     ]
             },
@@ -174,10 +177,4 @@ module.exports = {
     mode: isProduction?'production':'development'
 };
 
-function getEntrySources(sources) {
-    if (isProduction) {
-        //sources.push('webpack-dev-server/client?http://localhost:8082');
-    }
 
-    return sources;
-};
