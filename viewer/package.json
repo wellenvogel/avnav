@@ -14,7 +14,9 @@
     "url": "https://github.com/wellenvogel/avnav/tree/master/viewer"
   },
   "browserslist": [
-    "> 0.25%","not dead","safari >= 6"
+    "> 0.25%",
+    "not dead",
+    "safari >= 6"
   ],
   "author": "Andreas Vogel",
   "license": "MIT",

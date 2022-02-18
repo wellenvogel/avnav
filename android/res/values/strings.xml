@@ -108,5 +108,6 @@
     <string name="powerSafer">You have power saving enabled on your device. This will turn off the GPS in background. Please consider turning this off to ensure location updates while the screen is off.</string>
     <string name="backgroundGpsDisabled">gps disabled by power saving</string>
     <string name="backgroundGpsEnabled">gps enabled</string>
+    <string name="uploadSettings">Select a settings file to upload</string>
 
 </resources>

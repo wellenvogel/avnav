@@ -61,11 +61,13 @@ public class RequestHandler {
 
     private ChartHandler gemfHandler;
     private LayoutHandler layoutHandler;
+    private SettingsHandler settingsHandler;
     private AddonHandler addonHandler;
 
     //file types from the js side
     public static String TYPE_ROUTE="route";
     public static String TYPE_LAYOUT="layout";
+    public static String TYPE_SETTINGS="settings";
     public static String TYPE_CHART="chart";
     public static String TYPE_TRACK="track";
     public static String TYPE_USER="user";
@@ -90,6 +92,7 @@ public class RequestHandler {
             new AvnUtil.KeyValue<Integer>(TYPE_IMAGE,R.string.uploadImage),
             new AvnUtil.KeyValue<Integer>(TYPE_USER,R.string.uploadUser),
             new AvnUtil.KeyValue<Integer>(TYPE_LAYOUT,R.string.uploadLayout),
+            new AvnUtil.KeyValue<Integer>(TYPE_SETTINGS,R.string.uploadSettings),
             new AvnUtil.KeyValue<Integer>(TYPE_OVERLAY,R.string.uploadOverlay),
             new AvnUtil.KeyValue<Integer>(TYPE_TRACK,R.string.uploadTrack)
     );
@@ -100,6 +103,7 @@ public class RequestHandler {
             new AvnUtil.KeyValue<File>(TYPE_CHART,new File("charts")),
             new AvnUtil.KeyValue<File>(TYPE_TRACK,new File("tracks")),
             new AvnUtil.KeyValue<File>(TYPE_LAYOUT,new File("layout")),
+            new AvnUtil.KeyValue<File>(TYPE_SETTINGS,new File("settings")),
             new AvnUtil.KeyValue<File>(TYPE_USER,new File(new File("user"),"viewer")),
             new AvnUtil.KeyValue<File>(TYPE_IMAGE,new File(new File("user"),"images")),
             new AvnUtil.KeyValue<File>(TYPE_OVERLAY,new File("overlays"))
@@ -162,12 +166,20 @@ public class RequestHandler {
         this.gemfHandler.updateChartList();
         this.addonHandler= new AddonHandler(service,this);
         startHandler();
-        layoutHandler=new LayoutHandler(service,"viewer/layout",
+        layoutHandler=new LayoutHandler(service,  "viewer/layout",
                 new File(getWorkDir(),typeDirs.get(TYPE_LAYOUT).value.getPath()));
         handlerMap.put(TYPE_LAYOUT, new LazyHandlerAccess() {
             @Override
             public INavRequestHandler getHandler() {
                 return layoutHandler;
+            }
+        });
+        settingsHandler=new SettingsHandler(service,  "viewer/settings",
+                new File(getWorkDir(),typeDirs.get(TYPE_SETTINGS).value.getPath()));
+        handlerMap.put(TYPE_SETTINGS, new LazyHandlerAccess() {
+            @Override
+            public INavRequestHandler getHandler() {
+                return settingsHandler;
             }
         });
         handlerMap.put(TYPE_ROUTE, new LazyHandlerAccess() {
@@ -706,6 +718,7 @@ public class RequestHandler {
                 o.put("plugins",false);
                 o.put("uploadRoute",true);
                 o.put("uploadLayout",true);
+                o.put("uploadSettings",true);
                 o.put("canConnect",true);
                 o.put("uploadUser",true);
                 o.put("uploadImages",true);

@@ -20,7 +20,6 @@ import de.wellenvogel.avnav.main.MainActivity;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
-import de.wellenvogel.avnav.worker.RemoteChannel;
 
 //potentially the Javascript interface code is called from the Xwalk app package
 //so we have to be careful to always access the correct resource manager when accessing resources!
@@ -155,6 +154,8 @@ public class JavaScriptApi {
         Uri data = null;
         if (type.equals("layout")) {
             data = LayoutHandler.getUriForLayout(url);
+        } else if (type.equals("settings")){
+            data= SettingsHandler.getUriForSettings(url);
         } else {
             try {
                 data = UserFileProvider.createContentUri(type, name,url);
