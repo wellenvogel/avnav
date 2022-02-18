@@ -13,6 +13,9 @@
     "type": "git",
     "url": "https://github.com/wellenvogel/avnav/tree/master/viewer"
   },
+  "browserslist": [
+    "> 0.25%","not dead","safari >= 6"
+  ],
   "author": "Andreas Vogel",
   "license": "MIT",
   "devDependencies": {
@@ -62,6 +65,7 @@
     "canvas-gauges": "^2.1.7",
     "clone-deep": "^4.0.1",
     "codeflask": "git+https://github.com/wellenvogel/CodeFlask.git#20220109",
+    "core-js": "^2.6.12",
     "create-react-class": "^15.7.0",
     "downloadjs": "^1.4.7",
     "fullscreen-polyfill": "^1.0.4",
@@ -73,6 +77,7 @@
     "react-html-parser": "git+https://github.com/wellenvogel/react-html-parser.git#av-20220217-2",
     "react-measure": "^2.5.2",
     "react-sortable-hoc": "^2.0.0",
+    "regenerator-runtime": "^0.13.9",
     "shallow-equal": "^1.2.1",
     "tinycolor2": "^1.4.2",
     "whatwg-fetch-timeout": "^2.0.2-timeout",
