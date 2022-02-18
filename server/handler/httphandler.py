@@ -528,7 +528,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
         AVNLog.debug("found handler %s to handle download %s"%(handler.getConfigName(), type))
         dl=handler.handleApiRequest('download',type,requestParam,handler=self)
         if dl is None:
-          raise Exception("unable to download %s",type)
+          raise Exception("unable to download %s"%type)
         if isinstance(dl, AVNDownload):
           try:
             self.writeFromDownload(dl,

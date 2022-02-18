@@ -188,9 +188,10 @@ class PropertyHandler {
      * @param data
      * @param opt_checkValues if set - reject on invalid values, otherwise correct them
      * @param opt_errorNonExistent treat non existing properties as error
+     * @param opt_replacements an object with key/value, keys will be used for a $key$ replacement
      * @return the checked (and potentially corrected) flattend properties
      */
-    verifySettingsData(data, opt_checkValues, opt_errorNonExistent) {
+    verifySettingsData(data, opt_checkValues, opt_errorNonExistent,opt_replacements) {
 
         return new Promise((resolve, reject) => {
             let warnings=[];
@@ -231,6 +232,11 @@ class PropertyHandler {
                 }
                 let des = descriptions[key];
                 let v = data.properties[dk];
+                if (opt_replacements && typeof(v) === 'string'){
+                    for (let rk in opt_replacements){
+                        v=v.replace('$'+rk+'$',opt_replacements[rk]);
+                    }
+                }
                 let ov=v;
                 switch (des.type) {
                     case PropertyType.CHECKBOX:

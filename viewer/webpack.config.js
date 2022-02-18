@@ -85,7 +85,10 @@ module.exports = (env, argv) => {
 //console.log(process.env);
 
     var config = {
+        target: ['web','browserslist'],  //this way use the same config as babel is using
+                                         //find the browserslist in package.json
         entry: {
+
             main: {import: './webpack-main.js', filename: 'avnav_min.js'},
             style: {import: './style/avnav_viewer_new.less'}
         },
@@ -94,7 +97,9 @@ module.exports = (env, argv) => {
                 chunks: "all"
             }
         },
-        output: {path: __dirname + "/" + outDir},
+        output: {
+            path: __dirname + "/" + outDir,
+        },
         resolve: {
             extensions: ['.jsx', '.scss', '.js', '.json'],
             alias: resolveAlias
@@ -118,10 +123,9 @@ module.exports = (env, argv) => {
                             {
                                 presets: ['@babel/preset-react', ["@babel/preset-env",
                                     {
-                                        targets: {
-                                            browsers: "> 0.25%, not dead, safari 9, safari 10, safari 11"
-                                        }
-                                    }
+                                        useBuiltIns: false,
+                                        //debug: true
+                                    },
                                 ]],
                                 plugins: [
                                     ["prismjs", {

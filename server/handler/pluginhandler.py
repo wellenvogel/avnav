@@ -39,8 +39,9 @@ import avnav_handlerList
 from avnremotechannel import AVNRemoteChannelHandler
 from avnuserapps import AVNUserAppHandler
 from avnusb import AVNUsbSerialReader
-from layouthandler import AVNScopedDirectoryHandler
+from layouthandler import AVNScopedDirectoryHandler, AVNLayoutHandler
 from charthandler import AVNChartHandler
+from settingshandler import AVNSettingsHandler
 
 URL_PREFIX= "/plugins"
 
@@ -77,6 +78,8 @@ class ApiImpl(AVNApi):
     self.stopHandler=None
     self.storeKeys=[]
     self.userApps=[]
+    self.layouts=[]
+    self.settingsFiles=[]
 
   def stop(self):
     if self.stopHandler is None:
@@ -99,8 +102,28 @@ class ApiImpl(AVNApi):
         addonhandler.unregisterAddOn("%s%i"%(self.prefix,id))
     except:
       pass
+    try:
+      layouthandler=AVNWorker.findHandlerByName(AVNLayoutHandler.getConfigName())
+      if layouthandler:
+        for layout in self.layouts:
+          layouthandler.deregisterPluginItem(self.getPrefixForItems(),layout)
+      self.layouts=[]
+    except:
+      pass
+    try:
+      settingshandler=AVNWorker.findHandlerByName(AVNSettingsHandler.getConfigName())
+      if settingshandler:
+        for setting in self.settingsFiles:
+          settingshandler.deregisterPluginItem(self.getPrefixForItems(),setting)
+      self.settingsFiles=[]
+    except:
+      pass
+
     self.stopHandler()
 
+
+  def getPrefixForItems(self):
+    return re.sub(".*\.","",self.prefix)
 
   def log(self, str, *args):
     AVNLog.info("%s",str % args)
@@ -227,10 +250,28 @@ class ApiImpl(AVNApi):
       layoutFile=os.path.join(os.path.dirname(self.fileName),layoutFile)
     if not os.path.exists(layoutFile):
       raise Exception("layout file %s not found",layoutFile)
-    layoutHandler=AVNWorker.findHandlerByName(AVNScopedDirectoryHandler.getConfigName()) #type: AVNScopedDirectoryHandler
+    layoutHandler=AVNWorker.findHandlerByName(AVNLayoutHandler.getConfigName()) #type: AVNScopedDirectoryHandler
     if layoutHandler is None:
       raise Exception("no layout handler")
-    layoutHandler.registerPluginLayout(re.sub(".*\.","",self.prefix),name,layoutFile)
+    if name in self.layouts:
+      self.log("re-registering layout %s",name)
+      layoutHandler.deregisterPluginItem(self.getPrefixForItems(),name)
+    layoutHandler.registerPluginItem(self.getPrefixForItems(),name,layoutFile)
+    self.layouts.append(name)
+
+  def registerSettingsFile(self, name, settingsFile):
+    if not os.path.isabs(settingsFile):
+      settingsFile=os.path.join(os.path.dirname(self.fileName), settingsFile)
+    if not os.path.exists(settingsFile):
+      raise Exception("settings file %s not found", settingsFile)
+    settingsHandler=AVNWorker.findHandlerByName(AVNSettingsHandler.getConfigName()) #type: AVNScopedDirectoryHandler
+    if settingsHandler is None:
+      raise Exception("no settings handler")
+    if name in self.settingsFiles:
+      self.log("re-registering settings %s",name)
+      settingsHandler.deregisterPluginItem(self.getPrefixForItems(),name)
+    settingsHandler.registerPluginItem(self.getPrefixForItems(), name, settingsFile)
+    self.settingsFiles.append(name)
 
   def timestampFromDateTime(self, dt=None):
     if dt is None:

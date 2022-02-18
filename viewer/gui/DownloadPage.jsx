@@ -31,7 +31,7 @@ import {
 import EditOverlaysDialog, {DEFAULT_OVERLAY_CHARTENTRY} from '../components/EditOverlaysDialog';
 import {getOverlayConfigName} from "../map/chartsourcebase"
 import PropertyHandler from '../util/propertyhandler';
-import {SaveItemDialog} from "../components/SettingsNameDialogs";
+import {SaveItemDialog} from "../components/LoadSaveDialogs";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 

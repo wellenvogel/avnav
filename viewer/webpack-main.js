@@ -27,7 +27,8 @@
 
 
  */
-
+require('core-js'); //babel polyfills
+require('regenerator-runtime/runtime'); //for babel-plugin-transform-regenerator
 window.avnav={};
 window.fetch=undefined; //force using whatwg-fetch-timeout
 //we do some lazy loading of modules...
