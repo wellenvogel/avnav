@@ -257,6 +257,7 @@ class ApiImpl(AVNApi):
       self.log("re-registering layout %s",name)
       layoutHandler.deregisterPluginItem(self.getPrefixForItems(),name)
     layoutHandler.registerPluginItem(self.getPrefixForItems(),name,layoutFile)
+    self.layouts.append(name)
 
   def registerSettingsFile(self, name, settingsFile):
     if not os.path.isabs(settingsFile):
@@ -270,6 +271,7 @@ class ApiImpl(AVNApi):
       self.log("re-registering settings %s",name)
       settingsHandler.deregisterPluginItem(self.getPrefixForItems(),name)
     settingsHandler.registerPluginItem(self.getPrefixForItems(), name, settingsFile)
+    self.settingsFiles.append(name)
 
   def timestampFromDateTime(self, dt=None):
     if dt is None:
