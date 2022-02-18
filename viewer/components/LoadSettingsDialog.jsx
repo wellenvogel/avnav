@@ -39,31 +39,49 @@ const loadSettings = (currentValues, defaultName, opt_title) => {
     const setSettings = (checkedValues) => {
         return PropertyHandler.importSettings(checkedValues, currentValues, true);
     }
-
-    return LoadItemDialog.createDialog(
-        defaultName,
-        (current) => PropertyHandler.listSettings(true),
-        {
-            title: opt_title ? opt_title : 'Select Settings to load',
-            itemLabel: 'Settings'
-        }
-    )
-        .then(
-            (selected) => RequestHandler.getJson({
-                    request: 'download',
-                    type: 'settings',
-                    noattach: true,
-                    name: selected
-                },
+    let settings=[];
+    let selectedEntry=undefined;
+    return PropertyHandler.listSettings()
+        .then((settingslist)=> {
+            settings=settingslist;
+            let displayList=[];
+            settingslist.forEach((s)=>{
+                displayList.push({label:s.name,value:s.name});
+            })
+            return LoadItemDialog.createDialog(
+                defaultName,
+                displayList,
                 {
-                    checkOk: false
+                    title: opt_title ? opt_title : 'Select Settings to load',
+                    itemLabel: 'Settings'
                 }
-            ),
+            )
+        })
+        .then(
+            (selected) => {
+                settings.forEach((s)=>{
+                    if (s.name === selected) selectedEntry=s;
+                })
+                return RequestHandler.getJson({
+                        request: 'download',
+                        type: 'settings',
+                        noattach: true,
+                        name: selected
+                    },
+                    {
+                        checkOk: false
+                    }
+                )
+            },
             (error) => Promise.reject()
         )
         .then(
             (settings) => {
-                return PropertyHandler.verifySettingsData(settings, false, false)
+                let replacements;
+                if (selectedEntry && selectedEntry.prefix){
+                    replacements={prefix:selectedEntry.prefix};
+                }
+                return PropertyHandler.verifySettingsData(settings, false, false,replacements)
             },
             (error) => Promise.reject(error?"unable to download settings from server: " + error:error)
         )

@@ -57,10 +57,5 @@ class AVNSettingsHandler(AVNScopedDirectoryHandler):
   def getSystemDir(self):
     return os.path.join(self.httpServer.handlePathmapping("viewer"), TYPE)
 
-  def registerPluginSettings(self,pluginName,name,fileName):
-    return self.registerPluginItem(pluginName,name,fileName)
-
-  def deregisterPluginSettings(self,pluginName,name):
-    return self.deregisterPluginItem(pluginName,name)
 
 avnav_handlerList.registerHandler(AVNSettingsHandler)

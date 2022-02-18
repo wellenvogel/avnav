@@ -350,3 +350,6 @@ class AVNApi(object):
     @return:
     '''
     raise NotImplemented()
+
+  def registerSettingsFile(self,name,fileName):
+    raise NotImplemented()

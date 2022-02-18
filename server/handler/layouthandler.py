@@ -57,10 +57,5 @@ class AVNLayoutHandler(AVNScopedDirectoryHandler):
   def getSystemDir(self):
     return os.path.join(self.httpServer.handlePathmapping("viewer"), TYPE)
 
-  def registerPluginLayout(self,pluginName,name,fileName):
-    return self.registerPluginItem(pluginName,name,fileName)
-
-  def deregisterPluginLayout(self,pluginName,name):
-    return self.deregisterPluginItem(pluginName,name)
 
 avnav_handlerList.registerHandler(AVNLayoutHandler)

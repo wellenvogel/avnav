@@ -391,7 +391,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
     @return: tuple name,basedir
              basedir can be None
     '''
-    return (path,None)
+    return (path,self.baseDir)
   def getPathFromUrl(self,path,handler=None,requestParam=None):
     """
     the path is already unqouted and utf8-decoded here
@@ -406,8 +406,6 @@ class AVNDirectoryHandlerBase(AVNWorker):
     (subPath,baseDir)=self.convertLocalPath(subPath)
     if subPath is None:
       return #not found
-    if baseDir is None:
-      baseDir=self.baseDir
     #check for zip files in the path
     pathParts=subPath.split(os.path.sep)
     hasZip=False
@@ -416,18 +414,22 @@ class AVNDirectoryHandlerBase(AVNWorker):
         hasZip=True
         break
     if not hasZip:
-      originalPath = os.path.join(baseDir, subPath)
-      return originalPath
+      if baseDir is not None:
+        return os.path.join(baseDir, subPath)
+      else:
+        return subPath
     currentPath=baseDir
     for k in range(0,len(pathParts)):
       part=pathParts[k]
-      currentPath=os.path.join(currentPath,part)
+      if currentPath is not None:
+        currentPath=os.path.join(currentPath,part)
       if not os.path.exists(currentPath):
         return None
       if (part.lower().endswith(".zip") or part.lower().endswith('.kmz')) and k < (len(pathParts)-1):
         return self.getZipEntry(currentPath,"/".join(pathParts[k+1:]),handler,requestParam)
-    originalPath = os.path.join(baseDir,subPath)
-    return originalPath
+    if baseDir is not None:
+      return os.path.join(baseDir,subPath)
+    return subPath
 
   def handleSpecialApiRequest(self,command,requestparam,handler):
     raise Exception("unknown command for %s api request: %s" % (self.type, command))
@@ -494,13 +496,15 @@ class AVNDirectoryHandlerBase(AVNWorker):
     self._scanDirectory()
     return AVNUtil.getReturnData()
 
-  def handleDownload(self,name,handler,requestparam,baseDir=None):
+  def handleDownload(self,name,handler,requestparam):
     if name is None:
       raise Exception("missing name")
     name = AVNUtil.clean_filename(name)
-    if baseDir is None:
-      baseDir=self.baseDir
-    filename = os.path.join(baseDir, name)
+    (filename,baseDir)=self.convertLocalPath(name)
+    if filename is None:
+      return None
+    if baseDir is not None:
+      filename = os.path.join(baseDir, filename)
     if not os.path.exists(filename):
       raise Exception("file %s not found" % filename)
     return AVNDownload(filename)
@@ -555,16 +559,19 @@ class AVNScopedDirectoryEntry(AVNDirectoryListEntry):
                      **kwargs)
     self.baseDir=kwargs.get('baseDir')
     self.scopedName=None
-    self.layoutType=self.T_USER
+    self.itemType=self.T_USER
     self.canDelete=False
+    self.fileName=kwargs.get('fileName')
+    self.prefix=None
   def setName(self,ltype,prefix=None):
     if not ltype in self.T_ALL:
       ltype=self.T_USER
-    self.layoutType=ltype
+    self.itemType=ltype
     if prefix is not None:
-      self.scopedName=ltype+"."+prefix+"."+self.name
+      self.prefix=ltype+"."+prefix
     else:
-      self.scopedName=ltype+"."+self.name
+      self.prefix=ltype
+    self.scopedName=self.prefix+"."+self.name
     self.canDelete=ltype == self.T_USER
 
   @classmethod
@@ -678,6 +685,8 @@ class AVNScopedDirectoryHandler(AVNDirectoryHandlerBase):
     item=self.findItem(name)
     if not item:
       return (None,None)
+    if item.fileName:
+      return (item.fileName,None)
     return (item.name,item.baseDir)
 
   def handleDelete(self, name):
@@ -687,7 +696,7 @@ class AVNScopedDirectoryHandler(AVNDirectoryHandlerBase):
       return AVNUtil.getReturnData(error="%s %s not found"%(self.type,name))
     if not item.canDelete:
       return AVNUtil.getReturnData(error="unable to delete %s "%(name))
-    return super().handleDelete(AVNScopedDirectoryEntry.stripPrefix(name))
+    return super().handleDelete(item.name)
 
   def handleRename(self, name, newName, requestparam):
     name=self.clientNameToScopedName(name)
@@ -697,44 +706,41 @@ class AVNScopedDirectoryHandler(AVNDirectoryHandlerBase):
     if not item.canDelete:
       return AVNUtil.getReturnData(error="unable to rename %s "%(name))
     return super().handleRename(
-      AVNScopedDirectoryEntry.stripPrefix(name),
-      AVNScopedDirectoryEntry.stripPrefix(self.clientNameToScopedName(newName))
+      item.name,
+      self.getListEntryClass().stripPrefix(self.clientNameToScopedName(newName))
       , requestparam)
 
   def handleUpload(self, name, handler, requestparam):
     name=self.clientNameToScopedName(name)
     if AVNScopedDirectoryEntry.getType(name) != AVNScopedDirectoryEntry.T_USER:
       return AVNUtil.getReturnData(error="cannot upload %s"%name)
-    return super().handleUpload(AVNScopedDirectoryEntry.stripPrefix(name), handler, requestparam)
-
-  def handleDownload(self, name, handler, requestparam, **kwargs):
-    name=self.clientNameToScopedName(name)
-    item=self.findItem(name)
-    if not item:
-      raise Exception("%s %s not found"%(self.type,name))
-    return super().handleDownload(item.name, handler, requestparam,item.baseDir)
+    return super().handleUpload(self.getListEntryClass().stripPrefix(name), handler, requestparam)
 
   def registerPluginItem(self,pluginName,name,fileName):
     if not os.path.exists(fileName):
       return False
     name=self.clientNameToScopedName(name)
-    info=AVNScopedDirectoryEntry(self.type, self.getPrefix(), name, time=os.path.getmtime(fileName), baseDir=os.path.dirname(fileName))
+    AVNLog.debug("register plugin item %s",name)
+    info=AVNScopedDirectoryEntry(self.type, self.getPrefix(), name, time=os.path.getmtime(fileName),
+                                 baseDir=os.path.dirname(fileName),
+                                 fileName=fileName)
     info.setName(AVNScopedDirectoryEntry.T_PLUGIN, prefix=pluginName)
+    if self.findItem(info.scopedName) is not None:
+      AVNLog.error("trying to register an already existing plugin layout %s",name)
+      return False
     with self.lock:
-      if self.findItem(info.scopedName) is not None:
-        AVNLog.error("trying to register an already existing plugin layout %s",name)
-        return False
       self.pluginItems.append(info)
 
   def deregisterPluginItem(self,pluginName,name):
     name=self.clientNameToScopedName(name)
+    AVNLog.debug("deregister plugin item %s",name)
     info=AVNScopedDirectoryEntry(self.type, self.getPrefix(), name)
     info.setName(AVNScopedDirectoryEntry.T_PLUGIN, prefix=pluginName)
+    existing=self.findItem(info.scopedName)
+    if not existing:
+      AVNLog.error("item %s not found",name)
+      return False
     with self.lock:
-      existing=self.findItem(info.scopedName)
-      if not existing:
-        AVNLog.error("item %s not found",name)
-        return False
       self.pluginItems.remove(existing)
     return True
 
