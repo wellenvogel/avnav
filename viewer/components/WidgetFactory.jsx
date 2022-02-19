@@ -15,13 +15,12 @@ import {createEditableParameter, EditableParameter} from "./EditableParameters";
 import ShallowCompare from "../util/shallowcompare";
 import CloneDeep from 'clone-deep';
 
-export const filterByEditables=(editableParameters,values,opt_changedOnly)=>{
+export const filterByEditables=(editableParameters,values)=>{
     let rt={};
     if (! editableParameters) return rt;
     editableParameters.forEach((param)=>{
         if (! param.canEdit()) return;
         let v=param.getValue(values);
-        if (opt_changedOnly && ! param.isChanged(v)) return;
         param.setValue(rt,v);
     });
     let fixed=['name','weight'];
@@ -274,60 +273,72 @@ class WidgetFactory{
         for (let pname in editableParameters){
             let pdefinition=editableParameters[pname];
             if (pdefinition === undefined || pdefinition === false ) continue;
+            //get a fresh (i.e. copied) default parameter
             let predefined=getDefaultParameter(pname);
             if (! predefined && (typeof(pdefinition) !== 'object')){
                 base.log("invalid parameter definition in widget "+widgetData.name+": "+pname);
                 continue;
             }
-            if (predefined){
-                //some special handling for the formatter
-                //some widgets have a fixed formatter
-                //but we still want to edit the formatter parameters
-                //and it is helpfull to show the formatter to the user
-                //so we set a readOnly parameter for the formatter
-                pdefinition=predefined;
-                if (pdefinition.name === 'formatter'){
-                    if (widgetData.formatter){
-                        pdefinition=createWidgetParameter(pdefinition.name,WidgetParameter_TYPE.DISPLAY,
-                            undefined,'formatter')
+            if (predefined) {
+                //we allow for overriding default definitions except for formatter
+                //and formatter parameters as long as the type matches
+                let usePredefined = pdefinition.name === 'formatter' || predefined.type === WidgetParameter_TYPE.FORMATTER_PARAM;
+                if (!usePredefined && (typeof (pdefinition) !== 'object')) usePredefined = true;
+                if (!usePredefined && (predefined.type !== WidgetParameter_TYPE[pdefinition.type])) usePredefined = true;
+                if (usePredefined) {
+                    pdefinition = predefined;
+                    //some special handling for the formatter
+                    //some widgets have a fixed formatter
+                    //but we still want to edit the formatter parameters
+                    //and it is helpfull to show the formatter to the user
+                    //so we set a readOnly parameter for the formatter
+                    if (pdefinition.name === 'formatter') {
+                        if (widgetData.formatter) {
+                            pdefinition = createWidgetParameter(pdefinition.name, WidgetParameter_TYPE.DISPLAY,
+                                undefined, 'formatter')
 
-                    }
-                }
-                //do not allow to edit key parameters if they are already provided
-                //in the widget definition
-                if (pdefinition.type === WidgetParameter_TYPE.KEY && storeKeys[pdefinition.name]){
-                    continue;
-                }
-                if (pdefinition.type === WidgetParameter_TYPE.FORMATTER_PARAM){
-                    let formatter=widgetData.formatter;
-                    if (formatter){
-                        if (typeof(formatter) !== 'function'){
-                            formatter = Formatter[formatter];
-                        }
-                        if (formatter && formatter.parameters){
-                            pdefinition.parameterDescriptions=formatter.parameters;
                         }
                     }
+                    //do not allow to edit key parameters if they are already provided
+                    //in the widget definition
+                    if (pdefinition.type === WidgetParameter_TYPE.KEY && storeKeys[pdefinition.name]) {
+                        continue;
+                    }
+                    if (pdefinition.type === WidgetParameter_TYPE.FORMATTER_PARAM) {
+                        let formatter = widgetData.formatter;
+                        if (formatter) {
+                            if (typeof (formatter) !== 'function') {
+                                formatter = Formatter[formatter];
+                            }
+                            if (formatter && formatter.parameters) {
+                                pdefinition.parameterDescriptions = formatter.parameters;
+                            }
+                        }
+                    }
+                } else {
+                    //trigger creation of a copy
+                    predefined = undefined;
                 }
             }
-            if (! predefined){
-                let npdefinition=createWidgetParameter(pname,pdefinition.type,pdefinition.list,pdefinition.displayName);
-                if (! npdefinition){
-                    base.log("unknown widget parameter type: "+pdefinition.type);
+            if (!predefined) {
+                //create a copy as we potentially e.g. change the default
+                let npdefinition = createWidgetParameter(pname, pdefinition.type, pdefinition.list, pdefinition.displayName);
+                if (!npdefinition) {
+                    base.log("unknown widget parameter type: " + pdefinition.type);
                     continue;
                 }
-                npdefinition.default=pdefinition.default;
-                pdefinition=npdefinition;
+                npdefinition.default = pdefinition.default;
+                pdefinition = npdefinition;
             }
-            let defaultv=pdefinition.getValue(widgetData);
-            if (defaultv !== undefined){
+            let defaultv = pdefinition.getValue(widgetData);
+            if (defaultv !== undefined) {
                 //default values from the widget class or from the widget list will win against
                 //defaults from the parameter defines
                 pdefinition.default = defaultv;
             }
             rt.push(pdefinition);
         }
-        this.editableParametersCache[name]=rt;
+        this.editableParametersCache[name] = rt;
         return rt;
     }
 

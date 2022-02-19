@@ -83,7 +83,24 @@ class EditWidgetDialog extends React.Component{
          * and the name and weight in any case
          */
         if (! this.state.parameters) return this.state.widget;
-        let rt=filterByEditables(this.state.parameters,this.state.widget,true);
+        let filtered=filterByEditables(this.state.parameters,this.state.widget);
+        //filter out the parameters that are really set at the widget itself
+        let widget=WidgetFactory.findWidget(this.state.widget);
+        let rt={};
+        this.state.parameters.forEach((parameter)=>{
+            let fv=parameter.getValue(filtered);
+            if (fv !== undefined){
+                let dv=parameter.getValue(widget);
+                if (ShallowCompare(fv,dv)){
+                    return; //we have set the value that is at the widget anyway - do not write this out
+                }
+                parameter.setValue(rt,fv);
+            }
+        })
+        let fixed=['name','weight'];
+        fixed.forEach((fp)=>{
+            if (filtered[fp] !== undefined) rt[fp]=filtered[fp];
+        });
         return rt;
     }
     render () {
