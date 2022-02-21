@@ -313,7 +313,6 @@ class GpsPage extends React.Component{
                 autoHideButtons={autohide}
                 buttonWidthChanged={()=>{
                     resizeFont();
-                    this.setState({update:this.state.update+1});
                 }}
                 />;
 
