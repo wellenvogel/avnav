@@ -14,6 +14,7 @@ import AisData from '../nav/aisdata.js';
 import assign from 'object-assign';
 import OverlayDialog from '../components/OverlayDialog.jsx';
 import Mob from '../components/Mob.js';
+import ShallowCompare from "../util/shallowcompare";
 
 const aisInfos=[
     [
@@ -116,6 +117,55 @@ const sortDialog=()=>{
     });
 };
 
+const AisItem=(props)=>{
+    let fmt=AisFormatter;
+    let fb=fmt.format('passFront',props);
+    let style={
+        color:props.color
+    };
+    let cl=props.addClass;
+    if (props.warning) cl+=" "+WARNING_CLASS;
+    let aisInfoKey=1;
+    let clazz=fmt.format('clazz',props);
+    if (clazz !== '') clazz="["+clazz+"]";
+    return ( <div className={"aisListItem "+cl} onClick={props.onClick}>
+            <div className="aisItemFB" style={style}>
+                <span className="fb1">{fb.substr(0,1)}</span>{fb.substr(1)}
+            </div>
+            <div className="aisData">
+                <div className="aisData1">
+                    {fmt.format('mmsi',props)}&nbsp;
+                    {fmt.format('shipname',props)}&nbsp;
+                    {clazz}
+                </div>
+                { aisInfos.map(function(info1){
+                    aisInfoKey++;
+                    return <div className="infoLine" key={aisInfoKey}>
+                        {
+                            info1.map(function(info) {
+                                aisInfoKey++;
+                                return (
+                                    <span className="aisInfoElement" key={aisInfoKey}>
+                                                <span className="label">{info.label}: </span>
+                                                <span className="info">{fmt.format(info.name,props)}{info.unit !== undefined && info.unit}</span>
+                                            </span>
+                                );
+                            })
+                        }
+                    </div>
+                })}
+
+            </div>
+        </div>
+    );
+};
+
+const itemCompare=(oldValues,newValues)=>{
+    return ShallowCompare(oldValues,newValues);
+}
+
+const MemoAisItem=React.memo(AisItem,itemCompare);
+
 const WARNING_CLASS='aisWarning';
 class AisPage extends React.Component{
     constructor(props){
@@ -153,48 +203,7 @@ class AisPage extends React.Component{
     }
     render(){
         let self=this;
-        const AisItem=(props)=>{
-            let fmt=AisFormatter;
-            let fb=fmt.format('passFront',props);
-            let style={
-                color:props.color
-            };
-            let cl=props.addClass;
-            if (props.warning) cl+=" "+WARNING_CLASS;
-            let aisInfoKey=1;
-            let clazz=fmt.format('clazz',props);
-            if (clazz !== '') clazz="["+clazz+"]";
-            return ( <div className={"aisListItem "+cl} onClick={props.onClick}>
-                    <div className="aisItemFB" style={style}>
-                        <span className="fb1">{fb.substr(0,1)}</span>{fb.substr(1)}
-                    </div>
-                    <div className="aisData">
-                        <div className="aisData1">
-                            {fmt.format('mmsi',props)}&nbsp;
-                            {fmt.format('shipname',props)}&nbsp;
-                            {clazz}
-                        </div>
-                        { aisInfos.map(function(info1){
-                            aisInfoKey++;
-                            return <div className="infoLine" key={aisInfoKey}>
-                                {
-                                    info1.map(function(info) {
-                                        aisInfoKey++;
-                                        return (
-                                            <span className="aisInfoElement" key={aisInfoKey}>
-                                                <span className="label">{info.label}: </span>
-                                                <span className="info">{fmt.format(info.name,props)}{info.unit !== undefined && info.unit}</span>
-                                            </span>
-                                        );
-                                    })
-                                }
-                            </div>
-                        })}
 
-                    </div>
-                </div>
-            );
-        };
         const AisList=Dynamic(ItemList);
         const Summary=Dynamic(function(props){
             let color=PropertyHandler.getAisColor({
@@ -209,8 +218,12 @@ class AisPage extends React.Component{
                 </div>
             );
         });
-
-        let MainContent=<React.Fragment>
+        let MainContent=<React.Profiler
+            id="aisList"
+            onRender={(id,phase,actualDuration,baseDuration,startTime,commitTime,interactions)=>{
+                console.log("render",id,phase,actualDuration,baseDuration,startTime,commitTime,interactions);
+            }}
+            >
             <Summary numTargets={0}
                      storeKeys={{
                         sortField:keys.gui.aispage.sortField,
@@ -220,7 +233,7 @@ class AisPage extends React.Component{
                      updateFunction={computeSummary}
                 />
                 <AisList
-                    itemClass={AisItem}
+                    itemClass={MemoAisItem}
                     onItemClick={function (item) {
                         self.props.history.replace('aisinfopage', {mmsi: item.mmsi});
                                 }}
@@ -234,7 +247,7 @@ class AisPage extends React.Component{
                     updateFunction={computeList}
                     scrollable={true}
                     />
-            </React.Fragment>;
+            </React.Profiler>;
 
         return (
             <Page

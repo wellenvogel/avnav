@@ -27,6 +27,9 @@ class ItemList extends React.Component{
     constructor(props){
         super(props);
         this.onSortEnd=this.onSortEnd.bind(this);
+        this.Content=this.Content.bind(this);
+        this.ItemWrapper=this.ItemWrapper.bind(this);
+        this.ItemWrapperNoClick=this.ItemWrapperNoClick.bind(this);
     }
     onSortEnd(data){
         let len=this.props.itemList?this.props.itemList.length:0;
@@ -38,6 +41,92 @@ class ItemList extends React.Component{
         }
 
     }
+
+    ItemWrapper(props){
+        let {ItemClass,...iprops}=props;
+        const memoClick=React.useCallback((data)=>{
+            if (data && data.stopPropagation) data.stopPropagation();
+            if (data && data.preventDefault) data.preventDefault();
+            if (this.props.reverse){
+                let len=this.props.itemList?self.props.itemList.length:0;
+                this.props.onItemClick(assign({},iprops,{index:len-iprops.index}),data);
+            }
+            else {
+                this.props.onItemClick(iprops, data);
+            }
+        },[iprops]);
+        return <ItemClass
+            {...iprops}
+            onClick={memoClick}
+        />
+    }
+    ItemWrapperNoClick(props){
+        let {ItemClass,...iprops}=props;
+        return <ItemClass
+            {...iprops}
+        />
+    }
+    Content(props) {
+        let self=this;
+        let idx = 0;
+        let existingKeys={};
+        return (
+            <div className={props.className}
+                 style={props.style}
+                 ref={(el)=>{if (props.listRef) props.listRef(el)}}
+                 onClick={(ev)=>{
+                     if (self.props.onClick){
+                         ev.stopPropagation();
+                         self.props.onClick(ev);
+                     }
+                 }}
+            >
+                {props.allitems.map(function (entry) {
+                    let itemProps = assign({}, entry);
+                    let key = getKey(entry);
+                    //we allow for multiple items with the same name
+                    //we try at most 20 times to get a unique key by appending _idx
+                    let tries=20;
+                    while (tries > 0 && (! key || existingKeys[key])){
+                        key+="_"+idx;
+                        tries--;
+                    }
+                    itemProps.index=self.props.reverse?props.allitems.length-idx:idx;
+                    itemProps.key = key;
+                    existingKeys[key]=true;
+                    if (self.props.selectedIndex !== undefined){
+                        if (idx == self.props.selectedIndex) {
+                            itemProps.selected = true;
+                        }
+                        else {
+                            itemProps.selected = false;
+                        }
+                    }
+                    let ItemClass;
+                    if (self.props.itemCreator) {
+                        ItemClass = self.props.itemCreator(entry);
+                        if (!ItemClass) return null;
+                    }
+                    else {
+                        ItemClass = self.props.itemClass;
+                    }
+                    if (self.props.dragdrop) {
+                        ItemClass=SortableElement(ItemClass);
+                    }
+                    let ItemWrapper;
+                    if (!itemProps.onClick && self.props.onItemClick) {
+                        ItemWrapper=self.ItemWrapper;
+                    }
+                    else{
+                        ItemWrapper=self.ItemWrapperNoClick;
+                    }
+                    idx++;
+
+                    return <ItemWrapper ItemClass={ItemClass} key={key} {...itemProps}/>
+                })}
+            </div>
+        );
+    };
     render() {
         let allitems = this.props.itemList || [];
         if (this.props.hideOnEmpty && allitems.length < 1) return null;
@@ -50,82 +139,9 @@ class ItemList extends React.Component{
         if (this.props.fontSize){
             style.fontSize=this.props.fontSize;
         }
-        let Content = function (props) {
-            let idx = 0;
-            let existingKeys={};
-            return (
-                <div className={props.className}
-                     style={props.style}
-                     ref={(el)=>{if (props.listRef) props.listRef(el)}}
-                     onClick={(ev)=>{
-                        if (self.props.onClick){
-                            ev.stopPropagation();
-                            self.props.onClick(ev);
-                        }
-                        }}
-                    >
-                    {allitems.map(function (entry) {
-                        let itemProps = assign({}, entry);
-                        let key = getKey(entry);
-                        //we allow for multiple items with the same name
-                        //we try at most 20 times to get a unique key by appending _idx
-                        let tries=20;
-                        while (tries > 0 && (! key || existingKeys[key])){
-                            key+="_"+idx;
-                            tries--;
-                        }
-                        itemProps.index=self.props.reverse?allitems.length-idx:idx;
-                        itemProps.key = key;
-                        existingKeys[key]=true;
-                        if (self.props.selectedIndex !== undefined){
-                            if (idx == self.props.selectedIndex) {
-                                itemProps.selected = true;
-                            }
-                            else {
-                                itemProps.selected = false;
-                            }
-                        }
-                        let ItemClass;
-                        if (self.props.itemCreator) {
-                            ItemClass = self.props.itemCreator(entry);
-                            if (!ItemClass) return null;
-                        }
-                        else {
-                            ItemClass = self.props.itemClass;
-                        }
-                        if (self.props.dragdrop) {
-                            ItemClass=SortableElement(ItemClass);
-                        }
-                        let ItemWrapper;
-                        if (!itemProps.onClick && self.props.onItemClick) {
-                            ItemWrapper=(iprops)=>{
-                                return <ItemClass
-                                    {...iprops}
-                                    onClick={(data)=>{
-                                        if (data && data.stopPropagation) data.stopPropagation();
-                                        if (data && data.preventDefault) data.preventDefault();
-                                        if (self.props.reverse){
-                                            let len=self.props.itemList?self.props.itemList.length:0;
-                                            self.props.onItemClick(assign({},iprops,{index:len-iprops.index}),data);
-                                        }
-                                        else {
-                                            self.props.onItemClick(iprops, data);
-                                        }
-                                    }}
-                                    />
-                            };
-                        }
-                        else{
-                            ItemWrapper=ItemClass;
-                        }
-                        idx++;
 
-                        return <ItemWrapper {...itemProps}/>
-                    })}
-                </div>
-            );
-        };
         let dragProps={};
+        let Content=this.Content;
         if (this.props.dragdrop){
             Content= SortableContainer(Content);
             dragProps.axis=self.props.horizontal?"x":"y";
@@ -137,13 +153,13 @@ class ItemList extends React.Component{
         if (this.props.scrollable) {
             return (
                 <div onClick={self.props.onClick} className={className} style={style} ref={(el)=>{if (self.props.listRef) self.props.listRef(el)}}>
-                    <Content className="listScroll" {...dragProps}/>
+                    <Content className="listScroll" allitems={allitems} {...dragProps}/>
                 </div>
             );
         }
         else {
             return(
-                <Content className={className} style={style} listRef={self.props.listRef} {...dragProps}/>
+                <Content className={className} allitems={allitems} style={style} listRef={self.props.listRef} {...dragProps}/>
             );
         }
     }
