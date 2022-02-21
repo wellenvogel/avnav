@@ -290,6 +290,8 @@ let keys={
         aisClassbShrink: new Property(0.6,"Class B rel size",PropertyType.RANGE, [0.1,2,0.1]),
         aisMinDisplaySpeed: new Property(0.5,"min speed (kn) for AIS target display",PropertyType.RANGE,[0.1,40]),
         aisOnlyShowMoving: new Property(false,"only show moving AIS targets",PropertyType.CHECKBOX),
+        aisListUpdateTime: new Property(5,"update time(s) for AIS list",PropertyType.RANGE,[1,20]),
+        aisReducedList: new Property(true,"reduce details in AIS list",PropertyType.CHECKBOX),
         clickTolerance: new Property(60, "Click Tolerance", PropertyType.RANGE, [10, 120]),
         maxAisErrors: new Property(3), //after that many errors AIS display will be switched off
         minAISspeed: new Property(0.1), //minimal speed in m/s that we consider when computing cpa/tcpa

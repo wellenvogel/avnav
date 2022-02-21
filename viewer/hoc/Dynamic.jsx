@@ -25,6 +25,8 @@ export default  function(Component,opt_options){
             if (keys) store.register(this,keys);
             this.state=this.getTranslatedStoreValues();
             this.updateCallback(this.state);
+            this.timer=undefined;
+            this.lastUpdate=0;
         }
         updateCallback(data){
             let updateFunction=this.props.changeCallback;
@@ -56,10 +58,29 @@ export default  function(Component,opt_options){
             }
             return values;
             }
-        dataChanged(){
+        doUpdate(){
+            this.lastUpdate=(new Date()).getTime();
             let data=this.getTranslatedStoreValues()||{};
             this.setState(data);
             this.updateCallback(data);
+        }
+        dataChanged(){
+            if (opt_options && opt_options.minTime){
+                let now=(new Date()).getTime();
+                let tdiff=this.lastUpdate+opt_options.minTime -now;
+                if (tdiff > 0){
+                    if (this.timer){
+                        window.clearTimeout(this.timer);
+                        this.timer=undefined;
+                    }
+                    this.timer=window.setTimeout(()=>{
+                        this.timer=undefined;
+                        this.doUpdate();
+                    },tdiff);
+                    return;
+                }
+            }
+            this.doUpdate();
         }
         componentDidMount(){
             let keys=this.getStoreKeys();

@@ -118,6 +118,7 @@ const sortDialog=()=>{
 };
 
 const AisItem=(props)=>{
+    let reduceDetails=globalStore.getData(keys.properties.aisReducedList,true);
     let fmt=AisFormatter;
     let fb=fmt.format('passFront',props);
     let style={
@@ -139,6 +140,7 @@ const AisItem=(props)=>{
                     {clazz}
                 </div>
                 { aisInfos.map(function(info1){
+                    if (reduceDetails && aisInfoKey > 1) return null;
                     aisInfoKey++;
                     return <div className="infoLine" key={aisInfoKey}>
                         {
@@ -203,8 +205,8 @@ class AisPage extends React.Component{
     }
     render(){
         let self=this;
-
-        const AisList=Dynamic(ItemList);
+        let updateTime=globalStore.getData(keys.properties.aisListUpdateTime,1)*1000;
+        const AisList=Dynamic(ItemList,{minTime:updateTime});
         const Summary=Dynamic(function(props){
             let color=PropertyHandler.getAisColor({
                 warning: true
@@ -217,7 +219,7 @@ class AisPage extends React.Component{
                     <span>sorted by {fieldToLabel(props.sortField)}</span>
                 </div>
             );
-        });
+        },{minTime:updateTime});
         let MainContent=<React.Profiler
             id="aisList"
             onRender={(id,phase,actualDuration,baseDuration,startTime,commitTime,interactions)=>{
