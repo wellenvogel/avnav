@@ -38,7 +38,8 @@ const settingsSections={
         keys.properties.aisFirstLabel,keys.properties.aisSecondLabel,keys.properties.aisThirdLabel,
         keys.properties.aisTextSize,keys.properties.aisUseCourseVector,keys.properties.style.aisNormalColor,
         keys.properties.style.aisNearestColor, keys.properties.style.aisWarningColor,keys.properties.style.aisTrackingColor,
-        keys.properties.aisIconBorderWidth,keys.properties.aisIconScale,keys.properties.aisClassbShrink,keys.properties.aisShowOnlyAB],
+        keys.properties.aisIconBorderWidth,keys.properties.aisIconScale,keys.properties.aisClassbShrink,keys.properties.aisShowOnlyAB,
+        keys.properties.aisReducedList,keys.properties.aisListUpdateTime],
     Navigation: [keys.properties.bearingColor,keys.properties.bearingWidth,keys.properties.navCircleColor,keys.properties.navCircleWidth,keys.properties.navCircle1Radius,keys.properties.navCircle2Radius,keys.properties.navCircle3Radius,
         keys.properties.navBoatCourseTime,keys.properties.boatIconScale,keys.properties.boatDirectionMode,
         keys.properties.boatDirectionVector,keys.properties.courseAverageTolerance,keys.properties.gpsXteMax,keys.properties.courseAverageInterval,keys.properties.speedAverageInterval,keys.properties.positionAverageInterval,keys.properties.anchorWatchDefault,keys.properties.anchorCircleWidth,
@@ -427,6 +428,7 @@ class SettingsPage extends React.Component{
         this.handleLayoutClick=this.handleLayoutClick.bind(this);
         this.changeItem=this.changeItem.bind(this);
         this.confirmAbortOrDo=this.confirmAbortOrDo.bind(this);
+        this.MainContent=this.MainContent.bind(this);
         this.flattenedKeys=KeyHelper.flattenedKeys(keys.properties);
         this.state={
             leftPanelVisible:true,
@@ -592,97 +594,98 @@ class SettingsPage extends React.Component{
     }
     componentDidMount(){
     }
-
+    MainContent(props){
+        let self=this;
+        let leftVisible = props.leftPanelVisible;
+        let rightVisible = !props.small || !props.leftPanelVisible;
+        let leftClass = "sectionList";
+        if (!rightVisible) leftClass += " expand";
+        let currentSection = props.section|| 'Layer';
+        let sectionItems = [];
+        for (let s in settingsSections) {
+            let sectionCondition=sectionConditions[s];
+            if (sectionCondition !== undefined){
+                if (! sectionCondition()) continue;
+            }
+            let item = {name: s};
+            if (s === currentSection) item.activeItem = true;
+            sectionItems.push(item);
+        }
+        let hasCurrentSection=false;
+        sectionItems.forEach((item)=>{
+            if (item.name === currentSection){
+                hasCurrentSection=true;
+            }
+        });
+        if (! hasCurrentSection){
+            currentSection=sectionItems[0].name;
+            sectionItems[0].activeItem=true;
+            //TODO: send up
+        }
+        let settingsItems = [];
+        let sectionChanges={};
+        for (let section in settingsSections) {
+            for (let s in settingsSections[section]) {
+                let key = settingsSections[section][s];
+                if (settingsConditions[key] !== undefined){
+                    if (! settingsConditions[key](self.values.getValues())) continue;
+                }
+                let description = KeyHelper.getKeyDescriptions()[key];
+                let value=self.values.getValue(key);
+                let className="listEntry";
+                if (value === this.defaultValues[key]){
+                    className+=" defaultValue";
+                }
+                else{
+                    if (! sectionChanges[section]) sectionChanges[section]={};
+                    sectionChanges[section].isDefault=false;
+                }
+                if (this.values.isItemChanged(key)) {
+                    className+=" changed";
+                    if (! sectionChanges[section]) sectionChanges[section]={};
+                    sectionChanges[section].isChanged=true;
+                }
+                if (section === currentSection) {
+                    let item = assign({}, description, {
+                        name: key,
+                        value: value,
+                        className: className
+                    });
+                    settingsItems.push(item);
+                }
+            }
+        }
+        sectionItems.forEach((sitem) => {
+            let className = "listEntry";
+            if ((sectionChanges[sitem.name] || {}).isChanged) {
+                className += " changed";
+            }
+            if ((sectionChanges[sitem.name] || {}).isDefault !== false) {
+                className += " defaultValue";
+            }
+            sitem.className = className;
+        });
+        return (
+            <div className="leftSection">
+                { leftVisible ? <ItemList
+                    className={leftClass}
+                    scrollable={true}
+                    itemClass={SectionItem}
+                    onItemClick={self.sectionClick}
+                    itemList={sectionItems}
+                /> : null}
+                {rightVisible ? <ItemList
+                    className="settingsList"
+                    scrollable={true}
+                    itemCreator={createSettingsItem}
+                    itemList={settingsItems}
+                    onItemClick={self.changeItem}
+                /> : null}
+            </div>);
+    };
     render() {
         let self = this;
-        let MainContent = (props)=> {
-            let leftVisible = props.leftPanelVisible;
-            let rightVisible = !props.small || !props.leftPanelVisible;
-            let leftClass = "sectionList";
-            if (!rightVisible) leftClass += " expand";
-            let currentSection = props.section|| 'Layer';
-            let sectionItems = [];
-            for (let s in settingsSections) {
-                let sectionCondition=sectionConditions[s];
-                if (sectionCondition !== undefined){
-                    if (! sectionCondition()) continue;
-                }
-                let item = {name: s};
-                if (s === currentSection) item.activeItem = true;
-                sectionItems.push(item);
-            }
-            let hasCurrentSection=false;
-            sectionItems.forEach((item)=>{
-                if (item.name === currentSection){
-                    hasCurrentSection=true;
-                }
-            });
-            if (! hasCurrentSection){
-                currentSection=sectionItems[0].name;
-                sectionItems[0].activeItem=true;
-                //TODO: send up
-            }
-            let settingsItems = [];
-            let sectionChanges={};
-            for (let section in settingsSections) {
-                for (let s in settingsSections[section]) {
-                    let key = settingsSections[section][s];
-                    if (settingsConditions[key] !== undefined){
-                        if (! settingsConditions[key](self.values.getValues())) continue;
-                    }
-                    let description = KeyHelper.getKeyDescriptions()[key];
-                    let value=self.values.getValue(key);
-                    let className="listEntry";
-                    if (value === this.defaultValues[key]){
-                        className+=" defaultValue";
-                    }
-                    else{
-                        if (! sectionChanges[section]) sectionChanges[section]={};
-                        sectionChanges[section].isDefault=false;
-                    }
-                    if (this.values.isItemChanged(key)) {
-                        className+=" changed";
-                        if (! sectionChanges[section]) sectionChanges[section]={};
-                        sectionChanges[section].isChanged=true;
-                    }
-                    if (section === currentSection) {
-                        let item = assign({}, description, {
-                            name: key,
-                            value: value,
-                            className: className
-                        });
-                        settingsItems.push(item);
-                    }
-                }
-            }
-            sectionItems.forEach((sitem) => {
-                let className = "listEntry";
-                if ((sectionChanges[sitem.name] || {}).isChanged) {
-                    className += " changed";
-                }
-                if ((sectionChanges[sitem.name] || {}).isDefault !== false) {
-                    className += " defaultValue";
-                }
-                sitem.className = className;
-            });
-            return (
-                <div className="leftSection">
-                    { leftVisible ? <ItemList
-                        className={leftClass}
-                        scrollable={true}
-                        itemClass={SectionItem}
-                        onItemClick={self.sectionClick}
-                        itemList={sectionItems}
-                        /> : null}
-                    {rightVisible ? <ItemList
-                        className="settingsList"
-                        scrollable={true}
-                        itemCreator={createSettingsItem}
-                        itemList={settingsItems}
-                        onItemClick={self.changeItem}
-                        /> : null}
-                </div>);
-        };
+        let MainContent=this.MainContent;
         return (
             <Page
                 {...self.props}
