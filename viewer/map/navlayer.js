@@ -12,6 +12,7 @@ import boatImage from '../images/Boat-NoNeedle.png';
 import markerImage from '../images/Marker2.png';
 import measureImage from '../images/measure.png';
 import assign from 'object-assign';
+import Formatter from "../util/formatter";
 
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE,true);
@@ -54,6 +55,7 @@ const NavLayer=function(mapholder){
     this.circleStyle={};
     this.anchorCircleStyle={};
     this.measureLineStyle={};
+    this.measureTextStyle={};
 
 
     /**
@@ -106,6 +108,15 @@ NavLayer.prototype.setStyle=function() {
         color: this.measureStyle.courseVectorColor?this.measureStyle.courseVectorColor:globalStore.getData(keys.properties.measureColor),
         width: globalStore.getData(keys.properties.navCircleWidth)
     }
+    this.measureTextStyle={
+        stroke: '#fff',
+        color: this.measureStyle.courseVectorColor?this.measureStyle.courseVectorColor:globalStore.getData(keys.properties.measureColor),
+        width: 3,
+        fontSize: globalStore.getData(keys.properties.aisTextSize),
+        fontBase: 'Calibri,sans-serif',
+        offsetY: -20
+    }
+
 };
 
 //we do not explicitely register for those keys as we rely on the mapholder
@@ -195,6 +206,12 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
             let measure=this.mapholder.transformToMap((new navobjects.Point(measurePos.lon,measurePos.lat)).toCoord());
             drawing.drawImageToContext(measure,this.measureStyle.image,this.measureStyle);
             drawing.drawLineToContext([measure,center],this.measureLineStyle);
+            let centerPoint=new navobjects.Point();
+            centerPoint.fromCoord(this.mapholder.transformFromMap(center));
+            let distance=NavCompute.computeDistance(measurePos,centerPoint);
+            let text=Formatter.formatDirection(distance.course)+"°\n"+
+                Formatter.formatDistance(distance.dts)+"nm";
+            drawing.drawTextToContext(center,text,this.measureTextStyle);
         }
     }
     if (anchorDistance){
