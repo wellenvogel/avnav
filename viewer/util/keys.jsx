@@ -296,7 +296,9 @@ let keys={
         aisWarningCpa: new Property(500, "AIS Warning-CPA(m)", PropertyType.RANGE, [100, 5000, 10]), //m for AIS warning (500m)
         aisWarningTpa: new Property(900, "AIS-Warning-TPA(s)", PropertyType.RANGE, [30, 3600, 10]), //in s - max time for tpa warning (15min)
         aisTextSize: new Property(14, "Text Size(px)", PropertyType.RANGE, [8, 24]), //in px
-        aisShowOnlyAB: new Property(true,"Show only class A/B",PropertyType.CHECKBOX),
+        aisShowA: new Property(true,"Show class A",PropertyType.CHECKBOX),
+        aisShowB: new Property(true,"Show class B",PropertyType.CHECKBOX),
+        aisShowOther: new Property(false,"Show other",PropertyType.CHECKBOX),
         aisFirstLabel: new Property('nameOrmmsi','First AIS label',PropertyType.SELECT,['--none--'].concat(AisFormatter.getLabels())),
         aisSecondLabel: new Property('--none--','Second AIS label',PropertyType.SELECT,['--none--'].concat(AisFormatter.getLabels())),
         aisThirdLabel: new Property('--none--','Third AIS label',PropertyType.SELECT,['--none--'].concat(AisFormatter.getLabels())),
