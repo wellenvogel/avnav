@@ -229,10 +229,15 @@ NavData.prototype.computeValues=function() {
 NavData.prototype.getAisCenter=function(){
     if (this.aisMode == navobjects.AisCenterMode.NONE) return undefined;
     if (this.aisMode == navobjects.AisCenterMode.GPS) {
-        if (globalStore.getData(keys.nav.gps.valid)) return globalStore.getData(keys.nav.gps.position);
+        if (globalStore.getData(keys.nav.gps.valid)) return [globalStore.getData(keys.nav.gps.position)];
         return undefined;
     }
-    return globalStore.getData(keys.map.centerPosition);
+    else{
+        if (globalStore.getData(keys.nav.gps.valid)){
+            return [globalStore.getData(keys.map.centerPosition),globalStore.getData(keys.nav.gps.position)]
+        }
+    }
+    return [globalStore.getData(keys.map.centerPosition)];
 };
 
 /**

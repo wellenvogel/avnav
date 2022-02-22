@@ -364,22 +364,42 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
     rt=self.server.navdata.getAisData()
     lat=None
     lon=None
+    lat1=None
+    lon1=None
     dist=None
     try:
       lat=float(self.getRequestParam(requestParam, 'lat'))
       lon=float(self.getRequestParam(requestParam, 'lon'))
       dist=float(self.getRequestParam(requestParam, 'distance')) #distance in NM
+      rq=self.getRequestParam(requestParam,'lat1')
+      if rq is not None:
+        lat1=float(rq)
+      rq=self.getRequestParam(requestParam,'lon1')
+      if rq is not None:
+        lon1=float(rq)
     except:
       pass
     frt=[]
     if not lat is None and not lon is None and not dist is None:
       dest=(lat,lon)
       AVNLog.debug("limiting AIS to lat=%f,lon=%f,dist=%f",lat,lon,dist)
+      dest1=None
+      if lat1 is not None and lon1 is not None:
+        dest1=(lat1,lon1)
+        AVNLog.debug("additional AIS range lat=%f,lon=%f,dist=%f",lat1,lon1,dist)
       for entry in rt:
         try:
           fentry=AVNUtil.convertAIS(entry)
           mdist=AVNUtil.distance((fentry.get('lat'),fentry.get('lon')), dest)
+          inRange=False
           if mdist<=dist:
+            inRange=True
+          else:
+            if dest1 is not None:
+              mdist=AVNUtil.distance((fentry.get('lat'),fentry.get('lon')), dest1)
+              if mdist<=dist:
+                inRange=True
+          if inRange:
             fentry['distance']=mdist*AVNUtil.NM #have this in m
             frt.append(fentry)
           else:

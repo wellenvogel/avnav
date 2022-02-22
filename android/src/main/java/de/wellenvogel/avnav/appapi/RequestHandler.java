@@ -551,17 +551,27 @@ public class RequestHandler {
             }
             if (type.equals("ais")) {
                 handled=true;
-                String slat=uri.getQueryParameter("lat");
-                String slon=uri.getQueryParameter("lon");
+                ArrayList<Location> centers=new ArrayList<Location>();
                 String sdistance=uri.getQueryParameter("distance");
                 double lat=0,lon=0,distance=0;
+                String[] suffixes=new String[]{"","1"};
+                for (String sfx:suffixes){
+                    String slat=uri.getQueryParameter("lat"+sfx);
+                    String slon=uri.getQueryParameter("lon"+sfx);
+                    try{
+                        if (slat != null) lat=Double.parseDouble(slat);
+                        if (slon != null) lon=Double.parseDouble(slon);
+                        Location l=new Location((String)null);
+                        l.setLatitude(lat);
+                        l.setLongitude(lon);
+                        centers.add(l);
+                    }catch(Exception e){}
+                }
                 try{
-                    if (slat != null) lat=Double.parseDouble(slat);
-                    if (slon != null) lon=Double.parseDouble(slon);
                     if (sdistance != null)distance=Double.parseDouble(sdistance);
                 }catch (Exception e){}
                 if (getGpsService() !=null){
-                    fout=getGpsService().getAisData(lat, lon, distance);
+                    fout=getGpsService().getAisData(centers, distance);
                 }
             }
             if (type.equals("route")){

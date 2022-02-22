@@ -1370,9 +1370,9 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         return dec!=null?dec.getLocation():null;
     }
 
-    public JSONArray getAisData(double lat,double lon, double distance){
+    public JSONArray getAisData(List<Location> centers, double distance){
         Decoder dec=getDecoder();
-        return dec != null?dec.getAisData(lat,lon,distance):null;
+        return dec != null?dec.getAisData(centers,distance):null;
     }
 
     public void setMediaUpdater(IMediaUpdater u) {

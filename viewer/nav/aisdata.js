@@ -246,10 +246,16 @@ AisData.prototype.startQuery=function() {
         },timeout);
         return;
     }
-    url+="&lon="+this.formatter.formatDecimal(center.lon,3,5);
-    url+="&lat="+this.formatter.formatDecimal(center.lat,3,5);
-    url+="&distance="+this.formatter.formatDecimal(globalStore.getData(keys.properties.aisDistance)||10,4,1);
-    Requests.getJson(url,{checkOk:false,timeout:timeout}).then(
+    let param={
+        request: 'ais',
+        distance: this.formatter.formatDecimal(globalStore.getData(keys.properties.aisDistance)||10,4,1)
+    };
+    for (let idx=0;idx<center.length;idx++){
+        let sfx=idx!==0?idx+"":"";
+        param['lat'+sfx]=this.formatter.formatDecimal(center[idx].lat,3,5);
+        param['lon'+sfx]=this.formatter.formatDecimal(center[idx].lon,3,5);
+    }
+    Requests.getJson(param,{checkOk:false,timeout:timeout}).then(
         (data)=>{
             self.aisErrors=0;
             self.lastAisQuery=new Date().getTime();

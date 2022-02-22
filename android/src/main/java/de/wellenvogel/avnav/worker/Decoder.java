@@ -84,6 +84,8 @@ public class Decoder extends Worker {
         public JSONObject data=new JSONObject();
         public int priority=0;
     }
+
+
     private final HashMap<String,AuxiliaryEntry> auxiliaryData=new HashMap<String,AuxiliaryEntry>();
 
     private void addAuxiliaryData(String key, AuxiliaryEntry entry,long maxAge){
@@ -626,13 +628,13 @@ public class Decoder extends Worker {
 
     /**
      * get AIS data (limited to distance)
-     * @param lat
-     * @param lon
+     * @param centers
+     *
      * @param distance in nm
      * @return
      */
-    public JSONArray  getAisData(double lat,double lon,double distance){
-        if (store != null) return store.getAisData(lat,lon,distance);
+    public JSONArray  getAisData(List<Location> centers,double distance){
+        if (store != null) return store.getAisData(centers,distance);
         return new JSONArray();
 
     }
