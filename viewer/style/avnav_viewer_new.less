@@ -976,6 +976,7 @@ span.valuePrefix{
 #aispage{
   .aisListItem{
     .listEntry();
+    .flex-wrap(wrap);
     .aisItemFB{
       width:4em;
       min-width: 4em;
@@ -985,11 +986,15 @@ span.valuePrefix{
       font-weight: bold;
     }
     .aisData{
-      padding-left: 1em;
-      padding-right: 1em;
+      overflow: hidden;
+      max-width: 100%;
       .aisData1{
         font-weight: bold;
         margin-bottom: 0.2em;
+      }
+      .aisData2{
+        white-space: pre-line;
+        font-family: monospace;
       }
       .infoLine{
         margin-bottom: 0.2em;

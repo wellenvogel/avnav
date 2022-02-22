@@ -18,20 +18,23 @@ import ShallowCompare from "../util/shallowcompare";
 
 const aisInfos=[
     [
-        {name:'distance',label:'Dst',unit:'nm'},
-        {name:'cpa',label:'Cpa',unit:'nm'},
-        {name:'tcpa',label:'Tcpa',unit:'h'}
+        {name:'distance',label:'Dst ',unit:'nm',len:6},
+        {name:'cpa',label:'Cpa ',unit:'nm',len:6},
+        {name:'tcpa',label:'Tcpa',unit:'h',len:8}
     ],
     [
-        {name:'course',label:'Cog',unit:'°'},
-        {name:'speed',label:'Sog',unit:'kn'},
-        {name:'heading',label:'Hdg',unit:'°'}
+        {name:'course',label:'Cog ',unit:'°',len:6},
+        {name:'speed',label:'Sog ',unit:'kn',len:6},
+        {name:'heading',label:'Hdg ',unit:'°',len:8}
     ],
     [
         {name:'shiptype',label:'Type'},
         {name:'callsign',label:'Call'},
         {name:'destination',label:'Dest'}
     ]
+];
+const reducedAisInfos=[
+    aisInfos[0]
 ];
 const fieldToLabel=(field)=>{
     let rt;
@@ -42,6 +45,7 @@ const fieldToLabel=(field)=>{
     });
     return rt||field;
 };
+
 
 const aisSortCreator=(sortField)=>{
     return (a,b)=> {
@@ -62,6 +66,11 @@ const aisSortCreator=(sortField)=>{
     };
 };
 
+const formatFixed=(val,len)=>{
+    let str=new Array(len+1).join(' ')+val;
+    return str.substr(str.length-len);
+
+}
 
 
 const computeList=(state)=>{
@@ -129,6 +138,20 @@ const AisItem=(props)=>{
     let aisInfoKey=1;
     let clazz=fmt.format('clazz',props);
     if (clazz !== '') clazz="["+clazz+"]";
+    let txt="";
+    let infos=reduceDetails?reducedAisInfos:aisInfos;
+    infos.forEach((infoLine)=>{
+        if (txt !== "") txt+="\n";
+        infoLine.forEach((info)=>{
+            txt+=(info.label+": ").replace(/ /g,'\xa0');
+            let val=(fmt.format(info.name,props)||'');
+            if (info.len){
+                val=formatFixed(val,info.len);
+            }
+            txt+=val.replace(/ /g,'\xa0');
+            txt+="  ";
+        })
+    })
     return ( <div className={"aisListItem "+cl} onClick={props.onClick}>
             <div className="aisItemFB" style={style}>
                 <span className="fb1">{fb.substr(0,1)}</span>{fb.substr(1)}
@@ -139,24 +162,7 @@ const AisItem=(props)=>{
                     {fmt.format('shipname',props)}&nbsp;
                     {clazz}
                 </div>
-                { aisInfos.map(function(info1){
-                    if (reduceDetails && aisInfoKey > 1) return null;
-                    aisInfoKey++;
-                    return <div className="infoLine" key={aisInfoKey}>
-                        {
-                            info1.map(function(info) {
-                                aisInfoKey++;
-                                return (
-                                    <span className="aisInfoElement" key={aisInfoKey}>
-                                                <span className="label">{info.label}: </span>
-                                                <span className="info">{fmt.format(info.name,props)}{info.unit !== undefined && info.unit}</span>
-                                            </span>
-                                );
-                            })
-                        }
-                    </div>
-                })}
-
+                <div className="aisData2">{txt}</div>
             </div>
         </div>
     );
