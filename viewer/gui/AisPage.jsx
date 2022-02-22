@@ -15,6 +15,7 @@ import assign from 'object-assign';
 import OverlayDialog from '../components/OverlayDialog.jsx';
 import Mob from '../components/Mob.js';
 import ShallowCompare from "../util/shallowcompare";
+import GuiHelper from "../util/GuiHelpers";
 
 const aisInfos=[
     [
@@ -73,42 +74,8 @@ const formatFixed=(val,len)=>{
 }
 
 
-const computeList=(state)=>{
-    let aisList=state.list;
-    if (! aisList) return {itemList:[]};
-    let trackingTarget=state.tracked;
-    let items=[];
-    let sortFunction=aisSortCreator(state.sortField||'cpa');
-    aisList.sort(sortFunction);
-    for( let aisidx in aisList){
-        let ais=aisList[aisidx];
-        if (! ais.mmsi) continue;
-        let color=PropertyHandler.getAisColor({
-            nearest: ais.nearest,
-            warning: ais.warning,
-            //tracking: hasTracking && ais.tracking
-        });
-        let item=assign({},ais,{color:color,key:ais.mmsi});
-        if (item.mmsi == trackingTarget){
-            item.selected=true;
-        }
-        items.push(item);
-    }
-    return {itemList:items};
-};
 
-const computeSummary=(state)=>{
-    let empty={sortField:state.sortField||'cpa',numTargets:0,warning:undefined};
-    let aisList=state.list;
-    if (! aisList || aisList.length == 0) return empty;
-    let rt=empty;
-    for( let aisidx in aisList){
-        let ais=aisList[aisidx];
-        if (ais.warning) rt.warning=ais.mmsi;
-    }
-    rt.numTargets=aisList.length;
-    return rt;
-};
+
 
 const sortDialog=()=>{
     let sortField=globalStore.getData(keys.gui.aispage.sortField,'cpa');
@@ -120,10 +87,7 @@ const sortDialog=()=>{
     for (let i in list){
         if (list[i].value == sortField) list[i].selected=true;
     }
-    let p=OverlayDialog.selectDialogPromise('Sort Order',list);
-    p.then(function(selected){
-        globalStore.storeData(keys.gui.aispage.sortField,selected.value);
-    });
+    return OverlayDialog.selectDialogPromise('Sort Order',list);
 };
 
 const AisItem=(props)=>{
@@ -133,7 +97,8 @@ const AisItem=(props)=>{
     let style={
         color:props.color
     };
-    let cl=props.addClass;
+    let cl=props.addClass||'';
+    if (props.initialTarget) cl+=" initialTarget";
     if (props.warning) cl+=" "+WARNING_CLASS;
     let aisInfoKey=1;
     let clazz=fmt.format('clazz',props);
@@ -179,6 +144,16 @@ class AisPage extends React.Component{
     constructor(props){
         super(props);
         let self=this;
+        if (props.options && props.options.mmsi){
+            this.initialMmsi=props.options.mmsi;
+        }
+        let sortField='cpa';
+        if (props.options && props.options.sortField){
+            sortField=props.options.sortField;
+        }
+        this.state={
+            sortField: sortField
+        }
         this.buttons=[
             {
                 name:"AisNearest",
@@ -189,7 +164,7 @@ class AisPage extends React.Component{
             },
             {
                 name:"AisSort",
-                onClick:sortDialog
+                onClick:this.sortDialog
 
             },
             Mob.mobDefinition(this.props.history),
@@ -199,14 +174,61 @@ class AisPage extends React.Component{
             }
         ];
         this.scrollWarning=this.scrollWarning.bind(this);
+        this.computeList=this.computeList.bind(this);
+        this.sortDialog=this.sortDialog.bind(this);
+        this.computeSummary=this.computeSummary.bind(this);
     }
-
+    computeSummary(state){
+        let empty={sortField:this.state.sortField||'cpa',numTargets:0,warning:undefined};
+        let aisList=state.list;
+        if (! aisList || aisList.length === 0) return empty;
+        let rt=empty;
+        for( let aisidx in aisList){
+            let ais=aisList[aisidx];
+            if (ais.warning) rt.warning=ais.mmsi;
+        }
+        rt.numTargets=aisList.length;
+        return rt;
+    };
+    computeList(state){
+        let aisList=state.list;
+        if (! aisList) return {itemList:[]};
+        let trackingTarget=state.tracked;
+        let items=[];
+        let sortFunction=aisSortCreator(this.state.sortField||'cpa');
+        aisList.sort(sortFunction);
+        for( let aisidx in aisList){
+            let ais=aisList[aisidx];
+            if (! ais.mmsi) continue;
+            let color=PropertyHandler.getAisColor({
+                nearest: ais.nearest,
+                warning: ais.warning,
+                //tracking: hasTracking && ais.tracking
+            });
+            let item=assign({},ais,{color:color,key:ais.mmsi});
+            if (item.mmsi == trackingTarget){
+                item.selected=true;
+            }
+            if (this.initialMmsi && item.mmsi ===  this.initialMmsi){
+                item.initialTarget=true;
+            }
+            items.push(item);
+        }
+        return {itemList:items};
+    };
     scrollWarning(ev){
         if (ev && ev.stopPropagation) ev.stopPropagation();
         let el=document.querySelector('.aisList .'+WARNING_CLASS);
         if (el) el.scrollIntoView();
     }
-
+    sortDialog(){
+        sortDialog()
+            .then((selected)=>{
+                this.setState({sortField:selected});
+                this.props.history.setOptions({sortField:selected});
+            })
+            .catch(()=>{})
+    }
     componentDidMount(){
     }
     render(){
@@ -218,11 +240,11 @@ class AisPage extends React.Component{
                 warning: true
             });
             return (
-                <div className="aisSummary" onClick={sortDialog}>
+                <div className="aisSummary" onClick={self.sortDialog}>
                     <span className="aisNumTargets">{props.numTargets} Targets</span>
                     {(props.warning) && <span className={WARNING_CLASS} style={{backgroundColor:color}}
                                               onClick={self.scrollWarning}/>}
-                    <span>sorted by {fieldToLabel(props.sortField)}</span>
+                    <span>sorted by {fieldToLabel(self.state.sortField)}</span>
                 </div>
             );
         },{minTime:updateTime});
@@ -234,26 +256,35 @@ class AisPage extends React.Component{
             >
             <Summary numTargets={0}
                      storeKeys={{
-                        sortField:keys.gui.aispage.sortField,
                         updateCount:keys.nav.ais.updateCount,
                         list:keys.nav.ais.list
                         }}
-                     updateFunction={computeSummary}
+                     updateFunction={this.computeSummary}
+                     sortField={this.state.sortField}
                 />
                 <AisList
                     itemClass={MemoAisItem}
                     onItemClick={function (item) {
-                        self.props.history.replace('aisinfopage', {mmsi: item.mmsi});
-                                }}
+                        self.props.history.replace('aisinfopage', {mmsi: item.mmsi,back:'aispage'});
+                        }}
                     className="aisList"
                     storeKeys={{
                         updateCount:keys.nav.ais.updateCount,
                         list:keys.nav.ais.list,
                         tracked: keys.nav.ais.trackedMmsi,
-                        sortField: keys.gui.aispage.sortField
                         }}
-                    updateFunction={computeList}
+                    updateFunction={this.computeList}
                     scrollable={true}
+                    listRef={(list)=>{
+                        if (!list) return;
+                        if (! this.initialMmsi) return;
+                        let selected=list.querySelector('.initialTarget');
+                        if (! selected) return;
+                        this.initialMmsi=undefined;
+                        let mode=GuiHelper.scrollInContainer(list,selected);
+                        if (mode < 1 || mode > 2) return;
+                        selected.scrollIntoView(mode===1);
+                    }}
                     />
             </React.Profiler>;
 
@@ -269,5 +300,5 @@ class AisPage extends React.Component{
         );
     }
 }
-
+AisPage.propTypes= Page.pageProperties;
 export default AisPage;

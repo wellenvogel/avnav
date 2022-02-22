@@ -23,12 +23,13 @@ export default  function(Component,opt_options){
             this.dataChanged=this.dataChanged.bind(this);
             let keys=this.getStoreKeys();
             if (keys) store.register(this,keys);
+            this.lastUpdate=0;
             this.state=this.getTranslatedStoreValues();
             this.updateCallback(this.state);
             this.timer=undefined;
-            this.lastUpdate=0;
         }
         updateCallback(data){
+            this.lastUpdate=(new Date()).getTime();
             let updateFunction=this.props.changeCallback;
             if (! updateFunction && opt_options) updateFunction=opt_options.changeCallback;
             if (! updateFunction) return;
@@ -59,7 +60,6 @@ export default  function(Component,opt_options){
             return values;
             }
         doUpdate(){
-            this.lastUpdate=(new Date()).getTime();
             let data=this.getTranslatedStoreValues()||{};
             this.setState(data);
             this.updateCallback(data);

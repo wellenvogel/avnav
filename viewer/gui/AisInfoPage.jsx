@@ -90,7 +90,8 @@ class AisInfoPage extends React.Component{
             {
                 name: 'AisInfoList',
                 onClick:()=>{
-                    self.props.history.replace('aispage');
+                    let mmsi=(this.props.options||{}).mmsi;
+                    self.props.history.replace('aispage',{mmsi:mmsi});
                 }
             },
             Mob.mobDefinition(this.props.history),
@@ -157,7 +158,13 @@ class AisInfoPage extends React.Component{
                     itemList={displayItems}
                     scrollable={true}
                     className="infoList"
-                    onClick={()=>{self.props.history.pop()}}
+                    onClick={()=>{
+                        if (self.props.options && self.props.options.back){
+                            self.props.history.replace(self.props.options.back,{mmsi:props.mmsi});
+                            return;
+                        }
+                        self.props.history.pop()
+                    }}
                     />
 
             </React.Fragment>

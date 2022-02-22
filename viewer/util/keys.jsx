@@ -205,9 +205,6 @@ let keys={
         gpspage:{
             pageNumber:K,
         },
-        aispage:{
-            sortField:K,
-        },
         addonpage:{
             activeAddOn:K,
         },
