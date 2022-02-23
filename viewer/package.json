@@ -64,7 +64,7 @@
     "@braintree/browser-detection": "^1.12.1",
     "@openlayers/pepjs": "^0.5.4",
     "PubSub": "^4.0.0",
-    "canvas-gauges": "^2.1.7",
+    "canvas-gauges": "git+https://github.com/wellenvogel/canvas-gauges#av20220223",
     "clone-deep": "^4.0.1",
     "codeflask": "git+https://github.com/wellenvogel/CodeFlask.git#20220109",
     "core-js": "^2.6.12",
