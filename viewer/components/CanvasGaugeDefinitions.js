@@ -152,8 +152,8 @@ export default  ()=>{
         animationDuration:1000,
         animationRule:"linear"
     },{
-        minValue:{type:'NUMBER'},
-        maxValue:{type:'NUMBER'},
+        minValue:{type:'NUMBER',default:0},
+        maxValue:{type:'NUMBER',default: 100},
         colorHighlight:{type:'COLOR',default:"rgba(200, 50, 50, .75)"},
         startHighlight:{type:'NUMBER'}
     });
@@ -188,8 +188,8 @@ export default  ()=>{
     },{
         formatter: false,
         formatterParameters: false,
-        minValue:{type:'NUMBER'},
-        maxValue:{type:'NUMBER'},
+        minValue:{type:'NUMBER',default:-100},
+        maxValue:{type:'NUMBER',default:100},
         inputIsKelvin:{type:'BOOLEAN',default:false},
         colorHighlight:{type:'COLOR',default:"rgba(200, 50, 50, .75)"},
         startHighlight:{type:'NUMBER',default: 30}

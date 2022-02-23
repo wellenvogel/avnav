@@ -339,7 +339,11 @@ let widgetList=[
     },
     {
         name: 'RadialGauge',
-        wclass: GaugeRadial
+        wclass: GaugeRadial,
+        editableParameters: {
+            minValue: {type:'NUMBER',default:0},
+            maxValue: {type:'NUMBER',default: 100}
+        }
     },
     {
         name: 'Undefined',
