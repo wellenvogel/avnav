@@ -153,6 +153,10 @@ class AisPage extends React.Component{
         this.state={
             sortField: sortField
         }
+        this.scrollWarning=this.scrollWarning.bind(this);
+        this.computeList=this.computeList.bind(this);
+        this.sortDialog=this.sortDialog.bind(this);
+        this.computeSummary=this.computeSummary.bind(this);
         this.buttons=[
             {
                 name:"AisNearest",
@@ -172,10 +176,6 @@ class AisPage extends React.Component{
                 onClick: ()=>{self.props.history.pop()}
             }
         ];
-        this.scrollWarning=this.scrollWarning.bind(this);
-        this.computeList=this.computeList.bind(this);
-        this.sortDialog=this.sortDialog.bind(this);
-        this.computeSummary=this.computeSummary.bind(this);
     }
     computeSummary(state){
         let empty={sortField:this.state.sortField||'cpa',numTargets:0,warning:undefined};
