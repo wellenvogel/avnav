@@ -379,20 +379,22 @@ class WidgetFactory{
         let mergedProps = assign({}, e, filteredProps, opt_properties);
         if (mergedProps.key === undefined) mergedProps.key = props.name;
         if (mergedProps.formatter) {
+            let ff = mergedProps.formatter;
             if (typeof mergedProps.formatter === 'string') {
-                let ff = this.formatter[mergedProps.formatter];
+                ff = this.formatter[mergedProps.formatter];
                 if (typeof ff !== 'function') {
                     //return a string indicating a missing formatter
-                    ff=()=>'?#?#';
-                }
-                mergedProps.formatter = function (v) {
-                    let param=mergedProps.formatterParameters;
-                    if (typeof(param) === 'string'){
-                        param=param.split(",");
-                    }
-                    return ff.apply(self.formatter, [v].concat(param || []));
+                    ff = () => '?#?#';
                 }
             }
+            mergedProps.formatter = function (v) {
+                let param = mergedProps.formatterParameters;
+                if (typeof (param) === 'string') {
+                    param = param.split(",");
+                }
+                return ff.apply(self.formatter, [v].concat(param || []));
+            }
+
         }
         return function (props) {
             let wprops = assign({}, props, mergedProps);
