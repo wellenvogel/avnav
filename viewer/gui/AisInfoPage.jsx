@@ -91,13 +91,15 @@ class AisInfoPage extends React.Component{
                 name: 'AisInfoList',
                 onClick:()=>{
                     let mmsi=(this.props.options||{}).mmsi;
-                    self.props.history.replace('aispage',{mmsi:mmsi});
+                    if (! self.props.history.backFromReplace()) {
+                        self.props.history.replace('aispage', {mmsi: mmsi});
+                    }
                 }
             },
             Mob.mobDefinition(this.props.history),
             {
                 name: 'Cancel',
-                onClick: ()=>{self.props.history.pop()}
+                onClick: ()=>{self.props.history.backFromReplace(true)}
             }
         ];
         this.checkNoTarget=this.checkNoTarget.bind(this);
@@ -159,11 +161,9 @@ class AisInfoPage extends React.Component{
                     scrollable={true}
                     className="infoList"
                     onClick={()=>{
-                        if (self.props.options && self.props.options.back){
-                            self.props.history.replace(self.props.options.back,{mmsi:props.mmsi});
-                            return;
+                        if (! self.props.history.backFromReplace()) {
+                            self.props.history.pop();
                         }
-                        self.props.history.pop()
                     }}
                     />
 

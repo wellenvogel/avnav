@@ -10,6 +10,8 @@ class History{
         this.push=this.push.bind(this);
         this.updateCallback=this.updateCallback.bind(this);
         this.reset=this.reset.bind(this);
+        this.replace=this.replace.bind(this);
+        this.setOptions=this.setOptions.bind(this);
         this.remoteChannel=remotechannel;
         if (startlocation){
             this.push(startlocation,startoptions);
@@ -28,15 +30,30 @@ class History{
             this.push(location,options);
             return;
         }
-        this.history.splice(-1,1,{location:location,options:options||{}});
+        let hentry=this.history[this.history.length - 1];
+        this.history.splice(-1,1,{location:location,options:options||{},back:hentry});
         this.updateCallback();
     }
-    setOptions(options){
+    backFromReplace(opt_popNotFound){
+        if (this.history.length < 1) return false;
+        let hentry=this.history[this.history.length - 1];
+        if (!hentry.back) {
+            if (!opt_popNotFound) return false;
+            this.pop();
+            return true;
+        }
+        hentry.location=hentry.back.location;
+        hentry.options=hentry.back.options;
+        hentry.back=hentry.back.back;
+        this.updateCallback();
+        return true;
+    }
+    setOptions(options){this.history[this.history.length - 1]
         if (this.history.length < 1){
             return false;
         }
-        let newOptions=assign({},this.history[this.history.length-1].options,options);
-        this.history[this.history.length].options=newOptions;
+        let hentry=this.history[this.history.length - 1];
+        hentry.options=assign({},hentry.options,options);
         this.updateCallback();
     }
     push(location,options){
@@ -54,7 +71,8 @@ class History{
             return this.history[this.history.length - 1].location;
         }
         else{
-            return assign({},this.history[this.history.length - 1]);
+            let hentry=this.history[this.history.length - 1];
+            return {location: hentry.location,options:hentry.options};
         }
     }
 

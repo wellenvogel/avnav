@@ -77,15 +77,14 @@ const formatFixed=(val,len)=>{
 
 
 
-const sortDialog=()=>{
-    let sortField=globalStore.getData(keys.gui.aispage.sortField,'cpa');
+const sortDialog=(sortField)=>{
     let list=[
         {label:'CPA', value:'cpa'},
         {label:'TCPA',value:'tcpa'},
         {label:'DST',value:'distance'}
     ];
     for (let i in list){
-        if (list[i].value == sortField) list[i].selected=true;
+        if (list[i].value === sortField) list[i].selected=true;
     }
     return OverlayDialog.selectDialogPromise('Sort Order',list);
 };
@@ -222,10 +221,10 @@ class AisPage extends React.Component{
         if (el) el.scrollIntoView();
     }
     sortDialog(){
-        sortDialog()
+        sortDialog(this.state.sortField)
             .then((selected)=>{
-                this.setState({sortField:selected});
-                this.props.history.setOptions({sortField:selected});
+                this.setState({sortField:selected.value});
+                this.props.history.setOptions({sortField:selected.value});
             })
             .catch(()=>{})
     }
@@ -248,12 +247,7 @@ class AisPage extends React.Component{
                 </div>
             );
         },{minTime:updateTime});
-        let MainContent=<React.Profiler
-            id="aisList"
-            onRender={(id,phase,actualDuration,baseDuration,startTime,commitTime,interactions)=>{
-                console.log("render",id,phase,actualDuration,baseDuration,startTime,commitTime,interactions);
-            }}
-            >
+        let MainContent=<React.Fragment>
             <Summary numTargets={0}
                      storeKeys={{
                         updateCount:keys.nav.ais.updateCount,
@@ -265,7 +259,8 @@ class AisPage extends React.Component{
                 <AisList
                     itemClass={MemoAisItem}
                     onItemClick={function (item) {
-                        self.props.history.replace('aisinfopage', {mmsi: item.mmsi,back:'aispage'});
+                        self.props.history.setOptions({mmsi:item.mmsi});
+                        self.props.history.replace('aisinfopage', {mmsi: item.mmsi});
                         }}
                     className="aisList"
                     storeKeys={{
@@ -286,7 +281,7 @@ class AisPage extends React.Component{
                         selected.scrollIntoView(mode===1);
                     }}
                     />
-            </React.Profiler>;
+            </React.Fragment>;
 
         return (
             <Page
