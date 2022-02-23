@@ -713,9 +713,9 @@ export const deleteItem=(info,opt_resultCallback)=> {
 
 export const showFileDialog=(history,item,opt_doneCallback,opt_checkExists)=>{
     let actionFunction=(action,newItem)=>{
-        let doneAction=()=>{
+        let doneAction=(pageChanged)=>{
             if (opt_doneCallback){
-                opt_doneCallback(action,newItem)
+                opt_doneCallback(action,newItem,pageChanged)
             }
         };
         let schemeAction=(newScheme)=>{
@@ -752,22 +752,26 @@ export const showFileDialog=(history,item,opt_doneCallback,opt_checkExists)=>{
             return renameAction(item.name,newItem.name);
         }
         if (action === 'view'){
-            doneAction();
+            doneAction(true);
             history.push('viewpage',{type:item.type,name:item.name,readOnly:true});
             return;
         }
         if (action === 'edit'){
-            doneAction();
             if (item.type === 'route'){
                 RouteHandler.fetchRoute(item.name,false,
                     (route)=>{
                         let editor=new RouteEdit(RouteEdit.MODES.EDIT);
                         editor.setNewRoute(route,0);
+                        doneAction(true);
                         history.push('editroutepage',{center:true});
                     },
-                    (error)=>Toast(error));
+                    (error)=>{
+                        Toast(error);
+                        doneAction();
+                    });
                 return;
             }
+            doneAction(true);
             history.push('viewpage',{type:item.type,name:item.name});
             return;
         }

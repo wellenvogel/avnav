@@ -107,6 +107,7 @@ const Dialogs = {
                                         if (okCallback) okCallback(elem);
                                         if (props.closeCallback) props.closeCallback();
                                     }}
+                                     key={elem.value+":"+elem.label}
                                     >{elem.label}</div>);
                         })}
                     </div>

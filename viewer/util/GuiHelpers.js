@@ -180,6 +180,7 @@ const lifecycleTimer=(thisref,timercallback,interval,opt_autostart)=>{
             window.clearTimeout(timerData.timer);
         }
         if (! timerData.interval) return;
+        //console.log("lifecycle timer start",thisref,timerData.sequence);
         let currentSequence=timerData.sequence;
         timerData.timer=window.setTimeout(()=>{
             timerData.timer=undefined;
@@ -200,12 +201,14 @@ const lifecycleTimer=(thisref,timercallback,interval,opt_autostart)=>{
         }
         if (timerData.timer) {
             timerData.sequence++;
+            //console.log("lifecycle timer stop",thisref,timerData.sequence);
             window.clearTimeout(timerData.timer);
             timerData.timer=undefined;
         }
     };
     lifecycleSupport(thisref,(unmount)=>{
         timerData.sequence++;
+        //console.log("lifecycle timer",thisref,unmount,timerData.sequence);
         if (unmount){
             stopTimer();
             timerData.unmounted=true;
@@ -218,7 +221,16 @@ const lifecycleTimer=(thisref,timercallback,interval,opt_autostart)=>{
         startTimer:startTimer,
         setTimeout:setTimeout,
         stopTimer:stopTimer,
-        currentSequence:()=>{return timerData.sequence}
+        currentSequence:()=>{return timerData.sequence},
+        guardedCall:(sequence,callback)=>{
+            //console.log("guarded call start",thisref,sequence,timerData.sequence);
+            if (sequence !== timerData.sequence) {
+                return;
+            }
+            let rt=callback();
+            //console.log("guarded call end",thisref,sequence,timerData.sequence);
+            return rt;
+        }
     };
 };
 

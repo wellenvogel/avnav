@@ -567,7 +567,8 @@ class DownloadPage extends React.Component{
                                     return;
                                 }
                                 showFileDialog(this.props.history,item,
-                                    (action,item)=>{
+                                    (action,item,pageChanged)=>{
+                                        if (pageChanged) return;
                                         if (action === 'userapp') this.readAddOns()
                                         else this.fillData();
                                     },

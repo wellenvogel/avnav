@@ -15,7 +15,7 @@ import Toast from "./Toast";
  */
 
 const DEFAULT_TYPES={
-    value: PropTypes.any.isRequired,
+    value: PropTypes.any,
     label: PropTypes.string,
     className: PropTypes.string,
     onChange: PropTypes.func,
@@ -34,7 +34,7 @@ export const Input=(props)=>{
     if (size !== undefined && props.maxSize){
         if (size > props.maxSize) size=props.maxSize;
     }
-    return <div className={className} key={props.key}>
+    return <div className={className} >
         <span className="inputLabel">{props.label}</span>
         <input size={size} type={props.type||"text"} value={props.value} onChange={
             (ev)=>{ev.stopPropagation();props.onChange(ev.target.value);}
@@ -61,7 +61,7 @@ export const Checkbox=(props)=>{
             props.onChange(!props.value);
         }
     };
-    return <div className={frameClass} onClick={clickFunction} key={props.key}>
+    return <div className={frameClass} onClick={clickFunction} >
         <span className="inputLabel">{props.label}</span>
         <span className= {className} ></span>
         {props.children}
@@ -78,7 +78,7 @@ export const Radio=(props)=>{
     let className="radio";
     let frameClass=props.dialogRow?"dialogRow":"";
     if (props.className) frameClass+=" "+props.className;
-    return <div className={frameClass} key={props.key}>
+    return <div className={frameClass} >
         {props.label&& <span className="inputLabel">{props.label}</span>}
         {props.itemList.map((el)=>{
             let displayClass=className;
@@ -87,7 +87,9 @@ export const Radio=(props)=>{
                 <div className="radioInner" onClick={(ev)=>{
                         ev.stopPropagation();
                         props.onChange(el.value);
-                        }}>
+                        }}
+                     key={el.label}
+                >
                 <span className="inputLabel">{el.label}</span>
                 <span className= {displayClass} ></span>
                 </div>
@@ -107,7 +109,7 @@ export const InputReadOnly=(props)=>{
     if (props.className) className+=" "+props.className;
     if (! props.onClick) className+=" disabled";
     let frameClick=props.frameClick?props.onClick:undefined;
-    return <div className={className} key={props.key} onClick={frameClick}>
+    return <div className={className}  onClick={frameClick}>
         <span className="inputLabel">{props.label}</span>
         <div className="input" onClick={frameClick?undefined:props.onClick}>{props.value}</div>
         {props.children}

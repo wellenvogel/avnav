@@ -218,24 +218,28 @@ class StatusList extends React.Component{
         this.setState({itemList:itemList});
 
     }
-    doQuery(){
+    doQuery(sequence){
         let self=this;
-        Requests.getJson("?request=status",{checkOk:false,sequenceFunction:this.timer.currentSequence}).then(
+        Requests.getJson("?request=status",{checkOk:false}).then(
             (json)=>{
-                self.queryResult(json);
-                self.timer.startTimer();
+                self.timer.guardedCall(sequence,()=> {
+                    self.queryResult(json)
+                    self.timer.startTimer(sequence);
+                });
             },
             (error)=>{
-                self.errors++;
-                if (self.errors > 4){
-                    let newState={itemList:[]};
-                    newState.serverError=true;
-                    if (this.props.onChange){
-                        this.props.onChange({serverError:true});
+                this.timer.guardedCall(sequence,()=> {
+                    self.errors++;
+                    if (self.errors > 4) {
+                        let newState = {itemList: []};
+                        newState.serverError = true;
+                        if (this.props.onChange) {
+                            this.props.onChange({serverError: true});
+                        }
+                        this.setState(newState);
                     }
-                    this.setState(newState);
-                }
-                self.timer.startTimer();
+                    self.timer.startTimer(sequence);
+                });
             });
     }
     getSnapshotBeforeUpdate(prevProps, prevState) {
@@ -363,7 +367,8 @@ class StatusPage extends React.Component{
                                     OverlayDialog.alert("unable to trigger shutdown: "+error);
                                 });
 
-                        });
+                        })
+                            .catch(()=>{});
                     }
                 },
                 {
@@ -409,7 +414,7 @@ class StatusPage extends React.Component{
 
             let className=props.className;
             if (this.state.serverError) className+=" serverError";
-            let pageProperties=Helper.filteredAssign(Page.pageProperties,props);
+            let pageProperties=Helper.filteredAssign(Page.pageProperties,this.props);
             return(
             <Page
                 {...pageProperties}
@@ -420,7 +425,7 @@ class StatusPage extends React.Component{
                     <StatusList
                         connected={props.connected}
                         allowEdit={props.config}
-                        onChange={(nv)=>this.setState(nv)}
+                        onChange={(nv)=>window.setTimeout(()=>this.setState(nv),1)}
                         notifyProps={this.state}
                         reloadNotifier={this.reloadNotifier}
                     />

@@ -44,15 +44,18 @@ class BottomLine extends React.Component {
         }
 
         timerCall(sequence) {
-            if (sequence != this.timer.currentSequence()) return;
             Requests.getJson("?request=nmeaStatus")
                 .then((json)=> {
-                    this.setState({status: json.data});
-                    this.timer.startTimer(sequence);
+                    this.timer.guardedCall(sequence,()=> {
+                        this.setState({status: json.data});
+                        this.timer.startTimer(sequence);
+                    });
                 })
                 .catch((error)=> {
-                    this.setState({status: {}});
-                    this.timer.startTimer(sequence);
+                    this.timer.guardedCall(sequence,()=> {
+                        this.setState({status: {}});
+                        this.timer.startTimer(sequence);
+                    });
                 })
         }
 

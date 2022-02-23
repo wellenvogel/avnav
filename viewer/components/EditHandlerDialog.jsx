@@ -71,7 +71,6 @@ class EditHandlerDialog extends React.Component{
         this.currentValues=stateHelper(this,{},'current');
         this.modifiedValues=stateHelper(this,{},'modified');
         this.dialogHelper=dialogHelper(this);
-        this.dialogHelper=dialogHelper(this);
     }
     componentDidMount() {
         let param={
