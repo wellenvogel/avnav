@@ -321,7 +321,8 @@ let widgetList=[
             formatter: false,
             unit: false,
             formatterParameters: false,
-            value: false
+            value: false,
+            caption: false
         }
     },
     {
