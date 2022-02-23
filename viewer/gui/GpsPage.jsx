@@ -276,6 +276,7 @@ class GpsPage extends React.Component{
                 if (! panelData.list) return;
                 let sum = getWeightSum(panelData.list);
                 let prop={
+                    name: panelName,
                     className: 'widgetContainer',
                     itemCreator: (widget)=>{ return widgetCreator(widget,sum);},
                     itemList: panelData.list,
@@ -295,7 +296,7 @@ class GpsPage extends React.Component{
             <React.Fragment>
                 {panelList.map((panelProps)=>{
                     return(
-                        <div className="hfield" style={{width:panelWidth+"%"}}>
+                        <div className="hfield" style={{width:panelWidth+"%"}} key={panelProps.name}>
                             <ItemList {...panelProps}/>
                         </div>
                     )

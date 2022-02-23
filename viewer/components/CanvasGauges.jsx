@@ -145,7 +145,7 @@ class Gauge extends React.Component{
 };
 
 Gauge.propTypes={
-    gauge: PropTypes.object.isRequired,
+    gauge: PropTypes.oneOfType([PropTypes.object,PropTypes.func]).isRequired,
     name: PropTypes.string,
     unit: PropTypes.string,
     caption: PropTypes.string,
@@ -157,7 +157,7 @@ Gauge.propTypes={
     value: PropTypes.number,
     drawValue: PropTypes.bool,
     colorText: PropTypes.string,
-    formatter: PropTypes.oneOf([PropTypes.string,PropTypes.func]),
+    formatter: PropTypes.oneOfType([PropTypes.string,PropTypes.func]),
     formatterParameters: PropTypes.array,
     translateFunction: PropTypes.func, //if set: a function to translate options
     valueFontFactor: PropTypes.number
@@ -185,7 +185,8 @@ export const GaugeRadial=(props)=>{
         typeClass="radial"
         />
 };
-GaugeRadial.propTypes=Gauge.propTypes;
+GaugeRadial.propTypes=assign({},Gauge.propTypes);
+delete GaugeRadial.propTypes.gauge;
 GaugeRadial.editableParameters=Gauge.editableParameters;
 export const GaugeLinear=(props)=>{
     return <Gauge
@@ -196,5 +197,6 @@ export const GaugeLinear=(props)=>{
         />
 };
 
-GaugeLinear.propTypes=Gauge.propTypes;
+GaugeLinear.propTypes=assign({},Gauge.propTypes);
+delete GaugeLinear.propTypes.gauge;
 GaugeLinear.editableParameters=assign({},Gauge.editableParameters,{drawValue:false,valueFontFactor:false});
