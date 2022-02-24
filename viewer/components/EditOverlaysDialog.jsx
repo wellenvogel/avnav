@@ -99,9 +99,7 @@ class OverlayItemDialog extends React.Component{
             iconFiles:[{label:"--none--"}],
             route:[],
             track:[]};
-        if (props.current && props.current.url && props.current.type !== 'chart') {
-            this.analyseOverlay(props.current.url);
-        }
+
         this.getItemList('chart');
         this.getItemList('overlay');
         this.getItemList('images');
@@ -109,6 +107,12 @@ class OverlayItemDialog extends React.Component{
         this.getItemList('route');
         this.getItemList('track');
     }
+    componentDidMount() {
+        if (this.props.current && this.props.current.url && this.props.current.type !== 'chart') {
+            this.analyseOverlay(this.props.current.url);
+        }
+    }
+
     getItemList(type){
         Requests.getJson("",{},{
             request: 'listdir',
