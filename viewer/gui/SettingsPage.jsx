@@ -461,7 +461,7 @@ class SettingsPage extends React.Component{
     }
     saveSettings(){
         let actions=ItemActions.create('settings');
-        let oldName=globalStore.getData(keys.properties.lastLoadedName).replace(/-[0-9]*$/,'');
+        let oldName=globalStore.getData(keys.properties.lastLoadedName).replace(/-*[0-9]*$/,'');
         let suffix=Formatter.formatDateTime(new Date()).replace(/[: /]/g,'').replace(/--/g,'');
         let proposedName=actions.nameForUpload(oldName+"-"+suffix);
         PropertyHandler.listSettings(true)
