@@ -78,7 +78,7 @@
       sowie <a href="hints/plugins.html">Plugins</a> vorgenommen werden.</p>
     <h2>NMEA-Daten</h2>
     <p><img class="fimage" src="avnav_schnittstellen.png" name="Datenim- und Export"
-        width="600" border="0"> </p>
+        border="0" width="600"> </p>
     <h3>Client Server Variante</h3>
     <p>AvNav verarbeitet NMEA0183-Daten, die über angeschlossene USB-Geräte,
       serielle Schnittstellen, Bluetooth-Geräte,&nbsp; TCP (Client und Server)
@@ -95,7 +95,7 @@
       <li>$xxGLL</li>
       <li>$xxVTG</li>
       <li>$xxRMC</li>
-      <li>$xxMWV</li>
+      <li>$xxMWV (ab 20220225 auch waterSpeed)</li>
       <li>$xxDPT</li>
       <li>$xxDBT</li>
       <li>$xxXDR (seit 20210114)</li>
@@ -103,6 +103,8 @@
       <li>$xxHDT (seit 20210619)</li>
       <li>$xxHDM (seit 20210619) </li>
       <li>$xxVHW partiell (seit 20210619)</li>
+      <li>$xxVWR (seit 20220225)</li>
+      <li>$xxMTW (seit 20220225)</li>
     </ul>
     <p>Je nach <a href="hints/configfile.html">Konfiguration</a> kann AvNav
       auch NMEA-Daten erzeugen:</p>
@@ -130,7 +132,7 @@
       <li>$xxGLL</li>
       <li>$xxGSA</li>
       <li>$xxRMC</li>
-      <li>$xxMWV</li>
+      <li>$xxMWV (ab 20220225 auch waterSpeed)</li>
       <li>$xxDBT</li>
       <li>$xxXDR (seit 20210114)</li>
       <li>$xxHDG (seit 210106xx)</li>
@@ -138,9 +140,11 @@
       <li>$xxHDM (seit 20210619) <br>
       </li>
       <li>$xxVHW partiell (seit 20210619)</li>
+      <li>$xxVWR (seit 20220225)</li>
+      <li>$xxMTW (seit 20220225)</li>
     </ul>
-    <p>Bei enstprechender Konfiguration kann AvNav $GPRMC und $GPRMB-Sätze
-      erzeugen und aussenden.</p>
+    <p>Bei enstprechender Konfiguration kann AvNav $GPRMC und $GPRMB-Sätze (ab
+      20220225 auch $GPAPB) erzeugen und aussenden.</p>
     <p></p>
     <h2>Karten</h2>
     <p>AvNav verarbeitet grundsätzlich Karten im <a href="charts.html#Intro">Rasterformat</a>.

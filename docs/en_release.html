@@ -40,6 +40,154 @@ sudo systemctl start avnav</div>
     <br>
     <div> </div>
     <h2>Versions</h2>
+    <p> <span style="font-weight: bold;">20220225</span> <a title="release/20220225"
+        href="../downloads/release/20220225">link</a></p>
+    Save and Load Settings
+    <ul>
+      <li> allow to save settings on the server and load them on the same or
+        other devices</li>
+      <li> extend the <a href="hints/plugins.html">plugin api</a> to be able to
+        register settings (files)</li>
+      <li> when starting for the first time allow to select a settings file if
+        more then one setting is available. Later settings files can be loaded
+        from the <a href="userdoc/settingspage.html">settings page</a>.</li>
+      <li> show changed settings on the <a href="userdoc/settingspage.html">settings
+          page</a> page with different text styles</li>
+      <li> remove the ability to have settings in a layout file (use the new
+        save/load settings instead)</li>
+    </ul>
+    AIS improvements
+    <ul>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/185">#185</a>:
+        show AIS targets around the ship position and around the map center</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/187">#187</a>:
+        allow to separately decide which AIS classes to be displayed (class A,
+        class B,other)</li>
+      <li> optimize AIS list performance by avoiding many dom objects</li>
+      <li> allow to reduce the details in Ais list, allow to change list update
+        interval</li>
+      <li> allow to scale down class B ais targets in display</li>
+      <li> use a separate color for tracked AIS target</li>
+      <li> do not start tracking an AIS target when we click on it, only after
+        "center to"&nbsp; <img src="viewerimages/icons-new/center.svg" alt="" class="inlineimage">
+        on <a href="userdoc/aisinfopage.html">AIS info</a> page</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/149">#149</a>:
+        allow to customize the data that is shown at an AIS target on the map</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/145">#145</a>:
+        allow to hide AIS targets that do not move</li>
+      <li><br>
+      </li>
+    </ul>
+    Other new features:
+    <ul>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/135">#135</a>:
+        allow to measure distances by dropping a mark (button <img src="viewerimages/icons-new/straighten.svg"
+          alt="" class="inlineimage">, show course and distance to measure near
+        map center and in center display widget</li>
+      <li> make the edit route dialog a bit clearer</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/141">#141</a>:
+        make WP buttons usable when anchor watch is active</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/141">#141</a>:
+        <a href="userdoc/dashboardpage.html#anchorwatch"> add more options</a>
+        to set the anchor watch. Add anchor watch to the layout parameters for
+        the nav page</li>
+      <li> avoid sending old records when a new connection is establisehd on the
+        server</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/146">#146</a>:
+        sort charts on mainpage, prevent center map dialog</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/148">#148</a>:
+        AvNav will autodetect every change of an overlay and will redraw the map</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/151">#151</a>:
+        allow to open a <a href="userdoc/addonconfigpage.html">user app</a> in
+        a new window</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/155">#155</a>:
+        allow to disable the USB monitoring , bluetooth reader and NMEA logger</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/160">#160</a>:
+        decode water temp from MTW and speed trough water from VHW add widgets
+        for STW and water temp</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/163">#163</a>:
+        allow sending data in the socket reader</li>
+      <li> allow to run on a system without installed python-bluez (show in
+        status if not installed)</li>
+      <li> send out APB on android</li>
+      <li> decode VWR NMEA0183 sentence</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/164">#164</a>
+        Add higher baudrates then 115200</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/180">#180</a>:
+        warn if Android power saving will switch off GPS in background</li>
+      <li> new SignalK widgets: skpitch/skroll (thank's Tom)</li>
+      <li> better navigation between aislist and aisinfo</li>
+    </ul>
+    server startup changes:
+    <ul>
+      <li> the logfile does now contain all the output also from the start up</li>
+      <li> allow to set loglevel when starting, use -q to only control stderr
+        logging</li>
+      <li> do not start in silent mode when running as service</li>
+      <li> start with loglevel error by default with -q</li>
+    </ul>
+    bugfixes:
+    <ul>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/192">#192</a>,
+        <a href="https://github.com/wellenvogel/avnav/issues/193">#193</a>:
+        correctly provide formatter parameters to widgets that have a formatter
+        being a function</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/191">#191</a>:
+        remove useless caption in edit widget for combined widget, make css
+        class working</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/190">#190</a>:
+        add minValue/maxValue as parameters for radialGauge as they are
+        mandatory</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/189">#189</a>:
+        use own fork for canvas gauges to work around broken animationTarget
+        plate</li>
+      <li> adapt sizes for wind widget and depth widget</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/186">#186</a>:
+        avoid sporadic crash</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/184">#184</a>:
+        correctly handle store keys and formatter parameters in layout editor</li>
+      <li> correctly deregister a layout or setting when the plugin is disabled</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/182">#182</a>:
+        prevent setting empty formatter parameters if they are not defined in
+        the layout</li>
+      <li> correct bug in user defined formatters doc</li>
+      <li> correctly handle timestamp for zip and kml files in head requests</li>
+      <li> avoid duplicate user app when a plugin tries to register multiple
+        times</li>
+      <li> correctly show the default for formatTemperature to be kelvin</li>
+      <li> do not reset colors to defaults when editing overlays, ensure opacity
+        to be a number</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/161">#161</a>:
+        add fallback handling if the cfg file is corrupt and no ok file is
+        there, early logging switch to log cfg errors, show cfg file info in
+        status</li>
+      <li> handle keyboard interrupt for shutdown</li>
+      <li> correct linux default config</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/178">#178</a>:
+        make translate function working for all widgets</li>
+      <li> correct APB</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/157">#157</a>:
+        correctly switch to the next way point if no client is connected</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/154">#154</a>:
+        update package install docs</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/150">#150</a>:
+        directly link to list of mbtiles from OpenSeaMap</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/153">#153</a>:
+        do not redraw dialogs when window size changes</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/152">#152</a>:
+        make delete route working again on android</li>
+      <li> work around gdal not correctly converting kap header data to utf-8</li>
+      <li> prevent android crash if no file manager found</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/143">#143</a>:
+        allow for a complete server stop from the UI</li>
+    </ul>
+    internal changes:
+    <ul>
+      <li> new build tools and libraries</li>
+      <li> force nodejs version 16 for build</li>
+      <li> update to newer version of gradle node plugin</li>
+      <li> introduce split chunks to optimize loading</li>
+    </ul>
     <p> <span style="font-weight: bold;">20210619</span> <a title="release/20210619"
         href="../downloads/release/20210619">link</a> (Android Version:
       20210618)</p>

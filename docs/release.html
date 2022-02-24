@@ -42,6 +42,157 @@ sudo systemctl start avnav</div>
     <br>
     <div> </div>
     <h2>Versionen</h2>
+    <p> <span style="font-weight: bold;">20220225</span> <a title="release/20220225"
+        href="../downloads/release/20220225">link</a></p>
+    Speichern und Laden von Einstellungen
+    <ul>
+      <li> Die Einstellungen auf einem Gerät können auf dem Server gespeichert
+        und auf diesem oder anderen Geräten wieder geladen werden.</li>
+      <li> Das <a href="hints/plugins.html">plugin interface</a> wurde
+        erweitert um settings in einem Plugin mitzubringen und zu registrieren.</li>
+      <li> Beim erstmaligen Start von AvNav auf einem Gerät wird eine Auswahl
+        der gespeicherten Einstellungsdateien angezeigt, falls es mehr ale eine
+        gibt. Der Nutzer kann entscheiden, welche er nutzen möchte. Später
+        können andere Dateien über die <a href="userdoc/settingspage.html">Einstellungsseite</a>
+        geladen werden.</li>
+      <li>Auf der <a href="userdoc/settingspage.html">Einstellungsseite</a>
+        werden geänderte Werte durch unterschiedliche Schriftstile dargestellt.</li>
+      <li> Die Möglichkeit Einstellungen innerhalb einer Layoutdatei zu
+        speichern, wurde entfernt (man kann aber umgekehrt in einer
+        Settings-Datei auch den Namen des zu nutzenden Layouts angeben)</li>
+    </ul>
+    AIS Verbesserungen
+    <ul>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/185">#185</a>:
+        zeige sowohl AIS Ziele im eingestellen Umkreis um die Bootsposition als
+        auch um den Kartenmittelpunkt.</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/187">#187</a>:
+        In den Einstellungen kann gewählt werden, welche AIS Ziele angezeigt
+        werden sollen (class A, class B,other).</li>
+      <li> Optimierung der Anzeige-Performance in der AIS Liste</li>
+      <li> Die pro Ziel in der AIS Liste angezeigten Informationen können
+        reduziert werden</li>
+      <li> Class B Ziele können in der Karte kleiner angezeigt werden</li>
+      <li> Das momentan "verfolgte" AIS Ziel wird in einer separaten Farbe
+        dargestellt.</li>
+      <li> Das Verfolgen beginnt durch Klick auf den Center button&nbsp;<img src="viewerimages/icons-new/center.svg"
+          alt="" class="inlineimage"> auf der <a href="userdoc/aisinfopage.html">AIS
+          Seite</a>.</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/149">#149</a>:
+        Die Werte, die bei einem AIS Ziel angezeigt werden, können ausgewählt
+        werden (bis zu 3)</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/145">#145</a>:
+        AIS Ziele, die in Ruhe sind, können verborgen werden.</li>
+    </ul>
+    Andere neue Funktionen:
+    <ul>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/135">#135</a>:
+        Entfernungen können durch das Setzen einer Markierung auf der
+        Kartenmitte (button <img src="viewerimages/icons-new/straighten.svg" alt=""
+          class="inlineimage">) gemessen werden. Die Entfernung und der Kurs zur
+        Kartenmitte werden im "Center Display Widget" und neben der Kartenmitte
+        angezeigt.</li>
+      <li> Der Dialog für das Bearbeiten einer Route wurde klarer gestaltet</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/141">#141</a>:
+        Mehr Möglichkeiten für das Aktivieren der Ankerwache. Man kann die
+        aktuelle Position oder die Kartenmitte als Ankerposition nutzen sowie
+        einen Offset angeben. Siehe die <a href="userdoc/dashboardpage.html#anchorwatch">Beschreibung</a>.
+      </li>
+      <li> Wenn eine neue TCP Verbindung zu AvNav erfolgt, werden NMEA Daten nur
+        ab dem aktuellen Zeitpunkt gesendet (vorher wurden bis zu 10 ältere
+        Sätze gesendet).</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/146">#146</a>:
+        Die Karten auf der Hauptseite sind alphabetisch sortiert. Ausserdem
+        wurde die Dialogabfrage "center map now" entfernt.</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/148">#148</a>:
+        AvNav erkennt automatisch, wenn sich Overlays ändern und zeichnet die
+        Karte neu. Das gilt auch für Routen.</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/151">#151</a>:
+        <a href="userdoc/addonconfigpage.html"> UserApps</a> können jetzt in
+        einem eigenen Browser-Fenster/einem eigenen Tab geöffnet werden. Das
+        geht allerdings nur für externe URLs.</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/155">#155</a>:
+        USB Monitoring, Bluetooth reader und NMEA logger können über die
+        Server/Status Seite ausgeschaltet werden.</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/160">#160</a>:
+        Dekodierung der Wasser-Temperatur von MTW und der Geschwindigkeit durchs
+        Wasser von&nbsp; VHW. Zusätzliche widgets für STW und water temp</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/163">#163</a>:
+        Sie Socket Reader können jetzt auch NMEA Daten senden</li>
+      <li> AvNav kann jetzt auch gestartet werden, wenn auf dem System kein
+        python-bluez verfügbar ist. (Ein enstprechender Status wird angezeigt)</li>
+      <li> Unter Android wird jetzt auch APB gesendet</li>
+      <li>Dekoder für VWR NMEA0183 </li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/164">#164</a>
+        Höhere Bauraten als 115200</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/180">#180</a>:
+        Android: Es wird eine Warnung ausgegeben, wenn die Android Power Savee
+        Einstellungen das GPS im Hintergrund abschalten, da dann keine
+        Track-Aufzeichnung oder das Aussenden von NMEA Daten erfolgen kann.</li>
+      <li> Es gibt 2 neue Widgets für SignalK Daten: skpitch/skroll (danke an
+        Tom)</li>
+      <li> Die Seiten-Navigation zwischen der AIS-Liste und der AIS Detail-Seite
+        wurde verbessert (Hin- und Zurücknavigation möglich)</li>
+    </ul>
+    Änderungen für den Server Start:
+    <ul>
+      <li> Das logfile enthält jetzt auch alle potentiellen Fehler beim Start</li>
+      <li> Man kann beim Aufruf von der Kommandozeile jetzt den log level
+        mitgebenlogging</li>
+      <li> Im Normalfall wird mit dem Log Level "error" gestartet (Option -q)</li>
+    </ul>
+    Fehlerkorrekturem:
+    <ul>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/192">#192</a>,
+        <a href="https://github.com/wellenvogel/avnav/issues/193">#193</a>:
+        korrektes Übergeben der Parameter für Formatierer</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/191">#191</a>:
+        Entfernung der nihct genutzten "caption" für das Combined Widget</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/190">#190</a>:
+        Hinzufügen der erforderlichen minValue/maxValue für radialGauge</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/189">#189</a>:
+        Korrektur in canvas gauges </li>
+      <li> Anpassung der Grössen für&nbsp; wind widget und depth widget</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/186">#186</a>:
+        Verhinderung eines sporadischen crashes</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/184">#184</a>:
+        Richtiges Handling für store keys (value) und Formatter Parameter im
+        Layout Editor</li>
+      <li>registrierte Layouts und settings werden entfern wenn ein Plugin
+        disabled wird</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/182">#182</a>:
+        Korrektes Handling für default Formatter Parameter</li>
+      <li> Dokumentation korrigiert für nutzerdefinierte Formatter</li>
+      <li> Verhinderung von mehrfacher USer App Registrierung durch plugins</li>
+      <li> Erhalt der eingestellten Farben beim Editieren von Overlaysnumber</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/161">#161</a>:
+        Rückfall handling bei nicht ladbaren Konfigurationen</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/178">#178</a>:
+        Die "translate" ist jetzt für alle Widgets verfügbar</li>
+      <li>Korrektur des erzeugten APB Satzes</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/157">#157</a>:
+        Weiterschaltung zum nächsten Wegepunkt einer Route, wenn kein Client
+        verbunden ist</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/154">#154</a>:
+        Update für die Dokumentation der Installation mit Paketen</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/150">#150</a>:
+        Dokumentation: Direkter Link zu mbtiles von OpenSeaMap</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/153">#153</a>:
+        Overlay Dialog für Mobilgeräte korrigiert</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/152">#152</a>:
+        Löschen von Routen auf Android funktioniert wieder</li>
+      <li> Korrektur für den Konverter wenn utf-8 in KAP Dateien vorhanden ist</li>
+      <li> Android: Verhinderung eines Absturzes, falls kein Dateimanager
+        installiert ist</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/143">#143</a>:
+        Korrektes Herunterfahren des Servers aus der App heraus</li>
+    </ul>
+    Interne Änderungen:
+    <ul>
+      <li>Build Werkzeuge und Bibliotheken auf aktuelle Stände gebracht</li>
+      <li> Explizite definition der nodejs Version (16) beim Bauen per gradle</li>
+      <li>Optimierung des Builds für die Web-App</li>
+    </ul>
     <p> <span style="font-weight: bold;">20210619</span> <a title="release/20210619"
         href="../downloads/release/20210619">link</a>(Android Version: 20210618)
     </p>

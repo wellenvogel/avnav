@@ -235,6 +235,20 @@ def pluginInfo(cls):<br>  return {
               Plugin</a>.</td>
         </tr>
         <tr>
+          <td>registerSettingsFile<br>
+            (since 20220225)</td>
+          <td>Registrierung einer eigenen Einstellungsdatei (die vorher von der
+            Settingsseite aus exportiert werden kann).<br>
+            Der Dateiname (zweiter Parameter) ist relativ zum
+            Plugin-Verzeichnis. Der Name (erster Parameter) wird dem Nutzer
+            angezeigt.<br>
+            Within this file you can use $prefix$ in the layout name if you want
+            to refer to a layout that you register from the same plugin.<br>
+            <div class="code">...<br>"layoutName": "$prefix$.main"<br>....</div>
+            This will refer to a layout that you registered with the name
+            "main".</td>
+        </tr>
+        <tr>
           <td>getDataDir</td>
           <td>Das Verzeichnis, in dem AvNav Daten ablegt</td>
         </tr>

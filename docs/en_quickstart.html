@@ -77,7 +77,7 @@
     <p>With the Android installation, all settings are directly integrated in
       the App.</p>
     <h2>NMEA Data</h2>
-    <p><img class="fimage" src="en_avnav_schnittstellen.png" width="600" border="0">
+    <p><img class="fimage" src="en_avnav_schnittstellen.png" border="0" width="600">
     </p>
     <h3>Client Server</h3>
     <p>AvNav processes NMEA0183 Data from connected USB devices, serial ports,
@@ -98,7 +98,7 @@
       <li>$xxGLL</li>
       <li>$xxVTG</li>
       <li>$xxRMC</li>
-      <li>$xxMWV</li>
+      <li>$xxMWV (since 20220225 added waterSpeed)</li>
       <li>$xxDPT</li>
       <li>$xxDBT</li>
       <li>$xxXDR (since 20210114)</li>
@@ -107,6 +107,8 @@
       <li>$xxHDM (since 20210619) <br>
       </li>
       <li>$xxVHW partial (since 20210619)</li>
+      <li>$xxVWR (since 20220225)</li>
+      <li>$xxMTW (since 20220225)</li>
     </ul>
     &nbsp; Depending on the <a href="hints/configfile.html">configuration</a>
     AvNav is able to generate following NMEA sentences:
@@ -117,8 +119,8 @@
       <li>$AVMDA</li>
       <li>$AVMTA</li>
     </ul>
-    <p>In combination with <a href="hints/CanboatAndSignalk.html">Canboat
-        and SignalK</a> NMEA2000 data can be received and processed too. All own
+    <p>In combination with <a href="hints/CanboatAndSignalk.html">Canboat and
+        SignalK</a> NMEA2000 data can be received and processed too. All own
       vessel data available in SignalK can be displayed in AvNav.</p>
     <h3>Android</h3>
     <p>On <a href="android/android.html">Android</a> you can utilize the
@@ -133,7 +135,7 @@
       <li>$xxGLL</li>
       <li>$xxGSA</li>
       <li>$xxRMC</li>
-      <li>$xxMWV</li>
+      <li>$xxMWV (since 20220225 added&nbsp; waterSpeed)</li>
       <li>$xxDBT</li>
       <li>$xxXDR (since 20210114)</li>
       <li>$xxHDG (since 210106xx)</li>
@@ -141,8 +143,11 @@
       <li>$xxHDM (since 20210619) <br>
       </li>
       <li>$xxVHW partial (since 20210619)</li>
+      <li>$xxVWR (since 20220225)</li>
+      <li>$xxMTW (since 20220225)</li>
     </ul>
-    AvNav is able to create and send out $GPRMC and $GPRMB if configured.<br>
+    AvNav is able to create and send out $GPRMC and $GPRMB (since 20220225 also
+    $GPAPB) if configured.<br>
     <ul>
     </ul>
     <p></p>
