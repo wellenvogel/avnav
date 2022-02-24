@@ -73,7 +73,8 @@ class Page extends React.Component {
     render() {
         let props=this.props;
         let className = "page";
-        if (this.state.hideButtons) className+=" hiddenButtons";
+        let hideButtons=this.state.hideButtons && props.autoHideButtons;
+        if (hideButtons) className+=" hiddenButtons";
         if (props.isEditing) className+=" editing";
         if (props.className) className += " " + props.className;
         let Alarm=this.alarmWidget;
@@ -91,8 +92,8 @@ class Page extends React.Component {
                 {props.bottomContent ? props.bottomContent : null}
                 <Alarm onClick={alarmClick}/>
             </div>
-            {! this.state.hideButtons && <ButtonList itemList={props.buttonList} widthChanged={props.buttonWidthChanged}/>}
-            { this.state.hideButtons && <ButtonShade onClick={
+            {! hideButtons && <ButtonList itemList={props.buttonList} widthChanged={props.buttonWidthChanged}/>}
+            { hideButtons && <ButtonShade onClick={
                 (ev)=>{
                     ev.stopPropagation();
                     ev.preventDefault();
