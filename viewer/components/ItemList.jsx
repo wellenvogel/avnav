@@ -43,16 +43,17 @@ class ItemList extends React.Component{
     }
 
     ItemWrapper(props){
+        let self=this;
         let {ItemClass,...iprops}=props;
         const memoClick=React.useCallback((data)=>{
             if (data && data.stopPropagation) data.stopPropagation();
             if (data && data.preventDefault) data.preventDefault();
-            if (this.props.reverse){
-                let len=this.props.itemList?self.props.itemList.length:0;
-                this.props.onItemClick(assign({},iprops,{index:len-iprops.index}),data);
+            if (self.props.reverse){
+                let len=self.props.itemList?self.props.itemList.length:0;
+                self.props.onItemClick(assign({},iprops,{index:len-iprops.index}),data);
             }
             else {
-                this.props.onItemClick(iprops, data);
+                self.props.onItemClick(iprops, data);
             }
         },[iprops]);
         return <ItemClass
