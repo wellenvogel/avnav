@@ -266,7 +266,7 @@ class EditHandlerDialog extends React.Component{
 
 EditHandlerDialog.propTypes={
     title: PropTypes.string,
-    handlerId: PropTypes.string,
+    handlerId: PropTypes.oneOfType([PropTypes.string,PropTypes.number]),
     childId: PropTypes.string,
     handlerName: PropTypes.string, //if this is set the handlerId and childId are ignored
                                    //and we create a new handler
