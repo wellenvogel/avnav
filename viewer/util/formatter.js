@@ -65,10 +65,11 @@ formatLonLats.parameters=[];
  * @param fix
  * @param fract
  * @param addSpace if set - add a space for positive numbers
+ * @param prefixZero if set - use 0 instead of space to fill the fixed digits
  * @returns {string}
  */
 
-const formatDecimal=function(number,fix,fract,addSpace){
+const formatDecimal=function(number,fix,fract,addSpace,prefixZero){
     let sign="";
     number=parseFloat(number);
     if (isNaN(number)){
@@ -89,7 +90,8 @@ const formatDecimal=function(number,fix,fract,addSpace){
     fix-=1;
     while (fix > 0){
         if (number < v){
-            rt=" "+rt;
+            if (prefixZero) rt="0"+rt;
+            else  rt=" "+rt;
         }
         v=v*10;
         fix-=1;
@@ -99,7 +101,8 @@ const formatDecimal=function(number,fix,fract,addSpace){
 formatDecimal.parameters=[
     {name:'fix',type:'NUMBER'},
     {name: 'fract',type:'NUMBER'},
-    {name: 'addSpace',type:'BOOLEAN'}
+    {name: 'addSpace',type:'BOOLEAN'},
+    {name: 'prefixZero',type:'BOOLEAN'}
 ];
 const formatDecimalOpt=function(number,fix,fract,addSpace){
     number=parseFloat(number);
@@ -208,11 +211,11 @@ formatClock.parameters=[]
 const formatDateTime=function(curDate){
     if (! curDate || ! (curDate instanceof Date)) return "----/--/-- --:--:--";
     let datestr=this.formatDecimal(curDate.getFullYear(),4,0)+"/"+
-        this.formatDecimal(curDate.getMonth()+1,2,0)+"/"+
-        this.formatDecimal(curDate.getDate(),2,0)+" "+
-        this.formatDecimal(curDate.getHours(),2,0).replace(" ","0")+":"+
-        this.formatDecimal(curDate.getMinutes(),2,0).replace(" ","0")+":"+
-        this.formatDecimal(curDate.getSeconds(),2,0).replace(" ","0");
+        this.formatDecimal(curDate.getMonth()+1,2,0,false,true)+"/"+
+        this.formatDecimal(curDate.getDate(),2,0,false,true)+" "+
+        this.formatDecimal(curDate.getHours(),2,0,false,true)+":"+
+        this.formatDecimal(curDate.getMinutes(),2,0,false,true)+":"+
+        this.formatDecimal(curDate.getSeconds(),2,0,false,true);
     return datestr;
 };
 formatDateTime.parameters=[];
