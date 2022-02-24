@@ -251,6 +251,7 @@ AisData.prototype.startQuery=function() {
         distance: this.formatter.formatDecimal(globalStore.getData(keys.properties.aisDistance)||10,4,1)
     };
     for (let idx=0;idx<center.length;idx++){
+        if (! center[idx]) continue;
         let sfx=idx!==0?idx+"":"";
         param['lat'+sfx]=this.formatter.formatDecimal(center[idx].lat,3,5);
         param['lon'+sfx]=this.formatter.formatDecimal(center[idx].lon,3,5);
