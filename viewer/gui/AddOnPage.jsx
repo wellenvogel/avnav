@@ -85,7 +85,7 @@ class AddOnPage extends React.Component{
                     onClick: ()=> {
                         remotechannel.sendMessage(COMMANDS.addOn,i);
                         if (addOn.newWindow === 'true'){
-                            window.open(addOn.url,'_blank');
+                            window.open(addOn.url,addOn.key);
                             return;
                         }
                         //first unload the iframe completely to avoid pushing to the history

@@ -27,13 +27,17 @@ const AddonItem=(props)=>{
                 {props.title && <div className="itemTitle">{props.title}</div>}
                 <div className="sourceInfo">{source}</div>
             </div>
-            {!props.invalid &&<Button name="AddonConfigView" className="smallButton"
-                                      onClick={(ev)=>{
-                                        ev.preventDefault();
-                                        ev.stopPropagation();
-                                        props.history.push("addonpage",{addonName:props.name})
-                                      }
-                }/>}
+            {!props.invalid && <Button name="AddonConfigView" className="smallButton"
+                                       onClick={(ev) => {
+                                           ev.preventDefault();
+                                           ev.stopPropagation();
+                                           if (props.newWindow === 'true') {
+                                               window.open(props.url, props.name);
+                                               return;
+                                           }
+                                           props.history.push("addonpage", {addonName: props.name})
+                                       }
+                                       }/>}
         </div>
     )
 };
@@ -47,7 +51,7 @@ class AddonConfigPage extends React.Component{
             {
                 name: 'AddonConfigPlus',
                 onClick: ()=> {
-                    UserAppDialog.showUserAppDialog({},false,true)
+                    UserAppDialog.showUserAppDialog({}, {},true)
                         .then(()=>this.readAddons())
                         .catch(()=>this.readAddons());
                 }
