@@ -352,4 +352,10 @@ class AVNApi(object):
     raise NotImplemented()
 
   def registerSettingsFile(self,name,fileName):
+    '''
+    register a settings file
+    @param name: the name as provided to the user
+    @param fileName: the file name (relative to the plugin dir)
+    @return:
+    '''
     raise NotImplemented()
