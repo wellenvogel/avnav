@@ -192,7 +192,7 @@ export class ItemActions{
                 break;
             case 'route':
                 rt.headline='Routes';
-                rt.showIsServer=props.isServer;
+                rt.showIsServer=props.server;
                 rt.showDelete= ! props.active &&  props.canDelete !== false  && ( ! props.isServer || isConnected);
                 rt.showView=viewable;
                 rt.showEdit=mapholder.getCurrentChartEntry() !== undefined;
