@@ -16,6 +16,8 @@
     <p>Nach einigen Absprachen mit der Firma können diese Karten nun (ab Version
       20200515 mit einem Plugin - <a href="#Installation">s.u.</a>) auch für
       AvNav genutzt werden. Bisher können die oesenc Vektor-Karten genutzt
+      werden und ab Version 20220225 (und den zugehörigen Änderungen im o-charts
+      shop - siehe unter releases) können die oeRNC Raster Karten genutzt
       werden.</p>
     <p>Um die Karten in AvNav darzustellen, müssen sie zunächst einmal in Raster
       Karten umgewandelt werden. Das erledigt ein neues Plugin für AvNav
@@ -359,9 +361,42 @@
     </ul>
     <h3>Release Versionen</h3>
     <ul>
+      <li>20220225 <a href="../../downloads/release-ochartsplugin/20220225">packages</a></li>
+      <ul>
+        <li>Neuer <a href="https://o-charts.org/shop/en/">O-charts shop</a><br>
+          In den nächsten Tagen wird im o-charts Shop ein neues
+          Verschlüsselungsschema eingeführt.<br>
+          Das erfordert diese neue Version für das AvNav plugin. <b>Ausserdem
+            muss man das neue avnav-ocharts Paket installieren</b> - mindestens
+          in der Version 0.9.0.72 (sinnvoll nutzt man dafür das avnav update
+          plugin). Das (alte) Paket avnav-oesenc ist jetzt überflüssig und kann
+          deinstalliert werden. Es kann aber auch problemlos auf dem System
+          verbleiben.<br>
+          Die Benutzung der Karten und der Kaufprozess haben sich nicht
+          geändert. Ebenso funktionieren alle vorhandenen Karten weiter. Wenn
+          die Änderung im Shop vollzogen ist, können allerdings keine Karten
+          mehr heruntergeladen und mit dem alten plugin genutzt werden.<br>
+          Mit dem neuen plugin(und dem neuen Shop) <b>ist AvNav jetzt auch in
+            der Lage oeRNC Karten zu nutzen</b>&nbsp; (wie z.B. die Imray Karten
+          für das Mittelmeer).</li>
+        <li>Es gibt jetzt auch Pakete für die raspberry debian bullseye OS
+          Versionen (sowohl 32 bit als auch 64 bit)</li>
+        <li>Der Schalter "reduce details on lower zoom levels" funktioniert
+          jetzt korrekt</li>
+        <li>Die "under zoom" Einstellung arbeitet jetzt effitzineter, so das der
+          erlaubte Bereich vergrössert und der default auf 4 gesetzt wurde. Das
+          vermeidet potentielle weisse Flächen, wenn es keine Karten direkt für
+          den gewählten zoom level gibt.</li>
+        <li>Man kann jetzt direkt die Nutzung der ggf. unter OpenCPN auf dem
+          gleichen System installierten Karten direkt in den AvNav plugin
+          Einstellungen aktivieren (man muss nicht mehr die Konfig-Datei
+          bearbeiten). Das funktioniert aber nur für Karten, die mit dem neuen
+          ocharts_pi plugin bei OpenCPN installiert wurden.</li>
+      </ul>
       <li>20210711 <a href="../../downloads/release-ochartsplugin/20210711">Pakete</a></li>
       <ul>
-        <li>Fehlerkorrektur: Caches werden nicht neu gebaut nach Parameter-Änderung</li>
+        <li>Fehlerkorrektur: Caches werden nicht neu gebaut nach
+          Parameter-Änderung</li>
       </ul>
       <li>20210328 <a href="../../downloads/release-ochartsplugin/20210328">Pakete</a></li>
       <ul>

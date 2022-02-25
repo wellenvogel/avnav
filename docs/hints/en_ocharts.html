@@ -15,7 +15,9 @@
       OpenCPN.</p>
     <p>After some agreements with o-charts, those charts can now also be used
       for AvNav (starting with version 20200515 with a plugin - <a href="#Installation">see
-        below</a>). AT present you can use oesenc vector-charts.</p>
+        below</a>). At present you can use oesenc vector-charts and beginning
+      from version 20220225 (and the related change in the o-charts shop - see
+      releases below) you can also use oeRNC raster charts.</p>
     <p>To display those charts in AvNav they must be rendered into raster
       images. This is handled by a new plugin for AvNav(avnav-ocharts). The
       rendering takes place on the fly whenever tiles are to be displayed.
@@ -349,7 +351,36 @@
     <h3>Release Versions</h3>
     <p></p>
     <ul>
-       <li>20210711 <a href="../../downloads/release-ochartsplugin/20210711">packages</a></li>
+      <li>20220225 <a href="../../downloads/release-ochartsplugin/20220225">packages</a></li>
+      <ul>
+        <li>New <a href="https://o-charts.org/shop/en/">O-charts shop</a><br>
+          During the next days the shop at o-charts will move to a new
+          encryption schema.<br>
+          This will require this new version of the AvNav plugin. <b>Additionally
+            you need to install the new avnav-ocharts package</b> - at least
+          0.9.0.72 (use the avnav update plugin to handle this). The package
+          avnav-oesenc is now obsolete and can be removed (but it can also
+          remain on the system).<br>
+          The handling of the charts does not change and all your old charts
+          will continue to work. But once the shop is changed you will not be
+          able to download new charts with the old plugin.<br>
+          With the new plugin (and the new shop) <b>AvNav will now also be able
+            to handle oeRNC</b> charts (like the imray charts for the Med).</li>
+        <li>packages will now also be available for the raspberry debian
+          bullseye OS versions (both 32 bit and 64 bit)</li>
+        <li>the handling for "reduce details on lower zoom levels" does now work
+          correctly</li>
+        <li>the "under zoom" setting now works better so it's range could be
+          extended and the default changed to 4. This avoids some white areas if
+          no charts directly matched the required zoom level</li>
+        <li>You can now enable the usage of OpenCPN charts on the same system
+          directly in the AvNav plugin settings. This will only work for charts
+          installed with the new ocharts_pi plugin in OpenCPN.</li>
+      </ul>
+      <ul>
+        <li>the error handling has been improved</li>
+      </ul>
+      <li>20210711 <a href="../../downloads/release-ochartsplugin/20210711">packages</a></li>
       <ul>
         <li>bugfix: Cache rebuild not triggered when changing parameters</li>
       </ul>
