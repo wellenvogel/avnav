@@ -239,7 +239,7 @@ class DownloadPage extends React.Component{
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
-        if (prevState.type !== this.state.type){
+        if (prevState.type !== this.state.type || prevProps.reloadSequence !== this.props.reloadSequence){
             this.fillData();
         }
     }
@@ -538,7 +538,6 @@ class DownloadPage extends React.Component{
             })
             .catch(()=>{})
     };
-
     render(){
         let self=this;
         let localDoneFunction=this.getLocalUploadFunction();
