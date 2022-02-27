@@ -124,20 +124,21 @@ class ExternalRegistration(object):
     self.usbid=usibid
     self.callback=callback
 
-class Observer(pyudev.MonitorObserver):
-
-
-  def __init__(self,infoHandler, monitor, event_handler=None, callback=None, *args, **kwargs):
-    super().__init__(monitor, event_handler, callback, *args, **kwargs)
-    self.infoHandler=infoHandler
-
-  def run(self):
-    self.infoHandler.setInfo("monitor","running",WorkerStatus.NMEA)
-    try:
-      super().run()
-    except:
-      pass
-    self.infoHandler.deleteInfo('monitor')
+if hasUdev:
+  class Observer(pyudev.MonitorObserver):
+  
+  
+    def __init__(self,infoHandler, monitor, event_handler=None, callback=None, *args, **kwargs):
+      super().__init__(monitor, event_handler, callback, *args, **kwargs)
+      self.infoHandler=infoHandler
+  
+    def run(self):
+      self.infoHandler.setInfo("monitor","running",WorkerStatus.NMEA)
+      try:
+        super().run()
+      except:
+        pass
+      self.infoHandler.deleteInfo('monitor')
 
 
 #a worker that will use udev to find serial devices
