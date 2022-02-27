@@ -57,7 +57,7 @@ def avnavPrint(*args, **kwargs):
   line=""
   first=True
   for k in args:
-    line=line+k+(',' if not first else '')
+    line=line+str(k)+(',' if not first else '')
     first=False
   AVNLog.info(line)
 
