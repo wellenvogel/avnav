@@ -31,4 +31,8 @@ if [ "$AVNAV_STARTX" != "yes" ] ; then
     sleep 5
   done
 fi
-exec startx
+if [ "$AVNAV_HIDE_CURSOR" = yes ] ; then
+  exec startx -- -nocursor
+else
+  exec startx
+fi
