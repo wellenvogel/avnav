@@ -94,6 +94,7 @@
 
         <service
             android:name="de.wellenvogel.avnav.worker.GpsService"
+            android:foregroundServiceType="location"
             android:label="AvnavGps" />
 
         <provider
