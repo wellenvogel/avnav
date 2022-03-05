@@ -361,6 +361,13 @@
     </ul>
     <h3>Release Versionen</h3>
     <ul>
+      <li>20220305 <a href="../../downloads/release-ochartsplugin/20220305">packages</a></li>
+      <ul>
+        <li>Fehlerkorrektur: falsche Version angezeigt</li>
+        <li>besseres Fehlerhandling beim Nutzen der Karten, Anzeige solcher
+          Fehler im Status</li>
+        <li>korrekter Bereich für "memPercent" bei der Konfiguration</li>
+      </ul>
       <li>20220225 <a href="../../downloads/release-ochartsplugin/20220225">packages</a></li>
       <ul>
         <li>Neuer <a href="https://o-charts.org/shop/en/">O-charts shop</a><br>
@@ -463,6 +470,89 @@
       Netz möglich, maximal können 5 Geräte (Clients) gleichzeitig die o-charts
       von einem AvNav Server nutzen.</p>
     <p>Für die Software-Lizenzen siehe die <a href="https://github.com/wellenvogel/avnav-ocharts-provider/blob/master/Readme.md">Readme.</a></p>
+    <h2><a name="PluginConfig"></a> Konfiguration des Plugins </h2>
+    <p>Einige Konfigurationen des plugins können über die Server/Status&nbsp;<img
+        src="../viewerimages/icons-new/status.svg" alt="" class="inlineimage">
+      Seite unter "plugins/system-ocharts" vorgenommen werden (AvNav &gt;=
+      20210322).</p>
+    <p><img src="ocharts-edit-plugin.png" alt="" class="image fimage"> </p>
+    <p>Das sind die folgenden Parameter:</p>
+    <table border="1" width="100%">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Bedeutung</td>
+          <td>Default</td>
+        </tr>
+        <tr>
+          <td>port</td>
+          <td>Http port für das plugin</td>
+          <td>8082</td>
+        </tr>
+        <tr>
+          <td>threads</td>
+          <td>Zahl der zu nutzenden Threads</td>
+          <td>5</td>
+        </tr>
+        <tr>
+          <td>debug</td>
+          <td>Level für das logging (&lt;datadir&gt;/ocharts/provider.log).<br>
+            &lt;datadir&gt; ist auf einem RaspBerry Pi /home/pi/avnav/data</td>
+          <td>1</td>
+        </tr>
+        <tr>
+          <td>cacheSize</td>
+          <td>Maximale Zahl von Karten-Kacheln, die im Speicher gehalten werden
+            sollen. Der Provider berücksichtigt aber auch noch den erlaubten
+            Speicher und verringert diese Zahl potentiell</td>
+          <td>10000</td>
+        </tr>
+        <tr>
+          <td>diskCacheSize</td>
+          <td>Maximale Zahl von Kartenkacheln für einen Kartensatz, die im
+            Cache-File auf der SD Karte gehalten werden sollen</td>
+          <td>400000</td>
+        </tr>
+        <tr>
+          <td>prefillZoom</td>
+          <td>Bis zu welchem Zoomlevel sollen beim Prefill schon Kacheln
+            berechnet werden. Wenn man diesen Wert höher setzt, dauert der
+            Prefill entsprechend länger.</td>
+          <td>17</td>
+        </tr>
+        <tr>
+          <td>memPercent</td>
+          <td>Der prozentuale Anteil des Systemspeichers, den der Provider
+            maximal nutzen soll. Wenn man diesen nicht setzt (oder zu klein)
+            berechnet der Provider intern einen Minimalwert und nutzt diesen.<br>
+            Der kann u.U. insbesondere bei der Nutzung von Rasterkarten sehr
+            klein sein und ihn damit zwingen ständig Karten-Dateien zu öffnen
+            und zu schliessen - was die Geschwindigkeit stark reduzieren kann.
+            Wenn man ausreichend Speicher hat (z.B. &gt; 2GB), wird das Arbeiten
+            beschleunigt, wenn man&nbsp; den Speicher auf 1GB setzt.</td>
+          <td>---</td>
+        </tr>
+        <tr>
+          <td>useOCPNCharts<br>
+            (seit 20220225)</td>
+          <td>Wenn dieses Flag gesetzt ist, können Karten, die von OpenCPN auf
+            dem gleichen System genutzt werden, auch in AvNav direkt verwendet
+            werden. Das geht allerdings nur mit den Karten, die mit dem neuen
+            o-charts_pi Plugin installiert wurden (ab 1.3. 2022).</td>
+          <td>aus</td>
+        </tr>
+        <tr>
+          <td>ocpnConfigFile<br>
+            (seit 20220225)</td>
+          <td>Der Pfad zum OpenCPN config file (normalerweise
+            $HOME/.opencpn/opencpn.conf). Diese Datei muss gelesen werden, um
+            die installierten Karten zu finden.</td>
+          <td>$HOME/.opencpn/opencpn.conf</td>
+        </tr>
+      </tbody>
+    </table>
+    <p><br>
+    </p>
     <h2><a name="Details"></a>Technische Details</h2>
     <p>Die eigentliche Bereitstellung der Karten erfolgt durch ein executable
       auf dem Raspberry, das standardmäßig über den Port 8082 erreichbar ist.
@@ -476,20 +566,12 @@
     <p>Die Installation erfolgt in das Verzeichnis
       /usr/lib/avnav/plugins/ocharts. Die Daten liegen im Verzeichnis
       /home/pi/avnav/data/ocharts. Für das Plugin können in der <a href="configfile.html">avnav_server.xml
-        </a>einige Konfigurationen vorgenommen werden. Im Normalfall ist das
-      aber nicht nötig. Falls solche Konfigurationen erfolgen sollen, müssen sie
-      unterhalb des Plugin-Managers stattfinden.</p>
-    <div class="code">&lt;AVNPluginHandler&gt;<br>...<br>&lt;system-ocharts port="8082".../&gt;<br>&lt;/AVNPluginHandler&gt;</div>
-    <p>Für eine Liste der Konfigurationswerte siehe die <a href="https://github.com/wellenvogel/avnav-ocharts-provider/blob/master/avnav-plugin/plugin.py">Beschreibung
-        im Code des Plugins</a>.</p>
-    <p><a name="Chartconfig"></a>Falls man Karten z.B. gemeinsam mit OpenCPN
-      nutzen möchte, können die Verzeichnisse, in denen die o-charts Karten
-      liegen beispielsweise mit</p>
-    <div class="code">&lt;AVNPluginHandler&gt;<br>...<br>&lt;system-ocharts chartdir="/my/chartdir1,/my/chartdir2"/&gt;<br>&lt;/AVNPluginHandler&gt;</div>
-    <p>konfiguriert werden. Im Normalfall wird allerdings der direkte Upload der
-      zip Files empfohlen, wie unter <a href="#Charts">Karten</a> beschrieben.</p>
-    <p><a name="Upload"></a>Ab Version 20200709 kann auch das Verzeichnis für
-      die Karten separat gesetzt werden:</p>
+        </a>noch einige weitere Konfigurationen vorgenommen werden (die meisten
+      direkt in der UI - siehe weiter oben). Im Normalfall ist das aber nicht
+      nötig. Falls solche Konfigurationen erfolgen sollen, müssen sie unterhalb
+      des Plugin-Managers stattfinden.</p>
+    Ab Version 20200709 kann auch das Verzeichnis für die Karten separat gesetzt
+    werden:
     <div class="code">&lt;AVNPluginHandler&gt;<br>...<br>&lt;system-ocharts uploadDir="$DATADIR/charts/ocharts"/&gt;<br>&lt;/AVNPluginHandler&gt;</div>
     <p>Hier wird das Verzeichnis auf /home/pi/avnav/data/charts/ocharts gesetzt
       (es liegt sonst auf /home/pi/avnav/data/ocharts/charts). Das kann z.B. auf
