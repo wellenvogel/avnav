@@ -23,5 +23,14 @@ if [ "$AVNAV_KEYBOARD" != "" ] ; then
   setxkbmap $AVNAV_KEYBOARD
 fi
 dconf load /org/onboard/ < /home/pi/onboard.conf
+#set n mm keyboard height for onboard
+keyRows=5
+keyHeight="$AVNAV_KEYHEIGHT"
+if [ "$keyHeight" = "" ] ; then
+  keyHeight=7
+fi
+dockHeight=`echo "scale=0;($AVNAV_DPI * $keyHeight * $keyRows / 25.4)" | bc -l`
+gsettings set org.onboard.window.landscape dock-height $dockHeight
+
 dbus-launch --exit-with-session openbox-session
 
