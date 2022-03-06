@@ -351,6 +351,13 @@
     <h3>Release Versions</h3>
     <p></p>
     <ul>
+      <li>20220305 <a href="../../downloads/release-ochartsplugin/20220305">packages</a></li>
+      <ul>
+        <li>Bugfix: wrong version was shown</li>
+        <li>improved error handling during chart usage, show such errors in the
+          status</li>
+        <li>correctly limit setting for memPercent</li>
+      </ul>
       <li>20220225 <a href="../../downloads/release-ochartsplugin/20220225">packages</a></li>
       <ul>
         <li>New <a href="https://o-charts.org/shop/en/">O-charts shop</a><br>
@@ -442,6 +449,86 @@
     <p>Access to the charts in AvNav is only possible from within the local net.
       You can connect at most 5 devices (Clients) at the same time.</p>
     <p>For software licenses see the <a href="https://github.com/wellenvogel/avnav-ocharts-provider/blob/master/Readme.md">Readme.</a></p>
+    <h2><a name="PluginConfig"></a> Plugin Configuration</h2>
+    <p>Some of the plugins settings can be changed on the server/status page <img
+        src="../viewerimages/icons-new/status.svg" alt="" class="inlineimage">
+      at "plugins/system-ocharts" (AvNav &gt;= 20210322).</p>
+    <p><img src="ocharts-edit-plugin.png" alt="" class="image fimage"> </p>
+    <p>Those are:</p>
+    <table border="1" width="100%">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Meaning</td>
+          <td>Default</td>
+        </tr>
+        <tr>
+          <td>port</td>
+          <td>Http port </td>
+          <td>8082</td>
+        </tr>
+        <tr>
+          <td>threads</td>
+          <td>Number of threads that will be used</td>
+          <td>5</td>
+        </tr>
+        <tr>
+          <td>debug</td>
+          <td>log level for &lt;datadir&gt;/ocharts/provider.log.<br>
+            &lt;datadir&gt; on a raspberry is /home/pi/avnav/data</td>
+          <td>1</td>
+        </tr>
+        <tr>
+          <td>cacheSize</td>
+          <td>Maximal number of chart tiles that will be cached in memory. The
+            plugin will additionally consider the allowed memory and will
+            potentially lower this setting.</td>
+          <td>10000</td>
+        </tr>
+        <tr>
+          <td>diskCacheSize</td>
+          <td>Maximal number of chart tiles (for one set) that will be cached in
+            a file.</td>
+          <td>400000</td>
+        </tr>
+        <tr>
+          <td>prefillZoom</td>
+          <td>Up to which zoom level the prefill process should already render
+            chart tiles into the cache. If you increase this value the prefill
+            will take more time.</td>
+          <td>17</td>
+        </tr>
+        <tr>
+          <td>memPercent</td>
+          <td>The amount of memory (percent of the system memory) that the
+            plugin (correctly: the provider process) will use. If this value is
+            not set (or set to low) the provider will use an internal minimum.<br>
+            This potentially could be rather low - especially when using raster
+            charts. If it is very low the provider must open and close chart
+            files very often and this will slow down it's operation. If you have
+            enough memory (e.g. 2GB) you can increase speed by setting the
+            memory to 1GB .</td>
+          <td>---</td>
+        </tr>
+        <tr>
+          <td>useOCPNCharts<br>
+            (seit 20220225)</td>
+          <td>If this fla is set you can use charts that have been installed
+            with OpenCPN on the same system within AvNav . This will only work
+            for charts being installed with the new o-charts_pi plugin (since
+            2022/03/01).</td>
+          <td>aus</td>
+        </tr>
+        <tr>
+          <td>ocpnConfigFile<br>
+            (seit 20220225)</td>
+          <td>Path to the OpenCPN config file (normally
+            $HOME/.opencpn/opencpn.conf). The plugin needs to read this file to
+            find the installed charts.</td>
+          <td>$HOME/.opencpn/opencpn.conf</td>
+        </tr>
+      </tbody>
+    </table>
     <h2><a name="Details"></a>Technical Details</h2>
     <p>The charts are provided by an executable on the raspberry pi that
       normally serves at port 8082. This executable loads the oesenc-pi OpenCPN
@@ -451,19 +538,9 @@
       integrated into AvNav as a <a href="../userdoc/addonpage.html">User App</a>.</p>
     <p>You will find the complete code at <a href="https://github.com/wellenvogel/avnav-ocharts-provider">GitHub</a>.</p>
     <p>You install into /usr/lib/avnav/plugins/ocharts. The data directory is
-      /home/pi/avnav/data/ocharts. You can reconfigure the AvNav plugin by
-      editing <a href="configfile.html">avnav_server.xml</a>. Normally this is
-      not necessary at all. If you need to configure anyway this has to be done
-      in the Plugin-Handler section.</p>
-    <div class="code">&lt;AVNPluginHandler&gt;<br>...<br>&lt;system-ocharts port="8082".../&gt;<br>&lt;/AVNPluginHandler&gt;</div>
-    <p>For a list of available options refer to the <a href="https://github.com/wellenvogel/avnav-ocharts-provider/blob/master/avnav-plugin/plugin.py">description
-        in the plugin source code</a>.</p>
-    <p><a name="Chartconfig"></a>If you e.g. want to use charts that you already
-      installed for OpenCPN you can just point to the OpenCPN o-chart
-      directories:</p>
-    <div class="code">&lt;AVNPluginHandler&gt;<br>...<br>&lt;system-ocharts chartdir="/my/chartdir1,/my/chartdir2"/&gt;<br>&lt;/AVNPluginHandler&gt;</div>
-    <p>Normally it is recommended to upload the zip files as described at&nbsp;
-      <a href="#Charts">charts</a> .</p>
+      /home/pi/avnav/data/ocharts. You can set some additional parameters for
+      the AvNav plugin by editing <a href="configfile.html">avnav_server.xml</a>.
+      Normally this is not necessary at all. </p>
     <p><a name="Upload"></a>Since version 20200709 you can separately set the
       directory for uploading the charts: </p>
     <div class="code">&lt;AVNPluginHandler&gt;<br>...<br>&lt;system-ocharts uploadDir="$DATADIR/charts/ocharts"/&gt;<br>&lt;/AVNPluginHandler&gt;</div>

@@ -438,7 +438,9 @@ class PropertyHandler {
                     .catch((e)=>reject("unable to load layout: "+e));
                 //load layout
             }
-            resolve(values);
+            else {
+                resolve(values);
+            }
         });
     }
 

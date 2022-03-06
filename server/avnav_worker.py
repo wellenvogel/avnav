@@ -169,8 +169,8 @@ class WorkerParameter(object):
       else:
         rv=int(value)
       if rangeOrListCheck and self.rangeOrList is not None and len(self.rangeOrList) == 2:
-        if rv < self.rangeOrList[0] or rv > self.rangeOrList[1]:
-          raise ParamValueError("value %f for %s out of range %s"%(rv,self.name,",".join(self.rangeOrList)))
+        if rv < float(self.rangeOrList[0]) or rv > float(self.rangeOrList[1]):
+          raise ParamValueError("value %s for %s out of range %s"%(rv,self.name,",".join(map(lambda v: str(v),self.rangeOrList))))
       return rv
     if self.type == self.T_BOOLEAN:
       if value == True or value == False:
