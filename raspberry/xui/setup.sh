@@ -9,13 +9,35 @@ err(){
     exit 1
 }
 
+copyErr(){
+    echo "copying $1 $2"
+    cp "$1" "$2" || err "unable to copy $1 to $2"
+}
+
 copyNE(){
     if [ ! -f $1/$2 ] ; then
         cp $pdir/$2 $1/$2
     fi
 }
 
+pinFile=libgtk-3-0-pin
+reinstalls=""
+if [ -f "$pdir/$pinFile" ] ; then
+    copyErr "$pdir/$pinFile" /etc/apt/preferences.d
+    reinstalls="libgtk-3-0 libgail-3-0"
+fi
+
+echo "stopping avnav..."
+systemctl stop avnav
+echo "setting system time..."
+ntpdate pool.ntp.org || err "unable to set system time"
+echo "wating 5s"
+sleep 5
+
 apt-get update
+if [ "$reinstalls" != "" ] ; then
+    apt-get install --reinstall -y $reinstalls
+fi
 apt-get install python-xdg || apt-get install python3-xdg || err "unable to install"
 apt-get install -y --no-install-recommends xserver-xorg-video-all \
   xserver-xorg-input-all xserver-xorg-core xinit x11-xserver-utils \
@@ -34,21 +56,36 @@ fi
 cp -r $pdir/config/* $cfg || err "unable to copy config"
 chown -R pi:pi $cfg
 
-cp $pdir/.xinitrc $HOME || err "unable to copy .xinitrc"
+copyErr $pdir/.xinitrc $HOME 
 chown pi:pi $HOME/.xinitrc
 
-cp $pdir/Xwrapper.config /etc/X11 || err "unable to copy X11 wrapper config"
+copyErr $pdir/Xwrapper.config /etc/X11 
 
 ffprofile="$HOME/.mozilla/firefox/avnav"
 
 if [ ! -d "$ffprofile" ] ; then
     mkdir -p "$ffprofile" || err "unable to create $ffprofile"
 fi
-cp -r $pdir/firefox-profile/* "$ffprofile"
+cp -r $pdir/firefox-profile/* "$ffprofile" || err "unable to copy profile data"
 chown -R pi:pi "$HOME/.mozilla"
 
 cp $pdir/onboard.conf "$HOME"
 chown pi:pi "$HOME/onboard.conf"
+
+#set up config settings
+DBASE=/etc/dconf
+dp="$DBASE/profile"
+if [ ! -d "$dp" ] ; then
+    mkdir -p "$dp" || err "unable to create $dp"
+fi
+copyErr "$pdir/dconf-user" "$dp/user"
+dd="$DBASE/db/local.d"
+if [ ! -d "$dd" ]; then
+    mkdir -p "$dd" || err "unable to create $dd"
+fi
+copyErr "$pdir/dconf-onboard.conf" $dd
+
+dconf update || err "unable to set up dconf"
 
 servercfg="$HOME/avnav/data/avnav_server.xml"
 if [ ! -f $servercfg ] ; then
@@ -66,6 +103,7 @@ chown pi:pi $servercfg
 systemctl enable avnav-startx
 
 echo "setup done, use systemctl start avnav-startx after editing /boot/avnav.conf"
+echo "use sudo systemctl start avnav to start the avnav server if you don't reboot"
 
 
 

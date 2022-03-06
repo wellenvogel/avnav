@@ -1,0 +1,13 @@
+Package: libgtk-3-0
+Pin: release o=oss.boating
+Pin-Priority: 1000
+
+Package: libgail-3-0
+Pin: release o=oss.boating
+Pin-Priority: 1000
+
+Package: gtk-3-examples
+Pin: release o=oss.boating
+Pin-Priority: 1000
+
+
