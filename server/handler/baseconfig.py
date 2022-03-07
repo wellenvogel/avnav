@@ -32,6 +32,10 @@ from avnav_worker import AVNWorker, WorkerParameter, WorkerStatus
 
 
 class AVNBaseConfig(AVNWorker):
+  PARAM_NTP= WorkerParameter('ntphost', 'pool.ntp.org',type=WorkerParameter.T_STRING,
+                             description='ntp server to check if no time is received from gps')
+  PARAM_SWITCHTIME=WorkerParameter('switchtime',60,type=WorkerParameter.T_NUMBER,
+                                   description="time (sec) to wait before switching from gps time to ntp time and back")
   def __init__(self,param):
     AVNWorker.__init__(self,param)
     self.param=param
@@ -63,7 +67,9 @@ class AVNBaseConfig(AVNWorker):
             WorkerParameter('systimediff',5,type=WorkerParameter.T_FLOAT,
                             description='how many seconds do we allow the system time to be away from us'),
             WorkerParameter('settimeperiod', 3600,type=WorkerParameter.T_FLOAT,
-                            description='how often do we set the system time')
+                            description='how often do we set the system time'),
+            cls.PARAM_NTP,
+            cls.PARAM_SWITCHTIME
     ]
   @classmethod
   def preventMultiInstance(cls):
