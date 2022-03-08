@@ -357,7 +357,10 @@ def main(argv):
         return None
 
     def fetchNtpTime():
-      ts=getNTPTime(AVNBaseConfig.PARAM_NTP.fromDict(baseConfig.param))
+      host=AVNBaseConfig.PARAM_NTP.fromDict(baseConfig.param)
+      if host is None or host == '':
+        return
+      ts=getNTPTime(host)
       return ts
     #---------------------------- main loop --------------------------------
     #check if we have a position and handle time updates
@@ -365,8 +368,9 @@ def main(argv):
     lastchecktime=0
     gpsTime=TimeSource(TimeSource.SOURCE_GPS,fetchGpsTime)
     ntpTime=TimeSource(TimeSource.SOURCE_NTP,fetchNtpTime)
-    lastSource=None
+    lastSource=None # type: TimeSource
     lastutc=time.time()
+    startupTime=lastutc
     timeFalse=False
     while not handlerManager.shouldStop:
       settimeperiod=baseConfig.getIntParam('settimeperiod')
@@ -423,23 +427,26 @@ def main(argv):
                 checkSource=gpsTime
           else:
             #last source was not GPS
-            if curutc > (lastchecktime + switchtime):
-              checkSource=gpsTime
+            #immediately use the GPS
+            checkSource=gpsTime
         else:
           #no valid GPS time
           if gpsTime.equal(lastSource):
             #change source
-            if curutc > (lastchecktime + switchtime):
+            #wait at min switchtime after last check AND switschtime after GPS is going invalid
+            #this should help if the GPS becomes invalid for some time
+            if curutc > (lastchecktime + switchtime) and curutc > (gpsTime.lastValid + switchtime):
               if ntpTime.fetch():
                 checkSource=ntpTime
           else:
-            #we are still on NTP
+            #we are still on NTP or lastSource was None (startup)
             if timeFalse:
               if curutc > (lastchecktime + switchtime):
                 if ntpTime.fetch():
                   checkSource=ntpTime
             else:
-              if curutc > (lastchecktime + settimeperiod):
+              #startup without gps or repeated ntp
+              if curutc > (lastchecktime + settimeperiod) and curutc > (startupTime + switchtime):
                 if ntpTime.fetch():
                   checkSource=ntpTime
         if checkSource is not None:
@@ -449,9 +456,9 @@ def main(argv):
                        TimeSource.formatTs(now)
                        )
           lastSource=checkSource
+          lastchecktime=now
           if abs(now - checkSource.getCurrent()) > allowedDiff:
             timeFalse=True
-            lastchecktime=now
             AVNLog.warn("UTC time diff detected system=%s, %s=%s, lastcheck=%s, setting system time",
                           TimeSource.formatTs(now),
                           checkSource.name,
@@ -472,6 +479,7 @@ def main(argv):
               AVNLog.info("setting system time to %s succeeded",newtime)
               timeFalse=False
             lastchecktime=curutc
+            startupTime=0
             gpsTime.resetTime(curutc)
             ntpTime.resetTime(curutc)
             for h in AVNWorker.allHandlers:

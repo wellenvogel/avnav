@@ -33,7 +33,7 @@ from avnav_worker import AVNWorker, WorkerParameter, WorkerStatus
 
 class AVNBaseConfig(AVNWorker):
   PARAM_NTP= WorkerParameter('ntphost', 'pool.ntp.org',type=WorkerParameter.T_STRING,
-                             description='ntp server to check if no time is received from gps')
+                             description='ntp server to check if no time is received from gps (set to empty to disable ntp)')
   PARAM_SWITCHTIME=WorkerParameter('switchtime',60,type=WorkerParameter.T_NUMBER,
                                    description="time (sec) to wait before switching from gps time to ntp time and back")
   def __init__(self,param):
@@ -65,9 +65,9 @@ class AVNBaseConfig(AVNWorker):
                             description='how many seconds we allow time to go back before we reset'),
             WorkerParameter('settimecmd','',editable=False,description='if set, use this to set the system time'),
             WorkerParameter('systimediff',5,type=WorkerParameter.T_FLOAT,
-                            description='how many seconds do we allow the system time to be away from us'),
+                            description='how many seconds do we allow the system time to be away from gps/ntp'),
             WorkerParameter('settimeperiod', 3600,type=WorkerParameter.T_FLOAT,
-                            description='how often do we set the system time'),
+                            description='minimal interval (sec) for setting the system time'),
             cls.PARAM_NTP,
             cls.PARAM_SWITCHTIME
     ]
