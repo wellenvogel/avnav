@@ -20,6 +20,7 @@ import Addons from '../components/Addons.js';
 import EditOverlaysDialog, {DEFAULT_OVERLAY_CHARTENTRY} from '../components/EditOverlaysDialog.jsx';
 import mapholder from "../map/mapholder.js";
 import FullScreen from '../components/Fullscreen';
+import RemoteChannelDialog from "../components/RemoteChannelDialog";
 
 
 
@@ -47,7 +48,7 @@ class BottomLine extends React.Component {
             Requests.getJson("?request=nmeaStatus")
                 .then((json)=> {
                     this.timer.guardedCall(sequence,()=> {
-                        this.setState({status: json.data});
+                        this.setState({status: json.data});state
                         this.timer.startTimer(sequence);
                     });
                 })
@@ -253,6 +254,7 @@ class MainPage extends React.Component {
                 visible: this.state.addOns.length > 0,
                 editDisable: true
             },
+            RemoteChannelDialog({overflow:true}),
             FullScreen.fullScreenDefinition,
             {
                 name: 'Cancel',

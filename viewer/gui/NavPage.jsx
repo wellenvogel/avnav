@@ -27,6 +27,7 @@ import FeatureInfoDialog from "../components/FeatureInfoDialog";
 import {TrackConvertDialog} from "../components/TrackInfoDialog";
 import FullScreen from '../components/Fullscreen';
 import DialogButton from "../components/DialogButton";
+import RemoteChannelDialog from "../components/RemoteChannelDialog";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -538,6 +539,7 @@ class NavPage extends React.Component{
                 MapPage.PANELS,
                 [LayoutHandler.OPTIONS.SMALL,LayoutHandler.OPTIONS.ANCHOR]),
             LayoutFinishedDialog.getButtonDef(),
+            RemoteChannelDialog({overflow:true}),
             FullScreen.fullScreenDefinition,
             Dimmer.buttonDef(),
             {

@@ -21,6 +21,7 @@ import Mob from '../components/Mob.js';
 import Dimmer from '../util/dimhandler.js';
 import FullScreen from '../components/Fullscreen';
 import remotechannel, {COMMANDS} from "../util/remotechannel";
+import RemoteChannelDialog from "../components/RemoteChannelDialog";
 
 const PANEL_LIST=['left','m1','m2','m3','right'];
 //from https://stackoverflow.com/questions/16056591/font-scaling-based-on-width-of-container
@@ -214,6 +215,7 @@ class GpsPage extends React.Component{
                 overflow: true
             },
             anchorWatch(),
+            RemoteChannelDialog({overflow:true}),
             Mob.mobDefinition(this.props.history),
             EditPageDialog.getButtonDef('gpspage'+globalStore.getData(keys.gui.gpspage.pageNumber,0),
                 PANEL_LIST,
