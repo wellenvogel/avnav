@@ -6,6 +6,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -217,7 +218,7 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
             ExtendedWebResourceResponse rt=new ExtendedWebResourceResponse(
                     foundFile.length(),
                     RequestHandler.mimeType(foundFile.getName()),
-                    "", method.equalsIgnoreCase("GET")?new FileInputStream(foundFile):null);
+                    "", method.equalsIgnoreCase("GET")?new FileInputStream(foundFile):new ByteArrayInputStream(new byte[0]));
             rt.setDateHeader("Last-Modified",new Date(foundFile.lastModified()));
             return rt;
         }
