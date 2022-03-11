@@ -48,7 +48,7 @@ class BottomLine extends React.Component {
             Requests.getJson("?request=nmeaStatus")
                 .then((json)=> {
                     this.timer.guardedCall(sequence,()=> {
-                        this.setState({status: json.data});state
+                        this.setState({status: json.data});
                         this.timer.startTimer(sequence);
                     });
                 })
