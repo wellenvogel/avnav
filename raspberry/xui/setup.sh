@@ -36,7 +36,7 @@ sleep 5
 
 apt-get update
 if [ "$reinstalls" != "" ] ; then
-    apt-get install --reinstall -y $reinstalls
+    apt-get install --reinstall -y --allow-downgrades $reinstalls
 fi
 apt-get install python-xdg || apt-get install python3-xdg || err "unable to install"
 apt-get install -y --no-install-recommends xserver-xorg-video-all \
