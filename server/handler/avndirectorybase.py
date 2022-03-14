@@ -562,17 +562,23 @@ class AVNScopedDirectoryEntry(AVNDirectoryListEntry):
     self.itemType=self.T_USER
     self.canDelete=False
     self.fileName=kwargs.get('fileName')
-    self.prefix=None
+    self.scopePrefix=self.T_USER
   def setName(self,ltype,prefix=None):
     if not ltype in self.T_ALL:
       ltype=self.T_USER
     self.itemType=ltype
     if prefix is not None:
-      self.prefix=ltype+"."+prefix
+      self.scopePrefix=ltype+"."+prefix
     else:
-      self.prefix=ltype
-    self.scopedName=self.prefix+"."+self.name
+      self.scopePrefix=ltype
+    self.scopedName=self.scopePrefix+"."+self.name
     self.canDelete=ltype == self.T_USER
+
+  def isSame(self, other):
+    rt=super().isSame(other)
+    if not rt:
+      return rt
+    return self.scopePrefix == other.scopePrefix
 
   @classmethod
   def getExtension(cls):
@@ -658,8 +664,15 @@ class AVNScopedDirectoryHandler(AVNDirectoryHandlerBase):
     self.systemDir = self.getSystemDir()
     if self.systemDir is not None:
       self.systemItems=self.listDirectory(baseDir=self.systemDir)
-      for item in self.systemItems:
-        item.setName(AVNScopedDirectoryEntry.T_SYSTEM)
+
+  def listDirectory(self, includeDirs=False, baseDir=None):
+    items=super().listDirectory(includeDirs, baseDir)
+    scope=AVNScopedDirectoryEntry.T_USER
+    if baseDir is not None and baseDir == self.systemDir:
+      scope=AVNScopedDirectoryEntry.T_SYSTEM
+    for item in items:
+      item.setName(scope)
+    return items
 
   def onItemAdd(self, itemDescription: AVNScopedDirectoryEntry):
     '''automatically added items are from the user dir'''
