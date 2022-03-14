@@ -35,6 +35,12 @@ echo "wating 5s"
 sleep 5
 
 apt-get update
+if [ $? != 0 ] ; then
+  echo "apt-get update failed, waiting 5s and trying again"
+  sleep 5
+  apt-get update
+fi
+
 if [ "$reinstalls" != "" ] ; then
     apt-get install --reinstall -y --allow-downgrades $reinstalls
 fi
