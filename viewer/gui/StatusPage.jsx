@@ -173,13 +173,12 @@ class StatusList extends React.Component{
         this.state={
             itemList:[]
         }
-        this.notifyProps={
-            addresses:this.props.notifyProps.addresses||false,
-            wpa:this.props.notifyProps.wpa||false,
-            shutdown:this.props.notifyProps.shutdown||false,
-            serverError:this.props.notifyProps.serverError||false,
-            canRestart:this.props.notifyProps.canRestart||false
-        }
+        this.defaultProps={
+            addresses:false,
+            wpa:false,
+            shutdown:false,
+            serverError:false
+        };
         if (this.props.reloadNotifier){
             this.props.reloadNotifier.register(()=>this.doQuery())
         }
@@ -191,9 +190,7 @@ class StatusList extends React.Component{
     queryResult(data){
         let self=this;
         let itemList=[];
-        let storeData=assign({},this.notifyProps);
-        storeData.serverError=false;
-        storeData.addresses=false;
+        let storeData=assign({},this.defaultProps);
         self.errors=0;
         if (data.handler) {
             data.handler.forEach(function(el){
@@ -208,13 +205,9 @@ class StatusList extends React.Component{
                 itemList.push(el);
             });
         }
-        if (!Compare(storeData,this.notifyProps)){
-            if (this.props.onChange){
-                this.props.onChange(storeData);
-            }
-            this.notifyProps=storeData;
+        if (this.props.onChange){
+            this.props.onChange(storeData);
         }
-
         this.setState({itemList:itemList});
 
     }
@@ -425,8 +418,11 @@ class StatusPage extends React.Component{
                     <StatusList
                         connected={props.connected}
                         allowEdit={props.config}
-                        onChange={(nv)=>window.setTimeout(()=>this.setState(nv),1)}
-                        notifyProps={this.state}
+                        onChange={(nv)=>window.setTimeout(()=>this.setState((state,props)=>{
+                            let comp=Helper.filteredAssign(nv,state);
+                            if (Compare(nv,comp)) return null;
+                            return nv;
+                        }),1)}
                         reloadNotifier={this.reloadNotifier}
                     />
                 }
