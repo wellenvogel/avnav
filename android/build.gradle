@@ -30,7 +30,7 @@ dependencies {
     implementation "net.sf.marineapi:marineapi:0.11.0"
     implementation "com.android.support:support-compat:26.0.0"
     implementation 'com.android.support:appcompat-v7:26.0.0'
-    implementation 'com.github.felHR85:UsbSerial:4.5'
+    implementation 'com.github.felHR85:UsbSerial:6.1.0'
     implementation group: 'net.straylightlabs', name: 'hola', version: '0.2.2'
     implementation group: 'org.apache.httpcomponents', name: 'httpcore', version: '4.0'
     testImplementation 'junit:junit:4.12'
