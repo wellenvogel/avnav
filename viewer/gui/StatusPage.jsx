@@ -19,7 +19,7 @@ import DB from '../components/DialogButton';
 import {Checkbox, Input} from "../components/Inputs";
 import LogDialog from "../components/LogDialog";
 import assign from "object-assign";
-import ShallowCompare from "../util/shallowcompare";
+import Compare from "../util/compare";
 import PropTypes from 'prop-types';
 import Helper from "../util/helper";
 
@@ -208,7 +208,7 @@ class StatusList extends React.Component{
                 itemList.push(el);
             });
         }
-        if (!ShallowCompare(storeData,this.notifyProps)){
+        if (!Compare(storeData,this.notifyProps)){
             if (this.props.onChange){
                 this.props.onChange(storeData);
             }

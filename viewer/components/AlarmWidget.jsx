@@ -5,7 +5,7 @@
 import React from "react";
 import PropTypes from 'prop-types';
 import keys from '../util/keys.jsx';
-import compare from '../util/shallowcompare.js';
+import compare from '../util/compare.js';
 import GuiHelper from '../util/GuiHelpers.js';
 import AlarmHandler from '../nav/alarmhandler.js';
 

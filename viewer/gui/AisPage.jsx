@@ -14,7 +14,7 @@ import AisData from '../nav/aisdata.js';
 import assign from 'object-assign';
 import OverlayDialog from '../components/OverlayDialog.jsx';
 import Mob from '../components/Mob.js';
-import ShallowCompare from "../util/shallowcompare";
+import Compare from "../util/compare";
 import GuiHelper from "../util/GuiHelpers";
 
 const aisInfos=[
@@ -133,7 +133,7 @@ const AisItem=(props)=>{
 };
 
 const itemCompare=(oldValues,newValues)=>{
-    return ShallowCompare(oldValues,newValues);
+    return Compare(oldValues,newValues);
 }
 
 const MemoAisItem=React.memo(AisItem,itemCompare);

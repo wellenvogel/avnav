@@ -12,7 +12,7 @@ import Requests from '../util/requests.js';
 import base from '../base.js';
 import {GaugeRadial,GaugeLinear} from './CanvasGauges.jsx';
 import {createEditableParameter, EditableParameter} from "./EditableParameters";
-import ShallowCompare from "../util/shallowcompare";
+import Compare from "../util/compare";
 import CloneDeep from 'clone-deep';
 
 export const filterByEditables=(editableParameters,values)=>{
@@ -66,7 +66,7 @@ class KeyWidgetParameter extends EditableParameter {
         return EditableParameter.TYPE.SELECT;
     }
     isChanged(value) {
-        return ! ShallowCompare(value,this.default);
+        return ! Compare(value,this.default);
     }
 }
 
@@ -102,7 +102,7 @@ class ArrayWidgetParameter extends EditableParameter {
     }
 
     isChanged(value) {
-        return ! ShallowCompare(value,this.default);
+        return ! Compare(value,this.default);
     }
 }
 class FormatterParamWidgetParameter extends EditableParameter {
@@ -152,7 +152,7 @@ class FormatterParamWidgetParameter extends EditableParameter {
     isChanged(value) {
         let cv=(typeof(value) === 'string'?value.split(','):value);
         let cd=(typeof(this.default) === 'string'?this.default.split(','):this.default);
-        return ! ShallowCompare(cv,cd);
+        return ! Compare(cv,cd);
     }
 }
 

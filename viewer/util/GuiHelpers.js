@@ -3,7 +3,7 @@ import keys from '../util/keys.jsx';
 import KeyHandler from './keyhandler.js';
 import LayoutHandler from './layouthandler.js';
 import assign from 'object-assign';
-import shallowcompare from "./shallowcompare";
+import shallowcompare from "./compare";
 
 
 

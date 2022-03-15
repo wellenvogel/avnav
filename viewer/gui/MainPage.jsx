@@ -21,6 +21,7 @@ import EditOverlaysDialog, {DEFAULT_OVERLAY_CHARTENTRY} from '../components/Edit
 import mapholder from "../map/mapholder.js";
 import FullScreen from '../components/Fullscreen';
 import RemoteChannelDialog from "../components/RemoteChannelDialog";
+import {RecursiveCompare} from '../util/compare';
 
 
 
@@ -101,29 +102,6 @@ class BottomLine extends React.Component {
         }
     };
 
-const ChartItem = (props)=> {
-    let cls="chartItem";
-    if (props.selected) cls+=" activeEntry";
-    if (props.originalScheme) cls+=" userAction";
-    cls+=props.hasOverlays?" withOverlays":" noOverlays";
-    let isConnected=globalStore.getData(keys.properties.connectedMode,false);
-    return (
-        <div className={cls} onClick={props.onClick}>
-            <img src={props.icon||chartImage}/>
-            <span className="chartName">{props.name}</span>
-            {isConnected && <Button
-                className="smallButton"
-                name="MainOverlays"
-                onClick={(ev)=>{
-                    ev.stopPropagation();
-                    EditOverlaysDialog.createDialog(props,()=>{
-                        if (props.reload) props.reload();
-                    });
-                }}
-                />}
-        </div>
-    );
-};
 
 class MainPage extends React.Component {
     constructor(props) {
@@ -135,10 +113,16 @@ class MainPage extends React.Component {
             sequence:0,
             overlays:{}
         };
+        this.fillList=this.fillList.bind(this);
         GuiHelper.storeHelper(this,(data)=>{
             this.readAddOns();
-            this.fillList();
         },{sequence:keys.gui.global.reloadSequence},2);
+        GuiHelper.storeHelper(this,(data)=>{
+            this.fillList();
+        },{sequence:keys.gui.global.reloadSequence});
+        this.timer=GuiHelper.lifecycleTimer(this,(sequence)=>{
+            this.fillList(sequence);
+        },3000,true);
         let self=this;
         this.selectChart(0);
         GuiHelper.keyEventHandler(this,(component,action)=>{
@@ -157,6 +141,7 @@ class MainPage extends React.Component {
             }
         },"page",["selectChart","nextChart","previousChart"]);
         this.showNavpage=this.showNavpage.bind(this);
+        this.ChartItem=this.ChartItem.bind(this);
 
     }
 
@@ -267,6 +252,31 @@ class MainPage extends React.Component {
         ];
     }
 
+    ChartItem(props){
+        let self=this;
+        let cls="chartItem";
+        if (props.selected) cls+=" activeEntry";
+        if (props.originalScheme) cls+=" userAction";
+        cls+=props.hasOverlays?" withOverlays":" noOverlays";
+        let isConnected=globalStore.getData(keys.properties.connectedMode,false);
+        return (
+            <div className={cls} onClick={props.onClick}>
+                <img src={props.icon||chartImage}/>
+                <span className="chartName">{props.name}</span>
+                {isConnected && <Button
+                    className="smallButton"
+                    name="MainOverlays"
+                    onClick={(ev)=>{
+                        ev.stopPropagation();
+                        EditOverlaysDialog.createDialog(props,()=>{
+                            self.fillList();
+                        });
+                    }}
+                />}
+            </div>
+        );
+    };
+
 
     componentDidMount() {
         globalStore.storeData(keys.gui.global.soundEnabled,true);
@@ -287,8 +297,25 @@ class MainPage extends React.Component {
         }
     };
 
-
-    fillList() {
+    readOverlays(newChartList){
+        return Requests.getJson('',{},{
+            request:'api',
+            type:'chart',
+            command:'listOverlays'
+        })
+            .then((json)=>{
+                let overlays={};
+                for (let i in json.data){
+                    let overlay=json.data[i];
+                    overlays[overlay.name]=overlay;
+                }
+                for (let i in newChartList){
+                    newChartList[i].hasOverlays=!!overlays[newChartList[i].overlayConfig];
+                }
+                return{overlays:overlays,chartList:newChartList};
+            })
+    }
+    fillList(sequence) {
         Requests.getJson("?request=list&type=chart",{timeout:3*parseFloat(globalStore.getData(keys.properties.networkTimeout))}).then((json)=>{
                 let items = [];
                 let current=mapholder.getBaseChart();
@@ -310,14 +337,13 @@ class MainPage extends React.Component {
                     let chartEntry = json.items[e];
                     if (!chartEntry.key) chartEntry.key=chartEntry.chartKey||chartEntry.url;
                     chartEntry.hasOverlays=!!this.state.overlays[chartEntry.overlayConfig];
-                    chartEntry.reload=()=>this.fillList();
                     if (lastChartKey === chartEntry.key){
                         selectedChart=i;
                     }
                     items.push(chartEntry);
                     i++;
                 }
-                let newState={chartList:items};
+                let newState={};
                 if (selectedChart === undefined && items.length > 0){
                     selectedChart=0;
                     current=undefined; //it seems that the last chart from the mapholder is not available any more
@@ -329,31 +355,25 @@ class MainPage extends React.Component {
                     //just set the chart entry at the mapholder
                     if (! current) mapholder.setChartEntry(items[selectedChart]);
                 }
-                this.setState(newState);
+                if (newState.selectedChart !== this.state.selectedChart)  this.setState(newState);
+                this.readOverlays(items).then((newState)=>{
+                    this.setState((state,props)=>{
+                        let rt={};
+                        if (! RecursiveCompare(state.chartList,newState.chartList)){
+                            rt.chartList=newState.chartList;
+                        }
+                        if (!RecursiveCompare(state.overlays,newState.overlays)) rt.overlays=newState.overlays;
+                        if (! rt.chartList && ! rt.overlays) return null;
+                        return rt;
+                    });
+                    if (sequence !== undefined) this.timer.startTimer(sequence);
+                });
             },
             (error)=>{
                 Toast("unable to read chart list: "+error);
+                if (sequence !== undefined) this.timer.startTimer(sequence);
             });
-        Requests.getJson('',{},{
-            request:'api',
-            type:'chart',
-            command:'listOverlays'
-        })
-            .then((json)=>{
-                let overlays={};
-                for (let i in json.data){
-                    let overlay=json.data[i];
-                    overlays[overlay.name]=overlay;
-                }
-                let newChartList=this.state.chartList.slice();
-                for (let i in newChartList){
-                    newChartList[i].hasOverlays=!!overlays[newChartList[i].overlayConfig];
-                }
-                this.setState({overlays:overlays,chartList:newChartList});
-            })
-            .catch((error)=>{
-                this.setState({overlays:{}})
-            })
+
     };
     readAddOns() {
         Addons.readAddOns(true)
@@ -362,6 +382,7 @@ class MainPage extends React.Component {
             })
             .catch(()=>{});
     };
+
 
     render() {
         let self = this;
@@ -372,7 +393,7 @@ class MainPage extends React.Component {
                   title="AvNav"
                   mainContent={
                     <ItemList className="mainContent"
-                               itemClass={ChartItem}
+                               itemClass={this.ChartItem}
                                onItemClick={this.showNavpage}
                                itemList={this.state.chartList}
                                selectedIndex={this.state.selectedChart}

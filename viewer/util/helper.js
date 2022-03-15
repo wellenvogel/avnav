@@ -3,7 +3,7 @@
 
  */
 
-import compare from './shallowcompare';
+import compare from './compare';
 /**
  *
  * @constructor

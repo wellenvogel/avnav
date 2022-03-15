@@ -34,7 +34,7 @@ import {Input,InputSelect} from './Inputs.jsx';
 import DB from './DialogButton.jsx';
 import {getList,ParamValueInput} from "./ParamValueInput";
 import cloneDeep from 'clone-deep';
-import ShallowCompare from "../util/shallowcompare";
+import Compare from "../util/compare";
 
 
 class EditWidgetDialog extends React.Component{
@@ -91,7 +91,7 @@ class EditWidgetDialog extends React.Component{
             let fv=parameter.getValue(filtered);
             if (fv !== undefined){
                 let dv=parameter.getValue(widget);
-                if (ShallowCompare(fv,dv)){
+                if (Compare(fv,dv)){
                     return; //we have set the value that is at the widget anyway - do not write this out
                 }
                 parameter.setValue(rt,fv);

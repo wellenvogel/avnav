@@ -1,6 +1,6 @@
 import Helper from './helper.js';
 import {KeyHelper} from './keys.jsx';
-import shallowCompare from './shallowcompare';
+import shallowCompare from './compare';
 /**
  * Created by andreas on 20.11.16.
  * a simple interface to register for value updates

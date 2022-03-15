@@ -27,7 +27,7 @@ import base from '../base.js';
 import assign from 'object-assign';
 import Helper from '../util/helper.js';
 import CryptHandler from './crypthandler.js';
-import shallowcompare from '../util/shallowcompare.js';
+import shallowcompare from '../util/compare.js';
 import featureFormatter from "../util/featureFormatter";
 import globalstore from "../util/globalstore";
 import keys from '../util/keys';

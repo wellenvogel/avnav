@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import PropertyHandler from '../util/propertyhandler.js';
 import Toast from '../components/Toast.jsx';
-import compare from '../util/shallowcompare.js';
+import compare from '../util/compare.js';
 
 class SoundHandler extends React.Component{
     constructor(props){
