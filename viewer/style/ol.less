@@ -1,0 +1,43 @@
+.ol-scale-text {
+    position: absolute;
+    text-align: center;
+    bottom: 25px;
+    color: #000000;
+    text-shadow: -2px 0 #ffffff, 0 2px #ffffff, 2px 0 #ffffff, 0 -2px #ffffff;
+}
+.ol-scale-step-marker {
+    width: 1px;
+    height: 15px;
+    background-color: #000000;
+    float: right;
+    z-index: 10;
+}
+
+.ol-scale-singlebar {
+  position: relative;
+  height: 10px;
+  z-index: 9;
+  box-sizing: border-box;
+  border: 1px solid black;
+}
+.ol-scale-step-text {
+  position: absolute;
+  bottom: -0.5em;
+  font-size: 0.8em;
+  z-index: 11;
+  color: #000000;
+  text-shadow: -2px 0 #ffffff, 0 2px #ffffff, 2px 0 #ffffff, 0 -2px #ffffff;
+}
+.ol-viewport, .ol-unselectable {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+}
+.ol-scale-bar {
+  position: absolute;
+  bottom: 0.8em;
+  left: calc(50% - 80px);
+}

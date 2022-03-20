@@ -19,14 +19,14 @@ import DimHandler from '../util/dimhandler';
 import FullScreen from '../components/Fullscreen';
 import {stateHelper} from "../util/GuiHelpers";
 import Formatter from "../util/formatter";
-import {LoadItemDialog, SaveItemDialog} from "../components/LoadSaveDialogs";
+import {SaveItemDialog} from "../components/LoadSaveDialogs";
 import PropertyHandler from '../util/propertyhandler';
 import {ItemActions} from "../components/FileDialog";
-import RequestHandler from "../util/requests";
 import loadSettings from "../components/LoadSettingsDialog";
 
 const settingsSections={
-    Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,keys.properties.layers.grid,keys.properties.layers.compass],
+    Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,
+        keys.properties.layers.grid,keys.properties.layers.compass,keys.properties.layers.scale],
     UpdateTimes:[keys.properties.positionQueryTimeout,keys.properties.trackQueryTimeout,keys.properties.aisQueryTimeout, keys.properties.networkTimeout ],
     Widgets:    [keys.properties.widgetFontSize,keys.properties.allowTwoWidgetRows,keys.properties.showClock,keys.properties.showZoom,keys.properties.showWind,keys.properties.showDepth],
     Buttons:    [keys.properties.style.buttonSize,keys.properties.cancelTop,keys.properties.buttonCols,keys.properties.showDimButton,keys.properties.showFullScreen,
@@ -46,7 +46,7 @@ const settingsSections={
         keys.properties.boatDirectionVector,keys.properties.courseAverageTolerance,keys.properties.gpsXteMax,keys.properties.courseAverageInterval,keys.properties.speedAverageInterval,keys.properties.positionAverageInterval,keys.properties.anchorWatchDefault,keys.properties.anchorCircleWidth,
         keys.properties.anchorCircleColor,keys.properties.windKnots,keys.properties.windScaleAngle,keys.properties.measureColor],
     Map:        [keys.properties.autoZoom,keys.properties.mobMinZoom,keys.properties.style.useHdpi,keys.properties.clickTolerance,keys.properties.featureInfo,keys.properties.emptyFeatureInfo,keys.properties.mapFloat,keys.properties.mapScale,keys.properties.mapUpZoom,keys.properties.mapOnlineUpZoom,
-        keys.properties.mapLockMode],
+        keys.properties.mapLockMode,keys.properties.mapScaleBarText],
     Track:      [keys.properties.trackColor,keys.properties.trackWidth,keys.properties.trackInterval,keys.properties.initialTrackLength],
     Route:      [keys.properties.routeColor,keys.properties.routeWidth,keys.properties.routeWpSize,keys.properties.routingTextSize,keys.properties.routeApproach,keys.properties.routeShowLL],
     Remote:     [keys.properties.remoteChannelName,keys.properties.remoteChannelRead,keys.properties.remoteChannelWrite,keys.properties.remoteGuardTime]

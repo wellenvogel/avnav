@@ -32,6 +32,7 @@ import {Vector as olVectorLayer} from 'ol/layer';
 import {GeoJSON as olGeoJSONFormat} from 'ol/format';
 import {Style as olStyle,Circle as olCircle, Stroke as olStroke, Text as olText, Icon as olIcon, Fill as olFill} from 'ol/style';
 import * as olTransforms  from 'ol/proj/transforms';
+import {ScaleLine as olScaleLine} from 'ol/control';
 import OverlayConfig from "./overlayconfig";
 import Helper from "../util/helper";
 import KmlChartSource from "./kmlchartsource";
@@ -300,6 +301,7 @@ const MapHolder=function(){
         x:50,
         y:50
     }
+    this.scaleControl=undefined;
 };
 
 base.inherits(MapHolder,DrawingPositionConverter);
@@ -765,7 +767,26 @@ MapHolder.prototype.getMapOutlineLayer = function (layers,visible) {
     vectorLayer.avnavOptions={isBase:true};
     return vectorLayer;
 };
-
+MapHolder.prototype.updateStateControl=function() {
+    if (this.scaleControl) {
+        this.olmap.removeControl(this.scaleControl);
+        this.scaleControl=undefined;
+    }
+    let controls=[];
+    if (globalStore.getData(keys.properties.layers.scale,false)){
+        this.scaleControl=new olScaleLine({
+                units: 'nautical',
+                steps: 4,
+                bar: true,
+                text: globalStore.getData(keys.properties.mapScaleBarText,true),
+                minWidth: 140
+            }
+        );
+    }
+    if (this.scaleControl) {
+        this.olmap.addControl(this.scaleControl);
+    }
+}
 /**
  * init the map (deinit an old one...)
  */
@@ -901,6 +922,7 @@ MapHolder.prototype.initMap=function(){
             return self.onPostCompose(evt);
         });
     }
+    this.updateStateControl();
     this.renderTo(div);
     let recenter=true;
     let view;

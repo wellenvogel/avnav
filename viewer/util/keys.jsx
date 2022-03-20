@@ -233,7 +233,8 @@ let keys={
             boat: new Property(true, "Boat", PropertyType.CHECKBOX),
             grid: new Property(true, "Grid", PropertyType.CHECKBOX),
             compass: new Property(true, "Compass", PropertyType.CHECKBOX),
-            base: new Property(true, "Base", PropertyType.CHECKBOX)
+            base: new Property(true, "Base", PropertyType.CHECKBOX),
+            scale: new Property(true,"ScaleLine", PropertyType.CHECKBOX)
         },
         localAlarmSound: new Property(true, "Alarm Sound", PropertyType.CHECKBOX),
         connectedMode: new Property(true, "connected", PropertyType.CHECKBOX),
@@ -369,6 +370,7 @@ let keys={
         mapFloat: new Property(false,"float map behind buttons",PropertyType.CHECKBOX),
         mapLockMode: new Property('center','lock boat mode',PropertyType.LIST,['center','current','ask']),
         mapSequenceTime: new Property(2000,"change check interval(ms)",PropertyType.RANGE,[500,10000,100]),
+        mapScaleBarText: new Property(true,"Show text on scale bar",PropertyType.CHECKBOX),
         remoteChannelName: new Property('0','remote control channel',PropertyType.LIST,['0','1','2','3','4']),
         remoteChannelRead: new Property(false,'read from remote channel',PropertyType.CHECKBOX),
         remoteChannelWrite: new Property(false,'write to remote channel',PropertyType.CHECKBOX),
