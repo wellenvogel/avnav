@@ -34,7 +34,7 @@ from avnav_worker import *
 #a base class for socket readers and writers
 
 class SocketReader(object):
-  def __init__(self,socket,writeData,queue,setInfo,shouldStop=None):
+  def __init__(self,socket,writeData,queue,setInfo,shouldStop=None,sourcePriority=NMEAParser.DEFAULT_SOURCE_PRIORITY):
     self.feeder=None
     self.writeData=writeData
     self.feeder=queue
@@ -42,6 +42,7 @@ class SocketReader(object):
     self.stopFlag=False
     self.setInfo=setInfo
     self.shouldStop=shouldStop if shouldStop is not None else self.shouldStopInternal
+    self.sourcePriority=sourcePriority
 
 
   def shouldStopInternal(self):
@@ -98,7 +99,7 @@ class SocketReader(object):
             if pattern.match(l):
               if not NMEAParser.checkFilter(l, filterA):
                 continue
-              self.writeData(l,source=sourceName)
+              self.writeData(l,source=sourceName,sourcePriority=self.sourcePriority)
               if not hasNMEA:
                 self.setInfo(infoName, "NMEA %s"%(peer,), WorkerStatus.NMEA)
                 hasNMEA=True
@@ -109,7 +110,7 @@ class SocketReader(object):
           for i in range(len(lines)-1):
             line=lines[i].translate(NMEAParser.STRIPCHARS)
             if pattern.match(line):
-              self.writeData(line,source=sourceName)
+              self.writeData(line,source=sourceName,sourcePriority=self.sourcePriority)
               if not hasNMEA:
                 self.setInfo(infoName, "NMEA %s"%peer, WorkerStatus.NMEA)
                 hasNMEA=True

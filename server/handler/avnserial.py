@@ -56,6 +56,7 @@ class SerialReader(object):
   def getConfigParam(cls):
     cfg=[
                WorkerParameter('port',None,type=WorkerParameter.T_SELECT,rangeOrList=[]),
+               AVNWorker.PRIORITY_PARAM_DESCRIPTION,
                WorkerParameter('timeout', 2,type=WorkerParameter.T_FLOAT,
                                description="serial receive timeout in s, after 10*timeout port will be reopened"),
                WorkerParameter('baud',4800,type=WorkerParameter.T_SELECT,rangeOrList=cls.BAUDRATES),
@@ -222,6 +223,7 @@ class SerialReader(object):
        baud=int(self.param['baud'])
        maxerrors=int(self.param['numerrors'])
        minbaud=int(self.param.get('minbaud') or baud)
+       priority=AVNWorker.PRIORITY_PARAM_DESCRIPTION.fromDict(self.param)
        rates=self.BAUDRATES
        autobaud=False
        if minbaud != baud and minbaud != 0:
@@ -315,7 +317,7 @@ class SerialReader(object):
                self.setInfo("reader receiving NMEA %s at %d baud"%(portname,self.device.baudrate),WorkerStatus.NMEA)
              hasNMEA=True
              if not self.writeData is None:
-               self.writeData(data,source=self.sourceName)
+               self.writeData(data,source=self.sourceName,sourcePriority=priority)
              else:
                AVNLog.debug("unable to write data")
 

@@ -46,6 +46,7 @@ class AVNUdpReader(AVNWorker):
       return None
     rt=[
                WorkerParameter('feederName','',editable=False),
+               cls.PRIORITY_PARAM_DESCRIPTION,
                WorkerParameter('host','127.0.0.1',description="address to listen on, use 0.0.0.0 to allow external access"),
                WorkerParameter('port',None,type=WorkerParameter.T_NUMBER,
                                description="the local listener port"),
@@ -86,7 +87,8 @@ class AVNUdpReader(AVNWorker):
       pass
 
   def writeData(self,data,source=None,addCheckSum=False):
-    AVNWorker.writeData(self,data,source)
+    priority=self.PRIORITY_PARAM_DESCRIPTION.fromDict(self.param)
+    AVNWorker.writeData(self,data,source,sourcePriority=priority)
     if (self.getIntParam('minTime')):
       time.sleep(float(self.getIntParam('minTime'))/1000)
 

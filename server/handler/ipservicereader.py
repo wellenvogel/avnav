@@ -65,6 +65,7 @@ class AVNIpServiceReader(AVNWorker):
       return None
     rt = [
       WorkerParameter('feederName', '', editable=False),
+      cls.PRIORITY_PARAM_DESCRIPTION,
       cls.P_SERVICE_NAME,
       WorkerParameter('timeout', 10, type=WorkerParameter.T_FLOAT,
                       description='timeout in sec for connecting and waiting for data, close connection if no data within 5*timeout'),
@@ -110,7 +111,8 @@ class AVNIpServiceReader(AVNWorker):
       pass
 
   def writeData(self, data, source=None, **kwargs):
-    AVNWorker.writeData(self,data,source)
+    priority=self.PRIORITY_PARAM_DESCRIPTION.fromDict(self.param)
+    AVNWorker.writeData(self,data,source,sourcePriority=priority)
     if (self.getIntParam('minTime')):
       time.sleep(float(self.getIntParam('minTime'))/1000)
 

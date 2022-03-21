@@ -48,9 +48,10 @@ class AVNStore(object):
       self.keepAlways=keepAlways
 
   class AisDataEntry(object):
-    def __init__(self,data):
+    def __init__(self,data,priority=0):
       self.value=data
       self.timestamp = AVNUtil.utcnow()
+      self.priority=priority
   #fields we merge
   ais5mergeFields=['imo_id','callsign','shipname','shiptype','destination']
   CHANGE_COUNTER = ['alarm', 'leg', 'route']
@@ -130,37 +131,36 @@ class AVNStore(object):
     @return:
     """
     AVNLog.ld("AVNNavData set value key=%s", key, str(value))
-    self.__listLock.acquire()
-    isDict=False
-    dataValue=value
-    try:
-      keylist=['']
-      if type(value) == dict:
-        keylist=list(value.keys())
-        isDict=True
-      for kext in keylist:
-        if isDict:
-          listKey=key+'.'+kext
-          dataValue=value[kext]
-        else:
-          listKey=key
-        if not self.__allowedKey(listKey):
-          AVNLog.error("key %s is not registered in store" , listKey)
-          raise Exception("key %s is not registered in store" % (listKey))
-        existing=self.__list.get(listKey)
-        doUpdate=True
-        if existing is not None:
-          if not self.__isExpired(existing) and existing.priority > priority:
-            doUpdate=False
-        if doUpdate:
-          self.__list[listKey]=AVNStore.DataEntry(dataValue, priority=priority,source=source)
-        else:
-          AVNLog.debug("AVNavData: keeping existing entry for %s",listKey)
-    except :
-      self.__listLock.release()
-      AVNLog.error("exception in writing data: %",traceback.format_exc())
-      raise
-    self.__listLock.release()
+    with self.__listLock:
+      isDict=False
+      dataValue=value
+      try:
+        keylist=['']
+        if type(value) == dict:
+          keylist=list(value.keys())
+          isDict=True
+        for kext in keylist:
+          if isDict:
+            listKey=key+'.'+kext
+            dataValue=value[kext]
+          else:
+            listKey=key
+          if not self.__allowedKey(listKey):
+            AVNLog.error("key %s is not registered in store" , listKey)
+            raise Exception("key %s is not registered in store" % (listKey))
+          existing=self.__list.get(listKey)
+          doUpdate=True
+          if existing is not None:
+            if not self.__isExpired(existing) and existing.priority > priority:
+              doUpdate=False
+          if doUpdate:
+            self.__list[listKey]=AVNStore.DataEntry(dataValue, priority=priority,source=source)
+          else:
+            AVNLog.debug("AVNavData: keeping existing entry for %s",listKey)
+          return doUpdate
+      except :
+        AVNLog.error("exception in writing data: %",traceback.format_exc())
+        raise
 
   def setReceivedRecord(self,record,source=None):
     if len(record) > 3:
@@ -168,7 +168,7 @@ class AVNStore(object):
     now=AVNUtil.utcnow()
     self.setValue(self.KEY_LAST_RECORD+"."+record,now,source)
 
-  def setAisValue(self,mmsi,data,source=None):
+  def setAisValue(self,mmsi,data,source=None,priority=0):
     """
     add an AIS entry
     @param mmsi:
@@ -181,30 +181,33 @@ class AVNStore(object):
       return
     key=AVNStore.BASE_KEY_AIS+"."+mmsi
     now=AVNUtil.utcnow()
-    self.__aisLock.acquire()
-    existing=self.__aisList.get(key)
-    if existing is None:
-      existing=AVNStore.AisDataEntry({'mmsi':mmsi})
-      self.__aisList[key]=existing
-    if data.get('type') == '5' or data.get('type') == '24':
-      #add new items to existing entry
-      AVNLog.debug("merging AIS type 5/24 with existing message")
-      for k in self.ais5mergeFields:
-        v = data.get(k)
-        if v is not None:
-          existing.value[k] = v
-          existing.timestamp=now
-    else:
-      AVNLog.debug("merging AIS with existing message")
-      newData=data.copy()
-      for k in self.ais5mergeFields:
-        v = existing.value.get(k)
-        if v is not None:
-          newData[k] = v
-      existing.value=newData
-      existing.timestamp=now
-    self.__lastAisSource=source
-    self.__aisLock.release()
+    with self.__aisLock:
+      existing=self.__aisList.get(key)
+      if existing is None:
+        existing=AVNStore.AisDataEntry({'mmsi':mmsi},priority)
+        self.__aisList[key]=existing
+      else:
+        if existing.priority > priority:
+          AVNLog.debug("ignore ais for %s due to higher prio %d",mmsi,existing.priority)
+          return
+      if data.get('type') == '5' or data.get('type') == '24':
+        #add new items to existing entry
+        AVNLog.debug("merging AIS type 5/24 with existing message")
+        for k in self.ais5mergeFields:
+          v = data.get(k)
+          if v is not None:
+            existing.value[k] = v
+            existing.timestamp=now
+      else:
+        AVNLog.debug("merging AIS with existing message")
+        newData=data.copy()
+        for k in self.ais5mergeFields:
+          v = existing.value.get(k)
+          if v is not None:
+            newData[k] = v
+        existing.value=newData
+        existing.timestamp=now
+      self.__lastAisSource=source
 
 
   def getAisData(self, asDict=False,copyElements=False):

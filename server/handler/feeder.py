@@ -46,10 +46,11 @@ import avnav_handlerList
 
 
 class NmeaEntry(object):
-  def __init__(self,data,source=None,omitDecode=False):
+  def __init__(self,data,source=None,omitDecode=False,sourcePriority=NMEAParser.DEFAULT_SOURCE_PRIORITY):
     self.data=data
     self.source=source
     self.omitDecode=omitDecode
+    self.sourcePriority=sourcePriority
 
 
 #a Worker for feeding data trough gpsd (or directly to the navdata)
@@ -96,7 +97,7 @@ class AVNFeeder(AVNWorker):
 
 
 
-  def addNMEA(self, entry,source=None,addCheckSum=False,omitDecode=False):
+  def addNMEA(self, entry,source=None,addCheckSum=False,omitDecode=False,sourcePriority=NMEAParser.DEFAULT_SOURCE_PRIORITY):
     """
     add an NMEA record to our internal queue
     @param entry: the record
@@ -122,9 +123,9 @@ class AVNFeeder(AVNWorker):
       self.list.pop(0) #TODO: priorities?
     if len(self.history) >= self.maxlist:
       self.history.pop(0)
-    self.list.append(NmeaEntry(entry,source,omitDecode))
+    self.list.append(NmeaEntry(entry,source,omitDecode,sourcePriority))
     ll=len(self.list)
-    self.history.append(NmeaEntry(entry,source,omitDecode))
+    self.history.append(NmeaEntry(entry,source,omitDecode,sourcePriority))
     hl=len(self.history)
     rt=True
     self.listlock.notify_all()
@@ -206,7 +207,7 @@ class AVNFeeder(AVNWorker):
                                                     waitTime=self.waitTime)
           for data in nmeaList:
             if not data is None and not data.omitDecode:
-              if nmeaParser.parseData(data.data,source=data.source):
+              if nmeaParser.parseData(data.data,source=data.source,sourcePriority=data.sourcePriority):
                 if not hasNmea:
                   self.setInfo('main',"feeding NMEA",WorkerStatus.NMEA)
       except Exception as e:

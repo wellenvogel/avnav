@@ -140,10 +140,10 @@ class ApiImpl(AVNApi):
         filter=filter.split(',')
     return self.queue.fetchFromHistory(sequence,number,includeSource=includeSource,waitTime=waitTime,nmeafilter=filter)
 
-  def addNMEA(self, nmea, addCheckSum=False,omitDecode=True,source=None):
+  def addNMEA(self, nmea, addCheckSum=False,omitDecode=True,source=None,sourcePriority=NMEAParser.DEFAULT_API_PRIORITY):
     if source is None:
       source=self.prefix
-    return self.queue.addNMEA(nmea,source=source,addCheckSum=addCheckSum,omitDecode=omitDecode)
+    return self.queue.addNMEA(nmea,source=source,addCheckSum=addCheckSum,omitDecode=omitDecode,sourcePriority=sourcePriority)
 
   def registerKeys(self):
     if self.storeKeys is None:
@@ -176,7 +176,7 @@ class ApiImpl(AVNApi):
     else:
       if not key in self.patterns:
         self.patterns.append(key)
-  def addData(self,path,value,source=None,record=None):
+  def addData(self,path,value,source=None,record=None,sourcePriority=NMEAParser.DEFAULT_API_PRIORITY):
     if source is None:
       source="plugin-"+self.prefix
     matches=False
@@ -192,9 +192,9 @@ class ApiImpl(AVNApi):
     if not matches:
       AVNLog.error("%s:setting invalid path %s"%(self.prefix,path))
       return False
-    if record is not None:
-      self.store.setReceivedRecord(record,source)
-    self.store.setValue(path,value,source)
+    if self.store.setValue(path,value,source,sourcePriority*10):
+      if record is not None:
+        self.store.setReceivedRecord(record,source)
     return True
   def getDataByPrefix(self, prefix):
     return self.store.getDataByPrefix(prefix)

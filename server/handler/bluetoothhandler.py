@@ -83,6 +83,7 @@ class AVNBlueToothReader(AVNWorker):
   @classmethod
   def getConfigParam(cls, child=None):
     rt=[
+        cls.PRIORITY_PARAM_DESCRIPTION,
         WorkerParameter('maxDevices',5,description="maximal number of bluetooth devices",type=WorkerParameter.T_NUMBER),
         WorkerParameter('deviceList','',description=", separated list of devices addresses. If set - only connect to those devices"),
         WorkerParameter('feederName','',editable=False,description="if set, use this feeder"),

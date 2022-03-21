@@ -32,6 +32,8 @@ import time
 
 import threading
 import copy
+
+from avnav_nmea import NMEAParser
 from avnav_util import Enum, AVNLog
 import sys
 import os
@@ -344,6 +346,9 @@ class AVNWorker(object):
   ENABLE_CONFIG_PARAM=[
     ENABLE_PARAM_DESCRIPTION
   ]
+  PRIORITY_PARAM_DESCRIPTION=WorkerParameter('priority',default=NMEAParser.DEFAULT_SOURCE_PRIORITY,
+                                             type=WorkerParameter.T_NUMBER,rangeOrList=[10,100],
+                                             description="The priority for this source. If there is data from higher priority sources, values will be ignored in parser")
   handlerListLock=threading.Lock()
   """a base class for all workers
      this provides some config functions and a common interfcace for handling them"""
@@ -911,10 +916,10 @@ class AVNWorker(object):
         rt+="%s=%s"%(k,str(v))
     return rt
 
-  def writeData(self,data,source=None,addCheckSum=False):
+  def writeData(self,data,source=None,addCheckSum=False,sourcePriority=NMEAParser.DEFAULT_SOURCE_PRIORITY):
     if self.feeder is None:
       raise Exception("no feeder in %s"%(self.getName()))
-    self.feeder.addNMEA(data,source,addCheckSum)
+    self.feeder.addNMEA(data,source,addCheckSum,sourcePriority=sourcePriority)
 
   def getUsedResources(self,type=None):
     '''
