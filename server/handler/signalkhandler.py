@@ -53,7 +53,7 @@ class Config(object):
   def __init__(self,param):
     self.skHost=AVNSignalKHandler.P_HOST.fromDict(param)
     self.port=AVNSignalKHandler.P_PORT.fromDict(param)
-    self.period=AVNSignalKHandler.P_PERIOD.fromDict(param)
+    self.period=AVNSignalKHandler.P_PERIOD.fromDict(param)/1000
     self.chartQueryPeriod=AVNSignalKHandler.P_CHARTPERIOD.fromDict(param)
     self.priority=AVNSignalKHandler.PRIORITY_PARAM_DESCRIPTION.fromDict(param)
     self.proxyMode=AVNSignalKHandler.P_CHARTPROXYMODE.fromDict(param)
@@ -67,8 +67,8 @@ class AVNSignalKHandler(AVNWorker):
                           description="set to signalk host")
   P_PERIOD=WorkerParameter('period',type=WorkerParameter.T_NUMBER,default=1000,
                            description='query time in ms')
-  P_CHARTPERIOD=WorkerParameter('chartQueryPeriod',type=WorkerParameter.T_NUMBER,default=10000,
-                                description="query period(ms) for SignalK charts")
+  P_CHARTPERIOD=WorkerParameter('chartQueryPeriod',type=WorkerParameter.T_NUMBER,default=10,
+                                description="query period(s) for SignalK charts")
   P_CHARTPROXYMODE=WorkerParameter('chartProxyMode',type=WorkerParameter.T_SELECT,default='sameHost',
                                    description='proxy tile requests: never,always,sameHost',
                                    rangeOrList=['never','always','sameHost'])
@@ -100,7 +100,7 @@ class AVNSignalKHandler(AVNWorker):
     return rt
 
   USERAPP_NAME="signalk"
-  PREFIX='signalk'
+  PREFIX='/signalk'
   CHARTPREFIX='charts'
 
   def registerDeregisterApp(self,register):
@@ -392,7 +392,11 @@ class AVNSignalKHandler(AVNWorker):
 
   def queryCharts(self,apiUrl,port):
     charturl = apiUrl + "resources/charts"
-    chartlistResponse = urllib.request.urlopen(charturl)
+    try:
+      chartlistResponse = urllib.request.urlopen(charturl)
+    except:
+      self.skCharts=[]
+      raise
     if chartlistResponse is None:
       self.skCharts = []
       return
@@ -420,7 +424,7 @@ class AVNSignalKHandler(AVNWorker):
         'charturl': url,
         'sequence': self.configSequence,
         'canDelete': False,
-        'icon': "signalk.svg",
+        'icon': "images/signalk.svg",
         'upzoom': True,
         'internal': {
           'url': "http://%s:%d" % (self.config.skHost, port) + chart.get('tilemapUrl'),
@@ -462,7 +466,7 @@ class AVNSignalKHandler(AVNWorker):
       return []
 
   def getHandledCommands(self):
-    return {'prefix': self.PREFIX+"/"+self.CHARTPREFIX}
+    return {'path': self.PREFIX+"/"+self.CHARTPREFIX}
 
   def handleApiRequest(self, type, command, requestparam, **kwargs):
     handler = kwargs.get('handler')
@@ -510,6 +514,10 @@ class AVNSignalKHandler(AVNWorker):
         break
     if chart is None:
       raise Exception("chart %s not found"%chartName)
+    if parr[1] == "sequence":
+      sData={'status':'OK','sequence':self.configSequence}
+      handler.sendNavResponse(json.dumps(sData))
+      return
     if parr[1] == "avnav.xml":
       requestHost = handler.headers.get('host')
       requestHostAddr = requestHost.split(':')[0]
