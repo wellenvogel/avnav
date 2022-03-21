@@ -266,6 +266,8 @@ formatTemperature.parameters=[
     {name:'unit',type:'SELECT',list:['celsius','kelvin'],default:'kelvin'}
 ]
 
+const skTemperature=formatTemperature;
+const skPressure=formatPressure;
 export default {
     formatDateTime,
     formatClock,
@@ -280,5 +282,7 @@ export default {
     formatString,
     formatDate,
     formatPressure,
-    formatTemperature
+    formatTemperature,
+    skTemperature,
+    skPressure
 };

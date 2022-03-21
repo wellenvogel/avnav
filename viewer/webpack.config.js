@@ -44,7 +44,8 @@ module.exports = (env, argv) => {
         {context: './demo', from: '*.xml', to: 'demo/'}
     ];
     var images = [
-        'WebIcon-512.png'
+        'WebIcon-512.png',
+        'signalk.svg'
 
     ];
     images.forEach(function (el) {

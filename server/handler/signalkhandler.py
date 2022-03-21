@@ -197,7 +197,7 @@ class AVNSignalKHandler(AVNWorker):
         addonhandler.registerAddOn(self.USERAPP_NAME,"http://$HOST:%s"%self.config.port,"signalk.svg")
       else:
         addonhandler.registerAddOn(self.USERAPP_NAME,"http://%s:%s" %
-                                              (self.config.skHost,self.config.port), "signalk.svg")
+                                              (self.config.skHost,self.config.port), "images/signalk.svg")
     errorReported=False
     self.setInfo('main',"connecting at %s" % baseUrl,WorkerStatus.STARTED)
     while sequence == self.configSequence:

@@ -207,6 +207,11 @@ export const createWidgetParameter=(name,type,list,displayName)=>{
     return createEditableParameter(name,type,list,displayName);
 };
 
+const typeIdFromType=(typeStr)=>{
+    let sp=WidgetParameter_TYPE[typeStr];
+    if (sp !== undefined) return sp;
+    return EditableParameter.TYPE[typeStr];
+}
 
 const getDefaultParameter=(name)=>{
     if (name === 'caption') return createWidgetParameter('caption',EditableParameter.TYPE.STRING);
@@ -284,7 +289,7 @@ class WidgetFactory{
                 //and formatter parameters as long as the type matches
                 let usePredefined = pdefinition.name === 'formatter' || predefined.type === WidgetParameter_TYPE.FORMATTER_PARAM;
                 if (!usePredefined && (typeof (pdefinition) !== 'object')) usePredefined = true;
-                if (!usePredefined && (predefined.type !== WidgetParameter_TYPE[pdefinition.type])) usePredefined = true;
+                if (!usePredefined && (predefined.type !== typeIdFromType(pdefinition.type))) usePredefined = true;
                 if (usePredefined) {
                     pdefinition = predefined;
                     //some special handling for the formatter
