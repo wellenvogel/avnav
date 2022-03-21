@@ -139,6 +139,7 @@ class AVNStore(object):
         if type(value) == dict:
           keylist=list(value.keys())
           isDict=True
+        hasUpdate=False
         for kext in keylist:
           if isDict:
             listKey=key+'.'+kext
@@ -154,10 +155,11 @@ class AVNStore(object):
             if not self.__isExpired(existing) and existing.priority > priority:
               doUpdate=False
           if doUpdate:
+            hasUpdate=True
             self.__list[listKey]=AVNStore.DataEntry(dataValue, priority=priority,source=source)
           else:
             AVNLog.debug("AVNavData: keeping existing entry for %s",listKey)
-          return doUpdate
+        return hasUpdate
       except :
         AVNLog.error("exception in writing data: %",traceback.format_exc())
         raise
