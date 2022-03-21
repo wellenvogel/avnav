@@ -319,7 +319,7 @@ class AVNHandlerManager(object):
               raise Exception("invalid main node or main node name for autoInstantiate")
             self.parseHandler(node.documentElement, handler, domAttached=False)
           except Exception:
-              AVNLog.error("error parsing default config %s for %s:%s",ai,name,sys.exc_info()[1])
+              AVNLog.error("error parsing default config %s for %s:%s",ai,name,traceback.format_exc())
               return False
     return len(AVNWorker.getAllHandlers()) > 0
 

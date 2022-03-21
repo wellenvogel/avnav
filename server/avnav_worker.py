@@ -34,6 +34,7 @@ import threading
 import copy
 
 from avnav_nmea import NMEAParser
+from avnav_store import AVNStore
 from avnav_util import Enum, AVNLog
 import sys
 import os
@@ -885,7 +886,7 @@ class AVNWorker(object):
 
     @type navdata: AVNStore
     """
-    self.navdata=navdata
+    self.navdata=navdata #type: AVNStore
     self.feeder = self.findFeeder(self.getStringParam('feederName'))
     try:
       self.checkConfig(self.param)
