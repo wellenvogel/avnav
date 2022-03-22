@@ -24,6 +24,7 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py
 ###############################################################################
+import datetime
 import json
 import re
 import sys
@@ -43,12 +44,18 @@ except:
   pass
 
 
-from avnav_util import AVNLog
+from avnav_util import AVNLog, AVNUtil
 from avnav_worker import AVNWorker, WorkerParameter, WorkerStatus
 from avnuserapps import AVNUserAppHandler
 from charthandler import AVNChartHandler
 from pluginhandler import AVNPluginHandler
 import avnav_handlerList
+
+def timeToTs(tm):
+  dt=AVNUtil.gt(tm)
+  return AVNUtil.datetimeToTsUTC(dt)
+
+
 class Config(object):
   def __init__(self,param):
     self.skHost=AVNSignalKHandler.P_HOST.fromDict(param)
@@ -121,6 +128,10 @@ class AVNSignalKHandler(AVNWorker):
     self.sourceName='signalk'
     self.config=None
     self.webSocket=None
+    self.firstWebsocketMessage=False
+    #compute a time offset from our time to the SK time
+    #from the first Websocket message
+    self.timeOffset=None
 
 
 
@@ -344,6 +355,19 @@ class AVNSignalKHandler(AVNWorker):
           return
         self.wait(5)
 
+  def checkOutdated(self,timestampStr):
+    if timestampStr is None:
+      return False
+    timeStamp=timeToTs(timestampStr)
+    expiryPeriod=self.navdata.getExpiryPeriod()
+    oldest=time.time()-expiryPeriod
+    if self.timeOffset is not None:
+      oldest+=self.timeOffset
+    if timeStamp < oldest:
+      return True
+    return False
+
+
   def webSocketRun(self):
     AVNLog.info("websocket receiver started")
     self.webSocket.run_forever()
@@ -351,6 +375,7 @@ class AVNSignalKHandler(AVNWorker):
 
   def webSocketOpen(self,*args):
     self.setInfo('websocket','connected',WorkerStatus.NMEA)
+    self.firstWebsocketMessage=True
 
   #there is a change in the websocket client somewhere between
   #0.44 and 0.55 - the newer versions omit the ws parameter
@@ -382,16 +407,29 @@ class AVNSignalKHandler(AVNWorker):
 
   def webSocketMessage(self,*args):
     message=self.getWSParam(*args)
-    self.setInfo('websocket', "connected at %s" % self.webSocket.url,WorkerStatus.NMEA)
     AVNLog.debug("received: %s",message)
     try:
       data=json.loads(message)
+      if self.firstWebsocketMessage:
+        self.firstWebsocketMessage=False
+        timestamp=data.get('timestamp')
+        if timestamp is not None:
+          skTimeStamp=timeToTs(timestamp)
+          localTimeStamp=time.time()
+          self.timeOffset=skTimeStamp-localTimeStamp
+        else:
+          self.timeOffset=None
+      self.setInfo('websocket', "connected at %s, timeOffset=%.0fs" %(self.webSocket.url,self.timeOffset or 0),WorkerStatus.NMEA)
       updates=data.get('updates')
       if updates is None:
         return
       for update in updates:
         values=update.get('values')
+        timestamp=update.get('timestamp')
         if values is None:
+          continue
+        if self.checkOutdated(timestamp):
+          AVNLog.debug("ignore outdated delta, ts=%s",timestamp)
           continue
         for item in values:
           value=item.get('value')
@@ -463,6 +501,9 @@ class AVNSignalKHandler(AVNWorker):
     self.skCharts = newList
   def storeData(self,node,prefix,priority):
     if 'value' in node:
+      if self.checkOutdated(node.get('timestamp')):
+        AVNLog.debug('ignore outdated value %s',prefix)
+        return
       self.setValue(prefix, node.get('value'))
       return
     for key, item in list(node.items()):
