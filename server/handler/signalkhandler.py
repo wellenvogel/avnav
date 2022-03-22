@@ -191,12 +191,22 @@ class AVNSignalKHandler(AVNWorker):
 
   def decodeSelf(self,path,value):
     for k in NMEAParser.GPS_DATA:
-      if k.signalK == path:
-        key=k.getKey()
-        if k.signalKConversion is not None:
-          value=k.signalKConversion(value)
-        AVNLog.debug("setting %s:%s from SK %s",key,str(value),path)
-        self.navdata.setValue(key,value,source=self.sourceName,priority=self.config.priority*10)
+      sk=k.signalK
+      if sk is not None:
+        if not type(sk) is list:
+          sk=[sk]
+        #uf we have multiple values we use we give a prio to them
+        subPrio=10
+        for skKey in sk:
+          subPrio-=1
+          if subPrio < 0:
+            subPrio=0
+          if skKey == path:
+            key=k.getKey()
+            if k.signalKConversion is not None:
+              value=k.signalKConversion(value)
+            AVNLog.debug("setting %s:%s from SK %s",key,str(value),path)
+            self.navdata.setValue(key,value,source=self.sourceName,priority=self.config.priority*10+subPrio)
 
   def setValue(self,path,value):
     self.navdata.setValue(self.PATH+"."+path,value,source=self.sourceName,priority=self.config.priority*10)

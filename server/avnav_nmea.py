@@ -61,19 +61,24 @@ class NMEAParser(object):
   STRIPCHARS={i:None for i in range(0,32)}
   #AIS field translations
   aisFieldTranslations={'msgtype':'type'}
-  K_HDGM=Key('headingMag','magnetic heading','\N{DEGREE SIGN}','navigation.headingMagnetic')
-  K_HDGT=Key('headingTrue','true heading','\N{DEGREE SIGN}','navigation.headingTrue')
+  K_HDGM=Key('headingMag','magnetic heading','\N{DEGREE SIGN}','navigation.headingMagnetic',signalKConversion=AVNUtil.rad2deg)
+  K_HDGT=Key('headingTrue','true heading','\N{DEGREE SIGN}','navigation.headingTrue',signalKConversion=AVNUtil.rad2deg)
   K_VWTT=Key('waterTemp','water temparature','k',signalK='environment.water.temperature')
   K_VHWS=Key('waterSpeed','speed through water','m/s','navigation.speedThroughWater')
+  K_TWS=Key('trueWindSpeed','wind speed true (speed through water ref or ground ref)','m/s',['environment.wind.speedTrue','environment.wind.speedOverGround'])
+  K_AWS=Key('windSpeed','apparent wind speed in m/s','m/s','environment.wind.speedApparent')
+  K_TWA=Key('trueWindAngle','true wind angle','\N{DEGREE SIGN}',['environment.wind.directionTrue','environment.wind.directionGround'],signalKConversion=AVNUtil.rad2deg)
+  K_AWA=Key('windAngle','wind direction','\N{DEGREE SIGN}','environment.wind.angleApparent',signalKConversion=AVNUtil.rad2deg)
   #we will add the GPS base to all entries
   GPS_DATA=[
     Key('lat','gps latitude',signalK='navigation.position.latitude'),
     Key('lon','gps longitude',signalK='navigation.position.longitude'),
     Key('track','course','\N{DEGREE SIGN}','navigation.courseOverGroundTrue',signalKConversion=AVNUtil.rad2deg),
     Key('speed','speed in m/s','m/s','navigation.speedOverGround'),
-    Key('windAngle','wind direction','\N{DEGREE SIGN}'),
-    Key('windReference','wind reference: R or T'),
-    Key('windSpeed','wind speed in m/s','m/s'),
+    K_TWA,
+    K_AWA,
+    K_AWS,
+    K_TWS,
     Key('depthBelowTransducer','depthBelowTransducer in m','m','environment.depth.belowTransducer'),
     Key('depthBelowWaterline','depthBelowWaterlinein m','m','environment.depth.belowSurface'),
     Key('depthBelowKeel','depthBelowKeel in m','m','environment.depth.belowKeel'),
@@ -338,8 +343,7 @@ class NMEAParser(object):
         '''
         windAngle=float(darray[1] or '0')
         dir=darray[2]
-        rt['windAngle']= 360-windAngle if ( dir == 'L' or dir == 'l') else windAngle
-        rt['windReference']='R'
+        rt[self.K_AWA.key]= 360-windAngle if ( dir == 'L' or dir == 'l') else windAngle
         priority=0
         #we keep the speed im m/s
         windspeed=None
@@ -352,7 +356,7 @@ class NMEAParser(object):
         elif darray[7] != '':
           windspeed=float(darray[7] or '0')
         if windspeed is not None:
-          rt['windSpeed']=windspeed
+          rt[self.K_AWS.key]=windspeed
         self.addToNavData(rt,source=source,record=tag,priority=basePriority+priority)
         return True
       if tag == 'MWV':
@@ -366,19 +370,18 @@ class NMEAParser(object):
         5) Status, A = Data Valid
         6) Checksum
         '''
-        rt['windAngle']=float(darray[1])
-        rt['windReference']=darray[2]
-        priority=1
-        if darray[2] != 'R':
-          priority=0
+        ref=darray[2]
+        angleKey=self.K_TWA if ref == 'T' else self.K_AWA
+        speedKey=self.K_TWS if ref == 'T' else self.K_AWS
+        rt[angleKey.key]=float(darray[1])
         #we keep the speed im m/s
         windspeed=float(darray[3] or '0')
         if (darray[4] == 'K'):
           windspeed=windspeed/3.6
         if (darray[4] == 'N'):
           windspeed=windspeed*self.NM/3600
-        rt['windSpeed']=windspeed
-        self.addToNavData(rt,source=source,record=tag,priority=basePriority+priority)
+        rt[speedKey.key]=windspeed
+        self.addToNavData(rt,source=source,record=tag,priority=basePriority)
         return True
       if tag == 'DPT':
         '''

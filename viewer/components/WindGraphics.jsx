@@ -37,15 +37,50 @@ class WindGraphics extends React.Component{
     shouldComponentUpdate(nextProps,nextState){
         return Helper.compareProperties(this.props,nextProps,WindGraphics.storeKeys);
     }
+    getValues(){
+        let kind = this.props.kind;
+        let windSpeed;
+        let windAngle;
+        let suffix='';
+        if (kind !== 'true' && kind !== 'apparent') kind='auto';
+        if (kind === 'auto'){
+            if (this.props.windAngle !== undefined && this.props.windSpeed !== undefined){
+                windAngle=this.props.windAngle;
+                windSpeed=this.props.windSpeed;
+                suffix='A';
+            }
+            else{
+                windAngle=this.props.windAngleTrue;
+                windSpeed=this.props.windSpeedTrue;
+                suffix="T";
+            }
+        }
+        if (kind === 'apparent'){
+            windAngle=this.props.windAngle;
+            windSpeed=this.props.windSpeed;
+            suffix='A';
+        }
+        if (kind === 'true'){
+            windAngle=this.props.windAngleTrue;
+            windSpeed=this.props.windSpeedTrue;
+            suffix="T";
+        }
+        return {
+            windAngle: windAngle,
+            windSpeed: windSpeed,
+            suffix: suffix
+        }
+    }
     render(){
         let self = this;
         let classes = "widget windGraphics " + this.props.classes || ""+ " "+this.props.className||"";
         let style = this.props.style || {};
         setTimeout(self.drawWind,0);
+        let current=this.getValues();
         let windSpeed="";
         let showKnots=this.props.showKnots;
         try{
-            windSpeed=parseFloat(this.props.windSpeed);
+            windSpeed=parseFloat(current.windSpeed);
             if (showKnots){
                 windSpeed=windSpeed*3600/navcompute.NM;
             }
@@ -58,7 +93,7 @@ class WindGraphics extends React.Component{
                 <div className='infoLeft'>Wind</div>
                 <div className='infoRight'>{showKnots?"kn":"m/s"}</div>
                 <div className="windSpeed">{windSpeed}</div>
-                <div className="windReference">{this.props.windReference}</div>
+                <div className="windReference">{current.suffix}</div>
             </div>
 
         );
@@ -70,6 +105,7 @@ class WindGraphics extends React.Component{
         setTimeout(self.drawWind,0);
     }
     drawWind(){
+        let current=this.getValues();
         let colors=this.props.nightMode?nightColors:normalColors;
         let canvas=this.canvas;
         if (! canvas) return;
@@ -105,7 +141,7 @@ class WindGraphics extends React.Component{
         let angle_offset = 0;		// Angle offset for scala, Center 0° is north
 
         // Create random value for wind direction and wind speed
-        let winddirection = parseFloat(this.props.windAngle);
+        let winddirection = parseFloat(current.windAngle);
 
         // Calculation of pointer rotation
         let angle = ((angle_scala) / (value_max - value_min) * winddirection) + angle_offset;
@@ -115,30 +151,33 @@ class WindGraphics extends React.Component{
         ctx.lineWidth = circle_linewidth;
         ctx.arc(width / 2 ,height / 2,radius*0.97,0,2*Math.PI);
         ctx.stroke();
-        // Write left partial circle
-        ctx.beginPath();
-        ctx.strokeStyle = colors.red; // red
-        ctx.lineWidth = 15;
-        let start = 270-scaleAngle;
-        let end = 250;
-        ctx.arc(width / 2 ,height / 2,radius*0.9,2*Math.PI/360*start,2*Math.PI/360*end);
-        ctx.stroke();
-        // Write right partial circle
-        ctx.beginPath();
-        ctx.strokeStyle = colors.green; // green
-        ctx.lineWidth = 15;
-        start = 290;
-        end = 270+scaleAngle;
-        ctx.arc(width / 2 ,height / 2,radius*0.9,2*Math.PI/360*start,2*Math.PI/360*end);
-        ctx.stroke();
-        // Write partial circle
-        ctx.beginPath();
-        ctx.strokeStyle = colors.circle; // gray
-        ctx.lineWidth = 15;
-        start = 40;
-        end = 140;
-        ctx.arc(width / 2 ,height / 2,radius*0.9,2*Math.PI/360*start,2*Math.PI/360*end);
-        ctx.stroke();
+        let start,end;
+        if (current.suffix !== 'T') {
+            // Write left partial circle
+            ctx.beginPath();
+            ctx.strokeStyle = colors.red; // red
+            ctx.lineWidth = 15;
+            start = 270 - scaleAngle;
+            end = 250;
+            ctx.arc(width / 2, height / 2, radius * 0.9, 2 * Math.PI / 360 * start, 2 * Math.PI / 360 * end);
+            ctx.stroke();
+            // Write right partial circle
+            ctx.beginPath();
+            ctx.strokeStyle = colors.green; // green
+            ctx.lineWidth = 15;
+            start = 290;
+            end = 270 + scaleAngle;
+            ctx.arc(width / 2, height / 2, radius * 0.9, 2 * Math.PI / 360 * start, 2 * Math.PI / 360 * end);
+            ctx.stroke();
+            // Write partial circle
+            ctx.beginPath();
+            ctx.strokeStyle = colors.circle; // gray
+            ctx.lineWidth = 15;
+            start = 40;
+            end = 140;
+            ctx.arc(width / 2, height / 2, radius * 0.9, 2 * Math.PI / 360 * start, 2 * Math.PI / 360 * end);
+            ctx.stroke();
+        }
         // Write scale
         for (let i = 0; i < 12; i++){
             ctx.beginPath();
@@ -153,7 +192,7 @@ class WindGraphics extends React.Component{
         // Move the pointer from 0,0 to center position
         ctx.translate(width / 2 ,height / 2);
         ctx.font = fontSize+"px Arial";
-        if (! this.props.show360){
+        if (! this.props.show360 && current.suffix !== 'T'){
             if (winddirection > 180) winddirection-=360;
         }
         let txt=Formatter.formatDirection(winddirection).replace(/ /g,"0");
@@ -180,19 +219,24 @@ WindGraphics.propTypes={
     classes: PropTypes.string,
     windSpeed: PropTypes.number,
     windAngle: PropTypes.number,
+    windAngleTrue:  PropTypes.number,
+    windSpeedTrue:  PropTypes.number,
     showKnots:  PropTypes.bool,
     scaleAngle: PropTypes.number,
-    nightMode: PropTypes.bool
+    nightMode: PropTypes.bool,
+    kind: PropTypes.string //true,apparent,auto
 };
 WindGraphics.storeKeys={
     windSpeed:  keys.nav.gps.windSpeed,
     windAngle:  keys.nav.gps.windAngle,
-    windReference: keys.nav.gps.windReference,
+    windAngleTrue: keys.nav.gps.trueWindAngle,
+    windSpeedTrue: keys.nav.gps.trueWindSpeed,
     visible:    keys.properties.showWind,
     showKnots:  keys.properties.windKnots,
     scaleAngle: keys.properties.windScaleAngle
 };
 WindGraphics.editableParameters={
-    show360: {type:'BOOLEAN',default:false}
+    show360: {type:'BOOLEAN',default:false},
+    kind: {type:'SELECT',list:['auto','true','apparent'],default:'auto'}
 }
 export default WindGraphics;

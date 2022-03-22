@@ -365,9 +365,17 @@ class AVNUtil(object):
 
   @classmethod
   def rad2deg(cls,value):
+    '''
+    format rad to deg, additionally mapping angles < 0 to 360-angle
+    @param value:
+    @return:
+    '''
     if value is None:
       return None
-    return value*180/math.pi
+    rt=value*180/math.pi
+    if rt < 0:
+      rt=360+rt
+    return rt
 
   #convert AIS data (and clone the data)
   #positions / 600000

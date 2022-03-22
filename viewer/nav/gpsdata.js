@@ -106,12 +106,10 @@ GpsData.prototype.handleGpsResponse=function(data, status){
         gpsdata.speed = data.speed;
         delete data.speed;
         gpsdata=this.average(gpsdata);
-        gpsdata.windAngle = (data.windAngle !== undefined) ? data.windAngle : 0;
+        gpsdata.windAngle = data.windAngle;
         delete data.windAngle;
-        gpsdata.windSpeed = (data.windSpeed !== undefined) ? data.windSpeed : 0;
+        gpsdata.windSpeed = data.windSpeed ;
         delete data.windSpeed;
-        gpsdata.windReference = data.windReference || 'R';
-        delete data.windReference;
         gpsdata.depthBelowTransducer=data.depthBelowTransducer;
         delete data.depthBelowTransducer;
     }
