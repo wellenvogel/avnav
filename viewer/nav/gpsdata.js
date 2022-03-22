@@ -91,9 +91,9 @@ GpsData.prototype.handleGpsResponse=function(data, status){
     };
     gpsdata.connectionLost=!this.handleGpsStatus(status);
     if (status) {
-        gpsdata.valid=(data.lat != null && data.lon != null && data.mode != null && data.mode >=1);
+        gpsdata.valid=(data.lat !== null && data.lat !== undefined && data.lon !== null && data.lon !== undefined );
         gpsdata.rtime = null;
-        if (data.time != null && data.time !== undefined) gpsdata.rtime = new Date(data.time);
+        if (data.time !== null && data.time !== undefined) gpsdata.rtime = new Date(data.time);
         delete data.time;
         gpsdata.lon = data.lon;
         delete data.lon;

@@ -363,6 +363,12 @@ class AVNUtil(object):
         math.sin(math.radians(clat))*math.cos(math.radians(elat))*math.cos(math.radians(elon)-math.radians(clon))
     return ((math.atan2(y, x)*180/math.pi)+360)%360.0
 
+  @classmethod
+  def rad2deg(cls,value):
+    if value is None:
+      return None
+    return value*180/math.pi
+
   #convert AIS data (and clone the data)
   #positions / 600000
   #speed/10

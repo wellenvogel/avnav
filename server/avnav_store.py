@@ -36,16 +36,17 @@ class AVNStore(object):
   BASE_KEY_GPS = 'gps'
   BASE_KEY_AIS = 'ais'
   BASE_KEY_SKY = 'sky'
-  KEY_LAST_RECORD = 'internal.last' #we remember when we received the last kind of NMEA record
+
   # AIS messages we store
   knownAISTypes = (1, 2, 3, 5, 18, 19, 24)
   class DataEntry(object):
-    def __init__(self,value,source=None,priority=0,keepAlways=False):
+    def __init__(self,value,source=None,priority=0,keepAlways=False,record=None):
       self.value=value
       self.timestamp=AVNUtil.utcnow()
       self.source=source
       self.priority=priority
       self.keepAlways=keepAlways
+      self.record=record
 
   class AisDataEntry(object):
     def __init__(self,data,priority=0):
@@ -80,7 +81,6 @@ class AVNStore(object):
   def __registerInternalKeys(self):
     self.registerKey(self.BASE_KEY_AIS+".count","AIS count",self.__class__.__name__)
     self.registerKey(self.BASE_KEY_AIS+".entities.*","AIS entities",self.__class__.__name__)
-    self.registerKey(self.KEY_LAST_RECORD+".*","timestamp of last received record",self.__class__.__name__)
 
   def __isExpired(self, entry, now=None):
     if entry.keepAlways:
@@ -121,7 +121,7 @@ class AVNStore(object):
     self.__listLock.release()
     return True
 
-  def setValue(self,key,value,source=None,priority=0):
+  def setValue(self,key,value,source=None,priority=0,record=None):
     """
     set a data value
     @param key: the key to be set
@@ -163,12 +163,6 @@ class AVNStore(object):
       except :
         AVNLog.error("exception in writing data: %",traceback.format_exc())
         raise
-
-  def setReceivedRecord(self,record,source=None):
-    if len(record) > 3:
-      record=record[-3:]
-    now=AVNUtil.utcnow()
-    self.setValue(self.KEY_LAST_RECORD+"."+record,now,source)
 
   def setAisValue(self,mmsi,data,source=None,priority=0):
     """
@@ -243,9 +237,9 @@ class AVNStore(object):
     return rt
 
   def getSingleValue(self,key,includeInfo=False):
-    self.__listLock.acquire()
-    rt=self.__list.get(key)
-    self.__listLock.release()
+    rt=None
+    with self.__listLock:
+      rt=self.__list.get(key)
     if rt is None:
       return None
     if self.__isExpired(rt):
@@ -270,44 +264,42 @@ class AVNStore(object):
     prefix=prefix+"."
     plen=len(prefix)
     rt={}
-    self.__listLock.acquire()
-    try:
-      now=AVNUtil.utcnow()
-      keysToRemove=[]
-      for key in list(self.__list.keys()):
-        if not key.startswith(prefix):
-          continue
-        entry=self.__list[key]
-        if self.__isExpired(entry, now):
-          keysToRemove.append(key)
-        else:
-          nkey=key[plen:]
-          if nkey.find(".") >= 0:
-            nkey=re.sub('\.*$','',nkey)
-          if nkey.find(".") >= 0:
-            #compound key
-            keyparts=nkey.split(".")
-            numparts=len(keyparts)
-            current=rt
-            for i in range(0,numparts-1):
-              if current.get(keyparts[i]) is None:
-                current[keyparts[i]]={}
-              current=current[keyparts[i]]
-              if not type(current) == dict:
-                AVNLog.error("inconsistent data , found normal value and dict with key %s"%(".".join(keyparts[0:i])))
-                break
-            if type(current) == dict:
-              current[keyparts[-1]]=entry.value
+    with self.__listLock:
+      try:
+        now=AVNUtil.utcnow()
+        keysToRemove=[]
+        for key in list(self.__list.keys()):
+          if not key.startswith(prefix):
+            continue
+          entry=self.__list[key]
+          if self.__isExpired(entry, now):
+            keysToRemove.append(key)
           else:
-            rt[nkey]=entry.value
-      for rkey in keysToRemove:
-        del self.__list[rkey]
-    except:
-      self.__listLock.release()
-      AVNLog.error("error getting value with prefix %s: %s"%(prefix,traceback.format_exc()))
-      raise
-    self.__listLock.release()
-    return rt
+            nkey=key[plen:]
+            if nkey.find(".") >= 0:
+              nkey=re.sub('\.*$','',nkey)
+            if nkey.find(".") >= 0:
+              #compound key
+              keyparts=nkey.split(".")
+              numparts=len(keyparts)
+              current=rt
+              for i in range(0,numparts-1):
+                if current.get(keyparts[i]) is None:
+                  current[keyparts[i]]={}
+                current=current[keyparts[i]]
+                if not type(current) == dict:
+                  AVNLog.error("inconsistent data , found normal value and dict with key %s"%(".".join(keyparts[0:i])))
+                  break
+              if type(current) == dict:
+                current[keyparts[-1]]=entry.value
+            else:
+              rt[nkey]=entry.value
+        for rkey in keysToRemove:
+          del self.__list[rkey]
+      except:
+        AVNLog.error("error getting value with prefix %s: %s"%(prefix,traceback.format_exc()))
+        raise
+      return rt
 
   #delete all entries from the list (e.g. when we have to set the time)
   def reset(self): 

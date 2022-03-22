@@ -192,9 +192,7 @@ class ApiImpl(AVNApi):
     if not matches:
       AVNLog.error("%s:setting invalid path %s"%(self.prefix,path))
       return False
-    if self.store.setValue(path,value,source,sourcePriority*10):
-      if record is not None:
-        self.store.setReceivedRecord(record,source)
+    self.store.setValue(path,value,source,sourcePriority*10,record=record)
     return True
   def getDataByPrefix(self, prefix):
     return self.store.getDataByPrefix(prefix)

@@ -422,16 +422,12 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
     rtv = self.server.navdata.getDataByPrefix(AVNStore.BASE_KEY_GPS)
     # we depend the status on the mode: no mode - red (i.e. not connected), mode: 1- yellow, mode 2+lat+lon - green
     status = "red"
-    mode = rtv.get('mode')
-    if mode is not None:
-      if int(mode) == 1:
-        status = "yellow"
-      if int(mode) == 2 or int(mode) == 3:
-        if rtv.get("lat") is not None and rtv.get('lon') is not None:
-          status = "green"
-        else:
-          status = "yellow"
-    src = self.server.navdata.getLastSource(AVNStore.BASE_KEY_GPS + ".lat")  # we just want the last source of position
+    if rtv.get("lat") is not None and rtv.get('lon') is not None:
+      status = "green"
+    info = self.server.navdata.getSingleValue(AVNStore.BASE_KEY_GPS + ".lat",includeInfo=True)  # we just want the last source of position
+    src='unknown'
+    if info is not None:
+      src=info.source
     satInview = rtv.get('satInview')
     if satInview is None:
       satInview=0
@@ -445,7 +441,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
     if numAis > 0:
       status = "green"
     src = self.server.navdata.getLastAisSource()
-    statusAis = {"status": status, "source": self.server.navdata.getLastAisSource(), "info": "%d targets" % (numAis)}
+    statusAis = {"status": status, "source": src, "info": "%d targets" % (numAis)}
     rt = {"status": "OK","data":{"nmea": statusNmea, "ais": statusAis}}
     return json.dumps(rt,cls=Encoder)
 

@@ -42,10 +42,12 @@ class EmptyPosition(Exception):
 #parses some simple NMEA setences and uses ais from the gpsd project to parse AIS setences
 #adds parsed data to a navdata struct
 class Key(object):
-  def __init__(self,key,description,unit=None):
+  def __init__(self,key,description,unit=None,signalK=None,signalKConversion=None):
     self.key=key
     self.description=description
     self.unit=unit
+    self.signalK=signalK
+    self.signalKConversion=signalKConversion
   def getKey(self):
     return AVNStore.BASE_KEY_GPS+"."+self.key
 
@@ -59,28 +61,25 @@ class NMEAParser(object):
   STRIPCHARS={i:None for i in range(0,32)}
   #AIS field translations
   aisFieldTranslations={'msgtype':'type'}
-  K_HDGM=Key('headingMag','magnetic heading','\N{DEGREE SIGN}')
-  K_HDGT=Key('headingTrue','true heading','\N{DEGREE SIGN}')
-  K_VWTT=Key('waterTemp','water temparature','k')
-  K_VHWS=Key('waterSpeed','speed through water','m/s')
+  K_HDGM=Key('headingMag','magnetic heading','\N{DEGREE SIGN}','navigation.headingMagnetic')
+  K_HDGT=Key('headingTrue','true heading','\N{DEGREE SIGN}','navigation.headingTrue')
+  K_VWTT=Key('waterTemp','water temparature','k',signalK='environment.water.temperature')
+  K_VHWS=Key('waterSpeed','speed through water','m/s','navigation.speedThroughWater')
   #we will add the GPS base to all entries
   GPS_DATA=[
-    Key('lat','gps latitude'),
-    Key('lon','gps longitude'),
-    Key('mode','nmea mode 0/2'),
-    Key('track','course','\N{DEGREE SIGN}'),
-    Key('speed','speed in m/s','m/s'),
+    Key('lat','gps latitude',signalK='navigation.position.latitude'),
+    Key('lon','gps longitude',signalK='navigation.position.longitude'),
+    Key('track','course','\N{DEGREE SIGN}','navigation.courseOverGroundTrue',signalKConversion=AVNUtil.rad2deg),
+    Key('speed','speed in m/s','m/s','navigation.speedOverGround'),
     Key('windAngle','wind direction','\N{DEGREE SIGN}'),
     Key('windReference','wind reference: R or T'),
     Key('windSpeed','wind speed in m/s','m/s'),
-    Key('depthBelowTransducer','depthBelowTransducer in m','m'),
-    Key('depthBelowWaterline','depthBelowWaterlinein m','m'),
-    Key('depthBelowKeel','depthBelowKeel in m','m'),
-    Key('source','source of GPS info'),
-    Key('tag','the original NMEA record'),
-    Key('time','the received GPS time'),
-    Key('satInview', 'number of Sats in view'),
-    Key('satUsed', 'number of Sats in use'),
+    Key('depthBelowTransducer','depthBelowTransducer in m','m','environment.depth.belowTransducer'),
+    Key('depthBelowWaterline','depthBelowWaterlinein m','m','environment.depth.belowSurface'),
+    Key('depthBelowKeel','depthBelowKeel in m','m','environment.depth.belowKeel'),
+    Key('time','the received GPS time',signalK='navigation.datetime'),
+    Key('satInview', 'number of Sats in view',signalK='navigation.gnss.satellitesInView.count'),
+    Key('satUsed', 'number of Sats in use',signalK='navigation.gnss.satellites'),
     Key('transducers.*','transducer data from xdr'),
     K_HDGM,
     K_HDGT,
@@ -116,11 +115,8 @@ class NMEAParser(object):
   #timedate is a datetime object as returned by gpsTimeToTime
   #fill this additionally into the time part of data
   def addToNavData(self,data,record=None,source='internal',priority=0):
-    rt=self.navdata.setValue(AVNStore.BASE_KEY_GPS,data,source=source,priority=priority)
-    if rt:
-      if record is not None:
-        self.navdata.setReceivedRecord(record,source)
-    
+    self.navdata.setValue(AVNStore.BASE_KEY_GPS,data,source=source,priority=priority,record=record)
+
   #returns an datetime object containing the current gps time
   @classmethod
   def gpsTimeToTime(cls,gpstime,gpsdate=None):
@@ -278,9 +274,10 @@ class NMEAParser(object):
     #as only with this one we have really a valid complete timestamp
     try:
       if tag=='GGA':
-        rt['lat']=self.nmeaPosToFloat(darray[2],darray[3])
-        rt['lon']=self.nmeaPosToFloat(darray[4],darray[5])
-        rt['mode']=int(darray[6] or '0') #quality
+        mode=int(darray[6] or '0') #quality
+        if mode >= 1:
+          rt['lat']=self.nmeaPosToFloat(darray[2],darray[3])
+          rt['lon']=self.nmeaPosToFloat(darray[4],darray[5])
         rt['satUsed']=int(darray[7] or '0')
         self.addToNavData(rt,source=source,record=tag)
         return True
@@ -289,12 +286,13 @@ class NMEAParser(object):
         self.addToNavData(rt,source=source,record=tag,priority=basePriority)
         return True
       if tag=='GLL':
-        rt['mode']=1
+        mode=1
         if len(darray) > 6:
-          rt['mode']= (0 if (darray[6] != 'A') else 2)
-        rt['lat']=self.nmeaPosToFloat(darray[1],darray[2])
-        rt['lon']=self.nmeaPosToFloat(darray[3],darray[4])
-        self.addToNavData(rt,source=source,record=tag,priority=basePriority)
+          mode= (0 if (darray[6] != 'A') else 2)
+        if mode >= 1:
+          rt['lat']=self.nmeaPosToFloat(darray[1],darray[2])
+          rt['lon']=self.nmeaPosToFloat(darray[3],darray[4])
+          self.addToNavData(rt,source=source,record=tag,priority=basePriority)
         return True
       if tag=='VTG':
         mode=darray[2]
@@ -309,11 +307,12 @@ class NMEAParser(object):
       if tag=='RMC':
         #$--RMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,xxxx,x.x,a*hh
         #this includes current date
-        rt['mode']=( 0 if darray[2] != 'A' else 2)
-        rt['lat']=self.nmeaPosToFloat(darray[3],darray[4])
-        rt['lon']=self.nmeaPosToFloat(darray[5],darray[6])
-        rt['speed']=float(darray[7] or '0')*self.NM/3600
-        rt['track']=float(darray[8] or '0')
+        mode=( 0 if darray[2] != 'A' else 2)
+        if mode >= 1:
+          rt['lat']=self.nmeaPosToFloat(darray[3],darray[4])
+          rt['lon']=self.nmeaPosToFloat(darray[5],darray[6])
+          rt['speed']=float(darray[7] or '0')*self.NM/3600
+          rt['track']=float(darray[8] or '0')
         gpstime = darray[1]
         gpsdate = darray[9]
         if gpsdate != "" and gpstime != "":

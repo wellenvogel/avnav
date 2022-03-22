@@ -57,6 +57,7 @@ class Config(object):
     self.chartQueryPeriod=AVNSignalKHandler.P_CHARTPERIOD.fromDict(param)
     self.priority=AVNSignalKHandler.PRIORITY_PARAM_DESCRIPTION.fromDict(param)
     self.proxyMode=AVNSignalKHandler.P_CHARTPROXYMODE.fromDict(param)
+    self.decode=AVNSignalKHandler.P_DIRECT.fromDict(param)
 
 
 class AVNSignalKHandler(AVNWorker):
@@ -176,6 +177,26 @@ class AVNSignalKHandler(AVNWorker):
       charthandler.registerExternalProvider(self.CHARTHANDLER_PREFIX,None)
 
   PATH="gps.signalk"
+
+  def decodeSelf(self,path,value):
+    for k in NMEAParser.GPS_DATA:
+      if k.signalK == path:
+        key=k.getKey()
+        if k.signalKConversion is not None:
+          value=k.signalKConversion(value)
+        AVNLog.debug("setting %s:%s from SK %s",key,str(value),path)
+        self.navdata.setValue(key,value,source=self.sourceName,priority=self.config.priority*10)
+
+  def setValue(self,path,value):
+    self.navdata.setValue(self.PATH+"."+path,value,source=self.sourceName,priority=self.config.priority*10)
+    if self.config.decode:
+      if not type(value) is dict:
+        self.decodeSelf(path,value)
+      else:
+        for k,v in value.items():
+          self.decodeSelf(path+"."+k,v)
+
+
   def _runI(self):
     sequence=self.configSequence
     self.config=Config(self.param)
@@ -300,10 +321,10 @@ class AVNSignalKHandler(AVNWorker):
                 self.setInfo('main', "connected at %s" % apiUrl,WorkerStatus.NMEA)
               data=json.loads(response.read())
               AVNLog.debug("read: %s",json.dumps(data))
-              self.storeData(data,self.PATH,self.config.priority)
+              self.storeData(data,None,self.config.priority)
               name=data.get('name')
               if name is not None:
-                self.navdata.setValue(self.PATH+".name",name,source=self.sourceName,priority=self.config.priority)
+                self.setValue("name",name)
           else:
             pass
           if self.config.chartQueryPeriod > 0 and lastChartQuery < (now - self.config.chartQueryPeriod):
@@ -380,7 +401,7 @@ class AVNSignalKHandler(AVNWorker):
               #TODO: handle notifications
               pass
             else:
-              self.navdata.setValue(self.PATH+"."+path,value, self.sourceName,self.config.priority)
+              self.setValue(path,value)
     except:
       AVNLog.error("error decoding %s:%s",message,traceback.format_exc())
       try:
@@ -442,11 +463,18 @@ class AVNSignalKHandler(AVNWorker):
     self.skCharts = newList
   def storeData(self,node,prefix,priority):
     if 'value' in node:
-      self.navdata.setValue(prefix, node.get('value'), source=self.sourceName,priority=priority)
+      self.setValue(prefix, node.get('value'))
       return
     for key, item in list(node.items()):
+      if key == 'notifications':
+        continue
       if isinstance(item,dict):
-        self.storeData(item,prefix+"."+key,priority)
+        newPrefix=prefix
+        if newPrefix is None:
+          newPrefix=key
+        else:
+          newPrefix=newPrefix+"."+key
+        self.storeData(item,newPrefix,priority)
 
   def listCharts(self,hostip):
     AVNLog.debug("listCharts %s"%hostip)
