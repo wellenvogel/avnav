@@ -318,11 +318,13 @@ class AVNSignalKHandler(AVNWorker):
               response=urllib.request.urlopen(selfUrl)
               if response is None:
                 self.skCharts = []
+                self.setInfo('charts',"unable to fetch from %s: None"%selfUrl,WorkerStatus.ERROR)
                 if not errorReported:
                   AVNLog.error("unable to fetch from %s: None", selfUrl)
                   errorReported=True
             except Exception as e:
               self.skCharts=[]
+              self.setInfo('charts',"unable to fetch from %s: %s"%(selfUrl,str(e)),WorkerStatus.ERROR)
               if not errorReported:
                 AVNLog.error("unable to fetch from %s:%s",selfUrl,str(e))
                 errorReported=True
@@ -453,10 +455,12 @@ class AVNSignalKHandler(AVNWorker):
     charturl = apiUrl + "resources/charts"
     try:
       chartlistResponse = urllib.request.urlopen(charturl)
-    except:
+    except Exception as e:
+      self.setInfo('charts','unable to read charts: %s'%str(e),WorkerStatus.ERROR)
       self.skCharts=[]
       raise
     if chartlistResponse is None:
+      self.setInfo('charts','no charts',WorkerStatus.STARTED)
       self.skCharts = []
       return
     chartlist = json.loads(chartlistResponse.read())
@@ -499,6 +503,7 @@ class AVNSignalKHandler(AVNWorker):
       }
       newList.append(chartInfo)
     self.skCharts = newList
+    self.setInfo('charts','read %d charts'%len(newList),WorkerStatus.NMEA)
   def storeData(self,node,prefix,priority):
     if 'value' in node:
       if self.checkOutdated(node.get('timestamp')):
