@@ -26,6 +26,7 @@
 ###############################################################################
 import datetime
 import json
+import operator
 import re
 import sys
 import threading
@@ -33,6 +34,7 @@ import time
 import traceback
 import urllib.request
 import urllib.parse
+from functools import reduce
 
 from avnav_nmea import NMEAParser
 
@@ -52,9 +54,61 @@ from pluginhandler import AVNPluginHandler
 import avnav_handlerList
 
 def timeToTs(tm):
+  if tm is None:
+    return None
   dt=AVNUtil.gt(tm)
   return AVNUtil.datetimeToTsUTC(dt)
 
+class AE(object):
+  def __init__(self,path,converter=None):
+    self.path=path
+    self.converter=converter
+  def getValue(self,data):
+    value=data
+    if type(value) is dict:
+      value=value.get('value')
+    if value is None:
+      return value
+    if self.converter is not None:
+      return self.converter(value)
+    else:
+      return value
+
+  def getTimestamp(self,data):
+    if not type(data) is dict:
+      return None
+    ts=data.get('timestamp')
+    return timeToTs(ts)
+
+def saveGetItem(data,key):
+  if not type(data) is dict:
+    return None
+  return data.get(key)
+def convertAisShipType(value):
+  return saveGetItem(value,'id')
+def convertAisClass(value):
+  if value == "A":
+    return 1
+  if value == "B":
+    return 18
+  return value
+def convertAisLon(value):
+  return saveGetItem(value,'longitude')
+def convertAisLat(value):
+  return saveGetItem(value,'latitude')
+
+AISPATHMAP={
+  'mmsi':AE('mmsi'),
+  'shipname':AE('name'),
+  'speed':AE('navigation.speedOverGround'),
+  'course':AE('navigation.courseOverGroundTrue',converter=AVNUtil.rad2deg),
+  'callsign':AE('communication.callsignVhf'),
+  'shiptype': AE('design.aisShipType',converter=convertAisShipType),
+  'lon': AE('navigation.position',converter=convertAisLon),
+  'lat': AE('navigation.position',converter=convertAisLat),
+  'destination': AE('navigation.destination'),
+  'type': AE('sensors.ais.class',converter=convertAisClass)
+}
 
 class Config(object):
   def __init__(self,param):
@@ -65,7 +119,23 @@ class Config(object):
     self.priority=AVNSignalKHandler.PRIORITY_PARAM_DESCRIPTION.fromDict(param)
     self.proxyMode=AVNSignalKHandler.P_CHARTPROXYMODE.fromDict(param)
     self.decode=AVNSignalKHandler.P_DIRECT.fromDict(param)
+    self.aisFetchPeriod=AVNSignalKHandler.P_AISPERIOD.fromDict(param) if AVNSignalKHandler.P_AIS.fromDict(param) else 0
 
+class MappingEntry(object):
+  def __init__(self,localPath,converter=None,priority=0):
+    self.localPath=localPath
+    self.converter=converter
+    self.priority=priority
+
+def getItem(item,key):
+  if item is None:
+    return None
+  if key is None:
+    return None
+  return item.get(key)
+def getFromDict(dataDict, keystr):
+  mapList=keystr.split(".")
+  return reduce(getItem, mapList, dataDict)
 
 class AVNSignalKHandler(AVNWorker):
   P_MIGRATED=WorkerParameter('migrated',type=WorkerParameter.T_BOOLEAN,editable=False,default=False)
@@ -84,11 +154,16 @@ class AVNSignalKHandler(AVNWorker):
                                   description='use websockets if the package is available')
   P_DIRECT=WorkerParameter('decodeData',type=WorkerParameter.T_BOOLEAN,default=False,
                            description='directly use the signalK data for Navigation')
+  P_AIS=WorkerParameter('fetchAis',type=WorkerParameter.T_BOOLEAN,default=False,
+                        description='fetch AIS data from signalK')
+  P_AISPERIOD=WorkerParameter('aisQueryPeriod',type=WorkerParameter.T_NUMBER,default=10,
+                              description="query period for AIS (in s)",
+                              condition={'fetchAis':True})
 
   @classmethod
   def getConfigParam(cls, child=None):
-    return [cls.P_DIRECT,cls.PRIORITY_PARAM_DESCRIPTION,cls.P_PORT,cls.P_HOST,
-            cls.P_PERIOD,cls.P_CHARTPERIOD,cls.P_CHARTPROXYMODE,cls.P_USEWEBSOCKETS, cls.P_MIGRATED]
+    return [cls.P_DIRECT,cls.P_AIS,cls.PRIORITY_PARAM_DESCRIPTION,cls.P_PORT,cls.P_HOST,
+            cls.P_AISPERIOD,cls.P_PERIOD,cls.P_CHARTPERIOD,cls.P_CHARTPROXYMODE,cls.P_USEWEBSOCKETS, cls.P_MIGRATED]
 
   @classmethod
   def canEdit(cls):
@@ -132,6 +207,8 @@ class AVNSignalKHandler(AVNWorker):
     #compute a time offset from our time to the SK time
     #from the first Websocket message
     self.timeOffset=None
+    self.selfMap={}
+    self.aisMap={}
 
 
 
@@ -168,6 +245,22 @@ class AVNSignalKHandler(AVNWorker):
         AVNLog.info("migrating signalk config: %s",",".join(list(map(lambda v: str(v[0])+":"+str(v[1]),updates.items()))))
         super().changeMultiConfig(updates)
 
+  def createMappings(self):
+    selfMappings={}
+    for k in NMEAParser.GPS_DATA:
+      sk=k.signalK
+      if sk is not None:
+        if type(sk) is not list:
+          sk=[sk]
+        priority=10
+        for skKey in sk:
+          priority=priority-1
+          if priority< 0:
+            priority=0
+          selfMappings[skKey]=MappingEntry(k.getKey(),k.signalKConversion,self.config.priority*10+priority)
+    #TODO: AIS
+    self.selfMap=selfMappings
+
   CHARTHANDLER_PREFIX="signalk"
   def run(self):
     self.navdata.registerKey(self.PATH+".*",'signalK',self.sourceName)
@@ -190,23 +283,13 @@ class AVNSignalKHandler(AVNWorker):
   PATH="gps.signalk"
 
   def decodeSelf(self,path,value):
-    for k in NMEAParser.GPS_DATA:
-      sk=k.signalK
-      if sk is not None:
-        if not type(sk) is list:
-          sk=[sk]
-        #uf we have multiple values we use we give a prio to them
-        subPrio=10
-        for skKey in sk:
-          subPrio-=1
-          if subPrio < 0:
-            subPrio=0
-          if skKey == path:
-            key=k.getKey()
-            if k.signalKConversion is not None:
-              value=k.signalKConversion(value)
-            AVNLog.debug("setting %s:%s from SK %s",key,str(value),path)
-            self.navdata.setValue(key,value,source=self.sourceName,priority=self.config.priority*10+subPrio)
+    mapping=self.selfMap.get(path)
+    if mapping is None:
+      return
+    if mapping.converter is not None:
+      value=mapping.converter(value)
+    AVNLog.debug("setting %s:%s from SK %s",mapping.localPath,str(value),path)
+    self.navdata.setValue(mapping.localPath,value,source=self.sourceName,priority=mapping.priority)
 
   def setValue(self,path,value):
     self.navdata.setValue(self.PATH+"."+path,value,source=self.sourceName,priority=self.config.priority*10)
@@ -217,10 +300,53 @@ class AVNSignalKHandler(AVNWorker):
         for k,v in value.items():
           self.decodeSelf(path+"."+k,v)
 
+  def fetchAisData(self,baseUrl):
+    url=baseUrl+'vessels/'
+    response=None
+    try:
+      response=urllib.request.urlopen(url)
+      if response is None:
+        self.setInfo('ais','no response from %s'%url,WorkerStatus.ERROR)
+        return
+      data=json.loads(response.read())
+      numTargets=0
+      now=AVNUtil.utcnow()
+      oldest=now-self.navdata.getAisExpiryPeriod()
+      for vessel,values in data.items():
+        if vessel.find('mmsi') < 0:
+          continue
+        mmsi=values.get('mmsi')
+        if mmsi is None or mmsi=='':
+          continue
+        aisdata={'mmsi':mmsi}
+        newestTs=None
+        for k,e in AISPATHMAP.items():
+          av=getFromDict(values,e.path)
+          if av is None:
+            continue
+          ts=e.getTimestamp(av)
+          if ts is not None:
+            if self.timeOffset is not None:
+              ts+=self.timeOffset
+            if newestTs is None or ts > newestTs:
+              newestTs=ts
+          value=e.getValue(av)
+          if value is not None:
+            aisdata[k]=value
+        if newestTs is not None and newestTs < oldest:
+          AVNLog.debug("ignore ais mmsi=%s - to old",mmsi)
+          continue
+        numTargets+=1
+        AVNLog.debug("adding ais data for %s",mmsi)
+        self.navdata.addAisItem(mmsi,aisdata,self.sourceName,self.config.priority*10,now=newestTs)
+      self.setInfo('ais','read %d targets'%numTargets,WorkerStatus.NMEA)
+    except Exception as ex:
+      self.setInfo('ais','error reading ais data from %s:%s'%(url,str(ex)),WorkerStatus.ERROR)
 
   def _runI(self):
     sequence=self.configSequence
     self.config=Config(self.param)
+    self.createMappings()
     """
     the run method
     this will be called after successfully instantiating an instance
@@ -313,6 +439,7 @@ class AVNSignalKHandler(AVNWorker):
         lastQuery=0
         first=True # when we newly connect, just query everything once
         errorReported=False
+        lastAisFetch=0
         while self.connected and self.configSequence == sequence:
           now = time.time()
           #handle time shift backward
@@ -320,6 +447,8 @@ class AVNSignalKHandler(AVNWorker):
             lastChartQuery=0
           if lastQuery > now:
             lastQuery=0
+          if lastAisFetch > now:
+            lastAisFetch=0
           if (now - lastQuery) > self.config.period or first:
             first=False
             lastQuery=now
@@ -357,6 +486,12 @@ class AVNSignalKHandler(AVNWorker):
             except Exception as e:
               self.skCharts=[]
               AVNLog.debug("exception while reading chartlist %s",traceback.format_exc())
+          if self.config.aisFetchPeriod > 0 and lastAisFetch < (now - self.config.aisFetchPeriod):
+            try:
+              self.fetchAisData(apiUrl)
+            except Exception as e:
+              self.setInfo('ais','error in fetch %s'%str(e),WorkerStatus.ERROR)
+            lastAisFetch=now
           sleepTime=1 if self.config.period > 1 else self.config.period
           self.wait(sleepTime)
       except:

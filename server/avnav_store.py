@@ -49,10 +49,13 @@ class AVNStore(object):
       self.record=record
 
   class AisDataEntry(object):
-    def __init__(self,data,priority=0):
+    def __init__(self,data,priority=0,timestamp=None):
       self.value=data
-      self.timestamp = AVNUtil.utcnow()
+      self.timestamp = timestamp if timestamp is not None else AVNUtil.utcnow()
       self.priority=priority
+    def add(self,name,value,timestamp=None):
+      self.timestamp = timestamp if timestamp is not None else AVNUtil.utcnow()
+      self.value[name]=value
   #fields we merge
   ais5mergeFields=['imo_id','callsign','shipname','shiptype','destination']
   CHANGE_COUNTER = ['alarm', 'leg', 'route']
@@ -97,7 +100,8 @@ class AVNStore(object):
 
   def getExpiryPeriod(self):
     return self.__expiryTime
-
+  def getAisExpiryPeriod(self):
+    return self.__aisExpiryTime
   def updateBaseConfig(self,expiry,aisExpiry,ownMMSI):
     self.__expiryTime=expiry
     self.__aisExpiryTime=aisExpiry
@@ -175,7 +179,7 @@ class AVNStore(object):
     if self.__ownMMSI != '' and mmsi is not None and self.__ownMMSI == mmsi:
       AVNLog.debug("omitting own AIS message mmsi %s", self.__ownMMSI)
       return
-    key=AVNStore.BASE_KEY_AIS+"."+mmsi
+    key=AVNStore.BASE_KEY_AIS+"."+str(mmsi)
     now=AVNUtil.utcnow()
     with self.__aisLock:
       existing=self.__aisList.get(key)
@@ -203,6 +207,26 @@ class AVNStore(object):
             newData[k] = v
         existing.value=newData
         existing.timestamp=now
+      self.__lastAisSource=source
+
+  def addAisItem(self,mmsi,values,source,priority,now=None):
+    if self.__ownMMSI != '' and mmsi is not None and self.__ownMMSI == mmsi:
+      AVNLog.debug("omitting own AIS message mmsi %s", self.__ownMMSI)
+      return
+    key=AVNStore.BASE_KEY_AIS+"."+str(mmsi)
+    if now is None:
+      now=AVNUtil.utcnow()
+    with self.__aisLock:
+      existing=self.__aisList.get(key)
+      if existing is None:
+        existing=AVNStore.AisDataEntry({'mmsi':mmsi},priority,timestamp=now)
+        self.__aisList[key]=existing
+      else:
+        if existing.priority > priority:
+          AVNLog.debug("ignore ais for %s due to higher prio %d",mmsi,existing.priority)
+          return
+      for name,value in values.items():
+        existing.add(name,value,timestamp=now)
       self.__lastAisSource=source
 
 

@@ -686,5 +686,5 @@ class NMEAParser(object):
     if mmsi is None:
       AVNLog.debug("ignoring AIS data without mmsi, %s"%rt)
       return
-    self.navdata.setAisValue(mmsi,rt,source=source,priority=priority)
+    self.navdata.setAisValue(mmsi,AVNUtil.convertAIS(rt),source=source,priority=priority)
     

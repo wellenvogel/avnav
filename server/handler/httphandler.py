@@ -389,7 +389,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
         AVNLog.debug("additional AIS range lat=%f,lon=%f,dist=%f",lat1,lon1,dist)
       for entry in rt:
         try:
-          fentry=AVNUtil.convertAIS(entry)
+          fentry=entry
           mdist=AVNUtil.distance((fentry.get('lat'),fentry.get('lon')), dest)
           inRange=False
           if mdist<=dist:
@@ -409,7 +409,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
     else:
       for entry in rt:
         try:
-          frt.append(AVNUtil.convertAIS(entry))
+          frt.append(entry)
         except Exception as e:
           AVNLog.debug("unable to convert ais data: %s",traceback.format_exc())
     return json.dumps(frt,cls=Encoder)
