@@ -115,7 +115,7 @@ class Config(object):
     self.skHost=AVNSignalKHandler.P_HOST.fromDict(param)
     self.port=AVNSignalKHandler.P_PORT.fromDict(param)
     self.period=AVNSignalKHandler.P_PERIOD.fromDict(param)/1000
-    self.chartQueryPeriod=AVNSignalKHandler.P_CHARTPERIOD.fromDict(param)
+    self.chartQueryPeriod=AVNSignalKHandler.P_CHARTPERIOD.fromDict(param) if AVNSignalKHandler.P_CHARTS.fromDict(param) else 0
     self.priority=AVNSignalKHandler.PRIORITY_PARAM_DESCRIPTION.fromDict(param)
     self.proxyMode=AVNSignalKHandler.P_CHARTPROXYMODE.fromDict(param)
     self.decode=AVNSignalKHandler.P_DIRECT.fromDict(param)
@@ -145,11 +145,15 @@ class AVNSignalKHandler(AVNWorker):
                           description="set to signalk host")
   P_PERIOD=WorkerParameter('period',type=WorkerParameter.T_NUMBER,default=1000,
                            description='query time in ms')
+  P_CHARTS=WorkerParameter('fetchCharts',type=WorkerParameter.T_BOOLEAN,default=True,
+                           description='read charts from signalK')
   P_CHARTPERIOD=WorkerParameter('chartQueryPeriod',type=WorkerParameter.T_NUMBER,default=10,
-                                description="query period(s) for SignalK charts")
+                                description="query period(s) for SignalK charts",
+                                condition={P_CHARTS.name:True})
   P_CHARTPROXYMODE=WorkerParameter('chartProxyMode',type=WorkerParameter.T_SELECT,default='sameHost',
                                    description='proxy tile requests: never,always,sameHost',
-                                   rangeOrList=['never','always','sameHost'])
+                                   rangeOrList=['never','always','sameHost'],
+                                   condition={P_CHARTS.name:True})
   P_USEWEBSOCKETS=WorkerParameter('useWebsockets',type=WorkerParameter.T_BOOLEAN,default=True,
                                   description='use websockets if the package is available')
   P_DIRECT=WorkerParameter('decodeData',type=WorkerParameter.T_BOOLEAN,default=False,
@@ -158,12 +162,17 @@ class AVNSignalKHandler(AVNWorker):
                         description='fetch AIS data from signalK')
   P_AISPERIOD=WorkerParameter('aisQueryPeriod',type=WorkerParameter.T_NUMBER,default=10,
                               description="query period for AIS (in s)",
-                              condition={'fetchAis':True})
+                              condition={P_AIS.name:True})
+
+  I_AIS='ais'
+  I_CHARTS='charts'
+  I_WEBSOCKET="websocket"
+  I_MAIN='main'
 
   @classmethod
   def getConfigParam(cls, child=None):
     return [cls.P_DIRECT,cls.P_AIS,cls.PRIORITY_PARAM_DESCRIPTION,cls.P_PORT,cls.P_HOST,
-            cls.P_AISPERIOD,cls.P_PERIOD,cls.P_CHARTPERIOD,cls.P_CHARTPROXYMODE,cls.P_USEWEBSOCKETS, cls.P_MIGRATED]
+            cls.P_AISPERIOD,cls.P_PERIOD,cls.P_CHARTS,cls.P_CHARTPERIOD,cls.P_CHARTPROXYMODE,cls.P_USEWEBSOCKETS, cls.P_MIGRATED]
 
   @classmethod
   def canEdit(cls):
@@ -270,6 +279,8 @@ class AVNSignalKHandler(AVNWorker):
       charthandler.registerExternalProvider(self.CHARTHANDLER_PREFIX,self.listCharts)
     while not self.shouldStop():
       self._runI()
+      self.deleteInfo('charts')
+      self.deleteInfo('ais')
       addonhandler=AVNWorker.findHandlerByName(AVNUserAppHandler.getConfigName())
       if addonhandler:
         addonhandler.unregisterAddOn(self.USERAPP_NAME)
@@ -306,7 +317,7 @@ class AVNSignalKHandler(AVNWorker):
     try:
       response=urllib.request.urlopen(url)
       if response is None:
-        self.setInfo('ais','no response from %s'%url,WorkerStatus.ERROR)
+        self.setInfo(self.I_AIS,'no response from %s'%url,WorkerStatus.ERROR)
         return
       data=json.loads(response.read())
       numTargets=0
@@ -339,14 +350,19 @@ class AVNSignalKHandler(AVNWorker):
         numTargets+=1
         AVNLog.debug("adding ais data for %s",mmsi)
         self.navdata.addAisItem(mmsi,aisdata,self.sourceName,self.config.priority*10,now=newestTs)
-      self.setInfo('ais','read %d targets'%numTargets,WorkerStatus.NMEA)
+      self.setInfo(self.I_AIS,'read %d targets'%numTargets,WorkerStatus.NMEA)
     except Exception as ex:
-      self.setInfo('ais','error reading ais data from %s:%s'%(url,str(ex)),WorkerStatus.ERROR)
+      self.setInfo(self.I_AIS,'error reading ais data from %s:%s'%(url,str(ex)),WorkerStatus.ERROR)
 
   def _runI(self):
     sequence=self.configSequence
     self.config=Config(self.param)
     self.createMappings()
+    if self.config.aisFetchPeriod == 0:
+      self.setInfo(self.I_AIS,'disabled',WorkerStatus.INACTIVE)
+
+    if self.config.chartQueryPeriod == 0:
+      self.setInfo(self.I_CHARTS,'disabled',WorkerStatus.INACTIVE)
     """
     the run method
     this will be called after successfully instantiating an instance
@@ -367,7 +383,7 @@ class AVNSignalKHandler(AVNWorker):
         addonhandler.registerAddOn(self.USERAPP_NAME,"http://%s:%s" %
                                               (self.config.skHost,self.config.port), "images/signalk.svg")
     errorReported=False
-    self.setInfo('main',"connecting at %s" % baseUrl,WorkerStatus.STARTED)
+    self.setInfo(self.I_MAIN,"connecting at %s" % baseUrl,WorkerStatus.STARTED)
     while sequence == self.configSequence:
       expiryPeriod=self.navdata.getExpiryPeriod()
       apiUrl=None
@@ -404,7 +420,7 @@ class AVNSignalKHandler(AVNWorker):
               websocketUrl=ep.get("signalk-ws")
         except:
           if not errorReported:
-            self.setInfo('main', "unable to connect at %s" % baseUrl,WorkerStatus.ERROR)
+            self.setInfo(self.I_MAIN, "unable to connect at %s" % baseUrl,WorkerStatus.ERROR)
             AVNLog.info("unable to connect at url %s: %s" ,baseUrl, sys.exc_info()[0])
             errorReported=True
           self.wait(1)
@@ -434,6 +450,8 @@ class AVNSignalKHandler(AVNWorker):
         webSocketThread=threading.Thread(name="signalk-websocket",target=self.webSocketRun)
         webSocketThread.setDaemon(True)
         webSocketThread.start()
+      else:
+        self.setInfo(self.I_WEBSOCKET,'disabled',WorkerStatus.INACTIVE)
       try:
         lastChartQuery=0
         lastQuery=0
@@ -457,20 +475,20 @@ class AVNSignalKHandler(AVNWorker):
               response=urllib.request.urlopen(selfUrl)
               if response is None:
                 self.skCharts = []
-                self.setInfo('charts',"unable to fetch from %s: None"%selfUrl,WorkerStatus.ERROR)
+                self.setInfo(self.I_CHARTS,"unable to fetch from %s: None"%selfUrl,WorkerStatus.ERROR)
                 if not errorReported:
                   AVNLog.error("unable to fetch from %s: None", selfUrl)
                   errorReported=True
             except Exception as e:
               self.skCharts=[]
-              self.setInfo('charts',"unable to fetch from %s: %s"%(selfUrl,str(e)),WorkerStatus.ERROR)
+              self.setInfo(self.I_CHARTS,"unable to fetch from %s: %s"%(selfUrl,str(e)),WorkerStatus.ERROR)
               if not errorReported:
                 AVNLog.error("unable to fetch from %s:%s",selfUrl,str(e))
                 errorReported=True
             if response is not None:
               errorReported=False
               if not first:
-                self.setInfo('main', "connected at %s" % apiUrl,WorkerStatus.NMEA)
+                self.setInfo(self.I_MAIN, "connected at %s" % apiUrl,WorkerStatus.NMEA)
               data=json.loads(response.read())
               AVNLog.debug("read: %s",json.dumps(data))
               self.storeData(data,None,self.config.priority)
@@ -490,13 +508,13 @@ class AVNSignalKHandler(AVNWorker):
             try:
               self.fetchAisData(apiUrl)
             except Exception as e:
-              self.setInfo('ais','error in fetch %s'%str(e),WorkerStatus.ERROR)
+              self.setInfo(self.I_AIS,'error in fetch %s'%str(e),WorkerStatus.ERROR)
             lastAisFetch=now
           sleepTime=1 if self.config.period > 1 else self.config.period
           self.wait(sleepTime)
       except:
         AVNLog.error("error when fetching from signalk %s: %s",apiUrl,traceback.format_exc())
-        self.setInfo('main',"error when fetching from signalk %s"%(apiUrl),WorkerStatus.ERROR)
+        self.setInfo(self.I_MAIN,"error when fetching from signalk %s"%(apiUrl),WorkerStatus.ERROR)
         self.connected=False
         if sequence != self.configSequence:
           return
@@ -521,7 +539,7 @@ class AVNSignalKHandler(AVNWorker):
     AVNLog.info("websocket receiver finished")
 
   def webSocketOpen(self,*args):
-    self.setInfo('websocket','connected',WorkerStatus.NMEA)
+    self.setInfo(self.I_WEBSOCKET,'connected',WorkerStatus.NMEA)
     self.firstWebsocketMessage=True
 
   #there is a change in the websocket client somewhere between
@@ -536,7 +554,7 @@ class AVNSignalKHandler(AVNWorker):
     error=self.getWSParam(*args)
     AVNLog.error("error on websocket connection: %s", error)
     try:
-      self.setInfo('websocket', "error on websocket connection %s: %s" % (self.webSocket.url, error),WorkerStatus.ERROR)
+      self.setInfo(self.I_WEBSOCKET, "error on websocket connection %s: %s" % (self.webSocket.url, error),WorkerStatus.ERROR)
       self.webSocket.close()
     except:
       pass
@@ -547,7 +565,7 @@ class AVNSignalKHandler(AVNWorker):
     AVNLog.info("websocket connection closed")
     self.connected=False
     try:
-      self.setInfo('websocket', "connection closed at %s" % self.webSocket.url,WorkerStatus.ERROR)
+      self.setInfo(self.I_WEBSOCKET, "connection closed at %s" % self.webSocket.url,WorkerStatus.ERROR)
     except:
       pass
     self.webSocket=None
@@ -566,7 +584,7 @@ class AVNSignalKHandler(AVNWorker):
           self.timeOffset=skTimeStamp-localTimeStamp
         else:
           self.timeOffset=None
-      self.setInfo('websocket', "connected at %s, timeOffset=%.0fs" %(self.webSocket.url,self.timeOffset or 0),WorkerStatus.NMEA)
+      self.setInfo(self.I_WEBSOCKET, "connected at %s, timeOffset=%.0fs" %(self.webSocket.url,self.timeOffset or 0),WorkerStatus.NMEA)
       updates=data.get('updates')
       if updates is None:
         return
@@ -601,11 +619,11 @@ class AVNSignalKHandler(AVNWorker):
     try:
       chartlistResponse = urllib.request.urlopen(charturl)
     except Exception as e:
-      self.setInfo('charts','unable to read charts: %s'%str(e),WorkerStatus.ERROR)
+      self.setInfo(self.I_CHARTS,'unable to read charts: %s'%str(e),WorkerStatus.ERROR)
       self.skCharts=[]
       raise
     if chartlistResponse is None:
-      self.setInfo('charts','no charts',WorkerStatus.STARTED)
+      self.setInfo(self.I_CHARTS,'no charts',WorkerStatus.STARTED)
       self.skCharts = []
       return
     chartlist = json.loads(chartlistResponse.read())
@@ -648,7 +666,7 @@ class AVNSignalKHandler(AVNWorker):
       }
       newList.append(chartInfo)
     self.skCharts = newList
-    self.setInfo('charts','read %d charts'%len(newList),WorkerStatus.NMEA)
+    self.setInfo(self.I_CHARTS,'read %d charts'%len(newList),WorkerStatus.NMEA)
   def storeData(self,node,prefix,priority):
     if 'value' in node:
       if self.checkOutdated(node.get('timestamp')):
