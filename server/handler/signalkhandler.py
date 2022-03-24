@@ -127,6 +127,133 @@ class MappingEntry(object):
     self.converter=converter
     self.priority=priority
 
+class InfoSetter(object):
+  def __init__(self,name,writer):
+    self.name=name
+    self.writer=writer
+
+  def setInfo(self,info,status):
+    self.writer.setInfo(self.name,info,status)
+  def deleteInfo(self):
+    self.writer.deleteInfo(self.name)
+
+class WebSocketHandler(object):
+  def __init__(self,infoSetter:InfoSetter,url:str,messageCallback):
+    self.infoSetter=infoSetter
+    self.url=url
+    self.__messageCallback=messageCallback
+    self.__webSocket=None
+    self.__firstWebsocketMessage=False
+    self.__connected=False
+    self.__timeOffset=None
+
+  def open(self):
+    self.infoSetter.setInfo('connecting at %s'%self.url,WorkerStatus.STARTED)
+    if self.__webSocket is not None:
+      try:
+        self.__webSocket.close()
+        self.__webSocket=None
+      except:
+        pass
+    self.__connected=False
+    self.__timeOffset=None
+    try:
+      self.__webSocket=websocket.WebSocketApp(self.url,
+                                          on_error=self.__webSocketError,
+                                          on_message=self.__webSocketMessage,
+                                          on_close=self.__webSocketClose,
+                                          on_open=self.__webSocketOpen)
+      AVNLog.info("websocket %s created at %s",self.infoSetter.name,self.url)
+      webSocketThread=threading.Thread(name="signalk-websocket-%s"%self.infoSetter.name,target=self.__webSocketRun)
+      webSocketThread.setDaemon(True)
+      webSocketThread.start()
+    except Exception as e:
+      try:
+        self.__webSocket.close()
+      except:
+        pass
+      self.infoSetter.setInfo("unable to connect to %s:%s"%(self.url,str(e)),WorkerStatus.ERROR)
+      return False
+    return True
+
+  def __webSocketRun(self):
+    AVNLog.info("websocket receiver %s started",self.infoSetter.name)
+    self.__webSocket.run_forever()
+    AVNLog.info("websocket receiver %s finished",self.infoSetter.name)
+
+  def __webSocketOpen(self,*args):
+    self.infoSetter.setInfo('connected',WorkerStatus.NMEA)
+    self.__firstWebsocketMessage=True
+    self.__connected=True
+
+  #there is a change in the websocket client somewhere between
+  #0.44 and 0.55 - the newer versions omit the ws parameter
+  def getWSParam(self,*args):
+    if len(args) > 1:
+      return args[1]
+    if len(args) > 0:
+      return args[0]
+
+  def __webSocketError(self,*args):
+    error=self.getWSParam(*args)
+    AVNLog.error("error on websocket connection %s: %s",self.infoSetter.name, error)
+    try:
+      self.infoSetter.setInfo("error on websocket connection %s: %s" % (self.__webSocket.url, error), WorkerStatus.ERROR)
+      self.__webSocket.close()
+    except:
+      pass
+    self.__webSocket=None
+    self.__connected=False
+
+  def __webSocketClose(self,*args):
+    AVNLog.info("websocket connection %s closed",self.infoSetter.name)
+    self.__connected=False
+    try:
+      self.infoSetter.setInfo( "connection closed at %s" % self.__webSocket.url, WorkerStatus.ERROR)
+    except:
+      pass
+    self.__webSocket=None
+
+  def __webSocketMessage(self,*args):
+    message=self.getWSParam(*args)
+    AVNLog.debug("received on%s: %s",self.infoSetter.name,message)
+    try:
+      data=json.loads(message)
+      if self.__firstWebsocketMessage:
+        self.__firstWebsocketMessage=False
+        timestamp=data.get('timestamp')
+        if timestamp is not None:
+          skTimeStamp=timeToTs(timestamp)
+          localTimeStamp=time.time()
+          self.__timeOffset= skTimeStamp - localTimeStamp
+        else:
+          self.__timeOffset=None
+      self.infoSetter.setInfo( "connected at %s, timeOffset=%.0fs" % (self.__webSocket.url, self.__timeOffset or 0), WorkerStatus.NMEA)
+      self.__messageCallback(data)
+    except:
+      AVNLog.error("error decoding %s:%s",message,traceback.format_exc())
+      try:
+        self.__webSocket.close()
+      except:
+        pass
+      self.__webSocket=None
+      self.__connected=False
+
+  def close(self):
+    if self.__webSocket is None:
+      return
+    try:
+      self.__webSocket.close()
+    except:
+      pass
+    self.__webSocket=None
+    self.__connected=False
+
+  def isConnected(self):
+    return self.__connected
+  def getTimeOffset(self):
+    return self.__timeOffset
+
 def getItem(item,key):
   if item is None:
     return None
@@ -444,25 +571,12 @@ class AVNSignalKHandler(AVNWorker):
         if self.config.period < expiryPeriod:
           self.config.period=expiryPeriod
         AVNLog.info("using websockets at %s, querying with period %d", websocketUrl,self.config.period)
-        if self.webSocket is not None:
-          try:
-            self.webSocket.close()
-          except:
-            AVNLog.debug("error when closing websocket: %s",traceback.format_exc())
-        self.webSocket=websocket.WebSocketApp(websocketUrl,
-                                              on_error=self.webSocketError,
-                                              on_message=self.webSocketMessage,
-                                              on_close=self.webSocketClose,
-                                              on_open=self.webSocketOpen)
-        AVNLog.info("websocket created at %s",self.webSocket.url)
-        webSocketThread=threading.Thread(name="signalk-websocket",target=self.webSocketRun)
-        webSocketThread.setDaemon(True)
-        webSocketThread.start()
       else:
         self.setInfo(self.I_WEBSOCKET,'disabled',WorkerStatus.INACTIVE)
       try:
         lastChartQuery=0
         lastQuery=0
+        lastWebsocket=0
         first=True # when we newly connect, just query everything once
         errorReported=False
         lastAisFetch=0
@@ -475,6 +589,16 @@ class AVNSignalKHandler(AVNWorker):
             lastQuery=0
           if lastAisFetch > now:
             lastAisFetch=0
+          if lastWebsocket > now:
+            lastWebsocket=0
+          if useWebsockets:
+            if self.webSocket is None or not self.webSocket.isConnected():
+              if (now-lastWebsocket) > 10:
+                if self.webSocket is None:
+                  self.webSocket=WebSocketHandler(InfoSetter(self.I_WEBSOCKET,self),
+                                                  websocketUrl,self.webSocketMessage)
+                self.webSocket.open()
+                lastWebsocket=now
           if (now - lastQuery) > self.config.period or first:
             first=False
             lastQuery=now
@@ -520,6 +644,8 @@ class AVNSignalKHandler(AVNWorker):
             lastAisFetch=now
           sleepTime=1 if self.config.period > 1 else self.config.period
           self.wait(sleepTime)
+        if self.webSocket is not None:
+          self.webSocket.close()
       except:
         AVNLog.error("error when fetching from signalk %s: %s",apiUrl,traceback.format_exc())
         self.setInfo(self.I_MAIN,"error when fetching from signalk %s"%(apiUrl),WorkerStatus.ERROR)
@@ -540,59 +666,11 @@ class AVNSignalKHandler(AVNWorker):
       return True
     return False
 
-
-  def webSocketRun(self):
-    AVNLog.info("websocket receiver started")
-    self.webSocket.run_forever()
-    AVNLog.info("websocket receiver finished")
-
-  def webSocketOpen(self,*args):
-    self.setInfo(self.I_WEBSOCKET,'connected',WorkerStatus.NMEA)
-    self.firstWebsocketMessage=True
-
-  #there is a change in the websocket client somewhere between
-  #0.44 and 0.55 - the newer versions omit the ws parameter
-  def getWSParam(self,*args):
-    if len(args) > 1:
-      return args[1]
-    if len(args) > 0:
-      return args[0]
-
-  def webSocketError(self,*args):
-    error=self.getWSParam(*args)
-    AVNLog.error("error on websocket connection: %s", error)
+  def webSocketMessage(self,data):
+    to=self.webSocket.getTimeOffset()
+    if to is not None:
+      self.timeOffset=to
     try:
-      self.setInfo(self.I_WEBSOCKET, "error on websocket connection %s: %s" % (self.webSocket.url, error),WorkerStatus.ERROR)
-      self.webSocket.close()
-    except:
-      pass
-    self.webSocket=None
-    self.connected=False
-
-  def webSocketClose(self,*args):
-    AVNLog.info("websocket connection closed")
-    self.connected=False
-    try:
-      self.setInfo(self.I_WEBSOCKET, "connection closed at %s" % self.webSocket.url,WorkerStatus.ERROR)
-    except:
-      pass
-    self.webSocket=None
-
-  def webSocketMessage(self,*args):
-    message=self.getWSParam(*args)
-    AVNLog.debug("received: %s",message)
-    try:
-      data=json.loads(message)
-      if self.firstWebsocketMessage:
-        self.firstWebsocketMessage=False
-        timestamp=data.get('timestamp')
-        if timestamp is not None:
-          skTimeStamp=timeToTs(timestamp)
-          localTimeStamp=time.time()
-          self.timeOffset=skTimeStamp-localTimeStamp
-        else:
-          self.timeOffset=None
-      self.setInfo(self.I_WEBSOCKET, "connected at %s, timeOffset=%.0fs" %(self.webSocket.url,self.timeOffset or 0),WorkerStatus.NMEA)
       updates=data.get('updates')
       if updates is None:
         return
@@ -614,7 +692,7 @@ class AVNSignalKHandler(AVNWorker):
             else:
               self.setValue(path,value)
     except:
-      AVNLog.error("error decoding %s:%s",message,traceback.format_exc())
+      AVNLog.error("error decoding %s:%s",str(data),traceback.format_exc())
       try:
         self.webSocket.close()
       except:
