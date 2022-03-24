@@ -171,7 +171,7 @@ class AVNSignalKHandler(AVNWorker):
 
   @classmethod
   def getConfigParam(cls, child=None):
-    return [cls.P_DIRECT,cls.P_AIS,cls.PRIORITY_PARAM_DESCRIPTION,cls.P_PORT,cls.P_HOST,
+    return [cls.P_DIRECT,cls.P_AIS,cls.PRIORITY_PARAM_DESCRIPTION.copy(default=NMEAParser.DEFAULT_SOURCE_PRIORITY-10),cls.P_PORT,cls.P_HOST,
             cls.P_AISPERIOD,cls.P_PERIOD,cls.P_CHARTS,cls.P_CHARTPERIOD,cls.P_CHARTPROXYMODE,cls.P_USEWEBSOCKETS, cls.P_MIGRATED]
 
   @classmethod
@@ -222,19 +222,22 @@ class AVNSignalKHandler(AVNWorker):
 
 
   def migrateConfig(self):
-    if self.P_MIGRATED.fromDict(self.param):
-      return
+    pluginName='builtin-signalk'
     pluginHandler=self.findHandlerByName(AVNPluginHandler.getConfigName())
     if pluginHandler:
       updates={}
-      updates[self.P_MIGRATED.name]=True
-      pluginParam=pluginHandler.param.get('builtin-signalk')
+      pluginParam=pluginHandler.param.get(pluginName)
       if pluginParam is not None and type(pluginParam) is list:
         pluginParam=pluginParam[0]
         if not type(pluginParam) is dict:
           return
+        if self.P_MIGRATED.fromDict(pluginParam):
+          return
+        pluginHandler.changeChildConfigDict(pluginName,{self.P_MIGRATED.name:True})
         for p in self.getConfigParam():
           if p.name == self.ENABLE_PARAM_DESCRIPTION.name:
+            continue
+          if p.name == self.P_MIGRATED.name:
             continue
           ov=pluginParam.get(p.name)
           if ov is not None:
@@ -278,9 +281,10 @@ class AVNSignalKHandler(AVNWorker):
     if charthandler is not None:
       charthandler.registerExternalProvider(self.CHARTHANDLER_PREFIX,self.listCharts)
     while not self.shouldStop():
+      self.sourceName=self.getParamValue('name') or 'signalk'
       self._runI()
-      self.deleteInfo('charts')
-      self.deleteInfo('ais')
+      self.deleteInfo(self.I_CHARTS)
+      self.deleteInfo(self.I_AIS)
       addonhandler=AVNWorker.findHandlerByName(AVNUserAppHandler.getConfigName())
       if addonhandler:
         addonhandler.unregisterAddOn(self.USERAPP_NAME)
@@ -290,6 +294,10 @@ class AVNSignalKHandler(AVNWorker):
         pass
     if charthandler is not None:
       charthandler.registerExternalProvider(self.CHARTHANDLER_PREFIX,None)
+
+  def timeChanged(self):
+    self.configSequence+=1
+    self.wakeUp()
 
   PATH="gps.signalk"
 

@@ -83,7 +83,7 @@ class WorkerParameter(object):
       raise ParamValueError("invalid parameter %s"%name)
     return self.__setattr__(name,value)
 
-  def copy(self,resolveList=True):
+  def copy(self,resolveList=True,**kwargs):
     rt= WorkerParameter(self.name,
                            default=self.default,
                            type=self.type,
@@ -104,6 +104,10 @@ class WorkerParameter(object):
       else:
         if self.rangeOrList is not None:
           rt.rangeOrList=list(self.rangeOrList)
+    for k in self.__dict__.keys():
+      nv=kwargs.get(k)
+      if nv is not None:
+        rt.__setattr__(k,nv)
     return rt
   @classmethod
   def filterNameDef(cls,plist):
