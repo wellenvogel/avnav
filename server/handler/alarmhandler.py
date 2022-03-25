@@ -62,6 +62,7 @@ class AVNAlarmHandler(AVNWorker):
     AVNWorker.__init__(self, param)
     self.runningAlarms={}
     self.commandHandler=None
+    self.handlers=[]
     currentAlarms=self.param.get('Alarm')
     if currentAlarms is None:
       currentAlarms=[]
@@ -180,8 +181,16 @@ class AVNAlarmHandler(AVNWorker):
 
   def _startAlarmCmd(self,alarmdef):
     return self.commandHandler.startCommand(alarmdef['command'],alarmdef.get('repeat'),alarmdef.get('parameter'))
+  def callHandlers(self,alarm,on=True,caller=None):
+    for h in self.handlers:
+      if h == caller:
+        continue
+      try:
+        h.handleAlarm(alarm,on)
+      except Exception as e:
+        AVNLog.debug("alarm handler error: %s",str(e))
 
-  def startAlarm(self,name,useDefault=False):
+  def startAlarm(self,name,useDefault=False,caller=None):
     """start a named alarm"""
     cmd=self.findAlarm(name,useDefault)
     if cmd is None:
@@ -201,18 +210,19 @@ class AVNAlarmHandler(AVNWorker):
     if alarmid is None:
       alarmid=-1
     self.runningAlarms[name] = alarmid
+    self.callHandlers(name,True,caller)
     self.navdata.updateChangeCounter(self.CHANGE_KEY)
     return True
 
-  def stopAll(self):
+  def stopAll(self,caller=None):
     '''stop all alarms'''
     AVNLog.info("stopAllAlarms")
     alist=self.getRunningAlarms()
     if list is None:
       return
     for name in list(alist.keys()):
-      self.stopAlarm(name)
-  def stopAlarm(self, name):
+      self.stopAlarm(name,caller)
+  def stopAlarm(self, name,caller=None):
     '''stop a named command'''
     cmd = self.findAlarm(name,True)
     if cmd is None:
@@ -224,6 +234,7 @@ class AVNAlarmHandler(AVNWorker):
     except:
       pass
     if alarmid is not None:
+      self.callHandlers(name,False,caller)
       self.navdata.updateChangeCounter(self.CHANGE_KEY)
     if alarmid is not None and alarmid >=0:
       self.commandHandler.stopCommand(alarmid)
@@ -250,6 +261,13 @@ class AVNAlarmHandler(AVNWorker):
         info=self.findAlarm(k,True)
         rt[k]=info.get('command')
     return rt
+
+  def registerHandler(self,handler):
+    for h in self.handlers:
+      if h == handler:
+        return False
+    self.handlers.append(handler)
+    return True
 
   def getHandledCommands(self):
     return {"api":"alarm","download":"alarm"}

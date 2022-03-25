@@ -40,6 +40,8 @@ import base64
 import json
 import hmac
 import hashlib
+
+from alarmhandler import AVNAlarmHandler
 from avnav_nmea import NMEAParser
 from avnrouter import AVNRouter
 
@@ -410,6 +412,8 @@ class AVNSignalKHandler(AVNWorker):
     self.timeOffset=None
     self.selfMap={}
     self.aisMap={}
+    self.alarmhandler=None
+    self.skAlarms=set()
 
 
 
@@ -479,6 +483,9 @@ class AVNSignalKHandler(AVNWorker):
   def run(self):
     self.navdata.registerKey(self.PATH+".*",'signalK',self.sourceName)
     self.migrateConfig()
+    self.alarmhandler=self.findHandlerByName(AVNAlarmHandler.getConfigName())
+    if self.alarmhandler is not None:
+      self.alarmhandler.registerHandler(self)
     charthandler = self.findHandlerByName(AVNChartHandler.getConfigName())
     if charthandler is not None:
       charthandler.registerExternalProvider(self.CHARTHANDLER_PREFIX,self.listCharts)
@@ -761,6 +768,28 @@ class AVNSignalKHandler(AVNWorker):
       return True
     return False
 
+  def handleNotification(self, path, value,source):
+    ownAlarm=self.getSKAlarm(path)
+    if ownAlarm is None:
+      return
+    if source is None:
+      return
+    if source.endswith('.avnav'):
+      return
+    if self.alarmhandler is None:
+      return
+    setKey=ownAlarm+":"+source
+    if value is None:
+      if not setKey in self.skAlarms:
+        return
+      self.alarmhandler.stopAlarm(ownAlarm,caller=self)
+      self.skAlarms.remove(setKey)
+    else:
+      if setKey in self.skAlarms:
+        return
+      self.skAlarms.add(setKey)
+      self.alarmhandler.startAlarm(ownAlarm,caller=self)
+
   def webSocketMessage(self,data):
     to=self.webSocket.getTimeOffset()
     if to is not None:
@@ -772,6 +801,7 @@ class AVNSignalKHandler(AVNWorker):
       for update in updates:
         values=update.get('values')
         timestamp=update.get('timestamp')
+        source=update.get('$source')
         if values is None:
           continue
         if self.checkOutdated(timestamp):
@@ -782,8 +812,7 @@ class AVNSignalKHandler(AVNWorker):
           path=item.get('path')
           if value is not None and path is not None:
             if path.startswith("notifications"):
-              #TODO: handle notifications
-              pass
+              self.handleNotification(path, value,source)
             else:
               self.setValue(path,value)
     except:
@@ -845,6 +874,61 @@ class AVNSignalKHandler(AVNWorker):
 
     except Exception as e:
       AVNLog.debug("error sending current leg %",str(e))
+
+
+  ALARMS={
+    'mob': {
+      'path':'mob',
+      'state':'emergency',
+      'method':['visual','sound'],
+      'message':'man overboard'
+    }
+  }
+  def getSKAlarm(self,skpath):
+    for k,v in self.ALARMS.items():
+      if ('notifications.'+v['path']) == skpath:
+        return k
+    return None
+  def sendAlarm(self,alarm):
+    data=self.ALARMS.get(alarm)
+    if not data:
+      return False
+    if self.writeSocket is None or not self.writeSocket.isConnected():
+      return False
+    skdata=data.copy()
+    del skdata['path']
+    update=self.buildUpdateRequest({
+      'notifications.'+data['path']:skdata
+    })
+    self.writeSocket.send(json.dumps(update))
+    return True
+
+  def sendNotificationOff(self,alarm):
+    data=self.ALARMS.get(alarm)
+    if not data:
+      return False
+    if self.writeSocket is None or not self.writeSocket.isConnected():
+      return False
+    update=self.buildUpdateRequest({
+      'notifications.'+data['path']:None
+    })
+    self.writeSocket.send(json.dumps(update))
+    return True
+
+  def handleAlarm(self,name,on):
+    if not self.ENABLE_PARAM_DESCRIPTION.fromDict(self.param):
+      return
+    if on:
+      self.sendAlarm(name)
+    else:
+      removeList=[]
+      for k in self.skAlarms:
+        if k.startswith(name+":"):
+          removeList.append(k)
+      for k in removeList:
+        self.skAlarms.remove(k)
+      self.sendNotificationOff(name)
+
 
   def queryCharts(self,apiUrl,port):
     charturl = apiUrl + "resources/charts"
@@ -908,6 +992,8 @@ class AVNSignalKHandler(AVNWorker):
       return
     for key, item in list(node.items()):
       if key == 'notifications':
+        for k,v in item.items():
+          self.handleNotification('notifications.'+k, v.get('value'),v.get('$source'))
         continue
       if isinstance(item,dict):
         newPrefix=prefix
