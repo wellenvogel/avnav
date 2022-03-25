@@ -27,6 +27,7 @@
 import datetime
 import json
 import operator
+import os
 import re
 import sys
 import threading
@@ -35,7 +36,10 @@ import traceback
 import urllib.request
 import urllib.parse
 from functools import reduce
-
+import base64
+import json
+import hmac
+import hashlib
 from avnav_nmea import NMEAParser
 
 hasWebsockets=False
@@ -52,6 +56,33 @@ from avnuserapps import AVNUserAppHandler
 from charthandler import AVNChartHandler
 from pluginhandler import AVNPluginHandler
 import avnav_handlerList
+
+#from https://stackoverflow.com/questions/68274543/python-manually-create-jwt-token-without-library
+def base64url_encode(input: bytes):
+  return base64.urlsafe_b64encode(input).decode('utf-8').replace('=','')
+def jwt(user,  api_sec):
+
+  segments = []
+
+  header = {"typ": "JWT", "alg": "HS256"}
+  payload = {"id": user}
+
+  json_header = json.dumps(header, separators=(",",":")).encode()
+  json_payload = json.dumps(payload, separators=(",",":")).encode()
+
+  segments.append(base64url_encode(json_header))
+  segments.append(base64url_encode(json_payload))
+
+  signing_input = ".".join(segments).encode()
+  key = api_sec.encode()
+  signature = hmac.new(key, signing_input, hashlib.sha256).digest()
+
+  segments.append(base64url_encode(signature))
+
+  encoded_string = ".".join(segments)
+
+  return encoded_string
+
 
 def timeToTs(tm):
   if tm is None:
@@ -120,6 +151,11 @@ class Config(object):
     self.proxyMode=AVNSignalKHandler.P_CHARTPROXYMODE.fromDict(param)
     self.decode=AVNSignalKHandler.P_DIRECT.fromDict(param)
     self.aisFetchPeriod=AVNSignalKHandler.P_AISPERIOD.fromDict(param) if AVNSignalKHandler.P_AIS.fromDict(param) else 0
+    self.user=AVNSignalKHandler.P_USERNAME.fromDict(param)
+    self.password=AVNSignalKHandler.P_PASSWORD.fromDict(param)
+    self.write=AVNSignalKHandler.P_WRITE.fromDict(param)
+    self.isLocal= (self.skHost == 'localhost' or self.skHost == '127.0.0.1')
+    self.wsRetry=AVNSignalKHandler.P_WEBSOCKETRETRY.fromDict(param)
 
 class MappingEntry(object):
   def __init__(self,localPath,converter=None,priority=0):
@@ -146,9 +182,11 @@ class WebSocketHandler(object):
     self.__firstWebsocketMessage=False
     self.__connected=False
     self.__timeOffset=None
-
+    self.__error=None
+  def getUrlForLog(self):
+    return re.sub('\\?.*','',self.url)
   def open(self):
-    self.infoSetter.setInfo('connecting at %s'%self.url,WorkerStatus.STARTED)
+    self.infoSetter.setInfo('connecting at %s'%self.getUrlForLog(),WorkerStatus.STARTED)
     if self.__webSocket is not None:
       try:
         self.__webSocket.close()
@@ -163,7 +201,7 @@ class WebSocketHandler(object):
                                           on_message=self.__webSocketMessage,
                                           on_close=self.__webSocketClose,
                                           on_open=self.__webSocketOpen)
-      AVNLog.info("websocket %s created at %s",self.infoSetter.name,self.url)
+      AVNLog.info("websocket %s created at %s",self.infoSetter.name,self.getUrlForLog())
       webSocketThread=threading.Thread(name="signalk-websocket-%s"%self.infoSetter.name,target=self.__webSocketRun)
       webSocketThread.setDaemon(True)
       webSocketThread.start()
@@ -172,7 +210,7 @@ class WebSocketHandler(object):
         self.__webSocket.close()
       except:
         pass
-      self.infoSetter.setInfo("unable to connect to %s:%s"%(self.url,str(e)),WorkerStatus.ERROR)
+      self.infoSetter.setInfo("unable to connect to %s:%s"%(self.getUrlForLog(),str(e)),WorkerStatus.ERROR)
       return False
     return True
 
@@ -196,9 +234,10 @@ class WebSocketHandler(object):
 
   def __webSocketError(self,*args):
     error=self.getWSParam(*args)
+    self.__error=error
     AVNLog.error("error on websocket connection %s: %s",self.infoSetter.name, error)
     try:
-      self.infoSetter.setInfo("error on websocket connection %s: %s" % (self.__webSocket.url, error), WorkerStatus.ERROR)
+      self.infoSetter.setInfo("error on websocket connection %s: %s" % (self.getUrlForLog(), error), WorkerStatus.ERROR)
       self.__webSocket.close()
     except:
       pass
@@ -209,7 +248,7 @@ class WebSocketHandler(object):
     AVNLog.info("websocket connection %s closed",self.infoSetter.name)
     self.__connected=False
     try:
-      self.infoSetter.setInfo( "connection closed at %s" % self.__webSocket.url, WorkerStatus.ERROR)
+      self.infoSetter.setInfo( "connection closed at %s" % self.getUrlForLog(), WorkerStatus.ERROR)
     except:
       pass
     self.__webSocket=None
@@ -228,7 +267,7 @@ class WebSocketHandler(object):
           self.__timeOffset= skTimeStamp - localTimeStamp
         else:
           self.__timeOffset=None
-      self.infoSetter.setInfo( "connected at %s, timeOffset=%.0fs" % (self.__webSocket.url, self.__timeOffset or 0), WorkerStatus.NMEA)
+      self.infoSetter.setInfo( "connected at %s, timeOffset=%.0fs" % (self.getUrlForLog(), self.__timeOffset or 0), WorkerStatus.NMEA)
       self.__messageCallback(data)
     except:
       AVNLog.error("error decoding %s:%s",message,traceback.format_exc())
@@ -253,6 +292,8 @@ class WebSocketHandler(object):
     return self.__connected
   def getTimeOffset(self):
     return self.__timeOffset
+  def getError(self):
+    return self.__error
 
 def getItem(item,key):
   if item is None:
@@ -290,16 +331,30 @@ class AVNSignalKHandler(AVNWorker):
   P_AISPERIOD=WorkerParameter('aisQueryPeriod',type=WorkerParameter.T_NUMBER,default=10,
                               description="query period for AIS (in s)",
                               condition={P_AIS.name:True})
+  P_WRITE=WorkerParameter('sendData',type=WorkerParameter.T_BOOLEAN,default=False,
+                          description='send data to signalk. This includes waypoint info and notifications')
+  P_USERNAME=WorkerParameter('userName',type=WorkerParameter.T_STRING,default='admin',
+                             description='the user name to be used for SignalK. Remark: This user must have write permissions!',
+                             condition={P_WRITE.name:True})
+  P_PASSWORD=WorkerParameter('password',type=WorkerParameter.T_STRING,default='',
+                             description='the password for the SignalK server. You can leave this empty '+
+                             'for a local access if signalK is installed in the default location',
+                             condition={P_WRITE.name:True})
+  P_WEBSOCKETRETRY=WorkerParameter('websocketRetry',type=WorkerParameter.T_NUMBER,default=20,
+                                   description="retry period (s) for websocket channels to reopen")
 
   I_AIS='ais'
   I_CHARTS='charts'
   I_WEBSOCKET="websocket"
   I_MAIN='main'
+  I_AUTH='authentication'
+  I_WRITE='write'
 
   @classmethod
   def getConfigParam(cls, child=None):
     return [cls.P_DIRECT,cls.P_AIS,cls.PRIORITY_PARAM_DESCRIPTION.copy(default=NMEAParser.DEFAULT_SOURCE_PRIORITY-10),cls.P_PORT,cls.P_HOST,
-            cls.P_AISPERIOD,cls.P_PERIOD,cls.P_CHARTS,cls.P_CHARTPERIOD,cls.P_CHARTPROXYMODE,cls.P_USEWEBSOCKETS, cls.P_MIGRATED]
+            cls.P_AISPERIOD,cls.P_PERIOD,cls.P_CHARTS,cls.P_CHARTPERIOD,cls.P_CHARTPROXYMODE,cls.P_USEWEBSOCKETS, cls.P_MIGRATED,
+            cls.P_WRITE,cls.P_USERNAME,cls.P_PASSWORD,cls.P_WEBSOCKETRETRY]
 
   @classmethod
   def canEdit(cls):
@@ -339,6 +394,7 @@ class AVNSignalKHandler(AVNWorker):
     self.sourceName='signalk'
     self.config=None
     self.webSocket=None
+    self.writeSocket=None
     self.firstWebsocketMessage=False
     #compute a time offset from our time to the SK time
     #from the first Websocket message
@@ -400,6 +456,16 @@ class AVNSignalKHandler(AVNWorker):
     #TODO: AIS
     self.selfMap=selfMappings
 
+  def closeWebSockets(self):
+    for sock in [self.webSocket,self.writeSocket]:
+      if sock is not None:
+        try:
+          sock.close()
+        except:
+          pass
+    self.webSocket=None
+    self.writeSocket=None
+
   CHARTHANDLER_PREFIX="signalk"
   def run(self):
     self.navdata.registerKey(self.PATH+".*",'signalK',self.sourceName)
@@ -415,10 +481,7 @@ class AVNSignalKHandler(AVNWorker):
       addonhandler=AVNWorker.findHandlerByName(AVNUserAppHandler.getConfigName())
       if addonhandler:
         addonhandler.unregisterAddOn(self.USERAPP_NAME)
-      try:
-        self.webSocket.close()
-      except:
-        pass
+      self.closeWebSockets()
     if charthandler is not None:
       charthandler.registerExternalProvider(self.CHARTHANDLER_PREFIX,None)
 
@@ -523,12 +586,7 @@ class AVNSignalKHandler(AVNWorker):
       expiryPeriod=self.navdata.getExpiryPeriod()
       apiUrl=None
       websocketUrl=None
-      if self.webSocket is not None:
-        try:
-          self.webSocket.close()
-        except:
-          pass
-        self.webSocket=None
+      self.closeWebSockets()
       while apiUrl is None :
         if sequence != self.configSequence:
           return
@@ -577,7 +635,9 @@ class AVNSignalKHandler(AVNWorker):
         lastChartQuery=0
         lastQuery=0
         lastWebsocket=0
+        lastWriteSocket=0
         first=True # when we newly connect, just query everything once
+        token=None
         errorReported=False
         lastAisFetch=0
         while self.connected and self.configSequence == sequence:
@@ -591,14 +651,36 @@ class AVNSignalKHandler(AVNWorker):
             lastAisFetch=0
           if lastWebsocket > now:
             lastWebsocket=0
+          if lastWriteSocket > now:
+            lastWriteSocket=0
           if useWebsockets:
             if self.webSocket is None or not self.webSocket.isConnected():
-              if (now-lastWebsocket) > 10:
+              if (now-lastWebsocket) > self.config.wsRetry:
                 if self.webSocket is None:
                   self.webSocket=WebSocketHandler(InfoSetter(self.I_WEBSOCKET,self),
                                                   websocketUrl,self.webSocketMessage)
                 self.webSocket.open()
                 lastWebsocket=now
+          if self.config.write:
+            if not useWebsockets:
+              self.setInfo(self.I_WRITE,"websockets disabled",WorkerStatus.INACTIVE)
+            else:
+              if token is None or self.writeSocket is None or not self.webSocket.isConnected():
+                if (now - lastWriteSocket) > self.config.wsRetry:
+                  lastWriteSocket=now
+                  if token is None:
+                    token=self.getAuthentication(apiUrl)
+                  if token is None:
+                    self.setInfo(self.I_WRITE,"unable to get token",WorkerStatus.ERROR)
+                  else:
+                    url=websocketUrl+"?token="+urllib.parse.quote(token)
+                    if self.writeSocket is not None:
+                      self.writeSocket.close()
+                    self.writeSocket=WebSocketHandler(InfoSetter(self.I_WRITE,self),url,
+                                                      self.writeChannelMessage)
+                    self.writeSocket.open()
+
+
           if (now - lastQuery) > self.config.period or first:
             first=False
             lastQuery=now
@@ -644,8 +726,8 @@ class AVNSignalKHandler(AVNWorker):
             lastAisFetch=now
           sleepTime=1 if self.config.period > 1 else self.config.period
           self.wait(sleepTime)
-        if self.webSocket is not None:
-          self.webSocket.close()
+        self.closeWebSockets()
+
       except:
         AVNLog.error("error when fetching from signalk %s: %s",apiUrl,traceback.format_exc())
         self.setInfo(self.I_MAIN,"error when fetching from signalk %s"%(apiUrl),WorkerStatus.ERROR)
@@ -699,7 +781,8 @@ class AVNSignalKHandler(AVNWorker):
         pass
       self.webSocket=None
       self.connected=False
-
+  def writeChannelMessage(self,data):
+    pass
   def queryCharts(self,apiUrl,port):
     charturl = apiUrl + "resources/charts"
     try:
@@ -770,6 +853,79 @@ class AVNSignalKHandler(AVNWorker):
         else:
           newPrefix=newPrefix+"."+key
         self.storeData(item,newPrefix,priority)
+
+  def getLocalToken(self,user):
+    allowedTypes=['readwrite','admin']
+    cfgPath=os.path.join(os.path.expanduser('~'),'.signalk','security.json')
+    AVNLog.debug("trying to get token for %s in %s",user,cfgPath)
+    if not os.path.exists(cfgPath):
+      raise Exception("signalK security config %s not found"%cfgPath)
+    with open(cfgPath,'r') as ch:
+       secData=json.load(ch)
+       if not 'secretKey' in secData:
+         raise Exception("secretKey not found in %s"%cfgPath)
+       secretKey=secData.get('secretKey')
+       users=secData.get('users')
+       if users is None:
+         raise Exception("no users list found in %s"%cfgPath)
+       if type(users) is not list:
+         raise Exception("invalid type of users list in %s"%cfgPath)
+       found=False
+       for us in users:
+         if us.get('name') == user:
+           found = True
+           if us.get('type') not in allowedTypes:
+             raise Exception("user %s has no write permissions"%user)
+           break
+       if not found:
+         raise Exception("user %s not found in %s"%(user,cfgPath))
+       token=jwt(user,secretKey)
+       AVNLog.debug("created token %s for user %s",token,user)
+       return token
+
+  def getAuthentication(self,baseUrl):
+    isLocal= self.config.isLocal
+    lString='locally' if isLocal else 'on host %s'%self.config.skHost
+    user=self.config.user
+    if self.config.password == '' and not isLocal:
+      self.setInfo(self.I_AUTH,"must provide a password for non local auth",WorkerStatus.ERROR)
+      return
+    if self.config.password == '':
+      #trying local
+      try:
+        token=self.getLocalToken(user)
+        if token is not None:
+          self.setInfo(self.I_AUTH,"successfully authenticated locally %s"%user,WorkerStatus.NMEA)
+          return token
+        self.setInfo(self.I_AUTH,"unable to get local token for %s"%user,WorkerStatus.ERROR)
+        return
+      except Exception as ex:
+        self.setInfo(self.I_AUTH,"error when trying to get local auth for %s:%s"%(user,str(ex)),WorkerStatus.ERROR)
+        return
+    self.setInfo(self.I_AUTH,"trying to authenticate %s %s"%(user,lString),WorkerStatus.STARTED)
+    if baseUrl.endswith('/'):
+      baseUrl=baseUrl[0:-1]
+    if baseUrl.endswith('/api'):
+      baseUrl=baseUrl[0:-4]
+    url=baseUrl+'/auth/login'
+    try:
+      req = urllib.request.Request(url,method='POST')
+      req.add_header('Content-Type', 'application/json')
+      body={'username':user,'password':self.config.password}
+      jsondata = json.dumps(body)
+      jsondataasbytes = jsondata.encode('utf-8')   # needs to be bytes
+      req.add_header('Content-Length', str(len(jsondataasbytes)))
+      response = urllib.request.urlopen(req, jsondataasbytes)
+      data=response.read()
+      decoded=json.loads(data)
+      token=decoded.get('token')
+      if token is not None:
+        self.setInfo(self.I_AUTH,"successfully retrieved token for %s"%user,WorkerStatus.NMEA)
+        return token
+      raise Exception(decoded.get('message') or 'unknown result')
+    except Exception as e:
+      self.setInfo(self.I_AUTH,"unable to login %s : %s"%(user,str(e)),WorkerStatus.ERROR)
+
 
   def listCharts(self,hostip):
     AVNLog.debug("listCharts %s"%hostip)
@@ -846,7 +1002,7 @@ class AVNSignalKHandler(AVNWorker):
       requestHostAddr = requestHost.split(':')[0]
       url='tiles'
       doProxy=False
-      if self.config.proxyMode=='always' or ( self.config.proxyMode=='sameHost' and self.config.skHost != 'localhost'):
+      if self.config.proxyMode=='always' or ( self.config.proxyMode=='sameHost' and not self.config.isLocal):
         doProxy=True
       if not doProxy:
         #no proxying, direct access to sk for charts
