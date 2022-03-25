@@ -339,8 +339,8 @@ class AVNUtil(object):
   #distance in NM
   @classmethod
   def distance(cls,origin,destination):
-    rt=cls.distanceM(origin,destination);
-    return rt/float(cls.NM);
+    rt=cls.distanceM(origin,destination)
+    return rt/float(cls.NM)
 
   #XTE - originally from Dirk HH, crosschecked against
   #http://www.movable-type.co.uk/scripts/latlong.html
@@ -362,6 +362,12 @@ class AVNUtil(object):
     x = math.cos(math.radians(clat))*math.sin(math.radians(elat)) - \
         math.sin(math.radians(clat))*math.cos(math.radians(elat))*math.cos(math.radians(elon)-math.radians(clon))
     return ((math.atan2(y, x)*180/math.pi)+360)%360.0
+
+  @classmethod
+  def deg2rad(cls,v):
+    if v is None:
+      return v
+    return v*math.pi/180.0
 
   @classmethod
   def rad2deg(cls,value):

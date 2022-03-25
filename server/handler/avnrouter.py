@@ -158,6 +158,40 @@ class AVNRouteInfo(AVNDirectoryListEntry):
   def __str__(self):
     return "Route: %s"%self.name
 
+class WpData:
+  @classmethod
+  def float(cls,v):
+    if v is None:
+      return None
+    return float(v)
+  def __init__(self,target=None,lat=None,lon=None,speed=None,fromWp=None):
+    self.validData=False
+    self.xte=None
+    self.distance=0
+    self.bearing=None
+    self.dstBearing=None
+    self.lat=None
+    self.lon=None
+    self.fromLat=None
+    self.fromLon=None
+    self.speed=speed
+    lat=self.float(lat)
+    lon=self.float(lon)
+    if target is not None:
+      self.lat=self.float(target.get('lat'))
+      self.lon=self.float(target.get('lon'))
+    if fromWp is not None:
+      self.fromLon=self.float(fromWp.get('lon'))
+      self.fromLat=self.float(fromWp.get('lat'))
+    if self.lat is not None and self.lon is not None and lat is not None and lon is not None:
+      self.validData=True
+      self.distance=AVNUtil.distanceM((lat,lon),(self.lat,self.lon))
+      self.dstBearing=AVNUtil.calcBearing((lat,lon),(self.lat,self.lon))
+      if self.fromLon is not None and self.fromLat is not None:
+        self.xte=AVNUtil.calcXTE((lat,lon),(self.lat,self.lon),(self.fromLat,self.fromLon))
+        self.bearing=AVNUtil.calcBearing((self.fromLat,self.fromLon),(self.lat,self.lon))
+
+
 #routing handler
 class AVNRouter(AVNDirectoryHandlerBase):
   currentLeg = None  # type: AVNRoutingLeg
@@ -206,7 +240,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
   def __init__(self,cfgparam):
     AVNDirectoryHandlerBase.__init__(self,cfgparam,'route')
     self.baseDir = AVNHandlerManager.getDirWithDefault(self.param, 'routesdir', 'routes')
-    self.currentLeg=None
+    self.currentLeg=None # type AVNRoutingLeg
     self.currentLegFileName=None
     self.currentLegTimestamp = None
     self.feeder=self.findFeeder(self.getStringParam('feederName'))
@@ -464,6 +498,15 @@ class AVNRouter(AVNDirectoryHandlerBase):
       return (0,0)
     return (float(wp.get('lat')),float(wp.get('lon')))
 
+  def getWpData(self) -> WpData:
+    if self.currentLeg is not None and self.currentLeg.isActive():
+      curGps=self.navdata.getDataByPrefix(AVNStore.BASE_KEY_GPS,1)
+      lat=curGps.get('lat')
+      lon=curGps.get('lon')
+      speed=curGps.get('speed')
+      wpData=WpData(self.currentLeg.getTo(),lat,lon,speed or 0,self.currentLeg.getFrom())
+      return wpData
+    return WpData()
   #compute an RMB record and write this into the feeder
   #if we have an active leg
   def computeRMB(self,computeRMB,computeAPB):
@@ -477,19 +520,11 @@ class AVNRouter(AVNDirectoryHandlerBase):
         self.WpNr+=1
 
       if self.startWp is not None and self.endWp is not None:
-        curGps=self.navdata.getDataByPrefix(AVNStore.BASE_KEY_GPS,1)
-        lat=curGps.get('lat')
-        lon=curGps.get('lon')
-        kn=curGps.get('speed')
-        if kn is None:
-          kn=0
-        else:
-          kn=kn*3600/AVNUtil.NM
-        #we could have speed(kn) or course(deg) in curTPV
-        #they are basically as decoded by gpsd
-        if lat is not None and lon is not None:
+        wpData=self.getWpData()
+
+        if wpData.validData:
           AVNLog.debug("compute route data from %s to %s",str(self.startWp),str(self.endWp))
-          XTE=AVNUtil.calcXTE((lat,lon), self.wpToLatLon(self.startWp), self.wpToLatLon(self.endWp))/float(AVNUtil.NM)
+          XTE=wpData.xte/float(AVNUtil.NM)
           if XTE > 0:
             LR="L"
           else:
@@ -497,7 +532,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
           XTE=abs(XTE)
           if XTE>9.99:
             XTE=9.99
-          destDis=AVNUtil.distance((lat,lon),self.wpToLatLon(self.endWp))
+          destDis=wpData.distance/float(AVNUtil.NM)
           if destDis>999.9:
             destDis=999.9
           if self.currentLeg.isApproach():
@@ -506,12 +541,13 @@ class AVNRouter(AVNDirectoryHandlerBase):
             arrival="V"
           wplat=NMEAParser.nmeaFloatToPos(self.endWp['lat'],True)
           wplon = NMEAParser.nmeaFloatToPos(self.endWp['lon'], False)
-          destBearing=AVNUtil.calcBearing((lat,lon),self.wpToLatLon(self.endWp))
-          brg=AVNUtil.calcBearing(self.wpToLatLon(self.startWp),self.wpToLatLon(self.endWp))
+          destBearing=wpData.dstBearing
+          brg=wpData.bearing
           self.setInfo("autopilot","RMB=%s,APB=%s:WpNr=%d,XTE=%s%s,DST=%s,BRG=%s,ARR=%s"%
                       (computeRMB,computeAPB,self.WpNr,XTE,LR,destDis,destBearing,arrival),WorkerStatus.NMEA)
           hasRMB=True
           if computeRMB:
+            kn=wpData.speed*3600/AVNUtil.NM
             nmeaData = "GPRMB,A,%.2f,%s,%s,%s,%s,%s,%s,%s,%.1f,%.1f,%.1f,%s,A"% (
               XTE,LR,self.WpNr,self.WpNr+1,wplat[0],wplat[1],wplon[0],wplon[1],destDis,destBearing,kn,arrival)
             nmeaData = "$" + nmeaData + "*" + NMEAParser.nmeaChecksum(nmeaData) + "\r\n"
@@ -526,6 +562,8 @@ class AVNRouter(AVNDirectoryHandlerBase):
   ''' anchor watch
       will only be called if self.currentLeg.anchorDistance is not none
   '''
+
+
 
   @classmethod
   def canEdit(cls):

@@ -41,6 +41,7 @@ import json
 import hmac
 import hashlib
 from avnav_nmea import NMEAParser
+from avnrouter import AVNRouter
 
 hasWebsockets=False
 try:
@@ -287,6 +288,14 @@ class WebSocketHandler(object):
       pass
     self.__webSocket=None
     self.__connected=False
+
+  def send(self,data):
+    if not self.isConnected():
+      return False
+    if self.__webSocket is None:
+      return False
+    self.__webSocket.send(data)
+    return True
 
   def isConnected(self):
     return self.__connected
@@ -580,6 +589,9 @@ class AVNSignalKHandler(AVNWorker):
       else:
         addonhandler.registerAddOn(self.USERAPP_NAME,"http://%s:%s" %
                                               (self.config.skHost,self.config.port), "images/signalk.svg")
+    router=None
+    if self.config.write:
+      router=self.findHandlerByName(AVNRouter.getConfigName())
     errorReported=False
     self.setInfo(self.I_MAIN,"connecting at %s" % baseUrl,WorkerStatus.STARTED)
     while sequence == self.configSequence:
@@ -673,14 +685,15 @@ class AVNSignalKHandler(AVNWorker):
                   if token is None:
                     self.setInfo(self.I_WRITE,"unable to get token",WorkerStatus.ERROR)
                   else:
-                    url=websocketUrl+"?token="+urllib.parse.quote(token)
+                    url=websocketUrl+"?subscribe=none&token="+urllib.parse.quote(token)
                     if self.writeSocket is not None:
                       self.writeSocket.close()
                     self.writeSocket=WebSocketHandler(InfoSetter(self.I_WRITE,self),url,
                                                       self.writeChannelMessage)
                     self.writeSocket.open()
 
-
+            if self.writeSocket is not None and self.writeSocket.isConnected():
+              self.sendCurrentLeg(router)
           if (now - lastQuery) > self.config.period or first:
             first=False
             lastQuery=now
@@ -783,6 +796,56 @@ class AVNSignalKHandler(AVNWorker):
       self.connected=False
   def writeChannelMessage(self,data):
     pass
+  def buildUpdateRequest(self,values):
+    uvalues=[]
+    for k,v in values.items():
+      uvalues.append({
+        'path':k,
+        'value':v
+      })
+    update={
+      'source':{
+        'label':'avnav',
+        'src':'avnav',
+        'type':'avnav'
+      },
+      'values':uvalues
+    }
+    rt={
+      'context':'vessels.self',
+      'updates':[update]
+    }
+    return rt
+  def sendCurrentLeg(self,router : AVNRouter):
+    PRFX='navigation.courseGreatCircle'
+    try:
+      if router is None:
+        return
+      wpData=router.getWpData()
+      if not wpData.validData:
+        update=self.buildUpdateRequest({
+          PRFX+'.nextPoint.position':None,
+          PRFX+'.nextPoint.distance':None,
+          PRFX+'.nextPoint.bearingTrue':None,
+          PRFX+'.crossTrackError':None,
+          PRFX+'.bearingTrackTrue':None
+        })
+      else:
+        update=self.buildUpdateRequest({
+          PRFX+'.nextPoint.position':{
+                'latitude':wpData.lat,
+                'longitude':wpData.lon,
+          },
+          PRFX+'.nextPoint.distance':wpData.distance,
+          PRFX+'.nextPoint.bearingTrue':AVNUtil.deg2rad(wpData.dstBearing),
+          PRFX+'.crossTrackError':wpData.xte,
+          PRFX+'.bearingTrackTrue':AVNUtil.deg2rad(wpData.bearing)
+        })
+      self.writeSocket.send(json.dumps(update))
+
+    except Exception as e:
+      AVNLog.debug("error sending current leg %",str(e))
+
   def queryCharts(self,apiUrl,port):
     charturl = apiUrl + "resources/charts"
     try:
