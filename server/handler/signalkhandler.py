@@ -35,6 +35,7 @@ import time
 import traceback
 import urllib.request
 import urllib.parse
+import uuid
 from functools import reduce
 import base64
 import json
@@ -43,7 +44,7 @@ import hashlib
 
 from alarmhandler import AVNAlarmHandler
 from avnav_nmea import NMEAParser
-from avnrouter import AVNRouter
+from avnrouter import AVNRouter, WpData
 
 hasWebsockets=False
 try:
@@ -157,6 +158,9 @@ class Config(object):
     self.user=AVNSignalKHandler.P_USERNAME.fromDict(param)
     self.password=AVNSignalKHandler.P_PASSWORD.fromDict(param)
     self.write=AVNSignalKHandler.P_WRITE.fromDict(param)
+    self.notify=AVNSignalKHandler.P_WRITE.fromDict(param) and AVNSignalKHandler.P_NOTIFY.fromDict(param)
+    self.sendWp=AVNSignalKHandler.P_WRITE.fromDict(param) and AVNSignalKHandler.P_SENDWP.fromDict(param)
+    self.skSource='avnav-'+AVNSignalKHandler.P_UUID.fromDict(param)
     self.isLocal= (self.skHost == 'localhost' or self.skHost == '127.0.0.1')
     self.wsRetry=AVNSignalKHandler.P_WEBSOCKETRETRY.fromDict(param)
 
@@ -351,8 +355,15 @@ class AVNSignalKHandler(AVNWorker):
                              description='the password for the SignalK server. You can leave this empty '+
                              'for a local access if signalK is installed in the default location',
                              condition={P_WRITE.name:True})
+  P_SENDWP=WorkerParameter('sendWp',type=WorkerParameter.T_BOOLEAN,default=True,
+                           description='send current waypoint routing data',
+                           condition={P_WRITE.name:True})
+  P_NOTIFY=WorkerParameter('notifications',type=WorkerParameter.T_BOOLEAN,default=True,
+                           description='send and receive notifications',
+                           condition={P_WRITE.name:True})
   P_WEBSOCKETRETRY=WorkerParameter('websocketRetry',type=WorkerParameter.T_NUMBER,default=20,
                                    description="retry period (s) for websocket channels to reopen")
+  P_UUID=WorkerParameter('uuid',type=WorkerParameter.T_STRING,editable=False,default='avnav')
 
   I_AIS='ais'
   I_CHARTS='charts'
@@ -360,12 +371,13 @@ class AVNSignalKHandler(AVNWorker):
   I_MAIN='main'
   I_AUTH='authentication'
   I_WRITE='write'
+  I_SOURCE='source'
 
   @classmethod
   def getConfigParam(cls, child=None):
     return [cls.P_DIRECT,cls.P_AIS,cls.PRIORITY_PARAM_DESCRIPTION.copy(default=NMEAParser.DEFAULT_SOURCE_PRIORITY-10),cls.P_PORT,cls.P_HOST,
             cls.P_AISPERIOD,cls.P_PERIOD,cls.P_CHARTS,cls.P_CHARTPERIOD,cls.P_CHARTPROXYMODE,cls.P_USEWEBSOCKETS, cls.P_MIGRATED,
-            cls.P_WRITE,cls.P_USERNAME,cls.P_PASSWORD,cls.P_WEBSOCKETRETRY]
+            cls.P_WRITE,cls.P_USERNAME,cls.P_PASSWORD,cls.P_SENDWP,cls.P_NOTIFY,cls.P_WEBSOCKETRETRY,cls.P_UUID]
 
   @classmethod
   def canEdit(cls):
@@ -414,44 +426,46 @@ class AVNSignalKHandler(AVNWorker):
     self.aisMap={}
     self.alarmhandler=None
     self.skAlarms=set()
+    self.ownWpAvailable=False #set if there is own WP data in SK
 
 
 
   def migrateConfig(self):
     pluginName='builtin-signalk'
     pluginHandler=self.findHandlerByName(AVNPluginHandler.getConfigName())
-    if pluginHandler:
-      updates={}
+    updates={}
+    alreadyMigrated=self.P_MIGRATED.fromDict(self.param)
+    if self.P_UUID.fromDict(self.param) == self.P_UUID.default:
+      updates[self.P_UUID.name]=str(uuid.uuid4())
+    if pluginHandler and not alreadyMigrated:
+      updates[self.P_MIGRATED.name]=True
       pluginParam=pluginHandler.param.get(pluginName)
       if pluginParam is not None and type(pluginParam) is list:
         pluginParam=pluginParam[0]
-        if not type(pluginParam) is dict:
-          return
-        if self.P_MIGRATED.fromDict(pluginParam):
-          return
-        pluginHandler.changeChildConfigDict(pluginName,{self.P_MIGRATED.name:True})
-        for p in self.getConfigParam():
-          if p.name == self.ENABLE_PARAM_DESCRIPTION.name:
-            continue
-          if p.name == self.P_MIGRATED.name:
-            continue
-          ov=pluginParam.get(p.name)
-          if ov is not None:
-            own=self.param.get(p.name)
-            if ov != own:
-              updates[p.name]=ov
-        for p in self.getConfigParam():
-          newParam=updates.get(p.name)
-          if newParam is None:
-            continue
-          try:
-            updates[p.name]=p.checkValue(updates[p.name],True)
-          except:
-            del updates[p.name]
-        if len(list(updates.keys())) < 1:
-          return
-        AVNLog.info("migrating signalk config: %s",",".join(list(map(lambda v: str(v[0])+":"+str(v[1]),updates.items()))))
-        super().changeMultiConfig(updates)
+        if type(pluginParam) is dict and not self.P_MIGRATED.fromDict(pluginParam):
+          pluginHandler.changeChildConfigDict(pluginName,{self.P_MIGRATED.name:True})
+          for p in self.getConfigParam():
+            if p.name == self.ENABLE_PARAM_DESCRIPTION.name:
+              continue
+            if p.name == self.P_MIGRATED.name:
+              continue
+            ov=pluginParam.get(p.name)
+            if ov is not None:
+              own=self.param.get(p.name)
+              if ov != own:
+                updates[p.name]=ov
+    for p in self.getConfigParam():
+      newParam=updates.get(p.name)
+      if newParam is None:
+        continue
+      try:
+        updates[p.name]=p.checkValue(updates[p.name],True)
+      except:
+        del updates[p.name]
+    if len(list(updates.keys())) < 1:
+      return
+    AVNLog.info("migrating signalk config: %s",",".join(list(map(lambda v: str(v[0])+":"+str(v[1]),updates.items()))))
+    super().changeMultiConfig(updates)
 
   def createMappings(self):
     selfMappings={}
@@ -577,6 +591,11 @@ class AVNSignalKHandler(AVNWorker):
 
     if self.config.chartQueryPeriod == 0:
       self.setInfo(self.I_CHARTS,'disabled',WorkerStatus.INACTIVE)
+    if self.config.write:
+      self.setInfo(self.I_SOURCE,self.config.skSource,WorkerStatus.NMEA)
+    else:
+      self.setInfo(self.I_SOURCE,self.config.skSource,WorkerStatus.INACTIVE)
+
     """
     the run method
     this will be called after successfully instantiating an instance
@@ -699,7 +718,7 @@ class AVNSignalKHandler(AVNWorker):
                                                       self.writeChannelMessage)
                     self.writeSocket.open()
 
-            if self.writeSocket is not None and self.writeSocket.isConnected():
+            if self.config.sendWp and self.writeSocket is not None and self.writeSocket.isConnected():
               self.sendCurrentLeg(router)
           if (now - lastQuery) > self.config.period or first:
             first=False
@@ -769,6 +788,8 @@ class AVNSignalKHandler(AVNWorker):
     return False
 
   def handleNotification(self, path, value,source):
+    if not self.config.notify:
+      return
     ownAlarm=self.getSKAlarm(path)
     if ownAlarm is None:
       return
@@ -810,11 +831,12 @@ class AVNSignalKHandler(AVNWorker):
         for item in values:
           value=item.get('value')
           path=item.get('path')
-          if value is not None and path is not None:
+          if  path is not None:
             if path.startswith("notifications"):
               self.handleNotification(path, value,source)
             else:
-              self.setValue(path,value)
+              if value is not None:
+                self.setValue(path,value)
     except:
       AVNLog.error("error decoding %s:%s",str(data),traceback.format_exc())
       try:
@@ -835,9 +857,10 @@ class AVNSignalKHandler(AVNWorker):
     update={
       'source':{
         'label':'avnav',
-        'src':'avnav',
+        'talker':self.config.skSource,
         'type':'avnav'
       },
+      '$source':self.config.skSource,
       'values':uvalues
     }
     rt={
@@ -845,36 +868,65 @@ class AVNSignalKHandler(AVNWorker):
       'updates':[update]
     }
     return rt
-  def sendCurrentLeg(self,router : AVNRouter):
+
+  def getLegData(self,wpData: WpData):
     PRFX='navigation.courseGreatCircle'
+    rt={
+      PRFX+'.nextPoint.position':{
+        'latitude':wpData.lat,
+        'longitude':wpData.lon,
+      } if wpData.validData else None,
+      PRFX+'.previousPoint.position':{
+        'latitude':wpData.fromLat,
+        'longitude':wpData.fromLon,
+      } if (wpData.fromLat is not None and wpData.fromLon is not None) else None,
+      PRFX+'.nextPoint.distance':wpData.distance,
+      PRFX+'.nextPoint.bearingTrue':AVNUtil.deg2rad(wpData.dstBearing),
+      PRFX+'.crossTrackError':wpData.xte,
+      PRFX+'.netxPoint.arrivalCircle':wpData.approachDistance,
+      PRFX+'.bearingTrackTrue':AVNUtil.deg2rad(wpData.bearing)
+    }
+    return rt
+  def sendCurrentLeg(self,router : AVNRouter):
     try:
       if router is None:
         return
       wpData=router.getWpData()
-      if not wpData.validData:
-        update=self.buildUpdateRequest({
-          PRFX+'.nextPoint.position':None,
-          PRFX+'.nextPoint.distance':None,
-          PRFX+'.nextPoint.bearingTrue':None,
-          PRFX+'.crossTrackError':None,
-          PRFX+'.bearingTrackTrue':None
-        })
-      else:
-        update=self.buildUpdateRequest({
-          PRFX+'.nextPoint.position':{
-                'latitude':wpData.lat,
-                'longitude':wpData.lon,
-          },
-          PRFX+'.nextPoint.distance':wpData.distance,
-          PRFX+'.nextPoint.bearingTrue':AVNUtil.deg2rad(wpData.dstBearing),
-          PRFX+'.crossTrackError':wpData.xte,
-          PRFX+'.bearingTrackTrue':AVNUtil.deg2rad(wpData.bearing)
-        })
+      if not wpData.validData and not self.ownWpAvailable:
+        return
+      self.ownWpAvailable=wpData.validData
+      update=self.buildUpdateRequest(self.getLegData(wpData))
       self.writeSocket.send(json.dumps(update))
 
     except Exception as e:
       AVNLog.debug("error sending current leg %",str(e))
 
+  def isOwnSource(self,src):
+    if src is None:
+      return False
+    return src.endswith('.'+self.config.skSource)
+  def checkOwnItems(self,node,prefix):
+    if not '$source' in node and not 'values' in node:
+      return
+    own=None
+    value=None
+    if self.isOwnSource(node.get('$source'))  and 'value' in node:
+      own=True
+      value=node.get('value')
+    elif 'values' in node:
+      values=node['values']
+      for k,v in values.items():
+        if self.isOwnSource(k):
+          own=True
+          value=v.get('value')
+          break
+    if not own:
+      return
+    wpData=self.getLegData(WpData())
+    for k,v in wpData.items():
+      if k == prefix and value is not None:
+        self.ownWpAvailable=True
+        break
 
   ALARMS={
     'mob': {
@@ -916,7 +968,7 @@ class AVNSignalKHandler(AVNWorker):
     return True
 
   def handleAlarm(self,name,on):
-    if not self.ENABLE_PARAM_DESCRIPTION.fromDict(self.param):
+    if not self.ENABLE_PARAM_DESCRIPTION.fromDict(self.param) or not self.config.notify:
       return
     if on:
       self.sendAlarm(name)
@@ -984,6 +1036,15 @@ class AVNSignalKHandler(AVNWorker):
     self.skCharts = newList
     self.setInfo(self.I_CHARTS,'read %d charts'%len(newList),WorkerStatus.NMEA)
   def storeData(self,node,prefix,priority):
+    if prefix is None and 'notifications' in node:
+      item = node.get('notifications')
+      if item is not None:
+        for k,v in item.items():
+          self.handleNotification('notifications.'+k, v.get('value'),v.get('$source'))
+    try:
+      self.checkOwnItems(node,prefix)
+    except Exception as e:
+      AVNLog.debug("exception checking own items %s",traceback.format_exc())
     if 'value' in node:
       if self.checkOutdated(node.get('timestamp')):
         AVNLog.debug('ignore outdated value %s',prefix)
@@ -991,10 +1052,7 @@ class AVNSignalKHandler(AVNWorker):
       self.setValue(prefix, node.get('value'))
       return
     for key, item in list(node.items()):
-      if key == 'notifications':
-        for k,v in item.items():
-          self.handleNotification('notifications.'+k, v.get('value'),v.get('$source'))
-        continue
+
       if isinstance(item,dict):
         newPrefix=prefix
         if newPrefix is None:

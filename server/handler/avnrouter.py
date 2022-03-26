@@ -164,10 +164,10 @@ class WpData:
     if v is None:
       return None
     return float(v)
-  def __init__(self,target=None,lat=None,lon=None,speed=None,fromWp=None):
+  def __init__(self,leg: AVNRoutingLeg = None,lat=None,lon=None,speed=None):
     self.validData=False
     self.xte=None
-    self.distance=0
+    self.distance=None
     self.bearing=None
     self.dstBearing=None
     self.lat=None
@@ -177,6 +177,13 @@ class WpData:
     self.speed=speed
     lat=self.float(lat)
     lon=self.float(lon)
+    target=None
+    fromWp=None
+    self.approachDistance=None
+    if leg is not None and leg.isActive():
+      self.approachDistance=leg.getApproachDistance()
+      target=leg.getTo()
+      fromWp=leg.getFrom()
     if target is not None:
       self.lat=self.float(target.get('lat'))
       self.lon=self.float(target.get('lon'))
@@ -499,14 +506,12 @@ class AVNRouter(AVNDirectoryHandlerBase):
     return (float(wp.get('lat')),float(wp.get('lon')))
 
   def getWpData(self) -> WpData:
-    if self.currentLeg is not None and self.currentLeg.isActive():
-      curGps=self.navdata.getDataByPrefix(AVNStore.BASE_KEY_GPS,1)
-      lat=curGps.get('lat')
-      lon=curGps.get('lon')
-      speed=curGps.get('speed')
-      wpData=WpData(self.currentLeg.getTo(),lat,lon,speed or 0,self.currentLeg.getFrom())
-      return wpData
-    return WpData()
+    curGps=self.navdata.getDataByPrefix(AVNStore.BASE_KEY_GPS,1)
+    lat=curGps.get('lat')
+    lon=curGps.get('lon')
+    speed=curGps.get('speed')
+    wpData=WpData(self.currentLeg,lat,lon,speed or 0)
+    return wpData
   #compute an RMB record and write this into the feeder
   #if we have an active leg
   def computeRMB(self,computeRMB,computeAPB):
