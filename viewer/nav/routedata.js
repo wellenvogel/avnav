@@ -1015,7 +1015,7 @@ RouteData.prototype._legChangedLocally=function(leg){
         ).catch(
             (error)=>{
                 self.lastSentLeg=undefined;
-                if (globalStore.getData(keys.properties.routingServerError)) Toast("unable to send leg to server:" +errMsg);
+                if (globalStore.getData(keys.properties.routingServerError)) Toast("unable to send leg to server:" +error);
             }
         );
     }
