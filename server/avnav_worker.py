@@ -109,12 +109,6 @@ class WorkerParameter(object):
       if nv is not None:
         rt.__setattr__(k,nv)
     return rt
-  @classmethod
-  def filterNameDef(cls,plist):
-    rt={}
-    for p in plist:
-      rt[p.name]=p.default
-    return rt
 
   @classmethod
   def updateParamFor(cls, plist, paramName, vdict):
@@ -167,6 +161,8 @@ class WorkerParameter(object):
 
   def checkValue(self,value,rangeOrListCheck=True):
     if value is None and self.default is None:
+      if not self.mandatory:
+        return None
       raise ParamValueError("missing mandatory parameter %s"%self.name)
     if self.type == self.T_STRING:
       return str(value)
@@ -481,8 +477,8 @@ class AVNWorker(object):
       self.handlerListLock.release()
     self.id=self.getNextWorkerId()
     self.param=cfgparam
-    self.status=False
     self.status={'main':WorkerStatus('main',WorkerStatus.STARTED,"created")}
+    self.__statusLock=threading.Lock()
     self.type=self.Type.DEFAULT
     self.feeder=None
     self.configChanger=None #reference for writing back to the DOM
@@ -518,25 +514,28 @@ class AVNWorker(object):
     except:
       return {'name':self.getStatusName(),'items':[],'error':"no info available"}
   def setInfo(self,name,info,status,childId=None,canDelete=False,timeout=None):
-    existing=self.status.get(name)
-    if existing:
-      if existing.update(status,info,timeout=timeout):
-        AVNLog.info("%s",str(existing))
-        return True
-    else:
-      ns=WorkerStatus(name,status,info,childId=childId,canDelete=canDelete,timeout=timeout)
-      self.status[name]=ns
-      AVNLog.info("%s",str(ns))
+    with  self.__statusLock:
+      existing=self.status.get(name)
+      if existing:
+        if existing.update(status,info,timeout=timeout):
+          AVNLog.info("%s",str(existing))
+          return True
+      else:
+        ns=WorkerStatus(name,status,info,childId=childId,canDelete=canDelete,timeout=timeout)
+        self.status[name]=ns
+        AVNLog.info("%s",str(ns))
   def refreshInfo(self,name,timeout=None):
-    existing=self.status.get(name)
-    if existing:
-      existing.refresh(timeout=timeout)
+    with self.__statusLock:
+      existing=self.status.get(name)
+      if existing:
+        existing.refresh(timeout=timeout)
   def deleteInfo(self,name):
-    if self.status.get(name) is not None:
-      try:
-        del self.status[name]
-      except:
-        pass
+    with self.__statusLock:
+      if self.status.get(name) is not None:
+        try:
+          del self.status[name]
+        except:
+          pass
   def getId(self):
     return self.id
 
@@ -826,33 +825,52 @@ class AVNWorker(object):
       cls.checkSingleInstance()
     instance =cls(cfgparam)
     return instance
-  #parse an config entry
+
   @classmethod
-  def parseConfig(cls,attrs,default):
-    sparam=copy.deepcopy(default)
-    if len(list(sparam.keys())) == 0:
-      #special case: accept all attributes
-      for k in list(attrs.keys()):
+  def getConfigFromAttrs(cls,attrs):
+    sparam={}
+    for k in list(attrs.keys()):
         v=attrs[k]
         if v is None or isinstance(v,str):
           sparam[k]=v
         else:
           sparam[k] = v.value
-      return sparam
+    return sparam
+
+  @classmethod
+  def parseConfigNew(cls,attrs,workerParam):
+    parsed=cls.getConfigFromAttrs(attrs)
+    rt={}
+    for wp in workerParam:
+      try:
+        #we cannot use fromDict here as we have to be tolernat against
+        #all old config
+        v=parsed.get(wp.name)
+        if v is None:
+          v=wp.default
+        if v is None and wp.mandatory:
+          raise Exception("missing mandatory parameter %s",wp.name)
+        rt[wp.name]=v
+      except Exception as e:
+        AVNLog.error("unable to parse %s(%s) for %s",wp.name,str(parsed),cls.getConfigName())
+        raise
+    return rt
+
+  #parse an config entry
+  @classmethod
+  def parseConfig(cls,attrs,default):
+    parsed=cls.getConfigFromAttrs(attrs)
+    if len(list(default.keys())) == 0:
+      #special case: accept all attributes
+      return parsed
+    sparam=copy.deepcopy(default)
     for k in list(sparam.keys()):
       dv=sparam[k]
-      if (isinstance(dv,str)):
-        sparam[k]=dv
-      v=attrs.get(k)
+      v=parsed.get(k)
       if dv is None and v is None:
         raise Exception(cls.getConfigName()+": missing mandatory parameter "+k)
-      if v is None:
-        sparam[k]=dv
-      else:
-        if isinstance(v,str) or isinstance(v,str):
-          sparam[k]=v
-        else:
-          sparam[k] = v.value
+      if v is not None:
+        sparam[k]=v
     return sparam
 
   def run(self):

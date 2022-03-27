@@ -129,7 +129,7 @@ class AVNBaseConfig(AVNWorker):
                             description="expiry in seconds for NMEA data"),
             WorkerParameter('aisExpiryTime',1200,type=WorkerParameter.T_FLOAT,
                             description="expiry time in seconds for AIS data"),
-            WorkerParameter('ownMMSI','',type=WorkerParameter.T_NUMBER,
+            WorkerParameter('ownMMSI','',type=WorkerParameter.T_STRING,
                             description='if set - do not store AIS messages with this MMSI'),
             WorkerParameter('debugToLog', False,type=WorkerParameter.T_BOOLEAN,editable=False),
             WorkerParameter('maxtimeback',5,type=WorkerParameter.T_FLOAT,

@@ -426,16 +426,20 @@ class AVNRouter(AVNDirectoryHandlerBase):
     alert = self.findHandlerByName("AVNAlarmHandler")
     if alert is None:
       return
-    if start:
-      if self.activatedAlarms.get(name) is None:
-        AVNLog.info("starting alarm %s",name)
-      self.activatedAlarms[name]=True
-      alert.startAlarm(name)
-    else:
-      if self.activatedAlarms.get(name) is not None:
-        AVNLog.info("stopping alarm %s",name)
-        del self.activatedAlarms[name]
-      alert.stopAlarm(name)
+    try:
+      if start:
+        if self.activatedAlarms.get(name) is None:
+          AVNLog.info("starting alarm %s",name)
+        self.activatedAlarms[name]=True
+        alert.startAlarm(name)
+      else:
+        if self.activatedAlarms.get(name) is not None:
+          AVNLog.info("stopping alarm %s",name)
+          del self.activatedAlarms[name]
+        alert.stopAlarm(name)
+      self.setInfo('alarm',"%s alarm %s"%('set' if start else 'unset',name),WorkerStatus.NMEA)
+    except Exception as e:
+      self.setInfo('alarm','unable to handle alarm %s:%s'%(name,str(e)),WorkerStatus.ERROR)
   #compute whether we are approaching the waypoint
   def computeApproach(self):
     leg=self.getCurrentLeg()
