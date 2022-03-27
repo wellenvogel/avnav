@@ -883,7 +883,7 @@ class AVNSignalKHandler(AVNWorker):
       PRFX+'.nextPoint.distance':wpData.distance,
       PRFX+'.nextPoint.bearingTrue':AVNUtil.deg2rad(wpData.dstBearing),
       PRFX+'.crossTrackError':wpData.xte,
-      PRFX+'.netxPoint.arrivalCircle':wpData.approachDistance,
+      PRFX+'.nextPoint.arrivalCircle':wpData.approachDistance,
       PRFX+'.bearingTrackTrue':AVNUtil.deg2rad(wpData.bearing)
     }
     return rt
