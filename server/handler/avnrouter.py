@@ -43,6 +43,8 @@ import avnav_handlerList
 class AVNRoutingLeg(object):
   MOBNAME="MOB" #the waypoint name fro MOB
   def __init__(self,dict):
+    if dict is None:
+      dict={}
     self.plain=dict
     #TODO: some checks here
 
@@ -128,6 +130,8 @@ class AVNRoutingLeg(object):
     else:
       return "AVNRoutingLeg route=%s,from=%s,to=%s,active=%s, target=%d, approachDistance=%s, approach=%s"\
            %(self.getRouteName(),str(self.getFrom()),str(self.getTo()),self.isActive(),self.getCurrentTarget() or 0,str(self.getApproachDistance()),"True" if self.isApproach() else "False")
+  def clone(self):
+    return AVNRoutingLeg(self.plain if self.plain is None else self.plain.copy())
 
 class AVNRouteInfo(AVNDirectoryListEntry):
   def __init__(self,type,prefix,name,**kwargs):
@@ -261,34 +265,52 @@ class AVNRouter(AVNDirectoryHandlerBase):
     self.startWp = None
     self.endWp = None
     self.WpNr = 0
+    self.__legLock=threading.Lock()
+    self.__writeLegLock=threading.Lock() #alayws lock this first!
 
 
 
   LEG_CHANGE_KEY='leg'
 
-  def setCurrentLeg(self,leg,writeBack=True):
-    # type: (AVNRoutingLeg) -> object
-    changed=self.currentLeg == None or not self.currentLeg.equal(leg)
-    if changed:
-      self.navdata.updateChangeCounter(self.LEG_CHANGE_KEY)
-    self.currentLeg=leg
-    if leg is None:
-      if os.path.exists(self.currentLegFileName):
-        os.unlink(self.currentLegFileName)
-        AVNLog.info("current leg removed")
-      return
-    if writeBack:
-      AVNLog.info("new leg %s",str(leg))
-      f=open(self.currentLegFileName,"w",encoding='utf-8')
-      try:
-        f.write(json.dumps(leg.getJson()))
-      except:
-        f.close()
-        raise
-      f.close()
-      self.currentLegTimestamp=os.stat(self.currentLegFileName).st_mtime
-    if not leg.isActive():
-      self.computeApproach() #ensure that we immediately switch off alarms
+  def getCurrentLeg(self):
+    with self.__legLock:
+      if self.currentLeg is None:
+        return None
+      return self.currentLeg.clone()
+
+  def setCurrentLeg(self,leg=None,writeBack=True,changeFunction=None,forceWrite=False):
+    # type: (AVNRoutingLeg,bool,function,bool) -> object
+    with self.__writeLegLock:
+      with self.__legLock:
+        oldLeg=self.currentLeg
+        newLeg=leg
+        if changeFunction is not None:
+          if not type(changeFunction) is list:
+            changeFunction=[changeFunction]
+          newLeg=oldLeg.clone() if oldLeg is not None else None
+          for f in changeFunction:
+            newLeg=f(newLeg,leg)
+        changed=(oldLeg == None and newLeg is not None) or not oldLeg.equal(newLeg)
+        self.currentLeg=newLeg     
+      if changed or forceWrite:
+        self.navdata.updateChangeCounter(self.LEG_CHANGE_KEY)
+        ts=0
+        if newLeg is None:
+          if os.path.exists(self.currentLegFileName):
+            os.unlink(self.currentLegFileName)
+            AVNLog.info("current leg removed")
+          return
+        if writeBack:
+          AVNLog.info("new leg %s",str(leg))
+          f=open(self.currentLegFileName,"w",encoding='utf-8')
+          try:
+            f.write(json.dumps(newLeg.getJson()))
+          except:
+            f.close()
+            raise
+          f.close()
+        ts=os.stat(self.currentLegFileName).st_mtime
+        self.currentLegTimestamp=ts
 
   def getSleepTime(self):
     return self.getFloatParam('interval')
@@ -300,68 +322,79 @@ class AVNRouter(AVNDirectoryHandlerBase):
     return itemDescription
 
   def readCurrentLeg(self):
-    if os.path.exists(self.currentLegFileName):
-      f = None
-      try:
-        self.currentLegTimestamp=os.stat(self.currentLegFileName).st_mtime
-        f = open(self.currentLegFileName, "r", encoding='utf-8')
-        strleg = f.read(self.MAXROUTESIZE + 1000)
-        currentLeg = AVNRoutingLeg(json.loads(strleg))
-        if currentLeg.getTo() is not None:
-          distance = AVNUtil.distanceM(self.wpToLatLon(currentLeg.getFrom()),
-                                       self.wpToLatLon(currentLeg.getTo()))
-          AVNLog.info("read current leg, route=%s, from=%s, to=%s, length=%fNM" % (currentLeg.getRouteName(),
-                                                                                   str(currentLeg.getFrom()),
-                                                                                   str(currentLeg.getTo()),
-                                                                                   distance / AVNUtil.NM))
-        else:
-          AVNLog.info("read current leg, route=%s, from=%s, to=%s" % (currentLeg.getRouteName(),
-                                                                      str(currentLeg.getFrom()),
-                                                                      "NONE",                                                              ))
-        return currentLeg
-      except:
-        AVNLog.error("unable to read current leg %s:%s",self.currentLegFileName,traceback.format_exc())
-        self.currentLegTimestamp=None
+     if os.path.exists(self.currentLegFileName):
+       f = None
+       try:
+         self.currentLegTimestamp=os.stat(self.currentLegFileName).st_mtime
+         f = open(self.currentLegFileName, "r", encoding='utf-8')
+         strleg = f.read(self.MAXROUTESIZE + 1000)
+         currentLeg = AVNRoutingLeg(json.loads(strleg))
+         if currentLeg.getTo() is not None:
+           distance = AVNUtil.distanceM(self.wpToLatLon(currentLeg.getFrom()),
+                                      self.wpToLatLon(currentLeg.getTo()))
+           AVNLog.info("read current leg, route=%s, from=%s, to=%s, length=%fNM" % (currentLeg.getRouteName(),
+                                                                                  str(currentLeg.getFrom()),
+                                                                                  str(currentLeg.getTo()),
+                                                                                  distance / AVNUtil.NM))
+         else:
+           AVNLog.info("read current leg, route=%s, from=%s, to=%s" % (currentLeg.getRouteName(),
+                                                                     str(currentLeg.getFrom()),
+                                                                     "NONE",                                                              ))
+         return currentLeg
+       except:
+         AVNLog.error("unable to read current leg %s:%s",self.currentLegFileName,traceback.format_exc())
+         self.currentLegTimestamp=None
 
   #this is the main thread - listener
   def onPreRun(self):
     self.currentLegFileName=os.path.join(self.baseDir,self.currentLegName)
-    currentLeg=self.readCurrentLeg()
+    currentLeg=None
+    with self.__writeLegLock:
+      currentLeg=self.readCurrentLeg()
     if currentLeg is not None:
       self.setCurrentLeg(currentLeg,False)
     else:
       AVNLog.info("no current leg %s found"%(self.currentLegFileName,))
       self.setCurrentLeg(AVNRoutingLeg({}))
+    self.computeApproach()
     AVNLog.info("router main loop started")
 
   def periodicRun(self):
     hasLeg = False
     hasRMB = False
-    if os.path.exists(self.currentLegFileName):
-      newTime=os.stat(self.currentLegFileName).st_mtime
-      if newTime != self.currentLegTimestamp:
-        AVNLog.info("current leg %s changed timestamp, reload",self.currentLegFileName)
-        currentLeg=self.readCurrentLeg()
-        if currentLeg:
-          self.setCurrentLeg(currentLeg,False)
-
-
-    if self.currentLeg and self.currentLeg.isActive():
+    currentLeg=None
+    nonexist=False
+    with self.__writeLegLock:
+      if os.path.exists(self.currentLegFileName):
+        newTime=os.stat(self.currentLegFileName).st_mtime
+        if newTime != self.currentLegTimestamp:
+          AVNLog.info("current leg %s changed timestamp, reload",self.currentLegFileName)
+          currentLeg=self.readCurrentLeg()
+      else:
+        nonexist=True
+    if currentLeg:
+      self.setCurrentLeg(currentLeg,False)
+    if nonexist:
+      def update(leg,x):
+        return leg
+      self.setCurrentLeg(changeFunction=update,forceWrite=True)
+    leg=self.getCurrentLeg()
+    if leg and leg.isActive():
       hasLeg = True
-      if self.currentLeg.getAnchorDistance() is not None:
+      if leg.getAnchorDistance() is not None:
         routerInfo = "Anchor watch, from %s, (anchor radius %sm)" % (
-          str(self.currentLeg.getFrom()),
-          str(self.currentLeg.getAnchorDistance()))
+          str(leg.getFrom()),
+          str(leg.getAnchorDistance()))
       else:
         routerInfo = "from %s, to %s, route=%s, activeWp=%s, approach=%s (approach radius %sm)" % (
-        str(self.currentLeg.getFrom()), str(self.currentLeg.getTo()),
-        self.currentLeg.getRouteName(), self.currentLeg.getCurrentTarget(),
-        self.currentLeg.isApproach(), self.currentLeg.getApproachDistance())
+        str(leg.getFrom()), str(leg.getTo()),
+        leg.getRouteName(), leg.getCurrentTarget(),
+        leg.isApproach(), leg.getApproachDistance())
       AVNLog.debug(routerInfo)
       self.setInfo("leg", routerInfo
                    , WorkerStatus.RUNNING)
     try:
-      if self.currentLeg is not None and self.currentLeg.getAnchorDistance() is not None:
+      if leg is not None and leg.getAnchorDistance() is not None:
         self.computeAnchor()
       else:
         self.startStopAlarm(False, self.ALARMS.anchor)
@@ -405,17 +438,18 @@ class AVNRouter(AVNDirectoryHandlerBase):
       alert.stopAlarm(name)
   #compute whether we are approaching the waypoint
   def computeApproach(self):
-    if self.currentLeg is None:
+    leg=self.getCurrentLeg()
+    if leg is None:
       AVNLog.debug("currentLeg is None")
       self.startStopAlarm(False,self.ALARMS.waypoint)
       self.startStopAlarm(False, self.ALARMS.mob)
       return
-    if not self.currentLeg.isActive():
+    if not leg.isActive():
       AVNLog.debug("currentLeg inactive")
       self.startStopAlarm(False,self.ALARMS.waypoint)
       self.startStopAlarm(False, self.ALARMS.mob)
       return
-    if self.currentLeg.isMob():
+    if leg.isMob():
       AVNLog.debug("currentLeg MOB")
       self.startStopAlarm(False, self.ALARMS.waypoint)
       if self.activatedAlarms.get(self.ALARMS.mob) is None:
@@ -429,31 +463,36 @@ class AVNRouter(AVNDirectoryHandlerBase):
       self.startStopAlarm(False,self.ALARMS.waypoint)
       return
     currentLocation=(lat,lon)
-    dst=AVNUtil.distanceM(currentLocation,self.wpToLatLon(self.currentLeg.getTo()))
+    dst=AVNUtil.distanceM(currentLocation,self.wpToLatLon(leg.getTo()))
     AVNLog.debug("approach current distance=%f",float(dst))
-    if (dst > self.currentLeg.getApproachDistance()):
-      old=self.currentLeg.isApproach()
-      self.currentLeg.setApproach(False)
+    if (dst > leg.getApproachDistance()):
+      def unsetApproach(leg,x):
+        if not leg:
+          return leg
+        leg.setApproach(False)
+        return leg
+      self.setCurrentLeg(changeFunction=unsetApproach)
       self.startStopAlarm(False,self.ALARMS.waypoint)
-      if old:
-        #save leg
-        self.setCurrentLeg(self.currentLeg)
       self.lastDistanceToCurrent=None
       self.lastDistanceToNext=None
       return
     if self.activatedAlarms.get(self.ALARMS.waypoint) is None:
       self.startStopAlarm(True, self.ALARMS.waypoint)
-    if not self.currentLeg.isApproach():
-      self.currentLeg.setApproach(True)
-      #save the leg
-      self.setCurrentLeg(self.currentLeg)
-    AVNLog.info("Route: approaching wp %d (%s) currentDistance=%f",self.currentLeg.getCurrentTarget(),str(self.currentLeg.getTo()),float(dst))
-    route=self.currentLeg.getCurrentRoute()
+    #we have approach
+    def setApproach(leg,x):
+      if not leg:
+        return leg
+      leg.setApproach(True)
+      return leg
+    changes=[setApproach]
+    AVNLog.info("Route: approaching wp %d (%s) currentDistance=%f",leg.getCurrentTarget(),str(leg.getTo()),float(dst))
+    route=leg.getCurrentRoute()
     if route is None or route.get('points') is None:
       AVNLog.debug("Approach: no route active")
+      self.setCurrentLeg(changeFunction=changes)
       #TODO: stop routing?
       return
-    currentTarget=self.currentLeg.getCurrentTarget()
+    currentTarget=leg.getCurrentTarget()
     hasNextWp = True
     nextWpNum=0
     if currentTarget is None:
@@ -471,6 +510,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
           #first time in approach
           self.lastDistanceToNext=nextDistance
           self.lastDistanceToCurrent=dst
+          self.setCurrentLeg(changeFunction=changes)
           return
         #check if the distance to own wp increases and to the next decreases
       diffcurrent=dst-self.lastDistanceToCurrent
@@ -478,26 +518,38 @@ class AVNRouter(AVNDirectoryHandlerBase):
           #still decreasing
           self.lastDistanceToCurrent=dst
           self.lastDistanceToNext=nextDistance
+          self.setCurrentLeg(changeFunction=changes)
           return
       diffnext=nextDistance-self.lastDistanceToNext
       if (diffnext > 0):
           #increases to next
           self.lastDistanceToCurrent=dst
           self.lastDistanceToNext=nextDistance
+          self.setCurrentLeg(changeFunction=changes)
           return
     else:
       AVNLog.info("last WP of route reached, switch of routing")
-      self.currentLeg.setActive(False)
-      self.setCurrentLeg(self.currentLeg)
+      def unsetActive(leg,x):
+        if not leg:
+          return leg
+        leg.setActive(False)
+        return leg
+      changes.append(unsetActive)  
+      self.setCurrentLeg(changeFunction=changes)
       self.lastDistanceToCurrent=None
       self.lastDistanceToNext=None
       return
     #should we wait for some time???
     AVNLog.info("switching to next WP num=%d, wp=%s",nextWpNum,str(nextWp))
-    self.currentLeg.setNewLeg(nextWpNum,self.currentLeg.getTo(),nextWp)
+    def newWp(leg,x):
+      if not leg:
+        return leg
+      leg.setNewLeg(nextWpNum,leg.getTo(),nextWp)
+      return leg
+    changes.append(newWp)
     self.lastDistanceToCurrent=None
     self.lastDistanceToNext=None
-    self.setCurrentLeg(self.currentLeg)
+    self.setCurrentLeg(changeFunction=changes)
 
   @classmethod
   def wpToLatLon(cls,wp):
@@ -510,7 +562,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
     lat=curGps.get('lat')
     lon=curGps.get('lon')
     speed=curGps.get('speed')
-    wpData=WpData(self.currentLeg,lat,lon,speed or 0)
+    wpData=WpData(self.getCurrentLeg(),lat,lon,speed or 0)
     return wpData
   #compute an RMB record and write this into the feeder
   #if we have an active leg
@@ -518,10 +570,11 @@ class AVNRouter(AVNDirectoryHandlerBase):
     hasRMB=False
     #do the computation of some route data
     nmeaData="$GPRMB,A,,,,,,,,,,,,V,D*19\r\n"
-    if self.currentLeg is not None and self.currentLeg.isActive():
-      if self.startWp!=self.currentLeg.getFrom() or self.endWp!=self.currentLeg.getTo():
-        self.startWp=self.currentLeg.getFrom()
-        self.endWp=self.currentLeg.getTo()
+    leg=self.getCurrentLeg()
+    if leg is not None and leg.isActive():
+      if self.startWp!=leg.getFrom() or self.endWp!=leg.getTo():
+        self.startWp=leg.getFrom()
+        self.endWp=leg.getTo()
         self.WpNr+=1
 
       if self.startWp is not None and self.endWp is not None:
@@ -540,7 +593,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
           destDis=wpData.distance/float(AVNUtil.NM)
           if destDis>999.9:
             destDis=999.9
-          if self.currentLeg.isApproach():
+          if leg.isApproach():
             arrival="A"
           else:
             arrival="V"
@@ -565,7 +618,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
             self.feeder.addNMEA(nmeaData,source="router")
     return hasRMB
   ''' anchor watch
-      will only be called if self.currentLeg.anchorDistance is not none
+      will only be called if leg.anchorDistance is not none
   '''
 
 
@@ -587,9 +640,10 @@ class AVNRouter(AVNDirectoryHandlerBase):
         self.startStopAlarm(True,self.ALARMS.gps)
       return
     self.startStopAlarm(False,self.ALARMS.gps)
-    anchorDistance = AVNUtil.distanceM((lat, lon), self.wpToLatLon(self.currentLeg.getFrom()))
-    AVNLog.debug("Anchor distance %d, allowed %d",anchorDistance,self.currentLeg.getAnchorDistance())
-    if anchorDistance > self.currentLeg.getAnchorDistance():
+    leg=self.getCurrentLeg()
+    anchorDistance = AVNUtil.distanceM((lat, lon), self.wpToLatLon(leg.getFrom()))
+    AVNLog.debug("Anchor distance %d, allowed %d",anchorDistance,leg.getAnchorDistance())
+    if anchorDistance > leg.getAnchorDistance():
       self.startStopAlarm(True,self.ALARMS.anchor)
     return
 
@@ -604,6 +658,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
       return self.currentLeg.getJson() if self.currentLeg is not None else {}
     if (command == 'unsetleg'):
       self.setCurrentLeg(None)
+      self.wakeUp()
       return {'status':'OK'}
     if (command == 'setleg'):
       data=AVNUtil.getHttpRequestParam(requestparam, 'leg')
@@ -612,6 +667,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
         if data is None:
           raise Exception("missing leg data for setleg")
       self.setCurrentLeg(AVNRoutingLeg(json.loads(data)))
+      self.wakeUp()
       return {'status':'OK'}
     raise Exception("invalid command "+command)
 
