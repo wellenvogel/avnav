@@ -22,8 +22,9 @@ class AlarmHandler{
         let foundKeys={};
         for (let k in a){
             if (! b[k]) return false;
-            if (a[k].name != b[k].name) return false;
-            if (a[k].running != b[k].running) return false;
+            if (a[k].name !== b[k].name) return false;
+            if (a[k].running !== b[k].running) return false;
+            if (a[k].category !== b[k].category) return false;
             foundKeys[k]=true;
         }
         for (let k in b){
@@ -72,6 +73,25 @@ class AlarmHandler{
                 base.log("unable to stop alarm "+type);
             }
         );
+    }
+
+    sortedActiveAlarms(allAlarms){
+        let rt=[];
+        for(let k in allAlarms){
+            let alarm=allAlarms[k];
+            if (! alarm.running) continue;
+            rt.push({name:k,category:alarm.category,repeat:alarm.repeat})
+        }
+        rt.sort((a,b)=>{
+            if (a.category === b.category) return 0;
+            if (a.category === undefined && b.category !== undefined) return 1;
+            if (a.category !== undefined && b.category === undefined) return -1;
+            if (b.category === undefined) return -1;
+            if (a.category === 'critical') return -1;
+            if (a.category === 'info' && b.category === 'critical') return 1;
+            return 0;
+        })
+        return rt;
     }
 
 }

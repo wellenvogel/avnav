@@ -332,6 +332,7 @@ class AlarmQueueEntry(object):
     self.alarm=alarm
     self.on=on
     self.actionStarted=None
+    self.hasAck=False
   def setStart(self,now=None):
     self.actionStarted=now if now is not None else time.time()
   def shouldDo(self,retryTime):
@@ -340,6 +341,10 @@ class AlarmQueueEntry(object):
     if retryTime > self.actionStarted:
       return True
     return False
+  def ack(self):
+    self.hasAck=True
+    return self.actionStarted is not None
+
 
 
 class AVNSignalKHandler(AVNWorker):
@@ -622,14 +627,30 @@ class AVNSignalKHandler(AVNWorker):
           now=time.time()
           retry=now - self.P_ALARMRETRY.fromDict(self.param)
           with self.__alarmCondition:
+            deletes=[]
             for k,v in self.skDeactivateAlarms.items():
               if v.shouldDo(retry):
                 v.setStart(now)
                 alarms.append(v)
+                if v.hasAck:
+                  deletes.append(k)
+            for k in deletes:
+              try:
+                del self.skDeactivateAlarms[k]
+              except:
+                pass
+            deletes=[]
             for k,v in self.skActivateAlarms.items():
               if v.shouldDo(retry):
                 v.setStart()
                 alarms.append(v)
+                if v.hasAck:
+                  deletes.append(k)
+            for k in deletes:
+              try:
+                del self.skActivateAlarms[k]
+              except:
+                pass
           for alarm in alarms:
             if alarm.on:
               self.sendAlarm(alarm.alarm)
@@ -869,11 +890,13 @@ class AVNSignalKHandler(AVNWorker):
   def acknowledgeAlarm(self,name,on):
     with self.__alarmCondition:
       alarms=self.skActivateAlarms if on else self.skDeactivateAlarms
-      if alarms.get(name):
-        try:
-          del alarms[name]
-        except:
-          pass
+      entry=alarms.get(name)
+      if entry:
+        if entry.ack():
+          try:
+            del alarms[name]
+          except:
+            pass
         return True
       return False
 

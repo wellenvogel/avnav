@@ -31,15 +31,15 @@ class  AlarmWidget extends React.Component{
         let classes="widget alarmWidget "+this.props.className||"";
         let alarmText=undefined;
         if (this.props.alarmInfo){
-            for (let k in this.props.alarmInfo){
-                if (!this.props.alarmInfo[k].running) continue;
+            let list=AlarmHandler.sortedActiveAlarms(this.props.alarmInfo)
+            list.forEach((al)=>{
                 if (alarmText){
-                    alarmText+=","+k;
+                    alarmText+=","+al.name;
                 }
                 else {
-                    alarmText=k;
+                    alarmText=al.name;
                 }
-            }
+            })
         }
         if (! alarmText) {
             if (! this.props.isEditing || ! this.props.mode) return null;

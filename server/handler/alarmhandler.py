@@ -68,6 +68,7 @@ class RunningAlarm:
     self.commandId=commandId
     self.running=running
     self.info=info
+    self.commandFinished=False
 
 class AVNAlarmHandler(AVNWorker):
   CHANGE_KEY='alarm' #key for change counts
@@ -135,6 +136,7 @@ class AVNAlarmHandler(AVNWorker):
     self.commandHandler=None
     self.handlers=[]
     self.__handlerLock=threading.Lock()
+    self.__lastStartedCommand=None # type AlarmConfig
     currentAlarms=self.param.get('Alarm')
     if currentAlarms is None:
       currentAlarms=[]
@@ -203,25 +205,9 @@ class AVNAlarmHandler(AVNWorker):
         GPIO.add_event_detect(gpioPin,GPIO.FALLING,callback=self._gpioCmd,bouncetime=100)
         AVNLog.info("set gpio pin %d as reset alarm",gpioPin)
     while not self.shouldStop():
-      time.sleep(0.5)
+      self.wait(0.5)
       deletes=[]
-      current=self.getRunningAlarms()
-      for k,alarm in current.items():
-        if alarm.commandId is not None:
-          if not self.commandHandler.isCommandRunning(alarm.commandId):
-            if alarm.config.autoclean:
-              deletes.append(alarm)
-      with self.__runningAlarmsLock:
-        for alarm in deletes:
-          active=self.runningAlarms.get(alarm.config.name)
-          #check again as someone else could have stopped and started again...
-          if active is not None and active.commandId == alarm.commandId:
-            try:
-              del self.runningAlarms[active.config.name]
-            except:
-              pass
-            self.setInfo(alarm.config.name, "alarm inactive",
-                     WorkerStatus.INACTIVE)
+      self.handleCommand()
 
 
   def getRunningAlarms(self):
@@ -266,6 +252,11 @@ class AVNAlarmHandler(AVNWorker):
         config.sound=config.parameter
     if config.parameter is None and config.sound is not None:
       config.parameter=config.sound
+    if config.category is None:
+      for da in self.DEFAULT_ALARMS:
+        if da.name == config.name:
+          config.category=da.category
+          break
     return config
 
   def findAlarm(self,name,defaultCategory=None):
@@ -295,6 +286,82 @@ class AVNAlarmHandler(AVNWorker):
       except Exception as e:
         AVNLog.debug("alarm handler error: %s",str(e))
 
+  def isMoreImportant(self,entry1:RunningAlarm,entry2:RunningAlarm):
+    if entry1 is None:
+      return True
+    if entry2 is None:
+      return False
+    if entry1.config.category is None:
+      return entry2.config.category is not None
+    if entry1.config.category == AlarmConfig.C_INFO:
+      return entry2.config.category == AlarmConfig.C_CRITICAL
+    return False
+
+  def setInfoFromRunning(self,running:RunningAlarm,active,error=None):
+    if error is not None:
+      self.setInfo(running.config.name,"error %s"%str(error),WorkerStatus.ERROR)
+      return
+    if active:
+      self.setInfo(running.config.name,"command %s running"%running.config.command,WorkerStatus.NMEA)
+    else:
+      self.setInfo(running.config.name,"active",WorkerStatus.NMEA)
+
+  def deleteAlarmInfo(self,name):
+    for da in self.DEFAULT_ALARMS:
+      if da.name == name:
+        self.setInfo(name,"inactive",WorkerStatus.INACTIVE)
+        return
+    self.deleteInfo(name)
+
+
+  def handleCommand(self):
+    pending=None # type AlarmConfig
+    with self.__runningAlarmsLock:
+      if self.__lastStartedCommand is not None:
+        if not self.commandHandler.isCommandRunning(self.__lastStartedCommand.commandId):
+          if self.__lastStartedCommand.config.autoclean:
+            try:
+              del self.runningAlarms[self.__lastStartedCommand.config.name]
+            except:
+              pass
+            self.deleteAlarmInfo(self.__lastStartedCommand.config.name)
+          else:
+            self.__lastStartedCommand.commandFinished=True
+          self.setInfoFromRunning(self.__lastStartedCommand,False)
+          self.__lastStartedCommand=None
+        else:
+          if self.runningAlarms.get(self.__lastStartedCommand.config.name) is None:
+            self.commandHandler.stopCommand(self.__lastStartedCommand.commandId)
+            self.setInfoFromRunning(self.__lastStartedCommand,False)
+            self.__lastStartedCommand=None
+      for k,v in self.runningAlarms.items():
+        if v.commandFinished or v.config.command is None:
+          continue
+        if self.isMoreImportant(pending,v):
+          pending=v
+    if pending is None:
+      return None
+    if self.__lastStartedCommand is not None:
+      if not self.isMoreImportant(self.__lastStartedCommand,pending):
+        return False
+      AVNLog.debug("stopping running alarm command %s",self.__lastStartedCommand.config.name)
+      self.commandHandler.stopCommand(self.__lastStartedCommand.commandId)
+      self.setInfoFromRunning(self.__lastStartedCommand,False)
+      self.__lastStartedCommand=None
+    AVNLog.info("start alarm command %s for %s",pending.config.command,pending.config.name)
+    self.__lastStartedCommand=pending
+    alarmid=self._startAlarmCmd(pending.config)
+    if alarmid is not None:
+      pending.commandId=alarmid
+    else:
+      pending.commandFinished=True
+    if alarmid is not None:
+      self.setInfoFromRunning(pending,True)
+    else:
+      self.__lastStartedCommand=None
+      self.setInfoFromRunning(pending,False,error="unable to start %s"%pending.config.command)
+    return True
+
   def startAlarm(self,name,defaultCategory=None,caller=None,info=None):
     """start a named alarm"""
     cmd=self.findAlarm(name,defaultCategory)
@@ -306,18 +373,10 @@ class AVNAlarmHandler(AVNWorker):
     with self.__runningAlarmsLock:
       if self.runningAlarms.get(name) is not None:
         return True
-      #just block the alarm to prevent multiple starts
       self.runningAlarms[name]=running
-    alarmid=self._startAlarmCmd(cmd)
-    if alarmid is not None:
-      info=cmd.command+(cmd.parameter or '')
-      self.setInfo(name, "activated %s" % info, WorkerStatus.NMEA)
-    else:
-      self.setInfo(name, "unable to start alarm command \"%s\":\"%s\" " % (name,cmd.command), WorkerStatus.INACTIVE)
-    with self.__runningAlarmsLock:
-      running.commandId=alarmid
     self.callHandlers(running,True,caller)
     self.navdata.updateChangeCounter(self.CHANGE_KEY)
+    self.wakeUp()
     return True
 
   def stopAll(self,caller=None):
@@ -339,9 +398,8 @@ class AVNAlarmHandler(AVNWorker):
     if running is not None:
       self.callHandlers(running,False,caller)
       self.navdata.updateChangeCounter(self.CHANGE_KEY)
-      if running.commandId is not None:
-        self.commandHandler.stopCommand(running.commandId)
-    self.setInfo(name, "stopped", WorkerStatus.INACTIVE)
+      self.deleteAlarmInfo(running.config.name)
+      self.wakeUp()
     return True
 
   def isAlarmActive(self,name):
@@ -454,7 +512,8 @@ class AVNAlarmHandler(AVNWorker):
           continue
         rt[name]={'alarm':item.config.name,
                   'running':item.running,
-                  'repeat': item.config.repeat
+                  'repeat': item.config.repeat,
+                  'category':item.config.category
                   }
       return {"status":"OK","data":rt}
     mode="start"

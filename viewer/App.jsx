@@ -50,21 +50,21 @@ const DynamicSound=Dynamic(SoundHandler);
 const alarmStoreKeys={alarms:keys.nav.alarms.all,
     enabled:keys.properties.localAlarmSound,
     gui: keys.gui.global.soundEnabled};
-const computeAlarmSound=(state)=>{
-    let off={src:undefined,repeat:undefined};
-    if (! state.enabled || ! state.gui) return {enabled:false,...off};
-    if (!state.alarms) return {enabled:true,...off};
-    for (let k in state.alarms){
-        if (!state.alarms[k].running) continue;
-        //only use the first alarm
+const computeAlarmSound=(state)=> {
+    let off = {src: undefined, repeat: undefined};
+    if (!state.enabled || !state.gui) return {enabled: false, ...off};
+    if (!state.alarms) return {enabled: true, ...off};
+    let alarms = AlarmHandler.sortedActiveAlarms(state.alarms);
+    if (alarms.length > 0) {
+    //only use the first alarm
         return {
-            src: globalStore.getData(keys.properties.navUrl)+"?request=download&type=alarm&name="+encodeURIComponent(k),
-            repeat: state.alarms[k].repeat,
-            enabled:true
+            src: globalStore.getData(keys.properties.navUrl) + "?request=download&type=alarm&name=" + encodeURIComponent(alarms[0].name),
+            repeat: alarms[0].repeat,
+            enabled: true
         };
     }
     return {enabled:true,...off};
-};
+}
 //legacy support - hand over to the "old" gui handler
 class Other extends React.Component{
     constructor(props){
