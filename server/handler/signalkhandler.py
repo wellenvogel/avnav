@@ -42,7 +42,7 @@ import json
 import hmac
 import hashlib
 
-from alarmhandler import AVNAlarmHandler
+from alarmhandler import AVNAlarmHandler, AlarmConfig
 from avnav_nmea import NMEAParser
 from avnrouter import AVNRouter, WpData
 
@@ -190,35 +190,38 @@ class WebSocketHandler(object):
     self.__connected=False
     self.__timeOffset=None
     self.__error=None
+    self.__lock=threading.Lock()
   def getUrlForLog(self):
     return re.sub('\\?.*','',self.url)
   def open(self):
     self.infoSetter.setInfo('connecting at %s'%self.getUrlForLog(),WorkerStatus.STARTED)
-    if self.__webSocket is not None:
+    with self.__lock:
+      if self.__webSocket is not None:
+        try:
+          self.__webSocket.close()
+          self.__webSocket=None
+        except:
+          pass
+      self.__connected=False
+      self.__timeOffset=None
       try:
-        self.__webSocket.close()
-        self.__webSocket=None
-      except:
-        pass
-    self.__connected=False
-    self.__timeOffset=None
-    try:
-      self.__webSocket=websocket.WebSocketApp(self.url,
+        self.__webSocket=websocket.WebSocketApp(self.url,
                                           on_error=self.__webSocketError,
                                           on_message=self.__webSocketMessage,
                                           on_close=self.__webSocketClose,
                                           on_open=self.__webSocketOpen)
-      AVNLog.info("websocket %s created at %s",self.infoSetter.name,self.getUrlForLog())
-      webSocketThread=threading.Thread(name="signalk-websocket-%s"%self.infoSetter.name,target=self.__webSocketRun)
-      webSocketThread.setDaemon(True)
-      webSocketThread.start()
-    except Exception as e:
-      try:
-        self.__webSocket.close()
-      except:
-        pass
-      self.infoSetter.setInfo("unable to connect to %s:%s"%(self.getUrlForLog(),str(e)),WorkerStatus.ERROR)
-      return False
+        AVNLog.info("websocket %s created at %s",self.infoSetter.name,self.getUrlForLog())
+        webSocketThread=threading.Thread(name="signalk-websocket-%s"%self.infoSetter.name,target=self.__webSocketRun)
+        webSocketThread.setDaemon(True)
+        webSocketThread.start()
+      except Exception as e:
+        try:
+          self.__webSocket.close()
+        except:
+          pass
+        self.__webSocket=None
+        self.infoSetter.setInfo("unable to connect to %s:%s"%(self.getUrlForLog(),str(e)),WorkerStatus.ERROR)
+        return False
     return True
 
   def __webSocketRun(self):
@@ -286,21 +289,25 @@ class WebSocketHandler(object):
       self.__connected=False
 
   def close(self):
-    if self.__webSocket is None:
-      return
-    try:
-      self.__webSocket.close()
-    except:
-      pass
-    self.__webSocket=None
-    self.__connected=False
+    with self.__lock:
+      if self.__webSocket is None:
+        return
+      try:
+        self.__webSocket.close()
+      except:
+        pass
+      self.__webSocket=None
+      self.__connected=False
 
   def send(self,data):
-    if not self.isConnected():
-      return False
-    if self.__webSocket is None:
-      return False
-    self.__webSocket.send(data)
+    sock=None
+    with self.__lock:
+      if not self.__connected:
+        return False
+      if self.__webSocket is None:
+        return False
+      sock=self.__webSocket
+    sock.send(data)
     return True
 
   def isConnected(self):
@@ -319,6 +326,21 @@ def getItem(item,key):
 def getFromDict(dataDict, keystr):
   mapList=keystr.split(".")
   return reduce(getItem, mapList, dataDict)
+
+class AlarmQueueEntry(object):
+  def __init__(self,alarm,on):
+    self.alarm=alarm
+    self.on=on
+    self.actionStarted=None
+  def setStart(self,now=None):
+    self.actionStarted=now if now is not None else time.time()
+  def shouldDo(self,retryTime):
+    if self.actionStarted is None:
+      return True
+    if retryTime > self.actionStarted:
+      return True
+    return False
+
 
 class AVNSignalKHandler(AVNWorker):
   P_MIGRATED=WorkerParameter('migrated',type=WorkerParameter.T_BOOLEAN,editable=False,default=False)
@@ -364,6 +386,8 @@ class AVNSignalKHandler(AVNWorker):
   P_WEBSOCKETRETRY=WorkerParameter('websocketRetry',type=WorkerParameter.T_NUMBER,default=20,
                                    description="retry period (s) for websocket channels to reopen")
   P_UUID=WorkerParameter('uuid',type=WorkerParameter.T_STRING,editable=False,default='avnav')
+  P_ALARMRETRY=WorkerParameter('alarmRetry',type=WorkerParameter.T_NUMBER,default=10,
+                               editable=False)
 
   I_AIS='ais'
   I_CHARTS='charts'
@@ -372,12 +396,13 @@ class AVNSignalKHandler(AVNWorker):
   I_AUTH='authentication'
   I_WRITE='write'
   I_SOURCE='source'
+  I_ALARM='alarms'
 
   @classmethod
   def getConfigParam(cls, child=None):
     return [cls.P_DIRECT,cls.P_AIS,cls.PRIORITY_PARAM_DESCRIPTION.copy(default=NMEAParser.DEFAULT_SOURCE_PRIORITY-10),cls.P_PORT,cls.P_HOST,
             cls.P_AISPERIOD,cls.P_PERIOD,cls.P_CHARTS,cls.P_CHARTPERIOD,cls.P_CHARTPROXYMODE,cls.P_USEWEBSOCKETS, cls.P_MIGRATED,
-            cls.P_WRITE,cls.P_USERNAME,cls.P_PASSWORD,cls.P_SENDWP,cls.P_NOTIFY,cls.P_WEBSOCKETRETRY,cls.P_UUID]
+            cls.P_WRITE,cls.P_USERNAME,cls.P_PASSWORD,cls.P_SENDWP,cls.P_NOTIFY,cls.P_WEBSOCKETRETRY,cls.P_UUID,cls.P_ALARMRETRY]
 
   @classmethod
   def canEdit(cls):
@@ -423,9 +448,11 @@ class AVNSignalKHandler(AVNWorker):
     #from the first Websocket message
     self.timeOffset=None
     self.selfMap={}
-    self.aisMap={}
     self.alarmhandler=None
-    self.skAlarms=set()
+    #we have 2 lists of alarms that are "outstanding", i.e. the action has not yet being reported back
+    self.skActivateAlarms={}
+    self.skDeactivateAlarms={}
+    self.__alarmCondition=threading.Condition()
     self.ownWpAvailable=False #set if there is own WP data in SK
 
 
@@ -480,7 +507,6 @@ class AVNSignalKHandler(AVNWorker):
           if priority< 0:
             priority=0
           selfMappings[skKey]=MappingEntry(k.getKey(),k.signalKConversion,self.config.priority*10+priority)
-    #TODO: AIS
     self.selfMap=selfMappings
 
   def closeWebSockets(self):
@@ -498,17 +524,19 @@ class AVNSignalKHandler(AVNWorker):
     self.navdata.registerKey(self.PATH+".*",'signalK',self.sourceName)
     self.migrateConfig()
     self.alarmhandler=self.findHandlerByName(AVNAlarmHandler.getConfigName())
-    if self.alarmhandler is not None:
-      self.alarmhandler.registerHandler(self)
     charthandler = self.findHandlerByName(AVNChartHandler.getConfigName())
     if charthandler is not None:
       charthandler.registerExternalProvider(self.CHARTHANDLER_PREFIX,self.listCharts)
     while not self.shouldStop():
       self.sourceName=self.getParamValue('name') or 'signalk'
+      if self.alarmhandler is not None:
+        self.alarmhandler.registerHandler(self)
       self._runI()
       self.deleteInfo(self.I_CHARTS)
       self.deleteInfo(self.I_AIS)
       addonhandler=AVNWorker.findHandlerByName(AVNUserAppHandler.getConfigName())
+      if self.alarmhandler is not None:
+        self.alarmhandler.deregisterHandler(self)
       if addonhandler:
         addonhandler.unregisterAddOn(self.USERAPP_NAME)
       self.closeWebSockets()
@@ -516,6 +544,9 @@ class AVNSignalKHandler(AVNWorker):
       charthandler.registerExternalProvider(self.CHARTHANDLER_PREFIX,None)
 
   def timeChanged(self):
+    with self.__alarmCondition:
+      self.skActivateAlarms={}
+      self.skDeactivateAlarms={}
     self.configSequence+=1
     self.wakeUp()
 
@@ -582,6 +613,38 @@ class AVNSignalKHandler(AVNWorker):
     except Exception as ex:
       self.setInfo(self.I_AIS,'error reading ais data from %s:%s'%(url,str(ex)),WorkerStatus.ERROR)
 
+  def sendAlarms(self):
+    sequence=self.configSequence
+    while(sequence == self.configSequence):
+      try:
+        if self.config.notify:
+          alarms=[]
+          now=time.time()
+          retry=now - self.P_ALARMRETRY.fromDict(self.param)
+          with self.__alarmCondition:
+            for k,v in self.skDeactivateAlarms.items():
+              if v.shouldDo(retry):
+                v.setStart(now)
+                alarms.append(v)
+            for k,v in self.skActivateAlarms.items():
+              if v.shouldDo(retry):
+                v.setStart()
+                alarms.append(v)
+          for alarm in alarms:
+            if alarm.on:
+              self.sendAlarm(alarm.alarm)
+            else:
+              self.sendNotificationOff(alarm.alarm)
+          self.setInfo(self.I_ALARM,"active",WorkerStatus.NMEA)
+        else:
+          self.setInfo(self.I_ALARM,"disabled",WorkerStatus.INACTIVE)
+      except Exception as e:
+        self.setInfo(self.I_ALARM,"error in alarm sender %s"%str(e),WorkerStatus.ERROR)
+      with self.__alarmCondition:
+        self.__alarmCondition.wait(5)
+
+
+
   def _runI(self):
     sequence=self.configSequence
     self.config=Config(self.param)
@@ -619,6 +682,8 @@ class AVNSignalKHandler(AVNWorker):
     if self.config.write:
       router=self.findHandlerByName(AVNRouter.getConfigName())
     errorReported=False
+    sendAlarmThread=threading.Thread(target=self.sendAlarms,daemon=True,name="SKSendAlarms")
+    sendAlarmThread.start()
     self.setInfo(self.I_MAIN,"connecting at %s" % baseUrl,WorkerStatus.STARTED)
     while sequence == self.configSequence:
       expiryPeriod=self.navdata.getExpiryPeriod()
@@ -787,6 +852,36 @@ class AVNSignalKHandler(AVNWorker):
       return True
     return False
 
+  def enqueueAlarmMessage(self,name,on):
+    with self.__alarmCondition:
+      alarms=None
+      if on:
+        alarms=self.skActivateAlarms
+      else:
+        alarms=self.skDeactivateAlarms
+      existing=alarms.get(name)
+      if existing:
+        return
+      else:
+        alarms[name]=AlarmQueueEntry(name,on)
+      self.__alarmCondition.notifyAll()
+
+  def acknowledgeAlarm(self,name,on):
+    with self.__alarmCondition:
+      alarms=self.skActivateAlarms if on else self.skDeactivateAlarms
+      if alarms.get(name):
+        try:
+          del alarms[name]
+        except:
+          pass
+        return True
+      return False
+
+  def hasOpenAlarm(self,name,on):
+    with self.__alarmCondition:
+      alarms=self.skActivateAlarms if on else self.skDeactivateAlarms
+      return alarms.get(name) is not None
+
   def handleNotification(self, path, value,source):
     if not self.config.notify:
       return
@@ -795,21 +890,38 @@ class AVNSignalKHandler(AVNWorker):
       return
     if source is None:
       return
-    if source.endswith('.avnav'):
-      return
     if self.alarmhandler is None:
+      return
+    self.acknowledgeAlarm(ownAlarm, value is not None)
+    running=self.alarmhandler.isAlarmActive(ownAlarm)
+    if self.isOwnSource(source):
+      if running and value is None:
+        #seems that the last active did not reach SK
+        self.enqueueAlarmMessage(ownAlarm,True)
+      if not running and value is not None:
+        self.enqueueAlarmMessage(ownAlarm,False)
       return
     setKey=ownAlarm+":"+source
     if value is None:
-      if not setKey in self.skAlarms:
+      #maybe race - we are just waiting for the ack of our activate
+      if self.hasOpenAlarm(ownAlarm,True):
         return
-      self.alarmhandler.stopAlarm(ownAlarm,caller=self)
-      self.skAlarms.remove(setKey)
+      if running:
+        self.alarmhandler.stopAlarm(ownAlarm,caller=self)
+        return
     else:
-      if setKey in self.skAlarms:
+      #we have enqueued an alarm off and are still waiting
+      if self.hasOpenAlarm(ownAlarm,False):
         return
-      self.skAlarms.add(setKey)
-      self.alarmhandler.startAlarm(ownAlarm,caller=self)
+      if not running:
+        category=None
+        if type(value) is dict:
+          state=value.get('state')
+          if state == 'emergency':
+            category=AlarmConfig.C_CRITICAL
+          if state == 'normal':
+            category=AlarmConfig.C_INFO
+        self.alarmhandler.startAlarm(ownAlarm,caller=self,info=setKey,defaultCategory=category)
 
   def webSocketMessage(self,data):
     to=self.webSocket.getTimeOffset()
@@ -936,11 +1048,14 @@ class AVNSignalKHandler(AVNWorker):
       'message':'man overboard'
     }
   }
+  NPRFX='notifications.'
   def getSKAlarm(self,skpath):
     for k,v in self.ALARMS.items():
-      if ('notifications.'+v['path']) == skpath:
+      if (self.NPRFX+v['path']) == skpath:
         return k
-    return None
+    if not skpath.startswith(self.NPRFX):
+      return None
+    return "sk:"+skpath[len(self.NPRFX):]
   def sendAlarm(self,alarm):
     data=self.ALARMS.get(alarm)
     if not data:
@@ -950,36 +1065,38 @@ class AVNSignalKHandler(AVNWorker):
     skdata=data.copy()
     del skdata['path']
     update=self.buildUpdateRequest({
-      'notifications.'+data['path']:skdata
+      self.NPRFX+data['path']:skdata
     })
     self.writeSocket.send(json.dumps(update))
     return True
 
   def sendNotificationOff(self,alarm):
-    data=self.ALARMS.get(alarm)
-    if not data:
-      return False
     if self.writeSocket is None or not self.writeSocket.isConnected():
       return False
-    update=self.buildUpdateRequest({
-      'notifications.'+data['path']:None
-    })
+    update=None
+    data=self.ALARMS.get(alarm)
+    if data:
+      update=self.buildUpdateRequest({
+        self.NPRFX+data['path']:None
+      })
+    else:
+      if alarm.startswith('sk:'):
+        alarm=alarm[3:]
+        update=self.buildUpdateRequest({
+          self.NPRFX+alarm:None
+        })
     self.writeSocket.send(json.dumps(update))
     return True
 
-  def handleAlarm(self,name,on):
+  def handleAlarm(self,name,on,info):
     if not self.ENABLE_PARAM_DESCRIPTION.fromDict(self.param) or not self.config.notify:
       return
     if on:
-      self.sendAlarm(name)
+      if info is None:
+        #own alarm created by AvNav
+        self.enqueueAlarmMessage(name,True)
     else:
-      removeList=[]
-      for k in self.skAlarms:
-        if k.startswith(name+":"):
-          removeList.append(k)
-      for k in removeList:
-        self.skAlarms.remove(k)
-      self.sendNotificationOff(name)
+      self.enqueueAlarmMessage(name,False)
 
 
   def queryCharts(self,apiUrl,port):

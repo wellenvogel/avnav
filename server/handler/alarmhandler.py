@@ -63,10 +63,11 @@ class AlarmConfig:
 
 
 class RunningAlarm:
-  def __init__(self,config,commandId=None,running=True):
+  def __init__(self,config,commandId=None,running=True,info=None):
     self.config=config
     self.commandId=commandId
     self.running=running
+    self.info=info
 
 class AVNAlarmHandler(AVNWorker):
   CHANGE_KEY='alarm' #key for change counts
@@ -282,7 +283,7 @@ class AVNAlarmHandler(AVNWorker):
       alarmdef.command,
       alarmdef.repeat,
       alarmdef.parameter)
-  def callHandlers(self,alarm,on=True,caller=None):
+  def callHandlers(self,alarm: RunningAlarm,on:bool=True,caller=None):
     handlers=[]
     with self.__handlerLock:
       handlers=self.handlers.copy()
@@ -290,22 +291,23 @@ class AVNAlarmHandler(AVNWorker):
       if h == caller:
         continue
       try:
-        h.handleAlarm(alarm,on)
+        h.handleAlarm(alarm.config.name,on,alarm.info)
       except Exception as e:
         AVNLog.debug("alarm handler error: %s",str(e))
 
-  def startAlarm(self,name,defaultCategory=None,caller=None):
+  def startAlarm(self,name,defaultCategory=None,caller=None,info=None):
     """start a named alarm"""
     cmd=self.findAlarm(name,defaultCategory)
     if cmd is None:
       AVNLog.error("no alarm \"%s\" configured", name)
       self.setInfo(name, "no alarm \"%s\" configured"%name, WorkerStatus.ERROR)
       return False
+    running=RunningAlarm(cmd,info=info)
     with self.__runningAlarmsLock:
       if self.runningAlarms.get(name) is not None:
         return True
       #just block the alarm to prevent multiple starts
-      self.runningAlarms[name]=RunningAlarm(cmd)
+      self.runningAlarms[name]=running
     alarmid=self._startAlarmCmd(cmd)
     if alarmid is not None:
       info=cmd.command+(cmd.parameter or '')
@@ -313,10 +315,8 @@ class AVNAlarmHandler(AVNWorker):
     else:
       self.setInfo(name, "unable to start alarm command \"%s\":\"%s\" " % (name,cmd.command), WorkerStatus.INACTIVE)
     with self.__runningAlarmsLock:
-      running=self.runningAlarms.get(name)
-      if running:
-        running.commandId=alarmid
-    self.callHandlers(name,True,caller)
+      running.commandId=alarmid
+    self.callHandlers(running,True,caller)
     self.navdata.updateChangeCounter(self.CHANGE_KEY)
     return True
 
@@ -337,7 +337,7 @@ class AVNAlarmHandler(AVNWorker):
       except:
         pass
     if running is not None:
-      self.callHandlers(name,False,caller)
+      self.callHandlers(running,False,caller)
       self.navdata.updateChangeCounter(self.CHANGE_KEY)
       if running.commandId is not None:
         self.commandHandler.stopCommand(running.commandId)
@@ -380,7 +380,7 @@ class AVNAlarmHandler(AVNWorker):
       self.handlers.append(handler)
       return True
 
-  def dergisterHandler(self,handler):
+  def deregisterHandler(self,handler):
     with self.__handlerLock:
       newHandlers=[]
       for h in self.handlers:
