@@ -436,7 +436,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
         if self.activatedAlarms.get(name) is not None:
           AVNLog.info("stopping alarm %s",name)
           del self.activatedAlarms[name]
-        alert.stopAlarm(name)
+        alert.stopAlarm(name,ownOnly=True)
       self.setInfo('alarm',"%s alarm %s"%('set' if start else 'unset',name),WorkerStatus.NMEA)
     except Exception as e:
       self.setInfo('alarm','unable to handle alarm %s:%s'%(name,str(e)),WorkerStatus.ERROR)

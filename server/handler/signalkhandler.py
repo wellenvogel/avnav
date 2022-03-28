@@ -24,23 +24,20 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py
 ###############################################################################
-import datetime
+import base64
+import hashlib
+import hmac
 import json
-import operator
 import os
 import re
 import sys
 import threading
 import time
 import traceback
-import urllib.request
 import urllib.parse
+import urllib.request
 import uuid
 from functools import reduce
-import base64
-import json
-import hmac
-import hashlib
 
 from alarmhandler import AVNAlarmHandler, AlarmConfig
 from avnav_nmea import NMEAParser
@@ -158,7 +155,9 @@ class Config(object):
     self.user=AVNSignalKHandler.P_USERNAME.fromDict(param)
     self.password=AVNSignalKHandler.P_PASSWORD.fromDict(param)
     self.write=AVNSignalKHandler.P_WRITE.fromDict(param)
-    self.notify=AVNSignalKHandler.P_WRITE.fromDict(param) and AVNSignalKHandler.P_NOTIFY.fromDict(param)
+    self.notifyReceive=AVNSignalKHandler.P_WRITE.fromDict(param) and AVNSignalKHandler.P_NOTIFY_RECEIVE.fromDict(param)
+    self.notifyWrite=AVNSignalKHandler.P_WRITE.fromDict(param) and AVNSignalKHandler.P_NOTIFY.fromDict(param)
+    self.notifyMap=AVNSignalKHandler.P_NOTIFY_MAP.fromDict(param)
     self.sendWp=AVNSignalKHandler.P_WRITE.fromDict(param) and AVNSignalKHandler.P_SENDWP.fromDict(param)
     self.skSource='avnav-'+AVNSignalKHandler.P_UUID.fromDict(param)
     self.isLocal= (self.skHost == 'localhost' or self.skHost == '127.0.0.1')
@@ -385,9 +384,15 @@ class AVNSignalKHandler(AVNWorker):
   P_SENDWP=WorkerParameter('sendWp',type=WorkerParameter.T_BOOLEAN,default=True,
                            description='send current waypoint routing data',
                            condition={P_WRITE.name:True})
-  P_NOTIFY=WorkerParameter('notifications',type=WorkerParameter.T_BOOLEAN,default=True,
-                           description='send and receive notifications',
+  P_NOTIFY=WorkerParameter('sendNotifications',type=WorkerParameter.T_BOOLEAN,default=True,
+                           description='send notifications',
                            condition={P_WRITE.name:True})
+  P_NOTIFY_RECEIVE=WorkerParameter('receiveNotifications',type=WorkerParameter.T_BOOLEAN,default=False,
+                                   description='receive notifications from signalK',
+                                   condition={P_WRITE.name:True})
+  P_NOTIFY_MAP=WorkerParameter('mapNotifications',type=WorkerParameter.T_BOOLEAN,default=False,
+                               description='map some received signalK notifications to our own',
+                               condition={P_WRITE.name:True,P_NOTIFY_RECEIVE.name:True})
   P_WEBSOCKETRETRY=WorkerParameter('websocketRetry',type=WorkerParameter.T_NUMBER,default=20,
                                    description="retry period (s) for websocket channels to reopen")
   P_UUID=WorkerParameter('uuid',type=WorkerParameter.T_STRING,editable=False,default='avnav')
@@ -407,7 +412,7 @@ class AVNSignalKHandler(AVNWorker):
   def getConfigParam(cls, child=None):
     return [cls.P_DIRECT,cls.P_AIS,cls.PRIORITY_PARAM_DESCRIPTION.copy(default=NMEAParser.DEFAULT_SOURCE_PRIORITY-10),cls.P_PORT,cls.P_HOST,
             cls.P_AISPERIOD,cls.P_PERIOD,cls.P_CHARTS,cls.P_CHARTPERIOD,cls.P_CHARTPROXYMODE,cls.P_USEWEBSOCKETS, cls.P_MIGRATED,
-            cls.P_WRITE,cls.P_USERNAME,cls.P_PASSWORD,cls.P_SENDWP,cls.P_NOTIFY,cls.P_WEBSOCKETRETRY,cls.P_UUID,cls.P_ALARMRETRY]
+            cls.P_WRITE,cls.P_USERNAME,cls.P_PASSWORD,cls.P_SENDWP,cls.P_NOTIFY,cls.P_NOTIFY_RECEIVE,cls.P_NOTIFY_MAP,cls.P_WEBSOCKETRETRY,cls.P_UUID,cls.P_ALARMRETRY]
 
   @classmethod
   def canEdit(cls):
@@ -622,7 +627,7 @@ class AVNSignalKHandler(AVNWorker):
     sequence=self.configSequence
     while(sequence == self.configSequence):
       try:
-        if self.config.notify:
+        if self.config.notifyWrite or self.config.notifyReceive:
           alarms=[]
           now=time.time()
           retry=now - self.P_ALARMRETRY.fromDict(self.param)
@@ -906,16 +911,19 @@ class AVNSignalKHandler(AVNWorker):
       return alarms.get(name) is not None
 
   def handleNotification(self, path, value,source):
-    if not self.config.notify:
-      return
-    ownAlarm=self.getSKAlarm(path)
-    if ownAlarm is None:
+    if not self.config.notifyReceive and not self.config.notifyWrite:
       return
     if source is None:
       return
     if self.alarmhandler is None:
       return
+    ownSource=self.isOwnSource(source)
+    ownAlarm=self.getSKAlarm(path,self.config.notifyMap or ownSource)
+    if ownAlarm is None:
+      return
     self.acknowledgeAlarm(ownAlarm, value is not None)
+    if not self.config.notifyReceive:
+      return
     running=self.alarmhandler.isAlarmActive(ownAlarm)
     if self.isOwnSource(source):
       if running and value is None:
@@ -1069,13 +1077,26 @@ class AVNSignalKHandler(AVNWorker):
       'state':'emergency',
       'method':['visual','sound'],
       'message':'man overboard'
+    },
+    'waypoint':{
+      'path': 'arrivalCircleEntered',
+      'state': 'normal',
+      'method': ['visual','sound'],
+      'message': 'arrival circle entered'
+    },
+    'anchor':{
+      'path':'navigation.anchor',
+      'state':'emergency',
+      'method': ['visual','sound'],
+      'message': 'anchor drags'
     }
   }
   NPRFX='notifications.'
-  def getSKAlarm(self,skpath):
-    for k,v in self.ALARMS.items():
-      if (self.NPRFX+v['path']) == skpath:
-        return k
+  def getSKAlarm(self,skpath,tryMap=False):
+    if tryMap:
+      for k,v in self.ALARMS.items():
+        if (self.NPRFX+v['path']) == skpath:
+          return k
     if not skpath.startswith(self.NPRFX):
       return None
     return "sk:"+skpath[len(self.NPRFX):]
@@ -1112,7 +1133,7 @@ class AVNSignalKHandler(AVNWorker):
     return True
 
   def handleAlarm(self,name,on,info):
-    if not self.ENABLE_PARAM_DESCRIPTION.fromDict(self.param) or not self.config.notify:
+    if not self.ENABLE_PARAM_DESCRIPTION.fromDict(self.param) or not self.config.notifyWrite:
       return
     if on:
       if info is None:

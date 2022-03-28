@@ -316,10 +316,12 @@ class AVNAlarmHandler(AVNWorker):
 
   def handleCommand(self):
     pending=None # type AlarmConfig
+    mustUpdate=False
     with self.__runningAlarmsLock:
       if self.__lastStartedCommand is not None:
         if not self.commandHandler.isCommandRunning(self.__lastStartedCommand.commandId):
           if self.__lastStartedCommand.config.autoclean:
+            mustUpdate=True
             try:
               del self.runningAlarms[self.__lastStartedCommand.config.name]
             except:
@@ -334,6 +336,8 @@ class AVNAlarmHandler(AVNWorker):
             self.commandHandler.stopCommand(self.__lastStartedCommand.commandId)
             self.setInfoFromRunning(self.__lastStartedCommand,False)
             self.__lastStartedCommand=None
+      if mustUpdate:
+        self.navdata.updateChangeCounter(self.CHANGE_KEY)
       for k,v in self.runningAlarms.items():
         if v.commandFinished or v.config.command is None:
           continue
@@ -379,18 +383,20 @@ class AVNAlarmHandler(AVNWorker):
     self.wakeUp()
     return True
 
-  def stopAll(self,caller=None):
+  def stopAll(self,caller=None,ownOnly=False):
     '''stop all alarms'''
     AVNLog.info("stopAllAlarms")
     alist=self.getRunningAlarms()
     if list is None:
       return
     for name in list(alist.keys()):
-      self.stopAlarm(name,caller)
-  def stopAlarm(self, name,caller=None):
+      self.stopAlarm(name,caller=caller,ownOnly=ownOnly)
+  def stopAlarm(self, name,caller=None,ownOnly=False):
     running=None
     with self.__runningAlarmsLock:
       running=self.runningAlarms.get(name)
+      if running and ownOnly and running.info is not None:
+        return
       try:
         del self.runningAlarms[name]
       except:
