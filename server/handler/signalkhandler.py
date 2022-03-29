@@ -157,7 +157,6 @@ class Config(object):
     self.write=AVNSignalKHandler.P_WRITE.fromDict(param)
     self.notifyReceive=AVNSignalKHandler.P_WRITE.fromDict(param) and AVNSignalKHandler.P_NOTIFY_RECEIVE.fromDict(param)
     self.notifyWrite=AVNSignalKHandler.P_WRITE.fromDict(param) and AVNSignalKHandler.P_NOTIFY.fromDict(param)
-    self.notifyMap=AVNSignalKHandler.P_NOTIFY_MAP.fromDict(param)
     self.sendWp=AVNSignalKHandler.P_WRITE.fromDict(param) and AVNSignalKHandler.P_SENDWP.fromDict(param)
     self.skSource='avnav-'+AVNSignalKHandler.P_UUID.fromDict(param)
     self.isLocal= (self.skHost == 'localhost' or self.skHost == '127.0.0.1')
@@ -178,6 +177,75 @@ class InfoSetter(object):
     self.writer.setInfo(self.name,info,status)
   def deleteInfo(self):
     self.writer.deleteInfo(self.name)
+
+class SKAlarm(object):
+  def __init__(self,skPath,source,skValue,timestamp=None,isOwnSource=False):
+    self.skPath=skPath
+    self.skValue=skValue
+    self.source=source
+    self.timestamp=timestamp
+    self.isOwnSource=isOwnSource
+    self.shouldSend=False
+    self.sendTs=None
+    self.ackTs=None
+
+  def isSame(self, other : 'SKAlarm'):
+    if other is None:
+      return False
+    if self.skPath != other.skPath:
+      return False
+    if self.isOwnSource and other.isOwnSource:
+      return True
+    return self.source == other.source
+
+  def update(self, other: 'SKAlarm'):
+    rt=False
+    if other.skValue != self.skValue or other.timestamp != self.timestamp:
+      rt=True
+    if self.isOwnSource and other.isOwnSource:
+      #for receiving own notifications we only set the ack if it fits our wishes
+      self.timestamp=other.timestamp
+      if self.skValue == other.skValue:
+        self.ackTs=time.time()
+      else:
+        self.ackTs=None
+      return False #never an action for our own source
+    self.skValue=other.skValue
+    self.timestamp=other.timestamp
+    return rt
+  def updateSend(self,other: 'SKAlarm'):
+    self.skValue=other.skValue
+    self.timestamp=other.timestamp
+    self.shouldSend=other.shouldSend
+    self.sendTs=other.sendTs
+    self.ackTs=other.ackTs
+
+  def isNewer(self,other: 'SKAlarm'):
+    if self.timestamp is None:
+      return False
+    if other.timestamp is None:
+      return True
+    return timeToTs(self.timestamp) > timeToTs(other.timestamp)
+  def sameState(self,other: 'SKAlarm'):
+    if self.skValue is None and other.skValue is None:
+      return True
+    return self.skValue is not None and other.skValue is not None
+  def shouldDo(self):
+    if not self.shouldSend:
+      return False
+    if self.sendTs is None:
+      return True
+    return False
+  def shouldRetry(self,retryTs):
+    if not self.shouldSend or self.sendTs is None:
+      return False
+    return retryTs > self.sendTs and self.ackTs is None
+
+
+
+
+
+
 
 class WebSocketHandler(object):
   def __init__(self,infoSetter:InfoSetter,url:str,messageCallback):
@@ -326,23 +394,6 @@ def getFromDict(dataDict, keystr):
   mapList=keystr.split(".")
   return reduce(getItem, mapList, dataDict)
 
-class AlarmQueueEntry(object):
-  def __init__(self,alarm,on):
-    self.alarm=alarm
-    self.on=on
-    self.actionStarted=None
-    self.hasAck=False
-  def setStart(self,now=None):
-    self.actionStarted=now if now is not None else time.time()
-  def shouldDo(self,retryTime):
-    if self.actionStarted is None:
-      return True
-    if retryTime > self.actionStarted:
-      return True
-    return False
-  def ack(self):
-    self.hasAck=True
-    return self.actionStarted is not None
 
 
 
@@ -390,9 +441,6 @@ class AVNSignalKHandler(AVNWorker):
   P_NOTIFY_RECEIVE=WorkerParameter('receiveNotifications',type=WorkerParameter.T_BOOLEAN,default=False,
                                    description='receive notifications from signalK',
                                    condition={P_WRITE.name:True})
-  P_NOTIFY_MAP=WorkerParameter('mapNotifications',type=WorkerParameter.T_BOOLEAN,default=False,
-                               description='map some received signalK notifications to our own',
-                               condition={P_WRITE.name:True,P_NOTIFY_RECEIVE.name:True})
   P_WEBSOCKETRETRY=WorkerParameter('websocketRetry',type=WorkerParameter.T_NUMBER,default=20,
                                    description="retry period (s) for websocket channels to reopen")
   P_UUID=WorkerParameter('uuid',type=WorkerParameter.T_STRING,editable=False,default='avnav')
@@ -412,7 +460,7 @@ class AVNSignalKHandler(AVNWorker):
   def getConfigParam(cls, child=None):
     return [cls.P_DIRECT,cls.P_AIS,cls.PRIORITY_PARAM_DESCRIPTION.copy(default=NMEAParser.DEFAULT_SOURCE_PRIORITY-10),cls.P_PORT,cls.P_HOST,
             cls.P_AISPERIOD,cls.P_PERIOD,cls.P_CHARTS,cls.P_CHARTPERIOD,cls.P_CHARTPROXYMODE,cls.P_USEWEBSOCKETS, cls.P_MIGRATED,
-            cls.P_WRITE,cls.P_USERNAME,cls.P_PASSWORD,cls.P_SENDWP,cls.P_NOTIFY,cls.P_NOTIFY_RECEIVE,cls.P_NOTIFY_MAP,cls.P_WEBSOCKETRETRY,cls.P_UUID,cls.P_ALARMRETRY]
+            cls.P_WRITE,cls.P_USERNAME,cls.P_PASSWORD,cls.P_SENDWP,cls.P_NOTIFY,cls.P_NOTIFY_RECEIVE,cls.P_WEBSOCKETRETRY,cls.P_UUID,cls.P_ALARMRETRY]
 
   @classmethod
   def canEdit(cls):
@@ -459,11 +507,10 @@ class AVNSignalKHandler(AVNWorker):
     self.timeOffset=None
     self.selfMap={}
     self.alarmhandler=None
-    #we have 2 lists of alarms that are "outstanding", i.e. the action has not yet being reported back
-    self.skActivateAlarms={}
-    self.skDeactivateAlarms={}
+    #list of alarms from SK (or ours that we would like to send)
+    self.skAlarms=[]
     self.__alarmCondition=threading.Condition()
-    self.ownWpAvailable=False #set if there is own WP data in SK
+    self.ownWpOffSent=False #set if we have sent the own WP off to SK
 
 
 
@@ -624,48 +671,65 @@ class AVNSignalKHandler(AVNWorker):
       self.setInfo(self.I_AIS,'error reading ais data from %s:%s'%(url,str(ex)),WorkerStatus.ERROR)
 
   def sendAlarms(self):
+    '''
+    send out notifications towards SK
+    a notification will be send if the send flag is set and the sendTs is not set
+    retry handling:
+    after retry time if:
+    ack flag not set and no other alarm of the same path in correct state
+    otherwise we will reset the send flag
+    ?should we remove in this case?
+    @return:
+    '''
     sequence=self.configSequence
+    errorTS=0
     while(sequence == self.configSequence):
       try:
         if self.config.notifyWrite or self.config.notifyReceive:
+          if self.writeSocket is None or not self.writeSocket.isConnected():
+            self.setInfo(self.I_ALARM,"write socket not connected",WorkerStatus.ERROR)
+            errorTS=0
+            with self.__alarmCondition:
+              self.__alarmCondition.wait(1)
+            continue
+          if errorTS < (time.time() - 10):
+            self.setInfo(self.I_ALARM,"sender ready",WorkerStatus.NMEA)
           alarms=[]
           now=time.time()
           retry=now - self.P_ALARMRETRY.fromDict(self.param)
+          newestAlarms={}
           with self.__alarmCondition:
-            deletes=[]
-            for k,v in self.skDeactivateAlarms.items():
-              if v.shouldDo(retry):
-                v.setStart(now)
-                alarms.append(v)
-                if v.hasAck:
-                  deletes.append(k)
-            for k in deletes:
-              try:
-                del self.skDeactivateAlarms[k]
-              except:
-                pass
-            deletes=[]
-            for k,v in self.skActivateAlarms.items():
-              if v.shouldDo(retry):
-                v.setStart()
-                alarms.append(v)
-                if v.hasAck:
-                  deletes.append(k)
-            for k in deletes:
-              try:
-                del self.skActivateAlarms[k]
-              except:
-                pass
+            for alarm in self.skAlarms:
+              if alarm.shouldDo():
+                alarms.append(alarm)
+                alarm.sendTs=now
+              if not alarm.isOwnSource:
+                current=newestAlarms.get(alarm.skPath)
+                if current is None or alarm.isNewer(current):
+                  newestAlarms[alarm.skPath]=alarm
+            #add retries
+            for alarm in self.skAlarms:
+              if alarm.shouldRetry(retry):
+                newest=newestAlarms.get(alarm.skPath)
+                if newest is not None:
+                  if newest.sameState(alarm):
+                    alarm.shouldSend=False
+                  else:
+                    alarms.append(alarm)
+                    alarm.sendTs=now
+                else:
+                  alarms.append(alarm)
+                  alarm.sendTs=now
+          #outside lock
           for alarm in alarms:
-            if alarm.on:
-              self.sendAlarm(alarm.alarm)
-            else:
-              self.sendNotificationOff(alarm.alarm)
-          self.setInfo(self.I_ALARM,"active",WorkerStatus.NMEA)
-        else:
-          self.setInfo(self.I_ALARM,"disabled",WorkerStatus.INACTIVE)
+            AVNLog.info("send alarm to SK %s=%s",alarm.skPath,alarm.skValue)
+            update=self.buildUpdateRequest({
+              alarm.skPath:alarm.skValue
+            })
+            self.writeSocket.send(json.dumps(update))
       except Exception as e:
-        self.setInfo(self.I_ALARM,"error in alarm sender %s"%str(e),WorkerStatus.ERROR)
+        self.setInfo(self.I_ALARM,"error %s"%str(e),WorkerStatus.ERROR)
+        errorTS=time.time()
       with self.__alarmCondition:
         self.__alarmCondition.wait(5)
 
@@ -684,6 +748,8 @@ class AVNSignalKHandler(AVNWorker):
       self.setInfo(self.I_SOURCE,self.config.skSource,WorkerStatus.NMEA)
     else:
       self.setInfo(self.I_SOURCE,self.config.skSource,WorkerStatus.INACTIVE)
+    if self.alarmhandler is not None:
+      self.alarmhandler.callHandlersRunning(self)
 
     """
     the run method
@@ -878,39 +944,14 @@ class AVNSignalKHandler(AVNWorker):
       return True
     return False
 
-  def enqueueAlarmMessage(self,name,on):
-    with self.__alarmCondition:
-      alarms=None
-      if on:
-        alarms=self.skActivateAlarms
-      else:
-        alarms=self.skDeactivateAlarms
-      existing=alarms.get(name)
-      if existing:
-        return
-      else:
-        alarms[name]=AlarmQueueEntry(name,on)
-      self.__alarmCondition.notifyAll()
 
-  def acknowledgeAlarm(self,name,on):
-    with self.__alarmCondition:
-      alarms=self.skActivateAlarms if on else self.skDeactivateAlarms
-      entry=alarms.get(name)
-      if entry:
-        if entry.ack():
-          try:
-            del alarms[name]
-          except:
-            pass
-        return True
-      return False
 
   def hasOpenAlarm(self,name,on):
     with self.__alarmCondition:
       alarms=self.skActivateAlarms if on else self.skDeactivateAlarms
       return alarms.get(name) is not None
 
-  def handleNotification(self, path, value,source):
+  def handleNotification(self, path, value,source,timestamp=None):
     if not self.config.notifyReceive and not self.config.notifyWrite:
       return
     if source is None:
@@ -918,41 +959,34 @@ class AVNSignalKHandler(AVNWorker):
     if self.alarmhandler is None:
       return
     ownSource=self.isOwnSource(source)
-    ownAlarm=self.getSKAlarm(path,self.config.notifyMap or ownSource)
-    if ownAlarm is None:
-      return
-    self.acknowledgeAlarm(ownAlarm, value is not None)
-    if not self.config.notifyReceive:
-      return
-    running=self.alarmhandler.isAlarmActive(ownAlarm)
-    if self.isOwnSource(source):
-      if running and value is None:
-        #seems that the last active did not reach SK
-        self.enqueueAlarmMessage(ownAlarm,True)
-      if not running and value is not None:
-        self.enqueueAlarmMessage(ownAlarm,False)
-      return
-    setKey=ownAlarm+":"+source
-    if value is None:
-      #maybe race - we are just waiting for the ack of our activate
-      if self.hasOpenAlarm(ownAlarm,True):
-        return
-      if running:
-        self.alarmhandler.stopAlarm(ownAlarm,caller=self)
-        return
-    else:
-      #we have enqueued an alarm off and are still waiting
-      if self.hasOpenAlarm(ownAlarm,False):
-        return
-      if not running:
-        category=None
-        if type(value) is dict:
-          state=value.get('state')
-          if state == 'emergency':
-            category=AlarmConfig.C_CRITICAL
-          if state == 'normal':
-            category=AlarmConfig.C_INFO
-        self.alarmhandler.startAlarm(ownAlarm,caller=self,info=setKey,defaultCategory=category)
+    skAlarm=SKAlarm(path, source, value, timestamp, ownSource)
+    with self.__alarmCondition:
+      existing=False
+      changed=False
+      for alarm in self.skAlarms:
+        if alarm.isSame(skAlarm):
+          existing=True
+          changed=alarm.update(skAlarm)
+          break
+      if not existing:
+        changed=True
+        self.skAlarms.append(skAlarm)
+      if changed and not ownSource:
+        name=self.getSKAlarm(path)
+        if name is None:
+          return
+        AVNLog.debug("change sk alarm %s new %s",path,value)
+        if value is None:
+          self.alarmhandler.stopAlarm(name,self)
+        else:
+          category=None
+          if type(value) is dict:
+            state=value.get('state')
+            if state == 'emergency':
+              category=AlarmConfig.C_CRITICAL
+            if state == 'normal':
+              category=AlarmConfig.C_INFO
+          self.alarmhandler.startAlarm(name,caller=self,info=source,defaultCategory=category)
 
   def webSocketMessage(self,data):
     to=self.webSocket.getTimeOffset()
@@ -976,7 +1010,7 @@ class AVNSignalKHandler(AVNWorker):
           path=item.get('path')
           if  path is not None:
             if path.startswith("notifications"):
-              self.handleNotification(path, value,source)
+              self.handleNotification(path, value,source,update.get('timestamp'))
             else:
               if value is not None:
                 self.setValue(path,value)
@@ -1035,11 +1069,14 @@ class AVNSignalKHandler(AVNWorker):
       if router is None:
         return
       wpData=router.getWpData()
-      if not wpData.validData and not self.ownWpAvailable:
+      if not wpData.validData and self.ownWpOffSent:
         return
-      self.ownWpAvailable=wpData.validData
+      self.ownWpOffSent=False
       update=self.buildUpdateRequest(self.getLegData(wpData))
       self.writeSocket.send(json.dumps(update))
+      #hopefully we will have an error if we are unable to send our WP off
+      if not wpData.validData:
+        self.ownWpOffSent=True
 
     except Exception as e:
       AVNLog.debug("error sending current leg %",str(e))
@@ -1048,28 +1085,6 @@ class AVNSignalKHandler(AVNWorker):
     if src is None:
       return False
     return src.endswith('.'+self.config.skSource)
-  def checkOwnItems(self,node,prefix):
-    if not '$source' in node and not 'values' in node:
-      return
-    own=None
-    value=None
-    if self.isOwnSource(node.get('$source'))  and 'value' in node:
-      own=True
-      value=node.get('value')
-    elif 'values' in node:
-      values=node['values']
-      for k,v in values.items():
-        if self.isOwnSource(k):
-          own=True
-          value=v.get('value')
-          break
-    if not own:
-      return
-    wpData=self.getLegData(WpData())
-    for k,v in wpData.items():
-      if k == prefix and value is not None:
-        self.ownWpAvailable=True
-        break
 
   ALARMS={
     'mob': {
@@ -1092,55 +1107,45 @@ class AVNSignalKHandler(AVNWorker):
     }
   }
   NPRFX='notifications.'
-  def getSKAlarm(self,skpath,tryMap=False):
-    if tryMap:
-      for k,v in self.ALARMS.items():
-        if (self.NPRFX+v['path']) == skpath:
-          return k
+  def getSKAlarm(self,skpath):
+    for k,v in self.ALARMS.items():
+      if (self.NPRFX+v['path']) == skpath:
+        return k
     if not skpath.startswith(self.NPRFX):
       return None
     return "sk:"+skpath[len(self.NPRFX):]
-  def sendAlarm(self,alarm):
-    data=self.ALARMS.get(alarm)
-    if not data:
-      return False
-    if self.writeSocket is None or not self.writeSocket.isConnected():
-      return False
-    skdata=data.copy()
-    del skdata['path']
-    update=self.buildUpdateRequest({
-      self.NPRFX+data['path']:skdata
-    })
-    self.writeSocket.send(json.dumps(update))
-    return True
 
-  def sendNotificationOff(self,alarm):
-    if self.writeSocket is None or not self.writeSocket.isConnected():
-      return False
-    update=None
-    data=self.ALARMS.get(alarm)
-    if data:
-      update=self.buildUpdateRequest({
-        self.NPRFX+data['path']:None
-      })
-    else:
-      if alarm.startswith('sk:'):
-        alarm=alarm[3:]
-        update=self.buildUpdateRequest({
-          self.NPRFX+alarm:None
-        })
-    self.writeSocket.send(json.dumps(update))
-    return True
 
   def handleAlarm(self,name,on,info):
     if not self.ENABLE_PARAM_DESCRIPTION.fromDict(self.param) or not self.config.notifyWrite:
       return
-    if on:
-      if info is None:
-        #own alarm created by AvNav
-        self.enqueueAlarmMessage(name,True)
+    skAlarm=self.ALARMS.get(name)
+    value=None
+    if skAlarm is None:
+      #we can only turn off "foreign" alarms
+      if on:
+        return
+      if not name.startswith('sk:'):
+        return
+      skPath=self.NPRFX+name[3:]
     else:
-      self.enqueueAlarmMessage(name,False)
+      skPath=self.NPRFX+skAlarm['path']
+    if on:
+      value=skAlarm.copy()
+      try:
+        del value['path']
+      except:
+        pass
+    skAlarm=SKAlarm(skPath, 'local.'+self.config.skSource, value, isOwnSource=True)
+    skAlarm.shouldSend=True
+    with self.__alarmCondition:
+      for alarm in self.skAlarms:
+        if alarm.isSame(skAlarm):
+          alarm.updateSend(skAlarm)
+          self.__alarmCondition.notifyAll()
+          return
+      self.skAlarms.append(skAlarm)
+      self.__alarmCondition.notifyAll()
 
 
   def queryCharts(self,apiUrl,port):
@@ -1196,31 +1201,31 @@ class AVNSignalKHandler(AVNWorker):
       newList.append(chartInfo)
     self.skCharts = newList
     self.setInfo(self.I_CHARTS,'read %d charts'%len(newList),WorkerStatus.NMEA)
+
+  def iterateToValue(self,node,prefix,callback):
+    if not type(node) is dict:
+      return
+    if 'value' in node:
+      callback(prefix,node.get('value'),node.get('$source'),node.get('timestamp'))
+      return
+    for k,v in node.items():
+      if type(v) is dict:
+        path=k if prefix is None else prefix+"."+k
+        self.iterateToValue(v,path,callback)
+
+
   def storeData(self,node,prefix,priority):
     if prefix is None and 'notifications' in node:
       item = node.get('notifications')
       if item is not None:
         for k,v in item.items():
-          self.handleNotification('notifications.'+k, v.get('value'),v.get('$source'))
-    try:
-      self.checkOwnItems(node,prefix)
-    except Exception as e:
-      AVNLog.debug("exception checking own items %s",traceback.format_exc())
-    if 'value' in node:
-      if self.checkOutdated(node.get('timestamp')):
-        AVNLog.debug('ignore outdated value %s',prefix)
+          self.iterateToValue(v,'notifications.'+k,self.handleNotification)
+    def store(path,value,source,timestamp):
+      if self.checkOutdated(timestamp):
+        AVNLog.debug('ignore outdated value %s',path)
         return
-      self.setValue(prefix, node.get('value'))
-      return
-    for key, item in list(node.items()):
-
-      if isinstance(item,dict):
-        newPrefix=prefix
-        if newPrefix is None:
-          newPrefix=key
-        else:
-          newPrefix=newPrefix+"."+key
-        self.storeData(item,newPrefix,priority)
+      self.setValue(path, value)
+    self.iterateToValue(node,None,store)
 
   def getLocalToken(self,user):
     allowedTypes=['readwrite','admin']
