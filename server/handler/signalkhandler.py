@@ -959,6 +959,8 @@ class AVNSignalKHandler(AVNWorker):
     if self.alarmhandler is None:
       return
     ownSource=self.isOwnSource(source)
+    if not ownSource and not self.config.notifyReceive:
+      return
     skAlarm=SKAlarm(path, source, value, timestamp, ownSource)
     with self.__alarmCondition:
       existing=False
