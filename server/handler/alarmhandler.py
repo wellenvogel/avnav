@@ -214,6 +214,10 @@ class AVNAlarmHandler(AVNWorker):
     with self.__runningAlarmsLock:
       return self.runningAlarms.copy()
 
+  def getRunningAlarmNames(self):
+    alarms=self.getRunningAlarms()
+    return list(alarms.keys())
+
   @classmethod
   def getBoolean(cls,dict,name):
     rt=dict.get(name)

@@ -233,16 +233,21 @@ class InfoSetter(object):
     self.writer.deleteInfo(self.name)
 
 class SKAlarm(object):
-  def __init__(self,skPath,source,skValue,timestamp=None,isOwnSource=False,remoteId=None):
+  T_RECV=1 #received delta
+  T_SEND=2 #message to be send
+  def __init__(self,stype,skPath,source,skValue,
+               timestamp=None,isOwnSource=False,remoteId=None,
+               localTs=None):
+    self.stype=stype
     self.skPath=skPath
     self.skValue=skValue
     self.source=source
     self.timestamp=timestamp
     self.isOwnSource=isOwnSource
-    self.shouldSend=False
-    self.sendTs=None
-    self.ackTs=None
     self.remoteId=remoteId
+    self.shouldSend=False
+    self.localTs=localTs if localTs is not None else time.time()
+    self.fromDelta=False
 
   def isSame(self, other : 'SKAlarm'):
     if other is None:
@@ -253,39 +258,23 @@ class SKAlarm(object):
       return True
     return self.source == other.source
 
-  def update(self, other: 'SKAlarm'):
-    rt=False
-    if other.skValue != self.skValue or other.timestamp != self.timestamp:
-      rt=True
-    if self.isOwnSource and other.isOwnSource:
-      #for receiving own notifications we only set the ack if it fits our wishes
-      self.timestamp=other.timestamp
-      if self.skValue == other.skValue:
-        self.ackTs=time.time()
-      else:
-        self.ackTs=None
-      return False #never an action for our own source
-    self.skValue=other.skValue
-    self.timestamp=other.timestamp
-    return rt
-  def updateSend(self,other: 'SKAlarm'):
-    self.skValue=other.skValue
-    self.timestamp=other.timestamp
-    self.shouldSend=other.shouldSend
-    self.sendTs=other.sendTs
-    self.ackTs=other.ackTs
-  def copy(self):
-    rt=SKAlarm(self.skPath,self.source,self.skValue,
+  def copy(self,**kwargs):
+    rt=SKAlarm(self.stype,self.skPath,self.source,self.skValue,
                    timestamp=self.timestamp,
                    isOwnSource=self.isOwnSource,
-                   remoteId=self.remoteId
+                   remoteId=self.remoteId,
+                   localTs=self.localTs
                    )
     rt.shouldSend=self.shouldSend
-    rt.sendTs=self.sendTs
-    rt.ackTs=self.ackTs
+    rt.fromDelta=self.fromDelta
+    for k in list(rt.__dict__.keys()):
+      if k in kwargs:
+        setattr(rt,k,kwargs.get(k))
     return rt
 
   def isNewer(self,other: 'SKAlarm'):
+    if other is None:
+      return True
     if self.timestamp is None:
       return False
     if other.timestamp is None:
@@ -302,20 +291,102 @@ class SKAlarm(object):
       return True
     return False
   def shouldDo(self):
-    if not self.shouldSend:
+    return self.shouldSend
+  def psKey(self):
+    return self.skPath
+
+
+class SKAlarmList(object):
+  def __init__(self,ownSource=None,remoteId=None,currentList=None):
+    self.ownSource=ownSource
+    self.remoteId=remoteId
+    self.skList={} if currentList is None else currentList
+  def __checkReady(self):
+    if self.ownSource is None:
+      raise Exception("alarm list - no ownSource")
+    if self.remoteId is None:
+      raise Exception("alarm lsit - no remote id")
+  def __isOwnSource(self,source):
+    self.__checkReady()
+    if source is None:
       return False
-    if self.sendTs is None:
-      return True
-    return False
-  def shouldRetry(self,retryTs):
-    if not self.shouldSend or self.sendTs is None:
-      return False
-    return retryTs > self.sendTs and self.ackTs is None
+    return source == self.ownSource or source.endswith('.'+self.ownSource)
+  def setParam(self,ownSource,remoteId):
+    self.ownSource=ownSource
+    self.remoteId=remoteId
+    cleanups=[]
+    for k,v in self.skList.items():
+      if v.remoteId != self.remoteId:
+        cleanups.append(k)
+    for k in cleanups:
+      try:
+        del self.skList[k]
+      except:
+        pass
+  def handleNotification(self,path,value,source,timestamp,fromDelta=False):
+    skAlarm=SKAlarm(SKAlarm.T_RECV,path,source,value,
+                    timestamp=timestamp,
+                    remoteId=self.remoteId,
+                    isOwnSource=self.__isOwnSource(source))
+    skAlarm.fromDelta=fromDelta
+    key=skAlarm.psKey()
+    existing=self.skList.get(key)
+    if not skAlarm.isNewer(existing):
+      return None
+    self.skList[key]=skAlarm
+    return skAlarm
+  def add(self,skAlarm:SKAlarm):
+    self.__checkReady()
+    if skAlarm is None:
+      return
+    self.skList[skAlarm.psKey()]=skAlarm
+  def cleanup(self,oldest):
+    self.__checkReady()
+    now=time.time()
+    cleanupKeys=[]
+    for k,v in self.skList.items():
+      if v.localTs < oldest or v.localTs > now:
+        cleanupKeys.append(k)
+    for k in cleanupKeys:
+      try:
+        del self.skList[k]
+      except:
+        pass
+  def clear(self):
+    self.__checkReady()
+    self.skList.clear()
+  def copy(self):
+    return SKAlarmList(self.ownSource,self.remoteId,self.skList.copy())
 
+class LockedSKAlarmList(SKAlarmList):
 
+  def __init__(self, ownSource=None, remoteId=None, currentList=None):
+    super().__init__(ownSource, remoteId, currentList)
+    self.__lock=threading.Lock()
 
+  def handleNotification(self, path, value, source, timestamp,fromDelta=False):
+    with self.__lock:
+      return super().handleNotification(path, value, source, timestamp,fromDelta)
 
+  def cleanup(self, oldest):
+    with self.__lock:
+      super().cleanup(oldest)
 
+  def clear(self):
+    with self.__lock:
+      super().clear()
+
+  def add(self, skAlarm: SKAlarm):
+    with self.__lock:
+      super().add(skAlarm)
+
+  def setParam(self, ownSource, remoteId):
+    with self.__lock:
+      super().setParam(ownSource, remoteId)
+
+  def copy(self):
+    with self.__lock:
+      return super().copy()
 
 
 class WebSocketHandler(object):
@@ -578,11 +649,11 @@ class AVNSignalKHandler(AVNWorker):
     self.timeOffset=None
     self.selfMap={}
     self.alarmhandler=None
-    #list of alarms from SK (or ours that we would like to send)
-    self.skAlarms=[]
+
+    self.deleteAndActivateActions=SKAlarmList()
+    self.deltas=LockedSKAlarmList()
     self.__alarmCondition=threading.Condition()
     self.ownWpOffSent=False #set if we have sent the own WP off to SK
-    self.firstResponse=True
 
 
 
@@ -673,9 +744,6 @@ class AVNSignalKHandler(AVNWorker):
       charthandler.registerExternalProvider(self.CHARTHANDLER_PREFIX,None)
 
   def timeChanged(self):
-    with self.__alarmCondition:
-      self.skActivateAlarms={}
-      self.skDeactivateAlarms={}
     self.configSequence+=1
     self.wakeUp()
 
@@ -767,42 +835,28 @@ class AVNSignalKHandler(AVNWorker):
           if errorTS < (time.time() - 10):
             self.setInfo(self.I_ALARM,"sender ready",WorkerStatus.NMEA)
           alarms=[]
+          cleanups=[]
           now=time.time()
-          retry=now - self.P_ALARMRETRY.fromDict(self.param)
-          newestAlarms={}
           with self.__alarmCondition:
-            for alarm in self.skAlarms:
+            for k,alarm in self.deleteAndActivateActions.skList.items():
               if alarm.shouldDo():
-                alarms.append((alarm,alarm.copy()))
-              if not alarm.isOwnSource:
-                current=newestAlarms.get(alarm.skPath)
-                if current is None or alarm.isNewer(current):
-                  newestAlarms[alarm.skPath]=alarm
-            #add retries
-            for alarm in self.skAlarms:
-              if alarm.shouldRetry(retry):
-                newest=newestAlarms.get(alarm.skPath)
-                if newest is not None:
-                  if newest.sameState(alarm):
-                    alarm.shouldSend=False
-                  else:
-                    alarms.append((alarm,alarm.copy()))
+                alarms.append(alarm)
+                if alarm.isInState(True):
+                  cleanups.append(k)
                 else:
-                  alarms.append((alarm,alarm.copy()))
+                  alarm.shouldSend=False
+            for k in cleanups:
+              try:
+                del self.deleteAndActivateActions.skList[k]
+              except:
+                pass
           #outside lock
-          for (alarm,copy) in alarms:
-            AVNLog.info("send alarm to SK %s=%s",copy.skPath,copy.skValue)
+          for alarm in alarms:
+            AVNLog.info("send alarm to SK %s=%s",alarm.skPath,alarm.skValue)
             update=self.buildUpdateRequest({
-              copy.skPath:copy.skValue
+              alarm.skPath:alarm.skValue
             })
             self.writeSocket.send(json.dumps(update))
-          with self.__alarmCondition:
-            for (alarm,copy) in alarms:
-              if alarm.timestamp == copy.timestamp and alarm.skValue == copy.skValue and alarm.shouldSend == copy.shouldSend:
-                alarm.shouldSend=False
-                alarm.sendTs=now
-              else:
-                AVNLog.debug("alarm %s changed during send",alarm.skPath)
       except Exception as e:
         self.setInfo(self.I_ALARM,"error %s"%str(e),WorkerStatus.ERROR)
         errorTS=time.time()
@@ -826,10 +880,8 @@ class AVNSignalKHandler(AVNWorker):
     else:
       self.setInfo(self.I_SOURCE,self.config.skSource,WorkerStatus.INACTIVE)
     with self.__alarmCondition:
-      #remove alarms from different SK instances
-      self.skAlarms[:]=[alarm for alarm in self.skAlarms if alarm.remoteId == self.config.remoteId]
-
-
+      self.deleteAndActivateActions.setParam(self.config.skHost, self.config.remoteId)
+    self.deltas.setParam(self.config.skSource,self.config.remoteId)
 
     """
     the run method
@@ -981,6 +1033,8 @@ class AVNSignalKHandler(AVNWorker):
                 self.setInfo(self.I_MAIN, "connected at %s" % apiUrl,WorkerStatus.NMEA)
               data=json.loads(response.read())
               AVNLog.debug("read: %s",json.dumps(data))
+              oldestDeltas=now - 2 *self.config.period
+              self.deltas.cleanup(oldestDeltas)
               self.storeData(data,self.config.priority)
               name=data.get('name')
               if name is not None:
@@ -1026,50 +1080,97 @@ class AVNSignalKHandler(AVNWorker):
 
 
 
-  def hasOpenAlarm(self,name,on):
-    with self.__alarmCondition:
-      alarms=self.skActivateAlarms if on else self.skDeactivateAlarms
-      return alarms.get(name) is not None
 
-  def handleNotification(self, path, value,source,timestamp=None):
+  def handleNotifications(self, skAlarms,isFull=False):
     if not self.config.notifyReceive and not self.config.notifyWrite:
-      return
-    if source is None:
       return
     if self.alarmhandler is None:
       return
-    ownSource=self.isOwnSource(source)
-    if not ownSource and not self.config.notifyReceive:
-      return
-    skAlarm=SKAlarm(path, source, value, timestamp, ownSource,remoteId=self.config.remoteId)
+    handledPathes={}
     with self.__alarmCondition:
-      existing=False
-      changed=False
-      for alarm in self.skAlarms:
-        if alarm.isSame(skAlarm):
-          existing=True
-          changed=alarm.update(skAlarm)
-          break
-      if not existing:
-        changed=True
-        self.skAlarms.append(skAlarm)
-      if changed and not ownSource:
-        name=self.skAlarmToOur(path)
-        if name is None:
-          return
-        AVNLog.debug("change sk alarm %s new %s",path,value)
-        if value is None and not self.firstResponse:
-          #we only switch off alarms after we got a first response
-          self.alarmhandler.stopAlarm(name,self)
+      for k,skAlarm  in skAlarms.items():
+        handledPathes[skAlarm.skPath]=skAlarm
+        if not skAlarm.isOwnSource and not self.config.notifyReceive:
+          continue
+        name=self.skAlarmToOur(skAlarm.skPath)
+        sendAlarmValue=None
+        if not name.startswith('sk:'):
+          cfg=self.ALARMS.get(name)
+          if cfg is not None:
+            sendAlarmValue=cfg.get('value')
+        runningAny=self.alarmhandler.isAlarmActive(name)
+        runningOwn=self.alarmhandler.isAlarmActive(name,True)
+        runningOther=False if runningOwn else runningAny
+        category=None
+        if type(skAlarm.skValue) is dict:
+          state=skAlarm.skValue.get('state')
+          if state == 'emergency':
+            category=AlarmConfig.C_CRITICAL
+          if state == 'normal':
+            category=AlarmConfig.C_INFO
+        if skAlarm.isOwnSource:
+          if skAlarm.isInState(True):
+            #SK own on
+            if not runningAny:
+              AVNLog.info("prepare alarm %s off to SK (sk: ownOn)",skAlarm.skPath)
+              cp=skAlarm.copy(stype=SKAlarm.T_SEND,shouldSend=True,skValue=None)
+              self.deleteAndActivateActions.add(cp)
+          else:
+            #SK: own off
+            if runningOwn:
+              if sendAlarmValue:
+                AVNLog.info("prepare alarm %s on to SK (sk: own off, local: own on)",skAlarm.skPath)
+                cp=skAlarm.copy(stype=SKAlarm.T_SEND,shouldSend=True,skValue=sendAlarmValue)
+                self.deleteAndActivateActions.add(cp)
+              else:
+                AVNLog.debug("own alarm from sk without mapping %s",skAlarm.skPath)
+            elif runningOther:
+              AVNLog.info("own alarm off %s (sk:own off, local: other on")
+              self.alarmhandler.stopAlarm(name,caller=self)
         else:
-          category=None
-          if type(value) is dict:
-            state=value.get('state')
-            if state == 'emergency':
-              category=AlarmConfig.C_CRITICAL
-            if state == 'normal':
-              category=AlarmConfig.C_INFO
-          self.alarmhandler.startAlarm(name,caller=self,info=source,defaultCategory=category)
+          if skAlarm.isInState(True):
+            #check if we switched this off
+            existing=self.deleteAndActivateActions.skList.get(skAlarm.psKey())
+            if existing:
+              #when we delete an SK alarm (not our own) we copy the original
+              #timestamp to the deleteAndActivateActions
+              if existing.isInState(False) and not skAlarm.isNewer(existing):
+                AVNLog.info("ignore SK alarm on %s, having switch off")
+                continue
+            #SK other on
+            if not runningAny:
+              AVNLog.info("own alarm on %s (sk: other on, local: nothing on)",skAlarm.skPath)
+              self.alarmhandler.startAlarm(name,defaultCategory=category,caller=self,info=skAlarm.psKey())
+          else:
+            #SK other off
+            if runningOwn:
+              if skAlarm.fromDelta:
+                AVNLog.info("own alarm off %s (sk: other off, local: own on, isDelta)",skAlarm.skPath)
+                self.alarmhandler.stopAlarm(name,caller=self)
+              else:
+                AVNLog.info("prepare alarm %s on on SK (sk: other off, local: own on, noDelta",skAlarm.skPath)
+                self.deleteAndActivateActions.add(skAlarm.copy(stype=SKAlarm.T_SEND,shouldSend=True,skValue=sendAlarmValue))
+            elif runningOther:
+              AVNLog.info("own alarm off %s (sk: other off, local: other on")
+              self.alarmhandler.stopAlarm(name,caller=self)
+      if isFull:
+        #now handle alarms not found at all
+        ownAlarmNames=self.alarmhandler.getRunningAlarmNames()
+        for name in ownAlarmNames:
+          skAlarm=self.getSkAlarmFromOwn(name,False)
+          if skAlarm is None:
+            continue
+          if handledPathes.get(skAlarm.skPath):
+            continue
+          runningOwn=self.alarmhandler.isAlarmActive(name,True)
+          if not runningOwn:
+            AVNLog.info("switch off local alarm %s (sk: none, local: other on",name)
+            self.alarmhandler.stopAlarm(name,caller=self)
+          else:
+            skAlarm.shouldSend=True
+            AVNLog.info("prepare alarm %s on SK on (sk: none, local: own on)",skAlarm.skPath)
+            self.deleteAndActivateActions.add(skAlarm)
+      self.__alarmCondition.notifyAll()
 
   def webSocketMessage(self,data):
     to=self.webSocket.getTimeOffset()
@@ -1093,7 +1194,9 @@ class AVNSignalKHandler(AVNWorker):
           path=item.get('path')
           if  path is not None:
             if path.startswith("notifications"):
-              self.handleNotification(path, value,source,update.get('timestamp'))
+              skAlarm=self.deltas.handleNotification(path, value,source,update.get('timestamp'),True)
+              if skAlarm is not None:
+                self.handleNotifications({skAlarm.psKey():skAlarm},False)
             else:
               if value is not None:
                 self.setValue(path,value)
@@ -1206,88 +1309,29 @@ class AVNSignalKHandler(AVNWorker):
       return None
     return "sk:"+skpath[len(self.NPRFX):]
 
+  def getSkAlarmFromOwn(self,name,on) -> SKAlarm:
+    rt=self.ALARMS.get(name)
+    if rt is not None:
+      return SKAlarm(SKAlarm.T_SEND,self.NPRFX+rt['path'],'local.'+self.config.skSource,
+                     rt['value'] if on else None,isOwnSource=True,remoteId=self.config.remoteId)
+    else:
+      if on:
+        return None
+      if not name.startswith('sk:'):
+        return None
+      return SKAlarm(SKAlarm.T_SEND,self.NPRFX+name[3:],'local.'+self.config.skSource,
+                     None,isOwnSource=True,remoteId=self.config.remoteId)
 
   def handleAlarm(self,name,on,info):
     if not self.ENABLE_PARAM_DESCRIPTION.fromDict(self.param) or not self.config.notifyWrite:
       return
-    skAlarm=self.ALARMS.get(name)
-    value=None
+    skAlarm=self.getSkAlarmFromOwn(name,on)
     if skAlarm is None:
-      #we can only turn off "foreign" alarms
-      if on:
-        return
-      if not name.startswith('sk:'):
-        return
-      skPath=self.NPRFX+name[3:]
-    else:
-      skPath=self.NPRFX+skAlarm['path']
-    if on:
-      value=skAlarm['value']
-    skAlarm=SKAlarm(skPath, 'local.'+self.config.skSource, value, isOwnSource=True,remoteId=self.config.remoteId)
+      return
     skAlarm.shouldSend=True
     with self.__alarmCondition:
-      for alarm in self.skAlarms:
-        if alarm.isSame(skAlarm):
-          alarm.updateSend(skAlarm)
-          self.__alarmCondition.notifyAll()
-          return
-      self.skAlarms.append(skAlarm)
+      self.deleteAndActivateActions.add(skAlarm)
       self.__alarmCondition.notifyAll()
-
-  def initialAlarmUpdate(self):
-    '''
-    will be called once the first response has been processed
-    we now check if all our active alarms are there
-    and we check if alarms being inactive on our side are still active at Sk
-    @return:
-    '''
-    if self.alarmhandler is None:
-      return
-    with self.__alarmCondition:
-      newestAlarms={}
-      processedOwn=set()
-      for alarm in self.skAlarms:
-        current=newestAlarms.get(alarm.skPath)
-        if current is None or alarm.isNewer(current):
-          newestAlarms[alarm.skPath]=alarm
-      for k,alarm in newestAlarms.items():
-        if alarm.isOwnSource:
-          name=self.skAlarmToOur(alarm.skPath, generic=False)
-          if name is None:
-            continue
-          running=self.alarmhandler.isAlarmActive(name)
-          if not alarm.isInState(running):
-            if running:
-              value=self.ALARMS.get(name)
-              if value is None:
-                continue
-              value=value['value']
-            else:
-              value=None
-            alarm.skValue=value
-            AVNLog.info("find alarm %s to be send to SK, value=%s",name,str(alarm.value))
-            processedOwn.add(name)
-            #mark alarm for sending
-            alarm.shouldSend=True
-            alarm.ackTs=None
-            alarm.sendTs=None
-      #now just check if all our active alarms are there
-      for k,sk in self.ALARMS.items():
-        if k in processedOwn:
-          continue
-        newest=newestAlarms.get(self.NPRFX+sk['path'])
-        if newest is not None:
-          if newest.isOwnSource or newest.skValue is not None:
-            continue
-        running=self.alarmhandler.isAlarmActive(k)
-        if not running:
-          continue
-        #as we did not process an own alarm for this one yet we need to add
-        skAlarm=SKAlarm(self.NPRFX+sk['path'],'local.'+self.config.skSource,sk['value'],isOwnSource=True,remoteId=self.config.remoteId)
-        skAlarm.shouldSend=True
-        AVNLog.info("preparing to send own active alarm %s to SK",k)
-        self.skAlarms.append(skAlarm)
-
 
 
 
@@ -1361,13 +1405,12 @@ class AVNSignalKHandler(AVNWorker):
 
   def storeData(self,node,priority):
     if 'notifications' in node:
+      alarmList=self.deltas.copy()
       item = node.get('notifications')
       if item is not None:
         for k,v in item.items():
-          self.iterateToValue(v,'notifications.'+k,self.handleNotification)
-    if self.firstResponse:
-      self.firstResponse=False
-      self.initialAlarmUpdate()
+          self.iterateToValue(v,'notifications.'+k,alarmList.handleNotification)
+      self.handleNotifications(alarmList.skList,True)
     def store(path,value,source,timestamp):
       if self.checkOutdated(timestamp):
         AVNLog.debug('ignore outdated value %s',path)
