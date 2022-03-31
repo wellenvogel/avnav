@@ -566,28 +566,28 @@ class AVNSignalKHandler(AVNWorker):
                               description="query period for AIS (in s)",
                               condition={P_AIS.name:True})
   P_WRITE=WorkerParameter('sendData',type=WorkerParameter.T_BOOLEAN,default=False,
-                          description='send data to signalk. This includes waypoint info and notifications')
+                          description='send data to signalk. This includes waypoint info and notifications',
+                          condition={P_USEWEBSOCKETS.name:True})
   P_USERNAME=WorkerParameter('userName',type=WorkerParameter.T_STRING,default='admin',
                              description='the user name to be used for SignalK. Remark: This user must have write permissions!',
-                             condition={P_WRITE.name:True})
+                             condition={P_WRITE.name:True,P_USEWEBSOCKETS.name:True})
   P_PASSWORD=WorkerParameter('password',type=WorkerParameter.T_STRING,default='',
                              description='the password for the SignalK server. You can leave this empty '+
                              'for a local access if signalK is installed in the default location',
-                             condition={P_WRITE.name:True})
+                             condition={P_WRITE.name:True,P_USEWEBSOCKETS.name:True})
   P_SENDWP=WorkerParameter('sendWp',type=WorkerParameter.T_BOOLEAN,default=True,
                            description='send current waypoint routing data',
-                           condition={P_WRITE.name:True})
+                           condition={P_WRITE.name:True,P_USEWEBSOCKETS.name:True})
   P_NOTIFY=WorkerParameter('sendNotifications',type=WorkerParameter.T_BOOLEAN,default=True,
                            description='send notifications',
-                           condition={P_WRITE.name:True})
+                           condition={P_WRITE.name:True,P_USEWEBSOCKETS.name:True})
   P_NOTIFY_RECEIVE=WorkerParameter('receiveNotifications',type=WorkerParameter.T_BOOLEAN,default=False,
                                    description='receive notifications from signalK',
-                                   condition={P_WRITE.name:True})
+                                   condition={P_WRITE.name:True,P_USEWEBSOCKETS.name:True})
   P_WEBSOCKETRETRY=WorkerParameter('websocketRetry',type=WorkerParameter.T_NUMBER,default=20,
                                    description="retry period (s) for websocket channels to reopen")
   P_UUID=WorkerParameter('uuid',type=WorkerParameter.T_STRING,editable=False,default='avnav')
-  P_ALARMRETRY=WorkerParameter('alarmRetry',type=WorkerParameter.T_NUMBER,default=10,
-                               editable=False)
+
 
   I_AIS='ais'
   I_CHARTS='charts'
@@ -602,7 +602,7 @@ class AVNSignalKHandler(AVNWorker):
   def getConfigParam(cls, child=None):
     return [cls.P_DIRECT,cls.P_AIS,cls.PRIORITY_PARAM_DESCRIPTION.copy(default=NMEAParser.DEFAULT_SOURCE_PRIORITY-10),cls.P_PORT,cls.P_HOST,
             cls.P_AISPERIOD,cls.P_PERIOD,cls.P_CHARTS,cls.P_CHARTPERIOD,cls.P_CHARTPROXYMODE,cls.P_USEWEBSOCKETS, cls.P_MIGRATED,
-            cls.P_WRITE,cls.P_USERNAME,cls.P_PASSWORD,cls.P_SENDWP,cls.P_NOTIFY,cls.P_NOTIFY_RECEIVE,cls.P_WEBSOCKETRETRY,cls.P_UUID,cls.P_ALARMRETRY]
+            cls.P_WRITE,cls.P_USERNAME,cls.P_PASSWORD,cls.P_SENDWP,cls.P_NOTIFY,cls.P_NOTIFY_RECEIVE,cls.P_WEBSOCKETRETRY,cls.P_UUID]
 
   @classmethod
   def canEdit(cls):
@@ -1220,11 +1220,6 @@ class AVNSignalKHandler(AVNWorker):
         'value':v
       })
     update={
-      'source':{
-        'label':'avnav',
-        'talker':self.config.skSource,
-        'type':'avnav'
-      },
       '$source':self.config.skSource,
       'values':uvalues
     }
