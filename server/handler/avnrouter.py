@@ -185,7 +185,7 @@ class WpData:
     fromWp=None
     self.approachDistance=None
     if leg is not None and leg.isActive():
-      self.approachDistance=leg.getApproachDistance()
+      self.approachDistance=leg.getApproachDistance() if not leg.isMob() else None
       target=leg.getTo()
       fromWp=leg.getFrom()
     if target is not None:
