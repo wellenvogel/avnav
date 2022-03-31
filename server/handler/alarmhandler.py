@@ -274,18 +274,7 @@ class AVNAlarmHandler(AVNWorker):
       alarmdef.command,
       alarmdef.repeat,
       alarmdef.parameter)
-  def callHandlersRunning(self,handler=None):
-    alarms=self.getRunningAlarms()
-    handlers=[]
-    if handler is not None:
-      handlers=[handler]
-    else:
-      with self.__handlerLock:
-        handlers=self.handlers.copy()
-    for k,alarm in alarms.items():
-      for h in handlers:
-        if alarm.running:
-          h.handleAlarm(k,alarm.running,alarm.info)
+
 
   def callHandlers(self,alarm: RunningAlarm,on:bool=True,caller=None):
     handlers=[]
@@ -421,11 +410,13 @@ class AVNAlarmHandler(AVNWorker):
       self.wakeUp()
     return True
 
-  def isAlarmActive(self,name):
+  def isAlarmActive(self,name,ownOnly=False):
     '''return True if the named alarm is running'''
     with self.__runningAlarmsLock:
       al=self.runningAlarms.get(name)
       if al is None:
+        return False
+      if ownOnly and al.info is not None:
         return False
       return True
 

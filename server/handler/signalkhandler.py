@@ -24,6 +24,59 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py
 ###############################################################################
+'''
+Sk notification integration
+received                    own
+full/delta  source  on      source  on      action
+full        own     on      any     on      ---
+                            ---     off     enqueue off
+                    off     own     on      enqueue on
+                            other   on      set off - could race with delta other on
+                            ---     off     ---
+            other   on      any     on      --- - we have different src - but both show, so leave it
+                            ---     off     set on (other) race with own set off
+                    off     own     on      enqueue on (let our alarm win) - race with delta other off
+                            other   on      set off ##race with delta other on
+                            ---     off     ---
+            ---     ---     other   on      switch off
+                            own     on      enqueue on
+                            ---     off     ---
+delta       own     on      any     on      ---
+                            ---     off     ?enqueue off - leave to full
+                    off     own     on      ?enqueue on - leave to full
+                            other   on      set off
+                            ---     off     ---
+            other   on      any     on      ---
+                            ---     off     set on (other) ##race with full other off
+                    off     own     on      set off ##race with full other off
+                            other   on      set off
+                            ---     off     ---
+
+races:
+full-own-off -> other-on-setOff against delta-other-on->any-off-setOn
+full-other-off -> other-on-SetOff against delta-other-on->any-off-setOn
+
+full-other-off -> own-on-enqOn against delta-other-off->any-on-setOff
+
+full-other-on -> own-any-off against our switch off
+
+
+resolution:
+We consider delta's being "better" and full only being for retry/resync handling.
+Therefore we keep the delta data for > full query period and always store the newest delta
+for each combination of path/source.
+We let the delta's do their job immediately. In the full handling we merge the recived full data
+with the (still valid) delta items.
+If there are different actions for full an delta for a combination we simply do nothing if the value
+was coming from a delta.
+relevant for:
+xxx-other-off->own-on
+
+To solve the race for our alarm deletes potentially not being handled correctly we keep a "lock list" for
+them by storing source,timestamp,remoteId for each deleted alarm and only allowing new alarms from Sk if any of the
+values has changed.
+
+'''
 import base64
 import hashlib
 import hmac
@@ -161,6 +214,7 @@ class Config(object):
     self.skSource='avnav-'+AVNSignalKHandler.P_UUID.fromDict(param)
     self.isLocal= (self.skHost == 'localhost' or self.skHost == '127.0.0.1')
     self.wsRetry=AVNSignalKHandler.P_WEBSOCKETRETRY.fromDict(param)
+    self.remoteId=self.skHost+":"+str(self.port)
 
 class MappingEntry(object):
   def __init__(self,localPath,converter=None,priority=0):
@@ -179,7 +233,7 @@ class InfoSetter(object):
     self.writer.deleteInfo(self.name)
 
 class SKAlarm(object):
-  def __init__(self,skPath,source,skValue,timestamp=None,isOwnSource=False):
+  def __init__(self,skPath,source,skValue,timestamp=None,isOwnSource=False,remoteId=None):
     self.skPath=skPath
     self.skValue=skValue
     self.source=source
@@ -188,6 +242,7 @@ class SKAlarm(object):
     self.shouldSend=False
     self.sendTs=None
     self.ackTs=None
+    self.remoteId=remoteId
 
   def isSame(self, other : 'SKAlarm'):
     if other is None:
@@ -219,6 +274,16 @@ class SKAlarm(object):
     self.shouldSend=other.shouldSend
     self.sendTs=other.sendTs
     self.ackTs=other.ackTs
+  def copy(self):
+    rt=SKAlarm(self.skPath,self.source,self.skValue,
+                   timestamp=self.timestamp,
+                   isOwnSource=self.isOwnSource,
+                   remoteId=self.remoteId
+                   )
+    rt.shouldSend=self.shouldSend
+    rt.sendTs=self.sendTs
+    rt.ackTs=self.ackTs
+    return rt
 
   def isNewer(self,other: 'SKAlarm'):
     if self.timestamp is None:
@@ -230,6 +295,12 @@ class SKAlarm(object):
     if self.skValue is None and other.skValue is None:
       return True
     return self.skValue is not None and other.skValue is not None
+  def isInState(self,active):
+    if active and self.skValue is not None:
+      return True
+    if not active and self.skValue is None:
+      return True
+    return False
   def shouldDo(self):
     if not self.shouldSend:
       return False
@@ -511,6 +582,7 @@ class AVNSignalKHandler(AVNWorker):
     self.skAlarms=[]
     self.__alarmCondition=threading.Condition()
     self.ownWpOffSent=False #set if we have sent the own WP off to SK
+    self.firstResponse=True
 
 
 
@@ -701,8 +773,7 @@ class AVNSignalKHandler(AVNWorker):
           with self.__alarmCondition:
             for alarm in self.skAlarms:
               if alarm.shouldDo():
-                alarms.append(alarm)
-                alarm.sendTs=now
+                alarms.append((alarm,alarm.copy()))
               if not alarm.isOwnSource:
                 current=newestAlarms.get(alarm.skPath)
                 if current is None or alarm.isNewer(current):
@@ -715,18 +786,23 @@ class AVNSignalKHandler(AVNWorker):
                   if newest.sameState(alarm):
                     alarm.shouldSend=False
                   else:
-                    alarms.append(alarm)
-                    alarm.sendTs=now
+                    alarms.append((alarm,alarm.copy()))
                 else:
-                  alarms.append(alarm)
-                  alarm.sendTs=now
+                  alarms.append((alarm,alarm.copy()))
           #outside lock
-          for alarm in alarms:
-            AVNLog.info("send alarm to SK %s=%s",alarm.skPath,alarm.skValue)
+          for (alarm,copy) in alarms:
+            AVNLog.info("send alarm to SK %s=%s",copy.skPath,copy.skValue)
             update=self.buildUpdateRequest({
-              alarm.skPath:alarm.skValue
+              copy.skPath:copy.skValue
             })
             self.writeSocket.send(json.dumps(update))
+          with self.__alarmCondition:
+            for (alarm,copy) in alarms:
+              if alarm.timestamp == copy.timestamp and alarm.skValue == copy.skValue and alarm.shouldSend == copy.shouldSend:
+                alarm.shouldSend=False
+                alarm.sendTs=now
+              else:
+                AVNLog.debug("alarm %s changed during send",alarm.skPath)
       except Exception as e:
         self.setInfo(self.I_ALARM,"error %s"%str(e),WorkerStatus.ERROR)
         errorTS=time.time()
@@ -737,6 +813,7 @@ class AVNSignalKHandler(AVNWorker):
 
   def _runI(self):
     sequence=self.configSequence
+    self.firstResponse=True
     self.config=Config(self.param)
     self.createMappings()
     if self.config.aisFetchPeriod == 0:
@@ -748,8 +825,11 @@ class AVNSignalKHandler(AVNWorker):
       self.setInfo(self.I_SOURCE,self.config.skSource,WorkerStatus.NMEA)
     else:
       self.setInfo(self.I_SOURCE,self.config.skSource,WorkerStatus.INACTIVE)
-    if self.alarmhandler is not None:
-      self.alarmhandler.callHandlersRunning(self)
+    with self.__alarmCondition:
+      #remove alarms from different SK instances
+      self.skAlarms[:]=[alarm for alarm in self.skAlarms if alarm.remoteId == self.config.remoteId]
+
+
 
     """
     the run method
@@ -901,7 +981,7 @@ class AVNSignalKHandler(AVNWorker):
                 self.setInfo(self.I_MAIN, "connected at %s" % apiUrl,WorkerStatus.NMEA)
               data=json.loads(response.read())
               AVNLog.debug("read: %s",json.dumps(data))
-              self.storeData(data,None,self.config.priority)
+              self.storeData(data,self.config.priority)
               name=data.get('name')
               if name is not None:
                 self.setValue("name",name)
@@ -961,7 +1041,7 @@ class AVNSignalKHandler(AVNWorker):
     ownSource=self.isOwnSource(source)
     if not ownSource and not self.config.notifyReceive:
       return
-    skAlarm=SKAlarm(path, source, value, timestamp, ownSource)
+    skAlarm=SKAlarm(path, source, value, timestamp, ownSource,remoteId=self.config.remoteId)
     with self.__alarmCondition:
       existing=False
       changed=False
@@ -974,11 +1054,12 @@ class AVNSignalKHandler(AVNWorker):
         changed=True
         self.skAlarms.append(skAlarm)
       if changed and not ownSource:
-        name=self.getSKAlarm(path)
+        name=self.skAlarmToOur(path)
         if name is None:
           return
         AVNLog.debug("change sk alarm %s new %s",path,value)
-        if value is None:
+        if value is None and not self.firstResponse:
+          #we only switch off alarms after we got a first response
           self.alarmhandler.stopAlarm(name,self)
         else:
           category=None
@@ -1086,34 +1167,42 @@ class AVNSignalKHandler(AVNWorker):
   def isOwnSource(self,src):
     if src is None:
       return False
-    return src.endswith('.'+self.config.skSource)
+    return src == self.config.skSource or src.endswith('.'+self.config.skSource)
 
   ALARMS={
     'mob': {
       'path':'mob',
-      'state':'emergency',
-      'method':['visual','sound'],
-      'message':'man overboard'
+      'value':{
+        'state':'emergency',
+        'method':['visual','sound'],
+        'message':'man overboard'
+      }
     },
     'waypoint':{
       'path': 'arrivalCircleEntered',
-      'state': 'normal',
-      'method': ['visual','sound'],
-      'message': 'arrival circle entered'
+      'value':{
+        'state': 'normal',
+        'method': ['visual','sound'],
+        'message': 'arrival circle entered'
+      }
     },
     'anchor':{
       'path':'navigation.anchor',
-      'state':'emergency',
-      'method': ['visual','sound'],
-      'message': 'anchor drags'
+      'value': {
+        'state':'emergency',
+        'method': ['visual','sound'],
+        'message': 'anchor drags'
+      }
     }
   }
   NPRFX='notifications.'
-  def getSKAlarm(self,skpath):
+  def skAlarmToOur(self, skpath, generic=True):
     for k,v in self.ALARMS.items():
       if (self.NPRFX+v['path']) == skpath:
         return k
     if not skpath.startswith(self.NPRFX):
+      return None
+    if not generic:
       return None
     return "sk:"+skpath[len(self.NPRFX):]
 
@@ -1133,12 +1222,8 @@ class AVNSignalKHandler(AVNWorker):
     else:
       skPath=self.NPRFX+skAlarm['path']
     if on:
-      value=skAlarm.copy()
-      try:
-        del value['path']
-      except:
-        pass
-    skAlarm=SKAlarm(skPath, 'local.'+self.config.skSource, value, isOwnSource=True)
+      value=skAlarm['value']
+    skAlarm=SKAlarm(skPath, 'local.'+self.config.skSource, value, isOwnSource=True,remoteId=self.config.remoteId)
     skAlarm.shouldSend=True
     with self.__alarmCondition:
       for alarm in self.skAlarms:
@@ -1148,6 +1233,64 @@ class AVNSignalKHandler(AVNWorker):
           return
       self.skAlarms.append(skAlarm)
       self.__alarmCondition.notifyAll()
+
+  def initialAlarmUpdate(self):
+    '''
+    will be called once the first response has been processed
+    we now check if all our active alarms are there
+    and we check if alarms being inactive on our side are still active at Sk
+    @return:
+    '''
+    if self.alarmhandler is None:
+      return
+    with self.__alarmCondition:
+      newestAlarms={}
+      processedOwn=set()
+      for alarm in self.skAlarms:
+        current=newestAlarms.get(alarm.skPath)
+        if current is None or alarm.isNewer(current):
+          newestAlarms[alarm.skPath]=alarm
+      for k,alarm in newestAlarms.items():
+        if alarm.isOwnSource:
+          name=self.skAlarmToOur(alarm.skPath, generic=False)
+          if name is None:
+            continue
+          running=self.alarmhandler.isAlarmActive(name)
+          if not alarm.isInState(running):
+            if running:
+              value=self.ALARMS.get(name)
+              if value is None:
+                continue
+              value=value['value']
+            else:
+              value=None
+            alarm.skValue=value
+            AVNLog.info("find alarm %s to be send to SK, value=%s",name,str(alarm.value))
+            processedOwn.add(name)
+            #mark alarm for sending
+            alarm.shouldSend=True
+            alarm.ackTs=None
+            alarm.sendTs=None
+      #now just check if all our active alarms are there
+      for k,sk in self.ALARMS.items():
+        if k in processedOwn:
+          continue
+        newest=newestAlarms.get(self.NPRFX+sk['path'])
+        if newest is not None:
+          if newest.isOwnSource or newest.skValue is not None:
+            continue
+        running=self.alarmhandler.isAlarmActive(k)
+        if not running:
+          continue
+        #as we did not process an own alarm for this one yet we need to add
+        skAlarm=SKAlarm(self.NPRFX+sk['path'],'local.'+self.config.skSource,sk['value'],isOwnSource=True,remoteId=self.config.remoteId)
+        skAlarm.shouldSend=True
+        AVNLog.info("preparing to send own active alarm %s to SK",k)
+        self.skAlarms.append(skAlarm)
+
+
+
+
 
 
   def queryCharts(self,apiUrl,port):
@@ -1216,12 +1359,15 @@ class AVNSignalKHandler(AVNWorker):
         self.iterateToValue(v,path,callback)
 
 
-  def storeData(self,node,prefix,priority):
-    if prefix is None and 'notifications' in node:
+  def storeData(self,node,priority):
+    if 'notifications' in node:
       item = node.get('notifications')
       if item is not None:
         for k,v in item.items():
           self.iterateToValue(v,'notifications.'+k,self.handleNotification)
+    if self.firstResponse:
+      self.firstResponse=False
+      self.initialAlarmUpdate()
     def store(path,value,source,timestamp):
       if self.checkOutdated(timestamp):
         AVNLog.debug('ignore outdated value %s',path)
