@@ -840,10 +840,12 @@ class AVNSignalKHandler(AVNWorker):
           with self.__alarmCondition:
             for k,alarm in self.deleteAndActivateActions.skList.items():
               if alarm.shouldDo():
-                alarms.append(alarm)
                 if alarm.isInState(True):
+                  if self.config.notifyWrite:
+                    alarms.append(alarm)
                   cleanups.append(k)
                 else:
+                  alarms.append(alarm)
                   alarm.shouldSend=False
             for k in cleanups:
               try:
