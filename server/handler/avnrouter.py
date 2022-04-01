@@ -562,6 +562,9 @@ class AVNRouter(AVNDirectoryHandlerBase):
     return (float(wp.get('lat')),float(wp.get('lon')))
 
   def getWpData(self) -> WpData:
+    if self.navdata is None:
+      #called when uninitialized
+      return None
     curGps=self.navdata.getDataByPrefix(AVNStore.BASE_KEY_GPS,1)
     lat=curGps.get('lat')
     lon=curGps.get('lon')
@@ -584,7 +587,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
       if self.startWp is not None and self.endWp is not None:
         wpData=self.getWpData()
 
-        if wpData.validData:
+        if wpData is not None and wpData.validData:
           AVNLog.debug("compute route data from %s to %s",str(self.startWp),str(self.endWp))
           XTE=wpData.xte/float(AVNUtil.NM)
           if XTE > 0:
