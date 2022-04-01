@@ -1136,13 +1136,16 @@ class AVNSignalKHandler(AVNWorker):
             if existing:
               #when we delete an SK alarm (not our own) we copy the original
               #timestamp to the deleteAndActivateActions
-              if existing.isInState(False) and not skAlarm.isNewer(existing):
+              #we cannot safely use isNewer here as the SK time could have changed
+              #but if the timestamp at least changed the SK server must have been writing the value again
+              #and it should be ok to consider this as a new alarm now
+              if existing.isInState(False) and existing.timestamp == skAlarm.timestamp:
                 AVNLog.info("ignore SK alarm on %s, having switch off")
                 continue
             #SK other on
             if not runningAny:
               AVNLog.info("own alarm on %s (sk: other on, local: nothing on)",skAlarm.skPath)
-              self.alarmhandler.startAlarm(name,defaultCategory=category,caller=self,info=skAlarm.psKey())
+              self.alarmhandler.startAlarm(name,defaultCategory=category,caller=self,info=skAlarm.copy())
           else:
             #SK other off
             if runningOwn:
@@ -1326,6 +1329,12 @@ class AVNSignalKHandler(AVNWorker):
     if skAlarm is None:
       return
     skAlarm.shouldSend=True
+    if not on and isinstance(info,SKAlarm):
+      #ensure to keep the source and timestamp of the alarm that we delete
+      #in the action list to prevent a re-enabling e.g. with the next full update
+      #see handleNotifications SK other on
+      skAlarm.timestamp=info.timestamp
+      skAlarm.source=info.source
     with self.__alarmCondition:
       self.deleteAndActivateActions.add(skAlarm)
       self.__alarmCondition.notifyAll()
