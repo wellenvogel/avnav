@@ -463,6 +463,9 @@ class AVNAlarmHandler(AVNWorker):
   def getSoundFile(self,name):
     if name is None:
       return None
+    if os.path.exists(name):
+      #legacy support with fully qualified file name
+      return name
     dirs=self.getSoundDirs()
     name=AVNUtil.clean_filename(name)
     for d in dirs:
