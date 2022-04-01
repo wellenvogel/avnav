@@ -1442,7 +1442,7 @@ class AVNSignalKHandler(AVNWorker):
          raise Exception("invalid type of users list in %s"%cfgPath)
        found=False
        for us in users:
-         if us.get('name') == user:
+         if us.get('username') == user:
            found = True
            if us.get('type') not in allowedTypes:
              raise Exception("user %s has no write permissions"%user)
