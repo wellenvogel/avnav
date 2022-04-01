@@ -136,7 +136,7 @@ class AVNBaseConfig(AVNWorker):
                             description='how many seconds we allow time to go back before we reset'),
             WorkerParameter('settimecmd','',editable=False,description='if set, use this to set the system time'),
             WorkerParameter('systimediff',5,type=WorkerParameter.T_FLOAT,
-                            description='how many seconds do we allow the system time to be away from gps/ntp'),
+                            description='how many seconds do we allow the system time to be away from gps/ntp, set to 0 to disable time setting'),
             WorkerParameter('settimeperiod', 3600,type=WorkerParameter.T_FLOAT,
                             description='minimal interval (sec) for setting the system time'),
             cls.PARAM_NTP,
