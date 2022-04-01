@@ -598,6 +598,8 @@ class AVNSignalKHandler(AVNWorker):
   I_SOURCE='source'
   I_ALARM='alarms'
 
+  ICON="images/signalk.svg"
+
   @classmethod
   def getConfigParam(cls, child=None):
     return [cls.P_DIRECT,cls.P_AIS,cls.PRIORITY_PARAM_DESCRIPTION.copy(default=NMEAParser.DEFAULT_SOURCE_PRIORITY-10),cls.P_PORT,cls.P_HOST,
@@ -625,13 +627,6 @@ class AVNSignalKHandler(AVNWorker):
   PREFIX='/signalk'
   CHARTPREFIX='charts'
 
-  def registerDeregisterApp(self,register):
-    addonhandler=AVNWorker.findHandlerByName(AVNUserAppHandler.getConfigName())
-    if addonhandler:
-      if not register:
-        addonhandler.unregisterAddOn(self.USERAPP_NAME)
-        return
-      addonhandler.registerAddOn(self.USERAPP_NAME,)
 
   def stop(self):
     super().stop()
@@ -794,7 +789,7 @@ class AVNSignalKHandler(AVNWorker):
           ts=e.getTimestamp(av)
           if ts is not None:
             if self.timeOffset is not None:
-              ts+=self.timeOffset
+              ts-=self.timeOffset
             if newestTs is None or ts > newestTs:
               newestTs=ts
           value=e.getValue(av)
@@ -900,10 +895,10 @@ class AVNSignalKHandler(AVNWorker):
     addonhandler=AVNWorker.findHandlerByName(AVNUserAppHandler.getConfigName())
     if addonhandler:
       if self.config.skHost == "localhost":
-        addonhandler.registerAddOn(self.USERAPP_NAME,"http://$HOST:%s"%self.config.port,"signalk.svg")
+        addonhandler.registerAddOn(self.USERAPP_NAME,"http://$HOST:%s"%self.config.port,self.ICON)
       else:
         addonhandler.registerAddOn(self.USERAPP_NAME,"http://%s:%s" %
-                                              (self.config.skHost,self.config.port), "images/signalk.svg")
+                                              (self.config.skHost,self.config.port), self.ICON)
     router=None
     if self.config.write:
       router=self.findHandlerByName(AVNRouter.getConfigName())
@@ -1255,6 +1250,8 @@ class AVNSignalKHandler(AVNWorker):
       if router is None:
         return
       wpData=router.getWpData()
+      if wpData is None:
+        return
       if not wpData.validData and self.ownWpOffSent:
         return
       self.ownWpOffSent=False
