@@ -475,9 +475,11 @@ class WebSocketHandler(object):
   def __webSocketMessage(self,*args):
     message=self.getWSParam(*args)
     AVNLog.debug("received on%s: %s",self.infoSetter.name,message)
+    first=False
     try:
       data=json.loads(message)
       if self.__firstWebsocketMessage:
+        first=True
         self.__firstWebsocketMessage=False
         timestamp=data.get('timestamp')
         if timestamp is not None:
@@ -487,7 +489,7 @@ class WebSocketHandler(object):
         else:
           self.__timeOffset=None
       self.infoSetter.setInfo( "connected at %s, timeOffset=%.0fs" % (self.getUrlForLog(), self.__timeOffset or 0), WorkerStatus.NMEA)
-      self.__messageCallback(data)
+      self.__messageCallback(data,self,first)
     except:
       AVNLog.error("error decoding %s:%s",message,traceback.format_exc())
       try:
@@ -597,6 +599,7 @@ class AVNSignalKHandler(AVNWorker):
   I_WRITE='write'
   I_SOURCE='source'
   I_ALARM='alarms'
+  I_TIME='timeoffset'
 
   ICON="images/signalk.svg"
 
@@ -638,6 +641,7 @@ class AVNSignalKHandler(AVNWorker):
     self.config=None
     self.webSocket=None
     self.writeSocket=None
+    self.timeSocket=None
     self.firstWebsocketMessage=False
     #compute a time offset from our time to the SK time
     #from the first Websocket message
@@ -705,7 +709,7 @@ class AVNSignalKHandler(AVNWorker):
     self.selfMap=selfMappings
 
   def closeWebSockets(self):
-    for sock in [self.webSocket,self.writeSocket]:
+    for sock in [self.webSocket,self.writeSocket,self.timeSocket]:
       if sock is not None:
         try:
           sock.close()
@@ -713,6 +717,7 @@ class AVNSignalKHandler(AVNWorker):
           pass
     self.webSocket=None
     self.writeSocket=None
+    self.timeSocket=None
 
   CHARTHANDLER_PREFIX="signalk"
   def run(self):
@@ -955,6 +960,7 @@ class AVNSignalKHandler(AVNWorker):
         AVNLog.info("using websockets at %s, querying with period %d", websocketUrl,self.config.period)
       else:
         self.setInfo(self.I_WEBSOCKET,'disabled',WorkerStatus.INACTIVE)
+        self.setInfo(self.I_TIME,'disabled',WorkerStatus.INACTIVE)
       try:
         lastChartQuery=0
         lastQuery=0
@@ -1009,6 +1015,16 @@ class AVNSignalKHandler(AVNWorker):
           if (now - lastQuery) > self.config.period or first:
             first=False
             lastQuery=now
+            if useWebsockets:
+              try:
+                url=websocketUrl+"?subscribe=none"
+                if self.timeSocket is not None:
+                  self.timeSocket.close()
+                self.timeSocket=WebSocketHandler(InfoSetter(self.I_TIME,self),url,
+                                                self.timeChannelMessage)
+                self.timeSocket.open()
+              except Exception as e:
+                self.setInfo(self.I_TIME,"unable to create: %s"%str(e),WorkerStatus.ERROR)
             response=None
             try:
               response=urllib.request.urlopen(selfUrl)
@@ -1172,10 +1188,11 @@ class AVNSignalKHandler(AVNWorker):
             self.deleteAndActivateActions.add(skAlarm)
       self.__alarmCondition.notifyAll()
 
-  def webSocketMessage(self,data):
-    to=self.webSocket.getTimeOffset()
-    if to is not None:
-      self.timeOffset=to
+  def webSocketMessage(self,data,socket,first):
+    if first:
+      to=socket.getTimeOffset()
+      if to is not None:
+        self.timeOffset=to
     try:
       updates=data.get('updates')
       if updates is None:
@@ -1208,7 +1225,14 @@ class AVNSignalKHandler(AVNWorker):
         pass
       self.webSocket=None
       self.connected=False
-  def writeChannelMessage(self,data):
+  def timeChannelMessage(self,data,socket,first):
+    if not first:
+      return
+    to=socket.getTimeOffset()
+    if to is not None:
+      self.timeOffset=to
+
+  def writeChannelMessage(self,data,socket,first):
     pass
   def buildUpdateRequest(self,values):
     uvalues=[]
