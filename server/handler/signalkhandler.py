@@ -215,6 +215,17 @@ class Config(object):
     self.isLocal= (self.skHost == 'localhost' or self.skHost == '127.0.0.1')
     self.wsRetry=AVNSignalKHandler.P_WEBSOCKETRETRY.fromDict(param)
     self.remoteId=self.skHost+":"+str(self.port)
+    self.blackList=set()
+    blStr=AVNSignalKHandler.P_NOTIFY_BLACK.fromDict(param)
+    for be in blStr.split(','):
+      if be is not None and be.strip() != '':
+        self.blackList.add(be.strip())
+    self.whiteList=set()
+    wlStr=AVNSignalKHandler.P_NOTIFY_WHITE.fromDict(param)
+    for we in wlStr.split(','):
+      if we is not None and we.strip() != '':
+        self.whiteList.add(we.strip())
+
 
 class MappingEntry(object):
   def __init__(self,localPath,converter=None,priority=0):
@@ -558,8 +569,6 @@ class AVNSignalKHandler(AVNWorker):
                                    description='proxy tile requests: never,always,sameHost',
                                    rangeOrList=['never','always','sameHost'],
                                    condition={P_CHARTS.name:True})
-  P_USEWEBSOCKETS=WorkerParameter('useWebsockets',type=WorkerParameter.T_BOOLEAN,default=True,
-                                  description='use websockets if the package is available')
   P_DIRECT=WorkerParameter('decodeData',type=WorkerParameter.T_BOOLEAN,default=False,
                            description='directly use the signalK data for Navigation')
   P_AIS=WorkerParameter('fetchAis',type=WorkerParameter.T_BOOLEAN,default=False,
@@ -568,27 +577,36 @@ class AVNSignalKHandler(AVNWorker):
                               description="query period for AIS (in s)",
                               condition={P_AIS.name:True})
   P_WRITE=WorkerParameter('sendData',type=WorkerParameter.T_BOOLEAN,default=False,
-                          description='send data to signalk. This includes waypoint info and notifications',
-                          condition={P_USEWEBSOCKETS.name:True})
+                          description='send data to signalk. This includes waypoint info and notifications')
   P_USERNAME=WorkerParameter('userName',type=WorkerParameter.T_STRING,default='admin',
                              description='the user name to be used for SignalK. Remark: This user must have write permissions!',
-                             condition={P_WRITE.name:True,P_USEWEBSOCKETS.name:True})
+                             condition={P_WRITE.name:True})
   P_PASSWORD=WorkerParameter('password',type=WorkerParameter.T_STRING,default='',
                              description='the password for the SignalK server. You can leave this empty '+
                              'for a local access if signalK is installed in the default location',
-                             condition={P_WRITE.name:True,P_USEWEBSOCKETS.name:True})
+                             condition={P_WRITE.name:True})
   P_SENDWP=WorkerParameter('sendWp',type=WorkerParameter.T_BOOLEAN,default=True,
                            description='send current waypoint routing data',
-                           condition={P_WRITE.name:True,P_USEWEBSOCKETS.name:True})
+                           condition={P_WRITE.name:True})
   P_NOTIFY=WorkerParameter('sendNotifications',type=WorkerParameter.T_BOOLEAN,default=True,
                            description='send notifications',
-                           condition={P_WRITE.name:True,P_USEWEBSOCKETS.name:True})
+                           condition={P_WRITE.name:True})
   P_NOTIFY_RECEIVE=WorkerParameter('receiveNotifications',type=WorkerParameter.T_BOOLEAN,default=False,
                                    description='receive notifications from signalK',
-                                   condition={P_WRITE.name:True,P_USEWEBSOCKETS.name:True})
+                                   condition={P_WRITE.name:True})
   P_WEBSOCKETRETRY=WorkerParameter('websocketRetry',type=WorkerParameter.T_NUMBER,default=20,
                                    description="retry period (s) for websocket channels to reopen")
   P_UUID=WorkerParameter('uuid',type=WorkerParameter.T_STRING,editable=False,default='avnav')
+  P_NOTIFY_WHITE=WorkerParameter('notifyWhiteList','',type=WorkerParameter.T_STRING,
+                                 description='a comma separated list of sk notifications that should be received.'+
+                                             'e.g. mob,server.newVersion\n'+
+                                             'if empty (default) - all notifications',
+                                 condition={P_NOTIFY_RECEIVE.name:True}
+                                 )
+  P_NOTIFY_BLACK=WorkerParameter('notifyBlackList','server.newVersion',type=WorkerParameter.T_STRING,
+                                 description='a comma separated list of notifications that should not be received\n'+
+                                            'e.g. server.newVersion,navigation.arrivalCircleEntered',
+                                 condition={P_NOTIFY_RECEIVE.name:True})
 
 
   I_AIS='ais'
@@ -605,9 +623,12 @@ class AVNSignalKHandler(AVNWorker):
 
   @classmethod
   def getConfigParam(cls, child=None):
-    return [cls.P_DIRECT,cls.P_AIS,cls.PRIORITY_PARAM_DESCRIPTION.copy(default=NMEAParser.DEFAULT_SOURCE_PRIORITY-10),cls.P_PORT,cls.P_HOST,
-            cls.P_AISPERIOD,cls.P_PERIOD,cls.P_CHARTS,cls.P_CHARTPERIOD,cls.P_CHARTPROXYMODE,cls.P_USEWEBSOCKETS, cls.P_MIGRATED,
-            cls.P_WRITE,cls.P_USERNAME,cls.P_PASSWORD,cls.P_SENDWP,cls.P_NOTIFY,cls.P_NOTIFY_RECEIVE,cls.P_WEBSOCKETRETRY,cls.P_UUID]
+    rt=[cls.P_DIRECT,cls.P_AIS,cls.PRIORITY_PARAM_DESCRIPTION.copy(default=NMEAParser.DEFAULT_SOURCE_PRIORITY-10),cls.P_PORT,cls.P_HOST,
+            cls.P_AISPERIOD,cls.P_PERIOD,cls.P_CHARTS,cls.P_CHARTPERIOD,cls.P_CHARTPROXYMODE, cls.P_MIGRATED,
+            cls.P_UUID]
+    if hasWebsockets:
+      rt+=[cls.P_WRITE,cls.P_USERNAME,cls.P_PASSWORD,cls.P_SENDWP,cls.P_NOTIFY,cls.P_NOTIFY_RECEIVE,cls.P_NOTIFY_WHITE,cls.P_NOTIFY_BLACK,cls.P_WEBSOCKETRETRY]
+    return rt
 
   @classmethod
   def canEdit(cls):
@@ -953,7 +974,7 @@ class AVNSignalKHandler(AVNWorker):
           AVNLog.info("found api url %s",apiUrl)
       selfUrl=apiUrl+"vessels/self"
       self.connected = True
-      useWebsockets = self.P_USEWEBSOCKETS.fromDict(self.param) and hasWebsockets and websocketUrl is not None
+      useWebsockets = hasWebsockets and websocketUrl is not None
       if useWebsockets:
         if self.config.period < expiryPeriod:
           self.config.period=expiryPeriod
@@ -1092,7 +1113,22 @@ class AVNSignalKHandler(AVNWorker):
     return False
 
 
-
+  def filterNotification(self,skPath):
+    if skPath is None:
+      return False
+    wll=len(self.config.whiteList)
+    bll=len(self.config.blackList)
+    if bll == 0 and wll == 0:
+      return True
+    if skPath.startswith(self.NPRFX):
+      skPath=skPath[len(self.NPRFX):]
+    if wll != 0:
+      if not skPath in self.config.whiteList:
+        return False
+    if bll != 0:
+      if skPath in self.config.blackList:
+        return False
+    return True
 
   def handleNotifications(self, skAlarms,isFull=False):
     if not self.config.notifyReceive and not self.config.notifyWrite:
@@ -1102,9 +1138,13 @@ class AVNSignalKHandler(AVNWorker):
     handledPathes={}
     with self.__alarmCondition:
       for k,skAlarm  in skAlarms.items():
-        handledPathes[skAlarm.skPath]=skAlarm
         if not skAlarm.isOwnSource and not self.config.notifyReceive:
           continue
+        if not skAlarm.isOwnSource:
+          if not self.filterNotification(skAlarm.skPath):
+            AVNLog.debug('filter notification %s:%s due to bl/wl',skAlarm.skPath,skAlarm.skValue)
+            continue
+        handledPathes[skAlarm.skPath]=skAlarm
         name=self.skAlarmToOur(skAlarm.skPath)
         sendAlarmValue=None
         if not name.startswith('sk:'):
