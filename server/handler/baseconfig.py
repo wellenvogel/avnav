@@ -343,10 +343,10 @@ class AVNBaseConfig(AVNWorker):
               curutc=time.time()
               newdiff=abs((curutc-checkSource.getCurrent()))
               if newdiff > (allowedDiff*2):
-                AVNLog.error("unable to set system time to %s, %d still above difference",newtime,newdiff)
+                AVNLog.error("unable to set system time to %s , %d still above difference",newtime,newdiff)
                 self.setInfo(self.TIME_CHILD,
-                             "unable to set system time to UTC %s from %s at UTC %s"%
-                             (curts.isoformat(),checkSource.name,datetime.datetime.utcfromtimestamp(curutc).isoformat()),
+                             "unable to set system time to UTC %s (%s) from %s at UTC %s"%
+                             (curts.isoformat()," ".join(cmd),checkSource.name,datetime.datetime.utcfromtimestamp(curutc).isoformat()),
                              WorkerStatus.ERROR)
               else:
                 self.setInfo(self.TIME_CHILD,
