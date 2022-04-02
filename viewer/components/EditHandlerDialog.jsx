@@ -178,15 +178,37 @@ class EditHandlerDialog extends React.Component{
             for (let k in condition[i]){
                 let compare=condition[i][k];
                 let value=undefined;
+                let hasFound=false;
                 for (let pi in this.state.parameters) {
                     if (this.state.parameters[pi].name === k){
                         value=this.state.parameters[pi].getValueForDisplay(values);
+                        hasFound=true;
                         break;
                     }
                 }
-                if (compare !== value){
-                    matches=false;
-                    break;
+                if (! hasFound){
+                    //potentially we have some none editable parameter
+                    //we need to compare to - in this case we still take it's current value
+                    //this will potentially not include the default....
+                    value=values[k]
+                }
+                if (typeof(compare) === 'string' && compare.match(/^!/)){
+                    //special case: empty after ! also matches undefined
+                    if (value === undefined && compare === '!'){
+                        matches=false;
+                        break;
+                    }
+                    //intentionally use ==
+                    if (compare.substr(1) == value){
+                        matches=false;
+                        break;
+                    }
+                }
+                else {
+                    if (compare != value) {
+                        matches = false;
+                        break;
+                    }
                 }
             }
             if (matches) return true;

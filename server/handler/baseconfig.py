@@ -103,10 +103,32 @@ def getNTPTime(host = "pool.ntp.org"):
     return
 
 class AVNBaseConfig(AVNWorker):
-  PARAM_NTP= WorkerParameter('ntphost', 'pool.ntp.org',type=WorkerParameter.T_STRING,
-                             description='ntp server to check if no time is received from gps (set to empty to disable ntp)')
-  PARAM_SWITCHTIME=WorkerParameter('switchtime',60,type=WorkerParameter.T_NUMBER,
-                                   description="time (sec) to wait before switching from gps time to ntp time and back")
+  P_SETTIME_CMD=WorkerParameter('settimecmd','',editable=False,description='if set, use this to set the system time')
+  P_EXPIRY_TIME=WorkerParameter('expiryTime',30,type=WorkerParameter.T_FLOAT,
+                                description="expiry in seconds for NMEA data")
+  P_AIS_EXPIRYTIME=WorkerParameter('aisExpiryTime',1200,type=WorkerParameter.T_FLOAT,
+                                   description="expiry time in seconds for AIS data")
+  P_OWNMMSI=WorkerParameter('ownMMSI','',type=WorkerParameter.T_STRING,
+                            description='if set - do not store AIS messages with this MMSI')
+  P_DEBUGTOLOG=WorkerParameter('debugToLog', False,type=WorkerParameter.T_BOOLEAN,editable=False)
+  P_MAXTIMEBACK=WorkerParameter('maxtimeback',5,type=WorkerParameter.T_FLOAT,
+                                description='how many seconds we allow time to go back before we reset')
+  P_SETTIME=WorkerParameter('settime',True,type=WorkerParameter.T_BOOLEAN,
+                            description="set the system time if either gps or ntp time is available",
+                            condition={P_SETTIME_CMD.name:'!'})
+  P_SYSTIMEDIFF=WorkerParameter('systimediff',5,type=WorkerParameter.T_FLOAT,
+                                description='how many seconds do we allow the system time to be away from gps/ntp before we set',
+                                condition={P_SETTIME_CMD.name:'!'},
+                                rangeOrList=[2,1800])
+  P_SETTIME_PERIOD=WorkerParameter('settimeperiod', 3600,type=WorkerParameter.T_FLOAT,
+                                   description='minimal interval (sec) for setting the system time',
+                                   condition={P_SETTIME_CMD.name:'!',P_SETTIME.name:True})
+  P_SWITCHTIME=WorkerParameter('switchtime', 60, type=WorkerParameter.T_NUMBER,
+                               description="time (sec) to wait before switching from gps time to ntp time and back",
+                               condition={P_SETTIME_CMD.name:'!',P_SETTIME.name:True})
+  P_NTP= WorkerParameter('ntphost', 'pool.ntp.org', type=WorkerParameter.T_STRING,
+                         description='ntp server to check if no time is received from gps (set to empty to disable ntp)',
+                         condition={P_SETTIME_CMD.name:'!',P_SETTIME.name:True})
   def __init__(self,param):
     AVNWorker.__init__(self,param)
     self.param=param
@@ -120,28 +142,29 @@ class AVNBaseConfig(AVNWorker):
   @classmethod
   def autoInstantiate(cls):
     return True
+
   @classmethod
   def getConfigParam(cls, child=None):
     if child is not None:
       return None
     return [
-            WorkerParameter('expiryTime',30,type=WorkerParameter.T_FLOAT,
-                            description="expiry in seconds for NMEA data"),
-            WorkerParameter('aisExpiryTime',1200,type=WorkerParameter.T_FLOAT,
-                            description="expiry time in seconds for AIS data"),
-            WorkerParameter('ownMMSI','',type=WorkerParameter.T_STRING,
-                            description='if set - do not store AIS messages with this MMSI'),
-            WorkerParameter('debugToLog', False,type=WorkerParameter.T_BOOLEAN,editable=False),
-            WorkerParameter('maxtimeback',5,type=WorkerParameter.T_FLOAT,
-                            description='how many seconds we allow time to go back before we reset'),
-            WorkerParameter('settimecmd','',editable=False,description='if set, use this to set the system time'),
-            WorkerParameter('systimediff',5,type=WorkerParameter.T_FLOAT,
-                            description='how many seconds do we allow the system time to be away from gps/ntp, set to 0 to disable time setting'),
-            WorkerParameter('settimeperiod', 3600,type=WorkerParameter.T_FLOAT,
-                            description='minimal interval (sec) for setting the system time'),
-            cls.PARAM_NTP,
-            cls.PARAM_SWITCHTIME
+            cls.P_EXPIRY_TIME,
+            cls.P_AIS_EXPIRYTIME,
+            cls.P_OWNMMSI,
+            cls.P_DEBUGTOLOG,
+            cls.P_MAXTIMEBACK,
+            cls.P_SETTIME,
+            cls.P_SETTIME_CMD,
+            cls.P_SYSTIMEDIFF,
+            cls.P_SETTIME_PERIOD,
+            cls.P_NTP,
+            cls.P_SWITCHTIME
     ]
+
+  @classmethod
+  def getConfigParamCombined(cls, child=None):
+    return cls.getConfigParam(child)
+
   @classmethod
   def preventMultiInstance(cls):
     return True
@@ -154,9 +177,9 @@ class AVNBaseConfig(AVNWorker):
     super().updateConfig(param, child)
     if self.navdata is not None:
       self.navdata.updateBaseConfig(
-        self.getFloatParam('expiryTime'),
-        self.getFloatParam('aisExpiryTime'),
-        self.getParamValue('ownMMSI')
+        self.P_EXPIRY_TIME.fromDict(self.param),
+        self.P_AIS_EXPIRYTIME.fromDict(self.param),
+        self.P_OWNMMSI.fromDict(self.param)
       )
 
   def startInstance(self, navdata):
@@ -182,7 +205,7 @@ class AVNBaseConfig(AVNWorker):
       return None
 
   def fetchNtpTime(self):
-    host=AVNBaseConfig.PARAM_NTP.fromDict(self.param)
+    host=AVNBaseConfig.P_NTP.fromDict(self.param)
     if host is None or host == '':
       return
     ts=getNTPTime(host)
@@ -193,7 +216,6 @@ class AVNBaseConfig(AVNWorker):
   GPSPOS_CHILD="position"
   GPSTIME_CHILD="gpstime"
   def run(self):
-    self.setInfo('main','running',WorkerStatus.NMEA)
     self.setInfo(self.TIME_CHILD,'disabled',WorkerStatus.INACTIVE)
     self.setInfo(self.GPSPOS_CHILD,'no valid position',WorkerStatus.ERROR)
     hasFix=False
@@ -205,14 +227,15 @@ class AVNBaseConfig(AVNWorker):
     startupTime=lastutc
     timeFalse=False
     while not self.shouldStop():
-      settimeperiod=self.getIntParam('settimeperiod')
-      switchtime=self.PARAM_SWITCHTIME.fromDict(self.param)
+      settimeperiod=self.P_SETTIME_PERIOD.fromDict(self.param)
+      switchtime=self.P_SWITCHTIME.fromDict(self.param)
       self.wait(1)
+      self.setInfo('main','running',WorkerStatus.NMEA)
       #query the data to get old entries being removed
       curutc=time.time()
       self.setInfo(self.SYSTIME_CHILD,"UTC: %s"%datetime.datetime.utcfromtimestamp(curutc).isoformat(),WorkerStatus.RUNNING)
       delta=curutc-lastutc
-      allowedBackTime=self.getIntParam('maxtimeback')
+      allowedBackTime=self.P_MAXTIMEBACK.fromDict(self.param)
       if delta < -allowedBackTime and allowedBackTime != 0:
         AVNLog.warn("time shift backward (%d seconds) detected, deleting all entries ",delta)
         self.navdata.reset()
@@ -248,9 +271,10 @@ class AVNBaseConfig(AVNWorker):
           AVNLog.warn("lost GPS fix")
         hasFix=False
       try:
-        allowedDiff=self.getIntParam('systimediff')
-        settimecmd=self.getStringParam('settimecmd')
-        if allowedDiff != 0 and settimecmd != "":
+        allowedDiff=self.P_SYSTIMEDIFF.fromDict(self.param)
+        settimecmd=self.P_SETTIME_CMD.fromDict(self.param)
+        setTimeEnabled=self.P_SETTIME.fromDict(self.param)
+        if allowedDiff != 0 and settimecmd != "" and setTimeEnabled:
           currentStatus=self.status.get(self.TIME_CHILD)
           if not currentStatus or currentStatus.status == WorkerStatus.INACTIVE:
             self.setInfo(self.TIME_CHILD,"checking",WorkerStatus.RUNNING)

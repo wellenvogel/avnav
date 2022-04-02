@@ -167,10 +167,13 @@ class WorkerParameter(object):
     if self.type == self.T_STRING:
       return str(value)
     if self.type == self.T_NUMBER or self.type == self.T_FLOAT:
-      if self.type == self.T_FLOAT:
-        rv=float(value)
-      else:
-        rv=int(value)
+      try:
+        if self.type == self.T_FLOAT:
+          rv=float(value)
+        else:
+          rv=int(value)
+      except Exception as e:
+        raise ParamValueError("invalid value for %s:%s"%(self.name,str(e)))
       if rangeOrListCheck and self.rangeOrList is not None and len(self.rangeOrList) == 2:
         if rv < float(self.rangeOrList[0]) or rv > float(self.rangeOrList[1]):
           raise ParamValueError("value %s for %s out of range %s"%(rv,self.name,",".join(map(lambda v: str(v),self.rangeOrList))))
