@@ -280,7 +280,11 @@ class App extends React.Component {
         });
         GuiHelpers.storeHelper(this,(data)=>{
             let lost=data.connectionLost;
-            if (lost) alarmhandler.startLocalAlarm(LOCAL_TYPES.connectionLost);
+            if (lost) {
+                if (globalStore.getData(keys.properties.connectionLostAlarm)) {
+                    alarmhandler.startLocalAlarm(LOCAL_TYPES.connectionLost);
+                }
+            }
             else alarmhandler.stopAlarm(LOCAL_TYPES.connectionLost);
         },{connectionLost:keys.nav.gps.connectionLost})
 

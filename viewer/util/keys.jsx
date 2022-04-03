@@ -251,7 +251,8 @@ let keys={
         positionQueryTimeout: new Property(1000, "Position (ms)", PropertyType.RANGE, [500, 5000, 10]), //1000ms
         trackQueryTimeout: new Property(5000, "Track (ms)", PropertyType.RANGE, [500, 10000, 10]), //5s in ms
         routeQueryTimeout: new Property(1000, "Route (ms)", PropertyType.RANGE, [500, 10000, 10]), //5s in ms
-        chartQueryTimeout: new Property(30000, "ChartOverview (ms)", PropertyType.RANGE, [500, 200000, 100]), //5s in ms
+        chartQueryTimeout: new Property(30000, "ChartOverview (ms)", PropertyType.RANGE, [500, 200000, 100]),
+        connectionLostAlarm: new Property(true,"Connection Lost alarm",PropertyType.CHECKBOX),//5s in ms
         courseAverageInterval: new Property(0, "Course average", PropertyType.RANGE, [0, 20, 1]), //unit: query interval
         speedAverageInterval: new Property(0, "Speed average", PropertyType.RANGE, [0, 20, 1]), //unit: query interval
         positionAverageInterval: new Property(0, "Position average", PropertyType.RANGE, [0, 20, 1]), //unit: query interval

@@ -126,7 +126,8 @@ class AVNAlarmHandler(AVNWorker):
     		AlarmConfig(name="waypoint",category=AlarmConfig.C_INFO,repeat="1"),
   		  AlarmConfig("anchor",category=AlarmConfig.C_CRITICAL,repeat="20000"),
   		  AlarmConfig(name="gps",category=AlarmConfig.C_CRITICAL, repeat="20000"),
-  		  AlarmConfig(name="mob", category=AlarmConfig.C_CRITICAL, repeat="2")
+  		  AlarmConfig(name="mob", category=AlarmConfig.C_CRITICAL, repeat="2"),
+        AlarmConfig(name="connectionLost", category=AlarmConfig.C_INFO) #client only...
   ]
   """a handler for alarms"""
   def __init__(self,param):
