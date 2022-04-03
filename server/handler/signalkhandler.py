@@ -664,6 +664,7 @@ class AVNSignalKHandler(AVNWorker):
     self.writeSocket=None
     self.timeSocket=None
     self.firstWebsocketMessage=False
+    self.skCharts=[]
     #compute a time offset from our time to the SK time
     #from the first Websocket message
     self.timeOffset=None
