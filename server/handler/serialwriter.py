@@ -232,6 +232,7 @@ class SerialWriter(SerialReader):
       filter=filterstr.split(',')
     hasNmea=False
     source=self.sourceName
+    priority=AVNWorker.PRIORITY_PARAM_DESCRIPTION.fromDict(self.param)
     while not self.doStop:
       try:
         if self.device is not None:
@@ -255,7 +256,7 @@ class SerialWriter(SerialReader):
             if not hasNmea:
               self.setInfoWithKey("reader","receiving data",WorkerStatus.NMEA)
             if not self.writeData is None:
-              self.writeData(data,source)
+              self.writeData(data,source,sourcePriority=priority)
             else:
               AVNLog.debug("unable to write data")
         else:

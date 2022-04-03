@@ -214,7 +214,7 @@ class AVNBMP180Reader(AVNWorker):
           """$AVMTA,19.50,C*2B"""
           mta = '$AVMTA,%.2f,C' % (temperature)
           AVNLog.debug("BMP180:MTA %s", mta)
-          self.writeData(mta,source,addCheckSum=True)
+          self.writeData(mta,source,addCheckSum=True,sourcePriority=priority)
         if self.getBoolParam('writeXdr'):
           tn = self.param.get('namePress', 'Barometer')
           xdr = '$AVXDR,P,%.5f,B,%s' % (pressure / 1000.,tn)

@@ -73,6 +73,7 @@ class AVNSenseHatReader(AVNWorker):
     if not child is None:
       return None
     rt = [
+      cls.PRIORITY_PARAM_DESCRIPTION,
       cls.P_FEEDER,
       cls.P_INTERVAL,
       cls.P_MDA,
@@ -110,6 +111,7 @@ class AVNSenseHatReader(AVNWorker):
     sense = SenseHat()
     hasError=False
     while True:
+      priority=self.PRIORITY_PARAM_DESCRIPTION.fromDict(self.param)
       source = self.getSourceName()
       hasRead=False
       try:
@@ -118,34 +120,34 @@ class AVNSenseHatReader(AVNWorker):
           """$AVMDA,,,1.00000,B,,,,,,,,,,,,,,,,"""
           mda = '$AVMDA,,,%.5f,B,,,,,,,,,,,,,,,,' % ( sense.pressure/1000.)
           AVNLog.debug("SenseHat:MDA %s", mda)
-          self.writeData(mda,source,addCheckSum=True)
+          self.writeData(mda,source,addCheckSum=True,sourcePriority=priority)
           """$AVMTA,19.50,C*2B"""
           mta = '$AVMTA,%.2f,C' % (sense.temp)
           AVNLog.debug("SenseHat:MTA %s", mta)
-          self.writeData(mta,source,addCheckSum=True)
+          self.writeData(mta,source,addCheckSum=True,sourcePriority=priority)
         if self.P_XDR.fromDict(self.param):
           hasRead=True
           tn = self.P_NPRESS.fromDict(self.param)
           xdr = '$AVXDR,P,%.5f,B,%s' % (sense.pressure/ 1000.,tn)
           AVNLog.debug("SenseHat:XDR %s", xdr)
-          self.writeData(xdr,source,addCheckSum=True)
+          self.writeData(xdr,source,addCheckSum=True,sourcePriority=priority)
           tn = self.P_NTEMP.fromDict(self.param)
           xdr = '$AVXDR,C,%.2f,C,%s' % (sense.temp,tn)
           AVNLog.debug("SenseHat:XDR %s", xdr)
-          self.writeData(xdr,source,addCheckSum=True)
+          self.writeData(xdr,source,addCheckSum=True,sourcePriority=priority)
           tn = self.P_NHUMID.fromDict(self.param)
           xdr = '$AVXDR,H,%.2f,P,%s' % (sense.humidity,tn)
           AVNLog.debug("SenseHat:XDR %s", xdr)
-          self.writeData(xdr,source,addCheckSum=True)
+          self.writeData(xdr,source,addCheckSum=True,sourcePriority=priority)
           o = sense.get_orientation()
           pitch = o["pitch"]
           tn = self.P_NPITCH.fromDict(self.param)
           xdr = '$AVXDR,A,%.2f,D,%s' % ( float(pitch), tn)
-          self.writeData(xdr,source,addCheckSum=True)
+          self.writeData(xdr,source,addCheckSum=True,sourcePriority=priority)
           tn = self.P_NROLL.fromDict(self.param)
           roll = o["roll"]
           xdr = '$AVXDR,A,%.2f,D,%s' % ( float(roll), tn)
-          self.writeData(xdr,source,addCheckSum=True)
+          self.writeData(xdr,source,addCheckSum=True,sourcePriority=priority)
         if hasRead:
           self.setOk()
           hasError=False

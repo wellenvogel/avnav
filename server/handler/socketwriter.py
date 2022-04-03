@@ -162,8 +162,8 @@ class AVNSocketWriter(AVNWorker):
     self.deleteInfo(infoName)
 
   #if we have reading enabled...
-  def writeData(self,data,source=None):
-    super().writeData(data,source)
+  def writeData(self, data, source=None, addCheckSum=False,sourcePriority=NMEAParser.DEFAULT_SOURCE_PRIORITY):
+    super().writeData(data,source,addCheckSum=addCheckSum,sourcePriority=sourcePriority)
     if (self.getIntParam('minTime')):
       time.sleep(float(self.getIntParam('minTime'))/1000)
 
