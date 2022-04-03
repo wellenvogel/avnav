@@ -16,7 +16,9 @@
       "stop":"q"
     },
     "global":{
-      "mobon": ["Control- "]
+      "mobon": ["Control- "],
+      "anchoron": ["i"],
+      "anchoroff": ["Control-i"]
     },
     "button":{
       "Cancel":"Escape"

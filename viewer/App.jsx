@@ -42,6 +42,7 @@ import remotechannel, {COMMANDS} from "./util/remotechannel";
 import base from "./base";
 import propertyHandler from "./util/propertyhandler";
 import MapHolder from "./map/mapholder";
+import NavData from './nav/navdata';
 
 
 const DynamicSound=Dynamic(SoundHandler);
@@ -247,6 +248,12 @@ class App extends React.Component {
         GuiHelpers.keyEventHandler(this,()=>{
             Mob.toggleMob();
         },'global','mobtoggle');
+        GuiHelpers.keyEventHandler(this,()=>{
+            NavData.getRoutingHandler().anchorOn(undefined,undefined,true);
+        },'global','anchoron');
+        GuiHelpers.keyEventHandler(this,()=>{
+            NavData.getRoutingHandler().anchorOff();
+        },'global','anchoroff');
         GuiHelpers.keyEventHandler(this,(component,action)=>{
             let addon=parseInt(action);
             if (this.history.currentLocation() === "addonpage"){
