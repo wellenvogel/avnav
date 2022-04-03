@@ -43,8 +43,12 @@ class Page extends React.Component {
         this.timer=GuiHelpers.lifecycleTimer(this,this.timerCallback,1000,true);
         this.lastUserAction=(new Date()).getTime();
         this.state={
-            hideButtons:false
+            hideButtons:false,
+            connectionLost:globalStore.getData(keys.nav.gps.connectionLost)
         }
+        GuiHelpers.storeHelper(this,(data)=>{
+            this.setState(data)
+        },{connectionLost: keys.nav.gps.connectionLost});
     }
     timerCallback(sequence){
         if (this.props.autoHideButtons !== undefined){
@@ -87,7 +91,7 @@ class Page extends React.Component {
             >
             {props.floatContent && props.floatContent}
             <div className="leftPart">
-                {props.title ? <Headline title={props.title}/> : null}
+                {props.title ? <Headline title={props.title} connectionLost={this.state.connectionLost}/> : null}
                 {props.mainContent ? props.mainContent : null}
                 {props.bottomContent ? props.bottomContent : null}
                 <Alarm onClick={alarmClick}/>

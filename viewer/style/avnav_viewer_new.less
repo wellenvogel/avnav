@@ -130,6 +130,9 @@ body{
   .nightForeColor(white,@nightColor);
   font-weight: bold;
   .flex-shrink(0);
+  &.connectionLost{
+    .nightBackFade(@colorRed);
+  }
 }
 
 .mainContent{
