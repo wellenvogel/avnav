@@ -181,9 +181,6 @@
 <AVNSocketReader port="2599" host="localhost" filter="" name="canboatnmea0183" timeout="31104000"/>
  ##SIGNALK CANBOAT-->
 <AVNPluginHandler>
-<!-- ##SIGNALK
-        <builtin-signalk enabled="true"/>
- ##SIGNALK -->
 <!-- ##CANBOAT
 	<builtin-canboat enabled="true" allowKeyOverwrite="true" autoSendRMC="30" sourceName="canboatgen"/>
  ##CANBOAT -->
