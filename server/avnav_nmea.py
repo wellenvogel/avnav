@@ -146,14 +146,18 @@ class NMEAParser(object):
       #gpsdate is in the form ddmmyy
       #within GPSdate we do not have the century, so make some best guess:
       #if the 2 digits are below 80, assume that we are in 2000++, otherwise in 1900++
-      if len(gpsdate) != 6:
+      if len(gpsdate) != 6 and len(gpsdate) != 8:
         raise Exception("invalid gpsdate %s"%(gpsdate))
-      year=gpsdate[4:6]
-      completeyear=0
-      if int(year) < 80:
-        completeyear=2000+int(year)
+      if len(gpsdate) == 8:
+        #ZDA
+        completeyear=int(gpsdate[4:8])
       else:
-        completeyear=1900+int(year)
+        year=gpsdate[4:6]
+        completeyear=0
+        if int(year) < 80:
+          completeyear=2000+int(year)
+        else:
+          completeyear=1900+int(year)
       date=datetime.date(completeyear,int(gpsdate[2:4]),int(gpsdate[0:2]))
       gpsdt=datetime.datetime.combine(date,gpsts)
       AVNLog.ld("gpsts computed",gpsdt)
@@ -323,6 +327,15 @@ class NMEAParser(object):
         if gpsdate != "" and gpstime != "":
           rt['time']=self.formatTime(self.gpsTimeToTime(gpstime, gpsdate))
         self.addToNavData(rt,source=source,priority=basePriority+1,record=tag)
+        return True
+      if tag == 'ZDA':
+        if darray[1] == '' or darray[2] == '' or darray[3] == '' or darray[4] == '':
+          return False
+        gpstime=darray[1]
+        #ensure each 2 digits for day and month
+        gpsdate=('0' + darray[2])[-2:] +('0' + darray[3])[-2:]+('0000'+darray[4])[-4:]
+        rt['time']=self.formatTime(self.gpsTimeToTime(gpstime,gpsdate))
+        self.addToNavData(rt,source=source,priority=basePriority,record=tag)
         return True
       if tag == 'VWR':
         '''

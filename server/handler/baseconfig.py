@@ -192,10 +192,8 @@ class AVNBaseConfig(AVNWorker):
 
   def fetchGpsTime(self):
     try:
-      lat=self.navdata.getSingleValue(AVNStore.BASE_KEY_GPS+".lat")
-      lon = self.navdata.getSingleValue(AVNStore.BASE_KEY_GPS + ".lon")
       curGpsTime=self.navdata.getSingleValue(AVNStore.BASE_KEY_GPS + ".time")
-      if (lat is None or lon is None or curGpsTime is None):
+      if curGpsTime is None:
         return None
       dt=AVNUtil.gt(curGpsTime)
       timestamp = dt.replace(tzinfo=datetime.timezone.utc).timestamp()
