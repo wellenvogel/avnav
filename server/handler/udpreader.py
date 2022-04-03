@@ -86,9 +86,10 @@ class AVNUdpReader(AVNWorker):
     except:
       pass
 
-  def writeData(self,data,source=None,addCheckSum=False):
-    priority=self.PRIORITY_PARAM_DESCRIPTION.fromDict(self.param)
-    AVNWorker.writeData(self,data,source,sourcePriority=priority)
+  def writeData(self,data,source=None,addCheckSum=False,sourcePriority=None):
+    if sourcePriority is None:
+      sourcePriority=self.PRIORITY_PARAM_DESCRIPTION.fromDict(self.param)
+    AVNWorker.writeData(self,data,source,sourcePriority=sourcePriority)
     if (self.getIntParam('minTime')):
       time.sleep(float(self.getIntParam('minTime'))/1000)
 
