@@ -7,13 +7,14 @@ import GuiHelper from "../util/GuiHelpers";
 import Formatter from "../util/formatter";
 import PropTypes from "prop-types";
 
-const rad2deg=(rad)=>{
+const rad2deg=(rad,inDeg)=>{
+    if (inDeg) return parseFloat(rad);
     return parseFloat(rad) / Math.PI * 180;
 }
 
-const DegreeFormatter = (value)=> {
+const DegreeFormatter = (value,inDeg)=> {
       if (value === undefined) return "???";
-      return avnav.api.formatter.formatDecimal(Math.abs(rad2deg(value)), 4, 0);
+      return avnav.api.formatter.formatDecimal(Math.abs(rad2deg(value,inDeg)), 4, 0);
   };
 
 export class SKRollWidget extends React.Component{
@@ -24,7 +25,7 @@ export class SKRollWidget extends React.Component{
     }
 
     render(){
-        let value=DegreeFormatter(this.props.value);
+        let value=DegreeFormatter(this.props.value,this.props.inDegree);
         let degreeArrow = "0";
           // arrow left + Wert
           if (this.props.value <0 && this.props.value !== 0){
@@ -36,7 +37,7 @@ export class SKRollWidget extends React.Component{
           }
         let classes="widget SKRollWidget "+this.props.className||"";
         let wdClasses="widgetData";
-        if (Math.abs(rad2deg(this.props.value)) >= this.props.criticalValue){
+        if (Math.abs(rad2deg(this.props.value,this.props.inDegree)) >= this.props.criticalValue){
             wdClasses+=" critical";
         }
         return (
@@ -57,13 +58,15 @@ SKRollWidget.propTypes={
     caption: PropTypes.string,
     unit: PropTypes.string,
     value: PropTypes.oneOfType([PropTypes.string,PropTypes.number]),
-    criticalValue: PropTypes.number
+    criticalValue: PropTypes.number,
+    inDegree: PropTypes.bool
 };
 SKRollWidget.editableParameters={
     formatter: false,
     formatterParameters: false,
     value:{type:'KEY',default:'nav.gps.signalk.navigation.attitude.roll'},
     unit:{type:'STRING',default:'°'},
+    inDegree:{type:'BOOLEAN',default:false,description:'set to true if input is in deg instead of rad'},
     criticalValue: {type: 'NUMBER', default: 45},
     caption: {type:'STRING',default:'Roll'}
 }
@@ -76,7 +79,7 @@ export class SKPitchWidget extends React.Component{
     }
 
     render(){
-        let value=DegreeFormatter(this.props.value);
+        let value=DegreeFormatter(this.props.value,this.props.inDegree);
         let degreeArrow = "0";
         // arrow left + Wert
         if (this.props.value <0 && this.props.value !== 0){
@@ -88,7 +91,7 @@ export class SKPitchWidget extends React.Component{
         }
         let classes="widget SKPitchWidget "+this.props.className||"";
         let wdClasses="widgetData";
-        if (Math.abs(rad2deg(this.props.value)) >= this.props.criticalValue){
+        if (Math.abs(rad2deg(this.props.value,this.props.inDegree)) >= this.props.criticalValue){
             wdClasses+=" critical";
         }
         return (
@@ -109,13 +112,15 @@ SKPitchWidget.propTypes={
     caption: PropTypes.string,
     unit: PropTypes.string,
     value: PropTypes.oneOfType([PropTypes.string,PropTypes.number]),
-    criticalValue: PropTypes.number
+    criticalValue: PropTypes.number,
+    inDegree: PropTypes.bool
 };
 SKPitchWidget.editableParameters={
     formatter: false,
     formatterParameters: false,
     value:{type:'KEY',default:'nav.gps.signalk.navigation.attitude.pitch'},
     unit:{type:'STRING',default:'°'},
+    inDegree:{type:'BOOLEAN',default:false,description:'set to true if input is in deg instead of rad'},
     criticalValue: {type: 'NUMBER', default: 45},
     caption: {type:'STRING',default:'Pitch'}
 }
