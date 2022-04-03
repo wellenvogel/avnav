@@ -43,7 +43,27 @@ class AVNSenseHatReader(AVNWorker):
   """ a worker to read data from the SenseHat module
     and insert it as NMEA MDA/XDR records
   """
-
+  P_FEEDER=WorkerParameter('feederName','',editable=False)
+  P_INTERVAL=WorkerParameter('interval', 5,type=WorkerParameter.T_FLOAT)
+  P_MDA=WorkerParameter('writeMda',True,type=WorkerParameter.T_BOOLEAN,
+                        description="create MTA and MDA records")
+  P_XDR=WorkerParameter('writeXdr',True,type=WorkerParameter.T_BOOLEAN,
+                        description="create XDR records")
+  P_NPRESS=WorkerParameter('namePress', 'Baro',
+                           description="XDR transducer name for pressure",
+                           condition={P_XDR.name:True})
+  P_NHUMID=WorkerParameter('nameHumid', 'Humidity',
+                           description="XDR transducer name for humidity",
+                           condition={P_XDR.name:True})
+  P_NTEMP=WorkerParameter('nameTemp', 'AirTemp',
+                          description="XDR transducer name for temperature",
+                          condition={P_XDR.name:True})
+  P_NROLL=WorkerParameter('nameRoll', 'Roll',
+                          description="XDR transducer name for Roll",
+                          condition={P_XDR.name:True})
+  P_NPITCH=WorkerParameter('namePitch', 'Pitch',
+                           description="XDR transducer name for Pitch",
+                           condition={P_XDR.name:True})
   @classmethod
   def getConfigName(cls):
     return "AVNSenseHatReader"
@@ -53,20 +73,15 @@ class AVNSenseHatReader(AVNWorker):
     if not child is None:
       return None
     rt = [
-      WorkerParameter('feederName','',editable=False),
-      WorkerParameter('interval', 5,type=WorkerParameter.T_FLOAT),
-      WorkerParameter('writeMda',True,type=WorkerParameter.T_BOOLEAN),
-      WorkerParameter('writeXdr',True,type=WorkerParameter.T_BOOLEAN),
-      WorkerParameter('namePress', 'Barometer',
-                      description="XDR transducer name for pressure"),
-      WorkerParameter('nameHumid', 'Humidity',
-                      description="XDR transducer name for humidity"),
-      WorkerParameter('nameTemp', 'TempAir',
-                      description="XDR transducer name for temperature"),
-      WorkerParameter('nameRoll', 'ROLL',
-                      description="Roll"),
-      WorkerParameter('namePitch', 'PITCH',
-                      description="Pitch"),
+      cls.P_FEEDER,
+      cls.P_INTERVAL,
+      cls.P_MDA,
+      cls.P_XDR,
+      cls.P_NPRESS,
+      cls.P_NHUMID,
+      cls.P_NTEMP,
+      cls.P_NROLL,
+      cls.P_NPITCH,
     ]
     return rt
 
@@ -87,15 +102,19 @@ class AVNSenseHatReader(AVNWorker):
       return True
     return super().isDisabled()
 
-
+  def setOk(self):
+    self.setInfo('main', "reading sense", WorkerStatus.NMEA)
   # thread run method - just try forever
   def run(self):
-    self.setInfo('main', "reading sense", WorkerStatus.NMEA)
+    self.setOk()
     sense = SenseHat()
+    hasError=False
     while True:
       source = self.getSourceName()
+      hasRead=False
       try:
-        if self.getBoolParam('writeMda'):
+        if self.P_MDA.fromDict(self.param):
+          hasRead=True
           """$AVMDA,,,1.00000,B,,,,,,,,,,,,,,,,"""
           mda = '$AVMDA,,,%.5f,B,,,,,,,,,,,,,,,,' % ( sense.pressure/1000.)
           AVNLog.debug("SenseHat:MDA %s", mda)
@@ -104,33 +123,40 @@ class AVNSenseHatReader(AVNWorker):
           mta = '$AVMTA,%.2f,C' % (sense.temp)
           AVNLog.debug("SenseHat:MTA %s", mta)
           self.writeData(mta,source,addCheckSum=True)
-        if self.getBoolParam('writeXdr'):
-          tn = self.param.get('namePress', 'Barometer')
+        if self.P_XDR.fromDict(self.param):
+          hasRead=True
+          tn = self.P_NPRESS.fromDict(self.param)
           xdr = '$AVXDR,P,%.5f,B,%s' % (sense.pressure/ 1000.,tn)
           AVNLog.debug("SenseHat:XDR %s", xdr)
           self.writeData(xdr,source,addCheckSum=True)
-          tn = self.param.get('nameTemp', 'TempAir')
+          tn = self.P_NTEMP.fromDict(self.param)
           xdr = '$AVXDR,C,%.2f,C,%s' % (sense.temp,tn)
           AVNLog.debug("SenseHat:XDR %s", xdr)
           self.writeData(xdr,source,addCheckSum=True)
-          tn = self.param.get('nameHumid', 'Humidity')
+          tn = self.P_NHUMID.fromDict(self.param)
           xdr = '$AVXDR,H,%.2f,P,%s' % (sense.humidity,tn)
           AVNLog.debug("SenseHat:XDR %s", xdr)
           self.writeData(xdr,source,addCheckSum=True)
           o = sense.get_orientation()
           pitch = o["pitch"]
-          tn = self.param.get('namePitch', 'PITCH')
+          tn = self.P_NPITCH.fromDict(self.param)
           xdr = '$AVXDR,A,%.2f,D,%s' % ( float(pitch), tn)
           self.writeData(xdr,source,addCheckSum=True)
-          tn = self.param.get('nameRoll', 'ROLL')
+          tn = self.P_NROLL.fromDict(self.param)
           roll = o["roll"]
           xdr = '$AVXDR,A,%.2f,D,%s' % ( float(roll), tn)
           self.writeData(xdr,source,addCheckSum=True)
-      except:
+        if hasRead:
+          self.setOk()
+          hasError=False
+        else:
+          self.setInfo('main','reading disabled',WorkerStatus.INACTIVE)
+      except Exception as e:
+        if not hasError:
+          self.setInfo('main','exceptioon while reading from SenseHat %s'%str(e),WorkerStatus.ERROR)
+          hasError=True
         AVNLog.info("exception while reading data from SenseHat %s", traceback.format_exc())
-      wt = self.getFloatParam("interval")
-      if not wt:
-        wt = 5.0
+      wt = self.P_INTERVAL.fromDict(self.param)
       self.wait(wt)
 
 
