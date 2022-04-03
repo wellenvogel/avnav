@@ -63,6 +63,10 @@ class AVNSenseHatReader(AVNWorker):
                       description="XDR transducer name for humidity"),
       WorkerParameter('nameTemp', 'TempAir',
                       description="XDR transducer name for temperature"),
+      WorkerParameter('nameRoll', 'ROLL',
+                      description="Roll"),
+      WorkerParameter('namePitch', 'PITCH',
+                      description="Pitch"),
     ]
     return rt
 
@@ -113,7 +117,15 @@ class AVNSenseHatReader(AVNWorker):
           xdr = '$AVXDR,H,%.2f,P,%s' % (sense.humidity,tn)
           AVNLog.debug("SenseHat:XDR %s", xdr)
           self.writeData(xdr,source,addCheckSum=True)
-
+          o = sense.get_orientation()
+          pitch = o["pitch"]
+          tn = self.param.get('namePitch', 'PITCH')
+          xdr = '$AVXDR,A,%.2f,D,%s' % ( float(pitch), tn)
+          self.writeData(xdr,source,addCheckSum=True)
+          tn = self.param.get('nameRoll', 'ROLL')
+          roll = o["roll"]
+          xdr = '$AVXDR,A,%.2f,D,%s' % ( float(roll), tn)
+          self.writeData(xdr,source,addCheckSum=True)
       except:
         AVNLog.info("exception while reading data from SenseHat %s", traceback.format_exc())
       wt = self.getFloatParam("interval")
