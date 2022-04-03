@@ -30,7 +30,7 @@ import Toast,{ToastDisplay} from './components/Toast.jsx';
 import KeyHandler from './util/keyhandler.js';
 import LayoutHandler from './util/layouthandler.js';
 import assign from 'object-assign';
-import AlarmHandler from './nav/alarmhandler.js';
+import AlarmHandler, {LOCAL_TYPES} from './nav/alarmhandler.js';
 import GuiHelpers, {stateHelper} from './util/GuiHelpers.js';
 import Mob from './components/Mob.js';
 import Dimmer from './util/dimhandler.js';
@@ -43,6 +43,7 @@ import base from "./base";
 import propertyHandler from "./util/propertyhandler";
 import MapHolder from "./map/mapholder";
 import NavData from './nav/navdata';
+import alarmhandler from "./nav/alarmhandler.js";
 
 
 const DynamicSound=Dynamic(SoundHandler);
@@ -58,11 +59,7 @@ const computeAlarmSound=(state)=> {
     let alarms = AlarmHandler.sortedActiveAlarms(state.alarms);
     if (alarms.length > 0) {
     //only use the first alarm
-        return {
-            src: globalStore.getData(keys.properties.navUrl) + "?request=download&type=alarm&name=" + encodeURIComponent(alarms[0].name),
-            repeat: alarms[0].repeat,
-            enabled: true
-        };
+        return alarmhandler.getAlarmSound(alarms[0]);
     }
     return {enabled:true,...off};
 }
@@ -281,6 +278,11 @@ class App extends React.Component {
                 this.history.setFromRemote(location,options);
             }catch (e){}
         });
+        GuiHelpers.storeHelper(this,(data)=>{
+            let lost=data.connectionLost;
+            if (lost) alarmhandler.startLocalAlarm(LOCAL_TYPES.connectionLost);
+            else alarmhandler.stopAlarm(LOCAL_TYPES.connectionLost);
+        },{connectionLost:keys.nav.gps.connectionLost})
 
     }
     newDeviceHandler(){

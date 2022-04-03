@@ -140,6 +140,14 @@ Helper.templateReplace=function(tstring,replacements){
     return tstring;
 };
 
+Helper.keysToStr=(dict)=>{
+    let rt={};
+    for (let k in dict){
+        rt[k]=k+"";
+    }
+    return rt;
+}
+
 
 
 

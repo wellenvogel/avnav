@@ -3,7 +3,11 @@ import keys from '../util/keys.jsx';
 import globalStore from '../util/globalstore.jsx';
 import base from '../base.js';
 import assign from 'object-assign';
+import Helper from "../util/helper";
 
+export const LOCAL_TYPES=Helper.keysToStr({
+    connectionLost:1
+});
 
 class AlarmHandler{
     constructor(){
@@ -11,10 +15,25 @@ class AlarmHandler{
         this.startTimer=this.startTimer.bind(this);
         this.timer=undefined;
         this.lastSequence=globalStore.getData(keys.nav.gps.updatealarm);
+        this.localAlarms={};
+        this.sounds={};
     }
 
     start(){
         this.startTimer();
+        for (let alarm in LOCAL_TYPES){
+            if (this.sounds[alarm]) continue;
+            let cfg=this.getAlarmSound({name:alarm},true);
+            try {
+                if (cfg && cfg.src) {
+                    fetch(new Request(cfg.src))
+                        .then((r) => r.blob())
+                        .then((bl) => this.sounds[alarm] = bl)
+                        .catch((e) => {
+                        })
+                }
+            }catch(e){}
+        }
     }
     compareAlarms(a,b){
         if (!a !== !b) return false;
@@ -48,7 +67,7 @@ class AlarmHandler{
                     this.startTimer();
                     let old = globalStore.getData(keys.nav.alarms.all);
                     if (this.compareAlarms(old, json.data)) return;
-                    globalStore.storeData(keys.nav.alarms.all, json.data)
+                    globalStore.storeData(keys.nav.alarms.all,assign({}, json.data,this.localAlarms));
                 })
                 .catch((error)=> {
                     this.startTimer();
@@ -59,11 +78,23 @@ class AlarmHandler{
             this.startTimer();
         }
     }
-
+    startLocalAlarm(type,opt_category){
+        if (! LOCAL_TYPES[type]) return;
+        if (! opt_category) opt_category='info';
+        let alarms=assign({},globalStore.getData(keys.nav.alarms.all));
+        let alarm={category:opt_category,name:type,isLocal:true,running:true,repeat:1};
+        this.localAlarms[type]=alarm;
+        alarms[type]=alarm;
+        globalStore.storeData(keys.nav.alarms.all,alarms);
+    }
     stopAlarm(type){
         let alarms=assign({},globalStore.getData(keys.nav.alarms.all));
         delete alarms[type];
         globalStore.storeData(keys.nav.alarms.all,alarms);
+        if ( LOCAL_TYPES[type]) {
+            delete this.localAlarms[type];
+            return;
+        }
         Requests.getJson("?request=alarm&stop="+type).then(
             (json)=>{
 
@@ -73,6 +104,21 @@ class AlarmHandler{
                 base.log("unable to stop alarm "+type);
             }
         );
+    }
+
+    getAlarmSound(alarmConfig,opt_ignoreLocal){
+        if (! opt_ignoreLocal && this.sounds[alarmConfig.name]){
+            return {
+                src: URL.createObjectURL(this.sounds[alarmConfig.name]),
+                repeat: alarmConfig.repeat,
+                enabled: true
+            }
+        }
+        return {
+            src: globalStore.getData(keys.properties.navUrl) + "?request=download&type=alarm&name=" + encodeURIComponent(alarmConfig.name),
+            repeat: alarmConfig.repeat,
+            enabled: true
+        };
     }
 
     sortedActiveAlarms(allAlarms){
