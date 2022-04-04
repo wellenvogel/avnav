@@ -60,6 +60,7 @@ class AVNSocketWriter(AVNWorker):
                           description='the local bind address (0.0.0.0 for external access)'),
           WorkerParameter('read',True,type=WorkerParameter.T_BOOLEAN,
                           description='allow for also reading data from connected devices'),
+          cls.PRIORITY_PARAM_DESCRIPTION.copy(condition={'read':True}),
           WorkerParameter('readerFilter','',type=WorkerParameter.T_FILTER,
                           description='NMEA filter for incoming data',
                           condition={'read':True}),
@@ -67,7 +68,7 @@ class AVNSocketWriter(AVNWorker):
                           description='if this is set, wait this time before reading new data (ms)'),
           WorkerParameter('blackList','',description=', separated list of sources we do not send out'),
           cls.AVAHI_ENABLED,
-          cls.AVAHI_NAME
+          cls.AVAHI_NAME,
           ]
       return rt
     return None
@@ -137,7 +138,8 @@ class AVNSocketWriter(AVNWorker):
 
   #the writer for a connected client
   def client(self, socketConnection, addr, startSequence):
-    clientConnection=SocketReader(socketConnection,self.writeData,self.feeder,self.setInfo)
+    clientConnection=SocketReader(socketConnection,self.writeData,self.feeder,self.setInfo,
+                                  sourcePriority=self.PRIORITY_PARAM_DESCRIPTION.fromDict(self.param))
     infoName="SocketWriter-%s"%(str(addr),)
     self.setInfo(infoName,"sending data",WorkerStatus.RUNNING)
     if self.getBoolParam('read',False):
@@ -158,7 +160,7 @@ class AVNSocketWriter(AVNWorker):
     threading.currentThread().setName("%s-Reader-%s"%(self.getName(),str(addr)))
     #on each newly connected socket we recompute the filter
     filterstr=self.getStringParam('readerFilter')
-    connection.readSocket(infoName,self.getSourceName(),filterstr)
+    connection.readSocket(infoName,self.getSourceName(str(addr)),filterstr)
     self.deleteInfo(infoName)
 
   #if we have reading enabled...
