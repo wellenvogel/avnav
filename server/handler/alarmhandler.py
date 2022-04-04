@@ -173,8 +173,7 @@ class AVNAlarmHandler(AVNWorker):
         'autoclean':'false',
         'sound':'',
         'repeat':'1',
-        'parameter':'',
-        'duration':'' #duration in s - last that long even if the command finishes earlier
+        'parameter':''
       }
   @classmethod
   def preventMultiInstance(cls):
@@ -256,7 +255,7 @@ class AVNAlarmHandler(AVNWorker):
       else:
         config.sound=config.parameter
     if config.parameter is None and config.sound is not None:
-      config.parameter=config.sound
+      config.parameter=self.getSoundFile(config.sound)
     if config.category is None:
       for da in self.DEFAULT_ALARMS:
         if da.name == config.name:
