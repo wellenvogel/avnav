@@ -54,8 +54,11 @@ class AVNStore(object):
       self.timestamp = timestamp if timestamp is not None else AVNUtil.utcnow()
       self.priority=priority
     def add(self,name,value,timestamp=None):
+      if self.value.get(name) == value:
+        return False
       self.timestamp = timestamp if timestamp is not None else AVNUtil.utcnow()
       self.value[name]=value
+      return True
   #fields we merge
   ais5mergeFields=['imo_id','callsign','shipname','shiptype','destination']
   CHANGE_COUNTER = ['alarm', 'leg', 'route']

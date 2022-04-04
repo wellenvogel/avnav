@@ -165,12 +165,12 @@ class AE(object):
     ts=data.get('timestamp')
     return timeToTs(ts)
 
-def saveGetItem(data,key):
+def safeGetItem(data, key):
   if not type(data) is dict:
     return None
   return data.get(key)
 def convertAisShipType(value):
-  return saveGetItem(value,'id')
+  return safeGetItem(value, 'id')
 def convertAisClass(value):
   if value == "A":
     return 1
@@ -178,9 +178,9 @@ def convertAisClass(value):
     return 18
   return value
 def convertAisLon(value):
-  return saveGetItem(value,'longitude')
+  return safeGetItem(value, 'longitude')
 def convertAisLat(value):
-  return saveGetItem(value,'latitude')
+  return safeGetItem(value, 'latitude')
 
 AISPATHMAP={
   'mmsi':AE('mmsi'),
@@ -213,6 +213,7 @@ class Config(object):
     self.sendWp=AVNSignalKHandler.P_WRITE.fromDict(param) and AVNSignalKHandler.P_SENDWP.fromDict(param)
     self.skSource='avnav-'+AVNSignalKHandler.P_UUID.fromDict(param)
     self.isLocal= (self.skHost == 'localhost' or self.skHost == '127.0.0.1')
+    self.ignoreTs=AVNSignalKHandler.P_IGNORE_TS.fromDict(param)
     self.wsRetry=AVNSignalKHandler.P_WEBSOCKETRETRY.fromDict(param)
     self.remoteId=self.skHost+":"+str(self.port)
     self.blackList=set()
@@ -607,6 +608,12 @@ class AVNSignalKHandler(AVNWorker):
                                  description='a comma separated list of notifications that should not be received\n'+
                                             'e.g. server.newVersion,navigation.arrivalCircleEntered',
                                  condition={P_NOTIFY_RECEIVE.name:True})
+  P_IGNORE_TS=WorkerParameter('ignoreTimestamp',False, type=WorkerParameter.T_BOOLEAN,
+                              description='Ignore the timestamp that SignalK sets.\n'+
+                              'Normally data being to old will be ignored.\n'+
+                              'If you enable this flag, data still will be processed and '+
+                              'the expiry is handled locally based on the last received change\n'+
+                              'This can be helpful e.g. when using simulated data with timestamps in the past.')
 
 
   I_AIS='ais'
@@ -625,7 +632,7 @@ class AVNSignalKHandler(AVNWorker):
   def getConfigParam(cls, child=None):
     rt=[cls.P_DIRECT,cls.P_AIS,cls.PRIORITY_PARAM_DESCRIPTION.copy(default=NMEAParser.DEFAULT_SOURCE_PRIORITY-10),cls.P_PORT,cls.P_HOST,
             cls.P_AISPERIOD,cls.P_PERIOD,cls.P_CHARTS,cls.P_CHARTPERIOD,cls.P_CHARTPROXYMODE, cls.P_MIGRATED,
-            cls.P_UUID]
+            cls.P_UUID,cls.P_IGNORE_TS]
     if hasWebsockets:
       rt+=[cls.P_WRITE,cls.P_USERNAME,cls.P_PASSWORD,cls.P_SENDWP,cls.P_NOTIFY,cls.P_NOTIFY_RECEIVE,cls.P_NOTIFY_WHITE,cls.P_NOTIFY_BLACK,cls.P_WEBSOCKETRETRY]
     return rt
@@ -815,14 +822,16 @@ class AVNSignalKHandler(AVNWorker):
             continue
           ts=e.getTimestamp(av)
           if ts is not None:
-            if self.timeOffset is not None:
-              ts-=self.timeOffset
             if newestTs is None or ts > newestTs:
               newestTs=ts
           value=e.getValue(av)
           if value is not None:
             aisdata[k]=value
-        if newestTs is not None and newestTs < oldest:
+        if newestTs is not None:
+          aisdata['timestamp']=newestTs
+          if self.timeOffset is not None:
+            newestTs-=self.timeOffset
+        if newestTs is not None and newestTs < oldest and not self.config.ignoreTs:
           AVNLog.debug("ignore ais mmsi=%s - to old",mmsi)
           continue
         numTargets+=1
@@ -1244,7 +1253,7 @@ class AVNSignalKHandler(AVNWorker):
         source=update.get('$source')
         if values is None:
           continue
-        if self.checkOutdated(timestamp):
+        if not self.config.ignoreTs and self.checkOutdated(timestamp):
           AVNLog.debug("ignore outdated delta, ts=%s",timestamp)
           continue
         for item in values:
