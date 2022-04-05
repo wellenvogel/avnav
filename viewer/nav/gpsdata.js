@@ -19,7 +19,14 @@ const ignoredKeys=[
     'tag',
     'mode'
 ];
-const specialHandling=['time','track','course','courseAverageOn','speedAverageOn','positionAverageOn'];
+const specialHandling=[
+    'time',
+    'track',
+    'course',
+    'courseAverageOn',
+    'speedAverageOn',
+    'positionAverageOn'
+];
 /**
  * the handler for the gps data
  * query the server...
