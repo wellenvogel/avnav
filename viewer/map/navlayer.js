@@ -51,7 +51,7 @@ const NavLayer=function(mapholder){
     this.boatStyleHdg=assign({},this.boatStyle,{
         image: new Image(),
         src:boatImageHdg,
-        anchor:[15,10]
+        anchor:[15,5]
     })
 
     this.boatStyle.image.src=this.boatStyle.src;
