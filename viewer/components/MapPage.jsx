@@ -100,6 +100,7 @@ class MapPage extends React.Component{
         let self=this;
         this.mapEvent=this.mapEvent.bind(this);
         this.subscribeToken=undefined;
+        this.bottomContainer=undefined;
 
     }
     mapEvent(evdata){
@@ -112,6 +113,22 @@ class MapPage extends React.Component{
         if (this.subscribeToken !== undefined){
             MapHolder.unsubscribe(this.subscribeToken);
             this.subscribeToken=undefined;
+        }
+    }
+    computeScalePosition(){
+        const setBottom=(val)=>{
+            let el=document.querySelector('.ol-scale-bar');
+            if (el){
+                el.style.bottom=val;
+            }
+        }
+        if (! this.props.mapFloat){
+            setBottom('0px');
+        }
+        else{
+            if (!this.bottomContainer) return;
+            let rect=this.bottomContainer.getBoundingClientRect();
+            setBottom(rect.height+"px");
         }
     }
     componentDidMount(){
@@ -128,6 +145,7 @@ class MapPage extends React.Component{
             }
             MapHolder.loadMap(this.refs.map, this.props.preventCenterDialog).
                 then((result)=>{
+                    this.computeScalePosition();
                 }).
                 catch((error)=>{Toast(error)});
         };
@@ -147,6 +165,10 @@ class MapPage extends React.Component{
         showMap();
 
     }
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        this.computeScalePosition();
+    }
+
     render(){
         let self=this;
         const WidgetContainer=(props)=>{
@@ -198,7 +220,10 @@ class MapPage extends React.Component{
                             {!this.props.mapFloat && map}
                             {self.props.overlayContent ? self.props.overlayContent : null}
                         </div>
-                        <div
+                        <div ref={(container)=>{
+                            this.bottomContainer=container;
+                            this.computeScalePosition();
+                        }}
                             className={"bottomSection" + (globalStore.getData(keys.properties.allowTwoWidgetRows) ? " twoRows" : "")}>
                             <WidgetContainer
                                 reverse={true}
