@@ -62,6 +62,7 @@ const NavData=function(){
                 KeyHelper.flattenedKeys(this.gpsdata.getStoreKeys()),
                 [keys.map.centerPosition]
             ));
+    this.storeKeys=GpsData.getStoreKeys();
 };
 
 /**
@@ -92,7 +93,7 @@ NavData.prototype.computeValues=function() {
         anchorDistance: 0,
         anchorDirection: 0
     };
-    let gps = globalStore.getMultiple(GpsData.getStoreKeys());
+    let gps = globalStore.getMultiple(this.storeKeys);
     //copy the marker to data to make it available extern
     data.markerWp = activeRoute.getCurrentTarget();
     data.routeNextWp = activeRoute.getNextWaypoint();

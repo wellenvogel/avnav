@@ -110,7 +110,6 @@ WindWidget.propTypes={
     windSpeed:  PropTypes.number,
     windAngleTrue:  PropTypes.number,
     windSpeedTrue:  PropTypes.number,
-    windReference: PropTypes.string,
     enabled:    PropTypes.bool,
     kind: PropTypes.string //true,apparent,auto
 };

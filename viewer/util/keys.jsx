@@ -71,6 +71,16 @@ export class KeyNode{
         assign(this,original);
         this.__path=path;
     }
+    getKeys(){
+        let rt={};
+        for (let k in this){
+            if (k.substr(0,1) === '_') continue;
+            let v=this[k];
+            if (typeof(v) !== 'string') continue;
+            rt[k]=v;
+        }
+        return rt;
+    }
 }
 
 //the global definition of all used store keys
