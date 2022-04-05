@@ -9,10 +9,12 @@ import keys from '../util/keys.jsx';
 import globalStore from '../util/globalstore.jsx';
 import RouteEdit from '../nav/routeeditor.js';
 import boatImage from '../images/Boat-NoNeedle.png';
+import boatImageHdg from '../images/BoatHdg.png';
 import markerImage from '../images/Marker2.png';
 import measureImage from '../images/measure.png';
 import assign from 'object-assign';
 import Formatter from "../util/formatter";
+import Average from "../util/average";
 
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE,true);
@@ -46,7 +48,14 @@ const NavLayer=function(mapholder){
         rotateWithView: true,
         image: new Image()
     };
+    this.boatStyleHdg=assign({},this.boatStyle,{
+        image: new Image(),
+        src:boatImageHdg,
+        anchor:[15,10]
+    })
+
     this.boatStyle.image.src=this.boatStyle.src;
+    this.boatStyleHdg.image.src=this.boatStyleHdg.src;
 
     /**
      * @private
@@ -87,6 +96,7 @@ const NavLayer=function(mapholder){
     this.measureStyle.image.src=this.measureStyle.src;
     this.setStyle();
     globalStore.register(this,keys.gui.global.propertySequence);
+    this.speedAverage=new Average(10); //fixed for now
 
 };
 
@@ -138,42 +148,46 @@ const positionKeys={
 NavLayer.prototype.onPostCompose=function(center,drawing){
     let anchorDistance=activeRoute.anchorWatch();
     let gps=globalStore.getMultiple(positionKeys);
+    if (gps.speed !== undefined) this.speedAverage.add(gps.speed);
     let boatDirectionMode=globalStore.getData(keys.properties.boatDirectionMode,'cog');
     let course=gps.course;
     let boatRotation=undefined;
+    let usedHdg=false;
     if (boatDirectionMode === 'hdt' && gps.hdt !== undefined){
         boatRotation=gps.hdt;
+        usedHdg=true;
     }
     if (boatDirectionMode === 'hdm' && gps.hdm !== undefined){
         boatRotation=gps.hdm;
+        usedHdg=true;
     }
+    let boatStyle=assign({},usedHdg?this.boatStyleHdg:this.boatStyle);
     if (course === undefined) course=0;
-    if (this.boatStyle.rotate === false){
-        this.boatStyle.rotation=0;
+    if (boatStyle.rotate === false){
+        boatStyle.rotation=0;
     }
     else {
         if (boatRotation !== undefined){
-            this.boatStyle.rotation = boatRotation  * Math.PI / 180;
+            boatStyle.rotation = boatRotation  * Math.PI / 180;
         }
         else{
-            this.boatStyle.rotation = course  * Math.PI / 180;
+            boatStyle.rotation = course  * Math.PI / 180;
         }
     }
     let boatPosition = this.mapholder.transformToMap(gps.position.toCoord());
     if (globalStore.getData(keys.properties.layers.boat) && gps.valid) {
         let courseVectorTime=parseInt(globalStore.getData(keys.properties.navBoatCourseTime,600));
         let courseVetcorDistance=(gps.speed !== undefined)?gps.speed*courseVectorTime:0;
-        let boatStyle=assign({},this.boatStyle);
         let f=globalStore.getData(keys.properties.boatIconScale,1.0);
-        boatStyle.size=[this.boatStyle.size[0]*f, this.boatStyle.size[1]*f];
-        boatStyle.anchor=[this.boatStyle.anchor[0]*f,this.boatStyle.anchor[1]*f];
-        drawing.drawImageToContext(boatPosition, this.boatStyle.image, boatStyle);
+        boatStyle.size=[boatStyle.size[0]*f, boatStyle.size[1]*f];
+        boatStyle.anchor=[boatStyle.anchor[0]*f,boatStyle.anchor[1]*f];
+        drawing.drawImageToContext(boatPosition, boatStyle.image, boatStyle);
         let other;
         let courseVectorStyle=assign({},this.circleStyle);
-        if (this.boatStyle.courseVectorColor !== undefined) {
-            courseVectorStyle.color=this.boatStyle.courseVectorColor;
+        if (boatStyle.courseVectorColor !== undefined) {
+            courseVectorStyle.color=boatStyle.courseVectorColor;
         }
-        if (courseVetcorDistance > 0 && this.boatStyle.courseVector !== false){
+        if (courseVetcorDistance > 0 && boatStyle.courseVector !== false){
             other=this.computeTarget(boatPosition,course,courseVetcorDistance);
             drawing.drawLineToContext([boatPosition,other],courseVectorStyle);
             if (boatRotation !== undefined && globalStore.getData(keys.properties.boatDirectionVector)){
@@ -255,7 +269,8 @@ NavLayer.prototype.setImageStyles=function(styles){
     let otherStyles={
         anchorImage:'anchorStyle',
         measureImage:'measureStyle',
-        boatImage: 'boatStyle'
+        boatImage: 'boatStyle',
+        boatImageHdg:'boatStyleHdg'
     };
     for (let style in otherStyles){
         let target=otherStyles[style];
