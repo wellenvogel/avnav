@@ -10,11 +10,13 @@ import globalStore from '../util/globalstore.jsx';
 import RouteEdit from '../nav/routeeditor.js';
 import boatImage from '../images/Boat-NoNeedle.png';
 import boatImageHdg from '../images/BoatHdg.png';
+import boatImageSteady from '../images/BoatSteady.png';
 import markerImage from '../images/Marker2.png';
 import measureImage from '../images/measure.png';
 import assign from 'object-assign';
 import Formatter from "../util/formatter";
 import Average from "../util/average";
+import navcompute from "../nav/navcompute";
 
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE,true);
@@ -53,9 +55,16 @@ const NavLayer=function(mapholder){
         src:boatImageHdg,
         anchor:[15,5]
     })
+    this.boatStyleSteady=assign({},this.boatStyle,{
+        image: new Image(),
+        src:boatImageSteady,
+        anchor:[10,10],
+        size: [20,20]
+    })
 
     this.boatStyle.image.src=this.boatStyle.src;
     this.boatStyleHdg.image.src=this.boatStyleHdg.src;
+    this.boatStyleSteady.image.src=this.boatStyleSteady.src;
 
     /**
      * @private
@@ -153,6 +162,7 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
     let course=gps.course;
     let boatRotation=undefined;
     let usedHdg=false;
+    let isSteady=false;
     if (boatDirectionMode === 'hdt' && gps.hdt !== undefined){
         boatRotation=gps.hdt;
         usedHdg=true;
@@ -161,7 +171,16 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
         boatRotation=gps.hdm;
         usedHdg=true;
     }
-    let boatStyle=assign({},usedHdg?this.boatStyleHdg:this.boatStyle);
+    if (globalStore.getData(keys.properties.boatSteadyDetect) && ! usedHdg){
+        let maxSpeed=parseFloat(globalStore.getData(keys.properties.boatSteadyMax)) * navcompute.NM / 3600.0;
+        if (this.speedAverage.val() === undefined || this.speedAverage.val() < maxSpeed){
+            isSteady=true;
+        }
+        if (course === undefined){
+            isSteady=true;
+        }
+    }
+    let boatStyle=assign({},isSteady?this.boatStyleSteady:(usedHdg?this.boatStyleHdg:this.boatStyle));
     if (course === undefined) course=0;
     if (boatStyle.rotate === false){
         boatStyle.rotation=0;
@@ -183,16 +202,18 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
         boatStyle.anchor=[boatStyle.anchor[0]*f,boatStyle.anchor[1]*f];
         drawing.drawImageToContext(boatPosition, boatStyle.image, boatStyle);
         let other;
-        let courseVectorStyle=assign({},this.circleStyle);
-        if (boatStyle.courseVectorColor !== undefined) {
-            courseVectorStyle.color=boatStyle.courseVectorColor;
-        }
-        if (courseVetcorDistance > 0 && boatStyle.courseVector !== false){
-            other=this.computeTarget(boatPosition,course,courseVetcorDistance);
-            drawing.drawLineToContext([boatPosition,other],courseVectorStyle);
-            if (boatRotation !== undefined && globalStore.getData(keys.properties.boatDirectionVector)){
-                other=this.computeTarget(boatPosition,boatRotation,courseVetcorDistance);
-                drawing.drawLineToContext([boatPosition,other],assign({dashed:true},courseVectorStyle));
+        if (! isSteady) {
+            let courseVectorStyle = assign({}, this.circleStyle);
+            if (boatStyle.courseVectorColor !== undefined) {
+                courseVectorStyle.color = boatStyle.courseVectorColor;
+            }
+            if (courseVetcorDistance > 0 && boatStyle.courseVector !== false) {
+                other = this.computeTarget(boatPosition, course, courseVetcorDistance);
+                drawing.drawLineToContext([boatPosition, other], courseVectorStyle);
+                if (boatRotation !== undefined && globalStore.getData(keys.properties.boatDirectionVector)) {
+                    other = this.computeTarget(boatPosition, boatRotation, courseVetcorDistance);
+                    drawing.drawLineToContext([boatPosition, other], assign({dashed: true}, courseVectorStyle));
+                }
             }
         }
         if (! anchorDistance) {
@@ -270,7 +291,8 @@ NavLayer.prototype.setImageStyles=function(styles){
         anchorImage:'anchorStyle',
         measureImage:'measureStyle',
         boatImage: 'boatStyle',
-        boatImageHdg:'boatStyleHdg'
+        boatImageHdg:'boatStyleHdg',
+        boatImageSteady: 'boatStyleSteady'
     };
     for (let style in otherStyles){
         let target=otherStyles[style];
