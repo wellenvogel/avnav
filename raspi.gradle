@@ -130,6 +130,11 @@ ospackage {
             include('8192cu.conf')
         }
     }
+    into('/etc/avahi/services'){
+        from('raspberry'){
+            include('avnav-ssh.service')
+        }
+    }
     
     postInstall file('raspberry/postinstall')
     preInstall file('raspberry/preinstall')
