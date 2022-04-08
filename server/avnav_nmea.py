@@ -320,8 +320,10 @@ class NMEAParser(object):
         if mode >= 1:
           rt['lat']=self.nmeaPosToFloat(darray[3],darray[4])
           rt['lon']=self.nmeaPosToFloat(darray[5],darray[6])
-          rt['speed']=float(darray[7] or '0')*self.NM/3600
-          rt['track']=float(darray[8] or '0')
+          if darray[7] != '':
+            rt['speed']=float(darray[7] or '0')*self.NM/3600
+          if darray[8] != '':
+            rt['track']=float(darray[8] or '0')
         gpstime = darray[1]
         gpsdate = darray[9]
         if gpsdate != "" and gpstime != "":
