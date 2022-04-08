@@ -15,8 +15,6 @@ import markerImage from '../images/Marker2.png';
 import measureImage from '../images/measure.png';
 import assign from 'object-assign';
 import Formatter from "../util/formatter";
-import Average from "../util/average";
-import navcompute from "../nav/navcompute";
 
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE,true);
@@ -105,7 +103,6 @@ const NavLayer=function(mapholder){
     this.measureStyle.image.src=this.measureStyle.src;
     this.setStyle();
     globalStore.register(this,keys.gui.global.propertySequence);
-    this.speedAverage=new Average(10); //fixed for now
 
 };
 
@@ -147,6 +144,9 @@ const positionKeys={
     valid:      keys.nav.gps.valid,
     hdm:        keys.nav.gps.headingMag,
     hdt:        keys.nav.gps.headingTrue,
+    boatDirection: keys.nav.display.boatDirection,
+    directionMode: keys.nav.display.directionMode,
+    isSteady:   keys.nav.display.isSteady
 };
 /**
  * draw the marker and course
@@ -157,30 +157,11 @@ const positionKeys={
 NavLayer.prototype.onPostCompose=function(center,drawing){
     let anchorDistance=activeRoute.anchorWatch();
     let gps=globalStore.getMultiple(positionKeys);
-    if (gps.speed !== undefined) this.speedAverage.add(gps.speed);
     let boatDirectionMode=globalStore.getData(keys.properties.boatDirectionMode,'cog');
+    let boatRotation=gps.boatDirection;
+    let usedHdg=gps.directionMode !== 'cog';
+    let boatStyle=assign({},gps.isSteady?this.boatStyleSteady:(usedHdg?this.boatStyleHdg:this.boatStyle));
     let course=gps.course;
-    let boatRotation=undefined;
-    let usedHdg=false;
-    let isSteady=false;
-    if (boatDirectionMode === 'hdt' && gps.hdt !== undefined){
-        boatRotation=gps.hdt;
-        usedHdg=true;
-    }
-    if (boatDirectionMode === 'hdm' && gps.hdm !== undefined){
-        boatRotation=gps.hdm;
-        usedHdg=true;
-    }
-    if (globalStore.getData(keys.properties.boatSteadyDetect) && ! usedHdg){
-        let maxSpeed=parseFloat(globalStore.getData(keys.properties.boatSteadyMax)) * navcompute.NM / 3600.0;
-        if (this.speedAverage.val() === undefined || this.speedAverage.val() < maxSpeed){
-            isSteady=true;
-        }
-        if (course === undefined){
-            isSteady=true;
-        }
-    }
-    let boatStyle=assign({},isSteady?this.boatStyleSteady:(usedHdg?this.boatStyleHdg:this.boatStyle));
     if (course === undefined) course=0;
     if (boatStyle.rotate === false){
         boatStyle.rotation=0;
@@ -190,7 +171,7 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
             boatStyle.rotation = boatRotation  * Math.PI / 180;
         }
         else{
-            boatStyle.rotation = course  * Math.PI / 180;
+            boatStyle.rotation = 0;
         }
     }
     let boatPosition = this.mapholder.transformToMap(gps.position.toCoord());
@@ -202,7 +183,7 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
         boatStyle.anchor=[boatStyle.anchor[0]*f,boatStyle.anchor[1]*f];
         drawing.drawImageToContext(boatPosition, boatStyle.image, boatStyle);
         let other;
-        if (! isSteady) {
+        if (! gps.isSteady) {
             let courseVectorStyle = assign({}, this.circleStyle);
             if (boatStyle.courseVectorColor !== undefined) {
                 courseVectorStyle.color = boatStyle.courseVectorColor;

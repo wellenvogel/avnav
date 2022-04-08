@@ -112,6 +112,12 @@ let keys={
             updatealarm: new D("update counter for alarms"),
             updateleg: new D("update counter for leg")
         },
+        display:{
+            boatDirection: new D("the direction of the boat to be used for display"),
+            directionMode: new D("one of cog,hdm,hdt"),
+            isSteady: new D("will be true if steady detected"),
+            mapDirection: new D("the direction that will be used to rotate the map with course up")
+        },
         alarms:{
             all:K,
         },
@@ -255,8 +261,9 @@ let keys={
         slideLevels: new Property(3), //start with that many lower zoom levels
         maxUpscale: new Property(2), //2 levels upscale (otherwise we need too much mem)
         maxZoom: new Property(21),  //only allow upscaling up to this zom level
-        courseAverageFactor: new Property(0.5), //moving average for course up
+        courseAverageLength: new Property(10,"average interval for map course up",PropertyType.RANGE,[1,30]), //moving average for course up
         courseAverageTolerance: new Property(15, "Rotation Tolerance", PropertyType.RANGE, [1, 30]), //tolerance for slow rotation
+        courseUpAlwaysCOG: new Property(false,"CourseUp always COG",PropertyType.CHECKBOX),
         maxButtons: new Property(8),
         positionQueryTimeout: new Property(1000, "Position (ms)", PropertyType.RANGE, [500, 5000, 10]), //1000ms
         trackQueryTimeout: new Property(5000, "Track (ms)", PropertyType.RANGE, [500, 10000, 10]), //5s in ms

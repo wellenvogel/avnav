@@ -150,7 +150,8 @@ const MapHolder=function(){
         KeyHelper.flattenedKeys(keys.nav.center),
         KeyHelper.flattenedKeys(keys.nav.wp),
         KeyHelper.flattenedKeys(keys.nav.anchor),
-        KeyHelper.flattenedKeys(keys.nav.track)
+        KeyHelper.flattenedKeys(keys.nav.track),
+        KeyHelper.flattenedKeys(keys.nav.display)
     );
     this.navChanged=new Callback(()=>{
         self.navEvent();
@@ -1175,11 +1176,8 @@ MapHolder.prototype.navEvent = function () {
     if (!gps.valid) return;
     if (this.gpsLocked) {
         if (this.courseUp) {
-            let diff = (gps.course - this.averageCourse);
-            let tol = globalStore.getData(keys.properties.courseAverageTolerance);
-            if (diff < tol && diff > -tol) diff = diff / 30; //slower rotate the map
-            this.averageCourse += diff * globalStore.getData(keys.properties.courseAverageFactor);
-            this.setMapRotation(this.averageCourse);
+            let mapDirection=globalStore.getData(keys.nav.display.mapDirection);
+            this.setMapRotation(mapDirection);
         }
         this.setCenter(gps,true,this.getBoatOffset());
     }
@@ -1351,6 +1349,7 @@ MapHolder.prototype.pixelDistance=function(point1,point2){
  * @param {number} rotation in degrees
  */
 MapHolder.prototype.setMapRotation=function(rotation){
+    if (rotation === undefined) return;
     this.getView().setRotation(rotation==0?0:(360-rotation)*Math.PI/180);
     if (this.gpsLocked){
         let boat=globalStore.getData(keys.map.centerPosition);
@@ -1385,12 +1384,12 @@ MapHolder.prototype.setCourseUp=function(on,opt_noRemote){
     let old=this.courseUp;
     if (old === on) return on;
     if (on){
-        let gps=globalStore.getMultiple(keys.nav.gps);
-        if (! gps.valid) return false;
-        this.averageCourse=gps.course;
-        this.setMapRotation(this.averageCourse);
-        this.courseUp=on;
-        globalStore.storeData(keys.map.courseUp,on);
+        let direction=globalStore.getData(keys.nav.display.mapDirection);
+        if (direction !== undefined) {
+            this.setMapRotation(direction);
+            this.courseUp = on;
+            globalStore.storeData(keys.map.courseUp, on);
+        }
         return on;
     }
     else{

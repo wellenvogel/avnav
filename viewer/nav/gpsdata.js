@@ -10,8 +10,7 @@ import Formatter from '../util/formatter';
 import assign from 'object-assign';
 import Requests from '../util/requests.js';
 import base from '../base.js';
-import Average from "../util/average";
-import average from "../util/average";
+import Average, {CourseAverage} from "../util/average.mjs";
 
 
 const ignoredKeys=[
@@ -59,9 +58,23 @@ const GpsData=function(){
     }
 };
 
+const averageLen=(key)=>{
+    return globalStore.getData(KeyHelper.keyNodeToString(keys.properties)+'.'+key+'AverageInterval');
+}
+
 class GpsAverage extends Average{
     constructor(key) {
-        super(globalStore.getData(KeyHelper.keyNodeToString(keys.properties)+'.'+key+'AverageInterval'));
+        super(averageLen(key));
+        this.key=key;
+    }
+    setEnabled(data){
+        if (! data) return;
+        data[this.key+'AverageOn']=this.getLength() > 0;
+    }
+}
+class GpsCourseAverage extends CourseAverage{
+    constructor(key) {
+        super(averageLen(key));
         this.key=key;
     }
     setEnabled(data){
@@ -74,7 +87,7 @@ GpsData.prototype.resetAverages=function(){
     this.averages={
         lat: new GpsAverage('position'),
         lon: new GpsAverage('position'),
-        course: new GpsAverage('course'),
+        course: new GpsCourseAverage('course'),
         speed: new GpsAverage('speed'),
     }
 };
