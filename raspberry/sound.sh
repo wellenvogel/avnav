@@ -1,4 +1,13 @@
 #! /bin/sh
 #play a sound with setting the volume before
-amixer -D hw:1 cset numid=1 $1
-mpg123 -q -a hw:1 $2
+set -x
+if [ "$1" = "-i" ] ; then
+  shift
+  intf="$1"
+  shift
+  amixer -D $intf cset numid=1 $1
+  mpg123 -q -a $intf $2
+else
+  amixer  cset numid=1 $1
+  mpg123 -q $2
+fi
