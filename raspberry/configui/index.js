@@ -96,7 +96,11 @@
         AVNAV_TIMEZONE: {r:selectValue,s:setSelected},
         AVNAV_KBLAYOUT: {r:selectValue,s:setSelected},
         AVNAV_KBMODEL: {r:selectValue,s:setSelected},
-        AVNAV_WIFI_COUNTRY: {r:selectValue,s:setSelected}
+        AVNAV_WIFI_COUNTRY: {r:selectValue,s:setSelected},
+        AVNAV_STARTX: {r:checkBox,s:setCheckBox},
+        AVNAV_DPI: {r:getValue,s:setValue},
+        AVNAV_KEYHEIGHT: {r:getValue,s:setValue},
+        AVNAV_HIDE_CURSOR: {r:checkBox,s:setCheckBox}
     };
     let templateReplace=function(template,replace){
         if (! template) return;
@@ -134,6 +138,9 @@
                 line=line.replace(/['"]*/g,'');
                 line=line.replace(/#.*/,'');
                 line=line.replace(/ .*/,'');
+                if (line === 'yes' && i > 0){
+                    line='no'; //for yes/no a commented yes is treated as no
+                }
                 return line;
             }
         }
@@ -165,6 +172,43 @@
             if (data[lname] === defaultL) entry.setAttribute('selected',true);
             entry.textContent=lname;
             parent.appendChild(entry);
+        }
+    }
+    let getValueFor=function(sel){
+        return parseFloat(getValue(document.querySelector(sel)))
+    }
+    let computeDpi=function(){
+        let ipmm=0.0393701;
+        let swmm=getValueFor('#XScreenWidth');
+        let swpix=getValueFor('#XScreenWPix');
+        let shmm=getValueFor('#XScreenHeight');
+        let shpix=getValueFor('#XScreenHPix');
+        let dpi="<>"
+        try{
+            let swi=swmm*ipmm;
+            let shi=shmm*ipmm;
+            dpi=parseInt(Math.max(shpix/shi,swpix/swi));
+        }catch(e){
+
+        }
+        let t=document.querySelector('#XScreenDPI');
+        t.textContent=dpi;
+    }
+    let showDpi=function(){
+        let dialog=document.querySelector('.configui .dialogBack');
+        if (dialog){
+            dialog.classList.remove('hidden');
+        }
+        computeDpi();
+    }
+    let hideDpi=function(ev){
+        let dialog=document.querySelector('.configui .dialogBack');
+        if (dialog){
+            dialog.classList.add('hidden');
+        }
+        if (ev.target.getAttribute('id') === 'dpiOk'){
+            let dpi=document.querySelector('#XScreenDPI');
+            setValue(document.querySelector('#AVNAV_DPI'),parseInt(dpi.textContent));
         }
     }
     window.addEventListener('load',function(){
@@ -281,5 +325,20 @@
            lang=window.location.search.replace(/.*lang=/,'').replace('[?&].*','');
        }
        getToolTips(lang);
+       let dpiFields=this.document.querySelectorAll('.configui .dialog input');
+       for (let i=0;i<dpiFields.length;i++){
+           dpiFields[i].addEventListener('change',computeDpi);
+       }
+       let dpi=this.document.querySelector('#AVNAV_DPI');
+       if (dpi){
+           dpi.addEventListener('click',showDpi);
+           dpi.addEventListener('focus',showDpi);
+       }
+       ['dpiOk','dpiCancel'].forEach(function(id){
+            let bt=document.querySelector('#'+id);
+            if (bt){
+                bt.addEventListener('click',hideDpi);
+            }
+       });
     });
 })()

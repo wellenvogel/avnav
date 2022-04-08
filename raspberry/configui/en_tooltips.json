@@ -10,5 +10,9 @@
   "AVNAV_WIFI_CLIENT": "If being set the internal Wifi adapter of the pi will not create a Wifi network any more but can be used to connect to an existing one. This requires an additional Wifi Adapter being plugged into one of the USB ports to be able to create an own Wifi.",
   "AVNAV_KBLAYOUT": "keyboard layout (used if you connect a keyboard to your pi)",
   "AVNAV_KBMODEL": "keybaord model",
-  "AVNAV_WIFI_COUNTRY": "country code for setting up the Wifi adapter"
+  "AVNAV_WIFI_COUNTRY": "country code for setting up the Wifi adapter",
+  "AVNAV_STARTX":"Start a Firefox Browser in kiosk mode for a local touchscreen",
+  "AVNAV_DPI":"pixel/inch for your monitor to adapt various elements (only for local touch screen)",
+  "AVNAV_KEYHEIGHT":"height (in mm) of a keyboard row for the on screen keyboard (local touch screen)",
+  "AVNAV_HIDE_CURSOR":"hide the cursor on the local touch screen"
 }
