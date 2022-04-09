@@ -4,6 +4,21 @@ export default class Average{
         this.currentValue=undefined;
         this.values=[];
     }
+    isum(v1,v2){
+        return v1+v2;
+    }
+    idiff(v1,v2){
+        return v1-v2;
+    }
+    inorm(v,len){
+        return v/len;
+    }
+    encode(v){
+        return v;
+    }
+    decode(v){
+        return v;
+    }
     reset(opt_length){
         this.currentValue=undefined;
         this.values=[];
@@ -15,12 +30,16 @@ export default class Average{
         return this.length;
     }
     add(val){
+        let oval=val;
+        val=this.encode(val);
         if (val === undefined){
             if (this.values.length > 0){
                 //we remove the oldest entry
                 //so after length adds of undefined the value becomes undefined
                 let old=this.values.shift();
-                if (this.values.length > 0) this.currentValue-=old;
+                if (this.values.length > 0) {
+                    this.currentValue=this.idiff(this.currentValue-old);
+                }
                 else this.currentValue=undefined;
                 return;
             }
@@ -30,20 +49,20 @@ export default class Average{
         if (this.currentValue === undefined || this.length < 1) {
             this.currentValue = val;
             this.values.push(val);
-            return val;
+            return oval;
         }
         if (this.values.length >= this.length){
-            this.currentValue-=this.values.shift();
+            this.currentValue=this.idiff(this.currentValue,this.values.shift());
         }
-        this.currentValue+=val;
+        this.currentValue=this.isum(this.currentValue,val);
         this.values.push(val)
-        return this.currentValue/this.values.length;
+        return this.decode(this.inorm(this.currentValue,this.values.length));
     }
     val(){
         if (this.values.length < 1){
-            return this.currentValue;
+            return this.decode(this.currentValue);
         }
-        return this.currentValue/this.values.length;
+        return this.decode(this.inorm(this.currentValue,this.values.length));
     }
 
 
@@ -60,6 +79,15 @@ export default class Average{
 export class CourseAverage extends Average{
     constructor(length) {
         super(length);
+    }
+    isum(v1,v2){
+        return [v1[0]+v2[0],v1[1]+v2[1]];
+    }
+    idiff(v1,v2){
+        return [v1[0]-v2[0],v1[1]-v2[1]];
+    }
+    inorm(v,len){
+        return [v[0]/len,v[1]/len];
     }
     inRange(val){
         while (val >= 360) val-=360;
@@ -82,23 +110,15 @@ export class CourseAverage extends Average{
         if (val >= 180 && val < 270) return -90+(val-180);
         return val-270;
     }
-    getEntry(val){
+    encode(val){
+        if (val === undefined) return val;
+        val=this.inRange(val);
         return [this.linSin(val),this.linCos(val)]
     }
-    add(val){
-        if (this.length < 1) return;
-        if (val === undefined){
-            if (this.values.length > 0){
-                this.values.shift()
-            }
-            return;
-        }
-        this.values.push(this.getEntry(val));
-        if (this.values.length > this.length ){
-            this.values.shift()
-        }
-    }
-    reverse(x,y){
+    decode(v){
+        if (v === undefined) return v;
+        let x=v[0];
+        let y=v[1];
         //to acurate we use the vale that is closer to 0
         let useX=Math.abs(x) <= Math.abs(y);
         if (x >= 0){
@@ -124,23 +144,12 @@ export class CourseAverage extends Average{
             }
         }
     }
-    val(){
-        if (this.values.length < 1) return undefined;
-        let sum=[0,0];
-        this.values.forEach((v)=>{
-            sum[0]+=v[0];
-            sum[1]+=v[1];
-        });
-        sum[0]=sum[0]/this.values.length;
-        sum[1]=sum[1]/this.values.length;
-        return this.reverse(sum[0],sum[1]);
-    }
     //could be static
     fract(first,second,f){
         if (second === undefined || f < 0 || f > 1) return first;
-        let fc=[this.linSin(first),this.linCos(first)]
-        let sc=[this.linSin(second),this.linCos(second)]
+        let fc=this.encode(first);
+        let sc=this.encode(second);
         let comp=[fc[0]+f*(sc[0]-fc[0]),fc[1]+f*(sc[1]-fc[1])]
-        return this.reverse(comp[0],comp[1]);
+        return this.decode([comp[0],comp[1]]);
     }
 }

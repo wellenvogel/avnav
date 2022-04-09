@@ -1,6 +1,6 @@
 #! /usr/bin/env node
 
-import {CourseAverage} from '../../viewer/util/average.mjs';
+import Average, {CourseAverage} from '../../viewer/util/average.mjs';
 
 
 const range=(start,last,step)=>{
@@ -36,7 +36,22 @@ let inputs={
     tq1q2_2: {l:10,v:toggle(45,135,30)},
     tq1q2_3: {l:10,v:toggle(40,110,30)},
     tq4q1: {l:10,v:toggle(355,5,30)},
-    tq4q1_2: {l:10,v:toggle(355,50,30)}
+    tq4q1_2: {l:10,v:toggle(355,50,30)},
+    tq2q3: toggle(100,190,20),
+    tq2q3_2: toggle(170,190,20),
+    tq2q3_3: toggle(170,260,20),
+    tq3q4: toggle(260,290,20),
+    tq3q4_2: toggle(260,350,20),
+    tq3q4_3: toggle(190,350,20),
+    //we see extrem toggles of +/- 180 - this will lead to some jumps easily
+    //as small changes will either go to 0 or 180
+    //but in practice this should be no issue 
+    //anyway it's not worse the input values jumping by +/- 180
+    etq1q3: {l:10,v:toggle(10,190,20)},  //extrem: could either be 0 or 180
+    etq1q3_2: {l:10,v:toggle(11,190,20)},
+    etq1q3_3: {l:10,v:toggle(10,190,20).concat(toggle(190,190,10))},
+    nramp: {t:'normal',l:10,v:range(0,300,10).concat(toggle(300,300,20))},
+    ntoggle: {t:'normal',l:10,v:toggle(0,20,30).concat(toggle(20,20,20))}
 
 
 };
@@ -44,14 +59,15 @@ let len=10
 
 let parts=process.argv.slice(2);
 
-let cav=new CourseAverage(len)
+let cav=new CourseAverage(len);
+let av=new Average(len);
 let num=0;
 for (let k in inputs){
     if (parts.length > 0 && parts.indexOf(k) < 0) continue;
     let description=inputs[k];
     let qinputs;
     let count=len;
-    let type='normal';
+    let type='course';
     if (description instanceof Array){
         qinputs=description;
     }
@@ -60,12 +76,16 @@ for (let k in inputs){
         if (description.l !== undefined) count=description.l;
         if (description.t !== undefined) type=description.t;
     }
-    cav.reset(count);
+    let ua=cav;
+    if (type === 'normal'){
+        ua=av;
+    }
+    ua.reset(count);
     console.log("starting ",k,"type",type,"len",count);
     num=0;
     qinputs.forEach((i)=>{
-        cav.add(i)
-        console.log(k,num,i,cav.val())
+        ua.add(i)
+        console.log(k,num,i,ua.val())
         num++;
     })
 }
