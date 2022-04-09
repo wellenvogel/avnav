@@ -100,7 +100,8 @@
         AVNAV_STARTX: {r:checkBox,s:setCheckBox},
         AVNAV_DPI: {r:getValue,s:setValue},
         AVNAV_KEYHEIGHT: {r:getValue,s:setValue},
-        AVNAV_HIDE_CURSOR: {r:checkBox,s:setCheckBox}
+        AVNAV_HIDE_CURSOR: {r:checkBox,s:setCheckBox},
+        AVNAV_DISPLAY_DIMENSIONS: {r:getValue,s:setValue}
     };
     let templateReplace=function(template,replace){
         if (! template) return;
@@ -177,17 +178,23 @@
     let getValueFor=function(sel){
         return parseFloat(getValue(document.querySelector(sel)))
     }
+    const dpiFields={
+        swmm:'#XScreenWidth',
+        swpix:'#XScreenWPix',
+        shmm:'#XScreenHeight',
+        shpix:'#XScreenHPix'
+    };
     let computeDpi=function(){
         let ipmm=0.0393701;
-        let swmm=getValueFor('#XScreenWidth');
-        let swpix=getValueFor('#XScreenWPix');
-        let shmm=getValueFor('#XScreenHeight');
-        let shpix=getValueFor('#XScreenHPix');
+        let comp={};
+        for (let k in dpiFields){
+            comp[k]=getValueFor(dpiFields[k]);
+        }
         let dpi="<>"
         try{
-            let swi=swmm*ipmm;
-            let shi=shmm*ipmm;
-            dpi=parseInt(Math.max(shpix/shi,swpix/swi));
+            let swi=comp.swmm*ipmm;
+            let shi=comp.shmm*ipmm;
+            dpi=parseInt(Math.max(comp.shpix/shi,comp.swpix/swi));
         }catch(e){
 
         }
@@ -199,6 +206,15 @@
         if (dialog){
             dialog.classList.remove('hidden');
         }
+        let ov=getValue(document.querySelector('#AVNAV_DISPLAY_DIMENSIONS'));
+        if (ov){
+            let parts=ov.split(',');
+            let idx=0;
+            for (let k in dpiFields){
+                setValue(document.querySelector(dpiFields[k]),parts[idx]);
+                idx++;
+            }
+        }
         computeDpi();
     }
     let hideDpi=function(ev){
@@ -209,6 +225,13 @@
         if (ev.target.getAttribute('id') === 'dpiOk'){
             let dpi=document.querySelector('#XScreenDPI');
             setValue(document.querySelector('#AVNAV_DPI'),parseInt(dpi.textContent));
+            let sdv='';
+            for (let k in dpiFields){
+                let v=getValue(document.querySelector(dpiFields[k]));
+                if (sdv !== '') sdv+=",";
+                sdv+=v===undefined?'':v;
+            }
+            setValue(document.querySelector('#AVNAV_DISPLAY_DIMENSIONS'),sdv);
         }
     }
     window.addEventListener('load',function(){
