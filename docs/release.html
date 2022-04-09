@@ -42,6 +42,74 @@ sudo systemctl start avnav</div>
     <br>
     <div> </div>
     <h2>Versionen</h2>
+    <p> <span style="font-weight: bold;">202204xx</span> <a title="release/202204xx"
+        href="../downloads/release/202204xx">link</a></p>
+    <p>Starke Erweiterung der SignalK Integration</p>
+    <ul>
+      <li>AvNav kann jetzt direkt seine Navigationsdaten (inklusive AIS) von
+        SignalK empfangen</li>
+      <li>Wegepunkt-Daten können an SignalK geschickt werden</li>
+      <li>Alarme können zu SignalK geschickt und von dort empfangen werden</li>
+      <li>Das SignalK Handling wurde von einem Plugin in den "core" verlagert</li>
+      <li>Für Details siehe die <a href="hints/CanboatAndSignalk.html#SignalK">Beschreibung</a></li>
+    </ul>
+    <p>Images mit Touch Support</p>
+    <ul>
+      <li>Die AvNav Images haben jetzt auch Support für einen lokalen Monitor
+        (Schwerpunkt: Touch)</li>
+      <li>Das ersetzt die nicht mehr gepflegten AvNav-Touch images.</li>
+      <li>Details in der <a href="install.html">Installationsbeschreibung</a></li>
+    </ul>
+    <p>Setzen der Systemzeit ohne GPS</p>
+    <ul>
+      <li>die AvNav Images haben jetzt ein fallback-Handling zum Setzen der
+        Systemzeit</li>
+      <li>wenn für eine gewisse Zeit kein GPS Signal empfangen wird, wird
+        versucht über NTP die Zeit zu ermitteln</li>
+      <li>das sollte Probleme beim Internet Zugriff vermeiden (SignalK,
+        mapproxy,...)</li>
+    </ul>
+    <p>Weitere neue Funkionen</p>
+    <ul>
+      <li>Trennung von true und apparent Wind in den internen Daten - die
+        Anzeige der Wind-Widgets kann jetzt fest einem von beiden zugeordnet
+        werden</li>
+      <li>Beim Parsen von RMC wird jetzt korrekt geprüft, ob Kurs und
+        Geschwindigkeit vorhanden sind</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/168">#168</a>:
+        Anzeige für Map Scale (in den Settings unter Layer)</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/87">#87</a>:
+        Alarm und rote Titelzeite, wenn die Verbindung zum Server abbricht </li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/206">#206</a>:
+        Setzen von Ankerwache mit Keyboard Kommandos</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/200">#200</a>:
+        Verschiedene Boot-Symbole für COG und HDM/HDT sowie Stillstand, bessere
+        Berechnung des Kurs-Mittelwertes</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/202">#202</a>:
+        Parsen von ZDA</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/188">#188</a>:
+        Umschalten/Ausschalten des Remote Channels direkt auf Navigations- und
+        Dashboard Seiten</li>
+      <li>Pitch und Roll für BME280, skPitch,skRoll Widgets können auch Input in
+        deg verarbeiten</li>
+      <li>Kleinere interne Korrekturen</li>
+    </ul>
+    <p>Fehlerkorrekturen</p>
+    <ul>
+      <li>korrekte Mittelwertbildung für Kurs-Werte</li>
+      <li>besseres Fehlerhandling bei avahi</li>
+      <li>restart button manchmal nicht sichtbar auf der Status-Seite</li>
+      <li>android: Korrektes Arbeiten der overlay-change-detection</li>
+    </ul>
+    <p> Migrationshinweis</p>
+    <ul>
+      <li>falls nicht besondere Alarm-Kommandos definiert wurden, sollten
+        Einträge für den AVNAlarmHandler aus der avnav_server.xml entfernt
+        werden.<br>
+        Dann können die Alarm-Sounds über die Settings-Seite eingestellt werden
+        und es können eigene Alarm-Sounds genutzt werden.<br>
+      </li>
+    </ul>
     <p> <span style="font-weight: bold;">20220306</span> <a title="release/20220306"
         href="../downloads/release/20220306">link</a></p>
     <ul>

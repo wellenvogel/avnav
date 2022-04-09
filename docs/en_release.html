@@ -40,6 +40,73 @@ sudo systemctl start avnav</div>
     <br>
     <div> </div>
     <h2>Versions</h2>
+    <p> <span style="font-weight: bold;">202204xx</span> <a title="release/202204xx"
+        href="../downloads/release/202204xx">link</a></p>
+    <p>Extensions of the SignalK Integration</p>
+    <ul>
+      <li>AvNav is now able to directly fetch it's navigation data from SignalK
+        (including AIS)</li>
+      <li>Waypoint data can be sent to SignalK</li>
+      <li>Alarms can be received from and sent to SignalK</li>
+      <li>The SignalK handling has been moved from a plugin to the "core"</li>
+      <li>For details refer to the <a href="hints/CanboatAndSignalk.html#SignalK">description</a></li>
+    </ul>
+    <p>Images with Touch Support</p>
+    <ul>
+      <li>The AvNav images now include support for local monitors (touch
+        optimized)</li>
+      <li>This replaces the AvNav-Touch images that are not maintained any more.</li>
+      <li>For details refer to the&nbsp; <a href="install.html">installation
+          description</a></li>
+    </ul>
+    <p>Setting of the System time without GPS</p>
+    <ul>
+      <li>The AvNav images now have a fallback handling for setting the system
+        time</li>
+      <li>If there is no valid GPS signal for a certain time AvNav will try to
+        fetch the time from NTP</li>
+      <li>This should prevent issues during the internet access (SignalK,
+        mapproxy,...)</li>
+    </ul>
+    <p>Other new Functions</p>
+    <ul>
+      <li>Separation of true and apparent Wind in the internal data. The display
+        of the wind widgets can now explicitly assigned to one of them.</li>
+      <li>When parsing RMC there is now a check whether there is a valid course
+        and valid speed</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/168">#168</a>:
+        Map scale display (Settings/Layer)</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/87">#87</a>:
+        Alarm and red headline if server connection is lost</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/206">#206</a>:
+        Set and reset anchor watch with keyboard commands</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/200">#200</a>:
+        Different boat smybols for COG and HDM/HDT as well as "zero SOG", better
+        computation of course averages for map rotation</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/202">#202</a>:
+        Parsing of ZDA</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/188">#188</a>:
+        Change/Switch off the remote channels directly on the navigation and
+        dashboard pages</li>
+      <li>Pitch and Roll for BME280, skPitch,skRoll widgets can now also handle
+        deg as input</li>
+      <li>Internal corrections</li>
+    </ul>
+    <p>Bug Fixes</p>
+    <ul>
+      <li>correctly average course values</li>
+      <li>improve error handling for avahi</li>
+      <li>ensure restart button visibility on the status page</li>
+      <li>android: correctly handle overlay-change-detection</li>
+    </ul>
+    <p> Migration Hint</p>
+    <ul>
+      <li>if you did not configure special alarm commands just remove all
+        AVNAlarmHandler entries from your avnav_server.xml. This will allow you
+        to change the alarm sounds at the configuration and upload your own
+        sounds to the user directory.<br>
+      </li>
+    </ul>
     <p> <span style="font-weight: bold;">20220306</span> <a title="release/20220306"
         href="../downloads/release/20220306">link</a></p>
     <ul>

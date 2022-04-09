@@ -125,7 +125,11 @@
           <td>Define which NMEA value will be used to draw the boat symbol
             orientation.: COG, HDT, HDM. If you configure HDT or HDM and this
             value is not being received it will fall back to COG. The course
-            vector will be determined by COG in any case.</td>
+            vector will be determined by COG in any case.<br>
+            Since 202204xx: If HDT or HDM are used a boat symbol will be drawn
+            instead of the default arrow being used for COG.<br>
+            Can be customized by <a href="../hints/usericons.html">user icons</a>
+            .</td>
           <td>COG</td>
         </tr>
         <tr>
@@ -142,6 +146,24 @@
             rotated immediately for course changes below this value. This will
             make the map display more readable.</td>
           <td>15</td>
+        </tr>
+        <tr>
+          <td>Navigation</td>
+          <td>zero SOG detect<br>
+            (202204xx)</td>
+          <td>If the boat is rotated based on COG and there is no movement any
+            more (SOG below limit) switch of course vectors and map rotation.
+            Show a circle for the boat.</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>Navigation</td>
+          <td>zero SOG detect below<br>
+            (202204xx)</td>
+          <td>Limit for the SOG (in kn) for the zero SOG detect feature.</td>
+          <td><br>
+          </td>
         </tr>
         <tr>
           <td>AIS</td>
