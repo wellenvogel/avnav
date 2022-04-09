@@ -21,6 +21,10 @@ if [ "$1" = "prepare" ] ; then
   chmod g+w /dev/tty
   #TODO: postinstall?
   usermod -a -G tty pi
+  cache=/home/pi/.cache
+  if [ -d $cache ] ; then
+    chown -R pi $cache
+  fi
   update-menus
   exit 0
 fi
