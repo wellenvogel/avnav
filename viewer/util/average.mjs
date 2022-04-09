@@ -99,28 +99,28 @@ export class CourseAverage extends Average{
         }
     }
     reverse(x,y){
-        //to acurate we use the vale that is closer to 90°
-        //at 45 x and y should be equal anyway
+        //to acurate we use the vale that is closer to 0
+        let useX=Math.abs(x) <= Math.abs(y);
         if (x >= 0){
             //q1,q2
             if (y >= 0){
                 //q1
-                return x <= 45 ? x : 90 - y;
+                return useX ? x : 90 - y;
             }
             else{
                 //q2
-                return x <= 45 ? 90 + (90 - x) : 180 - (90 + y)
+                return useX ? 90 + (90 - x) : 180 - (90 + y)
             }
         }
         else{
             //q3,q4
             if (y >= 0){
                 //q4
-                return x <= 45 ? 360 + x : 270 + y;
+                return useX ? 360 + x : 270 + y;
             }
             else{
                 //q3
-                return x <= 45 ? 180 - x : 270 + y;
+                return useX ? 180 - x : 270 + y;
             }
         }
     }
