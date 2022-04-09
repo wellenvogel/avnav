@@ -54,7 +54,7 @@
     Die Images sind so vorkonfiguriert, dass NMEA0183-Daten von allen Interfaces
     zu AvNav und von dort zu <a href="hints/CanboatAndSignalk.html">SignalK</a>
     geleitet werden. AvNav holt sich zusätzlich alle Daten von SignalK und kann
-    diese anzeigen. Für Details zur SignalK Integration siehe die <a href="file:///home/andreas/projects/avnav/docs/hints/CanboatAndSignalk.html#SignalK">Beschreibung</a>.<br>
+    diese anzeigen. Für Details zur SignalK Integration siehe die <a href="hints/CanboatAndSignalk.html#SignalK">Beschreibung</a>.<br>
     NMEA2000-Daten laufen über Canboat zu SignalK und zu AvNav.<br>
     Für Details zu canboat siehe <a href="hints/CanboatAndSignalk.html">CanBoatAndSignalK</a>.
     <h3><a name="preparation"></a>Image Vorbereitung</h3>
@@ -233,7 +233,7 @@
       er von diesem eine IP Adresse. Über diese Adresse kann man sich mit dem Pi
       verbinden.<br>
       Da es oft mühsam ist, diese Adresse herauszufinden, macht sich der Pi im
-      Netz bper <a href="https://en.wikipedia.org/wiki/Multicast_DNS">mDNS</a>
+      Netz per <a href="https://en.wikipedia.org/wiki/Multicast_DNS">mDNS</a>
       (Bonjour, Avahi) bekannt.<br>
       Auf diese Weise kann man sich z.B. mit einem Browser einfach zu AvNav
       verbinden:</p>
@@ -272,11 +272,11 @@
       mit dem Raspberry per SSH verbinden will (z.B. <a href="https://www.putty.org/">putty</a>
       unter Windows).<br>
     </p>
-    <p>Eine Einschränkung bleibt: Leider funktioniert avnav.local nicht auf
+    <p>Eine Einschränkung bleibt: Leider funktioniert xxx.local nicht auf
       Android-Geräten. Daher empfehle ich, dort ein Tool zu nutzen, das mDNS
       nutzen kann - einen <a href="https://play.google.com/store/apps/details?id=de.wellenvogel.bonjourbrowser">
         BonjourBrowser </a>. Für IOS gibt es ein&nbsp; <a href="https://play.google.com/store/apps/details?id=de.wellenvogel.bonjourbrowser">vergleichbares
-        Tool</a> - auch wenn dort der Eintrag "avnav.local" im Browser
+        Tool</a> - auch wenn dort der Eintrag "xxx.local" im Browser
       funktioniert. Man wird seinen Raspberry mit dem AvNav-Image in den
       Browsern unter dem Namen "avnav-server" finden. Typischerweise wird man
       noch einen zweiten Eintrag "avnav" sehen - dahinter verbirgt sich der <a
@@ -287,7 +287,7 @@
       liegen, wenn zusätzlich z.B. per Mobilfunk eine Internet-Verbindung aktiv
       ist. In diesem Falle sollte man mobile Daten zeitweilig abschalten.</p>
     <p>Ab der Version 1.12 unterstützt die Android BonjourBrowser app auch SSH.
-      Das AvNav Image (ab 202204xx) mach auch seinen SSH Zugang per mDNS
+      Das AvNav Image (ab 202204xx) macht auch seinen SSH Zugang per mDNS
       bekannt. Wenn man unter Android dann noch einen passenden SSh client
       installiert (beispielsweise <a href="https://play.google.com/store/apps/details?id=com.sonelli.juicessh&amp;hl=de&amp;gl=US">JuiceSSH</a>)
       kann man sich auf diese Weise auch per SSH mit dem Pi verbinden. Das ist
@@ -313,7 +313,7 @@
       nicht funktioniert. Im BonjourBrowser wird man 2 http: Adressen finden
       (Port 8080 für AvNav und Port 3000 für SignalK). Dazu (ab 202204xx) noch
       einen SSH Zugang.</p>
-    <h4><a name="access-clientwifi"></a>Verbindung über ein anderes WLAN</h4>
+    <h4><a name="connect-clientwifi"></a>Verbindung über ein anderes WLAN</h4>
     <p>Wenn man wie unten beschrieben eine WLAN Verbindung zu einem anderen
       Netzwerk eingerichtet hat (erfordert einen WLAN Stick oder Umschaltung des
       internen WLANs auf Client), kann man den Zugriff auf den Pi über dieses
@@ -365,7 +365,7 @@
       Bei jedem WLAN, mit dem man sich verbindet, kann man auswählen, ob ein
       Zugriff auf den Pi von aussen möglich sein soll ("external access"). Wenn
       das nicht ausgewählt ist, kann über dieses WLAN nicht auf AvNav
-      zugegriffen werden. Bitte die <a href="#connect-wificlient">Hinweise zum
+      zugegriffen werden. Bitte die <a href="#connect-clientwifi">Hinweise zum
         Zugriff</a> beachten.</p>
     <h4>Verbindung über ein per USB angeschlossenes Android Gerät</h4>
     <p>Wie bereits beim <a href="#connect-usb">Zugriff</a> beschrieben, kann

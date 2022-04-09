@@ -115,7 +115,7 @@
       handled by a plugin but by a dedicated "handler" - AVNSignalKHandler. You
       need to modify the <a href="#configuration">Configuration</a> at this
       handler now.</p>
-    <h3>1. NMEA to AvNav and from there to SignalK</h3>
+    <h3><a name="flow1"></a>1. NMEA to AvNav and from there to SignalK</h3>
     <p>This flow is preconfigured in the <a href="../install.html#Headless">AvNav
         headless images</a>.</p>
     <p>A AVNSocketWriter is created in AvNav (default: port 34568). This writer
@@ -359,7 +359,7 @@
     <p>Some of the parameters will only become visible if the "parent" parameter
       is set.</p>
     <br>
-    <h3>Mapping</h3>
+    <h3><a name="mapping"></a>Mapping</h3>
     <p>SignalK pathes are mapped to AvNav data pathes:</p>
     <p>/vessels/self/... =&gt; gps.signalk....</p>
     <p>Those pathes are not used in AvNav internally but you can use them for
