@@ -167,13 +167,14 @@ class AVNApi(object):
     """
     raise NotImplemented()
 
-  def registerUserApp(self,url,iconFile,title=None):
+  def registerUserApp(self,url,iconFile,title=None,preventConnectionLost=False):
     """
     register a user app to be displayed
     this should be called only early - i.e. at the beginning of the run method
     @param url: the url to be used to connect, $HOST will be replaced by the current host
     @param iconFile: a file name for the icon file, relative pathes to this plugin dir
     @param title: if set - show a title bar with this title
+    @param preventConnectionLost: if True - disable any connection lost alarm while displaying
     @return:
     """
     raise NotImplemented()

@@ -11,6 +11,7 @@ import InputMonitor from '../hoc/InputMonitor.jsx';
 import Mob from '../components/Mob.js';
 import Addons from '../components/Addons.js';
 import remotechannel, {COMMANDS} from "../util/remotechannel";
+import alarmhandler from "../nav/alarmhandler";
 
 
 class AddOnPage extends React.Component{
@@ -46,9 +47,29 @@ class AddOnPage extends React.Component{
                 globalStore.storeData(keys.gui.addonpage.activeAddOn, i);
             },100);
         })
+        this.blockIds={};
     }
     componentWillUnmount() {
         remotechannel.unsubscribe(this.remoteToken);
+        for (let id in this.blockIds){
+            alarmhandler.removeBlock(id);
+        }
+        this.blockIds={};
+    }
+    blockAlarm(name){
+        for (let k in this.blockIds){
+            if (this.blockIds[k] === name) return;
+        }
+        this.blockIds[alarmhandler.addBlock(name)]=name;
+    }
+    unblockAlarm(name){
+        for (let k in this.blockIds){
+            if (this.blockIds[k] === name) {
+                alarmhandler.removeBlock(k);
+                delete this.blockIds[k];
+                return;
+            }
+        }
     }
 
     componentDidMount(){
@@ -115,6 +136,12 @@ class AddOnPage extends React.Component{
                     let urladd="_="+(new Date()).getTime();
                     if (url.match(/\?/)) url+="&"+urladd;
                     else url+="?"+urladd;
+                }
+                if (currentAddOn.preventConnectionLost){
+                    this.blockAlarm('connectionLost');
+                }
+                else{
+                    this.unblockAlarm('connectionLost');
                 }
                 let showInWindow=currentAddOn.newWindow === 'true';
                 let MainContent= InputMonitor((props)=>

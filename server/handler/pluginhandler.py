@@ -217,7 +217,7 @@ class ApiImpl(AVNApi):
   def setStatus(self,value,info):
     self.phandler.setInfo(self.prefix,info,value)
 
-  def registerUserApp(self, url, iconFile, title=None):
+  def registerUserApp(self, url, iconFile, title=None,preventConnectionLost=False):
     addonhandler=AVNWorker.findHandlerByName(AVNUserAppHandler.getConfigName())
     if addonhandler is None:
       raise Exception("no http server")
@@ -233,7 +233,7 @@ class ApiImpl(AVNApi):
       return
     self.userApps.append(userApp)
     addonhandler.registerAddOn(id,url,"%s/%s/%s"%(URL_PREFIX,self.prefix,iconFile),
-                               title=title)
+                               title=title,preventConnectionLost=preventConnectionLost)
     self.addonIndex+=1
     return id
 

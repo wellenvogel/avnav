@@ -17,8 +17,18 @@ class AlarmHandler{
         this.lastSequence=globalStore.getData(keys.nav.gps.updatealarm);
         this.localAlarms={};
         this.sounds={};
+        this.alarmBlocks={};
+        this.blockId=1;
     }
 
+    addBlock(alarmName){
+        this.blockId++;
+        this.alarmBlocks[this.blockId]=alarmName;
+        return this.blockId;
+    }
+    removeBlock(id){
+        delete this.alarmBlocks[id];
+    }
     start(){
         this.startTimer();
         for (let alarm in LOCAL_TYPES){
@@ -80,6 +90,11 @@ class AlarmHandler{
     }
     startLocalAlarm(type,opt_category){
         if (! LOCAL_TYPES[type]) return;
+        for (let k in this.alarmBlocks){
+            if (this.alarmBlocks[k] === type) {
+                return;
+            }
+        }
         if (! opt_category) opt_category='info';
         let alarms=assign({},globalStore.getData(keys.nav.alarms.all));
         let alarm={category:opt_category,name:type,isLocal:true,running:true,repeat:1};
