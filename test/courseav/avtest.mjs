@@ -51,7 +51,10 @@ let inputs={
     etq1q3_2: {l:10,v:toggle(11,190,20)},
     etq1q3_3: {l:10,v:toggle(10,190,20).concat(toggle(190,190,10))},
     nramp: {t:'normal',l:10,v:range(0,300,10).concat(toggle(300,300,20))},
-    ntoggle: {t:'normal',l:10,v:toggle(0,20,30).concat(toggle(20,20,20))}
+    ntoggle: {t:'normal',l:10,v:toggle(0,20,30).concat(toggle(20,20,20))},
+
+    ndefnorm: {t:'normal',v:[2,3,4,5,6,7,8,9,10].concat(toggle(undefined,undefined,12))},
+    ndefcour: range(0,10,1).concat(toggle(undefined,undefined,20))
 
 
 };

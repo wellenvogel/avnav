@@ -38,7 +38,7 @@ export default class Average{
                 //so after length adds of undefined the value becomes undefined
                 let old=this.values.shift();
                 if (this.values.length > 0) {
-                    this.currentValue=this.idiff(this.currentValue-old);
+                    this.currentValue=this.idiff(this.currentValue,old);
                 }
                 else this.currentValue=undefined;
                 return;
