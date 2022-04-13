@@ -141,8 +141,11 @@ def jwt(user,  api_sec):
 def timeToTs(tm):
   if tm is None:
     return None
-  dt=AVNUtil.gt(tm)
-  return AVNUtil.datetimeToTsUTC(dt)
+  try:
+    dt=AVNUtil.gt(tm)
+    return AVNUtil.datetimeToTsUTC(dt)
+  except Exception as e:
+    AVNLog.error("unable to parse timestamp %s:%s",str(tm),traceback.format_exc())
 
 class AE(object):
   def __init__(self,path,converter=None):
@@ -809,34 +812,37 @@ class AVNSignalKHandler(AVNWorker):
       now=AVNUtil.utcnow()
       oldest=now-self.navdata.getAisExpiryPeriod()
       for vessel,values in data.items():
-        if vessel.find('mmsi') < 0:
-          continue
-        mmsi=values.get('mmsi')
-        if mmsi is None or mmsi=='':
-          continue
-        aisdata={'mmsi':mmsi}
-        newestTs=None
-        for k,e in AISPATHMAP.items():
-          av=getFromDict(values,e.path)
-          if av is None:
+        try:
+          if vessel.find('mmsi') < 0:
             continue
-          ts=e.getTimestamp(av)
-          if ts is not None:
-            if newestTs is None or ts > newestTs:
-              newestTs=ts
-          value=e.getValue(av)
-          if value is not None:
-            aisdata[k]=value
-        if newestTs is not None:
-          aisdata['timestamp']=newestTs
-          if self.timeOffset is not None:
-            newestTs-=self.timeOffset
-        if newestTs is not None and newestTs < oldest and not self.config.ignoreTs:
-          AVNLog.debug("ignore ais mmsi=%s - to old",mmsi)
-          continue
-        numTargets+=1
-        AVNLog.debug("adding ais data for %s",mmsi)
-        self.navdata.addAisItem(mmsi,aisdata,self.sourceName,self.config.priority*10,now=newestTs)
+          mmsi=values.get('mmsi')
+          if mmsi is None or mmsi=='':
+            continue
+          aisdata={'mmsi':mmsi}
+          newestTs=None
+          for k,e in AISPATHMAP.items():
+            av=getFromDict(values,e.path)
+            if av is None:
+              continue
+            ts=e.getTimestamp(av)
+            if ts is not None:
+              if newestTs is None or ts > newestTs:
+                newestTs=ts
+            value=e.getValue(av)
+            if value is not None:
+              aisdata[k]=value
+          if newestTs is not None:
+            aisdata['timestamp']=newestTs
+            if self.timeOffset is not None:
+              newestTs-=self.timeOffset
+          if newestTs is not None and newestTs < oldest and not self.config.ignoreTs:
+            AVNLog.debug("ignore ais mmsi=%s - to old",mmsi)
+            continue
+          numTargets+=1
+          AVNLog.debug("adding ais data for %s",mmsi)
+          self.navdata.addAisItem(mmsi,aisdata,self.sourceName,self.config.priority*10,now=newestTs)
+        except Exception as e:
+          AVNLog.error("unable to read AIS target %s: %s",str(vessel),traceback.format_exc())
       self.setInfo(self.I_AIS,'read %d targets'%numTargets,WorkerStatus.NMEA)
     except Exception as ex:
       self.setInfo(self.I_AIS,'error reading ais data from %s:%s'%(url,str(ex)),WorkerStatus.ERROR)
