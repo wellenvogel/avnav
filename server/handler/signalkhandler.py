@@ -685,6 +685,7 @@ class AVNSignalKHandler(AVNWorker):
     self.deltas=LockedSKAlarmList()
     self.__alarmCondition=threading.Condition()
     self.ownWpOffSent=False #set if we have sent the own WP off to SK
+    self.ownMMSI=None
 
 
 
@@ -817,6 +818,8 @@ class AVNSignalKHandler(AVNWorker):
             continue
           mmsi=values.get('mmsi')
           if mmsi is None or mmsi=='':
+            continue
+          if self.ownMMSI is not None and mmsi == self.ownMMSI:
             continue
           aisdata={'mmsi':mmsi}
           newestTs=None
@@ -1089,6 +1092,11 @@ class AVNSignalKHandler(AVNWorker):
               name=data.get('name')
               if name is not None:
                 self.setValue("name",name)
+              mmsi=data.get('mmsi')
+              if mmsi != self.ownMMSI:
+                AVNLog.info("set own mmsi to %s",str(mmsi))
+                self.ownMMSI=mmsi
+
           else:
             pass
           if self.config.chartQueryPeriod > 0 and lastChartQuery < (now - self.config.chartQueryPeriod):
