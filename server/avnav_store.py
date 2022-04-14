@@ -59,6 +59,10 @@ class AVNStore(object):
       self.timestamp = timestamp if timestamp is not None else AVNUtil.utcnow()
       self.value[name]=value
       return True
+    def getMmsi(self):
+      if not type(self.value) is dict:
+        return None
+      return self.value.get('mmsi')
   #fields we merge
   ais5mergeFields=['imo_id','callsign','shipname','shiptype','destination']
   CHANGE_COUNTER = ['alarm', 'leg', 'route']
@@ -241,7 +245,7 @@ class AVNStore(object):
     try:
       for key in list(self.__aisList.keys()):
         aisEntry=self.__aisList[key]
-        if self.__isAisExpired(aisEntry, now):
+        if self.__isAisExpired(aisEntry, now) or aisEntry.getMmsi() == self.__ownMMSI:
           keysToRemove.append(key)
         else:
           if asDict:
