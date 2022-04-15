@@ -4,7 +4,6 @@
 
 
 import navobjects from '../nav/navobjects';
-import OverlayDialog from '../components/OverlayDialog.jsx';
 import AisLayer from './aislayer';
 import NavLayer from './navlayer';
 import TrackLayer from './tracklayer';
@@ -38,7 +37,6 @@ import OverlayConfig from "./overlayconfig";
 import Helper from "../util/helper";
 import KmlChartSource from "./kmlchartsource";
 import GeoJsonChartSource from "./geojsonchartsource";
-import CanvasChartSource from "./canvaschartsource";
 import pepjsdispatcher from '@openlayers/pepjs/src/dispatcher';
 import pepjstouch from '@openlayers/pepjs/src/touch';
 import pepjsmouse from '@openlayers/pepjs/src/mouse';
@@ -540,9 +538,6 @@ MapHolder.prototype.createChartSource=function(description){
     }
     if (description.url.match(/\.geojson$/)){
         return new GeoJsonChartSource(this,description);
-    }
-    if (description.url.match(/\.canvasoverlay$/)){
-        return new CanvasChartSource(this,description);
     }
     throw Error("unsupported overlay: "+description.url)
 
