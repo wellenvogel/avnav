@@ -102,6 +102,10 @@ if [ ! -f $servercfg ] ; then
     chown -R pi:pi "$HOME/avnav"
 fi
 
+if [ -d $HOME/.cache ] ; then
+    chown -R pi:pi $HOME/.cache
+fi
+
 $pdir/patchServerConfig.py $servercfg desk2 "/usr/lib/avnav/raspberry/xui/switch_desk.sh 2" images/rpi.png || err "unable to patch $servercfg"
 chown pi:pi $servercfg
 
