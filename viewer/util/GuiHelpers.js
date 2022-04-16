@@ -224,7 +224,7 @@ const lifecycleTimer=(thisref,timercallback,interval,opt_autostart)=>{
         currentSequence:()=>{return timerData.sequence},
         guardedCall:(sequence,callback)=>{
             //console.log("guarded call start",thisref,sequence,timerData.sequence);
-            if (sequence !== timerData.sequence) {
+            if (sequence!== undefined && sequence !== timerData.sequence) {
                 return;
             }
             let rt=callback();

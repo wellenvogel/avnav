@@ -180,7 +180,7 @@ class StatusList extends React.Component{
             serverError:false
         };
         if (this.props.reloadNotifier){
-            this.props.reloadNotifier.register(()=>this.doQuery())
+            this.props.reloadNotifier.register(()=>this.retriggerQuery())
         }
     }
     componentWillUnmount() {
@@ -210,6 +210,10 @@ class StatusList extends React.Component{
         }
         this.setState({itemList:itemList});
 
+    }
+    retriggerQuery(){
+        this.timer.stopTimer();
+        this.doQuery();
     }
     doQuery(sequence){
         let self=this;
@@ -255,7 +259,7 @@ class StatusList extends React.Component{
                 allowEdit={this.props.allowEdit}
                 finishCallback={
                     ()=>{
-                        this.doQuery();
+                        this.retriggerQuery();
                     }
                 }
                 {...iprops}/>}
