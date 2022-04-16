@@ -434,7 +434,8 @@ class AVNSerialReader(AVNWorker):
     if 'port' in param:
       self.checkUsedResource(UsedResource.T_SERIAL,param['port'])
     super().updateConfig(param)
-    self.reader.stopHandler()
+    if self.reader is not None:
+      self.reader.stopHandler()
 
   def stop(self):
     super().stop()
