@@ -116,7 +116,7 @@
         </tr>
         <tr>
           <td>priority<br>
-            (since 202204xx)</td>
+            (since 20220418)</td>
           <td>Alle NMEA Input Kanäle haben ein priority Feld. Dieses
             beeinflusst, welcher Wert gewinnt, wenn die gleichen Werte von
             mehreren Kanälen dekodiert werden. Die default priority ist 50, sie
@@ -182,7 +182,7 @@
         </tr>
         <tr>
           <td>ntphost<br>
-            (ab 202204xx)</td>
+            (ab 20220418)</td>
           <td>X</td>
           <td>Ein ntp server. Dieser wird befragt, wenn keine gültige GPS Zeit
             vorhanden ist und settime aktiv ist</td>
@@ -190,7 +190,7 @@
         </tr>
         <tr>
           <td>switchtime<br>
-            (ab 202204xx)</td>
+            (ab 20220418)</td>
           <td>X</td>
           <td>Zeit(in s) die nach dem Setzen der Zeit mindestens gewartet wird,
             bevor von gps zu ntp oder zurück gewechselt wird. Diese Zeit wird
@@ -1248,14 +1248,14 @@
         </tr>
         <tr>
           <td>nameRoll<br>
-            (ab 202204xx)</td>
+            (ab 20220418)</td>
           <td>X</td>
           <td>XDR transducer Name für Roll</td>
           <td>Roll</td>
         </tr>
         <tr>
           <td>namePitch<br>
-            (ab 202204xx)</td>
+            (ab 20220418)</td>
           <td>X</td>
           <td>XDR transducer Name für Pitch</td>
           <td>Pitch</td>
@@ -1540,7 +1540,7 @@
     <a name="AVNAlarmHandler"></a>
     <h3>AVNAlarmHandler</h3>
     <p>Management von Alarmen. Kategorie 2 (einmal, nicht notwendig).</p>
-    <p>Stark verändert ab 202204xx.</p>
+    <p>Stark verändert ab 20220418.</p>
     <p>Die default Konfiguration ist:</p>
     <div class="code">&lt;AVNAlarmHandler&gt;
 	&lt;Alarm name="waypoint" category="info" repeat="1"/&gt;<br>	&lt;Alarm name="connectionLost" category="info" repeat="1"/&gt;
@@ -1548,7 +1548,7 @@
 	&lt;Alarm name="gps"  category="critical" repeat="20000"/&gt;
 	&lt;Alarm name="mob" category="critical" repeat="2"/&gt;<br>&lt;/AVNAlarmHandler&gt;
     </div>
-    <p>Ab der Version 202204xx sollten vorhandene Alarm-Einträge in
+    <p>Ab der Version 20220418 sollten vorhandene Alarm-Einträge in
       avnav_server.xml gelöscht werden, falls nicht ein spezielles Kommando dort
       eingetragen werden soll.<br>
       Damit können die Sounds über die Sound Auswahl für die Kategorie definiert
@@ -1871,7 +1871,7 @@
       </tbody>
     </table>
     <h3>AVNSignalKHandler</h3>
-    <p>New with 202204xx.<br>
+    <p>New with 20220418.<br>
       For a description refer to the <a href="CanboatAndSignalk.html#configuration">SignalK
         Documentation</a>.</p>
     <p></p>
