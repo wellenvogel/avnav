@@ -1,0 +1,36 @@
+
+
+function userCanvasFunction(canvas){
+/**
+* mandatory - Called to draw user defined canvas elements
+* @param canvas - the Canvas Element, the origin of the drawing context is set 
+* to the center of the map
+* @returns nothing
+* "this" (the current context) is a ImageCanvasSource object (see: https://openlayers.org/en/latest/apidoc/module-ol_source_ImageCanvas-ImageCanvasSource.html) 
+*  and contains a function "lonlat_to_Canvas([lon,lat])"
+*  to calculate the canvas-coordinates of a specific map position
+**/
+
+	console.log("->berlin_cross:");
+	ctx=canvas.getContext('2d')
+	ctx.save();
+
+	const Berlin=[13.404954, 52.520008]
+	
+	let coordinate=this.lonlat_to_Canvas(Berlin);
+
+	ctx.beginPath();
+	ctx.moveTo(coordinate[0]-100,coordinate[1]);
+	ctx.lineTo(coordinate[0]+100,coordinate[1]);
+
+	ctx.moveTo(coordinate[0],coordinate[1]-100);
+	ctx.lineTo(coordinate[0],coordinate[1]+100);
+
+	ctx.stroke();	
+	ctx.lineWidth = 2;
+	ctx.fillStyle = "red";
+	ctx.strokeStyle = "red";
+	ctx.stroke();
+
+	ctx.restore();
+} 
