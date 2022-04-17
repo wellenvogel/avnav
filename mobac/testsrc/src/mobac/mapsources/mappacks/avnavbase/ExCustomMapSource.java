@@ -18,7 +18,9 @@ import javax.imageio.ImageIO;
 import jakarta.xml.bind.Unmarshaller;
 import jakarta.xml.bind.annotation.*;
 import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 import mobac.exceptions.UnrecoverableDownloadException;
 import mobac.mapsources.MapSourceTools;
@@ -36,7 +38,7 @@ import mobac.program.tilestore.TileStoreEntry;
 
 @XmlRootElement
 public class ExCustomMapSource implements HttpMapSource {
-	private Logger log = Logger.getLogger(ExCustomMapSource.class);
+	private Logger log = LoggerFactory.getLogger(ExCustomMapSource.class);
 	
 	private HashMap<Integer, Color> converterMap=new HashMap<Integer, Color>();
 
