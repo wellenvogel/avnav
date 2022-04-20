@@ -28,6 +28,7 @@ import os
 import logging
 import locale
 import csv
+import re
 
 from tiler_functions import *
 
@@ -41,6 +42,7 @@ except ImportError:
     import gdal
     from gdalconst import *
 
+isGdal3=re.match("^[3]",gdal.VersionInfo())
 def dms2dec(degs='0',mins='0',ne='E',sec='0'):
     return (float(degs)+float(mins)/60+float(sec)/3600)*(-1 if ne in ('W','S') else 1 )
 
@@ -281,11 +283,19 @@ class SrcLayer(object):
             dst_ds = dst_drv.CreateCopy(dst_file,
                                         self.raster_ds,0)
             dst_ds.SetProjection(self.srs)
-
+            
             #double x = 0.0, double y = 0.0, double z = 0.0, double pixel = 0.0, 
             #double line = 0.0, char info = "", char id = ""
-            gcps=[gdal.GCP(c[0],c[1],0,p[0],p[1],'',i) for i,p,c in self.refs]
-            dst_ds.SetGCPs(gcps,self.refs.srs())
+            if isGdal3:
+                gcps=[gdal.GCP(c[0],c[1],0,p[0],p[1],'',i) for i,p,c in self.refs]
+            else:
+                gcps=[gdal.GCP(c[0],c[1],0,p[1],p[0],'',i) for i,p,c in self.refs]
+            if isGdal3:
+                gsr=osr.SpatialReference()
+                gsr.SetFromUserInput(self.refs.srs())
+                dst_ds.SetGCPs(gcps,gsr)
+            else:    
+                dst_ds.SetGCPs(gcps,self.refs.srs())
             dst_geotr=gdal.GCPsToGeoTransform(gcps) # if len(gcps) < 5 else (0.0, 1.0, 0.0, 0.0, 0.0, 1.0)
             dst_ds.SetGeoTransform(dst_geotr)
             poly,gmt_data=self.cut_poly(dst_ds)
