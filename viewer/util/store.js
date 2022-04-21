@@ -23,10 +23,16 @@ Base.inherits(Store,StoreApi);
  * @param opt_noCallbacks: either true to omit all callbacks or a callback reference to omit this
  */
 Store.prototype.storeData=function(key,data,opt_noCallbacks){
+	let test=false;
     let hasChanged=!this.equalsData(this.data[key],data);
     this.data[key]=data;
-    if (hasChanged && ! (opt_noCallbacks === true) )this.callCallbacks([key],opt_noCallbacks);
+    if (hasChanged) {
+		if(key == 'nav.display.actualmapRotation')
+			test=true;
+		if(! (opt_noCallbacks === true) )
+			this.callCallbacks([key],opt_noCallbacks);
     return hasChanged;
+    }
 };
 
 

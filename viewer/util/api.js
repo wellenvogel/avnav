@@ -9,6 +9,9 @@ import Formatter from './formatter.js';
 import Helper from './helper.js';
 import Toast from '../components/Toast.jsx';
 import featureFormatter from "./featureFormatter";
+import keys,{KeyHelper} from '../util/keys.jsx';
+import globalStore from '../util/globalstore.jsx';
+
 
 class Api{
     constructor(){
@@ -114,6 +117,17 @@ class Api{
         }
         return parseInt(version);
     }
+    
+    /**
+     * store a key
+     * @returns {number}
+     */
+    storeData(key,data,opt_noCallbacks){
+		    globalStore.storeData(key, data, opt_noCallbacks);
+		    }
+
+	
+
 
 }
 

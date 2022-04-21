@@ -116,7 +116,8 @@ let keys={
             boatDirection: new D("the direction of the boat to be used for display"),
             directionMode: new D("one of cog,hdm,hdt"),
             isSteady: new D("will be true if steady detected"),
-            mapDirection: new D("the direction that will be used to rotate the map with course up")
+            mapDirection: new D("the direction that will be used to rotate the map with course up"),
+            actualmapRotation: new D("the actual rotation of the map")
         },
         alarms:{
             all:K,
@@ -265,7 +266,7 @@ let keys={
         courseAverageTolerance: new Property(15, "Rotation Tolerance", PropertyType.RANGE, [1, 30]), //tolerance for slow rotation
         courseUpAlwaysCOG: new Property(false,"CourseUp always COG",PropertyType.CHECKBOX),
         maxButtons: new Property(8),
-        positionQueryTimeout: new Property(1000, "Position (ms)", PropertyType.RANGE, [500, 5000, 10]), //1000ms
+        positionQueryTimeout: new Property(1000, "Position (ms)", PropertyType.RANGE, [111, 5000, 10]), //1000ms
         trackQueryTimeout: new Property(5000, "Track (ms)", PropertyType.RANGE, [500, 10000, 10]), //5s in ms
         routeQueryTimeout: new Property(1000, "Route (ms)", PropertyType.RANGE, [500, 10000, 10]), //5s in ms
         chartQueryTimeout: new Property(30000, "ChartOverview (ms)", PropertyType.RANGE, [500, 200000, 100]),

@@ -1356,6 +1356,7 @@ MapHolder.prototype.pixelDistance=function(point1,point2){
 MapHolder.prototype.setMapRotation=function(rotation){
     if (rotation === undefined) return;
     this.getView().setRotation(rotation==0?0:(360-rotation)*Math.PI/180);
+
     if (this.gpsLocked){
         let boat=globalStore.getData(keys.map.centerPosition);
         if (boat) {
@@ -1696,6 +1697,8 @@ MapHolder.prototype.onPostCompose=function(evt){
     this.drawing.setContext(evt.context);
     this.drawing.setDevPixelRatio(evt.frameState.pixelRatio);
     this.drawing.setRotation(evt.frameState.viewState.rotation);
+    globalStore.storeData(keys.nav.display.actualmapRotation, this.getView().getRotation()/Math.PI*180)
+
     this.drawGrid();
     this.drawNorth();
     this.tracklayer.onPostCompose(evt.frameState.viewState.center,this.drawing);
