@@ -14,7 +14,7 @@
         image</a>.</p>
     <p>To provide a "ready to go" solution there are some images for the
       raspberry pi you can use. <br>
-      Since version 202204xx the images do support both the "headless" working
+      Since version 20220418 the images do support both the "headless" working
       mode - i.e. no keyboard or monitor attached to the pi - as well as the
       "touch" mode - a monitor (with our without touch) is locally attached,
       optionally keyboard and mouse.</p>
@@ -59,7 +59,7 @@
     NMEA2000 data will flow via Canboat to SignalK and in parallel to AvNav.<br>
     For details refer to <a href="hints/CanboatAndSignalk.html">CanBoatAndSignalK</a>.<br>
     <h3><a name="preparation"></a>Image Preparation</h3>
-    <p>new as of 20210322, extended with 202204xx</p>
+    <p>new as of 20210322, extended with 20220418</p>
     <p>Before inserting the SD card into your Raspberry (after you wrote the
       image to it) you should adapt a couple of settings (especially passwords).<br>
       The images hold a configuration file "avnav.conf" in the first partition
@@ -139,14 +139,14 @@
         </tr>
         <tr>
           <td>TouchSupport<br>
-            (since 202204xx)</td>
+            (since 20220418)</td>
           <td>off</td>
           <td>If enabled a local X server with firefox in kiosk mode is started
             - see <a href="#Touch">touch</a>.</td>
         </tr>
         <tr>
           <td>Display Dpi<br>
-            (since 202204xx)</td>
+            (since 20220418)</td>
           <td>96</td>
           <td>Only if touch support is enabled.<br>
             Resolution of the connected screen (pixel/inch). A small calculator
@@ -156,7 +156,7 @@
             monitor.</td>
         </tr>
         <tr>
-          <td>OnScreen Keyboard Height (sind 202204xx)</td>
+          <td>OnScreen Keyboard Height (sind 20220418)</td>
           <td>7</td>
           <td>Only if touch support is enabled.<br>
             The height of a keyboard row of the on screen keyboard. Should be a
@@ -165,7 +165,7 @@
         </tr>
         <tr>
           <td>HideCursor<br>
-            (sind 202204xx)</td>
+            (sind 20220418)</td>
           <td>yes</td>
           <td>Only if touch support is enabled.<br>
             Will hide the cursor on the connected screen. Switch this off if you
@@ -261,7 +261,7 @@
       page fails this could be caused by some strange network handling on
       Android. Sometimes it will help to disconnect mobile data.</p>
     <p>Since version 1.12 the Android BonjourBrowser will also support SSH
-      services. The AvNav image (ab 202204xx) also will announce it's SSH access
+      services. The AvNav image (ab 20220418) also will announce it's SSH access
       via mDNS. If you installed a SSH client on Android (like <a href="https://play.google.com/store/apps/details?id=com.sonelli.juicessh&amp;hl=de&amp;gl=US">JuiceSSH</a>)
       you can also connect to the pi for an SSH session. This is maybe not that
       comfortable for normal operation - but could help for some repiar actions
@@ -283,7 +283,7 @@
       again <a href="https://play.google.com/store/apps/details?id=com.sonelli.juicessh&amp;hl=de&amp;gl=US">JuiceSSH</a>.</p>
     <p>This is also an option to access the Pi if the Wifi does not work for
       some reason. In the BonjourBrowser you will find 2 http: addresses (port
-      8080 for AvNav and port 3000 for SignalK). Additionally (since 202204xx)
+      8080 for AvNav and port 3000 for SignalK). Additionally (since 20220418)
       the SSH access.</p>
     <h4><a name="connect-clientwifi"></a>Connection via a different Wifi Network</h4>
     <p>If you created (like described below) a wifi connection to another
@@ -302,10 +302,10 @@
     <p>For some function (e.g. software updates) the Pi needs an internet
       connection. This is not necessary for the basic navigation functions, of
       course.</p>
-    <p>Before the image version 202204xx you needed to consider that the Pi was
+    <p>Before the image version 20220418 you needed to consider that the Pi was
       not automatically setting it's local time without a connected GPS. This
       could lead to trouble for many internet connections.<br>
-      Since version 202204xx the Pi will synchronize it's local time with the
+      Since version 20220418 the Pi will synchronize it's local time with the
       net (NTP) if there is no GPS.</p>
     <p>The following options are available to connect to the internet:</p>
     <ol>
@@ -376,7 +376,7 @@
     <h2><a name="Touch"></a>Image with Display (AvNav touch)</h2>
     <p> <span>In previous versions there has been a separate AvNav Touch image.</span><br>
       This is not maintained any more.<br>
-      Since version 202204xx the support for a connected monitor (focus on
+      Since version 20220418 the support for a connected monitor (focus on
       touch) has been integrated into the "normal" AvNav images.</p>
     <p>As described at <a href="#preparation">Preparation</a> you can switch on
       the support for a local monitor there.</p>

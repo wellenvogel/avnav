@@ -237,6 +237,7 @@ class MappingEntry(object):
     self.converter=converter
     self.priority=priority
 
+
 class InfoSetter(object):
   def __init__(self,name,writer):
     self.name=name
@@ -246,6 +247,14 @@ class InfoSetter(object):
     self.writer.setInfo(self.name,info,status)
   def deleteInfo(self):
     self.writer.deleteInfo(self.name)
+
+class DummyInfoSetter(InfoSetter):
+  def __init__(self):
+    super().__init__(None,None)
+  def setInfo(self,info,status):
+    pass
+  def deleteInfo(self):
+    pass
 
 class SKAlarm(object):
   T_RECV=1 #received delta
@@ -405,7 +414,7 @@ class LockedSKAlarmList(SKAlarmList):
 
 
 class WebSocketHandler(object):
-  def __init__(self,infoSetter:InfoSetter,url:str,messageCallback):
+  def __init__(self,infoSetter:InfoSetter,url:str,messageCallback,omitLog=False):
     self.infoSetter=infoSetter
     self.url=url
     self.__messageCallback=messageCallback
@@ -415,6 +424,7 @@ class WebSocketHandler(object):
     self.__timeOffset=None
     self.__error=None
     self.__lock=threading.Lock()
+    self.__omitLog=omitLog
   def getUrlForLog(self):
     return re.sub('\\?.*','',self.url)
   def open(self):
@@ -434,7 +444,8 @@ class WebSocketHandler(object):
                                           on_message=self.__webSocketMessage,
                                           on_close=self.__webSocketClose,
                                           on_open=self.__webSocketOpen)
-        AVNLog.info("websocket %s created at %s",self.infoSetter.name,self.getUrlForLog())
+        if not self.__omitLog:
+          AVNLog.info("websocket %s created at %s",self.infoSetter.name,self.getUrlForLog())
         webSocketThread=threading.Thread(name="signalk-websocket-%s"%self.infoSetter.name,target=self.__webSocketRun)
         webSocketThread.setDaemon(True)
         webSocketThread.start()
@@ -449,9 +460,11 @@ class WebSocketHandler(object):
     return True
 
   def __webSocketRun(self):
-    AVNLog.info("websocket receiver %s started",self.infoSetter.name)
+    if not self.__omitLog:
+      AVNLog.info("websocket receiver %s started",self.infoSetter.name)
     self.__webSocket.run_forever()
-    AVNLog.info("websocket receiver %s finished",self.infoSetter.name)
+    if not self.__omitLog:
+      AVNLog.info("websocket receiver %s finished",self.infoSetter.name)
 
   def __webSocketOpen(self,*args):
     self.infoSetter.setInfo('connected',WorkerStatus.NMEA)
@@ -479,7 +492,8 @@ class WebSocketHandler(object):
     self.__connected=False
 
   def __webSocketClose(self,*args):
-    AVNLog.info("websocket connection %s closed",self.infoSetter.name)
+    if not self.__omitLog:
+      AVNLog.info("websocket connection %s closed",self.infoSetter.name)
     self.__connected=False
     try:
       self.infoSetter.setInfo( "connection closed at %s" % self.getUrlForLog(), WorkerStatus.ERROR)
@@ -1059,8 +1073,10 @@ class AVNSignalKHandler(AVNWorker):
               try:
                 url=websocketUrl+"?subscribe=none"
                 if self.timeSocket is not None:
+                  if not self.timeSocket.isConnected():
+                    self.setInfo(self.I_TIME,"time channel not connected",WorkerStatus.ERROR)
                   self.timeSocket.close()
-                self.timeSocket=WebSocketHandler(InfoSetter(self.I_TIME,self),url,
+                self.timeSocket=WebSocketHandler(DummyInfoSetter(),url,
                                                 self.timeChannelMessage)
                 self.timeSocket.open()
               except Exception as e:
@@ -1295,6 +1311,7 @@ class AVNSignalKHandler(AVNWorker):
     to=socket.getTimeOffset()
     if to is not None:
       self.timeOffset=to
+      self.setInfo(self.I_TIME,"time offset=%s"%str(to),WorkerStatus.NMEA)
 
   def writeChannelMessage(self,data,socket,first):
     pass
