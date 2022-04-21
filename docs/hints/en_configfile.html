@@ -113,7 +113,7 @@
         </tr>
         <tr>
           <td>priority<br>
-            (since 20220418)</td>
+            (since 20220421)</td>
           <td>All NMEA input channels have a priority field. This controls which
             value will win if the same item will be decoded from multiple
             channels. The default priority is 50 you can adapt upwards and
@@ -148,7 +148,7 @@
         </tr>
         <tr>
           <td>settime<br>
-            (from 20220418)</td>
+            (from 20220421)</td>
           <td>X</td>
           <td>if set setting the system time is enabled (requires settimecmd to
             be set additionally)</td>
@@ -177,14 +177,14 @@
         </tr>
         <tr>
           <td>ntphost<br>
-            (from 20220418)</td>
+            (from 20220421)</td>
           <td>X</td>
           <td>NTP server to be queried if there is no valid GPS time</td>
           <td>pool.ntp.org</td>
         </tr>
         <tr>
           <td style="width: 161px;">switchtime<br>
-            (from 20220418)</td>
+            (from 20220421)</td>
           <td style="margin-left: 0px;">X</td>
           <td>time (in s) after setting the time before it is changed between
             valid GPS time and ntp time (and back). This time will also be used
@@ -1234,14 +1234,14 @@
         </tr>
         <tr>
           <td>nameRoll<br>
-            (from 20220418)</td>
+            (from 20220421)</td>
           <td>X</td>
           <td>XDR transducer name for roll</td>
           <td>Roll</td>
         </tr>
         <tr>
           <td>namePitch<br>
-            (from 20220418)</td>
+            (from 20220421)</td>
           <td>X</td>
           <td>XDR transducer name for pitch</td>
           <td>Pitch</td>
@@ -1511,7 +1511,7 @@
     <a name="AVNAlarmHandler"></a>
     <h3>AVNAlarmHandler</h3>
     <p>Management of Alarms. category 2 (once, optional).</p>
-    <p>Changed from 20220418. </p>
+    <p>Changed from 20220421. </p>
     <p>The default configuration:</p>
     <div class="code">&lt;AVNAlarmHandler&gt;
 	&lt;Alarm name="waypoint" category="info" repeat="1"/&gt;<br>	&lt;Alarm name="connectionLost" category="info" repeat="1"/&gt;
@@ -1519,7 +1519,7 @@
 	&lt;Alarm name="gps"  category="critical" repeat="20000"/&gt;
 	&lt;Alarm name="mob" category="critical" repeat="2"/&gt;<br>&lt;/AVNAlarmHandler&gt;
     </div>
-    <p>Since version 20220418 you should remove existing alarm entries from your
+    <p>Since version 20220421 you should remove existing alarm entries from your
       avnav_server.xml if you do not have special needs.<br>
       When using the defaults you can choose the sound directly at the server
       status page and you can e.g. use an own sound file that has been uploaded
@@ -1835,7 +1835,7 @@
     </table>
     <p></p>
     <h3>AVNSignalKHandler</h3>
-    <p>New with 20220418.<br>
+    <p>New with 20220421.<br>
       For a description refer to the <a href="CanboatAndSignalk.html#configuration">SignalK
         Documentation</a>.</p>
     <p><br>

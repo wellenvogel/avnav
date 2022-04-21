@@ -40,8 +40,8 @@ sudo systemctl start avnav</div>
     <br>
     <div> </div>
     <h2>Versions</h2>
-    <p> <span style="font-weight: bold;">20220418</span> <a title="release/20220418"
-        href="../downloads/release/20220418">link</a></p>
+    <p> <span style="font-weight: bold;">20220421</span> <a title="release/20220421"
+        href="../downloads/release/20220421">link</a></p>
     <p>Extensions of the SignalK Integration</p>
     <ul>
       <li>AvNav is now able to directly fetch it's navigation data from SignalK
@@ -98,14 +98,16 @@ sudo systemctl start avnav</div>
       <li>improve error handling for avahi</li>
       <li>ensure restart button visibility on the status page</li>
       <li>android: correctly handle overlay-change-detection</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/212">#212</a>:
+        Speed Gauge: maxValue &lt; 10 crashes app (endless loop)</li>
+      <li>chart converter now also working on bullseye (GDAL3)</li>
     </ul>
     <p> Migration Hint</p>
     <ul>
       <li>if you did not configure special alarm commands just remove all
         AVNAlarmHandler entries from your avnav_server.xml. This will allow you
         to change the alarm sounds at the configuration and upload your own
-        sounds to the user directory.<br>
-      </li>
+        sounds to the user directory.</li>
     </ul>
     <p> <span style="font-weight: bold;">20220306</span> <a title="release/20220306"
         href="../downloads/release/20220306">link</a></p>

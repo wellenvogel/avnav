@@ -13,7 +13,7 @@
     <p>Für Eilige ist hier der Link zum <a href="https://www.free-x.de/raspbian/bullseye">aktuellen
         Image</a>.</p>
     <p>Um den Start zu vereinfachen, gibt es fertige Images für den Raspberry
-      Pi. Ab Version 20220418 unterstützen die Images sowohl den sogenannten
+      Pi. Ab Version 20220421 unterstützen die Images sowohl den sogenannten
       "headless" Betrieb - d.h. es ist weder Tastatur noch Monitor am Pi
       angeschlossen als auch einen Betrieb mit einem angeschlossener (Touch-)
       Bildschirm (gerne auch optional Tastatur und Maus).</p>
@@ -58,7 +58,7 @@
     NMEA2000-Daten laufen über Canboat zu SignalK und zu AvNav.<br>
     Für Details zu canboat siehe <a href="hints/CanboatAndSignalk.html">CanBoatAndSignalK</a>.
     <h3><a name="preparation"></a>Image Vorbereitung</h3>
-    <p>neu ab Version "20210322", erweitert ab Version "20220418"</p>
+    <p>neu ab Version "20210322", erweitert ab Version "20220421"</p>
     <p>Bevor die fertig vorbereitete SD-Karte im Raspberry verwendet wird,
       sollte man einige Einstellungen anpassen. Das gilt vor allem für
       Passworte:<br>
@@ -143,7 +143,7 @@
         </tr>
         <tr>
           <td>TouchSupport<br>
-            (ab 20220418)</td>
+            (ab 20220421)</td>
           <td>aus</td>
           <td>Wenn eingeschaltet, startet ein X-Server mit einem Firefox Browser
             im Kiosk Modus. Über einen Button in AvNav kann auf einen anderen
@@ -152,7 +152,7 @@
         </tr>
         <tr>
           <td>Display DPI<br>
-            (ab 20220418)</td>
+            (ab 20220421)</td>
           <td>96</td>
           <td>Nur für den lokalen Bilschirm.<br>
             Die dots/inch für das angeschlossene Display. Beim Klick öffnet sich
@@ -163,7 +163,7 @@
         </tr>
         <tr>
           <td>OnScreen KeyboardHeight<br>
-            (ab 20220418)</td>
+            (ab 20220421)</td>
           <td>7</td>
           <td>Die Höhe einer Tastenzeile beim angezeigten OnScreen keyboard. Bei
             korrekter DPI Einstellung sollte dieser Wert ein guter Kompromiss
@@ -173,7 +173,7 @@
         </tr>
         <tr>
           <td>HideCursor<br>
-            (ab 20220418)</td>
+            (ab 20220421)</td>
           <td>an</td>
           <td>Verbergen des Cursors auf dem lokalen Bildchschirm. Wenn mit einer
             Maus gearbeitet werden soll, muss dieser Schalter auf "aus" gesetzt
@@ -287,7 +287,7 @@
       liegen, wenn zusätzlich z.B. per Mobilfunk eine Internet-Verbindung aktiv
       ist. In diesem Falle sollte man mobile Daten zeitweilig abschalten.</p>
     <p>Ab der Version 1.12 unterstützt die Android BonjourBrowser app auch SSH.
-      Das AvNav Image (ab 20220418) macht auch seinen SSH Zugang per mDNS
+      Das AvNav Image (ab 20220421) macht auch seinen SSH Zugang per mDNS
       bekannt. Wenn man unter Android dann noch einen passenden SSh client
       installiert (beispielsweise <a href="https://play.google.com/store/apps/details?id=com.sonelli.juicessh&amp;hl=de&amp;gl=US">JuiceSSH</a>)
       kann man sich auf diese Weise auch per SSH mit dem Pi verbinden. Das ist
@@ -311,7 +311,7 @@
       Für SSH Zugriffe ebenfalls wieder <a href="https://play.google.com/store/apps/details?id=com.sonelli.juicessh&amp;hl=de&amp;gl=US">JuiceSSH</a>.</p>
     <p>Über diesen Weg kann man auch auf den Pi zugreifen, falls z.B. das WLAN
       nicht funktioniert. Im BonjourBrowser wird man 2 http: Adressen finden
-      (Port 8080 für AvNav und Port 3000 für SignalK). Dazu (ab 20220418) noch
+      (Port 8080 für AvNav und Port 3000 für SignalK). Dazu (ab 20220421) noch
       einen SSH Zugang.</p>
     <h4><a name="connect-clientwifi"></a>Verbindung über ein anderes WLAN</h4>
     <p>Wenn man wie unten beschrieben eine WLAN Verbindung zu einem anderen
@@ -328,10 +328,10 @@
     <p>Für einige Funktionen (z.B. update von Software) benötigt der Pi eine
       Internet Verbindung. Diese wird natürlich nicht für die grundlegenden
       Navigationsfunktionen benötigt.</p>
-    <p>Vor der Image Version 20220418 ist dabei zu beachten, das der Pi nicht
+    <p>Vor der Image Version 20220421 ist dabei zu beachten, das der Pi nicht
       automatisch seine Zeit einstellt, wenn kein GPS angeschlossen ist. Das
       kann bei vielen Internet Zugriffen zu Problemen führen. <br>
-      Ab der Version 20220418 synchronisiert der Pi nach einer Wartezeit
+      Ab der Version 20220421 synchronisiert der Pi nach einer Wartezeit
       automatisch seine Zeit mit dem Netz (ntp).</p>
     <p>Für die Verbindung zum Internet gibt es die folgenden Möglichkeiten:</p>
     <ol>
@@ -402,7 +402,7 @@
     <h2><a name="Touch"></a>Image mit Bildschirm</h2>
     <p> <span>In früheren Versionen gab es ein eigenes AvNav Touch Image.</span><br>
       Dieses wird jedoch nicht mehr weiter gepflegt.<br>
-      Ab der Versiion 20220418 wurde daher der Support für einen angeschlossenen
+      Ab der Versiion 20220421 wurde daher der Support für einen angeschlossenen
       Bildschirm (mit dem Schwerpunkt touch) in die AvNav images integriert.</p>
     <p>Wie unter <a href="#preparation">Vorbereitung</a> beschrieben, kann man
       die Unterstützung für einen Bildschirm dort aktivieren.<br>
