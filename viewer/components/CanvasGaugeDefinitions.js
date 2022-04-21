@@ -5,7 +5,7 @@ import assign from 'object-assign';
 const temperatureTranslateFunction=(props)=>{
     let rt=props;
     if (props.minValue !== undefined && props.maxValue !== undefined){
-        let inc=Math.floor((props.maxValue - props.minValue)/10);
+        let inc=Math.floor((parseFloat(props.maxValue) - parseFloat(props.minValue))/10);
         if (inc < 1) inc=1;
         let majorTicks=[];
         for (let i=Math.round(props.minValue);i<=props.maxValue;i+=inc){
@@ -15,7 +15,7 @@ const temperatureTranslateFunction=(props)=>{
     }
     if (props.startHighlight){
         rt.highlights=[
-            {from:props.startHighlight,to:props.maxValue||200,color:props.colorHighlight}
+            {from:parseFloat(props.startHighlight),to:parseFloat(props.maxValue||200),color:props.colorHighlight}
         ];
     }
     else{
@@ -32,7 +32,7 @@ const temperatureTranslateFunction=(props)=>{
 const voltageTranslateFunction=(props)=>{
     let rt=props;
     if (props.minValue !== undefined && props.maxValue !== undefined){
-        let inc=Math.floor((props.maxValue - props.minValue)/10);
+        let inc=Math.floor((parseFloat(props.maxValue) - parseFloat(props.minValue))/10);
         if (inc < 1) inc=1;
         let majorTicks=[];
         for (let i=Math.round(props.minValue);i<=props.maxValue;i+=inc){
@@ -41,19 +41,19 @@ const voltageTranslateFunction=(props)=>{
         rt.majorTicks=majorTicks;
     }
     rt.highlights=[];
-    let warningStart=props.minValue||0;
-    let okStart=props.minValue||0;
+    let warningStart=parseFloat(props.minValue||0);
+    let okStart=parseFloat(props.minValue||0);
     if (props.startDanger){
         rt.highlights.push(
-            {from:props.minValue,to:props.startDanger,color:props.colorDanger});
-        warningStart=props.startDanger;
-        okStart=props.startDanger;
+            {from:parseFloat(props.minValue),to:parseFloat(props.startDanger),color:props.colorDanger});
+        warningStart=parseFloat(props.startDanger);
+        okStart=warningStart;
     }
     if (props.startWarning){
         rt.highlights.push(
-            {from:warningStart,to:props.startWarning,color:props.colorWarning}
+            {from:warningStart,to:parseFloat(props.startWarning),color:props.colorWarning}
         );
-        okStart=props.startWarning;
+        okStart=parseFloat(props.startWarning);
     }
     if (props.colorOk !== undefined) {
         rt.highlights.push(
@@ -112,16 +112,17 @@ export default  ()=>{
         translateFunction: (props)=>{
             let rt=props;
             if (props.minValue !== undefined && props.maxValue !== undefined){
-                let inc=Math.floor((props.maxValue-props.minValue)/10);
+                let inc=Math.floor((parseFloat(props.maxValue)-parseFloat(props.minValue))/10);
+                if (inc < 1) inc=1;
                 let majorTicks=[];
-                for (let i=Math.round(props.minValue);i<=props.maxValue;i+=inc){
+                for (let i=Math.round(props.minValue);i<=parseFloat(props.maxValue);i+=inc){
                     majorTicks.push(i);
                 }
                 rt.majorTicks=majorTicks;
             }
             if (props.startHighlight){
                 rt.highlights=[
-                    {from:props.startHighlight,to:props.maxValue||200,color:props.colorHighlight}
+                    {from:parseFloat(props.startHighlight),to:parseFloat(props.maxValue||200),color:props.colorHighlight}
                 ];
             }
             else{
