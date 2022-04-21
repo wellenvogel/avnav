@@ -5,6 +5,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const generateLicense = require('./collectLicense');
 const GenerateFilePlugin = require('generate-file-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const TerserPlugin = require("terser-webpack-plugin");
 
 module.exports = (env, argv) => {
     var outDir = "build/debug";
@@ -28,7 +29,7 @@ module.exports = (env, argv) => {
     console.log("isProduction=", isProduction);
 
     var replaceSuffix = function (content, path) {
-        //console.log("suffix replace "+path);
+        //console.log("suffix replace "+path,"content=",content.toString());
         return content.toString()
             .replace(/SUFFIX=1/, "SUFFIX='" + avnavVersion + "'")
             .replace(/_SFX=1/, "_SFX=" + avnavVersion);
@@ -61,8 +62,10 @@ module.exports = (env, argv) => {
     var devtool = "inline-source-map";
     var resolveAlias = {};
     resolveAlias['React$'] = __dirname + "/node_modules/react/index.js";
+    var cleanOutput=false;
     if (isProduction) {
         devtool = undefined;
+        cleanOutput=true;
     }
 
     var plugins = [
@@ -96,10 +99,15 @@ module.exports = (env, argv) => {
         optimization: {
             splitChunks: {
                 chunks: "all"
-            }
+            },
+            minimize: true,
+            minimizer: [new TerserPlugin({
+                exclude: /user.js/
+            })]
         },
         output: {
             path: __dirname + "/" + outDir,
+            clean: cleanOutput
         },
         resolve: {
             extensions: ['.jsx', '.scss', '.js', '.json'],
