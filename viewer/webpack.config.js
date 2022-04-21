@@ -63,9 +63,11 @@ module.exports = (env, argv) => {
     var resolveAlias = {};
     resolveAlias['React$'] = __dirname + "/node_modules/react/index.js";
     var cleanOutput=false;
+    var minify=false;
     if (isProduction) {
         devtool = undefined;
         cleanOutput=true;
+        minify=true;
     }
 
     var plugins = [
@@ -100,7 +102,7 @@ module.exports = (env, argv) => {
             splitChunks: {
                 chunks: "all"
             },
-            minimize: true,
+            minimize: minify,
             minimizer: [new TerserPlugin({
                 exclude: /user.js/
             })]
