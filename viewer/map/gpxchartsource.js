@@ -274,6 +274,10 @@ export const readFeatureInfoFromGpx=(gpx)=>{
         if (geo instanceof olPoint) {
             rt.hasWaypoint = true;
             rt.hasAny=true;
+            rt[stylePrefix+"fillColor"]=true;
+            rt[stylePrefix+"lineColor"]=true;
+            rt[stylePrefix+"circleWidth"]=true
+
         }
         else if (geo instanceof olLineString){
             rt.hasRoute=true;
