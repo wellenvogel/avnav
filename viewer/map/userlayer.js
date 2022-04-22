@@ -71,7 +71,7 @@ class UserOverlay{
         this.drawing=drawing;
         if (this.config.renderCanvas){
             let data=this.config.storeKeys?
-                globalStore.getData(this.config.storeKeys):{};
+                globalStore.getMultiple(this.config.storeKeys):{};
             try{
                 this.config.renderCanvas.apply(this.userContext,[drawing.getContext().canvas,data,center]);
             }catch (e){
@@ -161,6 +161,12 @@ export default class UserLayer {
     setImageStyles(styles) {
 
     }
+
+    /**
+     * register a user overlay
+     * @param config
+     * @return the store keys (if any)
+     */
     registerUserOverlay(config){
         if (! config || ! config.name){
             throw new Error("missing parameter name for user overlay");
@@ -171,6 +177,7 @@ export default class UserLayer {
             }
         });
         this.userOverlays.push(new UserOverlay(this.mapholder,config));
+        return config.storeKeys;
 
     }
 };

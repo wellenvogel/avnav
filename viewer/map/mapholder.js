@@ -157,7 +157,7 @@ const MapHolder=function(){
     this.needsRedraw=false;
 
     let self=this;
-    let storeKeys=KeyHelper.flattenedKeys(keys.nav.gps).concat(
+    this.storeKeys=KeyHelper.flattenedKeys(keys.nav.gps).concat(
         KeyHelper.flattenedKeys(keys.nav.center),
         KeyHelper.flattenedKeys(keys.nav.wp),
         KeyHelper.flattenedKeys(keys.nav.anchor),
@@ -178,7 +178,7 @@ const MapHolder=function(){
             self.setGpsLock(false);
         }
     });
-    globalStore.register(this.navChanged,storeKeys);
+    globalStore.register(this.navChanged,this.storeKeys);
     globalStore.register(this.propertyChange,keys.gui.global.propertySequence);
     globalStore.register(this.editMode,keys.gui.global.layoutEditing);
 
@@ -310,7 +310,20 @@ const MapHolder=function(){
 };
 
 base.inherits(MapHolder,DrawingPositionConverter);
-
+MapHolder.prototype.updateStoreKeys=function(newKeys){
+    if (! newKeys) return;
+    let flat=KeyHelper.flattenedKeys(newKeys);
+    let addKeys=[];
+    flat.forEach((k)=>{
+        if (this.storeKeys.indexOf(k) < 0){
+            addKeys.push(k);
+        }
+    });
+    if (addKeys.length > 0){
+        this.storeKeys=this.storeKeys.concat(addKeys);
+        globalStore.register(this.navChanged,this.storeKeys);
+    }
+}
 MapHolder.prototype.EventTypes=EventTypes;
 
 /**
@@ -1812,8 +1825,11 @@ MapHolder.prototype._callGuards=function(eventName){
 
 MapHolder.prototype.registerUserLayer=function(config){
     if (! this.userLayer) return;
-    this.userLayer.registerUserOverlay(config);
-    //TODO: add store keys to triggers
+    let newKeys=this.userLayer.registerUserOverlay(config);
+    if (newKeys) {
+        this.updateStoreKeys(newKeys);
+    }
+
 }
 
 
