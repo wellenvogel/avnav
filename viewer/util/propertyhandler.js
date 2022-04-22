@@ -163,12 +163,15 @@ class PropertyHandler {
         try {
             let ndata = this.loadUserData();
             if (ndata) {
-                let userData = Helper.filterObjectTree(ndata, (item, path)=> {
-                    let description = self.propertyDescriptions[path];
-                    if (!description) return;
-                    return item != globalStore.getData(path);
-                }, KeyHelper.keyNodeToString(keys.properties));
-                globalStore.storeMultiple(userData, keys.properties, true, true);
+                let userData={};
+                for (let k in this.propertyDescriptions){
+                    let v=KeyHelper.getValue(ndata,k,1);
+                    if ( v === undefined) continue;
+                    if (v !== globalStore.getData(k)){
+                        userData[k]=v;
+                    }
+                }
+                globalStore.storeMultiple(userData, undefined, true, true);
             }
         }catch (e){
             base.log("Exception reading user data "+e);
@@ -254,6 +257,12 @@ class PropertyHandler {
                 }
                 let ov=v;
                 switch (des.type) {
+                    case PropertyType.MULTICHECKBOX:
+                        if (typeof(v) !== 'object'){
+                            if (eHandler("invalid type "+typeof(v)+" for "+dk)) return;
+                        }
+                        rt[dk]=v;
+                        break;
                     case PropertyType.CHECKBOX:
                         if (typeof (v) !== 'boolean') {
                             if (typeof (v) === 'string') v = v.toLowerCase() === 'true';
@@ -376,7 +385,7 @@ class PropertyHandler {
         let descriptions = KeyHelper.getKeyDescriptions(true);
         let values = {};
         if (! current) {
-            let keys = KeyHelper.flattenedKeys(keys.properties);
+            let keys = Object.keys(descriptions);
             current = globalStore.getMultiple(keys);
         }
         for (let dk in descriptions){

@@ -498,7 +498,17 @@ export const KeyHelper = {
         return [keyObject]
 
     },
-
+    getValue:(obj,path,opt_skip)=>{
+        let parts=path.split('.');
+        let current=obj;
+        let rt=undefined;
+        for (let i=opt_skip||0;i<parts.length;i++){
+            if (typeof(current) !== 'object') return;
+            rt=current[parts[i]];
+            current=current[parts[i]];
+        }
+        return rt;
+    },
     /**
      * get a list of keys that can be used for the display in si9mple widgets
      * @return {Array}
