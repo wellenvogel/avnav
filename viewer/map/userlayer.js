@@ -46,6 +46,9 @@ class UserOverlay{
             let cv=this.drawing.getContext().canvas;
             return [cv.width*this.drawing.getDevPixelRatio(),cv.height*this.drawing.getDevPixelRatio()];
         }
+        this.userContext.triggerRender=()=>{
+            window.setTimeout(()=>this.mapholder.navEvent(),0);
+        }
     }
     init(){
         this.initUserContext();

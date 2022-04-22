@@ -1191,15 +1191,16 @@ MapHolder.prototype.setBoatOffset=function(point){
 MapHolder.prototype.navEvent = function () {
 
     let gps = globalStore.getMultiple(keys.nav.gps);
-    if (!gps.valid) return;
-    if (this.gpsLocked) {
-        if (this.courseUp) {
-            let mapDirection=globalStore.getData(keys.nav.display.mapDirection);
-            this.setMapRotation(mapDirection);
+    if (gps.valid) {
+        if (this.gpsLocked) {
+            if (this.courseUp) {
+                let mapDirection = globalStore.getData(keys.nav.display.mapDirection);
+                this.setMapRotation(mapDirection);
+            }
+            this.setCenter(gps, true, this.getBoatOffset());
         }
-        this.setCenter(gps,true,this.getBoatOffset());
+        this.checkAutoZoom();
     }
-    this.checkAutoZoom();
     if (this.olmap) this.olmap.render();
 
 };
