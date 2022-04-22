@@ -98,17 +98,32 @@ class PropertyHandler {
         }catch (e){}
     }
 
-
+    setItem(obj,path,value,opt_skip){
+        if (! obj) obj={};
+        let current=obj;
+        let parts=path.split('.');
+        for (let i=opt_skip||0;i<parts.length;i++){
+            let pk=parts[i];
+            if (i < (parts.length-1)){
+                if (typeof(current[pk]) !== 'object') current[pk]={};
+                current=current[pk];
+                continue;
+            }
+            current[pk]=value;
+        }
+        return obj;
+    }
     dataChanged(storeKeys){
         let self=this;
         let values=globalStore.getMultiple(keys.properties);
-        this.saveUserData(
-            Helper.filterObjectTree(values,(item,path)=>{
-                let description=self.propertyDescriptions[path];
-                if (description === undefined) return false;
-                return item !== description.defaultv;
-            },KeyHelper.keyNodeToString(keys.properties))
-        );
+        let saveData={};
+        for (let dk in this.propertyDescriptions){
+            let v=globalStore.getData(dk);
+            if (v !== this.propertyDescriptions[dk].defaultv){
+                this.setItem(saveData,dk,v,1);
+            }
+        }
+        this.saveUserData(saveData);
         this.incrementSequence();
     }
 

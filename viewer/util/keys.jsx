@@ -25,7 +25,8 @@ export const PropertyType={
     COLOR:3,
     LAYOUT:4,
     SELECT: 5,
-    INTERNAL: 6
+    INTERNAL: 6,
+    MULTICHECKBOX: 7
 };
 
 /**
@@ -252,7 +253,7 @@ let keys={
             compass: new Property(true, "Compass", PropertyType.CHECKBOX),
             base: new Property(true, "Base", PropertyType.CHECKBOX),
             scale: new Property(true,"ScaleLine", PropertyType.CHECKBOX),
-            user: new Property(true,"User/Plugins",PropertyType.CHECKBOX)
+            user: new Property({},"User/Plugins",PropertyType.MULTICHECKBOX)
         },
         localAlarmSound: new Property(true, "Alarm Sound", PropertyType.CHECKBOX),
         connectedMode: new Property(true, "connected", PropertyType.CHECKBOX),

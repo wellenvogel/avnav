@@ -91,6 +91,26 @@ const CheckBoxSettingsItem=(props)=>{
             value={props.value}/>
     );
 };
+const CheckBoxListSettingsItem=(lprops)=>{
+    let current=lprops.value;
+    if (typeof(current) !== 'object') return null;
+    let dl=[];
+    for (let k in current){
+        dl.push({label:k,value:current[k]})
+    }
+    return (<div>
+        {dl.map((props)=>
+        <Checkbox
+            className={lprops.className}
+            onChange={(nv)=>{
+                let newProps=assign({},current);
+                newProps[props.label]=nv;
+                lprops.onClick(newProps);
+            }}
+            label={props.label}
+            value={props.value}/>)}
+    </div>);
+};
 
 const rangeItemDialog=(item)=>{
     class Dialog extends React.Component{
@@ -239,6 +259,9 @@ const ColorSettingsItem=(properties)=>{
 const createSettingsItem=(item)=>{
     if (item.type == PropertyType.CHECKBOX){
         return CheckBoxSettingsItem;
+    }
+    if (item.type == PropertyType.MULTICHECKBOX){
+        return CheckBoxListSettingsItem;
     }
     if (item.type == PropertyType.RANGE){
         return RangeSettingsItem;

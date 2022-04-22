@@ -1,13 +1,11 @@
 /**
  * Created by andreas on 18.05.14.
  */
-    
-import navobjects from '../nav/navobjects';
+
 import keys from '../util/keys.jsx';
 import globalStore from '../util/globalstore.jsx';
-import RouteLayer from "./routelayer";
-import mapholder from "./mapholder";
 import base from "../base";
+import assign from 'object-assign';
 
 class UserOverlay{
     constructor(mapholder,config) {
@@ -15,6 +13,14 @@ class UserOverlay{
         this.mapholder=mapholder;
         this.isInitialized=false;
         this.drawing=undefined;
+        this.visible=true;
+    }
+    setVisible(v){
+        if (this.visible === v) return;
+        if (!v){
+            if (this.isInitialized) this.finalize();
+        }
+        this.visible=v;
     }
     initUserContext(){
         this.userContext={};
@@ -51,6 +57,7 @@ class UserOverlay{
         }
     }
     init(){
+        if (! this.visible) return;
         this.initUserContext();
         if (this.config.initFunction){
             try{
@@ -68,6 +75,7 @@ class UserOverlay{
      * @param {Drawing}drawing
      */
     onPostCompose(center,drawing){
+        if (! this.visible) return;
         if (! this.isInitialized){
             this.init();
         }
@@ -157,13 +165,13 @@ export default class UserLayer {
     }
 
     dataChanged() {
-        let oldVisible=this.visible;
         this.visible = globalStore.getData(keys.properties.layers.user);
-        if (! this.visible && oldVisible){
-            this.userOverlays.forEach((ovl)=>{
-                ovl.finalize();
-            })
-        }
+        if (typeof(this.visible) !== 'object') this.visible={};
+        this.userOverlays.forEach((ovl)=>{
+            let v=this.visible[ovl.config.name];
+            if (v === undefined) v=true;
+            ovl.setVisible(v);
+        })
         this.setStyle();
     }
 
@@ -185,7 +193,25 @@ export default class UserLayer {
                 throw new Error("user overlay "+config.name+" already exists");
             }
         });
-        this.userOverlays.push(new UserOverlay(this.mapholder,config));
+        let ovl=new UserOverlay(this.mapholder,config);
+        let visible=globalStore.getData(keys.properties.layers.user);
+        let isChanged=false;
+        if (typeof(visible) !== 'object') {
+            isChanged=true;
+            visible={};
+        }
+        else{
+            visible=assign({},visible);
+        }
+        if (visible[config.name] === undefined) {
+            visible[config.name]=true;
+            isChanged=true;
+        }
+        ovl.setVisible(visible[config.name]);
+        this.userOverlays.push(ovl);
+        if (isChanged){
+            globalStore.storeData(keys.properties.layers.user,visible);
+        }
         return config.storeKeys;
 
     }
