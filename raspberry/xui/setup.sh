@@ -47,7 +47,7 @@ fi
 apt-get install python-xdg || apt-get install python3-xdg || err "unable to install"
 apt-get install -y --no-install-recommends xserver-xorg-video-all \
   xserver-xorg-input-all xserver-xorg-core xinit x11-xserver-utils \
-  onboard  at-spi2-core onboard-data mousetweaks gir1.2-appindicator3-0.1 gir1.2-atspi-2.0 \
+  onboard  at-spi2-core onboard-data mousetweaks gir1.2-ayatanaappindicator3-0.1 gir1.2-atspi-2.0 \
   openbox lxterminal dconf-cli firefox-esr dbus-x11 \
   nemo xfce4-panel mousepad xdotool menu libglib2.0-bin || err "unable to install"
 
