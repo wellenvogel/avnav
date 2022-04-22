@@ -409,21 +409,21 @@ class OverlayItemDialog extends React.Component{
                                         value={this.stateHelper.getValue('maxZoom') || 0}
                                         onChange={(nv) => this.stateHelper.setValue('maxZoom', nv)}
                                     />
-                                    {itemInfo.hasSymbols && <Input
+                                    {(itemInfo.hasSymbols || itemInfo.hasWaypoint) && <Input
                                         dialogRow={true}
                                         type="number"
                                         label="min scale"
                                         value={this.stateHelper.getValue('minScale') || 0}
                                         onChange={(nv) => this.stateHelper.setValue('minScale', nv)}
                                     />}
-                                    {itemInfo.hasSymbols && <Input
+                                    {(itemInfo.hasSymbols || itemInfo.hasWaypoint) && <Input
                                         dialogRow={true}
                                         type="number"
                                         label="max scale"
                                         value={this.stateHelper.getValue('maxScale') || 0}
                                         onChange={(nv) => this.stateHelper.setValue('maxScale', nv)}
                                     />}
-                                    {(itemInfo.hasSymbols || itemInfo.allowOnline) &&<InputSelect
+                                    {(itemInfo.hasSymbols || itemInfo.allowOnline || itemInfo.hasWaypoint) &&<InputSelect
                                         dialogRow={true}
                                         label="default icon"
                                         value={this.stateHelper.getValue('defaultIcon') || '--none--'}

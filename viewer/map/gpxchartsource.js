@@ -102,6 +102,9 @@ class GpxChartSource extends ChartSourceBase{
         let type=feature.getGeometry().getType();
         if (type === 'Point' && (this.chartEntry.icons||this.chartEntry.defaultIcon)){
             let sym=feature.get('sym');
+            if (!sym && this.chartEntry.defaultIcon){
+                sym="defaultIcon"; //arbitrary name that is neither an external or absolute URL
+            }
             if (sym){
                 if (!this.styleMap[sym]) {
                     let style = new olStyle({
@@ -262,10 +265,13 @@ export const readFeatureInfoFromGpx=(gpx)=>{
         styles:{}
     };
     let features=parser.readFeatures(stripExtensions(gpx));
+    let nonSymbolPoints=false;
     features.forEach((feature)=>{
+        let hasSymbol=false;
         if (! feature) return;
         if (feature.get('sym')){
             rt.hasSymbols=true;
+            hasSymbol=true;
         }
         if (feature.get('link')){
             rt.hasLinks=true;
@@ -274,10 +280,7 @@ export const readFeatureInfoFromGpx=(gpx)=>{
         if (geo instanceof olPoint) {
             rt.hasWaypoint = true;
             rt.hasAny=true;
-            rt[stylePrefix+"fillColor"]=true;
-            rt[stylePrefix+"lineColor"]=true;
-            rt[stylePrefix+"circleWidth"]=true
-
+            if (! hasSymbol) nonSymbolPoints=true;
         }
         else if (geo instanceof olLineString){
             rt.hasRoute=true;
@@ -292,6 +295,11 @@ export const readFeatureInfoFromGpx=(gpx)=>{
             rt.hasAny=true;
         }
     })
+    if (nonSymbolPoints){
+        rt[stylePrefix+"fillColor"]=true;
+        rt[stylePrefix+"lineColor"]=true;
+        rt[stylePrefix+"circleWidth"]=true;
+    }
     rt.allowFormatter=true;
     return rt;
 
