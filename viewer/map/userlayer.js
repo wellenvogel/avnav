@@ -29,7 +29,7 @@ class UserOverlay{
             y=y/this.drawing.getDevPixelRatio();
             return this.mapholder.pointFromMap(this.drawing.cssPixelToCoord([x,y]));
         }
-        this.userContext.scale=()=>{
+        this.userContext.getScale=()=>{
             if (! this.drawing) return 1;
             return this.drawing.useHdpi?this.drawing.devPixelRatio:1;
         }
@@ -41,7 +41,7 @@ class UserOverlay{
             if (! this.drawing) return;
             return this.drawing.getContext();
         }
-        this.userContext.dimensions=()=>{
+        this.userContext.getDimensions=()=>{
             if (! this.drawing) return [0,0];
             let cv=this.drawing.getContext().canvas;
             return [cv.width*this.drawing.getDevPixelRatio(),cv.height*this.drawing.getDevPixelRatio()];
