@@ -154,7 +154,13 @@ export default class UserLayer {
     }
 
     dataChanged() {
+        let oldVisible=this.visible;
         this.visible = globalStore.getData(keys.properties.layers.user);
+        if (! this.visible && oldVisible){
+            this.userOverlays.forEach((ovl)=>{
+                ovl.finalize();
+            })
+        }
         this.setStyle();
     }
 
