@@ -28,7 +28,23 @@ DrawingPositionConverter.prototype.coordToPixel=function(point){
 DrawingPositionConverter.prototype.pixelToCoord=function(pixel){
     return [0,0];
 };
+/**
+ *
+ * @param point [lon,lat]
+ * @return {number[]}
+ */
+DrawingPositionConverter.prototype.pointToMap=function(point){
+    return [0,0];
+};
 
+/**
+ *
+ * @param coord [x,y]
+ * @return {number[]}
+ */
+DrawingPositionConverter.prototype.pointFromMap=function(coord){
+    return [0,0];
+};
 /**
  * 2d drawing functions
  * @constructor
@@ -487,4 +503,8 @@ Drawing.prototype.setLineStyles=function(opt_style){
         if (opt_style.join) this.context.lineJoin=opt_style.join;
     }
 };
+
+Drawing.prototype.cssPixelToCoord=function(xy){
+    return this.converter.pixelToCoord(xy);
+}
 

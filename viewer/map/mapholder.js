@@ -42,6 +42,7 @@ import pepjstouch from '@openlayers/pepjs/src/touch';
 import pepjsmouse from '@openlayers/pepjs/src/mouse';
 import remotechannel, {COMMANDS} from "../util/remotechannel";
 import {MouseWheelZoom} from "ol/interaction";
+import UserLayer from './userlayer';
 
 
 const PSTOPIC="mapevent";
@@ -61,7 +62,10 @@ const EventTypes={
     SELECTWP: 2,
     RELOAD: 3,
     LOAD: 4,
-    FEATURE: 5
+    FEATURE: 5,
+    SHOWMAP:6,
+    HIDEMAP:7
+
 };
 
 
@@ -102,11 +106,18 @@ const MapHolder=function(){
     this.averageCourse=0;
     this.transformFromMap=olTransforms.get("EPSG:3857","EPSG:4326");
     this.transformToMap=olTransforms.get("EPSG:4326","EPSG:3857");
-
+    this.mapEventSubscriptionId=0;
+    /**
+     * list of subscriptions
+     * @private
+     * @type {{}}
+     */
+    this.mapEventSubscriptions={};
     this.aislayer=new AisLayer(this);
     this.navlayer=new NavLayer(this);
     this.tracklayer=new TrackLayer(this);
-    this.routinglayer=new RouteLayer(this);
+    this.routinglayer=new RouteLayer(this)
+    this.userLayer=new UserLayer(this);
     this.minzoom=32;
     this.mapMinZoom=32; //for checking in autozoom - differs from minzoom if the baselayer is active
     this.maxzoom=0;
@@ -272,13 +283,6 @@ const MapHolder=function(){
      * @type {*[]}
      */
     this.eventGuards=[];
-    this.mapEventSubscriptionId=0;
-    /**
-     * list of subscriptions
-     * @private
-     * @type {{}}
-     */
-    this.mapEventSubscriptions={};
 
     /**
      * pepjs polyfill handling for converting touch events to pointer events
@@ -396,6 +400,7 @@ MapHolder.prototype.renderTo=function(div){
         this._lastMapDiv=undefined;
     }
     if (! this.olmap) return;
+    this._callHandlers({type:div?this.EventTypes.SHOWMAP:this.EventTypes.HIDEMAP});
     let mapDiv=div||this.defaultDiv;
     this.olmap.setTarget(mapDiv);
     this._lastMapDiv=div;
@@ -1697,6 +1702,7 @@ MapHolder.prototype.onPostCompose=function(evt){
     this.aislayer.onPostCompose(evt.frameState.viewState.center,this.drawing);
     this.routinglayer.onPostCompose(evt.frameState.viewState.center,this.drawing);
     this.navlayer.onPostCompose(evt.frameState.viewState.center,this.drawing);
+    this.userLayer.onPostCompose(evt.frameState.viewState.center,this.drawing);
 
 };
 
@@ -1789,6 +1795,7 @@ MapHolder.prototype.setImageStyles=function(styles){
     this.aislayer.setImageStyles(styles);
     this.routinglayer.setImageStyles(styles);
     this.tracklayer.setImageStyles(styles);
+    this.userLayer.setImageStyles(styles);
 };
 
 MapHolder.prototype.registerEventGuard=function(callback){
@@ -1801,6 +1808,12 @@ MapHolder.prototype._callGuards=function(eventName){
     this.eventGuards.forEach((guard)=>{
         guard(eventName);
     })
+}
+
+MapHolder.prototype.registerUserLayer=function(config){
+    if (! this.userLayer) return;
+    this.userLayer.registerUserOverlay(config);
+    //TODO: add store keys to triggers
 }
 
 

@@ -251,7 +251,8 @@ let keys={
             grid: new Property(true, "Grid", PropertyType.CHECKBOX),
             compass: new Property(true, "Compass", PropertyType.CHECKBOX),
             base: new Property(true, "Base", PropertyType.CHECKBOX),
-            scale: new Property(true,"ScaleLine", PropertyType.CHECKBOX)
+            scale: new Property(true,"ScaleLine", PropertyType.CHECKBOX),
+            user: new Property(true,"User/Plugins",PropertyType.CHECKBOX)
         },
         localAlarmSound: new Property(true, "Alarm Sound", PropertyType.CHECKBOX),
         connectedMode: new Property(true, "connected", PropertyType.CHECKBOX),
