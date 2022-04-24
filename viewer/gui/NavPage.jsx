@@ -28,6 +28,8 @@ import {TrackConvertDialog} from "../components/TrackInfoDialog";
 import FullScreen from '../components/Fullscreen';
 import DialogButton from "../components/DialogButton";
 import RemoteChannelDialog from "../components/RemoteChannelDialog";
+import {InputReadOnly} from "../components/Inputs";
+import assign from 'object-assign';
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -151,6 +153,54 @@ const navToWp=(on)=>{
     RouteHandler.routeOff();
     MapHolder.triggerRender();
 };
+const OVERLAYPANEL="overlay";
+class MapWidgetsDialog extends React.Component{
+    constructor(props) {
+        super(props);
+        this.state={
+            items:this.getCurrent()
+        };
+        this.sequence=GuiHelpers.storeHelper(this,()=>{
+            this.setState({items:this.getCurrent()})
+        },[keys.gui.global.layoutSequence]);
+    }
+    getCurrent(){
+        let current=getPanelList(OVERLAYPANEL);
+        let idx=0;
+        let rt=[];
+        if (current && current.list){
+            current.list.forEach((item)=>{
+                rt.push(assign({index:idx},item));
+                idx++;
+            })
+        }
+        return rt;
+    }
+    onItemClick(item){
+        EditWidgetDialog.createDialog(item,PAGENAME,OVERLAYPANEL,{fixPanel:true,types:['map']});
+    }
+    render(){
+        return <div className={'MapWidgetsDialog'}>
+            <h2>Map Widgets</h2>
+            {this.state.items && this.state.items.map((item)=>{
+                let theItem=item;
+                return <div className={'dialogRow listEntry'}
+                    onClick={()=>this.onItemClick(theItem)}
+                >{item.name}</div>
+            })}
+            <div className={'dialogButtons'}>
+                <DialogButton
+                    name={'add'}
+                    onClick={()=>EditWidgetDialog.createDialog(undefined,PAGENAME,OVERLAYPANEL,{fixPanel:true,types:['map']})}
+                    >Add</DialogButton>
+                <DialogButton
+                    name={'cancel'}
+                    onClick={this.props.closeCallback}
+                >Close</DialogButton>
+            </div>
+        </div>
+    }
+}
 
 class NavPage extends React.Component{
     constructor(props){
@@ -275,7 +325,7 @@ class NavPage extends React.Component{
         }
     }
     widgetClick(item,data,panel,invertEditDirection){
-        if (EditWidgetDialog.createDialog(item,PAGENAME,panel,invertEditDirection)) return;
+        if (EditWidgetDialog.createDialog(item,PAGENAME,panel,{beginning:invertEditDirection})) return;
         if (item.name == "AisTarget"){
             let mmsi=(data && data.mmsi)?data.mmsi:item.mmsi;
             if (! mmsi) return;
@@ -538,6 +588,12 @@ class NavPage extends React.Component{
             EditPageDialog.getButtonDef(PAGENAME,
                 MapPage.PANELS,
                 [LayoutHandler.OPTIONS.SMALL,LayoutHandler.OPTIONS.ANCHOR]),
+            {
+                name: 'NavMapWidgets',
+                editOnly: true,
+                overflow: true,
+                onClick: ()=>OverlayDialog.dialog((props)=><MapWidgetsDialog {...props}/>)
+            },
             LayoutFinishedDialog.getButtonDef(),
             RemoteChannelDialog({overflow:true}),
             FullScreen.fullScreenDefinition,
@@ -552,7 +608,7 @@ class NavPage extends React.Component{
     render(){
         let self=this;
         let autohide=undefined;
-        if (globalStore.getData(keys.properties.autoHideNavPage) && ! this.state.showWpButtons){
+        if (globalStore.getData(keys.properties.autoHideNavPage) && ! this.state.showWpButtons && ! globalStore.getData(keys.gui.global.layoutEditing)){
             autohide=globalStore.getData(keys.properties.hideButtonTime,30)*1000;
         }
         let pageProperties=Helper.filteredAssign(MapPage.propertyTypes,self.props);

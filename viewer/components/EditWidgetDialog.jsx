@@ -195,7 +195,8 @@ EditWidgetDialog.propTypes={
     insertCallback: PropTypes.func,
     updateCallback: PropTypes.func,
     removeCallback: PropTypes.func,
-    closeCallback: PropTypes.func.isRequired
+    closeCallback: PropTypes.func.isRequired,
+    types: PropTypes.array
 };
 
 const filterObject=(data)=>{
@@ -210,13 +211,17 @@ const filterObject=(data)=>{
  * @param widgetItem
  * @param pagename
  * @param panelname
- * @param opt_beginning: insert at the beginning
- * @param opt_weight: show weight input
+ * @param opt_options:
+ *  beginning: insert at the beginning
+ *  weight: show weight input
+ *  fixPanel: if set: do not allow panel change
+ *  types: a list of allowed widget types
  * @return {boolean}
  */
-EditWidgetDialog.createDialog=(widgetItem,pagename,panelname,opt_beginning,opt_weight)=>{
+EditWidgetDialog.createDialog=(widgetItem,pagename,panelname,opt_options)=>{
     if (! LayoutHandler.isEditing()) return false;
-    let index=opt_beginning?-1:1;
+    if (! opt_options) opt_options={};
+    let index=opt_options.beginning?-1:1;
     if (widgetItem){
         index=widgetItem.index;
     }
@@ -225,9 +230,10 @@ EditWidgetDialog.createDialog=(widgetItem,pagename,panelname,opt_beginning,opt_w
             {...props}
             title="Select Widget"
             panel={panelname}
-            panelList={LayoutHandler.getPagePanels(pagename)}
+            types={opt_options.types}
+            panelList={opt_options.fixPanel?[panelname]:LayoutHandler.getPagePanels(pagename)}
             current={widgetItem?widgetItem:{}}
-            weight={opt_weight}
+            weight={opt_options.weight}
             insertCallback={(selected,before,newPanel)=>{
                 if (! selected || ! selected.name) return;
                 let addMode=LayoutHandler.ADD_MODES.noAdd;
@@ -235,7 +241,7 @@ EditWidgetDialog.createDialog=(widgetItem,pagename,panelname,opt_beginning,opt_w
                     addMode=before?LayoutHandler.ADD_MODES.beforeIndex:LayoutHandler.ADD_MODES.afterIndex;
                 }
                 else{
-                    addMode=opt_beginning?LayoutHandler.ADD_MODES.beginning:LayoutHandler.ADD_MODES.end;
+                    addMode=opt_options.beginning?LayoutHandler.ADD_MODES.beginning:LayoutHandler.ADD_MODES.end;
                 }
                 LayoutHandler.replaceItem(pagename,newPanel,index,filterObject(selected),addMode);
             }}

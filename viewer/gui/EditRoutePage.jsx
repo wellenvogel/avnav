@@ -396,7 +396,7 @@ class EditRoutePage extends React.Component{
             }
             return;
         }
-        if (EditWidgetDialog.createDialog(item,PAGENAME,panel,invertEditDirection)) return;
+        if (EditWidgetDialog.createDialog(item,PAGENAME,panel,{beginning:invertEditDirection})) return;
         if (panel == 'bottomRight'){
             if (! globalStore.getData(keys.nav.gps.valid)) return;
             let boatPos=globalStore.getData(keys.nav.gps.position);
