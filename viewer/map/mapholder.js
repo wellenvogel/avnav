@@ -68,6 +68,29 @@ const EventTypes={
 
 };
 
+class Context{
+    constructor() {
+        this.width=undefined;
+        this.height=undefined;
+        this.context=undefined;
+    }
+    check(width,height,opt_clear) {
+        if (width === this.width && height === this.height) {
+            if (opt_clear) this.clear()
+            return;
+        }
+        this.width=width;
+        this.height=height;
+        let canvas=document.createElement('canvas');
+        canvas.width=width;
+        canvas.height=height;
+        this.context=canvas.getContext('2d');
+    }
+    clear(){
+        if (! this.context) return;
+        this.context.canvas.width=this.width;
+    }
+}
 
 /**
  * the holder for our olmap
@@ -113,6 +136,7 @@ const MapHolder=function(){
      * @type {{}}
      */
     this.mapEventSubscriptions={};
+    this.userLayerContext=new Context();
     this.aislayer=new AisLayer(this);
     this.navlayer=new NavLayer(this);
     this.tracklayer=new TrackLayer(this);
@@ -1716,7 +1740,10 @@ MapHolder.prototype.onPostCompose=function(evt){
     this.aislayer.onPostCompose(evt.frameState.viewState.center,this.drawing);
     this.routinglayer.onPostCompose(evt.frameState.viewState.center,this.drawing);
     this.navlayer.onPostCompose(evt.frameState.viewState.center,this.drawing);
+    this.userLayerContext.check(evt.context.canvas.width,evt.context.canvas.height,true);
+    this.drawing.setContext(this.userLayerContext.context);
     this.userLayer.onPostCompose(evt.frameState.viewState.center,this.drawing);
+    evt.context.drawImage(this.userLayerContext.context.canvas,0,0,this.userLayerContext.width,this.userLayerContext.height);
 
 };
 
