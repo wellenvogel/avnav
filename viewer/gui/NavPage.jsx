@@ -227,6 +227,9 @@ class NavPage extends React.Component{
         };
         this.showWpButtons=this.showWpButtons.bind(this);
         this.widgetClick=this.widgetClick.bind(this);
+        this.sequence=GuiHelpers.storeHelper(this,()=>{
+            MapHolder.triggerRender();
+        },[keys.gui.global.layoutSequence]);
         globalStore.storeData(keys.map.measurePosition,undefined);
         this.waypointButtons=[
             anchorWatch(),

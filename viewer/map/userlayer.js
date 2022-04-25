@@ -69,20 +69,20 @@ export default class UserLayer {
 
     }
 
-    registerMapWidget(page,config,callback){
+    registerMapWidget(page,name,callback){
         if (this.panelPage !== page && ! callback) return;
-        if (! config.name) return;
+        if (! name) return;
         if (this.panelPage !== page){
             this.userOverlays={};
         }
         this.panelPage=page;
         if (!callback) {
-            delete this.userOverlays[config.name];
+            delete this.userOverlays[name];
         }
         else {
-            this.userOverlays[config.name] = callback;
+            this.userOverlays[name] = callback;
+            return true;
         }
-        return config.storeKeys;
     }
     unregisterPageWidgets(page){
         if (this.panelPage !== page) return;

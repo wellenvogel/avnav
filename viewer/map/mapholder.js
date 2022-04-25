@@ -188,6 +188,7 @@ const MapHolder=function(){
         KeyHelper.flattenedKeys(keys.nav.track),
         KeyHelper.flattenedKeys(keys.nav.display)
     );
+    this.userKeys={};
     this.navChanged=new Callback(()=>{
         self.navEvent();
     });
@@ -334,19 +335,30 @@ const MapHolder=function(){
 };
 
 base.inherits(MapHolder,DrawingPositionConverter);
-MapHolder.prototype.updateStoreKeys=function(newKeys){
-    if (! newKeys) return;
-    let flat=KeyHelper.flattenedKeys(newKeys);
-    let addKeys=[];
-    flat.forEach((k)=>{
-        if (this.storeKeys.indexOf(k) < 0){
-            addKeys.push(k);
+MapHolder.prototype.updateStoreKeys=function(newKeys,page,name){
+    if (page !== undefined && name !== undefined) {
+        if (newKeys) {
+            if (!this.userKeys[page]) this.userKeys[page] = {};
+            this.userKeys[page][name] = KeyHelper.flattenedKeys(newKeys);
+        } else {
+            if (this.userKeys[page]) {
+                delete this.userKeys[page][name];
+            }
         }
-    });
-    if (addKeys.length > 0){
-        this.storeKeys=this.storeKeys.concat(addKeys);
-        globalStore.register(this.navChanged,this.storeKeys);
     }
+    let addKeys=[];
+    for (let p in this.userKeys) {
+        for (let n in this.userKeys[p]) {
+            let flat = this.userKeys[p][n];
+            if (!flat) continue;
+            flat.forEach((k) => {
+                if (addKeys.indexOf(k) < 0 && this.storeKeys.indexOf(k) < 0) {
+                    addKeys.push(k);
+                }
+            });
+        }
+    }
+    globalStore.register(this.navChanged,this.storeKeys.concat(addKeys));
 }
 MapHolder.prototype.EventTypes=EventTypes;
 
@@ -1851,17 +1863,20 @@ MapHolder.prototype._callGuards=function(eventName){
     })
 }
 
-MapHolder.prototype.registerMapWidget=function(page,name,callback){
+MapHolder.prototype.registerMapWidget=function(page,config,callback){
     if (! this.userLayer) return;
-    let newKeys=this.userLayer.registerMapWidget(page,name,callback);
-    if (newKeys) {
-        this.updateStoreKeys(newKeys);
+    if (! config.name) return;
+    let suc=this.userLayer.registerMapWidget(page,config.name,callback);
+    if ((config.storeKeys && suc) || ! callback) {
+        this.updateStoreKeys(callback?config.storeKeys:undefined,page,config.name);
     }
 
 }
 MapHolder.prototype.unregisterPageWidgets=function(page){
     if (! this.userLayer) return;
     this.userLayer.unregisterPageWidgets(page);
+    delete this.userKeys[page];
+    this.updateStoreKeys();
 }
 
 
