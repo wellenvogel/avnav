@@ -14,6 +14,7 @@ import {GaugeRadial,GaugeLinear} from './CanvasGauges.jsx';
 import {createEditableParameter, EditableParameter} from "./EditableParameters";
 import Compare from "../util/compare";
 import CloneDeep from 'clone-deep';
+import MapWidget from "./MapWidget";
 
 export const filterByEditables=(editableParameters,values)=>{
     let rt={};
@@ -451,10 +452,35 @@ class WidgetFactory{
         if (el.description === undefined)el.description=el.name;
         return el;
     }
-    getAvailableWidgets(){
+    getAvailableWidgets(filter){
         let rt=[];
         for (let i=0;i< this.widgetDefinitions.length;i++){
             let el=this.getWidget(i);
+            if (filter instanceof Array && filter.length > 0){
+                let type=el.type;
+                if (! type && el.wclass) type=el.wclass.name;
+                let hasMatch=false;
+                let hasInverseMatch=false;
+                let hasWhite=false;
+                filter.forEach((fe)=>{
+                    if (fe === undefined || fe.match(/^ *$/)) return;
+                    let fstring=fe;
+                    if (fe.indexOf('!') === 0){
+                        fstring=fstring.substr(1);
+                        if (fstring === type){
+                            hasInverseMatch=true;
+                        }
+                    }
+                    else{
+                        hasWhite=true;
+                        if (fstring === type){
+                            hasMatch=true;
+                        }
+                    }
+                })
+                if (hasWhite && ! hasMatch) continue;
+                if (hasInverseMatch) continue;
+            }
             rt.push(el);
         }
         return rt;
@@ -475,6 +501,8 @@ class WidgetFactory{
                 return GaugeRadial;
             case 'linearGauge':
                 return GaugeLinear
+            case 'map':
+                return MapWidget;
         }
     }
     registerWidget(description,opt_editableParameters){

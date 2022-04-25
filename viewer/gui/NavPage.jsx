@@ -325,7 +325,12 @@ class NavPage extends React.Component{
         }
     }
     widgetClick(item,data,panel,invertEditDirection){
-        if (EditWidgetDialog.createDialog(item,PAGENAME,panel,{beginning:invertEditDirection})) return;
+        let pagePanels=LayoutHandler.getPagePanels(PAGENAME);
+        let idx=pagePanels.indexOf(OVERLAYPANEL);
+        if (idx >=0){
+            pagePanels.splice(idx,1);
+        }
+        if (EditWidgetDialog.createDialog(item,PAGENAME,panel,{fixPanel:pagePanels,beginning:invertEditDirection,types:["!map"]})) return;
         if (item.name == "AisTarget"){
             let mmsi=(data && data.mmsi)?data.mmsi:item.mmsi;
             if (! mmsi) return;

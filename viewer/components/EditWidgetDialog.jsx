@@ -141,7 +141,7 @@ class EditWidgetDialog extends React.Component{
                     dialogRow={true}
                     label="New Widget"
                     onChange={(selected)=>{this.updateWidgetState({name:selected.name},true);}}
-                    list={()=>getList(WidgetFactory.getAvailableWidgets())}
+                    list={()=>getList(WidgetFactory.getAvailableWidgets(this.props.types))}
                     value={this.state.widget.name||'-Select Widget-'}
                     showDialogFunction={this.showDialog}/>
                 {parameters.map((param)=>{
@@ -226,12 +226,19 @@ EditWidgetDialog.createDialog=(widgetItem,pagename,panelname,opt_options)=>{
         index=widgetItem.index;
     }
     OverlayDialog.dialog((props)=> {
+        let panelList=[panelname];
+        if (!opt_options.fixPanel){
+            panelList=LayoutHandler.getPagePanels(pagename);
+        }
+        if (opt_options.fixPanel instanceof Array){
+            panelList=opt_options.fixPanel;
+        }
         return <EditWidgetDialog
             {...props}
             title="Select Widget"
             panel={panelname}
             types={opt_options.types}
-            panelList={opt_options.fixPanel?[panelname]:LayoutHandler.getPagePanels(pagename)}
+            panelList={panelList}
             current={widgetItem?widgetItem:{}}
             weight={opt_options.weight}
             insertCallback={(selected,before,newPanel)=>{

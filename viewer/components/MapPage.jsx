@@ -184,7 +184,7 @@ class MapPage extends React.Component{
                     self.props.onItemClick(item,data,panelItems.name,invertEditDirection)
                     }}
                 onClick={()=>{
-                    EditWidgetDialog.createDialog(undefined,self.props.id,panelItems.name,{beginning:invertEditDirection});
+                    EditWidgetDialog.createDialog(undefined,self.props.id,panelItems.name,{fixPanel: true,beginning:invertEditDirection,types:["!map"]});
                 }}
                 dragdrop={globalStore.getData(keys.gui.global.layoutEditing)}
                 horizontal={mode === 'horizontal'}

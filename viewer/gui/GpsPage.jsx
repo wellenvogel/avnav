@@ -230,7 +230,7 @@ class GpsPage extends React.Component{
         ];
     }
     onItemClick(item,data,panelInfo){
-        if (EditWidgetDialog.createDialog(item,panelInfo.page,panelInfo.name,{beginning:false,weight:true})) return;
+        if (EditWidgetDialog.createDialog(item,panelInfo.page,panelInfo.name,{beginning:false,weight:true,types:["!map"]})) return;
         if (item && item.name=== "AisTarget"){
             let mmsi=(data && data.mmsi)?data.mmsi:item.mmsi;
             this.props.history.push("aisinfopage",{mmsi:mmsi});
@@ -284,7 +284,7 @@ class GpsPage extends React.Component{
                     itemList: panelData.list,
                     fontSize: fontSize,
                     onItemClick: (item,data) => {self.onItemClick(item,data,panelData);},
-                    onClick: ()=>{EditWidgetDialog.createDialog(undefined,panelData.page,panelData.name,{beginning:false,weight:true});},
+                    onClick: ()=>{EditWidgetDialog.createDialog(undefined,panelData.page,panelData.name,{beginning:false,weight:true,types:["!map"]});},
                     dragdrop: LayoutHandler.isEditing(),
                     onSortEnd: (oldIndex,newIndex)=>LayoutHandler.moveItem(panelData.page,panelData.name,oldIndex,newIndex)
                 };
