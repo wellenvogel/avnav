@@ -127,7 +127,8 @@ export default class UserLayer {
         this.userOverlays = [];
         this.lineStyle = {};
         this.setStyle();
-        globalStore.register(this, [keys.gui.global.propertySequence]);
+        this.panelPage=undefined;
+        globalStore.register(this, [keys.gui.global.propertySequence,keys.gui.global.layoutSequence]);
         this.subscription=mapholder.subscribe((evt)=>{
             if (! evt || ! evt.type) return;
             if (evt.type===mapholder.EventTypes.HIDEMAP){
@@ -166,12 +167,6 @@ export default class UserLayer {
 
     dataChanged() {
         this.visible = globalStore.getData(keys.properties.layers.user);
-        if (typeof(this.visible) !== 'object') this.visible={};
-        this.userOverlays.forEach((ovl)=>{
-            let v=this.visible[ovl.config.name];
-            if (v === undefined) v=true;
-            ovl.setVisible(v);
-        })
         this.setStyle();
     }
 
@@ -179,6 +174,18 @@ export default class UserLayer {
 
     }
 
+    setMapPanel(page,widgets){
+         if (! widgets){
+             if (this.panelPage !== page ) return;
+         }
+         this.panelPage=page;
+         this.userOverlays.forEach((ovl)=>ovl.finalize())
+         this.userOverlays=[];
+         let rt={};
+         if (! widgets) return;
+         assign(rt,widgets.forEach((widget)=>this.registerUserOverlay(widget)));
+         return rt;
+    }
     /**
      * register a user overlay
      * @param config
@@ -188,30 +195,14 @@ export default class UserLayer {
         if (! config || ! config.name){
             throw new Error("missing parameter name for user overlay");
         }
-        this.userOverlays.forEach((ovl)=>{
+        for (let i in this.userOverlays){
+            let ovl=this.userOverlays[i];
             if (ovl.config.name === config.name){
-                throw new Error("user overlay "+config.name+" already exists");
+                return; //silently ignore duplicates
             }
-        });
+        }
         let ovl=new UserOverlay(this.mapholder,config);
-        let visible=globalStore.getData(keys.properties.layers.user);
-        let isChanged=false;
-        if (typeof(visible) !== 'object') {
-            isChanged=true;
-            visible={};
-        }
-        else{
-            visible=assign({},visible);
-        }
-        if (visible[config.name] === undefined) {
-            visible[config.name]=true;
-            isChanged=true;
-        }
-        ovl.setVisible(visible[config.name]);
         this.userOverlays.push(ovl);
-        if (isChanged){
-            globalStore.storeData(keys.properties.layers.user,visible);
-        }
         return config.storeKeys;
 
     }

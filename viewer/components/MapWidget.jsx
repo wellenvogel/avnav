@@ -35,7 +35,7 @@ class MapWidget extends React.Component{
             this.props.finalizeFunction.call(this.userData,this.userData,this.getProps());
         }
     }
-};
+}
 
 MapWidget.propTypes={
     name: PropTypes.string,

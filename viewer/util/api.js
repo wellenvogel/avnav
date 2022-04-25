@@ -9,7 +9,6 @@ import Formatter from './formatter.js';
 import Helper from './helper.js';
 import Toast from '../components/Toast.jsx';
 import featureFormatter from "./featureFormatter";
-import mapholder from "../map/mapholder";
 
 class Api{
     constructor(){
@@ -21,9 +20,6 @@ class Api{
     }
     registerWidget(description,opt_editableParameters){
         WidgetFactory.registerWidget(description,opt_editableParameters);
-    }
-    registerChartOverlay(description){
-        mapholder.registerUserLayer(description);
     }
     formatter(){
         return Formatter;

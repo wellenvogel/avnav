@@ -30,6 +30,7 @@ import DialogButton from "../components/DialogButton";
 import RemoteChannelDialog from "../components/RemoteChannelDialog";
 import {InputReadOnly} from "../components/Inputs";
 import assign from 'object-assign';
+import WidgetFactory from "../components/WidgetFactory";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -43,6 +44,19 @@ const PAGENAME='navpage';
 const getPanelList=(panel)=>{
     return LayoutHandler.getPanelData(PAGENAME,panel,LayoutHandler.getOptionValues([LayoutHandler.OPTIONS.SMALL,LayoutHandler.OPTIONS.ANCHOR]));
 };
+const getPanelWidgets=(panel,opt_create)=>{
+    let panelData=getPanelList(panel);
+    if (panelData && panelData.list) {
+        if (! opt_create)return panelData.list;
+        let rt=[];
+        panelData.list.forEach((item)=>{
+            let widget=WidgetFactory.createWidget(item);
+            if (widget) rt.push(widget)
+        });
+        return rt;
+    }
+    return [];
+}
 /**
  *
  * @param item
@@ -164,16 +178,15 @@ class MapWidgetsDialog extends React.Component{
             this.setState({items:this.getCurrent()})
         },[keys.gui.global.layoutSequence]);
     }
-    getCurrent(){
-        let current=getPanelList(OVERLAYPANEL);
-        let idx=0;
-        let rt=[];
-        if (current && current.list){
-            current.list.forEach((item)=>{
-                rt.push(assign({index:idx},item));
-                idx++;
-            })
-        }
+
+    getCurrent() {
+        let current = getPanelWidgets(OVERLAYPANEL);
+        let idx = 0;
+        let rt = [];
+        current.forEach((item) => {
+            rt.push(assign({index: idx}, item));
+            idx++;
+        })
         return rt;
     }
     onItemClick(item){
@@ -214,6 +227,9 @@ class NavPage extends React.Component{
         this.showWpButtons=this.showWpButtons.bind(this);
         this.widgetClick=this.widgetClick.bind(this);
         globalStore.storeData(keys.map.measurePosition,undefined);
+        this.sequence=GuiHelpers.storeHelper(this,()=>{
+            MapHolder.setMapPanel(PAGENAME,getPanelWidgets(OVERLAYPANEL,true))
+        },[keys.gui.global.layoutSequence]);
         this.waypointButtons=[
             anchorWatch(),
             {
@@ -454,9 +470,11 @@ class NavPage extends React.Component{
     }
     componentWillUnmount(){
         globalStore.storeData(keys.map.measurePosition,undefined);
+        MapHolder.setMapPanel(PAGENAME,undefined);
     }
     componentDidMount(){
         MapHolder.showEditingRoute(false);
+        MapHolder.setMapPanel(PAGENAME,getPanelWidgets(OVERLAYPANEL,true));
 
     }
     getButtons(){

@@ -253,7 +253,7 @@ let keys={
             compass: new Property(true, "Compass", PropertyType.CHECKBOX),
             base: new Property(true, "Base", PropertyType.CHECKBOX),
             scale: new Property(true,"ScaleLine", PropertyType.CHECKBOX),
-            user: new Property({},"User/Plugins",PropertyType.MULTICHECKBOX)
+            user: new Property({},"User/Plugins",PropertyType.CHECKBOX)
         },
         localAlarmSound: new Property(true, "Alarm Sound", PropertyType.CHECKBOX),
         connectedMode: new Property(true, "connected", PropertyType.CHECKBOX),

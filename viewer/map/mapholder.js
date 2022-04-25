@@ -1851,9 +1851,9 @@ MapHolder.prototype._callGuards=function(eventName){
     })
 }
 
-MapHolder.prototype.registerUserLayer=function(config){
+MapHolder.prototype.setMapPanel=function(page,widgets){
     if (! this.userLayer) return;
-    let newKeys=this.userLayer.registerUserOverlay(config);
+    let newKeys=this.userLayer.setMapPanel(page,widgets);
     if (newKeys) {
         this.updateStoreKeys(newKeys);
     }
