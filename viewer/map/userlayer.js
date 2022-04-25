@@ -5,106 +5,6 @@
 import keys from '../util/keys.jsx';
 import globalStore from '../util/globalstore.jsx';
 import base from "../base";
-import assign from 'object-assign';
-
-class UserOverlay{
-    constructor(mapholder,config) {
-        this.config=config||{}; //TODO: check config
-        this.mapholder=mapholder;
-        this.isInitialized=false;
-        this.drawing=undefined;
-        this.visible=true;
-    }
-    setVisible(v){
-        if (this.visible === v) return;
-        if (!v){
-            if (this.isInitialized) this.finalize();
-        }
-        this.visible=v;
-    }
-    initUserContext(){
-        this.userContext={};
-        this.userContext.lonLatToPixel=(lon,lat)=>{
-            if (! this.drawing) return[0,0];
-            let mapcoord=this.mapholder.pointToMap([lon,lat]);
-            return this.drawing.pixelToDevice(this.drawing.pointToCssPixel(mapcoord));
-        }
-        this.userContext.pixelToLonLat=(x,y)=>{
-            if (! this.drawing) return [0,0];
-            x=x/this.drawing.getDevPixelRatio();
-            y=y/this.drawing.getDevPixelRatio();
-            return this.mapholder.pointFromMap(this.drawing.cssPixelToCoord([x,y]));
-        }
-        this.userContext.getScale=()=>{
-            if (! this.drawing) return 1;
-            return this.drawing.useHdpi?this.drawing.devPixelRatio:1;
-        }
-        this.userContext.getRotation=()=>{
-            if (! this.drawing) return 0;
-            return this.drawing.getRotation();
-        }
-        this.userContext.getContext=()=>{
-            if (! this.drawing) return;
-            return this.drawing.getContext();
-        }
-        this.userContext.getDimensions=()=>{
-            if (! this.drawing) return [0,0];
-            let cv=this.drawing.getContext().canvas;
-            return [cv.width*this.drawing.getDevPixelRatio(),cv.height*this.drawing.getDevPixelRatio()];
-        }
-        this.userContext.triggerRender=()=>{
-            window.setTimeout(()=>this.mapholder.navEvent(),0);
-        }
-    }
-    init(){
-        if (! this.visible) return;
-        this.initUserContext();
-        if (this.config.initFunction){
-            try{
-                this.config.initFunction.apply(this.userContext,[this.userContext]);
-            }catch(e){
-                base.log("init error "+e+" for "+this.config.name);
-            }
-        }
-        this.isInitialized=true;
-    }
-
-    /**
-     *
-     * @param center
-     * @param {Drawing}drawing
-     */
-    onPostCompose(center,drawing){
-        if (! this.visible) return;
-        if (! this.isInitialized){
-            this.init();
-        }
-        this.drawing=drawing;
-        if (this.config.renderCanvas){
-            let data=this.config.storeKeys?
-                globalStore.getMultiple(this.config.storeKeys):{};
-            try{
-                this.config.renderCanvas.apply(this.userContext,[drawing.getContext().canvas,data,center]);
-            }catch (e){
-                base.log("renderCanvas error "+e+" for "+this.config.name);
-            }
-        }
-        this.drawing=undefined;
-    }
-    finalize(){
-        if (! this.isInitialized){
-            return;
-        }
-        if (this.config.finalizeFunction){
-            try{
-                this.config.finalizeFunction.apply(this.userContext,[this.userContext]);
-            }catch(e){
-                base.log("finalize error "+e+" for "+this.config.name);
-            }
-        }
-        this.isInitialized=false;
-    }
-}
 
 /**
  * a cover for the layer that the track
@@ -124,20 +24,10 @@ export default class UserLayer {
          * @type {boolean}
          */
         this.visible = globalStore.getData(keys.properties.layers.user);
-        this.userOverlays = [];
+        this.userOverlays = {};
         this.lineStyle = {};
         this.setStyle();
         this.panelPage=undefined;
-        globalStore.register(this, [keys.gui.global.propertySequence,keys.gui.global.layoutSequence]);
-        this.subscription=mapholder.subscribe((evt)=>{
-            if (! evt || ! evt.type) return;
-            if (evt.type===mapholder.EventTypes.HIDEMAP){
-                this.userOverlays.forEach((ovl)=>ovl.finalize())
-            }
-            if (evt.type===mapholder.EventTypes.SHOWMAP){
-                this.userOverlays.forEach((ovl)=>ovl.init())
-            }
-        })
     }
 
     /**
@@ -161,8 +51,13 @@ export default class UserLayer {
         if (!this.visible) {
             return;
         }
-        this.userOverlays.forEach((ovl)=>ovl.onPostCompose(center,drawing));
-
+        for (let k in this.userOverlays){
+            try {
+                this.userOverlays[k](drawing, center);
+            }catch(e){
+                base.log("error in user overlay "+k+": "+e);
+            }
+        }
     }
 
     dataChanged() {
@@ -174,37 +69,25 @@ export default class UserLayer {
 
     }
 
-    setMapPanel(page,widgets){
-         if (! widgets){
-             if (this.panelPage !== page ) return;
-         }
-         this.panelPage=page;
-         this.userOverlays.forEach((ovl)=>ovl.finalize())
-         this.userOverlays=[];
-         let rt={};
-         if (! widgets) return;
-         assign(rt,widgets.forEach((widget)=>this.registerUserOverlay(widget)));
-         return rt;
-    }
-    /**
-     * register a user overlay
-     * @param config
-     * @return the store keys (if any)
-     */
-    registerUserOverlay(config){
-        if (! config || ! config.name){
-            throw new Error("missing parameter name for user overlay");
+    registerMapWidget(page,config,callback){
+        if (this.panelPage !== page && ! callback) return;
+        if (! config.name) return;
+        if (this.panelPage !== page){
+            this.userOverlays={};
         }
-        for (let i in this.userOverlays){
-            let ovl=this.userOverlays[i];
-            if (ovl.config.name === config.name){
-                return; //silently ignore duplicates
-            }
+        this.panelPage=page;
+        if (!callback) {
+            delete this.userOverlays[config.name];
         }
-        let ovl=new UserOverlay(this.mapholder,config);
-        this.userOverlays.push(ovl);
+        else {
+            this.userOverlays[config.name] = callback;
+        }
         return config.storeKeys;
-
+    }
+    unregisterPageWidgets(page){
+        if (this.panelPage !== page) return;
+        this.userOverlays={};
+        this.panelPage=undefined;
     }
 };
 

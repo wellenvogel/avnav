@@ -31,6 +31,7 @@ import RemoteChannelDialog from "../components/RemoteChannelDialog";
 import {InputReadOnly} from "../components/Inputs";
 import assign from 'object-assign';
 import WidgetFactory from "../components/WidgetFactory";
+import ItemList from "../components/ItemList";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -44,16 +45,16 @@ const PAGENAME='navpage';
 const getPanelList=(panel)=>{
     return LayoutHandler.getPanelData(PAGENAME,panel,LayoutHandler.getOptionValues([LayoutHandler.OPTIONS.SMALL,LayoutHandler.OPTIONS.ANCHOR]));
 };
-const getPanelWidgets=(panel,opt_create)=>{
+const getPanelWidgets=(panel)=>{
     let panelData=getPanelList(panel);
     if (panelData && panelData.list) {
-        if (! opt_create)return panelData.list;
-        let rt=[];
+        let layoutSequence=globalStore.getData(keys.gui.global.layoutSequence);
+        let idx=0;
         panelData.list.forEach((item)=>{
-            let widget=WidgetFactory.createWidget(item);
-            if (widget) rt.push(widget)
-        });
-        return rt;
+            item.key=layoutSequence+"_"+idx;
+            idx++;
+        })
+        return panelData.list;
     }
     return [];
 }
@@ -227,9 +228,6 @@ class NavPage extends React.Component{
         this.showWpButtons=this.showWpButtons.bind(this);
         this.widgetClick=this.widgetClick.bind(this);
         globalStore.storeData(keys.map.measurePosition,undefined);
-        this.sequence=GuiHelpers.storeHelper(this,()=>{
-            MapHolder.setMapPanel(PAGENAME,getPanelWidgets(OVERLAYPANEL,true))
-        },[keys.gui.global.layoutSequence]);
         this.waypointButtons=[
             anchorWatch(),
             {
@@ -470,12 +468,10 @@ class NavPage extends React.Component{
     }
     componentWillUnmount(){
         globalStore.storeData(keys.map.measurePosition,undefined);
-        MapHolder.setMapPanel(PAGENAME,undefined);
+        MapHolder.unregisterPageWidgets(PAGENAME);
     }
     componentDidMount(){
         MapHolder.showEditingRoute(false);
-        MapHolder.setMapPanel(PAGENAME,getPanelWidgets(OVERLAYPANEL,true));
-
     }
     getButtons(){
         let rt=[
@@ -628,6 +624,9 @@ class NavPage extends React.Component{
         ];
         return rt;
     }
+    registerMapWidget(widget,callback){
+        MapHolder.registerMapWidget(PAGENAME,widget,callback);
+    }
     render(){
         let self=this;
         let autohide=undefined;
@@ -642,10 +641,31 @@ class NavPage extends React.Component{
                 mapEventCallback={self.mapEvent}
                 onItemClick={self.widgetClick}
                 panelCreator={getPanelList}
-                overlayContent={this.state.showWpButtons?<ButtonList
+                overlayContent={ (props)=>
+                    <React.Fragment>
+                        {this.state.showWpButtons?<ButtonList
                             itemList={self.waypointButtons}
                             className="overlayContainer"
                         />:null}
+                        <ItemList
+                            className={'mapWidgetContainer widgetContainer'}
+                            itemCreator={(widget)=>{
+                                let widgetConfig=WidgetFactory.findWidget(widget) || {};
+                                let key=widget.key;
+                                return WidgetFactory.createWidget(widget,
+                                    {
+                                        handleVisible:!globalStore.getData(keys.gui.global.layoutEditing),
+                                        registerMap: (callback)=>this.registerMapWidget({
+                                            name: key,
+                                            storeKeys: widgetConfig.storeKeys
+                                        },callback),
+                                        triggerRender: ()=>MapHolder.triggerRender()
+                                    }
+                                )
+                            }}
+                            itemList={getPanelWidgets(OVERLAYPANEL)}
+                        />
+                    </React.Fragment>}
                 buttonList={self.getButtons()}
                 preventCenterDialog={(self.props.options||{}).remote}
                 autoHideButtons={autohide}

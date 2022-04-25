@@ -507,4 +507,7 @@ Drawing.prototype.setLineStyles=function(opt_style){
 Drawing.prototype.cssPixelToCoord=function(xy){
     return this.converter.pixelToCoord(xy);
 }
+Drawing.prototype.pointToMap=function(lonlat){
+    return this.converter.pointToMap(lonlat);
+}
 

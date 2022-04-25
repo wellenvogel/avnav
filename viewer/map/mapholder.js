@@ -1851,13 +1851,17 @@ MapHolder.prototype._callGuards=function(eventName){
     })
 }
 
-MapHolder.prototype.setMapPanel=function(page,widgets){
+MapHolder.prototype.registerMapWidget=function(page,name,callback){
     if (! this.userLayer) return;
-    let newKeys=this.userLayer.setMapPanel(page,widgets);
+    let newKeys=this.userLayer.registerMapWidget(page,name,callback);
     if (newKeys) {
         this.updateStoreKeys(newKeys);
     }
 
+}
+MapHolder.prototype.unregisterPageWidgets=function(page){
+    if (! this.userLayer) return;
+    this.userLayer.unregisterPageWidgets(page);
 }
 
 
