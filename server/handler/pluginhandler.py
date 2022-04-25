@@ -80,8 +80,17 @@ class ApiImpl(AVNApi):
     self.userApps=[]
     self.layouts=[]
     self.settingsFiles=[]
+    self.jsCssOnly=False
+
+  def isEnabled(self):
+    return AVNUtil.getBool(self.getConfigValue(AVNPluginHandler.ENABLE_PARAMETER.name),True)
+  def setJsCssOnly(self):
+    self.jsCssOnly=True
+    self.phandler.setChildEditable(self.prefix,True)
 
   def stop(self):
+    if self.jsCssOnly:
+      return
     if self.stopHandler is None:
       raise Exception("plugin %s cannot be stopped during runtime"%self.prefix)
     try:
@@ -441,14 +450,17 @@ class AVNPluginHandler(AVNWorker):
           module=self.loadPluginFromDir(dir, moduleName)
         except:
           AVNLog.error("error loading plugin from %s:%s",dir,traceback.format_exc())
+        api = ApiImpl(self,self.navdata,self.queue,moduleName,inspect.getfile(module) if module is not None else module)
+        self.createdApis[moduleName]=api
         if module is not None:
           self.pluginDirs[moduleName]=os.path.realpath(dir)
-          self.instantiateHandlersFromModule(moduleName,module)
+          self.instantiateHandlersFromModule(moduleName,module,api)
         else:
           if os.path.exists(os.path.join(dir,"plugin.js")) or os.path.exists(os.path.join(dir,"plugin.css")):
             self.pluginDirs[moduleName]=dir
             self.setInfo(moduleName,"java script/css only",WorkerStatus.STARTED)
-    for name in list(self.createdPlugins.keys()):
+            api.setJsCssOnly()
+    for name in list(self.createdApis.keys()):
       self.startPluginThread(name)
     AVNLog.info("pluginhandler finished")
 
@@ -459,7 +471,7 @@ class AVNPluginHandler(AVNWorker):
       api.registerKeys()
       plugin.run()
       api.log("plugin run finshed")
-      if AVNUtil.getBool(api.getConfigValue('enabled'),True):
+      if api.isEnabled():
         api.setStatus(WorkerStatus.INACTIVE,"plugin run finished")
       else:
         api.setStatus(WorkerStatus.INACTIVE, "plugin disabled")
@@ -468,15 +480,21 @@ class AVNPluginHandler(AVNWorker):
       api.setStatus(WorkerStatus.ERROR,"plugin exception %s"%str(e))
 
   def startPluginThread(self,name):
-    plugin = self.createdPlugins[name]
+    plugin = self.createdPlugins.get(name)
     api = self.createdApis[name]
     if api is None:
       AVNLog.error("internal error: api not created for plugin %s", name)
       return
-    enabled = AVNUtil.getBool(api.getConfigValue("enabled"), True)
+    enabled = api.isEnabled()
     if not enabled:
       AVNLog.info("plugin %s is disabled by config", name)
       self.setInfo(name, "disabled by config", WorkerStatus.INACTIVE)
+      return
+    if api.jsCssOnly:
+      self.setInfo(name, "javascript/css only", WorkerStatus.NMEA)
+      return
+    if plugin is None:
+      self.setInfo(name,'no plugin could be created',WorkerStatus.ERROR)
       return
     AVNLog.info("starting plugin %s", name)
     thread = threading.Thread(target=self.runPlugin,args=[api,plugin])
@@ -485,7 +503,7 @@ class AVNPluginHandler(AVNWorker):
     thread.start()
     self.startedThreads[name] = thread
 
-  def instantiateHandlersFromModule(self,modulename, module):
+  def instantiateHandlersFromModule(self,modulename, module,api):
     MANDATORY_METHODS = ['run']
     MANDATORY_CLASSMETHODS=['pluginInfo']
 
@@ -517,7 +535,6 @@ class AVNPluginHandler(AVNWorker):
           break
       if hasMethods:
         #TODO: handle multiple instances from config
-        api = ApiImpl(self,self.navdata,self.queue,modulename,inspect.getfile(obj))
         AVNLog.info("creating %s" % (modulename))
         try:
           description=obj.pluginInfo()
@@ -533,7 +550,6 @@ class AVNPluginHandler(AVNWorker):
           pluginInstance = obj(api)
           AVNLog.info("created plugin %s",modulename)
           self.createdPlugins[modulename]=pluginInstance
-          self.createdApis[modulename]=api
           self.setInfo(modulename,"created",WorkerStatus.STARTED)
         except Exception as e:
           self.setInfo(modulename,"unable to create plugin: %s"%str(e), WorkerStatus.ERROR)
@@ -590,7 +606,7 @@ class AVNPluginHandler(AVNWorker):
     editables=api.editables
     if editables is None:
       editables=[]
-    if api.stopHandler:
+    if api.stopHandler or api.jsCssOnly:
       editables= editables + [self.ENABLE_PARAMETER]
     rt=[]
     for e in editables:
@@ -627,17 +643,19 @@ class AVNPluginHandler(AVNWorker):
     checked=WorkerParameter.checkValuesFor(self.getEditableChildParameters(child),param,self.param.get(child))
     if 'enabled' in checked:
       newEnabled=AVNUtil.getBool(checked.get('enabled'),True)
-      current=AVNUtil.getBool(api.getConfigValue('enabled'),True)
+      current=api.isEnabled()
       if newEnabled != current:
         self.changeChildConfigDict(child, {'enabled': newEnabled})
         if not newEnabled:
-          if api.stopHandler is None:
+          if api.stopHandler is None and not api.jsCssOnly:
             raise Exception("plugin %s cannot stop during runtime")
           try:
             del self.startedThreads[child]
           except:
             pass
           api.stop()
+          if api.jsCssOnly:
+            self.setInfo(child,"disabled by config",WorkerStatus.INACTIVE)
         else:
           self.startPluginThread(child)
           pass
@@ -670,6 +688,9 @@ class AVNPluginHandler(AVNWorker):
       dir=self.pluginDirs.get(localPath[0])
       if dir is None:
         raise Exception("plugin %s not found"%localPath[0])
+      api=self.createdApis.get(localPath[0])
+      if api is None or not api.isEnabled():
+        raise Exception("plugin %s disabled"%localPath[0])
       if localPath[1][0:3] == 'api':
         #plugin api request
         api=self.createdApis.get(localPath[0])
@@ -705,6 +726,9 @@ class AVNPluginHandler(AVNWorker):
       if sub=="list":
         data=[]
         for k in list(self.pluginDirs.keys()):
+          api=self.createdApis[k]
+          if api is None or not api.isEnabled():
+            continue
           dir=self.pluginDirs[k]
           element={'name':k,'dir':dir}
           if os.path.exists(os.path.join(dir,"plugin.js")):
