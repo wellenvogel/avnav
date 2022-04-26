@@ -91,6 +91,7 @@ class MapWidget extends React.Component{
                 }catch(e){
                     base.log("error in user renderCanvas function for "+this.props.name+": "+e);
                 }
+                this.drawing=undefined;
             })
         }
     }
