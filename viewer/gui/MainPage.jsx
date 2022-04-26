@@ -313,7 +313,8 @@ class MainPage extends React.Component {
                     newChartList[i].hasOverlays=!!overlays[newChartList[i].overlayConfig];
                 }
                 return{overlays:overlays,chartList:newChartList};
-            })
+            },(e)=>{return {chartList:newChartList}})
+
     }
     fillList(sequence) {
         Requests.getJson("?request=list&type=chart",{timeout:3*parseFloat(globalStore.getData(keys.properties.networkTimeout))}).then((json)=>{
