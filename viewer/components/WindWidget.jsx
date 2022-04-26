@@ -19,6 +19,16 @@ class WindWidget extends React.Component{
         return Helper.compareProperties(this.props,nextProps,WindWidget.storeKeys);
     }
     render(){
+        const names={
+            A :{
+                speed: 'AWS',
+                angle: 'AWA'
+            },
+            T: {
+                speed: 'TWS',
+                angle: 'TWD'
+            }
+        }
         let classes = "widget windWidget " +this.props.className||"";
         let style = this.props.style || {};
         let kind = this.props.kind;
@@ -83,12 +93,12 @@ class WindWidget extends React.Component{
                         <div className="resize">
                             <div className="windInner">
                                 <div className='widgetData'>{Formatter.formatDirection(windAngle)}</div>
-                                <div className='infoLeft'>{'WD'+suffix}</div>
+                                <div className='infoLeft'>{names[suffix].angle}</div>
                                 <div className='infoRight'>°</div>
                             </div>
                             <div className="windInner">
                                 <div className='widgetData'>{windSpeedStr}</div>
-                                <div className='infoLeft'>{'WS'+suffix}</div>
+                                <div className='infoLeft'>{names[suffix].speed}</div>
                                 <div className='infoRight'>{this.props.showKnots ? "kn" : "m/s"}</div>
                             </div>
                         </div>
