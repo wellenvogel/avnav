@@ -26,7 +26,8 @@ import loadSettings from "../components/LoadSettingsDialog";
 
 const settingsSections={
     Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,
-        keys.properties.layers.grid,keys.properties.layers.compass,keys.properties.layers.scale],
+        keys.properties.layers.grid,keys.properties.layers.compass,keys.properties.layers.scale,
+        keys.properties.layers.user],
     UpdateTimes:[keys.properties.positionQueryTimeout,keys.properties.trackQueryTimeout,keys.properties.aisQueryTimeout, keys.properties.networkTimeout ,
                 keys.properties.connectionLostAlarm],
     Widgets:    [keys.properties.widgetFontSize,keys.properties.allowTwoWidgetRows,keys.properties.showClock,keys.properties.showZoom,keys.properties.showWind,keys.properties.showDepth],
@@ -89,6 +90,26 @@ const CheckBoxSettingsItem=(props)=>{
             label={props.label}
             value={props.value}/>
     );
+};
+const CheckBoxListSettingsItem=(lprops)=>{
+    let current=lprops.value;
+    if (typeof(current) !== 'object') return null;
+    let dl=[];
+    for (let k in current){
+        dl.push({label:k,value:current[k]})
+    }
+    return (<div>
+        {dl.map((props)=>
+        <Checkbox
+            className={lprops.className}
+            onChange={(nv)=>{
+                let newProps=assign({},current);
+                newProps[props.label]=nv;
+                lprops.onClick(newProps);
+            }}
+            label={props.label}
+            value={props.value}/>)}
+    </div>);
 };
 
 const rangeItemDialog=(item)=>{
@@ -238,6 +259,9 @@ const ColorSettingsItem=(properties)=>{
 const createSettingsItem=(item)=>{
     if (item.type == PropertyType.CHECKBOX){
         return CheckBoxSettingsItem;
+    }
+    if (item.type == PropertyType.MULTICHECKBOX){
+        return CheckBoxListSettingsItem;
     }
     if (item.type == PropertyType.RANGE){
         return RangeSettingsItem;

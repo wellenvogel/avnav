@@ -98,17 +98,32 @@ class PropertyHandler {
         }catch (e){}
     }
 
-
+    setItem(obj,path,value,opt_skip){
+        if (! obj) obj={};
+        let current=obj;
+        let parts=path.split('.');
+        for (let i=opt_skip||0;i<parts.length;i++){
+            let pk=parts[i];
+            if (i < (parts.length-1)){
+                if (typeof(current[pk]) !== 'object') current[pk]={};
+                current=current[pk];
+                continue;
+            }
+            current[pk]=value;
+        }
+        return obj;
+    }
     dataChanged(storeKeys){
         let self=this;
         let values=globalStore.getMultiple(keys.properties);
-        this.saveUserData(
-            Helper.filterObjectTree(values,(item,path)=>{
-                let description=self.propertyDescriptions[path];
-                if (description === undefined) return false;
-                return item !== description.defaultv;
-            },KeyHelper.keyNodeToString(keys.properties))
-        );
+        let saveData={};
+        for (let dk in this.propertyDescriptions){
+            let v=globalStore.getData(dk);
+            if (v !== this.propertyDescriptions[dk].defaultv){
+                this.setItem(saveData,dk,v,1);
+            }
+        }
+        this.saveUserData(saveData);
         this.incrementSequence();
     }
 
@@ -148,12 +163,15 @@ class PropertyHandler {
         try {
             let ndata = this.loadUserData();
             if (ndata) {
-                let userData = Helper.filterObjectTree(ndata, (item, path)=> {
-                    let description = self.propertyDescriptions[path];
-                    if (!description) return;
-                    return item != globalStore.getData(path);
-                }, KeyHelper.keyNodeToString(keys.properties));
-                globalStore.storeMultiple(userData, keys.properties, true, true);
+                let userData={};
+                for (let k in this.propertyDescriptions){
+                    let v=KeyHelper.getValue(ndata,k,1);
+                    if ( v === undefined) continue;
+                    if (v !== globalStore.getData(k)){
+                        userData[k]=v;
+                    }
+                }
+                globalStore.storeMultiple(userData, undefined, true, true);
             }
         }catch (e){
             base.log("Exception reading user data "+e);
@@ -239,6 +257,12 @@ class PropertyHandler {
                 }
                 let ov=v;
                 switch (des.type) {
+                    case PropertyType.MULTICHECKBOX:
+                        if (typeof(v) !== 'object'){
+                            if (eHandler("invalid type "+typeof(v)+" for "+dk)) return;
+                        }
+                        rt[dk]=v;
+                        break;
                     case PropertyType.CHECKBOX:
                         if (typeof (v) !== 'boolean') {
                             if (typeof (v) === 'string') v = v.toLowerCase() === 'true';
@@ -361,7 +385,7 @@ class PropertyHandler {
         let descriptions = KeyHelper.getKeyDescriptions(true);
         let values = {};
         if (! current) {
-            let keys = KeyHelper.flattenedKeys(keys.properties);
+            let keys = Object.keys(descriptions);
             current = globalStore.getMultiple(keys);
         }
         for (let dk in descriptions){

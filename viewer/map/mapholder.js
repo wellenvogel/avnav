@@ -42,6 +42,7 @@ import pepjstouch from '@openlayers/pepjs/src/touch';
 import pepjsmouse from '@openlayers/pepjs/src/mouse';
 import remotechannel, {COMMANDS} from "../util/remotechannel";
 import {MouseWheelZoom} from "ol/interaction";
+import UserLayer from './userlayer';
 
 
 const PSTOPIC="mapevent";
@@ -61,9 +62,35 @@ const EventTypes={
     SELECTWP: 2,
     RELOAD: 3,
     LOAD: 4,
-    FEATURE: 5
+    FEATURE: 5,
+    SHOWMAP:6,
+    HIDEMAP:7
+
 };
 
+class Context{
+    constructor() {
+        this.width=undefined;
+        this.height=undefined;
+        this.context=undefined;
+    }
+    check(width,height,opt_clear) {
+        if (width === this.width && height === this.height) {
+            if (opt_clear) this.clear()
+            return;
+        }
+        this.width=width;
+        this.height=height;
+        let canvas=document.createElement('canvas');
+        canvas.width=width;
+        canvas.height=height;
+        this.context=canvas.getContext('2d');
+    }
+    clear(){
+        if (! this.context) return;
+        this.context.canvas.width=this.width;
+    }
+}
 
 /**
  * the holder for our olmap
@@ -102,11 +129,19 @@ const MapHolder=function(){
     this.averageCourse=0;
     this.transformFromMap=olTransforms.get("EPSG:3857","EPSG:4326");
     this.transformToMap=olTransforms.get("EPSG:4326","EPSG:3857");
-
+    this.mapEventSubscriptionId=0;
+    /**
+     * list of subscriptions
+     * @private
+     * @type {{}}
+     */
+    this.mapEventSubscriptions={};
+    this.userLayerContext=new Context();
     this.aislayer=new AisLayer(this);
     this.navlayer=new NavLayer(this);
     this.tracklayer=new TrackLayer(this);
-    this.routinglayer=new RouteLayer(this);
+    this.routinglayer=new RouteLayer(this)
+    this.userLayer=new UserLayer(this);
     this.minzoom=32;
     this.mapMinZoom=32; //for checking in autozoom - differs from minzoom if the baselayer is active
     this.maxzoom=0;
@@ -146,13 +181,14 @@ const MapHolder=function(){
     this.needsRedraw=false;
 
     let self=this;
-    let storeKeys=KeyHelper.flattenedKeys(keys.nav.gps).concat(
+    this.storeKeys=KeyHelper.flattenedKeys(keys.nav.gps).concat(
         KeyHelper.flattenedKeys(keys.nav.center),
         KeyHelper.flattenedKeys(keys.nav.wp),
         KeyHelper.flattenedKeys(keys.nav.anchor),
         KeyHelper.flattenedKeys(keys.nav.track),
         KeyHelper.flattenedKeys(keys.nav.display)
     );
+    this.userKeys={};
     this.navChanged=new Callback(()=>{
         self.navEvent();
     });
@@ -167,7 +203,7 @@ const MapHolder=function(){
             self.setGpsLock(false);
         }
     });
-    globalStore.register(this.navChanged,storeKeys);
+    globalStore.register(this.navChanged,this.storeKeys);
     globalStore.register(this.propertyChange,keys.gui.global.propertySequence);
     globalStore.register(this.editMode,keys.gui.global.layoutEditing);
 
@@ -272,13 +308,6 @@ const MapHolder=function(){
      * @type {*[]}
      */
     this.eventGuards=[];
-    this.mapEventSubscriptionId=0;
-    /**
-     * list of subscriptions
-     * @private
-     * @type {{}}
-     */
-    this.mapEventSubscriptions={};
 
     /**
      * pepjs polyfill handling for converting touch events to pointer events
@@ -306,7 +335,31 @@ const MapHolder=function(){
 };
 
 base.inherits(MapHolder,DrawingPositionConverter);
-
+MapHolder.prototype.updateStoreKeys=function(newKeys,page,name){
+    if (page !== undefined && name !== undefined) {
+        if (newKeys) {
+            if (!this.userKeys[page]) this.userKeys[page] = {};
+            this.userKeys[page][name] = KeyHelper.flattenedKeys(newKeys);
+        } else {
+            if (this.userKeys[page]) {
+                delete this.userKeys[page][name];
+            }
+        }
+    }
+    let addKeys=[];
+    for (let p in this.userKeys) {
+        for (let n in this.userKeys[p]) {
+            let flat = this.userKeys[p][n];
+            if (!flat) continue;
+            flat.forEach((k) => {
+                if (addKeys.indexOf(k) < 0 && this.storeKeys.indexOf(k) < 0) {
+                    addKeys.push(k);
+                }
+            });
+        }
+    }
+    globalStore.register(this.navChanged,this.storeKeys.concat(addKeys));
+}
 MapHolder.prototype.EventTypes=EventTypes;
 
 /**
@@ -396,6 +449,7 @@ MapHolder.prototype.renderTo=function(div){
         this._lastMapDiv=undefined;
     }
     if (! this.olmap) return;
+    this._callHandlers({type:div?this.EventTypes.SHOWMAP:this.EventTypes.HIDEMAP});
     let mapDiv=div||this.defaultDiv;
     this.olmap.setTarget(mapDiv);
     this._lastMapDiv=div;
@@ -1173,15 +1227,16 @@ MapHolder.prototype.setBoatOffset=function(point){
 MapHolder.prototype.navEvent = function () {
 
     let gps = globalStore.getMultiple(keys.nav.gps);
-    if (!gps.valid) return;
-    if (this.gpsLocked) {
-        if (this.courseUp) {
-            let mapDirection=globalStore.getData(keys.nav.display.mapDirection);
-            this.setMapRotation(mapDirection);
+    if (gps.valid) {
+        if (this.gpsLocked) {
+            if (this.courseUp) {
+                let mapDirection = globalStore.getData(keys.nav.display.mapDirection);
+                this.setMapRotation(mapDirection);
+            }
+            this.setCenter(gps, true, this.getBoatOffset());
         }
-        this.setCenter(gps,true,this.getBoatOffset());
+        this.checkAutoZoom();
     }
-    this.checkAutoZoom();
     if (this.olmap) this.olmap.render();
 
 };
@@ -1697,6 +1752,10 @@ MapHolder.prototype.onPostCompose=function(evt){
     this.aislayer.onPostCompose(evt.frameState.viewState.center,this.drawing);
     this.routinglayer.onPostCompose(evt.frameState.viewState.center,this.drawing);
     this.navlayer.onPostCompose(evt.frameState.viewState.center,this.drawing);
+    this.userLayerContext.check(evt.context.canvas.width,evt.context.canvas.height,true);
+    this.drawing.setContext(this.userLayerContext.context);
+    this.userLayer.onPostCompose(evt.frameState.viewState.center,this.drawing);
+    evt.context.drawImage(this.userLayerContext.context.canvas,0,0,this.userLayerContext.width,this.userLayerContext.height);
 
 };
 
@@ -1789,6 +1848,7 @@ MapHolder.prototype.setImageStyles=function(styles){
     this.aislayer.setImageStyles(styles);
     this.routinglayer.setImageStyles(styles);
     this.tracklayer.setImageStyles(styles);
+    this.userLayer.setImageStyles(styles);
 };
 
 MapHolder.prototype.registerEventGuard=function(callback){
@@ -1801,6 +1861,22 @@ MapHolder.prototype._callGuards=function(eventName){
     this.eventGuards.forEach((guard)=>{
         guard(eventName);
     })
+}
+
+MapHolder.prototype.registerMapWidget=function(page,config,callback){
+    if (! this.userLayer) return;
+    if (! config.name) return;
+    let suc=this.userLayer.registerMapWidget(page,config.name,callback);
+    if ((config.storeKeys && suc) || ! callback) {
+        this.updateStoreKeys(callback?config.storeKeys:undefined,page,config.name);
+    }
+
+}
+MapHolder.prototype.unregisterPageWidgets=function(page){
+    if (! this.userLayer) return;
+    this.userLayer.unregisterPageWidgets(page);
+    delete this.userKeys[page];
+    this.updateStoreKeys();
 }
 
 

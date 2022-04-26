@@ -184,7 +184,7 @@ class MapPage extends React.Component{
                     self.props.onItemClick(item,data,panelItems.name,invertEditDirection)
                     }}
                 onClick={()=>{
-                    EditWidgetDialog.createDialog(undefined,self.props.id,panelItems.name,invertEditDirection);
+                    EditWidgetDialog.createDialog(undefined,self.props.id,panelItems.name,{fixPanel: true,beginning:invertEditDirection,types:["!map"]});
                 }}
                 dragdrop={globalStore.getData(keys.gui.global.layoutEditing)}
                 horizontal={mode === 'horizontal'}
@@ -198,6 +198,10 @@ class MapPage extends React.Component{
         let className=self.props.className?self.props.className+" mapPage":"mapPage";
         if (this.props.mapFloat) className+=" mapFloat";
         let pageProperties=Helper.filteredAssign(Page.propTypes,self.props);
+        let overlay=self.props.overlayContent || null;
+        if (typeof(overlay) === 'function'){
+            overlay=overlay({});
+        }
         return (
             <Page
                 {...pageProperties}
@@ -218,7 +222,7 @@ class MapPage extends React.Component{
                             />
 
                             {!this.props.mapFloat && map}
-                            {self.props.overlayContent ? self.props.overlayContent : null}
+                            {overlay}
                         </div>
                         <div ref={(container)=>{
                             this.bottomContainer=container;

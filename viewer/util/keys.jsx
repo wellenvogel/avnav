@@ -25,7 +25,8 @@ export const PropertyType={
     COLOR:3,
     LAYOUT:4,
     SELECT: 5,
-    INTERNAL: 6
+    INTERNAL: 6,
+    MULTICHECKBOX: 7
 };
 
 /**
@@ -251,7 +252,8 @@ let keys={
             grid: new Property(true, "Grid", PropertyType.CHECKBOX),
             compass: new Property(true, "Compass", PropertyType.CHECKBOX),
             base: new Property(true, "Base", PropertyType.CHECKBOX),
-            scale: new Property(true,"ScaleLine", PropertyType.CHECKBOX)
+            scale: new Property(true,"ScaleLine", PropertyType.CHECKBOX),
+            user: new Property({},"User/Plugins",PropertyType.CHECKBOX)
         },
         localAlarmSound: new Property(true, "Alarm Sound", PropertyType.CHECKBOX),
         connectedMode: new Property(true, "connected", PropertyType.CHECKBOX),
@@ -496,7 +498,17 @@ export const KeyHelper = {
         return [keyObject]
 
     },
-
+    getValue:(obj,path,opt_skip)=>{
+        let parts=path.split('.');
+        let current=obj;
+        let rt=undefined;
+        for (let i=opt_skip||0;i<parts.length;i++){
+            if (typeof(current) !== 'object') return;
+            rt=current[parts[i]];
+            current=current[parts[i]];
+        }
+        return rt;
+    },
     /**
      * get a list of keys that can be used for the display in si9mple widgets
      * @return {Array}
