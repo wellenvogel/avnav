@@ -542,23 +542,22 @@ class NMEAParser(object):
         lf = len(darray)
         i = 1
         hasData=False
-        while i < lf:
-          if i < (lf - 3):
-            try:
-              # we need 4 fields
-              if darray[i + 1] is not None and darray[i] != "":
-                ttype = darray[i]
-                tdata = float(darray[i + 1] or '0')
-                tunit = darray[i + 2]
-                tname = darray[i + 3]
-                data=self.convertXdrValue(tdata,tunit)
-                if tname is not None and tname != "":
-                  rt["transducers."+tname]=data
-                  hasData=True
-            except Exception as e:
-              AVNLog.debug("decode %s at pos %d failed: %s"%(data,i,str(e)))
-              pass
-            i+=4
+        while i < (lf -3):
+          try:
+            # we need 4 fields
+            if darray[i + 1] is not None and darray[i] != "":
+              ttype = darray[i]
+              tdata = float(darray[i + 1] or '0')
+              tunit = darray[i + 2]
+              tname = darray[i + 3]
+              data=self.convertXdrValue(tdata,tunit)
+              if tname is not None and tname != "":
+                rt["transducers."+tname]=data
+                hasData=True
+          except Exception as e:
+            AVNLog.debug("decode %s at pos %d failed: %s"%(data,i,str(e)))
+            pass
+          i+=4
         if hasData:
           self.addToNavData(rt, source=source, record=tag,priority=basePriority)
           return True
