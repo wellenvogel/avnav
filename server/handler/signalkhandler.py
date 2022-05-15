@@ -1077,7 +1077,7 @@ class AVNSignalKHandler(AVNWorker):
                     self.setInfo(self.I_TIME,"time channel not connected",WorkerStatus.ERROR)
                   self.timeSocket.close()
                 self.timeSocket=WebSocketHandler(DummyInfoSetter(),url,
-                                                self.timeChannelMessage)
+                                                self.timeChannelMessage,omitLog=True)
                 self.timeSocket.open()
               except Exception as e:
                 self.setInfo(self.I_TIME,"unable to create: %s"%str(e),WorkerStatus.ERROR)
