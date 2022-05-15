@@ -27,7 +27,7 @@ import base from '../base.js';
 import assign from 'object-assign';
 import Helper from '../util/helper.js';
 import CryptHandler from './crypthandler.js';
-import shallowcompare from '../util/shallowcompare.js';
+import shallowcompare from '../util/compare.js';
 import featureFormatter from "../util/featureFormatter";
 import globalstore from "../util/globalstore";
 import keys from '../util/keys';
@@ -66,7 +66,7 @@ class ChartSourceBase {
          * @protected
          * @type {boolean}
          */
-        this.isReadyFlag = false
+        this.isReadyFlag = false;
         /**
          * @protected
          * @type {boolean}
@@ -77,6 +77,8 @@ class ChartSourceBase {
         this.sequence='';
 
         this.removeSequence=0;
+
+        this.visible=true;
     }
     getConfig(){
         return(assign({},this.chartEntry));
@@ -102,6 +104,11 @@ class ChartSourceBase {
         return new Promise((resolve,reject)=>{
             if (! globalstore.getData(keys.gui.capabilities.fetchHead,false)){
                 resolve(0);
+                return;
+            }
+            if (! this.visible){
+                resolve(0);
+                return;
             }
             fetch(this.getUrl(),{method:'HEAD'})
                 .then((response)=>{
@@ -151,8 +158,13 @@ class ChartSourceBase {
                 .then((r)=> {
                     this.prepareInternal()
                         .then((layers) => {
+                            layers.forEach((layer)=>{
+                                if (!layer.avnavOptions) layer.avnavOptions={};
+                                layer.avnavOptions.chartSource=this;
+                            });
                             this.layers = layers;
                             if (!this.chartEntry.enabled) {
+                                this.visible=false;
                                 this.layers.forEach((layer) => layer.setVisible(false));
                             }
                             this.isReadyFlag = true;
@@ -190,11 +202,13 @@ class ChartSourceBase {
     }
 
     setVisible(visible){
+        this.visible=visible;
         if (! this.isReady()) return;
         this.layers.forEach((layer)=>layer.setVisible(visible));
     }
     resetVisible(){
         if (! this.isReady()) return;
+        this.visible=this.chartEntry.enabled;
         this.layers.forEach((layer)=>layer.setVisible(this.chartEntry.enabled));
     }
 

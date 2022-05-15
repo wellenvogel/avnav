@@ -15,14 +15,15 @@
     <p>Falls man eigene Symbole nutzen möchte, müssen diese als .png Dateien in
       das Images Verzeichnis hochgeladen werden - siehe bei der <a href="../userdoc/downloadpage.html#userfiles">Beschreibung
         zu Nutzer-Dateien</a>.</p>
-    <p>Welche Symbole verändert werden sollen (und wie), wird in einer JSON Datei
-      im Nutzer Verzeichnis beschrieben - images.json.</p>
+    <p>Welche Symbole verändert werden sollen (und wie), wird in einer JSON
+      Datei im Nutzer Verzeichnis beschrieben - images.json.</p>
     <p>Diese Datei hat den folgenden Aufbau (Beispiel):</p>
     <div class="code">{
   "boatImage": {
     "anchor": [20,0],
     "size":[40,71]
-  },
+  },<br>  "boatImageHdg:{<br>    "src": "/user/images/SpecialBoat.png",
+    "anchor": [15,15],    <br>    "size":[30,70]<br>  }
   "markerImage":{
     "src": "/user/images/Marker.png",
     "anchor": [15,15],
@@ -47,6 +48,18 @@
         <tr>
           <td>boatImage</td>
           <td>Das Symbol für das Boot auf der Navigationsseite</td>
+        </tr>
+        <tr>
+          <td>boatImageHdg<br>
+            (20220421)</td>
+          <td>Das Symbol für das Boot wenn hdm oder hdt zur Anzeige genutzt
+            werden</td>
+        </tr>
+        <tr>
+          <td>boatImageSteady<br>
+            (20220421)</td>
+          <td>Das Symbol für das Boot, wenn zero SOG detect aktiviert ist und
+            das Boot sich nicht bewegt</td>
         </tr>
         <tr>
           <td>markerImage</td>

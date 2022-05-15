@@ -53,7 +53,23 @@
             <span class="label">KeyboardType<span class="since">(since 20210429)</span></span>
             <select id="AVNAV_KBMODEL" data-default="pc105"></select>
         </div>
-
+        <div class="row">
+            <span class="label">TouchSupport<span class="since">(since 202204xx)</span></span>
+            <input type="checkbox" id="AVNAV_STARTX" >
+        </div>
+        <div class="row">
+            <span class="label">DisplayDPI<span class="since">(since 202204xx)</span></span>
+            <input type="number" id="AVNAV_DPI" value="96"/>
+        </div>
+        <div class="row">
+            <span class="label">OnScreen Keyboard Height<span class="since">(since 202204xx)</span></span>
+            <input type="number" id="AVNAV_KEYHEIGHT" value="7"/>
+        </div>
+        <div class="row">
+            <span class="label">Hide Cursor<span class="since">(since 202204xx)</span></span>
+            <input type="checkbox" id="AVNAV_HIDE_CURSOR" checked/>
+        </div>
+        <input type="hidden" id="AVNAV_DISPLAY_DIMENSIONS"/>
     </div>
     <div class="buttons">
         <button name="upload" id="upload">Load Current</button>
@@ -65,7 +81,37 @@
 <div class="footer">
     SHA512 thanks to https://github.com/mvo5/sha512crypt-node
 </div>
+<div class="dialogBack hidden">
+    <div class="dialog">
+        <h2>Compute DPI</h2>
+        <div class="row">
+            <span class="label">Screen Width(mm)</span>
+            <input type="number" value="245" id="XScreenWidth">
+        </div>
+        <div class="row">
+            <span class="label">Screen Width(pixel)</span>
+            <input type="number" value="1920" id="XScreenWPix">
+        </div>
+        <div class="row">
+            <span class="label">Screen Height(mm)</span>
+            <input type="number" value="150" id="XScreenHeight">
+        </div>
+        <div class="row">
+            <span class="label">Screen Height(pixel)</span>
+            <input type="number" value="1280" id="XScreenHPix">
+        </div>
+        <div class="row">
+            <span class="label">DPI</span>
+            <div id="XScreenDPI"></div>
+        </div>
+        <div class="row">
+            <button id="dpiCancel">Cancel</button>
+            <button id="dpiOk">OK</button>
+         </div>
+    </div>
+</div>
 </div>
 <a id="downloadLink"></a>
+
 </body>
 </html>

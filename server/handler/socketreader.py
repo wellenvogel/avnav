@@ -53,6 +53,7 @@ class AVNSocketReader(AVNWorker,SocketReader):
       return None
     rt=[
                WorkerParameter('feederName','',editable=False),
+               cls.PRIORITY_PARAM_DESCRIPTION,
                WorkerParameter('host',None),
                WorkerParameter('port',None,type=WorkerParameter.T_NUMBER),
                WorkerParameter('timeout',10,type=WorkerParameter.T_FLOAT,
@@ -100,7 +101,8 @@ class AVNSocketReader(AVNWorker,SocketReader):
       pass
 
   def writeData(self, data, source=None, **kwargs):
-    AVNWorker.writeData(self,data,source)
+    priority=self.PRIORITY_PARAM_DESCRIPTION.fromDict(self.param)
+    AVNWorker.writeData(self,data,source,sourcePriority=priority)
     if (self.getIntParam('minTime')):
       time.sleep(float(self.getIntParam('minTime'))/1000)
      

@@ -34,6 +34,7 @@ import {Input,InputSelect} from './Inputs.jsx';
 import DB from './DialogButton.jsx';
 import {getList,ParamValueInput} from "./ParamValueInput";
 import cloneDeep from 'clone-deep';
+import Compare from "../util/compare";
 
 
 class EditWidgetDialog extends React.Component{
@@ -74,6 +75,34 @@ class EditWidgetDialog extends React.Component{
         }
     }
 
+    changedParameters(){
+        /**
+         * we need to compare
+         * the current values (state.widget) and the default values (from state.parameters)
+         * the rule is to include in the output anything that differs from the defaults
+         * and the name and weight in any case
+         */
+        if (! this.state.parameters) return this.state.widget;
+        let filtered=filterByEditables(this.state.parameters,this.state.widget);
+        //filter out the parameters that are really set at the widget itself
+        let widget=WidgetFactory.findWidget(this.state.widget);
+        let rt={};
+        this.state.parameters.forEach((parameter)=>{
+            let fv=parameter.getValue(filtered);
+            if (fv !== undefined){
+                let dv=parameter.getValue(widget);
+                if (Compare(fv,dv)){
+                    return; //we have set the value that is at the widget anyway - do not write this out
+                }
+                parameter.setValue(rt,fv);
+            }
+        })
+        let fixed=['name','weight'];
+        fixed.forEach((fp)=>{
+            if (filtered[fp] !== undefined) rt[fp]=filtered[fp];
+        });
+        return rt;
+    }
     render () {
         let self=this;
         let hasCurrent=this.props.current.name !== undefined;
@@ -82,7 +111,7 @@ class EditWidgetDialog extends React.Component{
         if (this.props.panel !== this.state.panel){
             panelClass+=" changed";
         }
-        let completeWidgetData=assign({},WidgetFactory.findWidget(this.state.widget.name),this.state.widget);
+        let completeWidgetData=assign({},cloneDeep(WidgetFactory.findWidget(this.state.widget.name)),this.state.widget);
         return (
             <React.Fragment>
             <div className="selectDialog editWidgetDialog">
@@ -112,7 +141,7 @@ class EditWidgetDialog extends React.Component{
                     dialogRow={true}
                     label="New Widget"
                     onChange={(selected)=>{this.updateWidgetState({name:selected.name},true);}}
-                    list={()=>getList(WidgetFactory.getAvailableWidgets())}
+                    list={()=>getList(WidgetFactory.getAvailableWidgets(this.props.types))}
                     value={this.state.widget.name||'-Select Widget-'}
                     showDialogFunction={this.showDialog}/>
                 {parameters.map((param)=>{
@@ -140,7 +169,7 @@ class EditWidgetDialog extends React.Component{
                     {this.props.updateCallback?
                         <DB name="ok" onClick={()=>{
                         this.props.closeCallback();
-                        let changes=filterByEditables(this.state.parameters,this.state.widget);
+                        let changes=this.changedParameters();
                         if (this.props.weight){
                             if (changes.weight !== undefined) changes.weight=parseFloat(changes.weight)
                         }
@@ -166,7 +195,8 @@ EditWidgetDialog.propTypes={
     insertCallback: PropTypes.func,
     updateCallback: PropTypes.func,
     removeCallback: PropTypes.func,
-    closeCallback: PropTypes.func.isRequired
+    closeCallback: PropTypes.func.isRequired,
+    types: PropTypes.array
 };
 
 const filterObject=(data)=>{
@@ -181,24 +211,36 @@ const filterObject=(data)=>{
  * @param widgetItem
  * @param pagename
  * @param panelname
- * @param opt_beginning: insert at the beginning
- * @param opt_weight: show weight input
+ * @param opt_options:
+ *  beginning: insert at the beginning
+ *  weight: show weight input
+ *  fixPanel: if set: do not allow panel change
+ *  types: a list of allowed widget types
  * @return {boolean}
  */
-EditWidgetDialog.createDialog=(widgetItem,pagename,panelname,opt_beginning,opt_weight)=>{
+EditWidgetDialog.createDialog=(widgetItem,pagename,panelname,opt_options)=>{
     if (! LayoutHandler.isEditing()) return false;
-    let index=opt_beginning?-1:1;
+    if (! opt_options) opt_options={};
+    let index=opt_options.beginning?-1:1;
     if (widgetItem){
         index=widgetItem.index;
     }
     OverlayDialog.dialog((props)=> {
+        let panelList=[panelname];
+        if (!opt_options.fixPanel){
+            panelList=LayoutHandler.getPagePanels(pagename);
+        }
+        if (opt_options.fixPanel instanceof Array){
+            panelList=opt_options.fixPanel;
+        }
         return <EditWidgetDialog
             {...props}
             title="Select Widget"
             panel={panelname}
-            panelList={LayoutHandler.getPagePanels(pagename)}
+            types={opt_options.types}
+            panelList={panelList}
             current={widgetItem?widgetItem:{}}
-            weight={opt_weight}
+            weight={opt_options.weight}
             insertCallback={(selected,before,newPanel)=>{
                 if (! selected || ! selected.name) return;
                 let addMode=LayoutHandler.ADD_MODES.noAdd;
@@ -206,7 +248,7 @@ EditWidgetDialog.createDialog=(widgetItem,pagename,panelname,opt_beginning,opt_w
                     addMode=before?LayoutHandler.ADD_MODES.beforeIndex:LayoutHandler.ADD_MODES.afterIndex;
                 }
                 else{
-                    addMode=opt_beginning?LayoutHandler.ADD_MODES.beginning:LayoutHandler.ADD_MODES.end;
+                    addMode=opt_options.beginning?LayoutHandler.ADD_MODES.beginning:LayoutHandler.ADD_MODES.end;
                 }
                 LayoutHandler.replaceItem(pagename,newPanel,index,filterObject(selected),addMode);
             }}

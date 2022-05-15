@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import OverlayDialog,{dialogHelper,stateHelper} from './OverlayDialog.jsx';
+import OverlayDialog,{dialogHelper} from './OverlayDialog.jsx';
 import assign from 'object-assign';
 import {Input,Checkbox,InputReadOnly,InputSelect,ColorSelector,Radio} from './Inputs.jsx';
 import DB from './DialogButton.jsx';
@@ -9,7 +9,7 @@ import ItemList from './ItemList.jsx';
 import Requests from '../util/requests.js';
 import Toast from './Toast.jsx';
 import Helper from '../util/helper.js';
-import GuiHelpers from '../util/GuiHelpers.js';
+import GuiHelpers, {stateHelper} from '../util/GuiHelpers.js';
 import {readFeatureInfoFromGpx} from '../map/gpxchartsource';
 import {readFeatureInfoFromKml} from '../map/kmlchartsource';
 import {getOverlayConfigName} from '../map/chartsourcebase'
@@ -19,7 +19,7 @@ import OverlayConfig, {getKeyFromOverlay,OVERLAY_ID} from '../map/overlayconfig'
 import DefaultGpxIcon from '../images/icons-new/DefaultGpxPoint.png'
 import {readFeatureInfoFromGeoJson} from "../map/geojsonchartsource";
 import featureFormatters from '../util/featureFormatter';
-
+import chartImage from '../images/Chart60.png';
 const filterOverlayItem=(item,opt_itemInfo)=>{
     let rt=undefined;
     if (item.type === 'chart') {
@@ -99,9 +99,7 @@ class OverlayItemDialog extends React.Component{
             iconFiles:[{label:"--none--"}],
             route:[],
             track:[]};
-        if (props.current && props.current.url && props.current.type !== 'chart') {
-            this.analyseOverlay(props.current.url);
-        }
+
         this.getItemList('chart');
         this.getItemList('overlay');
         this.getItemList('images');
@@ -109,6 +107,12 @@ class OverlayItemDialog extends React.Component{
         this.getItemList('route');
         this.getItemList('track');
     }
+    componentDidMount() {
+        if (this.props.current && this.props.current.url && this.props.current.type !== 'chart') {
+            this.analyseOverlay(this.props.current.url);
+        }
+    }
+
     getItemList(type){
         Requests.getJson("",{},{
             request: 'listdir',
@@ -405,21 +409,21 @@ class OverlayItemDialog extends React.Component{
                                         value={this.stateHelper.getValue('maxZoom') || 0}
                                         onChange={(nv) => this.stateHelper.setValue('maxZoom', nv)}
                                     />
-                                    {itemInfo.hasSymbols && <Input
+                                    {(itemInfo.hasSymbols || itemInfo.hasWaypoint) && <Input
                                         dialogRow={true}
                                         type="number"
                                         label="min scale"
                                         value={this.stateHelper.getValue('minScale') || 0}
                                         onChange={(nv) => this.stateHelper.setValue('minScale', nv)}
                                     />}
-                                    {itemInfo.hasSymbols && <Input
+                                    {(itemInfo.hasSymbols || itemInfo.hasWaypoint) && <Input
                                         dialogRow={true}
                                         type="number"
                                         label="max scale"
                                         value={this.stateHelper.getValue('maxScale') || 0}
                                         onChange={(nv) => this.stateHelper.setValue('maxScale', nv)}
                                     />}
-                                    {(itemInfo.hasSymbols || itemInfo.allowOnline) &&<InputSelect
+                                    {(itemInfo.hasSymbols || itemInfo.allowOnline || itemInfo.hasWaypoint) &&<InputSelect
                                         dialogRow={true}
                                         label="default icon"
                                         value={this.stateHelper.getValue('defaultIcon') || '--none--'}
@@ -974,7 +978,8 @@ export const DEFAULT_OVERLAY_CHARTENTRY={
     overlayConfig: DEFAULT_OVERLAY_CONFIG,
     canDelete: false,
     canDownload:false,
-    time: (new Date()).getTime()/1000
+    time: (new Date()).getTime()/1000,
+    icon: chartImage
 };
 
 

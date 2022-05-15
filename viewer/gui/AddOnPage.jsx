@@ -3,20 +3,15 @@
  */
 
 import Dynamic from '../hoc/Dynamic.jsx';
-import Visible from '../hoc/Visible.jsx';
-import Button from '../components/Button.jsx';
-import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import React from 'react';
-import PropertyHandler from '../util/propertyhandler.js';
-import history from '../util/history.js';
 import Page from '../components/Page.jsx';
-import Requests from '../util/requests.js';
 import InputMonitor from '../hoc/InputMonitor.jsx';
 import Mob from '../components/Mob.js';
 import Addons from '../components/Addons.js';
 import remotechannel, {COMMANDS} from "../util/remotechannel";
+import alarmhandler from "../nav/alarmhandler";
 
 
 class AddOnPage extends React.Component{
@@ -24,14 +19,14 @@ class AddOnPage extends React.Component{
         super(props);
         let self=this;
         this.buttons=[
-            Mob.mobDefinition,
+            Mob.mobDefinition(this.props.history),
             {
                 name: 'Back',
                 onClick: ()=>{window.history.back();}
             },
             {
                 name: 'Cancel',
-                onClick: ()=>{history.pop()}
+                onClick: ()=>{self.props.history.pop()}
             }
         ];
         this.state={
@@ -52,9 +47,29 @@ class AddOnPage extends React.Component{
                 globalStore.storeData(keys.gui.addonpage.activeAddOn, i);
             },100);
         })
+        this.blockIds={};
     }
     componentWillUnmount() {
         remotechannel.unsubscribe(this.remoteToken);
+        for (let id in this.blockIds){
+            alarmhandler.removeBlock(id);
+        }
+        this.blockIds={};
+    }
+    blockAlarm(name){
+        for (let k in this.blockIds){
+            if (this.blockIds[k] === name) return;
+        }
+        this.blockIds[alarmhandler.addBlock(name)]=name;
+    }
+    unblockAlarm(name){
+        for (let k in this.blockIds){
+            if (this.blockIds[k] === name) {
+                alarmhandler.removeBlock(k);
+                delete this.blockIds[k];
+                return;
+            }
+        }
     }
 
     componentDidMount(){
@@ -91,7 +106,7 @@ class AddOnPage extends React.Component{
                     onClick: ()=> {
                         remotechannel.sendMessage(COMMANDS.addOn,i);
                         if (addOn.newWindow === 'true'){
-                            window.open(addOn.url,'_blank');
+                            window.open(addOn.url,addOn.key);
                             return;
                         }
                         //first unload the iframe completely to avoid pushing to the history
@@ -122,6 +137,12 @@ class AddOnPage extends React.Component{
                     if (url.match(/\?/)) url+="&"+urladd;
                     else url+="?"+urladd;
                 }
+                if (currentAddOn.preventConnectionLost){
+                    this.blockAlarm('connectionLost');
+                }
+                else{
+                    this.unblockAlarm('connectionLost');
+                }
                 let showInWindow=currentAddOn.newWindow === 'true';
                 let MainContent= InputMonitor((props)=>
                     <div className="addOnFrame">
@@ -129,8 +150,7 @@ class AddOnPage extends React.Component{
                     </div>);
                 return (
                     <Page
-                        className={self.props.className}
-                        style={self.props.style}
+                        {...self.props}
                         id="addonpage"
                         title={showInWindow?'':currentAddOn.title}
                         mainContent={

@@ -29,11 +29,10 @@ import DB from "./DialogButton";
 import Requests from "../util/requests";
 import Toast from "./Toast";
 import EditOverlaysDialog, {KNOWN_OVERLAY_EXTENSIONS,DEFAULT_OVERLAY_CHARTENTRY} from "./EditOverlaysDialog";
-import OverlayDialog, {dialogHelper, InfoItem, stateHelper} from "./OverlayDialog";
+import OverlayDialog, {dialogHelper, InfoItem} from "./OverlayDialog";
 import globalStore from "../util/globalstore";
 import ViewPage from "../gui/ViewPage";
 import assign from 'object-assign';
-import history from "../util/history";
 import LayoutHandler from "../util/layouthandler";
 import base from "../base";
 import NavHandler from "../nav/navdata";
@@ -46,6 +45,10 @@ import {getRouteInfo,INFO_ROWS as ROUTE_INFO_ROWS} from "./RouteInfoDialog";
 import RouteEdit from "../nav/routeeditor";
 import mapholder from "../map/mapholder";
 import LogDialog from "./LogDialog";
+import {stateHelper} from "../util/GuiHelpers";
+import Formatter from '../util/formatter';
+import routeobjects from "../nav/routeobjects";
+import PropertyHandler from "../util/propertyhandler";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 /**
@@ -80,12 +83,8 @@ const getLocalDataFunction=(item)=>{
     }
 }
 const getDownloadFileName=(item)=>{
-    if (item.type === 'layout') return LayoutHandler.nameToBaseName(item.name)+".json";
-    if (item.type === 'route'){
-        if (! item.name.match(/\.gpx$/)) return item.name+".gpx";
-        return item.name;
-    }
-    return item.name;
+    let actions=ItemActions.create(item,false);
+    return actions.nameForDownload(item.name);
 }
 const getDownloadUrl=(item)=>{
     let name=item.name;
@@ -95,7 +94,7 @@ const getDownloadUrl=(item)=>{
     }
     let url=globalStore.getData(keys.properties.navUrl)+"?request=download&type="+
         encodeURIComponent(item.type)+"&name="+
-        encodeURIComponent(name)+"&filename="+encodeURIComponent(name);
+        encodeURIComponent(name)+"&filename="+encodeURIComponent(getDownloadFileName(item));
     for (let k in additionalUrlParameters){
         if (item[k] !== undefined){
             url+="&"+k+"="+encodeURIComponent(item[k])
@@ -104,56 +103,203 @@ const getDownloadUrl=(item)=>{
     return url;
 }
 
-
-export const allowedItemActions=(props)=>{
-    if (! props) return {};
-    let isConnected=globalStore.getData(keys.properties.connectedMode,true);
-    let ext=Helper.getExt(props.name);
-    if (props.type === 'route') ext="gpx";
-    if (props.type === 'layout') ext="json";
-    let showView=(props.type === 'overlay' || props.type === 'user' || props.type==='images' || (props.type === 'route' && props.server) || props.type === 'track' || props.type === 'layout') && ViewPage.VIEWABLES.indexOf(ext)>=0;
-    let showEdit=(isConnected && (((props.type === 'overlay' || props.type === 'user') && props.size !== undefined && props.size < ViewPage.MAXEDITSIZE)|| (props.type === 'layout' && props.canDelete)  ) && ViewPage.EDITABLES.indexOf(ext) >=0);
-    if (props.type === 'route' && mapholder.getCurrentChartEntry()) showEdit=true;
-    let showDelete=!props.active;
-    if (props.canDelete !== undefined){
-        showDelete=props.canDelete && ! props.active;
+const showConvertFunctions = {
+    track: (history,item) => {
+        TrackConvertDialog.showDialog(history,item.name);
     }
-    if (! isConnected && (props.type !== 'route' || props.isServer)) showDelete=false;
-    let showRename=isConnected && (props.type === 'user' || props.type === 'images' || props.type === 'overlay' );
-    let showApp=isConnected && (props.type === 'user' && ext === 'html' && globalStore.getData(keys.gui.capabilities.addons));
-    let isApp=(showApp && props.isAddon);
-    let showOverlay=(isConnected &&
-            (props.type === 'chart' ||
-            (['overlay','route','track'].indexOf(props.type) >= 0
-                && KNOWN_OVERLAY_EXTENSIONS.indexOf(Helper.getExt(props.name,true)) >= 0)
-            ) &&
-        globalStore.getData(keys.gui.capabilities.uploadOverlays));
-    let showScheme=(props.type === 'chart' && props.url && props.url.match(/.*mbtiles.*/));
-    let showConvert=(props.type === 'track' && ext === 'gpx');
-    return {
-        showEdit:showEdit,
-        showView:showView,
-        showDelete:showDelete,
-        showRename:showRename,
-        showApp:showApp,
-        isApp:isApp,
-        showOverlay: showOverlay,
-        showScheme: showScheme,
-        showConvert: showConvert,
-        showImportLog: props.hasImporterLog
-    };
-};
+}
+
+export class ItemActions{
+    constructor(type) {
+        this.type=type;
+        this.headline=type
+        this.showEdit=false;
+        this.showView=false;
+        this.showDelete=false;
+        this.showRename=false;
+        this.showApp=false;
+        this.isApp=false;
+        this.showOverlay=false;
+        this.showScheme=false;
+        this.showConvertFunction=undefined;
+        this.showImportLog=false;
+        this.showDownload=false;
+        this.showIsServer=false;
+        this.timeText='';
+        this.infoText='';
+        this.className='';
+        this.extForView='';
+        /**
+         * if this is set call this function to upload a new item
+         * instead of the normal server upload
+         * the function must expect name and data and optonally an overwrite flag
+         * as parameters and return a promise
+         * the resolves true when the upload succeeds
+         * @type {undefined}
+         */
+        this.localUploadFunction=undefined;
+        /**
+         * convert an entity name as received from the server to a name we offer when downloading
+         * @param name
+         * @returns {*}
+         */
+        this.nameForDownload=(name)=>name;
+        /**
+         * convert a local file name into an entity name as the server would create
+         * @param name
+         * @returns {*}
+         */
+        this.nameForUpload=(name)=>name;
+    }
+    static create(props,isConnected){
+        if (typeof(props) === 'string') props={type:props};
+        if (! props || ! props.type){
+            return new ItemActions();
+        }
+        let rt=new ItemActions(props.type);
+        let ext=Helper.getExt(props.name);
+        let viewable=ViewPage.VIEWABLES.indexOf(ext)>=0;
+        let editableSize=props.size !== undefined && props.size < ViewPage.MAXEDITSIZE;
+        let allowedOverlay=KNOWN_OVERLAY_EXTENSIONS.indexOf(Helper.getExt(props.name,true)) >= 0;
+        let canEditOverlays=globalStore.getData(keys.gui.capabilities.uploadOverlays) && isConnected;
+        if (props.time !== undefined) {
+            rt.timeText=Formatter.formatDateTime(new Date(props.time*1000));
+        }
+        rt.infoText=props.name;
+        if (props.active){
+            rt.className+=' activeEntry';
+        }
+        rt.extForView=ext;
+        switch (props.type){
+            case 'chart':
+                rt.headline='Charts';
+                rt.showDelete=props.canDelete && isConnected;
+                rt.showOverlay=canEditOverlays;
+                rt.showScheme=isConnected && props.url && props.url.match(/.*mbtiles.*/);
+                rt.showImportLog=props.hasImportLog;
+                rt.showDownload=props.canDelete;
+                if (props.originalScheme){
+                    rt.className+=' userAction';
+                }
+                break;
+            case 'track':
+                rt.headline='Tracks';
+                rt.showDelete=true;
+                rt.showDownload=true;
+                rt.showView=viewable;
+                rt.showConvertFunction=ext === 'gpx'?showConvertFunctions[props.type]:undefined;
+                rt.showOverlay=allowedOverlay && canEditOverlays;
+                break;
+            case 'route':
+                rt.headline='Routes';
+                rt.showIsServer=props.server;
+                rt.showDelete= ! props.active &&  props.canDelete !== false  && ( ! props.isServer || isConnected);
+                rt.showView=viewable;
+                rt.showEdit=mapholder.getCurrentChartEntry() !== undefined;
+                rt.showOverlay=canEditOverlays;
+                rt.showDownload=true;
+                rt.extForView='gpx';
+                rt.infoText+=","+Formatter.formatDecimal(props.length,4,2)+
+                    " nm, "+props.numpoints+" points";
+                rt.nameForDownload=(name)=>{
+                    if (! name.match(/\.gpx$/)) name+=".gpx";
+                    return name;
+                }
+                rt.nameForUpload=(name)=>{
+                    return name.replace(/\.gpx$/,'');
+                }
+                rt.localUploadFunction=(name,data)=>{
+                    //name is ignored
+                    try{
+                        let route=new routeobjects.Route("");
+                        route.fromXml(data);
+                        if (! route.name){
+                            return Promise.reject("route has no name");
+                        }
+                        return RouteHandler.saveRoute(route);
+                    } catch(e){
+                        return Promise.reject(e);
+                    }
+                }
+                break;
+            case 'layout':
+                rt.headline='Layouts';
+                rt.showDelete=isConnected && props.canDelete !== false && ! props.active;
+                rt.showView = true;
+                rt.showEdit = isConnected && editableSize && props.canDelete;
+                rt.showDownload = true;
+                rt.extForView='json';
+                rt.nameForDownload=(name)=>{
+                    return LayoutHandler.nameToBaseName(name)+".json";
+                }
+                rt.nameForUpload=(name)=>{
+                    return LayoutHandler.fileNameToServerName(name);
+                }
+                rt.localUploadFunction=(name,data,overwrite)=>{
+                    return LayoutHandler.uploadLayout(name,data,overwrite);
+                }
+                break;
+            case 'settings':
+                rt.headline='Settings';
+                rt.showDelete=isConnected && props.canDelete !== false && ! props.active;
+                rt.showView = true;
+                rt.showEdit = isConnected && editableSize && props.canDelete;
+                rt.showDownload = true;
+                rt.showRename=isConnected && props.canDelete;
+                rt.extForView='json';
+                rt.nameForDownload=(name)=>{
+                    return name.replace(/^user\./,'').replace(/^system\./,'').replace(/^plugin/,'')+".json";
+                }
+                rt.nameForUpload=(name)=>{
+                    let serverName=name;
+                    ['user','system','plugin'].forEach((prefix)=>{
+                        if (serverName.indexOf(prefix+".") === 0){
+                            serverName=serverName.substr(prefix.length+1);
+                        }
+                    });
+                    return 'user.'+serverName.replace(/\.json$/,'');
+                }
+                rt.localUploadFunction=(name,data,overwrite)=>{
+                   return PropertyHandler.verifySettingsData(data, true,true)
+                       .then((res) => PropertyHandler.uploadSettingsData(name,res.data,false,overwrite));
+                }
+                break;
+            case 'user':
+                rt.headline='User';
+                rt.showDelete=isConnected && props.canDelete;
+                rt.showRename=isConnected && props.canDelete;
+                rt.showView=viewable;
+                rt.showEdit=editableSize && ViewPage.EDITABLES.indexOf(ext) >=0 && props.canDelete && isConnected;
+                rt.showDownload=true;
+                rt.showApp=isConnected && ext === 'html' && globalStore.getData(keys.gui.capabilities.addons);
+                rt.isApp=rt.showApp && props.isAddon;
+                break;
+            case 'images':
+                rt.headline='Images';
+                rt.showDelete = isConnected && props.canDelete !== false;
+                rt.showView = viewable;
+                rt.showRename = isConnected && props.canDelete !== false;
+                rt.showDownload=true;
+                break;
+            case 'overlay':
+                rt.headline='Overlays';
+                rt.showDelete = isConnected && props.canDelete !== false;
+                rt.showView = viewable;
+                rt.showRename = isConnected && props.canDelete !== false;
+                rt.showDownload=true;
+                rt.showEdit= editableSize && ViewPage.EDITABLES.indexOf(ext) >=0 && isConnected;
+                rt.showOverlay = canEditOverlays && allowedOverlay;
+                break;
+        }
+        return rt;
+    }
+}
 
 const getImportLogUrl=(name)=>{
     return globalStore.getData(keys.properties.navUrl)+
         "?request=api&type=import&command=getlog&name="+encodeURIComponent(name);
 }
 
-const showConvertFunctions = {
-    track: (item) => {
-        TrackConvertDialog.showDialog(item.name);
-    }
-}
 
 class AddRemoveOverlayDialog extends React.Component{
     constructor(props) {
@@ -288,7 +434,7 @@ export default  class FileDialog extends React.Component{
             existingName:false,
             name:props.current.name,
             scheme:props.current.scheme,
-            allowed:allowedItemActions(props.current)
+            allowed:ItemActions.create(props.current,globalStore.getData(keys.properties.connectedMode,true))
         };
         this.onChange=this.onChange.bind(this);
         this.extendedInfo=stateHelper(this,{},'extendedInfo');
@@ -433,11 +579,8 @@ export default  class FileDialog extends React.Component{
                         {this.state.allowed.showConvert &&
                             <DB name="toroute"
                                 onClick={()=>{
-                                    let convertFunction=showConvertFunctions[this.props.current.type];
-                                    if (convertFunction){
-                                        this.props.closeCallback()
-                                        convertFunction(this.props.current);
-                                    }
+                                    this.props.closeCallback()
+                                    this.props.okFunction('convert',this.props.current);
                                 }}
                                 >Convert</DB>
                         }
@@ -568,11 +711,11 @@ export const deleteItem=(info,opt_resultCallback)=> {
     });
 };
 
-export const showFileDialog=(item,opt_doneCallback,opt_checkExists)=>{
+export const showFileDialog=(history,item,opt_doneCallback,opt_checkExists)=>{
     let actionFunction=(action,newItem)=>{
-        let doneAction=()=>{
+        let doneAction=(pageChanged)=>{
             if (opt_doneCallback){
-                opt_doneCallback(action,newItem)
+                opt_doneCallback(action,newItem,pageChanged)
             }
         };
         let schemeAction=(newScheme)=>{
@@ -609,22 +752,26 @@ export const showFileDialog=(item,opt_doneCallback,opt_checkExists)=>{
             return renameAction(item.name,newItem.name);
         }
         if (action === 'view'){
-            doneAction();
+            doneAction(true);
             history.push('viewpage',{type:item.type,name:item.name,readOnly:true});
             return;
         }
         if (action === 'edit'){
-            doneAction();
             if (item.type === 'route'){
                 RouteHandler.fetchRoute(item.name,false,
                     (route)=>{
                         let editor=new RouteEdit(RouteEdit.MODES.EDIT);
                         editor.setNewRoute(route,0);
+                        doneAction(true);
                         history.push('editroutepage',{center:true});
                     },
-                    (error)=>Toast(error));
+                    (error)=>{
+                        Toast(error);
+                        doneAction();
+                    });
                 return;
             }
+            doneAction(true);
             history.push('viewpage',{type:item.type,name:item.name});
             return;
         }
@@ -652,6 +799,13 @@ export const showFileDialog=(item,opt_doneCallback,opt_checkExists)=>{
                 });
                 return;
             }
+        }
+        if ( action === 'convert'){
+            let convertFunction=showConvertFunctions[newItem];
+            if (convertFunction){
+                convertFunction(history,newItem);
+            }
+            return;
         }
     };
     OverlayDialog.dialog((props)=>{

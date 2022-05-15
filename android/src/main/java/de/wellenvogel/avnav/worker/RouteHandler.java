@@ -624,7 +624,7 @@ public class RouteHandler extends DirectoryRequestHandler  {
             status.setChildStatus(CHILD_RMB, WorkerStatus.Status.INACTIVE,"no RMB");
         }
         if (! computeAPB){
-            status.setChildStatus(CHILD_RMB, WorkerStatus.Status.INACTIVE,"no RMB");
+            status.setChildStatus(CHILD_APB, WorkerStatus.Status.INACTIVE,"no APB");
         }
         if (! computeAPB && ! computeRMB){
             return;
@@ -692,6 +692,7 @@ public class RouteHandler extends DirectoryRequestHandler  {
         if (leg == null || ! leg.active ||currentPosition == null ) {
             status.setChildStatus(CHILD_LEG, WorkerStatus.Status.INACTIVE,"no leg");
             status.setChildStatus(CHILD_RMB, WorkerStatus.Status.INACTIVE,"no RMB");
+            status.setChildStatus(CHILD_APB, WorkerStatus.Status.INACTIVE,"no APB");
             resetLast();
             return false;
         }

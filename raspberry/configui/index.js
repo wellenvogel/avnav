@@ -96,7 +96,12 @@
         AVNAV_TIMEZONE: {r:selectValue,s:setSelected},
         AVNAV_KBLAYOUT: {r:selectValue,s:setSelected},
         AVNAV_KBMODEL: {r:selectValue,s:setSelected},
-        AVNAV_WIFI_COUNTRY: {r:selectValue,s:setSelected}
+        AVNAV_WIFI_COUNTRY: {r:selectValue,s:setSelected},
+        AVNAV_STARTX: {r:checkBox,s:setCheckBox},
+        AVNAV_DPI: {r:getValue,s:setValue},
+        AVNAV_KEYHEIGHT: {r:getValue,s:setValue},
+        AVNAV_HIDE_CURSOR: {r:checkBox,s:setCheckBox},
+        AVNAV_DISPLAY_DIMENSIONS: {r:getValue,s:setValue}
     };
     let templateReplace=function(template,replace){
         if (! template) return;
@@ -134,6 +139,9 @@
                 line=line.replace(/['"]*/g,'');
                 line=line.replace(/#.*/,'');
                 line=line.replace(/ .*/,'');
+                if (line === 'yes' && i > 0){
+                    line='no'; //for yes/no a commented yes is treated as no
+                }
                 return line;
             }
         }
@@ -165,6 +173,65 @@
             if (data[lname] === defaultL) entry.setAttribute('selected',true);
             entry.textContent=lname;
             parent.appendChild(entry);
+        }
+    }
+    let getValueFor=function(sel){
+        return parseFloat(getValue(document.querySelector(sel)))
+    }
+    const dpiFields={
+        swmm:'#XScreenWidth',
+        swpix:'#XScreenWPix',
+        shmm:'#XScreenHeight',
+        shpix:'#XScreenHPix'
+    };
+    let computeDpi=function(){
+        let ipmm=0.0393701;
+        let comp={};
+        for (let k in dpiFields){
+            comp[k]=getValueFor(dpiFields[k]);
+        }
+        let dpi="<>"
+        try{
+            let swi=comp.swmm*ipmm;
+            let shi=comp.shmm*ipmm;
+            dpi=parseInt(Math.max(comp.shpix/shi,comp.swpix/swi));
+        }catch(e){
+
+        }
+        let t=document.querySelector('#XScreenDPI');
+        t.textContent=dpi;
+    }
+    let showDpi=function(){
+        let dialog=document.querySelector('.configui .dialogBack');
+        if (dialog){
+            dialog.classList.remove('hidden');
+        }
+        let ov=getValue(document.querySelector('#AVNAV_DISPLAY_DIMENSIONS'));
+        if (ov){
+            let parts=ov.split(',');
+            let idx=0;
+            for (let k in dpiFields){
+                setValue(document.querySelector(dpiFields[k]),parts[idx]);
+                idx++;
+            }
+        }
+        computeDpi();
+    }
+    let hideDpi=function(ev){
+        let dialog=document.querySelector('.configui .dialogBack');
+        if (dialog){
+            dialog.classList.add('hidden');
+        }
+        if (ev.target.getAttribute('id') === 'dpiOk'){
+            let dpi=document.querySelector('#XScreenDPI');
+            setValue(document.querySelector('#AVNAV_DPI'),parseInt(dpi.textContent));
+            let sdv='';
+            for (let k in dpiFields){
+                let v=getValue(document.querySelector(dpiFields[k]));
+                if (sdv !== '') sdv+=",";
+                sdv+=v===undefined?'':v;
+            }
+            setValue(document.querySelector('#AVNAV_DISPLAY_DIMENSIONS'),sdv);
         }
     }
     window.addEventListener('load',function(){
@@ -281,5 +348,20 @@
            lang=window.location.search.replace(/.*lang=/,'').replace('[?&].*','');
        }
        getToolTips(lang);
+       let dpiFields=this.document.querySelectorAll('.configui .dialog input');
+       for (let i=0;i<dpiFields.length;i++){
+           dpiFields[i].addEventListener('change',computeDpi);
+       }
+       let dpi=this.document.querySelector('#AVNAV_DPI');
+       if (dpi){
+           dpi.addEventListener('click',showDpi);
+           dpi.addEventListener('focus',showDpi);
+       }
+       ['dpiOk','dpiCancel'].forEach(function(id){
+            let bt=document.querySelector('#'+id);
+            if (bt){
+                bt.addEventListener('click',hideDpi);
+            }
+       });
     });
 })()

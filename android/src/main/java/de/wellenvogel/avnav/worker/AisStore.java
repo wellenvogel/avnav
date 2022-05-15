@@ -12,6 +12,7 @@ import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -174,16 +175,12 @@ public class AisStore {
 
     /**
      *
-     * @param lat
-     * @param lon
+     * @param centers
      * @param distance
      * @return
      */
-    public synchronized JSONArray getAisData(double lat,double lon,double distance){
+    public synchronized JSONArray getAisData(List<Location> centers, double distance){
         JSONArray rt=new JSONArray();
-        Location myLoc=new Location((String)null);
-        myLoc.setLongitude(lon);
-        myLoc.setLatitude(lat);
         distance=distance* AvnUtil.NM; //in distance is in NM
         AvnLog.d(LOGPRFX,"getAisData dist="+distance);
         for(JSONObject o:aisData.values()){
@@ -195,9 +192,16 @@ public class AisStore {
                     Location aloc = new Location((String) null);
                     aloc.setLatitude(cv.getDouble("lat"));
                     aloc.setLongitude(cv.getDouble("lon"));
-                    double dist = aloc.distanceTo(myLoc);
-                    if (dist > distance) {
-                        AvnLog.d(LOGPRFX, "omitting ais " + cv.toString() + " distance=" + dist);
+                    boolean inRange=false;
+                    for (Location myLoc:centers) {
+                        double dist = aloc.distanceTo(myLoc);
+                        if (dist <= distance){
+                            inRange=true;
+                            break;
+                        }
+                    }
+                    if (! inRange) {
+                        AvnLog.d(LOGPRFX, "omitting ais " + cv.toString());
                         continue;
                     }
                 }

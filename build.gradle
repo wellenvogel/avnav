@@ -192,6 +192,7 @@ ospackage {
         }
         from('server/plugins'){
             into 'server/plugins'
+            exclude '**/__pycache__/**'
             fileMode 0644
         }
         from('chartconvert') {
@@ -212,6 +213,7 @@ ospackage {
         }
         from('libraries') {
             include 'gpxpy*/**'
+            exclude '**/__pycache__/**'
             into 'libraries'
         }
         from('linux') {

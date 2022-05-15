@@ -6,11 +6,11 @@ import {hideToast} from '../components/Toast.jsx';
 import WidgetFactory from './WidgetFactory.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
-import NavData from '../nav/navdata.js';
 import KeyHandler from '../util/keyhandler.js';
 import AlarmHandler from '../nav/alarmhandler.js';
 import Dynamic from '../hoc/Dynamic.jsx';
 import GuiHelpers from "../util/GuiHelpers";
+import assign from 'object-assign';
 
 const alarmClick =function(){
     let alarms=globalStore.getData(keys.nav.alarms.all,"");
@@ -43,8 +43,12 @@ class Page extends React.Component {
         this.timer=GuiHelpers.lifecycleTimer(this,this.timerCallback,1000,true);
         this.lastUserAction=(new Date()).getTime();
         this.state={
-            hideButtons:false
+            hideButtons:false,
+            connectionLost:globalStore.getData(keys.nav.gps.connectionLost)
         }
+        GuiHelpers.storeHelper(this,(data)=>{
+            this.setState(data)
+        },{connectionLost: keys.nav.gps.connectionLost});
     }
     timerCallback(sequence){
         if (this.props.autoHideButtons !== undefined){
@@ -73,7 +77,8 @@ class Page extends React.Component {
     render() {
         let props=this.props;
         let className = "page";
-        if (this.state.hideButtons) className+=" hiddenButtons";
+        let hideButtons=this.state.hideButtons && props.autoHideButtons;
+        if (hideButtons) className+=" hiddenButtons";
         if (props.isEditing) className+=" editing";
         if (props.className) className += " " + props.className;
         let Alarm=this.alarmWidget;
@@ -86,13 +91,13 @@ class Page extends React.Component {
             >
             {props.floatContent && props.floatContent}
             <div className="leftPart">
-                {props.title ? <Headline title={props.title}/> : null}
+                {props.title ? <Headline title={props.title} connectionLost={this.state.connectionLost}/> : null}
                 {props.mainContent ? props.mainContent : null}
                 {props.bottomContent ? props.bottomContent : null}
                 <Alarm onClick={alarmClick}/>
             </div>
-            {! this.state.hideButtons && <ButtonList itemList={props.buttonList} widthChanged={props.buttonWidthChanged}/>}
-            { this.state.hideButtons && <ButtonShade onClick={
+            {! hideButtons && <ButtonList itemList={props.buttonList} widthChanged={props.buttonWidthChanged}/>}
+            { hideButtons && <ButtonShade onClick={
                 (ev)=>{
                     ev.stopPropagation();
                     ev.preventDefault();
@@ -110,9 +115,16 @@ class Page extends React.Component {
 
 }
 
-Page.propTypes={
-    id: PropTypes.string.isRequired,
+Page.pageProperties={
     className: PropTypes.string,
+    style: PropTypes.object,
+    options: PropTypes.object,
+    location: PropTypes.string.isRequired,
+    history: PropTypes.object.isRequired,
+    small: PropTypes.bool.isRequired
+}
+Page.propTypes=assign({},Page.pageProperties,{
+    id: PropTypes.string.isRequired,
     title: PropTypes.string,
     mainContent: PropTypes.any,
     floatContent: PropTypes.any,
@@ -122,6 +134,8 @@ Page.propTypes={
     isEditing: PropTypes.bool,
     buttonWidthChanged: PropTypes.func,
     autoHideButtons: PropTypes.any // number of ms or undefined
-};
+});
 
-export default Dynamic(Page,{storeKeys:{isEditing:keys.gui.global.layoutEditing}});
+
+
+export default Page;

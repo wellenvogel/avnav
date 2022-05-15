@@ -14,10 +14,7 @@ import java.util.TimeZone;
 public class ExtendedWebResourceResponse extends WebResourceResponse {
     public static final String HTTP_RESPONSE_DATE_HEADER =
             "EEE, dd MMM yyyy HH:mm:ss zzz";
-    public static DateFormat httpTimeFormat=new SimpleDateFormat(HTTP_RESPONSE_DATE_HEADER, Locale.US);
-    static{
-        httpTimeFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-    }
+    DateFormat httpTimeFormat=null;
     long length;
     private HashMap<String,String> headers=new HashMap<String, String>();
     public ExtendedWebResourceResponse(long length, String mime, String encoding, InputStream is){
@@ -34,6 +31,10 @@ public class ExtendedWebResourceResponse extends WebResourceResponse {
         headers.put(name,value);
     }
     public void setDateHeader(String name, Date date){
+        if (httpTimeFormat == null){
+            httpTimeFormat=new SimpleDateFormat(HTTP_RESPONSE_DATE_HEADER, Locale.US);
+            httpTimeFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+        }
         String value=httpTimeFormat.format(date);
         headers.put(name,value);
     }

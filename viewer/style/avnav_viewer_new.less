@@ -5,6 +5,7 @@
 @import "widgets.less";
 @import "buttons.less";
 @import "prism.less";
+@import "ol.less";
 
 *{
   .border-box();
@@ -129,6 +130,9 @@ body{
   .nightForeColor(white,@nightColor);
   font-weight: bold;
   .flex-shrink(0);
+  &.connectionLost{
+    .nightBackFade(@colorRed);
+  }
 }
 
 .mainContent{
@@ -240,6 +244,11 @@ body{
     text-overflow: fade;
   }
 
+  .wideLabel{
+    .inputLabel();
+    width: unset;
+  }
+
 
   button:not(.dialogButton,.smallButton){
     .dialogButton();
@@ -266,6 +275,9 @@ body{
     .flex-direction(row);
     .flex-align-items(center);
     line-height: 1.5em;
+    &.infoText{
+        white-space: pre-wrap;
+    }
   }
 
   .dialogButtons {
@@ -659,7 +671,7 @@ span.valuePrefix{
     width: 8em;
     min-width: 8em;
     margin-left: 1em;
-    white-space: nowrap;
+    white-space: pre-wrap;
     margin-right: 1em;
   }
   .info{
@@ -971,6 +983,7 @@ span.valuePrefix{
 #aispage{
   .aisListItem{
     .listEntry();
+    .flex-wrap(wrap);
     .aisItemFB{
       width:4em;
       min-width: 4em;
@@ -980,11 +993,15 @@ span.valuePrefix{
       font-weight: bold;
     }
     .aisData{
-      padding-left: 1em;
-      padding-right: 1em;
+      overflow: hidden;
+      max-width: 100%;
       .aisData1{
         font-weight: bold;
         margin-bottom: 0.2em;
+      }
+      .aisData2{
+        white-space: pre-line;
+        font-family: monospace;
       }
       .infoLine{
         margin-bottom: 0.2em;
@@ -1375,6 +1392,14 @@ span.valuePrefix{
       }
       .listEntry{
         .flex-align-items(center)
+      }
+    }
+    .sectionList,.settingsList{
+      .listEntry.changed{
+        font-weight: bold;
+      }
+      .listEntry.defaultValue{
+        font-style: italic;
       }
     }
 }

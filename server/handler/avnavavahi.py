@@ -174,6 +174,13 @@ class AVNAvahi(AVNWorker):
                       type=WorkerParameter.T_FLOAT),
       WorkerParameter('heartBeatInterval',60,editable=False,type=WorkerParameter.T_FLOAT)
     ]
+
+  @classmethod
+  def getConfigParamCombined(cls, child=None):
+    if child is not None:
+      return super().getConfigParamCombined(child)
+    return [cls.ENABLE_PARAM_DESCRIPTION]+cls.getConfigParam()
+
   @classmethod
   def preventMultiInstance(cls):
     return True
@@ -187,15 +194,15 @@ class AVNAvahi(AVNWorker):
 
   def _removedService(self,interface, protocol, name, stype, domain, flags):
     AVNLog.info("detected removed service %s.%s at %i.%i",stype,name,interface,protocol)
-    self.foundServices.remove(FoundService(stype,name,interface,protocol))
+    try:
+      self.foundServices.remove(FoundService(stype,name,interface,protocol))
+    except Exception as e:
+      AVNLog.error("unable to remove service %s: %s",name,str(e))
 
   def _nextIndex(self):
-    self.lock.acquire()
-    try:
+    with self.lock:
       self.externalServicesIndex+=1
       return self.externalServicesIndex
-    finally:
-      self.lock.release()
 
   def _stopLoop(self):
     if self.loop is not None:
@@ -276,7 +283,10 @@ class AVNAvahi(AVNWorker):
 
   def _deregister(self, description: ServiceDescription) -> object:
     if description.group is None:
-      description.reset()
+      try:
+        description.reset()
+      except:
+        pass
       return
     try:
       AVNLog.info("deregister")
@@ -293,14 +303,21 @@ class AVNAvahi(AVNWorker):
       self._deregister(description)
 
 
-  def _startServiceBrowser(self):
-    self.serviceBrowser=dbus.Interface(dbus.SystemBus().get_object(
-      self.DBUS_NAME, self.server.ServiceBrowserNew(
-        self.IF_UNSPEC,
-        self.PROTO_INET, self.S_TYPE_NMEA,
-        "local",
-        dbus.UInt32(0))),
-      self.DBUS_INTERFACE_SERVICE_BROWSER)
+  def _startServiceBrowser(self,doRaise=True):
+    try:
+      self.serviceBrowser=dbus.Interface(dbus.SystemBus().get_object(
+        self.DBUS_NAME, self.server.ServiceBrowserNew(
+          self.IF_UNSPEC,
+          self.PROTO_INET, self.S_TYPE_NMEA,
+          "local",
+          dbus.UInt32(0))),
+        self.DBUS_INTERFACE_SERVICE_BROWSER)
+      return True
+    except Exception as e:
+      AVNLog.error("unable to start service Browser %s",str(e))
+      if doRaise:
+        raise
+      return False
 
 
   def _serverStateChange(self,newState,p):
@@ -359,7 +376,7 @@ class AVNAvahi(AVNWorker):
           self._startServiceBrowser()
         except Exception as e:
           self.setInfo('main','unable to get avahi interface %s'%str(e),WorkerStatus.ERROR)
-          self.wait(3000)
+          self.wait(3)
       hasError=False
       while not self.shouldStop():
         if self.stateSequence != sequence:
@@ -368,7 +385,10 @@ class AVNAvahi(AVNWorker):
           self.server=dbus.Interface(dbus.SystemBus().get_object(self.DBUS_NAME, self.DBUS_PATH_SERVER),
                                      self.DBUS_INTERFACE_SERVER)
           self._deregisterAll()
-          self._startServiceBrowser()
+          if not self._startServiceBrowser(False):
+            self.wait(3)
+            sequence=-1
+            continue
 
         #compute the entry for the web service
         webService=ServiceDescription(self.type,self.getParamValue('serviceName'),httpServer.server_port)
@@ -388,11 +408,11 @@ class AVNAvahi(AVNWorker):
                 self.setInfo(description.getKey(),"error: "+str(e),WorkerStatus.ERROR)
                 description.isRegistered=False
             if description.name is None or description.name == '':
-              self.lock.acquire()
-              try:
-                del self.services[key]
-              finally:
-                self.lock.release()
+              with self.lock:
+                try:
+                  del self.services[key]
+                except:
+                  pass
         self.wait(1)
     except Exception as e:
       self._stopLoop()

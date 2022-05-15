@@ -8,7 +8,6 @@ import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import React from 'react';
-import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import Toast from '../components/Toast.jsx';
 import Requests from '../util/requests.js';
@@ -20,8 +19,9 @@ import DB from '../components/DialogButton';
 import {Checkbox, Input} from "../components/Inputs";
 import LogDialog from "../components/LogDialog";
 import assign from "object-assign";
-import ShallowCompare from "../util/shallowcompare";
+import Compare from "../util/compare";
 import PropTypes from 'prop-types';
+import Helper from "../util/helper";
 
 class Notifier{
     constructor() {
@@ -173,15 +173,14 @@ class StatusList extends React.Component{
         this.state={
             itemList:[]
         }
-        this.notifyProps={
-            addresses:this.props.notifyProps.addresses||false,
-            wpa:this.props.notifyProps.wpa||false,
-            shutdown:this.props.notifyProps.shutdown||false,
-            serverError:this.props.notifyProps.serverError||false,
-            canRestart:this.props.notifyProps.canRestart||false
-        }
+        this.defaultProps={
+            addresses:false,
+            wpa:false,
+            shutdown:false,
+            serverError:false
+        };
         if (this.props.reloadNotifier){
-            this.props.reloadNotifier.register(()=>this.doQuery())
+            this.props.reloadNotifier.register(()=>this.retriggerQuery())
         }
     }
     componentWillUnmount() {
@@ -191,9 +190,7 @@ class StatusList extends React.Component{
     queryResult(data){
         let self=this;
         let itemList=[];
-        let storeData=assign({},this.notifyProps);
-        storeData.serverError=false;
-        storeData.addresses=false;
+        let storeData=assign({},this.defaultProps);
         self.errors=0;
         if (data.handler) {
             data.handler.forEach(function(el){
@@ -208,34 +205,38 @@ class StatusList extends React.Component{
                 itemList.push(el);
             });
         }
-        if (!ShallowCompare(storeData,this.notifyProps)){
-            if (this.props.onChange){
-                this.props.onChange(storeData);
-            }
-            this.notifyProps=storeData;
+        if (this.props.onChange){
+            this.props.onChange(storeData);
         }
-
         this.setState({itemList:itemList});
 
     }
-    doQuery(){
+    retriggerQuery(){
+        this.timer.stopTimer();
+        this.doQuery();
+    }
+    doQuery(sequence){
         let self=this;
-        Requests.getJson("?request=status",{checkOk:false,sequenceFunction:this.timer.currentSequence}).then(
+        Requests.getJson("?request=status",{checkOk:false}).then(
             (json)=>{
-                self.queryResult(json);
-                self.timer.startTimer();
+                self.timer.guardedCall(sequence,()=> {
+                    self.queryResult(json)
+                    self.timer.startTimer(sequence);
+                });
             },
             (error)=>{
-                self.errors++;
-                if (self.errors > 4){
-                    let newState={itemList:[]};
-                    newState.serverError=true;
-                    if (this.props.onChange){
-                        this.props.onChange({serverError:true});
+                this.timer.guardedCall(sequence,()=> {
+                    self.errors++;
+                    if (self.errors > 4) {
+                        let newState = {itemList: []};
+                        newState.serverError = true;
+                        if (this.props.onChange) {
+                            this.props.onChange({serverError: true});
+                        }
+                        this.setState(newState);
                     }
-                    this.setState(newState);
-                }
-                self.timer.startTimer();
+                    self.timer.startTimer(sequence);
+                });
             });
     }
     getSnapshotBeforeUpdate(prevProps, prevState) {
@@ -258,7 +259,7 @@ class StatusList extends React.Component{
                 allowEdit={this.props.allowEdit}
                 finishCallback={
                     ()=>{
-                        this.doQuery();
+                        this.retriggerQuery();
                     }
                 }
                 {...iprops}/>}
@@ -325,12 +326,12 @@ class StatusPage extends React.Component{
                 {
                     name:'StatusWpa',
                     visible: this.state.wpa && props.connected,
-                    onClick:()=>{history.push('wpapage');}
+                    onClick:()=>{this.props.history.push('wpapage');}
                 },
                 {
                     name:'StatusAddresses',
                     visible:this.state.addresses,
-                    onClick:()=>{history.push("addresspage");}
+                    onClick:()=>{this.props.history.push("addresspage");}
                 },
                 {
                     name:'StatusAndroid',
@@ -346,7 +347,7 @@ class StatusPage extends React.Component{
                 {
                     name: 'MainInfo',
                     onClick: ()=> {
-                        history.push('infopage')
+                        this.props.history.push('infopage')
                     },
                     overflow:true
                 },
@@ -363,7 +364,8 @@ class StatusPage extends React.Component{
                                     OverlayDialog.alert("unable to trigger shutdown: "+error);
                                 });
 
-                        });
+                        })
+                            .catch(()=>{});
                     }
                 },
                 {
@@ -400,27 +402,31 @@ class StatusPage extends React.Component{
                         EditHandlerDialog.createAddDialog(()=>this.reloadNotifier.trigger());
                     }
                 },
-                Mob.mobDefinition,
+                Mob.mobDefinition(this.props.history),
                 {
                     name: 'Cancel',
-                    onClick: ()=>{history.pop()}
+                    onClick: ()=>{this.props.history.pop()}
                 }
             ];
 
             let className=props.className;
             if (this.state.serverError) className+=" serverError";
+            let pageProperties=Helper.filteredAssign(Page.pageProperties,this.props);
             return(
             <Page
+                {...pageProperties}
                 className={className}
-                style={props.style}
                 id="statuspage"
                 title={this.state.serverError?"Server Connection lost":"Server Status"}
                 mainContent={
                     <StatusList
                         connected={props.connected}
                         allowEdit={props.config}
-                        onChange={(nv)=>this.setState(nv)}
-                        notifyProps={this.state}
+                        onChange={(nv)=>window.setTimeout(()=>this.setState((state,props)=>{
+                            let comp=Helper.filteredAssign(nv,state);
+                            if (Compare(nv,comp)) return null;
+                            return nv;
+                        }),1)}
                         reloadNotifier={this.reloadNotifier}
                     />
                 }

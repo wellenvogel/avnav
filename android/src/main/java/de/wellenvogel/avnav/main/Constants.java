@@ -26,6 +26,7 @@ public class Constants {
     public static final String GPSALARM="alarm.gps";
     public static final String WAYPOINTALARM="alarm.waypoint";
     public static final String MOBALARM="alarm.mob";
+    public static final String CONALARM="alarm.connectionLost";
     public static final String ADDON_CONFIG="addon.config";
     //new handler config
     public static final String HANDLER_CONFIG="internal.handler";
@@ -43,7 +44,8 @@ public class Constants {
             ANCHORALARM,
             GPSALARM,
             WAYPOINTALARM,
-            MOBALARM
+            MOBALARM,
+            CONALARM
     };
     public static final String PREFNAME="AvNav";
     public static final String MODE_SERVER ="server";

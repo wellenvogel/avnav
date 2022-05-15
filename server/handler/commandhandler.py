@@ -185,6 +185,15 @@ class AVNCommandHandler(AVNWorker):
       return rt
     return definedCommands
 
+  def listCommandNames(self):
+    rt=[]
+    commands=self.getConfiguredCommands()
+    for c in commands:
+      name=c.get('name')
+      if name is not None:
+        rt.append(name)
+    return rt
+
   def updateCommandStatus(self,cmd):
     running=self.findRunningCommandsByName(cmd.get('name'))
     self.setInfo(cmd.get('name'), "param=%s,repeat=%s" % (cmd.get('parameter'), cmd.get('repeat')),

@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import OverlayDialog, {dialogHelper,stateHelper} from './OverlayDialog.jsx';
+import OverlayDialog, {dialogHelper} from './OverlayDialog.jsx';
 import Toast from './Toast.jsx';
 import assign from 'object-assign';
 import {Checkbox,Input,InputReadOnly,InputSelect} from './Inputs.jsx';
@@ -8,7 +8,7 @@ import DB from './DialogButton.jsx';
 import Addons from './Addons.js';
 import Helper from '../util/helper.js';
 import Requests from '../util/requests.js';
-import GuiHelpers from '../util/GuiHelpers.js';
+import GuiHelpers, {stateHelper} from '../util/GuiHelpers.js';
 
 export default  class UserAppDialog extends React.Component{
     constructor(props){
@@ -109,7 +109,7 @@ export default  class UserAppDialog extends React.Component{
                             dialogRow={true}
                             className="url"
                             label="url"
-                            value={this.stateHelper.getValue('url')}/>
+                            value={this.stateHelper.getValue('url','')}/>
                         :
                         <React.Fragment>
                             {(canEdit && ! fixedUrl) && <Checkbox
@@ -118,14 +118,14 @@ export default  class UserAppDialog extends React.Component{
                                 value={this.state.internal}
                                 onChange={(nv)=>{
                                     this.setState({internal:nv});
-                                    this.stateHelper.setState({url:undefined,newWindow:false});
+                                    this.stateHelper.setState({url:'',newWindow:false});
                                     }
                                 }/>}
                             {!this.state.internal ?
                                 <Input
                                     dialogRow={true}
                                     label="external url"
-                                    value={this.stateHelper.getValue('url')}
+                                    value={this.stateHelper.getValue('url','')}
                                     minSize={50}
                                     maxSize={100}
                                     onChange={(val)=>self.stateHelper.setState({url:val})}/>
@@ -133,7 +133,7 @@ export default  class UserAppDialog extends React.Component{
                                 <InputSelect
                                     dialogRow={true}
                                     label="internal url"
-                                    value={this.stateHelper.getValue('url')}
+                                    value={this.stateHelper.getValue('url','')}
                                     list={this.state.userFiles}
                                     showDialogFunction={this.dialogHelper.showDialog}
                                     onChange={(selected)=>self.stateHelper.setState({url:selected.url})}/>
@@ -144,7 +144,7 @@ export default  class UserAppDialog extends React.Component{
                         <Input
                             dialogRow={true}
                             label="title"
-                            value={this.stateHelper.getValue('title')}
+                            value={this.stateHelper.getValue('title','')}
                             minSize={50}
                             maxSize={100}
                             onChange={(value)=>{self.stateHelper.setState({title:value})}}

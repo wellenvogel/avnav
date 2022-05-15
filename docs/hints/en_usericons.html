@@ -8,9 +8,9 @@
   <body data-order="6000">
     <h1>User Symbols</h1>
     <p>Since version 20201030.</p>
-    <p>A couple of the symbols used in AvNav can be adapted to your
-      preferences. You can resize the existing symbols, set a couple of
-      properties or replace them by own symbols.</p>
+    <p>A couple of the symbols used in AvNav can be adapted to your preferences.
+      You can resize the existing symbols, set a couple of properties or replace
+      them by own symbols.</p>
     <p>If you are going to use your own symbols you need to upload them as .png
       files into the images directory - see <a href="../userdoc/downloadpage.html#userfiles">description
         for user files.</a></p>
@@ -46,6 +46,16 @@
         <tr>
           <td>boatImage</td>
           <td>boat symbol on navigation page</td>
+        </tr>
+        <tr>
+          <td>boatImageHdg<br>
+            (20220421)</td>
+          <td>boat symbol if hdt or hdm are used</td>
+        </tr>
+        <tr>
+          <td>boatImageSteady<br>
+            (20220421)</td>
+          <td>boat symbol if zero SOG detect is active and not boat movement</td>
         </tr>
         <tr>
           <td>markerImage</td>
@@ -84,10 +94,10 @@
             If you do not specify this parameter the system will use the built
             in symbol. You still can e.g. alter the size.<br>
             Your image files should have a reasonable size (e.g. 2x the
-            specified size) - but not too large as otherwise the performance could
-            suffer. If you have vector graphics (like svg) you can use a program
-            like <a href="https://inkscape.org">inkscape</a> to create png's
-            from them.</td>
+            specified size) - but not too large as otherwise the performance
+            could suffer. If you have vector graphics (like svg) you can use a
+            program like <a href="https://inkscape.org">inkscape</a> to create
+            png's from them.</td>
           <td><br>
           </td>
         </tr>
@@ -95,14 +105,15 @@
           <td>size</td>
           <td>[width,height] - must be specified as an array - see the example.
             This defines the size the image will be scaled to.<br>
-            If you did not specify the src parameter, size applies to the built in
-            image.</td>
+            If you did not specify the src parameter, size applies to the built
+            in image.</td>
           <td><br>
           </td>
         </tr>
         <tr>
           <td>anchor</td>
-          <td>[x,y] - the point (related to the image's width, height coordinates) to be anchored at the item's position on the map.</td>
+          <td>[x,y] - the point (related to the image's width, height
+            coordinates) to be anchored at the item's position on the map.</td>
           <td><br>
           </td>
         </tr>
@@ -114,8 +125,8 @@
         </tr>
         <tr>
           <td>courseVector</td>
-          <td>true or false - if you set this to false, no course
-            vector for this symbol is displayed.</td>
+          <td>true or false - if you set this to false, no course vector for
+            this symbol is displayed.</td>
           <td>not for markerImage</td>
         </tr>
         <tr>
@@ -127,8 +138,8 @@
       </tbody>
     </table>
     <p>When you edit the images.json you have to be careful to create valid
-      json. When using the AvNav edit function at the Files/Download page
-      <img src="../viewerimages/icons-new/ic_file_download.svg" alt="" class="inlineimage">(sub
+      json. When using the AvNav edit function at the Files/Download page <img
+        src="../viewerimages/icons-new/ic_file_download.svg" alt="" class="inlineimage">(sub
       page <img src="../viewerimages/icons-new/folder_shared.svg" alt="" class="inlineimage">)
       syntax will be automatically checked when saving the file.</p>
     <p><img src="edit-images.png" alt="" class="image"></p>

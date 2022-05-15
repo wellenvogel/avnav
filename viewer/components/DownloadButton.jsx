@@ -61,7 +61,7 @@ class DownloadButton extends React.Component{
         this.hiddenA.click();
     }
     render() {
-        let {useDialogButton,url,localData,fileName,type,...forward}=this.props;
+        let {useDialogButton,url,localData,fileName,type,androidUrl,...forward}=this.props;
         let Bt = useDialogButton ? DB : Button;
         if (!url && (!this.canDownloadLocal() || ! localData)) return null;
         return (

@@ -128,16 +128,24 @@ AisData.prototype.handleAisData=function() {
     let aisWarningAis = null;
     let aisTargets=[];
     let onlyMoving=globalStore.getData(keys.properties.aisOnlyShowMoving,false);
-    let onlyAB=globalStore.getData(keys.properties.aisShowOnlyAB,true);
+    let showA=globalStore.getData(keys.properties.aisShowA,true);
+    let showB=globalStore.getData(keys.properties.aisShowB,true);
+    let showOther=globalStore.getData(keys.properties.aisShowOther,false);
     let aisMinSpeed = parseFloat(globalStore.getData(keys.properties.aisMinDisplaySpeed, 0));
     let foundTrackedTarget = false;
     for (let aisidx in this.currentAis) {
         let ais =this.currentAis[aisidx];
         let shouldHandle = !onlyMoving || (parseFloat(ais.speed) >= aisMinSpeed);
-        if (shouldHandle && onlyAB){
+        if (shouldHandle ){
             let clazz=aisformatter.format('clazz',ais);
-            if (clazz !== "A" && clazz !== "B"){
-                shouldHandle=false;
+            if (clazz === "A"){
+                shouldHandle=showA;
+            }
+            else if (clazz === "B"){
+                shouldHandle=showB;
+            }
+            else{
+                shouldHandle=showOther;
             }
         }
         if (!shouldHandle) continue;
@@ -238,10 +246,17 @@ AisData.prototype.startQuery=function() {
         },timeout);
         return;
     }
-    url+="&lon="+this.formatter.formatDecimal(center.lon,3,5);
-    url+="&lat="+this.formatter.formatDecimal(center.lat,3,5);
-    url+="&distance="+this.formatter.formatDecimal(globalStore.getData(keys.properties.aisDistance)||10,4,1);
-    Requests.getJson(url,{checkOk:false,timeout:timeout}).then(
+    let param={
+        request: 'ais',
+        distance: this.formatter.formatDecimal(globalStore.getData(keys.properties.aisDistance)||10,4,1)
+    };
+    for (let idx=0;idx<center.length;idx++){
+        if (! center[idx]) continue;
+        let sfx=idx!==0?idx+"":"";
+        param['lat'+sfx]=this.formatter.formatDecimal(center[idx].lat,3,5);
+        param['lon'+sfx]=this.formatter.formatDecimal(center[idx].lon,3,5);
+    }
+    Requests.getJson(param,{checkOk:false,timeout:timeout}).then(
         (data)=>{
             self.aisErrors=0;
             self.lastAisQuery=new Date().getTime();

@@ -5,7 +5,6 @@
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import React from 'react';
-import history from '../util/history.js';
 import MapPage,{overlayDialog} from '../components/MapPage.jsx';
 import Toast from '../components/Toast.jsx';
 import NavHandler from '../nav/navdata.js';
@@ -28,6 +27,11 @@ import FeatureInfoDialog from "../components/FeatureInfoDialog";
 import {TrackConvertDialog} from "../components/TrackInfoDialog";
 import FullScreen from '../components/Fullscreen';
 import DialogButton from "../components/DialogButton";
+import RemoteChannelDialog from "../components/RemoteChannelDialog";
+import {InputReadOnly} from "../components/Inputs";
+import assign from 'object-assign';
+import WidgetFactory from "../components/WidgetFactory";
+import ItemList from "../components/ItemList";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -41,6 +45,19 @@ const PAGENAME='navpage';
 const getPanelList=(panel)=>{
     return LayoutHandler.getPanelData(PAGENAME,panel,LayoutHandler.getOptionValues([LayoutHandler.OPTIONS.SMALL,LayoutHandler.OPTIONS.ANCHOR]));
 };
+const getPanelWidgets=(panel)=>{
+    let panelData=getPanelList(panel);
+    if (panelData && panelData.list) {
+        let layoutSequence=globalStore.getData(keys.gui.global.layoutSequence);
+        let idx=0;
+        panelData.list.forEach((item)=>{
+            item.key=layoutSequence+"_"+idx;
+            idx++;
+        })
+        return panelData.list;
+    }
+    return [];
+}
 /**
  *
  * @param item
@@ -151,6 +168,53 @@ const navToWp=(on)=>{
     RouteHandler.routeOff();
     MapHolder.triggerRender();
 };
+const OVERLAYPANEL="overlay";
+class MapWidgetsDialog extends React.Component{
+    constructor(props) {
+        super(props);
+        this.state={
+            items:this.getCurrent()
+        };
+        this.sequence=GuiHelpers.storeHelper(this,()=>{
+            this.setState({items:this.getCurrent()})
+        },[keys.gui.global.layoutSequence]);
+    }
+
+    getCurrent() {
+        let current = getPanelWidgets(OVERLAYPANEL);
+        let idx = 0;
+        let rt = [];
+        current.forEach((item) => {
+            rt.push(assign({index: idx}, item));
+            idx++;
+        })
+        return rt;
+    }
+    onItemClick(item){
+        EditWidgetDialog.createDialog(item,PAGENAME,OVERLAYPANEL,{fixPanel:true,types:['map']});
+    }
+    render(){
+        return <div className={'MapWidgetsDialog'}>
+            <h2>Map Widgets</h2>
+            {this.state.items && this.state.items.map((item)=>{
+                let theItem=item;
+                return <div className={'dialogRow listEntry'}
+                    onClick={()=>this.onItemClick(theItem)}
+                >{item.name}</div>
+            })}
+            <div className={'dialogButtons'}>
+                <DialogButton
+                    name={'add'}
+                    onClick={()=>EditWidgetDialog.createDialog(undefined,PAGENAME,OVERLAYPANEL,{fixPanel:true,types:['map']})}
+                    >Add</DialogButton>
+                <DialogButton
+                    name={'cancel'}
+                    onClick={this.props.closeCallback}
+                >Close</DialogButton>
+            </div>
+        </div>
+    }
+}
 
 class NavPage extends React.Component{
     constructor(props){
@@ -163,6 +227,9 @@ class NavPage extends React.Component{
         };
         this.showWpButtons=this.showWpButtons.bind(this);
         this.widgetClick=this.widgetClick.bind(this);
+        this.sequence=GuiHelpers.storeHelper(this,()=>{
+            MapHolder.triggerRender();
+        },[keys.gui.global.layoutSequence]);
         globalStore.storeData(keys.map.measurePosition,undefined);
         this.waypointButtons=[
             anchorWatch(),
@@ -275,18 +342,23 @@ class NavPage extends React.Component{
         }
     }
     widgetClick(item,data,panel,invertEditDirection){
-        if (EditWidgetDialog.createDialog(item,PAGENAME,panel,invertEditDirection)) return;
+        let pagePanels=LayoutHandler.getPagePanels(PAGENAME);
+        let idx=pagePanels.indexOf(OVERLAYPANEL);
+        if (idx >=0){
+            pagePanels.splice(idx,1);
+        }
+        if (EditWidgetDialog.createDialog(item,PAGENAME,panel,{fixPanel:pagePanels,beginning:invertEditDirection,types:["!map"]})) return;
         if (item.name == "AisTarget"){
             let mmsi=(data && data.mmsi)?data.mmsi:item.mmsi;
             if (! mmsi) return;
-            history.push("aisinfopage",{mmsi:mmsi});
+            this.props.history.push("aisinfopage",{mmsi:mmsi});
             return;
         }
         if (item.name == "ActiveRoute"){
             if (!activeRoute.hasRoute()) return;
             activeRoute.setIndexToTarget();
             activeRoute.syncTo(RouteEdit.MODES.EDIT);
-            history.push("editroutepage");
+            this.props.history.push("editroutepage");
             return;
         }
         if (item.name == "Zoom"){
@@ -298,7 +370,7 @@ class NavPage extends React.Component{
             this.showWpButtons(true);
             return;
         }
-        history.push("gpspage",{widget:item.name});
+        this.props.history.push("gpspage",{widget:item.name});
 
     };
     showWpButtons(on){
@@ -316,7 +388,7 @@ class NavPage extends React.Component{
             let aisparam=evdata.aisparam;
             if (!aisparam) return;
             if (aisparam.mmsi){
-                history.push('aisinfopage',{mmsi:aisparam.mmsi});
+                this.props.history.push('aisinfopage',{mmsi:aisparam.mmsi});
                 return true;
             }
             return;
@@ -339,11 +411,11 @@ class NavPage extends React.Component{
                         }
                     );
                 }
-                FeatureInfoDialog.showDialog(feature);
+                FeatureInfoDialog.showDialog(this.props.history,feature);
             }
             if (feature.overlayType === 'route' && ! feature.activeRoute){
                 let currentRouteName=activeRoute.getRouteName();
-                if (Helper.getExt(currentRouteName) !== '.gpx') currentRouteName+='.gpx';
+                if (Helper.getExt(currentRouteName) !== 'gpx') currentRouteName+='.gpx';
                 if (activeRoute.hasActiveTarget() && currentRouteName === feature.overlayName){
                     //do not show a feature pop up if we have an overlay that exactly has the current route
                     return false;
@@ -354,7 +426,7 @@ class NavPage extends React.Component{
                    name:'toroute',
                    label: 'Convert',
                    onClick:(props)=>{
-                       TrackConvertDialog.showDialog(props.overlayName)
+                       TrackConvertDialog.showDialog(this.props.history, props.overlayName)
                    }
                 });
             }
@@ -385,7 +457,7 @@ class NavPage extends React.Component{
                                 let idx=route.findBestMatchingIdx(feature.nextTarget);
                                 let editor=new RouteEdit(RouteEdit.MODES.EDIT);
                                 editor.setNewRoute(route,idx >= 0?idx:undefined);
-                                history.push("editroutepage");
+                                this.props.history.push("editroutepage");
                             },
                             (error)=> {
                                 if (error) Toast(error);
@@ -399,10 +471,10 @@ class NavPage extends React.Component{
     }
     componentWillUnmount(){
         globalStore.storeData(keys.map.measurePosition,undefined);
+        MapHolder.unregisterPageWidgets(PAGENAME);
     }
     componentDidMount(){
         MapHolder.showEditingRoute(false);
-
     }
     getButtons(){
         let rt=[
@@ -479,7 +551,7 @@ class NavPage extends React.Component{
                 onClick:()=>{
                     if (activeRoute.getIndex() < 0 ) activeRoute.setIndexToTarget();
                     activeRoute.syncTo(RouteEdit.MODES.EDIT);
-                    history.push("editroutepage");
+                    this.props.history.push("editroutepage");
                 },
                 overflow: true
 
@@ -534,38 +606,69 @@ class NavPage extends React.Component{
                     MapHolder.triggerRender();
                 }
             },
-            Mob.mobDefinition,
+            Mob.mobDefinition(this.props.history),
             EditPageDialog.getButtonDef(PAGENAME,
                 MapPage.PANELS,
                 [LayoutHandler.OPTIONS.SMALL,LayoutHandler.OPTIONS.ANCHOR]),
+            {
+                name: 'NavMapWidgets',
+                editOnly: true,
+                overflow: true,
+                onClick: ()=>OverlayDialog.dialog((props)=><MapWidgetsDialog {...props}/>)
+            },
             LayoutFinishedDialog.getButtonDef(),
+            RemoteChannelDialog({overflow:true}),
             FullScreen.fullScreenDefinition,
             Dimmer.buttonDef(),
             {
                 name: 'Cancel',
-                onClick: ()=>{history.pop()}
+                onClick: ()=>{this.props.history.pop()}
             }
         ];
         return rt;
     }
+    registerMapWidget(widget,callback){
+        MapHolder.registerMapWidget(PAGENAME,widget,callback);
+    }
     render(){
         let self=this;
         let autohide=undefined;
-        if (globalStore.getData(keys.properties.autoHideNavPage)){
+        if (globalStore.getData(keys.properties.autoHideNavPage) && ! this.state.showWpButtons && ! globalStore.getData(keys.gui.global.layoutEditing)){
             autohide=globalStore.getData(keys.properties.hideButtonTime,30)*1000;
         }
+        let pageProperties=Helper.filteredAssign(MapPage.propertyTypes,self.props);
         return (
             <MapPage
-                className={self.props.className}
-                style={self.props.style}
+                {...pageProperties}
                 id={PAGENAME}
                 mapEventCallback={self.mapEvent}
                 onItemClick={self.widgetClick}
                 panelCreator={getPanelList}
-                overlayContent={this.state.showWpButtons?<ButtonList
+                overlayContent={ (props)=>
+                    <React.Fragment>
+                        {this.state.showWpButtons?<ButtonList
                             itemList={self.waypointButtons}
                             className="overlayContainer"
                         />:null}
+                        <ItemList
+                            className={'mapWidgetContainer widgetContainer'}
+                            itemCreator={(widget)=>{
+                                let widgetConfig=WidgetFactory.findWidget(widget) || {};
+                                let key=widget.key;
+                                return WidgetFactory.createWidget(widget,
+                                    {
+                                        handleVisible:!globalStore.getData(keys.gui.global.layoutEditing),
+                                        registerMap: (callback)=>this.registerMapWidget({
+                                            name: key,
+                                            storeKeys: widgetConfig.storeKeys
+                                        },callback),
+                                        triggerRender: ()=>MapHolder.triggerRender()
+                                    }
+                                )
+                            }}
+                            itemList={getPanelWidgets(OVERLAYPANEL)}
+                        />
+                    </React.Fragment>}
                 buttonList={self.getButtons()}
                 preventCenterDialog={(self.props.options||{}).remote}
                 autoHideButtons={autohide}

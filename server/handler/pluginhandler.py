@@ -39,10 +39,21 @@ import avnav_handlerList
 from avnremotechannel import AVNRemoteChannelHandler
 from avnuserapps import AVNUserAppHandler
 from avnusb import AVNUsbSerialReader
-from layouthandler import AVNLayoutHandler
+from layouthandler import AVNScopedDirectoryHandler, AVNLayoutHandler
 from charthandler import AVNChartHandler
+from settingshandler import AVNSettingsHandler
 
 URL_PREFIX= "/plugins"
+
+class UserApp(object):
+  def __init__(self,url,icon,title):
+    self.url=url
+    self.title=title
+    self.icon=icon
+  def __eq__(self, other):
+    return self.__dict__ == other.__dict__
+
+
 
 class ApiImpl(AVNApi):
   def __init__(self,parent,store,queue,prefix,moduleFile):
@@ -66,8 +77,20 @@ class ApiImpl(AVNApi):
     self.editables=None
     self.stopHandler=None
     self.storeKeys=[]
+    self.userApps=[]
+    self.layouts=[]
+    self.settingsFiles=[]
+    self.jsCssOnly=False
+
+  def isEnabled(self):
+    return AVNUtil.getBool(self.getConfigValue(AVNPluginHandler.ENABLE_PARAMETER.name),True)
+  def setJsCssOnly(self):
+    self.jsCssOnly=True
+    self.phandler.setChildEditable(self.prefix,True)
 
   def stop(self):
+    if self.jsCssOnly:
+      return
     if self.stopHandler is None:
       raise Exception("plugin %s cannot be stopped during runtime"%self.prefix)
     try:
@@ -82,13 +105,34 @@ class ApiImpl(AVNApi):
       pass
     self.requestHandler=None
     try:
+      self.userApps=[]
       addonhandler = AVNWorker.findHandlerByName(AVNUserAppHandler.getConfigName())
       for id in range(0,self.addonIndex+1):
         addonhandler.unregisterAddOn("%s%i"%(self.prefix,id))
     except:
       pass
+    try:
+      layouthandler=AVNWorker.findHandlerByName(AVNLayoutHandler.getConfigName())
+      if layouthandler:
+        for layout in self.layouts:
+          layouthandler.deregisterPluginItem(self.getPrefixForItems(),layout)
+      self.layouts=[]
+    except:
+      pass
+    try:
+      settingshandler=AVNWorker.findHandlerByName(AVNSettingsHandler.getConfigName())
+      if settingshandler:
+        for setting in self.settingsFiles:
+          settingshandler.deregisterPluginItem(self.getPrefixForItems(),setting)
+      self.settingsFiles=[]
+    except:
+      pass
+
     self.stopHandler()
 
+
+  def getPrefixForItems(self):
+    return re.sub(".*\.","",self.prefix)
 
   def log(self, str, *args):
     AVNLog.info("%s",str % args)
@@ -105,10 +149,10 @@ class ApiImpl(AVNApi):
         filter=filter.split(',')
     return self.queue.fetchFromHistory(sequence,number,includeSource=includeSource,waitTime=waitTime,nmeafilter=filter)
 
-  def addNMEA(self, nmea, addCheckSum=False,omitDecode=True,source=None):
+  def addNMEA(self, nmea, addCheckSum=False,omitDecode=True,source=None,sourcePriority=NMEAParser.DEFAULT_API_PRIORITY):
     if source is None:
       source=self.prefix
-    return self.queue.addNMEA(nmea,source=source,addCheckSum=addCheckSum,omitDecode=omitDecode)
+    return self.queue.addNMEA(nmea,source=source,addCheckSum=addCheckSum,omitDecode=omitDecode,sourcePriority=sourcePriority)
 
   def registerKeys(self):
     if self.storeKeys is None:
@@ -141,7 +185,7 @@ class ApiImpl(AVNApi):
     else:
       if not key in self.patterns:
         self.patterns.append(key)
-  def addData(self,path,value,source=None,record=None):
+  def addData(self,path,value,source=None,record=None,sourcePriority=NMEAParser.DEFAULT_API_PRIORITY):
     if source is None:
       source="plugin-"+self.prefix
     matches=False
@@ -157,9 +201,7 @@ class ApiImpl(AVNApi):
     if not matches:
       AVNLog.error("%s:setting invalid path %s"%(self.prefix,path))
       return False
-    if record is not None:
-      self.store.setReceivedRecord(record,source)
-    self.store.setValue(path,value,source)
+    self.store.setValue(path,value,source,sourcePriority*10,record=record)
     return True
   def getDataByPrefix(self, prefix):
     return self.store.getDataByPrefix(prefix)
@@ -184,7 +226,7 @@ class ApiImpl(AVNApi):
   def setStatus(self,value,info):
     self.phandler.setInfo(self.prefix,info,value)
 
-  def registerUserApp(self, url, iconFile, title=None):
+  def registerUserApp(self, url, iconFile, title=None,preventConnectionLost=False):
     addonhandler=AVNWorker.findHandlerByName(AVNUserAppHandler.getConfigName())
     if addonhandler is None:
       raise Exception("no http server")
@@ -194,8 +236,13 @@ class ApiImpl(AVNApi):
     if not os.path.exists(iconFilePath):
       raise Exception("icon file %s not found"%iconFilePath)
     id = "%s%i"%(self.prefix,self.addonIndex)
+    userApp=UserApp(url,iconFile,title)
+    if userApp in self.userApps:
+      self.log("trying to re-register user app url=%s, ignore",url)
+      return
+    self.userApps.append(userApp)
     addonhandler.registerAddOn(id,url,"%s/%s/%s"%(URL_PREFIX,self.prefix,iconFile),
-                               title=title)
+                               title=title,preventConnectionLost=preventConnectionLost)
     self.addonIndex+=1
     return id
 
@@ -210,10 +257,28 @@ class ApiImpl(AVNApi):
       layoutFile=os.path.join(os.path.dirname(self.fileName),layoutFile)
     if not os.path.exists(layoutFile):
       raise Exception("layout file %s not found",layoutFile)
-    layoutHandler=AVNWorker.findHandlerByName(AVNLayoutHandler.getConfigName()) #type: AVNLayoutHandler
+    layoutHandler=AVNWorker.findHandlerByName(AVNLayoutHandler.getConfigName()) #type: AVNScopedDirectoryHandler
     if layoutHandler is None:
       raise Exception("no layout handler")
-    layoutHandler.registerPluginLayout(re.sub(".*\.","",self.prefix),name,layoutFile)
+    if name in self.layouts:
+      self.log("re-registering layout %s",name)
+      layoutHandler.deregisterPluginItem(self.getPrefixForItems(),name)
+    layoutHandler.registerPluginItem(self.getPrefixForItems(),name,layoutFile)
+    self.layouts.append(name)
+
+  def registerSettingsFile(self, name, settingsFile):
+    if not os.path.isabs(settingsFile):
+      settingsFile=os.path.join(os.path.dirname(self.fileName), settingsFile)
+    if not os.path.exists(settingsFile):
+      raise Exception("settings file %s not found", settingsFile)
+    settingsHandler=AVNWorker.findHandlerByName(AVNSettingsHandler.getConfigName()) #type: AVNScopedDirectoryHandler
+    if settingsHandler is None:
+      raise Exception("no settings handler")
+    if name in self.settingsFiles:
+      self.log("re-registering settings %s",name)
+      settingsHandler.deregisterPluginItem(self.getPrefixForItems(),name)
+    settingsHandler.registerPluginItem(self.getPrefixForItems(), name, settingsFile)
+    self.settingsFiles.append(name)
 
   def timestampFromDateTime(self, dt=None):
     if dt is None:
@@ -385,14 +450,17 @@ class AVNPluginHandler(AVNWorker):
           module=self.loadPluginFromDir(dir, moduleName)
         except:
           AVNLog.error("error loading plugin from %s:%s",dir,traceback.format_exc())
+        api = ApiImpl(self,self.navdata,self.queue,moduleName,inspect.getfile(module) if module is not None else module)
+        self.createdApis[moduleName]=api
         if module is not None:
           self.pluginDirs[moduleName]=os.path.realpath(dir)
-          self.instantiateHandlersFromModule(moduleName,module)
+          self.instantiateHandlersFromModule(moduleName,module,api)
         else:
           if os.path.exists(os.path.join(dir,"plugin.js")) or os.path.exists(os.path.join(dir,"plugin.css")):
             self.pluginDirs[moduleName]=dir
             self.setInfo(moduleName,"java script/css only",WorkerStatus.STARTED)
-    for name in list(self.createdPlugins.keys()):
+            api.setJsCssOnly()
+    for name in list(self.createdApis.keys()):
       self.startPluginThread(name)
     AVNLog.info("pluginhandler finished")
 
@@ -403,7 +471,7 @@ class AVNPluginHandler(AVNWorker):
       api.registerKeys()
       plugin.run()
       api.log("plugin run finshed")
-      if AVNUtil.getBool(api.getConfigValue('enabled'),True):
+      if api.isEnabled():
         api.setStatus(WorkerStatus.INACTIVE,"plugin run finished")
       else:
         api.setStatus(WorkerStatus.INACTIVE, "plugin disabled")
@@ -412,15 +480,21 @@ class AVNPluginHandler(AVNWorker):
       api.setStatus(WorkerStatus.ERROR,"plugin exception %s"%str(e))
 
   def startPluginThread(self,name):
-    plugin = self.createdPlugins[name]
+    plugin = self.createdPlugins.get(name)
     api = self.createdApis[name]
     if api is None:
       AVNLog.error("internal error: api not created for plugin %s", name)
       return
-    enabled = AVNUtil.getBool(api.getConfigValue("enabled"), True)
+    enabled = api.isEnabled()
     if not enabled:
       AVNLog.info("plugin %s is disabled by config", name)
       self.setInfo(name, "disabled by config", WorkerStatus.INACTIVE)
+      return
+    if api.jsCssOnly:
+      self.setInfo(name, "javascript/css only", WorkerStatus.NMEA)
+      return
+    if plugin is None:
+      self.setInfo(name,'no plugin could be created',WorkerStatus.ERROR)
       return
     AVNLog.info("starting plugin %s", name)
     thread = threading.Thread(target=self.runPlugin,args=[api,plugin])
@@ -429,7 +503,7 @@ class AVNPluginHandler(AVNWorker):
     thread.start()
     self.startedThreads[name] = thread
 
-  def instantiateHandlersFromModule(self,modulename, module):
+  def instantiateHandlersFromModule(self,modulename, module,api):
     MANDATORY_METHODS = ['run']
     MANDATORY_CLASSMETHODS=['pluginInfo']
 
@@ -461,7 +535,6 @@ class AVNPluginHandler(AVNWorker):
           break
       if hasMethods:
         #TODO: handle multiple instances from config
-        api = ApiImpl(self,self.navdata,self.queue,modulename,inspect.getfile(obj))
         AVNLog.info("creating %s" % (modulename))
         try:
           description=obj.pluginInfo()
@@ -477,7 +550,6 @@ class AVNPluginHandler(AVNWorker):
           pluginInstance = obj(api)
           AVNLog.info("created plugin %s",modulename)
           self.createdPlugins[modulename]=pluginInstance
-          self.createdApis[modulename]=api
           self.setInfo(modulename,"created",WorkerStatus.STARTED)
         except Exception as e:
           self.setInfo(modulename,"unable to create plugin: %s"%str(e), WorkerStatus.ERROR)
@@ -534,7 +606,7 @@ class AVNPluginHandler(AVNWorker):
     editables=api.editables
     if editables is None:
       editables=[]
-    if api.stopHandler:
+    if api.stopHandler or api.jsCssOnly:
       editables= editables + [self.ENABLE_PARAMETER]
     rt=[]
     for e in editables:
@@ -571,17 +643,19 @@ class AVNPluginHandler(AVNWorker):
     checked=WorkerParameter.checkValuesFor(self.getEditableChildParameters(child),param,self.param.get(child))
     if 'enabled' in checked:
       newEnabled=AVNUtil.getBool(checked.get('enabled'),True)
-      current=AVNUtil.getBool(api.getConfigValue('enabled'),True)
+      current=api.isEnabled()
       if newEnabled != current:
         self.changeChildConfigDict(child, {'enabled': newEnabled})
         if not newEnabled:
-          if api.stopHandler is None:
+          if api.stopHandler is None and not api.jsCssOnly:
             raise Exception("plugin %s cannot stop during runtime")
           try:
             del self.startedThreads[child]
           except:
             pass
           api.stop()
+          if api.jsCssOnly:
+            self.setInfo(child,"disabled by config",WorkerStatus.INACTIVE)
         else:
           self.startPluginThread(child)
           pass
@@ -614,6 +688,9 @@ class AVNPluginHandler(AVNWorker):
       dir=self.pluginDirs.get(localPath[0])
       if dir is None:
         raise Exception("plugin %s not found"%localPath[0])
+      api=self.createdApis.get(localPath[0])
+      if api is None or not api.isEnabled():
+        raise Exception("plugin %s disabled"%localPath[0])
       if localPath[1][0:3] == 'api':
         #plugin api request
         api=self.createdApis.get(localPath[0])
@@ -649,6 +726,9 @@ class AVNPluginHandler(AVNWorker):
       if sub=="list":
         data=[]
         for k in list(self.pluginDirs.keys()):
+          api=self.createdApis[k]
+          if api is None or not api.isEnabled():
+            continue
           dir=self.pluginDirs[k]
           element={'name':k,'dir':dir}
           if os.path.exists(os.path.join(dir,"plugin.js")):

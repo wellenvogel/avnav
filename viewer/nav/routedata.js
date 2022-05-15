@@ -327,14 +327,22 @@ RouteData.prototype.wpOn=function(wp,opt_keep_from) {
  *
  * @param {navobjects.WayPoint} wp
  * @param {number} distance
+ * @param {boolean} opt_useCurrent - if true and wp is undef - use current position
  */
 
-RouteData.prototype.anchorOn=function(wp,distance){
+RouteData.prototype.anchorOn=function(wp,distance,opt_useCurrent){
+    if (! wp && opt_useCurrent){
+        if (! globalStore.getData(keys.nav.gps.valid)) return;
+        wp = globalStore.getData(keys.nav.gps.position);
+    }
     if (! wp) return;
     if (! (wp instanceof navobjects.WayPoint)){
         let nwp=new navobjects.WayPoint();
         nwp.update(wp);
         wp=nwp;
+    }
+    if (distance === undefined){
+        distance=globalStore.getData(keys.properties.anchorWatchDefault);
     }
     activeRoute.modify((data)=> {
         if (data.leg) data.leg.setAnchorWatch(wp, distance);
@@ -1015,7 +1023,7 @@ RouteData.prototype._legChangedLocally=function(leg){
         ).catch(
             (error)=>{
                 self.lastSentLeg=undefined;
-                if (globalStore.getData(keys.properties.routingServerError)) Toast("unable to send leg to server:" +errMsg);
+                if (globalStore.getData(keys.properties.routingServerError)) Toast("unable to send leg to server:" +error);
             }
         );
     }

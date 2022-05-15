@@ -31,6 +31,7 @@ import {LineString as olLineString, MultiLineString as olMultiLineString, Point 
 import {GeoJSON as olGeoJSON} from 'ol/format';
 import Helper from "../util/helper";
 import {stylePrefix} from "./gpxchartsource";
+import assign from "object-assign";
 
 let styleParam={
     lineWidth:3,
@@ -58,10 +59,10 @@ class GeoJsonChartSource extends ChartSourceBase{
         super(mapholer,chartEntry);
         this.styleMap={};
         this.styleFunction=this.styleFunction.bind(this);
-
-        for (let k in styleParam) {
+        let ourStyleParam=assign({},styleParam);
+        for (let k in ourStyleParam) {
             if (chartEntry[stylePrefix + k] !== undefined) {
-                styleParam[k] = chartEntry[stylePrefix + k];
+                ourStyleParam[k] = chartEntry[stylePrefix + k];
             }
         }
         let image;
@@ -72,9 +73,9 @@ class GeoJsonChartSource extends ChartSourceBase{
         }
         else {
             image = new olCircle({
-                radius: styleParam.circleWidth/2,
+                radius: ourStyleParam.circleWidth/2,
                 fill: new olFill({
-                    color: styleParam.fillColor,
+                    color: ourStyleParam.fillColor,
                 })
             });
         }
@@ -85,14 +86,14 @@ class GeoJsonChartSource extends ChartSourceBase{
             }),
             'LineString': new olStyle({
                 stroke: new olStroke({
-                    color: styleParam.lineColor,
-                    width: styleParam.lineWidth,
+                    color: ourStyleParam.lineColor,
+                    width: ourStyleParam.lineWidth,
                 }),
             }),
             'MultiLineString': new olStyle({
                 stroke: new olStroke({
-                    color: styleParam.lineColor,
-                    width: styleParam.lineWidth,
+                    color: ourStyleParam.lineColor,
+                    width: ourStyleParam.lineWidth,
                 }),
             }),
             'MultiPoint': new olStyle({
@@ -100,39 +101,39 @@ class GeoJsonChartSource extends ChartSourceBase{
             }),
             'MultiPolygon': new olStyle({
                 stroke: new olStroke({
-                    color: styleParam.lineColor,
-                    width: styleParam.lineWidth,
+                    color: ourStyleParam.lineColor,
+                    width: ourStyleParam.lineWidth,
                 }),
                 fill: new olFill({
-                    color: styleParam.fillColor,
+                    color: ourStyleParam.fillColor,
                 }),
             }),
             'Polygon': new olStyle({
                 stroke: new olStroke({
-                    color: styleParam.lineColor,
-                    width: styleParam.lineWidth,
+                    color: ourStyleParam.lineColor,
+                    width: ourStyleParam.lineWidth,
                 }),
                 fill: new olFill({
-                    color: styleParam.fillColor,
+                    color: ourStyleParam.fillColor,
                 }),
             }),
             'GeometryCollection': new olStyle({
                 stroke: new olStroke({
-                    color: styleParam.lineColor,
-                    width: styleParam.lineWidth,
+                    color: ourStyleParam.lineColor,
+                    width: ourStyleParam.lineWidth,
                 }),
                 fill: new olFill({
-                    color: styleParam.fillColor,
+                    color: ourStyleParam.fillColor,
                 }),
                 image: image,
             }),
             'Circle': new olStyle({
                 stroke: new olStroke({
-                    color: styleParam.lineColor,
-                    width: styleParam.lineWidth,
+                    color: ourStyleParam.lineColor,
+                    width: ourStyleParam.lineWidth,
                 }),
                 fill: new olFill({
-                    color: styleParam.fillColor,
+                    color: ourStyleParam.fillColor,
                 }),
             }),
         };

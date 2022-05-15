@@ -151,6 +151,7 @@ class AVNBMP180Reader(AVNWorker):
     rt = [
       WorkerParameter('feederName', '', editable=False),
       # if this one is set, we do not use the defaul feeder but this one
+      cls.PRIORITY_PARAM_DESCRIPTION,
       WorkerParameter('interval', '5',
                       type=WorkerParameter.T_FLOAT,
                       description="interval in seconds between measures"),
@@ -198,6 +199,7 @@ class AVNBMP180Reader(AVNWorker):
     self.setInfo('main', "reading BMP180", WorkerStatus.NMEA)
     while True:
       addr = int(self.getStringParam('addr'), 16)
+      priority=self.PRIORITY_PARAM_DESCRIPTION.fromDict(self.param)
       (chip_id, chip_version) = readBmp180Id(addr)
       info = "Using BMP180 Chip: %d Version: %d " % (chip_id, chip_version)
       AVNLog.info(info)
@@ -208,20 +210,20 @@ class AVNBMP180Reader(AVNWorker):
           """$AVMDA,,,1.00000,B,,,,,,,,,,,,,,,,"""
           mda = '$AVMDA,,,%.5f,B,,,,,,,,,,,,,,,,' % ( pressure / 1000.)
           AVNLog.debug("BMP180:MDA %s", mda)
-          self.writeData(mda,source,addCheckSum=True)
+          self.writeData(mda,source,addCheckSum=True,sourcePriority=priority)
           """$AVMTA,19.50,C*2B"""
           mta = '$AVMTA,%.2f,C' % (temperature)
           AVNLog.debug("BMP180:MTA %s", mta)
-          self.writeData(mta,source,addCheckSum=True)
+          self.writeData(mta,source,addCheckSum=True,sourcePriority=priority)
         if self.getBoolParam('writeXdr'):
           tn = self.param.get('namePress', 'Barometer')
           xdr = '$AVXDR,P,%.5f,B,%s' % (pressure / 1000.,tn)
           AVNLog.debug("BMP180:XDR %s", xdr)
-          self.writeData(xdr,source,addCheckSum=True)
+          self.writeData(xdr,source,addCheckSum=True,sourcePriority=priority)
           tn = self.param.get('nameTemp', 'TempAir')
           xdr = '$AVXDR,C,%.2f,C,%s' % (temperature,tn)
           AVNLog.debug("BMP180:XDR %s", xdr)
-          self.writeData(xdr,source,addCheckSum=True)
+          self.writeData(xdr,source,addCheckSum=True,sourcePriority=priority)
       except:
         AVNLog.info("exception while reading data from BMP180 %s" ,traceback.format_exc())
       wt = self.getFloatParam("interval")

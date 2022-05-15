@@ -7,11 +7,15 @@
   </head>
   <body data-order="7200">
     <h1>Interworking with Canboat and SignalK</h1>
-    <p>Starting with release 20200204 AvNav can interact with canboat
-      (NMEA2000) and signalk.</p>
+    <p>Starting with release 20200204 AvNav can interact with canboat (NMEA2000)
+      and signalk.</p>
+    <p>Important Hint: Since version 20220421 the handling for <a href="#SignalK">SignalK</a>
+      changed.</p>
+    <div class="toc"> </div>
     <h2><a name="Canboat" id="Canboat"></a>Canboat (NMEA2000)</h2>
     <p><a href="https://github.com/canboat/canboat">Canboat</a> supports
-      interfacing to NMEA 2000 bus systems using either a CAN adapter (e.g. <a href="https://www.reichelt.de/entwicklerboards-can-modul-mcp2515-mcp2562-debo-can-modul-p239277.html">MCP2515</a>
+      interfacing to NMEA 2000 bus systems using either a CAN adapter (e.g. <a
+        href="https://www.reichelt.de/entwicklerboards-can-modul-mcp2515-mcp2562-debo-can-modul-p239277.html">MCP2515</a>
       or a <a href="https://www.waveshare.com/wiki/RS485_CAN_HAT">Waveshare
         RS485 CAN-HAT</a> ) or USB attached devices like the Actisene NGT-1. For
       simple adapters you need to ensure that they have 2 voltage supplies (3.3V
@@ -22,175 +26,598 @@
         images</a>. </p>
     <p>If you connect a <a href="https://www.raspberrypi.org/forums/viewtopic.php?t=141052">CAN
         adapter</a> via <a href="https://www.raspberrypi.org/documentation/hardware/raspberrypi/spi/README.md">SPI</a>
-      typically you need to enable an overlay in /boot/config.txt. Appropriate entries are prepared to use the
-      MCP2515 and only need to be uncommented.
-      Potentially you have to adjust the clock frequency and the GPIO pin used for the interrupt. Such can adapters are listed as network
-      interface (probably they require configuration, but they are preconfigured in the images).<br>
+      typically you need to enable an overlay in /boot/config.txt. Appropriate
+      entries are prepared to use the MCP2515 and only need to be uncommented.
+      Potentially you have to adjust the clock frequency and the GPIO pin used
+      for the interrupt. Such can adapters are listed as network interface
+      (probably they require configuration, but they are preconfigured in the
+      images).<br>
       The interface should be visible with</p>
     <div class="code">ifconfig can0</div>
-    <p>If you are planning to use an Actisense NGT-1 connected via USB refer to the
-      <a href="https://github.com/canboat/canboat/wiki/actisense-serial">documentation
+    <p>If you are planning to use an Actisense NGT-1 connected via USB refer to
+      the <a href="https://github.com/canboat/canboat/wiki/actisense-serial">documentation
         at canboat</a>.</p>
     <p>AvNav is communicating with <a href="https://github.com/canboat/canboat/wiki/n2kd">n2kd</a>.
-      This daemon converts incoming NMEA2000 data to NMEA0183 (although
-      not completely). The configuration for n2kd is located at</p>
+      This daemon converts incoming NMEA2000 data to NMEA0183 (although not
+      completely). The configuration for n2kd is located at</p>
     <div class="code">/etc/default/n2kd</div>
-    <p>Within our images this file predefines a connection to can0. If
-      you are going to use an USB based adapter you have to modify this
-      configuration.<br>
-      In this case, please also add an entry in avnav_server.xml to exclude
-      this adapter from auto detection (watch the AvNav status page while
-      connecting the adapter - note its USB id and use it for the
-      entry):</p>
+    <p>Within our images this file predefines a connection to can0. If you are
+      going to use an USB based adapter you have to modify this configuration.<br>
+      In this case, please also add an entry in avnav_server.xml to exclude this
+      adapter from auto detection (watch the AvNav status page while connecting
+      the adapter - note its USB id and use it for the entry):</p>
     <div class="code">&lt;AVNUsbSerialReader .....&gt;<br>&lt;UsbDevice usbid="x:y.z" type="ignore"/&gt; <br>....</div>
-    <p>When traffic is present on the NMEA 2000
-      bus and if everything is setup correctly, you should see NMEA data /
-      json data at ports 2599 and 2598. You can check this with</p>
+    <p>When traffic is present on the NMEA 2000 bus and if everything is setup
+      correctly, you should see NMEA data / json data at ports 2599 and 2598.
+      You can check this with</p>
     <div class="code">nc localhost 2599</div>
     <p>If you are unable to see data you can check the canboat status with</p>
     <div class="code">sudo systemctl status canboat</div>
     <p>There should be 2 connections between AvNav and n2kd (predefined in the
-      images). AvNav receives NMEA0183 data on one connection (port 2599) and some of the json data on the other connection (port 2598).
-      The latter is necessary as n2kd does not provide any NMEA0183 record
-      containing a complete time stamp (like RMC). To get the data from NMEA2000
-      AvNav directly decodes the pgns 126992 and 129029 to internally set
-      date and time. It can also generate a RMC record internally (if
-      valid position data is received via NMEA0183).</p>
-    <p>To setup the connections following configuration settings are necessary within
-      avnav_server.xml. Our images have them preconfigured, otherwise they can be copied &amp; pasted from the template at
+      images). AvNav receives NMEA0183 data on one connection (port 2599) and
+      some of the json data on the other connection (port 2598). The latter is
+      necessary as n2kd does not provide any NMEA0183 record containing a
+      complete time stamp (like RMC). To get the data from NMEA2000 AvNav
+      directly decodes the pgns 126992 and 129029 to internally set date and
+      time. It can also generate a RMC record internally (if valid position data
+      is received via NMEA0183).</p>
+    <p>To setup the connections following configuration settings are necessary
+      within avnav_server.xml. Our images have them preconfigured, otherwise
+      they can be copied &amp; pasted from the template at
       /usr/lib/avnav/raspberry/avnav_server.xml.</p>
     <div class="code">&lt;AVNSocketWriter port="34568" maxDevices="5" <br>   filter=""read="true" minTime="50" <br>   name="nmea0183tosignalk" <br>   blackList="canboatnmea0183,canboatgen"/&gt;
 &lt;AVNSocketReader port="2599" host="localhost" filter="" name="canboatnmea0183"/&gt;
 &lt;AVNPluginHandler&gt;<br>  &lt;builtin-canboat enabled="true" allowKeyOverwrite="true" autoSendRMC="30" sourceName="canboatgen"/&gt;<br>&lt;/AVNPluginHandler&gt;</div>
-    <p>The first entry defines an additional output port for AvNav.
-      This port provides all received/created NMEA 0183 data - excluding data received from canboat. This port is used for SignalK integration. Canboat data are omitted as signalk directly reads data from
-      the NMEA 2000 bus.</p>
-    <p>The SocketReader at localhost:2599 reads NMEA0183 data from
-      n2kd.</p>
+    <p>The first entry defines an additional output port for AvNav. This port
+      provides all received/created NMEA 0183 data - excluding data received
+      from canboat. This port is used for SignalK integration. Canboat data are
+      omitted as signalk directly reads data from the NMEA 2000 bus.</p>
+    <p>The SocketReader at localhost:2599 reads NMEA0183 data from n2kd.</p>
     <p>Direct reading of NMEA2000 data from n2kd is handled by a plugin.
-      Therefore an entry has to be created in AVNPluginHandler. The
-      settings as in above example activate the plugin.&nbsp;
-      allowKeyOverwrite permits the plugin to set date and time.&nbsp; autoSendRMC=30 will advise AvNav to send out a RMC record every one second
-      (if no other RMC records are seen within 30 seconds). For further explanation of the
-      plugin parameters refer to the <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/canboat/plugin.py">source
+      Therefore an entry has to be created in AVNPluginHandler. The settings as
+      in above example activate the plugin.&nbsp; allowKeyOverwrite permits the
+      plugin to set date and time.&nbsp; autoSendRMC=30 will advise AvNav to
+      send out a RMC record every one second (if no other RMC records are seen
+      within 30 seconds). For further explanation of the plugin parameters refer
+      to the <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/canboat/plugin.py">source
         code</a>.&nbsp;</p>
     <p>AvNav is currently not prepared to output data to NMEA2000. If this is
       required, you can handle this via signalk.</p>
     <p><br>
     </p>
     <h2><a name="SignalK" id="SignalK"></a>SignalK</h2>
-    <p>Starting from 20200204 a first step of interacting with <a href="http://signalk.org/">SignalK</a>
-      is possible.</p>
+    <p>With version 20220421 the integration of AvNav with <a href="http://signalk.org/">SignalK</a>
+      has been extended.</p>
     <img alt="SignalK" src="SignalK.png" width="800">
-    <p>In the set up as predifined in the images, all NMEA0183 data
-      received by AvNav are sent to SignalK, the only exception being data
-      received from canboat. On the SignalK side an
-      appropriate channel must be configured (predefined in the images as well). On
-      AvNav side the port is 34568 (see above).</p>
-    <p>If you are using AvNav on OpenPlotter the data flow will be different.
-      NMEA0183 are all read directly by SignalK and only from there they
-      will be routed to AvNav. In this case you should not configure any NMEA0183 input
-      devices in AvNav.</p>
-    <p>To receive data from SignalK AvNav is polling (default: once per second) the URL</p>
-    <div class="code">http://localhost:3000/signalk/v1/api/vessels/self</div>
-    <p>All SignalK "value" entries are stored internally with prefix</p>
-    <div class="code">gps.signalk....</div>
-    <p>Since Version 20201202 an additional websocket connection is implemented to accelerate reception of deltas. Polling will still take place, at a much reduced rate however (10s).</p>
-    <p>By this integration all data are available to the app and can be displayed in
-      widgtes. A ready to go <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/signalk/example.json">layout</a>
-      is available and you can adapt this one - or create your own - via the <a href="layouts.html">layout
-        editor</a>.&nbsp; You can select the layout on the <a href="../userdoc/settingspage.html">settings
-        page</a>&nbsp; (system.plugin.builtin-signalk.example) - it will only be
-      visible if the signalk plugin is enabled.</p>
-    <p>Fetching data from SignalK is handled by a plugin which has to be
-      configured. The images already contain the valid configuration, otherwise, as usual,
-      you will find it at the template
-      /usr/lib/avnav/raspberry/avnav_server.xml:</p>
-    <div class="code">&lt;AVNSocketWriter port="34568" maxDevices="5" filter="" read="true" minTime="50" name="nmea0183tosignalk" blackList="canboatnmea0183,canboatgen"/&gt;
-&lt;AVNPluginHandler&gt;
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;builtin-signalk enabled="true"/&gt;
-&lt;/AVNPluginHandler&gt;</div>
-    <p>If you also use the canboat integration make sure to configure both plugins within a single AVNPluginHandler entry.<br>
-      As SignalK receives all NMEA0183 data, any active waypoint would be
-      visible there (sent via $RMB).<br>
-      If the plugin is enabled a <a href="../userdoc/addonpage.html">user app</a>
-      entry for SignalK will be visible in the Web UI.</p>
-    <p>In principle you could also setup other configurations (e.g. AvNav receives all NMEA data from SignalK and only sends RMB). Such a setup will be used in OpenPlotter. In any case be
-      careful not to create any loops. You can use AvNav's SocketReader filter and&nbsp; name options, as well as the writer's filter,
-      readFilter and blackList options. In this environment you could also handle canboat integration via SignalK.</p>
-    <p>The following plugin parameters are available:</p>
+    <p>As a first step when integrating AvNav with SignalK you need to decide
+      about the basic flow of data.<br>
+      There are 2 basic options:
+    </p>
+    <ol>
+      <li>NMEA data will be received directly by AvNav and will be forwarded to
+        SignalK. This flow is used in the&nbsp; <a href="../install.html#Headless">AvNav
+          headless images</a>.&nbsp; SignalK data are sent back (via HTTP-Json
+        and websocket) to AvNav and can be displayed there.<br>
+        The data that is used by AvNav for navigation (including AIS data) will
+        be decoded from the NMEA data directly by AvNav.<br>
+        Exception: NMEA2000 data that are received via canboat will have to be
+        sent in parallel to SignalK.</li>
+      <li>NMEA data will be received by SignalK first and will be sent to via
+        HTTP-Json and websocket to AvNav.<br>
+        This flow is used by OpenPlotter e.g..</li>
+    </ol>
+    <p>For both variants AvNav can also send own data to SignalK. Currently
+      those are routing data to the next way point (either as RMB/APB NMEA0183
+      data or as SignalK delta update - see below).</p>
+    <p>Additionally Notifications (Alarms) can be fetched and sent from/to
+      SignalK.</p>
+    <p>With the version 20220421 the SignalK integration is not any longer
+      handled by a plugin but by a dedicated "handler" - AVNSignalKHandler. You
+      need to modify the <a href="#configuration">Configuration</a> at this
+      handler now.</p>
+    <h3><a name="flow1"></a>1. NMEA to AvNav and from there to SignalK</h3>
+    <p>This flow is preconfigured in the <a href="../install.html#Headless">AvNav
+        headless images</a>.</p>
+    <p>A AVNSocketWriter is created in AvNav (default: port 34568). This writer
+      will forward received NMEA data. Forwarding of data from canboat will be
+      prevented by blacklist entries.</p>
+    <div class="code">&lt;AVNSocketWriter port="34568" maxDevices="5" filter="" read="true" minTime="50" name="nmea0183tosignalk" blackList="canboatnmea0183,canboatgen"/&gt;</div>
+    <p>On the SignalK side you need to configure a matching data connection for
+      NMEA0183, TCP client.</p>
+    <p>By default the AVNSignalKHandler is configured to reach SignalK via
+      localhost:3000 and to read all data below vessels/self. Those values will
+      be stored in AvNav below gps.signalk,... and this way can be used
+      for&nbsp; <a href="layouts.html">Displays</a>.<br>
+      For fetching the data a mixture of polling with HTTP-Json and delta
+      updates via a websocket connection is used. The polling will ensure proper
+      sync of data, the websocket stream will give fast updates.</p>
+    <p>On the configured SocketWriter connection AvNav will also send its
+      routing data as RMB / APB Sätze towards SignalK.<br>
+      Additionally you can enable the sending and receiving of SignalK
+      notifications at the AVNSignalKHandler.</p>
+    <p>Data that is arriving directly at SignalK via other pathes will be
+      available in AvNav (as described below gps.signalk...) -&nbsp; <b>but
+        they cannot be used for AvNav's navigation functions</b>.</p>
+    <p>If you would like to route your data to SignalK first you should have a
+      look at the <a href="#flow2">other data flow</a>. </p>
+    <p>An advantage of flow 1 (NMEA to AvNav first) is the fact that this would
+      still work even is SignalK is not available or not working for some
+      reason.</p>
+    <h3><a name="flow2" id="flow2"></a>2. NMEA to SignalK first</h3>
+    <p>With this flow (that is preconfigured at OpenPlotter from AvNavInstaller
+      version xxxx) NMEA will be received and stored by SignalK. You need to
+      configure the necessary data connections in SignalK.</p>
+    <p>In AvNav you configure the AVNSignalKHandler to fetch the data from
+      SignalK in a combination of HTTP-Json and a websocket delta update
+      connection.<br>
+      The flags "decodeData" and "fetchAis" will be set (see <a href="#configuration">Configuration</a>).
+      This way received data will be stored in AvNav for it's navigation
+      functions. Additionally the data will be stored (a second time) as
+      described at <a href="#flow1">(1)</a> below gps.signalk.... to ensure
+      compatibility for the display usage.<br>
+      For the mapping of the received data refer to [<a href="#mapping">Mapping</a>].</p>
+    <p>Additionally the sending of data ("sendData") is activated at the
+      AVNSignalKhandler. Routing data for the current way point and alarms will
+      be sent to SignalK.<br>
+      Notifications from SignalK will be received.<br>
+      To be able to write data to SignalK you have to configure a user with
+      write access at SignalK (see <a href="#configuration">Configuration</a>).</p>
+    <p>The NMEA connections to and from SignalK (port 10110) are not necessary
+      any longer. You also do not need any plugin at SignalK to create NMEA data
+      for sending it to AvNav.</p>
+    <p>If you update from an older version you can just simply disable the NMEA
+      connections and adapt the settings of AVNSignalKHandler.</p>
+    <h3>Selection of the Data Flow</h3>
+    <p>For a decision whether to use <a href="#flow1">flow 1</a> (NMEA to AvNav
+      first) or <a href="#flow2">flow 2</a> (NMEA to SignalK first) you can
+      start from the default of your installation.</p>
+    <p>You should only change it if there are good reasons for. By using the
+      configuration at the&nbsp; <img src="../viewerimages/icons-new/status.svg"
+        alt="" class="inlineimage"> <a href="../userdoc/statuspage.html">status/server
+        page</a> you can configure your flow. You can even create mixtures of
+      them.</p>
+    <p>You only have to be careful to avoid loops - e.g. sending data from AvNav
+      via NMEA0183 to SignalK and getting it back from SignalK again via
+      NMEA0183.<br>
+      AvNav tries to address such mixed configurations with a "sourcePriority"
+      at every connection. All NMEA connections have a default priority of 50
+      compared to a default of 40 for The AVNSignalKHandler. This way data that
+      is decoded by AvNav itself will always win against data received from
+      SignalK (until you change the priorities).</p>
+    <h3>Konfiguration</h3>
+    <p>The AVNSignalKHandler has the following configuration.</p>
     <table style="width: 100%" border="1">
       <tbody>
         <tr>
           <td>Name</td>
-          <td>Default</td>
           <td>Description</td>
+          <td>Default</td>
+        </tr>
+        <tr>
+          <td>name</td>
+          <td>A name for the handler. Will be shown at the status page and used
+            in logs.</td>
+          <td>empty (signalk)</td>
         </tr>
         <tr>
           <td>enabled</td>
-          <td>false</td>
-          <td>Plugin will only be active if this is set to true</td>
+          <td>If switched off the SignalK integration is disabled. Configured
+            NMEA connections are not affected.</td>
+          <td>on</td>
+        </tr>
+        <tr>
+          <td>decodeData</td>
+          <td>If switched on the received data will be used for AvNav's
+            navigation functions. See <a href="#mapping">Mapping</a>.</td>
+          <td>off (on at OpenPlotter)</td>
+        </tr>
+        <tr>
+          <td>fetchAis</td>
+          <td>If switched on AIS data (/vessels/*) is fetched from SignalK every
+            10s (aisQueryPeriod) and stored in AvNav as AIS data.</td>
+          <td>off (on at OpenPlotter)</td>
+        </tr>
+        <tr>
+          <td>priority</td>
+          <td>The priority of the decoded SignalK data</td>
+          <td>40</td>
         </tr>
         <tr>
           <td>port</td>
+          <td>The SignalK HTTP port.</td>
           <td>3000</td>
-          <td>SignalK Port</td>
-        </tr>
-        <tr>
-          <td>period</td>
-          <td>1000</td>
-          <td>Query interval in ms (since 202011xx only valid unless web sockets
-            are used)</td>
         </tr>
         <tr>
           <td>host</td>
+          <td>The SignalK server hostname/the IP address.</td>
           <td>localhost</td>
-          <td>(since version 202011xx) address of the server running SignalK</td>
         </tr>
         <tr>
-          <td>useWebsockets</td>
-          <td>true</td>
-          <td>(since version 202011xx) if available use WebSockets to
-            communicate with SignalK (Changes will become available faster)</td>
+          <td>aisQueryPeriod</td>
+          <td>Intervall (in s) for fetching AIS data</td>
+          <td>10</td>
         </tr>
-      </tbody>
-    </table>
-    <h3><a name="SignalKCharts" id="SignalKCharts"></a>SignalK - Charts</h3>
-    <p>Since version 202011xx an integration of the <a href="https://github.com/SignalK/charts-plugin">SignalK
-        chart provider</a> is available. Charts provided by SignalK can be
-      selected on the main page. You have to enable the chart
-      provider plugin within SignalK and configure/upload charts.</p>
-    <p>Normally AvNav will just provide the information about these charts, the
-      browser will directly access SignalK to load the chart tiles.</p>
-    <p>If this is blocked (e.g. by firewall rules) you can
-      proxy all chart tile requests via AvNav. </p>
-    <p>The plugin brings along some new parameters to handle the SignalK charts.
-      Normally you can leave them at their defaults.</p>
-    <table style="width: 100%" border="1">
-      <tbody>
         <tr>
-          <td>Name</td>
-          <td>Default</td>
-          <td>Description</td>
+          <td>period</td>
+          <td>Period in ms for HTTP-Json queries to SignalK. if the python
+            websocket libraries are available (the default) this interval will
+            be enlarged close to the expiry time of navigation data in AvNav.</td>
+          <td>1000</td>
+        </tr>
+        <tr>
+          <td>fetchCharts</td>
+          <td>Fetch informations about charts installed at SignalK. It requires
+            the SignalK-chart-provider plugin to be installed.</td>
+          <td>on</td>
         </tr>
         <tr>
           <td>chartQueryPeriod</td>
-          <td>10000</td>
-          <td>Interval in ms for querying the list of charts from SignalK. If
-            set to 0, no charts are queried.</td>
+          <td>Interval (in s) for querying the chart information.</td>
+          <td>10</td>
         </tr>
         <tr>
           <td>chartProxyMode</td>
+          <td>If SignalK is running on a different computer then AvNav it could
+            happen that the Browser that displays AvNav cannot directly reach
+            this computer. Therefore AvNav can proxy the chart requests to
+            SignalK.<br>
+            This creates some additional load on AvNav and can be switched off.
+            Normally you can leave the default.<br>
+            <i>sameHost</i>: only proxy if SignalK is running on a different
+            computer then AvNav<br>
+            <i>never</i>: no proxy at all (you can use this if the browser can
+            directly reach SignalK at the address configured here)<br>
+            <i>always</i>: alsways proxy. Can be used if e.g. the SignalK port
+            cannot directly be reached from outside.</td>
           <td>sameHost</td>
-          <td>Proxy mode for requests to the chart tiles.<br>
-            sameHost: route directly to SignalK if running on the same host as
-            AvNav (normal case). Otherwise proxy via AvNav.<br>
-            never: always directly to SignalK<br>
-            always: always proxy via AvNav</td>
+        </tr>
+        <tr>
+          <td>ignoreTimestamp</td>
+          <td>Normally AvNav will consider the timestamp of SignalK data and
+            will ignore data that is to old (expiryPeriod in AVNConfig). A
+            potential time difference between SignalK and AvNav is considered.<br>
+            Sometimes SignalK does not use it's own local time for those time
+            stamps but instead uses time stamps from the received data.
+            Especially when using simulation data those times can be in the past
+            and AvNav would ignore such data.<br>
+            By setting this flag AvNav will ignore those time stamps and will
+            use it's own local time instead. It will update the timestamp
+            whenever a value changes. <br>
+            This is not as accurate as using the original time stamps from
+            SignalK but can help in making older simulation data working.</td>
+          <td>off</td>
+        </tr>
+        <tr>
+          <td>sendData</td>
+          <td>Send data towards SignalK.<br>
+            You can still decide separately whether waypoint data and/or alarms
+            should be sent.<br>
+            This will <b>not control the sending of NMEA data</b> to SignalK!</td>
+          <td>off (on at OpenPlotter)</td>
+        </tr>
+        <tr>
+          <td>userName</td>
+          <td>The name of a SignalK user with write access at the SignalK
+            server. This user must exist with the correct rights at SignalK.<br>
+            Unfortunately SignalK has no interface to find out whether a
+            particular user is able to write certain pathes. Only for localhost
+            AvNav will check if the user has (in principle) write access.</td>
+          <td>admin</td>
+        </tr>
+        <tr>
+          <td>password</td>
+          <td>The password for the configured user. For SignalK running at the
+            same computer like AvNav this normally can be left empty (as long as
+            the SignalK configuration is located at the default path
+            $HOME/.signalk/security.json).<br>
+            If you encounter an error in the status display at "authentication"
+            it could become necessary to set this password also for local access
+            (e.g. the config being located at a different location).<br>
+            Remark: The password will be stored in clear text in
+            avnav_server.xml.</td>
+          <td>&lt;empty&gt;</td>
+        </tr>
+        <tr>
+          <td>sendWp</td>
+          <td>Send way point data to SignalK. See <a href="#mapping">Mapping</a>.</td>
+          <td>on</td>
+        </tr>
+        <tr>
+          <td>sendNotifications</td>
+          <td>Send AvNav alarms as notifications to SignalK - See <a href="#mapping">Mapping</a>.</td>
+          <td>on</td>
+        </tr>
+        <tr>
+          <td>receiveNotifications</td>
+          <td>Receive notifications from SignalK as alarms.</td>
+          <td>off</td>
+        </tr>
+        <tr>
+          <td>notifyWhiteList</td>
+          <td>A comma separated list of SignalK notifications, that should be
+            received. The pathes are without the leading "notifications." e.g.:
+            navigation.arrivalCircleEntered,mob,fire,sinking.<br>
+            If the list is empty all notifications will be received but still
+            the notifyBlacklist is considered.</td>
+          <td>&lt;empty&gt;</td>
+        </tr>
+        <tr>
+          <td>notifyBlackList</td>
+          <td>A comma separated list of SignalK notifications that should not be
+            received.</td>
+          <td>server.newVersion</td>
+        </tr>
+        <tr>
+          <td>webSocketRetry</td>
+          <td>Interval (in s) for recreating a new websocket connection if the
+            old one has been closed.</td>
+          <td>20</td>
         </tr>
       </tbody>
     </table>
+    <h3><a name="authentication" id="authentication"></a></h3>
+    <p>Some of the parameters will only become visible if the "parent" parameter
+      is set.</p>
+    <br>
+    <h3><a name="mapping"></a>Mapping</h3>
+    <p>SignalK pathes are mapped to AvNav data pathes:</p>
+    <p>/vessels/self/... =&gt; gps.signalk....</p>
+    <p>Those pathes are not used in AvNav internally but you can use them for
+      display.</p>
+    <p>If "decodeData" is activatedthe following mappings will become active
+      (also see <a href="https://github.com/wellenvogel/avnav/blob/e36087aac3df717d084eebab8725f237176286a0/server/avnav_nmea.py#L64">in
+        the code</a>).</p>
+    <p>Remark: Courses/angles are stored in degrees inside AvNav whereas SignalK
+      used rad. The mapping will convert between them. If there are multiple
+      SignalK pathes in a mapping the first available will be used.</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>SignalK below /vessels/self/</td>
+          <td>AvNav</td>
+        </tr>
+        <tr>
+          <td>navigation.headingMagnetic</td>
+          <td>gps.headingMag</td>
+        </tr>
+        <tr>
+          <td>navigation.headingTrue</td>
+          <td>gps.headingTrue</td>
+        </tr>
+        <tr>
+          <td>environment.water.temperature</td>
+          <td>gps.waterTemp</td>
+        </tr>
+        <tr>
+          <td>navigation.speedThroughWater</td>
+          <td>gps.waterSpeed</td>
+        </tr>
+        <tr>
+          <td>environment.wind.speedTrue oder environment.wind.speedOverGround</td>
+          <td>gps.trueWindSpeed</td>
+        </tr>
+        <tr>
+          <td>environment.wind.speedApparent</td>
+          <td>gps.windSpeed</td>
+        </tr>
+        <tr>
+          <td>environment.wind.directionTrue environment.wind.directionGround</td>
+          <td>gps.trueWindAngle</td>
+        </tr>
+        <tr>
+          <td>environment.wind.angleApparent</td>
+          <td>gps.windAngle</td>
+        </tr>
+        <tr>
+          <td>navigation.position.latitude</td>
+          <td>gps.lat</td>
+        </tr>
+        <tr>
+          <td>navigation.position.longitude</td>
+          <td>gps.lon</td>
+        </tr>
+        <tr>
+          <td>navigation.courseOverGroundTrue</td>
+          <td>gps.track</td>
+        </tr>
+        <tr>
+          <td>navigation.speedOverGround</td>
+          <td>gps.speed</td>
+        </tr>
+        <tr>
+          <td>environment.depth.belowTransducer</td>
+          <td>gps.depthBelowTransducer</td>
+        </tr>
+        <tr>
+          <td>environment.depth.belowSurface</td>
+          <td>gps.depthBelowWaterline</td>
+        </tr>
+        <tr>
+          <td>environment.depth.belowKeel</td>
+          <td>gps.depthBelowKeel</td>
+        </tr>
+        <tr>
+          <td>navigation.datetime</td>
+          <td>gps.time</td>
+        </tr>
+        <tr>
+          <td>navigation.gnss.satellitesInView.count</td>
+          <td>gps.satInview</td>
+        </tr>
+        <tr>
+          <td>navigation.gnss.satellites</td>
+          <td>gps.satUsed</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>AIS&nbsp; are mapped like ("fetchAis" on):</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>SignalK vessels/*/</td>
+          <td>AvNav ais</td>
+          <td>Remark</td>
+        </tr>
+        <tr>
+          <td>mmsi</td>
+          <td>mmsi</td>
+          <td>only if mmsi is available the data is stored</td>
+        </tr>
+        <tr>
+          <td>name</td>
+          <td>shipname</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>navigation.speedOverGround</td>
+          <td>speed</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>navigation.courseOverGroundTrue</td>
+          <td>course</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>communication.callsignVhf</td>
+          <td>callsign</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>design.aisShipType</td>
+          <td>shiptype</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>navigation.position.longitude</td>
+          <td>lon</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>navigation.position.latitude</td>
+          <td>lat</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>navigation.destination</td>
+          <td>destination</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>sensors.ais.class</td>
+          <td>type</td>
+          <td>class A -&gt; type 1<br>
+            class B -&gt; type 18<br>
+            other -&gt; type other</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>If "sendWp" is active the following mapping is used:</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>AvNav</td>
+          <td>SignalK vessels/self/</td>
+        </tr>
+        <tr>
+          <td>currentLeg.to.lon</td>
+          <td>navigation.courseGreatCircle.nextPoint.position.longitude</td>
+        </tr>
+        <tr>
+          <td>currentLeg.to.lat</td>
+          <td>navigation.courseGreatCircle.nextPoint.position.latitude</td>
+        </tr>
+        <tr>
+          <td>currentLeg.from.lon</td>
+          <td>navigation.courseGreatCircle.previousPoint.position.longitude</td>
+        </tr>
+        <tr>
+          <td>currentLeg.from.lon</td>
+          <td>navigation.courseGreatCircle.previousPoint.position.latitude</td>
+        </tr>
+        <tr>
+          <td>currentLeg.distance</td>
+          <td>navigation.courseGreatCircle.nextPoint.distance</td>
+        </tr>
+        <tr>
+          <td>currentleg.dstBearing</td>
+          <td>navigation.courseGreatCircle.nextPoint.bearingTrue</td>
+        </tr>
+        <tr>
+          <td>currentLeg.xte</td>
+          <td>navigation.courseGreatCircle.crossTrackError</td>
+        </tr>
+        <tr>
+          <td>currentLeg.approachDistance</td>
+          <td>navigation.courseGreatCircle.nextPoint.arrivalCircle</td>
+        </tr>
+        <tr>
+          <td>currentLeg.bearing</td>
+          <td>navigation.courseGreatCircle.bearingTrackTrue</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>For notifications there only a few mappings, other will be mapped to
+      "sk:"+name in AvNav. Example: notifications.sinking will become
+      sk:sinking.</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>AvNav</td>
+          <td>SignalK vessels/self/notifications</td>
+          <td>Value</td>
+        </tr>
+        <tr>
+          <td>mob</td>
+          <td>mob </td>
+          <td>&nbsp;'state':'emergency',<br>
+            &nbsp;'method':['visual','sound'],<br>
+            &nbsp;'message':'man overboard'</td>
+        </tr>
+        <tr>
+          <td>waypoint</td>
+          <td>arrivalCircleEntered</td>
+          <td>'state': 'normal',<br>
+            'method': ['visual','sound'],<br>
+            'message': 'arrival circle entered'</td>
+        </tr>
+        <tr>
+          <td>anchor</td>
+          <td>navigation.anchor</td>
+          <td>'state':'emergency',<br>
+            'method': ['visual','sound'],<br>
+            'message': 'anchor drags'</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>SignalK notifications without a mapping will be assigned to a category
+      based on their state. With the catgeory you can define in
+      AVNCommandHandler which command should be executed and which sound should
+      be used.</p>
+    <p>emergency -&gt; critical<br>
+      normal -&gt; normal</p>
+    <p></p>
+    <h3><a name="configuration" id="configuration"></a></h3>
+    <p></p>
     <p><br>
     </p>
+    <h3>SignalK - Charts </h3>
+    <p>Since version 202011xx an integration of the <a href="https://github.com/SignalK/charts-plugin">SignalK
+        chart provider</a> is available. Charts provided by SignalK can be
+      selected on the main page. You have to enable the chart provider plugin
+      within SignalK and configure/upload charts.</p>
+    <p>Normally AvNav will just provide the information about these charts, the
+      browser will directly access SignalK to load the chart tiles.</p>
+    <p>If this is blocked (e.g. by firewall rules) you can proxy all chart tile
+      requests via AvNav. </p>
+    <br>
   </body>
 </html>

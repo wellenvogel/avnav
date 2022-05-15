@@ -319,7 +319,7 @@ class AVNHandlerManager(object):
               raise Exception("invalid main node or main node name for autoInstantiate")
             self.parseHandler(node.documentElement, handler, domAttached=False)
           except Exception:
-              AVNLog.error("error parsing default config %s for %s:%s",ai,name,sys.exc_info()[1])
+              AVNLog.error("error parsing default config %s for %s:%s",ai,name,traceback.format_exc())
               return False
     return len(AVNWorker.getAllHandlers()) > 0
 
@@ -350,8 +350,9 @@ class AVNHandlerManager(object):
   def parseHandler(self, element, handlerClass, domAttached=True):
     configParam= handlerClass.getConfigParamCombined()
     if type(configParam) is list:
-      configParam=WorkerParameter.filterNameDef(configParam)
-    cfg=handlerClass.parseConfig(element.attributes,configParam)
+      cfg=handlerClass.parseConfigNew(element.attributes,configParam)
+    else:
+      cfg=handlerClass.parseConfig(element.attributes,configParam)
     childPointer={}
     child=element.firstChild
     while child is not None:
@@ -359,15 +360,16 @@ class AVNHandlerManager(object):
         childName=child.tagName
         cfgDefaults= handlerClass.getConfigParamCombined(childName)
         if cfgDefaults is not None:
-          if type(cfgDefaults) is list:
-            cfgDefaults=WorkerParameter.filterNameDef(cfgDefaults)
           if childPointer.get(childName) is None:
             childPointer[childName]=[]
           if cfg.get(childName) is None:
             cfg[childName]=[]
           AVNLog.debug("adding child %s to %s",childName,element.tagName)
           childPointer[childName].append(child)
-          cfg[childName].append(handlerClass.parseConfig(child.attributes,cfgDefaults))
+          if type(cfgDefaults) is list:
+            cfg[childName].append(handlerClass.parseConfigNew(child.attributes,cfgDefaults))
+          else:
+            cfg[childName].append(handlerClass.parseConfig(child.attributes,cfgDefaults))
       child=child.nextSibling
     cfg.update(self.baseParam)
     instance=handlerClass.createInstance(cfg)

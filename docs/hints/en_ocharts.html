@@ -15,7 +15,9 @@
       OpenCPN.</p>
     <p>After some agreements with o-charts, those charts can now also be used
       for AvNav (starting with version 20200515 with a plugin - <a href="#Installation">see
-        below</a>). AT present you can use oesenc vector-charts.</p>
+        below</a>). At present you can use oesenc vector-charts and beginning
+      from version 20220225 (and the related change in the o-charts shop - see
+      releases below) you can also use oeRNC raster charts.</p>
     <p>To display those charts in AvNav they must be rendered into raster
       images. This is handled by a new plugin for AvNav(avnav-ocharts). The
       rendering takes place on the fly whenever tiles are to be displayed.
@@ -66,7 +68,7 @@
       to demonstrate this process. Additionally here is a short description.</p>
     <p><b>Hint</b>: If the charts are already registered on the same system (for
       OpenCPN) you can directly continue at step 6. Alternatively you could also
-      configure the OpenCPN chart directories with o-charts at the <a href="#Chartconfig">plugin</a>
+      configure to access the OpenCPN chart directories at the <a href="#PluginConfig">plugin</a>
       .</p>
     <h3>1. Creating the fingerprint</h3>
     <p>Via <img src="../viewerimages/icons-new/apps.svg" alt="" class="inlineimage">-&gt;<img
@@ -349,7 +351,49 @@
     <h3>Release Versions</h3>
     <p></p>
     <ul>
-       <li>20210711 <a href="../../downloads/release-ochartsplugin/20210711">packages</a></li>
+      <li>20220421 <a href="../../downloads/release-ochartsplugin/20220421">packages</a></li>
+      <ul>
+        <li>Bug fix: provider not always restarted correctly<a href="https://github.com/wellenvogel/avnav-ocharts-provider/issues/31"></a></li>
+      </ul>
+      <li>20220307 <a href="../../downloads/release-ochartsplugin/20220307">packages</a></li>
+      <ul>
+        <li>Bugfix <a href="https://github.com/wellenvogel/avnav-ocharts-provider/issues/31">#31</a>:
+          Missing checkbox for "use OpenCPN charts"</li>
+        <li>Bugfix: wrong version was shown</li>
+        <li>improved error handling during chart usage, show such errors in the
+          status</li>
+        <li>correctly limit setting for memPercent</li>
+      </ul>
+      <li>20220225 <a href="../../downloads/release-ochartsplugin/20220225">packages</a></li>
+      <ul>
+        <li>New <a href="https://o-charts.org/shop/en/">O-charts shop</a><br>
+          During the next days the shop at o-charts will move to a new
+          encryption schema.<br>
+          This will require this new version of the AvNav plugin. <b>Additionally
+            you need to install the new avnav-ocharts package</b> - at least
+          0.9.0.72 (use the avnav update plugin to handle this). The package
+          avnav-oesenc is now obsolete and can be removed (but it can also
+          remain on the system).<br>
+          The handling of the charts does not change and all your old charts
+          will continue to work. But once the shop is changed you will not be
+          able to download new charts with the old plugin.<br>
+          With the new plugin (and the new shop) <b>AvNav will now also be able
+            to handle oeRNC</b> charts (like the imray charts for the Med).</li>
+        <li>packages will now also be available for the raspberry debian
+          bullseye OS versions (both 32 bit and 64 bit)</li>
+        <li>the handling for "reduce details on lower zoom levels" does now work
+          correctly</li>
+        <li>the "under zoom" setting now works better so it's range could be
+          extended and the default changed to 4. This avoids some white areas if
+          no charts directly matched the required zoom level</li>
+        <li>You can now enable the usage of OpenCPN charts on the same system
+          directly in the AvNav plugin settings. This will only work for charts
+          installed with the new ocharts_pi plugin in OpenCPN.</li>
+      </ul>
+      <ul>
+        <li>the error handling has been improved</li>
+      </ul>
+      <li>20210711 <a href="../../downloads/release-ochartsplugin/20210711">packages</a></li>
       <ul>
         <li>bugfix: Cache rebuild not triggered when changing parameters</li>
       </ul>
@@ -411,6 +455,86 @@
     <p>Access to the charts in AvNav is only possible from within the local net.
       You can connect at most 5 devices (Clients) at the same time.</p>
     <p>For software licenses see the <a href="https://github.com/wellenvogel/avnav-ocharts-provider/blob/master/Readme.md">Readme.</a></p>
+    <h2><a name="PluginConfig"></a> Plugin Configuration</h2>
+    <p>Some of the plugins settings can be changed on the server/status page <img
+        src="../viewerimages/icons-new/status.svg" alt="" class="inlineimage">
+      at "plugins/system-ocharts" (AvNav &gt;= 20210322).</p>
+    <p><img src="ocharts-edit-plugin.png" alt="" class="image fimage"> </p>
+    <p>Those are:</p>
+    <table border="1" width="100%">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Meaning</td>
+          <td>Default</td>
+        </tr>
+        <tr>
+          <td>port</td>
+          <td>Http port </td>
+          <td>8082</td>
+        </tr>
+        <tr>
+          <td>threads</td>
+          <td>Number of threads that will be used</td>
+          <td>5</td>
+        </tr>
+        <tr>
+          <td>debug</td>
+          <td>log level for &lt;datadir&gt;/ocharts/provider.log.<br>
+            &lt;datadir&gt; on a raspberry is /home/pi/avnav/data</td>
+          <td>1</td>
+        </tr>
+        <tr>
+          <td>cacheSize</td>
+          <td>Maximal number of chart tiles that will be cached in memory. The
+            plugin will additionally consider the allowed memory and will
+            potentially lower this setting.</td>
+          <td>10000</td>
+        </tr>
+        <tr>
+          <td>diskCacheSize</td>
+          <td>Maximal number of chart tiles (for one set) that will be cached in
+            a file.</td>
+          <td>400000</td>
+        </tr>
+        <tr>
+          <td>prefillZoom</td>
+          <td>Up to which zoom level the prefill process should already render
+            chart tiles into the cache. If you increase this value the prefill
+            will take more time.</td>
+          <td>17</td>
+        </tr>
+        <tr>
+          <td>memPercent</td>
+          <td>The amount of memory (percent of the system memory) that the
+            plugin (correctly: the provider process) will use. If this value is
+            not set (or set to low) the provider will use an internal minimum.<br>
+            This potentially could be rather low - especially when using raster
+            charts. If it is very low the provider must open and close chart
+            files very often and this will slow down it's operation. If you have
+            enough memory (e.g. 2GB) you can increase speed by setting the
+            memory to 1GB .</td>
+          <td>---</td>
+        </tr>
+        <tr>
+          <td>useOCPNCharts<br>
+            (seit 20220225)</td>
+          <td>If this fla is set you can use charts that have been installed
+            with OpenCPN on the same system within AvNav . This will only work
+            for charts being installed with the new o-charts_pi plugin (since
+            2022/03/01).</td>
+          <td>aus</td>
+        </tr>
+        <tr>
+          <td>ocpnConfigFile<br>
+            (seit 20220225)</td>
+          <td>Path to the OpenCPN config file (normally
+            $HOME/.opencpn/opencpn.conf). The plugin needs to read this file to
+            find the installed charts.</td>
+          <td>$HOME/.opencpn/opencpn.conf</td>
+        </tr>
+      </tbody>
+    </table>
     <h2><a name="Details"></a>Technical Details</h2>
     <p>The charts are provided by an executable on the raspberry pi that
       normally serves at port 8082. This executable loads the oesenc-pi OpenCPN
@@ -420,19 +544,9 @@
       integrated into AvNav as a <a href="../userdoc/addonpage.html">User App</a>.</p>
     <p>You will find the complete code at <a href="https://github.com/wellenvogel/avnav-ocharts-provider">GitHub</a>.</p>
     <p>You install into /usr/lib/avnav/plugins/ocharts. The data directory is
-      /home/pi/avnav/data/ocharts. You can reconfigure the AvNav plugin by
-      editing <a href="configfile.html">avnav_server.xml</a>. Normally this is
-      not necessary at all. If you need to configure anyway this has to be done
-      in the Plugin-Handler section.</p>
-    <div class="code">&lt;AVNPluginHandler&gt;<br>...<br>&lt;system-ocharts port="8082".../&gt;<br>&lt;/AVNPluginHandler&gt;</div>
-    <p>For a list of available options refer to the <a href="https://github.com/wellenvogel/avnav-ocharts-provider/blob/master/avnav-plugin/plugin.py">description
-        in the plugin source code</a>.</p>
-    <p><a name="Chartconfig"></a>If you e.g. want to use charts that you already
-      installed for OpenCPN you can just point to the OpenCPN o-chart
-      directories:</p>
-    <div class="code">&lt;AVNPluginHandler&gt;<br>...<br>&lt;system-ocharts chartdir="/my/chartdir1,/my/chartdir2"/&gt;<br>&lt;/AVNPluginHandler&gt;</div>
-    <p>Normally it is recommended to upload the zip files as described at&nbsp;
-      <a href="#Charts">charts</a> .</p>
+      /home/pi/avnav/data/ocharts. You can set some additional parameters for
+      the AvNav plugin by editing <a href="configfile.html">avnav_server.xml</a>.
+      Normally this is not necessary at all. </p>
     <p><a name="Upload"></a>Since version 20200709 you can separately set the
       directory for uploading the charts: </p>
     <div class="code">&lt;AVNPluginHandler&gt;<br>...<br>&lt;system-ocharts uploadDir="$DATADIR/charts/ocharts"/&gt;<br>&lt;/AVNPluginHandler&gt;</div>

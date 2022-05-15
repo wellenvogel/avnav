@@ -21,6 +21,11 @@
         android:defaultValue="waypointAlarm.mp3"
         android:inputType="text"
         android:title="@string/labelSettingsWpAlarm"/>
+    <de.wellenvogel.avnav.settings.AudioEditTextPreference
+        android:key="alarm.connectionLost"
+        android:defaultValue="waypointAlarm.mp3"
+        android:inputType="text"
+        android:title="@string/labelSettingsConnAlarm"/>
     <Preference
         android:title="@string/labelSettingsDefaults"
         android:key="prefs.default"></Preference>

@@ -36,8 +36,6 @@ import ReactDOM from 'react-dom';
 import propertyHandler from './util/propertyhandler';
 import OverlayDialog from './components/OverlayDialog.jsx';
 import App from './App.jsx';
-import history from './util/history';
-import MapHolder from './map/mapholder';
 import keys from './util/keys.jsx';
 import globalStore from './util/globalstore.jsx';
 import base from './base.js';
@@ -45,7 +43,6 @@ import Requests from './util/requests.js';
 import Toast from './components/Toast.jsx';
 import Api from './util/api.js';
 import registerRadial from './components/CanvasGaugeDefinitions.js';
-import AndroidEventHandler from './util/androidEventHandler.js';
 import AvNavVersion from './version.js';
 import assign from 'object-assign';
 import LeaveHandler from './util/leavehandler';
@@ -73,7 +70,7 @@ function getParam(key)
  * main function called when dom is loaded
  *
  */
-avnav.main=function() {
+export default function() {
     //some workaround for lees being broken on IOS browser
     //less.modifyVars();
     let body=document.querySelector('body');
@@ -93,7 +90,6 @@ avnav.main=function() {
     else {
         globalStore.storeData(keys.properties.routingServerError,true,true);
     }
-    globalStore.storeData(keys.gui.global.onAndroid,false,true);
     let ro="readOnlyServer";
     if (getParam(ro) && getParam(ro) == "true"){
         globalStore.storeData(keys.properties.connectedMode,false,true);
@@ -101,52 +97,6 @@ avnav.main=function() {
     if (getParam("noCloseDialog") === "true"){
         LeaveHandler.stop();
     }
-    //make the android API available as avnav.android
-    if (window.avnavAndroid){
-        base.log("android integration enabled");
-        globalStore.storeData(keys.gui.global.onAndroid,true,true);
-        avnav.android=window.avnavAndroid;
-        globalStore.storeData(keys.properties.routingServerError,false,true);
-        globalStore.storeData(keys.properties.connectedMode,true,true);
-        avnav.version=avnav.android.getVersion();
-        avnav.android.applicationStarted();
-        avnav.android.receiveEvent=(key,id)=>{
-            try {
-                //inform the android part that we noticed the event
-                avnav.android.acceptEvent(key, id);
-            } catch (e) {
-            }
-            if (key == 'backPressed'){
-                let currentPage=globalStore.getData(keys.gui.global.pageName);
-                if (currentPage == "mainpage"){
-                    avnav.android.goBack();
-                    return;
-                }
-                history.pop();
-            }
-            if (key == 'propertyChange'){
-                globalStore.storeData(keys.gui.global.propertySequence,
-                    globalStore.getData(keys.gui.global.propertySequence,0)+1);
-            }
-            if (key == "reloadData"){
-                globalStore.storeData(keys.gui.global.reloadSequence,
-                    globalStore.getData(keys.gui.global.reloadSequence,0)+1);
-            }
-            AndroidEventHandler.handleEvent(key,id);
-        };
-    }
-    let startpage="warningpage";
-    let firstStart=true;
-    if (typeof window.localStorage === 'object'){
-        if (localStorage.getItem(globalStore.getData(keys.properties.licenseAcceptedName)) === 'true'){
-            startpage="mainpage";
-            firstStart=false;
-        }
-    }
-    if (firstStart){
-        propertyHandler.firstStart();
-    }
-    history.push(startpage);
     const loadScripts=(loadList)=>{
         let fileref=undefined;
         for (let i in  loadList) {
@@ -215,13 +165,6 @@ avnav.main=function() {
         globalStore.storeMultiple(falseCapabilities,keys.gui.capabilities);
         doLateLoads(globalStore.getData(keys.gui.capabilities.plugins));
     });
-    Requests.getJson("/user/viewer/images.json",{useNavUrl:false,checkOk:false})
-        .then((data)=>{
-            MapHolder.setImageStyles(data);
-        })
-        .catch((error)=> {
-            Toast("unable to load user image definitions: " + error);
-        });
     base.log("avnav loaded");
 };
 

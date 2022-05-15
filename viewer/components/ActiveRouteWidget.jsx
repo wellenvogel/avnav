@@ -3,7 +3,7 @@
  */
 
 import React from "react";
-import compare from '../util/shallowcompare';
+import compare from '../util/compare';
 import PropTypes from 'prop-types';
 import keys from '../util/keys.jsx';
 import Formatter from '../util/formatter.js';

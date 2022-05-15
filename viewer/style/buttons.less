@@ -89,7 +89,7 @@
     font-size: @normalButtonFont;
     padding: 0.5em;
     width: inherit;
-    .nightBackColor(@colorSelection);
+    .nightBackColor(@dialogButtonBackground);
     border: none;
     position: relative;
     .nightForeColor(@colorMain,@nightColor);
@@ -180,6 +180,9 @@ button{
     .iconButton('ic_clear.svg');
 
   }
+  &.NavMapWidgets{
+    .iconButton('assistant_nav.svg');
+  }
 
   /*- nav page routing panel --*/
   &.NavAdd {
@@ -247,6 +250,10 @@ button{
 
   &.Night {
     .iconButton('night.svg');
+  }
+
+  &.RemoteChannel{
+    .iconButton('settings_remote.svg');
   }
 
   &.ShowDownload {
@@ -353,6 +360,9 @@ button{
   &.DownloadPageLayouts{
     .iconButton('ballot.svg');
   }
+  &.DownloadPageSettings{
+    .iconButton('ic_settings.svg');
+  }
   &.DownloadPageImages{
     .iconButton('image-icon.svg');
   }
@@ -389,6 +399,12 @@ button{
     &.button.active{
       border-color: @editingColor;
     }
+  }
+  &.SettingsSave{
+    .iconButton('save.svg')
+  }
+  &.SettingsLoad{
+    .iconButton('ic_open.svg')
   }
 
   &.SettingsAddons {
@@ -586,5 +602,14 @@ button{
   }
   .AnchorWatchDialog &.boat{
     .dialogIconButton('boat.svg')
+  }
+  .RemoteChannelDialog &.disconnect{
+    .dialogIconButton('plug-disconnect.svg')
+  }
+  .RemoteChannelDialog &.connect{
+    .dialogIconButton('plug.svg')
+  }
+  .MapWidgetsDialog &.add{
+    .dialogIconButton('ic_add.svg')
   }
 }

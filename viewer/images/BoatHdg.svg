@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="22.63063mm"
+   height="49.246738mm"
+   viewBox="0 0 22.630631 49.246738"
+   version="1.1"
+   id="svg8"
+   sodipodi:docname="BoatHdg.svg"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"
+   inkscape:export-filename="/home/andreas/projects/avnav/viewer/images/BoatHdg.png"
+   inkscape:export-xdpi="72.620163"
+   inkscape:export-ydpi="72.620163">
+  <defs
+     id="defs2">
+    <inkscape:path-effect
+       effect="bspline"
+       id="path-effect3369"
+       is_visible="true"
+       lpeversion="1"
+       weight="33.333333"
+       steps="2"
+       helper_size="0"
+       apply_no_weight="true"
+       apply_with_weight="true"
+       only_selected="false" />
+    <inkscape:path-effect
+       effect="bspline"
+       id="path-effect3364"
+       is_visible="true"
+       lpeversion="1"
+       weight="33.333333"
+       steps="2"
+       helper_size="0"
+       apply_no_weight="true"
+       apply_with_weight="true"
+       only_selected="false" />
+    <inkscape:path-effect
+       effect="bspline"
+       id="path-effect3340"
+       is_visible="true"
+       lpeversion="1"
+       weight="33.333333"
+       steps="2"
+       helper_size="0"
+       apply_no_weight="true"
+       apply_with_weight="true"
+       only_selected="false" />
+    <inkscape:path-effect
+       effect="bspline"
+       id="path-effect3317"
+       is_visible="true"
+       lpeversion="1"
+       weight="33.333333"
+       steps="2"
+       helper_size="0"
+       apply_no_weight="true"
+       apply_with_weight="true"
+       only_selected="false" />
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1.979899"
+     inkscape:cx="15.163239"
+     inkscape:cy="62.756784"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     inkscape:document-rotation="0"
+     showgrid="false"
+     inkscape:window-width="1509"
+     inkscape:window-height="1050"
+     inkscape:window-x="72"
+     inkscape:window-y="0"
+     inkscape:window-maximized="0"
+     showborder="false"
+     inkscape:pagecheckerboard="true" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Ebene 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-95.877754,-120.55135)">
+    <path
+       style="mix-blend-mode:color;fill:#ff0000;fill-opacity:1;stroke:#000000;stroke-width:2.57729006;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 106.16908,168.42609 c -6.0848,-0.0411 -7.932736,-0.08 -7.980206,-0.15553 -0.0327,-0.0573 -0.085,-0.43544 -0.11127,-0.84674 -0.026,-0.41096 -0.16164,-2.15869 -0.29522,-3.88371 -1.10665,-14.22288 -0.76316,-21.2819 1.34222,-27.57505 1.360976,-4.06874 3.466156,-7.82702 7.492726,-13.3761 l 0.54358,-0.74906 1.14447,1.60456 c 2.38864,3.3512 3.9435,5.8571 5.16524,8.32579 3.62824,7.33124 4.40752,14.49545 3.27321,30.09973 -0.0871,1.20993 -0.24068,3.19849 -0.33831,4.41934 l -0.17823,2.22012 -1.06883,-0.004 c -0.58792,-0.002 -4.63219,-0.0375 -8.98763,-0.0707 z"
+       id="path3371"
+       sodipodi:nodetypes="sssssscsssscsss"
+       inkscape:connector-curvature="0" />
+  </g>
+</svg>

@@ -19,6 +19,7 @@ import RoutePointsWidget from './RoutePointsWidget.jsx';
 import DateTimeWidget from './DateTimeWidget.jsx';
 import {GaugeRadial} from './CanvasGauges.jsx';
 import UndefinedWidget from './UndefinedWidget.jsx';
+import {SKPitchWidget, SKRollWidget} from "./SKWidgets";
 
 let widgetList=[
     {
@@ -321,7 +322,8 @@ let widgetList=[
             formatter: false,
             unit: false,
             formatterParameters: false,
-            value: false
+            value: false,
+            caption: false
         }
     },
     {
@@ -339,12 +341,41 @@ let widgetList=[
     },
     {
         name: 'RadialGauge',
-        wclass: GaugeRadial
+        wclass: GaugeRadial,
+        editableParameters: {
+            minValue: {type:'NUMBER',default:0},
+            maxValue: {type:'NUMBER',default: 100}
+        }
     },
     {
         name: 'Undefined',
         wclass: UndefinedWidget
+    },
+    {
+        name: 'signalKPressureHpa',
+        unit: 'hPa',
+        formatter: 'skPressure',
+        editableParameters:{
+            formatter: false
+        }
+    },
+    {
+        name:'signalKCelsius',
+        unit:'°',
+        formatter: 'skTemperature',
+        editableParameters:{
+            formatter: false
+        }
+    },
+    {
+        name: 'signalKRoll',
+        wclass: SKRollWidget
+    },
+    {
+        name: 'signalKPitch',
+        wclass: SKPitchWidget
     }
+
 
 
 ];

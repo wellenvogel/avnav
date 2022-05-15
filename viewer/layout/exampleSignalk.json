@@ -1,11 +1,6 @@
 {
-  "description": "The system default layout. No keys and no properties.",
+  "description": "signalk example displays",
   "layoutVersion":1,
-  "properties":{
-    "layers":{
-      "ais": true
-    }
-  },
   "widgets": {
     "gpspage1": {
       "left": [

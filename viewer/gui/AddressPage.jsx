@@ -3,14 +3,10 @@
  */
 
 import Dynamic from '../hoc/Dynamic.jsx';
-import Visible from '../hoc/Visible.jsx';
-import Button from '../components/Button.jsx';
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import React from 'react';
-import PropertyHandler from '../util/propertyhandler.js';
-import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import Requests from '../util/requests.js';
 import QRCode from 'qrcode.react';
@@ -39,10 +35,10 @@ class AddressPage extends React.Component{
                 visible: globalStore.getData(keys.gui.global.onAndroid),
                 onClick:()=>{avnav.android.launchBrowser();}
             },
-            Mob.mobDefinition,
+            Mob.mobDefinition(this.props.history),
             {
                 name: 'Cancel',
-                onClick: ()=>{history.pop()}
+                onClick: ()=>{this.props.history.pop()}
             }
         ];
         this.querySequence=1;
@@ -107,8 +103,7 @@ class AddressPage extends React.Component{
 
         return (
             <Page
-                className={this.props.className}
-                style={this.props.style}
+                {...self.props}
                 id="addresspage"
                 title="Server Addresses"
                 mainContent={

@@ -32,6 +32,9 @@ import time
 
 import threading
 import copy
+
+from avnav_nmea import NMEAParser
+from avnav_store import AVNStore
 from avnav_util import Enum, AVNLog
 import sys
 import os
@@ -80,7 +83,7 @@ class WorkerParameter(object):
       raise ParamValueError("invalid parameter %s"%name)
     return self.__setattr__(name,value)
 
-  def copy(self,resolveList=True):
+  def copy(self,resolveList=True,**kwargs):
     rt= WorkerParameter(self.name,
                            default=self.default,
                            type=self.type,
@@ -101,12 +104,10 @@ class WorkerParameter(object):
       else:
         if self.rangeOrList is not None:
           rt.rangeOrList=list(self.rangeOrList)
-    return rt
-  @classmethod
-  def filterNameDef(cls,plist):
-    rt={}
-    for p in plist:
-      rt[p.name]=p.default
+    for k in self.__dict__.keys():
+      nv=kwargs.get(k)
+      if nv is not None:
+        rt.__setattr__(k,nv)
     return rt
 
   @classmethod
@@ -160,17 +161,22 @@ class WorkerParameter(object):
 
   def checkValue(self,value,rangeOrListCheck=True):
     if value is None and self.default is None:
+      if not self.mandatory:
+        return None
       raise ParamValueError("missing mandatory parameter %s"%self.name)
     if self.type == self.T_STRING:
       return str(value)
     if self.type == self.T_NUMBER or self.type == self.T_FLOAT:
-      if self.type == self.T_FLOAT:
-        rv=float(value)
-      else:
-        rv=int(value)
+      try:
+        if self.type == self.T_FLOAT:
+          rv=float(value)
+        else:
+          rv=int(value)
+      except Exception as e:
+        raise ParamValueError("invalid value for %s:%s"%(self.name,str(e)))
       if rangeOrListCheck and self.rangeOrList is not None and len(self.rangeOrList) == 2:
-        if rv < self.rangeOrList[0] or rv > self.rangeOrList[1]:
-          raise ParamValueError("value %f for %s out of range %s"%(rv,self.name,",".join(self.rangeOrList)))
+        if rv < float(self.rangeOrList[0]) or rv > float(self.rangeOrList[1]):
+          raise ParamValueError("value %s for %s out of range %s"%(rv,self.name,",".join(map(lambda v: str(v),self.rangeOrList))))
       return rv
     if self.type == self.T_BOOLEAN:
       if value == True or value == False:
@@ -344,6 +350,9 @@ class AVNWorker(object):
   ENABLE_CONFIG_PARAM=[
     ENABLE_PARAM_DESCRIPTION
   ]
+  PRIORITY_PARAM_DESCRIPTION=WorkerParameter('priority',default=NMEAParser.DEFAULT_SOURCE_PRIORITY,
+                                             type=WorkerParameter.T_NUMBER,rangeOrList=[10,100],
+                                             description="The priority for this source. If there is data from higher priority sources, values will be ignored in parser")
   handlerListLock=threading.Lock()
   """a base class for all workers
      this provides some config functions and a common interfcace for handling them"""
@@ -471,8 +480,8 @@ class AVNWorker(object):
       self.handlerListLock.release()
     self.id=self.getNextWorkerId()
     self.param=cfgparam
-    self.status=False
     self.status={'main':WorkerStatus('main',WorkerStatus.STARTED,"created")}
+    self.__statusLock=threading.Lock()
     self.type=self.Type.DEFAULT
     self.feeder=None
     self.configChanger=None #reference for writing back to the DOM
@@ -508,25 +517,28 @@ class AVNWorker(object):
     except:
       return {'name':self.getStatusName(),'items':[],'error':"no info available"}
   def setInfo(self,name,info,status,childId=None,canDelete=False,timeout=None):
-    existing=self.status.get(name)
-    if existing:
-      if existing.update(status,info,timeout=timeout):
-        AVNLog.info("%s",str(existing))
-        return True
-    else:
-      ns=WorkerStatus(name,status,info,childId=childId,canDelete=canDelete,timeout=timeout)
-      self.status[name]=ns
-      AVNLog.info("%s",str(ns))
+    with  self.__statusLock:
+      existing=self.status.get(name)
+      if existing:
+        if existing.update(status,info,timeout=timeout):
+          AVNLog.info("%s",str(existing))
+          return True
+      else:
+        ns=WorkerStatus(name,status,info,childId=childId,canDelete=canDelete,timeout=timeout)
+        self.status[name]=ns
+        AVNLog.info("%s",str(ns))
   def refreshInfo(self,name,timeout=None):
-    existing=self.status.get(name)
-    if existing:
-      existing.refresh(timeout=timeout)
+    with self.__statusLock:
+      existing=self.status.get(name)
+      if existing:
+        existing.refresh(timeout=timeout)
   def deleteInfo(self,name):
-    if self.status.get(name) is not None:
-      try:
-        del self.status[name]
-      except:
-        pass
+    with self.__statusLock:
+      if self.status.get(name) is not None:
+        try:
+          del self.status[name]
+        except:
+          pass
   def getId(self):
     return self.id
 
@@ -816,33 +828,52 @@ class AVNWorker(object):
       cls.checkSingleInstance()
     instance =cls(cfgparam)
     return instance
-  #parse an config entry
+
   @classmethod
-  def parseConfig(cls,attrs,default):
-    sparam=copy.deepcopy(default)
-    if len(list(sparam.keys())) == 0:
-      #special case: accept all attributes
-      for k in list(attrs.keys()):
+  def getConfigFromAttrs(cls,attrs):
+    sparam={}
+    for k in list(attrs.keys()):
         v=attrs[k]
         if v is None or isinstance(v,str):
           sparam[k]=v
         else:
           sparam[k] = v.value
-      return sparam
+    return sparam
+
+  @classmethod
+  def parseConfigNew(cls,attrs,workerParam):
+    parsed=cls.getConfigFromAttrs(attrs)
+    rt={}
+    for wp in workerParam:
+      try:
+        #we cannot use fromDict here as we have to be tolernat against
+        #all old config
+        v=parsed.get(wp.name)
+        if v is None:
+          v=wp.default
+        if v is None and wp.mandatory:
+          raise Exception("missing mandatory parameter %s",wp.name)
+        rt[wp.name]=v
+      except Exception as e:
+        AVNLog.error("unable to parse %s(%s) for %s",wp.name,str(parsed),cls.getConfigName())
+        raise
+    return rt
+
+  #parse an config entry
+  @classmethod
+  def parseConfig(cls,attrs,default):
+    parsed=cls.getConfigFromAttrs(attrs)
+    if len(list(default.keys())) == 0:
+      #special case: accept all attributes
+      return parsed
+    sparam=copy.deepcopy(default)
     for k in list(sparam.keys()):
       dv=sparam[k]
-      if (isinstance(dv,str)):
-        sparam[k]=dv
-      v=attrs.get(k)
+      v=parsed.get(k)
       if dv is None and v is None:
         raise Exception(cls.getConfigName()+": missing mandatory parameter "+k)
-      if v is None:
-        sparam[k]=dv
-      else:
-        if isinstance(v,str) or isinstance(v,str):
-          sparam[k]=v
-        else:
-          sparam[k] = v.value
+      if v is not None:
+        sparam[k]=v
     return sparam
 
   def run(self):
@@ -880,7 +911,7 @@ class AVNWorker(object):
 
     @type navdata: AVNStore
     """
-    self.navdata=navdata
+    self.navdata=navdata #type: AVNStore
     self.feeder = self.findFeeder(self.getStringParam('feederName'))
     try:
       self.checkConfig(self.param)
@@ -911,10 +942,10 @@ class AVNWorker(object):
         rt+="%s=%s"%(k,str(v))
     return rt
 
-  def writeData(self,data,source=None,addCheckSum=False):
+  def writeData(self,data,source=None,addCheckSum=False,sourcePriority=NMEAParser.DEFAULT_SOURCE_PRIORITY):
     if self.feeder is None:
       raise Exception("no feeder in %s"%(self.getName()))
-    self.feeder.addNMEA(data,source,addCheckSum)
+    self.feeder.addNMEA(data,source,addCheckSum,sourcePriority=sourcePriority)
 
   def getUsedResources(self,type=None):
     '''

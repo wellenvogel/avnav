@@ -8,7 +8,6 @@ import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import React from 'react';
 import PropTypes from 'prop-types';
-import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import MapHolder from '../map/mapholder.js';
 import GuiHelpers from '../util/GuiHelpers.js';
@@ -22,6 +21,7 @@ import Mob from '../components/Mob.js';
 import Dimmer from '../util/dimhandler.js';
 import FullScreen from '../components/Fullscreen';
 import remotechannel, {COMMANDS} from "../util/remotechannel";
+import RemoteChannelDialog from "../components/RemoteChannelDialog";
 
 const PANEL_LIST=['left','m1','m2','m3','right'];
 //from https://stackoverflow.com/questions/16056591/font-scaling-based-on-width-of-container
@@ -99,7 +99,7 @@ class GpsPage extends React.Component{
         this.buttons=[
             {
                 name: 'Cancel',
-                onClick: ()=>{history.pop()}
+                onClick: ()=>{this.props.history.pop()}
             }
         ];
         this.state={
@@ -135,7 +135,7 @@ class GpsPage extends React.Component{
                 name:'GpsCenter',
                 onClick:()=>{
                     MapHolder.centerToGps();
-                    history.pop();
+                    this.props.history.pop();
                 },
                 editDisable: true
             },
@@ -215,7 +215,8 @@ class GpsPage extends React.Component{
                 overflow: true
             },
             anchorWatch(),
-            Mob.mobDefinition,
+            RemoteChannelDialog({overflow:true}),
+            Mob.mobDefinition(this.props.history),
             EditPageDialog.getButtonDef('gpspage'+globalStore.getData(keys.gui.gpspage.pageNumber,0),
                 PANEL_LIST,
                 [LayoutHandler.OPTIONS.ANCHOR]),
@@ -224,18 +225,18 @@ class GpsPage extends React.Component{
             Dimmer.buttonDef(),
             {
                 name:'Cancel',
-                onClick:()=>{history.pop();}
+                onClick:()=>{this.props.history.pop();}
             }
         ];
     }
     onItemClick(item,data,panelInfo){
-        if (EditWidgetDialog.createDialog(item,panelInfo.page,panelInfo.name,false,true)) return;
+        if (EditWidgetDialog.createDialog(item,panelInfo.page,panelInfo.name,{beginning:false,weight:true,types:["!map"]})) return;
         if (item && item.name=== "AisTarget"){
             let mmsi=(data && data.mmsi)?data.mmsi:item.mmsi;
-            history.push("aisinfopage",{mmsi:mmsi});
+            this.props.history.push("aisinfopage",{mmsi:mmsi});
             return;
         }
-        history.pop();
+        this.props.history.pop();
     }
 
     componentDidMount(){
@@ -277,12 +278,13 @@ class GpsPage extends React.Component{
                 if (! panelData.list) return;
                 let sum = getWeightSum(panelData.list);
                 let prop={
+                    name: panelName,
                     className: 'widgetContainer',
                     itemCreator: (widget)=>{ return widgetCreator(widget,sum);},
                     itemList: panelData.list,
                     fontSize: fontSize,
                     onItemClick: (item,data) => {self.onItemClick(item,data,panelData);},
-                    onClick: ()=>{EditWidgetDialog.createDialog(undefined,panelData.page,panelData.name,false,true);},
+                    onClick: ()=>{EditWidgetDialog.createDialog(undefined,panelData.page,panelData.name,{beginning:false,weight:true,types:["!map"]});},
                     dragdrop: LayoutHandler.isEditing(),
                     onSortEnd: (oldIndex,newIndex)=>LayoutHandler.moveItem(panelData.page,panelData.name,oldIndex,newIndex)
                 };
@@ -296,7 +298,7 @@ class GpsPage extends React.Component{
             <React.Fragment>
                 {panelList.map((panelProps)=>{
                     return(
-                        <div className="hfield" style={{width:panelWidth+"%"}}>
+                        <div className="hfield" style={{width:panelWidth+"%"}} key={panelProps.name}>
                             <ItemList {...panelProps}/>
                         </div>
                     )
@@ -305,8 +307,7 @@ class GpsPage extends React.Component{
         };
 
         return <Page
-                className={self.props.className}
-                style={self.props.style}
+                {...self.props}
                 id="gpspage"
                 mainContent={
                             <MainContent/>
@@ -315,7 +316,6 @@ class GpsPage extends React.Component{
                 autoHideButtons={autohide}
                 buttonWidthChanged={()=>{
                     resizeFont();
-                    this.setState({update:this.state.update+1});
                 }}
                 />;
 

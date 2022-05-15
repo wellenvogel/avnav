@@ -25,14 +25,14 @@ task copyDefs(type: org.gradle.api.tasks.Copy) {
         include "*properties"
         include "*list"
     }
-    into new File(project.buildDir, "classes" + File.separator + "main" + File.separator + srcsub)
+    into new File(sourceSets.main.output.classesDirs[0],srcsub)
     outputs.upToDateWhen {false}
 }
 
 task writeVersion{
     doLast{
-    def outfile=new File(project.buildDir,"classes"+File.separator+"main"+File.separator+srcsub+
-        File.separator+"mappack.properties")
+    def outfile=new File(new File(sourceSets.main.output.classesDirs[0],srcsub),
+        "mappack.properties")
     outfile.withWriter {
         out->
             out.println("mappack.revision="+revision)
@@ -42,7 +42,7 @@ task writeVersion{
 writeVersion.dependsOn classes
 jar.dependsOn writeVersion
 jar.dependsOn copyDefs
-
+println("##: classes dir ${sourceSets.main.output.classesDirs[0]}")
 jar{
     archiveName="mp-avnavbase.jar"
     manifest.getAttributes().with{
@@ -51,8 +51,8 @@ jar{
         put 'MapPackName','avnavbase'
         put 'MapPackBuild-Date',new Date().format("yyyy-MM-dd HH:mm:ss")
     }
-    from new File(sourceSets.main.output.classesDir,srcsub),{
-        rename{ "mobac.program.interfaces.MapSource"}
+    from new File(sourceSets.main.output.classesDirs[0],srcsub),{
+        rename('mapsources.list',"mobac.program.interfaces.MapSource")
         into "META-INF/services/"
         include "mapsources.list"
     }
@@ -71,6 +71,7 @@ task createZip(type: org.gradle.api.tasks.bundling.Zip){
         logger.lifecycle("created "+archivePath)
     }
 }
+createZip.dependsOn(build)
 
 def testdir=new File(project.buildDir,"test")
 def testmapsrc=new File(testdir,"mapsources")
@@ -96,10 +97,7 @@ task prepareTest(type: org.gradle.api.tasks.Copy){
 
 
 
-build.doLast{
-    createZip.execute()
-    prepareTest.execute()
-}
+
 
 copyDefs.dependsOn classes
 jar.dependsOn copyDefs

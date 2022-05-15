@@ -13,6 +13,8 @@ import keys,{KeyHelper} from '../util/keys.jsx';
 import PropertyHandler from '../util/propertyhandler';
 import RouteEdit,{StateHelper} from './routeeditor.js';
 import assign from 'object-assign';
+import Average, {CourseAverage} from "../util/average.mjs";
+import navcompute from "./navcompute";
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE);
 
@@ -53,6 +55,10 @@ const NavData=function(){
 
     this.aisMode=navobjects.AisCenterMode.GPS;
 
+    this.speedAverage=new Average(10); //for steady detection
+    this.mapAverageCog=new CourseAverage(globalStore.getData(keys.properties.courseAverageLength)); //for map rotation
+    this.mapAverageHdt=new CourseAverage(globalStore.getData(keys.properties.courseAverageLength)); //for map rotation
+    this.mapAverageHdm=new CourseAverage(globalStore.getData(keys.properties.courseAverageLength)); //for map rotation
 
     let self=this;
     this.changeCallback=new Callback((keys)=>{self.computeValues();});
@@ -62,6 +68,7 @@ const NavData=function(){
                 KeyHelper.flattenedKeys(this.gpsdata.getStoreKeys()),
                 [keys.map.centerPosition]
             ));
+    this.storeKeys=GpsData.getStoreKeys();
 };
 
 /**
@@ -92,7 +99,7 @@ NavData.prototype.computeValues=function() {
         anchorDistance: 0,
         anchorDirection: 0
     };
-    let gps = globalStore.getMultiple(GpsData.getStoreKeys());
+    let gps = globalStore.getMultiple(this.storeKeys);
     //copy the marker to data to make it available extern
     data.markerWp = activeRoute.getCurrentTarget();
     data.routeNextWp = activeRoute.getNextWaypoint();
@@ -194,32 +201,90 @@ NavData.prototype.computeValues=function() {
     }
     let self=this;
     data.wpName=data.markerWp ? data.markerWp.name : '';
+
+    data.boatDirection=undefined;
+    data.directionMode='cog';
+    data.isSteady=false;
+    data.mapDirection=undefined;
+    this.speedAverage.add(gps.speed);
+    this.mapAverageCog.add(gps.course);
+    this.mapAverageHdt.add(gps.headingTrue);
+    this.mapAverageHdm.add(gps.headingMag);
+
+    let boatDirectionMode=globalStore.getData(keys.properties.boatDirectionMode,'cog');
+    data.boatDirection=gps.course;
+    let mapCourse=this.mapAverageCog.val();
+    let mapUseHdx=! globalStore.getDataLocal(keys.properties.courseUpAlwaysCOG);
+    if (boatDirectionMode === 'hdt' && gps.headingTrue !== undefined){
+        data.boatDirection=gps.headingTrue;
+        data.directionMode=boatDirectionMode;
+        if (mapUseHdx) mapCourse=this.mapAverageHdt.val();
+    }
+    if (boatDirectionMode === 'hdm' && gps.headingMag!== undefined){
+        data.boatDirection=gps.headingMag;
+        data.directionMode=boatDirectionMode;
+        if (mapUseHdx) mapCourse=this.mapAverageHdm.val();
+    }
+    if (globalStore.getData(keys.properties.boatSteadyDetect) && data.directionMode === 'cog'){
+        let maxSpeed=parseFloat(globalStore.getData(keys.properties.boatSteadyMax)) * navcompute.NM / 3600.0;
+        if (this.speedAverage.val() === undefined || this.speedAverage.val() < maxSpeed){
+            data.isSteady=true;
+        }
+        if (data.boatDirection === undefined){
+            data.isSteady=true;
+        }
+    }
+    let tol = globalStore.getData(keys.properties.courseAverageTolerance);
+    let mapDirection=globalStore.getData(keys.nav.display.mapDirection,0);
+    if (mapCourse !== undefined && ! data.isSteady) {
+        let diff=mapCourse-mapDirection;
+        if (tol > 0) {
+            if (diff < tol && diff > -tol) {
+                let red=1-(tol-Math.abs(diff))/tol;
+                if (red < 1 && red >= 0.2 ){
+                    mapCourse=this.mapAverageCog.fract(mapDirection,mapCourse,red);
+                }
+                else {
+                    mapCourse = mapDirection;
+                }
+            }
+        }
+        mapDirection=mapCourse;
+    }
+    else{
+        mapDirection=undefined;
+    }
+    data.mapDirection=mapDirection;
     //store the data asynchronously to avoid any locks
-    window.setTimeout(()=> {
-        globalStore.storeMultiple(data, {
-            centerCourse: keys.nav.center.course,
-            centerDistance: keys.nav.center.distance,
-            markerCourse: keys.nav.wp.course,
-            markerDistance: keys.nav.wp.distance,
-            markerEta: keys.nav.wp.eta,
-            markerXte: keys.nav.wp.xte,
-            markerVmg: keys.nav.wp.vmg,
-            markerWp: keys.nav.wp.position,
-            anchorDirection: keys.nav.anchor.direction,
-            anchorDistance: keys.nav.anchor.distance,
-            anchorWatchDistance: keys.nav.anchor.watchDistance,
-            centerMarkerCourse: keys.nav.center.markerCourse,
-            centerMarkerDistance: keys.nav.center.markerDistance,
-            routeName: keys.nav.route.name,
-            routeNumPoints: keys.nav.route.numPoints,
-            routeLen: keys.nav.route.len,
-            routeRemain: keys.nav.route.remain,
-            routeEta: keys.nav.route.eta,
-            routeNextCourse: keys.nav.route.nextCourse,
-            isApproaching: keys.nav.route.isApproaching,
-            wpName:keys.nav.wp.name
-        },self.changeCallback);
-    },0);
+    window.setTimeout(() => {
+        globalStore.storeMultiple(
+            data,
+            assign({
+                    centerCourse: keys.nav.center.course,
+                    centerDistance: keys.nav.center.distance,
+                    markerCourse: keys.nav.wp.course,
+                    markerDistance: keys.nav.wp.distance,
+                    markerEta: keys.nav.wp.eta,
+                    markerXte: keys.nav.wp.xte,
+                    markerVmg: keys.nav.wp.vmg,
+                    markerWp: keys.nav.wp.position,
+                    anchorDirection: keys.nav.anchor.direction,
+                    anchorDistance: keys.nav.anchor.distance,
+                    anchorWatchDistance: keys.nav.anchor.watchDistance,
+                    centerMarkerCourse: keys.nav.center.markerCourse,
+                    centerMarkerDistance: keys.nav.center.markerDistance,
+                    routeName: keys.nav.route.name,
+                    routeNumPoints: keys.nav.route.numPoints,
+                    routeLen: keys.nav.route.len,
+                    routeRemain: keys.nav.route.remain,
+                    routeEta: keys.nav.route.eta,
+                    routeNextCourse: keys.nav.route.nextCourse,
+                    isApproaching: keys.nav.route.isApproaching,
+                    wpName: keys.nav.wp.name
+                },
+                keys.nav.display)
+            , self.changeCallback);
+    }, 0);
 };
 
 /**
@@ -229,10 +294,15 @@ NavData.prototype.computeValues=function() {
 NavData.prototype.getAisCenter=function(){
     if (this.aisMode == navobjects.AisCenterMode.NONE) return undefined;
     if (this.aisMode == navobjects.AisCenterMode.GPS) {
-        if (globalStore.getData(keys.nav.gps.valid)) return globalStore.getData(keys.nav.gps.position);
+        if (globalStore.getData(keys.nav.gps.valid)) return [globalStore.getData(keys.nav.gps.position)];
         return undefined;
     }
-    return globalStore.getData(keys.map.centerPosition);
+    else{
+        if (globalStore.getData(keys.nav.gps.valid)){
+            return [globalStore.getData(keys.map.centerPosition),globalStore.getData(keys.nav.gps.position)]
+        }
+    }
+    return [globalStore.getData(keys.map.centerPosition)];
 };
 
 /**

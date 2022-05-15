@@ -181,9 +181,6 @@
 <AVNSocketReader port="2599" host="localhost" filter="" name="canboatnmea0183" timeout="31104000"/>
  ##SIGNALK CANBOAT-->
 <AVNPluginHandler>
-<!-- ##SIGNALK
-        <builtin-signalk enabled="true"/>
- ##SIGNALK -->
 <!-- ##CANBOAT
 	<builtin-canboat enabled="true" allowKeyOverwrite="true" autoSendRMC="30" sourceName="canboatgen"/>
  ##CANBOAT -->
@@ -213,6 +210,10 @@
 </AVNWpaHandler>
 <AVNCommandHandler >
 	<Command name="shutdown" command="sudo halt"/>
+     <!-- you can add a -i option to the sound command to select the device to play
+          if not set it will use the default alsa device
+          <Command name="sound" command="/bin/sh $BASEDIR/../raspberry/sound.sh -i hw:1 90%" repeat="1"/>
+     -->
 	<Command name="sound" command="/bin/sh $BASEDIR/../raspberry/sound.sh 90%" repeat="1"/>
 </AVNCommandHandler>
 

@@ -23,7 +23,7 @@
  ###############################################################################
  */
 import assign from "object-assign";
-import shallowcompare from '../util/shallowcompare';
+import shallowcompare from '../util/compare';
 import Helper from "../util/helper";
 
 /**

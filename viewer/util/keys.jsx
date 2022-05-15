@@ -24,7 +24,9 @@ export const PropertyType={
     LIST:2,
     COLOR:3,
     LAYOUT:4,
-    SELECT: 5
+    SELECT: 5,
+    INTERNAL: 6,
+    MULTICHECKBOX: 7
 };
 
 /**
@@ -39,7 +41,7 @@ export const PropertyType={
 export const Property=function(defaultv,opt_label,opt_type,opt_values,opt_initial){
     this.defaultv=defaultv;
     this.label=opt_label;
-    this.type=(opt_type !== undefined)?opt_type:PropertyType.RANGE;
+    this.type=(opt_type !== undefined)?opt_type:PropertyType.INTERNAL;
     this.values=(opt_values !== undefined)?opt_values:[0,1000]; //assume range 0...1000
     this.canChange=opt_type !== undefined;
     this.initialValue=opt_initial;
@@ -70,6 +72,16 @@ export class KeyNode{
         assign(this,original);
         this.__path=path;
     }
+    getKeys(){
+        let rt={};
+        for (let k in this){
+            if (k.substr(0,1) === '_') continue;
+            let v=this[k];
+            if (typeof(v) !== 'string') continue;
+            rt[k]=v;
+        }
+        return rt;
+    }
 }
 
 //the global definition of all used store keys
@@ -86,7 +98,8 @@ let keys={
             valid: K,
             windAngle: V,
             windSpeed: V,
-            windReference: V,
+            trueWindAngle: V,
+            trueWindSpeed: V,
             positionAverageOn:K,
             speedAverageOn: K,
             courseAverageOn: K,
@@ -99,6 +112,12 @@ let keys={
             connectionLost: K,
             updatealarm: new D("update counter for alarms"),
             updateleg: new D("update counter for leg")
+        },
+        display:{
+            boatDirection: new D("the direction of the boat to be used for display"),
+            directionMode: new D("one of cog,hdm,hdt"),
+            isSteady: new D("will be true if steady detected"),
+            mapDirection: new D("the direction that will be used to rotate the map with course up")
         },
         alarms:{
             all:K,
@@ -172,6 +191,7 @@ let keys={
             uploadImport: K,
             uploadOverlays: K,
             uploadTracks: K,
+            uploadSettings: K,
             canConnect: K,
             config: K,
             debugLevel: K,
@@ -181,8 +201,6 @@ let keys={
         },
         global:{
             smallDisplay: K,
-            pageName: K,
-            pageOptions:K,
             onAndroid:K,
             propertySequence:K,
             hasActiveInputs: K,
@@ -205,9 +223,6 @@ let keys={
         gpspage:{
             pageNumber:K,
         },
-        aispage:{
-            sortField:K,
-        },
         addonpage:{
             activeAddOn:K,
         },
@@ -221,24 +236,6 @@ let keys={
         },
         routepage:{
             initialName:K,
-        },
-        downloadpage:{
-            type:K,
-            currentItems:K,
-            downloadParameters:K,
-            fileInputKey:K,
-            enableUpload:K,
-            uploadInfo:K,
-            requestedUploadId: new D("the last requested upload for android"),
-            addOns:K,
-            chartImportExtensions:K,
-            chartImportSubDir:K
-        },
-        settingspage:{
-            hasChanges:K,
-            values:K,
-            section:K,
-            leftPanelVisible: K
         }
 
     },
@@ -246,6 +243,7 @@ let keys={
     //they will be written to local storage on change
     //and the store will be filled with initial values on start
     properties: {
+        lastLoadedName: new Property('system.default'),
         layers: {
             ais: new Property(true, "AIS", PropertyType.CHECKBOX),
             track: new Property(true, "Track", PropertyType.CHECKBOX),
@@ -253,7 +251,9 @@ let keys={
             boat: new Property(true, "Boat", PropertyType.CHECKBOX),
             grid: new Property(true, "Grid", PropertyType.CHECKBOX),
             compass: new Property(true, "Compass", PropertyType.CHECKBOX),
-            base: new Property(true, "Base", PropertyType.CHECKBOX)
+            base: new Property(true, "Base", PropertyType.CHECKBOX),
+            scale: new Property(true,"ScaleLine", PropertyType.CHECKBOX),
+            user: new Property({},"User/Plugins",PropertyType.CHECKBOX)
         },
         localAlarmSound: new Property(true, "Alarm Sound", PropertyType.CHECKBOX),
         connectedMode: new Property(true, "connected", PropertyType.CHECKBOX),
@@ -263,13 +263,15 @@ let keys={
         slideLevels: new Property(3), //start with that many lower zoom levels
         maxUpscale: new Property(2), //2 levels upscale (otherwise we need too much mem)
         maxZoom: new Property(21),  //only allow upscaling up to this zom level
-        courseAverageFactor: new Property(0.5), //moving average for course up
+        courseAverageLength: new Property(10,"average interval for map course up",PropertyType.RANGE,[1,30]), //moving average for course up
         courseAverageTolerance: new Property(15, "Rotation Tolerance", PropertyType.RANGE, [1, 30]), //tolerance for slow rotation
+        courseUpAlwaysCOG: new Property(false,"CourseUp always COG",PropertyType.CHECKBOX),
         maxButtons: new Property(8),
         positionQueryTimeout: new Property(1000, "Position (ms)", PropertyType.RANGE, [500, 5000, 10]), //1000ms
         trackQueryTimeout: new Property(5000, "Track (ms)", PropertyType.RANGE, [500, 10000, 10]), //5s in ms
         routeQueryTimeout: new Property(1000, "Route (ms)", PropertyType.RANGE, [500, 10000, 10]), //5s in ms
-        chartQueryTimeout: new Property(30000, "ChartOverview (ms)", PropertyType.RANGE, [500, 200000, 100]), //5s in ms
+        chartQueryTimeout: new Property(30000, "ChartOverview (ms)", PropertyType.RANGE, [500, 200000, 100]),
+        connectionLostAlarm: new Property(true,"Connection Lost alarm",PropertyType.CHECKBOX),//5s in ms
         courseAverageInterval: new Property(0, "Course average", PropertyType.RANGE, [0, 20, 1]), //unit: query interval
         speedAverageInterval: new Property(0, "Speed average", PropertyType.RANGE, [0, 20, 1]), //unit: query interval
         positionAverageInterval: new Property(0, "Position average", PropertyType.RANGE, [0, 20, 1]), //unit: query interval
@@ -291,6 +293,8 @@ let keys={
         boatIconScale: new Property(1,"Boat Icon Scale",PropertyType.RANGE, [0.5,5,0.1]),
         boatDirectionMode: new Property('cog','boat direction',PropertyType.LIST,['cog','hdt','hdm']),
         boatDirectionVector: new Property(true,'add dashed vector for hdt/hdm',PropertyType.CHECKBOX),
+        boatSteadyDetect: new Property(false,'zero SOG detect',PropertyType.CHECKBOX),
+        boatSteadyMax: new Property(0.2,'zero SOG detect below (kn)',PropertyType.RANGE,[0.1,1.0,0.05]),
         measureColor: new Property('red','Measure display color',PropertyType.COLOR),
         windScaleAngle: new Property(50, "red/green Angle Wind", PropertyType.RANGE, [5, 90, 1]),
         anchorWatchDefault: new Property(300, "AnchorWatch(m)", PropertyType.RANGE, [0, 1000, 1]),
@@ -307,6 +311,8 @@ let keys={
         aisClassbShrink: new Property(0.6,"Class B rel size",PropertyType.RANGE, [0.1,2,0.1]),
         aisMinDisplaySpeed: new Property(0.5,"min speed (kn) for AIS target display",PropertyType.RANGE,[0.1,40]),
         aisOnlyShowMoving: new Property(false,"only show moving AIS targets",PropertyType.CHECKBOX),
+        aisListUpdateTime: new Property(5,"update time(s) for AIS list",PropertyType.RANGE,[1,20]),
+        aisReducedList: new Property(false,"reduce details in AIS list",PropertyType.CHECKBOX),
         clickTolerance: new Property(60, "Click Tolerance", PropertyType.RANGE, [10, 120]),
         maxAisErrors: new Property(3), //after that many errors AIS display will be switched off
         minAISspeed: new Property(0.1), //minimal speed in m/s that we consider when computing cpa/tcpa
@@ -314,7 +320,9 @@ let keys={
         aisWarningCpa: new Property(500, "AIS Warning-CPA(m)", PropertyType.RANGE, [100, 5000, 10]), //m for AIS warning (500m)
         aisWarningTpa: new Property(900, "AIS-Warning-TPA(s)", PropertyType.RANGE, [30, 3600, 10]), //in s - max time for tpa warning (15min)
         aisTextSize: new Property(14, "Text Size(px)", PropertyType.RANGE, [8, 24]), //in px
-        aisShowOnlyAB: new Property(true,"Show only class A/B",PropertyType.CHECKBOX),
+        aisShowA: new Property(true,"Show class A",PropertyType.CHECKBOX),
+        aisShowB: new Property(true,"Show class B",PropertyType.CHECKBOX),
+        aisShowOther: new Property(false,"Show other",PropertyType.CHECKBOX),
         aisFirstLabel: new Property('nameOrmmsi','First AIS label',PropertyType.SELECT,['--none--'].concat(AisFormatter.getLabels())),
         aisSecondLabel: new Property('--none--','Second AIS label',PropertyType.SELECT,['--none--'].concat(AisFormatter.getLabels())),
         aisThirdLabel: new Property('--none--','Third AIS label',PropertyType.SELECT,['--none--'].concat(AisFormatter.getLabels())),
@@ -384,9 +392,8 @@ let keys={
         mapScale: new Property(1,"scale the map display",PropertyType.RANGE,[0.3,5]),
         mapFloat: new Property(false,"float map behind buttons",PropertyType.CHECKBOX),
         mapLockMode: new Property('center','lock boat mode',PropertyType.LIST,['center','current','ask']),
-        mapBoatX: new Property(50,"boat position x(%)",PropertyType.RANGE,[1,99]),
-        mapBoatY: new Property(50,"boat position y(%)",PropertyType.RANGE,[1,99]),
         mapSequenceTime: new Property(2000,"change check interval(ms)",PropertyType.RANGE,[500,10000,100]),
+        mapScaleBarText: new Property(true,"Show text on scale bar",PropertyType.CHECKBOX),
         remoteChannelName: new Property('0','remote control channel',PropertyType.LIST,['0','1','2','3','4']),
         remoteChannelRead: new Property(false,'read from remote channel',PropertyType.CHECKBOX),
         remoteChannelWrite: new Property(false,'write to remote channel',PropertyType.CHECKBOX),
@@ -491,7 +498,17 @@ export const KeyHelper = {
         return [keyObject]
 
     },
-
+    getValue:(obj,path,opt_skip)=>{
+        let parts=path.split('.');
+        let current=obj;
+        let rt=undefined;
+        for (let i=opt_skip||0;i<parts.length;i++){
+            if (typeof(current) !== 'object') return;
+            rt=current[parts[i]];
+            current=current[parts[i]];
+        }
+        return rt;
+    },
     /**
      * get a list of keys that can be used for the display in si9mple widgets
      * @return {Array}

@@ -364,22 +364,42 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
     rt=self.server.navdata.getAisData()
     lat=None
     lon=None
+    lat1=None
+    lon1=None
     dist=None
     try:
       lat=float(self.getRequestParam(requestParam, 'lat'))
       lon=float(self.getRequestParam(requestParam, 'lon'))
       dist=float(self.getRequestParam(requestParam, 'distance')) #distance in NM
+      rq=self.getRequestParam(requestParam,'lat1')
+      if rq is not None:
+        lat1=float(rq)
+      rq=self.getRequestParam(requestParam,'lon1')
+      if rq is not None:
+        lon1=float(rq)
     except:
       pass
     frt=[]
     if not lat is None and not lon is None and not dist is None:
       dest=(lat,lon)
       AVNLog.debug("limiting AIS to lat=%f,lon=%f,dist=%f",lat,lon,dist)
+      dest1=None
+      if lat1 is not None and lon1 is not None:
+        dest1=(lat1,lon1)
+        AVNLog.debug("additional AIS range lat=%f,lon=%f,dist=%f",lat1,lon1,dist)
       for entry in rt:
         try:
-          fentry=AVNUtil.convertAIS(entry)
+          fentry=entry
           mdist=AVNUtil.distance((fentry.get('lat'),fentry.get('lon')), dest)
+          inRange=False
           if mdist<=dist:
+            inRange=True
+          else:
+            if dest1 is not None:
+              mdist=AVNUtil.distance((fentry.get('lat'),fentry.get('lon')), dest1)
+              if mdist<=dist:
+                inRange=True
+          if inRange:
             fentry['distance']=mdist*AVNUtil.NM #have this in m
             frt.append(fentry)
           else:
@@ -389,7 +409,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
     else:
       for entry in rt:
         try:
-          frt.append(AVNUtil.convertAIS(entry))
+          frt.append(entry)
         except Exception as e:
           AVNLog.debug("unable to convert ais data: %s",traceback.format_exc())
     return json.dumps(frt,cls=Encoder)
@@ -402,16 +422,12 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
     rtv = self.server.navdata.getDataByPrefix(AVNStore.BASE_KEY_GPS)
     # we depend the status on the mode: no mode - red (i.e. not connected), mode: 1- yellow, mode 2+lat+lon - green
     status = "red"
-    mode = rtv.get('mode')
-    if mode is not None:
-      if int(mode) == 1:
-        status = "yellow"
-      if int(mode) == 2 or int(mode) == 3:
-        if rtv.get("lat") is not None and rtv.get('lon') is not None:
-          status = "green"
-        else:
-          status = "yellow"
-    src = self.server.navdata.getLastSource(AVNStore.BASE_KEY_GPS + ".lat")  # we just want the last source of position
+    if rtv.get("lat") is not None and rtv.get('lon') is not None:
+      status = "green"
+    info = self.server.navdata.getSingleValue(AVNStore.BASE_KEY_GPS + ".lat",includeInfo=True)  # we just want the last source of position
+    src='unknown'
+    if info is not None:
+      src=info.source
     satInview = rtv.get('satInview')
     if satInview is None:
       satInview=0
@@ -425,7 +441,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
     if numAis > 0:
       status = "green"
     src = self.server.navdata.getLastAisSource()
-    statusAis = {"status": status, "source": self.server.navdata.getLastAisSource(), "info": "%d targets" % (numAis)}
+    statusAis = {"status": status, "source": src, "info": "%d targets" % (numAis)}
     rt = {"status": "OK","data":{"nmea": statusNmea, "ais": statusAis}}
     return json.dumps(rt,cls=Encoder)
 
@@ -528,7 +544,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
         AVNLog.debug("found handler %s to handle download %s"%(handler.getConfigName(), type))
         dl=handler.handleApiRequest('download',type,requestParam,handler=self)
         if dl is None:
-          raise Exception("unable to download %s",type)
+          raise Exception("unable to download %s"%type)
         if isinstance(dl, AVNDownload):
           try:
             self.writeFromDownload(dl,
@@ -565,16 +581,18 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
     except Exception as e:
       if self.getRequestParam(requestParam,'noattach') is None:
         #send some empty data
-        data = io.StringIO("error: %s"%str(e))
+        data = io.BytesIO(("error: %s"%str(e)).encode(errors='ignore'))
         data.seek(0)
         self.send_response(200)
         self.send_header("Content-type", "application/octet-stream")
+        self.end_headers()
         try:
           self.copyfile(data, self.wfile)
         finally:
           data.close()
+          self.close_connection=True
       else:
-        self.send_error(404,traceback.format_exc(1))
+        self.send_error(404,message=str(e),explain=traceback.format_exc(1))
       return
     self.send_error(404, "invalid download request %s"%type)
 
@@ -668,6 +686,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
       'uploadImport': True,
       'uploadOverlays': True,
       'uploadTracks': True,
+      'uploadSettings': True,
       'canConnect': True,
       'config': True,
       'debugLevel': True,

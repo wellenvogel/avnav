@@ -103,6 +103,10 @@
     min-width: 8em;
   }
 }
+.mapWidgetContainer.widgetContainer {
+  width: 0;
+  height: 0;
+}
 
 //------------------ dedicated widgets -------------------------
 //widgets have their name from the widget list and maybe some additonial fixed name as classes
@@ -112,6 +116,7 @@
 @timeFont: 1.5em;
 @clockFont: 2.5em;
 @size1: 7em;
+@size15: 9em;
 @size2: 11em;
 .widget{
   .bigWidget(@size){
@@ -177,7 +182,7 @@
     .bigWidget(@size2);
   }
   &.AnchorWatchDistance{
-    .bigWidget(@size1);
+    .bigWidget(@size15);
   }
   &.RteDistance{
     .bigWidget(@size2);
@@ -337,7 +342,7 @@
     }
   }
   &.windWidget{
-    .smallWidget(@size2);
+    .smallWidget(@size15);
     padding-top: 0;
     padding-left: 0;
     padding-right: 0;
@@ -356,7 +361,7 @@
     }
   }
   &.DepthDisplay{
-    .bigWidget(@size1);
+    .bigWidget(@size2);
   }
   &.xteDisplay{
     .smallWidget(@size1)
@@ -464,5 +469,19 @@
     }
   }
 
+  &.signalKPitch .widgetData{
+    font-size: 2em;
+    text-align: center;
+  }
+  &.signalKPitch .widgetData.critical{
+    color:red;
+  }
 
+  &.signalKRoll .widgetData{
+    font-size: 2em;
+    text-align: center;
+  }
+  &.signalKRoll .widgetData.critical{
+    color:red;
+  }
 }

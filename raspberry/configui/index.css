@@ -2,6 +2,7 @@
     max-width: 35em;
     margin-left: auto;
     margin-right: auto;
+    position: relative;
 }
 .configui .info{
     margin-bottom: 1em;
@@ -61,3 +62,23 @@
     overflow: hidden;
     clip: rect(1px, 1px, 1px, 1px);
   }
+
+.configui .dialogBack {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    background-color: #8a8c8ec7;
+    display: flex;
+}
+.configui .hidden{
+    display: none;
+}
+.configui .dialog{
+    max-width: 35em;
+    margin: auto;
+    background-color: white;
+    padding: 2em;
+}

@@ -43,6 +43,22 @@
           <td>go to <a href="addonconfigpage.html">user app configuration</a></td>
         </tr>
         <tr>
+          <td><img src="../viewerimages/icons-new/save.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>SettingsSave<br>
+            (since 20220225)</td>
+          <td>Save the current settings to the server</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_open.svg" alt="" class="inlineimage"></td>
+          <td>SettingsLoad<br>
+            (since 20220225)</td>
+          <td>load a settings file from the server (you will be able to select
+            from a list)</td>
+        </tr>
+        <tr>
+        </tr>
+        <tr>
           <td><img src="../viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
           </td>
           <td>MOB</td>
@@ -64,8 +80,7 @@
         alt="" class="inlineimage">button. A confirmation dialog is displayed
       when leaving the page without saving.</p>
     <p>Most of the settings should be self explanatory. Some more sophisticated
-      ones are described below.
-    </p>
+      ones are described below. </p>
     <table style="width: 100%" border="1">
       <tbody>
         <tr>
@@ -110,7 +125,11 @@
           <td>Define which NMEA value will be used to draw the boat symbol
             orientation.: COG, HDT, HDM. If you configure HDT or HDM and this
             value is not being received it will fall back to COG. The course
-            vector will be determined by COG in any case.</td>
+            vector will be determined by COG in any case.<br>
+            Since 20220421: If HDT or HDM are used a boat symbol will be drawn
+            instead of the default arrow being used for COG.<br>
+            Can be customized by <a href="../hints/usericons.html">user icons</a>
+            .</td>
           <td>COG</td>
         </tr>
         <tr>
@@ -127,6 +146,60 @@
             rotated immediately for course changes below this value. This will
             make the map display more readable.</td>
           <td>15</td>
+        </tr>
+        <tr>
+          <td>Navigation</td>
+          <td>zero SOG detect<br>
+            (20220421)</td>
+          <td>If the boat is rotated based on COG and there is no movement any
+            more (SOG below limit) switch of course vectors and map rotation.
+            Show a circle for the boat.</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>Navigation</td>
+          <td>zero SOG detect below<br>
+            (20220421)</td>
+          <td>Limit for the SOG (in kn) for the zero SOG detect feature.</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>AIS</td>
+          <td>Class B rel size</td>
+          <td>class B AIS targets can be shown at reduced (increased) size</td>
+          <td>0.6</td>
+        </tr>
+        <tr>
+          <td>AIS</td>
+          <td>reduce details in AIS list</td>
+          <td>in the AIS list you can reduce the amount of information that is
+            shown for every target. This can be helpful if you have a laggy
+            display on slow devices.</td>
+          <td>off</td>
+        </tr>
+        <tr>
+          <td>AIS</td>
+          <td>First AIS label<br>
+            Second AIS label<br>
+            Third AIS label</td>
+          <td>select which information should be shown near the AIS target on
+            the map</td>
+          <td>first: name/mmsi</td>
+        </tr>
+        <tr>
+          <td>AIS</td>
+          <td>only show moving AIS targets</td>
+          <td>if selected - do not show AIS targest that do not move</td>
+          <td>off</td>
+        </tr>
+        <tr>
+          <td>AIS</td>
+          <td>min speed (kn) for AIS target display</td>
+          <td>only if "only show moving AIS targets" - the maximum speed of an
+            AIS target to be considered "not moving"</td>
+          <td>0.5kn</td>
         </tr>
         <tr>
           <td>Map</td>
@@ -183,10 +256,21 @@
         <tr>
           <td>Map</td>
           <td>Click Tolerance</td>
-          <td>The "catching area" in pixels for the click on chart objects.
-            A large area would potentially select the wron object, smaller areas
+          <td>The "catching area" in pixels for the click on chart objects. A
+            large area would potentially select the wron object, smaller areas
             could make touch actions difficult.</td>
           <td>60</td>
+        </tr>
+        <tr>
+          <td>Map</td>
+          <td>lock boat mode</td>
+          <td>you can modufy the behavior of the lock button <img src="../viewerimages/icons-new/boat.svg"
+              alt="" class="inlineimage"> on the navigation page. You can
+            determine at which screen position the boat will be locked.<br>
+            center: center of the screen<br>
+            current: current position of the boat on the screen<br>
+            ask: show a select dialog every time</td>
+          <td>center</td>
         </tr>
         <tr>
           <td>Route</td>

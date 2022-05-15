@@ -33,7 +33,6 @@
 	 The data is feed through the gpsd feeder
 	 -->
 <AVNUsbSerialReader maxDevices="5" allowUnknown="true" baud="38400" minbaud="4800">
-	<UsbDevice usbid="1-1.2.1:1.0" baud="38400" minbaud="4800"/>
 	<!-- a serial output device at one particular USB port
              with this filter it will output all NMEA data but no AIS data
              you can further restrict this by using e.g. $RMC for NMEA RMC sentences 
@@ -41,13 +40,13 @@
 	     use a readerFilter to also apply a filter at the reader-->
 	<!-- <UsbDevice usbid="3-4.3.1:1.0" baud="38400" type="writer" xonxoff="1" timeout="10" filter="$RMC" combined="True" /> -->
 	<!-- more readable form ...-->
-	<UsbDevice usbid="3-4.3.1:1.0" baud="38400" type="combined" xonxoff="1" timeout="10" filter="$RMC" />
+	<!-- <UsbDevice usbid="3-4.3.1:1.0" baud="38400" type="combined" xonxoff="1" timeout="10" filter="$RMC" /> -->
 	<!-- a device to be ignored - e.g. for testing -->
-	<UsbDevice usbid="3-10.1:1.0" baud="38400" type="ignore" />
+	<!-- <UsbDevice usbid="3-10.1:1.0" baud="38400" type="ignore" /> -->
 	<!-- a reader with autobaud and filter - it will filter out any RMC records and all AIS stuff-->
 	<!--<UsbDevice usbid="3-4.3.2:1.0" baud="38400" minbaud="4800" type="reader" filter="^$RMC,^!"/>-->
 	<!-- a pure writer that outputs RMB -->
-	<UsbDevice usbid="3-10.3.1:1.0" baud="4800" minbaud="4800" type="writer" filter="$RMB"/>
+	<!-- <UsbDevice usbid="3-10.3.1:1.0" baud="4800" minbaud="4800" type="writer" filter="$RMB"/> -->
 	<!--<UsbDevice usbid="3-4.3.2:1.0" baud="38400" minbaud="4800" type="ignore" filter=""/>-->
 </AVNUsbSerialReader>
 
@@ -62,7 +61,6 @@
 <AVNTrackWriter interval="10" distance="100" />
 <AVNHttpServer navurl="/viewer/avnav_navi.php" httpPort="8080" upzoom="0"
                chartbase="maps" empty="nonexistent">
-<!-- chartbaseurl="http://$host/Karten/anav"> -->
 	<Directory urlpath="maps" path="~/AvNavCharts/out"></Directory>
 	<MimeType extension=".avt" type="text/plain"></MimeType>
 	<MimeType extension=".log" type="text/plain"></MimeType>
@@ -74,14 +72,10 @@
 <!--<AVNNmeaLogger filter="$" interval="0"></AVNNmeaLogger>-->
 <AVNNmeaLogger></AVNNmeaLogger>
 <AVNImporter ></AVNImporter>
-<AVNWpaHandler></AVNWpaHandler>
 <AVNCommandHandler>
 	<Command name="sound" command="mpg123 -q" repeat="1"/>
 </AVNCommandHandler>
 <AVNPluginHandler>
-<!-- ##SIGNALK 
-        <builtin-signalk enabled="true"/>
- ##SIGNALK -->
 <!-- ##CANBOAT 
 	<builtin-canboat enabled="true" allowKeyOverwrite="true" autoSendRMC="30" sourceName="canboatgen"/>
  ##CANBOAT -->

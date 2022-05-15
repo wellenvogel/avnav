@@ -3,7 +3,7 @@
 
  */
 
-import compare from './shallowcompare';
+import compare from './compare';
 /**
  *
  * @constructor
@@ -74,40 +74,10 @@ Helper.parseXml=function(text){
     return xmlDoc;
 };
 
-/**
- * filter out some tree of objects
- * @param source
- * @param filterFunction will be called with the current leaf from source and a
- *        path being constructed of hierarchies concat by .
- * @param opt_basepath to be prepended to the path
- * @returns {undefined}
- */
-Helper.filterObjectTree=function(source,filterFunction,opt_basepath){
-    let rt=undefined;
-    let path=opt_basepath;
-    for (let k in source) {
-        let currentPath=path!==undefined?path+"."+k:k;
-        if (typeof(source[k]) === 'object') {
-            let sub=Helper.filterObjectTree(source[k],filterFunction,currentPath);
-            if (sub !== undefined) {
-                if (rt === undefined) rt={};
-                rt[k]=sub;
-            }
-        }
-        else {
-            if (filterFunction(source[k], currentPath)) {
-                if (rt === undefined) rt = {};
-                rt[k] = source[k];
-            }
-        }
-    }
-    return rt;
-};
 
-Helper.getExt=(name,opt_stripDot)=>{
+Helper.getExt=(name)=>{
     if (!name) return;
     let rt=name.replace(/.*\./,'').toLocaleLowerCase();
-    if (opt_stripDot) return rt.replace(/^\./,'')
     return rt;
 };
 
@@ -119,7 +89,7 @@ Helper.filteredAssign=function(){
         let o=args[k];
         if (! o) continue;
         for (let ok in filter){
-            if (o[ok] !== undefined) rt[ok]=o[ok];
+            if (ok in o ) rt[ok]=o[ok];
         }
     }
     return rt;
@@ -140,6 +110,14 @@ Helper.templateReplace=function(tstring,replacements){
     }
     return tstring;
 };
+
+Helper.keysToStr=(dict)=>{
+    let rt={};
+    for (let k in dict){
+        rt[k]=k+"";
+    }
+    return rt;
+}
 
 
 

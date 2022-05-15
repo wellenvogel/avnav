@@ -167,13 +167,14 @@ class AVNApi(object):
     """
     raise NotImplemented()
 
-  def registerUserApp(self,url,iconFile,title=None):
+  def registerUserApp(self,url,iconFile,title=None,preventConnectionLost=False):
     """
     register a user app to be displayed
     this should be called only early - i.e. at the beginning of the run method
     @param url: the url to be used to connect, $HOST will be replaced by the current host
     @param iconFile: a file name for the icon file, relative pathes to this plugin dir
     @param title: if set - show a title bar with this title
+    @param preventConnectionLost: if True - disable any connection lost alarm while displaying
     @return:
     """
     raise NotImplemented()
@@ -347,6 +348,15 @@ class AVNApi(object):
     @param command: K or one of Cx - see viewer/util/remotechannel.js:COMMANDS
     @param param: the command parameter, for K: the key code
     @param channel: the channel id (0...4)
+    @return:
+    '''
+    raise NotImplemented()
+
+  def registerSettingsFile(self,name,fileName):
+    '''
+    register a settings file
+    @param name: the name as provided to the user
+    @param fileName: the file name (relative to the plugin dir)
     @return:
     '''
     raise NotImplemented()

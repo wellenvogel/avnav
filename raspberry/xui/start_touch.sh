@@ -21,6 +21,10 @@ if [ "$1" = "prepare" ] ; then
   chmod g+w /dev/tty
   #TODO: postinstall?
   usermod -a -G tty pi
+  cache=/home/pi/.cache
+  if [ -d $cache ] ; then
+    chown -R pi $cache
+  fi
   update-menus
   exit 0
 fi
@@ -31,4 +35,8 @@ if [ "$AVNAV_STARTX" != "yes" ] ; then
     sleep 5
   done
 fi
-exec startx
+if [ "$AVNAV_HIDE_CURSOR" = yes ] ; then
+  exec startx -- -nocursor
+else
+  exec startx
+fi

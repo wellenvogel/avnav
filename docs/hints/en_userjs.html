@@ -315,10 +315,10 @@
     <div class="code">const formatTemperature=function(data,opt_unit){
     try{
         if (! opt_unit || opt_unit.toLowerCase().match(/^k/)){
-            return formatDecimal(data,3,1);
+            return avnav.api.formatter.formatDecimal(data,3,1);
         }
         if (opt_unit.toLowerCase().match(/^c/)){
-            return formatDecimal(parseFloat(data)-273.15,3,1)
+            return avnav.api.formatter.formatDecimal(parseFloat(data)-273.15,3,1)
         }
     }catch(e){
         return "-----"

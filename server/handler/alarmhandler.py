@@ -26,6 +26,9 @@
 ###############################################################################
 import time
 
+from avndirectories import AVNUserHandler
+from commandhandler import AVNCommandHandler
+
 hasGpio=False
 try:
   import RPi.GPIO as GPIO
@@ -39,29 +42,102 @@ from avnav_worker import *
 import avnav_handlerList
 
 class AlarmConfig:
-  def __init__(self,name="dummy",command="sound", parameter=None, repeat="1"):
+  C_INFO='info'
+  C_CRITICAL='critical'
+  @classmethod
+  def fromDict(cls,dct):
+    rt=AlarmConfig()
+    for k in list(rt.__dict__.keys()):
+      setattr(rt,k,dct.get(k))
+    return rt
+  def __init__(self,name=None,command="sound", parameter=None, repeat="1",category=None,sound=None,autoclean=False):
     self.name=name
     self.command=command
     self.parameter=parameter
     self.repeat=int(repeat)
+    self.category=category
+    self.sound=sound
+    self.autoclean=autoclean
   def toDict(self):
-    return self.__dict__
+    return {k:v for k,v in self.__dict__.items() if v is not None}
 
+
+class RunningAlarm:
+  def __init__(self,config,commandId=None,running=True,info=None):
+    self.config=config
+    self.commandId=commandId
+    self.running=running
+    self.info=info
+    self.commandFinished=False
 
 class AVNAlarmHandler(AVNWorker):
   CHANGE_KEY='alarm' #key for change counts
+  P_INFOSOUND=WorkerParameter('infoSound',type=WorkerParameter.T_SELECT,default='waypointAlarm.mp3',
+                              description='sound to be played for info Alarms (only if no explicit config)',
+                              rangeOrList=[])
+  P_CRITICALSOUND=WorkerParameter('criticalSound',type=WorkerParameter.T_SELECT,default='anchorAlarm.mp3',
+                              description='sound to be played for critical Alarms (only if no explicit config)',
+                              rangeOrList=[])
+  P_STOPALARMPIN=WorkerParameter('stopAlarmPin',type=WorkerParameter.T_NUMBER,
+                                 description='a gpio pin (board numbering!) to switch off alarms when it goes low',
+                                 mandatory=False)
+  P_DEFAULTCOMMAND=WorkerParameter('defaultCommand',type=WorkerParameter.T_SELECT,
+                                   default='sound',
+                                   description='a command that is configured at AVNCommandhandler',
+                                   rangeOrList=[])
+  P_DEFAULTPARAM=WorkerParameter('defaultParameter',default='',editable=False)
+
+  @classmethod
+  def getSoundDirs(cls):
+    soundDirs=[]
+    instance=cls.findHandlerByName(AVNUserHandler.getConfigName())
+    if instance:
+      base=instance.baseDir
+      if os.path.isdir(base):
+        soundDirs.append(base)
+    instance=cls.findHandlerByName(cls.getConfigName())
+    if instance:
+      base=instance.getStringParam(AVNHandlerManager.BASEPARAM.BASEDIR)
+      if base:
+        baseSounds=os.path.join(base,'..','sounds')
+        if os.path.isdir(baseSounds):
+          soundDirs.append(baseSounds)
+    return soundDirs
+
+  @classmethod
+  def listAlarmSounds(cls):
+    sounds=set()
+    soundDirs=cls.getSoundDirs()
+    for dir in soundDirs:
+      for f in os.listdir(dir):
+            if f.endswith('.mp3') or f.endswith('.MP3'):
+              sounds.add(f)
+    return list(sounds)
+
+  @classmethod
+  def listCommands(cls):
+    cmdhandler=cls.findHandlerByName(AVNCommandHandler.getConfigName())
+    if cmdhandler:
+      return cmdhandler.listCommandNames()
+    return ['sound']
+
+
   DEFAULT_ALARMS=[
-    		AlarmConfig(name="waypoint",command="sound",parameter="$BASEDIR/../sounds/waypointAlarm.mp3",repeat="1"),
-  		  AlarmConfig(name="ais",command="sound",parameter="$BASEDIR/../sounds/aisAlarm.mp3",repeat="1"),
-  		  AlarmConfig("anchor",command="sound",parameter="$BASEDIR/../sounds/anchorAlarm.mp3",repeat="20000"),
-  		  AlarmConfig(name="gps",command="sound", parameter="$BASEDIR/../sounds/anchorAlarm.mp3", repeat="20000"),
-  		  AlarmConfig(name="mob", command="sound", parameter="$BASEDIR/../sounds/anchorAlarm.mp3", repeat="2")
+    		AlarmConfig(name="waypoint",category=AlarmConfig.C_INFO,repeat="1"),
+  		  AlarmConfig("anchor",category=AlarmConfig.C_CRITICAL,repeat="20000"),
+  		  AlarmConfig(name="gps",category=AlarmConfig.C_CRITICAL, repeat="20000"),
+  		  AlarmConfig(name="mob", category=AlarmConfig.C_CRITICAL, repeat="2"),
+        AlarmConfig(name="connectionLost", category=AlarmConfig.C_INFO) #client only...
   ]
   """a handler for alarms"""
   def __init__(self,param):
     AVNWorker.__init__(self, param)
     self.runningAlarms={}
+    self.__runningAlarmsLock=threading.Lock()
     self.commandHandler=None
+    self.handlers=[]
+    self.__handlerLock=threading.Lock()
+    self.__lastStartedCommand=None # type AlarmConfig
     currentAlarms=self.param.get('Alarm')
     if currentAlarms is None:
       currentAlarms=[]
@@ -74,22 +150,30 @@ class AVNAlarmHandler(AVNWorker):
   @classmethod
   def getConfigName(cls):
     return "AVNAlarmHandler"
+
+  @classmethod
+  def getConfigParamCombined(cls, child=None):
+    return cls.getConfigParam(child)
+
   @classmethod
   def getConfigParam(cls, child=None):
     if child is None:
-      return {
-        'defaultCommand':'sound',
-        'defaultParameter':'',
-        'stopAlarmPin':'' #when going low - stop alarm
-      }
+      rt=[cls.P_INFOSOUND.copy(rangeOrList=cls.listAlarmSounds),
+          cls.P_CRITICALSOUND.copy(rangeOrList=cls.listAlarmSounds),
+          cls.P_DEFAULTCOMMAND.copy(rangeOrList=cls.listCommands),
+          cls.P_DEFAULTPARAM]
+      if hasGpio:
+        rt.append(cls.P_STOPALARMPIN)
+      return rt
     if child == "Alarm":
       return {
         'name': '',
         'command': '',
+        'category':'',
         'autoclean':'false',
+        'sound':'',
         'repeat':'1',
-        'parameter':'',
-        'duration':'' #duration in s - last that long even if the command finishes earlier
+        'parameter':''
       }
   @classmethod
   def preventMultiInstance(cls):
@@ -99,17 +183,20 @@ class AVNAlarmHandler(AVNWorker):
   def autoInstantiate(cls):
     return True
 
+  @classmethod
+  def canEdit(cls):
+    return True
 
   def _gpioCmd(self,channel):
     self.stopAll()
   def run(self):
-    self.commandHandler=self.findHandlerByName("AVNCommandHandler")
+    self.commandHandler=self.findHandlerByName(AVNCommandHandler.getConfigName())
     if self.commandHandler is None:
       self.setInfo('main',"no command handler found",WorkerStatus.ERROR)
       return
     self.setInfo('main',"running",WorkerStatus.NMEA)
-    gpioPin=self.getIntParam('stopAlarmPin',False)
-    if gpioPin != 0:
+    gpioPin=self.P_STOPALARMPIN.fromDict(self.param)
+    if gpioPin is not None and gpioPin != 0:
       if not hasGpio:
         AVNLog.error("gpio pin for stopAlarm defined but no GPIO support found")
       else:
@@ -118,24 +205,18 @@ class AVNAlarmHandler(AVNWorker):
         GPIO.add_event_detect(gpioPin,GPIO.FALLING,callback=self._gpioCmd,bouncetime=100)
         AVNLog.info("set gpio pin %d as reset alarm",gpioPin)
     while not self.shouldStop():
-      time.sleep(0.5)
+      self.wait(0.5)
       deletes=[]
-      for k in list(self.runningAlarms.keys()):
-        id = self.runningAlarms.get(k)
-        if not self.commandHandler.isCommandRunning(id):
-          info=self.findAlarm(k,True)
-          if info is not None and info.get("autoclean"):
-            deletes.append(k)
-      for k in deletes:
-        try:
-          del self.runningAlarms[k]
-        except:
-          pass
-        self.setInfo(k, "alarm inactive \"%s\" " % k,
-                     WorkerStatus.INACTIVE)
+      self.handleCommand()
+
 
   def getRunningAlarms(self):
-    return self.runningAlarms
+    with self.__runningAlarmsLock:
+      return self.runningAlarms.copy()
+
+  def getRunningAlarmNames(self):
+    alarms=self.getRunningAlarms()
+    return list(alarms.keys())
 
   @classmethod
   def getBoolean(cls,dict,name):
@@ -152,104 +233,246 @@ class AVNAlarmHandler(AVNWorker):
       return int(rt or 0)
     except:
       return 0
-  def findAlarm(self,name,useDefault=False):
+
+  def expandAlarmConfig(self,config:AlarmConfig):
+    if config is None:
+      return None
+    if config.name is None:
+      return None
+    ALL_CAT=[AlarmConfig.C_INFO,AlarmConfig.C_CRITICAL]
+    if config.category not in ALL_CAT:
+      config.category=None
+    if config.parameter == '':
+      config.parameter=None
+    if config.parameter is not None:
+      config.parameter=AVNUtil.replaceParam(config.parameter, AVNHandlerManager.filterBaseParam(self.getParam()))
+    if config.command is None or config.command == '':
+      config.command=self.P_DEFAULTCOMMAND.fromDict(self.param,rangeOrListCheck=False)
+    if config.sound is None or config.sound == '':
+      if config.category in ALL_CAT:
+        config.sound=self.P_INFOSOUND.fromDict(self.param,rangeOrListCheck=False) if config.category==AlarmConfig.C_INFO \
+          else self.P_CRITICALSOUND.fromDict(self.param,rangeOrListCheck=False)
+      else:
+        config.sound=config.parameter
+    if config.parameter is None and config.sound is not None:
+      config.parameter=self.getSoundFile(config.sound)
+    if config.category is None:
+      for da in self.DEFAULT_ALARMS:
+        if da.name == config.name:
+          config.category=da.category
+          break
+    return config
+
+  def findAlarm(self,name,defaultCategory=None):
     definedAlarms=self.param.get('Alarm')
-    rt=None
     if definedAlarms is not None:
       for cmd in definedAlarms:
         if cmd.get('name') is not None and cmd.get('name') == name:
-          param=cmd.get('parameter')
-          if param=="":
-            param=None
-          if param is not None:
-            param=AVNUtil.replaceParam(param, AVNHandlerManager.filterBaseParam(self.getParam()))
-          rt= {
-            'command':cmd.get('command'),
-            'autoclean':self.getBoolean(cmd,'autoclean'),
-            'repeat':self.getInt(cmd,'repeat'),
-            'parameter':param
-          }
-          break
-    if rt is None and useDefault:
-      rt={
-        'command':self.getStringParam('defaultCommand'),
-        'parameter':self.getStringParam('defaultParameter'),
-        'autoclean':True,
-        'repeat':1}
-    return rt
+          return self.expandAlarmConfig(AlarmConfig.fromDict(cmd))
+    return self.expandAlarmConfig(AlarmConfig(category=defaultCategory,name=name))
 
-  def _startAlarmCmd(self,alarmdef):
-    return self.commandHandler.startCommand(alarmdef['command'],alarmdef.get('repeat'),alarmdef.get('parameter'))
+  def _startAlarmCmd(self,alarmdef:AlarmConfig):
+    if alarmdef.command is None:
+      return False
+    return self.commandHandler.startCommand(
+      alarmdef.command,
+      alarmdef.repeat,
+      alarmdef.parameter)
 
-  def startAlarm(self,name,useDefault=False):
+
+  def callHandlers(self,alarm: RunningAlarm,on:bool=True,caller=None):
+    handlers=[]
+    with self.__handlerLock:
+      handlers=self.handlers.copy()
+    for h in handlers:
+      if h == caller:
+        continue
+      try:
+        h.handleAlarm(alarm.config.name,on,alarm.info)
+      except Exception as e:
+        AVNLog.debug("alarm handler error: %s",str(e))
+
+  def isMoreImportant(self,entry1:RunningAlarm,entry2:RunningAlarm):
+    if entry1 is None:
+      return True
+    if entry2 is None:
+      return False
+    if entry1.config.category is None:
+      return entry2.config.category is not None
+    if entry1.config.category == AlarmConfig.C_INFO:
+      return entry2.config.category == AlarmConfig.C_CRITICAL
+    return False
+
+  def setInfoFromRunning(self,running:RunningAlarm,active,error=None):
+    if error is not None:
+      self.setInfo(running.config.name,"error %s"%str(error),WorkerStatus.ERROR)
+      return
+    if active:
+      self.setInfo(running.config.name,"command %s running"%running.config.command,WorkerStatus.NMEA)
+    else:
+      self.setInfo(running.config.name,"active",WorkerStatus.NMEA)
+
+  def deleteAlarmInfo(self,name):
+    for da in self.DEFAULT_ALARMS:
+      if da.name == name:
+        self.setInfo(name,"inactive",WorkerStatus.INACTIVE)
+        return
+    self.deleteInfo(name)
+
+
+  def handleCommand(self):
+    pending=None # type AlarmConfig
+    mustUpdate=False
+    with self.__runningAlarmsLock:
+      if self.__lastStartedCommand is not None:
+        if not self.commandHandler.isCommandRunning(self.__lastStartedCommand.commandId):
+          if self.__lastStartedCommand.config.autoclean:
+            mustUpdate=True
+            try:
+              del self.runningAlarms[self.__lastStartedCommand.config.name]
+            except:
+              pass
+            self.deleteAlarmInfo(self.__lastStartedCommand.config.name)
+          else:
+            self.__lastStartedCommand.commandFinished=True
+          self.setInfoFromRunning(self.__lastStartedCommand,False)
+          self.__lastStartedCommand=None
+        else:
+          if self.runningAlarms.get(self.__lastStartedCommand.config.name) is None:
+            self.commandHandler.stopCommand(self.__lastStartedCommand.commandId)
+            self.setInfoFromRunning(self.__lastStartedCommand,False)
+            self.__lastStartedCommand=None
+      if mustUpdate:
+        self.navdata.updateChangeCounter(self.CHANGE_KEY)
+      for k,v in self.runningAlarms.items():
+        if v.commandFinished or v.config.command is None:
+          continue
+        if self.isMoreImportant(pending,v):
+          pending=v
+    if pending is None:
+      return None
+    if self.__lastStartedCommand is not None:
+      if not self.isMoreImportant(self.__lastStartedCommand,pending):
+        return False
+      AVNLog.debug("stopping running alarm command %s",self.__lastStartedCommand.config.name)
+      self.commandHandler.stopCommand(self.__lastStartedCommand.commandId)
+      self.setInfoFromRunning(self.__lastStartedCommand,False)
+      self.__lastStartedCommand=None
+    AVNLog.info("start alarm command %s for %s",pending.config.command,pending.config.name)
+    self.__lastStartedCommand=pending
+    alarmid=self._startAlarmCmd(pending.config)
+    if alarmid is not None:
+      pending.commandId=alarmid
+    else:
+      pending.commandFinished=True
+    if alarmid is not None:
+      self.setInfoFromRunning(pending,True)
+    else:
+      self.__lastStartedCommand=None
+      self.setInfoFromRunning(pending,False,error="unable to start %s"%pending.config.command)
+    return True
+
+  def startAlarm(self,name,defaultCategory=None,caller=None,info=None):
     """start a named alarm"""
-    cmd=self.findAlarm(name,useDefault)
+    cmd=self.findAlarm(name,defaultCategory)
     if cmd is None:
       AVNLog.error("no alarm \"%s\" configured", name)
       self.setInfo(name, "no alarm \"%s\" configured"%name, WorkerStatus.ERROR)
       return False
-    if self.runningAlarms.get(name) is not None:
-      return True
-    alarmid=self._startAlarmCmd(cmd)
-    if alarmid is not None:
-      info=cmd['command']
-      if cmd.get('parameter') is not None:
-        info+=" "+cmd.get('parameter')
-      self.setInfo(name, "activated %s" % info, WorkerStatus.NMEA)
-    else:
-      self.setInfo(name, "unable to start alarm command \"%s\":\"%s\" " % (name,cmd['command']), WorkerStatus.INACTIVE)
-    if alarmid is None:
-      alarmid=-1
-    self.runningAlarms[name] = alarmid
+    running=RunningAlarm(cmd,info=info)
+    with self.__runningAlarmsLock:
+      if self.runningAlarms.get(name) is not None:
+        return True
+      self.runningAlarms[name]=running
+    self.callHandlers(running,True,caller)
     self.navdata.updateChangeCounter(self.CHANGE_KEY)
+    self.wakeUp()
     return True
 
-  def stopAll(self):
+  def stopAll(self,caller=None,ownOnly=False):
     '''stop all alarms'''
     AVNLog.info("stopAllAlarms")
     alist=self.getRunningAlarms()
     if list is None:
       return
     for name in list(alist.keys()):
-      self.stopAlarm(name)
-  def stopAlarm(self, name):
-    '''stop a named command'''
-    cmd = self.findAlarm(name,True)
-    if cmd is None:
-      AVNLog.error("no alarm \"%s\" configured", name)
-      return False
-    alarmid=self.runningAlarms.get(name)
-    try:
-      del self.runningAlarms[name]
-    except:
-      pass
-    if alarmid is not None:
+      self.stopAlarm(name,caller=caller,ownOnly=ownOnly)
+  def stopAlarm(self, name,caller=None,ownOnly=False):
+    running=None
+    with self.__runningAlarmsLock:
+      running=self.runningAlarms.get(name)
+      if running and ownOnly and running.info is not None:
+        return
+      try:
+        del self.runningAlarms[name]
+      except:
+        pass
+    if running is not None:
+      self.callHandlers(running,False,caller)
       self.navdata.updateChangeCounter(self.CHANGE_KEY)
-    if alarmid is not None and alarmid >=0:
-      self.commandHandler.stopCommand(alarmid)
-    self.setInfo(name, "stopped", WorkerStatus.INACTIVE)
+      self.deleteAlarmInfo(running.config.name)
+      self.wakeUp()
     return True
 
-  def isAlarmActive(self,name):
+  def isAlarmActive(self,name,ownOnly=False):
     '''return True if the named alarm is running'''
-    al=self.runningAlarms.get(name)
-    if al is None:
-      return False
-    return True
-  def getStatusProperties(self):
-    commands=self.param.get('Alarm')
+    with self.__runningAlarmsLock:
+      al=self.runningAlarms.get(name)
+      if al is None:
+        return False
+      if ownOnly and al.info is not None:
+        return False
+      return True
+
+  def getAllAlarms(self):
     rt={}
+    running=self.getRunningAlarms()
+    for k,v in running.items():
+      rt[k]=v
+    commands=self.param.get('Alarm')
     if commands is not None:
       for cmd in commands:
-        n=cmd.get('name')
-        if n is None:
-          continue
-        rt[n]=cmd.get('command')
-    for k in list(self.runningAlarms.keys()):
-      if rt.get(k) is None:
-        info=self.findAlarm(k,True)
-        rt[k]=info.get('command')
+        config=self.expandAlarmConfig(AlarmConfig.fromDict(cmd))
+        if config is not None and not config.name in rt:
+          rt[config.name]=RunningAlarm(config,running=False)
     return rt
+
+  def getStatusProperties(self):
+    all=self.getAllAlarms()
+    rt={}
+    for k,v in all.items():
+      rt[k]=v.config.command
+    return rt
+
+  def registerHandler(self,handler):
+    with self.__handlerLock:
+      for h in self.handlers:
+        if h == handler:
+          return False
+      self.handlers.append(handler)
+      return True
+
+  def deregisterHandler(self,handler):
+    with self.__handlerLock:
+      newHandlers=[]
+      for h in self.handlers:
+        if h != handler:
+          newHandlers.append(h)
+      self.handlers=newHandlers
+
+  def getSoundFile(self,name):
+    if name is None:
+      return None
+    if os.path.exists(name):
+      #legacy support with fully qualified file name
+      return name
+    dirs=self.getSoundDirs()
+    name=AVNUtil.clean_filename(name)
+    for d in dirs:
+      fn=os.path.join(d,name)
+      if os.path.exists(fn):
+        return fn
+
 
   def getHandledCommands(self):
     return {"api":"alarm","download":"alarm"}
@@ -268,16 +491,20 @@ class AVNAlarmHandler(AVNWorker):
     media=name {command:thecommand,repeat:therepeat,url:mediaUrl}
     '''
     if type == "download":
-      name = AVNUtil.getHttpRequestParam(requestparam, "name")
+      name = AVNUtil.getHttpRequestParam(requestparam, "name",mantadory=True)
       AVNLog.debug("download alarm %s",name)
-      if name is None:
-        AVNLog.error("missing parameter name for alarm download")
-        return None
-      alarmInfo = self.findAlarm(name)
+      running=None
+      alarmInfo=None
+      with self.__runningAlarmsLock:
+        running=self.runningAlarms.get(name)
+      if running:
+        alarmInfo=running.config
+      if alarmInfo is None:
+        alarmInfo = self.findAlarm(name)
       if alarmInfo is None:
         AVNLog.error("no alarm %s defined",name)
         return None
-      file=alarmInfo.get('parameter')
+      file=self.getSoundFile(alarmInfo.sound)
       if file is None:
         return None
       fh=open(file,"rb")
@@ -294,22 +521,18 @@ class AVNAlarmHandler(AVNWorker):
     if status is not None:
       status=status.split(',')
       rt={}
-      definedCommands = self.getStatusProperties()
-      if definedCommands is None:
+      all=self.getAllAlarms()
+      if all is None:
         return rt
-      for name in list(definedCommands.keys()):
-        if name is None:
-          continue
+      for name,item in all.items():
         if not name in status and not 'all' in status :
           continue
-        running=self.runningAlarms.get(name)
-        config=self.findAlarm(name,True)
-        rt[name]={'alarm':name,
-                  'running':True if running is not None else False,
-                  'repeat': config.get('repeat')
+        rt[name]={'alarm':item.config.name,
+                  'running':item.running,
+                  'repeat': item.config.repeat,
+                  'category':item.config.category
                   }
       return {"status":"OK","data":rt}
-    rt={'status':'ok'}
     mode="start"
     command=AVNUtil.getHttpRequestParam(requestparam,"start")
     if command is None:
@@ -320,13 +543,12 @@ class AVNAlarmHandler(AVNWorker):
         return rt
     rt={'status':'ok'}
     if mode == "start":
-      if not self.startAlarm(command,True):
+      category=AVNUtil.getHttpRequestParam(requestparam,'defaultCategory')
+      if not self.startAlarm(command,defaultCategory=category):
         rt['status']='error'
-        rt['info']=self.info.get(command)
       return rt
     if not self.stopAlarm(command):
       rt['status'] = 'error'
-      rt['info'] = self.info.get(command)
     return rt
 
 

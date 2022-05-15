@@ -24,7 +24,7 @@
  */
 import React from 'react';
 import PropTypes from 'prop-types';
-import {stateHelper} from "./OverlayDialog";
+import {stateHelper} from "../util/GuiHelpers";
 import Button from "./Button";
 import globalStore from "../util/globalstore";
 import keys from "../util/keys";

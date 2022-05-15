@@ -129,23 +129,26 @@ class LayoutHandler{
      * loads a layout but still does not activate it
      * @param name
      */
-    loadLayout(name){
+    loadLayout(name, opt_checkOnly){
         let self=this;
-        this.layout=undefined;
-        this.name=name;
-        this._setEditing(false);
+        if (! opt_checkOnly) {
+            this.layout=undefined;
+            this.name=name;
+            this._setEditing(false);
+        }
         return new Promise((resolve,reject)=> {
             if (this.storeLocally){
                 if (!this.temporaryLayouts[name]) {
                     reject("layout "+name+" not found");
                 }
                 else {
-                    this.layout=this.temporaryLayouts[name];
-                    resolve(this.temporaryLayouts[name]);
+                    let layout=this.temporaryLayouts[name];
+                    if (! opt_checkOnly) this.layout=layout;
+                    resolve(layout);
                 }
                 return;
             }
-            Requests.getJson("?request=download&type=layout&name=" +
+            Requests.getJson("?request=download&noattach=true&type=layout&name=" +
                 encodeURIComponent(name), {checkOk: false}).then(
                 (json)=> {
                     let error=self.checkLayout(json);
@@ -153,7 +156,7 @@ class LayoutHandler{
                         reject("layout error: "+error);
                         return;
                     }
-                    this.layout = json;
+                    if (! opt_checkOnly) this.layout = json;
                     resolve(json);
                 },
                 (error)=> {
@@ -164,11 +167,15 @@ class LayoutHandler{
                         if (raw) {
                             let layoutData=JSON.parse(raw);
                             if (layoutData.name == name && layoutData.data){
-                                this.layout=layoutData.data;
-                                if (name.match(/^user\./)) {
-                                    self.uploadLayout(name.replace(/^user\./,''), this.layout)
-                                        .then(()=>{})
-                                        .catch(()=>{});
+                                if (! opt_checkOnly) {
+                                    this.layout = layoutData.data;
+                                    if (name.match(/^user\./)) {
+                                        self.uploadLayout(name.replace(/^user\./, ''), this.layout)
+                                            .then(() => {
+                                            })
+                                            .catch(() => {
+                                            });
+                                    }
                                 }
                                 resolve(layoutData.data);
                                 return;
@@ -185,10 +192,10 @@ class LayoutHandler{
     }
 
     nameToBaseName(name){
-        return name.replace(/^user\./,'').replace(/^system\./,'').replace(/\.json$/,'').replace(/.*\./,'');
+        return name.replace(/^user\./,'').replace(/^system\./,'').replace(/^plugin\./,'').replace(/\.json$/,'').replace(/.*\./,'');
     }
 
-    uploadLayout(name,layout,isString){
+    uploadLayout(name,layout,opt_overwrite){
         if (! name || ! layout){
             return new Promise((resolve,reject)=>{
                reject("missing parameter name or layout");
@@ -199,7 +206,7 @@ class LayoutHandler{
         name=this.nameToBaseName(name);
         return new Promise((resolve, reject)=> {
             try {
-                if (isString) {
+                if (typeof(layout) === 'string') {
                     layout = JSON.parse(layout);
                 }
                 let error = this.checkLayout(layout);
@@ -223,7 +230,12 @@ class LayoutHandler{
                 resolve({status:'OK'});
                 return;
             }
-            Requests.postPlain("?request=upload&type=layout&name=" + encodeURIComponent(name), JSON.stringify(layout,undefined,2)).
+            Requests.postPlain({
+                request:'upload',
+                type:'layout',
+                name: layoutName,
+                overwrite: !! opt_overwrite
+            }, JSON.stringify(layout,undefined,2)).
                 then((result)=>{
                     if (isActive){
                         this.name=layoutName;
@@ -259,21 +271,6 @@ class LayoutHandler{
         return;
     }
 
-    /**
-     * get the properties from the layout
-     * @returns a flattened object with the properties
-     */
-    getLayoutProperties(){
-        if (! this.layout || ! this.layout.properties) return {};
-        let rt=[];
-        Helper.filterObjectTree(this.layout.properties,(item,path)=>{
-            let description=this.propertyDescriptions[path];
-            if(description !== undefined && description.canChange){
-                rt[path]=item;
-            }
-        },KeyHelper.keyNodeToString(keys.properties));
-        return rt;
-    }
 
     getLayoutWidgets(){
         if (! this.layout || ! this.layout.widgets) return {};
@@ -297,7 +294,7 @@ class LayoutHandler{
         globalStore.storeData(keys.properties.layoutName,this.name);
         this.incrementSequence();
         if (upload){
-            this.uploadLayout(this.name,this.layout).then(()=>{}).catch((error)=>{
+            this.uploadLayout(this.name,this.layout,true).then(()=>{}).catch((error)=>{
                base.log("unable to upload layout "+error);
             });
         }

@@ -44,6 +44,19 @@
               Apps</a></td>
         </tr>
         <tr>
+          <td><img src="../viewerimages/icons-new/save.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>SettingsSave<br>
+            (ab 20220225)</td>
+          <td>Speichern der aktuellen Einstellungen auf dem Server</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/ic_open.svg" alt="" class="inlineimage"></td>
+          <td>SettingsLoad<br>
+            (ab 20220225)</td>
+          <td>Laden von Einstellungen vom Server (eine Auswahl wird angezeigt)</td>
+        </tr>
+        <tr>
           <td><img src="../viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
           </td>
           <td>MOB</td>
@@ -113,7 +126,11 @@
           <td>Bestimmt, welcher NMEA Wert für die Anzeige der Richtung des
             Boot-Symbols genutzt wird. COG, HDT,HDM. Wenn HDT oder HDM gewählt
             wurde, aber der Wert nicht verfügbar ist, wird COG genutzt. Der
-            Kursvektor wird in jedem Falle durch COG bestimmt!</td>
+            Kursvektor wird in jedem Falle durch COG bestimmt!<br>
+            Ab 20220421: Wenn HDT oder HDM genutzt wird, wird das Boot als
+            Boots-Symbol dargestellt, bei COG als Pfeil.<br>
+            Kann durch <a href="../hints/usericons.html">user icons</a>
+            angepasst werden.</td>
           <td>COG</td>
         </tr>
         <tr>
@@ -131,6 +148,61 @@
             Kurs-Änderung unter diesem Wert bleibt. Das führt zu einer deutlich
             ruhigeren Anzeige.</td>
           <td>15</td>
+        </tr>
+        <tr>
+          <td>Navigation</td>
+          <td>zero SOG detect<br>
+            (20220421)</td>
+          <td>Wenn das Boot nach COG ausgerichtet wird, kann entschieden werden,
+            ab einer minimalen SOG keine Kurs-Vektoren mehr zu zeigen und das
+            Boat als Kreis darzustellen</td>
+          <td>aus</td>
+        </tr>
+        <tr>
+          <td>Navigation</td>
+          <td>zero SOG detect below<br>
+            (20220421)</td>
+          <td>Switch off the course vectors, map rotation and show the boat as
+            circle if SOG is below this value (only if zero SOG detect on)</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>AIS</td>
+          <td>Class B rel size</td>
+          <td>Class B AIS Ziele können kleiner (oder grösser) als andere Ziele
+            dargestellt werden.</td>
+          <td>0.6</td>
+        </tr>
+        <tr>
+          <td>AIS</td>
+          <td>reduce details in AIS list</td>
+          <td>In der Listen-Anzeige kann die Menge der angezeigten Informationen
+            pro Ziel begrenzt werden. Besonders empfehlenswert, wenn auf
+            langsamen Mobilgeräten die Anzeige der Liste träge wird.</td>
+          <td>aus</td>
+        </tr>
+        <tr>
+          <td>AIS</td>
+          <td>First AIS label<br>
+            Second AIS label<br>
+            Third AIS label</td>
+          <td>Auswahl der Informationen, die in der Nähe eines AIS Zieles auf
+            der Karte gezeigt werden sollen.</td>
+          <td>first: name/mmsi</td>
+        </tr>
+        <tr>
+          <td>AIS</td>
+          <td>only show moving AIS targets</td>
+          <td>Wenn eingeschaltet werden nur bewegliche AIS Ziele angezeigt</td>
+          <td>aus</td>
+        </tr>
+        <tr>
+          <td>AIS</td>
+          <td>min speed (kn) for AIS target display</td>
+          <td>nur wenn "only show moving AIS targets" - Die minimale
+            Geschwindigkeit, um ein AIS Ziel als bewegt zu sehen.</td>
+          <td>0.5kn</td>
         </tr>
         <tr>
           <td>Map</td>
@@ -190,6 +262,18 @@
             angeklickt werden. Ein zu kleiner Bereich macht den Klick sehr
             mühsam auf touch-Geräten.</td>
           <td>60</td>
+        </tr>
+        <tr>
+          <td>Map</td>
+          <td>lock boat mode</td>
+          <td>Hier kann das Verhalten des Lock Buttons&nbsp;<img src="../viewerimages/icons-new/boat.svg"
+              alt="" class="inlineimage"> auf der Navigationsseite beeinflusst
+            werden, d.h. an welcher Stelle auf dem Bildschirm das Boot
+            festgehalten werden soll.<br>
+            center: Bildschirm-Mitte<br>
+            current: aktuelle Position des Bootes<br>
+            ask: zeige einen Auswahldialog an</td>
+          <td>center</td>
         </tr>
         <tr>
           <td>Route</td>

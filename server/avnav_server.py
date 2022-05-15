@@ -25,14 +25,15 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
+import datetime
 import glob
 import logging.handlers
 import optparse
 import signal
-import datetime
 
 from avnav_nmea import NMEAParser
 from avnav_store import AVNStore
+from handler.baseconfig import AVNBaseConfig
 
 try:
   import create_overview
@@ -57,17 +58,15 @@ def avnavPrint(*args, **kwargs):
   line=""
   first=True
   for k in args:
-    line=line+k+(',' if not first else '')
+    line=line+str(k)+(',' if not first else '')
     first=False
   AVNLog.info(line)
 
 builtins.print=avnavPrint
 
-
-
 def sighandler(signal,frame):
   AVNWorker.shutdownServer()
-        
+
 def findHandlerByConfig(list,configName):
   for h in list:
     if h.getConfigName()==configName:
@@ -274,101 +273,8 @@ def main(argv):
     pass
   try:
     handlerManager.startHandlers(navData)
-    
-    #---------------------------- main loop --------------------------------
-    #check if we have a position and handle time updates
-    hasFix=False
-    lastsettime=0
-    lastutc=datetime.datetime.utcnow()
-    timeFalse=False
-    
     while not handlerManager.shouldStop:
       time.sleep(1)
-      #query the data to get old entries being removed 
-      curutc=datetime.datetime.utcnow()
-      delta=curutc-lastutc
-      allowedBackTime=baseConfig.getIntParam('maxtimeback')
-      if AVNUtil.total_seconds(delta) < -allowedBackTime and allowedBackTime != 0:
-        AVNLog.warn("time shift backward (%d seconds) detected, deleting all entries ",AVNUtil.total_seconds(delta))
-        navData.reset()
-        #if the time is shifting all condition waits must
-        #be notified...
-        for h in AVNWorker.allHandlers:
-          try:
-            h.wakeUp()
-          except:
-            pass
-        hasFix=False
-      lastutc=curutc
-      lat=None
-      lon=None
-      curGpsTime=None
-      try:
-        lat=navData.getSingleValue(AVNStore.BASE_KEY_GPS+".lat")
-        lon = navData.getSingleValue(AVNStore.BASE_KEY_GPS + ".lon")
-        curGpsTime=navData.getSingleValue(AVNStore.BASE_KEY_GPS + ".time")
-      except Exception as e:
-        AVNLog.error("Exception when getting curGpsData: %s",traceback.format_exc())
-      if ( lat is not None) and (lon is not None):
-        #we have some position
-        if not hasFix:
-          AVNLog.info("new GPS fix lat=%f lon=%f, time=%s, currentTime=%s",lat,lon,curGpsTime,curutc.isoformat())
-          hasFix=True
-        #settime handling
-        if not curGpsTime is None:
-          try:
-            AVNLog.debug("checking time diffs - new gpsts=%s",curGpsTime)
-            curts=AVNUtil.gt(curGpsTime)
-            AVNLog.debug("time diff check system utc %s - gps utc %s",curutc.isoformat(),curts.isoformat())
-            allowedDiff=baseConfig.getIntParam('systimediff')
-            settimecmd=baseConfig.getStringParam('settimecmd')
-            settimeperiod=baseConfig.getIntParam('settimeperiod')
-            if allowedDiff != 0 and settimecmd != "" and settimeperiod != 0:
-            #check if the time is too far away and the period is reached
-              if abs(AVNUtil.total_seconds(curts-curutc)) > allowedDiff:
-                timeFalse=True
-                AVNLog.debug("UTC time diff detected system=%s, gps=%s",curutc.isoformat(),curts.isoformat())
-                if lastsettime == 0 or AVNUtil.total_seconds(curutc-lastsettime) > settimeperiod:
-                  AVNLog.warn("detected UTC time diff between system time %s and gps time %s, setting system time",
-                              curutc.isoformat(),curts.isoformat())
-                  #[MMDDhhmm[[CC]YY][.ss]]
-                  newtime="%02d%02d%02d%02d%04d.%02d"%(curts.month,curts.day,curts.hour,curts.minute,curts.year,curts.second)
-                  cmd=[settimecmd,newtime]
-                  AVNLog.info("starting command %s"," ".join(cmd))
-                  cmdThread=threading.Thread(target=AVNUtil.runCommand,args=(cmd,"setTime"))
-                  cmdThread.start()
-                  cmdThread.join(20)
-                  curutc=datetime.datetime.utcnow()
-                  if abs(AVNUtil.total_seconds(curts-curutc)) > allowedDiff:
-                    AVNLog.error("unable to set system time to %s, still above difference",newtime)
-                  else:
-                    AVNLog.info("setting system time to %s succeeded",newtime)
-                    lastsettime=curutc
-                    timeFalse=False
-                    for h in AVNWorker.allHandlers:
-                      try:
-                        h.timeChanged()
-                      except:
-                        pass
-                      try:
-                        h.wakeUp()
-                      except:
-                        pass
-
-              else:
-                #time is OK now
-                if timeFalse:
-                  AVNLog.info("UTC system time is correct now")
-                  timeFalse=False
-            else:
-              AVNLog.debug("no time check - disabled by parameter")
-          except Exception as e:
-              AVNLog.warn("exception when checking time diff %s",traceback.format_exc())          
-      else:
-        if hasFix:
-          AVNLog.warn("lost GPS fix")
-        hasFix=False
-      #AVNLog.debug("entries for TPV: "+unicode(curTPV))
 
   except Exception as e:
     AVNLog.error("Exception in main %s",traceback.format_exc())

@@ -84,6 +84,8 @@ public class Decoder extends Worker {
         public JSONObject data=new JSONObject();
         public int priority=0;
     }
+
+
     private final HashMap<String,AuxiliaryEntry> auxiliaryData=new HashMap<String,AuxiliaryEntry>();
 
     private void addAuxiliaryData(String key, AuxiliaryEntry entry,long maxAge){
@@ -190,6 +192,20 @@ public class Decoder extends Worker {
                     return "$P"+nmea.substring(3,csdel);
                 }
                 return "$P"+nmea.substring(3);
+            }
+        }
+        private static class WindKeys{
+            public String angle;
+            public String speed;
+            public WindKeys(boolean isTrue){
+                if (!isTrue){
+                    angle="windAngle";
+                    speed="windSpeed";
+                }
+                else{
+                    angle="trueWindAngle";
+                    speed="trueWindSpeed";
+                }
             }
         }
         @Override
@@ -299,8 +315,8 @@ public class Decoder extends Worker {
                                     MWVSentence m = (MWVSentence) s;
                                     AvnLog.d("%s: MWV sentence",getTypeName() );
                                     AuxiliaryEntry e = new AuxiliaryEntry();
-                                    e.data.put("windAngle", m.getAngle());
-                                    e.data.put("windReference", m.isTrue() ? "T" : "R");
+                                    WindKeys keys=new WindKeys(m.isTrue());
+                                    e.data.put(keys.angle, m.getAngle());
                                     double speed = m.getSpeed();
                                     if (m.getSpeedUnit().equals(Units.KMH)) {
                                         speed = speed / 3.6;
@@ -308,7 +324,7 @@ public class Decoder extends Worker {
                                     if (m.getSpeedUnit().equals(Units.KNOT)) {
                                         speed = knToMs(speed);
                                     }
-                                    e.data.put("windSpeed", speed);
+                                    e.data.put(keys.speed, speed);
                                     if (!m.isTrue()) e.priority=1; //prefer apparent if it is there
                                     addAuxiliaryData(s.getSentenceId(), e,posAge);
                                     continue;
@@ -320,15 +336,15 @@ public class Decoder extends Worker {
                                     double wangle=w.getWindAngle();
                                     Direction wdir=w.getDirectionLeftRight();
                                     if (wdir == Direction.LEFT) wangle=360-wangle;
-                                    e.data.put("windAngle",wangle);
-                                    e.data.put("windReference","R");
+                                    WindKeys keys=new WindKeys(false);
+                                    e.data.put(keys.angle,wangle);
                                     try{
                                         double speed=w.getSpeedKnots();
-                                        e.data.put("windSpeed",knToMs(speed));
+                                        e.data.put(keys.speed,knToMs(speed));
                                     }catch (Throwable t){
                                         try{
                                             double speed=w.getSpeedKmh();
-                                            e.data.put("windSpeed",speed/3.6);
+                                            e.data.put(keys.speed,speed/3.6);
                                         }catch (Throwable x){}
                                     }
                                     addAuxiliaryData(s.getSentenceId(), e,posAge);
@@ -626,13 +642,13 @@ public class Decoder extends Worker {
 
     /**
      * get AIS data (limited to distance)
-     * @param lat
-     * @param lon
+     * @param centers
+     *
      * @param distance in nm
      * @return
      */
-    public JSONArray  getAisData(double lat,double lon,double distance){
-        if (store != null) return store.getAisData(lat,lon,distance);
+    public JSONArray  getAisData(List<Location> centers,double distance){
+        if (store != null) return store.getAisData(centers,distance);
         return new JSONArray();
 
     }

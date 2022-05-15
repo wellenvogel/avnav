@@ -8,7 +8,6 @@ import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import React from 'react';
-import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import AisHandler from '../nav/aisdata.js';
 import AisFormatter from '../nav/aisformatter.jsx';
@@ -72,7 +71,7 @@ class AisInfoPage extends React.Component{
                     AisHandler.setTrackedTarget(0);
                     let pos=AisHandler.getAisPositionByMmsi(AisHandler.getTrackedTarget());
                     if (pos) MapHolder.setCenter(pos);
-                    history.pop();
+                    self.props.history.pop();
                 }
             },
             {
@@ -85,19 +84,22 @@ class AisInfoPage extends React.Component{
                         MapHolder.setCenter(pos);
                         MapHolder.setGpsLock(false);
                     }
-                    history.pop();
+                    self.props.history.pop();
                 }
             },
             {
                 name: 'AisInfoList',
                 onClick:()=>{
-                    history.replace('aispage');
+                    let mmsi=(this.props.options||{}).mmsi;
+                    if (! self.props.history.backFromReplace()) {
+                        self.props.history.replace('aispage', {mmsi: mmsi});
+                    }
                 }
             },
-            Mob.mobDefinition,
+            Mob.mobDefinition(this.props.history),
             {
                 name: 'Cancel',
-                onClick: ()=>{history.pop()}
+                onClick: ()=>{self.props.history.backFromReplace(true)}
             }
         ];
         this.checkNoTarget=this.checkNoTarget.bind(this);
@@ -109,7 +111,7 @@ class AisInfoPage extends React.Component{
     checkNoTarget(timerSequence){
         let mmsi=this.props.options?this.props.options.mmsi:undefined;
         if (! mmsi || ! AisHandler.getAisByMmsi(mmsi)){
-            history.pop();
+            this.props.history.pop();
             return;
         }
         this.timer.startTimer(timerSequence);
@@ -158,7 +160,11 @@ class AisInfoPage extends React.Component{
                     itemList={displayItems}
                     scrollable={true}
                     className="infoList"
-                    onClick={()=>{history.pop()}}
+                    onClick={()=>{
+                        if (! self.props.history.backFromReplace()) {
+                            self.props.history.pop();
+                        }
+                    }}
                     />
 
             </React.Fragment>
@@ -167,8 +173,7 @@ class AisInfoPage extends React.Component{
 
         return (
             <Page
-                className={this.props.className}
-                style={this.props.style}
+                {...self.props}
                 id="aisinfopage"
                 title="AIS Info"
                 mainContent={

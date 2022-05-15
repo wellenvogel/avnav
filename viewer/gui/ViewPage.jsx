@@ -2,15 +2,10 @@
  * Created by andreas on 02.05.14.
  */
 
-import Dynamic from '../hoc/Dynamic.jsx';
-import Visible from '../hoc/Visible.jsx';
-import Button from '../components/Button.jsx';
-import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import helper from '../util/helper.js';
 import React from 'react';
-import history from '../util/history.js';
 import Page from '../components/Page.jsx';
 import Requests from '../util/requests.js';
 import Mob from '../components/Mob.js';
@@ -22,6 +17,7 @@ import Prism from 'prismjs';
 import GuiHelpers from '../util/GuiHelpers.js';
 import InputMonitor from '../hoc/InputMonitor.jsx';
 import Helper from "../util/helper.js";
+import {ItemActions} from "../components/FileDialog";
 
 //add all extensions here that we can edit
 //if set to undefined we will edit them but without highlighting
@@ -47,7 +43,7 @@ class ViewPageBase extends React.Component{
             readOnly:false
         };
         if (! this.props.options ) {
-            history.pop();
+            this.props.history.pop();
         }
         this.type=this.props.options.type;
         this.name=this.props.options.name;
@@ -68,7 +64,7 @@ class ViewPageBase extends React.Component{
     buttons() {
         let self=this;
         return [
-            Mob.mobDefinition,
+            Mob.mobDefinition(this.props.history),
             {
                 name: 'ViewPageView',
                 visible: this.canChangeMode(),
@@ -122,14 +118,24 @@ class ViewPageBase extends React.Component{
                         }catch(e){
                         }
                     }
-                    Requests.postPlain("?request=upload&type=" + self.type + "&overwrite=true&name=" + encodeURIComponent(self.name), data)
-                        .then((result)=> {
-                            this.setState({changed: false});
-                        })
-                        .catch((error)=> {
-                            Toast("unable to save: " + error)
-                        });
-
+                    let actions=ItemActions.create({type:self.type,name:self.name});
+                    let uploadFunction;
+                    if (actions.localUploadFunction){
+                        uploadFunction=actions.localUploadFunction;
+                    }
+                    else{
+                        uploadFunction=(name,data,overwrite)=>{
+                            return Requests.postPlain({
+                                request:'upload',
+                                type:self.type,
+                                overwrite: overwrite,
+                                name: name
+                            },data)
+                        }
+                    }
+                    uploadFunction(self.name,data,true)
+                        .then((ok)=>this.setState({changed: false}))
+                        .catch((error)=>Toast("unable to save: " + error));
                 }
 
             },
@@ -138,11 +144,11 @@ class ViewPageBase extends React.Component{
                 onClick: ()=> {
                     if (this.state.changed){
                         OverlayDialog.confirm("Discard Changes?")
-                            .then((data)=>{history.pop();})
+                            .then((data)=>{this.props.history.pop();})
                             .catch((e)=>{});
                         return;
                     }
-                    history.pop()
+                    this.props.history.pop()
                 }
             }
         ];
@@ -152,11 +158,10 @@ class ViewPageBase extends React.Component{
         this.setState({changed:true});
     }
     getExt(){
-        if (this.type == 'route') return "gpx";
-        if (this.type == 'layout') return 'json';
         if (this.url) return Helper.getExt(this.url);
         if (this.html) return 'html';
-        return Helper.getExt(this.name);
+        let actions=ItemActions.create({type:this.type,name:this.name});
+        return actions.extForView;
     }
     isImage(){
         let ext=this.getExt().toLowerCase();
@@ -238,8 +243,7 @@ class ViewPageBase extends React.Component{
 
         return (
             <Page
-                className={this.props.className}
-                style={this.props.style}
+                {...this.props}
                 id="viewpage"
                 title={(this.state.readOnly?"Showing":"Editing")+": "+this.name}
                 mainContent={
