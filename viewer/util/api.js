@@ -9,6 +9,7 @@ import Formatter from './formatter.js';
 import Helper from './helper.js';
 import Toast from '../components/Toast.jsx';
 import featureFormatter from "./featureFormatter";
+import NavCompute from "../nav/navcompute";
 
 class Api{
     constructor(){
@@ -113,6 +114,40 @@ class Api{
             version=version.replace(/dev-/,'').replace(/[-].*/,'');
         }
         return parseInt(version);
+    }
+
+    /**
+     * compute a distance in m (greatCircle)
+     * @param src [lon,lat]
+     * @param dest [lon,lat]
+     * @return distance in m
+     */
+    distance(src,dest){
+        let rt=NavCompute.computeDistance({lon:src[0],lat:src[1]}, {lon:dest[0],lat:dest[1]});
+        return rt.dts;
+    }
+
+    /**
+     * compute a course (greatCircle)
+     * @param src [lon,lat]
+     * @param dest [lon,lat]
+     * @return {number} course in degrees
+     */
+    courseTo(src,dest){
+        let rt=NavCompute.computeDistance({lon:src[0],lat:src[1]}, {lon:dest[0],lat:dest[1]});
+        return rt.course;
+    }
+
+    /**
+     * compute a target lon,lat from a start and course and distance
+     * @param src [lon,lat]
+     * @param course degrees
+     * @param distance m
+     * @return {(*|number)[]} [lon,lat]
+     */
+    computeTarget(src,course,distance){
+        let rt= NavCompute.computeTarget({lon:src[0],lat:src[1]},course,distance);
+        return [rt.lon,rt.lat]
     }
 
 }
