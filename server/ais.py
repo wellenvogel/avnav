@@ -290,7 +290,7 @@ type5 = (
     bitfield("to_bow",        9, 'unsigned',    0, "Dimension to Bow"),
     bitfield("to_stern",      9, 'unsigned',    0, "Dimension to Stern"),
     bitfield("to_port",       6, 'unsigned',    0, "Dimension to Port"),
-    bitfield("to_starbord",   6, 'unsigned',    0, "Dimension to Starboard"),
+    bitfield("to_starboard",   6, 'unsigned',    0, "Dimension to Starboard"),
     bitfield("epfd",          4, 'unsigned',    0, "Position Fix Type",
              validator=lambda n: n >= 0 and n <= 8 or n == 15,
              formatter=epfd_type_legends),
@@ -648,7 +648,7 @@ type19 = (
     bitfield("to_bow",      9,  'unsigned', 0,         "Dimension to Bow"),
     bitfield("to_stern",    9,  'unsigned', 0,         "Dimension to Stern"),
     bitfield("to_port",     6,  'unsigned', 0,         "Dimension to Port"),
-    bitfield("to_starbord", 6,  'unsigned', 0,         "Dimension to Starboard"),
+    bitfield("to_starboard", 6,  'unsigned', 0,         "Dimension to Starboard"),
     bitfield("epfd",        4,  'unsigned', 0,         "Position Fix Type",
              validator=lambda n: n >= 0 and n <= 8 or n == 15,
              formatter=epfd_type_legends),
@@ -811,7 +811,7 @@ type24b1 = (
     bitfield("to_bow",        9, 'unsigned',    0, "Dimension to Bow"),
     bitfield("to_stern",      9, 'unsigned',    0, "Dimension to Stern"),
     bitfield("to_port",       6, 'unsigned',    0, "Dimension to Port"),
-    bitfield("to_starbord",   6, 'unsigned',    0, "Dimension to Starboard"),
+    bitfield("to_starboard",   6, 'unsigned',    0, "Dimension to Starboard"),
     spare(8),
     )
 

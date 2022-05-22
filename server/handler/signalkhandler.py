@@ -184,6 +184,10 @@ def convertAisLon(value):
   return safeGetItem(value, 'longitude')
 def convertAisLat(value):
   return safeGetItem(value, 'latitude')
+def convertAisLength(value):
+  return safeGetItem(value,'overall')
+def convertAisDraft(value):
+  return safeGetItem(value,'current')
 
 AISPATHMAP={
   'mmsi':AE('mmsi'),
@@ -195,7 +199,10 @@ AISPATHMAP={
   'lon': AE('navigation.position',converter=convertAisLon),
   'lat': AE('navigation.position',converter=convertAisLat),
   'destination': AE('navigation.destination'),
-  'type': AE('sensors.ais.class',converter=convertAisClass)
+  'type': AE('sensors.ais.class',converter=convertAisClass),
+  'beam': AE('design.beam'),
+  'length': AE('design.length',converter=convertAisLength),
+  'draft':AE('design.draft',converter=convertAisDraft)
 }
 
 class Config(object):

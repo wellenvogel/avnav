@@ -395,6 +395,21 @@ class AVNUtil(object):
     rt['speed']=(float(aisdata.get('speed') or 0)/10) * cls.NM/3600;
     rt['course']=float(aisdata.get('course') or 0)/10
     rt['mmsi']=str(aisdata['mmsi'])
+    if 'draught' in rt:
+      try:
+        rt ['draught']=float(rt['draught'])/10.0
+      except:
+        pass
+    if 'to_port' in rt and 'to_starboard' in rt:
+      try:
+        rt['beam']=int(rt['to_port']) + int (rt['to_starboard'])
+      except:
+        pass
+    if 'to_bow' in rt and 'to_stern' in rt:
+      try:
+        rt['length'] = int(rt['to_bow']) + int(rt['to_stern'])
+      except:
+        pass
     return rt
   
   #parse an ISO8601 t8ime string
