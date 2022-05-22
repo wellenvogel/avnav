@@ -286,10 +286,9 @@ class SrcLayer(object):
             
             #double x = 0.0, double y = 0.0, double z = 0.0, double pixel = 0.0, 
             #double line = 0.0, char info = "", char id = ""
-            if isGdal3:
-                gcps=[gdal.GCP(c[0],c[1],0,p[0],p[1],'',i) for i,p,c in self.refs]
-            else:
-                gcps=[gdal.GCP(c[0],c[1],0,p[1],p[0],'',i) for i,p,c in self.refs]
+
+            gcps = [gdal.GCP(c[0], c[1], 0, p[0], p[1], '', i) for i, p, c in self.refs]
+
             if isGdal3:
                 gsr=osr.SpatialReference()
                 gsr.SetFromUserInput(self.refs.srs())
