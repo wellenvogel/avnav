@@ -157,8 +157,26 @@ const aisparam={
             if (v.type == 4) return "S";
             return "";
         }
+    },
+    beam: {
+        headline: 'beam',
+            format: function (v) {
+            return v.beam;
+        }
+    },
+    length: {
+        headline: 'length',
+            format: function (v) {
+            if(v.length === undefined)
+            {
+                return v.length;
+            }
+            else
+            {
+                return v.length.overall;
+            }
+        }
     }
-
 };
 
 const AisFormatter={
