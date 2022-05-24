@@ -21,7 +21,7 @@ const displayItems = [
     {name: 'mmsi', label: 'MMSI'},
     {name: 'shipname', label: 'Name'},
     {name: 'callsign', label: 'Callsign'},
-    {name: 'distance', label: 'Distance'},
+    {name: 'distance', label: 'Distance(nm)'},
     {name: 'heading', label: 'HeadingTo'},
     {name: 'cpa', label: 'CPA(nm)'},
     {name: 'tcpa', label: 'TCPA(h:min:sec)'},
@@ -31,7 +31,10 @@ const displayItems = [
     {name: 'shiptype', label: 'Type'},
     {name: 'passFront', label: 'we pass', addClass: 'aisFront'},
     {name: 'position', label: 'Position'},
-    {name: 'clazz', label: 'Class'}
+    {name: 'clazz', label: 'Class'},
+    {name: 'length', label: 'Length(m)'},
+    {name: 'beam',label: 'Beam(m)'},
+    {name: 'draught',label: 'Draught(m)'}
 ];
 
 const createUpdateFunction=(config,mmsi)=>{
