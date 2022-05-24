@@ -675,6 +675,7 @@ export const deleteItem=(info,opt_resultCallback)=> {
                 return;
             }
             doneAction();
+            return;
         }
         if (info.type !== "route") {
             Requests.getJson('', {}, buildRequestParameters('delete',info))
@@ -781,7 +782,7 @@ export const showFileDialog=(history,item,opt_doneCallback,opt_checkExists)=>{
                 .catch((error)=>doneAction());
         }
         if (action === 'delete'){
-            return deleteItem(item,doneAction);
+            return deleteItem(item,()=>doneAction());
         }
         if (action === 'overlay'){
             doneAction();

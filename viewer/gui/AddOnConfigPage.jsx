@@ -9,6 +9,7 @@ import Page from '../components/Page.jsx';
 import Mob from '../components/Mob.js';
 import Addons from '../components/Addons.js';
 import UserAppDialog from '../components/UserAppDialog.jsx';
+import assign from "object-assign";
 
 
 const AddonItem=(props)=>{
@@ -99,7 +100,8 @@ class AddonConfigPage extends React.Component{
                         />
                 }}
                 onItemClick={(item)=>{
-                    UserAppDialog.showUserAppDialog(item,{name:item.name},true)
+                    let itemUrl=(item.originalUrl !== undefined)?item.originalUrl:item.url;
+                    UserAppDialog.showUserAppDialog(assign(item,{url:itemUrl}),{name:item.name},true)
                         .then(()=>self.readAddons())
                         .catch(()=>self.readAddons());
                 }}

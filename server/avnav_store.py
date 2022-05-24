@@ -64,7 +64,7 @@ class AVNStore(object):
         return None
       return self.value.get('mmsi')
   #fields we merge
-  ais5mergeFields=['imo_id','callsign','shipname','shiptype','destination']
+  ais5mergeFields=['imo_id','callsign','shipname','shiptype','destination','length','beam','draught']
   CHANGE_COUNTER = ['alarm', 'leg', 'route']
   def __init__(self,expiryTime,aisExpiryTime,ownMMSI):
     self.__list={}

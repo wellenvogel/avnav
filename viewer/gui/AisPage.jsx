@@ -29,6 +29,11 @@ const aisInfos=[
         {name:'heading',label:'Hdg ',unit:'°',len:8}
     ],
     [
+        {name:'length',label:'Len ',len:6},
+        {name:'beam',label:'Beam',len:6},
+        {name:'draught',label:'Drau',len:8}
+    ],
+    [
         {name:'shiptype',label:'Type'},
         {name:'callsign',label:'Call'},
         {name:'destination',label:'Dest'}
