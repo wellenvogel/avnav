@@ -245,7 +245,8 @@ class MainPage extends React.Component {
             {
                 name: 'Split',
                 storeKeys: {
-                    toggle: keys.gui.global.splitMode
+                    toggle: keys.gui.global.splitMode,
+                    visible: keys.properties.showSplitButton
                 },
                 overflow: true,
                 onClick: ()=>{
