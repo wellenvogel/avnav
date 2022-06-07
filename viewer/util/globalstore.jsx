@@ -3,5 +3,5 @@
  */
 import Store from './store';
 
-export default new Store();
+export default new Store('global');
 

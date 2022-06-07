@@ -229,11 +229,6 @@ let keys={
         addresspage:{
             addressList:K
         },
-        wpapage:{
-            interface:K,
-            wpaItems:K,
-            showAccess:K
-        },
         routepage:{
             initialName:K,
         }

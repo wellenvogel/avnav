@@ -4,8 +4,6 @@
 
 import Dynamic from '../hoc/Dynamic.jsx';
 import ItemList from '../components/ItemList.jsx';
-import globalStore from '../util/globalstore.jsx';
-import keys from '../util/keys.jsx';
 import React from 'react';
 import PropTypes from 'prop-types';
 import Page from '../components/Page.jsx';
@@ -17,6 +15,7 @@ import OverlayDialog from '../components/OverlayDialog.jsx';
 import {Input,Checkbox} from '../components/Inputs.jsx';
 import DB from '../components/DialogButton.jsx';
 import Mob from '../components/Mob.js';
+import Store from "../util/store";
 
 const ListEntry=(props)=>{
     let level=props.level;
@@ -41,9 +40,8 @@ const ListEntry=(props)=>{
     );
 };
 
-const DynamicList=Dynamic(ItemList);
 
-const Interface = Dynamic((props)=> {
+const Interface = (props)=> {
     let status = props.interface || {};
     if (!status.wpa_state) {
         return (
@@ -71,7 +69,7 @@ const Interface = Dynamic((props)=> {
         </div>
     );
 
-});
+};
 
 class Dialog extends React.Component{
     constructor(props){
@@ -128,11 +126,15 @@ Dialog.propTypes={
     showAccess: PropTypes.bool,
 
 };
-
+const LISTKEY='list';
 const timeout=4000;
 class WpaPage extends React.Component{
     constructor(props){
         super(props);
+        this.state={
+            interface:undefined,
+            showAccess: undefined
+        }
         let self=this;
         this.buttons=[
             Mob.mobDefinition(this.props.history),
@@ -144,7 +146,9 @@ class WpaPage extends React.Component{
         this.itemClick=this.itemClick.bind(this);
         this.timer=GuiHelpers.lifecycleTimer(this,this.doQuery,timeout,true);
         this.numErrors=0;
-
+        this.listItemStore=new Store('wpaList');
+        this.listItemStore.storeData(LISTKEY,[]);
+        this.ItemList=Dynamic(ItemList,undefined,this.listItemStore);
     }
 
     doQuery(timerSequence){
@@ -155,8 +159,10 @@ class WpaPage extends React.Component{
             checkOk: false
         }).then((json)=>{
             self.numErrors=0;
-            globalStore.storeData(keys.gui.wpapage.interface,json.status);
-            globalStore.storeData(keys.gui.wpapage.showAccess,json.showAccess);
+            this.setState({
+                interface: json.status,
+                showAccess: json.showAccess
+            });
             let itemList=[];
             if (json.status && json.list) {
                 for (let i in json.list) {
@@ -179,7 +185,7 @@ class WpaPage extends React.Component{
                     itemList.push(displayItem);
                 }
             }
-            globalStore.storeData(keys.gui.wpapage.wpaItems,itemList);
+            this.listItemStore.storeData(LISTKEY,itemList);
             self.timer.startTimer(timerSequence);
 
         }).catch((error)=>{
@@ -250,21 +256,18 @@ class WpaPage extends React.Component{
     }
     render(){
         let self=this;
-
         const MainContent=(props)=> {
             return(
             <React.Fragment>
                 <Interface
-                    storeKeys={{
-                        showAccess:keys.gui.wpapage.showAccess,
-                        interface: keys.gui.wpapage.interface
-                    }}
+                        showAccess={this.state.showAccess}
+                        interface={this.state.interface}
                     />
-                <DynamicList
+                <this.ItemList
                     itemClass={ListEntry}
                     scrollable={true}
                     storeKeys={{
-                        itemList:keys.gui.wpapage.wpaItems
+                        itemList:LISTKEY
                     }}
                     onItemClick={self.itemClick}
                     />

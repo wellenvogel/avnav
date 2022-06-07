@@ -13,8 +13,8 @@ import assign from 'object-assign';
 
 
 
-export default  function(Component,opt_options){
-    let store=globalStore;
+export default  function(Component,opt_options,opt_store){
+    let store=opt_store||globalStore;
     class Dynamic extends React.Component{
         constructor(props){
             super(props);
