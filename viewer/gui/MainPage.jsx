@@ -22,6 +22,7 @@ import mapholder from "../map/mapholder.js";
 import FullScreen from '../components/Fullscreen';
 import RemoteChannelDialog from "../components/RemoteChannelDialog";
 import {RecursiveCompare} from '../util/compare';
+import LocalStorage from '../util/localStorageManager';
 
 
 
@@ -410,7 +411,7 @@ class MainPage extends React.Component {
             <Page
                 {...self.props}
                   id="mainpage"
-                  title="AvNav"
+                  title={"AvNav "+ LocalStorage.getPrefix()}
                   mainContent={
                     <ItemList className="mainContent"
                                itemClass={this.ChartItem}

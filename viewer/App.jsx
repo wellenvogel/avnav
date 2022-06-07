@@ -209,7 +209,7 @@ class App extends React.Component {
                     let item=LocalStorage.getItem(sn,undefined);
                     if (! item){
                         item=LocalStorage.getItem(sn,undefined);
-                        if (item !== undefined){
+                        if (item){
                             LocalStorage.setItem(sn,undefined,item);
                         }
                     }

@@ -4,7 +4,7 @@
 
 import Toast from '../components/Toast.jsx';
 import globalStore from './globalstore.jsx';
-import keys, {KeyHelper, PropertyType} from './keys.jsx';
+import keys, {KeyHelper, PropertyType, SplitProperty} from './keys.jsx';
 import base from '../base.js';
 import assign from 'object-assign';
 import LayoutHandler from './layouthandler';
@@ -63,14 +63,18 @@ class PropertyHandler {
     }
 
     loadUserData(){
-        try{
-           let rawdata = LocalStorage.getItem(STORAGE_NAMES.SETTINGS);
-           if (!rawdata) return {};
-           return JSON.parse(rawdata);
-        }catch (e){
-           base.log("unable to load user data")
-        }
-        return {};
+        let rt={};
+        [STORAGE_NAMES.SETTINGS,STORAGE_NAMES.SPLITSETTINGS].forEach((storageName)=> {
+            try {
+                let rawdata = LocalStorage.getItem(storageName);
+                if (rawdata) {
+                    assign(rt, JSON.parse(rawdata));
+                }
+            } catch (e) {
+                base.log("unable to load user data from "+storageName)
+            }
+        });
+        return rt;
     }
 
     incrementSequence(){
@@ -90,9 +94,9 @@ class PropertyHandler {
     /**
      * save the current settings
      */
-    saveUserData(data) {
+    saveUserData(data,opt_forPrefix) {
         let raw = JSON.stringify(data);
-        LocalStorage.setItem(STORAGE_NAMES.SETTINGS,undefined, raw);
+        LocalStorage.setItem(opt_forPrefix?STORAGE_NAMES.SPLITSETTINGS:STORAGE_NAMES.SETTINGS,undefined, raw);
         try{
             window.parent.postMessage('settingsChanged',window.location.origin);
         }catch (e){}
@@ -117,13 +121,20 @@ class PropertyHandler {
         let self=this;
         let values=globalStore.getMultiple(keys.properties);
         let saveData={};
+        let saveDataSplit={}
         for (let dk in this.propertyDescriptions){
             let v=globalStore.getData(dk);
             if (v !== this.propertyDescriptions[dk].defaultv){
-                this.setItem(saveData,dk,v,1);
+                if (this.propertyDescriptions[dk] instanceof SplitProperty){
+                    this.setItem(saveDataSplit,dk,v,1);
+                }
+                else{
+                    this.setItem(saveData,dk,v,1);
+                }
             }
         }
         this.saveUserData(saveData);
+        this.saveUserData(saveDataSplit,true);
         this.incrementSequence();
     }
 

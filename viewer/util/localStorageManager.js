@@ -5,6 +5,7 @@ export const PREFIX_NAMES={
     ROUTING: 'avnav.routing',
     ROUTE: 'avnav.route.', //prefix for routes, let them sync via the server
     CENTER: 'avnav.center',
+    SPLITSETTINGS:'avnav.splitsettings'
 }
 const UNPREFIXED_NAMES={
     CHARTINFO: 'avnav.chartinfo',
@@ -34,6 +35,9 @@ class LocalStorage{
     }
     setPrefix(prefix){
         this.prefix=prefix;
+    }
+    getPrefix(){
+        return this.prefix;
     }
 
     _getRealNameImpl(name,nameList){
