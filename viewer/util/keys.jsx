@@ -200,6 +200,7 @@ let keys={
             fetchHead: K
         },
         global:{
+            splitMode: K,
             smallDisplay: K,
             onAndroid:K,
             propertySequence:K,

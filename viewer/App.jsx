@@ -302,6 +302,17 @@ class App extends React.Component {
             }
             else alarmhandler.stopAlarm(LOCAL_TYPES.connectionLost);
         },{connectionLost:keys.nav.gps.connectionLost})
+        try{
+            window.addEventListener('message',(ev)=>{
+                if (ev.origin !== window.location.origin) return;
+                if (ev.data === 'isSplitMode'){
+                    globalStore.storeData(keys.gui.global.splitMode,true);
+                }
+            })
+        } catch (e){}
+        try{
+            window.parent.postMessage('querySplitMode',window.location.origin);
+        }catch (e){}
 
     }
     newDeviceHandler(){
