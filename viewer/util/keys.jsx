@@ -327,18 +327,9 @@ let keys={
         centerDisplayTimeout: new Property(45000), //ms - auto hide measure display (0 - no auto hide)
         navUrl: new Property("/viewer/avnav_navi.php"),
         maxGpsErrors: new Property(3), //after that much invalid responses/timeouts the GPS is dead
-        settingsName: new Property("avnav.settings"), //storage name
-        routingDataName: new Property("avnav.routing"),
-        chartDataName: new Property("avnav.lastChart"),
-        routeName: new Property("avnav.route"), //prefix for route names
-        layoutStoreName: new Property("avnav.layout"),
-        eulaStoreName: new Property("avnav.eulas"),
-        chartInfoStoreName: new Property("avnav.chartinfo"),
         routingServerError: new Property(true, "ServerError", PropertyType.CHECKBOX), //notify comm errors to server
         routingTextSize: new Property(14, "Text Size(px)", PropertyType.RANGE, [8, 36]), //in px
         routeCatchRange: new Property(50,"route point snap distance %", PropertyType.RANGE,[0,100]),
-        centerName: new Property("avnav.center"),
-        licenseAcceptedName: new Property("avnav.licenseAccepted"),
         statusErrorImage: new Property(redBubble),
         statusOkImage: new Property(greenBubble),
         statusYellowImage: new Property(yellowBubble),

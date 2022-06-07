@@ -214,7 +214,7 @@ NavData.prototype.computeValues=function() {
     let boatDirectionMode=globalStore.getData(keys.properties.boatDirectionMode,'cog');
     data.boatDirection=gps.course;
     let mapCourse=this.mapAverageCog.val();
-    let mapUseHdx=! globalStore.getDataLocal(keys.properties.courseUpAlwaysCOG);
+    let mapUseHdx=! globalStore.getData(keys.properties.courseUpAlwaysCOG);
     if (boatDirectionMode === 'hdt' && gps.headingTrue !== undefined){
         data.boatDirection=gps.headingTrue;
         data.directionMode=boatDirectionMode;

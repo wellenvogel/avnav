@@ -152,7 +152,7 @@
       }
       setSplit(percent);
       f1.src=location;
-      f2.src=location;
+      f2.src=location+"&storePrefix=2";
       window.addEventListener('resize',function(){setMover()});
       window.addEventListener('message',function(ev){
           if (ev.data === 'fullscreen'){

@@ -7,10 +7,10 @@ import globalStore from './globalstore.jsx';
 import keys, {KeyHelper, PropertyType} from './keys.jsx';
 import base from '../base.js';
 import assign from 'object-assign';
-import Helper from './helper.js';
 import LayoutHandler from './layouthandler';
 import RequestHandler from "./requests";
 import Requests from "./requests";
+import LocalStorage, {STORAGE_NAMES} from './localStorageManager';
 
 
 const hex2rgba= (hex, opacity)=> {
@@ -46,7 +46,7 @@ class PropertyHandler {
         this.resetToSaved();
         //register at the store for updates of our synced data
         globalStore.register(this,keys.properties);
-        if (!window.localStorage) {
+        if (!LocalStorage.hasStorage()) {
             Toast("local storage is not available, seems that your browser is not HTML5... - application will not work");
             return;
         }
@@ -64,7 +64,7 @@ class PropertyHandler {
 
     loadUserData(){
         try{
-           let rawdata = localStorage.getItem(globalStore.getData(keys.properties.settingsName));
+           let rawdata = LocalStorage.getItem(STORAGE_NAMES.SETTINGS);
            if (!rawdata) return {};
            return JSON.parse(rawdata);
         }catch (e){
@@ -92,7 +92,7 @@ class PropertyHandler {
      */
     saveUserData(data) {
         let raw = JSON.stringify(data);
-        localStorage.setItem(globalStore.getData(keys.properties.settingsName), raw);
+        LocalStorage.setItem(STORAGE_NAMES.SETTINGS,undefined, raw);
         try{
             window.parent.postMessage('settingsChanged',window.location.origin);
         }catch (e){}
