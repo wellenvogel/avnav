@@ -77,27 +77,27 @@ const NavData=function(){
  */
 NavData.prototype.computeValues=function() {
     let data={
-        centerCourse:0,
-        centerDistance:0,
-        centerMarkerCourse:0,
-        centerMarkerDistance:0,
-        markerCourse:0,
-        markerDistance:0,
-        markerVmg:0,
-        markerEta:null,
-        markerXte: 0,
-        markerWp:new navobjects.WayPoint(0,0,"Marker"),
+        centerCourse:undefined,
+        centerDistance:undefined,
+        centerMarkerCourse:undefined,
+        centerMarkerDistance:undefined,
+        markerCourse:undefined,
+        markerDistance:undefined,
+        markerVmg:undefined,
+        markerEta:undefined,
+        markerXte: undefined,
+        markerWp:undefined,
         /* data for the active route */
         routeName: undefined,
         routeNumPoints: 0,
         routeLen: 0,
         routeRemain: 0,
-        routeEta: null,
-        routeNextCourse: 0,
+        routeEta: undefined,
+        routeNextCourse: undefined,
         routeNextWp: undefined,
         anchorWatchDistance: undefined,
-        anchorDistance: 0,
-        anchorDirection: 0
+        anchorDistance: undefined,
+        anchorDirection: undefined
     };
     let gps = globalStore.getMultiple(this.storeKeys);
     //copy the marker to data to make it available extern
@@ -128,8 +128,8 @@ NavData.prototype.computeValues=function() {
                 data.anchorDirection = aleginfo.markerCourse;
             }
             else {
-                data.anchorDistance = 0;
-                data.anchorDirection = 0;
+                data.anchorDistance = undefined;
+                data.anchorDirection = undefined;
                 data.anchorWatchDistance = undefined;
             }
         }
@@ -138,14 +138,14 @@ NavData.prototype.computeValues=function() {
         }
     }
     else {
-        data.centerCourse = 0;
-        data.centerDistance = 0;
-        data.markerCourse = 0;
-        data.markerDistance = 0;
-        data.markerEta = null;
+        data.centerCourse = undefined;
+        data.centerDistance = undefined;
+        data.markerCourse = undefined;
+        data.markerDistance = undefined;
+        data.markerEta = undefined;
         data.markerXte = undefined;
-        data.anchorDistance = 0;
-        data.anchorDirection = 0;
+        data.anchorDistance = undefined;
+        data.anchorDirection = undefined;
         data.anchorWatchDistance = undefined;
     }
 
@@ -214,7 +214,7 @@ NavData.prototype.computeValues=function() {
     let boatDirectionMode=globalStore.getData(keys.properties.boatDirectionMode,'cog');
     data.boatDirection=gps.course;
     let mapCourse=this.mapAverageCog.val();
-    let mapUseHdx=! globalStore.getDataLocal(keys.properties.courseUpAlwaysCOG);
+    let mapUseHdx=! globalStore.getData(keys.properties.courseUpAlwaysCOG);
     if (boatDirectionMode === 'hdt' && gps.headingTrue !== undefined){
         data.boatDirection=gps.headingTrue;
         data.directionMode=boatDirectionMode;

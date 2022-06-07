@@ -13,6 +13,7 @@ import RoutEdit from './routeeditor.js';
 import Requests from '../util/requests.js';
 import assign from 'object-assign';
 import base from '../base.js';
+import LocalStorage, {STORAGE_NAMES} from '../util/localStorageManager';
 
 const activeRoute=new RoutEdit(RoutEdit.MODES.ACTIVE);
 const editingRoute=new RoutEdit(RoutEdit.MODES.EDIT);
@@ -91,7 +92,7 @@ let RouteData=function(){
             changed=true;
         }
         try {
-            let raw=localStorage.getItem(globalStore.getData(keys.properties.routingDataName));
+            let raw=LocalStorage.getItem(STORAGE_NAMES.ROUTING);
             if (raw){
                 data.leg.fromJsonString(raw);
                 changed=true;
@@ -122,7 +123,7 @@ let RouteData=function(){
      * @type {string}
      */
     this.DEFAULTROUTE="default";
-    this.FALLBACKROUTENAME="avnav.defaultRoute"; //a fallback name for the default route
+    this.FALLBACKROUTENAME=STORAGE_NAMES.DEFAULTROUTE; //a fallback name for the default route
 
 
 
@@ -528,15 +529,15 @@ RouteData.prototype._listRoutesLocal=function(){
     let rt=[];
     let i=0;
     let key,rtinfo,route;
-    let routeprfx=globalStore.getData(keys.properties.routeName)+".";
+    let routeKeys=LocalStorage.listByPrefix(STORAGE_NAMES.ROUTE);
     let editingName=editingRoute.getRouteName();
-    for (i=0;i<localStorage.length;i++){
-        key=localStorage.key(i);
-        if (key.substr(0,routeprfx.length)===routeprfx){
-            rtinfo=new routeobjects.RouteInfo(this._ensureGpx(key.substr(routeprfx.length)));
+    for (i=0;i<routeKeys.length;i++){
+        key=routeKeys[i];
+        let routeName=key.substr(STORAGE_NAMES.ROUTE.length);
+            rtinfo=new routeobjects.RouteInfo(this._ensureGpx(routeName));
             try {
                 route=new routeobjects.Route();
-                route.fromJsonString(localStorage.getItem(key));
+                route.fromJsonString(LocalStorage.getItem(STORAGE_NAMES.ROUTE,name));
                 if (route.points) rtinfo.numpoints=route.points.length;
                 rtinfo.length=route.computeLength(0);
                 rtinfo.time=route.time;
@@ -544,7 +545,7 @@ RouteData.prototype._listRoutesLocal=function(){
                 if (rtinfo.name === editingName) rtinfo.canDelete=false;
             } catch(e){}
             rt.push(rtinfo);
-        }
+
 
     }
     return rt;
@@ -566,7 +567,7 @@ RouteData.prototype.deleteRoute=function(name,opt_okcallback,opt_errorcallback,o
         return false;
     }
     try{
-        localStorage.removeItem(globalStore.getData(keys.properties.routeName)+"."+localName);
+        LocalStorage.removeItem(STORAGE_NAMES.ROUTE,localName);
     }catch(e){}
     if (this.connectMode && ! opt_localonly){
         Requests.getJson('',{},{
@@ -895,7 +896,7 @@ RouteData.prototype._saveRouteLocal=function(route, opt_keepTime) {
     if (! route) return;
     if (! opt_keepTime || ! route.time) route.time = new Date().getTime()/1000;
     let str = route.toJsonString();
-    localStorage.setItem(globalStore.getData(keys.properties.routeName) + "." + route.name, str);
+    LocalStorage.setItem(STORAGE_NAMES.ROUTE,route.name, str);
     return route;
 };
 
@@ -907,7 +908,7 @@ RouteData.prototype._saveRouteLocal=function(route, opt_keepTime) {
  */
 RouteData.prototype._localRouteExists=function(route) {
     if (! route) return false;
-    let existing=localStorage.getItem(globalStore.getData(keys.properties.routeName) + "." + route.name);
+    let existing=LocalStorage.getItem(STORAGE_NAMES.ROUTE, route.name);
     return !!existing;
 };
 
@@ -922,10 +923,10 @@ RouteData.prototype._loadRoute=function(name,opt_returnUndef){
     if (name.match(/\.gpx$/)) name=name.replace(/\.gpx$/,'');
     let rt=new routeobjects.Route(name);
     try{
-        let raw=localStorage.getItem(globalStore.getData(keys.properties.routeName)+"."+name);
+        let raw=LocalStorage.getItem(STORAGE_NAMES.ROUTE,name);
         if (! raw && name == this.DEFAULTROUTE){
             //fallback to load the old default route
-            raw=localStorage.getItem(this.FALLBACKROUTENAME);
+            raw=LocalStorage.getItem(this.FALLBACKROUTENAME);
         }
         if (raw) {
             base.log("route "+name+" successfully loaded");
@@ -982,7 +983,7 @@ RouteData.prototype._legChangedLocally=function(leg){
     this.lastDistanceToCurrent=-1;
     this.lastDistanceToNext=-1;
     let raw=leg.toJsonString();
-    localStorage.setItem(globalStore.getData(keys.properties.routingDataName),raw);
+    LocalStorage.setItem(STORAGE_NAMES.ROUTING,undefined,raw);
     if (leg.currentRoute){
         this._saveRouteLocal(leg.currentRoute,true);
     }

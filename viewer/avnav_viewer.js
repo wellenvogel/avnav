@@ -47,6 +47,7 @@ import AvNavVersion from './version.js';
 import assign from 'object-assign';
 import LeaveHandler from './util/leavehandler';
 import isIosSafari from '@braintree/browser-detection/is-ios-safari';
+import LocalStorage from './util/localStorageManager';
 
 
 if (! window.avnav){
@@ -97,6 +98,8 @@ export default function() {
     if (getParam("noCloseDialog") === "true"){
         LeaveHandler.stop();
     }
+    let storePrefix=getParam('storePrefix');
+    if (storePrefix && storePrefix !== "") LocalStorage.setPrefix(storePrefix);
     const loadScripts=(loadList)=>{
         let fileref=undefined;
         for (let i in  loadList) {

@@ -44,6 +44,7 @@ import propertyHandler from "./util/propertyhandler";
 import MapHolder from "./map/mapholder";
 import NavData from './nav/navdata';
 import alarmhandler from "./nav/alarmhandler.js";
+import LocalStorage, {PREFIX_NAMES, STORAGE_NAMES} from './util/localStorageManager';
 
 
 const DynamicSound=Dynamic(SoundHandler);
@@ -196,10 +197,24 @@ class App extends React.Component {
         }
         let startpage="warningpage";
         let firstStart=true;
-        if (typeof window.localStorage === 'object'){
-            if (localStorage.getItem(globalStore.getData(keys.properties.licenseAcceptedName)) === 'true'){
+        if (LocalStorage.hasStorage()){
+            if (LocalStorage.getItem(STORAGE_NAMES.LICENSE) === 'true'){
                 startpage="mainpage";
                 firstStart=false;
+            }
+            if (LocalStorage.hasPrefix()){
+                //fill the prefixed data with the unprefixed one if prefixed is not available
+                for (let n in PREFIX_NAMES){
+                    let sn=PREFIX_NAMES[n];
+                    let item=LocalStorage.getItem(sn,undefined);
+                    if (! item){
+                        item=LocalStorage.getItem(sn,undefined);
+                        if (item){
+                            LocalStorage.setItem(sn,undefined,item);
+                        }
+                    }
+
+                }
             }
         }
         if (firstStart){
@@ -287,6 +302,17 @@ class App extends React.Component {
             }
             else alarmhandler.stopAlarm(LOCAL_TYPES.connectionLost);
         },{connectionLost:keys.nav.gps.connectionLost})
+        try{
+            window.addEventListener('message',(ev)=>{
+                if (ev.origin !== window.location.origin) return;
+                if (ev.data === 'isSplitMode'){
+                    globalStore.storeData(keys.gui.global.splitMode,true);
+                }
+            })
+        } catch (e){}
+        try{
+            window.parent.postMessage('querySplitMode',window.location.origin);
+        }catch (e){}
 
     }
     newDeviceHandler(){

@@ -4,13 +4,13 @@
 
 import Toast from '../components/Toast.jsx';
 import globalStore from './globalstore.jsx';
-import keys, {KeyHelper, PropertyType} from './keys.jsx';
+import keys, {KeyHelper, PropertyType, SplitProperty} from './keys.jsx';
 import base from '../base.js';
 import assign from 'object-assign';
-import Helper from './helper.js';
 import LayoutHandler from './layouthandler';
 import RequestHandler from "./requests";
 import Requests from "./requests";
+import LocalStorage, {STORAGE_NAMES} from './localStorageManager';
 
 
 const hex2rgba= (hex, opacity)=> {
@@ -46,7 +46,7 @@ class PropertyHandler {
         this.resetToSaved();
         //register at the store for updates of our synced data
         globalStore.register(this,keys.properties);
-        if (!window.localStorage) {
+        if (!LocalStorage.hasStorage()) {
             Toast("local storage is not available, seems that your browser is not HTML5... - application will not work");
             return;
         }
@@ -63,14 +63,18 @@ class PropertyHandler {
     }
 
     loadUserData(){
-        try{
-           let rawdata = localStorage.getItem(globalStore.getData(keys.properties.settingsName));
-           if (!rawdata) return {};
-           return JSON.parse(rawdata);
-        }catch (e){
-           base.log("unable to load user data")
-        }
-        return {};
+        let rt={};
+        [STORAGE_NAMES.SETTINGS,STORAGE_NAMES.SPLITSETTINGS].forEach((storageName)=> {
+            try {
+                let rawdata = LocalStorage.getItem(storageName);
+                if (rawdata) {
+                    assign(rt, JSON.parse(rawdata));
+                }
+            } catch (e) {
+                base.log("unable to load user data from "+storageName)
+            }
+        });
+        return rt;
     }
 
     incrementSequence(){
@@ -90,9 +94,9 @@ class PropertyHandler {
     /**
      * save the current settings
      */
-    saveUserData(data) {
+    saveUserData(data,opt_forPrefix) {
         let raw = JSON.stringify(data);
-        localStorage.setItem(globalStore.getData(keys.properties.settingsName), raw);
+        LocalStorage.setItem(opt_forPrefix?STORAGE_NAMES.SPLITSETTINGS:STORAGE_NAMES.SETTINGS,undefined, raw);
         try{
             window.parent.postMessage('settingsChanged',window.location.origin);
         }catch (e){}
@@ -117,13 +121,20 @@ class PropertyHandler {
         let self=this;
         let values=globalStore.getMultiple(keys.properties);
         let saveData={};
+        let saveDataSplit={}
         for (let dk in this.propertyDescriptions){
             let v=globalStore.getData(dk);
             if (v !== this.propertyDescriptions[dk].defaultv){
-                this.setItem(saveData,dk,v,1);
+                if (this.propertyDescriptions[dk] instanceof SplitProperty){
+                    this.setItem(saveDataSplit,dk,v,1);
+                }
+                else{
+                    this.setItem(saveData,dk,v,1);
+                }
             }
         }
         this.saveUserData(saveData);
+        this.saveUserData(saveDataSplit,true);
         this.incrementSequence();
     }
 

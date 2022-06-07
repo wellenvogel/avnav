@@ -576,7 +576,7 @@ export default  class FileDialog extends React.Component{
                                 }}
                                 >Log</DB>
                         }
-                        {this.state.allowed.showConvert &&
+                        {this.state.allowed.showConvertFunction &&
                             <DB name="toroute"
                                 onClick={()=>{
                                     this.props.closeCallback()
@@ -802,7 +802,7 @@ export const showFileDialog=(history,item,opt_doneCallback,opt_checkExists)=>{
             }
         }
         if ( action === 'convert'){
-            let convertFunction=showConvertFunctions[newItem];
+            let convertFunction=showConvertFunctions[newItem.type];
             if (convertFunction){
                 convertFunction(history,newItem);
             }
