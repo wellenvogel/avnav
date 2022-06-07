@@ -84,7 +84,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
   #write out the line
   #timestamp is a datetime object
   def writeLine(self,filehandle,timestamp,data):
-    ts=timestamp.isoformat()
+    ts=timestamp.replace(microsecond=0).isoformat()
     if not ts[-1:]=="Z":
         ts+="Z"
     str="%s,%f,%f,%f,%f,%f\n"%(ts,data['lat'],data['lon'],(data.get('track') or 0),(data.get('speed') or 0),(data.get('distance') or 0))
