@@ -23,6 +23,7 @@ import {SaveItemDialog} from "../components/LoadSaveDialogs";
 import PropertyHandler from '../util/propertyhandler';
 import {ItemActions} from "../components/FileDialog";
 import loadSettings from "../components/LoadSettingsDialog";
+import propertyhandler from "../util/propertyhandler";
 
 const settingsSections={
     Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,
@@ -32,7 +33,8 @@ const settingsSections={
                 keys.properties.connectionLostAlarm],
     Widgets:    [keys.properties.widgetFontSize,keys.properties.allowTwoWidgetRows,keys.properties.showClock,keys.properties.showZoom,keys.properties.showWind,keys.properties.showDepth],
     Buttons:    [keys.properties.style.buttonSize,keys.properties.cancelTop,keys.properties.buttonCols,keys.properties.showDimButton,keys.properties.showFullScreen,
-        keys.properties.hideButtonTime,keys.properties.showButtonShade, keys.properties.autoHideNavPage,keys.properties.autoHideGpsPage,keys.properties.nightModeNavPage],
+        keys.properties.hideButtonTime,keys.properties.showButtonShade, keys.properties.autoHideNavPage,keys.properties.autoHideGpsPage,keys.properties.nightModeNavPage,
+        keys.properties.showSplitButton],
     Layout:     [keys.properties.layoutName,keys.properties.baseFontSize,keys.properties.smallBreak,keys.properties.nightFade,
         keys.properties.nightChartFade,keys.properties.dimFade,keys.properties.localAlarmSound ],
     AIS:        [keys.properties.aisDistance,keys.properties.aisWarningCpa,keys.properties.aisWarningTpa,
@@ -672,6 +674,9 @@ class SettingsPage extends React.Component{
                     className+=" changed";
                     if (! sectionChanges[section]) sectionChanges[section]={};
                     sectionChanges[section].isChanged=true;
+                }
+                if (propertyhandler.isPrefixProperty(key)){
+                    className+=" prefix";
                 }
                 if (section === currentSection) {
                     let item = assign({}, description, {

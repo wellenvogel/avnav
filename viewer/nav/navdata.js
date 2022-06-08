@@ -10,11 +10,11 @@ import NavCompute from './navcompute';
 import navobjects from './navobjects';
 import globalStore from '../util/globalstore.jsx';
 import keys,{KeyHelper} from '../util/keys.jsx';
-import PropertyHandler from '../util/propertyhandler';
 import RouteEdit,{StateHelper} from './routeeditor.js';
 import assign from 'object-assign';
 import Average, {CourseAverage} from "../util/average.mjs";
 import navcompute from "./navcompute";
+import AisData from './aisdata';
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE);
 
@@ -42,6 +42,7 @@ const NavData=function(){
      * @private
      */
     this.gpsdata=new GpsData();
+
         /**
      * @private
      * @type {TrackData}
@@ -69,8 +70,14 @@ const NavData=function(){
                 [keys.map.centerPosition]
             ));
     this.storeKeys=GpsData.getStoreKeys();
+    this.aisData=new AisData(this);
 };
-
+NavData.prototype.startQuery=function(){
+    this.gpsdata.startQuery();
+    this.trackHandler.startQuery();
+    this.routeHandler.startQuery();
+    this.aisData.startQuery();
+};
 /**
  * compute the raw and formtted valued
  * @private
@@ -344,6 +351,10 @@ NavData.prototype.getCurrentPosition=function(){
         return globalStore.getData(keys.nav.gps.position);
     }
 };
+
+NavData.prototype.getAisHandler=function(){
+    return this.aisData;
+}
 
 export default new NavData();
 

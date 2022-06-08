@@ -1,0 +1,11 @@
+{
+"version":1,
+"keys":
+[
+    "properties.connectedMode",
+    "properties.layoutName",
+    "properties.remoteChannelName",
+    "properties.remoteChannelRead",
+    "properties.remoteChannelWrite"
+]
+}

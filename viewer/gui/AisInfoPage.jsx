@@ -3,19 +3,19 @@
  */
 
 import Dynamic from '../hoc/Dynamic.jsx';
-import AisData from '../nav/aisdata.js';
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
 import React from 'react';
 import Page from '../components/Page.jsx';
-import AisHandler from '../nav/aisdata.js';
 import AisFormatter from '../nav/aisformatter.jsx';
 import MapHolder from '../map/mapholder.js';
 import GuiHelpers from '../util/GuiHelpers.js';
 import Mob from '../components/Mob.js';
 import {Drawing} from '../map/drawing.js';
 import MapEventGuard from "../hoc/MapEventGuard";
+import NavData from '../nav/navdata';
+
 
 const displayItems = [
     {name: 'mmsi', label: 'MMSI'},
@@ -40,7 +40,7 @@ const displayItems = [
 const createUpdateFunction=(config,mmsi)=>{
     return (state)=>{
         if (!mmsi) return {current:undefined,...config};
-        return {current:AisHandler.getAisByMmsi(mmsi),...config};
+        return {current:NavData.getAisHandler().getAisByMmsi(mmsi),...config};
     }
 };
 const storeKeys={
@@ -71,8 +71,8 @@ class AisInfoPage extends React.Component{
             {
                 name: 'AisNearest',
                 onClick:()=>{
-                    AisHandler.setTrackedTarget(0);
-                    let pos=AisHandler.getAisPositionByMmsi(AisHandler.getTrackedTarget());
+                    NavData.getAisHandler().setTrackedTarget(0);
+                    let pos=NavData.getAisHandler().getAisPositionByMmsi(NavData.getAisHandler().getTrackedTarget());
                     if (pos) MapHolder.setCenter(pos);
                     self.props.history.pop();
                 }
@@ -81,8 +81,8 @@ class AisInfoPage extends React.Component{
                 name: 'AisInfoLocate',
                 onClick:()=>{
                     if (!self.props.options || ! self.props.options.mmsi) return;
-                    AisData.setTrackedTarget(self.props.options.mmsi);
-                    let pos=AisHandler.getAisPositionByMmsi(self.props.options.mmsi);
+                    NavData.getAisHandler().setTrackedTarget(self.props.options.mmsi);
+                    let pos=NavData.getAisHandler().getAisPositionByMmsi(self.props.options.mmsi);
                     if (pos) {
                         MapHolder.setCenter(pos);
                         MapHolder.setGpsLock(false);
@@ -113,7 +113,7 @@ class AisInfoPage extends React.Component{
 
     checkNoTarget(timerSequence){
         let mmsi=this.props.options?this.props.options.mmsi:undefined;
-        if (! mmsi || ! AisHandler.getAisByMmsi(mmsi)){
+        if (! mmsi || ! NavData.getAisHandler().getAisByMmsi(mmsi)){
             this.props.history.pop();
             return;
         }

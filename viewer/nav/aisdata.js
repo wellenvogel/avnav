@@ -1,7 +1,6 @@
 /**
  * Created by andreas on 04.05.14.
  */
-import NavData from './navdata';
 import navobjects from './navobjects';
 import Formatter from '../util/formatter';
 import NavCompute from './navcompute';
@@ -19,8 +18,9 @@ const AisTarget=navobjects.Ais;
  * query the server...
  * @constructor
  */
-let AisData=function( opt_noQuery){
+let AisData=function(navdata){
 
+    this.navdata=navdata;
 
     /** @private
      * @type {Array.<AisTarget>}
@@ -74,7 +74,6 @@ let AisData=function( opt_noQuery){
      * @type {Formatter}
      */
     this.formatter=Formatter;
-    if (! opt_noQuery) this.startQuery();
 };
 /**
  *
@@ -232,11 +231,11 @@ AisData.prototype.aisSort=function(a,b) {
 };
 
 /**
- * @private
+ *
  */
 AisData.prototype.startQuery=function() {
     let url = "?request=ais";
-    let center=NavData.getAisCenter();
+    let center=this.navdata.getAisCenter();
     let self=this;
     let timeout=parseInt(globalStore.getData(keys.properties.aisQueryTimeout));
     if (! center){
@@ -343,4 +342,4 @@ AisData.prototype.setTrackedTarget=function(mmsi){
     this.handleAisData();
 };
 
-export default new AisData();
+export default AisData;
