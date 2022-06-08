@@ -23,6 +23,7 @@ import {SaveItemDialog} from "../components/LoadSaveDialogs";
 import PropertyHandler from '../util/propertyhandler';
 import {ItemActions} from "../components/FileDialog";
 import loadSettings from "../components/LoadSettingsDialog";
+import propertyhandler from "../util/propertyhandler";
 
 const settingsSections={
     Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,
@@ -673,6 +674,9 @@ class SettingsPage extends React.Component{
                     className+=" changed";
                     if (! sectionChanges[section]) sectionChanges[section]={};
                     sectionChanges[section].isChanged=true;
+                }
+                if (propertyhandler.isPrefixProperty(key)){
+                    className+=" prefix";
                 }
                 if (section === currentSection) {
                     let item = assign({}, description, {

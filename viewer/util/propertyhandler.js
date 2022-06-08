@@ -35,6 +35,7 @@ const hex2rgba= (hex, opacity)=> {
 class PropertyHandler {
     constructor(propertyDescriptions) {
         let self=this;
+        this.propertyPrefix=KeyHelper.keyNodeToString(keys.properties)+".";
         this.propertyDescriptions = KeyHelper.getKeyDescriptions(true);
         this.getProperties=this.getProperties.bind(this);
         this.saveUserData=this.saveUserData.bind(this);
@@ -74,7 +75,7 @@ class PropertyHandler {
         }
         let newPrefixKeys=[];
         prefixKeys.forEach((key)=>{
-            if (key.indexOf("properties.") !== 0) key="properties."+key;
+            if (key.indexOf(this.propertyPrefix) !== 0) key=this.propertyPrefix+key;
             newPrefixKeys.push(key);
         })
         this.prefixKeys=newPrefixKeys;
@@ -520,6 +521,14 @@ class PropertyHandler {
             json.items.forEach((item)=>rt.push({label:item.name,value:item.name}));
             return rt;
         });
+    }
+
+    isPrefixProperty(name){
+        if (! name || ! LocalStorage.hasPrefix()) return false;
+        if (name.indexOf(this.propertyPrefix) !== 0){
+            name=this.propertyPrefix+key;
+        }
+        return this.prefixKeys.indexOf(name) >= 0;
     }
 
 
