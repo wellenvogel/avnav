@@ -206,8 +206,6 @@ let RouteData=function(){
     globalStore.register(this.editingRouteChanged,editingRoute.getStoreKeys());
     this.lastLegSequence=globalStore.getData(keys.nav.gps.updateleg);
     this.currentRoutePage=undefined; //only if there is a page that handles a route we will query
-
-    this._startQuery();
 };
 /*---------------------------------------------------------
  get raw data functions
@@ -808,7 +806,7 @@ RouteData.prototype._handleLegResponse = function (serverData) {
 /**
  * @private
  */
-RouteData.prototype._startQuery=function() {
+RouteData.prototype.startQuery=function() {
     this._checkNextWp();
     let url = "?request=route&command=getleg";
     let timeout = globalStore.getData(keys.properties.routeQueryTimeout); //in ms!
@@ -819,7 +817,7 @@ RouteData.prototype._startQuery=function() {
         this.lastSentRoute=undefined;
         this.lastSentLeg=undefined;
         self.timer=window.setTimeout(function() {
-            self._startQuery();
+            self.startQuery();
         },timeout);
         return;
     }
@@ -832,7 +830,7 @@ RouteData.prototype._startQuery=function() {
                     let change = self._handleLegResponse(data);
                     base.log("leg data change=" + change);
                     self.timer = window.setTimeout(function () {
-                        self._startQuery();
+                        self.startQuery();
                     }, timeout);
                 }
             ).catch(
@@ -844,14 +842,14 @@ RouteData.prototype._startQuery=function() {
                         self.serverConnected = false;
                     }
                     self.timer = window.setTimeout(function () {
-                        self._startQuery();
+                        self.startQuery();
                     }, timeout);
                 }
             );
         }
         else{
             self.timer = window.setTimeout(function () {
-                self._startQuery();
+                self.startQuery();
             }, timeout);
         }
     }

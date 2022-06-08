@@ -219,6 +219,7 @@ class App extends React.Component {
         if (firstStart){
             propertyHandler.firstStart();
         }
+        NavData.startQuery();
         this.history.push(startpage);
         this.leftHistoryState=stateHelper(this,this.history.currentLocation(true),'leftHistory');
         this.history.setCallback((topEntry)=>this.leftHistoryState.setState(topEntry,true));
