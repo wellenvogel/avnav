@@ -19,7 +19,7 @@ import de.wellenvogel.avnav.worker.GpsService;
 public class UserDirectoryRequestHandler extends DirectoryRequestHandler {
     private static final byte[] PREFIX="try{(\nfunction(){\n".getBytes(StandardCharsets.UTF_8);
     private static final byte[] SUFFIX="\n})();\n}catch(e){\nwindow.avnav.api.showToast(e.message+\"\\n\"+(e.stack||e));\n }\n".getBytes(StandardCharsets.UTF_8);
-    private static String templateFiles[]=new String[]{"user.css","user.js"};
+    private static String templateFiles[]=new String[]{"user.css","user.js","splitkeys.json"};
     private static String emptyJsonFiles[]=new String[]{"keys.json","images.json"};
     //input stream for a js file wrapped by prefix and suffix
     static class JsStream extends InputStream {
