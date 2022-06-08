@@ -72,6 +72,9 @@ function getParam(key)
  *
  */
 export default function() {
+    let storePrefix=getParam('storePrefix');
+    if (storePrefix && storePrefix !== "") LocalStorage.setPrefix(storePrefix);
+    propertyHandler.resetToSaved();
     //some workaround for lees being broken on IOS browser
     //less.modifyVars();
     let body=document.querySelector('body');
@@ -98,8 +101,6 @@ export default function() {
     if (getParam("noCloseDialog") === "true"){
         LeaveHandler.stop();
     }
-    let storePrefix=getParam('storePrefix');
-    if (storePrefix && storePrefix !== "") LocalStorage.setPrefix(storePrefix);
     const loadScripts=(loadList)=>{
         let fileref=undefined;
         for (let i in  loadList) {

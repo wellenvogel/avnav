@@ -43,7 +43,13 @@ class PropertyHandler {
         this.incrementSequence=this.incrementSequence.bind(this);
         this.dataChanged=this.dataChanged.bind(this);
         this.resetToSaved=this.resetToSaved.bind(this);
-        this.resetToSaved();
+        this.prefixKeys=[];
+        for (let k in this.propertyDescriptions){
+            let description=this.propertyDescriptions[k];
+            if (description instanceof SplitProperty){
+                this.prefixKeys.push(k);
+            }
+        }
         //register at the store for updates of our synced data
         globalStore.register(this,keys.properties);
         if (!LocalStorage.hasStorage()) {
@@ -62,18 +68,32 @@ class PropertyHandler {
         } catch (e){}
     }
 
-    loadUserData(){
-        let rt={};
-        [STORAGE_NAMES.SETTINGS,STORAGE_NAMES.SPLITSETTINGS].forEach((storageName)=> {
-            try {
-                let rawdata = LocalStorage.getItem(storageName);
-                if (rawdata) {
-                    assign(rt, JSON.parse(rawdata));
-                }
-            } catch (e) {
-                base.log("unable to load user data from "+storageName)
+    setPrefixKeys(prefixKeys){
+        if (! (prefixKeys instanceof Array)){
+            throw new Error("prefix keys must be an array");
+        }
+        let newPrefixKeys=[];
+        prefixKeys.forEach((key)=>{
+            if (key.indexOf("properties.") !== 0) key="properties."+key;
+            newPrefixKeys.push(key);
+        })
+        this.prefixKeys=newPrefixKeys;
+    }
+
+    loadUserData(use_prefix) {
+        let rt = {};
+        if (use_prefix && !LocalStorage.hasPrefix()) return rt;
+        let storageName = use_prefix ?
+            STORAGE_NAMES.SPLITSETTINGS :
+            STORAGE_NAMES.SETTINGS;
+        try {
+            let rawdata = LocalStorage.getItem(storageName);
+            if (rawdata) {
+                return JSON.parse(rawdata);
             }
-        });
+        } catch (e) {
+            base.log("unable to load user data from " + storageName)
+        }
         return rt;
     }
 
@@ -122,10 +142,11 @@ class PropertyHandler {
         let values=globalStore.getMultiple(keys.properties);
         let saveData={};
         let saveDataSplit={}
+        let hasPrefix=LocalStorage.hasPrefix();
         for (let dk in this.propertyDescriptions){
             let v=globalStore.getData(dk);
             if (v !== this.propertyDescriptions[dk].defaultv){
-                if (this.propertyDescriptions[dk] instanceof SplitProperty){
+                if (this.prefixKeys.indexOf(dk) >= 0 && hasPrefix){
                     this.setItem(saveDataSplit,dk,v,1);
                 }
                 else{
@@ -134,7 +155,9 @@ class PropertyHandler {
             }
         }
         this.saveUserData(saveData);
-        this.saveUserData(saveDataSplit,true);
+        if (hasPrefix) {
+            this.saveUserData(saveDataSplit, true);
+        }
         this.incrementSequence();
     }
 
@@ -173,10 +196,15 @@ class PropertyHandler {
         globalStore.storeMultiple(defaults,undefined,true);
         try {
             let ndata = this.loadUserData();
+            let prefixData = this.loadUserData(true);
             if (ndata) {
                 let userData={};
                 for (let k in this.propertyDescriptions){
                     let v=KeyHelper.getValue(ndata,k,1);
+                    if (this.prefixKeys.indexOf(k) >= 0){
+                        let pv=KeyHelper.getValue(prefixData,k,1);
+                        if (pv !== undefined) v=pv;
+                    }
                     if ( v === undefined) continue;
                     if (v !== globalStore.getData(k)){
                         userData[k]=v;

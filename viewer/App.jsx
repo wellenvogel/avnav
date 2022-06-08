@@ -158,7 +158,6 @@ class App extends React.Component {
             error:0
         };
         this.history=new History();
-        this.rightHistory=new History();
         this.buttonSizer=null;
         globalStore.storeData(keys.gui.global.onAndroid,false,true);
         //make the android API available as avnav.android
@@ -221,11 +220,8 @@ class App extends React.Component {
             propertyHandler.firstStart();
         }
         this.history.push(startpage);
-        this.rightHistory.push(startpage);
         this.leftHistoryState=stateHelper(this,this.history.currentLocation(true),'leftHistory');
-        this.rightHistoryState=stateHelper(this,this.rightHistory.currentLocation(true),'rightHistory');
         this.history.setCallback((topEntry)=>this.leftHistoryState.setState(topEntry,true));
-        this.rightHistory.setCallback((topEntry)=>this.rightHistoryState.setState(topEntry,true));
         Requests.getJson("/user/viewer/images.json",{useNavUrl:false,checkOk:false})
             .then((data)=>{
                 MapHolder.setImageStyles(data);
@@ -246,6 +242,22 @@ class App extends React.Component {
                 KeyHandler.mergeMappings(2,json);
             },
             (error)=>{
+            }
+        );
+        Requests.getJson("/user/viewer/splitkeys.json",{useNavUrl:false,checkOk:false}).then(
+            (json)=>{
+                if (json.version === undefined){
+                    throw new Error("missing version");
+                }
+                if (json.keys === undefined){
+                    throw new Error("missing keys");
+                }
+                propertyHandler.setPrefixKeys(json.keys);
+                propertyHandler.resetToSaved();
+                propertyHandler.incrementSequence();
+            })
+            .catch((error)=>{
+                console.log("splitkeys.json: "+error);
             }
         );
         LayoutHandler.loadStoredLayout(true)
