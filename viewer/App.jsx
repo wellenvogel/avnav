@@ -434,6 +434,7 @@ class App extends React.Component {
                 null}
             <ToastDisplay/>
             <ButtonSizer
+                sequence={this.props.sequence}
                 fontSize={this.props.buttonFontSize}
                 refFunction={(el)=>{
                 this.buttonSizer=el;
@@ -448,6 +449,7 @@ export default   Dynamic(App,{
       fontSize: keys.properties.baseFontSize,
       smallDisplay: keys.gui.global.smallDisplay,
       nightMode: keys.properties.nightMode,
-      layoutName: keys.properties.layoutName
+      layoutName: keys.properties.layoutName,
+      sequence: keys.gui.global.propertySequence
   }
 });
