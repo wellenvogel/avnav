@@ -47,7 +47,7 @@ import AvNavVersion from './version.js';
 import assign from 'object-assign';
 import LeaveHandler from './util/leavehandler';
 import isIosSafari from '@braintree/browser-detection/is-ios-safari';
-import LocalStorage from './util/localStorageManager';
+import LocalStorage, {PREFIX_NAMES} from './util/localStorageManager';
 
 
 if (! window.avnav){
@@ -74,7 +74,22 @@ function getParam(key)
 export default function() {
     let storePrefix=getParam('storePrefix');
     if (storePrefix && storePrefix !== "") LocalStorage.setPrefix(storePrefix);
+    if (LocalStorage.hasPrefix()){
+        //fill the prefixed data with the unprefixed one if prefixed is not available
+        for (let n in PREFIX_NAMES){
+            let sn=PREFIX_NAMES[n];
+            let item=LocalStorage.getItem(sn,undefined);
+            if (! item){
+                item=LocalStorage.getItem(sn,undefined);
+                if (item){
+                    LocalStorage.setItem(sn,undefined,item);
+                }
+            }
+
+        }
+    }
     propertyHandler.resetToSaved();
+    propertyHandler.savePrefixedValues();
     //some workaround for lees being broken on IOS browser
     //less.modifyVars();
     let body=document.querySelector('body');
