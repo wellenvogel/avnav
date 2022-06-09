@@ -2,6 +2,7 @@
  * Created by Andreas on 14.05.2014.
  */
 import navobjects from './navobjects';
+import LatLon from 'geodesy/latlon-spherical';
 let NavCompute={
 };
 
@@ -19,8 +20,8 @@ NavCompute.computeDistance=function(src,dst){
     //use the movable type stuff for computations
     let llsrc=new LatLon(srcll.lat,srcll.lon);
     let lldst=new LatLon(dstll.lat,dstll.lon);
-    rt.dts=llsrc.distanceTo(lldst,5)*1000;
-    rt.course=llsrc.bearingTo(lldst);
+    rt.dts=llsrc.distanceTo(lldst);
+    rt.course=llsrc.initialBearingTo(lldst);
     return rt;
 };
 
@@ -29,7 +30,7 @@ NavCompute.computeXte=function(start,destination,current){
     let llsrc=new LatLon(start.lat,start.lon);
     let lldst=new LatLon(destination.lat,destination.lon);
     let llcur=new LatLon(current.lat,current.lon);
-    let xte=llsrc.xte(lldst,llcur)*1000;
+    let xte=llsrc.crossTrackDistanceTo(lldst,llcur);
     return xte;
 };
 
@@ -64,20 +65,20 @@ NavCompute.computeCpa=function(src,dst,properties){
     let rt = new navobjects.Cpa();
     let llsrc = new LatLon(src.lat, src.lon);
     let lldst = new LatLon(dst.lat, dst.lon);
-    let curdistance=llsrc.distanceTo(lldst,5)*1000; //m
+    let curdistance=llsrc.distanceTo(lldst); //m
     if (curdistance < 0.1){
         let x=curdistance;
     }
     rt.curdistance=curdistance;
-    let courseToTarget=llsrc.bearingTo(lldst); //in deg
+    let courseToTarget=llsrc.initialBearingTo(lldst); //in deg
     //default to our current distance
     rt.tcpa=0;
     rt.cpa=curdistance;
-    let maxDistance=llsrc._radius*1000*Math.PI; //half earth
+    let maxDistance=6371e3*1000*Math.PI; //half earth
     let appr=NavCompute.computeApproach(courseToTarget,curdistance,src.course,src.speed,dst.course,dst.speed,properties.minAISspeed,maxDistance);
     if (appr.dd !== undefined && appr.ds !== undefined) {
         let xpoint = llsrc.destinationPoint(src.course, appr.dd / 1000);
-        rt.crosspoint = new navobjects.Point(xpoint._lon, xpoint._lat);
+        rt.crosspoint = new navobjects.Point(xpoint.lon, xpoint.lat);
     }
     if (!appr.tm){
         rt.tcpa=0; //better undefined
@@ -87,11 +88,11 @@ NavCompute.computeCpa=function(src,dst,properties){
     }
     let cpasrc = llsrc.destinationPoint(src.course, appr.dms/1000);
     let cpadst = lldst.destinationPoint(dst.course, appr.dmd/1000);
-    rt.src.lon=cpasrc._lon;
-    rt.src.lat=cpasrc._lat;
-    rt.dst.lon=cpadst._lon;
-    rt.dst.lat=cpadst._lat;
-    rt.cpa = cpasrc.distanceTo(cpadst, 5) * 1000;
+    rt.src.lon=cpasrc.lon;
+    rt.src.lat=cpasrc.lat;
+    rt.dst.lon=cpadst.lon;
+    rt.dst.lat=cpadst.lat;
+    rt.cpa = cpasrc.distanceTo(cpadst);
     rt.tcpa = appr.tm;
     if (rt.cpa > curdistance || appr.tm < 0){
         rt.cpa=curdistance;
@@ -177,7 +178,7 @@ NavCompute.computeApproach=function(courseToTarget,curdistance,srcCourse,srcSpee
 NavCompute.computeTarget=function(src,brg,dist){
     let llsrc = new LatLon(src.lat, src.lon);
     let llrt=llsrc.destinationPoint(brg,dist/1000);
-    let rt=new navobjects.Point(llrt.lon(),llrt.lat());
+    let rt=new navobjects.Point(llrt.lon,llrt.lat);
     return rt;
 };
 
