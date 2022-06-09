@@ -201,20 +201,6 @@ class App extends React.Component {
                 startpage="mainpage";
                 firstStart=false;
             }
-            if (LocalStorage.hasPrefix()){
-                //fill the prefixed data with the unprefixed one if prefixed is not available
-                for (let n in PREFIX_NAMES){
-                    let sn=PREFIX_NAMES[n];
-                    let item=LocalStorage.getItem(sn,undefined);
-                    if (! item){
-                        item=LocalStorage.getItem(sn,undefined);
-                        if (item){
-                            LocalStorage.setItem(sn,undefined,item);
-                        }
-                    }
-
-                }
-            }
         }
         if (firstStart){
             propertyHandler.firstStart();
@@ -448,6 +434,7 @@ class App extends React.Component {
                 null}
             <ToastDisplay/>
             <ButtonSizer
+                sequence={this.props.sequence}
                 fontSize={this.props.buttonFontSize}
                 refFunction={(el)=>{
                 this.buttonSizer=el;
@@ -462,6 +449,7 @@ export default   Dynamic(App,{
       fontSize: keys.properties.baseFontSize,
       smallDisplay: keys.gui.global.smallDisplay,
       nightMode: keys.properties.nightMode,
-      layoutName: keys.properties.layoutName
+      layoutName: keys.properties.layoutName,
+      sequence: keys.gui.global.propertySequence
   }
 });

@@ -24,6 +24,7 @@ import PropertyHandler from '../util/propertyhandler';
 import {ItemActions} from "../components/FileDialog";
 import loadSettings from "../components/LoadSettingsDialog";
 import propertyhandler from "../util/propertyhandler";
+import LocalStorage from '../util/localStorageManager';
 
 const settingsSections={
     Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,
@@ -379,6 +380,28 @@ class SettingsPage extends React.Component{
                     self.confirmAbortOrDo().then(()=> {
                         self.resetData();
                     });
+                }
+            },
+            {
+                name: 'SettingsSplitReset',
+                storeKeys:{
+                    editing: keys.gui.global.layoutEditing
+                },
+                updateFunction:(state)=>{
+                    return {visible: !state.editing && LocalStorage.hasPrefix()}
+                },
+                onClick:()=>{
+                    let masterValues=propertyhandler.getMasterValues();
+                    let promises=[];
+                    for (let key in masterValues){
+                        let description = KeyHelper.getKeyDescriptions()[key];
+                        if (description.type === PropertyType.LAYOUT){
+                            promises.push(LayoutHandler.loadLayout(masterValues[key]));
+                        }
+                    }
+                    Promise.all(promises)
+                        .then(()=> this.values.setState(masterValues))
+                        .catch((e)=>Toast(e));
                 }
             },
             {

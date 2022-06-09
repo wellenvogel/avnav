@@ -138,19 +138,31 @@ class PropertyHandler {
         }
         return obj;
     }
+    savePrefixedValues(){
+        let saveDataSplit={}
+        let hasPrefix=LocalStorage.hasPrefix();
+        if (! hasPrefix) return;
+        for (let dk in this.propertyDescriptions){
+            let v=globalStore.getData(dk);
+            if (this.prefixKeys.indexOf(dk) >= 0){
+                //in any case also write default values to prefixed settings
+                this.setItem(saveDataSplit,dk,v,1);
+            }
+        }
+        this.saveUserData(saveDataSplit, true);
+    }
     dataChanged(storeKeys){
-        let self=this;
-        let values=globalStore.getMultiple(keys.properties);
         let saveData={};
         let saveDataSplit={}
         let hasPrefix=LocalStorage.hasPrefix();
         for (let dk in this.propertyDescriptions){
             let v=globalStore.getData(dk);
-            if (v !== this.propertyDescriptions[dk].defaultv){
-                if (this.prefixKeys.indexOf(dk) >= 0 && hasPrefix){
-                    this.setItem(saveDataSplit,dk,v,1);
-                }
-                else{
+            if (this.prefixKeys.indexOf(dk) >= 0 && hasPrefix){
+                //in any case also write default values to prefixed settings
+                this.setItem(saveDataSplit,dk,v,1);
+            }
+            else{
+                if (v !== this.propertyDescriptions[dk].defaultv){
                     this.setItem(saveData,dk,v,1);
                 }
             }
@@ -529,6 +541,30 @@ class PropertyHandler {
             name=this.propertyPrefix+key;
         }
         return this.prefixKeys.indexOf(name) >= 0;
+    }
+
+    /**
+     * get a list of property values for splitkeys
+     * from the master
+     * return them in the flattend structure with the keys being the store keys
+     */
+    getMasterValues(){
+        let masterData=this.loadUserData();
+        let rt={};
+        this.prefixKeys.forEach((key)=>{
+            let v=KeyHelper.getValue(masterData,key,1);
+            if ( v!== undefined) rt[key]=v;
+            else{
+                let description=this.propertyDescriptions[key];
+                if (description){
+                    rt[key]=description.defaultv;
+                }
+                else{
+                    rt[key]=undefined;
+                }
+            }
+        })
+        return rt;
     }
 
 
