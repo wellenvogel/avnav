@@ -7,6 +7,7 @@ import keys,{KeyHelper} from '../util/keys.jsx';
 import globalStore from '../util/globalstore.jsx';
 import RouteEdit from '../nav/routeeditor.js';
 import orangeMarker from '../images/MarkerOrange.png';
+import NavCompute from "../nav/navcompute";
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE);
 const editingRoute=new RouteEdit(RouteEdit.MODES.EDIT);
@@ -190,7 +191,12 @@ RouteLayer.prototype.onPostCompose=function(center,drawing) {
         let line=[this.mapholder.pointToMap(gpsPosition.toCoord()),to];
         drawing.drawLineToContext(line,this.courseStyle);
         if (from){
-            line=[from,to];
+            //line=[from,to];
+            let linePoints=NavCompute.computeCoursePoints(fromPoint,toPoint,5);
+            line=[];
+            linePoints.forEach((point)=>{
+               line.push(this.mapholder.pointToMap([point.lon,point.lat]));
+            })
             drawing.drawLineToContext(line,this.dashedStyle);
         }
     }

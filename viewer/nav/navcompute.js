@@ -3,6 +3,8 @@
  */
 import navobjects from './navobjects';
 import LatLon from 'geodesy/latlon-spherical';
+import globalstore from "../util/globalstore";
+import keys from "../util/keys";
 let NavCompute={
 };
 
@@ -33,6 +35,31 @@ NavCompute.computeXte=function(start,destination,current){
     let xte=llsrc.crossTrackDistanceTo(lldst,llcur);
     return xte;
 };
+/**
+ * compute points on a route
+ * @param start
+ * @param destination
+ * @param percentStep
+ * @return {LatLonSpherical[]}
+ */
+NavCompute.computeCoursePoints=function (start,destination,percentStep){
+   let llsrc=new LatLon(start.lat,start.lon);
+   let lldst=new LatLon(destination.lat,destination.lon);
+   let rt=[llsrc];
+   if (percentStep < 1 || globalstore.getData(keys.properties.routeRhumbLine)){
+       rt.push(lldst);
+       return rt;
+   }
+   let last=undefined
+   for (let fraction=percentStep;fraction <= 100;fraction+=percentStep){
+       last=llsrc.intermediatePointTo(lldst,fraction/100.0);
+       rt.push(last);
+   }
+   if (! last || (last.lon !== lldst.lon || last.lat !== lldst.lat)){
+       rt.push(lldst);
+   }
+   return rt;
+}
 
 /**
  * check if a course is closer to our own course or to ownCourse + 180
