@@ -116,6 +116,13 @@ export default function() {
     if (getParam("noCloseDialog") === "true"){
         LeaveHandler.stop();
     }
+    let lateLoads=["/user/viewer/user.js"];
+    let addScripts="addScripts";
+    if (getParam(addScripts)){
+        getParam(addScripts).split(',').forEach((script)=>{
+            lateLoads.push(script);
+        })
+    }
     const loadScripts=(loadList)=>{
         let fileref=undefined;
         for (let i in  loadList) {
@@ -145,7 +152,6 @@ export default function() {
 
         let scriptsLoaded=false;
         //load the user and plugin stuff
-        let lateLoads=["/user/viewer/user.js"];
         if (loadPlugins) {
             Requests.getJson("?request=plugins&command=list").then(
                 (json)=> {

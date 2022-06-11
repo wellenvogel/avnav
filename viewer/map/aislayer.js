@@ -298,6 +298,9 @@ AisLayer.prototype.onPostCompose=function(center,drawing){
             pos=this.mapholder.pointToMap((new navobjects.Point(current.lon,current.lat)).toCoord());
             current.mapPos=pos;
         }
+        if (! pos || isNaN(pos[0]) || isNaN(pos[1])) {
+            continue;
+        }
         let curpix=this.drawTargetSymbol(drawing,pos,current,this.computeTarget);
         pixel.push({pixel:curpix,ais:current});
         let text=AisFormatter.format(firstLabel,current,true);
@@ -339,11 +342,15 @@ AisLayer.prototype.dataChanged=function(){
  * @param {number} dist in m
  */
 AisLayer.prototype.computeTarget=function(pos,course,dist){
-    let point=new navobjects.Point();
-    point.fromCoord(this.mapholder.transformFromMap(pos));
-    let tp=NavCompute.computeTarget(point,course,dist);
-    let tpmap=this.mapholder.transformToMap(tp.toCoord());
-    return tpmap;
+    try {
+        let point = new navobjects.Point();
+        point.fromCoord(this.mapholder.transformFromMap(pos));
+        let tp = NavCompute.computeTarget(point, course, dist);
+        let tpmap = this.mapholder.transformToMap(tp.toCoord());
+        return tpmap;
+    }catch (e){
+        return [0,0];
+    }
 };
 /**
  *

@@ -197,6 +197,7 @@ Drawing.prototype.dashedLine = function (x1, y1, x2, y2, dashLen) {
     let dX = x2 - x1;
     let dY = y2 - y1;
     let dashes = Math.floor(Math.sqrt(dX * dX + dY * dY) / dashLen);
+    if (dashes < 4) dashes=4;
     let dashX = dX / dashes;
     let dashY = dY / dashes;
 

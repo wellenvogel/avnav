@@ -10,6 +10,8 @@ import Helper from './helper.js';
 import Toast from '../components/Toast.jsx';
 import featureFormatter from "./featureFormatter";
 import NavCompute from "../nav/navcompute";
+import LatLon from "geodesy/latlon-spherical";
+import Dms from "geodesy/dms";
 
 class Api{
     constructor(){
@@ -117,39 +119,33 @@ class Api{
     }
 
     /**
-     * compute a distance in m (greatCircle)
-     * @param src [lon,lat]
-     * @param dest [lon,lat]
-     * @return distance in m
+     * create an instance of {@link https://www.movable-type.co.uk/scripts/geodesy-library.html LatLonSpherical}
+     * @param lat
+     * @param lon
+     * @return {LatLonSpherical}
      */
-    distance(src,dest){
-        let rt=NavCompute.computeDistance({lon:src[0],lat:src[1]}, {lon:dest[0],lat:dest[1]});
-        return rt.dts;
+    createLatLon(lat,lon){
+        return new LatLon(lat,lon);
     }
 
     /**
-     * compute a course (greatCircle)
-     * @param src [lon,lat]
-     * @param dest [lon,lat]
-     * @return {number} course in degrees
+     * parse a LatLon from various formats
+     * refer to the LatLon parse from {@link https://www.movable-type.co.uk/scripts/geodesy-library.html}
+     * @param args
+     * @return {LatLon}
      */
-    courseTo(src,dest){
-        let rt=NavCompute.computeDistance({lon:src[0],lat:src[1]}, {lon:dest[0],lat:dest[1]});
-        return rt.course;
+    parseLatLon(...args){
+        return LatLon.parse(...args);
     }
 
     /**
-     * compute a target lon,lat from a start and course and distance
-     * @param src [lon,lat]
-     * @param course degrees
-     * @param distance m
-     * @return {(*|number)[]} [lon,lat]
+     * get an instance of {@link https://www.movable-type.co.uk/scripts/geodesy-library.html Dms} to parse
+     * lat/lon data
+     * @return {Dms}
      */
-    computeTarget(src,course,distance){
-        let rt= NavCompute.computeTarget({lon:src[0],lat:src[1]},course,distance);
-        return [rt.lon,rt.lat]
+    dms(){
+        return Dms;
     }
-
 }
 
 export default  new Api();
