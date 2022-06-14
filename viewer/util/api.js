@@ -119,23 +119,16 @@ class Api{
     }
 
     /**
-     * create an instance of {@link https://www.movable-type.co.uk/scripts/geodesy-library.html LatLonSpherical}
+     * get the {@link https://www.movable-type.co.uk/scripts/geodesy-library.html LatLonSpherical} module
+     * use it like:
+     * let LatLon=avnav.api.LatLon();
+     * let point=new LatLon(54,13);
      * @param lat
      * @param lon
      * @return {LatLonSpherical}
      */
-    createLatLon(lat,lon){
-        return new LatLon(lat,lon);
-    }
-
-    /**
-     * parse a LatLon from various formats
-     * refer to the LatLon parse from {@link https://www.movable-type.co.uk/scripts/geodesy-library.html}
-     * @param args
-     * @return {LatLon}
-     */
-    parseLatLon(...args){
-        return LatLon.parse(...args);
+    LatLon(){
+        return LatLon;
     }
 
     /**

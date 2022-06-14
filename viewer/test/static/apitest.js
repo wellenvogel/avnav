@@ -218,13 +218,14 @@
                 }
                 let lastPoint = undefined;
                 let sum = 0;
+                let LatLon=avnav.api.LatLon();
                 const fmt = avnav.api.formatter.formatDistance;
                 let result = [];
                 for (let i = 0; i < routeJson.length;
                      i++
                 ) {
                     let point = routeJson[i];
-                    let ll = avnav.api.createLatLon(point.lat, point.lon);
+                    let ll = new LatLon(point.lat, point.lon);
                     if (lastPoint !== undefined) {
                         let dst = ll.distanceTo(lastPoint);
                         let brg = lastPoint.initialBearingTo(ll);
@@ -252,7 +253,7 @@
             'parseLatLon':()=>{
                 let wplon = "013° 34.7303′ E";
                 let wplat = "54° 11.0796′ N";
-                let wp = avnav.api.parseLatLon(wplat, wplon);
+                let wp = avnav.api.LatLon().parse(wplat, wplon);
                 TinyTest.assertRange(13.578838333333334,wp.lon,1e-6)
                 TinyTest.assertRange(54.18466,wp.lat,1e-6);
                 console.log(wp);
