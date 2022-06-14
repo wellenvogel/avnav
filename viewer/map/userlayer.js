@@ -28,6 +28,9 @@ export default class UserLayer {
         this.lineStyle = {};
         this.setStyle();
         this.panelPage=undefined;
+        globalStore.register(()=>{
+            this.visible=globalStore.getData(keys.properties.layers.user);
+        },keys.gui.global.propertySequence);
     }
 
     /**
