@@ -32,9 +32,27 @@ NavCompute.computeXte=function(start,destination,current){
     let llsrc=new LatLon(start.lat,start.lon);
     let lldst=new LatLon(destination.lat,destination.lon);
     let llcur=new LatLon(current.lat,current.lon);
-    let xte=llsrc.crossTrackDistanceTo(lldst,llcur);
+    let xte=llcur.crossTrackDistanceTo(llsrc,lldst);
     return xte;
 };
+/**
+ * compute the rhumb line xte using a simple "flattened" approach
+ * like OpenCPN is doing this
+ * @param start
+ * @param destination
+ * @param current
+ */
+NavCompute.computeRhumbXte=function(start,destination,current){
+    let llsrc=new LatLon(start.lat,start.lon);
+    let lldst=new LatLon(destination.lat,destination.lon);
+    let llcur=new LatLon(current.lat,current.lon);
+    let dstFromBrg=lldst.rhumbBearingTo(llsrc);
+    let dstCurBrg=lldst.rhumbBearingTo(llcur);
+    let dstCurDst=lldst.rhumbDistanceTo(llcur);
+    let alpha=dstFromBrg-dstCurBrg;
+    if (alpha <= -90 || alpha >= 90) return; //not defined
+    return dstCurDst*Math.sin(alpha * Math.PI / 180);
+}
 /**
  * compute points on a route
  * @param start
