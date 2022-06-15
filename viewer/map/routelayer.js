@@ -1,14 +1,12 @@
 /**
  * Created by andreas on 14.07.14.
  */
-    
-import navobjects from '../nav/navobjects';
+
 import keys,{KeyHelper} from '../util/keys.jsx';
 import globalStore from '../util/globalstore.jsx';
 import RouteEdit from '../nav/routeeditor.js';
 import orangeMarker from '../images/MarkerOrange.png';
 import NavCompute from "../nav/navcompute";
-import assign from 'object-assign';
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE);
 const editingRoute=new RouteEdit(RouteEdit.MODES.EDIT);
@@ -47,7 +45,7 @@ class RouteDisplay{
                     this.segments.push([this.mapholder.pointToMap(lastPoint.toCoord()),p]);
                 } else {
                     let nextPart=[];
-                    let segments = NavCompute.computeCoursePoints(lastPoint, routePoints[i], 5);
+                    let segments = NavCompute.computeCoursePoints(lastPoint, routePoints[i], 3);
                     for (let s in segments) {
                         nextPart.push(this.mapholder.pointToMap([segments[s].lon, segments[s].lat]));
                     }
