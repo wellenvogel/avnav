@@ -104,7 +104,7 @@ NavCompute.computeCpa=function(src,dst,properties){
     let maxDistance=6371e3*1000*Math.PI; //half earth
     let appr=NavCompute.computeApproach(courseToTarget,curdistance,src.course,src.speed,dst.course,dst.speed,properties.minAISspeed,maxDistance);
     if (appr.dd !== undefined && appr.ds !== undefined) {
-        let xpoint = llsrc.destinationPoint(src.course, appr.dd );
+        let xpoint = llsrc.destinationPoint(appr.dd,src.course);
         rt.crosspoint = new navobjects.Point(xpoint.lon, xpoint.lat);
     }
     if (!appr.tm){
@@ -113,8 +113,9 @@ NavCompute.computeCpa=function(src,dst,properties){
         rt.front=undefined;
         return rt;
     }
-    let cpasrc = llsrc.destinationPoint(src.course, appr.dms);
-    let cpadst = lldst.destinationPoint(dst.course, appr.dmd);
+
+    let cpasrc = llsrc.destinationPoint(appr.dms,src.course );
+    let cpadst = lldst.destinationPoint(appr.dmd,dst.course);
     rt.src.lon=cpasrc.lon;
     rt.src.lat=cpasrc.lat;
     rt.dst.lon=cpadst.lon;
@@ -204,7 +205,7 @@ NavCompute.computeApproach=function(courseToTarget,curdistance,srcCourse,srcSpee
 */
 NavCompute.computeTarget=function(src,brg,dist){
     let llsrc = new LatLon(src.lat, src.lon);
-    let llrt=llsrc.destinationPoint(brg,dist);
+    let llrt=llsrc.destinationPoint(dist,brg);
     let rt=new navobjects.Point(llrt.lon,llrt.lat);
     return rt;
 };
