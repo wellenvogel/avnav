@@ -191,7 +191,7 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
             if (courseVetcorDistance > 0 && boatStyle.courseVector !== false) {
                 other = this.computeTarget(boatPosition, course, courseVetcorDistance);
                 drawing.drawLineToContext([boatPosition, other], courseVectorStyle);
-                if (boatRotation !== undefined && globalStore.getData(keys.properties.boatDirectionVector)) {
+                if (boatDirectionMode !== 'cog' && boatRotation !== undefined && globalStore.getData(keys.properties.boatDirectionVector)) {
                     other = this.computeTarget(boatPosition, boatRotation, courseVetcorDistance);
                     drawing.drawLineToContext([boatPosition, other], assign({dashed: true}, courseVectorStyle));
                 }
