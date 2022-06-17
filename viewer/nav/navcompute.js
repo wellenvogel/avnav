@@ -50,7 +50,6 @@ NavCompute.computeRhumbXte=function(start,destination,current){
     let dstCurBrg=lldst.rhumbBearingTo(llcur);
     let dstCurDst=lldst.rhumbDistanceTo(llcur);
     let alpha=dstFromBrg-dstCurBrg;
-    if (alpha <= -90 || alpha >= 90) return; //not defined
     return dstCurDst*Math.sin(alpha * Math.PI / 180);
 }
 /**
