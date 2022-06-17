@@ -265,9 +265,7 @@ RouteLayer.prototype.onPostCompose=function(center,drawing) {
         let allSegments=this.routeDisplay.getSegments();
         for (let i in allSegments){
             let currentRoutePoints=allSegments[i];
-            this.routePixel=this.routePixel.concat(
-                drawing.drawLineToContext(currentRoutePoints, this.lineStyle)
-            );
+            drawing.drawLineToContext(currentRoutePoints, this.lineStyle);
         }
         let currentRoutePoints=this.routeDisplay.getPoints();
         let active = currentEditor.getIndex();
@@ -278,7 +276,7 @@ RouteLayer.prototype.onPostCompose=function(center,drawing) {
             else {
                 if (i == routeTarget) style=this.routeTargetStyle;
             }
-            drawing.drawBubbleToContext(currentRoutePoints[i],wpSize,style);
+            this.routePixel.push(drawing.drawBubbleToContext(currentRoutePoints[i],wpSize,style));
             wp=route.points[i];
             if (wp && wp.name) text=wp.name;
             else text=i+"";
