@@ -30,7 +30,7 @@ NavCompute.computeXte=function(start,destination,current){
     let llsrc=new LatLon(start.lat,start.lon);
     let lldst=new LatLon(destination.lat,destination.lon);
     let llcur=new LatLon(current.lat,current.lon);
-    let xte=llsrc.crossTrackDistanceTo(lldst,llcur);
+    let xte=llcur.crossTrackDistanceTo(llsrc,lldst);
     return xte;
 };
 
