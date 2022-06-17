@@ -41,7 +41,7 @@ class RouteDisplay{
             let p = this.mapholder.pointToMap(routePoints[i].toCoord());
             this.points.push(p);
             if (lastPoint !== undefined) {
-                if (globalStore.getData(keys.properties.routeRhumbLine)) {
+                if (globalStore.getData(keys.nav.routeHandler.useRhumbLine)) {
                     this.segments.push([this.mapholder.pointToMap(lastPoint.toCoord()),p]);
                 } else {
                     let nextPart=[];
@@ -134,15 +134,17 @@ const RouteLayer=function(mapholder){
     this.routeDisplay=new RouteDisplay(this.mapholder);
     globalStore.register(()=>{
         this.routeDisplay.reset();
-    },activeRoute.getStoreKeys(editingRoute.getStoreKeys({seq: keys.gui.global.propertySequence})));
+    },activeRoute.getStoreKeys(editingRoute.getStoreKeys({seq: keys.gui.global.propertySequence,rl:keys.nav.routeHandler.useRhumbLine})));
     this.currentCourse=new RouteDisplay(this.mapholder);
     globalStore.register(()=>{
         this.currentCourse.reset();
-    },activeRoute.getStoreKeys({lat:keys.nav.gps.lat,lon:keys.nav.gps.lon,seq:keys.gui.global.propertySequence}));
+    },activeRoute.getStoreKeys({lat:keys.nav.gps.lat,lon:keys.nav.gps.lon,
+        seq:keys.gui.global.propertySequence,
+        rl:keys.nav.routeHandler.useRhumbLine}));
     this.currentLeg=new RouteDisplay(this.mapholder);
     globalStore.register(()=>{
         this.currentLeg.reset();
-    },activeRoute.getStoreKeys({seq:keys.gui.global.propertySequence}))
+    },activeRoute.getStoreKeys({seq:keys.gui.global.propertySequence,rl:keys.nav.routeHandler.useRhumbLine}))
 
 
 };

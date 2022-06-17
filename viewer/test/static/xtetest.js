@@ -108,8 +108,13 @@
         let xteReferences={};
         TinyTest.run({
             'parse points':()=>{
-                testsets.forEach((ts)=>
-                getTestPoints(ts));
+                testsets.forEach((ts)=>{
+                    console.log("##TS: ",ts.name);
+                    let tps=getTestPoints(ts);
+                    tps.forEach((tp)=>{
+                        console.log("["+tp.lat+","+tp.lon+"],");
+                    })
+                })
             },
             'xte great circle':()=>{
                 testsets.forEach((ts)=> {

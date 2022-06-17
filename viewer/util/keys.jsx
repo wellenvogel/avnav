@@ -179,6 +179,7 @@ let keys={
             pageRouteIndex: K,
             editingRoute:K,
             editingIndex: K,
+            useRhumbLine: K,
             currentLeg: new D("the current leg used for routing"),
             currentIndex: new D("the index when working directly on the active route (currentLeg)")
         },
@@ -293,7 +294,6 @@ let keys={
         routeWpSize: new Property(7, "WPSize", PropertyType.RANGE, [5, 30]),
         routeApproach: new Property(200, "Approach(m)", PropertyType.RANGE, [20, 2000]),
         routeShowLL: new Property(false, "showLatLon", PropertyType.CHECKBOX), //show latlon or leg course/len
-        routeRhumbLine: new Property(true,'useRhumbLine',PropertyType.CHECKBOX),
         navCircleColor: new Property("#D71038", "Circle Color", PropertyType.COLOR),
         navCircleWidth: new Property(1, "Circle Width", PropertyType.RANGE, [1, 10]),
         navBoatCourseTime: new Property(600,"Boat Course Vector Length(sec)", PropertyType.RANGE,[1,3600]),

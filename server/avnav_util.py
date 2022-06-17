@@ -335,6 +335,31 @@ class AVNUtil(object):
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
     d = (cls.R * c )
     return d
+  @classmethod
+  def distanceRhumbLineM(cls,origin,destination):
+    lat1, lon1 = origin
+    lat2, lon2 = destination
+    lat1r = math.radians(lat1)
+    lat2r = math.radians(lat2)
+    dlatr=lat2r-lat1r
+    dlonr=math.radians(math.fabs(lon2-lon1))
+
+    #if dLon over 180° take shorter rhumb line across the anti-meridian:
+    if (math.fabs(dlonr) > math.pi):
+      dlonr = -(2 * math.pi - dlonr) if dlonr > 0 else (2 * math.pi + dlonr)
+
+    # on Mercator projection, longitude distances shrink
+    # by latitude
+    # q is the 'stretch factor'
+    # q becomes ill - conditioned along E - W line(0 / 0)
+    # use empirical tolerance to avoid it(note ε is too small)
+    dcorr = math.log(math.tan(lat2r / 2 + math.pi / 4) / math.tan(lat1r / 2 + math.pi / 4))
+    q = dlatr / dcorr if math.fabs(dcorr) > 10e-12 else  math.cos(lat1r)
+
+    #distance is pythagoras on 'stretched' Mercator projection, √(Δφ² + q²·Δλ²)
+    d = math.sqrt(dlatr * dlatr + q * q * dlonr * dlonr)  # angular distance in radians
+    d = d * cls.R
+    return d
 
   #distance in NM
   @classmethod
@@ -347,10 +372,18 @@ class AVNUtil(object):
   #points are always tuples lat,lon
   @classmethod
   def calcXTE(cls,Pp, startWp, endWp):
-    d13 = cls.distanceM(startWp,Pp);
+    d13 = cls.distanceM(startWp,Pp)
     w13 = cls.calcBearing(startWp,Pp)
     w12 = cls.calcBearing(startWp,endWp)
     return math.asin(math.sin(d13/cls.R)*math.sin(math.radians(w13)-math.radians(w12))) * cls.R
+
+  @classmethod
+  def calcXTERumbLine(cls,Pp,startWp,endWp):
+    dstFromBrg = cls.calcBearingRhumbLine(endWp,startWp)
+    dstCurBrg = cls.calcBearingRhumbLine(endWp,Pp)
+    dstCurDst = cls.distanceRhumbLineM(endWp,Pp)
+    alpha = dstFromBrg - dstCurBrg
+    return dstCurDst * math.sin(math.radians(alpha))
 
   #bearing from one point the next originally by DirkHH
   #http://www.movable-type.co.uk/scripts/latlong.html
@@ -362,6 +395,23 @@ class AVNUtil(object):
     x = math.cos(math.radians(clat))*math.sin(math.radians(elat)) - \
         math.sin(math.radians(clat))*math.cos(math.radians(elat))*math.cos(math.radians(elon)-math.radians(clon))
     return ((math.atan2(y, x)*180/math.pi)+360)%360.0
+
+  @classmethod
+  def calcBearingRhumbLine(cls,curP,endP):
+    clat,clon=curP
+    elat,elon=endP
+    clatr=math.radians(clat)
+    elatr=math.radians(elat)
+    dlonr=math.radians(elon-clon)
+    # if dLon over 180° take shorter rhumb line across the anti-meridian:
+    if math.fabs(dlonr) > math.pi:
+      dlonr = -(2 * math.pi - dlonr) if dlonr > 0 else (2 * math.pi + dlonr)
+
+    corr=math.log(math.tan(elatr / 2 + math.pi / 4) / math.tan(clatr / 2 + math.pi / 4))
+    brg=math.atan2(dlonr, corr)
+    brg=math.degrees(brg)
+    return (brg+360)%360.0
+
 
   @classmethod
   def deg2rad(cls,v):
@@ -594,3 +644,112 @@ class AVNDownload(object):
   def fileToAttach(cls,filename):
     #see https://stackoverflow.com/questions/93551/how-to-encode-the-filename-parameter-of-content-disposition-header-in-http
     return 'filename="%s"; filename*=utf-8\'\'%s'%(filename,urllib.parse.quote(filename))
+
+
+if __name__ == '__main__':
+  testsets = [
+    {
+      "name": 'q1',
+      "waypoints": [
+        {"lon": 13.46481754474968, "lat": 54.10810325512469, "name": "WP 1"},
+        {"lon": 13.468166666666667, "lat": 54.11538104291324, "name": "WP 2"}
+      ],
+      "testpoints": [
+        [54.111, 13.469],
+        [54.11216666666667, 13.463666666666667],
+        [54.10666666666667, 13.471333333333334],
+        [54.10433333333334, 13.469],
+        [54.117666666666665, 13.474],
+        [54.112, 13.4665],
+        [54.10816666666667, 13.464833333333333],
+        [54.11183333333334, 13.466333333333333],
+        [54.11533333333333, 13.468166666666667]
+      ]
+    },
+    {
+      "name": 'q2',
+      "waypoints": [
+        {"lon": 13.46481754474968, "lat": 54.10810325512469, "name": "WP 1"},
+        {"lon": 13.472969266821604, "lat": 54.105126060954404, "name": "WP 2"}
+      ],
+      "testpoints": [
+        [54.108333333333334, 13.469666666666667],
+        [54.105666666666664, 13.466333333333333],
+        [54.107, 13.468],
+        [54.10583333333334, 13.478833333333334],
+        [54.102333333333334, 13.474],
+        [54.112, 13.464333333333334],
+        [54.106833333333334, 13.460833333333333]
+      ]
+    },
+    {
+      "name": 'q3',
+      "waypoints": [
+        {"lon": 13.46481754474968, "lat": 54.10810325512469, "name": "WP 1"},
+        {"lon": 13.458224892739876, "lat": 54.10384632131624, "name": "WP 2"}
+      ],
+      "testpoints": [
+        [54.105333333333334, 13.463333333333333],
+        [54.106833333333334, 13.460166666666666],
+        [54.10166666666667, 13.459166666666667],
+        [54.1045, 13.452166666666667],
+        [54.108666666666664, 13.47],
+        [54.111, 13.464],
+        [54.106, 13.461500000000001]
+      ]
+    },
+    {
+      "name": 'q4',
+      "waypoints": [
+        {"lon": 13.464728465190955, "lat": 54.10854720253275, "name": "WP 1"},
+        {"lon": 13.458937624792682, "lat": 54.11408311247243, "name": "WP 2"}
+      ],
+      "testpoints": [
+        [54.11066666666667, 13.458833333333333],
+        [54.11233333333333, 13.464],
+        [54.114666666666665, 13.453333333333333],
+        [54.11683333333333, 13.4595],
+        [54.10583333333334, 13.463666666666667],
+        [54.107166666666664, 13.472833333333334],
+        [54.1115, 13.461666666666666]
+      ]
+    },
+    {
+      "name": 'cross',
+      "waypoints": [
+        {"lon": 13.464728465190955, "lat": 54.10854720253275, "name": "WP 1"},
+        {"lon": 13.470786574851976, "lat": 54.103924671947794, "name": "WP 2"}
+      ],
+      "testpoints": [
+        [54.1085, 13.4755]
+      ]
+    },
+    {
+      "name": 'long50',
+      "waypoints": [
+        {"lon": 14.14261292205835, "lat": 55.35112111609973, "name": "WP 1"},
+        {"lon": 13.470786574851976, "lat": 54.103924671947794, "name": "WP 2"}
+      ],
+      "testpoints": [
+        [54.4455, 13.608],
+        [54.6215, 12.981666666666667]
+      ],
+      "percent": 10
+    }
+  ]
+  for ts in testsets:
+    print("Testset %s" % (ts['name']))
+    p1 = [ts['waypoints'][0]['lat'], ts['waypoints'][0]['lon']]
+    p2 = [ts['waypoints'][1]['lat'], ts['waypoints'][1]['lon']]
+    print("Points: %s , %s" % (str(p1), str(p2)))
+    dst = AVNUtil.distanceM(p1, p2)
+    dstRl = AVNUtil.distanceRhumbLineM(p1, p2)
+    print("dst=%f, dstRL=%f" % (dst, dstRl))
+    brg = AVNUtil.calcBearing(p1, p2)
+    brgRl = AVNUtil.calcBearingRhumbLine(p1, p2)
+    print("brg=%f, brgRl=%f" % (brg, brgRl))
+    tps = ts['testpoints']
+    for tp in tps:
+      xte=AVNUtil.calcXTE(tp,p1,p2)
+      xteRl=AVNUtil.calcXTERumbLine(tp,p1,p2)
+      print("latlon=%f,%f xte=%f, xteRl=%f"%(tp[0],tp[1],xte,xteRl))

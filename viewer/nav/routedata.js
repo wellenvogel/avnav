@@ -80,6 +80,7 @@ let RouteData=function(){
     this.lastReceivedRoute=undefined;
     this.lastSentRoute=undefined;
 
+
     //ensure that there is always a current leg and read from local storage
     activeRoute.modify((data)=>{
         let changed=false;
@@ -761,6 +762,10 @@ RouteData.prototype._handleLegResponse = function (serverData) {
     if (!serverData) {
         return false;
     }
+    if (serverData.useRhumbLine !== undefined){
+        globalStore.storeData(keys.nav.routeHandler.useRhumbLine,serverData.useRhumbLine);
+        delete serverData.useRhumbLine;
+    }
     this.routeErrors = 0;
     if (!this.connectMode) return false;
     let nleg = new routeobjects.Leg();
@@ -1049,7 +1054,6 @@ RouteData.prototype.unsetCurrentRoutePage=function(page){
     if (this.currentRoutePage !== page) return;
     this.currentRoutePage=undefined;
 };
-
 
 
 
