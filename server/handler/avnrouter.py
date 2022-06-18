@@ -374,6 +374,8 @@ class AVNRouter(AVNDirectoryHandlerBase):
     hasRMB = False
     currentLeg=None
     nonexist=False
+    modeText='rhumb line' if self.P_RHUMBLINE.fromDict(self.param) else 'great circle'
+    self.setInfo('mode',"%s"%(modeText),WorkerStatus.NMEA)
     with self.__writeLegLock:
       if os.path.exists(self.currentLegFileName):
         newTime=os.stat(self.currentLegFileName).st_mtime
