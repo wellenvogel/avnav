@@ -67,7 +67,8 @@ const NavData=function(){
         KeyHelper.flattenedKeys(activeRoute.getStoreKeys())
             .concat(
                 KeyHelper.flattenedKeys(this.gpsdata.getStoreKeys()),
-                [keys.map.centerPosition,keys.nav.routeHandler.useRhumbLine]
+                [keys.map.centerPosition,
+                    keys.nav.routeHandler.useRhumbLine]
             ));
     this.storeKeys=GpsData.getStoreKeys();
     this.aisData=new AisData(this);

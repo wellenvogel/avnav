@@ -13,6 +13,7 @@ let NavCompute={
  * compute the distances between 2 points
  * @param {navobjects.Point} src
  * @param {navobjects.Point} dst
+ * @param opt_useRhumbLine
  * @returns {navobjects.Distance}
  */
 NavCompute.computeDistance=function(src,dst, opt_useRhumbLine){
@@ -22,7 +23,7 @@ NavCompute.computeDistance=function(src,dst, opt_useRhumbLine){
     //use the movable type stuff for computations
     let llsrc=new LatLon(srcll.lat,srcll.lon);
     let lldst=new LatLon(dstll.lat,dstll.lon);
-    if (opt_useRhumbLine) {
+    if (!opt_useRhumbLine) {
         rt.dts = llsrc.distanceTo(lldst);
         rt.course = llsrc.initialBearingTo(lldst);
     }

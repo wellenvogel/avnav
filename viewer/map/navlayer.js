@@ -220,12 +220,23 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
         drawing.drawImageToContext(center, this.centerStyle.image, this.centerStyle);
         let measurePos=globalStore.getData(keys.map.measurePosition);
         if (measurePos && measurePos.lat && measurePos.lon){
+            let measureRhumbLine=globalstore.getData(keys.properties.measureRhumbLine);
             let measure=this.mapholder.transformToMap((new navobjects.Point(measurePos.lon,measurePos.lat)).toCoord());
             drawing.drawImageToContext(measure,this.measureStyle.image,this.measureStyle);
-            drawing.drawLineToContext([measure,center],this.measureLineStyle);
             let centerPoint=new navobjects.Point();
             centerPoint.fromCoord(this.mapholder.transformFromMap(center));
-            let distance=NavCompute.computeDistance(measurePos,centerPoint,globalstore.getData(keys.nav.routeHandler.useRhumbLine));
+            if (measureRhumbLine) {
+                drawing.drawLineToContext([measure, center], this.measureLineStyle);
+            }
+            else{
+                let segmentPoints=NavCompute.computeCoursePoints(centerPoint,measurePos,3);
+                let line=[];
+                segmentPoints.forEach((sp)=>line.push(
+                    this.mapholder.transformToMap([sp.lon,sp.lat])
+                ));
+                drawing.drawLineToContext(line, this.measureLineStyle);
+            }
+            let distance=NavCompute.computeDistance(measurePos,centerPoint,measureRhumbLine);
             let text=Formatter.formatDirection(distance.course)+"°\n"+
                 Formatter.formatDistance(distance.dts)+"nm";
             drawing.drawTextToContext(center,text,this.measureTextStyle);
