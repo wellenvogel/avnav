@@ -38,7 +38,8 @@ const load=(storeKeys,clone)=>{
             leg:    newLeg,
             route:  newLeg.currentRoute,
             index:  storeData.index,
-            activeName: storeData.activeName
+            activeName: storeData.activeName,
+            useRhumbLine: storeData.useRhumbLine
         }
     }
     let route=storeData.route;
@@ -46,15 +47,18 @@ const load=(storeKeys,clone)=>{
     let rt={
         route:route,
         index:storeData.index,
-        activeName: storeData.activeName
+        activeName: storeData.activeName,
+        useRhumbLine: storeData.useRhumbLine
     };
     return rt;
 };
 
 const write=(storeKeys,data,opt_omitCallbacks)=>{
-    let storeData=globalStore.getMultiple(storeKeys);
+    let writeKeys=assign({},storeKeys);
+    delete writeKeys.useRhumbLine;
+    let storeData=globalStore.getMultiple(writeKeys);
     let hasChanged=false;
-    if (storeKeys.leg){
+    if (writeKeys.leg){
         if (!data.leg) throw new Error("missing leg on write");
         data.leg.currentRoute=data.route; //resync as the route could be new...
         hasChanged=(storeData.index != data.index) || data.leg.differsTo(storeData.leg);
@@ -78,10 +82,10 @@ const write=(storeKeys,data,opt_omitCallbacks)=>{
     }
     if (hasChanged){
         if (opt_omitCallbacks === undefined || opt_omitCallbacks === true) {
-            globalStore.storeMultiple(data, storeKeys, guard);
+            globalStore.storeMultiple(data, writeKeys, guard);
         }
         else {
-            globalStore.storeMultiple(data, storeKeys, [guard].concat(opt_omitCallbacks));
+            globalStore.storeMultiple(data, writeKeys, [guard].concat(opt_omitCallbacks));
         }
     }
 };
@@ -377,7 +381,7 @@ class RouteEdit{
     getRoutePoints(selectedIndex){
         let data=load(this.storeKeys);
         if (!data.route) return [];
-        return data.route.getRoutePoints(selectedIndex);
+        return data.route.getRoutePoints(selectedIndex,data.useRhumbLine);
     }
     getRouteName(){
         let data=load(this.storeKeys);
@@ -451,7 +455,8 @@ RouteEdit.MODES={
         storeKeys: {
             route: keys.nav.routeHandler.routeForPage,
             index: keys.nav.routeHandler.pageRouteIndex,
-            activeName: keys.nav.routeHandler.activeName
+            activeName: keys.nav.routeHandler.activeName,
+            useRhumbLine: keys.nav.routeHandler.useRhumbLine
         },
         writable:true
     },
@@ -459,7 +464,8 @@ RouteEdit.MODES={
         storeKeys: {
             route: keys.nav.routeHandler.editingRoute,
             index: keys.nav.routeHandler.editingIndex,
-            activeName: keys.nav.routeHandler.activeName
+            activeName: keys.nav.routeHandler.activeName,
+            useRhumbLine: keys.nav.routeHandler.useRhumbLine
         },
         writable: true
     },
@@ -467,7 +473,8 @@ RouteEdit.MODES={
         storeKeys: {
             leg: keys.nav.routeHandler.currentLeg,
             index: keys.nav.routeHandler.currentIndex,
-            activeName: keys.nav.routeHandler.activeName
+            activeName: keys.nav.routeHandler.activeName,
+            useRhumbLine: keys.nav.routeHandler.useRhumbLine
         },
         writable:true,
         writeActiveName: true

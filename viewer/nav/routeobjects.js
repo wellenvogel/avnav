@@ -674,7 +674,7 @@ base.inherits(routeobjects.RoutePoint,navobjects.WayPoint);
  * extended by distance, index and course
  * @returns {routeobjects.RoutePoint[]}
  */
-routeobjects.Route.prototype.getRoutePoints=function(opt_selectedIdx){
+routeobjects.Route.prototype.getRoutePoints=function(opt_selectedIdx,opt_useRhumbLine){
     let rt=[];
     let i=0;
     for (i=0;i<this.points.length;i++){
@@ -683,7 +683,7 @@ routeobjects.Route.prototype.getRoutePoints=function(opt_selectedIdx){
         formatted.name=this.points[i].name?this.points[i].name:i+"";
         formatted.routeName=this.name;
         if (i>0) {
-            let dst=NavCompute.computeDistance(this.points[i-1],this.points[i]);
+            let dst=NavCompute.computeDistance(this.points[i-1],this.points[i],opt_useRhumbLine);
             formatted.course=dst.course;
             formatted.distance=dst.dts;
         }
@@ -697,9 +697,10 @@ routeobjects.Route.prototype.getRoutePoints=function(opt_selectedIdx){
 /**
  * compute the length
  * @param {number} startIdx - the point to start from
+ * @param opt_useRhumbLine - if true - use rhum line computations
  * @returns {number}
  */
-routeobjects.Route.prototype.computeLength=function(startIdx){
+routeobjects.Route.prototype.computeLength=function(startIdx,opt_useRhumbLine){
     let rt=0;
     if (startIdx < 0) startIdx=0;
     if (this.points.length < (startIdx+2)) return rt;
@@ -707,7 +708,7 @@ routeobjects.Route.prototype.computeLength=function(startIdx){
     startIdx++;
     for (;startIdx<this.points.length;startIdx++){
         let next=this.points[startIdx];
-        let dst=NavCompute.computeDistance(last,next);
+        let dst=NavCompute.computeDistance(last,next,opt_useRhumbLine);
         rt+=dst.dts;
         last=next;
     }

@@ -15,6 +15,7 @@ import markerImage from '../images/Marker2.png';
 import measureImage from '../images/measure.png';
 import assign from 'object-assign';
 import Formatter from "../util/formatter";
+import globalstore from "../util/globalstore";
 
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE,true);
@@ -224,7 +225,7 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
             drawing.drawLineToContext([measure,center],this.measureLineStyle);
             let centerPoint=new navobjects.Point();
             centerPoint.fromCoord(this.mapholder.transformFromMap(center));
-            let distance=NavCompute.computeDistance(measurePos,centerPoint);
+            let distance=NavCompute.computeDistance(measurePos,centerPoint,globalstore.getData(keys.nav.routeHandler.useRhumbLine));
             let text=Formatter.formatDirection(distance.course)+"°\n"+
                 Formatter.formatDistance(distance.dts)+"nm";
             drawing.drawTextToContext(center,text,this.measureTextStyle);
@@ -256,7 +257,7 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
 NavLayer.prototype.computeTarget=function(pos,course,dist){
     let point=new navobjects.Point();
     point.fromCoord(this.mapholder.transformFromMap(pos));
-    let tp=NavCompute.computeTarget(point,course,dist);
+    let tp=NavCompute.computeTarget(point,course,dist,globalstore.getData(keys.nav.routeHandler.useRhumbLine));
     let tpmap=this.mapholder.transformToMap(tp.toCoord());
     return tpmap;
 };

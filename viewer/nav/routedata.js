@@ -514,7 +514,7 @@ RouteData.prototype.getInfoFromRoute=function(route){
     let rtinfo=new routeobjects.RouteInfo(route.name);
     try {
         if (route.points) rtinfo.numpoints=route.points.length;
-        rtinfo.length=route.computeLength(0);
+        rtinfo.length=route.computeLength(0,globalStore.getData(keys.nav.routeHandler.useRhumbLine));
         rtinfo.time=route.time;
     } catch(e){}
     return rtinfo;
@@ -530,6 +530,7 @@ RouteData.prototype._listRoutesLocal=function(){
     let key,rtinfo,route;
     let routeKeys=LocalStorage.listByPrefix(STORAGE_NAMES.ROUTE);
     let editingName=editingRoute.getRouteName();
+    let useRhumbLine=globalStore.getData(keys.nav.routeHandler.useRhumbLine);
     for (i=0;i<routeKeys.length;i++){
         key=routeKeys[i];
         let routeName=key.substr(STORAGE_NAMES.ROUTE.length);
@@ -538,7 +539,7 @@ RouteData.prototype._listRoutesLocal=function(){
                 route=new routeobjects.Route();
                 route.fromJsonString(LocalStorage.getItem(STORAGE_NAMES.ROUTE,name));
                 if (route.points) rtinfo.numpoints=route.points.length;
-                rtinfo.length=route.computeLength(0);
+                rtinfo.length=route.computeLength(0,useRhumbLine);
                 rtinfo.time=route.time;
                 if (this.isActiveRoute(rtinfo.name)) rtinfo.active=true;
                 if (rtinfo.name === editingName) rtinfo.canDelete=false;
@@ -680,12 +681,13 @@ RouteData.prototype._checkNextWp=function(){
         let boat = globalStore.getData(keys.nav.gps.position);
         //TODO: switch of routing?!
         if (!globalStore.getData(keys.nav.gps.valid)) return;
+        let useRhumbLine=globalStore.getData(keys.nav.routeHandler.useRhumbLine);
         let nextWpNum = data.leg.getCurrentTargetIdx() + 1;
         let nextWp = data.route?data.route.getPointAtIndex(nextWpNum):undefined;
         let approach = globalStore.getData(keys.properties.routeApproach) + 0;
         let tolerance = approach / 10; //we allow some position error...
         try {
-            let dst = NavCompute.computeDistance(boat, data.leg.to);
+            let dst = NavCompute.computeDistance(boat, data.leg.to,useRhumbLine);
             //TODO: some handling for approach
             if (dst.dts <= approach) {
                 data.leg.approach = true;
@@ -694,7 +696,7 @@ RouteData.prototype._checkNextWp=function(){
                 }
                 let nextDst = new navobjects.Distance();
                 if (nextWp) {
-                    nextDst = NavCompute.computeDistance(boat, nextWp);
+                    nextDst = NavCompute.computeDistance(boat, nextWp,useRhumbLine);
                 }
                 if (this.lastDistanceToCurrent < 0 || this.lastDistanceToNext < 0) {
                     //seems to be the first time

@@ -63,7 +63,7 @@ class RoutePointsWidget extends React.Component{
         return (
             <ItemList style={this.props.style}
                       className={classes}
-                      itemList={route?route.getRoutePoints(index):[]}
+                      itemList={route?route.getRoutePoints(index,this.props.useRhumbLine):[]}
                       itemCreator={(item)=>{return RoutePoint(this.props.showLatLon)}}
                       scrollable={true}
                       onItemClick={(item,data)=>{if (self.props.onClick)
@@ -86,12 +86,14 @@ RoutePointsWidget.propTypes={
     isActive:       PropTypes.bool,
     index:          PropTypes.number,
     showLatLon:     PropTypes.bool,
-    isEditing:      PropTypes.bool
+    isEditing:      PropTypes.bool,
+    useRhumbLine:   PropTypes.bool
 };
 
 RoutePointsWidget.storeKeys=editor.getStoreKeys({
     showLatLon: keys.properties.routeShowLL,
-    isEditing: keys.gui.global.layoutEditing
+    isEditing: keys.gui.global.layoutEditing,
+    useRhumbLine: keys.nav.routeHandler.useRhumbLine
 });
 
 export default RoutePointsWidget;

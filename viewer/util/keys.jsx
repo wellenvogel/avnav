@@ -145,7 +145,11 @@ let keys={
         },
         wp:{
             course: V,
+            courseRhumbLine: V,
+            courseGreatCircle: V,
             distance: V,
+            distanceRhumbLine: V,
+            distanceGreatCircle: V,
             eta: V,
             xte: V,
             vmg: V,
