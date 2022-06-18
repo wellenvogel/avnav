@@ -183,6 +183,7 @@ class WpData:
     self.fromLat=None
     self.fromLon=None
     self.speed=speed
+    self.useRhumbLine=useRhumLine
     lat=self.float(lat)
     lon=self.float(lon)
     target=None
@@ -589,7 +590,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
     lat=curGps.get('lat')
     lon=curGps.get('lon')
     speed=curGps.get('speed')
-    wpData=WpData(self.getCurrentLeg(),lat,lon,speed or 0)
+    wpData=WpData(self.getCurrentLeg(),lat,lon,speed or 0,useRhumLine=self.P_RHUMBLINE.fromDict(self.param))
     return wpData
   #compute an RMB record and write this into the feeder
   #if we have an active leg
