@@ -23,6 +23,7 @@ node{
 */
 
 class MyNpm extends NpmTask{
+    @Internal
     def subDir
     @InputFiles
     def getInputFiles(){
