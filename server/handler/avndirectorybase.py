@@ -369,7 +369,11 @@ class AVNDirectoryHandlerBase(AVNWorker):
     zip = ZipFile(zipname)
     entry = None
     try:
-      entry = zip.getinfo(entryName)
+      if entryName.lower().endswith("doc.kml"):
+        # get first entry, regardless of name
+        entry = zip.infolist()[0]
+      else:
+        entry = zip.getinfo(entryName)
     except KeyError as e:
       pass
     if entry is None:
