@@ -67,7 +67,8 @@ const NavData=function(){
         KeyHelper.flattenedKeys(activeRoute.getStoreKeys())
             .concat(
                 KeyHelper.flattenedKeys(this.gpsdata.getStoreKeys()),
-                [keys.map.centerPosition]
+                [keys.map.centerPosition,
+                    keys.nav.routeHandler.useRhumbLine]
             ));
     this.storeKeys=GpsData.getStoreKeys();
     this.aisData=new AisData(this);
@@ -83,47 +84,51 @@ NavData.prototype.startQuery=function(){
  * @private
  */
 NavData.prototype.computeValues=function() {
-    let data={
-        centerCourse:undefined,
-        centerDistance:undefined,
-        centerMarkerCourse:undefined,
-        centerMarkerDistance:undefined,
-        markerCourse:undefined,
-        markerDistance:undefined,
-        markerVmg:undefined,
-        markerEta:undefined,
-        markerXte: undefined,
-        markerWp:undefined,
-        /* data for the active route */
-        routeName: undefined,
-        routeNumPoints: 0,
-        routeLen: 0,
-        routeRemain: 0,
-        routeEta: undefined,
-        routeNextCourse: undefined,
-        routeNextWp: undefined,
-        anchorWatchDistance: undefined,
-        anchorDistance: undefined,
-        anchorDirection: undefined
-    };
+    const storeWriteKeys = assign({
+            centerCourse: keys.nav.center.course,
+            centerDistance: keys.nav.center.distance,
+            markerCourseRhumbLine: keys.nav.wp.courseRhumbLine,
+            markerCourseGreatCircle: keys.nav.wp.courseGreatCircle,
+            markerCourse: keys.nav.wp.course,
+            markerDistanceRhumbLine: keys.nav.wp.distanceRhumbLine,
+            markerDistanceGreatCircle: keys.nav.wp.distanceGreatCircle,
+            markerDistance: keys.nav.wp.distance,
+            markerEta: keys.nav.wp.eta,
+            markerXte: keys.nav.wp.xte,
+            markerVmg: keys.nav.wp.vmg,
+            markerWp: keys.nav.wp.position,
+            anchorDirection: keys.nav.anchor.direction,
+            anchorDistance: keys.nav.anchor.distance,
+            anchorWatchDistance: keys.nav.anchor.watchDistance,
+            centerMarkerCourse: keys.nav.center.markerCourse,
+            centerMarkerDistance: keys.nav.center.markerDistance,
+            routeName: keys.nav.route.name,
+            routeNumPoints: keys.nav.route.numPoints,
+            routeLen: keys.nav.route.len,
+            routeRemain: keys.nav.route.remain,
+            routeEta: keys.nav.route.eta,
+            routeNextCourse: keys.nav.route.nextCourse,
+            isApproaching: keys.nav.route.isApproaching,
+            wpName: keys.nav.wp.name
+        },
+        keys.nav.display);
+    let data=assign({},storeWriteKeys);
+    for (let k in data){
+        data[k]=undefined;
+    }
     let gps = globalStore.getMultiple(this.storeKeys);
     //copy the marker to data to make it available extern
     data.markerWp = activeRoute.getCurrentTarget();
     data.routeNextWp = activeRoute.getNextWaypoint();
     let maplatlon=globalStore.getData(keys.map.centerPosition,new navobjects.Point(0,0));
     let rstart = activeRoute.getCurrentFrom();
+    let useRhumbLine=globalStore.getData(keys.nav.routeHandler.useRhumbLine);
     if (gps.valid) {
         if (activeRoute.hasActiveTarget()) {
             let legData = NavCompute.computeLegInfo(data.markerWp, gps, rstart);
             assign(data, legData);
         }
-        else {
-            data.markerCourse = undefined;
-            data.markerDistance = undefined;
-            data.markerEta = undefined;
-            data.markerXte = undefined;
-        }
-        let centerdst = NavCompute.computeDistance(gps, maplatlon);
+        let centerdst = NavCompute.computeDistance(gps, maplatlon,useRhumbLine);
         data.centerCourse = centerdst.course;
         data.centerDistance = centerdst.dts;
         if (activeRoute.anchorWatch() !== undefined) {
@@ -134,85 +139,42 @@ NavData.prototype.computeValues=function() {
                 data.anchorDistance = aleginfo.markerDistance;
                 data.anchorDirection = aleginfo.markerCourse;
             }
-            else {
-                data.anchorDistance = undefined;
-                data.anchorDirection = undefined;
-                data.anchorWatchDistance = undefined;
-            }
-        }
-        else {
-            data.anchorWatchDistance = undefined;
         }
     }
-    else {
-        data.centerCourse = undefined;
-        data.centerDistance = undefined;
-        data.markerCourse = undefined;
-        data.markerDistance = undefined;
-        data.markerEta = undefined;
-        data.markerXte = undefined;
-        data.anchorDistance = undefined;
-        data.anchorDirection = undefined;
-        data.anchorWatchDistance = undefined;
-    }
-
     //distance between marker and center
     if (data.markerWp) {
-        let mcdst = NavCompute.computeDistance(data.markerWp, maplatlon);
+        let mcdst = NavCompute.computeDistance(data.markerWp, maplatlon,useRhumbLine);
         data.centerMarkerCourse = mcdst.course;
         data.centerMarkerDistance = mcdst.dts;
     }
-    else {
-        data.centerMarkerCourse = undefined;
-        data.centerMarkerDistance = undefined;
-    }
+
     //route data
     let curRoute = activeRoute.hasActiveTarget() ? activeRoute.getRoute() : undefined;
     data.isApproaching = activeRoute.isApproaching();
     if (curRoute) {
         data.routeName = curRoute.name;
         data.routeNumPoints = curRoute.points.length;
-        data.routeLen = curRoute.computeLength(0);
+        data.routeLen = curRoute.computeLength(0,useRhumbLine);
         let currentIndex = curRoute.getIndexFromPoint(data.markerWp);
         if (currentIndex < 0) currentIndex = 0;
-        data.routeRemain = curRoute.computeLength(currentIndex) + data.markerDistance;
+        data.routeRemain = curRoute.computeLength(currentIndex,useRhumbLine) + data.markerDistance;
         let routetime = gps.rtime ? gps.rtime.getTime() : 0;
         if (data.markerVmg && data.markerVmg > 0) {
             routetime += data.routeRemain / data.markerVmg  * 1000; //time in ms
             let routeDate = new Date(Math.round(routetime));
             data.routeEta = routeDate;
         }
-        else {
-            data.routeEta = undefined;
-        }
-        data.routeNextCourse = undefined;
         if (gps.valid) {
             if (data.routeNextWp) {
                 let dst = NavCompute.computeDistance(gps, data.routeNextWp);
                 data.routeNextCourse = dst.course;
             }
         }
-        else {
-            data.routeRemain = 0;
-            data.routeEta = undefined;
-            data.routeNextCourse = undefined;
-        }
-    }
-    else {
-        data.routeName = undefined;
-        data.routeNumPoints = 0;
-        data.routeLen = 0;
-        data.routeRemain = 0;
-        data.routeEta = undefined;
-        data.routeNextCourse = undefined;
     }
     let self=this;
     data.wpName=data.markerWp ? data.markerWp.name : '';
-
-    data.boatDirection=undefined;
     data.directionMode='cog';
     data.isSteady=false;
-    data.mapDirection=undefined;
     this.speedAverage.add(gps.speed);
     this.mapAverageCog.add(gps.course);
     this.mapAverageHdt.add(gps.headingTrue);
@@ -264,32 +226,10 @@ NavData.prototype.computeValues=function() {
     data.mapDirection=mapDirection;
     //store the data asynchronously to avoid any locks
     window.setTimeout(() => {
+
         globalStore.storeMultiple(
             data,
-            assign({
-                    centerCourse: keys.nav.center.course,
-                    centerDistance: keys.nav.center.distance,
-                    markerCourse: keys.nav.wp.course,
-                    markerDistance: keys.nav.wp.distance,
-                    markerEta: keys.nav.wp.eta,
-                    markerXte: keys.nav.wp.xte,
-                    markerVmg: keys.nav.wp.vmg,
-                    markerWp: keys.nav.wp.position,
-                    anchorDirection: keys.nav.anchor.direction,
-                    anchorDistance: keys.nav.anchor.distance,
-                    anchorWatchDistance: keys.nav.anchor.watchDistance,
-                    centerMarkerCourse: keys.nav.center.markerCourse,
-                    centerMarkerDistance: keys.nav.center.markerDistance,
-                    routeName: keys.nav.route.name,
-                    routeNumPoints: keys.nav.route.numPoints,
-                    routeLen: keys.nav.route.len,
-                    routeRemain: keys.nav.route.remain,
-                    routeEta: keys.nav.route.eta,
-                    routeNextCourse: keys.nav.route.nextCourse,
-                    isApproaching: keys.nav.route.isApproaching,
-                    wpName: keys.nav.wp.name
-                },
-                keys.nav.display)
+            storeWriteKeys
             , self.changeCallback);
     }, 0);
 };

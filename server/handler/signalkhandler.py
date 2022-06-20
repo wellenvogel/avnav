@@ -1341,6 +1341,8 @@ class AVNSignalKHandler(AVNWorker):
 
   def getLegData(self,wpData: WpData):
     PRFX='navigation.courseGreatCircle'
+    if wpData.useRhumbLine:
+      PRFX='navigation.courseRhumbLine'
     rt={
       PRFX+'.nextPoint.position':{
         'latitude':wpData.lat,
@@ -1350,11 +1352,11 @@ class AVNSignalKHandler(AVNWorker):
         'latitude':wpData.fromLat,
         'longitude':wpData.fromLon,
       } if (wpData.fromLat is not None and wpData.fromLon is not None) else None,
-      PRFX+'.nextPoint.distance':wpData.distance,
-      PRFX+'.nextPoint.bearingTrue':AVNUtil.deg2rad(wpData.dstBearing),
+      PRFX+'.nextPoint.distance':wpData.distance if not wpData.useRhumbLine else wpData.distanceRhumbLine,
+      PRFX+'.nextPoint.bearingTrue':AVNUtil.deg2rad(wpData.dstBearing if not wpData.useRhumbLine else wpData.dstBearingRhumbLine),
       PRFX+'.crossTrackError':wpData.xte,
       PRFX+'.nextPoint.arrivalCircle':wpData.approachDistance,
-      PRFX+'.bearingTrackTrue':AVNUtil.deg2rad(wpData.bearing)
+      PRFX+'.bearingTrackTrue':AVNUtil.deg2rad(wpData.bearing if not wpData.useRhumbLine else wpData.bearingRhumbLine)
     }
     return rt
   def sendCurrentLeg(self,router : AVNRouter):

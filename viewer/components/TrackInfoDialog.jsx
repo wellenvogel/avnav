@@ -92,7 +92,8 @@ class TrackInfo{
         }
         this.points.push(point);
         if (this.lastPoint) {
-            let dts = NavCompute.computeDistance(this.lastPoint, point);
+            let dts = NavCompute.computeDistance(this.lastPoint, point,
+                globalstore.getData(keys.nav.routeHandler.useRhumbLine));
             this.distance += dts.dts;
         }
         this.lastPoint = point;
@@ -114,15 +115,18 @@ class TrackInfo{
         if (this.refPoint){
             let bestDistance;
             for (let i=0;i<this.points.length;i++){
-                let cur=NavCompute.computeDistance(this.refPoint,this.points[i]).dts;
+                let cur=NavCompute.computeDistance(this.refPoint,
+                    this.points[i],
+                    globalstore.getData(keys.nav.routeHandler.useRhumbLine)).dts;
                 if (bestDistance === undefined || cur < bestDistance){
                     refIdx=i;
                     bestDistance=cur;
                 }
             }
             let last=this.points[refIdx];
+            let useRhumbLine=globalstore.getData(keys.nav.routeHandler.useRhumbLine);
             for (let i=refIdx+1;i<this.points.length;i++){
-                remain+=NavCompute.computeDistance(last,this.points[i]).dts;
+                remain+=NavCompute.computeDistance(last,this.points[i],useRhumbLine).dts;
                 last=this.points[i];
             }
         }

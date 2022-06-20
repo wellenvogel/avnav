@@ -110,5 +110,6 @@
     <string name="backgroundGpsEnabled">gps enabled</string>
     <string name="uploadSettings">Select a settings file to upload</string>
     <string name="labelSettingsConnAlarm">Sound for connectionLost alarm</string>
+    <string name="labelSettingsRhumbLine">use rhumb lines (else: great circle)</string>
 
 </resources>

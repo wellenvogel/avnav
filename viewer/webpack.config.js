@@ -65,6 +65,10 @@ module.exports = (env, argv) => {
         devtool = undefined;
         cleanOutput=true;
         minify=true;
+        resolveAlias['debugSupport.js']=false;
+    }
+    else{
+        resolveAlias['debugSupport.js']=__dirname+"/util/debugSupport.js"
     }
 
     var plugins = [

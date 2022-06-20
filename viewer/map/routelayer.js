@@ -1,12 +1,12 @@
 /**
  * Created by andreas on 14.07.14.
  */
-    
-import navobjects from '../nav/navobjects';
+
 import keys,{KeyHelper} from '../util/keys.jsx';
 import globalStore from '../util/globalstore.jsx';
 import RouteEdit from '../nav/routeeditor.js';
 import orangeMarker from '../images/MarkerOrange.png';
+import NavCompute from "../nav/navcompute";
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE);
 const editingRoute=new RouteEdit(RouteEdit.MODES.EDIT);
@@ -17,6 +17,50 @@ class Callback{
     }
     dataChanged(keys){
         this.callback(keys);
+    }
+}
+class RouteDisplay{
+    constructor(mapholder) {
+        this.mapholder=mapholder;
+        this.points=[];
+        this.segments=[];
+        this.filled=false;
+    }
+    reset(){
+        this.points=[];
+        this.segments=[];
+        this.filled=false;
+    }
+    fillIfNeeded(routePoints){
+        if (this.filled) return;
+        this.points=[];
+        this.segments=[];
+        let lastPoint=undefined;
+        for (let i in routePoints){
+            if (!routePoints[i]) continue;
+            let p = this.mapholder.pointToMap(routePoints[i].toCoord());
+            this.points.push(p);
+            if (lastPoint !== undefined) {
+                if (globalStore.getData(keys.nav.routeHandler.useRhumbLine)) {
+                    this.segments.push([this.mapholder.pointToMap(lastPoint.toCoord()),p]);
+                } else {
+                    let nextPart=[];
+                    let segments = NavCompute.computeCoursePoints(lastPoint, routePoints[i], 3);
+                    for (let s in segments) {
+                        nextPart.push(this.mapholder.pointToMap([segments[s].lon, segments[s].lat]));
+                    }
+                    this.segments.push(nextPart);
+                }
+            }
+            lastPoint = routePoints[i];
+        }
+        this.filled=true;
+    }
+    getPoints(){
+        return this.points;
+    }
+    getSegments(){
+        return this.segments;
     }
 }
 /**
@@ -87,7 +131,20 @@ const RouteLayer=function(mapholder){
     );
     globalStore.register(this.navChangedCb,navStoreKeys);
     globalStore.register(this,keys.gui.global.propertySequence);
-
+    this.routeDisplay=new RouteDisplay(this.mapholder);
+    globalStore.register(()=>{
+        this.routeDisplay.reset();
+    },activeRoute.getStoreKeys(editingRoute.getStoreKeys({seq: keys.gui.global.propertySequence,rl:keys.nav.routeHandler.useRhumbLine})));
+    this.currentCourse=new RouteDisplay(this.mapholder);
+    globalStore.register(()=>{
+        this.currentCourse.reset();
+    },activeRoute.getStoreKeys({lat:keys.nav.gps.lat,lon:keys.nav.gps.lon,
+        seq:keys.gui.global.propertySequence,
+        rl:keys.nav.routeHandler.useRhumbLine}));
+    this.currentLeg=new RouteDisplay(this.mapholder);
+    globalStore.register(()=>{
+        this.currentLeg.reset();
+    },activeRoute.getStoreKeys({seq:keys.gui.global.propertySequence,rl:keys.nav.routeHandler.useRhumbLine}))
 
 
 };
@@ -173,9 +230,7 @@ RouteLayer.prototype.onPostCompose=function(center,drawing) {
     let gpsPosition=globalStore.getData(keys.nav.gps.position);
     let gpsValid=globalStore.getData(keys.nav.gps.valid);
     let toPoint=activeRoute.getCurrentTarget();
-    let to=toPoint?this.mapholder.pointToMap(toPoint.toCoord()):undefined;
     let fromPoint=activeRoute.getCurrentFrom();
-    let from=fromPoint?this.mapholder.pointToMap(fromPoint.toCoord()):undefined;
     let showBoat=globalStore.getData(keys.properties.layers.boat);
     let showNav=globalStore.getData(keys.properties.layers.nav);
     let wpSize=globalStore.getData(keys.properties.routeWpSize);
@@ -186,15 +241,18 @@ RouteLayer.prototype.onPostCompose=function(center,drawing) {
         this.routePixel=[];
         return;
     }
-    if (from && to && gpsValid ){
-        let line=[this.mapholder.pointToMap(gpsPosition.toCoord()),to];
+    if (fromPoint && toPoint && gpsValid ){
+        this.currentCourse.fillIfNeeded([gpsPosition,toPoint])
+        let line=this.currentCourse.getSegments()[0];
         drawing.drawLineToContext(line,this.courseStyle);
-        if (from){
-            line=[from,to];
+        if (fromPoint){
+            this.currentLeg.fillIfNeeded([fromPoint,toPoint]);
+            line=this.currentLeg.getSegments()[0];
             drawing.drawLineToContext(line,this.dashedStyle);
         }
     }
-    if (to ){
+    if (toPoint && ! route ){
+        let to=this.mapholder.pointToMap(toPoint.toCoord());
         //only draw the current target wp if we do not have a route
         this.wpPixel.push(drawing.drawImageToContext(to,this.markerStyle.image,this.markerStyle));
         if (toPoint.name){
@@ -204,13 +262,14 @@ RouteLayer.prototype.onPostCompose=function(center,drawing) {
 
     let routeTarget=-1;
     if ( route) {
-        let currentRoutePoints=[];
-        for (let i in route.points){
-            let p=this.mapholder.pointToMap(route.points[i].toCoord());
-            if (route.points[i].compare(toPoint)) routeTarget=i;
-            currentRoutePoints.push(p);
+        this.routeDisplay.fillIfNeeded(route.points,toPoint);
+        this.routePixel=[];
+        let allSegments=this.routeDisplay.getSegments();
+        for (let i in allSegments){
+            let currentRoutePoints=allSegments[i];
+            drawing.drawLineToContext(currentRoutePoints, this.lineStyle);
         }
-        this.routePixel = drawing.drawLineToContext(currentRoutePoints, this.lineStyle);
+        let currentRoutePoints=this.routeDisplay.getPoints();
         let active = currentEditor.getIndex();
         let i,style;
         for (i = 0; i < currentRoutePoints.length; i++) {
@@ -219,8 +278,7 @@ RouteLayer.prototype.onPostCompose=function(center,drawing) {
             else {
                 if (i == routeTarget) style=this.routeTargetStyle;
             }
-            drawing.drawBubbleToContext(currentRoutePoints[i],wpSize,
-                style);
+            this.routePixel.push(drawing.drawBubbleToContext(currentRoutePoints[i],wpSize,style));
             wp=route.points[i];
             if (wp && wp.name) text=wp.name;
             else text=i+"";

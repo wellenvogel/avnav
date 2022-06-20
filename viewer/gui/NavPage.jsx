@@ -454,7 +454,8 @@ class NavPage extends React.Component{
                     onClick:()=>{
                         RouteHandler.fetchRoute(feature.overlayName,false,
                             (route)=>{
-                                let idx=route.findBestMatchingIdx(feature.nextTarget);
+                                let nextTarget= new navobjects.WayPoint(feature.nextTarget[0],feature.nextTarget[1])
+                                let idx=route.findBestMatchingIdx(nextTarget);
                                 let editor=new RouteEdit(RouteEdit.MODES.EDIT);
                                 editor.setNewRoute(route,idx >= 0?idx:undefined);
                                 this.props.history.push("editroutepage");

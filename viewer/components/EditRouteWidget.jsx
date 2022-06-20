@@ -37,7 +37,7 @@ class EditRouteWidget extends React.Component{
         }
         let rname=route.name;
         let numPoints=route.points.length;
-        let len=route.computeLength(0);
+        let len=route.computeLength(0,this.props.useRhumbLine);
         let remain=isActive?this.props.remain:undefined;
         let eta=isActive?this.props.eta:undefined;
         return (
@@ -76,13 +76,15 @@ EditRouteWidget.propTypes={
     remain: PropTypes.number,
     eta:    PropTypes.objectOf(Date),
     isApproaching: PropTypes.bool,
-    isActive: PropTypes.bool
+    isActive: PropTypes.bool,
+    useRhumbLine: PropTypes.bool
 };
 
 EditRouteWidget.storeKeys=editor.getStoreKeys({
     remain:keys.nav.route.remain,
     eta:keys.nav.route.eta,
-    isApproaching: keys.nav.route.isApproaching
+    isApproaching: keys.nav.route.isApproaching,
+    useRhumbLine: keys.nav.routeHandler.useRhumbLine
 });
 
 export default EditRouteWidget;

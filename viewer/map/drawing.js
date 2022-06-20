@@ -230,9 +230,7 @@ Drawing.prototype.arrow=function(x1,y1,x2,y2,w,l,pe,open){
     let d=dx*dx+dy*dy;
     //compute part of line we must move
     let f=Math.sqrt(l*l/d);
-    if (f> 0.8) f=0.8;
     let lf=Math.sqrt(pe*pe/d);
-    if (lf > 0.5) lf=0.5;
     let x0=x1+lf*dx;
     let y0=y1+lf*dy;
     this.context.moveTo(x0,y0);
@@ -324,9 +322,11 @@ Drawing.prototype.drawLineToContext=function(points,opt_style){
         p=this.pixelToDevice(p);
         if (dashlen == 0) this.context.lineTo(p[0],p[1]);
         else this.dashedLine(last[0],last[1],p[0],p[1],dashlen);
-        nminus1=last;
+        if (arrowStyle && (nminus1 === undefined || Math.abs(last[0]-p[0]))> 0.01) {
+            nminus1 = last;
+        }
         last=p;
-        if (arrowStyle){
+        if (arrowStyle && i >= (points.length -1) && nminus1 !== undefined){
             this.arrow(last[0],last[1],nminus1[0],nminus1[1],arrowStyle.width,arrowStyle.length,arrowStyle.offset,arrowStyle.open);
         }
     }

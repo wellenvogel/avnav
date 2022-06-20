@@ -78,8 +78,14 @@ window.TinyTest = {
         }
     },
     assertRange: function(expected,actual,offset){
-        if (Math.abs(expected-actual) > offset){
+        if (isNaN(actual) || Math.abs(expected-actual) > offset){
             throw new Error('assertRange() ' + expected+'('+offset+') != '+actual );
+        }
+    },
+    assertRangePercent: function(expected,actual,percent){
+        let offset=Math.abs((percent*expected)/100.0);
+        if (isNaN(actual) || Math.abs(expected-actual) > offset){
+            throw new Error('assertRangePercent() ' + expected+'('+offset+') != '+actual );
         }
     }
 

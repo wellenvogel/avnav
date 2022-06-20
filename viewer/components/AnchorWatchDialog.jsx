@@ -35,7 +35,8 @@ class WatchDialog extends React.Component{
             cv.refPoint = NavData.getCurrentPosition();
         }
         if (cv.bearing != 0 || cv.dispatcher != 0) {
-            let target = NavCompute.computeTarget(cv.refPoint, cv.bearing, cv.distance);
+            let target = NavCompute.computeTarget(cv.refPoint, cv.bearing, cv.distance,
+                globalStore.getData(keys.nav.routeHandler.useRhumbLine));
             cv.refPoint = target;
         }
         return cv;

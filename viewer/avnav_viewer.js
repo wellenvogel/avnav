@@ -48,6 +48,7 @@ import assign from 'object-assign';
 import LeaveHandler from './util/leavehandler';
 import isIosSafari from '@braintree/browser-detection/is-ios-safari';
 import LocalStorage, {PREFIX_NAMES} from './util/localStorageManager';
+import debugSupport from 'debugSupport.js';
 
 
 if (! window.avnav){

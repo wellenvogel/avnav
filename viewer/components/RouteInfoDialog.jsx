@@ -48,13 +48,14 @@ export const INFO_ROWS=[
     ];
 export const getClosestPoint=(route,waypoint)=>{
     let idx=route.findBestMatchingIdx(waypoint);
+    let useRhumbLine=globalStore.getData(keys.nav.routeHandler.useRhumbLine);
     if (idx >= 0) {
         //now we check if we are somehow between the found point and the next
         let currentTarget = route.getPointAtIndex(idx);
         let nextTarget = route.getPointAtIndex(idx + 1);
         if (nextTarget && currentTarget) {
-            let nextDistanceWp = NavCompute.computeDistance(waypoint, nextTarget).dts;
-            let nextDistanceRt = NavCompute.computeDistance(currentTarget, nextTarget).dts;
+            let nextDistanceWp = NavCompute.computeDistance(waypoint, nextTarget,useRhumbLine).dts;
+            let nextDistanceRt = NavCompute.computeDistance(currentTarget, nextTarget,useRhumbLine).dts;
             //if the distance to the next wp is larger then the distance between current and next
             //we stick at current
             //we allow additionally a xx% catch range
@@ -66,6 +67,7 @@ export const getClosestPoint=(route,waypoint)=>{
                 return currentTarget;
             }
         }
+        return currentTarget;
     }
 }
 export const getRouteInfo = (routeName,opt_waypoint) => {

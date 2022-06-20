@@ -3,6 +3,8 @@
  */
 import navobjects from './navobjects';
 import LatLon from 'geodesy/latlon-spherical';
+import globalstore from "../util/globalstore";
+import keys from "../util/keys";
 let NavCompute={
 };
 
@@ -11,17 +13,24 @@ let NavCompute={
  * compute the distances between 2 points
  * @param {navobjects.Point} src
  * @param {navobjects.Point} dst
+ * @param opt_useRhumbLine
  * @returns {navobjects.Distance}
  */
-NavCompute.computeDistance=function(src,dst){
+NavCompute.computeDistance=function(src,dst, opt_useRhumbLine){
     let srcll=src;
     let dstll=dst;
     let rt=new navobjects.Distance();
     //use the movable type stuff for computations
     let llsrc=new LatLon(srcll.lat,srcll.lon);
     let lldst=new LatLon(dstll.lat,dstll.lon);
-    rt.dts=llsrc.distanceTo(lldst);
-    rt.course=llsrc.initialBearingTo(lldst);
+    if (!opt_useRhumbLine) {
+        rt.dts = llsrc.distanceTo(lldst);
+        rt.course = llsrc.initialBearingTo(lldst);
+    }
+    else{
+        rt.dts = llsrc.rhumbDistanceTo(lldst);
+        rt.course = llsrc.rhumbBearingTo(lldst);
+    }
     return rt;
 };
 
@@ -30,9 +39,68 @@ NavCompute.computeXte=function(start,destination,current){
     let llsrc=new LatLon(start.lat,start.lon);
     let lldst=new LatLon(destination.lat,destination.lon);
     let llcur=new LatLon(current.lat,current.lon);
-    let xte=llsrc.crossTrackDistanceTo(lldst,llcur);
+    let xte=llcur.crossTrackDistanceTo(llsrc,lldst);
     return xte;
 };
+/**
+ * compute the rhumb line xte using a simple "flattened" approach
+ * like OpenCPN is doing this
+ * @param start
+ * @param destination
+ * @param current
+ */
+NavCompute.computeRhumbXte=function(start,destination,current){
+    let llsrc=new LatLon(start.lat,start.lon);
+    let lldst=new LatLon(destination.lat,destination.lon);
+    let llcur=new LatLon(current.lat,current.lon);
+    let dstFromBrg=lldst.rhumbBearingTo(llsrc);
+    let dstCurBrg=lldst.rhumbBearingTo(llcur);
+    let dstCurDst=lldst.rhumbDistanceTo(llcur);
+    let alpha=dstFromBrg-dstCurBrg;
+    return dstCurDst*Math.sin(alpha * Math.PI / 180);
+}
+/**
+ * compute points on a route
+ * @param start
+ * @param destination
+ * @param percentStep
+ * @param opt_min minimal distance in m - below no split
+ * @return {LatLonSpherical[]}
+ */
+NavCompute.computeCoursePoints=function (start,destination,percentStep,opt_min){
+   let llsrc=new LatLon(start.lat,start.lon);
+   let lldst=new LatLon(destination.lat,destination.lon);
+   let rt=[llsrc];
+   if (isNaN(percentStep) || percentStep < 1){
+       rt.push(lldst);
+       return rt;
+   }
+   if (opt_min === undefined){
+       opt_min=10*NavCompute.NM;
+   }
+   let dst=llsrc.distanceTo(lldst);
+   if (dst <= opt_min){
+       rt.push(lldst);
+       return rt;
+   }
+   //try to make segments of opt_min
+   //but at most the given percentage
+   let num=dst/opt_min;
+   if (num < 2) num=2;
+   let numPercent=100.0/num;
+   if (percentStep < numPercent) {
+       percentStep=numPercent;
+   }
+   let last=undefined
+   for (let fraction=percentStep;fraction <= 100;fraction+=percentStep){
+       last=llsrc.intermediatePointTo(lldst,fraction/100.0);
+       rt.push(last);
+   }
+   if (! last || (last.lon !== lldst.lon || last.lat !== lldst.lat)){
+       rt.push(lldst);
+   }
+   return rt;
+}
 
 /**
  * check if a course is closer to our own course or to ownCourse + 180
@@ -59,25 +127,30 @@ NavCompute.checkInverseCourse=function(myCourse,otherCourse){
  * @param src
  * @param dst
  * @param properties - settings
+ * @param opt_useRhumbLine
  * @returns {navobjects.Cpa}
  */
-NavCompute.computeCpa=function(src,dst,properties){
+NavCompute.computeCpa=function(src,dst,properties,opt_useRhumbLine){
     let rt = new navobjects.Cpa();
     let llsrc = new LatLon(src.lat, src.lon);
     let lldst = new LatLon(dst.lat, dst.lon);
-    let curdistance=llsrc.distanceTo(lldst); //m
+    let curdistance=opt_useRhumbLine?llsrc.rhumbDistanceTo(lldst):llsrc.distanceTo(lldst); //m
     if (curdistance < 0.1){
         let x=curdistance;
     }
     rt.curdistance=curdistance;
-    let courseToTarget=llsrc.initialBearingTo(lldst); //in deg
+    let courseToTarget=opt_useRhumbLine?
+        llsrc.rhumbBearingTo(lldst):
+        llsrc.initialBearingTo(lldst); //in deg
     //default to our current distance
     rt.tcpa=0;
     rt.cpa=curdistance;
     let maxDistance=6371e3*1000*Math.PI; //half earth
     let appr=NavCompute.computeApproach(courseToTarget,curdistance,src.course,src.speed,dst.course,dst.speed,properties.minAISspeed,maxDistance);
     if (appr.dd !== undefined && appr.ds !== undefined) {
-        let xpoint = llsrc.destinationPoint(appr.dd,src.course);
+        let xpoint = opt_useRhumbLine?
+            llsrc.rhumbDestinationPoint(appr.dd,src.course):
+            llsrc.destinationPoint(appr.dd,src.course);
         rt.crosspoint = new navobjects.Point(xpoint.lon, xpoint.lat);
     }
     if (!appr.tm){
@@ -86,13 +159,20 @@ NavCompute.computeCpa=function(src,dst,properties){
         rt.front=undefined;
         return rt;
     }
-    let cpasrc = llsrc.destinationPoint(appr.dms,src.course );
-    let cpadst = lldst.destinationPoint(appr.dmd,dst.course);
+
+    let cpasrc = opt_useRhumbLine?
+        llsrc.rhumbDestinationPoint(appr.dms,src.course):
+        llsrc.destinationPoint(appr.dms,src.course );
+    let cpadst = opt_useRhumbLine?
+        lldst.rhumbDestinationPoint(appr.dms,dst.course):
+        lldst.destinationPoint(appr.dmd,dst.course);
     rt.src.lon=cpasrc.lon;
     rt.src.lat=cpasrc.lat;
     rt.dst.lon=cpadst.lon;
     rt.dst.lat=cpadst.lat;
-    rt.cpa = cpasrc.distanceTo(cpadst);
+    rt.cpa = opt_useRhumbLine?
+        cpasrc.rhumbDistanceTo(cpadst):
+        cpasrc.distanceTo(cpadst);
     rt.tcpa = appr.tm;
     if (rt.cpa > curdistance || appr.tm < 0){
         rt.cpa=curdistance;
@@ -175,9 +255,11 @@ NavCompute.computeApproach=function(courseToTarget,curdistance,srcCourse,srcSpee
  * @param {number} brg in degrees
  * @param {number} dist in m
 */
-NavCompute.computeTarget=function(src,brg,dist){
+NavCompute.computeTarget=function(src,brg,dist,opt_useRhumbLine){
     let llsrc = new LatLon(src.lat, src.lon);
-    let llrt=llsrc.destinationPoint(dist,brg);
+    let llrt= opt_useRhumbLine?
+        llsrc.rhumbDestinationPoint(dist,brg):
+        llsrc.destinationPoint(dist,brg);
     let rt=new navobjects.Point(llrt.lon,llrt.lat);
     return rt;
 };
@@ -192,20 +274,36 @@ NavCompute.computeTarget=function(src,brg,dist){
  * @returns {{markerCourse: Number, markerDistance: Number, markerVmg: Number, markerEta: Date, markerXte: Number}}
  */
 NavCompute.computeLegInfo=function(target,gps,opt_start){
+    let useRhumbLine=globalstore.getData(keys.nav.routeHandler.useRhumbLine);
     let rt={
         markerCourse:undefined,
+        markerCourseGreatCircle: undefined,
+        markerCourseRhumbLine: undefined,
         markerDistance: undefined,
+        markerDistanceGreatCircle: undefined,
+        markerDistanceRhumbLine: undefined,
         markerVmg: undefined,
         markerEta: undefined,
         markerXte: undefined
     };
     rt.markerWp=target;
     if (gps.valid) {
-        let markerdst = NavCompute.computeDistance(gps, target);
-        rt.markerCourse = markerdst.course;
-        rt.markerDistance = markerdst.dts;
-        let coursediff = Math.min(Math.abs(markerdst.course - gps.course), Math.abs(markerdst.course + 360 - gps.course),
-            Math.abs(markerdst.course - (gps.course + 360)));
+        let pos=new LatLon(gps.lat,gps.lon);
+        let targetll=new LatLon(target.lat,target.lon);
+        rt.markerCourseGreatCircle=pos.initialBearingTo(targetll);
+        rt.markerCourseRhumbLine=pos.rhumbBearingTo(targetll);
+        rt.markerDistanceGreatCircle=pos.distanceTo(targetll);
+        rt.markerDistanceRhumbLine=pos.rhumbDistanceTo(targetll);
+        if (useRhumbLine){
+            rt.markerCourse=rt.markerCourseRhumbLine;
+            rt.markerDistance=rt.markerDistanceRhumbLine;
+        }
+        else{
+            rt.markerCourse=rt.markerCourseGreatCircle;
+            rt.markerDistance=rt.markerDistanceGreatCircle;
+        }
+        let coursediff = Math.min(Math.abs(rt.markerCourse - gps.course), Math.abs(rt.markerCourse + 360 - gps.course),
+            Math.abs(rt.markerCourse - (gps.course + 360)));
         if (gps.rtime && coursediff <= 85) {
             //TODO: is this really correct for VMG?
             let vmgapp = gps.speed * Math.cos(Math.PI / 180 * coursediff);
@@ -226,7 +324,9 @@ NavCompute.computeLegInfo=function(target,gps,opt_start){
             rt.markerVmg = 0;
         }
         if (opt_start) {
-            rt.markerXte = NavCompute.computeXte(opt_start,target, gps);
+            rt.markerXte = useRhumbLine?
+                NavCompute.computeRhumbXte(opt_start,target,gps):
+                NavCompute.computeXte(opt_start,target, gps);
         }
         else{
             rt.markerXte=0;

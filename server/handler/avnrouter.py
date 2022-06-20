@@ -168,17 +168,22 @@ class WpData:
     if v is None:
       return None
     return float(v)
-  def __init__(self,leg: AVNRoutingLeg = None,lat=None,lon=None,speed=None):
+  def __init__(self,leg: AVNRoutingLeg = None,lat=None,lon=None,speed=None,useRhumLine=False):
     self.validData=False
     self.xte=None
+    self.xteRhumbLine=None
     self.distance=None
+    self.distanceRhumbLine=None
     self.bearing=None
+    self.bearingRhumbLine=None
     self.dstBearing=None
+    self.dstBearingRhumbLine=None
     self.lat=None
     self.lon=None
     self.fromLat=None
     self.fromLon=None
     self.speed=speed
+    self.useRhumbLine=useRhumLine
     lat=self.float(lat)
     lon=self.float(lon)
     target=None
@@ -197,10 +202,14 @@ class WpData:
     if self.lat is not None and self.lon is not None and lat is not None and lon is not None:
       self.validData=True
       self.distance=AVNUtil.distanceM((lat,lon),(self.lat,self.lon))
+      self.distanceRhumbLine = AVNUtil.distanceRhumbLineM((lat, lon), (self.lat, self.lon))
       self.dstBearing=AVNUtil.calcBearing((lat,lon),(self.lat,self.lon))
+      self.dstBearingRhumbLine = AVNUtil.calcBearingRhumbLine((lat, lon), (self.lat, self.lon))
       if self.fromLon is not None and self.fromLat is not None:
         self.xte=AVNUtil.calcXTE((lat,lon),(self.lat,self.lon),(self.fromLat,self.fromLon))
+        self.xteRhumbLine = AVNUtil.calcXTERumbLine((lat, lon), (self.lat, self.lon), (self.fromLat, self.fromLon))
         self.bearing=AVNUtil.calcBearing((self.fromLat,self.fromLon),(self.lat,self.lon))
+        self.bearingRhumbLine=AVNUtil.calcBearingRhumbLine((self.fromLat,self.fromLon),(self.lat,self.lon))
 
 
 #routing handler
@@ -214,7 +223,8 @@ class AVNRouter(AVNDirectoryHandlerBase):
   @classmethod
   def getConfigName(cls):
     return "AVNRouter"
-  
+  P_RHUMBLINE=WorkerParameter('useRhumbLine',False,type=WorkerParameter.T_BOOLEAN,
+                              description='use rhumb lines for courses (otherwise great circle)')
   @classmethod
   def getConfigParam(cls, child=None):
     if child is None:
@@ -227,7 +237,8 @@ class AVNRouter(AVNDirectoryHandlerBase):
           WorkerParameter("computeRMB",True,type=WorkerParameter.T_BOOLEAN,
                           description='if set we compute AP control data'),
           WorkerParameter("computeAPB",False,type=WorkerParameter.T_BOOLEAN,
-                          description='if set to true, compute APB taking True course as magnetic!')
+                          description='if set to true, compute APB taking True course as magnetic!'),
+          cls.P_RHUMBLINE
           ]
       return rt
     return None
@@ -364,6 +375,8 @@ class AVNRouter(AVNDirectoryHandlerBase):
     hasRMB = False
     currentLeg=None
     nonexist=False
+    modeText='rhumb line' if self.P_RHUMBLINE.fromDict(self.param) else 'great circle'
+    self.setInfo('mode',"%s"%(modeText),WorkerStatus.NMEA)
     with self.__writeLegLock:
       if os.path.exists(self.currentLegFileName):
         newTime=os.stat(self.currentLegFileName).st_mtime
@@ -467,7 +480,11 @@ class AVNRouter(AVNDirectoryHandlerBase):
       self.startStopAlarm(False,self.ALARMS.waypoint)
       return
     currentLocation=(lat,lon)
-    dst=AVNUtil.distanceM(currentLocation,self.wpToLatLon(leg.getTo()))
+    dst=None
+    if self.useRhumbLine():
+      dst=AVNUtil.distanceRhumbLineM(currentLocation,self.wpToLatLon(leg.getTo()))
+    else:
+      dst = AVNUtil.distanceM(currentLocation, self.wpToLatLon(leg.getTo()))
     AVNLog.debug("approach current distance=%f",float(dst))
     if (dst > leg.getApproachDistance()):
       def unsetApproach(leg,x):
@@ -509,7 +526,11 @@ class AVNRouter(AVNDirectoryHandlerBase):
         hasNextWp=False
     if hasNextWp:
       nextWp=route['points'][nextWpNum]
-      nextDistance=AVNUtil.distanceM(currentLocation,self.wpToLatLon(nextWp))
+      nextDistance=None
+      if self.useRhumbLine():
+        nextDistance=AVNUtil.distanceRhumbLineM(currentLocation,self.wpToLatLon(nextWp))
+      else:
+        nextDistance = AVNUtil.distanceM(currentLocation, self.wpToLatLon(nextWp))
       if self.lastDistanceToNext is None or self.lastDistanceToNext is None:
           #first time in approach
           self.lastDistanceToNext=nextDistance
@@ -569,7 +590,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
     lat=curGps.get('lat')
     lon=curGps.get('lon')
     speed=curGps.get('speed')
-    wpData=WpData(self.getCurrentLeg(),lat,lon,speed or 0)
+    wpData=WpData(self.getCurrentLeg(),lat,lon,speed or 0,useRhumLine=self.P_RHUMBLINE.fromDict(self.param))
     return wpData
   #compute an RMB record and write this into the feeder
   #if we have an active leg
@@ -589,7 +610,11 @@ class AVNRouter(AVNDirectoryHandlerBase):
 
         if wpData is not None and wpData.validData:
           AVNLog.debug("compute route data from %s to %s",str(self.startWp),str(self.endWp))
-          XTE=wpData.xte/float(AVNUtil.NM)
+          XTE=None
+          if self.useRhumbLine():
+            XTE = wpData.xteRhumbLine / float(AVNUtil.NM)
+          else:
+            XTE=wpData.xte/float(AVNUtil.NM)
           if XTE > 0:
             LR="L"
           else:
@@ -597,7 +622,11 @@ class AVNRouter(AVNDirectoryHandlerBase):
           XTE=abs(XTE)
           if XTE>9.99:
             XTE=9.99
-          destDis=wpData.distance/float(AVNUtil.NM)
+          destDis=None
+          if self.useRhumbLine():
+            destDis = wpData.distanceRhumbLine / float(AVNUtil.NM)
+          else:
+            destDis=wpData.distance/float(AVNUtil.NM)
           if destDis>999.9:
             destDis=999.9
           if leg.isApproach():
@@ -606,7 +635,11 @@ class AVNRouter(AVNDirectoryHandlerBase):
             arrival="V"
           wplat=NMEAParser.nmeaFloatToPos(self.endWp['lat'],True)
           wplon = NMEAParser.nmeaFloatToPos(self.endWp['lon'], False)
-          destBearing=wpData.dstBearing
+          destBearing=None
+          if self.useRhumbLine():
+            destBearing=wpData.dstBearingRhumbLine
+          else:
+            destBearing = wpData.dstBearing
           brg=wpData.bearing
           self.setInfo("autopilot","RMB=%s,APB=%s:WpNr=%d,XTE=%s%s,DST=%s,BRG=%s,ARR=%s"%
                       (computeRMB,computeAPB,self.WpNr,XTE,LR,destDis,destBearing,arrival),WorkerStatus.NMEA)
@@ -628,14 +661,17 @@ class AVNRouter(AVNDirectoryHandlerBase):
       will only be called if leg.anchorDistance is not none
   '''
 
-
+  def useRhumbLine(self):
+    return self.P_RHUMBLINE.fromDict(self.param)
 
   @classmethod
   def canEdit(cls):
     return True
 
   def updateConfig(self, param, child=None):
-    return super().updateConfig(param, child)
+    rt=super().updateConfig(param, child)
+    self.navdata.updateChangeCounter(self.LEG_CHANGE_KEY)
+    return rt
 
   def computeAnchor(self):
     curGps = self.navdata.getDataByPrefix(AVNStore.BASE_KEY_GPS,1)
@@ -648,7 +684,10 @@ class AVNRouter(AVNDirectoryHandlerBase):
       return
     self.startStopAlarm(False,self.ALARMS.gps)
     leg=self.getCurrentLeg()
-    anchorDistance = AVNUtil.distanceM((lat, lon), self.wpToLatLon(leg.getFrom()))
+    if self.useRhumbLine():
+      anchorDistance=AVNUtil.distanceRhumbLineM((lat, lon), self.wpToLatLon(leg.getFrom()))
+    else:
+      anchorDistance = AVNUtil.distanceM((lat, lon), self.wpToLatLon(leg.getFrom()))
     AVNLog.debug("Anchor distance %d, allowed %d",anchorDistance,leg.getAnchorDistance())
     if anchorDistance > leg.getAnchorDistance():
       self.startStopAlarm(True,self.ALARMS.anchor)
@@ -658,11 +697,15 @@ class AVNRouter(AVNDirectoryHandlerBase):
     data=list(self.itemList.values())
     rt = AVNUtil.getReturnData(items=data)
     return rt
-
+  RL_PARAM='useRhumbLine'
   def handleSpecialApiRequest(self,command,requestparam,handler):
     command=AVNUtil.getHttpRequestParam(requestparam, 'command',True)
     if (command == 'getleg'):
-      return self.currentLeg.getJson() if self.currentLeg is not None else {}
+      if self.currentLeg is None:
+        return {}
+      legData=self.currentLeg.getJson().copy()
+      legData[self.RL_PARAM]=self.useRhumbLine()
+      return legData
     if (command == 'unsetleg'):
       self.setCurrentLeg(None)
       self.wakeUp()
@@ -673,9 +716,17 @@ class AVNRouter(AVNDirectoryHandlerBase):
         data=AVNUtil.getHttpRequestParam(requestparam,'_json')
         if data is None:
           raise Exception("missing leg data for setleg")
-      self.setCurrentLeg(AVNRoutingLeg(json.loads(data)))
+      legData=json.loads(data)
+      if self.RL_PARAM in legData:
+        try:
+          del legData[self.RL_PARAM]
+        except:
+          pass
+      self.setCurrentLeg(AVNRoutingLeg(legData))
       self.wakeUp()
       return {'status':'OK'}
+    if (command == 'useRhumbLine'):
+      return AVNUtil.getReturnData(useRhumbLine=self.useRhumbLine())
     raise Exception("invalid command "+command)
 
 avnav_handlerList.registerHandler(AVNRouter)

@@ -10,6 +10,7 @@ import assign from 'object-assign';
 import NavCompute from '../nav/navcompute.js';
 import AisFormatter from '../nav/aisformatter.jsx';
 import Helper from '../util/helper.js';
+import globalstore from "../util/globalstore";
 
 const StyleEntry=function(src,style){
     this.src=src;
@@ -345,7 +346,7 @@ AisLayer.prototype.computeTarget=function(pos,course,dist){
     try {
         let point = new navobjects.Point();
         point.fromCoord(this.mapholder.transformFromMap(pos));
-        let tp = NavCompute.computeTarget(point, course, dist);
+        let tp = NavCompute.computeTarget(point, course, dist,globalstore.getData(keys.nav.routeHandler.useRhumbLine));
         let tpmap = this.mapholder.transformToMap(tp.toCoord());
         return tpmap;
     }catch (e){

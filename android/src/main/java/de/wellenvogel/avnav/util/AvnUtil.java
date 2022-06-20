@@ -266,7 +266,79 @@ public class AvnUtil {
         double rt=Math.asin(Math.sin(d13/R)*Math.sin(Math.toRadians(w13)-Math.toRadians(w12)))*R;
         return rt;
     }
+
+    public static double rhumbLineXTE(Location start, Location end, Location current){
+        double dstFromBrg = rhumbLineBearing(end,start);
+        double dstCurBrg = rhumbLineBearing(end,current);
+        double dstCurDst = rhumbLineDistance(end,current);
+        double alpha = dstFromBrg - dstCurBrg;
+        return dstCurDst * Math.sin(Math.toRadians(alpha));
+    }
+
+    public static double XTE(Location start,Location end, Location current,boolean useRhumbLine){
+        if (! useRhumbLine){
+            return calcXTE(start,end,current);
+        }
+        return rhumbLineXTE(start,end,current);
+    }
     public static final double R=6371000; //app. earth radius
+
+    public static double rhumbLineDistance(Location start, Location end){
+        double lat1 = start.getLatitude();
+        double lon1 = start.getLongitude();
+        double lat2 = end.getLatitude();
+        double lon2 = end.getLongitude();
+        double lat1r = Math.toRadians(lat1);
+        double lat2r = Math.toRadians(lat2);
+        double dlatr=lat2r-lat1r;
+        double dlonr=Math.toRadians(Math.abs(lon2-lon1));
+
+        //if dLon over 180° take shorter rhumb line across the anti-meridian:
+        if (Math.abs(dlonr) > Math.PI) {
+            dlonr = (dlonr > 0)?-(2 * Math.PI - dlonr):(2 * Math.PI + dlonr);
+        }
+
+        // on Mercator projection, longitude distances shrink
+        //by latitude
+        //q is the 'stretch factor'
+        //q becomes ill - conditioned along E - W line(0 / 0)
+        //use empirical tolerance to avoid it(note ε is too small)
+        double dcorr = Math.log(Math.tan(lat2r / 2 + Math.PI / 4) / Math.tan(lat1r / 2 + Math.PI / 4));
+        double q = (Math.abs(dcorr) > 10e-12)?dlatr / dcorr:Math.cos(lat1r);
+
+        //distance is pythagoras on 'stretched' Mercator projection, √(Δφ² + q²·Δλ²)
+        double d = Math.sqrt(dlatr * dlatr + q * q * dlonr * dlonr);  // angular distance in radians
+        d = d * R;
+        return d;
+    }
+
+    public static double distance(Location start,Location end,boolean useRhumbLine){
+        if (! useRhumbLine) return start.distanceTo(end);
+        else return rhumbLineDistance(start,end);
+    }
+
+    public static double rhumbLineBearing(Location start, Location end){
+        double clat = start.getLatitude();
+        double clon= start.getLongitude();
+        double elat= end.getLatitude();
+        double elon= end.getLongitude();
+        double clatr=Math.toRadians(clat);
+        double elatr=Math.toRadians(elat);
+        double dlonr=Math.toRadians(elon-clon);
+        // if dLon over 180° take shorter rhumb line across the anti-meridian:
+        if (Math.abs(dlonr) > Math.PI) {
+            dlonr = (dlonr > 0)?-(2 * Math.PI - dlonr):(2 * Math.PI + dlonr);
+        }
+
+        double corr=Math.log(Math.tan(elatr / 2 + Math.PI / 4) / Math.tan(clatr / 2 + Math.PI / 4));
+        double brg=Math.atan2(dlonr, corr);
+        brg=Math.toDegrees(brg);
+        return (brg+360)%360.0;
+    }
+    public static double bearingTo(Location start,Location end, boolean useRhumbLine){
+        if (! useRhumbLine) return start.bearingTo(end);
+        return rhumbLineBearing(start,end);
+    }
 
     public static class KeyValueList extends ArrayList<KeyValue> {
         public KeyValueList(KeyValue... parameter){
