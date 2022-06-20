@@ -107,6 +107,9 @@
         };
         let xteReferences={};
         TinyTest.run({
+            'print json':()=>{
+              console.log(JSON.stringify(testsets)+"");
+            },
             'parse points':()=>{
                 testsets.forEach((ts)=>{
                     console.log("##TS: ",ts.name);
