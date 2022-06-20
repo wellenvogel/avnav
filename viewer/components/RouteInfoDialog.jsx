@@ -67,6 +67,7 @@ export const getClosestPoint=(route,waypoint)=>{
                 return currentTarget;
             }
         }
+        return currentTarget;
     }
 }
 export const getRouteInfo = (routeName,opt_waypoint) => {
