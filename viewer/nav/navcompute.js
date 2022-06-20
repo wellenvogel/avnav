@@ -64,15 +64,32 @@ NavCompute.computeRhumbXte=function(start,destination,current){
  * @param start
  * @param destination
  * @param percentStep
+ * @param opt_min minimal distance in m - below no split
  * @return {LatLonSpherical[]}
  */
-NavCompute.computeCoursePoints=function (start,destination,percentStep){
+NavCompute.computeCoursePoints=function (start,destination,percentStep,opt_min){
    let llsrc=new LatLon(start.lat,start.lon);
    let lldst=new LatLon(destination.lat,destination.lon);
    let rt=[llsrc];
-   if (percentStep < 1 || globalstore.getData(keys.properties.routeRhumbLine)){
+   if (isNaN(percentStep) || percentStep < 1){
        rt.push(lldst);
        return rt;
+   }
+   if (opt_min === undefined){
+       opt_min=10*NavCompute.NM;
+   }
+   let dst=llsrc.distanceTo(lldst);
+   if (dst <= opt_min){
+       rt.push(lldst);
+       return rt;
+   }
+   //try to make segments of opt_min
+   //but at most the given percentage
+   let num=dst/opt_min;
+   if (num < 2) num=2;
+   let numPercent=100.0/num;
+   if (percentStep < numPercent) {
+       percentStep=numPercent;
    }
    let last=undefined
    for (let fraction=percentStep;fraction <= 100;fraction+=percentStep){
