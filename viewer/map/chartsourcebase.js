@@ -95,6 +95,15 @@ class ChartSourceBase {
 
     }
 
+    /**
+     * redraw this layer if the sequence has changed
+     * return true to let checkSequence always resolve to 0
+     * thus preventing a complete redraw of the map
+     * @return {boolean}
+     */
+    redraw(){
+        return false;
+    }
 
     /**
      * returns a promise that resolves to 1 for changed
@@ -119,7 +128,8 @@ class ChartSourceBase {
                     let newSequence=response.headers.get('last-modified');
                     if (newSequence !== this.sequence) {
                         this.sequence=newSequence;
-                        resolve(1);
+                        let drawn=this.redraw();
+                        resolve(drawn?0:1);
                     }
                     else resolve(0)
                 })

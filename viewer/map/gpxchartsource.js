@@ -98,15 +98,21 @@ class GpxChartSource extends ChartSourceBase{
             })
         };
         this.source=undefined;
-        this.needsRedraw=false;
+        this.isRoute=false;
         globalstore.register(()=>{
-            if (this.needsRedraw && this.source){
-                this.source.clear();
-                this.source.refresh();
+            if (this.isRoute){
+                this.redraw();
             }
         },[keys.nav.routeHandler.useRhumbLine])
     }
 
+    redraw() {
+        if (this.source) {
+            this.source.clear();
+            this.source.refresh();
+            return true;
+        }
+    }
     styleFunction(feature,resolution) {
 
         let type=feature.getGeometry().getType();
@@ -205,7 +211,7 @@ class GpxChartSource extends ChartSourceBase{
                                 features.forEach((feature) => {
                                     let geometry = feature.getGeometry();
                                     if (geometry instanceof olLineString) {
-                                        this.needsRedraw = 1;
+                                        this.isRoute = 1;
                                         //this is a route
                                         let coordinates = geometry.getCoordinates();
                                         if (coordinates.length > 1 && !globalstore.getData(keys.nav.routeHandler.useRhumbLine)) {
