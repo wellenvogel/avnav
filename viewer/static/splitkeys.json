@@ -1,0 +1,14 @@
+{
+    "description": "this file defines the settings that should be different in split mode",
+    "description2": "for the names refer to https://github.com/wellenvogel/avnav/blob/master/viewer/util/keys.jsx at *properties*",
+    "description3": "to revert to defaults remove this file and restart AvNav",
+    "version":1,
+    "keys":
+    [
+    "connectedMode",
+    "layoutName",
+    "remoteChannelName",
+    "remoteChannelRead",
+    "remoteChannelWrite"
+    ]
+}

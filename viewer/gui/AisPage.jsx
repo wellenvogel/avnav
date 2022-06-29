@@ -10,12 +10,12 @@ import React from 'react';
 import PropertyHandler from '../util/propertyhandler.js';
 import Page from '../components/Page.jsx';
 import AisFormatter from '../nav/aisformatter.jsx';
-import AisData from '../nav/aisdata.js';
 import assign from 'object-assign';
 import OverlayDialog from '../components/OverlayDialog.jsx';
 import Mob from '../components/Mob.js';
 import Compare from "../util/compare";
 import GuiHelper from "../util/GuiHelpers";
+import navdata from "../nav/navdata";
 
 const aisInfos=[
     [
@@ -27,6 +27,11 @@ const aisInfos=[
         {name:'course',label:'Cog ',unit:'°',len:6},
         {name:'speed',label:'Sog ',unit:'kn',len:6},
         {name:'heading',label:'Hdg ',unit:'°',len:8}
+    ],
+    [
+        {name:'length',label:'Len ',len:6},
+        {name:'beam',label:'Beam',len:6},
+        {name:'draught',label:'Drau',len:8}
     ],
     [
         {name:'shiptype',label:'Type'},
@@ -161,7 +166,7 @@ class AisPage extends React.Component{
             {
                 name:"AisNearest",
                 onClick:()=>{
-                    AisData.setTrackedTarget(0);
+                    navdata.getAisHandler().setTrackedTarget(0);
                     self.props.history.pop();
                 }
             },

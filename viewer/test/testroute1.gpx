@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx>
+    <rte>
+        <name>default</name>
+        <rtept lon="13.51880589551362" lat="54.33241927332065">
+            <name>WP 1</name>
+        </rtept>
+        <rtept lon="13.559324556191452" lat="54.33770414594454">
+            <name>WP 2</name>
+        </rtept>
+        <rtept lon="13.57332681843668" lat="54.33226150595533">
+            <name>WP 3</name>
+        </rtept>
+        <rtept lon="13.56906403039801" lat="54.30842681573759">
+            <name>WP 4</name>
+        </rtept>
+        <rtept lon="13.501309267789537" lat="54.1631546005587">
+            <name>WP 5</name>
+        </rtept>
+        <rtept lon="13.612677980818736" lat="54.17566175021352">
+            <name>WP 6</name>
+        </rtept>
+        <rtept lon="13.711603412571709" lat="54.20475398291015">
+            <name>WP 7</name>
+        </rtept>
+        <rtept lon="13.747034369960204" lat="54.165464916464146">
+            <name>WP 8</name>
+        </rtept>
+        <rtept lon="13.742498612715305" lat="54.15769701941491">
+            <name>WP 9</name>
+        </rtept>
+        <rtept lon="13.751003169715345" lat="54.142555391700824">
+            <name>WP10</name>
+        </rtept>
+        <rtept lon="13.730478876454915" lat="54.13710836579051">
+            <name>WP11</name>
+        </rtept>
+    </rte>
+</gpx>

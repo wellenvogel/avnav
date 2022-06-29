@@ -2,11 +2,8 @@
  * Created by andreas on 04.05.14.
  */
 import navobjects from './navobjects';
-import NavData from './navdata';
-import Base from '../base';
 import globalStore from '../util/globalstore.jsx';
 import keys,{KeyHelper} from '../util/keys.jsx';
-import Formatter from '../util/formatter';
 import assign from 'object-assign';
 import Requests from '../util/requests.js';
 import base from '../base.js';
@@ -44,8 +41,6 @@ const GpsData=function(){
         keys.properties.courseAverageInterval,
         keys.properties.speedAverageInterval
     ]);
-
-    this.startQuery();
     this.additionalKeys={}; //collect additonal keys here to reset them if not received any more
     let skeys=this.getStoreKeys();
     this.filteredStoreKeys={};
@@ -182,7 +177,7 @@ GpsData.prototype.computeKeys=function(key,data,base){
 };
 
 /**
- * @private
+ *
  */
 GpsData.prototype.startQuery=function(){
     let self=this;

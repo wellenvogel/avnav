@@ -13,6 +13,7 @@ import PropertyHandler from '../util/propertyhandler';
 import loadSettings from "../components/LoadSettingsDialog";
 import LayoutHandler from "../util/layouthandler";
 import Toast from "../components/Toast";
+import LocalStorage, {STORAGE_NAMES} from '../util/localStorageManager';
 
 class WarningPage extends React.Component{
     constructor(props){
@@ -26,8 +27,8 @@ class WarningPage extends React.Component{
         },(error)=>{});
     }
     okFunction(){
-        if (window.localStorage){
-            window.localStorage.setItem(globalStore.getData(keys.properties.licenseAcceptedName),"true");
+        if (LocalStorage.hasStorage()){
+           LocalStorage.setItem(STORAGE_NAMES.LICENSE,undefined,"true");
         }
         let flattenedKeys=KeyHelper.flattenedKeys(keys.properties);
         PropertyHandler.listSettings(true)

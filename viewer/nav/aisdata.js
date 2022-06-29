@@ -1,7 +1,6 @@
 /**
  * Created by andreas on 04.05.14.
  */
-import NavData from './navdata';
 import navobjects from './navobjects';
 import Formatter from '../util/formatter';
 import NavCompute from './navcompute';
@@ -19,8 +18,9 @@ const AisTarget=navobjects.Ais;
  * query the server...
  * @constructor
  */
-let AisData=function( opt_noQuery){
+let AisData=function(navdata){
 
+    this.navdata=navdata;
 
     /** @private
      * @type {Array.<AisTarget>}
@@ -67,14 +67,13 @@ let AisData=function( opt_noQuery){
      */
     this.nearestAisTarget={};
 
-    globalStore.register(this,keys.nav.gps);
+    globalStore.register(this,[keys.nav.gps,keys.nav.routeHandler.useRhumbLine]);
 
     /**
      * @private
      * @type {Formatter}
      */
     this.formatter=Formatter;
-    if (! opt_noQuery) this.startQuery();
 };
 /**
  *
@@ -83,13 +82,14 @@ let AisData=function( opt_noQuery){
  * @private
  */
 AisData.prototype._computeAisTarget=function(boatPos,ais){
+    let useRhumbLine= globalStore.getData(keys.nav.routeHandler.useRhumbLine);
     ais.warning=false;
     ais.tracking=false;
     ais.nearest=false;
     let computeProperties=globalStore.getMultiple({
         minAISspeed: keys.properties.minAISspeed
     });
-    let dst = NavCompute.computeDistance(boatPos, new navobjects.Point(parseFloat(ais.lon||0), parseFloat(ais.lat||0)));
+    let dst = NavCompute.computeDistance(boatPos, new navobjects.Point(parseFloat(ais.lon||0), parseFloat(ais.lat||0)),useRhumbLine);
     let cpadata = NavCompute.computeCpa({
             lon: boatPos.lon,
             lat: boatPos.lat,
@@ -102,7 +102,8 @@ AisData.prototype._computeAisTarget=function(boatPos,ais){
             course: parseFloat(ais.course || 0),
             speed: parseFloat(ais.speed || 0)
         },
-        computeProperties
+        computeProperties,
+        useRhumbLine
     );
     ais.distance = dst.dts;
     ais.headingTo = dst.course;
@@ -232,11 +233,11 @@ AisData.prototype.aisSort=function(a,b) {
 };
 
 /**
- * @private
+ *
  */
 AisData.prototype.startQuery=function() {
     let url = "?request=ais";
-    let center=NavData.getAisCenter();
+    let center=this.navdata.getAisCenter();
     let self=this;
     let timeout=parseInt(globalStore.getData(keys.properties.aisQueryTimeout));
     if (! center){
@@ -343,4 +344,4 @@ AisData.prototype.setTrackedTarget=function(mmsi){
     this.handleAisData();
 };
 
-export default new AisData();
+export default AisData;

@@ -157,6 +157,30 @@ const aisparam={
             if (v.type == 4) return "S";
             return "";
         }
+    },
+    length: {
+        headline: 'length',
+        format: function(v){
+            if (v.length === undefined) return '---';
+            return Formatter.formatDecimal(v.length,3)
+        },
+        unit: 'm'
+    },
+    beam: {
+        headline: 'beam',
+        format: function(v){
+            if (v.beam === undefined) return '---';
+            return Formatter.formatDecimal(v.beam,3);
+        },
+        unit: 'm'
+    },
+    draught: {
+        headline: 'draught',
+        format: function(v){
+            if (v.draught === undefined) return '---';
+            return Formatter.formatDecimal(v.draught,2,1);
+        },
+        unit: 'm'
     }
 
 };

@@ -10,6 +10,7 @@ import navobjects from '../nav/navobjects';
 import assign from 'object-assign';
 import DB from './DialogButton.jsx';
 import {Input} from './Inputs.jsx';
+import Dms from "geodesy/dms";
 
 /**
  * a waypoint dialog
@@ -27,8 +28,8 @@ let WaypointDialog = reactCreateClass({
     getInitialState: function () {
         return {
             name: this.props.waypoint.name,
-            lat: Geo.toLat(this.props.waypoint.lat, 'dm', 4),
-            lon: Geo.toLon(this.props.waypoint.lon, 'dm', 4),
+            lat: Dms.toLat(this.props.waypoint.lat, 'dm', 4),
+            lon: Dms.toLon(this.props.waypoint.lon, 'dm', 4),
             show: true
         };
     },
@@ -44,8 +45,8 @@ let WaypointDialog = reactCreateClass({
     okFunction: function (event) {
         let data = {
             name: this.state.name,
-            lat: Geo.parseDMS(this.state.lat),
-            lon: Geo.parseDMS(this.state.lon.replace(/o/i, 'e'))
+            lat: Dms.parse(this.state.lat),
+            lon: Dms.parse(this.state.lon.replace(/o/i, 'e'))
         };
         if (data.lat < -180 || data.lat > 180) delete data.lat;
         if (data.lon < -90 || data.lon > 90) delete data.lon;

@@ -43,6 +43,7 @@ import pepjsmouse from '@openlayers/pepjs/src/mouse';
 import remotechannel, {COMMANDS} from "../util/remotechannel";
 import {MouseWheelZoom} from "ol/interaction";
 import UserLayer from './userlayer';
+import LocalStorage, {STORAGE_NAMES} from '../util/localStorageManager';
 
 
 const PSTOPIC="mapevent";
@@ -151,7 +152,7 @@ const MapHolder=function(){
     this.forceZoom=false; //temporarily overwrite autozoom
     this.mapZoom=-1; //the last zoom we required from the map
     try {
-        let currentView = localStorage.getItem(globalStore.getData(keys.properties.centerName));
+        let currentView = LocalStorage.getItem(STORAGE_NAMES.CENTER);
         if (currentView) {
             let decoded = JSON.parse(currentView);
             this.center = decoded.center;
@@ -502,7 +503,7 @@ MapHolder.prototype.setChartEntry=function(entry,opt_noRemote){
     //set the new base chart
     this._baseChart=this.createChartSource(assign({},entry,{type:'chart',enabled:true,baseChart:true}));
     try{
-        localStorage.setItem(globalStore.getData(keys.properties.chartDataName),this._baseChart.getChartKey());
+        LocalStorage.setItem(STORAGE_NAMES.LASTCHART,undefined,this._baseChart.getChartKey());
     }catch(e){}
     if (! opt_noRemote){
         try {
@@ -514,7 +515,7 @@ MapHolder.prototype.setChartEntry=function(entry,opt_noRemote){
 MapHolder.prototype.getLastChartKey=function (){
     let rt;
     try{
-        rt=localStorage.getItem(globalStore.getData(keys.properties.chartDataName));
+        rt=LocalStorage.getItem(STORAGE_NAMES.LASTCHART);
         return rt;
     }catch (e){}
 }
@@ -1803,7 +1804,7 @@ MapHolder.prototype.triggerRender=function(){
  */
 MapHolder.prototype.saveCenter=function(){
     let raw=JSON.stringify({center:this.center,zoom:this.zoom,requiredZoom: this.requiredZoom});
-    localStorage.setItem(globalStore.getData(keys.properties.centerName),raw);
+    LocalStorage.setItem(STORAGE_NAMES.CENTER,undefined,raw);
 };
 
 /**

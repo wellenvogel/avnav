@@ -63,8 +63,9 @@ public class RouteHandler extends DirectoryRequestHandler  {
     private static final long MAXROUTESIZE= Constants.MAXFILESIZE;
     private UpdateReceiver updateReceiver;
 
-    private Float lastDistanceToCurrent=null;
-    private Float lastDistanceToNext=null;
+    private Double lastDistanceToCurrent=null;
+    private Double lastDistanceToNext=null;
+    private Object legSequenceLock=new Object();
 
 
     public static class RouteInfo implements AvnUtil.IJsonObect {
@@ -156,16 +157,6 @@ public class RouteHandler extends DirectoryRequestHandler  {
             return String.format("WP: %s lat=%2.9f lon=%2.9f",(name != null)?name:"",lat,lon);
         }
 
-        /**
-         * get the distance in m
-         * @param other other route point (when 0: distance will be 0)
-         * @return the distance in m
-         */
-        public float distanceTo(Location other){
-            if (other == null) return 0;
-            Location own=this.toLocation();
-            return own.distanceTo(other);
-        }
     };
 
     public static class Route{
@@ -191,13 +182,13 @@ public class RouteHandler extends DirectoryRequestHandler  {
             return rt;
         }
 
-        public double computeLength(){
+        public double computeLength(boolean useRhumbLine){
             double rt=0;
             if (points.size() < 2) return rt;
             Location last=points.get(0).toLocation();
             for (int i=1;i<points.size();i++){
                 Location next=points.get(i).toLocation();
-                rt+=next.distanceTo(last)/AvnUtil.NM;
+                rt+=AvnUtil.distance(next,last,useRhumbLine)/AvnUtil.NM;
                 last=next;
             }
             return rt;
@@ -209,10 +200,10 @@ public class RouteHandler extends DirectoryRequestHandler  {
             return currentTarget+1;
         }
 
-        public RouteInfo getInfo(){
+        public RouteInfo getInfo(boolean useRhumbLine){
             RouteInfo rt=new RouteInfo();
             rt.numpoints=points.size();
-            rt.length=computeLength();
+            rt.length=computeLength(useRhumbLine);
             rt.name=new String(name);
             rt.mtime=System.currentTimeMillis();
             return rt;
@@ -329,11 +320,13 @@ public class RouteHandler extends DirectoryRequestHandler  {
             new EditableParameter.BooleanParameter("computeRMB", R.string.labelSettingsComputeRMB,true);
     static EditableParameter.BooleanParameter COMPUTE_APB=
             new EditableParameter.BooleanParameter("computeAPB", R.string.labelSettingsComputeAPB,true);
+    static EditableParameter.BooleanParameter USE_RHUMBLINE=
+            new EditableParameter.BooleanParameter("useRhumbLine",R.string.labelSettingsRhumbLine,false);
     public RouteHandler(File routedir,GpsService ctx,NmeaQueue queue) throws IOException {
         super(RequestHandler.TYPE_ROUTE,ctx,routedir,"route",null);
         this.routedir=routedir;
         updateReceiver=ctx;
-        parameterDescriptions.addParams(COMPUTE_RMB, COMPUTE_APB);
+        parameterDescriptions.addParams(COMPUTE_RMB, COMPUTE_APB,USE_RHUMBLINE);
         status.canEdit=true;
         this.queue=queue;
     }
@@ -361,6 +354,10 @@ public class RouteHandler extends DirectoryRequestHandler  {
         else{
             status.setChildStatus("directory", WorkerStatus.Status.ERROR,routedir.getAbsolutePath()+" does not exist");
         }
+        boolean useRhumbLine=useRhumbLine();
+        incrementLegSequence();
+        status.setChildStatus("mode", WorkerStatus.Status.NMEA,
+                useRhumbLine?"rhumb line":"great circle");
         HashMap<String, RouteInfo> localList = new HashMap<String, RouteInfo>();
         while (!shouldStop(startSequence)) {
             boolean mustUpdate = false;
@@ -384,7 +381,7 @@ public class RouteHandler extends DirectoryRequestHandler  {
                     if (mustParse) {
                         try {
                             Route rt = new RouteParser().parseRouteFile(new FileInputStream(f));
-                            RouteInfo info = rt.getInfo();
+                            RouteInfo info = rt.getInfo(useRhumbLine);
                             if (!rt.name.equals(name)) {
                                 //TODO: make this more robust!
                                 throw new Exception("name in route " + rt.name + " does not match route file name");
@@ -545,7 +542,10 @@ public class RouteHandler extends DirectoryRequestHandler  {
     @Override
     protected JSONObject handleSpecialApiRequest(String command, Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
         if (command.equals("getleg")){
-            return getLeg();
+            JSONObject rt=getLeg();
+            JSONObject clone=new JSONObject(rt.toString());
+            clone.put("useRhumbLine",USE_RHUMBLINE.fromJson(parameters));
+            return clone;
         }
         if (command.equals("setleg")){
             setLeg(postData.getAsString());
@@ -554,15 +554,21 @@ public class RouteHandler extends DirectoryRequestHandler  {
         return super.handleSpecialApiRequest(command, uri, postData, serverInfo);
     }
 
+    private void incrementLegSequence(){
+        synchronized (legSequenceLock){
+            legSequence++;
+        }
+    }
+
     public void setLeg(String data) throws Exception{
         AvnLog.i("setLeg");
         String old=(currentLeg!=null)?currentLeg.toJson().toString():null;
         if (old == null){
-            if (data != null) legSequence++;
+            if (data != null) incrementLegSequence();
         }
         else {
             if (!old.equals(data)) {
-                legSequence++;
+                incrementLegSequence();
             }
         }
         currentLeg =(data != null)?new RoutingLeg(new JSONObject(data)):null;
@@ -600,12 +606,14 @@ public class RouteHandler extends DirectoryRequestHandler  {
         AvnLog.i("unset leg");
         File legFile=new File(routedir,LEGFILE);
         if (legFile.isFile()) legFile.delete();
-        if (currentLeg != null) legSequence++;
+        if (currentLeg != null) incrementLegSequence();
         currentLeg =null;
     }
 
     public long getLegSequence(){
-        return legSequence;
+        synchronized (legSequenceLock) {
+            return legSequence;
+        }
     }
 
     private void resetLast(){
@@ -613,6 +621,7 @@ public class RouteHandler extends DirectoryRequestHandler  {
         lastDistanceToCurrent=null;
     }
     private void computeRMB(RoutingLeg leg,Location currentPosition){
+        boolean useRhumbLine=useRhumbLine();
         boolean computeRMB=false;
         boolean computeAPB=false;
         try {
@@ -632,9 +641,9 @@ public class RouteHandler extends DirectoryRequestHandler  {
         try {
             Location target = leg.to.toLocation();
             Location start = leg.from.toLocation();
-            double xte = AvnUtil.calcXTE(start, target, currentPosition) / AvnUtil.NM;
-            double distance = currentPosition.distanceTo(target);
-            float destBearing = currentPosition.bearingTo(target);
+            double xte = AvnUtil.XTE(start, target, currentPosition,useRhumbLine) / AvnUtil.NM;
+            double distance = AvnUtil.distance(currentPosition,target,useRhumbLine);
+            double destBearing = AvnUtil.bearingTo(currentPosition,target,useRhumbLine);
 
             if (!leg.from.equals(lastRMBfrom) || !leg.to.equals(lastRMBto)) {
                 rmbWpId++;
@@ -667,7 +676,7 @@ public class RouteHandler extends DirectoryRequestHandler  {
                 apb.setPerpendicularPassed(false); //TODO
                 apb.setBearingPositionToDestinationTrue(true);
                 apb.setBearingPositionToDestination(destBearing);
-                double startBearing=start.bearingTo(target);
+                double startBearing=AvnUtil.bearingTo(start,target,useRhumbLine);
                 if (startBearing < 0) startBearing+=360;
                 apb.setBearingOriginToDestination(startBearing);
                 apb.setBearingPositionToDestinationTrue(true);
@@ -687,7 +696,17 @@ public class RouteHandler extends DirectoryRequestHandler  {
             AvnLog.e("error computing RMB/APB",t);
         }
     }
+    private boolean useRhumbLine(){
+        boolean rt=false;
+        try {
+            rt=USE_RHUMBLINE.fromJson(parameters);
+        } catch (JSONException e) {
+            AvnLog.e("unable to get rhumb line mode",e);
+        }
+        return rt;
+    }
     public boolean handleApproach(Location currentPosition){
+        boolean useRhumbLine=useRhumbLine();
         RoutingLeg leg=this.currentLeg;
         if (leg == null || ! leg.active ||currentPosition == null ) {
             status.setChildStatus(CHILD_LEG, WorkerStatus.Status.INACTIVE,"no leg");
@@ -708,7 +727,7 @@ public class RouteHandler extends DirectoryRequestHandler  {
         else{
             status.setChildStatus(CHILD_LEG, WorkerStatus.Status.NMEA,String.format("to %s",leg.to.toString()));
         }
-        float currentDistance=leg.to.distanceTo(currentPosition);
+        double currentDistance=AvnUtil.distance(leg.to.toLocation(),currentPosition,useRhumbLine);
         if (currentDistance > leg.approachDistance){
             resetLast();
             return false;
@@ -718,11 +737,11 @@ public class RouteHandler extends DirectoryRequestHandler  {
         if (leg.getRoute() != null) {
             nextIdx=leg.getRoute().getNextTarget(leg.currentTarget);
         }
-        float nextDistance=0;
+        double nextDistance=0;
         RoutePoint nextTarget=null;
         if (nextIdx >= 0 ) {
             nextTarget = leg.getRoute().points.get(nextIdx);
-            nextDistance = nextTarget.distanceTo(currentPosition);
+            nextDistance = AvnUtil.distance(nextTarget.toLocation(),currentPosition,useRhumbLine);
         }
         if (lastDistanceToCurrent == null || lastDistanceToNext == null){
             //first time..
@@ -776,7 +795,7 @@ public class RouteHandler extends DirectoryRequestHandler  {
         if (leg == null) return false;
         if (! leg.hasAnchorWatch()) return false;
         if (currentPosition == null) return true; //lost gps
-        float distance=leg.from.distanceTo(currentPosition);
+        double distance=AvnUtil.distance(leg.from.toLocation(),currentPosition,useRhumbLine());
         if (distance > leg.anchorDistance) return true;
         return false;
     }

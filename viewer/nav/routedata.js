@@ -13,6 +13,7 @@ import RoutEdit from './routeeditor.js';
 import Requests from '../util/requests.js';
 import assign from 'object-assign';
 import base from '../base.js';
+import LocalStorage, {STORAGE_NAMES} from '../util/localStorageManager';
 
 const activeRoute=new RoutEdit(RoutEdit.MODES.ACTIVE);
 const editingRoute=new RoutEdit(RoutEdit.MODES.EDIT);
@@ -79,6 +80,7 @@ let RouteData=function(){
     this.lastReceivedRoute=undefined;
     this.lastSentRoute=undefined;
 
+
     //ensure that there is always a current leg and read from local storage
     activeRoute.modify((data)=>{
         let changed=false;
@@ -91,7 +93,7 @@ let RouteData=function(){
             changed=true;
         }
         try {
-            let raw=localStorage.getItem(globalStore.getData(keys.properties.routingDataName));
+            let raw=LocalStorage.getItem(STORAGE_NAMES.ROUTING);
             if (raw){
                 data.leg.fromJsonString(raw);
                 changed=true;
@@ -122,7 +124,7 @@ let RouteData=function(){
      * @type {string}
      */
     this.DEFAULTROUTE="default";
-    this.FALLBACKROUTENAME="avnav.defaultRoute"; //a fallback name for the default route
+    this.FALLBACKROUTENAME=STORAGE_NAMES.DEFAULTROUTE; //a fallback name for the default route
 
 
 
@@ -205,8 +207,6 @@ let RouteData=function(){
     globalStore.register(this.editingRouteChanged,editingRoute.getStoreKeys());
     this.lastLegSequence=globalStore.getData(keys.nav.gps.updateleg);
     this.currentRoutePage=undefined; //only if there is a page that handles a route we will query
-
-    this._startQuery();
 };
 /*---------------------------------------------------------
  get raw data functions
@@ -514,7 +514,7 @@ RouteData.prototype.getInfoFromRoute=function(route){
     let rtinfo=new routeobjects.RouteInfo(route.name);
     try {
         if (route.points) rtinfo.numpoints=route.points.length;
-        rtinfo.length=route.computeLength(0);
+        rtinfo.length=route.computeLength(0,globalStore.getData(keys.nav.routeHandler.useRhumbLine));
         rtinfo.time=route.time;
     } catch(e){}
     return rtinfo;
@@ -528,23 +528,24 @@ RouteData.prototype._listRoutesLocal=function(){
     let rt=[];
     let i=0;
     let key,rtinfo,route;
-    let routeprfx=globalStore.getData(keys.properties.routeName)+".";
+    let routeKeys=LocalStorage.listByPrefix(STORAGE_NAMES.ROUTE);
     let editingName=editingRoute.getRouteName();
-    for (i=0;i<localStorage.length;i++){
-        key=localStorage.key(i);
-        if (key.substr(0,routeprfx.length)===routeprfx){
-            rtinfo=new routeobjects.RouteInfo(this._ensureGpx(key.substr(routeprfx.length)));
+    let useRhumbLine=globalStore.getData(keys.nav.routeHandler.useRhumbLine);
+    for (i=0;i<routeKeys.length;i++){
+        key=routeKeys[i];
+        let routeName=key.substr(STORAGE_NAMES.ROUTE.length);
+            rtinfo=new routeobjects.RouteInfo(this._ensureGpx(routeName));
             try {
                 route=new routeobjects.Route();
-                route.fromJsonString(localStorage.getItem(key));
+                route.fromJsonString(LocalStorage.getItem(STORAGE_NAMES.ROUTE,name));
                 if (route.points) rtinfo.numpoints=route.points.length;
-                rtinfo.length=route.computeLength(0);
+                rtinfo.length=route.computeLength(0,useRhumbLine);
                 rtinfo.time=route.time;
                 if (this.isActiveRoute(rtinfo.name)) rtinfo.active=true;
                 if (rtinfo.name === editingName) rtinfo.canDelete=false;
             } catch(e){}
             rt.push(rtinfo);
-        }
+
 
     }
     return rt;
@@ -566,7 +567,7 @@ RouteData.prototype.deleteRoute=function(name,opt_okcallback,opt_errorcallback,o
         return false;
     }
     try{
-        localStorage.removeItem(globalStore.getData(keys.properties.routeName)+"."+localName);
+        LocalStorage.removeItem(STORAGE_NAMES.ROUTE,localName);
     }catch(e){}
     if (this.connectMode && ! opt_localonly){
         Requests.getJson('',{},{
@@ -680,12 +681,13 @@ RouteData.prototype._checkNextWp=function(){
         let boat = globalStore.getData(keys.nav.gps.position);
         //TODO: switch of routing?!
         if (!globalStore.getData(keys.nav.gps.valid)) return;
+        let useRhumbLine=globalStore.getData(keys.nav.routeHandler.useRhumbLine);
         let nextWpNum = data.leg.getCurrentTargetIdx() + 1;
         let nextWp = data.route?data.route.getPointAtIndex(nextWpNum):undefined;
         let approach = globalStore.getData(keys.properties.routeApproach) + 0;
         let tolerance = approach / 10; //we allow some position error...
         try {
-            let dst = NavCompute.computeDistance(boat, data.leg.to);
+            let dst = NavCompute.computeDistance(boat, data.leg.to,useRhumbLine);
             //TODO: some handling for approach
             if (dst.dts <= approach) {
                 data.leg.approach = true;
@@ -694,7 +696,7 @@ RouteData.prototype._checkNextWp=function(){
                 }
                 let nextDst = new navobjects.Distance();
                 if (nextWp) {
-                    nextDst = NavCompute.computeDistance(boat, nextWp);
+                    nextDst = NavCompute.computeDistance(boat, nextWp,useRhumbLine);
                 }
                 if (this.lastDistanceToCurrent < 0 || this.lastDistanceToNext < 0) {
                     //seems to be the first time
@@ -762,6 +764,10 @@ RouteData.prototype._handleLegResponse = function (serverData) {
     if (!serverData) {
         return false;
     }
+    if (serverData.useRhumbLine !== undefined){
+        globalStore.storeData(keys.nav.routeHandler.useRhumbLine,serverData.useRhumbLine);
+        delete serverData.useRhumbLine;
+    }
     this.routeErrors = 0;
     if (!this.connectMode) return false;
     let nleg = new routeobjects.Leg();
@@ -807,7 +813,7 @@ RouteData.prototype._handleLegResponse = function (serverData) {
 /**
  * @private
  */
-RouteData.prototype._startQuery=function() {
+RouteData.prototype.startQuery=function() {
     this._checkNextWp();
     let url = "?request=route&command=getleg";
     let timeout = globalStore.getData(keys.properties.routeQueryTimeout); //in ms!
@@ -818,7 +824,7 @@ RouteData.prototype._startQuery=function() {
         this.lastSentRoute=undefined;
         this.lastSentLeg=undefined;
         self.timer=window.setTimeout(function() {
-            self._startQuery();
+            self.startQuery();
         },timeout);
         return;
     }
@@ -831,7 +837,7 @@ RouteData.prototype._startQuery=function() {
                     let change = self._handleLegResponse(data);
                     base.log("leg data change=" + change);
                     self.timer = window.setTimeout(function () {
-                        self._startQuery();
+                        self.startQuery();
                     }, timeout);
                 }
             ).catch(
@@ -843,14 +849,14 @@ RouteData.prototype._startQuery=function() {
                         self.serverConnected = false;
                     }
                     self.timer = window.setTimeout(function () {
-                        self._startQuery();
+                        self.startQuery();
                     }, timeout);
                 }
             );
         }
         else{
             self.timer = window.setTimeout(function () {
-                self._startQuery();
+                self.startQuery();
             }, timeout);
         }
     }
@@ -895,7 +901,7 @@ RouteData.prototype._saveRouteLocal=function(route, opt_keepTime) {
     if (! route) return;
     if (! opt_keepTime || ! route.time) route.time = new Date().getTime()/1000;
     let str = route.toJsonString();
-    localStorage.setItem(globalStore.getData(keys.properties.routeName) + "." + route.name, str);
+    LocalStorage.setItem(STORAGE_NAMES.ROUTE,route.name, str);
     return route;
 };
 
@@ -907,7 +913,7 @@ RouteData.prototype._saveRouteLocal=function(route, opt_keepTime) {
  */
 RouteData.prototype._localRouteExists=function(route) {
     if (! route) return false;
-    let existing=localStorage.getItem(globalStore.getData(keys.properties.routeName) + "." + route.name);
+    let existing=LocalStorage.getItem(STORAGE_NAMES.ROUTE, route.name);
     return !!existing;
 };
 
@@ -922,10 +928,10 @@ RouteData.prototype._loadRoute=function(name,opt_returnUndef){
     if (name.match(/\.gpx$/)) name=name.replace(/\.gpx$/,'');
     let rt=new routeobjects.Route(name);
     try{
-        let raw=localStorage.getItem(globalStore.getData(keys.properties.routeName)+"."+name);
+        let raw=LocalStorage.getItem(STORAGE_NAMES.ROUTE,name);
         if (! raw && name == this.DEFAULTROUTE){
             //fallback to load the old default route
-            raw=localStorage.getItem(this.FALLBACKROUTENAME);
+            raw=LocalStorage.getItem(this.FALLBACKROUTENAME);
         }
         if (raw) {
             base.log("route "+name+" successfully loaded");
@@ -982,7 +988,7 @@ RouteData.prototype._legChangedLocally=function(leg){
     this.lastDistanceToCurrent=-1;
     this.lastDistanceToNext=-1;
     let raw=leg.toJsonString();
-    localStorage.setItem(globalStore.getData(keys.properties.routingDataName),raw);
+    LocalStorage.setItem(STORAGE_NAMES.ROUTING,undefined,raw);
     if (leg.currentRoute){
         this._saveRouteLocal(leg.currentRoute,true);
     }
@@ -1050,7 +1056,6 @@ RouteData.prototype.unsetCurrentRoutePage=function(page){
     if (this.currentRoutePage !== page) return;
     this.currentRoutePage=undefined;
 };
-
 
 
 

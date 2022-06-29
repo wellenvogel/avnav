@@ -38,7 +38,7 @@ from avndirectorybase import AVNDirectoryHandlerBase
 
 class AVNUserHandler(AVNDirectoryHandlerBase):
   PREFIX = "/user/viewer"
-  FLIST=['user.css',"user.js"]
+  FLIST=['user.css',"user.js","splitkeys.json"]
   EMPTY_JSONS=['keys.json','images.json']
   @classmethod
   def getPrefix(cls):

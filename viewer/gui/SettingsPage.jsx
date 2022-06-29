@@ -23,6 +23,8 @@ import {SaveItemDialog} from "../components/LoadSaveDialogs";
 import PropertyHandler from '../util/propertyhandler';
 import {ItemActions} from "../components/FileDialog";
 import loadSettings from "../components/LoadSettingsDialog";
+import propertyhandler from "../util/propertyhandler";
+import LocalStorage from '../util/localStorageManager';
 
 const settingsSections={
     Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,
@@ -32,7 +34,8 @@ const settingsSections={
                 keys.properties.connectionLostAlarm],
     Widgets:    [keys.properties.widgetFontSize,keys.properties.allowTwoWidgetRows,keys.properties.showClock,keys.properties.showZoom,keys.properties.showWind,keys.properties.showDepth],
     Buttons:    [keys.properties.style.buttonSize,keys.properties.cancelTop,keys.properties.buttonCols,keys.properties.showDimButton,keys.properties.showFullScreen,
-        keys.properties.hideButtonTime,keys.properties.showButtonShade, keys.properties.autoHideNavPage,keys.properties.autoHideGpsPage,keys.properties.nightModeNavPage],
+        keys.properties.hideButtonTime,keys.properties.showButtonShade, keys.properties.autoHideNavPage,keys.properties.autoHideGpsPage,keys.properties.nightModeNavPage,
+        keys.properties.showSplitButton],
     Layout:     [keys.properties.layoutName,keys.properties.baseFontSize,keys.properties.smallBreak,keys.properties.nightFade,
         keys.properties.nightChartFade,keys.properties.dimFade,keys.properties.localAlarmSound ],
     AIS:        [keys.properties.aisDistance,keys.properties.aisWarningCpa,keys.properties.aisWarningTpa,
@@ -47,7 +50,7 @@ const settingsSections={
         keys.properties.navBoatCourseTime,keys.properties.boatIconScale,keys.properties.boatDirectionMode,
         keys.properties.boatDirectionVector,keys.properties.boatSteadyDetect,keys.properties.boatSteadyMax,
         keys.properties.courseAverageTolerance,keys.properties.gpsXteMax,keys.properties.courseAverageInterval,keys.properties.speedAverageInterval,keys.properties.positionAverageInterval,keys.properties.anchorWatchDefault,keys.properties.anchorCircleWidth,
-        keys.properties.anchorCircleColor,keys.properties.windKnots,keys.properties.windScaleAngle,keys.properties.measureColor],
+        keys.properties.anchorCircleColor,keys.properties.windKnots,keys.properties.windScaleAngle,keys.properties.measureColor,keys.properties.measureRhumbLine],
     Map:        [keys.properties.autoZoom,keys.properties.mobMinZoom,keys.properties.style.useHdpi,keys.properties.clickTolerance,keys.properties.featureInfo,keys.properties.emptyFeatureInfo,keys.properties.mapFloat,keys.properties.mapScale,keys.properties.mapUpZoom,keys.properties.mapOnlineUpZoom,
         keys.properties.mapLockMode,keys.properties.mapScaleBarText],
     Track:      [keys.properties.trackColor,keys.properties.trackWidth,keys.properties.trackInterval,keys.properties.initialTrackLength],
@@ -380,6 +383,28 @@ class SettingsPage extends React.Component{
                 }
             },
             {
+                name: 'SettingsSplitReset',
+                storeKeys:{
+                    editing: keys.gui.global.layoutEditing
+                },
+                updateFunction:(state)=>{
+                    return {visible: !state.editing && LocalStorage.hasPrefix()}
+                },
+                onClick:()=>{
+                    let masterValues=propertyhandler.getMasterValues();
+                    let promises=[];
+                    for (let key in masterValues){
+                        let description = KeyHelper.getKeyDescriptions()[key];
+                        if (description.type === PropertyType.LAYOUT){
+                            promises.push(LayoutHandler.loadLayout(masterValues[key]));
+                        }
+                    }
+                    Promise.all(promises)
+                        .then(()=> this.values.setState(masterValues))
+                        .catch((e)=>Toast(e));
+                }
+            },
+            {
                 name:'SettingsAndroid',
                 visible: globalStore.getData(keys.gui.global.onAndroid,false),
                 onClick:()=>{
@@ -672,6 +697,9 @@ class SettingsPage extends React.Component{
                     className+=" changed";
                     if (! sectionChanges[section]) sectionChanges[section]={};
                     sectionChanges[section].isChanged=true;
+                }
+                if (propertyhandler.isPrefixProperty(key)){
+                    className+=" prefix";
                 }
                 if (section === currentSection) {
                     let item = assign({}, description, {

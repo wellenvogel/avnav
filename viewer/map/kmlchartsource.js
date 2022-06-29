@@ -53,7 +53,15 @@ class KmlChartSource extends ChartSourceBase{
     constructor(mapholer, chartEntry) {
         super(mapholer,chartEntry);
         this.styleMap=[];
+        this.source=undefined;
 
+    }
+    redraw() {
+        if (this.source){
+            this.source.clear();
+            this.source.refresh();
+            return true;
+        }
     }
     replacePointStyle(feature,style){
         let type=feature.getGeometry().getType();
@@ -113,7 +121,7 @@ class KmlChartSource extends ChartSourceBase{
                 reject("no url for "+this.chartEntry.name);
                 return;
             }
-            let vectorSource = new olVectorSource({
+            this.source = new olVectorSource({
                 format: new olKMLFormat({
                     showPointNames: this.chartEntry.showText||false,
                 }),
@@ -121,7 +129,7 @@ class KmlChartSource extends ChartSourceBase{
                 loader: (extent,resolution,projection)=>{
                     Requests.getHtmlOrText(url,{},{'_':(new Date()).getTime()})
                         .then((kml)=>{
-                            let features=vectorSource.getFormat().readFeatures(kml,{
+                            let features=this.source.getFormat().readFeatures(kml,{
                                 extent: extent,
                                 featureProjection: projection,
                             });
@@ -142,7 +150,7 @@ class KmlChartSource extends ChartSourceBase{
                                     feature.setStyle(newSf);
                                 }
                             })
-                            vectorSource.addFeatures(features);
+                            this.source.addFeatures(features);
                         })
                         .catch((error)=>{
                             //vectorSource.removeLoadedExtent(extent);
@@ -150,7 +158,7 @@ class KmlChartSource extends ChartSourceBase{
                 },
             });
             let layerOptions={
-                source: vectorSource,
+                source: this.source,
                 opacity: this.chartEntry.opacity!==undefined?parseFloat(this.chartEntry.opacity):1
             };
             if (this.chartEntry.minZoom !== undefined) layerOptions.minZoom=this.chartEntry.minZoom;

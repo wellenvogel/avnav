@@ -46,7 +46,6 @@ const TrackData=function(){
      * @type {number}
      */
     this.trackRequestSequence=0;
-    this.startQuery();
     globalStore.register(this,keys.gui.global.propertySequence);
 
 };
@@ -86,7 +85,7 @@ TrackData.prototype.handleTrackResponse=function(data){
 };
 
 /**
- * @private
+ *
  */
 TrackData.prototype.startQuery=function() {
     let url = "?request=track&command=getTrack";

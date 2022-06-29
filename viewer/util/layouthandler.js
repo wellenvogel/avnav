@@ -1,10 +1,10 @@
 import Requests from './requests.js';
-import Helper from './helper.js';
 import globalStore from './globalstore.jsx';
 import keys,{KeyHelper} from './keys.jsx';
 import KeyHandler from './keyhandler.js';
 import base from '../base.js';
 import assign from 'object-assign';
+import LocalStorage, {STORAGE_NAMES} from './localStorageManager';
 
 import defaultLayout from '../layout/default.json';
 const DEFAULT_NAME="system.default";
@@ -109,8 +109,8 @@ class LayoutHandler{
      */
     _loadFromStorage(){
         try {
-            let raw = localStorage.getItem(
-                globalStore.getData(keys.properties.layoutStoreName)
+            let raw = LocalStorage.getItem(
+                STORAGE_NAMES.LAYOUT
             );
             if (raw) {
                 return JSON.parse(raw);
@@ -161,8 +161,8 @@ class LayoutHandler{
                 },
                 (error)=> {
                     try {
-                        let raw = localStorage.getItem(
-                            globalStore.getData(keys.properties.layoutStoreName)
+                        let raw = LocalStorage.getItem(
+                            STORAGE_NAMES.LAYOUT
                         );
                         if (raw) {
                             let layoutData=JSON.parse(raw);
@@ -281,8 +281,8 @@ class LayoutHandler{
         this._setEditing(false);
         if (!this.layout) return false;
         try {
-            localStorage.setItem(
-                globalStore.getData(keys.properties.layoutStoreName),
+            LocalStorage.setItem(
+                STORAGE_NAMES.LAYOUT,undefined,
                 JSON.stringify({name: this.name, data: this.layout}));
         }catch(e){
             base.log("unable to store layout locally")

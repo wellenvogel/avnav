@@ -39,7 +39,7 @@ const RouteHandler=NavHandler.getRoutingHandler();
 
 const Heading = (props)=>{
     if (! props.currentRoute) return null;
-    let len=props.currentRoute.computeLength(0);
+    let len=props.currentRoute.computeLength(0,props.useRhumbLine);
     return (
         <div className="routeCurrent" onClick={props.onClick}>
             <div className="routeName">{props.currentRoute.name||''}</div>
@@ -303,9 +303,10 @@ class RoutePage extends React.Component{
                 <Heading
                     onClick={onHeadingClick}
                     currentRoute={route}
+                    useRhumbLine={props.useRhumbLine}
                     />
                 <ItemList
-                    itemList={route.getRoutePoints(index)}
+                    itemList={route.getRoutePoints(index,props.useRhumbLine)}
                     itemClass={WaypointListItem}
                     scrollable={true}
                     onItemClick={(item,data)=>{
@@ -333,7 +334,9 @@ class RoutePage extends React.Component{
                 id={PAGENAME}
                 mainContent={
                             <MainContent
-                                storeKeys={editor.getStoreKeys()}
+                                storeKeys={editor.getStoreKeys({
+                                    useRhumbLine:keys.nav.routeHandler.useRhumbLine
+                                })}
                             />
                         }
                 buttonList={self.buttons}

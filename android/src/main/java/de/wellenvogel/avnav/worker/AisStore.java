@@ -155,7 +155,7 @@ public class AisStore {
         for (Iterator<String> i=in.keys();i.hasNext();){
             String k=i.next();
             if (k.equals("speed")){
-                rt.put(k,in.getInt(k)/10);
+                rt.put(k,in.getInt(k)/10.0 * AvnUtil.NM/3600.0);
             }
             else if (k.equals("course")){
                 rt.put(k,in.getInt(k)/10);

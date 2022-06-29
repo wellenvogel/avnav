@@ -26,6 +26,7 @@ import {getOverlayConfigName} from "../map/chartsourcebase";
 import mapholder from "../map/mapholder.js";
 import Helper from "../util/helper";
 import assign from 'object-assign';
+import LocalStorage, {STORAGE_NAMES} from '../util/localStorageManager';
 
 const SHOW_MODE={
     never:0,
@@ -34,15 +35,15 @@ const SHOW_MODE={
 };
 
 const INFO_TYPES={
-    eula:keys.properties.eulaStoreName,
-    info:keys.properties.chartInfoStoreName
+    eula:STORAGE_NAMES.EULAS,
+    info:STORAGE_NAMES.CHARTINFO
 };
 
 const needsToShow=(setName,type,mode)=>{
     if (mode == SHOW_MODE.never) return false;
     let storeName=globalStore.getData(type);
     if (! storeName) return false;
-    let currentRaw=localStorage.getItem(storeName)||"{}";
+    let currentRaw=LocalStorage.getItem(storeName)||"{}";
     let current={};
     try{
         current=JSON.parse(currentRaw);
@@ -66,7 +67,7 @@ const needsToShow=(setName,type,mode)=>{
 const setShown=(setName,type)=>{
     let storeName=globalStore.getData(type);
     if (! storeName) return;
-    let currentRaw=localStorage.getItem(storeName)||"{}";
+    let currentRaw=LocalStorage.getItem(storeName)||"{}";
     let current={};
     try{
         current=JSON.parse(currentRaw);
@@ -74,7 +75,7 @@ const setShown=(setName,type)=>{
         base.log("unable to read state for "+type);
     }
     current[setName]=(new Date()).getTime();
-    localStorage.setItem(storeName,JSON.stringify(current));
+    LocalStorage.setItem(storeName,undefined,JSON.stringify(current));
 };
 
 

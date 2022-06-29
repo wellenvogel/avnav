@@ -38,14 +38,29 @@ export const PropertyType={
  * @param opt_initial value to be set on first start
  * @constructor
  */
-export const Property=function(defaultv,opt_label,opt_type,opt_values,opt_initial){
-    this.defaultv=defaultv;
-    this.label=opt_label;
-    this.type=(opt_type !== undefined)?opt_type:PropertyType.INTERNAL;
-    this.values=(opt_values !== undefined)?opt_values:[0,1000]; //assume range 0...1000
-    this.canChange=opt_type !== undefined;
-    this.initialValue=opt_initial;
-};
+export class Property{
+    constructor(defaultv,opt_label,opt_type,opt_values,opt_initial){
+        this.defaultv=defaultv;
+        this.label=opt_label;
+        this.type=(opt_type !== undefined)?opt_type:PropertyType.INTERNAL;
+        this.values=(opt_values !== undefined)?opt_values:[0,1000]; //assume range 0...1000
+        this.canChange=opt_type !== undefined;
+        this.initialValue=opt_initial;
+    }
+    isSplit(){
+        return false;
+    }
+}
+
+export class SplitProperty extends Property{
+    constructor(defaultv,opt_label,opt_type,opt_values,opt_initial) {
+        super(defaultv,opt_label,opt_type,opt_values,opt_initial);
+    }
+
+    isSplit() {
+        return true;
+    }
+}
 
 /**
  * key with description
@@ -130,7 +145,11 @@ let keys={
         },
         wp:{
             course: V,
+            courseRhumbLine: V,
+            courseGreatCircle: V,
             distance: V,
+            distanceRhumbLine: V,
+            distanceGreatCircle: V,
             eta: V,
             xte: V,
             vmg: V,
@@ -164,6 +183,7 @@ let keys={
             pageRouteIndex: K,
             editingRoute:K,
             editingIndex: K,
+            useRhumbLine: K,
             currentLeg: new D("the current leg used for routing"),
             currentIndex: new D("the index when working directly on the active route (currentLeg)")
         },
@@ -200,6 +220,7 @@ let keys={
             fetchHead: K
         },
         global:{
+            splitMode: K,
             smallDisplay: K,
             onAndroid:K,
             propertySequence:K,
@@ -229,11 +250,6 @@ let keys={
         addresspage:{
             addressList:K
         },
-        wpapage:{
-            interface:K,
-            wpaItems:K,
-            showAccess:K
-        },
         routepage:{
             initialName:K,
         }
@@ -256,7 +272,7 @@ let keys={
             user: new Property({},"User/Plugins",PropertyType.CHECKBOX)
         },
         localAlarmSound: new Property(true, "Alarm Sound", PropertyType.CHECKBOX),
-        connectedMode: new Property(true, "connected", PropertyType.CHECKBOX),
+        connectedMode: new SplitProperty(true, "connected", PropertyType.CHECKBOX),
         readOnlyServer: new Property(false),
         silenceSound: new Property("sounds/1-minute-of-silence.mp3"),
         slideTime: new Property(300), //time in ms for upzoom
@@ -332,18 +348,9 @@ let keys={
         centerDisplayTimeout: new Property(45000), //ms - auto hide measure display (0 - no auto hide)
         navUrl: new Property("/viewer/avnav_navi.php"),
         maxGpsErrors: new Property(3), //after that much invalid responses/timeouts the GPS is dead
-        settingsName: new Property("avnav.settings"), //storage name
-        routingDataName: new Property("avnav.routing"),
-        chartDataName: new Property("avnav.lastChart"),
-        routeName: new Property("avnav.route"), //prefix for route names
-        layoutStoreName: new Property("avnav.layout"),
-        eulaStoreName: new Property("avnav.eulas"),
-        chartInfoStoreName: new Property("avnav.chartinfo"),
         routingServerError: new Property(true, "ServerError", PropertyType.CHECKBOX), //notify comm errors to server
         routingTextSize: new Property(14, "Text Size(px)", PropertyType.RANGE, [8, 36]), //in px
         routeCatchRange: new Property(50,"route point snap distance %", PropertyType.RANGE,[0,100]),
-        centerName: new Property("avnav.center"),
-        licenseAcceptedName: new Property("avnav.licenseAccepted"),
         statusErrorImage: new Property(redBubble),
         statusOkImage: new Property(greenBubble),
         statusYellowImage: new Property(yellowBubble),
@@ -359,6 +366,7 @@ let keys={
         nightChartFade: new Property(30, "NightChartDim(%)", PropertyType.RANGE, [1, 99]), //in %
         dimFade: new Property(0,"Dim Fade(%)",PropertyType.RANGE,[0,60]),
         showDimButton: new Property(true,"Show Dim Button",PropertyType.CHECKBOX),
+        showSplitButton: new Property(true,"Show Split Button", PropertyType.CHECKBOX),
         baseFontSize: new Property(14, "Base Font(px)", PropertyType.RANGE, [8, 28]),
         widgetFontSize: new Property(14, "Widget Base Font(px)", PropertyType.RANGE, [8, 28]),
         allowTwoWidgetRows: new Property(true, "2 widget rows", PropertyType.CHECKBOX),
@@ -379,7 +387,7 @@ let keys={
         autoHideNavPage: new Property(false,"auto hide buttons on NavPage",PropertyType.CHECKBOX),
         autoHideGpsPage: new Property(false,"auto hide buttons on Dashboard Pages",PropertyType.CHECKBOX),
         toastTimeout: new Property(15,"time(s) to display messages",PropertyType.RANGE,[2,3600]),
-        layoutName: new Property("system.default","Layout name",PropertyType.LAYOUT),
+        layoutName: new SplitProperty("system.default","Layout name",PropertyType.LAYOUT),
         mobMinZoom: new Property(16,"minzoom for MOB",PropertyType.RANGE,[8,20]),
         buttonCols: new Property(false,"2 button columns",PropertyType.CHECKBOX),
         cancelTop: new Property(false,"Back button top",PropertyType.CHECKBOX,undefined,true),
@@ -387,6 +395,7 @@ let keys={
         emptyFeatureInfo: new Property(true,"Always Info on Chart Click",PropertyType.CHECKBOX),
         showFullScreen: new Property(true,"Show Fullscreen Button",PropertyType.CHECKBOX),
         showMeasure: new Property(true,"Show Measure Button",PropertyType.CHECKBOX),
+        measureRhumbLine: new Property(true,"Measure rhumb line (false: great circle)",PropertyType.CHECKBOX),
         mapUpZoom: new Property(4,"zoom up lower layers",PropertyType.RANGE,[0,6]),
         mapOnlineUpZoom: new Property(0,"zoom up lower layers for online sources",PropertyType.RANGE,[0,6]),
         mapScale: new Property(1,"scale the map display",PropertyType.RANGE,[0.3,5]),
@@ -394,9 +403,9 @@ let keys={
         mapLockMode: new Property('center','lock boat mode',PropertyType.LIST,['center','current','ask']),
         mapSequenceTime: new Property(2000,"change check interval(ms)",PropertyType.RANGE,[500,10000,100]),
         mapScaleBarText: new Property(true,"Show text on scale bar",PropertyType.CHECKBOX),
-        remoteChannelName: new Property('0','remote control channel',PropertyType.LIST,['0','1','2','3','4']),
-        remoteChannelRead: new Property(false,'read from remote channel',PropertyType.CHECKBOX),
-        remoteChannelWrite: new Property(false,'write to remote channel',PropertyType.CHECKBOX),
+        remoteChannelName: new SplitProperty('0','remote control channel',PropertyType.LIST,['0','1','2','3','4']),
+        remoteChannelRead: new SplitProperty(false,'read from remote channel',PropertyType.CHECKBOX),
+        remoteChannelWrite: new SplitProperty(false,'write to remote channel',PropertyType.CHECKBOX),
         remoteGuardTime: new Property(2,'time(s) to switch read/write',PropertyType.RANGE,[1,10]),
 
         style: {

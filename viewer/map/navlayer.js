@@ -15,6 +15,7 @@ import markerImage from '../images/Marker2.png';
 import measureImage from '../images/measure.png';
 import assign from 'object-assign';
 import Formatter from "../util/formatter";
+import globalstore from "../util/globalstore";
 
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE,true);
@@ -191,7 +192,7 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
             if (courseVetcorDistance > 0 && boatStyle.courseVector !== false) {
                 other = this.computeTarget(boatPosition, course, courseVetcorDistance);
                 drawing.drawLineToContext([boatPosition, other], courseVectorStyle);
-                if (boatRotation !== undefined && globalStore.getData(keys.properties.boatDirectionVector)) {
+                if (boatDirectionMode !== 'cog' && boatRotation !== undefined && globalStore.getData(keys.properties.boatDirectionVector)) {
                     other = this.computeTarget(boatPosition, boatRotation, courseVetcorDistance);
                     drawing.drawLineToContext([boatPosition, other], assign({dashed: true}, courseVectorStyle));
                 }
@@ -219,12 +220,23 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
         drawing.drawImageToContext(center, this.centerStyle.image, this.centerStyle);
         let measurePos=globalStore.getData(keys.map.measurePosition);
         if (measurePos && measurePos.lat && measurePos.lon){
+            let measureRhumbLine=globalstore.getData(keys.properties.measureRhumbLine);
             let measure=this.mapholder.transformToMap((new navobjects.Point(measurePos.lon,measurePos.lat)).toCoord());
             drawing.drawImageToContext(measure,this.measureStyle.image,this.measureStyle);
-            drawing.drawLineToContext([measure,center],this.measureLineStyle);
             let centerPoint=new navobjects.Point();
             centerPoint.fromCoord(this.mapholder.transformFromMap(center));
-            let distance=NavCompute.computeDistance(measurePos,centerPoint);
+            if (measureRhumbLine) {
+                drawing.drawLineToContext([measure, center], this.measureLineStyle);
+            }
+            else{
+                let segmentPoints=NavCompute.computeCoursePoints(centerPoint,measurePos,3);
+                let line=[];
+                segmentPoints.forEach((sp)=>line.push(
+                    this.mapholder.transformToMap([sp.lon,sp.lat])
+                ));
+                drawing.drawLineToContext(line, this.measureLineStyle);
+            }
+            let distance=NavCompute.computeDistance(measurePos,centerPoint,measureRhumbLine);
             let text=Formatter.formatDirection(distance.course)+"°\n"+
                 Formatter.formatDistance(distance.dts)+"nm";
             drawing.drawTextToContext(center,text,this.measureTextStyle);
@@ -256,7 +268,7 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
 NavLayer.prototype.computeTarget=function(pos,course,dist){
     let point=new navobjects.Point();
     point.fromCoord(this.mapholder.transformFromMap(pos));
-    let tp=NavCompute.computeTarget(point,course,dist);
+    let tp=NavCompute.computeTarget(point,course,dist,globalstore.getData(keys.nav.routeHandler.useRhumbLine));
     let tpmap=this.mapholder.transformToMap(tp.toCoord());
     return tpmap;
 };

@@ -26,7 +26,7 @@ class CenterDisplayWidget extends React.Component{
         let measurePosition=this.props.measurePosition;
         let measureValues;
         if (measurePosition) {
-            measureValues = NavCompute.computeDistance(measurePosition,this.props.centerPosition);
+            measureValues = NavCompute.computeDistance(measurePosition,this.props.centerPosition,this.props.measureRhumbLine);
         }
         return (
             <div className={classes} onClick={this.props.onClick} style={this.props.style||{}}>
@@ -89,7 +89,8 @@ CenterDisplayWidget.storeKeys={
         centerCourse:keys.nav.center.course,
         centerDistance:keys.nav.center.distance,
         centerPosition: keys.map.centerPosition,
-        measurePosition: keys.map.measurePosition
+        measurePosition: keys.map.measurePosition,
+        measureRhumbLine: keys.properties.measureRhumbLine
 };
 
 CenterDisplayWidget.propTypes={
@@ -100,6 +101,7 @@ CenterDisplayWidget.propTypes={
     centerCourse:PropTypes.number,
     centerDistance:PropTypes.number,
     centerPosition: PropTypes.object,
-    measurePosition: PropTypes.object
+    measurePosition: PropTypes.object,
+    measureRhumbLine: PropTypes.bool
 };
 export default CenterDisplayWidget;

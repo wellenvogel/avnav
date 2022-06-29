@@ -35,6 +35,8 @@ import globalstore from "../util/globalstore";
 import keys from "../util/keys";
 import {assign} from "ol/obj";
 import featureFormatter from "../util/featureFormatter";
+import navobjects from "../nav/navobjects";
+import NavCompute from "../nav/navcompute";
 
 export const stylePrefix="style."; // the prefix for style attributes
 
@@ -95,8 +97,22 @@ class GpxChartSource extends ChartSourceBase{
                 })
             })
         };
+        this.source=undefined;
+        this.isRoute=false;
+        globalstore.register(()=>{
+            if (this.isRoute){
+                this.redraw();
+            }
+        },[keys.nav.routeHandler.useRhumbLine])
     }
 
+    redraw() {
+        if (this.source) {
+            this.source.clear();
+            this.source.refresh();
+            return true;
+        }
+    }
     styleFunction(feature,resolution) {
 
         let type=feature.getGeometry().getType();
@@ -142,6 +158,24 @@ class GpxChartSource extends ChartSourceBase{
             })
             return styles;
         }
+        if (type === 'MultiLineString'){
+            //route
+            let geometry=feature.getGeometry();
+            let styles=[this.styles[type]];
+            let isFirst=true;
+            let lineStrings=geometry.getLineStrings();
+            lineStrings.forEach((lineString)=>{
+                let coordinates=lineString.getCoordinates();
+                if (coordinates.length > 1) {
+                    if (isFirst) {
+                        styles.push(this.getRoutePointStyle(coordinates[0]));
+                        isFirst = false;
+                    }
+                    styles.push(this.getRoutePointStyle(coordinates[coordinates.length-1]));
+                }
+            })
+            return styles;
+        }
         return this.styles[feature.getGeometry().getType()];
     };
     getRoutePointStyle(coordinates){
@@ -163,27 +197,57 @@ class GpxChartSource extends ChartSourceBase{
                 reject("no url for "+this.chartEntry.name);
                 return;
             }
-            let vectorSource = new olVectorSource({
+            this.source = new olVectorSource({
                 format: new olGPXFormat(),
-                loader: (extent,resolution,projection)=>{
-                    Requests.getHtmlOrText(url,{},{'_':(new Date()).getTime()})
-                        .then((gpx)=>{
-                            gpx=stripExtensions(gpx);
-                            vectorSource.addFeatures(
-                                vectorSource.getFormat().readFeatures(gpx,{
-                                    extent: extent,
-                                    featureProjection: projection,
+                loader: (extent, resolution, projection) => {
+                    Requests.getHtmlOrText(url, {}, {'_': (new Date()).getTime()})
+                        .then((gpx) => {
+                            gpx = stripExtensions(gpx);
+                            let features = this.source.getFormat().readFeatures(gpx, {
+                                extent: extent,
+                                featureProjection: projection,
+                            });
+                            if (features) {
+                                features.forEach((feature) => {
+                                    let geometry = feature.getGeometry();
+                                    if (geometry instanceof olLineString) {
+                                        this.isRoute = 1;
+                                        //this is a route
+                                        let coordinates = geometry.getCoordinates();
+                                        if (coordinates.length > 1 && !globalstore.getData(keys.nav.routeHandler.useRhumbLine)) {
+                                            let newGeometry = new olMultiLineString([]);
+                                            let start = new navobjects.Point();
+                                            start.fromCoord(this.mapholder.transformFromMap(coordinates[0]));
+                                            let end = new navobjects.Point();
+                                            for (let i = 1; i < coordinates.length; i++) {
+                                                let newCoordinates = [];
+                                                end.fromCoord(this.mapholder.transformFromMap(coordinates[i]));
+                                                let points = NavCompute.computeCoursePoints(start, end, 3);
+                                                points.forEach((point) => {
+                                                    newCoordinates.push(this.mapholder.transformToMap([point.lon, point.lat]));
+                                                })
+                                                start.lat = end.lat;
+                                                start.lon = end.lon;
+                                                newGeometry.appendLineString(new olLineString(newCoordinates));
+                                            }
+                                            feature.setGeometry(newGeometry);
+                                        }
+                                    }
                                 })
+                            }
+
+                            this.source.addFeatures(
+                                features
                             );
                         })
-                        .catch((error)=>{
+                        .catch((error) => {
                             //vectorSource.removeLoadedExtent(extent);
                         })
                 },
                 wrapX: false
             });
             let layerOptions={
-                source: vectorSource,
+                source: this.source,
                 style: this.styleFunction,
                 opacity: this.chartEntry.opacity!==undefined?parseFloat(this.chartEntry.opacity):1
             };

@@ -9,6 +9,9 @@ import Formatter from './formatter.js';
 import Helper from './helper.js';
 import Toast from '../components/Toast.jsx';
 import featureFormatter from "./featureFormatter";
+import NavCompute from "../nav/navcompute";
+import LatLon from "geodesy/latlon-spherical";
+import Dms from "geodesy/dms";
 
 class Api{
     constructor(){
@@ -115,6 +118,27 @@ class Api{
         return parseInt(version);
     }
 
+    /**
+     * get the {@link https://www.movable-type.co.uk/scripts/geodesy-library.html LatLonSpherical} module
+     * use it like:
+     * let LatLon=avnav.api.LatLon();
+     * let point=new LatLon(54,13);
+     * @param lat
+     * @param lon
+     * @return {LatLonSpherical}
+     */
+    LatLon(){
+        return LatLon;
+    }
+
+    /**
+     * get an instance of {@link https://www.movable-type.co.uk/scripts/geodesy-library.html Dms} to parse
+     * lat/lon data
+     * @return {Dms}
+     */
+    dms(){
+        return Dms;
+    }
 }
 
 export default  new Api();

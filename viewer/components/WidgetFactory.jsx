@@ -383,6 +383,17 @@ class WidgetFactory{
             filteredProps=filterByEditables(editables,props);
         }
         let mergedProps = assign({}, e, filteredProps, opt_properties);
+        //we need a special handling for the store keys as the simple assign above will not merge them
+        let mergedStoreKeys;
+        [e,filteredProps,opt_properties].forEach((p)=>{
+            if (p && p.storeKeys){
+                if (! mergedStoreKeys) mergedStoreKeys={};
+                assign(mergedStoreKeys,p.storeKeys);
+            }
+        });
+        if (mergedStoreKeys){
+            mergedProps.storeKeys=mergedStoreKeys;
+        }
         if (mergedProps.key === undefined) mergedProps.key = props.name;
         if (mergedProps.formatter) {
             let ff = mergedProps.formatter;

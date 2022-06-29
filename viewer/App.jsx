@@ -44,6 +44,7 @@ import propertyHandler from "./util/propertyhandler";
 import MapHolder from "./map/mapholder";
 import NavData from './nav/navdata';
 import alarmhandler from "./nav/alarmhandler.js";
+import LocalStorage, {PREFIX_NAMES, STORAGE_NAMES} from './util/localStorageManager';
 
 
 const DynamicSound=Dynamic(SoundHandler);
@@ -157,7 +158,6 @@ class App extends React.Component {
             error:0
         };
         this.history=new History();
-        this.rightHistory=new History();
         this.buttonSizer=null;
         globalStore.storeData(keys.gui.global.onAndroid,false,true);
         //make the android API available as avnav.android
@@ -196,8 +196,8 @@ class App extends React.Component {
         }
         let startpage="warningpage";
         let firstStart=true;
-        if (typeof window.localStorage === 'object'){
-            if (localStorage.getItem(globalStore.getData(keys.properties.licenseAcceptedName)) === 'true'){
+        if (LocalStorage.hasStorage()){
+            if (LocalStorage.getItem(STORAGE_NAMES.LICENSE) === 'true'){
                 startpage="mainpage";
                 firstStart=false;
             }
@@ -205,12 +205,10 @@ class App extends React.Component {
         if (firstStart){
             propertyHandler.firstStart();
         }
+        NavData.startQuery();
         this.history.push(startpage);
-        this.rightHistory.push(startpage);
         this.leftHistoryState=stateHelper(this,this.history.currentLocation(true),'leftHistory');
-        this.rightHistoryState=stateHelper(this,this.rightHistory.currentLocation(true),'rightHistory');
         this.history.setCallback((topEntry)=>this.leftHistoryState.setState(topEntry,true));
-        this.rightHistory.setCallback((topEntry)=>this.rightHistoryState.setState(topEntry,true));
         Requests.getJson("/user/viewer/images.json",{useNavUrl:false,checkOk:false})
             .then((data)=>{
                 MapHolder.setImageStyles(data);
@@ -231,6 +229,22 @@ class App extends React.Component {
                 KeyHandler.mergeMappings(2,json);
             },
             (error)=>{
+            }
+        );
+        Requests.getJson("/user/viewer/splitkeys.json",{useNavUrl:false,checkOk:false}).then(
+            (json)=>{
+                if (json.version === undefined){
+                    throw new Error("missing version");
+                }
+                if (json.keys === undefined){
+                    throw new Error("missing keys");
+                }
+                propertyHandler.setPrefixKeys(json.keys);
+                propertyHandler.resetToSaved();
+                propertyHandler.incrementSequence();
+            })
+            .catch((error)=>{
+                console.log("splitkeys.json: "+error);
             }
         );
         LayoutHandler.loadStoredLayout(true)
@@ -287,6 +301,17 @@ class App extends React.Component {
             }
             else alarmhandler.stopAlarm(LOCAL_TYPES.connectionLost);
         },{connectionLost:keys.nav.gps.connectionLost})
+        try{
+            window.addEventListener('message',(ev)=>{
+                if (ev.origin !== window.location.origin) return;
+                if (ev.data === 'isSplitMode'){
+                    globalStore.storeData(keys.gui.global.splitMode,true);
+                }
+            })
+        } catch (e){}
+        try{
+            window.parent.postMessage('querySplitMode',window.location.origin);
+        }catch (e){}
 
     }
     newDeviceHandler(){
@@ -409,6 +434,7 @@ class App extends React.Component {
                 null}
             <ToastDisplay/>
             <ButtonSizer
+                sequence={this.props.sequence}
                 fontSize={this.props.buttonFontSize}
                 refFunction={(el)=>{
                 this.buttonSizer=el;
@@ -423,6 +449,7 @@ export default   Dynamic(App,{
       fontSize: keys.properties.baseFontSize,
       smallDisplay: keys.gui.global.smallDisplay,
       nightMode: keys.properties.nightMode,
-      layoutName: keys.properties.layoutName
+      layoutName: keys.properties.layoutName,
+      sequence: keys.gui.global.propertySequence
   }
 });

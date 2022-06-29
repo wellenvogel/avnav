@@ -48,14 +48,18 @@ const INFO_ROWS=[
             let position=globalstore.getData(keys.nav.gps.position);
             let valid=globalstore.getData(keys.nav.gps.valid,false);
             if (! valid) return;
-            let distance=NavCompute.computeDistance(position,new navobjects.Point(v[0],v[1]));
+            let distance=NavCompute.computeDistance(position,
+                new navobjects.Point(v[0],v[1]),
+                globalstore.getData(keys.nav.routeHandler.useRhumbLine));
             return Formatter.formatDistance(distance.dts)+" nm";
         }},
     {label: 'bearing',value:'coordinates',formatter:(v)=>{
             let position=globalstore.getData(keys.nav.gps.position);
             let valid=globalstore.getData(keys.nav.gps.valid,false);
             if (! valid) return;
-            let distance=NavCompute.computeDistance(position,new navobjects.Point(v[0],v[1]));
+            let distance=NavCompute.computeDistance(position,
+                new navobjects.Point(v[0],v[1]),
+                globalstore.getData(keys.nav.routeHandler.useRhumbLine));
             return Formatter.formatDirection(distance.course)+" °";
         }},
     {label:'name',value:'name'},

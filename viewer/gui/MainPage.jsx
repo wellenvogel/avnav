@@ -22,6 +22,7 @@ import mapholder from "../map/mapholder.js";
 import FullScreen from '../components/Fullscreen';
 import RemoteChannelDialog from "../components/RemoteChannelDialog";
 import {RecursiveCompare} from '../util/compare';
+import LocalStorage from '../util/localStorageManager';
 
 
 
@@ -242,6 +243,26 @@ class MainPage extends React.Component {
             RemoteChannelDialog({overflow:true}),
             FullScreen.fullScreenDefinition,
             {
+                name: 'Split',
+                storeKeys: {
+                    toggle: keys.gui.global.splitMode,
+                    visible: keys.properties.showSplitButton
+                },
+                overflow: true,
+                onClick: ()=>{
+                    if (globalStore.getData(keys.gui.global.splitMode)){
+                        try{
+                            window.parent.postMessage('finishSplit',window.location.origin);
+                        }catch (e){}
+                    }
+                    else{
+                        var location=window.location.href+'';
+                        location=location.replace('avnav_viewer','viewer_split');
+                        window.location.href=location.replace(/\?.*/,'');
+                    }
+                }
+            },
+            {
                 name: 'Cancel',
                 storeKeys: {visible: keys.gui.global.onAndroid},
                 onClick: ()=> {
@@ -391,7 +412,7 @@ class MainPage extends React.Component {
             <Page
                 {...self.props}
                   id="mainpage"
-                  title="AvNav"
+                  title={"AvNav "+ LocalStorage.getPrefix()}
                   mainContent={
                     <ItemList className="mainContent"
                                itemClass={this.ChartItem}

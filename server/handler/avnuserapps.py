@@ -57,7 +57,8 @@ class AVNUserAppHandler(AVNWorker):
         'url':None, #we replace $HOST...
         'title':'',
         'icon':None, #an icon below $datadir/user
-        'keepUrl':'' #auto detect
+        'keepUrl':'', #auto detect
+        'newWindow':''
       }
     if not child is None:
       return None

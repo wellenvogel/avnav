@@ -137,8 +137,18 @@ class GeoJsonChartSource extends ChartSourceBase{
                 }),
             }),
         };
+        this.source=undefined;
 
     }
+
+    redraw() {
+        if (this.source){
+            this.source.clear();
+            this.source.refresh();
+            return true;
+        }
+    }
+
     styleFunction(feature,resolution) {
         let type=feature.getGeometry().getType();
         return this.styles[feature.getGeometry().getType()];
@@ -151,13 +161,13 @@ class GeoJsonChartSource extends ChartSourceBase{
                 reject("no url for "+this.chartEntry.name);
                 return;
             }
-            let vectorSource = new olVectorSource({
+            this.source = new olVectorSource({
                 format: new olGeoJSON(),
                 url: url,
                 wrapX: false
             });
             let layerOptions={
-                source: vectorSource,
+                source: this.source,
                 style: this.styleFunction,
                 opacity: this.chartEntry.opacity!==undefined?parseFloat(this.chartEntry.opacity):1
             };

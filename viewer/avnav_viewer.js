@@ -47,6 +47,8 @@ import AvNavVersion from './version.js';
 import assign from 'object-assign';
 import LeaveHandler from './util/leavehandler';
 import isIosSafari from '@braintree/browser-detection/is-ios-safari';
+import LocalStorage, {PREFIX_NAMES} from './util/localStorageManager';
+import debugSupport from 'debugSupport.js';
 
 
 if (! window.avnav){
@@ -71,6 +73,24 @@ function getParam(key)
  *
  */
 export default function() {
+    let storePrefix=getParam('storePrefix');
+    if (storePrefix && storePrefix !== "") LocalStorage.setPrefix(storePrefix);
+    if (LocalStorage.hasPrefix()){
+        //fill the prefixed data with the unprefixed one if prefixed is not available
+        for (let n in PREFIX_NAMES){
+            let sn=PREFIX_NAMES[n];
+            let item=LocalStorage.getItem(sn,undefined);
+            if (! item){
+                item=LocalStorage.getItem(sn,undefined);
+                if (item){
+                    LocalStorage.setItem(sn,undefined,item);
+                }
+            }
+
+        }
+    }
+    propertyHandler.resetToSaved();
+    propertyHandler.savePrefixedValues();
     //some workaround for lees being broken on IOS browser
     //less.modifyVars();
     let body=document.querySelector('body');
@@ -96,6 +116,13 @@ export default function() {
     }
     if (getParam("noCloseDialog") === "true"){
         LeaveHandler.stop();
+    }
+    let lateLoads=["/user/viewer/user.js"];
+    let addScripts="addScripts";
+    if (getParam(addScripts)){
+        getParam(addScripts).split(',').forEach((script)=>{
+            lateLoads.push(script);
+        })
     }
     const loadScripts=(loadList)=>{
         let fileref=undefined;
@@ -126,7 +153,6 @@ export default function() {
 
         let scriptsLoaded=false;
         //load the user and plugin stuff
-        let lateLoads=["/user/viewer/user.js"];
         if (loadPlugins) {
             Requests.getJson("?request=plugins&command=list").then(
                 (json)=> {

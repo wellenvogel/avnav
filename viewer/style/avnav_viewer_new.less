@@ -1072,7 +1072,7 @@ span.valuePrefix{
       text-align: right;
       padding-right: 1em;
       .mdText2();
-      padding-bottom: .7em;
+      padding-bottom: .5em;
       width: 50%;
     }
     .smallDisplay & {
@@ -1090,7 +1090,7 @@ span.valuePrefix{
     .aisData {
       display: inline-block;
       text-align: left;
-      padding-bottom: .7em;
+      padding-bottom: .5em;
       width: 50%;
     }
   }
@@ -1400,6 +1400,10 @@ span.valuePrefix{
       }
       .listEntry.defaultValue{
         font-style: italic;
+      }
+      .listEntry.prefix::before {
+        content: "* ";
+        width: 0.8em;
       }
     }
 }

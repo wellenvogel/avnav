@@ -542,23 +542,22 @@ class NMEAParser(object):
         lf = len(darray)
         i = 1
         hasData=False
-        while i < lf:
-          if i < (lf - 3):
-            try:
-              # we need 4 fields
-              if darray[i + 1] is not None and darray[i] != "":
-                ttype = darray[i]
-                tdata = float(darray[i + 1] or '0')
-                tunit = darray[i + 2]
-                tname = darray[i + 3]
-                data=self.convertXdrValue(tdata,tunit)
-                if tname is not None and tname != "":
-                  rt["transducers."+tname]=data
-                  hasData=True
-            except Exception as e:
-              AVNLog.debug("decode %s at pos %d failed: %s"%(data,i,str(e)))
-              pass
-            i+=4
+        while i < (lf -3):
+          try:
+            # we need 4 fields
+            if darray[i + 1] is not None and darray[i] != "":
+              ttype = darray[i]
+              tdata = float(darray[i + 1] or '0')
+              tunit = darray[i + 2]
+              tname = darray[i + 3]
+              data=self.convertXdrValue(tdata,tunit)
+              if tname is not None and tname != "":
+                rt["transducers."+tname]=data
+                hasData=True
+          except Exception as e:
+            AVNLog.debug("decode %s at pos %d failed: %s"%(data,i,str(e)))
+            pass
+          i+=4
         if hasData:
           self.addToNavData(rt, source=source, record=tag,priority=basePriority)
           return True
@@ -611,7 +610,9 @@ class NMEAParser(object):
         fragment = fields[2]
         channel = fields[4]
         if fragment == '1':
-            self.payloads[channel] = ''
+          if self.payloads[channel] != '':
+            AVNLog.debug('channel %s still open with %s',channel,self.payloads[channel])
+          self.payloads[channel] = ''
         self.payloads[channel] += fields[5]
         try:
             # This works because a mangled pad literal means
@@ -635,7 +636,9 @@ class NMEAParser(object):
     # Render assembled payload to packed bytes
     bits = ais.BitVector()
     bits.from_sixbit(self.payloads[channel], pad)
-    return self.parse_ais_messages(self.payloads[channel], bits,source=source,priority=basePriority)
+    rt=self.parse_ais_messages(self.payloads[channel], bits,source=source,priority=basePriority)
+    self.payloads[channel]=''
+    return rt
 
 
   #basically taken from ais.py but changed to decode one message at a time
@@ -654,14 +657,6 @@ class NMEAParser(object):
       # Magic recursive unpacking operation
       try:
           cooked = ais.aivdm_unpack(0, bits, 0, values, ais.aivdm_decode)
-          # We now have a list of tuples containing unpacked fields
-          # Collect some field groups into ISO8601 format
-          for (offset, template, label, legend, formatter) in ais.field_groups:
-              segment = cooked[offset:offset+len(template)]
-              if [x[0] for x in segment] == template:
-                  group = ais.formatter(*[x[1] for x in segment])
-                  group = (label, group, 'string', legend, None)
-                  cooked = cooked[:offset]+[group]+cooked[offset+len(template):]
           # Apply the postprocessor stage
           cooked = ais.postprocess(cooked)
           expected = ais.lengths.get(values['msgtype'], None)
