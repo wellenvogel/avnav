@@ -370,8 +370,12 @@ class AVNDirectoryHandlerBase(AVNWorker):
     entry = None
     try:
       if entryName.lower().endswith("doc.kml"):
-        # get first entry, regardless of name
-        entry = zip.infolist()[0]
+        # accept first .kml file found in root of archive, regardless of name
+        for mbr in zip.infolist():
+          memname = mbr.filename.lower()
+          if ('/' not in memname) and memname.endswith('.kml'):
+            entry = mbr
+            break
       else:
         entry = zip.getinfo(entryName)
     except KeyError as e:
@@ -379,7 +383,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
     if entry is None:
       return self.tryFallbackOrFail(requestParam, handler, "no entry %s in %s" % (entryName, zipname))
     handler.send_response(200)
-    handler.send_header("Content-type", handler.getMimeType(entryName))
+    handler.send_header("Content-type", handler.getMimeType(entry.filename))
     handler.send_header("Content-Length", entry.file_size)
     fs = os.stat(zipname)
     handler.send_header("Last-Modified", handler.date_time_string(fs.st_mtime))
