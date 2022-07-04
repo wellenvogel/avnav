@@ -369,17 +369,16 @@ class AVNDirectoryHandlerBase(AVNWorker):
     zip = ZipFile(zipname)
     entry = None
     try:
-      if (entryName.lower() == "doc.kml") and zipname.lower().endswith(".kmz"):
+      entry = zip.getinfo(entryName)
+    except KeyError as e:
+      pass
+    if entry is None and (entryName.lower() == "doc.kml") and zipname.lower().endswith(".kmz"):
         # when looking for *.kmz/doc.kml, accept first .kml file found in root, regardless of name
         # just like it says in: https://developers.google.com/kml/documentation/kmzarchives#recommended-directory-structure
         for mbr in zip.infolist():
           if ('/' not in mbr.filename) and mbr.filename.lower().endswith('.kml'):
             entry = mbr
-            break
-      else:
-        entry = zip.getinfo(entryName)
-    except KeyError as e:
-      pass
+            break    
     if entry is None:
       return self.tryFallbackOrFail(requestParam, handler, "no entry %s in %s" % (entryName, zipname))
     handler.send_response(200)
