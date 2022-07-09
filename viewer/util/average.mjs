@@ -46,9 +46,14 @@ export default class Average{
             this.currentValue=undefined;
             return;
         }
-        if (this.currentValue === undefined || this.length < 1) {
+        if (this.currentValue === undefined || this.values.length < 1) {
             this.currentValue = val;
+            if (this.length < 1) return oval;
             this.values.push(val);
+            if (this.values.length >= this.length){
+                //just to be robust....
+               this.values.shift();
+            }
             return oval;
         }
         if (this.values.length >= this.length){
