@@ -39,7 +39,8 @@ const GpsData=function(){
     globalStore.register(()=>this.resetAverages(),[
         keys.properties.positionAverageInterval,
         keys.properties.courseAverageInterval,
-        keys.properties.speedAverageInterval
+        keys.properties.speedAverageInterval,
+        keys.gui.global.propertiesLoaded
     ]);
     this.additionalKeys={}; //collect additonal keys here to reset them if not received any more
     let skeys=this.getStoreKeys();

@@ -60,7 +60,11 @@ const NavData=function(){
     this.mapAverageCog=new CourseAverage(globalStore.getData(keys.properties.courseAverageLength)); //for map rotation
     this.mapAverageHdt=new CourseAverage(globalStore.getData(keys.properties.courseAverageLength)); //for map rotation
     this.mapAverageHdm=new CourseAverage(globalStore.getData(keys.properties.courseAverageLength)); //for map rotation
-
+    globalStore.register(()=>{
+        this.mapAverageCog.reset(globalStore.getData(keys.properties.courseAverageLength));
+        this.mapAverageHdt.reset(globalStore.getData(keys.properties.courseAverageLength));
+        this.mapAverageHdm.reset(globalStore.getData(keys.properties.courseAverageLength));
+    },[keys.gui.global.propertiesLoaded])
     let self=this;
     this.changeCallback=new Callback((keys)=>{self.computeValues();});
     globalStore.register(this.changeCallback,

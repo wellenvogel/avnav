@@ -228,6 +228,7 @@ class PropertyHandler {
         }catch (e){
             base.log("Exception reading user data "+e);
         }
+        globalStore.storeData(keys.gui.global.propertiesLoaded,true);
     }
 
     firstStart(){
