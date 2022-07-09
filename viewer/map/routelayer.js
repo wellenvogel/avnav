@@ -25,19 +25,25 @@ class RouteDisplay{
         this.points=[];
         this.segments=[];
         this.filled=false;
+        this.targetIndex=undefined;
     }
     reset(){
         this.points=[];
         this.segments=[];
         this.filled=false;
+        this.targetIndex=undefined;
     }
-    fillIfNeeded(routePoints){
+    fillIfNeeded(routePoints,opt_target){
         if (this.filled) return;
         this.points=[];
         this.segments=[];
         let lastPoint=undefined;
+        this.targetIndex=undefined;
         for (let i in routePoints){
             if (!routePoints[i]) continue;
+            if (opt_target !== undefined && routePoints[i].compare(opt_target)){
+                this.targetIndex=i;
+            }
             let p = this.mapholder.pointToMap(routePoints[i].toCoord());
             this.points.push(p);
             if (lastPoint !== undefined) {
@@ -61,6 +67,9 @@ class RouteDisplay{
     }
     getSegments(){
         return this.segments;
+    }
+    getTargetIndex(){
+        return this.targetIndex;
     }
 }
 /**
@@ -259,10 +268,9 @@ RouteLayer.prototype.onPostCompose=function(center,drawing) {
             drawing.drawTextToContext(to,toPoint.name,this.textStyle);
         }
     }
-
-    let routeTarget=-1;
     if ( route) {
         this.routeDisplay.fillIfNeeded(route.points,toPoint);
+        let routeTarget=this.routeDisplay.getTargetIndex();
         this.routePixel=[];
         let allSegments=this.routeDisplay.getSegments();
         for (let i in allSegments){
