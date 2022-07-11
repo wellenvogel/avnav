@@ -240,7 +240,7 @@ let keys={
             computedButtonWidth: K,
             isFullScreen: K,
             remoteChannelState:K,
-
+            preventAlarms: K
         },
         gpspage:{
             pageNumber:K,

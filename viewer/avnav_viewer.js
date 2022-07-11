@@ -117,6 +117,9 @@ export default function() {
     if (getParam("noCloseDialog") === "true"){
         LeaveHandler.stop();
     }
+    if (getParam('preventAlarms') === 'true'){
+        globalStore.storeData(keys.gui.global.preventAlarms,true);
+    }
     let lateLoads=["/user/viewer/user.js"];
     let addScripts="addScripts";
     if (getParam(addScripts)){

@@ -28,6 +28,7 @@ class  AlarmWidget extends React.Component{
         return ! AlarmHandler.compareAlarms(nextProps.alarmInfo,this.props.alarmInfo);
     }
     render(){
+        if (this.props.disabled) return null;
         let classes="widget alarmWidget "+this.props.className||"";
         let alarmText=undefined;
         if (this.props.alarmInfo){
@@ -75,7 +76,8 @@ AlarmWidget.propTypes={
 
 AlarmWidget.storeKeys={
     alarmInfo: keys.nav.alarms.all,
-    isEditing: keys.gui.global.layoutEditing
+    isEditing: keys.gui.global.layoutEditing,
+    disabled: keys.gui.global.preventAlarms
 };
 
 export default AlarmWidget;

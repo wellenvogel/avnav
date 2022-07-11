@@ -427,7 +427,7 @@ class App extends React.Component {
                 />
             <Dialogs
                 className={this.props.nightMode?"nightMode":""}/>
-            { ! avnav.android ?<DynamicSound
+            { ! (avnav.android || globalStore.getData(keys.gui.global.preventAlarms)) ?<DynamicSound
                 storeKeys={alarmStoreKeys}
                 updateFunction={computeAlarmSound}
                 />:

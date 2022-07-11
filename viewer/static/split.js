@@ -82,7 +82,7 @@
         }
     }
     setSplit(percent);
-    f1.src=location+"&storePrefix=1";
+    f1.src=location+"&storePrefix=1&preventAlarms=true";
     f2.src=location+"&storePrefix=2";
     window.addEventListener('resize',function(){setMover()});
     window.addEventListener('message',function(ev){
