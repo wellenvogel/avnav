@@ -123,7 +123,13 @@ class Router extends Component {
         let small = (this.props.dimensions||{}).width
             < globalStore.getData(keys.properties.smallBreak);
         return <div className={className}>
-            {this.props.dim ? <div className="dimm" style={dimStyle} onClick={Dimmer.trigger}></div>:null}
+            {this.props.dim ?
+                <div
+                    className="dimm"
+                    style={dimStyle}
+                    onClick={()=>Dimmer.trigger()}
+                    />
+                :null}
                 <Page
                     style={style}
                     options={this.props.options}

@@ -95,6 +95,11 @@
     }
     window.addEventListener('message',function(ev){
         let type=ev.data.type;
+        const forwards=['dimm'];
+        if (forwards.indexOf(type) >= 0){
+            msgAll(ev.data);
+            return;
+        }
         if (type === 'fullscreen'){
             let newState=false;
             if (document.fullscreenElement){

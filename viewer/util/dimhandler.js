@@ -1,5 +1,6 @@
 import globalStore from './globalstore.jsx';
 import keys from './keys.jsx';
+import splitsupport from "./splitsupport";
 
 const KEY=keys.gui.global.dimActive;
 class DimmHandler{
@@ -32,9 +33,15 @@ class DimmHandler{
                 console.log("dimmer");
             }
         }
+        splitsupport.subscribe('dimm',(data)=>{
+            if (data.value !== globalStore.getData(KEY)){
+                if (data.value) this.activate(true);
+                else this.trigger(true);
+            }
+        })
 
     }
-    activate(){
+    activate(opt_noSend){
         if (this.mode != "manual" && this.mode != "timer") return;
         if (! this.enabled()) return;
         globalStore.storeData(KEY,true);
@@ -42,6 +49,11 @@ class DimmHandler{
         if (dimFade < 0) dimFade=0;
         if (dimFade > 100) dimFade=100;
         this.actionFunction(dimFade);
+        if (! opt_noSend){
+            splitsupport.sendToFrame('dimm',{
+                value: true
+            })
+        }
     }
     setMode(mode){
         if (this.mode != "manual" && this.mode != "timer" && this.mode != "off") return false;
@@ -61,10 +73,15 @@ class DimmHandler{
     _setLastTrigger(){
         this.lastTrigger=(new Date()).getTime();
     }
-    trigger(){
+    trigger(opt_noSend){
         this._setLastTrigger();
         globalStore.storeData(KEY,false);
         if (this.actionFunction) this.actionFunction(100);
+        if (! opt_noSend){
+            splitsupport.sendToFrame('dimm',{
+                value: false
+            })
+        }
     }
     isActive(){
         return globalStore.getData(KEY,false);
@@ -78,7 +95,7 @@ class DimmHandler{
     buttonDef(){
         return{
             name: 'Dim',
-            onClick: this.activate,
+            onClick: ()=>this.activate(),
             visible: this.enabled(),
             overflow: true
         }
