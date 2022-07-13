@@ -82,30 +82,57 @@
         }
     }
     setSplit(percent);
-    f1.src=location+"&storePrefix=1&preventAlarms=true";
+    f1.src=location+"&storePrefix=1&preventAlarms=true&ignoreAndroidBack=true";
     f2.src=location+"&storePrefix=2";
     window.addEventListener('resize',function(){setMover()});
+    const msgAll=(msg)=>{
+        if (typeof(msg) === 'string'){
+            msg={type:msg};
+        }
+        [f1,f2].forEach(function(frm){
+            frm.contentWindow.postMessage(msg,window.location.origin);
+        })
+    }
     window.addEventListener('message',function(ev){
-        if (ev.data === 'fullscreen'){
+        let type=ev.data.type;
+        if (type === 'fullscreen'){
+            let newState=false;
             if (document.fullscreenElement){
                 document.exitFullscreen()
             }
             else {
                 document.body.requestFullscreen();
+                newState=true;
             }
-        }
-        if (ev.data === 'settingsChanged'){
-            [f1,f2].forEach(function(frm){
-                frm.contentWindow.postMessage('reloadSettings',window.location.origin);
+            msgAll({
+                type: 'fullScreenChanged',
+                isFullScreen: newState
             })
         }
-        if (ev.data === 'finishSplit'){
+        if (type === 'settingsChanged'){
+            msgAll('reloadSettings');
+        }
+        if (type === 'finishSplit'){
             window.location.href=singleLocation;
         }
-        if (ev.data === 'querySplitMode'){
-            [f1,f2].forEach(function(frm){
-                frm.contentWindow.postMessage('isSplitMode',window.location.origin);
-            })
+        if (type === 'querySplitMode'){
+            msgAll('isSplitMode');
         }
     })
+    if (window.avnavAndroid) {
+        if (!window.avnav) {
+            window.avnav = {};
+        }
+        if (! window.avnav.android){
+            window.avnav.android={
+                receiveEvent: (key,param)=>{
+                    msgAll( {
+                        type: 'android',
+                        key: key,
+                        param: param
+                    })
+                }
+            }
+        }
+    }
 })();

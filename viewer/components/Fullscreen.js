@@ -5,6 +5,7 @@ import defaultFullScreenIcon from '../images/icons-new/fullscreen.svg';
 import Requests from '../util/requests';
 import Toast from "./Toast";
 import piIcon from '../images/rpi.png';
+import splitsupport from "../util/splitsupport";
 
 let fullScreenBlocked=false;
 let fullScreenIcon=defaultFullScreenIcon;
@@ -89,11 +90,14 @@ try {
             }
         }
         else if (mode === 'parent'){
-            fullScreenAvailable=()=>true;
-            isFullScreen=()=>{return undefined};
+            fullScreenAvailable=()=> ! window.avnavAndroid;
+            isFullScreen=()=>{return globalStore.getData(keys.gui.global.isFullScreen)};
             toggleFullscreen=()=>{
-                window.parent.postMessage('fullscreen','*');
+                splitsupport.sendToFrame('fullscreen');
             }
+            splitsupport.subscribe('fullScreenChanged',(data)=>{
+                globalStore.storeData(keys.gui.global.isFullScreen,data.isFullScreen);
+            })
         }
         else{
             fullScreenBlocked=true;

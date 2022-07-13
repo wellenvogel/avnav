@@ -416,6 +416,9 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 if (url != null && (url.startsWith("http://")||url.startsWith("https://") )) {
+                    if (url.startsWith("http://assets")){
+                        return false;
+                    }
                     view.getContext().startActivity(
                             new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
                     return true;
@@ -448,7 +451,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
 
         //we nedd to add a filename to the base to make local storage working...
         //http://stackoverflow.com/questions/8390985/android-4-0-1-breaks-webview-html-5-local-storage
-        String start= RequestHandler.INTERNAL_URL_PREFIX +RequestHandler.ROOT_PATH+"/dummy.html?navurl=avnav_navi.php";
+        String start= RequestHandler.INTERNAL_URL_PREFIX +RequestHandler.ROOT_PATH+"/avnav_viewer.html?navurl=avnav_navi.php";
         if (BuildConfig.DEBUG) start+="&logNmea=1";
         if (htmlPage != null) {
             webView.loadDataWithBaseURL(start, htmlPage, "text/html", "UTF-8", null);

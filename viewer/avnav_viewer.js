@@ -120,6 +120,9 @@ export default function() {
     if (getParam('preventAlarms') === 'true'){
         globalStore.storeData(keys.gui.global.preventAlarms,true);
     }
+    if (getParam('ignoreAndroidBack') === 'true'){
+        globalStore.storeData(keys.gui.global.ignoreAndroidBack,true);
+    }
     let lateLoads=["/user/viewer/user.js"];
     let addScripts="addScripts";
     if (getParam(addScripts)){

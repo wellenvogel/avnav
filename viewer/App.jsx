@@ -45,6 +45,7 @@ import MapHolder from "./map/mapholder";
 import NavData from './nav/navdata';
 import alarmhandler from "./nav/alarmhandler.js";
 import LocalStorage, {PREFIX_NAMES, STORAGE_NAMES} from './util/localStorageManager';
+import splitsupport from "./util/splitsupport" //triggers querySplitMode
 
 
 const DynamicSound=Dynamic(SoundHandler);
@@ -161,38 +162,44 @@ class App extends React.Component {
         this.buttonSizer=null;
         globalStore.storeData(keys.gui.global.onAndroid,false,true);
         //make the android API available as avnav.android
-        if (window.avnavAndroid){
+        if (window.avnavAndroid) {
             base.log("android integration enabled");
-            globalStore.storeData(keys.gui.global.onAndroid,true,true);
-            avnav.android=window.avnavAndroid;
-            globalStore.storeData(keys.properties.routingServerError,false,true);
-            globalStore.storeData(keys.properties.connectedMode,true,true);
-            avnav.version=avnav.android.getVersion();
+            globalStore.storeData(keys.gui.global.onAndroid, true, true);
+            avnav.android = window.avnavAndroid;
+            globalStore.storeData(keys.properties.routingServerError, false, true);
+            globalStore.storeData(keys.properties.connectedMode, true, true);
+            avnav.version = avnav.android.getVersion();
             avnav.android.applicationStarted();
-            avnav.android.receiveEvent=(key,id)=>{
+            const receiveAndroidEvent = (key, id) => {
                 try {
                     //inform the android part that we noticed the event
                     avnav.android.acceptEvent(key, id);
                 } catch (e) {
                 }
-                if (key == 'backPressed'){
-                    let currentPage=this.history.currentLocation()
-                    if (currentPage == "mainpage"){
-                        avnav.android.goBack();
-                        return;
+                if (key == 'backPressed') {
+                    if (! globalStore.getData(keys.gui.global.ignoreAndroidBack)) {
+                        let currentPage = this.history.currentLocation()
+                        if (currentPage == "mainpage") {
+                            avnav.android.goBack();
+                            return;
+                        }
+                        this.history.pop();
                     }
-                    this.history.pop();
                 }
-                if (key == 'propertyChange'){
+                if (key == 'propertyChange') {
                     globalStore.storeData(keys.gui.global.propertySequence,
-                        globalStore.getData(keys.gui.global.propertySequence,0)+1);
+                        globalStore.getData(keys.gui.global.propertySequence, 0) + 1);
                 }
-                if (key == "reloadData"){
+                if (key == "reloadData") {
                     globalStore.storeData(keys.gui.global.reloadSequence,
-                        globalStore.getData(keys.gui.global.reloadSequence,0)+1);
+                        globalStore.getData(keys.gui.global.reloadSequence, 0) + 1);
                 }
-                AndroidEventHandler.handleEvent(key,id);
+                AndroidEventHandler.handleEvent(key, id);
             };
+            avnav.android.receiveEvent = receiveAndroidEvent;
+            splitsupport.subscribe('android', (ev) => {
+                receiveAndroidEvent(ev.key, ev.param);
+            })
         }
         let startpage="warningpage";
         let firstStart=true;
@@ -301,18 +308,6 @@ class App extends React.Component {
             }
             else alarmhandler.stopAlarm(LOCAL_TYPES.connectionLost);
         },{connectionLost:keys.nav.gps.connectionLost})
-        try{
-            window.addEventListener('message',(ev)=>{
-                if (ev.origin !== window.location.origin) return;
-                if (ev.data === 'isSplitMode'){
-                    globalStore.storeData(keys.gui.global.splitMode,true);
-                }
-            })
-        } catch (e){}
-        try{
-            window.parent.postMessage('querySplitMode',window.location.origin);
-        }catch (e){}
-
     }
     newDeviceHandler(){
         try{

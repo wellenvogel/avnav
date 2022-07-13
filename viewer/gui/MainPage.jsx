@@ -23,6 +23,8 @@ import FullScreen from '../components/Fullscreen';
 import RemoteChannelDialog from "../components/RemoteChannelDialog";
 import {RecursiveCompare} from '../util/compare';
 import LocalStorage from '../util/localStorageManager';
+import splitsupport from "../util/splitsupport";
+import LeaveHandler from '../util/leavehandler';
 
 
 
@@ -250,10 +252,9 @@ class MainPage extends React.Component {
                 },
                 overflow: true,
                 onClick: ()=>{
+                    LeaveHandler.stop();
                     if (globalStore.getData(keys.gui.global.splitMode)){
-                        try{
-                            window.parent.postMessage('finishSplit',window.location.origin);
-                        }catch (e){}
+                        splitsupport.sendToFrame('finishSplit');
                     }
                     else{
                         var location=window.location.href+'';

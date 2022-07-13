@@ -11,6 +11,7 @@ import LayoutHandler from './layouthandler';
 import RequestHandler from "./requests";
 import Requests from "./requests";
 import LocalStorage, {STORAGE_NAMES} from './localStorageManager';
+import splitsupport from "./splitsupport";
 
 
 const hex2rgba= (hex, opacity)=> {
@@ -58,15 +59,10 @@ class PropertyHandler {
             return;
         }
         this.incrementSequence();
-        try{
-            window.addEventListener('message',(ev)=>{
-                if (ev.origin !== window.location.origin) return;
-                if (ev.data === 'reloadSettings'){
-                    this.resetToSaved();
-                    this.incrementSequence();
-                }
-            })
-        } catch (e){}
+        splitsupport.subscribe('reloadSettings',()=>{
+            this.resetToSaved();
+            this.incrementSequence();
+        });
     }
 
     setPrefixKeys(prefixKeys){
@@ -118,9 +114,7 @@ class PropertyHandler {
     saveUserData(data,opt_forPrefix) {
         let raw = JSON.stringify(data);
         LocalStorage.setItem(opt_forPrefix?STORAGE_NAMES.SPLITSETTINGS:STORAGE_NAMES.SETTINGS,undefined, raw);
-        try{
-            window.parent.postMessage('settingsChanged',window.location.origin);
-        }catch (e){}
+        splitsupport.sendToFrame('settingsChanged');
     }
 
     setItem(obj,path,value,opt_skip){
