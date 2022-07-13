@@ -123,6 +123,9 @@ export default function() {
     if (getParam('ignoreAndroidBack') === 'true'){
         globalStore.storeData(keys.gui.global.ignoreAndroidBack,true);
     }
+    if (getParam('splitMode') === 'true'){
+        globalStore.storeData(keys.gui.global.splitMode,true);
+    }
     let lateLoads=["/user/viewer/user.js"];
     let addScripts="addScripts";
     if (getParam(addScripts)){

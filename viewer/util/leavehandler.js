@@ -1,3 +1,4 @@
+import splitsupport from "./splitsupport";
 
 const txt="Really exit AvNav?";
 

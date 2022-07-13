@@ -105,5 +105,9 @@ class History{
             this.remoteChannel.sendMessage(REMOTE_CMD+' '+topEntry.location+' '+JSON.stringify(topEntry.options))
         }
     }
+
+    isTop(){
+        return this.history.length <=1;
+    }
 }
 export default History;

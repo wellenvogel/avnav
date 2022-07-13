@@ -32,10 +32,8 @@ class SplitSupport{
             if (ev.origin !== window.location.origin) return;
             if (typeof(ev.data) !== 'object') return;
             if (ev.data.type === undefined) return;
-            if (ev.data.type === 'isSplitMode') globalStore.storeData(keys.gui.global.splitMode,true);
             this.pubSub.publish(ev.data.type,ev.data);
         })
-        this.sendToFrame('querySplitMode');
     }
     subscribe(type,callback){
         return this.pubSub.subscribe(type,callback);
@@ -44,6 +42,7 @@ class SplitSupport{
         this.pubSub.unsubscribe(token);
     }
     sendToFrame(type,message){
+        if (! globalStore.getData(keys.gui.global.splitMode)) return;
         if (! message) message={};
         message.type=type;
         try{

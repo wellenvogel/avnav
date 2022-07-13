@@ -74,7 +74,7 @@
     var singleLocation=location;
     singleLocation=singleLocation.replace(/\?.*/,'');
     if (! location.match(/[?]/)) location+='?';
-    location+="&fullscreen=parent";
+    location+="&splitMode=true";
     if (window.location.search.match(/split=/)){
         var np=window.location.search.replace(/.*split=/,'').replace(/[^0-9].*/,'');
         if (! isNaN(np)){
@@ -113,10 +113,10 @@
             msgAll('reloadSettings');
         }
         if (type === 'finishSplit'){
-            window.location.href=singleLocation;
-        }
-        if (type === 'querySplitMode'){
-            msgAll('isSplitMode');
+            msgAll('stopLeave');
+            window.setTimeout(()=>
+                window.location.href=singleLocation,
+                20);
         }
     })
     if (window.avnavAndroid) {

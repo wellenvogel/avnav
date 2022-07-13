@@ -45,7 +45,8 @@ import MapHolder from "./map/mapholder";
 import NavData from './nav/navdata';
 import alarmhandler from "./nav/alarmhandler.js";
 import LocalStorage, {PREFIX_NAMES, STORAGE_NAMES} from './util/localStorageManager';
-import splitsupport from "./util/splitsupport" //triggers querySplitMode
+import splitsupport from "./util/splitsupport"
+import leavehandler from "./util/leavehandler"; //triggers querySplitMode
 
 
 const DynamicSound=Dynamic(SoundHandler);
@@ -201,6 +202,11 @@ class App extends React.Component {
                 receiveAndroidEvent(ev.key, ev.param);
             })
         }
+        splitsupport.subscribe('stopLeave',()=>{
+            if (this.history.isTop() && ! globalStore.getData(keys.gui.global.layoutEditing)) {
+                leavehandler.stop();
+            }
+        });
         let startpage="warningpage";
         let firstStart=true;
         if (LocalStorage.hasStorage()){

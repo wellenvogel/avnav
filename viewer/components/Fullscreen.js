@@ -46,6 +46,18 @@ const toggleFullscreenDefault=()=>{
 let toggleFullscreen=toggleFullscreenDefault;
 
 try {
+    globalStore.register(()=>{
+        if (globalStore.getData(keys.gui.global.splitMode)){
+            fullScreenAvailable=()=> ! window.avnavAndroid;
+            isFullScreen=()=>{return globalStore.getData(keys.gui.global.isFullScreen)};
+            toggleFullscreen=()=>{
+                splitsupport.sendToFrame('fullscreen');
+            }
+            splitsupport.subscribe('fullScreenChanged',(data)=>{
+                globalStore.storeData(keys.gui.global.isFullScreen,data.isFullScreen);
+            })
+        }
+    },[keys.gui.global.splitMode]);
     if (window.location.search.match(/[?&]fullscreen=/)){
         let mode=window.location.search.replace(/.*[?&]fullscreen=/,'').replace(/[&].*/,'');
         if (mode.match(/^server:/)){
@@ -89,16 +101,6 @@ try {
                     .catch((e)=> Toast(e));
             }
         }
-        else if (mode === 'parent'){
-            fullScreenAvailable=()=> ! window.avnavAndroid;
-            isFullScreen=()=>{return globalStore.getData(keys.gui.global.isFullScreen)};
-            toggleFullscreen=()=>{
-                splitsupport.sendToFrame('fullscreen');
-            }
-            splitsupport.subscribe('fullScreenChanged',(data)=>{
-                globalStore.storeData(keys.gui.global.isFullScreen,data.isFullScreen);
-            })
-        }
         else{
             fullScreenBlocked=true;
         }
@@ -119,11 +121,15 @@ try {
 
 const fullScreenDefinition={
     name: "FullScreen",
-    storeKeys: {visible:keys.properties.showFullScreen, toggle:keys.gui.global.isFullScreen},
+    storeKeys: {
+        visible:keys.properties.showFullScreen,
+        toggle:keys.gui.global.isFullScreen,
+        split: keys.gui.global.splitMode
+    },
     updateFunction:(state)=>{
         return {
             toggle: isFullScreen(), //we directly query here again as IE does not seem to fire the event...
-            visible: state.visible && fullScreenAvailable(),
+            visible: state.visible && fullScreenAvailable() && ! window.avnavAndroid,
             dummy: state.toggle,
             icon: fullScreenIcon
         }

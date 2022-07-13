@@ -250,6 +250,7 @@ class MainPage extends React.Component {
                     toggle: keys.gui.global.splitMode,
                     visible: keys.properties.showSplitButton
                 },
+                editDisable: true,
                 overflow: true,
                 onClick: ()=>{
                     LeaveHandler.stop();
