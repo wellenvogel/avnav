@@ -202,13 +202,27 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
             if (parts[0].endsWith(".zip") || parts[0].endsWith(".kmz")) {
                 String name = URLDecoder.decode(parts[0], "UTF-8");
                 File foundFile = findLocalFile(name);
-                if (foundFile == null) return tryFallbackOrFail(uri, handler);
+                if (foundFile == null) 
+                    return tryFallbackOrFail(uri, handler);
                 ZipFile zf = new ZipFile(foundFile);
                 String entryPath = path.replaceFirst("[^/]*/", "");
                 ZipEntry entry = zf.getEntry(entryPath);
-                if (entry == null) return tryFallbackOrFail(uri, handler);
+                if (entry == null && entryPath.equals("doc.kml") && name.endsWith(".kmz")) {
+                    Enumeration<? extends ZipEntry> entries = zf.entries();
+                    while (entries.hasMoreElements()) {
+                        ZipEntry ze = entries.nextElement();
+                        if (!ze.getName().contains("/") && ze.getName().endsWith(".kml")) {
+                            entry = ze;
+                            break;
+                        }
+                    }
+                }
+
+                if (entry == null) 
+                    return tryFallbackOrFail(uri, handler);
+
                 return new ExtendedWebResourceResponse(entry.getSize(),
-                        RequestHandler.mimeType(entryPath),
+                        RequestHandler.mimeType(entry.getName),
                         "", new CloseHelperStream(zf.getInputStream(entry), zf));
             }
         }
