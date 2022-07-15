@@ -209,7 +209,7 @@ class App extends React.Component {
             })
         }
         splitsupport.subscribe('stopLeave',()=>{
-            if (this.history.isTop() && ! globalStore.getData(keys.gui.global.layoutEditing)) {
+            if (! globalStore.getData(keys.gui.global.layoutEditing)) {
                 leavehandler.stop();
             }
         });

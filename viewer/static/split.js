@@ -85,11 +85,12 @@
     f1.src=location+"&storePrefix=1&preventAlarms=true&ignoreAndroidBack=true";
     f2.src=location+"&storePrefix=2";
     window.addEventListener('resize',function(){setMover()});
-    const msgAll=(msg)=>{
+    const msgAll=(msg,opt_omit)=>{
         if (typeof(msg) === 'string'){
             msg={type:msg};
         }
         [f1,f2].forEach(function(frm){
+            if (opt_omit && frm.contentWindow === opt_omit) return;
             frm.contentWindow.postMessage(msg,window.location.origin);
         })
     }
@@ -97,7 +98,7 @@
         let type=ev.data.type;
         const forwards=['dimm'];
         if (forwards.indexOf(type) >= 0){
-            msgAll(ev.data);
+            msgAll(ev.data,ev.source);
             return;
         }
         if (type === 'fullscreen'){
