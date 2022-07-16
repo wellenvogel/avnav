@@ -104,6 +104,21 @@ class ChartSourceBase {
     redraw(){
         return false;
     }
+    getScale(){
+        try {
+            let view = this.mapholder.olmap.getView();
+            let scale = 1;
+            let currentZoom = view.getZoom();
+            if (this.chartEntry.minScale && currentZoom < this.chartEntry.minScale) {
+                scale = 1 / Math.pow(2, this.chartEntry.minScale - currentZoom);
+            }
+            if (this.chartEntry.maxScale && currentZoom > this.chartEntry.maxScale) {
+                scale = Math.pow(2, currentZoom - this.chartEntry.maxScale);
+            }
+            return scale;
+        }catch (e){}
+        return 1;
+    }
 
     /**
      * returns a promise that resolves to 1 for changed

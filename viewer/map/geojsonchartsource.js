@@ -151,7 +151,11 @@ class GeoJsonChartSource extends ChartSourceBase{
 
     styleFunction(feature,resolution) {
         let type=feature.getGeometry().getType();
-        return this.styles[feature.getGeometry().getType()];
+        let rt= this.styles[type];
+        if (rt.getImage()){
+            rt.getImage().setScale(this.getScale());
+        }
+        return rt;
     }
     prepareInternal() {
         let url = this.chartEntry.url;

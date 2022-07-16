@@ -69,6 +69,7 @@ class KmlChartSource extends ChartSourceBase{
             try {
                 let currentUrl=style.getImage().getSrc();
                 if (currentUrl.startsWith(this.chartEntry.icons) || currentUrl.startsWith(this.chartEntry.defaultIcon)){
+                    style.getImage().setScale(this.getScale());
                     return style;
                 }
                 let url;
@@ -109,6 +110,7 @@ class KmlChartSource extends ChartSourceBase{
                         })
                     );
                 }
+                style.getImage().setScale(this.getScale());
             }catch (e){base.log("exception in kml style: "+e.message);}
         }
         return style;

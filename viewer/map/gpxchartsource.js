@@ -116,31 +116,31 @@ class GpxChartSource extends ChartSourceBase{
     styleFunction(feature,resolution) {
 
         let type=feature.getGeometry().getType();
-        if (type === 'Point' && (this.chartEntry.icons||this.chartEntry.defaultIcon)){
-            let sym=feature.get('sym');
-            if (!sym && this.chartEntry.defaultIcon){
-                sym="defaultIcon"; //arbitrary name that is neither an external or absolute URL
+        if (type === 'Point'){
+            if(this.chartEntry.icons||this.chartEntry.defaultIcon) {
+                let sym = feature.get('sym');
+                if (!sym && this.chartEntry.defaultIcon) {
+                    sym = "defaultIcon"; //arbitrary name that is neither an external or absolute URL
+                }
+                if (sym) {
+                    if (!this.styleMap[sym]) {
+                        let style = new olStyle({
+                            image: new olIcon({
+                                src: this.getSymbolUrl(sym, '.png')
+                            })
+                        });
+                        this.styleMap[sym] = style;
+                    }
+                    let rt = this.styleMap[sym];
+                    let view = this.mapholder.olmap.getView();
+                    let scale = this.getScale();
+                    rt.getImage().setScale(scale);
+                    return rt;
+                }
             }
-            if (sym){
-                if (!this.styleMap[sym]) {
-                    let style = new olStyle({
-                        image: new olIcon({
-                            src: this.getSymbolUrl(sym,'.png')
-                        })
-                    });
-                    this.styleMap[sym] = style;
-                }
-                let rt=this.styleMap[sym];
-                let view=this.mapholder.olmap.getView();
-                let scale=1;
-                let currentZoom=view.getZoom();
-                if (this.chartEntry.minScale && currentZoom < this.chartEntry.minScale){
-                    scale=1/Math.pow(2,this.chartEntry.minScale-currentZoom);
-                }
-                if (this.chartEntry.maxScale && currentZoom > this.chartEntry.maxScale){
-                    scale=Math.pow(2,currentZoom-this.chartEntry.maxScale);
-                }
-                rt.getImage().setScale(scale);
+            else{
+                let rt=this.styles[type];
+                rt.getImage().setScale(this.getScale());
                 return rt;
             }
         }
@@ -185,7 +185,7 @@ class GpxChartSource extends ChartSourceBase{
                 fill: new olFill({
                         color: this.styles.LineString.getStroke().getColor()
                     }),
-                radius: globalstore.getData(keys.properties.routeWpSize)
+                radius: globalstore.getData(keys.properties.routeWpSize) * this.getScale()
             })
         });
     }
