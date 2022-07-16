@@ -28,6 +28,7 @@ import time
 import traceback
 
 from avnav_manager import AVNHandlerManager
+from avndirectorybase import AVNDirectoryHandlerBase
 from httpserver import AVNHTTPServer
 from avnav_util import *
 from avnav_worker import *
@@ -440,7 +441,7 @@ class AVNImporter(AVNWorker):
         if not os.path.isdir(dir):
           return AVNUtil.getReturnData(error="unable to create directory %s"%dir)
       fname=os.path.join(dir,name)
-      handler.writeFileFromInput(fname,kwargs.get('flen'),True)
+      AVNDirectoryHandlerBase.writeAtomic(fname,handler.rfile,True,int(kwargs.get('flen')))
       return AVNUtil.getReturnData()
 
     if type == "api":

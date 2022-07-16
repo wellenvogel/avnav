@@ -27,7 +27,9 @@
 #  parts contributed by Matt Hawkins http://www.raspberrypi-spy.co.uk/
 #
 ###############################################################################
+import io
 import json
+import shutil
 import urllib.request, urllib.parse, urllib.error
 from zipfile import ZipFile
 from typing import List
@@ -35,6 +37,7 @@ from avnav_manager import AVNHandlerManager
 from avnav_nmea import *
 from avnav_worker import *
 from avnav_util import AVNDownload
+
 
 
 
@@ -251,6 +254,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
 
   # thread run method - just try forever
   def run(self):
+    lastCleanup=0
     if not os.path.exists(self.baseDir):
       AVNLog.info("creating user dir %s"%self.baseDir)
       os.makedirs(self.baseDir)
@@ -267,6 +271,13 @@ class AVNDirectoryHandlerBase(AVNWorker):
         self.periodicRun()
       except:
         AVNLog.debug("%s: exception in periodic run: %s",self.getName(),traceback.format_exc())
+      now=time.time()
+      if (lastCleanup+3600) < now or lastCleanup > now:
+        try:
+          self.cleanupTmp(self.baseDir)
+          lastCleanup=now
+        except Exception as e:
+          AVNLog.error("exception in cleanup tmp %s"%str(e))
       sleepTime = self.getSleepTime()
       AVNLog.debug("main loop periodic run sleeping %f seconds",sleepTime)
       self.wait(sleepTime)
@@ -340,6 +351,11 @@ class AVNDirectoryHandlerBase(AVNWorker):
 
 
   def checkName(self,name,doRaise=True):
+    if name.startswith(self.TMP_PREFIX):
+      if doRaise:
+        raise Exception("name %s not allowed to start with %s"%(name,self.TMP_PREFIX))
+      else:
+        return False
     cleanName=AVNUtil.clean_filename(name)
     if name != cleanName:
       if doRaise:
@@ -491,15 +507,10 @@ class AVNDirectoryHandlerBase(AVNWorker):
     data = AVNUtil.getHttpRequestParam(requestparam, '_json')
     if data is not None:
       decoded = json.loads(data)
-      if not overwrite and os.path.exists(outname):
-        raise Exception("file %s already exists" % outname)
-      fh = open(outname, "wb")
-      if fh is None:
-        raise Exception("unable to write to %s" % outname)
-      fh.write(data.encode('utf-8'))
-      fh.close()
+      stream=io.BytesIO(data.encode('utf-8'))
+      self.writeAtomic(outname,stream,overwrite)
     else:
-      handler.writeFileFromInput(outname, rlen, overwrite)
+      self.writeAtomic(outname,handler.rfile,overwrite,int(rlen))
     self._scanDirectory()
     return AVNUtil.getReturnData()
 
@@ -555,6 +566,60 @@ class AVNDirectoryHandlerBase(AVNWorker):
       return AVNUtil.getReturnData()
 
     raise Exception("unable to handle user request %s"%(type))
+
+  TMP_PREFIX='__avn.'
+  tmpCount=0
+  tmpLock=threading.Lock()
+  @classmethod
+  def getTmpFor(cls,name):
+    (dir,fn)=os.path.split(name)
+    with cls.tmpLock:
+      cls.tmpCount+=1
+      return os.path.join(dir,cls.TMP_PREFIX+str(cls.tmpCount)+"."+fn)
+  @classmethod
+  def writeAtomic(cls,outname,instream,overwrite,requestedLength=-1):
+    if not overwrite and os.path.exists(outname):
+      raise Exception("outname already exists")
+    tmp=cls.getTmpFor(outname)
+    with open(tmp,"wb") as oh:
+      bRead=0
+      length=16*1024
+      while True:
+        bToRead=length
+        if requestedLength >=0:
+          if bToRead > (requestedLength-bRead):
+            bToRead=requestedLength-bRead
+        if bToRead <= 0:
+          break
+        buf = instream.read(bToRead)
+        if not buf:
+          break
+        oh.write(buf)
+        bRead+=bToRead
+      oh.close()
+      instream.close()
+    if requestedLength >= 0:
+      sz=os.stat(tmp).st_size
+      if sz != requestedLength:
+        os.unlink(tmp)
+        raise Exception("not all bytes copied (%d from %d)"%(sz,requestedLength))
+    os.replace(tmp,outname)
+
+  @classmethod
+  def cleanupTmp(cls,dir):
+    if dir is None:
+      return
+    if not os.path.isdir(dir):
+      return
+    now=time.time()
+    removeTime=now-3600
+    for f in os.listdir(dir):
+      if not f.startswith(cls.TMP_PREFIX):
+        continue
+      fn=os.path.join(dir,f)
+      mtime=os.stat(fn).st_mtime
+      if mtime > time.time() or mtime < removeTime:
+        os.unlink(fn)
 
 class AVNScopedDirectoryEntry(AVNDirectoryListEntry):
   T_SYSTEM='system'

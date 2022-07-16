@@ -24,6 +24,7 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py
 ###############################################################################
+import io
 import json
 import shutil
 import urllib.request, urllib.parse, urllib.error
@@ -344,6 +345,8 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
     # type: (ChartDescription) -> ChartDescription or None
     if itemDescription is None:
       return None
+    if itemDescription.name.startswith(self.TMP_PREFIX):
+      return None
     try:
       fullname=os.path.join(self.baseDir,itemDescription.name)
       chart=None
@@ -417,9 +420,9 @@ class AVNChartHandler(AVNDirectoryHandlerBase):
           numChanged+=1
           overlayConfig['overlays']=newOverlays
           try:
-            with open(os.path.join(self.baseDir,info.name),"w",encoding='utf-8') as f:
-              f.write(json.dumps(overlayConfig,indent=2))
-              f.close()
+            data=json.dumps(overlayConfig,indent=2).encode('utf-8')
+            self.writeAtomic(os.path.join(self.baseDir,info.name),
+                             io.BytesIO(data),True)
           except Exception as e:
             AVNLog.error("unable to write overlay config %s:%s",info.name,traceback.format_exc())
     if numChanged > 0:

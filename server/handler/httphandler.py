@@ -617,35 +617,6 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
     except Exception as e:
       return json.dumps({'status':str(e)},cls=Encoder)
 
-  def writeFileFromInput(self,outname,rlen,overwrite=False,stream=None):
-    if os.path.exists(outname) and not overwrite:
-      raise Exception("file %s already exists" % outname)
-    writename = outname + ".tmp"
-    AVNLog.info("start upload of file %s", outname)
-    fh = open(writename, "wb")
-    if fh is None:
-      raise Exception("unable to write to %s" % outname)
-    if stream is None:
-      stream=self.rfile
-    bToRead = int(rlen)
-    bufSize = 1000000
-    try:
-      while bToRead > 0:
-        buf = stream.read(bufSize if bToRead >= bufSize else bToRead)
-        if len(buf) == 0 or buf is None:
-          raise Exception("no more data received")
-        bToRead -= len(buf)
-        fh.write(buf)
-      fh.close()
-      if os.path.exists(outname):
-        os.unlink(outname)
-      os.rename(writename, outname)
-    except:
-      try:
-        os.unlink(writename)
-      except:
-        pass
-      raise
 
   def handleListDir(self,requestParam):
     type=self.getRequestParam(requestParam,"type")

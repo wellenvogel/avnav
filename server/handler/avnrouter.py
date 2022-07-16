@@ -313,13 +313,8 @@ class AVNRouter(AVNDirectoryHandlerBase):
           return
         if writeBack:
           AVNLog.info("new leg %s",str(leg))
-          f=open(self.currentLegFileName,"w",encoding='utf-8')
-          try:
-            f.write(json.dumps(newLeg.getJson()))
-          except:
-            f.close()
-            raise
-          f.close()
+          data=json.dumps(newLeg.getJson()).encode('utf-8')
+          self.writeAtomic(self.currentLegFileName,io.BytesIO(data),True)
         ts=os.stat(self.currentLegFileName).st_mtime
         self.currentLegTimestamp=ts
 
