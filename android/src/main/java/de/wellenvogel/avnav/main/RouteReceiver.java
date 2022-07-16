@@ -18,18 +18,17 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.wellenvogel.avnav.worker.RouteHandler;
+import de.wellenvogel.avnav.appapi.DirectoryRequestHandler;
 import de.wellenvogel.avnav.settings.SettingsActivity;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
+import de.wellenvogel.avnav.worker.RouteHandler;
 
 /**
  * Created by andreas on 09.01.15.
@@ -278,14 +277,8 @@ public class RouteReceiver extends Activity {
                 for (ListItem item : names) {
                     File outFile = item.outFile;
                     if (outFile == null) continue;
-                    FileOutputStream os = new FileOutputStream(outFile);
                     InputStream is = getContentResolver().openInputStream(item.routeUri);
-                    byte buffer[] = new byte[10000];
-                    int rt = 0;
-                    while ((rt = is.read(buffer)) > 0) {
-                        os.write(buffer, 0, rt);
-                    }
-                    os.close();
+                    DirectoryRequestHandler.writeAtomic(outFile,is,true);
                     is.close();
                 }
             } catch (Exception e) {

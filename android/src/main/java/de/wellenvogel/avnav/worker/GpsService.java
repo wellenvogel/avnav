@@ -1094,6 +1094,20 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
                 }
             }catch (Exception e){}
         }
+        cleanupOldTmp();
+    }
+
+    private long lastCleanup=0;
+    private static long CLEANUP_INTERVAL=1800*1000; //ms
+    private void cleanupOldTmp(){
+        if (requestHandler == null) return;
+        long now=System.currentTimeMillis();
+        if ((lastCleanup + CLEANUP_INTERVAL) < now){
+            AvnLog.i("cleanup tmp files");
+            requestHandler.cleanupTmpFiles();
+            lastCleanup=now;
+        }
+
     }
 
     private void checkAnchor() throws JSONException {

@@ -10,7 +10,6 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -83,9 +82,8 @@ public class ScopedItemHandler implements INavRequestHandler{
         String fileName =nameToUserFileName(DirectoryRequestHandler.safeName(name,true),false);
         File of = new File(userDir, fileName);
         if (!userDir.canWrite()) throw new IOException("unable to write " + fileName);
-        FileOutputStream os = new FileOutputStream(of);
-        postData.writeTo(os);
-        os.close();
+        DirectoryRequestHandler.writeAtomic(of,postData.getStream(),ignoreExisting);
+        postData.closeInput();
         return true;
     }
 

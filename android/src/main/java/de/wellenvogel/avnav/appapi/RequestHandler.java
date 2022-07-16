@@ -771,6 +771,15 @@ public class RequestHandler {
     }
 
 
+    public void cleanupTmpFiles(){
+        for (AvnUtil.KeyValue<File> dir : typeDirs.values()){
+            try {
+                DirectoryRequestHandler.cleanupOldTmp(new File(getWorkDir(), dir.value.getPath()));
+            }catch (Exception e){
+                AvnLog.e("error cleaning up tmp files",e);
+            }
+        }
+    }
 
 
 

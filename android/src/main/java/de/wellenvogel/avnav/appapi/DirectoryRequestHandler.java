@@ -1,7 +1,9 @@
 package de.wellenvogel.avnav.appapi;
 
 import android.net.Uri;
+import android.os.Build;
 import android.support.annotation.NonNull;
+import android.telephony.AvailableNetworkInfo;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -16,11 +18,14 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.worker.GpsService;
 import de.wellenvogel.avnav.worker.Worker;
@@ -69,10 +74,10 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
 
     @Override
     public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
-        FileOutputStream os=openForWrite(name,ignoreExisting);
+        String safeName=safeName(name,true);
         if (postData == null) throw new Exception("no data");
-        postData.writeTo(os);
-        os.close();
+        writeAtomic(new File(workDir,safeName),postData.getStream(),ignoreExisting);
+        postData.closeInput();
         return true;
     }
 
@@ -268,19 +273,79 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
         return urlPrefix;
     }
 
-
+    public static String TMP_PRFX="__avn.";
     public static String safeName(String name,boolean throwError) throws Exception {
         if (name == null) throw new Exception("name is null");
+        if (name.startsWith(TMP_PRFX)) throw new Exception("name cannot start with "+TMP_PRFX);
         String safeName=name.replaceAll("[^\\w. ()+-@]","");
         if (!name.equals(safeName) && throwError) throw new Exception("illegal filename "+name);
         return safeName;
     }
 
-    private FileOutputStream openForWrite(String name, boolean overwrite) throws Exception {
-        String safeName=safeName(name,true);
-        File outFile=new File(workDir,safeName);
-        if (outFile.exists() && !overwrite) throw new Exception("file "+name+" already exists");
-        return new FileOutputStream(outFile);
+
+    static long tmpCount=0;
+
+    static synchronized long getTmpCount(){
+        tmpCount++;
+        return tmpCount;
     }
+    
+    private static File getTmpFor(File original){
+        if (original == null) return original;
+        String tmp=TMP_PRFX+Long.toString(getTmpCount())+"."+original.getName();
+        return new File(original.getParent(),tmp);
+    }
+
+    public static void writeAtomic(File out, InputStream is, boolean overwrite) throws Exception {
+        //first check to avoid useless writes
+        if (!overwrite && out.exists()) throw new Exception("File "+out+" already exists");
+        File tmp=getTmpFor(out);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Files.copy(is,tmp.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            if (overwrite) {
+                Files.move(tmp.toPath(), out.toPath(),StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);
+            }
+            else{
+                try {
+                    Files.move(tmp.toPath(), out.toPath(), StandardCopyOption.ATOMIC_MOVE);
+                } catch(Throwable t){
+                    tmp.delete();
+                    throw t;
+                }
+            }
+            is.close();
+        }
+        else{
+            FileOutputStream os=new FileOutputStream(tmp);
+            byte[] buffer=new byte[10240];
+            int rd=is.read(buffer);
+            while (rd >= 0){
+                os.write(buffer,0,rd);
+                rd=is.read(buffer);
+            }
+            os.close();
+            is.close();
+            if (! tmp.renameTo(out)){
+                tmp.delete();
+                throw new Exception("cannot rename "+tmp+" to "+out);
+            }
+        }
+    }
+
+    public static void cleanupOldTmp(File dir){
+        if (dir == null) return;
+        if (! dir.isDirectory()) return;
+        long removeTime=System.currentTimeMillis()-3600*1000;
+        for (File f:dir.listFiles()){
+            if (f.getName().startsWith(TMP_PRFX)){
+                if (f.lastModified() <= removeTime){
+                    if (! f.delete()){
+                        AvnLog.e("unable to remove tmp file "+f);
+                    }
+                }
+            }
+        }
+    }
+
 
 }

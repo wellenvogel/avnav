@@ -1,6 +1,5 @@
 package de.wellenvogel.avnav.worker;
 
-import android.content.Context;
 import android.location.Location;
 import android.net.Uri;
 import android.support.annotation.NonNull;
@@ -22,9 +21,9 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -575,12 +574,11 @@ public class RouteHandler extends DirectoryRequestHandler  {
         saveCurrentLeg();
     }
 
-    private void saveCurrentLeg() throws JSONException, IOException {
+    private void saveCurrentLeg() throws Exception {
         String data=currentLeg.toJson().toString();
         File legFile=new File(routedir,LEGFILE);
-        FileOutputStream os=new FileOutputStream(legFile);
-        os.write(data.getBytes(StandardCharsets.UTF_8));
-        os.close();
+        DirectoryRequestHandler.writeAtomic(legFile,
+                new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)),true);
     }
 
     public JSONObject getLeg() throws Exception{

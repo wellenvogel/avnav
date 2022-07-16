@@ -16,10 +16,10 @@ import org.json.JSONObject;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -27,10 +27,10 @@ import java.util.List;
 
 import de.wellenvogel.avnav.appapi.DirectoryRequestHandler;
 import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
+import de.wellenvogel.avnav.appapi.INavRequestHandler;
 import de.wellenvogel.avnav.appapi.PostVars;
 import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.main.Constants;
-import de.wellenvogel.avnav.appapi.INavRequestHandler;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 
@@ -135,6 +135,7 @@ public class ChartHandler implements INavRequestHandler {
             }
         }
         boolean modified = false;
+        final ArrayList<Chart> modifiedCharts=new ArrayList<>();
         synchronized (this) {
             //now we have all current charts - compare to the existing list and create/delete entries
             //currently we assume only one thread to change the chartlist...
@@ -143,12 +144,14 @@ public class ChartHandler implements INavRequestHandler {
                 long lastModified = chart.getLastModified();
                 if (chartList.get(url) == null) {
                     chartList.put(url, chart);
+                    modifiedCharts.add(chart);
                     modified = true;
                 } else {
                     if (chartList.get(url).getLastModified() < lastModified) {
                         modified = true;
                         chartList.get(url).close();
                         chartList.put(url, chart);
+                        modifiedCharts.add(chart);
                     }
                 }
             }
@@ -175,7 +178,7 @@ public class ChartHandler implements INavRequestHandler {
                 public void run() {
                     AvnLog.i("creating chart overviews");
                     boolean readAgain=false;
-                    for (Chart chart :chartList.values()){
+                    for (Chart chart :modifiedCharts){
                         try{
                             chart.computeOverview();
                         }catch (Throwable t){
@@ -304,17 +307,11 @@ public class ChartHandler implements INavRequestHandler {
                 && ! safeName.endsWith(XMLEXTENSION) && ! safeName.endsWith(CFG_EXTENSION))
             throw new Exception("only "+GEMFEXTENSION+" or "+MBTILESEXTENSION+" or "+XMLEXTENSION+" or "+CFG_EXTENSION+" files allowed");
         File outFile=new File(getInternalChartsDir(context),safeName);
-        if (outFile.exists() && !ignoreExisting){
-            throw new Exception("file already exists");
-        }
         if (postData == null) throw new Exception("no data in file");
-        File tmpFile=new File(outFile.getParent(),outFile.getName()+".tmp");
-        FileOutputStream os= new FileOutputStream(tmpFile);
-        postData.writeTo(os);
-        os.close();
-        boolean rt=tmpFile.renameTo(outFile);
+        DirectoryRequestHandler.writeAtomic(outFile,postData.getStream(),ignoreExisting);
+        postData.closeInput();
         updateChartList();
-        return rt;
+        return true;
     }
 
     @Override
@@ -405,9 +402,9 @@ public class ChartHandler implements INavRequestHandler {
                 if (hasChanges){
                     config.put("overlays",newOverlays);
                     numChanges++;
-                    FileOutputStream fout=new FileOutputStream(f);
-                    fout.write(config.toString(2).getBytes(StandardCharsets.UTF_8));
-                    fout.close();
+                    DirectoryRequestHandler.writeAtomic(f,
+                            new ByteArrayInputStream(config.toString(2).getBytes(StandardCharsets.UTF_8)),
+                            true);
                 }
             } catch(Exception e){
                 AvnLog.e("error reading/updating overlay config "+f.getAbsolutePath(),e);
