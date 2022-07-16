@@ -1,6 +1,7 @@
 package de.wellenvogel.avnav.appapi;
 
 import android.net.Uri;
+import android.support.annotation.NonNull;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -16,6 +17,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -173,6 +175,16 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
         }
 
         @Override
+        public int read(@NonNull byte[] b) throws IOException {
+            return is.read(b);
+        }
+
+        @Override
+        public int read(@NonNull byte[] b, int off, int len) throws IOException {
+            return is.read(b, off, len);
+        }
+
+        @Override
         public void close() throws IOException {
             super.close();
             zf.close();
@@ -191,19 +203,20 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
     }
     @Override
     public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler, String method) throws Exception {
-        String path=uri.getPath();
+        String path = uri.getPath();
         if (path == null) return null;
-        if (path.startsWith("/")) path=path.substring(1);
+        if (path.startsWith("/")) path = path.substring(1);
         if (!path.startsWith(urlPrefix)) return null;
-        path = path.substring((urlPrefix.length()+1));
+        path = path.substring((urlPrefix.length() + 1));
         String[] parts = path.split("/");
         if (parts.length < 1) return null;
-        if (method.equalsIgnoreCase("GET")) {
-            if (parts[0].endsWith(".zip") || parts[0].endsWith(".kmz")) {
-                String name = URLDecoder.decode(parts[0], "UTF-8");
-                File foundFile = findLocalFile(name);
-                if (foundFile == null) 
-                    return tryFallbackOrFail(uri, handler);
+
+        if (parts[0].endsWith(".zip") || parts[0].endsWith(".kmz")) {
+            String name = URLDecoder.decode(parts[0], "UTF-8");
+            File foundFile = findLocalFile(name);
+            if (foundFile == null)
+                return tryFallbackOrFail(uri, handler);
+            if (method.equalsIgnoreCase("GET")) {
                 ZipFile zf = new ZipFile(foundFile);
                 String entryPath = path.replaceFirst("[^/]*/", "");
                 ZipEntry entry = zf.getEntry(entryPath);
@@ -218,22 +231,33 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
                     }
                 }
 
-                if (entry == null) 
+                if (entry == null)
                     return tryFallbackOrFail(uri, handler);
-
-                return new ExtendedWebResourceResponse(entry.getSize(),
-                        RequestHandler.mimeType(entry.getName),
+                ExtendedWebResourceResponse rt = new ExtendedWebResourceResponse(entry.getSize(),
+                        RequestHandler.mimeType(entry.getName()),
                         "", new CloseHelperStream(zf.getInputStream(entry), zf));
+                rt.setDateHeader("Last-Modified", new Date(foundFile.lastModified()));
+                return rt;
+            } else {
+                //this is for head requests - AvNav only uses this to check the last-modified
+                //so we avoid reading the whole zip file each time
+                //this way we would also answer head requests for non existing entries
+                //but for the use case this should be ok
+                ExtendedWebResourceResponse rt = new ExtendedWebResourceResponse(0,
+                        RequestHandler.mimeType(path),
+                        "", new ByteArrayInputStream(new byte[0]));
+                rt.setDateHeader("Last-Modified", new Date(foundFile.lastModified()));
+                return rt;
             }
         }
-        String name= URLDecoder.decode(parts[parts.length - 1],"UTF-8");
+        String name = URLDecoder.decode(parts[parts.length - 1], "UTF-8");
         File foundFile = findLocalFile(name);
         if (foundFile != null) {
-            ExtendedWebResourceResponse rt=new ExtendedWebResourceResponse(
+            ExtendedWebResourceResponse rt = new ExtendedWebResourceResponse(
                     foundFile.length(),
                     RequestHandler.mimeType(foundFile.getName()),
-                    "", method.equalsIgnoreCase("GET")?new FileInputStream(foundFile):new ByteArrayInputStream(new byte[0]));
-            rt.setDateHeader("Last-Modified",new Date(foundFile.lastModified()));
+                    "", method.equalsIgnoreCase("GET") ? new FileInputStream(foundFile) : new ByteArrayInputStream(new byte[0]));
+            rt.setDateHeader("Last-Modified", new Date(foundFile.lastModified()));
             return rt;
         }
         return null;
