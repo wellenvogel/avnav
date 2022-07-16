@@ -253,6 +253,7 @@ public class ChartHandler implements INavRequestHandler {
         File[] files=chartDir.listFiles();
         if (files == null) return;
         for (File f : files) {
+            if (f.getName().startsWith(DirectoryRequestHandler.TMP_PRFX)) continue;
             try {
                 if (f.getName().endsWith(GEMFEXTENSION)){
                     String gemfName = f.getName();
@@ -308,7 +309,7 @@ public class ChartHandler implements INavRequestHandler {
             throw new Exception("only "+GEMFEXTENSION+" or "+MBTILESEXTENSION+" or "+XMLEXTENSION+" or "+CFG_EXTENSION+" files allowed");
         File outFile=new File(getInternalChartsDir(context),safeName);
         if (postData == null) throw new Exception("no data in file");
-        DirectoryRequestHandler.writeAtomic(outFile,postData.getStream(),ignoreExisting);
+        DirectoryRequestHandler.writeAtomic(outFile,postData.getStream(),ignoreExisting,postData.getContentLength());
         postData.closeInput();
         updateChartList();
         return true;

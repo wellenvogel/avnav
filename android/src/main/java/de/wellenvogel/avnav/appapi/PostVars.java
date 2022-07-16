@@ -16,7 +16,12 @@ public class PostVars {
     InputStream is;
     String strValue;
     boolean closed=false;
-    public long getContentLength(){ return len;}
+    public long getContentLength(){
+        if (len < 0 && strValue != null){
+            len=strValue.getBytes(StandardCharsets.UTF_8).length;
+        }
+        return len;
+    }
     public String getAsString() throws IOException {
         if (strValue != null) return strValue;
         if (is == null) throw new IOException("input closed");

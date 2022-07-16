@@ -82,7 +82,7 @@ public class ScopedItemHandler implements INavRequestHandler{
         String fileName =nameToUserFileName(DirectoryRequestHandler.safeName(name,true),false);
         File of = new File(userDir, fileName);
         if (!userDir.canWrite()) throw new IOException("unable to write " + fileName);
-        DirectoryRequestHandler.writeAtomic(of,postData.getStream(),ignoreExisting);
+        DirectoryRequestHandler.writeAtomic(of,postData.getStream(),ignoreExisting,postData.getContentLength());
         postData.closeInput();
         return true;
     }

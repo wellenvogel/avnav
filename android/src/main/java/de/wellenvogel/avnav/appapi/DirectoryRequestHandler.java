@@ -76,7 +76,7 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
     public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
         String safeName=safeName(name,true);
         if (postData == null) throw new Exception("no data");
-        writeAtomic(new File(workDir,safeName),postData.getStream(),ignoreExisting);
+        writeAtomic(new File(workDir,safeName),postData.getStream(),ignoreExisting,postData.getContentLength());
         postData.closeInput();
         return true;
     }
@@ -296,12 +296,20 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
         return new File(original.getParent(),tmp);
     }
 
-    public static void writeAtomic(File out, InputStream is, boolean overwrite) throws Exception {
+    public static long writeAtomic(File out, InputStream is, boolean overwrite) throws Exception {
+        return writeAtomic(out,is,overwrite,-1);
+    }
+    public static long writeAtomic(File out, InputStream is, boolean overwrite,long requestedLength) throws Exception {
         //first check to avoid useless writes
+        long written=0;
         if (!overwrite && out.exists()) throw new Exception("File "+out+" already exists");
         File tmp=getTmpFor(out);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Files.copy(is,tmp.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            written=Files.copy(is,tmp.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            if (requestedLength >= 0 && written != requestedLength){
+                tmp.delete();
+                throw new IOException("not all bytes written ("+written+" from "+requestedLength+")");
+            }
             if (overwrite) {
                 Files.move(tmp.toPath(), out.toPath(),StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);
             }
@@ -321,15 +329,21 @@ public class DirectoryRequestHandler extends Worker implements INavRequestHandle
             int rd=is.read(buffer);
             while (rd >= 0){
                 os.write(buffer,0,rd);
+                written+=rd;
                 rd=is.read(buffer);
             }
             os.close();
             is.close();
+            if (requestedLength >= 0 && written != requestedLength){
+                tmp.delete();
+                throw new IOException("not all bytes written ("+written+" from "+requestedLength+")");
+            }
             if (! tmp.renameTo(out)){
                 tmp.delete();
                 throw new Exception("cannot rename "+tmp+" to "+out);
             }
         }
+        return written;
     }
 
     public static void cleanupOldTmp(File dir){
