@@ -23,6 +23,7 @@ public class EditableParameter {
         public String getName();
         public JSONObject toJson() throws JSONException;
         public void checkJson(JSONObject o) throws JSONException;
+        public void addToJson(JSONObject target,JSONObject source) throws JSONException;
     }
     public static abstract class EditableParameterBase<T> implements AvnUtil.IJsonObect,EditableParameterInterface {
         public static class ConditionList extends ArrayList<AvnUtil.KeyValueList>{
@@ -83,6 +84,12 @@ public class EditableParameter {
         }
         public abstract String getType();
         abstract public T fromJson(JSONObject o) throws JSONException;
+
+        @Override
+        public void addToJson(JSONObject target,JSONObject source) throws JSONException {
+            target.put(name,fromJson(source));
+        }
+
         @Override
         public JSONObject toJson() throws JSONException {
             JSONObject rt = new JSONObject();

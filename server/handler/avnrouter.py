@@ -460,20 +460,21 @@ class AVNRouter(AVNDirectoryHandlerBase):
     except Exception as e:
       self.setInfo('alarm','unable to handle alarm %s:%s'%(name,str(e)),WorkerStatus.ERROR)
 
-  def inSegment(self,wpcourse,poscourse):
-    '''
-    check if poscourse is within +/-90° to wpcourse
-    @param wpcourse:
-    @param poscourse:
-    @return:
-    '''
-    #shift courses to avoid 360/0 handling
-    wpcourse+=720
-    poscourse+=720
-    min=wpcourse-90
-    max=wpcourse+90
-    if poscourse >= min and poscourse <= max:
-      return True
+
+  def _inQuadrant(self,courseStart,course):
+    ranges=[]
+    min=courseStart-90
+    if (min < 0):
+      ranges.append([360+min,0])
+      min=0
+    max=courseStart+90
+    if max >= 360:
+      ranges.append([0,max-360])
+      max=360
+    ranges.append([min,max])
+    for mm in ranges:
+      if mm[0] <= course and mm[1] > course:
+        return True
     return False
 
   #compute whether we are approaching the waypoint
@@ -603,7 +604,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
         else:
           courseLeg=AVNUtil.calcBearing(self.wpToLatLon(leg.getTo()),self.wpToLatLon(fromWp))
           courseCur=AVNUtil.calcBearing(self.wpToLatLon(leg.getTo()),currentLocation)
-        if self.inSegment(courseLeg,courseCur):
+        if self._inQuadrant(courseLeg,courseCur):
           AVNLog.debug("courseLeg=%d, courseCur=%d, still not passed",courseLeg,courseCur)
           self.setCurrentLeg(changeFunction=changes)
           return

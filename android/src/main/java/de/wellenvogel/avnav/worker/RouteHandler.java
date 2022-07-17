@@ -53,6 +53,7 @@ public class RouteHandler extends DirectoryRequestHandler  {
     private static final String CHILD_LEG="leg";
     private static final String CHILD_RMB="RMB";
     private static final String CHILD_APB="APB";
+    private long lastApproachTime=0;
 
     public static interface UpdateReceiver{
         public void updated();
@@ -212,14 +213,14 @@ public class RouteHandler extends DirectoryRequestHandler  {
 
     public static class RoutingLeg{
         public static String MOBNAME="MOB";
-        private RoutePoint from;
-        private RoutePoint to;
-        private Route route;
+        private RoutePoint from=null;
+        private RoutePoint to=null;
+        private Route route=null;
         private int currentTarget=-1;
         private boolean active=false;
         private double anchorDistance=-1;
         private double approachDistance=-1;
-        JSONObject jsonData;
+        JSONObject jsonData=null;
 
         public RoutePoint getFrom() {
             return from;
@@ -240,6 +241,7 @@ public class RouteHandler extends DirectoryRequestHandler  {
             return (from != null && anchorDistance>=0);
         }
         public RoutingLeg(JSONObject o) throws JSONException {
+            if (o == null) return;
             if (o.has("from")){
                 from=RoutePoint.fromJson(o.getJSONObject("from"));
             }
@@ -315,17 +317,26 @@ public class RouteHandler extends DirectoryRequestHandler  {
     private long legSequence=System.currentTimeMillis();
     private SentenceFactory factory=SentenceFactory.getInstance();
     private NmeaQueue queue;
+    private static final String M_LATE="late";
+    private static final String M_90="90";
+    private static final String M_EARLY="early";
     static EditableParameter.BooleanParameter COMPUTE_RMB=
             new EditableParameter.BooleanParameter("computeRMB", R.string.labelSettingsComputeRMB,true);
     static EditableParameter.BooleanParameter COMPUTE_APB=
             new EditableParameter.BooleanParameter("computeAPB", R.string.labelSettingsComputeAPB,true);
     static EditableParameter.BooleanParameter USE_RHUMBLINE=
             new EditableParameter.BooleanParameter("useRhumbLine",R.string.labelSettingsRhumbLine,false);
+    static EditableParameter.StringListParameter WP_MODE=
+            new EditableParameter.StringListParameter("nextWpMode",R.string.labelSettingsNextWpMode,"late",
+                    M_LATE,M_90,M_EARLY);
+    static EditableParameter.IntegerParameter WP_TIME=
+            new EditableParameter.IntegerParameter("nextWpTime",R.string.labelSettingsNextWpTime,10)
+                    .cloneCondition(new AvnUtil.KeyValue(WP_MODE.name,M_EARLY));
     public RouteHandler(File routedir,GpsService ctx,NmeaQueue queue) throws IOException {
         super(RequestHandler.TYPE_ROUTE,ctx,routedir,"route",null);
         this.routedir=routedir;
         updateReceiver=ctx;
-        parameterDescriptions.addParams(COMPUTE_RMB, COMPUTE_APB,USE_RHUMBLINE);
+        parameterDescriptions.addParams(COMPUTE_RMB, COMPUTE_APB,USE_RHUMBLINE,WP_MODE,WP_TIME);
         status.canEdit=true;
         this.queue=queue;
     }
@@ -537,13 +548,16 @@ public class RouteHandler extends DirectoryRequestHandler  {
         }
         return rt;
     }
-
+    static EditableParameter.ParameterList sendParameters=
+            new EditableParameter.ParameterList(USE_RHUMBLINE,WP_MODE,WP_TIME);
     @Override
     protected JSONObject handleSpecialApiRequest(String command, Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
         if (command.equals("getleg")){
             JSONObject rt=getLeg();
             JSONObject clone=new JSONObject(rt.toString());
-            clone.put("useRhumbLine",USE_RHUMBLINE.fromJson(parameters));
+            for (EditableParameter.EditableParameterInterface p:sendParameters) {
+                p.addToJson(clone,parameters);
+            }
             return clone;
         }
         if (command.equals("setleg")){
@@ -561,42 +575,72 @@ public class RouteHandler extends DirectoryRequestHandler  {
 
     public void setLeg(String data) throws Exception{
         AvnLog.i("setLeg");
-        String old=(currentLeg!=null)?currentLeg.toJson().toString():null;
+        RoutingLeg newLeg=new RoutingLeg(new JSONObject(data));
+        JSONObject old=getCurrentLegJson();
         if (old == null){
             if (data != null) incrementLegSequence();
         }
         else {
-            if (!old.equals(data)) {
+            if (!old.toString().equals(newLeg.toJson().toString())) {
                 incrementLegSequence();
             }
         }
-        currentLeg =(data != null)?new RoutingLeg(new JSONObject(data)):null;
-        saveCurrentLeg();
+        if (data == null) unsetLeg();
+        else {
+            setCurrentLeg(newLeg);
+            saveCurrentLeg(newLeg);
+        }
     }
 
-    private void saveCurrentLeg() throws Exception {
-        String data=currentLeg.toJson().toString();
+    private void saveCurrentLeg(RoutingLeg leg) throws Exception {
+        String data=leg.toJson().toString();
         File legFile=new File(routedir,LEGFILE);
         DirectoryRequestHandler.writeAtomic(legFile,
                 new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)),true);
     }
 
+    private RoutingLeg getCurrentLeg() throws JSONException {
+        synchronized (legSequenceLock){
+            if (currentLeg == null) {
+                return currentLeg;
+            }
+            return new RoutingLeg(currentLeg.getJsonData());
+        }
+    }
+    private JSONObject getCurrentLegJson() throws JSONException {
+        synchronized (legSequenceLock){
+            if (currentLeg == null) {
+                return null;
+            }
+            return currentLeg.getJsonData();
+        }
+    }
+    private void setCurrentLeg(RoutingLeg leg) throws JSONException {
+        synchronized (legSequenceLock){
+            if (leg == null) currentLeg=null;
+            else currentLeg=new RoutingLeg(leg.getJsonData());
+            legSequence++;
+        }
+    }
+
     public JSONObject getLeg() throws Exception{
-        if (currentLeg != null) return currentLeg.getJsonData();
-        JSONObject rt=new JSONObject();
+        JSONObject leg=getCurrentLegJson();
+        if (leg != null) return leg;
+        JSONObject rt=null;
         File legFile=new File(routedir,LEGFILE);
-        boolean hasError=false;
         long maxlegsize=MAXROUTESIZE+2000;
+        RoutingLeg newLeg=null;
         try{
             rt=AvnUtil.readJsonFile(legFile,maxlegsize);
-            currentLeg = new RoutingLeg(rt);
+            newLeg = new RoutingLeg(rt);
         }
         catch (Exception e){
             AvnLog.e("error reading leg file: ",e);
-            currentLeg=new RoutingLeg(new JSONObject());
-            rt=currentLeg.toJson();
-            saveCurrentLeg();
+            newLeg=new RoutingLeg(new JSONObject());
+            rt=newLeg.toJson();
+            saveCurrentLeg(newLeg);
         }
+        setCurrentLeg(newLeg);
         return rt;
     }
 
@@ -604,8 +648,10 @@ public class RouteHandler extends DirectoryRequestHandler  {
         AvnLog.i("unset leg");
         File legFile=new File(routedir,LEGFILE);
         if (legFile.isFile()) legFile.delete();
-        if (currentLeg != null) incrementLegSequence();
-        currentLeg =null;
+        synchronized (legSequenceLock) {
+            if (currentLeg != null) legSequence++;
+            currentLeg = null;
+        }
     }
 
     public long getLegSequence(){
@@ -648,7 +694,6 @@ public class RouteHandler extends DirectoryRequestHandler  {
                 lastRMBfrom = new RoutePoint(leg.from);
                 lastRMBto = new RoutePoint(leg.to);
             }
-            if (destBearing < 0) destBearing = 360 + destBearing;
             Direction steerTo=(xte > 0) ? Direction.LEFT : Direction.RIGHT;
             xte = Math.abs(xte);
             if (xte > 9.99) xte = 9.99;
@@ -675,7 +720,6 @@ public class RouteHandler extends DirectoryRequestHandler  {
                 apb.setBearingPositionToDestinationTrue(true);
                 apb.setBearingPositionToDestination(destBearing);
                 double startBearing=AvnUtil.bearingTo(start,target,useRhumbLine);
-                if (startBearing < 0) startBearing+=360;
                 apb.setBearingOriginToDestination(startBearing);
                 apb.setBearingPositionToDestinationTrue(true);
                 apb.setCrossTrackError(xte);
@@ -703,9 +747,38 @@ public class RouteHandler extends DirectoryRequestHandler  {
         }
         return rt;
     }
-    public boolean handleApproach(Location currentPosition){
+    private static class MinMax{
+        public double min;
+        public double max;
+        public MinMax(double min,double max){
+            this.min=min;
+            this.max=max;
+        }
+        boolean contains(double value){
+            return value >= min && value < max;
+        }
+    }
+    private boolean inQuadrant(double course,double compare){
+        ArrayList<MinMax> ranges=new ArrayList<>();
+        double min=course-90;
+        if (min < 0){
+            ranges.add(new MinMax(360+min,360));
+            min=0;
+        }
+        double max=course+90;
+        if (max >= 360){
+            ranges.add(new MinMax(0,max-360));
+            max=360;
+        }
+        ranges.add(new MinMax(min,max));
+        for (MinMax mm:ranges){
+            if (mm.contains(compare)) return true;
+        }
+        return false;
+    }
+    public boolean handleApproach(Location currentPosition) throws JSONException {
         boolean useRhumbLine=useRhumbLine();
-        RoutingLeg leg=this.currentLeg;
+        RoutingLeg leg=this.getCurrentLeg();
         if (leg == null || ! leg.active ||currentPosition == null ) {
             status.setChildStatus(CHILD_LEG, WorkerStatus.Status.INACTIVE,"no leg");
             status.setChildStatus(CHILD_RMB, WorkerStatus.Status.INACTIVE,"no RMB");
@@ -725,59 +798,87 @@ public class RouteHandler extends DirectoryRequestHandler  {
         else{
             status.setChildStatus(CHILD_LEG, WorkerStatus.Status.NMEA,String.format("to %s",leg.to.toString()));
         }
-        double currentDistance=AvnUtil.distance(leg.to.toLocation(),currentPosition,useRhumbLine);
-        if (currentDistance > leg.approachDistance){
+        String mode=WP_MODE.fromJson(parameters);
+        int wpTime=WP_TIME.fromJson(parameters);
+        boolean switchWp = false;
+        double currentDistance = AvnUtil.distance(leg.to.toLocation(), currentPosition, useRhumbLine);
+        if (currentDistance > leg.approachDistance) {
             resetLast();
+            lastApproachTime=0;
             return false;
         }
-        double tolerance=leg.approachDistance/10; //some tolerance for positions
-        int nextIdx=-1;
+        if (lastApproachTime == 0) lastApproachTime=System.currentTimeMillis();
+        double tolerance = leg.approachDistance / 10; //some tolerance for positions
+        int nextIdx = -1;
         if (leg.getRoute() != null) {
-            nextIdx=leg.getRoute().getNextTarget(leg.currentTarget);
+            nextIdx = leg.getRoute().getNextTarget(leg.currentTarget);
         }
-        double nextDistance=0;
-        RoutePoint nextTarget=null;
-        if (nextIdx >= 0 ) {
+        RoutePoint nextTarget = null;
+        if (nextIdx >= 0) {
             nextTarget = leg.getRoute().points.get(nextIdx);
-            nextDistance = AvnUtil.distance(nextTarget.toLocation(),currentPosition,useRhumbLine);
         }
-        if (lastDistanceToCurrent == null || lastDistanceToNext == null){
-            //first time..
-            lastDistanceToCurrent=currentDistance;
-            lastDistanceToNext=nextDistance;
-            return true;
-        }
-        if (currentDistance <= (lastDistanceToCurrent + tolerance)){
-            //still approaching wp
-            if (currentDistance <= lastDistanceToCurrent) {
+        if (mode.equals(M_LATE)) {
+            double nextDistance = 0;
+            if (nextTarget != null) {
+                nextDistance = AvnUtil.distance(nextTarget.toLocation(), currentPosition, useRhumbLine);
+            }
+            if (lastDistanceToCurrent == null || lastDistanceToNext == null) {
+                //first time..
                 lastDistanceToCurrent = currentDistance;
                 lastDistanceToNext = nextDistance;
+                return true;
             }
-            return true;
-        }
-        if (nextIdx >= 0 && (nextDistance > (lastDistanceToNext - tolerance))){
-            //still not approaching next wp
-            if (nextDistance > lastDistanceToNext) {
-                lastDistanceToCurrent = currentDistance;
-                lastDistanceToNext = nextDistance;
+            if (currentDistance <= (lastDistanceToCurrent + tolerance)) {
+                //still approaching wp
+                if (currentDistance <= lastDistanceToCurrent) {
+                    lastDistanceToCurrent = currentDistance;
+                    lastDistanceToNext = nextDistance;
+                }
+                return true;
             }
+            if (nextIdx >= 0 && (nextDistance > (lastDistanceToNext - tolerance))) {
+                //still not approaching next wp
+                if (nextDistance > lastDistanceToNext) {
+                    lastDistanceToCurrent = currentDistance;
+                    lastDistanceToNext = nextDistance;
+                }
+                return true;
+            }
+            switchWp = true;
+        }
+        if (mode.equals(M_EARLY)){
+            if (lastApproachTime != 0 && (lastApproachTime+ 1000*wpTime) < System.currentTimeMillis()){
+                switchWp=true;
+            }
+        }
+        if (mode.equals(M_90)){
+            double courseStart=AvnUtil.bearingTo(leg.to.toLocation(),leg.from.toLocation(),useRhumbLine);
+            double courseCur=AvnUtil.bearingTo(leg.to.toLocation(),currentPosition,useRhumbLine);
+            if (!inQuadrant(courseStart,courseCur)){
+                switchWp=true;
+            }
+        }
+        if (switchWp){
+            AvnLog.i("switching to next wp mode="+mode+", nextIdx="+nextIdx);
+            if (nextTarget == null) {
+                //switch of routing
+                leg.active = false;
+            } else {
+                //switch to next wp
+                leg.currentTarget = nextIdx;
+                leg.from = leg.to;
+                leg.to = nextTarget;
+            }
+            resetLast();
+            try {
+                setCurrentLeg(leg);
+                saveCurrentLeg(leg);
+            } catch (Exception e) {
+                AvnLog.e("error saving current leg ", e);
+            }
+        }
+        else{
             return true;
-        }
-        if (nextTarget == null){
-            //switch of routing
-            leg.active=false;
-        }
-        else {
-            //switch to next wp
-            leg.currentTarget = nextIdx;
-            leg.from = leg.to;
-            leg.to = nextTarget;
-        }
-        resetLast();
-        try {
-            saveCurrentLeg();
-        } catch (Exception e) {
-            AvnLog.e("error saving current leg ",e);
         }
         return false;
     }

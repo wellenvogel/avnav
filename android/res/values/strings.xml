@@ -111,5 +111,7 @@
     <string name="uploadSettings">Select a settings file to upload</string>
     <string name="labelSettingsConnAlarm">Sound for connectionLost alarm</string>
     <string name="labelSettingsRhumbLine">use rhumb lines (else: great circle)</string>
+    <string name="labelSettingsNextWpMode">when to switch to next waypoint\nearly: xx seconds after wp alarm\n90: we are at +/-90° from wp course\nlate: old behavior</string>
+    <string name="labelSettingsNextWpTime">seconds after approach to switch wp (5...100) in mode early</string>
 
 </resources>

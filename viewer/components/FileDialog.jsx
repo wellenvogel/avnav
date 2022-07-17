@@ -759,7 +759,7 @@ export const showFileDialog=(history,item,opt_doneCallback,opt_checkExists)=>{
         }
         if (action === 'edit'){
             if (item.type === 'route'){
-                RouteHandler.fetchRoute(item.name,false,
+                RouteHandler.fetchRoute(item.name,!item.server,
                     (route)=>{
                         let editor=new RouteEdit(RouteEdit.MODES.EDIT);
                         editor.setNewRoute(route,0);

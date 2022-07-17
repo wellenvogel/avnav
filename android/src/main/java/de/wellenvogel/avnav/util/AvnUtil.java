@@ -336,7 +336,10 @@ public class AvnUtil {
         return (brg+360)%360.0;
     }
     public static double bearingTo(Location start,Location end, boolean useRhumbLine){
-        if (! useRhumbLine) return start.bearingTo(end);
+        if (! useRhumbLine) {
+            double rt=start.bearingTo(end);
+            if (rt < 0) rt=360+rt;
+        }
         return rhumbLineBearing(start,end);
     }
 

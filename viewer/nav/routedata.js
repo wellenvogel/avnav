@@ -542,7 +542,7 @@ RouteData.prototype._listRoutesLocal=function(){
             rtinfo=new routeobjects.RouteInfo(this._ensureGpx(routeName));
             try {
                 route=new routeobjects.Route();
-                route.fromJsonString(LocalStorage.getItem(STORAGE_NAMES.ROUTE,name));
+                route.fromJsonString(LocalStorage.getItem(STORAGE_NAMES.ROUTE,routeName));
                 if (route.points) rtinfo.numpoints=route.points.length;
                 rtinfo.length=route.computeLength(0,useRhumbLine);
                 rtinfo.time=route.time;
@@ -640,7 +640,7 @@ RouteData.prototype._downloadRoute=function (name,okcallback,opt_errorcallback){
  */
 RouteData.prototype.fetchRoute=function(name,localOnly,okcallback,opt_errorcallback){
     let route;
-    if (localOnly || ! this.connectMode){
+    const loadLocal=(etxt)=>{
         route=this._loadRoute(name,true);
         if (route){
             setTimeout(function(){
@@ -649,28 +649,49 @@ RouteData.prototype.fetchRoute=function(name,localOnly,okcallback,opt_errorcallb
         }
         else if (opt_errorcallback){
             setTimeout(function(){
-                opt_errorcallback(name);
+                opt_errorcallback(etxt+": "+name);
             },0);
         }
-        return;
     }
-    this._downloadRoute(name,(route)=>{
+    if (! localOnly){
+        this._downloadRoute(name,(route)=>{
             route.server=true;
             this._saveRouteLocal(route,true);
             if (okcallback){
                 okcallback(route);
             }
         },(error)=>{
-            if (opt_errorcallback){
-                opt_errorcallback(error);
-            }
+            loadLocal("unable to fetch from server and locally");
         });
+    }
+    else{
+        loadLocal("unable to fetch locally");
+    }
+
 };
 
 /*---------------------------------------------------------
  routing (next wp...)
  ----------------------------------------------------------*/
-
+RouteData.prototype._inQuadrant=function(courseStart,course){
+    let ranges=[];
+    let min=courseStart-90;
+    if (min< 0){
+        ranges.push([360+min,360]);
+        min=0;
+    }
+    let max=courseStart+90;
+    if (max >= 360){
+        ranges.push([0,max-360]);
+        max=360;
+    }
+    ranges.push([min,max]);
+    for (let i in ranges){
+        let mm=ranges[i];
+        if (mm[0] <= course && mm[1]> course) return true;
+    }
+    return false;
+};
 /**
  * @private
  * check if we have to switch to the next WP
@@ -722,9 +743,7 @@ RouteData.prototype._checkNextWp=function(){
                         target.rhumbBearingTo(start):target.initialBearingTo(start);
                     let courseCur=useRhumbLine?
                         target.rhumbBearingTo(cur):target.initialBearingTo(cur);
-                    courseCur+=720;
-                    courseFrom+=720;
-                    if ((courseFrom-90) > courseCur || courseCur > (courseFrom+90)){
+                    if (! this._inQuadrant(courseFrom,courseCur)){
                         //90 reached
                         doSwitch=true
                     }

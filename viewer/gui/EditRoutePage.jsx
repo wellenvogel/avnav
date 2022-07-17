@@ -124,6 +124,7 @@ class EditRouteDialog extends React.Component{
     save(copy){
         this.props.closeCallback();
         let oldName=this.props.route.name;
+        let oldServer=this.state.route.server;
         if (this.state.nameChanged){
             this.state.route.name=this.state.name;
         }
@@ -145,7 +146,11 @@ class EditRouteDialog extends React.Component{
                 Toast("unable to copy to active route");
                 return;
             }
-            editor.setNewRoute(this.state.route)
+            let newRoute=this.state.route.clone();
+            if (newRoute.server && ! globalStore.getData(keys.properties.connectedMode)){
+                newRoute.server=false;
+            }
+            editor.setNewRoute(newRoute);
         }
         if (! copy && this.state.nameChanged){
             RouteHandler.deleteRoute(oldName,
@@ -155,7 +160,9 @@ class EditRouteDialog extends React.Component{
                 (error)=>{
                     this.done();
                     Toast(error);
-                })
+                },
+                !oldServer
+                )
         }
     }
     done(){
@@ -178,7 +185,9 @@ class EditRouteDialog extends React.Component{
                     },
                     (error) => {
                         Toast(error)
-                    })
+                    },
+                    !this.state.route.server)
+
             })
             .catch(() => {
             })

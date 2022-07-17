@@ -83,7 +83,7 @@ class LocalStorage{
     }
     listByPrefix(prefix){
         if (! this.impl) return [];
-        let realName=this.getRealName(name);
+        let realName=this.getRealName(prefix);
         if (! realName) return [];
         let len=realName.length;
         let rt=[];
