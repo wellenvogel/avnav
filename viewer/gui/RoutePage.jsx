@@ -280,10 +280,10 @@ class RoutePage extends React.Component{
         if (currentName != globalStore.getData(keys.gui.routepage.initialName,"") ){
             //check if a route with this name already exists
             RouteHandler.fetchRoute(currentName,!current.server,
-                function(data){
+                (data)=>{
                     Toast("route with name "+currentName+" already exists");
                 },
-                function(er){
+                (er)=>{
                     if(storeRoute(current.clone(),startNav)) this.props.history.pop();
                 });
             return;
