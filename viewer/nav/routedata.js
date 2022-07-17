@@ -14,6 +14,7 @@ import Requests from '../util/requests.js';
 import assign from 'object-assign';
 import base from '../base.js';
 import LocalStorage, {STORAGE_NAMES} from '../util/localStorageManager';
+import LatLon from 'geodesy/latlon-spherical';
 
 const activeRoute=new RoutEdit(RoutEdit.MODES.ACTIVE);
 const editingRoute=new RoutEdit(RoutEdit.MODES.EDIT);
@@ -170,7 +171,11 @@ let RouteData=function(){
      * @type {number}
      */
     this.lastDistanceToNext=-1;
-
+    /**
+     * last start time for approach (for early switch handling)
+     * @type {undefined}
+     */
+    this.lastApproachStarted=undefined;
     /**
      * @private
      * @type {Formatter}
@@ -692,55 +697,90 @@ RouteData.prototype._checkNextWp=function(){
             if (dst.dts <= approach) {
                 data.leg.approach = true;
                 if (!data.leg.hasRoute()){
-                    return data.leg.approach != lastApproach;
+                    return data.leg.approach !== lastApproach;
                 }
-                let nextDst = new navobjects.Distance();
-                if (nextWp) {
-                    nextDst = NavCompute.computeDistance(boat, nextWp,useRhumbLine);
+                let now=(new Date()).getTime();
+                if (! lastApproach){
+                    this.lastApproachStarted=now;
                 }
-                if (this.lastDistanceToCurrent < 0 || this.lastDistanceToNext < 0) {
-                    //seems to be the first time
-                    this.lastDistanceToCurrent = dst.dts;
-                    this.lastDistanceToNext = nextDst.dts;
-                    return true;
+                let mode=globalStore.getData(keys.nav.routeHandler.nextWpMode,'late');
+                let doSwitch=false;
+                if (mode === 'early'){
+                    if (! this.lastApproachStarted || ! nextWp){
+                        return data.leg.approach !== lastApproach;
+                    }
+                    let wpTime=globalStore.getData(keys.nav.routeHandler.nextWpTime,10);
+                    if ((this.lastApproachStarted+1000*wpTime) <= now){
+                        doSwitch=true;
+                    }
                 }
-                //check if the distance to own wp increases and to the nex decreases
-                let diffcurrent = dst.dts - this.lastDistanceToCurrent;
-                if (diffcurrent <= tolerance) {
-                    //still decreasing
-                    if (diffcurrent <= 0) {
+                if (mode === '90'){
+                    let start=new LatLon(data.leg.from.lat,data.leg.from.lon);
+                    let cur=new LatLon(boat.lat,boat.lon);
+                    let target=new LatLon(data.leg.to.lat,data.leg.to.lon);
+                    let courseFrom=useRhumbLine?
+                        target.rhumbBearingTo(start):target.initialBearingTo(start);
+                    let courseCur=useRhumbLine?
+                        target.rhumbBearingTo(cur):target.initialBearingTo(cur);
+                    courseCur+=720;
+                    courseFrom+=720;
+                    if ((courseFrom-90) > courseCur || courseCur > (courseFrom+90)){
+                        //90 reached
+                        doSwitch=true
+                    }
+                }
+                if (mode === 'late') {
+                    let nextDst = new navobjects.Distance();
+                    if (nextWp) {
+                        nextDst = NavCompute.computeDistance(boat, nextWp, useRhumbLine);
+                    }
+                    if (this.lastDistanceToCurrent < 0 || this.lastDistanceToNext < 0) {
+                        //seems to be the first time
                         this.lastDistanceToCurrent = dst.dts;
                         this.lastDistanceToNext = nextDst.dts;
+                        return true;
                     }
-                    return true;
-                }
-                let diffnext = nextDst.dts - this.lastDistanceToNext;
-                if (nextWp && (diffnext > -tolerance)) {
-                    //increases to next
-                    if (diffnext > 0) {
-                        this.lastDistanceToCurrent = dst.dts;
-                        this.lastDistanceToNext = nextDst.dts;
+                    //check if the distance to own wp increases and to the nex decreases
+                    let diffcurrent = dst.dts - this.lastDistanceToCurrent;
+                    if (diffcurrent <= tolerance) {
+                        //still decreasing
+                        if (diffcurrent <= 0) {
+                            this.lastDistanceToCurrent = dst.dts;
+                            this.lastDistanceToNext = nextDst.dts;
+                        }
+                        return true;
                     }
-                    return true;
+                    let diffnext = nextDst.dts - this.lastDistanceToNext;
+                    if (nextWp && (diffnext > -tolerance)) {
+                        //increases to next
+                        if (diffnext > 0) {
+                            this.lastDistanceToCurrent = dst.dts;
+                            this.lastDistanceToNext = nextDst.dts;
+                        }
+                        return true;
+                    }
+                    doSwitch=true;
                 }
-                //should we wait for some time???
-                if (nextWp) {
-                    data.leg.from=data.leg.to;
-                    data.leg.to = nextWp;
-                    base.log("switching to next WP");
-                    this.lastDistanceToCurrent=-1;
-                    this.lastDistanceToNext=-1;
-                    data.leg.approach=false;
-                }
-                else {
-                    window.setTimeout(()=> {
-                        this.routeOff();
-                    },0);
-                    base.log("end of route reached");
+                if (doSwitch) {
+                    //should we wait for some time???
+                    if (nextWp) {
+                        data.leg.from = data.leg.to;
+                        data.leg.to = nextWp;
+                        base.log("switching to next WP");
+                        this.lastDistanceToCurrent = -1;
+                        this.lastDistanceToNext = -1;
+                        data.leg.approach = false;
+                    } else {
+                        window.setTimeout(() => {
+                            this.routeOff();
+                        }, 0);
+                        base.log("end of route reached");
+                    }
                 }
             }
             else {
                 data.leg.approach = false;
+                this.lastApproachStarted=undefined;
                 return data.leg.approach != lastApproach;
             }
         } catch (ex) {
@@ -764,10 +804,13 @@ RouteData.prototype._handleLegResponse = function (serverData) {
     if (!serverData) {
         return false;
     }
-    if (serverData.useRhumbLine !== undefined){
-        globalStore.storeData(keys.nav.routeHandler.useRhumbLine,serverData.useRhumbLine);
-        delete serverData.useRhumbLine;
-    }
+    const configKeys=['useRhumbLine','nextWpMode','nextWpTime'];
+    configKeys.forEach((k) => {
+        if (serverData[k] !== undefined) {
+            globalStore.storeData(keys.nav.routeHandler[k], serverData[k]);
+            delete serverData[k];
+        }
+    })
     this.routeErrors = 0;
     if (!this.connectMode) return false;
     let nleg = new routeobjects.Leg();

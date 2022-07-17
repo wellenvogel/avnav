@@ -225,6 +225,13 @@ class AVNRouter(AVNDirectoryHandlerBase):
     return "AVNRouter"
   P_RHUMBLINE=WorkerParameter('useRhumbLine',False,type=WorkerParameter.T_BOOLEAN,
                               description='use rhumb lines for courses (otherwise great circle)')
+  P_WPMODE=WorkerParameter('nextWpMode','late',type=WorkerParameter.T_SELECT,
+                           description='when to switch to next waypoint\nearly: xx seconds after wp alarm\n90: we are at +/-90° from wp course\nlate: old behavior',
+                           rangeOrList=['early','90','late'])
+  P_WPTIME=WorkerParameter('nextWpTime',10,type=WorkerParameter.T_NUMBER,
+                           description='seconds after approach to switch wp (5...100) in mode early',
+                           condition=[{P_WPMODE.name:'early'}],
+                           rangeOrList=[5,100])
   @classmethod
   def getConfigParam(cls, child=None):
     if child is None:
@@ -238,7 +245,9 @@ class AVNRouter(AVNDirectoryHandlerBase):
                           description='if set we compute AP control data'),
           WorkerParameter("computeAPB",False,type=WorkerParameter.T_BOOLEAN,
                           description='if set to true, compute APB taking True course as magnetic!'),
-          cls.P_RHUMBLINE
+          cls.P_RHUMBLINE,
+          cls.P_WPMODE,
+          cls.P_WPTIME
           ]
       return rt
     return None
@@ -278,6 +287,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
     self.WpNr = 0
     self.__legLock=threading.Lock()
     self.__writeLegLock=threading.Lock() #alayws lock this first!
+    self.approachStarted=None
 
 
 
@@ -372,6 +382,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
     nonexist=False
     modeText='rhumb line' if self.P_RHUMBLINE.fromDict(self.param) else 'great circle'
     self.setInfo('mode',"%s"%(modeText),WorkerStatus.NMEA)
+    self.setInfo('wpswitch',"%s"%self.P_WPMODE.fromDict(self.param),WorkerStatus.NMEA)
     with self.__writeLegLock:
       if os.path.exists(self.currentLegFileName):
         newTime=os.stat(self.currentLegFileName).st_mtime
@@ -448,6 +459,23 @@ class AVNRouter(AVNDirectoryHandlerBase):
       self.setInfo('alarm',"%s alarm %s"%('set' if start else 'unset',name),WorkerStatus.NMEA)
     except Exception as e:
       self.setInfo('alarm','unable to handle alarm %s:%s'%(name,str(e)),WorkerStatus.ERROR)
+
+  def inSegment(self,wpcourse,poscourse):
+    '''
+    check if poscourse is within +/-90° to wpcourse
+    @param wpcourse:
+    @param poscourse:
+    @return:
+    '''
+    #shift courses to avoid 360/0 handling
+    wpcourse+=720
+    poscourse+=720
+    min=wpcourse-90
+    max=wpcourse+90
+    if poscourse >= min and poscourse <= max:
+      return True
+    return False
+
   #compute whether we are approaching the waypoint
   def computeApproach(self):
     leg=self.getCurrentLeg()
@@ -474,6 +502,8 @@ class AVNRouter(AVNDirectoryHandlerBase):
     if lat is None or lon is None:
       self.startStopAlarm(False,self.ALARMS.waypoint)
       return
+    switchMode=self.P_WPMODE.fromDict(self.param)
+    switchTime=self.P_WPTIME.fromDict(self.param)
     currentLocation=(lat,lon)
     dst=None
     if self.useRhumbLine():
@@ -487,6 +517,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
           return leg
         leg.setApproach(False)
         return leg
+      self.approachStarted=None
       self.setCurrentLeg(changeFunction=unsetApproach)
       self.startStopAlarm(False,self.ALARMS.waypoint)
       self.lastDistanceToCurrent=None
@@ -494,6 +525,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
       return
     if self.activatedAlarms.get(self.ALARMS.waypoint) is None:
       self.startStopAlarm(True, self.ALARMS.waypoint)
+      self.approachStarted=time.time()
     #we have approach
     def setApproach(leg,x):
       if not leg:
@@ -520,33 +552,63 @@ class AVNRouter(AVNDirectoryHandlerBase):
         AVNLog.debug("already at last WP of route %d",(nextWpNum-1))
         hasNextWp=False
     if hasNextWp:
+      if switchMode == 'early':
+        if self.approachStarted is not None:
+          now=time.time()
+          if self.approachStarted > now:
+            self.approachStarted=now
+          if self.approachStarted > (now - switchTime):
+            self.setCurrentLeg(changeFunction=changes)
+            return
+        else:
+          self.setCurrentLeg(changeFunction=changes)
+          return
       nextWp=route['points'][nextWpNum]
-      nextDistance=None
-      if self.useRhumbLine():
-        nextDistance=AVNUtil.distanceRhumbLineM(currentLocation,self.wpToLatLon(nextWp))
-      else:
-        nextDistance = AVNUtil.distanceM(currentLocation, self.wpToLatLon(nextWp))
-      if self.lastDistanceToNext is None or self.lastDistanceToNext is None:
-          #first time in approach
-          self.lastDistanceToNext=nextDistance
-          self.lastDistanceToCurrent=dst
+      if switchMode == 'late':
+        nextDistance=None
+        if self.useRhumbLine():
+          nextDistance=AVNUtil.distanceRhumbLineM(currentLocation,self.wpToLatLon(nextWp))
+        else:
+          nextDistance = AVNUtil.distanceM(currentLocation, self.wpToLatLon(nextWp))
+        if self.lastDistanceToNext is None or self.lastDistanceToNext is None:
+            #first time in approach
+            self.lastDistanceToNext=nextDistance
+            self.lastDistanceToCurrent=dst
+            self.setCurrentLeg(changeFunction=changes)
+            return
+          #check if the distance to own wp increases and to the next decreases
+        diffcurrent=dst-self.lastDistanceToCurrent
+        if (diffcurrent <= 0):
+            #still decreasing
+            self.lastDistanceToCurrent=dst
+            self.lastDistanceToNext=nextDistance
+            self.setCurrentLeg(changeFunction=changes)
+            return
+        diffnext=nextDistance-self.lastDistanceToNext
+        if (diffnext > 0):
+            #increases to next
+            self.lastDistanceToCurrent=dst
+            self.lastDistanceToNext=nextDistance
+            self.setCurrentLeg(changeFunction=changes)
+            return
+      if switchMode == '90':
+        fromWp=leg.getFrom()
+        if fromWp is None:
+          AVNLog.debug("no fromWp in leg")
           self.setCurrentLeg(changeFunction=changes)
           return
-        #check if the distance to own wp increases and to the next decreases
-      diffcurrent=dst-self.lastDistanceToCurrent
-      if (diffcurrent <= 0):
-          #still decreasing
-          self.lastDistanceToCurrent=dst
-          self.lastDistanceToNext=nextDistance
+        if self.useRhumbLine():
+          courseLeg=AVNUtil.calcBearingRhumbLine(self.wpToLatLon(leg.getTo()),self.wpToLatLon(fromWp))
+          courseCur=AVNUtil.calcBearingRhumbLine(self.wpToLatLon(leg.getTo()),currentLocation)
+        else:
+          courseLeg=AVNUtil.calcBearing(self.wpToLatLon(leg.getTo()),self.wpToLatLon(fromWp))
+          courseCur=AVNUtil.calcBearing(self.wpToLatLon(leg.getTo()),currentLocation)
+        if self.inSegment(courseLeg,courseCur):
+          AVNLog.debug("courseLeg=%d, courseCur=%d, still not passed",courseLeg,courseCur)
           self.setCurrentLeg(changeFunction=changes)
           return
-      diffnext=nextDistance-self.lastDistanceToNext
-      if (diffnext > 0):
-          #increases to next
-          self.lastDistanceToCurrent=dst
-          self.lastDistanceToNext=nextDistance
-          self.setCurrentLeg(changeFunction=changes)
-          return
+        else:
+          AVNLog.debug("90° from wp")
     else:
       AVNLog.info("last WP of route reached, switch of routing")
       def unsetActive(leg,x):
@@ -692,14 +754,15 @@ class AVNRouter(AVNDirectoryHandlerBase):
     data=list(self.itemList.values())
     rt = AVNUtil.getReturnData(items=data)
     return rt
-  RL_PARAM='useRhumbLine'
   def handleSpecialApiRequest(self,command,requestparam,handler):
     command=AVNUtil.getHttpRequestParam(requestparam, 'command',True)
     if (command == 'getleg'):
       if self.currentLeg is None:
         return {}
       legData=self.currentLeg.getJson().copy()
-      legData[self.RL_PARAM]=self.useRhumbLine()
+      legData[self.P_RHUMBLINE.name]=self.useRhumbLine()
+      legData[self.P_WPMODE.name]=self.P_WPMODE.fromDict(self.param)
+      legData[self.P_WPTIME.name]=self.P_WPTIME.fromDict(self.param)
       return legData
     if (command == 'unsetleg'):
       self.setCurrentLeg(None)
@@ -712,11 +775,13 @@ class AVNRouter(AVNDirectoryHandlerBase):
         if data is None:
           raise Exception("missing leg data for setleg")
       legData=json.loads(data)
-      if self.RL_PARAM in legData:
-        try:
-          del legData[self.RL_PARAM]
-        except:
-          pass
+      rmValues=[self.P_WPTIME.name,self.P_WPMODE.name,self.P_RHUMBLINE.name]
+      for name in rmValues:
+        if name in legData:
+          try:
+            del legData[name]
+          except:
+            pass
       self.setCurrentLeg(AVNRoutingLeg(legData))
       self.wakeUp()
       return {'status':'OK'}

@@ -184,6 +184,8 @@ let keys={
             editingRoute:K,
             editingIndex: K,
             useRhumbLine: K,
+            nextWpMode: new D("switch mode: early, 90, late"),
+            nextWpTime: new D("switch time for mode early"),
             currentLeg: new D("the current leg used for routing"),
             currentIndex: new D("the index when working directly on the active route (currentLeg)")
         },
