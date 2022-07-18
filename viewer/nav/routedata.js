@@ -710,7 +710,7 @@ RouteData.prototype._checkNextWp=function(){
         let useRhumbLine=globalStore.getData(keys.nav.routeHandler.useRhumbLine);
         let nextWpNum = data.leg.getCurrentTargetIdx() + 1;
         let nextWp = data.route?data.route.getPointAtIndex(nextWpNum):undefined;
-        let approach = globalStore.getData(keys.properties.routeApproach) + 0;
+        let approach = data.leg.approachDistance;
         let tolerance = approach / 10; //we allow some position error...
         try {
             let dst = NavCompute.computeDistance(boat, data.leg.to,useRhumbLine);
