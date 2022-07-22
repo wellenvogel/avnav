@@ -1,7 +1,5 @@
 package de.wellenvogel.avnav.worker;
 
-import android.app.Application;
-import android.content.Context;
 import android.location.Location;
 import android.net.Uri;
 import android.util.Log;
@@ -96,6 +94,29 @@ public class TrackWriter extends DirectoryRequestHandler {
     private long lastTrackWrite=0;
     private boolean trackLoading=true;
     private long lastTrackCount=0;
+    static class WriteInfo{
+        int numWrites=0;
+        int numPoints=0;
+        String lastError=null;
+        void update(int points,String error){
+            if (error == null) numWrites++;
+            numPoints=points;
+            lastError=error;
+        }
+        WriteInfo(WriteInfo other){
+            numWrites=other.numWrites;
+            numPoints=other.numPoints;
+            lastError=other.lastError;
+        }
+        boolean equals(WriteInfo other){
+            if (! Objects.equals(other.lastError,lastError)) return false;
+            if (other.numPoints != numPoints) return false;
+            if (other.numWrites != numWrites) return false;
+            return true;
+        }
+        WriteInfo(){}
+    }
+    private WriteInfo writeInfo=new WriteInfo();
 
     private ArrayList<Location> trackpoints=new ArrayList<Location>();
     private static final EditableParameter.IntegerParameter PARAM_INTERVAL=
@@ -107,11 +128,34 @@ public class TrackWriter extends DirectoryRequestHandler {
     private static final EditableParameter.IntegerParameter PARAM_DISTANCE=
             new EditableParameter.IntegerParameter("distance", R.string.labelSettingsTrackMinDist,25);
 
+    private synchronized void updateWriteInfo(int numPoints, String error){
+        writeInfo.update(numPoints,error);
+    }
+    private synchronized WriteInfo getWriteInfo(){
+        return new WriteInfo(writeInfo);
+    }
+    static final String C_WRITES="writes";
+    private void setWriteStatus(WriteInfo info){
+        if (info.lastError != null){
+            status.setChildStatus(C_WRITES, WorkerStatus.Status.ERROR,
+                    info.numWrites+" error="+info.lastError);
+        }
+        else {
+            status.setChildStatus(C_WRITES, (info.numWrites > 0) ?
+                    WorkerStatus.Status.NMEA :
+                    WorkerStatus.Status.STARTED, info.numWrites + " (" + info.numPoints + " points)");
+        }
 
+    }
     @Override
     public void run(int startSequence) {
+        WriteInfo currentInfo=getWriteInfo();
+        WriteInfo lastWriteInfo=new WriteInfo(currentInfo);
         status.setChildStatus("directory", WorkerStatus.Status.NMEA, trackdir.getAbsolutePath());
+        setWriteStatus(currentInfo);
+        setStatus(WorkerStatus.Status.STARTED,"loading tracks");
         try {
+            status.setChildStatus("loading", WorkerStatus.Status.STARTED,"loading track files");
             ArrayList<Location> filetp = new ArrayList<Location>();
             //read the track data from today and yesterday
             //we rely on the cleanup to handle outdated entries
@@ -131,15 +175,24 @@ public class TrackWriter extends DirectoryRequestHandler {
                 trackpoints = filetp;
                 trackpoints.addAll(newTp);
             }
-            setStatus(WorkerStatus.Status.NMEA, "loaded " + trackpoints.size() + " points");
+            status.setChildStatus("loading",WorkerStatus.Status.NMEA, "finished with " + trackpoints.size() + " points");
         } catch (Exception e) {
-            setStatus(WorkerStatus.Status.ERROR, "error loading tracks: " + e.getMessage());
+            status.setChildStatus("loading",WorkerStatus.Status.ERROR, "error: " + e.getMessage());
             AvnLog.e("error loading tracks", e);
         }
         AvnLog.d(LOGPRFX, "read " + trackpoints.size() + " trackpoints from files");
         trackLoading = false;
+        setStatus(WorkerStatus.Status.STARTED,"waiting for trackpoints");
         while (!shouldStop(startSequence)) {
             sleep(1000);
+            WriteInfo info= getWriteInfo();
+            if (! lastWriteInfo.equals(info)){
+                status.setChildStatus(C_WRITES, (info.numWrites>0)?
+                        WorkerStatus.Status.NMEA:
+                        WorkerStatus.Status.STARTED,
+                        info.numWrites+" ("+info.numPoints+" points)");
+                lastWriteInfo=info;
+            }
         }
     }
 
@@ -204,7 +257,7 @@ public class TrackWriter extends DirectoryRequestHandler {
         }
         setStatus(WorkerStatus.Status.NMEA, trackpoints.size() + " points");
         if (writeOut) {
-            List<Location> w = getTrackPoints(true);
+            List<Location> w = getTrackPoints(true,true);
             lastTrackCount = w.size();
             lastTrackWrite = current;
             try {
@@ -219,12 +272,14 @@ public class TrackWriter extends DirectoryRequestHandler {
 
     private void writeSync(IMediaUpdater mediaUpdater) throws FileNotFoundException{
         if (trackpoints.size() < 1) return;
-        writeTrackFile(getTrackPoints(true),new Date(),false,mediaUpdater);
+        writeTrackFile(getTrackPoints(true,true),new Date(),false,mediaUpdater);
     }
 
 
-    public synchronized List<Location> getTrackPoints(boolean doCopy){
-        if (trackLoading || isStopped()) return new ArrayList<Location>();
+    public synchronized List<Location> getTrackPoints(boolean doCopy, boolean force){
+        if (! force){
+            if (trackLoading || isStopped()) return new ArrayList<Location>();
+        }
         if (! doCopy) return trackpoints;
         else return new ArrayList<Location>(trackpoints);
     }
@@ -277,8 +332,10 @@ public class TrackWriter extends DirectoryRequestHandler {
                     updater.triggerUpdateMtp(ofile);
                 }
                 AvnLog.i(LOGPRFX,"writing track finished with "+numpoints+" points");
+                writer.updateWriteInfo(numpoints,null);
             } catch (Exception io) {
                 Log.e(LOGPRFX, "error writing trackfile: " + io.getLocalizedMessage());
+                writer.updateWriteInfo(0,io.getMessage());
             }
             writer.writerRunning=false;
         }
@@ -307,7 +364,8 @@ public class TrackWriter extends DirectoryRequestHandler {
             writerRunning=true;
             new WriteRunner(track,dt,this,updater).run();
         }catch (InterruptedException e){
-            return;
+            AvnLog.e("track writer - writer interrupted",e);
+            writerRunning=false;
         }
     }
     public boolean isCurrentDay(Location l,Date dt){

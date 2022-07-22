@@ -1244,7 +1244,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         ArrayList<Location> rt=new ArrayList<Location>();
         TrackWriter trackWriter=getTrackWriter();
         if (trackWriter == null) return rt;
-        List<Location> trackpoints=trackWriter.getTrackPoints(true);
+        List<Location> trackpoints=trackWriter.getTrackPoints(true,false);
         if (! isRunning) return rt;
         long currts=-1;
         long num=0;
