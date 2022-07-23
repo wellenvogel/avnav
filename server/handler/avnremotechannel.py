@@ -179,13 +179,13 @@ class AVNRemoteChannelHandler(AVNWorker):
         try:
           self.socket=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
           self.socket.bind((host,port))
+          self.socket.settimeout(1)
           self.setInfo('udp',"listening on port %d, host=%s"%(port,host),WorkerStatus.NMEA)
         except Exception as e:
           self.setInfo('udp',"unable to open port %s:%d : %s"%(host,port,e),WorkerStatus.ERROR)
           if not self.shouldStop():
             self.wait(5)
           continue
-        self.socket.settimeout(1)
         while self.socket.fileno() >= 0 and not self.shouldStop() and self.configSequence == sequence:
           try:
             try:
