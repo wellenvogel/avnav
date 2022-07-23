@@ -1,16 +1,24 @@
 package de.wellenvogel.avnav.worker;
 
+import android.net.Uri;
+
+import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.HashSet;
 
+import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
+import de.wellenvogel.avnav.appapi.INavRequestHandler;
 import de.wellenvogel.avnav.appapi.IWebSocket;
 import de.wellenvogel.avnav.appapi.IWebSocketHandler;
+import de.wellenvogel.avnav.appapi.PostVars;
 import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.util.AvnUtil;
 
-public class RemoteChannel extends Worker implements IWebSocketHandler {
+public class RemoteChannel extends Worker implements IWebSocketHandler, INavRequestHandler {
     final HashSet<IWebSocket> clients=new HashSet<>();
     protected RemoteChannel(String typeName, GpsService ctx) {
         super(typeName, ctx);
@@ -108,5 +116,44 @@ public class RemoteChannel extends Worker implements IWebSocketHandler {
         synchronized (clients){
             clients.remove(socket);
         }
+    }
+
+    @Override
+    public ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception {
+        return null;
+    }
+
+    @Override
+    public boolean handleUpload(PostVars postData, String name, boolean ignoreExisting) throws Exception {
+        return false;
+    }
+
+    @Override
+    public JSONArray handleList(Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception {
+        return null;
+    }
+
+    @Override
+    public boolean handleDelete(String name, Uri uri) throws Exception {
+        return false;
+    }
+
+    @Override
+    public JSONObject handleApiRequest(Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
+        String command= AvnUtil.getMandatoryParameter(uri,"command");
+        if (command.equals("enabled")){
+            return RequestHandler.getReturn( new AvnUtil.KeyValue("enabled",ENABLED_PARAMETER.fromJson(parameters)));
+        }
+        return RequestHandler.getErrorReturn("unknown command "+command);
+    }
+
+    @Override
+    public ExtendedWebResourceResponse handleDirectRequest(Uri uri, RequestHandler handler, String method) throws Exception {
+        return null;
+    }
+
+    @Override
+    public String getPrefix() {
+        return RequestHandler.TYPE_REMOTE;
     }
 }

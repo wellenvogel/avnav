@@ -30,6 +30,7 @@ import base from "../base";
 import PubSub from "PubSub";
 import androidEventHandler from "./androidEventHandler";
 import dimhandler from "./dimhandler";
+import Requests from './requests';
 const PSTOPIC="remote.";
 export const COMMANDS={
     setPage:'CP', //str page
@@ -97,12 +98,27 @@ class RemoteChannel{
        }
 
     }
+    queryEnabled(){
+       return Requests.getJson({
+            request:'api',
+            type: 'remotechannels',
+            command: 'enabled'
+        }).then((json)=> {
+            return json.enabled;
+       },(e)=>{
+           base.log("unable to query websocket enabled state")
+           return false;
+        })
+    }
     timerCall(){
+        this.queryEnabled().then((enabled)=>{
+            globalstore.storeData(keys.gui.capabilities.remoteChannel,enabled);
+        });
         if (this.websocket === undefined){
-            this.openWebSocket();
+            if (globalstore.getData(keys.gui.capabilities.remoteChannel)) this.openWebSocket();
         }
         else{
-            if (!globalstore.getData(keys.gui.capabilities.remoteChannel)){
+            if (!globalstore.getData(keys.gui.capabilities.remoteChannel) ){
                 this.close();
             }
         }
@@ -115,7 +131,12 @@ class RemoteChannel{
         if (window.WebSocket === undefined) return;
         globalstore.register(this.channelChanged,[keys.properties.remoteChannelName]);
         this.channel=globalstore.getData(keys.properties.remoteChannelName,'0');
-        this.openWebSocket();
+        this.queryEnabled().then((enabled)=> {
+            globalstore.storeData(keys.gui.capabilities.remoteChannel);
+            if (enabled) {
+                this.openWebSocket();
+            }
+        })
         this.timer=window.setInterval(this.timerCall,1000);
     }
     onMessage(data){

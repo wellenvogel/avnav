@@ -75,7 +75,7 @@ public class RequestHandler {
     public static String TYPE_OVERLAY="overlay";
     public static String TYPE_ADDON="addon";
     public static String TYPE_CONFIG="config";
-    public static String TYPE_REMOTE="remotechannel";
+    public static String TYPE_REMOTE="remotechannels";
 
 
     public static class TypeItemMap<VT> extends HashMap<String, AvnUtil.KeyValue<VT>>{
@@ -246,6 +246,14 @@ public class RequestHandler {
             @Override
             public INavRequestHandler getHandler() {
                 return getGpsService();
+            }
+        });
+        handlerMap.put(TYPE_REMOTE, new LazyHandlerAccess() {
+            @Override
+            public INavRequestHandler getHandler() {
+                GpsService s=getGpsService();
+                if (s != null) return s.getRemoteChannel();
+                return null;
             }
         });
 
