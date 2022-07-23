@@ -252,6 +252,14 @@ class AVNHandlerManager(object):
     now = datetime.datetime.utcnow()
     return fileName + ".invalid-" + now.strftime("%Y%m%d%H%M%S")
 
+  def isDisabled(self):
+    '''
+    the httpserver will check all handlers for being disabled
+    and thus needs this method
+    :return:
+    '''
+    return False
+
   def __init__(self,canRestart=False):
     #global parameters
     self.parameters={

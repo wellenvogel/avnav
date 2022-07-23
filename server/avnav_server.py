@@ -243,7 +243,7 @@ def main(argv):
       except:
         pass
   if httpServer is not None:
-    for handler in AVNWorker.getAllHandlers():
+    for handler in AVNWorker.getAllHandlers(disabled=True):
       handledCommands=handler.getHandledCommands()
       if handledCommands is not None:
         if isinstance(handledCommands,dict):

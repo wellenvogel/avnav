@@ -211,7 +211,12 @@ class AVNHTTPServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
     typeMap=self.handlerMap.get(type)
     if typeMap is None:
       return None
-    return typeMap.get(command)
+    handler=typeMap.get(command)
+    if handler is None:
+      return None
+    if handler.isDisabled():
+      return None
+    return handler
 
   def plainUrlToPath(self,path,usePathMapping=True):
     '''
@@ -244,7 +249,7 @@ class AVNHTTPServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
   def tryExternalMappings(self,path,query,handler=None):
     requestParam=urllib.parse.parse_qs(query,True)
     for prefix in list(self.externalHandlers.keys()):
-      if path.startswith(prefix):
+      if path.startswith(prefix) and not self.externalHandlers[prefix].isDisabled():
         # the external handler can either return a mapped path (already
         # converted in an OS path - e.g. using plainUrlToPath)
         # or just do the handling by its own and return None
@@ -267,7 +272,7 @@ class AVNHTTPServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
   def getWebSocketsHandler(self,path,query,handler):
     requestParam=urllib.parse.parse_qs(query,True)
     for prefix in list(self.webSocketHandlers.keys()):
-      if path.startswith(prefix):
+      if path.startswith(prefix) and not self.webSocketHandlers[prefix].isDisabled():
         # the external handler can either return a mapped path (already
         # converted in an OS path - e.g. using plainUrlToPath)
         # or just do the handling by its own and return None
