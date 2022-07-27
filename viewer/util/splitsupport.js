@@ -25,6 +25,8 @@ import PubSub from "PubSub";
 import base from "../base";
 import globalStore from "./globalstore";
 import keys from "./keys";
+import LeaveHandler from "./leavehandler";
+import assign from 'object-assign';
 class SplitSupport{
     constructor() {
         this.pubSub=new PubSub();
@@ -50,6 +52,33 @@ class SplitSupport{
         }catch(e){
             base.log("unable to post message: "+e);
         }
+    }
+    toggleSplitMode(){
+        LeaveHandler.stop();
+        if (globalStore.getData(keys.gui.global.splitMode)){
+            this.sendToFrame('finishSplit');
+        }
+        else{
+            var location=window.location.href+'';
+            location=location.replace('avnav_viewer','viewer_split');
+            window.location.replace(location.replace(/\?.*/,''));
+        }
+    }
+
+    buttonDef(options) {
+        return assign(
+            {
+                name: 'Split',
+                storeKeys: {
+                    toggle: keys.gui.global.splitMode,
+                    visible: keys.properties.showSplitButton
+                },
+                editDisable: true,
+                onClick: () => {
+                    this.toggleSplitMode();
+                }
+            },options);
+
     }
 
 }

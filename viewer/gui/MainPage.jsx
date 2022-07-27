@@ -244,26 +244,7 @@ class MainPage extends React.Component {
             },
             RemoteChannelDialog({overflow:true}),
             FullScreen.fullScreenDefinition,
-            {
-                name: 'Split',
-                storeKeys: {
-                    toggle: keys.gui.global.splitMode,
-                    visible: keys.properties.showSplitButton
-                },
-                editDisable: true,
-                overflow: true,
-                onClick: ()=>{
-                    LeaveHandler.stop();
-                    if (globalStore.getData(keys.gui.global.splitMode)){
-                        splitsupport.sendToFrame('finishSplit');
-                    }
-                    else{
-                        var location=window.location.href+'';
-                        location=location.replace('avnav_viewer','viewer_split');
-                        window.location.href=location.replace(/\?.*/,'');
-                    }
-                }
-            },
+            splitsupport.buttonDef({overflow:true}),
             {
                 name: 'Cancel',
                 storeKeys: {visible: keys.gui.global.onAndroid},

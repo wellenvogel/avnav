@@ -121,8 +121,8 @@
         if (type === 'finishSplit'){
             msgAll('stopLeave');
             window.setTimeout(()=>
-                window.location.href=singleLocation,
-                20);
+                window.location.replace(singleLocation),
+                100);
         }
     })
     if (window.avnavAndroid) {
