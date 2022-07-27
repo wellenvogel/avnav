@@ -105,6 +105,9 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
     private NsdManager nsdManager;
     private final HashSet<NsdServiceInfo> services=new HashSet<>();
     private final HashMap<Integer,Registration> registeredServices= new HashMap<>();
+    private long configSequence=System.currentTimeMillis();
+    private final Object configSequenceLock=new Object();
+    private int avnavVersion=0;
 
     private static class Registration{
         NsdManager.RegistrationListener listener;
@@ -173,6 +176,12 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         return false;
     }
 
+    private void updateConfigSequence(){
+        synchronized (configSequenceLock){
+            configSequence++;
+        }
+    }
+
     @Override
     public JSONObject handleApiRequest(Uri uri, PostVars postData, RequestHandler.ServerInfo serverInfo) throws Exception {
         if (serverInfo != null){
@@ -183,6 +192,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             String typeName=AvnUtil.getMandatoryParameter(uri,"handlerName");
             String config=postData.getAsString();
             addWorker(typeName,new JSONObject(config));
+            updateConfigSequence();
             return RequestHandler.getReturn();
         }
         if ("getAddables".equals(command)){
@@ -217,6 +227,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         if ("setConfig".equals(command)){
             String config=postData.getAsString();
             updateWorkerConfig(worker,new JSONObject(config));
+            updateConfigSequence();
             return RequestHandler.getReturn();
         }
         if ("deleteHandler".equals(command)){
@@ -224,6 +235,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
                 return RequestHandler.getErrorReturn("handler "+id+" cannot be deleted");
             }
             deleteWorker(worker);
+            updateConfigSequence();
             return RequestHandler.getReturn();
         }
         return RequestHandler.getErrorReturn("invalid command "+command);
@@ -680,6 +692,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
     private void handleStartup(boolean isWatchdog){
         SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
         AvnLog.d(LOGPRFX,"started");
+        avnavVersion=prefs.getInt(Constants.VERSION,0);
         if (! isWatchdog || requestHandler == null){
             if (requestHandler != null) requestHandler.stop();
             requestHandler=new RequestHandler(this);
@@ -1376,6 +1389,12 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         RouteHandler routeHandler=getRouteHandler();
         if (routeHandler != null) legSequence=routeHandler.getLegSequence();
         rt.put("updateleg",legSequence);
+        synchronized (configSequenceLock){
+            rt.put("updateconfig",configSequence);
+        }
+        if (avnavVersion != 0) {
+            rt.put("version", avnavVersion);
+        }
         return rt;
     }
 

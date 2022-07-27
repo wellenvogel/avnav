@@ -126,7 +126,9 @@ let keys={
             sequence: K, //will be incremented as last operation on each receive
             connectionLost: K,
             updatealarm: new D("update counter for alarms"),
-            updateleg: new D("update counter for leg")
+            updateleg: new D("update counter for leg"),
+            updateconfig: new D("update counter for the server config"),
+            version: new D("the server version")
         },
         display:{
             boatDirection: new D("the direction of the boat to be used for display"),

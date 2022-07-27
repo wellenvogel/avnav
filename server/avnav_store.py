@@ -37,6 +37,8 @@ class AVNStore(object):
   BASE_KEY_AIS = 'ais'
   BASE_KEY_SKY = 'sky'
 
+  KEY_VERSION= BASE_KEY_GPS+".version"
+
   # AIS messages we store
   knownAISTypes = (1, 2, 3, 5, 18, 19, 24)
   class DataEntry(object):
@@ -65,7 +67,7 @@ class AVNStore(object):
       return self.value.get('mmsi')
   #fields we merge
   ais5mergeFields=['imo_id','callsign','shipname','shiptype','destination','length','beam','draught']
-  CHANGE_COUNTER = ['alarm', 'leg', 'route']
+  CHANGE_COUNTER = ['alarm', 'leg', 'route','config']
   def __init__(self,expiryTime,aisExpiryTime,ownMMSI):
     self.__list={}
     self.__aisList={}
@@ -91,6 +93,7 @@ class AVNStore(object):
   def __registerInternalKeys(self):
     self.registerKey(self.BASE_KEY_AIS+".count","AIS count",self.__class__.__name__)
     self.registerKey(self.BASE_KEY_AIS+".entities.*","AIS entities",self.__class__.__name__)
+    self.registerKey(self.KEY_VERSION,"server version")
 
   def __isExpired(self, entry, now=None):
     if entry.keepAlways:

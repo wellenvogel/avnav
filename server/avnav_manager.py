@@ -499,6 +499,9 @@ class AVNHandlerManager(object):
 
   def getConfigName(self):
     return "Manager"
+
+  def updateChangeCounter(self):
+    self.navData.updateChangeCounter('config')
   def handleApiRequest(self,request,type,requestParam,**kwargs):
 
     if request == 'download':
@@ -524,6 +527,7 @@ class AVNHandlerManager(object):
       handler=self.createHandlerFromScratch(tagName,json.loads(config))
       handler.configChanger.writeAll()
       handler.startInstance(self.navData)
+      self.updateChangeCounter()
       return rt
     if command == 'getAddables':
       allHandlers = avnav_handlerList.getAllHandlerClasses()
@@ -573,15 +577,18 @@ class AVNHandlerManager(object):
       values = AVNUtil.getHttpRequestParam(requestParam, '_json', mantadory=True)
       decoded = json.loads(values)
       handler.updateConfig(decoded, child)
+      self.updateChangeCounter()
       AVNLog.info("updated %s, new config %s", handler.getName(), handler.getConfigString())
     elif command == 'deleteChild':
       if child is None:
         raise Exception("missing parameter child")
       AVNLog.info("deleting child %s for %s", child, handler.getName())
       handler.deleteChild(child)
+      self.updateChangeCounter()
     elif command == 'deleteHandler':
       AVNLog.info("removing handler %s", handler.getName())
       AVNWorker.removeHandler(int(id))
+      self.updateChangeCounter()
 
     else:
       raise Exception("unknown command %s" % command)

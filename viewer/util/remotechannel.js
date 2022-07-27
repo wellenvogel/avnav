@@ -73,6 +73,9 @@ class RemoteChannel{
             });
         }
         this.id=0;
+        globalstore.register(()=>{
+            this.checkEnabled();
+        },[keys.nav.gps.updateconfig])
     }
     close(){
         if (this.websocket !== undefined){
@@ -110,10 +113,12 @@ class RemoteChannel{
            return false;
         })
     }
-    timerCall(){
+    checkEnabled(){
         this.queryEnabled().then((enabled)=>{
             globalstore.storeData(keys.gui.capabilities.remoteChannel,enabled);
-        });
+        })
+    }
+    timerCall(){
         if (this.websocket === undefined){
             if (globalstore.getData(keys.gui.capabilities.remoteChannel)) this.openWebSocket();
         }
