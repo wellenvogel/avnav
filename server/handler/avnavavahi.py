@@ -96,6 +96,9 @@ class ServiceDescription:
     self.port=other.port
     self.reset()
 
+  def __str__(self):
+    return "Avahi Service: %s:%d[%s], reg=%s"%(self.getKey(),self.port,self.currentName,self.isRegistered)
+
 
 class FoundService:
   def __init__(self,type,name,intf,proto):
@@ -107,7 +110,7 @@ class FoundService:
     return hash((self.type,self.name,self.intf,self.proto))
 
   def __str__(self):
-    return "Service %s.%s"%(self.type,self.name)
+    return "Service %s.%s at %s"%(self.type,self.name,self.intf)
   def __eq__(self, other):
     return self.type == other.type \
            and self.name == other.name \
@@ -186,16 +189,22 @@ class AVNAvahi(AVNWorker):
     return True
 
   def _newService(self, interface, protocol, name, stype, domain, flags):
+    serviceEntry=FoundService(stype,name,interface,protocol)
+    if serviceEntry in self.foundServices:
+      return
     AVNLog.info("detected new service %s.%s at %i.%i",stype,name,interface,protocol)
     try:
-      self.foundServices.add(FoundService(stype,name,interface,protocol))
+      self.foundServices.add(serviceEntry)
     except Exception as e:
-      AVNLog.error("unable to add service: %s",e)
+      AVNLog.error("unable to add service %s: %s",str(serviceEntry),e)
 
   def _removedService(self,interface, protocol, name, stype, domain, flags):
+    serviceEntry = FoundService(stype, name, interface, protocol)
+    if not serviceEntry in self.foundServices:
+      return
     AVNLog.info("detected removed service %s.%s at %i.%i",stype,name,interface,protocol)
     try:
-      self.foundServices.remove(FoundService(stype,name,interface,protocol))
+        self.foundServices.remove(serviceEntry)
     except Exception as e:
       AVNLog.error("unable to remove service %s: %s",name,str(e))
 
@@ -289,7 +298,7 @@ class AVNAvahi(AVNWorker):
         pass
       return
     try:
-      AVNLog.info("deregister")
+      AVNLog.info("deregister %s",description)
       description.reset()
       description.group.Reset()
       description.group.Free()
@@ -381,7 +390,7 @@ class AVNAvahi(AVNWorker):
       while not self.shouldStop():
         if self.stateSequence != sequence:
           sequence=self.stateSequence
-          AVNLog.info("daemon restart detected")
+          AVNLog.info("reregister all services")
           self.server=dbus.Interface(dbus.SystemBus().get_object(self.DBUS_NAME, self.DBUS_PATH_SERVER),
                                      self.DBUS_INTERFACE_SERVER)
           self._deregisterAll()

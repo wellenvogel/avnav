@@ -167,6 +167,7 @@ class App extends React.Component {
         };
         this.history=new History();
         this.buttonSizer=null;
+        this.serverVersion=globalStore.getData(keys.nav.gps.version); //maybe we should start with the compiled version
         globalStore.storeData(keys.gui.global.onAndroid,false,true);
         //make the android API available as avnav.android
         if (window.avnavAndroid) {
@@ -320,6 +321,9 @@ class App extends React.Component {
             }
             else alarmhandler.stopAlarm(LOCAL_TYPES.connectionLost);
         },{connectionLost:keys.nav.gps.connectionLost})
+        GuiHelpers.storeHelper(this,(data)=>{
+            this.checkReload();
+        },[keys.nav.gps.version])
     }
     newDeviceHandler(){
         try{
@@ -382,6 +386,24 @@ class App extends React.Component {
     keyDown(evt){
         let inDialog=globalStore.getData(keys.gui.global.hasActiveInputs,false);
         KeyHandler.handleKeyEvent(evt,inDialog);
+    }
+    checkReload(){
+        let newVersion=globalStore.getData(keys.nav.gps.version);
+        if (newVersion === undefined || newVersion === '') return;
+        if (this.serverVersion === undefined){
+            //first query
+            this.serverVersion=newVersion;
+            return;
+        }
+        if (this.serverVersion === newVersion)return;
+        OverlayDialog.confirm("The server version has changed from "+
+            this.serverVersion+
+            " to "+newVersion+". Would you like to reload?",undefined,"Server version change")
+            .then(()=>{
+                LeaveHandler.stop();
+                window.location.replace(window.location.href);
+            })
+            .catch(()=>this.serverVersion=newVersion);
     }
     render(){
         if (this.state.error){

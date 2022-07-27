@@ -135,7 +135,7 @@ class AVNStore(object):
     self.__listLock.release()
     return True
 
-  def setValue(self,key,value,source=None,priority=0,record=None):
+  def setValue(self,key,value,source=None,priority=0,record=None,keepAlways=False):
     """
     set a data value
     @param key: the key to be set
@@ -170,7 +170,7 @@ class AVNStore(object):
               doUpdate=False
           if doUpdate:
             hasUpdate=True
-            self.__list[listKey]=AVNStore.DataEntry(dataValue, priority=priority,source=source)
+            self.__list[listKey]=AVNStore.DataEntry(dataValue, keepAlways=keepAlways,priority=priority,source=source)
           else:
             AVNLog.debug("AVNavData: keeping existing entry for %s",listKey)
         return hasUpdate

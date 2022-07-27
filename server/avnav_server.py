@@ -257,7 +257,7 @@ def main(argv):
     float(baseConfig.param['expiryTime']),
     float(baseConfig.param['aisExpiryTime']),
     baseConfig.param['ownMMSI'])
-  navData.setValue(navData.KEY_VERSION,AVNAV_VERSION)
+  navData.setValue(navData.KEY_VERSION,AVNAV_VERSION,keepAlways=True)
   NMEAParser.registerKeys(navData)
   if options.pidfile is not None:
     f=open(options.pidfile,"w",encoding='utf-8')
