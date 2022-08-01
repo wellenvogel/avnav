@@ -64,6 +64,9 @@ export const INFO_ROWS=[
     {label:'average',value:'avgSpeed', formatter:(v)=>{
         return Formatter.formatSpeed(v)+" kn";
         }},
+    {label:'speed',value: 'pointSpeed', formatter:(v)=> Formatter.formatSpeed(v)+" kn"},
+    {label:'course',value: 'pointCourse',formatter:(v)=>Formatter.formatDirection(v)+" °"},
+    {label:'time',value:'pointTime',formatter: (v)=>Formatter.formatDateTime(v)},
     {label:'start',value:'startTime',formatter:(v)=>Formatter.formatDateTime(v)},
     {label:'end',value:'endTime',formatter:(v)=>Formatter.formatDateTime(v)},
     ];
@@ -77,6 +80,7 @@ class TrackInfo{
         this.endTime = undefined;
         this.hasTimeErrors = false;
         this.refPoint=opt_refpoint;
+        this.foundPoint=undefined;
     }
 
     /**
@@ -110,7 +114,7 @@ class TrackInfo{
             && this.endTime > (this.startTime + MINDIFF)) {
             avgSpeed = this.distance / (this.endTime - this.startTime); //m/s
         }
-        let refIdx;
+        let refIdx=-1;
         let remain=0;
         if (this.refPoint){
             let bestDistance;
@@ -123,7 +127,8 @@ class TrackInfo{
                     bestDistance=cur;
                 }
             }
-            let last=this.points[refIdx];
+            this.foundPoint=this.points[refIdx];
+            let last=this.foundPoint;
             let useRhumbLine=globalstore.getData(keys.nav.routeHandler.useRhumbLine);
             for (let i=refIdx+1;i<this.points.length;i++){
                 remain+=NavCompute.computeDistance(last,this.points[i],useRhumbLine).dts;
@@ -136,6 +141,9 @@ class TrackInfo{
             numPoints: this.points.length,
             refIdx: refIdx>=0?refIdx:undefined,
             remain: refIdx>=0?remain:undefined,
+            pointTime: this.foundPoint!==undefined?new Date(this.foundPoint.ts*1000):undefined,
+            pointSpeed: this.foundPoint!== undefined?this.foundPoint.speed:undefined,
+            pointCourse: this.foundPoint !== undefined?this.foundPoint.opt_course:undefined,
             timeErrors: this.hasTimeErrors,
             avgSpeed: avgSpeed,
             startTime: new Date(this.startTime*1000),
@@ -154,6 +162,26 @@ export const getInfoForList=(trackPoints,opt_point)=>{
     })
 }
 
+const TrackPointFields=[
+    {
+        name: 'time',
+        target: 'ts',
+        convert: (v) => {
+            let time = new Date(v);
+            return (!isNaN(time)) ? time.getTime() / 1000.0 : undefined
+        }
+    },
+    {
+        name: 'speed',
+        target: 'speed',
+        convert: (v)=>parseFloat(v)
+    },
+    {
+        name: 'course',
+        target: 'opt_course',
+        convert: (v) => parseFloat(v)
+    }
+]
 export const getTrackInfo = (trackName,opt_point) => {
     if (trackName === 'current'){
         let trackPoints=globalstore.getData(keys.nav.track.currentTrack,[]);
@@ -208,18 +236,29 @@ export const getTrackInfo = (trackName,opt_point) => {
                             continue;
                         }
                         let newPoint = new navobjects.TrackPoint(lon, lat,undefined);
-                        let timev = tpoint.getElementsByTagName('time')[0];
                         let validTime = false;
-                        if (timev && timev.textContent) {
-                            let time = new Date(timev.textContent);
-                            if (!isNaN(time)) {
-                                newPoint.ts = time.getTime()/1000.0;
-                                trackInfo.addPoint(newPoint);
-                                validTime = true;
+                        TrackPointFields.forEach((field)=>{
+                            let fv=tpoint.getElementsByTagName(field.name)[0];
+                            if (fv && fv.textContent) {
+                                if (field.convert) {
+                                    fv = field.convert(fv.textContent);
+                                }
+                                else{
+                                    fv=fv.textContent;
+                                }
                             }
+                            if (! fv){
+                                return;
+                            }
+                            if (field.name === 'time') validTime=true;
+                            newPoint[field.target]=fv;
+                        })
+                        if (validTime){
+                            trackInfo.addPoint(newPoint);
                         }
-                        if (!validTime) trackInfo.hasTimeErrors=true;
-
+                        else{
+                            trackInfo.hasTimeErrors=true;
+                        }
                     }
                 }
                 trackInfo.finalize(resolve,reject);
