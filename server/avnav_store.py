@@ -336,11 +336,18 @@ class AVNStore(object):
       return rt
 
   #delete all entries from the list (e.g. when we have to set the time)
-  def reset(self): 
-    self.__listLock.acquire()
-    self.__list.clear()
-    self.__aisList.clear()
-    self.__listLock.release()
+  def reset(self):
+      with self.__listLock:
+          keysToRemove=[]
+          for k,v in self.__list.items():
+            if not v.keepAlways:
+                keysToRemove.append(k)
+          for k in keysToRemove:
+            try:
+                del self.__list[k]
+            except:
+                pass
+          self.__aisList.clear()
 
   def getAisCounter(self):
     return len(self.__aisList)
