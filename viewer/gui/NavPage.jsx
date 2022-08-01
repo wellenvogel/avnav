@@ -289,6 +289,19 @@ class NavPage extends React.Component{
                 }
             },
             {
+                name: 'NavRestart',
+                storeKeys: activeRoute.getStoreKeys({watchDistance:keys.nav.anchor.watchDistance}),
+                updateFunction: (state)=> {
+                    return {
+                        visible:  StateHelper.hasActiveTarget(state)
+                    };
+                },
+                onClick:()=>{
+                    self.showWpButtons(false);
+                    RouteHandler.legRestart();
+                }
+            },
+            {
                 name:'WpNext',
                 storeKeys:activeRoute.getStoreKeys({watchDistance:keys.nav.anchor.watchDistance}),
                 updateFunction: (state)=> {

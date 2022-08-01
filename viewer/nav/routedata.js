@@ -446,6 +446,15 @@ RouteData.prototype._startRouting = function (mode, newWp, opt_keep_from) {
     });
 };
 
+RouteData.prototype.legRestart=function(){
+    activeRoute.modify((data)=> {
+        if (!data.leg || !data.leg.active) return false;
+        let gps = globalStore.getData(keys.nav.gps.position);
+        if (!globalStore.getData(keys.nav.gps.valid)) return false;
+        data.leg.from = new navobjects.WayPoint(gps.lon, gps.lat);
+        return true;
+    });
+}
 
 RouteData.prototype.routeOff=function(){
     if (! activeRoute.hasActiveTarget()) return; //is already off
