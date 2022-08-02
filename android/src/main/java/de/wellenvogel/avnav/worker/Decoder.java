@@ -15,6 +15,7 @@ import net.sf.marineapi.nmea.sentence.HDGSentence;
 import net.sf.marineapi.nmea.sentence.HDMSentence;
 import net.sf.marineapi.nmea.sentence.HDTSentence;
 import net.sf.marineapi.nmea.sentence.MTWSentence;
+import net.sf.marineapi.nmea.sentence.MWDSentence;
 import net.sf.marineapi.nmea.sentence.MWVSentence;
 import net.sf.marineapi.nmea.sentence.PositionSentence;
 import net.sf.marineapi.nmea.sentence.RMCSentence;
@@ -197,13 +198,20 @@ public class Decoder extends Worker {
         private static class WindKeys{
             public String angle;
             public String speed;
-            public WindKeys(boolean isTrue){
-                if (!isTrue){
+            public static final int TRUEA=1;
+            public static final int TRUED=2;
+            public static final int APP=3;
+            public WindKeys(int kind){
+                if (kind == APP){
                     angle="windAngle";
                     speed="windSpeed";
                 }
-                else{
+                if (kind == TRUEA){
                     angle="trueWindAngle";
+                    speed="trueWindSpeed";
+                }
+                if (kind == TRUED){
+                    angle="trueWindDirection";
                     speed="trueWindSpeed";
                 }
             }
@@ -315,7 +323,7 @@ public class Decoder extends Worker {
                                     MWVSentence m = (MWVSentence) s;
                                     AvnLog.d("%s: MWV sentence",getTypeName() );
                                     AuxiliaryEntry e = new AuxiliaryEntry();
-                                    WindKeys keys=new WindKeys(m.isTrue());
+                                    WindKeys keys=new WindKeys(m.isTrue()?WindKeys.TRUEA:WindKeys.APP);
                                     e.data.put(keys.angle, m.getAngle());
                                     double speed = m.getSpeed();
                                     if (m.getSpeedUnit().equals(Units.KMH)) {
@@ -325,8 +333,37 @@ public class Decoder extends Worker {
                                         speed = knToMs(speed);
                                     }
                                     e.data.put(keys.speed, speed);
-                                    if (!m.isTrue()) e.priority=1; //prefer apparent if it is there
-                                    addAuxiliaryData(s.getSentenceId(), e,posAge);
+                                    addAuxiliaryData(s.getSentenceId()+(m.isTrue()?"T":"A"), e,posAge);
+                                    continue;
+                                }
+                                if (s instanceof MWDSentence){
+                                    MWDSentence m = (MWDSentence) s;
+                                    AvnLog.d("%s: MWD sentence",getTypeName() );
+                                    AuxiliaryEntry e = new AuxiliaryEntry();
+                                    WindKeys keys=new WindKeys(WindKeys.TRUED);
+                                    boolean hasData=false;
+                                    double direction=m.getTrueWindDirection();
+                                    if (Double.isNaN(direction)){
+                                        direction=m.getMagneticWindDirection();
+                                    }
+                                    if (! Double.isNaN(direction)){
+                                        hasData=true;
+                                        e.data.put(keys.angle,direction);
+                                    }
+                                    double speed=m.getWindSpeed();
+                                    if (Double.isNaN(speed)){
+                                        speed=m.getWindSpeedKnots();
+                                        if (! Double.isNaN(speed)){
+                                            speed=knToMs(speed);
+                                        }
+                                    }
+                                    if (! Double.isNaN(speed)){
+                                        hasData=true;
+                                        e.data.put(keys.speed,speed);
+                                    }
+                                    if (hasData){
+                                        addAuxiliaryData(s.getSentenceId(), e,posAge);
+                                    }
                                     continue;
                                 }
                                 if (s instanceof VWRSentence){
@@ -336,7 +373,7 @@ public class Decoder extends Worker {
                                     double wangle=w.getWindAngle();
                                     Direction wdir=w.getDirectionLeftRight();
                                     if (wdir == Direction.LEFT) wangle=360-wangle;
-                                    WindKeys keys=new WindKeys(false);
+                                    WindKeys keys=new WindKeys(WindKeys.APP);
                                     e.data.put(keys.angle,wangle);
                                     try{
                                         double speed=w.getSpeedKnots();

@@ -67,7 +67,8 @@ class NMEAParser(object):
   K_VHWS=Key('waterSpeed','speed through water','m/s','navigation.speedThroughWater')
   K_TWS=Key('trueWindSpeed','wind speed true (speed through water ref or ground ref)','m/s',['environment.wind.speedTrue','environment.wind.speedOverGround'])
   K_AWS=Key('windSpeed','apparent wind speed in m/s','m/s','environment.wind.speedApparent')
-  K_TWA=Key('trueWindAngle','true wind angle','\N{DEGREE SIGN}',['environment.wind.directionTrue','environment.wind.directionGround'],signalKConversion=AVNUtil.rad2deg)
+  K_TWA=Key('trueWindAngle','true wind angle','\N{DEGREE SIGN}',['environment.wind.angleTrueWater'],signalKConversion=AVNUtil.rad2deg)
+  K_TWD=Key('trueWindDirection','true wind direction','\N{DEGREE SIGN}',['environment.wind.directionGround'],signalKConversion=AVNUtil.rad2deg)
   K_AWA=Key('windAngle','wind direction','\N{DEGREE SIGN}','environment.wind.angleApparent',signalKConversion=AVNUtil.rad2deg)
   #we will add the GPS base to all entries
   GPS_DATA=[
@@ -79,6 +80,7 @@ class NMEAParser(object):
     K_AWA,
     K_AWS,
     K_TWS,
+    K_TWD,
     Key('depthBelowTransducer','depthBelowTransducer in m','m','environment.depth.belowTransducer'),
     Key('depthBelowWaterline','depthBelowWaterlinein m','m','environment.depth.belowSurface'),
     Key('depthBelowKeel','depthBelowKeel in m','m','environment.depth.belowKeel'),
@@ -397,6 +399,29 @@ class NMEAParser(object):
           windspeed=windspeed*self.NM/3600
         rt[speedKey.key]=windspeed
         self.addToNavData(rt,source=source,record=tag,priority=basePriority)
+        return True
+      if tag == 'MWD':
+        hasData=False
+        '''
+        $WIMWD,10.1,T,10.1,M,12,N,40,M*5D
+        https://github.com/adrianmo/go-nmea/blob/master/mwd.go
+        '''
+        if darray[1] != '':
+          rt[self.K_TWD.key]=float(darray[1])
+          hasData=True
+        else:
+          if darray[3] != '':
+            rt[self.K_TWD.key] = float(darray[3])
+            hasData=True
+        if ( darray[8] == 'M' or darray[8] == 'm') and darray[7] != '':
+          rt[self.K_TWS.key]=float(darray[7])
+          hasData=True
+        else:
+          if (darray[6] == 'N' or darray[6] == 'n') and darray[5] != '':
+            rt[self.K_TWS.key] = float(darray[5]) * self.NM/3600.0
+            hasData=True
+        if hasData:
+          self.addToNavData(rt, source=source, record=tag, priority=basePriority)
         return True
       if tag == 'DPT':
         '''

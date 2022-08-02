@@ -115,6 +115,7 @@ let keys={
             windSpeed: V,
             trueWindAngle: V,
             trueWindSpeed: V,
+            trueWindDirection: V,
             positionAverageOn:K,
             speedAverageOn: K,
             courseAverageOn: K,

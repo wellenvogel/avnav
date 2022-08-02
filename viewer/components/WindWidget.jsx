@@ -10,6 +10,53 @@ import Helper from '../util/helper.js';
 import GuiHelper from '../util/GuiHelpers.js';
 import navcompute from '../nav/navcompute.js';
 
+export const getWindData=(props)=>{
+    let kind = props.kind;
+    let windSpeed;
+    let windAngle;
+    let suffix='';
+    if (kind !== 'true' && kind !== 'apparent' && kind !== 'trueAngle' && kind !== 'trueDirection') kind='auto';
+    if (kind === 'auto'){
+        if (props.windAngle !== undefined && props.windSpeed !== undefined){
+            windAngle=props.windAngle;
+            windSpeed=props.windSpeed;
+            suffix='A';
+        }
+        else{
+            if (props.windAngleTrue !== undefined){
+                windAngle=props.windAngleTrue;
+                windSpeed=props.windSpeedTrue;
+                suffix="TA";
+            }
+            else{
+                windAngle=props.windDirectionTrue;
+                windSpeed=props.windSpeedTrue;
+                suffix="TD";
+            }
+        }
+    }
+    if (kind === 'apparent'){
+        windAngle=props.windAngle;
+        windSpeed=props.windSpeed;
+        suffix='A';
+    }
+    if (kind === 'true' || kind === 'trueAngle'){
+        windAngle=props.windAngleTrue;
+        windSpeed=props.windSpeedTrue;
+        suffix="TA";
+    }
+    if (kind === 'trueDirection'){
+        windAngle=props.windDirectionTrue;
+        windSpeed=props.windSpeedTrue;
+        suffix="TD";
+    }
+    return {
+        windAngle: windAngle,
+        windSpeed: windSpeed,
+        suffix: suffix
+    }
+}
+
 class WindWidget extends React.Component{
     constructor(props){
         super(props);
@@ -19,48 +66,26 @@ class WindWidget extends React.Component{
         return Helper.compareProperties(this.props,nextProps,WindWidget.storeKeys);
     }
     render(){
+        let wind=getWindData(this.props);
         const names={
             A :{
                 speed: 'AWS',
                 angle: 'AWA'
             },
-            T: {
+            TD: {
                 speed: 'TWS',
                 angle: 'TWD'
+            },
+            TA:{
+                speed: 'TWS',
+                angle: 'TWA'
             }
         }
         let classes = "widget windWidget " +this.props.className||"";
         let style = this.props.style || {};
-        let kind = this.props.kind;
-        let windSpeed;
-        let windAngle;
-        let suffix='';
-        if (kind !== 'true' && kind !== 'apparent') kind='auto';
-        if (kind === 'auto'){
-            if (this.props.windAngle !== undefined && this.props.windSpeed !== undefined){
-                windAngle=this.props.windAngle;
-                windSpeed=this.props.windSpeed;
-                suffix='A';
-            }
-            else{
-                windAngle=this.props.windAngleTrue;
-                windSpeed=this.props.windSpeedTrue;
-                suffix="T";
-            }
-        }
-        if (kind === 'apparent'){
-            windAngle=this.props.windAngle;
-            windSpeed=this.props.windSpeed;
-            suffix='A';
-        }
-        if (kind === 'true'){
-            windAngle=this.props.windAngleTrue;
-            windSpeed=this.props.windSpeedTrue;
-            suffix="T";
-        }
         let windSpeedStr='';
         try{
-            windSpeedStr=parseFloat(windSpeed);
+            windSpeedStr=parseFloat(wind.windSpeed);
             if (isNaN(windSpeedStr)){
                 windSpeedStr="---"
             }
@@ -73,16 +98,16 @@ class WindWidget extends React.Component{
                 else windSpeedStr = Formatter.formatDecimal(windSpeedStr, 3, 0);
             }
         }catch(e){}
-        if (! this.props.show360 && suffix !== 'T'){
-            if (windAngle > 180) windAngle-=360;
+        if (! this.props.show360 && wind.suffix !== 'TD'){
+            if (wind.windAngle > 180) wind.windAngle-=360;
         }
         return (
             <div className={classes} onClick={this.props.onClick} style={style}>
                 {(this.props.mode === 'horizontal') ?
                     <React.Fragment>
-                        <div className='infoLeft'>{'W'+suffix}</div>
+                        <div className='infoLeft'>{'W'+wind.suffix}</div>
                         <div className="widgetData">
-                            {Formatter.formatDirection(windAngle)}
+                            {Formatter.formatDirection(wind.windAngle)}
                             <span className="unit">°</span>
                             /{windSpeedStr}
                             <span className="unit">{this.props.showKnots ? "kn" : "m/s"}</span>
@@ -92,13 +117,13 @@ class WindWidget extends React.Component{
                     <React.Fragment>
                         <div className="resize">
                             <div className="windInner">
-                                <div className='widgetData'>{Formatter.formatDirection(windAngle)}</div>
-                                <div className='infoLeft'>{names[suffix].angle}</div>
+                                <div className='widgetData'>{Formatter.formatDirection(wind.windAngle)}</div>
+                                <div className='infoLeft'>{names[wind.suffix].angle}</div>
                                 <div className='infoRight'>°</div>
                             </div>
                             <div className="windInner">
                                 <div className='widgetData'>{windSpeedStr}</div>
-                                <div className='infoLeft'>{names[suffix].speed}</div>
+                                <div className='infoLeft'>{names[wind.suffix].speed}</div>
                                 <div className='infoRight'>{this.props.showKnots ? "kn" : "m/s"}</div>
                             </div>
                         </div>
@@ -129,12 +154,13 @@ WindWidget.storeKeys={
     windSpeed: keys.nav.gps.windSpeed,
     windAngleTrue: keys.nav.gps.trueWindAngle,
     windSpeedTrue: keys.nav.gps.trueWindSpeed,
+    windDirectionTrue: keys.nav.gps.trueWindDirection,
     visible: keys.properties.showWind,
     showKnots: keys.properties.windKnots
 };
 WindWidget.editableParameters={
     show360: {type:'BOOLEAN',default:false},
-    kind: {type:'SELECT',list:['auto','true','apparent'],default:'auto'}
+    kind: {type:'SELECT',list:['auto','trueAngle','trueDirection','apparent'],default:'auto'}
 }
 
 export default WindWidget;

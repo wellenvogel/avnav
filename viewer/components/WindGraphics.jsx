@@ -9,7 +9,7 @@ import keys from '../util/keys.jsx';
 import navcompute from '../nav/navcompute.js';
 import Helper from '../util/helper.js';
 import GuiHelper from '../util/GuiHelpers.js';
-import WindWidget from "./WindWidget";
+import WindWidget, {getWindData} from "./WindWidget";
 
 const normalColors={
     green:  'rgba(5, 128, 30, 0.57)',
@@ -38,38 +38,7 @@ class WindGraphics extends React.Component{
         return Helper.compareProperties(this.props,nextProps,WindGraphics.storeKeys);
     }
     getValues(){
-        let kind = this.props.kind;
-        let windSpeed;
-        let windAngle;
-        let suffix='';
-        if (kind !== 'true' && kind !== 'apparent') kind='auto';
-        if (kind === 'auto'){
-            if (this.props.windAngle !== undefined && this.props.windSpeed !== undefined){
-                windAngle=this.props.windAngle;
-                windSpeed=this.props.windSpeed;
-                suffix='A';
-            }
-            else{
-                windAngle=this.props.windAngleTrue;
-                windSpeed=this.props.windSpeedTrue;
-                suffix="T";
-            }
-        }
-        if (kind === 'apparent'){
-            windAngle=this.props.windAngle;
-            windSpeed=this.props.windSpeed;
-            suffix='A';
-        }
-        if (kind === 'true'){
-            windAngle=this.props.windAngleTrue;
-            windSpeed=this.props.windSpeedTrue;
-            suffix="T";
-        }
-        return {
-            windAngle: windAngle,
-            windSpeed: windSpeed,
-            suffix: suffix
-        }
+        return getWindData(this.props);
     }
     render(){
         let self = this;
@@ -152,7 +121,7 @@ class WindGraphics extends React.Component{
         ctx.arc(width / 2 ,height / 2,radius*0.97,0,2*Math.PI);
         ctx.stroke();
         let start,end;
-        if (current.suffix !== 'T') {
+        if (current.suffix === 'A') {
             // Write left partial circle
             ctx.beginPath();
             ctx.strokeStyle = colors.red; // red
@@ -192,7 +161,7 @@ class WindGraphics extends React.Component{
         // Move the pointer from 0,0 to center position
         ctx.translate(width / 2 ,height / 2);
         ctx.font = fontSize+"px Arial";
-        if (! this.props.show360 && current.suffix !== 'T'){
+        if (! this.props.show360 && current.suffix !== 'TD'){
             if (winddirection > 180) winddirection-=360;
         }
         let txt=Formatter.formatDirection(winddirection).replace(/ /g,"0");
@@ -230,6 +199,7 @@ WindGraphics.storeKeys={
     windSpeed:  keys.nav.gps.windSpeed,
     windAngle:  keys.nav.gps.windAngle,
     windAngleTrue: keys.nav.gps.trueWindAngle,
+    windDirectionTrue: keys.nav.gps.trueWindDirection,
     windSpeedTrue: keys.nav.gps.trueWindSpeed,
     visible:    keys.properties.showWind,
     showKnots:  keys.properties.windKnots,
@@ -237,6 +207,6 @@ WindGraphics.storeKeys={
 };
 WindGraphics.editableParameters={
     show360: {type:'BOOLEAN',default:false},
-    kind: {type:'SELECT',list:['auto','true','apparent'],default:'auto'}
+    kind: {type:'SELECT',list:['auto','trueAngle','trueDirection','apparent'],default:'auto'}
 }
 export default WindGraphics;

@@ -7,7 +7,7 @@ import AisTargetWidget from './AisTargetWidget.jsx';
 import ActiveRouteWidget from './ActiveRouteWidget.jsx';
 import EditRouteWidget from './EditRouteWidget.jsx';
 import CenterDisplayWidget from './CenterDisplayWidget.jsx';
-import WindWidget from './WindWidget';
+import WindWidget, {getWindData} from './WindWidget';
 import XteWidget from './XteWidget';
 import EmptyWidget from './EmptyWidget';
 import WindGraphics from './WindGraphics';
@@ -20,6 +20,7 @@ import DateTimeWidget from './DateTimeWidget.jsx';
 import {GaugeRadial} from './CanvasGauges.jsx';
 import UndefinedWidget from './UndefinedWidget.jsx';
 import {SKPitchWidget, SKRollWidget} from "./SKWidgets";
+import assign from 'object-assign';
 
 let widgetList=[
     {
@@ -148,11 +149,25 @@ let widgetList=[
         unit: "\u00b0",
         caption: 'Wind Angle',
         storeKeys:{
-            value:keys.nav.gps.windAngle
+            windAngle:keys.nav.gps.windAngle,
+            windDirectionTrue: keys.nav.gps.trueWindDirection,
+            windAngleTrue: keys.nav.gps.trueWindAngle
         },
         formatter: 'formatDirection',
         editableParameters: {
-            formatterParameters: false
+            formatterParameters: false,
+            value: false,
+            caption: false,
+            kind: {type:'SELECT',list:['auto','trueAngle','trueDirection','apparent'],default:'auto'}
+        },
+        translateFunction: (props)=>{
+            const captions={
+                A:'AWA',
+                TD: 'TWD',
+                TA: 'TWA'
+            };
+            let wind=getWindData(props);
+            return assign({},props,{value:wind.windAngle, caption:captions[wind.suffix] })
         }
     },
     {
@@ -161,10 +176,31 @@ let widgetList=[
         unit: "m/s",
         caption: 'Wind Speed',
         storeKeys:{
-            value:keys.nav.gps.windSpeed
+            windSpeed:keys.nav.gps.windSpeed,
+            windSpeedTrue: keys.nav.gps.trueWindSpeed,
+            showKnots: keys.properties.windKnots
         },
-        formatter: 'formatDecimal',
-        formatterParameters: [2,1]
+        formatter: 'formatSpeed',
+        editableParameters: {
+            formatterParameters: false,
+            value: false,
+            caption: false,
+            kind: {type:'SELECT',list:['auto','true','apparent'],default:'auto'}
+        },
+        translateFunction: (props)=>{
+            const captions={
+                A:'AWS',
+                TD: 'TWS',
+                TA: 'TWS'
+            };
+            let wind=getWindData(props);
+            return assign({},props,{
+                value:wind.windSpeed,
+                caption:captions[wind.suffix],
+                formatterParameters: props.showKnots?'k':'m',
+                unit: props.showKnots?'kn':'m/s'
+            })
+        }
     },
     {
         name: 'WaterTemp',
