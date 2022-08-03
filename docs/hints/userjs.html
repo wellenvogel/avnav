@@ -57,9 +57,14 @@
       <li>Widgets mit eigenem HTML, die mit dem Server Teil eines Plugins
         interagieren (<a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/testPlugin/plugin.js">TestPlugin</a>:
         testPlugin_serverWidget)</li>
+      <li>Widgets, die Grafiken auf der Karte darstellen (type: map) - ab
+        202208xx z.B. <a href="https://github.com/kdschmidt1/Sail_Instrument/blob/e1d87186138e5a3ac894916e9b7e85a3218a4c9a/Sail_Instrument/plugin.js#L223">SailInstrument</a></li>
     </ul>
     <p>Das Interface, über das mit AvNav kommuniziert wird, findet sich <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/util/api.js">auf
-        github</a> bzw. im Template Code.</p>
+        github</a> bzw. im Template Code.<br>
+      Für map Widgets kann über das Api auf die <a href="https://www.movable-type.co.uk/scripts/geodesy-library.html">zugrunde
+        liegenden Bibliotheken</a> für geografische Berechnungen zugegriffen
+      werden (Funktion LatLon und Dms).</p>
     <p>Für ein selbst geschriebenes Widget können die folgenden
       Funktionen/Eigenschaften implementiert werden:</p>
     <table style="width: 100%" border="1">
@@ -82,7 +87,7 @@
             (optional)</td>
           <td>alle</td>
           <td>Bestimmt, welches Widget erzeugt werden soll.<br>
-            Werte: radialGauge, linearGauge<br>
+            Werte: radialGauge, linearGauge, map<br>
             Wenn der Typ nicht gesetzt ist, wird entweder das default widget
             genutzt (keine Funktion renderHtml und keine Funktion renderCanvas
             angegeben) - oder ein nutzer definiertes Widget (userWidget)</td>
@@ -117,7 +122,8 @@
           </td>
           <td>Funktion<br>
             (optional)</td>
-          <td>userWidget</td>
+          <td>userWidget,<br>
+            map</td>
           <td>Mit dieser Funktion kann in das übergebene Canvas Objekt
             gezeichnet werden.<br>
             Das als zweiter Parameter an renderCanvas übergebene Objekt enthält
@@ -126,6 +132,11 @@
             geändert haben.<br>
             Die "this" variable innerhalb von renderCanvas zeigt auf ein Objekt,
             das spezifisch für das Widget ist (Kontext).<br>
+            Für map widgets ist dieser Canvas ein Overlay, das über die Karte
+            gelegt wird. Am Widget Kontext stehen Funktionen zur Umrechnung von
+            Koordinaten in Canvas Pixel bereit. <br>
+            Es ist wichtig den Canvas korrekt mit save/restore zu beschreiben,
+            da sich alle map widgets den gleichen Canvas teilen.<br>
           </td>
         </tr>
         <tr>
@@ -165,7 +176,7 @@
           <td>translateFunction</td>
           <td>Funktion<br>
             (optional)</td>
-          <td>alle</td>
+          <td>alle ausser map</td>
           <td>Diese Funktion wird mit den aktuellen Werten als Parameter
             aufgerufen (so wie bei storeKeys angegeben) und muss die daraus
             berechneten Werte zurückgeben.<br>
@@ -176,7 +187,8 @@
           <td>initFunction</td>
           <td>Funktion<br>
             (optional)</td>
-          <td>userWidget</td>
+          <td>userWidget,<br>
+            map</td>
           <td>Falls vorhanden, wird diese Funktion einmalig aufgerufen, wenn das
             Widget erzeugt wird. Als Parameter (und als this) ist der Widget
             Context vorhanden.<br>
@@ -192,15 +204,13 @@
           <td>finalizeFunktion</td>
           <td>Funktion<br>
             (optional)</td>
-          <td>userWidget</td>
+          <td>userWidget,<br>
+            map</td>
           <td>Falls vorhanden, wird diese Funktion aufgerufen, bevor das Widget
             nicht mehr genutzt wird. Die "this" Variable zeigt wieder auf den
             Widget Kontext.<br>
             Ausserdem ist der Kontext auch als erster Parameter vorhanden - wie
-            bei der initFunction.<br>
-            Ab Version 20210422 erhält die initFunction einen 2. Parameter, der
-            die Eigenschaften des Widgets enthält. Das sind insbesondere auch
-            alle editierbaren Widget Parameter, die definiert wurden.</td>
+            bei der initFunction.</td>
         </tr>
       </tbody>
     </table>
@@ -231,7 +241,109 @@
     </table>
     <p>Nach der Definition muss das Widget bei AvNav bekannt gemacht werden
       (avnav.registerWidget). </p>
-    <h2><a name="widgetparameter" id="widgetparameter"></a>Widget Parameter</h2>
+    <h2>Widget Context</h2>
+    <p>User Widgets und Map Widgets bekommen einen WidgetContext. Dieser wird
+      für jedes Widget erzeugt und den Funktionen:</p>
+    <ul>
+      <li>initFunction (this und erster Parameter)</li>
+      <li>finalizeFunction (this und erster Parameter)</li>
+      <li>renderHtml (this)</li>
+      <li>renderCanvas (this)</li>
+    </ul>
+    übergeben.<br>
+    <ul>
+    </ul>
+    <p>Damit der Kontext als this Parameter genutzt werden kann, müssen die
+      Funktionen "klassisch" mittels function definiert werden und nicht als
+      "arrow function".</p>
+    <p>Richtig:</p>
+    <div class="code">let userWidget={<br>	renderHtml: function(context,props){<br>		return "&lt;p&gt;Hello&lt;/p&gt;";<br>	}<br>}</div>
+    <h2><a name="widgetparameter" id="widgetparameter"></a></h2>
+    <p>Im WidgetContext können Nutzerdaten gespeichert werden, die in
+      aufeinanderfolgenden Aufrufen benötigt werden.<br>
+      Ausserdem enthält er einige Funktionen, die vom Widget Code aufgerufen
+      werden können.</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Widget</td>
+          <td>Parameter</td>
+          <td>Beschreibung</td>
+        </tr>
+        <tr>
+          <td>eventHandler</td>
+          <td>userWidget</td>
+          <td>---</td>
+          <td>eventHandler ist keine Funktion sondern ein array. Falls im
+            renderHtml event Handler angegeben werden (z.B. &lt;button
+            onclick="clickHandler"/&gt;), dann muss in der initFunction&nbsp;
+            eine Funktion clickHandler hier registriert werden:<br>
+            this.eventHandler.clickHandler=function(ev){...}<br>
+            Siehe <a href="https://github.com/wellenvogel/avnav/blob/7035cba511ea400ebcd7a972b6b0baf79deba04d/server/plugins/testPlugin/plugin.js#L150">TestPlugin</a>.</td>
+        </tr>
+        <tr>
+          <td>triggerRedraw</td>
+          <td>userWidget</td>
+          <td>---</td>
+          <td>Diese Funktion muss gerufen werden, wenn das Widget (z.B. nach
+            einer Kommunikation mit dem Server) möchte, das es neu gezeichnet
+            wird.<br>
+            Siehe <a href="https://github.com/wellenvogel/avnav/blob/7035cba511ea400ebcd7a972b6b0baf79deba04d/server/plugins/testPlugin/plugin.js#L160">TestPlugin</a>.</td>
+        </tr>
+        <tr>
+          <td>lonLatToPixel</td>
+          <td>map</td>
+          <td>lon,lat</td>
+          <td>Konvertiert die Koordinaten in pixel Koordinaten für das Zeichnen
+            in renderCanvas.<br>
+            Gibt ein array mit x,y Koordinate zurück.</td>
+        </tr>
+        <tr>
+          <td>pixelToLonLat</td>
+          <td>map</td>
+          <td>x,y</td>
+          <td>Berechnet aus den Canvas-Koordinaten x,y longitude und latitude.
+            Gibt ein array mit lon,lat zurück.</td>
+        </tr>
+        <tr>
+          <td>getScale</td>
+          <td>map</td>
+          <td>---</td>
+          <td>Gibt den Scaling Faktor für das Display zurück. Hochauflösende
+            Display haben einen scaling Factor &gt; 1. Gezeichnete Objekte
+            (besonders Text) sollten in ihren Dimensionen angepasst werden.</td>
+        </tr>
+        <tr>
+          <td>getRotation</td>
+          <td>map</td>
+          <td>---</td>
+          <td>Gibt die Drehung der Karte (in radian!) zurück</td>
+        </tr>
+        <tr>
+          <td>getContext</td>
+          <td>map</td>
+          <td>---</td>
+          <td>Gibt den renderingContext2D des Canvas zurück (nur aktiv innerhalb
+            der renderCanvas Funktion)</td>
+        </tr>
+        <tr>
+          <td>getDimensions</td>
+          <td>map</td>
+          <td>---</td>
+          <td>gibt die Größe des Canvas zurück [Breite,Höhe]</td>
+        </tr>
+        <tr>
+          <td>triggerRender</td>
+          <td>map</td>
+          <td>---</td>
+          <td>gleiche Funktion wie triggerRedraw beim user Widget</td>
+        </tr>
+      </tbody>
+    </table>
+    <p><br>
+    </p>
+    <h2>Widget Parameter</h2>
     <p>Neben der Widget Definition können hier noch Parameter angegeben werden,
       die dann im Layout Editor für das Widget angezeigt werden.</p>
     <p>Beispiele sind im <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">user.js

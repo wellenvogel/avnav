@@ -150,6 +150,13 @@
           </td>
         </tr>
         <tr>
+          <td><img src="../viewerimages/icons-new/settings_remote.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>RemoteChannel</td>
+          <td>selection of the <a href="../hints/RemoteControl.html">remote
+              control channel and mode</a><span style="color: #0000ee;"> </span>(send/receive).</td>
+        </tr>
+        <tr>
           <td><img src="../viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage"><br>
           </td>
           <td>Cancel</td>
@@ -271,6 +278,14 @@
           <td>start navigation to this waypoint<br>
             only visible if there is no active route</td>
         </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/wpgoto.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>NavRestart</td>
+          <td>restart navigation to the current waypoint. This especially sets a
+            new course and restarts the XTE computation.<br>
+            Will only be visible if a navigation is active currently.</td>
+        </tr>
       </tbody>
     </table>
     <p>If a route is active, the waypoint buttons will change slightly.</p>
@@ -302,6 +317,14 @@
           <td>WpPrevious</td>
           <td>center chart to previous waypoint</td>
         </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/wpgoto.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>NavRestart</td>
+          <td>restart navigation to the current waypoint. This especially sets a
+            new course and restarts the XTE computation.<br>
+            Will only be visible if a navigation is active currently.</td>
+        </tr>
       </tbody>
     </table>
     <p>If a route is active there will be a display for the route data on the
@@ -311,8 +334,9 @@
     <ul>
       <li>the boat is within the approach radius to the current target
         waypoint&nbsp; (default 200m - settings-&gt;route-&gt;approach)</li>
-      <li>the distance to the waypoint starts to increase (and the distance to
-        the next one to decrease)</li>
+      <li>the second condition depending on the selected mode is met
+        (early/90/late) - see&nbsp; <a href="../quickstart.html#nextwp">Next
+          Waypoint Handling</a></li>
     </ul>
     <p> In approach to the waypoint the display of the route parameters will
       turn red and the course to the next waypoint will be shown additionally.
@@ -339,6 +363,10 @@
       waypoint to the center. For a simple bearing just move the chart center
       (cross) to the bearing target and read the bearing from the "Center"
       display.</p>
+    <h3>Feature Info</h3>
+    <p>When clicking on the map a feature info dialog will pop up. Within this
+      dialog you also have a button to immediately start a navigation to the
+      clicked point.</p>
     <p>To start a route - change with&nbsp; <img src="../viewerimages/icons-new/route.svg"
         alt="" class="inlineimage">to the <a href="editroutepage.html">route
         editor</a>.</p>

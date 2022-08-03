@@ -152,6 +152,13 @@
           </td>
         </tr>
         <tr>
+          <td><img src="../viewerimages/icons-new/settings_remote.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>RemoteChannel</td>
+          <td>Auswahl des <a href="../hints/RemoteControl.html">Fernsteuerungskanals
+              sowie des Fernsteuerungsmodus</a> (senden/empfangen).</td>
+        </tr>
+        <tr>
           <td><img src="../viewerimages/icons-new/ic_clear.svg" alt="" class="inlineimage"><br>
           </td>
           <td>Cancel</td>
@@ -275,6 +282,15 @@
           <td>Start der Navigation zu diesem Wegpunkt.<br>
             Wir nur angezeigt, wenn noch keine Navigation aktiv ist.</td>
         </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/wpgoto.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>NavRestart</td>
+          <td>Restarte die Navigation zum aktuellen Wegepunkt. Damit wird
+            insbesondere der Soll-Kurs und damit die XTE Berechnung neu
+            gestartet.<br>
+            Wird nur angezeigt, wenn eine Navigation aktiv ist.</td>
+        </tr>
       </tbody>
     </table>
     <p>Falls momentan eine Route aktiv ist, werden etwas andere Buttons beim
@@ -307,6 +323,15 @@
           <td>WpPrevious</td>
           <td>Zentriere den Kartenmittelpunkt auf den vorigen Wegpunkt</td>
         </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/wpgoto.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>NavRestart</td>
+          <td>Restarte die Navigation zum aktuellen Wegepunkt. Damit wird
+            insbesondere der Soll-Kurs und damit die XTE Berechnung neu
+            gestartet.<br>
+            Wird nur angezeigt, wenn eine Navigation aktiv ist.</td>
+        </tr>
       </tbody>
     </table>
     <p>Wenn eine Route aktiv ist, hat man wie im Bild links eine Anzeige der
@@ -316,7 +341,9 @@
     <ul>
       <li>Das Boot befindet sich im "Fangbereich" (default 200m -
         settings-&gt;route-&gt;approach)</li>
-      <li>Die Entfernung zum Wegpunkt wird größer</li>
+      <li>Die weitere Bedingung entsprechend des eingestellten modes
+        (early/90/late) ist erfüllt - siehe <a href="../quickstart.html#nextwp">Wegepunkt
+          Weiterschaltung</a>.</li>
     </ul>
     <p> Die Anzeige der Routen-Parameter wird rot und zeigt den Kurs zum
       nächsten WP an, wenn das Boot im "Fangbereich" ist. Ausserdem erfolgt eine
@@ -345,6 +372,11 @@
       Anzeige des aktuellen Abstandes vom Marker bzw. Schiff zum
       Kartenmittelpunkt. Damit kann man einfache Peilungen machen - Mittelpunkt
       auf Peilziel verschieben und Peilung ablesen.</p>
+    <h3>Feature Info</h3>
+    <p>Wenn man auf die Karte klickt erscheint ein Dialog mit Informationen zum
+      angeklickten Punkt. In diesem Dialog findet man einen Butoon um sofort
+      eine Navigation zu diesem Ziel zu starten.</p>
+    <p></p>
     <p>Für das Starten einer Route wechselt man zunächst mittels <img src="../viewerimages/icons-new/route.svg"
         alt="" class="inlineimage">zum <a href="editroutepage.html">Routen
         Editor</a>.</p>

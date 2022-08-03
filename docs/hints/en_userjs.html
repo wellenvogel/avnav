@@ -55,9 +55,14 @@
       <li>widgets with own HTML that are communicating with the server part of a
         plugin (<a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/testPlugin/plugin.js">TestPlugin</a>:
         testPlugin_serverWidget</li>
+      <li>widgets that will draw graphics on the map (type: map) - since
+        202208xx e.g. <a href="https://github.com/kdschmidt1/Sail_Instrument/blob/e1d87186138e5a3ac894916e9b7e85a3218a4c9a/Sail_Instrument/plugin.js#L223">SailInstrument</a></li>
     </ul>
     <p>The interface to communicate with AvNav is available <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/util/api.js">at
         github</a> and in the example code.</p>
+    <p>For map widgets you can access the <a href="https://www.movable-type.co.uk/scripts/geodesy-library.html">underlying
+        libraries</a> for geographical computations via the API (functions
+      LatLon and Dms).</p>
     <p>For an own widget the following functions/properties can be implemented:</p>
     <table style="width: 100%" border="1">
       <tbody>
@@ -79,7 +84,7 @@
             (optional)</td>
           <td>alle</td>
           <td>defines which type of widget should be created<br>
-            Values: radialGauge, linearGauge<br>
+            Values: radialGauge, linearGauge, map<br>
             If you don't set the type either the default widget will be used (no
             renderHtml and no renderCanvas provided) or a special userWidget
             will be used.</td>
@@ -112,13 +117,19 @@
           </td>
           <td>function<br>
             (optional)</td>
-          <td>userWidget</td>
+          <td>userWidget,<br>
+            map</td>
           <td>With this function you can draw to the provided canvas object.<br>
             The second parameter of renderCanvas contains all parameters of the
             widget and the values defined at storeKeys.<br>
             The function will be called every time the values change.<br>
             The "this" inside renderCanvas refers to the widget context (an
             object that is specific for the particular widget).<br>
+            For map widgets this canvas is an overlay on the map. At the widget
+            context you have functions to convert between coordinates and canvas
+            pixels.<br>
+            it is important to correctly handle the canvas with save/restore as
+            all map widgets share the same canvas.<br>
           </td>
         </tr>
         <tr>
@@ -167,7 +178,8 @@
           <td>initFunction</td>
           <td>function<br>
             (optional)</td>
-          <td>userWidget</td>
+          <td>userWidget,<br>
+            map</td>
           <td>If defined, this function will be called once after creating the
             widget before any renderXXX function. The widget context is provided
             as a parameter and as the "this" variable.<br>
@@ -184,7 +196,8 @@
           <td>finalizeFunktion</td>
           <td>function<br>
             (optional)</td>
-          <td>userWidget</td>
+          <td>userWidget,<br>
+            map</td>
           <td>If defined, this function will be called before the widget is
             removed. The "this" refers to the widget context. Additionally the
             context will also provided as the first parameter (like in the
@@ -221,7 +234,108 @@
       </tbody>
     </table>
     <p>After defining a widget you need to register it at AvNav
-      (avnav.registerWidget). </p>
+      (avnav.registerWidget).</p>
+    <h2>Widget Context</h2>
+    <p>User widgets and map widgets will receive a widget context. This will be
+      created for every instance of a widget and will be provided to the
+      following functions:</p>
+    <ul>
+      <li>initFunction (this and first parameter)</li>
+      <li>finalizeFunction (this and first parameter)</li>
+      <li>renderHtml (this)</li>
+      <li>renderCanvas (this)</li>
+    </ul>
+    <ul>
+    </ul>
+    <p>To make the access to "this" inside the functions working they need to be
+      defined the classic way with "function" - not as arrow functions.</p>
+    <p>Correct:</p>
+    <div class="code">let userWidget={<br>	renderHtml: function(context,props){<br>		return "&lt;p&gt;Hello&lt;/p&gt;";<br>	}<br>}</div>
+    <h2><a name="widgetparameter" id="widgetparameter"></a></h2>
+    <p>Inside the widget context you can store userc&nbsp; data that will be
+      needed in consecutive function calls.<br>
+      Additionally it contains a couple of functions you can use in your widget
+      code.</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Widget</td>
+          <td>Parameter</td>
+          <td>Description</td>
+        </tr>
+        <tr>
+          <td>eventHandler</td>
+          <td>userWidget</td>
+          <td>---</td>
+          <td>eventHandler is not a function but just an object. If you have
+            event handlers inside your rendered HTML you need to provide the
+            handler function there.<br>
+            E.g.:<br>
+            renderHtml returns &lt;button onclick="clickHandler"/&gt;) - you
+            need to register a function "clickHandler" here.<br>
+            this.eventHandler.clickHandler=function(ev){...}<br>
+            See <a href="https://github.com/wellenvogel/avnav/blob/7035cba511ea400ebcd7a972b6b0baf79deba04d/server/plugins/testPlugin/plugin.js#L150">TestPlugin</a>.</td>
+        </tr>
+        <tr>
+          <td>triggerRedraw</td>
+          <td>userWidget</td>
+          <td>---</td>
+          <td>This function needs to be called if the widget would like itself
+            to be redrawn (e.g. after communicating with a server).<br>
+            See <a href="https://github.com/wellenvogel/avnav/blob/7035cba511ea400ebcd7a972b6b0baf79deba04d/server/plugins/testPlugin/plugin.js#L160">TestPlugin</a>.</td>
+        </tr>
+        <tr>
+          <td>lonLatToPixel</td>
+          <td>map</td>
+          <td>lon,lat</td>
+          <td>Converts longitude, latitude into pixel coordinate for the
+            renderCanvas.<br>
+            Returns an array [x,y].</td>
+        </tr>
+        <tr>
+          <td>pixelToLonLat</td>
+          <td>map</td>
+          <td>x,y</td>
+          <td>Computes longitude and latitude from the canvas coordinates x and
+            y.<br>
+            Returns an array [lon,lat].</td>
+        </tr>
+        <tr>
+          <td>getScale</td>
+          <td>map</td>
+          <td>---</td>
+          <td>Returns the scale factor for the display. High resolution displays
+            normally have a scale factor &gt; 1. You should adapt the dimension
+            of your drawings (especially texts) depending on this scal factor.</td>
+        </tr>
+        <tr>
+          <td>getRotation</td>
+          <td>map</td>
+          <td>---</td>
+          <td>Returns the current map rotation (in radians!)</td>
+        </tr>
+        <tr>
+          <td>getContext</td>
+          <td>map</td>
+          <td>---</td>
+          <td>Returns the renderingContext2D of the canvas (only active inside
+            the renderCanvas function)</td>
+        </tr>
+        <tr>
+          <td>getDimensions</td>
+          <td>map</td>
+          <td>---</td>
+          <td>Returns the width and height of the canvas ([width,height]).</td>
+        </tr>
+        <tr>
+          <td>triggerRender</td>
+          <td>map</td>
+          <td>---</td>
+          <td>Same functionality like triggerRedraw at the userWidget.</td>
+        </tr>
+      </tbody>
+    </table>
     <a name="widgetparameter" id="widgetparameter"></a>
     <h2>Widget Parameters</h2>
     <p>As a second parameter you can provide an object containing parameters to
