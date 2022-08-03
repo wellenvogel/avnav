@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html>
-<head>
-<meta http-equiv="content-type" content="text/html; charset=utf-8">
-    
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <title>AvNav Hauptseite</title>
     <link href="../styles.css" rel="stylesheet" type="text/css">
   </head>
@@ -92,8 +91,7 @@
               <td><img src="../viewerimages/icons-new/fullscreen.svg" alt="" class="inlineimage"><br>
               </td>
               <td>FullScreen</td>
-              <td>Fullscreen ein/aus (nur auf unterstützten
-                Browsern)<a href="../hints/overlays.html"></a></td>
+              <td>Fullscreen ein/aus (nur auf unterstützten Browsern)<a href="../hints/overlays.html"></a></td>
             </tr>
             <tr>
               <td><img src="../viewerimages/icons-new/apps.svg" alt="" class="inlineimage"><br>
@@ -101,6 +99,21 @@
               <td>MainAddOns</td>
               <td><a href="addonpage.html">Anzeige von konfigurierten User Apps</a>
                 (z.B. signalK)</td>
+            </tr>
+            <tr>
+              <td><img src="../viewerimages/icons-new/settings_remote.svg" alt=""
+                  class="inlineimage"><br>
+              </td>
+              <td>RemoteChannel</td>
+              <td>Erlaubt den <a href="../hints/RemoteControl.html">Fernsteuerungskanal</a>
+                und -Modus zu wechseln</td>
+            </tr>
+            <tr>
+              <td><img src="../viewerimages/icons-new/vertical_split.svg" alt=""
+                  class="inlineimage"><br>
+              </td>
+              <td>Split</td>
+              <td>Schaltet den <a href="#SplitMode">Split Mode</a> ein oder aus</td>
             </tr>
           </tbody>
         </table>
@@ -169,6 +182,65 @@
       Wegepunkte! Alle anderen Funktionen sind immer mit dem Server verbunden
       (ausser MOB - das ist eine Routing Funktion - und daher nicht aktivierbar
       wenn man nicht verbunden ist).</p>
-    <h3></h3>
-  </body>
+    <h3><a name="SplitMode" id="SplitMode"></a>Split Mode</h3>
+    <p>Ab Version 202207xx kann AvNav sein Hauptfenster teilen. Dabei laufen
+      praktisch 2 Instanzen der AvNav App nebeneinander.</p>
+    <p><img src="splitmode1.png" alt="" class="fimage"> </p>
+    <p>Die beiden Instanzen sind weitgehend unabhängig voneinander und können
+      jeweils getrennt bedient werden.<br>
+      Sie teilen sich zu einem großen Teil die Einstellungen von AvNav.<br>
+      Nur einige wenige Einstellungen sind jeweils spezifisch für die Seite
+      (rechts/links). Diese werden beim Aufruf der <a href="settingspage.html">Einstellungsseite</a>
+      mit einem * gekennzeichnet.<br>
+      Wenn man Einstellungen ändert (ausser die mit dem *) werden die Änderungen
+      auch sofort auf der anderen Seite wirksam.</p>
+    <p>Die folgenden Einstellungen sind jeweils spezifisch pro Seite:</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Bedeutung</td>
+        </tr>
+        <tr>
+          <td>connectedMode</td>
+          <td>Der "Stecker Button" - wenn der ausgeschaltet ist, kann die
+            Instanz keine Änderungen auf dem Server vornehmen. Man kann hier
+            z.B. eine eigene Route testen.</td>
+        </tr>
+        <tr>
+          <td>layoutName</td>
+          <td>Das zu verwendende Layout</td>
+        </tr>
+        <tr>
+          <td>remoteChannelName</td>
+          <td>Der Name für den Fernsteuerungskanal</td>
+        </tr>
+        <tr>
+          <td>remoteChannelRead</td>
+          <td>Fenrsteuerung lesen</td>
+        </tr>
+        <tr>
+          <td>remoteChannelWrite</td>
+          <td>Fernsteuerung schreiben</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Falls man andere/weitere Einstellungen spezifisch je Seite vornehmen
+      möchte, kann man eine Datei splitkeys.json im User-Verzeichnis anlegen.
+      Die default Datei findet man auf <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/splitkeys.json">GitHub</a>.
+      Die Namen für die keys muss man dem <a href="https://github.com/wellenvogel/avnav/blob/16b121112b05308d0f7b3c3e8ae6924375524289/viewer/util/keys.jsx#L265">Source
+        Code im Abschnitt properties</a> entnehmen. Alle in dieser Datei
+      aufgelisteten Eigenschaften sind dann spezifisch pro Seite.<br>
+      Die pro Seite spezifisch eingestellten Eigenschaften werden beim Beenden
+      des Split Modes nicht für die dann laufende Instanz übernommen (sind aber
+      für den nächsten Split Mode Aufruf erhalten).</p>
+    <p>Alarme werden im Split Mode nur in der rechten Instanz angezeigt.</p>
+    <p>Über den <img src="file:///home/andreas/projects/avnav/docs/viewerimages/icons-new/vertical_split.svg"
+        alt="" class="inlineimage"> Split Button in jeder Instanz kann der Split
+      mode wieder verlassen werden.</p>
+    <p>Mit dem Slider kann die Aufteilung zwischen beiden Instanzen verändert
+      werden.</p>
+    <p><br>
+    </p>
+    </body>
 </html>

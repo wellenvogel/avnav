@@ -77,7 +77,7 @@
     <p>With the Android installation, all settings are directly integrated in
       the App.</p>
     <h2>NMEA Data</h2>
-    <p><img class="fimage" src="en_avnav_schnittstellen.png" border="0" width="600">
+    <p><img class="fimage" src="en_avnav_schnittstellen.png" width="600" border="0">
     </p>
     <h3>Client Server</h3>
     <p>AvNav processes NMEA0183 Data from connected USB devices, serial ports,
@@ -196,7 +196,7 @@
       that you would like to use.</p>
     <p>There is also an adaptation to different screen sizes available in the
       layout ("small").</p>
-    <h2>Routes</h2>
+    <h2><a name="routes"></a>Routes</h2>
     <p>You can easily create and edit routes within AvNav. You will use the
       chart view at the <a href="userdoc/editroutepage.html">Route Editor</a>.
       Normally you just drag the center of the chart (cross) to the next point
@@ -210,6 +210,48 @@
       route navigation. When following a route an alarm will be raised as you
       reach the next waypoint (if you are within an "approach" distance) and
       AvNav will automatically switch to the next waypoint.</p>
+    <p>Since version 202207xx AvNav can handle two different routing modes. </p>
+    <h3><a href="https://en.wikipedia.org/wiki/Great_circle">great circle</a></h3>
+    A route is computed as the shortest distance between two points on the
+    earth. The drawback is a course that will change permanently throughout the
+    route. In the map display this route will be a curve.<br>
+    In older versions AvNav always computed routes as great circle - by
+    accidently did draw them as straight lines.<br>
+    For shorter distances (&lt; 100nm) this basically does not matter at all.
+    <h3><a href="https://en.wikipedia.org/wiki/Rhumb_line">rhumb line</a></h3>
+    A route will be computed for a constant course. The display on the map will
+    be a straight line.
+    <p>To switch the modes use the Router at the <img src="viewerimages/icons-new/status.svg"
+        alt="" class="inlineimage"> <a href="userdoc/settingspage.html">server/status
+        page</a>. For the <img src="viewerimages/icons-new/straighten.svg" alt=""
+        class="inlineimage"> measure tool you can set the mode separately in the
+      settings of the App (at Navigation/Measure Display RhumbLine). This way
+      you can easily compare the two pathes.</p>
+    <h3><a name="nextwp"></a>Next Waypoint Switching</h3>
+    <p>To trigger the automatic switch to the next waypoint two conditions must
+      be meat simultaneously:</p>
+    <ol>
+      <li>The boot must be located inside the approach radius of the waypoint
+        (can be defined in the app settings before you start a route). This will
+        become visible by a red display of the Route Widget and the triggering
+        of the waypoint alarm.</li>
+      <li>Depending on the selected mode (Router on the <img src="viewerimages/icons-new/status.svg"
+          alt="" class="inlineimage"> <a href="userdoc/settingspage.html">server/status
+          page</a>: nextWpMode) - new since 202207xx<br>
+        "late" (the default and the one used in older versions): The distance to
+        the current waypoint must not decrease any more and the distance to the
+        next waypoint must start to decrease.<br>
+        "90": The waypoint is "abeam" - more exactly the boat has crossed a line
+        +/- 90° to the original waypoint course.<br>
+        "early": The switch will be triggered by a delay (that you can
+        configure) after the waypoint alarm has been initiated (without any
+        further conditions).</li>
+    </ol>
+    It is important to know the the automatic switch will only occur if really
+    both conditions are meat. If you would like to trigger the switch by hand
+    you can bring up the waypoint buttons by a click on the lower left widgets
+    and use the <img src="viewerimages/icons-new/nextwp.svg" alt="" class="inlineimage">Button.
+    <p></p>
     <h2><a name="tracks"></a>Tracks</h2>
     <p>AvNav is records the current track displaying it on the chart. To
       minimize the number of trackpoints they will just be recorded after major

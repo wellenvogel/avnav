@@ -78,7 +78,7 @@
       sowie <a href="hints/plugins.html">Plugins</a> vorgenommen werden.</p>
     <h2>NMEA-Daten</h2>
     <p><img class="fimage" src="avnav_schnittstellen.png" name="Datenim- und Export"
-        border="0" width="600"> </p>
+        width="600" border="0"> </p>
     <h3>Client Server Variante</h3>
     <p>AvNav verarbeitet NMEA0183-Daten, die über angeschlossene USB-Geräte,
       serielle Schnittstellen, Bluetooth-Geräte,&nbsp; TCP (Client und Server)
@@ -195,7 +195,7 @@
       und mit <a href="hints/usercss.html">CSS</a> erstellt werden.</p>
     <p>Diese Layouts beinhalten auch eine Anpassung an unterschiedliche
       Bildschirm-Ausrichtungen und -auflösungen.</p>
-    <h2>Routen</h2>
+    <h2><a name="routes"></a>Routen</h2>
     <p>In AvNav können sehr einfach Routen erstellt und bearbeitet werden. Das
       erfolgt in der Kartenansicht im <a href="userdoc/editroutepage.html">Routen-Editor</a>.
       Im Normalfall verschiebt man die Karte so, dass der Mittelpunkt auf dem
@@ -213,6 +213,48 @@
       Alarmierung, wenn der nächste Wegepunkt erreicht wird bzw. sobald man sich
       innerhalb des "approach" genannten Umkreises befindet. Es erfolgt ein
       automatisches Weiterschalten zum nächsten Wegpunkt.</p>
+    <p>Ab Version 202207xx kann AvNav zwei verschiedene Routing Modi nutzen:</p>
+    <h3><a href="https://en.wikipedia.org/wiki/Great_circle">great circle</a></h3>
+    Hier wird eine Route so berechnet das man den kürzesten Weg zwischen Start
+    und Ziel hat. Der Nachteil daran ist, das sich der Kurs im Verlauf der Route
+    permanent ändert. Eine solche Route ist in der Kartendarstellung keine
+    Strecke sondern eine Kurve.<br>
+    In älteren Versionen hat AvNav immer great circle Routen berechnet, diese
+    aber (fälschlich) als Strecken dargestellt.<br>
+    Für kürzere Distanzen (&lt; 100nm) spielt das aber praktisch keine Rolle.
+    <h3><a href="https://en.wikipedia.org/wiki/Rhumb_line">rhumb line</a></h3>
+    Hier wird die Route so berechnet, das ein konstanter Kurs gesteuert werden
+    kann. Die Kartendarstellung ist eine Strecke.
+    <p>Die Umschaltung erfolgt im Router auf der&nbsp;<img src="viewerimages/icons-new/status.svg"
+        alt="" class="inlineimage"> <a href="userdoc/settingspage.html">Server/Status
+        Seite</a>. Für das&nbsp;<img src="viewerimages/icons-new/straighten.svg"
+        alt="" class="inlineimage"> Mess-Tool kann in den Einstellungen der Web
+      App (unter Navigation/Measure Display RhumbLine) der Modus separat
+      eingestellt werden. Damit können leicht die beiden Wege verglichen werden.</p>
+    <h3><a name="nextwp"></a>Wegepunkt Weiterschaltung</h3>
+    <p>Für die automatische Weiterschaltung zum nächsten Wegepunkt in einer
+      Route müssen immer zwei Bedingungen erfüllt sein:</p>
+    <ol>
+      <li>Das Boot muss sich im Annäherungsbereich des Wegepunktes befinden
+        (kann man in den Einstellungen der WebApp vor dem Starten einer Route
+        definieren). Das wird ersichtlich durch einen ausgelösten
+        Wegepunkt-Alarm und eine rote Darstellung im Route-Widget.</li>
+      <li>Je nach eingestelltem Mode (Router auf der&nbsp;<img src="viewerimages/icons-new/status.svg"
+          alt="" class="inlineimage"> <a href="userdoc/settingspage.html">Server/Status
+          Seite</a>: nextWpMode) - neu ab 202207xx<br>
+        "late" (der default und in älteren Versionen): Die Entfernung zum
+        aktuellen Wegepunkt nimmt nicht mehr ab aber die Entfernung zum nächsten
+        Wegepunkt nimmt ab<br>
+        "90": Der Wegepunkt liegt "querab" (genauer: Das Boot hat eine Linie +/-
+        90° zum originalen Wegepunktkurs überquert)<br>
+        "early": Die Weiterschaltung erfolgt eine (einstellbare) Zeit nach dem
+        Wegepunkt-Alarm ohne weitere Bedingungen</li>
+    </ol>
+    Es ist wichtig zu beachten, das die Weiterschaltung nur erfolgt, wenn beide
+    Kriterien erfüllt sind. Falls eine manuelle Weiterschaltung gewünscht ist,
+    kann man jederzeit durch Klick auf die Widgets links unten die
+    Wegepunkt-Buttons anzeigen un den <img src="viewerimages/icons-new/nextwp.svg"
+      alt="" class="inlineimage">Button nutzen.<br>
     <h2><a name="tracks"></a>Tracks</h2>
     <p>AvNav zeichnet beständig den aktuellen Track auf und zeigt ihn auf der
       Karte. Dabei wird versucht, die Zahl der Trackpunkte zu begrenzen, indem

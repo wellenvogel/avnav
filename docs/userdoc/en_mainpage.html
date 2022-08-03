@@ -98,13 +98,28 @@
               <td><a href="addonpage.html">display of configured user apps </a>
                 (e.g. signalk)</td>
             </tr>
+            <tr>
+              <td><img src="../viewerimages/icons-new/settings_remote.svg" alt=""
+                  class="inlineimage"><br>
+              </td>
+              <td>RemoteChannel</td>
+              <td>Switch the <a href="../hints/RemoteControl.html">remote
+                  control</a> channel and mode</td>
+            </tr>
+            <tr>
+              <td><img src="../viewerimages/icons-new/vertical_split.svg" alt=""
+                  class="inlineimage"><br>
+              </td>
+              <td>Split</td>
+              <td>Switch <a href="#SplitMode">Split Mode</a> on or off</td>
+            </tr>
           </tbody>
         </table>
       </div>
     </div>
-    <p>In the page main area there is the list of charts available on the
-      server (files at /home/pi/avnav/data/charts on raspi, on android
-      charts in the choosen directory). </p>
+    <p>In the page main area there is the list of charts available on the server
+      (files at /home/pi/avnav/data/charts on raspi, on android charts in the
+      choosen directory). </p>
     <p>After first installation you will see some/one online demo charts. They
       can only be used when connected to internet, of course.</p>
     <p>You can upload further charts via the <a href="downloadpage.html">files/download
@@ -119,8 +134,8 @@
         alt="" class="inlineimage">button). </p>
     <p>If you have charts installed in <a href="../hints/CanboatAndSignalk.html">SignalK</a>,
       you will also see them here.</p>
-    <p>Next to each chart the <img src="../viewerimages/icons-new/layers-black.svg" alt="" class="inlineimage">button
-      will open the <a href="../hints/overlays.html">overlay</a>
+    <p>Next to each chart the <img src="../viewerimages/icons-new/layers-black.svg"
+        alt="" class="inlineimage">button will open the <a href="../hints/overlays.html">overlay</a>
       editor for this chart.</p>
     <p>By clicking on a chart entry you will be taken to the <a href="navpage.html">navigation
         page</a> with the selected chart set.</p>
@@ -129,13 +144,14 @@
     <p>Visible on all pages - but only if we are in connected mode - button <img
         src="../viewerimages/icons-new/plug.svg" alt="" class="inlineimage">with
       green border.<br>
-      By clicking on the MOB button the current position will turn into a dedicated
-      waypoint named "MOB". Any active routing will be stopped and the route to
-      the MOB waypoint will be activated. The display will switch to the navigation page
-      with the last selected chart. The chart will be centered to the boat and a
-      fixed zoom will be applied (can be preset in settings). Additionally a MOB
-      alarm will be triggered. The alarm can be stopped. The MOB routing remains
-      active until you click the MOB button again.</p>
+      By clicking on the MOB button the current position will turn into a
+      dedicated waypoint named "MOB". Any active routing will be stopped and the
+      route to the MOB waypoint will be activated. The display will switch to
+      the navigation page with the last selected chart. The chart will be
+      centered to the boat and a fixed zoom will be applied (can be preset in
+      settings). Additionally a MOB alarm will be triggered. The alarm can be
+      stopped. The MOB routing remains active until you click the MOB button
+      again.</p>
     <p><img src="mob-navpage.png" alt="" class="fimage"></p>
     <p>If there was no selected chart before the display will go to the <a href="dashboardpage.html">dashboard</a>
       .</p>
@@ -148,19 +164,78 @@
     <p>With the<img src="../viewerimages/icons-new/plug.svg" alt="" class="inlineimage">button
       you control how the route data is synced with the server. If it is active
       (green border) all changes on routing data (waypoints, start routing, stop
-      routing, change route) will be synced with the server immediately. This way
-      they will become visible on all connected displays.</p>
-    <p>If it is switched off, all routing changes will only be stored
-      locally. In this mode you can e.g. try out a new route without disturbing
-      the helms man or the auto pilot. If you connect later on, data from
-      server will always take precedence. To keep your changes you need to store them e.g.
+      routing, change route) will be synced with the server immediately. This
+      way they will become visible on all connected displays.</p>
+    <p>If it is switched off, all routing changes will only be stored locally.
+      In this mode you can e.g. try out a new route without disturbing the helms
+      man or the auto pilot. If you connect later on, data from server will
+      always take precedence. To keep your changes you need to store them e.g.
       in a new route with different name. If you are activating a route that
       only has been stored locally (and you are connected again) this route now
       will be synced to the server. At the <a href="downloadpage.html">files/download</a>
-      page the symbol <img src="../viewerimages/icons-new/plug.svg" alt="" class="inlineimage">next to
-      the routes indicates if they are synced with the server.</p>
+      page the symbol <img src="../viewerimages/icons-new/plug.svg" alt="" class="inlineimage">next
+      to the routes indicates if they are synced with the server.</p>
     <p>The connected/not connected mode only affects routing data and waypoints.
       All other functions are always connected with the server (except MOB -
       this is a routing function and not available when disconnected).</p>
+    <h3><a name="SplitMode" id="SplitMode"></a>Split Mode</h3>
+    <p>Since version 202207xx AvNav can split it's main window. In this mode
+      there are two instances of AvNav running in the same browser.</p>
+    <p><img src="splitmode1.png" alt="" class="fimage"> </p>
+    <p>Both instances are mainly independent from each other and can be operated
+      separately.<br>
+      They share most of the AvNav settings.<br>
+      Only a couple of settings will be handled separately for each of the
+      instances (left/right). On the <a href="settingspage.html">settings page</a>
+      they will be marked with a *.<br>
+      If you change settings (except the ones with a *) the changes will become
+      visible on the other instance immediately.</p>
+    <p>The following settings are specific per side:</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Meaning</td>
+        </tr>
+        <tr>
+          <td>connectedMode</td>
+          <td>The "plug button" - if it is switched of the instance cannot make
+            any changes at the server. You can test a route e.g. in this mode
+            without influencing the server.</td>
+        </tr>
+        <tr>
+          <td>layoutName</td>
+          <td>The layout to be used</td>
+        </tr>
+        <tr>
+          <td>remoteChannelName</td>
+          <td>The name for the remote control channel</td>
+        </tr>
+        <tr>
+          <td>remoteChannelRead</td>
+          <td>Read from the remote control channel</td>
+        </tr>
+        <tr>
+          <td>remoteChannelWrite</td>
+          <td>Write to the remote control channel</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>If you would like to have other/more settings to be specific per side you
+      can create a file splitkeys.json in the user directory. The default file
+      can be found at <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/splitkeys.json">GitHub</a>.
+      The names for the keys must be taken from the <a href="https://github.com/wellenvogel/avnav/blob/16b121112b05308d0f7b3c3e8ae6924375524289/viewer/util/keys.jsx#L265">source
+        code in the properties section</a>. All preoperties you list in the
+      splitkeys.json will afterwards be handled separately per side.<br>
+      The settings that are specific per side will not be kept for the normal
+      display when leaving the split mode (but will be kept for the next split
+      mode entering).</p>
+    <p>Alarms will only be handled by the right instance.</p>
+    <p>Using the <img src="file:///home/andreas/projects/avnav/docs/viewerimages/icons-new/vertical_split.svg"
+        alt="" class="inlineimage"> Split Button on each instance you can leave
+      the split mode.</p>
+    <p>You can drag and drop the slider to change the window split</p>
+    <p><br>
+    </p>
   </body>
 </html>
