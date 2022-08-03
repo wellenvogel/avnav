@@ -32,11 +32,11 @@ const load=(storeKeys,clone)=>{
             newLeg=new routeobjects.Leg(
                 new navobjects.WayPoint(),
                 new navobjects.WayPoint(),
-                true);
+                false);
         }
         return{
             leg:    newLeg,
-            route:  newLeg.currentRoute,
+            route:  newLeg.hasRoute()?newLeg.currentRoute:undefined,
             index:  storeData.index,
             activeName: storeData.activeName,
             useRhumbLine: storeData.useRhumbLine
