@@ -246,7 +246,8 @@ let keys={
             isFullScreen: K,
             remoteChannelState:K,
             preventAlarms: K,
-            ignoreAndroidBack: K
+            ignoreAndroidBack: K,
+            remoteChannelActive: K
         },
         gpspage:{
             pageNumber:K,

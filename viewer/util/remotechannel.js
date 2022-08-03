@@ -74,8 +74,8 @@ class RemoteChannel{
         }
         this.id=0;
         globalstore.register(()=>{
-            this.checkEnabled();
-        },[keys.nav.gps.updateconfig])
+                this.checkEnabled()
+        },[keys.nav.gps.updateconfig]);
     }
     close(){
         if (this.websocket !== undefined){
@@ -115,15 +115,19 @@ class RemoteChannel{
     }
     checkEnabled(){
         this.queryEnabled().then((enabled)=>{
-            globalstore.storeData(keys.gui.capabilities.remoteChannel,enabled);
+            globalstore.storeData(keys.gui.global.remoteChannelActive,enabled);
         })
+    }
+    isActive(){
+        return globalstore.getData(keys.gui.capabilities.remoteChannel) &&
+            globalstore.getData(keys.gui.global.remoteChannelActive)
     }
     timerCall(){
         if (this.websocket === undefined){
-            if (globalstore.getData(keys.gui.capabilities.remoteChannel)) this.openWebSocket();
+            if (this.isActive()) this.openWebSocket();
         }
         else{
-            if (!globalstore.getData(keys.gui.capabilities.remoteChannel) ){
+            if (!this.isActive() ){
                 this.close();
             }
         }
@@ -137,8 +141,8 @@ class RemoteChannel{
         globalstore.register(this.channelChanged,[keys.properties.remoteChannelName]);
         this.channel=globalstore.getData(keys.properties.remoteChannelName,'0');
         this.queryEnabled().then((enabled)=> {
-            globalstore.storeData(keys.gui.capabilities.remoteChannel);
-            if (enabled) {
+            globalstore.storeData(keys.gui.global.remoteChannelActive,enabled)
+            if (this.isActive()) {
                 this.openWebSocket();
             }
         })
@@ -158,7 +162,7 @@ class RemoteChannel{
         },0);
     }
     openWebSocket(){
-        if (! globalstore.getData(keys.gui.capabilities.remoteChannel)) return;
+        if (! this.isActive()) return;
         this.close();
         if (this.android){
             this.websocket=this.android.channelOpen("/remotechannels/"+this.channel);

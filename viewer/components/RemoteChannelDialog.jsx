@@ -59,6 +59,7 @@ class RemoteChannelDialog extends React.Component{
 }
 const storeKeys={
     available:keys.gui.capabilities.remoteChannel,
+    active: keys.gui.global.remoteChannelActive,
     channel: keys.properties.remoteChannelName,
     write: keys.properties.remoteChannelWrite,
     read: keys.properties.remoteChannelRead,
@@ -92,7 +93,7 @@ export default  (options)=>{
         name: "RemoteChannel",
         storeKeys: storeKeys,
         updateFunction:(state)=>{
-            let enabled=state.available && state.connected;
+            let enabled=state.available && state.connected && state.active;
             return {
                 toggle: enabled && (state.read || state.write),
                 visible: enabled
