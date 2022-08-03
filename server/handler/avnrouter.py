@@ -300,7 +300,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
       return self.currentLeg.clone()
 
   def setCurrentLeg(self,leg=None,writeBack=True,changeFunction=None,forceWrite=False):
-    # type: (AVNRoutingLeg,bool,function,bool) -> object
+    # type: (AVNRoutingLeg,bool,function or list,bool) -> object
     with self.__writeLegLock:
       with self.__legLock:
         oldLeg=self.currentLeg
