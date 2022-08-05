@@ -64,7 +64,7 @@ TrackData.prototype.handleTrackResponse=function(data){
     for (let i=0;i<data.length;i++){
         let cur=data[i];
         if (data[i].ts <= lastts) continue;
-        this.currentTrack.push(new navobjects.TrackPoint(cur.lon,cur.lat,cur.ts)); //we could add course,speed...
+        this.currentTrack.push(new navobjects.TrackPoint(cur.lon,cur.lat,cur.ts,cur.speed,cur.course)); //we could add course,speed...
         num++;
     }
     //cleanup old track data

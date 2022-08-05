@@ -552,6 +552,8 @@ public class RequestHandler {
                         e.put("time",dateFormat.format(new Date(l.getTime())));
                         e.put("lon",l.getLongitude());
                         e.put("lat",l.getLatitude());
+                        e.put("course",l.getBearing());
+                        e.put("speed",l.getSpeed());
                         arr.put(e);
                     }
                     fout=arr;

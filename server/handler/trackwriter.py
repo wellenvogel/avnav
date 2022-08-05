@@ -32,6 +32,38 @@ from avnav_manager import AVNHandlerManager
 from avndirectorybase import *
 
 
+class TrackPoint:
+  def __init__(self,ts=None,lat=None,lon=None,speed=None,course=None,distance=None):
+    self.ts=ts
+    self.lat=lat
+    self.lon=lon
+    self.speed=speed
+    self.course=course
+    self.distance=distance
+
+  def fillFromGpsData(self,data):
+    self.lat=data.get('lat')
+    self.lon=data.get('lon')
+    self.course=data.get('track')
+    self.speed=data.get('speed')
+    self.distance=data.get('distance')
+
+  def getFormatted(self):
+    rt=self.__dict__.copy()
+    try:
+      del rt['distance']
+    except:
+      pass
+    rt['ts']=AVNUtil.datetimeToTsUTC(self.ts)
+    rt['time']=self.ts.isoformat()
+    return rt
+
+  def getLine(self):
+    ts=self.ts.replace(microsecond=0).isoformat()
+    if not ts[-1:]=="Z":
+        ts+="Z"
+    return "%s,%f,%f,%f,%f,%f\n"%(ts,self.lat,self.lon,self.course or 0,self.speed or 0,self.distance or 0)
+
 #a writer for our track
 class AVNTrackWriter(AVNDirectoryHandlerBase):
   def __init__(self,param):
@@ -83,12 +115,8 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
     return self.baseDir
   #write out the line
   #timestamp is a datetime object
-  def writeLine(self,filehandle,timestamp,data):
-    ts=timestamp.replace(microsecond=0).isoformat()
-    if not ts[-1:]=="Z":
-        ts+="Z"
-    str="%s,%f,%f,%f,%f,%f\n"%(ts,data['lat'],data['lon'],(data.get('track') or 0),(data.get('speed') or 0),(data.get('distance') or 0))
-    filehandle.write(str)
+  def writeLine(self,filehandle,tp: TrackPoint):
+    filehandle.write(tp.getLine())
     filehandle.flush()
   def createFileName(self,dt):
     fstr=str(dt.strftime("%Y-%m-%d"))
@@ -98,7 +126,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
     cleanupTime=datetime.datetime.utcnow()-datetime.timedelta(hours=self.getIntParam('cleanup'))
     self.tracklock.acquire()
     while len(self.track) > 0:
-      if self.track[0][0]<=cleanupTime:
+      if self.track[0].ts<=cleanupTime:
         numremoved+=1
         self.track.pop(0)
       else:
@@ -140,14 +168,9 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
     self.tracklock.acquire()
     try:
       for tp in self.track:
-        if curts is None or tp[0] > (curts + intervaldt):
-          entry={
-               'ts':AVNUtil.datetimeToTsUTC(tp[0]),
-               'time':tp[0].isoformat(),
-               'lat':tp[1],
-               'lon':tp[2]}
-          rt.append(entry)
-          curts=tp[0]
+        if curts is None or tp.ts > (curts + intervaldt):
+          rt.append(tp.getFormatted())
+          curts=tp.ts
     except:
       pass
     self.tracklock.release()
@@ -171,11 +194,12 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
         if len(par) < 3:
           continue
         try:
-          newLat=float(par[1])
-          newLon=float(par[2])
-          track=float(par[3])
-          speed=float(par[4])
-          rt.append((AVNUtil.gt(par[0]),newLat,newLon,track,speed))
+          tp=TrackPoint(AVNUtil.gt(par[0]),
+                        lat=float(par[1]),
+                        lon=float(par[2]),
+                        course=float(par[3]),
+                        speed=float(par[4]))
+          rt.append(tp)
         except:
           AVNLog.warn("exception while reading track file %s: %s",filename,traceback.format_exc())
     except:
@@ -218,13 +242,13 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
     try:
       f.write(header%(title,))
       for trackpoint in data:
-        ts=trackpoint[0].isoformat()
+        ts=trackpoint.ts.isoformat()
         if not ts[-1:]=="Z":
           ts+="Z"
-        f.write(trkpstr%(trackpoint[1],trackpoint[2],ts,trackpoint[3],trackpoint[4]))
+        f.write(trkpstr%(trackpoint.lat,trackpoint.lon,ts,trackpoint.course,trackpoint.speed))
       f.write(footer)
     except:
-      AVNLog.warn("Exception while writing gpx file %s: %s",filename,traceback.format_exc());
+      AVNLog.warn("Exception while writing gpx file %s: %s",filename,traceback.format_exc())
     f.close()
 
   #a converter running in a separate thread
@@ -298,7 +322,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
               self.setInfo('main', "reading old track data", WorkerStatus.STARTED)
               data = self.readTrackFile(realfilename)
               for trkpoint in data:
-                self.track.append((trkpoint[0], trkpoint[1], trkpoint[2]))
+                self.track.append(trkpoint)
             self.initial = False
         if newFile:
           self.currentFile = open(realfilename, "a",encoding='utf-8')
@@ -314,21 +338,23 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
       lat = gpsdata.get('lat')
       lon = gpsdata.get('lon')
       if not lat is None and not lon is None:
+        tp=TrackPoint(ts=currentTime)
+        tp.fillFromGpsData(gpsdata)
         if self.lastlat is None or self.lastlon is None:
           AVNLog.ld("write track entry", gpsdata)
           if self.currentFile is not None:
-            self.writeLine(self.currentFile, currentTime, gpsdata)
-          self.track.append((currentTime, lat, lon))
+            self.writeLine(self.currentFile,tp)
+          self.track.append(tp)
           self.lastlat = lat
           self.lastlon = lon
         else:
           dist = AVNUtil.distance((self.lastlat, self.lastlon), (lat, lon)) * AVNUtil.NM
           if dist >= self.getFloatParam('mindistance'):
-            gpsdata['distance'] = dist
+            tp.distance = dist
             AVNLog.ld("write track entry", gpsdata)
             if self.currentFile is not None:
-              self.writeLine(self.currentFile, currentTime, gpsdata)
-            self.track.append((currentTime, lat, lon))
+              self.writeLine(self.currentFile,tp)
+            self.track.append(tp)
             self.lastlat = lat
             self.lastlon = lon
     except Exception as e:

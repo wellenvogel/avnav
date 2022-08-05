@@ -143,7 +143,7 @@ class TrackInfo{
             remain: refIdx>=0?remain:undefined,
             pointTime: this.foundPoint!==undefined?new Date(this.foundPoint.ts*1000):undefined,
             pointSpeed: this.foundPoint!== undefined?this.foundPoint.speed:undefined,
-            pointCourse: this.foundPoint !== undefined?this.foundPoint.opt_course:undefined,
+            pointCourse: this.foundPoint !== undefined?this.foundPoint.opt_course||this.foundPoint.course:undefined,
             timeErrors: this.hasTimeErrors,
             avgSpeed: avgSpeed,
             startTime: new Date(this.startTime*1000),
