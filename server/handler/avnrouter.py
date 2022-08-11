@@ -206,8 +206,8 @@ class WpData:
       self.dstBearing=AVNUtil.calcBearing((lat,lon),(self.lat,self.lon))
       self.dstBearingRhumbLine = AVNUtil.calcBearingRhumbLine((lat, lon), (self.lat, self.lon))
       if self.fromLon is not None and self.fromLat is not None:
-        self.xte=AVNUtil.calcXTE((lat,lon),(self.lat,self.lon),(self.fromLat,self.fromLon))
-        self.xteRhumbLine = AVNUtil.calcXTERumbLine((lat, lon), (self.lat, self.lon), (self.fromLat, self.fromLon))
+        self.xte=AVNUtil.calcXTE((lat,lon),(self.fromLat,self.fromLon),(self.lat,self.lon))
+        self.xteRhumbLine = AVNUtil.calcXTERumbLine((lat, lon), (self.fromLat, self.fromLon), (self.lat, self.lon))
         self.bearing=AVNUtil.calcBearing((self.fromLat,self.fromLon),(self.lat,self.lon))
         self.bearingRhumbLine=AVNUtil.calcBearingRhumbLine((self.fromLat,self.fromLon),(self.lat,self.lon))
 
