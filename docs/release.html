@@ -42,8 +42,8 @@ sudo systemctl start avnav</div>
     <br>
     <div> </div>
     <h2>Versionen</h2>
-    <p> <span style="font-weight: bold;">20220819</span> <a title="release/20220819"
-        href="../downloads/release/20220819">link</a></p>
+    <p> <span style="font-weight: bold;">202208xx</span> <a title="release/202208xx"
+        href="../downloads/release/202208xx">link</a></p>
     <p>Split Screen</p>
     <ul>
       <li>Wechsel zu und vom Split Screen per button</li>
@@ -54,7 +54,7 @@ sudo systemctl start avnav</div>
       <li>default: GreatCircle</li>
       <li>umschaltbar im RoutingHandler</li>
       <li>korrekte Anzeige von great circle Kursen</li>
-      <li><a href="userdoc/navpage.html#h3:greatcircle">Beschreibung</a></li>
+      <li><a href="quickstart.html#RoutingMode">Beschreibung</a></li>
     </ul>
     <p> Verbesserungen</p>
     <ul>
@@ -92,34 +92,38 @@ sudo systemctl start avnav</div>
     <p> Fehlerkorrekturen </p>
     <ul>
       <li><a href="https://github.com/wellenvogel/avnav/issues/232">#232</a>:
-        correctly send the AIS target SOG in m/s from android</li>
-      <li>make conversion of track to route from downloadpage working again</li>
+        korrekte Umrechnung für&nbsp; AIS SOG in m/s auf Android</li>
+      <li>Umwandlung von Tracks in Routen auf der Download-Seite funktioniert
+        wieder</li>
       <li><a href="https://github.com/wellenvogel/avnav/issues/222">#222</a>:
-        ensure to reload the list of files at the downloadpage after delete</li>
+        Neu-Laden der angezeigten Liste auf der Download Seite nach Löschen von
+        Elementen</li>
       <li><a href="https://github.com/wellenvogel/avnav/issues/228">#228</a>:
-        avoid to replace&nbsp; with the current hostname when editing a user app</li>
+        $HOST nicht mehr beim Editieren einer User App ersetzen</li>
       <li><a href="https://github.com/wellenvogel/avnav/issues/228">#228</a>:
-        keep the newWindow setting for a user app even on AvNav restart</li>
+        Die Einstellung "new window" wurde bisher nicht über einen AvNav Restart
+        hinaus gespeichert</li>
       <li><a href="https://github.com/wellenvogel/avnav/issues/225">#225</a>:
-        make the chartconversion working again on gdal2 (Windows)</li>
+        Kartenkonvertierung auf Windows geht wieder (gdal2 auf Windows)</li>
       <li><a href="https://github.com/wellenvogel/avnav/issues/223">#223</a>:
-        correctly merge storeKeys from a widget definition and from it's
-        editable parameters</li>
+        Korrektes Zusammenführen der storeKeys Einträge aus einer Widget
+        Definition und aus den editierbaren Parametern</li>
       <li><a href="https://github.com/wellenvogel/avnav/issues/221">#221</a>:
-        make translateFunction also work for simple user widgets</li>
+        translateFunction funkltioniert jetzt auch für einfache user widgets</li>
       <li><a href="https://github.com/wellenvogel/avnav/issues/219">#219</a>:
-        avoid the sk time socket connection to fill up the AvNav log</li>
+        Vermeidung von fortlaufenden Log Nachrichten der SignalK Time Verbindung</li>
       <li><a href="https://github.com/wellenvogel/avnav/issues/220">#220</a>:
-        avoid hanging nmea decoder on invalid xdr records</li>
-      <li>replace gir1.2-appindicator3-0.1 by gir1.2-ayatanaappindicator3-0.1
-        for xui set up</li>
-      <li>prevent minification of user.js</li>
-      <li>avoid accidently emptying the track file when the android app stops</li>
-      <li>correctly compute route approach in the viewer</li>
-      <li><a href="https://github.com/wellenvogel/avnav/issues/231">#231</a> Fix
-        Track GPX for OpenCPN compatibility</li>
+        Vermeidung einer Endlosschleife im NMEA Dekoder bei fehlerhaften XDR
+        Sätzen</li>
+      <li>Ersatz des Paketes gir1.2-appindicator3-0.1 durch
+        gir1.2-ayatanaappindicator3-0.1 für die Touch Screen Einrichtung</li>
+      <li>Korrekte Auslieferung der default user.js</li>
+      <li>Android: Track wurde beim Beenden der App geleert</li>
+      <li>Richtige Berechnung der Annäherung and einen Wegepunkt in der App</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/231">#231</a>:
+        Track GPX OpenCPN Kompatibilität</li>
       <li><a href="https://github.com/wellenvogel/avnav/issues/244">#244</a>:
-        wrong XTE direction</li>
+        falsche XTE Richtung</li>
     </ul>
     <p> <span style="font-weight: bold;">20220421</span> <a title="release/20220421"
         href="../downloads/release/20220421">link</a></p>
