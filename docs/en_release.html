@@ -40,7 +40,83 @@ sudo systemctl start avnav</div>
     <br>
     <div> </div>
     <h2>Versions</h2>
-    <p> <span style="font-weight: bold;">20220421</span> <a title="release/20220421"
+    <p> <span style="font-weight: bold;">202208xx</span> <a title="release/202208xx"
+        href="../downloads/release/202208xx">link</a></p>
+    <p>Split Screen</p>
+    <ul>
+      <li>Change to and from split screen via button</li>
+      <li>partially separated settings per tab - see <a href="userdoc/mainpage.html#SplitMode">documentation</a></li>
+    </ul>
+    <p>Different Routing Modes: RhumbLine, GreatCircle</p>
+    <ul>
+      <li>default: GreatCircle</li>
+      <li>switch in RoutingHandler</li>
+      <li>correctly display great circle courses</li>
+      <li><a href="userdoc/navpage.html#h3:greatcircle">documentation</a></li>
+    </ul>
+    <p> Improvements</p>
+    <ul>
+      <li>set wp data that is not computed to undefined (display: ---)</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/224">#224</a>:
+        AIS improvements length, beam, draught</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/213">#213</a>: <a
+          href="hints/userjs.html">JS API</a> for drawing on the map (SailSteer
+        Widget)</li>
+      <li>Some renaming of the captions for wind widgets, select true,
+        apparent,...</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/237">#237</a>, <a
+          href="https://github.com/wellenvogel/avnav/issues/238">#238</a>: use
+        the first kml file in kmz archives if there is no doc.kml</li>
+      <li>only redraw the overlay itself if changed, avoid redrawing the
+        complete map</li>
+      <li>Scale parameters for kml and geojson overlays</li>
+      <li>info dialog if server version has changed</li>
+      <li>JS code (including widgets) will not be loaded for disabled plugins</li>
+      <li>Default icon for GPX overlays, allow to set color and size of points</li>
+      <li>display time, course, speed after clicking on a point on a track
+        (feature info)</li>
+      <li>Restart leg button (restart the XTE computation)</li>
+      <li>export the JS LatLon modul at the API</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/243">#243</a>, <a
+          href="https://github.com/wellenvogel/avnav/issues/217">#217</a>: show
+        remote conrtrol buttons only if remote control is enabled</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/170">#170</a>: <a
+          href="quickstart.html#nextwp">different switch modes for way points</a>:
+        early,90,late</li>
+    </ul>
+    <p> BugFixes </p>
+    <ul>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/232">#232</a>:
+        correctly send the AIS target SOG in m/s from android</li>
+      <li>make conversion of track to route from downloadpage working again</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/222">#222</a>:
+        ensure to reload the list of files at the downloadpage after delete</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/228">#228</a>:
+        avoid to replace&nbsp; with the current hostname when editing a user app</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/228">#228</a>:
+        keep the newWindow setting for a user app even on AvNav restart</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/225">#225</a>:
+        make the chartconversion working again on gdal2 (Windows)</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/223">#223</a>:
+        correctly merge storeKeys from a widget definition and from it's
+        editable parameters</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/221">#221</a>:
+        make translateFunction also work for simple user widgets</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/219">#219</a>:
+        avoid the sk time socket connection to fill up the AvNav log</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/220">#220</a>:
+        avoid hanging nmea decoder on invalid xdr records</li>
+      <li>replace gir1.2-appindicator3-0.1 by gir1.2-ayatanaappindicator3-0.1
+        for xui set up</li>
+      <li>prevent minification of user.js</li>
+      <li>avoid accidently emptying the track file when the android app stops</li>
+      <li>correctly compute route approach in the viewer</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/231">#231</a> Fix
+        Track GPX for OpenCPN compatibility</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/244">#244</a>:
+        wrong XTE direction</li>
+    </ul>
+    <p><span style="font-weight: bold;">20220421</span> <a title="release/20220421"
         href="../downloads/release/20220421">link</a></p>
     <p>Extensions of the SignalK Integration</p>
     <ul>
