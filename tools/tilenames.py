@@ -11,6 +11,13 @@ def deg2num(lat_deg, lon_deg, zoom):
   ytile = int((1.0 - math.asinh(math.tan(lat_rad)) / math.pi) / 2.0 * n)
   return (xtile, ytile,zoom)
 
+def num2deg(xtile, ytile, zoom):
+    n = 2.0 ** zoom
+    lon_deg = xtile / n * 360.0 - 180.0
+    lat_rad = math.atan(math.sinh(math.pi * (1 - 2 * ytile / n)))
+    lat_deg = math.degrees(lat_rad)
+    return (lat_deg, lon_deg)
+
 class Bbox:
     def __init__(self,fname,zoom,minx,maxx,miny,maxy) -> None:
         self.fname=fname
@@ -49,10 +56,22 @@ def parseLog(logName):
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         print("usage: %s tn lat lon zoom"%sys.argv[0])
+        print("       %s tc x y zoom"%sys.argv[0])
         print("       %s parse logfile"%sys.argv[0])
         print("       %s search logfile lat lon zoom [up] [down]")
         sys.exit(1)
     mode=sys.argv[1]
+    if mode == "tc":
+        x=int(sys.argv[2])
+        y=int(sys.argv[3])
+        z=int(sys.argv[4])
+        nw=num2deg(x,y,z)
+        se=num2deg(x+1,y+1,z)
+        center=num2deg(float(x)+0.5,float(y)+0.5,z)
+        print("NW: lat=%f, lon=%f"%nw)
+        print("SE: lat=%f, lon=%f"%se)
+        print("CT: lat=%f, lon=%f"%center)
+        sys.exit(0)
     if mode == "tn":    
         tile=deg2num(float(sys.argv[2]),float(sys.argv[3]),int(sys.argv[4]))
         print("x=%d,y=%d,z=%d"%(tile[0],tile[1],tile[2]))
