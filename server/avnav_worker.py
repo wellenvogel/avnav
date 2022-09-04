@@ -465,6 +465,7 @@ class AVNWorker(object):
   def shutdownServer(cls):
     for handler in cls.allHandlers:
       try:
+        AVNLog.info("stopping handler %s",handler.getName())
         handler.stop()
       except:
         pass

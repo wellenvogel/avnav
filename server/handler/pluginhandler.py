@@ -464,6 +464,15 @@ class AVNPluginHandler(AVNWorker):
       self.startPluginThread(name)
     AVNLog.info("pluginhandler finished")
 
+  def stop(self):
+    super().stop()
+    for api in self.createdApis.values():
+      try:
+        AVNLog.info("stopping plugin %s",api.prefix)
+        api.stop()
+      except:
+        pass
+
   def runPlugin(self,api,plugin):
     api.log("run started")
     api.setStatus(WorkerStatus.INACTIVE, "plugin started")
