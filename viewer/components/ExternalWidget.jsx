@@ -11,6 +11,20 @@ import ReactHtmlParser,{convertNodeToElement} from 'react-html-parser/dist/react
 import base from '../base.js';
 import assign from 'object-assign';
 
+const REACT_EVENTS=('onCopy onCut onPaste onCompositionEnd onCompositionStart onCompositionUpdate onKeyDown onKeyPress onKeyUp'+
+    ' onFocus onBlur onChange onInput onInvalid onReset onSubmit onError onLoad onClick onContextMenu onDoubleClick onDrag onDragEnd onDragEnter onDragExit'+
+    ' onDragLeave onDragOver onDragStart onDrop onMouseDown onMouseEnter onMouseLeave onMouseMove onMouseOut onMouseOver onMouseUp'+
+    ' onPointerDown onPointerMove onPointerUp onPointerCancel onGotPointerCapture onLostPointerCapture onPointerEnter onPointerLeave'+
+    ' onPointerOver onPointerOut onSelect onTouchCancel onTouchEnd onTouchMove onTouchStart onScroll onWheel'+
+    ' onAbort onCanPlay onCanPlayThrough onDurationChange onEmptied onEncrypted onEnded onError onLoadedData' +
+    ' onLoadedMetadata onLoadStart onPause onPlay onPlaying onProgress onRateChange onSeeked onSeeking onStalled onSuspend'+
+    ' onTimeUpdate onVolumeChange onWaiting onLoad onError onAnimationStart onAnimationEnd onAnimationIteration onTransitionEnd'+
+    ' onToggle').split(/  */);
+
+let EVENT_TRANSLATIONS={};
+REACT_EVENTS.forEach((name)=>{
+    EVENT_TRANSLATIONS[name.toLowerCase()]=name;
+})
 
 const transform=(self,node,index)=>{
     if (node && node.attribs){
@@ -21,7 +35,14 @@ const transform=(self,node,index)=>{
                     base.log("external widget, no event handler for "+evstring);
                     continue;
                 }
-                let nk="on"+k.substr(2,1).toUpperCase()+k.substring(3);
+                let translated=EVENT_TRANSLATIONS[k];
+                let nk;
+                if (translated){
+                    nk=translated;
+                }
+                else {
+                    nk = "on" + k.substr(2, 1).toUpperCase() + k.substring(3);
+                }
                 node.attribs[nk]=(ev)=>{
                     ev.stopPropagation();
                     ev.preventDefault();
