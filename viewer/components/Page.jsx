@@ -96,7 +96,11 @@ class Page extends React.Component {
                 {props.bottomContent ? props.bottomContent : null}
                 <Alarm onClick={alarmClick}/>
             </div>
-            {! hideButtons && <ButtonList itemList={props.buttonList} widthChanged={props.buttonWidthChanged}/>}
+            <ButtonList
+                itemList={props.buttonList}
+                widthChanged={props.buttonWidthChanged}
+                hidden={hideButtons}
+            />
             { hideButtons && <ButtonShade onClick={
                 (ev)=>{
                     ev.stopPropagation();
