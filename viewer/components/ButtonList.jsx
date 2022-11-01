@@ -4,7 +4,6 @@ import Dynamic from '../hoc/Dynamic.jsx';
 import keys from '../util/keys.jsx';
 import ItemList from './ItemList.jsx';
 import PropertyHandler from '../util/propertyhandler.js';
-import GuiHelpers from "../util/GuiHelpers";
 
 
 class ButtonList extends React.Component{
@@ -13,23 +12,12 @@ class ButtonList extends React.Component{
         this.itemSort=this.itemSort.bind(this);
         this.buttonChanged=this.buttonChanged.bind(this);
         this.state={showOverflow:false};
-        this.disabled={};
         if (this.props.itemList){
             for (let k in this.props.itemList){
-                let button=this.props.itemList[k];
-                let key=this.getStateKey(button);
+                let key=this.getStateKey(this.props.itemList[k]);
                 if (! key) continue;
-                this.disabled[button.name]=button.disabled === true;
-                let visible=this.buttonVisible(button);
+                let visible=this.buttonVisible(this.props.itemList[k]);
                 this.state[key]=visible;
-                let haveKeyAction=this.shouldHaveButtonKeyAction(button);
-                if (haveKeyAction && button.name){
-                    GuiHelpers.keyEventHandler(this,(component,action)=>{
-                        if (button.onClick && ! this.disabled[button.name] && this.state[key]){
-                            button.onClick();
-                        }
-                    },"button",button.name);
-                }
             }
         }
         this.buttonListRef=this.buttonListRef.bind(this);
@@ -64,7 +52,6 @@ class ButtonList extends React.Component{
         if (! values || ! values.name) return;
         let visible=this.buttonVisible(values);
         let stateKey=this.getStateKey(values);
-        this.disabled[values.name]= values.enabled === false;
         if (this.state[stateKey] === visible) return;
         let ns={};
         ns[stateKey]=visible;
@@ -73,11 +60,6 @@ class ButtonList extends React.Component{
 
     buttonVisible(item){
         if (item.visible !== undefined && ! item.visible) return false;
-        if (item.editDisable && this.props.isEditing) return false;
-        if (item.editOnly && ! this.props.isEditing) return false;
-        return true;
-    }
-    shouldHaveButtonKeyAction(item){
         if (item.editDisable && this.props.isEditing) return false;
         if (item.editOnly && ! this.props.isEditing) return false;
         return true;
