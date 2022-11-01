@@ -2,9 +2,11 @@ import base from '../base.js';
 import remotechannel, {COMMANDS} from "./remotechannel";
 
 class Mapping{
-    constructor(component,action){
+    constructor(idx,page,component,action){
         this.component=component;
         this.action=action;
+        this.page=page;
+        this.idx=idx;
     }
 }
 
@@ -95,23 +97,51 @@ class KeyHandler{
     setPage(page){
         this.page=page;
     }
+    findMappingForPage(key,page,opt_inDialog) {
+        let mapping=this.findMappingForPageInternal(key,page,opt_inDialog);
+        if (! mapping) return;
+        //check if we have the same page/action on higher merges
+        //this would mean the key is not included there any more
+        //so basically a higher level deleted the key completely
+        let startIdx=mapping.idx;
+        if (startIdx === undefined) startIdx=0;
+        else startIdx++;
+        for (let idx=startIdx;idx<this.mergeLevels.length;idx++){
+            let mergeIndex=this.mergeLevels[idx];
+            let mappings=this.merges[mergeIndex];
+            if (! mappings) continue;
+            //we need to use mapping.page as this could be "all" now
+            let pageActions=mappings[mapping.page];
+            if (! pageActions) continue;
+            let component=pageActions[mapping.component];
+            if (! component) continue;
+            if (component[mapping.action] !== undefined){
+                //we have an entry for this action
+                //but as it has not been found by the search
+                //our key will not be included here
+                //so the mapping was deleted
+                return;
+            }
+        }
+        return mapping;
 
-    findMappingForPage(key,page,opt_inDialog){
+    }
+
+    findMappingForPageInternal(key,page,opt_inDialog){
         let mapping=undefined;
         for (let lidx=this.mergeLevels.length-1;lidx>=0;lidx--) {
-            let mergeIndex=this.mergeLevels[lidx];
             try {
-                mapping = this.findMappingForType(this.merges[mergeIndex], key, page,opt_inDialog);
+                mapping = this.findMappingForType(lidx, key, page,opt_inDialog);
                 if (mapping) return mapping;
-                mapping = this.findMappingForType(this.merges[mergeIndex], key,this.ALLPAGES ,opt_inDialog);
+                mapping = this.findMappingForType(lidx, key,this.ALLPAGES ,opt_inDialog);
             } catch (e) {
                 console.log("error when searching keymapping: " + e)
             }
             if (mapping) return mapping;
         }
-        mapping=this.findMappingForType(this.keymappings,key,page,opt_inDialog);
+        mapping=this.findMappingForType(undefined,key,page,opt_inDialog);
         if (mapping) return mapping;
-        return this.findMappingForType(this.keymappings,key,this.ALLPAGES,opt_inDialog);
+        return this.findMappingForType(undefined,key,this.ALLPAGES,opt_inDialog);
 
     }
     hasRegistrations(component,action){
@@ -124,7 +154,15 @@ class KeyHandler{
         }
         return false;
     }
-    findMappingForType(mappings,key,page,opt_inDialog){
+    findMappingForType(idx,key,page,opt_inDialog){
+        let mappings;
+        if (idx !== undefined){
+            let mergeIndex=this.mergeLevels[idx];
+            mappings=this.merges[mergeIndex];
+        }
+        else{
+            mappings=this.keymappings;
+        }
         if (mappings === undefined) return;
         if (key === undefined) return;
         if (page === undefined) return;
@@ -142,13 +180,13 @@ class KeyHandler{
                 if (actionKey instanceof Array){
                     for (let i in actionKey){
                         if (actionKey[i] === key){
-                            return new Mapping(k,a);
+                            return new Mapping(idx,page,k,a);
                         }
                     }
                 }
                 else{
                     if (actionKey === key){
-                        return new Mapping(k,a);
+                        return new Mapping(idx,page,k,a);
                     }
                 }
             }
