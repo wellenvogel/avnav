@@ -1,0 +1,321 @@
+#!/bin/sh
+#
+# Copyright (c) 2017 Ilker Temir <ilker@ilkertemir.com>
+#
+# Based on raspi-config by Alex Bradbury 
+#
+# Licensed under MIT License
+#
+# Permission is hereby granted, free of charge, to any person
+# obtaining a copy of this software and associated documentation
+# files (the "Software"), to deal in the Software without
+# restriction, including without limitation the rights to use,
+# copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following
+# conditions:
+# 
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+# OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+# HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+# WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.# 
+
+CONFIG=/boot/config.txt
+CMDLINE=/boot/cmdline.txt
+
+is_pione() {
+   if grep -q "^Revision\s*:\s*00[0-9a-fA-F][0-9a-fA-F]$" /proc/cpuinfo; then
+      return 0
+   elif  grep -q "^Revision\s*:\s*[ 123][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]0[0-36][0-9a-fA-F]$" /proc/cpuinfo ; then
+      return 0
+   else
+      return 1
+   fi
+}
+
+is_pifour() {
+   grep -q "^Revision\s*:\s*[ 123][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]11[0-9a-fA-F]$" /proc/cpuinfo
+   return $?
+}
+
+is_pithree() {
+   grep -q "^Revision\s*:\s*[ 123][0-9a-fA-F][0-9a-fA-F]2[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]$" /proc/cpuinfo
+   return $?
+}
+
+is_pitwo() {
+   grep -q "^Revision\s*:\s*[ 123][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]04[0-9a-fA-F]$" /proc/cpuinfo
+   return $?
+}
+
+is_pizero() {
+   grep -q "^Revision\s*:\s*[ 123][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]09[0-9a-fA-F]$" /proc/cpuinfo
+   return $?
+}
+
+get_pi_type() {
+   if is_pione; then
+      echo 1
+   elif is_pitwo; then
+      echo 2
+   elif is_pithree; then
+      echo 3
+   elif is_pifour; then
+      echo 4
+   elif is_pizero; then
+      echo 0
+   else
+      echo "unknown"
+   fi
+}
+
+get_init_sys() {
+  if command -v systemctl > /dev/null && systemctl | grep -q '\-\.mount'; then
+    SYSTEMD=1
+  elif [ -f /etc/init.d/cron ] && [ ! -h /etc/init.d/cron ]; then
+    SYSTEMD=0
+  else
+    echo "Unrecognised init system"
+    return 1
+  fi
+}
+
+set_config_var() {
+  lua - "$1" "$2" "$3" <<EOF > "$3.bak"
+local key=assert(arg[1])
+local value=assert(arg[2])
+local fn=assert(arg[3])
+local file=assert(io.open(fn))
+local made_change=false
+for line in file:lines() do
+  if line:match("^#?%s*"..key.."=.*$") then
+    line=key.."="..value
+    made_change=true
+  end
+  print(line)
+end
+
+if not made_change then
+  print(key.."="..value)
+end
+EOF
+mv "$3.bak" "$3"
+}
+
+clear_config_var() {
+  lua - "$1" "$2" <<EOF > "$2.bak"
+local key=assert(arg[1])
+local fn=assert(arg[2])
+local file=assert(io.open(fn))
+for line in file:lines() do
+  if line:match("^%s*"..key.."=.*$") then
+    line="#"..line
+  end
+  print(line)
+end
+EOF
+mv "$2.bak" "$2"
+}
+
+get_config_var() {
+  lua - "$1" "$2" <<EOF
+local key=assert(arg[1])
+local fn=assert(arg[2])
+local file=assert(io.open(fn))
+local found=false
+for line in file:lines() do
+  local val = line:match("^%s*"..key.."=(.*)$")
+  if (val ~= nil) then
+    print(val)
+    found=true
+    break
+  end
+end
+if not found then
+   print(0)
+end
+EOF
+}
+
+console_status() {
+  if grep -q -E "console=(ttyAMA0|serial0)" $CMDLINE; then
+    echo "enabled"
+  else
+    echo "disabled"
+  fi
+}
+
+set_console() {
+  if [ $1 = "enable" ]; then
+    if [ $SYSTEMD -eq 0 ]; then
+      sed -i /etc/inittab -e "s|^#\(.*:.*:respawn:.*ttyAMA0\)|\1|"
+      if ! grep -q "^T.*:.*:respawn:.*ttyAMA0" /etc/inittab; then
+        printf "T0:23:respawn:/sbin/getty -L ttyAMA0 115200 vt100\n" >> /etc/inittab
+      fi
+    fi
+    if grep -q "console=ttyAMA0" $CMDLINE ; then
+      if [ -e /proc/device-tree/aliases/serial0 ]; then
+        sed -i $CMDLINE -e "s/console=ttyAMA0/console=serial0/"
+      fi
+    elif ! grep -q "console=ttyAMA0" $CMDLINE && ! grep -q "console=serial0" $CMDLINE ; then
+      if [ -e /proc/device-tree/aliases/serial0 ]; then
+        sed -i $CMDLINE -e "s/root=/console=serial0,115200 root=/"
+      else
+        sed -i $CMDLINE -e "s/root=/console=ttyAMA0,115200 root=/"
+      fi
+    fi
+  elif [ $1 = "disable" ]; then
+    if [ $SYSTEMD -eq 0 ]; then
+      sed -i /etc/inittab -e "s|^.*:.*:respawn:.*ttyAMA0|#&|"
+    fi
+    sed -i $CMDLINE -e "s/console=ttyAMA0,[0-9]\+ //"
+    sed -i $CMDLINE -e "s/console=serial0,[0-9]\+ //"
+  fi
+}
+
+bluetooth_status() {
+  if is_pifour; then
+    if grep -q -E "^dtoverlay=disable-bt" $CONFIG; then
+      echo "disabled"
+    else
+      echo "enabled"
+    fi
+  elif is_pithree; then
+    if grep -q -E "^dtoverlay=pi3-disable-bt" $CONFIG; then
+      echo "disabled"
+    else
+      echo "enabled"
+    fi
+  else
+    echo "N/A"
+  fi
+}
+
+set_bluetooth() {
+  if [ $1 = "enable" ]; then
+    if is_pithree; then
+      sed $CONFIG -i -e "s/^dtoverlay=pi3-disable-bt/#dtoverlay=pi3-disable-bt/"
+    else
+      sed $CONFIG -i -e "s/^dtoverlay=disable-bt/#dtoverlay=disable-bt/"
+    fi
+    systemctl enable hciuart 
+  elif [ $1 = "disable" ]; then
+    if is_pithree; then
+      sed $CONFIG -i -e "s/^#dtoverlay=pi3-disable-bt/dtoverlay=pi3-disable-bt/"
+      if ! grep -q -E "^dtoverlay=pi3-disable-bt" $CONFIG; then
+        printf "# Comment the following line to enable Bluetooth\n" >> $CONFIG
+        printf "dtoverlay=pi3-disable-bt\n" >> $CONFIG
+      fi
+    else
+      sed $CONFIG -i -e "s/^#dtoverlay=disable-bt/dtoverlay=disable-bt/"
+      if ! grep -q -E "^dtoverlay=disable-bt" $CONFIG; then
+        printf "# Comment the following line to enable Bluetooth\n" >> $CONFIG
+        printf "dtoverlay=disable-bt\n" >> $CONFIG
+      fi
+    fi
+    systemctl disable hciuart 
+  fi
+}
+
+uart_status() {
+  uart=$(get_config_var enable_uart $CONFIG)
+  if [ $uart -eq 0 ]; then
+    echo "disabled"
+  elif [ $uart -eq 1 ]; then
+    echo "enabled"
+  fi
+}
+
+set_uart() {
+  if [ $1 = "enable" ]; then
+    set_config_var enable_uart 1 $CONFIG
+  else
+    set_config_var enable_uart 0 $CONFIG
+  fi
+}
+
+get_init_sys
+
+if [ $(id -u) -ne 0 ]; then
+  printf "Script must be run as root. Try 'sudo $0'\n"
+  exit 1
+fi
+
+for i in $*
+do
+  case $i in
+  gpio)
+    printf "Enabling UART.\n"
+    set_uart enable
+    printf "Disabling console on UART.\n"
+    set_console disable
+    if is_pithree || is_pifour; then
+      printf "Disabling Bluetooth.\n"
+      set_bluetooth disable
+    else
+      printf "Bluetooth is not available on Raspberry Pi $(get_pi_type).\n"
+    fi
+    printf "\n"
+    printf "UART made available on GPIO 14 & 15.\n"
+    printf "You now need to reboot.\n"
+    exit 1
+    ;;
+  default)
+    printf "Enabling UART.\n"
+    set_uart enable
+    printf "Enabling console on UART.\n"
+    set_console enable
+    if is_pithree || is_pifour; then
+      printf "Enabling Bluetooth.\n"
+      set_bluetooth enable
+    else
+      printf "Bluetooth is not available on Raspberry Pi $(get_pi_type).\n"
+    fi
+    printf "\n"
+    printf "Default system settings restored.\n"
+    printf "You now need to reboot.\n"
+    exit 1
+    ;;
+  status)
+    pitype=$(get_pi_type)
+    console=$(console_status)
+    uart=$(uart_status)
+    bluetooth=$(bluetooth_status)
+
+    printf "Raspberry Pi : $pitype\n"
+    printf "Console      : $console\n"
+    printf "UART         : $uart\n"
+    printf "Bluetooth    : $bluetooth\n"
+
+    if [ "$console" = disabled ] && \
+       [ "$uart" = enabled ] && \
+       [ "$bluetooth" != enabled ]; then
+      printf "\n"
+      printf "UART is available to GPIO 14 & 15.\n"
+    else
+      printf "\n"
+      printf "UART is NOT available$ to GPIO 14 & 15.\n"
+    fi 
+    exit 1
+    ;;
+  *)
+    # unknown option
+    printf "Unknown option\n"
+    exit 1
+    ;;
+  esac
+done
+
+printf "Usage:\n"
+printf "  $0 [ OPTION ]\n"
+printf "      default Restores original state\n"
+printf "      gpio    Makes UART available on GPIO pins 14 & 15\n"
+printf "      status  Displays current status\n"
+                    
