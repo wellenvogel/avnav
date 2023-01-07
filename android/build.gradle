@@ -122,10 +122,12 @@ android {
             if (System.getenv("ANDROID_KEYSTORE") != null) {
                 signingConfig signingConfigs.config
             }
+            manifestPlaceholders.suffix=""
         }
         debug {
             applicationIdSuffix ".debug"
-            manifestPlaceholders( ['label':'avNav-debug'])
+            manifestPlaceholders.label='avNav-debug';
+            manifestPlaceholders.suffix=".debug"
         }
         beta {
             if (System.getenv("ANDROID_KEYSTORE") != null) {
@@ -135,7 +137,8 @@ android {
                 signingConfig buildTypes.debug.signingConfig
             }
             applicationIdSuffix ".beta"
-            manifestPlaceholders(['label':'avNav-beta'])
+            manifestPlaceholders.label='avNav-beta'
+            manifestPlaceholders.suffix=".beta"
         }
     }
     applicationVariants.all { variant ->

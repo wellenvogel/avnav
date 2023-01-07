@@ -12,6 +12,7 @@ import android.util.Log;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.JSONTokener;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -57,6 +58,7 @@ public class ChartHandler implements INavRequestHandler {
     //mapping of url name to char descriptors
     private HashMap<String, Chart> chartList =new HashMap<String, Chart>();
     private boolean isStopped=false;
+    private final HashMap<String,JSONArray> externalCharts= new HashMap<>();
 
     public ChartHandler(Context a, RequestHandler h){
         handler=h;
@@ -109,9 +111,20 @@ public class ChartHandler implements INavRequestHandler {
         return null;
     }
 
+    public void removeExternalCharts(String key){
+        synchronized (externalCharts){
+            externalCharts.remove(key);
+        }
+    }
+    public void addExternalCharts(String key, JSONArray charts){
+        synchronized (externalCharts){
+            externalCharts.put(key,charts);
+        }
+    }
 
     public void updateChartList(){
         HashMap<String, Chart> newGemfFiles=new HashMap<String, Chart>();
+        HashMap<String, Chart> currentCharts=chartList; //atomic
         SharedPreferences prefs=AvnUtil.getSharedPreferences(context);
         File workDir=AvnUtil.getWorkDir(prefs, context);
         File chartDir = getInternalChartsDir(context);
@@ -142,7 +155,7 @@ public class ChartHandler implements INavRequestHandler {
             for (String url : newGemfFiles.keySet()) {
                 Chart chart = newGemfFiles.get(url);
                 long lastModified = chart.getLastModified();
-                if (chartList.get(url) == null) {
+                if (currentCharts.get(url) == null) {
                     chartList.put(url, chart);
                     modifiedCharts.add(chart);
                     modified = true;
@@ -206,10 +219,10 @@ public class ChartHandler implements INavRequestHandler {
         }
     }
 
-    public Chart getChartDescription(String url){
+    public synchronized Chart getChartDescription(String url){
         return chartList.get(url);
     }
-    public Chart getChartDescriptionByChartKey(String key){
+    public synchronized Chart getChartDescriptionByChartKey(String key){
         if (key == null) return null;
         //we rely on the the key (url) being the same as our chart key
         return chartList.get(key);
@@ -314,15 +327,17 @@ public class ChartHandler implements INavRequestHandler {
         updateChartList();
         return true;
     }
+    private static final String[] REPLACE_KEYS=new String[]{"url","tokenUrl","icon"};
 
     @Override
     public JSONArray handleList(Uri uri, RequestHandler.ServerInfo serverInfo) throws Exception {
         //here we will have more dirs in the future...
         AvnLog.i(Constants.LOGPRFX,"start chartlist request "+Thread.currentThread().getId());
         JSONArray rt=new JSONArray();
+        HashMap<String,Chart> currentCharts=chartList; //atomic
         try {
-            for (String url : chartList.keySet()) {
-                Chart chart = chartList.get(url);
+            for (String url : currentCharts.keySet()) {
+                Chart chart = currentCharts.get(url);
                 try {
                     rt.put(chart.toJson());
                 }catch (Throwable t){
@@ -331,6 +346,40 @@ public class ChartHandler implements INavRequestHandler {
             }
         } catch (Exception e) {
             Log.e(Constants.LOGPRFX, "exception reading chartlist:", e);
+        }
+        try{
+            String replaceUrl=null;
+            if (serverInfo != null && serverInfo.address != null){
+                replaceUrl="http://"+serverInfo.address.toString();
+            }
+            synchronized (externalCharts){
+                for (String key:externalCharts.keySet()){
+                    try {
+                        JSONArray charts = externalCharts.get(key);
+                        if (charts == null) continue;
+                        for (int i = 0; i < charts.length(); i++) {
+                            JSONObject ce=charts.getJSONObject(i);
+                            JSONObject o = new JSONObject(ce.toString()); //no nice copy constructor...
+                            if (replaceUrl != null) {
+                                for (String ok : REPLACE_KEYS) {
+                                    if (o.has(ok)) {
+                                        String value = o.getString(ok);
+                                        value = value.replace("http://localhost", replaceUrl);
+                                        value = value.replace("http://127.0.0.1", replaceUrl);
+                                        o.put(ok, value);
+                                    }
+                                }
+                            }
+                            o.put("overlayConfig",key+"@"+DirectoryRequestHandler.safeName(o.getString("name"),false)+"@.cfg");
+                            rt.put(o);
+                        }
+                    }catch (Exception x){
+                        Log.e(Constants.LOGPRFX,"error in external charts for "+key,x);
+                    }
+                }
+            }
+        }catch (Exception e){
+            Log.e(Constants.LOGPRFX,"exception adding external charts:",e);
         }
         AvnLog.i(Constants.LOGPRFX,"finish chartlist request "+Thread.currentThread().getId());
         return rt;

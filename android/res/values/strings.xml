@@ -94,6 +94,7 @@
     <string name="labelSettingsCloseOnTimeout">close and reopen the connection when a read timeout occurs</string>
     <string name="labelSettingsBindPort">local port the connection will listen on</string>
     <string name="labelSettingsExternalAccess">allow external systems to connect to this port (use with caution!)</string>
+    <string name="labelSettingsPluginTimeout">time (s) to consider a plugin being not available any more</string>
     <string name="labelSettingsReadData">also read data on this connection</string>
     <string name="labelSettingsBlacklist">a , separated list of source names that we do not send out on this connection</string>
     <string name="labelSettingsSendBroadcast">send data as broadcast</string>

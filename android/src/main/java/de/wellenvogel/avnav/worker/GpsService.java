@@ -41,11 +41,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import de.wellenvogel.avnav.appapi.AddonHandler;
 import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
 import de.wellenvogel.avnav.appapi.INavRequestHandler;
 import de.wellenvogel.avnav.appapi.PostVars;
 import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.appapi.WebServer;
+import de.wellenvogel.avnav.charts.Chart;
+import de.wellenvogel.avnav.charts.ChartHandler;
+import de.wellenvogel.avnav.main.BuildConfig;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.Dummy;
 import de.wellenvogel.avnav.main.IMediaUpdater;
@@ -138,6 +142,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
 
     private static final String LOGPRFX="Avnav:GpsService";
     private BroadcastReceiver broadCastReceiverStop;
+    private BroadcastReceiver broadCastReceiverPlugin;
     private boolean mdnsUpdateRunning;
 
     @Override
@@ -203,7 +208,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         if ("getAddAttributes".equals(command)){
             String typeName=AvnUtil.getMandatoryParameter(uri,"handlerName");
             try{
-                ChannelWorker w=WorkerFactory.getInstance().createWorker(typeName,this,null);
+                IWorker w=WorkerFactory.getInstance().createWorker(typeName,this,null);
                 return RequestHandler.getReturn(
                         new AvnUtil.KeyValue<JSONArray>("data",w.getParameterDescriptions(this))
                 );
@@ -443,7 +448,21 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             return new RemoteChannel(typeName,ctx);
         }
     };
-    private static final WorkerConfig[] INTERNAL_WORKERS ={WDECODER,WROUTER,WTRACK,WLOGGER,WSERVER,WGPS,WMDNS,WREMOTE};
+    private static final WorkerConfig WOCHARTS=new WorkerConfig(PluginWorker.TYPENAME,9) {
+        @Override
+        IWorker createWorker(GpsService ctx, NmeaQueue queue) throws IOException {
+            String suffix=BuildConfig.BUILD_TYPE;
+            if (suffix.equals("release")){
+                suffix="";
+            }
+            else{
+                suffix="."+suffix;
+            }
+            return new PluginWorker(ctx,"ocharts","de.wellenvogel.ochartsprovider"+ suffix,"de.wellenvogel.ochartsprovider.OchartsService");
+        }
+    };
+
+    private static final WorkerConfig[] INTERNAL_WORKERS ={WDECODER,WROUTER,WTRACK,WLOGGER,WSERVER,WGPS,WMDNS,WREMOTE,WOCHARTS};
 
     private synchronized int getNextWorkerId(){
         workerId++;
@@ -587,6 +606,27 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         IWorker rc=findWorkerById(WREMOTE.id);
         return (RemoteChannel) rc;
     }
+    public ChartHandler getChartHandler(){
+        RequestHandler r=getRequestHandler();
+        if (r == null) return null;
+        INavRequestHandler rt=r.getPrefixHandler(Constants.CHARTPREFIX);
+        if (rt == null) return null;
+        if (rt instanceof ChartHandler){
+            return (ChartHandler)rt;
+        }
+        return null;
+    }
+
+    public AddonHandler getAddonHandler(){
+        RequestHandler r=getRequestHandler();
+        if (r == null) return null;
+        INavRequestHandler rt=r.getPrefixHandler(AddonHandler.PREFIX);
+        if (rt == null) return null;
+        if (rt instanceof AddonHandler){
+            return (AddonHandler) rt;
+        }
+        return null;
+    }
 
 
     private void saveWorkerConfig(IWorker worker) throws JSONException {
@@ -618,8 +658,12 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         saveWorkerConfig(worker);
     }
     private synchronized void addWorker(String typeName, JSONObject newConfig) throws WorkerFactory.WorkerNotFound, JSONException, IOException {
-        IWorker newWorker=WorkerFactory.getInstance().createWorker(typeName,this,queue);
+        IWorker newWorker = WorkerFactory.getInstance().createWorker(typeName, this, queue);
+        addWorker(newWorker,newConfig);
+    }
+    private synchronized void addWorker(IWorker newWorker, JSONObject newConfig) throws IOException, JSONException {
         newWorker.setId(getNextWorkerId());
+        String typeName=newWorker.getTypeName();
         newWorker.setParameters(newConfig, true,true);
         newWorker.start();
         String currentType=null;
@@ -1043,6 +1087,17 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             }
         };
         registerReceiver(broadCastReceiverStop,filterStop);
+        IntentFilter pluginFilter=new IntentFilter(Constants.BC_PLUGIN);
+        broadCastReceiverPlugin=new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String name=intent.getStringExtra("name");
+                if (name == null) return;
+                AvnLog.d("received plugin message "+name);
+                handlePluginMessage(name,intent);
+            }
+        };
+        registerReceiver(broadCastReceiverPlugin,pluginFilter);
         Intent watchdog = new Intent(getApplicationContext(), GpsService.class);
         watchdog.setAction(WATCHDOGACTION);
         watchdogIntent=PendingIntent.getService(
@@ -1484,6 +1539,35 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             rt.put(w.getJsonStatus());
         }
         return rt;
+    }
+    private List<List<IWorker>> getAllWorkers(){
+        List<List<IWorker>> rt=new ArrayList<List<IWorker>>();
+        rt.add(workers);
+        rt.add(internalWorkers);
+        return rt;
+    }
+    private void handlePluginMessage(String name, Intent intent){
+        PluginWorker existing=null;
+        for (List<IWorker> wlist: getAllWorkers()) {
+            for (IWorker w : wlist) {
+                if (w.getTypeName().equals(PluginWorker.TYPENAME)) {
+                    PluginWorker pw = (PluginWorker)w;
+                    if (pw.getPluginName().equals(name)){
+                        //found existing
+                        pw.update(intent);
+                        return;
+                    }
+                }
+            }
+        }
+        //not found
+        //TODO: allow unknown?
+        PluginWorker pw=new PluginWorker(this,name);
+        try {
+            addWorker(pw,new JSONObject());
+        } catch (Exception e) {
+            AvnLog.e("unable to add new plugin worker "+name,e);
+        }
     }
 
 

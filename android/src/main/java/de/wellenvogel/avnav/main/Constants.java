@@ -58,6 +58,7 @@ public class Constants {
     public static final String BC_STOPAPPL="de.wellenvogel.avnav.STOPAPPL";
     public static final String BC_TRIGGER="de.wellenvogel.avnav.TRIGGER";
     public static final String BC_RELOAD_DATA ="de.wellenvogel.avnav.RELOAD_DATA";
+    public static final String BC_PLUGIN ="de.wellenvogel.avnav.PLUGIN";
 
     public static final int LOCALNOTIFY=1;
 
