@@ -370,7 +370,9 @@ public class ChartHandler implements INavRequestHandler {
                                     }
                                 }
                             }
-                            o.put("overlayConfig",key+"@"+DirectoryRequestHandler.safeName(o.getString("name"),false)+"@.cfg");
+                            if (! o.has("overlayConfig") && o.has("chartKey")) {
+                                o.put("overlayConfig", key + "@" + DirectoryRequestHandler.safeName(o.getString("chartKey"), false) + ".cfg");
+                            }
                             rt.put(o);
                         }
                     }catch (Exception x){
