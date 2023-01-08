@@ -112,6 +112,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
     private long configSequence=System.currentTimeMillis();
     private final Object configSequenceLock=new Object();
     private int avnavVersion=0;
+    private boolean allowAllPlugins=true;
 
     private static class Registration{
         NsdManager.RegistrationListener listener;
@@ -388,6 +389,11 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             this.configName="internal."+typeName;
             this.typeName=typeName;
         }
+        WorkerConfig(String typeName,int id, String configName){
+            this.id=id;
+            this.configName="internal."+configName;
+            this.typeName=typeName;
+        }
         abstract IWorker createWorker(GpsService ctx, NmeaQueue queue) throws IOException;
     }
 
@@ -448,7 +454,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             return new RemoteChannel(typeName,ctx);
         }
     };
-    private static final WorkerConfig WOCHARTS=new WorkerConfig(PluginWorker.TYPENAME,9) {
+    private static final WorkerConfig WOCHARTS=new WorkerConfig(PluginWorker.TYPENAME,9,PluginWorker.TYPENAME+".ocharts") {
         @Override
         IWorker createWorker(GpsService ctx, NmeaQueue queue) throws IOException {
             String suffix=BuildConfig.BUILD_TYPE;
@@ -462,7 +468,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         }
     };
 
-    private static final WorkerConfig[] INTERNAL_WORKERS ={WDECODER,WROUTER,WTRACK,WLOGGER,WSERVER,WGPS,WMDNS,WREMOTE,WOCHARTS};
+    private static final WorkerConfig[] INTERNAL_WORKERS ={WDECODER,WROUTER,WTRACK,WLOGGER,WSERVER,WGPS,WMDNS,WREMOTE ,WOCHARTS};
 
     private synchronized int getNextWorkerId(){
         workerId++;
@@ -609,26 +615,20 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
     public ChartHandler getChartHandler(){
         RequestHandler r=getRequestHandler();
         if (r == null) return null;
-        INavRequestHandler rt=r.getPrefixHandler(Constants.CHARTPREFIX);
-        if (rt == null) return null;
-        if (rt instanceof ChartHandler){
-            return (ChartHandler)rt;
-        }
-        return null;
+        return r.getChartHandler();
     }
 
     public AddonHandler getAddonHandler(){
         RequestHandler r=getRequestHandler();
         if (r == null) return null;
-        INavRequestHandler rt=r.getPrefixHandler(AddonHandler.PREFIX);
-        if (rt == null) return null;
-        if (rt instanceof AddonHandler){
-            return (AddonHandler) rt;
-        }
-        return null;
+        return r.getAddonHandler();
     }
 
-
+    /**
+     * must be called when already protected by synchronized
+     * @param worker
+     * @throws JSONException
+     */
     private void saveWorkerConfig(IWorker worker) throws JSONException {
         SharedPreferences prefs = getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         SharedPreferences.Editor edit=prefs.edit();
@@ -695,7 +695,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         }
         saveWorkerConfig(worker);
     }
-    private void stopWorkers(boolean wait){
+    private synchronized void stopWorkers(boolean wait){
         for (IWorker w: workers){
             try{
                 if (wait) w.stopAndWait();
@@ -733,10 +733,11 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         return false;
     }
 
-    private void handleStartup(boolean isWatchdog){
+    private synchronized void handleStartup(boolean isWatchdog){
         SharedPreferences prefs=getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
         AvnLog.d(LOGPRFX,"started");
         avnavVersion=prefs.getInt(Constants.VERSION,0);
+        allowAllPlugins=prefs.getBoolean(Constants.ALLOW_PLUGINS,true);
         if (! isWatchdog || requestHandler == null){
             if (requestHandler != null) requestHandler.stop();
             requestHandler=new RequestHandler(this);
@@ -1142,9 +1143,11 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         checkMob();
         handleNotification(true,false);
         checkTrackWriter();
-        ArrayList<IWorker> allWorkers=new ArrayList<>();
-        allWorkers.addAll(workers);
-        allWorkers.addAll(internalWorkers);
+        ArrayList<IWorker> allWorkers = new ArrayList<>();
+        synchronized (this) {
+            allWorkers.addAll(workers);
+            allWorkers.addAll(internalWorkers);
+        }
         for (IWorker w: allWorkers) {
             if (w != null) {
                 try {
@@ -1530,7 +1533,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         rt.put("ais", ais);
         return rt;
     }
-    public JSONArray getStatus() throws JSONException {
+    public synchronized JSONArray getStatus() throws JSONException {
         JSONArray rt=new JSONArray();
         for (IWorker w: internalWorkers){
             rt.put(w.getJsonStatus());
@@ -1548,20 +1551,28 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
     }
     private void handlePluginMessage(String name, Intent intent){
         PluginWorker existing=null;
-        for (List<IWorker> wlist: getAllWorkers()) {
-            for (IWorker w : wlist) {
-                if (w.getTypeName().equals(PluginWorker.TYPENAME)) {
-                    PluginWorker pw = (PluginWorker)w;
-                    if (pw.getPluginName().equals(name)){
-                        //found existing
-                        pw.update(intent);
-                        return;
+        synchronized (this) {
+            for (List<IWorker> wlist : getAllWorkers()) {
+                for (IWorker w : wlist) {
+                    if (w.getTypeName().equals(PluginWorker.TYPENAME)) {
+                        PluginWorker pw = (PluginWorker) w;
+                        if (pw.getPluginName().equals(name)) {
+                            //found existing
+                            existing = pw;
+                            break;
+                        }
                     }
                 }
             }
         }
+        if (existing != null){
+            existing.update(intent);
+            return;
+        }
         //not found
-        //TODO: allow unknown?
+        if (! allowAllPlugins) {
+            return;
+        }
         PluginWorker pw=new PluginWorker(this,name);
         try {
             addWorker(pw,new JSONObject());

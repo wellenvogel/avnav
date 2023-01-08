@@ -34,6 +34,8 @@ public class PluginWorker extends Worker{
     }
     static final String NAME_PARAM="_name";
     static final String TYPENAME="Plugin";
+    private static final String C_CHARTS="charts";
+    private static final String C_ADDONS="addons";
     static final EditableParameter.IntegerParameter TIMEOUT_PARAMETER=
             new EditableParameter.IntegerParameter("timeout", R.string.labelSettingsPluginTimeout,30);
     long lastUpdate=0;
@@ -66,6 +68,7 @@ public class PluginWorker extends Worker{
         this.startAction=startAction;
         this.startPackage=startPackage;
         this.status.canEdit=true;
+        this.status.canDelete=false;
         setParameters();
     }
 
@@ -107,6 +110,7 @@ public class PluginWorker extends Worker{
             chartHandler.removeExternalCharts(getKey());
         }
         if (reset) charts=null;
+        status.unsetChildStatus(C_CHARTS);
     }
     private void unregisterAddons(boolean reset){
         AddonHandler addonHandler=gpsService.getAddonHandler();
@@ -114,12 +118,17 @@ public class PluginWorker extends Worker{
             addonHandler.removeExternalAddons(getKey());
         }
         if (reset) addons=null;
+        status.unsetChildStatus(C_ADDONS);
     }
     private void registerCharts(JSONArray charts){
         ChartHandler chartHandler=gpsService.getChartHandler();
-        if (chartHandler == null) return;
+        if (chartHandler == null) {
+            status.unsetChildStatus(C_CHARTS);
+            return;
+        }
         chartHandler.addExternalCharts(getKey(),charts);
         this.charts=charts;
+        status.setChildStatus(C_CHARTS, WorkerStatus.Status.NMEA,charts.length()+" registered");
     }
 
     private void registerAddons(JSONArray addonsJson) {
@@ -143,8 +152,8 @@ public class PluginWorker extends Worker{
                 }
             }
             addonHandler.addExternalAddons(getKey(), addons);
+            status.setChildStatus(C_ADDONS, WorkerStatus.Status.NMEA,addons.size()+" registered");
             this.addons=addonsJson;
-
         }
     }
     @Override
@@ -174,6 +183,7 @@ public class PluginWorker extends Worker{
         while (! shouldStop(startSequence)){
             sleep(1000);
             long last=getLastUpdate();
+            if (shouldStop(startSequence)) break;
             if ( (last + 1000 *TIMEOUT_PARAMETER.fromJson(parameters)) < SystemClock.uptimeMillis()){
                 setStatus(WorkerStatus.Status.INACTIVE,"timeout");
                 unregisterCharts(true);
@@ -185,7 +195,6 @@ public class PluginWorker extends Worker{
         }
         unregisterAddons(false);
         unregisterCharts(false);
-
     }
 
     @Override
@@ -235,13 +244,15 @@ public class PluginWorker extends Worker{
             unregisterCharts(true);
             unregisterAddons(true);
         }
-        String heartBeat=intent.getStringExtra("heartbeat");
-        if (heartBeat != null){
-            try {
-                Intent reply = new Intent(heartBeat);
-                gpsService.sendBroadcast(reply);
-            }catch (Throwable t){
-                Log.d(Constants.LOGPRFX,"unable to send heartbeat",t);
+        if (enabled) {
+            String heartBeat = intent.getStringExtra("heartbeat");
+            if (heartBeat != null) {
+                try {
+                    Intent reply = new Intent(heartBeat);
+                    gpsService.sendBroadcast(reply);
+                } catch (Throwable t) {
+                    Log.d(Constants.LOGPRFX, "unable to send heartbeat", t);
+                }
             }
         }
     }

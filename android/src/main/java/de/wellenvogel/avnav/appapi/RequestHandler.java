@@ -160,6 +160,13 @@ public class RequestHandler {
         return new File(getWorkDir(),subDir.value.getPath());
     }
 
+    public AddonHandler getAddonHandler(){
+        return addonHandler;
+    }
+    public ChartHandler getChartHandler(){
+        return gemfHandler;
+    }
+
     public RequestHandler(GpsService service){
         this.service = service;
         this.gemfHandler =new ChartHandler(service,this);

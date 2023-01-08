@@ -27,6 +27,7 @@ public class Constants {
     public static final String WAYPOINTALARM="alarm.waypoint";
     public static final String MOBALARM="alarm.mob";
     public static final String CONALARM="alarm.connectionLost";
+    public static final String ALLOW_PLUGINS="allowAllPlugins";
     public static final String ADDON_CONFIG="addon.config";
     //new handler config
     public static final String HANDLER_CONFIG="internal.handler";
