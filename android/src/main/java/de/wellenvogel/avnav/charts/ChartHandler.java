@@ -348,10 +348,6 @@ public class ChartHandler implements INavRequestHandler {
             Log.e(Constants.LOGPRFX, "exception reading chartlist:", e);
         }
         try{
-            String replaceUrl=null;
-            if (serverInfo != null && serverInfo.address != null){
-                replaceUrl="http://"+serverInfo.address.getHostAddress();
-            }
             synchronized (externalCharts){
                 for (String key:externalCharts.keySet()){
                     try {
@@ -360,12 +356,11 @@ public class ChartHandler implements INavRequestHandler {
                         for (int i = 0; i < charts.length(); i++) {
                             JSONObject ce=charts.getJSONObject(i);
                             JSONObject o = new JSONObject(ce.toString()); //no nice copy constructor...
-                            if (replaceUrl != null) {
+                            if (serverInfo != null) {
                                 for (String ok : REPLACE_KEYS) {
                                     if (o.has(ok)) {
                                         String value = o.getString(ok);
-                                        value = value.replace("http://localhost", replaceUrl);
-                                        value = value.replace("http://127.0.0.1", replaceUrl);
+                                        value=serverInfo.replaceHostInUrl(value);
                                         o.put(ok, value);
                                     }
                                 }

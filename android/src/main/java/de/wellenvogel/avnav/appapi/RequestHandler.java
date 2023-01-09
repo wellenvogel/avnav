@@ -17,6 +17,8 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -115,6 +117,19 @@ public class RequestHandler {
         public InetAddress address;
         public boolean listenAny=false;
         public String lastError=null;
+        public String replaceHostInUrl(String url){
+            if (address == null) return url;
+            try {
+                URI uri=new URI(url);
+                uri = new URI(uri.getScheme(), uri.getUserInfo(),
+                    address.getHostAddress(), uri.getPort(), uri.getPath(),
+                    uri.getQuery(), uri.getFragment());
+                return uri.toString();
+            } catch (Exception e) {
+                AvnLog.e("cannot replace invalid url "+url+": ",e);
+            }
+            return url;
+        }
     }
 
 

@@ -10,6 +10,7 @@ import org.json.JSONObject;
 
 import java.io.FileNotFoundException;
 import java.math.BigInteger;
+import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -108,10 +109,6 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
             }
             rt.put(aj);
         }
-        String urlReplace=null;
-        if (serverInfo != null && serverInfo.address != null){
-            urlReplace="http://"+serverInfo.address.toString();
-        }
         String [] REPLACE_KEYS=new String[]{"url","icon"};
         synchronized (externalAddons){
             for (String k: externalAddons.keySet()){
@@ -119,13 +116,12 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
                 if (extAddons == null) continue;
                 for (AddonInfo addon: extAddons){
                     JSONObject aj=addon.toJson();
-                    if (urlReplace != null) {
+                    if (serverInfo != null) {
                         for (String rk : REPLACE_KEYS) {
                             if (aj.optBoolean("keepUrl", false) || !rk.equals("url")) {
                                 //external url
-                                String v = aj.optString(rk, "")
-                                        .replace("http://localhost", urlReplace)
-                                        .replace("http://127.0.0.1", urlReplace);
+                                String v = aj.optString(rk, "");
+                                v=serverInfo.replaceHostInUrl(v);
                                 aj.put(rk, v);
                             }
                         }
