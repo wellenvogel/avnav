@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -111,7 +112,7 @@ public class RequestHandler {
     );
 
     public static class ServerInfo{
-        public InetSocketAddress address;
+        public InetAddress address;
         public boolean listenAny=false;
         public String lastError=null;
     }

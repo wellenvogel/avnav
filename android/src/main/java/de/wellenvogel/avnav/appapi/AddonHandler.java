@@ -97,7 +97,7 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
         JSONArray rt=new JSONArray();
         String host="localhost";
         if (serverInfo != null && serverInfo.address != null) {
-            host=serverInfo.address.getHostString();
+            host=serverInfo.address.getHostAddress();
         }
         for (AddonInfo addon : addons) {
             JSONObject aj=addon.toJson();

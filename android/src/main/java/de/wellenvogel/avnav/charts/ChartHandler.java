@@ -350,7 +350,7 @@ public class ChartHandler implements INavRequestHandler {
         try{
             String replaceUrl=null;
             if (serverInfo != null && serverInfo.address != null){
-                replaceUrl="http://"+serverInfo.address.toString();
+                replaceUrl="http://"+serverInfo.address.getHostAddress();
             }
             synchronized (externalCharts){
                 for (String key:externalCharts.keySet()){
