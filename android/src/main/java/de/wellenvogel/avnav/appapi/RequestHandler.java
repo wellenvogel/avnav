@@ -15,7 +15,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -111,9 +114,22 @@ public class RequestHandler {
     );
 
     public static class ServerInfo{
-        public InetSocketAddress address;
+        public InetAddress address;
         public boolean listenAny=false;
         public String lastError=null;
+        public String replaceHostInUrl(String url){
+            if (address == null) return url;
+            try {
+                URI uri=new URI(url);
+                uri = new URI(uri.getScheme(), uri.getUserInfo(),
+                    address.getHostAddress(), uri.getPort(), uri.getPath(),
+                    uri.getQuery(), uri.getFragment());
+                return uri.toString();
+            } catch (Exception e) {
+                AvnLog.e("cannot replace invalid url "+url+": ",e);
+            }
+            return url;
+        }
     }
 
 
@@ -158,6 +174,13 @@ public class RequestHandler {
         AvnUtil.KeyValue<File> subDir=typeDirs.get(type);
         if (subDir == null) throw new Exception("invalid type "+type);
         return new File(getWorkDir(),subDir.value.getPath());
+    }
+
+    public AddonHandler getAddonHandler(){
+        return addonHandler;
+    }
+    public ChartHandler getChartHandler(){
+        return gemfHandler;
     }
 
     public RequestHandler(GpsService service){

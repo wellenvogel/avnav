@@ -25,7 +25,7 @@ public class WorkerFactory {
         }
     }
     static abstract class Creator{
-        abstract ChannelWorker create(String name,GpsService ctx,NmeaQueue queue) throws JSONException, IOException;
+        abstract IWorker create(String name,GpsService ctx,NmeaQueue queue) throws JSONException, IOException;
         boolean canAdd(GpsService ctx){return true;}
     }
     public WorkerFactory(){
@@ -36,6 +36,7 @@ public class WorkerFactory {
         registerCreator(BLUETOOTH_NAME, new BluetoothConnectionHandler.Creator());
         registerCreator(UDPREADER_NAME,new UdpReceiver.Creator());
         registerCreator(UDPWRITER_NAME, new UdpWriter.Creator());
+        registerCreator(PluginWorker.TYPENAME,new PluginWorker.Creator());
         for (TcpServiceReader.Description d:TcpServiceReader.SERVICES){
             registerCreator(d.displayName,d.getCreator());
         }
@@ -45,7 +46,7 @@ public class WorkerFactory {
     void registerCreator(String typeName,Creator creator){
         workers.put(typeName,creator);
     }
-    public ChannelWorker createWorker(String name,GpsService ctx, NmeaQueue queue) throws WorkerNotFound, JSONException, IOException {
+    public IWorker createWorker(String name,GpsService ctx, NmeaQueue queue) throws WorkerNotFound, JSONException, IOException {
         Creator cr=workers.get(name);
         if ( cr == null) throw new WorkerNotFound(name);
         return cr.create(name,ctx,queue);

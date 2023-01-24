@@ -49,7 +49,7 @@ class AVNWpaHandler(AVNWorker):
   def __init__(self,param):
     AVNWorker.__init__(self, param)
     self.wpaHandler=None
-    self.lastScan=datetime.datetime.utcnow()
+    self.lastScan=time.monotonic()
     self.scanLock=threading.Lock()
     self.getRequestParam=AVNUtil.getHttpRequestParam
     self.commandHandler = None
@@ -75,7 +75,7 @@ class AVNWpaHandler(AVNWorker):
     self.commandHandler = self.findHandlerByName("AVNCommandHandler")
     wpaSocket=self.getStringParam('wpaSocket')
     ownSocket=self.getStringParam('ownSocket')
-    watcherThread=threading.Thread(target=self.allowDenyWatcher,name="firewallWatcher")
+    watcherThread=threading.Thread(target=self.allowDenyWatcher,name="Wpa:fwWatcher")
     watcherThread.start()
     while not self.shouldStop():
       try:
@@ -133,7 +133,7 @@ class AVNWpaHandler(AVNWorker):
     lastNet=None
     lastMode=None
     lastResult=-1
-    lastSuccess=AVNUtil.utcnow()
+    lastSuccess=time.monotonic()
     while True:
       try:
         status=self.getStatus()
@@ -148,11 +148,12 @@ class AVNWpaHandler(AVNWorker):
               waittime=self.COMMAND_REPEAT
             else:
               waittime=self.COMMAND_REPEAT_OK
-          if (AVNUtil.utcnow() - lastSuccess) >= waittime:
+          AVNLog.debug("COMPLETED check mode=%s,waittime=%d",mode,waittime)
+          if (time.monotonic() - lastSuccess) >= waittime:
             lastNet=ssid
             lastMode=mode
-            AVNLog.info("running command %s %s",command,mode)
-            lastResult=AVNUtil.runCommand(command+[mode],statusName+"-command")
+            AVNLog.info("running command %s %s"," ".join(command),mode)
+            lastResult=AVNUtil.runCommand(command+[mode])
             if lastResult != 0:
               if lastResult is None:
                 lastResult=-1
@@ -160,7 +161,8 @@ class AVNWpaHandler(AVNWorker):
               self.setInfo(statusName,"unable to run firewall command on %s for %s, return %d"%(ssid,mode,lastResult),WorkerStatus.ERROR)
             else:
               self.setInfo(statusName, "firewall command on %s for %s ok" % (ssid,mode), WorkerStatus.NMEA)
-              lastSuccess=AVNUtil.utcnow()
+              lastSuccess=time.monotonic()
+            AVNLog.info("command %s %s result %d"," ".join(command),mode,lastResult)
             self.lastFwInfo=FwInfo(ssid,mode,lastResult)
       except:
         AVNLog.error("%s: exception %s"%(statusName,traceback.format_exc()))
@@ -170,8 +172,8 @@ class AVNWpaHandler(AVNWorker):
     if self.wpaHandler is None:
       return
     self.scanLock.acquire()
-    now=datetime.datetime.utcnow()
-    if now > (self.lastScan + datetime.timedelta(seconds=30)):
+    now=time.monotonic()
+    if now > (self.lastScan + 30):
       AVNLog.debug("wpa start scan")
       self.lastScan=now
       self.scanLock.release()
@@ -202,7 +204,7 @@ class AVNWpaHandler(AVNWorker):
         if id_str is not None and id_str == self.PRIVATE_NAME:
           net['allowAccess']=True
         rt.append(net)
-      AVNLog.debug("wpa list %s",rt)
+      AVNLog.debug("wpa list %s",str(rt))
       return rt
     except Exception:
       AVNLog.error("exception in WPAHandler:getList: %s",traceback.format_exc())
@@ -213,7 +215,7 @@ class AVNWpaHandler(AVNWorker):
     if wpaHandler is None:
       return rt
     try:
-      AVNLog.debug("wpa remove network",id)
+      AVNLog.info("wpa remove network %s",str(id))
       wpaHandler.removeNetwork(id)
       wpaHandler.saveConfig()
       return {'status':'OK'}
@@ -227,7 +229,7 @@ class AVNWpaHandler(AVNWorker):
     if wpaHandler is None:
       return rt
     try:
-      AVNLog.debug("wpa enable network",id)
+      AVNLog.info("wpa enable network %s",str(id))
       if param is not None:
         self.wpaHandler.configureNetwork(id,param)
       wpaHandler.enableNetwork(id)
@@ -242,7 +244,7 @@ class AVNWpaHandler(AVNWorker):
     if wpaHandler is None:
       return rt
     try:
-      AVNLog.debug("wpa disable network",id)
+      AVNLog.info("wpa disable network %s",str(id))
       wpaHandler.disableNetwork(id)
       wpaHandler.saveConfig()
       return {'status':'OK'}
@@ -256,7 +258,12 @@ class AVNWpaHandler(AVNWorker):
     if wpaHandler is None:
       return rt
     try:
-      AVNLog.debug("wpa connect",param)
+      lparam=param.copy()
+      try:
+        del lparam['psk']
+      except:
+        pass
+      AVNLog.info("wpa connect %s",str(lparam))
       wpaHandler.connect(param)
       wpaHandler.saveConfig()
       return {'status':'OK'}
@@ -281,7 +288,7 @@ class AVNWpaHandler(AVNWorker):
           hasFwResult=True
       if not hasFwResult:
         rt['fwStatus']=-1
-      AVNLog.debug("wpa status",rt)
+      AVNLog.debug("wpa status %s",str(rt))
       return rt
     except Exception:
       AVNLog.error("exception in WPAHandler:getStatus: %s",traceback.format_exc())
@@ -297,7 +304,7 @@ class AVNWpaHandler(AVNWorker):
       return None
 
   def handleApiRequest(self,type,subtype,requestparam,**kwargs):
-    start=datetime.datetime.utcnow()
+    start=time.monotonic()
     command=self.getRequestParam(requestparam, 'command')
     AVNLog.debug("wpa api request %s",command)
     rt=None
@@ -351,8 +358,8 @@ class AVNWpaHandler(AVNWorker):
       rt=json.dumps(self.connect(param))
     if rt is None:
       raise Exception("unknown command %s"%(command))
-    end=datetime.datetime.utcnow()
-    AVNLog.debug("wpa request %s lasted %d millis",command,(end-start).total_seconds()*1000)
+    end=time.monotonic()
+    AVNLog.debug("wpa request %s lasted %d millis",command,(end-start)*1000)
     return rt
 avnav_handlerList.registerHandler(AVNWpaHandler)
         

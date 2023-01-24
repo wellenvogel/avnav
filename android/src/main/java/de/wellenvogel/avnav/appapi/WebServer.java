@@ -49,6 +49,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
@@ -102,12 +103,12 @@ public class WebServer extends Worker {
     }
 
 
-    public RequestHandler.ServerInfo getServerInfo(){
+    public RequestHandler.ServerInfo getServerInfo(InetAddress currentTarget){
         RequestHandler.ServerInfo info=null;
         if (listener != null){
             try {
                 info = new RequestHandler.ServerInfo();
-                info.address = listener.getLocalAddress();
+                info.address = (currentTarget != null)?currentTarget:listener.getLocalAddress().getAddress();
                 info.listenAny = listener.getAny();
                 info.lastError = listener.getLastError();
             }catch (Throwable t){}
@@ -259,9 +260,14 @@ public class WebServer extends Worker {
             ExtendedWebResourceResponse resp=null;
             try {
                 if (handler!= null) {
+                    AvNavHttpServerConnection con=(AvNavHttpServerConnection)httpContext.getAttribute("http.connection");
+                    InetAddress currentTarget=null;
+                    if (con != null){
+                        currentTarget=con.getLocalAddress();
+                    }
                     resp = handler.handleNavRequest(uri,
                             postData,
-                            getServerInfo());
+                            getServerInfo(currentTarget));
                 }
             }catch (Throwable t){
                 AvnLog.e("error handling request "+url,t);
@@ -419,11 +425,11 @@ public class WebServer extends Worker {
     private InetAddress getLocalHost() throws UnknownHostException {
         InetAddress local=null;
         try {
-            local = InetAddress.getByName("localhost");
+            local = Inet4Address.getByName("localhost");
         }catch(Exception ex){
             AvnLog.e("Exception getting localhost: "+ex);
         }
-        if (local == null) local=InetAddress.getLocalHost();
+        if (local == null) local=Inet4Address.getLocalHost();
         return local;
     }
 
@@ -567,7 +573,7 @@ public class WebServer extends Worker {
             lastError=null;
             try {
                 serversocket.setReuseAddress(true);
-                if (any) serversocket.bind(new InetSocketAddress(port));
+                if (any) serversocket.bind( new InetSocketAddress( port));
                 else {
                     InetAddress local=getLocalHost();
                     serversocket.bind(new InetSocketAddress(local.getHostAddress(),port));
