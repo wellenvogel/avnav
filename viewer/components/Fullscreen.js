@@ -6,6 +6,8 @@ import Requests from '../util/requests';
 import Toast from "./Toast";
 import piIcon from '../images/rpi.png';
 import splitsupport from "../util/splitsupport";
+import Helper from "../util/helper";
+import GuiHelpers from "../util/GuiHelpers";
 
 let fullScreenBlocked=false;
 let fullScreenIcon=defaultFullScreenIcon;
@@ -60,65 +62,55 @@ const init=()=>{
                 })
             }
         },[keys.gui.global.splitMode]);
-        if (window.location.search.match(/[?&]fullscreen=/)){
-            let mode=decodeURIComponent(window.location.search.replace(/.*[?&]fullscreen=/,'').replace(/[&].*/,''));
-            splitsupport.addUrlParameter("fullscreen",mode);
-            if (mode.match(/^server:/)){
-                let command=mode.replace(/^server:/,'');
-                Requests.getJson('',undefined,{
-                    request:'api',
-                    type:'command',
-                    action:'getCommands'
-                })
-                    .then((data)=>{
-                        if (! data.data) return;
-                        let found=false;
-                        data.data.forEach((serverCommand)=>{
-                            if (serverCommand.name === command){
-                                if (serverCommand.icon) fullScreenIcon=serverCommand.icon;
-                                found=true;
-                            }
-                        });
-                        if (!found){
-                            fullScreenBlocked=true;
+        let mode=Helper.getParam("fullscreen");
+        if (mode) {
+            splitsupport.addUrlParameter("fullscreen", mode);
+            if (mode.match(/^server:/)) {
+                let command = mode.replace(/^server:/, '');
+                GuiHelpers.getServerCommand(command)
+                    .then((serverCommand) => {
+                        if (serverCommand) {
+
+                            if (serverCommand.icon) fullScreenIcon = serverCommand.icon;
+                            fullScreenAvailable = () => true;
+                        } else {
+                            fullScreenBlocked = true;
                         }
-                        else{
-                            fullScreenAvailable=()=>true;
-                        }
-                        let current=globalStore.getData(keys.gui.global.isFullScreen);
+
+                        let current = globalStore.getData(keys.gui.global.isFullScreen);
                         //toggle this to triger button redraw
-                        globalStore.storeData(keys.gui.global.isFullScreen,!current);
-                        globalStore.storeData(keys.gui.global.isFullScreen,current);
+                        globalStore.storeData(keys.gui.global.isFullScreen, !current);
+                        globalStore.storeData(keys.gui.global.isFullScreen, current);
                     })
-                    .catch((e)=>{
+                    .catch((e) => {
                         Toast(e)
                     });
-                fullScreenAvailable=()=>false;
-                isFullScreen=()=>{return undefined};
-                toggleFullscreen=()=>{
-                    Requests.getJson('',undefined,{
+                fullScreenAvailable = () => false;
+                isFullScreen = () => {
+                    return undefined
+                };
+                toggleFullscreen = () => {
+                    Requests.getJson({
                         request: 'api',
                         type: 'command',
                         action: 'runCommand',
                         name: command
                     })
-                        .then(()=>{})
-                        .catch((e)=> Toast(e));
+                        .then(() => {
+                        })
+                        .catch((e) => Toast(e));
                 }
-            }
-            else{
-                fullScreenBlocked=true;
+            } else {
+                fullScreenBlocked = true;
             }
         }
-
-        globalStore.storeData(keys.gui.global.isFullScreen,fullScreenAvailable() && !!document.fullscreenElement );
-        if (! fullScreenBlocked) {
+        globalStore.storeData(keys.gui.global.isFullScreen, fullScreenAvailable() && !!document.fullscreenElement);
+        if (!fullScreenBlocked) {
             document.addEventListener('fullscreenchange', () => {
                 globalStore.storeData(keys.gui.global.isFullScreen, isFullScreen());
             });
         }
-
-    }catch (e){
+    } catch (e) {
         console.log("unable to install fullscreen handler")
     }
 }

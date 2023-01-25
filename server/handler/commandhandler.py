@@ -97,7 +97,7 @@ class Handler(object):
           line = self.subprocess.stdout.readline()
           if not line:
             break
-          AVNLog.debug("[cmd]%s", line.strip())
+          AVNLog.info("[cmd]%s", line.strip())
         status=None
         wt=30
         while wt >0 and status is None:
@@ -345,10 +345,11 @@ class AVNCommandHandler(AVNWorker):
           return rt
         if command == 'runCommand':
           name=AVNUtil.getHttpRequestParam(requestparam,'name',mantadory=True)
+          parameter=AVNUtil.getHttpRequestParam(requestparam,"parameter",mantadory=False)
           allowedCommands=self.getClientCommands(isLocal,handler)
           for cmd in allowedCommands:
             if cmd['name'] == name:
-              self.startCommand(name)
+              self.startCommand(name,parameters=parameter)
               return {'status':'OK'}
           return {'status': 'command %s not found'%name}
         return rt

@@ -4,6 +4,8 @@ import KeyHandler from './keyhandler.js';
 import LayoutHandler from './layouthandler.js';
 import assign from 'object-assign';
 import shallowcompare from "./compare";
+import Requests from "./requests";
+import base from "../base";
 
 
 
@@ -360,6 +362,22 @@ export const stateHelper=(thisref,initialValues,opt_namePrefix)=>{
 
 };
 
+const getServerCommand=(name)=>{
+    return Requests.getJson({
+        request:'api',
+        type:'command',
+        action:'getCommands'
+    })
+        .then((data)=> {
+            if (!data.data) return;
+            for (let i=0;i<data.data.length;i++){
+                if (data.data[i].name === name){
+                    return data.data[i];
+                }
+            }
+        })
+        .catch((e)=>base.log("unable to query server command "+name));
+}
 
 export default {
     resizeElementFont,
@@ -372,5 +390,6 @@ export default {
     IMAGES,
     storeHelper,
     storeHelperState,
-    stateHelper
+    stateHelper,
+    getServerCommand
 };

@@ -1,8 +1,13 @@
 import globalStore from './globalstore.jsx';
 import keys from './keys.jsx';
 import splitsupport from "./splitsupport";
+import Helper from "./helper";
+import GuiHelpers from "./GuiHelpers";
+import base from "../base";
+import RequestHandler from "./requests";
 
 const KEY=keys.gui.global.dimActive;
+const URLPARAM="dimm";
 class DimmHandler{
     constructor(opt_defaultTimeout){
         this.timerAction=this.timerAction.bind(this);
@@ -14,25 +19,6 @@ class DimmHandler{
         this.buttonDef=this.buttonDef.bind(this);
         this.mode="manual";
         this.actionFunction=undefined;
-        try {
-            if (window && window.bonjourBrowser && window.bonjourBrowser.dimScreen) {
-                this.actionFunction = window.bonjourBrowser.dimScreen.bind(window.bonjourBrowser);
-            }
-        }catch (e){}
-        if (! this.actionFunction){
-            try {
-                //we must use the original injection point here as window.avnav.android will be set later only
-                if (window.avnavAndroid && window.avnavAndroid.dimScreen) {
-                    this.actionFunction = window.avnavAndroid.dimScreen.bind(window.avnavAndroid);
-                }
-            }catch(e){}
-        }
-        //test only...
-        if (! this.actionFunction && window.location.search.match(/[?&]dimm=true/)){
-            this.actionFunction=()=>{
-                console.log("dimmer");
-            }
-        }
         splitsupport.subscribe('dimm',(data)=>{
             if (data.value !== globalStore.getData(KEY)){
                 if (data.value) this.activate(true);
@@ -40,6 +26,57 @@ class DimmHandler{
             }
         })
 
+    }
+    init(){
+        let mode=Helper.getParam(URLPARAM);
+        if (mode){
+            if (mode.match(/^server:/)){
+                let command=mode.replace(/^server:/,'');
+                GuiHelpers.getServerCommand(command)
+                    .then((serverCommand)=>{
+                        if (serverCommand) {
+                            this.actionFunction = (value) => {
+                                RequestHandler.getJson({
+                                    request: 'api',
+                                    type: 'command',
+                                    action: 'runCommand',
+                                    name: command,
+                                    parameter: value+""
+                                })
+                                    .then((res)=>{})
+                                    .catch((err)=>base.log("cannot execute command "+command+": "+err));
+                            }
+                            splitsupport.addUrlParameter(URLPARAM,mode);
+                        }
+                    })
+                    .catch((err)=>base.log("cannot get command for dim: "+command));
+            }
+            else{
+                if (mode === "true"){
+                    //TEST
+                    this.actionFunction=(value)=>{
+                        console.log("dimm called with "+value);
+                    }
+                }
+            }
+        }
+        else {
+            try {
+                if (window && window.bonjourBrowser && window.bonjourBrowser.dimScreen) {
+                    this.actionFunction = window.bonjourBrowser.dimScreen.bind(window.bonjourBrowser);
+                }
+            } catch (e) {
+            }
+            if (!this.actionFunction) {
+                try {
+                    //we must use the original injection point here as window.avnav.android will be set later only
+                    if (window.avnavAndroid && window.avnavAndroid.dimScreen) {
+                        this.actionFunction = window.avnavAndroid.dimScreen.bind(window.avnavAndroid);
+                    }
+                } catch (e) {
+                }
+            }
+        }
     }
     activate(opt_noSend){
         if (this.mode != "manual" && this.mode != "timer") return;

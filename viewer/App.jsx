@@ -47,6 +47,7 @@ import LocalStorage, {PREFIX_NAMES, STORAGE_NAMES} from './util/localStorageMana
 import splitsupport from "./util/splitsupport"
 import leavehandler from "./util/leavehandler"; //triggers querySplitMode
 import fullscreen from "./components/Fullscreen";
+import dimmHandler from './util/dimhandler';
 
 
 const DynamicSound=Dynamic(SoundHandler);
@@ -215,6 +216,7 @@ class App extends React.Component {
             }
         });
         fullscreen.init();
+        dimmHandler.init();
         let startpage="warningpage";
         let firstStart=true;
         if (LocalStorage.hasStorage()){

@@ -80,10 +80,18 @@
     var location=window.location.href+'';
     location=location.replace('viewer_split','avnav_viewer');
     var singleLocation=location;
-    var fullscreenMode=getParam("fullscreen",singleLocation);
+    var FWPARAM=["fullscreen","dimm"];
+    var fwValues={};
+    FWPARAM.forEach(function(p){
+        var v=getParam(p,singleLocation);
+        if (v) fwValues[p]=v;
+    })
     singleLocation=singleLocation.replace(/\?.*/,'');
-    if (fullscreenMode){
-        singleLocation+="?fullscreen="+encodeURIComponent(fullscreenMode);
+    var i;
+    var delim="?";
+    for (i in fwValues){
+        singleLocation+=delim+encodeURIComponent(i)+"="+encodeURIComponent(fwValues[i]);
+        delim="&";
     }
     if (! location.match(/[?]/)) location+='?';
     location+="&splitMode=true";
