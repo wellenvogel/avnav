@@ -181,7 +181,21 @@ class AisPage extends React.Component{
                 onClick: ()=>{self.props.history.pop()}
             }
         ];
+        this.listRef=undefined;
     }
+
+    getSnapshotBeforeUpdate(prevProps, prevState) {
+        if (! this.listRef) return null;
+        return this.listRef.scrollTop;
+    }
+
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if (snapshot === undefined || snapshot === null) return;
+        if (this.initialMmsi !== undefined) return ;
+        if (! this.listRef) return;
+        this.listRef.scrollTop=snapshot;
+    }
+
     computeSummary(state){
         let empty={sortField:this.state.sortField||'cpa',numTargets:0,warning:undefined};
         let aisList=state.list;
@@ -276,6 +290,7 @@ class AisPage extends React.Component{
                     updateFunction={this.computeList}
                     scrollable={true}
                     listRef={(list)=>{
+                        this.listRef=list;
                         if (!list) return;
                         if (! this.initialMmsi) return;
                         let selected=list.querySelector('.initialTarget');

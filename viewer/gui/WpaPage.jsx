@@ -4,7 +4,7 @@
 
 import Dynamic from '../hoc/Dynamic.jsx';
 import ItemList from '../components/ItemList.jsx';
-import React from 'react';
+import React, {createRef} from 'react';
 import PropTypes from 'prop-types';
 import Page from '../components/Page.jsx';
 import Toast from '../components/Toast.jsx';
@@ -149,6 +149,19 @@ class WpaPage extends React.Component{
         this.listItemStore=new Store('wpaList');
         this.listItemStore.storeData(LISTKEY,[]);
         this.ItemList=Dynamic(ItemList,undefined,this.listItemStore);
+        this.listRef=undefined
+    }
+
+    getSnapshotBeforeUpdate(prevProps, prevState) {
+        if (! this.listRef) return null;
+        return this.listRef.scrollTop;
+    }
+
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if (snapshot != null ){
+            if (!this.listRef) return;
+            this.listRef.scrollTop = snapshot;
+        }
     }
 
     doQuery(timerSequence){
@@ -250,8 +263,6 @@ class WpaPage extends React.Component{
     }
     componentDidMount(){
     }
-    componentDidUpdate(){
-    }
     componentWillUnmount(){
     }
     render(){
@@ -270,6 +281,7 @@ class WpaPage extends React.Component{
                         itemList:LISTKEY
                     }}
                     onItemClick={self.itemClick}
+                    listRef={(node)=>this.listRef=node}
                     />
             </React.Fragment>
             );
