@@ -32,4 +32,5 @@ public interface IWorker {
     String getTypeName();
     void start();
 
+    void onResume();
 }

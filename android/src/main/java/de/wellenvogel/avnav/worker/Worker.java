@@ -362,4 +362,7 @@ public abstract class Worker implements IWorker {
     @Override
     public void check() throws JSONException {}
 
+    @Override
+    public void onResume() {
+    }
 }

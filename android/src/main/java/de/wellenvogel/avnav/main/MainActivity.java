@@ -677,10 +677,15 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             startGpsService();
             return;
         }
-        if (serviceNeedsRestart) {
-            gpsService.restart();
-            serviceNeedsRestart=false;
-            AvnLog.d(Constants.LOGPRFX, "MainActivity:onResume serviceRestart");
+        if (gpsService != null) {
+            if (serviceNeedsRestart) {
+                gpsService.restart();
+                serviceNeedsRestart = false;
+                AvnLog.d(Constants.LOGPRFX, "MainActivity:onResume serviceRestart");
+            }
+            else{
+                gpsService.onResumeInternal();
+            }
         }
         if (webView == null) {
             initializeWebView();

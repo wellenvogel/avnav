@@ -156,16 +156,7 @@ public class PluginWorker extends Worker{
             this.addons=addonsJson;
         }
     }
-    @Override
-    protected void run(int startSequence) throws JSONException, IOException {
-        setStatus(WorkerStatus.Status.INACTIVE,"started");
-        boolean active=false;
-        JSONArray charts;
-        JSONArray addons;
-        charts=this.charts;
-        addons=this.addons;
-        if (charts != null) registerCharts(charts);
-        if (addons != null) registerAddons(addons);
+    private void tryAutoStart(){
         if (startPackage != null && startAction != null) {
             Intent si = new Intent();
             si.setComponent(new ComponentName(startPackage, startAction));
@@ -180,6 +171,18 @@ public class PluginWorker extends Worker{
                 Log.e(Constants.LOGPRFX,"unable to start plugin "+pluginName,t);
             }
         }
+    }
+    @Override
+    protected void run(int startSequence) throws JSONException, IOException {
+        setStatus(WorkerStatus.Status.INACTIVE,"started");
+        boolean active=false;
+        JSONArray charts;
+        JSONArray addons;
+        charts=this.charts;
+        addons=this.addons;
+        if (charts != null) registerCharts(charts);
+        if (addons != null) registerAddons(addons);
+        tryAutoStart();
         while (! shouldStop(startSequence)){
             sleep(1000);
             long last=getLastUpdate();
@@ -255,5 +258,11 @@ public class PluginWorker extends Worker{
                 }
             }
         }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        tryAutoStart();
     }
 }

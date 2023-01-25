@@ -114,6 +114,10 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
     private int avnavVersion=0;
     private boolean allowAllPlugins=true;
 
+    public void onResumeInternal() {
+        onResumeWorkers();
+    }
+
     private static class Registration{
         NsdManager.RegistrationListener listener;
         NsdServiceInfo info;
@@ -713,6 +717,23 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             }
         }
         internalWorkers.clear();
+    }
+
+    private synchronized void onResumeWorkers(){
+        for (IWorker w: workers){
+            try{
+                w.onResume();
+            }catch (Throwable t){
+                AvnLog.e("unable to stop worker "+w.getStatus().toString());
+            }
+        }
+        for (IWorker w: internalWorkers){
+            try{
+                w.onResume();
+            }catch (Throwable t){
+                AvnLog.e("unable to stop worker "+w.getStatus().toString());
+            }
+        }
     }
 
     public static boolean handlesUsbDevice(Context ctx,String deviceName){
@@ -1552,6 +1573,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
     private void handlePluginMessage(String name, Intent intent){
         PluginWorker existing=null;
         synchronized (this) {
+            if (! isRunning) return; //prevent duplicates...
             for (List<IWorker> wlist : getAllWorkers()) {
                 for (IWorker w : wlist) {
                     if (w.getTypeName().equals(PluginWorker.TYPENAME)) {

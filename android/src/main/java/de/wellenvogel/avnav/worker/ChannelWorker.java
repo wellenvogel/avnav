@@ -89,4 +89,8 @@ public abstract class ChannelWorker extends Worker{
         Target.ServiceTarget target=new Target.ServiceTarget(type,name);
         return resolveMdns(target,startSequence,forceNew);
     }
+
+    @Override
+    public void onResume() {
+    }
 }
