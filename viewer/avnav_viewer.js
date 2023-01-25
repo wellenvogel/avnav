@@ -65,7 +65,7 @@ function getParam(key)
     let value=RegExp(""+key+"[^&]+").exec(window.location.search);
 
     // Return the unescaped value minus everything starting from the equals sign or an empty string
-    return unescape(!!value ? value.toString().replace(/^[^=]+./,"") : "");
+    return decodeURIComponent(!!value ? value.toString().replace(/^[^=]+./,"") : "");
 }
 
 /**

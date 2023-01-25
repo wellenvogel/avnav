@@ -36,6 +36,10 @@ class SplitSupport{
             if (ev.data.type === undefined) return;
             this.pubSub.publish(ev.data.type,ev.data);
         })
+        this.urlParameters={};
+    }
+    addUrlParameter(name,value){
+        this.urlParameters[name]=value;
     }
     subscribe(type,callback){
         return this.pubSub.subscribe(type,callback);
@@ -60,8 +64,13 @@ class SplitSupport{
         }
         else{
             var location=window.location.href+'';
-            location=location.replace('avnav_viewer','viewer_split');
-            window.location.replace(location.replace(/\?.*/,''));
+            location=location.replace('avnav_viewer','viewer_split').replace(/\?.*/,'');
+            let delim='?';
+            for (let k in this.urlParameters){
+                location+=delim+encodeURIComponent(k)+"="+encodeURIComponent(this.urlParameters[k]);
+                delim='&';
+            }
+            window.location.replace(location);
         }
     }
 

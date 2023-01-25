@@ -21,7 +21,6 @@ import EditRoutePage from './gui/EditRoutePage.jsx';
 import WarningPage from './gui/WarningPage.jsx';
 import ViewPage from './gui/ViewPage.jsx';
 import AddonConfigPage from './gui/AddOnConfigPage.jsx';
-import PropertyHandler from './util/propertyhandler.js';
 import OverlayDialog from './components/OverlayDialog.jsx';
 import globalStore from './util/globalstore.jsx';
 import Requests from './util/requests.js';
@@ -47,6 +46,7 @@ import alarmhandler from "./nav/alarmhandler.js";
 import LocalStorage, {PREFIX_NAMES, STORAGE_NAMES} from './util/localStorageManager';
 import splitsupport from "./util/splitsupport"
 import leavehandler from "./util/leavehandler"; //triggers querySplitMode
+import fullscreen from "./components/Fullscreen";
 
 
 const DynamicSound=Dynamic(SoundHandler);
@@ -214,6 +214,7 @@ class App extends React.Component {
                 leavehandler.stop();
             }
         });
+        fullscreen.init();
         let startpage="warningpage";
         let firstStart=true;
         if (LocalStorage.hasStorage()){
@@ -225,6 +226,7 @@ class App extends React.Component {
         if (firstStart){
             propertyHandler.firstStart();
         }
+
         NavData.startQuery();
         this.history.push(startpage);
         this.leftHistoryState=stateHelper(this,this.history.currentLocation(true),'leftHistory');

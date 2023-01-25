@@ -1,4 +1,12 @@
 (function(){
+    function getParam(key,src)
+    {
+        // Find the key and everything up to the ampersand delimiter
+        let value=RegExp(""+key+"[^&]+").exec(src||window.location.search);
+
+        // Return the unescaped value minus everything starting from the equals sign or an empty string
+        return decodeURIComponent(!!value ? value.toString().replace(/^[^=]+./,"") : "");
+    }
     var PNAME="avnavsplit.percent";
     var dragPosition=-1;
     var dragstartX=-1;
@@ -72,7 +80,11 @@
     var location=window.location.href+'';
     location=location.replace('viewer_split','avnav_viewer');
     var singleLocation=location;
+    var fullscreenMode=getParam("fullscreen",singleLocation);
     singleLocation=singleLocation.replace(/\?.*/,'');
+    if (fullscreenMode){
+        singleLocation+="?fullscreen="+encodeURIComponent(fullscreenMode);
+    }
     if (! location.match(/[?]/)) location+='?';
     location+="&splitMode=true";
     if (window.location.search.match(/split=/)){

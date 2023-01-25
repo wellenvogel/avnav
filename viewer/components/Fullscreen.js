@@ -45,76 +45,82 @@ const toggleFullscreenDefault=()=>{
 
 let toggleFullscreen=toggleFullscreenDefault;
 
-try {
-    globalStore.register(()=>{
-        if (globalStore.getData(keys.gui.global.splitMode)){
-            fullScreenAvailable=()=> ! window.avnavAndroid;
-            isFullScreen=()=>{return globalStore.getData(keys.gui.global.isFullScreen)};
-            toggleFullscreen=()=>{
-                splitsupport.sendToFrame('fullscreen');
-            }
-            splitsupport.subscribe('fullScreenChanged',(data)=>{
-                globalStore.storeData(keys.gui.global.isFullScreen,data.isFullScreen);
-            })
-        }
-    },[keys.gui.global.splitMode]);
-    if (window.location.search.match(/[?&]fullscreen=/)){
-        let mode=window.location.search.replace(/.*[?&]fullscreen=/,'').replace(/[&].*/,'');
-        if (mode.match(/^server:/)){
-            let command=mode.replace(/^server:/,'');
-            Requests.getJson('',undefined,{
-                request:'api',
-                type:'command',
-                action:'getCommands'
-            })
-                .then((data)=>{
-                    if (! data.data) return;
-                    let found=false;
-                    data.data.forEach((serverCommand)=>{
-                        if (serverCommand.name === command){
-                            if (serverCommand.icon) fullScreenIcon=serverCommand.icon;
-                            found=true;
-                        }
-                    });
-                    if (!found){
-                        fullScreenBlocked=true;
-                    }
-                    else{
-                        fullScreenAvailable=()=>true;
-                    }
-                    let current=globalStore.getData(keys.gui.global.isFullScreen);
-                    //toggle this to triger button redraw
-                    globalStore.storeData(keys.gui.global.isFullScreen,!current);
-                    globalStore.storeData(keys.gui.global.isFullScreen,current);
+
+const init=()=>{
+    try {
+        globalStore.register(()=>{
+            if (globalStore.getData(keys.gui.global.splitMode)){
+                fullScreenAvailable=()=> ! window.avnavAndroid;
+                isFullScreen=()=>{return globalStore.getData(keys.gui.global.isFullScreen)};
+                toggleFullscreen=()=>{
+                    splitsupport.sendToFrame('fullscreen');
+                }
+                splitsupport.subscribe('fullScreenChanged',(data)=>{
+                    globalStore.storeData(keys.gui.global.isFullScreen,data.isFullScreen);
                 })
-                .catch((e)=>Toast(e));
-            fullScreenAvailable=()=>false;
-            isFullScreen=()=>{return undefined};
-            toggleFullscreen=()=>{
+            }
+        },[keys.gui.global.splitMode]);
+        if (window.location.search.match(/[?&]fullscreen=/)){
+            let mode=decodeURIComponent(window.location.search.replace(/.*[?&]fullscreen=/,'').replace(/[&].*/,''));
+            splitsupport.addUrlParameter("fullscreen",mode);
+            if (mode.match(/^server:/)){
+                let command=mode.replace(/^server:/,'');
                 Requests.getJson('',undefined,{
-                    request: 'api',
-                    type: 'command',
-                    action: 'runCommand',
-                    name: command
+                    request:'api',
+                    type:'command',
+                    action:'getCommands'
                 })
-                    .then(()=>{})
-                    .catch((e)=> Toast(e));
+                    .then((data)=>{
+                        if (! data.data) return;
+                        let found=false;
+                        data.data.forEach((serverCommand)=>{
+                            if (serverCommand.name === command){
+                                if (serverCommand.icon) fullScreenIcon=serverCommand.icon;
+                                found=true;
+                            }
+                        });
+                        if (!found){
+                            fullScreenBlocked=true;
+                        }
+                        else{
+                            fullScreenAvailable=()=>true;
+                        }
+                        let current=globalStore.getData(keys.gui.global.isFullScreen);
+                        //toggle this to triger button redraw
+                        globalStore.storeData(keys.gui.global.isFullScreen,!current);
+                        globalStore.storeData(keys.gui.global.isFullScreen,current);
+                    })
+                    .catch((e)=>{
+                        Toast(e)
+                    });
+                fullScreenAvailable=()=>false;
+                isFullScreen=()=>{return undefined};
+                toggleFullscreen=()=>{
+                    Requests.getJson('',undefined,{
+                        request: 'api',
+                        type: 'command',
+                        action: 'runCommand',
+                        name: command
+                    })
+                        .then(()=>{})
+                        .catch((e)=> Toast(e));
+                }
+            }
+            else{
+                fullScreenBlocked=true;
             }
         }
-        else{
-            fullScreenBlocked=true;
+
+        globalStore.storeData(keys.gui.global.isFullScreen,fullScreenAvailable() && !!document.fullscreenElement );
+        if (! fullScreenBlocked) {
+            document.addEventListener('fullscreenchange', () => {
+                globalStore.storeData(keys.gui.global.isFullScreen, isFullScreen());
+            });
         }
-    }
 
-    globalStore.storeData(keys.gui.global.isFullScreen,fullScreenAvailable() && !!document.fullscreenElement );
-    if (! fullScreenBlocked) {
-        document.addEventListener('fullscreenchange', () => {
-            globalStore.storeData(keys.gui.global.isFullScreen, isFullScreen());
-        });
+    }catch (e){
+        console.log("unable to install fullscreen handler")
     }
-
-}catch (e){
-    console.log("unable to install fullscreen handler")
 }
 
 
@@ -141,9 +147,14 @@ const fullScreenDefinition={
     overflow: true
 };
 
+const getParameter=()=>{
+    return fullscreenParameter;
+}
 
 export default {
     fullScreenAvailable,
     fullScreenDefinition,
-    toggleFullscreen
+    toggleFullscreen,
+    init,
+    getParameter
 };
