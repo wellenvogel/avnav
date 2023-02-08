@@ -164,10 +164,41 @@ if [ "$runMcs" = 1 ];then
         needsReboot=1
     else
     [ $rt != 0 ] && LAST_MCS='' #retry next time    
+    fi   
+fi
+
+OBPLOTTERV3_INSTALL=`dirname $0`/../plugins/obp-plotterv3/setup.sh
+runPlotter=0
+if [ "$AVNAV_OBPLOTTERV3" = "yes" ] ; then
+    if [ "$LAST_OBPLOTTERV3" = "yes" ] ; then
+        log "AVNAV_OBPLOTTERV3 is set but unchanged"
+    else
+        log "AVNAV_OBPLOTTERV3 set to $AVNAV_OBPLOTTERV3"
+        if [ -f "$OBPLOTTERV3_INSTALL" ] ; then
+            LAST_OBPLOTTERV3="$AVNAV_OBPLOTTERV3"
+            runPlotter=1
+            hasChanges=1
+        else
+            log "ERROR: $OBPLOTTERV3_INSTALL not found, cannot set up OBPLOTTERV3"
+        fi
     fi
 else
-    log "startup check done"    
+    log "AVNAV_OBPLOTTERV3 not enabled"    
 fi
+
+if [ "$runPlotter" = 1 ];then
+    log "running $OBPLOTTERV3_INSTALL"
+    $OBPLOTTERV3_INSTALL
+    rt=$?
+    log "$OBPLOTTERV3_INSTALL install returned $rt"
+    if [ $rt = 1 ] ; then
+        log "reboot requested by OBPLOTTERV3 install"
+        needsReboot=1
+    else
+    [ $rt != 0 ] && LAST_OBPLOTTERV3='' #retry next time    
+    fi
+fi
+log "startup check done"
 if [ "$hasChanges" = 1 ]; then
     log "writing back $LAST"
     echo "LAST_MCS=$LAST_MCS" > $LAST
