@@ -40,6 +40,9 @@ def insertCommand(filename,name,param):
     tmp=filename+".tmp"
     with open(tmp,"w") as oh:
       domObject.writexml(oh)
+    stat=os.stat(filename)
+    os.chown(tmp,stat.st_uid,stat.st_gid)
+    os.chmod(tmp,stat.st_mode)  
     os.replace(tmp,filename)
 
 
