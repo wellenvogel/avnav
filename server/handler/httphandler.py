@@ -348,7 +348,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
     @param rtype: the request type
     @return: json
     """
-    if type is None:
+    if rtype is None:
       raise Exception("missing parameter type for api request")
     handler = self.server.getRequestHandler('api', rtype)
     if handler is None:
