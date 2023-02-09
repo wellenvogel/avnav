@@ -106,8 +106,15 @@ if [ -d $HOME/.cache ] ; then
     chown -R pi:pi $HOME/.cache
 fi
 
-$pdir/patchServerConfig.py $servercfg desk2 "/usr/lib/avnav/raspberry/xui/switch_desk.sh 2" images/rpi.png || err "unable to patch $servercfg"
-chown pi:pi $servercfg
+pluginDir="$pdir/../../plugins/switchDesk"
+if [ ! -d "$pluginDir" ] ; then
+    mkdir -p "$pluginDir" || err "unable to create $pluginDir"
+fi
+for f in plugin.py switch_desk.sh
+do
+    cp "$pdir/$f" "$pluginDir/$f"
+done
+cp "$pdir/../../viewer/images/rpi.png" "$pluginDir"    
 
 
 systemctl enable avnav-startx
