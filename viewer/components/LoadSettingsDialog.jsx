@@ -94,8 +94,8 @@ const loadSettings = (currentValues, defaultName, opt_title, opt_preventDialog) 
         .then(
             (settings) => {
                 let replacements;
-                if (selectedEntry && selectedEntry.prefix){
-                    replacements={prefix:selectedEntry.prefix};
+                if (selectedEntry && selectedEntry.scopePrefix){
+                    replacements={prefix:selectedEntry.scopePrefix};
                 }
                 return PropertyHandler.verifySettingsData(settings, false, false,replacements)
             },

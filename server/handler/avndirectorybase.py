@@ -644,6 +644,7 @@ class AVNScopedDirectoryEntry(AVNDirectoryListEntry):
     else:
       self.scopePrefix=ltype
     self.scopedName=self.scopePrefix+"."+self.name
+    self.url=self.prefix+"/"+urllib.parse.quote(self.scopedName.encode('utf-8'))
     self.canDelete=ltype == self.T_USER
 
   def isSame(self, other):
@@ -811,7 +812,7 @@ class AVNScopedDirectoryHandler(AVNDirectoryHandlerBase):
                                  fileName=fileName)
     info.setName(AVNScopedDirectoryEntry.T_PLUGIN, prefix=pluginName)
     if self.findItem(info.scopedName) is not None:
-      AVNLog.error("trying to register an already existing plugin layout %s",name)
+      AVNLog.error("trying to register an already existing plugin item %s",name)
       return False
     with self.lock:
       self.pluginItems.append(info)
