@@ -44,7 +44,7 @@ class Plugin(object):
     """
     self.api.log("started")
     if hasattr(self.api,'registerCommand'):
-      self.api.registerCommand('desk2','switch_desk.sh',['2'],client='local',icon='rpi.png')
+      self.api.registerCommand('desk2','switch_desk.sh',['2'],client='local',iconFile='rpi.png')
     else:
       self.error="cannot register command (avnav version too old)"  
     if self.error is not None:

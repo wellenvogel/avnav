@@ -93,29 +93,9 @@ copyErr "$pdir/dconf-onboard.conf" $dd
 
 dconf update || err "unable to set up dconf"
 
-servercfg="$HOME/avnav/data/avnav_server.xml"
-if [ ! -f $servercfg ] ; then
-    if [ ! -d "$HOME/avnav/data" ] ; then
-        mkdir -p "$HOME/avnav/data"
-    fi
-    cp $pdir/../avnav_server.xml $servercfg
-    chown -R pi:pi "$HOME/avnav"
-fi
-
 if [ -d $HOME/.cache ] ; then
     chown -R pi:pi $HOME/.cache
 fi
-
-pluginDir="$pdir/../../plugins/switchDesk"
-if [ ! -d "$pluginDir" ] ; then
-    mkdir -p "$pluginDir" || err "unable to create $pluginDir"
-fi
-for f in plugin.py switch_desk.sh
-do
-    cp "$pdir/$f" "$pluginDir/$f"
-done
-cp "$pdir/../../viewer/images/rpi.png" "$pluginDir"    
-
 
 systemctl enable avnav-startx
 
