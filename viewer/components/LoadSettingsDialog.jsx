@@ -28,14 +28,19 @@ import PropertyHandler from "../util/propertyhandler";
 import RequestHandler from "../util/requests";
 import OverlayDialog from "./OverlayDialog";
 
+
+const doLoad=(settings,selected)=>{
+
+}
 /**
  * will return a promise that reolves to the loaded settings
  * or rejects with undefined of abort - or an error string
  * @param currentValues
  * @param defaultName
  * @param opt_title
+ * @param opt_preventDialog
  */
-const loadSettings = (currentValues, defaultName, opt_title) => {
+const loadSettings = (currentValues, defaultName, opt_title, opt_preventDialog) => {
     const setSettings = (checkedValues) => {
         return PropertyHandler.importSettings(checkedValues, currentValues, true);
     }
@@ -45,17 +50,28 @@ const loadSettings = (currentValues, defaultName, opt_title) => {
         .then((settingslist)=> {
             settings=settingslist;
             let displayList=[];
+            let prefSettings=undefined;
             settingslist.forEach((s)=>{
+                if (s.name === defaultName){
+                    prefSettings=s.name;
+                }
                 displayList.push({label:s.name,value:s.name});
             })
-            return LoadItemDialog.createDialog(
-                defaultName,
-                displayList,
-                {
-                    title: opt_title ? opt_title : 'Select Settings to load',
-                    itemLabel: 'Settings'
-                }
-            )
+            if (! prefSettings || ! opt_preventDialog) {
+                return LoadItemDialog.createDialog(
+                    defaultName,
+                    displayList,
+                    {
+                        title: opt_title ? opt_title : 'Select Settings to load',
+                        itemLabel: 'Settings'
+                    }
+                )
+            }
+            else{
+                return new Promise((resolve,reject)=>{
+                    resolve(prefSettings);
+                })
+            }
         })
         .then(
             (selected) => {

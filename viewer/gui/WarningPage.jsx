@@ -14,6 +14,8 @@ import loadSettings from "../components/LoadSettingsDialog";
 import LayoutHandler from "../util/layouthandler";
 import Toast from "../components/Toast";
 import LocalStorage, {STORAGE_NAMES} from '../util/localStorageManager';
+import Helper from "../util/helper";
+import base from "../base";
 
 class WarningPage extends React.Component{
     constructor(props){
@@ -31,9 +33,26 @@ class WarningPage extends React.Component{
            LocalStorage.setItem(STORAGE_NAMES.LICENSE,undefined,"true");
         }
         let flattenedKeys=KeyHelper.flattenedKeys(keys.properties);
+        let prefSettings=Helper.getParam("defaultSettings");
         PropertyHandler.listSettings(true)
             .then(
                 (settingsList)=>{
+                    if (prefSettings && settingsList && settingsList.length > 0){
+                        try {
+                            for (let i=0;i<settingsList.length;i++){
+                                if (settingsList[i].value.match(prefSettings)){
+                                    //if we found a matching setting, just load this one without dialog
+                                    return loadSettings(globalStore.getMultiple(flattenedKeys),
+                                        settingsList[i].value,
+                                "Select initial Settings",
+                                        true);
+                                }
+                            }
+                        }
+                        catch (e){
+                            base.log("unable to check for preferred settings: "+e);
+                        }
+                    }
                     if (settingsList && settingsList.length > 1){
                         return loadSettings(globalStore.getMultiple(flattenedKeys),
                             settingsList[0].value,
