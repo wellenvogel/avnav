@@ -280,6 +280,7 @@ let keys={
             user: new Property({},"User/Plugins",PropertyType.CHECKBOX)
         },
         localAlarmSound: new Property(true, "Alarm Sound", PropertyType.CHECKBOX),
+        alarmVolume: new Property(50,"Alarm Volume (0...100)",PropertyType.RANGE,[0,100]),
         connectedMode: new SplitProperty(true, "connected", PropertyType.CHECKBOX),
         readOnlyServer: new Property(false),
         silenceSound: new Property("sounds/1-minute-of-silence.mp3"),

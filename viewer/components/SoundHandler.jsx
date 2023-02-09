@@ -3,6 +3,8 @@ import PropTypes from 'prop-types';
 import PropertyHandler from '../util/propertyhandler.js';
 import Toast from '../components/Toast.jsx';
 import compare from '../util/compare.js';
+import globalStore from '../util/globalstore';
+import keys from '../util/keys';
 
 class SoundHandler extends React.Component{
     constructor(props){
@@ -14,6 +16,15 @@ class SoundHandler extends React.Component{
         this.checkSound=this.checkSound.bind(this);
         this.askForSound=this.askForSound.bind(this);
         this.playerFinished=this.playerFinished.bind(this);
+        this.volume=globalStore.getData(keys.properties.alarmVolume,50);
+        this.dataChanged=this.dataChanged.bind(this);
+        globalStore.register(this.dataChanged,[keys.properties.alarmVolume]);
+    }
+    dataChanged(){
+        this.volume=globalStore.getData(keys.properties.alarmVolume,50);
+        if (this.refs.audio){
+            this.refs.audio.volume=this.volume/100.0;
+        }
     }
     render(){
         let self=this;
@@ -24,6 +35,7 @@ class SoundHandler extends React.Component{
                             }
                         }}
                       onEnded={self.playerFinished}
+                      volume={self.volume}
             />
     }
 
@@ -77,6 +89,10 @@ class SoundHandler extends React.Component{
     componentDidUpdate(){
         this.checkSound();
     }
+    componentWillUnmount() {
+        globalStore.deregister(this.dataChanged);
+    }
+
     //we need to be intelligent here as
     //the store potentially will call us with the nested alarm object...
     shouldComponentUpdate(nextProps,nextState){
