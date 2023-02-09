@@ -136,6 +136,8 @@ class AVNCommandHandler(AVNWorker):
     self.runningProcesses={}
     self.cntLock = threading.Lock()
     self.idCounter = 0
+    self.pluginCommands={}
+    self.lock=threading.Lock()
   @classmethod
   def getConfigName(cls):
     return "AVNCommandHandler"
@@ -179,11 +181,20 @@ class AVNCommandHandler(AVNWorker):
       self.wait(10)
 
   def getConfiguredCommands(self):
-    rt=[]
+    rt={}
     definedCommands = self.param.get('Command')
-    if definedCommands is None:
-      return rt
-    return definedCommands
+    if definedCommands is not None:
+      for cmd in definedCommands:
+        name=cmd.get('name')
+        if name is not None:
+          rt[name]=cmd
+    with self.lock:
+      for k,v in self.pluginCommands.items():
+        for cmd in v:
+          name=cmd.get('name')
+          if name is not None:
+            rt[name]=cmd
+    return list(rt.values())
 
   def listCommandNames(self):
     rt=[]
@@ -193,6 +204,40 @@ class AVNCommandHandler(AVNWorker):
       if name is not None:
         rt.append(name)
     return rt
+
+  def addPluginCommand(self,pluginName,name,command,icon=None,client=None):
+    '''
+    add a command from a plugin
+    @param pluginName: the plugin name
+    @param name: the command name
+    @param command: the command to be executed (can contain parameters)
+    @param icon: the icon
+    @param client: local|all|None
+    @return:
+    '''
+    with self.lock:
+      cmds=self.pluginCommands.get(pluginName)
+      newCommands=[]
+      if cmds is not None:
+        for cmd in cmds:
+          if cmd.get('name') != name:
+            newCommands.append(cmd)
+      newCommand={
+        'name':name,
+        'command':command,
+        'icon':icon if icon is not None else ''
+      }
+      if client in ['local','all']:
+        newCommand['client']=client
+      newCommands.append(newCommand)
+      self.pluginCommands[pluginName]=newCommands
+
+  def removePluginCommands(self,pluginName):
+    with self.lock:
+      try:
+        del self.pluginCommands[pluginName]
+      except:
+        pass
 
   def updateCommandStatus(self,cmd):
     running=self.findRunningCommandsByName(cmd.get('name'))
@@ -284,9 +329,7 @@ class AVNCommandHandler(AVNWorker):
     return True
 
   def getStatusProperties(self):
-    commands=self.param.get('Command')
-    if commands is None:
-      return {}
+    commands=self.getConfiguredCommands()
     rt={}
     for cmd in commands:
       n=cmd.get('name')
@@ -308,9 +351,7 @@ class AVNCommandHandler(AVNWorker):
 
   def getClientCommands(self,isLocal,handler=None,addCmd=False):
     rt=[]
-    commands=self.param.get('Command')
-    if commands is None:
-      return rt
+    commands=self.getConfiguredCommands()
     for cmd in commands:
       clientMode=cmd.get('client')
       if clientMode is None:
@@ -357,9 +398,7 @@ class AVNCommandHandler(AVNWorker):
     if status is not None:
       status=status.split(',')
       rt={}
-      definedCommands = self.param.get('Command')
-      if definedCommands is None:
-        return rt
+      definedCommands = self.getConfiguredCommands()
       for cmd in definedCommands:
         name=cmd.get('name')
         if name is None:

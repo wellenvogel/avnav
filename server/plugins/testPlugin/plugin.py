@@ -40,6 +40,10 @@ class Plugin(object):
     self.api.registerRequestHandler(self.handleApiRequest)
     self.count=0
     self.api.registerRestart(self.stop)
+    if hasattr(self.api,'registerCommand'):
+      #here we could register a command that can be triggered via the API
+      #self.api.registerCommand('test','testCmd.sh',['dummy'],client='all')
+      pass
 
   def stop(self):
     pass

@@ -5,7 +5,7 @@
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a
 #  copy of this software and associated documentation files (the "Software"),
-#  to deal in the Software without restriction, including without limitation
+#  to deal in the Software without restriction, including without limitationAVNUserAppHandler
 #  the rights to use, copy, modify, merge, publish, distribute, sublicense,
 #  and/or sell copies of the Software, and to permit persons to whom the
 #  Software is furnished to do so, subject to the following conditions:
@@ -42,6 +42,7 @@ from avnusb import AVNUsbSerialReader
 from layouthandler import AVNScopedDirectoryHandler, AVNLayoutHandler
 from charthandler import AVNChartHandler
 from settingshandler import AVNSettingsHandler
+from commandhandler import AVNCommandHandler
 
 URL_PREFIX= "/plugins"
 
@@ -125,6 +126,12 @@ class ApiImpl(AVNApi):
         for setting in self.settingsFiles:
           settingshandler.deregisterPluginItem(self.getPrefixForItems(),setting)
       self.settingsFiles=[]
+    except:
+      pass
+    try:
+      cmdHandler=AVNWorker.findHandlerByName(AVNCommandHandler.getConfigName()) #type: AVNCommandHandler
+      if cmdHandler:
+        cmdHandler.removePluginCommands(self.prefix)
     except:
       pass
 
@@ -244,6 +251,29 @@ class ApiImpl(AVNApi):
     addonhandler.registerAddOn(id,url,"%s/%s/%s"%(URL_PREFIX,self.prefix,iconFile),
                                title=title,preventConnectionLost=preventConnectionLost)
     self.addonIndex+=1
+    return id
+
+  def registerCommand(self, name, command, parameters=None,iconFile=None,client=None):
+    cmdhandler=AVNWorker.findHandlerByName(AVNCommandHandler.getConfigName()) #type: AVNCommandHandler
+    if cmdhandler is None:
+      raise Exception("no command handler")
+    iconUrl=None
+    if iconFile is not None:
+      if os.path.isabs(iconFile):
+        raise Exception("only relative pathes for icon files")
+      iconFilePath=os.path.join(os.path.dirname(self.fileName),iconFile)
+      if not os.path.exists(iconFilePath):
+        raise Exception("icon file %s not found"%iconFilePath)
+      iconUrl=self.getBaseUrl()+"/"+iconFile
+    if os.path.isabs(command):
+      raise Exception("only relative pathes for commands")
+    cmdFile=os.path.join(os.path.dirname(self.fileName),command)
+    if not os.path.exists(cmdFile):
+      raise Exception("command %s not found"%cmdFile)
+    commandString=cmdFile
+    if parameters is not None:
+      commandString+=" "+" ".join(parameters)
+    cmdhandler.addPluginCommand(self.prefix,name,commandString,iconUrl,client)
     return id
 
   def unregisterUserApp(self, id):

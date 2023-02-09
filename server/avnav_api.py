@@ -360,3 +360,16 @@ class AVNApi(object):
     @return:
     '''
     raise NotImplemented()
+
+  def registerCommand(self, name, command, parameters=None,iconFile=None,client=None):
+    '''
+    register a user command
+    @param name: the name of the command. Any existing command with this name will
+                 be overwritten
+    @param command: the command string (relative to the plugin directory)
+    @param parameters: parameters always to be added to the command
+    @param iconFile: an icon file
+    @param client: client mode: None|all|local
+    @return:
+    '''
+    raise NotImplemented()
