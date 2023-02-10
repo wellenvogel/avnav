@@ -240,6 +240,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
       wbytes=rtj.encode('utf-8')
       self.send_header("Content-Length", str(len(wbytes)))
       self.send_header("Last-Modified", self.date_time_string())
+      self.send_header("Cache-Control", "no-store")
       self.end_headers()
       self.wfile.write(wbytes)
       AVNLog.ld("nav response",rtj)
