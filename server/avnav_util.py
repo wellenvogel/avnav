@@ -24,6 +24,7 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
+import glob
 import urllib.parse
 
 import ctypes
@@ -144,8 +145,12 @@ class AVNLog(object):
       version=sys.version.split(" ")[0][0:3]
     except:
       pass
+    oldFiles=glob.glob("%s.[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]"%filename)
+    for of in oldFiles:
+      os.remove(of)
     if version != '2.6':
-      cls.fhandler=logging.handlers.TimedRotatingFileHandler(filename=filename,when='midnight',backupCount=7,delay=True)
+      #log files: 10M, 10 old files -> 110MB
+      cls.fhandler=logging.handlers.RotatingFileHandler(filename=filename,maxBytes=10*1024*1024,backupCount=10,delay=True)
       cls.fhandler.setFormatter(formatter)
       flevel=numeric_level
       if flevel < logging.DEBUG and not debugToFile:

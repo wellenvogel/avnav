@@ -320,10 +320,13 @@ class AVNStore(object):
               for i in range(0,numparts-1):
                 if current.get(keyparts[i]) is None:
                   current[keyparts[i]]={}
-                current=current[keyparts[i]]
-                if not type(current) == dict:
-                  AVNLog.error("inconsistent data , found normal value and dict with key %s"%(".".join(keyparts[0:i])))
-                  break
+                nextV=current[keyparts[i]]
+                if not type(nextV) == dict:
+                  #AVNLog.error("inconsistent data , found normal value and dict with key %s"%(".".join(keyparts[0:i])))
+                  current[keyparts[i]]={'value':nextV}
+                  current=current[keyparts[i]]
+                else:
+                  current=nextV
               if type(current) == dict:
                 current[keyparts[-1]]=entry.value
             else:
