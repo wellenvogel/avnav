@@ -6,7 +6,7 @@ err(){
 pdir=`dirname $0`
 CFG=/boot/avnav.conf
 [ -f $CFG ] && . $CFG
-pluginDir="$pdir/../../plugins/switchDesk"    
+pluginDir="$pdir/../../server/plugins/switchDesk"    
 if [ "$AVNAV_STARTX" != "yes" ] ; then
   logger -t avnav remove switchdesk
   rm -rf "$pluginDir"
