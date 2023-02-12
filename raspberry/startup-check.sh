@@ -177,9 +177,27 @@ if [ "$runMcs" = 1 ];then
 fi
 LAST_DATA+=("LAST_MCS='$LAST_MCS'")
 
+
 gn(){
     echo "$1" | tr -cd '[a-zA-Z0-9]' | tr '[a-z]' '[A-Z]'
 }
+#allowed modes for plugin dir and startup-check.sh
+read -r -d '' MODES <<EOF
+root:root:755
+root:root:744
+root:root:700
+EOF
+
+hasAllowedMode(){
+    local perm=`find "$1" -maxdepth 0  -printf "%u:%g:%m\n"`
+    if echo "$MODES" | grep -q "$perm" ; then
+      return 0
+    else
+      log "invalid mode $perm for $1"
+      return 1
+    fi    
+}
+
 #for now only consider system plugins
 #builtin are not necessary, user makes no sense...
 PLUGINDIR=`dirname $0`/../plugins
@@ -188,22 +206,27 @@ if [ -d "$PLUGINDIR" ] ; then
     for plugin in `ls -1 "$PLUGINDIR"`
     do
         sn="$PLUGINDIR/$plugin/$PISCRIPT"
+        dn="$PLUGINDIR/$plugin"
         if [ -x "$sn" ] ; then
-          piname=`gn "$plugin"`
-          vname="AVNAV_$piname"
-          echo "checking plugin $sn, $vname"
-          if [ "${!vname}" = "yes" ] ; then
-            log "running $sn"
-            ldata="yes"
-            $sn
-            rt=$?
-            log "$sn returned $rt"
-            if [ $rt = 1 ] ; then
-              log "reboot requested by $sn"
-              needsReboot=1
+          if hasAllowedMode "$dn" && hasAllowedMode "$sn" ; then
+            piname=`gn "$plugin"`
+            vname="AVNAV_$piname"
+            echo "checking plugin $sn, $vname"
+            if [ "${!vname}" = "yes" ] ; then
+              log "running $sn"
+              ldata="yes"
+              $sn
+              rt=$?
+              log "$sn returned $rt"
+              if [ $rt = 1 ] ; then
+                log "reboot requested by $sn"
+                needsReboot=1
+              fi
+            else
+              log "$vname not to set to yes"
             fi
-          else
-            log "$vname not to set to yes"
+          else  
+            log "cannot handle $sn, permissions not correct"  
           fi
         fi
     done
