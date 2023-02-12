@@ -224,6 +224,10 @@ ospackage {
             fileMode 0755
         }
         from('linux') {
+            include "plugin.sh"
+            fileMode 0755
+        }
+        from('linux') {
             include "avnav_gui*"
             fileMode 0755
             into "gui"

@@ -5,7 +5,7 @@ After=syslog.target network.target
 
 [Service]
 User=avnav
-ExecStart=/usr/bin/avnav -q -b /var/lib/avnav
+ExecStart=/usr/bin/avnav -q -b /var/lib/avnav -n /etc/default/avnav
 KillMode=control-group
 Restart=always
 TimeoutStopSec=10

@@ -27,6 +27,7 @@ usage(){
   echo "       -d             : start with loglevel debug"
   echo "       -g             : start with GUI instead of normal server mode"
   echo "       -q             : do not log to stderr"
+  echo "       -n envFile     : read environment variables from env file if it exists"
   echo "       -------------- some development options --------------"
   echo "       -a softwareBase: find the server software at this directory"
   echo "       -v viewerDir   : find the viewer software at this directory"
@@ -38,7 +39,7 @@ err(){
 }
 
 
-while getopts dec:b:x:qgt:a:v:l: opt; do
+while getopts dec:b:x:qgt:a:v:l:n: opt; do
 case $opt in
   d)
     loglevel="DEBUG"
@@ -74,6 +75,12 @@ case $opt in
     ;;
   l)
     loglevel="$OPTARG"
+    ;;
+  n)
+    envFile="$OPTARG"
+    if [ -r "$envFile" ]  ; then
+    . "$envFile"
+    fi
     ;;
   \?)
     echo "invalid option $opt"

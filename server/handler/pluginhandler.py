@@ -46,6 +46,12 @@ from commandhandler import AVNCommandHandler
 
 URL_PREFIX= "/plugins"
 
+'''
+hide plugins if an environment variable with this prefix 
+and the "normalized" plugin name is set
+'''
+ENV_PREFIX="AVNAV_HIDE_"
+
 class UserApp(object):
   def __init__(self,url,icon,title):
     self.url=url
@@ -54,7 +60,11 @@ class UserApp(object):
   def __eq__(self, other):
     return self.__dict__ == other.__dict__
 
-
+def normalizedName(name):
+  try:
+    return re.sub("[^0-9a-zA-Z]","",name).upper()
+  except:
+    return name
 
 class ApiImpl(AVNApi):
   def __init__(self,parent,store,queue,prefix,moduleFile):
@@ -219,14 +229,29 @@ class ApiImpl(AVNApi):
   def getExpiryPeriod(self):
     return self.store.getExpiryPeriod()
 
+  def __getConfigFromEnv(self,key):
+    key=re.sub("[^0-9a-zA-Z_]","",key)
+    name="AVNAV_PLUGIN_"+normalizedName(self.prefix)+"_"+key
+    ev=os.getenv(name)
+    if ev is not None:
+      return ev
+    return ev
+
   def getConfigValue(self, key, default=None):
     childcfg=self.phandler.getParamValue(self.prefix) #for now we use the prefix as cfg name
+    ev=self.__getConfigFromEnv(key)
     if childcfg is None:
+      if ev is not None:
+        return ev
       return default
     if len(childcfg) < 1:
+      if ev is not None:
+        return ev
       return default
     rt=childcfg[0].get(key)
     if rt is None:
+      if ev is not None:
+        return ev
       return default
     return rt
 
@@ -360,8 +385,9 @@ class ApiImpl(AVNApi):
         raise Exception("items of paramList must be dictionaries")
       if p.get('name') is None:
         raise Exception("missing key name in %s"%str(p))
+      evDef=self.__getConfigFromEnv(p.get('name'))
       description=WorkerParameter(p['name'],
-                                  default=p.get('default'),
+                                  default=p.get('default') if evDef is None else evDef,
                                   type=p.get('type'),
                                   rangeOrList=p.get('rangeOrList'),
                                   description=p.get('description'),
@@ -446,6 +472,12 @@ class AVNPluginHandler(AVNWorker):
     self.queue=feeder
     super().startInstance(navdata)
 
+  def isHidden(self,name):
+    ev=os.getenv(ENV_PREFIX+normalizedName(name))
+    if ev:
+      return True
+    return False
+
   def run(self):
     builtInDir=self.getStringParam('builtinDir')
     systemDir=AVNHandlerManager.getDirWithDefault(self.param, 'systemDir', defaultSub=os.path.join('..', 'plugins'), belowData=False)
@@ -476,6 +508,9 @@ class AVNPluginHandler(AVNWorker):
           continue
         module=None
         moduleName=dircfg['prefix'] + "-" + dirname
+        if self.isHidden(moduleName):
+          AVNLog.info("module %s is hidden by environment")
+          continue
         try:
           module=self.loadPluginFromDir(dir, moduleName)
         except:
