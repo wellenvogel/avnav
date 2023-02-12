@@ -4,15 +4,17 @@
 CONFIG=/boot/avnav.conf
 LAST=/etc/avnav-startup-checks
 MCS_INSTALL=`dirname $0`/setup-mcs.sh
+if [ "$1" != "" ] ; then
+  logStdout=1
+fi
 log(){
+    [ "$logStdout" = "1" ] && echo "$*"
     logger -t 'avnav-startup-check' "$*"
 }
 
 log "started"
+LAST_DATA=()
 
-LAST_PASSWD=""
-LAST_MCS=""
-LAST_WIFI_CLIENT=""
 
 if [ -f $LAST ] ; then
     source $LAST
@@ -42,6 +44,7 @@ if [ "$AVNAV_PASSWD" != "" ] ; then
 else
     log "AVNAV_PASSWD not set"
 fi
+LAST_DATA+=("LAST_PASSWD='$LAST_PASSWD'")
 
 if [ "$AVNAV_WIFI_CLIENT" != "$LAST_WIFI_CLIENT" ] ; then
     log "AVNAV_WIFI_CLIENT=$AVNAV_WIFI_CLIENT"
@@ -51,6 +54,7 @@ if [ "$AVNAV_WIFI_CLIENT" != "$LAST_WIFI_CLIENT" ] ; then
 else
     log "AVNAV_WIFI_CLIENT unchanged"
 fi
+LAST_DATA+=("LAST_WIFI_CLIENT=\"$LAST_WIFI_CLIENT\"")
 
 if [ "$AVNAV_HOSTNAME" != "$LAST_HOSTNAME" -a "$AVNAV_HOSTNAME" != "" ] ; then
     log "AVNAV_HOSTNAME is set to $AVNAV_HOSTNAME"
@@ -67,6 +71,7 @@ if [ "$AVNAV_HOSTNAME" != "$LAST_HOSTNAME" -a "$AVNAV_HOSTNAME" != "" ] ; then
 else
     log "AVNAV_HOSTNAME unchanged"
 fi
+LAST_DATA+=("LAST_HOSTNAME='$LAST_HOSTNAME'")
 
 if [ "$AVNAV_KBLAYOUT" != "$LAST_KBLAYOUT" -o "$AVNAV_KBMODEL" != "$LAST_KBMODEL" ] ; then
     if [ "$AVNAV_KBLAYOUT" != "" -a "$AVNAV_KBMODEL" != "" ]; then
@@ -92,6 +97,8 @@ if [ "$AVNAV_KBLAYOUT" != "$LAST_KBLAYOUT" -o "$AVNAV_KBMODEL" != "$LAST_KBMODEL
 else
     log "AVNAV_KBLAYOUT and AVNAV_KBMODEL unchanged"
 fi
+LAST_DATA+=("LAST_KBLAYOUT='$LAST_KBLAYOUT'")
+LAST_DATA+=("LAST_KBMODEL='$LAST_KBMODEL'")
 
 if [ "$AVNAV_TIMEZONE" != "$LAST_TIMEZONE" -a "$AVNAV_TIMEZONE" != "" ] ; then
     log "AVNAV_TIMEZONE is set to $AVNAV_TIMEZONE"
@@ -110,6 +117,7 @@ if [ "$AVNAV_TIMEZONE" != "$LAST_TIMEZONE" -a "$AVNAV_TIMEZONE" != "" ] ; then
 else
     log "timezone unchanged"
 fi
+LAST_DATA+=("LAST_TIMEZONE='$LAST_TIMEZONE'")
 
 if [ "$AVNAV_WIFI_COUNTRY" != "$LAST_WIFI_COUNTRY" -a "$AVNAV_WIFI_COUNTRY" != "" ]; then
     log "AVNAV_WIFI_COUNTRY changed to $AVNAV_WIFI_COUNTRY"
@@ -131,6 +139,7 @@ if [ "$AVNAV_WIFI_COUNTRY" != "$LAST_WIFI_COUNTRY" -a "$AVNAV_WIFI_COUNTRY" != "
 else
     log "AVNAV_WIFI_COUNTRY unchanged"
 fi
+LAST_DATA+=("LAST_WIFI_COUNTRY='$LAST_WIFI_COUNTRY'")
 
 runMcs=0
 if [ "$AVNAV_MCS" = "yes" ] ; then
@@ -166,57 +175,57 @@ if [ "$runMcs" = 1 ];then
     [ $rt != 0 ] && LAST_MCS='' #retry next time    
     fi   
 fi
+LAST_DATA+=("LAST_MCS='$LAST_MCS'")
 
-OBPLOTTERV3_INSTALL=`dirname $0`/../plugins/obp-plotterv3/setup.sh
-runPlotter=0
-if [ "$AVNAV_OBPLOTTERV3" = "yes" ] ; then
-    if [ "$LAST_OBPLOTTERV3" = "yes" ] ; then
-        log "AVNAV_OBPLOTTERV3 is set but unchanged"
-    else
-        log "AVNAV_OBPLOTTERV3 set to $AVNAV_OBPLOTTERV3"
-        if [ -f "$OBPLOTTERV3_INSTALL" ] ; then
-            LAST_OBPLOTTERV3="$AVNAV_OBPLOTTERV3"
-            runPlotter=1
-            hasChanges=1
-        else
-            log "ERROR: $OBPLOTTERV3_INSTALL not found, cannot set up OBPLOTTERV3"
+gn(){
+    echo "$1" | tr -cd '[a-zA-Z0-9]' | tr '[a-z]' '[A-Z]'
+}
+#for now only consider system plugins
+#builtin are not necessary, user makes no sense...
+PLUGINDIR=`dirname $0`/../plugins
+PISCRIPT=startup-check.sh
+if [ -d "$PLUGINDIR" ] ; then
+    for plugin in `ls -1 "$PLUGINDIR"`
+    do
+        sn="$PLUGINDIR/$plugin/$PISCRIPT"
+        if [ -x "$sn" ] ; then
+          piname=`gn "$plugin"`
+          vname="AVNAV_$piname"
+          echo "checking plugin $sn, $vname"
+          if [ "${!vname}" = "yes" ] ; then
+            log "running $sn"
+            ldata="yes"
+            $sn
+            rt=$?
+            log "$sn returned $rt"
+            if [ $rt = 1 ] ; then
+              log "reboot requested by $sn"
+              needsReboot=1
+            fi
+          else
+            log "$vname not to set to yes"
+          fi
         fi
-    fi
-else
-    log "AVNAV_OBPLOTTERV3 not enabled"    
+    done
 fi
 
-if [ "$runPlotter" = 1 ];then
-    log "running $OBPLOTTERV3_INSTALL"
-    $OBPLOTTERV3_INSTALL
-    rt=$?
-    log "$OBPLOTTERV3_INSTALL install returned $rt"
-    if [ $rt = 1 ] ; then
-        log "reboot requested by OBPLOTTERV3 install"
-        needsReboot=1
-    else
-    [ $rt != 0 ] && LAST_OBPLOTTERV3='' #retry next time    
-    fi
-fi
 log "startup check done"
 if [ "$hasChanges" = 1 ]; then
     log "writing back $LAST"
-    echo "LAST_MCS=$LAST_MCS" > $LAST
-    echo "LAST_PASSWD='$LAST_PASSWD'" >> $LAST
-    echo "LAST_WIFI_CLIENT='$LAST_WIFI_CLIENT'" >> $LAST
-    echo "LAST_HOSTNAME='$LAST_HOSTNAME'" >> $LAST
-    echo "LAST_KBLAYOUT='$LAST_KBLAYOUT'" >> $LAST
-    echo "LAST_KBMODEL='$LAST_KBMODEL'" >> $LAST
-    echo "LAST_TIMEZONE='$LAST_TIMEZONE'" >> $LAST
-    echo "LAST_WIFI_COUNTRY='$LAST_WIFI_COUNTRY'" >> $LAST
+    echo "#startup check last" > $LAST
+    for i in ${LAST_DATA[@]}
+    do
+        echo "$i" >> $LAST
+    done
     chmod 600 $LAST
 fi
 if [ $needsReboot = 1 ] ; then
-    echo "****rebooting now****"
-    log "****rebooting now****"
     if [ "$1" = "noreboot" ] ; then
+        echo "***reboot needed***"
         exit 2
     fi
+    echo "****rebooting now****"
+    log "****rebooting now****"
     reboot
 fi
 exit 0    
