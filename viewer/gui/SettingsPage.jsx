@@ -25,6 +25,7 @@ import {ItemActions} from "../components/FileDialog";
 import loadSettings from "../components/LoadSettingsDialog";
 import propertyhandler from "../util/propertyhandler";
 import LocalStorage from '../util/localStorageManager';
+import leavehandler from "../util/leavehandler";
 
 const settingsSections={
     Layer:      [keys.properties.layers.base,keys.properties.layers.ais,keys.properties.layers.track,keys.properties.layers.nav,keys.properties.layers.boat,
@@ -458,6 +459,23 @@ class SettingsPage extends React.Component{
                     });
                 },
                 visible: globalStore.getData(keys.properties.connectedMode,false) && globalStore.getData(keys.gui.capabilities.uploadSettings)
+            },
+            {
+                name: 'SettingsReload',
+                onClick: ()=> {
+                    self.confirmAbortOrDo().then(() => {
+                        leavehandler.stop();
+                        window.location.href = window.location.href;
+                    });
+                },
+                storeKeys:{
+                    visible: keys.gui.global.layoutEditing,
+                },
+                updateFunction:(state)=>{
+                    return {
+                        visible: ! state.visible
+                    }
+                },
             },
             Mob.mobDefinition(this.props.history),
             {
