@@ -41,9 +41,7 @@ const INFO_TYPES={
 
 const needsToShow=(setName,type,mode)=>{
     if (mode == SHOW_MODE.never) return false;
-    let storeName=globalStore.getData(type);
-    if (! storeName) return false;
-    let currentRaw=LocalStorage.getItem(storeName)||"{}";
+    let currentRaw=LocalStorage.getItem(type)||"{}";
     let current={};
     try{
         current=JSON.parse(currentRaw);
@@ -65,9 +63,7 @@ const needsToShow=(setName,type,mode)=>{
 };
 
 const setShown=(setName,type)=>{
-    let storeName=globalStore.getData(type);
-    if (! storeName) return;
-    let currentRaw=LocalStorage.getItem(storeName)||"{}";
+    let currentRaw=LocalStorage.getItem(type)||"{}";
     let current={};
     try{
         current=JSON.parse(currentRaw);
@@ -75,7 +71,7 @@ const setShown=(setName,type)=>{
         base.log("unable to read state for "+type);
     }
     current[setName]=(new Date()).getTime();
-    LocalStorage.setItem(storeName,undefined,JSON.stringify(current));
+    LocalStorage.setItem(type,undefined,JSON.stringify(current));
 };
 
 
