@@ -441,13 +441,22 @@
     Informationen dazu findet man wieder in seiner <a href="https://github.com/free-x/avnav/wiki">Beschreibung</a>.<br>
     <p>Die Paketquellen bindet man wie folgt ein. Das ist nur nötig, wenn man
       nicht das AvNav-Image nutzt.</p>
+    <p> Debian Buster (amd64,armhf,arm64)</p>
     <div class="code">wget https://www.free-x.de/debian/oss.boating.gpg.key
 sudo apt-key add oss.boating.gpg.key
 wget https://www.free-x.de/debian/boating.list
-sudo cp boating.list /etc/apt/sources.list.d/<br>sudo apt-get update</div>
+sudo cp boating.list /etc/apt/sources.list.d/</div>
+    <p> Debian Bullseye (amd64,armhf,arm64)</p>
+    <div class="code">wget -O - https://www.free-x.de/debian/oss.boating.gpg.key | gpg --dearmor | sudo tee /usr/share/keyrings/oss.boating.gpg
+echo "deb [signed-by=/usr/share/keyrings/oss.boating.gpg] https://www.free-x.de/debian bullseye main contrib non-free" | sudo tee -a /etc/apt/sources.list.d/</div>
+    <p> Ubuntu Jammy (amd64)</p>
+    <div class="code">wget -O - https://www.free-x.de/ubuntu/oss.boating.gpg.key | gpg --dearmor | sudo tee /usr/share/keyrings/oss.boating.gpg
+echo "deb [signed-by=/usr/share/keyrings/oss.boating.gpg] https://www.free-x.de/ubuntu jammy main contrib" | sudo tee -a /etc/apt/sources.list.d/</div>
+
     <p>Für die Installation auf einem Linux System muss man nach Einbindung der
       Paketquellen die folgenden Schritte ausführen:</p>
-    <div class="code">sudo apt-get install avnav </div>
+    <div class="code">sudo apt update 
+sudo apt install avnav </div>
     <br>
     Danach kann man als beliebiger Nutzer mit dem Kommando<br>
     <div class="code">avnav</div>
