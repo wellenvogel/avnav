@@ -448,10 +448,10 @@ wget https://www.free-x.de/debian/boating.list
 sudo cp boating.list /etc/apt/sources.list.d/</div>
     <p> Debian Bullseye (amd64,armhf,arm64)</p>
     <div class="code">wget -O - https://www.free-x.de/debian/oss.boating.gpg.key | gpg --dearmor | sudo tee /usr/share/keyrings/oss.boating.gpg
-echo "deb [signed-by=/usr/share/keyrings/oss.boating.gpg] https://www.free-x.de/debian bullseye main contrib non-free" | sudo tee -a /etc/apt/sources.list.d/</div>
+echo "deb [signed-by=/usr/share/keyrings/oss.boating.gpg] https://www.free-x.de/debian bullseye main contrib non-free" | sudo tee -a /etc/apt/sources.list.d/boating.list</div>
     <p> Ubuntu Jammy (amd64)</p>
     <div class="code">wget -O - https://www.free-x.de/ubuntu/oss.boating.gpg.key | gpg --dearmor | sudo tee /usr/share/keyrings/oss.boating.gpg
-echo "deb [signed-by=/usr/share/keyrings/oss.boating.gpg] https://www.free-x.de/ubuntu jammy main" | sudo tee -a /etc/apt/sources.list.d/</div>
+echo "deb [signed-by=/usr/share/keyrings/oss.boating.gpg] https://www.free-x.de/ubuntu jammy main" | sudo tee -a /etc/apt/sources.list.d/boating.list</div>
 
     <p>Für die Installation auf einem Linux System muss man nach Einbindung der
       Paketquellen die folgenden Schritte ausführen:</p>
