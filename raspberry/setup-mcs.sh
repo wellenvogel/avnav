@@ -24,7 +24,6 @@ dtoverlay=sc16is752-i2c,int_pin=13,addr=0x4c,xtal=14745600
 dtoverlay=sc16is752-i2c,int_pin=12,addr=0x49,xtal=14745600
 dtoverlay=sc16is752-i2c,int_pin=6,addr=0x48,xtal=14745600
 dtoverlay=mcp2515-can1,oscillator=16000000,interrupt=25
-dtoverlay=spi-bcm2835-overlay
 CFGPAR
 
 #/etc/network/interfaces.d/can0

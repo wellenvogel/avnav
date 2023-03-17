@@ -15,7 +15,6 @@ IFS='' read -r -d '' CFGPAR <<'CFGPAR'
 dtparam=i2c_arm=on
 dtparam=spi=on
 dtoverlay=mcp2515-can0,oscillator=16000000,interrupt=25
-dtoverlay=spi-bcm2835-overlay
 CFGPAR
 
 #/etc/network/interfaces.d/can0
