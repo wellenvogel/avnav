@@ -94,6 +94,7 @@
     <string name="labelSettingsCloseOnTimeout">close and reopen the connection when a read timeout occurs</string>
     <string name="labelSettingsBindPort">local port the connection will listen on</string>
     <string name="labelSettingsExternalAccess">allow external systems to connect to this port (use with caution!)</string>
+    <string name="labelSettingsPluginTimeout">time (s) to consider a plugin being not available any more</string>
     <string name="labelSettingsReadData">also read data on this connection</string>
     <string name="labelSettingsBlacklist">a , separated list of source names that we do not send out on this connection</string>
     <string name="labelSettingsSendBroadcast">send data as broadcast</string>
@@ -113,5 +114,6 @@
     <string name="labelSettingsRhumbLine">use rhumb lines (else: great circle)</string>
     <string name="labelSettingsNextWpMode">when to switch to next waypoint\nearly: xx seconds after wp alarm\n90: we are at +/-90° from wp course\nlate: old behavior</string>
     <string name="labelSettingsNextWpTime">seconds after approach to switch wp (5...100) in mode early</string>
+    <string name="allowPlugins">allow unknown plugins</string>
 
 </resources>

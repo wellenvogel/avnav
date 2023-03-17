@@ -10,9 +10,11 @@ import org.json.JSONObject;
 
 import java.io.FileNotFoundException;
 import java.math.BigInteger;
+import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import de.wellenvogel.avnav.main.Constants;
@@ -21,12 +23,13 @@ import de.wellenvogel.avnav.util.AvnUtil;
 
 public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
 
-    static class AddonInfo implements AvnUtil.IJsonObect {
+    public static class AddonInfo implements AvnUtil.IJsonObect {
         public String name;
         public String url;
         public String icon;
         public String title;
         public String newWindow="false";
+        public boolean adaptHttpUrls=false;
         @Override
         public JSONObject toJson() throws JSONException {
             JSONObject rt=new JSONObject();
@@ -35,7 +38,7 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
             rt.put("canDelete",true);
             rt.put("url",url);
             rt.put("originalUrl",url);
-            rt.put("keepUrl",url.startsWith("http"));
+            rt.put("keepUrl",url.startsWith("http") && ! adaptHttpUrls);
             rt.put("icon",icon);
             rt.put("newWindow",newWindow);
             if (title != null) rt.put("title",title);
@@ -59,10 +62,24 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
     private Context context;
     private RequestHandler handler;
 
+    private final HashMap<String,List<AddonInfo>> externalAddons=new HashMap<>();
+
     public AddonHandler(Context ctx,RequestHandler handler){
         this.context=ctx;
         this.handler=handler;
     }
+
+    public void addExternalAddons(String name,List<AddonInfo> addons){
+        synchronized (externalAddons){
+            externalAddons.put(name,addons);
+        }
+    }
+    public void removeExternalAddons(String name){
+        synchronized (externalAddons){
+            externalAddons.remove(name);
+        }
+    }
+
 
     @Override
     public ExtendedWebResourceResponse handleDownload(String name, Uri uri) throws Exception {
@@ -81,7 +98,7 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
         JSONArray rt=new JSONArray();
         String host="localhost";
         if (serverInfo != null && serverInfo.address != null) {
-            host=serverInfo.address.getHostString();
+            host=serverInfo.address.getHostAddress();
         }
         for (AddonInfo addon : addons) {
             JSONObject aj=addon.toJson();
@@ -91,6 +108,28 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
                 aj.put("url",url);
             }
             rt.put(aj);
+        }
+        String [] REPLACE_KEYS=new String[]{"url","icon"};
+        synchronized (externalAddons){
+            for (String k: externalAddons.keySet()){
+                List<AddonInfo> extAddons=externalAddons.get(k);
+                if (extAddons == null) continue;
+                for (AddonInfo addon: extAddons){
+                    JSONObject aj=addon.toJson();
+                    if (serverInfo != null) {
+                        for (String rk : REPLACE_KEYS) {
+                            if (aj.optBoolean("keepUrl", false) || !rk.equals("url")) {
+                                //external url
+                                String v = aj.optString(rk, "");
+                                v=serverInfo.replaceHostInUrl(v);
+                                aj.put(rk, v);
+                            }
+                        }
+                    }
+                    aj.put("canDelete","false");
+                    rt.put(aj);
+                }
+            }
         }
         return rt;
     }
@@ -244,9 +283,10 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
         return null;
     }
 
+    public static final String PREFIX="addons";
     @Override
     public String getPrefix() {
-        return null;
+        return PREFIX;
     }
 
 

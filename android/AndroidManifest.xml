@@ -19,7 +19,9 @@
 
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-
+    <queries>
+        <package android:name="de.wellenvogel.ochartsprovider${suffix}" />
+    </queries>
     <application
         android:hardwareAccelerated="true"
         android:icon="@drawable/sailboatr"

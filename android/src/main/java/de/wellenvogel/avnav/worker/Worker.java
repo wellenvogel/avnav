@@ -233,6 +233,7 @@ public abstract class Worker implements IWorker {
             }
             checkParameters(newParam);
         }
+        //atomic assignment by spec....
         parameters=newParam;
         paramSequence++;
     }
@@ -360,4 +361,5 @@ public abstract class Worker implements IWorker {
      */
     @Override
     public void check() throws JSONException {}
+
 }
