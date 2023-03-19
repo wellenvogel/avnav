@@ -491,21 +491,40 @@ class AVNUtil(object):
   #run an external command and and log the output
   #param - the command as to be given to subprocess.Popen
   @classmethod
-  def runCommand(cls,param,threadName=None):
-    if not threadName is None:
-      threading.current_thread().setName("%s"%threadName or '')
+  def runCommand(cls,param,threadName=None,timeout=None):
     try:
         cmd=subprocess.Popen(param,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,close_fds=True)
+        reader=threading.Thread(target=cls.cmdOut,args= [cmd.stdout],daemon=True)
+        if threadName is not None:
+          reader.setName(threadName or '')
+        reader.start()
+        start=time.monotonic()
         while True:
-            line=cmd.stdout.readline()
-            if not line:
-                break
-            AVNLog.debug("[cmd]%s",line.strip())
-        cmd.poll()
-        return cmd.returncode
+          rt=cmd.poll()
+          if rt is not None:
+            return rt
+          time.sleep(0.1)
+          if timeout is None:
+            continue
+          if (start+timeout) < time.monotonic():
+            AVNLog.error("timeout %f reached for command %s",timeout," ".join(param))
+            cmd.kill()
+            time.sleep(0.1)
+            cmd.poll()
+            return -255
     except Exception as e:
         AVNLog.error("unable to start command %s:%s"," ".join(param),str(e))
         return -255
+
+  @classmethod
+  def cmdOut(cls,stream):
+    AVNLog.debug("cmd reading started")
+    while True:
+      line=stream.readline()
+      if not line:
+        break
+      AVNLog.debug("[cmd]%s",line.strip())
+    AVNLog.debug("cmd reading finished")
 
 
   @classmethod
