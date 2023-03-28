@@ -236,6 +236,7 @@ hasAllowedMode(){
 #builtin are not necessary, user makes no sense...
 PLUGINDIR=`dirname $0`/../plugins
 PISCRIPT=startup-check.sh
+PIREMOVE=startup-remove.sh
 if [ -d "$PLUGINDIR" ] ; then
     for plugin in `ls -1 "$PLUGINDIR"`
     do
@@ -260,6 +261,17 @@ if [ -d "$PLUGINDIR" ] ; then
               fi
             else
               log "$vname not to set to yes"
+              if [ "$lastvalue" = yes ] ; then
+                removeScript="$PLUGINDIR/$plugin/$PIREMOVE"
+                if [ -x "$removeScript" ] ; then
+                    if hasAllowedMode "$removeScript" ; then
+                        log "calling remove for plugin $plugin"
+                        $removeScript
+                    else
+                        log "$removeScript has invalid permissions, cannot remove plugin data"
+                    fi
+                fi  
+              fi
             fi
             LAST_DATA+=("$lastname=${!vname}")
             if [ "${!vname}" != "$lastvalue" ] ; then
