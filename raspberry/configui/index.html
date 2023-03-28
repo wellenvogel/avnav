@@ -30,8 +30,9 @@
             <input type="text" id="AVNAV_HOSTNAME" value="avnav"/>
         </div>
         <div class="row">
-            <span class="label">Configure <a href="https://www.gedad.de/projekte/projekte-f%C3%BCr-privat/gedad-marine-control-server/">MCS</a></span>
-            <input type="checkbox" id="AVNAV_MCS"/>
+            <span class="label" >Base Board<span class="since">(since 202303xx)</span></span>
+            <!--<span class="label">Configure <a href="https://www.gedad.de/projekte/projekte-f%C3%BCr-privat/gedad-marine-control-server/">MCS</a></span>-->
+            <select id="AVNAV_BASE_BOARD" data-default="NONE"/>
         </div>
         <div class="row">
             <span class="label">TimeZone<span class="since">(since 20210429)</span></span>
@@ -70,6 +71,8 @@
             <input type="checkbox" id="AVNAV_HIDE_CURSOR" checked/>
         </div>
         <input type="hidden" id="AVNAV_DISPLAY_DIMENSIONS"/>
+        <input type="hidden" id="AVNAV_MCS"/>
+        <input type="hidden" id="AVNAV_OBPPLOTTERV3"/>
     </div>
     <div class="buttons">
         <button name="upload" id="upload">Load Current</button>

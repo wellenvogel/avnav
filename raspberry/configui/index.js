@@ -101,7 +101,9 @@
         AVNAV_DPI: {r:getValue,s:setValue},
         AVNAV_KEYHEIGHT: {r:getValue,s:setValue},
         AVNAV_HIDE_CURSOR: {r:checkBox,s:setCheckBox},
-        AVNAV_DISPLAY_DIMENSIONS: {r:getValue,s:setValue}
+        AVNAV_DISPLAY_DIMENSIONS: {r:getValue,s:setValue},
+        AVNAV_BASE_BOARD: {r:getValue,s:setValue},
+        AVNAV_OBPPLOTTERV3: {r:getValue,s:setValue}
     };
     let templateReplace=function(template,replace){
         if (! template) return;
@@ -169,8 +171,12 @@
         for (let li in keys){
             let lname=keys[li];
             let entry=document.createElement('option');
-            entry.setAttribute('value',data[lname]);
-            if (data[lname] === defaultL) entry.setAttribute('selected',true);
+            let value=data[lname];
+            if (typeof(value) === 'object'){
+                value=lname;
+            }
+            entry.setAttribute('value',value);
+            if (value === defaultL) entry.setAttribute('selected',true);
             entry.textContent=lname;
             parent.appendChild(entry);
         }
@@ -234,6 +240,14 @@
             setValue(document.querySelector('#AVNAV_DISPLAY_DIMENSIONS'),sdv);
         }
     }
+    let setFieldValues=function(valueData){
+        for (let k in valueData){
+            let v=valueData[k];
+            let field=fields[k];
+            if (! field) continue;
+            field.s(document.getElementById(k),v);
+        }
+    }
     window.addEventListener('load',function(){
        console.log("loaded");
        fetch("avnav.conf")
@@ -281,6 +295,43 @@
            pass.addEventListener('change',function(ev){
                pass.removeAttribute('data-encrypted');
            })
+       }
+        let BASE_BOARDS = {
+            MCS: {
+                href: "https://www.gedad.de/projekte/projekte-f%C3%BCr-privat/gedad-marine-control-server/",
+                parameters: {
+                    AVNAV_MCS: 'yes',
+                    AVNAV_HAT: '',
+                    AVNAV_OBPPLOTTERV3: 'no'
+                }
+            },
+            OBPPLOTTERV3: {
+                parameters: {
+                    AVNAV_DISPLAY_DIMENSIONS: '245,1920,150,1280',
+                    AVNAV_DPI: '96',
+                    AVNAV_HAT: '',
+                    AVNAV_KEYHEIGHT: '7',
+                    AVNAV_STARTX: 'yes',
+                    AVNAV_MCS: 'no',
+                    AVNAV_OBPPLOTTERV3: 'yes'
+                },
+            },
+            NONE: {
+                parameters: {
+                    AVNAV_OBPPLOTTERV3: 'no',
+                    AVNAV_MCS: 'no',
+                }
+            }
+
+        };
+       let baseBoard=this.document.getElementById('AVNAV_BASE_BOARD');
+       if (baseBoard){
+        fillSelect(baseBoard,BASE_BOARDS);
+        baseBoard.addEventListener('change',function(ev){
+            let board=BASE_BOARDS[ev.target.value];
+            if (! board) return;
+            setFieldValues(board.parameters);
+        })
        }                  
        let bt=document.getElementById('download');
        bt.addEventListener('click',function(){
