@@ -31,9 +31,10 @@ CFGPAR
 CAN0CHECK='can0'
 IFS='' read -r -d '' CAN0 << 'CAN0'
 #physical can interfaces
-allow-hotplug can0
+auto can0
 iface can0 can static
 bitrate 250000
+pre-up ip link set can0 type can restart-ms 100
 down /sbin/ip link set $IFACE down
 up /sbin/ifconfig $IFACE txqueuelen 10000'
 CAN0
