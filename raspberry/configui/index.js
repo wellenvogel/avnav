@@ -103,8 +103,14 @@
         AVNAV_HIDE_CURSOR: {r:checkBox,s:setCheckBox},
         AVNAV_DISPLAY_DIMENSIONS: {r:getValue,s:setValue},
         AVNAV_BASE_BOARD: {r:getValue,s:setValue},
-        AVNAV_OBPPLOTTERV3: {r:getValue,s:setValue}
+        AVNAV_OBPPLOTTERV3: {r:getValue,s:setValue},
+        AVNAV_HAT: {r:getValue,s:setValue}
     };
+    let HATS=['PICANM','WAVESHAREA8','WAVESHAREA12','WAVESHAREB','WAVESHARE2CH'];
+    for (let hi in HATS){
+        let hat=HATS[hi];
+        fields["AVNAV_"+hat+"_HAT"]={r:getValue,s:setValue};
+    }
     let templateReplace=function(template,replace){
         if (! template) return;
         let rt=template.split('\n');
@@ -254,6 +260,20 @@
             field.s(document.getElementById(k),v);
         }
     }
+    let setHats = function (newHat) {
+        let parameters = {};
+        for (let hi in HATS) {
+            let hat = HATS[hi];
+            let cfg = "AVNAV_" + hat + "_HAT";
+            if (hat == newHat) {
+                parameters[cfg] = 'yes';
+            }
+            else {
+                parameters[cfg] = 'no';
+            }
+        }
+        setFieldValues(parameters);
+    }
     window.addEventListener('load',function(){
        console.log("loaded");
        let fieldParent=document.getElementById('parameterContainer');
@@ -317,7 +337,7 @@
                 href: "https://www.gedad.de/projekte/projekte-f%C3%BCr-privat/gedad-marine-control-server/",
                 parameters: {
                     AVNAV_MCS: 'yes',
-                    AVNAV_HAT: '',
+                    AVNAV_HAT: 'NONE',
                     AVNAV_OBPPLOTTERV3: 'no'
                 }
             },
@@ -325,7 +345,7 @@
                 parameters: {
                     AVNAV_DISPLAY_DIMENSIONS: '245,1920,150,1280',
                     AVNAV_DPI: '96',
-                    AVNAV_HAT: '',
+                    AVNAV_HAT: 'NONE',
                     AVNAV_KEYHEIGHT: '7',
                     AVNAV_STARTX: 'yes',
                     AVNAV_MCS: 'no',
@@ -339,16 +359,31 @@
                 }
             }
 
-        };
-       let baseBoard=this.document.getElementById('AVNAV_BASE_BOARD');
+        }; 
+       let baseBoard=document.getElementById('AVNAV_BASE_BOARD');
        if (baseBoard){
         fillSelect(baseBoard,BASE_BOARDS);
         baseBoard.addEventListener('change',function(ev){
             let board=BASE_BOARDS[ev.target.value];
             if (! board) return;
             setFieldValues(board.parameters);
+            setHats();
         })
-       }                  
+       }
+       let hats=document.getElementById('AVNAV_HAT');
+       if (hats){
+            let hatConfig={NONE:{}};
+            for (let hi in HATS){
+                let hat=HATS[hi];
+                hatConfig[hat]={
+                }
+            }
+            fillSelect(hats,hatConfig);
+            hats.addEventListener('change',function(ev){
+                let nh=ev.target.value;
+                setHats(nh);
+            });
+       }
        let bt=document.getElementById('download');
        bt.addEventListener('click',function(){
            if (!template) {
