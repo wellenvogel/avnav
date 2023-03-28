@@ -1,20 +1,22 @@
 #! /bin/bash
-#set up RS485_CAN_HAT (https://www.waveshare.com/wiki/RS485_CAN_HAT)
+#set up waveshare 2 channel can HAT https://www.waveshare.com/wiki/2-CH_CAN_HAT
 #return 0 if ok, 1 if needs reboot, -1 on error 
 #set -x
 #testing
 BASE=/
 
-WS_COMMENT="#WAVESHAREA12_DO_NOT_DELETE"
+WS_COMMENT="#WAVESHARE2CH_DO_NOT_DELETE"
 
 pdir=`dirname $0`
 pdir=`readlink -f "$pdir"`
+
 . $pdir/setup-helper.sh
 
 #/boot/config.txt
 read -r -d '' CFGPAR <<'CFGPAR'
 dtparam=spi=on
-dtoverlay=mcp2515-can0,oscillator=12000000,interrupt=25,spimaxfrequency=1000000
+dtoverlay=mcp2515-can0,oscillator=16000000,interrupt=23
+dtoverlay=mcp2515-can1,oscillator=16000000,interrupt=25
 CFGPAR
 
 #/etc/network/interfaces.d/can0
@@ -27,6 +29,22 @@ pre-up ip link set can0 type can restart-ms 100
 down /sbin/ip link set $IFACE down
 up /sbin/ifconfig $IFACE txqueuelen 10000
 CAN0
+
+canif0="$BASE/etc/network/interfaces.d/can0"
+
+#/etc/network/interfaces.d/can1
+read -r -d '' CAN1 << 'CAN1'
+#physical can interfaces
+auto can1
+iface can1 can static
+bitrate 250000
+pre-up ip link set can0 type can restart-ms 100
+down /sbin/ip link set $IFACE down
+up /sbin/ifconfig $IFACE txqueuelen 10000
+CAN1
+
+canif1="$BASE/etc/network/interfaces.d/can1"
+
 needsReboot=0
 if [ "$1" = remove ] ; then
     removeConfig $BOOTCONFIG "$WS_COMMENT" "$CFGPAR"
@@ -36,11 +54,10 @@ fi
 
 checkConfig "$BOOTCONFIG" "$WS_COMMENT" "$CFGPAR"
 checkRes
-can="$BASE/etc/network/interfaces.d/can0"
-replaceConfig "$can" "$CAN0"
+replaceConfig "$canif0" "$CAN0"
 checkRes
-$pdir/uart_control gpio
+replaceConfig "$canif1" "$CAN1"
+checkRes
 
 log "needReboot=$needsReboot"
 exit $needsReboot
-
