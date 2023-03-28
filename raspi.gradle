@@ -51,10 +51,11 @@ ospackage {
             include 'iptables-ext.sh'
             include 'wpa_supplicant.conf'
             include 'startup-check.sh'
-            include 'setup-mcs.sh'
+            include 'setup-*.sh'
             include 'wpa_action.sh'
             include 'rename-interface.sh'
             include 'checkLink.sh'
+            include 'uart_control'
         }
         from('raspberry') {
             include 'avnav_server.xml'
