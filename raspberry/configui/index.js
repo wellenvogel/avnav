@@ -120,6 +120,12 @@
                 hasReplaced[k]=true;
             }
         }
+        //add all values not yet being set
+        for (let k in replace){
+            if (hasReplaced[k]) continue;
+            rt.push(k+"="+replace[k]);
+            hasReplaced[k]=true;
+        }
         return rt.join("\n");
     }
     let findInCurrent=function(current,key,includeComment){
@@ -250,6 +256,16 @@
     }
     window.addEventListener('load',function(){
        console.log("loaded");
+       let fieldParent=document.getElementById('parameterContainer');
+       for (let k in fields){
+            let el=document.getElementById(k);
+            if (! el){
+                let nel=document.createElement('input');
+                nel.setAttribute('type','hidden')
+                nel.setAttribute('id',k);
+                fieldParent.appendChild(nel);
+            } 
+       }
        fetch("avnav.conf")
            .then(function(r){return r.text()})
            .then(function(td){

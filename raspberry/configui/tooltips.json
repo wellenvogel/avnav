@@ -7,6 +7,7 @@
   "download": "Erzeugen und Herunterladen der avnav.conf",
   "AVNAV_HOSTNAME": "Hostname für den Raspberry",
   "AVNAV_TIMEZONE": "Zeitzone für den Raspberry",
+  "AVNAV_BASE_BOARD": "Auswahl der unterstützten Basis Boards (NONE für normale PIs)",
   "AVNAV_WIFI_CLIENT": "Wenn gesetzt, erzeugt der interne WLAN Adapter kein eigenes WLAN mehr(!) sondern steht für eine externe Verbindung zur Verfügung. Man benötigt dann unbedingt noch einen USB WLAN Adapter - dieser erzeugt dann das WLAN.",
   "AVNAV_KBLAYOUT": "Das Tastaturlayout für den Raspberry für eine direkt angeschlossene Tastatur",
   "AVNAV_KBMODEL": "Das Tastaturmodell.",

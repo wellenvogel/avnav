@@ -7,6 +7,7 @@
   "download": "Create and download avnav.conf",
   "AVNAV_HOSTNAME": "hostname for the raspberry (only a..z, A-Z, 0..9, -)",
   "AVNAV_TIMEZONE": "time zone for the raspberry",
+  "AVNAV_BASE_BOARD": "select a supported base board (NONE for normal PIs)",
   "AVNAV_WIFI_CLIENT": "If being set the internal Wifi adapter of the pi will not create a Wifi network any more but can be used to connect to an existing one. This requires an additional Wifi Adapter being plugged into one of the USB ports to be able to create an own Wifi.",
   "AVNAV_KBLAYOUT": "keyboard layout (used if you connect a keyboard to your pi)",
   "AVNAV_KBMODEL": "keybaord model",
