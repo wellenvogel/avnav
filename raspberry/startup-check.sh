@@ -4,6 +4,7 @@
 CONFIG=/boot/avnav.conf
 LAST=/etc/avnav-startup-checks
 MCS_INSTALL=`dirname $0`/setup-mcs.sh
+pdir=`dirname $0`
 if [ "$1" != "" ] ; then
   logStdout=1
 fi
@@ -177,6 +178,39 @@ if [ "$runMcs" = 1 ];then
 fi
 LAST_DATA+=("LAST_MCS='$LAST_MCS'")
 
+declare -A HATS=([PICANM]=setup-picanm.sh)
+
+for hat in "${!HATS[@]}"
+do
+    key="AVNAV_${hat}_HAT"
+    last="LAST_${hat}_HAT"
+    value="${!key}"
+    script="$pdir/${HATS[$hat]}"
+    if [ ! -x "$script" ] ; then
+        log "script $script for $hat does not exist"
+    else
+        if [ "$value" = "yes" ] ; then
+            log "HAT $hat is enabled, running check"
+            $script
+            res=$?
+            if [ "$res" = 1 ] ; then
+                log "reboot requested by $hat"
+                needsReboot=1
+                hasChanges=1
+            fi    
+        else
+            if [ "${!last}" = yes ] ; then
+                log "remove config for hat $hat"
+                $script remove
+                hasChanges=1
+                #TODO: should we trigger a reboot?
+            else
+                log "no config for HAT $hat"
+            fi
+        fi
+    fi
+    LAST_DATA+=("$last='$value'")
+done
 
 gn(){
     echo "$1" | tr -cd '[a-zA-Z0-9]' | tr '[a-z]' '[A-Z]'
@@ -211,6 +245,8 @@ if [ -d "$PLUGINDIR" ] ; then
           if hasAllowedMode "$dn" && hasAllowedMode "$sn" ; then
             piname=`gn "$plugin"`
             vname="AVNAV_$piname"
+            lastname="LAST_$piname"
+            lastvalue="${!lastname}"
             echo "checking plugin $sn, $vname"
             if [ "${!vname}" = "yes" ] ; then
               log "running $sn"
@@ -224,6 +260,10 @@ if [ -d "$PLUGINDIR" ] ; then
               fi
             else
               log "$vname not to set to yes"
+            fi
+            LAST_DATA+=("$lastname=${!vname}")
+            if [ "${!vname}" != "$lastvalue" ] ; then
+                hasChanges=1
             fi
           else  
             log "cannot handle $sn, permissions not correct"  
