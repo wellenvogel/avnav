@@ -13,7 +13,7 @@
     border-bottom: 1px solid grey;
     margin-bottom: 1em;
 }
-.configui .row input,select {
+.configui .row input[type="checkbox"] {
     flex-grow: 1;
     appearance: auto;
 }

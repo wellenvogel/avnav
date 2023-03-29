@@ -6,11 +6,7 @@
 BASE=/
 
 WS_COMMENT="#WAVESHARE2CH_DO_NOT_DELETE"
-
-pdir=`dirname $0`
-pdir=`readlink -f "$pdir"`
-
-. $pdir/setup-helper.sh
+. "$AVNAV_SETUP_HELPER"
 
 #/boot/config.txt
 read -r -d '' CFGPAR <<'CFGPAR'
@@ -46,18 +42,21 @@ CAN1
 canif1="$BASE/etc/network/interfaces.d/can1"
 
 needsReboot=0
-if [ "$1" = remove ] ; then
+if [ "$1" = $MODE_DIS ] ; then
     removeConfig $BOOTCONFIG "$WS_COMMENT" "$CFGPAR"
     checkRes
     exit $needsReboot
 fi
 
-checkConfig "$BOOTCONFIG" "$WS_COMMENT" "$CFGPAR"
-checkRes
-replaceConfig "$canif0" "$CAN0"
-checkRes
-replaceConfig "$canif1" "$CAN1"
-checkRes
+if [ "$1" = $MODE_EN ] ; then
+    checkConfig "$BOOTCONFIG" "$WS_COMMENT" "$CFGPAR"
+    checkRes
+    replaceConfig "$canif0" "$CAN0"
+    checkRes
+    replaceConfig "$canif1" "$CAN1"
+    checkRes
+    log "needReboot=$needsReboot"
+    exit $needsReboot
+fi
 
-log "needReboot=$needsReboot"
-exit $needsReboot
+exit 0

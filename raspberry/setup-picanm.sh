@@ -3,9 +3,7 @@
 #return 0 if ok, 1 if needs reboot, -1 on error 
 #set -x
 #testing
-pdir=`dirname $0`
-pdir=`readlink -f "$pdir"`
-. "$pdir/setup-helper.sh"
+. "$AVNAV_SETUP_HELPER"
 BASE=/
 WS_COMMENT="#PICAN-M_DO_NOT_DELETE"
 #/boot/config.txt
@@ -28,18 +26,20 @@ CAN0
 
 can="$BASE/etc/network/interfaces.d/can0"
 needsReboot=0
-if [ "$1" = "remove" ]; then
+if [ "$1" = $MODE_DIS ]; then
   removeConfig "$BOOTCONFIG" "$WS_COMMENT"
   checkRes
   exit $needsReboot
 fi
 
-checkConfig "$BOOTCONFIG" "$WS_COMMENT" "$CFGPAR"
-checkRes
+if [ "$1" = $MODE_EN ] ; then
+  checkConfig "$BOOTCONFIG" "$WS_COMMENT" "$CFGPAR"
+  checkRes
+  replaceConfig "$can" "$CAN0"
+  checkRes
+  `dirname $0`/uart_control gpio
+  log "needReboot=$needsReboot"
+  exit $needsReboot
+fi
 
-replaceConfig "$can" "$CAN0"
-checkRes
-$pdir/uart_control gpio
-
-log "needReboot=$needsReboot"
-exit $needsReboot
+exit 0

@@ -104,7 +104,8 @@
         AVNAV_DISPLAY_DIMENSIONS: {r:getValue,s:setValue},
         AVNAV_BASE_BOARD: {r:getValue,s:setValue},
         AVNAV_OBPPLOTTERV3: {r:getValue,s:setValue},
-        AVNAV_HAT: {r:getValue,s:setValue}
+        AVNAV_HAT: {r:getValue,s:setValue},
+        AVNAV_CONFIG_SEQUENCE: {r:getValue,s:setValue}
     };
     let HATS=['PICANM','WAVESHAREA8','WAVESHAREA12','WAVESHAREB','WAVESHARE2CH'];
     for (let hi in HATS){

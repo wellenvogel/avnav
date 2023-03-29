@@ -5,6 +5,11 @@ CONFIG=/boot/avnav.conf
 LAST=/etc/avnav-startup-checks
 MCS_INSTALL=`dirname $0`/setup-mcs.sh
 pdir=`dirname $0`
+pdir=`readlink -f $pdir`
+AVNAV_SETUP_HELPER="$pdir/setup-helper.sh"
+export AVNAV_SETUP_HELPER
+. "$AVNAV_SETUP_HELPER"
+
 if [ "$1" != "" ] ; then
   logStdout=1
 fi
@@ -29,8 +34,17 @@ fi
 source <(tr -d '\015' < $CONFIG)
 hasChanges=0
 needsReboot=0
+force=0
+if [ "$AVNAV_CONFIG_SEQUENCE" != "" ] ; then
+    if [ "$LAST_CONFIG_SEQUENCE" != "" -a "$AVNAV_CONFIG_SEQUENCE" != "$LAST_CONFIG_SEQUENCE" ] || [ "$LAST_CONFIG_SEQUENCE" = "" -a "$AVNAV_CONFIG_SEQUENCE" != "1" ]; then
+        log "config sequence changed from $LAST_CONFIG_SEQUENCE to $AVNAV_CONFIG_SEQUENCE, force re-apply"
+        force=1
+        hasChanges=1
+    fi
+    LAST_DATA+=("LAST_CONFIG_SEQUENCE='$AVNAV_CONFIG_SEQUENCE'")
+fi
 if [ "$AVNAV_PASSWD" != "" ] ; then
-    if [ "$AVNAV_PASSWD" = "$LAST_PASSWD" ] ; then
+    if [ "$AVNAV_PASSWD" = "$LAST_PASSWD" -a $force = 0 ] ; then
         log "AVNAV_PASSWD is set but unchanged"
     else
         log "setting AVNAV_PASSWD from $CONFIG"
@@ -48,6 +62,7 @@ fi
 LAST_DATA+=("LAST_PASSWD='$LAST_PASSWD'")
 
 if [ "$AVNAV_WIFI_CLIENT" != "$LAST_WIFI_CLIENT" ] ; then
+    #no need to handle force here as the wifi handling will directly access the set data
     log "AVNAV_WIFI_CLIENT=$AVNAV_WIFI_CLIENT"
     hasChanges=1
     needsReboot=1
@@ -57,7 +72,7 @@ else
 fi
 LAST_DATA+=("LAST_WIFI_CLIENT=\"$LAST_WIFI_CLIENT\"")
 
-if [ "$AVNAV_HOSTNAME" != "$LAST_HOSTNAME" -a "$AVNAV_HOSTNAME" != "" ] ; then
+if [ "$AVNAV_HOSTNAME" != "$LAST_HOSTNAME" -a "$AVNAV_HOSTNAME" != "" ] || [ $force = 1 -a "$AVNAV_HOSTNAME" != "" ]; then
     log "AVNAV_HOSTNAME is set to $AVNAV_HOSTNAME"
     current=`cat /etc/hostname | tr -d " \t\n\r"`
     if [ "$current" = "$AVNAV_HOSTNAME" ]; then
@@ -74,7 +89,7 @@ else
 fi
 LAST_DATA+=("LAST_HOSTNAME='$LAST_HOSTNAME'")
 
-if [ "$AVNAV_KBLAYOUT" != "$LAST_KBLAYOUT" -o "$AVNAV_KBMODEL" != "$LAST_KBMODEL" ] ; then
+if [ "$AVNAV_KBLAYOUT" != "$LAST_KBLAYOUT" -o "$AVNAV_KBMODEL" != "$LAST_KBMODEL" -o $force = 1 ] ; then
     if [ "$AVNAV_KBLAYOUT" != "" -a "$AVNAV_KBMODEL" != "" ]; then
         log "AVNAV_KBLAYOUT=$AVNAV_KBLAYOUT, AVNAV_KBMODEL=$AVNAV_KBMODEL"
         kbfile=/etc/default/keyboard
@@ -101,7 +116,7 @@ fi
 LAST_DATA+=("LAST_KBLAYOUT='$LAST_KBLAYOUT'")
 LAST_DATA+=("LAST_KBMODEL='$LAST_KBMODEL'")
 
-if [ "$AVNAV_TIMEZONE" != "$LAST_TIMEZONE" -a "$AVNAV_TIMEZONE" != "" ] ; then
+if [ "$AVNAV_TIMEZONE" != "$LAST_TIMEZONE" -a "$AVNAV_TIMEZONE" != "" ] || [ "$AVNAV_TIMEZONE" != "" -a $force = 1 ] ; then
     log "AVNAV_TIMEZONE is set to $AVNAV_TIMEZONE"
     currentTZ=`cat /etc/timezone | tr -d " \t\n\r"`
     if [ "$currentTZ" = "$AVNAV_TIMEZONE" ] ; then
@@ -120,7 +135,7 @@ else
 fi
 LAST_DATA+=("LAST_TIMEZONE='$LAST_TIMEZONE'")
 
-if [ "$AVNAV_WIFI_COUNTRY" != "$LAST_WIFI_COUNTRY" -a "$AVNAV_WIFI_COUNTRY" != "" ]; then
+if [ "$AVNAV_WIFI_COUNTRY" != "$LAST_WIFI_COUNTRY" -a "$AVNAV_WIFI_COUNTRY" != "" ] || [ "$AVNAV_WIFI_COUNTRY" != "" -a $force = 1 ]; then
     log "AVNAV_WIFI_COUNTRY changed to $AVNAV_WIFI_COUNTRY"
     cfgfile=/etc/wpa_supplicant/wpa_supplicant.conf
     current=`sed -n 's/^ *country *= *//p' $cfgfile | sed 's/#.*//'| tr -d '" \n\r'`
@@ -142,39 +157,55 @@ else
 fi
 LAST_DATA+=("LAST_WIFI_COUNTRY='$LAST_WIFI_COUNTRY'")
 
-runMcs=0
-if [ "$AVNAV_MCS" = "yes" ] ; then
-    if grep MCS_DO_NOT_DELETE /etc/modules > /dev/null 2>&1 ; then
-        log "must correct /etc/modules"
-        LAST_MCS=""
-    fi
-    if [ "$LAST_MCS" = "yes" ] ; then
-        log "AVNAV_MCS is set but unchanged"
-    else
-        log "AVNAV_MCS is set to $AVNAV_MCS"
-        if [ -f "$MCS_INSTALL" ] ; then
-            LAST_MCS="$AVNAV_MCS"
-            runMcs=1
-            hasChanges=1
+#check if the enabled state has changed
+# $1: lastval
+# $2: val
+# handles force
+# returns 0 if changed
+enableChanged(){
+    [ $force = 1 ] && return 0
+    if [ "$1" = yes ] ; then
+        if [ "$2" != "$1" ] ; then
+            return 0
         else
-            log "ERROR: $MCS_INSTALL not found, cannot set up MCS"
+            return 1
+        fi
+    else
+        if [ "$2" = yes ] ; then
+            return 0
+        else
+            return 1
         fi
     fi
-else
-    log "AVNAV_MCS not enabled"    
-fi
+}
 
-if [ "$runMcs" = 1 ];then
-    log "running $MCS_INSTALL"
-    $MCS_INSTALL -r -p -c
-    rt=$?
-    log "mcs install returned $rt"
-    if [ $rt = 1 ] ; then
-        log "reboot requested by MCS install"
-        needsReboot=1
+runMcs=0
+if enableChanged "$LAST_MCS" "$AVNAV_MCS" ; then
+    LAST_MCS="$AVNAV_MCS"
+    hasChanges=1
+    mode=$MODE_EN
+    if [ "$AVNAV_MCS" = yes ] ; then
+        mode=$MODE_DIS
+    fi
+    if [ ! -f "$MCS_INSTALL" ] ; then
+        log "ERROR: $MCS_INSTALL not found, cannot set up MCS"
+        LAST_MCS=''
     else
-    [ $rt != 0 ] && LAST_MCS='' #retry next time    
-    fi   
+        log "running $MCS_INSTALL $mode"
+        "$MCS_INSTALL" -p $mode    
+        rt=$?
+        log "mcs install returned $rt"
+        if [ $rt = 1 ] ; then
+            log "reboot requested by MCS install"
+            needsReboot=1
+        else
+            if [ $rt != 0 ] ; then
+                LAST_MCS='' #retry next time    
+            fi
+        fi  
+    fi    
+else
+    log "AVNAV_MCS unchanged $AVNAV_MCS"
 fi
 LAST_DATA+=("LAST_MCS='$LAST_MCS'")
 
@@ -185,31 +216,38 @@ do
     key="AVNAV_${hat}_HAT"
     last="LAST_${hat}_HAT"
     value="${!key}"
+    lastvalue="${!last}"
     script="$pdir/${HATS[$hat]}"
     if [ ! -x "$script" ] ; then
         log "script $script for $hat does not exist"
     else
-        if [ "$value" = "yes" ] ; then
-            log "HAT $hat is enabled, running check"
-            $script
-            res=$?
-            if [ "$res" = 1 ] ; then
-                log "reboot requested by $hat"
-                needsReboot=1
-                hasChanges=1
-            fi    
-        else
-            if [ "${!last}" = yes ] ; then
-                log "remove config for hat $hat"
-                $script remove
-                hasChanges=1
-                #TODO: should we trigger a reboot?
-            else
-                log "no config for HAT $hat"
+        mode=''
+        if [ "$value" != "$lastvalue" -o $force = 1 ] ;then
+            mode=$MODE_EN
+            if [ "$value" != yes ] ; then
+                mode=$MODE_DIS
             fi
         fi
+        if [ "$mode" != "" ] ; then
+            hasChanges=1
+            log "HAT $hat changed, running check $script"
+            $script $mode
+            res=$?
+            if [ "$res" = 1 ] ; then
+                if [ "$mode" = $MODE_EN ] ; then
+                    log "reboot requested by $hat"
+                    needsReboot=1
+                fi
+            fi
+            if [ "$res" -lt 0 ] ; then
+                value='' # retry next time
+            fi
+            lastvalue="$value"    
+        else
+            log "HAT $hat unchanged $value"
+        fi
     fi
-    LAST_DATA+=("$last='$value'")
+    LAST_DATA+=("$last='$lastvalue'")
 done
 
 gn(){
@@ -234,9 +272,8 @@ hasAllowedMode(){
 
 #for now only consider system plugins
 #builtin are not necessary, user makes no sense...
-PLUGINDIR=`dirname $0`/../plugins
-PISCRIPT=startup-check.sh
-PIREMOVE=startup-remove.sh
+PLUGINDIR="$pdir/../plugins"
+PISCRIPT=plugin-startup.sh
 if [ -d "$PLUGINDIR" ] ; then
     for plugin in `ls -1 "$PLUGINDIR"`
     do
@@ -248,35 +285,32 @@ if [ -d "$PLUGINDIR" ] ; then
             vname="AVNAV_$piname"
             lastname="LAST_$piname"
             lastvalue="${!lastname}"
-            echo "checking plugin $sn, $vname"
-            if [ "${!vname}" = "yes" ] ; then
-              log "running $sn"
-              ldata="yes"
-              $sn
-              rt=$?
-              log "$sn returned $rt"
-              if [ $rt = 1 ] ; then
-                log "reboot requested by $sn"
+            value="${!vname}"
+            mode=''
+            if [ "$value" != "$lastvalue" -o $force = 1 ] ; then
+                hasChanges=1
+                if [ "$value" = yes ] ; then
+                    mode=$MODE_EN
+                else
+                    mode=$MODE_DIS
+                fi
+            fi
+            log "running $sn $mode"
+            "$sn" $mode
+            rt=$?
+            log "$sn returned $rt"
+            if [ $rt = 1 ] ; then
+              log "reboot requested by $sn"
+              if [ "$mode" = $MODE_EN ] ; then
                 needsReboot=1
               fi
+            fi
+            if [ $rt -lt 0 ] ; then
+                lastvalue='' #retry next time
             else
-              log "$vname not to set to yes"
-              if [ "$lastvalue" = yes ] ; then
-                removeScript="$PLUGINDIR/$plugin/$PIREMOVE"
-                if [ -x "$removeScript" ] ; then
-                    if hasAllowedMode "$removeScript" ; then
-                        log "calling remove for plugin $plugin"
-                        $removeScript
-                    else
-                        log "$removeScript has invalid permissions, cannot remove plugin data"
-                    fi
-                fi  
-              fi
+                lastvalue="$value"    
             fi
             LAST_DATA+=("$lastname=${!vname}")
-            if [ "${!vname}" != "$lastvalue" ] ; then
-                hasChanges=1
-            fi
           else  
             log "cannot handle $sn, permissions not correct"  
           fi

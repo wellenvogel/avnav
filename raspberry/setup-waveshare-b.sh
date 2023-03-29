@@ -6,10 +6,7 @@
 BASE=/
 
 WS_COMMENT="#WAVESHAREB_DO_NOT_DELETE"
-
-pdir=`dirname $0`
-pdir=`readlink -f "$pdir"`
-. $pdir/setup-helper.sh
+. "$AVNAV_SETUP_HELPER"
 
 #/boot/config.txt
 read -r -d '' CFGPAR <<'CFGPAR'
@@ -31,18 +28,21 @@ up /sbin/ifconfig $IFACE txqueuelen 10000
 CAN0
 
 needsReboot=0
-if [ "$1" = remove ] ; then
+if [ "$1" = $MODE_DIS ] ; then
     removeConfig $BOOTCONFIG "$WS_COMMENT" "$CFGPAR"
     checkRes
     exit $needsReboot
 fi
 
-checkConfig "$BOOTCONFIG" "$WS_COMMENT" "$CFGPAR"
-checkRes
-can="$BASE/etc/network/interfaces.d/can0"
-replaceConfig "$can" "$CAN0"
-checkRes
-$pdir/uart_control gpio
+if [ "$1" = $MODE_EN ] ; then
+    checkConfig "$BOOTCONFIG" "$WS_COMMENT" "$CFGPAR"
+    checkRes
+    can="$BASE/etc/network/interfaces.d/can0"
+    replaceConfig "$can" "$CAN0"
+    checkRes
+    `dirname $0`/uart_control gpio
+    log "needReboot=$needsReboot"
+    exit $needsReboot
+fi
 
-log "needReboot=$needsReboot"
-exit $needsReboot
+exit 0

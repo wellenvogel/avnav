@@ -1,5 +1,8 @@
 #(bash) helper functions for set up of /boot/config.txt and other cfg files
 BOOTCONFIG=/boot/config.txt
+MODE_EN="enable"
+MODE_DIS="disable"
+
 log(){
     local n=`basename $0 .sh`
     echo "$n: $*"
@@ -82,6 +85,10 @@ replaceConfig(){
     local cur="`grep "\$cfgdata\" \"$config\" 2>/dev/null`" 
     if [ "$cur" != "$cfgdata" ] ; then
         log "must change $config"
+        local dn="`dirname \"$config\"`"
+        if [ ! -d "$dn" ] ; then
+            mkdir -p "$dn"
+        fi
         echo "$cfgdata" > "$config" || { err "unable to replace config $config"; return -1;}
         return 1
 
