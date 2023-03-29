@@ -12,7 +12,7 @@ rsync -rav --include="*php" --exclude="*" $BASE/docs/ $TARGET
 rsync -rav --delete $BASE/viewer/build/$SUB/ $TARGET/viewern
 rsync -rav --delete $BASE/viewer/demo/ $TARGET/viewer
 rsync -rav --delete $BASE/mobac/testsrc/build/libs/avnav-mapsources.zip $TARGET/downloads
-rsync -rav --delete --exclude=".idea" $BASE/raspberry/configui/ $TARGET/configGen
+rsync -L -rav --delete --exclude=".idea" $BASE/raspberry/configui/ $TARGET/configGen
 cp -p $BASE/docs/indexav.json $TARGET/index.json
 
 for lib in movable-type 
