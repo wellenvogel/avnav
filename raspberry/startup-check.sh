@@ -181,15 +181,13 @@ enableChanged(){
 
 runMcs=0
 if enableChanged "$LAST_MCS" "$AVNAV_MCS" ; then
-    LAST_MCS="$AVNAV_MCS"
     hasChanges=1
     mode=$MODE_EN
-    if [ "$AVNAV_MCS" = yes ] ; then
+    if [ "$AVNAV_MCS" != yes ] ; then
         mode=$MODE_DIS
     fi
     if [ ! -f "$MCS_INSTALL" ] ; then
         log "ERROR: $MCS_INSTALL not found, cannot set up MCS"
-        LAST_MCS=''
     else
         log "running $MCS_INSTALL $mode"
         "$MCS_INSTALL" -p $mode    
@@ -198,11 +196,11 @@ if enableChanged "$LAST_MCS" "$AVNAV_MCS" ; then
         if [ $rt = 1 ] ; then
             log "reboot requested by MCS install"
             needsReboot=1
-        else
-            if [ $rt != 0 ] ; then
-                LAST_MCS='' #retry next time    
-            fi
-        fi  
+            LAST_MCS="$AVNAV_MCS"
+        fi
+        if [ $rt -ge 0 ] ; then
+            LAST_MCS="$AVNAV_MCS"
+        fi
     fi    
 else
     log "AVNAV_MCS unchanged $AVNAV_MCS"
@@ -239,10 +237,9 @@ do
                     needsReboot=1
                 fi
             fi
-            if [ "$res" -lt 0 ] ; then
-                value='' # retry next time
+            if [ "$res" -ge 0 ] ; then
+              lastvalue="$value"  
             fi
-            lastvalue="$value"    
         else
             log "HAT $hat unchanged $value"
         fi
@@ -287,28 +284,28 @@ if [ -d "$PLUGINDIR" ] ; then
             lastvalue="${!lastname}"
             value="${!vname}"
             mode=''
-            if [ "$value" != "$lastvalue" -o $force = 1 ] ; then
-                hasChanges=1
-                if [ "$value" = yes ] ; then
-                    mode=$MODE_EN
-                else
-                    mode=$MODE_DIS
+            if [ "$value" = yes -o "$lastvalue" = yes ] ; then
+                if [ "$value" != "$lastvalue" -o $force = 1 ] ; then
+                    hasChanges=1
+                    if [ "$value" = yes ] ; then
+                        mode=$MODE_EN
+                    else
+                        mode=$MODE_DIS
+                    fi
                 fi
-            fi
-            log "running $sn $mode"
-            "$sn" $mode
-            rt=$?
-            log "$sn returned $rt"
-            if [ $rt = 1 ] ; then
-              log "reboot requested by $sn"
-              if [ "$mode" = $MODE_EN ] ; then
-                needsReboot=1
-              fi
-            fi
-            if [ $rt -lt 0 ] ; then
-                lastvalue='' #retry next time
-            else
-                lastvalue="$value"    
+                log "running $sn $mode"
+                "$sn" $mode
+                rt=$?
+                log "$sn returned $rt"
+                if [ $rt = 1 ] ; then
+                    if [ "$mode" = $MODE_EN ] ; then
+                        log "reboot requested by $sn"
+                        needsReboot=1
+                    fi
+                fi
+                if [ $rt -ge 0 ] ; then
+                    lastvalue="$value"    
+                fi
             fi
             LAST_DATA+=("$lastname=${!vname}")
           else  
