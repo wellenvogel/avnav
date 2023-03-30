@@ -18,7 +18,8 @@
     "global":{
       "mobon": ["Control- "],
       "anchoron": ["i"],
-      "anchoroff": ["Control-i"]
+      "anchoroff": ["Control-i"],
+      "toggledimm": ["z"]
     },
     "button":{
       "Cancel":"Escape"

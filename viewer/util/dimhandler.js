@@ -17,8 +17,11 @@ class DimmHandler{
         this.trigger=this.trigger.bind(this);
         this.activate=this.activate.bind(this);
         this.buttonDef=this.buttonDef.bind(this);
+        this.toggle=this.toggle.bind(this);
         this.mode="manual";
         this.actionFunction=undefined;
+        this.lastTrigger=0;
+        this.lastOff=0;
         splitsupport.subscribe('dimm',(data)=>{
             if (data.value !== globalStore.getData(KEY)){
                 if (data.value) this.activate(true);
@@ -107,17 +110,31 @@ class DimmHandler{
             }
         }
     }
-    _setLastTrigger(){
-        this.lastTrigger=(new Date()).getTime();
-    }
+
     trigger(opt_noSend){
-        this._setLastTrigger();
+        let now=(new Date()).getTime();
+        this.lastTrigger=now;
+        if (this.isActive()){
+            this.lastOff=now;
+        }
         globalStore.storeData(KEY,false);
         if (this.actionFunction) this.actionFunction(100);
         if (! opt_noSend){
             splitsupport.sendToFrame('dimm',{
                 value: false
             })
+        }
+    }
+    toggle(){
+        if (this.isActive()){
+            this.trigger();
+        }
+        else{
+            let now=(new Date()).getTime();
+            if (this.lastOff > (now - 100)) {
+                return;//prevent a re-active in a remote channel action
+            }
+            this.activate();
         }
     }
     isActive(){

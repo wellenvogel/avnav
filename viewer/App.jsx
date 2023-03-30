@@ -47,7 +47,6 @@ import LocalStorage, {PREFIX_NAMES, STORAGE_NAMES} from './util/localStorageMana
 import splitsupport from "./util/splitsupport"
 import leavehandler from "./util/leavehandler"; //triggers querySplitMode
 import fullscreen from "./components/Fullscreen";
-import dimmHandler from './util/dimhandler';
 
 
 const DynamicSound=Dynamic(SoundHandler);
@@ -216,7 +215,7 @@ class App extends React.Component {
             }
         });
         fullscreen.init();
-        dimmHandler.init();
+        Dimmer.init();
         let startpage="warningpage";
         let firstStart=true;
         if (LocalStorage.hasStorage()){
@@ -298,6 +297,15 @@ class App extends React.Component {
                 this.history.push("addonpage", {activeAddOn: addon});
             }
         },'addon',['0','1','2','3','4','5','6','7']);
+        GuiHelpers.keyEventHandler(this,(component,action)=>{
+            Dimmer.toggle();
+        },'global','toggledimm')
+        GuiHelpers.keyEventHandler(this,(component,action)=>{
+            Dimmer.activate();
+        },'global','dimmon');
+        GuiHelpers.keyEventHandler(this,(component,action)=>{
+            Dimmer.trigger();
+        },'global','dimmoff');
         this.newDeviceHandler=this.newDeviceHandler.bind(this);
         this.subscription=AndroidEventHandler.subscribe('deviceAdded',this.newDeviceHandler);
         this.remoteChannel=remotechannel;
