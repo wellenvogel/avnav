@@ -344,8 +344,8 @@
             },
             OBPPLOTTERV3: {
                 parameters: {
-                    AVNAV_DISPLAY_DIMENSIONS: '245,1920,150,1280',
-                    AVNAV_DPI: '96',
+                    AVNAV_DISPLAY_DIMENSIONS: '217,1280,136,800',
+                    AVNAV_DPI: '150',
                     AVNAV_HAT: 'NONE',
                     AVNAV_KEYHEIGHT: '7',
                     AVNAV_STARTX: 'yes',
