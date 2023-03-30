@@ -11,7 +11,7 @@ WS_COMMENT="#WAVESHAREB_DO_NOT_DELETE"
 #/boot/config.txt
 read -r -d '' CFGPAR <<'CFGPAR'
 dtparam=spi=on
-dtoverlay=mcp2515-can0,oscillator=16000000,interrupt=25,,spimaxfrequency=1000000
+dtoverlay=mcp2515-can0,oscillator=16000000,interrupt=25,spimaxfrequency=1000000
 dtoverlay=sc16is752-spi1,int_pin=24
 CFGPAR
 
@@ -22,7 +22,7 @@ read -r -d '' CAN0 << 'CAN0'
 auto can0
 iface can0 can static
 bitrate 250000
-pre-up ip link set can0 type can restart-ms 100
+pre-up /sbin/ip link set $IFACE type can restart-ms 100
 down /sbin/ip link set $IFACE down
 up /sbin/ifconfig $IFACE txqueuelen 10000
 CAN0
