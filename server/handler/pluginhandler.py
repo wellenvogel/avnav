@@ -474,7 +474,7 @@ class AVNPluginHandler(AVNWorker):
 
   def isHidden(self,name):
     ev=os.getenv(ENV_PREFIX+normalizedName(name))
-    if ev:
+    if ev == '1':
       return True
     return False
 
