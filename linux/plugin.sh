@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 
 usage(){
     echo "usage: $0 hide plugin"
@@ -47,6 +47,19 @@ if [ "$1" = "hide" ]  ; then
   echo "export $PREFIX$name" >> "$CFG" || ecfg
   exit 0
 fi
+if [ "$1" = "hideIf" ]  ; then
+  [ "$2" = "" ] && err "missing parameter plugin"
+  name=`gn "$2"`
+  if [ -f "$CFG" ] ; then
+    if grep -q "^ *$PREFIX$name" "$CFG" ; then
+      echo "$2 already set"
+      exit 0
+    fi
+  fi  
+  echo "$PREFIX$name=1" >> "$CFG" || ecfg
+  echo "export $PREFIX$name" >> "$CFG" || ecfg
+  exit 0
+fi
 if [ "$1" = "unhide" ] ; then
   [ "$2" = "" ] && err "missing parameter plugin"
   name=`gn "$2"`
@@ -54,6 +67,8 @@ if [ "$1" = "unhide" ] ; then
     if grep -q "^ *$PREFIX$name" "$CFG" ; then
       sed -i "/$PREFIX$name/d" "$CFG" || ecfg
     fi
+  echo "$PREFIX$name=0" >> "$CFG" || ecfg
+  echo "export $PREFIX$name" >> "$CFG" || ecfg
   fi
   exit 0
 fi
