@@ -107,11 +107,7 @@
         AVNAV_HAT: {r:getValue,s:setValue},
         AVNAV_CONFIG_SEQUENCE: {r:getValue,s:setValue}
     };
-    let HATS=['PICANM','WAVESHAREA8','WAVESHAREA12','WAVESHAREB','WAVESHARE2CH'];
-    for (let hi in HATS){
-        let hat=HATS[hi];
-        fields["AVNAV_"+hat+"_HAT"]={r:getValue,s:setValue};
-    }
+    
     let templateReplace=function(template,replace){
         if (! template) return;
         let rt=template.split('\n');
@@ -179,12 +175,12 @@
     let fillSelect=function(parent,data){
         if (! parent || ! data) return;
         let defaultL=parent.getAttribute('data-default');
-        let keys=Object.keys(data);
+        let keys=(data instanceof Array)?data:Object.keys(data);
         keys.sort();
         for (let li in keys){
             let lname=keys[li];
             let entry=document.createElement('option');
-            let value=data[lname];
+            let value=(data instanceof Array)?lname:data[lname];
             if (typeof(value) === 'object'){
                 value=lname;
             }
@@ -261,20 +257,7 @@
             field.s(document.getElementById(k),v);
         }
     }
-    let setHats = function (newHat) {
-        let parameters = {};
-        for (let hi in HATS) {
-            let hat = HATS[hi];
-            let cfg = "AVNAV_" + hat + "_HAT";
-            if (hat == newHat) {
-                parameters[cfg] = 'yes';
-            }
-            else {
-                parameters[cfg] = 'no';
-            }
-        }
-        setFieldValues(parameters);
-    }
+    
     window.addEventListener('load',function(){
        console.log("loaded");
        let fieldParent=document.getElementById('parameterContainer');
@@ -368,22 +351,12 @@
             let board=BASE_BOARDS[ev.target.value];
             if (! board) return;
             setFieldValues(board.parameters);
-            setHats();
         })
        }
+       let HATS=['NONE','PICANM','WAVESHAREA8','WAVESHAREA12','WAVESHAREB','WAVESHARE2CH'];
        let hats=document.getElementById('AVNAV_HAT');
        if (hats){
-            let hatConfig={NONE:{}};
-            for (let hi in HATS){
-                let hat=HATS[hi];
-                hatConfig[hat]={
-                }
-            }
-            fillSelect(hats,hatConfig);
-            hats.addEventListener('change',function(ev){
-                let nh=ev.target.value;
-                setHats(nh);
-            });
+            fillSelect(hats,HATS);
        }
        let bt=document.getElementById('download');
        bt.addEventListener('click',function(){

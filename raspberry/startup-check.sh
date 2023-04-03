@@ -209,43 +209,52 @@ LAST_DATA+=("LAST_MCS='$LAST_MCS'")
 
 declare -A HATS=([PICANM]=setup-picanm.sh [WAVESHAREA8]=setup-waveshare-a8.sh [WAVESHAREA12]=setup-waveshare-a12.sh [WAVESHAREB]=setup-waveshare-b.sh [WAVESHARE2CH]=setup-waveshare-2ch.sh)
 
-for hat in "${!HATS[@]}"
-do
-    key="AVNAV_${hat}_HAT"
-    last="LAST_${hat}_HAT"
-    value="${!key}"
-    lastvalue="${!last}"
-    script="$pdir/${HATS[$hat]}"
-    if [ ! -x "$script" ] ; then
-        log "script $script for $hat does not exist"
-    else
-        mode=''
-        if [ "$value" != "$lastvalue" -o $force = 1 ] ;then
-            mode=$MODE_EN
-            if [ "$value" != yes ] ; then
-                mode=$MODE_DIS
-            fi
+
+hatScript=''
+getHatScript(){
+    hatScript="${HATS[$1]}"
+    if [ "$hatScript" = "" ] ; then 
+       log "WARNING: unknown HAT $1, cannot $2"
+       return 1 
+    fi
+    hatScript="$pdir/$hatScript"
+    if [ ! -x "$hatScript" ] ; then
+        log "ERROR: script $hatScript for hast $1 not found, cannot $2"
+        return 1
+    fi
+    return 0
+}
+
+if [ "$AVNAV_HAT" != "$LAST_HAT" -o $force = 1 ] ; then
+    if [ "$AVNAV_HAT" != "$LAST_HAT" ] ; then
+      #try to disable old
+      if [ "$LAST_HAT" != "" -a "$LAST_HAT" != NONE ] ; then
+        if getHatScript "$LAST_HAT" $MODE_DIS ; then
+            "$hatScript" $MODE_DIS    
         fi
-        if [ "$mode" != "" ] ; then
-            hasChanges=1
-            log "HAT $hat changed, running check $script"
-            $script $mode
+      fi
+    fi
+    if [ "$AVNAV_HAT" != "" -a "$AVNAV_HAT" != NONE ] ; then
+        if getHatScript "$AVNAV_HAT" $MODE_EN ; then
+            "$hatScript" $MODE_EN
             res=$?
             if [ "$res" = 1 ] ; then
-                if [ "$mode" = $MODE_EN ] ; then
-                    log "reboot requested by $hat"
-                    needsReboot=1
-                fi
+                log "reboot requested by $AVNAV_HAT"
+                needsReboot=1 
             fi
-            if [ "$res" -ge 0 ] ; then
-              lastvalue="$value"  
+            if [ $res -ge 0 ] ; then
+                LAST_HAT="$AVNAV_HAT"
+                hasChanges=1
             fi
-        else
-            log "HAT $hat unchanged $value"
         fi
+    else
+        LAST_HAT="$AVNAV_HAT"
+        hasChanges=1    
     fi
-    LAST_DATA+=("$last='$lastvalue'")
-done
+else
+    log "AVNAV_HAT unchanged $AVNAV_HAT"
+fi
+LAST_DATA+=("LAST_HAT='$LAST_HAT'")
 
 gn(){
     echo "$1" | tr -cd '[a-zA-Z0-9]' | tr '[a-z]' '[A-Z]'
