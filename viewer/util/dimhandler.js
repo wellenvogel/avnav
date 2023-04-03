@@ -131,8 +131,8 @@ class DimmHandler{
         }
         else{
             let now=(new Date()).getTime();
-            if (this.lastOff > (now - 100)) {
-                return;//prevent a re-active in a remote channel action
+            if (this.lastOff > (now - parseFloat(globalStore.getData(keys.properties.remoteDimGuard,200)))) {
+                return;//prevent a re-activate in a remote channel action
             }
             this.activate();
         }

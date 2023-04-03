@@ -416,6 +416,7 @@ let keys={
         remoteChannelRead: new SplitProperty(false,'read from remote channel',PropertyType.CHECKBOX),
         remoteChannelWrite: new SplitProperty(false,'write to remote channel',PropertyType.CHECKBOX),
         remoteGuardTime: new Property(2,'time(s) to switch read/write',PropertyType.RANGE,[1,10]),
+        remoteDimGuard: new Property(200,'time (ms) before a toggle is accepted from remote',PropertyType.RANGE,[100,1000]),
 
         style: {
             buttonSize: new Property(50, "Button Size(px)", PropertyType.RANGE, [35, 100]),
