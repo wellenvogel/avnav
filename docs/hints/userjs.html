@@ -45,7 +45,7 @@
         rpmWidget, <a href="https://github.com/wellenvogel/avnav/blob/master/server/plugins/testPlugin/plugin.js">testPlugin</a>:
         testPluing_simpleWidget )</li>
       <li>Anpassung/Erweiterung der Grafik Widgets mit <a href="https://canvas-gauges.com/">canvas
-          gauges</a> (Beispiel 2 - <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">user.js</a>:
+          gauges</a> (Beispiel 2 - <a href="https://github.com/wellenvogel/avnav/blob/edda409268c6ff71143f8ea665e1a729ccc4ff13/viewer/static/user.js#L69">user.js</a>:
         rpmGauge)<br>
         Hiermit ist es auch möglich, Parameter zugänglich zu machen, die in den
         bisher vorhandenen Widgets nicht enthalten sind</li>
@@ -65,6 +65,43 @@
       Für map Widgets kann über das Api auf die <a href="https://www.movable-type.co.uk/scripts/geodesy-library.html">zugrunde
         liegenden Bibliotheken</a> für geografische Berechnungen zugegriffen
       werden (Funktion LatLon und Dms).</p>
+    <h3>Canvas Gauges</h3>
+    <p>Für <a href="https://canvas-gauges.com/">Canvas Gauge</a> Widgets können
+      bestimmte Parameter (siehe <a href="https://canvas-gauges.com/documentation/user-guide/configuration">Canvas
+        Gauges Beschreibung</a>) entweder auf feste Werte gesetzt werden (dann
+      müssen sie in der Widget Definition vorhanden sein - siehe die Werte im <a
+        href="https://github.com/wellenvogel/avnav/blob/edda409268c6ff71143f8ea665e1a729ccc4ff13/viewer/static/user.js#L134">Beispiel
+        ab Zeile 134</a>) oder sie können für den Nutzer im Layout Editor
+      einstellbar gemacht werden (dann müssen sie als <a href="#widgetparameter">editable
+        WidgetParameter</a> gesetzt werden - im <a href="https://github.com/wellenvogel/avnav/blob/edda409268c6ff71143f8ea665e1a729ccc4ff13/viewer/static/user.js#L156">Beispiel
+        ab Zeile 156</a>).</p>
+    <p>Ausserdem kann eventuell ein <a href="#formatter">eigener Formatter</a>
+      definiert werden und als default für das Widget gesetzt werden.</p>
+    <p>Wenn man für bestimmte <a href="#predefinedparameters">vordefinierte
+        Parameter</a> vermeiden möchte, das sie im Layout Editor für den Nutzer
+      sichtbar werden, müssen sie in den editable Parameters mit false angegeben
+      werden.</p>
+    <div class="code">var rpmGaugeUserParameter = {
+      ...
+      formatter: false,
+      formatterParameters: false
+      };</div>
+    <p>Für jedes gauge widget muss der Parameter "type" angegeben werden -
+      entweder "radialGauge" oder "linearGauge".<br>
+      Ausserdem haben sie den zusätzlichen Parameter</p>
+    <div class="code">drawValue (boolean)</div>
+    <p>Dieser Parameter steuert, ob auch eine numerische Anzeige des Wertes
+      erfolgen soll. Der originale "valueBox" Parameter der canvas gauges wird
+      ignoriert!</p>
+    <p>Neben den Parametern kann auch noch eine translateFunction definiert
+      werden. Diese erhält als Parameter ein Objekt mit den aktuellen Werten
+      aller Parameter und kann dieses modifizieren, bevor sie an
+      canvas gauges übergeben wird (<a href="https://github.com/wellenvogel/avnav/blob/edda409268c6ff71143f8ea665e1a729ccc4ff13/viewer/static/user.js#L104">Beispiel
+        ab Zeile 104</a>). Diese Funktion muss "zustandsfrei" sein, d.h. die
+      Werte der Rückgabe dürfen nur von den übergebenen Werten (und anderen
+      unveränderlichen Werten) abhängig sein. Andernfalls werden potentiell
+      Änderungen nicht in der Anzeige sichtbar.</p>
+    <h3>Eigene Widgets</h3>
     <p>Für ein selbst geschriebenes Widget können die folgenden
       Funktionen/Eigenschaften implementiert werden:</p>
     <table style="width: 100%" border="1">
@@ -343,7 +380,7 @@
     </table>
     <p><br>
     </p>
-    <h2>Widget Parameter</h2>
+    <h2><a name="widgetparameter" id="widgetparameter"></a>Widget Parameter</h2>
     <p>Neben der Widget Definition können hier noch Parameter angegeben werden,
       die dann im Layout Editor für das Widget angezeigt werden.</p>
     <p>Beispiele sind im <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/user.js">user.js
@@ -394,10 +431,11 @@
         </tr>
       </tbody>
     </table>
-    <p>Es gibt eine Reihe von vordefinierten Parametern für den Layout Editor.
-      Bei diesen wird zur Beschreibung kein Objekt mit Eigenschaften angegeben,
-      sonder nur true oder false (das zeigt, ob sie zum Ändern angeboten werden
-      sollen oder nicht).</p>
+    <p><a name="predefinedparameters" id="predefinedparameters"></a>Es gibt eine
+      Reihe von vordefinierten Parametern für den Layout Editor. Bei diesen wird
+      zur Beschreibung kein Objekt mit Eigenschaften angegeben, sonder nur true
+      oder false (das zeigt, ob sie zum Ändern angeboten werden sollen oder
+      nicht).</p>
     <p>Das sind:</p>
     <ul>
       <li>caption (STRING)</li>

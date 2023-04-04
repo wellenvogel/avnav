@@ -63,6 +63,39 @@
     <p>For map widgets you can access the <a href="https://www.movable-type.co.uk/scripts/geodesy-library.html">underlying
         libraries</a> for geographical computations via the API (functions
       LatLon and Dms).</p>
+    <h3>Canvas Gauges</h3>
+    <p>For <a href="https://canvas-gauges.com/">canvas gauge</a> widgets you
+      can set some parameters (see <a href="https://canvas-gauges.com/documentation/user-guide/configuration">canvas
+        gauges description</a>) either to fixed values (in this case they must
+      become part of the widget definition - see the values in the&nbsp; <a href="https://github.com/wellenvogel/avnav/blob/edda409268c6ff71143f8ea665e1a729ccc4ff13/viewer/static/user.js#L134">example
+        starting from line 134</a>) or you can make them settable by the user
+      within the layout editor (put them into the <a href="#widgetparameter">editable
+        widget parameters</a>&nbsp; -&nbsp; <a href="https://github.com/wellenvogel/avnav/blob/edda409268c6ff71143f8ea665e1a729ccc4ff13/viewer/static/user.js#L156">example
+        starting from line 156</a>).</p>
+    <p>Additionally you can define an <a href="#formatter">own formatter</a>
+      and set it as default for the widget.</p>
+    <p>If you would like to hide some <a href="#predefinedparameters">predefined
+        parameters</a> in the layout editor you need to set them to "false" in
+      the editable parameters.</p>
+    <div class="code">var rpmGaugeUserParameter = {
+      ...
+      formatter: false,
+      formatterParameters: false
+      };</div>
+    <p>For every gauge widget you need to provide the parameter "type" - either
+      "radialGauge" or "linearGauge".<br>
+      Additionally they have the parameter</p>
+    <div class="code">drawValue (boolean)</div>
+    <p>This parameter controls whether the value is displayed as numeric
+      (additionally) or not. The original parameter "valueBox" from canvas
+      gauges is ignored!</p>
+    <p>Beside the parameters you can also define a translateFunction. This
+      function receives an object with all the current values and can modify
+      this bevore it is set at canvas gauges(<a href="https://github.com/wellenvogel/avnav/blob/edda409268c6ff71143f8ea665e1a729ccc4ff13/viewer/static/user.js#L104">example
+        from line 104</a>). This function needs to be "stateless". That means
+      the output must only depend form the input or any other fixed values.
+      Otherwise some changes potentially will not been drawn.</p>
+    <h3>Own Widgets</h3>
     <p>For an own widget the following functions/properties can be implemented:</p>
     <table style="width: 100%" border="1">
       <tbody>
@@ -385,9 +418,10 @@
         </tr>
       </tbody>
     </table>
-    <p>There are some predefined parameters for the layout editor. For those no
-      describing object with properties should be provided, just true or false
-      (this defines whether or not they will be prompted in the layout editor).</p>
+    <p><a name="predefinedparameters" id="predefinedparameters"></a>There are
+      some predefined parameters for the layout editor. For those no describing
+      object with properties should be provided, just true or false (this
+      defines whether or not they will be prompted in the layout editor).</p>
     <p>Those are:</p>
     <ul>
       <li>caption (STRING)</li>
