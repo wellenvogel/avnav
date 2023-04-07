@@ -39,14 +39,16 @@ from avnav_util import AVNLog, AVNUtil
 
 
 class TimeSource(object):
-  SOURCE_GPS="gps"
-  SOURCE_NTP="ntp"
-  def __init__(self,name,fetchFunction):
-    self.lastSet=0
-    self.lastValid=0
+  SOURCE_GPS="gpstime"
+  SOURCE_NTP="ntptime"
+  def __init__(self,name,fetchFunction,statusFunction):
+    self.lastSet=None
+    self.lastValid=None
     self.externalTs=None
     self.name=name
     self.fetchFunction=fetchFunction
+    self.statusFunction=statusFunction
+    statusFunction(self.name,"not checked",WorkerStatus.INACTIVE)
 
   def equal(self,other):
     if other is None:
@@ -62,10 +64,12 @@ class TimeSource(object):
     self.externalTs=externalTs
     self.lastSet=timestamp
     if externalTs is not None:
+      self.statusFunction(self.name,"time %s"%self.formatTs(externalTs),WorkerStatus.NMEA)
       if not wasValid:
         AVNLog.info("new %s time: %s",self.name,self.formatTs(externalTs))
       self.lastValid=timestamp
     else:
+      self.statusFunction(self.name,"no valid time",WorkerStatus.ERROR)
       if wasValid:
         AVNLog.info("lost %s time",self.name)
     return self.externalTs
@@ -209,25 +213,31 @@ class AVNBaseConfig(AVNWorker):
   TIME_CHILD="settime"
   SYSTIME_CHILD="systemtime"
   GPSPOS_CHILD="position"
-  GPSTIME_CHILD="gpstime"
+  NEXT_CHILD="timecheck"
   def diffMonotonicOk(self,delta):
     allowedBackTime=self.P_MAXTIMEBACK.fromDict(self.param)
     if allowedBackTime < 2:
       allowedBackTime=2
     return abs(delta) < allowedBackTime
+
+  def _shouldCheck(self,lastchecktime,offset):
+    if lastchecktime is None:
+      return True
+    return time.monotonic() >= (lastchecktime+offset)
+
   def run(self):
     self.setInfo(self.TIME_CHILD,'disabled',WorkerStatus.INACTIVE)
     self.setInfo(self.GPSPOS_CHILD,'no valid position',WorkerStatus.ERROR)
     hasFix=False
-    lastchecktime=0
-    gpsTime=TimeSource(TimeSource.SOURCE_GPS,self.fetchGpsTime)
-    ntpTime=TimeSource(TimeSource.SOURCE_NTP,self.fetchNtpTime)
-    lastSource=None # type: TimeSource
+    lastchecktime=None
+    gpsTime=TimeSource(TimeSource.SOURCE_GPS,self.fetchGpsTime,self.setInfo)
+    ntpTime=TimeSource(TimeSource.SOURCE_NTP,self.fetchNtpTime,self.setInfo)
+    lastSource=gpsTime
     startutc=time.time()
     startupTime=time.monotonic()
     diffToMonotonic=startutc-startupTime
     AVNLog.debug("monotonic diff startup %f",diffToMonotonic)
-    timeFalse=False
+    lastGpsOk=False
     while not self.shouldStop():
       settimeperiod=self.P_SETTIME_PERIOD.fromDict(self.param)
       switchtime=self.P_SWITCHTIME.fromDict(self.param)
@@ -282,43 +292,47 @@ class AVNBaseConfig(AVNWorker):
           if not currentStatus or currentStatus.status == WorkerStatus.INACTIVE:
             self.setInfo(self.TIME_CHILD,"checking",WorkerStatus.RUNNING)
           checkSource=None
-          if gpsTime.fetch():
-            self.setInfo(self.GPSTIME_CHILD,
-                         "UTC: %s"%datetime.datetime.utcfromtimestamp(gpsTime.getCurrent()).isoformat(),WorkerStatus.NMEA)
-            #valid GPS time
-            if gpsTime.equal(lastSource):
-              if timeFalse:
-                if curmonotonic > (lastchecktime + switchtime):
-                  checkSource=gpsTime
-              else:
-                if curmonotonic > (lastchecktime + settimeperiod):
-                  checkSource=gpsTime
+          gpsOk=gpsTime.fetch()
+          #compute next check time
+          nextCheck=None
+          if gpsOk:
+            if not lastGpsOk and lastchecktime is not None:
+              lastchecktime=curmonotonic
+            lastGpsOk=True
+            checkSource=gpsTime
+            #1 startup - do it once now
+            if lastchecktime is None:
+              nextCheck=curmonotonic-1
             else:
-              #last source was not GPS
-              #immediately use the GPS
-              checkSource=gpsTime
+              if gpsTime.equal(lastSource):
+                nextCheck=lastchecktime+settimeperiod
+              else:
+                nextCheck=lastchecktime+switchtime
           else:
-            self.setInfo(self.GPSTIME_CHILD,"no valid time",WorkerStatus.ERROR)
-            #no valid GPS time
-            if gpsTime.equal(lastSource):
-              #change source
-              #wait at min switchtime after last check AND switschtime after GPS is going invalid
-              #this should help if the GPS becomes invalid for some time
-              if curmonotonic > (lastchecktime + switchtime) and curmonotonic > (gpsTime.lastValid + switchtime):
-                if ntpTime.fetch():
-                  checkSource=ntpTime
+            if lastGpsOk:
+              lastchecktime=curmonotonic
+            lastGpsOk=False
+            if lastchecktime is None:
+              #wait to check NTP on startup
+              nextCheck=startupTime+switchtime
             else:
-              #we are still on NTP or lastSource was None (startup)
-              if timeFalse:
-                if curmonotonic > (lastchecktime + switchtime):
-                  if ntpTime.fetch():
-                    checkSource=ntpTime
+              if ntpTime.equal(lastSource):
+                nextCheck=lastchecktime+settimeperiod
               else:
-                #startup without gps or repeated ntp
-                if curmonotonic > (lastchecktime + settimeperiod) and curmonotonic > (startupTime + switchtime):
-                  if ntpTime.fetch():
-                    checkSource=ntpTime
-          if checkSource is not None:
+                nextCheck=lastchecktime+switchtime
+            if nextCheck <= curmonotonic:
+              if ntpTime.fetch():
+                checkSource=ntpTime
+              else:
+                #try again to fetch NTP after switchtime
+                nextCheck=curmonotonic+switchtime
+                lastchecktime=curmonotonic
+          diff=nextCheck-curmonotonic
+          if diff < 0:
+            diff=0
+          self.setInfo(self.NEXT_CHILD,"in %d seconds"%diff,WorkerStatus.NMEA)
+
+          if checkSource is not None and nextCheck <= curmonotonic:
             now=time.time()
             AVNLog.debug("checking time from %s(%s) against local %s",checkSource.name,
                          TimeSource.formatTs(checkSource.getCurrent()),
@@ -327,7 +341,6 @@ class AVNBaseConfig(AVNWorker):
             lastSource=checkSource
             lastchecktime=curmonotonic
             if abs(now - checkSource.getCurrent()) > allowedDiff:
-              timeFalse=True
               AVNLog.warn("UTC time diff detected system=%s, %s=%s,setting system time",
                           TimeSource.formatTs(now),
                           checkSource.name,
@@ -360,7 +373,6 @@ class AVNBaseConfig(AVNWorker):
                              "last setting UTC to %s from %s"%(curts.isoformat(),checkSource.name),
                              WorkerStatus.NMEA)
                 AVNLog.info("setting system time to %s succeeded",newtime)
-                timeFalse=False
               lastchecktime=curmonotonic
             else:
               self.setInfo(self.TIME_CHILD,"Last check ok at UTC: %s from %s"%(
