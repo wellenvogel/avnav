@@ -2,9 +2,18 @@ xset s noblank
 xset s off
 xset -dpms
 pdir=`dirname $0`
+includeDir="$pdir/.xinitrc.d"
+runIncludes(){
+  [ ! -d "$includeDir" ] && return
+  for include in `find "$includeDir" -name "${1}*"`
+  do
+    . "$include"
+  done
+}
+
 CFG=/boot/avnav.conf
 [ -f $CFG ] && . $CFG
-
+runIncludes early
 [ "$AVNAV_DPI" = "" ] && AVNAV_DPI=96
 if [ "$AVNAV_DPI" != "" ] ; then
   xrandr --dpi $AVNAV_DPI
@@ -51,6 +60,6 @@ gsettings set org.onboard.window.landscape dock-height $dockHeight
 sz=`echo "scale=0;12*$AVNAV_DPI/166" | bc -l`
 [ "$sz" -lt 8 ] && sz=8
 sed -i  "s?<size> *[0-9]* *</size>?<size>$sz</size>?" $pdir/.config/openbox/rc.xml
-
+runIncludes late
 dbus-launch --exit-with-session openbox-session
 
