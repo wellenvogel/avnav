@@ -56,6 +56,7 @@ ospackage {
             include 'rename-interface.sh'
             include 'checkLink.sh'
             include 'uart_control'
+            include 'patchServerConfig.py'
         }
         from('raspberry') {
             include 'avnav_server.xml'
