@@ -44,9 +44,9 @@ class ConfigItem:
   def check(self):
     if self.handler is None:
       raise Exception("missing parameter handler")
-    if len(self.keys) is 0 and len(self.attributes) is 0 and not self.doDelete:
+    if len(self.keys) == 0 and len(self.attributes) == 0 and not self.doDelete:
       raise Exception("missing parameter keys and/or attributes")
-    if self.doDelete and len(self.attributes) is not 0:
+    if self.doDelete and len(self.attributes) != 0:
       raise Exception("no attributes allowed for delete")
   def __str__(self):
     return "handler={handler}, child={child}, keys={xkeys}, doDelete={doDelete} attributes={xattributes}".\
@@ -159,6 +159,7 @@ if __name__ == '__main__':
     err("file %s does not exist"%filename)
   if not os.access(filename,os.W_OK):
     err("cannot write file %s"%filename)
+  curState=os.stat(filename)
   tmpfile=tempfile.NamedTemporaryFile(mode="w",dir=os.path.dirname(filename),prefix=os.path.basename(filename))
   if debug:
     print("tmpfile=",tmpfile.name)
@@ -184,6 +185,8 @@ if __name__ == '__main__':
   if changed:
     domObject.writexml(tmpfile)
     tmpfile.flush()
+    os.chown(tmpfile.name,curState.st_uid,curState.st_gid)
+    os.chmod(tmpfile.name,curState.st_mode)
     os.replace(tmpfile.name,filename)
     try:
       tmpfile.close()
