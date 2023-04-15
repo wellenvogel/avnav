@@ -82,3 +82,10 @@
     background-color: white;
     padding: 2em;
 }
+.configui #warn{
+    display: none;
+    color: red;
+}
+.configui #warn.warn{
+    display: block;
+}

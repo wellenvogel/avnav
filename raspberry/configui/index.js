@@ -439,5 +439,11 @@
                 bt.addEventListener('click',hideDpi);
             }
        });
+       if (window.location.href.match(/preview/i)){
+            let warn=this.document.getElementById('warn');
+            if (warn){
+                warn.classList.add("warn");
+            }
+       }
     });
 })()
