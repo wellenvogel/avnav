@@ -1,8 +1,7 @@
 allow-hotplug wlan0
 
-iface wlan0 inet static
+iface wlan0 inet manual
   wireless-power off
-  address 192.168.60.10
-  netmask 255.255.255.0
-  up /usr/lib/avnav/raspberry/hostapd wlan0
-  down /usr/lib/avnav/raspberry/hostapd -s wlan0
+  up /sbin/ip -4 addr replace 192.168.60.10/24 dev $IFACE || true
+  up /usr/lib/avnav/raspberry/hostapd $IFACE
+  down /usr/lib/avnav/raspberry/hostapd -s $IFACE
