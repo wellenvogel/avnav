@@ -312,17 +312,53 @@ if [ -d "$PLUGINDIR" ] ; then
                         needsReboot=1
                     fi
                 fi
-                if [ $rt -ge 0 ] ; then
+                if [ $rt -ge 0 -o "$mode" = $MODE_DIS ] ; then
                     lastvalue="$value"    
                 fi
             fi
-            LAST_DATA+=("$lastname=${!vname}")
+            LAST_DATA+=("$lastname=$lastvalue")
           else  
             log "cannot handle $sn, permissions not correct"  
           fi
         fi
     done
 fi
+
+#drivers
+driverscript="$pdir/driver/setup.sh"
+
+if [ -x "$driverscript" ] ; then
+    modules=($("$driverscript" list))
+    for mod in ${modules[@]}
+    do
+        vname="AVNAV_MODULE_$mod"
+        lastname="LAST_MODULE_$mod"
+        lastvalue="${!lastname}"
+        value="${!vname}"
+        if [ "$lastvalue" != "$value" -o $force = 1 ] ; then
+            log "$vname=$value"
+            hasChanges=1
+            mode=$MODE_DIS
+            if [ "$value" = yes ] ; then
+                mode=$MODE_EN
+            fi
+            "$driverscript" $mode $mod
+            res=$?
+            if [ $res = 1 -a $mode = $MODE_EN ]; then
+                needsReboot=1
+            fi
+            if [ $res -ge 0 -o $mode = $MODE_DIS ] ; then
+                lastvalue=$value
+            fi
+        else
+            log "$vname unchanged $value"
+        fi
+        LAST_DATA+=("$lastname=${lastvalue}")
+    done
+else
+    log "$driverscript not found, do not handle modules"
+fi
+
 
 log "startup check done"
 if [ "$hasChanges" = 1 ]; then
