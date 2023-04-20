@@ -95,6 +95,5 @@ systemctl restart avnav
 systemctl enable avnav-iptables
 systemctl start avnav-iptables
 systemctl enable avnav-startup
-systemctl start avnav-startup
 
 exit 0
