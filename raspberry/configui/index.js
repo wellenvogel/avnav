@@ -105,7 +105,9 @@
         AVNAV_BASE_BOARD: {r:getValue,s:setValue},
         AVNAV_OBPPLOTTERV3: {r:getValue,s:setValue},
         AVNAV_HAT: {r:getValue,s:setValue},
-        AVNAV_CONFIG_SEQUENCE: {r:getValue,s:setValue}
+        AVNAV_CONFIG_SEQUENCE: {r:getValue,s:setValue},
+        AVNAV_MODULE_RTL8188EU: {r:checkBox,s:setCheckBox},
+        AVNAV_MODULE_RTL8192EU: {r:checkBox,s:setCheckBox},
     };
     
     let templateReplace=function(template,replace){
