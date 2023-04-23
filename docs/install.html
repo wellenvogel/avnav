@@ -11,7 +11,8 @@
     <p>Eine Beschreibung der Versionen und Links zu den Downloads finden sich im
       <a href="release.html">Release Dokument</a>.</p>
     <p>Für Eilige ist hier der Link zum <a href="https://www.free-x.de/raspbian/bullseye">aktuellen
-        Image</a>.</p>
+        Image</a>, zu den <a href="../downloads/daily">Entwickler-Versionen</a>
+      und zu den <a href="../downloads/release">Release-Downloads</a>.</p>
     <p>Um den Start zu vereinfachen, gibt es fertige Images für den Raspberry
       Pi. Ab Version 20220421 unterstützen die Images sowohl den sogenannten
       "headless" Betrieb - d.h. es ist weder Tastatur noch Monitor am Pi
@@ -69,7 +70,7 @@
       werden soll ("Touch Variante")</p>
     <p>Einfacher geht es mit einer kleinen Web-Oberfläche <a href="../configGen/index.html">hier</a>.
     </p>
-    <a href="../configGen/index.html"><img src="ConfigImagesUi.png" class="fimage"></a>
+    <a href="../configGen/index.html"><img src="ConfigImagesUi.png" class="image"></a>
     <p>Die Bedeutung der Felder:</p>
     <table border="1" width="100%">
       <tbody>
@@ -102,13 +103,58 @@
             für den User "pi" sollte ebenfalls unbedingt geändert werden.</td>
         </tr>
         <tr>
-          <td>Configure MCS</td>
+          <td><a name="configBOARDS"></a>Base Board</td>
+          <td>None</td>
+          <td>Hier kann man aus unterstützten Basis-Platinen wählen.<br>
+            <ul>
+              <li><b>MCS:</b> Wenn diese Optoin aktiviert ist, wird beim
+                nächsten Bootvorgang die notwendige Software für den <a href="https://www.gedad.de/projekte/projekte-f%C3%BCr-privat/gedad-marine-control-server/">Marine
+                  Control Server von GeDad</a> aktiviert. Die Änderung der
+                Einstellung führt dann zu einem automatischen Reboot, wenn der
+                Raspberry das erste mal mit dieser Einstellung startet.</li>
+              <li><b>OBPPLOTTERV3:</b> Hiermit werden die Einstellungen für den
+                <a href="https://www.segeln-forum.de/thread/85423-10-1-raspberry-plotter-v3/?postID=2456379#post2456379">Open
+                  Boat Projects Plotter (V3) </a>gesetzt.</li>
+            </ul>
+          </td>
+        </tr>
+        <tr>
+          <td><a name="configHATS"></a>HAT</td>
+          <td>None</td>
+          <td>Hier kann man einen unterstützten Pi-HAT auswählen. AvNav wird die
+            entsprechenden Einträge für die Overlays in /boot/config.txt machen
+            und die CAN Netzwerk-Schnittstellen anlegen.<br>
+            <ul>
+              <li>WAVESHAREB: <a href="https://www.waveshare.com/wiki/RS485_CAN_HAT_%28B%29">waveshare
+                  RS485 CAN HAT (B)</a></li>
+              <li>WAVESHAREA8: <a href="https://www.waveshare.com/wiki/RS485_CAN_HAT">waveshare
+                  RS485 CAN HAT (8Mhz)<br>
+                </a></li>
+              <li>WAVESHAREA12: <a href="https://www.waveshare.com/wiki/RS485_CAN_HAT">waveshare
+                  RS485 CAN HAT (12 Mhz)</a></li>
+              <li>WAVESHARE2CH: <a href="https://www.waveshare.com/wiki/2-CH_CAN_HAT">waveshare
+                  2CH CAN HAT</a></li>
+              <li>PICANM: <a href="https://cdn.shopify.com/s/files/1/0563/2029/5107/files/pican-m_UGB_20.pdf?v=1619008196">PICAN-M</a></li>
+            </ul>
+          </td>
+        </tr>
+        <tr>
+          <td><a name="configMODULES"></a>Module RTL8188EU</td>
           <td>aus</td>
-          <td>Wenn diese Optoin aktiviert ist, wird beim nächsten Bootvorgang
-            die notwendige Software für den <a href="https://www.gedad.de/projekte/projekte-f%C3%BCr-privat/gedad-marine-control-server/">Marine
-              Control Server von GeDad</a> aktiviert. Die Änderung der
-            Einstellung führt dann zu einem automatischen Reboot, wenn der
-            Raspberry das erste mal mit dieser Einstellung startet.</td>
+          <td>Wenn eingeschaltet, wird der <a href="https://github.com/lwfinger/rtl8188eu/tree/v5.2.2.4">Kernel-Treiber</a>
+            für WLAN Adapter mit dem Chipsatz RTL8188EU per <a href="https://manpages.debian.org/unstable/dkms/dkms.8.en.html">DKMS</a>
+            eingerichtet.<br>
+            Wenn der Kernel des Systems aktualisiert wird (Kommandozeile) wird
+            der Treiber neu übersetzt.</td>
+        </tr>
+        <tr>
+          <td><a name="configMODULES"></a>Module RTL8192EU</td>
+          <td>aus</td>
+          <td>Wenn eingeschaltet, wird der <a href="https://github.com/Mange/rtl8192eu-linux-driver">Kernel
+              Treiber</a> für WLAN Adapter mit dem Chipsatz RTL8192EU per <a href="https://manpages.debian.org/unstable/dkms/dkms.8.en.html">DKMS</a>
+            eingerichtet.<br>
+            Wenn der Kernel des Systems aktualisiert wird (Kommandozeile) wird
+            der Treiber neu übersetzt.</td>
         </tr>
         <tr>
           <td>TimeZone</td>
@@ -452,7 +498,6 @@ echo "deb [signed-by=/usr/share/keyrings/oss.boating.gpg] https://www.free-x.de/
     <p> Ubuntu Jammy (amd64)</p>
     <div class="code">wget -O - https://www.free-x.de/ubuntu/oss.boating.gpg.key | gpg --dearmor | sudo tee /usr/share/keyrings/oss.boating.gpg
 echo "deb [signed-by=/usr/share/keyrings/oss.boating.gpg] https://www.free-x.de/ubuntu jammy main" | sudo tee -a /etc/apt/sources.list.d/boating.list</div>
-
     <p>Für die Installation auf einem Linux System muss man nach Einbindung der
       Paketquellen die folgenden Schritte ausführen:</p>
     <div class="code">sudo apt update 

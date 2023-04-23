@@ -10,8 +10,9 @@
     <h2> Releases </h2>
     <p>A description of the releases and download links can be found in the <a
         href="release.html">releases document</a>.</p>
-    <p>If you are in a hurry - this is the <a href="https://www.free-x.de/raspbian/bullseye">current
-        image</a>.</p>
+    <p>If you are in a hurry - those are the <a href="https://www.free-x.de/raspbian/bullseye">current
+        image</a>, the <a href="../downloads/daily">daily builds</a> and the <a
+        href="../downloads/release">release downloads</a>.</p>
     <p>To provide a "ready to go" solution there are some images for the
       raspberry pi you can use. <br>
       Since version 20220421 the images do support both the "headless" working
@@ -69,7 +70,7 @@
       display ("touch variant").</p>
     <p>More easily you can use a simple GUI that is provided <a href="../configGen/index.html">here</a>.
     </p>
-    <a href="../configGen/index.html"><img src="en_ConfigImagesUi.png" alt="" class="fimage"></a>
+    <a href="../configGen/index.html"><img src="en_ConfigImagesUi.png" alt="" class="image"></a>
     <p>The meaning of the fields:</p>
     <table border="1" width="100%">
       <tbody>
@@ -101,12 +102,60 @@
             one!</td>
         </tr>
         <tr>
-          <td>Configure MCS</td>
-          <td>false</td>
-          <td>When activated the image will set up the necessary software to
-            interact with the <a href="https://www.gedad.de/projekte/projekte-f%C3%BCr-privat/gedad-marine-control-server/">Marine
-              Control Server from GeDad</a>. This will cause an additional
-            reboot of the Pi when it starts up for the first time.</td>
+          <td><a name="configBOARDS"></a>Base Board</td>
+          <td>None</td>
+          <td>You can select one&nbsp; of the supported base boards.<br>
+            <ul>
+              <li><b>MCS:</b> If this option is activated the software for the <a
+                  href="https://www.gedad.de/projekte/projekte-f%C3%BCr-privat/gedad-marine-control-server/">Marine
+                  Control Server from GeDad</a> will be activated.</li>
+              <li><b>OBPPLOTTERV3:</b> This will set up the software for the <a
+                  href="https://www.segeln-forum.de/thread/85423-10-1-raspberry-plotter-v3/?postID=2456379#post2456379">Open
+                  Boat Projects Plotter (V3) </a>.</li>
+            </ul>
+          </td>
+        </tr>
+        <tr>
+          <td><a name="configHATS"></a>HAT</td>
+          <td>None</td>
+          <td>You can select one of the supported HATs. AvNav will create the
+            necessary entries for overlays in /boot/config.txt and will set up
+            the can network interfaces.<br>
+            <ul>
+              <li>WAVESHAREB: <a href="https://www.waveshare.com/wiki/RS485_CAN_HAT_%28B%29">waveshare
+                  RS485 CAN HAT (B)</a></li>
+              <li>WAVESHAREA8: <a href="https://www.waveshare.com/wiki/RS485_CAN_HAT">waveshare
+                  RS485 CAN HAT (8Mhz)<br>
+                </a></li>
+              <li>WAVESHAREA12: <a href="https://www.waveshare.com/wiki/RS485_CAN_HAT">waveshare
+                  RS485 CAN HAT (12 Mhz)</a></li>
+              <li>WAVESHARE2CH: <a href="https://www.waveshare.com/wiki/2-CH_CAN_HAT">waveshare
+                  2CH CAN HAT</a></li>
+              <li>PICANM: <a href="https://cdn.shopify.com/s/files/1/0563/2029/5107/files/pican-m_UGB_20.pdf?v=1619008196">PICAN-M</a></li>
+            </ul>
+          </td>
+        </tr>
+        <tr>
+          <td><a name="configMODULES"></a>Module RTL8188EU</td>
+          <td>off</td>
+          <td>If activated the <a href="https://github.com/lwfinger/rtl8188eu/tree/v5.2.2.4">kernel
+              driver module</a> for wifi adapters with the chip set RTL8188EU
+            will be activated via <a href="https://manpages.debian.org/unstable/dkms/dkms.8.en.html">DKMS</a>
+            .<br>
+            If you would upgrade the kernel of your system (from the command
+            line) the kernel module will be compiled to fit the newly installed
+            kernel.</td>
+        </tr>
+        <tr>
+          <td><a name="configMODULES"></a>Module RTL8192EU</td>
+          <td>off</td>
+          <td>If activated the <a href="https://github.com/Mange/rtl8192eu-linux-driver">kernel
+              driver module</a> for wifi adapters with the chip set RTL8192EU
+            will be activated via <a href="https://manpages.debian.org/unstable/dkms/dkms.8.en.html">DKMS</a>
+            .<br>
+            If you would upgrade the kernel of your system (from the command
+            line) the kernel module will be compiled to fit the newly installed
+            kernel.</td>
         </tr>
         <tr>
           <td>TimeZone</td>
@@ -409,7 +458,7 @@
     Information is available at his github <a href="https://github.com/free-x/avnav/wiki">wiki</a>.
     <p>To set up the repository on your system, run the following commands (only
       required if you don't use the headless or the AvNav touch images):</p>
-    </p>
+    <p></p>
     <p> Debian Buster (amd64,armhf,arm64)</p>
     <div class="code">wget https://www.free-x.de/debian/oss.boating.gpg.key
 sudo apt-key add oss.boating.gpg.key
