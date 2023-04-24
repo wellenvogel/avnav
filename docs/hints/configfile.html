@@ -17,7 +17,12 @@
       einem Template erzeugt - passend für den <a href="https://github.com/wellenvogel/avnav/blob/master/raspberry/avnav_server.xml">Raspberry</a>
       oder <a href="https://github.com/wellenvogel/avnav/blob/master/linux/avnav_template.xml">andere
         Systeme</a>.<br>
-      Bei Updates der AvNav Software wird diese Datei im Allgemeinen nicht
+      Dieses Template ist auf dem Raspberry Pi (mit dem Paket avnav-raspi)&nbsp;
+      die Datei /etc/avnav_server.xml (ab 202304xx). Wenn diese nicht existiert,
+      wird eine Datei aus dem Paket als Template genutzt.<br>
+      Falls AvNav von der Kommandozeile über das Kommando "avnav" gestartet
+      wird, kann mit der Option -t ein Template angegeben werden.</p>
+    <p>Bei Updates der AvNav Software wird diese Datei im Allgemeinen nicht
       geändert. Es kann aber sein, dass für neue Funktionen neue Einträge nötig
       werden. Dann wird in den <a href="../release.html">Release Notes</a>
       darauf hingewiesen.</p>
@@ -26,6 +31,9 @@
       der xml Datei fehlschlägt, liest er stattdessen die .ok Datei. Diese
       Funktion soll verhindern, dass nach einer Änderung, die AvNav in manchen
       Situation selbst vornimmt, der nächste Start ggf. scheitert.</p>
+    <p>Wenn AvNav nicht mehr starten kann wegen Fehler in der Konfiguration,
+      kann man die avnav_server.xml komplett entfernen und danach noch einmal
+      starten. AvNav startet dann wieder von einem "sauberen" Template.</p>
     <p>Beginnend ab Version 20210322 <b>es ist nicht mehr nötig, die Datei "per
         Hand" zu bearbeiten</b>. Stattdessen sollte AvNav selbst (<a href="../userdoc/statuspage.html">Server/Status
         Seite</a>) für die Bearbeitung der meisten Parameter genutzt werden. Das
@@ -1386,9 +1394,8 @@
           <td>nextWpTime<br>
             (ab 20220819)</td>
           <td>X</td>
-          <td>Die Wartezeit nach dem Wegepunktalarm (in Sekunden)
-            bis zur Weiterschaltung zum nächsten Wegepunkt (nur nextWpMode =
-            early)</td>
+          <td>Die Wartezeit nach dem Wegepunktalarm (in Sekunden) bis zur
+            Weiterschaltung zum nächsten Wegepunkt (nur nextWpMode = early)</td>
           <td>10</td>
         </tr>
       </tbody>

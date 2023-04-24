@@ -16,7 +16,12 @@
     <p>If this file still does not exist on start up it will be created from a
       template - fitting either the <a href="https://github.com/wellenvogel/avnav/blob/master/raspberry/avnav_server.xml">raspberry</a>
       set up or <a href="https://github.com/wellenvogel/avnav/blob/master/linux/avnav_template.xml">other
-        systems</a>.<br>
+        systems</a>.</p>
+    <p>This template will be /etc/avnav_server.xml (from 202304xx) on a
+      raspberry pi (with the package avnav-raspi installed). If this one does
+      not exist, AvNav falls back to a template installed with the package.<br>
+      If you start AvNav from the command line using "avnav" you can define the
+      template to be used with the -t parameter.<br>
       On package updates of AvNav this file normally will not be changed.
       Potentially it could be necessary to add some entries to enable new
       functions. In this case you will find some hints in the <a href="../release.html">release
@@ -28,6 +33,9 @@
       change of the original config file (what AvNav is doing in some
       situations) leaves the file in a defect state. If you don't want this
       fallback (for testing) add the -e command line switch.</p>
+    <p>If AvNav completely fails to start, you can try to remove the
+      avnav_server.xml completely. This way AvNav will start up with a clean
+      template.</p>
     <p>Starting from 20210322 <b>it should not be necessary anymore to modify
         the config file "by hand"</b>. Instead use AvNav itself (<a href="../userdoc/statuspage.html">Server/Status
         page</a>) to edit most parts of the configuration. This also eliminates
