@@ -7,30 +7,35 @@
   </head>
   <body data-order="100">
     <h1>Navigation im Browser </h1>
-    <p>AvNav ist eine kostenlose Navigationssoftware für Sportbootfahrer.
-      Wie andere Anwendungen in diesem Bereich kann man elektronische Seekarten laden und mit
-      angeschlossenen GPS-Geräten schauen, wo sich das eigene Boot befindet.
-      Es ist natürlich möglich, Marker zu setzen, Routen zu erstellen und AIS-Signale einzubinden.
-      Besonderes Merkmal von AvNav ist das Serverkonzept: AvNav  lässt sich auf einem Raspberry oder
-      einem Windows-Gerät installieren und als Navigationszentrale betreiben,
-      die alle relevanten Daten einsammelt und Seekarten bereit stellt.
-      Der Zugriff auf den Server im Boots-Netz und damit die eigentliche Darstellung von Karten und Daten
-      läuft auf einem Webbrowser und ist so unabhängig vom jeweiligen Betriebssystem der zugreifenden Geräte.
-      AvNav ist konsequent für die Bedienung per Touchscreen ausgelegt
-      Darüber hinaus bietet AvNav die Möglichkeit, für jedes Gerät, das man benutzen möchte,
-      Layouts zu definieren, um so das Aussehen der App z.B.  auf unterschiedliche Bildschirmgrößen anzupassen.</p>
-      <h2>Karten</h2>
-      <p>Einmal können Rasterkarten, die nicht herstellerverschlüsselt sind, verwendet werden.
-        Vektorkarten Typs OESenc können ebenfalls genutzt werden.
-        Sie sind allerdings nicht kostenlos und können über den O-Charts-Shop bezogen werden.</p>
+    <p>AvNav ist eine kostenlose Navigationssoftware für Sportbootfahrer. Wie
+      andere Anwendungen in diesem Bereich kann man elektronische Seekarten
+      laden und mit angeschlossenen GPS-Geräten schauen, wo sich das eigene Boot
+      befindet. Es ist natürlich möglich, Marker zu setzen, Routen zu erstellen
+      und AIS-Signale einzubinden. Besonderes Merkmal von AvNav ist das
+      Serverkonzept: AvNav lässt sich auf einem Raspberry oder einem
+      Windows-Gerät installieren und als Navigationszentrale betreiben, die alle
+      relevanten Daten einsammelt und Seekarten bereit stellt. Der Zugriff auf
+      den Server im Boots-Netz und damit die eigentliche Darstellung von Karten
+      und Daten läuft auf einem Webbrowser und ist so unabhängig vom jeweiligen
+      Betriebssystem der zugreifenden Geräte. AvNav ist konsequent für die
+      Bedienung per Touchscreen ausgelegt Darüber hinaus bietet AvNav die
+      Möglichkeit, für jedes Gerät, das man benutzen möchte, Layouts zu
+      definieren, um so das Aussehen der App z.B. auf unterschiedliche
+      Bildschirmgrößen anzupassen.</p>
+    <h2>Karten</h2>
+    <p>Einmal können Rasterkarten, die nicht herstellerverschlüsselt sind,
+      verwendet werden. Vektorkarten Typs OESenc können ebenfalls genutzt
+      werden. Sie sind allerdings nicht kostenlos und können über den
+      O-Charts-Shop bezogen werden.</p>
     <h2>Varianten</h2>
-    <p> Es gibt nicht nur die Server-Variante von AvNav:
-      Ebenfalls zur Verfügung stehen ein „StandAlone-AvNav“ für den Raspberry (AvNav Touch) und eine Android-App.
-      Eine Besonderheit ergibt sich beim Einsatz eines OpenPlotter-Image auf einem Raspberry:
-      Die Installationsvariante „AvNav für Openplotter“ sorgt automatisch für die richtigen Verbindungen
-      zwischen dem Herzstück von Openplotter, dem SignalK-Server und AvNav.
-      Die gesamte Software steht zum Download unter einer  Open Source Lizenz bereit. </p>
-      <p>Für einen schnellen Einstieg: <a href="quickstart.html">Quickstart</a></p>
+    <p> Es gibt nicht nur die Server-Variante von AvNav: Ebenfalls zur Verfügung
+      stehen ein „StandAlone-AvNav“ für den Raspberry (AvNav Touch) und eine
+      Android-App. Eine Besonderheit ergibt sich beim Einsatz eines
+      OpenPlotter-Image auf einem Raspberry: Die Installationsvariante „AvNav
+      für Openplotter“ sorgt automatisch für die richtigen Verbindungen zwischen
+      dem Herzstück von Openplotter, dem SignalK-Server und AvNav. Die gesamte
+      Software steht zum Download unter einer Open Source Lizenz bereit. </p>
+    <p>Für einen schnellen Einstieg: <a href="quickstart.html">Quickstart</a></p>
     15.12.2020
     <ul class="mainlist">
       <li class="printPageHidden"><a href="../downloads/de_AvNavDoc.pdf"><img class="inlineimage"
@@ -58,19 +63,19 @@
           insbesondere die Nutzung zu Navigationszwecken geschieht auf eigenes
           Risiko. In jedem Falle empfehle ich einen intensiven Test der
           Genauigkeit der Darstellung und des verwendeten Kartenmaterials.</b></i></p>
-      <h2 class="western">Überblick </h2>
-    <p><img class="fimage" src="overview.png" name="Grafik1" width="600" border="0"
+    <h2 class="western">Überblick </h2>
+    <p><img class="fimage" src="overview.png" name="Grafik1" border="0" width="600"
         align="LEFT">avnav-raspi-2020<br clear="LEFT">
       Wie im Bild zu sehen, besteht die gesamte Lösung aus mehreren Teilen:</p>
     <ul>
       <li>
-        <p>Raspberry Pi mit einer Server-Software, die
-          die angeschlossenen Geräte abfragt, die Daten aufbereitet und per WLAN
-          zur Verfügung stellt</p>
+        <p>Raspberry Pi mit einer Server-Software, die die angeschlossenen
+          Geräte abfragt, die Daten aufbereitet und per WLAN zur Verfügung
+          stellt</p>
       </li>
       <li>
-        <p>Software für Windows/OSx/Linux, die zum Vorbereiten und
-          Konvertieren der Karten dient</p>
+        <p>Software für Windows/OSx/Linux, die zum Vorbereiten und Konvertieren
+          der Karten dient</p>
       </li>
     </ul>
     <p>Über ein WLAN, das der Raspberry Pi als Access Point bereitstellt, können
@@ -78,29 +83,28 @@
       Varianten:</p>
     <ul>
       <li>
-        <p>Variante 1: Auf den Geräten (z.B. Ipad oder Laptop) kann eine Navigationssoftware
-          laufen (getestet: InavX,OpenCPN), diese greift über TCP auf die NMEA-Daten zu.
-          Navigationssoftware und Karten müssen natürlich auf den
-          Geräten installiert sein.</p>
+        <p>Variante 1: Auf den Geräten (z.B. Ipad oder Laptop) kann eine
+          Navigationssoftware laufen (getestet: InavX,OpenCPN), diese greift
+          über TCP auf die NMEA-Daten zu. Navigationssoftware und Karten müssen
+          natürlich auf den Geräten installiert sein.</p>
       </li>
       <li>
-        <p>Variante 2: Auf den Geräten läuft nur ein Browser, die Navigation erfolgt per
-          Java Script App, die vom Raspberry bereitgestellt wird. Dazu muss nur
-          die entsprechende URL aufgerufen werden. In diesem Fall ist auf den
-          Geräten keine Software installiert, nur ein aktueller Browser muss
-          vorhanden sein (getestet: Chrome unter Windows, OSX, Safari, Android
-          ab 4.x – Chrom/Stock/Boat Browser, IOS, Blackberry stockBrowser,
-          WebBrowser mini).</p>
+        <p>Variante 2: Auf den Geräten läuft nur ein Browser, die Navigation
+          erfolgt per Java Script App, die vom Raspberry bereitgestellt wird.
+          Dazu muss nur die entsprechende URL aufgerufen werden. In diesem Fall
+          ist auf den Geräten keine Software installiert, nur ein aktueller
+          Browser muss vorhanden sein (getestet: Chrome unter Windows, OSX,
+          Safari, Android ab 4.x – Chrom/Stock/Boat Browser, IOS, Blackberry
+          stockBrowser, WebBrowser mini).</p>
       </li>
     </ul>
     <h2>"Unter der Haube" </h2>
     <p>Die Server Software auf dem Raspberry ist in Python geschrieben und über
       eine XML-Datei konfigurierbar - was im Normalfall aber nicht notwendig
-      sein sollte. Neben dieser Software steht auch ein fertiges Image für
-      den Raspberry zur Verfügung, das nur noch auf eine SD-Karte installiert
-      werden muss (Empfehlung: mindestens 8GB, mehr ist besser...).</p>
-    <p>Die Web Applikation bietet eine&nbsp; Navigation mit Rasterkarten
-      (<a href="charts.html#chartformats">gemf,mbtiles</a>)&nbsp;
+      sein sollte. Neben dieser Software steht auch ein fertiges Image für den
+      Raspberry zur Verfügung, das nur noch auf eine SD-Karte installiert werden
+      muss (Empfehlung: mindestens 8GB, mehr ist besser...).</p>
+    <p>Die Web Applikation bietet eine&nbsp; Navigation mit Rasterkarten (<a href="charts.html#chartformats">gemf,mbtiles</a>)&nbsp;
       oder <a href="hints/ocharts.html">OESenc Vektorkarten</a> inklusive
       AIS-Darstellung, Wegpunkt-Navigation und Routing. Falls die
       Web-Applikation verwendet werden soll, müssen die Karten dafür auch auf
@@ -121,10 +125,10 @@
         <p>Mit Mobile Atlas Creator heruntergeladene Karten</p>
       </li>
     </ul>
-    <p>Daneben gibt es noch eine <a href="android/android.html">Android-App</a>, die
-      eine weitgehend identische Funktionalität bereitstellt: Der Server-Anteil
-      ist hier nativ in Java geschrieben, die Anzeige-Funktionen sind identisch
-      zur Raspberry-Variante.</p>
+    <p>Daneben gibt es noch eine <a href="android/android.html">Android-App</a>,
+      die eine weitgehend identische Funktionalität bereitstellt: Der
+      Server-Anteil ist hier nativ in Java geschrieben, die Anzeige-Funktionen
+      sind identisch zur Raspberry-Variante.</p>
     <p>In den folgenden Abschnitten gehe ich auf die Funktion der einzelnen
       Teile ein wenig genauer ein.</p>
     <h2>Die Server-Software (avnav_server.py)</h2>
@@ -134,11 +138,11 @@
     <p>Der Hauptbestandteil der Sofware auf dem Raspberry Pi ist ein in Python
       geschriebener Server. Im Folgenden beschreibe ich in groben Zügen, was
       dieser Server intern tut.</p>
-    <p><img class="fimage" src="software.png" name="Grafik2" width="600" border="0"
+    <p><img class="fimage" src="software.png" name="Grafik2" border="0" width="600"
         align="LEFT"><br clear="LEFT">
       <br>
-      Der Server versucht alle am Raspberry angeschlossenen seriellen Geräte
-      zu erkennen und deren NMEA-Daten zu lesen. Typisch werden die Geräte über
+      Der Server versucht alle am Raspberry angeschlossenen seriellen Geräte zu
+      erkennen und deren NMEA-Daten zu lesen. Typisch werden die Geräte über
       Seriell-USB Wandler angeschlossen (z.B. PL2303). Man muss ein wenig
       aufpassen, dass man einen Wandler hat, der vom Raspberry auch sauber
       unterstützt wird - siehe z.B. <a href="http://elinux.org/RPi_VerifiedPeripherals#USB_UART_and_USB_to_Serial_.28RS-232.29_adapters">hier</a>.
@@ -147,14 +151,14 @@
       serielle Klasse und ermittelt deren Schnittstelle (device). Anschliessend
       versucht er ein "auto bauding" zwischen 4800 und 34000 Baud und bemüht
       sich, NMEA Daten zu erkennen. Falls keine Daten empfangen werden, wird die
-      Schnittstelle geschlossen und das Spiel beginnt von vorn. Damit
-      „überlebt“ der Server auch das Anschliessen/Abstecken von Wandlern während
-      des Betriebes oder das An- bzw. Abschalten von Geräten. Bei mir hängt ein
+      Schnittstelle geschlossen und das Spiel beginnt von vorn. Damit „überlebt“
+      der Server auch das Anschliessen/Abstecken von Wandlern während des
+      Betriebes oder das An- bzw. Abschalten von Geräten. Bei mir hängt ein
       RO4800 mit AIS-Decoder an einem Seriell-USB-Wandler, die GPS Daten werden
       durchgereicht. Alternativ versucht AvNav auch Kontakt zu seriellen
-      Bluetooth-Geräten aufzunehmen. Falls die App per "discovery" Geräte findet,
-      versucht sie von diesen ebenfalls NMEA-Daten zu lesen. Das wurde z.B. mit
-      einer Holux GPS Slim236 getestet. In diesem Sinne arbeitet der
+      Bluetooth-Geräten aufzunehmen. Falls die App per "discovery" Geräte
+      findet, versucht sie von diesen ebenfalls NMEA-Daten zu lesen. Das wurde
+      z.B. mit einer Holux GPS Slim236 getestet. In diesem Sinne arbeitet der
       AvNav-Server auch als NMEA-Multiplexer.</p>
     <p>Alle GPS-Daten werden intern in eine Liste eingefügt und per TCP
       bereitgestellt. Verbundene TCP-Empfänger (z.B. OpenCPN) bekommen so jeden
@@ -180,22 +184,22 @@
       beenden.</p>
     <p>Da der gesamte Server in Python geschrieben ist, kann er auch (vor allem
       zu Testzwecken) unter Windows, Osx (Mac) oder Linux laufen. Dazu muss
-      Python ab 3.7 installiert sein (die Windows Installation bringt das selbst mit).
-      Falls reale serielle Daten gelesen werden
-      sollen, muss dazu noch <a href="http://pyserial.sourceforge.net/">pyserial</a>
-      installiert werden.</p>
+      Python ab 3.7 installiert sein (die Windows Installation bringt das selbst
+      mit). Falls reale serielle Daten gelesen werden sollen, muss dazu noch <a
+        href="http://pyserial.sourceforge.net/">pyserial</a> installiert werden.</p>
     <p>Der Server kann in weiten Grenzen durch eine XML-Datei konfiguriert
       werden, für die verschiedenen Nutzungsfälle liegen dokumentierte Beispiele
-      vor. In den Versionen ab 20210322 können die meisten Einstellungen
-      auch direkt in der App vorgenommen werden.</p>
+      vor. In den Versionen ab 20210322 können die meisten Einstellungen auch
+      direkt in der App vorgenommen werden.</p>
     Die ausgelieferte avnav_server.xml Datei enthält Kommentare, so dass
     Anpassungen an die eigenen Bedürfnisse einfach möglich sein sollten.
     <p>Die Software ist auf <a href="https://github.com/wellenvogel/avnav">github</a>
-      verfügbar - für die Installation sei die separate <a href="install.html">Beschreibung verwiesen.</a>.</p>
-    <h3 >Software auf dem Raspberry</h3>
+      verfügbar - für die Installation sei die separate <a href="install.html">Beschreibung
+        verwiesen.</a>.</p>
+    <h3>Software auf dem Raspberry</h3>
     <p>Auf dem Raspberry ist die Software in der folgenden Verzeichnisstruktur
       installiert:</p>
-    <table width="100%" cellspacing="4" cellpadding="4" border="1">
+    <table cellspacing="4" cellpadding="4" border="1" width="100%">
       <colgroup><col width="73*"> <col width="183*"> </colgroup>
       <tbody>
         <tr valign="TOP">
@@ -250,7 +254,8 @@
         </tr>
         <tr>
           <td>.../data/import</td>
-          <td>Hier abgelegte Karten werden konvertiert in das "gemf"-Format, sodass die WebApp sie verarbeiten kann</td>
+          <td>Hier abgelegte Karten werden konvertiert in das "gemf"-Format,
+            sodass die WebApp sie verarbeiten kann</td>
         </tr>
       </tbody>
     </table>
@@ -266,11 +271,70 @@
       Die Einstiegsseite ist unter der url <a href="http://avnav.avnav.de/viewer/avnav_viewer.html">http://avnav.avnav.de/viewer/avnav_viewer.html</a>
       erreichbar. Es ist eine sogenannte „single page app“, d.h. die weitere
       Kommunikation mit dem Server geschieht per Ajax durch den
-      JavaScript-Anteil. Das Layout ist optimiert für die Darstellung auf
-      einem 7 Zoll-Tablet oder größer, bei mir momentan im Einsatz: Nexus 7 am
-      Navitisch, Blackberry Playbook draussen, sie läuft aber natürlich auch
-      auf größeren Tablets (Ipad) oder auf einem Laptop/Desktop. Eine sinnvolle
+      JavaScript-Anteil. Das Layout ist optimiert für die Darstellung auf einem
+      7 Zoll-Tablet oder größer, bei mir momentan im Einsatz: Nexus 7 am
+      Navitisch, Blackberry Playbook draussen, sie läuft aber natürlich auch auf
+      größeren Tablets (Ipad) oder auf einem Laptop/Desktop. Eine sinnvolle
       Nutzung ist ab etwa 900x540 Pixel möglich.</p>
+    <h2>URL Parameter</h2>
+    <p>Die WebApp unterstützt eine Reihe von URL Parametern mit denen man einige
+      Funktionen steuern kann.</p>
+    <table border="1" width="100%">
+      <tbody>
+        <tr>
+          <td>Parameter</td>
+          <td>Beschreibung</td>
+        </tr>
+        <tr>
+          <td>defaultLayout</td>
+          <td>Der Name eines existierenden <a href="hints/layouts.html">Layouts</a>
+            das als initiales Layout genutzt wird. </td>
+        </tr>
+        <tr>
+          <td>defaultSettings</td>
+          <td>Der Name einer existierenden Einstellungsdatei (regex möglich).
+            Diese wird genutzt als default, wenn AvNav das erste Mal in diesem
+            Browser für diese URL startet.<br>
+            Beispiel: defaultSettings=.*localFirefox</td>
+        </tr>
+        <tr>
+          <td>fullscreen</td>
+          <td>Man kann einen Parameter in der Form "server:&lt;command&gt;"
+            angeben. Command muss ein existierendes Kommando sein, das
+            beim&nbsp; <a href="hints/configfile.html#h3:AVNCommandHandler">AVNCommandHandler</a>
+            konfiguriert wurde. Das wird ausgeführt, wenn der Fullscreen Button
+            geklickt wird (anstelle der Fullscreen Funktion im Browser).<br>
+            Beispiel: fullscreen=server:fullCommand</td>
+        </tr>
+        <tr>
+          <td>dimm</td>
+          <td>Man kann einen Parameter in der Form "server:&lt;command&gt;"
+            angeben. Command muss ein existierendes Kommando sein, das
+            beim&nbsp; <a href="hints/configfile.html#h3:AVNCommandHandler">AVNCommandHandler</a>
+            konfiguriert wurde. Das wird ausgeführt, wenn der Dimm Button
+            geklickt wird (anstelle der Nutzung einer Dimm Funktion in Java
+            Script - wie bei AvNav auf Android)<br>
+            Beispiel: dimm=server:dimmCommand</td>
+        </tr>
+        <tr>
+          <td>noCloseDialog</td>
+          <td>Kein Dialog der warnt, wenn die AvNav Seite verlassen werden soll.<br>
+            Beispiel: noCloseDialog=true</td>
+        </tr>
+        <tr>
+          <td>splitMode</td>
+          <td>Starte AvNav im Split Mode.<br>
+            Beispiel: splitMode=yes</td>
+        </tr>
+        <tr>
+          <td>pereventAlarms</td>
+          <td>Zeige keine Alarme.<br>
+            Beispiel: preventAlarms=true</td>
+          <td><br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
     <br>
     Zur Beschreibung der WebApp <a href="userdoc/index.html">hier</a>.<br>
     <br>

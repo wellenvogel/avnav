@@ -7,32 +7,34 @@
   </head>
   <body data-order="100">
     <h1>Navigation in the Browser</h1>
-<p>AvNav is a free of charge, open source navigation software for recreational boaters.
-    Like similar applications in this area, AvNav displays nautical charts and marks
-    the boat's position using GPS devices attached to the system. Markers, waypoints, routes,
-    tracks, AIS, external sensors and many more features are supported.
-    The server concept is one of it's key features: AvNav installs on any Raspberry Pi, Windows or Android
-    device acting as 'navigation server'.
-    It collects relevant data from various sources and administers nautical charts.
-    Server access and graphical represention can be realised on any device running a modern web browser,
-    irrespective of it's operating system.
-    AvNav is consequently optimised to be used on touchscreens.
-    Different layouts can be defined to adapt the user interface e.g. to meet special user requirements
-    or to fit specific screen dimensions.</p>
-<h2>Charts</h2>
-      <p>Any raster charts (RNC), not encrypted by their author, can be used.
-          Vector charts of type oeSENC can also be used.
-          They are, however, not free of charge and need to be acquired at the o-charts shop.</p>
+    <p>AvNav is a free of charge, open source navigation software for
+      recreational boaters. Like similar applications in this area, AvNav
+      displays nautical charts and marks the boat's position using GPS devices
+      attached to the system. Markers, waypoints, routes, tracks, AIS, external
+      sensors and many more features are supported. The server concept is one of
+      it's key features: AvNav installs on any Raspberry Pi, Windows or Android
+      device acting as 'navigation server'. It collects relevant data from
+      various sources and administers nautical charts. Server access and
+      graphical represention can be realised on any device running a modern web
+      browser, irrespective of it's operating system. AvNav is consequently
+      optimised to be used on touchscreens. Different layouts can be defined to
+      adapt the user interface e.g. to meet special user requirements or to fit
+      specific screen dimensions.</p>
+    <h2>Charts</h2>
+    <p>Any raster charts (RNC), not encrypted by their author, can be used.
+      Vector charts of type oeSENC can also be used. They are, however, not free
+      of charge and need to be acquired at the o-charts shop.</p>
     <h2 class="western">Variants</h2>
-    <p>There is more than AvNav's server variant:
-        as an alternative a stand alone version is offered for Rapberri Pi (AvNav Touch)
-        as well as an Android app.
-        On top of that: 'AvNav for OpenPlotter' integrates seamlessly into the OpenPlotter 2 image
-        with all necessary connections to SignalK server configured out of the box.
-        <br>All software is available for download under an open source license.</p>
-<p><a href="en_quickstart.html">Quickstart</a></p>
-<p><br></p>
-<p>15.12.2020</p>
+    <p>There is more than AvNav's server variant: as an alternative a stand
+      alone version is offered for Rapberri Pi (AvNav Touch) as well as an
+      Android app. On top of that: 'AvNav for OpenPlotter' integrates seamlessly
+      into the OpenPlotter 2 image with all necessary connections to SignalK
+      server configured out of the box. <br>
+      All software is available for download under an open source license.</p>
+    <p><a href="en_quickstart.html">Quickstart</a></p>
+    <p><br>
+    </p>
+    <p>15.12.2020</p>
     <a href="https://www.youtube.com/playlist?list=PLxNyj_GYzonmrSgnqtHogY7XK-TANk6q3">
     </a>
     <ul class="mainlist">
@@ -61,20 +63,20 @@
         </a></li>
     </ul>
     <p>Important Note:</p>
-    <p><i><b>In no case I promise or can be held responsible for correct function
-          of AvNav - especially using it for navigation is at your own risk.
-          Before using it I recommend to carefully test the precision of the
-          display and the used charts.</b></i><br>
+    <p><i><b>In no case I promise or can be held responsible for correct
+          function of AvNav - especially using it for navigation is at your own
+          risk. Before using it I recommend to carefully test the precision of
+          the display and the used charts.</b></i><br>
+    </p>
     <h2>Overview</h2>
     <p><img class="fimage" src="overview.png" name="Grafik1" border="0" width="600"
         align="LEFT">avnav-raspi-2020<br clear="LEFT">
       The whole solution consists of different parts:</p>
     <ul>
       <li>
-        <p>A Raspberry Pi with the server software
-          reading the connected devices (e.g. NMEA via serial-USB converter – like PL
-          2303), Bluetooth GPS, multiplexing and storing the data and providing
-          them via WLAN</p>
+        <p>A Raspberry Pi with the server software reading the connected devices
+          (e.g. NMEA via serial-USB converter – like PL 2303), Bluetooth GPS,
+          multiplexing and storing the data and providing them via WLAN</p>
       </li>
       <li>
         <p>A variant of this software for the desktop (Windows/OSx/Linux) to
@@ -85,16 +87,17 @@
       it's data:</p>
     <ul>
       <li>
-        <p>Variant 1: the client (lie laptop or iPad) runs some (other) navigation software
-            (tested: InavX, OpenCPN), those access the NMEA data via TCP or UDP. </p>
+        <p>Variant 1: the client (lie laptop or iPad) runs some (other)
+          navigation software (tested: InavX, OpenCPN), those access the NMEA
+          data via TCP or UDP. </p>
       </li>
       <li>
-        <p>Variant 2: the client device just runs a browser. All the navigation is handled
-          by the AvNav WebApp provided by the raspi. There is no
-          need for any other installed software on the device, only a current
-          HTML5 browser (tested: Chrome Windows, OSX, Safari, Android starting
-          4.4 – Chrome/Stock/Boat Browser, IOS, Blackberry stockBrowser,
-          WebBrowser mini).</p>
+        <p>Variant 2: the client device just runs a browser. All the navigation
+          is handled by the AvNav WebApp provided by the raspi. There is no need
+          for any other installed software on the device, only a current HTML5
+          browser (tested: Chrome Windows, OSX, Safari, Android starting 4.4 –
+          Chrome/Stock/Boat Browser, IOS, Blackberry stockBrowser, WebBrowser
+          mini).</p>
       </li>
     </ul>
     <p>The server part is written in python and can be configured via an xml
@@ -108,8 +111,9 @@
       on the raspberry. </p>
     <p><a href="hints/ocharts.html">oeSENC charts</a> can be bought in the <a href="https://www.o-charts.org/">o-charts</a>
       shop.</p>
-    <p> Chart formats that cannot be handled directly in the app must be <a href="charts.html">converted</a> to gemf using AvNav at
-      the desktop (or directly on the pi within the App). The converter can process the following formats:</p>
+    <p> Chart formats that cannot be handled directly in the app must be <a href="charts.html">converted</a>
+      to gemf using AvNav at the desktop (or directly on the pi within the App).
+      The converter can process the following formats:</p>
     <ul>
       <li>
         <p>All chart sources that can be read by <a href="https://gdal.org/">GDAL</a>
@@ -125,47 +129,47 @@
     <p>The following chapters describe the parts a bit more in detail.</p>
     <h2 class="western">The Server Software (avnav_server.py)</h2>
     <p>The pi holds a <a href="http://www.raspberrypi.org/downloads">normal
-        Debian image</a> (app. 2GB). A couple of additional
-      packages get installed together with AvNav (see list below).</p>
+        Debian image</a> (app. 2GB). A couple of additional packages get
+      installed together with AvNav (see list below).</p>
     <p>Structure of the server software:</p>
     <p><img class="fimage" src="software.png" name="Grafik2" border="0" width="600">
     </p>
     <p>The server tries to detect all devices connected via USB-serial and via
       bluetooth-serial. You have to take care that your USB-serial device is
       correctly handled by the pi - like e.g. <a href="http://elinux.org/RPi_VerifiedPeripherals#USB_UART_and_USB_to_Serial_.28RS-232.29_adapters">this
-        one</a>. The server scans connected devices (via dbus) and discovers
-      the device nodes. It then tries to do some auto-bauding (i.e.
-      determine the baudrate for the device) between 4800 and 34000 baud and
-      tries to recognise NMEA data. If no data is detected it starts over again by
+        one</a>. The server scans connected devices (via dbus) and discovers the
+      device nodes. It then tries to do some auto-bauding (i.e. determine the
+      baudrate for the device) between 4800 and 34000 baud and tries to
+      recognise NMEA data. If no data is detected it starts over again by
       closing and reopening the devices. This way it can cope with disconnecting
       and reconnecting devices. I have connected a AIS VHF receiving GPS data
       from the pi and sending AIS data to it. If bluetooth serial devices are
       detected AvNav will also try to read from them.</p>
-    <p>You can also configure devices to output the data and this way have a NMEA
-      multiplexer.</p>
+    <p>You can also configure devices to output the data and this way have a
+      NMEA multiplexer.</p>
     <p>All NMEA data internally are stored in a queue and made available for
       output. By default a TCP socket is open where you can connect to (default
       port: 34567).</p>
     <p>Additionally you can configure more outputs (TCP,UDP,serial).</p>
-    <p>Internally the data (including AIS) are forwarded to a decoder
-      storing them in the server&nbsp; ("NMEA decoded data"). Those
-      data&nbsp; are available as JSON for the webapp's HTTP - API requests. Additionally the server
-      writes track data, computes routing information, handles anchor watch and
-      alarms. </p>
-    <p>To control an auto pilot the server computes RMB data and sends them
-      to the internal queue so that it can be received by any connected device.<br>
+    <p>Internally the data (including AIS) are forwarded to a decoder storing
+      them in the server&nbsp; ("NMEA decoded data"). Those data&nbsp; are
+      available as JSON for the webapp's HTTP - API requests. Additionally the
+      server writes track data, computes routing information, handles anchor
+      watch and alarms. </p>
+    <p>To control an auto pilot the server computes RMB data and sends them to
+      the internal queue so that it can be received by any connected device.<br>
     </p>
     If there is a valid time information in the GPS data it sets the system time
     of the raspberry.<br>
     <p>For automated start up there is a (systemd) service so you can control
       start and stop via systemctl.</p>
     <p> Most of the server functions you can configure via an xml file
-      (avnav_server.xml). In the installed template there are examples for 
-      many use cases. Additionally (if a bluetooth
-      device has been detected) AvNav tries to connect to bluetooth serial
-      devices and receive NMEA data from them. </p>
+      (avnav_server.xml). In the installed template there are examples for many
+      use cases. Additionally (if a bluetooth device has been detected) AvNav
+      tries to connect to bluetooth serial devices and receive NMEA data from
+      them. </p>
     <p>Normally there is no need for additional configuration.</p>
-    <p>You can find the software on <a href="https://github.com/wellenvogel/avnav">github</a>. 
+    <p>You can find the software on <a href="https://github.com/wellenvogel/avnav">github</a>.
       For installation instructions see the <a href="install.html">installation
         description</a>.</p>
     <h3 class="western">Software on the raspberry</h3>
@@ -223,7 +227,8 @@
         </tr>
         <tr>
           <td>.../data/import</td>
-          <td>input directory for the converter: charts stored here will be converted to 'gemf' </td>
+          <td>input directory for the converter: charts stored here will be
+            converted to 'gemf' </td>
         </tr>
         <tr>
           <td>.../data/user/viewer</td>
@@ -240,16 +245,79 @@
       </tbody>
     </table>
     <p>Apart from the systemd scripts (and some command scripts) the software is
-      running as user pi (on the raspberry). You can also start the
-      software from the command line using the command "avnav". On a desktop
-      system you may run this as any user.</p>
+      running as user pi (on the raspberry). You can also start the software
+      from the command line using the command "avnav". On a desktop system you
+      may run this as any user.</p>
     <h2>The Web App</h2>
     The app is a single page app built with<span style="color: #0000ee;"> </span><a
       href="https://reactjs.org/">ReactJs</a>.<br>
-    It communicates with the server using Ajax (javascript). The app entry point is <a href="http://avnav.avnav.de/viewer/avnav_viewer.html">http://avnav.avnav.de/viewer/avnav_viewer.html</a>.
+    It communicates with the server using Ajax (javascript). The app entry point
+    is <a href="http://avnav.avnav.de/viewer/avnav_viewer.html">http://avnav.avnav.de/viewer/avnav_viewer.html</a>.
     It is optimized for mobile devices - especially tablets starting at 7". But
     you can use it also on desktop systems or larger displays. Meaningful usage
     starts at around 900x540 pixel.<br>
+    <br>
+    <h2>URL Parameters</h2>
+    <p>The WebApp support a couple of URL Parameters that you can add to control
+      some functions.</p>
+    <table border="1" width="100%">
+      <tbody>
+        <tr>
+          <td>parameter</td>
+          <td>description</td>
+        </tr>
+        <tr>
+          <td>defaultLayout</td>
+          <td>The name of an existing <a href="hints/layouts.html">layout</a>
+            that will be used as the initial layout. If not set (or not found)
+            the user will be prompted to select one of the existing layouts.</td>
+        </tr>
+        <tr>
+          <td>defaultSettings</td>
+          <td>The name of an existing settings file (regex supported) that will
+            be used as default settings when AvNav is started for the first time
+            in the Browser with this URL.<br>
+            Example: defaultSettings=.*localFirefox</td>
+        </tr>
+        <tr>
+          <td>fullscreen</td>
+          <td>You can provide a parameter in the form of
+            "server:&lt;command&gt;". Command must be an existing command that
+            has been configured at the <a href="hints/configfile.html#h3:AVNCommandHandler">AVNCommandHandler</a>.
+            This will be executed when the Fullscreen Button is pressed (instead
+            of using the browser fullscreen feature)<br>
+            Example: fullscreen=server:fullCommand</td>
+        </tr>
+        <tr>
+          <td>dimm</td>
+          <td>You can provide a parameter in the form of
+            "server:&lt;command&gt;". Command must be an existing command that
+            has been configured at the <a href="hints/configfile.html#h3:AVNCommandHandler">AVNCommandHandler</a>.
+            This will be executed when the dimm Button is pressed (instead of
+            using a dimm function that is available in the Browser - like AvNav
+            on Android)<br>
+            Example: dimm=server:dimmCommand</td>
+        </tr>
+        <tr>
+          <td>noCloseDialog</td>
+          <td>Prevent the Dialog that will warn you if you are going to leave
+            the AvNav page.<br>
+            Example: noCloseDialog=true</td>
+        </tr>
+        <tr>
+          <td>splitMode</td>
+          <td>Start AvNav directly in split mode.<br>
+            Example: splitMode=yes</td>
+        </tr>
+        <tr>
+          <td>pereventAlarms</td>
+          <td>Do not show any Alarms.<br>
+            Example: preventAlarms=true</td>
+          <td><br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
     <br>
     For a user documentation of the web app refer to <a href="userdoc/index.html">this
       description</a>.<br>
