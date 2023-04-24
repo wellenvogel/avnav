@@ -38,6 +38,31 @@
       <li>plugin.css - die CSS Anteile des Plugins, optional</li>
     </ul>
     <p>Ein Beispiel für ein Plugin findet man auf <a href="https://github.com/wellenvogel/avnav/tree/master/server/plugins/testPlugin">GitHub</a>.</p>
+    <h2>Installation</h2>
+    <p>Um ein eigenes plugin zu erzeugen kann man entweder eine zip Datei oder
+      ein debian Paket bereitstellen.<br>
+      Wenn man eine zip Datei bereitstellt, sollte diese auf der obersten Ebene
+      genau einen Ordner mit dem Namen des plugins enthalten ("plugin" oder
+      "avnav" sollten nicht Bestandteil dieses Namens sein).<br>
+      Ein Nutzer des Plugins muss dieses dann im Unterverzeichnis "plugins" des
+      AvNav Datenverzeichnisses auspacken (z.B. /home/pi/avnav/data/plugins auf
+      einem Raspberry Pi).<br>
+      Auf diese Weise wird das plugin zu einem "user plugin".</p>
+    <p>Wenn man ein debian Paket bereitstellt, sollte es dem Namensschema
+      avnav-xxx-plugin folgen. Der Inhalt sollte in das Verzeichnis
+      /usr/lib/avnav/plugins/&lt;pluginName&gt; entpackt werden.<br>
+      Ein solches plugin wird zu einem "system plugin".<br>
+      Plugin Pakete sollten den Namen des plugins (d.h. denb Verzeichnis-Namen)
+      als Metadaten Feld mit dem Namen packages should contain the name of the
+      plugin (i.e. the directory name) as a meta data field "avnav-plugin"
+      enthalten.<br>
+      Beispiel:</p>
+    <p class="code">avnav-plugin: system-obp-plotterv3</p>
+    <p>Das unterstützt den AvNav Updater dabei festzustellen, ob ein
+      Plugin-Paket als Installationskandidat angezeigt werden soll oder nicht.<br>
+      Wenn man ausserdem das Metdatenfeld "avnav-hidden" auf true setzt , wird
+      das Paket im Updater nur angezeigt, wenn das Plugin explizit enabled
+      wurde.</p>
     <h2>Liste von Plugins</h2>
     <ul>
       <li><a href="https://github.com/wellenvogel/avnav-seatalk-remote-plugin">Seatalk
@@ -56,6 +81,8 @@
         von <a href="https://www.segeln-forum.de/user/19350-chrhartz">Christian</a></li>
       <li><a href="https://github.com/kdschmidt1/avnav-more-nmea-plugin">More-NMEA-Plugin</a>
         - Dekodierung und Berechnung von weiteren Kurs- und Winddaten</li>
+      <li><a href="https://gitlab.strukturpunkt.de/kfr/avnav-rudder-angel">rudder-angle</a>
+        - Anzeige des Ruderwinkels (über SignalK)</li>
     </ul>
     <h2>plugin.js</h2>
     <p>Im Java script code sind genau die gleichen Funktionen verfügbar wie
@@ -164,6 +191,7 @@ def pluginInfo(cls):<br>  return {
     <p>Für das Plugin können in der <a href="configfile.html#plugins">avnav_server.xml</a>
       Parameter konfiguriert werden, diese sind dann über das API
       (getConfigValue) abrufbar.</p>
+    <h3>Plugin API</h3>
     <p>Am <a href="https://github.com/wellenvogel/avnav/blob/master/server/avnav_api.py">API</a>
       stehen die folgenden Funktionen zur Verfügung</p>
     <table border="1" width="100%">
@@ -332,7 +360,84 @@ def pluginInfo(cls):<br>  return {
             Plugin gestoppt werden soll. In jedem anderen Thread wird immer True
             zurück gegeben.</td>
         </tr>
+        <tr>
+          <td>sendRemoteCommand<br>
+            (ab 202304xx)</td>
+          <td>Sende ein Fernsteuerungskommando, siehe den <a href="https://github.com/wellenvogel/avnav/blob/3a291c2e08bfaa13b12246f9a456a4a896533d52/server/avnav_api.py#L344">Source
+              Code</a> für Details.</td>
+        </tr>
+        <tr>
+          <td>registerSettingsFile<br>
+            (ab 202304xx)</td>
+          <td>Mache eine Datei mit gespeicherten Einstellungen bekannt. Diese
+            kann vom Nutzer dann geladen werden.</td>
+        </tr>
+        <tr>
+          <td>registerCommand<br>
+            (ab 202304xx)</td>
+          <td>Registriere ein Kommando, das von AvNav ausgeführt werden kann.
+            Dieses kann z.B. dafür genutzt werden ein bereits vorhandenes
+            Kommando zu ersetzen. Auch neue Kommandos sind möglich. Siehe den <a
+              href="https://github.com/wellenvogel/avnav/blob/3a291c2e08bfaa13b12246f9a456a4a896533d52/server/avnav_api.py#L364">Source
+              Code</a> oder die <a href="configfile.html#h3:AVNCommandHandler">AVNCommandHandler
+              Konfiguration</a> für Details.</td>
+        </tr>
       </tbody>
     </table>
+    <h2>Aktivieren und Verbergen von System Plugins</h2>
+    <p>(ab 202304xx)</p>
+    <p>Um plugins "unsichtbar" zu machen, die mit debian Paketen installiert
+      wurden, gibt es ein Script /usr/lib/avnav/plugin.sh.<br>
+      Als root kann man dieses Script aufrufen um die Sichtbarkeit von system
+      plugins zu steuern und default Parameter zu setzen.<br>
+      Ein Aufruf ohne Parameter bringt eine Hilfe mit den Aufruf-Optionen.</p>
+    <h2>Spezialfunktionen für den Raspberry Pi</h2>
+    <p>(ab 202304xx)</p>
+    <p>Plugins die als debian Pakete für den Raspberry Pi erzeugt werden (system
+      plugins) können ein Shell Script "plugin-startup.sh" bereitstellen.<br>
+      Dieses Script ermöglich es plugins, Systemparameter zu konfigurieren.<br>
+      Es wird immer während des Bootprozesses des Systems aufgerufen.<br>
+      Ob und mit welchen Parametern ein solches Script aufgerufen wird, hängt
+      von einem Parameter in der Datei /boot/avnav.conf ab (siehe <a href="../install.html#preparation">Image
+        Vorbereitung</a>). Der Parametername ist:<br>
+      AVNAV_&lt;PLUGIN&gt;<br>
+      Dabei ist &lt;PLUGIN&gt; der Pluginname (d.h. der Name seines
+      Verzeichnisses) übersetzt in Großbuchstaben (und ohne alle Zeichen ausser
+      0-9 und a-z).<br>
+      Wenn dieser Parameter auf "yes" gesetzt ist, wird das Pluginscript
+      gerufen.</p>
+    <p>Es gibt 3 Aufruf-Varianten:</p>
+    <h3>plugin-startup.sh enable</h3>
+    <p>Dieser Aufruf findet beim ersten Boot mit dem Parameter in der avnav.conf
+      auf "yes" statt.<br>
+      Das Plugin sollte jetzt alle notwendigen Änderungen am System vornehmen
+      (wenn möglich so, das sie auch später wieder rückgängig gemacht werden
+      können).<br>
+      Typischerwe betrifft das Anpassungen /boot/config.txt oder anderen
+      Konfigurationsdateien.<br>
+      Das Script sollte 1 zurückgeben, wenn ein Reboot nötig ist, sonst 0 oder
+      &lt; 0 bei Fehlern.</p>
+    <p>Es gibt einige <a href="https://github.com/wellenvogel/avnav/blob/master/raspberry/setup-helper.sh">Helper
+        Funktionen</a> die im Script genutzt werden können. Diese Helper
+      Funktionen bindet man mit </p>
+    <p class="code">. "$AVNAV_SETUP_HELPER"</p>
+    <p>in das Script ein.<br>
+      Die Umgebungsvariable AVNAV_SETUP_HELPER ist gesetzt, wenn das Script
+      aufgerufen wird.<br>
+      Ein Beispiel findet man im <a href="https://github.com/wellenvogel/avnav-obp-plotterv3-plugin/blob/master/plugin-startup.sh">obp-plotterv3-plugin</a>.</p>
+    <h3>plugin-startup.sh disable</h3>
+    <p>Dieser Aufruf wird ausgeführt, wenn der Parameter in der avnav.conf von
+      yes auf einen anderen Wert geändert oder entfernt wird. Das Script sollte
+      die am System gemachten Änderungen - soweit möglich - wieder zurücknehmen.<br>
+      Anmerkung: Da das Handling im Normalfall nur dazu vorgesehen ist, einmalig
+      bei der ersten Nutzung eines Images stattzufinden, ist es kein grosses
+      Problem, wenn Änderungen nicht zurückgenommen werden.</p>
+    <h3>plugin.startup.sh [keine Parameter]</h3>
+    <p>Dieser Aufruf erfolgt bei jedem boot. In diesem Falls sollten keine
+      Einstellungen im System geändert werden - es könnte sonst sehr
+      überraschend für den Nutzer sein, wenn bei einem beliebigen Startvorgang
+      plötzlich Systemeinstellungen geändert werden. Es können aber
+      beispielsweise notwendige Initialisierungen von Hardware vorgenommen
+      werden.</p>
   </body>
 </html>
