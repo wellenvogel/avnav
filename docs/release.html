@@ -42,6 +42,86 @@ sudo systemctl start avnav</div>
     <br>
     <div> </div>
     <h2>Versionen</h2>
+    <p> <span style="font-weight: bold;">202304xx</span> <a title="release/202304xx"
+        href="../downloads/release/202304xx">link</a></p>
+    Unterstützung für dem OpenBoatProjects 10 Zoll Plotter V3 - siehe <a href="https://www.segeln-forum.de/thread/85423-10-1-raspberry-plotter-v3">Forum</a>
+    <br>
+    <ul>
+      <li>Neues Plugin <a href="https://github.com/wellenvogel/avnav-obp-plotterv3-plugin">obp-plotter-v3</a></li>
+      <li>Unterstützung in avnav.conf und in der <a href="install.html#configBOARDS">Image
+          Vorbereitung</a></li>
+    </ul>
+    Konfiguration für einige Raspberry Pi HATS
+    <ul>
+      <li>für AvNav Images können wir jetzt die notwendigen Einstellungen für
+        einige HATs automatisch vornehmen.<br>
+        Siehe die Beschreibung bei der <a href="install.html#configHATS">Image
+          Vorbereitung</a>. </li>
+    </ul>
+    Erweiterungen in der Plugin API(Server)
+    <ul>
+      <li>Plugins (auf dem Raspberry Pi) können jetzt <a href="hints/plugins.html#scripts">Scripte</a>
+        haben, um Systemkonfigurationen zu erzeugen basierend auf Einträgen in
+        der avnav.conf.</li>
+      <li>Neue <a href="https://github.com/wellenvogel/avnav/blob/master/server/avnav_api.py">API</a>
+        Funktionen sendRemoteCommand, registerSettingsFile, registerCommand</li>
+    </ul>
+    Einbettung einiger zusätzlicher Kernel Treiber (Raspberry)<br>
+    <ul>
+      <li>ein <a href="https://github.com/wellenvogel/avnav-raspi-driver">neues
+          Paket</a> wird auf AvNav images installiert, das Treiber für RTL8188EU
+        und RTL8192EU WLAN Chipsätze enthält.</li>
+    </ul>
+    Kleinere Verbesserungen und Fehlerkorrekturen<br>
+    Alle:
+    <ul>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/249">#249</a>:
+        Nutzung einer Event-Übversetzungsliste um Event-Name für User Widgets
+        korrekt durchzureichen.</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/251">#251</a>:
+        Erlaube das Deaktivieren von Tastenzuordnungen in Nutzer- key.json Datei</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/252">#252</a>:
+        Korrekte Behandlung von Tastenzuordnungen zu Buttons - auch wenn diese
+        momentan nicht sichtbar (oder in der 2. Spalte) sind.</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/261">#261</a>:
+        Verhindere einen Fehler bei inkonsistenten Daten im store (value und
+        dict), Limitiere einzelne logs auf ca. 110MB</li>
+      <li>Vermeide Error-Fluten im Log bei Bluetooth Problemen</li>
+      <li>Tastenzuordnung z zum Umschalten (Toggle) des Dimm Modus</li>
+      <li>Zusätzlicher Button "reload page" auf der Einstellungsseite</li>
+      <li>Einige neue <a href="beschreibung.html#urlParameters">URL Parameter</a></li>
+      <li>Halte die Scrollposition auf der AIS und WPA Seite (Lange Listen von
+        AIS-Zielen oder WLAN Netzwerken)</li>
+    </ul>
+    Raspberry:
+    <ul>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/266">#266</a>:
+        Vermeide eine Blockierung beim Setzen der Systemzeit<br>
+        verbesserte Behandlung für das initiale Setzen der Systemzeit ohne GPS,
+        korrekte Umschaltung zwischen GPS Zeit und NTP Zeit</li>
+      <li>Kein Aufruf des startup-check (Einlesen der avnav.conf) während der
+        Installation von avnav-raspi (Verhindert einen reboot während des
+        Updates)</li>
+      <li>Zusätzliches Template für die avnav_server.xml in /etc</li>
+      <li>Änderung aller WLAN access point Konfigurationen auf "manual" um
+        Konflikte mit dem avahi-autoipd zu vermeiden (manchmal kein Korrektes
+        Aufsetzen des Access Points)</li>
+      <li>Setze restart-ms für alle CAN Interfaces (siehe <a href="https://www.segeln-forum.de/thread/86708-openmarine-mcarthur-hat/?postID=2508782#post2508782">Forum</a>)
+        um die Robustheit des NMEA2000 Adapters zu verbessern</li>
+      <li>Korrigierte country codes für die Image Vorbereitung</li>
+      <li>Entfernen des nicht mehr vorhandenen spi-bcm2835-overlay</li>
+      <li>Update der Installationsbeschreibung für Pakete (bullseye)</li>
+      <li>Neustart von wlan-av1 bei Änderung der Systemzeit (wpa_supplicant
+        funktioniert potentiell nicht mehr nach Zeit-Umstellungen)</li>
+      <li>Korrektur für das Wpa Firewall&nbsp; Kommand (external access für WLAN
+        Netzwerke) , besseres Logging in diesem Teil der Software</li>
+      <li>uart_control Script jetzt in /usr/lib/avnav/raspberry</li>
+      <li>korrekte Konfiguration für CANboat (n2kd)</li>
+    </ul>
+    Android:
+    <ul>
+      <li>einige erste Implementierungen für ein plugin-Handling</li>
+    </ul>
     <p> <span style="font-weight: bold;">20220819</span> <a title="release/20220819"
         href="../downloads/release/20220819">link</a></p>
     <p>Split Screen</p>
