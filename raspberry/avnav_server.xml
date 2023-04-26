@@ -43,7 +43,7 @@
 	 The data is feed through the gpsd feeder
 	 -->
 <AVNUsbSerialReader allowUnknown="true" baud="38400" maxDevices="5" minbaud="4800">
-	<UsbDevice baud="38400" minbaud="4800" usbid="1-1.2.1:1.0"/>
+    <!-- <UsbDevice baud="38400" minbaud="4800" usbid="1-1.2.1:1.0"/> -->
     <!-- a serial input + output device at one particular USB port
          with this filter it will output only RMB NMEA records data
 	     use a readerFilter to also apply a filter at the reader
