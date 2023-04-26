@@ -346,19 +346,19 @@ def pluginInfo(cls):<br>  return {
         </tr>
         <tr>
           <td>sendRemoteCommand<br>
-            (since 202304xx)</td>
+            (since 20230426)</td>
           <td>Send a remote control command, see the <a href="https://github.com/wellenvogel/avnav/blob/3a291c2e08bfaa13b12246f9a456a4a896533d52/server/avnav_api.py#L344">source
               code</a> for details.</td>
         </tr>
         <tr>
           <td>registerSettingsFile<br>
-            (since 202304xx)</td>
+            (since 20230426)</td>
           <td>Register a file with store user settings. Those settings can be
             loaded by the user.</td>
         </tr>
         <tr>
           <td>registerCommand<br>
-            (since 202304xx)</td>
+            (since 20230426)</td>
           <td>Register a command that can be executed by AvNav. This can be used
             to replace existing commands or register new commands. See the <a href="https://github.com/wellenvogel/avnav/blob/3a291c2e08bfaa13b12246f9a456a4a896533d52/server/avnav_api.py#L364">source
               code</a> or the <a href="configfile.html#h3:AVNCommandHandler">AVNCommandHandler
@@ -367,14 +367,14 @@ def pluginInfo(cls):<br>  return {
       </tbody>
     </table>
     <h2>Enabling and Disabling of System Plugins</h2>
-    <p>(since 202304xx)</p>
+    <p>(since 20230426)</p>
     <p>To be able to disable plugins that are installed with debian packages,
       there is a script /usr/lib/avnav/plugin.sh.<br>
       You can call this script (as root) with to maintain the visibility of
       system plugins and even set some default parameters.<br>
       Just call the script with no parameters to get a help.</p>
     <h2><a name="scripts"></a>Special Functions for Raspberry Pi</h2>
-    <p>(since 202304xx)</p>
+    <p>(since 20230426)</p>
     <p>Plugins that are provided as debian packages for the raspberry pi can
       provide a shell script "plugin-startup.sh".<br>
       This script will allow plugins to configure system parameters.<br>
