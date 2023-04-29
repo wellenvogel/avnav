@@ -37,6 +37,8 @@ class AVNStore(object):
   BASE_KEY_AIS = 'ais'
   BASE_KEY_SKY = 'sky'
 
+  AIS_AGE_KEY='age'
+
   KEY_VERSION= BASE_KEY_GPS+".version"
 
   # AIS messages we store
@@ -240,7 +242,7 @@ class AVNStore(object):
       self.__lastAisSource=source
 
 
-  def getAisData(self, asDict=False,copyElements=False):
+  def getAisData(self, asDict=False):
     rt=[] if not asDict else {}
     keysToRemove=[]
     now=AVNUtil.utcnow()
@@ -251,16 +253,12 @@ class AVNStore(object):
         if self.__isAisExpired(aisEntry, now) or aisEntry.getMmsi() == self.__ownMMSI:
           keysToRemove.append(key)
         else:
+          val=aisEntry.value.copy()
+          val[self.AIS_AGE_KEY]=now-aisEntry.timestamp
           if asDict:
-            if copyElements:
-              rt[key] = aisEntry.value.copy()
-            else:
-              rt[key]=aisEntry.value
+            rt[key] = val
           else:
-            if copyElements:
-              rt.append(aisEntry.value.copy())
-            else:
-              rt.append(aisEntry.value)
+            rt.append(val)
       for rkey in keysToRemove:
         del self.__aisList[rkey]
     except:
@@ -293,7 +291,7 @@ class AVNStore(object):
     @return: a dict with all entries, keys having the prefix removed
     """
     if prefix == self.BASE_KEY_AIS:
-      rt=self.getAisData(True,copyElements=True)
+      rt=self.getAisData(True)
       return rt
     prefix=prefix+"."
     plen=len(prefix)

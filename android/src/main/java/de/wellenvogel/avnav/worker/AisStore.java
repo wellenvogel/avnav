@@ -1,6 +1,7 @@
-package de.wellenvogel.avnav.worker;
+34568 package de.wellenvogel.avnav.worker;
 
 import android.location.Location;
+import android.os.SystemClock;
 import android.util.Log;
 import de.wellenvogel.avnav.aislib.messages.message.*;
 import de.wellenvogel.avnav.util.AvnLog;
@@ -33,7 +34,7 @@ public class AisStore {
     private static final int HANDLED_MESSAGES[]=new int[]{1,2,3,5,18,19,24};
     private static final String MERGE_FIELDS[]=new String[]{"imo_id","callsign","shipname","shiptype","destination"};
     private static final String LOGPRFX="Avnav.AisStore";
-
+    private static final String AGE_KEY="age";
     private boolean isHandledMessage(AisMessage msg){
         for (int i:HANDLED_MESSAGES){
             if (msg.getMsgId() == i){
@@ -63,6 +64,7 @@ public class AisStore {
                 return;
             }
             int type=msg.getMsgId();
+            long now= SystemClock.uptimeMillis();
             JSONObject old=aisData.get(mmsi);
             if (old != null){
                 if (type == 5 || type == 24){
@@ -81,11 +83,13 @@ public class AisStore {
                             o.put(mf,ov);
                         }
                     }
+                    o.put(AGE_KEY,now);
                     aisData.put(mmsi,o);
                 }
             }
             else{
                 AvnLog.d(LOGPRFX, "store new message type " + type + " for mmsi" + mmsi);
+                o.put(AGE_KEY,now);
                 aisData.put(mmsi,o);
             }
         } catch (JSONException e) {
@@ -150,7 +154,7 @@ public class AisStore {
         return rt;
     }
 
-    private JSONObject convertEntry(JSONObject in) throws JSONException {
+    private JSONObject convertEntry(JSONObject in, long now) throws JSONException {
         JSONObject rt=new JSONObject();
         for (Iterator<String> i=in.keys();i.hasNext();){
             String k=i.next();
@@ -170,6 +174,9 @@ public class AisStore {
                 rt.put(k,in.get(k));
             }
         }
+        if (rt.has(AGE_KEY)){
+            rt.put(AGE_KEY,(float)(now-rt.getLong(AGE_KEY))/1000.0);
+        }
         return rt;
     }
 
@@ -183,11 +190,12 @@ public class AisStore {
         JSONArray rt=new JSONArray();
         distance=distance* AvnUtil.NM; //in distance is in NM
         AvnLog.d(LOGPRFX,"getAisData dist="+distance);
+        long now=SystemClock.uptimeMillis();
         for(JSONObject o:aisData.values()){
             if (! o.has("lat") || ! o.has("lon")) continue;
             JSONObject cv=null;
             try {
-                cv=convertEntry(o);
+                cv=convertEntry(o,now);
                 if (distance != 0) {
                     Location aloc = new Location((String) null);
                     aloc.setLatitude(cv.getDouble("lat"));
