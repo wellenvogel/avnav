@@ -22,6 +22,7 @@ import assign from "object-assign";
 import Compare from "../util/compare";
 import PropTypes from 'prop-types';
 import Helper from "../util/helper";
+import GuiHelper from "../util/GuiHelpers";
 
 class Notifier{
     constructor() {
@@ -31,9 +32,15 @@ class Notifier{
         if (cb) this.callbacks[cb]=cb;
         else delete this.callbacks[cb];
     }
-    trigger(data){
-        for (let k in this.callbacks){
+    trigger(timeout,data){
+        const run=()=>{for (let k in this.callbacks){
             if (this.callbacks[k]) this.callbacks[k](data);
+        }};
+        if (timeout){
+            window.setTimeout(run,timeout);
+        }
+        else{
+            run();
         }
     }
 }
@@ -137,8 +144,12 @@ const StatusItem=(props)=>{
     if (props.id !== undefined){
         name="["+props.id+"]"+name;
     }
+    let cl="status";
+    if (props.requestFocus){
+        cl+=" requestFocus";
+    }
     return(
-        <div className="status"  key={props.id}>
+        <div className={cl}  key={props.id}>
             <div className={"statusHeading"+ (isDisabled?" disabled":"")}>
                 <span className="statusName">{name}</span>
                 {isDisabled && <span className="disabledInfo">[disabled]</span> }
@@ -180,14 +191,15 @@ class StatusList extends React.Component{
             serverError:false
         };
         if (this.props.reloadNotifier){
-            this.props.reloadNotifier.register(()=>this.retriggerQuery())
+            this.props.reloadNotifier.register((data)=>this.retriggerQuery(data))
         }
+        this.focusItem=undefined;
     }
     componentWillUnmount() {
         if (this.props.reloadNotifier) this.props.reloadNotifier.register(undefined);
     }
 
-    queryResult(data){
+    queryResult(data,focusItem){
         let self=this;
         let itemList=[];
         let storeData=assign({},this.defaultProps);
@@ -202,6 +214,9 @@ class StatusList extends React.Component{
                     if (el.properties && el.properties.shutdown ) storeData.shutdown=true;
                 }
                 el.key=el.displayKey||el.id;
+                if (focusItem !== undefined && focusItem === el.id){
+                    el.requestFocus=true;
+                }
                 itemList.push(el);
             });
         }
@@ -211,16 +226,16 @@ class StatusList extends React.Component{
         this.setState({itemList:itemList});
 
     }
-    retriggerQuery(){
+    retriggerQuery(data){
         this.timer.stopTimer();
-        this.doQuery();
+        this.doQuery(undefined,data);
     }
-    doQuery(sequence){
+    doQuery(sequence,focusItem){
         let self=this;
         Requests.getJson("?request=status",{checkOk:false}).then(
             (json)=>{
                 self.timer.guardedCall(sequence,()=> {
-                    self.queryResult(json)
+                    self.queryResult(json,focusItem)
                     self.timer.startTimer(sequence);
                 });
             },
@@ -251,6 +266,15 @@ class StatusList extends React.Component{
             this.mainListRef.scrollLeft=snapshot.x;
             this.mainListRef.scrollTop=snapshot.y;
         }
+        if (this.mainListRef){
+            let focusItem=this.mainListRef.querySelector(".requestFocus");
+            if (focusItem){
+                let mode=GuiHelper.scrollInContainer(this.mainListRef,focusItem);
+                if (mode >= 1 && mode <=2 ) {
+                    focusItem.scrollIntoView(mode === 1);
+                }
+            }
+        }
     }
     render(){
         return <ItemList
@@ -259,7 +283,9 @@ class StatusList extends React.Component{
                 allowEdit={this.props.allowEdit}
                 finishCallback={
                     ()=>{
-                        this.retriggerQuery();
+                        window.setTimeout(()=>
+                            this.retriggerQuery()
+                            ,1000);
                     }
                 }
                 {...iprops}/>}
@@ -399,7 +425,7 @@ class StatusPage extends React.Component{
                     name: 'StatusAdd',
                     visible: props.config && props.connected,
                     onClick: ()=>{
-                        EditHandlerDialog.createAddDialog(()=>this.reloadNotifier.trigger());
+                        EditHandlerDialog.createAddDialog((id)=>this.reloadNotifier.trigger(1000,id));
                     }
                 },
                 Mob.mobDefinition(this.props.history),

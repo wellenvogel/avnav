@@ -90,6 +90,19 @@ const addParameters=(url,parameters)=>{
     }
     return url;
 };
+const handleAndroidPost=(url,body)=>{
+    return new Promise((resolve,reject)=> {
+        let res=JSON.parse(avnav.android.handleUpload(url, body));
+        if (res.status === 'OK'){
+            resolve(res);
+            return;
+        }
+        else{
+            reject(res.info||res.status);
+            return;
+        }
+    });
+};
 let RequestHandler={
     /**
      * do a json get request
@@ -108,7 +121,6 @@ let RequestHandler={
         let [rurl,requestOptions]=prepare(url,options);
         return handleJson(addParameters(rurl,opt_parameter),requestOptions,options);
     },
-
     postJson:(url,body,options,opt_parameters)=>{
         let [rurl,requestOptions]=prepare(url,options);
         requestOptions.method='POST';
@@ -117,17 +129,7 @@ let RequestHandler={
         requestOptions.headers['content-type']='application/json';
         let encodedBody=JSON.stringify(body);
         if (avnav.android){
-            return new Promise((resolve,reject)=> {
-                let status=avnav.android.handleUpload(rurl, encodedBody);
-                if (status == 'OK'){
-                    resolve({status:status});
-                    return;
-                }
-                else{
-                    reject(status);
-                    return;
-                }
-            });
+            return handleAndroidPost(rurl,encodedBody)
         }
         requestOptions.body=encodedBody;
         return handleJson(rurl,requestOptions,options);
@@ -140,17 +142,7 @@ let RequestHandler={
         if (!requestOptions.headers) requestOptions.headers={};
         requestOptions.headers['content-type']='application/octet-string';
         if (avnav.android){
-            return new Promise((resolve,reject)=> {
-                let status=avnav.android.handleUpload(rurl, body);
-                if (status == 'OK'){
-                    resolve({status:status});
-                    return;
-                }
-                else{
-                    reject(status);
-                    return;
-                }
-            });
+            return handleAndroidPost(rurl,body);
         }
         requestOptions.body=body;
         return handleJson(rurl,requestOptions,options);

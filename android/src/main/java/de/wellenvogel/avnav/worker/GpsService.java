@@ -201,9 +201,9 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         if ("createHandler".equals(command)){
             String typeName=AvnUtil.getMandatoryParameter(uri,"handlerName");
             String config=postData.getAsString();
-            addWorker(typeName,new JSONObject(config));
+            int newId=addWorker(typeName,new JSONObject(config));
             updateConfigSequence();
-            return RequestHandler.getReturn();
+            return RequestHandler.getReturn(new AvnUtil.KeyValue<Integer>("id",newId));
         }
         if ("getAddables".equals(command)){
             List<String> names=WorkerFactory.getInstance().getKnownTypes(true,this);
@@ -661,11 +661,11 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         worker.start(); //will restart
         saveWorkerConfig(worker);
     }
-    private synchronized void addWorker(String typeName, JSONObject newConfig) throws WorkerFactory.WorkerNotFound, JSONException, IOException {
+    private synchronized int addWorker(String typeName, JSONObject newConfig) throws WorkerFactory.WorkerNotFound, JSONException, IOException {
         IWorker newWorker = WorkerFactory.getInstance().createWorker(typeName, this, queue);
-        addWorker(newWorker,newConfig);
+        return addWorker(newWorker,newConfig);
     }
-    private synchronized void addWorker(IWorker newWorker, JSONObject newConfig) throws IOException, JSONException {
+    private synchronized int addWorker(IWorker newWorker, JSONObject newConfig) throws IOException, JSONException {
         newWorker.setId(getNextWorkerId());
         String typeName=newWorker.getTypeName();
         newWorker.setParameters(newConfig, true,true);
@@ -684,6 +684,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
             workers.add(newWorker);
         }
         saveWorkerConfig(newWorker);
+        return newWorker.getId();
     }
     private synchronized void deleteWorker(IWorker worker) throws JSONException {
         worker.stopAndWait();

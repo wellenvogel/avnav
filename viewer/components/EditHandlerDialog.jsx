@@ -154,7 +154,12 @@ class EditHandlerDialog extends React.Component{
     addHandler(){
         let param=this.getRequestParam({handlerName:this.props.handlerName,command:'createHandler'});
         RequestHandler.postJson('',this.modifiedValues.getState(),undefined,param)
-            .then((data)=>this.props.closeCallback())
+            .then((data)=>{
+                if (this.props.createdCallback){
+                    this.props.createdCallback(data.id)
+                }
+                this.props.closeCallback()
+            })
             .catch((e)=>Toast(e));
     }
 
@@ -293,7 +298,8 @@ EditHandlerDialog.propTypes={
     handlerName: PropTypes.string, //if this is set the handlerId and childId are ignored
                                    //and we create a new handler
     closeCallback: PropTypes.func.isRequired,
-    initialValues: PropTypes.object
+    initialValues: PropTypes.object,
+    createdCallback: PropTypes.func
 };
 
 const filterObject=(data)=>{
@@ -328,8 +334,9 @@ EditHandlerDialog.createNewHandlerDialog=(typeName,opt_initialParameters,opt_don
             title="Add Handler"
             handlerName={typeName}
             initialValues={opt_initialParameters}
+            createdCallback={opt_doneCallback}
         />
-    },undefined,opt_doneCallback);
+    },undefined);
 }
 
 EditHandlerDialog.createAddDialog=(opt_doneCallback)=>{

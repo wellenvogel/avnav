@@ -183,9 +183,9 @@ public class JavaScriptApi {
     /**
      * replacement for the missing ability to intercept post requests
      * will only work for small data provided here as a string
-     * basically it calls the request handler and returns the status as string
-     * @param url
-     * @param data
+     * basically it calls the request handler and returns the status as json object
+     * @param url the url
+     * @param data the post data
      * @return status
      */
     @JavascriptInterface
@@ -193,13 +193,17 @@ public class JavaScriptApi {
         if (detached) return null;
         try {
             RequestHandler.NavResponse rt= requestHandler.handleNavRequestInternal(Uri.parse(url),new PostVars(data),null);
-            if (! rt.isJson() || ! (rt.getJson() instanceof JSONObject)){
-                return "invalid post request";
+            if (! rt.isJson()){
+                return RequestHandler.getErrorReturn("invalid post request").toString();
             }
-            return ((JSONObject)(rt.getJson())).getString("status");
+            return rt.getJson().toString();
         } catch (Exception e) {
             AvnLog.e("error in upload request for "+url+":",e);
-            return e.getMessage();
+            try {
+                return RequestHandler.getErrorReturn(e.getMessage()).toString();
+            } catch (JSONException jsonException) {
+                return null;
+            }
         }
 
     }

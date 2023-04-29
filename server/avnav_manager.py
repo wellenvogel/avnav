@@ -528,6 +528,7 @@ class AVNHandlerManager(object):
       handler.configChanger.writeAll()
       handler.startInstance(self.navData)
       self.updateChangeCounter()
+      rt['id']=handler.getId()
       return rt
     if command == 'getAddables':
       allHandlers = avnav_handlerList.getAllHandlerClasses()
