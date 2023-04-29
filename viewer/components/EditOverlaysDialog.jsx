@@ -206,7 +206,7 @@ class OverlayItemDialog extends React.Component{
                         this.stateHelper.setState(newItemState);
                     }
                 }catch (e){
-                    Toast(url+" is no valid xml: "+e.message);
+                    Toast(url+" is no valid overlay: "+e.message);
                     this.setState({loading:false,itemInfo:{}});
                     this.stateHelper.setValue('name',undefined);
                 }
