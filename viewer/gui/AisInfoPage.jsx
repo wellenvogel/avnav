@@ -27,6 +27,7 @@ const displayItems = [
     {name: 'tcpa', label: 'TCPA(h:min:sec)'},
     {name: 'speed', label: 'SOG(kn)'},
     {name: 'course', label: 'COG'},
+    {name: 'status', label: 'Status'},
     {name: 'destination', label: 'Destination'},
     {name: 'shiptype', label: 'Type'},
     {name: 'passFront', label: 'we pass', addClass: 'aisFront'},
@@ -34,7 +35,8 @@ const displayItems = [
     {name: 'clazz', label: 'Class'},
     {name: 'length', label: 'Length(m)'},
     {name: 'beam',label: 'Beam(m)'},
-    {name: 'draught',label: 'Draught(m)'}
+    {name: 'draught',label: 'Draught(m)'},
+    {name: 'age',label: 'Age(s)'}
 ];
 
 const createUpdateFunction=(config,mmsi)=>{

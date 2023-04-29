@@ -123,6 +123,41 @@ const aisparam={
             return "Other";
         }
     },
+    status:{
+        headline: 'status',
+        format: function(v){
+            if (v.status === undefined){
+                return "----";
+            }
+            let st=parseInt(v.status);
+            switch (st){
+                case 0: return 'Under way using engine';
+                case 1: return 'At anchor';
+                case 2: return 'Not under command';
+                case 3: return 'Restricted manoeuverability';
+                case 4: return 'Constrained by her draught';
+                case 5: return 'Moored';
+                case 6: return 'Aground';
+                case 7: return 'Engaged in Fishing';
+                case 8: return 'Under way sailing';
+                case 9:
+                case 10:
+                case 11:
+                case 12:
+                case 13: return '[reserved]';
+                case 14: return 'AIS-SART is active';
+            }
+            return st+' [unknown]'
+        }
+    },
+    age: {
+        headline: 'age',
+        format: function(v){
+            if (v.age === undefined) return '----';
+            return Formatter.formatDecimal(v.age,5,2);
+        },
+        unit: 's'
+    },
     position: {
         headline: 'position',
             format: function (v) {

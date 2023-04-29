@@ -38,7 +38,7 @@ const mergeStyles=function(){
     return rt;
 };
 
-const styleKeyFromItem=(item,useDefault,useInternal)=>{
+const styleKeyFromItem=(item)=>{
     let rt="normal";
     if (item.mmsi === globalStore.getData(keys.nav.ais.trackedMmsi)){
         rt="tracking";
@@ -51,11 +51,7 @@ const styleKeyFromItem=(item,useDefault,useInternal)=>{
             rt="nearest";
         }
     }
-    if (useDefault) {
-        return useInternal?"internal"+rt:rt;
-    }
-    let suffix=AisFormatter.format('shiptype',item);
-    return rt+"-"+suffix;
+    return rt;
 
 };
 
@@ -211,9 +207,15 @@ AisLayer.prototype.setStyles=function(){
  * @returns {StyleEntry}
  */
 AisLayer.prototype.getStyleEntry=function(item){
-    return mergeStyles(this.symbolStyles[styleKeyFromItem(item,true,true)],
-        this.symbolStyles[styleKeyFromItem(item,true)],
-        this.symbolStyles[styleKeyFromItem(item)]);
+    let typeSuffix="-"+AisFormatter.format('shiptype',item);
+    let statusSuffix=(item.status !== undefined)?"-status"+parseInt(item.status):undefined;
+    let base=styleKeyFromItem(item);
+    return mergeStyles(this.symbolStyles["internal"+base],
+        this.symbolStyles[base],
+        this.symbolStyles[base+typeSuffix],
+        (statusSuffix!==undefined)?this.symbolStyles[base+statusSuffix]:undefined,
+        (statusSuffix!==undefined)?this.symbolStyles[base+typeSuffix+statusSuffix]:undefined,
+        );
 };
 
 AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,computeTargetFunction){
@@ -380,7 +382,7 @@ AisLayer.prototype.setImageStyles=function(styles){
         let re=new RegExp("^"+styleProp+"[-]");
         for (let k in styles){
             if (re.exec(k)){
-                let suffix=k.replace(/.*[-]/,"");
+                let suffix=k.replace(re,"");
                 let styleKey=name.toLowerCase()+"-"+suffix;
                 let dstyle=styles[k];
                 if (typeof (dstyle) === 'object') {

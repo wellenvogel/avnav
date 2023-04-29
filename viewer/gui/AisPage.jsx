@@ -34,6 +34,10 @@ const aisInfos=[
         {name:'draught',label:'Drau',len:8}
     ],
     [
+        {name:'age',label:'Age ',len:6},
+        {name:'status',label:'Stat'}
+    ],
+    [
         {name:'shiptype',label:'Type'},
         {name:'callsign',label:'Call'},
         {name:'destination',label:'Dest'}
