@@ -202,24 +202,6 @@ AisLayer.prototype.createInternalIcons = function () {
     this.symbolStyles.internaltracking = new StyleEntry(
         this.createIcon(style.aisTrackingColor, useCourseVector),
         assign({}, symbolStyle, {courseVectorColor: style.aisTrackingColor}));
-    let originalColor="#F7C204";
-    let baseIcon=useCourseVector?aisdefault:aisdefaultnv;
-    this.adaptIconColor(baseIcon,originalColor,style.aisNearestColor)
-        .then((icon)=>{
-            this.symbolStyles.internalnearest= new StyleEntry(icon,this.symbolStyles.internalnearest.style)
-        })
-    this.adaptIconColor(baseIcon,originalColor,style.aisNormalColor)
-        .then((icon)=>{
-            this.symbolStyles.internalnormal= new StyleEntry(icon,this.symbolStyles.internalnormal.style)
-        })
-    this.adaptIconColor(baseIcon,originalColor,style.aisWarningColor)
-        .then((icon)=>{
-            this.symbolStyles.internalwarning= new StyleEntry(icon,this.symbolStyles.internalwarning.style)
-        })
-    this.adaptIconColor(baseIcon,originalColor,style.aisTrackingColor)
-        .then((icon)=>{
-            this.symbolStyles.internaltracking= new StyleEntry(icon,this.symbolStyles.internaltracking.style)
-        })
 };
 /**
  * find the AIS target that has been clicked
@@ -412,8 +394,23 @@ AisLayer.prototype.computeTarget=function(pos,course,dist){
     }
 };
 /**
- *
- * @param styles
+ * parse the user image styles
+ * we can handle the following style entries:
+ * aisImage
+ * aisNearestImage, aisNormalImage, aisWarningImage, aisTrackingImage
+ * aisXXXImage-<shiptype> - e.g. aisNormalImage-Sail or aisImage-Sail
+ * aisXXXImage-status<status> - e.g. aisImage-status5 for moored
+ * aisXXXImage-<shiptype>-status<status> - e.g. aisImage-Sail-status5
+ * for all styles you can provied the following entries:
+ * src: an PNG/JPG icon url
+ * anchor: [x,y] image anchor (i.e. where to position the image)
+ * size: [width,height] image size
+ * courseVectorColor: color - if given use this color for the course vector insetad of the default colors
+ * courseVector: true|false - show/do not show a course vector
+ * rotate: true|false - rotate by the ship course
+ * replaceColor: color - if given, this color will be replaced by the user selected normal/tracking/nearest/warning color
+ *               this way you can use the same icon image for all 4 display modes
+ * @param styles - the user images.json data
  */
 AisLayer.prototype.setImageStyles=function(styles){
     let names=['Normal','Warning','Nearest','Tracking'];
@@ -424,30 +421,43 @@ AisLayer.prototype.setImageStyles=function(styles){
         courseVector: true,
         rotate: true
     };
-    for (let i in names){
-        let name=names[i];
+    let iter=[''].concat(names);
+    for (let i in iter){
+        let name=iter[i];
         let styleProp="ais"+name+"Image";
-        if (typeof(styles[styleProp]) === 'object' ) {
-            let style = styles[styleProp];
-            this.symbolStyles[name.toLowerCase()] = new StyleEntry(
-                style.src,
-                Helper.filteredAssign(allowedStyles,style),
-                true
-            );
-        }
-        let re=new RegExp("^"+styleProp+"[-]");
+        let re=new RegExp("^"+styleProp);
         for (let k in styles){
             if (re.exec(k)){
                 let suffix=k.replace(re,"");
-                let styleKey=name.toLowerCase()+"-"+suffix;
-                let dstyle=styles[k];
-                if (typeof (dstyle) === 'object') {
-                    this.symbolStyles[styleKey] = new StyleEntry(
-                        dstyle.src,
-                        Helper.filteredAssign(allowedStyles,dstyle),
-                        true
-                    )
-                }
+                let prefixes=name===''?names:[name];
+                prefixes.forEach((prefix)=>{
+                    let styleKey=prefix.toLowerCase()+suffix;
+                    let dstyle=styles[k];
+                    if (typeof (dstyle) === 'object') {
+                        if (dstyle.replaceColor !== undefined){
+                            let style = globalStore.getMultiple(keys.properties.style);
+                            let targetColor=style['ais'+prefix+'Color'];
+                            if (targetColor === undefined) {
+                                return;
+                            }
+                            this.adaptIconColor(dstyle.src,dstyle.replaceColor,targetColor)
+                                .then((icon)=>{
+                                    this.symbolStyles[styleKey] = new StyleEntry(
+                                        icon,
+                                        Helper.filteredAssign(allowedStyles, dstyle),
+                                        true
+                                    )
+                                })
+                        }
+                        else {
+                            this.symbolStyles[styleKey] = new StyleEntry(
+                                dstyle.src,
+                                Helper.filteredAssign(allowedStyles, dstyle),
+                                true
+                            )
+                        }
+                    }
+                })
             }
         }
     }
