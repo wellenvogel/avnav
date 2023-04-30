@@ -11,6 +11,9 @@ import NavCompute from '../nav/navcompute.js';
 import AisFormatter from '../nav/aisformatter.jsx';
 import Helper from '../util/helper.js';
 import globalstore from "../util/globalstore";
+import tinycolor from "tinycolor2";
+import aisdefault from '../images/ais-default-noarrow.png'
+import aisdefaultnv from '../images/ais-default.png'
 
 const StyleEntry=function(src,style){
     this.src=src;
@@ -141,6 +144,42 @@ AisLayer.prototype.createIcon=function(color,useCourseVector){
     return canvas.toDataURL();
 };
 
+AisLayer.prototype.adaptIconColor= function(src,originalColor,color){
+    return new Promise((resolve,reject)=>{
+        let canvas = document.createElement("canvas");
+        if (! canvas) {
+            reject("no canvas");
+            return;
+        }
+        let orig=tinycolor(originalColor).toRgb();
+        let target=tinycolor(color).toRgb();
+        let image=new Image();
+        image.onload=()=>{
+            let ctx=canvas.getContext("2d");
+            canvas.height=image.height;
+            canvas.width=image.width;
+            ctx.drawImage(image,0,0,image.width,image.height);
+            let imgData=ctx.getImageData(0,0,image.width,image.height);
+            let hasChanges=false;
+            for (let i=0;i<imgData.data.length;i+=4){
+                if (imgData.data[i] === orig.r &&
+                    imgData.data[i+1] === orig.g &&
+                    imgData.data[i+2] === orig.b){
+                    hasChanges=true;
+                    imgData.data[i]=target.r;
+                    imgData.data[i+1]=target.g;
+                    imgData.data[i+2]=target.b;
+                }
+            }
+            if (hasChanges){
+                ctx.putImageData(imgData,0,0);
+            }
+            resolve(canvas.toDataURL());
+        }
+        image.src=src;
+    });
+};
+
 /**
  * compute the icons for the AIS display
  * @private
@@ -163,7 +202,24 @@ AisLayer.prototype.createInternalIcons = function () {
     this.symbolStyles.internaltracking = new StyleEntry(
         this.createIcon(style.aisTrackingColor, useCourseVector),
         assign({}, symbolStyle, {courseVectorColor: style.aisTrackingColor}));
-
+    let originalColor="#F7C204";
+    let baseIcon=useCourseVector?aisdefault:aisdefaultnv;
+    this.adaptIconColor(baseIcon,originalColor,style.aisNearestColor)
+        .then((icon)=>{
+            this.symbolStyles.internalnearest= new StyleEntry(icon,this.symbolStyles.internalnearest.style)
+        })
+    this.adaptIconColor(baseIcon,originalColor,style.aisNormalColor)
+        .then((icon)=>{
+            this.symbolStyles.internalnormal= new StyleEntry(icon,this.symbolStyles.internalnormal.style)
+        })
+    this.adaptIconColor(baseIcon,originalColor,style.aisWarningColor)
+        .then((icon)=>{
+            this.symbolStyles.internalwarning= new StyleEntry(icon,this.symbolStyles.internalwarning.style)
+        })
+    this.adaptIconColor(baseIcon,originalColor,style.aisTrackingColor)
+        .then((icon)=>{
+            this.symbolStyles.internaltracking= new StyleEntry(icon,this.symbolStyles.internaltracking.style)
+        })
 };
 /**
  * find the AIS target that has been clicked

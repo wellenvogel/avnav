@@ -1,9 +1,74 @@
-<svg width="100" height="300" xmlns="http://www.w3.org/2000/svg">
- <!-- Created with SVG-edit - http://svg-edit.googlecode.com/ -->
- <g>
-  <title>Layer 1</title>
-  <path stroke="#000000" id="svg_1" d="m23.5,297.875l26.5,-97.875l26.5,97.875l-53,0z" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" fill="#f7c204"/>
-  <line id="svg_2" y2="3" x2="50" y1="200" x1="50" stroke-linecap="null" stroke-linejoin="null" stroke-dasharray="null" stroke-width="4" stroke="#f7c204" fill="none"/>
- </g>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="100"
+   height="300"
+   version="1.1"
+   id="svg906"
+   sodipodi:docname="ais-default.svg"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"
+   inkscape:export-filename="/home/andreas/projects/avnav/viewer/images/ais-default.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96">
+  <metadata
+     id="metadata912">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs910" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1920"
+     inkscape:window-height="994"
+     id="namedview908"
+     showgrid="false"
+     inkscape:zoom="1.6"
+     inkscape:cx="-101.27119"
+     inkscape:cy="200.84746"
+     inkscape:window-x="1680"
+     inkscape:window-y="31"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg906" />
+  <!-- Created with SVG-edit - http://svg-edit.googlecode.com/ -->
+  <g
+     id="g904">
+    <title
+       id="title900">Layer 1</title>
+    <path
+       id="svg_1"
+       d="M 23.5,297.875 50,205.11457 76.5,297.875 Z"
+       stroke-linecap="null"
+       stroke-linejoin="null"
+       inkscape:connector-curvature="0"
+       style="fill:#f7c204;stroke:#000000;stroke-width:3;stroke-miterlimit:4;stroke-dasharray:none" />
+    <line
+       id="svg_2"
+       y2="3"
+       x2="50"
+       y1="200"
+       x1="50"
+       stroke-linecap="null"
+       stroke-linejoin="null"
+       style="fill:none;stroke:#f7c204;stroke-width:4;stroke-dasharray:none" />
+  </g>
 </svg>
-
