@@ -1,4 +1,4 @@
-34568 package de.wellenvogel.avnav.worker;
+package de.wellenvogel.avnav.worker;
 
 import android.location.Location;
 import android.os.SystemClock;
