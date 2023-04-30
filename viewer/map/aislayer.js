@@ -15,11 +15,17 @@ import tinycolor from "tinycolor2";
 import aisdefault from '../images/ais-default-noarrow.png'
 import aisdefaultnv from '../images/ais-default.png'
 
-const StyleEntry=function(src,style){
+const StyleEntry=function(src,style,fallback){
     this.src=src;
     this.style=style;
+    let retries=0;
     if (src !== undefined) {
         this.image = new Image();
+        this.image.onerror=()=>{
+            if (retries) return;
+            if (! fallback) return;
+            this.image.src=fallback;
+        }
         this.image.src = src;
     }
 };
@@ -144,7 +150,7 @@ AisLayer.prototype.createIcon=function(color,useCourseVector){
     return canvas.toDataURL();
 };
 
-AisLayer.prototype.adaptIconColor= function(src,originalColor,color){
+AisLayer.prototype.adaptIconColor= function(src,fallback,originalColor,color){
     return new Promise((resolve,reject)=>{
         let canvas = document.createElement("canvas");
         if (! canvas) {
@@ -154,6 +160,7 @@ AisLayer.prototype.adaptIconColor= function(src,originalColor,color){
         let orig=tinycolor(originalColor).toRgb();
         let target=tinycolor(color).toRgb();
         let image=new Image();
+        let count=0;
         image.onload=()=>{
             let ctx=canvas.getContext("2d");
             canvas.height=image.height;
@@ -175,6 +182,11 @@ AisLayer.prototype.adaptIconColor= function(src,originalColor,color){
                 ctx.putImageData(imgData,0,0);
             }
             resolve(canvas.toDataURL());
+        }
+        image.onerror=()=>{
+            if (count) return;
+            count++;
+            image.src=fallback;
         }
         image.src=src;
     });
@@ -421,6 +433,8 @@ AisLayer.prototype.setImageStyles=function(styles){
         courseVector: true,
         rotate: true
     };
+    let useCourseVector = globalStore.getData(keys.properties.aisUseCourseVector, false);
+    let fallback=useCourseVector?aisdefault:aisdefaultnv;
     let iter=[''].concat(names);
     for (let i in iter){
         let name=iter[i];
@@ -440,12 +454,11 @@ AisLayer.prototype.setImageStyles=function(styles){
                             if (targetColor === undefined) {
                                 return;
                             }
-                            this.adaptIconColor(dstyle.src,dstyle.replaceColor,targetColor)
+                            this.adaptIconColor(dstyle.src,fallback,dstyle.replaceColor,targetColor)
                                 .then((icon)=>{
                                     this.symbolStyles[styleKey] = new StyleEntry(
                                         icon,
-                                        Helper.filteredAssign(allowedStyles, dstyle),
-                                        true
+                                        Helper.filteredAssign(allowedStyles, dstyle)
                                     )
                                 })
                         }
@@ -453,7 +466,7 @@ AisLayer.prototype.setImageStyles=function(styles){
                             this.symbolStyles[styleKey] = new StyleEntry(
                                 dstyle.src,
                                 Helper.filteredAssign(allowedStyles, dstyle),
-                                true
+                                fallback
                             )
                         }
                     }
