@@ -1,0 +1,26 @@
+{
+  "aisImage-status1": {
+    "src": "/viewer/images/ais-default-anchor.png",
+    "anchor": [15,0],
+    "size": [30,30],
+    "replaceColor": "#f7c204"
+  },
+  "aisImage-status5": {
+    "src": "/viewer/images/ais-default-anchor.png",
+    "anchor": [15,0],
+    "size": [30,30],
+    "replaceColor": "#f7c204"
+  },
+  "aisImage-status6": {
+    "src": "/viewer/images/ais-default-anchor.png",
+    "anchor": [15,0],
+    "size": [30,30],
+    "replaceColor": "#f7c204"
+  },
+  "aisImage-status3": {
+    "src": "/viewer/images/ais-default-restricted.png",
+    "anchor": [15,0],
+    "size": [30,30],
+    "replaceColor": "#f7c204"
+  }
+}

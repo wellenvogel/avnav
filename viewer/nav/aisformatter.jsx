@@ -23,7 +23,7 @@ const aisparam={
     heading: {
         headline: 'hdg',
         format: function (v) {
-            return Formatter.formatDirection(v.headingTo || 0);
+            return Formatter.formatDirection(v.heading || 0);
         },
         unit: '°'
     },
@@ -38,6 +38,13 @@ const aisparam={
         headline: 'course',
             format: function (v) {
             return Formatter.formatDirection(v.course || 0);
+        },
+        unit: '°'
+    },
+    headingTo:{
+        headline: 'hdt',
+        format: function (v) {
+            return Formatter.formatDirection(v.headingTo || 0);
         },
         unit: '°'
     },

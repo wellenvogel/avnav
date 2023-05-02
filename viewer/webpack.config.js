@@ -43,7 +43,10 @@ module.exports = (env, argv) => {
     ];
     var images = [
         'WebIcon-512.png',
-        'signalk.svg'
+        'signalk.svg',
+        'ais-default.png',
+        'ais-default-anchor.png',
+        'ais-default-restricted.png'
 
     ];
     images.forEach(function (el) {

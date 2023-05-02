@@ -21,12 +21,13 @@ const aisInfos=[
     [
         {name:'distance',label:'Dst ',unit:'nm',len:6},
         {name:'cpa',label:'Cpa ',unit:'nm',len:6},
+        {name:'headingTo',label:'Hdt ',unit:'°',len:3},
         {name:'tcpa',label:'Tcpa',unit:'h',len:8}
     ],
     [
         {name:'course',label:'Cog ',unit:'°',len:6},
         {name:'speed',label:'Sog ',unit:'kn',len:6},
-        {name:'heading',label:'Hdg ',unit:'°',len:8}
+        {name:'heading',label:'Hdg ',unit:'°',len:3}
     ],
     [
         {name:'length',label:'Len ',len:6},
