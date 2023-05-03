@@ -12,20 +12,15 @@ import AisFormatter from '../nav/aisformatter.jsx';
 import Helper from '../util/helper.js';
 import globalstore from "../util/globalstore";
 import tinycolor from "tinycolor2";
-import aisdefault from '../images/ais-default-noarrow.png'
-import aisdefaultnv from '../images/ais-default.png'
 
-const StyleEntry=function(src,style,fallback){
+
+const StyleEntry=function(src,style){
     this.src=src;
     this.style=style;
-    let retries=0;
+    this.loaded=false;
     if (src !== undefined) {
         this.image = new Image();
-        this.image.onerror=()=>{
-            if (retries) return;
-            if (! fallback) return;
-            this.image.src=fallback;
-        }
+        this.image.onload=()=>this.loaded=true;
         this.image.src = src;
     }
 };
@@ -36,10 +31,11 @@ const mergeStyles=function(){
     for (let i=0;i< arguments.length;i++) {
         let other = arguments[i];
         if (!other) continue;
-        if (other.src !== undefined) {
-            rt.src = other.src;
-        }
         if (other.image !== undefined) {
+            //we skip all styles that have a source attribute
+            //but there was no chance to load it
+            if (! other.loaded) continue;
+            rt.src = other.src;
             rt.image = other.image;
         }
         assign(rt.style, other.style);
@@ -150,7 +146,7 @@ AisLayer.prototype.createIcon=function(color,useCourseVector){
     return canvas.toDataURL();
 };
 
-AisLayer.prototype.adaptIconColor= function(src,fallback,originalColor,color){
+AisLayer.prototype.adaptIconColor= function(src,originalColor,color){
     return new Promise((resolve,reject)=>{
         let canvas = document.createElement("canvas");
         if (! canvas) {
@@ -160,7 +156,6 @@ AisLayer.prototype.adaptIconColor= function(src,fallback,originalColor,color){
         let orig=tinycolor(originalColor).toRgb();
         let target=tinycolor(color).toRgb();
         let image=new Image();
-        let count=0;
         image.onload=()=>{
             let ctx=canvas.getContext("2d");
             canvas.height=image.height;
@@ -184,9 +179,7 @@ AisLayer.prototype.adaptIconColor= function(src,fallback,originalColor,color){
             resolve(canvas.toDataURL());
         }
         image.onerror=()=>{
-            if (count) return;
-            count++;
-            image.src=fallback;
+            resolve('data:,error'); //invalid url, triggers fallback to next matching style
         }
         image.src=src;
     });
@@ -379,7 +372,7 @@ AisLayer.prototype.onPostCompose=function(center,drawing){
  * handle changed properties
  * @param evdata
  */
-AisLayer.prototype.dataChanged=function(){
+AisLayer.prototype.dataChanged=function(evdata){
     this.visible=globalStore.getData(keys.properties.layers.ais);
     this.createInternalIcons();
     this.setStyles();
@@ -422,6 +415,8 @@ AisLayer.prototype.computeTarget=function(pos,course,dist){
  * rotate: true|false - rotate by the ship course
  * replaceColor: color - if given, this color will be replaced by the user selected normal/tracking/nearest/warning color
  *               this way you can use the same icon image for all 4 display modes
+ * whenever a style contains a src attribute but the source could not be loaded,
+ * this style will be skipped completely and we fall back to the next matching (ending at the internal basic styles)
  * @param styles - the user images.json data
  */
 AisLayer.prototype.setImageStyles=function(styles){
@@ -433,8 +428,6 @@ AisLayer.prototype.setImageStyles=function(styles){
         courseVector: true,
         rotate: true
     };
-    let useCourseVector = globalStore.getData(keys.properties.aisUseCourseVector, false);
-    let fallback=useCourseVector?aisdefault:aisdefaultnv;
     let iter=[''].concat(names);
     for (let i in iter){
         let name=iter[i];
@@ -454,7 +447,7 @@ AisLayer.prototype.setImageStyles=function(styles){
                             if (targetColor === undefined) {
                                 return;
                             }
-                            this.adaptIconColor(dstyle.src,fallback,dstyle.replaceColor,targetColor)
+                            this.adaptIconColor(dstyle.src,dstyle.replaceColor,targetColor)
                                 .then((icon)=>{
                                     this.symbolStyles[styleKey] = new StyleEntry(
                                         icon,
@@ -465,8 +458,7 @@ AisLayer.prototype.setImageStyles=function(styles){
                         else {
                             this.symbolStyles[styleKey] = new StyleEntry(
                                 dstyle.src,
-                                Helper.filteredAssign(allowedStyles, dstyle),
-                                fallback
+                                Helper.filteredAssign(allowedStyles, dstyle)
                             )
                         }
                     }
