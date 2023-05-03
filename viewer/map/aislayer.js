@@ -74,7 +74,7 @@ class StyleEntry {
                 }
                 this.image.onload = () => {
                     if (sequence !== this.sequence) return;
-                    adaptOpacity(this.image, this.ghostFactor)
+                    adaptOpacity(this.image, ghostFactor)
                         .then((ghostImage) => {
                             if (sequence !== this.sequence) return;
                             this.ghostImage.src = ghostImage;
@@ -107,7 +107,7 @@ class StyleEntry {
                 this.ghostFactor=ghostFactor;
                 this.loaded = true;
             }
-            adaptOpacity(this.image, this.ghostFactor)
+            adaptOpacity(this.image, ghostFactor)
                         .then((ghostImage) => {
                             if (sequence !== this.sequence) return;
                             this.ghostImage.src = ghostImage;
@@ -193,35 +193,27 @@ const adaptIconColor= (src,originalColor,color)=>{
     });
 };
 
-const adaptOpacity= (src,factor)=>{
-    return new Promise((resolve,reject)=>{
+const adaptOpacity = (image, factor) => {
+    return new Promise((resolve, reject) => {
         let canvas = document.createElement("canvas");
-        if (! canvas) {
+        if (!canvas) {
             reject("no canvas");
             return;
         }
-        if (factor === 1 || factor < 0){
-            resolve(src);
-        }
-        let image=new Image();
-        image.onload=()=>{
-            let ctx=canvas.getContext("2d");
-            canvas.height=image.height;
-            canvas.width=image.width;
-            ctx.drawImage(image,0,0,image.width,image.height);
-            let imgData=ctx.getImageData(0,0,image.width,image.height);
-            for (let i=0;i<imgData.data.length;i+=4){
-                let nv=Math.floor(imgData.data[i+3]*factor);
-                if (nv > 255) nv=255;
-                imgData.data[i+3]=nv;
+        let ctx = canvas.getContext("2d");
+        canvas.height = image.height;
+        canvas.width = image.width;
+        ctx.drawImage(image, 0, 0, image.width, image.height);
+        if (factor !== 1 && factor > 0) {
+            let imgData = ctx.getImageData(0, 0, image.width, image.height);
+            for (let i = 0; i < imgData.data.length; i += 4) {
+                let nv = Math.floor(imgData.data[i + 3] * factor);
+                if (nv > 255) nv = 255;
+                imgData.data[i + 3] = nv;
             }
-            ctx.putImageData(imgData,0,0);
-            resolve(canvas.toDataURL());
+            ctx.putImageData(imgData, 0, 0);
         }
-        image.onerror=()=>{
-            resolve('data:,error'); //invalid url, triggers fallback to next matching style
-        }
-        image.src=src;
+        resolve(canvas.toDataURL());
     });
 };
 

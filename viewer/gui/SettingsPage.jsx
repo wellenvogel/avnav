@@ -45,7 +45,7 @@ const settingsSections={
         keys.properties.aisTextSize,keys.properties.aisUseCourseVector,keys.properties.style.aisNormalColor,
         keys.properties.style.aisNearestColor, keys.properties.style.aisWarningColor,keys.properties.style.aisTrackingColor,
         keys.properties.aisIconBorderWidth,keys.properties.aisIconScale,keys.properties.aisClassbShrink,keys.properties.aisShowA,
-        keys.properties.aisShowB,keys.properties.aisShowOther,
+        keys.properties.aisShowB,keys.properties.aisShowOther, keys.properties.aisShowEstimated,
         keys.properties.aisReducedList,keys.properties.aisListUpdateTime],
     Navigation: [keys.properties.bearingColor,keys.properties.bearingWidth,keys.properties.navCircleColor,keys.properties.navCircleWidth,keys.properties.navCircle1Radius,keys.properties.navCircle2Radius,keys.properties.navCircle3Radius,
         keys.properties.navBoatCourseTime,keys.properties.boatIconScale,keys.properties.boatDirectionMode,
