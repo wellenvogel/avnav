@@ -3,7 +3,7 @@
  */
     
 import navobjects from '../nav/navobjects';
-import keys from '../util/keys.jsx';
+import keys, {KeyHelper} from '../util/keys.jsx';
 import globalStore from '../util/globalstore.jsx';
 import base from '../base.js';
 import assign from 'object-assign';
@@ -13,17 +13,110 @@ import Helper from '../util/helper.js';
 import globalstore from "../util/globalstore";
 import tinycolor from "tinycolor2";
 
+const DEFAULT_COLOR="#f7c204";
 
-const StyleEntry=function(src,style){
-    this.src=src;
-    this.style=style;
-    this.loaded=false;
-    if (src !== undefined) {
-        this.image = new Image();
-        this.image.onload=()=>this.loaded=true;
-        this.image.src = src;
+class StyleEntry {
+    constructor(colorStyle,src, style, replaceColor) {
+        this.src = src;
+        this.style = style;
+        this.loaded = false;
+        this.image = undefined;
+        this.ghostImage = undefined;
+        this.color=undefined;
+        this.ghostFactor=undefined;
+        this.replaceColor=replaceColor;
+        this.sequence=1;
+        this.colorStyle=colorStyle;
     }
-};
+
+    load(ghostFactor) {
+        if (this.src === undefined) return;
+        let color=globalStore.getData(KeyHelper.keyNodeToString(keys.properties.style)+"."+this.colorStyle);
+        if (! color) return;
+        this.sequence++;
+        let sequence=this.sequence;
+        //what needs to be done?
+        //load for the first time
+        //or load with changing color or ghostFactor
+        if (! this.loaded){
+            this.image=undefined;
+            this.ghostImage=undefined;
+        }
+        if (this.image) {
+            if (this.replaceColor !== undefined && this.color !== color) {
+                this.image = undefined;
+            }
+        }
+        if (this.image){
+            if (ghostFactor === undefined){
+                this.ghostFactor=undefined;
+                this.ghostImage=undefined;
+                return;
+            }
+            else{
+                if (this.ghostFactor !== ghostFactor){
+                    this.ghostImage=undefined;
+                }
+                else{
+                    return;
+                }
+            }
+        }
+        if (! this.image){
+            this.loaded=false;
+            this.image = new Image();
+            if (ghostFactor !== undefined ) {
+                this.ghostImage = new Image();
+                this.ghostImage.onload = () => {
+                    if (sequence !== this.sequence) return;
+                    this.ghostFactor=ghostFactor;
+                    this.loaded = true
+                }
+                this.image.onload = () => {
+                    if (sequence !== this.sequence) return;
+                    adaptOpacity(this.image, this.ghostFactor)
+                        .then((ghostImage) => {
+                            if (sequence !== this.sequence) return;
+                            this.ghostImage.src = ghostImage;
+                        })
+                }
+            } else {
+                this.image.onload = () => {
+                    if (sequence !== this.sequence) return;
+                    this.loaded = true;
+                }
+            }
+            if (this.replaceColor !== undefined) {
+                adaptIconColor(this.src, this.replaceColor, color)
+                    .then((adaptedSrc) => {
+                        if (sequence !== this.sequence) return;
+                        this.color = color;
+                        this.image.src = adaptedSrc;
+                    })
+            }
+            else {
+                this.image.src = this.src;
+            }
+        }
+        else{
+            this.loaded=false;
+            //only re-compute the ghost image
+            this.ghostImage = new Image();
+            this.ghostImage.onload = () => {
+                if (sequence !== this.sequence) return;
+                this.ghostFactor=ghostFactor;
+                this.loaded = true;
+            }
+            adaptOpacity(this.image, this.ghostFactor)
+                        .then((ghostImage) => {
+                            if (sequence !== this.sequence) return;
+                            this.ghostImage.src = ghostImage;
+                        })
+        }
+
+    }
+
+}
 const mergeStyles=function(){
     let rt={
         style:{}
@@ -31,12 +124,13 @@ const mergeStyles=function(){
     for (let i=0;i< arguments.length;i++) {
         let other = arguments[i];
         if (!other) continue;
-        if (other.image !== undefined) {
+        if (other.src !== undefined) {
             //we skip all styles that have a source attribute
             //but there was no chance to load it
             if (! other.loaded) continue;
             rt.src = other.src;
             rt.image = other.image;
+            rt.ghostImage = other.ghostImage;
         }
         assign(rt.style, other.style);
     }
@@ -60,6 +154,80 @@ const styleKeyFromItem=(item)=>{
 
 };
 
+const adaptIconColor= (src,originalColor,color)=>{
+    return new Promise((resolve,reject)=>{
+        let canvas = document.createElement("canvas");
+        if (! canvas) {
+            reject("no canvas");
+            return;
+        }
+        let orig=tinycolor(originalColor).toRgb();
+        let target=tinycolor(color).toRgb();
+        let image=new Image();
+        image.onload=()=>{
+            let ctx=canvas.getContext("2d");
+            canvas.height=image.height;
+            canvas.width=image.width;
+            ctx.drawImage(image,0,0,image.width,image.height);
+            let imgData=ctx.getImageData(0,0,image.width,image.height);
+            let hasChanges=false;
+            for (let i=0;i<imgData.data.length;i+=4){
+                if (imgData.data[i] === orig.r &&
+                    imgData.data[i+1] === orig.g &&
+                    imgData.data[i+2] === orig.b){
+                    hasChanges=true;
+                    imgData.data[i]=target.r;
+                    imgData.data[i+1]=target.g;
+                    imgData.data[i+2]=target.b;
+                }
+            }
+            if (hasChanges){
+                ctx.putImageData(imgData,0,0);
+            }
+            resolve(canvas.toDataURL());
+        }
+        image.onerror=()=>{
+            resolve('data:,error'); //invalid url, triggers fallback to next matching style
+        }
+        image.src=src;
+    });
+};
+
+const adaptOpacity= (src,factor)=>{
+    return new Promise((resolve,reject)=>{
+        let canvas = document.createElement("canvas");
+        if (! canvas) {
+            reject("no canvas");
+            return;
+        }
+        if (factor === 1 || factor < 0){
+            resolve(src);
+        }
+        let image=new Image();
+        image.onload=()=>{
+            let ctx=canvas.getContext("2d");
+            canvas.height=image.height;
+            canvas.width=image.width;
+            ctx.drawImage(image,0,0,image.width,image.height);
+            let imgData=ctx.getImageData(0,0,image.width,image.height);
+            for (let i=0;i<imgData.data.length;i+=4){
+                let nv=Math.floor(imgData.data[i+3]*factor);
+                if (nv > 255) nv=255;
+                imgData.data[i+3]=nv;
+            }
+            ctx.putImageData(imgData,0,0);
+            resolve(canvas.toDataURL());
+        }
+        image.onerror=()=>{
+            resolve('data:,error'); //invalid url, triggers fallback to next matching style
+        }
+        image.src=src;
+    });
+};
+
+const estimatedImageOpacity=()=>{
+    return globalStore.getData(keys.properties.aisShowEstimated,false)?0.4:undefined;
+}
 /**
  * a cover for the layer with the AIS display
  * @param {MapHolder} mapholder
@@ -82,6 +250,7 @@ const AisLayer=function(mapholder){
     this.symbolStyles={};
 
     this.createInternalIcons();
+    this.computeStyles();
 
     /**
      * an array of pixel positions of the current ais data
@@ -146,44 +315,7 @@ AisLayer.prototype.createIcon=function(color,useCourseVector){
     return canvas.toDataURL();
 };
 
-AisLayer.prototype.adaptIconColor= function(src,originalColor,color){
-    return new Promise((resolve,reject)=>{
-        let canvas = document.createElement("canvas");
-        if (! canvas) {
-            reject("no canvas");
-            return;
-        }
-        let orig=tinycolor(originalColor).toRgb();
-        let target=tinycolor(color).toRgb();
-        let image=new Image();
-        image.onload=()=>{
-            let ctx=canvas.getContext("2d");
-            canvas.height=image.height;
-            canvas.width=image.width;
-            ctx.drawImage(image,0,0,image.width,image.height);
-            let imgData=ctx.getImageData(0,0,image.width,image.height);
-            let hasChanges=false;
-            for (let i=0;i<imgData.data.length;i+=4){
-                if (imgData.data[i] === orig.r &&
-                    imgData.data[i+1] === orig.g &&
-                    imgData.data[i+2] === orig.b){
-                    hasChanges=true;
-                    imgData.data[i]=target.r;
-                    imgData.data[i+1]=target.g;
-                    imgData.data[i+2]=target.b;
-                }
-            }
-            if (hasChanges){
-                ctx.putImageData(imgData,0,0);
-            }
-            resolve(canvas.toDataURL());
-        }
-        image.onerror=()=>{
-            resolve('data:,error'); //invalid url, triggers fallback to next matching style
-        }
-        image.src=src;
-    });
-};
+
 
 /**
  * compute the icons for the AIS display
@@ -193,27 +325,38 @@ AisLayer.prototype.createInternalIcons = function () {
     let style = globalStore.getMultiple(keys.properties.style);
     let useCourseVector = globalStore.getData(keys.properties.aisUseCourseVector, false);
     let symbolStyle = useCourseVector ? this.targetStyleCourseVector : this.targetStyle;
-    this.symbolStyles.internalnearest = new StyleEntry(
-        this.createIcon(style.aisNearestColor, useCourseVector),
-        assign({}, symbolStyle, {courseVectorColor: style.aisNearestColor}));
-
-    this.symbolStyles.internalwarning = new StyleEntry(
-        this.createIcon(style.aisWarningColor, useCourseVector),
-        assign({}, symbolStyle, {courseVectorColor: style.aisWarningColor}));
-
-    this.symbolStyles.internalnormal = new StyleEntry(
-        this.createIcon(style.aisNormalColor, useCourseVector),
-        assign({}, symbolStyle, {courseVectorColor: style.aisNormalColor}));
-    this.symbolStyles.internaltracking = new StyleEntry(
-        this.createIcon(style.aisTrackingColor, useCourseVector),
-        assign({}, symbolStyle, {courseVectorColor: style.aisTrackingColor}));
+    let baseIcon=this.createIcon(DEFAULT_COLOR,useCourseVector);
+    this.symbolStyles.internalnearest = new StyleEntry('aisNearestColor',
+        baseIcon,
+        assign({}, symbolStyle, {courseVectorColor: style.aisNearestColor}),
+        DEFAULT_COLOR);
+    this.symbolStyles.internalwarning = new StyleEntry('aisWarningColor',
+        baseIcon,
+        assign({}, symbolStyle, {courseVectorColor: style.aisWarningColor}),
+        DEFAULT_COLOR);
+    this.symbolStyles.internalnormal = new StyleEntry('aisNormalColor',
+        baseIcon,
+        assign({}, symbolStyle, {courseVectorColor: style.aisNormalColor}),
+        DEFAULT_COLOR);
+    this.symbolStyles.internaltracking = new StyleEntry('aisTrackingColor',
+        baseIcon,
+        assign({}, symbolStyle, {courseVectorColor: style.aisTrackingColor}),
+        DEFAULT_COLOR);
 };
+AisLayer.prototype.computeStyles=function(){
+    let ghostFactor=estimatedImageOpacity();
+    for (let k in this.symbolStyles){
+        let style=this.symbolStyles[k];
+        style.load(ghostFactor);
+    }
+}
 /**
  * find the AIS target that has been clicked
  * @param {olCoordinate} pixel the css pixel from the event
  */
 AisLayer.prototype.findTarget=function(pixel){
     base.log("findAisTarget "+pixel[0]+","+pixel[1]);
+    if (! this.pixel) return undefined;
     let tolerance=globalStore.getData(keys.properties.clickTolerance)/2;
     let idx=this.mapholder.findTarget(pixel,this.pixel,tolerance);
     if (idx >=0) return this.pixel[idx].ais;
@@ -270,6 +413,7 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,computeTargetFun
     let rotation=current.course||0;
     let symbol=this.getStyleEntry(current);
     let style=assign({},symbol.style);
+    if (! symbol.image || ! style.size) return;
     if (classbShrink != 1 && AisFormatter.format('clazz',current) === 'B'){
         scale=scale*classbShrink;
     }
@@ -374,8 +518,10 @@ AisLayer.prototype.onPostCompose=function(center,drawing){
  */
 AisLayer.prototype.dataChanged=function(evdata){
     this.visible=globalStore.getData(keys.properties.layers.ais);
-    this.createInternalIcons();
     this.setStyles();
+    this.createInternalIcons();
+    this.computeStyles();
+
 };
 
 
@@ -441,31 +587,17 @@ AisLayer.prototype.setImageStyles=function(styles){
                     let styleKey=prefix.toLowerCase()+suffix;
                     let dstyle=styles[k];
                     if (typeof (dstyle) === 'object') {
-                        if (dstyle.replaceColor !== undefined){
-                            let style = globalStore.getMultiple(keys.properties.style);
-                            let targetColor=style['ais'+prefix+'Color'];
-                            if (targetColor === undefined) {
-                                return;
-                            }
-                            this.adaptIconColor(dstyle.src,dstyle.replaceColor,targetColor)
-                                .then((icon)=>{
-                                    this.symbolStyles[styleKey] = new StyleEntry(
-                                        icon,
-                                        Helper.filteredAssign(allowedStyles, dstyle)
-                                    )
-                                })
-                        }
-                        else {
-                            this.symbolStyles[styleKey] = new StyleEntry(
-                                dstyle.src,
-                                Helper.filteredAssign(allowedStyles, dstyle)
-                            )
-                        }
+                        this.symbolStyles[styleKey] = new StyleEntry(
+                            'ais'+prefix+'Color',
+                            dstyle.src,
+                            Helper.filteredAssign(allowedStyles, dstyle),
+                            dstyle.replaceColor);
                     }
-                })
+                });
             }
         }
     }
+    this.computeStyles();
 };
 
 

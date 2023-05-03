@@ -331,6 +331,8 @@ let keys={
         aisQueryTimeout: new Property(5000, "AIS (ms)", PropertyType.RANGE, [1000, 10000, 10]), //ms
         aisDistance: new Property(20, "AIS-Range(nm)", PropertyType.RANGE, [1, 1000]), //distance for AIS query in nm
         aisUseCourseVector: new Property(true, "AIS Use Course Vector", PropertyType.CHECKBOX),
+        aisShowEstimated: new Property(false,"AIS show estimated position", PropertyType.CHECKBOX),
+        aisUseEstimated: new Property(true,"AIS use estimated position for CPA",PropertyType.CHECKBOX),
         aisIconBorderWidth: new Property(3, "Border Width", PropertyType.RANGE, [0, 10]),
         aisIconScale: new Property(1,"Icon Scale",PropertyType.RANGE, [0.5,5,0.1]),
         aisClassbShrink: new Property(0.6,"Class B rel size",PropertyType.RANGE, [0.1,2,0.1]),
