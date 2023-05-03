@@ -46,7 +46,10 @@ module.exports = (env, argv) => {
         'signalk.svg',
         'ais-default.png',
         'ais-default-anchor.png',
-        'ais-default-restricted.png'
+        'ais-default-restricted.png',
+        'ais-default-nc.png',
+        'ais-default-fishing.png',
+        'ais-default-draft.png'
 
     ];
     images.forEach(function (el) {
