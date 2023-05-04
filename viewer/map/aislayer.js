@@ -402,6 +402,7 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,computeTargetFun
     let courseVectorWidth=globalStore.getData(keys.properties.navCircleWidth);
     let scale=globalStore.getData(keys.properties.aisIconScale,1);
     let classbShrink=globalStore.getData(keys.properties.aisClassbShrink,1);
+    let useHeading=globalStore.getData(keys.properties.aisUseHeading,false);
     let rotation=current.course||0;
     let symbol=this.getStyleEntry(current);
     let style=assign({},symbol.style);
@@ -419,7 +420,12 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,computeTargetFun
         style.rotateWithView=false;
     }
     else{
-        style.rotation = rotation * Math.PI / 180;
+        if (useHeading && current.heading !== undefined){
+            style.rotation=current.heading * Math.PI/180;
+        }
+        else {
+            style.rotation = rotation * Math.PI / 180;
+        }
         style.rotateWithView=true;
     }
     if (drawEstimated && symbol.ghostImage){

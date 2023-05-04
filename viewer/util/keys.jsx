@@ -333,6 +333,7 @@ let keys={
         aisUseCourseVector: new Property(true, "AIS Use Course Vector", PropertyType.CHECKBOX),
         aisShowEstimated: new Property(false,"AIS show estimated position", PropertyType.CHECKBOX),
         aisEstimatedOpacity: new Property(0.4,"AIS estimated image opacity",PropertyType.RANGE,[0.1,1,0.05]),
+        aisUseHeading: new Property(false,"AIS use heading for direction",PropertyType.CHECKBOX),
         aisIconBorderWidth: new Property(3, "Border Width", PropertyType.RANGE, [0, 10]),
         aisIconScale: new Property(1,"Icon Scale",PropertyType.RANGE, [0.5,5,0.1]),
         aisClassbShrink: new Property(0.6,"Class B rel size",PropertyType.RANGE, [0.1,2,0.1]),

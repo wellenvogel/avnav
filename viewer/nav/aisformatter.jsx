@@ -23,7 +23,8 @@ const aisparam={
     heading: {
         headline: 'hdg',
         format: function (v) {
-            return Formatter.formatDirection(v.heading || 0);
+            if (v.heading === undefined) return '---';
+            return Formatter.formatDirection(v.heading );
         },
         unit: '°'
     },

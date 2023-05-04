@@ -152,6 +152,11 @@ AisData.prototype.handleAisData=function() {
             }
         }
         if (!shouldHandle) continue;
+        if (ais.heading !== undefined){
+            if (parseInt(ais.heading) === 511) {
+                ais.heading=undefined;
+            }
+        }
         aisTargets.push(ais);
         if (boatPos.valid) {
             this._computeAisTarget(boatPos, ais);
