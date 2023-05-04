@@ -183,7 +183,49 @@
       Man stellt die Sekunden ein, die Länge berechnet sich dann aus der
       aktuellen Geschwindigkeit (default: 10 Minuten).&nbsp; Die Dicke der
       Kursvektoren wird über die Einstellung für die Navigationskreise bestimmt.</p>
-    Die gleiche Einstellung gilt auch für die Kursvektoren der AIS Ziele.
+    <p> Die gleiche Einstellung gilt auch für die Kursvektoren der AIS Ziele. </p>
+    <p>Für die Ausrichtung des Schiffes und die Kursvektoren gibt es
+      verschiedene Modi (ab 20220421) - setzbar unter <a href="settingspage.html">Einstellungen</a>-&gt;Navigation-&gt;boat
+      direction (siehe auch die Diskussion dazu auf <a href="https://github.com/wellenvogel/avnav/issues/200">GitHub</a>):</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Einstellung</td>
+          <td>Bedeutung</td>
+          <td><a href="../hints/usericons.html">Symbol-Name</a></td>
+        </tr>
+        <tr>
+          <td>cog</td>
+          <td>Ausrichtung und Course Vector basieren auf COG</td>
+          <td>boatImage (Pfeil)</td>
+        </tr>
+        <tr>
+          <td>hdt</td>
+          <td>Ausrichtung basiert auf Heading True (fallback auf COG wenn nicht
+            vorhanden), Course Vector auf COG. Optional HDT als gepunktete Linie
+            (Einstellungen-&gt;navigation-&gt;add dashed vector for hdt/hdm)</td>
+          <td>boatImageHdg<br>
+            (Boot)</td>
+        </tr>
+        <tr>
+          <td>hdm</td>
+          <td>Ausrichtung basiert auf Heading Magnetic (fallback auf COG wenn
+            nicht vorhanden), Course Vector auf COG. Optional HDM
+            als gepunktete Linie (Einstellungen-&gt;navigation-&gt;add dashed
+            vector for hdt/hdm)</td>
+          <td>boatImageHdg<br>
+            (Boot)</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>In den Einstellungen kann ausserdem noch eine Erkennung für "Boot nicht
+      in Bewegung" aktiviert werden (<a href="settingspage.html">Einstellungen</a>-&gt;Navigation-&gt;zero
+      SOG detect). Wenn das aktiviert ist, wird bei einer Geschwindigkeit &lt;
+      0.2 kn (<a href="settingspage.html">Einstellungen</a>-&gt;Navigation-&gt;zero
+      SOG detect below (kn)) das Boot Symbol geändert (boatImageSteady, roter
+      Kreis).</p>
+    <p><br>
+    </p>
     <h2>Folge Modus</h2>
     <p>Wenn (wie im Bild) der Schiff-Button einen grünen Rand hat ("Schiff
       lock"), ist die Karten-Mitte auf die Schiffsposition fixiert und springt

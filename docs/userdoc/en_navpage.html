@@ -183,6 +183,46 @@
       minutes). The width of this line is controlled by the width for the
       Navigation Circles. </p>
     <p>The same settings also apply to the course vectors of AIS targets.</p>
+    <p>For the boat direction and the course vectors you can select various
+      modes (since 20220421) - you can choose at&nbsp; <a href="settingspage.html">settings</a>-&gt;navigation-&gt;boat
+      direction (see the <a href="https://github.com/wellenvogel/avnav/issues/200">GitHub</a>
+      discussion):</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Setting</td>
+          <td>Meaning</td>
+          <td><a href="../hints/usericons.html">Symbol-Name</a></td>
+        </tr>
+        <tr>
+          <td>cog</td>
+          <td>boat direction and course vector COG</td>
+          <td>boatImage (arrow)</td>
+        </tr>
+        <tr>
+          <td>hdt</td>
+          <td>boat direction based on Heading True (fallback to COG if not
+            available), course vector based on COG. Optionally HDT as dotted
+            line(settings-&gt;navigation-&gt;add dashed vector for hdt/hdm)</td>
+          <td>boatImageHdg<br>
+            (Boat)</td>
+        </tr>
+        <tr>
+          <td>hdm</td>
+          <td>boat direction based on Heading Magnetic (fallback to COG if not
+            available), course vector based on COG. Optional HDM as dotted
+            line(settings-&gt;navigation-&gt;add dashed vector for hdt/hdm)</td>
+          <td>boatImageHdg<br>
+            (Boat)</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>In the settings you can additionally activate a "no boat movement"
+      detection.(<a href="settingspage.html">settings</a>-&gt;navigation-&gt;zero
+      SOG detect). If this is activated and the boat speed (SOG) drops below 0.2
+      kn (<a href="settingspage.html">settings</a>-&gt;navigation-&gt;zero SOG
+      detect below (kn)) the boat symbol will change to a red circle
+      (boatImageSteady).</p>
     <h2>Lock Mode</h2>
     <p>If the chart is locked to the boat position (like in the picture) it will
       always keep the boat in the center of the screen and move the map
