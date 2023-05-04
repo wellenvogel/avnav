@@ -12,6 +12,7 @@ import AisFormatter from '../nav/aisformatter.jsx';
 import Helper from '../util/helper.js';
 import globalstore from "../util/globalstore";
 import tinycolor from "tinycolor2";
+import atonIcon from '../images/ais-aton.png';
 
 const DEFAULT_COLOR="#f7c204";
 
@@ -240,6 +241,7 @@ const AisLayer=function(mapholder){
     this.setStyles();
 
     this.symbolStyles={};
+    this.atonStyles={};
 
     this.createInternalIcons();
     this.computeStyles();
@@ -307,7 +309,12 @@ AisLayer.prototype.createIcon=function(color,useCourseVector){
     return canvas.toDataURL();
 };
 
-
+const styleToProps={
+    nearest: 'aisNearestColor',
+    warning: 'aisWarningColor',
+    tracking: 'aisTrackingColor',
+    normal: 'aisNormalColor'
+};
 
 /**
  * compute the icons for the AIS display
@@ -318,28 +325,26 @@ AisLayer.prototype.createInternalIcons = function () {
     let useCourseVector = globalStore.getData(keys.properties.aisUseCourseVector, false);
     let symbolStyle = useCourseVector ? this.targetStyleCourseVector : this.targetStyle;
     let baseIcon=this.createIcon(DEFAULT_COLOR,useCourseVector);
-    this.symbolStyles.internalnearest = new StyleEntry('aisNearestColor',
-        baseIcon,
-        assign({}, symbolStyle, {courseVectorColor: style.aisNearestColor}),
-        DEFAULT_COLOR);
-    this.symbolStyles.internalwarning = new StyleEntry('aisWarningColor',
-        baseIcon,
-        assign({}, symbolStyle, {courseVectorColor: style.aisWarningColor}),
-        DEFAULT_COLOR);
-    this.symbolStyles.internalnormal = new StyleEntry('aisNormalColor',
-        baseIcon,
-        assign({}, symbolStyle, {courseVectorColor: style.aisNormalColor}),
-        DEFAULT_COLOR);
-    this.symbolStyles.internaltracking = new StyleEntry('aisTrackingColor',
-        baseIcon,
-        assign({}, symbolStyle, {courseVectorColor: style.aisTrackingColor}),
-        DEFAULT_COLOR);
+    for (let key in styleToProps) {
+        this.symbolStyles["internal"+key] = new StyleEntry(styleToProps[key],
+            baseIcon,
+            assign({}, symbolStyle, {courseVectorColor: style[styleToProps[key]]}),
+            DEFAULT_COLOR);
+        this.atonStyles["internal"+key] = new StyleEntry(styleToProps[key],
+            atonIcon,
+            assign({}, symbolStyle, {courseVectorColor: style[styleToProps[key]]}),
+            DEFAULT_COLOR);
+    }
 };
 AisLayer.prototype.computeStyles=function(){
     let ghostFactor=estimatedImageOpacity();
     for (let k in this.symbolStyles){
         let style=this.symbolStyles[k];
         style.load(ghostFactor);
+    }
+    for (let k in this.atonStyles){
+        let style=this.atonStyles[k];
+        style.load(); //never have a ghost image
     }
 }
 /**
@@ -388,11 +393,12 @@ AisLayer.prototype.getStyleEntry=function(item){
     let typeSuffix="-"+AisFormatter.format('shiptype',item);
     let statusSuffix=(item.status !== undefined)?"-status"+parseInt(item.status):undefined;
     let base=styleKeyFromItem(item);
-    return mergeStyles(this.symbolStyles["internal"+base],
-        this.symbolStyles[base],
-        this.symbolStyles[base+typeSuffix],
-        (statusSuffix!==undefined)?this.symbolStyles[base+statusSuffix]:undefined,
-        (statusSuffix!==undefined)?this.symbolStyles[base+typeSuffix+statusSuffix]:undefined,
+    let styleMap=(item.type == 21)?this.atonStyles:this.symbolStyles;
+    return mergeStyles(styleMap["internal"+base],
+        styleMap[base],
+        styleMap[base+typeSuffix],
+        (statusSuffix!==undefined)?styleMap[base+statusSuffix]:undefined,
+        (statusSuffix!==undefined)?styleMap[base+typeSuffix+statusSuffix]:undefined,
         );
 };
 
@@ -575,34 +581,41 @@ AisLayer.prototype.computeTarget=function(pos,course,dist){
  * @param styles - the user images.json data
  */
 AisLayer.prototype.setImageStyles=function(styles){
-    let names=['Normal','Warning','Nearest','Tracking'];
-    let allowedStyles={
-        anchor:true,
-        size: true,
-        courseVectorColor: true,
-        courseVector: true,
-        rotate: true
+    let styleMaps={
+        symbolStyles:'',
+        atonStyles:'aton'
     };
-    let iter=[''].concat(names);
-    for (let i in iter){
-        let name=iter[i];
-        let styleProp="ais"+name+"Image";
-        let re=new RegExp("^"+styleProp);
-        for (let k in styles){
-            if (re.exec(k)){
-                let suffix=k.replace(re,"");
-                let prefixes=name===''?names:[name];
-                prefixes.forEach((prefix)=>{
-                    let styleKey=prefix.toLowerCase()+suffix;
-                    let dstyle=styles[k];
-                    if (typeof (dstyle) === 'object') {
-                        this.symbolStyles[styleKey] = new StyleEntry(
-                            'ais'+prefix+'Color',
-                            dstyle.src,
-                            Helper.filteredAssign(allowedStyles, dstyle),
-                            dstyle.replaceColor);
-                    }
-                });
+    for (let styleMap in styles) {
+        let stylePrefix=styleMaps[styleMap];
+        let names = ['Normal', 'Warning', 'Nearest', 'Tracking'];
+        let allowedStyles = {
+            anchor: true,
+            size: true,
+            courseVectorColor: true,
+            courseVector: true,
+            rotate: true
+        };
+        let iter = [''].concat(names);
+        for (let i in iter) {
+            let name = iter[i];
+            let styleProp = "ais"+stylePrefix + name + "Image";
+            let re = new RegExp("^" + styleProp);
+            for (let k in styles) {
+                if (re.exec(k)) {
+                    let suffix = k.replace(re, "");
+                    let prefixes = name === '' ? names : [name];
+                    prefixes.forEach((prefix) => {
+                        let styleKey = prefix.toLowerCase() + suffix;
+                        let dstyle = styles[k];
+                        if (typeof (dstyle) === 'object') {
+                            this[styleMap][styleKey] = new StyleEntry(
+                                'ais' + prefix + 'Color',
+                                dstyle.src,
+                                Helper.filteredAssign(allowedStyles, dstyle),
+                                dstyle.replaceColor);
+                        }
+                    });
+                }
             }
         }
     }

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="100"
+   height="100.28819"
+   version="1.1"
+   id="svg873"
+   sodipodi:docname="ais-aton.svg"
+   inkscape:version="1.0.2 (1.0.2+r75+1)"
+   inkscape:export-filename="/home/andreas/projects/avnav/viewer/images/ais-default-fishing.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96">
+  <metadata
+     id="metadata879">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs877" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1920"
+     inkscape:window-height="971"
+     id="namedview875"
+     showgrid="false"
+     inkscape:zoom="2.7166667"
+     inkscape:cx="16.662583"
+     inkscape:cy="93.160275"
+     inkscape:window-x="0"
+     inkscape:window-y="31"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g871"
+     inkscape:document-rotation="0" />
+  <!-- Created with SVG-edit - http://svg-edit.googlecode.com/ -->
+  <g
+     id="g871"
+     transform="translate(-22.84662,-198.08681)">
+    <title
+       id="title867">Layer 1</title>
+    <path
+       id="svg_1"
+       d="M 38.642014,248.85225 73.997353,213.49691 109.3527,248.85225 73.997353,284.20759 Z"
+       stroke-linecap="null"
+       stroke-linejoin="null"
+       inkscape:connector-curvature="0"
+       style="fill:#f7c204;stroke:#000000;stroke-width:3;stroke-miterlimit:4;stroke-dasharray:none"
+       inkscape:export-xdpi="96"
+       inkscape:export-ydpi="96"
+       sodipodi:nodetypes="ccccc" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:2.64352;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 60.34662,248.58681 c 25.688204,0 24.998207,0 24.998207,0"
+       id="path862" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:3.044;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:0;stroke-dasharray:none;stroke-opacity:1"
+       d="m 74.16838,261.08681 c 0,-25.6882 0,-24.99821 0,-24.99821"
+       id="path862-3" />
+  </g>
+</svg>

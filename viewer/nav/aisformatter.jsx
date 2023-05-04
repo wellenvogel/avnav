@@ -8,7 +8,12 @@ const aisparam={
     nameOrmmsi: {
         headline: 'name/mmsi',
         format: function (v) {
-            if (v.shipname && v.shipname !== 'unknown') return v.shipname;
+            if (v.type == 21){
+                if (v.name && v.name !== 'unknown') return v.name;
+            }
+            else {
+                if (v.shipname && v.shipname !== 'unknown') return v.shipname;
+            }
             return v.mmsi;
         }
     },
@@ -85,6 +90,7 @@ const aisparam={
     shipname: {
         headline: 'name',
             format: function (v) {
+            if (v.type == 21) return v.name;
             return v.shipname;
         }
     },
@@ -198,6 +204,7 @@ const aisparam={
             if (v.type == 1 || v.type == 2 || v.type == 3) return "A";
             if (v.type == 18 || v.type == 19) return "B";
             if (v.type == 4) return "S";
+            if (v.type == 21) return "T";
             return "";
         }
     },
