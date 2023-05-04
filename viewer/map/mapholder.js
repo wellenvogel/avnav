@@ -333,6 +333,7 @@ const MapHolder=function(){
         y:50
     }
     this.scaleControl=undefined;
+    this.lastRender=undefined;
 };
 
 base.inherits(MapHolder,DrawingPositionConverter);
@@ -1053,6 +1054,10 @@ MapHolder.prototype.timerFunction=function(){
     });
     let self=this;
     let now=(new Date()).getTime();
+    if ((this.lastRender + 1000) < now){
+        this.olmap.render();
+        this.lastRender=now;
+    }
     if (this._lastSequenceQuery < (now - globalStore.getData(keys.properties.mapSequenceTime,5000))){
         this._lastSequenceQuery=now;
         if (this.sources.length > 0 && this._lastMapDiv) {
@@ -1744,6 +1749,7 @@ MapHolder.prototype.setCenterFromMove=function(newCenter,force){
  * @param {RenderEvent} evt
  */
 MapHolder.prototype.onPostCompose=function(evt){
+    this.lastRender=(new Date()).getTime();
     this.drawing.setContext(evt.context);
     this.drawing.setDevPixelRatio(evt.frameState.pixelRatio);
     this.drawing.setRotation(evt.frameState.viewState.rotation);

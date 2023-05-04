@@ -396,7 +396,7 @@ AisLayer.prototype.getStyleEntry=function(item){
         );
 };
 
-AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,computeTargetFunction){
+AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,computeTargetFunction,drawEstimated){
     let courseVectorTime=globalStore.getData(keys.properties.navBoatCourseTime,0);
     let useCourseVector=globalStore.getData(keys.properties.aisUseCourseVector,false);
     let courseVectorWidth=globalStore.getData(keys.properties.navCircleWidth);
@@ -406,6 +406,7 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,computeTargetFun
     let symbol=this.getStyleEntry(current);
     let style=assign({},symbol.style);
     if (! symbol.image || ! style.size) return;
+    let now=(new Date()).getTime();
     if (classbShrink != 1 && AisFormatter.format('clazz',current) === 'B'){
         scale=scale*classbShrink;
     }
@@ -421,9 +422,13 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,computeTargetFun
         style.rotation = rotation * Math.PI / 180;
         style.rotateWithView=true;
     }
-    if (globalStore.getData(keys.properties.aisShowEstimated,false) && symbol.ghostImage){
+    if (drawEstimated && symbol.ghostImage){
         if ((current.speed||0) >= globalStore.getData(keys.properties.aisMinDisplaySpeed) && current.age > 0){
-            let ghostPos=computeTargetFunction(xy,rotation,current.speed*current.age);
+            let age=current.age;
+            if (current.receiveTime < now){
+                age+=(now-current.receiveTime)/1000;
+            }
+            let ghostPos=computeTargetFunction(xy,rotation,current.speed*age);
             drawing.drawImageToContext(ghostPos,symbol.ghostImage,style);
         }
     }
@@ -478,6 +483,7 @@ AisLayer.prototype.onPostCompose=function(center,drawing){
     let firstLabel=globalStore.getData(keys.properties.aisFirstLabel,'');
     let secondLabel=globalStore.getData(keys.properties.aisSecondLabel,'');
     let thirdLabel=globalStore.getData(keys.properties.aisThirdLabel,'');
+    let drawEstimated=globalStore.getData(keys.properties.aisShowEstimated,false);
     for (i in aisList){
         let current=aisList[i];
         let pos=current.mapPos;
@@ -488,7 +494,7 @@ AisLayer.prototype.onPostCompose=function(center,drawing){
         if (! pos || isNaN(pos[0]) || isNaN(pos[1])) {
             continue;
         }
-        let curpix=this.drawTargetSymbol(drawing,pos,current,this.computeTarget);
+        let curpix=this.drawTargetSymbol(drawing,pos,current,this.computeTarget, drawEstimated);
         pixel.push({pixel:curpix,ais:current});
         let text=AisFormatter.format(firstLabel,current,true);
         if (text) {

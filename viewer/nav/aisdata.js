@@ -134,8 +134,10 @@ AisData.prototype.handleAisData=function() {
     let showOther=globalStore.getData(keys.properties.aisShowOther,false);
     let aisMinSpeed = parseFloat(globalStore.getData(keys.properties.aisMinDisplaySpeed, 0));
     let foundTrackedTarget = false;
+    let now=(new Date()).getTime();
     for (let aisidx in this.currentAis) {
         let ais =this.currentAis[aisidx];
+        ais.receiveTime=now;
         let shouldHandle = !onlyMoving || (parseFloat(ais.speed) >= aisMinSpeed);
         if (shouldHandle ){
             let clazz=aisformatter.format('clazz',ais);
