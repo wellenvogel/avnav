@@ -39,6 +39,7 @@ class StyleEntry {
         //load for the first time
         //or load with changing color or ghostFactor
         if (! this.loaded){
+            //if we start a new load before done - just restart completely
             this.image=undefined;
             this.ghostImage=undefined;
         }
@@ -62,14 +63,15 @@ class StyleEntry {
                 }
             }
         }
+        this.loaded=false;
+        this.color=color;
+        this.ghostFactor=ghostFactor;
         if (! this.image){
-            this.loaded=false;
             this.image = new Image();
             if (ghostFactor !== undefined ) {
                 this.ghostImage = new Image();
                 this.ghostImage.onload = () => {
                     if (sequence !== this.sequence) return;
-                    this.ghostFactor=ghostFactor;
                     this.loaded = true
                 }
                 this.image.onload = () => {
@@ -90,7 +92,6 @@ class StyleEntry {
                 adaptIconColor(this.src, this.replaceColor, color)
                     .then((adaptedSrc) => {
                         if (sequence !== this.sequence) return;
-                        this.color = color;
                         this.image.src = adaptedSrc;
                     })
             }
@@ -99,12 +100,10 @@ class StyleEntry {
             }
         }
         else{
-            this.loaded=false;
             //only re-compute the ghost image
             this.ghostImage = new Image();
             this.ghostImage.onload = () => {
                 if (sequence !== this.sequence) return;
-                this.ghostFactor=ghostFactor;
                 this.loaded = true;
             }
             adaptOpacity(this.image, ghostFactor)
@@ -218,7 +217,8 @@ const adaptOpacity = (image, factor) => {
 };
 
 const estimatedImageOpacity=()=>{
-    return globalStore.getData(keys.properties.aisShowEstimated,false)?0.4:undefined;
+    return globalStore.getData(keys.properties.aisShowEstimated,false)?
+        globalStore.getData(keys.properties.aisEstimatedOpacity,0.4):undefined;
 }
 /**
  * a cover for the layer with the AIS display
@@ -421,7 +421,12 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,computeTargetFun
         style.rotation = rotation * Math.PI / 180;
         style.rotateWithView=true;
     }
-
+    if (globalStore.getData(keys.properties.aisShowEstimated,false) && symbol.ghostImage){
+        if ((current.speed||0) >= globalStore.getData(keys.properties.aisMinDisplaySpeed) && current.age > 0){
+            let ghostPos=computeTargetFunction(xy,rotation,current.speed*current.age);
+            drawing.drawImageToContext(ghostPos,symbol.ghostImage,style);
+        }
+    }
     let curpix=drawing.drawImageToContext(xy,symbol.image,style);
     if (useCourseVector && style.courseVector !== false){
         let courseVectorDistance=(current.speed !== undefined)?current.speed*courseVectorTime:0;

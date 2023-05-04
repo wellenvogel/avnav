@@ -332,11 +332,11 @@ let keys={
         aisDistance: new Property(20, "AIS-Range(nm)", PropertyType.RANGE, [1, 1000]), //distance for AIS query in nm
         aisUseCourseVector: new Property(true, "AIS Use Course Vector", PropertyType.CHECKBOX),
         aisShowEstimated: new Property(false,"AIS show estimated position", PropertyType.CHECKBOX),
-        aisUseEstimated: new Property(true,"AIS use estimated position for CPA",PropertyType.CHECKBOX),
+        aisEstimatedOpacity: new Property(0.4,"AIS estimated image opacity",PropertyType.RANGE,[0.1,1,0.05]),
         aisIconBorderWidth: new Property(3, "Border Width", PropertyType.RANGE, [0, 10]),
         aisIconScale: new Property(1,"Icon Scale",PropertyType.RANGE, [0.5,5,0.1]),
         aisClassbShrink: new Property(0.6,"Class B rel size",PropertyType.RANGE, [0.1,2,0.1]),
-        aisMinDisplaySpeed: new Property(0.5,"min speed (kn) for AIS target display",PropertyType.RANGE,[0.1,40]),
+        aisMinDisplaySpeed: new Property(0.5,"min speed (kn) for AIS target/estimated display",PropertyType.RANGE,[0.1,40]),
         aisOnlyShowMoving: new Property(false,"only show moving AIS targets",PropertyType.CHECKBOX),
         aisListUpdateTime: new Property(5,"update time(s) for AIS list",PropertyType.RANGE,[1,20]),
         aisReducedList: new Property(false,"reduce details in AIS list",PropertyType.CHECKBOX),
