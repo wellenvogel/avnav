@@ -613,7 +613,7 @@ AisLayer.prototype.setImageStyles=function(styles){
         symbolStyles:'',
         atonStyles:'aton'
     };
-    for (let styleMap in styles) {
+    for (let styleMap in styleMaps) {
         let stylePrefix=styleMaps[styleMap];
         let names = ['Normal', 'Warning', 'Nearest', 'Tracking'];
         let allowedStyles = {
