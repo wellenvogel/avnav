@@ -40,6 +40,7 @@ const aisInfos=[
     ],
     [
         {name:'shiptype',label:'Type'},
+        {name:'aid_type',label:'Type'},
         {name:'callsign',label:'Call'},
         {name:'destination',label:'Dest'}
     ]
@@ -114,9 +115,13 @@ const AisItem=(props)=>{
     if (clazz !== '') clazz="["+clazz+"]";
     let txt="";
     let infos=reduceDetails?reducedAisInfos:aisInfos;
+    let newLine=false;
     infos.forEach((infoLine)=>{
-        if (txt !== "") txt+="\n";
+        if (newLine) txt+="\n";
+        newLine=false;
         infoLine.forEach((info)=>{
+            if (! fmt.shouldShow(info.name,props)) return;
+            newLine=true;
             txt+=(info.label+": ").replace(/ /g,'\xa0');
             let val=(fmt.format(info.name,props)||'');
             if (info.len){

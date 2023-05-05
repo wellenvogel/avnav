@@ -31,6 +31,7 @@ const displayItems = [
     {name: 'status', label: 'Status'},
     {name: 'destination', label: 'Destination'},
     {name: 'shiptype', label: 'Type'},
+    {name: 'aid_type', label: 'Type'},
     {name: 'passFront', label: 'we pass', addClass: 'aisFront'},
     {name: 'position', label: 'Position'},
     {name: 'clazz', label: 'Class'},
@@ -53,6 +54,9 @@ const createItem=(config,mmsi)=>{
     let cl="aisData";
     if (config.addClass)cl+=" "+config.addClass;
     return Dynamic((props)=> {
+        if (! AisFormatter.shouldShow(props.name,props.current)){
+            return null;
+        }
         return (
         <div className="aisInfoRow">
             <div className='label '>{props.label}</div>
