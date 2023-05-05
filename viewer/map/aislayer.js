@@ -427,6 +427,19 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,computeTargetFun
     let symbol=this.getStyleEntry(current);
     let style=assign({},symbol.style);
     if (! symbol.image || ! style.size) return;
+    if (style.alpha !== undefined){
+        style.alpha=parseFloat(style.alpha);
+        if (isNaN(style.alpha)) {
+            style.alpha = undefined;
+        }
+        else{
+            if (style.alpha < 0) style.alpha=0;
+            if (style.alpha > 1) style.alpha=1;
+        }
+    }
+    if (current.hidden){
+        style.alpha=0.2;
+    }
     let now=(new Date()).getTime();
     if (classbShrink != 1 && AisFormatter.format('clazz',current) === 'B'){
         scale=scale*classbShrink;
@@ -512,6 +525,7 @@ AisLayer.prototype.onPostCompose=function(center,drawing){
     let drawEstimated=globalStore.getData(keys.properties.aisShowEstimated,false);
     for (i in aisList){
         let current=aisList[i];
+        let alpha={alpha: current.hidden?0.2:undefined};
         let pos=current.mapPos;
         if (! pos){
             pos=this.mapholder.pointToMap((new navobjects.Point(current.lon,current.lat)).toCoord());
@@ -524,18 +538,18 @@ AisLayer.prototype.onPostCompose=function(center,drawing){
         pixel.push({pixel:curpix,ais:current});
         let text=AisFormatter.format(firstLabel,current,true);
         if (text) {
-            drawing.drawTextToContext(pos, text, assign({}, this.textStyle, this.computeTextOffsets(current, 0)));
+            drawing.drawTextToContext(pos, text, assign({}, this.textStyle, this.computeTextOffsets(current, 0),alpha));
         }
         if (secondLabel !== firstLabel) {
             text=AisFormatter.format(secondLabel,current,true);
             if (text) {
-                drawing.drawTextToContext(pos, text, assign({}, this.textStyle, this.computeTextOffsets(current, 1)));
+                drawing.drawTextToContext(pos, text, assign({}, this.textStyle, this.computeTextOffsets(current, 1),alpha));
             }
         }
         if (thirdLabel !== firstLabel && thirdLabel !== secondLabel){
             text=AisFormatter.format(thirdLabel,current,true);
             if (text) {
-                drawing.drawTextToContext(pos, text, assign({}, this.textStyle, this.computeTextOffsets(current, 2)));
+                drawing.drawTextToContext(pos, text, assign({}, this.textStyle, this.computeTextOffsets(current, 2),alpha));
             }
         }
     }
@@ -607,7 +621,8 @@ AisLayer.prototype.setImageStyles=function(styles){
             size: true,
             courseVectorColor: true,
             courseVector: true,
-            rotate: true
+            rotate: true,
+            alpha: true
         };
         let iter = [''].concat(names);
         for (let i in iter) {

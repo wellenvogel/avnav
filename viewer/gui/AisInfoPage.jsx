@@ -98,6 +98,23 @@ class AisInfoPage extends React.Component{
                 }
             },
             {
+                name: 'AisInfoHide',
+                onClick: ()=>{
+                    if (!self.props.options || ! self.props.options.mmsi) return;
+                    if (globalStore.getData(keys.gui.aisinfopage.hidden)){
+                        NavData.getAisHandler().unsetHidden(self.props.options.mmsi);
+                    }
+                    else {
+                        NavData.getAisHandler().setHidden(self.props.options.mmsi);
+                    }
+                    self.props.history.pop();
+                },
+                storeKeys: {
+                    toggle: keys.gui.aisinfopage.hidden
+                }
+
+            },
+            {
                 name: 'AisInfoList',
                 onClick:()=>{
                     let mmsi=(this.props.options||{}).mmsi;
@@ -115,7 +132,12 @@ class AisInfoPage extends React.Component{
         this.checkNoTarget=this.checkNoTarget.bind(this);
         this.drawIcon=this.drawIcon.bind(this);
         this.timer=GuiHelpers.lifecycleTimer(this,this.checkNoTarget,5000,true);
-
+        let mmsi=(this.props.options||{}).mmsi;
+        if (mmsi) {
+            GuiHelpers.storeHelper(this, () => {
+                globalStore.storeData(keys.gui.aisinfopage.hidden,NavData.getAisHandler().isHidden(mmsi));
+            }, storeKeys, true)
+        }
     }
 
     checkNoTarget(timerSequence){

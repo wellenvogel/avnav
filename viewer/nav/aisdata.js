@@ -74,6 +74,12 @@ let AisData=function(navdata){
      * @type {Formatter}
      */
     this.formatter=Formatter;
+    /**
+     * @private
+     * a map mmsi->hideTime for hidden ais targets
+     * @type {{}}
+     */
+    this.hiddenTargets={}
 };
 /**
  *
@@ -133,6 +139,7 @@ AisData.prototype.handleAisData=function() {
     let showB=globalStore.getData(keys.properties.aisShowB,true);
     let showOther=globalStore.getData(keys.properties.aisShowOther,false);
     let aisMinSpeed = parseFloat(globalStore.getData(keys.properties.aisMinDisplaySpeed, 0));
+    let hideTime=parseFloat(globalStore.getData(keys.properties.aisHideTime,30))*1000;
     let foundTrackedTarget = false;
     let now=(new Date()).getTime();
     for (let aisidx in this.currentAis) {
@@ -157,6 +164,14 @@ AisData.prototype.handleAisData=function() {
                 ais.heading=undefined;
             }
         }
+        let hidden=this.hiddenTargets[ais.mmsi];
+        if (hidden !== undefined){
+            if (hidden > now || (hidden + hideTime) < now){
+                delete this.hiddenTargets[ais.mmsi];
+                hidden=undefined;
+            }
+        }
+        if (hidden !== undefined) ais.hidden=true;
         aisTargets.push(ais);
         if (boatPos.valid) {
             this._computeAisTarget(boatPos, ais);
@@ -340,6 +355,29 @@ AisData.prototype.getAisPositionByMmsi=function(mmsi){
 AisData.prototype.getTrackedTarget=function(){
     return this.trackedAIStarget;
 };
+
+AisData.prototype.setHidden=function(mmsi){
+    let now=(new Date()).getTime();
+    this.hiddenTargets[mmsi]=now;
+    this.handleAisData();
+}
+AisData.prototype.unsetHidden=function(mmsi){
+    if (this.hiddenTargets[mmsi] !== undefined) {
+        delete this.hiddenTargets[mmsi];
+        this.handleAisData();
+    }
+}
+AisData.prototype.isHidden=function(mmsi){
+    let now=(new Date()).getTime();
+    let hidden=this.hiddenTargets[mmsi];
+    if (hidden === undefined) return false;
+    if (hidden > now || (hidden + globalStore.getData(keys.properties.aisHideTime,30)*1000) < now){
+        delete this.hiddenTargets[mmsi];
+        return false;
+    }
+    return true;
+
+}
 /**
  * set the target to be tracked, 0 to use nearest
  * @param {number} mmsi

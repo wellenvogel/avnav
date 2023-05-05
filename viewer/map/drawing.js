@@ -128,23 +128,24 @@ Drawing.prototype.drawCircleToContext=function(center,other,opt_styles){
  */
 Drawing.prototype.drawImageToContext=function(point,image,opt_options){
     if (! this.context) return;
+    if (! opt_options) opt_options={};
     if (image.naturalHeight == 0 || image.naturalWidth == 0) return; //silently ignore error
     let rt=this.pointToCssPixel(point);
     let xy=this.pixelToDevice(rt);
-    if (opt_options && opt_options.fixX !== undefined) {
+    if (opt_options.fixX !== undefined) {
         xy[0]=opt_options.fixX*this.devPixelRatio;
     }
-    if (opt_options &&  opt_options.fixY !== undefined) {
+    if (opt_options.fixY !== undefined) {
         xy[1]=opt_options.fixY*this.devPixelRatio;
     }
     let devpixratio=this.devPixelRatio;
     let anchor=[0,0];
-    if (opt_options && opt_options.anchor){
+    if (opt_options.anchor){
         anchor[0]+=opt_options.anchor[0]*devpixratio;
         anchor[1]+=opt_options.anchor[1]*devpixratio;
     }
     let size;
-    if (opt_options && opt_options.size) {
+    if (opt_options.size) {
         size=opt_options.size;
     }
     else {
@@ -156,12 +157,12 @@ Drawing.prototype.drawImageToContext=function(point,image,opt_options){
     context.save();
     context.translate(xy[0],xy[1]);
     let angle=0;
-    if (opt_options && opt_options.rotation) {
+    if (opt_options.rotation) {
         angle = opt_options.rotation;
     }
     if (opt_options.rotateWithView) angle+=this.rotation;
     if (angle) context.rotate(angle);
-    if (opt_options && (opt_options.background || opt_options.backgroundCircle)){
+    if (opt_options.background || opt_options.backgroundCircle){
         context.beginPath();
         if (opt_options.background) {
             context.fillStyle = opt_options.background;
@@ -178,7 +179,15 @@ Drawing.prototype.drawImageToContext=function(point,image,opt_options){
         context.fill();
         context.globalAlpha=alpha;
     }
+    let alpha;
+    if (opt_options.alpha !== undefined){
+        let alpha=context.globalAlpha;
+        context.globalAlpha=opt_options.alpha;
+    }
     context.drawImage(image,-anchor[0],-anchor[1], size[0]*devpixratio, size[1]*devpixratio);
+    if (alpha !== undefined){
+        context.globalAlpha=alpha;
+    }
     context.restore();
     return rt;
 };
@@ -386,6 +395,7 @@ Drawing.prototype.drawTextToContext=function(point,text,opt_styles){
     let rt=this.pointToCssPixel(point);
     let dp=this.pixelToDevice(rt);
     let offset=[0,0];
+    let alpha;
     if (opt_styles) {
         if (opt_styles.fontBase) {
             let fontStyle=opt_styles.fontSize||10;
@@ -407,6 +417,10 @@ Drawing.prototype.drawTextToContext=function(point,text,opt_styles){
         }
         if (opt_styles.offsetX) offset[0]=opt_styles.offsetX;
         if (opt_styles.offsetY) offset[1]=opt_styles.offsetY;
+        if (opt_styles.alpha){
+            alpha=this.context.globalAlpha;
+            this.context.globalAlpha=opt_styles.alpha;
+        }
     }
     offset=this.pixelToDevice(offset);
     this.context.textAlign = opt_styles.align || 'center';
@@ -422,6 +436,9 @@ Drawing.prototype.drawTextToContext=function(point,text,opt_styles){
     else {
         if (doStroke) this.context.strokeText(text,dp[0]+offset[0],dp[1]+offset[1]);
         if (doFill) this.context.fillText(text,dp[0]+offset[0],dp[1]+offset[1]);
+    }
+    if (alpha !== undefined){
+        this.context.globalAlpha=alpha;
     }
     return rt;
 };
