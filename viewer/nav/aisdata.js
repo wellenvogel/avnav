@@ -80,6 +80,14 @@ let AisData=function(navdata){
      * @type {{}}
      */
     this.hiddenTargets={}
+
+    /**
+     * @private
+     * remember the last AIS center we ever used
+     * this will be used if there is no current GPS available
+     * @type {undefined}
+     */
+    this.lastAisCenter=undefined;
 };
 /**
  *
@@ -262,6 +270,12 @@ AisData.prototype.startQuery=function() {
     let center=this.navdata.getAisCenter();
     let self=this;
     let timeout=parseInt(globalStore.getData(keys.properties.aisQueryTimeout));
+    if (! center){
+        center=this.lastAisCenter;
+    }
+    else{
+        this.lastAisCenter=center;
+    }
     if (! center){
         window.clearTimeout(this.timer);
         this.timer=window.setTimeout(function(){
