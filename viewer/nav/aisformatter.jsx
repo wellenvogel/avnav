@@ -104,7 +104,7 @@ const aisparam={
             if (v.type == 21) return v.name;
             return v.shipname;
         },
-        classes: [AIS_CLASSES.A,AIS_CLASSES.B]
+        classes: [AIS_CLASSES.A,AIS_CLASSES.B,AIS_CLASSES.Aton]
     },
     callsign: {
         headline: 'call',

@@ -8,7 +8,7 @@ import globalStore from '../util/globalstore.jsx';
 import base from '../base.js';
 import assign from 'object-assign';
 import NavCompute from '../nav/navcompute.js';
-import AisFormatter from '../nav/aisformatter.jsx';
+import AisFormatter, {AIS_CLASSES} from '../nav/aisformatter.jsx';
 import Helper from '../util/helper.js';
 import globalstore from "../util/globalstore";
 import tinycolor from "tinycolor2";
@@ -332,7 +332,7 @@ AisLayer.prototype.createInternalIcons = function () {
             DEFAULT_COLOR);
         this.atonStyles["internal"+key] = new StyleEntry(styleToProps[key],
             atonIcon,
-            assign({}, symbolStyle, {courseVectorColor: style[styleToProps[key]]}),
+            assign({}, this.atonStyle, {courseVectorColor: style[styleToProps[key]]}),
             DEFAULT_COLOR);
     }
 };
@@ -382,6 +382,12 @@ AisLayer.prototype.setStyles=function(){
         rotation: 0,
         rotateWithView: true
     };
+    this.atonStyle={
+       anchor: [15, 15],
+        size: [30,30],
+        rotation: 0,
+        rotateWithView: true
+    }
 };
 
 /**
@@ -390,13 +396,21 @@ AisLayer.prototype.setStyles=function(){
  * @returns {StyleEntry}
  */
 AisLayer.prototype.getStyleEntry=function(item){
-    let typeSuffix="-"+AisFormatter.format('shiptype',item);
-    let statusSuffix=(item.status !== undefined)?"-status"+parseInt(item.status):undefined;
+    let cl=AisFormatter.format('clazz',item);
+    let typeSuffix;
+    let statusSuffix;
+    if (cl === AIS_CLASSES.A || cl === AIS_CLASSES.B) {
+        typeSuffix = "-" + AisFormatter.format('shiptype', item);
+        statusSuffix = (item.status !== undefined) ? "-status" + parseInt(item.status) : undefined;
+    }
+    if (cl === AIS_CLASSES.Aton){
+        typeSuffix="-type"+item.aid_type;
+    }
     let base=styleKeyFromItem(item);
-    let styleMap=(item.type == 21)?this.atonStyles:this.symbolStyles;
+    let styleMap=(cl === AIS_CLASSES.Aton)?this.atonStyles:this.symbolStyles;
     return mergeStyles(styleMap["internal"+base],
         styleMap[base],
-        styleMap[base+typeSuffix],
+        (typeSuffix !== undefined)?styleMap[base+typeSuffix]:undefined,
         (statusSuffix!==undefined)?styleMap[base+statusSuffix]:undefined,
         (statusSuffix!==undefined)?styleMap[base+typeSuffix+statusSuffix]:undefined,
         );
