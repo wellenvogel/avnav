@@ -11,9 +11,9 @@
    height="100.28819"
    version="1.1"
    id="svg873"
-   sodipodi:docname="ais-default-fishing.svg"
+   sodipodi:docname="ais-default-draft.svg"
    inkscape:version="1.0.2 (1.0.2+r75+1)"
-   inkscape:export-filename="/home/andreas/projects/avnav/viewer/images/ais-default-fishing.png"
+   inkscape:export-filename="/home/andreas/projects/avnav/viewer/images/ais-default-draft.png"
    inkscape:export-xdpi="96"
    inkscape:export-ydpi="96">
   <metadata
@@ -24,7 +24,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
