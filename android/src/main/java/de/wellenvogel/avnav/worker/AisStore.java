@@ -31,7 +31,7 @@ public class AisStore {
         }
     }
     private HashMap<Integer,JSONObject> aisData=new HashMap<Integer, JSONObject>();
-    private static final int HANDLED_MESSAGES[]=new int[]{1,2,3,5,18,19,24};
+    private static final int HANDLED_MESSAGES[]=new int[]{1,2,3,5,18,19,24,4,21};
     private static final String MERGE_FIELDS[]=new String[]{"imo_id","callsign","shipname","shiptype","destination"};
     private static final String LOGPRFX="Avnav.AisStore";
     private static final String AGE_KEY="age";
@@ -114,6 +114,16 @@ public class AisStore {
                     rt.put("course", m.getCog());
                     break;
                 }
+                case 4:
+                {
+                    AisMessage4 m=(AisMessage4) msg;
+                    rt = new JSONObject();
+                    rt.put("mmsi", m.getUserId());
+                    rt.put("lon", m.getPos().getLongitudeDouble());
+                    rt.put("lat", m.getPos().getLatitudeDouble());
+                    //TODO: type 4 fields?
+                    break;
+                }
                 case 5:
                 case 24:
                 {
@@ -123,10 +133,13 @@ public class AisStore {
                     rt.put("callsign", m.getCallsign()!=null?m.getCallsign().replaceAll("@*$",""):"");
                     rt.put("shipname", m.getName()!=null?m.getName().replaceAll("@*$",""):"");
                     rt.put("shiptype", m.getShipType());
+                    rt.put("length",m.getDimBow()+m.getDimStern());
+                    rt.put("beam",m.getDimPort()+m.getDimStarboard());
                     if (msg.getMsgId() == 5) {
                         AisMessage5 m5=(AisMessage5)msg;
                         rt.put("imo_id", m5.getImo());
                         rt.put("destination", m5.getDest()!=null?m5.getDest().replaceAll("@*$",""):"");
+                        rt.put("draught",(float)m5.getDraught()/10.0);
                     }
                     break;
                 }
@@ -139,6 +152,19 @@ public class AisStore {
                     rt.put("lat", m.getPos().getLatitudeDouble());
                     rt.put("speed", m.getSog());
                     rt.put("course", m.getCog());
+                    break;
+                }
+                case 21:
+                {
+                    AisMessage21 m=(AisMessage21) msg;
+                    rt = new JSONObject();
+                    rt.put("mmsi", msg.getUserId());
+                    rt.put("lon", m.getPos().getLongitudeDouble());
+                    rt.put("lat", m.getPos().getLatitudeDouble());
+                    rt.put("name",m.getName());
+                    rt.put("aid_type",m.getAtonType());
+                    rt.put("length",m.getDimBow()+m.getDimStern());
+                    rt.put("beam",m.getDimPort()+m.getDimStarboard());
                     break;
                 }
 
