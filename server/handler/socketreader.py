@@ -63,7 +63,8 @@ class AVNSocketReader(AVNWorker,SocketReader):
                WorkerParameter('filter','',type=WorkerParameter.T_FILTER),
                cls.P_WRITE_OUT,
                cls.P_WRITE_FILTER,
-               cls.P_BLACKLIST
+               cls.P_BLACKLIST,
+               SocketReader.P_STRIP_LEADING
     ]
     return rt
 
@@ -138,7 +139,10 @@ class AVNSocketReader(AVNWorker,SocketReader):
           timeout = timeout *5
         else:
           timeout=None
-        connection = SocketReader(self.socket, self.writeData, self.feeder, self.setInfo, shouldStop=self.shouldStop)
+        connection = SocketReader(self.socket, self.writeData,
+                                  self.feeder, self.setInfo,
+                                  shouldStop=self.shouldStop,
+                                  stripLeading=SocketReader.P_STRIP_LEADING.fromDict(self.param))
         if self.P_WRITE_OUT.fromDict(self.param):
           clientHandler = threading.Thread(
             target=self._writer,

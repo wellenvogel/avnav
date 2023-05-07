@@ -25,6 +25,7 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
 import socket
+import re
 
 from avnav_nmea import *
 from avnav_worker import *
@@ -34,7 +35,10 @@ from avnav_worker import *
 #a base class for socket readers and writers
 
 class SocketReader(object):
-  def __init__(self,socket,writeData,queue,setInfo,shouldStop=None,sourcePriority=NMEAParser.DEFAULT_SOURCE_PRIORITY):
+  P_STRIP_LEADING = WorkerParameter('stripLeading', False, type=WorkerParameter.T_BOOLEAN,
+                                description="strip anything before $ or ! in received lines")
+  START_PATTERN=re.compile('[$!]')
+  def __init__(self,socket,writeData,queue,setInfo,shouldStop=None,sourcePriority=NMEAParser.DEFAULT_SOURCE_PRIORITY,stripLeading=False):
     self.feeder=None
     self.writeData=writeData
     self.feeder=queue
@@ -43,6 +47,7 @@ class SocketReader(object):
     self.setInfo=setInfo
     self.shouldStop=shouldStop if shouldStop is not None else self.shouldStopInternal
     self.sourcePriority=sourcePriority
+    self.stripLeading=stripLeading
 
 
   def shouldStopInternal(self):
@@ -54,6 +59,16 @@ class SocketReader(object):
     except:
       pass
     self.socket.close()
+
+  def _removeLeading(self,line):
+    if not self.stripLeading:
+      return line
+    if line is None:
+      return line
+    match=self.START_PATTERN.search(line)
+    if match is None:
+      return line
+    return line[match.span()[0]:]
 
   def readSocket(self,infoName,sourceName,filter=None,timeout=None):
     sock=self.socket
@@ -96,6 +111,7 @@ class SocketReader(object):
           #last one ends with nl
           for l in lines:
             l=l.translate(NMEAParser.STRIPCHARS)
+            l=self._removeLeading(l)
             if pattern.match(l):
               if not NMEAParser.checkFilter(l, filterA):
                 continue
@@ -109,6 +125,7 @@ class SocketReader(object):
         else:
           for i in range(len(lines)-1):
             line=lines[i].translate(NMEAParser.STRIPCHARS)
+            line=self._removeLeading(line)
             if pattern.match(line):
               self.writeData(line,source=sourceName,sourcePriority=self.sourcePriority)
               if not hasNMEA:

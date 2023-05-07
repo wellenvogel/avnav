@@ -52,7 +52,8 @@ class AVNUdpReader(AVNWorker):
                                description="the local listener port"),
                WorkerParameter('minTime',0,type=WorkerParameter.T_FLOAT,
                                description='wait this time before reading new data (ms)'),
-               WorkerParameter('filter','',type=WorkerParameter.T_FILTER)
+               WorkerParameter('filter','',type=WorkerParameter.T_FILTER),
+               SocketReader.P_STRIP_LEADING
     ]
     return rt
 
@@ -120,7 +121,10 @@ class AVNUdpReader(AVNWorker):
         continue
       AVNLog.info("successfully listening at %s",info)
       try:
-        reader=SocketReader(self.socket,self.writeData,None,self.setInfo,shouldStop=self.shouldStop)
+        reader=SocketReader(self.socket,self.writeData,
+                            None,self.setInfo,
+                            shouldStop=self.shouldStop,
+                            stripLeading=SocketReader.P_STRIP_LEADING.fromDict(self.param))
         reader.readSocket('main',self.getSourceName(info),self.getParamValue('filter'))
       except:
         AVNLog.info("exception while reading data from %s:%d %s",self.getStringParam('host'),self.getIntParam('port'),traceback.format_exc())
