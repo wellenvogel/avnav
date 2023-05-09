@@ -232,28 +232,37 @@ class App extends React.Component {
         this.history.push(startpage);
         this.leftHistoryState=stateHelper(this,this.history.currentLocation(true),'leftHistory');
         this.history.setCallback((topEntry)=>this.leftHistoryState.setState(topEntry,true));
-        Requests.getJson("/user/viewer/images.json",{useNavUrl:false,checkOk:false})
-            .then((data)=>{
+        Requests.getJson("images.json", {useNavUrl: false, checkOk: false})
+            .then((data) => {
                 MapHolder.setImageStyles(data);
             })
-            .catch((error)=> {
-                Toast("unable to load user image definitions: " + error);
-            });
-        Requests.getJson("keys.json",{useNavUrl:false,checkOk:false}).then(
-            (json)=>{
-                KeyHandler.registerMappings(json);
-            },
-            (error)=>{
-                Toast("unable to load key mappings: "+error);
-            }
-        );
-        Requests.getJson("/user/viewer/keys.json",{useNavUrl:false,checkOk:false}).then(
-            (json)=>{
-                KeyHandler.mergeMappings(2,json);
-            },
-            (error)=>{
-            }
-        );
+            .catch((error) => {
+                Toast("unable to load image definitions");
+            })
+            .then(() => Requests.getJson("/user/viewer/images.json", {useNavUrl: false, checkOk: false})
+                .then((data) => {
+                    MapHolder.setImageStyles(data);
+                })
+                .catch((error) => {
+                    Toast("unable to load user image definitions: " + error);
+                }));
+        Requests.getJson("keys.json", {useNavUrl: false, checkOk: false})
+            .then(
+                (json) => {
+                    KeyHandler.registerMappings(json);
+                })
+            .catch((error) => {
+                Toast("unable to load key mappings: " + error);
+            })
+            .then(() =>
+                Requests.getJson("/user/viewer/keys.json", {useNavUrl: false, checkOk: false}).then(
+                    (json) => {
+                        KeyHandler.mergeMappings(2, json);
+                    },
+                    (error) => {
+                    }
+                )
+            );
         Requests.getJson("/user/viewer/splitkeys.json",{useNavUrl:false,checkOk:false}).then(
             (json)=>{
                 if (json.version === undefined){
