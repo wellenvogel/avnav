@@ -115,5 +115,6 @@
     <string name="labelSettingsNextWpMode">when to switch to next waypoint\nearly: xx seconds after wp alarm\n90: we are at +/-90° from wp course\nlate: old behavior</string>
     <string name="labelSettingsNextWpTime">seconds after approach to switch wp (5...100) in mode early</string>
     <string name="allowPlugins">allow unknown plugins</string>
+    <string name="labelSettingsStripLeading">delete any leading characters before $ or ! in received lines</string>
 
 </resources>

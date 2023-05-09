@@ -32,7 +32,7 @@ public class AisStore {
     }
     private HashMap<Integer,JSONObject> aisData=new HashMap<Integer, JSONObject>();
     private static final int HANDLED_MESSAGES[]=new int[]{1,2,3,5,18,19,24,4,21};
-    private static final String MERGE_FIELDS[]=new String[]{"imo_id","callsign","shipname","shiptype","destination"};
+    private static final String MERGE_FIELDS[]=new String[]{"imo_id","callsign","shipname","shiptype","destination","length","beam","draught"};
     private static final String LOGPRFX="Avnav.AisStore";
     private static final String AGE_KEY="age";
     private boolean isHandledMessage(AisMessage msg){
@@ -79,7 +79,7 @@ public class AisStore {
                 else{
                     for (String mf:MERGE_FIELDS){
                         Object ov=old.opt(mf);
-                        if (ov != null){
+                        if (ov != null && o.opt(mf) == null){
                             o.put(mf,ov);
                         }
                     }
@@ -112,6 +112,7 @@ public class AisStore {
                     rt.put("status", m.getNavStatus());
                     rt.put("speed", m.getSog());
                     rt.put("course", m.getCog());
+                    rt.put("heading",m.getTrueHeading());
                     break;
                 }
                 case 4:
@@ -152,6 +153,7 @@ public class AisStore {
                     rt.put("lat", m.getPos().getLatitudeDouble());
                     rt.put("speed", m.getSog());
                     rt.put("course", m.getCog());
+                    rt.put("heading",m.getTrueHeading());
                     break;
                 }
                 case 21:
@@ -161,7 +163,7 @@ public class AisStore {
                     rt.put("mmsi", msg.getUserId());
                     rt.put("lon", m.getPos().getLongitudeDouble());
                     rt.put("lat", m.getPos().getLatitudeDouble());
-                    rt.put("name",m.getName());
+                    rt.put("name",m.getName().replaceAll("@*$",""));
                     rt.put("aid_type",m.getAtonType());
                     rt.put("length",m.getDimBow()+m.getDimStern());
                     rt.put("beam",m.getDimPort()+m.getDimStarboard());

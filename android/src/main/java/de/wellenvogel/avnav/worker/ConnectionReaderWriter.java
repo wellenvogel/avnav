@@ -8,6 +8,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
@@ -17,6 +19,7 @@ import de.wellenvogel.avnav.util.NmeaQueue;
  * Created by andreas on 25.12.14.
  */
 public class ConnectionReaderWriter{
+    private static Pattern NMEA_START=Pattern.compile("[!$]");
     public static class ConnectionProperties {
         public String sourceName;
         public boolean readData=true;
@@ -28,6 +31,7 @@ public class ConnectionReaderWriter{
         public int connectTimeout =0;
         public int writeTimeout=0;
         public String[] blacklist;
+        public boolean stripLeading=false;
     }
 
     private static final String LOGPRFX = "ConnectionReaderWriter";
@@ -119,6 +123,17 @@ public class ConnectionReaderWriter{
                 dataAvailable=true;
                 if (properties.readData) {
                     line = AvnUtil.removeNonNmeaChars(line);
+                    if (line.length() < 1){
+                        continue;
+                    }
+                    if (properties.stripLeading){
+                        if (line.charAt(0) != '!' && line.charAt(0) != '$') {
+                            Matcher m = NMEA_START.matcher(line);
+                            if (m.find()) {
+                                line = line.substring(m.start());
+                            }
+                        }
+                    }
                     if (! line.startsWith("!") && ! line.startsWith("$") ){
                         AvnLog.dfs("broken line \"%s\"",line);
                     }

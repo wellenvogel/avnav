@@ -61,6 +61,8 @@ public abstract class Worker implements IWorker {
                     new EditableParameter.EditableParameterBase.ConditionList(
                             new AvnUtil.KeyValue<Boolean>(MDNS_ENABLED.name,true)
                     ));
+    public static EditableParameter.BooleanParameter STRIP_LEADING_PARAMETER =
+            new EditableParameter.BooleanParameter("stripLeading",R.string.labelSettingsStripLeading,false);
 
     static final String CLAIM_BLUETOOTH ="bluetooth device";
     static final String CLAIM_USB ="usb device";

@@ -1,6 +1,5 @@
 package de.wellenvogel.avnav.worker;
 
-import android.content.Context;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -29,7 +28,8 @@ public abstract class SingleConnectionHandler extends ChannelWorker {
                 SEND_DATA_PARAMETER,
                 SEND_FILTER_PARAM.cloneCondition(new AvnUtil.KeyValue<Boolean>(SEND_DATA_PARAMETER.name,true)),
                 READ_TIMEOUT_PARAMETER,
-                BLACKLIST_PARAMETER.cloneCondition(new AvnUtil.KeyValue<Boolean>(SEND_DATA_PARAMETER.name,true))
+                BLACKLIST_PARAMETER.cloneCondition(new AvnUtil.KeyValue<Boolean>(SEND_DATA_PARAMETER.name,true)),
+                STRIP_LEADING_PARAMETER
         );
         gpsService =ctx;
         this.queue=queue;
