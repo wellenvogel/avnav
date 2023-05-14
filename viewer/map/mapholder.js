@@ -44,6 +44,7 @@ import remotechannel, {COMMANDS} from "../util/remotechannel";
 import {MouseWheelZoom} from "ol/interaction";
 import UserLayer from './userlayer';
 import LocalStorage, {STORAGE_NAMES} from '../util/localStorageManager';
+import {FeatureInfoList, FeatureInfoTypes} from "./featureinfo";
 
 
 const PSTOPIC="mapevent";
@@ -137,6 +138,7 @@ const MapHolder=function(){
      * @type {{}}
      */
     this.mapEventSubscriptions={};
+    this.allowedFeatureSelections=[];
     this.userLayerContext=new Context();
     this.aislayer=new AisLayer(this);
     this.navlayer=new NavLayer(this);
@@ -1476,6 +1478,9 @@ MapHolder.prototype.setGpsLock=function(lock,opt_noRemote){
     this.checkAutoZoom();
 };
 
+MapHolder.prototype.setAllowedFeatureSelections=function(selections){
+    this.allowedFeatureSelections=selections;
+}
 /**
  * click event handler
  * @param {MapBrowserEvent} evt
@@ -1483,10 +1488,15 @@ MapHolder.prototype.setGpsLock=function(lock,opt_noRemote){
 MapHolder.prototype.onClick=function(evt){
     evt.preventDefault();
     evt.stopPropagation();
-    let wp=this.routinglayer.findTarget(evt.pixel);
-    if (wp){
-        let rt=this._callHandlers({type:this.EventTypes.SELECTWP,wp:wp});
-        if (rt) return false;
+    if (!Object.keys(this.mapEventSubscriptions).length) return;
+    let featureList=new FeatureInfoList();
+    let wp;
+    if (this.allowedFeatureSelections.indexOf(FeatureInfoTypes.ROUTE) >= 0) {
+        wp = this.routinglayer.findTarget(evt.pixel);
+        if (wp) {
+            let rt = this._callHandlers({type: this.EventTypes.SELECTWP, wp: wp});
+            if (rt) return false;
+        }
     }
     let aisparam=this.aislayer.findTarget(evt.pixel);
     if (aisparam) {

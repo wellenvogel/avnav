@@ -27,6 +27,7 @@ import mapholder from "../map/mapholder.js";
 import {Input, InputSelect} from "../components/Inputs";
 import DB from '../components/DialogButton';
 import Formatter from "../util/formatter";
+import {FeatureInfoTypes} from "../map/featureinfo";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 const PAGENAME="editroutepage";
@@ -612,6 +613,13 @@ class EditRoutePage extends React.Component{
     componentDidMount(){
         MapHolder.setRoutingActive(true);
         MapHolder.showEditingRoute(true);
+        MapHolder.setAllowedFeatureSelections([
+            FeatureInfoTypes.ROUTE,
+            FeatureInfoTypes.OV_ROUTE,
+            FeatureInfoTypes.OV_TRACK,
+            FeatureInfoTypes.OV,
+            FeatureInfoTypes.CHART
+        ]);
         this.lastGpsLock=MapHolder.getGpsLock();
         MapHolder.setGpsLock(false);
     }

@@ -32,6 +32,7 @@ import {InputReadOnly} from "../components/Inputs";
 import assign from 'object-assign';
 import WidgetFactory from "../components/WidgetFactory";
 import ItemList from "../components/ItemList";
+import {FeatureInfoTypes} from "../map/featureinfo";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -489,6 +490,15 @@ class NavPage extends React.Component{
     }
     componentDidMount(){
         MapHolder.showEditingRoute(false);
+        MapHolder.setAllowedFeatureSelections([
+            FeatureInfoTypes.AIS,
+            FeatureInfoTypes.ROUTE,
+            FeatureInfoTypes.TARGET,
+            FeatureInfoTypes.OV_ROUTE,
+            FeatureInfoTypes.OV_TRACK,
+            FeatureInfoTypes.OV,
+            FeatureInfoTypes.CHART
+        ]);
     }
     getButtons(){
         let rt=[
