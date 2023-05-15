@@ -179,6 +179,8 @@ def convertAisClass(value):
     return 1
   if value == "B":
     return 18
+  if value == 'ATON':
+    return 21
   return value
 def convertAisLon(value):
   return safeGetItem(value, 'longitude')
@@ -187,22 +189,87 @@ def convertAisLat(value):
 def convertAisLength(value):
   return safeGetItem(value,'overall')
 def convertAisDraft(value):
-  return safeGetItem(value,'current')
+  for key in ['current','maximum']:
+    rt=safeGetItem(value,key)
+    if rt is not None:
+      return rt
+
+
+#from n2k-signalk/pgns/129038.js
+AIS_STATEMAP1 = [
+    {"name": "Under way using engine", "value": "0"},
+    {"name": "At anchor", "value": "1"},
+    {"name": "Not under command", "value": "2"},
+    {"name": "Restricted manoeuverability", "value": "3"},
+    {"name": "Constrained by her draught", "value": "4"},
+    {"name": "Moored", "value": "5"},
+    {"name": "Aground", "value": "6"},
+    {"name": "Engaged in Fishing", "value": "7"},
+    {"name": "Under way sailing", "value": "8"},
+    {"name": "Hazardous material - High Speed", "value": "9"},
+    {"name": "Hazardous material - Wing in Ground", "value": "10"},
+    {"name": "AIS-SART", "value": "14"}
+  ]
+#from canboat/pgns/pgns.json
+AIS_STATEMAP2={
+  'Under way using engine': 'motoring',
+  'At anchor': 'anchored',
+  'Not under command': 'not under command',
+  'Restricted manoeuverability': 'restricted manouverability',
+  'Constrained by her draught': 'constrained by draft',
+  'Moored': 'moored',
+  'Aground': 'aground',
+  'Engaged in Fishing': 'fishing',
+  'Under way sailing': 'sailing',
+  'Hazardous material, High Speed': 'hazardous material high speed',
+  'Hazardous material, Wing in Ground': 'hazardous material wing in ground',
+  'AIS-SART': 'ais-sart'
+}
+AIS_STATEMAP={}
+for entry in AIS_STATEMAP1:
+  AIS_STATEMAP[entry['name']]=entry['value']
+for k,v in AIS_STATEMAP2.items():
+  number=AIS_STATEMAP.get(k)
+  if number is not None:
+    AIS_STATEMAP[v]=number
+def convertAisStatus(value):
+  '''
+  unfortunately SK des some double mapping of the state
+  (1) from the number value to the defined name in canboat/pgns/pgns.json 129038
+  (2) in n2k-signalk/pgns/129028.js
+  @param value:
+  @return:
+  '''
+  rt=AIS_STATEMAP.get(value)
+  if rt is None:
+    return '15'
+  return rt
+
+def convertAisAtonType(value):
+  return safeGetItem(value,'id')
+
+def convertAisName(value):
+  if value is None:
+    return value
+  return value.replace('\00','')
 
 AISPATHMAP={
   'mmsi':AE('mmsi'),
-  'shipname':AE('name'),
+  'shipname':AE('name',converter=convertAisName),
   'speed':AE('navigation.speedOverGround'),
   'course':AE('navigation.courseOverGroundTrue',converter=AVNUtil.rad2deg),
   'callsign':AE('communication.callsignVhf'),
   'shiptype': AE('design.aisShipType',converter=convertAisShipType),
   'lon': AE('navigation.position',converter=convertAisLon),
   'lat': AE('navigation.position',converter=convertAisLat),
-  'destination': AE('navigation.destination'),
+  'destination': AE('navigation.destination.commonName'),
   'type': AE('sensors.ais.class',converter=convertAisClass),
   'beam': AE('design.beam'),
   'length': AE('design.length',converter=convertAisLength),
-  'draft':AE('design.draft',converter=convertAisDraft)
+  'draught':AE('design.draft',converter=convertAisDraft),
+  'status': AE('navigation.state',converter=convertAisStatus),
+  'heading': AE('navigation.headingTrue',converter=AVNUtil.rad2deg),
+  'aid_type': AE('atonType',converter=convertAisAtonType)
 }
 
 class Config(object):
@@ -830,6 +897,16 @@ class AVNSignalKHandler(AVNWorker):
         self.setInfo(self.I_AIS,'no response from %s'%url,WorkerStatus.ERROR)
         return
       data=json.loads(response.read())
+      try:
+        url=baseUrl+'atons/'
+        response=urllib.request.urlopen(url)
+        if response is not None:
+          atons=json.loads(response.read())
+          data.update(atons)
+        else:
+          AVNLog.debug("empty response from fetch atons")
+      except Exception as e:
+        AVNLog.debug("exception fetching atons from SK: %s",str(e))
       numTargets=0
       now=AVNUtil.utcnow()
       oldest=now-self.navdata.getAisExpiryPeriod()
