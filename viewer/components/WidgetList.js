@@ -390,18 +390,12 @@ let widgetList=[
     {
         name: 'signalKPressureHpa',
         unit: 'hPa',
-        formatter: 'skPressure',
-        editableParameters:{
-            formatter: false
-        }
+        formatter: 'skPressure'
     },
     {
         name:'signalKCelsius',
         unit:'°',
-        formatter: 'skTemperature',
-        editableParameters:{
-            formatter: false
-        }
+        formatter: 'skTemperature'
     },
     {
         name: 'signalKRoll',
