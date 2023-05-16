@@ -63,7 +63,7 @@ class KeyWidgetParameter extends EditableParameter {
         return widget.storeKeys[this.name];
     }
 
-    getTypeForEdit() {
+    getTypeForEdit(widget) {
         return EditableParameter.TYPE.SELECT;
     }
     isChanged(value) {
@@ -98,7 +98,7 @@ class ArrayWidgetParameter extends EditableParameter {
         }
         return rt;
     }
-    getTypeForEdit() {
+    getTypeForEdit(widget) {
         return EditableParameter.TYPE.STRING;
     }
 
@@ -134,12 +134,16 @@ class FormatterParamWidgetParameter extends EditableParameter {
         }
         return rt;
     }
-    getTypeForEdit() {
+    getTypeForEdit(widget) {
         let rt=EditableParameter.TYPE.STRING;
-        if (! this.parameterDescriptions) return rt;
+        let parameterDescriptions=this.parameterDescriptions;
+        if (! parameterDescriptions) {
+            parameterDescriptions=getFormatterParameters(widget);
+            if (! parameterDescriptions) return rt;
+        }
         rt=[];
         let idx=0;
-        this.parameterDescriptions.forEach((fp)=>{
+        parameterDescriptions.forEach((fp)=>{
             let nested=createEditableParameter(this.name,fp.type,fp.list,
                 'fmt:'+fp.name);
             if (! nested) return;
@@ -174,7 +178,7 @@ class ReadOnlyWidgetParameter extends EditableParameter {
         if (!widget) widget = {};
         return widget;
     }
-    getTypeForEdit() {
+    getTypeForEdit(widget) {
         return 'STRING';
     }
 }
@@ -230,6 +234,18 @@ const getDefaultParameter=(name)=>{
 };
 
 
+export const getFormatterParameters=(widget)=>{
+    if (! widget) return;
+    let formatter = widget.formatter;
+    if (formatter) {
+        if (typeof (formatter) !== 'function') {
+            formatter = Formatter[formatter];
+        }
+        if (formatter && formatter.parameters) {
+            return formatter.parameters;
+        }
+    }
+}
 
 
 
@@ -311,14 +327,12 @@ class WidgetFactory{
                         continue;
                     }
                     if (pdefinition.type === WidgetParameter_TYPE.FORMATTER_PARAM) {
-                        let formatter = widgetData.formatter;
-                        if (formatter) {
-                            if (typeof (formatter) !== 'function') {
-                                formatter = Formatter[formatter];
-                            }
-                            if (formatter && formatter.parameters) {
-                                pdefinition.parameterDescriptions = formatter.parameters;
-                            }
+                        //if the widget has a predefined formatter
+                        //we set the formatter parameters here
+                        //if not the editWidgetDialog will do this dynamically later
+                        let formatterParam=getFormatterParameters(widgetData);
+                        if (formatterParam){
+                                pdefinition.parameterDescriptions = formatterParam;
                         }
                     }
                 } else {

@@ -42,7 +42,7 @@ export class EditableParameter{
     canEdit(){
         return ! this.readOnly;
     }
-    getTypeForEdit(){
+    getTypeForEdit(params){
         return this.type;
     }
     getList(){
