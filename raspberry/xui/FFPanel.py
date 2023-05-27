@@ -10,13 +10,17 @@ import traceback
 import Xlib
 from Xlib.display import Display
 from Xlib import X
+import re
 
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk,Gdk,GdkPixbuf,Gio,GLib,GdkX11
+from gi.repository import Gtk,Gdk,GdkPixbuf,Gio,GObject,GLib,GdkX11
+
+TITLE_CHECK=re.compile('AVNav-Web')
 
 SIZE=48
 MARGIN=SIZE+12
 BASE_DIR="/usr/lib/avnav/viewer/images"
+
 def getImage(name):
     imgpath=os.path.join(BASE_DIR,name)
     if not os.path.exists(imgpath):
@@ -115,6 +119,35 @@ class ButtonWindow(Gtk.Window):
                            X.PropModeReplace) 
         display.flush()
 
+def getProp(disp,win, prop):
+    if disp is None:
+        disp=Display()
+    p = win.get_full_property(disp.intern_atom('_NET_WM_' + prop), 0)
+    return [None] if (p is None) else p.value
+def listWindows(root):
+    children = root.query_tree().children
+    for window in children:
+        yield window
+    for window in children:
+        for window in listWindows(window):
+            yield window
+
+def findWindowByPid(pid):
+    disp = Display()
+    xroot = disp.screen().root
+    for window in listWindows(xroot):
+        attrs=window.get_attributes()
+        if attrs is None or attrs.map_state != Xlib.X.IsViewable:
+            continue
+        PIDs=getProp(disp,window,'PID')
+        if PIDs is None or len(PIDs) < 1:
+            continue
+        if PIDs[0] != pid:
+            continue
+        name=window.get_wm_name()
+        window.change_attributes(event_mask=Xlib.X.PropertyChangeMask)
+        return window.id
+
 class MyApp(Gtk.Application):
     def __init__(self, *args, **kwargs):
         super().__init__(
@@ -161,15 +194,33 @@ class MyApp(Gtk.Application):
         self.window.setStruts()
         self.add_window(self.window)
         if self.targetPid is not None:
-            t=threading.Thread(target=self.findWindowId)
-            t.start()
+            if self.findTarget:
+                GLib.timeout_add(5000,self.findTarget)
+            #t=threading.Thread(target=self.findWindowId)
+            #t.start()
+    def findTarget(self):
+        targetWindowId=findWindowByPid(self.targetPid)
+        if targetWindowId is not None:
+            self.targetWindowId=targetWindowId
+            d=self.window.get_screen().get_display()
+            tw=GdkX11.X11Window.foreign_new_for_display(d,self.targetWindowId)
+            tw.set_events(Gdk.EventMask.PROPERTY_CHANGE_MASK)
+            self.handleTargetVisibility()
+            return False
+        return True
+    def handleTargetVisibility(self):
+        if self.targetWindowId is None:
+            self.window.show()
+            return
+        name=getProp(None,self.targetWindowId,'NAME')
+        if TITLE_CHECK.match(name):
+            self.window.hide()
+        else:
+            self.window.show()
 
     def send_key(self,key):
         if self.targetWindowId is None:
             return
-        d=self.window.get_screen().get_display()
-        tw=GdkX11.X11Window.foreign_new_for_display(d,self.targetWindowId)
-        tw.set_events(Gdk.EventMask.PROPERTY_CHANGE_MASK)
         if not isinstance(key,list):
             key=[key]
         cmd=["xdotool","windowactivate","--sync",str(self.targetWindowId),"key"]
