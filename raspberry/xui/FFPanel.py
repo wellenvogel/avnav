@@ -146,7 +146,7 @@ def findWindowByPid(pid):
             continue
         name=window.get_wm_name()
         window.change_attributes(event_mask=Xlib.X.PropertyChangeMask)
-        return window.id
+        return window
 
 class MyApp(Gtk.Application):
     def __init__(self, *args, **kwargs):
@@ -173,7 +173,7 @@ class MyApp(Gtk.Application):
         )
         self.window = None
         self.targetPid=None
-        self.targetWindowId=None
+        self.targetWindow=None
         self.buttonlist=ButtonList(self.send_key)
     def do_command_line(self, command_line):
         options = command_line.get_options_dict()
@@ -184,6 +184,20 @@ class MyApp(Gtk.Application):
         if 'pid' in options:
             self.targetPid=options['pid']
         self.activate()
+    def eventHandler(self,ev):
+        if self.targetWindow is not None:
+            try:
+                w=ev.get_window()
+                xid=w.get_xid() if w is not None else None
+                if xid == self.targetWindow.id:
+                    print("evhandler", ev.get_event_type(),xid)
+                    if ev.get_event_type() == Gdk.EventType.PROPERTY_NOTIFY:
+                        print("property notify...")
+                        if ev.property.atom.name()=='_NET_WM_NAME':
+                            self.handleTargetVisibility()
+            except Exception as e:
+                print("ERR:",e)
+        Gtk.main_do_event(ev)    
     def do_activate(self):
         if self.window is None:
             self.window = ButtonWindow(self.buttonlist)
@@ -193,72 +207,53 @@ class MyApp(Gtk.Application):
         self.window.setPosition()
         self.window.setStruts()
         self.add_window(self.window)
+        Gdk.event_handler_set(self.eventHandler)
         if self.targetPid is not None:
             if self.findTarget:
                 GLib.timeout_add(5000,self.findTarget)
-            #t=threading.Thread(target=self.findWindowId)
-            #t.start()
+            
     def findTarget(self):
-        targetWindowId=findWindowByPid(self.targetPid)
-        if targetWindowId is not None:
-            self.targetWindowId=targetWindowId
+        targetWindow=findWindowByPid(self.targetPid)
+        if targetWindow is not None:
+            self.targetWindow=targetWindow
             d=self.window.get_screen().get_display()
-            tw=GdkX11.X11Window.foreign_new_for_display(d,self.targetWindowId)
+            tw=GdkX11.X11Window.foreign_new_for_display(d,self.targetWindow.id)
             tw.set_events(Gdk.EventMask.PROPERTY_CHANGE_MASK)
             self.handleTargetVisibility()
             return False
         return True
     def handleTargetVisibility(self):
-        if self.targetWindowId is None:
+        if self.targetWindow is None:
             self.window.show()
-            return
-        name=getProp(None,self.targetWindowId,'NAME')
-        if TITLE_CHECK.match(name):
+            self.window.setPosition()
+            self.window.setStruts()
+            return True
+        name=getProp(None,self.targetWindow,'NAME')
+        if TITLE_CHECK.match(name.decode('utf-8',errors='ignore')):
             self.window.hide()
+            return False
         else:
             self.window.show()
+            self.window.setPosition()
+            self.window.setStruts()
+            return True
 
     def send_key(self,key):
-        if self.targetWindowId is None:
+        if self.targetWindow is None:
             return
         if not isinstance(key,list):
             key=[key]
-        cmd=["xdotool","windowactivate","--sync",str(self.targetWindowId),"key"]
+        cmd=["xdotool","windowactivate","--sync",str(self.targetWindow.id),"key"]
         cmd.extend(key)    
         res=subprocess.run(cmd)
         if res.returncode != 0:
             print("%s failed with %d"%(" ".join(cmd),res.returncode))
     
-    def findWindowId(self):
-        if self.targetPid is None:
-            print("no pid set...")
-            return
-        while self.targetWindowId is None:
-            res=subprocess.run(["xdotool","search","--all","--onlyvisible","--pid",str(self.targetPid)],
-                               capture_output=True,text=True,timeout=50)
-            if res.returncode == 0:
-                wid=res.stdout.rstrip().lstrip()
-                if wid != "":
-                    try:
-                        self.targetWindowId=int(wid)
-                        print("target window id %s found for pid %s"%(self.targetWindowId,self.targetPid))
-                        return
-                    except Exception as e: 
-                        pass
-            time.sleep(5)
         
-def evh(*args):
-    ev=args[0]
-    w=ev.get_window()
-    xid=hex(w.get_xid()) if w is not None else None
-    print("evhandler", ev.get_event_type(),xid)
-    if ev.get_event_type() == Gdk.EventType.PROPERTY_NOTIFY:
-        print("property notify...")
-    Gtk.main_do_event(*args)
+
 
 try:
     app=MyApp()
-    Gdk.event_handler_set(evh)
     app.run(sys.argv)
 except:
     print(traceback.format_exc())
