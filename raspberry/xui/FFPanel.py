@@ -12,7 +12,7 @@ from Xlib.display import Display
 from Xlib import X
 
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk,Gdk,GdkPixbuf,Gio,GLib
+from gi.repository import Gtk,Gdk,GdkPixbuf,Gio,GLib,GdkX11
 
 SIZE=48
 MARGIN=SIZE+12
@@ -167,6 +167,9 @@ class MyApp(Gtk.Application):
     def send_key(self,key):
         if self.targetWindowId is None:
             return
+        d=self.window.get_screen().get_display()
+        tw=GdkX11.X11Window.foreign_new_for_display(d,self.targetWindowId)
+        tw.set_events(Gdk.EventMask.PROPERTY_CHANGE_MASK)
         if not isinstance(key,list):
             key=[key]
         cmd=["xdotool","windowactivate","--sync",str(self.targetWindowId),"key"]
@@ -193,9 +196,18 @@ class MyApp(Gtk.Application):
                         pass
             time.sleep(5)
         
+def evh(*args):
+    ev=args[0]
+    w=ev.get_window()
+    xid=hex(w.get_xid()) if w is not None else None
+    print("evhandler", ev.get_event_type(),xid)
+    if ev.get_event_type() == Gdk.EventType.PROPERTY_NOTIFY:
+        print("property notify...")
+    Gtk.main_do_event(*args)
 
 try:
     app=MyApp()
+    Gdk.event_handler_set(evh)
     app.run(sys.argv)
 except:
     print(traceback.format_exc())
