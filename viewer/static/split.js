@@ -161,4 +161,5 @@
             }
         }
     }
+    document.title="AVNav-Web-Split";
 })();

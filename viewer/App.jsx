@@ -393,6 +393,7 @@ class App extends React.Component {
         window.addEventListener('resize',this.checkSizes);
         AlarmHandler.start();
         this.newDeviceHandler();
+        document.title="AVNav-Web";
 
 
     }
