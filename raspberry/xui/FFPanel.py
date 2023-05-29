@@ -70,6 +70,20 @@ def getImage(name,baseDir=None,resolution=160):
     return img
 
 #GTK based...
+
+class ResetDialog(Gtk.Dialog):
+    def __init__(self, parent):
+        super().__init__(title="Reset UI", transient_for=parent, flags=0)
+        self.add_buttons(
+            Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OK, Gtk.ResponseType.OK
+        )
+
+        self.set_default_size(250, 100)
+        label = Gtk.Label(label="Ready to reset the AvNav UI?")
+        box = self.get_content_area()
+        box.add(label)
+        self.show_all()
+
 class BDef():
     def __init__(self,action,icon,toTarget=True,command=None) -> None:
         self.action=action
@@ -86,11 +100,14 @@ class BDef():
             baseDir=self.iconBase
         return getImage(self.icon,baseDir,resolution)    
 
+
+
 BUTTONS=[
     BDef(['Escape','ctrl+w'],'ic_clear.svg'), #close
     BDef('ctrl+bracketleft','ic_arrow_back.svg'), #back
     BDef('F5','ic_refresh.svg'), #reload
-    BDef('Super_L+2','rpi.png',toTarget=False)
+    BDef('Super_L+2','rpi.png',toTarget=False),
+    BDef('##restart','RedBubble40.png')
 ]
 
 class ButtonList():
@@ -209,11 +226,20 @@ class MyApp(Gtk.Application):
             'base dir for icons',
             None
         )
+        self.add_main_option(
+            'dialog',
+            ord('d'),
+            GLib.OptionFlags.NONE,
+            GLib.OptionArg.NONE,
+            'reset dialog only',
+            None
+        )
         self.window = None
         self.targetPid=None
         self.targetWindow=None
         self.buttonlist=None
         self.iconBase=None
+        self.dialogOnly=False
     def do_command_line(self, command_line):
         options = command_line.get_options_dict()
         # convert GVariantDict -> GVariant -> dict
@@ -224,7 +250,10 @@ class MyApp(Gtk.Application):
             self.targetPid=options['pid']
         if 'base' in options:
             self.iconBase=options['base']
-        self.buttonlist=ButtonList(self.send_key,iconBase=self.iconBase)    
+        if 'dialog' in options:
+            self.dialogOnly=True
+        if not self.dialogOnly:    
+            self.buttonlist=ButtonList(self.handle_action,iconBase=self.iconBase)    
         self.activate()
     def eventHandler(self,ev):
         if self.targetWindow is not None:
@@ -241,6 +270,10 @@ class MyApp(Gtk.Application):
                 print("ERR:",e)
         Gtk.main_do_event(ev)    
     def do_activate(self):
+        if self.dialogOnly:
+            self.window=Gtk.Window()
+            self.reset_dialog()
+            self.quit()
         if self.window is None:
             self.window = ButtonWindow(self.buttonlist)
             self.window.setPanelParam()
@@ -273,8 +306,34 @@ class MyApp(Gtk.Application):
         else:
             self.window.show()
             return True
+    def error_dialog(self,error):
+        dialog = Gtk.MessageDialog(
+            transient_for=self.window,
+            flags=0,
+            message_type=Gtk.MessageType.ERROR,
+            buttons=Gtk.ButtonsType.CANCEL,
+            text=error,
+        )
+        dialog.run()
+        dialog.destroy()
+    def reset_dialog(self):
+        dialog = ResetDialog(self.window)
+        response = dialog.run()
+        dialog.destroy()
+        if response == Gtk.ResponseType.OK:
+            cmd=[os.path.join(os.path.dirname(__file__),'resetUI.sh')]
+            if not os.path.exists(cmd[0]):
+                self.error_dialog("%s not found"%cmd[0])
+                return
+            res=subprocess.run(cmd)
+            if res.returncode != 0:
+                self.error_dialog("running %s failed with status %d"%(cmd[0],res.returncode))
 
-    def send_key(self,key,toTarget=True):
+    def handle_action(self,key,toTarget=True):
+        if key[0:1] == '#':
+            if key == '##restart':
+                self.reset_dialog()
+                return
         if self.targetWindow is None and toTarget:
             return
         if not isinstance(key,list):
