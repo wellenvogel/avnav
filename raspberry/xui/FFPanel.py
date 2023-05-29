@@ -108,7 +108,7 @@ BUTTONS=[
     BDef('ctrl+bracketright','ic_arrow_forward.svg'), #forward
     BDef('F5','ic_refresh.svg'), #reload
     BDef('Super_L+2','rpi.png',toTarget=False),
-    BDef('##restart','RedBubble40.png')
+    BDef('##restart','SailBoatRed96.png')
 ]
 
 class ButtonList():
