@@ -21,8 +21,10 @@ SIZE=48
 MARGIN=SIZE+12
 BASE_DIR="/usr/lib/avnav/viewer/images"
 
-def getImage(name):
-    imgpath=os.path.join(BASE_DIR,name)
+def getImage(name,baseDir=None):
+    if baseDir is None:
+        baseDir=BASE_DIR
+    imgpath=os.path.join(baseDir,name)
     if not os.path.exists(imgpath):
         raise Exception("image %s not found"%imgpath)
     pb=GdkPixbuf.Pixbuf.new_from_file_at_scale(imgpath,SIZE,SIZE,True)
@@ -36,12 +38,15 @@ class BDef():
         self.action=action
         self.icon=icon
         self.command=command
+        self.iconBase=None
     def run(self,*args):
         if self.command is None:
             return
         self.command(self.action)
-    def getImage(self):
-        return getImage(self.icon)    
+    def getImage(self,baseDir=None):
+        if baseDir is None:
+            baseDir=self.iconBase
+        return getImage(self.icon,baseDir)    
 
 BUTTONS=[
     BDef(['Escape','ctrl+w'],'ic_clear.svg'), #close
@@ -50,10 +55,12 @@ BUTTONS=[
 ]
 
 class ButtonList():
-    def __init__(self,callback,buttons=BUTTONS) -> None:
+    def __init__(self,callback,buttons=BUTTONS,iconBase=None) -> None:
         self.buttons=buttons
         self.callback=callback
         for button in self.buttons:
+            if iconBase is not  None:
+                button.iconBase=iconBase
             if button.command is None:
                 button.command=callback
 
@@ -171,10 +178,19 @@ class MyApp(Gtk.Application):
             'Target pid to send keystrokes',
             None
         )
+        self.add_main_option(
+            'base',
+            ord('b'),
+            GLib.OptionFlags.NONE,
+            GLib.OptionArg.STRING,
+            'base dir for icons',
+            None
+        )
         self.window = None
         self.targetPid=None
         self.targetWindow=None
-        self.buttonlist=ButtonList(self.send_key)
+        self.buttonlist=None
+        self.iconBase=None
     def do_command_line(self, command_line):
         options = command_line.get_options_dict()
         # convert GVariantDict -> GVariant -> dict
@@ -183,6 +199,9 @@ class MyApp(Gtk.Application):
             Gdk.set_program_class(options['class'])
         if 'pid' in options:
             self.targetPid=options['pid']
+        if 'base' in options:
+            self.iconBase=options['base']
+        self.buttonlist=ButtonList(self.send_key,iconBase=self.iconBase)    
         self.activate()
     def eventHandler(self,ev):
         if self.targetWindow is not None:
