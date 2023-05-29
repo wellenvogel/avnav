@@ -15,6 +15,39 @@ import re
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk,Gdk,GdkPixbuf,Gio,GObject,GLib,GdkX11
 
+#XLib stuff
+def getProp(disp,win, prop):
+    if disp is None:
+        disp=Display()
+    p = win.get_full_property(disp.intern_atom(prop), 0)
+    return [None] if (p is None) else p.value
+def listWindows(root):
+    children = root.query_tree().children
+    for window in children:
+        yield window
+    for window in children:
+        for window in listWindows(window):
+            yield window
+
+def findWindowByPid(pid):
+    disp = Display()
+    xroot = disp.screen().root
+    for window in listWindows(xroot):
+        attrs=window.get_attributes()
+        if attrs is None or attrs.map_state != Xlib.X.IsViewable:
+            continue
+        PIDs=getProp(disp,window,'_NET_WM_PID')
+        if PIDs is None or len(PIDs) < 1:
+            continue
+        if PIDs[0] != pid:
+            continue
+        name=window.get_wm_name()
+        window.change_attributes(event_mask=Xlib.X.PropertyChangeMask)
+        return window
+
+
+
+
 TITLE_CHECK=re.compile('AVNav-Web')
 
 SIZE=48
@@ -32,7 +65,7 @@ def getImage(name,baseDir=None):
     img.set_from_pixbuf(pb)
     return img
 
-
+#GTK based...
 class BDef():
     def __init__(self,action,icon,command=None) -> None:
         self.action=action
@@ -67,6 +100,10 @@ class ButtonList():
 class ButtonWindow(Gtk.Window):
     POS_RIGHT=0
     POS_LEFT=1
+    def mapped_cb(self,*args):
+        self.setPosition()
+        self.setStruts()
+
     def __init__(self,buttonList: ButtonList,lr:int=POS_RIGHT):
         super().__init__(title="FF-Panel")
         self.set_border_width(0)
@@ -80,6 +117,8 @@ class ButtonWindow(Gtk.Window):
             button.connect("clicked", bdef.run)
             button.set_image(bdef.getImage())
             hbox.pack_start(button, False, False, 0)
+        self.connect('map-event',self.mapped_cb)    
+
 
     def setPanelParam(self):
         self.set_decorated(False)
@@ -91,11 +130,13 @@ class ButtonWindow(Gtk.Window):
         display = self.get_screen().get_display()
         
         self.curgeo=display.get_monitor_at_window(self.get_window()).get_geometry()
+        '''
         print("monitor %d x %d (offset x=%d, y=%d)" % (self.curgeo.width,
                                                                     self.curgeo.height,
                                                                     self.curgeo.x,
                                                                     self.curgeo.y))
         print("bar: right=%d" % (self.curgeo.x+self.curgeo.width-1))
+        '''
 
         # display bar left/right
         if self.lr == self.POS_LEFT:
@@ -126,34 +167,6 @@ class ButtonWindow(Gtk.Window):
                            X.PropModeReplace) 
         display.flush()
 
-def getProp(disp,win, prop):
-    if disp is None:
-        disp=Display()
-    p = win.get_full_property(disp.intern_atom('_NET_WM_' + prop), 0)
-    return [None] if (p is None) else p.value
-def listWindows(root):
-    children = root.query_tree().children
-    for window in children:
-        yield window
-    for window in children:
-        for window in listWindows(window):
-            yield window
-
-def findWindowByPid(pid):
-    disp = Display()
-    xroot = disp.screen().root
-    for window in listWindows(xroot):
-        attrs=window.get_attributes()
-        if attrs is None or attrs.map_state != Xlib.X.IsViewable:
-            continue
-        PIDs=getProp(disp,window,'PID')
-        if PIDs is None or len(PIDs) < 1:
-            continue
-        if PIDs[0] != pid:
-            continue
-        name=window.get_wm_name()
-        window.change_attributes(event_mask=Xlib.X.PropertyChangeMask)
-        return window
 
 class MyApp(Gtk.Application):
     def __init__(self, *args, **kwargs):
@@ -223,8 +236,6 @@ class MyApp(Gtk.Application):
             self.window.setPanelParam()
             self.window.connect("destroy", self.quit)
         self.window.show_all()
-        self.window.setPosition()
-        self.window.setStruts()
         self.add_window(self.window)
         Gdk.event_handler_set(self.eventHandler)
         if self.targetPid is not None:
@@ -244,17 +255,13 @@ class MyApp(Gtk.Application):
     def handleTargetVisibility(self):
         if self.targetWindow is None:
             self.window.show()
-            self.window.setPosition()
-            self.window.setStruts()
             return True
-        name=getProp(None,self.targetWindow,'NAME')
+        name=getProp(None,self.targetWindow,'_NET_WM_NAME')
         if TITLE_CHECK.match(name.decode('utf-8',errors='ignore')):
             self.window.hide()
             return False
         else:
             self.window.show()
-            self.window.setPosition()
-            self.window.setStruts()
             return True
 
     def send_key(self,key):
