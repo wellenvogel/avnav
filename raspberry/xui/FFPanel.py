@@ -105,6 +105,7 @@ class BDef():
 BUTTONS=[
     BDef(['Escape','ctrl+w'],'ic_clear.svg'), #close
     BDef('ctrl+bracketleft','ic_arrow_back.svg'), #back
+    BDef('ctrl+bracketright','ic_arrow_forward.svg'), #forward
     BDef('F5','ic_refresh.svg'), #reload
     BDef('Super_L+2','rpi.png',toTarget=False),
     BDef('##restart','RedBubble40.png')
