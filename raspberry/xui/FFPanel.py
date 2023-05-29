@@ -67,15 +67,16 @@ def getImage(name,baseDir=None):
 
 #GTK based...
 class BDef():
-    def __init__(self,action,icon,command=None) -> None:
+    def __init__(self,action,icon,toTarget=True,command=None) -> None:
         self.action=action
         self.icon=icon
         self.command=command
         self.iconBase=None
+        self.toTarget=toTarget
     def run(self,*args):
         if self.command is None:
             return
-        self.command(self.action)
+        self.command(self.action,self.toTarget)
     def getImage(self,baseDir=None):
         if baseDir is None:
             baseDir=self.iconBase
@@ -84,7 +85,8 @@ class BDef():
 BUTTONS=[
     BDef(['Escape','ctrl+w'],'ic_clear.svg'), #close
     BDef('ctrl+bracketleft','ic_arrow_back.svg'), #back
-    BDef('F5','ic_refresh.svg') #reload
+    BDef('F5','ic_refresh.svg'), #reload
+    BDef('Super_L+2','rpi.png',toTarget=False)
 ]
 
 class ButtonList():
@@ -264,12 +266,16 @@ class MyApp(Gtk.Application):
             self.window.show()
             return True
 
-    def send_key(self,key):
-        if self.targetWindow is None:
+    def send_key(self,key,toTarget=True):
+        if self.targetWindow is None and toTarget:
             return
         if not isinstance(key,list):
             key=[key]
-        cmd=["xdotool","windowactivate","--sync",str(self.targetWindow.id),"key"]
+        cmd=[]
+        if toTarget:    
+            cmd=["xdotool","windowactivate","--sync",str(self.targetWindow.id),"key"]
+        else:
+            cmd=["xdotool","key","--clearmodifiers"]    
         cmd.extend(key)    
         res=subprocess.run(cmd)
         if res.returncode != 0:
