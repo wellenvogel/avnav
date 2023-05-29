@@ -240,7 +240,7 @@ class MyApp(Gtk.Application):
         Gdk.event_handler_set(self.eventHandler)
         if self.targetPid is not None:
             if self.findTarget:
-                GLib.timeout_add(5000,self.findTarget)
+                GLib.timeout_add(1000,self.findTarget)
             
     def findTarget(self):
         targetWindow=findWindowByPid(self.targetPid)
