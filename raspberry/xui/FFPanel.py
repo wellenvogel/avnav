@@ -241,6 +241,13 @@ class MyApp(Gtk.Application):
         self.buttonlist=None
         self.iconBase=None
         self.dialogOnly=False
+        styleFile=os.path.join(os.path.dirname(__file__),"FFPanel.css")
+        if os.path.exists:
+            provider = Gtk.CssProvider()
+            provider.load_from_path(styleFile)
+            Gtk.StyleContext.add_provider_for_screen(
+                Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+            )
     def do_command_line(self, command_line):
         options = command_line.get_options_dict()
         # convert GVariantDict -> GVariant -> dict
@@ -269,14 +276,19 @@ class MyApp(Gtk.Application):
                             self.handleTargetVisibility()
             except Exception as e:
                 print("ERR:",e)
-        Gtk.main_do_event(ev)    
+        Gtk.main_do_event(ev)
+    def set_style_class(self):
+        styleContext=self.window.get_style_context()
+        styleContext.add_class('ffpanel');        
     def do_activate(self):
         if self.dialogOnly:
             self.window=Gtk.Window()
+            self.set_style_class()
             self.reset_dialog()
             self.quit()
         if self.window is None:
             self.window = ButtonWindow(self.buttonlist)
+            self.set_style_class()
             self.window.setPanelParam()
             self.window.connect("destroy", self.quit)
         self.window.show_all()
