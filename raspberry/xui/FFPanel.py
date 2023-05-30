@@ -52,18 +52,17 @@ TITLE_CHECK=re.compile('AVNav-Web')
 
 BASE_RESOLUTION=160.0
 SIZE=48 #at 160 dpi gives ~ 7mm
-MARGIN=SIZE+4*SIZE/10
 BASE_DIR="/usr/lib/avnav/viewer/images"
 
 def getScale(original,resolution):
     return int(original*resolution/BASE_RESOLUTION)
-def getImage(name,baseDir=None,resolution=160):
+def getImage(name,baseDir=None,resolution=160, size=SIZE):
     if baseDir is None:
         baseDir=BASE_DIR
     imgpath=os.path.join(baseDir,name)
     if not os.path.exists(imgpath):
         raise Exception("image %s not found"%imgpath)
-    scaledSize=getScale(SIZE,resolution)
+    scaledSize=getScale(size,resolution)
     pb=GdkPixbuf.Pixbuf.new_from_file_at_scale(imgpath,scaledSize,scaledSize,True)
     img=Gtk.Image()
     img.set_from_pixbuf(pb)
@@ -95,10 +94,10 @@ class BDef():
         if self.command is None:
             return
         self.command(self.action,self.toTarget)
-    def getImage(self,baseDir=None,resolution=160):
+    def getImage(self,baseDir=None,resolution=160,size=SIZE):
         if baseDir is None:
             baseDir=self.iconBase
-        return getImage(self.icon,baseDir,resolution)    
+        return getImage(self.icon,baseDir,resolution=resolution,size=size)    
 
 
 
@@ -128,19 +127,21 @@ class ButtonWindow(Gtk.Window):
         self.setPosition()
         self.setStruts()
 
-    def __init__(self,buttonList: ButtonList,lr:int=POS_RIGHT):
+    def __init__(self,buttonList: ButtonList,lr:int=POS_RIGHT,buttonSize=SIZE):
         super().__init__(title="FF-Panel")
         self.resolution=self.get_screen().get_resolution()
-        self.set_border_width(getScale(SIZE/10,self.resolution))
+        self.set_border_width(getScale(buttonSize/10,self.resolution))
         self.lr=lr
         self.curgeo=None
+        self.buttonSize=buttonSize
+        self.margin=buttonSize+4*buttonSize/10
 
         hbox = Gtk.Box(spacing=6,orientation=Gtk.Orientation.VERTICAL)
         self.add(hbox)
         for bdef in buttonList.buttons:
             button = Gtk.Button()
             button.connect("clicked", bdef.run)
-            button.set_image(bdef.getImage(resolution=self.resolution))
+            button.set_image(bdef.getImage(resolution=self.resolution, size=self.buttonSize))
             hbox.pack_start(button, False, False, 0)
         self.connect('map-event',self.mapped_cb)    
 
@@ -154,7 +155,7 @@ class ButtonWindow(Gtk.Window):
     def setPosition(self):
         screen=self.get_screen()
         display = screen.get_display()
-        scaledMargin=getScale(MARGIN,self.resolution)
+        scaledMargin=getScale(self.margin,self.resolution)
         scaledSize=getScale(SIZE,self.resolution)
         
         self.curgeo=display.get_monitor_at_window(self.get_window()).get_geometry()
@@ -186,9 +187,9 @@ class ButtonWindow(Gtk.Window):
         # http://python-xlib.sourceforge.net/doc/html/python-xlib_21.html#SEC20
         struts=None
         if self.lr == self.POS_LEFT:
-            struts=[getScale(MARGIN,self.resolution)+1, 0, 0, 0,   self.curgeo.y, self.curgeo.y+self.curgeo.height-1, 0, 0, 0, 0, 0, 0]
+            struts=[getScale(self.margin,self.resolution)+1, 0, 0, 0,   self.curgeo.y, self.curgeo.y+self.curgeo.height-1, 0, 0, 0, 0, 0, 0]
         else:
-            struts=[0, getScale(MARGIN,self.resolution)+1, 0, 0,   0, 0, self.curgeo.y, self.curgeo.y+self.curgeo.height-1, 0, 0, 0, 0]    
+            struts=[0, getScale(self.margin,self.resolution)+1, 0, 0,   0, 0, self.curgeo.y, self.curgeo.y+self.curgeo.height-1, 0, 0, 0, 0]    
         res=topw.change_property(display.intern_atom('_NET_WM_STRUT_PARTIAL'),
                            display.intern_atom('CARDINAL'), 32,
                            struts,
@@ -235,12 +236,21 @@ class MyApp(Gtk.Application):
             'reset dialog only',
             None
         )
+        self.add_main_option(
+            'size',
+            ord('s'),
+            GLib.OptionFlags.NONE,
+            GLib.OptionArg.INT,
+            'button size in dp',
+            None
+        )
         self.window = None
         self.targetPid=None
         self.targetWindow=None
         self.buttonlist=None
         self.iconBase=None
         self.dialogOnly=False
+        self.buttonSize=SIZE; #dp
         styleFile=os.path.join(os.path.dirname(__file__),"FFPanel.css")
         if os.path.exists:
             provider = Gtk.CssProvider()
@@ -260,6 +270,8 @@ class MyApp(Gtk.Application):
             self.iconBase=options['base']
         if 'dialog' in options:
             self.dialogOnly=True
+        if 'size' in options:
+            self.buttonSize=options['size']
         if not self.dialogOnly:    
             self.buttonlist=ButtonList(self.handle_action,iconBase=self.iconBase)    
         self.activate()
@@ -287,7 +299,7 @@ class MyApp(Gtk.Application):
             self.reset_dialog()
             self.quit()
         if self.window is None:
-            self.window = ButtonWindow(self.buttonlist)
+            self.window = ButtonWindow(self.buttonlist,buttonSize=self.buttonSize)
             self.set_style_class()
             self.window.setPanelParam()
             self.window.connect("destroy", self.quit)

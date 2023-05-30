@@ -23,7 +23,11 @@ do
  MOZ_USE_XINPUT2=1 firefox --profile $PROFILE --class=AvNavFirefox 'http://localhost:8080/viewer/avnav_viewer.html?fullscreen=server:desk2&dimm=server:dimm&defaultSettings=.*localFirefox' &
  ffpid=$!
  echo "ffpid=$ffpid"
- `dirname $0`/FFPanel.py -c AvNavFirefox -p $ffpid &
+ panelSize=""
+ if [ "$AVNAV_FFPANEL_WIDTH" != "" ] ; then
+   panelSize="-s $AVNAV_FFPANEL_WIDTH"
+ fi
+ `dirname $0`/FFPanel.py -c AvNavFirefox -p $ffpid $panelSize &
  panelPid=$!
  wait $ffpid
  kill -0 $monitor || exit 0

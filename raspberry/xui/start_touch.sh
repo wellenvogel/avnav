@@ -1,7 +1,7 @@
 #! /bin/sh
 CFG=/boot/avnav.conf
 [ -f $CFG ] && . $CFG
-
+HOME=/home/pi
 X=/usr/lib/xorg/Xorg
 if [ "$1" = "prepare" ] ; then
   logger -t avnavstartx preparing
@@ -21,10 +21,12 @@ if [ "$1" = "prepare" ] ; then
   chmod g+w /dev/tty
   #TODO: postinstall?
   usermod -a -G tty pi
-  cache=/home/pi/.cache
+  cache=$HOME/.cache
   if [ -d $cache ] ; then
     chown -R pi $cache
   fi
+  cp -p `dirname $0`/.xinitrc $HOME
+  chown pi:pi $HOME/.xinitrc
   update-menus
   exit 0
 fi
