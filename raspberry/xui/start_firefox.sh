@@ -2,12 +2,17 @@
 USER=pi
 HOME=/home/$USER
 PROFILE=$HOME/.mozilla/firefox/avnav
+DELETE_MARKER=AVNAV_DELETE
 set -x
 dbus-monitor --address "$DBUS_SESSION_BUS_ADDRESS" > /dev/null 2>&1 &
 monitor=$!
 panelPid=""
 while true
 do
+ if [ -f "$PROFILE/$DELETE_MARKER" ] ; then
+   echo "delete marker found, removing $PROFILE"
+   rm -rf "$PROFILE"
+ fi
  if [ ! -d "$PROFILE" ] ; then
    echo "profile $PROFILE not found, creating it"
    mkdir -p $PROFILE && cp -rp /usr/lib/avnav/raspberry/xui/firefox-profile/* $PROFILE
