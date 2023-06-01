@@ -357,6 +357,8 @@ class MyApp(Gtk.Application):
         dialog.unmaximize()
         dialog.get_action_area().props.margin=10
         dialog.get_content_area().props.margin=10
+        dialog.set_position(Gtk.WindowPosition.CENTER)
+        dialog.set_keep_above(True)
         response = dialog.run()
         dialog.destroy()
         if response == Gtk.ResponseType.OK:
