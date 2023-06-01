@@ -161,5 +161,14 @@
             }
         }
     }
-    document.title="AVNav-Web-Split";
+    let finalTitle='AVNav-Web';
+    let iv=window.setInterval(function(){
+        if ((f1.contentDocument && f1.contentDocument.title.match(finalTitle))
+            || (f2.contentDocument && f2.contentDocument.title.match(finalTitle))){
+            document.title=finalTitle+"-Split";
+        }
+        else{
+            document.title="AVNav-Split loading...";
+        }
+    },500);
 })();
