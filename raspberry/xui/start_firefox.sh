@@ -3,7 +3,7 @@ USER=pi
 HOME=/home/$USER
 PROFILE=$HOME/.mozilla/firefox/avnav
 DELETE_MARKER=AVNAV_DELETE
-set -x
+#set -x
 dbus-monitor --address "$DBUS_SESSION_BUS_ADDRESS" > /dev/null 2>&1 &
 monitor=$!
 panelPid=""
