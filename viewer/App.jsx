@@ -345,6 +345,7 @@ class App extends React.Component {
         GuiHelpers.storeHelper(this,(data)=>{
             this.checkReload();
         },[keys.nav.gps.version])
+        this.titleSet=false;
     }
     newDeviceHandler(){
         try{
@@ -393,8 +394,6 @@ class App extends React.Component {
         window.addEventListener('resize',this.checkSizes);
         AlarmHandler.start();
         this.newDeviceHandler();
-        document.title="AVNav-Web";
-
 
     }
     componentWillUnmount(){
@@ -457,6 +456,16 @@ class App extends React.Component {
         let layoutClass=(this.props.layoutName||"").replace(/[^0-9a-zA-Z]/g,'_');
         appClass+=" "+layoutClass;
         if (this.props.smallDisplay) appClass+=" smallDisplay";
+        let location=this.leftHistoryState.getValue('location');
+        if (location !== "warningpage") {
+            if (! this.titleSet) {
+                document.title = "AVNav-Web";
+                this.titleSet=true;
+            }
+        }
+        else{
+            document.title = "AVNav-Warning";
+        }
         return <div
             className={appClass}
             ref="app"
@@ -471,7 +480,7 @@ class App extends React.Component {
                 isEditing:keys.gui.global.layoutEditing
                 },keys.gui.capabilities)
             }
-                location={this.leftHistoryState.getValue('location')}
+                location={location}
                 options={this.leftHistoryState.getValue('options')}
                 history={this.history}
                 nightMode={this.props.nightMode}
