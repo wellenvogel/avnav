@@ -22,6 +22,7 @@
         <value type="int" value="1"/>
         <value type="int" value="8"/>
         <value type="int" value="11"/>
+        <value type="int" value="7"/>
         <value type="int" value="6"/>
         <value type="int" value="5"/>
         <value type="int" value="4"/>
@@ -80,6 +81,11 @@
     <property name="plugin-4" type="string" value="clock">
       <property name="mode" type="uint" value="0"/>
       <property name="digital-format" type="string" value="%_H:%M"/>
+    </property>
+    <property name="plugin-7" type="string" value="launcher">
+      <property name="items" type="array">
+        <value type="string" value="01685622152.desktop"/>
+      </property>
     </property>
   </property>
 </channel>
