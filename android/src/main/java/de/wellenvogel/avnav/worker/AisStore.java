@@ -218,6 +218,9 @@ public class AisStore {
         JSONArray rt=new JSONArray();
         distance=distance* AvnUtil.NM; //in distance is in NM
         AvnLog.d(LOGPRFX,"getAisData dist="+distance);
+        for (Location l: centers) {
+            AvnLog.d(LOGPRFX, "center=" +l);
+        }
         long now=SystemClock.uptimeMillis();
         for(JSONObject o:aisData.values()){
             if (! o.has("lat") || ! o.has("lon")) continue;
