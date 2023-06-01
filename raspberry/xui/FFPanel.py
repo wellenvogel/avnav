@@ -30,20 +30,26 @@ def listWindows(root):
             yield window
 
 def findWindowByPid(pid):
-    disp = Display()
-    xroot = disp.screen().root
-    for window in listWindows(xroot):
-        attrs=window.get_attributes()
-        if attrs is None or attrs.map_state != Xlib.X.IsViewable:
-            continue
-        PIDs=getProp(disp,window,'_NET_WM_PID')
-        if PIDs is None or len(PIDs) < 1:
-            continue
-        if PIDs[0] != pid:
-            continue
-        name=window.get_wm_name()
-        window.change_attributes(event_mask=Xlib.X.PropertyChangeMask)
-        return window
+    try:
+        disp = Display()
+        xroot = disp.screen().root
+        for window in listWindows(xroot):
+            try:
+                attrs=window.get_attributes()
+                if attrs is None or attrs.map_state != Xlib.X.IsViewable:
+                    continue
+                PIDs=getProp(disp,window,'_NET_WM_PID')
+                if PIDs is None or len(PIDs) < 1:
+                    continue
+                if PIDs[0] != pid:
+                    continue
+                name=window.get_wm_name()
+                window.change_attributes(event_mask=Xlib.X.PropertyChangeMask)
+                return window
+            except:
+                pass
+    except:
+        return
 
 
 
@@ -143,7 +149,10 @@ class ButtonWindow(Gtk.Window):
             button.connect("clicked", bdef.run)
             button.set_image(bdef.getImage(resolution=self.resolution, size=self.buttonSize))
             hbox.pack_start(button, False, False, 0)
-        self.connect('map-event',self.mapped_cb)    
+        self.connect('map-event',self.mapped_cb)
+        self.screen=self.get_screen()
+        self.screen.connect('monitors-changed',self.mapped_cb)
+        self.screen.connect('size-changed',self.mapped_cb)    
 
 
     def setPanelParam(self):
@@ -153,8 +162,7 @@ class ButtonWindow(Gtk.Window):
     
 
     def setPosition(self):
-        screen=self.get_screen()
-        display = screen.get_display()
+        display = self.screen.get_display()
         scaledMargin=getScale(self.margin,self.resolution)
         scaledSize=getScale(SIZE,self.resolution)
         
@@ -343,6 +351,12 @@ class MyApp(Gtk.Application):
         dialog.destroy()
     def reset_dialog(self):
         dialog = ResetDialog(self.window)
+        def unmax(*args):
+            dialog.unmaximize()
+        dialog.connect('map-event',unmax)    
+        dialog.unmaximize()
+        dialog.get_action_area().props.margin=10
+        dialog.get_content_area().props.margin=10
         response = dialog.run()
         dialog.destroy()
         if response == Gtk.ResponseType.OK:
