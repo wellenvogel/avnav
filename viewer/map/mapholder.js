@@ -1234,7 +1234,8 @@ MapHolder.prototype.navEvent = function () {
 
     let gps = globalStore.getMultiple(keys.nav.gps);
     if (gps.valid) {
-        if (this.gpsLocked) {
+        let allowMove=globalStore.getData(keys.properties.mapLockMove) && this.isInUserActionGuard();
+        if (this.gpsLocked && ! allowMove) {
             if (this.courseUp) {
                 let mapDirection = globalStore.getData(keys.nav.display.mapDirection);
                 this.setMapRotation(mapDirection);
@@ -1731,13 +1732,20 @@ MapHolder.prototype.setCenterFromMove=function(newCenter,force){
     this.zoom=this.getView().getZoom();
     let p=new navobjects.Point();
     p.fromCoord(newCenter);
-    if (! this.gpsLocked) {
+    let allowMove=globalStore.getData(keys.properties.mapLockMove) && this.isInUserActionGuard();
+    if (! this.gpsLocked || allowMove) {
         //we avoid some heavy redrawing when we move/zoom in locked
         //mode
         //instead we already set the position directly from the gps
         globalStore.storeData(keys.map.centerPosition,p);
         if (this.isInUserActionGuard()) {
             this.remoteChannel.sendMessage(COMMANDS.setCenter + " " + JSON.stringify({lat: p.lat, lon: p.lon}));
+        }
+        if (this.gpsLocked){
+            let gps = globalStore.getMultiple(keys.nav.gps);
+            if (gps.valid) {
+                this.setBoatOffset(gps);
+            }
         }
 
     }
