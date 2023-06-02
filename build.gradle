@@ -301,6 +301,7 @@ task releaseRpm(type: Rpm) {
     requires('python3-devel')
     requires('bluez-devel')
     requires('python3-websocket-client')
+    requires('python3-pybluez')
 }
 
 task releaseDeb(type: Deb) {
@@ -309,7 +310,7 @@ task releaseDeb(type: Deb) {
     requires('bluetooth')
     requires('libbluetooth-dev')
     requires('python3-websocket')
-    recommends 'python3-bluez'
+    requires('python3-bluez')
 }
 
 task release{
