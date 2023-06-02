@@ -165,11 +165,8 @@ ospackage {
     packageName='avnav'
     requires('python3-pip')
     requires('python3-pyudev')
-    requires('python3-serial')
-    requires('python3-gdal')
     requires('python3-imaging').or('python3-pil')
     requires('python3-netifaces')
-    requires('python3-dbus')
     user='root'
     into ('/usr/lib/avnav') {
         from('viewer/build/release') {
@@ -302,6 +299,9 @@ task releaseRpm(type: Rpm) {
     requires('bluez-devel')
     requires('python3-websocket-client')
     requires('python3-pybluez')
+    requires('python3-pydbus')
+    requires('python3-pyserial')
+    requires('python3-GDAL')
 }
 
 task releaseDeb(type: Deb) {
@@ -311,6 +311,9 @@ task releaseDeb(type: Deb) {
     requires('libbluetooth-dev')
     requires('python3-websocket')
     requires('python3-bluez')
+    requires('python3-dbus')
+    requires('python3-serial')
+    requires('python3-gdal')
 }
 
 task release{
