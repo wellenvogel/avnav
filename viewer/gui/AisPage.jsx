@@ -21,7 +21,7 @@ const aisInfos=[
     [
         {name:'distance',label:'Dst ',unit:'nm',len:6},
         {name:'cpa',label:'Cpa ',unit:'nm',len:6},
-        {name:'headingTo',label:'Hdt ',unit:'°',len:3},
+        {name:'headingTo',label:'Brg ',unit:'°',len:3},
         {name:'tcpa',label:'Tcpa',unit:'h',len:8}
     ],
     [

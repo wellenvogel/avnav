@@ -22,7 +22,7 @@ const displayItems = [
     {name: 'shipname', label: 'Name'},
     {name: 'callsign', label: 'Callsign'},
     {name: 'distance', label: 'Distance(nm)'},
-    {name: 'headingTo', label: 'HeadingTo'},
+    {name: 'headingTo', label: 'BRG'},
     {name: 'cpa', label: 'CPA(nm)'},
     {name: 'tcpa', label: 'TCPA(h:min:sec)'},
     {name: 'speed', label: 'SOG(kn)'},
