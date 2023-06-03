@@ -298,10 +298,10 @@ task releaseRpm(type: Rpm) {
     requires('python3-devel')
     requires('bluez-devel')
     requires('python3-websocket-client')
-    requires('python3-pybluez')
+    requires('python3-pybluez').or('python3-bluez')
     requires('python3-pydbus')
     requires('python3-pyserial')
-    requires('python3-GDAL')
+    requires('python3-GDAL').or('python3-gdal')
 }
 
 task releaseDeb(type: Deb) {
