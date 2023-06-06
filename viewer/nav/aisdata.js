@@ -290,8 +290,8 @@ AisData.prototype.startQuery=function() {
     for (let idx=0;idx<center.length;idx++){
         if (! center[idx]) continue;
         let sfx=idx!==0?idx+"":"";
-        param['lat'+sfx]=this.formatter.formatDecimal(center[idx].lat,3,5);
-        param['lon'+sfx]=this.formatter.formatDecimal(center[idx].lon,3,5);
+        param['lat'+sfx]=this.formatter.formatDecimal(center[idx].lat,3,5,false,true);
+        param['lon'+sfx]=this.formatter.formatDecimal(center[idx].lon,3,5,false,true);
     }
     Requests.getJson(param,{checkOk:false,timeout:timeout}).then(
         (data)=>{
