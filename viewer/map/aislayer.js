@@ -595,6 +595,7 @@ AisLayer.prototype.computeTarget=function(pos,course,dist){
  * aisXXXImage-<shiptype> - e.g. aisNormalImage-Sail or aisImage-Sail
  * aisXXXImage-status<status> - e.g. aisImage-status5 for moored
  * aisXXXImage-<shiptype>-status<status> - e.g. aisImage-Sail-status5
+ * aisatonXXXImage-type<aid_type> - e.g. aisatonImage-type9
  * for all styles you can provied the following entries:
  * src: an PNG/JPG icon url
  * anchor: [x,y] image anchor (i.e. where to position the image)

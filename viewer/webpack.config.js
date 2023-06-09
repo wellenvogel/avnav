@@ -39,18 +39,14 @@ module.exports = (env, argv) => {
         {from: '../sounds/1-minute-of-silence.mp3', to: 'sounds'},
         {from: './layout', to: 'layout'},
         {from: './settings', to: 'settings'},
-        {context: './demo', from: '*.xml', to: 'demo/'}
+        {context: './demo', from: '*.xml', to: 'demo/'},
+        {context: './images', from: 'ais-default*png', to: 'images/'},
+        {context: './images', from: 'ais-aton*png', to: 'images/'}
     ];
     var images = [
         'WebIcon-512.png',
         'SailBoatRed96.png',
-        'signalk.svg',
-        'ais-default.png',
-        'ais-default-anchor.png',
-        'ais-default-restricted.png',
-        'ais-default-nc.png',
-        'ais-default-fishing.png',
-        'ais-default-draft.png'
+        'signalk.svg'
 
     ];
     images.forEach(function (el) {
