@@ -325,6 +325,12 @@ const MapHolder=function(){
      */
     this.lastUserAction=0;
     /**
+     * any "real" map user action like move, drag, click
+     * this will be used to allow for moving the center when locked
+     * @type {number}
+     */
+    this.lastMapUserAction=0;
+    /**
      * the boat position on the display in percent
      * @type {{x: number, y: number}}
      */
@@ -433,12 +439,20 @@ MapHolder.prototype.getZoom=function(){
     return {required:this.requiredZoom,current: v.getZoom()};
 };
 
-MapHolder.prototype.userAction=function(){
-    this.lastUserAction=(new Date()).getTime();
+MapHolder.prototype.userAction=function(opt_map){
+    let ts=(new Date()).getTime();
+    this.lastUserAction=ts;
+    if (opt_map){
+        this.lastMapUserAction=ts;
+    }
+    else{
+        this.lastMapUserAction=0;
+    }
 }
-MapHolder.prototype.isInUserActionGuard=function(){
+MapHolder.prototype.isInUserActionGuard=function(opt_map){
     let now=(new Date()).getTime();
-    return now <= (this.lastUserAction + globalStore.getData(keys.properties.remoteGuardTime,2)*1000);
+    let compare=opt_map?this.lastMapUserAction:this.lastUserAction;
+    return now <= (compare + globalStore.getData(keys.properties.remoteGuardTime,2)*1000);
 }
 /**
  * render the map to a new div
@@ -933,7 +947,7 @@ MapHolder.prototype.initMap=function(){
         });
         interactions.push(new MouseWheelZoom({
            condition: (ev)=>{
-               this.userAction();
+               this.userAction(ev.type === 'pointerdown' || ev.type === 'pointermove' || ev.type === 'pointerdrag' || ev.type === 'pointerup');
                return true;
            }
         }));
@@ -959,17 +973,17 @@ MapHolder.prototype.initMap=function(){
         });
         this.olmap.on('click', function(evt) {
             self._callGuards('click');
-            self.userAction();
+            self.userAction(true);
             return self.onClick(evt);
         });
         this.olmap.on('dblclick', function(evt) {
-            self.userAction();
+            self.userAction(true);
             self._callGuards('dblclick');
             return self.onDoubleClick(evt);
         });
-        this.olmap.on('pointerdrag',()=>self.userAction());
-        this.olmap.on('pointermove',()=>self.userAction());
-        this.olmap.on('singleclick',()=>self.userAction());
+        this.olmap.on('pointerdrag',()=>self.userAction(true));
+        this.olmap.on('pointermove',()=>self.userAction(true));
+        this.olmap.on('singleclick',()=>self.userAction(true));
         this.olmap.getView().on('change:resolution',function(evt){
             return self.onZoomChange(evt);
         });
@@ -1234,7 +1248,7 @@ MapHolder.prototype.navEvent = function () {
 
     let gps = globalStore.getMultiple(keys.nav.gps);
     if (gps.valid) {
-        let allowMove=globalStore.getData(keys.properties.mapLockMove) && this.isInUserActionGuard();
+        let allowMove=globalStore.getData(keys.properties.mapLockMove) && this.isInUserActionGuard(true);
         if (this.gpsLocked && ! allowMove) {
             if (this.courseUp) {
                 let mapDirection = globalStore.getData(keys.nav.display.mapDirection);
@@ -1251,6 +1265,7 @@ MapHolder.prototype.navEvent = function () {
 MapHolder.prototype.centerToGps=function(){
     if (! globalStore.getData(keys.nav.gps.valid)) return;
     let gps=globalStore.getData(keys.nav.gps.position);
+    this.setBoatOffset(); //reset any boat offset
     this.setCenter(gps);
 };
 
@@ -1732,7 +1747,7 @@ MapHolder.prototype.setCenterFromMove=function(newCenter,force){
     this.zoom=this.getView().getZoom();
     let p=new navobjects.Point();
     p.fromCoord(newCenter);
-    let allowMove=globalStore.getData(keys.properties.mapLockMove) && this.isInUserActionGuard();
+    let allowMove=globalStore.getData(keys.properties.mapLockMove) && this.isInUserActionGuard(true);
     if (! this.gpsLocked || allowMove) {
         //we avoid some heavy redrawing when we move/zoom in locked
         //mode
