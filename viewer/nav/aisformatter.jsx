@@ -99,7 +99,7 @@ const aisparam={
     shipname: {
         headline: 'name',
             format: function (v) {
-            if (v.shipname === undefined && v.type == 21) return v.name;
+            if ((v.shipname === undefined || v.shipname === 'unknown') && v.type == 21) return v.name;
             return v.shipname;
         },
         classes: [AIS_CLASSES.A,AIS_CLASSES.B,AIS_CLASSES.Aton]
