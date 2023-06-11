@@ -416,7 +416,7 @@ AisLayer.prototype.getStyleEntry=function(item){
         );
 };
 
-AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,computeTargetFunction,drawEstimated){
+AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,symbol,drawEstimated){
     let courseVectorTime=globalStore.getData(keys.properties.navBoatCourseTime,0);
     let useCourseVector=globalStore.getData(keys.properties.aisUseCourseVector,false);
     let courseVectorWidth=globalStore.getData(keys.properties.navCircleWidth);
@@ -424,7 +424,6 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,computeTargetFun
     let classbShrink=globalStore.getData(keys.properties.aisClassbShrink,1);
     let useHeading=globalStore.getData(keys.properties.aisUseHeading,false);
     let rotation=current.course||0;
-    let symbol=this.getStyleEntry(current);
     let style=assign({},symbol.style);
     if (! symbol.image || ! style.size) return;
     if (style.alpha !== undefined){
@@ -467,7 +466,7 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,computeTargetFun
             if (current.receiveTime < now){
                 age+=(now-current.receiveTime)/1000;
             }
-            let ghostPos=computeTargetFunction(xy,rotation,current.speed*age);
+            let ghostPos=this.computeTarget(xy,rotation,current.speed*age);
             drawing.drawImageToContext(ghostPos,symbol.ghostImage,style);
         }
     }
@@ -475,35 +474,35 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,computeTargetFun
     if (useCourseVector && style.courseVector !== false){
         let courseVectorDistance=(current.speed !== undefined)?current.speed*courseVectorTime:0;
         if (courseVectorDistance > 0){
-            let other=computeTargetFunction(xy,rotation,courseVectorDistance);
+            let other=this.computeTarget(xy,rotation,courseVectorDistance);
             drawing.drawLineToContext([xy,other],{color:style.courseVectorColor,width:courseVectorWidth});
         }
     }
     return curpix;
 };
 
-AisLayer.prototype.computeTextOffsets=function(target,textIndex){
+AisLayer.prototype.computeTextOffsets=function(target,textIndex, opt_baseOffset){
     let rt={
-        offsetX:0,
-        offsetY:0
+        offsetX:opt_baseOffset?opt_baseOffset[0]:0,
+        offsetY:opt_baseOffset?opt_baseOffset[1]:0
     };
     let hoffset=Math.floor(this.textStyle.fontSize * 1.0);
     let base=10;
     if (! target.course || 315 < target.course  ||  target.course < 45 ){
         //above
-        rt.offsetY=-base-textIndex*hoffset;
+        rt.offsetY+=-base-textIndex*hoffset;
     }
     else{
         if (target.course >= 45 && target.course <= 135){
-            rt.offsetX=base;
-            rt.offsetY=-hoffset+textIndex*hoffset;
+            rt.offsetX+=base;
+            rt.offsetY+=-hoffset+textIndex*hoffset;
         }
         if (target.course > 135 && target.course < 225){
-            rt.offsetY=base+textIndex*hoffset;
+            rt.offsetY+=base+textIndex*hoffset;
         }
         if (target.course >= 225 && target.course <= 315){
-            rt.offsetX=-base;
-            rt.offsetY=-hoffset+textIndex*hoffset;
+            rt.offsetX+=-base;
+            rt.offsetY+=-hoffset+textIndex*hoffset;
         }
     }
     return rt;
@@ -534,22 +533,23 @@ AisLayer.prototype.onPostCompose=function(center,drawing){
         if (! pos || isNaN(pos[0]) || isNaN(pos[1])) {
             continue;
         }
-        let curpix=this.drawTargetSymbol(drawing,pos,current,this.computeTarget, drawEstimated);
+        let symbol=this.getStyleEntry(current);
+        let curpix=this.drawTargetSymbol(drawing,pos,current,symbol, drawEstimated);
         pixel.push({pixel:curpix,ais:current});
         let text=AisFormatter.format(firstLabel,current,true);
         if (text) {
-            drawing.drawTextToContext(pos, text, assign({}, this.textStyle, this.computeTextOffsets(current, 0),alpha));
+            drawing.drawTextToContext(pos, text, assign({}, this.textStyle, this.computeTextOffsets(current, 0,symbol.style.textOffset),alpha));
         }
         if (secondLabel !== firstLabel) {
             text=AisFormatter.format(secondLabel,current,true);
             if (text) {
-                drawing.drawTextToContext(pos, text, assign({}, this.textStyle, this.computeTextOffsets(current, 1),alpha));
+                drawing.drawTextToContext(pos, text, assign({}, this.textStyle, this.computeTextOffsets(current, 1,symbol.style.textOffset),alpha));
             }
         }
         if (thirdLabel !== firstLabel && thirdLabel !== secondLabel){
             text=AisFormatter.format(thirdLabel,current,true);
             if (text) {
-                drawing.drawTextToContext(pos, text, assign({}, this.textStyle, this.computeTextOffsets(current, 2),alpha));
+                drawing.drawTextToContext(pos, text, assign({}, this.textStyle, this.computeTextOffsets(current, 2,symbol.style.textOffset),alpha));
             }
         }
     }
@@ -623,7 +623,8 @@ AisLayer.prototype.setImageStyles=function(styles){
             courseVectorColor: true,
             courseVector: true,
             rotate: true,
-            alpha: true
+            alpha: true,
+            textOffset: true
         };
         let iter = [''].concat(names);
         for (let i in iter) {
