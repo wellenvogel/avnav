@@ -243,17 +243,17 @@ export const readFeatureInfoFromKml=(kml)=>{
     features.forEach((feature)=>{
         if (! feature) return;
         let geo=feature.getGeometry();
+        if (geo){
+            rt.hasAny=true;
+        }
         if (geo instanceof olPoint) {
             rt.hasWaypoint = true;
-            rt.hasAny=true;
         }
         else if (geo instanceof olLineString){
             rt.hasTrack=true;
-            rt.hasAny=true;
         }
         else if (geo instanceof olMultiLineString){
             rt.hasTrack=true;
-            rt.hasAny=true;
         }
         let desc=feature.get('desc')||feature.get('description');
         if (desc && desc.indexOf("<")>=0){
