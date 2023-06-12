@@ -13,6 +13,7 @@ import Helper from '../util/helper.js';
 import globalstore from "../util/globalstore";
 import tinycolor from "tinycolor2";
 import atonIcon from '../images/ais-aton.png';
+import cloneDeep from 'clone-deep';
 
 const DEFAULT_COLOR="#f7c204";
 
@@ -416,7 +417,14 @@ AisLayer.prototype.getStyleEntry=function(item){
         );
 };
 
-AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,symbol,drawEstimated){
+const amul=(arr,fact)=>{
+    if (! arr) return;
+    for (let i=0;i<arr.length;i++){
+        arr[i]=arr[i]*fact;
+    }
+}
+
+AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,drawTargetFunction,drawEstimated){
     let courseVectorTime=globalStore.getData(keys.properties.navBoatCourseTime,0);
     let useCourseVector=globalStore.getData(keys.properties.aisUseCourseVector,false);
     let courseVectorWidth=globalStore.getData(keys.properties.navCircleWidth);
@@ -424,7 +432,8 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,symbol,drawEstim
     let classbShrink=globalStore.getData(keys.properties.aisClassbShrink,1);
     let useHeading=globalStore.getData(keys.properties.aisUseHeading,false);
     let rotation=current.course||0;
-    let style=assign({},symbol.style);
+    let symbol=this.getStyleEntry(current);
+    let style=cloneDeep(symbol.style);
     if (! symbol.image || ! style.size) return;
     if (style.alpha !== undefined){
         style.alpha=parseFloat(style.alpha);
@@ -444,8 +453,8 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,symbol,drawEstim
         scale=scale*classbShrink;
     }
     if (scale != 1){
-        style.size=[style.size[0]*scale,style.size[1]*scale];
-        style.anchor=[style.anchor[0]*scale,style.anchor[1]*scale];
+        amul(style.size,scale);
+        amul(style.anchor,scale);
     }
     if (style.rotate !== undefined && ! style.rotate) {
         style.rotation = 0;
@@ -466,7 +475,7 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,symbol,drawEstim
             if (current.receiveTime < now){
                 age+=(now-current.receiveTime)/1000;
             }
-            let ghostPos=this.computeTarget(xy,rotation,current.speed*age);
+            let ghostPos=drawTargetFunction(xy,rotation,current.speed*age);
             drawing.drawImageToContext(ghostPos,symbol.ghostImage,style);
         }
     }
@@ -474,38 +483,44 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,symbol,drawEstim
     if (useCourseVector && style.courseVector !== false){
         let courseVectorDistance=(current.speed !== undefined)?current.speed*courseVectorTime:0;
         if (courseVectorDistance > 0){
-            let other=this.computeTarget(xy,rotation,courseVectorDistance);
+            let other=drawTargetFunction(xy,rotation,courseVectorDistance);
             drawing.drawLineToContext([xy,other],{color:style.courseVectorColor,width:courseVectorWidth});
         }
     }
-    return curpix;
+    return {pix:curpix,scale:scale, style: style};
 };
 
-AisLayer.prototype.computeTextOffsets=function(target,textIndex, opt_baseOffset){
-    let rt={
-        offsetX:opt_baseOffset?opt_baseOffset[0]:0,
-        offsetY:opt_baseOffset?opt_baseOffset[1]:0
-    };
-    let hoffset=Math.floor(this.textStyle.fontSize * 1.0);
-    let base=10;
+AisLayer.prototype.computeTextOffsets=function(drawing, target,textIndex, opt_baseOffset,opt_iconScale){
+    let scale=(opt_iconScale === undefined)?1:opt_iconScale;
+    let rt=[opt_baseOffset?opt_baseOffset[0]:0,opt_baseOffset?opt_baseOffset[1]:0];
+    let base=10 *scale;
+    amul(rt,scale);
+    amul(rt,drawing.getDevPixelRatio()); //images are always scaled
+    base*=drawing.getDevPixelRatio();
+    let hoffset=Math.floor(this.textStyle.fontSize * 1.2); //https://stackoverflow.com/questions/1134586/how-can-you-find-the-height-of-text-on-an-html-canvas
+    if (drawing.getUseHdpi()){
+        hoffset*=drawing.getDevPixelRatio();
+    }
     if (! target.course || 315 < target.course  ||  target.course < 45 ){
         //above
-        rt.offsetY+=-base-textIndex*hoffset;
+        rt[1]+=-base-(textIndex+0.5)*hoffset;
     }
     else{
         if (target.course >= 45 && target.course <= 135){
-            rt.offsetX+=base;
-            rt.offsetY+=-hoffset+textIndex*hoffset;
+            rt[0]+=base;
+            rt[1]+=-hoffset+(textIndex+0.5)*hoffset;
         }
         if (target.course > 135 && target.course < 225){
-            rt.offsetY+=base+textIndex*hoffset;
+            rt[1]+=base+(textIndex+0.5)*hoffset;
         }
         if (target.course >= 225 && target.course <= 315){
-            rt.offsetX+=-base;
-            rt.offsetY+=-hoffset+textIndex*hoffset;
+            rt[0]+=-base;
+            rt[1]+=-hoffset+(textIndex+0.5)*hoffset;
         }
     }
-    return rt;
+    //as the offsets will be multiplied with devPixelRatio later on we need to devide...
+    amul(rt,1/drawing.getDevPixelRatio());
+    return {offsetX:rt[0],offsetY:rt[1]};
 };
 
 /**
@@ -533,23 +548,23 @@ AisLayer.prototype.onPostCompose=function(center,drawing){
         if (! pos || isNaN(pos[0]) || isNaN(pos[1])) {
             continue;
         }
-        let symbol=this.getStyleEntry(current);
-        let curpix=this.drawTargetSymbol(drawing,pos,current,symbol, drawEstimated);
-        pixel.push({pixel:curpix,ais:current});
+        let drawn=this.drawTargetSymbol(drawing,pos,current,this.computeTarget, drawEstimated);
+        pixel.push({pixel:drawn.pix,ais:current});
+        let textOffsetScale=drawn.scale;
         let text=AisFormatter.format(firstLabel,current,true);
         if (text) {
-            drawing.drawTextToContext(pos, text, assign({}, this.textStyle, this.computeTextOffsets(current, 0,symbol.style.textOffset),alpha));
+            drawing.drawTextToContext(pos, text, assign({}, this.textStyle, this.computeTextOffsets(drawing,current, 0,drawn.style.textOffset,textOffsetScale),alpha));
         }
         if (secondLabel !== firstLabel) {
             text=AisFormatter.format(secondLabel,current,true);
             if (text) {
-                drawing.drawTextToContext(pos, text, assign({}, this.textStyle, this.computeTextOffsets(current, 1,symbol.style.textOffset),alpha));
+                drawing.drawTextToContext(pos, text, assign({}, this.textStyle, this.computeTextOffsets(drawing,current, 1,drawn.style.textOffset,textOffsetScale),alpha));
             }
         }
         if (thirdLabel !== firstLabel && thirdLabel !== secondLabel){
             text=AisFormatter.format(thirdLabel,current,true);
             if (text) {
-                drawing.drawTextToContext(pos, text, assign({}, this.textStyle, this.computeTextOffsets(current, 2,symbol.style.textOffset),alpha));
+                drawing.drawTextToContext(pos, text, assign({}, this.textStyle, this.computeTextOffsets(drawing,current, 2,drawn.style.textOffset,textOffsetScale),alpha));
             }
         }
     }

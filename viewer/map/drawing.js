@@ -88,6 +88,9 @@ export const Drawing=function(converter,opt_useHdpi){
 Drawing.prototype.setUseHdpi=function(val){
     this.useHdpi=val||false;
 };
+Drawing.prototype.getUseHdpi=function(){
+    return this.useHdpi;
+};
 
 /**
  * draw a circle determined by a center point an one other point
