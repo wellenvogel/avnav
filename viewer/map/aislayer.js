@@ -369,7 +369,8 @@ AisLayer.prototype.setStyles=function(){
         width: 3,
         fontSize: globalStore.getData(keys.properties.aisTextSize),
         fontBase: 'Calibri,sans-serif',
-        offsetY: 15
+        offsetY: 15,
+        align: 'left'
     };
     this.targetStyle={
         anchor: [15, 60],
@@ -492,30 +493,25 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,drawTargetFuncti
 
 AisLayer.prototype.computeTextOffsets=function(drawing, target,textIndex, opt_baseOffset,opt_iconScale){
     let scale=(opt_iconScale === undefined)?1:opt_iconScale;
-    let rt=[opt_baseOffset?opt_baseOffset[0]:0,opt_baseOffset?opt_baseOffset[1]:0];
-    let base=10 *scale;
+    let rt=[opt_baseOffset?opt_baseOffset[0]:10,opt_baseOffset?opt_baseOffset[1]:0];
     amul(rt,scale);
     amul(rt,drawing.getDevPixelRatio()); //images are always scaled
-    base*=drawing.getDevPixelRatio();
     let hoffset=Math.floor(this.textStyle.fontSize * 1.2); //https://stackoverflow.com/questions/1134586/how-can-you-find-the-height-of-text-on-an-html-canvas
     if (drawing.getUseHdpi()){
         hoffset*=drawing.getDevPixelRatio();
     }
-    if (! target.course || 315 < target.course  ||  target.course < 45 ){
-        //above
-        rt[1]+=-base-(textIndex+0.5)*hoffset;
+    if (! target.course || (0 <= target.course  &&  target.course < 90 )){
+        rt[1]+=(textIndex+0.5)*hoffset;
     }
     else{
-        if (target.course >= 45 && target.course <= 135){
-            rt[0]+=base;
-            rt[1]+=-hoffset+(textIndex+0.5)*hoffset;
+        if (target.course >= 90 && target.course < 180){
+            rt[1]+=-(textIndex+0.5)*hoffset;
         }
-        if (target.course > 135 && target.course < 225){
-            rt[1]+=base+(textIndex+0.5)*hoffset;
+        if (target.course >= 180 && target.course < 270){
+            rt[1]+=(textIndex+0.5)*hoffset;
         }
-        if (target.course >= 225 && target.course <= 315){
-            rt[0]+=-base;
-            rt[1]+=-hoffset+(textIndex+0.5)*hoffset;
+        if (target.course >= 270 && target.course < 360){
+            rt[1]+=-(textIndex+0.5)*hoffset;
         }
     }
     //as the offsets will be multiplied with devPixelRatio later on we need to devide...

@@ -1,4 +1,7 @@
 {
+  "aisImage": {
+    "textOffset": [12,0]
+  },
   "aisImage-status1": {
     "src": "/viewer/images/ais-default-anchor.png",
     "anchor": [15,0],
@@ -42,104 +45,90 @@
     "replaceColor": "#f7c204"
   },
   "aisatonImage": {
-    "textOffset": [0,-5]
+    "textOffset": [13,0]
   },
   "aisatonImage-type9": {
     "src": "/viewer/images/ais-aton-north.png",
     "anchor": [15,30],
     "size": [30,45],
-    "replaceColor": "#f7c204",
-    "textOffset": [0,-20]
+    "replaceColor": "#f7c204"
   },
   "aisatonImage-type20": {
     "src": "/viewer/images/ais-aton-north.png",
     "anchor": [15,30],
     "size": [30,45],
-    "replaceColor": "#f7c204",
-    "textOffset": [0,-20]
+    "replaceColor": "#f7c204"
   },
   "aisatonImage-type11": {
     "src": "/viewer/images/ais-aton-south.png",
     "anchor": [15,30],
     "size": [30,45],
-    "replaceColor": "#f7c204",
-    "textOffset": [0,-20]
+    "replaceColor": "#f7c204"
   },
   "aisatonImage-type22": {
     "src": "/viewer/images/ais-aton-south.png",
     "anchor": [15,30],
     "size": [30,45],
-    "replaceColor": "#f7c204",
-    "textOffset": [0,-20]
+    "replaceColor": "#f7c204"
   },
   "aisatonImage-type10": {
     "src": "/viewer/images/ais-aton-east.png",
     "anchor": [15,30],
     "size": [30,45],
-    "replaceColor": "#f7c204",
-    "textOffset": [0,-20]
+    "replaceColor": "#f7c204"
   },
   "aisatonImage-type21": {
     "src": "/viewer/images/ais-aton-east.png",
     "anchor": [15,30],
     "size": [30,45],
-    "replaceColor": "#f7c204",
-    "textOffset": [0,-20]
+    "replaceColor": "#f7c204"
   },
   "aisatonImage-type12": {
     "src": "/viewer/images/ais-aton-west.png",
     "anchor": [15,30],
     "size": [30,45],
-    "replaceColor": "#f7c204",
-    "textOffset": [0,-20]
+    "replaceColor": "#f7c204"
   },
   "aisatonImage-type23": {
     "src": "/viewer/images/ais-aton-west.png",
     "anchor": [15,30],
     "size": [30,45],
-    "replaceColor": "#f7c204",
-    "textOffset": [0,-20]
+    "replaceColor": "#f7c204"
   },
   "aisatonImage-type17": {
     "src": "/viewer/images/ais-aton-danger.png",
     "anchor": [15,30],
     "size": [30,45],
-    "replaceColor": "#f7c204",
-    "textOffset": [0,-20]
+    "replaceColor": "#f7c204"
   },
   "aisatonImage-type28": {
     "src": "/viewer/images/ais-aton-danger.png",
     "anchor": [15,30],
     "size": [30,45],
-    "replaceColor": "#f7c204",
-    "textOffset": [0,-20]
+    "replaceColor": "#f7c204"
   },
   "aisatonImage-type18": {
     "src": "/viewer/images/ais-aton-safe.png",
     "anchor": [15,30],
     "size": [30,45],
-    "replaceColor": "#f7c204",
-    "textOffset": [0,-16]
+    "replaceColor": "#f7c204"
   },
   "aisatonImage-type29": {
     "src": "/viewer/images/ais-aton-safe.png",
     "anchor": [15,30],
     "size": [30,45],
-    "replaceColor": "#f7c204",
-    "textOffset": [0,-16]
+    "replaceColor": "#f7c204"
   },
   "aisatonImage-type19": {
     "src": "/viewer/images/ais-aton-special.png",
     "anchor": [15,30],
     "size": [30,45],
-    "replaceColor": "#f7c204",
-    "textOffset": [0,-16]
+    "replaceColor": "#f7c204"
   },
   "aisatonImage-type30": {
     "src": "/viewer/images/ais-aton-special.png",
     "anchor": [15,30],
     "size": [30,45],
-    "replaceColor": "#f7c204",
-    "textOffset": [0,-16]
+    "replaceColor": "#f7c204"
   }
 }
