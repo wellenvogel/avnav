@@ -7,6 +7,7 @@
   </head>
   <body data-order="6000">
     <h1>Nutzer Symbole</h1>
+    <div class="toc"> </div>
     <p>Seit Version 20201030.</p>
     <p>Eine Reihe der in AvNav genutzten Symbole kann man an die eigenen
       Bedürfnisse anpassen. Man kann die vorhanden Symbole in ihrer Größe
@@ -41,8 +42,12 @@
     "size":[64,120]
   }
 }</div>
+    <p>Ab 202306xx existiert eine <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/images.json">Basis-Konfiguration</a>
+      die das System nutzt. In der Nutzer-Datei können Einträge überschrieben
+      werden.</p>
     <p>Für jedes zu ersetzende Symbol muss ein Eintrag mit dem entsprechenden
       Namen existieren.</p>
+    <h2>Allgemeine Images</h2>
     <table style="width: 100%" border="1">
       <tbody>
         <tr>
@@ -66,29 +71,105 @@
           <td>Das Symbol für den aktuellen Ziel-Wegepunkt</td>
         </tr>
         <tr>
-          <td>aisNormalImage</td>
-          <td>Das Symbol für ein AIS Ziel, das nicht das nächste oder eines mit
-            Warnung ist</td>
+          <td>anchorImage</td>
+          <td>Das Symbol für den Anker bei aktiviertem Anker-Alarm</td>
         </tr>
         <tr>
-          <td>aisNearestImage</td>
-          <td>Das Symbol für das nächste AIS Ziel</td>
-        </tr>
-        <tr>
-          <td>aisWarningImage</td>
-          <td>Das Symbol für ein AIS Ziel mit einer Näherungs-Warnung</td>
+          <td>measureImage</td>
+          <td>Das Symbol für den Startpunkt der aktuellen Messung</td>
         </tr>
       </tbody>
     </table>
-    <p>Bei den AisImages kann mit -shiptype noch ausgewählt, für welchen der
-      verschiedenen angezeigten Typen dieses Image gelten soll. Falls für einen
-      Type kein spezifisches Image definiert wurde, wird das jeweilige
-      Basis-Image (also ohne -shiptype) bzw. das eingebaute Image genutzt.</p>
-    <p>Die folgende werte werden für shiptype unterstützt:</p>
-    <div class="code">WIG<br>Fishing<br>Towing<br>Dredging<br>Diving<br>Military<br>Sail<br>Pleasure<br>HighSp<br>Pilot<br>SAR<br>Tug<br>PortT<br>AntiPol<br>Law<br>Medical<br>Passenger<br>Cargo<br>Tanker<br>Hazard</div>
-    <p>Für die AisImages müssen jeweils alle 3 Varianten (also Normal, Nearest,
-      Warning) definiert werden, sonst ändert sich das Symbol je nach Zustand.</p>
-    <p>Die folgenden Parameter können für jedes Symbol definiert werden:</p>
+    <h2>AIS Images</h2>
+    <p>Bei den AIS Images gibt es eine ganze Reihe von Optionen. Jedes AIS Ziel
+      kann in einem bestimmten Zustand sein (gekennzeichnet durch eine
+      entsprechende Farbe)</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Zustand</td>
+          <td>Bedeutung</td>
+        </tr>
+        <tr>
+          <td>Normal</td>
+          <td>AIS Ziel</td>
+        </tr>
+        <tr>
+          <td>Warning</td>
+          <td>Das nächste AIS Ziel, das die minimal eingestellte CPA
+            unterschreitet</td>
+        </tr>
+        <tr>
+          <td>Tracking</td>
+          <td>Das AIS Ziel, das über die AIS Info Seite ausgewählt wurde</td>
+        </tr>
+        <tr>
+          <td>Nearest</td>
+          <td>Das nächste AIS Ziel</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Daneben können die AIS Images noch abhängig von der Art (Normal/Aton) und
+      verschiedenen Parametern (ship type, navigation status, aid type)
+      unterschieden werden.</p>
+    <p>Es ist prinzipiell möglich für jede der möglichen Kombinationen ein
+      eigenes Icon zu definieren. Einfacher ist es jedoch (ab 202306xx) , die
+      Handling des Zustandes (Farbe) AvNav zu überlassen. Dazu müssen die Icons
+      eine Farbe enthalten, die dann bei der Darstellung durch die entsprechende
+      Farbe des Zustandes ersetzt wird. Diese Farbe muss dazu AvNav über den
+      Parameter "replaceColor" mitgeteilt werden (siehe die <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/images.json">defaults</a>
+      für Beispiele).</p>
+    <p>Es sind damit im Wesentliche folgende Icon-Angaben möglich (Beispiele):</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Key</td>
+          <td>Bedeutung</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>aisImage</td>
+          <td>default Ais icon</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>aisImage-status1</td>
+          <td>Icon für AIS Ziele mit dem navigational Status 1 (At Anchor), für
+            eine Liste der Werte siehe den <a href="https://github.com/wellenvogel/avnav/blob/d96104c8db58459d24dee180fa19c5360cab3d69/viewer/nav/aisformatter.jsx#L152">source
+              code</a>.</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>aisImage-typeFishing</td>
+          <td>Icon für AIS Ziele mit dem ship type 30 (Fishing), <a href="https://github.com/wellenvogel/avnav/blob/d96104c8db58459d24dee180fa19c5360cab3d69/viewer/nav/aisformatter.jsx#L120">siehe
+              den code</a> für die Werte</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>aisatonImage</td>
+          <td>default AIS Icon für atons</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>aisatonImage-type9</td>
+          <td>AIS Icon für atons mit type 9 (Beacon, Cardinal N), <a href="https://github.com/wellenvogel/avnav/blob/d96104c8db58459d24dee180fa19c5360cab3d69/viewer/nav/aisformatter.jsx#L256">siehe
+              den code</a> für die Werte.</td>
+          <td><br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Falls man nicht mit "replaceColor" arbeiten möchte, kann man
+      unterschiedliche Icons für die Zustände angeben:</p>
+    <p>aisWarningImage, aisNormalImage, aisWarningImage-status1, ...</p>
+    <h2>Icon Parameter<br>
+    </h2>
+    Die folgenden Parameter können für jedes Symbol definiert werden:
     <table style="width: 100%" border="1">
       <tbody>
         <tr>
@@ -142,8 +223,27 @@
             die zu den genutzten Bildern passt.</td>
           <td>nicht für markerImage</td>
         </tr>
+        <tr>
+          <td>replaceColor<br>
+            (ab 202306xx)</td>
+          <td>Die Farbe, die je nach Zustand zu ersetzen ist</td>
+          <td>nur ais...Image</td>
+        </tr>
+        <tr>
+          <td>textOffset<br>
+            (ab 202306xx)</td>
+          <td>Ein Array [x,y] für den Basis-Text-Offset. Zusätzlich wird noch
+            ein weiterer Offset je nach Kurs berechnet (primär y). Der X Wert
+            muss sich an der Größe des Icons (size Parameter) orientieren</td>
+          <td>nur ais...lImage</td>
+        </tr>
       </tbody>
     </table>
+    <p>Nicht angegebene Parameter werden jeweils durch default Werte ersetzt. Es
+      ist auch möglich, für bestimmte Kombinationen nur Parameter anzugeben und
+      kein eigenes Icon - damit kann man z.B. die AIS Symbole unterschiedlich
+      groß gestalten. Typischerweise muss bei Änderung von size auch anchor
+      geändert werden.</p>
     <p>Bei der Bearbeitung der images.json muss darauf geachtet werden, valides
       json zu erzeugen. Wenn man es innerhalb von AvNav auf der Files/Download
       Seite <img src="../viewerimages/icons-new/ic_file_download.svg" alt="" class="inlineimage">(Unterseite

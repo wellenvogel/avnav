@@ -40,6 +40,46 @@ sudo systemctl start avnav</div>
     <br>
     <div> </div>
     <h2>Versions</h2>
+    <p> <span style="font-weight: bold;">202306xx</span> <a title="release/202306xx"
+        href="../downloads/release/202306xx">link</a></p>
+    Improved handling for touch images (OBP Plotter)
+    <ul>
+      <li>new panel on the start page if AvNav does not come up completely (see
+        <a href="install.html#Touch">documentation</a>)</li>
+      <li>reset for AvNav GUI (firefox profil)</li>
+    </ul>
+    <p><a href="https://github.com/wellenvogel/avnav/issues/272">#272</a>:
+      Improved AIS Handling (<a href="quickstart.html#AIS">Documentation</a>)</p>
+    <ul>
+      <li>different icons depending on navigational status</li>
+      <li>use HDG for display if available</li>
+      <li>display of atons</li>
+      <li>show estimated position</li>
+    </ul>
+    <p><a href="https://github.com/wellenvogel/avnav/issues/276">#276</a>: Move
+      Map in lock mode (<a href="userdoc/navpage.html">documentation</a>)</p>
+    <p>New canboat version &gt;= 4.12 to avoid n2kd forking every 30s (and
+      eating up system resources)</p>
+    <p>Smaller improvements and bug fixes:</p>
+    <ul>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/273">#273</a>:
+        handle AIS on android for southern latitudes</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/275">#275</a>:
+        Installation on bookworm (remove pip in postinstall)</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/277">#277</a>:
+        corect requirements for fedora</li>
+      <li>make installation possible on OpenSuse</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/274">#274</a>
+        update RPI4 (CM) Revisions in uart_control (GPS on obp plotter v3)</li>
+      <li>correctly show formatter Parameters in EditWidget dialog for widgets
+        with flexible formatters</li>
+      <li>allow to use online (AIS) streams that follow IEC 62320-1 - new
+        Parameter stripLeading for readers</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/9">#279</a>:Fix
+        permissions of avnav system user for serial/usb devices</li>
+      <li>be more relaxed when checking kml overlays (allow more kml sources)</li>
+      <li>do not ask for sound permissions on startup if sound is disabled</li>
+    </ul>
     <p> <span style="font-weight: bold;">20230426</span> <a title="release/20230426"
         href="../downloads/release/20230426">link</a></p>
     Support for the OpenBoatProjects 10 inch plotter V3 - see <a href="https://open-boat-projects.org/en/10-plotter-raspi-4b/">project
@@ -94,8 +134,8 @@ sudo systemctl start avnav</div>
     Raspberry:
     <ul>
       <li><a href="https://github.com/wellenvogel/avnav/issues/270">#270</a>:
-        avoid shutting down wpa_supplicant (client wifi) on restart (e.g. from updater)
-      </li>
+        avoid shutting down wpa_supplicant (client wifi) on restart (e.g. from
+        updater) </li>
       <li><a href="https://github.com/wellenvogel/avnav/issues/266">#266</a>:
         avoid blocking when setting the system time <br>
         correctly handle initial time setting without gps, correctly switch
