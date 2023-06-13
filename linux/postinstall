@@ -5,6 +5,12 @@ if [ "$x" = "" ] ; then
 else
     echo "user avnav already exists"
 fi
+
+if [ -z $(id avnav | grep dialout) ]
+then
+  usermod -aG dialout avnav
+fi
+
 BASE=/var/lib/avnav
 if [ ! -d $BASE ] ; then
     echo creating basedir $BASE
