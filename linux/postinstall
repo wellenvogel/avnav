@@ -6,7 +6,7 @@ else
     echo "user avnav already exists"
 fi
 
-if [ -z $(id avnav | grep dialout) ]
+if [ -z "$(id avnav | grep dialout)" ]
 then
   usermod -aG dialout avnav
 fi
