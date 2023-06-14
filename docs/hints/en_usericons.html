@@ -40,7 +40,7 @@
     "size":[64,120]
   }
 }</div>
-    <p>Since 202306xx there is a <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/images.json">base
+    <p>Since 20230614 there is a <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/images.json">base
         configuration</a> that is used by the system. In the user images.json
       you can overwrite entries from the base config.</p>
     <p>For each symbol you want to replace there must be an entry with the
@@ -106,7 +106,7 @@
     <p>Beside the state AIS icons can be defined based on the kind (Normal/Aton)
       and a couple of parameters (ship type, navigation status, aid type).</p>
     <p>Basically you could define an own icon for each combination of parameters
-      and state. But from 202306xx you can leave the handling of the state
+      and state. But from 20230614 you can leave the handling of the state
       (color) to AvNav. To make this possible you need to create the icons in a
       way that there is one color that can be replaced by the state color. You
       need to define this color in the parameter "replaceColor" (see the <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/images.json">defaults</a>
@@ -214,13 +214,13 @@
         </tr>
         <tr>
           <td>replaceColor<br>
-            (since 202306xx)</td>
+            (since 20230614)</td>
           <td>The color to be replaced by the state color.</td>
           <td>only ais...Image</td>
         </tr>
         <tr>
           <td>textOffset<br>
-            (since 202306xx)</td>
+            (since 20230614)</td>
           <td>An array [x,y] for the base text offset. The system will add some
             additional offset based on the course (mainly y). The x value must
             be related to the size of your icon.</td>
