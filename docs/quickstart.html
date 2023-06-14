@@ -269,17 +269,28 @@
     <p>Vorhandene <a href="hints/TracksToRoutes.html">Tracks können in Routen</a>
       umgewandelt werden. Dabei wird über einen Reduktionsalgorithmus die Zahl
       der Wegepunkte automatisch reduziert.</p>
-    <h2>AIS</h2>
+    <h2><a name="AIS"></a>AIS</h2>
     <p>In der Kartendarstellung werden AIS-Ziele in einem bestimmten Umkreis
       (default: 20nm) mit ihren Positionen und ihren Kursen dargestellt.
       Außerdem erfolgt eine Berechnung des nächsten Zieles und eine Warnung,
       falls eine einstellbare minimale Begegnungsentfernung unterschritten wird
       (CPA).</p>
     <p>Die Symbole für die AIS-Ziele können durch <a href="hints/usericons.html">eigene
-        Smybole</a> angepasst werden, bei Bedarf unterschiedlich je nach
-      AIS-Schiffsklasse. Für das eigene Boot und für die AIS-Ziele wird ein
-      Kurs-Vektor gezeichnet, dessen Ende die Position nach 10 Minuten
-      (einstellbar) markiert.</p>
+        Symbole</a> angepasst werden, bei Bedarf unterschiedlich je nach
+      AIS-Schiffsklasse oder navigational status. Für das eigene Boot und für
+      die AIS-Ziele wird ein Kurs-Vektor gezeichnet, dessen Ende die Position
+      nach 10 Minuten (einstellbar) markiert.</p>
+    <p>Ab 20230614 werden auch AIS Atons dargestellt (dazu muss in den <a href="userdoc/settingspage.html">Einstellungen</a>/AIS
+      "only show moving targets" ausgeschaltet und "show other" eingeschaltet
+      sein). Ausserdem ist es möglich eine geschätzte aktuelle Position des AIS
+      Ziels abhängig vom Alter der Information, Kurs und Geschwindigkeit
+      anzuzeigen (Einstellungen/AIS "show estimated position").<br>
+      Es kann ausserdem gewählt werden, ob die Ausrichtung des AIS Zieles nach
+      HDG erfolgt (sofern empfangen - Einstellungen/AIS "use heading for
+      direction") - sonst nach COG. Der Course Vector eines AIS Zieles wird
+      immer nach COG ausgerichtet.<br>
+      Es gibt unterschiedliche Symbole für die AIS Ziele - für Details siehe
+      unter "<a href="hints/usericons.html">Nutzerdefinierte Icons</a>".</p>
     <p>Durch Klick auf ein AIS-Ziel (oder auf die Anzeige des nächsten Zieles in
       den Anzeige-Bereichen) erhält man alle <a href="userdoc/aisinfopage.html">Informationen</a>
       zu diesem Ziel und kann zur <a href="userdoc/aispage.html">Liste aller

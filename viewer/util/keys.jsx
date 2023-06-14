@@ -332,32 +332,32 @@ let keys={
         trackInterval: new Property(30, "Point Dist.(s)", PropertyType.RANGE, [5, 300]), //seconds
         initialTrackLength: new Property(24, "Length(h)", PropertyType.RANGE, [1, 48]), //in h
         aisQueryTimeout: new Property(5000, "AIS (ms)", PropertyType.RANGE, [1000, 10000, 10]), //ms
-        aisDistance: new Property(20, "AIS-Range(nm)", PropertyType.RANGE, [1, 1000]), //distance for AIS query in nm
-        aisUseCourseVector: new Property(true, "AIS Use Course Vector", PropertyType.CHECKBOX),
-        aisShowEstimated: new Property(false,"AIS show estimated position", PropertyType.CHECKBOX),
-        aisEstimatedOpacity: new Property(0.4,"AIS estimated image opacity",PropertyType.RANGE,[0.1,1,0.05]),
-        aisUseHeading: new Property(false,"AIS use heading for direction",PropertyType.CHECKBOX),
+        aisDistance: new Property(20, "Range(nm)", PropertyType.RANGE, [1, 1000]), //distance for AIS query in nm
+        aisUseCourseVector: new Property(true, "use Course Vector", PropertyType.CHECKBOX),
+        aisShowEstimated: new Property(false,"show estimated position", PropertyType.CHECKBOX),
+        aisEstimatedOpacity: new Property(0.4,"estimated image opacity",PropertyType.RANGE,[0.1,1,0.05]),
+        aisUseHeading: new Property(false,"use heading for direction",PropertyType.CHECKBOX),
         aisIconBorderWidth: new Property(3, "Border Width", PropertyType.RANGE, [0, 10]),
         aisIconScale: new Property(1,"Icon Scale",PropertyType.RANGE, [0.5,5,0.1]),
         aisClassbShrink: new Property(0.6,"Class B rel size",PropertyType.RANGE, [0.1,2,0.1]),
-        aisMinDisplaySpeed: new Property(0.5,"min speed (kn) for AIS target/estimated display",PropertyType.RANGE,[0.1,40]),
-        aisOnlyShowMoving: new Property(false,"only show moving AIS targets",PropertyType.CHECKBOX),
-        aisListUpdateTime: new Property(5,"update time(s) for AIS list",PropertyType.RANGE,[1,20]),
-        aisReducedList: new Property(false,"reduce details in AIS list",PropertyType.CHECKBOX),
-        aisHideTime: new Property(15,"AIS hide time(s)",PropertyType.RANGE,[1,3600]),
+        aisMinDisplaySpeed: new Property(0.5,"min speed (kn) for target/estimated display",PropertyType.RANGE,[0.1,40]),
+        aisOnlyShowMoving: new Property(false,"only show moving targets",PropertyType.CHECKBOX),
+        aisListUpdateTime: new Property(5,"update time(s) for list",PropertyType.RANGE,[1,20]),
+        aisReducedList: new Property(false,"reduce details in list",PropertyType.CHECKBOX),
+        aisHideTime: new Property(15,"hide time(s)",PropertyType.RANGE,[1,3600]),
         clickTolerance: new Property(60, "Click Tolerance", PropertyType.RANGE, [10, 120]),
         maxAisErrors: new Property(3), //after that many errors AIS display will be switched off
         minAISspeed: new Property(0.1), //minimal speed in m/s that we consider when computing cpa/tcpa
         maxAisTPA: new Property(3),    //max. computed AIS TPA time in h (otherwise we do not consider this)
-        aisWarningCpa: new Property(500, "AIS Warning-CPA(m)", PropertyType.RANGE, [100, 5000, 10]), //m for AIS warning (500m)
-        aisWarningTpa: new Property(900, "AIS-Warning-TPA(s)", PropertyType.RANGE, [30, 3600, 10]), //in s - max time for tpa warning (15min)
+        aisWarningCpa: new Property(500, "Warning-CPA(m)", PropertyType.RANGE, [100, 5000, 10]), //m for AIS warning (500m)
+        aisWarningTpa: new Property(900, "Warning-TPA(s)", PropertyType.RANGE, [30, 3600, 10]), //in s - max time for tpa warning (15min)
         aisTextSize: new Property(14, "Text Size(px)", PropertyType.RANGE, [8, 24]), //in px
         aisShowA: new Property(true,"Show class A",PropertyType.CHECKBOX),
         aisShowB: new Property(true,"Show class B",PropertyType.CHECKBOX),
         aisShowOther: new Property(false,"Show other",PropertyType.CHECKBOX),
-        aisFirstLabel: new Property('nameOrmmsi','First AIS label',PropertyType.SELECT,['--none--'].concat(AisFormatter.getLabels())),
-        aisSecondLabel: new Property('--none--','Second AIS label',PropertyType.SELECT,['--none--'].concat(AisFormatter.getLabels())),
-        aisThirdLabel: new Property('--none--','Third AIS label',PropertyType.SELECT,['--none--'].concat(AisFormatter.getLabels())),
+        aisFirstLabel: new Property('nameOrmmsi','First label',PropertyType.SELECT,['--none--'].concat(AisFormatter.getLabels())),
+        aisSecondLabel: new Property('--none--','Second label',PropertyType.SELECT,['--none--'].concat(AisFormatter.getLabels())),
+        aisThirdLabel: new Property('--none--','Third label',PropertyType.SELECT,['--none--'].concat(AisFormatter.getLabels())),
         statusQueryTimeout: new Property(8000), //ms
         networkTimeout: new Property(8000,"Network timeout(ms)",PropertyType.RANGE,[1000,20000,100]),
         wpaQueryTimeout: new Property(10000), //ms

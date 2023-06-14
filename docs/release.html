@@ -42,6 +42,55 @@ sudo systemctl start avnav</div>
     <br>
     <div> </div>
     <h2>Versionen</h2>
+    <p> <span style="font-weight: bold;">20230614</span> <a title="release/20230614"
+        href="../downloads/release/20230614">link</a></p>
+    <p> <i><b>AvNav Images (avnav-raspi):</b></i></p>
+    <ul>
+      <li>Verbessertes Handling für Images mit Touch (auch OBP Plotter)</li>
+      <ul>
+        <li>Neues Panel auf der Startseite, wenn AvNav nicht komplett startet
+          (siehe <a href="install.html#Touch">Dokumentation</a>)</li>
+        <li>Reset für AvNav GUI (firefox Profil)</li>
+        <li><b>Wichtiger Hinweis für OBP Plotter</b>: Bitte auch
+          avnav-obp-plotter-v3-plugin mindestens auf 20230601 updaten und nach
+          allen Updates neu starten!</li>
+      </ul>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/274">#274</a>&nbsp;
+        update RPI4 (CM) Versionen in uart_control (GPS auf obp plotter v3)</li>
+      <li>Update auf canboat &gt;= 4.12 um einen Fehler im n2kd zu korrigieren
+        (neuer Prozess alle 30s, kann alle Systemressourcen verbrauchen)</li>
+    </ul>
+    <p><i><b>AvNav base (avnav):</b></i></p>
+    <ul>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/272">#272</a>:
+        Verbessertes AIS Handling (<a href="quickstart.html#AIS">Dokumentation</a>)</li>
+      <ul>
+        <li>verschiedene Icons je nach navigational status</li>
+        <li>nutze HDG zur Anzeige, wenn verfügbar</li>
+        <li>Anzeige von Atons</li>
+        <li>zeige eine geschätzte aktuelle Position</li>
+      </ul>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/276">#276</a>:
+        Karte verschieben im Lock Modus(<a href="userdoc/navpage.html">Dokumentation</a>)</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/275">#275</a>:
+        Installation auf bookworm (kein pip im postinstall)</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/277">#277</a>:
+        requirements für fedora</li>
+      <li>Installation auf OpenSuse</li>
+      <li>zeige die formatter Parameter im EditWidget Dialog für Widgets mit
+        flexiblen Formattern</li>
+      <li>ermögliche die Nutzung von online (AIS) streams die nach IEC 62320-1
+        arbeiten: Neuer Parameter stripLeading für Reader</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/9">#279</a>:Korrigiere
+        Zugriffsrechte für den&nbsp; avnav System Nutzer für serielle/USB Geräte</li>
+      <li>Weniger strenge checks für kml Overlays</li>
+      <li>Keine Abfrage der Sound-Berechtigung, wenn Sound deaktiviert ist</li>
+    </ul>
+    <p><i><b>AvNav Android:</b></i></p>
+    <ul>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/273">#273</a>:
+        AIS auf Android für südliche Breiten</li>
+    </ul>
     <p> <span style="font-weight: bold;">20230426</span> <a title="release/20230426"
         href="../downloads/release/20230426">link</a></p>
     Unterstützung für dem OpenBoatProjects 10 Zoll Plotter V3 - siehe <a href="https://open-boat-projects.org/de/10-plotter-raspi-4b">Projekt
@@ -1130,9 +1179,7 @@ sudo systemctl start avnav-check-wlan</div>
       <li>korrekte Ermittlung der Layer-Grenzen für gemf Karten</li>
       <li>Android Korrekturen</li>
     </ul>
-    <br>
-    <br>
-    <br>
-    <br>
+    
+    
   </body>
 </html>

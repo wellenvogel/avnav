@@ -451,6 +451,17 @@
       <b>Important</b>: AvNav settings that not have been saved to the server
       will be lost in this case.</p>
     <div class="code">sudo systemctl stop avnav-startx<br>rm -rf /home/pi/.mozilla/firefox/avnav<br>sudo systemctl start avnav-startx</div>
+    <p>Since version 20230614 the main screen will show an additonal panel every
+      time AvNav has not (or not completely) loaded.</p>
+    <p><img src="xui-ffpanel.png" alt="" class="fimage"><br>
+    </p>
+    <p>Using this panel you will get some basic firefox navigation functions and
+      you can switch to the second (system) screen. Additionally you can execute
+      the reset function for the firefox profile described above (<img src="viewerimages/SailBoatRed96.png"
+        alt="" class="inlineimage">).</p>
+    <p>This will help to operate the system even if AvNav does not start up
+      completely. For new installations you will also find the reset function on
+      the second screen.</p>
     <h2 class="western"><a name="Packages"></a>Pakage Installation</h2>
     Thanks to Oleg there are ready to go package repositories you can use in
     your debian based system. This will work on the pi as well as on any other

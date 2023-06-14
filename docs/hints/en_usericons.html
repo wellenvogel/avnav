@@ -7,6 +7,7 @@
   </head>
   <body data-order="6000">
     <h1>User Symbols</h1>
+    <div class="toc"> </div>
     <p>Since version 20201030.</p>
     <p>A couple of the symbols used in AvNav can be adapted to your preferences.
       You can resize the existing symbols, set a couple of properties or replace
@@ -39,8 +40,12 @@
     "size":[64,120]
   }
 }</div>
+    <p>Since 20230614 there is a <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/images.json">base
+        configuration</a> that is used by the system. In the user images.json
+      you can overwrite entries from the base config.</p>
     <p>For each symbol you want to replace there must be an entry with the
       correct name.</p>
+    <h2>Common Images</h2>
     <table style="width: 100%" border="1">
       <tbody>
         <tr>
@@ -62,29 +67,101 @@
           <td>symbol for active waypoint</td>
         </tr>
         <tr>
-          <td>aisNormalImage</td>
-          <td>symbol for a normal AIS target (neither the nearest or warning)</td>
+          <td>anchorImage</td>
+          <td>symbol for the anchor if anchor watch is activated</td>
         </tr>
         <tr>
-          <td>aisNearestImage</td>
-          <td>symbol for nearest AIS target</td>
-        </tr>
-        <tr>
-          <td>aisWarningImage</td>
-          <td>symbol for AIS target with warning</td>
+          <td>measureImage</td>
+          <td>symbol for the starting point of the current measure</td>
         </tr>
       </tbody>
     </table>
-    <p>For the AisImages you can append a "-shiptype" to define different images
-      for different ship types. If you do not define a type specific image the
-      appropriate base image (without -shiptype) or the built in image will be
-      used.</p>
-    <p>Shiptype can have the following values:</p>
-    <div class="code">WIG<br>Fishing<br>Towing<br>Dredging<br>Diving<br>Military<br>Sail<br>Pleasure<br>HighSp<br>Pilot<br>SAR<br>Tug<br>PortT<br>AntiPol<br>Law<br>Medical<br>Passenger<br>Cargo<br>Tanker<br>Hazard</div>
-    <p>You need to define all 3 variants (Normal, Nearest, Warning) for each of
-      the AIS symbols - otherwise the symbol will change depending on the state.</p>
-    <p>For each of the symbols in the file you can specify the following
-      parameters:</p>
+    <h2>AIS Images</h2>
+    <p>For AIS icons you have a couple of parameters that you can consider. Each
+      AIS target will be in a particular state - shown by a different color.</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>State</td>
+          <td>Meaning</td>
+        </tr>
+        <tr>
+          <td>Normal</td>
+          <td>AIS target</td>
+        </tr>
+        <tr>
+          <td>Warning</td>
+          <td>the closest AIS target with a CPA lower then the threshold</td>
+        </tr>
+        <tr>
+          <td>Tracking</td>
+          <td>the AIS target you have selected at the AIS info page</td>
+        </tr>
+        <tr>
+          <td>Nearest</td>
+          <td>the closest AIS target</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Beside the state AIS icons can be defined based on the kind (Normal/Aton)
+      and a couple of parameters (ship type, navigation status, aid type).</p>
+    <p>Basically you could define an own icon for each combination of parameters
+      and state. But from 20230614 you can leave the handling of the state
+      (color) to AvNav. To make this possible you need to create the icons in a
+      way that there is one color that can be replaced by the state color. You
+      need to define this color in the parameter "replaceColor" (see the <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/static/images.json">defaults</a>
+      for examples).</p>
+    <p>Basically you can define the following icons (examples):</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Key</td>
+          <td>Meaning</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>aisImage</td>
+          <td>default Ais icon</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>aisImage-status1</td>
+          <td>Icon for AIS targets with navigationl status 1(At Anchor), see the
+            <a href="https://github.com/wellenvogel/avnav/blob/d96104c8db58459d24dee180fa19c5360cab3d69/viewer/nav/aisformatter.jsx#L152">source
+              code</a> for other values.</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>aisImage-typeFishing</td>
+          <td>Icon for AIS targets with ship type 30(Fishing), <a href="https://github.com/wellenvogel/avnav/blob/d96104c8db58459d24dee180fa19c5360cab3d69/viewer/nav/aisformatter.jsx#L120">see
+              the code</a> for values</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>aisatonImage</td>
+          <td>default AIS icon for atons</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>aisatonImage-type9</td>
+          <td>AIS icon for atons of aid_type 9 (Beacon, Cardinal N), <a href="https://github.com/wellenvogel/avnav/blob/d96104c8db58459d24dee180fa19c5360cab3d69/viewer/nav/aisformatter.jsx#L256">see
+              the code</a> for values</td>
+          <td><br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>If you do not want to use "replaceColor" you can define different icons
+      depending on the state:</p>
+    <p>aisWarningImage, aisNormalImage, aisWarningImage-status1, ...</p>
+    <h2>Icon Parameters</h2>
+    For each of the symbols in the file you can specify the following
+    parameters:
     <table style="width: 100%" border="1">
       <tbody>
         <tr>
@@ -135,8 +212,26 @@
             course vector color to the image colors.</td>
           <td>not for markerImage</td>
         </tr>
+        <tr>
+          <td>replaceColor<br>
+            (since 20230614)</td>
+          <td>The color to be replaced by the state color.</td>
+          <td>only ais...Image</td>
+        </tr>
+        <tr>
+          <td>textOffset<br>
+            (since 20230614)</td>
+          <td>An array [x,y] for the base text offset. The system will add some
+            additional offset based on the course (mainly y). The x value must
+            be related to the size of your icon.</td>
+          <td>only ais...lImage</td>
+        </tr>
       </tbody>
     </table>
+    <p>Parameters not being provided will be replaced by defaults. You can also
+      only provide some parameters without an src attribute - this way you can
+      e.g. change the size of AIS symbols based on there type. Normally you also
+      have to adapt the anchor parameter if you change the size.</p>
     <p>When you edit the images.json you have to be careful to create valid
       json. When using the AvNav edit function at the Files/Download page <img
         src="../viewerimages/icons-new/ic_file_download.svg" alt="" class="inlineimage">(sub
