@@ -1,5 +1,6 @@
 package de.wellenvogel.avnav.main;
 
+import android.app.Activity;
 import android.os.Build;
 
 /**
@@ -66,6 +67,9 @@ public class Constants {
     public static final long WATCHDOGTIME=30000; //ms
 
     public static final String EXTRA_INITIAL="initial"; //boolean extra - check permissions when entering settings
+    public static final String EXTRA_PERMSSIONS="permissions"; //start the settings activity to request some permissions
+    public static final String EXTRA_PERMSSIONTITLE="permissiontitle"; //title for permission request dialog
+    public static final int RESULT_NO_RESTART = Activity.RESULT_FIRST_USER+1;
 
     //workdir settings
     public static final String INTERNAL_WORKDIR="workdir_internal";

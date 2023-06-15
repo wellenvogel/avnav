@@ -2,11 +2,6 @@ package de.wellenvogel.avnav.main;
 
 import android.app.Activity;
 import android.app.ActivityManager;
-import android.app.Dialog;
-import android.app.Fragment;
-import android.app.FragmentManager;
-import android.app.FragmentTransaction;
-import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
@@ -19,8 +14,6 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
-import android.hardware.usb.UsbDevice;
-import android.hardware.usb.UsbManager;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
@@ -32,7 +25,6 @@ import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.webkit.WebChromeClient;
@@ -57,12 +49,10 @@ import de.wellenvogel.avnav.appapi.JavaScriptApi;
 import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.appapi.WebServer;
 import de.wellenvogel.avnav.settings.SettingsActivity;
-import de.wellenvogel.avnav.util.ActionBarHandler;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.DialogBuilder;
 import de.wellenvogel.avnav.worker.GpsService;
-import de.wellenvogel.avnav.worker.IWorker;
 import de.wellenvogel.avnav.worker.UsbConnectionHandler;
 import de.wellenvogel.avnav.worker.WorkerFactory;
 
@@ -138,7 +128,9 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                     endApp();
                     return;
                 }
-                serviceNeedsRestart=true;
+                if (resultCode != Constants.RESULT_NO_RESTART) {
+                    serviceNeedsRestart = true;
+                }
                 break;
             case Constants.FILE_OPEN:
                 if (resultCode != RESULT_OK) {
@@ -244,6 +236,14 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
     public void showSettings(boolean initial){
         Intent sintent= new Intent(this,SettingsActivity.class);
         sintent.putExtra(Constants.EXTRA_INITIAL,initial);
+        startActivityForResult(sintent,Constants.SETTINGS_REQUEST);
+    }
+    public void showPermissionRequest(int title, String[] permissionRequests){
+        Intent sintent= new Intent(this,SettingsActivity.class);
+        sintent.putExtra(Constants.EXTRA_PERMSSIONTITLE,title);
+        if (permissionRequests != null && permissionRequests.length != 0){
+            sintent.putExtra(Constants.EXTRA_PERMSSIONS,permissionRequests);
+        }
         startActivityForResult(sintent,Constants.SETTINGS_REQUEST);
     }
 

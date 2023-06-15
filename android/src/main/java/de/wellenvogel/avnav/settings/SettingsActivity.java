@@ -156,13 +156,56 @@ public class SettingsActivity extends PreferenceActivity {
         updateHeaderSummaries(true);
         boolean checkInitially=false;
         Bundle b=getIntent() != null?getIntent().getExtras():null;
+        String [] permissionRequests=null;
+        int permissionTitle=R.string.notifyTitle;
         if (b != null){
             checkInitially=b.getBoolean(Constants.EXTRA_INITIAL,false);
+            if (b.containsKey(Constants.EXTRA_PERMSSIONS)) {
+                permissionRequests = b.getStringArray(Constants.EXTRA_PERMSSIONS);
+            }
+            if (b.containsKey(Constants.EXTRA_PERMSSIONTITLE)){
+                permissionTitle=b.getInt(Constants.EXTRA_PERMSSIONTITLE);
+            }
         }
         if (checkInitially) {
             if (!checkSettings(this,true)){
                 Toast.makeText(this,R.string.requiredSettings,Toast.LENGTH_LONG).show();
                 runPermissionDialogs(true);
+            }
+        }
+        else if (permissionRequests != null && permissionRequests.length != 0){
+            final String[] requests=permissionRequests;
+            final int title=permissionTitle;
+            openRequests.add(new DialogRequest(getNextPermissionRequestCode(), new Runnable() {
+                @Override
+                public void run() {
+                    DialogBuilder.confirmDialog(SettingsActivity.this, title, R.string.grantQuestion, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            if (i == DialogInterface.BUTTON_POSITIVE) {
+                                requestPermission(requests, new PermissionResult() {
+                                    @Override
+                                    public void result(String[] permissions, int[] grantResults) {
+                                        boolean grantOk=true;
+                                        for (int i=0;i< permissions.length;i++){
+                                            if (i >= grantResults.length || grantResults[i]!= PackageManager.PERMISSION_GRANTED){
+                                                grantOk=false;
+                                            }
+                                        }
+                                        if (! grantOk) Toast.makeText(SettingsActivity.this,R.string.notGranted,Toast.LENGTH_SHORT).show();
+                                        if (!runNextDialog() ) resultNoRestart();
+                                    }
+                                });
+                            }
+                            else{
+                                resultNoRestart();
+                            }
+                        }
+                    });
+                }
+            }));
+            if (! runNextDialog()){
+                resultNoRestart();
             }
         }
     }
@@ -401,6 +444,11 @@ public class SettingsActivity extends PreferenceActivity {
     private void resultOk(){
         Intent result=new Intent();
         setResult(Activity.RESULT_OK,result);
+        finish();
+    }
+    private void resultNoRestart(){
+        Intent result=new Intent();
+        setResult(Constants.RESULT_NO_RESTART,result);
         finish();
     }
     private void resultNok(){

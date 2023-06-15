@@ -1,13 +1,18 @@
 package de.wellenvogel.avnav.worker;
 
+import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.DialogInterface;
+import android.content.pm.PackageManager;
+import android.os.Build;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.util.DialogBuilder;
 import de.wellenvogel.avnav.util.NmeaQueue;
 
 import java.io.IOException;
@@ -37,6 +42,16 @@ public class BluetoothConnectionHandler extends SingleConnectionHandler {
 
         @Override
         ChannelWorker create(String name, GpsService ctx, NmeaQueue queue) throws JSONException, IOException {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                if (ctx.checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED){
+                    final GpsService.MainActivityActions actions=ctx.getMainActions();
+                    //only request permissions when we are in getAddable...
+                    if (actions != null && queue == null) {
+                        actions.showPermissionRequest(R.string.needsBluetooth,new String[]{Manifest.permission.BLUETOOTH_CONNECT});
+                    }
+                    throw new IOException("needs bluetooth");
+                }
+            }
             return new BluetoothConnectionHandler(name, ctx, queue);
         }
         @Override

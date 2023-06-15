@@ -47,7 +47,6 @@ import de.wellenvogel.avnav.appapi.INavRequestHandler;
 import de.wellenvogel.avnav.appapi.PostVars;
 import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.appapi.WebServer;
-import de.wellenvogel.avnav.charts.Chart;
 import de.wellenvogel.avnav.charts.ChartHandler;
 import de.wellenvogel.avnav.main.BuildConfig;
 import de.wellenvogel.avnav.main.Constants;
@@ -267,6 +266,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
 
     public static interface MainActivityActions{
         void showSettings(boolean checkInitially);
+        void showPermissionRequest(int title, String[]permissions);
         void mainGoBack();
         void mainShutdown();
     }
@@ -1297,6 +1297,10 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         }
         AvnLog.i(LOGPRFX, "service stopped");
         stopDiscovery();
+    }
+
+    public MainActivityActions getMainActions(){
+        return mBinder.getCallback();
     }
 
     public void stopMe(){
