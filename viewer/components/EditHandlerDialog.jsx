@@ -117,7 +117,10 @@ class EditHandlerDialog extends React.Component{
                     this.modifiedValues.setState(this.props.initialValues);
                 }
             })
-            .catch((e)=>Toast(e));
+            .catch((e)=>{
+                Toast(e);
+                this.props.closeCallback();
+            });
     }
     getRequestParam(add){
         let rt=assign({
