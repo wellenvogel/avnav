@@ -12,7 +12,8 @@
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <!-- xwalkold only -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
@@ -35,7 +36,8 @@
             android:configChanges="orientation|screenSize"
             android:label="${label}"
             android:windowSoftInputMode="stateHidden"
-            android:theme="@style/AppTheme">
+            android:theme="@style/AppTheme"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -47,13 +49,15 @@
             android:name=".Info"
             android:label="Info"
             android:theme="@style/AppTheme"/>
-        <activity android:name=".Dummy">
+        <activity android:name=".Dummy"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
             </intent-filter>
         </activity>
         <activity android:name=".UsbReceiver"
-            android:directBootAware="true">
+            android:directBootAware="true"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
             </intent-filter>
@@ -63,6 +67,7 @@
         </activity>
         <activity android:name=".RouteReceiver"
             android:theme="@style/AppTheme"
+            android:exported="true"
             >
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />

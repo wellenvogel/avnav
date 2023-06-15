@@ -7,6 +7,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.widget.Toast;
 
@@ -56,7 +57,7 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
     private static final String LOGPRFX="Avnav:AndroidPositionHandler";
     private boolean stopped=true;
     private Thread satStatusProvider;
-
+    private GnssStatus.Callback gnssStatus;
     AndroidPositionHandler(String name, GpsService ctx, NmeaQueue queue) {
         super(name,ctx,queue);
         parameterDescriptions.addParams(
@@ -64,6 +65,68 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
                 SOURCENAME_PARAMETER
                 );
         status.canEdit=true;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            this.gnssStatus=new GnssStatus.Callback() {
+                @Override
+                public void onStarted() {
+                    AndroidPositionHandler.this.tryEnableLocation();
+                }
+
+                @Override
+                public void onStopped() {
+                }
+
+                @Override
+                public void onFirstFix(int ttffMillis) {
+                }
+
+                @Override
+                public void onSatelliteStatusChanged(@NonNull GnssStatus status) {
+                    SentenceFactory sf=SentenceFactory.getInstance();
+                        try {
+                            int numSat = 0;
+                            ArrayList<SatelliteInfo> sats = new ArrayList<SatelliteInfo>();
+                            ArrayList<String> fixSats = new ArrayList<String>();
+                            for (int idx=0;idx < status.getSatelliteCount();idx++) {
+                                numSat++;
+                                if (status.usedInFix(idx) && fixSats.size() < 12) fixSats.add(String.format("%02d", status.getSvid(idx)));
+                                SatelliteInfo sat = new SatelliteInfo(String.format("%02d", status.getSvid(idx)),
+                                        (int) Math.round(status.getElevationDegrees(idx)),
+                                        (int) Math.round(status.getAzimuthDegrees(idx)),
+                                        (int) Math.round(status.getCn0DbHz(idx))
+                                );
+                                sats.add(sat);
+                            }
+                            int numGsv = (numSat + 3) / 4;
+                            for (int i = 0; i < numGsv; i++) {
+                                GSVSentence gsv = (GSVSentence) sf.createParser(TalkerId.GP, "GSV");
+                                gsv.setSentenceCount(numGsv);
+                                gsv.setSentenceIndex(i + 1);
+                                gsv.setSatelliteCount(numSat);
+                                ArrayList<SatelliteInfo> glist = new ArrayList<SatelliteInfo>();
+                                for (int j = i * 4; j < (i + 1) * 4 && j < numSat; j++) {
+                                    glist.add(sats.get(j));
+                                }
+                                gsv.setSatelliteInfo(glist);
+                                queue.add(gsv.toSentence(), getSourceName());
+                            }
+                            Location loc = location;
+                            if (loc != null && (System.currentTimeMillis() <= (lastValidLocation + MAXLOCWAIT))) {
+                                GSASentence gsa = (GSASentence) sf.createParser(TalkerId.GP, "GSA");
+                                gsa.setMode(FaaMode.AUTOMATIC);
+                                gsa.setFixStatus(GpsFixStatus.GPS_3D);
+                                String[] fsats = new String[fixSats.size()];
+                                fsats = fixSats.toArray(fsats);
+                                gsa.setSatelliteIds(fsats);
+                                //TODO: XDOP
+                                queue.add(gsa.toSentence(), getSourceName());
+                            }
+                        }catch (Throwable t){
+                            AvnLog.e("error in sat status loop",t);
+                        }
+                }
+            };
+        }
     }
 
     public static class Creator extends WorkerFactory.Creator{
@@ -93,60 +156,63 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
         locationService=(LocationManager) gpsService.getSystemService(gpsService.LOCATION_SERVICE);
         tryEnableLocation();
         checkBackgroundGps();
-        satStatusProvider=new Thread(new Runnable() {
-            @Override
-            public void run() {
-                SentenceFactory sf=SentenceFactory.getInstance();
-                while (! shouldStop(startSequence)){
-                    try {
-                        int numSat = 0;
-                        GpsStatus status = locationService.getGpsStatus(null);
-                        ArrayList<SatelliteInfo> sats = new ArrayList<SatelliteInfo>();
-                        ArrayList<String> fixSats = new ArrayList<String>();
-                        for (GpsSatellite s : status.getSatellites()) {
-                            numSat++;
-                            if (s.usedInFix() && fixSats.size() < 12) fixSats.add(String.format("%02d", s.getPrn()));
-                            SatelliteInfo sat = new SatelliteInfo(String.format("%02d", s.getPrn()),
-                                    (int) Math.round(Math.toDegrees(s.getElevation())),
-                                    (int) Math.round(Math.toDegrees(s.getAzimuth())),
-                                    (int) Math.round(10 * Math.log10(s.getSnr()))
-                            );
-                            sats.add(sat);
-                        }
-                        int numGsv = (numSat + 3) / 4;
-                        for (int i = 0; i < numGsv; i++) {
-                            GSVSentence gsv = (GSVSentence) sf.createParser(TalkerId.GP, "GSV");
-                            gsv.setSentenceCount(numGsv);
-                            gsv.setSentenceIndex(i + 1);
-                            gsv.setSatelliteCount(numSat);
-                            ArrayList<SatelliteInfo> glist = new ArrayList<SatelliteInfo>();
-                            for (int j = i * 4; j < (i + 1) * 4 && j < numSat; j++) {
-                                glist.add(sats.get(j));
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            satStatusProvider = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    SentenceFactory sf = SentenceFactory.getInstance();
+                    while (!shouldStop(startSequence)) {
+                        try {
+                            int numSat = 0;
+                            GpsStatus status = locationService.getGpsStatus(null);
+                            ArrayList<SatelliteInfo> sats = new ArrayList<SatelliteInfo>();
+                            ArrayList<String> fixSats = new ArrayList<String>();
+                            for (GpsSatellite s : status.getSatellites()) {
+                                numSat++;
+                                if (s.usedInFix() && fixSats.size() < 12)
+                                    fixSats.add(String.format("%02d", s.getPrn()));
+                                SatelliteInfo sat = new SatelliteInfo(String.format("%02d", s.getPrn()),
+                                        (int) Math.round(Math.toDegrees(s.getElevation())),
+                                        (int) Math.round(Math.toDegrees(s.getAzimuth())),
+                                        (int) Math.round(10 * Math.log10(s.getSnr()))
+                                );
+                                sats.add(sat);
                             }
-                            gsv.setSatelliteInfo(glist);
-                            queue.add(gsv.toSentence(), getSourceName());
+                            int numGsv = (numSat + 3) / 4;
+                            for (int i = 0; i < numGsv; i++) {
+                                GSVSentence gsv = (GSVSentence) sf.createParser(TalkerId.GP, "GSV");
+                                gsv.setSentenceCount(numGsv);
+                                gsv.setSentenceIndex(i + 1);
+                                gsv.setSatelliteCount(numSat);
+                                ArrayList<SatelliteInfo> glist = new ArrayList<SatelliteInfo>();
+                                for (int j = i * 4; j < (i + 1) * 4 && j < numSat; j++) {
+                                    glist.add(sats.get(j));
+                                }
+                                gsv.setSatelliteInfo(glist);
+                                queue.add(gsv.toSentence(), getSourceName());
+                            }
+                            Location loc = location;
+                            if (loc != null && (System.currentTimeMillis() <= (lastValidLocation + MAXLOCWAIT))) {
+                                GSASentence gsa = (GSASentence) sf.createParser(TalkerId.GP, "GSA");
+                                gsa.setMode(FaaMode.AUTOMATIC);
+                                gsa.setFixStatus(GpsFixStatus.GPS_3D);
+                                String[] fsats = new String[fixSats.size()];
+                                fsats = fixSats.toArray(fsats);
+                                gsa.setSatelliteIds(fsats);
+                                //TODO: XDOP
+                                queue.add(gsa.toSentence(), getSourceName());
+                            }
+                        } catch (Throwable t) {
+                            AvnLog.e("error in sat status loop", t);
                         }
-                        Location loc = location;
-                        if (loc != null && (System.currentTimeMillis() <= (lastValidLocation + MAXLOCWAIT))) {
-                            GSASentence gsa = (GSASentence) sf.createParser(TalkerId.GP, "GSA");
-                            gsa.setMode(FaaMode.AUTOMATIC);
-                            gsa.setFixStatus(GpsFixStatus.GPS_3D);
-                            String[] fsats = new String[fixSats.size()];
-                            fsats = fixSats.toArray(fsats);
-                            gsa.setSatelliteIds(fsats);
-                            //TODO: XDOP
-                            queue.add(gsa.toSentence(), getSourceName());
-                        }
-                    }catch (Throwable t){
-                        AvnLog.e("error in sat status loop",t);
+                        if (!sleep(1000)) break;
                     }
-                    if (!sleep(1000)) break;
+                    AvnLog.i("sat status thread stopped");
                 }
-                AvnLog.i("sat status thread stopped");
-            }
-        });
-        satStatusProvider.setDaemon(true);
-        satStatusProvider.start();
+            });
+            satStatusProvider.setDaemon(true);
+            satStatusProvider.start();
+        }
         while (! shouldStop(startSequence)){
             if (!sleep(5000)) break;
             checkBackgroundGps();
@@ -200,7 +266,12 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
                 @Override
                 public void run() {
                     locationService.removeUpdates(AndroidPositionHandler.this);
-                    locationService.removeGpsStatusListener(AndroidPositionHandler.this);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        locationService.unregisterGnssStatusCallback(AndroidPositionHandler.this.gnssStatus);
+                    }
+                    else {
+                        locationService.removeGpsStatusListener(AndroidPositionHandler.this);
+                    }
                     isRegistered=false;
                 }
             });
@@ -227,7 +298,12 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
                     @Override
                     public void run() {
                         locationService.requestLocationUpdates(currentProvider, 400, 0, AndroidPositionHandler.this);
-                        locationService.addGpsStatusListener(AndroidPositionHandler.this);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                locationService.registerGnssStatusCallback(AndroidPositionHandler.this.gpsService.getMainExecutor(), AndroidPositionHandler.this.gnssStatus);
+                        }
+                        else {
+                            locationService.addGpsStatusListener(AndroidPositionHandler.this);
+                        }
                     }
                 });
                 location = null;

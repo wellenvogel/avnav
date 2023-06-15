@@ -261,7 +261,7 @@ public class UsbConnectionHandler extends SingleConnectionHandler {
                 if (! manager.hasPermission(device)){
                     if (! permissionRequested){
                         setStatus(WorkerStatus.Status.ERROR,"requested permissions for "+ device.getDeviceName());
-                        PendingIntent permissionIntent = PendingIntent.getBroadcast(ctx, 0, new Intent(ACTION_USB_PERMISSION), 0);
+                        PendingIntent permissionIntent = PendingIntent.getBroadcast(ctx, 0, new Intent(ACTION_USB_PERMISSION), AvnUtil.buildPiFlags(0,true));
                         manager.requestPermission(device,permissionIntent);
                         permissionRequested=true;
 

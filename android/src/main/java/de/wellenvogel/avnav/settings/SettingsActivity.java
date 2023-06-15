@@ -174,7 +174,8 @@ public class SettingsActivity extends PreferenceActivity {
             openRequests.add(new DialogRequest(request, new Runnable() {
                 @Override
                 public void run() {
-                    requestPermission(Manifest.permission.ACCESS_FINE_LOCATION, new PermissionResult() {
+                    requestPermission(new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_COARSE_LOCATION}, new PermissionResult() {
                         @Override
                         public void result(String[] permissions, int[] grantResults) {
                             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
@@ -253,13 +254,13 @@ public class SettingsActivity extends PreferenceActivity {
         void result(String[] permissions, int[] grantResults);
     }
 
-    public int requestPermission(String permission,PermissionResult result){
+    public int requestPermission(String[] permission,PermissionResult result){
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return -1;
         int request=getNextPermissionRequestCode();
         if (result != null){
             resultHandler.put(request,result);
         }
-        requestPermissions(new String[]{permission}, request);
+        requestPermissions(permission, request);
         return request;
     }
 

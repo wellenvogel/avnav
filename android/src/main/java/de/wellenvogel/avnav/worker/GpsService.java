@@ -322,13 +322,13 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
                 createNotificationChannel();
                 Intent notificationIntent = new Intent(this, Dummy.class);
                 PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
-                        notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                        notificationIntent, AvnUtil.buildPiFlags(PendingIntent.FLAG_UPDATE_CURRENT,true));
                 Intent broadcastIntent = new Intent();
                 broadcastIntent.setAction(Constants.BC_STOPALARM);
-                PendingIntent stopAlarmPi = PendingIntent.getBroadcast(ctx, 1, broadcastIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+                PendingIntent stopAlarmPi = PendingIntent.getBroadcast(ctx, 1, broadcastIntent, AvnUtil.buildPiFlags(PendingIntent.FLAG_CANCEL_CURRENT,true));
                 Intent broadcastIntentStop = new Intent();
                 broadcastIntentStop.setAction(Constants.BC_STOPAPPL);
-                PendingIntent stopAppl = PendingIntent.getBroadcast(ctx, 1, broadcastIntentStop, PendingIntent.FLAG_CANCEL_CURRENT);
+                PendingIntent stopAppl = PendingIntent.getBroadcast(ctx, 1, broadcastIntentStop, AvnUtil.buildPiFlags(PendingIntent.FLAG_CANCEL_CURRENT,true));
                 RemoteViews nv = new RemoteViews(getPackageName(), R.layout.notification);
                 nv.setOnClickPendingIntent(R.id.button2, stopAlarmPi);
                 nv.setOnClickPendingIntent(R.id.button3, stopAppl);
@@ -1127,7 +1127,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
                 getApplicationContext(),
                 0,
                 watchdog,
-                0);
+                AvnUtil.buildPiFlags(0,true));
 
         ((AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE))
                 .setInexactRepeating(

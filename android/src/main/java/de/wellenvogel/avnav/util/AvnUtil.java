@@ -1,5 +1,6 @@
 package de.wellenvogel.avnav.util;
 
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.location.Location;
@@ -377,5 +378,13 @@ public class AvnUtil {
             this.key=key;
             this.value=v;
         }
+    }
+
+    public static int buildPiFlags(int flags, boolean immutable){
+        int rt=flags;
+        if (Build.VERSION.SDK_INT >= 31) {
+            rt|=immutable? PendingIntent.FLAG_IMMUTABLE:PendingIntent.FLAG_MUTABLE;
+        }
+        return rt;
     }
 }
