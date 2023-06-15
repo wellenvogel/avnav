@@ -28,11 +28,20 @@ public class BluetoothConnectionHandler extends SingleConnectionHandler {
             "device",
             R.string.labelSettingsBtDevice
     );
+    private boolean isBluetoothAllowed(){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            return (BluetoothConnectionHandler.this.gpsService.checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED);
+        }
+        return true;
+    }
     private BluetoothConnectionHandler(String name,GpsService ctx, NmeaQueue queue) throws IOException, JSONException {
         super(name,ctx,queue);
         deviceSelect.listBuilder=new EditableParameter.ListBuilder<String>() {
             @Override
             public List<String> buildList(EditableParameter.StringListParameter param) {
+                if (! isBluetoothAllowed()){
+                    return new ArrayList<String>();
+                }
                 return filterByClaims(CLAIM_BLUETOOTH,getBluetoothDevices(),false);
             }
         };
@@ -42,11 +51,11 @@ public class BluetoothConnectionHandler extends SingleConnectionHandler {
 
         @Override
         ChannelWorker create(String name, GpsService ctx, NmeaQueue queue) throws JSONException, IOException {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (queue == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 if (ctx.checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED){
                     final GpsService.MainActivityActions actions=ctx.getMainActions();
                     //only request permissions when we are in getAddable...
-                    if (actions != null && queue == null) {
+                    if (actions != null ) {
                         actions.showPermissionRequest(R.string.needsBluetooth,new String[]{Manifest.permission.BLUETOOTH_CONNECT});
                     }
                     throw new IOException("needs bluetooth");
@@ -74,12 +83,17 @@ public class BluetoothConnectionHandler extends SingleConnectionHandler {
         String deviceName=deviceSelect.fromJson(parameters);
         addClaim(CLAIM_BLUETOOTH,deviceName,true);
         BluetoothDevice device=null;
-        while (device == null && ! shouldStop(startSequence)){
+        while (! shouldStop(startSequence)){
             BluetoothAdapter adapter=BluetoothAdapter.getDefaultAdapter();
             String error=null;
             if (adapter == null) error="no bluetooth available";
             else {
                 if (!adapter.isEnabled()) error = "bluetooth disabled";
+            }
+            if (error == null){
+                if (! isBluetoothAllowed()){
+                    error="bluetooth permission not granted";
+                }
             }
             if (error == null) {
                 device = getDeviceForName(deviceName);
