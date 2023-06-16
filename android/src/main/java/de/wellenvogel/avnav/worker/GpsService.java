@@ -491,7 +491,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         }
         return null;
     }
-    private static JSONArray getWorkerConfig(Context ctx) throws JSONException {
+    public static JSONArray getWorkerConfig(Context ctx) throws JSONException {
         SharedPreferences prefs=ctx.getSharedPreferences(Constants.PREFNAME,Context.MODE_PRIVATE);
         String config=prefs.getString(Constants.HANDLER_CONFIG,null);
         JSONArray rt=null;

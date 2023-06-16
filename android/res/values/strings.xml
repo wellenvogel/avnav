@@ -117,6 +117,7 @@
     <string name="allowPlugins">allow unknown plugins</string>
     <string name="labelSettingsStripLeading">delete any leading characters before $ or ! in received lines</string>
     <string name="needsBluetooth">You need bluetooth permissions</string>
+    <string name="needsBluetoothCon">You have configured a bluetooth connection. But you currently do not have bluetooth permissions.</string>
     <string name="grantQuestion">grant now?</string>
     <string name="notGranted">not granted</string>
 

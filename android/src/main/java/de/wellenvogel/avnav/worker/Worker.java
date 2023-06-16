@@ -72,6 +72,15 @@ public abstract class Worker implements IWorker {
     protected static final String CLAIM_SERVICE="service";
     protected GpsService gpsService;
 
+    public static String typeFromConfig (JSONObject config){
+        try {
+            return TYPENAME_PARAMETER.fromJson(config);
+        } catch (JSONException e) {
+
+        }
+        return null;
+    }
+
     private static class ResourceClaim{
         String kind;
         String name;
