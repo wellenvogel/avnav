@@ -37,7 +37,7 @@ public abstract class Worker implements IWorker {
             new EditableParameter.StringParameter("typeName"); //not intended to be edited
     static final EditableParameter.StringListParameter BAUDRATE_PARAMETER=
             new EditableParameter.StringListParameter("baud rate",R.string.labelSettingsBaud,"9600",
-                    "1200","2400","4800","9600","14400","19200","28800","38400","57600","115200","230400","460800");
+                    "1200","2400","4800","9600","14400","19200","28800","38400","57600","115200","230400","460800","921600");
     static final EditableParameter.IntegerParameter TIMEOFFSET_PARAMETER=
             new EditableParameter.IntegerParameter("timeOffset",R.string.labelSettingsTimeOffset,0);
     static final EditableParameter.IntegerParameter CONNECT_TIMEOUT_PARAMETER=
