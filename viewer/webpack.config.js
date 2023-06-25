@@ -122,7 +122,7 @@ module.exports = (env, argv) => {
         module: {
             rules: [
                 {
-                    test: /version\.js$/,
+                    test: path.join(__dirname,"version.js"),
                     loader: 'val-loader',
                     options: {
                         version: avnavVersion

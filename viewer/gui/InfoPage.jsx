@@ -6,6 +6,7 @@ import React from 'react';
 import Page from '../components/Page.jsx';
 import Requests from '../util/requests.js';
 import Mob from '../components/Mob.js';
+import AvNavVersion from '../version.js';
 
 class InfoPage extends React.Component{
     constructor(props){
@@ -54,6 +55,7 @@ class InfoPage extends React.Component{
                 <div className="link" onClick={self.showLicense}>License</div>
                 <div className="link" onClick={self.showPrivacy}>PrivacyInfo</div>
             </div>
+            <div className="avnavVersion">{ "Version: "+AvNavVersion}</div>
             <div className="listContainer scrollable" ref="frame">
             <div className="infoFrame" >
                 <div className="infoText" dangerouslySetInnerHTML={{__html: this.state.info}} ref="info">
