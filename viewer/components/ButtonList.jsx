@@ -190,7 +190,7 @@ class ButtonList extends React.Component{
         }
         else {
             let style={};
-            if (hasOverflow && this.props.buttonCols ) style.width=(this.props.buttonWidth*scale*2)+"px";
+            if (hasOverflow && this.props.buttonCols && ! this.props.hidden) style.width=(this.props.buttonWidth*scale*2)+"px";
             return <div className={"buttonContainerWrap "} ref={this.buttonListRef}>
                 <ItemList {...this.props}
                 style={style}
