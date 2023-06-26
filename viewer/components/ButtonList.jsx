@@ -100,7 +100,7 @@ class ButtonList extends React.Component{
         for (let k in this.props.itemList){
             let stateKey=this.getStateKey(this.props.itemList[k]);
             if (!stateKey) continue;
-            if (this.state[stateKey] === undefined || this.state[stateKey]){
+            if (! this.props.hidden && (this.state[stateKey] === undefined || this.state[stateKey])){
                 items.push(this.props.itemList[k]);
             }
             else{
@@ -109,102 +109,94 @@ class ButtonList extends React.Component{
             if (this.props.itemList[k].overflow) allowedOverflowItems++;
         }
         items=this.itemSort(items);
-        let scale=1;
-        let hasOverflow=false;
-        /* strategy:
-           add 1 to len for overflow button (cannot overflow) if buttonCols is not set
-           check if we can overflow without scaling - overflow items will be at most == remaining
-           compute scale based on remaining
-         */
-        let moveToOverflow=0;
-        if (listHeight && this.props.buttonHeight) {
-            let completeLength = items.length;
-            if (completeLength * this.props.buttonHeight > listHeight) {
-                if (! this.props.buttonCols) completeLength += 1; //overflow button
-                if (allowedOverflowItems > completeLength / 2) {
-                    allowedOverflowItems = Math.floor(completeLength / 2);
+        let scale = 1;
+        let hasOverflow = false;
+        let moveToOverflow = 0;
+        if (! this.props.hidden) {
+            /* strategy:
+               add 1 to len for overflow button (cannot overflow) if buttonCols is not set
+               check if we can overflow without scaling - overflow items will be at most == remaining
+               compute scale based on remaining
+             */
+            if (listHeight && this.props.buttonHeight) {
+                let completeLength = items.length;
+                if (completeLength * this.props.buttonHeight > listHeight) {
+                    if (!this.props.buttonCols) completeLength += 1; //overflow button
+                    if (allowedOverflowItems > completeLength / 2) {
+                        allowedOverflowItems = Math.floor(completeLength / 2);
+                    }
+                    while (moveToOverflow < allowedOverflowItems && ((completeLength - moveToOverflow) * this.props.buttonHeight > listHeight)) {
+                        moveToOverflow++;
+                    }
+                    scale = listHeight / (this.props.buttonHeight * (completeLength - moveToOverflow));
                 }
-                while (moveToOverflow < allowedOverflowItems && ((completeLength - moveToOverflow) * this.props.buttonHeight > listHeight)) {
-                    moveToOverflow++;
-                }
-                scale = listHeight / (this.props.buttonHeight * (completeLength - moveToOverflow));
+                if (scale > 1) scale = 1;
             }
-            if (scale > 1) scale = 1;
         }
         let fontSize=this.props.buttonSize*scale/4.0;
         let mainItems=[];
         let overflowItems=[];
-        if (moveToOverflow > 0){
-            hasOverflow=true;
-            if (! this.props.buttonCols) {
-                //split the buttons into multiple lists
-                for (let k = items.length - 1; k >= 0; k--) {
-                    if (items[k].overflow && moveToOverflow > 0) {
-                        overflowItems.splice(0, 0, items[k]);
-                        moveToOverflow--;
-                    } else {
-                        mainItems.splice(0, 0, items[k]);
-                    }
-                }
-                if (overflowItems.length > 0) {
-                    mainItems.push({
-                        name: 'Overflow',
-                        toggle: this.state.showOverflow,
-                        onClick: (el) => {
-                            this.setState({showOverflow: !this.state.showOverflow})
-                        }
-                    });
+        if (!this.props.hidden) {
+            //split the buttons into multiple lists
+            for (let k = items.length - 1; k >= 0; k--) {
+                if (items[k].overflow && moveToOverflow > 0) {
+                    overflowItems.splice(0, 0, items[k]);
+                    moveToOverflow--;
+                    hasOverflow = true;
                 } else {
-                    hasOverflow = false;
+                    mainItems.splice(0, 0, items[k]);
                 }
+            }
+            if (overflowItems.length > 0 && !this.props.buttonCols) {
+                mainItems.push({
+                    name: 'Overflow',
+                    toggle: this.state.showOverflow,
+                    onClick: (el) => {
+                        this.setState({showOverflow: !this.state.showOverflow})
+                    }
+                });
             }
         }
-        if (hasOverflow && !this.props.buttonCols){
-            if (! this.state.showOverflow){
+        if (hasOverflow) {
+            if (!this.state.showOverflow && !this.props.buttonCols) {
                 //add currently invisible items to the invisible list
                 //to get changeCallbacks
-                invisibleItems=invisibleItems.concat(overflowItems);
+                invisibleItems = invisibleItems.concat(overflowItems);
+
             }
-            return <div className={"buttonContainerWrap "} ref={this.buttonListRef}>
+        }
+        return (
+             <div className={"buttonContainerWrap "} ref={this.buttonListRef}>
+                 {(!this.props.hidden) && <ItemList {...this.props}
+                          fontSize={fontSize}
+                          className={className + " main"}
+                          itemList={mainItems}
+                          itemClass={Dynamic(Button, {changeCallback: this.buttonChanged})}
+                />
+                }
+                {(hasOverflow && (this.state.showOverflow || this.props.buttonCols)) ?
                     <ItemList {...this.props}
-                        fontSize={fontSize}
-                        className={className + " main"}
-                        itemList={mainItems}
-                        itemClass={Dynamic(Button,{changeCallback:this.buttonChanged})}
-                        />
-                {this.state.showOverflow ?
-                    <ItemList {...this.props}
-                        fontSize={fontSize}
-                        className={className + " overflow"}
-                        itemList={overflowItems}
-                        itemClass={Dynamic(Button,{changeCallback:this.buttonChanged})}
-                        />
+                              fontSize={fontSize}
+                              className={className + " overflow"}
+                              itemList={overflowItems}
+                              itemClass={Dynamic(Button, {changeCallback: this.buttonChanged})}
+                    />
                     :
                     null
                 }
                 <ItemList className="hidden"
                           itemList={invisibleItems}
-                          itemClass={Dynamic(Button,{changeCallback:this.buttonChanged})}
-                    />
-                </div>
-        }
-        else {
-            let style={};
-            if (hasOverflow && this.props.buttonCols && ! this.props.hidden) style.width=(this.props.buttonWidth*scale*2)+"px";
-            return <div className={"buttonContainerWrap "} ref={this.buttonListRef}>
-                <ItemList {...this.props}
-                style={style}
-                fontSize={fontSize}
-                itemList={items}
-                className={className +(this.props.buttonCols?" wrap":"")}
-                itemClass={Dynamic(Button,{changeCallback:this.buttonChanged})}
+                          itemClass={Dynamic(Button, {changeCallback: this.buttonChanged})}
                 />
-                <ItemList className="hidden"
-                    itemList={invisibleItems}
-                    itemClass={Dynamic(Button,{changeCallback:this.buttonChanged})}
-                />
+                 {this.props.hidden &&
+                 <div
+                     className={"buttonShade "+(this.props.showShade?"shade":"")}
+                     style={{width: this.props.buttonWidth}}
+                     onClick={this.props.shadeCallback}
+                 />
+                 }
             </div>
-        }
+        )
     }
 
 }
