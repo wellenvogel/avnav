@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -142,6 +143,17 @@ public class SettingsActivity extends PreferenceActivity {
         edit.apply();
     }
 
+    static private int permissionToText(String [] permissions){
+        for (String s : permissions){
+            if (s.equals(Manifest.permission.ACCESS_FINE_LOCATION)){
+                return R.string.needGps;
+            }
+            if (s.equals(Manifest.permission.BLUETOOTH_CONNECT)){
+                return R.string.needsBluetoothCon;
+            }
+        }
+        return 0;
+    }
     static class PermissionRequestDialog extends DialogRequest{
         PermissionRequestDialog(SettingsActivity activity,int requestCode,  boolean doRestart,String [] permissions, int title) {
             super(requestCode, new Runnable() {
@@ -156,19 +168,26 @@ public class SettingsActivity extends PreferenceActivity {
                                     grantOk=false;
                                 }
                             }
+                            int permissionInfo=permissionToText(permissions);
                             boolean showDialog=false;
                             if (! grantOk) {
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                                     for (String perm : permissions) {
-                                        if (!activity.shouldShowRequestPermissionRationale(perm))
-                                            showDialog = true;
+                                            if (!activity.shouldShowRequestPermissionRationale(perm))
+                                                showDialog = true;
                                     }
                                 }
-                                if (!showDialog) {
-                                    Toast.makeText(activity, title, Toast.LENGTH_SHORT).show();
+                                showDialog=showDialog && permissionInfo != 0;
+                                if (! showDialog) {
+                                    if (permissionInfo != 0){
+                                        Toast.makeText(activity,activity.getText(permissionInfo)+" "+activity.getText(R.string.notGranted), Toast.LENGTH_SHORT).show();
+                                    }
+                                    else {
+                                        Toast.makeText(activity, R.string.notGranted, Toast.LENGTH_SHORT).show();
+                                    }
                                 }
                             }
-                            if (!showDialog) {
+                            if (! showDialog) {
                                 if (!activity.runNextDialog()) {
                                     if (doRestart)
                                         activity.resultOk();
@@ -177,10 +196,15 @@ public class SettingsActivity extends PreferenceActivity {
                                 }
                                 return;
                             }
-                            DialogBuilder.confirmDialog(activity, title, R.string.grantQuestion, new DialogInterface.OnClickListener() {
+                            DialogBuilder.confirmDialog(activity, permissionInfo, R.string.grantQuestion, new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialogInterface, int i) {
-                                    //TODO: take us to the settings
+                                    if (i == DialogInterface.BUTTON_POSITIVE){
+                                        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                                        Uri uri = Uri.fromParts("package", activity.getPackageName(), null);
+                                        intent.setData(uri);
+                                        activity.startActivity(intent);
+                                    }
                                     if (!activity.runNextDialog() ) {
                                         if(doRestart)
                                             activity.resultOk();
