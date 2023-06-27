@@ -6,6 +6,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileTree
 import org.gradle.api.file.FileVisitDetails
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 
 import java.security.MessageDigest
 
@@ -171,19 +172,33 @@ class UploadTask extends DefaultTask{
         ftp.completePendingCommand();
         return rt
     }
+    @Internal
     def server="www.wellenvogel.net"
+    @Internal
     def base="/www/software/avnav/downloads"
+    @Internal
     def baseDir="daily"
+    @Internal
     def user
+    @Internal
     def passwd
+    @Internal
     def useHashes=false
+    @Internal
     def hashFileName="_hashes"
 
+    @InputFile
+    @Optional
     File inputFile
+    @Internal
     def getTargetName=null
+    @InputDirectory
+    @Optional
     FileTree inputFiles
+    @Internal
     boolean deleteTargetDir=false
 
+    @Internal
     def getRealBase(){
         def envBase=System.getenv("AVNAV_REPO_BASE");
         if (envBase != null) base=envBase

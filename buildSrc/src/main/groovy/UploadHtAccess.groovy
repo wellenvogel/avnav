@@ -1,9 +1,12 @@
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 
 class UploadHtAccess extends UploadTask{
 
+    @Internal
     def sourceName=null
+    @Internal
     def version=null
 
     static def createHtAccess(src,dest,version){
