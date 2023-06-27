@@ -508,6 +508,38 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         rt=new JSONArray();
         return rt;
     }
+
+    public static NeededPermissions getNeededPermissions(Context ctx){
+        NeededPermissions rt = new NeededPermissions();
+        try {
+            JSONArray handlerConfig = getWorkerConfig(ctx);
+            for (int i = 0; i < handlerConfig.length(); i++) {
+                JSONObject config = handlerConfig.getJSONObject(i);
+                if (WorkerFactory.BLUETOOTH_NAME.equals(Worker.typeFromConfig(config))
+                        && Worker.ENABLED_PARAMETER.fromJson(config)) {
+                    rt.bluetooth = true;
+                    break;
+                }
+            }
+        }catch (Exception e){
+            AvnLog.e("unable to query worker config for permissions",e);
+        }
+        SharedPreferences prefs = ctx.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
+        String gpsConfig=prefs.getString(WGPS.configName,null);
+        if (gpsConfig == null){
+            rt.gps=true;
+        }
+        else{
+            JSONObject o= null;
+            try {
+                o = new JSONObject(gpsConfig);
+                rt.gps=Worker.ENABLED_PARAMETER.fromJson(o);
+            } catch (JSONException e) {
+                rt.gps=true;
+            }
+        }
+        return rt;
+    }
     private void handleMigration(){
         try {
             SharedPreferences prefs = getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);

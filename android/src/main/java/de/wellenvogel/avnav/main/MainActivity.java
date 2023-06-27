@@ -580,8 +580,8 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         e.commit();
     }
 
-    private boolean checkSettingsInternal(boolean checkGps){
-        if (checkSettings && !checkSettings(this,checkGps)) {
+    private boolean checkSettingsInternal(){
+        if (checkSettings && !checkSettings(this,true)) {
             checkSettings=false;
             showSettings(true);
             return false;
@@ -616,6 +616,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     showsDialog=false;
+                    checkSettings=false; //settings are checked in the settings activity
                     showSettings(false);
                 }
             });
@@ -637,7 +638,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                         public void onClick(DialogInterface dialog, int which) {
                             sharedPrefs.edit().putInt(Constants.VERSION,newVersion).commit();
                             showsDialog=false;
-                            if (!checkSettingsInternal(true)) return;
+                            if (!checkSettingsInternal()) return;
                             onResumeInternal();
                         }
                     });
@@ -652,7 +653,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                 }
             }catch (Exception e){}
         }
-        return showsDialog || !checkSettingsInternal(false);
+        return showsDialog || !checkSettingsInternal();
     }
 
     @Override
@@ -718,7 +719,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         super.onResume();
         handleBars();
         AvnLog.d("main: onResume");
-        if (! checkForInitialDialogs() && checkSettingsInternal(false)){
+        if (! checkForInitialDialogs()){
             onResumeInternal();
         }
     }

@@ -13,7 +13,7 @@
     <string name="externalStorage">External Storage</string>
     <string name="newFolderName">name for new folder</string>
     <string name="createFolder">create folder</string>
-    <string name="noGpsSelected">no GPS service selected</string>
+    <string name="noGpsSelected">no Location permissions granted</string>
     <string name="action_about">about</string>
     <string name="notifyTitle">AvNav</string>
     <string name="notifyText">AvNav running</string>
@@ -118,7 +118,8 @@
     <string name="labelSettingsStripLeading">delete any leading characters before $ or ! in received lines</string>
     <string name="needsBluetooth">You need bluetooth permissions</string>
     <string name="needsBluetoothCon">You have configured a bluetooth connection. But you currently do not have bluetooth permissions.</string>
-    <string name="grantQuestion">grant now?</string>
+    <string name="needGps">You need Location permissions. But you currently do not have them</string>
+    <string name="grantQuestion">Enable it at the application settings now?</string>
     <string name="notGranted">not granted</string>
 
 </resources>

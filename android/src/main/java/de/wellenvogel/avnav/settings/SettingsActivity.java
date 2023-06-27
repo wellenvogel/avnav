@@ -2,12 +2,10 @@ package de.wellenvogel.avnav.settings;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.os.Build;
@@ -18,7 +16,6 @@ import android.preference.*;
 
 import android.provider.Settings;
 import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.DisplayMetrics;
 import android.view.Menu;
@@ -29,9 +26,6 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -39,11 +33,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import de.wellenvogel.avnav.worker.BluetoothConnectionHandler;
 import de.wellenvogel.avnav.worker.GpsService;
-import de.wellenvogel.avnav.worker.UsbConnectionHandler;
+import de.wellenvogel.avnav.worker.NeededPermissions;
 import de.wellenvogel.avnav.main.Constants;
 import de.wellenvogel.avnav.main.Info;
 import de.wellenvogel.avnav.main.R;
@@ -51,8 +43,6 @@ import de.wellenvogel.avnav.util.ActionBarHandler;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.DialogBuilder;
-import de.wellenvogel.avnav.worker.Worker;
-import de.wellenvogel.avnav.worker.WorkerFactory;
 
 /**
  * Created by andreas on 03.09.15.
@@ -157,35 +147,48 @@ public class SettingsActivity extends PreferenceActivity {
             super(requestCode, new Runnable() {
                 @Override
                 public void run() {
-                    DialogBuilder.confirmDialog(activity, title, R.string.grantQuestion, new DialogInterface.OnClickListener() {
+                    activity.requestPermission(permissions, new PermissionResult() {
                         @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            if (i == DialogInterface.BUTTON_POSITIVE) {
-                                activity.requestPermission(permissions, new PermissionResult() {
-                                    @Override
-                                    public void result(String[] permissions, int[] grantResults) {
-                                        boolean grantOk=true;
-                                        for (int i=0;i< permissions.length;i++){
-                                            if (i >= grantResults.length || grantResults[i]!= PackageManager.PERMISSION_GRANTED){
-                                                grantOk=false;
-                                            }
-                                        }
-                                        if (! grantOk) Toast.makeText(activity,R.string.notGranted,Toast.LENGTH_SHORT).show();
-                                        if (!activity.runNextDialog() ) {
-                                            if(doRestart)
-                                                activity.resultOk();
-                                            else
-                                                activity.resultNoRestart();
-                                        }
+                        public void result(String[] permissions, int[] grantResults) {
+                            boolean grantOk=true;
+                            for (int i=0;i< permissions.length;i++){
+                                if (i >= grantResults.length || grantResults[i]!= PackageManager.PERMISSION_GRANTED){
+                                    grantOk=false;
+                                }
+                            }
+                            boolean showDialog=false;
+                            if (! grantOk) {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                    for (String perm : permissions) {
+                                        if (!activity.shouldShowRequestPermissionRationale(perm))
+                                            showDialog = true;
                                     }
-                                });
+                                }
+                                if (!showDialog) {
+                                    Toast.makeText(activity, title, Toast.LENGTH_SHORT).show();
+                                }
                             }
-                            else{
-                                if(doRestart)
-                                    activity.resultOk();
-                                else
-                                    activity.resultNoRestart();
+                            if (!showDialog) {
+                                if (!activity.runNextDialog()) {
+                                    if (doRestart)
+                                        activity.resultOk();
+                                    else
+                                        activity.resultNoRestart();
+                                }
+                                return;
                             }
+                            DialogBuilder.confirmDialog(activity, title, R.string.grantQuestion, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    //TODO: take us to the settings
+                                    if (!activity.runNextDialog() ) {
+                                        if(doRestart)
+                                            activity.resultOk();
+                                        else
+                                            activity.resultNoRestart();
+                                    }
+                                }
+                            });
                         }
                     });
                 }
@@ -216,8 +219,8 @@ public class SettingsActivity extends PreferenceActivity {
         }
         if (checkInitially) {
             if (!checkSettings(this,true)){
-                Toast.makeText(this,R.string.requiredSettings,Toast.LENGTH_LONG).show();
-                runPermissionDialogs(true);
+                //Toast.makeText(this,R.string.requiredSettings,Toast.LENGTH_LONG).show();
+                runPermissionDialogs();
             }
         }
         else if (permissionRequests != null && permissionRequests.length != 0){
@@ -228,29 +231,15 @@ public class SettingsActivity extends PreferenceActivity {
         }
     }
 
-    private void runPermissionDialogs(boolean initial){
+    private void runPermissionDialogs(){
         SharedPreferences sharedPrefs=getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
-        if (!checkGpsPermission(this)){
-            int request=getNextPermissionRequestCode();
-            openRequests.add(new DialogRequest(request, new Runnable() {
-                @Override
-                public void run() {
-                    requestPermission(new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
-                            Manifest.permission.ACCESS_COARSE_LOCATION}, new PermissionResult() {
-                        @Override
-                        public void result(String[] permissions, int[] grantResults) {
-                            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                            }
-                            else{
-                                if (! initial) Toast.makeText(SettingsActivity.this,R.string.noGpsSelected,Toast.LENGTH_LONG).show();
-                            }
-                            if (!runNextDialog() && ! initial) resultOk();
-                        }
-                    });
-                }
-            }));
+        NeededPermissions perm=GpsService.getNeededPermissions(this);
+        if (perm.gps && !checkGpsPermission(this)) {
+            int request = getNextPermissionRequestCode();
+            openRequests.add(new PermissionRequestDialog(this, request, true, new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION}, R.string.needGps));
         }
-        if (! checkGpsEnabled(this)){
+        if (perm.gps && ! checkGpsEnabled(this)){
             int request=getNextPermissionRequestCode();
             openRequests.add(new DialogRequest(request, new Runnable() {
                 @Override
@@ -264,7 +253,7 @@ public class SettingsActivity extends PreferenceActivity {
                                     openRequests.clear();
                                 }
                                 else{
-                                    if (! initial) resultOk();
+                                    if (!runNextDialog()) resultOk();
                                 }
                             }
                         });
@@ -282,13 +271,13 @@ public class SettingsActivity extends PreferenceActivity {
                             if (which == DialogInterface.BUTTON_NEGATIVE) {
                                 resultNok();
                             }
-                            openRequests.clear();
+                            if (!runNextDialog()) resultOk();
                         }
                     });
                 }
             }));
         }
-        if (! checkPowerSavingMode(this)){
+        if (perm.gps && ! checkPowerSavingMode(this)){
             int request = getNextPermissionRequestCode();
             openRequests.add(new DialogRequest(request, new Runnable() {
                 @Override
@@ -301,14 +290,14 @@ public class SettingsActivity extends PreferenceActivity {
                                 startActivity(new Intent(Settings.ACTION_SETTINGS));
                             }
                             else {
-                                resultOk();
+                                if (!runNextDialog()) resultOk();
                             }
                         }
                     });
                 }
             }));
         }
-        if (! checkBluetooth(this)){
+        if (perm.bluetooth && ! checkBluetooth(this)){
             if (Build.VERSION.SDK_INT >= 31) {
                 openRequests.add(new PermissionRequestDialog(
                         this,
@@ -317,7 +306,7 @@ public class SettingsActivity extends PreferenceActivity {
                         new String[]{Manifest.permission.BLUETOOTH_CONNECT},R.string.needsBluetoothCon));
             }
         }
-        if (! runNextDialog() && !initial) resultOk();
+        if (! runNextDialog()) resultOk();
     }
 
     public interface PermissionResult{
@@ -349,22 +338,7 @@ public class SettingsActivity extends PreferenceActivity {
     }
     public static boolean checkBluetooth(final Activity activity){
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return true;
-        try{
-            JSONArray handlerConfig= GpsService.getWorkerConfig(activity);
-            boolean needsBluetooth=false;
-            for (int i=0;i<handlerConfig.length();i++){
-                JSONObject config = handlerConfig.getJSONObject(i);
-                if (WorkerFactory.BLUETOOTH_NAME.equals(Worker.typeFromConfig(config))){
-                    needsBluetooth=true;
-                    break;
-                }
-            }
-            if (! needsBluetooth) return true;
-            return activity.checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED;
-        } catch (Exception e){
-            AvnLog.e("error reading handler config",e);
-        }
-        return true;
+        return activity.checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED;
     }
 
     public static boolean checkPowerSavingMode(final Context context){
@@ -383,14 +357,16 @@ public class SettingsActivity extends PreferenceActivity {
      * @param activity
      * @return true if settings are ok
      */
-    public static boolean checkSettings(Activity activity, boolean checkGps){
+    public static boolean checkSettings(Activity activity, boolean checkPermissions){
         handleMigrations(activity);
         SharedPreferences sharedPrefs=activity.getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         if (! checkOrCreateWorkDir(AvnUtil.getWorkDir(sharedPrefs,activity))){
             return false;
         }
-        if (! checkBluetooth(activity)) return false;
-        if (! checkGps) return true;
+        if (! checkPermissions) return true;
+        NeededPermissions perm=GpsService.getNeededPermissions(activity);
+        if (perm.bluetooth && ! checkBluetooth(activity)) return false;
+        if (! perm.gps) return true;
         if (! checkGpsEnabled(activity)) return false;
         if (! checkGpsPermission(activity)) return false;
         if (! checkPowerSavingMode(activity)) return false;
@@ -483,7 +459,7 @@ public class SettingsActivity extends PreferenceActivity {
     }
     private void checkResult(){
         if (! checkSettings(this,true)) {
-            runPermissionDialogs(false);
+            runPermissionDialogs();
             return;
         }
         resultOk();
