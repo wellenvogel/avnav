@@ -2,7 +2,7 @@ package de.wellenvogel.avnav.util;
 
 import android.app.Activity;
 import android.app.Fragment;
-import android.support.v7.widget.Toolbar;
+import androidx.appcompat.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
 

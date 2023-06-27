@@ -16,8 +16,8 @@ import android.os.PowerManager;
 import android.preference.*;
 
 import android.provider.Settings;
-import android.support.annotation.NonNull;
-import android.support.v4.content.ContextCompat;
+import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuInflater;

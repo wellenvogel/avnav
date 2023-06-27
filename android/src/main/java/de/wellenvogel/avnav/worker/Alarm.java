@@ -1,6 +1,6 @@
 package de.wellenvogel.avnav.worker;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import org.json.JSONException;
 import org.json.JSONObject;

@@ -1,12 +1,11 @@
 package de.wellenvogel.avnav.mdns;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
-import java.net.SocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 

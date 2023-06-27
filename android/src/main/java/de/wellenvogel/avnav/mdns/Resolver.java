@@ -1,7 +1,7 @@
 package de.wellenvogel.avnav.mdns;
 
 import android.os.Build;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import net.straylightlabs.hola.dns.ARecord;
 import net.straylightlabs.hola.dns.Domain;

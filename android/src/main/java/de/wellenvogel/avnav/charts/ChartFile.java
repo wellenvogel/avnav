@@ -3,8 +3,8 @@ package de.wellenvogel.avnav.charts;
 import android.content.Context;
 import android.net.Uri;
 import android.os.ParcelFileDescriptor;
-import android.support.annotation.NonNull;
-import android.support.v4.provider.DocumentFile;
+import androidx.annotation.NonNull;
+import androidx.documentfile.provider.DocumentFile;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -20,9 +20,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-
-import de.wellenvogel.avnav.main.Constants;
-import de.wellenvogel.avnav.util.AvnLog;
 
 /**
  *abstract chart File handler class.

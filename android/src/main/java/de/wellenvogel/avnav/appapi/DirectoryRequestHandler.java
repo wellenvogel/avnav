@@ -2,8 +2,7 @@ package de.wellenvogel.avnav.appapi;
 
 import android.net.Uri;
 import android.os.Build;
-import android.support.annotation.NonNull;
-import android.telephony.AvailableNetworkInfo;
+import androidx.annotation.NonNull;
 
 import org.json.JSONArray;
 import org.json.JSONException;
