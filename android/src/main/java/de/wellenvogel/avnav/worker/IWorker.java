@@ -9,6 +9,9 @@ import org.json.JSONObject;
 import java.io.IOException;
 
 public interface IWorker {
+    interface PermissionCallback{
+        void permissionNeeded(NeededPermissions perm);
+    }
     WorkerStatus getStatus();
 
     JSONObject getJsonStatus() throws JSONException;
@@ -30,7 +33,7 @@ public interface IWorker {
     boolean isStopped();
     void check() throws JSONException;
     String getTypeName();
-    void start();
+    void start(PermissionCallback permissionCallback);
 
     void onResume();
 }

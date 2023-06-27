@@ -1,5 +1,6 @@
 package de.wellenvogel.avnav.worker;
 
+import android.Manifest;
 import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -56,6 +57,7 @@ import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.mdns.MdnsWorker;
 import de.wellenvogel.avnav.mdns.Resolver;
 import de.wellenvogel.avnav.settings.AudioEditTextPreference;
+import de.wellenvogel.avnav.settings.SettingsActivity;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.util.NmeaQueue;
@@ -690,7 +692,26 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
     }
     private synchronized void updateWorkerConfig(IWorker worker, JSONObject newConfig) throws JSONException, IOException {
         worker.setParameters(newConfig, false,true);
-        worker.start(); //will restart
+        worker.start(new IWorker.PermissionCallback() {
+            @Override
+            public void permissionNeeded(NeededPermissions perm) {
+                MainActivityActions actions=getMainActions();
+                if (actions == null) return;
+                if (perm.bluetooth){
+                    if(!SettingsActivity.checkBluetooth(GpsService.this)){
+                        if (Build.VERSION.SDK_INT >= 31) {
+                            actions.showPermissionRequest(R.string.needsBluetoothCon,new String[]{Manifest.permission.BLUETOOTH_CONNECT});
+                        }
+                    }
+                }
+                if (perm.gps){
+                    if (!SettingsActivity.checkGpsPermission(GpsService.this)){
+                        actions.showPermissionRequest(R.string.needGps,new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
+                                Manifest.permission.ACCESS_COARSE_LOCATION});
+                    }
+                }
+            }
+        }); //will restart
         saveWorkerConfig(worker);
     }
     private synchronized int addWorker(String typeName, JSONObject newConfig) throws WorkerFactory.WorkerNotFound, JSONException, IOException {
@@ -701,7 +722,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         newWorker.setId(getNextWorkerId());
         String typeName=newWorker.getTypeName();
         newWorker.setParameters(newConfig, true,true);
-        newWorker.start();
+        newWorker.start(null);
         String currentType=null;
         boolean inserted=false;
         for (int i=0;i<workers.size();i++){
@@ -811,7 +832,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
                             AvnLog.e("error parsing decoder parameters",e);
                         }
                     }
-                    worker.start();
+                    worker.start(null);
                     internalWorkers.add(worker);
                 } catch (Throwable t) {
                     AvnLog.e("unable to create worker "+cfg.typeName,t);
@@ -832,7 +853,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
                         worker.setId(getNextWorkerId());
                         try {
                             worker.setParameters(config, true,false);
-                            worker.start();
+                            worker.start(null);
                         }catch (Throwable t){
                             worker.setStatus(WorkerStatus.Status.ERROR,"unable to set parameters: "+t.getMessage());
                         }

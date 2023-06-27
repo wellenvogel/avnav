@@ -352,17 +352,17 @@ public class SettingsActivity extends PreferenceActivity {
         LocationManager locationService = (LocationManager) activity.getSystemService(activity.LOCATION_SERVICE);
         return locationService.isProviderEnabled(LocationManager.GPS_PROVIDER);
     }
-    public static boolean checkGpsPermission(final Activity activity) {
+    public static boolean checkGpsPermission(final Context ctx) {
         if (Build.VERSION.SDK_INT >= 23) {
-            if (ContextCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) !=
+            if (ctx.checkSelfPermission( Manifest.permission.ACCESS_FINE_LOCATION) !=
                     PackageManager.PERMISSION_GRANTED)
                 return false;
         }
         return true;
     }
-    public static boolean checkBluetooth(final Activity activity){
+    public static boolean checkBluetooth(final Context ctx){
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return true;
-        return activity.checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED;
+        return ctx.checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED;
     }
 
     public static boolean checkPowerSavingMode(final Context context){

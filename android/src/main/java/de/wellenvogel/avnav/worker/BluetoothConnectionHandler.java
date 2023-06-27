@@ -111,6 +111,13 @@ public class BluetoothConnectionHandler extends SingleConnectionHandler {
 
     }
 
+    @Override
+    NeededPermissions needsPermissions() {
+        NeededPermissions rt=new NeededPermissions();
+        rt.bluetooth=true;
+        return rt;
+    }
+
     /**
      * get the device for a given name
      * return if no device with this name found

@@ -261,7 +261,11 @@ public abstract class Worker implements IWorker {
         return parameters;
     }
 
-    public void start(){
+    NeededPermissions needsPermissions(){
+        return null;
+    }
+
+    public void start(PermissionCallback permissionCallback){
         if (mainThread != null){
             stopAndWait();
         }
@@ -275,6 +279,12 @@ public abstract class Worker implements IWorker {
                 }
             }
             if (enabled.fromJson(parameters)) {
+                if (permissionCallback != null){
+                    NeededPermissions perm=needsPermissions();
+                    if (perm != null){
+                        permissionCallback.permissionNeeded(perm);
+                    }
+                }
                 running = true;
                 mainThread = new Thread(new Runnable() {
                     @Override

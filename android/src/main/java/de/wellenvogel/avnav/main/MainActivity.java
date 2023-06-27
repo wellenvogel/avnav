@@ -586,6 +586,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             showSettings(true);
             return false;
         }
+        checkSettings=false;
         return true;
     }
     private boolean checkForInitialDialogs(){

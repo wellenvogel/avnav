@@ -329,6 +329,13 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
         deregister();
     }
 
+    @Override
+    NeededPermissions needsPermissions() {
+        NeededPermissions rt=new NeededPermissions();
+        rt.gps=true;
+        return rt;
+    }
+
     /**
      * get the current position data
      * @return
