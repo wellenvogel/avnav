@@ -6,6 +6,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileTree
 import org.gradle.api.file.FileVisitDetails
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.Internal
 
 import java.security.MessageDigest
 
@@ -166,20 +167,32 @@ class UploadSftp extends DefaultTask{
         is.close();
         return rt
     }
+    @Internal
     def server="www.wellenvogel.net"
+    @Internal
     def base="/www/software/avnav/downloads"
+    @Internal
     def user
+    @Internal
     def passwd
+    @Internal
     def privateKey
+    @Internal
     def baseDir="daily"
+    @Internal
     def useHashes=false
+    @Internal
     def hashFileName="_hashes"
-
+    @Internal
     File inputFile
+    @Internal
     def getTargetName=null
+    @Internal
     FileTree inputFiles
+    @Internal
     boolean deleteTargetDir=false
 
+    @Internal
     def getRealBase(){
         def envBase=System.getenv("AVNAV_REPO_BASE");
         if (envBase != null) base=envBase

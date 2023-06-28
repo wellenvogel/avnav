@@ -187,13 +187,11 @@ class UploadTask extends DefaultTask{
     @Internal
     def hashFileName="_hashes"
 
-    @InputFile
-    @Optional
+    @Internal
     File inputFile
     @Internal
     def getTargetName=null
-    @InputDirectory
-    @Optional
+    @Internal
     FileTree inputFiles
     @Internal
     boolean deleteTargetDir=false
