@@ -67,7 +67,7 @@ android {
         versionName "avnav-$avnavVersion"
         versionCode Integer.parseInt(project.avnavVersion)
         manifestPlaceholders(['label':'avNav'])
-        targetSdkVersion 31
+        targetSdkVersion 33
         multiDexEnabled true //https://stackoverflow.com/questions/60919046/how-to-fix-build-gradle
         minSdkVersion 19
         buildConfigField "long", "TIMESTAMP", System.currentTimeMillis() + "L"
