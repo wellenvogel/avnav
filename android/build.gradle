@@ -61,6 +61,7 @@ else{
 
 
 android {
+    namespace="de.wellenvogel.avnav.main"
     defaultConfig{
         applicationId "de.wellenvogel.avnav.main"
         versionName "avnav-$avnavVersion"
