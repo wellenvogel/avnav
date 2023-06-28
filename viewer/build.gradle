@@ -1,5 +1,5 @@
 import java.text.SimpleDateFormat
-import com.moowork.gradle.node.npm.*
+import com.github.gradle.node.npm.task.*
 buildscript {
     repositories {
         maven {
@@ -7,11 +7,11 @@ buildscript {
         }
     }
     dependencies {
-        classpath "com.moowork.gradle:gradle-node-plugin:1.3.1"
+        classpath "com.github.node-gradle:gradle-node-plugin:5.0.0"
     }
 }
 
-apply plugin: 'com.moowork.node'
+apply plugin: 'com.github.node-gradle.node'
 apply plugin: 'java'
 
 /*
@@ -22,7 +22,7 @@ node{
 }
 */
 
-class MyNpm extends NpmTask{
+abstract class MyNpm extends NpmTask{
     @Internal
     def subDir
     @InputFiles
@@ -53,17 +53,18 @@ class MyNpm extends NpmTask{
         }
     }
 }
-project.ext.avnavVersion=null
-task pkgVersion {
-    doLast {
-        if (!project.hasProperty('packageVersion')) {
-            SimpleDateFormat f = new SimpleDateFormat('yyyyMMdd')
-            project.avnavVersion = f.format(new Date())
-        } else {
-            project.avnavVersion = packageVersion
-        }
+def computePackageVersion(){
+    def rt=null
+    if (!project.hasProperty('packageVersion')) {
+        SimpleDateFormat f = new SimpleDateFormat('yyyyMMdd')
+        rt = f.format(new Date())
+    } else {
+        rt= packageVersion
     }
+    //logger.lifecycle("AVNAV_VERSION=${rt}")
+    return rt
 }
+
 task touchLock {
     doLast{
        File f=file('package-lock.json')
@@ -77,16 +78,12 @@ npmInstall.dependsOn(touchLock)
 task release(type: MyNpm){
     subDir="release"
 	args=["run","production"]
-    setExecOverrides({
-        it.environment.put('AVNAV_VERSION',project.avnavVersion)
-    })
-	dependsOn npmInstall,pkgVersion
+	dependsOn npmInstall
+    environment=['AVNAV_VERSION':computePackageVersion()]
 }
 task debug(type: MyNpm){
     subDir="debug"
 	args=["run","debug"]
-    setExecOverrides({
-        it.environment.put('AVNAV_VERSION',project.avnavVersion)
-    })
-	dependsOn npmInstall,pkgVersion
+    environment=['AVNAV_VERSION':computePackageVersion()]
+	dependsOn npmInstall
 }

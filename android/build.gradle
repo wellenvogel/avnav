@@ -11,7 +11,7 @@ buildscript {
 
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.4.2'
+        classpath 'com.android.tools.build:gradle:8.0.2'
     }
 }
 repositories{
@@ -150,6 +150,10 @@ android {
             manifestPlaceholders.label='avNav-beta'
             manifestPlaceholders.suffix=".beta"
         }
+    }
+    buildFeatures {
+        renderScript true
+        aidl true
     }
     applicationVariants.all { variant ->
         project.logger.lifecycle("Variant: " + variant.getName())
