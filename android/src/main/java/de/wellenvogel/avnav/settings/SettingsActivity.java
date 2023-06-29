@@ -151,6 +151,9 @@ public class SettingsActivity extends PreferenceActivity {
             if (s.equals(Manifest.permission.BLUETOOTH_CONNECT)){
                 return R.string.needsBluetoothCon;
             }
+            if (s.equals(Manifest.permission.POST_NOTIFICATIONS)){
+                return R.string.permissionNotification;
+            }
         }
         return 0;
     }
@@ -321,6 +324,16 @@ public class SettingsActivity extends PreferenceActivity {
                 }
             }));
         }
+        if (! checkNotificationPermission(this)){
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                openRequests.add(new PermissionRequestDialog(
+                        this,
+                        getNextPermissionRequestCode(),
+                        true,
+                        new String[]{Manifest.permission.POST_NOTIFICATIONS},R.string.permissionNotification));
+            }
+
+        }
         if (perm.bluetooth && ! checkBluetooth(this)){
             if (Build.VERSION.SDK_INT >= 31) {
                 openRequests.add(new PermissionRequestDialog(
@@ -374,6 +387,13 @@ public class SettingsActivity extends PreferenceActivity {
         return true;
     }
 
+    public static boolean checkNotificationPermission(final Context ctx){
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU){
+            return true;
+        }
+        return ctx.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED;
+    }
+
 
 
     /**
@@ -387,6 +407,7 @@ public class SettingsActivity extends PreferenceActivity {
         if (! checkOrCreateWorkDir(AvnUtil.getWorkDir(sharedPrefs,activity))){
             return false;
         }
+        if (! checkNotificationPermission(activity)) return false;
         if (! checkPermissions) return true;
         NeededPermissions perm=GpsService.getNeededPermissions(activity);
         if (perm.bluetooth && ! checkBluetooth(activity)) return false;

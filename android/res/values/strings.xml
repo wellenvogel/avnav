@@ -121,5 +121,6 @@
     <string name="needGps">Location permissions</string>
     <string name="grantQuestion">are not enabled. \nEnable it at the application settings now?</string>
     <string name="notGranted">not granted</string>
+    <string name="permissionNotification">Notification permissions</string>
 
 </resources>
