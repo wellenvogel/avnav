@@ -35,6 +35,7 @@ public class AisStore {
     private static final String MERGE_FIELDS[]=new String[]{"imo_id","callsign","shipname","shiptype","destination","length","beam","draught"};
     private static final String LOGPRFX="Avnav.AisStore";
     private static final String AGE_KEY="age";
+    private static final String PRIO_KEY="__priority";
     private boolean isHandledMessage(AisMessage msg){
         for (int i:HANDLED_MESSAGES){
             if (msg.getMsgId() == i){
@@ -43,7 +44,7 @@ public class AisStore {
         }
         return false;
     }
-    public synchronized void addAisMessage(AisMessage msg){
+    public synchronized void addAisMessage(AisMessage msg, int priority){
         if (! isHandledMessage(msg)){
             AvnLog.i(LOGPRFX,"ignore AIS message "+msg);
             return;
@@ -66,6 +67,19 @@ public class AisStore {
             int type=msg.getMsgId();
             long now= SystemClock.uptimeMillis();
             JSONObject old=aisData.get(mmsi);
+            if (old != null) {
+                if (old.has(PRIO_KEY)) {
+                    int oldPrio = old.getInt(PRIO_KEY);
+                    if (oldPrio > priority) {
+                        //cleanup will remove old higher prio entries
+                        AvnLog.d(LOGPRFX, "AIS msg " + type + " ignored for " + mmsi + ", newPrio=" + priority + ", existingPrio=" + oldPrio);
+                        return;
+                    }
+                    if (oldPrio < priority) {
+                        old = null;
+                    }
+                }
+            }
             if (old != null){
                 if (type == 5 || type == 24){
                     //merge fields
@@ -84,12 +98,14 @@ public class AisStore {
                         }
                     }
                     o.put(AGE_KEY,now);
+                    o.put(PRIO_KEY,priority);
                     aisData.put(mmsi,o);
                 }
             }
             else{
                 AvnLog.d(LOGPRFX, "store new message type " + type + " for mmsi" + mmsi);
                 o.put(AGE_KEY,now);
+                o.put(PRIO_KEY,priority);
                 aisData.put(mmsi,o);
             }
         } catch (JSONException e) {

@@ -41,15 +41,17 @@ public class ConnectionReaderWriter{
     private ConnectionProperties properties;
     private boolean dataAvailable = false;
     private String name;
+    private int priority=0;
     WriterRunnable writer;
     Thread writerThread;
     long lastReceived=0;
 
-    public ConnectionReaderWriter(AbstractConnection connection, String name, NmeaQueue queue) {
+    public ConnectionReaderWriter(AbstractConnection connection, String name, int priority, NmeaQueue queue) {
         this.connection = connection;
         this.properties = connection.properties;
         this.name = name;
         this.queue = queue;
+        this.priority=priority;
     }
 
     class WriterRunnable implements Runnable {
@@ -142,7 +144,7 @@ public class ConnectionReaderWriter{
                         continue;
                     }
                     lastReceived = System.currentTimeMillis();
-                    queue.add(line, name);
+                    queue.add(line, name,priority);
                 }
 
             } catch (IOException e) {

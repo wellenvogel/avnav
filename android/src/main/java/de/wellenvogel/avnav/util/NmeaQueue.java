@@ -8,10 +8,17 @@ public class NmeaQueue {
         public int sequence;
         public String data;
         public String source;
+        public int priority=0;
         Entry(int s,String d,String source){
             this.sequence=s;
             this.data=d;
             this.source=source;
+        }
+        Entry(int s,String d,String source, int priority){
+            this.sequence=s;
+            this.data=d;
+            this.source=source;
+            this.priority=priority;
         }
     }
     private int length=30;
@@ -22,9 +29,9 @@ public class NmeaQueue {
     }
     public NmeaQueue(){}
 
-    public synchronized int add(String data,String source){
+    public synchronized int add(String data,String source,int priority){
         sequence++;
-        queue.add(new Entry(sequence,data,source));
+        queue.add(new Entry(sequence,data,source,priority));
         if (queue.size() > length) queue.remove(0);
         notifyAll();
         return sequence;

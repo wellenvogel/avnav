@@ -24,6 +24,7 @@ public abstract class SingleConnectionHandler extends ChannelWorker {
         parameterDescriptions.addParams(
                 ENABLED_PARAMETER,
                 SOURCENAME_PARAMETER,
+                SOURCE_PRIORITY_PARAMETER,
                 FILTER_PARAM,
                 SEND_DATA_PARAMETER,
                 SEND_FILTER_PARAM.cloneCondition(new AvnUtil.KeyValue<Boolean>(SEND_DATA_PARAMETER.name,true)),
@@ -72,7 +73,7 @@ public abstract class SingleConnectionHandler extends ChannelWorker {
                 continue;
             }
             AvnLog.d(LOGPRFX, name + ": connected to " + connection.getId());
-            handler=new ConnectionReaderWriter(connection,getSourceName(),queue);
+            handler=new ConnectionReaderWriter(connection,getSourceName(),getPriority(null),queue);
             try {
                 handler.run();
             }catch (Throwable t){

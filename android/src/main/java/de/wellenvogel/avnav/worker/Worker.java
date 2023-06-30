@@ -63,7 +63,8 @@ public abstract class Worker implements IWorker {
                     ));
     public static EditableParameter.BooleanParameter STRIP_LEADING_PARAMETER =
             new EditableParameter.BooleanParameter("stripLeading",R.string.labelSettingsStripLeading,false);
-
+    public static EditableParameter.IntegerParameter SOURCE_PRIORITY_PARAMETER = 
+            new EditableParameter.IntegerParameter("priority",R.string.priority_for_this_source,50);
     static final String CLAIM_BLUETOOTH ="bluetooth device";
     static final String CLAIM_USB ="usb device";
     protected static final String CLAIM_TCPPORT = "tcp port";
@@ -265,6 +266,14 @@ public abstract class Worker implements IWorker {
         return null;
     }
 
+    public EditableParameter.EditableParameterInterface getParameter(EditableParameter.EditableParameterInterface nameAndType, boolean fallBack){
+        for (EditableParameter.EditableParameterInterface p:parameterDescriptions){
+            if (p.getName().equals(nameAndType.getName()) && p.getType().equals(nameAndType.getType())){
+                return p;
+            }
+        }
+        return fallBack?nameAndType:null;
+    }
     public void start(PermissionCallback permissionCallback){
         if (mainThread != null){
             stopAndWait();
@@ -272,12 +281,8 @@ public abstract class Worker implements IWorker {
         try {
             //check if we have a defined enabled parameter
             //otherwise use the generic one
-            EditableParameter.BooleanParameter enabled=Worker.ENABLED_PARAMETER;
-            for (EditableParameter.EditableParameterInterface p:parameterDescriptions){
-                if (p.getName().equals(ENABLED_PARAMETER.name) && p instanceof EditableParameter.BooleanParameter){
-                    enabled=(EditableParameter.BooleanParameter)p;
-                }
-            }
+            EditableParameter.EditableParameterInterface enabledIf=getParameter(Worker.ENABLED_PARAMETER,true);
+            EditableParameter.BooleanParameter enabled=(EditableParameter.BooleanParameter)enabledIf;
             if (enabled.fromJson(parameters)) {
                 if (permissionCallback != null){
                     NeededPermissions perm=needsPermissions();

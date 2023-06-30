@@ -37,6 +37,15 @@ public abstract class ChannelWorker extends Worker{
             return rt;
     }
 
+    protected synchronized int getPriority(EditableParameter.IntegerParameter param)  {
+        if (param == null) param=SOURCE_PRIORITY_PARAMETER;
+        try {
+            return param.fromJson(parameters);
+        } catch (JSONException e) {
+            return 50;
+        }
+    }
+
     private InetSocketAddress resolveMdns(Target.ResolveTarget target, int startSequence, boolean forceNew) {
         //we must wait more then the resolver to avoid filling it up with our requests
         long MAXWAIT = Resolver.RETRIGGER_TIME * (Resolver.MAX_RETRIGGER + 1);

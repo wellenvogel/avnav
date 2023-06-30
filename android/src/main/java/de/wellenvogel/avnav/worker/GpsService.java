@@ -691,7 +691,18 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         edit.commit();
     }
     private synchronized void updateWorkerConfig(IWorker worker, JSONObject newConfig) throws JSONException, IOException {
+        JSONObject oldConfig=worker.getConfig();
         worker.setParameters(newConfig, false,true);
+        EditableParameter.IntegerParameter prioParam=(EditableParameter.IntegerParameter)worker.getParameter(Worker.SOURCE_PRIORITY_PARAMETER,true);
+        int oldPrio=prioParam.fromJson(oldConfig);
+        int newPrio=prioParam.fromJson(worker.getConfig());
+        if (oldPrio != newPrio){
+            AvnLog.i(LOGPRFX,"source priority changed for "+worker.getId()+", reset data");
+            Decoder decoder=getDecoder();
+            if (decoder != null){
+                decoder.cleanup();
+            }
+        }
         worker.start(new IWorker.PermissionCallback() {
             @Override
             public void permissionNeeded(NeededPermissions perm) {

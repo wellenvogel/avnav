@@ -336,7 +336,7 @@ public class RouteHandler extends DirectoryRequestHandler  {
         super(RequestHandler.TYPE_ROUTE,ctx,routedir,"route",null);
         this.routedir=routedir;
         updateReceiver=ctx;
-        parameterDescriptions.addParams(COMPUTE_RMB, COMPUTE_APB,USE_RHUMBLINE,WP_MODE,WP_TIME);
+        parameterDescriptions.addParams(COMPUTE_RMB, COMPUTE_APB,USE_RHUMBLINE,SOURCE_PRIORITY_PARAMETER,WP_MODE,WP_TIME);
         status.canEdit=true;
         this.queue=queue;
     }
@@ -683,6 +683,7 @@ public class RouteHandler extends DirectoryRequestHandler  {
             return;
         }
         try {
+            int priority=SOURCE_PRIORITY_PARAMETER.fromJson(parameters);
             Location target = leg.to.toLocation();
             Location start = leg.from.toLocation();
             double xte = AvnUtil.XTE(start, target, currentPosition,useRhumbLine) / AvnUtil.NM;
@@ -711,7 +712,7 @@ public class RouteHandler extends DirectoryRequestHandler  {
                 rmb.setStatus(DataStatus.ACTIVE);
                 String sentence = rmb.toSentence();
                 status.setChildStatus(CHILD_RMB, WorkerStatus.Status.NMEA, sentence);
-                queue.add(sentence, getSourceName());
+                queue.add(sentence, getSourceName(),priority);
             }
             if (computeAPB){
                 APBSentence apb=(APBSentence) factory.createParser(TalkerId.GP,"APB");
@@ -732,7 +733,7 @@ public class RouteHandler extends DirectoryRequestHandler  {
                 apb.setCycleLockStatus(DataStatus.ACTIVE);
                 String sentence = apb.toSentence();
                 status.setChildStatus(CHILD_APB, WorkerStatus.Status.NMEA, sentence);
-                queue.add(sentence, getSourceName());
+                queue.add(sentence, getSourceName(),priority);
             }
         }catch (Throwable t){
             AvnLog.e("error computing RMB/APB",t);

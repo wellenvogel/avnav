@@ -33,6 +33,7 @@ public class UdpReceiver extends ChannelWorker {
                 PORT_PARAMETER,
                 ENABLED_PARAMETER,
                 SOURCENAME_PARAMETER,
+                SOURCE_PRIORITY_PARAMETER,
                 EXTERNAL_ACCESS,
                 FILTER_PARAM,
                 READ_TIMEOUT_PARAMETER
@@ -53,6 +54,7 @@ public class UdpReceiver extends ChannelWorker {
     protected void run(int startSequence) throws JSONException, IOException { int MAXSIZE=10000;
         lastReceived=0;
         Integer port=PORT_PARAMETER.fromJson(parameters);
+        int priority=SOURCE_PRIORITY_PARAMETER.fromJson(parameters);
         boolean allowExternal=EXTERNAL_ACCESS.fromJson(parameters);
         addClaim(CLAIM_UDPPORT,port.toString(),true);
         if (channel != null){
@@ -98,7 +100,7 @@ public class UdpReceiver extends ChannelWorker {
                             record = record.trim();
                             if (record.length() > 0) {
                                 if (AvnUtil.matchesNmeaFilter(record,nmeaFilter)) {
-                                    queue.add(record, source);
+                                    queue.add(record, source,priority);
                                 }
                             }
                         }
@@ -111,7 +113,7 @@ public class UdpReceiver extends ChannelWorker {
                     record = record.trim();
                     if (record.length() > 0) {
                         if (AvnUtil.matchesNmeaFilter(record,nmeaFilter)) {
-                            queue.add(record, source);
+                            queue.add(record, source,priority);
                         }
                     }
                 }

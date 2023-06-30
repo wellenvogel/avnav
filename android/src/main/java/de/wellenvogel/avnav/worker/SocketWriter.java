@@ -100,7 +100,7 @@ public class SocketWriter extends ChannelWorker {
         Thread thread;
         ClientConnection connection;
         Client(ClientConnection connection){
-            handler=new ConnectionReaderWriter(connection,getSourceName(),queue);
+            handler=new ConnectionReaderWriter(connection,getSourceName(),getPriority(null),queue);
             this.connection=connection;
             this.thread=new Thread(new Runnable() {
                 @Override

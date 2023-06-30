@@ -57,11 +57,14 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
     private boolean stopped=true;
     private Thread satStatusProvider;
     private GnssStatus.Callback gnssStatus;
+
+    private static EditableParameter.IntegerParameter PRIORITY_PARAMETER= SOURCE_PRIORITY_PARAMETER.clone(40);
     AndroidPositionHandler(String name, GpsService ctx, NmeaQueue queue) {
         super(name,ctx,queue);
         parameterDescriptions.addParams(
                 ENABLED_PARAMETER,
-                SOURCENAME_PARAMETER
+                SOURCENAME_PARAMETER,
+                PRIORITY_PARAMETER
                 );
         status.canEdit=true;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -82,6 +85,7 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
                 @Override
                 public void onSatelliteStatusChanged(@NonNull GnssStatus status) {
                     SentenceFactory sf=SentenceFactory.getInstance();
+                    int priority=getPriority(PRIORITY_PARAMETER);
                         try {
                             int numSat = 0;
                             ArrayList<SatelliteInfo> sats = new ArrayList<SatelliteInfo>();
@@ -107,7 +111,7 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
                                     glist.add(sats.get(j));
                                 }
                                 gsv.setSatelliteInfo(glist);
-                                queue.add(gsv.toSentence(), getSourceName());
+                                queue.add(gsv.toSentence(), getSourceName(), priority);
                             }
                             Location loc = location;
                             if (loc != null && (System.currentTimeMillis() <= (lastValidLocation + MAXLOCWAIT))) {
@@ -118,7 +122,7 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
                                 fsats = fixSats.toArray(fsats);
                                 gsa.setSatelliteIds(fsats);
                                 //TODO: XDOP
-                                queue.add(gsa.toSentence(), getSourceName());
+                                queue.add(gsa.toSentence(), getSourceName(),priority);
                             }
                         }catch (Throwable t){
                             AvnLog.e("error in sat status loop",t);
@@ -159,6 +163,7 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
             satStatusProvider = new Thread(new Runnable() {
                 @Override
                 public void run() {
+                    int priority=getPriority(PRIORITY_PARAMETER);
                     SentenceFactory sf = SentenceFactory.getInstance();
                     while (!shouldStop(startSequence)) {
                         try {
@@ -188,7 +193,7 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
                                     glist.add(sats.get(j));
                                 }
                                 gsv.setSatelliteInfo(glist);
-                                queue.add(gsv.toSentence(), getSourceName());
+                                queue.add(gsv.toSentence(), getSourceName(),priority);
                             }
                             Location loc = location;
                             if (loc != null && (System.currentTimeMillis() <= (lastValidLocation + MAXLOCWAIT))) {
@@ -199,7 +204,7 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
                                 fsats = fixSats.toArray(fsats);
                                 gsa.setSatelliteIds(fsats);
                                 //TODO: XDOP
-                                queue.add(gsa.toSentence(), getSourceName());
+                                queue.add(gsa.toSentence(), getSourceName(),priority);
                             }
                         } catch (Throwable t) {
                             AvnLog.e("error in sat status loop", t);
@@ -233,7 +238,7 @@ public class AndroidPositionHandler extends ChannelWorker implements LocationLis
             try {
                 //build an NMEA RMC record and write out
                 RMCSentence rmc=positionToRmc(location);
-                queue.add(rmc.toSentence(),getSourceName());
+                queue.add(rmc.toSentence(),getSourceName(),getPriority(PRIORITY_PARAMETER));
             }catch(Exception e){
                 AvnLog.e("unable to create RMC from position: "+e);
             }

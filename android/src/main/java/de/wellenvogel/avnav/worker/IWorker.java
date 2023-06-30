@@ -34,6 +34,7 @@ public interface IWorker {
     void check() throws JSONException;
     String getTypeName();
     void start(PermissionCallback permissionCallback);
+    public EditableParameter.EditableParameterInterface getParameter(EditableParameter.EditableParameterInterface nameAndType, boolean fallBack);
 
     void onResume();
 }

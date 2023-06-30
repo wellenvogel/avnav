@@ -1,6 +1,7 @@
 package de.wellenvogel.avnav.worker;
 
 import android.location.Location;
+import android.os.SystemClock;
 import android.util.Log;
 
 import net.sf.marineapi.nmea.parser.SentenceFactory;
@@ -61,8 +62,8 @@ public class Decoder extends Worker {
     private long lastAisCleanup=0;
     private AisStore store=null;
     private GSVStore currentGsvStore=null;
-    private final SatStatus stat=new SatStatus(0,0);
     private Location location=null;
+    private int locationPriority=0;
     private long lastPositionReceived=0;
     public static final String LOGPRFX="AvNav:Decoder";
     private NmeaQueue queue;
@@ -77,6 +78,8 @@ public class Decoder extends Worker {
             EditableParameter.IntegerParameter("aisAge", R.string.labelSettingsAisLifetime,1200);
     public static final EditableParameter.StringParameter OWN_MMSI= new
             EditableParameter.StringParameter("ownMMSI",R.string.labelSettingsOwnMMSI,"");
+    private boolean gpsEnabled=false;
+    private SatStatus satStatus=null;
     private void addParameters(){
         parameterDescriptions.addParams(OWN_MMSI,POSITION_AGE, NMEA_AGE,AIS_AGE,READ_TIMEOUT_PARAMETER);
     }
@@ -84,13 +87,16 @@ public class Decoder extends Worker {
         public long timeout;
         public JSONObject data=new JSONObject();
         public int priority=0;
+        public AuxiliaryEntry(int priority){
+            this.priority=priority;
+        }
     }
 
 
     private final HashMap<String,AuxiliaryEntry> auxiliaryData=new HashMap<String,AuxiliaryEntry>();
 
-    private void addAuxiliaryData(String key, AuxiliaryEntry entry,long maxAge){
-        long now=System.currentTimeMillis();
+    private synchronized void addAuxiliaryData(String key, AuxiliaryEntry entry,long maxAge){
+        long now=SystemClock.uptimeMillis();
         entry.timeout=now+maxAge;
         AuxiliaryEntry current=auxiliaryData.get(key);
         if (current != null){
@@ -101,8 +107,8 @@ public class Decoder extends Worker {
         }
         auxiliaryData.put(key,entry);
     }
-    private void mergeAuxiliaryData(JSONObject json) throws JSONException {
-        long now=System.currentTimeMillis();
+    private synchronized void mergeAuxiliaryData(JSONObject json) throws JSONException {
+        long now=SystemClock.uptimeMillis();
         //TODO: consider timestamp
         for (AuxiliaryEntry e: auxiliaryData.values()){
             if (e.timeout < now) continue;
@@ -118,20 +124,54 @@ public class Decoder extends Worker {
     static class GSVStore{
         public static final int MAXGSV=20; //max number of gsv sentences without one that is the last
         public static final int GSVAGE=60000; //max age of gsv data in ms
-        int numGsv=0;
-        int lastReceived=0;
-        boolean isValid=false;
-        long validDate=0;
-        long lastReceivedTime=System.currentTimeMillis();
+        private int numGsv=0;
+        private int lastReceived=0;
+        private boolean isValid=false;
+        private long validDate=0;
+        private long lastReceivedTime=SystemClock.uptimeMillis();
+        private int sourcePriority=0;
+        private int numUsed=0;
+        private HashMap<Integer,GSVSentence> sentences=new HashMap<Integer,GSVSentence>();
 
-        HashMap<Integer,GSVSentence> sentences=new HashMap<Integer,GSVSentence>();
-        public void addSentence(GSVSentence gsv){
-            lastReceivedTime=System.currentTimeMillis();
+        public GSVStore(int priority){
+            sourcePriority=priority;
+        }
+        public boolean setSourcePriority(int priority){
+            //we let the position set our priority
+            lastReceivedTime=SystemClock.uptimeMillis();
+            if (priority != sourcePriority){
+                numUsed=0;
+                lastReceived=0;
+                sentences.clear();
+                numGsv=0;
+                isValid=false;
+                sourcePriority=priority;
+                return true;
+            }
+            return false;
+        }
+        public void addSentence(GSVSentence gsv, int priority){
+            if (priority < sourcePriority){
+                if (! isOutDated()) return;
+            }
+            lastReceivedTime=SystemClock.uptimeMillis();
+            if (priority != sourcePriority){
+                sentences.clear();
+                isValid=false;
+                validDate=0;
+                numGsv=0;
+                sourcePriority=priority;
+                if (! gsv.isFirst()) return;
+            }
             if (gsv.isFirst()){
                 numGsv=gsv.getSentenceCount();
                 sentences.clear();
                 isValid=false;
                 validDate=0;
+            }
+            if (sentences.size() >= (numGsv-1) && ! gsv.isLast()){
+                AvnLog.e("too many gsv sentences without last");
+                return;
             }
             lastReceived=gsv.getSentenceIndex();
             sentences.put(gsv.getSentenceIndex(),gsv);
@@ -140,13 +180,18 @@ public class Decoder extends Worker {
                     AvnLog.e("missing GSV sentence expected count="+numGsv+", has="+sentences.size());
                 }
                 isValid=true;
-                validDate=System.currentTimeMillis();
+                validDate=SystemClock.uptimeMillis();
+            }
+        }
+        public void setNumUsed(int num, int priority){
+            if (priority == sourcePriority){
+                numUsed=num;
             }
         }
         public boolean getValid(){
             if (! isValid) return false;
             if (validDate == 0) return false;
-            long now=System.currentTimeMillis();
+            long now=SystemClock.uptimeMillis();
             if ((now-validDate) > GSVAGE) return false;
             return true;
         }
@@ -157,8 +202,12 @@ public class Decoder extends Worker {
             }
             return 0;
         }
+        public int getNumUsed(){
+            if (! isValid) return 0;
+            return numUsed;
+        }
         public boolean isOutDated(){
-            long now=System.currentTimeMillis();
+            long now=SystemClock.uptimeMillis();
             return ((now-lastReceivedTime) > GSVAGE);
         }
     }
@@ -220,11 +269,10 @@ public class Decoder extends Worker {
         public void run(int startSequence) throws JSONException {
             store=new AisStore(OWN_MMSI.fromJson(parameters));
             int noDataTime=READ_TIMEOUT_PARAMETER.fromJson(parameters)*1000;
-            int numGsv = 0; //number of gsv sentences without being the last
             long lastConnect = 0;
             int sequence = -1;
             SentenceFactory factory = SentenceFactory.getInstance();
-            AisPacketParser aisparser = new AisPacketParser();
+            HashMap<Integer,AisPacketParser> aisparsers=new HashMap<>();
             Thread cleanupThread=new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -251,22 +299,16 @@ public class Decoder extends Worker {
                     entry = queue.fetch(sequence, 2000);
                 } catch (InterruptedException e) {
                     if (shouldStop(startSequence)) return;
-                    if ((lastReceived+ noDataTime) < System.currentTimeMillis()){
-                        stat.gpsEnabled=false;
+                    if ((lastReceived+ noDataTime) < SystemClock.uptimeMillis()){
+                        gpsEnabled=false;
                         setStatus(WorkerStatus.Status.INACTIVE,"no NMEA data");
                     }
                     sleep(2000);
                     continue;
                 }
-                if ((lastReceived+ noDataTime) < System.currentTimeMillis()){
-                    stat.gpsEnabled=false;
+                if ((lastReceived+ noDataTime) < SystemClock.uptimeMillis()){
+                    gpsEnabled=false;
                     setStatus(WorkerStatus.Status.INACTIVE,"no NMEA data");
-                }
-                if (currentGsvStore == null || currentGsvStore.isOutDated()){
-                    synchronized (stat){
-                        stat.numSat=0;
-                        stat.numUsed=0;
-                    }
                 }
                 if (entry == null) {
                     continue;
@@ -278,8 +320,8 @@ public class Decoder extends Worker {
                         //NMEA
                         if (SentenceValidator.isValid(line)) {
                             setStatus(WorkerStatus.Status.NMEA,"receiving NMEA data");
-                            stat.gpsEnabled=true;
-                            lastReceived=System.currentTimeMillis();
+                            gpsEnabled=true;
+                            lastReceived=SystemClock.uptimeMillis();
                             try {
                                 line = correctTalker(line);
                                 Sentence s = factory.createParser(line);
@@ -287,42 +329,31 @@ public class Decoder extends Worker {
                                     lastDate = ((DateSentence) s).getDate();
                                 }
                                 if (s instanceof GSVSentence) {
-                                    numGsv++;
-                                    if (currentGsvStore == null) currentGsvStore = new GSVStore();
+                                    if (currentGsvStore == null) currentGsvStore = new GSVStore(locationPriority);
                                     GSVSentence gsv = (GSVSentence) s;
-                                    currentGsvStore.addSentence(gsv);
+                                    currentGsvStore.addSentence(gsv,entry.priority);
                                     AvnLog.dfs("%s: GSV sentence (%d/%d) numSat=%d" ,
                                             getTypeName() ,gsv.getSentenceIndex(),
                                             gsv.getSentenceCount(),gsv.getSatelliteCount());
                                     if (currentGsvStore.getValid()) {
-                                        numGsv = 0;
-                                        synchronized (stat){
-                                            stat.numSat=currentGsvStore.getSatCount();
-                                        }
-                                        currentGsvStore = new GSVStore();
-                                        AvnLog.dfs("%s: GSV sentence last, numSat=%d",getTypeName(),stat.numSat);
+                                        satStatus=new SatStatus(currentGsvStore.getSatCount(),currentGsvStore.getNumUsed(),gpsEnabled);
+                                        currentGsvStore = new GSVStore(locationPriority);
+                                        AvnLog.dfs("%s: GSV sentence last, numSat=%d",getTypeName(),satStatus.numSat);
                                     }
-                                    if (numGsv > GSVStore.MAXGSV) {
-                                        AvnLog.e(getTypeName() + ": to many gsv sentences without a final one " + numGsv);
-                                        synchronized (stat) {
-                                            stat.numSat = 0;
-                                            stat.numUsed=0;
-                                        }
-                                        currentGsvStore=null;
-                                    }
-
                                     continue;
                                 }
                                 if (s instanceof GSASentence) {
-                                    stat.numUsed = ((GSASentence) s).getSatelliteIds().length;
+                                    if (currentGsvStore != null){
+                                        currentGsvStore.setNumUsed(((GSASentence) s).getSatelliteIds().length,entry.priority);
+                                    }
                                     AvnLog.dfs("%s: GSA sentence, used=%d",
-                                            getTypeName(),stat.numUsed);
+                                            getTypeName(),satStatus.numUsed);
                                     continue;
                                 }
                                 if (s instanceof MWVSentence) {
                                     MWVSentence m = (MWVSentence) s;
                                     AvnLog.d("%s: MWV sentence",getTypeName() );
-                                    AuxiliaryEntry e = new AuxiliaryEntry();
+                                    AuxiliaryEntry e = new AuxiliaryEntry(entry.priority);
                                     WindKeys keys=new WindKeys(m.isTrue()?WindKeys.TRUEA:WindKeys.APP);
                                     e.data.put(keys.angle, m.getAngle());
                                     double speed = m.getSpeed();
@@ -339,7 +370,7 @@ public class Decoder extends Worker {
                                 if (s instanceof MWDSentence){
                                     MWDSentence m = (MWDSentence) s;
                                     AvnLog.d("%s: MWD sentence",getTypeName() );
-                                    AuxiliaryEntry e = new AuxiliaryEntry();
+                                    AuxiliaryEntry e = new AuxiliaryEntry(entry.priority);
                                     WindKeys keys=new WindKeys(WindKeys.TRUED);
                                     boolean hasData=false;
                                     double direction=m.getTrueWindDirection();
@@ -369,7 +400,7 @@ public class Decoder extends Worker {
                                 if (s instanceof VWRSentence){
                                     VWRSentence w=(VWRSentence)s;
                                     AvnLog.d("%s: VWR sentence",getTypeName() );
-                                    AuxiliaryEntry e = new AuxiliaryEntry();
+                                    AuxiliaryEntry e = new AuxiliaryEntry(entry.priority);
                                     double wangle=w.getWindAngle();
                                     Direction wdir=w.getDirectionLeftRight();
                                     if (wdir == Direction.LEFT) wangle=360-wangle;
@@ -390,7 +421,7 @@ public class Decoder extends Worker {
                                 if (s instanceof DPTSentence) {
                                     DPTSentence d = (DPTSentence) s;
                                     AvnLog.d("%s: DPT sentence",getTypeName() );
-                                    AuxiliaryEntry e = new AuxiliaryEntry();
+                                    AuxiliaryEntry e = new AuxiliaryEntry(entry.priority);
                                     double depth = d.getDepth();
                                     e.data.put("depthBelowTransducer", depth);
                                     double offset = d.getOffset();
@@ -405,7 +436,7 @@ public class Decoder extends Worker {
                                 if (s instanceof DBTSentence) {
                                     DBTSentence d = (DBTSentence) s;
                                     AvnLog.d("%s: DBT sentence",getTypeName() );
-                                    AuxiliaryEntry e = new AuxiliaryEntry();
+                                    AuxiliaryEntry e = new AuxiliaryEntry(entry.priority);
                                     double depth = d.getDepth();
                                     e.data.put("depthBelowTransducer", depth);
                                     addAuxiliaryData(s.getSentenceId(), e,posAge);
@@ -414,7 +445,7 @@ public class Decoder extends Worker {
                                 if (s instanceof MTWSentence) {
                                     MTWSentence d = (MTWSentence) s;
                                     AvnLog.d("%s: MTW sentence",getTypeName() );
-                                    AuxiliaryEntry e = new AuxiliaryEntry();
+                                    AuxiliaryEntry e = new AuxiliaryEntry(entry.priority);
                                     double waterTemp = d.getTemperature() + 273.15;
                                     e.data.put("waterTemp", waterTemp);
                                     addAuxiliaryData(s.getSentenceId(), e,posAge);
@@ -428,7 +459,7 @@ public class Decoder extends Worker {
                                         String tunit = transducer.getUnits();
                                         double tval = transducer.getValue();
                                         if (tname != null && ttype != null && tunit != null) {
-                                            AuxiliaryEntry e = new AuxiliaryEntry();
+                                            AuxiliaryEntry e = new AuxiliaryEntry(entry.priority);
                                             e.data.put("transducers." + tname, convertTransducerValue(ttype, tunit, tval));
                                             addAuxiliaryData(s.getSentenceId() + "." + tname, e,auxAge);
                                         }
@@ -438,7 +469,7 @@ public class Decoder extends Worker {
                                 if (s instanceof HDMSentence ){
                                     HDMSentence sh=(HDMSentence)s;
                                     AvnLog.dfs("%s: HDM sentence",getTypeName() );
-                                    AuxiliaryEntry e = new AuxiliaryEntry();
+                                    AuxiliaryEntry e = new AuxiliaryEntry(entry.priority);
                                     e.data.put("headingMag",sh.getHeading());
                                     addAuxiliaryData(s.getSentenceId(),e,posAge);
                                     continue;
@@ -446,7 +477,7 @@ public class Decoder extends Worker {
                                 if (s instanceof HDTSentence ){
                                     HDTSentence sh=(HDTSentence)s;
                                     AvnLog.dfs("%s: %s sentence",getTypeName(),s.getSentenceId() );
-                                    AuxiliaryEntry e = new AuxiliaryEntry();
+                                    AuxiliaryEntry e = new AuxiliaryEntry(entry.priority);
                                     e.data.put("headingTrue",sh.getHeading());
                                     addAuxiliaryData(s.getSentenceId(),e,posAge);
                                     continue;
@@ -454,7 +485,7 @@ public class Decoder extends Worker {
                                 if (s instanceof VHWSentence){
                                     VHWSentence sv=(VHWSentence)s;
                                     AvnLog.dfs("%s: %s sentence",getTypeName(), s.getSentenceId());
-                                    AuxiliaryEntry e = new AuxiliaryEntry();
+                                    AuxiliaryEntry e = new AuxiliaryEntry(entry.priority);
                                     boolean hasData=false;
                                     try {
                                         e.data.put("headingMag", sv.getMagneticHeading());
@@ -479,7 +510,7 @@ public class Decoder extends Worker {
                                 if (s instanceof HDGSentence){
                                     HDGSentence sh=(HDGSentence)s;
                                     AvnLog.dfs("%s: %s sentence",getTypeName(),s.getSentenceId() );
-                                    AuxiliaryEntry e = new AuxiliaryEntry();
+                                    AuxiliaryEntry e = new AuxiliaryEntry(entry.priority);
                                     double heading=sh.getHeading();
                                     try{
                                         heading+=sh.getDeviation();
@@ -526,31 +557,56 @@ public class Decoder extends Worker {
                                 }
                                 if (time != null && lastDate != null && p != null) {
                                     synchronized (this) {
-                                        Location lastLocation = location;
-                                        Location newLocation = null;
-                                        if (lastLocation != null) {
-                                            newLocation = new Location(lastLocation);
-                                        } else {
-                                            newLocation = new Location((String) null);
+                                        boolean setValues=false;
+                                        Location lastLocation=null;
+                                        if (entry.priority == locationPriority){
+                                            setValues=true;
+                                            lastLocation=location;
                                         }
-                                        lastPositionReceived = System.currentTimeMillis();
-                                        newLocation.setLatitude(p.getLatitude());
-                                        newLocation.setLongitude(p.getLongitude());
-                                        newLocation.setTime(AvnUtil.toTimeStamp(lastDate, time));
-                                        location = newLocation;
-                                        if (s.getSentenceId().equals("RMC")) {
-                                            try {
-                                                location.setSpeed((float) (((RMCSentence) s).getSpeed() / AvnUtil.msToKn));
-                                            } catch (Exception i) {
-                                                AvnLog.dfs("%s: Exception querying speed: %s",getTypeName() ,i.getLocalizedMessage());
-                                            }
-                                            try {
-                                                location.setBearing((float) (((RMCSentence) s).getCourse()));
-                                            } catch (Exception i) {
-                                                AvnLog.dfs("%s: Exception querying bearing: %s",getTypeName() , i.getLocalizedMessage());
+                                        if (entry.priority > locationPriority){
+                                            locationPriority=entry.priority;
+                                            setValues=true;
+                                        }
+                                        if (entry.priority < locationPriority){
+                                            if (! locationValid()){
+                                                setValues=true;
+                                                locationPriority=entry.priority;
                                             }
                                         }
-                                        AvnLog.d(LOGPRFX, getTypeName() + ": location: " + location);
+                                        if (setValues) {
+                                            if (currentGsvStore != null) {
+                                                if (currentGsvStore.setSourcePriority(locationPriority)){
+                                                    satStatus=null;
+                                                };
+                                            }
+                                            Location newLocation = null;
+                                            if (lastLocation != null) {
+                                                newLocation = new Location(lastLocation);
+                                            } else {
+                                                newLocation = new Location((String) null);
+                                            }
+                                            lastPositionReceived = SystemClock.uptimeMillis();
+                                            newLocation.setLatitude(p.getLatitude());
+                                            newLocation.setLongitude(p.getLongitude());
+                                            newLocation.setTime(AvnUtil.toTimeStamp(lastDate, time));
+                                            location = newLocation;
+                                            if (s.getSentenceId().equals("RMC")) {
+                                                try {
+                                                    location.setSpeed((float) (((RMCSentence) s).getSpeed() / AvnUtil.msToKn));
+                                                } catch (Exception i) {
+                                                    AvnLog.dfs("%s: Exception querying speed: %s", getTypeName(), i.getLocalizedMessage());
+                                                }
+                                                try {
+                                                    location.setBearing((float) (((RMCSentence) s).getCourse()));
+                                                } catch (Exception i) {
+                                                    AvnLog.dfs("%s: Exception querying bearing: %s", getTypeName(), i.getLocalizedMessage());
+                                                }
+                                            }
+                                            AvnLog.d(LOGPRFX, getTypeName() + ": location: " + location);
+                                        }
+                                        else{
+                                            AvnLog.d(LOGPRFX,getTypeName()+": location ignored newPrio="+entry.priority+", existingPrio="+locationPriority);
+                                        }
                                     }
                                 } else {
                                     AvnLog.d(LOGPRFX, getTypeName() + ": ignoring sentence " + line + " - no position or time");
@@ -563,6 +619,11 @@ public class Decoder extends Worker {
                         }
                     }
                     if (line.startsWith("!")) {
+                        AisPacketParser aisparser= aisparsers.get(entry.priority);
+                        if (aisparser == null){
+                            aisparser=new AisPacketParser();
+                            aisparsers.put(entry.priority,aisparser);
+                        }
                         if (Abk.isAbk(line)) {
                             aisparser.newVdm();
                             AvnLog.i(LOGPRFX, getTypeName() + ": ignore abk line " + line);
@@ -572,9 +633,9 @@ public class Decoder extends Worker {
                             if (p != null) {
                                 AisMessage m = p.getAisMessage();
                                 AvnLog.i(LOGPRFX, getTypeName() + ": AisPacket received: " + m.toString());
-                                store.addAisMessage(m);
-                                lastReceived= System.currentTimeMillis();
-                                stat.gpsEnabled=true;
+                                store.addAisMessage(m,entry.priority);
+                                lastReceived= SystemClock.uptimeMillis();
+                                gpsEnabled=true;
                                 setStatus(WorkerStatus.Status.NMEA,"receiving NMEA");
                             }
                         } catch (Exception e) {
@@ -592,7 +653,7 @@ public class Decoder extends Worker {
 
     public void cleanupAis(long lifetime){
         if (store != null) {
-            long now=System.currentTimeMillis();
+            long now=SystemClock.uptimeMillis();
             if (now > (lastAisCleanup+AIS_CLEANUP_INTERVAL)) {
                 lastAisCleanup=now;
                 store.cleanup(lifetime);
@@ -624,9 +685,9 @@ public class Decoder extends Worker {
     }
 
     SatStatus getSatStatus() {
-        synchronized (stat) {
-            return new SatStatus(stat);
-        }
+        SatStatus rt=satStatus;
+        if (rt == null || ! rt.isValid()) rt=new SatStatus(0,0,gpsEnabled);
+        return rt;
     }
 
 
@@ -636,12 +697,16 @@ public class Decoder extends Worker {
         queue.clear();
     }
 
+    private boolean locationValid() throws JSONException {
+        long current=SystemClock.uptimeMillis();
+        if (current > (lastPositionReceived+POSITION_AGE.fromJson(parameters)*1000)){
+            return false;
+        }
+        return true;
+    }
 
     public Location getLocation() throws JSONException {
-        long current=System.currentTimeMillis();
-        if (current > (lastPositionReceived+POSITION_AGE.fromJson(parameters)*1000)){
-            return null;
-        }
+        if (! locationValid()) return null;
         Location rt=location;
         if (rt == null) return rt;
         rt=new Location(rt);
@@ -720,19 +785,32 @@ public class Decoder extends Worker {
         public int numSat=0;
         public int numUsed=0;
         public boolean gpsEnabled; //for external connections this shows if it is connected
+        public long createdTime;
 
-        public SatStatus(int numSat,int numUsed){
+        public SatStatus(int numSat,int numUsed, boolean gpsEnabled){
             this.numSat=numSat;
             this.numUsed=numUsed;
-            this.gpsEnabled=false;
+            this.gpsEnabled=gpsEnabled;
+            this.createdTime= SystemClock.uptimeMillis();
         }
         public SatStatus(SatStatus other){
-
-            this(other.numSat,other.numUsed);
-            this.gpsEnabled=other.gpsEnabled;
+            this(other.numSat,other.numUsed,other.gpsEnabled);
+            this.createdTime=other.createdTime;
+        }
+        public boolean isValid(){
+            return (SystemClock.uptimeMillis()-createdTime) < GSVStore.GSVAGE;
         }
         public String toString(){
             return "Sat num="+numSat+", used="+numUsed;
         }
+    }
+
+    public synchronized void cleanup(){
+        store.cleanup(-1); //cleanup all
+        locationPriority=0;
+        location=null;
+        lastPositionReceived=0;
+        auxiliaryData.clear();
+        satStatus=null;
     }
 }
