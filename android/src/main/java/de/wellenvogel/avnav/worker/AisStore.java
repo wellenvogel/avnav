@@ -44,25 +44,25 @@ public class AisStore {
         }
         return false;
     }
-    public synchronized void addAisMessage(AisMessage msg, int priority){
+    public synchronized boolean addAisMessage(AisMessage msg, int priority){
         if (! isHandledMessage(msg)){
             AvnLog.i(LOGPRFX,"ignore AIS message "+msg);
-            return;
+            return false;
         }
         JSONObject o=objectFromMessage(msg);
         if (o == null){
             AvnLog.i(LOGPRFX,"unable to convert AIS message "+msg);
-            return;
+            return false;
         }
         try {
             int mmsi=o.getInt("mmsi");
             if (mmsi == 0){
                 AvnLog.i(LOGPRFX,"ignore invalid message with mmsi 0");
-                return;
+                return false;
             }
             if (mmsi == ownMmsi){
                 AvnLog.i("ignoring own MMSI "+mmsi);
-                return;
+                return false;
             }
             int type=msg.getMsgId();
             long now= SystemClock.uptimeMillis();
@@ -73,7 +73,7 @@ public class AisStore {
                     if (oldPrio > priority) {
                         //cleanup will remove old higher prio entries
                         AvnLog.d(LOGPRFX, "AIS msg " + type + " ignored for " + mmsi + ", newPrio=" + priority + ", existingPrio=" + oldPrio);
-                        return;
+                        return false;
                     }
                     if (oldPrio < priority) {
                         old = null;
@@ -111,6 +111,7 @@ public class AisStore {
         } catch (JSONException e) {
             e.printStackTrace();
         }
+        return true;
     }
 
     public static JSONObject objectFromMessage(AisMessage msg){

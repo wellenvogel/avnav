@@ -362,7 +362,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
                 notificationBuilder.setOngoing(true);
                 notificationBuilder.setAutoCancel(false);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    notificationBuilder.setVisibility(Notification.VISIBILITY_PUBLIC);
+                    notificationBuilder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
                 }
                 NotificationManager mNotificationManager =
                         (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -1589,31 +1589,30 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
         if (decoder != null) {
             Decoder.SatStatus st = decoder.getSatStatus();
             Location loc = decoder.getLocation();
-            String addr = "decoder";
-            nmea.put("source", decoder.getSourceName());
+            nmea.put("source", decoder.getLastPositionSource());
             if (loc != null) {
                 nmea.put("status", "green");
-                nmea.put("info", "(" + addr + ") sats: " + st.numSat + " / " + st.numUsed);
+                nmea.put("info", "sats: " + st.getNumSat() + " / " + st.getNumUsed());
             } else {
-                if (st.gpsEnabled) {
-                    nmea.put("info", "(" + addr + ") con, sats: " + st.numSat + " / " + st.numUsed);
+                if (st.isGpsEnabled()) {
+                    nmea.put("info", "con, sats: " + st.getNumSat() + " / " + st.getNumUsed());
                     nmea.put("status", "yellow");
                 } else {
-                    nmea.put("info", "(" + addr + ") disconnected");
+                    nmea.put("info", "disconnected");
                     nmea.put("status", "red");
                 }
             }
-            ais.put("source", addr);
+            ais.put("source", decoder.getLastAisSource());
             int aisTargets = decoder.numAisData();
             if (aisTargets > 0) {
                 ais.put("status", "green");
-                ais.put("info", "(" + addr + "), " + aisTargets + " targets");
+                ais.put("info", aisTargets + " targets");
             } else {
-                if (st.gpsEnabled) {
-                    ais.put("info", "(" + addr + ") connected");
+                if (st.isGpsEnabled()) {
+                    ais.put("info", "connected");
                     ais.put("status", "yellow");
                 } else {
-                    ais.put("info", "(" + addr + ") disconnected");
+                    ais.put("info", "disconnected");
                     ais.put("status", "red");
                 }
             }

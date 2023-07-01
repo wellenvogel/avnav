@@ -69,6 +69,8 @@ public class Decoder extends Worker {
     private NmeaQueue queue;
     private static final long AIS_CLEANUP_INTERVAL=60000;
     private long lastReceived=0;
+    private String lastPositionSource="";
+    private String lastAisSource="";
 
     public static final EditableParameter.IntegerParameter POSITION_AGE= new
             EditableParameter.IntegerParameter("posAge",R.string.labelSettingsPosAge,10);
@@ -272,7 +274,7 @@ public class Decoder extends Worker {
             long lastConnect = 0;
             int sequence = -1;
             SentenceFactory factory = SentenceFactory.getInstance();
-            HashMap<Integer,AisPacketParser> aisparsers=new HashMap<>();
+            HashMap<String,AisPacketParser> aisparsers=new HashMap<>();
             Thread cleanupThread=new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -579,6 +581,7 @@ public class Decoder extends Worker {
                                                     satStatus=null;
                                                 };
                                             }
+                                            lastPositionSource=entry.source;
                                             Location newLocation = null;
                                             if (lastLocation != null) {
                                                 newLocation = new Location(lastLocation);
@@ -619,10 +622,10 @@ public class Decoder extends Worker {
                         }
                     }
                     if (line.startsWith("!")) {
-                        AisPacketParser aisparser= aisparsers.get(entry.priority);
+                        AisPacketParser aisparser= aisparsers.get(entry.source);
                         if (aisparser == null){
                             aisparser=new AisPacketParser();
-                            aisparsers.put(entry.priority,aisparser);
+                            aisparsers.put(entry.source,aisparser);
                         }
                         if (Abk.isAbk(line)) {
                             aisparser.newVdm();
@@ -633,7 +636,9 @@ public class Decoder extends Worker {
                             if (p != null) {
                                 AisMessage m = p.getAisMessage();
                                 AvnLog.i(LOGPRFX, getTypeName() + ": AisPacket received: " + m.toString());
-                                store.addAisMessage(m,entry.priority);
+                                if (store.addAisMessage(m,entry.priority)){
+                                    lastAisSource=entry.source;
+                                };
                                 lastReceived= SystemClock.uptimeMillis();
                                 gpsEnabled=true;
                                 setStatus(WorkerStatus.Status.NMEA,"receiving NMEA");
@@ -685,9 +690,9 @@ public class Decoder extends Worker {
     }
 
     SatStatus getSatStatus() {
-        SatStatus rt=satStatus;
-        if (rt == null || ! rt.isValid()) rt=new SatStatus(0,0,gpsEnabled);
-        return rt;
+        SatStatus st=satStatus;
+        if (st == null) st=new SatStatus(0,0,gpsEnabled);
+        return st;
     }
 
 
@@ -782,10 +787,10 @@ public class Decoder extends Worker {
     }
 
     public static class SatStatus{
-        public int numSat=0;
-        public int numUsed=0;
-        public boolean gpsEnabled; //for external connections this shows if it is connected
-        public long createdTime;
+        private int numSat=0;
+        private int numUsed=0;
+        private boolean gpsEnabled; //for external connections this shows if it is connected
+        private long createdTime;
 
         public SatStatus(int numSat,int numUsed, boolean gpsEnabled){
             this.numSat=numSat;
@@ -793,10 +798,21 @@ public class Decoder extends Worker {
             this.gpsEnabled=gpsEnabled;
             this.createdTime= SystemClock.uptimeMillis();
         }
-        public SatStatus(SatStatus other){
-            this(other.numSat,other.numUsed,other.gpsEnabled);
-            this.createdTime=other.createdTime;
+
+        public int getNumSat() {
+            if (! isValid()) return 0;
+            return numSat;
         }
+
+        public int getNumUsed() {
+            if (! isValid()) return 0;
+            return numUsed;
+        }
+
+        public boolean isGpsEnabled() {
+            return gpsEnabled;
+        }
+
         public boolean isValid(){
             return (SystemClock.uptimeMillis()-createdTime) < GSVStore.GSVAGE;
         }
@@ -812,5 +828,13 @@ public class Decoder extends Worker {
         lastPositionReceived=0;
         auxiliaryData.clear();
         satStatus=null;
+    }
+
+    public String getLastPositionSource() {
+        return lastPositionSource;
+    }
+
+    public String getLastAisSource() {
+        return lastAisSource;
     }
 }

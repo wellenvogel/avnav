@@ -184,7 +184,7 @@ public abstract class Worker implements IWorker {
             n=SOURCENAME_PARAMETER.fromJson(parameters);
         } catch (JSONException e) {
         }
-        if (n == null || n.isEmpty()) return status.typeName;
+        if (n == null || n.isEmpty()) return status.typeName+":"+getId();
         return n;
     }
 
