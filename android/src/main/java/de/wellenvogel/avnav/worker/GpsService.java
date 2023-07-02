@@ -1346,7 +1346,7 @@ public class GpsService extends Service implements RouteHandler.UpdateReceiver, 
 
             }
         }
-        for (BroadcastReceiver r: new BroadcastReceiver[]{broadCastReceiver,triggerReceiver,broadCastReceiverStop,usbReceiver}){
+        for (BroadcastReceiver r: new BroadcastReceiver[]{broadCastReceiver,triggerReceiver,broadCastReceiverStop,usbReceiver,broadCastReceiverPlugin}){
             if (r != null){
                 try{
                     unregisterReceiver(r);
