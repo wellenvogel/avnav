@@ -1473,13 +1473,15 @@ MapHolder.prototype.pixelDistance=function(point1,point2){
 /**
  * set the map rotation
  * @param {number} rotation in degrees
+ * @param {olCoordinate} opt_anchor anchor coordinate in lon/lat
  */
-MapHolder.prototype.setMapRotation=function(rotation){
+MapHolder.prototype.setMapRotation=function(rotation,opt_anchor){
     if (rotation === undefined) return;
-    this.getView().setRotation(rotation==0?0:(360-rotation)*Math.PI/180);
-    if (this.gpsLocked){
-        this._centerToReference();
-    }
+    let view=this.getView();
+    if (! view) return;
+    let rot=rotation==0?0:(360-rotation)*Math.PI/180;
+    let delta=rot-view.getRotation();
+    view.adjustRotation(delta,this.transformToMap(opt_anchor !== undefined?opt_anchor:this.referencePoint));
 };
 
 MapHolder.prototype.moveCenterPercent=function(deltax,deltay){
@@ -1507,10 +1509,20 @@ MapHolder.prototype.setCourseUp=function(on,opt_noRemote){
     }
     let old=this.courseUp;
     if (old === on) return on;
+    let anchor=undefined;
+    if (! this.gpsLocked){
+        //our reference point is the chart center
+        //but we would like to rotate around the boat
+        //if we have a valid position
+        let gps=globalStore.getMultiple(keys.nav.gps);
+        if (gps.valid){
+            anchor=[gps.position.lon,gps.position.lat];
+        }
+    }
     if (on){
         let direction=globalStore.getData(keys.nav.display.mapDirection);
         if (direction !== undefined) {
-            this.setMapRotation(direction);
+            this.setMapRotation(direction,anchor);
             this.courseUp = on;
             globalStore.storeData(keys.map.courseUp, on);
         }
@@ -1519,7 +1531,7 @@ MapHolder.prototype.setCourseUp=function(on,opt_noRemote){
     else{
         this.courseUp=on;
         globalStore.storeData(keys.map.courseUp,on);
-        this.setMapRotation(0);
+        this.setMapRotation(0,anchor);
 
     }
 };
@@ -1535,6 +1547,7 @@ MapHolder.prototype.setGpsLock=function(lock,opt_noRemote){
     if (! globalStore.getData(keys.properties.layers.boat) && lock) return;
     globalStore.storeData(keys.map.lockPosition,lock);
     if (lock) this.setCenter(globalStore.getData(keys.nav.gps.position),opt_noRemote,this.getBoatOffset());
+    else this.setBoatOffset();
     this.sendReference();
     this.checkAutoZoom();
 };
