@@ -345,11 +345,11 @@ public class Decoder extends Worker {
                                     continue;
                                 }
                                 if (s instanceof GSASentence) {
-                                    if (currentGsvStore != null){
-                                        currentGsvStore.setNumUsed(((GSASentence) s).getSatelliteIds().length,entry.priority);
+                                    if (currentGsvStore != null) {
+                                        currentGsvStore.setNumUsed(((GSASentence) s).getSatelliteIds().length, entry.priority);
+                                        AvnLog.dfs("%s: GSA sentence, used=%d",
+                                                getTypeName(), currentGsvStore.getNumUsed());
                                     }
-                                    AvnLog.dfs("%s: GSA sentence, used=%d",
-                                            getTypeName(),satStatus.numUsed);
                                     continue;
                                 }
                                 if (s instanceof MWVSentence) {
