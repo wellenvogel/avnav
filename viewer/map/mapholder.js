@@ -26,6 +26,7 @@ import {Map as olMap,View as olView,
 import * as olExtent from 'ol/extent';
 import * as olCoordinate from 'ol/coordinate';
 import * as olInteraction from 'ol/interaction';
+import EventType from "ol/events/EventType";
 import {Polygon as olPolygonGemotery, Point as olPointGeometry} from 'ol/geom';
 import {Vector as olVectorSource, XYZ as olXYZSource} from 'ol/source';
 import {Vector as olVectorLayer} from 'ol/layer';
@@ -966,7 +967,13 @@ MapHolder.prototype.initMap=function(){
         });
         interactions.push(new MouseWheelZoom({
            condition: (ev)=>{
-               this.userAction(ev.type === 'pointerdown' || ev.type === 'pointermove' || ev.type === 'pointerdrag' || ev.type === 'pointerup');
+               if (ev.type === EventType.WHEEL){
+                   if (this.gpsLocked){
+                       //always have the anchor at the boat position if locked
+                       ev.coordinate=this.transformToMap(this.referencePoint);
+                   }
+                   this.userAction(true);
+               }
                return true;
            }
         }));
@@ -1082,9 +1089,8 @@ MapHolder.prototype.postrender=function(evt){
     globalStore.storeData(keys.map.centerPosition,rt);
     if (! this.lastCenter || this.lastCenter[0] !== newCenter[0] || this.lastCenter[1] !== newCenter[1] || newZoom !== this.zoom) {
         this.lastCenter = newCenter;
+        let zoomChanged=this.zoom !== newZoom;
         this.zoom = newZoom;
-        let p = new navobjects.Point();
-        p.fromCoord(this.transformFromMap(newCenter));
         let allowMove = globalStore.getData(keys.properties.mapLockMove) && this.isInUserActionGuard(true);
         /*
         if not gps locked:
@@ -1111,6 +1117,11 @@ MapHolder.prototype.postrender=function(evt){
                         this.saveCenter();
                         this.sendReference();
                     }
+                }
+            }
+            else{
+                if (zoomChanged) {
+                    //this._centerToReference();
                 }
             }
         }
@@ -1174,6 +1185,7 @@ MapHolder.prototype.setZoom=function(newZoom){
     if (this.olmap.getView().getZoom() != newZoom) {
         base.log("set new zoom " + newZoom);
         this.olmap.getView().setZoom(newZoom);
+        this._centerToReference();
     }
 };
 /**
