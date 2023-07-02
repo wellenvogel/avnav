@@ -409,7 +409,8 @@ class SettingsPage extends React.Component{
                     Promise.all(promises)
                         .then(()=> this.values.setState(masterValues))
                         .catch((e)=>Toast(e));
-                }
+                },
+                overflow: true
             },
             {
                 name:'SettingsAndroid',
@@ -454,7 +455,8 @@ class SettingsPage extends React.Component{
             {
                 name: 'SettingsSave',
                 onClick:()=>this.saveSettings(),
-                visible: globalStore.getData(keys.properties.connectedMode,false) && globalStore.getData(keys.gui.capabilities.uploadSettings)
+                visible: globalStore.getData(keys.properties.connectedMode,false) && globalStore.getData(keys.gui.capabilities.uploadSettings),
+                overflow: true
             },
             {
                 name: 'SettingsLoad',
@@ -464,7 +466,8 @@ class SettingsPage extends React.Component{
                         this.loadSettings();
                     });
                 },
-                visible: globalStore.getData(keys.properties.connectedMode,false) && globalStore.getData(keys.gui.capabilities.uploadSettings)
+                visible: globalStore.getData(keys.properties.connectedMode,false) && globalStore.getData(keys.gui.capabilities.uploadSettings),
+                overflow: true
             },
             {
                 name: 'SettingsReload',

@@ -180,7 +180,8 @@ class MainPage extends React.Component {
                 onClick: ()=> {
                     this.props.history.push('downloadpage')
                 },
-                editDisable: true
+                editDisable: true,
+                overflow: true
             },
             {
                 name: 'Connected',
