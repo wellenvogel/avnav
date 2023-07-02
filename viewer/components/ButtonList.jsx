@@ -139,7 +139,7 @@ class ButtonList extends React.Component{
         if (!this.props.hidden) {
             //split the buttons into multiple lists
             for (let k = items.length - 1; k >= 0; k--) {
-                if (items[k].overflow && moveToOverflow >= 0) {
+                if (items[k].overflow && moveToOverflow > 0) {
                     overflowItems.splice(0, 0, items[k]);
                     moveToOverflow--;
                     hasOverflow = true;
