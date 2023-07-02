@@ -1063,7 +1063,7 @@ MapHolder.prototype.initMap=function(){
     globalStore.storeData(keys.map.lockPosition,this.gpsLocked);
 };
 MapHolder.prototype.sendReference=function(){
-    if (this.isInUserActionGuard(true)){
+    if (this.isInUserActionGuard()){
         this.remoteChannel.sendMessage(COMMANDS.setCenter + " " + JSON.stringify(
             {   lat: this.referencePoint[1],
                 lon: this.referencePoint[0],
@@ -1312,11 +1312,13 @@ MapHolder.prototype.navEvent = function () {
 
 };
 
-MapHolder.prototype.centerToGps=function(){
+MapHolder.prototype.centerToGps=function(opt_noUserAction){
     if (! globalStore.getData(keys.nav.gps.valid)) return;
+    if (! opt_noUserAction) this.userAction();
     let gps=globalStore.getData(keys.nav.gps.position);
     this.setBoatOffset(); //reset any boat offset
     this.setCenter(gps);
+    this.sendReference();
 };
 
 MapHolder.prototype.checkAutoZoom=function(opt_force){
@@ -1521,6 +1523,7 @@ MapHolder.prototype.setGpsLock=function(lock,opt_noRemote){
     if (! globalStore.getData(keys.properties.layers.boat) && lock) return;
     globalStore.storeData(keys.map.lockPosition,lock);
     if (lock) this.setCenter(globalStore.getData(keys.nav.gps.position),opt_noRemote,this.getBoatOffset());
+    this.sendReference();
     this.checkAutoZoom();
 };
 
