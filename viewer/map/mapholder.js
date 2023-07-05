@@ -1453,6 +1453,15 @@ MapHolder.prototype.setCenter=function(point,opt_noUserAction,opt_offset){
 };
 
 /**
+ * get the current center in lat/lon
+ * @returns {navobjects.Point}
+ */
+MapHolder.prototype.getCenter=function(){
+    let rt=new navobjects.Point();
+    rt.fromCoord(this.pointFromMap(this.getView().getCenter()));
+    return rt;
+};
+/**
  * get the distance in css pixel for 2 points
  * @param {navobjects.Point}point1
  * @param {navobjects.Point}point2
