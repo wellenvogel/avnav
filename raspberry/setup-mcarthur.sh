@@ -42,6 +42,7 @@ if [ "$1" = $MODE_EN ] ; then
   checkRes
   cat /home/pi/.signalk/settings.json | jq '.pipedProviders += [{ "enabled": "true", "id": "MCARTHUR_SEATALK", "pipeElements": [{ "options" : { "logging" : false, "subOptions" : { "gpio": "GPIO20", "gpioInvert": false }, "type": "Seatalk" }, "type": "providers/simple"}] }]' > /tmp/settings.json
   mv /tmp/settings.json /home/pi/.signalk/settings.json
+  chown pi:pi /home/pi/.signalk/settings.json
   log "needReboot=$needsReboot"
   exit $needsReboot
 fi
