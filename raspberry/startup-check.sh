@@ -207,7 +207,7 @@ else
 fi
 LAST_DATA+=("LAST_MCS='$LAST_MCS'")
 
-declare -A HATS=([PICANM]=setup-picanm.sh [WAVESHAREA8]=setup-waveshare-a8.sh [WAVESHAREA12]=setup-waveshare-a12.sh [WAVESHAREB]=setup-waveshare-b.sh [WAVESHARE2CH]=setup-waveshare-2ch.sh)
+declare -A HATS=([PICANM]=setup-picanm.sh [WAVESHAREA8]=setup-waveshare-a8.sh [WAVESHAREA12]=setup-waveshare-a12.sh [WAVESHAREB]=setup-waveshare-b.sh [WAVESHARE2CH]=setup-waveshare-2ch.sh [MCARTHUR]=setup-mcarthur.sh)
 
 
 hatScript=''
