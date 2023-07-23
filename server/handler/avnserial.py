@@ -273,6 +273,7 @@ class SerialReader(object):
              buffer=''
            if  len(bytes) > 0 and bytes.find(b"\n") <0:
              if len(bytes) < MAXLEN:
+               buffer=bytes
                continue
              raise Exception("no newline in serial data")
          except Exception as e:
