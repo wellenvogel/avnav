@@ -779,9 +779,9 @@ class AVNScopedDirectoryHandler(AVNDirectoryHandlerBase):
     name=self.clientNameToScopedName(name)
     item=self.findItem(name)
     if not item:
-      return AVNUtil.getReturnData(error="%s %s not found"%(self.type,name))
+      raise Exception("%s %s not found"%(self.type,name))
     if not item.canDelete:
-      return AVNUtil.getReturnData(error="unable to delete %s "%(name))
+      raise Exception("%s cannot be deleted "%(name))
     return super().handleDelete(item.name)
 
   def handleRename(self, name, newName, requestparam):

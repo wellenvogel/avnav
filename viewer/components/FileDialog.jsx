@@ -670,11 +670,14 @@ export const deleteItem=(info,opt_resultCallback)=> {
     let ok = OverlayDialog.confirm("delete " + info.name + "?");
     ok.then(function () {
         if (info.type === 'layout') {
-            if (LayoutHandler.deleteItem(info.name)) {
-                doneAction();
-                return;
-            }
-            doneAction();
+            LayoutHandler.deleteItem(info.name)
+                .then((res)=> {
+                    doneAction();
+                })
+                .catch((err)=>{
+                    Toast("unable to delete layout "+info.name+": "+err);
+                    doneAction();
+                });
             return;
         }
         if (info.type !== "route") {
