@@ -10,6 +10,8 @@ import Requests from '../util/requests.js';
 import base from '../base.js';
 import assign from "object-assign";
 import aisformatter from './aisformatter';
+import AlarmHandler, {LOCAL_TYPES} from '../nav/alarmhandler.js';
+import alarmhandler from "../nav/alarmhandler.js";
 
 
 const AisTarget=navobjects.Ais;
@@ -184,7 +186,7 @@ AisData.prototype.handleAisData=function() {
         if (boatPos.valid) {
             this._computeAisTarget(boatPos, ais);
             let warningCpa = globalStore.getData(keys.properties.aisWarningCpa);
-            if (ais.cpa && ais.cpa < warningCpa && ais.tcpa && Math.abs(ais.tcpa) < globalStore.getData(keys.properties.aisWarningTpa)) {
+            if (ais.cpa && ais.cpa < warningCpa && ais.tcpa && ais.tcpa>=0 && Math.abs(ais.tcpa) < globalStore.getData(keys.properties.aisWarningTpa)) {
                 if (aisWarningAis) {
                     if (ais.tcpa >= 0) {
                         if (aisWarningAis.tcpa > ais.tcpa || aisWarningAis.tcpa < 0) aisWarningAis = ais;
@@ -209,11 +211,14 @@ AisData.prototype.handleAisData=function() {
         }
     }
     if (aisWarningAis) {
-        aisWarningAis.warning = true;
-        this.computedWarningMmsi=aisWarningAis.mmsi;
+    	aisWarningAis.warning = true;
+    	this.computedWarningMmsi=aisWarningAis.mmsi;
+    	if(!alarmhandler.localAlarms[LOCAL_TYPES.AIS])
+    		alarmhandler.startLocalAlarm(LOCAL_TYPES.AIS);
     }
     else{
-        this.computedWarningMmsi=null;
+    	this.computedWarningMmsi=null;
+    	alarmhandler.stopAlarm(LOCAL_TYPES.AIS);
     }
     //handling of the nearest target
     //warning active - this one
@@ -290,8 +295,8 @@ AisData.prototype.startQuery=function() {
     for (let idx=0;idx<center.length;idx++){
         if (! center[idx]) continue;
         let sfx=idx!==0?idx+"":"";
-        param['lat'+sfx]=this.formatter.formatDecimal(center[idx].lat,3,5,false,true);
-        param['lon'+sfx]=this.formatter.formatDecimal(center[idx].lon,3,5,false,true);
+        param['lat'+sfx]=this.formatter.formatDecimal(center[idx].lat,3,5);
+        param['lon'+sfx]=this.formatter.formatDecimal(center[idx].lon,3,5);
     }
     Requests.getJson(param,{checkOk:false,timeout:timeout}).then(
         (data)=>{

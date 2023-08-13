@@ -6,7 +6,8 @@ import assign from 'object-assign';
 import Helper from "../util/helper";
 
 export const LOCAL_TYPES=Helper.keysToStr({
-    connectionLost:1
+    connectionLost:1,
+    AIS:2
 });
 
 class AlarmHandler{
