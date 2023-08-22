@@ -263,6 +263,10 @@ let keys={
         },
         aisinfopage:{
             hidden: K
+        },
+        aispage:{
+            searchActive: K,
+            searchValue: K
         }
 
     },

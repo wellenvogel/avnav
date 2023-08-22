@@ -16,6 +16,7 @@ import Mob from '../components/Mob.js';
 import Compare from "../util/compare";
 import GuiHelper from "../util/GuiHelpers";
 import navdata from "../nav/navdata";
+import Dialogs from "../components/OverlayDialog.jsx";
 
 const aisInfos=[
     [
@@ -166,7 +167,9 @@ class AisPage extends React.Component{
             sortField=props.options.sortField;
         }
         this.state={
-            sortField: sortField
+            sortField: sortField,
+            searchValue:'',
+            searchActive:false
         }
         this.scrollWarning=this.scrollWarning.bind(this);
         this.computeList=this.computeList.bind(this);
@@ -190,6 +193,22 @@ class AisPage extends React.Component{
                 onClick:()=>{globalStore.storeData(keys.properties.aisListLock,!globalStore.getData(keys.properties.aisListLock,false))},
                 storeKeys: {toggle:keys.properties.aisListLock}
 
+            },
+            {
+                name:'AisSearch',
+                onClick: ()=>{
+                    if (this.state.searchActive){
+                        this.setState({searchActive:false});
+                    }
+                    else{
+                        Dialogs.valueDialogPromise("filter",this.state.searchValue)
+                            .then((value)=>{
+                                this.setState({searchValue:value.toUpperCase(),searchActive: true});
+                            })
+                            .catch((e)=>{});
+                    }
+                },
+                toggle:()=>this.state.searchActive
             },
             Mob.mobDefinition(this.props.history),
             {
@@ -234,6 +253,15 @@ class AisPage extends React.Component{
         for( let aisidx in aisList){
             let ais=aisList[aisidx];
             if (! ais.mmsi) continue;
+            if (this.state.searchActive){
+                let found=false;
+                ['name','mmsi','callsign','shipname'].forEach((n)=>{
+                    let v=ais[n];
+                    if (! v) return;
+                    if ((v+"").toUpperCase().indexOf(this.state.searchValue) >= 0) found=true;
+                });
+                if (! found) continue;
+            }
             let color=PropertyHandler.getAisColor({
                 nearest: ais.nearest,
                 warning: ais.warning,
@@ -279,6 +307,7 @@ class AisPage extends React.Component{
                     {(props.warning) && <span className={WARNING_CLASS} style={{backgroundColor:color}}
                                               onClick={self.scrollWarning}/>}
                     <span>sorted by {fieldToLabel(self.state.sortField)}</span>
+                    {(props.searchValue !== undefined) && <span>[{props.searchValue}]</span>}
                 </div>
             );
         },{minTime:updateTime});
@@ -304,6 +333,7 @@ class AisPage extends React.Component{
                         }}
                      updateFunction={this.computeSummary}
                      sortField={this.state.sortField}
+                     searchValue={this.state.searchActive?this.state.searchValue:undefined}
                 />
                 <AisList
                     itemClass={MemoAisItem}
