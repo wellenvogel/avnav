@@ -170,7 +170,8 @@ class AisPage extends React.Component{
             sortField: sortField,
             searchValue:'',
             searchActive:false
-        }
+        };
+        this.searchHandler=GuiHelper.storeHelperState(this,{searchActive:keys.gui.aispage.searchActive,searchValue: keys.gui.aispage.searchValue});
         this.scrollWarning=this.scrollWarning.bind(this);
         this.computeList=this.computeList.bind(this);
         this.sortDialog=this.sortDialog.bind(this);
@@ -198,12 +199,12 @@ class AisPage extends React.Component{
                 name:'AisSearch',
                 onClick: ()=>{
                     if (this.state.searchActive){
-                        this.setState({searchActive:false});
+                        this.searchHandler.setMultiple({searchActive:false});
                     }
                     else{
                         Dialogs.valueDialogPromise("filter",this.state.searchValue)
                             .then((value)=>{
-                                this.setState({searchValue:value.toUpperCase(),searchActive: true});
+                                this.searchHandler.setMultiple({searchValue:value.toUpperCase(),searchActive: true});
                             })
                             .catch((e)=>{});
                     }
