@@ -10,6 +10,17 @@ import GuiHelper from '../util/GuiHelpers.js';
 import {RadialGauge,LinearGauge} from 'canvas-gauges';
 import base from '../base.js';
 import assign from 'object-assign';
+
+export const getTicks=(minValue,maxValue,number)=>{
+    if (minValue === undefined || maxValue === undefined || number === undefined) return;
+    let majorTicks=[];
+    let inc=Math.floor((parseFloat(maxValue) - parseFloat(minValue))/number);
+    if (inc < 1) inc=1;
+    for (let i=Math.round(minValue);i<=maxValue;i+=inc){
+        majorTicks.push(i);
+    }
+    return majorTicks;
+}
 //refer to https://canvas-gauges.com/documentation/user-guide/configuration
 const defaultTranslateFunction=(props)=>{
     let rt=props;
@@ -24,6 +35,9 @@ const defaultTranslateFunction=(props)=>{
     if (rt.colorNeedle === undefined) rt.colorNeedle=defaultColors.needle;
     if (rt.colorNeedle !== undefined){
         if (rt.colorNeedleEnd === undefined) rt.colorNeedleEnd=rt.colorNeedle;
+    }
+    if (rt.majorTicks === undefined){
+        rt.majorTicks=getTicks(props.minValue,props.maxValue,10);
     }
     return rt;
 };
@@ -187,7 +201,9 @@ export const GaugeRadial=(props)=>{
 };
 GaugeRadial.propTypes=assign({},Gauge.propTypes);
 delete GaugeRadial.propTypes.gauge;
-GaugeRadial.editableParameters=Gauge.editableParameters;
+GaugeRadial.editableParameters=assign({},Gauge.editableParameters,{
+    valueBox:{type:"BOOLEAN",default: false, description:"Show the original canvas gauges value box"},
+});
 export const GaugeLinear=(props)=>{
     return <Gauge
         {...props}
