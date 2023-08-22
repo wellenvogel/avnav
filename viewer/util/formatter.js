@@ -85,7 +85,7 @@ const formatDecimal=function(number,fix,fract,addSpace,prefixZero){
         number=-number;
         sign="-";
     }
-    let rt=sign+number.toFixed(fract);
+    let rt=(prefixZero?"":sign)+number.toFixed(fract);
     let v=10;
     fix-=1;
     while (fix > 0){
@@ -96,7 +96,7 @@ const formatDecimal=function(number,fix,fract,addSpace,prefixZero){
         v=v*10;
         fix-=1;
     }
-    return rt;
+    return prefixZero?(sign+rt):rt;
 };
 formatDecimal.parameters=[
     {name:'fix',type:'NUMBER'},
