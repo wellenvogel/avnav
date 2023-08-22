@@ -185,6 +185,12 @@ class AisPage extends React.Component{
                 onClick:this.sortDialog
 
             },
+            {
+                name:"AisLock",
+                onClick:()=>{globalStore.storeData(keys.properties.aisListLock,!globalStore.getData(keys.properties.aisListLock,false))},
+                storeKeys: {toggle:keys.properties.aisListLock}
+
+            },
             Mob.mobDefinition(this.props.history),
             {
                 name: 'Cancel',
@@ -276,6 +282,20 @@ class AisPage extends React.Component{
                 </div>
             );
         },{minTime:updateTime});
+        let aisListProps = globalStore.getData(keys.properties.aisListLock, false) ?
+            this.computeList(globalStore.getMultiple({
+                list: keys.nav.ais.list,
+                tracked: keys.nav.ais.trackedMmsi,
+            }))
+            :
+            {
+                storeKeys: {
+                    updateCount: keys.nav.ais.updateCount,
+                    list: keys.nav.ais.list,
+                    tracked: keys.nav.ais.trackedMmsi,
+                },
+                updateFunction: this.computeList
+            };
         let MainContent=<React.Fragment>
             <Summary numTargets={0}
                      storeKeys={{
@@ -292,12 +312,7 @@ class AisPage extends React.Component{
                         self.props.history.replace('aisinfopage', {mmsi: item.mmsi});
                         }}
                     className="aisList"
-                    storeKeys={{
-                        updateCount:keys.nav.ais.updateCount,
-                        list:keys.nav.ais.list,
-                        tracked: keys.nav.ais.trackedMmsi,
-                        }}
-                    updateFunction={this.computeList}
+                    {...aisListProps}
                     scrollable={true}
                     listRef={(list)=>{
                         this.listRef=list;
