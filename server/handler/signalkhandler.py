@@ -1419,9 +1419,9 @@ class AVNSignalKHandler(AVNWorker):
   def getLegData(self,wpData: WpData):
     PRFX='navigation.courseGreatCircle'
     if wpData.useRhumbLine:
-      PRFX='navigation.courseRhumbLine'
+      PRFX='navigation.courseRhumbline'
     rt={
-      PRFX+'.nextPoint.position':{
+      PRFX+'.nextPoint':{
         'latitude':wpData.lat,
         'longitude':wpData.lon,
       } if wpData.validData else None,
