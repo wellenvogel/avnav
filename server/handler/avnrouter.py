@@ -168,7 +168,15 @@ class WpData:
     if v is None:
       return None
     return float(v)
-  def __init__(self,leg: AVNRoutingLeg = None,lat=None,lon=None,speed=None,useRhumLine=False):
+  def _calcVmg(self,targetCourse):
+    if self.course is None or self.speed is None or targetCourse is None:
+      return None
+    coursediff=min(abs(targetCourse-self.course),abs(targetCourse+360-self.course),abs(targetCourse-(self.course+360)))
+    if coursediff > 85:
+      return None
+    return self.speed * math.cos(math.pi/180*coursediff)
+
+  def __init__(self,leg: AVNRoutingLeg = None,lat=None,lon=None,speed=None,course=None,useRhumLine=False):
     self.validData=False
     self.xte=None
     self.xteRhumbLine=None
@@ -183,6 +191,9 @@ class WpData:
     self.fromLat=None
     self.fromLon=None
     self.speed=speed
+    self.vmg=None
+    self.vmgRhumbLine=None
+    self.course=course
     self.useRhumbLine=useRhumLine
     lat=self.float(lat)
     lon=self.float(lon)
@@ -205,6 +216,8 @@ class WpData:
       self.distanceRhumbLine = AVNUtil.distanceRhumbLineM((lat, lon), (self.lat, self.lon))
       self.dstBearing=AVNUtil.calcBearing((lat,lon),(self.lat,self.lon))
       self.dstBearingRhumbLine = AVNUtil.calcBearingRhumbLine((lat, lon), (self.lat, self.lon))
+      self.vmg=self._calcVmg(self.dstBearing)
+      self.vmgRhumbLine=self._calcVmg(self.dstBearingRhumbLine)
       if self.fromLon is not None and self.fromLat is not None:
         self.xte=AVNUtil.calcXTE((lat,lon),(self.fromLat,self.fromLon),(self.lat,self.lon))
         self.xteRhumbLine = AVNUtil.calcXTERumbLine((lat, lon), (self.fromLat, self.fromLon), (self.lat, self.lon))
@@ -648,7 +661,8 @@ class AVNRouter(AVNDirectoryHandlerBase):
     lat=curGps.get('lat')
     lon=curGps.get('lon')
     speed=curGps.get('speed')
-    wpData=WpData(self.getCurrentLeg(),lat,lon,speed or 0,useRhumLine=self.P_RHUMBLINE.fromDict(self.param))
+    course=curGps.get('track')
+    wpData=WpData(self.getCurrentLeg(),lat,lon,speed or 0,course,useRhumLine=self.P_RHUMBLINE.fromDict(self.param))
     return wpData
   #compute an RMB record and write this into the feeder
   #if we have an active leg
@@ -699,11 +713,12 @@ class AVNRouter(AVNDirectoryHandlerBase):
           else:
             destBearing = wpData.dstBearing
           brg=wpData.bearing
-          self.setInfo("autopilot","RMB=%s,APB=%s:WpNr=%d,XTE=%s%s,DST=%s,BRG=%s,ARR=%s"%
-                      (computeRMB,computeAPB,self.WpNr,XTE,LR,destDis,destBearing,arrival),WorkerStatus.NMEA)
+          vmg=wpData.vmg if not wpData.useRhumbLine else wpData.vmgRhumbLine
+          kn=vmg*3600/AVNUtil.NM if vmg is not None else 0
+          self.setInfo("autopilot","RMB=%s,APB=%s:WpNr=%d,XTE=%s%s,DST=%s,BRG=%s,ARR=%s,VMG=%skn"%
+                      (computeRMB,computeAPB,self.WpNr,XTE,LR,destDis,destBearing,arrival,kn),WorkerStatus.NMEA)
           hasRMB=True
           if computeRMB:
-            kn=wpData.speed*3600/AVNUtil.NM
             nmeaData = "GPRMB,A,%.2f,%s,%s,%s,%s,%s,%s,%s,%.1f,%.1f,%.1f,%s,A"% (
               XTE,LR,self.WpNr,self.WpNr+1,wplat[0],wplat[1],wplon[0],wplon[1],destDis,destBearing,kn,arrival)
             nmeaData = "$" + nmeaData + "*" + NMEAParser.nmeaChecksum(nmeaData) + "\r\n"
