@@ -1,0 +1,21 @@
+
+
+.Sail_InstrumentWidget {
+    ￼    display: flex;￼
+    ￼    flex-direction: row;
+}
+
+.Sail_InstrumentWidget canvas.widgetData {
+    width: 100%;
+    flex-grow: 1;
+}
+
+.Sail_InstrumentInfo {
+    ￼    display: flex;￼
+    ￼    flex-direction: row;
+}
+.Sail_InstrumentInfo .Sail_InstrumentInfoInner {
+
+    font-size: 1 em;
+    position: relative;
+    padding-right: 0.3em;}

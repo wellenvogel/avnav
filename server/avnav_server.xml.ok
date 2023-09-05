@@ -84,5 +84,4 @@
 </AVNAlarmHandler>    
 
 <AVNRemoteChannelHandler enabled="False"/>
-<AVNUdpReader port="34667"/>
 </AVNServer>

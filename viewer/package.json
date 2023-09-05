@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/wellenvogel/avnav/tree/master/viewer"
+    "url": "git+https://github.com/wellenvogel/avnav.git#master"
   },
   "browserslist": [
     "> 0.25%",
@@ -64,7 +64,7 @@
   "dependencies": {
     "@braintree/browser-detection": "^1.12.1",
     "@openlayers/pepjs": "^0.5.4",
-    "canvas-gauges": "git+https://github.com/wellenvogel/canvas-gauges#av20220223",
+    "canvas-gauges": "git+https://github.com/wellenvogel/canvas-gauges.git#av20220223",
     "clone-deep": "^4.0.1",
     "codeflask": "git+https://github.com/wellenvogel/CodeFlask.git#20220109",
     "core-js": "^2.6.12",
@@ -86,5 +86,12 @@
     "tinycolor2": "^1.4.2",
     "whatwg-fetch-timeout": "^2.0.2-timeout",
     "xml-writer": "^1.7.0"
+  },
+  "bugs": {
+    "url": "https://github.com/wellenvogel/avnav/issues"
+  },
+  "homepage": "https://github.com/wellenvogel/avnav/tree/master#readme",
+  "directories": {
+    "test": "test"
   }
 }
