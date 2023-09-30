@@ -460,7 +460,7 @@ public class Decoder extends Worker {
                                         String ttype = transducer.getType();
                                         String tunit = transducer.getUnits();
                                         double tval = transducer.getValue();
-                                        if (tname != null && ttype != null && tunit != null) {
+                                        if (tname != null ) {
                                             AuxiliaryEntry e = new AuxiliaryEntry(entry.priority);
                                             e.data.put("transducers." + tname, convertTransducerValue(ttype, tunit, tval));
                                             addAuxiliaryData(s.getSentenceId() + "." + tname, e,auxAge);
