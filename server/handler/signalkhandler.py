@@ -772,7 +772,8 @@ class AVNSignalKHandler(AVNWorker):
     self.deleteAndActivateActions=SKAlarmList()
     self.deltas=LockedSKAlarmList()
     self.__alarmCondition=threading.Condition()
-    self.ownWpOffSent=False #set if we have sent the own WP off to SK
+    self.ownWpOffSent=False #set if we have sent the own WP off to SK (great Circle)
+    self.ownWpOffSentRl=False #last wp off rhumb line
     self.ownMMSI=None
 
 
@@ -1419,9 +1420,9 @@ class AVNSignalKHandler(AVNWorker):
   def getLegData(self,wpData: WpData):
     PRFX='navigation.courseGreatCircle'
     if wpData.useRhumbLine:
-      PRFX='navigation.courseRhumbLine'
+      PRFX='navigation.courseRhumbline'
     rt={
-      PRFX+'.nextPoint.position':{
+      PRFX+'.nextPoint':{
         'latitude':wpData.lat,
         'longitude':wpData.lon,
       } if wpData.validData else None,
@@ -1431,9 +1432,12 @@ class AVNSignalKHandler(AVNWorker):
       } if (wpData.fromLat is not None and wpData.fromLon is not None) else None,
       PRFX+'.nextPoint.distance':wpData.distance if not wpData.useRhumbLine else wpData.distanceRhumbLine,
       PRFX+'.nextPoint.bearingTrue':AVNUtil.deg2rad(wpData.dstBearing if not wpData.useRhumbLine else wpData.dstBearingRhumbLine),
+      PRFX+'.bearingToDestinationTrue':AVNUtil.deg2rad(wpData.dstBearing if not wpData.useRhumbLine else wpData.dstBearingRhumbLine), #ton2k plugin
+      PRFX+'.nextPoint.velocityMadeGood':wpData.vmg if not wpData.useRhumbLine else wpData.vmgRhumbLine,
       PRFX+'.crossTrackError':wpData.xte,
       PRFX+'.nextPoint.arrivalCircle':wpData.approachDistance,
-      PRFX+'.bearingTrackTrue':AVNUtil.deg2rad(wpData.bearing if not wpData.useRhumbLine else wpData.bearingRhumbLine)
+      PRFX+'.bearingTrackTrue':AVNUtil.deg2rad(wpData.bearing if not wpData.useRhumbLine else wpData.bearingRhumbLine),
+      PRFX+'.bearingOriginToDestinationTrue':AVNUtil.deg2rad(wpData.bearing if not wpData.useRhumbLine else wpData.bearingRhumbLine) #ton2k plugin
     }
     return rt
   def sendCurrentLeg(self,router : AVNRouter):
@@ -1443,14 +1447,39 @@ class AVNSignalKHandler(AVNWorker):
       wpData=router.getWpData()
       if wpData is None:
         return
-      if not wpData.validData and self.ownWpOffSent:
-        return
-      self.ownWpOffSent=False
+      useRhumbline=wpData.useRhumbLine
+      #send an off request for the routing mode not being used any more
+      if useRhumbline and not self.ownWpOffSent:
+        try:
+          update=self.buildUpdateRequest(self.getLegData(WpData(useRhumLine=False)))
+          self.writeSocket.send(json.dumps(update))
+          self.ownWpOffSent=True
+        except Exception as e:
+          AVNLog.debug("error sending great circle leg off %",str(e))
+      if not useRhumbline and not self.ownWpOffSentRl:
+        try:
+          update=self.buildUpdateRequest(self.getLegData(WpData(useRhumLine=True)))
+          self.writeSocket.send(json.dumps(update))
+          self.ownWpOffSentRl=True
+        except Exception as e:
+          AVNLog.debug("error sending rhumb line leg off %",str(e))
+      if not wpData.validData:
+        if useRhumbline and self.ownWpOffSentRl:
+          return
+        if not useRhumbline and self.ownWpOffSent:
+          return
+      if useRhumbline:
+        self.ownWpOffSentRl=False
+      else:
+        self.ownWpOffSent=False
       update=self.buildUpdateRequest(self.getLegData(wpData))
       self.writeSocket.send(json.dumps(update))
       #hopefully we will have an error if we are unable to send our WP off
       if not wpData.validData:
-        self.ownWpOffSent=True
+        if useRhumbline:
+          self.ownWpOffSentRl=True
+        else:
+          self.ownWpOffSent=True
 
     except Exception as e:
       AVNLog.debug("error sending current leg %",str(e))

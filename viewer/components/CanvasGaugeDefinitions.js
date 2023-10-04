@@ -1,16 +1,11 @@
 import WidgetFactory from './WidgetFactory.jsx';
-import assign from 'object-assign';
+import {getTicks} from "./CanvasGauges";
 
 
 const temperatureTranslateFunction=(props)=>{
     let rt=props;
-    if (props.minValue !== undefined && props.maxValue !== undefined){
-        let inc=Math.floor((parseFloat(props.maxValue) - parseFloat(props.minValue))/10);
-        if (inc < 1) inc=1;
-        let majorTicks=[];
-        for (let i=Math.round(props.minValue);i<=props.maxValue;i+=inc){
-            majorTicks.push(i);
-        }
+    let majorTicks=getTicks(props.minValue,props.maxValue,10);
+    if (majorTicks){
         rt.majorTicks=majorTicks;
     }
     if (props.startHighlight){
@@ -31,13 +26,8 @@ const temperatureTranslateFunction=(props)=>{
 
 const voltageTranslateFunction=(props)=>{
     let rt=props;
-    if (props.minValue !== undefined && props.maxValue !== undefined){
-        let inc=Math.floor((parseFloat(props.maxValue) - parseFloat(props.minValue))/10);
-        if (inc < 1) inc=1;
-        let majorTicks=[];
-        for (let i=Math.round(props.minValue);i<=props.maxValue;i+=inc){
-            majorTicks.push(i);
-        }
+    let majorTicks=getTicks(props.minValue,props.maxValue,10);
+    if (majorTicks){
         rt.majorTicks=majorTicks;
     }
     rt.highlights=[];
@@ -153,6 +143,7 @@ export default  ()=>{
         animationDuration:1000,
         animationRule:"linear"
     },{
+        valueBox: false,
         minValue:{type:'NUMBER',default:0},
         maxValue:{type:'NUMBER',default: 100},
         colorHighlight:{type:'COLOR',default:"rgba(200, 50, 50, .75)"},
@@ -189,6 +180,7 @@ export default  ()=>{
     },{
         formatter: false,
         formatterParameters: false,
+        valueBox: false,
         minValue:{type:'NUMBER',default:-100},
         maxValue:{type:'NUMBER',default:100},
         inputIsKelvin:{type:'BOOLEAN',default:false},
@@ -226,6 +218,7 @@ export default  ()=>{
     },{
         formatter: false,
         formatterParameters: false,
+        valueBox: false,
         minValue:{type:'NUMBER',default:9},
         maxValue:{type:'NUMBER',default:16},
         startWarning:{type:'NUMBER',default: 12.2},
@@ -312,6 +305,7 @@ export default  ()=>{
         },{
             formatter: false,
             formatterParameters: false,
+            valueBox: false,
             minValue:{type:'NUMBER'},
             maxValue:{type:'NUMBER'},
             inputIsKelvin:{type:'BOOLEAN',default:false},
@@ -354,6 +348,7 @@ export default  ()=>{
     },{
         formatter: false,
         formatterParameters: false,
+        valueBox: false,
         minValue:{type:'NUMBER',default:9},
         maxValue:{type:'NUMBER',default:16},
         startWarning:{type:'NUMBER',default: 12.2},
