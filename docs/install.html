@@ -526,7 +526,7 @@ sudo systemctl start avnav</div>
     </ul>
     <p> Nach dem Herunterladen kann man die Pakete auf einem raspberry pi mit<br>
     </p>
-    <div class="code">sudo apt install ./avnav_xxxxxxxx_all,deb
+    <div class="code">sudo apt install ./avnav_xxxxxxxx_all.deb
 </div> installieren.<br>
     <p>Falls man sein raspberry pi System vergleichbar zu unseren Images
       aufsetzen möchte, kann man dazu noch das "avnav-raspi"-Paket installieren.<br>
@@ -557,7 +557,7 @@ ExecStart=/usr/bin/avnav -q -b /home/pi/avnav/data -t /usr/lib/avnav/avnav_templ
 After=avnav-check-parts.service
     </div>
     Danach kann man mit den Kommandos
-    <div class="code">sudo systemctl daemon-reload<br>sudo systemctl enable avnav<br>sudo systemctl start avnv</div>
+    <div class="code">sudo systemctl daemon-reload<br>sudo systemctl enable avnav<br>sudo systemctl start avnav</div>
     <p>Avnav als Systemdienst starten. Wenn man diese Datei nicht
       anlegt/kopiert, wird AvNav nicht mit den Nutzer "pi", sondern mit dem
       Nutzer "avnav" arbeiten.</p>
