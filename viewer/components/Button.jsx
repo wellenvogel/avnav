@@ -27,7 +27,8 @@ class Button extends React.Component {
         let className = this.props.className || "";
         className += " button " + this.props.name;
         if (this.props.toggle !== undefined) {
-            className += this.props.toggle ? " active" : " inactive";
+            let toggle=(typeof(this.props.toggle) === 'function')?this.props.toggle():this.props.toggle;
+            className += toggle ? " active" : " inactive";
         }
         let {toggle,icon,style,disabled,overflow,editDisable,editOnly,visible,dummy,...forward}=this.props;
         let spanStyle={};

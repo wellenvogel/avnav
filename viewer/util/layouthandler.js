@@ -591,17 +591,23 @@ class LayoutHandler{
     }
 
     /**
-     * delete an item if we handle this locally
-     * return true if handled
+     * delete an item
+     * resolves true if handled
      * @param name
-     * @returns {boolean}
+     * @returns {Promise}
      */
     deleteItem(name){
-        if (this.storeLocally){
-            delete this.temporaryLayouts[name];
-            return true;
+        if (this.storeLocally) {
+            return new Promise((resolve, reject) => {
+                delete this.temporaryLayouts[name];
+                resolve(true);
+            });
         }
-        return false;
+        return Requests.getJson({
+            request: 'delete',
+            type: 'layout',
+            name: name
+        })
     }
 
     getStoreKeys(others){

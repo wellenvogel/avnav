@@ -64,6 +64,9 @@ class LogFilter(logging.Filter):
       return True
     if (self.filterre.search(record.threadName)):
       return True
+    for arg in record.args:
+      if (self.filterre.search(str(arg))):
+        return True
     return False
 
 class AVNLog(object):

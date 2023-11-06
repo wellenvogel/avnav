@@ -234,6 +234,7 @@ class Store {
         if (data === undefined && keyTranslations === undefined) return;
         for (let k in (keyTranslations !== undefined) ? keyTranslations : data) {
             let storeKey = (keyTranslations !== undefined) ? keyTranslations[k] : k;
+            if (storeKey === undefined) continue;
             let v = (data !== undefined) ? data[k] : undefined;
             if (typeof (storeKey) === 'object') {
                 let subChanged = self.storeMultiple(v, storeKey, true, opt_omitUndefined);

@@ -263,6 +263,10 @@ let keys={
         },
         aisinfopage:{
             hidden: K
+        },
+        aispage:{
+            searchActive: K,
+            searchValue: K
         }
 
     },
@@ -345,6 +349,7 @@ let keys={
         aisListUpdateTime: new Property(5,"update time(s) for list",PropertyType.RANGE,[1,20]),
         aisReducedList: new Property(false,"reduce details in list",PropertyType.CHECKBOX),
         aisHideTime: new Property(15,"hide time(s)",PropertyType.RANGE,[1,3600]),
+        aisListLock: new Property(false,"lock ais list",PropertyType.CHECKBOX),
         clickTolerance: new Property(60, "Click Tolerance", PropertyType.RANGE, [10, 120]),
         maxAisErrors: new Property(3), //after that many errors AIS display will be switched off
         minAISspeed: new Property(0.1), //minimal speed in m/s that we consider when computing cpa/tcpa

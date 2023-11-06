@@ -153,6 +153,16 @@ const storeHelperState=(thisref,storeKeys,opt_stateName)=>{
             globalStore.deregister(cbHandler)
         }
     });
+    return {
+        setValue:(name,value)=>{
+            let sk=storeKeys[name];
+            if (! sk) return;
+            globalStore.storeData(sk,value);
+        },
+        setMultiple:(obj)=>{
+            globalStore.storeMultiple(obj,storeKeys,false,true);
+        }
+    }
 };
 
 /**
