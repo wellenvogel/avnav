@@ -12,6 +12,7 @@ import RequestHandler from "./requests";
 import Requests from "./requests";
 import LocalStorage, {STORAGE_NAMES} from './localStorageManager';
 import splitsupport from "./splitsupport";
+import {object} from "prop-types";
 
 
 const hex2rgba= (hex, opacity)=> {
@@ -348,7 +349,12 @@ class PropertyHandler {
                     case PropertyType.SELECT:
                         let found = false;
                         des.values.forEach((le) => {
-                            if (le === v) found = true;
+                            if (le instanceof Object){
+                               if (le.value === v) found=true;
+                            }
+                            else {
+                                if (le === v) found = true;
+                            }
                         })
                         if (!found) {
                             v = des.values[0];
