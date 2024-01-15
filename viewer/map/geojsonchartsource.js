@@ -24,7 +24,7 @@
  */
 
 import ChartSourceBase from './chartsourcebase.js';
-import {Style as olStyle, Stroke as olStroke, Circle as olCircle, Icon as olIcon, Fill as olFill} from 'ol/style';
+import {Style as olStyle, Stroke as olStroke, Circle as olCircle, Icon as olIcon, Fill as olFill, Text as olText} from 'ol/style';
 import {Vector as olVectorSource} from 'ol/source';
 import {Vector as olVectorLayer} from 'ol/layer';
 import {LineString as olLineString, MultiLineString as olMultiLineString, Point as olPoint} from 'ol/geom';
@@ -33,13 +33,16 @@ import Helper from "../util/helper";
 import {stylePrefix} from "./gpxchartsource";
 import assign from "object-assign";
 
+//TODO: check against style param from chartsourcebase
 let styleParam={
     lineWidth:3,
     lineColor: '#000000',
     fillColor: 'rgba(255,255,0,0.4)',
     strokeWidth: 3,
-    circleWidth: 10
-
+    circleWidth: 10,
+    showName: false,
+    textSize: 16,
+    textOffset: 32
 };
 class GeoJsonChartSource extends ChartSourceBase{
     /**
@@ -58,6 +61,7 @@ class GeoJsonChartSource extends ChartSourceBase{
     constructor(mapholer, chartEntry) {
         super(mapholer,chartEntry);
         this.styleMap={};
+        this.userIcons={};
         this.styleFunction=this.styleFunction.bind(this);
         let ourStyleParam=assign({},styleParam);
         for (let k in ourStyleParam) {
@@ -68,7 +72,7 @@ class GeoJsonChartSource extends ChartSourceBase{
         let image;
         if (this.chartEntry.defaultIcon) {
             image=new olIcon({
-                url: this.chartEntry.defaultIcon
+                src: this.chartEntry.defaultIcon
             })
         }
         else {
@@ -82,7 +86,7 @@ class GeoJsonChartSource extends ChartSourceBase{
 
         this.styles = {
             'Point': new olStyle({
-                image: image,
+                image: image
             }),
             'LineString': new olStyle({
                 stroke: new olStroke({
@@ -148,13 +152,52 @@ class GeoJsonChartSource extends ChartSourceBase{
             return true;
         }
     }
-
+    setIconScale(style,resolution){
+        let img=style.getImage();
+        if (!img)return;
+        img.setScale(this.getScale());
+    }
     styleFunction(feature,resolution) {
         let type=feature.getGeometry().getType();
         let rt= this.styles[type];
-        if (rt.getImage()){
-            rt.getImage().setScale(this.getScale());
+        let userInfo={};
+        let isCloned=false;
+        let name;
+        if (this.featureFormatter){
+            userInfo=this.formatFeatureInfo({},feature,false);
+            if (userInfo.sym){
+                let icon=this.userIcons(userInfo.sym);
+                if (! icon){
+                    icon=new olIcon({src:userInfo.sym});
+                    this.userIcons[userInfo.sym]=icon;
+                }
+                rt=rt.clone();
+                isCloned=true;
+                rt.setImage(icon);
+            }
+            name=userInfo.name;
         }
+        else{
+            name=feature.getProperties().name;
+        }
+        if (this.chartEntry['style.showName']){
+            if (name !== undefined){
+                if (!isCloned){
+                    rt=rt.clone();
+                }
+                rt.setText(new olText({
+                    text:name,
+                    textAlign:'start',
+                    font: this.chartEntry['style.textSize']||styleParam.textSize+"px",
+                    offsetX: this.chartEntry['style.textOffset']||styleParam.textOffset
+                }))
+            }
+        }
+        this.setIconScale(rt);
+        feature.setStyle((feature,res)=>{
+            this.setIconScale(rt);
+            return rt;
+        });
         return rt;
     }
     prepareInternal() {
@@ -216,7 +259,7 @@ class GeoJsonChartSource extends ChartSourceBase{
                 rt[k]=this.chartEntry[k];
             }
         }
-        this.formatFeatureInfo(rt,feature,coordinates);
+        this.formatFeatureInfo(rt,feature,coordinates,true);
         if (rt.link && this.chartEntry.icons){
             rt.link=this.getLinkUrl(rt.link);
         }

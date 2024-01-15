@@ -287,7 +287,7 @@ class GpxChartSource extends ChartSourceBase{
         rt.coordinates=coordinates;
         let infoItems=['desc','name','sym','time','height','sym','link','linkText'];
         infoItems.forEach((item)=>rt[item]=feature.get(item));
-        this.formatFeatureInfo(rt,feature,coordinates);
+        this.formatFeatureInfo(rt,feature,coordinates.true);
         for (let k in this.chartEntry){
             if (Helper.startsWith(k,stylePrefix)){
                 rt[k]=this.chartEntry[k];

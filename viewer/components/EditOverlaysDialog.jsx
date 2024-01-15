@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import OverlayDialog,{dialogHelper} from './OverlayDialog.jsx';
 import assign from 'object-assign';
+import {ParamValueInput} from './ParamValueInput';
 import {Input,Checkbox,InputReadOnly,InputSelect,ColorSelector,Radio} from './Inputs.jsx';
 import DB from './DialogButton.jsx';
 import Button from './Button.jsx';
@@ -20,6 +21,9 @@ import DefaultGpxIcon from '../images/icons-new/DefaultGpxPoint.png'
 import {readFeatureInfoFromGeoJson} from "../map/geojsonchartsource";
 import featureFormatters from '../util/featureFormatter';
 import chartImage from '../images/Chart60.png';
+import {createEditableParameter,EditableParameter} from "./EditableParameters";
+import {getKnownStyleParam} from "../map/chartsourcebase";
+
 const filterOverlayItem=(item,opt_itemInfo)=>{
     let rt=undefined;
     if (item.type === 'chart') {
@@ -359,42 +363,18 @@ class OverlayItemDialog extends React.Component{
                                             />
 
                                     }
-                                    {itemInfo['style.lineWidth'] &&
-                                        <Input
-                                            dialogRow={true}
-                                            type="number"
-                                            label="line width"
-                                            value={this.stateHelper.getValue('style.lineWidth',defaultLineWith)}
-                                            onChange={(nv)=>this.stateHelper.setValue('style.lineWidth',nv)}
+                                    {getKnownStyleParam().map((param)=>{
+                                        if (!itemInfo[param.name]) return null;
+                                        return(
+                                            <ParamValueInput
+                                                param={createEditableParameter(param.name,param.type,param.list,param.displayName,param.default)}
+                                                currentValues={this.stateHelper.getValues()||{} }
+                                                onChange={(nv)=>this.stateHelper.setState(nv)}
+                                                showDialogFunction={this.dialogHelper.showDialog}
+                                                onlyOwnParam={true}
                                             />
-                                    }
-                                    {itemInfo['style.circleWidth'] &&
-                                    <Input
-                                        dialogRow={true}
-                                        type="number"
-                                        label="circle width"
-                                        value={this.stateHelper.getValue('style.circleWidth',defaultLineWith*3)}
-                                        onChange={(nv)=>this.stateHelper.setValue('style.circleWidth',nv)}
-                                    />
-                                    }
-                                    {itemInfo['style.lineColor'] &&
-                                    <ColorSelector
-                                        dialogRow={true}
-                                        label="line color"
-                                        value={this.stateHelper.getValue('style.lineColor',defaultColor)}
-                                        onChange={(nv)=>this.stateHelper.setValue('style.lineColor',nv)}
-                                        showDialogFunction={this.dialogHelper.showDialog}
-                                    />
-                                    }
-                                    {itemInfo['style.fillColor'] &&
-                                    <ColorSelector
-                                        dialogRow={true}
-                                        label="circle color"
-                                        value={this.stateHelper.getValue('style.fillColor',defaultColor)}
-                                        onChange={(nv)=>this.stateHelper.setValue('style.fillColor',nv)}
-                                        showDialogFunction={this.dialogHelper.showDialog}
-                                    />
-                                    }
+                                        )
+                                    })}
                                     <Input
                                         dialogRow={true}
                                         type="number"
