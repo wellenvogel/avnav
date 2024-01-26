@@ -68,9 +68,9 @@ if __name__ == '__main__':
         nw=num2deg(x,y,z)
         se=num2deg(x+1,y+1,z)
         center=num2deg(float(x)+0.5,float(y)+0.5,z)
-        print("NW: lat=%f, lon=%f"%nw)
-        print("SE: lat=%f, lon=%f"%se)
-        print("CT: lat=%f, lon=%f"%center)
+        print("NW: lat=%3.8f, lon=%3.8f"%nw)
+        print("SE: lat=%3.8f, lon=%3.8f"%se)
+        print("CT: lat=%3.8f, lon=%3.8f"%center)
         sys.exit(0)
     if mode == "tn":    
         tile=deg2num(float(sys.argv[2]),float(sys.argv[3]),int(sys.argv[4]))
