@@ -175,6 +175,8 @@ class AVNFeeder(AVNWorker):
       pass
     self.listlock.release()
     if len(list) < 1:
+      if returnError:
+        return (numErrors,seq,list)
       return (seq,list)
     if includeSource:
       if nmeafilter is None:
