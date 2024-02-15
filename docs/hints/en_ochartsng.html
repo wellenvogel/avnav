@@ -6,7 +6,7 @@
   </head>
   <body data-order="700" class="fimage">
     <h1>Avnav Ocharts(NG)</h1>
-    <div class="toc"></div>
+    <div class="toc" data-maxlevel="3"></div>
     <p>AvNav ochartsng is a new implementation of the <a href="ocharts.html">AvNav
         ocharts plugin</a>.<br>
       This implementation has a couple of new features:</p>
@@ -72,7 +72,7 @@
       OpenCPN convert the charts. To do so you need to activate the charts in
       OpenCPN. On the OpenCPN settings / tab "chart files" just click "Prepare
       all ENC Charts".</p>
-    <p><img src="ochartsng-convert-opencpn.png" alt=""></p>
+    <p><img src="ochartsng-convert-opencpn.png" alt="" class="fimage"></p>
     <p>This will create a lot of files with the s57 extension in the OpenCPN
       directory (~/.opencpn on linux). Just pick the ones with similar names
       like your s57 charts, copy them in a new, empty directory with a name that
@@ -144,7 +144,7 @@
       OpenCPN) you can directly continue at step 6. Alternatively you could also
       configure to access the OpenCPN chart directories at the <a href="#PluginConfig">plugin</a>
       .</p>
-    <h4>1. Creating the fingerprint</h4>
+    <h4>Creating the fingerprint</h4>
     <p>Via <img src="../viewerimages/icons-new/apps.svg" alt="" class="inlineimage">-&gt;<img
         src="ochartsngicon.png" class="inlineimage"> you enter the GUI of the
       plugin, select the "Charts" tab.</p>
@@ -154,28 +154,28 @@
       will only be visible if a dongle has been detected (dongle line is green).</p>
     <p><img src="ochartsng-gui-charts2.png" class="fimage"></p>
     <p>Choose Download to save the created file on your device.</p>
-    <h3>2. Uploading the fingerprints to o-charts</h3>
+    <h4>Uploading the fingerprints to o-charts</h4>
     <p>Enter the&nbsp; <a href="https://o-charts.org/shop/en/module/occharts/occhartsOesu">o-charts
         page</a> and upload the fingerprint.</p>
     <img src="ocharts-buying.png" alt="" class="fimage">
     <p>With "Choose File" you select the file stored at step 2. Assign a
       meaningful name to the new system - this will be part of the mails you
       will receive later.</p>
-    <h3>3. Buying the Charts</h3>
+    <h4>Buying the Charts</h4>
     <p>Select the desired charts from <a href="https://o-charts.org/shop/en/8-oesenc">oeSENC
         charts</a>.</p>
-    <h3>4. Assigning to your System</h3>
+    <h4>Assigning to your System</h4>
     <img src="ocharts-assign.png" alt="" class="fimage">
     <p>At 1 you can assign charts to your system (in this screenshot this is not
       available anymore as the max amount of 2 systems are already assigned). At
       2 you request the mail holding the download link (you would do the same
       for updates - in the screenshot: last version I have downloaded is 21,
       latest available is 23)</p>
-    <h3>5. Downloading the Charts</h3>
+    <h4>Downloading the Charts</h4>
     <img src="ocharts-download.png" alt="" class="fimage">
     <p>After a short time you will receive a mail containing the download link
       for your charts. Download the zip file.</p>
-    <h3>6. Uploading the Zip File to AvNav</h3>
+    <h4>Uploading the Zip File to AvNav</h4>
     <p><img src="ochartsng-upload1.png" class="fimage"></p>
     <p>In the plugin's GUI select "Upload Zip" to transfer the zip file
       downloaded in step 5 to AvNav.</p>
@@ -217,13 +217,13 @@
       is not. So when you are using the online process just be sure to work
       within a secured network (e.g. behind an LTE router or a mobile phone
       hotspot).</p>
-    <p><img src="ochartsng-shop1.png" alt=""> </p>
+    <p><img src="ochartsng-shop1.png" alt="" class="fimage"> </p>
     <p>When opening the "shop" tab you will not be logged in and you will see an
       info whether a dongle is active on your system or not. Via the "ShopPage"
       button you can directly access the o-charts web page (but better log in
       first...).</p>
     <p>With tapping "Login" you will login to the o-charts shop. </p>
-    <p><img src="ochartsng-shoploggedin.png" alt=""></p>
+    <p><img src="ochartsng-shoploggedin.png" alt="" class="fimage"></p>
     <p>When the shop already knows your current system the "Shop name" will be
       shown and the list of available charts/updates that have been assigned to
       your system (see <a href="#offlineprocess">OfflineProcess</a>) will be
@@ -231,7 +231,7 @@
       If a version in the shop is newer as your local version (or the chart is
       not locally available) you can immediately install it.</p>
     <p><img src="ochartsng-shopupdate.png" alt="" class="fimage"></p>
-    <p><img src="ochartsng-shopdownload.png" alt=""></p>
+    <p><img src="ochartsng-shopdownload.png" alt="" class="fimage"></p>
     <p>After downloading the chart will be unpacked and can immediately be used.
       If it is an update for an existing chart set, the new version will become
       active but the old one will still be available. On the chart tab you can
@@ -244,7 +244,7 @@
       from the "charts" tab (Download button).</p>
     <p>If your system is still not known to the shop you are able to register it
       there.</p>
-    <p><img src="ochartsng-shopunknown.png" alt=""></p>
+    <p><img src="ochartsng-shopunknown.png" alt="" class="fimage"></p>
     On linux systems you will be prompted for a system name but on android the
     system name is fixed and cannot be changed.<br>
     <p>After you registered your system you can click the "ShopPage" link and
@@ -474,8 +474,7 @@
     <p><img src="ochartsng-featureinfo2.png" class="fimage"> </p>
     <p> By clicking the blue chart name you can get some more information about
       the chart that this object belongs to.</p>
-    <img src="file:///home/andreas/projects/avnav/docs/hints/ochartsng-featureinfo3.png"
-      alt="" class="fimage">
+    <img src="ochartsng-featureinfo3.png" alt="" class="fimage">
     <h2><a name="Installation"></a>Installation</h2>
     <h3>Linux/Raspberry</h3>
     <p>The plugin is available as a debian package.<br>
@@ -531,7 +530,7 @@
       Some of the plugins settings can be changed on the server/status page <img
         src="../viewerimages/icons-new/status.svg" alt="" class="inlineimage">
       at "plugins/system-ochartsng" .</p>
-    <p><img src="ochartsng-edit-plugin.png" class="image fimage"> </p>
+    <p><img src="ochartsng-edit-plugin.png" class="fimage"> </p>
     <p>Those are:</p>
     <table border="1" width="100%">
       <tbody>
