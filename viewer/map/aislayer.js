@@ -1,7 +1,7 @@
 /**
  * Created by andreas on 18.05.14.
  */
-    
+
 import navobjects from '../nav/navobjects';
 import keys, {KeyHelper} from '../util/keys.jsx';
 import globalStore from '../util/globalstore.jsx';
@@ -432,7 +432,14 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,drawTargetFuncti
     let scale=globalStore.getData(keys.properties.aisIconScale,1);
     let classbShrink=globalStore.getData(keys.properties.aisClassbShrink,1);
     let useHeading=globalStore.getData(keys.properties.aisUseHeading,false);
-    let rotation=current.course||0;
+
+    // own ship
+    let cog=globalStore.getData(keys.nav.gps.course,0);
+    let sog=globalStore.getData(keys.nav.gps.speed,0);
+    // ais target
+    let target_cog=useHeading ? (current.heading||0) : (current.course||0);
+    let target_sog=current.speed||0;
+
     let symbol=this.getStyleEntry(current);
     let style=cloneDeep(symbol.style);
     if (! symbol.image || ! style.size) return;
@@ -462,30 +469,34 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,drawTargetFuncti
         style.rotateWithView=false;
     }
     else{
-        if (useHeading && current.heading !== undefined){
-            style.rotation=current.heading * Math.PI/180;
-        }
-        else {
-            style.rotation = rotation * Math.PI / 180;
-        }
+        style.rotation = Helper.radians(target_cog);
         style.rotateWithView=true;
     }
     if (drawEstimated && symbol.ghostImage){
-        if ((current.speed||0) >= globalStore.getData(keys.properties.aisMinDisplaySpeed) && current.age > 0){
+        if (target_sog >= globalStore.getData(keys.properties.aisMinDisplaySpeed) && current.age > 0){
             let age=current.age;
             if (current.receiveTime < now){
                 age+=(now-current.receiveTime)/1000;
             }
-            let ghostPos=drawTargetFunction(xy,rotation,current.speed*age);
+            let ghostPos=drawTargetFunction(xy,target_cog,target_sog*age);
             drawing.drawImageToContext(ghostPos,symbol.ghostImage,style);
         }
     }
     let curpix=drawing.drawImageToContext(xy,symbol.image,style);
     if (useCourseVector && style.courseVector !== false){
-        let courseVectorDistance=(current.speed !== undefined)?current.speed*courseVectorTime:0;
-        if (courseVectorDistance > 0){
-            let other=drawTargetFunction(xy,rotation,courseVectorDistance);
+        // true motion vector
+        let trueMotionVectorLength=target_sog*courseVectorTime;
+        if (trueMotionVectorLength > 0){
+            let other=drawTargetFunction(xy,target_cog,trueMotionVectorLength);
             drawing.drawLineToContext([xy,other],{color:style.courseVectorColor,width:courseVectorWidth});
+        }
+        // relative motion vector
+        let drm,srm;
+        [drm,srm]=Helper.addPolar([target_cog,target_sog],[cog,-sog]);
+        let relMotionVectorLength=srm*courseVectorTime;
+        if (relMotionVectorLength > 0){
+            let other=drawTargetFunction(xy,drm,relMotionVectorLength);
+            drawing.drawLineToContext([xy,other],{color:style.courseVectorColor,width:courseVectorWidth,dashed:true});
         }
     }
     return {pix:curpix,scale:scale, style: style};

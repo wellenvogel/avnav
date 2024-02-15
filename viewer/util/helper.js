@@ -25,7 +25,7 @@ Helper.addEntryToListItem=function(list,keyname,keyvalue,key,value){
       if(item[keyname] === keyvalue){
           item[key]=value;
       }
-  })  
+  })
 };
 
 /**
@@ -117,17 +117,50 @@ Helper.keysToStr=(dict)=>{
         rt[k]=k+"";
     }
     return rt;
-}
-Helper.getParam=(key)=>
-{
+};
+
+Helper.getParam=(key)=>{
     // Find the key and everything up to the ampersand delimiter
     let value=RegExp(""+key+"[^&]+").exec(window.location.search);
 
     // Return the unescaped value minus everything starting from the equals sign or an empty string
     return decodeURIComponent(!!value ? value.toString().replace(/^[^=]+./,"") : "");
+};
+
+Helper.to360=(a)=>{
+    while (a < 360) {
+        a += 360;
+    }
+    return a % 360;
+};
+
+Helper.to180=(a)=>{
+    return to360(a+180)-180;
+};
+
+Helper.radians=(a)=>{
+    return a * Math.PI / 180;
+};
+
+Helper.degrees=(a)=>{
+    return a * 180 / Math.PI;
+};
+
+Helper.toCart=(p)=>{
+  return [p[1] * Math.sin(Helper.radians(p[0])),
+          p[1] * Math.cos(Helper.radians(p[0]))];
 }
 
+Helper.toPol=(c)=>{
+  return [Helper.to360(90 - Helper.degrees(Math.atan2(c[1], c[0]))),
+          Math.sqrt(c[0] * c[0] + c[1] * c[1])];
+}
 
+Helper.addPolar=(a,b)=>{
+  a=Helper.toCart(a);
+  b=Helper.toCart(b);
+  return Helper.toPol([a[0]+b[0],a[1]+b[1]]);
+}
 
 export default Helper;
 
