@@ -1,0 +1,606 @@
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>AvNav OCharts</title>
+    <link href="../styles.css" rel="stylesheet" type="text/css">
+  </head>
+  <body data-order="700">
+    <h1>Avnav Ocharts(NG)</h1>
+    <div class="toc"></div>
+    <p>AvNav ochartsng is a new implementation of the <a href="ocharts.html">AvNav
+        ocharts plugin</a>.<br>
+      This implementation has a couple of new features:</p>
+    <ul>
+      <li>Now also available on Android (see below)</li>
+      <li>Has a direct (online) Shop interface</li>
+      <li>Can now also handle unencrypted S57 charts (after some initial
+        conversion)</li>
+      <li>Has more options for adapting the display</li>
+      <li>Avoids the large disk caches that created a lot of SD card write load
+        and a lot of CPU load</li>
+      <li>Does not need to restart to handle newly uploaded charts</li>
+      <li>Can utilize more cores of the processors and should run faster on many
+        systems</li>
+      <li>Has fewer external dependencies - especially it does not need a
+        working X11 environment any more</li>
+      <li>Utilizes less memory</li>
+      <li>...</li>
+    </ul>
+    <p>Currently this implementation is in a beta status. So there are / could
+      be some restrictions:</p>
+    <ul>
+      <li>Handleing of oeRNC charts (raster charts) is still not implemented</li>
+      <li>There could be bugs in the display or in some handling flows</li>
+    </ul>
+    <h3>Overview</h3>
+    <div class="toc"> </div>
+    <p>AvNav is able to handle charts in various raster formats. So far it was
+      unable to handle any commercial charts. The&nbsp; <a href="https://o-charts.org/">o-charts</a>
+      company supplies charts for various regions of the world for usage in
+      OpenCPN.</p>
+    <p>After some agreements with o-charts, those charts can now also be used
+      for AvNav (starting with version 2024xxx with this new plugin - <a href="#Installation">see
+        below</a>). At present you can use oeusenc vector-charts .</p>
+    <p>To display those charts in AvNav they must be rendered into raster
+      images. This is handled by a new plugin for AvNav(avnav-ochartsng). The
+      rendering takes place on the fly whenever tiles are to be displayed. A
+      certain amount of rendered chart data (tiles) is kept in memory on the
+      server to serve them fast if you switch between certain zoom levels or if
+      you run multiple displays.</p>
+    <p>All oeSENC charts handling is performed by the plugin - including
+      installation (you cannot install them directly via the <span style="color: #0000ee;">d</span><a
+        href="../userdoc/downloadpage.html">ownload page</a>). For this purpose
+      a dedicated GUI is offered by the plugin. You enter it from the main page
+      via <img src="../viewerimages/icons-new/apps.svg" alt="" class="inlineimage">(User
+      Apps) and&nbsp; Ocharts-Provider&nbsp; <img src="ochartsngicon.png" alt=""
+        class="inlineimage">.</p>
+    <img src="ochartsng-gui1.png" class="fimage"><br>
+    <h2><a name="Charts"></a>Buying and Installing the Charts</h2>
+    <p>Important Hint: <span style="color: #ff6666;">If you do not have a
+        dongle from o-charts, your chart license is bound to your system. So in
+        case of any trouble <b>do not</b> set up a new system (by writing an
+        image to an SD card) but instead try to repair the system. If you set up
+        a new system you will lose your license. I will by happy to support in
+        case of trouble - contact e.g. via <a href="mailto:andreas@wellenvogel.net">email</a>.</span></p>
+    <p>To be able to buy charts at o-charts you have to create an account at <a
+        href="https://o-charts.org/shop/en/autenticacion?back=my-account">their
+        site</a> first.</p>
+    <p>Afterwards you have to register the systems you would like to buy the
+      charts for <a href="https://o-charts.org/shop/en/module/occharts/occharts">there</a>.
+    </p>
+    <p>You have two different ways to do this - named the "<a href="https://o-charts.org/manuals/?lng=en">online
+        process</a> " and the <a href="https://o-charts.org/manuals/offline.php?lng=en">"Offline"
+        process</a> . <br>
+      The online process requires that your system (the one running the AvNav
+      server - not necessarily the one running the browser!) is connected to the
+      internet.<br>
+      For Android the registration of the system is only possible with the
+      online process.</p>
+    <h3>The Offline Process</h3>
+    <p>This process consists of the following steps:</p>
+    <ol>
+      <li>Create a "fingerprint" for the system you would like to use the charts
+        at. In AvNav you will create it in the GUI for the plugin and download
+        from there.</li>
+      <li>Upload the fingerprint to o-charts and create a system (basically
+        assigning a name).</li>
+      <li>Buy charts</li>
+      <li>Assign charts to the system you created</li>
+      <li>After a short time you will receive an email from o-charts with a
+        download link (zip file).</li>
+      <li>Upload charts to AvNav (via the plugin GUI).</li>
+    </ol>
+    <p>For updates repeat steps 4, 5 and 6 (only requesting the notification
+      mail at step 4)</p>
+    <p>For further chart sets steps 3-6.</p>
+    <p>For steps 2,3,4 and 5 you need a system with internet connectivity. You
+      can e.g. use a laptop or an android device.</p>
+    <p><span style="color: red;">Important hint for Android</span>: The
+      registration of the system (Steps 1 and 2) cannot be handled using the
+      offline process. You have to use the <a href="#onlineprocess">online
+        process</a> for those steps. Bying charts, assigning them, downloading
+      and installing can be also done with the offline process.</p>
+    <p>I created a <a href="https://www.youtube.com/watch?v=q24VRAtbbEE">video</a>
+      to demonstrate this process. Additionally here is a short description.</p>
+    <p><b>Hint</b>: If the charts are already registered on the same system (for
+      OpenCPN) you can directly continue at step 6. Alternatively you could also
+      configure to access the OpenCPN chart directories at the <a href="#PluginConfig">plugin</a>
+      .</p>
+    <h4>1. Creating the fingerprint</h4>
+    <p>Via <img src="../viewerimages/icons-new/apps.svg" alt="" class="inlineimage">-&gt;<img
+        src="ochartsngicon.png" class="inlineimage"> you enter the GUI of the
+      plugin, select the "Charts" tab.</p>
+    <img src="ocharts-gui-charts1.png" class="fimage">
+    <p>Use "Get Fingerprint" to create the fingerprint file. If you are using an
+      o-charts dongle - just select "Get Fingerprint(Dongle)". The dongle button
+      will only be visible if a dongle has been detected (dongle line is green).</p>
+    <p><img src="ochartsng-gui-charts2.png" class="fimage"></p>
+    <p>Choose Download to save the created file on your device.</p>
+    <h3>2. Uploading the fingerprints to o-charts</h3>
+    <p>Enter the&nbsp; <a href="https://o-charts.org/shop/en/module/occharts/occhartsOesu">o-charts
+        page</a> and upload the fingerprint.</p>
+    <img src="ocharts-buying.png" alt="" class="fimage">
+    <p>With "Choose File" you select the file stored at step 2. Assign a
+      meaningful name to the new system - this will be part of the mails you
+      will receive later.</p>
+    <h3>3. Buying the Charts</h3>
+    <p>Select the desired charts from <a href="https://o-charts.org/shop/en/8-oesenc">oeSENC
+        charts</a>.</p>
+    <h3>4. Assigning to your System</h3>
+    <img src="ocharts-assign.png" alt="" class="fimage">
+    <p>At 1 you can assign charts to your system (in this screenshot this is not
+      available anymore as the max amount of 2 systems are already assigned). At
+      2 you request the mail holding the download link (you would do the same
+      for updates - in the screenshot: last version I have downloaded is 21,
+      latest available is 23)</p>
+    <h3>5. Downloading the Charts</h3>
+    <img src="ocharts-download.png" alt="" class="fimage">
+    <p>After a short time you will receive a mail containing the download link
+      for your charts. Download the zip file.</p>
+    <h3>6. Uploading the Zip File to AvNav</h3>
+    <p><img src="ochartsng-upload1.png" class="fimage"></p>
+    <p>In the plugin's GUI select "Upload Zip" to transfer the zip file
+      downloaded in step 5 to AvNav.</p>
+    <p>There will be a progress bar during upload.</p>
+    <p><img src="ochartsng-upload2.png" class="fimage"></p>
+    <p>After the upload is completed the zip file will be unpacked. Some initial
+      checks can take some time.</p>
+    <p>Unless configured otherwise, the charts will be uploaded to
+      /home/pi/avnav/data/ocharts/charts.</p>
+    If the newly uploaded chart contains updates to an already existing set, the
+    existing set will be deactivated at restart. You may change this later on
+    within the GUI. Chart sets not required anymore can be deleted.
+    <p>After all charts are successfully read the status should change to green
+      (READY).</p>
+    <p><img src="ochartsng-upload4.png" class="fimage"></p>
+    <p>If the status turns to "ERROR" (red) you maybe uploaded a zip that was
+      not built for your current system. You can check details in the log file
+      at /home/pi/avnav/data/ocharts/provider.log.</p>
+    <p>Now the charts are available and can be used.</p>
+    <p><img src="ocharts-mainpage.png" alt="" class="fimage"></p>
+    <p><img src="ocharts-navpage.png" alt="" class="fimage"></p>
+    <p><br>
+    </p>
+    <h3><a name="onlineprocess"></a>The Online Process</h3>
+    <h2><a name="MainSettings"></a>Adapting the Look and Feel</h2>
+    <p>As the o-charts are vector charts you can adjust their look and feel.
+      However some limitations must be considered:</p>
+    <ol>
+      <li>The modifications apply to the server's chart settings - so they will
+        become effective for all displays.</li>
+      <li>If you change the look and feel all data in the cache have to be wiped
+        and all chart tiles must be rendered from scratch. So this will
+        (potentially) again induce lag on smaller/older systems. The automatic
+        cache prefill process starts again to pre-render a lot of tiles.</li>
+    </ol>
+    <p>Changing display parameters is done in the plugin GUI(<img src="../viewerimages/icons-new/apps.svg"
+        alt="" class="inlineimage">-&gt;<img src="ochartsngicon.png" class="inlineimage">),
+      tab "Main Settings".</p>
+    <img src="ochartsng-settings1.png" class="fimage">
+    <p>If you change a setting (1) it will be displayed bold. Changes will only
+      become effective when you click "Update Settings"(2).<br>
+      When you changed the settings the chart display will be rebuild. This will
+      typically cause a small delay with no display at all.<br>
+      Additionally the internal cache of already rendered chart tiles will be
+      reset - so the display could become a bit slower initially.</p>
+    <p>By selecting "Cancel" you can revert your changes. "Defaults" will reset
+      to the built-in defaults. Most parameters are similar to the ones you find
+      at&nbsp; <a href="https://opencpn.org/wiki/dokuwiki/doku.php?id=opencpn:opencpn_user_manual:options_setting">OpenCPN
+        settings</a>.</p>
+    <p>The following parameters are available.</p>
+    <table border="1" width="100%">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Meaning</td>
+          <td>Default</td>
+        </tr>
+        <tr>
+          <td>Show Text</td>
+          <td>show text for chart objects</td>
+          <td>true</td>
+        </tr>
+        <tr>
+          <td>Important Text Only</td>
+          <td>hide less important text</td>
+          <td>false</td>
+        </tr>
+        <tr>
+          <td>Light Descriptions</td>
+          <td>show descriptions for lights</td>
+          <td>true</td>
+        </tr>
+        <tr>
+          <td>Show Depths</td>
+          <td>show soundings</td>
+          <td>true</td>
+        </tr>
+        <tr>
+          <td>Show Quality</td>
+          <td>show extra objects indicating the quality</td>
+          <td>false</td>
+        </tr>
+        <tr>
+          <td>Chart Information Objects</td>
+          <td>show informational objects</td>
+          <td>true</td>
+        </tr>
+        <tr>
+          <td>Buoy/Light Labels</td>
+          <td>show labels for buoys and lights</td>
+          <td>true</td>
+        </tr>
+        <tr>
+          <td>National text on chart</td>
+          <td>show national text</td>
+          <td>true</td>
+        </tr>
+        <tr>
+          <td>Show Lights</td>
+          <td>show lights</td>
+          <td>true</td>
+        </tr>
+        <tr>
+          <td>Show Anchor Info</td>
+          <td>show anchoring information</td>
+          <td>true</td>
+        </tr>
+        <tr>
+          <td>Color Scheme</td>
+          <td>The color scheme to be used for the chart display</td>
+          <td>DAY_BRIGHT</td>
+        </tr>
+        <tr>
+          <td>Chart Bounds</td>
+          <td>Show the chart bounding boxes</td>
+          <td>true</td>
+        </tr>
+        <tr>
+          <td>Reduced Detail at Small Scale</td>
+          <td>reduce details at lower zoom levels</td>
+          <td>true</td>
+        </tr>
+        <tr>
+          <td>De-Cluttered Text</td>
+          <td>improve text positioning</td>
+          <td>true</td>
+        </tr>
+        <tr>
+          <td>Display Category</td>
+          <td>Base, Standard, All, User Standard</td>
+          <td>Standard</td>
+        </tr>
+        <tr>
+          <td>Graphics Style</td>
+          <td>Paper Chart, Simplified</td>
+          <td>Paper Chart</td>
+        </tr>
+        <tr>
+          <td>Boundaries</td>
+          <td>Plain, Symbolized</td>
+          <td>Plain</td>
+        </tr>
+        <tr>
+          <td>Colors</td>
+          <td>4Color, 2 Color</td>
+          <td>4 Color</td>
+        </tr>
+        <tr>
+          <td>Text Font Size</td>
+          <td>Scaling for text on charts</td>
+          <td>1 (ca. 12px)</td>
+        </tr>
+        <tr>
+          <td>Soundings Font Size</td>
+          <td>Scaling for soundings</td>
+          <td>1 (ca. 12px)</td>
+        </tr>
+        <tr>
+          <td>Scale</td>
+          <td>Base scaling. Higher values for more details on lower zoom levels</td>
+          <td>1</td>
+        </tr>
+        <tr>
+          <td>UnderZoom</td>
+          <td>Number of zoom levels to downscale higher resolution chart tiles
+            if no chart tile is available at the requested zoom level.</td>
+          <td>4</td>
+        </tr>
+        <tr>
+          <td>AreaUnder</td>
+          <td>If with in the under zoom range still no charts have been found,
+            just try some lower zoom layers - but only display the areas (land,
+            depth) - no other information.<br>
+            Be careful when increasing this as this could impact the performance
+            a lot.</td>
+          <td>2</td>
+        </tr>
+        <tr>
+          <td>OverZoom</td>
+          <td>Number of zoom levels to upscale a lower resolution chart tile if
+            is no chart tile is available with better resolution.<br>
+            <b>Hint</b>: Scale, UnderZoom and OverZoom heavily influence the
+            cost of the rendering process as they determine the number of charts
+            to be processed to generate a single chart tile. Lower values
+            normally mean less charts (i.e. being faster) - but there could be
+            white areas between chart tiles. The defaults should be a good
+            compromise.</td>
+          <td>4</td>
+        </tr>
+        <tr>
+          <td>Scale Tolerance</td>
+          <td>When scaling the map or the symbols (symbol scale) all the symbols
+            have to be rendered on those scaled values.<br>
+            To avoid too much additional symbols you can allow a small tolerance
+            here.</td>
+          <td>0.1</td>
+        </tr>
+        <tr>
+          <td>Rotation Tolerance</td>
+          <td>When Objects (symbols, lines, lights... have to be rotated on the
+            map for each different angel a new symbol has to be created. To
+            optimize performance and memory usage we can allow a small tolerance
+            here so that a couple of different angles can use the same rotated
+            symbol (in degrees)</td>
+          <td>2</td>
+        </tr>
+        <tr>
+          <td>SymbolScale</td>
+          <td>Scale the display of symbols. Some of the symbols are build out of
+            raster data - so a scale &gt; 2 could already make theme look very
+            ugly.</td>
+          <td>1</td>
+        </tr>
+        <tr>
+          <td>Depth</td>
+          <td>Unit for soundings(Meters, Feet, Fathoms)</td>
+          <td>Meters</td>
+        </tr>
+        <tr>
+          <td>Shallow Depth</td>
+          <td>Adjust to your needs</td>
+          <td>2</td>
+        </tr>
+        <tr>
+          <td>Safety Depth</td>
+          <td>Adjust to your needs</td>
+          <td>3</td>
+        </tr>
+        <tr>
+          <td>Deep Depth</td>
+          <td>Adjust to your needs</td>
+          <td>5</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>At the tab "Detail Settings" you can switch on/off particular chart
+      features. Those detail settings will only become effective when using the
+      display category "User Standard".</p>
+    <h2><a name="featureinfo"></a>Feature Info (Object Query)</h2>
+    <p>When you click on a chart you will heav AvNav's Feature info. This will
+      be extended by some important information found around the click position.</p>
+    <img src="FeatureInfo-OCharts1.png" alt="" class="fimage">
+    <p>By clicking "Info" you can view the raw information from the chart.</p>
+    <p><img src="ochartsng-featureinfo2.png" class="fimage"> </p>
+    <p> By clicking the blue chart name you can get some more information about
+      the chart that this object belongs to.</p>
+    <img src="file:///home/andreas/projects/avnav/docs/hints/ochartsng-featureinfo3.png"
+      alt="" class="fimage">
+    <h2><a name="Installation"></a>Installation</h2>
+    <h3>Linux/Raspberry</h3>
+    <p>The plugin is available as a debian package.<br>
+      As the plugin is currently in a beta phase, the packages are still not
+      part of the official repositories.</p>
+    <p>For the <a href="../install.html#Headless">Headless Images</a> the
+      necessary packages can be found in the beta repository (to enable it you
+      can edit the file /etc/apt/sources.list.d/extra.list - as root).<br>
+      Alternatively you can download them from the <a href="../../downloads/daily-ochartsng">daily
+        builds directory</a>.</p>
+    <ul>
+      <li>avnav-ochartsng-plugin</li>
+    </ul>
+    <div class="code">sudo apt-get update<br>sudo apt-get install avnav-ochartsng-plugin<br>sudo systemctl restart avnav</div>
+    <p>If you are working on other images you should add the repository from
+      free-x:</p>
+    <div class="code">deb https://www.free-x.de/debpreview buster main contrib non-free</div>
+    <p>You can also see the packages in the release list below. To use one of
+      those packages (if it is not in the repo yet or if you need an older one)
+      - just download and install the package (replace the version by the one
+      you want): </p>
+    <div class="code">cd /home/pi/avnav<br>wget -O avnav-ochartsng_20240214-raspbian-bullseye_armhf.deb https://www.wellenvogel.net/software/avnav/downloads/daily-ochartsng/20240214/avnav-ochartsng_20240214-raspbian-bullseye_armhf.deb<br>sudo apt install ./avnav-ochartsng_20240214-raspbian-bullseye_armhf.deb<br>sudo systemctl restart avnav</div>
+    <h2><a name="Releases"></a></h2>
+    <p> You can also download to a PC, transfer by scp/WinScp to the pi and
+      install then. </p>
+    <h3>Android</h3>
+    <p>On android there is an extra app that will contain the ochartsng.</p>
+    <p>See <a href="#android">AndroidApp</a> below.</p>
+    <h2><a name="Releases"></a>Releases</h2>
+    <p>You can find all releases and intermediate developer builds (daily
+      builds) at:</p>
+    <ul>
+      <li><a href="../../downloads/release-ochartsng">Releases</a></li>
+      <li><a href="../../downloads/daily-ochartsng">Daily Builds</a></li>
+    </ul>
+    <ul>
+    </ul>
+    <h3>Release Versions</h3>
+    <ul>
+    </ul>
+    <h2><a name="License"></a>License Notes</h2>
+    <p>Using the charts in AvNav with the oesenc-pi plugin has been agreed with
+      o-charts and therefore is inline with their license conditions.<br>
+      You have to agree to the <a href="https://o-charts.org/manuals/docs/EN_rrc_eula_ChartSetsForOpenCPN.html">license
+        conditions</a> of <a href="https://o-charts.org/shop/en/content/3-our-conditions">o-charts</a><br>
+      Especially it is not allowed to copy the charts or use them on other than
+      the licensed systems.</p>
+    <p>Access to the charts in AvNav is only possible from within the local net.
+      You can connect at most 5 devices (Clients) at the same time.</p>
+    <p>For software licenses see the <a href="https://github.com/wellenvogel/ochartsng/blob/master/Readme.md">Readme.</a></p>
+    <h2><a name="PluginConfig"></a> Plugin Configuration</h2>
+    <p>Linux only. For Android refer to TODO Android.<br>
+      Some of the plugins settings can be changed on the server/status page <img
+        src="../viewerimages/icons-new/status.svg" alt="" class="inlineimage">
+      at "plugins/system-ochartsng" .</p>
+    <p><img src="ochartsng-edit-plugin.png" class="image fimage"> </p>
+    <p>Those are:</p>
+    <table border="1" width="100%">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Meaning</td>
+          <td>Default</td>
+        </tr>
+        <tr>
+          <td>port</td>
+          <td>Http port </td>
+          <td>8082</td>
+        </tr>
+        <tr>
+          <td>debug</td>
+          <td>log level for &lt;datadir&gt;/ocharts/provider.log.<br>
+            &lt;datadir&gt; on a raspberry is /home/pi/avnav/data</td>
+          <td>1</td>
+        </tr>
+        <tr>
+          <td>memPercent</td>
+          <td>The amount of memory (percent of the system memory) that the
+            plugin (correctly: the provider process) will use. If this value is
+            not set (or set to low) the provider will use an internal minimum.<br>
+            This potentially could be rather low - especially when using raster
+            charts. If it is very low the provider must open and close chart
+            files very often and this will slow down it's operation. If you have
+            enough memory (e.g. 2GB) you can increase speed by setting the
+            memory to 1GB .</td>
+          <td>50</td>
+        </tr>
+        <tr>
+          <td>tileCachekb</td>
+          <td>KB of memory to be used for the internal tile cache (set to 0 to
+            disable it for some testing)</td>
+          <td>40960</td>
+        </tr>
+        <tr>
+          <td>useLegacy</td>
+          <td>Also use the charts that have been installed with the old
+            avnav-ocharts-plugin. By activating this you can disable the old
+            plugin in the settings and just use all the charts you already
+            installed.</td>
+          <td>off</td>
+        </tr>
+      </tbody>
+    </table>
+    <h2><a name="Details"></a></h2>
+    <h2><a name="android"></a>Android App</h2>
+    <p>With this new version there is alos support for the <a href="../android/android.html">AvNav
+        android app</a>.<br>
+      The Ocharts support is built into a separate Android App - avocharts.</p>
+    <p>Currently the app is not (yet) available in the google play store as it
+      is still in beta status. So you need to download it from the <a href="../../downloads/daily-ochartsng">daily
+        builds directory</a> and install it (allow external sources).</p>
+    <p><img src="ochartsng-android-main.jpg" class="fimage"></p>
+    <p>After you started up avocharts for the first time you can adapt some
+      settings and you can register at the ocharts shop (on android this is only
+      possible using the Online Process).<br>
+      When you see this pciture the real ocharts provider process is still not
+      running - it will start up when you tap "start".</p>
+    <p>Later it will not be necessary to start the avocharts app by hand - it
+      should normally being started automatically when AvNav starts up. But it
+      can help to troubleshoot as you can get access to the output and log of
+      the chart provider.</p>
+    <p>To adapt settings tap on the shown settings or on the settings icon on
+      the upper right.</p>
+    <p><img src="ochartsng-android-settings.jpg" alt="" class="fimage"></p>
+    <br>
+    <table border="1" width="100%">
+      <tbody>
+        <tr>
+          <td>Name</td>
+          <td>Explanation</td>
+          <td>Default</td>
+        </tr>
+        <tr>
+          <td>Port</td>
+          <td>The IP Port the provider process will use. If you get srrors when
+            you start the provider and see something like "address already in
+            use" in the output (tapping the out button on the main page) you
+            maybe need to change the port</td>
+          <td>8082</td>
+        </tr>
+        <tr>
+          <td>LogLevel</td>
+          <td>0 - errors, 1- info, 2- debug</td>
+          <td>1</td>
+        </tr>
+        <tr>
+          <td>Shutdown</td>
+          <td>Time (in seconds) the provider will wait for a heartbeat from
+            AvNav before it stops (only active when started by AvNav)</td>
+          <td>30</td>
+        </tr>
+        <tr>
+          <td>Memory</td>
+          <td>Allowed Memory usage (%) of the system memory</td>
+          <td>50</td>
+        </tr>
+        <tr>
+          <td>Testmode</td>
+          <td>internal testing only</td>
+          <td>false</td>
+        </tr>
+        <tr>
+          <td>Use alt key</td>
+          <td>See below for the hints about Release/Beta Versions</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>Disk symbol (upper right)</td>
+          <td>Save your key (See below for the hints about Release/Beta
+            Versions)</td>
+          <td><br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>When done with the settings tap the back arrow.</p>
+    <p>You can now start the chart provider by tapping "START".</p>
+    <p><img src="ochartsng-android-running.jpg" class="fimage"></p>
+    <p>When the provider process is up an running you will see the indication in
+      the notification bar. If something goes wrong just try to have a look at
+      the output (tapping "OUT") or the log (tapping "LOG").</p>
+    <p>Tapping "APP" will open up a browser window with the ochartsng app - the
+      same view like you get from within AvNav.</p>
+    <p><img src="ochartsng-android-webmain.jpg" alt="" class="fimage"></p>
+    <h3>Beta and Release Versions</h3>
+    <p>Due to the way that the ocharts license daemon is working you will
+      normally not be able to use charts that you installed with the release
+      version within the beta version and vice versa.<br>
+      To overcome this problem you can export the necessary information from the
+      app version that you used to assign the charts and import this in the
+      different version. Hint: You still can only use this on the same android
+      device!</p>
+    <p>To export a key tap the disk symbol on the settings screen within the app
+      and store the file at a safe place. When you later use the alternative
+      version, select "use alternate key" , tap on the key value and import the
+      saved key file there.</p>
+    <p>You can easily check if your app has the correct key by going to the shop
+      page and log in. When the shop recognizes your current key it will show
+      the system name - see Online Process.</p>
+    <h2>Technical Details</h2>
+    <p>The charts are provided by an executable on the raspberry pi that
+      normally serves at port 8082. <br>
+      Communication with AvNav is handled by an AvNav <a href="plugins.html">plugin</a>.</p>
+    <p>The GUI is a reactjs app that is also provided by the executable. It is
+      integrated into AvNav as a <a href="../userdoc/addonpage.html">User App</a>.</p>
+    <p>You will find the complete code at <a href="https://github.com/wellenvogel/ochartsng">GitHub</a>.</p>
+    <p>You install into /usr/lib/avnav/plugins/ochartsng. The data directory is
+      /home/pi/avnav/data/ochartsng. You can set some additional parameters for
+      the AvNav plugin by editing <a href="configfile.html">avnav_server.xml</a>.
+      Normally this is not necessary at all. </p>
+    <p><a name="Upload"></a>You can separately set the directory for all
+      settings and the charts: </p>
+    <div class="code">&lt;AVNPluginHandler&gt;<br>...<br>&lt;system-ochartsng dataDir="$DATADIR/ochartsng"/&gt;<br>&lt;/AVNPluginHandler&gt;</div>
+    <br>
+    <p> </p>
+  </body>
+</html>
