@@ -4,7 +4,7 @@
     <title>AvNav OCharts</title>
     <link href="../styles.css" rel="stylesheet" type="text/css">
   </head>
-  <body data-order="700">
+  <body data-order="700" class="fimage">
     <h1>Avnav Ocharts(NG)</h1>
     <div class="toc"></div>
     <p>AvNav ochartsng is a new implementation of the <a href="ocharts.html">AvNav
@@ -110,7 +110,7 @@
     <p>Via <img src="../viewerimages/icons-new/apps.svg" alt="" class="inlineimage">-&gt;<img
         src="ochartsngicon.png" class="inlineimage"> you enter the GUI of the
       plugin, select the "Charts" tab.</p>
-    <img src="ocharts-gui-charts1.png" class="fimage">
+    <img src="ochartsng-gui-charts1.png" class="fimage">
     <p>Use "Get Fingerprint" to create the fingerprint file. If you are using an
       o-charts dongle - just select "Get Fingerprint(Dongle)". The dongle button
       will only be visible if a dongle has been detected (dongle line is green).</p>
@@ -162,6 +162,58 @@
     <p><br>
     </p>
     <h3><a name="onlineprocess"></a>The Online Process</h3>
+    <p>For using the online process your system (the server that runs AvNav -
+      not necessarily the one that you run your browser on) needs internet
+      connectivity.</p>
+    <p>It will allow you to register your system, check if it is known in the
+      ocharts shop, list charts or updates being available for download,
+      download and install them.<br>
+      Currently the buying process and the assignments of the charts have to be
+      done on the o-charts web site. But the GUI will contain a link button to
+      go there.<br>
+      The AvNav ochartsng will not store any shop credentials. But as you run
+      inside a browser you can easily use your browser to store the credentials
+      (like you do on any other web site).</p>
+    <p>Security hint: Although the communication with the ocharts shop is
+      secured by SSL the communication between your browser and the AvNav server
+      is not. So when you are using the online process just be sure to work
+      within a secured network (e.g. behind an LTE router or a mobile phone
+      hotspot).</p>
+    <p><img src="ochartsng-shop1.png" alt=""> </p>
+    <p>When opening the "shop" tab you will not be logged in and you will see an
+      info whether a dongle is active on your system or not. Via the "ShopPage"
+      button you can directly access the o-charts web page (but better log in
+      first...).</p>
+    <p>With tapping "Login" you will login to the o-charts shop. </p>
+    <p><img src="ochartsng-shoploggedin.png" alt=""></p>
+    <p>When the shop already knows your current system the "Shop name" will be
+      shown and the list of available charts/updates that have been assigned to
+      your system (see <a href="#offlineprocess">OfflineProcess</a>) will be
+      shown.<br>
+      If a version in the shop is newer as your local version (or the chart is
+      not locally available) you can immediately install it.</p>
+    <p><img src="ochartsng-shopupdate.png" alt="" class="fimage"></p>
+    <p><img src="ochartsng-shopdownload.png" alt=""></p>
+    <p>After downloading the chart will be unpacked and can immediately be used.
+      If it is an update for an existing chart set, the new version will become
+      active but the old one will still be available. On the chart tab you can
+      later on delete the older version if you don't need this any more.</p>
+    <p>Important hint:<br>
+      As the charts in the shop will only remain available for download as long
+      as they are valid (one year) please store the charts additionally at a
+      safe place. You can either do this from the shop website by requesting the
+      charts (like in the offline process). Or you can download the chart set
+      from the "charts" tab (Download button).</p>
+    <p>If your system is still not known to the shop you are able to register it
+      there.</p>
+    <p><img src="ochartsng-shopunknown.png" alt=""></p>
+    On linux systems you will be prompted for a system name but on android the
+    system name is fixed and cannot be changed.<br>
+    <p>After you registered your system you can click the "ShopPage" link and
+      start assigning charts to your system. When coming back to the shop tab
+      you need to refresh to get the list of charts that have been assigned.</p>
+    <p><br>
+    </p>
     <h2><a name="MainSettings"></a>Adapting the Look and Feel</h2>
     <p>As the o-charts are vector charts you can adjust their look and feel.
       However some limitations must be considered:</p>
