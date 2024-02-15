@@ -29,10 +29,13 @@
     <p>Currently this implementation is in a beta status. So there are / could
       be some restrictions:</p>
     <ul>
-      <li>Handleing of oeRNC charts (raster charts) is still not implemented</li>
+      <li>Handling of oeRNC charts (raster charts) is still not implemented</li>
       <li>There could be bugs in the display or in some handling flows</li>
+      <li>On Android you cannot use the same licens for OpenCPN and for AvNav</li>
+      <li>You should not run AvNav ocharts and OpenCPN at the same time on
+        Android</li>
     </ul>
-    <h3>Overview</h3>
+    <h2>Overview</h2>
     <div class="toc"> </div>
     <p>AvNav is able to handle charts in various raster formats. So far it was
       unable to handle any commercial charts. The&nbsp; <a href="https://o-charts.org/">o-charts</a>
@@ -54,7 +57,42 @@
       via <img src="../viewerimages/icons-new/apps.svg" alt="" class="inlineimage">(User
       Apps) and&nbsp; Ocharts-Provider&nbsp; <img src="ochartsngicon.png" alt=""
         class="inlineimage">.</p>
-    <img src="ochartsng-gui1.png" class="fimage"><br>
+    <p> <img src="ochartsng-gui1.png" class="fimage"></p>
+    <br>
+    <h2>Chart Types</h2>
+    <p>AvNav ochartsng can handle the o-charts vector charts (oeusenc) as
+      described in this document.<br>
+      Additionally it can also handle unencrypted vector charts - like S57
+      charts available for download for various regions.<br>
+      To use S57 charts they need to be converted into the OpenCPN format that
+      this plugin understands. <br>
+      There are 2 Options to convert such charts.</p>
+    <h3>Converting using OpenCPN</h3>
+    <p>If you already have a computer with OpenCPN up and running you can let
+      OpenCPN convert the charts. To do so you need to activate the charts in
+      OpenCPN. On the OpenCPN settings / tab "chart files" just click "Prepare
+      all ENC Charts".</p>
+    <p><img src="ochartsng-convert-opencpn.png" alt=""></p>
+    <p>This will create a lot of files with the s57 extension in the OpenCPN
+      directory (~/.opencpn on linux). Just pick the ones with similar names
+      like your s57 charts, copy them in a new, empty directory with a name that
+      explains the chart set. Afterwards create a text file "Chartinfo.txt" in
+      this directory with just one line of text:</p>
+    <p class="code">ChartInfo: nameOfTheChart</p>
+    <p>Create a zip archive from this directory so that the zip archive has this
+      directory inside. This archive can be uploaded to AvNav ochartsng.<br>
+      On Linux there is a <a href="https://github.com/wellenvogel/ochartsng/blob/master/tools/collectS57.sh">script</a>
+      to automate this collection process.</p>
+    <h3>Converting with a Script</h3>
+    <p>The avnav-ochartsng-plugin contains a python script to convert S57 data
+      into a zip archive that can be uploaded. So if you have a linux system
+      with the plugin being installed you can run the script with</p>
+    <p class="code">/usr/lib/anvnav/plugins/ochartsng/tosenc.py input output</p>
+    <p>Input can either be a directory with the s57 files (.000,.001,...) or a
+      zip file that contains them. Output should be the name of a zip file.<br>
+      The conversion process requires to install mapbox-earcut with pip:</p>
+    <p class="code">pip3 install mapbox-earcut</p>
+    <p>Later on this will be integrated into the AvNav chart converter.</p>
     <h2><a name="Charts"></a>Buying and Installing the Charts</h2>
     <p>Important Hint: <span style="color: #ff6666;">If you do not have a
         dongle from o-charts, your chart license is bound to your system. So in
