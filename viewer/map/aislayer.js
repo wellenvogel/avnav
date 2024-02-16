@@ -18,7 +18,7 @@ import cloneDeep from 'clone-deep';
 const DEFAULT_COLOR="#f7c204";
 
 class StyleEntry {
-    constructor(colorStyle,src, style, replaceColor) {
+    constructor(colorStyle, src, style, replaceColor) {
         this.src = src;
         this.style = style;
         this.loaded = false;
@@ -432,15 +432,13 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,drawTargetFuncti
     let courseVectorWidth=globalStore.getData(keys.properties.navCircleWidth);
     let scale=globalStore.getData(keys.properties.aisIconScale,1);
     let classbShrink=globalStore.getData(keys.properties.aisClassbShrink,1);
-    let useHeading=globalStore.getData(keys.properties.aisUseHeading,false);
-
     // own ship
     let cog=globalStore.getData(keys.nav.gps.course,0);
     let sog=globalStore.getData(keys.nav.gps.speed,0);
     // ais target
-    let target_cog=useHeading ? (current.heading||0) : (current.course||0);
+    let target_cog=current.course||0;
     let target_sog=current.speed||0;
-
+    let target_hdg=(current.heading===undefined?current.course:current.heading)||0;
     let symbol=this.getStyleEntry(current);
     let style=cloneDeep(symbol.style);
     if (! symbol.image || ! style.size) return;
@@ -448,8 +446,7 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,drawTargetFuncti
         style.alpha=parseFloat(style.alpha);
         if (isNaN(style.alpha)) {
             style.alpha = undefined;
-        }
-        else{
+        }else{
             if (style.alpha < 0) style.alpha=0;
             if (style.alpha > 1) style.alpha=1;
         }
@@ -470,20 +467,32 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,drawTargetFuncti
         style.rotateWithView=false;
     }
     else{
-        style.rotation = Helper.radians(target_cog);
+        style.rotation = Helper.radians(target_hdg);
         style.rotateWithView=true;
     }
-    if (drawEstimated && symbol.ghostImage){
-        if (target_sog >= globalStore.getData(keys.properties.aisMinDisplaySpeed) && current.age > 0){
-            let age=current.age;
-            if (current.receiveTime < now){
-                age+=(now-current.receiveTime)/1000;
+    if (drawEstimated!==undefined) { // do not draw vectors in target info view
+        if (drawEstimated && symbol.ghostImage){
+            if (target_sog >= globalStore.getData(keys.properties.aisMinDisplaySpeed) && current.age > 0){
+                let age=current.age;
+                if (current.receiveTime < now){
+                    age+=(now-current.receiveTime)/1000;
+                }
+                let ghostPos=drawTargetFunction(xy,target_cog,target_sog*age);
+                drawing.drawImageToContext(ghostPos,symbol.ghostImage,style);
             }
-            let ghostPos=drawTargetFunction(xy,target_cog,target_sog*age);
-            drawing.drawImageToContext(ghostPos,symbol.ghostImage,style);
+        }
+        if (drawRelMotionVector && style.courseVector !== false) {
+            // relative motion vector
+            if (target_sog || sog) {
+                let drm,srm; // direction and speed of relative motion
+                [drm,srm]=Helper.addPolar([target_cog,target_sog],[cog,-sog]);
+                if (srm) {
+                    let other=drawTargetFunction(xy,drm,srm*courseVectorTime);
+                    drawing.drawLineToContext([xy,other],{color:style.courseVectorColor,width:courseVectorWidth,dashed:true});
+                }
+            }
         }
     }
-    let curpix=drawing.drawImageToContext(xy,symbol.image,style);
     if (useCourseVector && style.courseVector !== false) {
         // true motion vector
         if (target_sog) {
@@ -491,17 +500,7 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,drawTargetFuncti
             drawing.drawLineToContext([xy,other],{color:style.courseVectorColor,width:courseVectorWidth});
         }
     }
-    if (drawRelMotionVector && style.courseVector !== false) {
-        // relative motion vector
-        if (target_sog || sog) {
-            let drm,srm; // direction and speed of relative motion
-            [drm,srm]=Helper.addPolar([target_cog,target_sog],[cog,-sog]);
-            if (srm) {
-                let other=drawTargetFunction(xy,drm,srm*courseVectorTime);
-                drawing.drawLineToContext([xy,other],{color:style.courseVectorColor,width:courseVectorWidth,dashed:true});
-            }
-        }
-    }
+    let curpix=drawing.drawImageToContext(xy,symbol.image,style);
     return {pix:curpix,scale:scale, style: style};
 };
 
