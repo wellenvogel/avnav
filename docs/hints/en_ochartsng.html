@@ -468,11 +468,13 @@
     <div class="code">sudo nano /etc/apt/sources.list.d/extra.list</div>
     <div class="code"><span style="color: red;">#</span>deb [signed-by=/usr/share/keyrings/oss.boating.gpg] https://www.free-x.de/debpreview bullseye main contrib non-free
     deb [signed-by=/usr/share/keyrings/oss.boating.gpg] https://www.free-x.de/debian bullseye main contrib non-free</div>
-    <p>
-      aha
-    </p>
+    <p>Just remove the hash mark at the debpreview line. Afterwards you can
+      install the package normally with the avnav updater:</p>
     <ul>
-      <li>avnav-ochartsng-plugin</li>
+      <li>avnav-ochartsng</li>
+    </ul>
+    <p>If you want to do this from the command line execute:</p>
+    <ul>
     </ul>
     <div class="code">sudo apt-get update<br>sudo apt-get install avnav-ochartsng-plugin<br>sudo systemctl restart avnav</div>
     <p>If you are working on other images you should add the repository from
@@ -492,16 +494,15 @@
     <p>When you install the new avnav-ochartsng-plugin you will get some
       conflict with the existing ocharts plugin. At the end both will try to use
       the same port - so at least one of the two will fail to start.<br>
-      The suggested solution is to disable the avnav-ocharts-plugin on the&nbsp;<img
-        src="../viewerimages/icons-new/status.svg" alt="" class="inlineimage"> <a
-        href="../userdoc/statuspage.html">server/status page</a>.<br>
-      Additionally enable the "useLegacy" switch in the <a href="#PluginConfig">PluginConfig</a>.
-      This way the ochartsng plugin will also use all the charts that you
-      installed with the old plugin.</p>
-    <p>If you would like to run both plugins in parallel (e.g. to compare the
-      display) change the port of the ochartsng plugin to e.g. 8083. Running
-      both in parallel should only be done if your system has sufficient RAM (at
-      least 2GB).</p>
+      The suggested solution is to disable the ocharts-plugin on the&nbsp;<img src="../viewerimages/icons-new/status.svg"
+        alt="" class="inlineimage"> <a href="../userdoc/statuspage.html">server/status
+        page</a>.<br>
+      Additionally enable the "useLegacy" switch in the <a href="#PluginConfig">PluginConfig</a>
+      of the ochartsng plugin. This way the new plugin will also use all the
+      charts that you installed with the old one.</p>
+    <p>If you would like to run both plugins in parallel change the port of the
+      ochartsng plugin to e.g. 8083. Running both in parallel should only be
+      done if your system has sufficient RAM (at least 2GB).</p>
     <h3>Android</h3>
     <p>On android there is an extra app that will contain the ochartsng.</p>
     <p>See <a href="#android">AndroidApp</a> below.</p>
@@ -515,6 +516,7 @@
     <ul>
     </ul>
     <h3>Release Versions</h3>
+    <p>-- none yet --</p>
     <ul>
     </ul>
     <h2><a name="License"></a>License Notes</h2>
@@ -590,8 +592,7 @@
         builds directory</a> and install it (allow external sources).</p>
     <p><img src="ochartsng-android-main.jpg" class="fimage"></p>
     <p>After you started up avocharts for the first time you can adapt some
-      settings and you can register at the ocharts shop (on android this is only
-      possible using the Online Process).<br>
+      settings.<br>
       When you see this picture the real ocharts provider process is still not
       running - it will start up when you tap "start".</p>
     <p><a name="androidstartup"></a>Later it will not be necessary to start the
@@ -671,6 +672,8 @@
     <p>Tapping "APP" will open up a browser window with the ochartsng app - the
       same view like you get from within AvNav.</p>
     <p><img src="ochartsng-android-webmain.jpg" alt="" class="fimage"></p>
+    <p>You now can e.g. register at the ocharts shop (on android this is only
+      possible using the Online Process).</p>
     <h3><a name="androidbetarelease"></a>Beta and Release Versions</h3>
     <p>Due to the way that the ocharts license daemon is working you will
       normally not be able to use charts that you installed with the release
@@ -685,13 +688,14 @@
       saved key file there.<br>
       You can easily check if your app has the correct key by going to the shop
       page and log in. When the shop recognizes your current key it will show
-      the system name - see Online Process. </p>
+      the system name - see <a href="#onlineprocess">Online Process</a>. </p>
     <p>Please also consider the <a href="#androidstartup">automatic startup
-        relations</a> between the Beta nand Release version.</p>
+        relations</a> between the Beta and Release version.</p>
     <h2>Technical Details</h2>
-    <p>The charts are provided by an executable on the raspberry pi that
-      normally serves at port 8082. <br>
-      Communication with AvNav is handled by an AvNav <a href="plugins.html">plugin</a>.</p>
+    <p>The charts are provided by an executable that normally serves at port
+      8082. <br>
+      Communication with AvNav is handled by an AvNav <a href="plugins.html">plugin</a>
+      on linux and by the avocharts app on Android.</p>
     <p>The GUI is a reactjs app that is also provided by the executable. It is
       integrated into AvNav as a <a href="../userdoc/addonpage.html">User App</a>.</p>
     <p>You will find the complete code at <a href="https://github.com/wellenvogel/ochartsng">GitHub</a>.</p>
