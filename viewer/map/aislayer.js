@@ -428,6 +428,7 @@ const amul=(arr,fact)=>{
 AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,drawTargetFunction,drawEstimated){
     let courseVectorTime=globalStore.getData(keys.properties.navBoatCourseTime,0);
     let useCourseVector=globalStore.getData(keys.properties.aisUseCourseVector,false);
+    let drawRelMotionVector=globalStore.getData(keys.properties.aisUseRelMotionVector,false);
     let courseVectorWidth=globalStore.getData(keys.properties.navCircleWidth);
     let scale=globalStore.getData(keys.properties.aisIconScale,1);
     let classbShrink=globalStore.getData(keys.properties.aisClassbShrink,1);
@@ -483,20 +484,22 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,drawTargetFuncti
         }
     }
     let curpix=drawing.drawImageToContext(xy,symbol.image,style);
-    if (useCourseVector && style.courseVector !== false){
+    if (useCourseVector && style.courseVector !== false) {
         // true motion vector
-        let trueMotionVectorLength=target_sog*courseVectorTime;
-        if (trueMotionVectorLength > 0){
-            let other=drawTargetFunction(xy,target_cog,trueMotionVectorLength);
+        if (target_sog) {
+            let other=drawTargetFunction(xy,target_cog,target_sog*courseVectorTime);
             drawing.drawLineToContext([xy,other],{color:style.courseVectorColor,width:courseVectorWidth});
         }
+    }
+    if (drawRelMotionVector && style.courseVector !== false) {
         // relative motion vector
-        let drm,srm;
-        [drm,srm]=Helper.addPolar([target_cog,target_sog],[cog,-sog]);
-        let relMotionVectorLength=srm*courseVectorTime;
-        if (relMotionVectorLength > 0){
-            let other=drawTargetFunction(xy,drm,relMotionVectorLength);
-            drawing.drawLineToContext([xy,other],{color:style.courseVectorColor,width:courseVectorWidth,dashed:true});
+        if (target_sog || sog) {
+            let drm,srm; // direction and speed of relative motion
+            [drm,srm]=Helper.addPolar([target_cog,target_sog],[cog,-sog]);
+            if (srm) {
+                let other=drawTargetFunction(xy,drm,srm*courseVectorTime);
+                drawing.drawLineToContext([xy,other],{color:style.courseVectorColor,width:courseVectorWidth,dashed:true});
+            }
         }
     }
     return {pix:curpix,scale:scale, style: style};

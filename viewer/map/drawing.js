@@ -198,29 +198,23 @@ Drawing.prototype.drawImageToContext=function(point,image,opt_options){
  * draw a dashed line
  * coordinates have to be in device coordinates
  * @private
- * @param x1 start x
- * @param y1 start y
- * @param x2 end x
- * @param y2 end y
+ * @param ax start x
+ * @param ay start y
+ * @param bx end x
+ * @param by end y
  * @param dashLen the len in device pixel
  */
-Drawing.prototype.dashedLine = function (x1, y1, x2, y2, dashLen) {
-    this.context.moveTo(x1, y1);
-    let dX = x2 - x1;
-    let dY = y2 - y1;
-    let dashes = Math.floor(Math.sqrt(dX * dX + dY * dY) / dashLen);
-    if (dashes < 4) dashes=4;
-    let dashX = dX / dashes;
-    let dashY = dY / dashes;
-
-    let q = 0;
-    while (q++ < dashes) {
-        x1 += dashX;
-        y1 += dashY;
-        this.context[q % 2 == 0 ? 'moveTo' : 'lineTo'](x1, y1);
+Drawing.prototype.dashedLine = function(ax, ay, bx, by, dashlen) {
+    var dx = bx-ax, dy = by-ay;
+    var dashes = Math.max(Math.floor(Math.sqrt(dx * dx + dy * dy) / Math.max(1,dashlen)),3);
+    dashes += 1-dashes%2; // force odd number of dashes to draw visible dash at end
+    dx/=dashes; dy/=dashes;
+    for(var i=0;i<=dashes;i++) {
+        var x=ax+i*dx, y=ay+i*dy;
+        this.context[i % 2 ? 'lineTo' : 'moveTo'](x,y);
     }
-    this.context[q % 2 == 0 ? 'moveTo' : 'lineTo'](x2, y2);
 };
+
 /**
  * draw an arrow with the current line style settings
  * x1,y1 being the peak (end of this line), x2,y2 the start, width - with at bottom
@@ -283,7 +277,8 @@ Drawing.prototype.drawLineToContext=function(points,opt_style){
     let i;
     let dashlen=0;
     if (opt_style && opt_style.dashed){
-        dashlen=this.context.canvas.width/100;
+//        dashlen=this.context.canvas.width/100;
+        dashlen=6;
         dashlen*=this.devPixelRatio;
     }
     let last=p;
@@ -332,8 +327,10 @@ Drawing.prototype.drawLineToContext=function(points,opt_style){
         p=this.pointToCssPixel(points[i]);
         rt.push(p);
         p=this.pixelToDevice(p);
-        if (dashlen == 0) this.context.lineTo(p[0],p[1]);
-        else this.dashedLine(last[0],last[1],p[0],p[1],dashlen);
+//        if (dashlen == 0) this.context.lineTo(p[0],p[1]);
+//        else this.dashedLine(last[0],last[1],p[0],p[1],dashlen);
+        this.context.lineTo(p[0],p[1]);
+        if(dashlen) this.context.setLineDash([dashlen,dashlen]);
         if (arrowStyle && (nminus1 === undefined || Math.abs(last[0]-p[0]))> 0.01) {
             nminus1 = last;
         }
@@ -344,6 +341,7 @@ Drawing.prototype.drawLineToContext=function(points,opt_style){
     }
 
     this.context.stroke();
+    this.context.setLineDash([]);
     return rt;
 };
 /**
