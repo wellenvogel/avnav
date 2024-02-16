@@ -498,6 +498,15 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,drawTargetFuncti
         if (target_sog) {
             let other=drawTargetFunction(xy,target_cog,target_sog*courseVectorTime);
             drawing.drawLineToContext([xy,other],{color:style.courseVectorColor,width:courseVectorWidth});
+            // turn indicator
+            if(current.turn && drawEstimated!==undefined) {
+                let sgn=Math.sign(current.turn);
+                let rot=Math.abs(current.turn);//Math.pow(current.turn/4.733,2); // °/min
+                if(rot && isFinite(rot)){
+                    let w=drawTargetFunction(other,target_cog+sgn*90,rot/127*target_sog*courseVectorTime);
+                    drawing.drawLineToContext([other,w],{color:"black",width:courseVectorWidth});
+                }
+            }
         }
     }
     let curpix=drawing.drawImageToContext(xy,symbol.image,style);
