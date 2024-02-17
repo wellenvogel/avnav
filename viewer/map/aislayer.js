@@ -425,7 +425,7 @@ const amul=(arr,fact)=>{
     }
 }
 
-AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,drawTargetFunction,drawEstimated){
+AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunction,drawEstimated){
     let courseVectorTime=globalStore.getData(keys.properties.navBoatCourseTime,0);
     let useCourseVector=globalStore.getData(keys.properties.aisUseCourseVector,false);
     let drawRelMotionVector=globalStore.getData(keys.properties.aisUseRelMotionVector,false);
@@ -436,10 +436,10 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,drawTargetFuncti
     let cog=globalStore.getData(keys.nav.gps.course,0);
     let sog=globalStore.getData(keys.nav.gps.speed,0);
     // ais target
-    let target_cog=current.course||0;
-    let target_sog=current.speed||0;
-    let target_hdg=(current.heading===undefined?current.course:current.heading)||0;
-    let symbol=this.getStyleEntry(current);
+    let target_cog=target.course||0;
+    let target_sog=target.speed||0;
+    let target_hdg=(target.heading===undefined?target.course:target.heading)||0;
+    let symbol=this.getStyleEntry(target);
     let style=cloneDeep(symbol.style);
     if (! symbol.image || ! style.size) return;
     if (style.alpha !== undefined){
@@ -451,11 +451,11 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,drawTargetFuncti
             if (style.alpha > 1) style.alpha=1;
         }
     }
-    if (current.hidden){
+    if (target.hidden){
         style.alpha=0.2;
     }
     let now=(new Date()).getTime();
-    if (classbShrink != 1 && AisFormatter.format('clazz',current) === 'B'){
+    if (classbShrink != 1 && AisFormatter.format('clazz',target) === 'B'){
         scale=scale*classbShrink;
     }
     if (scale != 1){
@@ -465,17 +465,16 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,drawTargetFuncti
     if (style.rotate !== undefined && ! style.rotate) {
         style.rotation = 0;
         style.rotateWithView=false;
-    }
-    else{
+    }else{
         style.rotation = Helper.radians(target_hdg);
         style.rotateWithView=true;
     }
     if (drawEstimated!==undefined) { // do not draw vectors in target info view
         if (drawEstimated && symbol.ghostImage){
-            if (target_sog >= globalStore.getData(keys.properties.aisMinDisplaySpeed) && current.age > 0){
-                let age=current.age;
-                if (current.receiveTime < now){
-                    age+=(now-current.receiveTime)/1000;
+            if (target_sog >= globalStore.getData(keys.properties.aisMinDisplaySpeed) && target.age > 0){
+                let age=target.age;
+                if (target.receiveTime < now){
+                    age+=(now-target.receiveTime)/1000;
                 }
                 let ghostPos=drawTargetFunction(xy,target_cog,target_sog*age);
                 drawing.drawImageToContext(ghostPos,symbol.ghostImage,style);
@@ -499,9 +498,9 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,current,drawTargetFuncti
             let other=drawTargetFunction(xy,target_cog,target_sog*courseVectorTime);
             drawing.drawLineToContext([xy,other],{color:style.courseVectorColor,width:courseVectorWidth});
             // turn indicator
-            if(current.turn && drawEstimated!==undefined) {
-                let sgn=Math.sign(current.turn);
-                let rot=Math.abs(current.turn);//Math.pow(current.turn/4.733,2); // °/min
+            if(target.turn && drawEstimated!==undefined) {
+                let sgn=Math.sign(target.turn);
+                let rot=Math.abs(target.turn);//Math.pow(target.turn/4.733,2); // °/min
                 if(rot && isFinite(rot)){
                     let w=drawTargetFunction(other,target_cog+sgn*90,rot/127*target_sog*courseVectorTime);
                     drawing.drawLineToContext([other,w],{color:"black",width:courseVectorWidth});
