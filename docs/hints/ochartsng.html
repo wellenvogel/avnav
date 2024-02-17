@@ -248,120 +248,118 @@
       aktualisieren.</p>
     <p><br>
     </p>
-    <h2><a name="MainSettings"></a>Adapting the Look and Feel</h2>
-    <p>As the o-charts are vector charts you can adjust their look and feel.
-      However some limitations must be considered:</p>
+    <h2><a name="MainSettings"></a>Anpassung des Aussehens</h2>
+    <p>Da die O-charts Karten zunächst als Vektorkarten vorhanden sind, kann in
+      weiten Bereichen das Aussehen der Karten angepasst werden. Dabei sind
+      allerdings einige Einschränkungen zu beachten: </p>
     <ol>
-      <li>The modifications apply to the server's chart settings - so they will
-        become effective for all displays.</li>
-      <li>If you change the look and feel all data in the internal cache is
-        wiped and the chart tiles must be rendered from scratch. So this will
-        (potentially) introduce some delays on systems with less computing
-        power.</li>
+      <li>Die Anpassung erfolgt auf der Server-Seite und ist damit für alle
+        verbundenen Displays gleichartig wirksam</li>
+      <li>Wenn das Aussehen geändert wird, werden die im internen Cache
+        gespeicherten Kartenkacheln gelöscht, so das es auf langsamen Systemen
+        danach leichte Verzögerungen geben kann.</li>
     </ol>
-    <p>Changing display parameters is done in the plugin GUI(<img src="../viewerimages/icons-new/apps.svg"
+    <p>Die Veränderung der Parameter erfolgt über die GUI des Plugins(<img src="../viewerimages/icons-new/apps.svg"
         alt="" class="inlineimage">-&gt;<img src="ochartsngicon.png" class="inlineimage">),
-      tab "Main Settings".</p>
-    <img src="ochartsng-settings1.png" class="fimage">
-    <p>If you change a setting (1) it will be displayed bold. Changes will only
-      become effective when you click "Update Settings"(2).<br>
-      When you changed the settings the chart display will be rebuild. This will
-      typically cause a small delay with no display at all.</p>
-    <p>By selecting "Cancel" you can revert your changes. "Defaults" will reset
-      to the built-in defaults. Most parameters are similar to the ones you find
-      at&nbsp; <a href="https://opencpn.org/wiki/dokuwiki/doku.php?id=opencpn:opencpn_user_manual:options_setting">OpenCPN
-        settings</a>.</p>
-    <p>The following parameters are available.</p>
+      Reiter "Main Settings".</p>
+    <img src="ochartsng-settings1.png" class="fimage">Wenn eine Einstellung
+    geändert wird (1) wird der Parameter fett dargestellt. Die Änderungen werden
+    erst wirksam, wenn "Update Settings"(2) angeklickt wird.
+    <p>Mit Cancel können die Änderungen zurückgenommen werden, Defaults setzt
+      die Einstellungen auf Default-Werte. Die Parameter entsprechen weitgehend
+      den bei <a href="https://opencpn.org/wiki/dokuwiki/doku.php?id=opencpn:opencpn_user_manual:options_setting">OpenCPN
+        vorhandenen Settings</a>.</p>
+    Die folgende Tabelle listet die Einstellungen.
     <table border="1" width="100%">
       <tbody>
         <tr>
           <td>Name</td>
-          <td>Meaning</td>
+          <td>Bedeutung</td>
           <td>Default</td>
         </tr>
         <tr>
           <td>Show Text</td>
-          <td>show text for chart objects</td>
-          <td>true</td>
+          <td>Zeige Texte zu den Objekten auf der Karte</td>
+          <td>an</td>
         </tr>
         <tr>
           <td>Important Text Only</td>
-          <td>hide less important text</td>
-          <td>false</td>
+          <td>Verberge weniger wichtige Texte</td>
+          <td>aus</td>
         </tr>
         <tr>
           <td>Light Descriptions</td>
-          <td>show descriptions for lights</td>
-          <td>true</td>
+          <td>Beschreibungen für Feuer</td>
+          <td>an</td>
         </tr>
         <tr>
           <td>Show Depths</td>
-          <td>show soundings</td>
-          <td>true</td>
+          <td>Zeige Tiefen Werte</td>
+          <td>an</td>
         </tr>
         <tr>
           <td>Show Quality</td>
-          <td>show extra objects indicating the quality</td>
-          <td>false</td>
+          <td>Zeige extra Objekte für die Karten-Qualität</td>
+          <td>aus</td>
         </tr>
         <tr>
           <td>Chart Information Objects</td>
-          <td>show informational objects</td>
-          <td>true</td>
+          <td>spezielle Objekte auf der Karte</td>
+          <td>an</td>
         </tr>
         <tr>
           <td>Buoy/Light Labels</td>
-          <td>show labels for buoys and lights</td>
-          <td>true</td>
+          <td>Bezeichnungen für Feuer/Tonnen</td>
+          <td>an</td>
         </tr>
         <tr>
           <td>National text on chart</td>
-          <td>show national text</td>
-          <td>true</td>
+          <td>Nationale Texte</td>
+          <td>an</td>
         </tr>
         <tr>
           <td>Show Lights</td>
-          <td>show lights</td>
-          <td>true</td>
+          <td>Zeige Feuer</td>
+          <td>an</td>
         </tr>
         <tr>
           <td>Show Anchor Info</td>
-          <td>show anchoring information</td>
-          <td>true</td>
+          <td>Zeige Informationen über den Ankergrund</td>
+          <td>an</td>
         </tr>
         <tr>
           <td>Color Scheme</td>
-          <td>The color scheme to be used for the chart display</td>
+          <td>Das Farbschema für die Darstellung</td>
           <td>DAY_BRIGHT</td>
         </tr>
         <tr>
           <td>Chart Bounds</td>
-          <td>Show the chart bounding boxes</td>
-          <td>true</td>
+          <td>Zeige die Ränder der Karten</td>
+          <td>an</td>
         </tr>
         <tr>
           <td>Reduced Detail at Small Scale</td>
-          <td>reduce details at lower zoom levels</td>
-          <td>true</td>
+          <td>Reduziere die Details auf geringeren Zoom-Leveln</td>
+          <td>an</td>
         </tr>
         <tr>
           <td>De-Cluttered Text</td>
-          <td>improve text positioning</td>
-          <td>true</td>
+          <td>Bessere Anordnung der Texte</td>
+          <td>an</td>
         </tr>
         <tr>
           <td>Display Category</td>
-          <td>Base, Standard, All, User Standard</td>
+          <td>Art der Darstellung (Base, Standard, All, User Standard)</td>
           <td>Standard</td>
         </tr>
         <tr>
           <td>Graphics Style</td>
-          <td>Paper Chart, Simplified</td>
+          <td>Grafische Darstellung (Paper Chart, Simplified)</td>
           <td>Paper Chart</td>
         </tr>
         <tr>
           <td>Boundaries</td>
-          <td>Plain, Symbolized</td>
+          <td>Art der Begrenzungen(Plain, Symbolized)</td>
           <td>Plain</td>
         </tr>
         <tr>
@@ -371,273 +369,281 @@
         </tr>
         <tr>
           <td>Text Font Size</td>
-          <td>Scaling for text on charts</td>
+          <td>Skalierung für die Text-Grösse</td>
           <td>1 (ca. 12px)</td>
         </tr>
         <tr>
           <td>Soundings Font Size</td>
-          <td>Scaling for soundings</td>
+          <td>Skalierung für die Tiefen-Angaben</td>
           <td>1 (ca. 12px)</td>
         </tr>
         <tr>
           <td>Scale</td>
-          <td>Base scaling. Higher values for more details on lower zoom levels</td>
+          <td>Basis Skalierung. Höhere Werte sorgen für mehr Details auf
+            kleineren Zoom-Stufen</td>
           <td>1</td>
         </tr>
         <tr>
           <td>UnderZoom</td>
-          <td>Number of zoom levels to downscale higher resolution chart tiles
-            if no chart tile is available at the requested zoom level.</td>
+          <td>Anzahl der Zoom Stufen, die eine höher aufgelöste Karte
+            verkleinert wird, wenn auf dem gewünschten Level keine Karte
+            vorhanden ist</td>
           <td>4</td>
         </tr>
         <tr>
           <td>AreaUnder</td>
-          <td>If with in the under zoom range still no charts have been found,
-            just try some lower zoom layers - but only display the areas (land,
-            depth) - no other information.<br>
+          <td>Wenn im Bereich "UnderZoom" immer noch keine Karte für den Bereich
+            gefunden wurde, benutzte weitere (höhere) zoom level. Für diese
+            Karten werden dann nur If with in the under zoom range still no
+            charts have been found, just try some lower zoom layers - but only
+            display the areas (land, depth) - no other information.<br>
             Be careful when increasing this as this could impact the performance
             a lot.</td>
           <td>2</td>
         </tr>
         <tr>
           <td>OverZoom</td>
-          <td>Number of zoom levels to upscale a lower resolution chart tile if
-            is no chart tile is available with better resolution.<br>
-            <b>Hint</b>: Scale, UnderZoom and OverZoom, AreaUnder heavily
-            influence the cost of the rendering process as they determine the
-            number of charts to be processed to generate a single chart tile.
-            Lower values normally mean less charts (i.e. being faster) - but
-            there could be white areas between chart tiles. The defaults should
-            be a good compromise.</td>
+          <td>Anzahl der Zoom Stufen, die eine niedriger aufgelöste Karte
+            vergrößert wird,wenn es keine besser aufgelöste Karte gibt.<br>
+            <b>Hinweis</b>: UnderZoom,AreaUnder und OverZoom bestimmen
+            massgeblich, wie aufwendig der Render-Vorgang ist, d.h. wieviele
+            Karten an der Erzeugung einer Kachel beteiligt werden müssen.
+            Kleinere Werte führen zu weniger Karten (schneller) können aber in
+            bestimmten Bereichen zu weissen Flächen zwischen Karten-Teilen
+            führen. Die Defaults sollten ein guter Kompromiss sein.</td>
           <td>4</td>
         </tr>
         <tr>
           <td>Scale Tolerance</td>
-          <td>When scaling the map or the symbols (symbol scale) all the symbols
-            have to be rendered on those scaled values.<br>
-            To avoid too much additional symbols you can allow a small tolerance
-            here.</td>
+          <td>Wenn die Symbole in unterschiedlichen Größen benötigt werden oder
+            die Karte skaliert wird, müssen jeweils neue Symbole intern
+            berechnet werden. MIt einer Toleranz kann man die Anzahl dieser
+            Neuberechnungen etwas verringern.</td>
           <td>0.1</td>
         </tr>
         <tr>
           <td>Rotation Tolerance</td>
-          <td>When Objects (symbols, lines, lights... have to be rotated on the
-            map for each different angle a new symbol has to be created. To
-            optimize performance and memory usage we can allow a small tolerance
-            here so that a couple of different angles can use the same rotated
-            symbol (in degrees)</td>
+          <td>Auf der Karte werden viele Objekte (insbesondere auch Linien) in
+            verschiedenen Rotations-Winkeln benötigt. Um die Zahl der zu
+            erzeugenden Objekte zu verringern, macht eine gewisse Toleranz für
+            den Winkel Sinn.</td>
           <td>2</td>
         </tr>
         <tr>
           <td>SymbolScale</td>
-          <td>Scale the display of symbols. Some of the symbols are build out of
-            raster data - so a scale &gt; 2 could already make theme look very
-            ugly.</td>
+          <td>Skalierung der Symbolgrößen. Da einige Symbole auf Raster-Bildern
+            basieren, ist eine Skalierung &gt; 2 meist nicht sinnvoll.</td>
           <td>1</td>
         </tr>
         <tr>
           <td>Depth</td>
-          <td>Unit for soundings(Meters, Feet, Fathoms)</td>
+          <td>Einheit für die Tiefen-Angaben (Meters, Feet, Fathoms)</td>
           <td>Meters</td>
         </tr>
         <tr>
           <td>Shallow Depth</td>
-          <td>Adjust to your needs</td>
+          <td>Tiefe für Flachwasser</td>
           <td>2</td>
         </tr>
         <tr>
           <td>Safety Depth</td>
-          <td>Adjust to your needs</td>
+          <td>Tiefe für Sicherheits-Kontur</td>
           <td>3</td>
         </tr>
         <tr>
           <td>Deep Depth</td>
-          <td>Adjust to your needs</td>
+          <td>Tiefe für Tiefwasser</td>
           <td>5</td>
         </tr>
       </tbody>
     </table>
-    <p>At the tab "Detail Settings" you can switch on/off particular chart
-      features. Those detail settings will only become effective when using the
-      display category "User Standard".</p>
-    <h2><a name="featureinfo"></a>Feature Info (Object Query)</h2>
-    <p>When you click on a chart you will heav AvNav's Feature info. This will
-      be extended by some important information found around the click position.</p>
+    <p>Unter dem Tab "Detail Settings" können gezielt einzelne Karten-Features
+      an- oder abgeschaltet werden. Diese Einstellungen werden nur im
+      Anzeige-Modus "User Standard" wirksam.</p>
+    <h2><a name="featureinfo"></a>Feature Info (Object Abfrage)</h2>
+    <p>Wenn man auf die Karte klickt, bekommt man die "Feature Info" von AvNav.
+      Diese wird angereichert um wichtige Informationen (Tonne, Feuer) in der
+      Nähe des Klick-Punktes.</p>
     <img src="FeatureInfo-OCharts1.png" alt="" class="fimage">
-    <p>By clicking "Info" you can view the raw information from the chart.</p>
+    <p>Über "Info" können die Roh-Informationen der Karten angezeigt werden.</p>
     <p><img src="ochartsng-featureinfo2.png" class="fimage"> </p>
-    <p> By clicking the blue chart name you can get some more information about
-      the chart that this object belongs to.</p>
+    <p> Mit einem Klick auf den (baluen) Karten-Namen bekommt man einige weitere
+      Informationen zur Karte.</p>
     <img src="ochartsng-featureinfo3.png" alt="" class="fimage">
     <h2><a name="Installation"></a>Installation</h2>
     <h3>Linux/Raspberry</h3>
-    <p>The plugin is available as a debian package.<br>
-      As the plugin is currently in a beta phase, the packages are still not
-      part of the official repositories.</p>
-    <p>For the <a href="../install.html#Headless">Headless Images</a> the
-      necessary packages can be found in the beta repository. To enable it you
-      can edit the file /etc/apt/sources.list.d/extra.list to enable the beta
-      repository.<br>
-      Start the editor with:</p>
+    <p>Das Plugin ist als debian Paket vorhanden.<br>
+      Da es sicht momentan noch im Beta-Status befindet, ist es noch nicht in
+      den normalen Repositories vorhanden.</p>
+    <p>Für die <a href="../install.html#Headless">AvNav Images</a> bekommt man
+      die Pakete im "beta" Verzeichnis. Um dieses zu aktivieren kann man die
+      Datei /etc/apt/sources.list.d/extra.list bearbeiten und das beta
+      Verzeichnis aktivieren.<br>
+      Kommando:</p>
     <div class="code">sudo nano /etc/apt/sources.list.d/extra.list</div>
     <div class="code"><span style="color: red;">#</span>deb [signed-by=/usr/share/keyrings/oss.boating.gpg] https://www.free-x.de/debpreview bullseye main contrib non-free
     deb [signed-by=/usr/share/keyrings/oss.boating.gpg] https://www.free-x.de/debian bullseye main contrib non-free</div>
-    <p>Just remove the hash mark at the debpreview line. Afterwards you can
-      install the package normally with the avnav updater:</p>
+    <p>Einfach das # in der debpreview Zeile entfernen. Anschliessend kann man
+      die Pakete mit dem avnav-updater installieren:</p>
     <ul>
       <li>avnav-ochartsng</li>
     </ul>
-    <p>If you want to do this from the command line execute:</p>
+    <p>Wenn man es direkt von der Kommandozeile machen möchte, kann man das mit
+      den folgenden Kommandos tun:</p>
     <ul>
     </ul>
-    <div class="code">sudo apt-get update<br>sudo apt-get install avnav-ochartsng-plugin<br>sudo systemctl restart avnav</div>
-    <p>If you are working on other images you should add the repository from
-      free-x (adapt "bullseye" to your debian release):</p>
-    <p>Refer to the <a href="../install.html#Packages">AvNav package install
-        description</a>.</p>
+    <div class="code">sudo apt-get update<br>sudo apt-get install avnav-ochartsng<br>sudo systemctl restart avnav</div>
+    <p>Wenn man mit anderen Images arbeitet, sollte man das Verzeichnis von
+      free-x einrichten ("bullseye" an die eigene Debian Version anpassen):</p>
+    <p>Siehe die&nbsp; <a href="../install.html#Packages">AvNav
+        Paket-Installationsbeschreibung</a>.</p>
     <div class="code">deb https://www.free-x.de/debpreview bullseye main contrib non-free</div>
-    <p>Alternatively you can download the packages them from the <a href="../../downloads/daily-ochartsng">daily
-        builds directory</a>.</p>
-    <p>To use one of those packages just download and install the package
-      (replace the version by the one you want): </p>
+    <p>Alternativ kann man die Pakete auch aus dem <a href="../../downloads/daily-ochartsng">daily
+        builds Verzeichnis</a> herunterladen und installieren.</p>
+    <p>Das kann man z.B. mit den folgenden Kommandos tun (die Version durch die
+      gewünschte ersetzen): </p>
     <div class="code">cd /home/pi/avnav<br>wget -O avnav-ochartsng_20240214-raspbian-bullseye_armhf.deb https://www.wellenvogel.net/software/avnav/downloads/daily-ochartsng/20240214/avnav-ochartsng_20240214-raspbian-bullseye_armhf.deb<br>sudo apt install ./avnav-ochartsng_20240214-raspbian-bullseye_armhf.deb<br>sudo systemctl restart avnav</div>
     <h2><a name="Releases"></a></h2>
-    <p> You can also download to a PC, transfer by scp/WinScp to the pi and
-      install then. </p>
-    <h4>AvNav-ocharts and AvNav-ochartsng Together</h4>
-    <p>When you install the new avnav-ochartsng-plugin you will get some
-      conflict with the existing ocharts plugin. At the end both will try to use
-      the same port - so at least one of the two will fail to start.<br>
-      The suggested solution is to disable the ocharts-plugin on the&nbsp;<img src="../viewerimages/icons-new/status.svg"
+    <p> Man kann natürlich auch die Pakete zunächst auf einen PC herunterladen
+      und sie von dort z.B. mit WinSCP auf den Raspberry Pi übertragen und dann
+      dort installieren.</p>
+    <h4>AvNav-ocharts und AvNav-ochartsng zusammen</h4>
+    <p>Wenn man das neue ochartsng Plugin installiert wird es einen Konflikt mit
+      dem bisherigen ocharts Plugin geben. Sie versuchen beide, den gleichen
+      Port (8082) zu benutzen, so eines von beiden wird nicht starten.<br>
+      Die vorgeschlagene Lösung ist, das alte Plugin auf der <img src="../viewerimages/icons-new/status.svg"
         alt="" class="inlineimage"> <a href="../userdoc/statuspage.html">server/status
-        page</a>.<br>
-      Additionally enable the "useLegacy" switch in the <a href="#PluginConfig">PluginConfig</a>
-      of the ochartsng plugin. This way the new plugin will also use all the
-      charts that you installed with the old one.</p>
-    <p>If you would like to run both plugins in parallel change the port of the
-      ochartsng plugin to e.g. 8083. Running both in parallel should only be
-      done if your system has sufficient RAM (at least 2GB).</p>
+        Seite</a> zu disablen.<br>
+      Zusätzlich kann man im neuen Plugin den Schalter "useLegacy" aktivieren
+      (in der <a href="#PluginConfig">Plugin Konfiguration)</a>. Mit diesem
+      Schalter aktiviert benutzt das neue Plugin auch alle Karten, die vorher
+      mit dem alten installiert wurden.</p>
+    <p>Wenn man beide Plugins parallel nutzen möchte, muss man z.B. beim neuen
+      Plugin den Port ändern (beispielsweise auf 8083). Um beide gemeinsam
+      laufen zu lassen, sollte das System über ausreichend RAM verfügen (2GB).</p>
     <h3>Android</h3>
-    <p>On android there is an extra app that will contain the ochartsng.</p>
-    <p>See <a href="#android">AndroidApp</a> below.</p>
+    <p>Für Android git es eine eigene App die ochartsng enthält. Diese muss
+      separat installiert werden.</p>
+    <p>Siehe <a href="#android">AndroidApp</a> weiter unten..</p>
     <h2><a name="Releases"></a>Releases</h2>
-    <p>You can find all releases and intermediate developer builds (daily
-      builds) at:</p>
+    <p>Alle Releases und alle Beta-Versionen (Entwickler Versionen oder daily
+      builds) findet man unter:</p>
     <ul>
       <li><a href="../../downloads/release-ochartsng">Releases</a></li>
       <li><a href="../../downloads/daily-ochartsng">Daily Builds</a></li>
     </ul>
     <ul>
     </ul>
-    <h3>Release Versions</h3>
-    <p>-- none yet --</p>
+    <h3>Release Versionen</h3>
+    <p>-- bisher keine --</p>
     <ul>
     </ul>
     <h2><a name="License"></a>License Notes</h2>
-    <p>Using the charts in AvNav with the oesenc-pi plugin has been agreed with
-      o-charts and therefore is inline with their license conditions.<br>
-      You have to agree to the <a href="https://o-charts.org/manuals/docs/EN_rrc_eula_ChartSetsForOpenCPN.html">license
-        conditions</a> of <a href="https://o-charts.org/shop/en/content/3-our-conditions">o-charts</a><br>
-      Especially it is not allowed to copy the charts or use them on other than
-      the licensed systems.</p>
-    <p>Access to the charts in AvNav is only possible from within the local net.
-      You can connect at most 5 devices (Clients) at the same time.</p>
-    <p>For software licenses see the <a href="https://github.com/wellenvogel/ochartsng/blob/master/Readme.md">Readme.</a></p>
-    <h2><a name="PluginConfig"></a> Plugin Configuration</h2>
-    <p>Linux only. For Android refer to <a href="#androidsettings">Android/Settings</a>.<br>
-      Some of the plugins settings can be changed on the server/status page <img
+    Die Nutzung der Karten für AvNav mit dem oesenc-pi Plugin ist so mit
+    o-charts diskutiert und abgestimmt worden und ist damit legal im Sinne der
+    Lizenzen.<br>
+    Die <a href="https://o-charts.org/manuals/docs/EN_rrc_eula_ChartSetsForOpenCPN.html">Lizenzbedingungen</a>
+    von <a href="https://o-charts.org/shop/en/content/3-our-conditions">o-charts</a>
+    sind dabei unbedingt zu beachten. Es ist insbesondere nicht gestattet, die
+    Karten zu kopieren oder auf anderen als den lizensierten Systemen
+    einzusetzen.
+    <p>Der Zugriff auf die Karten innerhalb von AvNav ist nur aus dem lokalen
+      Netz möglich, maximal können 5 Geräte (Clients) gleichzeitig die o-charts
+      von einem AvNav Server nutzen.</p>
+    Für die Software-Lizenzen siehe die <a href="https://github.com/wellenvogel/ochartsng/blob/master/Readme.md">Readme.</a>
+    <h2><a name="PluginConfig"></a> Plugin Konfiguration</h2>
+    <p>Nur unter Linux. Für Android siehe <a href="#androidsettings">Android/Settings</a>.<br>
+      Einige Einstellungen für das Plugin können auf der server/status Seite <img
         src="../viewerimages/icons-new/status.svg" alt="" class="inlineimage">
-      at "plugins/system-ochartsng" .</p>
+      unter "plugins/system-ochartsng"&nbsp; geändert werden.</p>
     <p><img src="ochartsng-edit-plugin.png" class="fimage"> </p>
     <p>Those are:</p>
     <table border="1" width="100%">
       <tbody>
         <tr>
           <td>Name</td>
-          <td>Meaning</td>
+          <td>Bedeutung</td>
           <td>Default</td>
         </tr>
         <tr>
           <td>port</td>
-          <td>Http port </td>
+          <td>Http port</td>
           <td>8082</td>
         </tr>
         <tr>
           <td>debug</td>
-          <td>log level for &lt;datadir&gt;/ocharts/provider.log.<br>
-            &lt;datadir&gt; on a raspberry is /home/pi/avnav/data</td>
+          <td>Level für das Logging, 0-ERROR,1-INFO,2-DEBUG</td>
           <td>1</td>
         </tr>
         <tr>
           <td>memPercent</td>
-          <td>The amount of memory (percent of the system memory) that the
-            plugin (correctly: the provider process) will use. If this value is
-            not set (or set to low) the provider will use an internal minimum.<br>
-            This potentially could be rather low - especially when using raster
-            charts. If it is very low the provider must open and close chart
-            files very often and this will slow down it's operation. If you have
-            enough memory (e.g. 2GB) you can increase speed by setting the
-            memory to 1GB .</td>
+          <td>Der prozentuale Anteil des Systemspeichers, den der Provider
+            maximal nutzen soll. Wenn man diesen nicht setzt (oder zu klein)
+            berechnet der Provider intern einen Minimalwert und nutzt diesen.<br>
+            Der kann u.U. insbesondere bei der Nutzung von Rasterkarten sehr
+            klein sein und ihn damit zwingen ständig Karten-Dateien zu öffnen
+            und zu schliessen - was die Geschwindigkeit stark reduzieren kann.
+            Wenn man ausreichend Speicher hat (z.B. &gt; 2GB), wird das Arbeiten
+            beschleunigt, wenn man&nbsp; den Speicher auf 1GB setzt.</td>
           <td>50</td>
         </tr>
         <tr>
           <td>tileCachekb</td>
-          <td>KB of memory to be used for the internal tile cache (set to 0 to
-            disable it for some testing)</td>
+          <td>Speicher in KB für die Speicherung von bereits erzeugten
+            Karten-Kacheln (mit&nbsp; 0 erfolgt keine interne Speicherung)</td>
           <td>40960</td>
         </tr>
         <tr>
           <td>useLegacy</td>
-          <td>Also use the charts that have been installed with the old
-            avnav-ocharts-plugin. By activating this you can disable the old
-            plugin in the settings and just use all the charts you already
-            installed.</td>
-          <td>off</td>
+          <td>Nutze auch die Karten, die mit dem alten avnav-ocharts-plugin
+            installiert wurden.</td>
+          <td>aus</td>
         </tr>
       </tbody>
     </table>
     <h2><a name="Details"></a></h2>
     <h2><a name="android"></a>Android App</h2>
-    <p>AvNav OchartsNG also runs on Android and provides charts for the <a href="../android/android.html">AvNav
-        android app</a>.<br>
-      The Ocharts support is built into a separate Android App - avocharts.</p>
-    <p>Currently the app is not (yet) available in the google play store as it
-      is still in beta status. So you need to download it from the <a href="../../downloads/daily-ochartsng">daily
-        builds directory</a> and install it (allow external sources).</p>
+    <p>AvNav OchartsNG steht auch für Android zur Verfügung und stellt die
+      Karten für die <a href="../android/android.html">AvNav Android App</a>
+      bereit.<br>
+      Dazu gibt es die separate Android App&nbsp; "avocharts".</p>
+    <p>Im Moment ist die App noch nicht im google play store vorhanden, da sie
+      ja noch im Beta Stadium ist. Man muss sie daher aus dem <a href="../../downloads/daily-ochartsng">daily
+        builds Verzeichnis</a>&nbsp; herunterladen und auf dem Gerät
+      installieren (Dazu muss man ggf. die Installation aus externen Quellen
+      erlauben).</p>
     <p><img src="ochartsng-android-main.jpg" class="fimage"></p>
-    <p>After you started up avocharts for the first time you can adapt some
-      settings.<br>
-      When you see this picture the real ocharts provider process is still not
-      running - it will start up when you tap "start".</p>
-    <p><a name="androidstartup"></a>Later it will not be necessary to start the
-      avocharts app by hand - it should normally being started automatically
-      when AvNav starts up. But directly starting the avocharts app can help to
-      troubleshoot as you can get access to the output and log of the chart
-      provider.<br>
-      Please consider that the auto start will only work for apps of the same
-      type - i.e. an AvNav release app can only start an avocharts release&nbsp;
-      app and an AvNav beta app can only start an avocharts beta app.<br>
-      So when you install the avocharts beta together with the "normal" AvNav
-      app from the store you need to start avocharts by hand before you can use
-      the charts in AvNav.</p>
-    <h3><a name="androidsettings"></a>Settings</h3>
-    <p>To adapt settings tap on the shown settings or on the settings icon on
-      the upper right.</p>
+    <p>Wenn man die App startet kann man zunächst einige Einstellungen anpassen.<br>
+      Wenn man diese Bild sieht (Status rot) läuft der eigentliche Karten-Server
+      noch nicht. Dieser wird erst durch Klick auf "Start" gestartet.</p>
+    <p><a name="androidstartup"></a>Später wird es normalerweise nicht mehr
+      nötig sein, die avocharts App separat zu starten. Das wird automatisch
+      erfolgen, solbal AvNav startet. Aber mit einem direkten Start kann man
+      unter Umständen Fehler erkennen, indem man die Ausgabe ("OUT") oder die
+      Logdatei ("LOG") anschaut.<br>
+      <b>Bitte beachten</b>: Der automatische Start funktioniert nur bei Apps
+      vom gleichen Typ - d.h. eine AvNav release App kann nur eine avocharts
+      release App starten, eine AvNav beta app eine avocharts beta.<br>
+      Wenn man also die avocharts beta installiert und mit AvNav (release - aus
+      dem Store) nutzen möchte, muss man avocharts per Hand starten und auch
+      noch einmal auf "START" klicken.</p>
+    <h3><a name="androidsettings"></a>Einstellungen</h3>
+    <p>Um Einstellungen anzupassen kann man auf die angezeigten Einstellungen
+      oder auf das Einstellungssymbol (oben rechts) klicken.</p>
     <p><img src="ochartsng-android-settings.jpg" alt="" class="fimage"></p>
     <br>
     <table border="1" width="100%">
       <tbody>
         <tr>
           <td>Name</td>
-          <td>Explanation</td>
+          <td>Bedeutung</td>
           <td>Default</td>
         </tr>
         <tr>
           <td>Port</td>
-          <td>The IP Port the provider process will use. If you get errors when
-            you start the provider and see something like "address already in
-            use" in the output (tapping the out button on the main page) you
-            maybe need to change the port</td>
+          <td>Der HTTP Port, den der Karten-Server nutzen wird. Wenn man bei
+            Start Fehlermeldungen bekommt und unter "OUT" so etwas wie "address
+            already in use" sieht, muss man diesen Port ändern.</td>
           <td>8082</td>
         </tr>
         <tr>
@@ -647,108 +653,115 @@
         </tr>
         <tr>
           <td>Shutdown</td>
-          <td>Time (in seconds) the provider will wait for a heartbeat from
-            AvNav before it stops (only active when started by AvNav)</td>
+          <td>Teit (in Sekunden) die der Karten-Server auf ein Signal von AvNav
+            (Heartbeat) warten, bevor er automatisch stoppt(das ist nur aktive,
+            wenn avocharts automatisch durch AvNav gestartet wurde)</td>
           <td>30</td>
         </tr>
         <tr>
           <td>Memory</td>
-          <td>Allowed Memory usage (%) of the system memory</td>
+          <td>Erlaubte Speichernutzung (%) vom System Speicher (RAM)</td>
           <td>50</td>
         </tr>
         <tr>
           <td>Testmode</td>
-          <td>internal testing only</td>
+          <td>für interne Tests</td>
           <td>false</td>
         </tr>
         <tr>
           <td>Use alt key</td>
-          <td>See below for the <a href="#androidbetarelease">hints</a> about
-            Release/Beta Versions</td>
+          <td>Siehe unten <a href="#androidbetarelease">Hinweise</a> über
+            Release/Beta Versionen</td>
           <td><br>
           </td>
         </tr>
         <tr>
           <td>Disk symbol (upper right)</td>
-          <td>Save your key (See below for the <a href="#androidbetarelease" style="color: black;">hints</a>
-            about Release/Beta Versions)</td>
+          <td>Key specihern (Siehe unten <a href="#androidbetarelease">Hinweise</a>
+            über Release/Beta Versionen)</td>
           <td><br>
           </td>
         </tr>
       </tbody>
     </table>
-    <p>When done with the settings tap the back arrow.</p>
-    <p>You can now start the chart provider by tapping "START".</p>
+    <p>Wenn man die Einstellungen fertig angepasst hat, geht man mit dem Pfeil
+      zurück wieder auf die Hauptseite.</p>
+    <p>Man kann nun den Karten-Server mit "START" loslaufen lassen.</p>
     <p><img src="ochartsng-android-running.jpg" class="fimage"></p>
-    <p>When the provider process is up an running you will see the indication in
-      the notification bar. If something goes wrong just try to have a look at
-      the output (tapping "OUT") or the log (tapping "LOG").</p>
-    <p>Tapping "APP" will open up a browser window with the ochartsng app - the
-      same view like you get from within AvNav.</p>
+    <p>Wenn der Server läuft, wird das in der Benachrichtigungszeile angezeigt.
+      Wenn der Start nicht erfolgreich ist (Status wird wieder rot) kann man in
+      die Ausgabe ("OUT") und in das Log ("LOG") schauen.</p>
+    <p>Ein Klick auf "APP" öffnet ein Browser-Fenster mit der ochartsng Seite -
+      die gleiche Ansicht, die man auch aus AvNav heraus bekommt.</p>
     <p><img src="ochartsng-android-webmain.jpg" alt="" class="fimage"></p>
-    <p>You now can e.g. register at the ocharts shop (on android this is only
-      possible using the Online Process).</p>
-    <h3><a name="androidbetarelease"></a>Beta and Release Versions</h3>
-    <p>Due to the way that the ocharts license daemon is working you will
-      normally not be able to use charts that you installed with the release
-      version within the beta version and vice versa.<br>
-      To overcome this problem you can export the necessary information from the
-      app version that you used to assign the charts and import this in the
-      different version. Hint: You still can only use this on the same android
-      device!<br>
-      To export a key tap the disk symbol on the settings screen within the app
-      and store the file at a safe place. When you later use the alternative
-      version, select "use alternate key" , tap on the key value and import the
-      saved key file there.<br>
-      You can easily check if your app has the correct key by going to the shop
-      page and log in. When the shop recognizes your current key it will show
-      the system name - see <a href="#onlineprocess">Online Process</a>. </p>
-    <p>Please also consider the <a href="#androidstartup">automatic startup
-        relations</a> between the Beta and Release version.</p>
-    <h2>Technical Details</h2>
-    <p>The charts are provided by an executable that normally serves at port
-      8082. <br>
-      Communication with AvNav is handled by an AvNav <a href="plugins.html">plugin</a>
-      on linux and by the avocharts app on Android.</p>
-    <p>The GUI is a reactjs app that is also provided by the executable. It is
-      integrated into AvNav as a <a href="../userdoc/addonpage.html">User App</a>.</p>
-    <p>You will find the complete code at <a href="https://github.com/wellenvogel/ochartsng">GitHub</a>.</p>
-    <p>You install into /usr/lib/avnav/plugins/ochartsng. The data directory is
-      /home/pi/avnav/data/ochartsng. You can set some additional parameters for
-      the AvNav plugin by editing <a href="configfile.html">avnav_server.xml</a>.
-      Normally this is not necessary at all. </p>
-    <p><a name="Upload"></a>You can separately set the directory for all
-      settings and the charts: </p>
+    <p>Man kann jetzt z.B. das System im o-charts Shop registrieren (unter
+      Android geht das nur mit dem <a href="#onlineprocess">Online Process</a>).</p>
+    <h3><a name="androidbetarelease"></a>Beta and Release Versionen</h3>
+    <p>Bedingt durch die Arbeitsweise des o-charts Lizenz-Servers kann man
+      Karten, die man z.B. in der Beta-Version gekauft hat, nicht in der Release
+      Version verwenden (und umgekehrt).<br>
+      Um das zu vermeiden, kann man die benötigte Lizenz-Information (Key) aus
+      der App exportieren und in der anderen Version wieder imprtieren. Hinweis:
+      Man kann die Lizenz trotzdem nur auf dem jeweiligen Gerät nutzen!<br>
+      Um den Key zu exportieren, klickt man auf der Einstellungsseite oben
+      rechts auf das Disketten-Symbol und speichert ihn (bitte auch an ein
+      backup denken, ohne diesen Key kann man später in der anderen App-Version
+      die Karten nicht mehr nutzen). Wenn man später die andere Version der App
+      nutzt, dann aktiviert man dort "use alternate key", klickt auf den
+      alternate key und findet dort einen "Import" Button.<br>
+      Man kann leicht prüfen, ob man die korrekte Lizenz hat, indem man sich im
+      Shop anmeldet und prüft, ob das System korrekt erkannt wird - siehe <a href="#onlineprocess">Online
+        Prozeß</a>. </p>
+    <p>Bitte auch die Hinweise zum <a href="#androidstartup">automatischen
+        Start</a> beachten.</p>
+    <h2>Technische Details</h2>
+    <p>Die Karten werden durch einen Server (eigenes Programm) bereitgestellt.<br>
+      Die Kommunikation mit AvNav wird durch ein AvNav <a href="plugins.html">Plugin</a>
+      unter Linux realisiert und durch die avocharts App auf Android.</p>
+    <p>Die Web-Oberfläche ist eine Reactjs App und wird auch durch den Server
+      bereitgestellt. In AvNav ist sie als <a href="../userdoc/addonpage.html">User
+        App</a> integriert.</p>
+    <p>Der komplette Code findet sich auf <a href="https://github.com/wellenvogel/ochartsng">GitHub</a>.</p>
+    <p>Die Installation erfolgt (unter Linux) in
+      /usr/lib/avnav/plugins/ochartsng. Das Daten-Verzeichnis ist
+      /home/pi/avnav/data/ochartsng. Man kann einige weitere Parameter für das
+      plugin direkt in der <a href="configfile.html">avnav_server.xml</a>
+      setzen. Das sollte im Normalfall aber nicht nötig sein.</p>
+    <p><a name="Upload"></a>Man kann z.B. das Daten-Verzeichnis setzen.</p>
     <div class="code">&lt;AVNPluginHandler&gt;<br>...<br>&lt;system-ochartsng dataDir="$DATADIR/ochartsng"/&gt;<br>&lt;/AVNPluginHandler&gt;</div>
     <br>
     <p> </p>
-    <h3> <a name="chartconversions"></a>Chart Conversions </h3>
-    <p>Unencrypted vector charts like S57 charts have to be converted into the
-      internally used "SENC" format before they can be handled.<br>
-      There are 2 Options to convert such charts.</p>
-    <h4>Converting using OpenCPN</h4>
-    <p>If you already have a computer with OpenCPN up and running you can let
-      OpenCPN convert the charts. To do so you need to activate the charts in
-      OpenCPN. On the OpenCPN settings / tab "chart files" just click "Prepare
-      all ENC Charts".</p>
+    <h3> <a name="chartconversions"></a>Karten Konvertierungen </h3>
+    <p>Unverschlüsselte Vektor Karten wie S57 müssen vor der Bneutzung in das
+      verwendete interne "SENC" Format konvertiert werden.<br>
+      Dafür gibt es 2 Optionen:</p>
+    <h4>Konvertierung mit OpenCPN</h4>
+    <p>Wenn man bereits einen Computer mit OpenCPN hat, kann man dort die Karten
+      konvertieren. <br>
+      Dafür aktiviert man die Karten in OpenCPN. In den OpenCPN
+      Einstellungen/Reiter "chart files" klickt man auf "Prepare all ENC
+      Charts".</p>
     <p><img src="ochartsng-convert-opencpn.png" alt="" class="fimage"></p>
-    <p>This will create a lot of files with the s57 extension in the OpenCPN
-      directory (~/.opencpn on linux). Just pick the ones with similar names
-      like your s57 charts, copy them in a new, empty directory with a name that
-      explains the chart set. Afterwards create a text file "Chartinfo.txt" in
-      this directory with just one line of text:</p>
+    <p>Das erzeugt eine Reihe von Dateien mit der Endung .s57 im OpenCPN
+      Verzeichznis (unter Linux: ~/.opencpn/SENC). Aus diesem Verzeichnis
+      kopiert man alle Dateien mit den gleichen Namen wie die S57 Dateien in ein
+      neues, leeres Verzeichnis. Dieses sollte einen "sprechenden" Namen haben -
+      der wird später angezeigt. Anschliessend erezugt man eine Textdatei
+      "Chartinfo.txt" in diesem Verzeichnis mit genau einer Zeile Text:</p>
     <p class="code">ChartInfo: nameOfTheChart</p>
-    <p>Create a zip archive from this directory so that the zip archive has this
-      directory inside. This archive can be uploaded to AvNav ochartsng.<br>
-      On Linux there is a <a href="https://github.com/wellenvogel/ochartsng/blob/master/tools/collectS57.sh">script</a>
-      to automate this collection process.</p>
-    <h4>Converting with a Script</h4>
-    <p>The avnav-ochartsng-plugin contains a python script to convert S57 data
-      into a zip archive that can be uploaded. So if you have a linux system
-      with the plugin being installed you can run the script with</p>
+    <p>Dann erzeugt man ein zip Archive in dem das Kartenverzeichnis als
+      Unterverzeichnis enthalten ist. Dieses Archive kann man dann zu AvNav
+      ochartsng hochladen.<br>
+      Für Linux gibt es ein <a href="https://github.com/wellenvogel/ochartsng/blob/master/tools/collectS57.sh">script</a>
+      um das Einsammeln der Karten zu automatisieren.</p>
+    <h4>Konvertierung mit einem Python Script</h4>
+    <p>Das avnav-ochartsng Paket enthält ein python script um die S57 Daten in
+      eine ZIP Datei mit SENC zu wandeln. Auf einem Linux System mit dem
+      installierten Plugin-Paket kann man das ausführen mit:</p>
     <p class="code">/usr/lib/anvnav/plugins/ochartsng/tosenc.py input output</p>
-    <p>Input can either be a directory with the s57 files (.000,.001,...) or a
-      zip file that contains them. Output should be the name of a zip file.</p>
-    Later on the converter will be integrated into the AvNav chart converter.
+    <p>Der "input" kann entweder ein Verzeichnis mit S57 Dateien oder eine ZIP
+      Datei sein. "output" muss der Name einer ZIP Datei sein.</p>
+    Zukünftig wird der Konverter in den AvNav Karten-Konverter integriert
+    werden.
   </body>
 </html>
