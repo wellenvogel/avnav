@@ -178,7 +178,7 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
     let boatPosition = this.mapholder.transformToMap(gps.position.toCoord());
     if (globalStore.getData(keys.properties.layers.boat) && gps.valid) {
         let courseVectorTime=parseInt(globalStore.getData(keys.properties.navBoatCourseTime,600));
-        let courseVetcorDistance=(gps.speed !== undefined)?gps.speed*courseVectorTime:0;
+        let courseVectorDistance=(gps.speed !== undefined)?gps.speed*courseVectorTime:0;
         let f=globalStore.getData(keys.properties.boatIconScale,1.0);
         boatStyle.size=[boatStyle.size[0]*f, boatStyle.size[1]*f];
         boatStyle.anchor=[boatStyle.anchor[0]*f,boatStyle.anchor[1]*f];
@@ -189,11 +189,11 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
             if (boatStyle.courseVectorColor !== undefined) {
                 courseVectorStyle.color = boatStyle.courseVectorColor;
             }
-            if (courseVetcorDistance > 0 && boatStyle.courseVector !== false) {
-                other = this.computeTarget(boatPosition, course, courseVetcorDistance);
+            if (courseVectorDistance > 0 && boatStyle.courseVector !== false) {
+                other = this.computeTarget(boatPosition, course, courseVectorDistance);
                 drawing.drawLineToContext([boatPosition, other], courseVectorStyle);
                 if (boatDirectionMode !== 'cog' && boatRotation !== undefined && globalStore.getData(keys.properties.boatDirectionVector)) {
-                    other = this.computeTarget(boatPosition, boatRotation, courseVetcorDistance);
+                    other = this.computeTarget(boatPosition, boatRotation, courseVectorDistance);
                     drawing.drawLineToContext([boatPosition, other], assign({dashed: true}, courseVectorStyle));
                 }
             }
