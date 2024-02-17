@@ -433,6 +433,7 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
     let scale=globalStore.getData(keys.properties.aisIconScale,1);
     let classbShrink=globalStore.getData(keys.properties.aisClassbShrink,1);
     let useHeading=globalStore.getData(keys.properties.aisUseHeading,true);
+    let lostTime=globalStore.getData(keys.properties.aisLostTime,0);
     // own ship
     let cog=globalStore.getData(keys.nav.gps.course,0);
     let sog=globalStore.getData(keys.nav.gps.speed,0);
@@ -452,7 +453,8 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
             if (style.alpha > 1) style.alpha=1;
         }
     }
-    if (target.hidden){
+    let hidden = target.hidden || lostTime && target.age>lostTime;
+    if (hidden){
         style.alpha=0.2;
     }
     let now=(new Date()).getTime();
@@ -470,18 +472,8 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
         style.rotation = Helper.radians(target_hdg);
         style.rotateWithView=true;
     }
-    if (drawEstimated!==undefined) { // do not draw vectors in target info view
-        if (drawEstimated && symbol.ghostImage){
-            if (target_sog >= globalStore.getData(keys.properties.aisMinDisplaySpeed) && target.age > 0){
-                let age=target.age;
-                if (target.receiveTime < now){
-                    age+=(now-target.receiveTime)/1000;
-                }
-                let ghostPos=drawTargetFunction(xy,target_cog,target_sog*age);
-                drawing.drawImageToContext(ghostPos,symbol.ghostImage,style);
-            }
-        }
-        if (drawRelMotionVector && style.courseVector !== false) {
+    if(!hidden){
+        if (drawRelMotionVector && style.courseVector !== false && drawEstimated!==undefined) {
             // relative motion vector
             if (target_sog || sog) {
                 let drm,srm; // direction and speed of relative motion
@@ -492,25 +484,35 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
                 }
             }
         }
-    }
-    if (useCourseVector && style.courseVector !== false) {
-        // true motion vector
-        if (target_sog) {
-            let other=drawTargetFunction(xy,target_cog,target_sog*courseVectorTime);
-            drawing.drawLineToContext([xy,other],{color:style.courseVectorColor,width:courseVectorWidth});
-            // turn indicator
-            if(target.turn && drawEstimated!==undefined) {
-                let sgn=Math.sign(target.turn);
-                let rot=Math.abs(target.turn);//Math.pow(target.turn/4.733,2); // °/min
-                if(rot && isFinite(rot)){
-                    let w=drawTargetFunction(other,target_cog+sgn*90,rot/127*target_sog*courseVectorTime);
-                    drawing.drawLineToContext([other,w],{color:"black",width:courseVectorWidth});
+        if (useCourseVector && style.courseVector !== false) {
+            // true motion vector
+            if (target_sog) {
+                let other=drawTargetFunction(xy,target_cog,target_sog*courseVectorTime);
+                drawing.drawLineToContext([xy,other],{color:style.courseVectorColor,width:courseVectorWidth});
+                // turn indicator
+                if(target.turn && drawEstimated!==undefined) {
+                    let sgn=Math.sign(target.turn);
+                    let rot=Math.abs(target.turn);//Math.pow(target.turn/4.733,2); // °/min
+                    if(rot && isFinite(rot)){
+                        let w=drawTargetFunction(other,target_cog+sgn*90,rot/127*target_sog*courseVectorTime);
+                        drawing.drawLineToContext([other,w],{color:"black",width:courseVectorWidth});
+                    }
                 }
+            }
+        }
+        if (drawEstimated && symbol.ghostImage){
+            if (target_sog >= globalStore.getData(keys.properties.aisMinDisplaySpeed) && target.age > 0){
+                let age=target.age;
+                if (target.receiveTime < now){
+                    age+=(now-target.receiveTime)/1000;
+                }
+                let ghostPos=drawTargetFunction(xy,target_cog,target_sog*age);
+                drawing.drawImageToContext(ghostPos,symbol.ghostImage,style);
             }
         }
     }
     let curpix=drawing.drawImageToContext(xy,symbol.image,style);
-    return {pix:curpix,scale:scale, style: style};
+    return {pix:curpix, scale:scale, style: style};
 };
 
 AisLayer.prototype.computeTextOffsets=function(drawing, target,textIndex, opt_baseOffset,opt_iconScale){
