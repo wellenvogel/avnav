@@ -432,13 +432,14 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
     let courseVectorWidth=globalStore.getData(keys.properties.navCircleWidth);
     let scale=globalStore.getData(keys.properties.aisIconScale,1);
     let classbShrink=globalStore.getData(keys.properties.aisClassbShrink,1);
+    let useHeading=globalStore.getData(keys.properties.aisUseHeading,false);
     // own ship
     let cog=globalStore.getData(keys.nav.gps.course,0);
     let sog=globalStore.getData(keys.nav.gps.speed,0);
     // ais target
     let target_cog=target.course||0;
     let target_sog=target.speed||0;
-    let target_hdg=(target.heading===undefined?target.course:target.heading)||0;
+    let target_hdg=(useHeading && target.heading!==undefined?target.heading:target.course)||0;
     let symbol=this.getStyleEntry(target);
     let style=cloneDeep(symbol.style);
     if (! symbol.image || ! style.size) return;
