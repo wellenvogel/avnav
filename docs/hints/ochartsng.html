@@ -17,13 +17,12 @@
         (nach einer einmaligen <a href="#chartconversions">Konvertierung</a>)</li>
       <li>Die Anzeige kann noch stärker angepasst werden</li>
       <li>Es werden keine großen Disk-Caches mehr angelegt. Das verringert die
-        Schreiblast auf der SD Karte und die CPU Last.write load and a lot of
-        CPU load</li>
+        Schreiblast auf der SD Karte und die CPU Last.</li>
       <li>Es braucht keinen Restart mehr, wenn neue Karten hinzugefügt werden.</li>
       <li>Es können mehr Prozessorkerne genutzt werden und es sollte auf den
         meisten Systemen schneller laufen.</li>
       <li>Es werden wesentlich weniger externe Pakete benötigt. Insbesondere
-        auch keine lauffähiges X11 Umgebung.</li>
+        auch keine lauffähige X11 Umgebung.</li>
       <li>Es wird weniger Speicher benötigt.</li>
       <li>...</li>
     </ul>
@@ -46,22 +45,21 @@
       die Karten für viele Gebiete der Erde für OpenCPN bereitstellt. </p>
     <p>Nach einigen Absprachen mit der Firma können diese Karten nun auch für
       AvNav genutzt werden (ab Version&nbsp; 2024xxx mit diesem neuen plugin - <a
-        href="#Installation">siehe unten</a>). Bisher können die oesenc
-      Vektor-Karten genutzt werden.</p>
-    <p>Bisher können die oesenc Vektor-Karten genutzt werden. Das erledigt ein
-      neues Plugin für AvNav (avnav-ochartsng). Die Umwandlung erfolgt dabei im
-      laufenden Betrieb immer dann, wenn die Karten dargestellt werden sollen.
-      Ein gewisser Teil der Kartenkacheln wird im Server im Speicher aufbewahrt,
-      so das diese sehr schnell erneut bereitgestellt werden können. Das
-      beschleunigt die Anzeige, wenn man zwischen verschiedenen Zoom Stufen
-      wechselt oder mehrere Displays angeschlossen sind.</p>
+        href="#Installation">siehe unten</a>).&nbsp;</p>
+    <p>Bisher können die oesenc Vektor-Karten genutzt werden. Die Umwandlung
+      erfolgt dabei im laufenden Betrieb immer dann, wenn die Karten dargestellt
+      werden sollen. Ein gewisser Teil der Kartenkacheln wird im Server im
+      Speicher aufbewahrt, so das diese sehr schnell erneut bereitgestellt
+      werden können. Das beschleunigt die Anzeige, wenn man zwischen
+      verschiedenen Zoom Stufen wechselt oder mehrere Displays angeschlossen
+      sind.</p>
     <p>Das Handling der Karten erfolgt dabei vollständig durch das Plugin - das
       betrifft auch die Installation (die Karten können nicht über die normale <a
         href="../userdoc/downloadpage.html">Download-Seite</a> hochgeladen
       werden). Das Plugin hat dazu eine eigene GUI, die von der Hauptseite über
       den Button <img src="../viewerimages/icons-new/apps.svg" alt="" class="inlineimage">(User
-      Apps) und dort über den Button Ocharts-Provider <img src="ochartsngicon.png"
-        alt="" class="inlineimage"> erreichbar ist.</p>
+      Apps) und dort über den Button OchartsNG <img src="ochartsngicon.png" alt=""
+        class="inlineimage"> erreichbar ist.</p>
     <p> <img src="ochartsng-gui1.png" class="fimage"></p>
     <br>
     <h2>Karten Typen</h2>
@@ -78,8 +76,8 @@
         von o-charts hat, sind die Karten an das System gebunden. Wenn es daher
         beim Einbringen oder bei der Nutzung der Karten Probleme gibt, bitte <b>nicht</b>
         das System neu aufsetzen - sondern eine Reparatur versuchen. Wenn man
-        das System neu aufsetzt, werden die Lizenzen ungültig. Ich helfe gerne
-        bei Problemen - Kontakt z.B. per <a href="mailto:andreas@wellenvogel.net">email</a>.</span>
+        das System neu aufsetzt, werden u.U. die Lizenzen ungültig. Ich helfe
+        gerne bei Problemen - Kontakt z.B. per <a href="mailto:andreas@wellenvogel.net">email</a>.</span>
     </p>
     <p>Nur bei Nutzung der AvNav Images ist auch ein update der Images möglich.
       Bitte im Zweifel vorher testen.</p>
@@ -199,19 +197,20 @@
       zugeordnet wurden anzeigen zu lassen. Man kann diese dann direkt
       herunterladen und installieren.<br>
       Das eigentliche Kaufen der Karten und die Zuordnung zum System muss über
-      die o-charts Webseite vorgenommen werden. Ein der ochartsNG Weboberfläche
+      die o-charts Webseite vorgenommen werden. In der ochartsng Weboberfläche
       ist ein Link-Button vorhanden, der einen direkt dort hin bringt.<br>
       AvNav ochartsng speichert keine Login-Daten für den Shop. Da aber die
-      Applikation ja im Browser läuft, können die Login Daten dort gespeichert
+      Applikation im Browser läuft, können die Login Daten dort gespeichert
       werden (wie für jede andere Webseite).</p>
     <p><span style="color: red;">Sicherheitshinweis</span>: Die Kommunikation
       zwischen AvNav ochartsng und dem o-charts Shop ist verschlüsselt. Die
       Kommunikation zwischen dem Browser und dem AvNav Server aber nicht. Daher
       darf der Online Prozeß nur verwendet werden, wenn man sich in einem
       sicheren WLAN befindet (z.B. hinter einem LTE Router oder einem mobilen
-      Hotspot) - niemals aber in einem öffentlichen WLAN.</p>
+      Hotspot) - niemals aber direkt in einem öffentlichen WLAN wenn der Browser
+      und der Server nicht auf dem gleichen Rechner laufen.</p>
     <p><img src="ochartsng-shop1.png" alt="" class="fimage"> </p>
-    <p>Wenn man den "Shop" Reiter öffnet ist man zunächst nich im Shop
+    <p>Wenn man den "Shop" Reiter öffnet ist man zunächst nicht im Shop
       eingelogged. Man kann sehen, ob momentan ein Dongle aktiv ist oder nicht.
       Über den "ShopPage" Button gelangt man direkt zur o-charts Webseite (aber
       es macht mehr Sinn, sich zunächst einzuloggen).</p>
@@ -226,18 +225,18 @@
       Karten lokal noch nicht vorhanden ist) kann man sie direkt installieren.</p>
     <p><img src="ochartsng-shopupdate.png" alt="" class="fimage"></p>
     <p><img src="ochartsng-shopdownload.png" alt="" class="fimage"></p>
-    <p>Nach dem Herunterladen wirde die Karten entpackt und kann sofort genutzt
+    <p>Nach dem Herunterladen wird die Karten entpackt und kann sofort genutzt
       werden. Wenn es ein update für eine existierende Karte ist, wird die neue
-      Version aktiv und die alte wird "disabled" (gleiche Verhalten wie beim
-      Upload einer Karte). Auf dem "Charts" Reiter kann man später die alte
+      Version aktiv und die alte wird "disabled" (gleiches Verhalten wie beim
+      Hochladen einer Karte). Auf dem "Charts" Reiter kann man später die alte
       Version löschen, wenn man sie nicht mehr benötigt.</p>
     <p><span style="color: red;">Wichtiger Hinweis</span>:<br>
       Die Karten im Shop bleiben nur während ihrer Gültigkeitsdauer (1 Jahr)
       verfügbar. Bitte daher die Karten noch einmal lokal sicher aufbewahren.
-      Das kann man entweder durch Anforderung auf der Shop-Webseite (wie im
-      Offline Prozeß) tun oder man kann die ZIP Datei direkt vom "Charts" Reiter
+      Das kann man entweder durch Anforderung auf der Shop-Webseite tun (wie im
+      Offline Prozeß) oder man kann die ZIP Datei direkt vom "Charts" Reiter
       herunterladen.</p>
-    <p>Wnn das System im Shop noch nicht bekannt ist, kann man es hier
+    <p>Wenn das System im Shop noch nicht bekannt ist, kann man es hier
       registrieren.</p>
     <p><img src="ochartsng-shopunknown.png" alt="" class="fimage"></p>
     Auf einem Linux System wird man nach einem Namen für das System gefragt,
@@ -249,9 +248,9 @@
     <p><br>
     </p>
     <h2><a name="MainSettings"></a>Anpassung des Aussehens</h2>
-    <p>Da die O-charts Karten zunächst als Vektorkarten vorhanden sind, kann in
-      weiten Bereichen das Aussehen der Karten angepasst werden. Dabei sind
-      allerdings einige Einschränkungen zu beachten: </p>
+    <p>Da die O-charts Karten als Vektorkarten vorhanden sind, kann in weiten
+      Bereichen das Aussehen der Karten angepasst werden. Dabei sind allerdings
+      einige Einschränkungen zu beachten: </p>
     <ol>
       <li>Die Anpassung erfolgt auf der Server-Seite und ist damit für alle
         verbundenen Displays gleichartig wirksam</li>
@@ -259,9 +258,9 @@
         gespeicherten Kartenkacheln gelöscht, so das es auf langsamen Systemen
         danach leichte Verzögerungen geben kann.</li>
     </ol>
-    <p>Die Veränderung der Parameter erfolgt über die GUI des Plugins(<img src="../viewerimages/icons-new/apps.svg"
-        alt="" class="inlineimage">-&gt;<img src="ochartsngicon.png" class="inlineimage">),
-      Reiter "Main Settings".</p>
+    <p>Die Veränderung der Parameter erfolgt über die Oberfläche des Plugins(<img
+        src="../viewerimages/icons-new/apps.svg" alt="" class="inlineimage">-&gt;<img
+        src="ochartsngicon.png" class="inlineimage">), Reiter "Main Settings".</p>
     <img src="ochartsng-settings1.png" class="fimage">Wenn eine Einstellung
     geändert wird (1) wird der Parameter fett dargestellt. Die Änderungen werden
     erst wirksam, wenn "Update Settings"(2) angeklickt wird.
@@ -467,14 +466,14 @@
     <img src="FeatureInfo-OCharts1.png" alt="" class="fimage">
     <p>Über "Info" können die Roh-Informationen der Karten angezeigt werden.</p>
     <p><img src="ochartsng-featureinfo2.png" class="fimage"> </p>
-    <p> Mit einem Klick auf den (baluen) Karten-Namen bekommt man einige weitere
+    <p> Mit einem Klick auf den (blauen) Karten-Namen bekommt man einige weitere
       Informationen zur Karte.</p>
     <img src="ochartsng-featureinfo3.png" alt="" class="fimage">
     <h2><a name="Installation"></a>Installation</h2>
     <h3>Linux/Raspberry</h3>
     <p>Das Plugin ist als debian Paket vorhanden.<br>
-      Da es sicht momentan noch im Beta-Status befindet, ist es noch nicht in
-      den normalen Repositories vorhanden.</p>
+      Da es sich momentan noch im Beta-Status befindet, ist es noch nicht in den
+      normalen Repositories(Verzeichnissen) vorhanden.</p>
     <p>Für die <a href="../install.html#Headless">AvNav Images</a> bekommt man
       die Pakete im "beta" Verzeichnis. Um dieses zu aktivieren kann man die
       Datei /etc/apt/sources.list.d/extra.list bearbeiten und das beta
@@ -493,7 +492,7 @@
     <ul>
     </ul>
     <div class="code">sudo apt-get update<br>sudo apt-get install avnav-ochartsng<br>sudo systemctl restart avnav</div>
-    <p>Wenn man mit anderen Images arbeitet, sollte man das Verzeichnis von
+    <p>Falls man mit anderen Images arbeitet, sollte man das Verzeichnis von
       free-x einrichten ("bullseye" an die eigene Debian Version anpassen):</p>
     <p>Siehe die&nbsp; <a href="../install.html#Packages">AvNav
         Paket-Installationsbeschreibung</a>.</p>
@@ -510,7 +509,7 @@
     <h4>AvNav-ocharts und AvNav-ochartsng zusammen</h4>
     <p>Wenn man das neue ochartsng Plugin installiert wird es einen Konflikt mit
       dem bisherigen ocharts Plugin geben. Sie versuchen beide, den gleichen
-      Port (8082) zu benutzen, so eines von beiden wird nicht starten.<br>
+      Port (8082) zu benutzen, eines von beiden wird daher nicht starten.<br>
       Die vorgeschlagene Lösung ist, das alte Plugin auf der <img src="../viewerimages/icons-new/status.svg"
         alt="" class="inlineimage"> <a href="../userdoc/statuspage.html">server/status
         Seite</a> zu disablen.<br>
@@ -618,7 +617,7 @@
       noch nicht. Dieser wird erst durch Klick auf "Start" gestartet.</p>
     <p><a name="androidstartup"></a>Später wird es normalerweise nicht mehr
       nötig sein, die avocharts App separat zu starten. Das wird automatisch
-      erfolgen, solbal AvNav startet. Aber mit einem direkten Start kann man
+      erfolgen, sobald AvNav startet. Aber mit einem direkten Start kann man
       unter Umständen Fehler erkennen, indem man die Ausgabe ("OUT") oder die
       Logdatei ("LOG") anschaut.<br>
       <b>Bitte beachten</b>: Der automatische Start funktioniert nur bei Apps
@@ -666,7 +665,7 @@
         <tr>
           <td>Testmode</td>
           <td>für interne Tests</td>
-          <td>false</td>
+          <td>aus</td>
         </tr>
         <tr>
           <td>Use alt key</td>
@@ -732,7 +731,7 @@
     <br>
     <p> </p>
     <h3> <a name="chartconversions"></a>Karten Konvertierungen </h3>
-    <p>Unverschlüsselte Vektor Karten wie S57 müssen vor der Bneutzung in das
+    <p>Unverschlüsselte Vektor Karten wie S57 müssen vor der Benutzung in das
       verwendete interne "SENC" Format konvertiert werden.<br>
       Dafür gibt es 2 Optionen:</p>
     <h4>Konvertierung mit OpenCPN</h4>
@@ -746,9 +745,9 @@
       Verzeichznis (unter Linux: ~/.opencpn/SENC). Aus diesem Verzeichnis
       kopiert man alle Dateien mit den gleichen Namen wie die S57 Dateien in ein
       neues, leeres Verzeichnis. Dieses sollte einen "sprechenden" Namen haben -
-      der wird später angezeigt. Anschliessend erezugt man eine Textdatei
+      der wird später angezeigt. Anschliessend erzeugt man eine Textdatei
       "Chartinfo.txt" in diesem Verzeichnis mit genau einer Zeile Text:</p>
-    <p class="code">ChartInfo: nameOfTheChart</p>
+    <p class="code">ChartInfo: -hier der name der Karte-</p>
     <p>Dann erzeugt man ein zip Archive in dem das Kartenverzeichnis als
       Unterverzeichnis enthalten ist. Dieses Archive kann man dann zu AvNav
       ochartsng hochladen.<br>
