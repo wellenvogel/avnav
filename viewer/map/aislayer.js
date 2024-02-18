@@ -429,6 +429,7 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
     let courseVectorTime=globalStore.getData(keys.properties.navBoatCourseTime,0);
     let useCourseVector=globalStore.getData(keys.properties.aisUseCourseVector,false);
     let drawRelMotionVector=globalStore.getData(keys.properties.aisUseRelMotionVector,false);
+    let drawTurnIndicator=globalStore.getData(keys.properties.aisUseTurnIndicator,false);
     let courseVectorWidth=globalStore.getData(keys.properties.navCircleWidth);
     let scale=globalStore.getData(keys.properties.aisIconScale,1);
     let classbShrink=globalStore.getData(keys.properties.aisClassbShrink,1);
@@ -490,7 +491,7 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
                 let other=drawTargetFunction(xy,target_cog,target_sog*courseVectorTime);
                 drawing.drawLineToContext([xy,other],{color:style.courseVectorColor,width:courseVectorWidth});
                 // turn indicator
-                if(target.turn && drawEstimated!==undefined) {
+                if(drawTurnIndicator && target.turn && drawEstimated!==undefined) {
                     let sgn=Math.sign(target.turn);
                     let rot=Math.abs(target.turn);
                     if(rot && isFinite(rot)){
