@@ -68,7 +68,6 @@ class AVNStore(object):
         return None
       return self.value.get('mmsi')
   #fields we merge
-  ais5mergeFields=['imo_id','callsign','shipname','shiptype','destination','length','beam','draught']
   CHANGE_COUNTER = ['alarm', 'leg', 'route','config']
   def __init__(self,expiryTime,aisExpiryTime,ownMMSI):
     self.__list={}
@@ -198,27 +197,18 @@ class AVNStore(object):
       if existing is None:
         existing=AVNStore.AisDataEntry({'mmsi':mmsi},priority)
         self.__aisList[key]=existing
+      elif existing.priority > priority:
+        AVNLog.debug("ignore ais for %s due to higher prio %d",mmsi,existing.priority)
+        return
+      if any(k in data for k in ("second","lat","lon")): # use timestamp is bound to dynamic data
+        existing.timestamp = now
+        # sec=data.get("second",60) # 60=timestamp not available
+        # if 0<=sec<60: # use timestamp from ais seconds
+        #   delay = (now%60-sec)%60 # delay of message (up to 59s)
+        #   existing.timestamp -= delay # shift timestamp back
       else:
-        if existing.priority > priority:
-          AVNLog.debug("ignore ais for %s due to higher prio %d",mmsi,existing.priority)
-          return
-      if data.get('type') == '5' or data.get('type') == '24':
-        #add new items to existing entry
-        AVNLog.debug("merging AIS type 5/24 with existing message")
-        for k in self.ais5mergeFields:
-          v = data.get(k)
-          if v is not None:
-            existing.value[k] = v
-            existing.timestamp=now
-      else:
-        AVNLog.debug("merging AIS with existing message")
-        newData=data.copy()
-        for k in self.ais5mergeFields:
-          v = existing.value.get(k)
-          if v is not None:
-            newData[k] = v
-        existing.value=newData
-        existing.timestamp=now
+        del data["type"] # do not update type from static data
+      existing.value.update(data) # update existing data with new data
       self.__lastAisSource=source
 
   def addAisItem(self,mmsi,values,source,priority,now=None):
