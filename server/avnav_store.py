@@ -201,7 +201,6 @@ class AVNStore(object):
       elif existing.priority > priority:
           AVNLog.debug("ignore ais for %s due to higher prio %d",mmsi,existing.priority)
           return
-      #if data.get("type") in ("5", "24"): del data["type"]
       existing.value.update(data) # update existing data with new data
       if "lat" in data and "lon" in data:
           existing.timestamp = now # timestamp is bound to position (not to static data)

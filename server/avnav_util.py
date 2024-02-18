@@ -443,10 +443,17 @@ class AVNUtil(object):
     return rt
 
   ais_converters = {
-    "mmsi": str,
+    "mmsi": int,
+    "imo_id": int,
+    "shiptype": int,
     "type": int,
+    "epfd": int,
     "status": int,
-    "second": int,
+    "month": int, # ETA
+    "day": int, # ETA
+    "hour": int, # ETA
+    "minute": int, # ETA
+    "second": int, # timestamp
     "maneuver": int,
     "accuracy": int,
     "lat": lambda v: float(v) / 600000,
@@ -480,8 +487,13 @@ class AVNUtil(object):
     try:
       rt["beam"] = rt["to_port"] + rt["to_starboard"]
       rt["length"] = rt["to_bow"] + rt["to_stern"]
-    except:
-      pass
+    except: pass
+
+    try:
+        #if rt["type"] in (5,24):
+        if "lat" not in rt:
+            del rt["type"] # remove to keep
+    except: pass
 
     return rt
   
