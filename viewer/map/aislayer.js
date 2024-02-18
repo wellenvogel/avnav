@@ -492,9 +492,9 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
                 // turn indicator
                 if(target.turn && drawEstimated!==undefined) {
                     let sgn=Math.sign(target.turn);
-                    let rot=Math.abs(target.turn);//Math.pow(target.turn/4.733,2); // °/min
+                    let rot=Math.abs(target.turn);
                     if(rot && isFinite(rot)){
-                        let w=drawTargetFunction(other,target_cog+sgn*90,rot/127*target_sog*courseVectorTime);
+                        let w=drawTargetFunction(other,target_cog+sgn*90,rot/300*target_sog*courseVectorTime);
                         drawing.drawLineToContext([other,w],{color:"black",width:courseVectorWidth});
                     }
                 }

@@ -42,8 +42,7 @@ const aisparam={
         headline: 'rot(°/min)',
         format: function (v) {
             if (v.turn === undefined) return '-';
-            var rot=Math.pow(v.turn/4.733,2)*Math.sign(v.turn);
-            return Formatter.formatDecimal(rot,1,0);
+            return Formatter.formatDecimal(v.turn,1,0);
         },
         unit: '°',
         classes: [AIS_CLASSES.A,AIS_CLASSES.B]

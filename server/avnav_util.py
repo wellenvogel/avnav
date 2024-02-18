@@ -40,6 +40,7 @@ import traceback
 import datetime
 import math
 import threading
+from math import copysign
 
 class Enum(set):
     def __getattr__(self, name):
@@ -441,33 +442,47 @@ class AVNUtil(object):
       rt=360+rt
     return rt
 
-  #convert AIS data (and clone the data)
-  #positions / 600000
-  #speed/10
-  #course/10
+  ais_converters = {
+    "mmsi": str,
+    "type": int,
+    "status": int,
+    "second": int,
+    "maneuver": int,
+    "accuracy": int,
+    "lat": lambda v: float(v) / 600000,
+    "lon": lambda v: float(v) / 600000,
+    "speed": lambda v: float(v) / 10 * AVNUtil.NM / 3600,
+    "course": lambda v: float(v) / 10,
+    "heading": int,
+    "turn": lambda v: round(copysign((float(v) / 4.733) ** 2, float(v)))
+    if abs(float(v)) < 128
+    else None,
+    "draught": lambda v: float(v) / 10,
+    "to_bow": int,  # A
+    "to_stern": int,  # B
+    "to_port": int,  # C
+    "to_starboard": int,  # D
+  }
+
   @classmethod
-  def convertAIS(cls,aisdata):
-    rt=aisdata.copy()
-    rt['lat']=float(aisdata.get('lat') or 0)/600000
-    rt['lon']=float(aisdata.get('lon') or 0)/600000
-    rt['speed']=(float(aisdata.get('speed') or 0)/10) * cls.NM/3600;
-    rt['course']=float(aisdata.get('course') or 0)/10
-    rt['mmsi']=str(aisdata['mmsi'])
-    if 'draught' in rt:
+  def convertAIS(cls, aisdata):
+    "convert ais raw values to real values"
+    rt = aisdata.copy()
+
+    for k, f in cls.ais_converters.items():
+      if k not in rt:  # only convert data that's actually present
+        continue
       try:
-        rt ['draught']=float(rt['draught'])/10.0
+        rt[k] = f(rt[k])
       except:
-        pass
-    if 'to_port' in rt and 'to_starboard' in rt:
-      try:
-        rt['beam']=int(rt['to_port']) + int (rt['to_starboard'])
-      except:
-        pass
-    if 'to_bow' in rt and 'to_stern' in rt:
-      try:
-        rt['length'] = int(rt['to_bow']) + int(rt['to_stern'])
-      except:
-        pass
+        rt[k] = None  # explicitly map invalid data to none
+
+    try:
+      rt["beam"] = rt["to_port"] + rt["to_starboard"]
+      rt["length"] = rt["to_bow"] + rt["to_stern"]
+    except:
+      pass
+
     return rt
   
   #parse an ISO8601 t8ime string
