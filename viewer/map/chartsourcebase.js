@@ -57,6 +57,16 @@ class ChartSourceBase {
                 delete this.chartEntry[k];
             }
         }
+        this.featureFormatter=undefined
+        if (chartEntry.featureFormatter){
+            let formatter=chartEntry.featureFormatter;
+            if (typeof(formatter) === 'string'){
+                formatter=featureFormatter[formatter];
+            }
+            if (formatter) {
+                this.featureFormatter=formatter;
+            }
+        }
         /**
          * @protected
          * @type {undefined}
@@ -268,40 +278,36 @@ class ChartSourceBase {
      * @param info the info to be merged in
      * @param feature the ol feature
      */
-    formatFeatureInfo(info, feature,coordinates){
-       if (! info || ! feature) return;
-        if (this.chartEntry.featureFormatter){
-            try{
-                let formatter=this.chartEntry.featureFormatter;
-                if (typeof(formatter) === 'string'){
-                    formatter=featureFormatter[formatter];
-                }
-                if (formatter) {
-                    let fProps=assign({}, feature.getProperties());
-                    for (let k in fProps){
-                        if (typeof(fProps[k]) !== 'string' && typeof(fProps[k]) !== 'number'){
-                            delete fProps[k];
-                        }
+    formatFeatureInfo(info, feature,coordinates,extended){
+       if (! info || ! feature) return {};
+        if (this.featureFormatter) {
+            try {
+                let fProps = assign({}, feature.getProperties());
+                for (let k in fProps) {
+                    if (typeof (fProps[k]) !== 'string' && typeof (fProps[k]) !== 'number') {
+                        delete fProps[k];
                     }
-                    if (coordinates){
-                        fProps.lat=coordinates[1];
-                        fProps.lon=coordinates[0];
-                    }
-                    assign(info,Helper.filteredAssign({
-                        sym:true,
-                        name: true,
-                        desc: true,
-                        link: true,
-                        htmlInfo: true,
-                        time: true
-                    },formatter(fProps,true)));
                 }
-            }catch (e){
-                base.log("error in feature info formatter "+this.chartEntry.featureFormatter+": "+e);
+                if (coordinates) {
+                    fProps.lat = coordinates[1];
+                    fProps.lon = coordinates[0];
+                }
+                assign(info, Helper.filteredAssign({
+                    sym: true,
+                    name: true,
+                    desc: true,
+                    link: true,
+                    htmlInfo: true,
+                    time: true
+                }, this.featureFormatter(fProps, extended)));
+
+            } catch (e) {
+                base.log("error in feature info formatter : " + e);
             }
         }
         info.icon=this.getSymbolUrl(info.sym,'.png');
         info.link=this.getLinkUrl(info.link);
+        return info;
     }
 
     setEnabled(enabled,opt_update){
@@ -324,6 +330,30 @@ class ChartSourceBase {
         return this.chartEntry.hasFeatureInfo||false;
     }
 
+}
+
+/**
+ * a list of known style parameters
+ * we do not import EditableWidgetParameter here directly
+ * as this could easily create circular dependencies
+ * @type {*[]}
+ */
+ChartSourceBase.StyleParam={
+    lineWidth:{type:'NUMBER',list:[1,10],displayName:'line width',default: 3},
+    lineColor:{type:'COLOR',displayName:'line color',default:'#000000' },
+    fillColor:{type:'COLOR',displayName:'fill color',default: 'rgba(255,255,0,0.4)'},
+    strokeWidth:{type:'NUMBER',displayName:'stroke width',default: 3,list:[1,40]},
+    circleWidth:{type:'NUMBER',displayName:'circle width',default: 10,list:[1,40]},
+    showName:{type:'BOOLEAN',displayName:'show feature name',default: false},
+    textSize:{type:'NUMBER',displayName:'font size',default: 16},
+    textOffset:{type:'NUMBER',displayName: 'text offset',default: 32}
+}
+export const getKnownStyleParam=()=>{
+    let rt=[];
+    for (let k in ChartSourceBase.StyleParam){
+        rt.push(assign({},ChartSourceBase.StyleParam[k],{name:'style.'+k}));
+    }
+    return rt;
 }
 
 export default  ChartSourceBase;

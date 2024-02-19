@@ -76,7 +76,6 @@ class AVNFeeder(AVNWorker):
     super().__init__(cfgparam)
     self.type=AVNWorker.Type.FEEDER
     self.listlock=threading.Condition()
-    self.list=[]
     self.history=[]
     self.sequence=1
     self.readConfig()
@@ -119,18 +118,14 @@ class AVNFeeder(AVNWorker):
         entry=entry+"\r\n"
     self.listlock.acquire()
     self.sequence+=1
-    if len(self.list) >=self.maxlist:
-      self.list.pop(0) #TODO: priorities?
     if len(self.history) >= self.maxlist:
       self.history.pop(0)
-    self.list.append(NmeaEntry(entry,source,omitDecode,sourcePriority))
-    ll=len(self.list)
     self.history.append(NmeaEntry(entry,source,omitDecode,sourcePriority))
     hl=len(self.history)
     rt=True
     self.listlock.notify_all()
     self.listlock.release()
-    AVNLog.debug("addNMEA listlen=%d history=%d data=%s",ll,hl,entry)
+    AVNLog.debug("addNMEA history=%d data=%s",hl,entry)
     return rt
 
   def wakeUp(self):
@@ -145,7 +140,7 @@ class AVNFeeder(AVNWorker):
   #only return entries with higher sequence
   #return a tuple (lastSequence,[listOfEntries])
   #when sequence == None or 0 - just fetch the topmost entries (maxEntries)
-  def fetchFromHistory(self,sequence,maxEntries=10,includeSource=False,waitTime=0.1,nmeafilter=None):
+  def fetchFromHistory(self,sequence,maxEntries=10,includeSource=False,waitTime=0.1,nmeafilter=None, returnError=False):
     seq=0
     list=[]
     if waitTime <=0:
@@ -155,6 +150,7 @@ class AVNFeeder(AVNWorker):
     if sequence is None:
       sequence=0
     stop = time.time() + waitTime
+    numErrors=0
     self.listlock.acquire()
     if sequence <= 0:
       #if a new connection is opened - always wait for a new entry before sending out
@@ -166,6 +162,7 @@ class AVNFeeder(AVNWorker):
         seq=self.sequence
         if seq > sequence:
           if (seq-sequence) > maxEntries:
+            numErrors=(seq-sequence)-maxEntries #we missed some entries
             seq=sequence+maxEntries
           start=seq-sequence
           list=self.history[-start:]
@@ -178,16 +175,25 @@ class AVNFeeder(AVNWorker):
       pass
     self.listlock.release()
     if len(list) < 1:
+      if returnError:
+        return (numErrors,seq,list)
       return (seq,list)
     if includeSource:
       if nmeafilter is None:
+        if returnError:
+          return (numErrors,seq,list)
         return (seq,list)
-      return (seq,[el for el in list if NMEAParser.checkFilter(el.data,nmeafilter)])
+      rl=[el for el in list if NMEAParser.checkFilter(el.data,nmeafilter)]
+      if returnError:
+        return (numErrors,seq,rl)
+      return (seq,rl)
     else:
       rt=[]
       for le in list:
         if NMEAParser.checkFilter(le.data,nmeafilter):
           rt.append(le.data)
+      if returnError:
+        return (numErrors,seq,rt)
       return (seq,rt)
 
   #a standalone feeder that uses our bultin methods
@@ -201,10 +207,13 @@ class AVNFeeder(AVNWorker):
     while not self.shouldStop():
       try:
         while True:
-          (sequence,nmeaList)=self.fetchFromHistory(sequence,
+          (numErrors,sequence,nmeaList)=self.fetchFromHistory(sequence,
                                                     nmeafilter=self.nmeaFilter,
                                                     includeSource=True,
-                                                    waitTime=self.waitTime)
+                                                    waitTime=self.waitTime,
+                                                    returnError=True)
+          if numErrors > 0:
+            AVNLog.error("decoder lost %d records",numErrors)
           for data in nmeaList:
             if not data is None and not data.omitDecode:
               if nmeaParser.parseData(data.data,source=data.source,sourcePriority=data.sourcePriority):

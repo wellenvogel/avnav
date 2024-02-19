@@ -71,7 +71,7 @@ export const ParamValueInput=(props)=>{
     let current=param.getValueForDisplay(props.currentValues);
     let addClass=props.className?(" "+props.className):"";
     let inputFunction=(val)=>{
-        props.onChange(param.setValue(assign({},props.currentValues),val));
+        props.onChange(param.setValue(assign({},props.onlyOwnParam?{}:props.currentValues),val));
     };
     let type=param.getTypeForEdit(props.currentValues);
     if (type instanceof  Array){
@@ -97,7 +97,7 @@ export const ParamValueInput=(props)=>{
         if (type === EditableParameter.TYPE.SELECT ) {
             ValueInput = InputSelect;
             inputFunction = (val) => {
-                props.onChange(param.setValue(assign({},props.currentValues), val.name));
+                props.onChange(param.setValue(assign({},props.onlyOwnParam?{}:props.currentValues), val.name));
             };
         }
         if (type === EditableParameter.TYPE.BOOLEAN){
@@ -126,5 +126,6 @@ ParamValueInput.PropTypes={
     currentValues: PropTypes.object.isRequired,
     onChange: PropTypes.func.isRequired,
     showDialogFunction: PropTypes.func.isRequired,
-    className: PropTypes.string
+    className: PropTypes.string,
+    onlyOwnParam: PropTypes.bool
 }

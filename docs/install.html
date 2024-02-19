@@ -486,9 +486,7 @@
       ausführen (<img src="viewerimages/SailBoatRed96.png" alt="" class="inlineimage">).</p>
     <p>Damit ist eine Bedienung des Systems auch möglich, wenn einmal AvNav
       nicht komplett startet. Die Reset Funktion findet sich auch auf dem
-      System-Bildschirm (allerdings nur für komplette
-      Neu-Installationen).</p>
-    
+      System-Bildschirm (allerdings nur für komplette Neu-Installationen).</p>
     <h2 class="western"><a name="Packages"></a>Paket Installation</h2>
     Dank Oleg gibt es&nbsp; fertige Paket-Repositories, die man in sein
     Debian-Linux einbinden kann. Das geht auf dem Raspberry Pi - aber auch auf
@@ -499,8 +497,8 @@
     <p> Debian Buster (amd64,armhf,arm64)</p>
     <div class="code">wget https://www.free-x.de/debian/oss.boating.gpg.key
 sudo apt-key add oss.boating.gpg.key
-wget https://www.free-x.de/debian/boating.list
-sudo cp boating.list /etc/apt/sources.list.d/</div>
+wget https://www.free-x.de/debian/boating-buster.list
+sudo cp boating-buster.list /etc/apt/sources.list.d/</div>
     <p> Debian Bullseye (amd64,armhf,arm64)</p>
     <div class="code">wget -O - https://www.free-x.de/debian/oss.boating.gpg.key | gpg --dearmor | sudo tee /usr/share/keyrings/oss.boating.gpg
 echo "deb [signed-by=/usr/share/keyrings/oss.boating.gpg] https://www.free-x.de/debian bullseye main contrib non-free" | sudo tee -a /etc/apt/sources.list.d/boating.list</div>
@@ -528,7 +526,7 @@ sudo systemctl start avnav</div>
     </ul>
     <p> Nach dem Herunterladen kann man die Pakete auf einem raspberry pi mit<br>
     </p>
-    <div class="code">sudo apt install ./avnav_xxxxxxxx_all,deb
+    <div class="code">sudo apt install ./avnav_xxxxxxxx_all.deb
 </div> installieren.<br>
     <p>Falls man sein raspberry pi System vergleichbar zu unseren Images
       aufsetzen möchte, kann man dazu noch das "avnav-raspi"-Paket installieren.<br>
@@ -545,16 +543,21 @@ sudo systemctl start avnav</div>
     Man kann dann als Nutzer "pi" AvNav einfach von der Kommandozeile starten
     lassen.<br>
     Wenn man AvNav als "systemd service" laufen lassen möchte, sollte man das
-    Verzeichnis:<br>
-    /usr/lib/systemd/system/avnav.service.d<br>
-    anlegen und dort die Datei <a href="https://github.com/wellenvogel/avnav/blob/master/raspberry/raspberry.conf">raspberry.conf</a>
-    hinein kopieren.<br>
-    Die Zeile 5 in der Datei muss dann noch etwas abgeändert werden, da das dort
-    angegebene Template für die avnav_server.xml nicht existiert.<br>
-    Also muss geändert werden in:
-    <div class="code"><span style="color: rgb(36, 41, 46); font-family: SFMono-Regular, Consolas, &quot;Liberation Mono&quot;, Menlo, monospace; font-size: 12px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; white-space: pre; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; background-color: rgb(255, 255, 255); text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none;">ExecStart=/usr/bin/avnav -q -b /home/pi/avnav/data -t /usr/lib/avnav/avnav_template.xml</span></div>
+    Verzeichnis:
+    <div class="code">/usr/lib/systemd/system/avnav.service.d</div>
+    anlegen und dort die Datei anvav.conf mit folgendem Inhalt anlegen:
+    <div class="code">
+#Overrides for the avnav service
+[Service]
+User=pi
+ExecStart=
+ExecStart=/usr/bin/avnav -q -b /home/pi/avnav/data -t /usr/lib/avnav/avnav_template.xml -n /etc/default/avnav
+
+[Unit]
+After=avnav-check-parts.service
+    </div>
     Danach kann man mit den Kommandos
-    <div class="code">sudo systemctl daemon-reload<br>sudo systemctl enable avnav<br>sudo systemctl start avnv</div>
+    <div class="code">sudo systemctl daemon-reload<br>sudo systemctl enable avnav<br>sudo systemctl start avnav</div>
     <p>Avnav als Systemdienst starten. Wenn man diese Datei nicht
       anlegt/kopiert, wird AvNav nicht mit den Nutzer "pi", sondern mit dem
       Nutzer "avnav" arbeiten.</p>

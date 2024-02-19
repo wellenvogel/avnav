@@ -136,18 +136,23 @@ EditableParameter.TYPE={
 };
 
 
-export const createEditableParameter=(name, type, list, displayName)=>{
+export const createEditableParameter=(name, type, list, displayName,opt_default)=>{
     if (typeof(type) === 'string'){
         type=EditableParameter.TYPE[type];
         if (type === undefined) return;
     }
+    let rt;
     switch(type) {
         case EditableParameter.TYPE.STRING:
         case EditableParameter.TYPE.NUMBER:
         case EditableParameter.TYPE.SELECT:
         case EditableParameter.TYPE.BOOLEAN:
         case EditableParameter.TYPE.COLOR:
-            return new EditableParameter(name, type, list, displayName);
+            rt=new EditableParameter(name, type, list, displayName);
     }
+    if (rt && opt_default !== undefined){
+        rt.default=opt_default;
+    }
+    return rt;
 };
 

@@ -146,7 +146,7 @@ class AVNStore(object):
     @param source: optional a source key
     @return:
     """
-    AVNLog.ld("AVNNavData set value key=%s", key, str(value))
+    AVNLog.ld("AVNNavData set value ", key, str(value))
     with self.__listLock:
       isDict=False
       dataValue=value
