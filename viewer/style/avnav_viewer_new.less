@@ -302,9 +302,14 @@ body{
     width: 1.5em;
     height: 1.5em;
   }
-  .missing {
+  .missing{
     input, .input {
       .nightBorderFade(@colorRed);
+    }
+  }
+  .error{
+    input, .input {
+      .nightBackFade(fade(@colorRed,50%));
     }
   }
 
