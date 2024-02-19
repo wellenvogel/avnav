@@ -173,7 +173,8 @@ class AVNUsbSerialReader(AVNWorker):
     ownParam=[
         WorkerParameter('usbid',None,type=WorkerParameter.T_STRING,editable=False,
                         description='an identifier of the USB device\n.../1-1.3.1:1.0/ttyUSB2/tty/ttyUSB2 - identifier would be 1-1.3.1'),
-        WorkerParameter('type', 'reader',type=WorkerParameter.T_SELECT,rangeOrList=UsbSerialHandler.ALL_INTERNAL_TYPES)
+        WorkerParameter('type', 'reader',type=WorkerParameter.T_SELECT,rangeOrList=UsbSerialHandler.ALL_INTERNAL_TYPES,
+                        description="the type of this serial channel: reader or writer or combined (both reader and writer)\nor ignored to not use it at all")
         ]
     return rt+ownParam
   
