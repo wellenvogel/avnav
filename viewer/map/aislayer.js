@@ -428,6 +428,7 @@ const amul=(arr,fact)=>{
 AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunction,drawEstimated){
     let courseVectorTime=globalStore.getData(keys.properties.navBoatCourseTime,0);
     let useCourseVector=globalStore.getData(keys.properties.aisUseCourseVector,false);
+    let curved=globalStore.getData(keys.properties.aisCurvedVectors,false);
     let rmvRange=globalStore.getData(keys.properties.aisRelativeMotionVectorRange,0);
     let courseVectorWidth=globalStore.getData(keys.properties.navCircleWidth);
     let scale=globalStore.getData(keys.properties.aisIconScale,1);
@@ -443,6 +444,10 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
     let target_cog=target.course||0;
     let target_sog=target.speed||0;
     let target_hdg=(useHeading && target.heading!==undefined?target.heading:target.course)||0;
+    let target_turn=target.turn||0;
+    let target_rot_sgn=Math.sign(target_turn);
+    let target_rot=Math.pow(target_turn/4.733,2); // °/min
+
     let symbol=this.getStyleEntry(target);
     let style=cloneDeep(symbol.style);
     if (! symbol.image || ! style.size) return;
@@ -487,17 +492,31 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
                 }
             }
         }
+
+        var drawArc=function(center,radius,start,angle,style){
+            let segments=Math.max(3,Math.ceil(Math.abs(angle)/5));
+            let delta=angle/segments;
+            let points=[];
+            for(let i=0; i<=segments; i++){
+                points.push(drawTargetFunction(center,start+i*delta,radius));
+            }
+            drawing.drawLineToContext(points,style);
+        };
+
         if (useCourseVector && style.courseVector !== false) {
             if (target_sog) { // true motion vector
-                let other=drawTargetFunction(xy,target_cog,target_sog*courseVectorTime);
-                drawing.drawLineToContext([xy,other],{color:style.courseVectorColor,width:courseVectorWidth});
-                if(target.turn && onMap) { // turn indicator
-                    let sgn=Math.sign(target.turn);
-                    let rot=Math.abs(target.turn);//Math.pow(target.turn/4.733,2); // °/min
-                    if(rot && isFinite(rot)){
-                        let w=drawTargetFunction(other,target_cog+sgn*90,rot/127*target_sog*courseVectorTime);
-                        drawing.drawLineToContext([other,w],{color:"black",width:courseVectorWidth});
-                    }
+                if(curved && onMap && isFinite(target_rot) && target_rot>0.5) { // curved TMV
+                    let turn_radius=target_sog/Helper.radians(target_rot)*60; // m, SOG=[m/s]
+                    let turn_center=drawTargetFunction(xy,target_cog+target_rot_sgn*90,turn_radius);
+                    let turn_angle=Helper.degrees(target_sog*courseVectorTime/turn_radius);
+                    //drawing.drawLineToContext([xy,drawTargetFunction(xy,target_cog+target_rot_sgn*90,100)],{color:"black",width:courseVectorWidth});
+                    drawArc(turn_center,turn_radius,target_cog-target_rot_sgn*90,target_rot_sgn*turn_angle,
+                            {color:style.courseVectorColor,width:courseVectorWidth});
+                    let other=drawTargetFunction(xy,target_cog,target_sog*courseVectorTime);
+                    //drawing.drawLineToContext([xy,other],{color:"lightgray",width:courseVectorWidth});
+                } else {
+                    let other=drawTargetFunction(xy,target_cog,target_sog*courseVectorTime);
+                    drawing.drawLineToContext([xy,other],{color:style.courseVectorColor,width:courseVectorWidth});
                 }
             }
         }
