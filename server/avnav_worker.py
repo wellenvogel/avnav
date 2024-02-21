@@ -341,8 +341,15 @@ def forceExit():
   os._exit(1)
 
 
+class InfoHandler(object):
+  def setInfo(self,name,info,status,childId=None,canDelete=False,timeout=None):
+    pass
+  def refreshInfo(self,name,timeout=None):
+    pass
+  def deleteInfo(self,name):
+    pass
 
-class AVNWorker(object):
+class AVNWorker(InfoHandler):
   DEFAULT_CONFIG_PARAM = [
     WorkerParameter('name',default='',type=WorkerParameter.T_STRING)
   ]
@@ -353,6 +360,8 @@ class AVNWorker(object):
   PRIORITY_PARAM_DESCRIPTION=WorkerParameter('priority',default=NMEAParser.DEFAULT_SOURCE_PRIORITY,
                                              type=WorkerParameter.T_NUMBER,rangeOrList=[10,100],
                                              description="The priority for this source. If there is data from higher priority sources, values will be ignored in parser")
+
+  QUEUE_NAME_PARAMETER=WorkerParameter('queueName',default='',type=WorkerParameter.T_STRING)
   handlerListLock=threading.Lock()
   """a base class for all workers
      this provides some config functions and a common interfcace for handling them"""
@@ -387,10 +396,21 @@ class AVNWorker(object):
   @classmethod
   def resetHandlerList(cls):
     cls.allHandlers=[]
-  @classmethod
-  def findFeeder(cls,feedername):
+
+  def findFeeder(self,feedername=None):
+    if feedername is None:
+      feedername=self.QUEUE_NAME_PARAMETER.fromDict(self.param)
+      if feedername == "":
+        #support legacy config
+        feedername=self.getStringParam('feederName')
     """find a feeder by its name (not configName)"""
-    return cls.findHandlerByTypeAndName(cls.Type.FEEDER,feedername)
+    rt=self.findHandlerByTypeAndName(self.Type.FEEDER,feedername)
+    if rt is None:
+      #try fallback to main
+      rt=self.findHandlerByTypeAndName(self.Type.FEEDER)
+      if rt is None:
+        raise Exception("unable to find queue %s"%(feedername or ""))
+    return rt
   
   @classmethod
   def findHandlerByName(cls,name,disabled=False):
@@ -484,7 +504,7 @@ class AVNWorker(object):
     self.status={'main':WorkerStatus('main',WorkerStatus.STARTED,"created")}
     self.__statusLock=threading.Lock()
     self.type=self.Type.DEFAULT
-    self.feeder=None
+    self.queue=None
     self.configChanger=None #reference for writing back to the DOM
     self.condition=threading.Condition()
     self.currentThread=None
@@ -913,7 +933,7 @@ class AVNWorker(object):
     @type navdata: AVNStore
     """
     self.navdata=navdata #type: AVNStore
-    self.feeder = self.findFeeder(self.getStringParam('feederName'))
+    self.queue = self.findFeeder()
     try:
       self.checkConfig(self.param)
     except Exception as e:
@@ -944,9 +964,9 @@ class AVNWorker(object):
     return rt
 
   def writeData(self,data,source=None,addCheckSum=False,sourcePriority=NMEAParser.DEFAULT_SOURCE_PRIORITY):
-    if self.feeder is None:
+    if self.queue is None:
       raise Exception("no feeder in %s"%(self.getName()))
-    self.feeder.addNMEA(data,source,addCheckSum,sourcePriority=sourcePriority)
+    self.queue.addNMEA(data, source, addCheckSum, sourcePriority=sourcePriority)
 
   def getUsedResources(self,type=None):
     '''

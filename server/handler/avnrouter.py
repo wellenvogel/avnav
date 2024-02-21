@@ -287,7 +287,6 @@ class AVNRouter(AVNDirectoryHandlerBase):
     self.currentLeg=None # type AVNRoutingLeg
     self.currentLegFileName=None
     self.currentLegTimestamp = None
-    self.feeder=self.findFeeder(self.getStringParam('feederName'))
     #approach handling
     self.lastDistanceToCurrent=None
     self.lastDistanceToNext=None
@@ -733,6 +732,10 @@ class AVNRouter(AVNDirectoryHandlerBase):
   ''' anchor watch
       will only be called if leg.anchorDistance is not none
   '''
+
+  def startInstance(self, navdata):
+    self.feeder=self.findFeeder()
+    return super().startInstance(navdata)
 
   def useRhumbLine(self):
     return self.P_RHUMBLINE.fromDict(self.param)

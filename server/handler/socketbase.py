@@ -29,6 +29,7 @@ import re
 
 from avnav_nmea import *
 from avnav_worker import *
+from avnav_util import MovingSum
 
   
 
@@ -71,6 +72,12 @@ class SocketReader(object):
     return line[match.span()[0]:]
 
   def readSocket(self,infoName,sourceName,filter=None,timeout=None):
+    nmeaSum=MovingSum()
+    def nmeaInfo(infoName,peer):
+      if nmeaSum.shouldUpdate():
+        self.setInfo(infoName,
+                     "%s, %d/10s"%(peer,nmeaSum.val()),
+                     WorkerStatus.NMEA if nmeaSum.val()>0 else WorkerStatus.RUNNING)
     sock=self.socket
     filterA = None
     if filter:
@@ -85,11 +92,11 @@ class SocketReader(object):
     AVNLog.info("%s established, start reading",peer)
     self.setInfo(infoName, "receiving %s"%(peer,), WorkerStatus.RUNNING)
     buffer=""
-    hasNMEA=False
     try:
       sock.settimeout(1)
       lastReceived=time.time()
       while sock.fileno() >= 0 and not self.shouldStop():
+        nmeaSum.add(0)
         try:
           data = sock.recv(1024)
           lastReceived=time.time()
@@ -101,6 +108,7 @@ class SocketReader(object):
               continue
             if now > (lastReceived + timeout):
               raise Exception("no data received within timeout of %s seconds"%str(timeout))
+          nmeaInfo(infoName,peer)
           continue
         if len(data) == 0:
           AVNLog.info("connection lost")
@@ -115,10 +123,8 @@ class SocketReader(object):
             if pattern.match(l):
               if not NMEAParser.checkFilter(l, filterA):
                 continue
+              nmeaSum.add(1)
               self.writeData(l,source=sourceName,sourcePriority=self.sourcePriority)
-              if not hasNMEA:
-                self.setInfo(infoName, "NMEA %s"%(peer,), WorkerStatus.NMEA)
-                hasNMEA=True
             else:
               AVNLog.debug("ignoring unknown data %s",l)
           buffer=''
@@ -127,10 +133,8 @@ class SocketReader(object):
             line=lines[i].translate(NMEAParser.STRIPCHARS)
             line=self._removeLeading(line)
             if pattern.match(line):
+              nmeaSum.add(1)
               self.writeData(line,source=sourceName,sourcePriority=self.sourcePriority)
-              if not hasNMEA:
-                self.setInfo(infoName, "NMEA %s"%peer, WorkerStatus.NMEA)
-                hasNMEA=True
             else:
               AVNLog.debug("ignoring unknown data %s",lines[i])
           if len(lines) > 0:
@@ -138,6 +142,7 @@ class SocketReader(object):
         if len(buffer) > 4096:
           AVNLog.debug("no line feed in long data, stopping")
           break
+        nmeaInfo(infoName,peer)
       sock.shutdown(socket.SHUT_RDWR)
       sock.close()
     except Exception as e:
@@ -163,23 +168,32 @@ class SocketReader(object):
     filter = None
     if filterstr != "":
       filter = filterstr.split(',')
-    self.setInfo(infoName, "sending data", WorkerStatus.RUNNING)
+    nmeaSum=MovingSum()
+    def nmeaInfo(infoName):
+      if nmeaSum.shouldUpdate():
+        self.setInfo(infoName,
+                     "sending %d/10s"%(nmeaSum.val()),
+                     WorkerStatus.NMEA if nmeaSum.val()>0 else WorkerStatus.RUNNING)
+    nmeaInfo(infoName)
     try:
       seq = 0
       self.socket.sendall(("avnav_server %s\r\n" % (version)).encode('utf-8'))
       while self.socket.fileno() >= 0:
         hasSend = False
         seq, data = self.feeder.fetchFromHistory(seq, 10, nmeafilter=filter, includeSource=True)
+        nmeaSum.add(0)
         if len(data) > 0:
           for line in data:
             if line.source in blacklist:
               AVNLog.debug("ignore %s:%s due to blacklist", line.source, line.data)
             else:
               self.socket.sendall(line.data.encode('ascii', errors='ignore'))
+              nmeaSum.add(1)
               hasSend = True
         if not hasSend:
           # just throw an exception if the reader potentially closed the socket
           self.socket.getpeername()
+        nmeaInfo(infoName)
     except Exception as e:
       AVNLog.info("exception in client connection %s", traceback.format_exc())
     AVNLog.info("client disconnected or stop received")

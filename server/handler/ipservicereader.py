@@ -176,7 +176,7 @@ class AVNIpServiceReader(AVNWorker):
           timeout = timeout *5
         else:
           timeout=None
-        connection=SocketReader(self.socket,self.writeData,self.feeder,self.setInfo,shouldStop=self.shouldStop)
+        connection=SocketReader(self.socket, self.writeData, self.queue, self.setInfo, shouldStop=self.shouldStop)
         if self.P_WRITE_OUT.fromDict(self.param):
           clientHandler=threading.Thread(
             target=self._writer,

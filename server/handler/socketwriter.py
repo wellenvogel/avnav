@@ -138,7 +138,7 @@ class AVNSocketWriter(AVNWorker):
 
   #the writer for a connected client
   def client(self, socketConnection, addr, startSequence):
-    clientConnection=SocketReader(socketConnection,self.writeData,self.feeder,self.setInfo,
+    clientConnection=SocketReader(socketConnection, self.writeData, self.queue, self.setInfo,
                                   sourcePriority=self.PRIORITY_PARAM_DESCRIPTION.fromDict(self.param))
     infoName="SocketWriter-%s"%(str(addr),)
     self.setInfo(infoName,"sending data",WorkerStatus.RUNNING)

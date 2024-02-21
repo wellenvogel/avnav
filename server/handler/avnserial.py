@@ -90,7 +90,7 @@ class SerialReader(object):
   #param - the config dict
   #navdata - a nav data object (can be none if this reader doesn not directly write)
   #a write data method used to write a received line
-  def __init__(self,param,writeData,infoHandler,sourceName):
+  def __init__(self,param,writeData,infoHandler: InfoHandler,sourceName):
     for p in ('port','timeout'):
       if param.get(p) is None:
         raise Exception("missing "+p+" parameter for serial reader")
@@ -145,9 +145,9 @@ class SerialReader(object):
                    "true" if autobaud else "false")
     lastTime=time.time()
     try:
-      self.setInfo("reader opening at %d baud"%(baud),WorkerStatus.STARTED)
+      self.setInfo("opening at %d baud"%(baud),WorkerStatus.STARTED)
       self.device=serial.Serial(pnum, timeout=timeout, baudrate=baud, bytesize=bytesize, parity=parity, stopbits=stopbits, xonxoff=xonxoff, rtscts=rtscts)
-      self.setInfo("reader port open at %d baud"%baud,WorkerStatus.STARTED)
+      self.setInfo("port open at %d baud"%baud,WorkerStatus.STARTED)
       if autobaud:
         starttime=time.time()
         while time.time() <= (starttime + autobaudtime):
@@ -176,7 +176,7 @@ class SerialReader(object):
               continue
             AVNLog.debug("assumed startpattern %s at baud %d in %s",match.group(0),baud,data)
             AVNLog.info("autobaud successfully finished at baud %d",baud)
-            self.setInfo("reader receiving at %d baud"%(baud),WorkerStatus.STARTED)
+            self.setInfo("receiving at %d baud"%(baud),WorkerStatus.STARTED)
             return self.device
         self.device.close()
         return None
@@ -264,7 +264,15 @@ class SerialReader(object):
        hasNMEA=False
        MAXLEN=500
        buffer=b''
+       nmeaSum=MovingSum()
+       def nmeaInfo():
+         if nmeaSum.shouldUpdate():
+           self.infoHandler.setInfo('reader',
+                                    'receiving %d/10s'%nmeaSum.val(),
+                                    WorkerStatus.NMEA if nmeaSum.val()>0 else WorkerStatus.RUNNING)
        while not self.doStop:
+         nmeaSum.add(0)
+         nmeaInfo()
          bytes=b''
          try:
            bytes=self.readLine(self.device,timeout)
@@ -285,8 +293,6 @@ class SerialReader(object):
              pass
            break
          if not bytes is None and len(bytes)> 0:
-           if not hasNMEA:
-             self.setInfo("reader receiving %s at %d baud"%(portname,self.device.baudrate),WorkerStatus.STARTED)
            if not isOpen:
              AVNLog.info("successfully opened %s",self.device.name)
              isOpen=True
@@ -314,9 +320,7 @@ class SerialReader(object):
              lastTime=time.time()
              if not NMEAParser.checkFilter(data,filter):
                continue
-             if not hasNMEA:
-               self.setInfo("reader receiving NMEA %s at %d baud"%(portname,self.device.baudrate),WorkerStatus.NMEA)
-             hasNMEA=True
+             nmeaSum.add(1)
              if not self.writeData is None:
                self.writeData(data,source=self.sourceName,sourcePriority=priority)
              else:

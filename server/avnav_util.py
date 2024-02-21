@@ -25,6 +25,7 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
 import glob
+import itertools
 import urllib.parse
 
 import ctypes
@@ -671,6 +672,66 @@ class AVNDownload(object):
   def fileToAttach(cls,filename):
     #see https://stackoverflow.com/questions/93551/how-to-encode-the-filename-parameter-of-content-disposition-header-in-http
     return 'filename="%s"; filename*=utf-8\'\'%s'%(filename,urllib.parse.quote(filename))
+
+
+class MovingSum:
+  def __init__(self,num=10):
+    self._values=list(itertools.repeat(0,num))
+    self._num=num
+    self._sum=0
+    self._last=None
+    self._idx=0
+    self._lastUpdate=None
+
+  def clear(self):
+    self._sum=0
+    self._idx=0
+    for i in range(0,self._num):
+      self._values[i]=0
+  def num(self):
+    return self._num
+  def val(self):
+    return self._sum
+  def avg(self):
+    if self._num <= 0:
+      return 0
+    return self._sum/self._num
+  def add(self,v=0):
+    now=int(time.monotonic())
+    if self._last is None:
+      self._last=now
+    diff=now-self._last
+    self._last=now
+    rt=False
+    if diff  > 0:
+      rt=True
+      if diff > self._num:
+        #fast empty
+        self.clear()
+      else:
+        while diff > 0:
+          #fill intermediate seconds with 0
+          self._idx+=1
+          diff-=1
+          if self._idx >= self._num:
+            self._idx=0
+          self._sum-=self._values[self._idx]
+          self._values[self._idx]=0
+      self._values[self._idx]=v
+      self._sum+=v
+    else:
+      self._values[self._idx]+=v
+      self._sum+=v
+    return rt
+
+  def shouldUpdate(self,iv=1):
+    now=int(time.monotonic())
+    if self._lastUpdate is None or (now-self._lastUpdate) >= iv:
+      self._lastUpdate=now
+      self.add(0)
+      return True
+    return False
+
 
 
 if __name__ == '__main__':

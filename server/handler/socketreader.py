@@ -30,6 +30,7 @@ from socketbase import *
 import avnav_handlerList
 from avnav_nmea import *
 from avnav_worker import *
+from avnav_util import MovingSum
 
 
 #a Worker to read from a remote NMEA source via a socket
@@ -140,7 +141,7 @@ class AVNSocketReader(AVNWorker,SocketReader):
         else:
           timeout=None
         connection = SocketReader(self.socket, self.writeData,
-                                  self.feeder, self.setInfo,
+                                  self.queue, self.setInfo,
                                   shouldStop=self.shouldStop,
                                   stripLeading=SocketReader.P_STRIP_LEADING.fromDict(self.param))
         if self.P_WRITE_OUT.fromDict(self.param):
@@ -151,7 +152,7 @@ class AVNSocketReader(AVNWorker,SocketReader):
           )
           clientHandler.daemon = True
           clientHandler.start()
-        connection.readSocket('main', self.getSourceName(info), self.getParamValue('filter'), timeout=timeout)
+        connection.readSocket('reader', self.getSourceName(info), self.getParamValue('filter'), timeout=timeout)
         self.wait(2)
       except:
         AVNLog.info("exception while reading from %s %s",info,traceback.format_exc())

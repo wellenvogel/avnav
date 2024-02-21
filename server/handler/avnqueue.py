@@ -26,15 +26,7 @@
 ###############################################################################
 
 from avnav_worker import *
-hasSerial=False
-
-try:
-  import avnserial
-  hasSerial=True
-except:
-  pass
-
-
+from avnav_util import MovingSum
 import avnav_handlerList
 
 
@@ -49,20 +41,18 @@ class NmeaEntry(object):
 
 
 #a Worker for feeding data trough gpsd (or directly to the navdata)
-class AVNFeeder(AVNWorker):
+class AVNQueue(AVNWorker):
   P_MAXLIST=WorkerParameter('maxList',default=300,type=WorkerParameter.T_NUMBER,
                             description='number of nmea records to be queued',
                             rangeOrList=[10,3000])
   P_SLEEP=WorkerParameter('feederSleep',default=0.5,type=WorkerParameter.T_FLOAT,
                           editable=False)
-  P_NAME=WorkerParameter('name',default='feeder',type=WorkerParameter.T_STRING,
+  P_NAME=WorkerParameter('name',default='main',type=WorkerParameter.T_STRING,
                          editable=False)
-  P_FILTER=WorkerParameter('decoderFilter',default='',type=WorkerParameter.T_STRING,
-                           description='an NMEA filter for the decoder')
   P_AGE=WorkerParameter('maxAge',default=3,type=WorkerParameter.T_FLOAT,
                         description='max age(s) of an NMEA item in the queue before it gets dropped',
                         rangeOrList=[1,1000])
-  P_ALL=[P_MAXLIST,P_SLEEP,P_NAME,P_FILTER,P_AGE]
+  P_ALL=[P_MAXLIST,P_SLEEP,P_NAME,P_AGE]
   @classmethod
   def getConfigParam(cls, child=None):
     return cls.P_ALL
@@ -108,8 +98,6 @@ class AVNFeeder(AVNWorker):
     self.maxlist = self.P_MAXLIST.fromDict(self.param)
     self.waitTime= self.P_SLEEP.fromDict(self.param)
     self.maxAge= self.P_AGE.fromDict(self.param)
-    filterstr = self.P_FILTER.fromDict(self.param)
-    self.nmeaFilter = filterstr.split(",")
 
   def stop(self):
     super().stop()
@@ -260,39 +248,112 @@ class AVNFeeder(AVNWorker):
   #a standalone feeder that uses our bultin methods
   
   def run(self):
-    AVNLog.info("standalone feeder started")
-    nmeaParser=NMEAParser(self.navdata)
+    AVNLog.info("feeder started")
     self.setInfo('main', "running", WorkerStatus.RUNNING)
-    hasNmea=False
     sequence=None
     while not self.shouldStop():
-      try:
-        while True:
-          (numErrors,sequence,nmeaList)=self.fetchFromHistory(sequence,
-                                                    nmeafilter=self.nmeaFilter,
-                                                    includeSource=True,
-                                                    waitTime=self.waitTime,
-                                                    returnError=True)
-          if numErrors > 0:
-            AVNLog.error("decoder lost %d records",numErrors)
-          for data in nmeaList:
-            if not data is None and not data.omitDecode:
-              if nmeaParser.parseData(data.data,source=data.source,sourcePriority=data.sourcePriority):
-                if not hasNmea:
-                  self.setInfo('main',"feeding NMEA",WorkerStatus.NMEA)
-      except Exception as e:
-        AVNLog.warn("feeder exception - retrying %s",traceback.format_exc())
+      while True:
+        self.wait(1)
 
 
-class AVNGpsdFeeder(AVNFeeder):
-  '''
-  legacy config support with AVNGpsdFeeder
-  '''
+avnav_handlerList.registerHandler(AVNQueue)
 
-  @classmethod
-  def autoInstantiate(cls):
-    return False
+class Fetcher:
+  def __init__(self,queue:AVNQueue,
+               infoHandler:InfoHandler,
+               maxEntries=10,
+               includeSource=False,
+               waitTime=0.1,
+               nmeaFilter=None,
+               maxAge=None,
+               returnErrors=False,
+               sumKey='received',
+               errorKey='skipped'):
+    self._queue=queue
+    self._info=infoHandler
+    self._maxEntries=maxEntries
+    self._includeSource=includeSource
+    self._waitTime=waitTime
+    self._nmeaFilter=nmeaFilter.split(",") if nmeaFilter else None
+    self._maxAge=maxAge if maxAge is not None else queue.maxAge
+    self._returnErrors=returnErrors
+    self._sequence=None
+    self._sumKey=sumKey
+    if sumKey is not None:
+      self._nmeaSum=MovingSum()
+    self._errorKey=errorKey
+    if errorKey is not None:
+      self._nmeaErrors=MovingSum()
 
+  def __del__(self):
+    if self._sumKey is not None:
+      self._info.deleteInfo(self._sumKey)
+    if self._errorKey is not None:
+      self._info.deleteInfo(self._errorKey)
 
-avnav_handlerList.registerHandler(AVNGpsdFeeder)
-avnav_handlerList.registerHandler(AVNFeeder)
+  def updateParam(self,
+                  maxEntries=None,
+                  includeSource=None,
+                  waitTime=None,
+                  nmeaFilter=None,
+                  maxAge=None,
+                  returnErrors=None,
+                  ):
+    if maxEntries is not None:
+      self._maxEntries=maxEntries
+    if includeSource is not None:
+      self._includeSource=includeSource
+    if waitTime is not None:
+      self._waitTime=waitTime
+    if nmeaFilter is not None:
+      self._nmeaFilter=nmeaFilter.split(",")
+    if maxAge is not None:
+      self._maxAge=maxAge
+    if returnErrors is not None:
+      self._returnErrors=returnErrors
+
+  def fetch(self,maxEntries=None,
+                       waitTime=None,
+                       maxAge=None):
+    (numErrors,self._sequence,nmeaList)=self._queue.fetchFromHistory(
+      sequence=self._sequence,
+      includeSource=self._includeSource,
+      waitTime=self._waitTime if waitTime is None else waitTime,
+      maxAge=self._maxAge if maxAge is None else maxAge,
+      nmeafilter=self._nmeaFilter,
+      returnError=True,
+      maxEntries=self._maxEntries if maxEntries is None else maxEntries
+      )
+    if self._nmeaErrors is not None:
+      self._nmeaErrors.add(numErrors)
+    if self._nmeaSum is not None:
+      self._nmeaSum.add(len(nmeaList))
+    if self._returnErrors:
+      return numErrors,nmeaList
+    else:
+      return nmeaList
+
+  def reset(self):
+    self._sequence=None
+    if self._nmeaSum is not None:
+      self._nmeaSum.clear()
+    if self._nmeaErrors is not None:
+      self._nmeaErrors.clear()
+
+  def reportSum(self,txt=''):
+    if self._nmeaSum is None:
+      return
+    if self._nmeaSum.shouldUpdate():
+      self._info.setInfo(self._sumKey,
+                  "%s %.4g/s"%(txt,self._nmeaSum.avg()),
+                  WorkerStatus.NMEA if self._nmeaSum.val()>0 else WorkerStatus.INACTIVE)
+  def reportErr(self,txt=''):
+    if self._nmeaErrors is None:
+      return
+    if self._nmeaErrors.shouldUpdate():
+      self._info.setInfo(self._errorKey,
+                  "%s %d errors/10s"%(txt,self._nmeaErrors.val()),
+                  WorkerStatus.ERROR if self._nmeaErrors.val()>0 else WorkerStatus.INACTIVE)
+  def report(self):
+    self.reportErr()
+    self.reportSum()

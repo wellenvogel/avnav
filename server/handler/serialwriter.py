@@ -70,7 +70,7 @@ class SerialWriter(SerialReader):
   #param - the config dict
   #navdata - a nav data object (can be none if this reader does not directly write)
   #a write data method used to write a received line
-  def __init__(self,param,writeData,infoHandler,sourceName):
+  def __init__(self,param,writeData,infoHandler:InfoHandler,sourceName):
     for p in ('port','name','timeout'):
       if param.get(p) is None:
         raise Exception("missing "+p+" parameter for serial writer")
