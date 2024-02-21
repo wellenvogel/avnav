@@ -428,13 +428,15 @@ const amul=(arr,fact)=>{
 AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunction,drawEstimated){
     let courseVectorTime=globalStore.getData(keys.properties.navBoatCourseTime,0);
     let useCourseVector=globalStore.getData(keys.properties.aisUseCourseVector,false);
-    let drawRelMotionVector=globalStore.getData(keys.properties.aisUseRelMotionVector,false);
+    let rmvRange=globalStore.getData(keys.properties.aisRelativeMotionVectorRange,0);
     let courseVectorWidth=globalStore.getData(keys.properties.navCircleWidth);
     let scale=globalStore.getData(keys.properties.aisIconScale,1);
     let classbShrink=globalStore.getData(keys.properties.aisClassbShrink,1);
     let useHeading=globalStore.getData(keys.properties.aisUseHeading,true);
     let lostTime=globalStore.getData(keys.properties.aisLostTime,0);
     // own ship
+    let lat=globalStore.getData(keys.nav.gps.lat,0);
+    let lon=globalStore.getData(keys.nav.gps.lon,0);
     let cog=globalStore.getData(keys.nav.gps.course,0);
     let sog=globalStore.getData(keys.nav.gps.speed,0);
     // ais target
@@ -473,9 +475,9 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
         style.rotateWithView=true;
     }
     if(!hidden){
-        if (drawRelMotionVector && style.courseVector !== false && drawEstimated!==undefined) {
-            // relative motion vector
-            if (target_sog || sog) {
+        if (rmvRange>0 && style.courseVector !== false) { // relative motion vector
+            let distance=NavCompute.computeDistance({lat:lat,lon:lon},{lat:target.lat,lon:target.lon}).dts/1852;
+            if (distance<=rmvRange && (target_sog || sog)) {
                 let drm,srm; // direction and speed of relative motion
                 [drm,srm]=Helper.addPolar([target_cog,target_sog],[cog,-sog]);
                 if (srm) {
@@ -485,12 +487,10 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
             }
         }
         if (useCourseVector && style.courseVector !== false) {
-            // true motion vector
-            if (target_sog) {
+            if (target_sog) { // true motion vector
                 let other=drawTargetFunction(xy,target_cog,target_sog*courseVectorTime);
                 drawing.drawLineToContext([xy,other],{color:style.courseVectorColor,width:courseVectorWidth});
-                // turn indicator
-                if(target.turn && drawEstimated!==undefined) {
+                if(target.turn) { // turn indicator
                     let sgn=Math.sign(target.turn);
                     let rot=Math.abs(target.turn);//Math.pow(target.turn/4.733,2); // °/min
                     if(rot && isFinite(rot)){
@@ -502,10 +502,7 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
         }
         if (drawEstimated && symbol.ghostImage){
             if (target_sog >= globalStore.getData(keys.properties.aisMinDisplaySpeed) && target.age > 0){
-                let age=target.age;
-                if (target.receiveTime < now){
-                    age+=(now-target.receiveTime)/1000;
-                }
+                let age=target.age+Math.max(0,(now-target.receiveTime)/1000);
                 let ghostPos=drawTargetFunction(xy,target_cog,target_sog*age);
                 drawing.drawImageToContext(ghostPos,symbol.ghostImage,style);
             }
