@@ -484,12 +484,13 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
     if(!hidden){
         let onMap=drawEstimated!==undefined; // true when drawing on map, false in ais info
 
-        var drawArc=function(center,radius,start,angle,style,shift_dir=0,shift_dst=0){
+        var drawArc=function(origin,center,radius,start,angle,style,shift_dir=0,shift_dst=0){
+            // pass origin to mitigate error due to projection for large radii
             let segments=Math.max(3,Math.ceil(Math.abs(angle)/5));
             let da=angle/segments, dd=shift_dst/segments;
             let points=[];
             for(let i=0; i<=segments; i++){
-                let p=drawTargetFunction(center,start+i*da,radius);
+                let p=i==0?origin:drawTargetFunction(center,start+i*da,radius);
                 if (shift_dst) p=drawTargetFunction(p,shift_dir,i*dd);
                 points.push(p);
             }
@@ -506,7 +507,7 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
             let distance=NavCompute.computeDistance({lat:lat,lon:lon},{lat:target.lat,lon:target.lon}).dts/1852;
             if (distance<=rmvRange && (target_sog || sog)) {
                 if (curved) {
-                    drawArc(turn_center,turn_radius,target_cog-target_rot_sgn*90,target_rot_sgn*turn_angle,
+                    drawArc(xy,turn_center,turn_radius,target_cog-target_rot_sgn*90,target_rot_sgn*turn_angle,
                             {color:style.courseVectorColor,width:courseVectorWidth,dashed:true},
                             cog,-sog*courseVectorTime);
                 } else {
@@ -521,7 +522,7 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
             if (target_sog) { // true motion vector
                 if(curved && onMap) { // curved TMV
                     //drawing.drawLineToContext([xy,drawTargetFunction(xy,target_cog+target_rot_sgn*90,100)],{color:"black",width:courseVectorWidth});
-                    drawArc(turn_center,turn_radius,target_cog-target_rot_sgn*90,target_rot_sgn*turn_angle,
+                    drawArc(xy,turn_center,turn_radius,target_cog-target_rot_sgn*90,target_rot_sgn*turn_angle,
                             {color:style.courseVectorColor,width:courseVectorWidth});
                 } else {
                     let p=drawTargetFunction(xy,target_cog,target_sog*courseVectorTime);
@@ -530,13 +531,16 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
             }
         }
 
-        if (drawEstimated && symbol.ghostImage){ // DR position of target
-            if (target_sog >= minDRspeed){
-                let age=target.age+Math.max(0,(now-target.receiveTime)/1000);
-                let pos=drawTargetFunction(xy,target_cog,target_sog*age);
-                //drawing.drawImageToContext(pos,symbol.ghostImage,style);
-                drawing.drawImageToContext(pos,symbol.image,style);
+        if (drawEstimated && symbol.ghostImage && target_sog >= minDRspeed){ // DR position of target
+            let age=target.age+Math.max(0,(now-target.receiveTime)/1000);
+            if (curved) {
+                let a=Helper.degrees(target_sog*age/turn_radius);
+                var pos=drawTargetFunction(turn_center,target_cog-target_rot_sgn*(90-a),turn_radius);
+                //if (style.rotateWithView) { style.rotation+=Helper.radians(target_rot_sgn*a); } // TODO rotate DR icon only
+            } else {
+                var pos=drawTargetFunction(xy,target_cog,target_sog*age);
             }
+            drawing.drawImageToContext(pos,symbol.ghostImage,style);
         }
     }
     let curpix=drawing.drawImageToContext(xy,symbol.image,style);
