@@ -28,6 +28,7 @@
 
 import socket
 import avnav_handlerList
+from avnqueue import Fetcher
 from socketbase import *
 
 
@@ -37,20 +38,20 @@ class AVNUdpWriter(AVNWorker):
   @classmethod
   def getConfigName(cls):
     return "AVNUdpWriter"
-
+  P_HOST=WorkerParameter('host','localhost',description="target host for udp packages")
+  P_PORT=WorkerParameter('port',2000,type=WorkerParameter.T_NUMBER,
+                         description='port for udp packages')
+  P_BROADCAST=WorkerParameter('broadcast', True,type=WorkerParameter.T_BOOLEAN,
+                              description="send broadcast packages")
   @classmethod
   def getConfigParam(cls, child=None):
     if child is None:
-      
       rt=[
-          WorkerParameter('host','localhost',description="target host for udp packages"),
-          WorkerParameter('port',2000,type=WorkerParameter.T_NUMBER,
-                          description='port for udp packages'),
-          WorkerParameter('feederName', '',editable=False),
-          WorkerParameter('broadcast', True,type=WorkerParameter.T_BOOLEAN,
-                          description="send broadcast packages"),
-          WorkerParameter('filter','',type=WorkerParameter.T_FILTER),
-          WorkerParameter('blackList' , '',description=', separated list of sources we do not send out')
+          cls.P_HOST,
+          cls.P_PORT,
+          cls.P_BROADCAST,
+          cls.FILTER_PARAM,
+          cls.BLACKLIST_PARAM
          ]
       return rt
     return None
@@ -64,15 +65,17 @@ class AVNUdpWriter(AVNWorker):
     return True
 
   def __init__(self,param):
-    for p in ('port','host'):
-      if param.get(p) is None:
-        raise Exception("missing "+p+" parameter for udp writer")
     AVNWorker.__init__(self, param)
-    self.blackList = None
     self.socket=None
+    self._fetcher=None
 
   def updateConfig(self, param, child=None):
     super().updateConfig(param, child)
+    if self._fetcher is not None:
+      self._fetcher.updateParam(
+        nmeaFilter=self.FILTER_PARAM.fromDict(self.param),
+        blackList=self.BLACKLIST_PARAM.fromDict(self.param)
+      )
     try:
       self.socket.close()
     except:
@@ -86,47 +89,34 @@ class AVNUdpWriter(AVNWorker):
     except:
       pass
 
-  # make some checks when we have to start
-  # we cannot do this on init as we potentiall have to find the feeder...
-  def startInstance(self, navdata):
-    feedername = self.getStringParam('feederName')
-    feeder = self.findFeeder(feedername)
-    if feeder is None:
-      raise Exception("%s: cannot find a suitable feeder (name %s)", self.getName(), feedername or "")
-    self.feeder=feeder
-    super().startInstance(navdata)
-  
 
   def run(self):
-    self.setNameIfEmpty("%s-%s:%s" % (self.getName(), self.param['host'], self.param['port']))
+    self._fetcher=Fetcher(self.queue,self,
+                          nmeaFilter=self.FILTER_PARAM.fromDict(self.param),
+                          blackList=self.BLACKLIST_PARAM.fromDict(self.param)
+                          )
+    self.setNameIfEmpty("%s-%s:%s" % (self.getName(), self.P_HOST.fromDict(self.param),self.P_PORT.fromDict(self.param)))
     while not self.shouldStop():
       try:
-        self.blackList = self.getStringParam('blackList').split(',')
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        if self.getBoolParam('broadcast'):
+        if self.P_BROADCAST.fromDict(self.param):
           self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        addr=self.getStringParam('host')
-        port=int(self.getIntParam('port'))
-        filterstr=self.getStringParam('filter')
-        filter=None
-        seq=0
+        addr=self.P_HOST.fromDict(self.param)
+        port=self.P_PORT.fromDict(self.param)
         self.setInfo('main',"sending to %s:%d" % (str(addr),port),WorkerStatus.NMEA)
-        if filterstr != "":
-          filter=filterstr.split(",")
         while not self.shouldStop() and self.socket.fileno() >= 0:
-          seq,data=self.feeder.fetchFromHistory(seq,10,nmeafilter=filter,includeSource=True)
+          data=self._fetcher.fetch()
+          self._fetcher.report()
           if len(data) > 0:
             for line in data:
-               if line.source in self.blackList:
-                 AVNLog.debug("ignore line %s:%s due to blacklist",line.source,line.data)
-               else:
-                 self.socket.sendto(line.data.encode('ascii',errors='ignore'),(addr,port))
+                self.socket.sendto(line.encode('ascii',errors='ignore'),(addr,port))
         self.socket.shutdown(socket.SHUT_RDWR)
         self.socket.close()
       except Exception as e:
+        self._fetcher.reset()
         self.setInfo('main', "error sending to %s:%s %s" %
-                     (str(self.param.get('host')), str(self.param.get('port')),str(e)), WorkerStatus.ERROR)
+                     (self.P_PORT.fromDict(self.param), str(self.P_PORT.fromDict(self.param)),str(e)), WorkerStatus.ERROR)
         AVNLog.error("error in udp writer: %s",traceback.format_exc())
         if self.shouldStop():
           return

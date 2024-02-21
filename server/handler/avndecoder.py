@@ -42,8 +42,7 @@ class NmeaEntry(object):
 
 #a Worker for feeding data trough gpsd (or directly to the navdata)
 class AVNDecoder(AVNWorker):
-  P_FILTER=WorkerParameter('decoderFilter',default='',type=WorkerParameter.T_STRING,
-                           description='an NMEA filter for the decoder')
+  P_FILTER=WorkerParameter('decoderFilter',default='',type=WorkerParameter.T_FILTER)
   P_ALL=[P_FILTER]
   @classmethod
   def getConfigParam(cls, child=None):
@@ -70,7 +69,7 @@ class AVNDecoder(AVNWorker):
     return rt
 
   def run(self):
-    self._fetcher=Fetcher(self.queue,self,includeSource=True)
+    self._fetcher=Fetcher(self.queue,self,includeSource=True,nmeaFilter=self.P_FILTER.fromDict(self.param) )
     AVNLog.info("decoder started")
     nmeaParser=NMEAParser(self.navdata)
     self.setInfo('main', "running", WorkerStatus.RUNNING)

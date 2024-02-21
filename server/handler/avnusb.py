@@ -36,17 +36,23 @@ except:
 
 CHILD_NAME='UsbDevice'
 
-class InfoHandler(object):
-  def __init__(self,name,parent):
+class USBInfoHandler(InfoHandler):
+  def __init__(self,name,parent:InfoHandler):
     self.name=name
-    self.parent=parent
+    self.parent=TrackingInfoHandler(parent)
     self.childId="%s:%s"%(CHILD_NAME,name)
-  def setInfo(self,item,text,status,canDelete=False):
-    self.parent.setInfo(self.name,text,status,self.childId,canDelete=canDelete)
-  def deleteInfo(self,item):
-    self.parent.deleteInfo(self.name)
+  def _gn(self,name):
+    if name is None:
+      return self.name
+    return "{0}-{1}".format(self.name,name)
+  def setInfo(self, name, info, status, childId=None, canDelete=False, timeout=None):
+    self.parent.setInfo(self._gn(name), info, status, childId, canDelete, timeout)
+  def refreshInfo(self, name, timeout=None):
+    self.parent.refreshInfo(self._gn(name), timeout)
+  def deleteInfo(self,name):
+    self.parent.deleteInfo(self._gn(name))
 
-class UsbSerialHandler(InfoHandler):
+class UsbSerialHandler(USBInfoHandler):
   T_IGNORE='ignore'
   T_READER='reader'
   T_WRITER='writer'
@@ -55,8 +61,9 @@ class UsbSerialHandler(InfoHandler):
   T_UNKNOWN='unknown'
   ALL_TYPES=[T_IGNORE,T_READER,T_WRITER,T_EXTERNAL,T_COMBINED]
   ALL_INTERNAL_TYPES=[T_IGNORE,T_READER,T_WRITER,T_COMBINED]
-  def __init__(self, name, parent,param):
-    super().__init__(name, parent)
+  def __init__(self, name, infoHandler:InfoHandler,queue:AVNQueue,param):
+    super().__init__(name, infoHandler)
+    self.queue=queue
     self.param=param
     self.type=param['type']
     self.serialHandler=None
@@ -68,15 +75,14 @@ class UsbSerialHandler(InfoHandler):
   def run(self):
     device=self.param.get('port')
     if device is not None and self.type != self.T_IGNORE:
-      sourceName=self.param.get('name',"%s-%s" % (self.parent.getName(), self.name))
-      self.param['name']=self.name
+      sourceName=self.param['sourcename']
       self.setInfo(None,"starting type %s"%self.type,WorkerStatus.STARTED,
                    canDelete=self.param.get('childIndex',-1) >= 0)
       if self.type == self.T_WRITER or self.type == self.T_COMBINED:
-        self.serialHandler = SerialWriter(self.param, self.parent.writeData, self, sourceName)
+        self.serialHandler = SerialWriter(self.param, self.queue, self, sourceName)
         self.serialHandler.param["combined"] = self.type == self.T_COMBINED
       else:
-        self.serialHandler = SerialReader(self.param, self.parent.writeData, self, sourceName)
+        self.serialHandler = SerialReader(self.param, self.queue, self, sourceName)
       self.serialHandler.run()
     else:
       if device is None:
@@ -101,8 +107,8 @@ class UsbSerialHandler(InfoHandler):
     return self.type in [self.T_COMBINED,self.T_WRITER,self.T_READER]
 
 class ExternalHandler(UsbSerialHandler):
-  def __init__(self, name, parent, param):
-    super().__init__(name, parent, param)
+  def __init__(self, name, infoHandler:InfoHandler,queue:AVNQueue, param):
+    super().__init__(name, infoHandler, queue, param)
     self.callback=param['callback']
     self.childId=None #no editing possible
 
@@ -147,18 +153,22 @@ class AVNUsbSerialReader(AVNWorker):
   @classmethod
   def getConfigName(cls):
     return "AVNUsbSerialReader"
-  
+  P_MAXDEVICES=WorkerParameter('maxDevices',5,type=WorkerParameter.T_NUMBER,
+                               description='max number of USB devices, this includes preconfigured devices!')
+  P_UNKNOWN=WorkerParameter('allowUnknown',True,type=WorkerParameter.T_BOOLEAN,
+                            description='allow devices that are not configured')
+  P_USBDEVICE=WorkerParameter('usbid',None,type=WorkerParameter.T_STRING,editable=False,
+                              description='an identifier of the USB device\n.../1-1.3.1:1.0/ttyUSB2/tty/ttyUSB2 - identifier would be 1-1.3.1')
+  P_DTYPE=WorkerParameter('type', 'reader',type=WorkerParameter.T_SELECT,rangeOrList=UsbSerialHandler.ALL_INTERNAL_TYPES,
+                          description="the type of this serial channel: reader or writer or combined (both reader and writer)\nor ignored to not use it at all")
   @classmethod
   def getConfigParam(cls, child=None):
     if child is None:
       #get the default configuration for a serial reader
       rt=list(filter(lambda p: p.name != 'port',SerialReader.getConfigParam()))
       ownParameters=[
-          WorkerParameter('maxDevices',5,type=WorkerParameter.T_NUMBER,
-                          description='max number of USB devices, this includes preconfigured devices!'),
-          WorkerParameter('feederName','',type=WorkerParameter.T_STRING,editable=False),
-          WorkerParameter('allowUnknown',True,type=WorkerParameter.T_BOOLEAN,
-                          description='allow devices that are not configured')
+          cls.P_MAXDEVICES,
+          cls.P_UNKNOWN
           ]
       return rt+ownParameters
     if child == CHILD_NAME:
@@ -168,13 +178,11 @@ class AVNUsbSerialReader(AVNWorker):
   #get the parameters for an usb device
   @classmethod
   def getSerialParam(cls):
-    rt=list(filter(lambda p:p.name != 'port' and p.name != 'combined',SerialWriter.getConfigParam()))
-    rt = rt+ list(filter(lambda p: p.name == 'minbaud', SerialReader.getConfigParam()))
+    rt=list(filter(lambda p:p.name != SerialWriter.P_PORT.name and p.name != SerialWriter.P_COMBINED.name,SerialWriter.getConfigParam()))
+    rt = rt+ list(filter(lambda p: p.name == SerialReader.P_MINBAUD.name, SerialReader.getConfigParam()))
     ownParam=[
-        WorkerParameter('usbid',None,type=WorkerParameter.T_STRING,editable=False,
-                        description='an identifier of the USB device\n.../1-1.3.1:1.0/ttyUSB2/tty/ttyUSB2 - identifier would be 1-1.3.1'),
-        WorkerParameter('type', 'reader',type=WorkerParameter.T_SELECT,rangeOrList=UsbSerialHandler.ALL_INTERNAL_TYPES,
-                        description="the type of this serial channel: reader or writer or combined (both reader and writer)\nor ignored to not use it at all")
+        cls.P_USBDEVICE,
+        cls.P_DTYPE
         ]
     return rt+ownParam
   
@@ -225,12 +233,12 @@ class AVNUsbSerialReader(AVNWorker):
       raise Exception("unknown child type %s"%child)
     rt=WorkerParameter.filterEditables(self.getSerialParam(),makeCopy=True)
     for p in rt:
-      if p.name == 'readFilter':
-        p.condition={'type':'combined'}
-      if p.name == 'minbaud':
-        p.condition={'type':'reader'}
-      if p.name == 'blackList':
-        p.condition=[{'type':'writer'},{'type':'combined'}]
+      if p.name == SerialWriter.P_READFILTER.name:
+        p.condition={self.P_DTYPE.name: UsbSerialHandler.T_COMBINED}
+      if p.name == SerialReader.P_MINBAUD:
+        p.condition={self.P_DTYPE.name:UsbSerialHandler.T_READER}
+      if p.name ==  SerialWriter.P_BLACKLIST:
+        p.condition=[{self.P_DTYPE.name: UsbSerialHandler.T_WRITER},{self.P_DTYPE.name:UsbSerialHandler.T_COMBINED}]
     return rt
 
   def canDeleteChild(self, child):
@@ -438,6 +446,12 @@ class AVNUsbSerialReader(AVNWorker):
       config['type']=UsbSerialHandler.T_READER if allowUnknown else UsbSerialHandler.T_UNKNOWN
       config['childIndex']=-1
     config['port']=device
+    if config.get('name') is None:
+      config['name']=usbid
+      config['sourcename']="{0}-{1}".format(self.getName(),usbid)
+    else:
+      config['sourcename']=config['name']
+      config['name']=usbid
     return config
 
   #a thread method to run a serial reader/writer
@@ -461,11 +475,11 @@ class AVNUsbSerialReader(AVNWorker):
           #do nothing - potentially we handle it in the next round
           continue
         AVNLog.debug("must start handler for %s at %s",usbid,devicelist[usbid])
-        param=self.getParamByUsbId(usbid,devicelist[usbid],self.getBoolParam('allowUnknown'))
+        param=self.getParamByUsbId(usbid,devicelist[usbid],self.P_UNKNOWN.fromDict(self.param))
         if param['type'] == 'external':
-          handler=ExternalHandler(usbid,self,param)
+          handler=ExternalHandler(usbid,self,self.queue,param)
         else:
-          handler=UsbSerialHandler(usbid,self,param)
+          handler=UsbSerialHandler(usbid,self,self.queue,param)
         res=self.checkAndAddHandler(handler)
         if not res:
             AVNLog.debug("max number of readers already reached, skip start of %s at %s",usbid,devicelist[usbid])

@@ -35,24 +35,22 @@ from avnav_worker import *
 
 #a Worker to read  NMEA source from a udp socket
 class AVNUdpReader(AVNWorker):
-  
-  @classmethod
-  def getConfigName(cls):
-    return "AVNUdpReader"
+  P_LADDR=WorkerParameter('host','127.0.0.1',description="address to listen on, use 0.0.0.0 to allow external access")
+  P_PORT=WorkerParameter('port',None,type=WorkerParameter.T_NUMBER,
+                         description="the local listener port")
+  P_MINTIME=WorkerParameter('minTime',0,type=WorkerParameter.T_FLOAT,
+                            description='wait this time before reading new data (ms)')
   
   @classmethod
   def getConfigParam(cls, child=None):
     if not child is None:
       return None
     rt=[
-               WorkerParameter('feederName','',editable=False),
                cls.PRIORITY_PARAM_DESCRIPTION,
-               WorkerParameter('host','127.0.0.1',description="address to listen on, use 0.0.0.0 to allow external access"),
-               WorkerParameter('port',None,type=WorkerParameter.T_NUMBER,
-                               description="the local listener port"),
-               WorkerParameter('minTime',0,type=WorkerParameter.T_FLOAT,
-                               description='wait this time before reading new data (ms)'),
-               WorkerParameter('filter','',type=WorkerParameter.T_FILTER),
+               cls.P_LADDR,
+               cls.P_PORT,
+               cls.P_MINTIME,
+               cls.FILTER_PARAM,
                SocketReader.P_STRIP_LEADING
     ]
     return rt
@@ -66,10 +64,8 @@ class AVNUdpReader(AVNWorker):
     return True
 
   def __init__(self,param):
-    for p in ('port','host'):
-      if param.get(p) is None:
-        raise Exception("missing "+p+" parameter for udp reader")
-    self.feederWrite=None
+    for p in (self.P_PORT, self.P_LADDR):
+      p.fromDict(param)
     self.socket=None
     AVNWorker.__init__(self, param)
 
@@ -87,17 +83,9 @@ class AVNUdpReader(AVNWorker):
     except:
       pass
 
-  def writeData(self,data,source=None,addCheckSum=False,sourcePriority=None):
-    if sourcePriority is None:
-      sourcePriority=self.PRIORITY_PARAM_DESCRIPTION.fromDict(self.param)
-    AVNWorker.writeData(self,data,source,sourcePriority=sourcePriority)
-    if (self.getIntParam('minTime')):
-      time.sleep(float(self.getIntParam('minTime'))/1000)
-
-
   def checkConfig(self, param):
-    if 'port' in param:
-      self.checkUsedResource(UsedResource.T_UDP,param.get('port'))
+    if self.P_PORT.name in param:
+      self.checkUsedResource(UsedResource.T_UDP,self.P_PORT.fromDict(param))
 
   #thread run method - just try forever
   def run(self):
@@ -121,11 +109,14 @@ class AVNUdpReader(AVNWorker):
         continue
       AVNLog.info("successfully listening at %s",info)
       try:
-        reader=SocketReader(self.socket,self.writeData,
-                            None,self.setInfo,
+        reader=SocketReader(self.socket,self.queue,
+                            self,
                             shouldStop=self.shouldStop,
-                            stripLeading=SocketReader.P_STRIP_LEADING.fromDict(self.param))
-        reader.readSocket('main',self.getSourceName(info),self.getParamValue('filter'))
+                            stripLeading=SocketReader.P_STRIP_LEADING.fromDict(self.param),
+                            sourcePriority=self.PRIORITY_PARAM_DESCRIPTION.fromDict(self.param))
+        reader.readSocket('main',self.getSourceName(info),
+                          filter=self.FILTER_PARAM.fromDict(self.param),
+                          minTime=self.P_MINTIME.fromDict(self.param))
       except:
         AVNLog.info("exception while reading data from %s:%d %s",self.getStringParam('host'),self.getIntParam('port'),traceback.format_exc())
 avnav_handlerList.registerHandler(AVNUdpReader)

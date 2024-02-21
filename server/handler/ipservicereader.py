@@ -59,19 +59,20 @@ class AVNIpServiceReader(AVNWorker):
   P_BLACKLIST=WorkerParameter('blackList', '',
                               description=', separated list of sources we do not send out',
                               condition={P_WRITE_OUT.name:True})
+  P_TIMEOUT=WorkerParameter('timeout', 10, type=WorkerParameter.T_FLOAT,
+                            description='timeout in sec for connecting and waiting for data, close connection if no data within 5*timeout')
+  P_MINTIME=WorkerParameter('minTime', 0, type=WorkerParameter.T_FLOAT,
+                            description='if this is set, wait this time before reading new data (ms)')
   @classmethod
   def getConfigParam(cls, child=None):
     if not child is None:
       return None
     rt = [
-      WorkerParameter('feederName', '', editable=False),
       cls.PRIORITY_PARAM_DESCRIPTION,
       cls.P_SERVICE_NAME,
-      WorkerParameter('timeout', 10, type=WorkerParameter.T_FLOAT,
-                      description='timeout in sec for connecting and waiting for data, close connection if no data within 5*timeout'),
-      WorkerParameter('minTime', 0, type=WorkerParameter.T_FLOAT,
-                      description='if this is set, wait this time before reading new data (ms)'),
-      WorkerParameter('filter', '', type=WorkerParameter.T_FILTER),
+      cls.P_TIMEOUT,
+      cls.P_MINTIME,
+      cls.FILTER_PARAM,
       cls.P_WRITE_OUT,
       cls.P_WRITE_FILTER,
       cls.P_BLACKLIST
@@ -110,26 +111,17 @@ class AVNIpServiceReader(AVNWorker):
     except:
       pass
 
-  def writeData(self, data, source=None, **kwargs):
-    priority=self.PRIORITY_PARAM_DESCRIPTION.fromDict(self.param)
-    AVNWorker.writeData(self,data,source,sourcePriority=priority)
-    if (self.getIntParam('minTime')):
-      time.sleep(float(self.getIntParam('minTime'))/1000)
-
   def _writer(self, socketConnection):
     infoName="writer"
     socketConnection.writeSocket(infoName,
                                  self.P_WRITE_FILTER.fromDict(self.param),
                                  self.version,
-                                 blacklist=self.P_BLACKLIST.fromDict(self.param).split(','))
+                                 blacklist=self.P_BLACKLIST.fromDict(self.param))
     self.deleteInfo(infoName)
 
   #thread run method - just try forever  
   def run(self):
-    self.version='development'
-    baseConfig=self.findHandlerByName('AVNConfig')
-    if baseConfig:
-      self.version=baseConfig.getVersion()
+    self.version=self.navdata.getSingleValue(AVNStore.KEY_VERSION)
     errorReported=False
     lastInfo = None
     lastName=None
@@ -176,7 +168,10 @@ class AVNIpServiceReader(AVNWorker):
           timeout = timeout *5
         else:
           timeout=None
-        connection=SocketReader(self.socket, self.writeData, self.queue, self.setInfo, shouldStop=self.shouldStop)
+        connection=SocketReader(self.socket, self.queue, self,
+                                shouldStop=self.shouldStop,
+                                sourcePriority=self.PRIORITY_PARAM_DESCRIPTION.fromDict(self.param)
+                                )
         if self.P_WRITE_OUT.fromDict(self.param):
           clientHandler=threading.Thread(
             target=self._writer,
@@ -185,7 +180,11 @@ class AVNIpServiceReader(AVNWorker):
           )
           clientHandler.daemon=True
           clientHandler.start()
-        connection.readSocket('main',self.getSourceName(info),self.getParamValue('filter'),timeout=timeout)
+        connection.readSocket('reader',
+                              self.getSourceName(info),
+                              self.getParamValue('filter'),
+                              timeout=timeout,
+                              minTime=self.P_MINTIME.fromDict(self.param))
         self.wait(2)
       except:
         AVNLog.info("exception while reading from %s %s",info,traceback.format_exc())

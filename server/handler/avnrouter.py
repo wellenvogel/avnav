@@ -253,7 +253,6 @@ class AVNRouter(AVNDirectoryHandlerBase):
           WorkerParameter("routesdir","",editable=False),
           WorkerParameter("interval", 5,type=WorkerParameter.T_FLOAT,
                           description='interval in seconds for computing route data'),
-          WorkerParameter("feederName",'',editable=False),
           WorkerParameter("computeRMB",True,type=WorkerParameter.T_BOOLEAN,
                           description='if set we compute AP control data'),
           WorkerParameter("computeAPB",False,type=WorkerParameter.T_BOOLEAN,
@@ -663,7 +662,7 @@ class AVNRouter(AVNDirectoryHandlerBase):
     course=curGps.get('track')
     wpData=WpData(self.getCurrentLeg(),lat,lon,speed or 0,course,useRhumLine=self.P_RHUMBLINE.fromDict(self.param))
     return wpData
-  #compute an RMB record and write this into the feeder
+  #compute an RMB record and write this into the queue
   #if we have an active leg
   def computeRMB(self,computeRMB,computeAPB):
     hasRMB=False
@@ -722,20 +721,16 @@ class AVNRouter(AVNDirectoryHandlerBase):
               XTE,LR,self.WpNr,self.WpNr+1,wplat[0],wplat[1],wplon[0],wplon[1],destDis,destBearing,kn,arrival)
             nmeaData = "$" + nmeaData + "*" + NMEAParser.nmeaChecksum(nmeaData) + "\r\n"
             AVNLog.debug("adding NMEA %s",nmeaData)
-            self.feeder.addNMEA(nmeaData,source="router")
+            self.queue.addNMEA(nmeaData,source="router")
           if computeAPB:
             nmeaData = "GPAPB,A,A,%.2f,%s,N,%s,,%.1f,T,%s,%.1f,T,%.1f,T" % (XTE,LR,arrival,brg,self.WpNr + 1,destBearing,destBearing)
             nmeaData = "$" + nmeaData + "*" + NMEAParser.nmeaChecksum(nmeaData) + "\r\n"
             AVNLog.debug("adding NMEA %s", nmeaData, )
-            self.feeder.addNMEA(nmeaData,source="router")
+            self.queue.addNMEA(nmeaData,source="router")
     return hasRMB
   ''' anchor watch
       will only be called if leg.anchorDistance is not none
   '''
-
-  def startInstance(self, navdata):
-    self.feeder=self.findFeeder()
-    return super().startInstance(navdata)
 
   def useRhumbLine(self):
     return self.P_RHUMBLINE.fromDict(self.param)

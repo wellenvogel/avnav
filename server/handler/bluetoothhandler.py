@@ -86,8 +86,7 @@ class AVNBlueToothReader(AVNWorker):
         cls.PRIORITY_PARAM_DESCRIPTION,
         WorkerParameter('maxDevices',5,description="maximal number of bluetooth devices",type=WorkerParameter.T_NUMBER),
         WorkerParameter('deviceList','',description=", separated list of devices addresses. If set - only connect to those devices"),
-        WorkerParameter('feederName','',editable=False,description="if set, use this feeder"),
-        WorkerParameter('filter','',type=WorkerParameter.T_FILTER)
+        cls.FILTER_PARAM
     ]
     return rt
 
@@ -147,6 +146,7 @@ class AVNBlueToothReader(AVNWorker):
   def readBT(self,host,port):
     infoName="BTReader-%s"%(host)
     threading.current_thread().setName("%s-reader-%s]"%(self.getName(),host))
+    sock=None
     try:
       sock=OurBtSocket( bluetooth.RFCOMM )
       if not self.checkAndAddAddr(host,sock):
@@ -159,8 +159,10 @@ class AVNBlueToothReader(AVNWorker):
       self.setInfo(infoName, "connecting", WorkerStatus.STARTED)
       sock.connect((host, port))
       AVNLog.info("bluetooth connection to %s established",host)
-      client=SocketReader(sock,self.writeData,None,self.setInfo,shouldStop=self.shouldStop)
-      client.readSocket(infoName,self.getSourceName(host),self.getParamValue('filter'))
+      client=SocketReader(sock,self.queue,self,
+                          shouldStop=self.shouldStop,
+                          sourcePriority=self.PRIORITY_PARAM_DESCRIPTION.fromDict(self.param))
+      client.readSocket(infoName,self.getSourceName(host),self.FILTER_PARAM.fromDict(self.param))
       sock.close()
     except Exception as e:
       AVNLog.debug("exception from bluetooth device: %s",traceback.format_exc())

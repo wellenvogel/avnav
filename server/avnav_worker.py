@@ -349,9 +349,31 @@ class InfoHandler(object):
   def deleteInfo(self,name):
     pass
 
+class TrackingInfoHandler(InfoHandler):
+  def __init__(self,handler:InfoHandler):
+    self._handler=handler
+    self._names=set()
+  def __del__(self):
+    for n in self._names:
+      self._handler.deleteInfo(n)
+  def setInfo(self, name, info, status, childId=None, canDelete=False, timeout=None):
+    self._names.add(name)
+    self._handler.setInfo(name, info, status, childId, canDelete, timeout)
+
+  def refreshInfo(self, name, timeout=None):
+    self._names.add(name)
+    self._handler.refreshInfo(name, timeout)
+
+  def deleteInfo(self, name):
+    self._names.remove(name)
+    self._handler.deleteInfo(name)
+
+
 class AVNWorker(InfoHandler):
+  QUEUE_NAME_PARAMETER=WorkerParameter('queueName',default='',type=WorkerParameter.T_STRING,editable=False)
   DEFAULT_CONFIG_PARAM = [
-    WorkerParameter('name',default='',type=WorkerParameter.T_STRING)
+    WorkerParameter('name',default='',type=WorkerParameter.T_STRING),
+    QUEUE_NAME_PARAMETER
   ]
   ENABLE_PARAM_DESCRIPTION=WorkerParameter('enabled',default=True,type=WorkerParameter.T_BOOLEAN)
   ENABLE_CONFIG_PARAM=[
@@ -360,8 +382,9 @@ class AVNWorker(InfoHandler):
   PRIORITY_PARAM_DESCRIPTION=WorkerParameter('priority',default=NMEAParser.DEFAULT_SOURCE_PRIORITY,
                                              type=WorkerParameter.T_NUMBER,rangeOrList=[10,100],
                                              description="The priority for this source. If there is data from higher priority sources, values will be ignored in parser")
+  FILTER_PARAM=WorkerParameter('filter','',type=WorkerParameter.T_FILTER)
+  BLACKLIST_PARAM=WorkerParameter('blackList' , '',description=', separated list of sources we do not send out')
 
-  QUEUE_NAME_PARAMETER=WorkerParameter('queueName',default='',type=WorkerParameter.T_STRING)
   handlerListLock=threading.Lock()
   """a base class for all workers
      this provides some config functions and a common interfcace for handling them"""

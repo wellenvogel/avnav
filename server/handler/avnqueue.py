@@ -153,6 +153,7 @@ class AVNQueue(AVNWorker):
                        includeSource=False,
                        waitTime=0.1,
                        nmeafilter=None,
+                       blackList=None,
                        returnError=False,
                        maxAge=None):
     '''
@@ -162,13 +163,13 @@ class AVNQueue(AVNWorker):
     @param includeSource: include the meta information with the entries
     @param waitTime: time to wait (in s) if no data is available
     @param nmeafilter: an nmeafilter (list) to only filter messages matching
+    @param blackList: a list of source names to be omitted
     @param returnError: return an error flag
     @param maxAge: max age (in s) of the messages, defaults to the configured maxAge
     @return:
     '''
     seq=0
     rtlist=[]
-
     if maxAge is None:
       maxAge=self.maxAge
     if waitTime <=0:
@@ -180,6 +181,14 @@ class AVNQueue(AVNWorker):
     now=time.monotonic()
     stop = now + waitTime
     numErrors=0
+    def shouldInclude(item: NmeaEntry):
+      if nmeafilter is not None:
+        if not NMEAParser.checkFilter(item.data,nmeafilter):
+          return False
+      if blackList is not None:
+        if item.source in blackList:
+          return False
+      return True
     with self.listlock:
       if sequence <= 0:
         #if a new connection is opened - always wait for a new entry before sending out
@@ -228,18 +237,18 @@ class AVNQueue(AVNWorker):
         return (numErrors,seq,rtlist)
       return (seq,rtlist)
     if includeSource:
-      if nmeafilter is None:
+      if nmeafilter is None and blackList is None:
         if returnError:
           return (numErrors,seq,rtlist)
         return (seq,rtlist)
-      rl=[el for el in rtlist if NMEAParser.checkFilter(el.data,nmeafilter)]
+      rl=[el for el in rtlist if shouldInclude(el)]
       if returnError:
         return (numErrors,seq,rl)
       return (seq,rl)
     else:
       rt=[]
       for le in rtlist:
-        if NMEAParser.checkFilter(le.data,nmeafilter):
+        if shouldInclude(le):
           rt.append(le.data)
       if returnError:
         return (numErrors,seq,rt)
@@ -259,12 +268,21 @@ class AVNQueue(AVNWorker):
 avnav_handlerList.registerHandler(AVNQueue)
 
 class Fetcher:
+  def _split(self,param):
+    if param is None:
+      return None
+    rt=[el for el in param.split(",") if el != ""]
+    if len(rt) < 1:
+      return None
+    return rt
+
   def __init__(self,queue:AVNQueue,
                infoHandler:InfoHandler,
                maxEntries=10,
                includeSource=False,
                waitTime=0.1,
                nmeaFilter=None,
+               blackList=None,
                maxAge=None,
                returnErrors=False,
                sumKey='received',
@@ -274,7 +292,8 @@ class Fetcher:
     self._maxEntries=maxEntries
     self._includeSource=includeSource
     self._waitTime=waitTime
-    self._nmeaFilter=nmeaFilter.split(",") if nmeaFilter else None
+    self._nmeaFilter=self._split(nmeaFilter)
+    self._blackList=self._split(blackList)
     self._maxAge=maxAge if maxAge is not None else queue.maxAge
     self._returnErrors=returnErrors
     self._sequence=None
@@ -296,6 +315,7 @@ class Fetcher:
                   includeSource=None,
                   waitTime=None,
                   nmeaFilter=None,
+                  blackList=None,
                   maxAge=None,
                   returnErrors=None,
                   ):
@@ -306,11 +326,13 @@ class Fetcher:
     if waitTime is not None:
       self._waitTime=waitTime
     if nmeaFilter is not None:
-      self._nmeaFilter=nmeaFilter.split(",")
+      self._nmeaFilter=self._split(nmeaFilter)
     if maxAge is not None:
       self._maxAge=maxAge
     if returnErrors is not None:
       self._returnErrors=returnErrors
+    if blackList is not None:
+      self._blackList=self._split(blackList)
 
   def fetch(self,maxEntries=None,
                        waitTime=None,
@@ -321,6 +343,7 @@ class Fetcher:
       waitTime=self._waitTime if waitTime is None else waitTime,
       maxAge=self._maxAge if maxAge is None else maxAge,
       nmeafilter=self._nmeaFilter,
+      blackList=self._blackList,
       returnError=True,
       maxEntries=self._maxEntries if maxEntries is None else maxEntries
       )

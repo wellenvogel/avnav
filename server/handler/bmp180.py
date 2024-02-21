@@ -210,20 +210,20 @@ class AVNBMP180Reader(AVNWorker):
           """$AVMDA,,,1.00000,B,,,,,,,,,,,,,,,,"""
           mda = '$AVMDA,,,%.5f,B,,,,,,,,,,,,,,,,' % ( pressure / 1000.)
           AVNLog.debug("BMP180:MDA %s", mda)
-          self.writeData(mda,source,addCheckSum=True,sourcePriority=priority)
+          self.queue.addNMEA(mda,source,addCheckSum=True,sourcePriority=priority)
           """$AVMTA,19.50,C*2B"""
           mta = '$AVMTA,%.2f,C' % (temperature)
           AVNLog.debug("BMP180:MTA %s", mta)
-          self.writeData(mta,source,addCheckSum=True,sourcePriority=priority)
+          self.queue.addNMEA(mta,source,addCheckSum=True,sourcePriority=priority)
         if self.getBoolParam('writeXdr'):
           tn = self.param.get('namePress', 'Barometer')
           xdr = '$AVXDR,P,%.5f,B,%s' % (pressure / 1000.,tn)
           AVNLog.debug("BMP180:XDR %s", xdr)
-          self.writeData(xdr,source,addCheckSum=True,sourcePriority=priority)
+          self.queue.addNMEA(xdr,source,addCheckSum=True,sourcePriority=priority)
           tn = self.param.get('nameTemp', 'TempAir')
           xdr = '$AVXDR,C,%.2f,C,%s' % (temperature,tn)
           AVNLog.debug("BMP180:XDR %s", xdr)
-          self.writeData(xdr,source,addCheckSum=True,sourcePriority=priority)
+          self.queue.addNMEA(xdr,source,addCheckSum=True,sourcePriority=priority)
       except:
         AVNLog.info("exception while reading data from BMP180 %s" ,traceback.format_exc())
       wt = self.getFloatParam("interval")
