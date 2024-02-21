@@ -474,8 +474,9 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
         style.rotation = Helper.radians(target_hdg);
         style.rotateWithView=true;
     }
+    let onMap=drawEstimated!==undefined; // true when drawing on map, false in ais info
     if(!hidden){
-        if (rmvRange>0 && style.courseVector !== false) { // relative motion vector
+        if (rmvRange>0 && style.courseVector !== false && onMap) { // relative motion vector
             let distance=NavCompute.computeDistance({lat:lat,lon:lon},{lat:target.lat,lon:target.lon}).dts/1852;
             if (distance<=rmvRange && (target_sog || sog)) {
                 let drm,srm; // direction and speed of relative motion
@@ -490,7 +491,7 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
             if (target_sog) { // true motion vector
                 let other=drawTargetFunction(xy,target_cog,target_sog*courseVectorTime);
                 drawing.drawLineToContext([xy,other],{color:style.courseVectorColor,width:courseVectorWidth});
-                if(target.turn) { // turn indicator
+                if(target.turn && onMap) { // turn indicator
                     let sgn=Math.sign(target.turn);
                     let rot=Math.abs(target.turn);//Math.pow(target.turn/4.733,2); // °/min
                     if(rot && isFinite(rot)){
