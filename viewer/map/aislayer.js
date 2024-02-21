@@ -445,10 +445,9 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
     let target_cog=target.course||0;
     let target_sog=target.speed||0;
     let target_hdg=(useHeading && target.heading!==undefined?target.heading:target.course)||0;
-    let target_turn=target.turn||0;
-    let target_rot_sgn=Math.sign(target_turn);
-    let target_rot=Math.pow(target_turn/4.733,2); // °/min
-    curved = curved && isFinite(target_rot) && target_rot>1;
+    let target_rot_sgn=Math.sign(target.turn||0);
+    let target_rot=Math.abs(target.turn||0); // °/min
+    curved = curved && isFinite(target_rot) && target_rot>0.5;
 
     let symbol=this.getStyleEntry(target);
     let style=cloneDeep(symbol.style);
