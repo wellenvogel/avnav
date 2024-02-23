@@ -134,11 +134,13 @@ class AVNSocketWriter(AVNWorker):
 
   #the writer for a connected client
   def client(self, socketConnection, addr, startSequence):
-    clientConnection=SocketReader(socketConnection,  self.queue, self,
-                                  sourcePriority=self.PRIORITY_PARAM_DESCRIPTION.fromDict(self.param))
+    tinfo=TrackingInfoHandler(self)
     infoName="SocketWriter-%s"%(str(addr),)
-    self.setInfo(infoName,"sending data",WorkerStatus.RUNNING)
-    if self.P_READ.fromDict(self.param):
+    clientConnection=SocketReader(socketConnection,  self.queue, SubInfoHandler(tinfo,infoName,track=False),
+                                  sourcePriority=self.PRIORITY_PARAM_DESCRIPTION.fromDict(self.param))
+    rd=self.P_READ.fromDict(self.param)
+    tinfo.setInfo(infoName,"sending%s data"%("/receiving" if rd else ""),WorkerStatus.RUNNING)
+    if rd:
       clientHandler=threading.Thread(
         target=self.clientRead,
         args=(clientConnection, addr, startSequence),
@@ -146,23 +148,18 @@ class AVNSocketWriter(AVNWorker):
       )
       clientHandler.daemon=True
       clientHandler.start()
-    clientConnection.writeSocket(infoName,
-                                 self.FILTER_PARAM.fromDict(self.param),
+    clientConnection.writeSocket(self.FILTER_PARAM.fromDict(self.param),
                                  self.version,
                                  self.BLACKLIST_PARAM.fromDict(self.param))
     self.removeHandler(addr)
-    self.deleteInfo(infoName)
 
   def clientRead(self,connection,addr,startSequence):
-    infoName="SocketReader-%s"%(str(addr),)
     threading.currentThread().setName("%s-Reader-%s"%(self.getName(),str(addr)))
     #on each newly connected socket we recompute the filter
     connection.readSocket(
-      infoName,
       self.getSourceName(str(addr)),
       filter=self.P_READFILTER.fromDict(self.param),
       minTime=self.P_MINTIME.fromDict(self.param))
-    self.deleteInfo(infoName)
 
 
   def _closeSockets(self):

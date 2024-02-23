@@ -78,7 +78,9 @@ class SerialWriter(SerialReader):
     self.queue=queue
     self._fetcher=Fetcher(queue,infoHandler,
                           nmeaFilter=self.P_FILTER.fromDict(param),
-                          blackList=self.P_BLACKLIST.fromDict(param)+","+sourceName)
+                          blackList=self.P_BLACKLIST.fromDict(param)+","+sourceName,
+                          sumKey='out',
+                          errorKey='out-skipped')
     self.addrmap={}
     #the serial device
     self.device=None
@@ -93,31 +95,30 @@ class SerialWriter(SerialReader):
       pass
 
   
-  def openDevice(self,baud,autobaud,init=False):
-    INAME='main'
+  def openDevice(self,iname,baud,autobaud,init=False):
+    INAME=iname
     self.buffer=''
     f=None
-    pnum=self.P_PORT.fromDict(self.param)
     bytesize=self.P_BYTESIZE.fromDict(self.param)
     parity=self.P_PARITY.fromDict(self.param)
     stopbits=self.P_STOPBITS.fromDict(self.param)
     xonxoff=self.P_XONOFF.fromDict(self.param)
     rtscts=self.P_RTSCTS.fromDict(self.param)
-    portname=self.P_PORT.fromDict(self.param)
+    portname=self.P_PORT.fromDict(self.param,rangeOrListCheck=False)
     timeout=self.P_TIMEOUT.fromDict(self.param)
     name=self.getName()
     isCombined = self.P_COMBINED.fromDict(self.param)
     modeStr='writer' if not isCombined else 'combined'
     if init:
       AVNLog.info("openDevice for port %s, baudrate=%d, timeout=%f",
-                  portname,baud,timeout)
+                  str(portname),baud,timeout)
       init=False
     else:
       AVNLog.debug("openDevice for port %s, baudrate=%d, timeout=%f",portname,baud,timeout)
     try:
       self.infoHandler.setInfo(INAME,"%s opening %s at %d baud"%(modeStr,portname,baud),WorkerStatus.STARTED)
-      f=serial.Serial(pnum, timeout=timeout, baudrate=baud, bytesize=bytesize, parity=parity, stopbits=stopbits, xonxoff=xonxoff, rtscts=rtscts)
-      self.infoHandler.setInfo(INAME,"%s port %s open at %d baud"%(modeStr,portname,baud),WorkerStatus.STARTED)
+      f=serial.Serial(portname, timeout=timeout, baudrate=baud, bytesize=bytesize, parity=parity, stopbits=stopbits, xonxoff=xonxoff, rtscts=rtscts)
+      self.infoHandler.setInfo(INAME,"%s port %s open at %d baud"%(modeStr,portname,baud),WorkerStatus.NMEA)
       return f
     except Exception:
       self.infoHandler.setInfo(INAME,"%s unable to open port %s"%(modeStr,portname),WorkerStatus.ERROR)
@@ -136,7 +137,7 @@ class SerialWriter(SerialReader):
 
   #the run method - just try forever  
   def run(self):
-    INAME='writer'
+    INAME='device'
     threading.current_thread().setName("%s - %s"%(self.getName(),self.param['port']))
     self.device=None
     init=True
@@ -153,10 +154,10 @@ class SerialWriter(SerialReader):
       self._fetcher.reset()
       name=self.getName()
       timeout=self.P_TIMEOUT.fromDict(self.param)
-      portname=self.P_PORT.fromDict(self.param)
+      portname=self.P_PORT.fromDict(self.param,rangeOrListCheck=False)
       porttimeout=timeout*10
       baud=self.P_BAUD.fromDict(self.param)
-      self.device=self.openDevice(baud,False,init=init)
+      self.device=self.openDevice(INAME,baud,False,init=init)
       init=False
       if self.doStop:
         AVNLog.info("handler stopped, leaving")
@@ -178,24 +179,26 @@ class SerialWriter(SerialReader):
           self._fetcher.report()
           if len(data)>0:
             for line in data:
-              self.device.write(data.encode('ascii','ignore'))
+              self.device.write(line.encode('ascii','ignore'))
         except Exception as e:
           AVNLog.debug("Exception %s in serial write, close and reopen %s",traceback.format_exc(),portname)
           try:
             self.device.close()
             self.device=None
+            if not self.doStop:
+              time.sleep(porttimeout/2)
           except:
             pass
           break
 
     AVNLog.info("stopping handler")
-    self.infoHandler.setInfo("writer","stopped",WorkerStatus.INACTIVE)
+    self.infoHandler.setInfo(INAME,"stopped",WorkerStatus.INACTIVE)
 
   #the read method for the combined reader/writer
   def readMethod(self):
     threading.current_thread().setName("%s-combinedReader"%self.getName())
     nmeaSum=MovingSum()
-    INAME="reader"
+    INAME="in"
     self.infoHandler.setInfo(INAME,"started",WorkerStatus.STARTED)
     AVNLog.info("started")
     filterstr=self.P_READFILTER.fromDict(self.param)
@@ -291,7 +294,7 @@ class AVNSerialWriter(AVNWorker):
 
   def checkConfig(self, param):
     if SerialWriter.P_PORT.name in param:
-      self.checkUsedResource(UsedResource.T_SERIAL,SerialWriter.P_PORT.fromDict(param))
+      self.checkUsedResource(UsedResource.T_SERIAL,SerialWriter.P_PORT.fromDict(param, rangeOrListCheck=False))
 
   def stop(self):
     try:
@@ -316,7 +319,7 @@ class AVNSerialWriter(AVNWorker):
 
   def updateConfig(self, param, child=None):
     if SerialWriter.P_PORT.name in param:
-      self.checkUsedResource(UsedResource.T_SERIAL,SerialWriter.P_PORT.fromDict(param))
+      self.checkUsedResource(UsedResource.T_SERIAL,SerialWriter.P_PORT.fromDict(param,rangeOrListCheck=False))
     super().updateConfig(param, child)
     if self.writer is not None:
       self.writer.stopHandler()

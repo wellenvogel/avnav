@@ -36,21 +36,18 @@ except:
 
 CHILD_NAME='UsbDevice'
 
-class USBInfoHandler(InfoHandler):
-  def __init__(self,name,parent:InfoHandler):
+class USBInfoHandler(TrackingInfoHandler):
+  def __init__(self, name, parent: InfoHandler):
+    super().__init__(parent)
     self.name=name
-    self.parent=TrackingInfoHandler(parent)
     self.childId="%s:%s"%(CHILD_NAME,name)
-  def _gn(self,name):
-    if name is None:
-      return self.name
-    return "{0}-{1}".format(self.name,name)
+    self.parent=parent
   def setInfo(self, name, info, status, childId=None, canDelete=False, timeout=None):
-    self.parent.setInfo(self._gn(name), info, status, childId, canDelete, timeout)
+    self.parent.setInfo(name, info, status, self.childId, canDelete, timeout)
   def refreshInfo(self, name, timeout=None):
-    self.parent.refreshInfo(self._gn(name), timeout)
+    self.parent.refreshInfo(name, timeout)
   def deleteInfo(self,name):
-    self.parent.deleteInfo(self._gn(name))
+    self.parent.deleteInfo(name)
 
 class UsbSerialHandler(USBInfoHandler):
   T_IGNORE='ignore'
@@ -64,37 +61,51 @@ class UsbSerialHandler(USBInfoHandler):
   def __init__(self, name, infoHandler:InfoHandler,queue:AVNQueue,param):
     super().__init__(name, infoHandler)
     self.queue=queue
-    self.param=param
+    self.param=param.copy()
     self.type=param['type']
     self.serialHandler=None
     self.stop=False
 
   def getDevice(self):
     return self.param.get('port')
-
+  def typeToSuffix(self,device):
+    if device is None:
+      return "n"
+    if self.type == self.T_COMBINED:
+      return "c"
+    if self.type == self.T_IGNORE:
+      return "i"
+    if self.type == self.T_READER:
+      return "r"
+    if self.type == self.T_WRITER:
+      return "w"
+    if self.type == self.T_EXTERNAL:
+      return "e"
+    return "u"
   def run(self):
-    device=self.param.get('port')
+    device=self.getDevice()
+    INAME=self.name+self.typeToSuffix(device)
     if device is not None and self.type != self.T_IGNORE:
       sourceName=self.param['sourcename']
-      self.setInfo(None,"starting type %s"%self.type,WorkerStatus.STARTED,
+      self.setInfo(INAME,"starting type %s"%self.type,WorkerStatus.STARTED,
                    canDelete=self.param.get('childIndex',-1) >= 0)
       if self.type == self.T_WRITER or self.type == self.T_COMBINED:
-        self.serialHandler = SerialWriter(self.param, self.queue, self, sourceName)
-        self.serialHandler.param["combined"] = self.type == self.T_COMBINED
+        self.param['combined']=self.type == self.T_COMBINED
+        self.serialHandler = SerialWriter(self.param, self.queue, SubInfoHandler(self,INAME,track=False), sourceName)
       else:
-        self.serialHandler = SerialReader(self.param, self.queue, self, sourceName)
+        self.serialHandler = SerialReader(self.param, self.queue, SubInfoHandler(self,INAME,track=False), sourceName)
       self.serialHandler.run()
     else:
       if device is None:
-        self.setInfo(None,"configured but not available",WorkerStatus.INACTIVE,canDelete=True)
+        self.setInfo(INAME,"configured but not available",WorkerStatus.INACTIVE,canDelete=True)
       else:
         if self.type == self.T_IGNORE:
-          self.setInfo(None, '%s configured to be ignored' % (device), WorkerStatus.INACTIVE,canDelete=True)
+          self.setInfo(INAME, '%s configured to be ignored' % (device), WorkerStatus.INACTIVE,canDelete=True)
         else:
-          self.setInfo(None, '%s not configured(forbidden)' %(device), WorkerStatus.INACTIVE)
+          self.setInfo(INAME, '%s not configured(forbidden)' %(device), WorkerStatus.INACTIVE)
       while (not self.stop):
         time.sleep(0.2)
-    self.deleteInfo(None)
+    self.cleanup()
 
   def stopHandler(self):
     self.stop=True
@@ -122,7 +133,7 @@ class ExternalHandler(UsbSerialHandler):
       self.setInfo(None,'%s %s: error in handler %s: %s'%(self.name,device,handlername,str(e)),WorkerStatus.ERROR)
     while( not self.stop):
       time.sleep(0.2)
-    self.deleteInfo(None)
+    self.cleanup()
 
 class ExternalRegistration(object):
   def __init__(self,usibid,name,callback):
@@ -379,8 +390,7 @@ class AVNUsbSerialReader(AVNWorker):
   
   def removeHandler(self,addr,handler=None):
     rt=None
-    self.maplock.acquire()
-    try:
+    with self.maplock:
       if handler is not None:
         #if we are called from a handler - only remove exactly this handler
         old=self.addrmap.get(addr)
@@ -389,8 +399,6 @@ class AVNUsbSerialReader(AVNWorker):
       rt=self.addrmap.get(addr)
       if rt is not None:
         self.addrmap.pop(addr)
-    finally:
-      self.maplock.release()
     return rt
     
   #param  a dict of usbid->device
@@ -462,7 +470,7 @@ class AVNUsbSerialReader(AVNWorker):
       AVNLog.info("serial handler stopped with %s",(traceback.format_exc(),))
     AVNLog.debug("serial handler for %s finished",addr)
     self.removeHandler(addr,handler)
-    self.deleteInfo(handler.name)
+    handler.cleanup()
   
   #param: a dict key being the usb id, value the device node
   def checkDevices(self,devicelist):

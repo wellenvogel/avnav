@@ -159,10 +159,10 @@ class AVNBlueToothReader(AVNWorker):
       self.setInfo(infoName, "connecting", WorkerStatus.STARTED)
       sock.connect((host, port))
       AVNLog.info("bluetooth connection to %s established",host)
-      client=SocketReader(sock,self.queue,self,
+      client=SocketReader(sock,self.queue,SubInfoHandler(self,infoName),
                           shouldStop=self.shouldStop,
                           sourcePriority=self.PRIORITY_PARAM_DESCRIPTION.fromDict(self.param))
-      client.readSocket(infoName,self.getSourceName(host),self.FILTER_PARAM.fromDict(self.param))
+      client.readSocket(self.getSourceName(host),self.FILTER_PARAM.fromDict(self.param))
       sock.close()
     except Exception as e:
       AVNLog.debug("exception from bluetooth device: %s",traceback.format_exc())

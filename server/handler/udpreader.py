@@ -89,6 +89,7 @@ class AVNUdpReader(AVNWorker):
 
   #thread run method - just try forever
   def run(self):
+    INAME='main'
     while not self.shouldStop():
       self.freeAllUsedResources()
       self.claimUsedResource(UsedResource.T_UDP,self.getParamValue('port'))
@@ -96,13 +97,13 @@ class AVNUdpReader(AVNWorker):
       info="unknown"
       try:
         info = "%s:%d" % (self.getStringParam('host'), self.getIntParam('port'))
-        self.setInfo('main',"trying udp listen at %s"%(info,),WorkerStatus.INACTIVE)
+        self.setInfo(INAME,"trying udp listen at %s"%(info,),WorkerStatus.INACTIVE)
         self.socket=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.bind((self.getStringParam('host'), self.getIntParam('port')))
-        self.setInfo('main',"listening at %s"%(info,),WorkerStatus.RUNNING)
+        self.setInfo(INAME,"listening at %s"%(info,),WorkerStatus.RUNNING)
       except:
         AVNLog.info("exception while trying to listen at %s:%d %s",self.getStringParam('host'),self.getIntParam('port'),traceback.format_exc())
-        self.setInfo('main',"unable to listen at %s"%(info,),WorkerStatus.ERROR)
+        self.setInfo(INAME,"unable to listen at %s"%(info,),WorkerStatus.ERROR)
         if self.shouldStop():
           break
         self.wait(2)
@@ -114,7 +115,7 @@ class AVNUdpReader(AVNWorker):
                             shouldStop=self.shouldStop,
                             stripLeading=SocketReader.P_STRIP_LEADING.fromDict(self.param),
                             sourcePriority=self.PRIORITY_PARAM_DESCRIPTION.fromDict(self.param))
-        reader.readSocket('main',self.getSourceName(info),
+        reader.readSocket(self.getSourceName(info),
                           filter=self.FILTER_PARAM.fromDict(self.param),
                           minTime=self.P_MINTIME.fromDict(self.param))
       except:

@@ -194,8 +194,24 @@ class WorkerParameter(object):
         cmp=cv
         if type(cv) is dict:
           cmp=cv.get('value')
+        if type(cmp) is int:
+          try:
+            if int(value) == cmp:
+              return cmp
+          except:
+            pass
+        if type(cmp) is float:
+          try:
+            if float(value) == cmp:
+              return cmp
+          except:
+            pass
+        if type(cmp) is str:
+          if str(value) == cmp:
+            return cmp
         if type(value) is str:
-          cmp=str(cmp)
+          if str(cmp) == value:
+            return cmp
         if value == cmp:
           return value
       raise ValueError("value %s for %s not in list %s"%(str(value),self.name,",".join(
@@ -354,8 +370,7 @@ class TrackingInfoHandler(InfoHandler):
     self._handler=handler
     self._names=set()
   def __del__(self):
-    for n in self._names:
-      self._handler.deleteInfo(n)
+    self.cleanup()
   def setInfo(self, name, info, status, childId=None, canDelete=False, timeout=None):
     self._names.add(name)
     self._handler.setInfo(name, info, status, childId, canDelete, timeout)
@@ -365,8 +380,33 @@ class TrackingInfoHandler(InfoHandler):
     self._handler.refreshInfo(name, timeout)
 
   def deleteInfo(self, name):
-    self._names.remove(name)
+    if name is not None:
+      try:
+        self._names.remove(name)
+      except:
+        pass
     self._handler.deleteInfo(name)
+
+  def cleanup(self):
+    for n in self._names:
+      self._handler.deleteInfo(n)
+    self._names.clear()
+
+class SubInfoHandler(InfoHandler):
+  def __init__(self,parent:InfoHandler,prefix=None,track=True):
+    self._prefix = prefix if prefix is not None else ""
+    self._parent=parent if not track else TrackingInfoHandler(parent)
+  def _gn(self,name):
+    return self._prefix+":#:"+name
+
+  def setInfo(self, name, info, status, childId=None, canDelete=False, timeout=None):
+    self._parent.setInfo(self._gn(name), info, status, childId, canDelete, timeout)
+
+  def refreshInfo(self, name, timeout=None):
+    self._parent.refreshInfo(self._gn(name), timeout)
+
+  def deleteInfo(self, name):
+    self._parent.deleteInfo(self._gn(name))
 
 
 class AVNWorker(InfoHandler):

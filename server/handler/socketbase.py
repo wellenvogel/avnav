@@ -71,12 +71,13 @@ class SocketReader(object):
       return line
     return line[match.span()[0]:]
 
-  def readSocket(self,infoName,sourceName,filter=None,timeout=None,minTime=None):
+  def readSocket(self,sourceName,filter=None,timeout=None,minTime=None):
+    INAME='reader'
     nmeaSum=MovingSum()
-    def nmeaInfo(infoName,peer):
+    def nmeaInfo(peer):
       if nmeaSum.shouldUpdate():
-        self.infoHandler.setInfo(infoName,
-                     "%s, %d/s"%(peer,nmeaSum.avg()),
+        self.infoHandler.setInfo(INAME,
+                     "%d/s"%(nmeaSum.avg()),
                      WorkerStatus.NMEA if nmeaSum.val()>0 else WorkerStatus.RUNNING)
     sock=self.socket
     filterA = None
@@ -90,7 +91,7 @@ class SocketReader(object):
     except:
       pass
     AVNLog.info("%s established, start reading",peer)
-    self.infoHandler.setInfo(infoName, "receiving %s"%(peer,), WorkerStatus.RUNNING)
+    self.infoHandler.setInfo(INAME, "receiving %s"%(peer,), WorkerStatus.RUNNING)
     buffer=""
     try:
       sock.settimeout(1)
@@ -108,7 +109,7 @@ class SocketReader(object):
               continue
             if now > (lastReceived + timeout):
               raise Exception("no data received within timeout of %s seconds"%str(timeout))
-          nmeaInfo(infoName,peer)
+          nmeaInfo(peer)
           continue
         if len(data) == 0:
           AVNLog.info("connection lost")
@@ -144,7 +145,7 @@ class SocketReader(object):
         if len(buffer) > 4096:
           AVNLog.debug("no line feed in long data, stopping")
           break
-        nmeaInfo(infoName,peer)
+        nmeaInfo(peer)
       sock.shutdown(socket.SHUT_RDWR)
       sock.close()
     except Exception as e:
@@ -155,9 +156,9 @@ class SocketReader(object):
     except:
       pass
     AVNLog.info("disconnected from socket %s",peer)
-    self.infoHandler.setInfo(infoName, "socket to %s disconnected"%(peer), WorkerStatus.ERROR)
+    self.infoHandler.setInfo(INAME, "socket to %s disconnected"%(peer), WorkerStatus.ERROR)
 
-  def writeSocket(self,infoName,filterstr,version,blacklist):
+  def writeSocket(self,filterstr,version,blacklist):
     '''
     write method
     there is no stop handling so the socket must be closed from another thread
@@ -170,8 +171,8 @@ class SocketReader(object):
     fetcher=Fetcher(self.queue,self.infoHandler,
                     nmeaFilter=filterstr,
                     blackList=blacklist,
-                    errorKey="err"+infoName,
-                    sumKey=infoName)
+                    errorKey="werr",
+                    sumKey='writer')
     try:
       fetcher.report()
       self.socket.sendall(("avnav_server %s\r\n" % (version)).encode('utf-8'))

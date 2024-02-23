@@ -104,14 +104,13 @@ class SerialReader(object):
   #a write data method used to write a received line
   def __init__(self,param,queue:AVNQueue,infoHandler: InfoHandler,sourceName):
     for p in (self.P_PORT,self.P_TIMEOUT):
-      p.fromDict(param)
+      p.fromDict(param,rangeOrListCheck=False)
     self.param=param
     self.queue=queue
     self.infoHandler=TrackingInfoHandler(infoHandler)
     self.sourceName=sourceName
     self.startpattern=AVNUtil.getNMEACheck()
-    self.doStop=False 
-    self.infoHandler.setInfo("main","created",WorkerStatus.INACTIVE)
+    self.doStop=False
     self.device=None
   def getName(self):
     return "SerialReader-"+self.param['name']
@@ -129,17 +128,15 @@ class SerialReader(object):
   # once we found this, we expect $ or ! and five capital letters afterwards
   # if not found we try the next lower baudrate
   
-  def openDevice(self,baud,autobaud,init=False):
-    INAME='main'
+  def openDevice(self,iname,baud,autobaud,init=False):
     self.buffer=''
     self.device=None
-    pnum=self.P_PORT.fromDict(self.param)
     bytesize=self.P_BYTESIZE.fromDict(self.param)
     parity=self.P_PARITY.fromDict(self.param)
     stopbits=self.P_STOPBITS.fromDict(self.param)
     xonxoff=self.P_XONOFF.fromDict(self.param)
     rtscts=self.P_RTSCTS.fromDict(self.param)
-    portname=self.P_PORT.fromDict(self.param)
+    portname=self.P_PORT.fromDict(self.param,rangeOrListCheck=False)
     timeout=self.P_TIMEOUT.fromDict(self.param)
     autobaudtime=self.P_AUTOTIME.fromDict(self.param)
     if init:
@@ -150,9 +147,9 @@ class SerialReader(object):
                    "true" if autobaud else "false")
     lastTime=time.monotonic()
     try:
-      self.infoHandler.setInfo(INAME,"opening at %d baud"%(baud),WorkerStatus.STARTED)
-      self.device=serial.Serial(pnum, timeout=timeout, baudrate=baud, bytesize=bytesize, parity=parity, stopbits=stopbits, xonxoff=xonxoff, rtscts=rtscts)
-      self.infoHandler.setInfo(INAME,"port open at %d baud"%baud,WorkerStatus.STARTED)
+      self.infoHandler.setInfo(iname,"opening at %d baud"%(baud),WorkerStatus.STARTED)
+      self.device=serial.Serial(portname, timeout=timeout, baudrate=baud, bytesize=bytesize, parity=parity, stopbits=stopbits, xonxoff=xonxoff, rtscts=rtscts)
+      self.infoHandler.setInfo(iname,"port open at %d baud"%baud,WorkerStatus.STARTED)
       if autobaud:
         starttime=time.monotonic()
         while time.monotonic() <= (starttime + autobaudtime):
@@ -181,14 +178,14 @@ class SerialReader(object):
               continue
             AVNLog.debug("assumed startpattern %s at baud %d in %s",match.group(0),baud,data)
             AVNLog.info("autobaud successfully finished at baud %d",baud)
-            self.infoHandler.setInfo(INAME,"receiving at %d baud"%(baud),WorkerStatus.STARTED)
+            self.infoHandler.setInfo(iname,"receiving at %d baud"%(baud),WorkerStatus.NMEA)
             return self.device
         self.device.close()
         return None
       #hmm - seems that we have not been able to autobaud - return anyway
       return self.device
     except Exception:
-      self.infoHandler.setInfo(INAME,"unable to open port",WorkerStatus.ERROR)
+      self.infoHandler.setInfo(iname,"unable to open port",WorkerStatus.ERROR)
       try:
         tf=traceback.format_exc(3)
       except:
@@ -209,21 +206,21 @@ class SerialReader(object):
 
   #the run method - just try forever  
   def run(self):
-    INAME = 'main'
+    INAME = 'device'
     threading.current_thread().setName("%s" % self.getName())
     self.device = None
     init = True
     isOpen = False
     AVNLog.debug("started with param %s", ",".join(str(i) + "=" + str(self.param[i]) for i in list(self.param.keys())))
     self.infoHandler.setInfo(INAME, "created", WorkerStatus.STARTED)
-    filterstr = self.P_FILTER.fromDict(self.param.get)
+    filterstr = self.P_FILTER.fromDict(self.param)
     filter = None
     if filterstr != "":
       filter = filterstr.split(',')
     try:
       while not self.doStop:
         name = self.getName()
-        portname = self.P_PORT.fromDict(self.param)
+        portname = self.P_PORT.fromDict(self.param,rangeOrListCheck=False)
         timeout = self.P_TIMEOUT.fromDict(self.param)
         porttimeout = timeout * 10
         baud = self.P_BAUD.fromDict(self.param)
@@ -245,13 +242,13 @@ class SerialReader(object):
           while rates[baudidx] > baud:
             baudidx += 1
           while baudidx < len(rates) and rates[baudidx] >= minbaud and not self.doStop:
-            f = self.openDevice(rates[baudidx], True, init)
+            f = self.openDevice(INAME,rates[baudidx], True, init)
             init = False
             baudidx += 1
             if not f is None:
               break
         else:
-          self.openDevice(baud, False, init)
+          self.openDevice(INAME,baud, False, init)
           init = False
         if self.doStop:
           AVNLog.info("handler stopped, leaving")
@@ -274,7 +271,7 @@ class SerialReader(object):
         def nmeaInfo():
           if nmeaSum.shouldUpdate():
             self.infoHandler.setInfo('reader',
-                                     'receiving %d/10s' % nmeaSum.val(),
+                                     'receiving %d/s' % nmeaSum.avg(),
                                      WorkerStatus.NMEA if nmeaSum.val() > 0 else WorkerStatus.RUNNING)
         while not self.doStop:
           nmeaSum.add(0)
@@ -390,7 +387,7 @@ class AVNSerialReader(AVNWorker):
 
   def checkConfig(self, param):
     if SerialReader.P_PORT.name in param:
-      self.checkUsedResource(UsedResource.T_SERIAL,SerialReader.P_PORT.fromDict(param))
+      self.checkUsedResource(UsedResource.T_SERIAL,SerialReader.P_PORT.fromDict(param,rangeOrListCheck=False))
 
   #thread run method - just try forever  
   def run(self):

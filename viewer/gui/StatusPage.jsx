@@ -126,12 +126,16 @@ const EditIcon=(props)=>{
 }
 const ChildStatus=(props)=>{
     let canEdit=props.canEdit && props.connected;
+    let sub=(props.name && props.name.match(/:#:/));
+    let name=sub?props.name.replace(/^.*:#:/,''):props.name;
+    let clName="childStatus";
+    if (sub) clName+=" sub";
     return (
-        <div className="childStatus">
+        <div className={clName}>
             <img src={statusTextToImageUrl(props.status)}/>
-            <span className="statusName">{props.name}</span>
+            <span className="statusName">{name}</span>
             <span className="statusInfo">{props.info}</span>
-            {canEdit && <EditIcon onClick={
+            {canEdit && ! sub && <EditIcon onClick={
                 ()=>showEditDialog(props.handlerId,props.id,props.finishCallback)
             }/>}
         </div>
@@ -148,6 +152,12 @@ const StatusItem=(props)=>{
     if (props.requestFocus){
         cl+=" requestFocus";
     }
+    let children=(props.info && props.info.items)?props.info.items:[];
+    children.sort((a,b)=>{
+        if (a.name>b.name) return 1;
+        if (a.name < b.name) return -1;
+        return 0;}
+        );
     return(
         <div className={cl}  key={props.id}>
             <div className={"statusHeading"+ (isDisabled?" disabled":"")}>
@@ -158,7 +168,7 @@ const StatusItem=(props)=>{
                         () => showEditDialog(props.id,undefined,props.finishCallback)
                     }/>}
             </div>
-            {props.info && props.info.items && props.info.items.map(function(el){
+            {children.map(function(el){
                 return <ChildStatus
                     {...el}
                     key={props.name+el.name}
@@ -184,7 +194,7 @@ class StatusList extends React.Component{
         this.state={
             itemList:[]
         }
-        this.defaultProps={
+        this.defaults={
             addresses:false,
             wpa:false,
             shutdown:false,
@@ -202,7 +212,7 @@ class StatusList extends React.Component{
     queryResult(data,focusItem){
         let self=this;
         let itemList=[];
-        let storeData=assign({},this.defaultProps);
+        let storeData=assign({},this.defaults);
         self.errors=0;
         if (data.handler) {
             data.handler.forEach(function(el){

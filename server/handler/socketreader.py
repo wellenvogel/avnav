@@ -103,6 +103,7 @@ class AVNSocketReader(AVNWorker,SocketReader):
      
   #thread run method - just try forever  
   def run(self):
+    INAME='main'
     self.version = self.navdata.getSingleValue(AVNStore.KEY_VERSION)
     errorReported=False
     self.setNameIfEmpty("%s-%s:%d" % (self.getName(), self.getStringParam('host'), self.getIntParam('port')))
@@ -111,26 +112,27 @@ class AVNSocketReader(AVNWorker,SocketReader):
       info = "%s:%d" % (self.getStringParam('host'), self.getIntParam('port'))
       try:
         if info != lastInfo:
-          self.setInfo('main',"trying to connect to %s"%(info,),WorkerStatus.INACTIVE)
+          self.setInfo(INAME,"trying to connect to %s"%(info,),WorkerStatus.INACTIVE)
           lastInfo=info
-        self.socket=socket.create_connection((self.getStringParam('host'),self.getIntParam('port')), self.getFloatParam('timeout'))
-        self.setInfo('main',"connected to %s"%(info,),WorkerStatus.RUNNING)
+        self.socket=socket.create_connection((self.P_HOST.fromDict(self.param),self.P_PORT.fromDict(self.param)),self.P_TIMEOUT.fromDict(self.param))
+        self.setInfo(INAME,"connected to %s"%(info,),WorkerStatus.RUNNING)
       except:
         if not errorReported:
           AVNLog.info("exception while trying to connect to %s %s",info,traceback.format_exc())
           errorReported=True
-        self.setInfo('main',"unable to connect to %s"%(info,),WorkerStatus.ERROR)
+        self.setInfo(INAME,"unable to connect to %s"%(info,),WorkerStatus.ERROR)
         self.wait(2)
         continue
       AVNLog.info("successfully connected to %s",info)
       try:
+        self.setInfo(INAME,"connected to %s"%info, WorkerStatus.NMEA)
         errorReported=False
         timeout=self.P_TIMEOUT.fromDict(self.param)
         if timeout != 0:
           timeout = timeout *5
         else:
           timeout=None
-        connection = SocketReader(self.socket, self.queue, self,
+        connection = SocketReader(self.socket, self.queue, SubInfoHandler(self,INAME),
                                   shouldStop=self.shouldStop,
                                   sourcePriority=self.PRIORITY_PARAM_DESCRIPTION.fromDict(self.param),
                                   stripLeading=SocketReader.P_STRIP_LEADING.fromDict(self.param))
@@ -142,8 +144,7 @@ class AVNSocketReader(AVNWorker,SocketReader):
           )
           clientHandler.daemon = True
           clientHandler.start()
-        connection.readSocket('reader',
-                              self.getSourceName(info),
+        connection.readSocket(self.getSourceName(info),
                               filter=self.FILTER_PARAM.fromDict(self.param),
                               timeout=timeout,
                               minTime=self.P_MINTIME.fromDict(self.param))
@@ -152,12 +153,10 @@ class AVNSocketReader(AVNWorker,SocketReader):
         AVNLog.info("exception while reading from %s %s",info,traceback.format_exc())
 
   def _writer(self, socketConnection):
-    infoName="writer"
-    socketConnection.writeSocket(infoName,
-                                 self.P_WRITE_FILTER.fromDict(self.param),
+    socketConnection.writeSocket(self.P_WRITE_FILTER.fromDict(self.param),
                                  self.version,
                                  blacklist=self.P_BLACKLIST.fromDict(self.param).split(','))
-    self.deleteInfo(infoName)
+
 avnav_handlerList.registerHandler(AVNSocketReader)
         
         

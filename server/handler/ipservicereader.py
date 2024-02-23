@@ -113,8 +113,7 @@ class AVNIpServiceReader(AVNWorker):
 
   def _writer(self, socketConnection):
     infoName="writer"
-    socketConnection.writeSocket(infoName,
-                                 self.P_WRITE_FILTER.fromDict(self.param),
+    socketConnection.writeSocket(self.P_WRITE_FILTER.fromDict(self.param),
                                  self.version,
                                  blacklist=self.P_BLACKLIST.fromDict(self.param))
     self.deleteInfo(infoName)
@@ -168,7 +167,7 @@ class AVNIpServiceReader(AVNWorker):
           timeout = timeout *5
         else:
           timeout=None
-        connection=SocketReader(self.socket, self.queue, self,
+        connection=SocketReader(self.socket, self.queue, SubInfoHandler(self,'main'),
                                 shouldStop=self.shouldStop,
                                 sourcePriority=self.PRIORITY_PARAM_DESCRIPTION.fromDict(self.param)
                                 )
@@ -180,8 +179,7 @@ class AVNIpServiceReader(AVNWorker):
           )
           clientHandler.daemon=True
           clientHandler.start()
-        connection.readSocket('reader',
-                              self.getSourceName(info),
+        connection.readSocket(self.getSourceName(info),
                               self.getParamValue('filter'),
                               timeout=timeout,
                               minTime=self.P_MINTIME.fromDict(self.param))
