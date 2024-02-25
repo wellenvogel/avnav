@@ -43,11 +43,11 @@ class USBInfoHandler(TrackingInfoHandler):
     self.childId="%s:%s"%(CHILD_NAME,name)
     self.parent=parent
   def setInfo(self, name, info, status, childId=None, canDelete=False, timeout=None):
-    self.parent.setInfo(name, info, status, self.childId, canDelete, timeout)
+    super().setInfo(name, info, status, self.childId, canDelete, timeout)
   def refreshInfo(self, name, timeout=None):
-    self.parent.refreshInfo(name, timeout)
+    super().refreshInfo(name, timeout)
   def deleteInfo(self,name):
-    self.parent.deleteInfo(name)
+    super().deleteInfo(name)
 
 class UsbSerialHandler(USBInfoHandler):
   T_IGNORE='ignore'
@@ -65,52 +65,55 @@ class UsbSerialHandler(USBInfoHandler):
     self.type=param['type']
     self.serialHandler=None
     self.stop=False
+    self.isRunning=True
+    self.lock=threading.Condition()
 
   def getDevice(self):
     return self.param.get('port')
-  def typeToSuffix(self,device):
-    if device is None:
-      return "n"
-    if self.type == self.T_COMBINED:
-      return "c"
-    if self.type == self.T_IGNORE:
-      return "i"
-    if self.type == self.T_READER:
-      return "r"
-    if self.type == self.T_WRITER:
-      return "w"
-    if self.type == self.T_EXTERNAL:
-      return "e"
-    return "u"
   def run(self):
-    device=self.getDevice()
-    INAME=self.name+self.typeToSuffix(device)
-    if device is not None and self.type != self.T_IGNORE:
-      sourceName=self.param['sourcename']
-      self.setInfo(INAME,"starting type %s"%self.type,WorkerStatus.STARTED,
-                   canDelete=self.param.get('childIndex',-1) >= 0)
-      if self.type == self.T_WRITER or self.type == self.T_COMBINED:
-        self.param['combined']=self.type == self.T_COMBINED
-        self.serialHandler = SerialWriter(self.param, self.queue, SubInfoHandler(self,INAME,track=False), sourceName)
-      else:
-        self.serialHandler = SerialReader(self.param, self.queue, SubInfoHandler(self,INAME,track=False), sourceName)
-      self.serialHandler.run()
-    else:
-      if device is None:
-        self.setInfo(INAME,"configured but not available",WorkerStatus.INACTIVE,canDelete=True)
-      else:
-        if self.type == self.T_IGNORE:
-          self.setInfo(INAME, '%s configured to be ignored' % (device), WorkerStatus.INACTIVE,canDelete=True)
+    if self.stop:
+      self.isRunning=False
+      return
+    try:
+      device=self.getDevice()
+      INAME=self.name
+      if device is not None and self.type != self.T_IGNORE:
+        sourceName=self.param['sourcename']
+        self.setInfo(INAME,"starting type %s"%self.type,WorkerStatus.STARTED,
+                     canDelete=self.param.get('childIndex',-1) >= 0)
+        if self.type == self.T_WRITER or self.type == self.T_COMBINED:
+          self.param['combined']=self.type == self.T_COMBINED
+          self.serialHandler = SerialWriter(self.param, self.queue, SubInfoHandler(self,INAME,track=False), sourceName)
         else:
-          self.setInfo(INAME, '%s not configured(forbidden)' %(device), WorkerStatus.INACTIVE)
-      while (not self.stop):
-        time.sleep(0.2)
-    self.cleanup()
+          self.serialHandler = SerialReader(self.param, self.queue, SubInfoHandler(self,INAME,track=False), sourceName)
+        self.serialHandler.run()
+      else:
+        if device is None:
+          self.setInfo(INAME,"configured but not available",WorkerStatus.INACTIVE,canDelete=True)
+        else:
+          if self.type == self.T_IGNORE:
+            self.setInfo(INAME, '%s configured to be ignored' % (device), WorkerStatus.INACTIVE,canDelete=True)
+          else:
+            self.setInfo(INAME, '%s not configured(forbidden)' %(device), WorkerStatus.INACTIVE)
+        while (not self.stop):
+          with self.lock:
+            self.lock.wait(0.2)
+    finally:
+      self.cleanup()
+      self.isRunning=False
 
   def stopHandler(self):
     self.stop=True
     if self.serialHandler:
       self.serialHandler.stopHandler()
+    with self.lock:
+      self.lock.notifyAll()
+    start=time.monotonic()
+    while (time.monotonic() < (start+0.2)):
+      if not self.isRunning:
+        return
+      with self.lock:
+        self.lock.wait(0.05)
 
   def mustCheckLimit(self):
     if self.param.get('port') is None:

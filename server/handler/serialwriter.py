@@ -71,11 +71,8 @@ class SerialWriter(SerialReader):
   #param - the config dict
   #navdata - a nav data object (can be none if this reader does not directly write)
   #a write data method used to write a received line
-  def __init__(self,param,queue:AVNQueue,infoHandler:InfoHandler,sourceName):
-    self.param=param
-    self.infoHandler=TrackingInfoHandler(infoHandler)
-    self.doStop=False
-    self.queue=queue
+  def __init__(self, param, queue: AVNQueue, infoHandler: InfoHandler, sourceName):
+    super().__init__(param, queue, infoHandler, sourceName)
     self._fetcher=Fetcher(queue,infoHandler,
                           nmeaFilter=self.P_FILTER.fromDict(param),
                           blackList=self.P_BLACKLIST.fromDict(param)+","+sourceName,
@@ -83,14 +80,17 @@ class SerialWriter(SerialReader):
                           errorKey='out-skipped')
     self.addrmap={}
     #the serial device
-    self.device=None
     self.buffer=None
-    self.sourceName=sourceName
    
   def stopHandler(self):
     self.doStop=True
     try:
       self.device.close()
+    except:
+      pass
+    try:
+      with self.lock:
+        self.lock.notifyAll()
     except:
       pass
 
@@ -170,7 +170,11 @@ class SerialWriter(SerialReader):
           pass
         return
       if self.device is None:
-        time.sleep(porttimeout/2)
+        try:
+          with self.lock:
+            self.lock.wait(porttimeout/2)
+        except:
+          pass
         continue
       AVNLog.debug("%s opened, start sending data",self.device.name)
       while True and not self.doStop:
@@ -186,7 +190,11 @@ class SerialWriter(SerialReader):
             self.device.close()
             self.device=None
             if not self.doStop:
-              time.sleep(porttimeout/2)
+              try:
+                with self.lock:
+                  self.lock.wait(porttimeout/2)
+              except:
+                pass
           except:
             pass
           break
@@ -222,7 +230,8 @@ class SerialWriter(SerialReader):
           if bytes is None or len(bytes)==0:
             #if there is no data at all we simply take all the time we have...
             AVNLog.debug("unable to read data, retrying ")
-            time.sleep(0.1)
+            with self.lock:
+              self.lock.wait(0.1)
             continue
           data=bytes.decode('ascii','ignore')
           if len(data) < 5:
@@ -234,10 +243,12 @@ class SerialWriter(SerialReader):
             nmeaSum.add(1)
             self.queue.addNMEA(data,source=source,sourcePriority=priority)
         else:
-          time.sleep(0.5)
+          with self.lock:
+            self.lock.wait(0.5)
       except:
         AVNLog.debug("exception on read in mixed reader/writer %s (port %s)",traceback.format_exc(),str(self.param['port']))
-        time.sleep(0.5)
+        with self.lock:
+          self.lock.wait(0.5)
         nmeaSum.clear()
 
     

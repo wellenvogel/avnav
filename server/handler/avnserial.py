@@ -113,6 +113,7 @@ class SerialReader(object):
     self.startpattern=AVNUtil.getNMEACheck()
     self.doStop=False
     self.device=None
+    self.lock=threading.Condition()
   def getName(self):
     return "SerialReader-"+self.param['name']
    
@@ -123,6 +124,11 @@ class SerialReader(object):
         self.device.close()
     except Exception as e:
       AVNLog.debug("unable to close serial device: %s",str(e))
+    try:
+      with self.lock:
+        self.lock.notifyAll()
+    except Exception as e:
+      AVNLog.debug("unable to stop serial reader: %s",str(e))
    
   # a simple approach for autobauding
   # we try to read some data (~3 lines) and find a 0x0a in it
@@ -260,10 +266,11 @@ class SerialReader(object):
             pass
           break
         if self.device is None:
-          time.sleep(min(porttimeout / 2, 5))
+          with self.lock:
+            self.lock.wait(min(porttimeout / 2, 5))
           continue
         AVNLog.debug("%s opened, start receiving data", self.device.name)
-        lastTime = time.time()
+        lastTime = time.monotonic()
         numerrors = 0
         hasNMEA = False
         MAXLEN = 500
@@ -321,7 +328,7 @@ class SerialReader(object):
               AVNLog.debug("ignore short data %s", data)
             else:
               numerrors = 0
-              lastTime = time.time()
+              lastTime = time.monotonic()
               if not NMEAParser.checkFilter(data, filter):
                 continue
               nmeaSum.add(1)
