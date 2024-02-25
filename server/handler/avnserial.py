@@ -58,12 +58,13 @@ class SerialReader(object):
   P_PORT=WorkerParameter('port',None,type=WorkerParameter.T_SELECT,rangeOrList=[])
   P_TIMEOUT=WorkerParameter('timeout', 2,type=WorkerParameter.T_FLOAT,
                             description="serial receive timeout in s, after 10*timeout port will be reopened")
-  P_BAUD=WorkerParameter('baud',4800,type=WorkerParameter.T_SELECT,rangeOrList=BAUDRATES)
+  P_BAUD=WorkerParameter('baud',4800,type=WorkerParameter.T_SELECT,rangeOrList=BAUDRATES,valuetype=WorkerParameter.T_NUMBER)
   P_MINBAUD=WorkerParameter('minbaud',0,type=WorkerParameter.T_SELECT,rangeOrList=BAUDRATES+[0],
-                            description='if this is set to anything else then 0, try autobauding between baud and minbaud')
-  P_BYTESIZE=WorkerParameter('bytesize', 8,type=WorkerParameter.T_SELECT,rangeOrList=[5,6,7,8])
+                            description='if this is set to anything else then 0, try autobauding between baud and minbaud',
+                            valuetype=WorkerParameter.T_NUMBER)
+  P_BYTESIZE=WorkerParameter('bytesize', 8,type=WorkerParameter.T_SELECT,rangeOrList=[5,6,7,8],valuetype=WorkerParameter.T_NUMBER)
   P_PARITY=WorkerParameter('parity','N',type=WorkerParameter.T_SELECT,rangeOrList=['N','E','O','M','S'])
-  P_STOPBITS=WorkerParameter('stopbits', 1,type=WorkerParameter.T_SELECT,rangeOrList=[1,1.5,2])
+  P_STOPBITS=WorkerParameter('stopbits', 1,type=WorkerParameter.T_SELECT,rangeOrList=[1,1.5,2],valuetype=WorkerParameter.T_FLOAT)
   P_NUMERRORS=WorkerParameter('numerrors',20,type=WorkerParameter.T_NUMBER,
                               description='reopen port after that many errors, set this to 0 to avoid any check for NMEA data')
   P_AUTOTIME=WorkerParameter('autobaudtime', 5,type=WorkerParameter.T_FLOAT,

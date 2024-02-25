@@ -50,6 +50,8 @@ class WorkerParameter(object):
   T_SELECT='SELECT'
   T_FILTER='FILTER'
   ALL_TYPES=[T_STRING,T_NUMBER,T_BOOLEAN,T_FLOAT,T_SELECT,T_FILTER]
+  VALUE_TYPES=[T_STRING,T_NUMBER,T_BOOLEAN,T_FLOAT]
+  RANGE_TYPES=[T_NUMBER,T_FLOAT]
   PREDEFINED_DESCRIPTIONS={
     T_FILTER: ', separated list of sentences either !AIVDM or $RMC - for $ we ignore the 1st 2 characters'
   }
@@ -61,7 +63,8 @@ class WorkerParameter(object):
                description=None,
                editable=True,
                mandatory=None,
-               condition=None):
+               condition=None,
+               valuetype=None):
     self.name=name
     self.type=type if type is not None else self.T_STRING
     if self.type not in self.ALL_TYPES:
@@ -74,6 +77,25 @@ class WorkerParameter(object):
     self.editable=editable
     self.mandatory=mandatory if mandatory is not None else default is None
     self.condition=condition #a dict with name:value that must match for visbility
+    if self.type == self.T_SELECT:
+      self.valuetype=self.T_STRING if valuetype is None else valuetype
+      if self.valuetype not in self.VALUE_TYPES:
+        raise ParamValueError("invalid valuetype %s"%self.valuetype)
+    else:
+      self.valuetype=self.type if self.type != self.T_FILTER else self.T_STRING
+
+  def _getValue(self,val):
+    if self.valuetype == self.T_NUMBER:
+      return int(val)
+    if self.valuetype == self.T_FLOAT:
+      return float(val)
+    if self.valuetype == self.T_BOOLEAN:
+      if val == True or val == False:
+        return val
+      if type(val) is str:
+        return val.upper()=="TRUE"
+      return True if val else False
+    return str(val)
 
   def serialize(self):
     return self.__dict__
@@ -91,7 +113,8 @@ class WorkerParameter(object):
                            description=self.description,
                            editable=self.editable,
                            mandatory=self.mandatory,
-                           condition=self.condition)
+                           condition=self.condition,
+                           valuetype=self.valuetype)
     if resolveList:
       if callable(self.rangeOrList):
         rt.rangeOrList=self.rangeOrList()
@@ -164,62 +187,32 @@ class WorkerParameter(object):
       if not self.mandatory:
         return None
       raise ParamValueError("missing mandatory parameter %s"%self.name)
-    if self.type == self.T_STRING:
-      return str(value)
-    if self.type == self.T_NUMBER or self.type == self.T_FLOAT:
-      try:
-        if self.type == self.T_FLOAT:
-          rv=float(value)
-        else:
-          rv=int(value)
-      except Exception as e:
+    try:
+      tvalue=self._getValue(value)
+    except Exception as e:
         raise ParamValueError("invalid value for %s:%s"%(self.name,str(e)))
-      if rangeOrListCheck and self.rangeOrList is not None and len(self.rangeOrList) == 2:
-        if rv < float(self.rangeOrList[0]) or rv > float(self.rangeOrList[1]):
-          raise ParamValueError("value %s for %s out of range %s"%(rv,self.name,",".join(map(lambda v: str(v),self.rangeOrList))))
-      return rv
-    if self.type == self.T_BOOLEAN:
-      if value == True or value == False:
-        return value
-      if type(value) is str:
-        return value.upper()=="TRUE"
-      return True if value else False
-    if self.type == self.T_SELECT:
-      if not rangeOrListCheck:
-        return str(value)
-      if self.rangeOrList is None:
-        raise ValueError("no select list for %s"%self.name)
-      checkList=self.rangeOrList if not callable(self.rangeOrList) else self.rangeOrList()
-      for cv in checkList:
+    if not rangeOrListCheck:
+      return tvalue
+    if self.type in self.RANGE_TYPES:
+      if self.rangeOrList is not None and len(self.rangeOrList) == 2:
+        if tvalue < self._getValue(self.rangeOrList[0]) or tvalue > self._getValue(self.rangeOrList[1]):
+          raise ParamValueError("value %s for %s out of range %s"%(
+            str(tvalue),self.name,",".join(map(lambda v: str(v),self.rangeOrList))))
+      return tvalue
+    if self.type != self.T_SELECT or not rangeOrListCheck:
+      return tvalue
+    if self.rangeOrList is None:
+      raise ValueError("no select list for %s"%self.name)
+    checkList=self.rangeOrList if not callable(self.rangeOrList) else self.rangeOrList()
+    for cv in checkList:
         cmp=cv
         if type(cv) is dict:
           cmp=cv.get('value')
-        if type(cmp) is int:
-          try:
-            if int(value) == cmp:
-              return cmp
-          except:
-            pass
-        if type(cmp) is float:
-          try:
-            if float(value) == cmp:
-              return cmp
-          except:
-            pass
-        if type(cmp) is str:
-          if str(value) == cmp:
-            return cmp
-        if type(value) is str:
-          if str(cmp) == value:
-            return cmp
-        if value == cmp:
-          return value
-      raise ValueError("value %s for %s not in list %s"%(str(value),self.name,",".join(
+        cmp=self._getValue(cmp)
+        if cmp == tvalue:
+          return tvalue
+    raise ValueError("value %s for %s not in list %s"%(str(value),self.name,",".join(
         list(map(lambda x:str(x),checkList)))))
-    if self.type == self.T_FILTER:
-      #TODO: some filter checks
-      return str(value)
-    return value
 
   def fromDict(self,valueDict,check=True,rangeOrListCheck=True):
     rt=valueDict.get(self.name)
