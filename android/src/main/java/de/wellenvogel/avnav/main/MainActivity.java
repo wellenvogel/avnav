@@ -25,11 +25,14 @@ import android.preference.PreferenceManager;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.Nullable;
+
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.webkit.DownloadListener;
+import android.webkit.URLUtil;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
@@ -37,15 +40,26 @@ import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.EditText;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Method;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 
@@ -94,8 +108,131 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
     private boolean checkSettings=true;
     private boolean showsDialog = false;
 
+    View dlProgress=null;
+    TextView dlText=null;
     private ValueCallback<Uri[]> upload=null;
 
+    private class Download {
+        public String url;
+        public Download(String url) {
+            this.url = url;
+        }
+        public void start(OutputStream os){}
+        public void stop(){}
+        public boolean isRunning(){return false;}
+    }
+    private class DownloadHttp extends Download{
+        private Thread thread=null;
+        private OutputStream os=null;
+        private String fileName;
+        public DownloadHttp(String url,String name){
+            super(url);
+            fileName=name;
+        }
+        private void update(long bytes){
+            MainActivity.this.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    View dl=MainActivity.this.dlProgress;
+                    if (dl == null) return;
+                    if (bytes > 0){
+                        if (dl.getVisibility() != View.VISIBLE){
+                            dl.setVisibility(View.VISIBLE);
+                        }
+                    }
+                    else{
+                        if (dl.getVisibility() == View.VISIBLE){
+                            dl.setVisibility(View.GONE);
+                        }
+                    }
+                    MainActivity.this.dlText.setText(fileName+"("+(bytes/1024)+"k)");
+                }
+            });
+        }
+        private void toast(String msg){
+            MainActivity.this.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(MainActivity.this,msg,Toast.LENGTH_LONG).show();
+                }
+            });
+        }
+        @Override
+        public void start(OutputStream os){
+            this.os=os;
+            this.thread=new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    Log.i(LOGPRFX,"download started for "+url);
+                    update(0);
+                    try {
+                        URL dlurl=new URL(DownloadHttp.this.url);
+                        final HttpURLConnection urlConnection = (HttpURLConnection) dlurl.openConnection();
+                        final InputStream is=new BufferedInputStream(urlConnection.getInputStream());
+                        byte [] buffer=new byte[1024*1024];
+                        int rdBytes=0;
+                        long sum=0;
+                        while ((rdBytes=is.read(buffer)) > 0){
+                            os.write(buffer,0,rdBytes);
+                            sum+=rdBytes;
+                            update(sum);
+                        }
+                        toast(getString(R.string.download_finished_for)+url);
+                        os.close();
+                        urlConnection.disconnect();
+                    } catch (IOException e) {
+                        toast(getString(R.string.download_error)+e);
+                    }
+                    update(-1);
+                }
+            });
+            this.thread.setDaemon(true);
+            this.thread.start();
+        }
+        @Override
+        public void stop(){
+            this.thread.interrupt();
+            try {
+                this.thread.join(100);
+            } catch (InterruptedException e) {
+                Log.e(LOGPRFX,"unable to stop download "+url);
+            }
+        }
+
+        @Override
+        public boolean isRunning() {
+            if (thread == null) return false;
+            return thread.isAlive();
+        }
+    };
+    private class DataDownload extends Download{
+        public DataDownload(String url) {
+            super(url);
+        }
+
+        @Override
+        public void start(OutputStream os) {
+            try {
+                Uri uri=Uri.parse(url);
+                String data=uri.getSchemeSpecificPart();
+                String [] parts=data.split(",",2);
+                if (parts.length < 2) throw new IOException("invalid data url");
+                String [] hparts=parts[0].split(";");
+                byte [] res=null;
+                if (hparts.length >1){
+                    if (hparts[1].equalsIgnoreCase("base64")){
+                        res=Base64.decode(parts[1],Base64.DEFAULT);
+                    }
+                }
+                if (res == null) res=parts[1].getBytes(StandardCharsets.UTF_8);
+                os.write(res);
+                os.close();
+            } catch (IOException e) {
+                Log.e(LOGPRFX,"unable to close dl stream "+url);
+            }
+        }
+    }
+    private Download download=null;
     private static class AttachedDevice{
         String type;
         JSONObject parameters;
@@ -156,6 +293,21 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                     Uri returnUri = data.getData();
                     upload.onReceiveValue(new Uri[]{returnUri});
                     upload=null;
+                }
+            case Constants.FILE_OPEN_DOWNLOAD:
+                if (download == null) return;
+                if (resultCode != RESULT_OK) {
+                    download=null;
+                    return;
+                } else {
+                    Uri returnUri = data.getData();
+                    try {
+                        OutputStream os=getContentResolver().openOutputStream(returnUri);
+                        download.start(os);
+                    } catch (FileNotFoundException e) {
+                        Toast.makeText(this,"unable to open "+returnUri,Toast.LENGTH_SHORT).show();
+                        download=null;
+                    }
                 }
             default:
                 AvnLog.e("unknown activity result " + requestCode);
@@ -480,8 +632,41 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         });
         webView.setDownloadListener(new DownloadListener() {
             @Override
-            public void onDownloadStart(String s, String s1, String s2, String s3, long l) {
-                Log.i(LOGPRFX,"download request");
+            public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimeType, long l) {
+                Log.i(LOGPRFX, "download request for "+url);
+                if (download != null && download.isRunning()) return;
+                try {
+                    Uri uri = Uri.parse(url);
+                    boolean isData=uri.getScheme().equalsIgnoreCase("data");
+                    String fileName;
+                    String []contentSplit = contentDisposition.split("filename=");
+                    if (contentSplit.length>1){
+                        fileName = contentSplit[1].replace("filename=", "").replace("\"", "") ;
+                    }
+                    else {
+                        if (isData){
+                            fileName="data.bin";
+                        }
+                        else {
+                            fileName = URLUtil.guessFileName(url, contentDisposition, mimeType);
+                        }
+                    }
+                    Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                    intent.addCategory(Intent.CATEGORY_OPENABLE);
+                    intent.setType(mimeType);
+                    intent.putExtra(Intent.EXTRA_TITLE, fileName);
+                    if (isData){
+                        download=new DataDownload(url);
+                    }
+                    else{
+                        download=new DownloadHttp(url,fileName);
+                    }
+                    startActivityForResult(intent,Constants.FILE_OPEN_DOWNLOAD);
+                }catch (Throwable t){
+                    Toast.makeText(MainActivity.this,"download error:"+t,Toast.LENGTH_LONG).show();
+                }
+
+
             }
         });
         webView.getSettings().setDomStorageEnabled(true);
@@ -538,6 +723,11 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         if (running) return;
         showsDialog=false;
         setContentView(R.layout.main);
+        dlProgress=findViewById(R.id.dlIndicator);
+        dlProgress.setOnClickListener(view -> {
+            if (download != null) download.stop();
+        });
+        dlText=findViewById(R.id.dlInfo);
         sharedPrefs=getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         PreferenceManager.setDefaultValues(this,Constants.PREFNAME,Context.MODE_PRIVATE, R.xml.sound_preferences, false);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
