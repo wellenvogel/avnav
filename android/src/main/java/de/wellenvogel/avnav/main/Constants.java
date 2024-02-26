@@ -55,6 +55,8 @@ public class Constants {
     //request codes in main activity
     public static final int SETTINGS_REQUEST=1;
     public static final int FILE_OPEN=100;
+    public static final int FILE_OPEN_DOWNLOAD=101;
+    public static final int FILE_OPEN_UPLOAD=102;
 
     public static final String BC_STOPALARM="de.wellenvogel.avnav.STOPALARM";
     public static final String BC_STOPAPPL="de.wellenvogel.avnav.STOPAPPL";

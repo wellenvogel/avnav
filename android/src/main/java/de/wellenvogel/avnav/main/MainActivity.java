@@ -22,11 +22,15 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.preference.PreferenceManager;
+
+import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.Nullable;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.webkit.DownloadListener;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -90,6 +94,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
     private boolean checkSettings=true;
     private boolean showsDialog = false;
 
+    private ValueCallback<Uri[]> upload=null;
 
     private static class AttachedDevice{
         String type;
@@ -131,6 +136,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                 if (resultCode != Constants.RESULT_NO_RESTART) {
                     serviceNeedsRestart = true;
                 }
+                sendEventToJs(Constants.JS_PROPERTY_CHANGE, 0); //this will some pages cause to reload...
                 break;
             case Constants.FILE_OPEN:
                 if (resultCode != RESULT_OK) {
@@ -139,6 +145,17 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                 } else {
                     Uri returnUri = data.getData();
                     if (jsInterface != null) jsInterface.saveFile(returnUri);
+                }
+            case Constants.FILE_OPEN_UPLOAD:
+                if (upload == null) return;
+                if (resultCode != RESULT_OK) {
+                    upload.onReceiveValue(null);
+                    upload=null;
+                    return;
+                } else {
+                    Uri returnUri = data.getData();
+                    upload.onReceiveValue(new Uri[]{returnUri});
+                    upload=null;
                 }
             default:
                 AvnLog.e("unknown activity result " + requestCode);
@@ -372,6 +389,9 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    if (request.getUrl().toString().contains(".zip")){
+                        Log.i(LOGPRFX,"zip request");
+                    }
                     if (request.getMethod().equalsIgnoreCase("head")){
                         WebResourceResponse rt=handleRequest(view,request.getUrl().toString(),request.getMethod());
                         if (rt != null) return rt;
@@ -437,6 +457,32 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                         + sourceID);
             }
 
+            @Override
+            public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
+                if (upload != null){
+                    return false;
+                }
+                upload=filePathCallback;
+                Intent i = null;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    i=fileChooserParams.createIntent();
+                }
+                else {
+                    i = new Intent(Intent.ACTION_GET_CONTENT);
+                    i.addCategory(Intent.CATEGORY_OPENABLE);
+                    i.setType("*/*");
+                }
+                MainActivity.this.startActivityForResult(
+                        Intent.createChooser(i, getString(R.string.file_upload)),
+                        Constants.FILE_OPEN_UPLOAD);
+                return true;
+            }
+        });
+        webView.setDownloadListener(new DownloadListener() {
+            @Override
+            public void onDownloadStart(String s, String s1, String s2, String s3, long l) {
+                Log.i(LOGPRFX,"download request");
+            }
         });
         webView.getSettings().setDomStorageEnabled(true);
         webView.getSettings().setDatabaseEnabled(true);
@@ -691,8 +737,6 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         }
         if (webView == null) {
             initializeWebView();
-        } else {
-            sendEventToJs(Constants.JS_PROPERTY_CHANGE, 0); //this will some pages cause to reload...
         }
     }
 
