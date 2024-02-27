@@ -6,6 +6,7 @@ import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -14,6 +15,7 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
+import android.database.Cursor;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
@@ -26,6 +28,8 @@ import android.preference.PreferenceManager;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.Nullable;
 
+import android.provider.DocumentsContract;
+import android.provider.OpenableColumns;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
@@ -114,16 +118,19 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
 
     private class Download {
         public String url;
+        boolean done=false;
+        Uri uri=null;
         public Download(String url) {
             this.url = url;
         }
-        public void start(OutputStream os){}
+        public void start(OutputStream os,Uri uri){
+            this.uri=uri;
+        }
         public void stop(){}
         public boolean isRunning(){return false;}
     }
     private class DownloadHttp extends Download{
         private Thread thread=null;
-        private OutputStream os=null;
         private String fileName;
         public DownloadHttp(String url,String name){
             super(url);
@@ -145,7 +152,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                             dl.setVisibility(View.GONE);
                         }
                     }
-                    MainActivity.this.dlText.setText(fileName+"("+(bytes/1024)+"k)");
+                    MainActivity.this.dlText.setText(String.format("%dkb: %s", bytes / 1024, fileName));
                 }
             });
         }
@@ -158,8 +165,16 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             });
         }
         @Override
-        public void start(OutputStream os){
-            this.os=os;
+        public void start(OutputStream os,Uri uri){
+            if (done) return;
+            super.start(os,uri);
+            try {
+                try (Cursor c = MainActivity.this.getContentResolver().query(uri, null, null, null, null)) {
+                    int nameIdx = c.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                    c.moveToFirst();
+                    fileName = c.getString(nameIdx);
+                }
+            }catch (Throwable t){}
             this.thread=new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -169,21 +184,34 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                         URL dlurl=new URL(DownloadHttp.this.url);
                         final HttpURLConnection urlConnection = (HttpURLConnection) dlurl.openConnection();
                         final InputStream is=new BufferedInputStream(urlConnection.getInputStream());
-                        byte [] buffer=new byte[1024*1024];
+                        byte [] buffer=new byte[4*1024*1024];
                         int rdBytes=0;
                         long sum=0;
+                        final long UPDIV=2*1024*1024;
+                        long lastUpdate=sum-UPDIV-1;
                         while ((rdBytes=is.read(buffer)) > 0){
                             os.write(buffer,0,rdBytes);
                             sum+=rdBytes;
-                            update(sum);
+                            if (sum >= (lastUpdate+UPDIV)) {
+                                update(sum);
+                                lastUpdate=sum;
+                            }
                         }
-                        toast(getString(R.string.download_finished_for)+url);
+                        toast(getString(R.string.download_finished));
                         os.close();
                         urlConnection.disconnect();
+                        Log.i(LOGPRFX,"download finished for "+uri);
                     } catch (IOException e) {
                         toast(getString(R.string.download_error)+e);
+                        try{
+                            DocumentsContract.deleteDocument(MainActivity.this.getContentResolver(),uri);
+                            Log.i(LOGPRFX,"deleted download "+uri);
+                        } catch(Throwable t){
+                            Log.e(LOGPRFX,"unable to delete document "+uri);
+                        }
                     }
                     update(-1);
+                    done=true;
                 }
             });
             this.thread.setDaemon(true);
@@ -197,6 +225,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             } catch (InterruptedException e) {
                 Log.e(LOGPRFX,"unable to stop download "+url);
             }
+            done=true;
         }
 
         @Override
@@ -211,7 +240,9 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         }
 
         @Override
-        public void start(OutputStream os) {
+        public void start(OutputStream os,Uri ruri) {
+            if (done) return;
+            super.start(os,ruri);
             try {
                 Uri uri=Uri.parse(url);
                 String data=uri.getSchemeSpecificPart();
@@ -230,6 +261,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             } catch (IOException e) {
                 Log.e(LOGPRFX,"unable to close dl stream "+url);
             }
+            done=true;
         }
     }
     private Download download=null;
@@ -283,6 +315,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                     Uri returnUri = data.getData();
                     if (jsInterface != null) jsInterface.saveFile(returnUri);
                 }
+                break;
             case Constants.FILE_OPEN_UPLOAD:
                 if (upload == null) return;
                 if (resultCode != RESULT_OK) {
@@ -294,6 +327,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                     upload.onReceiveValue(new Uri[]{returnUri});
                     upload=null;
                 }
+                break;
             case Constants.FILE_OPEN_DOWNLOAD:
                 if (download == null) return;
                 if (resultCode != RESULT_OK) {
@@ -303,12 +337,13 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                     Uri returnUri = data.getData();
                     try {
                         OutputStream os=getContentResolver().openOutputStream(returnUri);
-                        download.start(os);
+                        download.start(os,returnUri);
                     } catch (FileNotFoundException e) {
                         Toast.makeText(this,"unable to open "+returnUri,Toast.LENGTH_SHORT).show();
                         download=null;
                     }
                 }
+                break;
             default:
                 AvnLog.e("unknown activity result " + requestCode);
         }
