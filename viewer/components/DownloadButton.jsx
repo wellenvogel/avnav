@@ -54,7 +54,7 @@ class DownloadButton extends React.Component{
         return true;
     }
     serverDownload(){
-        if (avnav.android){
+        if (avnav.android && false){
             return avnav.android.downloadFile(this.props.fileName,this.props.type,this.props.androidUrl);
         }
         if (! this.hiddenA) return;

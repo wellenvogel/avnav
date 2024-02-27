@@ -662,7 +662,15 @@ public class RequestHandler {
                 }
                 if (setAttachment) {
                     String value="attachment";
-                    if (remain != null && ! remain.isEmpty()) value+="; filename=\""+remain+"\"";
+                    if (remain != null && ! remain.isEmpty()) {
+                        value+="; filename=\""+remain+"\"";
+                    }
+                    else{
+                        String fn=uri.getQueryParameter("filename");
+                        if (fn != null){
+                            value+="; filename=\"" + DirectoryRequestHandler.safeName(fn,false)+"\"";
+                        }
+                    }
                     resp.setHeader("Content-Disposition", value);
                 }
                 resp.setHeader("Content-Type",resp.getMimeType());

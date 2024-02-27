@@ -67,6 +67,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 
+import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
 import de.wellenvogel.avnav.appapi.JavaScriptApi;
 import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.appapi.WebServer;
@@ -116,8 +117,9 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
     TextView dlText=null;
     private ValueCallback<Uri[]> upload=null;
 
-    private class Download {
+    private static class Download {
         public String url;
+        public String fileName;
         boolean done=false;
         Uri uri=null;
         public Download(String url) {
@@ -129,12 +131,10 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         public void stop(){}
         public boolean isRunning(){return false;}
     }
-    private class DownloadHttp extends Download{
+    private class DownloadStream extends Download{
         private Thread thread=null;
-        private String fileName;
-        public DownloadHttp(String url,String name){
+        public DownloadStream(String url){
             super(url);
-            fileName=name;
         }
         private void update(long bytes){
             MainActivity.this.runOnUiThread(new Runnable() {
@@ -156,6 +156,11 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                 }
             });
         }
+
+        InputStream openInput() throws IOException {
+            return null;
+        }
+        void closeInput() throws IOException {}
         private void toast(String msg){
             MainActivity.this.runOnUiThread(new Runnable() {
                 @Override
@@ -181,15 +186,14 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                     Log.i(LOGPRFX,"download started for "+url);
                     update(0);
                     try {
-                        URL dlurl=new URL(DownloadHttp.this.url);
-                        final HttpURLConnection urlConnection = (HttpURLConnection) dlurl.openConnection();
-                        final InputStream is=new BufferedInputStream(urlConnection.getInputStream());
+                        InputStream is=openInput();
                         byte [] buffer=new byte[4*1024*1024];
                         int rdBytes=0;
                         long sum=0;
                         final long UPDIV=2*1024*1024;
                         long lastUpdate=sum-UPDIV-1;
                         while ((rdBytes=is.read(buffer)) > 0){
+                            if (done) throw new InterruptedException("user stop");
                             os.write(buffer,0,rdBytes);
                             sum+=rdBytes;
                             if (sum >= (lastUpdate+UPDIV)) {
@@ -199,9 +203,9 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                         }
                         toast(getString(R.string.download_finished));
                         os.close();
-                        urlConnection.disconnect();
+                        closeInput();
                         Log.i(LOGPRFX,"download finished for "+uri);
-                    } catch (IOException e) {
+                    } catch (Throwable e) {
                         toast(getString(R.string.download_error)+e);
                         try{
                             DocumentsContract.deleteDocument(MainActivity.this.getContentResolver(),uri);
@@ -219,8 +223,8 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         }
         @Override
         public void stop(){
-            this.thread.interrupt();
             try {
+                this.thread.interrupt();
                 this.thread.join(100);
             } catch (InterruptedException e) {
                 Log.e(LOGPRFX,"unable to stop download "+url);
@@ -234,6 +238,42 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             return thread.isAlive();
         }
     };
+
+    private class DownloadHttp extends DownloadStream{
+        HttpURLConnection urlConnection=null;
+        public DownloadHttp(String url) {
+            super(url);
+        }
+        @Override
+        InputStream openInput() throws IOException {
+            URL dlurl=new URL(this.url);
+            urlConnection = (HttpURLConnection) dlurl.openConnection();
+            return new BufferedInputStream(urlConnection.getInputStream());
+        }
+
+        @Override
+        void closeInput() throws IOException {
+            super.closeInput();
+            urlConnection.disconnect();
+        }
+    }
+    private class DownloadInternal extends DownloadStream{
+        ExtendedWebResourceResponse response;
+        public DownloadInternal(String url, ExtendedWebResourceResponse r) {
+            super(url);
+            response=r;
+        }
+
+        @Override
+        InputStream openInput() throws IOException {
+            return response.getData();
+        }
+
+        @Override
+        void closeInput() throws IOException {
+            response.getData().close();
+        }
+    }
     private class DataDownload extends Download{
         public DataDownload(String url) {
             super(url);
@@ -576,9 +616,6 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    if (request.getUrl().toString().contains(".zip")){
-                        Log.i(LOGPRFX,"zip request");
-                    }
                     if (request.getMethod().equalsIgnoreCase("head")){
                         WebResourceResponse rt=handleRequest(view,request.getUrl().toString(),request.getMethod());
                         if (rt != null) return rt;
@@ -623,7 +660,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 if (url != null && (url.startsWith("http://")||url.startsWith("https://") )) {
-                    if (url.startsWith("http://assets")){
+                    if (url.startsWith(RequestHandler.INTERNAL_URL_PREFIX)){
                         return false;
                     }
                     view.getContext().startActivity(
@@ -670,32 +707,50 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimeType, long l) {
                 Log.i(LOGPRFX, "download request for "+url);
                 if (download != null && download.isRunning()) return;
+                Download nextDownload=null;
+                String fileName="";
+                boolean isData=false;
                 try {
-                    Uri uri = Uri.parse(url);
-                    boolean isData=uri.getScheme().equalsIgnoreCase("data");
-                    String fileName;
-                    String []contentSplit = contentDisposition.split("filename=");
-                    if (contentSplit.length>1){
-                        fileName = contentSplit[1].replace("filename=", "").replace("\"", "") ;
+                    if (url.startsWith(RequestHandler.INTERNAL_URL_PREFIX)){
+                        if (handler == null){
+                            throw new Exception("no handler");
+                        }
+                        ExtendedWebResourceResponse r=handler.handleRequest(null,url,"get");
+                        //TODO: separate dl handler
+                        if (r == null){
+                            throw new Exception("cannot handle "+url);
+                        }
+                        nextDownload=new DownloadInternal(url,r);
+                        String cd=r.getHeaders().get("Content-Disposition");
+                        if (cd != null && ! cd.isEmpty()) contentDisposition=cd;
                     }
                     else {
-                        if (isData){
-                            fileName="data.bin";
-                        }
-                        else {
+                        Uri uri = Uri.parse(url);
+                        isData = uri.getScheme().equalsIgnoreCase("data");
+                    }
+                    String[] contentSplit = contentDisposition.split("filename=");
+                    if (contentSplit.length > 1) {
+                        fileName = contentSplit[1].replace("filename=", "").replace("\"", "");
+                    } else {
+                        if (isData) {
+                            fileName = "data.bin";
+                        } else {
                             fileName = URLUtil.guessFileName(url, contentDisposition, mimeType);
                         }
                     }
+                    if (nextDownload == null) {
+                        if (isData) {
+                            nextDownload = new DataDownload(url);
+                        } else {
+                            nextDownload = new DownloadHttp(url);
+                        }
+                    }
+                    nextDownload.fileName=fileName;
+                    download=nextDownload;
                     Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
                     intent.addCategory(Intent.CATEGORY_OPENABLE);
                     intent.setType(mimeType);
                     intent.putExtra(Intent.EXTRA_TITLE, fileName);
-                    if (isData){
-                        download=new DataDownload(url);
-                    }
-                    else{
-                        download=new DownloadHttp(url,fileName);
-                    }
                     startActivityForResult(intent,Constants.FILE_OPEN_DOWNLOAD);
                 }catch (Throwable t){
                     Toast.makeText(MainActivity.this,"download error:"+t,Toast.LENGTH_LONG).show();
