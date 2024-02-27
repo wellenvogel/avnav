@@ -16,7 +16,7 @@
       "stop":"q"
     },
     "global":{
-      "mobon": ["Control- "],
+      "mobon": ["m","Control- "],
       "anchoron": ["i"],
       "anchoroff": ["Control-i"],
       "toggledimm": ["z"]
