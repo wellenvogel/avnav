@@ -513,8 +513,10 @@ class NMEAParser(object):
         if MagVarDir is not None and MagVariation is not None:
           if MagVarDir == 'E':
             heading_t = heading + MagVariation
+            rt['magVariation'] = MagVariation
           elif MagVarDir == 'W':
             heading_t = heading - MagVariation
+            rt['magVariation'] = -MagVariation
         if heading_t is not None:
           rt[self.K_HDGT.key]=heading_t
         self.addToNavData(rt,source=source,record=tag,priority=basePriority)
