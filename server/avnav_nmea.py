@@ -329,6 +329,11 @@ class NMEAParser(object):
             rt['track']=float(darray[8] or '0')
         gpstime = darray[1]
         gpsdate = darray[9]
+        if darray[10] != '':
+          if darray[11] == 'E':
+            rt['magVariation'] = float(darray[10] or '0')
+          elif darray[11] == 'W':
+            rt['magVariation'] = -float(darray[10] or '0')
         if gpsdate != "" and gpstime != "":
           rt['time']=self.formatTime(self.gpsTimeToTime(gpstime, gpsdate))
         self.addToNavData(rt,source=source,priority=basePriority+1,record=tag)
