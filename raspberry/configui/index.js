@@ -355,7 +355,7 @@
             setFieldValues(board.parameters);
         })
        }
-       let HATS=['NONE','PICANM','WAVESHAREA8','WAVESHAREA12','WAVESHAREB','WAVESHARE2CH'];
+       let HATS=['NONE','PICANM','WAVESHAREA8','WAVESHAREA12','WAVESHAREB','WAVESHARE2CH','MCARTHUR'];
        let hats=document.getElementById('AVNAV_HAT');
        if (hats){
             fillSelect(hats,HATS);
