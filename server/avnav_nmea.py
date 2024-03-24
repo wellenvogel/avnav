@@ -76,6 +76,7 @@ class NMEAParser(object):
     Key('lon','gps longitude',signalK='navigation.position.longitude'),
     Key('track','course','\N{DEGREE SIGN}','navigation.courseOverGroundTrue',signalKConversion=AVNUtil.rad2deg),
     Key('speed','speed in m/s','m/s','navigation.speedOverGround'),
+    Key('magVariation', 'magnetic Variation in deg','\N{DEGREE SIGN}', signalK='navigation.magneticVariation', signalKConversion=AVNUtil.rad2deg),
     K_TWA,
     K_AWA,
     K_AWS,
@@ -328,6 +329,11 @@ class NMEAParser(object):
             rt['track']=float(darray[8] or '0')
         gpstime = darray[1]
         gpsdate = darray[9]
+        if darray[10] != '':
+          if darray[11] == 'E':
+            rt['magVariation'] = float(darray[10] or '0')
+          elif darray[11] == 'W':
+            rt['magVariation'] = -float(darray[10] or '0')
         if gpsdate != "" and gpstime != "":
           rt['time']=self.formatTime(self.gpsTimeToTime(gpstime, gpsdate))
         self.addToNavData(rt,source=source,priority=basePriority+1,record=tag)
@@ -507,8 +513,10 @@ class NMEAParser(object):
         if MagVarDir is not None and MagVariation is not None:
           if MagVarDir == 'E':
             heading_t = heading + MagVariation
+            rt['magVariation'] = MagVariation
           elif MagVarDir == 'W':
             heading_t = heading - MagVariation
+            rt['magVariation'] = -MagVariation
         if heading_t is not None:
           rt[self.K_HDGT.key]=heading_t
         self.addToNavData(rt,source=source,record=tag,priority=basePriority)
