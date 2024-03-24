@@ -130,6 +130,10 @@ public class AisStore {
                     rt.put("speed", m.getSog());
                     rt.put("course", m.getCog());
                     rt.put("heading",m.getTrueHeading());
+                    Float rot=m.getSensorRot();
+                    if (rot != null){
+                        rt.put("turn",rot);
+                    }
                     break;
                 }
                 case 4:

@@ -44,29 +44,33 @@ class AVNSocketWriter(AVNWorker):
   AVAHI_ENABLED=WorkerParameter('avahiEnabled',False,description='If set make this port available via Mdns (Bonjour/Avahi)',type=WorkerParameter.T_BOOLEAN)
   AVAHI_NAME=WorkerParameter('avahiName','avnav-server',description='Name for this connection when anncounced via Mdns (Bonjour/Avahi)',
                              condition={AVAHI_ENABLED.name:True})
+  P_PORT=WorkerParameter('port',None,type=WorkerParameter.T_NUMBER,
+                         description='local listener port')
+  P_MAXDEVICES=WorkerParameter('maxDevices',5,type=WorkerParameter.T_NUMBER,
+                               description='max external connections')
+  P_LADDR=WorkerParameter('address','0.0.0.0',type=WorkerParameter.T_STRING,
+                          description='the local bind address (0.0.0.0 for external access)')
+  P_READ=WorkerParameter('read',True,type=WorkerParameter.T_BOOLEAN,
+                         description='allow for also reading data from connected devices')
+  P_READFILTER=WorkerParameter('readerFilter','',type=WorkerParameter.T_FILTER,
+                               description='NMEA filter for incoming data',
+                               condition={P_READ.name:True})
+  P_MINTIME=WorkerParameter('minTime',50,type=WorkerParameter.T_FLOAT,
+                            description='if this is set, wait this time before reading new data (ms)')
   @classmethod
   def getConfigParam(cls, child=None):
     if child is None:
       
       rt=[
-          WorkerParameter('port',None,type=WorkerParameter.T_NUMBER,
-                          description='local listener port'),
-          WorkerParameter('maxDevices',5,type=WorkerParameter.T_NUMBER,
-                          description='max external connections'),
-          WorkerParameter('feederName','',editable=False),
-          WorkerParameter('filter','',type=WorkerParameter.T_FILTER,
-                          description=', separated list of sentences either !AIVDM or $RMC - for $ we ignore the 1st 2 characters'),
-          WorkerParameter('address','0.0.0.0',type=WorkerParameter.T_STRING,
-                          description='the local bind address (0.0.0.0 for external access)'),
-          WorkerParameter('read',True,type=WorkerParameter.T_BOOLEAN,
-                          description='allow for also reading data from connected devices'),
-          cls.PRIORITY_PARAM_DESCRIPTION.copy(condition={'read':True}),
-          WorkerParameter('readerFilter','',type=WorkerParameter.T_FILTER,
-                          description='NMEA filter for incoming data',
-                          condition={'read':True}),
-          WorkerParameter('minTime',50,type=WorkerParameter.T_FLOAT,
-                          description='if this is set, wait this time before reading new data (ms)'),
-          WorkerParameter('blackList','',description=', separated list of sources we do not send out'),
+          cls.P_PORT,
+          cls.P_MAXDEVICES,
+          cls.FILTER_PARAM,
+          cls.P_LADDR,
+          cls.P_READ,
+          cls.PRIORITY_PARAM_DESCRIPTION.copy(condition={cls.P_READ.name:True}),
+          cls.P_READFILTER,
+          cls.P_MINTIME,
+          cls.BLACKLIST_PARAM,
           cls.AVAHI_ENABLED,
           cls.AVAHI_NAME,
           ]
@@ -83,19 +87,11 @@ class AVNSocketWriter(AVNWorker):
   
   def __init__(self,cfgparam):
     AVNWorker.__init__(self, cfgparam)
-    self.blackList=[]
     self.listener=None
     self.addrmap = {}
     self.maplock = threading.Lock()
     self.startSequence=0
-
-  def startInstance(self, navdata):
-    self.startSequence+=1
-    self.version='development'
-    baseConfig=self.findHandlerByName('AVNConfig')
-    if baseConfig:
-      self.version=baseConfig.getVersion()
-    super().startInstance(navdata)
+    self.version='unset'
 
 
   def sequenceChanged(self,seq):
@@ -114,7 +110,7 @@ class AVNSocketWriter(AVNWorker):
 
   def checkAndAddHandler(self,addr,handler):
     rt=False
-    maxd=self.getIntParam('maxDevices')
+    maxd=self.P_MAXDEVICES.fromDict(self.param)
     self.maplock.acquire()
     if len(self.addrmap) < maxd:
       if not addr in self.addrmap:
@@ -138,11 +134,13 @@ class AVNSocketWriter(AVNWorker):
 
   #the writer for a connected client
   def client(self, socketConnection, addr, startSequence):
-    clientConnection=SocketReader(socketConnection,self.writeData,self.feeder,self.setInfo,
-                                  sourcePriority=self.PRIORITY_PARAM_DESCRIPTION.fromDict(self.param))
+    tinfo=TrackingInfoHandler(self)
     infoName="SocketWriter-%s"%(str(addr),)
-    self.setInfo(infoName,"sending data",WorkerStatus.RUNNING)
-    if self.getBoolParam('read',False):
+    clientConnection=SocketReader(socketConnection,  self.queue, SubInfoHandler(tinfo,infoName,track=False),
+                                  sourcePriority=self.PRIORITY_PARAM_DESCRIPTION.fromDict(self.param))
+    rd=self.P_READ.fromDict(self.param)
+    tinfo.setInfo(infoName,"sending%s data"%("/receiving" if rd else ""),WorkerStatus.RUNNING)
+    if rd:
       clientHandler=threading.Thread(
         target=self.clientRead,
         args=(clientConnection, addr, startSequence),
@@ -150,24 +148,19 @@ class AVNSocketWriter(AVNWorker):
       )
       clientHandler.daemon=True
       clientHandler.start()
-    filterstr=self.getStringParam('filter')
-    clientConnection.writeSocket(infoName,filterstr,self.version,self.blackList)
+    clientConnection.writeSocket(self.FILTER_PARAM.fromDict(self.param),
+                                 self.version,
+                                 self.BLACKLIST_PARAM.fromDict(self.param))
     self.removeHandler(addr)
-    self.deleteInfo(infoName)
+    tinfo.deleteInfo(infoName)
 
   def clientRead(self,connection,addr,startSequence):
-    infoName="SocketReader-%s"%(str(addr),)
     threading.currentThread().setName("%s-Reader-%s"%(self.getName(),str(addr)))
     #on each newly connected socket we recompute the filter
-    filterstr=self.getStringParam('readerFilter')
-    connection.readSocket(infoName,self.getSourceName(str(addr)),filterstr)
-    self.deleteInfo(infoName)
-
-  #if we have reading enabled...
-  def writeData(self, data, source=None, addCheckSum=False,sourcePriority=NMEAParser.DEFAULT_SOURCE_PRIORITY):
-    super().writeData(data,source,addCheckSum=addCheckSum,sourcePriority=sourcePriority)
-    if (self.getIntParam('minTime')):
-      time.sleep(float(self.getIntParam('minTime'))/1000)
+    connection.readSocket(
+      self.getSourceName(str(addr)),
+      filter=self.P_READFILTER.fromDict(self.param),
+      minTime=self.P_MINTIME.fromDict(self.param))
 
 
   def _closeSockets(self):
@@ -201,8 +194,8 @@ class AVNSocketWriter(AVNWorker):
       return None
     return avahiName+"."+AVNUtil.NMEA_SERVICE
   def checkConfig(self, param):
-    if 'port' in param:
-      self.checkUsedResource(UsedResource.T_TCP,param.get('port'))
+    if self.P_PORT.name in param:
+      self.checkUsedResource(UsedResource.T_TCP,self.P_PORT.fromDict(param))
     if ( self.AVAHI_ENABLED.name in param and self.AVAHI_ENABLED.fromDict(param,True)) or \
         ( self.AVAHI_ENABLED.name not in param and self.AVAHI_ENABLED.fromDict(self.param,True)):
       avahiName=None
@@ -228,18 +221,20 @@ class AVNSocketWriter(AVNWorker):
 
   #this is the main thread - listener
   def run(self):
+    self.startSequence+=1
+    self.version=self.navdata.getSingleValue(AVNStore.KEY_VERSION)
     self.wait(2)
     init=True
     self.listener=None
     avahi=self.findHandlerByName(AVNAvahi.getConfigName())
     while not self.shouldStop():
       self.freeAllUsedResources()
-      self.claimUsedResource(UsedResource.T_TCP,self.getParamValue('port'))
+      self.claimUsedResource(UsedResource.T_TCP,self.P_PORT.fromDict(self.param))
       if avahi is not None:
         avahi.unregisterService(self.getId())
       if self.AVAHI_ENABLED.fromDict(self.param):
         self.claimUsedResource(UsedResource.T_SERVICE,self.getResourceFromName(self.AVAHI_NAME.fromDict(self.param)))
-      self.setNameIfEmpty("%s-%s"%(self.getName(),str(self.getParamValue('port'))))
+      self.setNameIfEmpty("%s-%s"%(self.getName(),str(self.P_PORT.fromDict(self.param))))
       self.blackList = self.getStringParam('blackList').split(',')
       self.blackList.append(self.getSourceName())
       try:
@@ -247,7 +242,7 @@ class AVNSocketWriter(AVNWorker):
           self.listener=socket.socket()
           self.listener.settimeout(0.5)
           self.listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-          self.listener.bind((self.getStringParam('address'),self.getIntParam('port')))
+          self.listener.bind((self.P_LADDR.fromDict(self.param),self.P_PORT.fromDict(self.param)))
           self.listener.listen(1)
           AVNLog.info("listening at port address %s",str(self.listener.getsockname()))
           self.setInfo('main', "listening at %s"%(str(self.listener.getsockname()),), WorkerStatus.RUNNING)

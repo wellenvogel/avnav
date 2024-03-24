@@ -50,6 +50,8 @@ class WorkerParameter(object):
   T_SELECT='SELECT'
   T_FILTER='FILTER'
   ALL_TYPES=[T_STRING,T_NUMBER,T_BOOLEAN,T_FLOAT,T_SELECT,T_FILTER]
+  VALUE_TYPES=[T_STRING,T_NUMBER,T_BOOLEAN,T_FLOAT]
+  RANGE_TYPES=[T_NUMBER,T_FLOAT]
   PREDEFINED_DESCRIPTIONS={
     T_FILTER: ', separated list of sentences either !AIVDM or $RMC - for $ we ignore the 1st 2 characters'
   }
@@ -61,7 +63,8 @@ class WorkerParameter(object):
                description=None,
                editable=True,
                mandatory=None,
-               condition=None):
+               condition=None,
+               valuetype=None):
     self.name=name
     self.type=type if type is not None else self.T_STRING
     if self.type not in self.ALL_TYPES:
@@ -74,6 +77,25 @@ class WorkerParameter(object):
     self.editable=editable
     self.mandatory=mandatory if mandatory is not None else default is None
     self.condition=condition #a dict with name:value that must match for visbility
+    if self.type == self.T_SELECT:
+      self.valuetype=self.T_STRING if valuetype is None else valuetype
+      if self.valuetype not in self.VALUE_TYPES:
+        raise ParamValueError("invalid valuetype %s"%self.valuetype)
+    else:
+      self.valuetype=self.type if self.type != self.T_FILTER else self.T_STRING
+
+  def _getValue(self,val):
+    if self.valuetype == self.T_NUMBER:
+      return int(val)
+    if self.valuetype == self.T_FLOAT:
+      return float(val)
+    if self.valuetype == self.T_BOOLEAN:
+      if val == True or val == False:
+        return val
+      if type(val) is str:
+        return val.upper()=="TRUE"
+      return True if val else False
+    return str(val)
 
   def serialize(self):
     return self.__dict__
@@ -91,7 +113,8 @@ class WorkerParameter(object):
                            description=self.description,
                            editable=self.editable,
                            mandatory=self.mandatory,
-                           condition=self.condition)
+                           condition=self.condition,
+                           valuetype=self.valuetype)
     if resolveList:
       if callable(self.rangeOrList):
         rt.rangeOrList=self.rangeOrList()
@@ -164,46 +187,32 @@ class WorkerParameter(object):
       if not self.mandatory:
         return None
       raise ParamValueError("missing mandatory parameter %s"%self.name)
-    if self.type == self.T_STRING:
-      return str(value)
-    if self.type == self.T_NUMBER or self.type == self.T_FLOAT:
-      try:
-        if self.type == self.T_FLOAT:
-          rv=float(value)
-        else:
-          rv=int(value)
-      except Exception as e:
+    try:
+      tvalue=self._getValue(value)
+    except Exception as e:
         raise ParamValueError("invalid value for %s:%s"%(self.name,str(e)))
-      if rangeOrListCheck and self.rangeOrList is not None and len(self.rangeOrList) == 2:
-        if rv < float(self.rangeOrList[0]) or rv > float(self.rangeOrList[1]):
-          raise ParamValueError("value %s for %s out of range %s"%(rv,self.name,",".join(map(lambda v: str(v),self.rangeOrList))))
-      return rv
-    if self.type == self.T_BOOLEAN:
-      if value == True or value == False:
-        return value
-      if type(value) is str:
-        return value.upper()=="TRUE"
-      return True if value else False
-    if self.type == self.T_SELECT:
-      if not rangeOrListCheck:
-        return str(value)
-      if self.rangeOrList is None:
-        raise ValueError("no select list for %s"%self.name)
-      checkList=self.rangeOrList if not callable(self.rangeOrList) else self.rangeOrList()
-      for cv in checkList:
+    if not rangeOrListCheck:
+      return tvalue
+    if self.type in self.RANGE_TYPES:
+      if self.rangeOrList is not None and len(self.rangeOrList) == 2:
+        if tvalue < self._getValue(self.rangeOrList[0]) or tvalue > self._getValue(self.rangeOrList[1]):
+          raise ParamValueError("value %s for %s out of range %s"%(
+            str(tvalue),self.name,",".join(map(lambda v: str(v),self.rangeOrList))))
+      return tvalue
+    if self.type != self.T_SELECT or not rangeOrListCheck:
+      return tvalue
+    if self.rangeOrList is None:
+      raise ValueError("no select list for %s"%self.name)
+    checkList=self.rangeOrList if not callable(self.rangeOrList) else self.rangeOrList()
+    for cv in checkList:
         cmp=cv
         if type(cv) is dict:
           cmp=cv.get('value')
-        if type(value) is str:
-          cmp=str(cmp)
-        if value == cmp:
-          return value
-      raise ValueError("value %s for %s not in list %s"%(str(value),self.name,",".join(
+        cmp=self._getValue(cmp)
+        if cmp == tvalue:
+          return tvalue
+    raise ValueError("value %s for %s not in list %s"%(str(value),self.name,",".join(
         list(map(lambda x:str(x),checkList)))))
-    if self.type == self.T_FILTER:
-      #TODO: some filter checks
-      return str(value)
-    return value
 
   def fromDict(self,valueDict,check=True,rangeOrListCheck=True):
     rt=valueDict.get(self.name)
@@ -341,10 +350,64 @@ def forceExit():
   os._exit(1)
 
 
+class InfoHandler(object):
+  def setInfo(self,name,info,status,childId=None,canDelete=False,timeout=None):
+    pass
+  def refreshInfo(self,name,timeout=None):
+    pass
+  def deleteInfo(self,name):
+    pass
 
-class AVNWorker(object):
+class TrackingInfoHandler(InfoHandler):
+  def __init__(self,handler:InfoHandler):
+    self._handler=handler
+    self._names=set()
+  def __del__(self):
+    self.cleanup()
+  def setInfo(self, name, info, status, childId=None, canDelete=False, timeout=None):
+    self._names.add(name)
+    self._handler.setInfo(name, info, status, childId, canDelete, timeout)
+
+  def refreshInfo(self, name, timeout=None):
+    self._names.add(name)
+    self._handler.refreshInfo(name, timeout)
+
+  def deleteInfo(self, name):
+    if name is not None:
+      try:
+        self._names.remove(name)
+      except:
+        pass
+    self._handler.deleteInfo(name)
+
+  def cleanup(self):
+    for n in self._names:
+      self._handler.deleteInfo(n)
+    self._names.clear()
+
+class SubInfoHandler(InfoHandler):
+  def __init__(self,parent:InfoHandler,prefix=None,track=True):
+    self._prefix = prefix if prefix is not None else ""
+    self._parent=parent if not track else TrackingInfoHandler(parent)
+  def _gn(self,name):
+    return self._prefix+":#:"+name
+
+  def setInfo(self, name, info, status, childId=None, canDelete=False, timeout=None):
+    self._parent.setInfo(self._gn(name), info, status, childId, canDelete, timeout)
+
+  def refreshInfo(self, name, timeout=None):
+    self._parent.refreshInfo(self._gn(name), timeout)
+
+  def deleteInfo(self, name):
+    self._parent.deleteInfo(self._gn(name))
+
+
+class AVNWorker(InfoHandler):
+  QUEUE_NAME_PARAMETER=WorkerParameter('queueName',default='',type=WorkerParameter.T_STRING,editable=False)
+  NAME_PARAMETER=WorkerParameter('name',default='',type=WorkerParameter.T_STRING)
   DEFAULT_CONFIG_PARAM = [
-    WorkerParameter('name',default='',type=WorkerParameter.T_STRING)
+    NAME_PARAMETER,
+    QUEUE_NAME_PARAMETER
   ]
   ENABLE_PARAM_DESCRIPTION=WorkerParameter('enabled',default=True,type=WorkerParameter.T_BOOLEAN)
   ENABLE_CONFIG_PARAM=[
@@ -353,6 +416,9 @@ class AVNWorker(object):
   PRIORITY_PARAM_DESCRIPTION=WorkerParameter('priority',default=NMEAParser.DEFAULT_SOURCE_PRIORITY,
                                              type=WorkerParameter.T_NUMBER,rangeOrList=[10,100],
                                              description="The priority for this source. If there is data from higher priority sources, values will be ignored in parser")
+  FILTER_PARAM=WorkerParameter('filter','',type=WorkerParameter.T_FILTER)
+  BLACKLIST_PARAM=WorkerParameter('blackList' , '',description=', separated list of sources we do not send out')
+
   handlerListLock=threading.Lock()
   """a base class for all workers
      this provides some config functions and a common interfcace for handling them"""
@@ -387,10 +453,21 @@ class AVNWorker(object):
   @classmethod
   def resetHandlerList(cls):
     cls.allHandlers=[]
-  @classmethod
-  def findFeeder(cls,feedername):
+
+  def findFeeder(self,feedername=None):
+    if feedername is None:
+      feedername=self.QUEUE_NAME_PARAMETER.fromDict(self.param)
+      if feedername == "":
+        #support legacy config
+        feedername=self.getStringParam('feederName')
     """find a feeder by its name (not configName)"""
-    return cls.findHandlerByTypeAndName(cls.Type.FEEDER,feedername)
+    rt=self.findHandlerByTypeAndName(self.Type.FEEDER,feedername)
+    if rt is None:
+      #try fallback to main
+      rt=self.findHandlerByTypeAndName(self.Type.FEEDER)
+      if rt is None:
+        raise Exception("unable to find queue %s"%(feedername or ""))
+    return rt
   
   @classmethod
   def findHandlerByName(cls,name,disabled=False):
@@ -484,7 +561,7 @@ class AVNWorker(object):
     self.status={'main':WorkerStatus('main',WorkerStatus.STARTED,"created")}
     self.__statusLock=threading.Lock()
     self.type=self.Type.DEFAULT
-    self.feeder=None
+    self.queue=None
     self.configChanger=None #reference for writing back to the DOM
     self.condition=threading.Condition()
     self.currentThread=None
@@ -597,6 +674,8 @@ class AVNWorker(object):
         return 0
       else:
         raise e
+  def getWParam(self,param:WorkerParameter,rangeOrListCheck:bool=False):
+    return param.fromDict(self.param,rangeOrListCheck=rangeOrListCheck)
   def isDisabled(self):
     """is this handler set to disabled?"""
     if not self.canDisable() and not self.canDeleteHandler():
@@ -707,12 +786,12 @@ class AVNWorker(object):
     @param defaultSuffix:
     @return: returns either the explicitely set name or the default name appended by the suffix
     '''
-    rt=self.getParamValue('name')
+    rt=self.NAME_PARAMETER.fromDict(self.param)
     if rt is not None and rt != "":
       return rt
     if defaultSuffix is None:
       defaultSuffix="?"
-    return "%s-%s"%(self.getName(),defaultSuffix)
+    return "%s-%s"%(self.getName(),str(defaultSuffix))
 
   def changeConfig(self,name,value):
     if self.param is None:
@@ -887,7 +966,7 @@ class AVNWorker(object):
       self.run()
       self.setInfo('main','handler stopped',WorkerStatus.INACTIVE)
     except Exception as e:
-      self.setInfo('main','handler stopped with %s'%str(e),WorkerStatus.ERROR)
+      self.setInfo('main','handler stopped with: %s'%str(e),WorkerStatus.ERROR)
       AVNLog.error("handler run stopped with exception %s",traceback.format_exc())
     self.usedResources=[]
     self.currentThread=None
@@ -913,7 +992,7 @@ class AVNWorker(object):
     @type navdata: AVNStore
     """
     self.navdata=navdata #type: AVNStore
-    self.feeder = self.findFeeder(self.getStringParam('feederName'))
+    self.queue = self.findFeeder()
     try:
       self.checkConfig(self.param)
     except Exception as e:
@@ -944,9 +1023,9 @@ class AVNWorker(object):
     return rt
 
   def writeData(self,data,source=None,addCheckSum=False,sourcePriority=NMEAParser.DEFAULT_SOURCE_PRIORITY):
-    if self.feeder is None:
+    if self.queue is None:
       raise Exception("no feeder in %s"%(self.getName()))
-    self.feeder.addNMEA(data,source,addCheckSum,sourcePriority=sourcePriority)
+    self.queue.addNMEA(data, source, addCheckSum, sourcePriority=sourcePriority)
 
   def getUsedResources(self,type=None):
     '''

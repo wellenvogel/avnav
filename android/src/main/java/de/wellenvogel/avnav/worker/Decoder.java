@@ -522,6 +522,10 @@ public class Decoder extends Worker {
                                         heading+=sh.getVariation();
                                         e.data.put("headingTrue",heading);
                                     }catch(Exception h2e){}
+                                    try{
+                                        double mVar=sh.getVariation();
+                                        e.data.put("magVariation",mVar);
+                                    }catch (Exception h3e){}
                                     addAuxiliaryData(s.getSentenceId(),e,posAge);
                                     continue;
                                 }
@@ -531,8 +535,17 @@ public class Decoder extends Worker {
                                     //it could be either RMC or GLL - they have DataStatus or GGA - GpsFixQuality
                                     boolean isValid = false;
                                     if (s instanceof RMCSentence) {
-                                        isValid = ((RMCSentence) s).getStatus() == DataStatus.ACTIVE;
+                                        RMCSentence rmc=(RMCSentence) s;
+                                        isValid = rmc.getStatus() == DataStatus.ACTIVE;
                                         AvnLog.dfs("%s: RMC sentence, valid=%s",getTypeName() ,isValid);
+                                        if (isValid) {
+                                            try {
+                                                double mvar = rmc.getVariation();
+                                                AuxiliaryEntry e = new AuxiliaryEntry(entry.priority);
+                                                e.data.put("magVariation",mvar);
+                                                addAuxiliaryData(s.getSentenceId(),e,posAge);
+                                            }catch(Exception re){}
+                                        }
                                     }
                                     if (s instanceof GLLSentence) {
                                         isValid = ((GLLSentence) s).getStatus() == DataStatus.ACTIVE;

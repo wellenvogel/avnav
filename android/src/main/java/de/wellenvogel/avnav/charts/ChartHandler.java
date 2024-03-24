@@ -307,10 +307,12 @@ public class ChartHandler implements INavRequestHandler {
         String url=AvnUtil.getMandatoryParameter(uri,"url");
         ParcelFileDescriptor fd=getFileFromUri(url, context);
         if (fd == null) return null;
-        return new ExtendedWebResourceResponse(fd.getStatSize(),
+        ExtendedWebResourceResponse rt= new ExtendedWebResourceResponse(fd.getStatSize(),
                 "application/octet-stream",
                 "",
                 new FileInputStream(fd.getFileDescriptor()));
+        rt.userData=fd;
+        return rt;
     }
 
     @Override

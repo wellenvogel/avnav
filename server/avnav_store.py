@@ -201,16 +201,22 @@ class AVNStore(object):
       elif existing.priority > priority:
           AVNLog.debug("ignore ais for %s due to higher prio %d",mmsi,existing.priority)
           return
-      existing.value.update(data) # update existing data with new data
-      if "second" in data: # use timestamp from ais data (usually bound to position)
-          sec=data["second"]
-          if sec is not None and 0<sec<60:
-            delay = (now%60-sec)%60
-            existing.timestamp = now-delay
-          else:
-            existing.timestamp = now
-      elif "lat" in data: # fallback
-        existing.timestamp = now
+      if data.get('type') == '5' or data.get('type') == '24':
+        #add new items to existing entry
+        AVNLog.debug("merging AIS type 5/24 with existing message")
+        for k in self.ais5mergeFields:
+          v = data.get(k)
+          if v is not None:
+            existing.value[k] = v
+      else:
+        AVNLog.debug("merging AIS with existing message")
+        newData=data.copy()
+        for k in self.ais5mergeFields:
+          v = existing.value.get(k)
+          if v is not None:
+            newData[k] = v
+        existing.value=newData
+        existing.timestamp=now
       self.__lastAisSource=source
 
   def addAisItem(self,mmsi,values,source,priority,now=None):

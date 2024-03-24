@@ -14,6 +14,8 @@ import java.util.TimeZone;
 public class ExtendedWebResourceResponse extends WebResourceResponse {
     public static final String HTTP_RESPONSE_DATE_HEADER =
             "EEE, dd MMM yyyy HH:mm:ss zzz";
+
+    public Object userData; //allow to store some user data here to correctly handle the life cycle
     DateFormat httpTimeFormat=null;
     long length;
     private HashMap<String,String> headers=new HashMap<String, String>();

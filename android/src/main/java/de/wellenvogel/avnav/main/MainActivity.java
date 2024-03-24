@@ -6,6 +6,7 @@ import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -14,6 +15,7 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
+import android.database.Cursor;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
@@ -22,29 +24,50 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.preference.PreferenceManager;
+
+import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.Nullable;
+
+import android.provider.DocumentsContract;
+import android.provider.OpenableColumns;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.webkit.DownloadListener;
+import android.webkit.URLUtil;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.EditText;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Method;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 
+import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
 import de.wellenvogel.avnav.appapi.JavaScriptApi;
 import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.appapi.WebServer;
@@ -90,7 +113,198 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
     private boolean checkSettings=true;
     private boolean showsDialog = false;
 
+    View dlProgress=null;
+    TextView dlText=null;
+    private ValueCallback<Uri[]> upload=null;
 
+    private static class Download {
+        public String url;
+        public String fileName;
+        boolean done=false;
+        Uri uri=null;
+        public Download(String url) {
+            this.url = url;
+        }
+        public void start(OutputStream os,Uri uri){
+            this.uri=uri;
+        }
+        public void stop(){}
+        public boolean isRunning(){return false;}
+    }
+    private class DownloadStream extends Download{
+        private Thread thread=null;
+        public DownloadStream(String url){
+            super(url);
+        }
+        private void update(long bytes){
+            MainActivity.this.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    View dl=MainActivity.this.dlProgress;
+                    if (dl == null) return;
+                    if (bytes > 0){
+                        if (dl.getVisibility() != View.VISIBLE){
+                            dl.setVisibility(View.VISIBLE);
+                        }
+                    }
+                    else{
+                        if (dl.getVisibility() == View.VISIBLE){
+                            dl.setVisibility(View.GONE);
+                        }
+                    }
+                    MainActivity.this.dlText.setText(String.format("%dkb: %s", bytes / 1024, fileName));
+                }
+            });
+        }
+
+        InputStream openInput() throws IOException {
+            return null;
+        }
+        void closeInput() throws IOException {}
+        private void toast(String msg){
+            MainActivity.this.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(MainActivity.this,msg,Toast.LENGTH_LONG).show();
+                }
+            });
+        }
+        @Override
+        public void start(OutputStream os,Uri uri){
+            if (done) return;
+            super.start(os,uri);
+            try {
+                try (Cursor c = MainActivity.this.getContentResolver().query(uri, null, null, null, null)) {
+                    int nameIdx = c.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                    c.moveToFirst();
+                    fileName = c.getString(nameIdx);
+                }
+            }catch (Throwable t){}
+            this.thread=new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    Log.i(LOGPRFX,"download started for "+url);
+                    update(0);
+                    try {
+                        InputStream is=openInput();
+                        byte [] buffer=new byte[4*1024*1024];
+                        int rdBytes=0;
+                        long sum=0;
+                        final long UPDIV=2*1024*1024;
+                        long lastUpdate=sum-UPDIV-1;
+                        while ((rdBytes=is.read(buffer)) > 0){
+                            if (done) throw new InterruptedException("user stop");
+                            os.write(buffer,0,rdBytes);
+                            sum+=rdBytes;
+                            if (sum >= (lastUpdate+UPDIV)) {
+                                update(sum);
+                                lastUpdate=sum;
+                            }
+                        }
+                        toast(getString(R.string.download_finished));
+                        os.close();
+                        closeInput();
+                        Log.i(LOGPRFX,"download finished for "+uri);
+                    } catch (Throwable e) {
+                        toast(getString(R.string.download_error)+e);
+                        try{
+                            DocumentsContract.deleteDocument(MainActivity.this.getContentResolver(),uri);
+                            Log.i(LOGPRFX,"deleted download "+uri);
+                        } catch(Throwable t){
+                            Log.e(LOGPRFX,"unable to delete document "+uri);
+                        }
+                    }
+                    update(-1);
+                    done=true;
+                }
+            });
+            this.thread.setDaemon(true);
+            this.thread.start();
+        }
+        @Override
+        public void stop(){
+            try {
+                this.thread.interrupt();
+                this.thread.join(100);
+            } catch (InterruptedException e) {
+                Log.e(LOGPRFX,"unable to stop download "+url);
+            }
+            done=true;
+        }
+
+        @Override
+        public boolean isRunning() {
+            if (thread == null) return false;
+            return thread.isAlive();
+        }
+    };
+
+    private class DownloadHttp extends DownloadStream{
+        HttpURLConnection urlConnection=null;
+        public DownloadHttp(String url) {
+            super(url);
+        }
+        @Override
+        InputStream openInput() throws IOException {
+            URL dlurl=new URL(this.url);
+            urlConnection = (HttpURLConnection) dlurl.openConnection();
+            return new BufferedInputStream(urlConnection.getInputStream());
+        }
+
+        @Override
+        void closeInput() throws IOException {
+            super.closeInput();
+            urlConnection.disconnect();
+        }
+    }
+    private class DownloadInternal extends DownloadStream{
+        ExtendedWebResourceResponse response;
+        public DownloadInternal(String url, ExtendedWebResourceResponse r) {
+            super(url);
+            response=r;
+        }
+
+        @Override
+        InputStream openInput() throws IOException {
+            return response.getData();
+        }
+
+        @Override
+        void closeInput() throws IOException {
+            response.getData().close();
+        }
+    }
+    private class DataDownload extends Download{
+        public DataDownload(String url) {
+            super(url);
+        }
+
+        @Override
+        public void start(OutputStream os,Uri ruri) {
+            if (done) return;
+            super.start(os,ruri);
+            try {
+                Uri uri=Uri.parse(url);
+                String data=uri.getSchemeSpecificPart();
+                String [] parts=data.split(",",2);
+                if (parts.length < 2) throw new IOException("invalid data url");
+                String [] hparts=parts[0].split(";");
+                byte [] res=null;
+                if (hparts.length >1){
+                    if (hparts[1].equalsIgnoreCase("base64")){
+                        res=Base64.decode(parts[1],Base64.DEFAULT);
+                    }
+                }
+                if (res == null) res=parts[1].getBytes(StandardCharsets.UTF_8);
+                os.write(res);
+                os.close();
+            } catch (IOException e) {
+                Log.e(LOGPRFX,"unable to close dl stream "+url);
+            }
+            done=true;
+        }
+    }
+    private Download download=null;
     private static class AttachedDevice{
         String type;
         JSONObject parameters;
@@ -131,6 +345,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                 if (resultCode != Constants.RESULT_NO_RESTART) {
                     serviceNeedsRestart = true;
                 }
+                sendEventToJs(Constants.JS_PROPERTY_CHANGE, 0); //this will some pages cause to reload...
                 break;
             case Constants.FILE_OPEN:
                 if (resultCode != RESULT_OK) {
@@ -140,6 +355,35 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                     Uri returnUri = data.getData();
                     if (jsInterface != null) jsInterface.saveFile(returnUri);
                 }
+                break;
+            case Constants.FILE_OPEN_UPLOAD:
+                if (upload == null) return;
+                if (resultCode != RESULT_OK) {
+                    upload.onReceiveValue(null);
+                    upload=null;
+                    return;
+                } else {
+                    Uri returnUri = data.getData();
+                    upload.onReceiveValue(new Uri[]{returnUri});
+                    upload=null;
+                }
+                break;
+            case Constants.FILE_OPEN_DOWNLOAD:
+                if (download == null) return;
+                if (resultCode != RESULT_OK) {
+                    download=null;
+                    return;
+                } else {
+                    Uri returnUri = data.getData();
+                    try {
+                        OutputStream os=getContentResolver().openOutputStream(returnUri);
+                        download.start(os,returnUri);
+                    } catch (FileNotFoundException e) {
+                        Toast.makeText(this,"unable to open "+returnUri,Toast.LENGTH_SHORT).show();
+                        download=null;
+                    }
+                }
+                break;
             default:
                 AvnLog.e("unknown activity result " + requestCode);
         }
@@ -416,7 +660,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 if (url != null && (url.startsWith("http://")||url.startsWith("https://") )) {
-                    if (url.startsWith("http://assets")){
+                    if (url.startsWith(RequestHandler.INTERNAL_URL_PREFIX)){
                         return false;
                     }
                     view.getContext().startActivity(
@@ -437,6 +681,83 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                         + sourceID);
             }
 
+            @Override
+            public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
+                if (upload != null){
+                    return false;
+                }
+                upload=filePathCallback;
+                Intent i = null;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    i=fileChooserParams.createIntent();
+                }
+                else {
+                    i = new Intent(Intent.ACTION_GET_CONTENT);
+                    i.addCategory(Intent.CATEGORY_OPENABLE);
+                    i.setType("*/*");
+                }
+                MainActivity.this.startActivityForResult(
+                        Intent.createChooser(i, getString(R.string.file_upload)),
+                        Constants.FILE_OPEN_UPLOAD);
+                return true;
+            }
+        });
+        webView.setDownloadListener(new DownloadListener() {
+            @Override
+            public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimeType, long l) {
+                Log.i(LOGPRFX, "download request for "+url);
+                if (download != null && download.isRunning()) return;
+                Download nextDownload=null;
+                String fileName="";
+                boolean isData=false;
+                try {
+                    if (url.startsWith(RequestHandler.INTERNAL_URL_PREFIX)){
+                        if (handler == null){
+                            throw new Exception("no handler");
+                        }
+                        ExtendedWebResourceResponse r=handler.handleRequest(null,url,"get");
+                        //TODO: separate dl handler
+                        if (r == null){
+                            throw new Exception("cannot handle "+url);
+                        }
+                        nextDownload=new DownloadInternal(url,r);
+                        String cd=r.getHeaders().get("Content-Disposition");
+                        if (cd != null && ! cd.isEmpty()) contentDisposition=cd;
+                    }
+                    else {
+                        Uri uri = Uri.parse(url);
+                        isData = uri.getScheme().equalsIgnoreCase("data");
+                    }
+                    String[] contentSplit = contentDisposition.split("filename=");
+                    if (contentSplit.length > 1) {
+                        fileName = contentSplit[1].replace("filename=", "").replace("\"", "");
+                    } else {
+                        if (isData) {
+                            fileName = "data.bin";
+                        } else {
+                            fileName = URLUtil.guessFileName(url, contentDisposition, mimeType);
+                        }
+                    }
+                    if (nextDownload == null) {
+                        if (isData) {
+                            nextDownload = new DataDownload(url);
+                        } else {
+                            nextDownload = new DownloadHttp(url);
+                        }
+                    }
+                    nextDownload.fileName=fileName;
+                    download=nextDownload;
+                    Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                    intent.addCategory(Intent.CATEGORY_OPENABLE);
+                    intent.setType(mimeType);
+                    intent.putExtra(Intent.EXTRA_TITLE, fileName);
+                    startActivityForResult(intent,Constants.FILE_OPEN_DOWNLOAD);
+                }catch (Throwable t){
+                    Toast.makeText(MainActivity.this,"download error:"+t,Toast.LENGTH_LONG).show();
+                }
+
+
+            }
         });
         webView.getSettings().setDomStorageEnabled(true);
         webView.getSettings().setDatabaseEnabled(true);
@@ -492,6 +813,11 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         if (running) return;
         showsDialog=false;
         setContentView(R.layout.main);
+        dlProgress=findViewById(R.id.dlIndicator);
+        dlProgress.setOnClickListener(view -> {
+            if (download != null) download.stop();
+        });
+        dlText=findViewById(R.id.dlInfo);
         sharedPrefs=getSharedPreferences(Constants.PREFNAME, Context.MODE_PRIVATE);
         PreferenceManager.setDefaultValues(this,Constants.PREFNAME,Context.MODE_PRIVATE, R.xml.sound_preferences, false);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -691,8 +1017,6 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         }
         if (webView == null) {
             initializeWebView();
-        } else {
-            sendEventToJs(Constants.JS_PROPERTY_CHANGE, 0); //this will some pages cause to reload...
         }
     }
 

@@ -34,6 +34,9 @@ export const Input=(props)=>{
     if (size !== undefined && props.maxSize){
         if (size > props.maxSize) size=props.maxSize;
     }
+    if (props.checkFunction){
+        if (! props.checkFunction(props.value)) className+=" error";
+    }
     return <div className={className} >
         <span className="inputLabel">{props.label}</span>
         <input size={size} type={props.type||"text"} value={props.value} onChange={
@@ -46,7 +49,8 @@ export const Input=(props)=>{
 Input.propTypes=assign({},DEFAULT_TYPES,{
     type: PropTypes.string, //the type of the input element, default: text
     minSize: PropTypes.number,
-    maxSize: PropTypes.number
+    maxSize: PropTypes.number,
+    checkFunction: PropTypes.func
 });
 
 export const Checkbox=(props)=>{

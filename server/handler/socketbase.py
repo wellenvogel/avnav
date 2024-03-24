@@ -29,22 +29,23 @@ import re
 
 from avnav_nmea import *
 from avnav_worker import *
+from avnav_util import MovingSum
 
   
 
 #a base class for socket readers and writers
+from avnqueue import AVNQueue, Fetcher
+
 
 class SocketReader(object):
   P_STRIP_LEADING = WorkerParameter('stripLeading', False, type=WorkerParameter.T_BOOLEAN,
                                 description="strip anything before $ or ! in received lines")
   START_PATTERN=re.compile('[$!]')
-  def __init__(self,socket,writeData,queue,setInfo,shouldStop=None,sourcePriority=NMEAParser.DEFAULT_SOURCE_PRIORITY,stripLeading=False):
-    self.feeder=None
-    self.writeData=writeData
-    self.feeder=queue
+  def __init__(self,socket,queue:AVNQueue,setInfo:InfoHandler,shouldStop=None,sourcePriority=NMEAParser.DEFAULT_SOURCE_PRIORITY,stripLeading=False):
+    self.queue=queue
     self.socket=socket
     self.stopFlag=False
-    self.setInfo=setInfo
+    self.infoHandler=TrackingInfoHandler(setInfo)
     self.shouldStop=shouldStop if shouldStop is not None else self.shouldStopInternal
     self.sourcePriority=sourcePriority
     self.stripLeading=stripLeading
@@ -70,7 +71,14 @@ class SocketReader(object):
       return line
     return line[match.span()[0]:]
 
-  def readSocket(self,infoName,sourceName,filter=None,timeout=None):
+  def readSocket(self,sourceName,filter=None,timeout=None,minTime=None):
+    INAME='reader'
+    nmeaSum=MovingSum()
+    def nmeaInfo(peer):
+      if nmeaSum.shouldUpdate():
+        self.infoHandler.setInfo(INAME,
+                     "%d/s"%(nmeaSum.avg()),
+                     WorkerStatus.NMEA if nmeaSum.val()>0 else WorkerStatus.RUNNING)
     sock=self.socket
     filterA = None
     if filter:
@@ -83,13 +91,13 @@ class SocketReader(object):
     except:
       pass
     AVNLog.info("%s established, start reading",peer)
-    self.setInfo(infoName, "receiving %s"%(peer,), WorkerStatus.RUNNING)
+    self.infoHandler.setInfo(INAME, "receiving %s"%(peer,), WorkerStatus.RUNNING)
     buffer=""
-    hasNMEA=False
     try:
       sock.settimeout(1)
       lastReceived=time.time()
       while sock.fileno() >= 0 and not self.shouldStop():
+        nmeaSum.add(0)
         try:
           data = sock.recv(1024)
           lastReceived=time.time()
@@ -101,6 +109,7 @@ class SocketReader(object):
               continue
             if now > (lastReceived + timeout):
               raise Exception("no data received within timeout of %s seconds"%str(timeout))
+          nmeaInfo(peer)
           continue
         if len(data) == 0:
           AVNLog.info("connection lost")
@@ -115,10 +124,10 @@ class SocketReader(object):
             if pattern.match(l):
               if not NMEAParser.checkFilter(l, filterA):
                 continue
-              self.writeData(l,source=sourceName,sourcePriority=self.sourcePriority)
-              if not hasNMEA:
-                self.setInfo(infoName, "NMEA %s"%(peer,), WorkerStatus.NMEA)
-                hasNMEA=True
+              nmeaSum.add(1)
+              self.queue.addNMEA(l,source=sourceName,sourcePriority=self.sourcePriority)
+              if minTime is not None:
+                time.sleep(minTime/1000)
             else:
               AVNLog.debug("ignoring unknown data %s",l)
           buffer=''
@@ -127,10 +136,8 @@ class SocketReader(object):
             line=lines[i].translate(NMEAParser.STRIPCHARS)
             line=self._removeLeading(line)
             if pattern.match(line):
-              self.writeData(line,source=sourceName,sourcePriority=self.sourcePriority)
-              if not hasNMEA:
-                self.setInfo(infoName, "NMEA %s"%peer, WorkerStatus.NMEA)
-                hasNMEA=True
+              nmeaSum.add(1)
+              self.queue.addNMEA(line,source=sourceName,sourcePriority=self.sourcePriority)
             else:
               AVNLog.debug("ignoring unknown data %s",lines[i])
           if len(lines) > 0:
@@ -138,6 +145,7 @@ class SocketReader(object):
         if len(buffer) > 4096:
           AVNLog.debug("no line feed in long data, stopping")
           break
+        nmeaInfo(peer)
       sock.shutdown(socket.SHUT_RDWR)
       sock.close()
     except Exception as e:
@@ -148,9 +156,9 @@ class SocketReader(object):
     except:
       pass
     AVNLog.info("disconnected from socket %s",peer)
-    self.setInfo(infoName, "socket to %s disconnected"%(peer), WorkerStatus.ERROR)
+    self.infoHandler.deleteInfo(INAME)
 
-  def writeSocket(self,infoName,filterstr,version,blacklist):
+  def writeSocket(self,filterstr,version,blacklist):
     '''
     write method
     there is no stop handling so the socket must be closed from another thread
@@ -160,23 +168,22 @@ class SocketReader(object):
     :param blacklist:
     :return:
     '''
-    filter = None
-    if filterstr != "":
-      filter = filterstr.split(',')
-    self.setInfo(infoName, "sending data", WorkerStatus.RUNNING)
+    fetcher=Fetcher(self.queue,self.infoHandler,
+                    nmeaFilter=filterstr,
+                    blackList=blacklist,
+                    errorKey="werr",
+                    sumKey='writer')
     try:
-      seq = 0
+      fetcher.report()
       self.socket.sendall(("avnav_server %s\r\n" % (version)).encode('utf-8'))
       while self.socket.fileno() >= 0:
         hasSend = False
-        seq, data = self.feeder.fetchFromHistory(seq, 10, nmeafilter=filter, includeSource=True)
+        data = fetcher.fetch()
+        fetcher.report()
         if len(data) > 0:
           for line in data:
-            if line.source in blacklist:
-              AVNLog.debug("ignore %s:%s due to blacklist", line.source, line.data)
-            else:
-              self.socket.sendall(line.data.encode('ascii', errors='ignore'))
-              hasSend = True
+            self.socket.sendall(line.encode('ascii', errors='ignore'))
+            hasSend = True
         if not hasSend:
           # just throw an exception if the reader potentially closed the socket
           self.socket.getpeername()

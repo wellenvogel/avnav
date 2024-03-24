@@ -186,6 +186,9 @@ class ViewPageBase extends React.Component{
         if (this.html) {
             return;
         }
+        if (this.url && this.props.options.useIframe){
+            return;
+        }
         Requests.getHtmlOrText(this.getUrl(true),{noCache:true}).then((text)=>{
             if (! this.state.readOnly || this.canChangeMode()) {
                 let language = self.getLanguage();

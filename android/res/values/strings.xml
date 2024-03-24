@@ -123,5 +123,8 @@
     <string name="notGranted">not granted</string>
     <string name="permissionNotification">Notification permissions</string>
     <string name="priority_for_this_source">priority for this source</string>
+    <string name="file_upload">Select Browser</string>
+    <string name="download_finished">"download finished"</string>
+    <string name="download_error">"download error: "</string>
 
 </resources>

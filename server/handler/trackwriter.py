@@ -66,16 +66,20 @@ class TrackPoint:
 
 #a writer for our track
 class AVNTrackWriter(AVNDirectoryHandlerBase):
+  P_CLEANUP=WorkerParameter('cleanup',25,type=WorkerParameter.T_FLOAT,
+                            description='cleanup in hours')
+  P_INTERVAL=WorkerParameter('interval',10,type=WorkerParameter.T_FLOAT,
+                             description='time between trackpoints in s')
+  P_TRACKDIR=WorkerParameter('trackdir',"",editable=False,description='defaults to datadir/tracks')
+  P_MINDIST=WorkerParameter('mindistance',25,type=WorkerParameter.T_FLOAT,
+                            description='only write if we at least moved this distance in m')
+  P_WRITEF=WorkerParameter('writeFile',True,type=WorkerParameter.T_BOOLEAN,
+                           description="write to track file (otherwise memory only)")
   def __init__(self,param):
     super(AVNTrackWriter,self).__init__(param,'track')
     self.track=[]
-    #param checks
-    throw=True
-    self.getIntParam('cleanup', throw)
-    self.getFloatParam('mindistance', throw)
-    self.getFloatParam('interval', throw)
     self.tracklock=threading.Lock()
-    self.baseDir=AVNHandlerManager.getDirWithDefault(self.param, "trackdir", 'tracks')
+    self.baseDir=AVNHandlerManager.getDirWithDefault(self.param, self.P_TRACKDIR.name, 'tracks')
     self.fname=None
     self.loopCount=0
     self.currentFile=None
@@ -83,23 +87,17 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
     self.lastlon=None
     self.lastlat=None
     self.startSequence=0
-  @classmethod
-  def getConfigName(cls):
-    return "AVNTrackWriter"
+
   @classmethod
   def getConfigParam(cls, child=None):
     if child is not None:
       return None
     return [
-            WorkerParameter('interval',10,type=WorkerParameter.T_FLOAT,
-                            description='time between trackpoints in s'),
-            WorkerParameter('trackdir',"",editable=False,description='defaults to datadir/tracks'),
-            WorkerParameter('mindistance',25,type=WorkerParameter.T_FLOAT,
-                            description='only write if we at least moved this distance in m'),
-            WorkerParameter('cleanup',25,type=WorkerParameter.T_FLOAT,
-                          description='cleanup in hours'),
-            WorkerParameter('writeFile',True,type=WorkerParameter.T_BOOLEAN,
-                            description="write to track file (otherwise memory only)")
+            cls.P_INTERVAL,
+            cls.P_TRACKDIR,
+            cls.P_MINDIST,
+            cls.P_CLEANUP,
+            cls.P_WRITEF
     ]
 
   @classmethod
@@ -123,7 +121,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
     return fstr
   def cleanupTrack(self):
     numremoved=0
-    cleanupTime=datetime.datetime.utcnow()-datetime.timedelta(hours=self.getIntParam('cleanup'))
+    cleanupTime=datetime.datetime.utcnow()-datetime.timedelta(hours=self.getWParam(self.P_CLEANUP))
     self.tracklock.acquire()
     while len(self.track) > 0:
       if self.track[0].ts<=cleanupTime:
@@ -283,11 +281,11 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
     theConverter.start()
     AVNLog.info("started with dir=%s,interval=%d, distance=%d",
                 self.baseDir,
-                self.getFloatParam("interval"),
-                self.getFloatParam("mindistance"))
+                self.getWParam(self.P_INTERVAL),
+                self.getWParam(self.P_MINDIST))
 
   def getSleepTime(self):
-    return self.getFloatParam("interval")
+    return self.getWParam(self.P_INTERVAL)
 
   def stop(self):
     super().stop()
@@ -304,7 +302,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
       curfname = self.createFileName(currentTime)
       newFile=False
       realfilename=None
-      writeFile=self.getBoolParam('writeFile')
+      writeFile=self.getWParam(self.P_WRITEF)
       if not writeFile and self.currentFile is not None:
         self.currentFile.close()
         self.currentFile=None
@@ -349,7 +347,7 @@ class AVNTrackWriter(AVNDirectoryHandlerBase):
           self.lastlon = lon
         else:
           dist = AVNUtil.distance((self.lastlat, self.lastlon), (lat, lon)) * AVNUtil.NM
-          if dist >= self.getFloatParam('mindistance'):
+          if dist >= self.getWParam(self.P_MINDIST):
             tp.distance = dist
             AVNLog.ld("write track entry", gpsdata)
             if self.currentFile is not None:

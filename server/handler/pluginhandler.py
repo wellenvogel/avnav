@@ -460,18 +460,6 @@ class AVNPluginHandler(AVNWorker):
   def autoInstantiate(cls):
     return True
 
-  def startInstance(self, navdata):
-    """
-    we overwrite start to allow for an error stop
-    if the feeder is misconfigured
-    @return:
-    """
-    feeder=self.findFeeder(self.getStringParam('feederName'))
-    if feeder is None:
-      raise Exception("%s: cannot find a suitable feeder (name %s)",self.getName(),self.getStringParam('feederName') or "")
-    self.queue=feeder
-    super().startInstance(navdata)
-
   def isHidden(self,name):
     ev=os.getenv(ENV_PREFIX+normalizedName(name))
     if ev == '1':
