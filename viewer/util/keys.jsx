@@ -338,8 +338,8 @@ let keys={
         aisQueryTimeout: new Property(5000, "AIS (ms)", PropertyType.RANGE, [1000, 10000, 10]), //ms
         aisDistance: new Property(20, "Range(nm)", PropertyType.RANGE, [1, 1000]), //distance for AIS query in nm
         aisUseCourseVector: new Property(true, "use Course Vector", PropertyType.CHECKBOX),
-        aisUseRelMotionVector: new Property(false, "relative motion vectors", PropertyType.CHECKBOX),
-        aisUseTurnIndicator: new Property(false, "turn indicator", PropertyType.CHECKBOX),
+        aisCurvedVectors: new Property(true, "curved vectors", PropertyType.CHECKBOX),
+        aisRelativeMotionVectorRange: new Property(0, "relative motion vector range (nm)", PropertyType.RANGE, [0, 100]),
         aisShowEstimated: new Property(false,"show estimated position", PropertyType.CHECKBOX),
         aisEstimatedOpacity: new Property(0.4,"estimated image opacity",PropertyType.RANGE,[0.1,1,0.05]),
         aisUseHeading: new Property(true,"use heading for direction",PropertyType.CHECKBOX),

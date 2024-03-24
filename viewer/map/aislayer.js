@@ -428,20 +428,27 @@ const amul=(arr,fact)=>{
 AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunction,drawEstimated){
     let courseVectorTime=globalStore.getData(keys.properties.navBoatCourseTime,0);
     let useCourseVector=globalStore.getData(keys.properties.aisUseCourseVector,false);
-    let drawRelMotionVector=globalStore.getData(keys.properties.aisUseRelMotionVector,false);
-    let drawTurnIndicator=globalStore.getData(keys.properties.aisUseTurnIndicator,false);
+    let curved=globalStore.getData(keys.properties.aisCurvedVectors,false);
+    let rmvRange=globalStore.getData(keys.properties.aisRelativeMotionVectorRange,0);
     let courseVectorWidth=globalStore.getData(keys.properties.navCircleWidth);
     let scale=globalStore.getData(keys.properties.aisIconScale,1);
     let classbShrink=globalStore.getData(keys.properties.aisClassbShrink,1);
     let useHeading=globalStore.getData(keys.properties.aisUseHeading,true);
     let lostTime=globalStore.getData(keys.properties.aisLostTime,0);
+    let minDRspeed=globalStore.getData(keys.properties.aisMinDisplaySpeed,0);
     // own ship
+    let lat=globalStore.getData(keys.nav.gps.lat,0);
+    let lon=globalStore.getData(keys.nav.gps.lon,0);
     let cog=globalStore.getData(keys.nav.gps.course,0);
     let sog=globalStore.getData(keys.nav.gps.speed,0);
     // ais target
     let target_cog=target.course||0;
     let target_sog=target.speed||0;
     let target_hdg=(useHeading && target.heading!==undefined?target.heading:target.course)||0;
+    let target_rot_sgn=Math.sign(target.turn||0);
+    let target_rot=Math.abs(target.turn||0); // °/min
+    curved = curved && isFinite(target_rot) && target_rot>0.5;
+
     let symbol=this.getStyleEntry(target);
     let style=cloneDeep(symbol.style);
     if (! symbol.image || ! style.size) return;
@@ -474,42 +481,65 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
         style.rotateWithView=true;
     }
     if(!hidden){
-        if (drawRelMotionVector && style.courseVector !== false && drawEstimated!==undefined) {
-            // relative motion vector
-            if (target_sog || sog) {
-                let drm,srm; // direction and speed of relative motion
-                [drm,srm]=Helper.addPolar([target_cog,target_sog],[cog,-sog]);
-                if (srm) {
-                    let other=drawTargetFunction(xy,drm,srm*courseVectorTime);
-                    drawing.drawLineToContext([xy,other],{color:style.courseVectorColor,width:courseVectorWidth,dashed:true});
+        let onMap=drawEstimated!==undefined; // true when drawing on map, false in ais info
+
+        var drawArc=function(origin,center,radius,start,angle,style,shift_dir=0,shift_dst=0){
+            // pass origin to mitigate error due to projection for large radii
+            let segments=Math.max(3,Math.ceil(Math.abs(angle)/5));
+            let da=angle/segments, dd=shift_dst/segments;
+            let points=[];
+            for(let i=0; i<=segments; i++){
+                let p=i==0?origin:drawTargetFunction(center,start+i*da,radius);
+                if (shift_dst) p=drawTargetFunction(p,shift_dir,i*dd);
+                points.push(p);
+            }
+            drawing.drawLineToContext(points,style);
+        };
+
+        if (curved) {
+            var turn_radius=target_sog/Helper.radians(target_rot)*60; // m, SOG=[m/s]
+            var turn_center=drawTargetFunction(xy,target_cog+target_rot_sgn*90,turn_radius);
+            var turn_angle=Helper.degrees(target_sog*courseVectorTime/turn_radius);
+        }
+
+        if (rmvRange>0 && onMap && style.courseVector !== false) { // relative motion vector
+            let distance=NavCompute.computeDistance({lat:lat,lon:lon},{lat:target.lat,lon:target.lon}).dts/1852;
+            if (distance<=rmvRange && (target_sog || sog)) {
+                if (curved) {
+                    drawArc(xy,turn_center,turn_radius,target_cog-target_rot_sgn*90,target_rot_sgn*turn_angle,
+                            {color:style.courseVectorColor,width:courseVectorWidth,dashed:true},
+                            cog,-sog*courseVectorTime);
+                } else {
+                    let p=drawTargetFunction(xy,target_cog,target_sog*courseVectorTime);
+                    p=drawTargetFunction(p,cog,-sog*courseVectorTime);
+                    drawing.drawLineToContext([xy,p],{color:style.courseVectorColor,width:courseVectorWidth,dashed:true});
                 }
             }
         }
+
         if (useCourseVector && style.courseVector !== false) {
-            // true motion vector
-            if (target_sog) {
-                let other=drawTargetFunction(xy,target_cog,target_sog*courseVectorTime);
-                drawing.drawLineToContext([xy,other],{color:style.courseVectorColor,width:courseVectorWidth});
-                // turn indicator
-                if(drawTurnIndicator && target.turn && drawEstimated!==undefined) {
-                    let sgn=Math.sign(target.turn);
-                    let rot=Math.abs(target.turn);
-                    if(rot && isFinite(rot)){
-                        let w=drawTargetFunction(other,target_cog+sgn*90,rot/300*target_sog*courseVectorTime);
-                        drawing.drawLineToContext([other,w],{color:"black",width:courseVectorWidth});
-                    }
+            if (target_sog) { // true motion vector
+                if(curved && onMap) { // curved TMV
+                    //drawing.drawLineToContext([xy,drawTargetFunction(xy,target_cog+target_rot_sgn*90,100)],{color:"black",width:courseVectorWidth});
+                    drawArc(xy,turn_center,turn_radius,target_cog-target_rot_sgn*90,target_rot_sgn*turn_angle,
+                            {color:style.courseVectorColor,width:courseVectorWidth});
+                } else {
+                    let p=drawTargetFunction(xy,target_cog,target_sog*courseVectorTime);
+                    drawing.drawLineToContext([xy,p],{color:style.courseVectorColor,width:courseVectorWidth});
                 }
             }
         }
-        if (drawEstimated && symbol.ghostImage){
-            if (target_sog >= globalStore.getData(keys.properties.aisMinDisplaySpeed) && target.age > 0){
-                let age=target.age;
-                if (target.receiveTime < now){
-                    age+=(now-target.receiveTime)/1000;
-                }
-                let ghostPos=drawTargetFunction(xy,target_cog,target_sog*age);
-                drawing.drawImageToContext(ghostPos,symbol.ghostImage,style);
+
+        if (drawEstimated && symbol.ghostImage && target_sog >= minDRspeed){ // DR position of target
+            let age=target.age+Math.max(0,(now-target.receiveTime)/1000);
+            if (curved) {
+                let a=Helper.degrees(target_sog*age/turn_radius);
+                var pos=drawTargetFunction(turn_center,target_cog-target_rot_sgn*(90-a),turn_radius);
+                //if (style.rotateWithView) { style.rotation+=Helper.radians(target_rot_sgn*a); } // TODO rotate DR icon only
+            } else {
+                var pos=drawTargetFunction(xy,target_cog,target_sog*age);
             }
+            drawing.drawImageToContext(pos,symbol.ghostImage,style);
         }
     }
     let curpix=drawing.drawImageToContext(xy,symbol.image,style);
