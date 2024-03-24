@@ -29,7 +29,7 @@ public class NmeaLogger extends Worker {
         this.trackdir=trackdir;
         this.queue=queue;
         this.updater=updater;
-        parameterDescriptions.addParams(Worker.ENABLED_PARAMETER,Worker.FILTER_PARAM);
+        parameterDescriptions.addParams(Worker.ENABLED_PARAMETER,Worker.FILTER_PARAM,QUEUE_AGE_PARAMETER);
         status.canEdit=true;
     }
 
@@ -51,10 +51,11 @@ public class NmeaLogger extends Worker {
         String[] nmeaFilter = AvnUtil.splitNmeaFilter(FILTER_PARAM.fromJson(parameters));
         int numRecords=0;
         setStatus(WorkerStatus.Status.NMEA,"running");
+        long queueAge=QUEUE_AGE_PARAMETER.fromJson(parameters);
         while (!shouldStop(startSequence)) {
             NmeaQueue.Entry entry = null;
             try {
-                entry = queue.fetch(sequence, 2000);
+                entry = queue.fetch(sequence, 200,queueAge);
             } catch (InterruptedException e) {
                 continue;
             }

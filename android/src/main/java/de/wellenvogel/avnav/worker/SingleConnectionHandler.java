@@ -30,7 +30,8 @@ public abstract class SingleConnectionHandler extends ChannelWorker {
                 SEND_FILTER_PARAM.cloneCondition(new AvnUtil.KeyValue<Boolean>(SEND_DATA_PARAMETER.name,true)),
                 READ_TIMEOUT_PARAMETER,
                 BLACKLIST_PARAMETER.cloneCondition(new AvnUtil.KeyValue<Boolean>(SEND_DATA_PARAMETER.name,true)),
-                STRIP_LEADING_PARAMETER
+                STRIP_LEADING_PARAMETER,
+                QUEUE_AGE_PARAMETER
         );
         gpsService =ctx;
         this.queue=queue;
@@ -73,7 +74,7 @@ public abstract class SingleConnectionHandler extends ChannelWorker {
                 continue;
             }
             AvnLog.d(LOGPRFX, name + ": connected to " + connection.getId());
-            handler=new ConnectionReaderWriter(connection,getSourceName(),getPriority(null),queue);
+            handler=new ConnectionReaderWriter(connection,getSourceName(),getPriority(null),queue,QUEUE_AGE_PARAMETER.fromJson(parameters));
             try {
                 handler.run();
             }catch (Throwable t){

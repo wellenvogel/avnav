@@ -126,5 +126,6 @@
     <string name="file_upload">Select Browser</string>
     <string name="download_finished">"download finished"</string>
     <string name="download_error">"download error: "</string>
+    <string name="nmeaAge">max age of NMEA data in the queue before it get\'s dropped (in ms)</string>
 
 </resources>

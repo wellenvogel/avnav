@@ -99,8 +99,8 @@ public class SocketWriter extends ChannelWorker {
         ConnectionReaderWriter handler;
         Thread thread;
         ClientConnection connection;
-        Client(ClientConnection connection){
-            handler=new ConnectionReaderWriter(connection,getSourceName(),getPriority(null),queue);
+        Client(ClientConnection connection) throws JSONException {
+            handler=new ConnectionReaderWriter(connection,getSourceName(),getPriority(null),queue,QUEUE_AGE_PARAMETER.fromJson(parameters));
             this.connection=connection;
             this.thread=new Thread(new Runnable() {
                 @Override

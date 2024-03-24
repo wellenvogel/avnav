@@ -45,13 +45,15 @@ public class ConnectionReaderWriter{
     WriterRunnable writer;
     Thread writerThread;
     long lastReceived=0;
+    long queueAge=3000;
 
-    public ConnectionReaderWriter(AbstractConnection connection, String name, int priority, NmeaQueue queue) {
+    public ConnectionReaderWriter(AbstractConnection connection, String name, int priority, NmeaQueue queue,long queueAge) {
         this.connection = connection;
         this.properties = connection.properties;
         this.name = name;
         this.queue = queue;
         this.priority=priority;
+        this.queueAge=queueAge;
     }
 
     class WriterRunnable implements Runnable {
@@ -61,7 +63,7 @@ public class ConnectionReaderWriter{
                 OutputStream os = connection.getOutputStream();
                 int sequence = -1;
                 while (!stopped) {
-                    NmeaQueue.Entry e = queue.fetch(sequence, 1000);
+                    NmeaQueue.Entry e = queue.fetch(sequence, 200,queueAge);
                     if (e != null) {
                         if (sequence != -1 && e.sequence != (sequence+1)){
                             AvnLog.d(name,"queue data loss");

@@ -65,6 +65,10 @@ public abstract class Worker implements IWorker {
             new EditableParameter.BooleanParameter("stripLeading",R.string.labelSettingsStripLeading,false);
     public static EditableParameter.IntegerParameter SOURCE_PRIORITY_PARAMETER = 
             new EditableParameter.IntegerParameter("priority",R.string.priority_for_this_source,50);
+
+    public static EditableParameter.IntegerParameter QUEUE_AGE_PARAMETER =
+            new EditableParameter.IntegerParameter("qeueAge",R.string.nmeaAge,3000);
+
     static final String CLAIM_BLUETOOTH ="bluetooth device";
     static final String CLAIM_USB ="usb device";
     protected static final String CLAIM_TCPPORT = "tcp port";

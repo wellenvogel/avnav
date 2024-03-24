@@ -41,7 +41,8 @@ public class UdpWriter extends ChannelWorker {
                 ENABLED_PARAMETER,
                 SEND_FILTER_PARAM,
                 BLACKLIST_PARAMETER,
-                BROADCAST_PARAMETER
+                BROADCAST_PARAMETER,
+                QUEUE_AGE_PARAMETER
                 );
         status.canDelete=true;
         status.canEdit=true;
@@ -92,10 +93,11 @@ public class UdpWriter extends ChannelWorker {
         int sequence=-1;
         int numOk=0;
         String[] nmeaFilter=AvnUtil.splitNmeaFilter(SEND_FILTER_PARAM.fromJson(parameters));
+        long queueAge=QUEUE_AGE_PARAMETER.fromJson(parameters);
         while (! shouldStop(startSequence) && channel.isOpen()){
             NmeaQueue.Entry entry;
             try {
-                entry = queue.fetch(sequence, 2000);
+                entry = queue.fetch(sequence, 200,queueAge);
                 if (entry == null) continue;
                 if (! AvnUtil.matchesNmeaFilter(entry.data,nmeaFilter)){
                     AvnLog.dfs("udpwriter: skipping record %s due to filter",

@@ -52,6 +52,7 @@ import de.wellenvogel.avnav.aislib.packet.AisPacketParser;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
+import de.wellenvogel.avnav.util.MovingSum;
 import de.wellenvogel.avnav.util.NmeaQueue;
 
 /**
@@ -68,7 +69,6 @@ public class Decoder extends Worker {
     public static final String LOGPRFX="AvNav:Decoder";
     private NmeaQueue queue;
     private static final long AIS_CLEANUP_INTERVAL=60000;
-    private long lastReceived=0;
     private String lastPositionSource="";
     private String lastAisSource="";
 
@@ -80,10 +80,10 @@ public class Decoder extends Worker {
             EditableParameter.IntegerParameter("aisAge", R.string.labelSettingsAisLifetime,1200);
     public static final EditableParameter.StringParameter OWN_MMSI= new
             EditableParameter.StringParameter("ownMMSI",R.string.labelSettingsOwnMMSI,"");
-    private boolean gpsEnabled=false;
     private SatStatus satStatus=null;
+    private MovingSum sCounter=new MovingSum(10);
     private void addParameters(){
-        parameterDescriptions.addParams(OWN_MMSI,POSITION_AGE, NMEA_AGE,AIS_AGE,READ_TIMEOUT_PARAMETER);
+        parameterDescriptions.addParams(OWN_MMSI,POSITION_AGE, NMEA_AGE,AIS_AGE,READ_TIMEOUT_PARAMETER, QUEUE_AGE_PARAMETER);
     }
     static class AuxiliaryEntry{
         public long timeout;
@@ -267,6 +267,14 @@ public class Decoder extends Worker {
                 }
             }
         }
+        private void updateStatus(MovingSum sCounter,MovingSum eCounter){
+            if (sCounter.shouldUpdate(200)){
+                eCounter.add(0);
+                boolean hasData=sCounter.val()>0;
+                setStatus(hasData?WorkerStatus.Status.NMEA: WorkerStatus.Status.INACTIVE,
+                            String.format("%s NMEA data rcv=%.2f/s,err=%d/10s",hasData?"receiving":"no",sCounter.avg(),eCounter.val()));
+            }
+        }
         @Override
         public void run(int startSequence) throws JSONException {
             store=new AisStore(OWN_MMSI.fromJson(parameters));
@@ -295,35 +303,39 @@ public class Decoder extends Worker {
             AvnLog.d(LOGPRFX,getTypeName()+":starting decoder");
             long auxAge= NMEA_AGE.fromJson(parameters)*1000;
             long posAge= POSITION_AGE.fromJson(parameters) *1000;
+            long queueAge = QUEUE_AGE_PARAMETER.fromJson(parameters);
+
+            MovingSum eCounter=new MovingSum(10);
             while (!shouldStop(startSequence)) {
                 NmeaQueue.Entry entry;
                 try {
-                    entry = queue.fetch(sequence, 2000);
+                    entry = queue.fetch(sequence, 200,queueAge);
                 } catch (InterruptedException e) {
                     if (shouldStop(startSequence)) return;
-                    if ((lastReceived+ noDataTime) < SystemClock.uptimeMillis()){
-                        gpsEnabled=false;
-                        setStatus(WorkerStatus.Status.INACTIVE,"no NMEA data");
-                    }
+                    updateStatus(sCounter,eCounter);
                     sleep(2000);
                     continue;
                 }
-                if ((lastReceived+ noDataTime) < SystemClock.uptimeMillis()){
-                    gpsEnabled=false;
-                    setStatus(WorkerStatus.Status.INACTIVE,"no NMEA data");
-                }
+                if (shouldStop(startSequence)) return;
+                updateStatus(sCounter,eCounter);
                 if (entry == null) {
                     continue;
                 }
+                if (sequence > 0 && entry.sequence != (sequence+1)){
+                    eCounter.add(entry.sequence-sequence-1);
+                }
+                else{
+                    eCounter.add(0);
+                }
                 sequence = entry.sequence;
                 String line = entry.data;
+                if ((line.startsWith("$") && SentenceValidator.isValid(line)) || line.startsWith("!")){
+                    sCounter.add(1);
+                }
                 try {
                     if (line.startsWith("$")) {
                         //NMEA
                         if (SentenceValidator.isValid(line)) {
-                            setStatus(WorkerStatus.Status.NMEA,"receiving NMEA data");
-                            gpsEnabled=true;
-                            lastReceived=SystemClock.uptimeMillis();
                             try {
                                 line = correctTalker(line);
                                 Sentence s = factory.createParser(line);
@@ -338,7 +350,7 @@ public class Decoder extends Worker {
                                             getTypeName() ,gsv.getSentenceIndex(),
                                             gsv.getSentenceCount(),gsv.getSatelliteCount());
                                     if (currentGsvStore.getValid()) {
-                                        satStatus=new SatStatus(currentGsvStore.getSatCount(),currentGsvStore.getNumUsed(),gpsEnabled);
+                                        satStatus=new SatStatus(currentGsvStore.getSatCount(),currentGsvStore.getNumUsed(),sCounter.val() > 0);
                                         currentGsvStore = new GSVStore(locationPriority);
                                         AvnLog.dfs("%s: GSV sentence last, numSat=%d",getTypeName(),satStatus.numSat);
                                     }
@@ -652,9 +664,6 @@ public class Decoder extends Worker {
                                 if (store.addAisMessage(m,entry.priority)){
                                     lastAisSource=entry.source;
                                 };
-                                lastReceived= SystemClock.uptimeMillis();
-                                gpsEnabled=true;
-                                setStatus(WorkerStatus.Status.NMEA,"receiving NMEA");
                             }
                         } catch (Exception e) {
                             Log.e(LOGPRFX, getTypeName() + ": AIS exception while parsing " + line);
@@ -704,7 +713,7 @@ public class Decoder extends Worker {
 
     SatStatus getSatStatus() {
         SatStatus st=satStatus;
-        if (st == null) st=new SatStatus(0,0,gpsEnabled);
+        if (st == null) st=new SatStatus(0,0, sCounter.val()>0);
         return st;
     }
 
