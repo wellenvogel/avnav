@@ -152,6 +152,7 @@ class AVNSocketWriter(AVNWorker):
                                  self.version,
                                  self.BLACKLIST_PARAM.fromDict(self.param))
     self.removeHandler(addr)
+    tinfo.deleteInfo(infoName)
 
   def clientRead(self,connection,addr,startSequence):
     threading.currentThread().setName("%s-Reader-%s"%(self.getName(),str(addr)))

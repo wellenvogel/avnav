@@ -404,8 +404,9 @@ class SubInfoHandler(InfoHandler):
 
 class AVNWorker(InfoHandler):
   QUEUE_NAME_PARAMETER=WorkerParameter('queueName',default='',type=WorkerParameter.T_STRING,editable=False)
+  NAME_PARAMETER=WorkerParameter('name',default='',type=WorkerParameter.T_STRING)
   DEFAULT_CONFIG_PARAM = [
-    WorkerParameter('name',default='',type=WorkerParameter.T_STRING),
+    NAME_PARAMETER,
     QUEUE_NAME_PARAMETER
   ]
   ENABLE_PARAM_DESCRIPTION=WorkerParameter('enabled',default=True,type=WorkerParameter.T_BOOLEAN)
@@ -673,6 +674,8 @@ class AVNWorker(InfoHandler):
         return 0
       else:
         raise e
+  def getWParam(self,param:WorkerParameter,rangeOrListCheck:bool=False):
+    return param.fromDict(self.param,rangeOrListCheck=rangeOrListCheck)
   def isDisabled(self):
     """is this handler set to disabled?"""
     if not self.canDisable() and not self.canDeleteHandler():
@@ -783,12 +786,12 @@ class AVNWorker(InfoHandler):
     @param defaultSuffix:
     @return: returns either the explicitely set name or the default name appended by the suffix
     '''
-    rt=self.getParamValue('name')
+    rt=self.NAME_PARAMETER.fromDict(self.param)
     if rt is not None and rt != "":
       return rt
     if defaultSuffix is None:
       defaultSuffix="?"
-    return "%s-%s"%(self.getName(),defaultSuffix)
+    return "%s-%s"%(self.getName(),str(defaultSuffix))
 
   def changeConfig(self,name,value):
     if self.param is None:
@@ -963,7 +966,7 @@ class AVNWorker(InfoHandler):
       self.run()
       self.setInfo('main','handler stopped',WorkerStatus.INACTIVE)
     except Exception as e:
-      self.setInfo('main','handler stopped with %s'%str(e),WorkerStatus.ERROR)
+      self.setInfo('main','handler stopped with: %s'%str(e),WorkerStatus.ERROR)
       AVNLog.error("handler run stopped with exception %s",traceback.format_exc())
     self.usedResources=[]
     self.currentThread=None

@@ -41,7 +41,6 @@ from avnav_nmea import *
 from avnav_worker import *
 import avnav_handlerList
 
-bus=None
 
 def getShort(data, index):
   # return two bytes from data as a signed 16-bit value
@@ -63,13 +62,17 @@ def getUChar(data,index):
   result =  data[index] & 0xFF
   return result
 
-def readBME280ID(addr):
+def readBME280ID(bus,addr):
+  if bus is None:
+    return (0,0)
   # Chip ID Register Address
   REG_ID     = 0xD0
   (chip_id, chip_version) = bus.read_i2c_block_data(addr, REG_ID, 2)
   return (chip_id, chip_version)
 
-def readBME280All(addr):
+def readBME280All(bus,addr):
+  if bus is None:
+    return (1,2,3)
   # Register Addresses
   REG_DATA = 0xF7
   REG_CONTROL = 0xF4
@@ -169,12 +172,36 @@ def readBME280All(addr):
 
   return temperature/100.0,pressure/100.0,humidity
 
+class ParamHex(WorkerParameter):
+  def __init__(self, name,default, **kwargs):
+    super().__init__(name,default,**kwargs)
+    self.type=self.T_STRING
+
+  def _getValue(self, val):
+    return int(str(val),16)
+
 
 class AVNBME280Reader(AVNWorker):
   """ a worker to read data from the BME280 module
     and insert it as NMEA MDA/XDR records
   """
-
+  P_INTERVAL=WorkerParameter('interval', '5',
+                             type=WorkerParameter.T_FLOAT,
+                             description="interval in seconds between measures")
+  P_WRITEMDA=WorkerParameter('writeMda', True,
+                             type=WorkerParameter.T_BOOLEAN,
+                             description="write MDA records")
+  P_WRITEXDR=WorkerParameter('writeXdr', True,
+                             type=WorkerParameter.T_BOOLEAN,
+                             description="write XDR records")
+  P_NAMEPRESS=WorkerParameter('namePress','Barometer',
+                              description="XDR transducer name for pressure")
+  P_NAMEHUMID=WorkerParameter('nameHumid','Humidity',
+                              description="XDR transducer name for humidity")
+  P_NAMETEMP=WorkerParameter('nameTemp', 'TempAir',
+                             description="XDR transducer name for temperature")
+  P_ADDR=ParamHex('addr' ,'0x77',
+                         description='I2C address for the BME in 0xnn notation')
   @classmethod
   def getConfigName(cls):
     return "AVNBME280Reader"
@@ -184,25 +211,14 @@ class AVNBME280Reader(AVNWorker):
     if not child is None:
       return None
     rt = [
-      WorkerParameter('feederName', '',editable=False),  # if this one is set, we do not use the defaul feeder but this one
       cls.PRIORITY_PARAM_DESCRIPTION,
-      WorkerParameter('interval', '5',
-                      type=WorkerParameter.T_FLOAT,
-                      description="interval in seconds between measures"),
-      WorkerParameter('writeMda', True,
-                      type=WorkerParameter.T_BOOLEAN,
-                      description="write MDA records"),
-      WorkerParameter('writeXdr', True,
-                      type=WorkerParameter.T_BOOLEAN,
-                      description="write XDR records"),
-      WorkerParameter('namePress','Barometer',
-                      description="XDR transducer name for pressure"),
-      WorkerParameter('nameHumid','Humidity',
-                      description="XDR transducer name for humidity"),
-      WorkerParameter('nameTemp', 'TempAir',
-                      description="XDR transducer name for temperature"),
-      WorkerParameter('addr' ,'0x77',
-                      description='I2C address for the BME in 0xnn notation')
+      cls.P_INTERVAL,
+      cls.P_WRITEMDA,
+      cls.P_WRITEXDR,
+      cls.P_NAMEPRESS,
+      cls.P_NAMEHUMID,
+      cls.P_NAMETEMP,
+      cls.P_ADDR
     ]
     return rt
 
@@ -227,24 +243,27 @@ class AVNBME280Reader(AVNWorker):
 
   # thread run method - just try forever
   def run(self):
-    global bus
+    bus=None
     if hasBME280:
       try:
         # BME280DEVICE = 0x77 # Default device I2C Address
         bus = smbus.SMBus(1)  # Rev 2 Pi, Pi 2 & Pi 3 uses bus 1
       except Exception as e:
         raise Exception("unable to get smbus #1: %s" % str(e))
+    else:
+      raise Exception("smbus library not installed")
     self.setInfo('main', "reading BME280", WorkerStatus.NMEA)
     while True:
-      addr = int(self.getStringParam('addr'), 16)
-      priority=self.PRIORITY_PARAM_DESCRIPTION.fromDict(self.param)
-      (chip_id, chip_version) = readBME280ID(addr)
+      addr = self.getWParam(self.P_ADDR)
+      priority=self.getWParam(self.PRIORITY_PARAM_DESCRIPTION)
+      (chip_id, chip_version) = readBME280ID(bus,addr)
       info = "Using BME280 Chip: %d Version: %d" % (chip_id, chip_version)
       AVNLog.info(info)
+      self.setInfo('main', "reading BME280 id=%d, version=%d"%(chip_id,chip_version), WorkerStatus.NMEA)
       source = self.getSourceName(addr)
       try:
-        temperature,pressure,humidity = readBME280All(addr)
-        if self.getBoolParam('writeMda'):
+        temperature,pressure,humidity = readBME280All(bus,addr)
+        if self.getWParam(self.P_WRITEMDA):
           """$AVMDA,,,1.00000,B,,,,,,,,,,,,,,,,"""
           mda = '$AVMDA,,,%.5f,B,,,,,,,,,,,,,,,,' % ( pressure / 1000.)
           AVNLog.debug("BME280:MDA %s", mda)
@@ -253,24 +272,24 @@ class AVNBME280Reader(AVNWorker):
           mta = '$AVMTA,%.2f,C' % (temperature)
           AVNLog.debug("BME280:MTA %s", mta)
           self.queue.addNMEA(mta,source,addCheckSum=True,sourcePriority=priority)
-        if self.getBoolParam('writeXdr'):
-          tn=self.param.get('namePress','Barometer')
+        if self.getWParam(self.P_WRITEXDR):
+          tn=self.getWParam(self.P_NAMEPRESS)
           xdr = '$AVXDR,P,%.5f,B,%s' % (pressure / 1000.,tn)
           AVNLog.debug("BME280:XDR %s", xdr)
           self.queue.addNMEA(xdr,source,addCheckSum=True,sourcePriority=priority)
-          tn = self.param.get('nameTemp', 'TempAir')
+          tn = self.getWParam(self.P_NAMETEMP)
           xdr = '$AVXDR,C,%.2f,C,%s' % (temperature,tn)
           AVNLog.debug("BME280:XDR %s", xdr)
           self.queue.addNMEA(xdr,source,addCheckSum=True,sourcePriority=priority)
-          tn = self.param.get('nameHumid', 'Humidity')
+          tn = self.getWParam(self.P_NAMEHUMID)
           xdr = '$AVXDR,H,%.2f,P,%s' % (humidity,tn)
           AVNLog.debug("BME280:XDR %s", xdr)
           self.queue.addNMEA(xdr,source,addCheckSum=True,sourcePriority=priority)
 
       except:
         AVNLog.info("exception while reading data from BME280 %s" ,traceback.format_exc())
-      wt = self.getFloatParam("interval")
-      if not wt:
+      wt = self.getWParam(self.P_INTERVAL)
+      if not wt or wt < 0.5:
         wt = 5.0
       self.wait(wt)
 

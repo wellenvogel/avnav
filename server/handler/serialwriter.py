@@ -298,8 +298,6 @@ class AVNSerialWriter(AVNWorker):
     return rt
 
   def __init__(self,param):
-    for p in (SerialWriter.P_PORT,SerialWriter.P_TIMEOUT):
-      p.fromDict(param)
     AVNWorker.__init__(self, param)
     self.writer=None
 
@@ -316,12 +314,14 @@ class AVNSerialWriter(AVNWorker):
 
   #thread run method - just try forever  
   def run(self):
+    for p in (SerialWriter.P_PORT,SerialWriter.P_TIMEOUT):
+      self.getWParam(p)
     while not self.shouldStop():
-      self.setNameIfEmpty("%s-%s"%(self.getName(),str(self.getParamValue('port'))))
+      self.setNameIfEmpty("%s-%s"%(self.getName(),str(self.getWParam(SerialWriter.P_PORT))))
       self.freeAllUsedResources()
       self.claimUsedResource(UsedResource.T_SERIAL,self.getParamValue('port'))
       try:
-        self.writer=SerialWriter(self.param,self.queue,self,self.getSourceName(self.getParamValue('port')))
+        self.writer=SerialWriter(self.param,self.queue,self,self.getSourceName(self.getWParam(SerialWriter.P_PORT)))
         self.writer.run()
       except Exception as e:
         AVNLog.error("exception in serial writer: %s",traceback.format_exc())

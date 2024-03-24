@@ -156,7 +156,7 @@ class SocketReader(object):
     except:
       pass
     AVNLog.info("disconnected from socket %s",peer)
-    self.infoHandler.setInfo(INAME, "socket to %s disconnected"%(peer), WorkerStatus.ERROR)
+    self.infoHandler.deleteInfo(INAME)
 
   def writeSocket(self,filterstr,version,blacklist):
     '''

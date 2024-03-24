@@ -79,8 +79,6 @@ class AVNSocketReader(AVNWorker,SocketReader):
     return True
 
   def __init__(self,param):
-    for p in (self.P_PORT,self.P_HOST):
-      p.fromDict(param)
     self.socket=None
     AVNWorker.__init__(self, param)
 
@@ -103,6 +101,8 @@ class AVNSocketReader(AVNWorker,SocketReader):
      
   #thread run method - just try forever  
   def run(self):
+    for p in (self.P_PORT,self.P_HOST):
+      self.getWParam(p)
     INAME='main'
     self.version = self.navdata.getSingleValue(AVNStore.KEY_VERSION)
     errorReported=False

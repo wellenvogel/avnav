@@ -29,6 +29,7 @@
 ###############################################################################
 
 from ctypes import c_short
+from bme280 import ParamHex
 
 hasBMP180=False
 try:
@@ -42,7 +43,6 @@ from avnav_nmea import *
 from avnav_worker import *
 import avnav_handlerList
 
-bus=None
 
 def convertToString(data):
   # Simple function to convert binary data into
@@ -57,14 +57,18 @@ def getUshort(data, index):
   # return two bytes from data as an unsigned 16-bit value
   return (data[index] << 8) + data[index + 1]
 
-def readBmp180Id(addr):
+def readBmp180Id(bus,addr):
+  if bus is None:
+    return (0,0)
   # Chip ID Register Address
   REG_ID     = 0xD0
   (chip_id, chip_version) = bus.read_i2c_block_data(addr, REG_ID, 2)
   return (chip_id, chip_version)
 
 
-def readBmp180(addr):
+def readBmp180(bus,addr):
+  if bus is None:
+    return (1,2)
   # Register Addresses
   REG_CALIB  = 0xAA
   REG_MEAS   = 0xF4
@@ -139,34 +143,34 @@ class AVNBMP180Reader(AVNWorker):
   """ a worker to read data from the BMP180 module
     and insert it as NMEA MDA/XDR records
   """
-
-  @classmethod
-  def getConfigName(cls):
-    return "AVNBMP180Reader"
-
+  P_INTERVAL=WorkerParameter('interval', '5',
+                             type=WorkerParameter.T_FLOAT,
+                             description="interval in seconds between measures")
+  P_WRITEMDA=WorkerParameter('writeMda', True,
+                             type=WorkerParameter.T_BOOLEAN,
+                             description="write MDA records")
+  P_WRITEXDR=WorkerParameter('writeXdr', True,
+                             type=WorkerParameter.T_BOOLEAN,
+                             description="write XDR records")
+  P_NAMEPRESS=WorkerParameter('namePress', 'Barometer',
+                              description="XDR transducer name for pressure")
+  P_NAMETEMP=WorkerParameter('nameTemp', 'TempAir',
+                             description="XDR transducer name for temperature")
+  P_ADDR=ParamHex('addr', '0x77',
+                         description='I2C address for the BME in 0xnn notation')
   @classmethod
   def getConfigParam(cls, child=None):
     if not child is None:
       return None
     rt = [
-      WorkerParameter('feederName', '', editable=False),
       # if this one is set, we do not use the defaul feeder but this one
       cls.PRIORITY_PARAM_DESCRIPTION,
-      WorkerParameter('interval', '5',
-                      type=WorkerParameter.T_FLOAT,
-                      description="interval in seconds between measures"),
-      WorkerParameter('writeMda', True,
-                      type=WorkerParameter.T_BOOLEAN,
-                      description="write MDA records"),
-      WorkerParameter('writeXdr', True,
-                      type=WorkerParameter.T_BOOLEAN,
-                      description="write XDR records"),
-      WorkerParameter('namePress', 'Barometer',
-                      description="XDR transducer name for pressure"),
-      WorkerParameter('nameTemp', 'TempAir',
-                      description="XDR transducer name for temperature"),
-      WorkerParameter('addr', '0x77',
-                      description='I2C address for the BME in 0xnn notation')
+      cls.P_INTERVAL,
+      cls.P_WRITEMDA,
+      cls.P_WRITEXDR,
+      cls.P_NAMEPRESS,
+      cls.P_NAMETEMP,
+      cls.P_ADDR
     ]
     return rt
 
@@ -190,23 +194,24 @@ class AVNBMP180Reader(AVNWorker):
 
   # thread run method - just try forever
   def run(self):
-    global bus
-    try:
-      if hasBMP180:
+    bus=None
+    if hasBMP180:
+      try:
         bus = smbus.SMBus(1)  # Rev 2 Pi, Pi 2 & Pi 3 uses bus 1
-    except Exception as e:
-      raise Exception("unable to get smbus #1: %s"%str(e))
+      except Exception as e:
+        raise Exception("unable to get smbus #1: %s"%str(e))
+    else:
+      raise Exception("smbus library not installed")
     self.setInfo('main', "reading BMP180", WorkerStatus.NMEA)
     while True:
-      addr = int(self.getStringParam('addr'), 16)
-      priority=self.PRIORITY_PARAM_DESCRIPTION.fromDict(self.param)
-      (chip_id, chip_version) = readBmp180Id(addr)
-      info = "Using BMP180 Chip: %d Version: %d " % (chip_id, chip_version)
-      AVNLog.info(info)
+      addr = self.getWParam(self.P_ADDR)
+      priority=self.getWParam(self.PRIORITY_PARAM_DESCRIPTION)
+      (chip_id, chip_version) = readBmp180Id(bus,addr)
+      self.setInfo('main', "reading BMP180 id=%d, version=%d"%(chip_id,chip_version), WorkerStatus.NMEA)
       source = self.getSourceName(addr)
       try:
-        temperature,pressure = readBmp180(addr)
-        if self.getBoolParam('writeMda'):
+        temperature,pressure = readBmp180(bus,addr)
+        if self.getWParam(self.P_WRITEMDA):
           """$AVMDA,,,1.00000,B,,,,,,,,,,,,,,,,"""
           mda = '$AVMDA,,,%.5f,B,,,,,,,,,,,,,,,,' % ( pressure / 1000.)
           AVNLog.debug("BMP180:MDA %s", mda)
@@ -215,19 +220,19 @@ class AVNBMP180Reader(AVNWorker):
           mta = '$AVMTA,%.2f,C' % (temperature)
           AVNLog.debug("BMP180:MTA %s", mta)
           self.queue.addNMEA(mta,source,addCheckSum=True,sourcePriority=priority)
-        if self.getBoolParam('writeXdr'):
-          tn = self.param.get('namePress', 'Barometer')
+        if self.getWParam(self.P_WRITEXDR):
+          tn = self.getWParam(self.P_NAMEPRESS)
           xdr = '$AVXDR,P,%.5f,B,%s' % (pressure / 1000.,tn)
           AVNLog.debug("BMP180:XDR %s", xdr)
           self.queue.addNMEA(xdr,source,addCheckSum=True,sourcePriority=priority)
-          tn = self.param.get('nameTemp', 'TempAir')
+          tn = self.getWParam(self.P_NAMETEMP)
           xdr = '$AVXDR,C,%.2f,C,%s' % (temperature,tn)
           AVNLog.debug("BMP180:XDR %s", xdr)
           self.queue.addNMEA(xdr,source,addCheckSum=True,sourcePriority=priority)
       except:
         AVNLog.info("exception while reading data from BMP180 %s" ,traceback.format_exc())
-      wt = self.getFloatParam("interval")
-      if not wt:
+      wt = self.getWParam(self.P_INTERVAL)
+      if not wt or wt < 0.5:
         wt = 5.0
       self.wait(wt)
 

@@ -387,8 +387,6 @@ class AVNSerialReader(AVNWorker):
     return True
 
   def __init__(self,param):
-    for p in (SerialReader.P_PORT,SerialReader.P_TIMEOUT):
-      p.fromDict(param)
     self.reader=None
     AVNWorker.__init__(self, param)
 
@@ -399,19 +397,21 @@ class AVNSerialReader(AVNWorker):
 
   #thread run method - just try forever  
   def run(self):
+    for p in (SerialReader.P_PORT,SerialReader.P_TIMEOUT):
+      self.getWParam(p)
     while not self.shouldStop():
       self.freeAllUsedResources()
-      self.claimUsedResource(UsedResource.T_SERIAL,self.getParamValue('port'))
+      self.claimUsedResource(UsedResource.T_SERIAL,self.getWParam(SerialReader.P_PORT))
       try:
-        self.reader=SerialReader(self.param, self.queue,self,self.getSourceName(self.getParamValue('port')))
+        self.reader=SerialReader(self.param, self.queue,self,self.getSourceName(self.getWParam(SerialReader.P_PORT)))
         self.reader.run()
       except Exception as e:
         AVNLog.error("exception in serial reader %s",traceback.format_exc())
 
 
   def updateConfig(self, param,child=None):
-    if 'port' in param:
-      self.checkUsedResource(UsedResource.T_SERIAL,param['port'])
+    if SerialReader.P_PORT.name in param:
+      self.checkUsedResource(UsedResource.T_SERIAL, param[SerialReader.P_PORT.name])
     super().updateConfig(param)
     if self.reader is not None:
       self.reader.stopHandler()
