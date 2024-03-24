@@ -70,13 +70,18 @@ class NMEAParser(object):
   K_TWA=Key('trueWindAngle','true wind angle','\N{DEGREE SIGN}',['environment.wind.angleTrueWater'],signalKConversion=AVNUtil.rad2deg)
   K_TWD=Key('trueWindDirection','true wind direction','\N{DEGREE SIGN}',['environment.wind.directionGround'],signalKConversion=AVNUtil.rad2deg)
   K_AWA=Key('windAngle','wind direction','\N{DEGREE SIGN}','environment.wind.angleApparent',signalKConversion=AVNUtil.rad2deg)
+  K_MVAR=Key('magVariation', 'magnetic Variation in deg','\N{DEGREE SIGN}', signalK='navigation.magneticVariation', signalKConversion=AVNUtil.rad2deg)
+  K_LAT=Key('lat','gps latitude',signalK='navigation.position.latitude')
+  K_LON=Key('lon','gps longitude',signalK='navigation.position.longitude')
+  K_COG=Key('track','course','\N{DEGREE SIGN}','navigation.courseOverGroundTrue',signalKConversion=AVNUtil.rad2deg)
+  K_SOG=Key('speed','speed in m/s','m/s','navigation.speedOverGround')
   #we will add the GPS base to all entries
   GPS_DATA=[
-    Key('lat','gps latitude',signalK='navigation.position.latitude'),
-    Key('lon','gps longitude',signalK='navigation.position.longitude'),
-    Key('track','course','\N{DEGREE SIGN}','navigation.courseOverGroundTrue',signalKConversion=AVNUtil.rad2deg),
-    Key('speed','speed in m/s','m/s','navigation.speedOverGround'),
-    Key('magVariation', 'magnetic Variation in deg','\N{DEGREE SIGN}', signalK='navigation.magneticVariation', signalKConversion=AVNUtil.rad2deg),
+    K_LAT,
+    K_LON,
+    K_COG,
+    K_SOG,
+    K_MVAR,
     K_TWA,
     K_AWA,
     K_AWS,
@@ -288,8 +293,8 @@ class NMEAParser(object):
       if tag=='GGA':
         mode=int(darray[6] or '0') #quality
         if mode >= 1:
-          rt['lat']=self.nmeaPosToFloat(darray[2],darray[3])
-          rt['lon']=self.nmeaPosToFloat(darray[4],darray[5])
+          rt[self.K_LAT.key]=self.nmeaPosToFloat(darray[2],darray[3])
+          rt[self.K_LON.key]=self.nmeaPosToFloat(darray[4],darray[5])
         rt['satUsed']=int(darray[7] or '0')
         self.addToNavData(rt,source=source,record=tag)
         return True
@@ -302,18 +307,18 @@ class NMEAParser(object):
         if len(darray) > 6:
           mode= (0 if (darray[6] != 'A') else 2)
         if mode >= 1:
-          rt['lat']=self.nmeaPosToFloat(darray[1],darray[2])
-          rt['lon']=self.nmeaPosToFloat(darray[3],darray[4])
+          rt[self.K_LAT.key]=self.nmeaPosToFloat(darray[1],darray[2])
+          rt[self.K_LON.key]=self.nmeaPosToFloat(darray[3],darray[4])
           self.addToNavData(rt,source=source,record=tag,priority=basePriority)
         return True
       if tag=='VTG':
         mode=darray[2]
-        rt['track']=float(darray[1] or '0')
+        rt[self.K_COG.key]=float(darray[1] or '0')
         if (mode == 'T'):
           #new mode
-          rt['speed']=float(darray[5] or '0')*self.NM/3600
+          rt[self.K_SOG.key]=float(darray[5] or '0')*self.NM/3600
         else:
-          rt['speed']=float(darray[3]or '0')*self.NM/3600
+          rt[self.K_SOG.key]=float(darray[3]or '0')*self.NM/3600
         self.addToNavData(rt,source=source,record=tag,priority=basePriority)
         return True
       if tag=='RMC':
@@ -321,19 +326,19 @@ class NMEAParser(object):
         #this includes current date
         mode=( 0 if darray[2] != 'A' else 2)
         if mode >= 1:
-          rt['lat']=self.nmeaPosToFloat(darray[3],darray[4])
-          rt['lon']=self.nmeaPosToFloat(darray[5],darray[6])
+          rt[self.K_LAT.key]=self.nmeaPosToFloat(darray[3],darray[4])
+          rt[self.K_LON.key]=self.nmeaPosToFloat(darray[5],darray[6])
           if darray[7] != '':
-            rt['speed']=float(darray[7] or '0')*self.NM/3600
+            rt[self.K_SOG.key]=float(darray[7] or '0')*self.NM/3600
           if darray[8] != '':
-            rt['track']=float(darray[8] or '0')
+            rt[self.K_COG.key]=float(darray[8] or '0')
         gpstime = darray[1]
         gpsdate = darray[9]
         if darray[10] != '':
           if darray[11] == 'E':
-            rt['magVariation'] = float(darray[10] or '0')
+            rt[self.K_MVAR.key] = float(darray[10] or '0')
           elif darray[11] == 'W':
-            rt['magVariation'] = -float(darray[10] or '0')
+            rt[self.K_MVAR.key] = -float(darray[10] or '0')
         if gpsdate != "" and gpstime != "":
           rt['time']=self.formatTime(self.gpsTimeToTime(gpstime, gpsdate))
         self.addToNavData(rt,source=source,priority=basePriority+1,record=tag)
@@ -513,10 +518,10 @@ class NMEAParser(object):
         if MagVarDir is not None and MagVariation is not None:
           if MagVarDir == 'E':
             heading_t = heading + MagVariation
-            rt['magVariation'] = MagVariation
+            rt[self.K_MVAR.key] = MagVariation
           elif MagVarDir == 'W':
             heading_t = heading - MagVariation
-            rt['magVariation'] = -MagVariation
+            rt[self.K_MVAR.key] = -MagVariation
         if heading_t is not None:
           rt[self.K_HDGT.key]=heading_t
         self.addToNavData(rt,source=source,record=tag,priority=basePriority)
