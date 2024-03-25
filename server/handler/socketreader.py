@@ -64,8 +64,9 @@ class AVNSocketReader(AVNWorker,SocketReader):
                cls.P_MINTIME,
                cls.FILTER_PARAM,
                cls.P_WRITE_OUT,
-               cls.P_WRITE_FILTER,
-               cls.P_BLACKLIST,
+               cls.P_WRITE_FILTER.copy(condition={cls.P_WRITE_OUT.name:True}),
+               cls.P_BLACKLIST.copy(condition={cls.P_WRITE_OUT.name:True}),
+               cls.REPLY_RECEIVED.copy(condition={cls.P_WRITE_OUT.name:True}),
                SocketReader.P_STRIP_LEADING
     ]
     return rt
@@ -109,7 +110,7 @@ class AVNSocketReader(AVNWorker,SocketReader):
     self.setNameIfEmpty("%s-%s:%d" % (self.getName(), self.getStringParam('host'), self.getIntParam('port')))
     lastInfo = None
     while not self.shouldStop():
-      info = "%s:%d" % (self.getStringParam('host'), self.getIntParam('port'))
+      info = "%s:%d" % (self.getWParam(self.P_HOST), self.getWParam(self.P_PORT))
       try:
         if info != lastInfo:
           self.setInfo(INAME,"trying to connect to %s"%(info,),WorkerStatus.INACTIVE)
@@ -136,15 +137,16 @@ class AVNSocketReader(AVNWorker,SocketReader):
                                   shouldStop=self.shouldStop,
                                   sourcePriority=self.PRIORITY_PARAM_DESCRIPTION.fromDict(self.param),
                                   stripLeading=SocketReader.P_STRIP_LEADING.fromDict(self.param))
+        sourceName=self.getSourceName(info)
         if self.P_WRITE_OUT.fromDict(self.param):
           clientHandler = threading.Thread(
             target=self._writer,
-            args=(connection,),
+            args=(connection,sourceName),
             name="%s-writer" % (self.getName())
           )
           clientHandler.daemon = True
           clientHandler.start()
-        connection.readSocket(self.getSourceName(info),
+        connection.readSocket(sourceName,
                               filter=self.FILTER_PARAM.fromDict(self.param),
                               timeout=timeout,
                               minTime=self.P_MINTIME.fromDict(self.param))
@@ -152,10 +154,13 @@ class AVNSocketReader(AVNWorker,SocketReader):
       except:
         AVNLog.info("exception while reading from %s %s",info,traceback.format_exc())
 
-  def _writer(self, socketConnection):
+  def _writer(self, socketConnection,sourceName):
+    blacklist=self.getWParam(self.P_BLACKLIST)
+    if not self.getWParam(self.REPLY_RECEIVED):
+      blacklist+=","+sourceName
     socketConnection.writeSocket(self.P_WRITE_FILTER.fromDict(self.param),
                                  self.version,
-                                 blacklist=self.P_BLACKLIST.fromDict(self.param).split(','))
+                                 blacklist=blacklist)
 
 avnav_handlerList.registerHandler(AVNSocketReader)
         

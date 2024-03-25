@@ -418,6 +418,8 @@ class AVNWorker(InfoHandler):
                                              description="The priority for this source. If there is data from higher priority sources, values will be ignored in parser")
   FILTER_PARAM=WorkerParameter('filter','',type=WorkerParameter.T_FILTER)
   BLACKLIST_PARAM=WorkerParameter('blackList' , '',description=', separated list of sources we do not send out')
+  REPLY_RECEIVED=WorkerParameter('sendOwn',False,type=WorkerParameter.T_BOOLEAN,
+                         description='send out data that we received on this connection')
 
   handlerListLock=threading.Lock()
   """a base class for all workers

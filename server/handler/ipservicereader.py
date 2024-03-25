@@ -74,8 +74,9 @@ class AVNIpServiceReader(AVNWorker):
       cls.P_MINTIME,
       cls.FILTER_PARAM,
       cls.P_WRITE_OUT,
-      cls.P_WRITE_FILTER,
-      cls.P_BLACKLIST
+      cls.P_WRITE_FILTER.copy(condition={cls.P_WRITE_OUT:True}),
+      cls.P_BLACKLIST.copy(condition={cls.P_WRITE_OUT:True}),
+      cls.REPLY_RECEIVED.copy(condition={cls.P_WRITE_OUT:True})
     ]
     cls.P_SERVICE_NAME.rangeOrList=cls._listServices
     return rt
@@ -111,11 +112,14 @@ class AVNIpServiceReader(AVNWorker):
     except:
       pass
 
-  def _writer(self, socketConnection):
+  def _writer(self, socketConnection,sourceName):
     infoName="writer"
+    blacklist=self.getWParam(self.P_BLACKLIST)
+    if not self.getWParam(self.REPLY_RECEIVED):
+      blacklist+=","+sourceName
     socketConnection.writeSocket(self.P_WRITE_FILTER.fromDict(self.param),
                                  self.version,
-                                 blacklist=self.P_BLACKLIST.fromDict(self.param))
+                                 blacklist=blacklist)
     self.deleteInfo(infoName)
 
   #thread run method - just try forever  
@@ -171,16 +175,17 @@ class AVNIpServiceReader(AVNWorker):
                                 shouldStop=self.shouldStop,
                                 sourcePriority=self.PRIORITY_PARAM_DESCRIPTION.fromDict(self.param)
                                 )
+        sourceName=self.getSourceName(info)
         if self.P_WRITE_OUT.fromDict(self.param):
           clientHandler=threading.Thread(
             target=self._writer,
-            args=(connection,),
+            args=(connection,sourceName),
             name="%s-writer"%(self.getName())
           )
           clientHandler.daemon=True
           clientHandler.start()
-        connection.readSocket(self.getSourceName(info),
-                              self.getParamValue('filter'),
+        connection.readSocket(sourceName,
+                              self.getWParam(self.FILTER_PARAM),
                               timeout=timeout,
                               minTime=self.P_MINTIME.fromDict(self.param))
         self.wait(2)

@@ -69,7 +69,8 @@ class AVNSocketWriter(AVNWorker):
           cls.P_READ,
           cls.PRIORITY_PARAM_DESCRIPTION.copy(condition={cls.P_READ.name:True}),
           cls.P_READFILTER,
-          cls.P_MINTIME,
+          cls.REPLY_RECEIVED.copy(condition={cls.P_READ.name:True}),
+          cls.P_MINTIME.copy(condition={cls.P_READ.name:True}),
           cls.BLACKLIST_PARAM,
           cls.AVAHI_ENABLED,
           cls.AVAHI_NAME,
@@ -148,9 +149,12 @@ class AVNSocketWriter(AVNWorker):
       )
       clientHandler.daemon=True
       clientHandler.start()
+    blackList=self.BLACKLIST_PARAM.fromDict(self.param)
+    if not self.getWParam(self.REPLY_RECEIVED):
+      blackList+=","+self.getSourceName(str(addr))
     clientConnection.writeSocket(self.FILTER_PARAM.fromDict(self.param),
                                  self.version,
-                                 self.BLACKLIST_PARAM.fromDict(self.param))
+                                 blackList)
     self.removeHandler(addr)
     tinfo.deleteInfo(infoName)
 
