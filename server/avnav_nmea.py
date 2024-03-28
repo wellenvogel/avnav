@@ -61,6 +61,7 @@ class NMEAParser(object):
   STRIPCHARS={i:None for i in range(0,32)}
   #AIS field translations
   aisFieldTranslations={'msgtype':'type'}
+  K_HDGC=Key('headingCompass','compass heading','\N{DEGREE SIGN}','navigation.headingCompass',signalKConversion=AVNUtil.rad2deg)
   K_HDGM=Key('headingMag','magnetic heading','\N{DEGREE SIGN}','navigation.headingMagnetic',signalKConversion=AVNUtil.rad2deg)
   K_HDGT=Key('headingTrue','true heading','\N{DEGREE SIGN}','navigation.headingTrue',signalKConversion=AVNUtil.rad2deg)
   K_VWTT=Key('waterTemp','water temparature','k',signalK='environment.water.temperature')
@@ -70,17 +71,21 @@ class NMEAParser(object):
   K_TWA=Key('trueWindAngle','true wind angle','\N{DEGREE SIGN}',['environment.wind.angleTrueWater'],signalKConversion=AVNUtil.rad2deg)
   K_TWD=Key('trueWindDirection','true wind direction','\N{DEGREE SIGN}',['environment.wind.directionGround'],signalKConversion=AVNUtil.rad2deg)
   K_AWA=Key('windAngle','wind direction','\N{DEGREE SIGN}','environment.wind.angleApparent',signalKConversion=AVNUtil.rad2deg)
+  K_MDEV=Key('magDeviation', 'magnetic Deviation in deg','\N{DEGREE SIGN}', signalK='navigation.magneticDeviation', signalKConversion=AVNUtil.rad2deg)
   K_MVAR=Key('magVariation', 'magnetic Variation in deg','\N{DEGREE SIGN}', signalK='navigation.magneticVariation', signalKConversion=AVNUtil.rad2deg)
   K_LAT=Key('lat','gps latitude',signalK='navigation.position.latitude')
   K_LON=Key('lon','gps longitude',signalK='navigation.position.longitude')
   K_COG=Key('track','course','\N{DEGREE SIGN}','navigation.courseOverGroundTrue',signalKConversion=AVNUtil.rad2deg)
   K_SOG=Key('speed','speed in m/s','m/s','navigation.speedOverGround')
+  K_SET=Key('currentSet','current set','\N{DEGREE SIGN}','environment.current.setTrue',signalKConversion=AVNUtil.rad2deg)
+  K_DFT=Key('currentDrift','current drift in m/s','m/s','environment.current.drift')
   #we will add the GPS base to all entries
   GPS_DATA=[
     K_LAT,
     K_LON,
     K_COG,
     K_SOG,
+    K_MDEV,
     K_MVAR,
     K_TWA,
     K_AWA,
@@ -94,10 +99,13 @@ class NMEAParser(object):
     Key('satInview', 'number of Sats in view',signalK='navigation.gnss.satellitesInView.count'),
     Key('satUsed', 'number of Sats in use',signalK='navigation.gnss.satellites'),
     Key('transducers.*','transducer data from xdr'),
+    K_HDGC,
     K_HDGM,
     K_HDGT,
     K_VWTT,
-    K_VHWS
+    K_VHWS,
+    K_SET,
+    K_DFT
   ]
 
   @classmethod
@@ -492,12 +500,13 @@ class NMEAParser(object):
 
       if tag == 'HDG':
         MagDevDir=None
-        heading=None
+        heading_c=None
         MagDeviation=0
         MagVarDir=None
         MagVariation=None
         if(len(darray[1]) > 0):
-          heading = float(darray[1] or '0')
+          heading_c = float(darray[1] or '0')
+          rt[self.K_HDGC.key] = heading_c
         if(len(darray[2]) > 0):
           MagDeviation = float(darray[2] or '0')  # --> Ablenkung
           if(len(darray[3]) > 0):
@@ -507,23 +516,26 @@ class NMEAParser(object):
           if(len(darray[5]) > 0):
             MagVarDir = darray[5] or 'X'
         # Kompassablenkung korrigieren
+        heading_m = heading_c
         if MagDevDir == 'E':
-           heading= heading + MagDeviation
+          heading_m += MagDeviation
+          rt[self.K_MDEV.key] = MagDeviation
         elif MagDevDir == 'W':
-          heading = heading - MagDeviation
-        rt[self.K_HDGM.key] = heading
+          heading_m -= MagDeviation
+          rt[self.K_MDEV.key] = -MagDeviation
+        rt[self.K_HDGM.key] = heading_m
 
         # Wahrer Kurs unter Berücksichtigung der Missweisung
         heading_t = None
         if MagVarDir is not None and MagVariation is not None:
           if MagVarDir == 'E':
-            heading_t = heading + MagVariation
+            heading_t = heading_m + MagVariation
             rt[self.K_MVAR.key] = MagVariation
           elif MagVarDir == 'W':
-            heading_t = heading - MagVariation
+            heading_t = heading_m - MagVariation
             rt[self.K_MVAR.key] = -MagVariation
         if heading_t is not None:
-          rt[self.K_HDGT.key]=heading_t
+          rt[self.K_HDGT.key] = heading_t
         self.addToNavData(rt,source=source,record=tag,priority=basePriority)
         return True
 
@@ -540,6 +552,24 @@ class NMEAParser(object):
         self.addToNavData(rt,source=source,record=tag,priority=basePriority)
         return True
 
+
+
+      if tag == 'VDR':
+        """ set and drift https://gpsd.gitlab.io/gpsd/NMEA.html#_vdr_set_and_drift
+                   1   2 3   4 5   6 7
+                   |   | |   | |   | |
+            $--VDR,x.x,T,x.x,M,x.x,N*hh<CR><LF>
+            1 set degrees true
+            3 set degrees magnetic
+            5 drift knots
+            """
+        if len(darray[1])>0 and darray[2]=="T":
+          rt[self.K_SET.key] = float(darray[1])
+        if len(darray[5])>0 and darray[6]=="N":
+          rt[self.K_DFT.key] = float(darray[5])
+        self.addToNavData(rt,source=source,record=tag,priority=basePriority)
+        return True
+      
       #VHW - Water speed and heading
 
       #        1   2 3   4 5   6 7   8 9
