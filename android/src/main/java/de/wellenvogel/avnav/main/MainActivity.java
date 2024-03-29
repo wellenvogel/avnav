@@ -71,6 +71,7 @@ import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
 import de.wellenvogel.avnav.appapi.JavaScriptApi;
 import de.wellenvogel.avnav.appapi.RequestHandler;
 import de.wellenvogel.avnav.appapi.WebServer;
+import de.wellenvogel.avnav.main.DownloadHandler.DownloadStream;
 import de.wellenvogel.avnav.settings.SettingsActivity;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
@@ -78,9 +79,10 @@ import de.wellenvogel.avnav.util.DialogBuilder;
 import de.wellenvogel.avnav.worker.GpsService;
 import de.wellenvogel.avnav.worker.UsbConnectionHandler;
 import de.wellenvogel.avnav.worker.WorkerFactory;
-
+import de.wellenvogel.avnav.main.DownloadHandler;
 import static de.wellenvogel.avnav.main.Constants.LOGPRFX;
 import static de.wellenvogel.avnav.settings.SettingsActivity.checkSettings;
+
 
 /**
  * Created by andreas on 06.01.15.
@@ -117,150 +119,11 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
     TextView dlText=null;
     private ValueCallback<Uri[]> upload=null;
 
-    private static class Download {
-        public String url;
-        public String fileName;
-        boolean done=false;
-        Uri uri=null;
-        public Download(String url) {
-            this.url = url;
-        }
-        public void start(OutputStream os,Uri uri){
-            this.uri=uri;
-        }
-        public void stop(){}
-        public boolean isRunning(){return false;}
-    }
-    private class DownloadStream extends Download{
-        private Thread thread=null;
-        public DownloadStream(String url){
-            super(url);
-        }
-        private void update(long bytes){
-            MainActivity.this.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    View dl=MainActivity.this.dlProgress;
-                    if (dl == null) return;
-                    if (bytes > 0){
-                        if (dl.getVisibility() != View.VISIBLE){
-                            dl.setVisibility(View.VISIBLE);
-                        }
-                    }
-                    else{
-                        if (dl.getVisibility() == View.VISIBLE){
-                            dl.setVisibility(View.GONE);
-                        }
-                    }
-                    MainActivity.this.dlText.setText(String.format("%dkb: %s", bytes / 1024, fileName));
-                }
-            });
-        }
 
-        InputStream openInput() throws IOException {
-            return null;
-        }
-        void closeInput() throws IOException {}
-        private void toast(String msg){
-            MainActivity.this.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(MainActivity.this,msg,Toast.LENGTH_LONG).show();
-                }
-            });
-        }
-        @Override
-        public void start(OutputStream os,Uri uri){
-            if (done) return;
-            super.start(os,uri);
-            try {
-                try (Cursor c = MainActivity.this.getContentResolver().query(uri, null, null, null, null)) {
-                    int nameIdx = c.getColumnIndex(OpenableColumns.DISPLAY_NAME);
-                    c.moveToFirst();
-                    fileName = c.getString(nameIdx);
-                }
-            }catch (Throwable t){}
-            this.thread=new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    Log.i(LOGPRFX,"download started for "+url);
-                    update(0);
-                    try {
-                        InputStream is=openInput();
-                        byte [] buffer=new byte[4*1024*1024];
-                        int rdBytes=0;
-                        long sum=0;
-                        final long UPDIV=2*1024*1024;
-                        long lastUpdate=sum-UPDIV-1;
-                        while ((rdBytes=is.read(buffer)) > 0){
-                            if (done) throw new InterruptedException("user stop");
-                            os.write(buffer,0,rdBytes);
-                            sum+=rdBytes;
-                            if (sum >= (lastUpdate+UPDIV)) {
-                                update(sum);
-                                lastUpdate=sum;
-                            }
-                        }
-                        toast(getString(R.string.download_finished));
-                        os.close();
-                        closeInput();
-                        Log.i(LOGPRFX,"download finished for "+uri);
-                    } catch (Throwable e) {
-                        toast(getString(R.string.download_error)+e);
-                        try{
-                            DocumentsContract.deleteDocument(MainActivity.this.getContentResolver(),uri);
-                            Log.i(LOGPRFX,"deleted download "+uri);
-                        } catch(Throwable t){
-                            Log.e(LOGPRFX,"unable to delete document "+uri);
-                        }
-                    }
-                    update(-1);
-                    done=true;
-                }
-            });
-            this.thread.setDaemon(true);
-            this.thread.start();
-        }
-        @Override
-        public void stop(){
-            try {
-                this.thread.interrupt();
-                this.thread.join(100);
-            } catch (InterruptedException e) {
-                Log.e(LOGPRFX,"unable to stop download "+url);
-            }
-            done=true;
-        }
-
-        @Override
-        public boolean isRunning() {
-            if (thread == null) return false;
-            return thread.isAlive();
-        }
-    };
-
-    private class DownloadHttp extends DownloadStream{
-        HttpURLConnection urlConnection=null;
-        public DownloadHttp(String url) {
-            super(url);
-        }
-        @Override
-        InputStream openInput() throws IOException {
-            URL dlurl=new URL(this.url);
-            urlConnection = (HttpURLConnection) dlurl.openConnection();
-            return new BufferedInputStream(urlConnection.getInputStream());
-        }
-
-        @Override
-        void closeInput() throws IOException {
-            super.closeInput();
-            urlConnection.disconnect();
-        }
-    }
-    private class DownloadInternal extends DownloadStream{
+    private class DownloadInternal extends DownloadHandler.DownloadStream{
         ExtendedWebResourceResponse response;
         public DownloadInternal(String url, ExtendedWebResourceResponse r) {
-            super(url);
+            super(url,MainActivity.this);
             response=r;
         }
 
@@ -274,37 +137,8 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             response.getData().close();
         }
     }
-    private class DataDownload extends Download{
-        public DataDownload(String url) {
-            super(url);
-        }
 
-        @Override
-        public void start(OutputStream os,Uri ruri) {
-            if (done) return;
-            super.start(os,ruri);
-            try {
-                Uri uri=Uri.parse(url);
-                String data=uri.getSchemeSpecificPart();
-                String [] parts=data.split(",",2);
-                if (parts.length < 2) throw new IOException("invalid data url");
-                String [] hparts=parts[0].split(";");
-                byte [] res=null;
-                if (hparts.length >1){
-                    if (hparts[1].equalsIgnoreCase("base64")){
-                        res=Base64.decode(parts[1],Base64.DEFAULT);
-                    }
-                }
-                if (res == null) res=parts[1].getBytes(StandardCharsets.UTF_8);
-                os.write(res);
-                os.close();
-            } catch (IOException e) {
-                Log.e(LOGPRFX,"unable to close dl stream "+url);
-            }
-            done=true;
-        }
-    }
-    private Download download=null;
+    private DownloadHandler.Download download=null;
     private static class AttachedDevice{
         String type;
         JSONObject parameters;
@@ -707,7 +541,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimeType, long l) {
                 Log.i(LOGPRFX, "download request for "+url);
                 if (download != null && download.isRunning()) return;
-                Download nextDownload=null;
+                DownloadHandler.Download nextDownload=null;
                 String fileName="";
                 boolean isData=false;
                 try {
@@ -740,12 +574,14 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                     }
                     if (nextDownload == null) {
                         if (isData) {
-                            nextDownload = new DataDownload(url);
+                            nextDownload = new DownloadHandler.DataDownload(url,MainActivity.this);
                         } else {
-                            nextDownload = new DownloadHttp(url);
+                            nextDownload = new DownloadHandler.DownloadHttp(url,MainActivity.this);
                         }
                     }
                     nextDownload.fileName=fileName;
+                    nextDownload.progress=MainActivity.this.dlProgress;
+                    nextDownload.dlText=MainActivity.this.dlText;
                     download=nextDownload;
                     Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
                     intent.addCategory(Intent.CATEGORY_OPENABLE);
