@@ -35,6 +35,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.webkit.CookieManager;
 import android.webkit.DownloadListener;
 import android.webkit.URLUtil;
 import android.webkit.ValueCallback;
@@ -63,6 +64,7 @@ import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
@@ -541,10 +543,8 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimeType, long l) {
                 Log.i(LOGPRFX, "download request for "+url);
                 if (download != null && download.isRunning()) return;
-                DownloadHandler.Download nextDownload=null;
-                String fileName="";
-                boolean isData=false;
-                try {
+                try{
+                    DownloadHandler.Download nextDownload=null;
                     if (url.startsWith(RequestHandler.INTERNAL_URL_PREFIX)){
                         if (handler == null){
                             throw new Exception("no handler");
@@ -556,37 +556,22 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                         }
                         nextDownload=new DownloadInternal(url,r);
                         String cd=r.getHeaders().get("Content-Disposition");
-                        if (cd != null && ! cd.isEmpty()) contentDisposition=cd;
+                        if (cd != null && ! cd.isEmpty()) {
+                            nextDownload.fileName=DownloadHandler.guessFileName(cd);
+                        }
                     }
                     else {
-                        Uri uri = Uri.parse(url);
-                        isData = uri.getScheme().equalsIgnoreCase("data");
+                        nextDownload=DownloadHandler.createHandler(MainActivity.this,url,userAgent,contentDisposition,mimeType,l);
                     }
-                    String[] contentSplit = contentDisposition.split("filename=");
-                    if (contentSplit.length > 1) {
-                        fileName = contentSplit[1].replace("filename=", "").replace("\"", "");
-                    } else {
-                        if (isData) {
-                            fileName = "data.bin";
-                        } else {
-                            fileName = URLUtil.guessFileName(url, contentDisposition, mimeType);
-                        }
-                    }
-                    if (nextDownload == null) {
-                        if (isData) {
-                            nextDownload = new DownloadHandler.DataDownload(url,MainActivity.this);
-                        } else {
-                            nextDownload = new DownloadHandler.DownloadHttp(url,MainActivity.this);
-                        }
-                    }
-                    nextDownload.fileName=fileName;
                     nextDownload.progress=MainActivity.this.dlProgress;
                     nextDownload.dlText=MainActivity.this.dlText;
                     download=nextDownload;
                     Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
                     intent.addCategory(Intent.CATEGORY_OPENABLE);
                     intent.setType(mimeType);
-                    intent.putExtra(Intent.EXTRA_TITLE, fileName);
+                    if (nextDownload.fileName != null) {
+                        intent.putExtra(Intent.EXTRA_TITLE, nextDownload.fileName);
+                    }
                     startActivityForResult(intent,Constants.FILE_OPEN_DOWNLOAD);
                 }catch (Throwable t){
                     Toast.makeText(MainActivity.this,"download error:"+t,Toast.LENGTH_LONG).show();

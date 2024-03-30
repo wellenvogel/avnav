@@ -27,6 +27,8 @@ import android.provider.OpenableColumns;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
+import android.webkit.CookieManager;
+import android.webkit.URLUtil;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,15 +36,15 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 
-import de.wellenvogel.avnav.appapi.ExtendedWebResourceResponse;
-
-import static de.wellenvogel.avnav.main.Constants.LOGPRFX;
 
 public class DownloadHandler {
+    private static final String LOGPRFX="BonjourBrowserDL";
     public static class Download {
         public String url;
         public String fileName;
@@ -116,14 +118,14 @@ public class DownloadHandler {
                 public void run() {
                     Log.i(LOGPRFX,"download started for "+url);
                     update(0);
+                    long sum=0;
                     try {
                         InputStream is=openInput();
                         byte [] buffer=new byte[4*1024*1024];
                         int rdBytes=0;
-                        long sum=0;
                         final long UPDIV=2*1024*1024;
                         long lastUpdate=sum-UPDIV-1;
-                        while ((rdBytes=is.read(buffer)) > 0){
+                        while ((rdBytes=is.read(buffer)) != -1){
                             if (done) throw new InterruptedException("user stop");
                             os.write(buffer,0,rdBytes);
                             sum+=rdBytes;
@@ -137,7 +139,12 @@ public class DownloadHandler {
                         closeInput();
                         Log.i(LOGPRFX,"download finished for "+uri);
                     } catch (Throwable e) {
-                        toast(activity.getString(R.string.download_error)+e);
+                        if (done){
+                            toast(activity.getString(R.string.download_interrupted));
+                        }
+                        else {
+                            toast(activity.getString(R.string.download_error) + e.getMessage());
+                        }
                         try{
                             DocumentsContract.deleteDocument(activity.getContentResolver(),uri);
                             Log.i(LOGPRFX,"deleted download "+uri);
@@ -172,14 +179,21 @@ public class DownloadHandler {
 
     public static class DownloadHttp extends DownloadStream {
         HttpURLConnection urlConnection=null;
-        public DownloadHttp(String url,Activity activity) {
+        public String cookies=null;
+        public String userAgent=null;
+        public DownloadHttp(String url,Activity activity, String cookies, String userAgent) {
             super(url,activity);
+            this.cookies=cookies;
+            this.userAgent=userAgent;
         }
         @Override
         InputStream openInput() throws IOException {
             URL dlurl=new URL(this.url);
             urlConnection = (HttpURLConnection) dlurl.openConnection();
-            return new BufferedInputStream(urlConnection.getInputStream());
+            urlConnection.setRequestProperty("Cookie", cookies);
+            urlConnection.setRequestProperty("User-Agent", userAgent);
+            urlConnection.connect();
+            return urlConnection.getInputStream();
         }
 
         @Override
@@ -217,6 +231,61 @@ public class DownloadHandler {
             }
             done=true;
         }
+    }
+    public static class DownloadException extends Exception{
+        public DownloadException(String message) {
+            super(message);
+        }
+    };
+
+    public static String guessFileName(String contentDisposition) throws UnsupportedEncodingException {
+        if (contentDisposition == null) return null;
+        if (contentDisposition.indexOf("filename*=") >= 0) {
+            contentDisposition = contentDisposition.replaceAll(".*filename\\*=utf-8''", "");
+            contentDisposition = URLDecoder.decode(contentDisposition, "utf-8");
+            contentDisposition = "attachment; filename=" + contentDisposition;
+        }
+        String[] contentSplit = contentDisposition.split("filename=");
+        if (contentSplit.length > 1) {
+            return contentSplit[1].replace("filename=", "").replace("\"", "");
+        }
+        return null;
+    }
+    public static Download createHandler(Activity activity, String url, String userAgent, String
+            contentDisposition, String mimeType, long contentLength) throws DownloadException, UnsupportedEncodingException {
+        Download nextDownload = null;
+        String fileName = "";
+        boolean isData = false;
+        Uri uri = Uri.parse(url);
+        String[] knowSchemas = new String[]{"http", "https", "data"};
+        String urlSchema = uri != null ? uri.getScheme().toLowerCase() : "";
+        boolean known = false;
+        for (String schema : knowSchemas) {
+            if (urlSchema.equals(schema)) {
+                known = true;
+                break;
+            }
+        }
+        if (!known) {
+            throw new DownloadException("invalid type " + urlSchema);
+        }
+        isData = urlSchema.equals("data");
+        fileName=guessFileName(contentDisposition);
+        if (fileName == null){
+            if (isData) {
+                fileName = "data.bin";
+            } else {
+                fileName = URLUtil.guessFileName(url, contentDisposition, mimeType);
+            }
+        }
+
+        if (isData) {
+            nextDownload = new DownloadHandler.DataDownload(url, activity);
+        } else {
+            nextDownload = new DownloadHandler.DownloadHttp(url, activity, CookieManager.getInstance().getCookie(url), userAgent);
+        }
+        nextDownload.fileName = fileName;
+        return nextDownload;
     }
 
 }
