@@ -24,6 +24,7 @@ import net.sf.marineapi.nmea.sentence.Sentence;
 import net.sf.marineapi.nmea.sentence.SentenceValidator;
 import net.sf.marineapi.nmea.sentence.TalkerId;
 import net.sf.marineapi.nmea.sentence.TimeSentence;
+import net.sf.marineapi.nmea.sentence.VDRSentence;
 import net.sf.marineapi.nmea.sentence.VHWSentence;
 import net.sf.marineapi.nmea.sentence.VWRSentence;
 import net.sf.marineapi.nmea.sentence.XDRSentence;
@@ -59,6 +60,18 @@ import de.wellenvogel.avnav.util.NmeaQueue;
  * Created by andreas on 25.12.14.
  */
 public class Decoder extends Worker {
+    private static final String K_SET = "currentSet";
+    private static final String K_DFT = "currentDrift";
+    private static final String K_HDGT = "headingTrue";
+    private static final String K_HDGM = "headingMag";
+    private static final String K_MDEV = "magDeviation";
+    private static final String K_MAGVAR = "magVariation";
+    private static final String K_HDGC = "headingCompass";
+    private static final String K_DEPTHT = "depthBelowTransducer";
+    private static final String K_DEPTHW = "depthBelowWaterline";
+    private static final String K_DEPTHK = "depthBelowKeel";
+    private static final String K_VHWS = "waterSpeed";
+    private static final String K_VWTT = "waterTemp";
     public SimpleDateFormat dateFormat=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
     private long lastAisCleanup=0;
     private AisStore store=null;
@@ -82,6 +95,7 @@ public class Decoder extends Worker {
             EditableParameter.StringParameter("ownMMSI",R.string.labelSettingsOwnMMSI,"");
     private SatStatus satStatus=null;
     private MovingSum sCounter=new MovingSum(10);
+
     private void addParameters(){
         parameterDescriptions.addParams(OWN_MMSI,POSITION_AGE, NMEA_AGE,AIS_AGE,READ_TIMEOUT_PARAMETER, QUEUE_AGE_PARAMETER);
     }
@@ -437,12 +451,12 @@ public class Decoder extends Worker {
                                     AvnLog.d("%s: DPT sentence",getTypeName() );
                                     AuxiliaryEntry e = new AuxiliaryEntry(entry.priority);
                                     double depth = d.getDepth();
-                                    e.data.put("depthBelowTransducer", depth);
+                                    e.data.put(K_DEPTHT, depth);
                                     double offset = d.getOffset();
                                     if (offset >= 0) {
-                                        e.data.put("depthBelowWaterline", depth + offset);
+                                        e.data.put(K_DEPTHW, depth + offset);
                                     } else {
-                                        e.data.put("depthBelowKeel", depth + offset);
+                                        e.data.put(K_DEPTHK, depth + offset);
                                     }
                                     addAuxiliaryData(s.getSentenceId(), e,posAge);
                                     continue;
@@ -452,7 +466,7 @@ public class Decoder extends Worker {
                                     AvnLog.d("%s: DBT sentence",getTypeName() );
                                     AuxiliaryEntry e = new AuxiliaryEntry(entry.priority);
                                     double depth = d.getDepth();
-                                    e.data.put("depthBelowTransducer", depth);
+                                    e.data.put(K_DEPTHT, depth);
                                     addAuxiliaryData(s.getSentenceId(), e,posAge);
                                     continue;
                                 }
@@ -461,7 +475,7 @@ public class Decoder extends Worker {
                                     AvnLog.d("%s: MTW sentence",getTypeName() );
                                     AuxiliaryEntry e = new AuxiliaryEntry(entry.priority);
                                     double waterTemp = d.getTemperature() + 273.15;
-                                    e.data.put("waterTemp", waterTemp);
+                                    e.data.put(this.K_VWTT, waterTemp);
                                     addAuxiliaryData(s.getSentenceId(), e,posAge);
                                     continue;
                                 }
@@ -484,7 +498,7 @@ public class Decoder extends Worker {
                                     HDMSentence sh=(HDMSentence)s;
                                     AvnLog.dfs("%s: HDM sentence",getTypeName() );
                                     AuxiliaryEntry e = new AuxiliaryEntry(entry.priority);
-                                    e.data.put("headingMag",sh.getHeading());
+                                    e.data.put(K_HDGM,sh.getHeading());
                                     addAuxiliaryData(s.getSentenceId(),e,posAge);
                                     continue;
                                 }
@@ -492,9 +506,25 @@ public class Decoder extends Worker {
                                     HDTSentence sh=(HDTSentence)s;
                                     AvnLog.dfs("%s: %s sentence",getTypeName(),s.getSentenceId() );
                                     AuxiliaryEntry e = new AuxiliaryEntry(entry.priority);
-                                    e.data.put("headingTrue",sh.getHeading());
+                                    e.data.put(K_HDGT,sh.getHeading());
                                     addAuxiliaryData(s.getSentenceId(),e,posAge);
                                     continue;
+                                }
+                                if (s instanceof VDRSentence){
+                                    VDRSentence vdr=(VDRSentence) s;
+                                    AvnLog.dfs("%s: %s sentence",getTypeName(),s.getSentenceId() );
+                                    AuxiliaryEntry e = new AuxiliaryEntry(entry.priority);
+                                    try{
+                                        double strue=vdr.getTrueDirection();
+                                        e.data.put(K_SET,strue);
+                                    }catch (Exception v1){}
+                                    try{
+                                        double drift=vdr.getSpeed();
+                                        e.data.put(K_DFT,drift);
+                                    }catch (Exception v2){}
+                                    if (e.data.length()>0){
+                                        addAuxiliaryData(s.getSentenceId(),e,posAge);
+                                    }
                                 }
                                 if (s instanceof VHWSentence){
                                     VHWSentence sv=(VHWSentence)s;
@@ -502,15 +532,15 @@ public class Decoder extends Worker {
                                     AuxiliaryEntry e = new AuxiliaryEntry(entry.priority);
                                     boolean hasData=false;
                                     try {
-                                        e.data.put("headingMag", sv.getMagneticHeading());
+                                        e.data.put(K_HDGM, sv.getMagneticHeading());
                                         hasData=true;
                                     }catch (Exception sv1){}
                                     try {
-                                        e.data.put("headingTrue", sv.getHeading());
+                                        e.data.put(K_HDGT, sv.getHeading());
                                         hasData=true;
                                     }catch(Exception sv2){}
                                     try {
-                                        e.data.put("waterSpeed", knToMs(sv.getSpeedKnots()));
+                                        e.data.put(K_VHWS, knToMs(sv.getSpeedKnots()));
                                         hasData=true;
                                     }catch(Exception sv3){}
                                     if (hasData) {
@@ -526,18 +556,19 @@ public class Decoder extends Worker {
                                     AvnLog.dfs("%s: %s sentence",getTypeName(),s.getSentenceId() );
                                     AuxiliaryEntry e = new AuxiliaryEntry(entry.priority);
                                     double heading=sh.getHeading();
+                                    e.data.put(K_HDGC,heading);
                                     try{
-                                        heading+=sh.getDeviation();
+                                        double mDev=sh.getDeviation();
+                                        e.data.put(K_MDEV,mDev);
+                                        heading+=mDev;
+                                        e.data.put(K_HDGM, heading);
                                     }catch (Exception he){}
-                                    e.data.put("headingMag", heading);
-                                    try{
-                                        heading+=sh.getVariation();
-                                        e.data.put("headingTrue",heading);
-                                    }catch(Exception h2e){}
                                     try{
                                         double mVar=sh.getVariation();
-                                        e.data.put("magVariation",mVar);
-                                    }catch (Exception h3e){}
+                                        e.data.put(K_MAGVAR,mVar);
+                                        heading+=mVar;
+                                        e.data.put(K_HDGT,heading);
+                                    }catch(Exception h2e){}
                                     addAuxiliaryData(s.getSentenceId(),e,posAge);
                                     continue;
                                 }
@@ -554,7 +585,7 @@ public class Decoder extends Worker {
                                             try {
                                                 double mvar = rmc.getVariation();
                                                 AuxiliaryEntry e = new AuxiliaryEntry(entry.priority);
-                                                e.data.put("magVariation",mvar);
+                                                e.data.put(K_MAGVAR,mvar);
                                                 addAuxiliaryData(s.getSentenceId(),e,posAge);
                                             }catch(Exception re){}
                                         }
