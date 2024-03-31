@@ -79,6 +79,9 @@ class NMEAParser(object):
   K_SOG=Key('speed','speed in m/s','m/s','navigation.speedOverGround')
   K_SET=Key('currentSet','current set','\N{DEGREE SIGN}','environment.current.setTrue',signalKConversion=AVNUtil.rad2deg)
   K_DFT=Key('currentDrift','current drift in m/s','m/s','environment.current.drift')
+  K_DEPTHT=Key('depthBelowTransducer','depthBelowTransducer in m','m','environment.depth.belowTransducer')
+  K_DEPTHW=Key('depthBelowWaterline','depthBelowWaterlinein m','m','environment.depth.belowSurface')
+  K_DEPTHK=Key('depthBelowKeel','depthBelowKeel in m','m','environment.depth.belowKeel')
   #we will add the GPS base to all entries
   GPS_DATA=[
     K_LAT,
@@ -92,9 +95,9 @@ class NMEAParser(object):
     K_AWS,
     K_TWS,
     K_TWD,
-    Key('depthBelowTransducer','depthBelowTransducer in m','m','environment.depth.belowTransducer'),
-    Key('depthBelowWaterline','depthBelowWaterlinein m','m','environment.depth.belowSurface'),
-    Key('depthBelowKeel','depthBelowKeel in m','m','environment.depth.belowKeel'),
+    K_DEPTHT,
+    K_DEPTHW,
+    K_DEPTHK,
     Key('time','the received GPS time',signalK='navigation.datetime'),
     Key('satInview', 'number of Sats in view',signalK='navigation.gnss.satellitesInView.count'),
     Key('satUsed', 'number of Sats in use',signalK='navigation.gnss.satellites'),
@@ -455,12 +458,12 @@ class NMEAParser(object):
             negative means distance from transducer to keel
         3) Checksum
         '''
-        rt['depthBelowTransducer'] = float(darray[1] or '0')
+        rt[self.K_DEPTHT.key] = float(darray[1] or '0')
         if len(darray[2]) > 0:
           if float(darray[2]) >= 0:
-            rt['depthBelowWaterline'] = float(darray[1] or '0') + float(darray[2] or '0')
+            rt[self.K_DEPTHW.key] = float(darray[1] or '0') + float(darray[2] or '0')
           else:
-            rt['depthBelowKeel'] = float(darray[1] or '0') + float(darray[2] or '0')
+            rt[self.K_DEPTHK.key] = float(darray[1] or '0') + float(darray[2] or '0')
         self.addToNavData(rt,source=source,record=tag,priority=basePriority)
         return True
       if tag == 'DBT':
@@ -479,7 +482,7 @@ class NMEAParser(object):
          7) Checksum
         '''
         if len(darray[3]) > 0:
-          rt['depthBelowTransducer'] = float(darray[3] or '0')
+          rt[self.K_DEPTHT.key] = float(darray[3] or '0')
           self.addToNavData(rt,source=source,record=tag,priority=basePriority)
           return True
         return False
@@ -515,7 +518,7 @@ class NMEAParser(object):
           MagVariation = float(darray[4] or '0')  # --> Missweisung
           if(len(darray[5]) > 0):
             MagVarDir = darray[5] or 'X'
-        # Kompassablenkung korrigieren
+        # Deviation
         heading_m = heading_c
         if MagDevDir == 'E':
           heading_m += MagDeviation
@@ -525,7 +528,7 @@ class NMEAParser(object):
           rt[self.K_MDEV.key] = -MagDeviation
         rt[self.K_HDGM.key] = heading_m
 
-        # Wahrer Kurs unter Berücksichtigung der Missweisung
+        # True course
         heading_t = None
         if MagVarDir is not None and MagVariation is not None:
           if MagVarDir == 'E':
