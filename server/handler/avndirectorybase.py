@@ -430,7 +430,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
     if subPath is None:
       return #not found
     #check for zip files in the path
-    pathParts=subPath.split(os.path.sep)
+    pathParts=subPath.split(os.sep)
     hasZip=False
     for part in pathParts:
       if part.lower().endswith(".zip") or part.lower().endswith(".kmz"):

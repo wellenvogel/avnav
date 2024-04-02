@@ -109,6 +109,8 @@ class AVNBaseConfig(AVNWorker):
                                 description="expiry in seconds for NMEA data")
   P_AIS_EXPIRYTIME=WorkerParameter('aisExpiryTime',1200,type=WorkerParameter.T_FLOAT,
                                    description="expiry time in seconds for AIS data")
+  P_AISAGE=WorkerParameter('useAisAge',True,type=WorkerParameter.T_BOOLEAN,
+                                   description="use the AIS message age")
   P_OWNMMSI=WorkerParameter('ownMMSI','',type=WorkerParameter.T_STRING,
                             description='if set - do not store AIS messages with this MMSI')
   P_DEBUGTOLOG=WorkerParameter('debugToLog', False,type=WorkerParameter.T_BOOLEAN,editable=False)
@@ -151,6 +153,7 @@ class AVNBaseConfig(AVNWorker):
     return [
             cls.P_EXPIRY_TIME,
             cls.P_AIS_EXPIRYTIME,
+            cls.P_AISAGE,
             cls.P_OWNMMSI,
             cls.P_DEBUGTOLOG,
             cls.P_MAXTIMEBACK,
@@ -178,9 +181,10 @@ class AVNBaseConfig(AVNWorker):
     super().updateConfig(param, child)
     if self.navdata is not None:
       self.navdata.updateBaseConfig(
-        self.P_EXPIRY_TIME.fromDict(self.param),
-        self.P_AIS_EXPIRYTIME.fromDict(self.param),
-        self.P_OWNMMSI.fromDict(self.param)
+        expiry=self.getWParam(self.P_EXPIRY_TIME),
+        aisExpiry=self.getWParam(self.P_AIS_EXPIRYTIME),
+        ownMMSI=self.getWParam(self.P_OWNMMSI),
+        useAisAge=self.getWParam(self.P_AISAGE)
       )
 
   def startInstance(self, navdata):
@@ -251,8 +255,7 @@ class AVNBaseConfig(AVNWorker):
       delta =  newDiffToMonotonic-diffToMonotonic
       diffToMonotonic=newDiffToMonotonic
       if not self.diffMonotonicOk(delta):
-        AVNLog.warn("time shift (%d seconds) detected, deleting all entries ",delta)
-        self.navdata.reset()
+        AVNLog.warn("time shift (%d seconds) detected",delta)
         #if the time is shifting all condition waits must
         #be notified...
         for h in AVNWorker.allHandlers:

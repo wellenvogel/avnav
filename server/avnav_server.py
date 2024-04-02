@@ -216,7 +216,7 @@ def main(argv):
       sys.exit(1)
   else:
     handlerManager.copyFileWithCheck(cfgname,fallbackName,False) #write a "last known good"
-  baseConfig=AVNWorker.findHandlerByName("AVNConfig")
+  baseConfig=AVNWorker.findHandlerByName("AVNConfig") #type: AVNBaseConfig
   httpServer=AVNWorker.findHandlerByName("AVNHttpServer")
   if baseConfig is None:
     AVNLog.error("internal error: base config not loaded")
@@ -254,9 +254,11 @@ def main(argv):
     httpServer.registerRequestHandler('api','config',handlerManager)
     httpServer.registerRequestHandler('download', 'config', handlerManager)
   navData=AVNStore(
-    float(baseConfig.param['expiryTime']),
-    float(baseConfig.param['aisExpiryTime']),
-    baseConfig.param['ownMMSI'])
+    expiryTime=baseConfig.getWParam(baseConfig.P_EXPIRY_TIME),
+    aisExpiryTime=baseConfig.getWParam(baseConfig.P_AIS_EXPIRYTIME),
+    ownMMSI=baseConfig.getWParam(baseConfig.P_OWNMMSI),
+    useAisAge=baseConfig.getWParam(baseConfig.P_AISAGE)
+    )
   navData.setValue(navData.KEY_VERSION,AVNAV_VERSION,keepAlways=True)
   NMEAParser.registerKeys(navData)
   if options.pidfile is not None:

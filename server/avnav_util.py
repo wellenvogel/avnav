@@ -444,7 +444,7 @@ class AVNUtil(object):
     return rt
 
   ais_converters = {
-    "mmsi": int,
+    "mmsi": str,
     "imo_id": int,
     "shiptype": int,
     "type": int,
@@ -488,12 +488,6 @@ class AVNUtil(object):
     try:
       rt["beam"] = rt["to_port"] + rt["to_starboard"]
       rt["length"] = rt["to_bow"] + rt["to_stern"]
-    except: pass
-
-    try:
-        #if rt["type"] in (5,24):
-        if "lat" not in rt:
-            del rt["type"] # remove to keep
     except: pass
 
     return rt
@@ -619,7 +613,7 @@ class AVNUtil(object):
 
   @classmethod
   def clean_filename(cls,filename):
-    replace=['/',os.path.sep]
+    replace=['/',os.sep]
     if filename is None:
       return None
     for r in replace:

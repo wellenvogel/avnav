@@ -78,7 +78,7 @@ class AVNDecoder(AVNWorker):
         nmealist=self._fetcher.fetch()
         for data in nmealist:
           if not data is None and not data.omitDecode:
-            if nmeaParser.parseData(data.data,source=data.source,sourcePriority=data.sourcePriority):
+            if nmeaParser.parseData(data.data,timestamp=data.timestamp,source=data.source,sourcePriority=data.sourcePriority):
               self.decoded.add(1)
       except Exception as e:
         AVNLog.warn("feeder exception - retrying %s",traceback.format_exc())

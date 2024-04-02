@@ -44,9 +44,12 @@ class AVNStore(object):
   # AIS messages we store
   knownAISTypes = (1, 2, 3, 5, 18, 19, 24)
   class DataEntry(object):
-    def __init__(self,value,source=None,priority=0,keepAlways=False,record=None):
+    def __init__(self,value,source=None,priority=0,keepAlways=False,record=None,timestamp=None):
       self.value=value
-      self.timestamp=AVNUtil.utcnow()
+      if timestamp is None:
+        self.timestamp=time.monotonic()
+      else:
+        self.timestamp=timestamp
       self.source=source
       self.priority=priority
       self.keepAlways=keepAlways
@@ -55,22 +58,21 @@ class AVNStore(object):
   class AisDataEntry(object):
     def __init__(self,data,priority=0,timestamp=None):
       self.value=data
-      self.timestamp = timestamp if timestamp is not None else AVNUtil.utcnow()
+      self.timestamp = timestamp if timestamp is not None else time.monotonic()
       self.priority=priority
     def add(self,name,value,timestamp=None):
       if self.value.get(name) == value:
         return False
-      self.timestamp = timestamp if timestamp is not None else AVNUtil.utcnow()
+      self.timestamp = timestamp if timestamp is not None else time.monotonic()
       self.value[name]=value
       return True
     def getMmsi(self):
       if not type(self.value) is dict:
         return None
       return self.value.get('mmsi')
-  #fields we merge
-  ais5mergeFields=['imo_id','callsign','shipname','shiptype','destination','length','beam','draught']
+
   CHANGE_COUNTER = ['alarm', 'leg', 'route','config']
-  def __init__(self,expiryTime,aisExpiryTime,ownMMSI):
+  def __init__(self,expiryTime,aisExpiryTime,ownMMSI,useAisAge):
     self.__list={}
     self.__aisList={}
     self.__listLock=threading.Lock()
@@ -78,6 +80,7 @@ class AVNStore(object):
     self.__expiryTime=expiryTime
     self.__aisExpiryTime=aisExpiryTime
     self.__ownMMSI=ownMMSI
+    self.__useAisAge=useAisAge
     self.__prefixCounter={} #contains the number of entries for TPV, AIS,...
     # a description of the already registered keys
     self.__registeredKeys={} # type: dict
@@ -101,12 +104,12 @@ class AVNStore(object):
     if entry.keepAlways:
       return False
     if now is None:
-      now=AVNUtil.utcnow()
+      now=time.monotonic()
     et = now - self.__expiryTime
     return entry.timestamp < et
   def __isAisExpired(self, aisEntry, now=None):
     if now is None:
-      now=AVNUtil.utcnow()
+      now=time.monotonic()
     et=now - self.__aisExpiryTime
     return aisEntry.timestamp < et
 
@@ -114,10 +117,11 @@ class AVNStore(object):
     return self.__expiryTime
   def getAisExpiryPeriod(self):
     return self.__aisExpiryTime
-  def updateBaseConfig(self,expiry,aisExpiry,ownMMSI):
+  def updateBaseConfig(self,expiry,aisExpiry,ownMMSI,useAisAge):
     self.__expiryTime=expiry
     self.__aisExpiryTime=aisExpiry
     self.__ownMMSI=ownMMSI
+    self.__useAisAge=useAisAge
 
   def updateChangeCounter(self,name):
     if not name in self.CHANGE_COUNTER:
@@ -128,7 +132,7 @@ class AVNStore(object):
     try:
       entry = self.__list.get(listKey)
       if entry is None:
-        entry=AVNStore.DataEntry(AVNUtil.utcnow(),keepAlways=True)
+        entry=AVNStore.DataEntry(time.monotonic(),keepAlways=True)
         self.__list[listKey]=entry
       else:
         entry.value+=1
@@ -137,13 +141,14 @@ class AVNStore(object):
     self.__listLock.release()
     return True
 
-  def setValue(self,key,value,source=None,priority=0,record=None,keepAlways=False):
+  def setValue(self,key,value,source=None,priority=0,record=None,keepAlways=False,timestamp=None):
     """
     set a data value
     @param key: the key to be set
     @param value: either a string/number/boolean or a dict
                   if the value is a dict, all its keys will be added to the provided key and the values will be set
     @param source: optional a source key
+    @:param timestamp: steady time point
     @return:
     """
     AVNLog.ld("AVNNavData set value ", key, str(value))
@@ -180,11 +185,12 @@ class AVNStore(object):
         AVNLog.error("exception in writing data: %",traceback.format_exc())
         raise
 
-  def setAisValue(self,mmsi,data,source=None,priority=0):
+  def setAisValue(self,mmsi,data,source=None,priority=0,timestamp=None):
     """
     add an AIS entry
     @param mmsi:
     @param data:
+    @:param timestamp monotonic time stamp
     @return:
     """
     AVNLog.debug("AVNavData add ais %s(%s)",mmsi,data.get('type')or "?")
@@ -192,58 +198,50 @@ class AVNStore(object):
       AVNLog.debug("omitting own AIS message mmsi %s", self.__ownMMSI)
       return
     key=AVNStore.BASE_KEY_AIS+"."+str(mmsi)
-    now=AVNUtil.utcnow()
+    now=time.monotonic()
     with self.__aisLock:
       existing=self.__aisList.get(key)
       if existing is None:
-        existing=AVNStore.AisDataEntry({'mmsi':mmsi},priority)
+        existing=AVNStore.AisDataEntry({'mmsi':mmsi},priority,timestamp=timestamp)
         self.__aisList[key]=existing
       elif existing.priority > priority:
-          AVNLog.debug("ignore ais for %s due to higher prio %d",mmsi,existing.priority)
-          return
-      if data.get('type') == '5' or data.get('type') == '24':
-        #add new items to existing entry
-        AVNLog.debug("merging AIS type 5/24 with existing message")
-        for k in self.ais5mergeFields:
-          v = data.get(k)
-          if v is not None:
-            existing.value[k] = v
+        AVNLog.debug("ignore ais for %s due to higher prio %d",mmsi,existing.priority)
+        return
+      if all(k in data for k in ("lat","lon")): # use timestamp is bound to dynamic data
+        existing.timestamp = now if timestamp is None else timestamp
+        if self.__useAisAge and "second" in data:
+          sec=data.get("second",60) # 60=timestamp not available
+          if 0<=sec<60: # use timestamp from ais seconds
+            delay = (now%60-sec)%60 # delay of message (up to 59s)
+            existing.timestamp -= delay # shift timestamp back
       else:
-        AVNLog.debug("merging AIS with existing message")
-        newData=data.copy()
-        for k in self.ais5mergeFields:
-          v = existing.value.get(k)
-          if v is not None:
-            newData[k] = v
-        existing.value=newData
-        existing.timestamp=now
+        del data["type"] # do not update type from static data
+      existing.value.update(data) # update existing data with new data
       self.__lastAisSource=source
 
-  def addAisItem(self,mmsi,values,source,priority,now=None):
+  def addAisItem(self,mmsi,values,source,priority,now=None,timestamp=None):
     if self.__ownMMSI != '' and mmsi is not None and self.__ownMMSI == mmsi:
       AVNLog.debug("omitting own AIS message mmsi %s", self.__ownMMSI)
       return
     key=AVNStore.BASE_KEY_AIS+"."+str(mmsi)
-    if now is None:
-      now=AVNUtil.utcnow()
     with self.__aisLock:
       existing=self.__aisList.get(key)
       if existing is None:
-        existing=AVNStore.AisDataEntry({'mmsi':mmsi},priority,timestamp=now)
+        existing=AVNStore.AisDataEntry({'mmsi':mmsi},priority,timestamp=timestamp)
         self.__aisList[key]=existing
       else:
         if existing.priority > priority:
           AVNLog.debug("ignore ais for %s due to higher prio %d",mmsi,existing.priority)
           return
       for name,value in values.items():
-        existing.add(name,value,timestamp=now)
+        existing.add(name,value,timestamp=timestamp)
       self.__lastAisSource=source
 
 
   def getAisData(self, asDict=False):
     rt=[] if not asDict else {}
     keysToRemove=[]
-    now=AVNUtil.utcnow()
+    now=time.monotonic()
     self.__aisLock.acquire()
     try:
       for key in list(self.__aisList.keys()):
@@ -296,7 +294,7 @@ class AVNStore(object):
     rt={}
     with self.__listLock:
       try:
-        now=AVNUtil.utcnow()
+        now=time.monotonic()
         keysToRemove=[]
         for key in list(self.__list.keys()):
           if not key.startswith(prefix):
