@@ -219,7 +219,7 @@ class AVNStore(object):
       existing.value.update(data) # update existing data with new data
       self.__lastAisSource=source
 
-  def addAisItem(self,mmsi,values,source,priority,now=None,timestamp=None):
+  def addAisItem(self,mmsi,values,source,priority,timestamp=None):
     if self.__ownMMSI != '' and mmsi is not None and self.__ownMMSI == mmsi:
       AVNLog.debug("omitting own AIS message mmsi %s", self.__ownMMSI)
       return

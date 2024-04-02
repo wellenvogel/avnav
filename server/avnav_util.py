@@ -312,6 +312,13 @@ class AVNUtil(object):
   @classmethod
   def utcnow(cls):
     return cls.datetimeToTsUTC(datetime.datetime.utcnow())
+
+  @classmethod
+  def utctomonotonic(cls,utcts):
+    mn=time.monotonic()
+    un=cls.utcnow()
+    diff=mn-un
+    return utcts+diff
   
   #check if a given position is within a bounding box
   #all in WGS84

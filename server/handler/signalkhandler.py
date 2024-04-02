@@ -334,17 +334,15 @@ class SKAlarm(object):
   T_RECV=1 #received delta
   T_SEND=2 #message to be send
   def __init__(self,stype,skPath,source,skValue,
-               timestamp=None,isOwnSource=False,remoteId=None,
-               localTs=None):
+               timestamp=None,isOwnSource=False,remoteId=None):
     self.stype=stype
     self.skPath=skPath
     self.skValue=skValue
     self.source=source
-    self.timestamp=timestamp
+    self.timestamp=timestamp if timestamp is not None else time.monotonic()
     self.isOwnSource=isOwnSource
     self.remoteId=remoteId
     self.shouldSend=False
-    self.localTs=localTs if localTs is not None else time.time()
     self.fromDelta=False
 
   def isSame(self, other : 'SKAlarm'):
@@ -360,8 +358,7 @@ class SKAlarm(object):
     rt=SKAlarm(self.stype,self.skPath,self.source,self.skValue,
                    timestamp=self.timestamp,
                    isOwnSource=self.isOwnSource,
-                   remoteId=self.remoteId,
-                   localTs=self.localTs
+                   remoteId=self.remoteId
                    )
     rt.shouldSend=self.shouldSend
     rt.fromDelta=self.fromDelta
@@ -377,7 +374,7 @@ class SKAlarm(object):
       return False
     if other.timestamp is None:
       return True
-    return timeToTs(self.timestamp) > timeToTs(other.timestamp)
+    return self.timestamp > other.timestamp
   def sameState(self,other: 'SKAlarm'):
     if self.skValue is None and other.skValue is None:
       return True
@@ -440,10 +437,10 @@ class SKAlarmList(object):
     self.skList[skAlarm.psKey()]=skAlarm
   def cleanup(self,oldest):
     self.__checkReady()
-    now=time.time()
+    now=time.monotonic()
     cleanupKeys=[]
     for k,v in self.skList.items():
-      if v.localTs < oldest or v.localTs > now:
+      if v.timestamp < oldest or v.timestamp > now:
         cleanupKeys.append(k)
     for k in cleanupKeys:
       try:
@@ -880,8 +877,8 @@ class AVNSignalKHandler(AVNWorker):
     AVNLog.debug("setting %s:%s from SK %s",mapping.localPath,str(value),path)
     self.navdata.setValue(mapping.localPath,value,source=self.sourceName,priority=mapping.priority)
 
-  def setValue(self,path,value):
-    self.navdata.setValue(self.PATH+"."+path,value,source=self.sourceName,priority=self.config.priority*10)
+  def setValue(self,path,value,timestamp=None):
+    self.navdata.setValue(self.PATH+"."+path,value,source=self.sourceName,priority=self.config.priority*10,timestamp=timestamp)
     if self.config.decode:
       if not type(value) is dict:
         self.decodeSelf(path,value)
@@ -909,7 +906,7 @@ class AVNSignalKHandler(AVNWorker):
       except Exception as e:
         AVNLog.debug("exception fetching atons from SK: %s",str(e))
       numTargets=0
-      now=AVNUtil.utcnow()
+      now=time.monotonic()
       oldest=now-self.navdata.getAisExpiryPeriod()
       for vessel,values in data.items():
         try:
@@ -934,15 +931,15 @@ class AVNSignalKHandler(AVNWorker):
             if value is not None:
               aisdata[k]=value
           if newestTs is not None:
-            aisdata['timestamp']=newestTs
             if self.timeOffset is not None:
               newestTs-=self.timeOffset
-          if newestTs is not None and newestTs < oldest and not self.config.ignoreTs:
+          monotonicTs = AVNUtil.utctomonotonic(newestTs) if newestTs is not None else None
+          if monotonicTs is not None and monotonicTs < oldest:
             AVNLog.debug("ignore ais mmsi=%s - to old",mmsi)
             continue
           numTargets+=1
           AVNLog.debug("adding ais data for %s",mmsi)
-          self.navdata.addAisItem(mmsi,aisdata,self.sourceName,self.config.priority*10,now=newestTs)
+          self.navdata.addAisItem(mmsi,aisdata,self.sourceName,self.config.priority*10,timestamp=monotonicTs)
         except Exception as e:
           AVNLog.error("unable to read AIS target %s: %s",str(vessel),traceback.format_exc())
       self.setInfo(self.I_AIS,'read %d targets'%numTargets,WorkerStatus.NMEA)
@@ -975,7 +972,7 @@ class AVNSignalKHandler(AVNWorker):
             self.setInfo(self.I_ALARM,"sender ready",WorkerStatus.NMEA)
           alarms=[]
           cleanups=[]
-          now=time.time()
+          now=time.monotonic()
           with self.__alarmCondition:
             for k,alarm in self.deleteAndActivateActions.skList.items():
               if alarm.shouldDo():
@@ -1110,7 +1107,7 @@ class AVNSignalKHandler(AVNWorker):
         errorReported=False
         lastAisFetch=0
         while self.connected and self.configSequence == sequence:
-          now = time.time()
+          now = time.monotonic()
           #handle time shift backward
           if lastChartQuery > now:
             lastChartQuery=0
@@ -1187,7 +1184,7 @@ class AVNSignalKHandler(AVNWorker):
                 self.setInfo(self.I_MAIN, "connected at %s" % apiUrl,WorkerStatus.NMEA)
               data=json.loads(response.read())
               AVNLog.debug("read: %s",json.dumps(data))
-              oldestDeltas=now - 2 *self.config.period
+              oldestDeltas=time.monotonic() - 2 *self.config.period
               self.deltas.cleanup(oldestDeltas)
               self.storeData(data,self.config.priority)
               name=data.get('name')
@@ -1225,14 +1222,24 @@ class AVNSignalKHandler(AVNWorker):
           return
         self.wait(5)
 
-  def checkOutdated(self,timestampStr):
-    if timestampStr is None:
-      return False
-    timeStamp=timeToTs(timestampStr)
-    expiryPeriod=self.navdata.getExpiryPeriod()
-    oldest=time.time()-expiryPeriod
+  def timestampToMonotonic(self,timestampstr):
+    '''
+    convert some received timestamp
+    to a monotonic value using our time offset
+    the monotonic value will age out normally even if we change the system time
+    :param timestampstr:
+    :return:
+    '''
+    if timestampstr is None:
+      return None
+    timeStamp=timeToTs(timestampstr)
     if self.timeOffset is not None:
-      oldest+=self.timeOffset
+      timeStamp+=self.timeOffset
+    return AVNUtil.utctomonotonic(timeStamp)
+
+  def checkOutdated(self,timeStamp):
+    expiryPeriod=self.navdata.getExpiryPeriod()
+    oldest=time.monotonic()-expiryPeriod
     if timeStamp < oldest:
       return True
     return False
@@ -1364,11 +1371,12 @@ class AVNSignalKHandler(AVNWorker):
         return
       for update in updates:
         values=update.get('values')
-        timestamp=update.get('timestamp')
+        timestampStr=update.get('timestamp')
         source=update.get('$source')
         if values is None:
           continue
-        if not self.config.ignoreTs and self.checkOutdated(timestamp):
+        timestamp=self.timestampToMonotonic(timestampStr) if not self.config.ignoreTs else time.monotonic()
+        if self.checkOutdated(timestamp):
           AVNLog.debug("ignore outdated delta, ts=%s",timestamp)
           continue
         for item in values:
@@ -1376,7 +1384,7 @@ class AVNSignalKHandler(AVNWorker):
           path=item.get('path')
           if  path is not None:
             if path.startswith("notifications"):
-              skAlarm=self.deltas.handleNotification(path, value,source,update.get('timestamp'),True)
+              skAlarm=self.deltas.handleNotification(path, value,source,timestamp,True)
               if skAlarm is not None:
                 self.handleNotifications({skAlarm.psKey():skAlarm},False)
             else:
@@ -1634,11 +1642,12 @@ class AVNSignalKHandler(AVNWorker):
         for k,v in item.items():
           self.iterateToValue(v,'notifications.'+k,alarmList.handleNotification)
       self.handleNotifications(alarmList.skList,True)
-    def store(path,value,source,timestamp):
+    def store(path,value,source,timestampstr):
+      timestamp=self.timestampToMonotonic(timestampstr) if not self.config.ignoreTs else time.monotonic()
       if self.checkOutdated(timestamp):
         AVNLog.debug('ignore outdated value %s',path)
         return
-      self.setValue(path, value)
+      self.setValue(path, value,timestamp=timestamp)
     self.iterateToValue(node,None,store)
 
   def getLocalToken(self,user):
