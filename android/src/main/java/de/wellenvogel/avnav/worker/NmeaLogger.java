@@ -61,6 +61,7 @@ public class NmeaLogger extends Worker {
             }
             if (entry == null) continue;
             sequence = entry.sequence;
+            if (! entry.valid) continue;
             if (!AvnUtil.matchesNmeaFilter(entry.data, nmeaFilter)) {
                 continue;
             }

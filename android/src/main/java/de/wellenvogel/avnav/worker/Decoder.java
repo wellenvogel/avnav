@@ -342,6 +342,7 @@ public class Decoder extends Worker {
                     eCounter.add(0);
                 }
                 sequence = entry.sequence;
+                if (! entry.valid) continue;
                 String line = entry.data;
                 if ((line.startsWith("$") && SentenceValidator.isValid(line)) || line.startsWith("!")){
                     sCounter.add(1);

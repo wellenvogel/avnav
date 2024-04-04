@@ -69,6 +69,7 @@ public class ConnectionReaderWriter{
                             AvnLog.d(name,"queue data loss");
                         }
                         sequence = e.sequence;
+                        if (! e.valid) continue;
                         if (!AvnUtil.matchesNmeaFilter(e.data, properties.writeFilter)) {
                             AvnLog.dfs("ignore %s due to filter",e.data);
                             continue;

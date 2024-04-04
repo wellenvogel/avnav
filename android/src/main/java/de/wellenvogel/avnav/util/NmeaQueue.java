@@ -31,17 +31,25 @@ public class NmeaQueue {
         public String source;
         public int priority=0;
         public long receiveTime=0;
+        public boolean valid=false;
         Entry(int s,String d,String source){
             this.sequence=s;
             this.data=d;
             this.source=source;
             this.receiveTime=SystemClock.uptimeMillis();
+            valid=true;
         }
         Entry(int s,String d,String source, int priority){
             this.sequence=s;
             this.data=d;
             this.source=source;
             this.priority=priority;
+            this.receiveTime=SystemClock.uptimeMillis();
+            valid=true;
+        }
+        Entry(int s){
+            sequence=s;
+            valid=false;
             this.receiveTime=SystemClock.uptimeMillis();
         }
     }
@@ -68,7 +76,7 @@ public class NmeaQueue {
         while (queue.size() < 1 || queue.get(queue.size()-1).sequence <= sequence){
             queuePos=queue.size()-1; //where to start searching
             long remain=end-SystemClock.uptimeMillis();
-            if (remain <= 0) return null;
+            if (remain <= 0) return new Entry(sequence);
             wait(remain);
         }
         long oldest=SystemClock.uptimeMillis()-maxAge;
@@ -90,7 +98,12 @@ public class NmeaQueue {
             Entry e=queue.get(i);
             if (e.sequence > sequence && e.receiveTime >= oldest ) return queue.get(i);
         }
-        return null;
+        if (queue.size() < 1) return new Entry(sequence);
+        //it seems that only outdated entries are in the queue
+        //do not check them again - return an invalid entry with
+        //the current highest sequence
+        //users will start looking only from this sequence when calling again
+        return new Entry(queue.get(queue.size()-1).sequence);
     }
     public synchronized void clear(){
         queue.clear();

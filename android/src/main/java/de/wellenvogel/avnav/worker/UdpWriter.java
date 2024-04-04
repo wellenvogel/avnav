@@ -99,6 +99,8 @@ public class UdpWriter extends ChannelWorker {
             try {
                 entry = queue.fetch(sequence, 200,queueAge);
                 if (entry == null) continue;
+                sequence=entry.sequence;
+                if (! entry.valid) continue;
                 if (! AvnUtil.matchesNmeaFilter(entry.data,nmeaFilter)){
                     AvnLog.dfs("udpwriter: skipping record %s due to filter",
                             entry.data);
@@ -121,7 +123,6 @@ public class UdpWriter extends ChannelWorker {
                 setStatus(WorkerStatus.Status.ERROR,"error fetching from queue "+e.getMessage());
                 break;
             }
-            sequence=entry.sequence;
             ByteBuffer buffer = ByteBuffer.wrap((entry.data + "\r\n").getBytes());
             try {
                 channel.write(buffer);
