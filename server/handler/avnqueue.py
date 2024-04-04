@@ -214,7 +214,7 @@ class AVNQueue(AVNWorker):
               numErrors=startSequence-sequence
               startPoint=0
             allowedAge=time.monotonic()-maxAge #maybe better related to return point
-            while self.history[startPoint].timestamp < allowedAge and startPoint < len(self.history):
+            while startPoint < len(self.history) and self.history[startPoint].timestamp < allowedAge:
               numErrors+=1
               startPoint+=1
             if startPoint < len(self.history):
@@ -225,12 +225,16 @@ class AVNQueue(AVNWorker):
               seq=startSequence+startPoint+numrt-1
               rtlist=self.history[startPoint:startPoint+numrt]
               break
+            #if we did not find anything
+            #we start the next time at the topmost sequence+1
+            sequence=self.sequence+1
+            seq=sequence #we return this if nothing found
           if len(rtlist) < 1:
             wait = stop - time.monotonic()
             if wait <= 0:
               break
             self.listlock.wait(wait)
-      except:
+      except Exception as e:
         pass
     if len(rtlist) < 1:
       if returnError:
