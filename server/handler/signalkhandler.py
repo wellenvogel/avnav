@@ -1642,11 +1642,14 @@ class AVNSignalKHandler(AVNWorker):
 
   def storeData(self,node,priority):
     if 'notifications' in node:
+      def storeNotification(path,value,source,timestampstr):
+        timestamp=self.timestampToMonotonic(timestampstr)
+        alarmList.handleNotification(path,value,source,timestamp)
       alarmList=self.deltas.copy()
       item = node.get('notifications')
       if item is not None:
         for k,v in item.items():
-          self.iterateToValue(v,'notifications.'+k,alarmList.handleNotification)
+          self.iterateToValue(v,'notifications.'+k,storeNotification)
       self.handleNotifications(alarmList.skList,True)
     def store(path,value,source,timestampstr):
       timestamp=self.timestampToMonotonic(timestampstr) if not self.config.ignoreTs else time.monotonic()
