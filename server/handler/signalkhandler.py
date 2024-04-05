@@ -1430,9 +1430,15 @@ class AVNSignalKHandler(AVNWorker):
     if wpData.useRhumbLine:
       PRFX='navigation.courseRhumbline'
     rt={
-      PRFX+'.nextPoint':{
+      PRFX+'.nextPoint.position':{
         'latitude':wpData.lat,
         'longitude':wpData.lon,
+      } if wpData.validData else None,
+      #workaround for https://github.com/SignalK/signalk-to-nmea2000/issues/94
+      #we simply send the nextPoint lat/lon twice
+      PRFX + '.nextPoint': {
+        'latitude': wpData.lat,
+        'longitude': wpData.lon,
       } if wpData.validData else None,
       PRFX+'.previousPoint.position':{
         'latitude':wpData.fromLat,
