@@ -69,16 +69,15 @@ class AVNIpServiceReader(AVNWorker):
       return None
     rt = [
       cls.PRIORITY_PARAM_DESCRIPTION,
-      cls.P_SERVICE_NAME,
+      cls.P_SERVICE_NAME.copy(rangeOrList=cls._listServices),
       cls.P_TIMEOUT,
       cls.P_MINTIME,
       cls.FILTER_PARAM,
       cls.P_WRITE_OUT,
-      cls.P_WRITE_FILTER.copy(condition={cls.P_WRITE_OUT:True}),
-      cls.P_BLACKLIST.copy(condition={cls.P_WRITE_OUT:True}),
-      cls.REPLY_RECEIVED.copy(condition={cls.P_WRITE_OUT:True})
+      cls.P_WRITE_FILTER.copy(condition={cls.P_WRITE_OUT.name:True}),
+      cls.P_BLACKLIST.copy(condition={cls.P_WRITE_OUT.name:True}),
+      cls.REPLY_RECEIVED.copy(condition={cls.P_WRITE_OUT.name:True})
     ]
-    cls.P_SERVICE_NAME.rangeOrList=cls._listServices
     return rt
 
   @classmethod
