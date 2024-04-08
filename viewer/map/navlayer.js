@@ -145,6 +145,7 @@ const positionKeys={
     valid:      keys.nav.gps.valid,
     hdm:        keys.nav.gps.headingMag,
     hdt:        keys.nav.gps.headingTrue,
+    stw:        keys.nav.gps.waterSpeed,
     boatDirection: keys.nav.display.boatDirection,
     directionMode: keys.nav.display.directionMode,
     isSteady:   keys.nav.display.isSteady
@@ -158,18 +159,18 @@ const positionKeys={
 NavLayer.prototype.onPostCompose=function(center,drawing){
     let anchorDistance=activeRoute.anchorWatch();
     let gps=globalStore.getMultiple(positionKeys);
-    let boatDirectionMode=globalStore.getData(keys.properties.boatDirectionMode,'cog');
-    let boatRotation=gps.boatDirection;
-    let usedHdg=gps.directionMode !== 'cog';
-    let boatStyle=assign({},gps.isSteady?this.boatStyleSteady:(usedHdg?this.boatStyleHdg:this.boatStyle));
+    let heading=gps.boatDirection;
+    let headingMode=globalStore.getData(keys.properties.headingMode,'cog');
+    let useHeading=gps.directionMode !== 'cog';
+    let boatStyle=assign({},gps.isSteady?this.boatStyleSteady:(useHeading?this.boatStyleHdg:this.boatStyle));
     let course=gps.course;
     if (course === undefined) course=0;
     if (boatStyle.rotate === false){
         boatStyle.rotation=0;
     }
     else {
-        if (boatRotation !== undefined){
-            boatStyle.rotation = boatRotation  * Math.PI / 180;
+        if (heading !== undefined){
+            boatStyle.rotation = heading  * Math.PI / 180;
         }
         else{
             boatStyle.rotation = 0;
@@ -178,23 +179,28 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
     let boatPosition = this.mapholder.transformToMap(gps.position.toCoord());
     if (globalStore.getData(keys.properties.layers.boat) && gps.valid) {
         let courseVectorTime=parseInt(globalStore.getData(keys.properties.navBoatCourseTime,600));
-        let courseVectorDistance=(gps.speed !== undefined)?gps.speed*courseVectorTime:0;
         let f=globalStore.getData(keys.properties.boatIconScale,1.0);
         boatStyle.size=[boatStyle.size[0]*f, boatStyle.size[1]*f];
         boatStyle.anchor=[boatStyle.anchor[0]*f,boatStyle.anchor[1]*f];
         drawing.drawImageToContext(boatPosition, boatStyle.image, boatStyle);
         let other;
-        if (! gps.isSteady) {
+        if (!gps.isSteady) {
             let courseVectorStyle = assign({}, this.circleStyle);
             if (boatStyle.courseVectorColor !== undefined) {
                 courseVectorStyle.color = boatStyle.courseVectorColor;
             }
-            if (courseVectorDistance > 0 && boatStyle.courseVector !== false) {
-                other = this.computeTarget(boatPosition, course, courseVectorDistance);
-                drawing.drawLineToContext([boatPosition, other], courseVectorStyle);
-                if (boatDirectionMode !== 'cog' && boatRotation !== undefined && globalStore.getData(keys.properties.boatDirectionVector)) {
-                    other = this.computeTarget(boatPosition, boatRotation, courseVectorDistance);
-                    drawing.drawLineToContext([boatPosition, other], assign({dashed: true}, courseVectorStyle));
+            if(boatStyle.courseVector !== false) {
+                let courseVectorDistance=(gps.speed !== undefined)?gps.speed*courseVectorTime:0;
+                if (course !== undefined && courseVectorDistance>0) {
+                    other = this.computeTarget(boatPosition, course, courseVectorDistance);
+                    drawing.drawLineToContext([boatPosition, other], courseVectorStyle);
+                }
+                if (useHeading && globalStore.getData(keys.properties.boatDirectionVector)) {
+                    let headingVectorDistance=(gps.stw !== undefined)?gps.stw*courseVectorTime:courseVectorDistance;
+                    if (heading !== undefined && headingVectorDistance>0) {
+                        other = this.computeTarget(boatPosition, heading, headingVectorDistance);
+                        drawing.drawLineToContext([boatPosition, other], assign({dashed: true}, courseVectorStyle));
+                    }
                 }
             }
         }

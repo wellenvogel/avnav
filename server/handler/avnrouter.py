@@ -26,6 +26,7 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
 import json
+import math
 import os
 import sys
 
@@ -168,13 +169,9 @@ class WpData:
     if v is None:
       return None
     return float(v)
-  def _calcVmg(self,targetCourse):
-    if self.course is None or self.speed is None or targetCourse is None:
-      return None
-    coursediff=min(abs(targetCourse-self.course),abs(targetCourse+360-self.course),abs(targetCourse-(self.course+360)))
-    if coursediff > 85:
-      return None
-    return self.speed * math.cos(math.pi/180*coursediff)
+  def _calcVmg(self, targetCourse):
+    if all(v is not None for v in [self.course, self.speed, targetCourse]):
+      return self.speed * math.cos(math.radians(targetCourse-self.course))
 
   def __init__(self,leg: AVNRoutingLeg = None,lat=None,lon=None,speed=None,course=None,useRhumLine=False):
     self.validData=False
