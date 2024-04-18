@@ -94,7 +94,7 @@ public class Decoder extends Worker {
     public static final EditableParameter.StringParameter OWN_MMSI= new
             EditableParameter.StringParameter("ownMMSI",R.string.labelSettingsOwnMMSI,"");
     private SatStatus satStatus=null;
-    private MovingSum sCounter=new MovingSum(10);
+    private NmeaQueue.Fetcher fetcher;
 
     private void addParameters(){
         parameterDescriptions.addParams(OWN_MMSI,POSITION_AGE, NMEA_AGE,AIS_AGE,READ_TIMEOUT_PARAMETER, QUEUE_AGE_PARAMETER);
@@ -294,7 +294,6 @@ public class Decoder extends Worker {
             store=new AisStore(OWN_MMSI.fromJson(parameters));
             int noDataTime=READ_TIMEOUT_PARAMETER.fromJson(parameters)*1000;
             long lastConnect = 0;
-            int sequence = -1;
             SentenceFactory factory = SentenceFactory.getInstance();
             HashMap<String,AisPacketParser> aisparsers=new HashMap<>();
             Thread cleanupThread=new Thread(new Runnable() {
@@ -318,39 +317,26 @@ public class Decoder extends Worker {
             long auxAge= NMEA_AGE.fromJson(parameters)*1000;
             long posAge= POSITION_AGE.fromJson(parameters) *1000;
             long queueAge = QUEUE_AGE_PARAMETER.fromJson(parameters);
-
+            fetcher.reset();
             MovingSum eCounter=new MovingSum(10);
             while (!shouldStop(startSequence)) {
                 NmeaQueue.Entry entry;
                 try {
-                    entry = queue.fetch(sequence, 200,queueAge);
+                    entry = fetcher.fetch(200,queueAge);
                 } catch (InterruptedException e) {
                     if (shouldStop(startSequence)) return;
-                    updateStatus(sCounter,eCounter);
                     sleep(2000);
                     continue;
                 }
                 if (shouldStop(startSequence)) return;
-                updateStatus(sCounter,eCounter);
                 if (entry == null) {
                     continue;
                 }
-                if (sequence > 0 && entry.sequence != (sequence+1)){
-                    eCounter.add(entry.sequence-sequence-1);
-                }
-                else{
-                    eCounter.add(0);
-                }
-                sequence = entry.sequence;
-                if (! entry.valid) continue;
                 String line = entry.data;
-                if ((line.startsWith("$") && SentenceValidator.isValid(line)) || line.startsWith("!")){
-                    sCounter.add(1);
-                }
                 try {
                     if (line.startsWith("$")) {
                         //NMEA
-                        if (SentenceValidator.isValid(line)) {
+                        if (entry.validated) {
                             try {
                                 line = correctTalker(line);
                                 Sentence s = factory.createParser(line);
@@ -365,7 +351,7 @@ public class Decoder extends Worker {
                                             getTypeName() ,gsv.getSentenceIndex(),
                                             gsv.getSentenceCount(),gsv.getSatelliteCount());
                                     if (currentGsvStore.getValid()) {
-                                        satStatus=new SatStatus(currentGsvStore.getSatCount(),currentGsvStore.getNumUsed(),sCounter.val() > 0);
+                                        satStatus=new SatStatus(currentGsvStore.getSatCount(),currentGsvStore.getNumUsed(),fetcher.hasData());
                                         currentGsvStore = new GSVStore(locationPriority);
                                         AvnLog.dfs("%s: GSV sentence last, numSat=%d",getTypeName(),satStatus.numSat);
                                     }
@@ -723,6 +709,12 @@ public class Decoder extends Worker {
     Decoder(String name, GpsService ctx, NmeaQueue queue){
         super(name,ctx);
         this.queue=queue;
+        this.fetcher=new NmeaQueue.Fetcher(queue, new NmeaQueue.Fetcher.StatusUpdate() {
+            @Override
+            public void update(MovingSum received, MovingSum errors) {
+                updateStatus(received,errors);
+            }
+        },200);
         addParameters();
         status.canEdit=true;
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -745,7 +737,7 @@ public class Decoder extends Worker {
 
     SatStatus getSatStatus() {
         SatStatus st=satStatus;
-        if (st == null) st=new SatStatus(0,0, sCounter.val()>0);
+        if (st == null) st=new SatStatus(0,0, fetcher.hasData());
         return st;
     }
 

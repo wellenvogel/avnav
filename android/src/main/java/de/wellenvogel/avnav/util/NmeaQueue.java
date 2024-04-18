@@ -21,6 +21,8 @@ package de.wellenvogel.avnav.util;
 
 import android.os.SystemClock;
 
+import net.sf.marineapi.nmea.sentence.SentenceValidator;
+
 import java.util.ArrayList;
 
 
@@ -30,6 +32,7 @@ public class NmeaQueue {
         public String data;
         public String source;
         public int priority=0;
+        public boolean validated=false;
         public long receiveTime=0;
         public boolean valid=false;
         Entry(int s,String d,String source){
@@ -53,6 +56,67 @@ public class NmeaQueue {
             this.receiveTime=SystemClock.uptimeMillis();
         }
     }
+
+    public static class Fetcher{
+        NmeaQueue queue;
+        long statusInterval=200;
+        public static interface StatusUpdate{
+            void update(MovingSum received, MovingSum errors);
+        }
+        StatusUpdate updater;
+        MovingSum received;
+        MovingSum errors;
+        int sequence=-1;
+        public Fetcher(NmeaQueue queue,StatusUpdate updater,long updateInterval){
+            this.queue=queue;
+            this.updater=updater;
+            this.statusInterval=updateInterval;
+            received=new MovingSum(10);
+            errors=new MovingSum(10);
+        }
+        public void reset(){
+            sequence=-1;
+            received.clear();
+            errors.clear();
+        }
+        private void status(){
+            if (received.shouldUpdate(this.statusInterval)){
+                if (updater != null) {
+                    received.add(0);
+                    errors.add(0);
+                    updater.update(received,errors);
+                }
+            }
+        }
+        public boolean hasData(){
+            return received.val() > 0;
+        }
+        public Entry fetch(long maxWait,long maxAge) throws InterruptedException{
+            try {
+                Entry rt=queue.fetch(sequence,maxWait,maxAge);
+                if (rt == null){
+                    status();
+                    return rt;
+                }
+                if (sequence > 0 && rt.sequence != (sequence+1)){
+                    errors.add(rt.sequence-sequence-1);
+                }
+                else{
+                    errors.add(0);
+                }
+                sequence = rt.sequence;
+                if (rt.validated){
+                    received.add(1);
+                }
+                status();
+                return rt;
+            } catch (InterruptedException e){
+                status();
+                throw e;
+            }
+        }
+
+    }
     private int length=30;
     private int sequence=0;
     private ArrayList<Entry> queue =new ArrayList<Entry>();
@@ -62,8 +126,13 @@ public class NmeaQueue {
     public NmeaQueue(){}
 
     public synchronized int add(String data,String source,int priority){
+        if (data == null) return sequence;
+        Entry e=new Entry(sequence,data,source,priority);
         sequence++;
-        queue.add(new Entry(sequence,data,source,priority));
+        if ((data.startsWith("$") && SentenceValidator.isValid(data)) || data.startsWith("!")){
+            e.validated=true;
+        }
+        queue.add(e);
         if (queue.size() > length) queue.remove(0);
         notifyAll();
         return sequence;
