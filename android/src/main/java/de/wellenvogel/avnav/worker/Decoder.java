@@ -97,7 +97,7 @@ public class Decoder extends Worker {
     private NmeaQueue.Fetcher fetcher;
 
     private void addParameters(){
-        parameterDescriptions.addParams(OWN_MMSI,POSITION_AGE, NMEA_AGE,AIS_AGE,READ_TIMEOUT_PARAMETER, QUEUE_AGE_PARAMETER);
+        parameterDescriptions.addParams(OWN_MMSI,POSITION_AGE, NMEA_AGE,AIS_AGE, QUEUE_AGE_PARAMETER);
     }
     static class AuxiliaryEntry{
         public long timeout;
@@ -281,19 +281,11 @@ public class Decoder extends Worker {
                 }
             }
         }
-        private void updateStatus(MovingSum sCounter,MovingSum eCounter){
-            if (sCounter.shouldUpdate(200)){
-                eCounter.add(0);
-                boolean hasData=sCounter.val()>0;
-                setStatus(hasData?WorkerStatus.Status.NMEA: WorkerStatus.Status.INACTIVE,
-                            String.format("%s NMEA data rcv=%.2f/s,err=%d/10s",hasData?"receiving":"no",sCounter.avg(),eCounter.val()));
-            }
-        }
+
+
         @Override
         public void run(int startSequence) throws JSONException {
             store=new AisStore(OWN_MMSI.fromJson(parameters));
-            int noDataTime=READ_TIMEOUT_PARAMETER.fromJson(parameters)*1000;
-            long lastConnect = 0;
             SentenceFactory factory = SentenceFactory.getInstance();
             HashMap<String,AisPacketParser> aisparsers=new HashMap<>();
             Thread cleanupThread=new Thread(new Runnable() {
@@ -318,7 +310,6 @@ public class Decoder extends Worker {
             long posAge= POSITION_AGE.fromJson(parameters) *1000;
             long queueAge = QUEUE_AGE_PARAMETER.fromJson(parameters);
             fetcher.reset();
-            MovingSum eCounter=new MovingSum(10);
             while (!shouldStop(startSequence)) {
                 NmeaQueue.Entry entry;
                 try {
@@ -712,7 +703,8 @@ public class Decoder extends Worker {
         this.fetcher=new NmeaQueue.Fetcher(queue, new NmeaQueue.Fetcher.StatusUpdate() {
             @Override
             public void update(MovingSum received, MovingSum errors) {
-                updateStatus(received,errors);
+                setStatus(fetcher.hasData()? WorkerStatus.Status.NMEA: WorkerStatus.Status.INACTIVE,
+                        fetcher.getStatusString());
             }
         },200);
         addParameters();

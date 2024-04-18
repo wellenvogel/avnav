@@ -91,6 +91,12 @@ public class NmeaQueue {
         public boolean hasData(){
             return received.val() > 0;
         }
+        public static String getStatusString(MovingSum received,MovingSum errors){
+            return String.format("%s NMEA data rcv=%.2f/s,err=%d/10s", (received.val() > 0) ? "receiving" : "no", received.avg(), errors.val());
+        }
+        public String getStatusString(){
+            return getStatusString(received,errors);
+        }
         public Entry fetch(long maxWait,long maxAge) throws InterruptedException{
             try {
                 Entry rt=queue.fetch(sequence,maxWait,maxAge);
@@ -98,13 +104,17 @@ public class NmeaQueue {
                     status();
                     return rt;
                 }
-                if (sequence > 0 && rt.sequence != (sequence+1)){
+                if (sequence > 0 && rt.sequence > (sequence+1)){
                     errors.add(rt.sequence-sequence-1);
                 }
                 else{
                     errors.add(0);
                 }
                 sequence = rt.sequence;
+                if (! rt.valid){
+                    status();
+                    return null;
+                }
                 if (rt.validated){
                     received.add(1);
                 }
@@ -141,11 +151,11 @@ public class NmeaQueue {
     public synchronized Entry fetch(int sequence,long maxWait,long maxAge) throws InterruptedException {
         long start= SystemClock.uptimeMillis();
         long end=start+maxWait;
-        int queuePos=-1;
+        int queuePos=queue.size()-1;
         while (queue.size() < 1 || queue.get(queue.size()-1).sequence <= sequence){
             queuePos=queue.size()-1; //where to start searching
             long remain=end-SystemClock.uptimeMillis();
-            if (remain <= 0) return new Entry(sequence);
+            if (remain <= 0) return null;
             wait(remain);
         }
         long oldest=SystemClock.uptimeMillis()-maxAge;
@@ -167,12 +177,19 @@ public class NmeaQueue {
             Entry e=queue.get(i);
             if (e.sequence > sequence && e.receiveTime >= oldest ) return queue.get(i);
         }
-        if (queue.size() < 1) return new Entry(sequence);
+        if (queue.size() < 1) return null;
         //it seems that only outdated entries are in the queue
         //do not check them again - return an invalid entry with
         //the current highest sequence
         //users will start looking only from this sequence when calling again
-        return new Entry(queue.get(queue.size()-1).sequence);
+        int highestSequence=queue.get(queue.size()-1).sequence;
+        if (highestSequence > sequence) {
+            //we lost messages as they are too old
+            //but it makes no sense to query them again
+            //so return an invalid entry with the highest sequence
+            return new Entry(highestSequence);
+        }
+        return null;
     }
     public synchronized void clear(){
         queue.clear();
