@@ -25,6 +25,9 @@ public class WorkerStatus implements AvnUtil.IJsonObect {
             children.put(k,other.children.get(k));
         }
     }
+    public synchronized WorkerStatus copy(){
+        return new WorkerStatus(this);
+    }
     public boolean canEdit=false;
     boolean canDelete=false;
     boolean disabled=false;
@@ -39,6 +42,10 @@ public class WorkerStatus implements AvnUtil.IJsonObect {
     }
     Status status= Status.INACTIVE;
     String info;
+    public synchronized void update(Status status,String info){
+        this.status=status;
+        this.info=info;
+    }
     private static class Child{
         Status status;
         String info;
@@ -66,7 +73,7 @@ public class WorkerStatus implements AvnUtil.IJsonObect {
     }
 
     @Override
-    public JSONObject toJson() throws JSONException {
+    public synchronized JSONObject toJson() throws JSONException {
         JSONObject rt=new JSONObject();
         rt.put("canEdit",canEdit);
         rt.put("canDelete",canDelete);

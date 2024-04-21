@@ -74,7 +74,12 @@ public abstract class SingleConnectionHandler extends ChannelWorker {
                 continue;
             }
             AvnLog.d(LOGPRFX, name + ": connected to " + connection.getId());
-            handler=new ConnectionReaderWriter(connection,getSourceName(),getPriority(null),queue,QUEUE_AGE_PARAMETER.fromJson(parameters));
+            handler=new ConnectionReaderWriter(connection, getSourceName(), getPriority(null), queue, QUEUE_AGE_PARAMETER.fromJson(parameters), new ConnectionReaderWriter.StatusUpdater() {
+                @Override
+                public void update(WorkerStatus.Status status, String info) {
+                    setStatus(status,info);
+                }
+            });
             try {
                 handler.run();
             }catch (Throwable t){
@@ -122,14 +127,9 @@ public abstract class SingleConnectionHandler extends ChannelWorker {
                 return;
             }
         }
-        if ( handler == null || ! handler.hasNmea()){
+        if ( handler == null || ! handler.isConnected()){
             if (status.status == WorkerStatus.Status.NMEA) {
                 setStatus(WorkerStatus.Status.STARTED, "no data timeout");
-            }
-        }
-        if (handler != null && handler.hasNmea()){
-            if (status.status != WorkerStatus.Status.NMEA) {
-                setStatus(WorkerStatus.Status.NMEA, "("+connects+") connected to " + connection.getId());
             }
         }
     }

@@ -100,7 +100,12 @@ public class SocketWriter extends ChannelWorker {
         Thread thread;
         ClientConnection connection;
         Client(ClientConnection connection) throws JSONException {
-            handler=new ConnectionReaderWriter(connection,getSourceName(),getPriority(null),queue,QUEUE_AGE_PARAMETER.fromJson(parameters));
+            handler=new ConnectionReaderWriter(connection, getSourceName(), getPriority(null), queue, QUEUE_AGE_PARAMETER.fromJson(parameters), new ConnectionReaderWriter.StatusUpdater() {
+                @Override
+                public void update(WorkerStatus.Status st, String info) {
+                    status.setChildStatus(connection.getId(),st,info);
+                }
+            });
             this.connection=connection;
             this.thread=new Thread(new Runnable() {
                 @Override
