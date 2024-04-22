@@ -145,6 +145,7 @@ const positionKeys={
     valid:      keys.nav.gps.valid,
     hdm:        keys.nav.gps.headingMag,
     hdt:        keys.nav.gps.headingTrue,
+    stw:        keys.nav.gps.waterSpeed,
     boatDirection: keys.nav.display.boatDirection,
     directionMode: keys.nav.display.directionMode,
     isSteady:   keys.nav.display.isSteady
@@ -158,10 +159,9 @@ const positionKeys={
 NavLayer.prototype.onPostCompose=function(center,drawing){
     let anchorDistance=activeRoute.anchorWatch();
     let gps=globalStore.getMultiple(positionKeys);
-    let boatDirectionMode=globalStore.getData(keys.properties.boatDirectionMode,'cog');
     let boatRotation=gps.boatDirection;
-    let usedHdg=gps.directionMode !== 'cog';
-    let boatStyle=assign({},gps.isSteady?this.boatStyleSteady:(usedHdg?this.boatStyleHdg:this.boatStyle));
+    let useHdg=gps.directionMode !== 'cog';
+    let boatStyle=assign({},gps.isSteady?this.boatStyleSteady:(useHdg?this.boatStyleHdg:this.boatStyle));
     let course=gps.course;
     if (course === undefined) course=0;
     if (boatStyle.rotate === false){
@@ -178,7 +178,6 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
     let boatPosition = this.mapholder.transformToMap(gps.position.toCoord());
     if (globalStore.getData(keys.properties.layers.boat) && gps.valid) {
         let courseVectorTime=parseInt(globalStore.getData(keys.properties.navBoatCourseTime,600));
-        let courseVectorDistance=(gps.speed !== undefined)?gps.speed*courseVectorTime:0;
         let f=globalStore.getData(keys.properties.boatIconScale,1.0);
         boatStyle.size=[boatStyle.size[0]*f, boatStyle.size[1]*f];
         boatStyle.anchor=[boatStyle.anchor[0]*f,boatStyle.anchor[1]*f];
@@ -189,12 +188,18 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
             if (boatStyle.courseVectorColor !== undefined) {
                 courseVectorStyle.color = boatStyle.courseVectorColor;
             }
-            if (courseVectorDistance > 0 && boatStyle.courseVector !== false) {
-                other = this.computeTarget(boatPosition, course, courseVectorDistance);
-                drawing.drawLineToContext([boatPosition, other], courseVectorStyle);
-                if (boatDirectionMode !== 'cog' && boatRotation !== undefined && globalStore.getData(keys.properties.boatDirectionVector)) {
-                    other = this.computeTarget(boatPosition, boatRotation, courseVectorDistance);
-                    drawing.drawLineToContext([boatPosition, other], assign({dashed: true}, courseVectorStyle));
+            if (boatStyle.courseVector !== false) {
+                let courseVectorDistance=(gps.speed !== undefined)?gps.speed*courseVectorTime:0;
+                if (courseVectorDistance > 0) {
+                    other = this.computeTarget(boatPosition, course, courseVectorDistance);
+                    drawing.drawLineToContext([boatPosition, other], courseVectorStyle);
+                }
+                if (useHdg && boatRotation !== undefined && globalStore.getData(keys.properties.boatDirectionVector)) {
+                    let headingVectorDistance=(gps.stw !== undefined)?gps.stw*courseVectorTime:courseVectorDistance;
+                    if (headingVectorDistance > 0) {
+                        other = this.computeTarget(boatPosition, boatRotation, headingVectorDistance);
+                        drawing.drawLineToContext([boatPosition, other], assign({dashed: true}, courseVectorStyle));
+                    }
                 }
             }
         }

@@ -343,6 +343,10 @@ public class AvnUtil {
         }
         return rhumbLineBearing(start,end);
     }
+    public static double vmg(Location current,double bearingTo){
+        if (!current.hasBearing() || ! current.hasSpeed()) return 0;
+        return current.getSpeed()*Math.cos(Math.toRadians(bearingTo-current.getBearing()));
+    }
 
     public static class KeyValueList extends ArrayList<KeyValue> {
         public KeyValueList(KeyValue... parameter){

@@ -703,7 +703,7 @@ public class RouteHandler extends DirectoryRequestHandler  {
                 RMBSentence rmb = (RMBSentence) factory.createParser(TalkerId.GP, "RMB");
                 rmb.setArrivalStatus((distance <= leg.approachDistance) ? DataStatus.ACTIVE : DataStatus.VOID);
                 rmb.setBearing(destBearing);
-                rmb.setVelocity(AvnUtil.msToKn * currentPosition.getSpeed());
+                rmb.setVelocity(AvnUtil.msToKn * AvnUtil.vmg(currentPosition,destBearing));
                 rmb.setSteerTo(steerTo);
                 rmb.setRange((sDistance < 999.9) ? sDistance : 999.9);
                 rmb.setCrossTrackError(xte);
