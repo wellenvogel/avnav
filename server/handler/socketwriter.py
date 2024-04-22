@@ -131,12 +131,15 @@ class AVNSocketWriter(AVNWorker):
     if rt is None:
       return None
     return rt
-  
+
+  def getSubSource(self,addr):
+    return self.getSourceName()+":"+str(addr)
 
   #the writer for a connected client
   def client(self, socketConnection, addr, startSequence):
     tinfo=TrackingInfoHandler(self)
     infoName="SocketWriter-%s"%(str(addr),)
+    subsource=self.getSubSource(addr)
     clientConnection=SocketReader(socketConnection,  self.queue, SubInfoHandler(tinfo,infoName,track=False),
                                   sourcePriority=self.PRIORITY_PARAM_DESCRIPTION.fromDict(self.param))
     rd=self.P_READ.fromDict(self.param)
@@ -149,22 +152,22 @@ class AVNSocketWriter(AVNWorker):
       )
       clientHandler.daemon=True
       clientHandler.start()
-    blackList=self.BLACKLIST_PARAM.fromDict(self.param)
-    if not self.getWParam(self.REPLY_RECEIVED):
-      blackList+=","+self.getSourceName(str(addr))
     clientConnection.writeSocket(self.FILTER_PARAM.fromDict(self.param),
                                  self.version,
-                                 blackList)
+                                 self.getWParam(self.BLACKLIST_PARAM),
+                                 subsource=subsource)
     self.removeHandler(addr)
     tinfo.deleteInfo(infoName)
 
   def clientRead(self,connection,addr,startSequence):
     threading.currentThread().setName("%s-Reader-%s"%(self.getName(),str(addr)))
     #on each newly connected socket we recompute the filter
+    ownsource=self.getSubSource(addr) if not self.getWParam(self.REPLY_RECEIVED) else None
     connection.readSocket(
-      self.getSourceName(str(addr)),
+      self.getSourceName(),
       filter=self.P_READFILTER.fromDict(self.param),
-      minTime=self.P_MINTIME.fromDict(self.param))
+      minTime=self.P_MINTIME.fromDict(self.param),
+      ownsource=ownsource)
 
 
   def _closeSockets(self):
@@ -223,6 +226,9 @@ class AVNSocketWriter(AVNWorker):
         except:
           pass
 
+  def getSourceName(self, defaultSuffix=None):
+    return super().getSourceName(self.getWParam(self.P_PORT))
+
   #this is the main thread - listener
   def run(self):
     self.startSequence+=1
@@ -239,8 +245,6 @@ class AVNSocketWriter(AVNWorker):
       if self.AVAHI_ENABLED.fromDict(self.param):
         self.claimUsedResource(UsedResource.T_SERVICE,self.getResourceFromName(self.AVAHI_NAME.fromDict(self.param)))
       self.setNameIfEmpty("%s-%s"%(self.getName(),str(self.P_PORT.fromDict(self.param))))
-      self.blackList = self.getStringParam('blackList').split(',')
-      self.blackList.append(self.getSourceName())
       try:
         try:
           self.listener=socket.socket()

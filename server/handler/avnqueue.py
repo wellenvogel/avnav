@@ -31,12 +31,13 @@ import avnav_handlerList
 
 
 class NmeaEntry(object):
-  def __init__(self,data,source=None,omitDecode=False,sourcePriority=NMEAParser.DEFAULT_SOURCE_PRIORITY):
+  def __init__(self,data,source=None,omitDecode=False,sourcePriority=NMEAParser.DEFAULT_SOURCE_PRIORITY,subsource=None):
     self.data=data
     self.source=source
     self.omitDecode=omitDecode
     self.sourcePriority=sourcePriority
     self.timestamp=time.monotonic()
+    self.subsource=subsource
 
 
 
@@ -109,7 +110,7 @@ class AVNQueue(AVNWorker):
 
 
 
-  def addNMEA(self, entry,source=None,addCheckSum=False,omitDecode=False,sourcePriority=NMEAParser.DEFAULT_SOURCE_PRIORITY):
+  def addNMEA(self, entry,source=None,addCheckSum=False,omitDecode=False,sourcePriority=NMEAParser.DEFAULT_SOURCE_PRIORITY,subsource=None):
     """
     add an NMEA record to our internal queue
     @param entry: the record
@@ -128,7 +129,7 @@ class AVNQueue(AVNWorker):
     else:
       if not entry[-2:]=="\r\n":
         entry=entry+"\r\n"
-    nentry=NmeaEntry(entry,source,omitDecode,sourcePriority)
+    nentry=NmeaEntry(entry,source,omitDecode,sourcePriority,subsource=subsource)
     with self.listlock:
       self.sequence+=1
       if len(self.history) >= self.maxlist:
@@ -155,7 +156,8 @@ class AVNQueue(AVNWorker):
                        nmeafilter=None,
                        blackList=None,
                        returnError=False,
-                       maxAge=None):
+                       maxAge=None,
+                       omitsubsource=None):
     '''
     fetch data from the queue
     @param sequence: the last read sequence
@@ -166,6 +168,7 @@ class AVNQueue(AVNWorker):
     @param blackList: a list of source names to be omitted
     @param returnError: return an error flag
     @param maxAge: max age (in s) of the messages, defaults to the configured maxAge
+    @param omitsubsource: if set do not fetch records from this subsource
     @return:
     '''
     seq=0
@@ -182,6 +185,8 @@ class AVNQueue(AVNWorker):
     stop = now + waitTime
     numErrors=0
     def shouldInclude(item: NmeaEntry):
+      if omitsubsource is not None and item.subsource is not None and item.subsource == omitsubsource:
+        return False
       if nmeafilter is not None:
         if not NMEAParser.checkFilter(item.data,nmeafilter):
           return False
@@ -290,7 +295,8 @@ class Fetcher:
                maxAge=None,
                returnErrors=False,
                sumKey='received',
-               errorKey='skipped'):
+               errorKey='skipped',
+               ownsubsource=None):
     self._queue=queue
     self._info=infoHandler
     self._maxEntries=maxEntries
@@ -307,6 +313,7 @@ class Fetcher:
     self._errorKey=errorKey
     if errorKey is not None:
       self._nmeaErrors=MovingSum()
+    self._ownsubsource=ownsubsource
 
   def __del__(self):
     if self._sumKey is not None:
@@ -349,7 +356,8 @@ class Fetcher:
       nmeafilter=self._nmeaFilter,
       blackList=self._blackList,
       returnError=True,
-      maxEntries=self._maxEntries if maxEntries is None else maxEntries
+      maxEntries=self._maxEntries if maxEntries is None else maxEntries,
+      omitsubsource=self._ownsubsource
       )
     if self._nmeaErrors is not None:
       self._nmeaErrors.add(numErrors)

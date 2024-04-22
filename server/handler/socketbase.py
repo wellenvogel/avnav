@@ -71,7 +71,7 @@ class SocketReader(object):
       return line
     return line[match.span()[0]:]
 
-  def readSocket(self,sourceName,filter=None,timeout=None,minTime=None):
+  def readSocket(self,sourceName,filter=None,timeout=None,minTime=None,ownsource=None):
     INAME='reader'
     nmeaSum=MovingSum()
     def nmeaInfo(peer):
@@ -125,7 +125,7 @@ class SocketReader(object):
               if not NMEAParser.checkFilter(l, filterA):
                 continue
               nmeaSum.add(1)
-              self.queue.addNMEA(l,source=sourceName,sourcePriority=self.sourcePriority)
+              self.queue.addNMEA(l,source=sourceName,sourcePriority=self.sourcePriority,subsource=ownsource)
               if minTime is not None:
                 time.sleep(minTime/1000)
             else:
@@ -158,7 +158,7 @@ class SocketReader(object):
     AVNLog.info("disconnected from socket %s",peer)
     self.infoHandler.deleteInfo(INAME)
 
-  def writeSocket(self,filterstr,version,blacklist):
+  def writeSocket(self,filterstr,version,blacklist,subsource=None):
     '''
     write method
     there is no stop handling so the socket must be closed from another thread
@@ -172,7 +172,8 @@ class SocketReader(object):
                     nmeaFilter=filterstr,
                     blackList=blacklist,
                     errorKey="werr",
-                    sumKey='writer')
+                    sumKey='writer',
+                    ownsubsource=subsource)
     try:
       fetcher.report()
       self.socket.sendall(("avnav_server %s\r\n" % (version)).encode('utf-8'))
