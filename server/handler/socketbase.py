@@ -171,7 +171,6 @@ class SocketReader(object):
     fetcher=Fetcher(self.queue,self.infoHandler,
                     nmeaFilter=filterstr,
                     blackList=blacklist,
-                    errorKey="werr",
                     sumKey='writer',
                     ownsubsource=subsource)
     try:

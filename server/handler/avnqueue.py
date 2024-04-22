@@ -295,7 +295,6 @@ class Fetcher:
                maxAge=None,
                returnErrors=False,
                sumKey='received',
-               errorKey='skipped',
                ownsubsource=None):
     self._queue=queue
     self._info=infoHandler
@@ -310,16 +309,12 @@ class Fetcher:
     self._sumKey=sumKey
     if sumKey is not None:
       self._nmeaSum=MovingSum()
-    self._errorKey=errorKey
-    if errorKey is not None:
       self._nmeaErrors=MovingSum()
     self._ownsubsource=ownsubsource
 
   def __del__(self):
     if self._sumKey is not None:
       self._info.deleteInfo(self._sumKey)
-    if self._errorKey is not None:
-      self._info.deleteInfo(self._errorKey)
 
   def updateParam(self,
                   maxEntries=None,
@@ -375,20 +370,10 @@ class Fetcher:
     if self._nmeaErrors is not None:
       self._nmeaErrors.clear()
 
-  def reportSum(self,txt=''):
+  def report(self):
     if self._nmeaSum is None:
       return
     if self._nmeaSum.shouldUpdate():
       self._info.setInfo(self._sumKey,
-                  "%s %.4g/s"%(txt,self._nmeaSum.avg()),
+                  "%.4g/s, err=%d/10s"%(self._nmeaSum.avg(), self._nmeaErrors.val()),
                   WorkerStatus.NMEA if self._nmeaSum.val()>0 else WorkerStatus.INACTIVE)
-  def reportErr(self,txt=''):
-    if self._nmeaErrors is None:
-      return
-    if self._nmeaErrors.shouldUpdate():
-      self._info.setInfo(self._errorKey,
-                  "%s %d errors/10s"%(txt,self._nmeaErrors.val()),
-                  WorkerStatus.ERROR if self._nmeaErrors.val()>0 else WorkerStatus.INACTIVE)
-  def report(self):
-    self.reportErr()
-    self.reportSum()

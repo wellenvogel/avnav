@@ -76,8 +76,7 @@ class SerialWriter(SerialReader):
     self._fetcher=Fetcher(queue,infoHandler,
                           nmeaFilter=self.P_FILTER.fromDict(param),
                           blackList=self.P_BLACKLIST.fromDict(param)+","+sourceName,
-                          sumKey='out',
-                          errorKey='out-skipped')
+                          sumKey='out')
     self.addrmap={}
     #the serial device
     self.buffer=None
