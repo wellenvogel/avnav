@@ -115,7 +115,7 @@ class SerialReader(object):
     self.device=None
     self.lock=threading.Condition()
   def getName(self):
-    return "SerialReader-"+self.param['name']
+    return "SerialReader-"+self.P_PORT.fromDict(self.param,rangeOrListCheck=False)
    
   def stopHandler(self):
     self.doStop=True
@@ -226,7 +226,6 @@ class SerialReader(object):
       filter = filterstr.split(',')
     try:
       while not self.doStop:
-        name = self.getName()
         portname = self.P_PORT.fromDict(self.param,rangeOrListCheck=False)
         timeout = self.P_TIMEOUT.fromDict(self.param)
         porttimeout = timeout * 10
