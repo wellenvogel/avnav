@@ -790,10 +790,10 @@ class AVNWorker(InfoHandler):
     '''
     rt=self.NAME_PARAMETER.fromDict(self.param)
     if rt is not None and rt != "":
-      return rt
+      return rt.replace(',','_')
     if defaultSuffix is None:
       defaultSuffix="?"
-    return "%s-%s"%(self.getName(),str(defaultSuffix))
+    return ("%s-%s"%(self.getName(),str(defaultSuffix))).replace(',','_')
 
   def changeConfig(self,name,value):
     if self.param is None:
