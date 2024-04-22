@@ -65,11 +65,13 @@ public class EditableParameter {
             mandatory=other.mandatory;
             conditions=other.conditions;
         }
-        public void setConditions(AvnUtil.KeyValue...paramters){
+        public EditableParameterBase<T> setConditions(AvnUtil.KeyValue...paramters){
             conditions=new ConditionList(paramters);
+            return this;
         }
-        public void setConditions(AvnUtil.KeyValueList...parameters){
+        public EditableParameterBase<T> setConditions(AvnUtil.KeyValueList...parameters){
             conditions=new ConditionList(parameters);
+            return this;
         }
         public void write(JSONObject target,T value) throws JSONException {
             target.put(name,value);
@@ -207,6 +209,11 @@ public class EditableParameter {
         public BooleanParameter clone(Boolean newDefault){
             BooleanParameter rt=new BooleanParameter(this);
             rt.defaultValue=newDefault;
+            return rt;
+        }
+        public BooleanParameter cloneCondition(AvnUtil.KeyValue ...conditions){
+            BooleanParameter rt=new BooleanParameter(this);
+            rt.setConditions(conditions);
             return rt;
         }
     }

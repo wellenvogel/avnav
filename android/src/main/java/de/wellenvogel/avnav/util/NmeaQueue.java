@@ -24,26 +24,26 @@ import android.os.SystemClock;
 import net.sf.marineapi.nmea.sentence.SentenceValidator;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 
 public class NmeaQueue {
     public static class Entry{
-        public int sequence;
+        public int sequence=-1;
         public String data;
         public String source;
         public int priority=0;
         public boolean validated=false;
         public long receiveTime=0;
         public boolean valid=false;
-        Entry(int s,String d,String source){
-            this.sequence=s;
+        public String connectionId;
+        public Entry(String d,String source){
             this.data=d;
             this.source=source;
             this.receiveTime=SystemClock.uptimeMillis();
             valid=true;
         }
-        Entry(int s,String d,String source, int priority){
-            this.sequence=s;
+        public Entry(String d,String source, int priority){
             this.data=d;
             this.source=source;
             this.priority=priority;
@@ -67,12 +67,35 @@ public class NmeaQueue {
         MovingSum received;
         MovingSum errors;
         int sequence=-1;
+        String[] blacklist=null;
+        String[] filter=null;
+
+        String connectionId=null;
         public Fetcher(NmeaQueue queue,StatusUpdate updater,long updateInterval){
             this.queue=queue;
             this.updater=updater;
             this.statusInterval=updateInterval;
             received=new MovingSum(10);
             errors=new MovingSum(10);
+        }
+        public void setBlackList(String[] blacklist,String ...more){
+            this.blacklist=blacklist;
+            if (more.length > 0){
+                if (this.blacklist == null) {
+                    this.blacklist=more;
+                }
+                else{
+                    int l=this.blacklist.length;
+                    this.blacklist= Arrays.copyOf(this.blacklist,l+more.length);
+                    System.arraycopy(more,0,this.blacklist,l,more.length);
+                }
+            }
+        }
+        public void setConnectionId(String connectionId){
+            this.connectionId=connectionId;
+        }
+        public void setFilter(String[] filter){
+            this.filter=filter;
         }
         public void reset(){
             sequence=-1;
@@ -115,6 +138,24 @@ public class NmeaQueue {
                     status();
                     return null;
                 }
+                if (connectionId != null && rt.connectionId != null){
+                    if (connectionId.equals(rt.connectionId)) return null;
+                }
+                if(blacklist != null && blacklist.length > 0){
+                    for (String bl:this.blacklist){
+                        if (bl.equals(rt.source)){
+                            AvnLog.dfs("ignore %s due to blacklist entry %s",rt.data,bl);
+                            status();
+                            return null;
+                        }
+                    }
+                }
+                if (filter != null && filter.length > 0){
+                    if (!AvnUtil.matchesNmeaFilter(rt.data, filter)) {
+                        AvnLog.dfs("ignore %s due to filter",rt.data);
+                        return null;
+                    }
+                }
                 if (rt.validated){
                     received.add(1);
                 }
@@ -135,17 +176,21 @@ public class NmeaQueue {
     }
     public NmeaQueue(){}
 
-    public synchronized int add(String data,String source,int priority){
-        if (data == null) return sequence;
-        Entry e=new Entry(sequence,data,source,priority);
+    public synchronized int add(Entry e){
+        e.sequence=sequence;
         sequence++;
-        if ((data.startsWith("$") && SentenceValidator.isValid(data)) || data.startsWith("!")){
+        if ((e.data.startsWith("$") && SentenceValidator.isValid(e.data)) || e.data.startsWith("!")){
             e.validated=true;
         }
         queue.add(e);
         if (queue.size() > length) queue.remove(0);
         notifyAll();
         return sequence;
+    }
+    public synchronized int add(String data,String source,int priority){
+        if (data == null) return sequence;
+        Entry e=new Entry(data,source,priority);
+        return add(e);
     }
 
     public synchronized Entry fetch(int sequence,long maxWait,long maxAge) throws InterruptedException {

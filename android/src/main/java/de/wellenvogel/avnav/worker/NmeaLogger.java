@@ -22,6 +22,7 @@ public class NmeaLogger extends Worker {
     private File trackdir;
     private NmeaQueue queue;
     private IMediaUpdater updater;
+    private int numRecords=0;
 
 
     NmeaLogger(File trackdir,GpsService ctx,NmeaQueue queue,IMediaUpdater updater){
@@ -42,29 +43,28 @@ public class NmeaLogger extends Worker {
 
     @Override
     protected void run(int startSequence) throws JSONException, IOException {
+        numRecords=0;
         File currentFile = null;
         PrintStream stream = null;
         long lastTry = 0;
         long lastCheck = 0;
         boolean newFile = false;
-        int sequence = -1;
-        String[] nmeaFilter = AvnUtil.splitNmeaFilter(FILTER_PARAM.fromJson(parameters));
-        int numRecords=0;
         setStatus(WorkerStatus.Status.NMEA,"running");
         long queueAge=QUEUE_AGE_PARAMETER.fromJson(parameters);
+        NmeaQueue.Fetcher fetcher=new NmeaQueue.Fetcher(queue,(received, errors) -> {
+            setStatus(received.val()>0?WorkerStatus.Status.NMEA: WorkerStatus.Status.INACTIVE,
+                    NmeaQueue.Fetcher.getStatusString(received,errors)+" records="+numRecords);
+        },200);
+        fetcher.setFilter(AvnUtil.splitNmeaFilter(FILTER_PARAM.fromJson(parameters)));
         while (!shouldStop(startSequence)) {
             NmeaQueue.Entry entry = null;
             try {
-                entry = queue.fetch(sequence, 200,queueAge);
+                entry = fetcher.fetch( 200,queueAge);
             } catch (InterruptedException e) {
                 continue;
             }
             if (entry == null) continue;
-            sequence = entry.sequence;
             if (! entry.valid) continue;
-            if (!AvnUtil.matchesNmeaFilter(entry.data, nmeaFilter)) {
-                continue;
-            }
             Date now = new Date();
             File nextFile = getLogFile(now);
             if (currentFile != null && now.getTime() > (lastCheck + 10000)) {
@@ -100,7 +100,6 @@ public class NmeaLogger extends Worker {
             if (stream != null) {
                 stream.println(entry.data);
                 numRecords++;
-                setStatus(WorkerStatus.Status.NMEA,"running "+numRecords+" records");
                 stream.flush();
                 if (newFile) {
                     //try updating until we have an updater available

@@ -33,6 +33,7 @@ public class ConnectionReaderWriter{
         public int writeTimeout=0;
         public String[] blacklist;
         public boolean stripLeading=false;
+        public boolean doNotSendOwn=true;
     }
 
     private static final String LOGPRFX = "ConnectionReaderWriter";
@@ -46,6 +47,7 @@ public class ConnectionReaderWriter{
     Thread writerThread;
     Thread updateThread;
     long queueAge=3000;
+    String identifier;
     public static interface StatusUpdater{
         void update(WorkerStatus.Status status,String info);
     }
@@ -61,6 +63,7 @@ public class ConnectionReaderWriter{
         this.priority=priority;
         this.queueAge=queueAge;
         this.updater=updater;
+        this.identifier=name+":"+connection.getId();
     }
 
     class WriterRunnable implements Runnable {
@@ -75,25 +78,14 @@ public class ConnectionReaderWriter{
                         queueSkips= errors.val();
                     }
                 },200);
+                fetcher.setBlackList(properties.blacklist);
+                if (properties.doNotSendOwn) {
+                    fetcher.setConnectionId(identifier);
+                }
+                fetcher.setFilter(properties.writeFilter);
                 while (!stopped) {
                     NmeaQueue.Entry e = fetcher.fetch(200,queueAge);
                     if (e != null) {
-                        if (! e.valid) continue;
-                        if (!AvnUtil.matchesNmeaFilter(e.data, properties.writeFilter)) {
-                            AvnLog.dfs("ignore %s due to filter",e.data);
-                            continue;
-                        }
-                        if (properties.blacklist != null){
-                            boolean blackListed=false;
-                            for (String bl:properties.blacklist){
-                                if (bl.equals(e.source)){
-                                    AvnLog.dfs("ignore %s due to blacklist entry %s",e.data,bl);
-                                    blackListed=true;
-                                    break;
-                                }
-                            }
-                            if (blackListed) continue;
-                        }
                         sendCount.add(1);
                         os.write((e.data+"\r\n").getBytes());
                     }
@@ -194,7 +186,9 @@ public class ConnectionReaderWriter{
                         continue;
                     }
                     receiveCounter.add(1);
-                    queue.add(line, name,priority);
+                    NmeaQueue.Entry e=new NmeaQueue.Entry(line,name,priority);
+                    e.connectionId=identifier;
+                    queue.add(e);
                 }
 
             } catch (IOException e) {

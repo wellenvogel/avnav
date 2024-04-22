@@ -20,6 +20,7 @@ import java.nio.channels.DatagramChannel;
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
 import de.wellenvogel.avnav.util.AvnUtil;
+import de.wellenvogel.avnav.util.MovingSum;
 import de.wellenvogel.avnav.util.NmeaQueue;
 
 public class UdpWriter extends ChannelWorker {
@@ -65,7 +66,7 @@ public class UdpWriter extends ChannelWorker {
                 runInternal(startSequence, addr);
             }catch (Throwable t){
                 setStatus(WorkerStatus.Status.ERROR,"error in send "+t.getMessage());
-                sleep(1000);
+                sleep(5000);
             }
         }
     }
@@ -87,38 +88,28 @@ public class UdpWriter extends ChannelWorker {
             channel.socket().setBroadcast(true);
         }
         channel.connect(target);
-        String [] blacklist=AvnUtil.splitNmeaFilter(BLACKLIST_PARAMETER.fromJson(parameters));
         AvnLog.ifs("udpwriter start to %s",target);
         setStatus(WorkerStatus.Status.STARTED,"sending to "+target);
-        int sequence=-1;
-        int numOk=0;
-        String[] nmeaFilter=AvnUtil.splitNmeaFilter(SEND_FILTER_PARAM.fromJson(parameters));
         long queueAge=QUEUE_AGE_PARAMETER.fromJson(parameters);
+        final MovingSum destinationErrors=new MovingSum(5);
+        NmeaQueue.Fetcher fetcher=new NmeaQueue.Fetcher(queue,(received, errors) -> {
+            destinationErrors.add(0);
+            if (destinationErrors.val() >0 ){
+                setStatus(WorkerStatus.Status.ERROR,"unreachable "+target);
+            }
+            else{
+                setStatus(received.val()>0? WorkerStatus.Status.NMEA: WorkerStatus.Status.INACTIVE,
+                        String.format("snd=%.2f/s, skip=%d/10s",received.avg(),errors.val()));
+            }
+        },200);
+        fetcher.setFilter(AvnUtil.splitNmeaFilter(SEND_FILTER_PARAM.fromJson(parameters)));
+        fetcher.setBlackList(AvnUtil.splitNmeaFilter(BLACKLIST_PARAMETER.fromJson(parameters)));
         while (! shouldStop(startSequence) && channel.isOpen()){
             NmeaQueue.Entry entry;
             try {
-                entry = queue.fetch(sequence, 200,queueAge);
+                entry = fetcher.fetch( 200,queueAge);
                 if (entry == null) continue;
-                sequence=entry.sequence;
                 if (! entry.valid) continue;
-                if (! AvnUtil.matchesNmeaFilter(entry.data,nmeaFilter)){
-                    AvnLog.dfs("udpwriter: skipping record %s due to filter",
-                            entry.data);
-                    continue;
-
-                }
-                if (blacklist != null){
-                    boolean blackListed=false;
-                    for (String be:blacklist){
-                        if (be.equals(entry.source)){
-                            AvnLog.dfs("udpwriter: skipping record %s due to blacklist %s",
-                                    entry.data,be);
-                            blackListed=true;
-                            break;
-                        }
-                    }
-                    if (blackListed) continue;
-                }
             }catch (Exception e){
                 setStatus(WorkerStatus.Status.ERROR,"error fetching from queue "+e.getMessage());
                 break;
@@ -127,15 +118,8 @@ public class UdpWriter extends ChannelWorker {
             try {
                 channel.write(buffer);
                 lastSend=System.currentTimeMillis();
-                numOk++;
-                //we get an error on every xx packet if the target is not reachable...
-                if (numOk >= 50) {
-                    setStatus(WorkerStatus.Status.NMEA,"sending to "+target);
-                }
             }catch (PortUnreachableException p){
-                numOk=0;
-                setStatus(WorkerStatus.Status.STARTED,"receiver port not open at "+target);
-                continue;
+                destinationErrors.add(1);
             }
         }
 
