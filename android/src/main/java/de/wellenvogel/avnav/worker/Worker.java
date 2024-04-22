@@ -73,6 +73,7 @@ public abstract class Worker implements IWorker {
             new EditableParameter.BooleanParameter("sendOwn",R.string.sendOwn,false);
 
     public static AvnUtil.KeyValue<Boolean> READ_DATA_CONDITION=new AvnUtil.KeyValue<Boolean>(READ_DATA_PARAMETER.name,true);
+    public static AvnUtil.KeyValue<Boolean> SEND_DATA_CONDITION=new AvnUtil.KeyValue<Boolean>(SEND_DATA_PARAMETER.name,true);
     static final String CLAIM_BLUETOOTH ="bluetooth device";
     static final String CLAIM_USB ="usb device";
     protected static final String CLAIM_TCPPORT = "tcp port";

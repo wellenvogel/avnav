@@ -207,7 +207,6 @@ public class SocketWriter extends ChannelWorker {
                 ConnectionReaderWriter.ConnectionProperties properties=getConnectionProperties();
                 properties.readData=READ_DATA_PARAMETER.fromJson(parameters);
                 properties.writeData=true;
-                properties.doNotSendOwn= ! REPLY_RECEIVED_PARAMETER.fromJson(parameters);
                 connection.setProperties(properties);
                 synchronized (this) {
                     clients.put(remote, new Client(connection));

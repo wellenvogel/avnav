@@ -34,6 +34,7 @@ public abstract class ChannelWorker extends Worker{
             if (parameterDescriptions.has(WRITE_TIMEOUT_PARAMETER)) rt.writeTimeout=Worker.WRITE_TIMEOUT_PARAMETER.fromJson(parameters);
             if (parameterDescriptions.has(BLACKLIST_PARAMETER)) rt.blacklist=AvnUtil.splitNmeaFilter(BLACKLIST_PARAMETER.fromJson(parameters));
             if (parameterDescriptions.has(STRIP_LEADING_PARAMETER)) rt.stripLeading=STRIP_LEADING_PARAMETER.fromJson(parameters);
+            if (parameterDescriptions.has(REPLY_RECEIVED_PARAMETER)) rt.doNotSendOwn=! REPLY_RECEIVED_PARAMETER.fromJson(parameters);
             return rt;
     }
 

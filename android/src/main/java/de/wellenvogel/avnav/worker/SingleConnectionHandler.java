@@ -26,10 +26,11 @@ public abstract class SingleConnectionHandler extends ChannelWorker {
                 SOURCENAME_PARAMETER,
                 SOURCE_PRIORITY_PARAMETER,
                 FILTER_PARAM,
-                SEND_DATA_PARAMETER,
-                SEND_FILTER_PARAM.cloneCondition(new AvnUtil.KeyValue<Boolean>(SEND_DATA_PARAMETER.name,true)),
                 READ_TIMEOUT_PARAMETER,
-                BLACKLIST_PARAMETER.cloneCondition(new AvnUtil.KeyValue<Boolean>(SEND_DATA_PARAMETER.name,true)),
+                SEND_DATA_PARAMETER,
+                SEND_FILTER_PARAM.cloneCondition(SEND_DATA_CONDITION),
+                BLACKLIST_PARAMETER.cloneCondition(SEND_DATA_CONDITION),
+                REPLY_RECEIVED_PARAMETER.cloneCondition(SEND_DATA_CONDITION),
                 STRIP_LEADING_PARAMETER,
                 QUEUE_AGE_PARAMETER
         );
