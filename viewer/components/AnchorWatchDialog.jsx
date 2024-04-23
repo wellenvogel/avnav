@@ -15,6 +15,14 @@ import NavCompute from "../nav/navcompute";
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE,true);
 
+export const stopAnchorWithConfirm=()=>{
+    return new Promise((resolve,reject)=>{
+        if (activeRoute.anchorWatch() === undefined) reject('inactive');
+        OverlayDialog.confirm("Really stop the anchor watch?")
+            .then(() => resolve(true))
+            .catch((e)=>reject(e));
+    })
+}
 class WatchDialog extends React.Component{
     constructor(props) {
         super(props);
@@ -86,7 +94,7 @@ class WatchDialog extends React.Component{
             </React.Fragment>}
             {this.props.active && <DialogButton name={'stop'}
                                      onClick={() => {
-                                         OverlayDialog.confirm("Really stop the anchor watch?")
+                                         stopAnchorWithConfirm()
                                              .then(() => {
                                                  this.props.stopCallback();
                                                  this.props.closeCallback();
@@ -135,7 +143,8 @@ export const anchorWatchDialog = (overlayContainer)=> {
     })
 };
 export const AnchorWatchKeys={
-    watchDistance:keys.nav.anchor.watchDistance
+    watchDistance:keys.nav.anchor.watchDistance,
+    connected:keys.properties.connectedMode
 };
 export const isWatchActive=(state)=>{
     return state.watchDistance !== undefined;
@@ -145,9 +154,12 @@ export default  (opt_hide)=>{
         name: "AnchorWatch",
         storeKeys: AnchorWatchKeys,
         updateFunction:(state)=>{
-            let rt={toggle:isWatchActive(state)};
+            let rt={
+                toggle:isWatchActive(state),
+                visible: state.connected
+            };
             if (opt_hide){
-                rt.visible= isWatchActive(state);
+                rt.visible= rt.visible && isWatchActive(state);
             }
             return rt;
         },

@@ -23,6 +23,7 @@ import navobjects from '../nav/navobjects.js';
 import DB from '../components/DialogButton.jsx';
 import {Input,Checkbox} from '../components/Inputs.jsx';
 import Mob from '../components/Mob.js';
+import {stopAnchorWithConfirm} from "../components/AnchorWatchDialog";
 
 const PAGENAME="routepage";
 const editor=new RouteEdit(RouteEdit.MODES.PAGE);
@@ -207,7 +208,9 @@ class RoutePage extends React.Component{
             {
                 name:'NavGoto',
                 onClick:()=>{
-                    self.storeRouteAndReturn(true);
+                    stopAnchorWithConfirm()
+                        .then(()=>self.storeRouteAndReturn(true))
+                        .catch(()=>{})
                 }
             },
             {

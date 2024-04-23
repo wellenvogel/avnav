@@ -1115,8 +1115,15 @@ RouteData.prototype.dataChanged=function() {
     let oldcon=this.connectMode;
     this.connectMode=globalStore.getData(keys.properties.connectedMode);
     this.readOnlyServer=globalStore.getData(keys.properties.readOnlyServer);
-    if (oldcon != this.connectMode && this.connectMode){
-        this.lastLegSequence=undefined;
+    if (oldcon != this.connectMode){
+        if(this.connectMode) {
+            this.lastLegSequence = undefined;
+        }
+        else{
+            if (activeRoute.anchorWatch()){
+                this.anchorOff();
+            }
+        }
     }
 };
 

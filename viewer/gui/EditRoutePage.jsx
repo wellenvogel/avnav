@@ -27,6 +27,7 @@ import mapholder from "../map/mapholder.js";
 import {Input, InputSelect} from "../components/Inputs";
 import DB from '../components/DialogButton';
 import Formatter from "../util/formatter";
+import {stopAnchorWithConfirm} from "../components/AnchorWatchDialog";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 const PAGENAME="editroutepage";
@@ -690,8 +691,12 @@ class EditRoutePage extends React.Component{
                 name:"NavGoto",
                 onClick:()=>{
                     if (! this.checkRouteWritable()) return;
-                    RouteHandler.wpOn(getCurrentEditor().getPointAt());
-                    this.props.history.pop();
+                    stopAnchorWithConfirm()
+                        .then(()=>{
+                            RouteHandler.wpOn(getCurrentEditor().getPointAt());
+                            this.props.history.pop();
+                        })
+                        .catch(()=>{});
                 },
                 editDisable: true,
                 overflow: true
