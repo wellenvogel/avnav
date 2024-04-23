@@ -147,6 +147,9 @@ export const AnchorWatchKeys={
     connected:keys.properties.connectedMode
 };
 export const isWatchActive=(state)=>{
+    if (state === undefined){
+        return activeRoute.anchorWatch() !== undefined;
+    }
     return state.watchDistance !== undefined;
 };
 export default  (opt_hide)=>{

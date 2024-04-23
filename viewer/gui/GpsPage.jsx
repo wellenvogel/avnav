@@ -22,6 +22,7 @@ import Dimmer from '../util/dimhandler.js';
 import FullScreen from '../components/Fullscreen';
 import remotechannel, {COMMANDS} from "../util/remotechannel";
 import RemoteChannelDialog from "../components/RemoteChannelDialog";
+import {DynamicTitleIcons} from "../components/TitleIcons";
 
 const PANEL_LIST=['left','m1','m2','m3','right'];
 //from https://stackoverflow.com/questions/16056591/font-scaling-based-on-width-of-container
@@ -294,8 +295,10 @@ class GpsPage extends React.Component{
             if (panelList.length){
                 panelWidth=panelWidth/panelList.length;
             }
+            let titleIcons=globalStore.getData(keys.properties.titleIconsGps);
             return(
             <React.Fragment>
+                { titleIcons && <DynamicTitleIcons/>}
                 {panelList.map((panelProps)=>{
                     return(
                         <div className="hfield" style={{width:panelWidth+"%"}} key={panelProps.name}>

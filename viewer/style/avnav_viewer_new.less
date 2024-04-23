@@ -119,6 +119,23 @@ body{
     background-image: linear-gradient(to right,fade(@colorMain,10), fade(@colorMain,20));
   }
 }
+.iconContainer {
+  position: absolute;
+  right: 1em;
+  top: 1em;
+  z-index: 3;
+
+  .anchorWatchIcon {
+    background-color: red;
+    .maskImage('anchor.svg');
+  }
+
+  .disconnectedIcon {
+    background-color: red;
+    .maskImage('plug-disconnect.svg');
+  }
+}
+
 
 .leftPart{
   .flex(1);
@@ -749,6 +766,10 @@ span.valuePrefix{
   .icon();
   background-image: url("@{iconBase}/@{url}");
 }
+.maskImage(@url){
+  .icon();
+  mask-image: url("@{iconBase}/@{url}");
+}
 
 //-- appIcon
 .appIcon{
@@ -917,6 +938,9 @@ span.valuePrefix{
 }
 
 #gpspage{
+  .iconContainer{
+    z-index: 101;
+  }
   .leftPart{
     .flex-direction(row);
     height: 100%;

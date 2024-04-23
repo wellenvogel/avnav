@@ -27,6 +27,8 @@ import mapholder from "../map/mapholder.js";
 import Helper from "../util/helper";
 import assign from 'object-assign';
 import LocalStorage, {STORAGE_NAMES} from '../util/localStorageManager';
+import {anchorWatchDialog, isWatchActive} from "./AnchorWatchDialog";
+import {DynamicTitleIcons} from "./TitleIcons";
 
 const SHOW_MODE={
     never:0,
@@ -189,9 +191,10 @@ class MapPage extends React.Component{
                 />
         };
         let mapOpacity=globalStore.getData(keys.properties.nightMode) ?
-            globalStore.getData(keys.properties.nightChartFade, 100) / 100
-            : 1;
-        let map=<div className="map" ref="map" style={{opacity:mapOpacity}}/>;
+            globalStore.getData(keys.properties.nightChartFade, 100) / 100:1;
+        let map=<div className="map" ref="map" style={{opacity:mapOpacity}}>
+            <DynamicTitleIcons/>
+        </div>;
         let className=self.props.className?self.props.className+" mapPage":"mapPage";
         if (this.props.mapFloat) className+=" mapFloat";
         let pageProperties=Helper.filteredAssign(Page.propTypes,self.props);
