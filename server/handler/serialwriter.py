@@ -68,7 +68,13 @@ class SerialWriter(SerialReader):
           cls.P_REPLY_RECEIVED
           ]
       return rt+ownParam
-    
+
+  def _getSubSourceName(self):
+    return "Serial-{0}".format(self.P_PORT.fromDict(self.param,rangeOrListCheck=False))
+
+  def getName(self):
+    return "SerialWriter-{0}".format(self.P_PORT.fromDict(self.param,rangeOrListCheck=False))
+
   #parameters:
   #param - the config dict
   #navdata - a nav data object (can be none if this reader does not directly write)
@@ -79,7 +85,7 @@ class SerialWriter(SerialReader):
                           nmeaFilter=self.P_FILTER.fromDict(param),
                           blackList=self.P_BLACKLIST.fromDict(param),
                           sumKey='out',
-                          ownsubsource=sourceName if not self.P_REPLY_RECEIVED.fromDict(param) else None)
+                          ownsubsource=self._getSubSourceName() if not self.P_REPLY_RECEIVED.fromDict(param) else None)
 
     self.addrmap={}
     #the serial device
@@ -140,6 +146,10 @@ class SerialWriter(SerialReader):
   #the run method - just try forever  
   def run(self):
     INAME='device'
+    self._fetcher.updateParam(nmeaFilter=self.P_FILTER.fromDict(self.param),
+                              blackList=self.P_BLACKLIST.fromDict(self.param),
+                              ownsubsource=self._getSubSourceName() if not self.P_REPLY_RECEIVED.fromDict(self.param) else '')
+    self._fetcher.reset()
     threading.current_thread().setName("%s - %s"%(self.getName(),self.param['port']))
     self.device=None
     init=True
@@ -242,7 +252,7 @@ class SerialWriter(SerialReader):
               AVNLog.debug("ignore line %s due to not matching filter",data)
               continue
             nmeaSum.add(1)
-            self.queue.addNMEA(data,source=source,sourcePriority=priority,subsource=source)
+            self.queue.addNMEA(data,source=source,sourcePriority=priority,subsource=self._getSubSourceName())
         else:
           with self.lock:
             self.lock.wait(0.5)

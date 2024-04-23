@@ -324,6 +324,7 @@ class Fetcher:
                   blackList=None,
                   maxAge=None,
                   returnErrors=None,
+                  ownsubsource=None
                   ):
     if maxEntries is not None:
       self._maxEntries=maxEntries
@@ -339,6 +340,8 @@ class Fetcher:
       self._returnErrors=returnErrors
     if blackList is not None:
       self._blackList=self._split(blackList)
+    if ownsubsource is not None:
+      self._ownsubsource=ownsubsource if ownsubsource !='' else None
 
   def fetch(self,maxEntries=None,
                        waitTime=None,

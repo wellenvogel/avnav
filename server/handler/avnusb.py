@@ -77,24 +77,27 @@ class UsbSerialHandler(USBInfoHandler):
     try:
       device=self.getDevice()
       INAME=self.name
+      sourceName=self.param['name']
+      displayName=""
+      if sourceName != self.param.get('defaultName'):
+        displayName="({0}) ".format(sourceName)
       if device is not None and self.type != self.T_IGNORE:
-        sourceName=self.param['name']
-        self.setInfo(INAME,"%s starting type %s"%(device,self.type),WorkerStatus.STARTED,
+        self.setInfo(INAME,"%s%s running %s"%(device,displayName,self.type),WorkerStatus.STARTED,
                      canDelete=self.param.get('childIndex',-1) >= 0)
         if self.type == self.T_WRITER or self.type == self.T_COMBINED:
-          self.param['combined']=self.type == self.T_COMBINED
+          self.param[SerialWriter.P_COMBINED.name]=self.type == self.T_COMBINED
           self.serialHandler = SerialWriter(self.param, self.queue, SubInfoHandler(self,INAME,track=False), sourceName)
         else:
           self.serialHandler = SerialReader(self.param, self.queue, SubInfoHandler(self,INAME,track=False), sourceName)
         self.serialHandler.run()
       else:
         if device is None:
-          self.setInfo(INAME,"configured but not available",WorkerStatus.INACTIVE,canDelete=True)
+          self.setInfo(INAME,"%sconfigured but not available"%(displayName),WorkerStatus.INACTIVE,canDelete=True)
         else:
           if self.type == self.T_IGNORE:
-            self.setInfo(INAME, '%s configured to be ignored' % (device), WorkerStatus.INACTIVE,canDelete=True)
+            self.setInfo(INAME, '%s%s configured to be ignored' % (device,displayName), WorkerStatus.INACTIVE,canDelete=True)
           else:
-            self.setInfo(INAME, '%s not configured(forbidden)' %(device), WorkerStatus.INACTIVE)
+            self.setInfo(INAME, '%s%s not configured(forbidden)' %(device,displayName), WorkerStatus.INACTIVE)
         while (not self.stop):
           with self.lock:
             self.lock.wait(0.2)
@@ -453,6 +456,7 @@ class AVNUsbSerialReader(AVNWorker):
         'port':device
       }
     configuredDevices=self.param.get(CHILD_NAME)
+    defaultName=self.getDefaultChildName(usbid)
     config=None
     if configuredDevices is not None:
       childIndex=0
@@ -472,7 +476,8 @@ class AVNUsbSerialReader(AVNWorker):
       config['childIndex']=-1
     config['port']=device
     if config.get('name') is None or config.get('name') == '':
-      config['name']=self.getDefaultChildName(usbid)
+      config['name']=defaultName
+    config['defaultName']=defaultName
     return config
 
   #a thread method to run a serial reader/writer
