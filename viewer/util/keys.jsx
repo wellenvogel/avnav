@@ -435,6 +435,7 @@ let keys={
         mapLockMove: new Property(true,'allow move when locked',PropertyType.CHECKBOX),
         mapSequenceTime: new Property(2000,"change check interval(ms)",PropertyType.RANGE,[500,10000,100]),
         mapScaleBarText: new Property(true,"Show text on scale bar",PropertyType.CHECKBOX),
+        mapZoomLock: new Property(true,"Lock to int zoom levels with buttons", PropertyType.CHECKBOX),
         remoteChannelName: new SplitProperty('0','remote control channel',PropertyType.LIST,['0','1','2','3','4']),
         remoteChannelRead: new SplitProperty(false,'read from remote channel',PropertyType.CHECKBOX),
         remoteChannelWrite: new SplitProperty(false,'write to remote channel',PropertyType.CHECKBOX),

@@ -1162,7 +1162,21 @@ MapHolder.prototype.timerFunction=function(){
 MapHolder.prototype.changeZoom=function(number,opt_force,opt_noUserAction){
     if (! opt_noUserAction) this.userAction();
     let curzoom=this.requiredZoom; //this.getView().getZoom();
-    curzoom+=number;
+    if (globalStore.getData(keys.properties.mapZoomLock)) {
+        if (number > 0){
+            if (Math.ceil(curzoom) != curzoom){
+                curzoom=Math.ceil(curzoom);
+                number--;
+            }
+        }
+        else{
+            if (Math.floor(curzoom) != curzoom){
+                curzoom=Math.floor(curzoom);
+                if (number < 0) number++;
+            }
+        }
+    }
+    curzoom += number;
     if (curzoom < this.minzoom ) curzoom=this.minzoom;
     if (curzoom > (this.maxzoom+globalStore.getData(keys.properties.maxUpscale)) ) {
         curzoom=this.maxzoom+globalStore.getData(keys.properties.maxUpscale);
