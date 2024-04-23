@@ -20,7 +20,7 @@ import LayoutHandler from '../util/layouthandler.js';
 import LayoutFinishedDialog from '../components/LayoutFinishedDialog.jsx';
 import EditWidgetDialog from '../components/EditWidgetDialog.jsx';
 import EditPageDialog from '../components/EditPageDialog.jsx';
-import anchorWatch from '../components/AnchorWatchDialog.jsx';
+import anchorWatch, {AnchorWatchKeys, isWatchActive} from '../components/AnchorWatchDialog.jsx';
 import Mob from '../components/Mob.js';
 import Dimmer from '../util/dimhandler.js';
 import FeatureInfoDialog from "../components/FeatureInfoDialog";
@@ -529,15 +529,16 @@ class NavPage extends React.Component{
             },
             {
                 name: "LockMarker",
-                storeKeys: activeRoute.getStoreKeys(),
+                storeKeys: activeRoute.getStoreKeys(AnchorWatchKeys),
                 updateFunction:(state)=>{
-                    return {visible:!StateHelper.hasActiveTarget(state)}
+                    return {visible:!StateHelper.hasActiveTarget(state) && ! isWatchActive(state)}
                 },
                 onClick:()=>{
                     navToWp(true);
                 },
                 editDisable: true
             },
+            anchorWatch(true),
             {
                 name: "StopNav",
                 storeKeys: activeRoute.getStoreKeys(),
