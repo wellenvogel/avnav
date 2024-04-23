@@ -33,6 +33,7 @@ import OverlayDialog from "./OverlayDialog";
 import globalStore from "../util/globalstore";
 
 const TitleIcons=(props)=>{
+    if (! props.show) return null;
     let cl="iconContainer ";
     if (props.className) cl+=props.className;
     let anchorWatch=props.watchDistance !== undefined;
@@ -49,8 +50,9 @@ const TitleIcons=(props)=>{
 export default TitleIcons;
 TitleIcons.propTypes={
     watchDistance: PropTypes.number,
-    connected: PropTypes.bool
+    connected: PropTypes.bool,
+    show: PropTypes.bool
 }
-TitleIcons.storeKeys=AnchorWatchKeys;
+TitleIcons.storeKeys=Object.assign({},AnchorWatchKeys,{show:keys.properties.titleIcons});
 
 export const DynamicTitleIcons=Dynamic(TitleIcons,{storeKeys:TitleIcons.storeKeys});
