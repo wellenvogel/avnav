@@ -233,7 +233,9 @@ class DownloadPage extends React.Component{
             command:'extensions'
         })
             .then((data)=>{
-                this.setState({chartImportExtensions:data.items});
+                let extensions=[]
+                data.items.forEach((e)=>extensions.push(e.toLowerCase().replace(/^\./,'')))
+                this.setState({chartImportExtensions:extensions});
             })
             .catch();
     }
