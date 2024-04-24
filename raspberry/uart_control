@@ -1,6 +1,7 @@
 #!/bin/sh
 #
 # Copyright (c) 2017 Ilker Temir <ilker@ilkertemir.com>
+# Copyright (c) 2023-2024 Oleg Roitburd <oroitburd@gmail.com>
 #
 # Based on raspi-config by Alex Bradbury 
 #
@@ -27,8 +28,14 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.# 
 
-CONFIG=/boot/config.txt
-CMDLINE=/boot/cmdline.txt
+if [ -d /boot/firmware ]
+then
+  CONFIG=/boot/firmware/config.txt
+  CMDLINE=/boot/firmware/cmdline.txt
+else  
+  CONFIG=/boot/config.txt
+  CMDLINE=/boot/cmdline.txt
+fi
 
 is_pione() {
    if grep -q "^Revision\s*:\s*00[0-9a-fA-F][0-9a-fA-F]$" /proc/cpuinfo; then
@@ -38,6 +45,11 @@ is_pione() {
    else
       return 1
    fi
+}
+
+is_pifive() {
+  grep -q "^Revision\s*:\s*[ 123][0-9a-fA-F][0-9a-fA-F]4[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]$" /proc/cpuinfo
+  return $?
 }
 
 is_pifour() {
@@ -69,6 +81,8 @@ get_pi_type() {
       echo 3
    elif is_pifour; then
       echo 4
+   elif is_pifive; then
+      echo 5
    elif is_pizero; then
       echo 0
    else
@@ -253,9 +267,13 @@ do
   case $i in
   gpio)
     printf "Enabling UART.\n"
-    set_uart enable
-    printf "Disabling console on UART.\n"
-    set_console disable
+    if is_pifive; then
+      raspi-config nonint do_serial_hw 0
+    else
+      set_uart enable
+      printf "Disabling console on UART.\n"
+      set_console disable
+    fi
     if is_pithree || is_pifour; then
       printf "Disabling Bluetooth.\n"
       set_bluetooth disable
@@ -268,10 +286,14 @@ do
     exit 1
     ;;
   default)
-    printf "Enabling UART.\n"
-    set_uart enable
-    printf "Enabling console on UART.\n"
-    set_console enable
+    printf "Disabling UART.\n"
+    if is_pifive; then
+      raspi-config nonint do_serial_hw 1
+    else
+      set_uart disable
+      printf "Enabling console on UART.\n"
+      set_console enable
+    fi
     if is_pithree || is_pifour; then
       printf "Enabling Bluetooth.\n"
       set_bluetooth enable
