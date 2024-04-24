@@ -206,6 +206,10 @@ class AVNImporter(AVNWorker):
   def canDisable(cls):
     return True
 
+  @classmethod
+  def preventMultiInstance(cls):
+    return True
+
   def __init__(self,param):
     AVNWorker.__init__(self, param)
     self.importDir=None
@@ -262,6 +266,15 @@ class AVNImporter(AVNWorker):
     AVNLog.info("starting importer with directory %s, tools dir %s, workdir %s",self.importDir,self.converterDir,self.workDir)
     super().startInstance(navdata)
 
+  def _syncInfo(self,candidates):
+    keys=set()
+    for c in candidates: # type: ConversionCandidate
+      keys.add(c.getInfoKey())
+    def check(k,v):
+      if not k.startswith('conv:'):
+        return True
+      return k in keys
+    self.cleanupInfo(check)
   #thread run method - just try forever  
   def run(self):
     self.setInfo("main","monitoring started for %s"%(self.importDir),WorkerStatus.NMEA)
@@ -271,10 +284,11 @@ class AVNImporter(AVNWorker):
       timeout=self.getWParam(self.P_KEEPINFO)
       self.waittime=self.getWParam(self.P_WAITTIME)
       AVNLog.debug("mainloop")
+      currentCandidates=self.readImportDir()
+      self._syncInfo(currentCandidates)
+      self.candidates=currentCandidates
       if self.runningConversion is None:
         self.setInfo("main","scanning",WorkerStatus.NMEA)
-        currentCandidates=self.readImportDir()
-        self.candidates=currentCandidates
         now=time.monotonic()
         for k in currentCandidates:
           infoKey=k.getInfoKey()
@@ -429,33 +443,47 @@ class AVNImporter(AVNWorker):
   def deleteImport(self,name):
     if (name.endswith(".gemf")):
       name=name[:-5]
-    if self.runningConversion is not None and self.runningConversion.candidate.name == name:
+    candidate=self.findCandidate(name)
+    if candidate is not None:
+      self.deleteImportByCandidate(candidate)
+  def deleteImportByCandidate(self,candidate):
+    if self.runningConversion is not None and self.runningConversion.candidate.name == candidate.name:
       try:
         self.runningConversion.stop()
         self.setInfo(self.runningConversion.candidate.getInfoKey(),"killed",WorkerStatus.INACTIVE)
         self.runningConversion=None
-        self.setInfo("converter","killed for %s"%(name),WorkerStatus.ERROR)
+        self.setInfo("converter","killed for %s"%(candidate.name),WorkerStatus.ERROR)
       except:
         pass
-    for candidate in self.candidates: # type: ConversionCandidate
-      if candidate.name == name:
-        fullname=candidate.filename
-        if os.path.isdir(fullname):
-          AVNLog.info("deleting import directory %s",fullname)
-          workdir=os.path.join(self.workDir,name)
-          try:
-            shutil.rmtree(fullname)
-            if os.path.isdir(workdir):
-              shutil.rmtree(workdir)
-          except:
-            AVNLog.error("error deleting directory %s:%s",fullname,traceback.format_exc())
-        else:
-          if os.path.isfile(fullname):
-            AVNLog.info("deleting import file %s",fullname)
-            try:
-              os.unlink(fullname)
-            except:
-              AVNLog.error("error deleting file %s:%s",fullname,traceback.format_exc())
+    fullname=candidate.filename
+    workdir=os.path.join(self.workDir,candidate.name)
+    if os.path.isdir(workdir):
+      try:
+        shutil.rmtree(workdir)
+      except:
+        pass
+    logfile=self.getLogFileName(candidate.name)
+    if os.path.exists(logfile):
+      try:
+        os.unlink(logfile)
+      except:
+        pass
+    if os.path.isdir(fullname):
+      AVNLog.info("deleting import directory %s",fullname)
+      try:
+        shutil.rmtree(fullname)
+      except:
+        AVNLog.error("error deleting directory %s:%s",fullname,traceback.format_exc())
+        return False
+    else:
+      if os.path.isfile(fullname):
+        AVNLog.info("deleting import file %s",fullname)
+        try:
+          os.unlink(fullname)
+        except:
+          AVNLog.error("error deleting file %s:%s",fullname,traceback.format_exc())
+          return False
+    return True
 
   def getLogFileName(self,name,checkExistance=False):
     if name is None:
@@ -497,12 +525,49 @@ class AVNImporter(AVNWorker):
     rt = {"api": type, "upload": type, "list": type, "download": type, "delete": type}
     return rt
 
+  def findCandidate(self,key,isName=False):
+    currentCandidates=self.candidates #thread safe copy
+    for c in currentCandidates: # type: ConversionCandidate
+      if isName:
+        if c.name == key:
+          return c
+      else:
+        if c.getInfoKey() == key:
+          return c
+
   def handleApiRequest(self, type, subtype, requestparam, **kwargs):
     if type == "list":
-      return AVNUtil.getReturnData(items=[])
+      status=self.getInfo()
+      items=[]
+      if status is not None and status.get('items') is not None:
+        items=status['items']
+      return AVNUtil.getReturnData(items=items)
     if type == "delete":
-      return AVNUtil.getReturnData(error="delete not yet supported")
+      name=AVNUtil.getHttpRequestParam(requestparam,'name',True)
+      if not name.startswith('conv:'):
+        return AVNUtil.getReturnData(error="unknown item "+name)
+      candidate=self.findCandidate(name)
+      if candidate is None:
+        return AVNUtil.getReturnData(error="item %s not found"%name)
+      if not self.deleteImportByCandidate(candidate):
+        return AVNUtil.getReturnData(error="unable to delete")
+      return AVNUtil.getReturnData()
     if type == "download":
+      name=AVNUtil.getHttpRequestParam(requestparam,'name',True)
+      candidate=self.findCandidate(name)
+      if candidate is None:
+        return AVNUtil.getReturnData(error="item %s not found"%name)
+      dlfile=candidate.converter.getOutFileOrDir(candidate.name)
+      if dlfile is None:
+        return AVNUtil.getReturnData(error="no download for %s"%name)
+      if not os.path.exists(dlfile):
+        return AVNUtil.getReturnData(error="%s not found"%dlfile)
+      if os.path.isdir(dlfile):
+        return AVNUtil.getReturnData(error="download of directories not yet supported")
+      filename=os.path.basename(dlfile)
+      handler=kwargs.get('handler')
+      handler.writeFromDownload(
+        AVNDownload(dlfile),filename=filename)
       return None
 
     if type == "upload":
@@ -533,7 +598,10 @@ class AVNImporter(AVNWorker):
         handler=kwargs.get('handler')
         name=AVNUtil.getHttpRequestParam(requestparam,"name",True)
         lastBytes=AVNUtil.getHttpRequestParam(requestparam,"lastBytes",False)
-        logName=self.getLogFileName(name,True)
+        candidate=self.findCandidate(name)
+        if candidate is None:
+          return AVNUtil.getReturnData(error="%s not found"%name)
+        logName=self.getLogFileName(candidate.name,True)
         if logName is None:
           return AVNUtil.getReturnData(error="log for %s not found"%name)
         filename=os.path.basename(logName)
@@ -557,9 +625,6 @@ class AVNImporter(AVNWorker):
   def deregisterConverter(self,id):
     self.registerConverter(id,None)
 
-  def getInfo(self):
-    rt= super().getInfo()
-    return rt
 
 
 avnav_handlerList.registerHandler(AVNImporter)

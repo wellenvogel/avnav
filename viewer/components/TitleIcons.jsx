@@ -1,6 +1,6 @@
 /**
  *###############################################################################
- # Copyright (c) 2012-2020 Andreas Vogel andreas@wellenvogel.net
+ # Copyright (c) 2012-2024 Andreas Vogel andreas@wellenvogel.net
  #
  #  Permission is hereby granted, free of charge, to any person obtaining a
  #  copy of this software and associated documentation files (the "Software"),

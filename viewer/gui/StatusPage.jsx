@@ -23,6 +23,7 @@ import Compare from "../util/compare";
 import PropTypes from 'prop-types';
 import Helper from "../util/helper";
 import GuiHelper from "../util/GuiHelpers";
+import {StatusItem} from '../components/StatusItems';
 
 class Notifier{
     constructor() {
@@ -114,73 +115,6 @@ class DebugDialog extends React.Component{
 const showEditDialog=(handlerId,child,opt_doneCallback)=>{
     EditHandlerDialog.createDialog(handlerId,child,opt_doneCallback);
 }
-const statusTextToImageUrl=(text)=>{
-    let rt=globalStore.getData(keys.properties.statusIcons[text]);
-    if (! rt) rt=globalStore.getData(keys.properties.statusIcons.INACTIVE);
-    return rt;
-};
-const EditIcon=(props)=>{
-    return <Button
-        name="Edit" className="Edit smallButton editIcon" onClick={props.onClick}/>
-
-}
-const ChildStatus=(props)=>{
-    let canEdit=props.canEdit && props.connected;
-    let sub=(props.name && props.name.match(/:#:/));
-    let name=sub?props.name.replace(/^.*:#:/,''):props.name;
-    let clName="childStatus";
-    if (sub) clName+=" sub";
-    return (
-        <div className={clName}>
-            <img src={statusTextToImageUrl(props.status)}/>
-            <span className="statusName">{name}</span>
-            <span className="statusInfo">{props.info}</span>
-            {canEdit && ! sub && <EditIcon onClick={
-                ()=>showEditDialog(props.handlerId,props.id,props.finishCallback)
-            }/>}
-        </div>
-    );
-};
-const StatusItem=(props)=>{
-    let canEdit=props.canEdit && props.connected && props.allowEdit;
-    let isDisabled=props.disabled;
-    let name=props.name.replace(/\[.*\]/, '');
-    if (props.id !== undefined){
-        name="["+props.id+"]"+name;
-    }
-    let cl="status";
-    if (props.requestFocus){
-        cl+=" requestFocus";
-    }
-    let children=(props.info && props.info.items)?props.info.items:[];
-    children.sort((a,b)=>{
-        if (a.name>b.name) return 1;
-        if (a.name < b.name) return -1;
-        return 0;}
-        );
-    return(
-        <div className={cl}  key={props.id}>
-            <div className={"statusHeading"+ (isDisabled?" disabled":"")}>
-                <span className="statusName">{name}</span>
-                {isDisabled && <span className="disabledInfo">[disabled]</span> }
-                {canEdit && <EditIcon
-                    onClick={
-                        () => showEditDialog(props.id,undefined,props.finishCallback)
-                    }/>}
-            </div>
-            {children.map(function(el){
-                return <ChildStatus
-                    {...el}
-                    key={props.name+el.name}
-                    connected={props.connected}
-                    handlerId={props.id}
-                    finishCallback={props.finishCallback}
-                />
-            })}
-        </div>
-
-    );
-};
 
 class StatusList extends React.Component{
     constructor(props) {
@@ -298,6 +232,7 @@ class StatusList extends React.Component{
                             ,1000);
                     }
                 }
+                showEditDialog={showEditDialog}
                 {...iprops}/>}
             itemList={this.state.itemList}
             scrollable={true}

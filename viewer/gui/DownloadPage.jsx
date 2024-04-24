@@ -344,6 +344,13 @@ class DownloadPage extends React.Component{
         let allowTypeChange=! (this.props.options && this.props.options.allowChange === false);
         let rt=[
             this.getButtonParam('DownloadPageCharts','chart'),
+            {
+                name: 'DownloadPageImporter',
+                onClick: ()=>this.props.history.push('importerpage'),
+                storeKeys: {
+                    visible: keys.gui.capabilities.uploadImport
+                }
+            },
             this.getButtonParam('DownloadPageTracks','track'),
             this.getButtonParam('DownloadPageRoutes','route'),
             this.getButtonParam('DownloadPageLayouts','layout'),

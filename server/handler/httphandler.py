@@ -641,7 +641,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
     rt = {'status': 'OK'}
     if handler is not None:
       AVNLog.debug("found handler for delete request %s:%s" % (type, handler.getConfigName()))
-      handler.handleApiRequest('delete', type, requestParam,handler=self)
+      rt=handler.handleApiRequest('delete', type, requestParam,handler=self)
       return json.dumps(rt,cls=Encoder)
     raise Exception("invalid type %s"%type)
 

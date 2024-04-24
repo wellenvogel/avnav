@@ -21,6 +21,7 @@ import EditRoutePage from './gui/EditRoutePage.jsx';
 import WarningPage from './gui/WarningPage.jsx';
 import ViewPage from './gui/ViewPage.jsx';
 import AddonConfigPage from './gui/AddOnConfigPage.jsx';
+import ImporterPage from "./gui/ImporterPage";
 import OverlayDialog from './components/OverlayDialog.jsx';
 import globalStore from './util/globalstore.jsx';
 import Requests from './util/requests.js';
@@ -105,7 +106,8 @@ const pages={
     editroutepage:EditRoutePage,
     warningpage:WarningPage,
     viewpage:ViewPage,
-    addonconfigpage: AddonConfigPage
+    addonconfigpage: AddonConfigPage,
+    importerpage: ImporterPage
 };
 class Router extends Component {
     constructor(props) {

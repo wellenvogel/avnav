@@ -619,6 +619,17 @@ class AVNWorker(InfoHandler):
           del self.status[name]
         except:
           pass
+  def cleanupInfo(self,check):
+    toremove=set()
+    with self.__statusLock:
+      for k,v in self.status.items():
+        if not check(k,v):
+          toremove.add(k)
+      for k in toremove:
+        try:
+          del self.status[k]
+        except:
+          pass
   def getId(self):
     return self.id
 
