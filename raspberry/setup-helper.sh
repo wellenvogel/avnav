@@ -1,5 +1,6 @@
 #(bash) helper functions for set up of /boot/config.txt and other cfg files
 BOOTCONFIG=/boot/config.txt
+_BOOTCFGNEW=/boot/firmware/config.txt
 MODE_EN="enable"
 MODE_DIS="disable"
 
@@ -15,6 +16,11 @@ errExit(){
     err "$*"
     exit 1
 }
+if [ -f $_BOOTCFGNEW ] ; then
+    log "found $_BOOTCFGNEW - using this one"
+    BOOTCONFIG=$_BOOTCFGNEW
+fi
+
 # check and update a config file
 # $1: name of the config file
 # $2: comment pattern

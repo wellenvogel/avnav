@@ -35,6 +35,15 @@ source <(tr -d '\015' < $CONFIG)
 hasChanges=0
 needsReboot=0
 force=0
+if [ "$BOOTCONFIG" != "$LAST_BOOTCONFIG" ] ; then
+    if [ "$LAST_BOOTCONFIG" != "" -o "$BOOTCONFIG" != /boot/config.txt ] ; then
+      #only run the setup forced if we change to the new config or back to the old one
+      log "boot config has changed to $BOOTCONFIG, force re-apply"
+      force=1
+      hasChanges=1
+    fi
+    LAST_DATA+=("LAST_BOOTCONFIG='$BOOTCONFIG'")
+fi
 if [ "$AVNAV_CONFIG_SEQUENCE" != "" ] ; then
     if [ "$LAST_CONFIG_SEQUENCE" != "" -a "$AVNAV_CONFIG_SEQUENCE" != "$LAST_CONFIG_SEQUENCE" ] || [ "$LAST_CONFIG_SEQUENCE" = "" -a "$AVNAV_CONFIG_SEQUENCE" != "1" ]; then
         log "config sequence changed from $LAST_CONFIG_SEQUENCE to $AVNAV_CONFIG_SEQUENCE, force re-apply"
