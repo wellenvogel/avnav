@@ -133,12 +133,13 @@ class MbtilesConverter(InternalConverter):
 
 
 class ConversionCandidate:
-  def __init__(self,name,filename,converter,currentmd5,convertedmd5):
+  def __init__(self,name,filename,converter,currentmd5,convertedmd5,convertedTime):
     self.name=name # type: str
     self.filename=filename # type: str
     self.converter=converter # type: ConverterApi
     self.currentmd5=currentmd5 # type: str
     self.convertedmd5=convertedmd5 # type: str
+    self.convertedTime=convertedTime
     self.timestamp=time.monotonic()
   def md5changed(self):
     return self.currentmd5 != self.convertedmd5
@@ -282,7 +283,8 @@ class AVNImporter(AVNWorker):
               del waitingCandidates[k.name]
             except:
               pass
-            self.setInfo(infoKey,"already converted",WorkerStatus.INACTIVE)
+            timestamp_str = datetime.datetime.fromtimestamp(k.convertedTime).strftime('%Y-%m-%d %H:%M')
+            self.setInfo(infoKey,"already converted at %s"%timestamp_str,WorkerStatus.INACTIVE)
             continue
           existing=waitingCandidates.get(k.name)
           startConversion=False
@@ -339,11 +341,14 @@ class AVNImporter(AVNWorker):
 
   def getLastMd5(self,name):
     fn=os.path.join(self.importDir,"_"+name)
+    if not os.path.exists(fn):
+      return (None,None)
+    mt=os.stat(fn).st_mtime
     try:
       with open(fn,"r") as h:
-        return h.read()
+        return (mt,h.read())
     except:
-      return None
+      return (None,None)
   def getNameFromImport(self,dirOrFile):
     path,ext=os.path.splitext(dirOrFile)
     path=os.path.basename(path)
@@ -371,10 +376,10 @@ class AVNImporter(AVNWorker):
         AVNLog.debug("ignore unknown import %s",fullname)
         continue
       name=self.getNameFromImport(file)
-      lastMd5=self.getLastMd5(name)
+      lastTime,lastMd5=self.getLastMd5(name)
       if lastMd5 == md5:
         AVNLog.debug("import %s unchanged, skip",fullname)
-      rt.append(ConversionCandidate(name,fullname,converter,md5,lastMd5))
+      rt.append(ConversionCandidate(name,fullname,converter,md5,lastMd5,lastTime))
     return rt
 
 
