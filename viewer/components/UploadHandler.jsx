@@ -113,7 +113,9 @@ class UploadHandler extends React.Component{
             + "&name=" + encodeURIComponent(name);
         if (opt_options) {
             for (let k in opt_options) {
-                url += "&" + k + "=" + encodeURIComponent(opt_options[k]);
+                if (opt_options[k] !== undefined) {
+                    url += "&" + k + "=" + encodeURIComponent(opt_options[k]);
+                }
             }
         }
         let currentSequence = this.props.uploadSequence;

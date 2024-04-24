@@ -52,6 +52,7 @@ import time
 import traceback
 import xml.sax as sax
 import xml.sax.saxutils
+import zipfile
 from optparse import OptionParser
 
 from osgeo import osr
@@ -116,6 +117,7 @@ LAYERFILE="layer.xml"
 LAYERBOUNDING="boundings.xml"
 OVERVIEW="avnav.xml"
 BASETILES="basetiles"
+INPUT="input" #for unpacking a zip
 OUTTILES="tiles"
 WORKDIR="work"
 OUT="out"
@@ -1620,9 +1622,28 @@ def convertAux(args,outdir):
       rt.append(name)
   return rt
 
+def unpackZip(targetBase,zipName):
+  opdir=os.path.join(targetBase,os.path.basename(zipName)[0:-4])
+  if os.path.exists(opdir):
+    try:
+      shutil.rmtree(opdir,True)
+    except Exception as e:
+      warn("unable to cleanup %s:%s"%(opdir,str(e)))
+  if not os.path.isdir(opdir):
+    os.makedirs(opdir)
+  if not os.path.isdir(opdir):
+    warn("unable to create %s to unpack %s"%(opdir,zipName))
+    return None
+  try:
+    log("unpacking %s to %s"%(zipName,opdir))
+    zip=zipfile.ZipFile(zipName,"r")
+    zip.extractall(path=opdir)
+  except Exception as e:
+    warn("unable to unpack %s to %s:%s"%(zipName,opdir,e))
+    return None
+  return opdir
  
 def main(argv):
-
   global LISTFILE,layer_zoom_levels,options,MAXUPSCALE,TilerTools,MAXOVERLAP
   usage = "%prog [options] [chartdir or file...]"
   parser = OptionParser(
@@ -1734,6 +1755,7 @@ def main(argv):
   outdir = os.path.join(basedir, WORKDIR, os.path.basename(outname))
   basetiles=os.path.join(outdir,BASETILES)
   mapdir=os.path.join(outdir,OUTTILES)
+  unpackdir=os.path.join(outdir,INPUT)
   if not os.path.isabs(outname):
     outname=os.path.join(basedir,OUT,outname)
   if not outname.upper().endswith(".GEMF"):
@@ -1745,7 +1767,13 @@ def main(argv):
     else:
       if not os.path.isdir(basetiles):
         os.makedirs(basetiles, 0o777)
-      createChartList(args,outdir,mercator)
+      cnvargs=[]
+      for arg in args:
+        if os.path.isfile(arg) and arg.upper().endswith('.ZIP'):
+          arg=unpackZip(unpackdir,arg)
+        if arg is not None:
+          cnvargs.append(arg)
+      createChartList(cnvargs,outdir,mercator)
   if mode == "generate" or mode == "all" or mode == "base":
     assert os.path.isdir(outdir),"the directory "+outdir+" does not exist, run mode chartlist before"
     generateAllBaseTiles(outdir,mercator)

@@ -25,17 +25,14 @@
 import hashlib
 import shutil
 
-import time
-import traceback
-
+import avnav_handlerList
+from avnav_api import ConverterApi
 from avnav_manager import AVNHandlerManager
-from avndirectorybase import AVNDirectoryHandlerBase
-from httpserver import AVNHTTPServer
 from avnav_util import *
 from avnav_worker import *
-from avnav_api import ConverterApi
-import avnav_handlerList
-
+from avndirectorybase import AVNDirectoryHandlerBase
+from httpserver import AVNHTTPServer
+import zipfile
 
 class ExternalConverter(ConverterApi):
   def __init__(self,converter:ConverterApi,id):
@@ -69,7 +66,26 @@ class InternalConverter(ConverterApi):
     st=os.stat(fn.encode(errors='ignore'))
     md5.update(str(st.st_mtime).encode(errors='ignore'))
     md5.update(str(st.st_size).encode(errors='ignore'))
+  def _handleZipFile(self,md5,fn):
+    rt=0
+    try:
+      zip=zipfile.ZipFile(fn)
+      for info in zip.infolist():
+        if info.is_dir():
+          continue
+        if self._canHandle(info.filename):
+          rt+=1
+          md5.update(info.filename.encode(errors="ignore"))
+          md5.update(str(info.date_time).encode(errors='ignore'))
+          md5.update(str(info.file_size).encode(errors="ignore"))
+      zip.close()
+      return rt
+    except Exception as e:
+      self._logger.error("unable to handle zipfile %s:%s"%(fn,traceback.format_exc()))
+      return 0
   def _handleFile(self,md5,fn):
+    if fn.upper().endswith('.ZIP'):
+      return self._handleZipFile(md5,fn)
     if self._canHandle(fn):
       self._addMd5(md5,fn)
       return 1
@@ -104,7 +120,7 @@ class InternalConverter(ConverterApi):
     return os.path.join(self._chartdir,outname+".gemf")
 
 class GdalConverter(InternalConverter):
-  EXTENSIONS=['kap','map','geo','eap']
+  EXTENSIONS=['kap','map','geo','eap','zip']
   def __init__(self, converterPath:str,chartDir:str,workDir:str):
     super().__init__(self.EXTENSIONS,chartDir)
     self._converter=converterPath
