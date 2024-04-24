@@ -36,7 +36,6 @@ import threading
 # logwriter must be a class having a log(string) method for writing infos
 # tiles are tuples (z,x,y)
 class GemfWriter(object):
-  MAXFILESIZE = 2000000000
   def __init__(self,filename,logwriter=None):
     self.filename=filename
     self.headerComplete=False
@@ -279,16 +278,6 @@ class GemfWriter(object):
       self.lock.acquire()
       struct.pack_into("!ql",self.offsetbuffer,offset,self.bytesWritten,dlen)
       #self.log("writing offset %d, len %d at buffer pos %d" %(self.bytesWritten,dlen,offset))
-      if (self.bytesWritten-self.lastFileStart) > self.MAXFILESIZE:
-        self.numextrafiles+=1
-        nfname="%s-%d"%(self.filename,self.numextrafiles)
-        self.log("opening new file %s after %d bytes" %(nfname,self.bytesWritten-self.lastFileStart))
-        if self.filehandle.fileno() != self.firsthandle.fileno():
-          self.filehandle.close()
-        self.filehandle=open(nfname,"wb")
-        if self.filehandle is None:
-          raise Exception("GemfWriter %s: unable to open new file %s" %(self.filename,nfname))
-        self.lastFileStart=self.bytesWritten
       self.filehandle.write(tiledata)
       self.bytesWritten+=dlen
       self.lock.release()

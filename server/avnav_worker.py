@@ -285,7 +285,7 @@ class WorkerStatus(object):
     self.status=status
     self.info=info
     self.name=name
-    self.modified=time.time()
+    self.modified=time.monotonic()
     self.timeout=timeout
     self.id=childId
     self.canDelete=canDelete
@@ -299,18 +299,18 @@ class WorkerStatus(object):
       rt=True
     self.status=status
     self.info=info
-    self.modified=time.time()
+    self.modified=time.monotonic()
     if timeout is not None:
       self.timeout=timeout
     return rt
   def refresh(self,timeout=None):
-    self.modified=time.time()
+    self.modified=time.monotonic()
     if timeout is not None:
       self.timeout=timeout
   def expired(self):
     if self.timeout is None or self.timeout <=0:
       return False
-    now = time.time()
+    now = time.monotonic()
     if now < self.modified or (self.modified + self.timeout) < now:
       return True
     return False
@@ -591,7 +591,7 @@ class AVNWorker(InfoHandler):
           elem=v.toDict()
           if elem is not None:
             rta.append(elem)
-        except:
+        except Exception as e:
           pass
       return {'name':self.getStatusName(),'items':rta}
     except:

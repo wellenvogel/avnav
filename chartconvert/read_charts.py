@@ -1695,6 +1695,7 @@ def main(argv):
   if (len(args) < 1):
     print(usage)
     sys.exit(1)
+  log("starting with %s"%" ".join(argv))
   TilerTools=findTilerTools(options.ttdir)
   mercator=Mercator()
   mode="all"
@@ -1730,8 +1731,14 @@ def main(argv):
     sys.exit(1)
   ld("outname",outname)
   log("using outname %s" %(outname))
-  basetiles = os.path.join(basedir, WORKDIR, outname, BASETILES)
-  outdir = os.path.join(basedir, WORKDIR, outname)
+  outdir = os.path.join(basedir, WORKDIR, os.path.basename(outname))
+  basetiles=os.path.join(outdir,BASETILES)
+  mapdir=os.path.join(outdir,OUTTILES)
+  if not os.path.isabs(outname):
+    outname=os.path.join(basedir,OUT,outname)
+  if not outname.upper().endswith(".GEMF"):
+    outname+=".gemf"
+  tmpgemf=os.path.join(outdir,"tmp.gemf")
   if mode == "chartlist"  or mode == "all":
     if len(args) < 1 :
       log("no charts to convert")
@@ -1744,17 +1751,15 @@ def main(argv):
     generateAllBaseTiles(outdir,mercator)
   if mode == "merge" or mode == "all" or mode == "generate" or mode == "overview" or mode == "gemf":
     assert os.path.isdir(outdir),"the directory "+outdir+" does not exist, run mode chartlist before"
-    mapdir=os.path.join(outdir,OUTTILES)
-    if not os.path.isdir(gemfdir):
-      os.makedirs(gemfdir,0o777)
-    gemfname=os.path.join(basedir,OUT,outname+".gemf")
+  copyGemf=False
   if mode == "merge" or mode == "all" or mode == "generate" or mode == "overview":
     if options.newgemf:
-      gemfwriter=WriterGemf(gemfname)
+      gemfwriter=WriterGemf(tmpgemf)
       ld("using new gemfwriting")
     else:
       gemfwriter=None
     mergeAllTiles(outdir,mercator,gemfwriter,(mode == "overview"))
+    copyGemf=True
   if ( mode == "gemf" or mode == "all" ) and not options.newgemf:
     assert os.path.isdir(outdir),"the directory "+outdir+" does not exist, run mode chartlist before"
     chartlist = readChartList(outdir, mercator)
@@ -1763,16 +1768,27 @@ def main(argv):
       marker=os.path.join(mapdir,"avnav.xml")
       doGenerateGemf=True
       if options.update == 1:
-        if os.path.exists(marker) and os.path.exists(gemfname):
-          ostat=os.stat(gemfname)
+        if os.path.exists(marker) and os.path.exists(outname):
+          ostat=os.stat(outname)
           cstat=os.stat(marker)
           if (cstat.st_mtime <= ostat.st_mtime):
-            log("file %s is newer then %s, no need to generate" %(gemfname,marker))
+            log("file %s is newer then %s, no need to generate" %(outname,marker))
             doGenerateGemf=False
       if doGenerateGemf:
-        log("starting creation of GEMF file %s"%(gemfname))
-        generate_efficient_map_file.MakeGEMFFile(mapdir,gemfname,gemfoptions)
-      log("gemf file %s successfully created" % (gemfname))
+        log("starting creation of GEMF file %s"%(tmpgemf))
+        generate_efficient_map_file.MakeGEMFFile(mapdir,tmpgemf,gemfoptions)
+        log("gemf file %s successfully created" % (tmpgemf))
+        copyGemf=True
+  if copyGemf:
+    log("copying %s to %s"%(tmpgemf,outname))
+    outtmp=outname+".tmp"
+    try:
+      shutil.copy(tmpgemf,outtmp)
+      os.replace(outtmp,outname)
+      os.unlink(tmpgemf)
+    except Exception as e:
+      strerr="ERROR: unable to copy/replace %s to %s: %s"%(tmpgemf,outname,traceback.format_exc())
+      raise Exception(strerr)
   log("***chart generation finished***")
 
 

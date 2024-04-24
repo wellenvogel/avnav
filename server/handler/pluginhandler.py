@@ -29,7 +29,7 @@ import inspect
 import json
 from typing import Dict, Any
 
-from avnav_api import AVNApi
+from avnav_api import AVNApi, ConverterApi
 from avnav_store import AVNStore
 
 from avnav_manager import AVNHandlerManager
@@ -39,6 +39,7 @@ import avnav_handlerList
 from avnremotechannel import AVNRemoteChannelHandler
 from avnuserapps import AVNUserAppHandler
 from avnusb import AVNUsbSerialReader
+from importer import AVNImporter
 from layouthandler import AVNScopedDirectoryHandler, AVNLayoutHandler
 from charthandler import AVNChartHandler
 from settingshandler import AVNSettingsHandler
@@ -90,6 +91,7 @@ class ApiImpl(AVNApi):
     self.storeKeys=[]
     self.userApps=[]
     self.layouts=[]
+    self.converters=set()
     self.settingsFiles=[]
     self.jsCssOnly=False
 
@@ -144,6 +146,14 @@ class ApiImpl(AVNApi):
         cmdHandler.removePluginCommands(self.prefix)
     except:
       pass
+    try:
+      importer=AVNWorker.findHandlerByName(AVNImporter.getConfigName()) # type: AVNImporter
+      if importer:
+        for name in self.converters:
+          importer.deregisterConverter(name)
+    except:
+      pass
+    self.converters.clear()
 
     self.stopHandler()
 
@@ -421,6 +431,22 @@ class ApiImpl(AVNApi):
     if channelhandler is None:
       raise Exception("no remote channel handler configured")
     channelhandler.sendMessage(command+" "+param,channel=channel)
+
+  def registerConverter(self, converter: ConverterApi, name=None):
+    importer=AVNWorker.findHandlerByName(AVNImporter.getConfigName()) # type: AVNImporter
+    if importer is None:
+      raise Exception("no importer available")
+    name=self.prefix if name is None else self.prefix+":"+name
+    self.converters.add(name)
+    importer.registerConverter(converter,name)
+
+  def deregisterConverter(self, name=None):
+    importer=AVNWorker.findHandlerByName(AVNImporter.getConfigName()) # type: AVNImporter
+    if importer is None:
+      raise Exception("no importer available")
+    name=self.prefix if name is None else self.prefix+":"+name
+    self.converters.remove(name)
+    importer.deregisterConverter(name)
 
 
 class AVNPluginHandler(AVNWorker):

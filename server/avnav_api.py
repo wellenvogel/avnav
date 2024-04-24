@@ -23,6 +23,29 @@
 #
 ###############################################################################
 
+class ConverterApi:
+  def countConvertibleFiles(self,dirOrFile):
+    '''
+    count the files that can be converted and
+    also compute an md5 hash to check for changes later on
+    @param dirOrFile:
+    @return: (num,md5)
+    '''
+    return (0,None)
+  def getConverterCommand(self,input,outname):
+    '''
+    run the conversion
+    @param input:
+    @param outname:
+    @return: (num,md5)
+    '''
+    raise Exception("not implemented")
+  def getOutFileOrDir(self,outname):
+    return None
+  def handledExtensions(self):
+    return []
+
+
 class AVNApi(object):
   """
   the API for handlers/decoders that will input data, decode NMEA or output data
@@ -373,3 +396,8 @@ class AVNApi(object):
     @return:
     '''
     raise NotImplemented()
+
+  def registerConverter(self,converter:ConverterApi,name=None):
+    raise NotImplemented
+  def deregisterConverter(self,name=None):
+    raise NotImplemented
