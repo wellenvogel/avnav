@@ -582,15 +582,16 @@ class AVNWorker(InfoHandler):
     self.configChanger=changer
   def getStatusProperties(self):
     return {}
-  def getInfo(self):
+  def getInfo(self,children=None):
     try:
       st=self.status.copy()
       rta=[]
       for k,v in st.items():
         try:
-          elem=v.toDict()
-          if elem is not None:
-            rta.append(elem)
+          if children is None or k in children:
+            elem=v.toDict()
+            if elem is not None:
+              rta.append(elem)
         except Exception as e:
           pass
       return {'name':self.getStatusName(),'items':rta}

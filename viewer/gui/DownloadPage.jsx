@@ -32,6 +32,7 @@ import EditOverlaysDialog, {DEFAULT_OVERLAY_CHARTENTRY} from '../components/Edit
 import {getOverlayConfigName} from "../map/chartsourcebase"
 import PropertyHandler from '../util/propertyhandler';
 import {SaveItemDialog} from "../components/LoadSaveDialogs";
+import ImportDialog from "../components/ImportDialog";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -146,59 +147,6 @@ const DownloadItem=(props)=>{
 
 
 
-class ImportDialog extends React.Component{
-    constructor(props){
-        super(props);
-        this.state={
-            subdir:props.subdir,
-            useSubdir:props.subdir?true:false
-        };
-    }
-    render(){
-        return (
-            <React.Fragment>
-                <div className="importDialog flexInner">
-                    <h3 className="dialogTitle">Upload Chart to Importer</h3>
-                    <InputReadOnly
-                        dialogRow={true}
-                        label="name"
-                        value={this.props.name}
-                        />
-                    <Checkbox
-                        dialogRow={true}
-                        label="use set name"
-                        value={this.state.useSubdir}
-                        onChange={(nv)=>this.setState({useSubdir:nv})}
-                        />
-                    {this.state.useSubdir?<Input
-                        dialogRow={true}
-                        label="set name"
-                        value={this.state.subdir}
-                        onChange={(nv)=>{this.setState({subdir:nv})}}
-                        />
-                        :
-                        null}
-
-                    <div className="dialogButtons">
-                        <DB name="cancel"
-                            onClick={()=>{
-                                this.props.cancelFunction();
-                                this.props.closeCallback();
-                            }}
-                        >Cancel</DB>
-                        <DB name="ok"
-                            onClick={()=>{
-                                this.props.okFunction(this.props,this.state.useSubdir?this.state.subdir:undefined);
-                                this.props.closeCallback();
-                            }}
-                            disabled={this.state.useSubdir && !this.state.subdir}
-                            >OK</DB>
-                    </div>
-                </div>
-             </React.Fragment>
-        );
-    }
-}
 
 
 
@@ -474,11 +422,12 @@ class DownloadPage extends React.Component{
                                         if (subdir !== this.state.importSubDir){
                                             this.setState({importSubDir: subdir});
                                         }
-                                        resolve({name:name,type:'import',uploadParameters:{subdir:subdir}});
+                                        resolve({name:name,type:'import',uploadParameters:{subdir:subdir},showImportPage:true});
                                     }}
                                     cancelFunction={()=>reject("canceled")}
                                     name={name}
                                     subdir={this.state.importSubDir}
+                                    allowSubDir={ext !== 'zip'}
                                 />
                             );
                         });
@@ -589,7 +538,12 @@ class DownloadPage extends React.Component{
                         <UploadHandler
                             local={localDoneFunction !== undefined}
                             type={this.state.type}
-                            doneCallback={localDoneFunction?localDoneFunction:this.fillData}
+                            doneCallback={(param)=>{
+                                if (param.param && param.param.showImportPage){
+                                    this.props.history.push('importerpage');
+                                }
+                                localDoneFunction?localDoneFunction():this.fillData()
+                            }}
                             errorCallback={(err)=>{if (err) Toast(err);this.fillData();}}
                             uploadSequence={this.state.uploadSequence}
                             checkNameCallback={this.checkNameForUpload}

@@ -213,25 +213,34 @@ class ConversionCandidate:
     if self._isConverted():
       return self.State.DONE
     return self.State.ERROR
-  def setInfo(self,setter):
-    key=self.getInfoKey()
-    st=self.getState()
+  def getWstate(self,st=None):
+    if st is None:
+      st=self.getState()
     if st == self.State.CONVERTING:
-      setter.setInfo(key,"converting %d files"%self.score,WorkerStatus.NMEA)
-      return
+      return WorkerStatus.NMEA
     if st == self.State.DONENC:
-      setter.setInfo(key,"no converter yet but converted at %s"%self.result.dateStr(),WorkerStatus.INACTIVE)
-      return
+      return WorkerStatus.INACTIVE
     if st == self.State.NOCONV:
-      setter.setInfo(key,"no converter",WorkerStatus.ERROR)
-      return
+      return WorkerStatus.ERROR
     if st == self.State.SETTLE:
-      setter.setInfo(key,"changed, waiting to settle (%d files)"%self.score,WorkerStatus.RUNNING)
-      return
+      return WorkerStatus.RUNNING
     if st == self.State.DONE:
-      setter.setInfo(key,"already converted at %s"%self.result.dateStr(),WorkerStatus.INACTIVE)
-      return
-    setter.setInfo(key,"conversion failed at %s: %s"%(self.result.dateStr(),str(self.result.error)),WorkerStatus.ERROR)
+      return WorkerStatus.INACTIVE
+    return WorkerStatus.ERROR
+  def getStateInfo(self,st=None):
+    if st is None:
+      st=self.getState()
+    if st == self.State.CONVERTING:
+      return "converting %d files"%self.score
+    if st == self.State.DONENC:
+      return "no converter yet but converted at %s"%self.result.dateStr()
+    if st == self.State.NOCONV:
+      return "no converter"
+    if st == self.State.SETTLE:
+      return "changed, waiting to settle (%d files)"%self.score
+    if st == self.State.DONE:
+      return "already converted at %s"%self.result.dateStr()
+    return "conversion failed at %s: %s"%(self.result.dateStr(),str(self.result.error))
 
 class Conversion:
   def __init__(self,process,candidate:ConversionCandidate):
@@ -354,7 +363,7 @@ class AVNImporter(AVNWorker):
     keys=set()
     for c in candidates: # type: ConversionCandidate
       keys.add(c.getInfoKey())
-      c.setInfo(self)
+      self.setInfo(c.getInfoKey(),c.getStateInfo(),c.getState())
     def check(k,v):
       if not k.startswith(ConversionCandidate.KPRFX):
         return True
@@ -639,10 +648,33 @@ class AVNImporter(AVNWorker):
 
   def handleApiRequest(self, type, subtype, requestparam, **kwargs):
     if type == "list":
-      status=self.getInfo()
+      status=self.getInfo(['main','converter'])
       items=[]
       if status is not None and status.get('items') is not None:
         items=status['items']
+      candidates=self.candidates
+      for can in candidates: # type: ConversionCandidate
+        canDownload=False
+        st=can.getState()
+        if st == ConversionCandidate.State.DONE or st == ConversionCandidate.State.DONENC:
+          if can.converter is not None:
+            downloadFile=can.converter.getOutFileOrDir(can.name)
+            if downloadFile is not None and os.path.exists(downloadFile):
+              canDownload=True
+        hasLog=self.getLogFileName(can.name,True) is not None
+        path,ext=os.path.splitext(can.filename)
+        basename=os.path.basename(path)+ext
+        canst={
+          'name':ConversionCandidate.KPRFX+can.name,
+          'istate':can.getState(),
+          'status':can.getWstate(),
+          'info':can.getStateInfo(),
+          'fullname':can.filename,
+          'basename':basename,
+          'running':can.running,
+          'canDownload': canDownload,
+          'hasLog': hasLog}
+        items.append(canst)
       return AVNUtil.getReturnData(items=items)
     if type == "delete":
       name=AVNUtil.getHttpRequestParam(requestparam,'name',True)

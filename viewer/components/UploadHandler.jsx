@@ -69,10 +69,10 @@ class UploadHandler extends React.Component{
         this.checkName(file.name)
             .then((res)=>{
                 if (!this.props.local){
-                    this.uploadServer(file,res.name,res.type||this.props.type,res.uploadParameters)
+                    this.uploadServer(file,res.name,res.type||this.props.type,res.uploadParameters,res)
                 }
                 else{
-                    this.uploadFileReader(file,res.name)
+                    this.uploadFileReader(file,res.name,res)
                 }
             })
             .catch((err)=>{
@@ -80,7 +80,7 @@ class UploadHandler extends React.Component{
             });
     }
 
-    uploadFileReader(file, name) {
+    uploadFileReader(file, name,param) {
         this.stateHelper.setState({}, true);
         if (file.size) {
             if (file.size > MAXUPLOADSIZE) {
@@ -100,13 +100,13 @@ class UploadHandler extends React.Component{
                 this.props.errorCallback("unable to load file " + file.name);
                 return;
             }
-            this.props.doneCallback({data: content, name: name});
+            this.props.doneCallback({data: content, name: name,param:param});
 
 
         };
         reader.readAsText(file);
     }
-    uploadServer(file, name,type, opt_options) {
+    uploadServer(file, name,type, opt_options,opt_param) {
         let self=this;
         let url = globalStore.getData(keys.properties.navUrl)
             + "?request=upload&type=" + type
@@ -150,7 +150,9 @@ class UploadHandler extends React.Component{
                 if (self.props.uploadSequence !== currentSequence) return;
                 self.stateHelper.setState({}, true);
                 if (self.props.doneCallback) {
-                    self.props.doneCallback();
+                    self.props.doneCallback({
+                        param:opt_param
+                    });
                 }
             }
         });
@@ -198,7 +200,8 @@ class UploadHandler extends React.Component{
             .then((res) => {
                 this.props.doneCallback({
                     name: res.name,
-                    data: data
+                    data: data,
+                    param: res
                 })
             })
             .catch((err) => {
@@ -228,7 +231,8 @@ class UploadHandler extends React.Component{
                     },
                     total: avnav.android.getFileSize(id),
                     loaded: 0,
-                    loadedPercent: true
+                    loadedPercent: true,
+                    param: res
                 };
                 this.stateHelper.setState(copyInfo, true);
                 if (avnav.android.copyFile(id,res.name)) {
@@ -254,8 +258,9 @@ class UploadHandler extends React.Component{
         }
         else{
             //done, error already reported from java side
+            let param=this.stateHelper.getValue('param')
             this.stateHelper.setState({},true);
-            this.props.doneCallback();
+            this.props.doneCallback({param:param});
         }
     }
 
