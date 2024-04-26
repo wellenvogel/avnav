@@ -36,6 +36,7 @@ import DB from "../components/DialogButton";
 import Dialogs from "../components/OverlayDialog";
 import Toast from "../components/Toast";
 import globalStore from "../util/globalstore";
+import LogDialog from "../components/LogDialog";
 
 const ImporterItem=(props)=>{
     return <div className="status">
@@ -129,7 +130,11 @@ class ImporterPage extends React.Component{
                 logCallback={(id)=>{
                   if (!this.downloadFrame) return;
                   let url=globalStore.getData(keys.properties.navUrl)+"?request=api&type=import&command=getlog&name="+encodeURIComponent(id);
-                  this.downloadFrame.src=url;
+                  Dialogs.dialog((dlprops)=>{
+                      return <LogDialog baseUrl={url}
+                          {...dlprops}
+                      />
+                  })
                 }}
                 download={(id)=>{
                     if (!this.downloadFrame) return;

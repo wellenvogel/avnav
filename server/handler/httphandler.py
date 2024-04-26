@@ -245,7 +245,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
       self.wfile.write(wbytes)
       AVNLog.ld("nav response",rtj)
     else:
-      raise Exception("empty response")
+      AVNLog.ld("empty response")
 
   def sendJsFile(self,filename,baseUrl,addCode=None):
     '''

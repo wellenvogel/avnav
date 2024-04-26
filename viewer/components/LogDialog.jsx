@@ -69,7 +69,7 @@ export default class LogDialog extends React.Component{
                 <DB
                     name="download"
                     onClick={()=>{
-                        let name="avnav-"+Formatter.formatDateTime(new Date()).replace(/[: /]/g,'-').replace(/--/g,'-')+".log";
+                        let name=this.props.dlname?this.props.dlname:"avnav-"+Formatter.formatDateTime(new Date()).replace(/[: /]/g,'-').replace(/--/g,'-')+".log";
                         let url=this.props.baseUrl+"&filename="+encodeURIComponent(name);
                         if (this.downloadFrame){
                             this.downloadFrame.src=url;
@@ -105,5 +105,6 @@ export default class LogDialog extends React.Component{
 LogDialog.propTypes={
     baseUrl: PropTypes.string.isRequired,
     title: PropTypes.string,
-    maxBytes: PropTypes.number
+    maxBytes: PropTypes.number,
+    dlname:PropTypes.string
 }

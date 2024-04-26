@@ -568,21 +568,23 @@ class AVNImporter(AVNWorker):
         os.unlink(logfile)
       except:
         pass
+    rt=False
     if os.path.isdir(fullname):
       AVNLog.info("deleting import directory %s",fullname)
       try:
         shutil.rmtree(fullname)
+        rt=True
       except:
         AVNLog.error("error deleting directory %s:%s",fullname,traceback.format_exc())
-        return False
     else:
       if os.path.isfile(fullname):
         AVNLog.info("deleting import file %s",fullname)
         try:
           os.unlink(fullname)
+          rt=True
         except:
           AVNLog.error("error deleting file %s:%s",fullname,traceback.format_exc())
-          return False
+    self.wakeUp()
     return True
 
   def getLogFileName(self,name,checkExistance=False):
@@ -701,7 +703,7 @@ class AVNImporter(AVNWorker):
       if (command == "getlog"):
         handler=kwargs.get('handler')
         name=AVNUtil.getHttpRequestParam(requestparam,"name",True)
-        lastBytes=AVNUtil.getHttpRequestParam(requestparam,"lastBytes",False)
+        lastBytes=AVNUtil.getHttpRequestParam(requestparam,"maxBytes",False)
         candidate=self.findCandidate(name)
         if candidate is None:
           return AVNUtil.getReturnData(error="%s not found"%name)
@@ -709,7 +711,6 @@ class AVNImporter(AVNWorker):
         if logName is None:
           return AVNUtil.getReturnData(error="log for %s not found"%name)
         filename=os.path.basename(logName)
-        rt=AVNDownload(logName,lastBytes=lastBytes,dlname=filename)
         handler.writeFromDownload(
           AVNDownload(logName,lastBytes=lastBytes),filename=filename)
         return None
