@@ -25,6 +25,7 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
 import glob
+import io
 import itertools
 import urllib.parse
 
@@ -660,13 +661,15 @@ class ChartFile(object):
 
 
 class AVNDownload(object):
-  def __init__(self, filename, size=None, stream=None, mimeType=None,lastBytes=None):
+  def __init__(self, filename, size=None, stream=None, mimeType=None,lastBytes=None,dlname=None,noattach=None):
     self.filename = filename
     self.size = size
     self.originalSize=self.size
     self.stream = stream
     self.mimeType = mimeType
     self.lastBytes=lastBytes
+    self.dlname=dlname
+    self.noattach=noattach
     if self.lastBytes is not None:
       self.lastBytes=int(self.lastBytes)
 
@@ -700,6 +703,20 @@ class AVNDownload(object):
   def fileToAttach(cls,filename):
     #see https://stackoverflow.com/questions/93551/how-to-encode-the-filename-parameter-of-content-disposition-header-in-http
     return 'filename="%s"; filename*=utf-8\'\'%s'%(filename,urllib.parse.quote(filename))
+
+class AVNDownloadError(AVNDownload):
+  def __init__(self, error:str):
+    super().__init__(None)
+    error=error.encode(encoding='utf-8',errors="ignore")
+    self.dlen=len(error)
+    self.stream=io.BytesIO(error)
+    self.stream.seek(0)
+    self.noattach=True
+  def getSize(self):
+    return self.dlen
+
+  def getMimeType(self, handler=None):
+    return "text/plain"
 
 
 class MovingSum:

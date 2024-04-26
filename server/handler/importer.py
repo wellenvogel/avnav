@@ -656,19 +656,18 @@ class AVNImporter(AVNWorker):
       name=AVNUtil.getHttpRequestParam(requestparam,'name',True)
       candidate=self.findCandidate(name)
       if candidate is None:
-        return AVNUtil.getReturnData(error="item %s not found"%name)
-      dlfile=candidate.converter.getOutFileOrDir(candidate.name)
+        return AVNDownloadError("item %s not found"%name)
+      dlfile=None
+      if candidate.converter is not None:
+        dlfile=candidate.converter.getOutFileOrDir(candidate.name)
       if dlfile is None:
-        return AVNUtil.getReturnData(error="no download for %s"%name)
+        return AVNDownloadError("no download for %s"%name)
       if not os.path.exists(dlfile):
-        return AVNUtil.getReturnData(error="%s not found"%dlfile)
+        return AVNDownloadError("%s not found"%dlfile)
       if os.path.isdir(dlfile):
-        return AVNUtil.getReturnData(error="download of directories not yet supported")
+        return AVNDownloadError("download of directories not yet supported")
       filename=os.path.basename(dlfile)
-      handler=kwargs.get('handler')
-      handler.writeFromDownload(
-        AVNDownload(dlfile),filename=filename)
-      return None
+      return AVNDownload(dlfile,dlname=filename)
 
     if type == "upload":
       handler=kwargs.get('handler')
@@ -710,6 +709,7 @@ class AVNImporter(AVNWorker):
         if logName is None:
           return AVNUtil.getReturnData(error="log for %s not found"%name)
         filename=os.path.basename(logName)
+        rt=AVNDownload(logName,lastBytes=lastBytes,dlname=filename)
         handler.writeFromDownload(
           AVNDownload(logName,lastBytes=lastBytes),filename=filename)
         return None

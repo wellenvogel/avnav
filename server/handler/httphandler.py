@@ -517,10 +517,13 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
     self.end_headers()
     self.wfile.write(wbytes)
 
-  def writeFromDownload(self,download,filename=None,noattach=False):
-    # type: (AVNDownload, str,bool) -> object or None
+  def writeFromDownload(self,download: AVNDownload,filename:str=None,noattach:bool=False):
     self.send_response(200)
     size = download.getSize()
+    if download.dlname is not None:
+      filename=download.dlname
+    if download.noattach is not None:
+      noattach=download.noattach
     if filename is not None and filename != "" and not noattach:
       self.send_header("Content-Disposition", "attachment; %s"%AVNDownload.fileToAttach(filename))
     self.send_header("Content-type", download.getMimeType(self))
