@@ -23,6 +23,7 @@
 #
 ###############################################################################
 import hashlib
+import json
 import shutil
 
 import avnav_handlerList
@@ -84,9 +85,9 @@ class InternalConverter(ConverterApi):
       self._logger.error("unable to handle zipfile %s:%s"%(fn,traceback.format_exc()))
       return 0
   def _handleFile(self,md5,fn):
-    if fn.upper().endswith('.ZIP'):
-      return self._handleZipFile(md5,fn)
     if self._canHandle(fn):
+      if fn.upper().endswith('.ZIP'):
+        return self._handleZipFile(md5,fn)
       self._addMd5(md5,fn)
       return 1
     return 0
@@ -147,24 +148,91 @@ class MbtilesConverter(InternalConverter):
   def getConverterCommand(self, input, outname):
     return [sys.executable,self._converter,self.getOutFileOrDir(outname),input]
 
+class ConversionResult:
+  def __init__(self,md5,error=None,ts=None):
+    self.error=error
+    self.md5=md5
+    self.ts=ts if ts is not None else time.time()
+  def valid(self):
+    return self.md5 is not None
+  def dateStr(self):
+    return datetime.datetime.fromtimestamp(self.ts).strftime('%Y-%m-%d %H:%M')
+  def isOk(self):
+    return self.error is None
+
 
 class ConversionCandidate:
-  def __init__(self,name,filename,converter,currentmd5,convertedmd5,convertedTime):
+  KPRFX="conv:"
+  class State(Enum):
+    SETTLE=1
+    CONVERTING=2
+    DONE=3
+    NOCONV=4
+    DONENC=5 #done but no converter
+    ERROR=6
+  def __init__(self,name,filename):
     self.name=name # type: str
     self.filename=filename # type: str
-    self.converter=converter # type: ConverterApi
-    self.currentmd5=currentmd5 # type: str
-    self.convertedmd5=convertedmd5 # type: str
-    self.convertedTime=convertedTime
+    self.converter=None # type: ConverterApi
+    self.score=0
+    self.currentmd5=None # type: str
     self.timestamp=time.monotonic()
+    self.result=ConversionResult(None,False)
+    self.running=False
+  def update(self,other):
+    if other is None or other.name != self.name:
+      return
+    self.converter=other.converter
+    self.score=other.score
+    self.currentmd5=other.currentmd5
+    self.timestamp=other.timestamp
+    self.result=other.result
+    self.running=other.running
   def md5changed(self):
-    return self.currentmd5 != self.convertedmd5
+    return self.currentmd5 != self.result.md5
   def hasChanged(self,other):
     return self.currentmd5 != other.currentmd5
   def getOutName(self):
     return self.converter.getOutFileOrDir(self.name)
   def getInfoKey(self):
-    return "conv:%s"%self.name
+    return "%s%s"%(self.KPRFX,self.name)
+  def _isConverted(self):
+    return self.result.valid() and self.result.isOk()
+  def hasError(self):
+    return self.result.valid() and not self.result.isOk()
+  def getState(self):
+    if self.running:
+      return self.State.CONVERTING
+    if self.score == 0:
+      if self._isConverted():
+        return self.State.DONENC
+      else:
+        return self.State.NOCONV
+    if self.md5changed():
+      return self.State.SETTLE
+    if self._isConverted():
+      return self.State.DONE
+    return self.State.ERROR
+  def setInfo(self,setter):
+    key=self.getInfoKey()
+    st=self.getState()
+    if st == self.State.CONVERTING:
+      setter.setInfo(key,"converting %d files"%self.score,WorkerStatus.NMEA)
+      return
+    if st == self.State.DONENC:
+      setter.setInfo(key,"no converter yet but converted at %s"%self.result.dateStr(),WorkerStatus.INACTIVE)
+      return
+    if st == self.State.NOCONV:
+      setter.setInfo(key,"no converter",WorkerStatus.ERROR)
+      return
+    if st == self.State.SETTLE:
+      setter.setInfo(key,"changed, waiting to settle (%d files)"%self.score,WorkerStatus.RUNNING)
+      return
+    if st == self.State.DONE:
+      setter.setInfo(key,"already converted at %s"%self.result.dateStr(),WorkerStatus.INACTIVE)
+      return
+    setter.setInfo(key,"conversion failed at %s: %s"%(self.result.dateStr(),str(self.result.error)),WorkerStatus.ERROR)
+
 class Conversion:
   def __init__(self,process,candidate:ConversionCandidate):
     self.process=process
@@ -191,8 +259,8 @@ class AVNImporter(AVNWorker):
   P_WORKDIR=WorkerParameter('workDir','',editable=False)
   P_WAITTIME=WorkerParameter('waittime',30,type=WorkerParameter.T_NUMBER,
                              description='time to wait in seconds before a conversion is started after detecting a change (and no further change)')
-  P_KEEPINFO=WorkerParameter('keepInfoTime', 30, type=WorkerParameter.T_NUMBER,
-                             description='seconds to keep the info entry',editable=False)
+  P_SCANINTERVAL=WorkerParameter('scanInterval', 10, type=WorkerParameter.T_NUMBER,
+                             description='seconds between import dir scan',editable=False)
   @classmethod
   def getConfigName(cls):
     return "AVNImporter"
@@ -206,7 +274,7 @@ class AVNImporter(AVNWorker):
       cls.P_IMPORTDIR, #directory below our data dir
       cls.P_WORKDIR,    #working directory
       cls.P_WAITTIME,
-      cls.P_KEEPINFO
+      cls.P_SCANINTERVAL
     ]
     return rt
 
@@ -286,8 +354,9 @@ class AVNImporter(AVNWorker):
     keys=set()
     for c in candidates: # type: ConversionCandidate
       keys.add(c.getInfoKey())
+      c.setInfo(self)
     def check(k,v):
-      if not k.startswith('conv:'):
+      if not k.startswith(ConversionCandidate.KPRFX):
         return True
       return k in keys
     self.cleanupInfo(check)
@@ -297,24 +366,19 @@ class AVNImporter(AVNWorker):
     self.setInfo("converter","free",WorkerStatus.STARTED)
     waitingCandidates={}
     while not self.shouldStop():
-      timeout=self.getWParam(self.P_KEEPINFO)
       self.waittime=self.getWParam(self.P_WAITTIME)
       AVNLog.debug("mainloop")
       currentCandidates=self.readImportDir()
-      self._syncInfo(currentCandidates)
       self.candidates=currentCandidates
       if self.runningConversion is None:
         self.setInfo("main","scanning",WorkerStatus.NMEA)
         now=time.monotonic()
         for k in currentCandidates:
-          infoKey=k.getInfoKey()
-          if not k.md5changed():
+          if not k.md5changed() or k.score == 0:
             try:
               del waitingCandidates[k.name]
             except:
               pass
-            timestamp_str = datetime.datetime.fromtimestamp(k.convertedTime).strftime('%Y-%m-%d %H:%M')
-            self.setInfo(infoKey,"already converted at %s"%timestamp_str,WorkerStatus.INACTIVE)
             continue
           existing=waitingCandidates.get(k.name)
           startConversion=False
@@ -328,9 +392,7 @@ class AVNImporter(AVNWorker):
           else:
             waitingCandidates[k.name]=k
           if not startConversion:
-            self.setInfo(infoKey, "change detected, waiting to settle" , WorkerStatus.STARTED,timeout=timeout)
             continue
-          self.setInfo(infoKey, "conversion started", WorkerStatus.NMEA,timeout=timeout)
           rs=self.startConversion(k)
           if not rs:
             try:
@@ -341,15 +403,26 @@ class AVNImporter(AVNWorker):
             break
       else:
         AVNLog.debug("conversion(s) running, skip check")
+        for k in currentCandidates:
+          if k.name == self.runningConversion.candidate.name:
+            k.running=True
       candidate=self.checkConversionFinished()
-      try:
-        del waitingCandidates[candidate.name]
-      except:
-        pass
+      if candidate is not None:
+        try:
+          del waitingCandidates[candidate.name]
+        except:
+          pass
+        for ac in self.candidates:
+          if ac.name == candidate.name:
+            ac.update(candidate)
+      self._syncInfo(self.candidates)
+      if candidate is not None:
+        #immediately scan again as we could start the next
+        continue
       if self.runningConversion is not None or len(waitingCandidates.keys())> 0:
         self.wait(self.waittime/5)
       else:
-        self.wait(1)
+        self.wait(self.getWParam(self.P_SCANINTERVAL))
     if self.runningConversion is not None:
       self.runningConversion.stop()
 
@@ -359,26 +432,37 @@ class AVNImporter(AVNWorker):
     for converter in converters: # type: ConverterApi
       extensions.extend(converter.handledExtensions())
     return extensions
-
-  def saveLastMd5(self,name,hexdigest):
-    fn=os.path.join(self.importDir,"_"+name)
+  def getResultName(self,name):
+    return os.path.join(self.importDir,"_"+name)
+  def saveLastResult(self, name, result:ConversionResult):
+    fn=self.getResultName(name)
     try:
+      data=json.dumps(result.__dict__)
       with open(fn,"w") as h:
-        h.write(hexdigest)
+        h.write(data)
         return True
     except:
       return False
 
-  def getLastMd5(self,name):
-    fn=os.path.join(self.importDir,"_"+name)
+  def getLastResult(self, name):
+    fn=self.getResultName(name)
+    rt=ConversionResult(None,"unable to read result")
     if not os.path.exists(fn):
-      return (None,None)
-    mt=os.stat(fn).st_mtime
+      rt.error=None
+      return rt
     try:
       with open(fn,"r") as h:
-        return (mt,h.read())
+        raw=json.load(h)
+        for k,v in raw.items():
+          if hasattr(rt,k):
+            setattr(rt,k,v)
+        return rt
     except:
-      return (None,None)
+      try:
+        os.unlink(fn)
+      except:
+        pass
+      return rt
   def getNameFromImport(self,dirOrFile):
     path,ext=os.path.splitext(dirOrFile)
     path=os.path.basename(path)
@@ -390,26 +474,21 @@ class AVNImporter(AVNWorker):
       if file == ".." or file == "." or file.startswith('_'):
         continue
       fullname=os.path.join(self.importDir,file)
-      score=0
-      converter=None
-      md5=None
+      name=self.getNameFromImport(file)
+      candidate=ConversionCandidate(name,fullname)
       for cnv in self._getConverters(): # type: ConverterApi
         try:
           cs,currentmd5=cnv.countConvertibleFiles(fullname)
-          if cs > score:
-            converter=cnv
-            score=cs
-            md5=currentmd5
+          if cs > candidate.score:
+            candidate.converter=cnv
+            candidate.score=cs
+            candidate.currentmd5=currentmd5
         except Exception as e:
-          AVNLog.error("error reading importt dir for converter %s",traceback.format_exc())
-      if score < 1:
-        AVNLog.debug("ignore unknown import %s",fullname)
-        continue
-      name=self.getNameFromImport(file)
-      lastTime,lastMd5=self.getLastMd5(name)
-      if lastMd5 == md5:
-        AVNLog.debug("import %s unchanged, skip",fullname)
-      rt.append(ConversionCandidate(name,fullname,converter,md5,lastMd5,lastTime))
+          AVNLog.error("error reading import dir for converter %s",traceback.format_exc())
+      if candidate.score < 1:
+        AVNLog.debug("unknown import %s",fullname)
+      candidate.result=self.getLastResult(name)
+      rt.append(candidate)
     return rt
 
 
@@ -423,6 +502,7 @@ class AVNImporter(AVNWorker):
       AVNLog.error("unable to start conversion for %s - don't know how to handle it",candidate.name)
       self.setInfo("converter","start for %s failed - don't know how to handle"%(candidate.name,),WorkerStatus.ERROR)
       return False
+    candidate.running=True
     self.runningConversion=Conversion(po,candidate)
 
   def checkConversionFinished(self):
@@ -431,27 +511,26 @@ class AVNImporter(AVNWorker):
     rtc=self.runningConversion.process.poll()
     if rtc is None:
       AVNLog.debug("converter for %s still running",self.runningConversion.candidate.name)
-      self.refreshInfo(self.runningConversion.candidate.getInfoKey(),timeout=self.getWParam(self.P_KEEPINFO))
       return
     else:
       AVNLog.info("finished conversion for %s with return code %d",self.runningConversion.candidate.name,rtc)
+      result=ConversionResult(self.runningConversion.candidate.currentmd5)
       if rtc == 0:
         outname=self.runningConversion.candidate.getOutName()
         if not os.path.exists(outname):
-          self.setInfo(self.runningConversion.candidate.getInfoKey(),"%s not created"%(outname),WorkerStatus.ERROR)
+          result.error="%s not created"%(outname)
           rtc=1
-        else:
-          self.setInfo(self.runningConversion.candidate.getInfoKey(),"conversion ok",WorkerStatus.NMEA)
       else:
-        self.setInfo(self.runningConversion.candidate.getInfoKey(),"failed with status %d"%rtc,WorkerStatus.ERROR)
-
+        result.error="failed with status %d"%rtc
       if rtc == 0:
           self.setInfo("converter","successful for %s"%(self.runningConversion.candidate.name),WorkerStatus.STARTED)
       else:
           self.setInfo("converter","failed for %s"%(self.runningConversion.candidate.name),WorkerStatus.ERROR)
       candidate=self.runningConversion.candidate
-      self.saveLastMd5(candidate.name,candidate.currentmd5 if rtc == 0 else '')
-      self.runningConversion=None
+      candidate.result=result
+      candidate.running=False
+      self.saveLastResult(candidate.name, result)
+      self.runningConversion=None # type: Conversion
       return candidate
 
   #delete an import dir/file
@@ -472,6 +551,11 @@ class AVNImporter(AVNWorker):
       except:
         pass
     fullname=candidate.filename
+    resultname=self.getResultName(candidate.name)
+    try:
+      os.unlink(resultname)
+    except:
+      pass
     workdir=os.path.join(self.workDir,candidate.name)
     if os.path.isdir(workdir):
       try:
@@ -595,6 +679,11 @@ class AVNImporter(AVNWorker):
       path,ext=os.path.splitext(name)
       if not ( ext.upper() in self.allExtensions()) :
         return AVNUtil.getReturnData(error="unknown file type %s"%ext)
+      if name.startswith("_"):
+        return AVNUtil.getReturnData(error="names with starting _ not allowed")
+      if ext.upper() == '.ZIP':
+        #no subdir for zip files
+        subdir=None
       dir=self.importDir
       if subdir is not None:
         dir=os.path.join(self.importDir,subdir)
