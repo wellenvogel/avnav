@@ -705,14 +705,17 @@ class AVNImporter(AVNWorker):
         name=AVNUtil.getHttpRequestParam(requestparam,"name",True)
         lastBytes=AVNUtil.getHttpRequestParam(requestparam,"maxBytes",False)
         candidate=self.findCandidate(name)
+        rt=None
         if candidate is None:
-          return AVNUtil.getReturnData(error="%s not found"%name)
-        logName=self.getLogFileName(candidate.name,True)
-        if logName is None:
-          return AVNUtil.getReturnData(error="log for %s not found"%name)
-        filename=os.path.basename(logName)
-        handler.writeFromDownload(
-          AVNDownload(logName,lastBytes=lastBytes),filename=filename)
+          rt=AVNDownloadError("%s not found"%name)
+        if rt is None:
+          logName=self.getLogFileName(candidate.name,True)
+          if logName is None:
+            rt=AVNDownloadError("log for %s not found"%name)
+          if rt is None:
+            filename=os.path.basename(logName)
+            rt=AVNDownload(logName,lastBytes=lastBytes,dlname=filename)
+        handler.writeFromDownload(rt)
         return None
     return AVNUtil.getReturnData(error="unknown command for import")
 
