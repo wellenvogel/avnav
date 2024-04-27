@@ -29,7 +29,7 @@ import Requests from '../util/requests.js';
 import Mob from '../components/Mob.js';
 import ItemList from "../components/ItemList";
 import GuiHelpers from "../util/GuiHelpers";
-import {ChildStatus, StatusItem} from "../components/StatusItems";
+import {ChildStatus, StatusItem, statusTextToImageUrl} from "../components/StatusItems";
 import globalstore from "../util/globalstore";
 import keys from '../util/keys';
 import DB from "../components/DialogButton";
@@ -103,6 +103,48 @@ const ImportStatusDialog=(props)=>{
     </div>
 }
 
+const ConverterDialog=(props)=>{
+    let isRunning=props.status === 'NMEA';
+    return <div className="importConverterDialog flexInner">
+        <h3 className="dialogTitle">Converter</h3>
+        <div className="dialogRow childStatus">
+            <img src={statusTextToImageUrl(props.status)}/>
+            <span className="itemInfo">{props.info}</span>
+        </div>
+
+        <div className="dialogButtons">
+            {isRunning && <DB name="stop"
+                onClick={() => {
+                    Requests.getJson({
+                        type:'import',
+                        request:'api',
+                        command:'cancel'
+                    })
+                        .then((res)=>{
+                            props.closeCallback()
+                        })
+                        .catch((e)=>Toast("unable to stop "+e,5000));
+                }}
+            >
+                Stop
+            </DB>}
+            {isRunning &&
+            <DB name="log"
+                onClick={() => {
+                    props.logCallback();
+                    props.closeCallback();
+                }}
+            >Log</DB>
+            }
+            <DB name="cancel"
+                onClick={() => {
+                    props.closeCallback();
+                }}
+            >Cancel</DB>
+        </div>
+    </div>
+}
+
 class ImporterPage extends React.Component{
     constructor(props){
         super(props);
@@ -155,6 +197,23 @@ class ImporterPage extends React.Component{
 
     }
     showConverterDialog(converter){
+        Dialogs.dialog((props)=>
+            <ConverterDialog
+                {...props}
+                {...converter}
+                logCallback={()=>{
+                    if (!this.downloadFrame) return;
+                    let url=globalStore.getData(keys.properties.navUrl)+"?request=api&type=import&command=getlog&name=_current";
+                    Dialogs.dialog((dlprops)=>{
+                        return <LogDialog
+                            baseUrl={url}
+                            title={"Converter"}
+                            {...dlprops}
+                        />
+                    })
+                }}
+            />
+        )
 
     }
     showImportDialog(item){

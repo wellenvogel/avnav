@@ -247,9 +247,13 @@ class Conversion:
     self.process=process
     self.candidate=candidate
     self.timestamp=time.monotonic()
+    self.running=True
 
   def stop(self):
+    if not self.running:
+      return -1
     self.process.kill()
+    self.running=False
     return self.process.poll()
 
 
@@ -517,6 +521,12 @@ class AVNImporter(AVNWorker):
   def checkConversionFinished(self):
     if self.runningConversion is None:
       return
+    if not self.runningConversion.running:
+      self.setInfo("converter","killed for %s"%(self.runningConversion.candidate.name),WorkerStatus.ERROR)
+      candidate=self.runningConversion.candidate
+      self.runningConversion=None
+      self.saveLastResult(candidate.name, ConversionResult(None,"killed"))
+      return candidate
     rtc=self.runningConversion.process.poll()
     if rtc is None:
       AVNLog.debug("converter for %s still running",self.runningConversion.candidate.name)
@@ -550,15 +560,16 @@ class AVNImporter(AVNWorker):
     candidate=self.findCandidate(name)
     if candidate is not None:
       self.deleteImportByCandidate(candidate)
+  def stopConversion(self,name=None):
+    running=self.runningConversion
+    if running is not None and (name is None or running.candidate.name == name) and running.running:
+      running.stop()
+
   def deleteImportByCandidate(self,candidate):
-    if self.runningConversion is not None and self.runningConversion.candidate.name == candidate.name:
-      try:
-        self.runningConversion.stop()
-        self.setInfo(self.runningConversion.candidate.getInfoKey(),"killed",WorkerStatus.INACTIVE)
-        self.runningConversion=None
-        self.setInfo("converter","killed for %s"%(candidate.name),WorkerStatus.ERROR)
-      except:
-        pass
+    try:
+      self.stopConversion(candidate.name)
+    except:
+      pass
     fullname=candidate.filename
     resultname=self.getResultName(candidate.name)
     try:
@@ -736,10 +747,19 @@ class AVNImporter(AVNWorker):
         handler=kwargs.get('handler')
         name=AVNUtil.getHttpRequestParam(requestparam,"name",True)
         lastBytes=AVNUtil.getHttpRequestParam(requestparam,"maxBytes",False)
-        candidate=self.findCandidate(name)
+        candidate=None
         rt=None
-        if candidate is None:
-          rt=AVNDownloadError("%s not found"%name)
+        if name == '_current':
+          running=self.runningConversion
+          if running is not None and running.running:
+            candidate=self.runningConversion.candidate
+          if candidate is None:
+            rt=AVNDownloadError("no conversion running")
+        else:
+          candidate=self.findCandidate(name)
+        if rt is None:
+          if candidate is None:
+            rt=AVNDownloadError("%s not found"%name)
         if rt is None:
           logName=self.getLogFileName(candidate.name,True)
           if logName is None:
@@ -749,6 +769,12 @@ class AVNImporter(AVNWorker):
             rt=AVNDownload(logName,lastBytes=lastBytes,dlname=filename)
         handler.writeFromDownload(rt)
         return None
+      if command == 'cancel':
+        running=self.runningConversion
+        if running is None or not running.running:
+          return AVNUtil.getReturnData(error="no conversion running")
+        self.stopConversion(running.candidate.name)
+        return AVNUtil.getReturnData()
     return AVNUtil.getReturnData(error="unknown command for import")
 
   def registerConverter(self,id,converter:ConverterApi):
