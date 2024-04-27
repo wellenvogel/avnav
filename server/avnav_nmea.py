@@ -689,7 +689,8 @@ class NMEAParser(object):
         fragment = fields[2]
         channel = fields[4]
         if fragment == '1':
-          if self.payloads[channel] != '':
+          cpl=self.payloads.get(channel)
+          if cpl is not None and cpl != '':
             AVNLog.debug('channel %s still open with %s',channel,self.payloads[channel])
           self.payloads[channel] = ''
         self.payloads[channel] += fields[5]
