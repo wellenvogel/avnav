@@ -542,7 +542,7 @@ class DownloadPage extends React.Component{
                                 if (param.param && param.param.showImportPage){
                                     this.props.history.push('importerpage');
                                 }
-                                localDoneFunction?localDoneFunction():this.fillData()
+                                localDoneFunction?localDoneFunction(param):this.fillData(param)
                             }}
                             errorCallback={(err)=>{if (err) Toast(err);this.fillData();}}
                             uploadSequence={this.state.uploadSequence}
