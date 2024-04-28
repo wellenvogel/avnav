@@ -331,7 +331,7 @@ class UploadHandler extends React.Component{
                         if (props.xhdr) props.xhdr.abort();
                         this.stateHelper.setState({}, true);
                         if (this.props.errorCallback) {
-                            this.props.errorCallback();
+                            this.props.errorCallback("cancelled");
                         }
                     }}
                     />

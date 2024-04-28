@@ -54,6 +54,7 @@ const ImporterItem=(props)=>{
 };
 
 const ImportStatusDialog=(props)=>{
+    let isRunning=props.status === 'NMEA';
     return <div className="importStatusDialog flexInner">
         <h3 className="dialogTitle">{props.name}</h3>
         <div className="dialogRow">
@@ -79,6 +80,54 @@ const ImportStatusDialog=(props)=>{
             >
                 Delete
             </DB>
+            {!isRunning && <DB name="disable"
+                               onClick={() => {
+                                   Requests.getJson({
+                                       type:'import',
+                                       request:'api',
+                                       command:'disable',
+                                       name: props.name
+                                   })
+                                       .then((res)=>{
+                                           props.closeCallback()
+                                       })
+                                       .catch((e)=>Toast("unable to disable "+e,5000));
+                               }}
+            >
+                Disable
+            </DB>}
+            {isRunning && <DB name="stop"
+                              onClick={() => {
+                                  Requests.getJson({
+                                      type:'import',
+                                      request:'api',
+                                      command:'cancel',
+                                      name: props.name
+                                  })
+                                      .then((res)=>{
+                                          props.closeCallback()
+                                      })
+                                      .catch((e)=>Toast("unable to stop "+e,5000));
+                              }}
+            >
+                Stop
+            </DB>}
+            {!isRunning && <DB name="restart"
+                              onClick={() => {
+                                  Requests.getJson({
+                                      type:'import',
+                                      request:'api',
+                                      command:'restart',
+                                      name: props.name
+                                  })
+                                      .then((res)=>{
+                                          props.closeCallback()
+                                      })
+                                      .catch((e)=>Toast("unable to restart "+e,5000));
+                              }}
+            >
+                Restart
+            </DB>}
             {props.canDownload && <DB name="download"
                                       onClick={() => {
                                           props.download(props.name);
@@ -322,7 +371,10 @@ class ImporterPage extends React.Component{
                     doneCallback={()=>{
 
                     }}
-                    errorCallback={(err)=>{if (err) Toast(err);}}
+                    errorCallback={
+                        (err)=>{
+                            if (err) Toast(err);
+                        }}
                     uploadSequence={this.state.uploadSequence}
                     checkNameCallback={this.checkNameForUpload}
                 />
