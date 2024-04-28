@@ -615,11 +615,15 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
       if handler is not None:
         AVNLog.debug("found handler for upload request %s:%s"%(type,handler.getConfigName()))
         rt=handler.handleApiRequest("upload",type,requestParam,rfile=self.rfile,flen=rlen,handler=self)
+        if rt.get('status') != 'OK':
+          raise Exception(rt.get('status') or 'no status')
         return json.dumps(rt,cls=Encoder)
       else:
         raise Exception("invalid request %s",type)
     except Exception as e:
-      return json.dumps({'status':str(e)},cls=Encoder)
+      self.send_response(409,str(e))
+      self.end_headers()
+      return None
 
 
   def handleListDir(self,requestParam):
