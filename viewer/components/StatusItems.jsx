@@ -40,16 +40,16 @@ export const EditIcon=(props)=>{
 }
 export const ChildStatus=(props)=>{
     let canEdit=props.canEdit && props.connected;
-    let sub=(props.name && props.name.match(/:#:/));
+    let sub=props.sub || (props.name && props.name.match(/:#:/));
     let name=sub?props.name.replace(/^.*:#:/,''):props.name;
     let clName="childStatus";
     if (sub) clName+=" sub";
     return (
-        <div className={clName}>
+        <div className={clName} onClick={props.onClick}>
             <img src={statusTextToImageUrl(props.status)}/>
             <span className="statusName">{name}</span>
             <span className="statusInfo">{props.info}</span>
-            {canEdit && ! sub && <EditIcon onClick={
+            {(props.forceEdit || (canEdit && ! sub))  && <EditIcon onClick={
                 ()=>props.showEditDialog(props.handlerId,props.id,props.finishCallback)
             }/>}
         </div>

@@ -41,15 +41,37 @@ import UploadHandler from "../components/UploadHandler";
 import ImportDialog from "../components/ImportDialog";
 import OverlayDialog from "../components/OverlayDialog";
 import Helper from "../util/helper";
-
+import {RecursiveCompare} from "../util/compare";
+const MainStatus=(props)=>{
+    let canEdit=globalstore.getData(keys.properties.connectedMode);
+    return <div className="status" >
+        <span className="itemLabel">ChartConverter</span>
+        {props.main && <ChildStatus
+            {...props.main}
+            name='scanner'
+            canEdit={false}
+            sub={true}
+        />}
+        {props.converter && <ChildStatus
+            {...props.converter}
+            connected={true}
+            forceEdit={canEdit}
+            showEditDialog={props.showConverterDialog}
+            sub={true}
+        />}
+    </div>
+}
 const ImporterItem=(props)=>{
-    return <div className="status">
+    let canEdit=globalstore.getData(keys.properties.connectedMode);
+    return <div className="status" >
         <ChildStatus
             {...props}
-            connected={globalstore.getData(keys.properties.connectedMode)}
-            canEdit={props.canEdit || props.name === 'converter' || props.name.match(/^conv:/)}
+            canEdit={canEdit}
+            connected={true}
             id={props.name}
+            name={props.name.replace(/^conv:/,'')}
         />
+        <div className="itemInfo">{props.basename}</div>
     </div>
 };
 
@@ -230,6 +252,10 @@ class ImporterPage extends React.Component{
         this.checkNameForUpload=this.checkNameForUpload.bind(this);
         this.downloadFrame=undefined;
     }
+    shouldComponentUpdate(nextProps, nextState, nextContext) {
+        return !RecursiveCompare(this.state,nextState);
+    }
+
     componentDidMount(){
         if (!globalStore.getData(keys.gui.capabilities.uploadImport)) return;
         Requests.getJson({
@@ -292,12 +318,7 @@ class ImporterPage extends React.Component{
         if (! this.state.items) return;
         for (let k=0;k<this.state.items.length;k++){
             if (this.state.items[k].name === id){
-                if (id === 'converter'){
-                    this.showConverterDialog(this.state.items[k]);
-                }
-                else{
-                    this.showImportDialog(this.state.items[k]);
-                }
+                this.showImportDialog(this.state.items[k]);
                 return;
             }
         }
@@ -332,10 +353,21 @@ class ImporterPage extends React.Component{
     }
     render(){
         let self=this;
+        let mainStatus={};
+        (this.state.items||[]).forEach((st)=>{
+            if (st.name === 'main' || st.name === 'converter'){
+                mainStatus[st.name]=st;
+            }
+        })
         let MainContent=<React.Fragment>
+            <MainStatus
+                {...mainStatus}
+                showConverterDialog={()=>this.showConverterDialog(mainStatus.converter)}
+            />
             <ItemList
                 itemList={this.state.items}
                 itemCreator={(item)=> {
+                    if (! item.name || ! item.name.match(/^conv:/)) return null;
                     return (props)=>{
                         return <ImporterItem
                             {...props}
