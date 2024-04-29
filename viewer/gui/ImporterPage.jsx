@@ -42,10 +42,14 @@ import ImportDialog from "../components/ImportDialog";
 import OverlayDialog from "../components/OverlayDialog";
 import Helper from "../util/helper";
 import {RecursiveCompare} from "../util/compare";
+import EditHandlerDialog from "../components/EditHandlerDialog";
+
+const HANDLER_NAME='AVNImporter';
+
 const MainStatus=(props)=>{
     let canEdit=globalstore.getData(keys.properties.connectedMode);
     return <div className="status" >
-        <span className="itemLabel">ChartConverter</span>
+        <span className="itemLabel">Converter</span>
         {props.main && <ChildStatus
             {...props.main}
             name='scanner'
@@ -219,13 +223,19 @@ const ConverterDialog=(props)=>{
 class ImporterPage extends React.Component{
     constructor(props){
         super(props);
-        this.buttons=[
+        this.activeButtons=[
             {
                 name:'DownloadPageUpload',
                 visible: globalStore.getData(keys.properties.connectedMode,true),
                 onClick:()=>{
                     this.setState({uploadSequence:this.state.uploadSequence+1});
                 }
+            }
+        ]
+        this.buttons=[
+            {
+                name: 'Edit',
+                onClick:()=>{this.showEditHandlerDialog()}
             },
             Mob.mobDefinition(this.props.history),
             {
@@ -236,20 +246,22 @@ class ImporterPage extends React.Component{
         this.state={
             items:[],
             uploadSequence:0,
-            chartImportExtensions:[]
+            chartImportExtensions:[],
+            disabled:true
         };
         this.timer=GuiHelpers.lifecycleTimer(this,(seq)=>{
             Requests.getJson({
             request:'list',
             type:'import'
         }).then((json)=>{
-                this.setState({items:json.items||[]});
+                this.setState({items:json.items||[],disabled:false});
                 this.timer.startTimer(seq);
             })
                 .catch((e)=>this.timer.startTimer(seq))
         },1000,true)
         this.showEditDialog=this.showEditDialog.bind(this);
         this.checkNameForUpload=this.checkNameForUpload.bind(this);
+        this.showEditHandlerDialog=this.showEditHandlerDialog.bind(this);
         this.downloadFrame=undefined;
     }
     shouldComponentUpdate(nextProps, nextState, nextContext) {
@@ -268,8 +280,14 @@ class ImporterPage extends React.Component{
                 data.items.forEach((e)=>extensions.push(e.toLowerCase().replace(/^\./,'')))
                 this.setState({chartImportExtensions:extensions});
             })
-            .catch();
+            .catch((e)=>{});
 
+    }
+    showEditHandlerDialog(){
+        EditHandlerDialog.createDialog(undefined,undefined,()=>{
+            //maybe we disabled...
+            this.setState({items:[]});
+        },HANDLER_NAME);
     }
     showConverterDialog(converter){
         Dialogs.dialog((props)=>
@@ -359,33 +377,40 @@ class ImporterPage extends React.Component{
                 mainStatus[st.name]=st;
             }
         })
-        let MainContent=<React.Fragment>
-            <MainStatus
-                {...mainStatus}
-                showConverterDialog={()=>this.showConverterDialog(mainStatus.converter)}
-            />
-            <ItemList
-                itemList={this.state.items}
-                itemCreator={(item)=> {
-                    if (! item.name || ! item.name.match(/^conv:/)) return null;
-                    return (props)=>{
-                        return <ImporterItem
-                            {...props}
-                            showEditDialog={this.showEditDialog}
-                        />
-                    }
-                }}
+        let MainContent;
+        let isActive=!this.state.disabled && mainStatus.main;
+        if (! isActive){
+            MainContent= <div className="importerInfo">Importer inactive</div>;
+        }
+        else {
+            MainContent = <React.Fragment>
+                <MainStatus
+                    {...mainStatus}
+                    showConverterDialog={() => this.showConverterDialog(mainStatus.converter)}
                 />
-            <iframe
-                className="downloadFrame"
-                onLoad={(ev)=>{
-                    let txt=ev.target.contentDocument.body.textContent;
-                    if (! txt) return;
-                    Toast(txt);
-                }}
-                src={undefined}
-                ref={(el)=>this.downloadFrame=el}/>
+                <ItemList
+                    itemList={this.state.items}
+                    itemCreator={(item) => {
+                        if (!item.name || !item.name.match(/^conv:/)) return null;
+                        return (props) => {
+                            return <ImporterItem
+                                {...props}
+                                showEditDialog={this.showEditDialog}
+                            />
+                        }
+                    }}
+                />
+                <iframe
+                    className="downloadFrame"
+                    onLoad={(ev) => {
+                        let txt = ev.target.contentDocument.body.textContent;
+                        if (!txt) return;
+                        Toast(txt);
+                    }}
+                    src={undefined}
+                    ref={(el) => this.downloadFrame = el}/>
             </React.Fragment>;
+        }
 
         return (
             <React.Fragment>
@@ -396,7 +421,7 @@ class ImporterPage extends React.Component{
                 mainContent={
                             MainContent
                         }
-                buttonList={self.buttons}/>
+                buttonList={isActive?self.activeButtons.concat(self.buttons):self.buttons}/>
                 <UploadHandler
                     local={false}
                     type={'chart'}

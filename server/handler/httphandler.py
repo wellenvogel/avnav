@@ -353,7 +353,7 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
       raise Exception("missing parameter type for api request")
     handler = self.server.getRequestHandler('api', rtype)
     if handler is None:
-      raise Exception("no handler found for request %s", rtype)
+      raise Exception("no handler found for request %s"%rtype)
     rtj = handler.handleApiRequest('api', rtype, requestParam,handler=self)
     if isinstance(rtj, dict) or isinstance(rtj, list):
       rtj = json.dumps(rtj,cls=Encoder)

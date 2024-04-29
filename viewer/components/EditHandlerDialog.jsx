@@ -66,7 +66,8 @@ class EditHandlerDialog extends React.Component{
         super(props);
         this.state={
             loaded:false,
-            parameters:undefined
+            parameters:undefined,
+            handlerId:props.handlerId
         }
         this.currentValues=stateHelper(this,{},'current');
         this.modifiedValues=stateHelper(this,{},'modified');
@@ -76,9 +77,10 @@ class EditHandlerDialog extends React.Component{
         let param={
             request: 'api',
             type: 'config',
-            handlerId: this.props.handlerId
+            handlerId: this.state.handlerId,
+            handlerName: this.props.handlerName
         }
-        if (! this.props.handlerName){
+        if (!this.props.addHandler){
             param.command='getEditables';
             if (this.props.child !== undefined){
                 param.child=this.props.child;
@@ -86,10 +88,13 @@ class EditHandlerDialog extends React.Component{
         }
         else{
             param.command='getAddAttributes';
-            param.handlerName=this.props.handlerName;
         }
         RequestHandler.getJson('',undefined,param)
             .then((data)=>{
+                let nextState={};
+                if (this.props.handlerId === undefined && data.handlerId !== undefined){
+                    nextState.handlerId=data.handlerId;
+                }
                 let parameters=[];
                 data.data.forEach((param)=>{
                     let type = param.type;
@@ -106,12 +111,11 @@ class EditHandlerDialog extends React.Component{
                     description.condition=param.condition;
                     parameters.push(description);
                 })
-                this.setState({
-                    loaded: true,
-                    parameters: parameters,
-                    name: data.configName||this.props.handlerName,
-                    canDelete: data.canDelete
-                })
+                nextState.loaded=true;
+                nextState.parameters=parameters;
+                nextState.name=data.configName||this.props.handlerName;
+                nextState.canDelete=data.canDelete;
+                this.setState(nextState);
                 this.currentValues.setState(data.values||{});
                 if (this.props.initialValues){
                     this.modifiedValues.setState(this.props.initialValues);
@@ -126,7 +130,7 @@ class EditHandlerDialog extends React.Component{
         let rt=assign({
             request: 'api',
             type:'config',
-            handlerId: this.props.handlerId
+            handlerId: this.state.handlerId
         },add)
         if (this.props.child !== undefined){
             rt.child=this.props.child;
@@ -284,7 +288,7 @@ class EditHandlerDialog extends React.Component{
                         }}>Delete</DB>:null}
                     <DB name="cancel" onClick={this.props.closeCallback}>Cancel</DB>
                     <DB name="ok" onClick={()=>{
-                        if (! this.props.handlerName) this.updateValues();
+                        if (! this.props.addHandler) this.updateValues();
                         else this.addHandler();
                     }}>Ok</DB>
                 </div>
@@ -298,11 +302,11 @@ EditHandlerDialog.propTypes={
     title: PropTypes.string,
     handlerId: PropTypes.oneOfType([PropTypes.string,PropTypes.number]),
     childId: PropTypes.string,
-    handlerName: PropTypes.string, //if this is set the handlerId and childId are ignored
-                                   //and we create a new handler
+    handlerName: PropTypes.string,
     closeCallback: PropTypes.func.isRequired,
     initialValues: PropTypes.object,
-    createdCallback: PropTypes.func
+    createdCallback: PropTypes.func,
+    addHandler: PropTypes.bool
 };
 
 const filterObject=(data)=>{
@@ -318,12 +322,13 @@ const filterObject=(data)=>{
  * @param opt_child: the child identifier
  * @return {boolean}
  */
-EditHandlerDialog.createDialog=(handlerId,opt_child,opt_doneCallback)=>{
+EditHandlerDialog.createDialog=(handlerId,opt_child,opt_doneCallback,opt_handlerName)=>{
     OverlayDialog.dialog((props)=> {
         return <EditHandlerDialog
             {...props}
             title="Edit Handler"
             handlerId={handlerId}
+            handlerName={opt_handlerName}
             child={opt_child}
             />
     },undefined,opt_doneCallback);
@@ -338,6 +343,7 @@ EditHandlerDialog.createNewHandlerDialog=(typeName,opt_initialParameters,opt_don
             handlerName={typeName}
             initialValues={opt_initialParameters}
             createdCallback={opt_doneCallback}
+            addHandler={true}
         />
     },undefined);
 }

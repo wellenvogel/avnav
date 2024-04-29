@@ -557,12 +557,22 @@ class AVNHandlerManager(object):
       self.shouldStop=True
       return rt
 
-    id = AVNUtil.getHttpRequestParam(requestParam, 'handlerId', mantadory=True)
+    id = AVNUtil.getHttpRequestParam(requestParam, 'handlerId', mantadory=False)
     child = AVNUtil.getHttpRequestParam(requestParam, 'child', mantadory=False)
-    handler = AVNWorker.findHandlerById(int(id))
-    if handler is None:
-        raise Exception("unable to find handler for id %s" % id)
+    configName=AVNUtil.getHttpRequestParam(requestParam,'handlerName',mantadory=False)
     if command == 'getEditables':
+      if id is None and configName is None:
+        return AVNUtil.getReturnData(error="either id or handlerName must be provided")
+      if id is not None:
+        handler = AVNWorker.findHandlerById(int(id))
+        if handler is None:
+          return AVNUtil.getReturnData(error="unable to find handler for %s"%str(id))
+      else:
+        handler=AVNWorker.findHandlerByName(configName,disabled=True)
+        if handler is None:
+          return AVNUtil.getReturnData(error="unable to find handler for %s"%configName)
+        if not handler.preventMultiInstance():
+          return AVNUtil.getReturnData(error="can only find single instance handler by name")
       if child is not None:
         data = handler.getEditableChildParameters(child)
         canDelete = handler.canDeleteChild(child)
@@ -570,11 +580,18 @@ class AVNHandlerManager(object):
         data = handler.getEditableParameters(id=handler.getId())
         canDelete = handler.canDeleteHandler()
       if data is not None:
+          rt['handlerId']=handler.getId()
           rt['data'] = data
           rt['values'] = handler.getParam(child, filtered=True)
           rt['configName'] = handler.getConfigName()
           rt['canDelete'] = canDelete
-    elif command == 'setConfig':
+      return rt
+    if id is None:
+      return AVNUtil.getReturnData(error="missing parameter id")
+    handler = AVNWorker.findHandlerById(int(id))
+    if handler is None:
+      raise Exception("unable to find handler for id %s" % id)
+    if command == 'setConfig':
       values = AVNUtil.getHttpRequestParam(requestParam, '_json', mantadory=True)
       decoded = json.loads(values)
       handler.updateConfig(decoded, child)
