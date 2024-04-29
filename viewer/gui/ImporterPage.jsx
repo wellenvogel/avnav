@@ -359,7 +359,7 @@ class ImporterPage extends React.Component{
                                 }}
                                 cancelFunction={() => reject("canceled")}
                                 name={name}
-                                allowSubDir={ext!=="zip"}
+                                allowSubDir={ext!=="zip" && ext !== 'mbtiles'}
                                 subdir={this.state.importSubDir}
                             />
                         );
