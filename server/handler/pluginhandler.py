@@ -438,7 +438,7 @@ class ApiImpl(AVNApi):
       raise Exception("no importer available")
     name=self.prefix if name is None else self.prefix+":"+name
     self.converters.add(name)
-    importer.registerConverter(converter,name)
+    importer.registerConverter(name,converter)
 
   def deregisterConverter(self, name=None):
     importer=AVNWorker.findHandlerByName(AVNImporter.getConfigName()) # type: AVNImporter

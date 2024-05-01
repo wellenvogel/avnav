@@ -867,13 +867,17 @@ class AVNImporter(AVNWorker):
   def registerConverter(self,id,converter:ConverterApi):
     with self.listlock:
       converters=[]
+      found=False
       for cnv in self.externalConverters:
         if cnv.id == id:
           if converter is not None:
             cnv.setConverter(converter)
             converters.append(cnv)
+            found=True
         else:
           converters.append(cnv)
+      if not found:
+        converters.append(converter)
       self.externalConverters=converters
 
   def deregisterConverter(self,id):

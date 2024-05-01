@@ -34,10 +34,10 @@ class ConverterApi:
     return (0,None)
   def getConverterCommand(self,input,outname):
     '''
-    run the conversion
+    get the command to run the conversion
     @param input:
     @param outname:
-    @return: (num,md5)
+    @return: command line (array)
     '''
     raise Exception("not implemented")
   def getOutFileOrDir(self,outname):
