@@ -76,6 +76,12 @@ const ImporterItem=(props)=>{
             name={props.name.replace(/^conv:/,'')}
         />
         <div className="itemInfo">{props.basename}</div>
+        {props.converter &&
+        <div className="itemInfo">
+            <span className="label">converter:</span>
+            <span className="value">{props.converter}</span>
+        </div>
+        }
     </div>
 };
 

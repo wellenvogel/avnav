@@ -131,6 +131,10 @@ class GdalConverter(InternalConverter):
     return [sys.executable,self._converter,"-o",self.getOutFileOrDir(outname),
             "-b",os.path.join(self._workdir,outname),"-g","-t","1",input]
 
+  def getName(self):
+    return 'gdal'
+
+
 class NavipackConverter(InternalConverter):
   EXTENSIONS=["navipack"]
   def __init__(self,converterPath:str,chartDir:str):
@@ -140,6 +144,10 @@ class NavipackConverter(InternalConverter):
   def getConverterCommand(self, input, outname):
     return [sys.executable,self._converter,self.getOutFileOrDir(outname),input]
 
+  def getName(self):
+    return 'navipack'
+
+
 class MbtilesConverter(InternalConverter):
   EXTENSIONS=['mbtiles']
   def __init__(self, converterPath:str,chartDir: str):
@@ -147,6 +155,10 @@ class MbtilesConverter(InternalConverter):
     self._converter=converterPath
   def getConverterCommand(self, input, outname):
     return [sys.executable,self._converter,self.getOutFileOrDir(outname),input]
+
+  def getName(self):
+    return 'mbtiles'
+
 
 class ConversionResult:
   def __init__(self,md5,error=None,ts=None,disabled=False):
@@ -261,6 +273,10 @@ class ConversionCandidate:
     if self.isDisabled() or self.hasError() or self.score < 1:
       return False
     return self.md5changed()
+  def getConverterName(self):
+    if self.converter is None:
+      return 'NONE'
+    return self.converter.getName()
 
 class Conversion:
   def __init__(self,process,candidate:ConversionCandidate):
@@ -724,6 +740,7 @@ class AVNImporter(AVNWorker):
           'fullname':can.filename,
           'basename':basename,
           'running':can.running,
+          'converter':can.getConverterName(),
           'canDownload': canDownload,
           'hasLog': hasLog}
         items.append(canst)

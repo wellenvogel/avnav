@@ -44,6 +44,8 @@ class ConverterApi:
     return None
   def handledExtensions(self):
     return []
+  def getName(self):
+    return 'unknown'
 
 
 class AVNApi(object):
