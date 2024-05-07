@@ -63,8 +63,6 @@
   }
 }
 
-
-
 .iconButton(@icon){
   span {
     .icon(@icon);
@@ -108,6 +106,12 @@
       padding-left: 1.3em;
       font-size: 0.9em;
     }
+    &.active {
+      border: 0.3em solid;
+      .nightBorderFade(@colorGreen);
+      padding: 0.2em;
+    }
+
 }
 
 .dialogIconButton(@icon){
@@ -510,6 +514,14 @@ button{
   }
   &.log{
     .dialogIconButton('ic_text_snippet.svg');
+  }
+  &.autoreload{
+    &.active{
+      .dialogIconButton('update_disabled.svg')
+    }
+    &.inactive{
+      .dialogIconButton('ic_refresh.svg')
+    }
   }
   .fileDialog &.view{
     .dialogIconButton('visibility.svg');

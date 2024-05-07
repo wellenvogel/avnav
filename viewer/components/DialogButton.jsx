@@ -21,6 +21,7 @@ class DialogButton extends React.Component {
             className+=" icon";
             spanStyle.backgroundImage = "url(" + icon + ")";
         }
+        className+=this.props.toggle?" active":" inactive";
         let add = {};
         if (disabled) {
             add.disabled = true;
@@ -40,7 +41,8 @@ DialogButton.propTypes={
     name: PropTypes.string.isRequired,
     icon: PropTypes.string,
     style: PropTypes.object,
-    disabled: PropTypes.bool
+    disabled: PropTypes.bool,
+    toggle: PropTypes.bool
 };
 
 export default DialogButton;
