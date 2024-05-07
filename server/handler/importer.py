@@ -53,6 +53,11 @@ class ExternalConverter(ConverterApi):
   def handledExtensions(self):
     return self._converter.handledExtensions()
 
+  def getName(self):
+    if hasattr(self._converter,'getName'):
+      return self._converter.getName()
+    return super().getName()
+
 
 class InternalConverter(ConverterApi):
   def __init__(self,knownExtensions:list,chartDir:str):
@@ -876,8 +881,8 @@ class AVNImporter(AVNWorker):
             found=True
         else:
           converters.append(cnv)
-      if not found:
-        converters.append(converter)
+      if not found and converter is not None:
+        converters.append(ExternalConverter(converter,id))
       self.externalConverters=converters
 
   def deregisterConverter(self,id):
