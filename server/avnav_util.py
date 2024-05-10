@@ -740,7 +740,8 @@ class AVNZipDownload(AVNDownload):
           raise ValueError("Can't write to a closed stream")
         self._buffer += b
         return len(b)
-
+      def hasData(self):
+        return len(self._buffer) > 0
       def readall(self):
         chunk = bytes(self._buffer)
         self._buffer.clear()
@@ -761,12 +762,10 @@ class AVNZipDownload(AVNDownload):
           yield buf
     stream = WStream()
     with zipfile.ZipFile(stream, mode="w",compression=zipfile.ZIP_DEFLATED) as zf:
-      toplevel = os.path.basename(os.path.normpath(path))
-      if prefix is not None:
-        toplevel=os.path.join(prefix,toplevel)
       for f in iter_files(path):
         # Use the basename of the path to set the arcname
-        arcname = os.path.join(toplevel, os.path.relpath(f, path))
+        rpath=os.path.relpath(f, path)
+        arcname = os.path.join(prefix, rpath) if prefix is not None else rpath
         zinfo = zipfile.ZipInfo.from_file(f, arcname)
         zinfo.compress_type=zipfile.ZIP_DEFLATED
 
@@ -776,29 +775,28 @@ class AVNZipDownload(AVNDownload):
             continue
           for buf in read_file(f):
             fp.write(buf)
-            yield stream.readall()
-      yield stream.readall()
+            if stream.hasData():
+              yield stream.readall()
+            else:
+              debug=1
+      zf.close()
+    yield stream.readall()
 
   class IteratorStream(object):
     def __init__(self, iterable):
-      self.buffered = b""
       self.iter = iter(iterable)
 
     def read(self, size):
-      result = b""
-      while size > 0:
-        data = self.buffered or next(self.iter, None)
-        self.buffered = b""
-        if data is None:
-         break
-        size -= len(data)
-        if size < 0:
-          data, self.buffered = data[:size], data[size:]
-        result += data
-      return result
+      '''
+      we just ignore the size
+      to avoid double buffering
+      @param size:
+      @return:
+      '''
+      return next(self.iter,None)
 
   def __init__(self, fileName, baseDir, prefix=None):
-    super().__init__(fileName)
+    super().__init__(None,dlname=fileName)
     self.baseDir=baseDir
     self.prefix=prefix
     self.stream=None

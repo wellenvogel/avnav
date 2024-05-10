@@ -777,8 +777,7 @@ class AVNImporter(AVNWorker):
         subDir=candidate.name
         if hasattr(candidate.converter,'getZipSubDir'):
           subDir=candidate.converter.getZipSubDir(candidate.name)
-
-        return AVNDownloadError("download of directories not yet supported")
+        return AVNZipDownload(candidate.name+".zip",dlfile,subDir)
       filename=os.path.basename(dlfile)
       return AVNDownload(dlfile,dlname=filename)
 
