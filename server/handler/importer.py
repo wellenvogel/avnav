@@ -137,7 +137,7 @@ class GdalConverter(InternalConverter):
             "-b",os.path.join(self._workdir,outname),"-g","-t","1",input]
 
   def getName(self):
-    return 'gdal'
+    return 'builtin-gdal'
 
 
 class NavipackConverter(InternalConverter):
@@ -150,7 +150,7 @@ class NavipackConverter(InternalConverter):
     return [sys.executable,self._converter,self.getOutFileOrDir(outname),input]
 
   def getName(self):
-    return 'navipack'
+    return 'builtin-navipack'
 
 
 class MbtilesConverter(InternalConverter):
@@ -162,7 +162,7 @@ class MbtilesConverter(InternalConverter):
     return [sys.executable,self._converter,self.getOutFileOrDir(outname),input]
 
   def getName(self):
-    return 'mbtiles'
+    return 'builtin-mbtiles'
 
 
 class ConversionResult:
