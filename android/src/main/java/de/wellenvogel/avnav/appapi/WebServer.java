@@ -66,6 +66,7 @@ import java.util.WeakHashMap;
 
 import de.wellenvogel.avnav.main.R;
 import de.wellenvogel.avnav.util.AvnLog;
+import de.wellenvogel.avnav.util.AvnUtil;
 import de.wellenvogel.avnav.worker.EditableParameter;
 import de.wellenvogel.avnav.worker.GpsService;
 import de.wellenvogel.avnav.worker.Worker;
@@ -423,14 +424,7 @@ public class WebServer extends Worker {
     }
 
     private InetAddress getLocalHost() throws UnknownHostException {
-        InetAddress local=null;
-        try {
-            local = Inet4Address.getByName("localhost");
-        }catch(Exception ex){
-            AvnLog.e("Exception getting localhost: "+ex);
-        }
-        if (local == null) local=Inet4Address.getLocalHost();
-        return local;
+        return AvnUtil.getLocalHost();
     }
 
     static class AvNavHttpServerConnection extends DefaultHttpServerConnection{

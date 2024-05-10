@@ -176,11 +176,11 @@ public class AvnUtil {
     public static InetAddress getLocalHost() throws UnknownHostException {
         InetAddress local=null;
         try {
-            local = InetAddress.getByName("localhost");
+            local = Inet4Address.getByName("localhost");
         }catch(Exception ex){
             AvnLog.e("Exception getting localhost: "+ex);
         }
-        if (local == null) local=InetAddress.getLocalHost();
+        if (local == null) local=Inet4Address.getLocalHost();
         return local;
     }
 

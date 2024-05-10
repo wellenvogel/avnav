@@ -951,7 +951,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
             if (!webServer.isRunning()) return;
             int port = webServer.getPort();
             if (port == 0) return;
-            String start = "http://localhost:" + port + "/viewer/avnav_viewer.html";
+            String start = "http://"+AvnUtil.getLocalHost().getHostAddress()+":" + port + "/viewer/avnav_viewer.html";
             if (BuildConfig.DEBUG) start += "?log=1";
             AvnLog.d(LOGPRFX, "start browser with " + start);
             try {

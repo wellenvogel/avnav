@@ -96,7 +96,7 @@ public class AddonHandler implements INavRequestHandler,IDeleteByUrl{
         String includeInvalid=uri.getQueryParameter("invalid");
         List<AddonInfo> addons=getAddons(!((includeInvalid != null) && (includeInvalid.toLowerCase().equals("true"))));
         JSONArray rt=new JSONArray();
-        String host="localhost";
+        String host=AvnUtil.getLocalHost().getHostAddress();
         if (serverInfo != null && serverInfo.address != null) {
             host=serverInfo.address.getHostAddress();
         }
