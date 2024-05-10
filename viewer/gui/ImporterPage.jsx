@@ -357,11 +357,12 @@ class ImporterPage extends React.Component{
                         return (
                             <ImportDialog
                                 {...props}
+                                allowNameChange={true}
                                 okFunction={(props, subdir) => {
                                     if (subdir !== this.state.importSubDir) {
                                         this.setState({importSubDir: subdir});
                                     }
-                                    resolve({name: name, type: 'import', uploadParameters: {subdir: subdir}});
+                                    resolve({name: props.name, type: 'import', uploadParameters: {subdir: subdir}});
                                 }}
                                 cancelFunction={() => reject("canceled")}
                                 name={name}

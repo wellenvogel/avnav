@@ -26,12 +26,19 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import {Checkbox, Input, InputReadOnly} from "./Inputs";
 import DB from "./DialogButton";
+import helper from '../util/helper'
+import assign from 'object-assign';
 class ImportDialog extends React.Component{
     constructor(props){
         super(props);
+        let name=props.name;
+        let ext=helper.getExt(name);
+        name=name.substr(0,name.length-ext.length-1);
         this.state={
             subdir:props.subdir,
-            useSubdir:props.subdir?true:false
+            useSubdir:props.subdir?true:false,
+            name:name,
+            ext: ext
         };
     }
     render(){
@@ -39,11 +46,24 @@ class ImportDialog extends React.Component{
             <React.Fragment>
                 <div className="importDialog flexInner">
                     <h3 className="dialogTitle">Upload Chart to Importer</h3>
-                    <InputReadOnly
+                    {!this.props.allowNameChange && <InputReadOnly
                         dialogRow={true}
                         label="name"
-                        value={this.props.name}
-                    />
+                        value={this.state.name}>
+                        <span className="ext">.{this.state.ext}</span>
+                    </InputReadOnly>
+                    }
+                    {
+                        this.props.allowNameChange && <Input
+                            dialogRow={true}
+                            value={this.state.name}
+                            onChange={(nv)=>{
+                                this.setState({name:nv})
+                            }}
+                            label="name">
+                            <span className="ext">.{this.state.ext}</span>
+                        </Input>
+                    }
                     {this.props.allowSubDir && <Checkbox
                         dialogRow={true}
                         label="use set name"
@@ -68,7 +88,7 @@ class ImportDialog extends React.Component{
                         >Cancel</DB>
                         <DB name="ok"
                             onClick={()=>{
-                                this.props.okFunction(this.props,this.state.useSubdir?this.state.subdir:undefined);
+                                this.props.okFunction(assign({},this.props,{name:this.state.name+"."+this.state.ext}),this.state.useSubdir?this.state.subdir:undefined);
                                 this.props.closeCallback();
                             }}
                             disabled={this.state.useSubdir && !this.state.subdir}
@@ -84,7 +104,8 @@ ImportDialog.propTypes={
     cancelFunction: PropTypes.func.isRequired,
     subdir: PropTypes.string,
     name: PropTypes.string.isRequired,
-    allowSubDir: PropTypes.bool
-}
+    allowSubDir: PropTypes.bool,
+    allowNameChange: PropTypes.bool
+};
 
 export default ImportDialog;
