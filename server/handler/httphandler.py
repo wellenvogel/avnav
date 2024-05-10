@@ -503,6 +503,18 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
       self.wfile.write(buf)
       bToSend -= len(buf)
     fh.close()
+  def writeChunkedStream(self,fh):
+    maxread = 1000000
+    while True:
+      buf = fh.read(maxread)
+      if buf is None or len(buf) == 0:
+        self.wfile.write(b'0\r\n\r\n')
+        fh.close()
+        return
+      l = len(buf)
+      self.wfile.write('{:X}\r\n'.format(l).encode('utf-8'))
+      self.wfile.write(buf)
+      self.wfile.write(b'\r\n')
 
   def writeData(self,data,mimeType):
     self.send_response(200)
@@ -527,12 +539,18 @@ class AVNHTTPHandler(HTTPWebSocketsHandler):
     if filename is not None and filename != "" and not noattach:
       self.send_header("Content-Disposition", "attachment; %s"%AVNDownload.fileToAttach(filename))
     self.send_header("Content-type", download.getMimeType(self))
-    self.send_header("Content-Length", size)
+    if size is not None:
+      self.send_header("Content-Length", size)
+    else:
+      self.send_header('Transfer-Encoding', 'chunked')
     self.send_header("Last-Modified", self.date_time_string())
     self.end_headers()
     stream = None
     stream = download.getStream()
-    self.writeStream(size, stream)
+    if size is not None:
+      self.writeStream(size, stream)
+    else:
+      self.writeChunkedStream(stream)
 
   #download requests
   #parameters:

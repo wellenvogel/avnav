@@ -43,6 +43,7 @@ import datetime
 import math
 import threading
 from math import copysign
+import zipfile
 
 class Enum(set):
     def __getattr__(self, name):
@@ -717,6 +718,101 @@ class AVNDownloadError(AVNDownload):
 
   def getMimeType(self, handler=None):
     return "text/plain"
+
+
+class AVNZipDownload(AVNDownload):
+  '''
+  see https://github.com/pR0Ps/zipstream-ng
+  and https://stackoverflow.com/questions/6657820/how-to-convert-an-iterable-to-a-stream
+  '''
+  def zipGenerator(self,path,prefix=None):
+    class WStream(io.RawIOBase):
+      """An unseekable stream for the ZipFile to write to"""
+      def __init__(self):
+        self._buffer = bytearray()
+        self._closed = False
+
+      def close(self):
+        self._closed = True
+
+      def write(self, b):
+        if self._closed:
+          raise ValueError("Can't write to a closed stream")
+        self._buffer += b
+        return len(b)
+
+      def readall(self):
+        chunk = bytes(self._buffer)
+        self._buffer.clear()
+        return chunk
+    def iter_files(path):
+      for dirpath, _, files in os.walk(path, followlinks=True):
+        if not files:
+          yield dirpath  # Preserve empty directories
+        for f in files:
+          yield os.path.join(dirpath, f)
+
+    def read_file(path):
+      with open(path, "rb") as fp:
+        while True:
+          buf = fp.read(1024 * 64)
+          if not buf:
+            break
+          yield buf
+    stream = WStream()
+    with zipfile.ZipFile(stream, mode="w",compression=zipfile.ZIP_DEFLATED) as zf:
+      toplevel = os.path.basename(os.path.normpath(path))
+      if prefix is not None:
+        toplevel=os.path.join(prefix,toplevel)
+      for f in iter_files(path):
+        # Use the basename of the path to set the arcname
+        arcname = os.path.join(toplevel, os.path.relpath(f, path))
+        zinfo = zipfile.ZipInfo.from_file(f, arcname)
+        zinfo.compress_type=zipfile.ZIP_DEFLATED
+
+        # Write data to the zip file then yield the stream content
+        with zf.open(zinfo, mode="w") as fp:
+          if zinfo.is_dir():
+            continue
+          for buf in read_file(f):
+            fp.write(buf)
+            yield stream.readall()
+      yield stream.readall()
+
+  class IteratorStream(object):
+    def __init__(self, iterable):
+      self.buffered = b""
+      self.iter = iter(iterable)
+
+    def read(self, size):
+      result = b""
+      while size > 0:
+        data = self.buffered or next(self.iter, None)
+        self.buffered = b""
+        if data is None:
+         break
+        size -= len(data)
+        if size < 0:
+          data, self.buffered = data[:size], data[size:]
+        result += data
+      return result
+
+  def __init__(self, fileName, baseDir, prefix=None):
+    super().__init__(fileName)
+    self.baseDir=baseDir
+    self.prefix=prefix
+    self.stream=None
+
+  def getSize(self):
+    return None
+
+  def getStream(self):
+    if self.stream is None:
+      self.stream=self.IteratorStream(self.zipGenerator(self.baseDir,self.prefix))
+    return self.stream
+
+  def getMimeType(self, handler=None):
+    return "application/x-zip"
 
 
 class MovingSum:
