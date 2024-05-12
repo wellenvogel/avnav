@@ -9,8 +9,12 @@ $dataDir=Join-Path $env:USERPROFILE '\AvNav'
 $logDir=Join-Path "$dataDir" "log"
 $serverLog="$logDir\service.log"
 $serverError="$logDir\service-err.log"
+$defaultUpdateUrl="https://wellenvogel.de/software/avnav/downloads/release/latest/avnav-latest.zip"
 
 $icon = Join-Path $PSScriptRoot 'Chart60.ico'
+
+#import dialogs
+. "$PSScriptRoot\Dialogs.ps1"
 ################################################################################################################################"
 # ACTIONS FROM THE SYSTRAY
 ################################################################################################################################"
@@ -36,6 +40,10 @@ $Menu_Stop = New-Object System.Windows.Forms.MenuItem
 $Menu_Stop.Enabled = $true
 $Menu_Stop.Text = "Stop"
 
+$Menu_Install = New-Object System.Windows.Forms.MenuItem
+$Menu_Install.Enabled = $true
+$Menu_Install.Text = "Install"
+
 $Menu_Exit = New-Object System.Windows.Forms.MenuItem
 $Menu_Exit.Text = "Exit"
 
@@ -43,6 +51,7 @@ $contextmenu = New-Object System.Windows.Forms.ContextMenu
 $Main_Tool_Icon.ContextMenu = $contextmenu
 $Main_Tool_Icon.contextMenu.MenuItems.AddRange($Menu_Start)
 $Main_Tool_Icon.contextMenu.MenuItems.AddRange($Menu_Stop)
+$Main_Tool_Icon.contextMenu.MenuItems.AddRange($Menu_Install)
 $Main_Tool_Icon.contextMenu.MenuItems.AddRange($Menu_Exit)
 
 function Kill-Tree {
@@ -101,9 +110,18 @@ $Menu_Exit.add_Click({
     if ( $null -ne $process){
         Kill-Tree $process.Id
     }
-    Stop-Process $pid
+    [void][System.Windows.Forms.Application]::Exit()
+    #Stop-Process $pid
  })
  
+ $Menu_Install.add_Click({
+    $url=Show-InputDialog -WindowTitle "Install/Update AvNav" -Message "Select the URL for the update" -DefaultText "$defaultUpdateUrl"
+    if ($null -eq $url){
+        return
+    }
+    [System.Windows.Forms.MessageBox]::Show("$url","Run Update",0)
+
+ })
 
  
 
