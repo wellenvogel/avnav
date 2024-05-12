@@ -13,6 +13,9 @@ The text to display on the prompt window's title.
  
 .PARAMETER DefaultText
 The default text to show in the input box.
+
+.PARAMETER ShowText
+If false - do not show a text input (use for confirm dialog)
  
 .EXAMPLE
 $userText = Show-InputDialog "Input some text please:" "Get User's Input"
@@ -48,7 +51,7 @@ Name: Show-MultiLineInputDialog
 Author: Daniel Schroeder (originally based on the code shown at http://technet.microsoft.com/en-us/library/ff730941.aspx)
 Version: 1.0
 #>
-function Show-InputDialog([string]$Message, [string]$WindowTitle = "Please enter some text.", [string]$DefaultText)
+function Show-InputDialog([string]$Message, [string]$WindowTitle = "Please enter some text.", [string]$DefaultText="",[bool]$ShowText=$true)
 {
     
 
@@ -57,19 +60,20 @@ function Show-InputDialog([string]$Message, [string]$WindowTitle = "Please enter
     $buttonSize=New-Object System.Drawing.Size(75,25)
     # Create the Label.
     $label = New-Object System.Windows.Forms.Label
-    #$label.Size = New-Object System.Drawing.Size(280,20)
     $label.Dock='Top'
     $label.AutoSize = $true
     $label.Text = $Message
-
-    # Create the TextBox used to capture the user's text.
-    $textBox = New-Object System.Windows.Forms.TextBox
-    $textBox.Dock = 'Top'
-    $textBox.AutoSize = $true
-    $textBox.AcceptsReturn = $true
-    $textBox.AcceptsTab = $false
-    $textBox.Multiline = $false
-    $textBox.Text = $DefaultText
+    $textBox=$null
+    if ($ShowText) {
+        # Create the TextBox used to capture the user's text.
+        $textBox = New-Object System.Windows.Forms.TextBox
+        $textBox.Dock = 'Top'
+        $textBox.AutoSize = $true
+        $textBox.AcceptsReturn = $true
+        $textBox.AcceptsTab = $false
+        $textBox.Multiline = $false
+        $textBox.Text = $DefaultText
+    }
 
     $buttonPanel=New-Object System.Windows.Forms.Panel
     $buttonPanel.Height=50
@@ -99,7 +103,12 @@ function Show-InputDialog([string]$Message, [string]$WindowTitle = "Please enter
     $form = New-Object System.Windows.Forms.Form
     $form.Text = $WindowTitle
     #$form.AutoSize=$true
-    $form.Size = New-Object System.Drawing.Size(610,180)
+    if ($ShowText){
+        $form.Size = New-Object System.Drawing.Size(610,180)
+    }
+    else{
+        $form.Size = New-Object System.Drawing.Size(610,130)
+    }
     $form.FormBorderStyle = 'FixedSingle'
     $form.StartPosition = "CenterScreen"
     $form.AutoSizeMode = 'GrowAndShrink'
@@ -110,7 +119,9 @@ function Show-InputDialog([string]$Message, [string]$WindowTitle = "Please enter
     $form.ShowInTaskbar = $true
 
     # Add all of the controls to the form.
-    $form.Controls.Add($textBox)
+    if ($ShowText) {
+        $form.Controls.Add($textBox)
+    }
     $form.Controls.Add($label)
     $form.Controls.Add($buttonPanel)
 

@@ -119,7 +119,7 @@ $Menu_Exit.add_Click({
     if ($null -eq $url){
         return
     }
-    [System.Windows.Forms.MessageBox]::Show("$url","Run Update",0)
+    Show-InputDialog -WindowTitle "start update" -Message "$url" -ShowText $false
 
  })
 
