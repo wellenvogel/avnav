@@ -83,6 +83,13 @@ const ImporterItem=(props)=>{
             <span className="value">{props.converter}</span>
         </div>
         }
+        {(props.realname !== undefined) &&
+        <div className="itemInfo">
+            <span className="label">linked name:</span>
+            <span className="value">{props.realname}</span>
+        </div>
+
+        }
     </div>
 };
 

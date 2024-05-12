@@ -230,13 +230,15 @@ class ConversionCandidate:
   def __init__(self,name,filename):
     self.name=name # type: str
     self.filename=filename # type: str
-    self.isDir=os.path.isdir(filename)
+    self.realName=filename
     self.converter=None # type: ConverterApi
     self.score=0
     self.currentmd5=None # type: str
     self.timestamp=time.monotonic()
-    self.result=ConversionResult(None,False)
+    self.result=ConversionResult(None)
     self.running=False
+  def isDir(self):
+    return os.path.isdir(self.realName)
   def update(self,other):
     if other is None or other.name != self.name:
       return
@@ -309,7 +311,8 @@ class ConversionCandidate:
     if st == self.State.DISABLED:
       return "disabled"
     return "conversion failed at %s: %s"%(self.result.dateStr(),str(self.result.error))
-
+  def getFileOrDir(self):
+    return self.realName
   def couldConvert(self):
     if self.isDisabled() or self.hasError() or self.score < 1:
       return False
@@ -484,7 +487,7 @@ class AVNImporter(AVNWorker):
             if existing.hasChanged(k):
               waitingCandidates[k.name]=k
             else:
-              wt=waittime if k.isDir else fwaittime
+              wt=waittime if k.isDir() else fwaittime
               if (existing.timestamp+wt) < now:
                 startConversion=True
                 waitingCandidates[k.name]=k
@@ -609,18 +612,39 @@ class AVNImporter(AVNWorker):
       fullname=os.path.join(self.importDir,file)
       name=self.getNameFromImport(file)
       candidate=ConversionCandidate(name,fullname)
-      for cnv in self._getConverters(): # type: ConverterApi
+      if file.upper().endswith(self.EXT_LINK):
+        #file contains a link to the real file/dir
+        error=None
+        realName=None
         try:
-          cs,currentmd5=cnv.countConvertibleFiles(fullname)
-          if cs > candidate.score:
-            candidate.converter=cnv
-            candidate.score=cs
-            candidate.currentmd5=currentmd5
+          with open(fullname,"r") as h:
+            realName=h.readline().rstrip()
         except Exception as e:
-          AVNLog.error("error reading import dir for converter %s",traceback.format_exc())
-      if candidate.score < 1:
-        AVNLog.debug("unknown import %s",fullname)
-      candidate.result=self.getLastResult(name)
+          error=str(e)
+        if realName is None:
+          error="no filename in %s"%file
+        if error is None:
+          if not os.path.exists(realName):
+            error="%s not found"%realName
+        if error is not None:
+          candidate.result=ConversionResult(None,error=error)
+        else:
+          candidate.realName=realName
+      if not candidate.hasError():
+        for cnv in self._getConverters(): # type: ConverterApi
+          try:
+            cs,currentmd5=cnv.countConvertibleFiles(candidate.getFileOrDir())
+            if cs > candidate.score:
+              candidate.converter=cnv
+              candidate.score=cs
+              candidate.currentmd5=currentmd5
+          except Exception as e:
+            AVNLog.error("error reading import dir for converter %s",traceback.format_exc())
+        if candidate.score < 1:
+          AVNLog.debug("unknown import %s",fullname)
+        candidate.result=self.getLastResult(name)
+      else:
+        self.saveLastResult(candidate.name,candidate.result)
       rt.append(candidate)
     return rt
 
@@ -629,7 +653,7 @@ class AVNImporter(AVNWorker):
     AVNLog.info("starting conversion for %s",candidate.name)
     now=time.time()
     self.setInfo(self.INFO_CONVERTER,"running for %s"%(candidate.name),WorkerStatus.NMEA)
-    cmd=candidate.converter.getConverterCommand(candidate.filename,candidate.name)
+    cmd=candidate.converter.getConverterCommand(candidate.getFileOrDir(),candidate.name)
     po=self.runConverter(candidate.name,cmd)
     if po is None:
       AVNLog.error("unable to start conversion for %s - don't know how to handle it",candidate.name)
@@ -815,6 +839,8 @@ class AVNImporter(AVNWorker):
           'converter':can.getConverterName(),
           'canDownload': canDownload,
           'hasLog': hasLog}
+        if can.getFileOrDir() != can.filename:
+          canst['realname']=can.getFileOrDir()
         items.append(canst)
       return AVNUtil.getReturnData(items=items)
     if type == "delete":
