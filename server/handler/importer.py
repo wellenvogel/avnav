@@ -58,6 +58,16 @@ class ExternalConverter(ConverterApi):
       return self._converter.getName()
     return super().getName()
 
+  def getZipSubDir(self, outname):
+    if hasattr(self._converter,'getZipSubDir'):
+      return self._converter.getZipSubDir(outname)
+    return None
+
+  def allowSubDir(self):
+    if hasattr(self._converter,'allowSubDir'):
+      return self._converter.allowSubDir()
+    return super().allowSubDir()
+
 
 class InternalConverter(ConverterApi):
   def __init__(self,knownExtensions:list,chartDir:str):
@@ -125,8 +135,12 @@ class InternalConverter(ConverterApi):
   def getOutFileOrDir(self, outname):
     return os.path.join(self._chartdir,outname+".gemf")
 
+  def allowSubDir(self):
+    return False
+
+
 class GdalConverter(InternalConverter):
-  EXTENSIONS=['kap','map','geo','eap','zip']
+  EXTENSIONS=['kap','map','geo','eap']
   def __init__(self, converterPath:str,chartDir:str,workDir:str):
     super().__init__(self.EXTENSIONS,chartDir)
     self._converter=converterPath
@@ -138,6 +152,28 @@ class GdalConverter(InternalConverter):
 
   def getName(self):
     return 'builtin-gdal'
+
+  def allowSubDir(self):
+    return True
+
+class GdalZipConverter(GdalConverter):
+  def __init__(self, converterPath: str, chartDir: str, workDir: str):
+    super().__init__(converterPath, chartDir, workDir)
+
+  def getName(self):
+    return 'builtin-gdal-zip'
+
+  def allowSubDir(self):
+    return False
+
+  def handledExtensions(self):
+    return ['.ZIP']
+
+  def _canHandle(self, fn):
+    sh=super()._canHandle(fn)
+    if sh:
+      return sh
+    return fn.upper().endswith('.ZIP')
 
 
 class NavipackConverter(InternalConverter):
@@ -315,8 +351,8 @@ class AVNImporter(AVNWorker):
                              description='time to wait in seconds before a conversion is started after detecting a change of a directory (settle time)')
   P_FWAITTIME=WorkerParameter('filesettls',10,type=WorkerParameter.T_NUMBER,
                              description='time to wait in seconds before a conversion is started after detecting a change of a directory (settle time)')
-  P_SCANINTERVAL=WorkerParameter('scanInterval', 10, type=WorkerParameter.T_NUMBER,
-                             description='seconds between import dir scan',editable=False)
+  P_SCANINTERVAL=WorkerParameter('scanInterval', 0, type=WorkerParameter.T_NUMBER,
+                             description='seconds between import dir scan, 0 to disable automatic scan')
   @classmethod
   def getConfigName(cls):
     return "AVNImporter"
@@ -350,7 +386,9 @@ class AVNImporter(AVNWorker):
   @classmethod
   def preventMultiInstance(cls):
     return True
-
+  INFO_MAIN="main"
+  INFO_CONVERTER="converter"
+  EXT_LINK=".CLK"
   def __init__(self,param):
     AVNWorker.__init__(self, param)
     self.importDir=None
@@ -385,6 +423,7 @@ class AVNImporter(AVNWorker):
       AVNLog.error("chartbase directory not found, stopping converter")
       return
     self.converters.append(GdalConverter(os.path.join(self.converterDir,"read_charts.py"),self.chartbase,self.workDir))
+    self.converters.append(GdalZipConverter(os.path.join(self.converterDir,"read_charts.py"),self.chartbase,self.workDir))
     self.converters.append(MbtilesConverter(os.path.join(self.converterDir,"convert_mbtiles.py"),self.chartbase))
     self.converters.append(NavipackConverter(os.path.join(self.converterDir,"convert_navipack.py"),self.chartbase))
     if not os.path.isdir(self.importDir):
@@ -418,8 +457,8 @@ class AVNImporter(AVNWorker):
     self.cleanupInfo(check)
   #thread run method - just try forever  
   def run(self):
-    self.setInfo("main","monitoring started for %s"%(self.importDir),WorkerStatus.NMEA)
-    self.setInfo("converter","free",WorkerStatus.STARTED)
+    self.setInfo(self.INFO_MAIN,"monitoring started for %s"%(self.importDir),WorkerStatus.NMEA)
+    self.setInfo(self.INFO_CONVERTER,"free",WorkerStatus.STARTED)
     waitingCandidates={}
     while not self.shouldStop():
       waittime=self.getWParam(self.P_WAITTIME)
@@ -427,10 +466,12 @@ class AVNImporter(AVNWorker):
       AVNLog.debug("mainloop")
       currentCandidates=self.readImportDir()
       self.candidates=currentCandidates
+      foundNames=set()
       if self.runningConversion is None:
-        self.setInfo("main","scanning",WorkerStatus.NMEA)
+        self.setInfo(self.INFO_MAIN,"scanning",WorkerStatus.NMEA)
         now=time.monotonic()
         for k in currentCandidates:
+          foundNames.add(k.name)
           if not k.couldConvert():
             try:
               del waitingCandidates[k.name]
@@ -459,6 +500,14 @@ class AVNImporter(AVNWorker):
               pass
           else:
             break
+        #remove any waiting entries that are not there any more
+        candidateKeys=list(waitingCandidates.keys())
+        for ckey in candidateKeys:
+          if not ckey in foundNames:
+            try:
+              del waitingCandidates[ckey]
+            except:
+              pass
       else:
         AVNLog.debug("conversion(s) running, skip check")
         for k in currentCandidates:
@@ -478,18 +527,36 @@ class AVNImporter(AVNWorker):
         #immediately scan again as we could start the next
         continue
       if self.runningConversion is not None or len(waitingCandidates.keys())> 0:
+        self.setInfo(self.INFO_MAIN,"scanning",WorkerStatus.NMEA)
         self.wait(min(waittime,fwaittime)/5)
       else:
-        self.wait(self.getWParam(self.P_SCANINTERVAL))
+        idlewait=self.getWParam(self.P_SCANINTERVAL)
+        if idlewait <= 0:
+          idlewait=365*24*3600 #1year
+        self.setInfo(self.INFO_MAIN,"pausing for %d seconds"%idlewait,WorkerStatus.STARTED)
+        self.wait(idlewait)
     if self.runningConversion is not None:
       self.runningConversion.stop()
 
-  def allExtensions(self):
+  def allExtensions(self,fullInfo=False):
     extensions=[]
+    def addExt(ext,sub=False):
+      ext=ext.upper()
+      if not ext.startswith('.'):
+        ext='.'+ext
+      if fullInfo:
+        extensions.append({'ext':ext,'sub':sub})
+      else:
+        extensions.append(ext)
+    addExt(self.EXT_LINK)
     converters=self._getConverters()
     for converter in converters: # type: ConverterApi
-      extensions.extend(converter.handledExtensions())
+      cnvext=converter.handledExtensions()
+      allowSub=converter.allowSubDir()
+      for cnv in cnvext:
+        addExt(cnv,allowSub)
     return extensions
+
   def getResultName(self,name):
     return os.path.join(self.importDir,"_"+name)
   def saveLastResult(self, name, result:ConversionResult):
@@ -561,12 +628,12 @@ class AVNImporter(AVNWorker):
   def startConversion(self,candidate:ConversionCandidate):
     AVNLog.info("starting conversion for %s",candidate.name)
     now=time.time()
-    self.setInfo("converter","running for %s"%(candidate.name),WorkerStatus.NMEA)
+    self.setInfo(self.INFO_CONVERTER,"running for %s"%(candidate.name),WorkerStatus.NMEA)
     cmd=candidate.converter.getConverterCommand(candidate.filename,candidate.name)
     po=self.runConverter(candidate.name,cmd)
     if po is None:
       AVNLog.error("unable to start conversion for %s - don't know how to handle it",candidate.name)
-      self.setInfo("converter","start for %s failed - don't know how to handle"%(candidate.name,),WorkerStatus.ERROR)
+      self.setInfo(self.INFO_CONVERTER,"start for %s failed - don't know how to handle"%(candidate.name,),WorkerStatus.ERROR)
       return False
     candidate.running=True
     self.runningConversion=Conversion(po,candidate)
@@ -575,7 +642,7 @@ class AVNImporter(AVNWorker):
     if self.runningConversion is None:
       return
     if not self.runningConversion.running:
-      self.setInfo("converter","killed for %s"%(self.runningConversion.candidate.name),WorkerStatus.ERROR)
+      self.setInfo(self.INFO_CONVERTER,"killed for %s"%(self.runningConversion.candidate.name),WorkerStatus.ERROR)
       candidate=self.runningConversion.candidate
       self.runningConversion=None
       self.saveLastResult(candidate.name, ConversionResult(None,"killed"))
@@ -595,9 +662,9 @@ class AVNImporter(AVNWorker):
       else:
         result.error="failed with status %d"%rtc
       if rtc == 0:
-          self.setInfo("converter","successful for %s"%(self.runningConversion.candidate.name),WorkerStatus.STARTED)
+          self.setInfo(self.INFO_CONVERTER,"successful for %s"%(self.runningConversion.candidate.name),WorkerStatus.STARTED)
       else:
-          self.setInfo("converter","failed for %s"%(self.runningConversion.candidate.name),WorkerStatus.ERROR)
+          self.setInfo(self.INFO_CONVERTER,"failed for %s"%(self.runningConversion.candidate.name),WorkerStatus.ERROR)
       candidate=self.runningConversion.candidate
       candidate.result=result
       candidate.running=False
@@ -788,7 +855,7 @@ class AVNImporter(AVNWorker):
       name=AVNUtil.clean_filename(AVNUtil.getHttpRequestParam(requestparam,"name",True))
       subdir=AVNUtil.clean_filename(AVNUtil.getHttpRequestParam(requestparam,"subdir",False))
       path,ext=os.path.splitext(name)
-      if not ( ext.upper() in self.allExtensions()) :
+      if not ( ext.upper() in self.allExtensions() or ext.upper() == self.EXT_LINK) :
         return AVNUtil.getReturnData(error="unknown file type %s"%ext)
       if name.startswith("_"):
         return AVNUtil.getReturnData(error="names with starting _ not allowed")
@@ -813,7 +880,7 @@ class AVNImporter(AVNWorker):
     if type == "api":
       command=AVNUtil.getHttpRequestParam(requestparam,"command",True)
       if (command == "extensions"):
-        return AVNUtil.getReturnData(items=self.allExtensions())
+        return AVNUtil.getReturnData(items=self.allExtensions(True))
       if (command == "getlog"):
         handler=kwargs.get('handler')
         name=AVNUtil.getHttpRequestParam(requestparam,"name",True)
@@ -870,6 +937,9 @@ class AVNImporter(AVNWorker):
         self.saveLastResult(candidate.name,ConversionResult(None,disabled=True))
         self.wakeUp()
         return AVNUtil.getReturnData()
+      if command == 'rescan':
+        self.wakeUp()
+        return AVNUtil.getReturnData()
     return AVNUtil.getReturnData(error="unknown command for import")
 
   def registerConverter(self,id,converter:ConverterApi):
@@ -887,6 +957,7 @@ class AVNImporter(AVNWorker):
       if not found and converter is not None:
         converters.append(ExternalConverter(converter,id))
       self.externalConverters=converters
+    self.wakeUp()
 
   def deregisterConverter(self,id):
     self.registerConverter(id,None)

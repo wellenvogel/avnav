@@ -32,7 +32,7 @@ import EditOverlaysDialog, {DEFAULT_OVERLAY_CHARTENTRY} from '../components/Edit
 import {getOverlayConfigName} from "../map/chartsourcebase"
 import PropertyHandler from '../util/propertyhandler';
 import {SaveItemDialog} from "../components/LoadSaveDialogs";
-import ImportDialog from "../components/ImportDialog";
+import ImportDialog, {checkExt, readImportExtensions} from "../components/ImportDialog";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -163,7 +163,7 @@ class DownloadPage extends React.Component{
             type:type,
             items:[],
             addOns:[],
-            chartImportExtensions:['kap'],
+            chartImportExtensions:[],
             importSubDir:''
         };
         this.checkNameForUpload=this.checkNameForUpload.bind(this);
@@ -174,18 +174,8 @@ class DownloadPage extends React.Component{
         this.fillData();
     }
     componentDidMount() {
-        if (!globalStore.getData(keys.gui.capabilities.uploadImport)) return;
-        Requests.getJson({
-            request:'api',
-            type:'import',
-            command:'extensions'
-        })
-            .then((data)=>{
-                let extensions=[]
-                data.items.forEach((e)=>extensions.push(e.toLowerCase().replace(/^\./,'')))
-                this.setState({chartImportExtensions:extensions});
-            })
-            .catch();
+        readImportExtensions()
+            .then((extList)=>{this.setState({chartImportExtensions:extList})});
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
@@ -412,13 +402,14 @@ class DownloadPage extends React.Component{
                 let directExtensions=['gemf','mbtiles','xml'];
                 if (directExtensions.indexOf(ext) < 0) {
                     //check for import
-                    let importExtensions=this.state.chartImportExtensions;
-                    if (importExtensions.indexOf(ext)>=0 && ! avnav.android) {
+                    let importConfig=checkExt(ext,this.state.chartImportExtensions);
+                    if (importConfig.allow) {
                         OverlayDialog.dialog((props)=>{
                             return(
                                 <ImportDialog
                                     {...props}
                                     allowNameChange={true}
+                                    allowSubDir={importConfig.subdir}
                                     okFunction={(props,subdir)=>{
                                         if (subdir !== this.state.importSubDir){
                                             this.setState({importSubDir: subdir});
@@ -428,7 +419,6 @@ class DownloadPage extends React.Component{
                                     cancelFunction={()=>reject("canceled")}
                                     name={name}
                                     subdir={this.state.importSubDir}
-                                    allowSubDir={ext !== 'zip'}
                                 />
                             );
                         });

@@ -38,7 +38,7 @@ import Toast from "../components/Toast";
 import globalStore from "../util/globalstore";
 import LogDialog from "../components/LogDialog";
 import UploadHandler from "../components/UploadHandler";
-import ImportDialog from "../components/ImportDialog";
+import ImportDialog, {checkExt, readImportExtensions} from "../components/ImportDialog";
 import OverlayDialog from "../components/OverlayDialog";
 import Helper from "../util/helper";
 import {RecursiveCompare} from "../util/compare";
@@ -53,8 +53,9 @@ const MainStatus=(props)=>{
         {props.main && <ChildStatus
             {...props.main}
             name='scanner'
-            canEdit={false}
+            forceEdit={true}
             sub={true}
+            showEditDialog={props.showScannerDialog}
         />}
         {props.converter && <ChildStatus
             {...props.converter}
@@ -226,6 +227,38 @@ const ConverterDialog=(props)=>{
     </div>
 }
 
+const ScannerDialog=(props)=>{
+    let isRunning=props.status === 'NMEA';
+    return <div className="importScannerDialog flexInner">
+        <h3 className="dialogTitle">Scanner</h3>
+        <div className="dialogRow childStatus">
+            <img src={statusTextToImageUrl(props.status)}/>
+            <span className="itemInfo">{props.info}</span>
+        </div>
+
+        <div className="dialogButtons">
+            <DB name="rescan"
+                onClick={()=>{
+                    Requests.getJson({
+                        type:'import',
+                        request:'api',
+                        command:'rescan'
+                    })
+                        .then((res)=>{
+                            props.closeCallback()
+                        })
+                        .catch((e)=>Toast("unable to trigger rescan "+e,5000));
+                }}
+            >Rescan</DB>
+            <DB name="cancel"
+                onClick={() => {
+                    props.closeCallback();
+                }}
+            >Cancel</DB>
+        </div>
+    </div>
+}
+
 class ImporterPage extends React.Component{
     constructor(props){
         super(props);
@@ -275,19 +308,8 @@ class ImporterPage extends React.Component{
     }
 
     componentDidMount(){
-        if (!globalStore.getData(keys.gui.capabilities.uploadImport)) return;
-        Requests.getJson({
-            request:'api',
-            type:'import',
-            command:'extensions'
-        })
-            .then((data)=>{
-                let extensions=[]
-                data.items.forEach((e)=>extensions.push(e.toLowerCase().replace(/^\./,'')))
-                this.setState({chartImportExtensions:extensions});
-            })
-            .catch((e)=>{});
-
+        readImportExtensions()
+            .then((extList)=>this.setState({chartImportExtensions:extList}));
     }
     showEditHandlerDialog(){
         EditHandlerDialog.createDialog(undefined,undefined,()=>{
@@ -311,6 +333,15 @@ class ImporterPage extends React.Component{
                         />
                     })
                 }}
+            />
+        )
+
+    }
+    showScannerDialog(scanner){
+        Dialogs.dialog((props)=>
+            <ScannerDialog
+                {...props}
+                {...scanner}
             />
         )
 
@@ -351,8 +382,8 @@ class ImporterPage extends React.Component{
     checkNameForUpload(name) {
         return new Promise((resolve, reject) => {
                 let ext = Helper.getExt(name);
-                let importExtensions = this.state.chartImportExtensions;
-                if (importExtensions.indexOf(ext) >= 0 && !avnav.android) {
+                let importConfig=checkExt(ext,this.state.chartImportExtensions);
+                if (importConfig.allow) {
                     OverlayDialog.dialog((props) => {
                         return (
                             <ImportDialog
@@ -366,7 +397,7 @@ class ImporterPage extends React.Component{
                                 }}
                                 cancelFunction={() => reject("canceled")}
                                 name={name}
-                                allowSubDir={ext!=="zip" && ext !== 'mbtiles'}
+                                allowSubDir={importConfig.subdir}
                                 subdir={this.state.importSubDir}
                             />
                         );
@@ -394,6 +425,7 @@ class ImporterPage extends React.Component{
                 <MainStatus
                     {...mainStatus}
                     showConverterDialog={() => this.showConverterDialog(mainStatus.converter)}
+                    showScannerDialog={()=>this.showScannerDialog(mainStatus.main)}
                 />
                 <ItemList
                     itemList={this.state.items}
