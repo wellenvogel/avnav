@@ -65,11 +65,11 @@ function Kill-Tree {
     Stop-Process -Id $ppid -ErrorAction SilentlyContinue
 }
 
-$process = $null
+$serverProcess = $null
 
 function Set-Enable{
     $isInstalled=Test-Path -Path "$softwareBase"
-    if ( $null -eq $process){
+    if ( $null -eq $serverProcess){
         $Menu_Stop.Enabled = $false
         $Menu_Start.Enabled = $isInstalled
         $Menu_Remove.Enabled = $isInstalled
@@ -93,7 +93,7 @@ function Set-Enable{
 function Run-Server {
     $exename = Join-Path $PSScriptRoot '\test.cmd'
     $null=md -Force $logDir
-    $global:process = Start-Process -FilePath "$exename" -PassThru -RedirectStandardOutput "$serverLog" -RedirectStandardError  "$serverError" -WindowStyle Hidden
+    $global:serverProcess = Start-Process -FilePath "$exename" -PassThru -RedirectStandardOutput "$serverLog" -RedirectStandardError  "$serverError" -WindowStyle Hidden
 }
 
 function Run-Installer([string]$url){
@@ -136,16 +136,16 @@ $Menu_Start.add_Click({
 
  # When Stop is clicked, kill stay awake job
 $Menu_Stop.add_Click({
-    Kill-Tree $process.Id
-    $process=$null
+    Kill-Tree $serverProcess.Id
+    $serverProcess=$null
     Set-Enable
  })
 
 # When Exit is clicked, close everything and kill the PowerShell process
 $Menu_Exit.add_Click({
     $Main_Tool_Icon.Visible = $false
-    if ( $null -ne $process){
-        Kill-Tree $process.Id
+    if ( $null -ne $serverProcess){
+        Kill-Tree $serverProcess.Id
     }
     [void][System.Windows.Forms.Application]::Exit()
     #Stop-Process $pid
