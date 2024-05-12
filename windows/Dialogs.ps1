@@ -86,7 +86,14 @@ function Show-InputDialog([string]$Message, [string]$WindowTitle = "Please enter
     $okButton.Size = $buttonSize
     $okButton.Dock='Right'
     $okButton.Text = "OK"
-    $okButton.Add_Click({ $form.Tag = $textBox.Text; $form.Close() })
+    $okButton.Add_Click({ 
+        if ($ShowText){
+            $form.Tag = $textBox.Text
+        }
+        else{
+            $form.Tag=$DefaultText
+        }
+        $form.Close() })
     
 
     # Create the Cancel button.

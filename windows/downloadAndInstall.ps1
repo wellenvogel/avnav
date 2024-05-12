@@ -1,7 +1,7 @@
 ﻿Param(
     [string]$avnavUrl
 )
-
+$code=0
 try{
 $targetBase=$env:LOCALAPPDATA + "\avnav"
 $downloadDir=$targetBase+"\download"
@@ -92,6 +92,7 @@ if ($avnavUrl){
     }
     else{
         Write-Host "Unable to download avnav from $avnavUrl"
+        exit(1)
     }
 
 }
@@ -154,15 +155,13 @@ foreach ($program in $actions){
                     }
                     $res=(Start-Process -WorkingDirectory $downloadDir -FilePath msiexec -ArgumentList "-a",$name,"-qb","TARGETDIR=$target","INSTALLDIR=$target" -PassThru -Wait)
                     if ($res.ExitCode -ne 0){
-                        Write-Host "ERROR installing $name $code"
-                        exit(1)
+                        throw "ERROR installing $name $code"
                     }
                     Rename-Item "$target\PFiles\MapServer" "$target\PFiles\GDAL"
                     Copy-Item -Path "$target\System64\*.dll" -Destination "$target\PFiles\GDAL"                   
                 }
                 else{
-                    Write-Host "unknown install command $installCmd"
-                    exit(1)
+                    throw "unknown install command $installCmd"
                 }
             }
             else{
@@ -182,8 +181,7 @@ foreach ($program in $actions){
         }
         if (($res -ne $null) -And ($res.ExitCode -ne 0)){
            $code=$res.ExitCode
-           Write-Host "ERROR installing $name $code"
-           exit(1)
+           throw "ERROR installing $name $code"
         }
         Write-Host "installing $name finished"
 
@@ -194,9 +192,11 @@ foreach ($program in $actions){
 
 }
 catch {
-    Write-Host "Downlod failed:"+$_.Exception.Message
+    Write-Host "Downlod/Install failed:"+$_.Exception.Message
+    $code=1
 }
-Write-Host "Close window to continue"
+Write-Host "Close window to continue or press ^C"
 Start-Sleep -Seconds 3600
+exit($code)
 
 

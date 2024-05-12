@@ -5,7 +5,8 @@
 [System.Reflection.Assembly]::LoadWithPartialName('WindowsFormsIntegration') | out-null
 
 
-$dataDir=Join-Path $env:USERPROFILE '\AvNav'
+$dataDir=Join-Path "$env:USERPROFILE" '\AvNav'
+$softwareBase=Join-Path "$env:LOCALAPPDATA" 'avnav'
 $logDir=Join-Path "$dataDir" "log"
 $serverLog="$logDir\service.log"
 $serverError="$logDir\service-err.log"
@@ -47,11 +48,15 @@ $Menu_Install.Text = "Install"
 $Menu_Exit = New-Object System.Windows.Forms.MenuItem
 $Menu_Exit.Text = "Exit"
 
+$Menu_Remove= New-Object System.Windows.Forms.MenuItem
+$Menu_Remove.Text= "Remove"
+
 $contextmenu = New-Object System.Windows.Forms.ContextMenu
 $Main_Tool_Icon.ContextMenu = $contextmenu
 $Main_Tool_Icon.contextMenu.MenuItems.AddRange($Menu_Start)
 $Main_Tool_Icon.contextMenu.MenuItems.AddRange($Menu_Stop)
 $Main_Tool_Icon.contextMenu.MenuItems.AddRange($Menu_Install)
+$Main_Tool_Icon.contextMenu.MenuItems.AddRange($Menu_Remove)
 $Main_Tool_Icon.contextMenu.MenuItems.AddRange($Menu_Exit)
 
 function Kill-Tree {
@@ -62,22 +67,54 @@ function Kill-Tree {
 
 $process = $null
 
+function Set-Enable{
+    $isInstalled=Test-Path -Path "$softwareBase"
+    if ( $null -eq $process){
+        $Menu_Stop.Enabled = $false
+        $Menu_Start.Enabled = $isInstalled
+        $Menu_Remove.Enabled = $isInstalled
+        $Menu_Install.Enabled = $true
+    }
+    else{
+        $Menu_Stop.Enabled = $true
+        $Menu_Start.Enabled = $false
+        $Menu_Remove.Enabled = $false
+        $Menu_Install.Enabled = $false
+    }
+    if ($isInstalled){
+        $Menu_Install.Text = 'Update'
+    }
+    else{
+        $Menu_Install.Text= 'Install'
+    }
+    
+}
+
 function Run-Server {
     $exename = Join-Path $PSScriptRoot '\test.cmd'
     $null=md -Force $logDir
     $global:process = Start-Process -FilePath "$exename" -PassThru -RedirectStandardOutput "$serverLog" -RedirectStandardError  "$serverError" -WindowStyle Hidden
 }
 
-function Set-Enable{
-    if ( $null -eq $process){
-        $Menu_Stop.Enabled = $false
-        $Menu_Start.Enabled = $true
-    }
-    else{
-        $Menu_Stop.Enabled = $true
-        $Menu_Start.Enabled = $false
-    }
+function Run-Installer([string]$url){
+    $arg = Join-Path $PSScriptRoot 'downloadAndInstall.ps1'
+    $res = Start-Process powershell -ArgumentList "-Command ""$arg"" ""$url"" " -Wait -PassThru
+    $msg="Installer result: "+ $res.ExitCode.ToString()
+    Show-InputDialog -WindowTitle "Installer Result" -Message "$msg" -ShowText $false
+    Set-Enable
 }
+
+function Remove-Installed{
+    $confirm=Show-InputDialog -WindowTitle 'Confirm Removal' -Message "Really remove the installed AvNav software from `n $softwareBase ?" -ShowText $false -DefaultText 'yes'
+    if ('yes' -ne $confirm){
+        return
+    }
+    Get-ChildItem -Path "$softwareBase" | Remove-Item -Recurse -Force
+    Remove-Item -Path "$softwareBase" -Force -Recurse
+    Set-Enable
+}
+
+
 # ---------------------------------------------------------------------
 # Action when after a click on the systray icon
 # ---------------------------------------------------------------------
@@ -119,8 +156,12 @@ $Menu_Exit.add_Click({
     if ($null -eq $url){
         return
     }
-    Show-InputDialog -WindowTitle "start update" -Message "$url" -ShowText $false
+    Run-Installer -url "$url"
 
+ })
+
+ $Menu_Remove.add_Click({
+    Remove-Installed
  })
 
  
