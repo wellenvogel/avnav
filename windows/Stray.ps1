@@ -90,6 +90,20 @@ function Set-Enable{
     
 }
 
+$timer=New-Object System.Windows.Forms.Timer
+$timer.Add_Tick({
+    if ($null -ne $serverProcess){
+        if ($serverProcess.HasExited){
+            $timer.Enabled=$false
+            $msg="AvNav stopped unexpectedly"
+            $global:serverProcess=$null
+            Set-Enable
+            Show-InputDialog -WindowTitle "AvNav stopped" -Message "$msg" -ShowText $false 
+        }
+    }
+ })
+$timer.Interval=1000
+
 function Run-Server {
     try{
     $exename = Join-Path "$softwareBase" "python\python.exe"
@@ -138,6 +152,8 @@ function Run-Server {
     $sounds=Join-Path "$softwareBase" "sounds"
     $arglist=@("$avnav",'-q','-w',"$dataDir","$xml","-u","viewer=""$viewer"",sounds=""$sounds""")
     $global:serverProcess = Start-Process -WindowStyle Hidden -FilePath "$exename" -ArgumentList $arglist -PassThru -RedirectStandardError "$serverError" -RedirectStandardOutput "$serverLog"
+    $timer.Enabled=$true
+    $timer.Start()
     }catch{
         Show-InputDialog -WindowTitle "StartupError" -Message $_.Exception.Message -ShowText $false
         return $false
@@ -187,6 +203,7 @@ $Menu_Start.add_Click({
 $Menu_Stop.add_Click({
     Kill-Tree $serverProcess.Id
     $serverProcess=$null
+    $timer.Enabled=$false
     Set-Enable
  })
 
@@ -196,6 +213,7 @@ $Menu_Exit.add_Click({
     if ( $null -ne $serverProcess){
         Kill-Tree $serverProcess.Id
     }
+    $timer.Stop()
     [void][System.Windows.Forms.Application]::Exit()
     #Stop-Process $pid
  })
