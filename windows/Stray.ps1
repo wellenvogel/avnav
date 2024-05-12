@@ -7,9 +7,10 @@
 
 $dataDir=Join-Path $env:USERPROFILE '\AvNav'
 $logDir=Join-Path "$dataDir" "log"
-$serverLog="$logDir\server.log"
+$serverLog="$logDir\service.log"
+$serverError="$logDir\service-err.log"
 
-$icon = Join-Path $PSScriptRoot '\AvChartConvert\AvChartConvert\Chart60.ico'
+$icon = Join-Path $PSScriptRoot 'Chart60.ico'
 ################################################################################################################################"
 # ACTIONS FROM THE SYSTRAY
 ################################################################################################################################"
@@ -55,7 +56,7 @@ $process = $null
 function Run-Server {
     $exename = Join-Path $PSScriptRoot '\test.cmd'
     $null=md -Force $logDir
-    $global:process = Start-Process -FilePath $exename -PassThru -RedirectStandardOutput $serverLog -WindowStyle Hidden
+    $global:process = Start-Process -FilePath "$exename" -PassThru -RedirectStandardOutput "$serverLog" -RedirectStandardError  "$serverError" -WindowStyle Hidden
 }
 
 function Set-Enable{
@@ -97,6 +98,9 @@ $Menu_Stop.add_Click({
 # When Exit is clicked, close everything and kill the PowerShell process
 $Menu_Exit.add_Click({
     $Main_Tool_Icon.Visible = $false
+    if ( $null -ne $process){
+        Kill-Tree $process.Id
+    }
     Stop-Process $pid
  })
  
