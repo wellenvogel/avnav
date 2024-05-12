@@ -66,8 +66,6 @@ function Kill-Tree {
 }
 
 $serverProcess = $null
-$serverStdoutReader=$null
-$serverStderrReader=$null
 
 function Set-Enable{
     $isInstalled=Test-Path -Path "$softwareBase"
@@ -93,22 +91,6 @@ function Set-Enable{
 }
 
 function Run-Server {
-    try{
-        if ($null -ne $serverStdoutReader){
-            Unregister-Event $serverStdoutReader.Id
-            $serverStdoutReader=$null
-        }
-    }catch {
-
-    }
-    try{
-        if ($null -ne $serverStderrReader){
-            Unregister-Event $serverStderrReader.Id
-            $serverStderrReader=$null
-        }
-    }catch{
-
-    }
     try{
     $exename = Join-Path "$softwareBase" "python\python.exe"
     if (-Not (Test-Path -Path "$exename")){
@@ -139,41 +121,23 @@ function Run-Server {
     }
     $gdaldata=Join-Path "$gdalpath" "gdal-data"
     $gdalpython=Join-Path "$softwareBase" "gdal\Lib\site-packages"
-    $env=@{
-        GDAL_DATA = "$gdaldata"
-        PYTHONPATH = "$gdalpython"
-        PATH="$gdalpath"
+    $Env:GDAL_DATA = "$gdaldata"
+    $Env:PYTHONPATH = "$gdalpython"
+    $path=$Env:PATH
+    if ($null -eq $path){
+        $path=$gdalpath
     }
+    else{
+        if (-Not ($path -contains $gdalpath)){
+            $path=$path+";"+$gdalpath
+        }
+    }
+    $ENV:PATH="$path"
     $null=md -Force $logDir
-    $arglist=@("$avnav",'-q','-w',"$dataDir")
-    $startInfo = New-Object System.Diagnostics.ProcessStartInfo
-    $startInfo.FileName="$exename"
-    $startInfo.Arguments=$arglist
-    $startInfo.RedirectStandardError=$true
-    $startInfo.RedirectStandardOutput=$true
-    $startInfo.UseShellExecute=$false
-    $startInfo.EnvironmentVariables.Remove("GDAL_DATA")
-    $startInfo.EnvironmentVariables.Add("GDAL_DATA",$gdaldata)
-    $startInfo.EnvironmentVariables.Remove("PYTHONPATH")
-    $startInfo.EnvironmentVariables.Add("PYTHONPATH",$gdalpython)
-    $path=$gdalpath
-    if ($startInfo.EnvironmentVariables.ContainsKey('PATH')){
-        $path=$path+";"+$startInfo.EnvironmentVariables['PATH']
-    }
-    $startInfo.EnvironmentVariables.Remove('PATH')
-    $startInfo.EnvironmentVariables.Add('PATH',$path)
-    $proc=New-Object System.Diagnostics.Process
-    $proc.StartInfo=$startInfo
-    $global:serverStdoutReader= Register-ObjectEvent $proc -EventName OutputDataReceived {
-        Add-Content -Path $serverLog "$Event.SourceEventArgs.Data"
-    }
-    $global:serverStderrReader=Register-ObjectEvent $proc -EventName ErrorDataReceived {
-        Add-Content -Path $serverError "$Event.SourceEventArgs.Data"
-    }
-    $proc.Start()
-    $proc.BeginErrorReadLine()
-    $proc.BeginOutputReadLine()
-    $global:serverProcess = $proc
+    $viewer=Join-Path "$softwareBase" "viewer"
+    $sounds=Join-Path "$softwareBase" "sounds"
+    $arglist=@("$avnav",'-q','-w',"$dataDir","$xml","-u","viewer=""$viewer"",sounds=""$sounds""")
+    $global:serverProcess = Start-Process -WindowStyle Hidden -FilePath "$exename" -ArgumentList $arglist -PassThru -RedirectStandardError "$serverError" -RedirectStandardOutput "$serverLog"
     }catch{
         Show-InputDialog -WindowTitle "StartupError" -Message $_.Exception.Message -ShowText $false
         return $false
