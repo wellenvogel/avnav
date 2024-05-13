@@ -106,7 +106,7 @@ $timer.Interval=1000
 
 function Run-Server {
     try{
-    $exename = Join-Path "$softwareBase" "python\python.exe"
+    $exename = Join-Path "$softwareBase" "windows\avnav.cmd"
     if (-Not (Test-Path -Path "$exename")){
         throw "python at $exename not found"
     }
@@ -114,43 +114,12 @@ function Run-Server {
     if (-Not (Test-Path -Path "$avnav")){
         throw "Avnav main at $avnav not found"
     }
-    $xml= Join-Path "$dataDir" "avnav_server.xml"
-    if (-Not (Test-Path -Path "$xml")){
-        #create from template
-        $template=Join-Path $PSScriptRoot "avnav_server.xml"
-        if (-Not (Test-Path -Path $template )){
-            throw "not config template at $template found"
-        }
-        if (-Not (Test-Path -Path "$dataDir")){
-            mkdir -Force "$dataDir"
-        }
-        if (-Not (Test-Path -Path "$dataDir")){
-            throw "unable to create data directory $dataDir"
-        }
-        Copy-Item "$template" -Destination "$xml"
-    }
     $gdalpath=Join-Path "$softwareBase" "gdal\PFiles\GDAL"
     if (-Not (Test-Path -Path "$gdalpath")){
         throw "gdal not found at $gdalpath"
     }
-    $gdaldata=Join-Path "$gdalpath" "gdal-data"
-    $gdalpython=Join-Path "$softwareBase" "gdal\Lib\site-packages"
-    $Env:GDAL_DATA = "$gdaldata"
-    $Env:PYTHONPATH = "$gdalpython"
-    $path=$Env:PATH
-    if ($null -eq $path){
-        $path=$gdalpath
-    }
-    else{
-        if (-Not ($path -contains $gdalpath)){
-            $path=$path+";"+$gdalpath
-        }
-    }
-    $ENV:PATH="$path"
+    $arglist=@("-q")
     $null=md -Force $logDir
-    $viewer=Join-Path "$softwareBase" "viewer"
-    $sounds=Join-Path "$softwareBase" "sounds"
-    $arglist=@("$avnav",'-q','-w',"$dataDir","$xml","-u","viewer=""$viewer"",sounds=""$sounds""")
     $global:serverProcess = Start-Process -WindowStyle Hidden -FilePath "$exename" -ArgumentList $arglist -PassThru -RedirectStandardError "$serverError" -RedirectStandardOutput "$serverLog"
     $timer.Enabled=$true
     $timer.Start()

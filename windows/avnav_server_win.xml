@@ -18,6 +18,7 @@
 <AVNRouter/>
 <AVNNmeaLogger></AVNNmeaLogger>
 <AVNImporter/>
+<AVNSignalkHandler enabled="False"/>
 <AVNPluginHandler>
 <builtin-canboat enabled="False"/>
 </AVNPluginHandler>
