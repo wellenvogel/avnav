@@ -31,9 +31,12 @@ import logging.handlers
 import optparse
 import signal
 
+from apport.hookutils import __filter_re_process
+
 from avnav_nmea import NMEAParser
 from avnav_store import AVNStore
 from handler.baseconfig import AVNBaseConfig
+from httpserver import AVNHTTPServer
 
 try:
   import create_overview
@@ -126,6 +129,7 @@ def setLogFile(filename,level,consoleOff=False):
 LOGFILE="avnav.log"
 def writeStderr(txt):
   sys.stderr.write("AVNAV-ERROR: "+txt+"\n")
+A_SERVERPORT="serverport"
 def main(argv):
   global loggingInitialized,debugger
   try:
@@ -154,11 +158,8 @@ def main(argv):
                     help="avnav will restart if server exits")
   parser.add_option("-l", "--loglevel", dest="loglevel", default="INFO", help="loglevel, default INFO")
   parser.add_option("-d","--debug",dest="loglevel", action="store_const", const="DEBUG")
+  parser.add_option("-o","--serverport",dest=A_SERVERPORT, help="http listener port, overwrite the one from config")
   (options, args) = parser.parse_args(argv[1:])
-  if len(args) < 1:
-    cfgname=os.path.join(os.path.dirname(argv[0]),"avnav_server.xml")
-  else:
-    cfgname=args[0]
   AVNLog.initLoggingInitial(AVNLog.levelToNumeric(options.loglevel))
   basedir = os.path.abspath(os.path.dirname(__file__))
   datadir = options.datadir
@@ -169,6 +170,10 @@ def main(argv):
     datadir = os.path.join(os.path.expanduser("~"), "avnav")
   datadir = os.path.abspath(datadir)
   AVNLog.info("basedir=%s,datadir=%s", basedir, datadir)
+  if len(args) < 1:
+    cfgname=os.path.join(datadir,"avnav_server.xml")
+  else:
+    cfgname=args[0]
   systemdEnv = os.environ.get('INVOCATION_ID')
   quiet=False
   if options.quiet or systemdEnv is not None:
@@ -243,6 +248,14 @@ def main(argv):
       except:
         pass
   if httpServer is not None:
+    defaultMappings={
+      'viewer':os.path.join(os.path.dirname(__file__),'..','viewer'),
+      'sounds':os.path.join(os.path.dirname(__file__),'..','sounds')
+    }
+    for k,v in defaultMappings.items():
+      if not k in httpServer.pathmappings:
+        AVNLog.info("set path mapping for %s to %s",k,v)
+        httpServer.pathmappings[k]=v
     for handler in AVNWorker.getAllHandlers(disabled=True):
       handledCommands=handler.getHandledCommands()
       if handledCommands is not None:
@@ -253,6 +266,9 @@ def main(argv):
           httpServer.registerRequestHandler('api',handledCommands,handler)
     httpServer.registerRequestHandler('api','config',handlerManager)
     httpServer.registerRequestHandler('download', 'config', handlerManager)
+    optPort=getattr(options,A_SERVERPORT)
+    if optPort is not None:
+      httpServer.parameters[AVNHTTPServer.PORT_CONFIG]=optPort
   navData=AVNStore(
     expiryTime=baseConfig.getWParam(baseConfig.P_EXPIRY_TIME),
     aisExpiryTime=baseConfig.getWParam(baseConfig.P_AIS_EXPIRYTIME),
