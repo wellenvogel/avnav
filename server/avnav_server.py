@@ -239,10 +239,6 @@ def main(argv):
   else:
     baseConfig.setConfigInfo("%s: not existing, started with empty config"%usedCfgFile)
   houseKeepingCfg(cfgname)
-  if httpServer is not None and options.chartbase is not None:
-    mapurl=httpServer.getStringParam('chartbase')
-    if mapurl is not None and mapurl != '':
-      httpServer.pathmappings[mapurl]=options.chartbase
   if httpServer is not None and options.urlmap is not None:
     urlmaps = options.urlmap if isinstance(options.urlmap,list) else [options.urlmap]
     for urlmap in urlmaps:
@@ -254,6 +250,12 @@ def main(argv):
         except:
           pass
   if httpServer is not None:
+    mapurl=httpServer.getStringParam('chartbase')
+    if mapurl is not None and mapurl != '':
+      if options.chartbase is not None:
+        httpServer.pathmappings[mapurl]=options.chartbase
+      else:
+        httpServer.pathmappings[mapurl]=os.path.join(datadir,'charts')
     defaultMappings={
       'viewer':os.path.join(os.path.dirname(__file__),'..','viewer'),
       'sounds':os.path.join(os.path.dirname(__file__),'..','sounds')
