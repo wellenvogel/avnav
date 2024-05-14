@@ -53,17 +53,19 @@ import threading
 
 
 #a HTTP server with threads for each request
-class AVNHTTPServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorker):
+class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorker):
   webSocketHandlers: Dict[str, WebSocketHandler]
   navxml=AVNUtil.NAVXML
-  
+  PORT_CONFIG="httpPort"
+
   @classmethod
-  def getConfigName(cls):
-    return "AVNHttpServer"
+  def autoInstantiate(cls):
+    return True
+
   @classmethod
   def createInstance(cls, cfgparam):
     cls.checkSingleInstance()
-    return AVNHTTPServer(cfgparam, AVNHTTPHandler)
+    return AVNHttpServer(cfgparam, AVNHTTPHandler)
   @classmethod
   def getConfigParam(cls, child=None):
     if child == "Directory":
@@ -90,7 +92,7 @@ class AVNHTTPServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
                      "navurl":"/viewer/avnav_navi.php", #those must be absolute with /
                      "index":"/viewer/avnav_viewer.html",
                      "chartbase": "maps", #this is the URL without leading /!
-                     "httpPort":"8080",
+                     cls.PORT_CONFIG:"8080",
                      "numThreads":"5",
                      "httpHost":"",
         }
@@ -112,21 +114,17 @@ class AVNHTTPServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
     if pathmappings.get('user') is None:
       pathmappings['user']=os.path.join(datadir,'user')
     self.pathmappings=pathmappings
-    charturl=cfgparam['chartbase']
-    if charturl is not None:
-      #set a default chart dir if not set via config url mappings
-      if self.pathmappings.get(charturl) is None:
-        self.pathmappings[charturl]=os.path.join(cfgparam[AVNHandlerManager.BASEPARAM.DATADIR], "charts")
     self.navurl=cfgparam['navurl']
     self.overwrite_map=({
                               '.png': 'image/png',
-                              '.js': 'text/javascript; charset=utf-8'
+                              '.js': 'text/javascript; charset=utf-8',
+                              '.avt': 'text/plain',
+                              '.log': 'text/plain'
                               })
     mtypes=cfgparam.get('MimeType')
     if mtypes is not None:
       for mtype in mtypes:
         self.overwrite_map[mtype['extension']]=mtype['type']
-    server_address=(cfgparam['httpHost'],int(cfgparam['httpPort']))
     AVNWorker.__init__(self, cfgparam)
     self.type=AVNWorker.Type.HTTPSERVER
     self.handlers={}
@@ -135,14 +133,21 @@ class AVNHTTPServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
     self.handlerMap={}
     self.externalHandlers={} #prefixes that will be handled externally
     self.webSocketHandlers={}
-    http.server.HTTPServer.__init__(self, server_address, RequestHandlerClass, True)
+    self.requestHandler=RequestHandlerClass
   
   def run(self):
     self.freeAllUsedResources()
+    server_address=(self.param['httpHost'],int(self.param[self.PORT_CONFIG]))
+    http.server.HTTPServer.__init__(self, server_address, self.requestHandler)
     self.claimUsedResource(UsedResource.T_TCP,self.server_port,force=True)
     self.setNameIfEmpty("%s-%d"%(self.getName(),self.server_port))
     AVNLog.info("HTTP server "+self.server_name+", "+str(self.server_port)+" started at thread "+self.name)
     self.setInfo('main',"serving at port %s"%(str(self.server_port)),WorkerStatus.RUNNING)
+    charturl=self.getStringParam('chartbase')
+    if charturl is not None:
+      #set a default chart dir if not set via config url mappings
+      if self.pathmappings.get(charturl) is None:
+        self.pathmappings[charturl]=os.path.join(self.getStringParam(AVNHandlerManager.BASEPARAM.DATADIR), "charts")
     if hasIfaces:
       self.interfaceReader=threading.Thread(target=self.readInterfaces)
       self.interfaceReader.daemon=True
@@ -283,6 +288,6 @@ class AVNHTTPServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
         return None
 
 
-avnav_handlerList.registerHandler(AVNHTTPServer)
+avnav_handlerList.registerHandler(AVNHttpServer)
 
 

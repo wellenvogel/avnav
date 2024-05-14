@@ -65,10 +65,16 @@ class ConverterApi:
     '''
     get the list of handled file extensions
     This will be used by AvNav to already notify the user if an unknown file is select for upload
-    The list should contain the extensions in lower case without the leading "."
+    The list should contain the extensions in upper case with the leading "."
     @return:
     '''
     return []
+  def allowSubDir(self):
+    '''
+    does this converter support sub dirs (i.e. multiple files of the announced extensions in one directory)
+    @return:
+    '''
+    return False
   def getName(self):
     '''
     return the name of the converter as it is provided to the user

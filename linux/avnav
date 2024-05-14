@@ -12,21 +12,21 @@ chartdir=""
 xmlfile=""
 viewer=""
 silent=0
-gui=0
 loglevel="INFO"
+port=""
 template="$avnavdir/avnav_template.xml"
 
 usage(){
   echo "usage: $0 [-e] [-d] [-q] [-b basedir] [-c chartdir] [-x cfgfile] [-t template] [-g] [-a softwareBase] [-v viewerDir]"
   echo "       -b basedir     : data dir for avanv routes,tracks,charts,..."
   echo "       -c chartdir    : separate dir for charts (instead of basedir/charts)"
-  echo "       -x cfgfile     :  start the server directly with this config (not for gui)"
+  echo "       -x cfgfile     :  start the server directly with this config "
   echo "       -t template    : create basedir/avnav_server.xml from this if not found"
   echo "       -l loglevel    : set the log level (ERROR|INFO|DEBUG)"
   echo "       -e             : directly fail on any errors in avnav_server.xml instead of trying avnav_server.xml.ok"
   echo "       -d             : start with loglevel debug"
-  echo "       -g             : start with GUI instead of normal server mode"
   echo "       -q             : do not log to stderr"
+  echo "       -o port        : use port as http server port"
   echo "       -n envFile     : read environment variables from env file if it exists"
   echo "       -------------- some development options --------------"
   echo "       -a softwareBase: find the server software at this directory"
@@ -39,7 +39,7 @@ err(){
 }
 
 
-while getopts dec:b:x:qgt:a:v:l:n: opt; do
+while getopts dec:b:x:qt:a:v:l:n:o: opt; do
 case $opt in
   d)
     loglevel="DEBUG"
@@ -60,9 +60,6 @@ case $opt in
   q)
     silent=1
     ;;
-  g)
-    gui=1
-    ;;
   t)
     template="$OPTARG"
     [ ! -f "$template" ] && err "template $template not found"
@@ -82,6 +79,9 @@ case $opt in
     . "$envFile"
     fi
     ;;
+  o)
+    port="-o $OPTARG"
+    ;;
   \?)
     echo "invalid option $opt"
     usage
@@ -90,19 +90,9 @@ esac
 done
 shift $((OPTIND-1))
 
-[ "$gui" != 0 -a "$chartdir" != "" ] && err "you cannot set the chartdir when running the gui"
-[ "$gui" != 0 -a "$xmlfile" != "" ] && err "you cannot set the config file when running the gui"
 
 startprog="$avnavdir/server/avnav_server.py"
 [ ! -x $startprog ] && err "$startprog not found"
-
-guiprog="$avnavdir/gui/avnav_gui.py"
-if [ "$gui" != 0 ]; then
-  if [ ! -f "$guiprog" ]; then
-    guiprog="$pdir/avnav_gui.py"
-  fi
-  [ ! -x "$guiprog" ] && err "the gui $guiprog is not installed"
-fi  
 
 if [ "$basedir" = "" ] ; then
   if [ "$HOME" = "" ] ; then
@@ -138,7 +128,7 @@ if [ "$xmlfile" = "" ] ; then
   xmlfile=$basedir/avnav_server.xml
   if [ ! -f "$xmlfile" ] ; then
     echo "creating initial $xmlfile"
-    sed -e "s?#DATADIR#?$basedir?" -e "s?#AVNAVDIR#?$avnavdir?" "$template" > $xmlfile || err "unable to create $xmlfile"
+    cp "$template"  $xmlfile || err "unable to create $xmlfile"
     demo="$viewer/demo/$DEMOCHART"
     if [ -f "$demo" ];then
       echo "copying demo chart $demo"
@@ -146,17 +136,11 @@ if [ "$xmlfile" = "" ] ; then
     fi  
   fi
 fi
-if [ "$gui" != 0 ] ; then
-  python3 -c 'import wx' > /dev/null 2>&1
-  [ $? != 0 ] && err "missing package python3-wxgtkn.n, please install a valid version of this package (e.g. python3-wxgtk3.0)"
-  exec $guiprog -b "$basedir" -u "viewer=$viewer,libraries=$avnavdir/viewer/libraries,sounds=$avnavdir/sounds"
+echo "chartdir=$chartdir, basedir=$basedir, config=$xmlfile, starting server..."
+if [ "$silent" = 0 ] ; then
+    exec $startprog $port  -l $loglevel -c "$chartdir" -w "$basedir" -u "viewer=$viewer" $dopt $eopt "$xmlfile"
 else
-  echo "chartdir=$chartdir, basedir=$basedir, config=$xmlfile, starting server..."
-  if [ "$silent" = 0 ] ; then
-    exec $startprog  -l $loglevel -c "$chartdir" -w "$basedir" -u "viewer=$viewer,libraries=$avnavdir/viewer/libraries,sounds=$avnavdir/sounds" $dopt $eopt "$xmlfile"
-  else
-    exec $startprog  -q  -l $loglevel -c "$chartdir" -w "$basedir" -u "viewer=$viewer,libraries=$avnavdir/viewer/libraries,sounds=$avnavdir/sounds" $dopt $eopt "$xmlfile" 
-  fi
+    exec $startprog  $port -q  -l $loglevel -c "$chartdir" -w "$basedir" -u "viewer=$viewer" $dopt $eopt "$xmlfile" 
 fi
 
 

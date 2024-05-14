@@ -33,6 +33,7 @@ import hashlib
 import avnav_handlerList
 from avnav_nmea import *
 from avnav_worker import *
+from httpserver import AVNHttpServer
 
 
 class AVNUserAppHandler(AVNWorker):
@@ -77,7 +78,7 @@ class AVNUserAppHandler(AVNWorker):
   def __init__(self,param):
     self.userHandler=None   # AVNUserHandler
     self.imagesHandler=None # AVNImagesHandler
-    self.httpServer=None # AVNHTTPServer
+    self.httpServer=None # AVNHttpServer
     self.addonList=[]
     self.additionalAddOns=[]
     AVNWorker.__init__(self,param)
@@ -89,7 +90,7 @@ class AVNUserAppHandler(AVNWorker):
     self.imagesHandler=self.findHandlerByName('AVNImagesHandler')
     if self.imagesHandler is None:
       raise Exception("unable to find an images handler")
-    self.httpServer = self.findHandlerByName('AVNHttpServer')
+    self.httpServer = self.findHandlerByName(AVNHttpServer.getConfigName())
     if self.httpServer is None:
       raise Exception("unable to find AVNHttpServer")
     super().startInstance(navdata)

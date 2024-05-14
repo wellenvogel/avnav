@@ -28,6 +28,9 @@ import {Checkbox, Input, InputReadOnly} from "./Inputs";
 import DB from "./DialogButton";
 import helper from '../util/helper'
 import assign from 'object-assign';
+import globalStore from "../util/globalstore";
+import keys from "../util/keys";
+import Requests from "../util/requests";
 class ImportDialog extends React.Component{
     constructor(props){
         super(props);
@@ -107,5 +110,31 @@ ImportDialog.propTypes={
     allowSubDir: PropTypes.bool,
     allowNameChange: PropTypes.bool
 };
+
+export const readImportExtensions=()=>{
+    return new Promise((resolve,reject)=>{
+        if (!globalStore.getData(keys.gui.capabilities.uploadImport)) resolve([]);
+        Requests.getJson({
+            request:'api',
+            type:'import',
+            command:'extensions'
+        })
+            .then((data)=>{
+                resolve(data.items);
+            })
+            .catch(()=>{
+                resolve([])
+            });
+    })
+}
+export const checkExt=(ext,extensionList)=>{
+    if (!ext || ! extensionList) return {allow:false,subdir:false}
+    ext=ext.toUpperCase();
+    if (! helper.startsWith(ext,'.')) ext='.'+ext;
+    for (let i=0;i<extensionList.length;i++){
+        if (extensionList[i].ext === ext) return {allow:true,subdir:extensionList[i].sub}
+    }
+    return {allow:false,sub:false}
+}
 
 export default ImportDialog;
