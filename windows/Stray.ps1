@@ -11,6 +11,7 @@ $logDir=Join-Path "$dataDir" "log"
 $serverLog="$logDir\service.log"
 $serverError="$logDir\service-err.log"
 $defaultUpdateUrl="https://wellenvogel.de/software/avnav/downloads/release/latest/avnav-latest.zip"
+$regKey="HKCU:\Software\Wellenvogel\AvNav"
 
 $icon = Join-Path $PSScriptRoot 'Chart60.ico'
 
@@ -51,14 +52,34 @@ $Menu_Exit.Text = "Exit"
 $Menu_Remove= New-Object System.Windows.Forms.MenuItem
 $Menu_Remove.Text= "Remove"
 
+$Menu_Config= New-Object System.Windows.Forms.MenuItem
+$Menu_Config.Text="Config"
+
 $contextmenu = New-Object System.Windows.Forms.ContextMenu
 $Main_Tool_Icon.ContextMenu = $contextmenu
 $Main_Tool_Icon.contextMenu.MenuItems.AddRange($Menu_Start)
 $Main_Tool_Icon.contextMenu.MenuItems.AddRange($Menu_Stop)
+$Main_Tool_Icon.contextMenu.MenuItems.AddRange($Menu_Config)
 $Main_Tool_Icon.contextMenu.MenuItems.AddRange($Menu_Install)
 $Main_Tool_Icon.contextMenu.MenuItems.AddRange($Menu_Remove)
 $Main_Tool_Icon.contextMenu.MenuItems.AddRange($Menu_Exit)
 
+function Get-Port {
+    if (Test-Path -Path "$regKey"){
+        $rt=Get-ItemPropertyValue -Path "$regKey" -Name Port 
+        if ($null -ne $rt) {
+            return $rt
+        }
+    }
+    return "8080"
+}
+
+function Save-Port([String]$Port) {
+    if (-Not (Test-Path -Path "$regKey")){
+        New-Item -Path "$regKey" -Force | Out-Null
+    }
+    New-ItemProperty -Path "$regKey" -Name Port -Value "$Port" -PropertyType string -Force 
+}
 function Kill-Tree {
     Param([int]$ppid)
     Get-CimInstance Win32_Process | Where-Object { $_.ParentProcessId -eq $ppid } | ForEach-Object { Kill-Tree $_.ProcessId }
@@ -74,12 +95,14 @@ function Set-Enable{
         $Menu_Start.Enabled = $isInstalled
         $Menu_Remove.Enabled = $isInstalled
         $Menu_Install.Enabled = $true
+        $Menu_Config.Enabled = $true
     }
     else{
         $Menu_Stop.Enabled = $true
         $Menu_Start.Enabled = $false
         $Menu_Remove.Enabled = $false
         $Menu_Install.Enabled = $false
+        $Menu_Config.Enabled = $false
     }
     if ($isInstalled){
         $Menu_Install.Text = 'Update'
@@ -118,7 +141,8 @@ function Run-Server {
     if (-Not (Test-Path -Path "$gdalpath")){
         throw "gdal not found at $gdalpath"
     }
-    $arglist=@("-q")
+    $port=Get-Port
+    $arglist=@("-q","-o",$port)
     $null=md -Force $logDir
     $global:serverProcess = Start-Process -WindowStyle Hidden -FilePath "$exename" -ArgumentList $arglist -PassThru -RedirectStandardError "$serverError" -RedirectStandardOutput "$serverLog"
     $timer.Enabled=$true
@@ -193,11 +217,18 @@ $Menu_Exit.add_Click({
         return
     }
     Run-Installer -url "$url"
-
  })
 
  $Menu_Remove.add_Click({
     Remove-Installed
+ })
+
+ $Menu_Config.add_Click({
+    $port=Get-Port
+    $port=Show-InputDialog -WindowTitle "AvNav Config" -Message "Set HTTP Port" -DefaultText "$port"
+    if ($null -ne $port){
+        Save-Port "$port"
+    }
  })
 
  
