@@ -265,14 +265,9 @@ task buildZip(type: Zip){
     }
     into('usr/lib/avnav/windows') {
         from('windows'){
-            include("avnav_server_home.xml")
-            rename "avnav_server_home.xml","avnav_server.xml"
+            include("avnav_server_win.xml")
+            include("avnav.cmd")
             include("downloadAndInstall.ps1")
-        }
-    }
-    into('usr/lib/avnav/test'){
-        from('test'){
-            include("nmea-20130630-3.log")
         }
     }
     into('usr/lib/avnav'){
