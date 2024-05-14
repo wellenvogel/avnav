@@ -14,6 +14,7 @@ viewer=""
 silent=0
 gui=0
 loglevel="INFO"
+port=""
 template="$avnavdir/avnav_template.xml"
 
 usage(){
@@ -27,6 +28,7 @@ usage(){
   echo "       -d             : start with loglevel debug"
   echo "       -g             : start with GUI instead of normal server mode"
   echo "       -q             : do not log to stderr"
+  echo "       -o port        : use port as http server port"
   echo "       -n envFile     : read environment variables from env file if it exists"
   echo "       -------------- some development options --------------"
   echo "       -a softwareBase: find the server software at this directory"
@@ -39,7 +41,7 @@ err(){
 }
 
 
-while getopts dec:b:x:qgt:a:v:l:n: opt; do
+while getopts dec:b:x:qgt:a:v:l:n:o: opt; do
 case $opt in
   d)
     loglevel="DEBUG"
@@ -81,6 +83,9 @@ case $opt in
     if [ -r "$envFile" ]  ; then
     . "$envFile"
     fi
+    ;;
+  o)
+    port="-o $OPTARG"
     ;;
   \?)
     echo "invalid option $opt"
@@ -153,9 +158,9 @@ if [ "$gui" != 0 ] ; then
 else
   echo "chartdir=$chartdir, basedir=$basedir, config=$xmlfile, starting server..."
   if [ "$silent" = 0 ] ; then
-    exec $startprog  -l $loglevel -c "$chartdir" -w "$basedir" -u "viewer=$viewer,libraries=$avnavdir/viewer/libraries,sounds=$avnavdir/sounds" $dopt $eopt "$xmlfile"
+    exec $startprog $port  -l $loglevel -c "$chartdir" -w "$basedir" -u "viewer=$viewer,libraries=$avnavdir/viewer/libraries,sounds=$avnavdir/sounds" $dopt $eopt "$xmlfile"
   else
-    exec $startprog  -q  -l $loglevel -c "$chartdir" -w "$basedir" -u "viewer=$viewer,libraries=$avnavdir/viewer/libraries,sounds=$avnavdir/sounds" $dopt $eopt "$xmlfile" 
+    exec $startprog  $port -q  -l $loglevel -c "$chartdir" -w "$basedir" -u "viewer=$viewer,libraries=$avnavdir/viewer/libraries,sounds=$avnavdir/sounds" $dopt $eopt "$xmlfile" 
   fi
 fi
 

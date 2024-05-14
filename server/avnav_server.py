@@ -268,7 +268,7 @@ def main(argv):
     httpServer.registerRequestHandler('download', 'config', handlerManager)
     optPort=getattr(options,A_SERVERPORT)
     if optPort is not None:
-      httpServer.parameters[AVNHTTPServer.PORT_CONFIG]=optPort
+      httpServer.param[AVNHTTPServer.PORT_CONFIG]=optPort
   navData=AVNStore(
     expiryTime=baseConfig.getWParam(baseConfig.P_EXPIRY_TIME),
     aisExpiryTime=baseConfig.getWParam(baseConfig.P_AIS_EXPIRYTIME),
