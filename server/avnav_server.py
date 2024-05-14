@@ -26,15 +26,10 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
 import datetime
-import glob
 import logging.handlers
 import optparse
 import signal
 
-from apport.hookutils import __filter_re_process
-
-from avnav_nmea import NMEAParser
-from avnav_store import AVNStore
 from handler.baseconfig import AVNBaseConfig
 from httpserver import AVNHttpServer
 
@@ -47,12 +42,9 @@ try:
   from avnav_server_version import AVNAV_VERSION
 except:
   pass
-from avnav_util import *
 from avnav_manager import *
-import avnav_handlerList
 from avnav_store import *
 sys.path.insert(0, os.path.join(os.path.dirname(__file__),"..","libraries"))
-import handler
 import builtins
 
 loggingInitialized=False
