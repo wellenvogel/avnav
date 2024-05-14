@@ -55,10 +55,14 @@ $Menu_Remove.Text= "Remove"
 $Menu_Config= New-Object System.Windows.Forms.MenuItem
 $Menu_Config.Text="Config"
 
+$Menu_Open= New-Object System.Windows.Forms.MenuItem
+$Menu_Open.Text="Open"
+
 $contextmenu = New-Object System.Windows.Forms.ContextMenu
 $Main_Tool_Icon.ContextMenu = $contextmenu
 $Main_Tool_Icon.contextMenu.MenuItems.AddRange($Menu_Start)
 $Main_Tool_Icon.contextMenu.MenuItems.AddRange($Menu_Stop)
+$Main_Tool_Icon.contextMenu.MenuItems.AddRange($Menu_Open)
 $Main_Tool_Icon.contextMenu.MenuItems.AddRange($Menu_Config)
 $Main_Tool_Icon.contextMenu.MenuItems.AddRange($Menu_Install)
 $Main_Tool_Icon.contextMenu.MenuItems.AddRange($Menu_Remove)
@@ -96,9 +100,11 @@ function Set-Enable{
         $Menu_Remove.Enabled = $isInstalled
         $Menu_Install.Enabled = $true
         $Menu_Config.Enabled = $true
+        $Menu_Open.Enabled = $false
     }
     else{
         $Menu_Stop.Enabled = $true
+        $Menu_Open.Enabled = $true
         $Menu_Start.Enabled = $false
         $Menu_Remove.Enabled = $false
         $Menu_Install.Enabled = $false
@@ -229,6 +235,12 @@ $Menu_Exit.add_Click({
     if ($null -ne $port){
         Save-Port "$port"
     }
+ })
+
+ $Menu_Open.add_Click({
+    $port=Get-Port
+    $url="http://localhost:$port"
+    Start-Process "$url"
  })
 
  
