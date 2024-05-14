@@ -53,17 +53,19 @@ import threading
 
 
 #a HTTP server with threads for each request
-class AVNHTTPServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorker):
+class AVNHttpServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorker):
   webSocketHandlers: Dict[str, WebSocketHandler]
   navxml=AVNUtil.NAVXML
   PORT_CONFIG="httpPort"
+
   @classmethod
-  def getConfigName(cls):
-    return "AVNHttpServer"
+  def autoInstantiate(cls):
+    return True
+
   @classmethod
   def createInstance(cls, cfgparam):
     cls.checkSingleInstance()
-    return AVNHTTPServer(cfgparam, AVNHTTPHandler)
+    return AVNHttpServer(cfgparam, AVNHTTPHandler)
   @classmethod
   def getConfigParam(cls, child=None):
     if child == "Directory":
@@ -115,7 +117,9 @@ class AVNHTTPServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
     self.navurl=cfgparam['navurl']
     self.overwrite_map=({
                               '.png': 'image/png',
-                              '.js': 'text/javascript; charset=utf-8'
+                              '.js': 'text/javascript; charset=utf-8',
+                              '.avt': 'text/plain',
+                              '.log': 'text/plain'
                               })
     mtypes=cfgparam.get('MimeType')
     if mtypes is not None:
@@ -284,6 +288,6 @@ class AVNHTTPServer(socketserver.ThreadingMixIn,http.server.HTTPServer, AVNWorke
         return None
 
 
-avnav_handlerList.registerHandler(AVNHTTPServer)
+avnav_handlerList.registerHandler(AVNHttpServer)
 
 

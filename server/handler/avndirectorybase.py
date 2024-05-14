@@ -37,8 +37,7 @@ from avnav_manager import AVNHandlerManager
 from avnav_nmea import *
 from avnav_worker import *
 from avnav_util import AVNDownload
-
-
+from httpserver import AVNHttpServer
 
 
 class AVNDirectoryListEntry(object):
@@ -150,7 +149,7 @@ class AVNDirectoryHandlerBase(AVNWorker):
     self.lock = threading.Lock()
 
   def startInstance(self, navdata):
-    self.httpServer=self.findHandlerByName('AVNHttpServer')
+    self.httpServer=self.findHandlerByName(AVNHttpServer.getConfigName())
     if self.httpServer is None:
       raise Exception("unable to find AVNHttpServer")
     super().startInstance(navdata)

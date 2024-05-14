@@ -39,6 +39,7 @@ from avnav_util import AVNLog, AVNUtil
 from avnav_worker import AVNWorker, WorkerParameter, WorkerStatus
 
 #taken from https://github.com/carlosefr/mdns-publisher/tree/master/mpublisher
+from httpserver import AVNHttpServer
 
 hasDbus=False
 Glib=None
@@ -356,9 +357,9 @@ class AVNAvahi(AVNWorker):
     sequence=self.stateSequence
     if not hasDbus:
       raise Exception("no DBUS found, cannot register avahi")
-    httpServer=self.findHandlerByName('AVNHttpServer')
+    httpServer=self.findHandlerByName(AVNHttpServer.getConfigName())
     if httpServer is None:
-      raise Exception("unable to find AVNHTTPServer")
+      raise Exception("unable to find AVNHttpServer")
     self.setInfo('main','starting',WorkerStatus.STARTED)
     self.loop=None
     try:
@@ -400,13 +401,15 @@ class AVNAvahi(AVNWorker):
             continue
 
         #compute the entry for the web service
-        webService=ServiceDescription(self.type,self.getParamValue('serviceName'),httpServer.server_port)
-        existing=self.services.get(-1)
-        if not webService.equal(existing):
-          if existing is not None:
-            existing.update(webService)
-          else:
-            self.services[-1]=webService
+        #this can be delayed as the server_port is only set after the httpServer has started
+        if hasattr(httpServer,'server_port'):
+          webService=ServiceDescription(self.type,self.getParamValue('serviceName'),httpServer.server_port)
+          existing=self.services.get(-1)
+          if not webService.equal(existing):
+            if existing is not None:
+              existing.update(webService)
+            else:
+              self.services[-1]=webService
         if not hasError:
           self.setInfo('main','running',WorkerStatus.NMEA)
           for key,description in list(self.services.items()):

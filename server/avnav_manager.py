@@ -298,16 +298,22 @@ class AVNHandlerManager(object):
     raise Exception("handler type %s not found"%tagName)
 
 
-  def readConfigAndCreateHandlers(self,filename):
+  def readConfigAndCreateHandlers(self,filename,allowNoConfig=False):
     AVNLog.info("reading config %s",filename)
     AVNWorker.resetHandlerList()
+    existingConfig=True
     if not os.path.exists(filename):
-      AVNLog.error("unable to read config file %s",filename)
-      return False
+      if not allowNoConfig:
+        AVNLog.error("unable to read config file %s",filename)
+        return False
+      existingConfig=False
     self.cfgfileName=filename
     self.currentCfgFileName=filename
     try:
-      self.parseDomAndCreateHandlers(filename)
+      if not existingConfig:
+        self.createEmptyDom()
+      else:
+        self.parseDomAndCreateHandlers(filename)
     except Exception as e:
       AVNLog.error("error parsing cfg file %s : %s",filename,traceback.format_exc())
       self.parseError=str(e)
@@ -335,7 +341,10 @@ class AVNHandlerManager(object):
   def parseDomAndCreateHandlers(self,filename):
     self.domObject=parser.parse(filename)
     self.parseDomNode(self.domObject.documentElement)
-
+  def createEmptyDom(self):
+    ai = "<AVNServer></AVNServer>"
+    self.domObject=parser.parseString(ai)
+    self.parseDomNode(self.domObject.documentElement)
   def parseDomNode(self,node):
     """
     parse a node from the dom tree
@@ -459,8 +468,9 @@ class AVNHandlerManager(object):
     copyFile=backupFile
     if not os.path.isfile(fallback):
       copyFile=fallback
-    AVNLog.info("creating fallback config file %s",copyFile)
-    self.copyFileWithCheck(self.currentCfgFileName,copyFile)
+    if os.path.exists(self.currentCfgFileName):
+      AVNLog.info("creating fallback config file %s",copyFile)
+      self.copyFileWithCheck(self.currentCfgFileName,copyFile)
     self.houseKeepingCfgFiles()
     tmpName=self.cfgfileName+".tmp"
     if os.path.exists(tmpName):
@@ -474,7 +484,8 @@ class AVNHandlerManager(object):
       parser.parse(tmpName)
     except Exception as e:
       raise Exception("unable to read config after writing it, xml error: %s"%str(e))
-    os.unlink(self.cfgfileName)
+    if os.path.exists(self.cfgfileName):
+      os.unlink(self.cfgfileName)
     try:
       os.rename(tmpName,self.cfgfileName)
     except Exception as e:

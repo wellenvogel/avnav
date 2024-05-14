@@ -36,7 +36,7 @@ from apport.hookutils import __filter_re_process
 from avnav_nmea import NMEAParser
 from avnav_store import AVNStore
 from handler.baseconfig import AVNBaseConfig
-from httpserver import AVNHTTPServer
+from httpserver import AVNHttpServer
 
 try:
   import create_overview
@@ -152,7 +152,7 @@ def main(argv):
   parser.add_option("-c", "--chartbase", dest="chartbase", help="if set, overwrite the chart base dir from the HTTPServer")
   parser.add_option("-w", "--datadir", dest="datadir",
                     help="if set make this the base data dir")
-  parser.add_option("-u", "--urlmap", dest="urlmap",
+  parser.add_option("-u", "--urlmap", dest="urlmap", action="store",
                     help="provide mappings in the form url=path,...")
   parser.add_option("-r", "--restart", dest="canRestart", action='store_const', const=True,
                     help="avnav will restart if server exits")
@@ -189,64 +189,78 @@ def main(argv):
   handlerManager.setBaseParam(handlerManager.BASEPARAM.BASEDIR,basedir)
   handlerManager.setBaseParam(handlerManager.BASEPARAM.DATADIR,datadir)
   usedCfgFile=cfgname
-  rt=handlerManager.readConfigAndCreateHandlers(cfgname)
   fallbackName = AVNHandlerManager.getFallbackName(cfgname)
   failedBackup=None
-  if rt is False:
-    if os.path.exists(fallbackName) and not options.failOnError:
-      AVNLog.error("error when parsing %s, trying fallback %s",cfgname,fallbackName)
-      writeStderr("error when parsing %s, trying fallback %s"%(cfgname,fallbackName))
-      usedCfgFile=fallbackName
-      rt=handlerManager.readConfigAndCreateHandlers(fallbackName)
-      if not rt:
-        AVNLog.error("unable to parse config file %s", fallbackName)
-        sys.exit(1)
-      createFailedBackup(cfgname)
-      try:
-        tmpName=cfgname+".tmp"+str(os.getpid())
-        shutil.copyfile(fallbackName,tmpName)
-        os.replace(tmpName,cfgname)
-      except Exception as e:
-        AVNLog.error("unable to create %s from %s: %s",cfgname,fallbackName,str(e))
-      handlerManager.cfgfileName=cfgname #we just did read the fallback - but if we write...
-
-    else:
-      AVNLog.error("unable to parse config file %s, no fallback found",cfgname)
-      writeStderr("unable to parse config file %s, no fallback found"%cfgname)
-      if not options.failOnError and canRestart:
-        if createFailedBackup(cfgname):
-          AVNLog.error("removing invalid config file %s",cfgname)
-          writeStderr("removing invalid config file %s"%cfgname)
-          os.unlink(cfgname)
+  existingConfig=True
+  if not os.path.exists(usedCfgFile) and not os.path.exists(fallbackName):
+    existingConfig=False
+    AVNLog.info("not config %s and fallback %s found, starting with defaults",usedCfgFile,fallbackName)
+    rt=handlerManager.readConfigAndCreateHandlers(cfgname,allowNoConfig=True)
+    if rt is False:
+      AVNLog.error("unable to start with empty config")
       sys.exit(1)
   else:
-    handlerManager.copyFileWithCheck(cfgname,fallbackName,False) #write a "last known good"
+    rt=handlerManager.readConfigAndCreateHandlers(cfgname)
+    if rt is False:
+      if os.path.exists(fallbackName) and not options.failOnError:
+        AVNLog.error("error when parsing %s, trying fallback %s",cfgname,fallbackName)
+        writeStderr("error when parsing %s, trying fallback %s"%(cfgname,fallbackName))
+        usedCfgFile=fallbackName
+        rt=handlerManager.readConfigAndCreateHandlers(fallbackName)
+        if not rt:
+          AVNLog.error("unable to parse config file %s", fallbackName)
+          sys.exit(1)
+        createFailedBackup(cfgname)
+        try:
+          tmpName=cfgname+".tmp"+str(os.getpid())
+          shutil.copyfile(fallbackName,tmpName)
+          os.replace(tmpName,cfgname)
+        except Exception as e:
+          AVNLog.error("unable to create %s from %s: %s",cfgname,fallbackName,str(e))
+        handlerManager.cfgfileName=cfgname #we just did read the fallback - but if we write...
+
+      else:
+        AVNLog.error("unable to parse config file %s, no fallback found",cfgname)
+        writeStderr("unable to parse config file %s, no fallback found"%cfgname)
+        if not options.failOnError and canRestart:
+          if createFailedBackup(cfgname):
+            AVNLog.error("removing invalid config file %s",cfgname)
+            writeStderr("removing invalid config file %s"%cfgname)
+            os.unlink(cfgname)
+        sys.exit(1)
+    else:
+      handlerManager.copyFileWithCheck(cfgname,fallbackName,False) #write a "last known good"
   baseConfig=AVNWorker.findHandlerByName("AVNConfig") #type: AVNBaseConfig
-  httpServer=AVNWorker.findHandlerByName("AVNHttpServer")
+  httpServer=AVNWorker.findHandlerByName(AVNHttpServer.getConfigName())
   if baseConfig is None:
     AVNLog.error("internal error: base config not loaded")
     sys.exit(1)
   baseConfig.setVersion(AVNAV_VERSION)
   parseError=handlerManager.parseError
-  cfgStat = os.stat(usedCfgFile)
-  cfgTime = time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(cfgStat.st_mtime))
-  if parseError is not None:
-    baseConfig.setStartupError("parsing config failed: %s, reverting back to fallback config from %s, invalid config moved to %s"%
+  if existingConfig:
+    cfgStat = os.stat(usedCfgFile)
+    cfgTime = time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(cfgStat.st_mtime))
+    baseConfig.setConfigInfo("%s (%s,%d bytes)"%(usedCfgFile,cfgTime,cfgStat.st_size))
+    if parseError is not None:
+      baseConfig.setStartupError("parsing config failed: %s, reverting back to fallback config from %s, invalid config moved to %s"%
                              (parseError,cfgTime or '',failedBackup or ''))
-  baseConfig.setConfigInfo("%s (%s,%d bytes)"%(usedCfgFile,cfgTime,cfgStat.st_size))
+  else:
+    baseConfig.setConfigInfo("%s: not existing, started with empty config"%usedCfgFile)
   houseKeepingCfg(cfgname)
   if httpServer is not None and options.chartbase is not None:
     mapurl=httpServer.getStringParam('chartbase')
     if mapurl is not None and mapurl != '':
       httpServer.pathmappings[mapurl]=options.chartbase
   if httpServer is not None and options.urlmap is not None:
-    for mapping in re.split("\s*,\s*",options.urlmap):
-      try:
-        url,path=re.split("\s*=\s*",mapping,2)
-        httpServer.pathmappings[url] = path
-        AVNLog.info("set url mapping %s=%s"%(url,path))
-      except:
-        pass
+    urlmaps = options.urlmap if isinstance(options.urlmap,list) else [options.urlmap]
+    for urlmap in urlmaps:
+      for mapping in re.split("\s*,\s*",urlmap):
+        try:
+          url,path=re.split("\s*=\s*",mapping,2)
+          httpServer.pathmappings[url] = path
+          AVNLog.info("set url mapping %s=%s"%(url,path))
+        except:
+          pass
   if httpServer is not None:
     defaultMappings={
       'viewer':os.path.join(os.path.dirname(__file__),'..','viewer'),
@@ -268,7 +282,7 @@ def main(argv):
     httpServer.registerRequestHandler('download', 'config', handlerManager)
     optPort=getattr(options,A_SERVERPORT)
     if optPort is not None:
-      httpServer.param[AVNHTTPServer.PORT_CONFIG]=optPort
+      httpServer.param[AVNHttpServer.PORT_CONFIG]=optPort
   navData=AVNStore(
     expiryTime=baseConfig.getWParam(baseConfig.P_EXPIRY_TIME),
     aisExpiryTime=baseConfig.getWParam(baseConfig.P_AIS_EXPIRYTIME),

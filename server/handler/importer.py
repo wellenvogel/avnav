@@ -32,7 +32,7 @@ from avnav_manager import AVNHandlerManager
 from avnav_util import *
 from avnav_worker import *
 from avndirectorybase import AVNDirectoryHandlerBase
-from httpserver import AVNHTTPServer
+from httpserver import AVNHttpServer
 import zipfile
 
 class ExternalConverter(ConverterApi):
@@ -418,7 +418,7 @@ class AVNImporter(AVNWorker):
   #make some checks when we have to start
   #we cannot do this on init as we potentiall have to find the feeder...
   def startInstance(self, navdata):
-    httpserver=self.findHandlerByName(AVNHTTPServer.getConfigName())
+    httpserver=self.findHandlerByName(AVNHttpServer.getConfigName())
     if httpserver is None:
       raise Exception("unable to find the httpserver")
     self.chartbase=httpserver.getChartBaseDir()

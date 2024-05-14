@@ -34,6 +34,7 @@ from avnav_nmea import *
 from avnav_worker import *
 import avnav_handlerList
 from avndirectorybase import AVNDirectoryHandlerBase
+from httpserver import AVNHttpServer
 
 
 class AVNUserHandler(AVNDirectoryHandlerBase):
@@ -53,7 +54,7 @@ class AVNUserHandler(AVNDirectoryHandlerBase):
     return super().startInstance(navdata)
 
   def onPreRun(self):
-    httpserver=self.findHandlerByName("AVNHttpServer")
+    httpserver=self.findHandlerByName(AVNHttpServer.getConfigName())
     if not httpserver:
       return
     srcDir=httpserver.handlePathmapping('viewer')
