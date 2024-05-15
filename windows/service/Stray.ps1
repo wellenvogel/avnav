@@ -7,6 +7,7 @@
 
 $dataDir=Join-Path "$env:USERPROFILE" '\AvNav'
 $softwareBase=Join-Path "$env:LOCALAPPDATA" 'avnav'
+$env:AVNAVBASE="$softwareBase"
 $logDir=Join-Path "$dataDir" "log"
 $serverLog="$logDir\service.log"
 $serverError="$logDir\service-err.log"

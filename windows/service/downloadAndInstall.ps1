@@ -4,12 +4,18 @@
 $code = 0
 $zip = $null
 try {
-    $targetBase = $env:LOCALAPPDATA + "\avnav"
+    $targetBase=$null
+    if ($null -eq $env:AVNAVBASE){
+        $targetBase = $env:LOCALAPPDATA + "\avnav"
+    }
+    else{
+        $targetBase =$env:AVNAVBASE
+    }
     $downloadDir = $targetBase + "\download"
 
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::TLS12
     $null = [Reflection.Assembly]::LoadWithPartialName('System.IO.Compression.FileSystem')
-    $postinstall = "downloadAndInstall.ps1"
+    $postinstall = "postinstall.ps1"
     $postinstallTarget = Join-Path "$downloadDir" "postinstall.ps1"
     $postinstallFound = $false
     if ($avnavUrl) {

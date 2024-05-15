@@ -267,7 +267,7 @@ task buildZip(type: Zip){
         from('windows'){
             include("avnav_server_win.xml")
             include("avnav.cmd")
-            include("downloadAndInstall.ps1")
+            include("postinstall.ps1")
         }
     }
     into('usr/lib/avnav'){
