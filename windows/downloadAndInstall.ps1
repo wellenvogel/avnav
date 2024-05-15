@@ -2,6 +2,7 @@
     [string]$avnavUrl
 )
 $code=0
+$zip=$null
 try{
 $targetBase=$env:LOCALAPPDATA + "\avnav"
 $downloadDir=$targetBase+"\download"
@@ -36,6 +37,9 @@ $actions=@(
 
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::TLS12
 $null=[Reflection.Assembly]::LoadWithPartialName('System.IO.Compression.FileSystem')
+$postinstall="downloadAndInstall.ps1"
+$postinstallTarget=Join-Path "$downloadDir" "postinstall.ps1"
+$postinstallFound=$false
 if ($avnavUrl){
     Write-Host "Downloading avnav from $avnavUrl"
     $Client = New-Object System.Net.WebClient
@@ -73,30 +77,57 @@ if ($avnavUrl){
                 throw "required file $k not found in $avnavUrl, unable to extract"
             }
         }
-        Write-Host "Installing avnav"
+        Write-Host "Installing avnav software"
 
         if ($null = Test-Path $targetBase){
             foreach ($sub in $subsToDel.Keys){
-		Write-Host "removing existing $sub"
+		        Write-Host "removing existing $sub"
                 Remove-Item -Path "$targetBase\$sub" -Recurse -Force
             }
         }
-        [IO.Compression.ZipFile]::ExtractToDirectory($downloadName,$targetBase)
+        $extractPath="$targetBase\"
+        $zip = [IO.Compression.ZipFile]::OpenRead($downloadName)
+        foreach ($entry in $zip.Entries)
+        {
+            if ($entry.FullName -match "$postinstall$" )
+            {
+                Write-Host "postinstall found: $entry"
+                $postinstallFound=$true
+                Remove-Item -Path "$postinstallTarget" -Force -ErrorAction Ignore
+                [IO.Compression.ZipFileExtensions]::ExtractToFile($entry,$postinstallTarget)
+            }
+            else{
+                #Gets the full path to ensure that relative segments are removed.
+                $destinationPath = [IO.Path]::GetFullPath([IO.Path]::Combine($extractPath, $entry.FullName))
+                if (-Not ($entry.FullName.EndsWith("/"))){
+                    if ($destinationPath.StartsWith($extractPath)){
+                        $parent=Split-Path -Parent -Path "$destinationPath"
+                        if (-Not (Test-Path  -Path "$parent")){
+                            $null=New-Item -Type Directory -Force "$parent"
+                        }
+                        [IO.Compression.ZipFileExtensions]::ExtractToFile($entry,$destinationPath);
+                    }
+                }
+            }
+        }
+        $zip.Dispose()
+        #[IO.Compression.ZipFile]::ExtractToDirectory($downloadName,$targetBase)
         Write-Host "Installation finished"
-        $scriptPath=$targetBase+"\windows\downloadAndInstall.ps1"
-        if ($null=Test-Path "$scriptPath"){
-            Write-Host "calling $scriptPath"
-            $ret=(& "$scriptPath")
-            exit($ret)
+        if ($postinstallFound){
+            if ($null=Test-Path "$postinstallTarget"){
+                Write-Host "calling $postinstallTarget"
+                $ret=(& "$postinstallTarget")
+                exit($ret)
+            }
         }
     }
     else{
-        Write-Host "Unable to download avnav from $avnavUrl"
-        exit(1)
+        throw "Unable to download avnav from $avnavUrl"
     }
 
 }
 
+if ($false){
 
 Write-Host "Installing into $targetBase"
 foreach ($program in $actions){
@@ -188,12 +219,18 @@ foreach ($program in $actions){
     }
     
 }
+}
 
 
 }
 catch {
     Write-Host "Downlod/Install failed:"+$_.Exception.Message
     $code=1
+    if ($null -ne $zip){
+        try{
+            $zip.Dispose();
+        }catch{}
+    }
 }
 Write-Host "Close window to continue or press ^C"
 Start-Sleep -Seconds 3600
