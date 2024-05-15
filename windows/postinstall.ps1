@@ -34,11 +34,13 @@ try {
             "name" = "GDAL-2.4.4.win-amd64-py3.7.msi"; target = "$targetBase\gdal"; "exe" = "Lib\site-packages\osgeo\gdal.py"
         }
         #http://download.gisinternals.com/sdk/downloads/release-1900-x64-gdal-3-2-0-mapserver-7-6-1/GDAL-3.2.0.win-amd64-py3.7.msi"  
-        [PSCustomObject]@{"urlBase" = "https://files.pythonhosted.org/packages/36/fd/f83806d04175c0a58332578143ee7a9c5702e6e0f134e157684c737ae55b";
-            "name" = "Pillow-7.2.0-cp37-cp37m-win_amd64.whl"; target = ""; "exe" = "$pythonDir\Lib\site-packages\Pillow-7.2.0.dist-info\METADATA"
+        [PSCustomObject]@{
+            name       = "Pillow==7.2.0"
+            installCmd = "pip"
         }
-        [PSCustomObject]@{"urlBase" = "https://files.pythonhosted.org/packages/07/bc/587a445451b253b285629263eb51c2d8e9bcea4fc97826266d186f96f558";
-            "name" = "pyserial-3.5-py2.py3-none-any.whl"; target = ""; "exe" = "$pythonDir\Lib\site-packages\serial\win32.py"
+        [PSCustomObject]@{
+            name       = "pyserial==3.5"
+            installCmd = "pip"
         }
     )
 
@@ -57,91 +59,90 @@ try {
         $name = $program.name
         $target = $program.target
         $installCmd = $program.installCmd
-        echo "checking $name : $exe"
-        if ($null = Test-Path $exe -PathType Leaf ) {
-            Write-Host "$name : $exe found"
+        if ($installCmd -eq "pip") {
+            #pip install
+            Write-Host "pip install $name"
+            $res = (Start-Process -WorkingDirectory $downloadDir -FilePath "$targetBase\$pythonDir\python.exe" -ArgumentList "-m", "pip","install", $name -PassThru -Wait -NoNewWindow)
         }
         else {
-            Write-Host "download $name from $url"
-            $Client = New-Object System.Net.WebClient
-            if ($target) {
-                $null = md -Force $target
-            }
-            $null = md -Force $downloadDir
-            $downloadName = $downloadDir + "\" + $name
-            $Client.DownloadFile($url, $downloadName)
-            $res = $null
-            if ($target) {
-                if ($installCmd) {
-                    if ($installCmd -match '^python') {
-                        if ($null = Test-Path $target) {
-                            Write-Host "removing existing $target"
-                            Remove-Item -Path "$target" -Recurse -Force
-    
-                        }
-                        $res = ([IO.Compression.ZipFile]::ExtractToDirectory($downloadName, $target))
-                        $pathFile = $program.pathFile
-                        if ($pathFile) {
-                            $pathFile = $target + "\" + $pathFile
-                            if (! ($null = Test-Path $pathFile)) {
-                                Write-Host "$pathFile not found"
-                            }
-                            else {
-                                Write-Host "removing $pathFile"
-                                Remove-Item -Path "$pathFile" -Force
-                            }
-                        }
-                    
-                    }
-                    elseif ($installCmd -match '^gdal') {
-                        if ($null = Test-Path $target) {
-                            Write-Host "removing existing $target"
-                            Remove-Item -Path "$target" -Recurse -Force
-    
-                        }
-                        $res = (Start-Process -WorkingDirectory $downloadDir -FilePath msiexec -ArgumentList "-a", $name, "-qb", "TARGETDIR=$target", "INSTALLDIR=$target" -PassThru -Wait)
-                        if ($res.ExitCode -ne 0) {
-                            throw "ERROR installing $name $code"
-                        }
-                        Rename-Item "$target\PFiles\MapServer" "$target\PFiles\GDAL"
-                        Copy-Item -Path "$target\System64\*.dll" -Destination "$target\PFiles\GDAL"                   
-                    }
-                    else {
-                        throw "unknown install command $installCmd"
-                    }
-                }
-                else {
-                    $res = (Start-Process -WorkingDirectory $downloadDir -FilePath msiexec -ArgumentList "-a", $name, "-qb", "TARGETDIR=$target", "INSTALLDIR=$target" -PassThru -Wait)
-                }
+            echo "checking $name : $exe"
+            if ($null = Test-Path $exe -PathType Leaf ) {
+                Write-Host "$name : $exe found"
             }
             else {
-                if ($name -match '\.py$') {
-                    Write-Host "python command $name"
-                    $res = (Start-Process -WorkingDirectory $downloadDir -FilePath "$targetBase\$pythonDir\python.exe" -ArgumentList $name -PassThru -Wait -NoNewWindow)
+                Write-Host "download $name from $url"
+                $Client = New-Object System.Net.WebClient
+                if ($target) {
+                    $null = md -Force $target
+                }
+                $null = md -Force $downloadDir
+                $downloadName = $downloadDir + "\" + $name
+                $Client.DownloadFile($url, $downloadName)
+                $res = $null
+                if ($target) {
+                    if ($installCmd) {
+                        if ($installCmd -match '^python') {
+                            if ($null = Test-Path $target) {
+                                Write-Host "removing existing $target"
+                                Remove-Item -Path "$target" -Recurse -Force
+    
+                            }
+                            $res = ([IO.Compression.ZipFile]::ExtractToDirectory($downloadName, $target))
+                            $pathFile = $program.pathFile
+                            if ($pathFile) {
+                                $pathFile = $target + "\" + $pathFile
+                                if (! ($null = Test-Path $pathFile)) {
+                                    Write-Host "$pathFile not found"
+                                }
+                                else {
+                                    Write-Host "removing $pathFile"
+                                    Remove-Item -Path "$pathFile" -Force
+                                }
+                            }
+                    
+                        }
+                        elseif ($installCmd -match '^gdal') {
+                            if ($null = Test-Path $target) {
+                                Write-Host "removing existing $target"
+                                Remove-Item -Path "$target" -Recurse -Force
+    
+                            }
+                            $res = (Start-Process -WorkingDirectory $downloadDir -FilePath msiexec -ArgumentList "-a", $name, "-qb", "TARGETDIR=$target", "INSTALLDIR=$target" -PassThru -Wait)
+                            if ($res.ExitCode -ne 0) {
+                                throw "ERROR installing $name $code"
+                            }
+                            Rename-Item "$target\PFiles\MapServer" "$target\PFiles\GDAL"
+                            Copy-Item -Path "$target\System64\*.dll" -Destination "$target\PFiles\GDAL"                   
+                        }
+                        else {
+                            throw "unknown install command $installCmd"
+                        }
+                    }
+                    else {
+                        $res = (Start-Process -WorkingDirectory $downloadDir -FilePath msiexec -ArgumentList "-a", $name, "-qb", "TARGETDIR=$target", "INSTALLDIR=$target" -PassThru -Wait)
+                    }
                 }
                 else {
-                    #pip install
-                    Write-Host "pip install $name"
-                    $res = (Start-Process -WorkingDirectory $downloadDir -FilePath "$targetBase\$pythonDir\Scripts\pip.exe" -ArgumentList "install", $name -PassThru -Wait -NoNewWindow)
+                    if ($name -match '\.py$') {
+                        Write-Host "python command $name"
+                        $res = (Start-Process -WorkingDirectory $downloadDir -FilePath "$targetBase\$pythonDir\python.exe" -ArgumentList $name -PassThru -Wait -NoNewWindow)
+                    }
+                    
                 }
-            }
-            if (($res -ne $null) -And ($res.ExitCode -ne 0)) {
-                $code = $res.ExitCode
-                throw "ERROR installing $name $code"
-            }
-            Write-Host "installing $name finished"
+                if (($res -ne $null) -And ($res.ExitCode -ne 0)) {
+                    $code = $res.ExitCode
+                    throw "ERROR installing $name $code"
+                }
+                Write-Host "installing $name finished"
 
+            }
         }
-    
     }
-
 }
 catch {
     Write-Host "Downlod/Install failed:"+$_.Exception.Message
     $code = 1
 }
-Write-Host "Close window to continue or press ^C"
-Start-Sleep -Seconds 3600
 exit($code)
 
 
