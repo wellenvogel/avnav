@@ -14,6 +14,7 @@ $defaultUpdateUrl="https://wellenvogel.de/software/avnav/downloads/release/lates
 $regKey="HKCU:\Software\Wellenvogel\AvNav"
 
 $icon = Join-Path $PSScriptRoot 'Chart60.ico'
+$iconInact = Join-Path $PSScriptRoot 'Chart60Inact.ico'
 
 #import dialogs
 . "$PSScriptRoot\Dialogs.ps1"
@@ -27,10 +28,8 @@ $icon = Join-Path $PSScriptRoot 'Chart60.ico'
 # Part - Add the systray menu
 # ----------------------------------------------------        
 
- 
 
 $Main_Tool_Icon = New-Object System.Windows.Forms.NotifyIcon
-$Main_Tool_Icon.Text = "AvNav Server"
 $Main_Tool_Icon.Icon = $icon
 $Main_Tool_Icon.Visible = $true
 
@@ -57,16 +56,20 @@ $Menu_Config.Text="Config"
 
 $Menu_Open= New-Object System.Windows.Forms.MenuItem
 $Menu_Open.Text="Open"
-
+$Menu_Log= New-Object System.Windows.Forms.MenuItem
+$Menu_Log.Text="Logs"
 $contextmenu = New-Object System.Windows.Forms.ContextMenu
 $Main_Tool_Icon.ContextMenu = $contextmenu
-$Main_Tool_Icon.contextMenu.MenuItems.AddRange($Menu_Start)
-$Main_Tool_Icon.contextMenu.MenuItems.AddRange($Menu_Stop)
-$Main_Tool_Icon.contextMenu.MenuItems.AddRange($Menu_Open)
-$Main_Tool_Icon.contextMenu.MenuItems.AddRange($Menu_Config)
-$Main_Tool_Icon.contextMenu.MenuItems.AddRange($Menu_Install)
-$Main_Tool_Icon.contextMenu.MenuItems.AddRange($Menu_Remove)
-$Main_Tool_Icon.contextMenu.MenuItems.AddRange($Menu_Exit)
+$null=$Main_Tool_Icon.contextMenu.MenuItems.Add($Menu_Start)
+$null=$Main_Tool_Icon.contextMenu.MenuItems.Add($Menu_Stop)
+$null=$Main_Tool_Icon.contextMenu.MenuItems.Add($Menu_Open)
+$null=$Main_Tool_Icon.contextMenu.MenuItems.Add($Menu_Log)
+$null=$Main_Tool_Icon.contextMenu.MenuItems.Add("-")
+$null=$Main_Tool_Icon.contextMenu.MenuItems.Add($Menu_Config)
+$null=$Main_Tool_Icon.contextMenu.MenuItems.Add($Menu_Install)
+$null=$Main_Tool_Icon.contextMenu.MenuItems.Add($Menu_Remove)
+$null=$Main_Tool_Icon.contextMenu.MenuItems.Add("-")
+$null=$Main_Tool_Icon.contextMenu.MenuItems.Add($Menu_Exit)
 
 function Get-Port {
     if (Test-Path -Path "$regKey"){
@@ -90,11 +93,17 @@ function Kill-Tree {
     Stop-Process -Id $ppid -ErrorAction SilentlyContinue
 }
 
+function Show-Logs{
+    Invoke-Item -Path "$logDir"
+}
+
 $serverProcess = $null
 
 function Set-Enable{
     $isInstalled=Test-Path -Path "$softwareBase"
     if ( $null -eq $serverProcess){
+        $Main_Tool_Icon.Text = "AvNav (stopped)"
+        $Main_Tool_Icon.Icon = "$iconInact"
         $Menu_Stop.Enabled = $false
         $Menu_Start.Enabled = $isInstalled
         $Menu_Remove.Enabled = $isInstalled
@@ -103,6 +112,8 @@ function Set-Enable{
         $Menu_Open.Enabled = $false
     }
     else{
+        $Main_Tool_Icon.Text = "AvNav (running)"
+        $Main_Tool_Icon.Icon = "$icon"
         $Menu_Stop.Enabled = $true
         $Menu_Open.Enabled = $true
         $Menu_Start.Enabled = $false
@@ -243,12 +254,17 @@ $Menu_Exit.add_Click({
     Start-Process "$url"
  })
 
+ $Menu_Log.add_Click({
+    Show-Logs
+ })
+
  
 
 # Make PowerShell Disappear
-$windowcode = '[DllImport("user32.dll")] public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);'
-$asyncwindow = Add-Type -MemberDefinition $windowcode -name Win32ShowWindowAsync -namespace Win32Functions -PassThru
-$null = $asyncwindow::ShowWindowAsync((Get-Process -PID $pid).MainWindowHandle, 0)
+# seems we don't need this as we start with a hidden window any way
+#$windowcode = '[DllImport("user32.dll")] public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);'
+#$asyncwindow = Add-Type -MemberDefinition $windowcode -name Win32ShowWindowAsync -namespace Win32Functions -PassThru
+#$null = $asyncwindow::ShowWindowAsync((Get-Process -PID $pid).MainWindowHandle, 0)
 
  
 
@@ -260,4 +276,5 @@ $null = $asyncwindow::ShowWindowAsync((Get-Process -PID $pid).MainWindowHandle, 
 # Create an application context for it to all run within.
 # This helps with responsiveness, especially when clicking Exit.
 $appContext = New-Object System.Windows.Forms.ApplicationContext
+
 [void][System.Windows.Forms.Application]::Run($appContext)
