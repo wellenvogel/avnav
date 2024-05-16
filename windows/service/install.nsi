@@ -8,7 +8,7 @@ OutFile "avnav-service.exe"
     ${cmd} ${prfx}Chart60Inact.ico  
     ${cmd} ${prfx}Dialogs.ps1  
     ${cmd} ${prfx}downloadAndInstall.ps1  
-    ${cmd} ${prfx}Stray.ps1
+    ${cmd} ${prfx}avnavservice.ps1
 !macroend
 
 
