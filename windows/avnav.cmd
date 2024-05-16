@@ -9,10 +9,10 @@ set "PYTHONPATH=%_AVNROOT%\gdal\Lib\site-packages"
 set "PATH=%PATH%;%_AVNROOT%\gdal\PFiles\GDAL"
 setlocal enableextensions
 set "_AVNXML=%_AVNDATADIR%\avnav_server.xml"
+set "_AVNTMPL=%~dp0\avnav_server_win.xml"
 if exist "%_AVNXML%" (
     rem
 ) else (
-    set "_AVNTMPL=%~dp0\avnav_server_win.xml"
     if exist "%_AVNTMPL%" (
         copy /y "%_AVNTMPL%" "%_AVNXML%"
     )

@@ -17,3 +17,5 @@
 
 
 4. from 202405xx onwards only powershell (>= 5.1) is required on the system
+Win81: install latest VC redist: https://aka.ms/vs/17/release/vc_redist.x64.exe
+
