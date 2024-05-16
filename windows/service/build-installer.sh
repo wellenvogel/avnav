@@ -1,3 +1,4 @@
 #! /bin/sh
-cd `dirname $0` || exit 1
-docker run  --rm   -v `pwd`:/build   --user `id -u`:`id -g` binfalse/nsis install.nsi
+pdir=`dirname $0`
+pdir=`readlink -f $pdir`
+docker run  --rm   -v $pdir/..:/build   --user `id -u`:`id -g` binfalse/nsis $* service/install.nsi 

@@ -11,63 +11,30 @@ buildscript {
 
 apply plugin: 'java'
 
-
-task buildViewer(type: org.gradle.api.tasks.GradleBuild){
-    dir=file("$projectDir/../viewer")
-    tasks=["release"]
-}
-
 project.ext.avnavVersion=null
 task pkgVersion {
     doFirst{	
 	    if (!project.hasProperty('packageVersion')) {
 		SimpleDateFormat f = new SimpleDateFormat('yyyyMMdd')
-		project.avnavVersion=f.format(new Date())
+		project.avnavVersion="dev-"+f.format(new Date())
 	    } else {
 		project.avnavVersion = packageVersion
 	    }
 	}
 }
 
-def versionFile=file("$projectDir/AvChartConvert/AvChartConvert/Properties/AssemblyInfo.cs")
-def versionSave=file("${versionFile}.save")
-task updateVersionFiles{
-    dependsOn pkgVersion
-    doFirst{
-        assert versionFile.exists(),"missing version file $versionFile"
-        def lines=[]
-        def windows_version_string=project.avnavVersion.replaceAll(/(....)(..)(..)/,'$1.$2.$3')
-        println "updating $versionFile with version $windows_version_string"
-        versionFile.withReader {rd->
-            rd.readLines().each{String line->
-                line=line.replaceAll(/^ *\[assembly: AssemblyVersion.*/,"[assembly: AssemblyVersion(\""+windows_version_string+"\")]")
-                line=line.replaceAll(/^ *\[assembly: AssemblyFileVersion.*/,"[assembly: AssemblyFileVersion(\""+windows_version_string+"\")]")
-                lines.add(line)
-            }
-        }
-        if (! versionSave.exists()){
-            versionFile.renameTo(versionSave)
-        }
-        else {
-            versionFile.delete()
-        }
-        versionFile.withWriter {wr->
-            lines.each{
-                wr.println(it)
-            }
-        }
-    }
-}
 
 task runBuild(type: org.gradle.api.tasks.Exec){
-    commandLine=['cmd','/C','build.cmd']
-    dependsOn updateVersionFiles,buildViewer
+    workingDir="service"
+    dependsOn pkgVersion
     doFirst{
+        commandLine=['./build-installer.sh',"-DVERSION=${project.avnavVersion}"]
         if (! project.buildDir.isDirectory()) project.buildDir.mkdirs()
     }
 
 }
 
-task release{
-    dependsOn buildViewer,updateVersionFiles,runBuild
+task buildInstaller{
+    dependsOn runBuild
 }
+build.dependsOn buildInstaller

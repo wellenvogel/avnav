@@ -60,12 +60,6 @@ else{
     project.ext.avnavVersion=project.packageVersion
 }
 
-boolean onWindows=false
-if (System.properties['os.name'].toLowerCase().contains('windows')) {
-    println "running on Windows"
-    onWindows = true
-}
-
 boolean buildAndroid=false
 if (System.getenv("ANDROID_HOME")){
     buildAndroid=true
@@ -147,16 +141,9 @@ task zipMarker{
 
 task windowsBuild(type: org.gradle.api.tasks.GradleBuild){
     dir="windows"
-    tasks=["release"]
-    doFirst{
-        assert onWindows,"we cannot run the windowsBuild task as we are not on windows"
-    }
+    tasks=["build"]
 }
-task noWindowsBuild{
-    doLast() {
-        println "###unable to build the windows installer as we are not running on windows###"
-    }
-}
+
 def emptyBase=new File(project.buildDir,"empty")
 ospackage {
     //release='3'
@@ -320,12 +307,7 @@ task release{
         println "all release packages have been build"
     }
     dependsOn testGit, releaseRpm, releaseDeb,raspiDeb
-    if (onWindows){
-        dependsOn windowsBuild
-    }
-    else{
-        dependsOn noWindowsBuild
-    }
+    dependsOn windowsBuild
     if (buildAndroid){
         dependsOn assembleReleaseAndroid
     }
@@ -337,12 +319,7 @@ task beta{
         println "all beta packages have been build"
     }
     dependsOn releaseRpm, releaseDeb,raspiDeb
-    if (onWindows){
-        dependsOn windowsBuild
-    }
-    else{
-        dependsOn noWindowsBuild
-    }
+    dependsOn windowsBuild
     if (buildAndroid){
         dependsOn assembleBetaAndroid
     }
@@ -379,8 +356,8 @@ task uploadRpm(type: UploadTask){
 
 task uploadWindowsNet(type: UploadTask){
     group=UPLOAD_GROUP
-    def windowsVersion=project.avnavVersion.replaceAll(/(....)(..)(..)/,'$1-$2-$3').replaceAll(/-0([^-])/,'-$1')
-    inputFile=file("windows/build/AvNavNetSetup-${windowsVersion}-0.exe")
+    def windowsVersion=project.avnavVersion
+    inputFile=file("windows/build/avnav-service-${windowsVersion}.exe")
     dependsOn windowsBuild
     baseDir="daily/${project.avnavVersion}"
 }
@@ -798,9 +775,7 @@ task upload{
         println "###uploaded artifacts to version dir $project.avnavVersion###"
     }
     dependsOn uploadDeb,uploadRaspi,uploadRpm,uploadViewer, uploadAccess,uploadZip
-    if (onWindows){
-        dependsOn uploadWindowsNet
-    }
+    dependsOn uploadWindowsNet
     if (buildAndroid){
         dependsOn uploadAndroidBeta
     }
@@ -811,9 +786,7 @@ task uploadRelease{
         println "###upload release artifacts to version dir $project.avnavVersion###"
     }
     dependsOn testGit,uploadDeb,uploadRaspi,uploadRpm,uploadViewerRelease,uploadAccess,uploadZip
-    if (onWindows){
-        dependsOn uploadWindowsNet,uploadAccessWindows
-    }
+    dependsOn uploadWindowsNet,uploadAccessWindows
     if (buildAndroid){
         dependsOn uploadAndroidRelease
     }

@@ -1,7 +1,12 @@
 
 # define installer name
-OutFile "avnav-service.exe"
-
+!ifndef VERSION
+    !define  /date NOW "%Y%m%d%M%S"
+    !define VERSION "dev-${NOW}"
+!endif
+!define PATH_OUT "../build"
+!system 'mkdir ${PATH_OUT}'
+OutFile "${PATH_OUT}/avnav-service-${VERSION}.exe"
 !macro InstFiles cmd prfx
     ${cmd} ${prfx}avnavservice.cmd
     ${cmd} ${prfx}Chart60.ico  
