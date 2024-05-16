@@ -25,7 +25,7 @@
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
 
-import shlex
+import re
 import signal
 import urllib.parse
 
@@ -54,13 +54,13 @@ class Handler(object):
     return self.command.get('command')
 
   def _startCmd(self):
-    args = shlex.split(self.getCommandStr())
-    AVNLog.debug("starting command ", args)
+    args = re.split("[ \t]+",self.getCommandStr())
+    AVNLog.debug("starting command %s", " ".join(args))
     if self.parameters is not None:
       if isinstance(self.parameters,list):
         args.extend(self.parameters)
       else:
-        args.extend(shlex.split(self.parameters))
+        args.extend(re.split("[ \t]+",self.parameters))
     if hasattr(os,'setsid'):
       self.subprocess = subprocess.Popen(args, stdout=subprocess.PIPE, stdin=subprocess.PIPE,
                                        preexec_fn=os.setsid)

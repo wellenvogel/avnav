@@ -102,7 +102,7 @@ $serverProcess = $null
 
 function Set-Enable{
     $isInstalled=Test-Path -Path "$softwareBase"
-    if ( $null -eq $serverProcess){
+    if ( $null -eq $global:serverProcess){
         $Main_Tool_Icon.Text = "AvNav (stopped)"
         $Main_Tool_Icon.Icon = "$iconInact"
         $Menu_Stop.Enabled = $false
@@ -133,13 +133,16 @@ function Set-Enable{
 
 $timer=New-Object System.Windows.Forms.Timer
 $timer.Add_Tick({
-    if ($null -ne $serverProcess){
-        if ($serverProcess.HasExited){
+    if ($null -ne $global:serverProcess){
+        if ($global:serverProcess.HasExited){
             $timer.Enabled=$false
-            $msg="AvNav stopped unexpectedly"
+            $msg="AvNav stopped unexpectedly`nOK to show logs"
             $global:serverProcess=$null
             Set-Enable
-            Show-InputDialog -WindowTitle "AvNav stopped" -Message "$msg" -ShowText $false 
+            $res=Show-InputDialog -WindowTitle "AvNav stopped" -Message "$msg" -ShowText $false -DefaultText log
+            if ("log" -eq $res){
+                Show-Logs
+            }
         }
     }
  })
@@ -162,11 +165,15 @@ function Run-Server {
     $port=Get-Port
     $arglist=@("-q","-o",$port)
     $null=md -Force $logDir
-    $global:serverProcess = Start-Process -WindowStyle Hidden -FilePath "$exename" -ArgumentList $arglist -PassThru -RedirectStandardError "$serverError" -RedirectStandardOutput "$serverLog"
+    $global:serverProcess = Start-Process -WorkingDirectory "$softwareBase"  -WindowStyle Hidden -FilePath "$exename" -ArgumentList $arglist -PassThru -RedirectStandardError "$serverError" -RedirectStandardOutput "$serverLog"
     $timer.Enabled=$true
     $timer.Start()
     }catch{
-        Show-InputDialog -WindowTitle "StartupError" -Message $_.Exception.Message -ShowText $false
+        $msg=$_.Exception.Message+"`nOk to show logs"
+        $res=Show-InputDialog -WindowTitle "StartupError" -Message "$msg" -ShowText $false -DefaultText logs
+        if ("logs" -eq $res){
+            Show-Logs
+        }
         return $false
     }
     return $true
@@ -175,8 +182,6 @@ function Run-Server {
 function Run-Installer([string]$url){
     $arg = Join-Path $PSScriptRoot 'downloadAndInstall.ps1'
     $res = Start-Process powershell -ArgumentList "-Command ""$arg"" ""$url"" " -Wait -PassThru
-    $msg="Installer result: "+ $res.ExitCode.ToString()
-    Show-InputDialog -WindowTitle "Installer Result" -Message "$msg" -ShowText $false
     Set-Enable
 }
 
@@ -212,8 +217,8 @@ $Menu_Start.add_Click({
 
  # When Stop is clicked, kill stay awake job
 $Menu_Stop.add_Click({
-    Kill-Tree $serverProcess.Id
-    $serverProcess=$null
+    Kill-Tree $global:serverProcess.Id
+    $global:serverProcess=$null
     $timer.Enabled=$false
     Set-Enable
  })
@@ -221,8 +226,8 @@ $Menu_Stop.add_Click({
 # When Exit is clicked, close everything and kill the PowerShell process
 $Menu_Exit.add_Click({
     $Main_Tool_Icon.Visible = $false
-    if ( $null -ne $serverProcess){
-        Kill-Tree $serverProcess.Id
+    if ( $null -ne $global:serverProcess){
+        Kill-Tree $global:serverProcess.Id
     }
     $timer.Stop()
     [void][System.Windows.Forms.Application]::Exit()

@@ -23,5 +23,8 @@
 <builtin-canboat enabled="False"/>
 </AVNPluginHandler>
 <AVNAvahi enabled="False"/>
+<AVNCommandHandler>
+<Command name="sound" command="windows\sound.cmd" repeat="1"/>
+</AVNCommandHandler>
 </Worker>
 </AVNServer>
