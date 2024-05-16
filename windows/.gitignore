@@ -1,8 +1,1 @@
-/AvChartConvert.application
-/AvChartConvert.exe.config
-/AvChartConvert.exe.manifest
-/AvChartConvert.pdb
-/AvChartConvert.vshost.application
-/AvChartConvert.vshost.exe
-/AvChartConvert.vshost.exe.config
-/AvChartConvert.vshost.exe.manifest
+service/*.exe

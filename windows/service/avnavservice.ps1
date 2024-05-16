@@ -23,7 +23,11 @@ $iconInact = Join-Path $PSScriptRoot 'Chart60Inact.ico'
 # ACTIONS FROM THE SYSTRAY
 ################################################################################################################################"
 
- 
+$opid=Get-WmiObject Win32_Process -Filter "name = 'powershell.exe' and commandline like '%avnavservice.ps1%' " | Select-Object processid
+if (($null -ne $opid) -and ($pid -ne $opid.processid)){
+    Show-InputDialog -WindowTitle "Already running" -Message "another instance of avnavservice is running with pid $opid" -ShowText $false
+    exit(1)
+}
 
 # ----------------------------------------------------
 # Part - Add the systray menu

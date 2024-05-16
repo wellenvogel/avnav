@@ -1,1 +1,1 @@
-@powershell -WindowStyle Hidden -executionpolicy unrestricted -file Stray.ps1
+@start /min "avnavservice" powershell -NonInteractive -WindowStyle Hidden -executionpolicy unrestricted -file "%~dp0\avnavservice.ps1"
