@@ -535,7 +535,7 @@ class AVNImporter(AVNWorker):
       else:
         idlewait=self.getWParam(self.P_SCANINTERVAL)
         if idlewait <= 0:
-          idlewait=365*24*3600 #1year
+          idlewait=24*3600 #1day
         self.setInfo(self.INFO_MAIN,"pausing for %d seconds"%idlewait,WorkerStatus.STARTED)
         self.wait(idlewait)
     if self.runningConversion is not None:
