@@ -268,6 +268,8 @@ task buildZip(type: Zip){
             include("avnav_server_win.xml")
             include("avnav.cmd")
             include("postinstall.ps1")
+            include("sound.ps1")
+            include("sound.cmd")
         }
     }
     into('usr/lib/avnav'){
