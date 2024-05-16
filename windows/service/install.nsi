@@ -15,7 +15,8 @@ OutFile "${PATH_OUT}/avnav-service-${VERSION}.exe"
     ${cmd} ${prfx}downloadAndInstall.ps1  
     ${cmd} ${prfx}avnavservice.ps1
 !macroend
-
+!define UNINST_KEY \
+  "Software\Microsoft\Windows\CurrentVersion\Uninstall\avnavservice"
 
 InstallDir $PROFILE\AppData\Local\avnavservice
  
@@ -32,6 +33,13 @@ SetOutPath $INSTDIR
 # define uninstaller name
 WriteUninstaller $INSTDIR\uninstaller.exe
 
+WriteRegStr HKCU "${UNINST_KEY}" "DisplayName" "avnavservice"
+WriteRegStr HKCU "${UNINST_KEY}" "UninstallString" \
+    "$\"$INSTDIR\uninstaller.exe$\" /CurrentUser"
+WriteRegStr HKCU "${UNINST_KEY}" "DisplayIcon" \
+    "$INSTDIR\Chart60Inact.ico" 
+WriteRegStr HKCU "${UNINST_KEY}" "QuietUninstallString" \
+    "$\"$INSTDIR\uninstaller.exe$\" /CurrentUser /S"
 CreateShortCut "$SMPROGRAMS\avnavservice.lnk" $INSTDIR\avnavservice.cmd "" $INSTDIR\Chart60.ico 0
 CreateShortCut "$SMSTARTUP\avnavservice.lnk" $INSTDIR\avnavservice.cmd "" $INSTDIR\Chart60.ico 0
 CreateShortCut "$SMPROGRAMS\avnavuninstall.lnk" $INSTDIR\uninstaller.exe "" $INSTDIR\Chart60Inact.ico 0
@@ -54,6 +62,7 @@ Delete  "$SMSTARTUP\avnavservice.lnk"
 Delete  "$SMPROGRAMS\avnavuninstall.lnk"
 # Delete the uninstaller
 Delete $INSTDIR\uninstaller.exe
+DeleteRegKey HKCU "${UNINST_KEY}"
  
 # Delete the directory
 RMDir $INSTDIR
