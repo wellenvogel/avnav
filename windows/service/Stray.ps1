@@ -73,12 +73,15 @@ $null=$Main_Tool_Icon.contextMenu.MenuItems.Add("-")
 $null=$Main_Tool_Icon.contextMenu.MenuItems.Add($Menu_Exit)
 
 function Get-Port {
-    if (Test-Path -Path "$regKey"){
-        $rt=Get-ItemPropertyValue -Path "$regKey" -Name Port 
-        if ($null -ne $rt) {
-            return $rt
+    try {
+        if (Test-Path -Path "$regKey") {
+            $rt = Get-ItemPropertyValue -Path "$regKey" -Name Port 
+            if ($null -ne $rt) {
+                return $rt
+            }
         }
     }
+    catch {}
     return "8080"
 }
 
@@ -87,6 +90,24 @@ function Save-Port([String]$Port) {
         New-Item -Path "$regKey" -Force | Out-Null
     }
     New-ItemProperty -Path "$regKey" -Name Port -Value "$Port" -PropertyType string -Force 
+}
+function Get-Autostart {
+    try {
+        if (Test-Path -Path "$regKey") {
+            $rt = Get-ItemPropertyValue -Path "$regKey" -Name Autostart 
+            if ($null -ne $rt) {
+                return $rt
+            }
+        }
+    }
+    catch {}
+    return 0
+}
+function Save-Autostart([int]$Enable){
+    if (-Not (Test-Path -Path "$regKey")){
+        New-Item -Path "$regKey" -Force | Out-Null
+    }
+    New-ItemProperty -Path "$regKey" -Name Autostart -Value "$Enable" -PropertyType DWORD -Force 
 }
 function Kill-Tree {
     Param([int]$ppid)
@@ -212,11 +233,13 @@ Set-Enable
  # When Start is clicked, start stayawake job and get its pid
 $Menu_Start.add_Click({
     Run-Server
+    Save-Autostart 1
     Set-Enable
  })
 
  # When Stop is clicked, kill stay awake job
 $Menu_Stop.add_Click({
+    Save-Autostart 0
     Kill-Tree $global:serverProcess.Id
     $global:serverProcess=$null
     $timer.Enabled=$false
@@ -264,6 +287,11 @@ $Menu_Exit.add_Click({
     Show-Logs
  })
 
+ $autostart=Get-Autostart
+ if (1 -eq $autostart){
+    Run-Server
+    Set-Enable
+ }
  
 
 # Make PowerShell Disappear
