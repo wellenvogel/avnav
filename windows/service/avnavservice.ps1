@@ -14,8 +14,8 @@ $serverError="$logDir\service-err.log"
 $defaultUpdateUrl="https://wellenvogel.de/software/avnav/downloads/release/latest/avnav-latest.zip"
 $regKey="HKCU:\Software\Wellenvogel\AvNav"
 
-$icon = Join-Path $PSScriptRoot 'Chart60.ico'
-$iconInact = Join-Path $PSScriptRoot 'Chart60Inact.ico'
+$icon = Join-Path $PSScriptRoot 'sailboat256x96.ico'
+$iconInact = Join-Path $PSScriptRoot 'sailboat256x96Inact.ico'
 
 #import dialogs
 . "$PSScriptRoot\Dialogs.ps1"

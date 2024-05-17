@@ -6,11 +6,13 @@
 !endif
 !define PATH_OUT "../build"
 !system 'mkdir ${PATH_OUT}'
+!define ICON sailboat256x96.ico
+!define ICONINACT sailboat256x96Inact.ico
 OutFile "${PATH_OUT}/avnav-service-${VERSION}.exe"
 !macro InstFiles cmd prfx
     ${cmd} ${prfx}avnavservice.cmd
-    ${cmd} ${prfx}Chart60.ico  
-    ${cmd} ${prfx}Chart60Inact.ico  
+    ${cmd} ${prfx}${ICON}
+    ${cmd} ${prfx}${ICONINACT}
     ${cmd} ${prfx}Dialogs.ps1  
     ${cmd} ${prfx}downloadAndInstall.ps1  
     ${cmd} ${prfx}avnavservice.ps1
@@ -37,12 +39,12 @@ WriteRegStr HKCU "${UNINST_KEY}" "DisplayName" "avnavservice"
 WriteRegStr HKCU "${UNINST_KEY}" "UninstallString" \
     "$\"$INSTDIR\uninstaller.exe$\" /CurrentUser"
 WriteRegStr HKCU "${UNINST_KEY}" "DisplayIcon" \
-    "$INSTDIR\Chart60Inact.ico" 
+    "$INSTDIR\${ICON}" 
 WriteRegStr HKCU "${UNINST_KEY}" "QuietUninstallString" \
     "$\"$INSTDIR\uninstaller.exe$\" /CurrentUser /S"
-CreateShortCut "$SMPROGRAMS\avnavservice.lnk" $INSTDIR\avnavservice.cmd "" $INSTDIR\Chart60.ico 0
-CreateShortCut "$SMSTARTUP\avnavservice.lnk" $INSTDIR\avnavservice.cmd "" $INSTDIR\Chart60.ico 0
-CreateShortCut "$SMPROGRAMS\avnavuninstall.lnk" $INSTDIR\uninstaller.exe "" $INSTDIR\Chart60Inact.ico 0
+CreateShortCut "$SMPROGRAMS\avnavservice.lnk" $INSTDIR\avnavservice.cmd "" $INSTDIR\${ICON} 0
+CreateShortCut "$SMSTARTUP\avnavservice.lnk" $INSTDIR\avnavservice.cmd "" $INSTDIR\${ICON} 0
+CreateShortCut "$SMPROGRAMS\avnavuninstall.lnk" $INSTDIR\uninstaller.exe "" $INSTDIR\${ICONINACT} 0
  
 #-------
 # default section end
