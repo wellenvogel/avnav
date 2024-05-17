@@ -17,8 +17,8 @@ port=""
 template="$avnavdir/avnav_template.xml"
 
 usage(){
-  echo "usage: $0 [-e] [-d] [-q] [-b basedir] [-c chartdir] [-x cfgfile] [-t template] [-g] [-a softwareBase] [-v viewerDir]"
-  echo "       -b basedir     : data dir for avanv routes,tracks,charts,..."
+  echo "usage: $0 [-e] [-d] [-q] [-w basedir] [-c chartdir] [-x cfgfile] [-t template] [-g] [-a softwareBase] [-v viewerDir]"
+  echo "       -w basedir     : data dir for avanv routes,tracks,charts,..."
   echo "       -c chartdir    : separate dir for charts (instead of basedir/charts)"
   echo "       -x cfgfile     :  start the server directly with this config "
   echo "       -t template    : create basedir/avnav_server.xml from this if not found"
@@ -39,7 +39,7 @@ err(){
 }
 
 
-while getopts dec:b:x:qt:a:v:l:n:o: opt; do
+while getopts dec:b:w:x:qt:a:v:l:n:o: opt; do
 case $opt in
   d)
     loglevel="DEBUG"
@@ -51,6 +51,9 @@ case $opt in
     chartdir=$OPTARG
     ;;
   b)
+    basedir=$OPTARG
+    ;;
+  w)
     basedir=$OPTARG
     ;;
   x)

@@ -1,0 +1,13 @@
+[Unit]
+Description=NMEA multiplexer and Browser based navigation(user service)
+After=syslog.target network.target
+
+
+[Service]
+ExecStart=/usr/bin/avnav -q -n /etc/default/avnav
+KillMode=control-group
+Restart=always
+TimeoutStopSec=10
+
+[Install]
+WantedBy=default.target

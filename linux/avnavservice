@@ -1,0 +1,64 @@
+#! /bin/bash
+SNAME=avnav
+usage(){
+    echo "usage: $0 enable|disable [port]"
+}
+
+log(){
+    echo "INFO: $*"
+}
+err(){
+    echo "ERROR: $*"
+    exit 1
+}
+warn(){
+    echo "WARNING: $*"
+}
+pdir="`readlink -f $0`"
+pdir="`dirname $pdir`"
+
+if [ "$1" = "" ] ; then
+  usage
+  exit 1
+fi
+if [ "$1" = "disable" ] ; then
+    log "disable and stop $SNAME user service"
+    systemctl --user disable --now $SNAME
+    exit $?
+fi
+if [ "$1" = "enable" ] ; then
+    if [ "$2" != "" ] ; then
+        #try to set the HTTP port if the config does not exist
+        [ "$HOME" = "" ] && err "environment HOME not set"
+        dd="$HOME/avnav"
+        if [ -d "$dd/data" ] ; then
+            dd="$dd/data"
+            log "old style data dir found at $dd, using this one"
+        fi
+        xml="$dd/avnav_server.xml"
+        if [ -f "$xml" ] ; then
+            warn "config $xml already exists, cannot set port"
+        else
+            tpl="$pdir/avnav_template.xml"
+            if [ ! -f "$tpl" ] ; then
+                echo "template $tpl not found, cannot set port"
+            else
+                if [ ! -d "$dd" ] ; then
+                    log "creating data dir $dd"
+                    mkdir -p "$dd"
+                fi
+                cp "$tpl" "$xml" || err "unable to copy $tpl to $xml"
+                
+            fi
+            log "configuring httpPort to $2 in $xml"
+            $pdir/patchServerConfig.py -f "$xml" -h AVNHttpServer httpPort=$2 || exit 1
+        fi
+    fi
+    log "enable user service $SNAME"
+    systemctl --user daemon-reload
+    systemctl --user enable $SNAME || exit 1
+    log "to start run: systemctl --user start $SNAME"
+    exit 0
+fi
+usage
+exit 1

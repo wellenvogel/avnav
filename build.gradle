@@ -209,6 +209,8 @@ ospackage {
         }
         from('linux') {
             include "plugin.sh"
+            include 'patchServerConfig.py'
+            include 'avnavservice'
             fileMode 0755
         }
         from('linux') {
@@ -230,9 +232,16 @@ ospackage {
             include 'avnav.service'
         }
     }
+    into('/usr/lib/systemd/user/'){
+        from('linux'){
+            include 'avnavuser.service'
+            rename('avnavuser.service','avnav.service')
+        }
+    }
     postInstall file('linux/postinstall')
 
     link('/usr/bin/avnav','/usr/lib/avnav/avnav')
+    link('/usr/bin/avnavservice','/usr/lib/avnav/avnavservice')
 }
 
 

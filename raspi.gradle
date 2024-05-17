@@ -60,7 +60,6 @@ ospackage {
             include 'rename-interface.sh'
             include 'checkLink.sh'
             include 'uart_control'
-            include 'patchServerConfig.py'
         }
         from('raspberry') {
             include 'avnav_server.xml'
@@ -68,6 +67,10 @@ ospackage {
             include 'ntp.conf'
             include 'avnav.conf'
             fileMode 0644
+        }
+        from('linux'){
+            include 'patchServerConfig.py'
+            fileMode 0755
         }
     }
     into('/usr/lib/avnav/raspberry/xui'){
