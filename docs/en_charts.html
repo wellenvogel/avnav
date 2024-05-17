@@ -18,19 +18,7 @@
   </head>
   <body data-order="600">
     <h1 class="western"><a name="Chartconvert">AvNav Charts and Overlays</a></h1>
-    <ul class="mainlist">
-      <li><a href="#Intro">Introduction</a></li>
-      <li><a href="#chartformats">Formats</a></li>
-      <li><a href="#overlays">Overlays</a></li>
-      <li><a href="hints/ocharts.html">O-Charts</a></li>
-      <li><a href="#mapproxy">Mapproxy</a></li>
-      <li><a href="#installation">Installation</a></li>
-      <li><a href="#Convert">Converting existing Raster Charts (like BSB)<br>
-        </a></li>
-      <li><a href="#Download">Downloading Raster Charts<br>
-        </a></li>
-      <li><a href="hints/CanboatAndSignalk.html#SignalKCharts">SignalK</a></li>
-    </ul>
+    <div class="toc"> </div>
     <h2><a id="Intro" name="Intro"></a>Introduction</h2>
     <img title="Karten" alt="Karten" src="Karten.png" width="600">
     <p>To use charts in AvNav they have to be available in a tile format. This
@@ -55,9 +43,9 @@
       The <a href="http://www.openlayers.org/">openlayers</a> library is used
       to display the charts. This library loads the tiles based on zoom level
       from the server (raspberry) and displays them on the screen. It is often
-      used in OpenStreatMap applications.<br>
-      You can easily imagine the huge numbers of tiles required for higher zoom
-      levels (if you try e.g. zoom 19 for all). Therefore it makes sense to
+      used in OpenStreatMap applications.</p>
+    <p> You can easily imagine the huge numbers of tiles required for higher
+      zoom levels (if you try e.g. zoom 19 for all). Therefore it makes sense to
       follow the same approach we take for paper charts: for an overview a small
       zoom level is used, detail charts a bit more and e.g. port approaches with
       the highest levels 18 or 19 (60cm/pixel and 30cm/pixel). To still maintain
@@ -66,26 +54,47 @@
       area this one will be displayed - otherwise the one with a lower zoom
       level (potentially up scaled). To not overload the display devices, the
       number of layers should be limited to 3...5 (depending on the device). </p>
-    <p>For chart conversion the goal is to assign available charts to such
-      layers, to potentially reproject them and finally create the chart tiles
-      (maybe together with a description). Typically this requires a lot of
-      computing power (and time) and should be better run on a desktop system.
-      But typically this should be no problem as you will do this only once.
-      After you will be rewarded with a continous chart view with no gaps
-      inbetween.<br>
+    <p>Additionally AvNav can display vector charts from <a href="https://o-charts.org/">o-charts</a>
+      (using the <a href="hints/ocharts.html">ocharts</a> or <a href="hints/ochartsng.html">ochartsng</a>
+      plugins) and S57 charts (after conversion using the <a href="hints/ochartsng.html">ochartsng</a>
+      plugin). Those vector charts are converted to the described tiles "on the
+      fly" by the plugins.</p>
+    <p>You can get charts from various source - either already in formats that
+      AvNav can directly use (gemf, mbtiles) or in formats that have to be
+      converted (like BSB - .kap files).</p>
+    <p>There are also tools available to download such charts outside of AvNav
+      or inside AvNav.</p>
+    <p>When converting charts the goal is to assign available charts to layers,
+      to potentially reproject them and finally create the chart tiles (maybe
+      together with a description). Typically this requires a lot of computing
+      power (and time) and should be better run on a desktop system. But
+      typically this should be no problem as you will do this only once. After
+      you will be rewarded with a continous chart view with no gaps inbetween.<br>
       The same has to be considered when it comes to downloading charts. You
       need to carefully select areas and zoom levels. </p>
-    <p>The download procedure depends on the source. I currently support 2
-      options to create charts for AvNav:</p>
+    <p>The following options for charts are available:</p>
     <ul>
-      <li>
-        <p>Converting charts using <a href="http://www.gdal.org/">GDAL</a>
-          (like BSB) – you can use everything that GDAL can read</p>
-      </li>
+      <li> Downloading ready to go raster charts (e.g. from <a href="https://ftp.gwdg.de/pub/misc/openstreetmap/openseamap/charts/mbtiles/">OpenSeamap</a>
+        - mbtiles) </li>
       <li> Downloading charts using the <a href="http://mobac.sourceforge.net/">Mobile
-          Atlas Creator</a>. </li>
-    </ul>
-    <ul>
+          Atlas Creator</a>.</li>
+      <li>Downloading charts and converting them inside AvNav (e.g. BSB kap
+        files)</li>
+      <li>Downloading charts inside AvNav using the <a href="#mapproxy">mapproxy</a>
+        plugin</li>
+      <li>Buying charts at <a href="https://o-charts.org/">o-charts</a> and
+        using them via the <a href="hints/ocharts.html">ocharts</a>/<a href="hints/ochartsng.html">ochartsng</a>
+        plugins</li>
+      <li>Downloading S57 charts and converting/using them with the <a href="hints/ochartsng.html">ochartsng</a>
+        plugin</li>
+      <li>Using charts from the <a href="https://github.com/SignalK/charts-plugin">signalK
+          chart provider</a> &nbsp; (if the <a href="hints/CanboatAndSignalk.html#SignalK">signalK
+          integration</a> is active).</li>
+      <li>Using online chart sources, provided they support the default url
+        format. You have to configure this with an xml file. An example can be
+        found in the provided <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/demo/osm-online.xml">online
+          source for OpenSeaMap</a>.</li>
+      <li>...</li>
     </ul>
     <h2><a name="chartformats" id="chartformats"></a>Chart Formats</h2>
     <p>AvNav uses <a href="http://www.cgtk.co.uk/gemf">GEMF</a> as its primary
@@ -105,29 +114,18 @@
       tms). If the value is set in the metadata, the chart will be displayed in
       red and you can visit the <a href="userdoc/downloadpage.html">Download-Page</a>
       to choose the type to be applied for this specific chart.</p>
-    <p>Additionally (since 20200325) you can also use online chart sources,
-      provided they support the default url format. You have to configure this
-      with an xml file. An example can be found in the provided <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/demo/osm-online.xml">online
-        source for OpenSeaMap</a>.</p>
-    <p>Since version 20200515 you can use a <a href="hints/ocharts.html">plugin</a>
-      to process charts from <a href="https://o-charts.org/">o-charts</a> as
-      well.</p>
-    <p>Since version 202011xx you can use charts from the <a href="https://github.com/SignalK/charts-plugin">signalK
-        chart provider</a> &nbsp; (if the <a href="hints/CanboatAndSignalk.html#SignalK">signalK
-        integration</a> is active).</p>
-    <p>With the <a href="#mapproxy">MapProxy Plugin</a> you can utilize and
-      download charts from various online chart sources.</p>
+    <p>For the handling of the vector charts refer to the <a href="hints/ocharts.html">ocharts</a>/<a
+        href="hints/ochartsng.html">ochartsng</a> descriptions.</p>
     <h2><a name="installation" id="installation"></a>Installation of Charts</h2>
     <p>After installing AvNav there is one/a couple of online demo charts
       available. For real usage you have to install charts in AvNav.<br>
-      You can do this either by directly copying charts into the chart directory
-      (/home/pi/avnav/data/charts) or&nbsp; to the external chart directory on
-      android. You can also upload the charts directly within the WebApp (some
-      only starting from 20200325). Upload can be executed via the <a href="userdoc/downloadpage.html#chartupload">Files/Download
-        page</a>.<br>
-      For android you have to consider that mbtiles can only be handled after
-      explicit upload&nbsp; - instead of simply storing them in the external
-      chart directory.<br>
+      You upload the charts directly within the WebApp (some only starting from
+      20200325). Upload can be executed via the <a href="userdoc/downloadpage.html#chartupload">Files/Download
+        page</a>.</p>
+    <p>On Android you can also copy charts directly to the external chart
+      directory. For android you have to consider that mbtiles can only be
+      handled after explicit upload&nbsp; - instead of simply storing them in
+      the external chart directory.<br>
       For mbtiles consider the option to switch the internal scheme <a href="userdoc/downloadpage.html#mbtiles">at
         the Files/Download page</a> .</p>
     <p>In standard versions (not android) starting from 20200325 you can also
@@ -137,10 +135,13 @@
       or from sub directories. When <a href="userdoc/downloadpage.html#chartupload">uploading</a>
       a file with a known filename extension (like .kap) you will be asked if
       you want this file to be loaded to the converter import directory. You can
-      monitor the working state of the importer at the <a href="userdoc/statuspage.html">status
-        page</a>. You should keep in mind that converting requires a lot of CPU
-      power and can last for hours on the raspberry pi. Probably it is more
-      efficient to run this on a desktop system.</p>
+      monitor the working state of the importer at the <a href="userdoc/importerpage.html">importer
+        page</a>. Starting from 202405xx you can also upload zip files with many
+      charts inside to the importer. You can also upload to the importer
+      directly on the<a href="userdoc/importerpage.html"> importer page</a>. <br>
+      You should keep in mind that converting can require a lot of CPU power and
+      can last for hours on the raspberry pi. Probably it is more efficient to
+      run this on a desktop system.</p>
     <p>If the <a href="#mapproxy">MapProxy plugin</a> is installed its charts
       will directly become visible in AvNav without any further installation. </p>
     <h2><a name="overlays" id="overlays"></a>Overlays</h2>
@@ -158,75 +159,30 @@
       <li><a href="install.html#Packages">Linux</a></li>
       <li><a href="install.html#Windows">Windows</a></li>
     </ul>
-    The central part of the conversion will be handled by tile tools (<a href="https://code.google.com/p/tilers-tools/">https://code.google.com/p/tilers-tools/</a>)
-    - a copy is included in AvNav.<br>
-    On a desktop the charts will be created at
-    &lt;UserHome&gt;/AvNavCharts/out&nbsp; (e.g.
-    c:\Users\Andreas\AvNavCharts\out). In the UI you can select the output path.
-    Normally one gemf file is created per run. The name is derived from the
-    first selected input file or directory.<br>
-    There will be a work directory within AvNavCharts - you should not delete
-    this as it would speed up subsequent conversion runs (if you e.g. receive
-    some corrective input charts).<br>
-    The conversion consists of the steps:
+    <p>The chart converter is a normal part of AvNav. Since 202405xx there is a
+      separate <a href="userdoc/importerpage.html">page</a> in the App to
+      control and monitor it. See the description of the <a href="userdoc/importerpage.html">importer
+        page</a> for the usage. Some of the available conversions are part of
+      AvNav, others are provided by plugins. The converter will analyze the
+      uploaded chart and select a suitable converter.<br>
+      The internal converter will be able to handle .kap files, mbtiles files,
+      navipack files. It also can handle zip files with kap files inside.<br>
+      The conversion process depends on the type of the chart. The converted
+      charts will be directly written to the chart directory of AvNav (or to the
+      appropriate directory of a plugin).<br>
+      You can also download them directly.</p>
+    <p>For kap (BSB) charts the conversion includes the following steps:</p>
     <ul>
-      <li>
-        <p>sorting the charts into layers (and potentially converting them)</p>
-      </li>
-      <li>
-        <p>creation of tiles</p>
-      </li>
+      <li> sorting the charts into layers (and potentially converting them) </li>
+      <li> creation of tiles </li>
       <li>creation of the gemf file</li>
     </ul>
-    <p>After creation of the gemf file just <a href="#installation">install</a>
-      it on the pi.<br>
-      You can also test the created chart directly on your desktop. The
-      converter will invoke the AvNav server to which you connect by browser.</p>
-    <h4><a name="windows" id="windows"></a>Windows</h4>
-    <p>There is a <a href="install.html#Windows">Net-Installer</a>
-      (AvNavNet...) for windows to install all the necessary software:</p>
-    <ul>
-      <li>python 2.7.10 (32 Bit)</li>
-      <li>GDAL 1.11 for python 2.7 (32 Bit)</li>
-      <li>Pillow 2.7.0</li>
-      <li>pyserial 2.7</li>
-    </ul>
-    The installer will be installed within ProgramFiles\AvNav. If you uninstall
-    AvNav just the installer will be removed.<br>
-    All added components are installed in the user home diectory. They have to
-    be uninstalled via the UI.<br>
-    After installation you can start with AvChartConvert. <br>
-    <br>
-    There is just one screen:<br>
-    <br>
-    <img alt="windows gui" src="avnav-windows-new.png" width="800px"><br>
-    <p>Click (1) to select the files/directories to convert. Click (2) to start
-      the conversion process. The "view" button will display the logfile as the
-      conversion proceeds. That's something you certainly like to see if
-      something goes wrong.<br>
-      Per default the AvNav server will automatically start up and invoke a
-      browser after the conversion has finished.<br>
-      If the necessary software has not yet been installed,&nbsp; a dialog is
-      brought up to prompt if it should be installed right now. Clicking (5) you
-      can repeat this step for an update. At (4) you can remove the downloaded
-      software.<br>
-      Some demo NMEA data are included in AvNav installation (southern baltic,
-      Greifswalder Bodden), You may also use any other NMEA0183 file as input.<br>
-      As the server on desktop computer is a fully featured AvNav you can also
-      read NMEA data from connected devices, from bluetooth or IP. To meet
-      special requirements you can even create your own avnav_server.xml and set
-      up things there.</p>
-    <p>This way it is also possible to use AvNav e.g. on a laptop on board. <br>
-      If you only want to start up the server - click (3) "startServer". Has to
-      be repeated after every configuration change.<br>
-    </p>
-    <h4>Linux</h4>
-    As described at <a href="install.html#Packages">Installation</a> start up
-    AvNav using avnav -g and select the charts you would like to convert.<br>
     <h4>Details</h4>
-    Here are some details about the conversion steps. Normally you do care about
-    them. You only need them if some of the default settings do not fit your
-    needs.
+    <p> Here are some details about the conversion steps of the internal kap
+      files converter. Normally you do care about them. <br>
+      But if you are unhappy with the results of the conversion you still could
+      run the conversion using the command line.<br>
+      The read_charts.py is located at /usr/lib/avnav/chartconvert.</p>
     <blockquote>
       <div style="font-size:small">
         <p>The first step is fast. All chart data will be read, resolution and

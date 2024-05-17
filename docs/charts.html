@@ -18,19 +18,7 @@
   </head>
   <body data-order="600">
     <h1 class="western"><a name="Chartconvert">Avnav Karten und Overlays</a></h1>
-    <ul class="mainlist">
-      <li><a href="#Intro">Einführung</a></li>
-      <li><a href="#chartformats">Formate</a></li>
-      <li><a href="#overlays">Overlays</a></li>
-      <li><a href="hints/ocharts.html">O-Charts</a></li>
-      <li><a href="#mapproxy">Mapproxy</a></li>
-      <li><a href="#installation">Installation</a></li>
-      <li><a href="#Convert">Konvertieren von vorhandenen Rasterkarten (z.B.
-          BSB)<br>
-        </a></li>
-      <li><a href="#Download">Herunterladen von Kachel-Karten</a></li>
-      <li><a href="hints/CanboatAndSignalk.html#SignalKCharts">SignalK</a></li>
-    </ul>
+    <div class="toc"> </div>
     <h2><a id="Intro" name="Intro"></a>Einführung</h2>
     <img title="Karten" alt="Karten" src="Karten.png" width="600">
     <p>Damit Karten in der WebApp verwendet werden können, müssen sie in einem
@@ -71,29 +59,48 @@
       der geringeren Auflösung (ggf. noch vergrössert). Um unsere Anzeigegeräte
       nicht zu überlasten, kann man typisch mit 3-5 Kartenlayern arbeiten (je
       nach Gerät...).</p>
-    <p>Damit besteht für die Kartenkonvertierung die Aufgabe darin, vorhandene
-      Karten in solche Layer einzusortieren, sie ggf zu reprojizieren und dann
-      die Kartenkacheln (sowie eine Beschreibungsdatei) zu erzeugen. Das
-      erfordert meist eine ganze Menge Rechenleistung (und ggf. Zeit), daher ist
-      das etwas, das auf einem PC oder Laptop laufen sollte (der Pi braucht
+    <p>AvNav kann auch Vertor Karten von <a href="https://o-charts.org/">o-charts</a>
+      (mit dem&nbsp; <a href="hints/ocharts.html">ocharts</a> oder <a href="hints/ochartsng.html">ochartsng</a>
+      plugin) und S57 Karten (nach Konvertierung mit dem <a href="hints/ochartsng.html">ochartsng</a>
+      plugin) nutzen. Diese Vektorkarten werden bei der Nutzung durch die
+      plugins automatisch in Kartenkacheln umgewandelt. </p>
+    <p>Man kann Karten aus verschiedenen Quellen beziehen - entweder direkt in
+      einem von AvNav nutzbaren Format (gemf, mbtiles) oder in einem Format, das
+      erst noch umgewandelt werden muss(z.B. BSB - .kap Dateien).</p>
+    <p>Es sind auch Tools verfügbar, um solche Karten innerhalb oder ausserhalb
+      von AvNav herunterzuladen.</p>
+    <p>Für die Kartenkonvertierung besteht die Aufgabe darin, vorhandene Karten
+      in Layer einzusortieren, sie ggf zu reprojizieren und dann die
+      Kartenkacheln (sowie eine Beschreibungsdatei) zu erzeugen. Das erfordert
+      meist eine ganze Menge Rechenleistung (und ggf. Zeit), daher ist das
+      etwas, das auf einem PC oder Laptop laufen sollte (der Pi braucht
       potentiell sehr lange dafür). Das ist aber nicht schlimm – man muss das ja
       nur einmal machen. Belohnt wird man dafür mit einer sogenannten
       „blattschnittfreien“ Darstellung.</p>
     <p>Für den Download gilt Vergleichbares - hier muss man geeignet die Zoom
       Level und Bereiche auswählen.</p>
-    <p>Das Verfahren dazu hängt von der Quelle ab. Im Moment habe ich Support
-      für 3 „Wege“ der Kartenerstellung eingebaut:</p>
+    <p>Es gibt die folgenden Optionen für die Kartennutzung</p>
     <ul>
-      <li>
-        <p>Konvertierung von Karten mittels <a href="http://www.gdal.org/">GDAL</a>
-          (z.B. BSB) – hier kann alles gelesen werden, was GDAL kann</p>
-      </li>
-      <li>Nutzung von online Karten (und deren Download) mit Hilfe von <a href="https://mapproxy.org/">MapProxy</a>
-        - über das MapProxy Plugin </li>
-      <li>
-        <p>Nutzung von downloads mit dem <a href="http://mobac.sourceforge.net/">Mobile
-            Atlas Creator</a>. </p>
-      </li>
+      <li> Download von fertigen Rasterkarten (z.B. von <a href="https://ftp.gwdg.de/pub/misc/openstreetmap/openseamap/charts/mbtiles/">OpenSeamap</a>
+        - mbtiles) </li>
+      <li> Download mit dem <a href="http://mobac.sourceforge.net/">Mobile
+          Atlas Creator</a>.</li>
+      <li>Download von BSB (KAP) Karten und Konvertierung in AvNav </li>
+      <li>Download von Karten in AvNav mit dem <a href="#mapproxy">Mapproxy</a>
+        Plugin</li>
+      <li>Kaufen von Karten bei <a href="https://o-charts.org/">o-charts</a>
+        und Nutzung mit dem <a href="hints/ocharts.html">ocharts</a>/<a href="hints/ochartsng.html">ochartsng</a>
+        Plugin</li>
+      <li>Download von S57 und Konvertierung/Nutzung mit dem <a href="hints/ochartsng.html">ochartsng</a>
+        plugin</li>
+      <li>Nutzung von Karten vom <a href="https://github.com/SignalK/charts-plugin">signalK
+          chart provider</a> &nbsp; (wenn die <a href="hints/CanboatAndSignalk.html#SignalK">signalK
+          Integration</a> aktiv ist).</li>
+      <li>Nutzung von online Kartenquellen wenn sie das default url Format
+        unterstützen. Das kann man in einer xml Datei konfigurieren. Ein
+        Beispiel findet man unter der <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/demo/osm-online.xml">Online
+          source für OpenSeaMap</a>.</li>
+      <li>...</li>
     </ul>
     <h2><a name="chartformats" id="chartformats"></a>Kartenformate</h2>
     <p>AvNav nutzt als primäres Kartenformat das <a href="http://www.cgtk.co.uk/gemf">GEMF</a>
@@ -117,28 +124,17 @@
       Falls er in den Metadaten vorhanden ist, wird die Karte in rot angezeigt,
       über die <a href="userdoc/downloadpage.html">Download-Seite</a> kann dann
       gewählt werden, welche interne Kodierung genutzt werden soll. </p>
-    <p> Zusätzlich können (ab 20200325) auch Online Kartenquellen eingebunden
-      werden, wenn sie ein entsprechendes URL Format unterstützen. Die
-      Konfiguration erfolgt über XML Dateien. Ein Beispiel ist die mitgelieferte
-      <a href="https://github.com/wellenvogel/avnav/blob/master/viewer/demo/osm-online.xml">Quelle
-        für OpenSeaMap</a>.</p>
-    <p>Ab Version 20200515 können mit einem <a href="hints/ocharts.html">Plugin</a>
-      auch Karten von <a href="https://o-charts.org/">o-charts</a> verwendet
-      werden.</p>
-    <p>Ab Version 202011xx können (wenn die <a href="hints/CanboatAndSignalk.html#SignalK">signalK
-        Integration</a> aktiv ist) auch Karten genutzt werden, die im <a href="https://github.com/SignalK/charts-plugin">signalK
-        chart provider</a> vorhanden sind.</p>
-    <p>Mit dem <a href="#mapproxy">MapProxy Plugin</a> können online Karten von
-      verschiedenen Quellen eingebunden werden.</p>
+    Für die Nutzung der Vektorkarten siehe die <a href="hints/ocharts.html">ocharts</a>/<a
+      href="hints/ochartsng.html">ochartsng</a> Plugin Beschreibungen.
     <h2><a name="installation" id="installation"></a>Installation von Karten</h2>
     <p>Nach der Installation ist in AvNav zunächst nur eine/einige
       Online-Demo-Karten vorhanden. Zur realen Nutzung müssen die Karten
       zunächst bei AvNav installiert werden.<br>
-      Das kann durch direkte Kopie in das Karten-Verzeichnis
-      (/home/pi/avnav/data/charts) bzw. in das externe Kartenverzeichnis unter
-      Android erfolgen. Alternativ können die Karten auch direkt in der WebApp
-      hochgeladen werden (einige erst ab 20200325). Das Hochladen erfolgt auf
-      der <a href="userdoc/downloadpage.html#chartupload">Files/Download Seite</a>.<br>
+      Die Karten können direkt in der WebApp hochgeladen werden (einige erst ab
+      20200325). Das Hochladen erfolgt auf der <a href="userdoc/downloadpage.html#chartupload">Files/Download
+        Seite</a>.<br>
+      Unter Android können sie auch in das externe Kartenverzeichnis kopiert
+      werden.<br>
       Für Android ist zu beachten, dass mbtiles Karten nur gelesen werden
       können, wenn sie hochgeladen wurden, nicht aus dem externen Karten
       Verzeichnis.<br>
@@ -151,9 +147,13 @@
       (/home/pi/avnav/data/import) bzw. aus Unterverzeichnissen. Wenn beim <a href="userdoc/downloadpage.html#chartupload">Hochladen</a>
       eine Karte mit einem Dateinamen für den Konverter gewählt wird (z.B.
       .kap), dann wird gefragt, ob diese direkt dem Konverter übergeben werden
-      soll. Der Arbeitszustand des Konverters kann auf der Status Seite
-      beobachtet werden. Es sollte dabei beachtet werden, das die Konvertierung
-      ein rechenintensiver Prozeß sein kann, der auf einem Raspberry Pi viele
+      soll. Der Arbeitszustand des Konverters kann auf der <a href="userdoc/importerpage.html">Import
+        Seite</a> beobachtet werden. Ab 202405xx können auch zip Dateien mit
+      mehreren Karten hochgeladen werden. Ein hochladen zum Importer kann auch
+      direkt auf der <a href="userdoc/importerpage.html">Import Seite</a>
+      erfolgen.<br>
+      Es sollte dabei beachtet werden, das die Konvertierung ein
+      rechenintensiver Prozeß sein kann, der auf einem Raspberry Pi viele
       Stunden dauern kann. Das sollte daher ggf. auf einem Desktop Rechner
       erfolgen.</p>
     <p>Wenn das <a href="#mapproxy">MapProxy plugin</a> installiert ist, werden
@@ -168,94 +168,40 @@
       Karten</h2>
     <p>Die Konvertierung kann direkt auf dem Raspi erfolgen. Da hier die
       Resourcen jedoch ziemlich begrenzt sind, muß mit längeren Laufzeiten
-      gerechnet werden (Beispiel: Auf einem Raspi 2 dauerte das Konvertieren
-      eines älteren NV Satzes (Ostsee 4) ca. 1 Stunde).</p>
+      gerechnet werden.</p>
     Einfacher geht die Konvertierung auf einem Windows (oder Linux/Mac) Rechner.
     Für die nötigen Installationen siehe:
     <ul>
       <li><a href="install.html#Packages">Linux</a></li>
       <li><a href="install.html#Windows">Windows</a></li>
     </ul>
-    Der Hauptteil der Konvertierung wird durch tiler_tools durchgeführt (<a href="https://code.google.com/p/tilers-tools/">https://code.google.com/p/tilers-tools/</a>)
-    diese sind Bestandteil der Software und müssen nicht extra heruntergeladen
-    werden..
-    <p>Die Karten werden per Default im Verzeichnis
-      &lt;UserHome&gt;/AvNavCharts/out erzeugt (also z.B.
-      c:\Users\Andreas\AvNavCharts\out). Zumindest in der Windows GUI kann das
-      Verzeichnis gewählt werden. Standarmäßig ensteht für jeden Konverter-Lauf
-      eine xxx.gemf Datei, xxx ist dabei der Dateiname der ersten Datei oder der
-      Name des ersten gewählten Verzeichnisses.</p>
-    <p>Im AvNavCharts Verzeichnis gibt es auch noch ein work-Verzeichnis, dieses
-      sollte nicht gelöscht werden, da dann bei einem Update (z.B. werden
-      Berichtigungen eingepflegt) nur die geänderten Karten neu erzeugt werden
-      müssen.</p>
-    <p>Die Konvertierung verläuft in 2 Schritten:</p>
+    <p>Der Konverter ist ein normaler Bestandteil von AvNav. Ab 202405xx gibt es
+      in der App eine separate <a href="userdoc/importerpage.html">Seite</a>
+      zur Steuerung und Überwaching. Siehe die Beschreibung der <a href="userdoc/importerpage.html">Importer
+        Seite</a> für Nutzungshinweise. Einige der verfügbaren Konvertierungen
+      sind direkt Bestandteil von AvNav, andere werden durch Plugins
+      bereitgestellt.Der Importer analysiert&nbsp; die hochgeladenen Dateien und
+      wählt einen geeigneten Umwandler aus.<br>
+      Der interne Konverter kann pak, mbtiles und navipack Dateien verarbeiten.
+      Für kap Dateien werden auch zip Dateien mit mehreren kap Dateien
+      akzeptiert.<br>
+      Der Konvertierungsprozess hängt vom Kartentyp ab. Die erzeugten Karten
+      werden direkt in das Kartenverzeichnis von AvNav oder von den jeweiligen
+      Plugins geschrieben.<br>
+      Auch ein Download ist möglich.</p>
+    <p>Für kap (BSB) Dateien besteht die Konvertierung aus den folgenden
+      Schritten:</p>
     <ul>
-      <li>
-        <p>Sortierung der Karten in Layer (und ggf. soweit nötig Konvertierung
-          der karten). </p>
-      </li>
-      <li>
-        <p>Erzeugung der Kacheln</p>
-      </li>
-      <li>Erzeugung der gemf Datei</li>
+      <li> Sortierung der Karten in Layer (mit potentieller Umwandlung) </li>
+      <li>Erzeugung der Kacheln</li>
+      <li>Erzeugung einer GEMF Datei</li>
     </ul>
-    <p>Wenn die Datei xxx.gemf erzeugt wurde, diese auf den raspberry <a href="#installation">installieren</a>.<br>
-      Man kann auch die Karte direkt auf dem Desktop Computer testen - nach
-      Abschluss der Konvertierung wird der AvNav Server gestartet und man kann
-      sich mit einem Browser verbinden.</p>
-    <h4><a name="windows" id="windows"></a>Windows</h4>
-    <p>Der <a href="install.html#Windows">Net-Installer</a> (AvNavNet...) für
-      Windows installiert neben der eigentlichen Konverter-Software auch die
-      nötigen Programme:</p>
-    <ul>
-      <li>python 2.7.10 (32 Bit)</li>
-      <li>GDAL 1.11 für python 2.7 (32 Bit)</li>
-      <li>Pillow 2.7.0</li>
-      <li>pyserial 2.7</li>
-    </ul>
-    Der Installer wird unter ProgramFiles\AvNav installiert. Wenn AvNav
-    deinstalliert wird, werden nur diese Anteile mit entfernt. <br>
-    Die nachgeladenen Teile werden im Home-Verzeichnis des Nutzers installiert
-    und müssen aus der UI deinstalliert werden.<br>
-    Nach der Installation kann man mit AvChartConvert die Applikation starten. <br>
-    <br>
-    Die Applikation hat nur einen Bildschirm:<br>
-    <br>
-    <img alt="windows gui" src="avnav-windows-new.png" width="800px"><br>
-    <p>Bei (1) können die zu konvertierenden Karten gewählt werden, bei (2)
-      startet die Konvertierung. Es wird eine Log Datei geschrieben, die man mit
-      "view" anschauen kann (das hätte ich auch gerne, wenn etwas nicht
-      funktioniert).</p>
-    <p>Mit den Default-Einstellungen startet danach sofort der AvNav Server
-      (also die Software, die sonst auf dem Raspberry läuft) und ein Browser
-      wird geöffnet, der die App anzeigt.</p>
-    <p>Wenn die nötige Software noch nicht installiert wurde, öffnet sich ein
-      Dialog, der die Installation anbietet und die nötigen Teile aus dem Netz
-      nachlädt. Mit (5) kann das für ein Update wiederholt werden (die aktuell
-      vorhandene Version wird angezeigt). Mit (4) kann die nachinstallierte
-      Software entfernt werden.</p>
-    <p>Wie im Bild zu sehen, liefere ich eine Datei mit NMEA Daten mit (vom
-      Greifswalder Bodden). Es kann natürlich zum Test auch jede andere eigene
-      NMEA-log Datei gewählt werden.</p>
-    <p>Alternativ kann der Server auch direkt die NMEA Daten von einem
-      angeschlossenen seriellen Gerät oder Bluetooth lesen (COM port) oder auch
-      z.B. von einem Raspberry (IP). Wenn spezielle Setups erforderlich sind,
-      kann man über 'custom' auch die Server-Konfiguration per Hand bearbeiten,
-      eine Vorlage mit Kommentaren wird mitgeliefert.</p>
-    <p>Mit diesem Setup kann die Software damit also auch komplett z.B. and Bord
-      auf einem Windows-Laptop benutzt werden. Die Funktionen sind die gleichen
-      wie mit dem Raspberry.</p>
-    <p>Wenn man nur den Server starten möchte - (3) "startServer". Das muß man
-      auch nach jeder Änderung tun.<br>
-    </p>
-    <h4>Linux</h4>
-    Wie unter <a href="install.html#Packages">Installation</a> beschrieben,
-    startet man avnav -g und wählt auch hier die zu konvertierenden Karten.<br>
     <h4>Details</h4>
-    Im Folgenden werden die Konvertierungsschritte beschrieben - normalerweise
-    muss man sich darum nicht kümmern - nur wenn die default-Einstellungen der
-    GUI nicht gut genug sind...
+    Im Folgenden werden die Konvertierungsschritte für den KAP Konvertrer
+    beschrieben. Im Normalfall sind diese nicht von INteresse. Aber man kann die
+    Konvertierung ggf. von der Kommandozeile aufrufen, falls die Ergebnisse
+    nicht zufriedenstellend sind.<br>
+    Die Datei read_charts.py findet sich unter /usr/lib/avnav/chartconvert.<br>
     <blockquote>
       <div style="font-size:small">
         <p>Der erste Schritt geht relativ schnell. Alle Kartendateien werden
