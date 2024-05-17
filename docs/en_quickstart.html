@@ -97,12 +97,12 @@
       <li>$xxGSV</li>
       <li>$xxGLL</li>
       <li>$xxVTG</li>
-      <li>$xxRMC</li>
+      <li>$xxRMC (mag. variation since 202405xx)</li>
       <li>$xxMWV (since 20220225 added waterSpeed)</li>
       <li>$xxDPT</li>
       <li>$xxDBT</li>
       <li>$xxXDR (since 20210114)</li>
-      <li>$xxHDG (since 210106xx)</li>
+      <li>$xxHDG (since 210106xx , mag. variation since 202405xx)</li>
       <li>$xxHDT (since 20210619)</li>
       <li>$xxHDM (since 20210619) <br>
       </li>
@@ -110,6 +110,7 @@
       <li>$xxVWR (since 20220225)</li>
       <li>$xxMTW (since 20220225)</li>
       <li>$xxZDA (since 20220421)</li>
+      <li>$xxVDR (since 202405xx)</li>
     </ul>
     &nbsp; Depending on the <a href="hints/configfile.html">configuration</a>
     AvNav is able to generate following NMEA sentences:
@@ -141,13 +142,14 @@
       <li>$xxMWV (since 20220225 added&nbsp; waterSpeed)</li>
       <li>$xxDBT</li>
       <li>$xxXDR (since 20210114)</li>
-      <li>$xxHDG (since 210106xx)</li>
+      <li>$xxHDG (since 210106xx, mag. variation since 202405xx)</li>
       <li>$xxHDT (since 20210619)</li>
       <li>$xxHDM (since 20210619) <br>
       </li>
       <li>$xxVHW partial (since 20210619)</li>
       <li>$xxVWR (since 20220225)</li>
       <li>$xxMTW (since 20220225)</li>
+      <li>$xxVDR (since 202405xx)</li>
     </ul>
     AvNav is able to create and send out $GPRMC and $GPRMB (since 20220225 also
     $GPAPB) if configured.<br>
@@ -166,13 +168,16 @@
       other types of raster charts like BSB (kap). This can be done directly on
       the server (raspberry) - or better beforehand on a desktop system.</p>
     <p>Additionally AvNav can process oeSENCcharts from <a href="hints/ocharts.html">o-charts</a>
-      (not available on Android). The company offers charts for Open Source
-      Software at reasonable prices.</p>
+      - on Android with <a href="hints/ochartsng.html">the avocharts app
+        (ochartsng</a>). The company offers charts for Open Source Software at
+      reasonable prices.</p>
+    <p>With the <a href="hints/ochartsng.html">ochartsng</a> plugin AvNav can
+      also display free S57 charts (after conversion).</p>
     <p>Charts need to be uploaded to AvNav before being usable - at the&nbsp; <a
         href="userdoc/downloadpage.html">Files/Download page</a>, section charts
       <img src="viewerimages/icons-new/map2.svg" alt="" class="inlineimage">.
       o-charts must be uploaded via the <a href="hints/ocharts.html">o-charts
-        plugin</a>.</p>
+        plugin</a> / <a href="hints/ochartsng.html">ochartsng plugin</a></p>
     <p>Using the <a href="https://github.com/wellenvogel/avnav-mapproxy-plugin">mapproxy-plugin</a>
       AvNav can include various online chart sources. Areas of those charts can
       be downloaded with the plugin for offline usage.</p>
