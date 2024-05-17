@@ -61,7 +61,7 @@ class ExternalConverter(ConverterApi):
   def getZipSubDir(self, outname):
     if hasattr(self._converter,'getZipSubDir'):
       return self._converter.getZipSubDir(outname)
-    return None
+    return outname
 
   def allowSubDir(self):
     if hasattr(self._converter,'allowSubDir'):
