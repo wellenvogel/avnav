@@ -50,7 +50,7 @@
 
 <!-- for testing purposes: connect to a socket for reading NMEA data -->
 <!--<AVNSocketReader host="localhost" port="34568"/>-->
-	<AVNUdpReader port="34667" minTime="100"></AVNUdpReader>
+<AVNUdpReader port="34667" minTime="100"></AVNUdpReader>
 <!-- provide your data at this port for e.g. OpenCPN -->
 <AVNSocketWriter port="34567" maxDevices="5" filter="" read="true" minTime="100" avahiName="avnav-server"/>
 <AVNTrackWriter interval="10" distance="100" />
