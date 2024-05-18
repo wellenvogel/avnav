@@ -7,8 +7,8 @@
   </head>
   <body data-order="1700">
     <h1>The AIS List</h1>
-    <p>From the <a href="aisinfopage.html">Ais Info</a> you get here by clicking the
-      <img src="../viewerimages/icons-new/ic_list.svg" alt="" class="inlineimage">
+    <p>From the <a href="aisinfopage.html">Ais Info</a> you get here by
+      clicking the <img src="../viewerimages/icons-new/ic_list.svg" alt="" class="inlineimage">
       button.</p>
     <p><img src="aislist.png" alt="" class="fimage"></p>
     <h2>Buttons</h2>
@@ -23,13 +23,30 @@
           <td><img src="../viewerimages/icons-new/ais-nearest.svg" alt="" class="inlineimage"><br>
           </td>
           <td>AisNearest</td>
-          <td>back to "normal mode", the closest target will be displayed centered on the&nbsp; <a href="navpage.html">navigation
-              page</a> </td>
+          <td>back to "normal mode", the closest target will be displayed
+            centered on the&nbsp; <a href="navpage.html">navigation page</a> </td>
         </tr>
         <tr>
-          <td><img src="../viewerimages/icons-new/ic_list.svg" alt="" class="inlineimage"></td>
+          <td><img src="../viewerimages/icons-new/sort.svg" class="inlineimage"></td>
           <td>AisSort</td>
           <td>change the sort order of the list</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/update_disabled.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>AisLock</td>
+          <td>disable the automatic list update (toggle)</td>
+        </tr>
+        <tr>
+          <td><img src="../viewerimages/icons-new/search.svg" alt="" class="inlineimage"><br>
+          </td>
+          <td>AisSearch</td>
+          <td>filter the shown ais targets. <br>
+            A filter dialog will be shown to input a search item. This will be
+            machted against: name,mmsi,callsign,shipname.<br>
+            Only matching items will be shown in the list.<br>
+            As the button is a toggle button the second click will disable the
+            filter.</td>
         </tr>
         <tr>
           <td><img src="../viewerimages/icons-new/drowning.svg" alt="" class="inlineimage"><br>
@@ -45,10 +62,12 @@
         </tr>
       </tbody>
     </table>
-    <p>This page lists all targets within a 10nm range to the
-      current position or to the center of the chart (sorted by CPA). By clicking
-      a row you will return to the chart centered to this target. </p>
+    <p>This page lists all targets within a 10nm range to the current position
+      or to the center of the chart (sorted by CPA). By clicking a row you will
+      return to the chart centered to this target. </p>
     <p>By clicking either second column heading or the <img src="../viewerimages/icons-new/sort.svg"
-        alt="" class="inlineimage">button you can change the sort order.</p>
+        alt="" class="inlineimage">button you can change the sort order.<br>
+      Clicking an item in the list will bring you to the <a href="aisinfopage.html">aisinfo
+        page</a> for this item.</p>
   </body>
 </html>
