@@ -611,13 +611,14 @@ sudo apt install openplotter-avnav</div>
       in OpenPlotter und SignalK vorgenommen werden.</p>
     <h2><a name="Windows"></a>Windows</h2>
     <p> Für Windows gibt es einen Installer (neu ab 202405xx). Die aktuelle
-      Version zum Download findet man <a href="../downloads/latestwindows">hier</a>.
+      Version zum Download findet man <a href="../downloads/release/latest/avnav-service-latest.exe">hier</a>.
       Dieser Installer erzeugt eine App "avnavservice" die (als default)
       automatisch startet(User autostart). Dieser Service erzeugt eine
       Notifikation (Icon) die bei Klick ein Menü mit den wichtigsten Funktionen
       zeigt. Dieser service enhält noch nicht die eigentliche AvNav software
       (oder die notwendigen Python Pakete). Aber über das Menü können diese
-      installiert werden.</p>
+      installiert werden.<br>
+      Für eine Deinstallation von avnavservice bitte die Systemsteuerung nutzen.</p>
     <p><img src="windows-notification-1.png" alt=""></p>
     <p><img src="windows-notification-2.png" alt=""></p>
     <p>Das service Menü hat die folgenden Einträge:</p>
@@ -665,7 +666,7 @@ sudo apt install openplotter-avnav</div>
           <td>Remove</td>
           <td>Entfernt die installierte AvNav Software (aber alle Nutzerdaten
             unter PROFILEDIR/AvNav bleiben erhalten).<br>
-            Vor einer Deinstallation an avnavservice (über
+            Vor einer Deinstallation von avnavservice (über
             Systemsteuerung/Software) sollte das genutzt werden - sonst muss man
             später das Verzeichnis PROFILEDIR/AppData/Local/avnav per Hand
             entfernen.</td>
@@ -674,7 +675,11 @@ sudo apt install openplotter-avnav</div>
           <td>Exit</td>
           <td>Stoppt AvNav und beendet avnavservice (die Notifikation
             verschwindet). Um den Service erneut zu starten, nutzt man das
-            Startmenü.</td>
+            Startmenü.<br>
+            Normalerweise kann man den Service laufen lassen. Wenn der AvNav
+            Server gestoppt ist, werden kaum Systemresourcen verbraucht. Nur
+            nach einer erneuten Installtion von avnavservice muss man diesen
+            einmal stoppen und wieder starten.</td>
         </tr>
       </tbody>
     </table>

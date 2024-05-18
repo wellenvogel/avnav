@@ -585,7 +585,7 @@ sudo apt install openplotter-avnav</div>
     </p>
     <h2><a name="Windows"></a>Windows</h2>
     <p> For Windows there is an installer (new from 202405xx). The current
-      version is available for download <a href="../downloads/release/latest/avnavservice-latest.exe">here</a>.
+      version is available for download <a href="../downloads/release/latest/avnav-service-latest.exe">here</a>.
       This installer will create an app "avnavservice" that (by default) is
       started automatically for you (User autostart). This service creates an
       icon in the notification area that can bring up a menu to handle
@@ -647,7 +647,11 @@ sudo apt install openplotter-avnav</div>
         <tr>
           <td>Exit</td>
           <td>Stop AvNav and exit the avnavservice (the system notification will
-            go away). You can start the service again via the start menu.</td>
+            go away). You can start the service again via the start menu.<br>
+            Normally you can leave avnavservice up and running. As long as the
+            AvNav server is stopped it will consume only very few resources.<br>
+            Only after an installation of avnavservice itself you need to stop
+            and start it.</td>
         </tr>
       </tbody>
     </table>
