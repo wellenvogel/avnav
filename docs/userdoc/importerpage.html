@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>AvNav Chart Import Seite</title>
+    <link href="../styles.css" rel="stylesheet" type="text/css">
+  </head>
+  <body data-order="1100">
+    <h1 >AvNav Chart Import Seite</h1>
+    <p><br>
+    </p>
+    <div class="toc" data-maxlevel="3"></div>
+     === <b>not on Android</b> ===<br>
+      <h2>Chart Types</h2>
+      <p>The importer has converters (built in) for the following chart types:</p>
+      <ul>
+        <li>BSB charts (extension .kap) and zip archives with multiple .kap
+          files</li>
+        <li>mbitles files (but only with the default coding, a different tile
+          numbering is not supperted)<br>
+          Normally you can use the mbtiles directly in AvNav without conversion.
+          The only use case would be to convert to gemf for the usage on Android
+          as gemf charts can be read from an external chart directory (e.g. SD
+          card) but mbtiles can (on Android) only be read from the internal
+          chart directory.</li>
+        <li>navipack files</li>
+      </ul>
+      <p>Additionally plugins can add own converters - like the <a href="../hints/ochartsng.html#chartconversions">ochartsng</a>
+        plugin (zip's of S57 files).</p>
+      <h2> Usage </h2>
+      <p> <img src="importer-list.png" alt="" class="fimage"></p>
+      <p>The importer page can be reached from the Files/Download page with the
+        <img src="../viewerimages/icons-new/swap_horiz.svg" alt="" class="inlineimage">Button.<br>
+        When activated the page shows all currently known import
+        files/directories from the import dir (DATADIR/import). For each of them
+        a possible converter is shown if AvNav was able to find a suitable one.
+        In the picture above all files have already been (successfully)
+        converted.</p>
+      <p>When clicking on one of the files you will get a dialog with a couple
+        of actions.</p>
+      <p><a name="itemdialog" id="itemdialog"></a><img src="importer-item.png" alt=""
+          class="fimage"></p>
+      <p>The visible actions depend on the status of the item (converted,
+        currently converting,...).</p>
+      <table style="width: 100%" border="1">
+        <tbody>
+          <tr>
+            <td>Button</td>
+            <td>Function</td>
+          </tr>
+          <tr>
+            <td>Delete</td>
+            <td>Delete the file/dir at the import directory. Converted charts
+              are not deleted.</td>
+          </tr>
+          <tr>
+            <td>Disable</td>
+            <td>Disable the item in the import directory. No new conversion will
+              be tried even if you update the item (e.g. upload new files to a
+              sub directory).</td>
+          </tr>
+          <tr>
+            <td>Restart</td>
+            <td>Restart the conversion.</td>
+          </tr>
+          <tr>
+            <td>Download<br>
+              (only when done)</td>
+            <td>Download the converted chart. For the internal converters this
+              will always be a gemf file, for others it depends on the plugin
+              that provides the conversion.</td>
+          </tr>
+          <tr>
+            <td>Log</td>
+            <td>Get the last (or current) conversion log file</td>
+          </tr>
+          <tr>
+            <td>Stop<br>
+              (only when running)</td>
+            <td>Interrupt a currently running conversion.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>The result of the conversion is stored in the AvNav charts directory or
+        in the appropriate plugin chart directory.<br>
+        With a click on the <img src="../viewerimages/icons-new/ic_file_upload.svg"
+          alt="" class="inlineimage">button you can select a file to upload
+        (.kap file, .zip file with .kap files, .navipack, .mbtiles,...).</p>
+      <p><img src="importer-upload.png" alt="" class="fimage"></p>
+      <p>In the dialog you can choose a name for the file as it should appear in
+        the converter (this will also later on be used as the name of the gemf
+        file).<br>
+        When you upload a single .kap file the importer will allow you to use a
+        "set name" (i.e. a directory in the importer directory).</p>
+      <img src="importer-upload-kap.png" alt="" class="fimage">
+      <p> This way you can upload multiple .kap files that will form a single
+        gemf chart with the name of the set file.<br>
+        But typically it's more convenient to package the kap files into a zip
+        and upload this.</p>
+      <p>After uploading the importer will still wait some time to ensure that
+        all files have been uploaded.</p>
+      <img src="importer-waiting.png" alt="">
+      <p>Once the importer did not detect changes for one file/directory any
+        more it will start the conversion.</p>
+      <p><img src="importer-converting.png" alt="" class="fimage"></p>
+      <p>You can view the log after clicking the <img src="../viewerimages/icons-new/ic_edit.svg"
+          alt="" class="inlineimage">button beside the entry or at the
+        converter. After the conversion is finished the result is presented. If
+        there are errors you can check the log for problems.</p>
+      <p>When the conversion has been successful the converted chart should
+        immediately be available for use in AvNav. If you want to transfer the
+        chart to another system (maybe you just run the conversion on a desktop
+        and now you would like to use the chart on a raspberry pi or on android)
+        you can use the download button as described <a href="#itemdialog">above</a>.</p>
+      <p>With the <img src="../viewerimages/icons-new/ic_edit.svg" alt="" class="inlineimage">button
+        at the right side you reach the property dialog for the converter.</p>
+      <img src="importer-edithandler.png" alt="" class="fimage"></div>
+    <p >You can configure the settle times for files and
+      directories and the scan interval. The default interval of "0" will let
+      the importer only scan once every 24h - but on every upload a scan is
+      triggered.</p>
+    <p>If you copied some files to the import directory by hand,
+      just click the <img src="../viewerimages/icons-new/ic_edit.svg" alt="" class="inlineimage">button
+      beside the scanner and trigger a rescan.</p>
+      <h3>Copying Files(Experts)</h3>
+    <p>If you run into trouble uploading large files you can copy
+      the files (or even complete directories) to the importer directory by
+      hand. You will find it at DATADIR/import. DATADIR will be $HOME/avnav or
+      $HOME/avnav/data depending on your set up.<br>
+      After you copied a file or direcftory you need to trigger a
+      rescan by hand.</p>
+    <p>To avoid copying lare files or directory trees you can also
+      create a file with the extension ".clk" (converter link file) in the
+      converter dir.<br>
+      Inside the file just put one line with the absolute path to
+      the file or directory you would like to convert.<br>
+      Don't forget to trigger a rescan after you saved the file.<br>
+    </p>
+
+  </body>
+</html>
