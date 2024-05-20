@@ -42,6 +42,114 @@ sudo systemctl start avnav</div>
     <br>
     <div> </div>
     <h2>Versionen</h2>
+    <p> <span style="font-weight: bold;">202405xx</span> <a title="release/202405xx"
+        href="../downloads/release/202405xx">link</a></p>
+    <p><i> <b>AvNav base</b></i></p>
+    <ul>
+      <li>neues <a href="userdoc/importerpage.html">Karten import</a> Handling
+        (nicht für Android)</li>
+      <ul>
+        <li>Änderung von Namen beim Hochladen</li>
+        <li>Hochladen zip Dateien</li>
+        <li>Herunterladen von umgewandelten Karten (gemf,zip)</li>
+        <li>Status Anzeige, Disable, Neustart</li>
+        <li><a href="hints/plugins.html#PluginAPI">plugin api</a> Erweiterung
+          für Konverter</li>
+        <li>enthält den S57 Konverter mit <a href="hints/ochartsng.html#chartconversions">ochartsng<br>
+          </a></li>
+      </ul>
+      <li>Neuer <a href="install.html#Windows">Windows</a> Service und
+        Installer<br>
+        <b>Bitte eine alte Windows Installation entfernen. Diese Version ist
+          nicht mehr kompatibel mit dem alten AvNavNet Installer!</b></li>
+      <li>Separate GUI für Windows/Linux für die Kartenkonvertierung entfernt
+        (Konvertierung ist jetzt normaler Bestandteil von AvNav)</li>
+      <li>Vereinfachter Start von AvNav von der Kommandozeile, Start ist jetzt
+        möglich ohne eine avnav_server.xml, man kann den HTTP Port auf der
+        Kommandozeile setzen.</li>
+      <li>Unter Linux kann AvNav jetzt als <a href="install.html#userservice">user
+          service</a> laufen</li>
+      <li>besserer Status an den NMEA Verbindungen mit Sende- und Empfangsraten
+        sowie Fehlerraten</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/324">#324</a>:
+        AvNav kann jetzt größere Bursts von NMEA Daten handeln. Die Daten werden
+        verworfen, wenn sie zu lange in der internen Queue verweilen.</li>
+      <li>Interne Nutzung von "Steady timers" (die sich beim Setzen der Zeit
+        nicht ändern) - damit müssen die internen Daten nicht mehr gelöscht
+        werden, wenn die Systemzeit geändert wird.</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/292">#292</a>:
+        Key codes hinzugefügt</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/303">#303</a>:
+        Rote Icons in der Titel Zeile für <a href="userdoc/mainpage.html#anchorwatch">Ankerwache</a>
+        und <a href="userdoc/mainpage.html#disconnected">Disconnected Mode</a></li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/303">#303</a>:
+        Editiermöglichkeit für die <a href="userdoc/dashboardpage.html#anchorwatch">Ankerwache</a>,
+        zusätzliche Bestätigung für Ende nötig</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/327">#327</a>:
+        Optional nur ganzzahlige Zoom Level mit den +/- Buttons</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/334">#334</a>:
+        Geänderte VMC und HDG Berechnung</li>
+      <li>Verhindere das Aussenden von empfangenen Nachrichten auf dem gleichen
+        Kanal (Schalter für enable/disable)</li>
+      <li>Workaround für fehlerhaftes signalk-to-nmea2000 plugin für <a href="hints/CanboatAndSignalk.html#waypoint">Wegepunkt
+          Daten</a></li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/325">#325</a>:
+        Zeige relative Bewegungsvektoren für <a href="userdoc/navpage.html#ais">AIS
+          Ziele</a> und einen Indikator für die Drehung</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/320">#320</a>:
+        Unklare Zuordnung von <a href="hints/CanboatAndSignalk.html#mapping">SignalK
+          zu AvNav</a> entfernt (d.h. keine Fallbacks in der Zuordnung mehr)</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/333">#333</a>:
+        Weitere <a href="quickstart.html#decoding">NMEA Dekoder</a></li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/331">#331</a>: <a
+          href="quickstart.html#decoding">Dekodiere magVariation</a></li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/247">#247</a>:
+        Einige Hilfe-Texte hinzugefügt</li>
+      <li>erlaube nutzerdefinierte Icons und Text für geojson Overlays,
+        vereinheitlichtes Handling der Style Parameter in Overlays</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/312">#312</a>:
+        Akzepiere XDR Werte ohne type oder unit.</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/310">#310</a>:
+        Sende auch vmg zu signalK, Korrektur der SignalK Pfade, os das sie für
+        das signalk-to-nmea2000 plugin passen</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/294">#294</a>:
+        Suchfunktion auf der <a href="userdoc/aispage.html">Ais Listen Seite</a></li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/305">#305</a>:
+        Lock Button auf der <a href="userdoc/aispage.html">Ais Listen Seite</a></li>
+      <li>Bessere Unterbrechung bei langen Hochladevorgängen</li>
+    </ul>
+    <p>kleinere Korrekturen:</p>
+    <ul>
+      <li>Korrekte AIS Dekodierung von Nachrichten ohne AIS channel ID</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/332">#332</a>:
+        Korrektur des fehlerhaften blacklist Handlings</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/321">#321</a>:
+        Vermeide eine ständig wiederholte Nachricht im Log</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/319">#319</a>:
+        Korrektur des Wegepunkt-Dialogs</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/318">#318</a>&nbsp;
+        Korrektur der BSH Demo-Kartenquelle</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/313">#313</a>:
+        Korrekte Prüfung von Listen beim Speichern</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/307">#307</a>:
+        Korrektur eines Fehlers bei canvas gauges mit negativen Werten</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/301">#301</a>:
+        Richtiges Löschen von Layouts</li>
+    </ul>
+    <p><i><b>AvNav Raspberry (avnav-raspi)</b></i></p>
+    <ul>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/330">#330</a>:
+        Vorbereitungen für Debian Bookworm (noch nicht final getestet) </li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/297">#297</a>:
+        Unterstützung für den MacArthur HAT </li>
+    </ul>
+    <p><i><b>AvNav Android </b></i></p>
+    <ul>
+      <li>Hochladen und Herunterladen in der Android App (für plugin Seiten und
+        User Apps)app (important for ochartsng)</li>
+      <li>Erzwinge IPv4 beim Start des Browsers aus der App (Wichtig für Plugins
+        und User Apps)</li>
+    </ul>
     <p> <span style="font-weight: bold;">20230705</span> <a title="release/20230705"
         href="../downloads/release/20230705">link</a></p>
     <i><b>Alle Versionen - wichtige Fehlerkorrektur:</b></i>
