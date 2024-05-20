@@ -401,17 +401,6 @@ task uploadRepoRelease(type: UploadSftp){
     dependsOn 'release'
 }
 
-task uploadAccess(type: UploadHtAccess){
-    sourceName=project.avnavRelease?"release.htaccess":"daily.htaccess"
-    baseDir=project.avnavRelease?"release":"daily"
-    version=project.avnavVersion
-}
-task uploadAccessWindows(type: UploadHtAccess){
-    sourceName="windows.htaccess"
-    baseDir=""
-    version=project.avnavVersion
-}
-
 def ks=System.getenv("ANDROID_KEYSTORE")
 def sign="-unsigned"
 if (ks) sign=""
@@ -783,7 +772,7 @@ task upload{
     doLast {
         println "###uploaded artifacts to version dir $project.avnavVersion###"
     }
-    dependsOn uploadDeb,uploadRaspi,uploadRpm,uploadViewer, uploadAccess,uploadZip
+    dependsOn uploadDeb,uploadRaspi,uploadRpm,uploadViewer, uploadZip
     dependsOn uploadWindowsNet
     if (buildAndroid){
         dependsOn uploadAndroidBeta
@@ -794,8 +783,8 @@ task uploadRelease{
     doLast {
         println "###upload release artifacts to version dir $project.avnavVersion###"
     }
-    dependsOn testGit,uploadDeb,uploadRaspi,uploadRpm,uploadViewerRelease,uploadAccess,uploadZip
-    dependsOn uploadWindowsNet,uploadAccessWindows
+    dependsOn testGit,uploadDeb,uploadRaspi,uploadRpm,uploadViewerRelease,uploadZip
+    dependsOn uploadWindowsNet
     if (buildAndroid){
         dependsOn uploadAndroidRelease
     }
