@@ -352,7 +352,7 @@ class AVNImporter(AVNWorker):
   P_WORKDIR=WorkerParameter('workDir','',editable=False)
   P_WAITTIME=WorkerParameter('dirsettle',30,type=WorkerParameter.T_NUMBER,
                              description='time to wait in seconds before a conversion is started after detecting a change of a directory (settle time)')
-  P_FWAITTIME=WorkerParameter('filesettls',10,type=WorkerParameter.T_NUMBER,
+  P_FWAITTIME=WorkerParameter('filesettle',10,type=WorkerParameter.T_NUMBER,
                              description='time to wait in seconds before a conversion is started after detecting a change of a directory (settle time)')
   P_SCANINTERVAL=WorkerParameter('scanInterval', 0, type=WorkerParameter.T_NUMBER,
                              description='seconds between import dir scan, 0 to disable automatic scan')
