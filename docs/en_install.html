@@ -52,7 +52,7 @@
       <li><a href="hints/CanboatAndSignalk.html">Canboat</a></li>
       <li>Support for <a href="https://www.gedad.de/projekte/projekte-f%C3%BCr-privat/gedad-marine-control-server/">MCS</a></li>
       <li>optionally and X-Server with openbox and firefox in kiosk mode</li>
-      <li>support for various <a href="#configHats">HATs</a></li>
+      <li>support for various <a href="#configHATS">HATs</a></li>
     </ul>
     They are preconfigured to route NMEA0183 traffic from all interfaces to
     AvNav and from there to <a href="hints/CanboatAndSignalk.html">SignalK</a>.
@@ -240,7 +240,8 @@
       system on your card. Depending on the selected configuration it will
       potentially reboot twice.</p>
     <p>Now you will be able to connect to your pi.</p>
-    <h3><a name="connecting"></a>Connecting to your Raspberry Pi</h3>
+    <h3><a name="connecting"></a><a name="access"></a>Connecting to your
+      Raspberry Pi</h3>
     <p>If you configured a local monitor connecting is fairly easy of course.
       But for the headless mode (and as a fallback also recommended with local
       screen) the following options are available to connect to the Pi.</p>
@@ -499,8 +500,10 @@ sudo apt install avnav </div>
 sudo systemctl start avnav</div>
     <p> you can let AvNav start with the user "avnav" automatically on system
       start up.</p>
-    <p>Starting from 202405xx you can run AvNav as a <a href="https://wiki.archlinux.org/title/Systemd/User">user
-        systemd service</a> for your user. To enable this you need to run</p>
+    <h3>User Service</h3>
+    <p><a name="userservice"></a>Starting from 202405xx you can run AvNav as a <a
+        href="https://wiki.archlinux.org/title/Systemd/User">user systemd
+        service</a> for your user. To enable this you need to run</p>
     <div class="code">avnavservice enable [port]</div>
     <p>This will enable a user systemd service "avnav" that will automatically
       start when the user logs in and stop when the user logs out. To have the

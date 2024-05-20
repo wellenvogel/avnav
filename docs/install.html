@@ -51,7 +51,7 @@
       <li><a href="hints/CanboatAndSignalk.html">Canboat</a></li>
       <li>Support for <a href="https://www.gedad.de/projekte/projekte-f%C3%BCr-privat/gedad-marine-control-server/">MCS</a></li>
       <li>optional einen X-Server mit openbox und firefox im Kiosk Modus</li>
-      <li>Unterstützung für verschiedene <a href="#configHats">HATs</a></li>
+      <li>Unterstützung für verschiedene <a href="#configHATS">HATs</a></li>
     </ul>
     Die Images sind so vorkonfiguriert, dass NMEA0183-Daten von allen Interfaces
     zu AvNav und von dort zu <a href="hints/CanboatAndSignalk.html">SignalK</a>
@@ -523,6 +523,7 @@ sudo apt install avnav </div>
 sudo systemctl start avnav</div>
     <p> kann man AvNav mit dem Benutzer "avnav" automatisch beim Systemstart
       aktivieren.</p>
+    <h3><a name="userservice"></a>User Service</h3>
     <p>Ab 202405xx kann man AvNav als ein <a href="https://wiki.archlinux.org/title/Systemd/User">user
         systemd service</a> für den eigenen Nutzer automatisch starten lassen.
       Um diesen Service zu aktivieren ruft man </p>
@@ -587,7 +588,7 @@ After=avnav-check-parts.service
     <p>Avnav als Systemdienst starten. Wenn man diese Datei nicht
       anlegt/kopiert, wird AvNav nicht mit den Nutzer "pi", sondern mit dem
       Nutzer "avnav" arbeiten.</p>
-    <h2>OpenPlotter </h2>
+      <a name="openplotter"></a><h2>OpenPlotter </h2>
     <p>Für <a href="https://openmarine.net/openplotter">OpenPlotter</a> gibt es
       eine komplette Integration von AvNav (Dank an <a href="https://github.com/e-sailing">e-sailing</a>).
       Im Repository <a href="https://www.free-x.de/deb4op/">https://www.free-x.de/deb4op/</a>
@@ -660,7 +661,7 @@ sudo apt install openplotter-avnav</div>
           <td>Update</td>
           <td>Diser Eintrag ist "Install" wenn die AvNav Software noch nicht
             installiert wurde.<br>
-            Ein Installationsdialog wird geöffnet(siehe <a href="#windowsisntall">unten</a>).</td>
+            Ein Installationsdialog wird geöffnet(siehe <a href="#windowsinstall">unten</a>).</td>
         </tr>
         <tr>
           <td>Remove</td>
