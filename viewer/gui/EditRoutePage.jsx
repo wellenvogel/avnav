@@ -691,7 +691,7 @@ class EditRoutePage extends React.Component{
                 name:"NavGoto",
                 onClick:()=>{
                     if (! this.checkRouteWritable()) return;
-                    stopAnchorWithConfirm()
+                    stopAnchorWithConfirm(true)
                         .then(()=>{
                             RouteHandler.wpOn(getCurrentEditor().getPointAt());
                             this.props.history.pop();

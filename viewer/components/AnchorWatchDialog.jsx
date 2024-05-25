@@ -15,9 +15,17 @@ import NavCompute from "../nav/navcompute";
 
 const activeRoute=new RouteEdit(RouteEdit.MODES.ACTIVE,true);
 
-export const stopAnchorWithConfirm=()=>{
+export const stopAnchorWithConfirm=(opt_resolveOnInact)=>{
     return new Promise((resolve,reject)=>{
-        if (activeRoute.anchorWatch() === undefined) reject('inactive');
+        if (activeRoute.anchorWatch() === undefined) {
+            if (opt_resolveOnInact){
+                resolve(true);
+            }
+            else {
+                reject('inactive');
+            }
+            return;
+        }
         OverlayDialog.confirm("Really stop the anchor watch?")
             .then(() => resolve(true))
             .catch((e)=>reject(e));
