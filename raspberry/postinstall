@@ -1,5 +1,7 @@
 #! /bin/sh
 BASE=/usr/lib/avnav/raspberry
+startAvNav=1
+systemctl -q status avnav > /dev/null || startAvNav=0 
 systemctl stop avnav || echo "avnav not running"
 systemctl stop check_parts || echo "check_parts not running"
 systemctl stop check_wlan || echo "check_wlan not running"
@@ -90,8 +92,10 @@ systemctl stop ntp.service || echo "ntp not running, dont need to disable"
 
 systemctl daemon-reload
 systemctl restart dnsmasq
-
-systemctl restart avnav
+if [ "$startAvNav" = "1" ] ; then
+    echo "starting avnav"
+    systemctl start avnav
+fi
 systemctl enable avnav-iptables
 systemctl start avnav-iptables
 systemctl enable avnav-startup
