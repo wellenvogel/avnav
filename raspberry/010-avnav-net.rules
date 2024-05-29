@@ -8,6 +8,9 @@
 KERNELS=="1-1.2:1.0",SUBSYSTEM=="net",PROGRAM="/usr/lib/avnav/raspberry/rename-interface.sh %k %b", NAME="%c"
 #for pi3B+ - thanks to free-x
 KERNELS=="1-1.1.2:1.0",SUBSYSTEM=="net",PROGRAM="/usr/lib/avnav/raspberry/rename-interface.sh %k %b", NAME="%c"
+#fix for bookworm pi3b and pi4b ( what's with pi3b+?)
+KERNELS=="1-1.2",SUBSYSTEM=="net",PROGRAM="/usr/lib/avnav/raspberry/rename-interface.sh %k %b", NAME="%c"
+#KERNELS=="1-1.1.2",SUBSYSTEM=="net",PROGRAM="/usr/lib/avnav/raspberry/rename-interface.sh %k %b", NAME="%c"
 
 #to fix a dongle to also work as access point if there are some conflicts
 #just select an USB port that you would like to plug it
