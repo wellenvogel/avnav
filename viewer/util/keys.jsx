@@ -293,6 +293,7 @@ let keys={
             scale: new Property(true,"ScaleLine", PropertyType.CHECKBOX),
             user: new Property({},"User/Plugins",PropertyType.CHECKBOX)
         },
+        startNavPage: new Property(false,"start with last map",PropertyType.CHECKBOX),
         localAlarmSound: new Property(true, "Alarm Sound", PropertyType.CHECKBOX),
         alarmVolume: new Property(50,"Alarm Volume (0...100)",PropertyType.RANGE,[0,100]),
         connectedMode: new SplitProperty(true, "connected", PropertyType.CHECKBOX),

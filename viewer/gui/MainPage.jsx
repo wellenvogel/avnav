@@ -359,7 +359,11 @@ class MainPage extends React.Component {
                     newState.selectedChart=selectedChart;
                     //if current is undefined we have just started
                     //just set the chart entry at the mapholder
-                    if (! current) mapholder.setChartEntry(items[selectedChart]);
+                    if (! current) {
+                        if (! this.props.options || ! this.props.options.noInitial) {
+                            mapholder.setChartEntry(items[selectedChart]);
+                        }
+                    }
                 }
                 if (newState.selectedChart !== this.state.selectedChart)  this.setState(newState);
                 this.readOverlays(items).then((newState)=>{

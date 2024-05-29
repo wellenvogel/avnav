@@ -54,7 +54,9 @@ const settingsSections={
         keys.properties.boatDirectionVector,keys.properties.boatSteadyDetect,keys.properties.boatSteadyMax,
         keys.properties.courseAverageTolerance,keys.properties.gpsXteMax,keys.properties.courseAverageInterval,keys.properties.speedAverageInterval,keys.properties.positionAverageInterval,keys.properties.anchorWatchDefault,keys.properties.anchorCircleWidth,
         keys.properties.anchorCircleColor,keys.properties.windKnots,keys.properties.windScaleAngle,keys.properties.measureColor,keys.properties.measureRhumbLine],
-    Map:        [keys.properties.autoZoom,keys.properties.mobMinZoom,keys.properties.style.useHdpi,
+    Map:        [
+        keys.properties.startNavPage,
+        keys.properties.autoZoom,keys.properties.mobMinZoom,keys.properties.style.useHdpi,
         keys.properties.clickTolerance,keys.properties.featureInfo,keys.properties.emptyFeatureInfo,
         keys.properties.mapFloat,keys.properties.mapScale,keys.properties.mapUpZoom,
         keys.properties.mapOnlineUpZoom,
