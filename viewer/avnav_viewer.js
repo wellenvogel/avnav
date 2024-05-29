@@ -29,6 +29,8 @@ icons partly from http://www.tutorial9.net/downloads/108-mono-icons-huge-set-of-
                   http://ionicons.com/ (MIT license)
 */
 
+import splitsupport from "./util/splitsupport";
+
 if (getParam('dimm')) avnav.testDim=true;
 
 import React from 'react';
@@ -187,6 +189,9 @@ export default function() {
     };
     //register some widget definitions
     registerRadial();
+    if (splitsupport.setSplitFromLast()){
+        return;
+    }
     //check capabilities
     let falseCapabilities={};
     for (let k in keys.gui.capabilities){

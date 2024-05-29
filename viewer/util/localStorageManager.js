@@ -7,13 +7,14 @@ export const PREFIX_NAMES={
     CENTER: 'avnav.center',
     SPLITSETTINGS:'avnav.splitsettings'
 }
-const UNPREFIXED_NAMES={
+export const UNPREFIXED_NAMES={
     CHARTINFO: 'avnav.chartinfo',
     O_SESSION: 'avnav.ochartProvider.sessionId',
     EULAS:'avnav.eulas',
     SETTINGS: 'avnav.settings',
     LICENSE: 'avnav.licenseAccepted',
-    DEFAULTROUTE: 'avnav.defaultRoute'
+    DEFAULTROUTE: 'avnav.defaultRoute',
+    SPLITMODE: 'avnav.splitmode'
 }
 
 export const STORAGE_NAMES=assign({},UNPREFIXED_NAMES,PREFIX_NAMES);
