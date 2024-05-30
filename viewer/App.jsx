@@ -288,25 +288,8 @@ class App extends React.Component {
         );
         let lastChart=mapholder.getLastChartKey();
         if (startpage === 'mainpage' && globalStore.getData(keys.properties.startNavPage) && lastChart){
-            this.pendingActions.push(
-                Requests.getJson("?request=list&type=chart",
-                {timeout:3*parseFloat(globalStore.getData(keys.properties.networkTimeout))})
-                .then((json)=> {
-                    if (json.items){
-                        json.items.forEach((ci)=>{
-                            if (!ci.key) ci.key=ci.chartKey||ci.url;
-                            if (lastChart === ci.key){
-                                mapholder.setChartEntry(ci,true);
-                            }
-                        })
-                    }
-                })
-                .catch(()=>{})
-            );
             const delayedStart=()=>{
-                if (mapholder.getCurrentChartEntry()) {
-                    this.history.push('navpage');
-                }
+                this.history.replace(startpage,{selectChart:lastChart})
             }
             this.history.push(startpage,{noInitial:true});
             Promise.all(this.pendingActions)
