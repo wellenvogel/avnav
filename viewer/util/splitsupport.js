@@ -85,18 +85,28 @@ class SplitSupport{
     }
 
     setSplitFromLast(){
+        let current=globalStore.getData(keys.gui.global.splitMode);
         if (!globalStore.getData(keys.properties.startLastSplit)){
-            return false;
+            if (! current) {
+                localStorageManager.setItem(UNPREFIXED_NAMES.SPLITMODE, undefined, "off");
+                return false;
+            }
+            if (! globalStore.getData(keys.gui.global.preventAlarms)){
+                //only handle this in one frame
+                localStorageManager.setItem(UNPREFIXED_NAMES.SPLITMODE, undefined, "on");
+                return false;
+            }
         }
         let wanted=localStorageManager.getItem(UNPREFIXED_NAMES.SPLITMODE);
-        let current=globalStore.getData(keys.gui.global.splitMode);
         if (wanted === 'on' && ! current){
             this.activateSplitMode();
             return true;
         }
         if (wanted !== 'on' && current){
-            this.deactivateSplitMode();
-            return true;
+            if (!globalStore.getData(keys.gui.global.preventAlarms)) {
+                this.deactivateSplitMode();
+                return true;
+            }
         }
         return false;
     }
