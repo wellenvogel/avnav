@@ -373,6 +373,16 @@ const Dialogs = {
 
 
 };
+export const dialogDisplay=(content,closeCallback)=>{
+    let Display=InputMonitor(DialogDisplay);
+    return(
+        <Display
+            className="nested"
+            content={content}
+            closeCallback={closeCallback}
+        />
+    );
+}
 /**
  * a helper that will add dialog functionality to a component
  * it will maintain a variable inside the component state that holds the dialog
@@ -418,16 +428,9 @@ export const dialogHelper=(thisref,stateName,opt_closeCallback)=>{
         },
         getRender(){
             if (!thisref.state[stateName]) return null;
-            let Display=InputMonitor(DialogDisplay);
-            return(
-                <Display
-                    className="nested"
-                    content={thisref.state[stateName]}
-                    closeCallback={()=>{
-                        this.hideDialog()
-                    }}
-                    />
-            );
+            return dialogDisplay(thisref.state[stateName],()=>{
+                this.hideDialog()
+            });
         },
         isShowing(){
           return !!thisref.state[stateName];

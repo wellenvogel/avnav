@@ -25,7 +25,6 @@ import {RecursiveCompare} from '../util/compare';
 import LocalStorage from '../util/localStorageManager';
 import splitsupport from "../util/splitsupport";
 import LeaveHandler from '../util/leavehandler';
-import OverlayDialog, {dialogHelper} from "../components/OverlayDialog";
 
 
 
@@ -125,7 +124,6 @@ class MainPage extends React.Component {
             this.fillList();
         },{sequence:keys.gui.global.reloadSequence});
         this.timer=GuiHelper.lifecycleTimer(this,(sequence)=>{
-            this.checkChartRequest();
             this.fillList(sequence);
         },3000,true);
         let self=this;
@@ -147,11 +145,6 @@ class MainPage extends React.Component {
         },"page",["selectChart","nextChart","previousChart"]);
         this.showNavpage=this.showNavpage.bind(this);
         this.ChartItem=this.ChartItem.bind(this);
-        this.dialogHelper=dialogHelper(this,'waitChart',()=>{
-            this.setState({waitingDone:true});
-            console.log("chart waiting cancelled");
-            this.props.history.replace('mainpage');
-        });
 
     }
 
@@ -164,33 +157,6 @@ class MainPage extends React.Component {
         MapHolder.setChartEntry(entry);
         this.props.history.push('navpage');
     };
-
-    checkChartRequest(){
-        if (this.props.options && this.props.options.selectChart && ! this.state.waitingDone) {
-            if (!this.dialogHelper.isShowing()) {
-                this.chartWaitCount = 5;
-                this.dialogHelper.showDialog(
-                    OverlayDialog.createAlertDialog("waiting for chart " + this.props.options.selectChart,
-                        () => {
-                            this.dialogHelper.hideDialog();
-                        }
-                    ));
-            }
-        }
-        if (this.dialogHelper.isShowing()){
-            this.chartWaitCount-=1;
-            if (this.chartWaitCount < 0 || ! (this.props.options && this.props.options.selectChart)){
-                this.dialogHelper.hideDialog();
-            }
-            let chartlist=this.state.chartList||[];
-            chartlist.forEach((chart)=>{
-                if (chart.key === this.props.options.selectChart){
-                    this.props.history.replace('mainpage');
-                    this.showNavpage(chart);
-                }
-            })
-        }
-    }
 
 
     getButtons() {
@@ -319,10 +285,6 @@ class MainPage extends React.Component {
 
     componentDidMount() {
         globalStore.storeData(keys.gui.global.soundEnabled,true);
-        this.checkChartRequest();
-    }
-    componentDidUpdate(prevProps, prevState, snapshot) {
-        this.checkChartRequest();
     }
 
     selectChart(offset){

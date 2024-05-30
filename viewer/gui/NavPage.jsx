@@ -8,7 +8,7 @@ import React from 'react';
 import MapPage,{overlayDialog} from '../components/MapPage.jsx';
 import Toast from '../components/Toast.jsx';
 import NavHandler from '../nav/navdata.js';
-import OverlayDialog from '../components/OverlayDialog.jsx';
+import OverlayDialog, {dialogDisplay} from '../components/OverlayDialog.jsx';
 import Helper from '../util/helper.js';
 import GuiHelpers from '../util/GuiHelpers.js';
 import MapHolder from '../map/mapholder.js';
@@ -32,6 +32,11 @@ import {InputReadOnly} from "../components/Inputs";
 import assign from 'object-assign';
 import WidgetFactory from "../components/WidgetFactory";
 import ItemList from "../components/ItemList";
+import mapholder from "../map/mapholder.js";
+import Page from "../components/Page";
+import Dialogs from "../components/OverlayDialog.jsx";
+import Requests from "../util/requests";
+import DB from "../components/DialogButton";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 
@@ -223,7 +228,8 @@ class NavPage extends React.Component{
         this.getButtons=this.getButtons.bind(this);
         this.mapEvent=this.mapEvent.bind(this);
         this.state={
-            showWpButtons: false
+            showWpButtons: false,
+            sequence: 0
         };
         this.showWpButtons=this.showWpButtons.bind(this);
         this.widgetClick=this.widgetClick.bind(this);
@@ -353,6 +359,35 @@ class NavPage extends React.Component{
         if (globalStore.getData(keys.properties.mapLockMode) === 'center'){
             MapHolder.setBoatOffset();
         }
+        this.checkChartCount=30;
+        this.checkChartTimer=GuiHelpers.lifecycleTimer(this,(seq)=>{
+            let neededChart=this.needsChartLoad();
+            if (! neededChart){
+                this.checkChartTimer.startTimer(seq);
+                return;
+            }
+            this.checkChartCount--;
+            if (this.checkChartCount < 0){
+                this.props.history.pop();
+                return;
+            }
+            Requests.getJson("?request=list&type=chart",{timeout:3*parseFloat(globalStore.getData(keys.properties.networkTimeout))}).
+                then((json)=>{
+                    this.checkChartTimer.startTimer(seq);
+                    (json.items||[]).forEach((chartEntry)=>{
+                        if (!chartEntry.key) chartEntry.key=chartEntry.chartKey||chartEntry.url;
+                        if (chartEntry.key === neededChart){
+                            mapholder.setChartEntry(chartEntry);
+                            this.setState({sequence:this.state.sequence+1});
+                        }
+                    })
+                })
+                .catch(()=>{this.checkChartTimer.startTimer(seq)});
+        },1000,true);
+    }
+    needsChartLoad(){
+        if (mapholder.getCurrentChartEntry()) return;
+        return mapholder.getLastChartKey()
     }
     widgetClick(item,data,panel,invertEditDirection){
         let pagePanels=LayoutHandler.getPagePanels(PAGENAME);
@@ -652,6 +687,28 @@ class NavPage extends React.Component{
             autohide=globalStore.getData(keys.properties.hideButtonTime,30)*1000;
         }
         let pageProperties=Helper.filteredAssign(MapPage.propertyTypes,self.props);
+        let neededChart=this.needsChartLoad();
+        if (neededChart){
+            let Dialog=dialogDisplay((props)=>{
+                return (<div className="inner">
+                    <h3 className="dialogTitle">Waiting for chart</h3>
+
+                    <div className="dialogText">{neededChart}</div>
+                    <div className="dialogButtons">
+                        <DB name="cancel" onClick={()=>this.props.history.pop()}>Cancel</DB>
+                    </div>
+                </div>)
+                },
+                ()=>this.props.history.pop());
+            return (
+                <Page
+                    {...pageProperties}
+                    id={PAGENAME}
+                    buttonList={self.getButtons()}
+                    mainContent={Dialog}
+                    />
+            );
+        }
         return (
             <MapPage
                 {...pageProperties}

@@ -289,7 +289,7 @@ class App extends React.Component {
         let lastChart=mapholder.getLastChartKey();
         if (startpage === 'mainpage' && globalStore.getData(keys.properties.startNavPage) && lastChart){
             const delayedStart=()=>{
-                this.history.replace(startpage,{selectChart:lastChart})
+                this.history.push('navpage');
             }
             this.history.push(startpage,{noInitial:true});
             Promise.all(this.pendingActions)
