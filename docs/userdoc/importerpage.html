@@ -135,7 +135,55 @@
       In diese Datei schreibt man genau eine Zeile mit dem absoluten Pfad zu den
       zu konvertierenden Dateien/Verzeichnissen.<br>
       Danach einen erneuten Scan ber Hand auslösen!</p>
-    <p><br>
-    </p>
+    <h2>Eingebaute Konverter</h2>
+    <p>AvNav bringt die folgenden Konverter mit.</p>
+    <h3>.kap (BSB)</h3>
+    <p> Für kap Dateien werden auch zip Dateien mit mehreren kap Dateien
+      akzeptiert.<br>
+      Die Konvertierung besteht aus den folgenden Schritten:</p>
+    <ul>
+      <li> Sortierung der Karten in Layer (mit potentieller Umwandlung) </li>
+      <li>Erzeugung der Kacheln</li>
+      <li>Erzeugung einer GEMF Datei</li>
+    </ul>
+    <h4>Details (nur für Experten)</h4>
+    Im Folgenden werden die Konvertierungsschritte für den KAP Konverter
+    beschrieben. Im Normalfall sind diese nicht von Interesse. Aber man kann die
+    Konvertierung ggf. von der Kommandozeile aufrufen, falls die Ergebnisse
+    nicht zufriedenstellend sind.<br>
+    Die Datei read_charts.py findet sich unter /usr/lib/avnav/chartconvert.<br>
+    <p>Der erste Schritt geht relativ schnell. Alle Kartendateien werden
+      gelesen, Auflösung und Abdeckung werden ermittelt (falls nötig wird
+      konvertiert). Im Ergebnis entsteht im workdir/&lt;name&gt; Verzeichnis
+      eine Datei chartlist.xml. Der Aufruf dazu lautet:</p>
+    <pre>read_charts.py -g -o name -m chartlist inputdir [inputdir...]
+</pre>
+    <p>Anschliessend sollte die chartlist.xml noch einmal mit einem Texteditor
+      überprüft werden, manchmal macht es Sinn, Kartendateien noch einem anderen
+      Layer zuzuordnen. Das kann einfach durch Verschieben des entsprechenden
+      XML Elements erfolgen. Man kann sich dazu an den Namen der Karten
+      orientieren - meist mach es Sinn Karten vergleichbaren Detailgrades in
+      einen Layer zu verschieben.</p>
+    <p>Der zweite Schritt ist etwas langwieriger, hier erfolgt die eigentliche
+      Erzeugung der Kartenkacheln. Der Aufruf:</p>
+    <pre>read_charts.py -g -o name -m generate inputdir [inputdir...]
+</pre>
+    <p> Unter workdir/&lt;name&gt; muss bereits eine chartlist.xml existieren.
+      Die Erzeugung läuft multi-threaded, auf einem Dual Core 2x2Ghz ca. 20 min
+      für einen Kartensatz mit ca. 20 Karten. </p>
+    <p>Zum Schluss muss man noch die gemf Datei erzeugen</p>
+    <pre>read_charts.py -g -o name -m gemf inputdir [inputdir...]</pre>
+    <p></p>
+    <p>Man kann auch alle Schritte kombinieren – dazu einfach -m all noch vor
+      den anderen Parametern bei Schritt 1 angeben:</p>
+    <pre>read_charts.py -g -m all [-o name] inputdir</pre>
+    <h3>.mbtiles</h3>
+    <p>Zwar kann AvNav .mbtiles direkt verarbeiten, aber es kann u.U. nützlich
+      sein, diese in gemf Dateien umzuwandeln - um sie z.B. unter Android im
+      externen Kartenverzeichnis nutzen zu können.<br>
+      Der Koverter kann bisher nur Dateien mit der Standard-xyz Kodierung
+      verarbeiten.</p>
+    <h3>.navipack</h3>
+    <p>Umwandlung in gemf.</p>
   </body>
 </html>

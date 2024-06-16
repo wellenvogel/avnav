@@ -19,20 +19,19 @@
   <body data-order="600">
     <h1 class="western"><a name="Chartconvert">AvNav Charts and Overlays</a></h1>
     <div class="toc"> </div>
-    <h2><a id="Intro" name="Intro"></a>Introduction</h2>
-    <img title="Karten" alt="Karten" src="Karten.png" width="600">
-    <p>To use charts in AvNav they have to be available in a tile format. This
-      is a format used by services like OpenStreetMaps or GoogleMaps. A tile has
-      (normally) a size of 256x256 pixel. The world is projected to a flat
-      surface (imagine a paper cylinder wrapped around the earth at the
-      aequator). Each point with it's coordinates (longitude/latitude) will pe
-      projected at this cylinder. How this is performed in detail, which units
-      will be used and whether the earth is considered as an ellipsoid or a
-      sphere is described by the projection. AvNav is using the so called google
-      mercator projection (earth considered a sphere) with the EPSG code 900913.
-      The projected units are always meters (but can be converted to longitude
-      and latitude). If you have charts using a different projection they have
-      to be reprojected beforehand.</p>
+    <h2><a id="Intro" name="Intro"></a>Technical Background</h2>
+    To use charts in AvNav they have to be available in a tile format. This is a
+    format used by services like OpenStreetMaps or GoogleMaps. A tile has
+    (normally) a size of 256x256 pixel. The world is projected to a flat surface
+    (imagine a paper cylinder wrapped around the earth at the aequator). Each
+    point with it's coordinates (longitude/latitude) will pe projected at this
+    cylinder. How this is performed in detail, which units will be used and
+    whether the earth is considered as an ellipsoid or a sphere is described by
+    the projection. AvNav is using the so called google mercator projection
+    (earth considered a sphere) with the EPSG code 900913. The projected units
+    are always meters (but can be converted to longitude and latitude). If you
+    have charts using a different projection they have to be reprojected
+    beforehand.
     <p>The whole projection area is split into tiles. The zoom level determines
       the number of tiles for the complete area. Zoom level 0 means:&nbsp;
       complete earth (from -85°...+85°, outside these limits the projection is
@@ -72,9 +71,36 @@
       you will be rewarded with a continous chart view with no gaps inbetween.<br>
       The same has to be considered when it comes to downloading charts. You
       need to carefully select areas and zoom levels. </p>
-    <p>The following options for charts are available:</p>
+    <h2><a name="chartformats" id="chartformats"></a>Chart Formats </h2>
+    <p>AvNav uses <a href="http://www.cgtk.co.uk/gemf">GEMF</a> as its primary
+      format. It is a compact binary format merging all tiles into one file with
+      the necessary meta data added. This format permits special functions like
+      automatic zoom level adaptation.&nbsp;&nbsp; <br>
+      Since version 20200325 AvNav can directly use the <a href="https://wiki.openstreetmap.org/wiki/MBTiles">mbtiles</a>
+      format. To use this format you potentially have to select the correct
+      variant of internal tile sorting. The default format is "xyz" but there is
+      also a "tms" format available. You can switch the format at the <a href="userdoc/downloadpage.html#mbtiles">Files/Download</a>
+      page. You can download MbTiles directly e.g. from <a href="https://ftp.gwdg.de/pub/misc/openstreetmap/openseamap/charts/mbtiles/">OpenSeamap</a>.</p>
+    <p><b>Hint</b>: Up to version 202011xx AvNav was reading an entry "scheme"
+      in the mbtiles metadata. Unfortunately the usage of this entry is not well
+      defined and different sources are using differently (see <a href="https://github.com/wellenvogel/avnav/issues/63">Issue
+        #63</a>). In earlier editions AvNav internally inverted the meaning of
+      xyz and tms. Since version 202011xx AvNav ignores this value (and assumes
+      tms). If the value is set in the metadata, the chart will be displayed in
+      red and you can visit the <a href="userdoc/downloadpage.html">Download-Page</a>
+      to choose the type to be applied for this specific chart.</p>
+    <p>For the handling of the vector charts refer to the <a href="hints/ocharts.html">ocharts</a>/<a
+        href="hints/ochartsng.html">ochartsng</a> descriptions.</p>
+    <h2><a name="sources" id="sources"></a>Chart Sources</h2>
+    <p>You can get charts from various sources - either in a format that is
+      directly usable by AvNav (.gemf, .mbtiles, o-charts) or a format that
+      needs conversion before (.kap, s57).<br>
+      There are tools available to download such charts - either within AvNav or
+      outside.</p>
+    <p>A list of chart sources: </p>
     <ul>
-      <li> Downloading ready to go raster charts (e.g. from <a href="https://ftp.gwdg.de/pub/misc/openstreetmap/openseamap/charts/mbtiles/">OpenSeamap</a>
+      <li> Downloading ready to go raster charts (e.g. from <a href="https://ftp.gwdg.de/pub/misc/openstreetmap/openseamap/charts/mbtiles/">OpenSeamap</a>,&nbsp;
+        <a href="https://distribution.charts.noaa.gov/ncds/index.html">NOAA</a>
         - mbtiles) </li>
       <li> Downloading charts using the <a href="http://mobac.sourceforge.net/">Mobile
           Atlas Creator</a>.</li>
@@ -96,131 +122,52 @@
           source for OpenSeaMap</a>.</li>
       <li>...</li>
     </ul>
-    <h2><a name="chartformats" id="chartformats"></a>Chart Formats</h2>
-    <p>AvNav uses <a href="http://www.cgtk.co.uk/gemf">GEMF</a> as its primary
-      format. It is a compact binary format merging all tiles into one file with
-      the necessary meta data added. This format permits special functions like
-      automatic zoom level adaptation.&nbsp;&nbsp; <br>
-      Since version 20200325 AvNav can directly use the <a href="https://wiki.openstreetmap.org/wiki/MBTiles">mbtiles</a>
-      format. To use this format you potentially have to select the correct
-      variant of internal tile sorting. The default format is "xyz" but there is
-      also a "tms" format available. You can switch the format at the <a href="userdoc/downloadpage.html#mbtiles">Files/Download</a>
-      page. You can download MbTiles directly e.g. from <a href="https://ftp.gwdg.de/pub/misc/openstreetmap/openseamap/charts/mbtiles/">OpenSeamap</a>.</p>
-    <p><b>Hint</b>: Up to version 202011xx AvNav was reading an entry "scheme"
-      in the mbtiles metadata. Unfortunately the usage of this entry is not well
-      defined and different sources are using differently (see <a href="https://github.com/wellenvogel/avnav/issues/63">Issue
-        #63</a>). In earlier editions AvNav internally inverted the meaning of
-      xyz and tms. Since version 202011xx AvNav ignores this value (and assumes
-      tms). If the value is set in the metadata, the chart will be displayed in
-      red and you can visit the <a href="userdoc/downloadpage.html">Download-Page</a>
-      to choose the type to be applied for this specific chart.</p>
-    <p>For the handling of the vector charts refer to the <a href="hints/ocharts.html">ocharts</a>/<a
-        href="hints/ochartsng.html">ochartsng</a> descriptions.</p>
+    <h2><br>
+    </h2>
     <h2><a name="installation" id="installation"></a>Installation of Charts</h2>
     <p>After installing AvNav there is one/a couple of online demo charts
-      available. For real usage you have to install charts in AvNav.<br>
-      You upload the charts directly within the WebApp (some only starting from
-      20200325). Upload can be executed via the <a href="userdoc/downloadpage.html#chartupload">Files/Download
-        page</a>.</p>
-    <p>On Android you can also copy charts directly to the external chart
-      directory. For android you have to consider that mbtiles can only be
-      handled after explicit upload&nbsp; - instead of simply storing them in
-      the external chart directory.<br>
+      available. For real usage you have to install charts in AvNav.</p>
+    <p>How to do this depends on the chart type.</p>
+    <h3>Directly usable chart types (gemf,mbtiles)</h3>
+    <p>Upload them on the <a href="userdoc/downloadpage.html#chartupload">Files/Download
+        page</a>.<br>
+      On Android you can also copy them directly to the external chart directory
+      (gemf files only).<br>
       For mbtiles consider the option to switch the internal scheme <a href="userdoc/downloadpage.html#mbtiles">at
         the Files/Download page</a> .</p>
-    <p>In standard versions (not android) starting from 20200325 you can also
-      upload charts that still require conversion. The converter as described
-      in&nbsp; <a href="#Convert">Converting</a> is always included in AvNav.
-      It will read files from it's import directory (/home/pi/avnav/data/import)
-      or from sub directories. When <a href="userdoc/downloadpage.html#chartupload">uploading</a>
-      a file with a known filename extension (like .kap) you will be asked if
-      you want this file to be loaded to the converter import directory. You can
-      monitor the working state of the importer at the <a href="userdoc/importerpage.html">importer
-        page</a>. Starting from 20240520 you can also upload zip files with many
-      charts inside to the importer. You can also upload to the importer
-      directly on the<a href="userdoc/importerpage.html"> importer page</a>. <br>
+    <h3>Charts with conversion (kap, s57)</h3>
+    <p>In normal versions (not Android) you can upload charts that need
+      conversion at the <a href="userdoc/importerpage.html">Importer</a>
+      (starting from 20200325).<br>
+      s57 charts require an installed <a href="hints/ochartsng.html">ochartsng</a>
+      plugin.<br>
       You should keep in mind that converting can require a lot of CPU power and
       can last for hours on the raspberry pi. Probably it is more efficient to
-      run this on a desktop system.</p>
-    <p>If the <a href="#mapproxy">MapProxy plugin</a> is installed its charts
-      will directly become visible in AvNav without any further installation. </p>
+      run this on a desktop system.<br>
+      As the conversion functions are not available for Android, you could
+      additionally <a href="install.html">install</a> AvNav on a Linux- or
+      Windows-System and run the conversion there. Converted charts can be
+      downloaded from the importer and uploaded to the Android app.</p>
+    <h3>Vector Charts (o-charts, s57)</h3>
+    <p>Those charts require an installed <a href="hints/ocharts.html">ocharts</a>
+      or <a href="hints/ochartsng.html">ochartsng</a> plugin (on Android the
+      avocharts app - see <a href="hints/ochartsng.html#android">ochartsng</a>).
+      You cannot use those chart types on windows as the plugins are not
+      available (except the converter from s57 to ocharts). For details refer to
+      the <a href="hints/ocharts.html">ocharts</a>/<a href="hints/ochartsng.html">ochartsng</a>
+      documentations. S57 charts that have been converted will directly become
+      visible in the <a href="hints/ochartsng.html">ochartsng</a> plugin.</p>
+    <h3>Downloading Charts inside AvNav</h3>
+    <p>If the <a href="https://github.com/wellenvogel/avnav-mapproxy-plugin">MapProxy
+        plugin</a> is installed its charts will directly become visible in AvNav
+      without any further installation. </p>
     <h2><a name="overlays" id="overlays"></a>Overlays</h2>
     <p>Since version 20201219 AvNav can display further information as overlay
       (or underlay). You can as well combine different charts. </p>
     <p>For details see <a href="hints/overlays.html">Overlays</a>.<br>
     </p>
-    <h2><a id="Convert" name="Convert"></a>Converting Charts</h2>
-    <p>As described you can run the conversion directly on the pi - but it will
-      take time.</p>
-    <p>It is potentially more appropriate to run the conversion on a desktop
-      computer. You can do this on Linux or Windows machines. For the necessary
-      installations see:</p>
-    <ul>
-      <li><a href="install.html#Packages">Linux</a></li>
-      <li><a href="install.html#Windows">Windows</a></li>
-    </ul>
-    <p>The chart converter is a normal part of AvNav. Since 20240520 there is a
-      separate <a href="userdoc/importerpage.html">page</a> in the App to
-      control and monitor it. See the description of the <a href="userdoc/importerpage.html">importer
-        page</a> for the usage. Some of the available conversions are part of
-      AvNav, others are provided by plugins. The converter will analyze the
-      uploaded chart and select a suitable converter.<br>
-      The internal converter will be able to handle .kap files, mbtiles files,
-      navipack files. It also can handle zip files with kap files inside.<br>
-      The conversion process depends on the type of the chart. The converted
-      charts will be directly written to the chart directory of AvNav (or to the
-      appropriate directory of a plugin).<br>
-      You can also download them directly.</p>
-    <p>For kap (BSB) charts the conversion includes the following steps:</p>
-    <ul>
-      <li> sorting the charts into layers (and potentially converting them) </li>
-      <li> creation of tiles </li>
-      <li>creation of the gemf file</li>
-    </ul>
-    <h4>Details</h4>
-    <p> Here are some details about the conversion steps of the internal kap
-      files converter. Normally you do care about them. <br>
-      But if you are unhappy with the results of the conversion you still could
-      run the conversion using the command line.<br>
-      The read_charts.py is located at /usr/lib/avnav/chartconvert.</p>
-    <blockquote>
-      <div style="font-size:small">
-        <p>The first step is fast. All chart data will be read, resolution and
-          range will be detected. If necessary charts would be
-          converted/reprojected. As a result there will be a chartlist.xml in
-          workdir/&lt;name&gt; . The command line would be:</p>
-        <pre>read_charts.py -g -o name -m chartlist inputdir [inputdir...]
-</pre>
-        <p>Afterwards you can check the chartlist.xml and you could e.g. move
-          some charts into a different layer.</p>
-        <p>The second step will take more time -&nbsp; now the tiles are
-          created:</p>
-        <pre>read_charts.py -g -o name -m generate inputdir [inputdir...]
-</pre>
-        <p>The file chartlist.xml must already exist at&nbsp;
-          workdir/&lt;name&gt;. The creation will run multi threaded.</p>
-        <p>At the end you need to create the gemf file:</p>
-        <pre>read_charts.py -g -o name -m gemf inputdir [inputdir...]</pre>
-        <p></p>
-        <p>You could also combine all steps:</p>
-        <blockquote>
-          <pre>read_charts.py -g -m all [-o name] inputdir [inputdir...]
-
-</pre> </blockquote>
-      </div>
-    </blockquote>
-    <h3 class="western"><a id="Download" name="Download"></a></h3>
-    <h2 class="western"><a name="mapproxy" id="mapproxy"></a>MapProxy plugin</h2>
-    <p>A <a href="https://github.com/wellenvogel/avnav-mapproxy-plugin">plugin</a>
-      is available to embed <a href="https://mapproxy.org/">MapProxy</a>,&nbsp;
-      providing access to various online chart sources. The plugin will support
-      you in configuring MapProxy and allows to comfortably download charts. For
-      details refer to the <a href="https://github.com/wellenvogel/avnav-mapproxy-plugin/blob/master/Readme.md">plugin
-        documentation</a>.</p>
-    <p>The plugin offers a lot of functionality very similar to Mobile Atlas
-      Creator and it can replace it in most cases.</p>
-    <h3 class="western"></h3>
-    <h2 class="western">Download using Mobile Atlas Creator</h2>
+    <h2 class="western"><a id="Convert" name="Convert"></a>Download using Mobile
+      Atlas Creator</h2>
     <p>To use the <a href="https://mobac.sourceforge.io/">Mobile Atlas Creators</a>
       you only need Java and the MOBAC itself. It is important to follow a
       certain procedure when selecting the ranges for download&nbsp; in order to

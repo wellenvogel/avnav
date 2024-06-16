@@ -19,8 +19,7 @@
   <body data-order="600">
     <h1 class="western"><a name="Chartconvert">Avnav Karten und Overlays</a></h1>
     <div class="toc"> </div>
-    <h2><a id="Intro" name="Intro"></a>Einführung</h2>
-    <img title="Karten" alt="Karten" src="Karten.png" width="600">
+    <h2><a id="Intro" name="Intro"></a>Technischer Hintergrund</h2>
     <p>Damit Karten in der WebApp verwendet werden können, müssen sie in einem
       „Kachelformat“ vorliegen. Das ist das Format, das durch Dienste wie
       OpenStreetMaps oder GoogleMaps benutzt wird. Eine Kartenkachel ist 256x256
@@ -59,29 +58,41 @@
       der geringeren Auflösung (ggf. noch vergrössert). Um unsere Anzeigegeräte
       nicht zu überlasten, kann man typisch mit 3-5 Kartenlayern arbeiten (je
       nach Gerät...).</p>
+    <br>
+    <h2><a name="chartformats" id="chartformats"></a>Kartenformate</h2>
+    <p>AvNav kann direkt Karten verarbeiten, die im Format <a href="http://www.cgtk.co.uk/gemf">gemf</a>
+      oder <a href="https://wiki.openstreetmap.org/wiki/MBTiles">mbtiles</a>
+      vorliegen. Diese Formate sind sogenannte Raster Formate, sie enthalten die
+      fertigen Kartenkacheln. Ausserdem können auch online Kartendienste
+      verwendet werden, die ein solches Format bereitstellen.
+    </p>
+    <p>Ausserdem kann AvNav mit seinem <a href="userdoc/importerpage.html">Importer</a>
+      eine ganze Reihe von weiteren Kartenformaten umwandeln um sie nutzbar zu
+      machen. Das sind insbesondere Karten im .KAP Format.</p>
     <p>AvNav kann auch Vertor Karten von <a href="https://o-charts.org/">o-charts</a>
       (mit dem&nbsp; <a href="hints/ocharts.html">ocharts</a> oder <a href="hints/ochartsng.html">ochartsng</a>
-      plugin) und S57 Karten (nach Konvertierung mit dem <a href="hints/ochartsng.html">ochartsng</a>
+      plugin) und S57 Karten (nach Konvertierung über den Importer und das <a href="hints/ochartsng.html">ochartsng</a>
       plugin) nutzen. Diese Vektorkarten werden bei der Nutzung durch die
       plugins automatisch in Kartenkacheln umgewandelt. </p>
+    <p>Hinweis zu mbtiles: Bei diesem Format muss ggf. noch die richtige interne
+      Anordnung der Kacheln gewählt werden - der Standard is "xyz", es gibt aber
+      auch Dateien, die im "tms" Format vorliegen. Eine Umschaltung kann auf der
+      <a href="userdoc/downloadpage.html#mbtiles">Files/Download</a> Seite
+      erfolgen. MbTiles können z.B. direkt von <a href="https://ftp.gwdg.de/pub/misc/openstreetmap/openseamap/charts/mbtiles/">OpenSeamap</a>
+      heruntergeladen werden.<br>
+      Für die Nutzung der Vektorkarten siehe die <a href="hints/ocharts.html">ocharts</a>/<a
+        href="hints/ochartsng.html">ochartsng</a> Plugin Beschreibungen. </p>
+    <h2><a name="sources" id="sources"></a>Kartenquellen</h2>
     <p>Man kann Karten aus verschiedenen Quellen beziehen - entweder direkt in
-      einem von AvNav nutzbaren Format (gemf, mbtiles) oder in einem Format, das
-      erst noch umgewandelt werden muss(z.B. BSB - .kap Dateien).</p>
+      einem von AvNav nutzbaren Format (gemf, mbtiles, o-charts) oder in einem
+      Format, das erst noch umgewandelt werden muss(z.B. BSB - .kap Dateien oser
+      s57). </p>
     <p>Es sind auch Tools verfügbar, um solche Karten innerhalb oder ausserhalb
       von AvNav herunterzuladen.</p>
-    <p>Für die Kartenkonvertierung besteht die Aufgabe darin, vorhandene Karten
-      in Layer einzusortieren, sie ggf zu reprojizieren und dann die
-      Kartenkacheln (sowie eine Beschreibungsdatei) zu erzeugen. Das erfordert
-      meist eine ganze Menge Rechenleistung (und ggf. Zeit), daher ist das
-      etwas, das auf einem PC oder Laptop laufen sollte (der Pi braucht
-      potentiell sehr lange dafür). Das ist aber nicht schlimm – man muss das ja
-      nur einmal machen. Belohnt wird man dafür mit einer sogenannten
-      „blattschnittfreien“ Darstellung.</p>
-    <p>Für den Download gilt Vergleichbares - hier muss man geeignet die Zoom
-      Level und Bereiche auswählen.</p>
-    <p>Es gibt die folgenden Optionen für die Kartennutzung</p>
+    <p>Eine Liste von Kartenquellen:</p>
     <ul>
       <li> Download von fertigen Rasterkarten (z.B. von <a href="https://ftp.gwdg.de/pub/misc/openstreetmap/openseamap/charts/mbtiles/">OpenSeamap</a>
+        , <a href="https://distribution.charts.noaa.gov/ncds/index.html">NOAA</a>
         - mbtiles) </li>
       <li> Download mit dem <a href="http://mobac.sourceforge.net/">Mobile
           Atlas Creator</a>.</li>
@@ -102,148 +113,54 @@
           source für OpenSeaMap</a>.</li>
       <li>...</li>
     </ul>
-    <h2><a name="chartformats" id="chartformats"></a>Kartenformate</h2>
-    <p>AvNav nutzt als primäres Kartenformat das <a href="http://www.cgtk.co.uk/gemf">GEMF</a>
-      Format - das ist ein kompaktes Format - anstelle von sehr vielen einzelnen
-      Dateien sind diese in einem großen File zusammengefaßt. Mit diesem Format
-      können auch spezielle Funktionen wie eine automatische Anpassung des Zoom
-      Levels ermöglicht werden.&nbsp;&nbsp;&nbsp; <br>
-      Ab der Version 20200325 kann AvNav auch direkt das <a href="https://wiki.openstreetmap.org/wiki/MBTiles">mbtiles</a>
-      Format lesen. Bei diesem Format muss ggf. noch die richtige interne
-      Anordnung der Kacheln gewählt werden - der Standard is "xyz", es gibt aber
-      auch Dateien, die im "tms" Format vorliegen. Eine Umschaltung kann auf der
-      <a href="userdoc/downloadpage.html#mbtiles">Files/Download</a> Seite
-      erfolgen. MbTiles können z.B. direkt von <a href="https://ftp.gwdg.de/pub/misc/openstreetmap/openseamap/charts/mbtiles/">OpenSeamap</a>
-      heruntergeladen werden.<br>
-      <b>Hinweis</b>: Bis Version 202011xx hat AvNav einen Eintrag "scheme" in
-      den Metadaten von mbtiles Files ausgewertet. Leider ist die Benutzung
-      nicht wirklich klar geregelt und verschiedene Quellen nutzen das
-      unterschiedlich (siehe auch <a href="https://github.com/wellenvogel/avnav/issues/63">Issue
-        #63</a>). AvNav hat auch intern xyz und tms genau invers verwendet. Mit
-      der Version 202011xx ignoriert jetzt AvNav diesen Wert und nimmt tms an.
-      Falls er in den Metadaten vorhanden ist, wird die Karte in rot angezeigt,
-      über die <a href="userdoc/downloadpage.html">Download-Seite</a> kann dann
-      gewählt werden, welche interne Kodierung genutzt werden soll. </p>
-    Für die Nutzung der Vektorkarten siehe die <a href="hints/ocharts.html">ocharts</a>/<a
-      href="hints/ochartsng.html">ochartsng</a> Plugin Beschreibungen.
     <h2><a name="installation" id="installation"></a>Installation von Karten</h2>
     <p>Nach der Installation ist in AvNav zunächst nur eine/einige
       Online-Demo-Karten vorhanden. Zur realen Nutzung müssen die Karten
       zunächst bei AvNav installiert werden.<br>
-      Die Karten können direkt in der WebApp hochgeladen werden (einige erst ab
-      20200325). Das Hochladen erfolgt auf der <a href="userdoc/downloadpage.html#chartupload">Files/Download
+      Die Karten können direkt in der WebApp hochgeladen werden. </p>
+    <p>Der Weg dafür hängt vom Kartentyp ab.</p>
+    <h3>Direkt nutzbare Karten (gemf,mbtiles)</h3>
+    <p>Das Hochladen erfolgt auf der <a href="userdoc/downloadpage.html#chartupload">Files/Download
         Seite</a>.<br>
       Unter Android können sie auch in das externe Kartenverzeichnis kopiert
-      werden.<br>
-      Für Android ist zu beachten, dass mbtiles Karten nur gelesen werden
-      können, wenn sie hochgeladen wurden, nicht aus dem externen Karten
-      Verzeichnis.<br>
+      werden (nur gemf Karten).<br>
       Für mbtiles bitte auch diesen <a href="userdoc/downloadpage.html#mbtiles">Hinweis
         auf der Files/Download Seite</a> beachten.</p>
+    <h3>Karten mit Konvertierung (kap, s57)</h3>
     <p>In den normalen Versionen (nicht Android) können ab 20200325 auch Karten,
-      die erst noch konvertiert werden müssen direkt hochgeladen werden. AvNav
-      enthält immer auch den unter <a href="#Convert">Konvertierung</a>
-      beschriebenen Konverter. Der liest Dateien aus seinem Import Verzeichnis
-      (/home/pi/avnav/data/import) bzw. aus Unterverzeichnissen. Wenn beim <a href="userdoc/downloadpage.html#chartupload">Hochladen</a>
-      eine Karte mit einem Dateinamen für den Konverter gewählt wird (z.B.
-      .kap), dann wird gefragt, ob diese direkt dem Konverter übergeben werden
-      soll. Der Arbeitszustand des Konverters kann auf der <a href="userdoc/importerpage.html">Import
-        Seite</a> beobachtet werden. Ab 20240520 können auch zip Dateien mit
-      mehreren Karten hochgeladen werden. Ein hochladen zum Importer kann auch
-      direkt auf der <a href="userdoc/importerpage.html">Import Seite</a>
-      erfolgen.<br>
-      Es sollte dabei beachtet werden, das die Konvertierung ein
-      rechenintensiver Prozeß sein kann, der auf einem Raspberry Pi viele
-      Stunden dauern kann. Das sollte daher ggf. auf einem Desktop Rechner
-      erfolgen.</p>
-    <p>Wenn das <a href="#mapproxy">MapProxy plugin</a> installiert ist, werden
-      dessen Karten in AvNav sofort sichtbar und müssen nicht getrennt
-      installiert werden.</p>
+      die erst noch konvertiert werden müssen über den <a href="userdoc/importerpage.html">Importer</a>
+      hochgeladen werden.<br>
+      s57 Karten erfordern dabei ein installiertes <a href="hints/ochartsng.html">ochartsng</a>
+      plugin.<br>
+      Es sollte beachtet werden, das die Konvertierung ein rechenintensiver
+      Prozeß sein kann, der auf einem Raspberry Pi viele Stunden dauern kann.
+      Das sollte daher ggf. auf einem Desktop Rechner erfolgen.<br>
+      Da die Konvertierungsfunktion unter Android nicht zur Verfügung steht,
+      sollte hierfür AvNav noch einmal auf einem Linux- oder Windows-System <a
+        href="install.html">installiert</a> werden und die Konvertierung dort
+      ausgeführt werden. Die erzeugten Dateien können dann direkt im Importer
+      heruntergeladen und unter Android installiert werden.</p>
+    <h3>Vektorkarten (o-charts, s57)</h3>
+    <p>Diese Karten erfordern ein installiertes <a href="hints/ocharts.html">ocharts</a>/<a
+        href="hints/ochartsng.html">ochartsng</a> Plugin (unter Android die
+      avocharts app - siehe <a href="hints/ochartsng.html#android">ochartsng</a>).
+      Für Windows können diese nicht genutzt werden, da die plugins nicht für
+      Windows bereitstehen (ausser dem Konverter von s57 nach ocharts). Für
+      Details siehe die <a href="hints/ocharts.html">ocharts</a>/<a href="hints/ochartsng.html">ochartsng</a>
+      Beschreibungen. S57 Karten, die über den Importer hochgeladen wurden,
+      werden sofort im <a href="hints/ochartsng.html">ochartsng</a> Plugin
+      aktiv.</p>
+    <h3>Download von Karten in AvNav</h3>
+    <p>Wenn das <a href="https://github.com/wellenvogel/avnav-mapproxy-plugin">MapProxy
+        plugin</a> installiert ist, werden dessen Karten in AvNav sofort
+      sichtbar und müssen nicht getrennt installiert werden.</p>
     <h2><a name="overlays" id="overlays"></a>Overlays</h2>
     <p>Ab Version 20201219 kann AvNav über (und unter) den eigentlichen Karten
       noch weitere Informationen anzeigen bzw. Karten können kombiniert werden.</p>
     <p>Für Details siehe <a href="hints/overlays.html">Overlays</a>.<br>
     </p>
-    <h2 class="western"><a id="Convert" name="Convert"></a>Konvertierung von
-      Karten</h2>
-    <p>Die Konvertierung kann direkt auf dem Raspi erfolgen. Da hier die
-      Resourcen jedoch ziemlich begrenzt sind, muß mit längeren Laufzeiten
-      gerechnet werden.</p>
-    Einfacher geht die Konvertierung auf einem Windows (oder Linux/Mac) Rechner.
-    Für die nötigen Installationen siehe:
-    <ul>
-      <li><a href="install.html#Packages">Linux</a></li>
-      <li><a href="install.html#Windows">Windows</a></li>
-    </ul>
-    <p>Der Konverter ist ein normaler Bestandteil von AvNav. Ab 20240520 gibt es
-      in der App eine separate <a href="userdoc/importerpage.html">Seite</a>
-      zur Steuerung und Überwaching. Siehe die Beschreibung der <a href="userdoc/importerpage.html">Importer
-        Seite</a> für Nutzungshinweise. Einige der verfügbaren Konvertierungen
-      sind direkt Bestandteil von AvNav, andere werden durch Plugins
-      bereitgestellt.Der Importer analysiert&nbsp; die hochgeladenen Dateien und
-      wählt einen geeigneten Umwandler aus.<br>
-      Der interne Konverter kann pak, mbtiles und navipack Dateien verarbeiten.
-      Für kap Dateien werden auch zip Dateien mit mehreren kap Dateien
-      akzeptiert.<br>
-      Der Konvertierungsprozess hängt vom Kartentyp ab. Die erzeugten Karten
-      werden direkt in das Kartenverzeichnis von AvNav oder von den jeweiligen
-      Plugins geschrieben.<br>
-      Auch ein Download ist möglich.</p>
-    <p>Für kap (BSB) Dateien besteht die Konvertierung aus den folgenden
-      Schritten:</p>
-    <ul>
-      <li> Sortierung der Karten in Layer (mit potentieller Umwandlung) </li>
-      <li>Erzeugung der Kacheln</li>
-      <li>Erzeugung einer GEMF Datei</li>
-    </ul>
-    <h4>Details</h4>
-    Im Folgenden werden die Konvertierungsschritte für den KAP Konvertrer
-    beschrieben. Im Normalfall sind diese nicht von INteresse. Aber man kann die
-    Konvertierung ggf. von der Kommandozeile aufrufen, falls die Ergebnisse
-    nicht zufriedenstellend sind.<br>
-    Die Datei read_charts.py findet sich unter /usr/lib/avnav/chartconvert.<br>
-    <blockquote>
-      <div style="font-size:small">
-        <p>Der erste Schritt geht relativ schnell. Alle Kartendateien werden
-          gelesen, Auflösung und Abdeckung werden ermittelt (falls nötig wird
-          konvertiert). Im Ergebnis entsteht im workdir/&lt;name&gt; Verzeichnis
-          eine Datei chartlist.xml. Der Aufruf dazu lautet:</p>
-        <pre>read_charts.py -g -o name -m chartlist inputdir [inputdir...]
-</pre>
-        <p>Anschliessend sollte die chartlist.xml noch einmal mit einem
-          Texteditor überprüft werden, manchmal macht es Sinn, Kartendateien
-          noch einem anderen Layer zuzuordnen. Das kann einfach durch
-          Verschieben des entsprechenden XML Elements erfolgen. Man kann sich
-          dazu an den Namen der Karten orientieren - meist mach es Sinn Karten
-          vergleichbaren Detailgrades in einen Layer zu verschieben.</p>
-        <p>Der zweite Schritt ist etwas langwieriger, hier erfolgt die
-          eigentliche Erzeugung der Kartenkacheln. Der Aufruf:</p>
-        <pre>read_charts.py -g -o name -m generate inputdir [inputdir...]
-</pre>
-        <p> Unter workdir/&lt;name&gt; muss bereits eine chartlist.xml
-          existieren. Die Erzeugung läuft multi-threaded, auf einem Dual Core
-          2x2Ghz ca. 20 min für einen Kartensatz mit ca. 20 Karten. </p>
-        <p>Zum Schluss muss man noch die gemf Datei erzeugen</p>
-        <pre>read_charts.py -g -o name -m gemf inputdir [inputdir...]</pre>
-        <p></p>
-        <p>Man kann auch alle Schritte kombinieren – dazu einfach -m all noch
-          vor den anderen Parametern bei Schritt 1 angeben:</p>
-        <blockquote>
-          <pre>read_charts.py -g -m all [-o name] inputdir
-</pre> </blockquote>
-      </div>
-    </blockquote>
-    <a id="Download" name="Download"></a>
-    <h2 class="western"><a name="mapproxy" id="mapproxy"></a>MapProxy plugin</h2>
-    <p>Es gibt ein <a href="https://github.com/wellenvogel/avnav-mapproxy-plugin">Plugin</a>,
-      das <a href="https://mapproxy.org/">MapProxy</a> einbindet und damit
-      Zugriff auf viele Online Kartenquellen erlaubt. Das Plugin unterstützt bei
-      der Konfiguration von MapProxy und erlaubt das komfortable Herunterladen
-      von Karten. Für Details siehe die <a href="https://github.com/wellenvogel/avnav-mapproxy-plugin/blob/master/Readme.md">plugin
-        Beschreibung</a>.</p>
-    <p>Es bietet viele Funktionen, die dem Mobile Atlas Creator ähneln, und kann
-      diesen damit weitgehend ersetzen.</p>
-    <h2 class="western">Download von Karten mit dem Mobile Atlas Creator</h2>
+    <h2 class="western"><a id="Convert" name="Convert"></a>Download von Karten
+      mit dem Mobile Atlas Creator</h2>
     <p>Für die Nutzung des <a href="https://mobac.sourceforge.io/">Mobile Atlas
         Creators</a> ist ausser Java und dem MOBAC selbst keine weitere Software
       auf dem PC/Laptop nötig. Man muss beim Download der Karten allerdings ein

@@ -131,7 +131,58 @@
       with the extension ".clk" (converter link file) in the importer directory.<br>
       Inside the file just put one line with the absolute path to the file or
       directory you would like to convert.<br>
-      Don't forget to trigger a rescan after you saved the file.<br>
-    </p>
+      Don't forget to trigger a rescan after you saved the file.</p>
+    <h2>Eingebaute Konverter</h2>
+    <p>AvNav bringt die folgenden Konverter mit.</p>
+    <h3>.kap (BSB)</h3>
+    <p> For kap (BSB) charts you can pack multiple files into a zip archive and
+      upload this archive.<br>
+      The connversions has the following steps:</p>
+    <ul>
+      <li>Sorting the charts into layers (with possible conversion)</li>
+      <li>Creation of the tiles</li>
+      <li>Building the gemf file</li>
+    </ul>
+    <h4>Details (Experts only)</h4>
+    <p> Here are some details about the conversion steps of the internal kap
+      files converter. Normally you do care about them. <br>
+      But if you are unhappy with the results of the conversion you still could
+      run the conversion using the command line.<br>
+      The read_charts.py is located at /usr/lib/avnav/chartconvert.</p>
+    <blockquote>
+      <div style="font-size:small">
+        <p>The first step is fast. All chart data will be read, resolution and
+          range will be detected. If necessary charts would be
+          converted/reprojected. As a result there will be a chartlist.xml in
+          workdir/&lt;name&gt; . The command line would be:</p>
+        <pre>read_charts.py -g -o name -m chartlist inputdir [inputdir...]
+</pre>
+        <p>Afterwards you can check the chartlist.xml and you could e.g. move
+          some charts into a different layer.</p>
+        <p>The second step will take more time -&nbsp; now the tiles are
+          created:</p>
+        <pre>read_charts.py -g -o name -m generate inputdir [inputdir...]
+</pre>
+        <p>The file chartlist.xml must already exist at&nbsp;
+          workdir/&lt;name&gt;. The creation will run multi threaded.</p>
+        <p>At the end you need to create the gemf file:</p>
+        <pre>read_charts.py -g -o name -m gemf inputdir [inputdir...]</pre>
+        <p></p>
+        <p>You could also combine all steps:</p>
+        <blockquote>
+          <pre>read_charts.py -g -m all [-o name] inputdir [inputdir...]</pre>
+        </blockquote>
+      </div>
+    </blockquote>
+    <br>
+    <h3>.mbtiles</h3>
+    <p>In principle AvNav can handle .mbtiles files directly. But ot could make
+      sense to convert them to .gemf any way - e.g. for copying them to the
+      external charts directory on Android.<br>
+      Until now the converter can only handle mbtiles with the default xyz
+      scheme.</p>
+    <h3>.navipack</h3>
+    <p>Conversion into gemf.</p>
+    <p> </p>
   </body>
 </html>
