@@ -9,7 +9,6 @@ import Formatter from './formatter.js';
 import Helper from './helper.js';
 import Toast from '../components/Toast.jsx';
 import featureFormatter from "./featureFormatter";
-import NavCompute from "../nav/navcompute";
 import LatLon from "geodesy/latlon-spherical";
 import Dms from "geodesy/dms";
 
