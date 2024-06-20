@@ -175,7 +175,8 @@ ItemList.propTypes={
         dragdrop:       PropTypes.bool,
         horizontal:     PropTypes.bool,
         reverse:        PropTypes.bool, //let the index count backwards
-        onSortEnd:      PropTypes.func
+        onSortEnd:      PropTypes.func,
+        style:          PropTypes.object
 };
 
 export default ItemList;
