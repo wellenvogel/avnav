@@ -35,7 +35,6 @@
       <li>Es können Anzeige Fehler auftreten</li>
       <li>Unter Android kann man nicht die gleiche Lizenz für OpenCPN und AvNav
         benutzen</li>
-      <li>Unter Android dürfen AvNav und OpenCPN nicht parallel laufen</li>
     </ul>
     <h2>Übersicht</h2>
     <div class="toc"> </div>
@@ -46,13 +45,14 @@
     <p>Nach einigen Absprachen mit der Firma können diese Karten nun auch für
       AvNav genutzt werden (ab Version&nbsp; 2024xxx mit diesem neuen plugin - <a
         href="#Installation">siehe unten</a>).&nbsp;</p>
-    <p>Bisher können die oesenc Vektor-Karten genutzt werden. Die Umwandlung
-      erfolgt dabei im laufenden Betrieb immer dann, wenn die Karten dargestellt
-      werden sollen. Ein gewisser Teil der Kartenkacheln wird im Server im
-      Speicher aufbewahrt, so das diese sehr schnell erneut bereitgestellt
-      werden können. Das beschleunigt die Anzeige, wenn man zwischen
-      verschiedenen Zoom Stufen wechselt oder mehrere Displays angeschlossen
-      sind.</p>
+    <p>Bisher können die oesenc Vektor-Karten genutzt werden. <br>
+      Ausserdem kann das Plugin freie S57 Karten nutzen (nach <a href="#chartconversions">Konvertierung</a>).</p>
+    <p>Die Umwandlung in die für AvNav notwendigen Raster-Karten erfolgt dabei
+      im laufenden Betrieb immer dann, wenn die Karten dargestellt werden
+      sollen. Ein gewisser Teil der Kartenkacheln wird im Server im Speicher
+      aufbewahrt, so das diese sehr schnell erneut bereitgestellt werden können.
+      Das beschleunigt die Anzeige, wenn man zwischen verschiedenen Zoom Stufen
+      wechselt oder mehrere Displays angeschlossen sind.</p>
     <p>Das Handling der Karten erfolgt dabei vollständig durch das Plugin - das
       betrifft auch die Installation (die Karten können nicht über die normale <a
         href="../userdoc/downloadpage.html">Download-Seite</a> hochgeladen
@@ -734,6 +734,29 @@
     <p>Unverschlüsselte Vektor Karten wie S57 müssen vor der Benutzung in das
       verwendete interne "SENC" Format konvertiert werden.<br>
       Dafür gibt es 2 Optionen:</p>
+    <h4>Konvertierung mit AvNav (ab AvNav 20240520)</h4>
+    <p>Das avnav-ochartsng-plugin fügt einen Konverter zu AvNav's <a href="../userdoc/importerpage.html">Importer</a>
+      hinzu. Dieser Konverter enthält ein Python Script um S57 in ein zip Archiv
+      umzuwandeln, was hochgeladen werden kann.<br>
+      Um die S57 Karten zu nutzen, kann man einfach ein zip mit den S57 Karten
+      zu AvNav's <a href="../userdoc/importerpage.html">Importer</a> hochladen,
+      nachdem ochartsng installiert wurde.<br>
+      Wenn man AvNav und ochartsng unter Linux nutzt, werden die Karten
+      automatisch in ochartsng verfügbar, wenn die Konvertierung abgeschlossen
+      wurde.</p>
+    <p>Wenn man ochartsng auf einem anderen System nutzen möchte (z.B. Android)
+      brauchtman zusätzlich eine Installation von AvNav unter <a href="#Installation">Linux</a>
+      oder unter <a href="../install.html#Windows">Windows</a>.</p>
+    <p>Ochartsng selbst ist nicht unter Windows lauffähig, aber der Konverter
+      steht auch für Windows zur Verfügung. Nachdem man AvNav für Windows
+      installiert hat muss man dort den "Update" Dialog aktivieren und die URL
+      für den ochartsng-s57 Konverter für Windows angeben:</p>
+    <li>release: <a href="https://www.wellenvogel.de/software/avnav/downloads/release-ochartsng/latest/ochartsng-latest.zip">https://www.wellenvogel.de/software/avnav/downloads/release-ochartsng/latest/ochartsng-latest.zip</a></li>
+    <li>daily: <a href="https://www.wellenvogel.de/software/avnav/downloads/daily-ochartsng/latest/ochartsng-latest.zip">https://www.wellenvogel.de/software/avnav/downloads/daily-ochartsng/latest/ochartsng-latest.zip</a></li>
+    <p>Danach lädt man die S57 Karten zum Konverter hoch und nachdem die
+      Konvertierung abgeschlossen wurde lädt man die zip Datei mit den
+      konvertieren Karten herunter. Diese .zip Datei kann dann direkt in
+      ochartsng installiert werden (Linux und Android).</p>
     <h4>Konvertierung mit OpenCPN</h4>
     <p>Wenn man bereits einen Computer mit OpenCPN hat, kann man dort die Karten
       konvertieren. <br>
@@ -753,14 +776,5 @@
       ochartsng hochladen.<br>
       Für Linux gibt es ein <a href="https://github.com/wellenvogel/ochartsng/blob/master/tools/collectS57.sh">script</a>
       um das Einsammeln der Karten zu automatisieren.</p>
-    <h4>Konvertierung mit einem Python Script</h4>
-    <p>Das avnav-ochartsng Paket enthält ein python script um die S57 Daten in
-      eine ZIP Datei mit SENC zu wandeln. Auf einem Linux System mit dem
-      installierten Plugin-Paket kann man das ausführen mit:</p>
-    <p class="code">/usr/lib/anvnav/plugins/ochartsng/tosenc.py input output</p>
-    <p>Der "input" kann entweder ein Verzeichnis mit S57 Dateien oder eine ZIP
-      Datei sein. "output" muss der Name einer ZIP Datei sein.</p>
-    Zukünftig wird der Konverter in den AvNav Karten-Konverter integriert
-    werden.
   </body>
 </html>

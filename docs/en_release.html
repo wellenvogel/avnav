@@ -40,6 +40,141 @@ sudo systemctl start avnav</div>
     <br>
     <div> </div>
     <h2>Versions</h2>
+    <p> <span style="font-weight: bold;">20240616</span> <a title="release/20240616"
+        href="../downloads/release/20240616">link</a></p>
+    <p><i> <b>AvNav base</b></i></p>
+    <ul>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/255">#255</a>
+        Allow to start with the last split screen setting<br>
+        use <a href="userdoc/settingspage.html">Settings</a>-&gt;Layout-&gt;"start
+        with last split mode" to enable this</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/263">#263</a>
+        Allow to start with last used chart on navigation page<br>
+        use <a href="userdoc/settingspage.html">Settings</a>-&gt;Map-&gt;"start
+        with last map" to enable this</li>
+    </ul>
+    <p><i><b>AvNav raspberry</b></i></p>
+    <ul>
+      <li>handling for bookworm and Pi5</li>
+      <li>only start avnav during installation of avnav-raspi if it was running
+        before (avoid issues with time changes during installation)</li>
+    </ul>
+    <p> <span style="font-weight: bold;">20240525</span> <a title="release/20240525"
+        href="../downloads/release/20240525">link</a></p>
+    <p><i> <b>AvNav base <br>
+        </b></i></p>
+    <p><i><b>Bugfix for 20240520<br>
+        </b></i></p>
+    <ul>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/342">#342</a>
+        Unable to activate routes </li>
+    </ul>
+    <p> <span style="font-weight: bold;">20240520</span> <a title="release/20240520"
+        href="../downloads/release/20240520">link</a></p>
+    <p> <span style="color: red;">Please skip 20240520 and install 20240525</span>
+      - Unable to activate routes</p>
+    <p><i> <b>AvNav base</b></i></p>
+    <ul>
+      <li>new <a href="userdoc/importerpage.html">importer</a> handling (not
+        for Android)</li>
+      <ul>
+        <li>allow to change import names</li>
+        <li>upload zip files</li>
+        <li>download converted files (zip)</li>
+        <li>status display, disable, restart</li>
+        <li><a href="hints/plugins.html#PluginAPI">plugin api</a> extension</li>
+        <li>includes S57 converter for <a href="hints/ochartsng.html#chartconversions">ochartsng</a></li>
+      </ul>
+      <li>new <a href="install.html#Windows">windows</a> service and installer<br>
+        <b>Please remove any old Windows installation before. This version is
+          not compatible with the old AvNavNet installer any more!.</b></li>
+      <li>removed separate windows/linux for chart conversion (is now fully
+        integrated)</li>
+      <li>simplified startup of AvNav from the command line, allow to start w/o
+        any avnav_server.xml, http port option on command line</li>
+      <li>allow avnav to run as a <a href="install.html#userservice">user
+          service</a></li>
+      <li>better status on NMEA channels including send/receive rates, error
+        rates</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/324">#324</a>:
+        allow AvNav to handle burst of received data with correct age handling
+        in internal queues</li>
+      <li>internally use steady timers - no need any more to discard data when
+        system time changes</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/292">#292</a>:
+        add keys</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/303">#303</a>:
+        icons in title bar for <a href="userdoc/mainpage.html#anchorwatch">anchor
+          watch</a> and <a href="userdoc/mainpage.html#disconnected">disconnected
+          mode</a></li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/303">#303</a>:
+        edit <a href="userdoc/dashboardpage.html#anchorwatch">anchor watch</a>,
+        extra stop dialog</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/327">#327</a>:
+        lock to zoom levels when using +/- buttons</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/334">#334</a>:
+        changed VMC and HDG computation</li>
+      <li>prevent sending out own received messages on channels (with a config
+        switch to enable/disable)</li>
+      <li>workaround for broken signalk-to-nmea2000 plugin for <a href="hints/CanboatAndSignalk.html#waypoint">waypoint
+          data</a></li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/325">#325</a>:
+        show relative motion vectors for <a href="userdoc/navpage.html#ais">AIS
+          targets</a> and turn indicator&nbsp;</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/320">#320</a>:
+        remove unclear <a href="hints/CanboatAndSignalk.html#mapping">SK to
+          AvNav mappings</a> (i.e. no fallback mapping any more)</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/333">#333</a>:
+        add more <a href="quickstart.html#decoding">NMEA decoders</a></li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/331">#331</a>: <a
+          href="quickstart.html#decoding">decode magVariation</a></li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/247">#247</a>:
+        add some help text</li>
+      <li>allow for user icons and text in geojson, unifiy style parameter
+        handling for overlays</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/312">#312</a>:
+        accept XDR values without type or unit</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/310">#310</a>:
+        include vmg into the navigation data sent to signalK, adapt the pathes
+        to the signalk-to-nmea2000 plugin</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/294">#294</a>:
+        search option on <a href="userdoc/aispage.html">Ais List page</a></li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/305">#305</a>:
+        lock button on <a href="userdoc/aispage.html">Ais List page</a></li>
+      <li>better interruption of larger uploads</li>
+    </ul>
+    <p>smaller bugfixes:</p>
+    <ul>
+      <li> allow AIS decoding of malformed messages (missing AIS channel ID) </li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/332">#332</a>:
+        invalid blacklist handling</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/321">#321</a>:
+        logs filled with exceptions</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/319">#319</a>:
+        fix broken waypoint dialog</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/318">#318</a>
+        adapt bsh demo source</li>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/313">#313</a>:
+        correctly check list properties when saving</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/307">#307</a>:
+        broken canvas gauges with negative values</li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/301">#301</a>:
+        correctly delete layouts </li>
+    </ul>
+    <p><i><b>AvNav Raspberry (avnav-raspi)</b></i></p>
+    <ul>
+      <li><a href="https://github.com/wellenvogel/avnav/issues/330">#330</a>:
+        prepare for bookworm (not finally tested) </li>
+      <li> <a href="https://github.com/wellenvogel/avnav/issues/297">#297</a>:
+        support for MacArthur HAT (raspi)</li>
+    </ul>
+    <p><i><b>AvNav Android </b></i></p>
+    <ul>
+      <li>allow for upload and download handling in the android app (important
+        for ochartsng)</li>
+      <li>always ensure IPv4 when starting browser (important for user
+        app/plugin pages)</li>
+    </ul>
     <p> <span style="font-weight: bold;">20230705</span> <a title="release/20230705"
         href="../downloads/release/20230705">link</a></p>
     <i><b>All Versions - important Bugfix:</b></i>

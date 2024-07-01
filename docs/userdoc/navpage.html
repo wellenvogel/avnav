@@ -246,7 +246,76 @@
       entsprechend verschoben.<br>
       Bei "ask" wird bei jedem "Lock" Vorgang ein Dialog gezeigt:</p>
     <img src="navpage-boat-lock-ask.png" alt="" class="fimage"><br>
-    <h2>Anzeigen</h2>
+    <h2><a name="ais" id="ais"></a>AIS Ziele</h2>
+    <p>AIS Ziele bis zu einer bestimmten Entfernung zur aktuellen Position
+      werden in der Karten zusammen mit einigen Informationen dargestellt. Diese
+      kann man unter<a href="settingspage.html"> Einstellungen</a>, AIS
+      anpassen. Ausserdem werden einige Bewegungsvektoren und eine berechnete
+      Position basierend auf dem Alter der AIS Information (als Schatten)
+      angezeigt.<br>
+      Die Symbole für die AIS-Ziele können durch <a href="../hints/usericons.html">eigene
+        Symbole</a> angepasst werden, bei Bedarf unterschiedlich je nach
+      AIS-Schiffsklasse oder navigational status. Für das eigene Boot und für
+      die AIS-Ziele wird ein Kurs-Vektor gezeichnet, dessen Ende die Position
+      nach 10 Minuten (einstellbar) markiert.</p>
+    <p>Ab 20230614 werden auch AIS Atons dargestellt (dazu muss in den <a href="settingspage.html">Einstellungen</a>/AIS
+      "only show moving targets" ausgeschaltet und "show other" eingeschaltet
+      sein). Ausserdem ist es möglich eine geschätzte aktuelle Position des AIS
+      Ziels abhängig vom Alter der Information, Kurs und Geschwindigkeit
+      anzuzeigen (Einstellungen/AIS "show estimated position").<br>
+      Es kann ausserdem gewählt werden, ob die Ausrichtung des AIS Zieles nach
+      HDG erfolgt (sofern empfangen - Einstellungen/AIS "use heading for
+      direction") - sonst nach COG. Der Course Vector eines AIS Zieles wird
+      immer nach COG ausgerichtet.<br>
+      Es gibt unterschiedliche Symbole für die AIS Ziele - für Details siehe
+      unter "<a href="../hints/usericons.html">Nutzerdefinierte Icons</a>".</p>
+    <p>Durch Klick auf ein AIS-Ziel (oder auf die Anzeige des nächsten Zieles in
+      den Anzeige-Bereichen) erhält man alle <a href="aisinfopage.html">Informationen</a>
+      zu diesem Ziel und kann zur <a href="aispage.html">Liste aller AIS-Ziele</a>
+      navigieren.</p>
+    <h3>AIS Bewegungsvektoren</h3>
+    <p>Eine grundsätzliche Einführung in das Thema true und relative motion
+      vectors und wie diese in der Navigation verwendet werden, ist zu finden
+      unter</p>
+    <ul>
+      <li><a href="https://msi.nga.mil/Publications/RNMB">https://msi.nga.mil/Publications/RNMB</a>
+        (Seite 59)</li>
+      <li><a href="https://www.youtube.com/watch?v=8YUic4LdWFg">https://www.youtube.com/watch?v=8YUic4LdWFg</a></li>
+    </ul>
+    <h2 id="true-motion-vectors">True Motion Vectors</h2>
+    <p>AvNav stellt für AIS-Targets deren voraussichtlichen Track über Grund
+      dar, wenn <a href="settingspage.html">settings</a>-&gt;AIS-&gt;use-course-vector
+      aktiviert ist. Dazu wird ausgehend von der zuletzt bekannten Position des
+      Targets eine Linie gezeichnet in Richtung des Kurs-über-Grund (COG) des
+      Targets und der Länge Fahrt-über-Grund (SOG) multipliziert mit
+      boat-course-vector-length. Diese Linie ist der sog. <em>true motion
+        vector</em>, kurz TMV.</p>
+    <p><img src="aisvectors-tmv.png" alt="true motion vectors" class="image"></p>
+    <h2 id="relative-motion-vectors">Relative Motion Vectors</h2>
+    <p>Zusätzlich können in AvNav <em>relative motion vectors</em> dargestellt
+      werden. Dazu in <a href="settingspage.html">settings</a>-&gt;AIS-&gt;relative-motion-vector-range
+      einen Wert größer als Null setzen, dann werden für Targets, die sich im
+      Umkreis dieser Distanz befinden zusätzlich RMVs als gestrichelte Linien
+      angezeigt.</p>
+    <p><img src="aisvectors-rmvp.png" alt="relative motion vectors" class="image"></p>
+    <p>Der RMV zeigt die Bewegung des Targets <em>relativ</em> zum eigenen
+      Schiff, er ergibt sich als Differenz zwischen TMV und dem eigenen
+      Kurs-Vektor, sodass TMV, RMV und der eigene Kurs-Vektor ein Dreieck
+      bilden. Zeigt der RMV eines Targets direkt auf das eigene Schiff, dann
+      besteht die Gefahr einer Kollision. Ebenso kann man die Lage des CPA
+      direkt aus dem RMV ablesen, man fällt das Lot vom eigenen Schiff auf den
+      RMV. </p>
+    <p>Die RMVs entsprechen den Spuren, die die Targets auf einem Radarschirm
+      hinterlassen würden.</p>
+    <h2 id="gekr-mmte-vektoren">Gekrümmte Vektoren</h2>
+    <p>Aktiviert man <a href="settingspage.html">settings</a>-&gt;AIS-&gt;curved-vectors,
+      so wird eine in den AIS-Daten vorhandene rate-of-turn (ROT) ausgewertet
+      und die Drehung des Targets bei der Darstellung der Vektoren
+      berücksichtigt. Die TMVs und RMVs werden dann als gekrümmte Linien
+      dargestellt. Die gekrümmten Vektoren zeigen eine potenzielle Kollision
+      ggf. viel früher an als die ungekrümmten Vektoren.</p>
+    <p><img src="aisvectors-curved.png" alt="curved vectors" class="image"></p>
+    <h2>Anzeigen (Widgets)</h2>
     <p>Links befinden sich (von oben nach unten):</p>
     <ul>
       <li>Die aktuelle Zoom-Stufe der Karte (wenn Auto Zoom aktiv, ist in

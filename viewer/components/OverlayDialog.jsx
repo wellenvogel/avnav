@@ -218,6 +218,22 @@ const Dialogs = {
             />;
     },
 
+    createAlertDialog: function(text,okFunction){
+        return (props)=>{
+            return (
+                <div className="inner">
+                    <h3 className="dialogTitle">Alert</h3>
+
+                    <div className="dialogText">{text}</div>
+                    <div className="dialogButtons">
+                        <DB name="ok" onClick={okFunction}>Ok</DB>
+                    </div>
+                </div>
+            );
+        }
+
+    },
+
 
     /**
      * show an alert message with close button
@@ -232,19 +248,7 @@ const Dialogs = {
                 removeDialog(id,true);
                 resolve();
             };
-            const html = function () {
-                return (
-                    <div className="inner">
-                        <h3 className="dialogTitle">Alert</h3>
-
-                        <div className="dialogText">{text}</div>
-                        <div className="dialogButtons">
-                            <DB name="ok" onClick={okFunction}>Ok</DB>
-                        </div>
-                    </div>
-                );
-            };
-            addDialog(id,html,opt_parent,()=> {
+            addDialog(id,Dialogs.createAlertDialog(text,okFunction),opt_parent,()=> {
                     resolve();
                 });
         });
@@ -369,6 +373,16 @@ const Dialogs = {
 
 
 };
+export const dialogDisplay=(content,closeCallback)=>{
+    let Display=InputMonitor(DialogDisplay);
+    return(
+        <Display
+            className="nested"
+            content={content}
+            closeCallback={closeCallback}
+        />
+    );
+}
 /**
  * a helper that will add dialog functionality to a component
  * it will maintain a variable inside the component state that holds the dialog
@@ -380,9 +394,10 @@ const Dialogs = {
  *    this.dialogHelper.showDialog((props)=>return <div>HelloDialog</div>);
  * @param thisref - the react component
  * @param stateName
+ * @param opt_closeCallback: callback when dialog is closed
  * @returns {*}
  */
-export const dialogHelper=(thisref,stateName)=>{
+export const dialogHelper=(thisref,stateName,opt_closeCallback)=>{
     if (! stateName) stateName="dialog";
     let rt={
         showDialog:(Dialog)=>{
@@ -404,6 +419,7 @@ export const dialogHelper=(thisref,stateName)=>{
             state[stateName]=undefined;
             thisref.setState(state);
             notifyClosed();
+            if (opt_closeCallback) opt_closeCallback();
         },
         filterState:(state)=>{
             let rt=assign({},state);
@@ -412,16 +428,12 @@ export const dialogHelper=(thisref,stateName)=>{
         },
         getRender(){
             if (!thisref.state[stateName]) return null;
-            let Display=InputMonitor(DialogDisplay);
-            return(
-                <Display
-                    className="nested"
-                    content={thisref.state[stateName]}
-                    closeCallback={()=>{
-                        this.hideDialog()
-                    }}
-                    />
-            );
+            return dialogDisplay(thisref.state[stateName],()=>{
+                this.hideDialog()
+            });
+        },
+        isShowing(){
+          return !!thisref.state[stateName];
         }
     };
     rt.showDialog=rt.showDialog.bind(rt);

@@ -45,6 +45,7 @@ class TimeSource(object):
     self.lastSet=None
     self.lastValid=None
     self.externalTs=None
+    self.externalSource=None
     self.name=name
     self.fetchFunction=fetchFunction
     self.statusFunction=statusFunction
@@ -59,14 +60,15 @@ class TimeSource(object):
   def fetch(self):
     wasValid=self.externalTs is not None
     self.externalTs=None
-    externalTs=self.fetchFunction()
+    externalTs,externalSource=self.fetchFunction()
     timestamp=time.monotonic()
     self.externalTs=externalTs
     self.lastSet=timestamp
+    self.externalSource=externalSource
     if externalTs is not None:
-      self.statusFunction(self.name,"time %s"%self.formatTs(externalTs),WorkerStatus.NMEA)
+      self.statusFunction(self.name,"time %s [%s]"%(self.formatTs(externalTs),externalSource),WorkerStatus.NMEA)
       if not wasValid:
-        AVNLog.info("new %s time: %s",self.name,self.formatTs(externalTs))
+        AVNLog.info("new %s time: %s from %s",self.name,self.formatTs(externalTs),externalSource)
       self.lastValid=timestamp
     else:
       self.statusFunction(self.name,"no valid time",WorkerStatus.ERROR)
@@ -197,22 +199,24 @@ class AVNBaseConfig(AVNWorker):
 
   def fetchGpsTime(self):
     try:
-      curGpsTime=self.navdata.getSingleValue(AVNStore.BASE_KEY_GPS + ".time")
+      curGpsTime=self.navdata.getSingleValue(AVNStore.BASE_KEY_GPS + ".time",includeInfo=True)
       if curGpsTime is None:
-        return None
-      dt=AVNUtil.gt(curGpsTime)
+        return None,None
+      dt=AVNUtil.gt(curGpsTime.value)
       timestamp = dt.replace(tzinfo=datetime.timezone.utc).timestamp()
-      return timestamp
+      return timestamp,curGpsTime.source
     except Exception as e:
       AVNLog.error("Exception when getting curGpsData: %s",traceback.format_exc())
-      return None
+      return None,None
 
   def fetchNtpTime(self):
     host=AVNBaseConfig.P_NTP.fromDict(self.param)
     if host is None or host == '':
-      return
+      return None,None
     ts=getNTPTime(host)
-    return ts
+    if ts is None:
+      return None,None
+    return ts,"NTP:"+host
 
   TIME_CHILD="settime"
   SYSTIME_CHILD="systemtime"

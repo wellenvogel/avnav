@@ -227,8 +227,8 @@
     <p>If the chart is locked to the boat position (like in the picture) it will
       always keep the boat in the center of the screen and move the map
       accordingly.</p>
-    Since version 20230614 you can alloow (settings/Map "allow move when
-    locked") to move the map when locked.<br>
+    Since version 20230614 you can allow (settings/Map "allow move when locked")
+    to move the map when locked.<br>
     When you finish moving the map the boat will be held at the current position
     on the screen.<br>
     But it will be ensured that the boat at least is visible.<br>
@@ -238,8 +238,73 @@
     <p>With "current" you will keep the boat at the point at the screen where it
       is when you "lock". <br>
       With "ask" there will be a dialog at every "Lock" :</p>
-    <img src="navpage-boat-lock-ask.png" alt="" class="fimage"><br>
-    <h2>Displays</h2>
+    <p> <img src="navpage-boat-lock-ask.png" alt="" class="fimage"></p>
+    <br>
+    <h2><a name="ais" id="ais"></a>AIS Target Display</h2>
+    <p>AvNav shows AIS Targets up to a configured distance to the current vessel
+      posiion.<br>
+      The display includes some information about the target (configure it at
+      the <a href="settingspage.html">settings page</a>, AIS) and some motion
+      vectors that show the movement of the AIS target. </p>
+    <p>AIS target symbols can be replaced by <a href="../hints/usericons.html">user
+        defined symbols</a> - optionally different ones depending on the AIS
+      shiptype. For the own boat and optionally for each AIS target a course
+      vector points to the position to be reached within a defined time interval
+      (default: 10 minutes).</p>
+    <p>Since 20230614 AIS atons will also be displayed (you need to have <a href="settingspage.html">settings</a>/AIS
+      "only show moving targets" switched off and "show other" switched on). For
+      each AIS target you can display an estimated position depending on the age
+      of the received information, course and speed (settings/AIS "show
+      estimated position").<br>
+      You can select if an AIS target should be rotated by its HDG (if received
+      - settings/AIS "use heading for direction") - otherwise COG will be used.
+      The course vector of an AIS target will always be rotated by COG.<br>
+      There are different symbols for AIS targets - for details refer to "<a href="../hints/usericons.html">user
+        defined icons</a>".<br>
+      If you enable this in the setting the targets will also show an estimated
+      position (shadow) based on the age of the AIS information.</p>
+    <p>By clicking an AIS target (or the "next AIS" display) you will be shown
+      all <a href="aisinfopage.html">information</a> for this target and you
+      can change to the <a href="aispage.html">list of all AIS targets</a>.</p>
+    <h3>AIS Motion Vectors</h3>
+    <p>A basic introduction to the topic of true and relative motion vectors and
+      how they are used in navigation can be found at</p>
+    <ul>
+      <li><a href="https://msi.nga.mil/Publications/RNMB">https://msi.nga.mil/Publications/RNMB</a>
+        (page 59)</li>
+      <li><a href="https://www.youtube.com/watch?v=8YUic4LdWFg">https://www.youtube.com/watch?v=8YUic4LdWFg</a></li>
+    </ul>
+    <h4 id="true-motion-vectors">True motion vectors</h4>
+    <p>AvNav displays the estimated track over ground for AIS targets if <a href="settingspage.html">settings</a>-&gt;AIS-&gt;use-course-vector
+      is activated. A line is drawn from the last known position of the target
+      in the direction of the course over ground (COG) of the target with the
+      length of the course over ground (SOG) multiplied by
+      boat-course-vector-length. This line is the so-called <em>true motion
+        vector</em>, or TMV for short.</p>
+    <p><img src="aisvectors-tmv.png" alt="true motion vectors" class="image"></p>
+    <h4 id="relative-motion-vectors">Relative motion vectors (since 20240520)</h4>
+    <p>In addition, <em>relative motion vectors</em> can be displayed in AvNav.
+      To enable this, set a value greater than zero in <a href="settingspage.html">settings</a>-&gt;AIS-&gt;relative-motion-vector-range,
+      then RMVs are also displayed as dashed lines for targets that are within
+      this distance.</p>
+    <p><img src="aisvectors-rmvp.png" alt="relative motion vectors" class="image"></p>
+    <p>The RMV shows the movement of the target <em>relative</em> to the own
+      ship, it results as the difference between TMV and the own course vector,
+      so that TMV, RMV and the own course vector form a triangle. If the RMV of
+      a target points directly at your own ship, there is a risk of collision.
+      The position of the CPA can also be read directly from the RMV; the
+      crossing of a line perpendicular to the RMV going through your own ship
+      with the RMV.</p>
+    <p>The RMVs correspond to the tracks that the targets would leave on a radar
+      screen.</p>
+    <h4 id="curved-vectors">Curved vectors (since 20240520)</h4>
+    <p>If you activate <a href="settingspage.html">settings</a>-&gt;AIS-&gt;curved-vectors,
+      a rate-of-turn (ROT) present in the AIS data is evaluated and the rotation
+      of the target is taken into account when displaying the vectors. The TMVs
+      and RMVs are then displayed as curved lines. The curved vectors may
+      indicate a potential collision much earlier than the uncurved vectors.</p>
+    <p><img src="aisvectors-curved.png" alt="curved vectors" class="image"></p>
+    <h2>Displays (Widgets)</h2>
     <p></p>
     <p></p>
     At the left side you have (top down):

@@ -48,6 +48,7 @@ import LocalStorage, {PREFIX_NAMES, STORAGE_NAMES} from './util/localStorageMana
 import splitsupport from "./util/splitsupport"
 import leavehandler from "./util/leavehandler"; //triggers querySplitMode
 import fullscreen from "./components/Fullscreen";
+import mapholder from "./map/mapholder";
 
 
 const DynamicSound=Dynamic(SoundHandler);
@@ -231,10 +232,8 @@ class App extends React.Component {
         }
 
         NavData.startQuery();
-        this.history.push(startpage);
-        this.leftHistoryState=stateHelper(this,this.history.currentLocation(true),'leftHistory');
-        this.history.setCallback((topEntry)=>this.leftHistoryState.setState(topEntry,true));
-        Requests.getJson("images.json", {useNavUrl: false, checkOk: false})
+        this.pendingActions=[];
+        this.pendingActions.push(Requests.getJson("images.json", {useNavUrl: false, checkOk: false})
             .then((data) => {
                 MapHolder.setImageStyles(data);
             })
@@ -247,8 +246,9 @@ class App extends React.Component {
                 })
                 .catch((error) => {
                     Toast("unable to load user image definitions: " + error);
-                }));
-        Requests.getJson("keys.json", {useNavUrl: false, checkOk: false})
+                }))
+        );
+        this.pendingActions.push(Requests.getJson("keys.json", {useNavUrl: false, checkOk: false})
             .then(
                 (json) => {
                     KeyHandler.registerMappings(json);
@@ -264,8 +264,9 @@ class App extends React.Component {
                     (error) => {
                     }
                 )
-            );
-        Requests.getJson("/user/viewer/splitkeys.json",{useNavUrl:false,checkOk:false}).then(
+            )
+        );
+        this.pendingActions.push(Requests.getJson("/user/viewer/splitkeys.json",{useNavUrl:false,checkOk:false}).then(
             (json)=>{
                 if (json.version === undefined){
                     throw new Error("missing version");
@@ -280,10 +281,25 @@ class App extends React.Component {
             .catch((error)=>{
                 console.log("splitkeys.json: "+error);
             }
-        );
-        LayoutHandler.loadStoredLayout(true)
+        ));
+        this.pendingActions.push(LayoutHandler.loadStoredLayout(true)
             .then((layout)=>{})
-            .catch((error)=>{Toast(error)});
+            .catch((error)=>{Toast(error)})
+        );
+        let lastChart=mapholder.getLastChartKey();
+        if (startpage === 'mainpage' && globalStore.getData(keys.properties.startNavPage) && lastChart){
+            const delayedStart=()=>{
+                this.history.push('navpage');
+            }
+            this.history.push(startpage,{noInitial:true});
+            Promise.all(this.pendingActions)
+                .then(()=>delayedStart(),()=>delayedStart());
+        }
+        else {
+            this.history.push(startpage);
+        }
+        this.leftHistoryState=stateHelper(this,this.history.currentLocation(true),'leftHistory');
+        this.history.setCallback((topEntry)=>this.leftHistoryState.setState(topEntry,true));
         GuiHelpers.keyEventHandler(this,()=>{
             Mob.controlMob(true);
         },'global','mobon');

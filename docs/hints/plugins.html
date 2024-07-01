@@ -65,6 +65,9 @@
       wurde.</p>
     <h2>Liste von Plugins</h2>
     <ul>
+      <li><a href="ocharts.html">ocharts</a> - Karten von <a href="https://o-charts.org/">o-charts</a></li>
+      <li><a href="ochartsng.html">ochartsng</a> - Neue Implementierung für <a
+          href="https://o-charts.org/">o-charts</a>, S57 Karten</li>
       <li><a href="https://github.com/wellenvogel/avnav-seatalk-remote-plugin">Seatalk
           Remote</a> - in Zusammenspiel mit der Fernbedienung von <a href="https://github.com/AK-Homberger/Seatalk-Autopilot-Remote-Control">AK-Homberger</a></li>
       <li><a href="https://github.com/wellenvogel/avnav-history-plugin">History</a>
@@ -79,8 +82,9 @@
       <li><a href="https://github.com/wellenvogel/avnav-obp-rc-remote-plugin">Obp-RC-Remote</a>
         - plugin für die Nutzung der <a href="https://www.segeln-forum.de/board194-boot-technik/board195-open-boat-projects-org/78328-fernbedienung-f%C3%BCr-den-raspberry/">Fernbedienung</a>
         von <a href="https://www.segeln-forum.de/user/19350-chrhartz">Christian</a></li>
-      <li><a href="https://github.com/kdschmidt1/avnav-more-nmea-plugin">More-NMEA-Plugin</a>
-        - Dekodierung und Berechnung von weiteren Kurs- und Winddaten</li>
+      <li><a href="https://github.com/kdschmidt1/Sail_Instrument">Sail-Instrument-Plugin</a>
+        - Dekodierung und Berechnung von weiteren Kurs- und Winddaten,Sail
+        Instrument</li>
       <li><a href="https://gitlab.strukturpunkt.de/kfr/avnav-rudder-angel">rudder-angle</a>
         - Anzeige des Ruderwinkels (über SignalK)</li>
       <li><a href="https://github.com/wellenvogel/avnav-obp-plotterv3-plugin">Obp-PlotterV3</a>
@@ -193,7 +197,7 @@ def pluginInfo(cls):<br>  return {
     <p>Für das Plugin können in der <a href="configfile.html#plugins">avnav_server.xml</a>
       Parameter konfiguriert werden, diese sind dann über das API
       (getConfigValue) abrufbar.</p>
-    <h3>Plugin API</h3>
+      <a name="PluginAPI"></a><h3>Plugin API</h3>
     <p>Am <a href="https://github.com/wellenvogel/avnav/blob/master/server/avnav_api.py">API</a>
       stehen die folgenden Funktionen zur Verfügung</p>
     <table border="1" width="100%">
@@ -381,8 +385,20 @@ def pluginInfo(cls):<br>  return {
             Dieses kann z.B. dafür genutzt werden ein bereits vorhandenes
             Kommando zu ersetzen. Auch neue Kommandos sind möglich. Siehe den <a
               href="https://github.com/wellenvogel/avnav/blob/3a291c2e08bfaa13b12246f9a456a4a896533d52/server/avnav_api.py#L364">Source
-              Code</a> oder die <a href="configfile.html#h3:AVNCommandHandler">AVNCommandHandler
+              Code</a> oder die <a href="configfile.html#AVNCommandHandler">AVNCommandHandler
               Konfiguration</a> für Details.</td>
+        </tr>
+        <tr>
+          <td>registerConverter<br>
+            (since 20240520)</td>
+          <td>Registriere einen Karten-Konverter<br>
+            Für ein Beispiel siehe das <a href="https://github.com/wellenvogel/ochartsng/blob/f10d8aa8b10ce89320b939a91e14ceaa822054a0/avnav-plugin/plugin.py#L407">ochartsng
+              plugin</a></td>
+        </tr>
+        <tr>
+          <td>deregisterConverter<br>
+            (since 20240520)</td>
+          <td>Deregistriere einen Karten-Konverter</td>
         </tr>
       </tbody>
     </table>

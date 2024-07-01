@@ -87,25 +87,27 @@
       an beliebige Schnittstellen wieder auszusenden.</p>
     <p>Einen Teil der Daten dekodiert AvNav (Positionsdaten, AIS,...) und nutzt
       sie für die eigenen Anzeige-Funktionen.<br>
-      Die folgenden NMEA-Datensätze werden von AvNav dekodiert:</p>
+      <a name="decoding"></a>Die folgenden NMEA-Datensätze werden von AvNav
+      dekodiert:</p>
     <ul>
       <li>!AIVDM</li>
       <li>$xxGGA</li>
       <li>$xxGSV</li>
       <li>$xxGLL</li>
       <li>$xxVTG</li>
-      <li>$xxRMC</li>
+      <li>$xxRMC (mag. variation seit 20240520)</li>
       <li>$xxMWV (ab 20220225 auch waterSpeed)</li>
       <li>$xxDPT</li>
       <li>$xxDBT</li>
       <li>$xxXDR (seit 20210114)</li>
-      <li>$xxHDG (seit 210106xx)</li>
+      <li>$xxHDG (seit 210106xx, mag. variation seit 20240520)</li>
       <li>$xxHDT (seit 20210619)</li>
       <li>$xxHDM (seit 20210619) </li>
       <li>$xxVHW partiell (seit 20210619)</li>
       <li>$xxVWR (seit 20220225)</li>
       <li>$xxMTW (seit 20220225)</li>
       <li>$xxZDA (seit 20220421)</li>
+      <li>$xxVDR (seit 20240520)</li>
     </ul>
     <p>Je nach <a href="hints/configfile.html">Konfiguration</a> kann AvNav
       auch NMEA-Daten erzeugen:</p>
@@ -134,17 +136,18 @@
       <li>$xxGSV</li>
       <li>$xxGLL</li>
       <li>$xxGSA</li>
-      <li>$xxRMC</li>
+      <li>$xxRMC (mag. variation seit 20240520)</li>
       <li>$xxMWV (ab 20220225 auch waterSpeed)</li>
       <li>$xxDBT</li>
       <li>$xxXDR (seit 20210114)</li>
-      <li>$xxHDG (seit 210106xx)</li>
+      <li>$xxHDG (seit 210106xx, mag. variation seit 20240520)</li>
       <li>$xxHDT (seit 20210619)</li>
       <li>$xxHDM (seit 20210619) <br>
       </li>
       <li>$xxVHW partiell (seit 20210619)</li>
       <li>$xxVWR (seit 20220225)</li>
       <li>$xxMTW (seit 20220225)</li>
+      <li>$xxVDR (seit 20240520)</li>
     </ul>
     <p>Bei enstprechender Konfiguration kann AvNav $GPRMC und $GPRMB-Sätze (ab
       20220225 auch $GPAPB) erzeugen und aussenden.</p>
@@ -162,15 +165,18 @@
       in das gemf Format <a href="charts.html#Convert">konvertiert</a> werden,
       entweder direkt auf dem Raspberry - oder besser vorher auf einem
       Desktop-System.</p>
-    <p>Karten müssen zur Benutzung in AvNav "hochgeladen" werden - dies
-      geschieht auf der <a href="userdoc/downloadpage.html">Files/Download-Seite</a>,
-      dort den Reiter "Karten" <img src="viewerimages/icons-new/map2.svg" alt=""
-        class="inlineimage"> anklicken. </p>
     <p>Außerdem kann AvNav <a href="hints/ocharts.html">o-charts</a>- Karten
-      verarbeiten, unter Android allerdings nicht. Der O-Charts-Shop bietet
-      Karten für Open-Source-Software zu sehr günstigen Preisen an.</p>
-    O-charts Karten werden über das <a href="hints/ocharts.html">o-charts-Plugin</a>
-    hochgeladen.
+      verarbeiten, unter Android <a href="hints/ochartsng.html">mit der
+        avocharts app (ochartsng)</a>. Der O-Charts-Shop bietet Karten für
+      Open-Source-Software zu sehr günstigen Preisen an.</p>
+    <p>Mit dem <a href="hints/ochartsng.html">ochartsng</a> plugin kann AvNav
+      auch freie S57 Karten anzeigen (nach Konvertierung).</p>
+    <p>Karten müssen in AvNav installiert werden, bevor sie genutzt werden
+      können. Das kann auf der <a href="userdoc/downloadpage.html">Files/Download
+        Seite</a>, erfolgen - Sektion charts <img src="viewerimages/icons-new/map2.svg"
+        alt="" class="inlineimage">. O-charts Karten müssen über das <a href="hints/ocharts.html">o-charts
+        plugin</a> / <a href="hints/ochartsng.html">ochartsng plugin</a>
+      hochgeladen werden.</p>
     <p></p>
     <p>Mit dem <a href="https://github.com/wellenvogel/avnav-mapproxy-plugin">mapproxy-plugin</a>
       kann AvNav darüber hinaus verschiedene Online-Karten einbinden. Für die
@@ -275,26 +281,7 @@
       Außerdem erfolgt eine Berechnung des nächsten Zieles und eine Warnung,
       falls eine einstellbare minimale Begegnungsentfernung unterschritten wird
       (CPA).</p>
-    <p>Die Symbole für die AIS-Ziele können durch <a href="hints/usericons.html">eigene
-        Symbole</a> angepasst werden, bei Bedarf unterschiedlich je nach
-      AIS-Schiffsklasse oder navigational status. Für das eigene Boot und für
-      die AIS-Ziele wird ein Kurs-Vektor gezeichnet, dessen Ende die Position
-      nach 10 Minuten (einstellbar) markiert.</p>
-    <p>Ab 20230614 werden auch AIS Atons dargestellt (dazu muss in den <a href="userdoc/settingspage.html">Einstellungen</a>/AIS
-      "only show moving targets" ausgeschaltet und "show other" eingeschaltet
-      sein). Ausserdem ist es möglich eine geschätzte aktuelle Position des AIS
-      Ziels abhängig vom Alter der Information, Kurs und Geschwindigkeit
-      anzuzeigen (Einstellungen/AIS "show estimated position").<br>
-      Es kann ausserdem gewählt werden, ob die Ausrichtung des AIS Zieles nach
-      HDG erfolgt (sofern empfangen - Einstellungen/AIS "use heading for
-      direction") - sonst nach COG. Der Course Vector eines AIS Zieles wird
-      immer nach COG ausgerichtet.<br>
-      Es gibt unterschiedliche Symbole für die AIS Ziele - für Details siehe
-      unter "<a href="hints/usericons.html">Nutzerdefinierte Icons</a>".</p>
-    <p>Durch Klick auf ein AIS-Ziel (oder auf die Anzeige des nächsten Zieles in
-      den Anzeige-Bereichen) erhält man alle <a href="userdoc/aisinfopage.html">Informationen</a>
-      zu diesem Ziel und kann zur <a href="userdoc/aispage.html">Liste aller
-        AIS-Ziele</a> navigieren.</p>
+    <p>Für Details siehe die Beschreibung auf der <a href="userdoc/navpage.html#ais">Navigationsseite</a>.</p>
     <h2>Alarme</h2>
     <p>AvNav kann Alarme erzeugen für:</p>
     <ul>

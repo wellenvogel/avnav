@@ -51,6 +51,7 @@
       <li><a href="hints/CanboatAndSignalk.html">Canboat</a></li>
       <li>Support for <a href="https://www.gedad.de/projekte/projekte-f%C3%BCr-privat/gedad-marine-control-server/">MCS</a></li>
       <li>optional einen X-Server mit openbox und firefox im Kiosk Modus</li>
+      <li>Unterstützung für verschiedene <a href="#configHATS">HATs</a></li>
     </ul>
     Die Images sind so vorkonfiguriert, dass NMEA0183-Daten von allen Interfaces
     zu AvNav und von dort zu <a href="hints/CanboatAndSignalk.html">SignalK</a>
@@ -135,7 +136,8 @@
               <li>WAVESHARE2CH: <a href="https://www.waveshare.com/wiki/2-CH_CAN_HAT">waveshare
                   2CH CAN HAT</a></li>
               <li>PICANM: <a href="https://cdn.shopify.com/s/files/1/0563/2029/5107/files/pican-m_UGB_20.pdf?v=1619008196">PICAN-M</a></li>
-              <li>MCARTHUR: <a href="https://github.com/OpenMarine/MacArthur-HAT">MacArthur HAT</a></li>
+              <li>MCARTHUR: <a href="https://github.com/OpenMarine/MacArthur-HAT">MacArthur
+                  HAT</a></li>
             </ul>
           </td>
         </tr>
@@ -489,6 +491,7 @@
       nicht komplett startet. Die Reset Funktion findet sich auch auf dem
       System-Bildschirm (allerdings nur für komplette Neu-Installationen).</p>
     <h2 class="western"><a name="Packages"></a>Paket Installation</h2>
+    <h3>Repositories</h3>
     Dank Oleg gibt es&nbsp; fertige Paket-Repositories, die man in sein
     Debian-Linux einbinden kann. Das geht auf dem Raspberry Pi - aber auch auf
     jeder anderen Debian-Variante (z.B. Ubuntu). <br>
@@ -511,14 +514,32 @@ echo "deb [signed-by=/usr/share/keyrings/oss.boating.gpg] https://www.free-x.de/
     <div class="code">sudo apt update 
 sudo apt install avnav </div>
     <br>
+    <h3>Startup</h3>
     Danach kann man als beliebiger Nutzer mit dem Kommando<br>
     <div class="code">avnav</div>
     den Server starten.<br>
     Mit <br>
     <div class="code">sudo systemctl enable avnav
 sudo systemctl start avnav</div>
-    kann man AvNav mit dem Benutzer "avnav" automatisch beim Systemstart
-    aktivieren.<br>
+    <p> kann man AvNav mit dem Benutzer "avnav" automatisch beim Systemstart
+      aktivieren.</p>
+    <h3><a name="userservice"></a>User Service</h3>
+    <p>Ab 20240520 kann man AvNav als ein <a href="https://wiki.archlinux.org/title/Systemd/User">user
+        systemd service</a> für den eigenen Nutzer automatisch starten lassen.
+      Um diesen Service zu aktivieren ruft man </p>
+    <div class="code">avnavservice enable [port]</div>
+    <p>auf. Der Service startet automatisch wenn sich der Nutzer einlogged und
+      stoppt, wenn er sich abmeldet. Um den Service bereits beim Systemstart zu
+      aktivieren muss man den "linger" mode für den Nutzer setzen:</p>
+    <div class="code">loginctl enable-linger</div>
+    <p>Für Details siehe die <a href="https://wiki.archlinux.org/title/Systemd/User">systemd
+        Dokumentation</a>.</p>
+    <p>Um den Status zu prüfen nutzt man</p>
+    <div class="code">systemctl --user status avnav</div>
+    <p>AvNav nutzt das (default) Datenverzeichnis $HOME/avnav.</p>
+    <p>Um den Service wieder zu deaktivieren nutzt man </p>
+    <div class="code">avnavservice disable</div>
+    <h3>Download</h3>
     Alternativ kann man auch die Debian-Pakete direkt von der Download-Seite
     herunterladen:<br>
     <ul>
@@ -537,14 +558,19 @@ sudo systemctl start avnav</div>
     Ich würde in jedem Fall empfehlen, das <a href="https://github.com/wellenvogel/avnav-update-plugin">AvNav
       Update-Plugin</a> zu installieren - aus dem Paket Repository mit
     <div class="code">sudo apt-get install avnav-update-plugin</div>
-    <p>oder mittels Download von&nbsp; <a href="https://github.com/wellenvogel/avnav-update-plugin">GitHub.</a></p>
+    <p>oder mittels Download von&nbsp; <a href="https://github.com/wellenvogel/avnav-update-plugin">GitHub.</a><br>
+      <b>Hinweis</b>: Die start/stop Funktionen im Update-Plugin funktionieren
+      (noch) nicht mit einem avnav, das als systemd user Service gestartet
+      wurde. Das ist aber kein Problem, da man AvNav auch aus der App selbst
+      restarten kann.</p>
     <p>Wenn man nicht das "avnav-raspi"-Paket installiert, man aber AvNav mit
       einem anderen Nutzer als "avnav" - also z.B. dem Nutzer pi starten
-      möchte,&nbsp; braucht man einige zusätzliche Schritte.</p>
+      möchte,&nbsp; sollte man wie beschrieben den Start als systemd user
+      Service nutzen.</p>
     Man kann dann als Nutzer "pi" AvNav einfach von der Kommandozeile starten
     lassen.<br>
-    Wenn man AvNav als "systemd service" laufen lassen möchte, sollte man das
-    Verzeichnis:
+    <p>Wenn man avnav als systemweiten Service mit einem anderen NUtzer laufen
+      lassen möchte, kann man auch folgende Schritte abarbeiten:</p>
     <div class="code">/usr/lib/systemd/system/avnav.service.d</div>
     anlegen und dort die Datei anvav.conf mit folgendem Inhalt anlegen:
     <div class="code">
@@ -562,14 +588,7 @@ After=avnav-check-parts.service
     <p>Avnav als Systemdienst starten. Wenn man diese Datei nicht
       anlegt/kopiert, wird AvNav nicht mit den Nutzer "pi", sondern mit dem
       Nutzer "avnav" arbeiten.</p>
-    <p> Wenn man auch die Karten-Konvertierung auf dem Linuxrechner mit einer
-      kleinen GUI machen möchte, muss zusätzlich das Paket "python3-wxgtk3.0"
-      installiert werden. Dann muss man AvNav mit</p>
-    <div class="code">avnav -g</div>
-    starten. Das sollte im Normalfall aber nicht nötig sein, man kann auch
-    direkt in der App die zu konverierenden Karten hochladen.<br>
-    <p> </p>
-    <h2><a name="openplotter"></a>OpenPlotter </h2>
+      <a name="openplotter"></a><h2>OpenPlotter </h2>
     <p>Für <a href="https://openmarine.net/openplotter">OpenPlotter</a> gibt es
       eine komplette Integration von AvNav (Dank an <a href="https://github.com/e-sailing">e-sailing</a>).
       Im Repository <a href="https://www.free-x.de/deb4op/">https://www.free-x.de/deb4op/</a>
@@ -591,20 +610,107 @@ sudo apt install openplotter-avnav</div>
       NMEA-Daten von SignalK und sucht nicht selbst nach USB Geräten. Alle
       Geräte-Konfigurationen oder Schnittstellen-Einrichtungen können so direkt
       in OpenPlotter und SignalK vorgenommen werden.</p>
-    <p></p>
     <h2><a name="Windows"></a>Windows</h2>
-    Für Windows gibt es einen Installer. Dieser wird nicht bei jedem Release neu
-    ausgeliefert. Die aktuelle Version findet man <a href="../downloads/latestwindows">hier</a>.<br>
-    Es empfiehlt sicht, den "AvNavNetSetup-jjjj-mm-dd-0.exe"-Installer zu
-    verwenden, da dieser die eigentliche Software nachlädt und somit eine
-    Möglichkeit bietet, jeweils die neueste AvNav-Version zu installieren, ohne
-    den Installer selbst neu herunterladen zu müssen.<br>
-    Die Windows-Version ist primär auf die <a href="charts.html#windows">Karten-Konvertierung</a>
-    ausgelegt, bietet aber die volle Funktionalität und kann somit auch zur
-    Navigation unter Windows verwendet werden. Wie bei allen anderen Versionen
-    bietet auch die Windwos-Version den Zugriff per Browser von anderen Geräten
-    aus über das Netzwerk..<br>
-    <br>
-    <br>
+    <p> Für Windows gibt es einen Installer (neu ab 20240520). Die aktuelle
+      Version zum Download findet man <a href="../downloads/release/latest/avnav-service-latest.exe">hier</a>.
+      Dieser Installer erzeugt eine App "avnavservice" die (als default)
+      automatisch startet(User autostart). Dieser Service erzeugt eine
+      Notifikation (Icon) die bei Klick ein Menü mit den wichtigsten Funktionen
+      zeigt. Dieser service enhält noch nicht die eigentliche AvNav software
+      (oder die notwendigen Python Pakete). Aber über das Menü können diese
+      installiert werden.<br>
+      Für eine Deinstallation von avnavservice bitte die Systemsteuerung nutzen.</p>
+    <p><img src="windows-notification-1.png" alt=""></p>
+    <p><img src="windows-notification-2.png" alt=""></p>
+    <p>Das service Menü hat die folgenden Einträge:</p>
+    <table border="1" width="100%">
+      <tbody>
+        <tr>
+          <td>Bezeichnung</td>
+          <td>Funktion</td>
+        </tr>
+        <tr>
+          <td>Start</td>
+          <td>Startet den AvNav Server. Nur aktive, wenn die AvNav software
+            installiert wurde und der Server noch nicht läuft. Der Service merkt
+            sich ob AvNav gestartet wurde und wird es beim nächsten Stat
+            automatisch wieder staerten, wenn nicht zischenzeitlich "Stop"
+            aktiviert wurde.</td>
+        </tr>
+        <tr>
+          <td>Stop</td>
+          <td>Stoppt den AvNav Server.</td>
+        </tr>
+        <tr>
+          <td>Open</td>
+          <td>Öffnet den default Browser mit der URL für den AvNav Server.</td>
+        </tr>
+        <tr>
+          <td>Logs</td>
+          <td>Öffnet ein Explorer Fenster im AvNav log Verzeichnis
+            (PROFILEDIR/AvNav/logs). Dort gibt es das normale avnav.log und
+            zusätzlich die Ausgabe vom startup(service-err.log).<br>
+            Um z.B. zur AvNav XML Konfiguration zu gelangen, muss man nur im
+            Explorer ein Verzeichnis nach oben navigieren.</td>
+        </tr>
+        <tr>
+          <td>Config</td>
+          <td>Erlaubt es, den HTTP Port für AvNav zu setzen(default: 8080).</td>
+        </tr>
+        <tr>
+          <td>Update</td>
+          <td>Diser Eintrag ist "Install" wenn die AvNav Software noch nicht
+            installiert wurde.<br>
+            Ein Installationsdialog wird geöffnet(siehe <a href="#windowsinstall">unten</a>).</td>
+        </tr>
+        <tr>
+          <td>Remove</td>
+          <td>Entfernt die installierte AvNav Software (aber alle Nutzerdaten
+            unter PROFILEDIR/AvNav bleiben erhalten).<br>
+            Vor einer Deinstallation von avnavservice (über
+            Systemsteuerung/Software) sollte das genutzt werden - sonst muss man
+            später das Verzeichnis PROFILEDIR/AppData/Local/avnav per Hand
+            entfernen.</td>
+        </tr>
+        <tr>
+          <td>Exit</td>
+          <td>Stoppt AvNav und beendet avnavservice (die Notifikation
+            verschwindet). Um den Service erneut zu starten, nutzt man das
+            Startmenü.<br>
+            Normalerweise kann man den Service laufen lassen. Wenn der AvNav
+            Server gestoppt ist, werden kaum Systemresourcen verbraucht. Nur
+            nach einer erneuten Installtion von avnavservice muss man diesen
+            einmal stoppen und wieder starten.</td>
+        </tr>
+      </tbody>
+    </table>
+    <h3><a name="windowsinstall"></a>Installation</h3>
+    <p>Nach Klick auf Install/Update wird ein kleiner Dialog angezeigt.</p>
+    <p><img src="windows-install-1.png" alt=""></p>
+    Die hier eingetragene URL zeigt auf die aktuelle AvNav software. Aber man
+    kann hier jede URL eingeben, die auf ein aktuelles AvNav Softwarepaket zeigt
+    (zip Datei) - z.B. von den <a href="../downloads/daily">daily</a> oder <a
+      href="../downloads/release">release</a> Seiten. <br>
+    <p>Nach OK wird ein Installationsfenster angezeigt mit dem Fortschritt.</p>
+    <p><img src="windows-install-2.png" alt="" class="fimage image"></p>
+    Nachdem man diese Fenster geshlossen hat, kann man den AvNav Server über
+    "Start" im Menü wieder starten.<br>
+    <h3>Windows Hinweise</h3>
+    <p>Der avnavservice erfordert Powershell (&gt;= 5.x) - das sollte auf allen
+      modernen Windows Systemen verfügbar sein. Wenn die AvNav Installation auf
+      einen Fehler läuft kann es sein, das die neuesten C/C++ Bibliotheken nicht
+      installiert sind. Diese kann man von <a href="https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170">Microsoft</a>
+      herunter laden. Der direkte Link ist normalerweise <a href="https://aka.ms/vs/17/release/vc_redist.x64.exe">hier</a>.
+    </p>
+    <p>Dieser neue Windows service ersetzt die alte AvNavNet installation mit
+      einer eigenen GUI. Releases ab 20240520 sind nicht mehr kompatibel mit der
+      alten Version. Es wird empfohlen, die alte Installation komplett zu
+      entfernen, ehe der neue Installer genutzt wird.</p>
+    <p>Die Karten-Konvertierung ist nun ohnehin komplett in AvNav integriert und
+      kann so genutzt werden wie in der App Dokumentation beschrieben.<br>
+      Man kann serielle Geräte, die am Windows System angeschlossen sind, ganz
+      normal benutzen(z.B. einen GPS Stick).</p>
+    <p>Da der AvNav Server im Hintergrund läuft, kann man ihn zum Beispiel auch
+      als NMEA Multiplexer und Logger nutzen.</p>
   </body>
 </html>

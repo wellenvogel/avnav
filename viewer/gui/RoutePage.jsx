@@ -208,7 +208,7 @@ class RoutePage extends React.Component{
             {
                 name:'NavGoto',
                 onClick:()=>{
-                    stopAnchorWithConfirm()
+                    stopAnchorWithConfirm(true)
                         .then(()=>self.storeRouteAndReturn(true))
                         .catch(()=>{})
                 }

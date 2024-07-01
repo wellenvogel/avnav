@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>AvNav Chart Import Seite</title>
+    <link href="../styles.css" rel="stylesheet" type="text/css">
+  </head>
+  <body data-order="1100">
+    <h1>AvNav Karten Import Seite</h1>
+    <p><br>
+    </p>
+    <div class="toc" data-maxlevel="3"></div>
+    === <b>nicht unter Android</b> ===<br>
+    <h2>Karten Typen</h2>
+    <p>Der Importer hat eingebaute Konverter für die folgenden Typen:</p>
+    <ul>
+      <li>BSB Karten (Erweiterung .kap) und Zip Archive mit mehreren .kap
+        Dateien</li>
+      <li>mbitles Dateien (Aber nur mit der default <a href="downloadpage.html#mbtiles">Kodierung
+          zyz</a> - abweichende Kodierungen können nicht verarbeitet werden)<br>
+        Normalerweise können mbtiles direkt in AvNav gelesen werden (Hochladen
+        auf der <a href="downloadpage.html">Files/Download Seite</a>).Die
+        verbleibende Anwendung für eine Konvertierung ist die Möglichkeit gemf
+        Dateien unter Android im externen Kartenverzeichnis (z.B. auf einer SD
+        Karte) zu nutzen. Mbtiles können unter Android nur im internen
+        Kartenverzeichnis genutzt werden.</li>
+      <li>navipack Dateien</li>
+    </ul>
+    <p>Plugins können eigene Konverter mitbringen - wie z.B. das <a href="../hints/ochartsng.html#chartconversions">ochartsng</a>
+      Plugin (zip's von S57 Dateien).</p>
+    <h2> Benutzung </h2>
+    <p> <img src="importer-list.png" alt="" class="fimage"></p>
+    <p>Die Import Seite kann über die <a href="downloadpage.html">Files/Download</a>
+      Seite mit dem&nbsp; <img src="../viewerimages/icons-new/swap_horiz.svg" alt=""
+        class="inlineimage">Button aufgerufen werden.<br>
+      Wenn die Seite geladen wurde, zeigt sie eine Liste der momentan bekannten
+      Import Dateien oder Verzeichznisse (unter DATADIR/import). Für jeden
+      Eintrag wird der dafür gefundene Konverter angezeigt. Im Bild wurde
+      bereits alle Dateien erfolgreich konvertiert.</p>
+    <p>Wenn man auf einen der Einträge klickt, erhält man einen Dialog mir
+      verschiedenen Aktionen.</p>
+    <p><a name="itemdialog" id="itemdialog"></a><img src="importer-item.png" alt=""
+        class="fimage"></p>
+    <p>Die sichtbaren Aktionen hängen vom Konvertierungszustand ab (konvertiert,
+      momentan in Bearbeitung,...).</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>Button</td>
+          <td>FunKtion</td>
+        </tr>
+        <tr>
+          <td>Delete</td>
+          <td>Lösche die Datei/das Verzeichnis im Import Verzeichnis. Erzeugte
+            (konvertierte) Karten werden nicht gelöscht.</td>
+        </tr>
+        <tr>
+          <td>Disable</td>
+          <td>Der Eintrag wird disabled. Es wird keine neue Konvertierung
+            gestartet auch wenn er sich verändert (z.B. Hochladen einer weiteren
+            Datei in dieses Verzeichnis).</td>
+        </tr>
+        <tr>
+          <td>Restart</td>
+          <td>Neustart der Konvertierung</td>
+        </tr>
+        <tr>
+          <td>Download<br>
+            (only when done)</td>
+          <td>Herunterladen der erzeugten Karte. Für die internen Konverter ist
+            das immer eine gemf Datei. Für andere hängt es vom Plugin ab.</td>
+        </tr>
+        <tr>
+          <td>Log</td>
+          <td>Lade das letzte (oder aktuelle) Log der Konvertierung.</td>
+        </tr>
+        <tr>
+          <td>Stop<br>
+            (only when running)</td>
+          <td>Unterbreche eine aktuell laufende Konvertierung.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Das Ergebnis der Konvertierung wird in das AvNav Kartenverzeichnis
+      geschrieben (bei Erfolg).</p>
+    <p><br>
+      Mit einem Klick auf&nbsp; <img src="../viewerimages/icons-new/ic_file_upload.svg"
+        alt="" class="inlineimage">kann man eine Datei zum Hochladen auswählen
+      (.kap ,.zip , .navipack, .mbtiles,...).</p>
+    <p><img src="importer-upload.png" alt="" class="fimage"></p>
+    <p>Im Dialog kann man einen Namen für die Datei im Import Verzeichnis
+      wählen. Das wird auch der Name der erzeugten Karte.<br>
+      Wenn man eine einzelne .kap Datei hochlädt kann man noch einen "set name"
+      vergeben - das wird ein Verzeichnis im Import Verzeichnis.</p>
+    <img src="importer-upload-kap.png" alt="" class="fimage">
+    <p> Auf diese Weise kann man mehrere .kap Dateien hochladen, die dann
+      zusammen zu einer Karte konvertiert werden (mit dem Namen des Sets).<br>
+      Aber normalerweise ist es bequemmer, die .kap Dateien vorher in ein Zip
+      Archiv zu packen und diese hochzuladen.</p>
+    <p>Nach dem Hochladen wartet der Konverter noch einige Zeit bis keine
+      Änderungen an den hochgeladenen Dateien mehr auftreten.</p>
+    <img src="importer-waiting.png" alt="">
+    <p>Wenn keine Änderungen mehr erkannt werden, beginnt die Konvertierung.</p>
+    <p><img src="importer-converting.png" alt="" class="fimage"></p>
+    <p>Man kann das Log nach Klick auf&nbsp; <img src="../viewerimages/icons-new/ic_edit.svg"
+        alt="" class="inlineimage">neben dem Eintrag (oder neben dem converter)
+      einsehen. Nach dem Ende wird das Ergebnis angezeigt. Bei Fehlern kann man
+      das Log nach Problemen durchsuchen.</p>
+    <p>Wenn die Konvertierung erfolgreich war, sollte die Karte sofort für AvNav
+      zur Verfügung stehen. Wenn man sie auf ein anderes System übertragen
+      möchte (z.B. weil man die Konvertierung auf einem Desktop System gemacht
+      hat, die Karten aber z.B. auf einem Raspberry Pi oder unter Android
+      verwedenden möchte) kann man sie wie <a href="#itemdialog">oben</a>
+      beschrieben herunter laden.</p>
+    <p>Mit dem&nbsp; <img src="../viewerimages/icons-new/ic_edit.svg" alt="" class="inlineimage">Button
+      rechts erreicht man den Eigenschaften-Dialog für den Importer.</p>
+    <img src="importer-edithandler.png" alt="" class="fimage">
+    <p>Man kann hier die Wartezeiten für Dateien und Verzeichniss einstellen und
+      das Scan-Intervall für das Importer Verzeichnis. Mit dem Default von "0"
+      erfolgt der Scan einmal in 24h und nach jedem Upload oder jheder Änderung
+      (z.B. restart).</p>
+    <p>Wenn man Dateien per Hand in das Import-Verzeichnis kopiert muss man über
+      den&nbsp; <img src="../viewerimages/icons-new/ic_edit.svg" alt="" class="inlineimage">Button
+      neben dem scanner einen erneuten Scan asulösen.</p>
+    <h2>Kopieren von Dateien (Experten)</h2>
+    <p>Wenn man Probleme damit hat, große Dateien zum Import hochzuladen, kann
+      man diese auch per Hand in das Import-Verzeichnis kopieren (oder auch
+      komplette Verzeichnisse). Das Import Verzeichnis ist DATADIR/import.
+      DATADIR ist $HOME/avnav oder $HOME/avnav/data - je nachdem, wie das System
+      aufgesetzt wurde.<br>
+      Wenn man Dateien kopiert hat muss man einen erneuten Scan per Hand
+      auslösen.</p>
+    <p>Um das Kopieren großer Dateien zu vermeiden, kann man auch eine Datei mit
+      der Endung ".clk" (converter link file) im Importverzeichnis erzeugen.<br>
+      In diese Datei schreibt man genau eine Zeile mit dem absoluten Pfad zu den
+      zu konvertierenden Dateien/Verzeichnissen.<br>
+      Danach einen erneuten Scan ber Hand auslösen!</p>
+    <h2>Eingebaute Konverter</h2>
+    <p>AvNav bringt die folgenden Konverter mit.</p>
+    <h3>.kap (BSB)</h3>
+    <p> Für kap Dateien werden auch zip Dateien mit mehreren kap Dateien
+      akzeptiert.<br>
+      Die Konvertierung besteht aus den folgenden Schritten:</p>
+    <ul>
+      <li> Sortierung der Karten in Layer (mit potentieller Umwandlung) </li>
+      <li>Erzeugung der Kacheln</li>
+      <li>Erzeugung einer GEMF Datei</li>
+    </ul>
+    <h4>Details (nur für Experten)</h4>
+    Im Folgenden werden die Konvertierungsschritte für den KAP Konverter
+    beschrieben. Im Normalfall sind diese nicht von Interesse. Aber man kann die
+    Konvertierung ggf. von der Kommandozeile aufrufen, falls die Ergebnisse
+    nicht zufriedenstellend sind.<br>
+    Die Datei read_charts.py findet sich unter /usr/lib/avnav/chartconvert.<br>
+    <p>Der erste Schritt geht relativ schnell. Alle Kartendateien werden
+      gelesen, Auflösung und Abdeckung werden ermittelt (falls nötig wird
+      konvertiert). Im Ergebnis entsteht im workdir/&lt;name&gt; Verzeichnis
+      eine Datei chartlist.xml. Der Aufruf dazu lautet:</p>
+    <pre>read_charts.py -g -o name -m chartlist inputdir [inputdir...]
+</pre>
+    <p>Anschliessend sollte die chartlist.xml noch einmal mit einem Texteditor
+      überprüft werden, manchmal macht es Sinn, Kartendateien noch einem anderen
+      Layer zuzuordnen. Das kann einfach durch Verschieben des entsprechenden
+      XML Elements erfolgen. Man kann sich dazu an den Namen der Karten
+      orientieren - meist mach es Sinn Karten vergleichbaren Detailgrades in
+      einen Layer zu verschieben.</p>
+    <p>Der zweite Schritt ist etwas langwieriger, hier erfolgt die eigentliche
+      Erzeugung der Kartenkacheln. Der Aufruf:</p>
+    <pre>read_charts.py -g -o name -m generate inputdir [inputdir...]
+</pre>
+    <p> Unter workdir/&lt;name&gt; muss bereits eine chartlist.xml existieren.
+      Die Erzeugung läuft multi-threaded, auf einem Dual Core 2x2Ghz ca. 20 min
+      für einen Kartensatz mit ca. 20 Karten. </p>
+    <p>Zum Schluss muss man noch die gemf Datei erzeugen</p>
+    <pre>read_charts.py -g -o name -m gemf inputdir [inputdir...]</pre>
+    <p></p>
+    <p>Man kann auch alle Schritte kombinieren – dazu einfach -m all noch vor
+      den anderen Parametern bei Schritt 1 angeben:</p>
+    <pre>read_charts.py -g -m all [-o name] inputdir</pre>
+    <h3>.mbtiles</h3>
+    <p>Zwar kann AvNav .mbtiles direkt verarbeiten, aber es kann u.U. nützlich
+      sein, diese in gemf Dateien umzuwandeln - um sie z.B. unter Android im
+      externen Kartenverzeichnis nutzen zu können.<br>
+      Der Koverter kann bisher nur Dateien mit der Standard-xyz Kodierung
+      verarbeiten.</p>
+    <h3>.navipack</h3>
+    <p>Umwandlung in gemf.</p>
+  </body>
+</html>

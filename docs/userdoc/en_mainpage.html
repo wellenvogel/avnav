@@ -160,7 +160,7 @@
       you will activate the night mode. You can fine tune the dim factors in the
       settings.</p>
     <p><img src="gpspage-night.png" alt="" class="fimage"></p>
-    <h3>Connected/ Not Connected</h3>
+    <h3><a name="disconnected" id="disconnected"></a>Connected/ Not Connected</h3>
     <p>With the<img src="../viewerimages/icons-new/plug.svg" alt="" class="inlineimage">button
       you control how the route data is synced with the server. If it is active
       (green border) all changes on routing data (waypoints, start routing, stop
@@ -178,6 +178,17 @@
     <p>The connected/not connected mode only affects routing data and waypoints.
       All other functions are always connected with the server (except MOB -
       this is a routing function and not available when disconnected).</p>
+    <p><img src="mainpage-disconnected.png" alt="" class="fimage"><br>
+    </p>
+    <p>Since 20240520 the title bar shows a small red icon if you are in
+      disconnected mode. By clicking this icon you can bring up a dialog to end
+      the disconnected mode.</p>
+    <p><img src="mainpage-disconnected-end.png" alt=""></p>
+    <h3><a name="anchorwatch" id="anchorwatch"></a>Anchor Watch</h3>
+    <p>On the <a href="dashboardpage.html#anchorwatch">dashboard</a> page you
+      can activate an anchor watch.</p>
+    <p><br>
+    </p>
     <h3><a name="SplitMode" id="SplitMode"></a>Split Mode</h3>
     <p>Since version 20220819 AvNav can split it's main window. In this mode
       there are two instances of AvNav running in the same browser.</p>
@@ -231,11 +242,12 @@
       display when leaving the split mode (but will be kept for the next split
       mode entering).</p>
     <p>Alarms will only be handled by the right instance.</p>
-    <p>Using the <img src="../viewerimages/icons-new/vertical_split.svg"
-        alt="" class="inlineimage"> Split Button on each instance you can leave
-      the split mode.</p>
-    <p>You can drag and drop the slider to change the window split</p>
-    <p><br>
-    </p>
+    <p>Using the <img src="../viewerimages/icons-new/vertical_split.svg" alt=""
+        class="inlineimage"> Split Button on each instance you can leave the
+      split mode.</p>
+    <p>You can drag and drop the slider to change the window split.</p>
+    <p>Since 20240616 you can force AvNav to start in the same mode
+      (split/unsplit) like it was left by enabling <a href="settingspage.html">Settings</a>-&gt;Layout-&gt;"start
+      with last split mode".</p>
   </body>
 </html>

@@ -91,8 +91,7 @@
     <img alt="SignalK" src="SignalK.png" width="800">
     <p>As a first step when integrating AvNav with SignalK you need to decide
       about the basic flow of data.<br>
-      There are 2 basic options:
-    </p>
+      There are 2 basic options: </p>
     <ol>
       <li>NMEA data will be received directly by AvNav and will be forwarded to
         SignalK. This flow is used in the&nbsp; <a href="../install.html#Headless">AvNav
@@ -393,7 +392,7 @@
           <td>gps.waterSpeed</td>
         </tr>
         <tr>
-          <td>environment.wind.speedTrue oder environment.wind.speedOverGround</td>
+          <td>environment.wind.speedTrue</td>
           <td>gps.trueWindSpeed</td>
         </tr>
         <tr>
@@ -401,12 +400,12 @@
           <td>gps.windSpeed</td>
         </tr>
         <tr>
-          <td>environment.wind.directionTrue environment.wind.directionGround</td>
-          <td>gps.trueWindAngle</td>
-        </tr>
-        <tr>
           <td>environment.wind.angleApparent</td>
           <td>gps.windAngle</td>
+        </tr>
+        <tr>
+          <td>environment.wind.angleTrueWater (since 20240520)</td>
+          <td>gps.trueWindAngle</td>
         </tr>
         <tr>
           <td>navigation.position.latitude</td>
@@ -447,6 +446,22 @@
         <tr>
           <td>navigation.gnss.satellites</td>
           <td>gps.satUsed</td>
+        </tr>
+        <tr>
+          <td>navigation.magneticDeviation (since 20240520)</td>
+          <td>gps.magDeviation</td>
+        </tr>
+        <tr>
+          <td>navigation.magneticVariation (since 20240520)</td>
+          <td>gps.magVariation</td>
+        </tr>
+        <tr>
+          <td>environment.current.setTrue (since 20240520)</td>
+          <td>gps.currentSet</td>
+        </tr>
+        <tr>
+          <td>environment.current.drift (since 20240520)</td>
+          <td>gps.currentDrift</td>
         </tr>
       </tbody>
     </table>
@@ -518,9 +533,46 @@
             class B -&gt; type 18<br>
             other -&gt; type other</td>
         </tr>
+        <tr>
+          <td>design.beam</td>
+          <td>beam</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>design.length</td>
+          <td>length</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>design.draft</td>
+          <td>draught</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>navigation.state</td>
+          <td>status</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>navigation.headingTrue</td>
+          <td>heading</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>atonType</td>
+          <td>aid_type</td>
+          <td><br>
+          </td>
+        </tr>
       </tbody>
     </table>
-    <p>If "sendWp" is active the following mapping is used:</p>
+    <p><a name="waypoint" id="waypoint"></a>If "sendWp" is active the following
+      mapping is used:</p>
     <table style="width: 100%" border="1">
       <tbody>
         <tr>
@@ -529,11 +581,15 @@
         </tr>
         <tr>
           <td>currentLeg.to.lon</td>
-          <td>navigation.courseGreatCircle.nextPoint.position.longitude</td>
+          <td>navigation.courseGreatCircle.nextPoint.position.longitude<br>
+            and<br>
+            navigation.courseGreatCircle.nextPoint.longitude</td>
         </tr>
         <tr>
           <td>currentLeg.to.lat</td>
-          <td>navigation.courseGreatCircle.nextPoint.position.latitude</td>
+          <td>navigation.courseGreatCircle.nextPoint.position.latitude<br>
+            and<br>
+            navigation.courseGreatCircle.nextPoint.latitude</td>
         </tr>
         <tr>
           <td>currentLeg.from.lon</td>
@@ -549,7 +605,9 @@
         </tr>
         <tr>
           <td>currentleg.dstBearing</td>
-          <td>navigation.courseGreatCircle.nextPoint.bearingTrue</td>
+          <td>navigation.courseGreatCircle.nextPoint.bearingTrue<br>
+            and<br>
+            navigation.courseGreatCircle.bearingToDestinationTrue</td>
         </tr>
         <tr>
           <td>currentLeg.xte</td>
@@ -561,10 +619,15 @@
         </tr>
         <tr>
           <td>currentLeg.bearing</td>
-          <td>navigation.courseGreatCircle.bearingTrackTrue</td>
+          <td>navigation.courseGreatCircle.bearingTrackTrue<br>
+            and<br>
+            navigation.courseGreatCircle.bearingOriginToDestinationTru</td>
         </tr>
       </tbody>
     </table>
+    <p>If the AvNav routing mode is rhumbline all "courseGreatCircle" are
+      replaced with "courseRhumbline". The doubled sending of some values with
+      different pathes works around some issues on the signalK side (like <a href="https://github.com/SignalK/signalk-to-nmea2000/issues/94">https://github.com/SignalK/signalk-to-nmea2000/issues/94</a>).</p>
     <p>For notifications there only a few mappings, other will be mapped to
       "sk:"+name in AvNav. Example: notifications.sinking will become
       sk:sinking.</p>

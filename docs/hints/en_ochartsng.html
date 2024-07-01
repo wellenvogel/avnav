@@ -13,8 +13,8 @@
     <ul>
       <li>Now also available on Android (see <a href="#android">below</a>)</li>
       <li>Has a direct (online) Shop interface</li>
-      <li>Can now also handle unencrypted S57 charts (after some initial
-        <a href="#chartconversions"> conversion</a>)</li>
+      <li>Can now also handle unencrypted S57 charts (after some initial <a href="#chartconversions">
+          conversion</a>)</li>
       <li>Has more options for adapting the display</li>
       <li>Avoids the large disk caches that created a lot of SD card write load
         and a lot of CPU load</li>
@@ -31,9 +31,7 @@
     <ul>
       <li>Handling of oeRNC charts (raster charts) is still not implemented</li>
       <li>There could be bugs in the display or in some handling flows</li>
-      <li>On Android you cannot use the same licens for OpenCPN and for AvNav</li>
-      <li>You should not run AvNav ocharts and OpenCPN at the same time on
-        Android</li>
+      <li>On Android you cannot use the same license for OpenCPN and for AvNav</li>
     </ul>
     <h2>Overview</h2>
     <div class="toc"> </div>
@@ -44,6 +42,7 @@
     <p>After some agreements with o-charts, those charts can now also be used
       for AvNav (starting with version 2024xxx with this new plugin - <a href="#Installation">see
         below</a>). At present you can use oeusenc vector-charts .</p>
+    <p>Additionally the plugin is able to handle free S57 charts (after <a href="#chartconversions">conversion</a>).</p>
     <p>To display those charts in AvNav they must be rendered into raster
       images. This is handled by a new plugin for AvNav(avnav-ochartsng). The
       rendering takes place on the fly whenever tiles are to be displayed. A
@@ -192,11 +191,12 @@
       The AvNav ochartsng will not store any shop credentials. But as you run
       inside a browser you can easily use your browser to store the credentials
       (like you do on any other web site).</p>
-    <p>Security hint: Although the communication with the ocharts shop is
-      secured by SSL the communication between your browser and the AvNav server
-      is not. So when you are using the online process just be sure to work
-      within a secured network (e.g. behind an LTE router or a mobile phone
-      hotspot) - not within a public open Wifi network.</p>
+    <p><span style="color: red;">Security hint</span>: Although the
+      communication with the ocharts shop is secured by SSL the communication
+      between your browser and the AvNav server is not. So when you are using
+      the online process just be sure to work within a secured network (e.g.
+      behind an LTE router or a mobile phone hotspot) - not within a public open
+      Wifi network.</p>
     <p><img src="ochartsng-shop1.png" alt="" class="fimage"> </p>
     <p>When opening the "shop" tab you will not be logged in and you will see an
       info whether a dongle is active on your system or not. Via the "ShopPage"
@@ -712,6 +712,28 @@
     <p>Unencrypted vector charts like S57 charts have to be converted into the
       internally used "SENC" format before they can be handled.<br>
       There are 2 Options to convert such charts.</p>
+    <h4>Converting with AvNav (since AvNav 20240520)</h4>
+    <p>The avnav-ochartsng-plugin adds a chart converter to AvNav's <a href="../userdoc/importerpage.html">importer</a>.
+      This converter contains a python script to convert S57 data into a zip
+      archive that can be uploaded.<br>
+      To convert your S57 charts simply upload a zip with the charts to AvNav's
+      <a href="../userdoc/importerpage.html">importer</a> after you installed
+      the plugin. <br>
+      If you run AvNav and ochartsng on linux the converted charts will be
+      automatically uploaded and activated to ochartsng.</p>
+    <p>If you run ochartsng on a different system (e.g. on Android) you need an
+      installation of AvNav either on a <a href="#Installation">linux machine</a>
+      or on <a href="../install.html#Windows">Windows</a>.</p>
+    <p>Ochartsng itself cannot run on Windows but the conversion tooling can. So
+      after you installed AvNav on Windows just open the "Update" Dialog and
+      enter the Url of the ochartsng-s57 converter for Windows:</p>
+    <ul>
+      <li>release: <a href="https://www.wellenvogel.de/software/avnav/downloads/release-ochartsng/latest/ochartsng-latest.zip">https://www.wellenvogel.de/software/avnav/downloads/release-ochartsng/latest/ochartsng-latest.zip</a></li>
+      <li>daily: <a href="https://www.wellenvogel.de/software/avnav/downloads/daily-ochartsng/latest/ochartsng-latest.zip">https://www.wellenvogel.de/software/avnav/downloads/daily-ochartsng/latest/ochartsng-latest.zip</a></li>
+    </ul>
+    <p>Afterwards let the conversion run and when finished download the
+      converted chart (.zip). This zip can directly be uploaded to ochartsng
+      both on linux and Android.</p>
     <h4>Converting using OpenCPN</h4>
     <p>If you already have a computer with OpenCPN up and running you can let
       OpenCPN convert the charts. To do so you need to activate the charts in
@@ -728,13 +750,5 @@
       directory inside. This archive can be uploaded to AvNav ochartsng.<br>
       On Linux there is a <a href="https://github.com/wellenvogel/ochartsng/blob/master/tools/collectS57.sh">script</a>
       to automate this collection process.</p>
-    <h4>Converting with a Script</h4>
-    <p>The avnav-ochartsng-plugin contains a python script to convert S57 data
-      into a zip archive that can be uploaded. So if you have a linux system
-      with the plugin being installed you can run the script with</p>
-    <p class="code">/usr/lib/anvnav/plugins/ochartsng/tosenc.py input output</p>
-    <p>Input can either be a directory with the s57 files (.000,.001,...) or a
-      zip file that contains them. Output should be the name of a zip file.</p>
-    Later on the converter will be integrated into the AvNav chart converter.
   </body>
 </html>

@@ -90,19 +90,19 @@
         SignalK</a> you can also handle <a href="hints/CanboatAndSignalk.html">NMEA2000</a>
       data. Additionally you can use all your own vessel's SignalK data to be
       displayed within AvNav.</p>
-    <p>The following NMEA sentences are decoded:</p>
+    <p><a name="decoding"></a>The following NMEA sentences are decoded:</p>
     <ul>
       <li>!AIVDM</li>
       <li>$xxGGA</li>
       <li>$xxGSV</li>
       <li>$xxGLL</li>
       <li>$xxVTG</li>
-      <li>$xxRMC</li>
+      <li>$xxRMC (mag. variation since 20240520)</li>
       <li>$xxMWV (since 20220225 added waterSpeed)</li>
       <li>$xxDPT</li>
       <li>$xxDBT</li>
       <li>$xxXDR (since 20210114)</li>
-      <li>$xxHDG (since 210106xx)</li>
+      <li>$xxHDG (since 210106xx , mag. variation since 20240520)</li>
       <li>$xxHDT (since 20210619)</li>
       <li>$xxHDM (since 20210619) <br>
       </li>
@@ -110,6 +110,7 @@
       <li>$xxVWR (since 20220225)</li>
       <li>$xxMTW (since 20220225)</li>
       <li>$xxZDA (since 20220421)</li>
+      <li>$xxVDR (since 20240520)</li>
     </ul>
     &nbsp; Depending on the <a href="hints/configfile.html">configuration</a>
     AvNav is able to generate following NMEA sentences:
@@ -141,13 +142,14 @@
       <li>$xxMWV (since 20220225 added&nbsp; waterSpeed)</li>
       <li>$xxDBT</li>
       <li>$xxXDR (since 20210114)</li>
-      <li>$xxHDG (since 210106xx)</li>
+      <li>$xxHDG (since 210106xx, mag. variation since 20240520)</li>
       <li>$xxHDT (since 20210619)</li>
       <li>$xxHDM (since 20210619) <br>
       </li>
       <li>$xxVHW partial (since 20210619)</li>
       <li>$xxVWR (since 20220225)</li>
       <li>$xxMTW (since 20220225)</li>
+      <li>$xxVDR (since 20240520)</li>
     </ul>
     AvNav is able to create and send out $GPRMC and $GPRMB (since 20220225 also
     $GPAPB) if configured.<br>
@@ -166,13 +168,16 @@
       other types of raster charts like BSB (kap). This can be done directly on
       the server (raspberry) - or better beforehand on a desktop system.</p>
     <p>Additionally AvNav can process oeSENCcharts from <a href="hints/ocharts.html">o-charts</a>
-      (not available on Android). The company offers charts for Open Source
-      Software at reasonable prices.</p>
+      - on Android with <a href="hints/ochartsng.html">the avocharts app
+        (ochartsng</a>). The company offers charts for Open Source Software at
+      reasonable prices.</p>
+    <p>With the <a href="hints/ochartsng.html">ochartsng</a> plugin AvNav can
+      also display free S57 charts (after conversion).</p>
     <p>Charts need to be uploaded to AvNav before being usable - at the&nbsp; <a
         href="userdoc/downloadpage.html">Files/Download page</a>, section charts
       <img src="viewerimages/icons-new/map2.svg" alt="" class="inlineimage">.
       o-charts must be uploaded via the <a href="hints/ocharts.html">o-charts
-        plugin</a>.</p>
+        plugin</a> / <a href="hints/ochartsng.html">ochartsng plugin</a></p>
     <p>Using the <a href="https://github.com/wellenvogel/avnav-mapproxy-plugin">mapproxy-plugin</a>
       AvNav can include various online chart sources. Areas of those charts can
       be downloaded with the plugin for offline usage.</p>
@@ -270,25 +275,7 @@
       range (default: 20nm) with their positions and courses. CPA (closest point
       of approach) of AIS targets will be computed and a warning issued if a
       defined minimum distance is not kept.</p>
-    <p>AIS target symbols can be replaced by <a href="hints/usericons.html">user
-        defined symbols</a> - optionally different ones depending on the AIS
-      shiptype. For the own boat and optionally for each AIS target a course
-      vector points to the position to be reached within a defined time interval
-      (default: 10 minutes).</p>
-    <p>Since 20230614 AIS atons will also be displayed (you need to have <a href="userdoc/settingspage.html">settings</a>/AIS
-      "only show moving targets" switched off and "show other" switched on). For
-      each AIS target you can display an estimated position depending on the age
-      of the received information, course and speed (settings/AIS "show
-      estimated position").<br>
-      You can select if an AIS target should be rotated by its HDG (if received
-      - settings/AIS "use heading for direction") - otherwise COG will be used.
-      The course vector of an AIS target will always be rotated by COG.<br>
-      There are different symbols for AIS targets - for details refer to "<a href="hints/usericons.html">user
-        defined icons</a>".</p>
-    <p>By clicking an AIS target (or the "next AIS" display) you will be shown
-      all <a href="userdoc/aisinfopage.html">information</a> for this target
-      and you can change to the <a href="userdoc/aispage.html">list of all AIS
-        targets</a>.</p>
+    For details refer to the <a href="userdoc/navpage.html#ais">navigation page</a>.<br>
     <h2>Alarm</h2>
     <p>AvNav can trigger alarms for:</p>
     <ul>

@@ -27,6 +27,7 @@ import globalStore from "./globalstore";
 import keys from "./keys";
 import LeaveHandler from "./leavehandler";
 import assign from 'object-assign';
+import localStorageManager,{UNPREFIXED_NAMES} from "./localStorageManager";
 class SplitSupport{
     constructor() {
         this.pubSub=new PubSub();
@@ -57,21 +58,57 @@ class SplitSupport{
             base.log("unable to post message: "+e);
         }
     }
-    toggleSplitMode(){
+    activateSplitMode(){
         LeaveHandler.stop();
+        var location=window.location.href+'';
+        location=location.replace('avnav_viewer','viewer_split').replace(/\?.*/,'');
+        let delim='?';
+        for (let k in this.urlParameters){
+            location+=delim+encodeURIComponent(k)+"="+encodeURIComponent(this.urlParameters[k]);
+            delim='&';
+        }
+        window.location.replace(location);
+    }
+    deactivateSplitMode(){
+        LeaveHandler.stop();
+        this.sendToFrame('finishSplit');
+    }
+    toggleSplitMode(){
         if (globalStore.getData(keys.gui.global.splitMode)){
-            this.sendToFrame('finishSplit');
+            localStorageManager.setItem(UNPREFIXED_NAMES.SPLITMODE,undefined,"off");
+            this.deactivateSplitMode();
         }
         else{
-            var location=window.location.href+'';
-            location=location.replace('avnav_viewer','viewer_split').replace(/\?.*/,'');
-            let delim='?';
-            for (let k in this.urlParameters){
-                location+=delim+encodeURIComponent(k)+"="+encodeURIComponent(this.urlParameters[k]);
-                delim='&';
-            }
-            window.location.replace(location);
+            localStorageManager.setItem(UNPREFIXED_NAMES.SPLITMODE,undefined,"on");
+            this.activateSplitMode();
         }
+    }
+
+    setSplitFromLast(){
+        let current=globalStore.getData(keys.gui.global.splitMode);
+        if (!globalStore.getData(keys.properties.startLastSplit)){
+            if (! current) {
+                localStorageManager.setItem(UNPREFIXED_NAMES.SPLITMODE, undefined, "off");
+                return false;
+            }
+            if (! globalStore.getData(keys.gui.global.preventAlarms)){
+                //only handle this in one frame
+                localStorageManager.setItem(UNPREFIXED_NAMES.SPLITMODE, undefined, "on");
+                return false;
+            }
+        }
+        let wanted=localStorageManager.getItem(UNPREFIXED_NAMES.SPLITMODE);
+        if (wanted === 'on' && ! current){
+            this.activateSplitMode();
+            return true;
+        }
+        if (wanted !== 'on' && current){
+            if (!globalStore.getData(keys.gui.global.preventAlarms)) {
+                this.deactivateSplitMode();
+                return true;
+            }
+        }
+        return false;
     }
 
     buttonDef(options) {
