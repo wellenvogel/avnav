@@ -459,7 +459,7 @@ class NMEAParser(object):
         Field Number:
         1) Depth, meters
         2) Offset from transducer,
-            positive means distance from tansducer to water line
+            positive means distance from transducer to water line
             negative means distance from transducer to keel
         3) Checksum
         '''
@@ -471,7 +471,7 @@ class NMEAParser(object):
           self.addToNavData(rt,source=source,record=tag,priority=basePriority,timestamp=timestamp)
           return True
         return False
-      if tag == 'DBT':
+      if tag in ('DBT','DBK','DBS'):
         '''
                 DBT - Depth below transducer
                 1   2 3   4 5   6 7
@@ -486,8 +486,9 @@ class NMEAParser(object):
          6) F = Fathoms
          7) Checksum
         '''
-        if darray[3]:
-          rt[self.K_DEPTHT.key] = float(darray[3])
+        if darray[3] and darray[4]=='M':
+          K = self.K_DEPTHW if tag[2]=='S' else self.K_DEPTHK if tag[2]=='K' else self.K_DEPTHT
+          rt[K.key] = float(darray[3])
           self.addToNavData(rt,source=source,record=tag,priority=basePriority,timestamp=timestamp)
           return True
         return False
@@ -567,9 +568,9 @@ class NMEAParser(object):
             3 set degrees magnetic
             5 drift knots
             """
-        if len(darray[1])>0 and darray[2]=="T":
+        if darray[1] and darray[2]=="T":
           rt[self.K_SET.key] = float(darray[1])
-        if len(darray[5])>0 and darray[6]=="N":
+        if darray[5] and darray[6]=="N":
           rt[self.K_DFT.key] = float(darray[5])
         self.addToNavData(rt,source=source,record=tag,priority=basePriority,timestamp=timestamp)
         return True
@@ -604,7 +605,7 @@ class NMEAParser(object):
 
       if tag == 'MTW':
         # $--MTW,x.x,C*hh<CR><LF>
-        if len(darray[1]) > 0:
+        if darray[1]:
           rt[self.K_VWTT.key] = float(darray[1])+273.15
         self.addToNavData(rt,source=source,record=tag,priority=basePriority,timestamp=timestamp)
         return True
