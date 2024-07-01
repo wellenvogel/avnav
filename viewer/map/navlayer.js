@@ -161,7 +161,7 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
     let gps=globalStore.getMultiple(positionKeys);
     let boatRotation=gps.boatDirection;
     let useHdg=gps.directionMode !== 'cog';
-    let boatStyle=assign({},gps.isSteady?this.boatStyleSteady:(useHdg?this.boatStyleHdg:this.boatStyle));
+    let boatStyle=assign({}, useHdg ? this.boatStyleHdg : (gps.isSteady ? this.boatStyleSteady : this.boatStyle));
     if (boatStyle.rotate === false){
         boatStyle.rotation=0;
     }
