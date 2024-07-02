@@ -25,7 +25,7 @@ import assign from 'object-assign';
 let widgetList=[
     {
         name: 'SOG',
-        default: "0.0",
+        default: "---",
         unit: "kn",
         caption: 'SOG',
         storeKeys: {
@@ -100,7 +100,7 @@ let widgetList=[
     },
     {
         name: 'DST',
-        default: "----",
+        default: "---",
         unit: "nm",
         caption: 'DST',
         storeKeys:{
@@ -124,7 +124,7 @@ let widgetList=[
     },
     {
         name: 'VMG',
-        default: "0.0",
+        default: "---",
         unit: "kn",
         caption: 'VMG',
         storeKeys: {
@@ -135,7 +135,7 @@ let widgetList=[
     },
     {
         name: 'STW',
-        default: '0.0',
+        default: '---',
         unit: 'kn',
         caption: 'STW',
         storeKeys:{
@@ -251,7 +251,7 @@ let widgetList=[
 
     {
         name: 'RteDistance',
-        default: " ----- ",
+        default: "---",
         unit: "nm",
         caption: 'RTE-Dst',
         storeKeys:{
@@ -323,6 +323,7 @@ let widgetList=[
     },
     {
         name: 'DepthDisplay',
+        default: "---",
         caption: 'DPT',
         unit: 'm',
         storeKeys:{
@@ -373,7 +374,8 @@ let widgetList=[
         storeKeys: RoutePointsWidget.storeKeys
     },
     {
-        name: 'Default' //a way to access the default widget providing all parameters in the layout
+        name: 'Default', //a way to access the default widget providing all parameters in the layout
+        default: "---",
     },
     {
         name: 'RadialGauge',
@@ -389,11 +391,13 @@ let widgetList=[
     },
     {
         name: 'signalKPressureHpa',
+        default: "---",
         unit: 'hPa',
         formatter: 'skPressure'
     },
     {
         name:'signalKCelsius',
+        default: "---",
         unit:'°',
         formatter: 'skTemperature'
     },

@@ -26,13 +26,12 @@ export class SKRollWidget extends React.Component{
 
     render(){
         let value=DegreeFormatter(this.props.value,this.props.inDegree);
-        let degreeArrow = "0";
-          // arrow left + Wert
-          if (this.props.value <0 && this.props.value !== 0){
+        let degreeArrow = "-";
+          if (this.props.value == 0) {
+              degreeArrow = "0";
+          } else if (this.props.value < 0) {
               degreeArrow = "\u21D0" + value;
-          }
-          // value + space + arrow right
-          if (this.props.value >0 && this.props.value !== 0){
+          } else if (this.props.value > 0) {
               degreeArrow = value + "\xA0\u21D2";
           }
         let classes="widget SKRollWidget "+this.props.className||"";
@@ -80,13 +79,12 @@ export class SKPitchWidget extends React.Component{
 
     render(){
         let value=DegreeFormatter(this.props.value,this.props.inDegree);
-        let degreeArrow = "0";
-        // arrow left + Wert
-        if (this.props.value <0 && this.props.value !== 0){
+        let degreeArrow = "-";
+        if (this.props.value == 0) {
+            degreeArrow = "0";
+        } else if (this.props.value < 0) {
             degreeArrow = value + "\xA0\u21D3";
-        }
-        // value + space + arrow right
-        if (this.props.value >0 && this.props.value !== 0){
+        } else if (this.props.value > 0) {
             degreeArrow = value + "\xA0\u21D1";
         }
         let classes="widget SKPitchWidget "+this.props.className||"";
