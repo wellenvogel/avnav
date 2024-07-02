@@ -162,14 +162,15 @@ NavLayer.prototype.onPostCompose=function(center,drawing){
     let boatRotation=gps.boatDirection;
     let useHdg=gps.directionMode !== 'cog';
     let boatStyle=assign({}, useHdg ? this.boatStyleHdg : (gps.isSteady ? this.boatStyleSteady : this.boatStyle));
-    if (boatStyle.rotate === false){
-        boatStyle.rotation=0;
+    if (boatRotation === undefined) {
+        boatStyle=this.boatStyleSteady;
     }
-    else {
-        if (boatRotation !== undefined){
+    if (boatStyle.rotate === false) {
+        boatStyle.rotation = 0;
+    } else {
+        if (boatRotation !== undefined) {
             boatStyle.rotation = boatRotation  * Math.PI / 180;
-        }
-        else{
+        } else {
             boatStyle.rotation = 0;
         }
     }
