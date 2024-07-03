@@ -10,9 +10,10 @@
  * ths onIemClick will directly pass through
  */
 
-import React,{useState} from 'react';
+import React, {useRef} from 'react';
 import PropTypes from 'prop-types';
-import assign from 'object-assign';
+import {DndProvider, useDrag, useDrop} from 'react-dnd';
+import {TouchBackend} from 'react-dnd-touch-backend';
 
 
 const getKey=function(obj){
@@ -21,30 +22,71 @@ const getKey=function(obj){
     rt=obj.name;
     return rt;
 };
-
-const ItemWrapper=(props)=>{
-    let {ItemClass,...iprops}=props;
-    const memoClick=(data)=>{
-        if (data && data.stopPropagation) data.stopPropagation();
-        if (data && data.preventDefault) data.preventDefault();
-        if (props.reverse){
-            let len=props.itemList?props.itemList.length:0;
-            props.onItemClick(assign({},iprops,{index:len-iprops.index}),data);
-        }
-        else {
-            props.onItemClick(iprops, data);
-        }
-    };
-    return <ItemClass
-        {...iprops}
-        onClick={memoClick}
-    />
-}
-const ItemWrapperNoClick=(props)=>{
-    let {ItemClass,...iprops}=props;
-    return <ItemClass
-        {...iprops}
-    />
+const DDType="dd";
+const DDItem=({ItemClass,...props})=>{
+    const ref = useRef(null)
+    const [{ handlerId }, drop] = useDrop({
+        accept: DDType,
+        collect(monitor) {
+            return {
+                handlerId: monitor.getHandlerId(),
+            }
+        },
+        hover(item, monitor) {
+            if (!ref.current) {
+                return
+            }
+            const dragIndex = item.index
+            const hoverIndex = index
+            // Don't replace items with themselves
+            if (dragIndex === hoverIndex) {
+                return
+            }
+            // Determine rectangle on screen
+            const hoverBoundingRect = ref.current?.getBoundingClientRect()
+            // Get vertical middle
+            const hoverMiddleY =
+                (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2
+            // Determine mouse position
+            const clientOffset = monitor.getClientOffset()
+            // Get pixels to the top
+            const hoverClientY = clientOffset.y - hoverBoundingRect.top
+            // Only perform the move when the mouse has crossed half of the items height
+            // When dragging downwards, only move when the cursor is below 50%
+            // When dragging upwards, only move when the cursor is above 50%
+            // Dragging downwards
+            if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
+                return
+            }
+            // Dragging upwards
+            if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
+                return
+            }
+            // Time to actually perform the action
+            props.move(dragIndex, hoverIndex)
+            // Note: we're mutating the monitor item here!
+            // Generally it's better to avoid mutations,
+            // but it's good here for the sake of performance
+            // to avoid expensive index searches.
+            item.index = hoverIndex
+        },
+    })
+    const [{ isDragging }, drag] = useDrag({
+        type: DDType,
+        item: () => {
+            return { id, index }
+        },
+        collect: (monitor) => ({
+            isDragging: monitor.isDragging(),
+        }),
+    })
+    const opacity = isDragging ? 0 : 1
+    drag(drop(ref))
+    return (
+        <div ref={ref} style={{ opacity }} data-handler-id={handlerId}>
+            <ItemClass {...props}/>
+        </div>
+    )
 }
 
 const Content=(props)=>{
@@ -90,23 +132,36 @@ const Content=(props)=>{
                 else {
                     ItemClass = props.itemClass;
                 }
-                if (props.dragdrop) {
-                    //ItemClass=SortableElement(ItemClass);
-                }
-                let ItemWrapperEl;
                 if (!itemProps.onClick && props.onItemClick) {
-                    ItemWrapperEl=ItemWrapper;
-                }
-                else{
-                    ItemWrapperEl=ItemWrapperNoClick;
+                    itemProps.onClick = (ev) => {
+                        if (ev.stopPropagation) ev.stopPropagation();
+                        if (ev.preventDefault) ev.preventDefault();
+                        if (props.reverse){
+                            let len=props.itemList?props.itemList.length:0;
+                            props.onItemClick({...itemProps,index:len-itemProps.index},ev);
+                        }
+                        else{
+                            props.onItemClick(itemProps, ev);
+                        }
+                    }
                 }
                 idx++;
-
-                return <ItemWrapperEl ItemClass={ItemClass} key={key} {...itemProps} onItemClick={props.onItemClick}/>
+                if (props.dragdrop){
+                    return <DDItem ItemClass={ItemClass} key={key}{...itemProps} onItemClick={props.onItemClick} move={(p1,p2)=>{
+                        console.log("move",p1,p2);
+                    }}/>
+                }
+                return <ItemClass key={key} {...itemProps} onItemClick={props.onItemClick}/>
             })}
         </div>
     );
 };
+
+const DDContent=({Content,...props})=>{
+    return <DndProvider backend={TouchBackend}>
+        <Content {...props}/>
+    </DndProvider>
+}
 
 const ItemList=(props)=>{
     const itemList=props.itemList;
@@ -131,28 +186,17 @@ const ItemList=(props)=>{
         if (props.fontSize){
             style.fontSize=props.fontSize;
         }
-
-        let dragProps={};
-        /*let Content=this.Content;
-        if (this.props.dragdrop){
-            Content= SortableContainer(Content);
-            dragProps.axis=self.props.horizontal?"x":"y";
-            dragProps.distance=20;
-            dragProps.onSortEnd=self.onSortEnd;
-            dragProps.helperClass="sortableHelper";
-
-        }
-         */
+        let ContentEl=props.dragdrop?(props)=><DDContent Content={Content} {...props}/>:Content;
         if (props.scrollable) {
             return (
                 <div onClick={props.onClick} className={className} style={style} ref={(el)=>{if (props.listRef) props.listRef(el)}}>
-                    <Content className="listScroll" {...props} allitems={itemList} {...dragProps}/>
+                    <ContentEl className="listScroll" {...props} allitems={itemList} />
                 </div>
             );
         }
         else {
             return(
-                <Content className={className} {...props} allitems={itemList} style={style} {...dragProps}/>
+                <ContentEl className={className} {...props} allitems={itemList} style={style} />
             );
         }
 
