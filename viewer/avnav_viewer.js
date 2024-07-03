@@ -156,7 +156,7 @@ export default function() {
     };
 
     const doLateLoads=(loadPlugins)=>{
-        ReactDOM.render(<App/>,document.getElementById('new_pages'));
+        ReactDOM.createRoot(document.getElementById('new_pages')).render(<App/>);
         //ios browser sometimes has issues with less...
         setTimeout(function(){
             propertyHandler.incrementSequence();
