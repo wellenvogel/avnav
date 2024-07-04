@@ -10,10 +10,13 @@
  * ths onIemClick will directly pass through
  */
 
-import React,{useState} from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
-import assign from 'object-assign';
-
+import {
+    DndContext,
+    closestCenter
+} from '@dnd-kit/core';
+import {useSortable} from "@dnd-kit/sortable";
 
 const getKey=function(obj){
     let rt=obj.key;
@@ -22,29 +25,24 @@ const getKey=function(obj){
     return rt;
 };
 
-const ItemWrapper=(props)=>{
-    let {ItemClass,...iprops}=props;
-    const memoClick=(data)=>{
-        if (data && data.stopPropagation) data.stopPropagation();
-        if (data && data.preventDefault) data.preventDefault();
-        if (props.reverse){
-            let len=props.itemList?props.itemList.length:0;
-            props.onItemClick(assign({},iprops,{index:len-iprops.index}),data);
-        }
-        else {
-            props.onItemClick(iprops, data);
-        }
+const SortableItem=(props)=>{
+    const {ItemClass,id,...fwProps}=props;
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+    } = useSortable({id: id});
+
+    const style = {
+        transform: "",//CSS.Transform.toString(transform),
+        transition,
     };
-    return <ItemClass
-        {...iprops}
-        onClick={memoClick}
-    />
-}
-const ItemWrapperNoClick=(props)=>{
-    let {ItemClass,...iprops}=props;
-    return <ItemClass
-        {...iprops}
-    />
+    const nodeRef=(el)=>{
+        setNodeRef(el);
+    }
+    return <ItemClass {...fwProps} dragRef={nodeRef} dragStyle={style} {...listeners}/>
 }
 
 const Content=(props)=>{
@@ -90,19 +88,24 @@ const Content=(props)=>{
                 else {
                     ItemClass = props.itemClass;
                 }
-                if (props.dragdrop) {
-                    //ItemClass=SortableElement(ItemClass);
-                }
-                let ItemWrapperEl;
                 if (!itemProps.onClick && props.onItemClick) {
-                    ItemWrapperEl=ItemWrapper;
-                }
-                else{
-                    ItemWrapperEl=ItemWrapperNoClick;
+                    itemProps.onClick=(data)=>{
+                        if (data && data.stopPropagation) data.stopPropagation();
+                        if (data && data.preventDefault) data.preventDefault();
+                        if (props.reverse){
+                            let len=props.itemList?props.itemList.length:0;
+                            props.onItemClick({...itemProps,index:len-iprops.index},data);
+                        }
+                        else {
+                            props.onItemClick(itemProps, data);
+                        }
+                    }
                 }
                 idx++;
-
-                return <ItemWrapperEl ItemClass={ItemClass} key={key} {...itemProps} onItemClick={props.onItemClick}/>
+                if (props.dragdrop) {
+                    return <SortableItem ItemClass={ItemClass} key={key} id={key+""} {...itemProps}/>
+                }
+                return <ItemClass key={key} {...itemProps}/>
             })}
         </div>
     );
@@ -178,5 +181,5 @@ ItemList.propTypes={
         onSortEnd:      PropTypes.func,
         style:          PropTypes.object
 };
-
+Content.propTypes=ItemList.propTypes;
 export default ItemList;

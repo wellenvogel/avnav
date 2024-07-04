@@ -44,7 +44,7 @@ class DirectWidget extends React.Component{
         let style=props.style||{};
 
         return (
-        <div className={classes} onClick={this.props.onClick} style={style}>
+        <div className={classes} onClick={this.props.onClick} style={style} ref={this.props.dragRef}>
             <div className="resize">
             <div className='widgetData'>
                 <Value value={val}/>
@@ -71,7 +71,8 @@ DirectWidget.propTypes={
     className: PropTypes.string,
     style: PropTypes.object,
     default: PropTypes.string,
-    translateFunction: PropTypes.func
+    translateFunction: PropTypes.func,
+    dragRef: PropTypes.func
 };
 
 DirectWidget.editableParameters={
