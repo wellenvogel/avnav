@@ -198,7 +198,7 @@ NavData.prototype.computeValues=function() {
         data.directionMode=boatDirectionMode;
         if (mapUseHdx) mapCourse=this.mapAverageHdm.val();
     }
-    if (globalStore.getData(keys.properties.boatSteadyDetect) && data.directionMode === 'cog'){
+    if (globalStore.getData(keys.properties.boatSteadyDetect)){
         let maxSpeed=parseFloat(globalStore.getData(keys.properties.boatSteadyMax)) * navcompute.NM / 3600.0;
         if (this.speedAverage.val() === undefined || this.speedAverage.val() < maxSpeed){
             data.isSteady=true;
