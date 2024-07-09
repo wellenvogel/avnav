@@ -528,7 +528,7 @@ class NMEAParser(object):
         elif MagDevDir == 'W':
           heading_m -= MagDeviation
           rt[self.K_MDEV.key] = -MagDeviation
-        rt[self.K_HDGM.key] = heading_m
+        rt[self.K_HDGM.key] = to360(heading_m)
 
         # True course
         heading_t = None
@@ -540,7 +540,7 @@ class NMEAParser(object):
             heading_t = heading_m - MagVariation
             rt[self.K_MVAR.key] = -MagVariation
         if heading_t is not None:
-          rt[self.K_HDGT.key] = heading_t
+          rt[self.K_HDGT.key] = to360(heading_t)
         self.addToNavData(rt,source=source,record=tag,priority=basePriority,timestamp=timestamp)
         return True
 
@@ -770,3 +770,7 @@ class NMEAParser(object):
       return
     self.navdata.setAisValue(mmsi,AVNUtil.convertAIS(rt),source=source,priority=priority,timestamp=timestamp)
 
+def to360(a):
+    "limit a to [0,360)"
+    while a < 0: a += 360
+    return a % 360
