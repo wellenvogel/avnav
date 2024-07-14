@@ -13,7 +13,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import {
-    DndContext
+    DndContext, KeyboardSensor, MouseSensor, TouchSensor, useSensor, useSensors
 } from '@dnd-kit/core';
 import {SortableContext} from "@dnd-kit/sortable";
 
@@ -115,13 +115,27 @@ const ItemList = (props) => {
             props.onSortEnd(active.id,over.id);
         }
     }
+    const mouseSensor = useSensor(MouseSensor,{
+        activationConstraint:{
+            distance: 10
+        } });
+    const touchSensor = useSensor(TouchSensor,{
+        activationConstraint: {
+            distance: 10,
+        }});
+    const keyboardSensor = useSensor(KeyboardSensor);
 
+    const sensors = useSensors(
+        mouseSensor,
+        touchSensor,
+        keyboardSensor,
+    );
     const SortableContent =
         (sprops) => {
             const {sortableIds, ...fwProps} = sprops;
             if (props.dragdrop) {
                 return (
-                    <DndContext onDragEnd={handleDragEnd}>
+                    <DndContext onDragEnd={handleDragEnd} sensors={sensors}>
                         <SortableContext items={sortableIds}>
                             <Content {...fwProps}/>
                         </SortableContext>
