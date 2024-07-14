@@ -8,6 +8,7 @@ import Helper from '../util/helper.js';
 import Value from './Value.jsx';
 import GuiHelper from '../util/GuiHelpers.js';
 import assign from 'object-assign';
+import {useAvNavSortable} from "../hoc/Sortable";
 
 class DirectWidget extends React.Component{
     constructor(props){
@@ -28,6 +29,7 @@ class DirectWidget extends React.Component{
         }
     }
     render(){
+        const sortableProps=useAvNavSortable(this.props.dragId)
         let classes="widget ";
         let props=this.getProps(this.props);
         if (props.isAverage) classes+=" average";
@@ -41,10 +43,9 @@ class DirectWidget extends React.Component{
             if (! isNaN(vdef) && this.props.formatter) val=this.props.formatter(vdef);
             else val=vdef+"";
         }
-        let style=props.style||{};
-
+        const style={...props.style,...sortableProps.style};
         return (
-        <div className={classes} onClick={this.props.onClick} style={style} ref={this.props.dragRef}>
+        <div className={classes} onClick={this.props.onClick} {...sortableProps} style={style}>
             <div className="resize">
             <div className='widgetData'>
                 <Value value={val}/>
@@ -72,7 +73,7 @@ DirectWidget.propTypes={
     style: PropTypes.object,
     default: PropTypes.string,
     translateFunction: PropTypes.func,
-    dragRef: PropTypes.func
+    dragId: PropTypes.string
 };
 
 DirectWidget.editableParameters={

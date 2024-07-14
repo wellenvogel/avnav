@@ -43,11 +43,7 @@ export default  (Component,opt_store)=>{
     return React.forwardRef((props,ref)=>{
         let {onClick,...forwards}=props;
         let clickHandler=onClick?function() {
-            let timeDiff = globalStore.getData(keys.properties.mapClickWorkaroundTime, 300);
-            if (lastMapClickTime !== undefined) {
-                let now = (new Date()).getTime();
-                if ((now - timeDiff) <= lastMapClickTime) return;
-            }
+            if (isMapDeadTime()) return;
             if (props.onClick) {
                 props.onClick.apply(this, [...arguments]);
             }
@@ -59,3 +55,12 @@ export default  (Component,opt_store)=>{
             />
     })
 };
+
+export const isMapDeadTime=()=>{
+    let timeDiff = globalStore.getData(keys.properties.mapClickWorkaroundTime, 300);
+    if (lastMapClickTime !== undefined) {
+        let now = (new Date()).getTime();
+        if ((now - timeDiff) <= lastMapClickTime) return true;
+    }
+    return false;
+}
