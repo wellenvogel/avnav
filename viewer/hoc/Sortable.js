@@ -40,7 +40,7 @@ export const useAvNavSortable=(id,ref)=>{
   };
   const setRef=(e)=>{
       if (typeof(ref) === 'function') ref(e);
-      setRef(e);
+      setNodeRef(e);
   }
   return {ref:setRef,style:nstyle,...attributes,...listeners};
 }

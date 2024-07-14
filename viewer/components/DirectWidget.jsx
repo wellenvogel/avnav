@@ -7,8 +7,38 @@ import PropTypes from 'prop-types';
 import Helper from '../util/helper.js';
 import Value from './Value.jsx';
 import GuiHelper from '../util/GuiHelpers.js';
-import assign from 'object-assign';
 import {useAvNavSortable} from "../hoc/Sortable";
+
+const RenderFunction=(props)=>{
+    const sortableProps=useAvNavSortable(props.dragId)
+    let classes="widget ";
+    if (props.isAverage) classes+=" average";
+    if (props.className) classes+=" "+props.className;
+    let val;
+    let vdef=props.default||'0';
+    if (props.value !== undefined) {
+        val=props.formatter?props.formatter(props.value):vdef+"";
+    }
+    else{
+        if (! isNaN(vdef) && props.formatter) val=props.formatter(vdef);
+        else val=vdef+"";
+    }
+    const style={...props.style,...sortableProps.style};
+    return (
+        <div className={classes} onClick={props.onClick} {...sortableProps} style={style}>
+            <div className="resize">
+                <div className='widgetData'>
+                    <Value value={val}/>
+                </div>
+            </div>
+            <div className='infoLeft'>{props.caption}</div>
+            {props.unit !== undefined?
+                <div className='infoRight'>{props.unit}</div>
+                :<div className='infoRight'></div>
+            }
+        </div>
+    );
+}
 
 class DirectWidget extends React.Component{
     constructor(props){
@@ -25,39 +55,12 @@ class DirectWidget extends React.Component{
             return props;
         }
         else{
-            return this.props.translateFunction(assign({},props));
+            return this.props.translateFunction({...props});
         }
     }
-    render(){
-        const sortableProps=useAvNavSortable(this.props.dragId)
-        let classes="widget ";
-        let props=this.getProps(this.props);
-        if (props.isAverage) classes+=" average";
-        if (props.className) classes+=" "+props.className;
-        let val;
-        let vdef=props.default||'0';
-        if (props.value !== undefined) {
-            val=this.props.formatter?this.props.formatter(props.value):vdef+"";
-        }
-        else{
-            if (! isNaN(vdef) && this.props.formatter) val=this.props.formatter(vdef);
-            else val=vdef+"";
-        }
-        const style={...props.style,...sortableProps.style};
-        return (
-        <div className={classes} onClick={this.props.onClick} {...sortableProps} style={style}>
-            <div className="resize">
-            <div className='widgetData'>
-                <Value value={val}/>
-            </div>
-            </div>
-            <div className='infoLeft'>{props.caption}</div>
-            {this.props.unit !== undefined?
-                <div className='infoRight'>{props.unit}</div>
-                :<div className='infoRight'></div>
-            }
-        </div>
-        );
+    render() {
+        let props = this.getProps(this.props);
+        return <RenderFunction {...props}/>;
     }
 };
 
