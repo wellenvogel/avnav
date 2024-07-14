@@ -3,45 +3,34 @@
  */
 
 import React from "react";
-import compare from '../util/compare';
 import PropTypes from 'prop-types';
 import keys from '../util/keys.jsx';
 import Formatter from '../util/formatter.js';
-import Helper from '../util/helper.js';
-import GuiHelper from '../util/GuiHelpers.js';
+import {useKeyEventHandler} from '../util/GuiHelpers.js';
+import {useAvNavSortable} from "../hoc/Sortable";
 
 
-class ActiveRouteWidget extends React.Component{
-    constructor(props){
-        super(props);
-        GuiHelper.nameKeyEventHandler(this,"widget");
-    }
-    shouldComponentUpdate(nextProps,nextState){
-        return Helper.compareProperties(this.props,nextProps,ActiveRouteWidget.storeKeys);
-    }
-    componentDidUpdate(){
-
-    }
-
-    render() {
-        if (!this.props.routeName && ! this.props.isEditing) return null;
-        let self = this;
-        let classes = "widget activeRouteWidget " + this.props.className || "";
-        if (this.props.isApproaching) classes += " approach ";
+const ActiveRouteWidget =(props)=>{
+    useKeyEventHandler(props,"widget");
+    const ddProps=useAvNavSortable(props.dragId);
+        if (!props.routeName && ! props.isEditing) return null;
+        let classes = "widget activeRouteWidget " + props.className || "";
+        if (props.isApproaching) classes += " approach ";
+        const style={...props.style,...ddProps.style};
         return (
-            <div className={classes} onClick={this.props.onClick} style={this.props.style}>
+            <div className={classes} onClick={props.onClick} style={style} {...ddProps}>
                 <div className="infoLeft">RTE</div>
                 <div className="widgetData">
-                    <div className="routeName">{this.props.routeName}</div>
+                    <div className="routeName">{props.routeName}</div>
                     <div>
-                        <span className="routeRemain">{Formatter.formatDistance(this.props.remain)}</span>
+                        <span className="routeRemain">{Formatter.formatDistance(props.remain)}</span>
                         <span className='unit'>nm</span>
                     </div>
-                    <div className="routeEta">{Formatter.formatTime(this.props.eta)}</div>
-                    { this.props.isApproaching ?
+                    <div className="routeEta">{Formatter.formatTime(props.eta)}</div>
+                    { props.isApproaching ?
                         <div className="routeNext">
                             <span
-                                className="routeNextCourse">{Formatter.formatDirection(this.props.nextCourse)}</span>
+                                className="routeNextCourse">{Formatter.formatDirection(props.nextCourse)}</span>
                             <span className='unit'>&#176;</span>
                         </div>
                         : <div></div>
@@ -51,7 +40,6 @@ class ActiveRouteWidget extends React.Component{
         );
     }
 
-}
 
 ActiveRouteWidget.propTypes={
     //formatter: React.PropTypes.func,
@@ -62,7 +50,11 @@ ActiveRouteWidget.propTypes={
     routeName: PropTypes.string,
     eta: PropTypes.objectOf(Date),
     remain: PropTypes.number,
-    nextCourse: PropTypes.number
+    nextCourse: PropTypes.number,
+    dragId: PropTypes.string,
+    isEditing: PropTypes.bool,
+    isApproaching: PropTypes.bool,
+    style: PropTypes.object
 
 };
 ActiveRouteWidget.storeKeys={

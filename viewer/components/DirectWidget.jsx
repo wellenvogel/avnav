@@ -4,12 +4,13 @@
 
 import React from "react";
 import PropTypes from 'prop-types';
-import Helper from '../util/helper.js';
 import Value from './Value.jsx';
-import GuiHelper from '../util/GuiHelpers.js';
+import {useKeyEventHandler} from '../util/GuiHelpers.js';
 import {useAvNavSortable} from "../hoc/Sortable";
 
-const RenderFunction=(props)=>{
+const DirectWidget=(wprops)=>{
+    const props=wprops.translateFunction?wprops.translateFunction(wprops):wprops;
+    useKeyEventHandler(wprops,"widget");
     const sortableProps=useAvNavSortable(props.dragId)
     let classes="widget ";
     if (props.isAverage) classes+=" average";
@@ -40,30 +41,6 @@ const RenderFunction=(props)=>{
     );
 }
 
-class DirectWidget extends React.Component{
-    constructor(props){
-        super(props);
-        GuiHelper.nameKeyEventHandler(this,"widget");
-        this.getProps=this.getProps.bind(this);
-    }
-    shouldComponentUpdate(nextProps,nextState) {
-        return Helper.compareProperties(this.getProps(this.props),
-            this.getProps(nextProps),{value:1,isAverage:1});
-    }
-    getProps(props){
-        if (! this.props.translateFunction){
-            return props;
-        }
-        else{
-            return this.props.translateFunction({...props});
-        }
-    }
-    render() {
-        let props = this.getProps(this.props);
-        return <RenderFunction {...props}/>;
-    }
-};
-
 DirectWidget.propTypes={
     name: PropTypes.string,
     unit: PropTypes.string,
@@ -78,7 +55,6 @@ DirectWidget.propTypes={
     translateFunction: PropTypes.func,
     dragId: PropTypes.string
 };
-
 DirectWidget.editableParameters={
     caption:true,
     unit:true,

@@ -10,6 +10,7 @@
 import globalStore from "../util/globalstore.jsx";
 import React from 'react';
 import assign from 'object-assign';
+import Helper from "../util/helper";
 
 
 
@@ -94,6 +95,10 @@ export default  function(Component,opt_options,opt_store){
             let {storeKeys,updateFunction,changeCallback,...forwardProps}=this.props;
             let childprops=assign({},forwardProps,this.state);
             return <Component {...childprops}/>
+        }
+        shouldComponentUpdate(nextProps, nextState, nextContext) {
+            return true;
+            //return Helper.compareProperties(this.state,nextState,this.getStoreKeys());
         }
     };
     return Dynamic;

@@ -6,6 +6,7 @@ import assign from 'object-assign';
 import shallowcompare from "./compare";
 import Requests from "./requests";
 import base from "../base";
+import {useEffect} from "react";
 
 
 
@@ -274,6 +275,22 @@ const nameKeyEventHandler=(thisref,component,opt_callback)=>{
         }
     },component,thisref.props.name);
 };
+
+export const useKeyEventHandler=(props,component,opt_callback)=>{
+    return useEffect(()=>{
+        if (! props.name || ! (props.onClick|| opt_callback)) return;
+        const handler=(cbComponent,cbAction)=>{
+            if (cbComponent === component && cbAction === props.name){
+                if (opt_callback) opt_callback(cbComponent,cbAction);
+                else props.onClick();
+            }
+        };
+        KeyHandler.registerHandler(handler,component,props.name);
+        return ()=>{
+            KeyHandler.deregisterHandler(handler);
+        }
+    },[])
+}
 
 //from https://stackoverflow.com/questions/487073/how-to-check-if-element-is-visible-after-scrolling
 //returns:

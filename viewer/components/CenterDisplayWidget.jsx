@@ -6,33 +6,27 @@ import React from "react";
 import PropTypes from 'prop-types';
 import keys from '../util/keys.jsx';
 import Formatter from '../util/formatter.js';
-import Helper from '../util/helper.js';
-import GuiHelper from '../util/GuiHelpers.js';
+import {useKeyEventHandler} from '../util/GuiHelpers.js';
 import NavCompute from "../nav/navcompute";
+import {useAvNavSortable} from "../hoc/Sortable";
 
 
-class CenterDisplayWidget extends React.Component{
-    constructor(props){
-        super(props);
-        GuiHelper.nameKeyEventHandler(this,"widget");
+const CenterDisplayWidget = (props) => {
+    useKeyEventHandler(props, "widget");
+    const ddProps = useAvNavSortable(props.dragId);
+    let classes = "widget centerDisplayWidget " + props.className || "";
+    let small = (props.mode == "horizontal");
+    let measurePosition = props.measurePosition;
+    let measureValues;
+    if (measurePosition) {
+        measureValues = NavCompute.computeDistance(measurePosition, props.centerPosition, props.measureRhumbLine);
     }
-    shouldComponentUpdate(nextProps,nextState) {
-        return Helper.compareProperties(this.props,nextProps,CenterDisplayWidget.storeKeys);
-    }
-
-    render() {
-        let classes = "widget centerDisplayWidget " + this.props.className || "";
-        let small = (this.props.mode == "horizontal");
-        let measurePosition=this.props.measurePosition;
-        let measureValues;
-        if (measurePosition) {
-            measureValues = NavCompute.computeDistance(measurePosition,this.props.centerPosition,this.props.measureRhumbLine);
-        }
-        return (
-            <div className={classes} onClick={this.props.onClick} style={this.props.style||{}}>
-                <div className="infoLeft">Center</div>
-                { !small && <div className="widgetData">{Formatter.formatLonLats(this.props.centerPosition)}</div>}
-                {(measurePosition !== undefined) &&
+    const style = {...props.style, ...ddProps.style};
+    return (
+        <div className={classes} onClick={props.onClick} {...ddProps} style={style}>
+            <div className="infoLeft">Center</div>
+            {!small && <div className="widgetData">{Formatter.formatLonLats(props.centerPosition)}</div>}
+            {(measurePosition !== undefined) &&
                 <div className="widgetData">
                     <div className="label measure"></div>
                     <div className="value">
@@ -47,41 +41,40 @@ class CenterDisplayWidget extends React.Component{
                         <span className="unit">nm</span>
                     </div>
                 </div>
-                }
-                <div className="widgetData">
-                    <div className="label marker"></div>
-                    <div className="value">
-                        <span>{Formatter.formatDirection(this.props.markerCourse)}</span>
-                        <span className="unit">&#176;</span>
-                    </div>
-                    <div className="value">
-                        /
-                    </div>
-                    <div className="value">
-                        <span>{Formatter.formatDistance(this.props.markerDistance)}</span>
-                        <span className="unit">nm</span>
-                    </div>
+            }
+            <div className="widgetData">
+                <div className="label marker"></div>
+                <div className="value">
+                    <span>{Formatter.formatDirection(props.markerCourse)}</span>
+                    <span className="unit">&#176;</span>
                 </div>
-                <div className="widgetData">
-                    <div className="label boat"></div>
-                    <div className="value">
-                        <span >{Formatter.formatDirection(this.props.centerCourse)}</span>
-                        <span className="unit">&#176;</span>
-                    </div>
-                    <div className="value">
-                        /
-                    </div>
-                    <div className="value">
-                        <span >{Formatter.formatDistance(this.props.centerDistance)}</span>
-                        <span className="unit">nm</span>
-
-                    </div>
+                <div className="value">
+                    /
+                </div>
+                <div className="value">
+                    <span>{Formatter.formatDistance(props.markerDistance)}</span>
+                    <span className="unit">nm</span>
                 </div>
             </div>
-        );
-    }
+            <div className="widgetData">
+                <div className="label boat"></div>
+                <div className="value">
+                    <span>{Formatter.formatDirection(props.centerCourse)}</span>
+                    <span className="unit">&#176;</span>
+                </div>
+                <div className="value">
+                    /
+                </div>
+                <div className="value">
+                    <span>{Formatter.formatDistance(props.centerDistance)}</span>
+                    <span className="unit">nm</span>
 
+                </div>
+            </div>
+        </div>
+    );
 }
+
 
 CenterDisplayWidget.storeKeys={
         markerCourse:keys.nav.center.markerCourse,
@@ -102,6 +95,9 @@ CenterDisplayWidget.propTypes={
     centerDistance:PropTypes.number,
     centerPosition: PropTypes.object,
     measurePosition: PropTypes.object,
-    measureRhumbLine: PropTypes.bool
+    measureRhumbLine: PropTypes.bool,
+    dragId: PropTypes.string,
+    style: PropTypes.object,
+    mode: PropTypes.string
 };
 export default CenterDisplayWidget;

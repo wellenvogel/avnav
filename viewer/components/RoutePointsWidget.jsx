@@ -2,17 +2,15 @@
  * Created by andreas on 23.02.16.
  */
 
-import React from "react";
+import React, {useEffect} from "react";
 import PropTypes from 'prop-types';
 import keys from '../util/keys.jsx';
-import Formatter from '../util/formatter.js'
-import Helper from '../util/helper.js';
 import routeobjects from '../nav/routeobjects.js';
 import ItemList from './ItemList.jsx';
 import WaypointItem from './WayPointItem.jsx';
-import assign from 'object-assign';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
-import GuiHelper from '../util/GuiHelpers.js';
+import GuiHelper, {useKeyEventHandler} from '../util/GuiHelpers.js';
+import {useAvNavSortable} from "../hoc/Sortable";
 
 const editor=new RouteEdit(RouteEdit.MODES.EDIT);
 
@@ -21,62 +19,63 @@ const RoutePoint=(showLL)=>{
         return <WaypointItem {...props} showLatLon={showLL}/>
     }
 };
-
-class RoutePointsWidget extends React.Component{
-    constructor(props){
-        super(props);
-        this.scrollSelected=this.scrollSelected.bind(this);
-        GuiHelper.nameKeyEventHandler(this,"widget");
-    }
-
-    shouldComponentUpdate(nextProps,nextState){
+//TODO: compare!
+const compareFunction=(prev,current)=>{
         for (let k in RoutePointsWidget.propTypes){
             if (k == 'route') continue;
-            if (nextProps[k] !== this.props[k]) return true;
+            if (prev[k] !== current[k]) return true;
         }
-        if (!nextProps.route != !this.props.route) return true;
-        if (!nextProps.route) return false;
-        return nextProps.route.differsTo(this.props.route);
-    }
-    scrollSelected(){
-        if (! this.listRef) return;
-        let el=this.listRef.querySelector('.activeEntry');
-        if (el) {
-            let mode=GuiHelper.scrollInContainer(this.listRef,el);
-            if (mode < 1 || mode > 2) return;
-            el.scrollIntoView(mode==1);
-        }
-    }
-    componentDidMount(){
-        this.scrollSelected();
-    }
-    componentDidUpdate(){
-        this.scrollSelected();
-    }
-    render(){
-        let self=this;
-        let [route,index,isActive]=StateHelper.getRouteIndexFlag(this.props);
-        if ((! route || !route.points || route.points.length < 1) && ! this.props.isEditing) return null;
-        let classes="widget routePointsWidget "+this.props.className||"";
-        if (isActive) classes +=" activeRoute ";
-        if (this.props.mode == 'horizontal' && ! this.props.isEditing) return null; //we do not display...
-        return (
-            <ItemList style={this.props.style}
-                      className={classes}
-                      itemList={route?route.getRoutePoints(index,this.props.useRhumbLine):[]}
-                      itemCreator={(item)=>{return RoutePoint(this.props.showLatLon)}}
-                      scrollable={true}
-                      onItemClick={(item,data)=>{if (self.props.onClick)
-                            self.props.onClick(new routeobjects.RoutePoint(item)) }}
-                      onClick={(ev)=>{if (self.props.isEditing && self.props.onClick){
-                        self.props.onClick(ev);
-                      }}}
-                      listRef={(element)=>{self.listRef=element}}
-                />
-        );
-    }
-
+        if (!prev.route != !current.route) return true;
+        if (!current.route) return false;
+        return current.route.differsTo(prev.route);
 }
+const RoutePointsWidget = (props) => {
+    useKeyEventHandler(props, "widget");
+    const ddProps = useAvNavSortable(props.dragId);
+    let listRef = undefined;
+    const scrollSelected = () => {
+        if (!listRef) return;
+        let el = listRef.querySelector('.activeEntry');
+        if (el) {
+            let mode = GuiHelper.scrollInContainer(listRef, el);
+            if (mode < 1 || mode > 2) return;
+            el.scrollIntoView(mode == 1);
+        }
+    }
+    useEffect(() => {
+        scrollSelected();
+    });
+    let [route, index, isActive] = StateHelper.getRouteIndexFlag(props);
+    if ((!route || !route.points || route.points.length < 1) && !props.isEditing) return null;
+    let classes = "widget routePointsWidget " + props.className || "";
+    if (isActive) classes += " activeRoute ";
+    if (props.mode == 'horizontal' && !props.isEditing) return null; //we do not display...
+    const style = {...props.style, ...ddProps.style};
+    return (
+        <div className={classes} {...ddProps} style={style}>
+            <ItemList
+                itemList={route ? route.getRoutePoints(index, props.useRhumbLine) : []}
+                itemCreator={(item) => {
+                    return RoutePoint(props.showLatLon)
+                }}
+                scrollable={true}
+                onItemClick={(item, data) => {
+                    if (props.onClick)
+                        props.onClick(new routeobjects.RoutePoint(item))
+                }}
+                onClick={(ev) => {
+                    if (props.isEditing && props.onClick) {
+                        props.onClick(ev);
+                    }
+                }}
+                listRef={(element) => {
+                    listRef = element
+                }}
+            />
+        </div>
+    );
+}
+
 
 RoutePointsWidget.propTypes={
     onClick:        PropTypes.func,
