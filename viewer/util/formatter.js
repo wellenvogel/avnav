@@ -4,6 +4,7 @@
 
 import navcompute from '../nav/navcompute.js';
 import {extendCoordinate} from "ol/extent";
+import Helper from "./helper.js";
 
 /**
  *
@@ -12,7 +13,7 @@ import {extendCoordinate} from "ol/extent";
  * @returns {string}
  */
 const formatLonLatsDecimal=function(coordinate,axis){
-    coordinate = (coordinate+540)%360 - 180; // normalize for sphere being round
+    coordinate = Helper.to180(coordinate); // normalize to ±180°
 
     let abscoordinate = Math.abs(coordinate);
     let coordinatedegrees = Math.floor(abscoordinate);
@@ -168,14 +169,14 @@ formatSpeed.parameters=[
     {name:'unit',type:'SELECT',list:['kn','ms','kmh'],default:'kn'}
 ];
 
-const formatDirection=function(dir,opt_rad){
-    if (opt_rad){
-        dir=180*dir/Math.PI;
-    }
+const formatDirection=function(dir,opt_rad,opt_180){
+    dir=opt_rad ? Helper.degrees(dir) : dir;
+    dir=opt_180 ? Helper.to180(dir) : Helper.to360(dir);
     return formatDecimal(dir,3,0);
 };
 formatDirection.parameters=[
-    {name:'inputRadian',type:'BOOLEAN',default:false}
+    {name:'inputRadian',type:'BOOLEAN',default:false},
+    {name:'±180°',type:'BOOLEAN',default:false}
 ];
 
 /**
