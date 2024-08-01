@@ -23,6 +23,7 @@
 import React from 'react';
 import {useSortable} from '@dnd-kit/sortable';
 import {CSS} from '@dnd-kit/utilities';
+import PropTypes from "prop-types";
 
 export const useAvNavSortable=(id,ref)=>{
    if (id === undefined) return {};
@@ -43,4 +44,8 @@ export const useAvNavSortable=(id,ref)=>{
       setNodeRef(e);
   }
   return {ref:setRef,style:nstyle,...attributes,...listeners};
+}
+
+export const SortableProps={
+    dragId: PropTypes.string
 }

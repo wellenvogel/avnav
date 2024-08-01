@@ -8,7 +8,8 @@ import keys from "../util/keys.jsx";
 import Formatter from "../util/formatter.js";
 import globalStore from '../util/globalstore.jsx';
 import {useKeyEventHandler} from '../util/GuiHelpers.js';
-import {useAvNavSortable} from "../hoc/Sortable";
+import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
+import {WidgetProps} from "./WidgetBase";
 
 const TimeStatusWidget = (props=> {
     useKeyEventHandler(props,"widget");
@@ -32,13 +33,10 @@ const TimeStatusWidget = (props=> {
 });
 
 TimeStatusWidget.propTypes={
-    onClick: PropTypes.func,
-    className: PropTypes.string,
+    ...SortableProps,
+    ...WidgetProps,
     time: PropTypes.objectOf(Date),
-    gpsValid: PropTypes.bool,
-    style: PropTypes.object,
-    caption: PropTypes.string,
-    dragId: PropTypes.string
+    gpsValid: PropTypes.bool
 };
 TimeStatusWidget.storeKeys={
     time: keys.nav.gps.rtime,

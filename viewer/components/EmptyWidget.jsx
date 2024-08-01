@@ -4,7 +4,8 @@
 
 import React from "react";
 import PropTypes from 'prop-types';
-import {useAvNavSortable} from "../hoc/Sortable";
+import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
+import {WidgetProps} from "./WidgetBase";
 
 const EmptyWidget =(props)=>{
     const ddProps=useAvNavSortable(props.dragId);
@@ -18,11 +19,9 @@ const EmptyWidget =(props)=>{
     }
 
 EmptyWidget.propTypes={
-        onClick: PropTypes.func,
-        className: PropTypes.string,
-        dragId: PropTypes.string,
-        style: PropTypes.object,
-        classes: PropTypes.string
+    ...SortableProps,
+    ...WidgetProps,
+    classes: PropTypes.string
 };
 
 export default EmptyWidget;

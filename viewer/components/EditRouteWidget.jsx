@@ -9,7 +9,8 @@ import Formatter from '../util/formatter.js'
 import routeobjects from '../nav/routeobjects.js';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
 import {useKeyEventHandler} from '../util/GuiHelpers.js';
-import {useAvNavSortable} from "../hoc/Sortable";
+import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
+import {WidgetProps} from "./WidgetBase";
 
 const editor=new RouteEdit(RouteEdit.MODES.EDIT);
 
@@ -62,17 +63,14 @@ const EditRouteWidget = (props) => {
 
 
 EditRouteWidget.propTypes={
-    onClick:PropTypes.func,
-    className:PropTypes.string,
-    mode:   PropTypes.string, //display info side by side if small
+    ...SortableProps,
+    ...WidgetProps,
     route:   PropTypes.objectOf(routeobjects.Route),
     remain: PropTypes.number,
     eta:    PropTypes.objectOf(Date),
     isApproaching: PropTypes.bool,
     isActive: PropTypes.bool,
-    useRhumbLine: PropTypes.bool,
-    dragId: PropTypes.string,
-    style: PropTypes.object
+    useRhumbLine: PropTypes.bool
 };
 
 EditRouteWidget.storeKeys=editor.getStoreKeys({

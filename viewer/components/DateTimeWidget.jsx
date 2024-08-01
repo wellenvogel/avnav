@@ -7,7 +7,8 @@ import PropTypes from "prop-types";
 import keys from "../util/keys.jsx";
 import Formatter from "../util/formatter.js";
 import {useKeyEventHandler} from '../util/GuiHelpers.js';
-import {useAvNavSortable} from "../hoc/Sortable";
+import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
+import {WidgetProps} from "./WidgetBase";
 
 const DateTimeWidget=(props)=>{
     useKeyEventHandler(props,"widget");
@@ -34,12 +35,10 @@ const DateTimeWidget=(props)=>{
     }
 
 DateTimeWidget.propTypes={
-    onClick: PropTypes.func,
-    className: PropTypes.string,
+    ...SortableProps,
+    ...WidgetProps,
     time: PropTypes.objectOf(Date),
-    gpsValid: PropTypes.bool,
-    style: PropTypes.object,
-    dragId: PropTypes.string
+    gpsValid: PropTypes.bool
 };
 DateTimeWidget.storeKeys={
     time: keys.nav.gps.rtime,

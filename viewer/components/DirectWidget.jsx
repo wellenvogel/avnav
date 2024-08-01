@@ -6,7 +6,8 @@ import React from "react";
 import PropTypes from 'prop-types';
 import Value from './Value.jsx';
 import {useKeyEventHandler} from '../util/GuiHelpers.js';
-import {useAvNavSortable} from "../hoc/Sortable";
+import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
+import {WidgetProps} from "./WidgetBase";
 
 const DirectWidget=(wprops)=>{
     const props=wprops.translateFunction?wprops.translateFunction(wprops):wprops;
@@ -44,16 +45,13 @@ const DirectWidget=(wprops)=>{
 DirectWidget.propTypes={
     name: PropTypes.string,
     unit: PropTypes.string,
-    caption: PropTypes.string,
+    ...SortableProps,
+    ...WidgetProps,
     value: PropTypes.any,
     isAverage: PropTypes.bool,
     formatter: PropTypes.func.isRequired,
-    onClick: PropTypes.func,
-    className: PropTypes.string,
-    style: PropTypes.object,
     default: PropTypes.string,
     translateFunction: PropTypes.func,
-    dragId: PropTypes.string
 };
 DirectWidget.editableParameters={
     caption:true,

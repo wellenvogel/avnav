@@ -10,24 +10,15 @@ import ItemList from './ItemList.jsx';
 import WaypointItem from './WayPointItem.jsx';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
 import GuiHelper, {useKeyEventHandler} from '../util/GuiHelpers.js';
-import {useAvNavSortable} from "../hoc/Sortable";
+import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
+import {WidgetProps} from "./WidgetBase";
 
 const editor=new RouteEdit(RouteEdit.MODES.EDIT);
 
 const RoutePoint=(showLL)=>{
-    return function(props){
+    return (props)=>{
         return <WaypointItem {...props} showLatLon={showLL}/>
     }
-};
-//TODO: compare!
-const compareFunction=(prev,current)=>{
-        for (let k in RoutePointsWidget.propTypes){
-            if (k == 'route') continue;
-            if (prev[k] !== current[k]) return true;
-        }
-        if (!prev.route != !current.route) return true;
-        if (!current.route) return false;
-        return current.route.differsTo(prev.route);
 }
 const RoutePointsWidget = (props) => {
     useKeyEventHandler(props, "widget");
@@ -55,11 +46,11 @@ const RoutePointsWidget = (props) => {
         <div className={classes} {...ddProps} style={style}>
             <ItemList
                 itemList={route ? route.getRoutePoints(index, props.useRhumbLine) : []}
-                itemCreator={(item) => {
+                itemCreator={() => {
                     return RoutePoint(props.showLatLon)
                 }}
                 scrollable={true}
-                onItemClick={(item, data) => {
+                onItemClick={(item) => {
                     if (props.onClick)
                         props.onClick(new routeobjects.RoutePoint(item))
                 }}
@@ -78,9 +69,8 @@ const RoutePointsWidget = (props) => {
 
 
 RoutePointsWidget.propTypes={
-    onClick:        PropTypes.func,
-    className:      PropTypes.string,
-    mode:           PropTypes.string, //display info side by side if small
+    ...SortableProps,
+    ...WidgetProps,
     route:          PropTypes.objectOf(routeobjects.Route),
     isActive:       PropTypes.bool,
     index:          PropTypes.number,
