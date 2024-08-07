@@ -16,6 +16,7 @@ import {
     DndContext, KeyboardSensor, MouseSensor, TouchSensor, useSensor, useSensors
 } from '@dnd-kit/core';
 import {SortableContext} from "@dnd-kit/sortable";
+import {SortContext, SortModes} from "../hoc/Sortable";
 
 const getKey=function(obj){
     let rt=obj.key;
@@ -65,10 +66,13 @@ const Content=(props)=>{
         </div>
     );
 };
-
+let sid=0;
+const getSid=()=>{
+    sid++;
+    return sid;
+}
 const ItemList = (props) => {
     const itemList = [];
-    const sortableIds = [];
     const existingKeys = {};
     let idx = 0;
     const allitems = props.itemList || [];
@@ -85,8 +89,7 @@ const ItemList = (props) => {
         itemProps.index = props.reverse ? allitems.length - idx : idx;
         itemProps.key = key;
         if (props.dragdrop) {
-            itemProps.dragId = idx+"";
-            sortableIds.push(itemProps.dragId);
+            itemProps.dragId = idx;
         }
         existingKeys[key] = true;
         if (props.selectedIndex !== undefined) {
@@ -110,39 +113,27 @@ const ItemList = (props) => {
     if (props.fontSize) {
         style.fontSize = props.fontSize;
     }
-    const handleDragEnd=({active,over})=>{
+    const handleDragEnd=(active,over,after)=>{
+        if (after){
+            if (active === (over + 1)) return;
+        }
+        else{
+            if (active === (over - 1)) return;
+        }
         if (props.onSortEnd){
-            props.onSortEnd(active.id,over.id);
+            props.onSortEnd(active,over);
         }
     }
-    const mouseSensor = useSensor(MouseSensor,{
-        activationConstraint:{
-            distance: 10
-        } });
-    const touchSensor = useSensor(TouchSensor,{
-        activationConstraint: {
-            distance: 10,
-        }});
-    const keyboardSensor = useSensor(KeyboardSensor);
-
-    const sensors = useSensors(
-        mouseSensor,
-        touchSensor,
-        keyboardSensor,
-    );
     const SortableContent =
         (sprops) => {
-            const {sortableIds, ...fwProps} = sprops;
             if (props.dragdrop) {
                 return (
-                    <DndContext onDragEnd={handleDragEnd} sensors={sensors}>
-                        <SortableContext items={sortableIds}>
-                            <Content {...fwProps}/>
-                        </SortableContext>
-                    </DndContext>
+                    <SortContext.Provider value={{onDragEnd:handleDragEnd,id:getSid(), mode:props.horizontal? SortModes.horizontal:SortModes.vertical}}>
+                            <Content {...sprops}/>
+                    </SortContext.Provider>
                 )
             } else {
-                return <Content {...fwProps}/>
+                return <Content {...sprops}/>
             }
         };
     if (props.scrollable) {
@@ -150,12 +141,12 @@ const ItemList = (props) => {
             <div onClick={props.onClick} className={className} style={style} ref={(el) => {
                 if (props.listRef) props.listRef(el)
             }}>
-                <SortableContent sortableIds={sortableIds} className="listScroll" {...props} allitems={itemList}/>
+                <SortableContent className="listScroll" {...props} allitems={itemList}/>
             </div>
         );
     } else {
         return (
-            <SortableContent sortableIds={sortableIds} className={className} {...props} allitems={itemList}
+            <SortableContent className={className} {...props} allitems={itemList}
                              style={style}/>
         );
     }

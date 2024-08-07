@@ -20,7 +20,7 @@
 #  DEALINGS IN THE SOFTWARE.
 */
 
-import React from 'react';
+import React, {createContext, useContext} from 'react';
 import {useSortable} from '@dnd-kit/sortable';
 import {CSS} from '@dnd-kit/utilities';
 import PropTypes from "prop-types";
@@ -53,23 +53,28 @@ export const SortableProps={
 export const useAvNavSortable=(id,ref)=>{
     const ATTR='data-dragid';
     const TYPE='application-x-avnav-dnd';
-    if (id === undefined) return {};
+    const context= useContext(SortContext);
+    if (id === undefined || context.id === undefined) return {};
     let rt={
         onDragStart:(ev)=>{
             let data={
                 rect: ev.currentTarget.getBoundingClientRect(),
                 id: id,
-                client: {x:ev.clientX,y:ev.clientY}
+                client: {x:ev.clientX,y:ev.clientY},
+                ctxid: context.id
             };
             data.offset={x:data.client.x-data.rect.left,y:data.client.y-data.rect.top}
             ev.dataTransfer.setData(TYPE,JSON.stringify(data));
-            ev.dataTransfer.supp
         },
         onDragOver:(ev)=>{
             let ta=ev.target.getAttribute(ATTR);
             if ( ta !== undefined) {
-                if (ev.dataTransfer.getData(TYPE) !== undefined) {
-                    ev.preventDefault();
+                const tdatas=ev.dataTransfer.getData(TYPE);
+                if (tdatas !== undefined) {
+                    //const tdata=JSON.parse(tdatas);
+                    //if (tdata.ctxid === context.id) {
+                        ev.preventDefault();
+                    //}
                 }
             }
         },
@@ -77,14 +82,22 @@ export const useAvNavSortable=(id,ref)=>{
             ev.preventDefault();
             let dids=ev.dataTransfer.getData(TYPE);
             let tdata=JSON.parse(dids);
-            let tid=ev.currentTarget.getAttribute(ATTR);
+            if (tdata.ctxid !== context.id) return;
+            let tid=parseInt(ev.currentTarget.getAttribute(ATTR));
             if (tid === tdata.id) return;
             let trect=ev.currentTarget.getBoundingClientRect();
             let toffset={x:ev.clientX-trect.left,y:ev.clientY-trect.top};
             let dragupperleft={x:toffset.x-tdata.offset.x,y:toffset.y-tdata.offset.y}
-            let mode="after";
-            if (dragupperleft.y < 0 ) mode="before";
-            console.log("drop from ",tdata.id,"to ",tid,"mode",mode,tdata,trect,dragupperleft);
+            let after=true;
+            if (context.mode === SortModes.vertical){
+                if (dragupperleft.y < 0) after=false;
+            }
+            else{
+                if (dragupperleft.x < 0) after=false;
+            }
+            if (context.onDragEnd){
+                context.onDragEnd(tdata.id,tid,after);
+            }
         },
         draggable: true,
         droppable: true
@@ -92,3 +105,10 @@ export const useAvNavSortable=(id,ref)=>{
     rt[ATTR]=id;
     return rt;
 }
+
+export const SortModes={
+    horizontal: 0,
+    vertical:1
+}
+export const SortContext=createContext({id:undefined,mode:SortModes.vertical,onDragEnd:undefined});
+
