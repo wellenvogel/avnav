@@ -52,6 +52,7 @@ export const SortableProps={
 
 export const useAvNavSortable=(id,ref)=>{
     const ATTR='data-dragid';
+    const TYPE='application-x-avnav-dnd';
     if (id === undefined) return {};
     let rt={
         onDragStart:(ev)=>{
@@ -61,17 +62,20 @@ export const useAvNavSortable=(id,ref)=>{
                 client: {x:ev.clientX,y:ev.clientY}
             };
             data.offset={x:data.client.x-data.rect.left,y:data.client.y-data.rect.top}
-            ev.dataTransfer.setData("text",JSON.stringify(data));
+            ev.dataTransfer.setData(TYPE,JSON.stringify(data));
+            ev.dataTransfer.supp
         },
         onDragOver:(ev)=>{
             let ta=ev.target.getAttribute(ATTR);
             if ( ta !== undefined) {
-                ev.preventDefault();
+                if (ev.dataTransfer.getData(TYPE) !== undefined) {
+                    ev.preventDefault();
+                }
             }
         },
         onDrop: (ev)=>{
             ev.preventDefault();
-            let dids=ev.dataTransfer.getData("text");
+            let dids=ev.dataTransfer.getData(TYPE);
             let tdata=JSON.parse(dids);
             let tid=ev.currentTarget.getAttribute(ATTR);
             if (tid === tdata.id) return;
