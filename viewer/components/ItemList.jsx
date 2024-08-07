@@ -12,10 +12,6 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import {
-    DndContext, KeyboardSensor, MouseSensor, TouchSensor, useSensor, useSensors
-} from '@dnd-kit/core';
-import {SortableContext} from "@dnd-kit/sortable";
 import {SortContext, SortModes} from "../hoc/Sortable";
 
 const getKey=function(obj){

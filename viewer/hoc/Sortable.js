@@ -21,30 +21,8 @@
 */
 
 import React, {createContext, useContext} from 'react';
-import {useSortable} from '@dnd-kit/sortable';
-import {CSS} from '@dnd-kit/utilities';
 import PropTypes from "prop-types";
 
-export const useAvNavSortableO=(id,ref)=>{
-   if (id === undefined) return {};
-   const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({id:id});
-
-  const nstyle = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-  const setRef=(e)=>{
-      if (typeof(ref) === 'function') ref(e);
-      setNodeRef(e);
-  }
-  return {ref:setRef,style:nstyle,...attributes,...listeners};
-}
 
 export const SortableProps={
     dragId: PropTypes.string
