@@ -25,7 +25,7 @@ import {useSortable} from '@dnd-kit/sortable';
 import {CSS} from '@dnd-kit/utilities';
 import PropTypes from "prop-types";
 
-export const useAvNavSortable=(id,ref)=>{
+export const useAvNavSortableO=(id,ref)=>{
    if (id === undefined) return {};
    const {
     attributes,
@@ -48,4 +48,43 @@ export const useAvNavSortable=(id,ref)=>{
 
 export const SortableProps={
     dragId: PropTypes.string
+}
+
+export const useAvNavSortable=(id,ref)=>{
+    const ATTR='data-dragid';
+    if (id === undefined) return {};
+    let rt={
+        onDragStart:(ev)=>{
+            let data={
+                rect: ev.currentTarget.getBoundingClientRect(),
+                id: id,
+                client: {x:ev.clientX,y:ev.clientY}
+            };
+            data.offset={x:data.client.x-data.rect.left,y:data.client.y-data.rect.top}
+            ev.dataTransfer.setData("text",JSON.stringify(data));
+        },
+        onDragOver:(ev)=>{
+            let ta=ev.target.getAttribute(ATTR);
+            if ( ta !== undefined) {
+                ev.preventDefault();
+            }
+        },
+        onDrop: (ev)=>{
+            ev.preventDefault();
+            let dids=ev.dataTransfer.getData("text");
+            let tdata=JSON.parse(dids);
+            let tid=ev.currentTarget.getAttribute(ATTR);
+            if (tid === tdata.id) return;
+            let trect=ev.currentTarget.getBoundingClientRect();
+            let toffset={x:ev.clientX-trect.left,y:ev.clientY-trect.top};
+            let dragupperleft={x:toffset.x-tdata.offset.x,y:toffset.y-tdata.offset.y}
+            let mode="after";
+            if (dragupperleft.y < 0 ) mode="before";
+            console.log("drop from ",tdata.id,"to ",tid,"mode",mode,tdata,trect,dragupperleft);
+        },
+        draggable: true,
+        droppable: true
+    }
+    rt[ATTR]=id;
+    return rt;
 }
