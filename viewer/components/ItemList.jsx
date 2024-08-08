@@ -65,7 +65,7 @@ const Content=(props)=>{
 let sid=0;
 const getSid=()=>{
     sid++;
-    return sid;
+    return "itemList"+sid;
 }
 const ItemList = (props) => {
     const itemList = [];
@@ -124,9 +124,12 @@ const ItemList = (props) => {
         (sprops) => {
             if (props.dragdrop) {
                 return (
-                    <SortContext.Provider value={{onDragEnd:handleDragEnd,id:getSid(), mode:props.horizontal? SortModes.horizontal:SortModes.vertical}}>
+                    <SortContext
+                        onDragEnd={handleDragEnd}
+                        id={getSid()}
+                        mode={props.horizontal? SortModes.horizontal:SortModes.vertical}>
                             <Content {...sprops}/>
-                    </SortContext.Provider>
+                    </SortContext>
                 )
             } else {
                 return <Content {...sprops}/>
