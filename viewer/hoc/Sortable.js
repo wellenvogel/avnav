@@ -28,51 +28,82 @@ export const SortModes={
     vertical:1
 }
 
+const percentOverlap=(itstart,itext,cmpstart,cmpext)=>{
+    const itend=itstart+itext;
+    const cmpend=cmpstart+cmpext;
+    if (itext === 0) return 0;
+    if (itstart > cmpend) return 0;
+    if (itend< cmpstart) return 0;
+    let ext=0;
+    if (itstart < cmpstart){
+        ext=(cmpend > itend)?itend-cmpstart:cmpend-cmpstart;
+    }
+    else{
+        ext=(cmpend > itend)?itend-itstart:cmpend-itstart;
+    }
+    return 100*ext/itext;
+}
 class SortHandler{
     constructor() {
         this.refs={};
         this.dragging=undefined;
     }
     ref(id,el){
+        id=parseInt(id);
         if (el) this.refs[id]=el;
         else delete this.refs[id];
     }
-    setDrag(id,el){
-        this.dragging={id:id,el:el};
-        console.log("start drag",id,el);
-    }
-    endDrag(){
-        if (this.dragging){
-            console.log("end drag", this.dragging);
-        }
-        this.dragging=undefined;
-    }
-    findPosition(dragUpperLeft,id){
-        let bestMatching=undefined;
-        const d=(rect)=>{
-            return {
-                x: dragUpperLeft.x-rect.left,
-                y: dragUpperLeft.y-rect.top
+    findPosition(dragRect,id,mode){
+        let bestMatching=[];
+        let maxv=undefined;
+        let minv=undefined;
+        let minid=undefined;
+        let maxid=undefined;
+        let itemstart=(mode===SortModes.vertical)?dragRect.top:dragRect.left;
+        let itemext=(mode===SortModes.vertical)?dragRect.height:dragRect.width;
+        const se=(rect)=>{
+            if (mode===SortModes.vertical){
+                return {start:rect.top,ext:rect.height};
+            }
+            else{
+                return{start:rect.left,ext:rect.width};
             }
         }
+        const d=(rect)=>{
+            const {start,ext}=se(rect);
+            if (minv === undefined || start < minv ) minv=start;
+            if (maxv === undefined || (start+ext) > maxv) maxv=start+ext;
+            return percentOverlap(itemstart,itemext,start,ext);
+        }
         for (let k in this.refs){
+            k=parseInt(k);
+            if (minid === undefined || k < minid) minid=k;
+            if (maxid === undefined || k > maxid) maxid=k;
             if (k === id) continue;
             const el=this.refs[k];
             if (! el){
                 continue;
             }
             const elrect=el.getBoundingClientRect();
-            if (! bestMatching){
-                bestMatching={el:el,rect:elrect,diff:d(elrect)};
-            }
-            else{
-                const cd=d(elrect);
-                if (Math.abs(cd.y) < Math.abs(bestMatching.diff.y)){
-                    bestMatching={el:el,rect:elrect,diff:cd}
-                }
+            const match=d(elrect);
+            if (match > 0) bestMatching.push({match:match,id:k});
+        }
+        if (bestMatching.length < 1) {
+            //check above/below
+            if (itemstart <= minv) return minid;
+            if ((itemstart + itemext) > maxv) return maxid + 1;
+            return undefined;
+        }
+        bestMatching.sort((a,b)=>{
+            return b.match - a.match;
+        });
+        if (bestMatching[0].match < 50){
+            //check if we are more after
+            if (bestMatching[0].id === maxid && (itemstart+itemext) > maxv){
+                return maxid+1;
             }
         }
-        return bestMatching;
+        return bestMatching[0].id;
     }
 }
 const SortContextImpl=createContext({
@@ -86,9 +117,10 @@ export const SortableProps={
     dragId: PropTypes.string
 }
 
-export const useAvNavSortable=(id,ref)=>{
-    const ATTR='data-dragid';
-    const TYPE='application-x-avnav-dnd';
+const ATTR='data-dragid';
+const CATTR='data-dragctx';
+const TYPE='application-x-avnav-dnd';
+export const useAvNavSortable=(id)=>{
     const context= useContext(SortContextImpl);
     if (id === undefined || context.id === undefined) return {};
     let rt={
@@ -101,49 +133,6 @@ export const useAvNavSortable=(id,ref)=>{
             };
             data.offset={x:data.client.x-data.rect.left,y:data.client.y-data.rect.top}
             ev.dataTransfer.setData(TYPE,JSON.stringify(data));
-            context.handler.setDrag(id,ev.currentTarget);
-        },
-        onDragOver:(ev)=>{
-            let ta=ev.target.getAttribute(ATTR);
-            if ( ta !== undefined) {
-                const tdatas=ev.dataTransfer.getData(TYPE);
-                if (tdatas !== undefined) {
-                    //const tdata=JSON.parse(tdatas);
-                    //if (tdata.ctxid === context.id) {
-                        ev.preventDefault();
-                    //}
-                }
-            }
-        },
-        onDrop: (ev)=>{
-            ev.preventDefault();
-            context.handler.endDrag();
-            let dids=ev.dataTransfer.getData(TYPE);
-            let tdata=JSON.parse(dids);
-            if (tdata.ctxid !== context.id) return;
-            let tid=parseInt(ev.currentTarget.getAttribute(ATTR));
-            if (tid === tdata.id) return;
-            let trect=ev.currentTarget.getBoundingClientRect();
-            let toffset={x:ev.clientX-trect.left,y:ev.clientY-trect.top};
-            let dragupperleft={x:toffset.x-tdata.offset.x,y:toffset.y-tdata.offset.y}
-            let bestMatching=context.handler.findPosition({
-                x:ev.clientX-tdata.offset.x,
-                y:ev.clientY-tdata.offset.y
-            },tdata.id);
-            console.log("best matching",bestMatching);
-            let after=true;
-            if (context.mode === SortModes.vertical){
-                if (dragupperleft.y < 0) after=false;
-            }
-            else{
-                if (dragupperleft.x < 0) after=false;
-            }
-            if (context.onDragEnd){
-                context.onDragEnd(tdata.id,tid,after);
-            }
-        },
-        onDragEnd:(ev)=>{
-            context.handler.endDrag();
         },
         draggable: true,
         ref: (el)=>{
@@ -151,6 +140,39 @@ export const useAvNavSortable=(id,ref)=>{
         }
     }
     rt[ATTR]=id;
+    return rt;
+}
+
+export const useAvNavSortFrame=()=>{
+    const context= useContext(SortContextImpl);
+    let rt={
+        onDragOver:(ev)=>{
+            let ta=ev.target.getAttribute(CATTR);
+            if ( ta !== undefined) {
+                const tdatas=ev.dataTransfer.getData(TYPE);
+                if (tdatas !== undefined) {
+                    ev.preventDefault();
+                }
+            }
+        },
+        onDrop: (ev)=>{
+            ev.preventDefault();
+            let dids=ev.dataTransfer.getData(TYPE);
+            let tdata=JSON.parse(dids);
+            if (tdata.ctxid !== context.id) return;
+            let bestMatching=context.handler.findPosition({
+                left:ev.clientX-tdata.offset.x,
+                top:ev.clientY-tdata.offset.y,
+                height: tdata.rect.height,
+                width: tdata.rect.width
+            },tdata.id,context.mode);
+            //console.log("best matching",bestMatching);
+            if (bestMatching !== undefined && bestMatching !== tdata.id && context.onDragEnd){
+                context.onDragEnd(tdata.id,bestMatching);
+            }
+        }
+    }
+    rt[CATTR]=context.id;
     return rt;
 }
 

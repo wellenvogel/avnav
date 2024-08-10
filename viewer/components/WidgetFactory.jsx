@@ -248,22 +248,13 @@ export const getFormatterParameters=(widget)=>{
         }
     }
 }
-const Dummy=(dprops)=>{
-    console.log("Dummy render",dprops);
-    return <div key={dprops.cey} onClick={(ev)=>{
-        dprops.onClick(ev);
-    }} className={"widget"}>XXX:{dprops.cey}</div>
-}
-const CombinedWidget=(props)=>{
 
+const CombinedWidget=(props)=>{
     useKeyEventHandler(props,"widget")
     let {editableParameters,children,onClick,childProperties,style,dragId,className,...forwardProps}=props;
     const ddProps = useAvNavSortable(dragId);
     const cl=(ev)=>{
         if (onClick) onClick(ev);
-    }
-    const cc=(ev)=>{
-        console.log("child click",ev);
     }
     let cidx = 0;
     delete childProperties.style;
@@ -272,7 +263,7 @@ const CombinedWidget=(props)=>{
         {(children||[] ).map((item) => {
             let Item = theFactory.createWidget(item, childProperties);
             cidx++;
-            return <Item key={cidx} onClick={cc}/>
+            return <Item key={cidx}/>
         })}
     </div>
 }

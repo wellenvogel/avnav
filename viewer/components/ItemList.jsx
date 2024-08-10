@@ -12,7 +12,7 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import {SortContext, SortModes} from "../hoc/Sortable";
+import {SortContext, SortModes, useAvNavSortFrame} from "../hoc/Sortable";
 
 const getKey=function(obj){
     let rt=obj.key;
@@ -23,8 +23,10 @@ const getKey=function(obj){
 
 
 const Content=(props)=>{
+    const sortFrameProps=useAvNavSortFrame();
     return (
-        <div className={props.className}
+        <div {...sortFrameProps}
+            className={props.className}
              style={props.style}
              ref={(el)=>{if (props.listRef) props.listRef(el)}}
              onClick={(ev)=>{
@@ -109,13 +111,7 @@ const ItemList = (props) => {
     if (props.fontSize) {
         style.fontSize = props.fontSize;
     }
-    const handleDragEnd=(active,over,after)=>{
-        if (after){
-            if (active === (over + 1)) return;
-        }
-        else{
-            if (active === (over - 1)) return;
-        }
+    const handleDragEnd=(active,over)=>{
         if (props.onSortEnd){
             props.onSortEnd(active,over);
         }
