@@ -187,7 +187,21 @@ class MapPage extends React.Component{
                 }}
                 dragdrop={globalStore.getData(keys.gui.global.layoutEditing)}
                 horizontal={mode === 'horizontal'}
-                onSortEnd={(oldIndex,newIndex)=>LayoutHandler.moveItem(self.props.id,panelItems.name,oldIndex,newIndex)}
+                allowOther={true}
+                dragFrame={panel}
+                onSortEnd={(oldIndex,newIndex,frameId)=>{
+                    if (frameId === panel) {
+                        LayoutHandler.moveItem(self.props.id, panelItems.name, oldIndex, newIndex)
+                    }
+                    else{
+                        let oldPanel=self.props.panelCreator(frameId);
+                        if (! oldPanel || ! oldPanel.list) return;
+                        let item=oldPanel.list[oldIndex];
+                        if (! item) return;
+                        LayoutHandler.replaceItem(self.props.id,oldPanel.name,oldIndex);
+                        LayoutHandler.replaceItem(self.props.id,panelItems.name,newIndex,item, LayoutHandler.ADD_MODES.beforeIndex);
+                    }
+                }}
                 />
         };
         let mapOpacity=globalStore.getData(keys.properties.nightMode) ?

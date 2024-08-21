@@ -124,6 +124,7 @@ const ItemList = (props) => {
                         onDragEnd={handleDragEnd}
                         id={props.dragFrame||getSid()}
                         allowOther={props.allowOther}
+                        reverse={props.reverse}
                         mode={props.horizontal? SortModes.horizontal:SortModes.vertical}>
                             <Content {...sprops}/>
                     </SortContext>

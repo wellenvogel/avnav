@@ -44,25 +44,27 @@ const percentOverlap=(itstart,itext,cmpstart,cmpext)=>{
     return 100*ext/itext;
 }
 class SortHandler{
-    constructor() {
+    constructor(mode,reverse) {
         this.refs={};
         this.dragging=undefined;
+        this.mode=mode;
+        this.reverse=reverse;
     }
     ref(id,el){
         id=parseInt(id);
         if (el) this.refs[id]=el;
         else delete this.refs[id];
     }
-    findPosition(dragRect,id,mode){
+    findPosition(dragRect,id){
         let bestMatching=[];
         let maxv=undefined;
         let minv=undefined;
         let minid=undefined;
         let maxid=undefined;
-        let itemstart=(mode===SortModes.vertical)?dragRect.top:dragRect.left;
-        let itemext=(mode===SortModes.vertical)?dragRect.height:dragRect.width;
+        let itemstart=(this.mode===SortModes.vertical)?dragRect.top:dragRect.left;
+        let itemext=(this.mode===SortModes.vertical)?dragRect.height:dragRect.width;
         const se=(rect)=>{
-            if (mode===SortModes.vertical){
+            if (this.mode===SortModes.vertical){
                 return {start:rect.top,ext:rect.height};
             }
             else{
@@ -90,8 +92,8 @@ class SortHandler{
         }
         if (bestMatching.length < 1) {
             //check above/below
-            if (itemstart <= minv) return minid;
-            if ((itemstart + itemext) > maxv) return maxid + 1;
+            if (itemstart <= minv) return this.reverse?maxid+1:minid;
+            if ((itemstart + itemext) > maxv) return this.reverse?minid:maxid + 1;
             return undefined;
         }
         bestMatching.sort((a,b)=>{
@@ -99,8 +101,15 @@ class SortHandler{
         });
         if (bestMatching[0].match < 50){
             //check if we are more after
-            if (bestMatching[0].id === maxid && (itemstart+itemext) > maxv){
-                return maxid+1;
+            if (this.reverse){
+                if (bestMatching[0].id === maxid && itemstart < minv) {
+                    return minid;
+                }
+            }
+            else {
+                if (bestMatching[0].id === maxid && (itemstart + itemext) > maxv) {
+                    return maxid + 1;
+                }
             }
         }
         return bestMatching[0].id;
@@ -108,7 +117,6 @@ class SortHandler{
 }
 const SortContextImpl=createContext({
     id:undefined,
-    mode:SortModes.vertical,
     onDragEnd:undefined,
     handler:undefined,
     allowOther: false
@@ -160,7 +168,8 @@ export const useAvNavSortFrame=()=>{
             ev.preventDefault();
             let dids=ev.dataTransfer.getData(TYPE);
             let tdata=JSON.parse(dids);
-            if (tdata.ctxid !== context.id && ! context.allowOther) return;
+            let other=tdata.ctxid !== context.id;
+            if (other && ! context.allowOther) return;
             let bestMatching=context.handler.findPosition({
                 left:ev.clientX-tdata.offset.x,
                 top:ev.clientY-tdata.offset.y,
@@ -168,7 +177,7 @@ export const useAvNavSortFrame=()=>{
                 width: tdata.rect.width
             },tdata.id,context.mode);
             //console.log("best matching",bestMatching);
-            if (bestMatching !== undefined && bestMatching !== tdata.id && context.onDragEnd){
+            if (bestMatching !== undefined && (other || (bestMatching !== tdata.id)) && context.onDragEnd){
                 context.onDragEnd(tdata.id,bestMatching,tdata.ctxid);
             }
         }
@@ -178,12 +187,11 @@ export const useAvNavSortFrame=()=>{
 }
 
 
-export const SortContext=({onDragEnd,id,mode,children,allowOther})=>{
+export const SortContext=({onDragEnd,id,mode,children,allowOther,reverse})=>{
     return <SortContextImpl.Provider value={{
         onDragEnd: onDragEnd,
         id:id,
-        mode:mode,
-        handler: new SortHandler(),
+        handler: new SortHandler(mode,reverse),
         allowOther: allowOther
     }}>
         {children}
@@ -194,5 +202,6 @@ SortContext.propTypes={
     id: PropTypes.any,
     mode: PropTypes.number,
     children: PropTypes.any,
-    allowOther: PropTypes.bool
+    allowOther: PropTypes.bool,
+    reverse: PropTypes.bool
 }
