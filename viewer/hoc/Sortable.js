@@ -110,7 +110,8 @@ const SortContextImpl=createContext({
     id:undefined,
     mode:SortModes.vertical,
     onDragEnd:undefined,
-    handler:undefined
+    handler:undefined,
+    allowOther: false
 });
 
 export const SortableProps={
@@ -159,7 +160,7 @@ export const useAvNavSortFrame=()=>{
             ev.preventDefault();
             let dids=ev.dataTransfer.getData(TYPE);
             let tdata=JSON.parse(dids);
-            if (tdata.ctxid !== context.id) return;
+            if (tdata.ctxid !== context.id && ! context.allowOther) return;
             let bestMatching=context.handler.findPosition({
                 left:ev.clientX-tdata.offset.x,
                 top:ev.clientY-tdata.offset.y,
@@ -168,7 +169,7 @@ export const useAvNavSortFrame=()=>{
             },tdata.id,context.mode);
             //console.log("best matching",bestMatching);
             if (bestMatching !== undefined && bestMatching !== tdata.id && context.onDragEnd){
-                context.onDragEnd(tdata.id,bestMatching);
+                context.onDragEnd(tdata.id,bestMatching,tdata.ctxid);
             }
         }
     }
@@ -177,13 +178,21 @@ export const useAvNavSortFrame=()=>{
 }
 
 
-export const SortContext=({onDragEnd,id,mode,children})=>{
+export const SortContext=({onDragEnd,id,mode,children,allowOther})=>{
     return <SortContextImpl.Provider value={{
         onDragEnd: onDragEnd,
         id:id,
         mode:mode,
-        handler: new SortHandler()
+        handler: new SortHandler(),
+        allowOther: allowOther
     }}>
         {children}
     </SortContextImpl.Provider>
+}
+SortContext.propTypes={
+    onDragEnd: PropTypes.func,
+    id: PropTypes.any,
+    mode: PropTypes.number,
+    children: PropTypes.any,
+    allowOther: PropTypes.bool
 }

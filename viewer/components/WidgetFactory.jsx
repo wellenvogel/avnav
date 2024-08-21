@@ -15,8 +15,10 @@ import {createEditableParameter, EditableParameter} from "./EditableParameters";
 import Compare from "../util/compare";
 import CloneDeep from 'clone-deep';
 import MapWidget from "./MapWidget";
-import {useAvNavSortable} from "../hoc/Sortable";
+import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
 import {useKeyEventHandler} from "../util/GuiHelpers";
+import {WidgetProps} from "./WidgetBase";
+import PropTypes from "prop-types";
 
 export const filterByEditables=(editableParameters,values)=>{
     let rt={};
@@ -266,6 +268,13 @@ const CombinedWidget=(props)=>{
             return <Item key={cidx}/>
         })}
     </div>
+}
+CombinedWidget.propTypes={
+    ...WidgetProps,
+    ...SortableProps,
+    children: PropTypes.array,
+    childProperties: PropTypes.object,
+    editableParameters: PropTypes.array
 }
 
 

@@ -111,9 +111,9 @@ const ItemList = (props) => {
     if (props.fontSize) {
         style.fontSize = props.fontSize;
     }
-    const handleDragEnd=(active,over)=>{
+    const handleDragEnd=(active,over,id)=>{
         if (props.onSortEnd){
-            props.onSortEnd(active,over);
+            props.onSortEnd(active,over,id);
         }
     }
     const SortableContent =
@@ -122,7 +122,8 @@ const ItemList = (props) => {
                 return (
                     <SortContext
                         onDragEnd={handleDragEnd}
-                        id={getSid()}
+                        id={props.dragFrame||getSid()}
+                        allowOther={props.allowOther}
                         mode={props.horizontal? SortModes.horizontal:SortModes.vertical}>
                             <Content {...sprops}/>
                     </SortContext>
@@ -164,7 +165,9 @@ ItemList.propTypes={
         horizontal:     PropTypes.bool,
         reverse:        PropTypes.bool, //let the index count backwards
         onSortEnd:      PropTypes.func,
-        style:          PropTypes.object
+        style:          PropTypes.object,
+        dragFrame:      PropTypes.string,
+        allowOther:     PropTypes.bool //allow dragging from other frames
 };
 Content.propTypes=ItemList.propTypes;
 export default ItemList;

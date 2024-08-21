@@ -496,7 +496,7 @@ class LayoutHandler{
                 return true;
             }
         }
-        if (index < 0 || index >= panelData.length){
+        if (index < 0 ){
             return false;
         }
         if (allowAdd){
