@@ -132,7 +132,7 @@ export const SortableProps={
 const ATTR='data-dragid';
 const CATTR='data-dragctx';
 const TYPE='application-x-avnav-dnd';
-export const useAvNavSortable=(id)=>{
+export const useAvNavSortable=(id,opt_nodrag)=>{
     const context= useContext(SortContextImpl);
     if (id === undefined || context.id === undefined) return {};
     let rt={
@@ -146,10 +146,12 @@ export const useAvNavSortable=(id)=>{
             data.offset={x:data.client.x-data.rect.left,y:data.client.y-data.rect.top}
             ev.dataTransfer.setData(TYPE,JSON.stringify(data));
         },
-        draggable: true,
         ref: (el)=>{
             context.handler.ref(id,el);
         }
+    }
+    if (opt_nodrag !== false){
+        rt.draggable=true;
     }
     rt[ATTR]=id;
     return rt;

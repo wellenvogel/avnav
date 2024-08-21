@@ -23,6 +23,7 @@ import featureFormatters from '../util/featureFormatter';
 import chartImage from '../images/Chart60.png';
 import {createEditableParameter,EditableParameter} from "./EditableParameters";
 import {getKnownStyleParam} from "../map/chartsourcebase";
+import {useAvNavSortable} from "../hoc/Sortable";
 
 const filterOverlayItem=(item,opt_itemInfo)=>{
     let rt=undefined;
@@ -449,8 +450,9 @@ class OverlayItemDialog extends React.Component{
 
 
 const BaseElement=(props)=>{
+    const dd=useAvNavSortable(props.dragId,false)
     return(
-    <div className={"listEntry overlayElement baseChart"}>
+    <div className={"listEntry overlayElement baseChart"} {...dd}>
         <div className="itemInfo">
             <div className="infoRow">
                 <span className="inputLabel"> </span><span className="valueText">---chart---</span>
@@ -461,8 +463,9 @@ const BaseElement=(props)=>{
 }
 
 const OverlayElement=(props)=>{
+    const dd=useAvNavSortable(props.dragId);
     return (
-        <div className={"listEntry overlayElement "+(props.selected?"activeEntry":"")+(props.enabled?"":" disabled")+(props.isDefault?" defaultOverlay":"")} onClick={()=>props.onClick('select')}>
+        <div className={"listEntry overlayElement "+(props.selected?"activeEntry":"")+(props.enabled?"":" disabled")+(props.isDefault?" defaultOverlay":"")} onClick={()=>props.onClick('select')} {...dd}>
             <div className="itemInfo">
                 <div className="infoRow">
                     <span className="inputLabel">Name</span><span className="valueText">{props.name}</span>
@@ -496,8 +499,10 @@ const OverlayElement=(props)=>{
 };
 
 const CombinedOverlayElement=(props)=> {
+    const dd=useAvNavSortable(props.dragId,false)
     return(
         <ItemList
+            listRef={dd.ref}
             className="defaultOverlayItems"
             itemClass={OverlayElement}
             itemList={props.items}
@@ -509,7 +514,8 @@ const CombinedOverlayElement=(props)=> {
 }
 
 const HiddenCombinedOverlayElement=(props)=>{
-    return <div className="empty"></div>
+    const dd=useAvNavSortable(props.dragId);
+    return <div className="empty" {...dd}></div>
 }
 
 /**
