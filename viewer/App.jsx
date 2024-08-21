@@ -49,6 +49,7 @@ import splitsupport from "./util/splitsupport"
 import leavehandler from "./util/leavehandler"; //triggers querySplitMode
 import fullscreen from "./components/Fullscreen";
 import mapholder from "./map/mapholder";
+import 'drag-drop-touch';
 
 
 const DynamicSound=Dynamic(SoundHandler);

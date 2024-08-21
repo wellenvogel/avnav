@@ -81,7 +81,6 @@ class SortHandler{
             k=parseInt(k);
             if (minid === undefined || k < minid) minid=k;
             if (maxid === undefined || k > maxid) maxid=k;
-            if (k === id) continue;
             const el=this.refs[k];
             if (! el){
                 continue;
@@ -91,6 +90,10 @@ class SortHandler{
             if (match > 0) bestMatching.push({match:match,id:k});
         }
         if (bestMatching.length < 1) {
+            if (minid === undefined){
+                //no elements at all
+                return 0;
+            }
             //check above/below
             if (itemstart <= minv) return this.reverse?maxid+1:minid;
             if ((itemstart + itemext) > maxv) return this.reverse?minid:maxid + 1;
