@@ -1626,6 +1626,16 @@ span.valuePrefix{
       .flex-direction(row);
     }
   }
+  &.editing{
+    .bottomLeft {
+      border-right: 0.3em solid;
+      .nightBorderFade(@editingColor);
+    }
+    .bottomRight {
+      border-left: 0.3em solid;
+      .nightBorderFade(@editingColor);
+    }
+  }
   .widgetContainer.left{
     position: absolute;
     bottom:0;
