@@ -176,7 +176,7 @@ const formatDirection=function(dir,opt_rad,opt_180){
 };
 formatDirection.parameters=[
     {name:'inputRadian',type:'BOOLEAN',default:false},
-    {name:'±180°',type:'BOOLEAN',default:false}
+    {name:'range180',type:'BOOLEAN',default:false}
 ];
 
 /**
