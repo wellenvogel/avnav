@@ -22,7 +22,7 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 #  parts from this software (AIS decoding) are taken from the gpsd project
-#  so refer to this BSD licencse also (see ais.py) or omit ais.py 
+#  so refer to this BSD licencse also (see ais.py) or omit ais.py
 ###############################################################################
 
 from avnav_store import *
@@ -64,18 +64,18 @@ class NMEAParser(object):
   K_HDGC=Key('headingCompass','compass heading','\N{DEGREE SIGN}','navigation.headingCompass',signalKConversion=AVNUtil.rad2deg)
   K_HDGM=Key('headingMag','magnetic heading','\N{DEGREE SIGN}','navigation.headingMagnetic',signalKConversion=AVNUtil.rad2deg)
   K_HDGT=Key('headingTrue','true heading','\N{DEGREE SIGN}','navigation.headingTrue',signalKConversion=AVNUtil.rad2deg)
-  K_VWTT=Key('waterTemp','water temparature','k',signalK='environment.water.temperature')
+  K_VWTT=Key('waterTemp','water temperature','k',signalK='environment.water.temperature')
   K_VHWS=Key('waterSpeed','speed through water','m/s','navigation.speedThroughWater')
-  K_TWS=Key('trueWindSpeed','wind speed true (speed through water ref or ground ref)','m/s','environment.wind.speedTrue')
-  K_AWS=Key('windSpeed','apparent wind speed in m/s','m/s','environment.wind.speedApparent')
+  K_AWS=Key('windSpeed','apparent wind speed','m/s','environment.wind.speedApparent')
+  K_AWA=Key('windAngle','apparent wind angle','\N{DEGREE SIGN}','environment.wind.angleApparent',signalKConversion=AVNUtil.rad2deg)
+  K_TWS=Key('trueWindSpeed','true wind speed','m/s','environment.wind.speedTrue')
   K_TWA=Key('trueWindAngle','true wind angle','\N{DEGREE SIGN}','environment.wind.angleTrueWater',signalKConversion=AVNUtil.rad2deg)
   K_TWD=Key('trueWindDirection','true wind direction','\N{DEGREE SIGN}')
-  K_AWA=Key('windAngle','wind direction','\N{DEGREE SIGN}','environment.wind.angleApparent',signalKConversion=AVNUtil.rad2deg)
   K_MDEV=Key('magDeviation', 'magnetic Deviation in deg','\N{DEGREE SIGN}', signalK='navigation.magneticDeviation', signalKConversion=AVNUtil.rad2deg)
   K_MVAR=Key('magVariation', 'magnetic Variation in deg','\N{DEGREE SIGN}', signalK='navigation.magneticVariation', signalKConversion=AVNUtil.rad2deg)
   K_LAT=Key('lat','gps latitude',signalK='navigation.position.latitude')
   K_LON=Key('lon','gps longitude',signalK='navigation.position.longitude')
-  K_COG=Key('track','course','\N{DEGREE SIGN}','navigation.courseOverGroundTrue',signalKConversion=AVNUtil.rad2deg)
+  K_COG=Key('track','course over ground','\N{DEGREE SIGN}','navigation.courseOverGroundTrue',signalKConversion=AVNUtil.rad2deg)
   K_SOG=Key('speed','speed in m/s','m/s','navigation.speedOverGround')
   K_SET=Key('currentSet','current set','\N{DEGREE SIGN}','environment.current.setTrue',signalKConversion=AVNUtil.rad2deg)
   K_DFT=Key('currentDrift','current drift in m/s','m/s','environment.current.drift')
@@ -121,7 +121,7 @@ class NMEAParser(object):
     #we use the PRN as additional key behind
     for satkey in cls.SKY_SATELLITE_KEYS:
       navdata.registerKey(AVNStore.BASE_KEY_SKY+".satellites.*."+satkey,{'description':'sat status entry'},cls.__name__)
-  
+
   def __init__(self,navdata):
     self.payloads = {'A':'', 'B':''}    #AIS paylod data
     self.navdata=navdata # type: AVNStore
@@ -140,12 +140,12 @@ class NMEAParser(object):
   def addToNavData(self,data,record=None,source='internal',priority=0,timestamp=None):
     '''
     add a data dictionary toe the internal store
-    :param data: 
-    :param record: 
-    :param source: 
-    :param priority: 
+    :param data:
+    :param record:
+    :param source:
+    :param priority:
     :param timestamp: steady time point
-    :return: 
+    :return:
     '''
     self.navdata.setValue(AVNStore.BASE_KEY_GPS,data,source=source,priority=priority,record=record,timestamp=timestamp)
 
@@ -189,7 +189,7 @@ class NMEAParser(object):
       gpsdt=datetime.datetime.combine(date,gpsts)
       AVNLog.ld("gpsts computed",gpsdt)
     return gpsdt
-  
+
   #parse the nmea psoition fields:
   #gggmm.dec,N  - 1-3 characters grad, mm 2 didgits minutes
   #direction N,S,E,W - S,W being negative
@@ -284,7 +284,7 @@ class NMEAParser(object):
     #return ("%X"%chksum).zfill(2)
     return ("%02X"%chksum)
 
-  #parse a line of NMEA data and store it in the navdata array      
+  #parse a line of NMEA data and store it in the navdata array
   def parseData(self,data,source='internal',sourcePriority=DEFAULT_SOURCE_PRIORITY,timestamp=None):
     basePriority=sourcePriority*10
     valAndSum=data.rstrip().split("*")
@@ -303,68 +303,65 @@ class NMEAParser(object):
         return False
       AVNLog.debug("parse AIS data %s",data)
       return self.ais_packet_scanner(data,source=source,sourcePriority=sourcePriority,timestamp=timestamp)
-      
+
     tag=darray[0][3:]
     rt={}
     #currently we only take the time from RMC
     #as only with this one we have really a valid complete timestamp
     try:
       if tag=='GGA':
-        mode=int(darray[6] or '0') #quality
-        if mode >= 1:
+        mode=int(darray[6] or 0) #quality
+        if mode >= 1 and all(darray[i] for i in (2,3,4,5)):
           rt[self.K_LAT.key]=self.nmeaPosToFloat(darray[2],darray[3])
           rt[self.K_LON.key]=self.nmeaPosToFloat(darray[4],darray[5])
-        rt['satUsed']=int(darray[7] or '0')
+        if darray[7]:
+          rt['satUsed']=int(darray[7])
         self.addToNavData(rt,source=source,record=tag,timestamp=timestamp)
         return True
       if tag=='GSV':
-        rt['satInview']=int(darray[3] or '0')
+        if darray[3]:
+          rt['satInview']=int(darray[3])
+        else:
+          return False
         self.addToNavData(rt,source=source,record=tag,priority=basePriority,timestamp=timestamp)
         return True
       if tag=='GLL':
-        mode=1
-        if len(darray) > 6:
-          mode= (0 if (darray[6] != 'A') else 2)
-        if mode >= 1:
+        valid = len(darray)<=6 or darray[6]=='A'
+        if valid and all(darray[i] for i in (1,2,3,4)):
           rt[self.K_LAT.key]=self.nmeaPosToFloat(darray[1],darray[2])
           rt[self.K_LON.key]=self.nmeaPosToFloat(darray[3],darray[4])
-          self.addToNavData(rt,source=source,record=tag,priority=basePriority,timestamp=timestamp)
+        else:
+          return False
+        self.addToNavData(rt,source=source,record=tag,priority=basePriority,timestamp=timestamp)
         return True
       if tag=='VTG':
-        mode=darray[2]
-        rt[self.K_COG.key]=float(darray[1] or '0')
-        if (mode == 'T'):
-          #new mode
-          rt[self.K_SOG.key]=float(darray[5] or '0')*self.NM/3600
-        else:
-          rt[self.K_SOG.key]=float(darray[3]or '0')*self.NM/3600
+        if darray[1]:
+          rt[self.K_COG.key]=float(darray[1])
+        i = 5 if darray[2]=='T' else 3
+        if darray[i]:
+          rt[self.K_SOG.key]=float(darray[i])*self.NM/3600
         self.addToNavData(rt,source=source,record=tag,priority=basePriority,timestamp=timestamp)
         return True
       if tag=='RMC':
         #$--RMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,xxxx,x.x,a*hh
         #this includes current date
-        mode=( 0 if darray[2] != 'A' else 2)
-        if mode >= 1:
+        valid = darray[2]=='A'
+        if valid and all(darray[i] for i in (3,4,5,6)):
           rt[self.K_LAT.key]=self.nmeaPosToFloat(darray[3],darray[4])
           rt[self.K_LON.key]=self.nmeaPosToFloat(darray[5],darray[6])
-          if darray[7] != '':
-            rt[self.K_SOG.key]=float(darray[7] or '0')*self.NM/3600
-          if darray[8] != '':
-            rt[self.K_COG.key]=float(darray[8] or '0')
-        gpstime = darray[1]
-        gpsdate = darray[9]
-        if darray[10] != '':
-          if darray[11] == 'E':
-            rt[self.K_MVAR.key] = float(darray[10] or '0')
-          elif darray[11] == 'W':
-            rt[self.K_MVAR.key] = -float(darray[10] or '0')
-        if gpsdate != "" and gpstime != "":
-          rt['time']=self.formatTime(self.gpsTimeToTime(gpstime, gpsdate))
+        if valid:
+          if darray[7]:
+            rt[self.K_SOG.key]=float(darray[7])*self.NM/3600
+          if darray[8]:
+            rt[self.K_COG.key]=float(darray[8])
+        if darray[10] and darray[11]:
+          rt[self.K_MVAR.key] = float(darray[10]) * (-1 if darray[11] == 'W' else +1)
+        if darray[1] and darray[9]:
+          rt['time']=self.formatTime(self.gpsTimeToTime(darray[1], darray[9]))
         self.addToNavData(rt,source=source,priority=basePriority+1,record=tag,timestamp=timestamp)
         return True
       if tag == 'ZDA':
-        if darray[1] == '' or darray[2] == '' or darray[3] == '' or darray[4] == '':
-          return False
+        if not all(darray[i] for i in (1,2,3,4)): return False
         gpstime=darray[1]
         #ensure each 2 digits for day and month
         gpsdate=('0' + darray[2])[-2:] +('0' + darray[3])[-2:]+('0000'+darray[4])[-4:]
@@ -388,23 +385,20 @@ class NMEAParser(object):
       8 K = Kilometers Per Hour
         Checksum
         '''
-        windAngle=float(darray[1] or '0')
-        dir=darray[2]
-        rt[self.K_AWA.key]= 360-windAngle if ( dir == 'L' or dir == 'l') else windAngle
-        priority=0
-        #we keep the speed im m/s
+        if darray[1] and darray[2]:
+          windAngle, dir = float(darray[1]), darray[2].upper()
+          rt[self.K_AWA.key] = 360-windAngle if dir == 'L' else windAngle
+        # we keep the speed im m/s
         windspeed=None
-        if darray[3] != '':
-          windspeed=float(darray[3] or '0')
-          windspeed=windspeed*self.NM/3600
-        elif darray[5] != '':
-          windspeed=float(darray[5] or '0')
-          windspeed=windspeed/3.6
-        elif darray[7] != '':
-          windspeed=float(darray[7] or '0')
+        if darray[3]:
+          windspeed=float(darray[3])*self.NM/3600
+        elif darray[5]:
+          windspeed=float(darray[5])/3.6
+        elif darray[7]:
+          windspeed=float(darray[7])
         if windspeed is not None:
           rt[self.K_AWS.key]=windspeed
-        self.addToNavData(rt,source=source,record=tag,priority=basePriority+priority,timestamp=timestamp)
+        self.addToNavData(rt,source=source,record=tag,priority=basePriority,timestamp=timestamp)
         return True
       if tag == 'MWV':
         '''
@@ -418,16 +412,19 @@ class NMEAParser(object):
         6) Checksum
         '''
         ref=darray[2]
+        if not ref: return False
         angleKey=self.K_TWA if ref == 'T' else self.K_AWA
         speedKey=self.K_TWS if ref == 'T' else self.K_AWS
-        rt[angleKey.key]=float(darray[1])
+        if darray[1]:
+          rt[angleKey.key]=float(darray[1])
         #we keep the speed im m/s
-        windspeed=float(darray[3] or '0')
-        if (darray[4] == 'K'):
-          windspeed=windspeed/3.6
-        if (darray[4] == 'N'):
-          windspeed=windspeed*self.NM/3600
-        rt[speedKey.key]=windspeed
+        if darray[3]:
+          windspeed=float(darray[3])
+          if (darray[4] == 'K'):
+            windspeed=windspeed/3.6
+          if (darray[4] == 'N'):
+            windspeed=windspeed*self.NM/3600
+          rt[speedKey.key]=windspeed
         self.addToNavData(rt,source=source,record=tag,priority=basePriority,timestamp=timestamp)
         return True
       if tag == 'MWD':
@@ -436,18 +433,18 @@ class NMEAParser(object):
         $WIMWD,10.1,T,10.1,M,12,N,40,M*5D
         https://github.com/adrianmo/go-nmea/blob/master/mwd.go
         '''
-        if darray[1] != '':
+        if darray[1]:
           rt[self.K_TWD.key]=float(darray[1])
           hasData=True
         else:
-          if darray[3] != '':
+          if darray[3]:
             rt[self.K_TWD.key] = float(darray[3])
             hasData=True
-        if ( darray[8] == 'M' or darray[8] == 'm') and darray[7] != '':
+        if darray[8].upper() == 'M' and darray[7]:
           rt[self.K_TWS.key]=float(darray[7])
           hasData=True
         else:
-          if (darray[6] == 'N' or darray[6] == 'n') and darray[5] != '':
+          if darray[6].upper() == 'N' and darray[5]:
             rt[self.K_TWS.key] = float(darray[5]) * self.NM/3600.0
             hasData=True
         if hasData:
@@ -462,19 +459,19 @@ class NMEAParser(object):
         Field Number:
         1) Depth, meters
         2) Offset from transducer,
-            positive means distance from tansducer to water line
+            positive means distance from transducer to water line
             negative means distance from transducer to keel
         3) Checksum
         '''
-        rt[self.K_DEPTHT.key] = float(darray[1] or '0')
-        if len(darray[2]) > 0:
-          if float(darray[2]) >= 0:
-            rt[self.K_DEPTHW.key] = float(darray[1] or '0') + float(darray[2] or '0')
-          else:
-            rt[self.K_DEPTHK.key] = float(darray[1] or '0') + float(darray[2] or '0')
-        self.addToNavData(rt,source=source,record=tag,priority=basePriority,timestamp=timestamp)
-        return True
-      if tag == 'DBT':
+        if darray[1]:
+          dpt = rt[self.K_DEPTHT.key] = float(darray[1])
+          if darray[2]:
+            offset = float(darray[2])
+            rt[self.K_DEPTHW.key if offset >= 0 else self.K_DEPTHK.key] = dpt + offset
+          self.addToNavData(rt,source=source,record=tag,priority=basePriority,timestamp=timestamp)
+          return True
+        return False
+      if tag in ('DBT','DBK','DBS'):
         '''
                 DBT - Depth below transducer
                 1   2 3   4 5   6 7
@@ -489,8 +486,9 @@ class NMEAParser(object):
          6) F = Fathoms
          7) Checksum
         '''
-        if len(darray[3]) > 0:
-          rt[self.K_DEPTHT.key] = float(darray[3] or '0')
+        if darray[3] and darray[4]=='M':
+          K = self.K_DEPTHW if tag[2]=='S' else self.K_DEPTHK if tag[2]=='K' else self.K_DEPTHT
+          rt[K.key] = float(darray[3])
           self.addToNavData(rt,source=source,record=tag,priority=basePriority,timestamp=timestamp)
           return True
         return False
@@ -515,17 +513,13 @@ class NMEAParser(object):
         MagDeviation=0
         MagVarDir=None
         MagVariation=None
-        if(len(darray[1]) > 0):
-          heading_c = float(darray[1] or '0')
+        if darray[1]:
+          heading_c = float(darray[1])
           rt[self.K_HDGC.key] = heading_c
-        if(len(darray[2]) > 0):
-          MagDeviation = float(darray[2] or '0')  # --> Ablenkung
-          if(len(darray[3]) > 0):
-            MagDevDir = darray[3] or 'X'
-        if(len(darray[4]) > 0):
-          MagVariation = float(darray[4] or '0')  # --> Missweisung
-          if(len(darray[5]) > 0):
-            MagVarDir = darray[5] or 'X'
+        if darray[2] and darray[3]:
+          MagDeviation,MagDevDir = float(darray[2]),darray[3]  # --> Ablenkung
+        if darray[4] and darray[5]:
+          MagVariation,MagVarDir = float(darray[4]),darray[5]  # --> Missweisung
         # Deviation
         heading_m = heading_c
         if MagDevDir == 'E':
@@ -534,7 +528,7 @@ class NMEAParser(object):
         elif MagDevDir == 'W':
           heading_m -= MagDeviation
           rt[self.K_MDEV.key] = -MagDeviation
-        rt[self.K_HDGM.key] = heading_m
+        rt[self.K_HDGM.key] = to360(heading_m)
 
         # True course
         heading_t = None
@@ -546,14 +540,14 @@ class NMEAParser(object):
             heading_t = heading_m - MagVariation
             rt[self.K_MVAR.key] = -MagVariation
         if heading_t is not None:
-          rt[self.K_HDGT.key] = heading_t
+          rt[self.K_HDGT.key] = to360(heading_t)
         self.addToNavData(rt,source=source,record=tag,priority=basePriority,timestamp=timestamp)
         return True
 
       if tag == 'HDM' or tag == 'HDT':
         heading=None
-        if len(darray[1]) > 0:
-          heading = float(darray[1] or '0')
+        if darray[1]:
+          heading = float(darray[1])
         magortrue = darray[2]
         if heading is not None:
           if magortrue == 'T':
@@ -574,13 +568,13 @@ class NMEAParser(object):
             3 set degrees magnetic
             5 drift knots
             """
-        if len(darray[1])>0 and darray[2]=="T":
+        if darray[1] and darray[2]=="T":
           rt[self.K_SET.key] = float(darray[1])
-        if len(darray[5])>0 and darray[6]=="N":
+        if darray[5] and darray[6]=="N":
           rt[self.K_DFT.key] = float(darray[5])
         self.addToNavData(rt,source=source,record=tag,priority=basePriority,timestamp=timestamp)
         return True
-      
+
       #VHW - Water speed and heading
 
       #        1   2 3   4 5   6 7   8 9
@@ -600,18 +594,18 @@ class NMEAParser(object):
 
 
       if tag == 'VHW':
-        if len(darray[1]) > 0:  # Heading True
-          rt[self.K_HDGT.key] = float(darray[1] or '0')
-        if(len(darray[3]) > 0):
-          rt[self.K_HDGM.key] = float(darray[3] or '0')  # Heading magnetic
-        if len(darray[5]) > 0:
-          rt[self.K_VHWS.key]= float(darray[5] or '0')*self.NM/3600
+        if darray[1]:  # Heading True
+          rt[self.K_HDGT.key] = float(darray[1])
+        if darray[3]:
+          rt[self.K_HDGM.key] = float(darray[3])  # Heading magnetic
+        if darray[5]:
+          rt[self.K_VHWS.key]= float(darray[5])*self.NM/3600
         self.addToNavData(rt,source=source,record=tag,priority=basePriority,timestamp=timestamp)
         return True
 
       if tag == 'MTW':
         # $--MTW,x.x,C*hh<CR><LF>
-        if len(darray[1]) > 0:
+        if darray[1]:
           rt[self.K_VWTT.key] = float(darray[1])+273.15
         self.addToNavData(rt,source=source,record=tag,priority=basePriority,timestamp=timestamp)
         return True
@@ -624,15 +618,14 @@ class NMEAParser(object):
         while i < (lf -3):
           try:
             # we need 4 fields
-            if darray[i + 1] is not None and darray[i] != "":
+            if all(darray[i + k] for k in range(4)):
               ttype = darray[i]
-              tdata = float(darray[i + 1] or '0')
+              tdata = float(darray[i + 1])
               tunit = darray[i + 2]
               tname = darray[i + 3]
               data=self.convertXdrValue(tdata,tunit)
-              if tname is not None and tname != "":
-                rt["transducers."+tname]=data
-                hasData=True
+              rt["transducers."+tname]=data
+              hasData=True
           except Exception as e:
             AVNLog.debug("decode %s at pos %d failed: %s"%(data,i,str(e)))
             pass
@@ -664,8 +657,8 @@ class NMEAParser(object):
       value=value*100*1000
     return value
 
-  #parse one line of AIS data 
-  #taken from ais.py and adapted to our input handling     
+  #parse one line of AIS data
+  #taken from ais.py and adapted to our input handling
   def ais_packet_scanner(self,line,source='internal',sourcePriority=DEFAULT_SOURCE_PRIORITY,timestamp=None):
     basePriority=sourcePriority*10
     "Get a span of AIVDM packets with contiguous fragment numbers."
@@ -673,7 +666,7 @@ class NMEAParser(object):
       AVNLog.debug("ignore unknown AIS data %s",line)
       return False
     line = line.strip()
-    # Strip off USCG metadata 
+    # Strip off USCG metadata
     line = re.sub(r"(?<=\*[0-9A-F][0-9A-F]),.*", "", line)
     # Compute CRC-16 checksum
     packet = line[1:-3]  # Strip leading !, trailing * and CRC
@@ -696,7 +689,7 @@ class NMEAParser(object):
         self.payloads[channel] += fields[5]
         try:
             # This works because a mangled pad literal means
-            # a malformed packet that will be caught by the CRC check. 
+            # a malformed packet that will be caught by the CRC check.
             pad = int(fields[6].split('*')[0])
         except ValueError:
             pad = 0
@@ -740,7 +733,7 @@ class NMEAParser(object):
           # Apply the postprocessor stage
           cooked = ais.postprocess(cooked)
           expected = ais.lengths.get(values['msgtype'], None)
-          # Check length; has to be done after so we have the type field 
+          # Check length; has to be done after so we have the type field
           bogon = False
           if expected is not None:
               if type(expected) == type(0):
@@ -757,7 +750,7 @@ class NMEAParser(object):
       except:
           AVNLog.debug("exception %s while decoding AIS data %s",traceback.format_exc())
           return False
-  
+
   def storeAISdata(self,bitfield,source='internal',priority=0,timestamp=None):
     rt={'class':'AIS'}
     storeData=False
@@ -776,4 +769,8 @@ class NMEAParser(object):
       AVNLog.debug("ignoring AIS data without mmsi, %s"%rt)
       return
     self.navdata.setAisValue(mmsi,AVNUtil.convertAIS(rt),source=source,priority=priority,timestamp=timestamp)
-    
+
+def to360(a):
+    "limit a to [0,360)"
+    while a < 0: a += 360
+    return a % 360
