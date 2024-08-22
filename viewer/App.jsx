@@ -492,13 +492,12 @@ class App extends React.Component {
             tabIndex="0"
             >
             <DynamicRouter
-                storeKeys={assign({
+                storeKeys={{
                 sequence: keys.gui.global.propertySequence,
                 dimensions: keys.gui.global.windowDimensions,
                 dim: keys.gui.global.dimActive,
-                isEditing:keys.gui.global.layoutEditing
-                },keys.gui.capabilities)
-            }
+                isEditing:keys.gui.global.layoutEditing,
+                ...keys.gui.capabilities}}
                 location={location}
                 options={this.leftHistoryState.getValue('options')}
                 history={this.history}

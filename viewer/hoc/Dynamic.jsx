@@ -9,6 +9,7 @@
 
 import globalStore from "../util/globalstore.jsx";
 import React from 'react';
+import {KeyHelper} from "../util/keys";
 
 
 export default  function(Component,opt_options,opt_store){
@@ -44,7 +45,7 @@ export default  function(Component,opt_options,opt_store){
             if (! (storeKeys instanceof Object)){
                 throw Error("store keys is no object",storeKeys);
             }
-            return storeKeys;
+            return KeyHelper.removeNodeInfo(storeKeys);
         }
         getTranslatedStoreValues(){
             const keys=this.getStoreKeys();

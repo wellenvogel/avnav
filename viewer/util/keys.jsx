@@ -562,6 +562,15 @@ export const KeyHelper = {
      */
     getValueKeys:()=>{
         return valueKeys;
+    },
+    removeNodeInfo:(keys)=>{
+        if (! (keys instanceof Object)) return keys;
+        if (keys.__path !== undefined) {
+            let rt={...keys};
+            delete rt.__path;
+            return rt;
+        }
+        return keys;
     }
 };
 

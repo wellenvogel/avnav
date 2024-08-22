@@ -129,12 +129,7 @@ export default function() {
         globalStore.storeData(keys.gui.global.splitMode,true);
     }
     let lateLoads=["/user/viewer/user.js"];
-    let addScripts="addScripts";
-    if (getParam(addScripts)){
-        getParam(addScripts).split(',').forEach((script)=>{
-            lateLoads.push(script);
-        })
-    }
+
     const loadScripts=(loadList)=>{
         let fileref=undefined;
         for (let i in  loadList) {
@@ -154,6 +149,14 @@ export default function() {
                 document.getElementsByTagName("head")[0].appendChild(fileref)
         }
     };
+    let addScripts="addScripts";
+    if (getParam(addScripts)){
+        let addList=[];
+        getParam(addScripts).split(',').forEach((script)=>{
+            addList.push(script);
+        })
+        loadScripts(addList);
+    }
 
     const doLateLoads=(loadPlugins)=>{
         ReactDOM.createRoot(document.getElementById('new_pages')).render(<App/>);
