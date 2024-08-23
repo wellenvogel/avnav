@@ -96,7 +96,6 @@ const layoutBaseParam={
 class GpsPage extends React.Component{
     constructor(props){
         super(props);
-        let self=this;
         this.buttons=[
             {
                 name: 'Cancel',
@@ -130,7 +129,6 @@ class GpsPage extends React.Component{
     }
 
     getButtons(){
-        let self=this;
         return[
             {
                 name:'GpsCenter',
@@ -151,7 +149,7 @@ class GpsPage extends React.Component{
                     visible: hasPageEntries(1) || state.isEditing
                 }},
                 onClick:()=>{
-                    self.setPageNumber(1);
+                    this.setPageNumber(1);
                 },
                 overflow: true
             },
@@ -166,7 +164,7 @@ class GpsPage extends React.Component{
                     visible: hasPageEntries(2) || state.isEditing
                 }},
                 onClick:()=>{
-                    self.setPageNumber(2);
+                    this.setPageNumber(2);
                 },
                 overflow: true
             },
@@ -181,7 +179,7 @@ class GpsPage extends React.Component{
                     visible: hasPageEntries(3) || state.isEditing
                 }},
                 onClick:()=>{
-                    self.setPageNumber(3);
+                    this.setPageNumber(3);
                 },
                 overflow: true
             },
@@ -196,7 +194,7 @@ class GpsPage extends React.Component{
                     visible: hasPageEntries(4) || state.isEditing
                 }},
                 onClick:()=>{
-                    self.setPageNumber(4);
+                    this.setPageNumber(4);
                 },
                 overflow: true
             },
@@ -211,7 +209,7 @@ class GpsPage extends React.Component{
                     visible: hasPageEntries(5) || state.isEditing
                 }},
                 onClick:()=>{
-                    self.setPageNumber(5);
+                    this.setPageNumber(5);
                 },
                 overflow: true
             },
@@ -254,7 +252,6 @@ class GpsPage extends React.Component{
         }
     }
     render(){
-        let self=this;
         let autohide=undefined;
         if (globalStore.getData(keys.properties.autoHideGpsPage)){
             autohide=globalStore.getData(keys.properties.hideButtonTime,30)*1000;
@@ -274,7 +271,7 @@ class GpsPage extends React.Component{
             }
             let panelList=[];
             PANEL_LIST.forEach((panelName)=> {
-                let panelData = getPanelList(panelName, self.props.pageNum || 1);
+                let panelData = getPanelList(panelName, this.props.pageNum || 1);
                 if (! panelData.list) return;
                 let sum = getWeightSum(panelData.list);
                 let prop={
@@ -285,21 +282,11 @@ class GpsPage extends React.Component{
                     itemCreator: (widget)=>{ return widgetCreator(widget,sum);},
                     itemList: panelData.list,
                     fontSize: fontSize,
-                    onItemClick: (item,data) => {self.onItemClick(item,data,panelData);},
+                    onItemClick: (item,data) => {this.onItemClick(item,data,panelData);},
                     onClick: ()=>{EditWidgetDialog.createDialog(undefined,panelData.page,panelData.name,{beginning:false,weight:true,types:["!map"]});},
                     dragdrop: LayoutHandler.isEditing(),
                     onSortEnd: (oldIndex,newIndex,frameId)=>{
-                        if (frameId !== panelName){
-                            let oldPanel=getPanelList(frameId,self.props.pageNum || 1);
-                            if (! oldPanel  || ! oldPanel.list) return;
-                            let item=oldPanel.list[oldIndex];
-                            if (! item) return;
-                            LayoutHandler.replaceItem(oldPanel.page,oldPanel.name,oldIndex);
-                            LayoutHandler.replaceItem(panelData.page,panelData.name,newIndex,item, LayoutHandler.ADD_MODES.beforeIndex);
-                        }
-                        else {
-                            LayoutHandler.moveItem(panelData.page, panelData.name, oldIndex, newIndex)
-                        }
+                        LayoutHandler.moveItem(panelData.page,frameId,oldIndex,newIndex,panelName);
                     }
                 };
                 panelList.push(prop);
@@ -323,12 +310,12 @@ class GpsPage extends React.Component{
         };
 
         return <Page
-                {...self.props}
+                {...this.props}
                 id="gpspage"
                 mainContent={
                             <MainContent/>
                         }
-                buttonList={self.getButtons()}
+                buttonList={this.getButtons()}
                 autoHideButtons={autohide}
                 buttonWidthChanged={()=>{
                     resizeFont();
@@ -339,6 +326,7 @@ class GpsPage extends React.Component{
 }
 
 GpsPage.propTypes={
+    ...Page.pageProperties,
     pageNum: PropTypes.number
 };
 

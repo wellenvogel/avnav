@@ -527,16 +527,21 @@ class LayoutHandler{
         return true;
     }
 
-    moveItem(page,panel,oldIndex,newIndex){
-        if (oldIndex == newIndex) return true;
+    moveItem(page,panel,oldIndex,newIndex,opt_newPanel){
+        if (oldIndex == newIndex && (opt_newPanel === undefined || panel === opt_newPanel)) return true;
         if (! this.isEditing()) return false;
         let panelData=this.getDirectPanelData(page,panel);
         if (!panelData) return false;
         if (oldIndex < 0 || oldIndex >= panelData.length) return false;
         if (newIndex < 0) return false;
+        let newPanelData=panelData;
+        if (opt_newPanel !== undefined && opt_newPanel !== panel){
+            newPanelData=this.getDirectPanelData(page,opt_newPanel);
+            if (! newPanelData) return false;
+        }
         let item=panelData[oldIndex];
         panelData.splice(oldIndex,1);
-        panelData.splice(newIndex,0,item);
+        newPanelData.splice(newIndex,0,item);
         this.incrementSequence();
         return true;
     }
