@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {createRef} from 'react';
 import PropTypes from 'prop-types';
 import PropertyHandler from '../util/propertyhandler.js';
 import Toast from '../components/Toast.jsx';
@@ -7,6 +7,7 @@ import globalStore from '../util/globalstore';
 import keys from '../util/keys';
 
 class SoundHandler extends React.Component{
+    audioRef=createRef();
     constructor(props){
         super(props);
         this.state={
@@ -22,20 +23,19 @@ class SoundHandler extends React.Component{
     }
     dataChanged(){
         this.volume=globalStore.getData(keys.properties.alarmVolume,50);
-        if (this.refs.audio){
-            this.refs.audio.volume=this.volume/100.0;
+        if (this.audioRef.current){
+            this.audioRef.current.volume=this.volume/100.0;
         }
     }
     render(){
-        let self=this;
-        return <audio ref="audio" className="hidden"
+        return <audio ref={this.audioRef} className="hidden"
                       onPlaying={()=>{
-                        if (! self.state.initialized){
-                            self.setState({initialized:true});
+                        if (! this.state.initialized){
+                            this.setState({initialized:true});
                             }
                         }}
-                      onEnded={self.playerFinished}
-                      volume={self.volume}
+                      onEnded={this.playerFinished}
+                      volume={this.volume}
             />
     }
 
@@ -45,24 +45,22 @@ class SoundHandler extends React.Component{
      * on that to start the sound inside a user transaction
      */
     askForSound(){
-        let self=this;
         if (this.state.initialized) return;
-        if (! this.refs.audio) return;
+        if (! this.audioRef.current) return;
         Toast("click to allow sounds",60000,()=>{
-            self.setState({initialized:true});
-            self.refs.audio.play();
+            this.setState({initialized:true});
+            this.audioRef.current.play();
         })
     }
     playerFinished(){
         if (this.repeatCount > 0){
             this.repeatCount--;
-            if (!this.refs.audio) return;
-            this.refs.audio.play();
+            if (!this.audioRef.current) return;
+            this.audioRef.current.play();
         }
     }
     checkSound(){
-        let self=this;
-        if (! this.refs.audio) return;
+        if (! this.audioRef.current) return;
         let enabled=this.props.enabled === undefined || this.props.enabled;
         let src=enabled?this.props.src:undefined;
         this.repeatCount=this.props.repeat;
@@ -72,15 +70,15 @@ class SoundHandler extends React.Component{
         }
         if (this.repeatCount === undefined) this.repeatCount=10000;
         if (! src){
-            this.refs.audio.pause();
-            this.refs.audio.removeAttribute('src');
+            this.audioRef.current.pause();
+            this.audioRef.current.removeAttribute('src');
             return;
         }
-        this.refs.audio.src=src;
+        this.audioRef.current.src=src;
         try {
-            this.refs.audio.play().catch(self.askForSound);
+            this.audioRef.current.play().catch(this.askForSound);
         }catch(e){
-            self.askForSound();
+            this.askForSound();
         }
     }
     componentDidMount(){

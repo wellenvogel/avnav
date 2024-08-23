@@ -34,9 +34,7 @@ import splitsupport from "./util/splitsupport";
 if (getParam('dimm')) avnav.testDim=true;
 
 import React from 'react';
-import ReactDOM from 'react-dom';
 import propertyHandler from './util/propertyhandler';
-import OverlayDialog from './components/OverlayDialog.jsx';
 import App from './App.jsx';
 import keys from './util/keys.jsx';
 import globalStore from './util/globalstore.jsx';
@@ -50,7 +48,7 @@ import assign from 'object-assign';
 import LeaveHandler from './util/leavehandler';
 import isIosSafari from '@braintree/browser-detection/is-ios-safari';
 import LocalStorage, {PREFIX_NAMES} from './util/localStorageManager';
-import debugSupport from 'debugSupport.js';
+import {createRoot} from "react-dom/client";
 
 
 if (! window.avnav){
@@ -159,7 +157,7 @@ export default function() {
     }
 
     const doLateLoads=(loadPlugins)=>{
-        ReactDOM.createRoot(document.getElementById('new_pages')).render(<App/>);
+        createRoot(document.getElementById('new_pages')).render(<App/>);
         //ios browser sometimes has issues with less...
         setTimeout(function(){
             propertyHandler.incrementSequence();

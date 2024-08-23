@@ -430,7 +430,6 @@ class MainPage extends React.Component {
 }
 
 MainPage.propTypes= {
-...Page.propTypes
 }
 
 

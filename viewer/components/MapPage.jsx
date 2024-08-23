@@ -9,7 +9,7 @@ import Visible from '../hoc/Visible.jsx';
 import ItemList from '../components/ItemList.jsx';
 import globalStore from '../util/globalstore.jsx';
 import keys from '../util/keys.jsx';
-import React from 'react';
+import React, {createRef} from 'react';
 import PropTypes from 'prop-types';
 import Page from '../components/Page.jsx';
 import Toast from '../components/Toast.jsx';
@@ -27,7 +27,6 @@ import mapholder from "../map/mapholder.js";
 import Helper from "../util/helper";
 import assign from 'object-assign';
 import LocalStorage, {STORAGE_NAMES} from '../util/localStorageManager';
-import {anchorWatchDialog, isWatchActive} from "./AnchorWatchDialog";
 import {DynamicTitleIcons} from "./TitleIcons";
 
 const SHOW_MODE={
@@ -94,9 +93,9 @@ const widgetCreator=(widget,mode)=>{
 };
 
 class MapPage extends React.Component{
+    mapRef=createRef();
     constructor(props){
         super(props);
-        let self=this;
         this.mapEvent=this.mapEvent.bind(this);
         this.subscribeToken=undefined;
         this.bottomContainer=undefined;
@@ -142,7 +141,7 @@ class MapPage extends React.Component{
                     setShown(chartEntry.url,INFO_TYPES.info);
                 }
             }
-            MapHolder.loadMap(this.refs.map, this.props.preventCenterDialog).
+            MapHolder.loadMap(this.mapRef.current, this.props.preventCenterDialog).
                 then((result)=>{
                     this.computeScalePosition();
                 }).
@@ -206,7 +205,7 @@ class MapPage extends React.Component{
         };
         let mapOpacity=globalStore.getData(keys.properties.nightMode) ?
             globalStore.getData(keys.properties.nightChartFade, 100) / 100:1;
-        let map=<div className="map" ref="map" style={{opacity:mapOpacity}}>
+        let map=<div className="map" ref={this.mapRef} style={{opacity:mapOpacity}}>
             <DynamicTitleIcons/>
         </div>;
         let className=self.props.className?self.props.className+" mapPage":"mapPage";

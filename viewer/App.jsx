@@ -1,9 +1,9 @@
 //avnav (C) wellenvogel 2019
 
-import React, { Component } from 'react';
+import React, {Component, createRef} from 'react';
 import History from './util/history.js';
 import Dynamic from './hoc/Dynamic.jsx';
-import keys,{KeyHelper} from './util/keys.jsx';
+import keys from './util/keys.jsx';
 import MainPage from './gui/MainPage.jsx';
 import InfoPage from './gui/InfoPage.jsx';
 import GpsPage from './gui/GpsPage.jsx';
@@ -29,7 +29,6 @@ import SoundHandler from './components/SoundHandler.jsx';
 import Toast,{ToastDisplay} from './components/Toast.jsx';
 import KeyHandler from './util/keyhandler.js';
 import LayoutHandler from './util/layouthandler.js';
-import assign from 'object-assign';
 import AlarmHandler, {LOCAL_TYPES} from './nav/alarmhandler.js';
 import GuiHelpers, {stateHelper} from './util/GuiHelpers.js';
 import Mob from './components/Mob.js';
@@ -44,7 +43,7 @@ import propertyHandler from "./util/propertyhandler";
 import MapHolder from "./map/mapholder";
 import NavData from './nav/navdata';
 import alarmhandler from "./nav/alarmhandler.js";
-import LocalStorage, {PREFIX_NAMES, STORAGE_NAMES} from './util/localStorageManager';
+import LocalStorage, {STORAGE_NAMES} from './util/localStorageManager';
 import splitsupport from "./util/splitsupport"
 import leavehandler from "./util/leavehandler"; //triggers querySplitMode
 import fullscreen from "./components/Fullscreen";
@@ -91,6 +90,8 @@ class MainWrapper extends React.Component{
         this.props.history.reset(); //reset history if we reach the mainpage
     }
 }
+MainWrapper.propTypes=MainPage.propTypes;
+
 const pages={
     mainpage: MainWrapper,
     infopage: InfoPage,
@@ -162,6 +163,7 @@ let lastError={
 };
 
 class App extends React.Component {
+    appRef=createRef();
     constructor(props) {
         super(props);
         this.checkSizes=this.checkSizes.bind(this);
@@ -388,8 +390,8 @@ class App extends React.Component {
     }
     checkSizes(){
         if (globalStore.getData(keys.gui.global.hasActiveInputs,false)) return;
-        if (! this.refs.app) return;
-        let current=this.refs.app.getBoundingClientRect();
+        if (! this.appRef.current) return;
+        let current=this.appRef.current.getBoundingClientRect();
         if (! current) return;
         let small = current.width <globalStore.getData(keys.properties.smallBreak);
         globalStore.storeData(keys.gui.global.smallDisplay,small); //set small before we change dimensions...
@@ -487,7 +489,7 @@ class App extends React.Component {
         }
         return <div
             className={appClass}
-            ref="app"
+            ref={this.appRef}
             style={{fontSize: this.props.fontSize+"px"}}
             tabIndex="0"
             >
