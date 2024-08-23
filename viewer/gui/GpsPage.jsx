@@ -241,7 +241,6 @@ class GpsPage extends React.Component{
     }
 
     componentDidMount(){
-        let self=this;
         resizeFont();
 
     }
@@ -280,6 +279,8 @@ class GpsPage extends React.Component{
                 let sum = getWeightSum(panelData.list);
                 let prop={
                     name: panelName,
+                    dragFrame: panelName,
+                    allowOther: true,
                     className: 'widgetContainer',
                     itemCreator: (widget)=>{ return widgetCreator(widget,sum);},
                     itemList: panelData.list,
@@ -287,7 +288,19 @@ class GpsPage extends React.Component{
                     onItemClick: (item,data) => {self.onItemClick(item,data,panelData);},
                     onClick: ()=>{EditWidgetDialog.createDialog(undefined,panelData.page,panelData.name,{beginning:false,weight:true,types:["!map"]});},
                     dragdrop: LayoutHandler.isEditing(),
-                    onSortEnd: (oldIndex,newIndex)=>LayoutHandler.moveItem(panelData.page,panelData.name,oldIndex,newIndex)
+                    onSortEnd: (oldIndex,newIndex,frameId)=>{
+                        if (frameId !== panelName){
+                            let oldPanel=getPanelList(frameId,self.props.pageNum || 1);
+                            if (! oldPanel  || ! oldPanel.list) return;
+                            let item=oldPanel.list[oldIndex];
+                            if (! item) return;
+                            LayoutHandler.replaceItem(oldPanel.page,oldPanel.name,oldIndex);
+                            LayoutHandler.replaceItem(panelData.page,panelData.name,newIndex,item, LayoutHandler.ADD_MODES.beforeIndex);
+                        }
+                        else {
+                            LayoutHandler.moveItem(panelData.page, panelData.name, oldIndex, newIndex)
+                        }
+                    }
                 };
                 panelList.push(prop);
             });

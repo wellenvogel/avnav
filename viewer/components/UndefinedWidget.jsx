@@ -3,22 +3,16 @@
  */
 
 import React from "react";
-import PropTypes from 'prop-types';
-import Helper from '../util/helper.js';
-import GuiHelper from '../util/GuiHelpers.js';
+import {useKeyEventHandler} from '../util/GuiHelpers.js';
+import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
+import {WidgetProps} from "./WidgetBase";
 
-class UndefinedWidget extends React.Component{
-    constructor(props){
-        super(props);
-        GuiHelper.nameKeyEventHandler(this,"widget")
-    }
-    shouldComponentUpdate(nextProps,nextState) {
-        return false;
-    }
-    render(){
-        let classes="widget undefinedWidget";
-        return (
-        <div className={classes} onClick={this.props.onClick} style={this.props.style}>
+const UndefinedWidget=(props)=>{
+    useKeyEventHandler(props,"widget");
+    const dd=useAvNavSortable()
+    let classes="widget undefinedWidget";
+    return (
+        <div className={classes} onClick={this.props.onClick} style={this.props.style} {...dd}>
             <div className="resize">
             <div className='widgetData'>
                 {this.props.name}
@@ -28,9 +22,10 @@ class UndefinedWidget extends React.Component{
         </div>
         );
     }
-}
 
 UndefinedWidget.propTypes={
+    ...SortableProps,
+    ...WidgetProps
 };
 
 

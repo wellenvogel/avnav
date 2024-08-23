@@ -12,9 +12,7 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import assign from 'object-assign';
-import {SortableContainer, SortableElement} from 'react-sortable-hoc';
-
+import {SortContext, SortModes, useAvNavSortFrame} from "../hoc/Sortable";
 
 const getKey=function(obj){
     let rt=obj.key;
@@ -23,149 +21,132 @@ const getKey=function(obj){
     return rt;
 };
 
-class ItemList extends React.Component{
-    constructor(props){
-        super(props);
-        this.onSortEnd=this.onSortEnd.bind(this);
-        this.Content=this.Content.bind(this);
-        this.ItemWrapper=this.ItemWrapper.bind(this);
-        this.ItemWrapperNoClick=this.ItemWrapperNoClick.bind(this);
-    }
-    onSortEnd(data){
-        let len=this.props.itemList?this.props.itemList.length:0;
-        if (this.props.reverse) {
-            if (this.props.onSortEnd) this.props.onSortEnd(len-data.oldIndex,len- data.newIndex);
-        }
-        else{
-            if (this.props.onSortEnd) this.props.onSortEnd(data.oldIndex, data.newIndex);
-        }
 
-    }
-
-    ItemWrapper(props){
-        let self=this;
-        let {ItemClass,...iprops}=props;
-        const memoClick=React.useCallback((data)=>{
-            if (data && data.stopPropagation) data.stopPropagation();
-            if (data && data.preventDefault) data.preventDefault();
-            if (self.props.reverse){
-                let len=self.props.itemList?self.props.itemList.length:0;
-                self.props.onItemClick(assign({},iprops,{index:len-iprops.index}),data);
-            }
-            else {
-                self.props.onItemClick(iprops, data);
-            }
-        },[iprops]);
-        return <ItemClass
-            {...iprops}
-            onClick={memoClick}
-        />
-    }
-    ItemWrapperNoClick(props){
-        let {ItemClass,...iprops}=props;
-        return <ItemClass
-            {...iprops}
-        />
-    }
-    Content(props) {
-        let self=this;
-        let idx = 0;
-        let existingKeys={};
-        return (
-            <div className={props.className}
-                 style={props.style}
-                 ref={(el)=>{if (props.listRef) props.listRef(el)}}
-                 onClick={(ev)=>{
-                     if (self.props.onClick){
-                         ev.stopPropagation();
-                         self.props.onClick(ev);
-                     }
-                 }}
-            >
-                {props.allitems.map(function (entry) {
-                    let itemProps = assign({}, entry);
-                    let key = getKey(entry);
-                    //we allow for multiple items with the same name
-                    //we try at most 20 times to get a unique key by appending _idx
-                    let tries=20;
-                    while (tries > 0 && (! key || existingKeys[key])){
-                        key+="_"+idx;
-                        tries--;
-                    }
-                    itemProps.index=self.props.reverse?props.allitems.length-idx:idx;
-                    itemProps.key = key;
-                    existingKeys[key]=true;
-                    if (self.props.selectedIndex !== undefined){
-                        if (idx == self.props.selectedIndex) {
-                            itemProps.selected = true;
+const Content=(props)=>{
+    const sortFrameProps=useAvNavSortFrame();
+    return (
+        <div {...sortFrameProps}
+            className={props.className}
+             style={props.style}
+             ref={(el)=>{if (props.listRef) props.listRef(el)}}
+             onClick={(ev)=>{
+                 if (props.onClick){
+                     ev.stopPropagation();
+                     props.onClick(ev);
+                 }
+             }}
+        >
+            {props.allitems.map(function (entry) {
+                const itemProps={...entry};
+                let ItemClass;
+                if (props.itemCreator) {
+                    ItemClass = props.itemCreator(entry);
+                    if (!ItemClass) return null;
+                }
+                else {
+                    ItemClass = props.itemClass;
+                }
+                if (!itemProps.onClick && props.onItemClick) {
+                    itemProps.onClick=(data)=>{
+                        if (data && data.stopPropagation) data.stopPropagation();
+                        if (data && data.preventDefault) data.preventDefault();
+                        if (props.reverse){
+                            let len=props.itemList?props.itemList.length:0;
+                            props.onItemClick({...itemProps,index:len-itemProps.index},data);
                         }
                         else {
-                            itemProps.selected = false;
+                            props.onItemClick(itemProps, data);
                         }
                     }
-                    let ItemClass;
-                    if (self.props.itemCreator) {
-                        ItemClass = self.props.itemCreator(entry);
-                        if (!ItemClass) return null;
-                    }
-                    else {
-                        ItemClass = self.props.itemClass;
-                    }
-                    if (self.props.dragdrop) {
-                        ItemClass=SortableElement(ItemClass);
-                    }
-                    let ItemWrapper;
-                    if (!itemProps.onClick && self.props.onItemClick) {
-                        ItemWrapper=self.ItemWrapper;
-                    }
-                    else{
-                        ItemWrapper=self.ItemWrapperNoClick;
-                    }
-                    idx++;
-
-                    return <ItemWrapper ItemClass={ItemClass} key={key} {...itemProps}/>
-                })}
-            </div>
-        );
-    };
-    render() {
-        let allitems = this.props.itemList || [];
-        if (this.props.hideOnEmpty && allitems.length < 1) return null;
-        let self = this;
-        let className = "listContainer";
-        if (this.props.scrollable) className+=" scrollable";
-        if (this.props.className) className += " " + this.props.className;
-        if (this.props.horizontal) className += " horizontal";
-        let style=this.props.style||{};
-        if (this.props.fontSize){
-            style.fontSize=this.props.fontSize;
+                }
+                return <ItemClass key={itemProps.key} {...itemProps}/>
+            })}
+        </div>
+    );
+};
+let sid=0;
+const getSid=()=>{
+    sid++;
+    return "itemList"+sid;
+}
+const ItemList = (props) => {
+    const itemList = [];
+    const existingKeys = {};
+    let idx = 0;
+    const allitems = props.itemList || [];
+    allitems.forEach((entry) => {
+        const itemProps = {...entry};
+        let key = getKey(entry);
+        //we allow for multiple items with the same name
+        //we try at most 20 times to get a unique key by appending _idx
+        let tries = 20;
+        while (tries > 0 && (!key || existingKeys[key])) {
+            key += "_" + idx;
+            tries--;
         }
-
-        let dragProps={};
-        let Content=this.Content;
-        if (this.props.dragdrop){
-            Content= SortableContainer(Content);
-            dragProps.axis=self.props.horizontal?"x":"y";
-            dragProps.distance=20;
-            dragProps.onSortEnd=self.onSortEnd;
-            dragProps.helperClass="sortableHelper";
-
+        itemProps.index = props.reverse ? allitems.length - idx : idx;
+        itemProps.key = key;
+        if (props.dragdrop) {
+            itemProps.dragId = idx;
         }
-        if (this.props.scrollable) {
-            return (
-                <div onClick={self.props.onClick} className={className} style={style} ref={(el)=>{if (self.props.listRef) self.props.listRef(el)}}>
-                    <Content className="listScroll" allitems={allitems} {...dragProps}/>
-                </div>
-            );
+        existingKeys[key] = true;
+        if (props.selectedIndex !== undefined) {
+            if (idx == props.selectedIndex) {
+                itemProps.selected = true;
+            } else {
+                itemProps.selected = false;
+            }
         }
-        else {
-            return(
-                <Content className={className} allitems={allitems} style={style} listRef={self.props.listRef} {...dragProps}/>
-            );
+        idx++;
+        itemList.push(itemProps);
+
+    })
+
+    if (props.hideOnEmpty && itemList.length < 1) return null;
+    let className = "listContainer";
+    if (props.scrollable) className += " scrollable";
+    if (props.className) className += " " + props.className;
+    if (props.horizontal) className += " horizontal";
+    let style = props.style || {};
+    if (props.fontSize) {
+        style.fontSize = props.fontSize;
+    }
+    const handleDragEnd=(active,over,id)=>{
+        if (props.onSortEnd){
+            props.onSortEnd(active,over,id);
         }
     }
-
-
+    const SortableContent =
+        (sprops) => {
+            if (props.dragdrop) {
+                return (
+                    <SortContext
+                        onDragEnd={handleDragEnd}
+                        id={props.dragFrame||getSid()}
+                        allowOther={props.allowOther}
+                        reverse={props.reverse}
+                        mode={props.horizontal? SortModes.horizontal:SortModes.vertical}>
+                            <Content {...sprops}/>
+                    </SortContext>
+                )
+            } else {
+                return <Content {...sprops}/>
+            }
+        };
+    if (props.scrollable) {
+        return (
+            <div onClick={props.onClick} className={className} style={style} ref={(el) => {
+                if (props.listRef) props.listRef(el)
+            }}>
+                <SortableContent className="listScroll" {...props} allitems={itemList}/>
+            </div>
+        );
+    } else {
+        return (
+            <SortableContent className={className} {...props} allitems={itemList}
+                             style={style}/>
+        );
+    }
 }
 
 ItemList.propTypes={
@@ -184,7 +165,10 @@ ItemList.propTypes={
         dragdrop:       PropTypes.bool,
         horizontal:     PropTypes.bool,
         reverse:        PropTypes.bool, //let the index count backwards
-        onSortEnd:      PropTypes.func
+        onSortEnd:      PropTypes.func,
+        style:          PropTypes.object,
+        dragFrame:      PropTypes.string,
+        allowOther:     PropTypes.bool //allow dragging from other frames
 };
-
+Content.propTypes=ItemList.propTypes;
 export default ItemList;

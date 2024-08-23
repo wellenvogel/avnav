@@ -8,7 +8,6 @@
  */
 
 import React from 'react';
-import PropTypes from 'prop-types';
 import assign from 'object-assign';
 import DialogDisplay from './OverlayDialogDisplay.jsx';
 import Dynamic from '../hoc/Dynamic.jsx';
@@ -17,7 +16,6 @@ import globalStore from '../util/globalstore.jsx';
 import ItemList from '../components/ItemList.jsx';
 import keys from '../util/keys.jsx';
 import DB from './DialogButton.jsx';
-import shallowcompare from '../util/compare.js';
 
 let id=1;
 const notifyClosed=()=>{

@@ -11,7 +11,6 @@ import WindWidget, {getWindData} from './WindWidget';
 import XteWidget from './XteWidget';
 import EmptyWidget from './EmptyWidget';
 import WindGraphics from './WindGraphics';
-import DirectWidget from './DirectWidget.jsx';
 import ZoomWidget from './ZoomWidget.jsx';
 import keys from '../util/keys.jsx';
 import AlarmWidget from './AlarmWidget.jsx';

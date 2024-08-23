@@ -24,8 +24,6 @@ import RemoteChannelDialog from "../components/RemoteChannelDialog";
 import {RecursiveCompare} from '../util/compare';
 import LocalStorage from '../util/localStorageManager';
 import splitsupport from "../util/splitsupport";
-import LeaveHandler from '../util/leavehandler';
-
 
 
 const getImgSrc=function(color){
@@ -431,7 +429,8 @@ class MainPage extends React.Component {
 
 }
 
-
+MainPage.propTypes= {
+}
 
 
 

@@ -15,6 +15,10 @@ import {createEditableParameter, EditableParameter} from "./EditableParameters";
 import Compare from "../util/compare";
 import CloneDeep from 'clone-deep';
 import MapWidget from "./MapWidget";
+import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
+import {useKeyEventHandler} from "../util/GuiHelpers";
+import {WidgetProps} from "./WidgetBase";
+import PropTypes from "prop-types";
 
 export const filterByEditables=(editableParameters,values)=>{
     let rt={};
@@ -247,7 +251,31 @@ export const getFormatterParameters=(widget)=>{
     }
 }
 
-
+const CombinedWidget=(props)=>{
+    useKeyEventHandler(props,"widget")
+    let {editableParameters,children,onClick,childProperties,style,dragId,className,...forwardProps}=props;
+    const ddProps = useAvNavSortable(dragId);
+    const cl=(ev)=>{
+        if (onClick) onClick(ev);
+    }
+    let cidx = 0;
+    delete childProperties.style;
+    className = (className || '') + " widget combinedWidget";
+    return <div  {...forwardProps}  {...ddProps} className={className} onClick={cl} style={{...style,...ddProps.style}}>
+        {(children||[] ).map((item) => {
+            let Item = theFactory.createWidget(item, childProperties);
+            cidx++;
+            return <Item key={cidx}/>
+        })}
+    </div>
+}
+CombinedWidget.propTypes={
+    ...WidgetProps,
+    ...SortableProps,
+    children: PropTypes.array,
+    childProperties: PropTypes.object,
+    editableParameters: PropTypes.array
+}
 
 
 class WidgetFactory{
@@ -427,48 +455,38 @@ class WidgetFactory{
             }
 
         }
-        return function (props) {
-            let wprops = assign({}, props, mergedProps);
-            delete wprops.editableParameters;
-            let {style,...childProperties}=opt_properties||{}; //filter out style for children
-            if (mergedProps.children) {
-                let cidx=0;
-                let className=(mergedProps.className||'')+" widget combinedWidget";
-                return <div {...wprops} className={className} >
-                    {mergedProps.children.map((item)=> {
-                        let Item = self.createWidget(item, childProperties);
-                        cidx++;
-                        return <Item key={cidx} onClick={wprops.onClick}/>
-                    })}
-                </div>
+        if (mergedProps.children) {
+            return (props)=> {
+                return <CombinedWidget {...props} {...mergedProps} childProperties={opt_properties}/>
             }
-            else {
+        } else {
+            return function (props) {
+                let wprops = {...props, ...mergedProps};
                 let RenderWidget = mergedProps.wclass || DirectWidget;
                 let storeKeys = mergedProps.storeKeys;
-                if (wprops.className) wprops.className+=" "+wprops.name;
-                else wprops.className=wprops.name;
+                if (wprops.className) wprops.className += " " + wprops.name;
+                else wprops.className = wprops.name;
                 if (!storeKeys) {
                     storeKeys = RenderWidget.storeKeys;
                 }
-                if (wprops.handleVisible){
-                    RenderWidget=Visible(RenderWidget);
+                if (wprops.handleVisible) {
+                    RenderWidget = Visible(RenderWidget);
                     delete wprops.handleVisible;
                 }
-                if (wprops.nightMode === undefined && (storeKeys === undefined || storeKeys.nightMode === undefined)){
-                    if (storeKeys === undefined){
-                        storeKeys={nightMode:keys.properties.nightMode}
-                    }
-                    else{
-                        storeKeys=assign({nightMode: keys.properties.nightMode},storeKeys)
+                if (wprops.nightMode === undefined && (storeKeys === undefined || storeKeys.nightMode === undefined)) {
+                    if (storeKeys === undefined) {
+                        storeKeys = {nightMode: keys.properties.nightMode}
+                    } else {
+                        storeKeys = assign({nightMode: keys.properties.nightMode}, storeKeys)
                     }
                 }
                 if (storeKeys) {
-                    RenderWidget = Dynamic(RenderWidget, {storeKeys:storeKeys});
+                    RenderWidget = Dynamic(RenderWidget, {storeKeys: storeKeys});
                 }
                 delete wprops.storeKeys;
                 return <RenderWidget {...wprops}/>
             }
-        };
+        }
     }
     getWidget(index){
         if (index < 0 || index >= this.widgetDefinitions.length) return undefined;
@@ -642,5 +660,6 @@ WidgetFactory.prototype.registerFormatter=function(name,formatterFunction){
     Formatter[name]=formatterFunction;
 }
 
+const theFactory=new WidgetFactory();
 
-export default  new WidgetFactory();
+export default  theFactory;

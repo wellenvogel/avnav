@@ -7,6 +7,7 @@ import assign from 'object-assign';
 import LocalStorage, {STORAGE_NAMES} from './localStorageManager';
 
 import defaultLayout from '../layout/default.json';
+import {SortModes} from "../hoc/Sortable";
 const DEFAULT_NAME="system.default";
 class LayoutHandler{
     constructor(){
@@ -495,7 +496,7 @@ class LayoutHandler{
                 return true;
             }
         }
-        if (index < 0 || index >= panelData.length){
+        if (index < 0 ){
             return false;
         }
         if (allowAdd){
@@ -532,7 +533,7 @@ class LayoutHandler{
         let panelData=this.getDirectPanelData(page,panel);
         if (!panelData) return false;
         if (oldIndex < 0 || oldIndex >= panelData.length) return false;
-        if (newIndex < 0 || newIndex >= panelData.length) return false;
+        if (newIndex < 0) return false;
         let item=panelData[oldIndex];
         panelData.splice(oldIndex,1);
         panelData.splice(newIndex,0,item);
