@@ -242,6 +242,7 @@ let keys={
             windowDimensions: K,
             layoutEditing:K,
             layoutSequence: K, //updated on layout load
+            layoutReverts: K,
             reloadSequence: K, //will be changed if new data from server
             toastText:K,
             toastTimeout:K,

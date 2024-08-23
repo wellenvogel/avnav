@@ -7,8 +7,44 @@ import assign from 'object-assign';
 import LocalStorage, {STORAGE_NAMES} from './localStorageManager';
 
 import defaultLayout from '../layout/default.json';
-import {SortModes} from "../hoc/Sortable";
 const DEFAULT_NAME="system.default";
+
+const ACTION_MOVE=1;
+const ACTION_ADD=2;
+const ACTION_REPLACE=3;
+const ACTION_DELETE=4;
+class LayoutAction{
+    constructor(action,page,panel,options){
+        this.action=action;
+        this.page=page;
+        this.panel=panel;
+        this.options=options;
+    }
+    run(handler){
+        if (this.action === ACTION_MOVE){
+            return handler.noAction(()=>
+                handler.moveItem(this.page,this.panel,this.options.oldIndex,this.options.newIndex,this.options.newPanel)
+            )
+        }
+        if (this.action === ACTION_REPLACE){
+            return handler.noAction(()=>
+                handler.replaceItem(this.page,this.panel,this.options.index,this.options.item)
+            );
+        }
+        if (this.action === ACTION_DELETE){
+            return handler.noAction(()=>
+                handler.replaceItem(this.page,this.panel,this.options.index)
+            );
+        }
+        if (this.action === ACTION_ADD){
+            return handler.noAction(()=>
+                handler.replaceItem(this.page,this.panel,this.options.index,this.options.item,this.options.addMode)
+            );
+        }
+        return false;
+    }
+}
+
 class LayoutHandler{
     constructor(){
         this.layout=undefined;
@@ -22,6 +58,8 @@ class LayoutHandler{
         this.hiddenPanels={}; //panels we removed during editing
         this.temporaryOptions={}; //options being set during edit
         globalStore.register(this,keys.gui.capabilities.uploadLayout);
+        this.actions=[];
+        this.lockActions=false;
     }
     dataChanged(skeys){
         this.storeLocally=!globalStore.getData(keys.gui.capabilities.uploadLayout,false);
@@ -123,6 +161,7 @@ class LayoutHandler{
     }
     _setEditing(on){
         this.editing=on;
+        this.resetActions();
         globalStore.storeData(keys.gui.global.layoutEditing,on);
     }
 
@@ -486,12 +525,18 @@ class LayoutHandler{
             if (opt_add == this.ADD_MODES.beginning) {
                 //insert at the beginning
                 panelData.splice(0, 0, layoutItem);
+                this._addAction(new LayoutAction(ACTION_DELETE,page,panel,{
+                    index:0
+                }));
                 this.incrementSequence();
                 return true;
             }
             if (opt_add == this.ADD_MODES.end) {
                 //append
                 panelData.push(layoutItem);
+                this._addAction(new LayoutAction(ACTION_DELETE,page,panel,{
+                    index: panelData.length-1
+                }));
                 this.incrementSequence();
                 return true;
             }
@@ -503,25 +548,43 @@ class LayoutHandler{
             if (opt_add == this.ADD_MODES.afterIndex){
                 if (index == (panelData.length-1)){
                     panelData.push(layoutItem);
+                    this._addAction(new LayoutAction(ACTION_DELETE,page,panel,{
+                        index: panelData.length-1
+                    }));
                 }
                 else {
                     panelData.splice(index + 1, 0, layoutItem)
+                    this._addAction(new LayoutAction(ACTION_DELETE,page,panel,{
+                        index: index+1
+                    }));
                 }
                 this.incrementSequence();
                 return true;
             }
             if (opt_add == this.ADD_MODES.beforeIndex){
                 panelData.splice(index,0,layoutItem);
+                this._addAction(new LayoutAction(ACTION_DELETE,page,panel,{
+                    index: index
+                }));
                 this.incrementSequence();
                 return true;
             }
             return false; //invalid add mode
         }
+        const old=panelData[index];
         if (item) {
             panelData.splice(index, 1, layoutItem);
+            this._addAction(new LayoutAction(ACTION_REPLACE,page,panel,{
+                index: index,
+                item: old
+            }));
         }
         else{
             panelData.splice(index, 1);
+            this._addAction(new LayoutAction(ACTION_ADD,page,panel,{
+                index: index,
+                item: old
+            }));
         }
         this.incrementSequence();
         return true;
@@ -539,6 +602,11 @@ class LayoutHandler{
             newPanelData=this.getDirectPanelData(page,opt_newPanel);
             if (! newPanelData) return false;
         }
+        this._addAction(new LayoutAction(ACTION_MOVE,page,opt_newPanel||panel,{
+            oldIndex: newIndex,
+            newIndex: oldIndex,
+            newPanel: panel
+        }));
         let item=panelData[oldIndex];
         panelData.splice(oldIndex,1);
         newPanelData.splice(newIndex,0,item);
@@ -653,6 +721,51 @@ class LayoutHandler{
             }
         });
         return rt;
+    }
+
+    resetActions(){
+        this.actions=[];
+        globalStore.storeData(keys.gui.global.layoutReverts,this.actions.length);
+    }
+    hasRevertableActions(){
+        return this.isEditing() && this.actions.length > 0;
+    }
+    revertAction(){
+        if (! this.hasRevertableActions()) return false;
+        const action=this.actions.pop();
+        globalStore.storeData(keys.gui.global.layoutReverts,this.actions.length);
+        return action.run(this);
+    }
+    _addAction(action){
+        if (! this.lockActions) {
+            this.actions.push(action);
+            globalStore.storeData(keys.gui.global.layoutReverts,this.actions.length);
+        }
+    }
+    noAction(callback){
+        this.lockActions=true;
+        try{
+            return callback();
+        }
+        finally {
+            this.lockActions=false;
+        }
+    }
+    revertButtonDef(){
+        return{
+            name: 'RevertLayout',
+            onClick: ()=>this.revertAction(),
+            storeKeys:{
+                reverts: keys.gui.global.layoutReverts,
+                editing: keys.gui.global.layoutEditing
+            },
+            updateFunction:(state)=>{
+              return {
+                  visible: state.editing,
+                  disabled: state.reverts < 1
+              }
+            }
+        }
     }
 
 }

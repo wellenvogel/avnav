@@ -667,6 +667,7 @@ class NavPage extends React.Component{
                 onClick: ()=>OverlayDialog.dialog((props)=><MapWidgetsDialog {...props}/>)
             },
             LayoutFinishedDialog.getButtonDef(),
+            LayoutHandler.revertButtonDef(),
             RemoteChannelDialog({overflow:true}),
             FullScreen.fullScreenDefinition,
             Dimmer.buttonDef(),
