@@ -126,7 +126,7 @@ const SortContextImpl=createContext({
 });
 
 export const SortableProps={
-    dragId: PropTypes.string
+    dragId: PropTypes.number
 }
 
 const ATTR='data-dragid';
