@@ -22,16 +22,19 @@ const DegreeFormatter = (value,inDeg)=> {
 export const SKRollWidget=(props)=>{
         useKeyEventHandler(props,"widget");
         const dd=useAvNavSortable(props.dragId)
-        let value=DegreeFormatter(props.value,props.inDegree);
-        let degreeArrow = "--";
-          // arrow left + Wert
-          if (props.value <0 && props.value !== 0){
-              degreeArrow = "\u21D0" + value;
-          }
-          // value + space + arrow right
-          if (props.value >0 && props.value !== 0){
-              degreeArrow = value + "\xA0\u21D2";
-          }
+        let degreeArrow = "---";
+        if (props.value !== undefined) {
+            let value = DegreeFormatter(props.value, props.inDegree);
+            degreeArrow = value + "";
+            // arrow left + Wert
+            if (value < 0) {
+                degreeArrow = "\u21D0" + degreeArrow;
+            }
+            // value + space + arrow right
+            if (value > 0) {
+                degreeArrow = degreeArrow + "\xA0\u21D2";
+            }
+        }
         let classes="widget SKRollWidget "+props.className||"";
         let wdClasses="widgetData";
         if (Math.abs(rad2deg(props.value,props.inDegree)) >= props.criticalValue){
@@ -68,15 +71,18 @@ SKRollWidget.editableParameters={
 export const SKPitchWidget = (props) => {
     useKeyEventHandler(props, "widget")
     const dd = useAvNavSortable(props.dragId);
-    let value = DegreeFormatter(props.value, props.inDegree);
-    let degreeArrow = "--";
-    // arrow left + Wert
-    if (props.value < 0 && props.value !== 0) {
-        degreeArrow = value + "\xA0\u21D3";
-    }
-    // value + space + arrow right
-    if (props.value > 0 && props.value !== 0) {
-        degreeArrow = value + "\xA0\u21D1";
+    let degreeArrow = "---";
+    if (props.value !== undefined) {
+        let value = DegreeFormatter(props.value, props.inDegree);
+        degreeArrow = value + "";
+        // arrow left + Wert
+        if (props.value < 0) {
+            degreeArrow += "\xA0\u21D3";
+        }
+        // value + space + arrow right
+        if (props.value > 0) {
+            degreeArrow += "\xA0\u21D1";
+        }
     }
     let classes = "widget SKPitchWidget " + props.className || "";
     let wdClasses = "widgetData";
