@@ -166,7 +166,7 @@ let widgetList=[
                 TA: 'TWA'
             };
             let wind=getWindData(props);
-            return assign({},props,{value:wind.windAngle, caption:captions[wind.suffix] })
+            return {...props,value:wind.windAngle, caption:captions[wind.suffix] }
         }
     },
     {
@@ -193,12 +193,12 @@ let widgetList=[
                 TA: 'TWS'
             };
             let wind=getWindData(props);
-            return assign({},props,{
+            return {...props,
                 value:wind.windSpeed,
                 caption:captions[wind.suffix],
                 formatterParameters: props.showKnots?'k':'m',
                 unit: props.showKnots?'kn':'m/s'
-            })
+            }
         }
     },
     {

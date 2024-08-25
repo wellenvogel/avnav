@@ -90,7 +90,7 @@ class MapWidget extends React.Component{
             return this.props;
         }
         else{
-            return this.props.translateFunction(assign({},this.props));
+            return {...this.props,...this.props.translateFunction(...this.props)};
         }
     }
     render() {

@@ -64,7 +64,7 @@ export const ExternalWidget =(props)=>{
     const initialCalled=useRef(false);
     const canvasRef=useRef(null);
     const getProps=()=>{
-        if (props.translateFunction) return props.translateFunction({...props});
+        if (props.translateFunction) return {...props,...props.translateFunction({...props})};
         return props;
     };
     const userData=useRef( {

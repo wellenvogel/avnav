@@ -52,7 +52,7 @@ const nightColors={
 }
 
 const getProps=(props)=>{
-    let rt=props.translateFunction?defaultTranslateFunction(props.translateFunction({...props})):defaultTranslateFunction(props);
+    let rt=props.translateFunction?defaultTranslateFunction({...props,...props.translateFunction({...props})}):defaultTranslateFunction(props);
     for (let k in rt){
         if (rt[k] === undefined) delete rt[k];
     }
