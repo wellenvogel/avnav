@@ -405,14 +405,29 @@ class AVNStore(object):
     @param source: if not None: only return True if registered by different source
     @return:
     '''
-    rt=self.__allowedKey(key)
-    if not rt:
-      return False
-    if source is None:
-      return rt
-    return self.__keySources[key] != source
+    try:
+      self.__checkAlreadyExists(key)
+    except:
+      #we come here if it already exists
+      if source is None:
+        return True
+      existingSource = self.__keySources.get(key)
+      return existingSource != source
+    return False
 
-  def registerKey(self,key,keyDescription,source=None):
+  def __checkAlreadyExists(self,key):
+    for existing in list(self.__registeredKeys.keys()):
+      if existing == key or key.startswith(existing):
+        raise Exception("key %s already registered from %s:%s" % (key,existing,self.__registeredKeys[existing]))
+    for existing in list(self.__wildcardKeys.keys()):
+      if self.wildCardMatch(key, existing):
+        raise Exception("key %s matches wildcard from %s:%s" % (key, existing, self.__wildcardKeys[existing]))
+    if self.__isWildCard(key):
+      for existing in list(self.__registeredKeys.keys()):
+        if self.wildCardMatch(existing, key):
+          raise Exception("wildcard key %s matches existing from %s:%s" % (key, existing, self.__registeredKeys[existing]))
+
+  def registerKey(self,key,keyDescription,source=None,allowOverwrite=False):
     """
     register a new key description
     raise an exception if there is already a key with the same name or a prefix of it
@@ -424,16 +439,8 @@ class AVNStore(object):
     if source is not None and self.__keySources.get(key) == source:
       AVNLog.ld("key re-registration - ignore - for %s, source %s",key,source)
       return
-    for existing in list(self.__registeredKeys.keys()):
-      if existing == key or key.startswith(existing):
-        raise Exception("key %s already registered from %s:%s" % (key,existing,self.__registeredKeys[existing]))
-    for existing in list(self.__wildcardKeys.keys()):
-      if self.wildCardMatch(key, existing):
-        raise Exception("key %s matches wildcard from %s:%s" % (key, existing, self.__wildcardKeys[existing]))
-    if self.__isWildCard(key):
-      for existing in list(self.__registeredKeys.keys()):
-        if self.wildCardMatch(existing, key):
-          raise Exception("wildcard key %s matches existing from %s:%s" % (key, existing, self.__registeredKeys[existing]))
+    if not allowOverwrite:
+      self.__checkAlreadyExists(key)
     self.__keySources[key]=source
     if self.__isWildCard(key):
       self.__wildcardKeys[key]=keyDescription

@@ -204,6 +204,8 @@ class ApiImpl(AVNApi):
           if key in self.patterns:
             self.patterns.remove(key)
         return
+      else:
+        self.store.registerKey(key,data,keySource,allowOverwrite=True)
     else:
       self.store.registerKey(key,data,keySource)
     if key.find('*') >= 0:
