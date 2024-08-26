@@ -101,6 +101,12 @@ class MapPage extends React.Component{
         this.bottomContainer=undefined;
 
     }
+    getLayoutPage(){
+        return {
+            location: this.props.location,
+            options: this.props.options
+        }
+    }
     mapEvent(evdata){
         if (globalStore.getData(keys.gui.global.layoutEditing)) return;
         return this.props.mapEventCallback(evdata);
@@ -182,15 +188,15 @@ class MapPage extends React.Component{
                     self.props.onItemClick(item,data,panelItems.name,invertEditDirection)
                     }}
                 onClick={()=>{
-                    EditWidgetDialog.createDialog(undefined,self.props.id,panelItems.name,{fixPanel: true,beginning:invertEditDirection,types:["!map"]});
+                    EditWidgetDialog.createDialog(undefined,this.getLayoutPage(),panelItems.name,{fixPanel: true,beginning:invertEditDirection,types:["!map"]});
                 }}
                 dragdrop={globalStore.getData(keys.gui.global.layoutEditing)}
                 horizontal={mode === 'horizontal'}
                 allowOther={true}
                 dragFrame={panel}
                 onSortEnd={(oldIndex,newIndex,frameId)=>{
-                    LayoutHandler.moveItem(self.props.id, frameId, oldIndex, newIndex,panelItems.name);
-                }}
+                    LayoutHandler.withTransaction(this.getLayoutPage(),(handler)=>handler.moveItem(self.props.id, frameId, oldIndex, newIndex,panelItems.name))
+                    }}
                 />
         };
         let mapOpacity=globalStore.getData(keys.properties.nightMode) ?
@@ -257,7 +263,8 @@ class MapPage extends React.Component{
     }
 }
 
-MapPage.propertyTypes=assign({},Page.pageProperties,{
+MapPage.propertyTypes={
+    ...Page.pageProperties,
     buttonList:         PropTypes.array,
     panelCreator:       PropTypes.func.isRequired,  //will be called with the panel name
                                                     //and must return {name: panelName, list:widget list}
@@ -271,7 +278,7 @@ MapPage.propertyTypes=assign({},Page.pageProperties,{
     widgetFontSize:     PropTypes.number,
     mapFloat:           PropTypes.bool
 
-});
+};
 
 export const overlayDialog=(opt_chartName,opt_updateCallback)=>{
     let current=MapHolder.getCurrentMergedOverlayConfig();

@@ -37,22 +37,32 @@ const widgetCreator=(widget,weightSum)=>{
     return WidgetFactory.createWidget(widget,{style:{height:height+"%"},mode:'gps'});
 };
 
+const getLayoutPage=(opt_pageNum)=>{
+    let pageNum=(opt_pageNum !== undefined)?opt_pageNum:globalStore.getData(keys.gui.gpspage.pageNumber,1);
+    const base="gpspage";
+    return{
+        location: base,
+        layoutPage: base+pageNum,
+        options: {pageNumber: pageNum}
+    }
+}
+
 const getPanelList=(panel,pageNum)=>{
-    let basename="gpspage"+pageNum;
-    let rt=LayoutHandler.getPanelData(basename,panel,LayoutHandler.getOptionValues([LayoutHandler.OPTIONS.ANCHOR]));
-    rt.page=basename;
+    let page=getLayoutPage(pageNum);
+    let rt=LayoutHandler.getPanelData(page,panel,LayoutHandler.getOptionValues([LayoutHandler.OPTIONS.ANCHOR]));
+    rt.page=page;
     return rt;
 
 };
 
 const hasPageEntries=(pageNum)=>{
-    let basename="gpspage"+pageNum;
-    let page=LayoutHandler.getPageData(basename);
+    let layoutPage=getLayoutPage(pageNum);
+    let page=LayoutHandler.getPageData(layoutPage);
     if (! page) return false;
     let panels=PANEL_LIST;
     for (let p in panels){
         let panel=panels[p];
-        let panelData=LayoutHandler.getPanelData(basename,panel,LayoutHandler.getAllOptions());
+        let panelData=LayoutHandler.getPanelData(layoutPage,panel,LayoutHandler.getAllOptions());
         if (panelData.list && panelData.list.length > 0) return true;
     }
     return false;
@@ -67,8 +77,6 @@ const getWeightSum=(list)=>{
     });
     return sum;
 };
-
-const layoutBase="gpspage";
 const findPageWithWidget=(name)=>{
     let pnums=[1,2,3,4,5];
     let panels=PANEL_LIST;
@@ -113,6 +121,9 @@ class GpsPage extends React.Component{
             if (pagenNum !== undefined){
                 globalStore.storeData(keys.gui.gpspage.pageNumber,pagenNum);
             }
+        }
+        if (props.options && props.options.pageNumber !== undefined){
+            globalStore.storeData(keys.gui.gpspage.pageNumber,props.options.pageNumber);
         }
         let oldNum=globalStore.getData(keys.gui.gpspage.pageNumber);
         if (oldNum === undefined || ! hasPageEntries(oldNum)){
@@ -217,11 +228,22 @@ class GpsPage extends React.Component{
             anchorWatch(),
             RemoteChannelDialog({overflow:true}),
             Mob.mobDefinition(this.props.history),
-            EditPageDialog.getButtonDef('gpspage'+globalStore.getData(keys.gui.gpspage.pageNumber,0),
+            EditPageDialog.getButtonDef(getLayoutPage().layoutPage,
                 PANEL_LIST,
                 [LayoutHandler.OPTIONS.ANCHOR]),
             LayoutFinishedDialog.getButtonDef(),
-            LayoutHandler.revertButtonDef(),
+            LayoutHandler.revertButtonDef((pageWithOptions)=>{
+                let current=getLayoutPage();
+                if (pageWithOptions.location !== current.location){
+                    this.props.history.replace(pageWithOptions.location,pageWithOptions.options);
+                    return;
+                }
+                if (current.layoutPage !== pageWithOptions.layoutPage){
+                    if (pageWithOptions.options && pageWithOptions.options.pageNumber !== undefined){
+                        this.setPageNumber(pageWithOptions.options.pageNumber);
+                    }
+                }
+            }),
             FullScreen.fullScreenDefinition,
             Dimmer.buttonDef(),
             {
@@ -285,9 +307,12 @@ class GpsPage extends React.Component{
                     itemList: panelData.list,
                     fontSize: fontSize,
                     onItemClick: (item,data) => {this.onItemClick(item,data,panelData);},
-                    onClick: ()=>{EditWidgetDialog.createDialog(undefined,panelData.page,panelData.name,{beginning:false,weight:true,types:["!map"]});},
+                    onClick: ()=>{EditWidgetDialog.createDialog(undefined,getLayoutPage(),panelData.name,{beginning:false,weight:true,types:["!map"]});},
                     dragdrop: LayoutHandler.isEditing(),
                     onSortEnd: (oldIndex,newIndex,frameId)=>{
+                        LayoutHandler.withTransaction({
+                            location: this.props.location
+                        })
                         LayoutHandler.moveItem(panelData.page,frameId,oldIndex,newIndex,panelName);
                     }
                 };
