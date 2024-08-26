@@ -51,7 +51,14 @@ class LayoutAction{
 
 class LayoutTransaction{
     constructor(pageWithProps) {
-        this.pageWithProps=pageWithProps;
+        if (typeof(pageWithProps) === 'string'){
+            this.pageWithProps={
+                location: pageWithProps
+            }
+        }
+        else {
+            this.pageWithProps = pageWithProps;
+        }
         this.actions=[];
     }
     add(action){
@@ -768,7 +775,7 @@ class LayoutHandler{
         const action=this.actions.pop();
         globalStore.storeData(keys.gui.global.layoutReverts,this.actions.length);
         let rt=action.run(this);
-        if (rt && pageCallback) pageCallback(action.pageWithProps);
+        if (rt && pageCallback && action.pageWithProps) pageCallback(action.pageWithProps);
         return rt;
     }
     _addAction(action){

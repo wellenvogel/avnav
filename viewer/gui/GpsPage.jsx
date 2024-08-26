@@ -253,7 +253,7 @@ class GpsPage extends React.Component{
         ];
     }
     onItemClick(item,data,panelInfo){
-        if (EditWidgetDialog.createDialog(item,panelInfo.page,panelInfo.name,{beginning:false,weight:true,types:["!map"]})) return;
+        if (EditWidgetDialog.createDialog(item,getLayoutPage(),panelInfo.name,{beginning:false,weight:true,types:["!map"]})) return;
         if (item && item.name=== "AisTarget"){
             let mmsi=(data && data.mmsi)?data.mmsi:item.mmsi;
             this.props.history.push("aisinfopage",{mmsi:mmsi});

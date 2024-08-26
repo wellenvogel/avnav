@@ -103,7 +103,7 @@ class MapPage extends React.Component{
     }
     getLayoutPage(){
         return {
-            location: this.props.location,
+            location: this.props.location||this.props.id,
             options: this.props.options
         }
     }
