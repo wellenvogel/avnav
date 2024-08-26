@@ -27,11 +27,11 @@ export const SKRollWidget=(props)=>{
             let value = DegreeFormatter(props.value, props.inDegree);
             degreeArrow = value + "";
             // arrow left + Wert
-            if (value < 0) {
+            if (props.value < 0 && value != 0) {
                 degreeArrow = "\u21D0" + degreeArrow;
             }
             // value + space + arrow right
-            if (value > 0) {
+            if (props.value > 0 && value != 0) {
                 degreeArrow = degreeArrow + "\xA0\u21D2";
             }
         }
@@ -76,11 +76,11 @@ export const SKPitchWidget = (props) => {
         let value = DegreeFormatter(props.value, props.inDegree);
         degreeArrow = value + "";
         // arrow left + Wert
-        if (props.value < 0) {
+        if (props.value < 0 && value != 0) {
             degreeArrow += "\xA0\u21D3";
         }
         // value + space + arrow right
-        if (props.value > 0) {
+        if (props.value > 0 && value != 0) {
             degreeArrow += "\xA0\u21D1";
         }
     }
