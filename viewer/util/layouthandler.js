@@ -803,13 +803,13 @@ class LayoutHandler{
         return{
             name: 'RevertLayout',
             onClick: ()=>this.revertAction(pageCallback),
+            editOnly: true,
+            overflow: true,
             storeKeys:{
-                reverts: keys.gui.global.layoutReverts,
-                editing: keys.gui.global.layoutEditing
+                reverts: keys.gui.global.layoutReverts
             },
             updateFunction:(state)=>{
               return {
-                  visible: state.editing,
                   disabled: state.reverts < 1
               }
             }
