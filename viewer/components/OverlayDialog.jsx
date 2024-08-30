@@ -7,7 +7,7 @@
  * the static methods will return promises for simple dialog handling
  */
 
-import React from 'react';
+import React, {useState} from 'react';
 import assign from 'object-assign';
 import DialogDisplay from './OverlayDialogDisplay.jsx';
 import Dynamic from '../hoc/Dynamic.jsx';
@@ -47,6 +47,7 @@ const addDialog=(key,content,opt_parent,opt_cancelCallback,opt_timeout)=> {
         properties.timeoutHandler=window.setTimeout(removeDialog(key),opt_timeout);
     }
     currentDialogs[key]=properties;
+    globalStore.storeData(keys.gui.global.currentDialog,currentDialogs);
     globalStore.storeData(keys.gui.global.currentDialog,currentDialogs);
     return key;
 };
@@ -448,6 +449,22 @@ export const dialogHelper=(thisref,stateName,opt_closeCallback)=>{
     thisref.render=newRender.bind(thisref);
     return rt;
 };
+
+export const useDialog=(closeCb)=>{
+    const [dialogContent,setDialog]=useState(undefined);
+    return [
+        ()=>{
+            if (! dialogContent || ! dialogContent.content) return null;
+            return dialogDisplay(dialogContent.content,()=>{
+                    setDialog(undefined);
+                    if (closeCb) closeCb();
+                });
+
+        }
+        ,
+        (content)=>setDialog(content?{content:content}:undefined)
+    ]
+}
 
 export const InfoItem=(props)=>{
     return <div className={"dialogRow "+props.className}>

@@ -20,6 +20,7 @@ import {GaugeRadial} from './CanvasGauges.jsx';
 import UndefinedWidget from './UndefinedWidget.jsx';
 import {SKPitchWidget, SKRollWidget} from "./SKWidgets";
 import assign from 'object-assign';
+import {CombinedWidget} from "./CombinedWidget";
 
 let widgetList=[
     {
@@ -351,6 +352,7 @@ let widgetList=[
     },
     {
         name: 'RteCombine',
+        wclass: CombinedWidget,
         caption: '',
         children: [{name:'RteDistance'},{name:'RteEta'}],
         editableParameters:{
@@ -358,8 +360,13 @@ let widgetList=[
             unit: false,
             formatterParameters: false,
             value: false,
-            caption: false
+            caption: false,
+            children: false
         }
+    },
+    {
+        name: 'CombinedWidget',
+        wclass: CombinedWidget
     },
     {
         name: 'Alarm',

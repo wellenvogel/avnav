@@ -116,7 +116,7 @@ class EditWidgetDialog extends React.Component{
             <React.Fragment>
             <div className="selectDialog editWidgetDialog">
                 <h3 className="dialogTitle">{this.props.title||'Select Widget'}</h3>
-                <InputSelect className={panelClass}
+                {(this.props.panelList !== undefined) && <InputSelect className={panelClass}
                              dialogRow={true}
                              label="Panel"
                              value={this.state.panel}
@@ -125,6 +125,7 @@ class EditWidgetDialog extends React.Component{
                                 this.setState({panel:selected.name})
                                 }}
                              showDialogFunction={this.showDialog}/>
+                }
                 {hasCurrent?
                     <div className="dialogRow info"><span className="inputLabel">Current</span>{this.props.current.name}</div>
                     :
@@ -152,7 +153,7 @@ class EditWidgetDialog extends React.Component{
                         onChange:self.updateWidgetState
                     })
                 })}
-                {(this.state.widget.name !== undefined)?
+                {(this.state.widget.name !== undefined && this.props.insertCallback)?
                     <div className="insertButtons">
                         {hasCurrent?<DB name="before" onClick={()=>this.insert(true)}>Before</DB>:null}
                         {hasCurrent?<DB name="after" onClick={()=>this.insert(false)}>After</DB>:null}
