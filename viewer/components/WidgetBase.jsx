@@ -25,6 +25,7 @@
  */
 
 import PropTypes from "prop-types";
+import React from "react";
 
 export const WidgetProps={
     onClick:    PropTypes.func,
@@ -32,4 +33,22 @@ export const WidgetProps={
     className:  PropTypes.string,
     mode:       PropTypes.string, //display info side by side if small
     caption:    PropTypes.string
+}
+
+export const WidgetHead=(props)=> {
+    if (props.unit === undefined && props.caption === undefined) return null;
+    return (
+    <div className="widgetHead">
+        <div className='infoLeft'>{props.caption}</div>
+        {props.unit !== undefined ?
+            <div className='infoRight'>{props.unit}</div>
+            : <div className='infoRight'></div>
+        }
+    </div>
+    )
+}
+
+WidgetHead.propTypes={
+    unit: PropTypes.string,
+    caption: PropTypes.string
 }

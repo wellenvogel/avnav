@@ -123,7 +123,8 @@ export const CombinedWidget=(props)=>{
     }
     let cidx = 0;
     if (childProperties) delete childProperties.style;
-    className = (className || '') + " widget combinedWidget";
+    className = (className || '') + " widget";
+    if (props.vertical) className+=" vertical";
     return <div  {...forwardProps}  {...ddProps} className={className} onClick={cl} style={{...style,...ddProps.style}}>
         {(children||[] ).map((item) => {
             let Item = theFactory.createWidget(item, childProperties);
@@ -136,8 +137,8 @@ CombinedWidget.propTypes={
     ...WidgetProps,
     ...SortableProps,
     children: PropTypes.array,
-    childProperties: PropTypes.object,
-    editableParameters: PropTypes.array
+    vertical: PropTypes.bool,
+    editableParameters: PropTypes.object
 }
 CombinedWidget.editableParameters={
     formatter: false,
@@ -145,5 +146,6 @@ CombinedWidget.editableParameters={
     formatterParameters: false,
     value: false,
     caption: false,
+    vertical: {type:'BOOLEAN',default: false},
     children: new ChildrenParam()
 }

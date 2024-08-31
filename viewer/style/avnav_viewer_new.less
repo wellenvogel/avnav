@@ -955,53 +955,7 @@ span.valuePrefix{
       padding: 0;
       margin: 0;
       .flex-direction(column);
-    }
-    .widget:not(.combinedWidget){
-      width: 100%;
-      .flex-display();
-      .flex-direction(column);
-      .flex(none);
-      .flex-justify-content(space-evenly);
-      padding-top: 1.3em;
-      &.canvasGauge.linear{
-        padding-top: 0.85em;
-      }
-    }
-    .widget{
-      .flex-grow(0);
-      .flex-shrink(0);
-      .flex(none);
-      margin: 0;
-    }
-    .infoLeft {
-      left: 0;
-      padding-left: 8px;
-      border-bottom: 1px solid;
-      border-top: 1px solid;
-      .nightBackFade(#E2DFDF);
-      width: 100%;
-      font-size: 0.7em;
-    }
-    .widgetData{
-      padding-top: 0;
-      display: block;
-      white-space: pre;
-    }
-    .centeredWidget {
-      .widgetData{
-        text-align: center;
-      }
-    }
-    .combinedWidget{
-      .flex-display();
-      .flex-direction(row);
-      .widget {
-        height: 100%;
-        .flex-grow(1);
-        .flex-shrink(1);
-        min-width: 0;
-        .flex(1);
-      }
+      .flex-align-items(stretch);
     }
   }
   .resize{

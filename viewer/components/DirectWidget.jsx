@@ -7,7 +7,7 @@ import PropTypes from 'prop-types';
 import Value from './Value.jsx';
 import {useKeyEventHandler} from '../util/GuiHelpers.js';
 import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
-import {WidgetProps} from "./WidgetBase";
+import {WidgetHead, WidgetProps} from "./WidgetBase";
 
 const DirectWidget=(wprops)=>{
     const props=wprops.translateFunction?{...wprops,...wprops.translateFunction(wprops)}:wprops;
@@ -28,21 +28,17 @@ const DirectWidget=(wprops)=>{
     const style={...props.style,...sortableProps.style};
     return (
         <div className={classes} onClick={props.onClick} {...sortableProps} style={style}>
+            <WidgetHead {...props}/>
             <div className="resize">
                 <div className='widgetData'>
                     <Value value={val}/>
                 </div>
             </div>
-            <div className='infoLeft'>{props.caption}</div>
-            {props.unit !== undefined?
-                <div className='infoRight'>{props.unit}</div>
-                :<div className='infoRight'></div>
-            }
         </div>
     );
 }
 
-DirectWidget.propTypes={
+DirectWidget.propTypes = {
     name: PropTypes.string,
     unit: PropTypes.string,
     ...SortableProps,
