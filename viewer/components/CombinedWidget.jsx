@@ -68,11 +68,11 @@ const RenderChildParam=(props)=>{
                             next[data.index]=data;
                             setChildren(next);
                         }}
-                        removeCallback={(data)=> {
-                            console.log("remove",data);
-                            if (data.index === undefined) return;
+                        removeCallback={()=> {
+                            console.log("remove",item);
+                            if (item.index === undefined) return;
                             let next=[...children];
-                            next.splice(data.index,1);
+                            next.splice(item.index,1);
                             setChildren(next);
                         }}
                     />
