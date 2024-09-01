@@ -10,6 +10,7 @@ import navcompute from '../nav/navcompute.js';
 import {useKeyEventHandler} from '../util/GuiHelpers.js';
 import {getWindData} from "./WindWidget";
 import {useAvNavSortable} from "../hoc/Sortable";
+import {WidgetHead} from "./WidgetBase";
 
 const normalColors={
     green:  'rgba(5, 128, 30, 0.57)',
@@ -160,9 +161,8 @@ const WindGraphics = (props) => {
     }
     return (
         <div className={classes} onClick={props.onClick} {...ddProps} style={style}>
+            <WidgetHead unit={showKnots ? "kn" : "m/s"} caption="Wind"/>
             <canvas className='widgetData' ref={canvasRef}></canvas>
-            <div className='infoLeft'>Wind</div>
-            <div className='infoRight'>{showKnots ? "kn" : "m/s"}</div>
             <div className="windSpeed">{windSpeed}</div>
             <div className="windReference">{current.suffix}</div>
         </div>

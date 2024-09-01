@@ -9,6 +9,7 @@ import Formatter from '../util/formatter.js';
 import {useKeyEventHandler} from '../util/GuiHelpers.js';
 import NavCompute from "../nav/navcompute";
 import {useAvNavSortable} from "../hoc/Sortable";
+import {WidgetHead} from "./WidgetBase";
 
 
 const CenterDisplayWidget = (props) => {
@@ -24,7 +25,7 @@ const CenterDisplayWidget = (props) => {
     const style = {...props.style, ...ddProps.style};
     return (
         <div className={classes} onClick={props.onClick} {...ddProps} style={style}>
-            <div className="infoLeft">Center</div>
+            <WidgetHead caption="Center"/>
             {!small && <div className="widgetData">{Formatter.formatLonLats(props.centerPosition)}</div>}
             {(measurePosition !== undefined) &&
                 <div className="widgetData">

@@ -9,7 +9,7 @@ import Formatter from "../util/formatter.js";
 import globalStore from '../util/globalstore.jsx';
 import {useKeyEventHandler} from '../util/GuiHelpers.js';
 import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
-import {WidgetProps} from "./WidgetBase";
+import {WidgetHead, WidgetProps} from "./WidgetBase";
 
 const TimeStatusWidget = (props=> {
     useKeyEventHandler(props,"widget");
@@ -25,9 +25,11 @@ const TimeStatusWidget = (props=> {
     const style={...props.style,...ddProps.style};
     return (
         <div {...ddProps} className={classes} onClick={props.onClick} style={style}>
-            <div className='infoLeft'>{props.caption}</div>
-            <img className="status" src={imgSrc}/>
-            <div className="widgetData">{time}</div>
+            <WidgetHead caption={props.caption}/>
+            <div className="resize">
+                <img className="status" src={imgSrc}/>
+                <div className="widgetData">{time}</div>
+            </div>
         </div>
     );
 });

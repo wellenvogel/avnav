@@ -9,6 +9,7 @@ import keys from '../util/keys.jsx';
 import {useKeyEventHandler} from '../util/GuiHelpers.js';
 import navcompute from '../nav/navcompute.js';
 import {useAvNavSortable} from "../hoc/Sortable";
+import {WidgetHead} from "./WidgetBase";
 
 export const getWindData=(props)=>{
     let kind = props.kind;
@@ -99,7 +100,7 @@ const WindWidget = (props) => {
         <div className={classes} onClick={props.onClick} {...ddProps} style={style}>
             {(props.mode === 'horizontal') ?
                 <React.Fragment>
-                    <div className='infoLeft'>{'W' + wind.suffix}</div>
+                    <WidgetHead caption={'W' + wind.suffix}/>
                     <div className="widgetData">
                         {Formatter.formatDirection(wind.windAngle)}
                         <span className="unit">°</span>
@@ -111,14 +112,12 @@ const WindWidget = (props) => {
                 <React.Fragment>
                     <div className="resize">
                         <div className="windInner">
+                            <WidgetHead caption={names[wind.suffix].angle} unit='°'/>
                             <div className='widgetData'>{Formatter.formatDirection(wind.windAngle)}</div>
-                            <div className='infoLeft'>{names[wind.suffix].angle}</div>
-                            <div className='infoRight'>°</div>
                         </div>
                         <div className="windInner">
+                            <WidgetHead caption={names[wind.suffix].speed} unit={props.showKnots ? "kn" : "m/s"}/>
                             <div className='widgetData'>{windSpeedStr}</div>
-                            <div className='infoLeft'>{names[wind.suffix].speed}</div>
-                            <div className='infoRight'>{props.showKnots ? "kn" : "m/s"}</div>
                         </div>
                     </div>
                 </React.Fragment>

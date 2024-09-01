@@ -9,6 +9,7 @@ import PropertyHandler from '../util/propertyhandler.js';
 import AisFormatter from '../nav/aisformatter.jsx';
 import {useKeyEventHandler} from '../util/GuiHelpers.js';
 import {useAvNavSortable} from "../hoc/Sortable";
+import {WidgetHead} from "./WidgetBase";
 
 
 const AisTargetWidget = (props) => {
@@ -39,7 +40,7 @@ const AisTargetWidget = (props) => {
                  onClick={click}
                  {...ddProps}
             >
-                <div className="infoLeft">AIS</div>
+                <WidgetHead caption="AIS"/>
                 <div className="aisPart">
                     {!small && <div className="widgetData">
                         <span className='label '>D</span>

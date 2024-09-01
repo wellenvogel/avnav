@@ -8,6 +8,7 @@ import keys from '../util/keys.jsx';
 import Formatter from '../util/formatter.js';
 import {useKeyEventHandler} from '../util/GuiHelpers.js';
 import {useAvNavSortable} from "../hoc/Sortable";
+import {WidgetHead} from "./WidgetBase";
 
 const ZoomWidget =(props)=>{
     useKeyEventHandler(props,"widget");
@@ -25,13 +26,13 @@ const ZoomWidget =(props)=>{
         const style={...props.style,...ddProps.style};
         return (
         <div className={classes} onClick={props.onClick} {...ddProps} style={style}>
+            <WidgetHead caption={props.caption}/>
             <div className='widgetData'>{val}
                 {
                     (rzoom !== undefined)?<div className="rzoom">({rzoom})</div>:''
 
                 }
             </div>
-            <div className='infoLeft'>{props.caption}</div>
         </div>
         );
     };

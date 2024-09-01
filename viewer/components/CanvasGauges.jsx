@@ -9,7 +9,7 @@ import {RadialGauge,LinearGauge} from 'canvas-gauges';
 import base from '../base.js';
 import assign from 'object-assign';
 import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
-import {WidgetProps} from "./WidgetBase";
+import {WidgetHead, WidgetProps} from "./WidgetBase";
 
 export const getTicks=(minValue,maxValue,number)=>{
     if (minValue === undefined || maxValue === undefined || number === undefined) return;
@@ -146,15 +146,12 @@ const Gauge =(rprops)=>{
     let textStyle={color:textColor};
     return (
         <div className={classes} onClick={props.onClick} style={style} {...ddProps}>
+            <WidgetHead {...props}/>
             <div className="canvasFrame" ref={frame}>
                 {props.drawValue?
                 <div className="gaugeValue" ref={value} style={textStyle}>{nvalue}</div>:null}
                 <canvas className='widgetData' ref={canvasRef}></canvas>
             </div>
-            {(props.caption !== undefined )?<div className='infoLeft'>{props.caption}</div>:null}
-            {(props.unit !== undefined)?
-                <div className='infoRight'>{props.unit}</div>
-                :null}
         </div>
         );
 };

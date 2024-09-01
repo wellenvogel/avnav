@@ -10,7 +10,7 @@ import routeobjects from '../nav/routeobjects.js';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
 import {useKeyEventHandler} from '../util/GuiHelpers.js';
 import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
-import {WidgetProps} from "./WidgetBase";
+import {WidgetHead, WidgetProps} from "./WidgetBase";
 
 const editor=new RouteEdit(RouteEdit.MODES.EDIT);
 
@@ -24,7 +24,7 @@ const EditRouteWidget = (props) => {
     if (!route) {
         return (
             <div className={classes} onClick={props.onClick} style={props.style}>
-                <div className="infoLeft">RTE</div>
+                <WidgetHead caption={'RTE'}/>
                 <div className="routeName">No Route</div>
             </div>
         )

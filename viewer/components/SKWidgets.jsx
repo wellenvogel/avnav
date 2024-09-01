@@ -7,7 +7,7 @@ import {useKeyEventHandler} from "../util/GuiHelpers";
 import Formatter from "../util/formatter";
 import PropTypes from "prop-types";
 import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
-import {WidgetProps} from "./WidgetBase";
+import {WidgetHead, WidgetProps} from "./WidgetBase";
 
 const rad2deg=(rad,inDeg)=>{
     if (inDeg) return parseFloat(rad);
@@ -42,8 +42,7 @@ export const SKRollWidget=(props)=>{
         }
         return (
             <div className={classes} onClick={props.onClick} style={props.style||{}} {...dd}>
-                <div className='infoLeft'>{props.caption}</div>
-                <div className='infoRight'>{props.unit}</div>
+                <WidgetHead {...props}/>
                 <div className={wdClasses}>{degreeArrow}</div>
             </div>
         );
@@ -91,8 +90,7 @@ export const SKPitchWidget = (props) => {
     }
     return (
         <div className={classes} onClick={props.onClick} style={props.style || {}} {...dd}>
-            <div className='infoLeft'>{props.caption}</div>
-            <div className='infoRight'>{props.unit}</div>
+            <WidgetHead {...props}/>
             <div className={wdClasses}>{degreeArrow}</div>
         </div>
     );

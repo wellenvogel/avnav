@@ -5,7 +5,7 @@
 import React from "react";
 import {useKeyEventHandler} from '../util/GuiHelpers.js';
 import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
-import {WidgetProps} from "./WidgetBase";
+import {WidgetHead, WidgetProps} from "./WidgetBase";
 
 const UndefinedWidget=(props)=>{
     useKeyEventHandler(props,"widget");
@@ -13,12 +13,12 @@ const UndefinedWidget=(props)=>{
     let classes="widget undefinedWidget";
     return (
         <div className={classes} onClick={props.onClick} style={props.style} {...dd}>
+            <WidgetHead caption="Undefined Widget"/>
             <div className="resize">
             <div className='widgetData'>
                 {props.name}
             </div>
             </div>
-            <div className='infoLeft'>Undefined Widget</div>
         </div>
         );
     }

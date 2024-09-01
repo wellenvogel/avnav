@@ -11,7 +11,7 @@ import ReactHtmlParser,{convertNodeToElement} from 'react-html-parser/dist/react
 import base from '../base.js';
 import assign from 'object-assign';
 import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
-import {WidgetProps} from "./WidgetBase";
+import {WidgetHead, WidgetProps} from "./WidgetBase";
 
 const REACT_EVENTS=('onCopy onCut onPaste onCompositionEnd onCompositionStart onCompositionUpdate onKeyDown onKeyPress onKeyUp'+
     ' onFocus onBlur onChange onInput onInvalid onReset onSubmit onError onLoad onClick onContextMenu onDoubleClick onDrag onDragEnd onDragEnter onDragExit'+
@@ -109,14 +109,11 @@ export const ExternalWidget =(props)=>{
             {transform:(node,index)=>{transform(userData.current,node,index);}}):null;
         return (
         <div className={classes} {...ddProps} onClick={props.onClick} style={{...convertedProps.style, ...ddProps.style}}>
+            <WidgetHead {...convertedProps}/>
             {props.renderCanvas?<canvas className='widgetData' ref={canvasRef}></canvas>:null}
             <div className="resize">
                 {userHtml}
             </div>
-            {(convertedProps.caption !== undefined )?<div className='infoLeft'>{convertedProps.caption}</div>:null}
-            {(convertedProps.unit !== undefined)?
-                <div className='infoRight'>{convertedProps.unit}</div>
-                :null}
         </div>
         );
 }

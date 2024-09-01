@@ -3,9 +3,9 @@
 
 @x: rgba(255, 20, 7, 0.54);
 
-@horizontalContainerHeight: 4em;
+@horizontalContainerHeight: 4.2em;
 @horizontalContainerDoubleHeight: 7.9em;
-@horizontalWidgetHeight: 3.8em;
+@horizontalWidgetHeight: 4em;
 @infoFontSize: 0.71em;
 
 .widgetInfo(){
@@ -24,14 +24,14 @@
   .flex-grow(1);
   .flex-display();
   .flex-direction(column);
-  .flex-justify-content(space-evenly);
+  .flex-justify-content(flex-start);
   .widgetHead {
     margin: 0;
     padding: 0.1em;
     display: flex;
     .flex-direction(row);
     .flex-justify-content(space-between);
-    height: 0.5em;
+    height: 0.7em;
     .infoLeft{
       .widgetInfo();
     }
@@ -43,6 +43,8 @@
     text-align: right;
     max-width: 100%;
     max-height: 100%;
+    min-height: 0;
+    min-width: 0;
   }
   &.average .infoLeft{
     .nightForeColor(red);
@@ -53,6 +55,11 @@
   }
   .editing &{
     .flex-grow(0);
+  }
+  .unit{
+    font-size: @infoFontSize;
+    opacity: 0.7;
+    margin-left: 0.2em;
   }
 }
 //----- dashboard pages (gps page) ------
@@ -89,6 +96,7 @@
 }
 .widgetContainer.horizontal{
   .flex-wrap(wrap);
+  .flex-align-items(center);
   max-height: @horizontalContainerHeight;
   .twoRows &{
     max-height: @horizontalContainerDoubleHeight;
@@ -99,6 +107,9 @@
   .editing &{
     .flex-wrap(nowrap);
     min-height: @horizontalContainerHeight;
+    .widget{
+      .flex-shrink(1);
+    }
   }
 }
 
@@ -106,10 +117,15 @@
   overflow: hidden;
   .flex-direction(column);
   .flex-justify-content(flex-end);
+  .flex-align-items(stretch);
   .widget{
-    max-width: @navLeftWidgetWidth;
-    width: @navLeftWidgetWidth;
-    flex-shrink: inherit;
+    min-width: 0;
+    .flex-shrink(1);
+    margin-left: 0.1em;
+    margin-right: 0.1em;
+    padding-left: 0.1em;
+    padding-right: 0.1em;
+    width: calc(100% - 0.2em);
   }
   .editing &{
     top: 0;
@@ -138,7 +154,6 @@
     }
     width: @size;
     .vertical &{
-      width: inherit;
       .widgetData{
         font-size: @bigFontVertical;
       }
@@ -152,7 +167,6 @@
     }
     width: @size;
     .vertical &{
-      width: inherit;
       .widgetData{
         font-size: @smallFont;
       }
@@ -164,7 +178,6 @@
     }
     width: 7em;
     .vertical &{
-      width: inherit;
       .widgetData{
         font-size: @font;
       }
@@ -263,11 +276,10 @@
     .widgetData ~ .widgetData{
       padding-top: 0;
     }
-    .hfield &{
-      .flex-direction(row)!important;
-      .aisPart{
-        .flex(1);
-      }
+    .hfield & .aisPart{
+      .flex-display();
+      .flex-direction(column);
+      .flex(1);
     }
   }
 
@@ -447,6 +459,10 @@
       .flex-shrink(1);
       min-width: 0;
       .flex(1);
+      border-right: 1px solid
+    }
+    .widget:last-of-type{
+      border-right: unset;
     }
     padding: 0;
     margin: 0;
@@ -454,7 +470,12 @@
       .flex-direction(column);
       .widget{
         height: unset;
+        min-height: 0;
         width: 100%;
+        .flex-grow(1);
+        .flex-shrink(1);
+        .flex(1);
+        border-right: unset;
       }
     }
   }

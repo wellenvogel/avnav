@@ -8,7 +8,7 @@ import keys from "../util/keys.jsx";
 import Formatter from "../util/formatter.js";
 import {useKeyEventHandler} from '../util/GuiHelpers.js';
 import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
-import {WidgetProps} from "./WidgetBase";
+import {WidgetHead, WidgetProps} from "./WidgetBase";
 
 const DateTimeWidget=(props)=>{
     useKeyEventHandler(props,"widget");
@@ -25,7 +25,7 @@ const DateTimeWidget=(props)=>{
         const style={...props.style,...ddProps.style};
         return (
         <div className={classes} onClick={props.onClick} {...ddProps} style={style}>
-            <div className='infoLeft'>Date</div>
+            <WidgetHead caption="Date"/>
             <div className="resize">
                 <div className="widgetData date">{date}</div>
                 <div className="widgetData time">{time}</div>

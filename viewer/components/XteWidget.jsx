@@ -9,6 +9,7 @@ import keys from '../util/keys.jsx';
 import {useKeyEventHandler} from '../util/GuiHelpers.js';
 import navcompute from '../nav/navcompute.js';
 import {useAvNavSortable} from "../hoc/Sortable";
+import {WidgetHead} from "./WidgetBase";
 
 const normalColors={
     all: '#000000'
@@ -90,9 +91,8 @@ const XteWidget = (props) => {
     setTimeout(drawXte, 0);
     return (
         <div className={classes} onClick={props.onClick} {...ddProps} style={style}>
+            <WidgetHead caption="XTE" unit="nm"/>
             <canvas className='widgetData' ref={canvasRef}></canvas>
-            <div className='infoLeft'>XTE</div>
-            <div className='infoRight'>nm</div>
         </div>
 
     );
