@@ -30,7 +30,7 @@ import theFactory from "./WidgetFactory";
 import {EditableParameter} from "./EditableParameters";
 import ItemList from "./ItemList";
 import DialogButton from "./DialogButton";
-import OverlayDialog, {useDialog} from "./OverlayDialog";
+import {useDialog} from "./OverlayDialog";
 import EditWidgetDialog from "./EditWidgetDialog";
 
 const ChildWidget=(props)=>{
@@ -63,9 +63,9 @@ const RenderChildParam=(props)=>{
                         closeCallback={()=>setDialog()}
                         updateCallback={(data)=>{
                             console.log("update",data);
-                            if (data.index === undefined) return;
+                            if (item.index === undefined) return;
                             let next=[...children];
-                            next[data.index]=data;
+                            next[item.index]=data;
                             setChildren(next);
                         }}
                         removeCallback={()=> {
@@ -105,6 +105,7 @@ const RenderChildParam=(props)=>{
 class ChildrenParam extends EditableParameter {
     constructor() {
         super('children', -1);
+        this.default=[];
     }
     render(props){
         return <RenderChildParam
@@ -113,10 +114,16 @@ class ChildrenParam extends EditableParameter {
     }
 }
 
+const getWeight=(item)=>{
+    if (! item) return 0;
+    if (item.weight === undefined) return 1;
+    return parseFloat(item.weight);
+}
 
+const DEFAULT_NAME="CombinedWidget";
 export const CombinedWidget=(props)=>{
     useKeyEventHandler(props,"widget")
-    let {editableParameters,children,onClick,childProperties,style,dragId,className,...forwardProps}=props;
+    let {editableParameters,children,onClick,childProperties,style,dragId,className,vertical,...forwardProps}=props;
     const ddProps = useAvNavSortable(dragId);
     const cl=(ev)=>{
         if (onClick) onClick(ev);
@@ -124,10 +131,23 @@ export const CombinedWidget=(props)=>{
     let cidx = 0;
     if (childProperties) delete childProperties.style;
     className = (className || '') + " widget";
-    if (props.vertical) className+=" vertical";
+    if (props.name !== DEFAULT_NAME) className+=" "+DEFAULT_NAME;
+    if (vertical) className+=" vertical";
+    let weightSum=0;
+    (children||[]).forEach((child)=>{
+        weightSum+=getWeight(child);
+    });
+
     return <div  {...forwardProps}  {...ddProps} className={className} onClick={cl} style={{...style,...ddProps.style}}>
         {(children||[] ).map((item) => {
-            let Item = theFactory.createWidget(item, childProperties);
+            let weight=getWeight(item);
+            let percent=(weightSum !== 0)?100*weight/weightSum:undefined;
+            let style={};
+            if (percent !== undefined){
+                if (vertical) style.height=percent+"%";
+                else style.width=percent+"%";
+            }
+            let Item = theFactory.createWidget(item, {...childProperties,style:style});
             cidx++;
             return <Item key={cidx}/>
         })}
