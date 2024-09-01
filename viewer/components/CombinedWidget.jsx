@@ -54,7 +54,6 @@ const RenderChildParam=(props)=>{
             itemList={children}
             itemClass={ChildWidget}
             onItemClick={(item,data)=>{
-                console.log("child widget click",item);
                 setDialog((props)=>{
                     return <EditWidgetDialog
                         title={"Sub Widget "+item.index}
@@ -62,14 +61,12 @@ const RenderChildParam=(props)=>{
                         weight={true}
                         closeCallback={()=>setDialog()}
                         updateCallback={(data)=>{
-                            console.log("update",data);
                             if (item.index === undefined) return;
                             let next=[...children];
                             next[item.index]=data;
                             setChildren(next);
                         }}
                         removeCallback={()=> {
-                            console.log("remove",item);
                             if (item.index === undefined) return;
                             let next=[...children];
                             next.splice(item.index,1);
@@ -83,14 +80,12 @@ const RenderChildParam=(props)=>{
             <DialogButton
                 name={'add'}
                 onClick={()=>{
-                    console.log("add widget click");
                     setDialog((props)=>{
                         return <EditWidgetDialog
                             title="Add Sub"
                             current={{}}
                             weight={true}
                             insertCallback={(data)=>{
-                               console.log("add",data);
                                setChildren([...children,data]);
                             }}
                             closeCallback={()=>setDialog()}
