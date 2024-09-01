@@ -503,8 +503,7 @@ AisLayer.prototype.drawTargetSymbol=function(drawing,xy,target,drawTargetFunctio
         }
 
         if (rmvRange>0 && onMap && style.courseVector !== false) { // relative motion vector
-            let distance=NavCompute.computeDistance({lat:lat,lon:lon},{lat:target.lat,lon:target.lon}).dts/1852;
-            if (distance<=rmvRange && (target_sog || sog)) {
+            if (target.distance<=rmvRange && (target_sog || sog)) {
                 if (curved) {
                     drawArc(xy,turn_center,turn_radius,target_cog-target_rot_sgn*90,target_rot_sgn*turn_angle,
                             {color:style.courseVectorColor,width:courseVectorWidth,dashed:true},
