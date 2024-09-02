@@ -28,6 +28,12 @@ export const SortModes={
     vertical:1
 }
 
+let sid=0;
+const uniqId=()=>{
+    sid++;
+    return sid;
+}
+
 const percentOverlap=(itstart,itext,cmpstart,cmpext)=>{
     const itend=itstart+itext;
     const cmpend=cmpstart+cmpext;
@@ -122,7 +128,8 @@ const SortContextImpl=createContext({
     id:undefined,
     onDragEnd:undefined,
     handler:undefined,
-    allowOther: false
+    allowOther: false,
+    uniqId: undefined
 });
 
 export const SortableProps={
@@ -134,14 +141,15 @@ const CATTR='data-dragctx';
 const TYPE='application-x-avnav-dnd';
 export const useAvNavSortable=(id,opt_nodrag)=>{
     const context= useContext(SortContextImpl);
-    if (id === undefined || context.id === undefined) return {};
+    if (id === undefined || context.uniqId === undefined) return {};
     let rt={
         onDragStart:(ev)=>{
             let data={
                 rect: ev.currentTarget.getBoundingClientRect(),
                 id: id,
                 client: {x:ev.clientX,y:ev.clientY},
-                ctxid: context.id
+                ctxid: context.id,
+                uniqId: context.uniqId
             };
             data.offset={x:data.client.x-data.rect.left,y:data.client.y-data.rect.top}
             ev.dataTransfer.setData(TYPE,JSON.stringify(data));
@@ -156,7 +164,7 @@ export const useAvNavSortable=(id,opt_nodrag)=>{
     rt[ATTR]=id;
     return rt;
 }
-
+const isSet=(val)=>val !== null && val !== undefined;
 export const useAvNavSortFrame=()=>{
     const context= useContext(SortContextImpl);
     let rt={
@@ -173,8 +181,12 @@ export const useAvNavSortFrame=()=>{
             ev.preventDefault();
             let dids=ev.dataTransfer.getData(TYPE);
             let tdata=JSON.parse(dids);
-            let other=tdata.ctxid !== context.id;
-            if (other && ! context.allowOther) return;
+            let other=tdata.uniqId !== context.uniqId;
+            if (other) {
+                if (!context.allowOther) return;
+                //moving between frames requires the id's to be set
+                if (!isSet(context.id) || !isSet(tdata.id)) return;
+            }
             let bestMatching=context.handler.findPosition({
                 left:ev.clientX-tdata.offset.x,
                 top:ev.clientY-tdata.offset.y,
@@ -187,7 +199,7 @@ export const useAvNavSortFrame=()=>{
             }
         }
     }
-    rt[CATTR]=context.id;
+    rt[CATTR]=context.uniqId;
     return rt;
 }
 
@@ -197,7 +209,8 @@ export const SortContext=({onDragEnd,id,mode,children,allowOther,reverse})=>{
         onDragEnd: onDragEnd,
         id:id,
         handler: new SortHandler(mode,reverse),
-        allowOther: allowOther
+        allowOther: allowOther,
+        uniqId: uniqId()
     }}>
         {children}
     </SortContextImpl.Provider>
@@ -209,4 +222,14 @@ SortContext.propTypes={
     children: PropTypes.any,
     allowOther: PropTypes.bool,
     reverse: PropTypes.bool
+}
+
+export const moveItem=(oldIndex,newIndex,list)=>{
+    if (oldIndex < 0 || oldIndex >= list.length) return;
+    if (newIndex < 0 ) return;
+    let next=[...list];
+    let item=next[oldIndex];
+    next.splice(oldIndex,1);
+    next.splice(newIndex,0,item);
+    return next;
 }
