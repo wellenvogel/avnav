@@ -8,6 +8,7 @@ import keys from '../util/keys.jsx';
 import {useKeyEventHandler} from '../util/GuiHelpers.js';
 import AlarmHandler from '../nav/alarmhandler.js';
 import {useAvNavSortable} from "../hoc/Sortable";
+import {WidgetHead} from "./WidgetBase";
 
 
 //TODO: compare alarm info correctly
@@ -45,7 +46,7 @@ const AlarmWidget=(props)=>{
         }
         return (
         <div className={classes} onClick={onClick} {...ddProps} style={style}>
-            <div className="infoLeft">Alarm</div>
+            <WidgetHead caption={"Alarm"}/>
             <div>
                 <span className="alarmInfo">{alarmText}</span>
             </div>
