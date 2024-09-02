@@ -194,8 +194,8 @@ class MapPage extends React.Component{
                 horizontal={mode === 'horizontal'}
                 allowOther={true}
                 dragFrame={panel}
-                onSortEnd={(oldIndex,newIndex,frameId)=>{
-                    LayoutHandler.withTransaction(this.getLayoutPage(),(handler)=>handler.moveItem(self.props.id, frameId, oldIndex, newIndex,panelItems.name))
+                onSortEnd={(oldIndex,newIndex,frameId,targetFrameId)=>{
+                    LayoutHandler.withTransaction(this.getLayoutPage(),(handler)=>handler.moveItem(self.props.id, frameId, oldIndex, newIndex,targetFrameId))
                     }}
                 />
         };

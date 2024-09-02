@@ -107,17 +107,12 @@ const ItemList = (props) => {
     if (props.fontSize) {
         style.fontSize = props.fontSize;
     }
-    const handleDragEnd=(active,over,id)=>{
-        if (props.onSortEnd){
-            props.onSortEnd(active,over,id);
-        }
-    }
     const SortableContent =
         (sprops) => {
             if (props.dragdrop) {
                 return (
                     <SortContext
-                        onDragEnd={handleDragEnd}
+                        onDragEnd={props.onSortEnd}
                         id={props.dragFrame}
                         allowOther={props.allowOther}
                         reverse={props.reverse}

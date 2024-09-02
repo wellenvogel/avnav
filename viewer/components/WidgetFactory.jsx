@@ -23,7 +23,12 @@ export const filterByEditables=(editableParameters,values)=>{
     editableParameters.forEach((param)=>{
         if (! param.canEdit()) return;
         let v=param.getValue(values);
-        param.setValue(rt,v);
+        if (v === undefined){
+            param.setDefault(rt);
+        }
+        else {
+            param.setValue(rt, v);
+        }
     });
     let fixed=['name','weight'];
     fixed.forEach((fp)=>{

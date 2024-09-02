@@ -476,12 +476,14 @@ class LayoutHandler{
         return {name:basename};
     }
 
-
+    splitPanelName(panel){
+        return panel.split(":");
+    }
     /**
      * get the data for a panel (name already includes options)
      * if opt_add is true and we are editing - just add the structure if it is not there
      * @param page
-     * @param panel
+     * @param panel - the panel name, optionally with :n:m... being indices of items with child properties
      * @param opt_add if set to true: create the panel (only possible if we are editing)
      * @return {*}
      */
@@ -489,7 +491,8 @@ class LayoutHandler{
         let page=getPagename(pageWithOptions);
         let pageData=this.getPageData(page,opt_add);
         if (! pageData) return;
-        let panelData=pageData[panel];
+        const panelParts=this.splitPanelName(panel);
+        let panelData=pageData[panelParts[0]];
         if (! panelData) {
             if ((! opt_add) || (! this.isEditing())) return ;
             panelData=[];
@@ -498,6 +501,11 @@ class LayoutHandler{
         if (this._isHiddenPanel(page,panel)){
             if (!opt_add) return;
             this._setHiddenPanel(page,panel,false);
+        }
+        for (let i=1;i<panelParts.length;i++){
+            let item=panelData[panelParts[i]];
+            if (item === undefined || item.children === undefined) return;
+            panelData=item.children;
         }
         return panelData;
     }
@@ -629,6 +637,7 @@ class LayoutHandler{
     }
 
     moveItem(pageWithOptions,panel,oldIndex,newIndex,opt_newPanel){
+        console.log("moveItem",pageWithOptions,panel,oldIndex,newIndex,opt_newPanel);
         if (oldIndex == newIndex && (opt_newPanel === undefined || panel === opt_newPanel)) return true;
         if (! this.isEditing()) return false;
         const page=getPagename(pageWithOptions);
@@ -641,10 +650,34 @@ class LayoutHandler{
             newPanelData=this.getDirectPanelData(page,opt_newPanel);
             if (! newPanelData) return false;
         }
-        this._addAction(new LayoutAction(ACTION_MOVE,page,opt_newPanel||panel,{
-            oldIndex: newIndex,
-            newIndex: oldIndex,
-            newPanel: panel
+        //for the fallback we have to recompute panel and indices if the insertion or removal
+        //affects the indices - only if the panels have sub-indices
+        let revertSourcePanel=opt_newPanel||panel;
+        let revertSourceParts=this.splitPanelName(revertSourcePanel);
+        let revertOldIndex=newIndex;
+        let revertNewIndex=oldIndex;
+        let revertTargetPanel=panel;
+        let revertTargetParts=this.splitPanelName(revertTargetPanel);
+        if (revertTargetParts[0] === revertSourceParts[0] && revertTargetParts.length !== revertSourceParts.length) {
+            if (revertTargetParts.length > revertSourceParts.length){
+                //in this case the target could be inserted before the original source
+                //so for reverting the source index increases
+                let idx=revertSourceParts.length;
+                if (newIndex <= revertTargetParts[idx]) revertTargetParts[idx]++;
+            }
+            else{
+                //in this case the source panel could be moved to lower if the source
+                //was located before the source panel
+                let idx=revertTargetParts.length;
+                if (oldIndex < revertSourceParts[idx]) revertSourceParts[idx]--;
+            }
+            revertTargetPanel=revertTargetParts.join(":");
+            revertSourcePanel=revertSourceParts.join(":");
+        }
+        this._addAction(new LayoutAction(ACTION_MOVE,page,revertSourcePanel,{
+            oldIndex: revertOldIndex,
+            newIndex: revertNewIndex,
+            newPanel: revertTargetPanel
         }));
         let item=panelData[oldIndex];
         panelData.splice(oldIndex,1);

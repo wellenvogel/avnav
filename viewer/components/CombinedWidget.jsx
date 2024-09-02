@@ -22,7 +22,7 @@
 ###############################################################################
 */
 import {useKeyEventHandler} from "../util/GuiHelpers";
-import {moveItem, SortableProps, useAvNavSortable} from "../hoc/Sortable";
+import {moveItem, SortableProps, useAvNavSortable, useAvnavSortContext} from "../hoc/Sortable";
 import {WidgetProps} from "./WidgetBase";
 import PropTypes from "prop-types";
 import React, {useState} from "react";
@@ -30,8 +30,9 @@ import theFactory from "./WidgetFactory";
 import {EditableParameter} from "./EditableParameters";
 import ItemList from "./ItemList";
 import DialogButton from "./DialogButton";
-import {useDialog} from "./OverlayDialog";
+import Dialogs, {useDialog} from "./OverlayDialog";
 import EditWidgetDialog from "./EditWidgetDialog";
+import keys from "../util/keys";
 
 const ChildWidget=(props)=>{
     const dd=useAvNavSortable(props.dragId);
@@ -41,11 +42,24 @@ const ChildWidget=(props)=>{
     </div>
 }
 
+const updateChildren=(children,index,data)=>{
+    if (index === undefined) return;
+    let next=[...children];
+    if (data !== undefined) {
+        next[index] = data;
+    }
+    else{
+        next.splice(index,1);
+    }
+    return next;
+}
+
 const RenderChildParam=(props)=>{
     if (! props.currentValues) return null;
     const [Dialog,setDialog]=useDialog();
     const [children,setChildrenImpl]=useState(props.currentValues.children||[])
     const setChildren=(ch)=>{
+        if (ch === undefined) return;
         setChildrenImpl(ch);
         props.onChange({children:ch});
     }
@@ -69,16 +83,10 @@ const RenderChildParam=(props)=>{
                         weight={true}
                         closeCallback={()=>setDialog()}
                         updateCallback={(data)=>{
-                            if (item.index === undefined) return;
-                            let next=[...children];
-                            next[item.index]=data;
-                            setChildren(next);
+                            setChildren(updateChildren(children,item.index,data));
                         }}
                         removeCallback={()=> {
-                            if (item.index === undefined) return;
-                            let next=[...children];
-                            next.splice(item.index,1);
-                            setChildren(next);
+                            setChildren(updateChildren(children,item.index));
                         }}
                     />
                 })
@@ -126,8 +134,9 @@ const getWeight=(item)=>{
 const DEFAULT_NAME="CombinedWidget";
 export const CombinedWidget=(props)=>{
     useKeyEventHandler(props,"widget")
-    let {editableParameters,children,onClick,childProperties,style,dragId,className,vertical,...forwardProps}=props;
-    const ddProps = useAvNavSortable(dragId);
+    let {locked,editing,sequence,editableParameters,children,onClick,childProperties,dragId,className,vertical,...forwardProps}=props;
+    const sortContext=useAvnavSortContext();
+    const ddProps = useAvNavSortable(locked?dragId:undefined);
     const cl=(ev)=>{
         if (onClick) onClick(ev);
     }
@@ -140,20 +149,33 @@ export const CombinedWidget=(props)=>{
     (children||[]).forEach((child)=>{
         weightSum+=getWeight(child);
     });
-
-    return <div  {...forwardProps}  {...ddProps} className={className} onClick={cl} style={{...style,...ddProps.style}}>
-        {(children||[] ).map((item) => {
-            let weight=getWeight(item);
-            let percent=(weightSum !== 0)?100*weight/weightSum:undefined;
-            let style={};
-            if (percent !== undefined){
-                if (vertical) style.height=percent+"%";
-                else style.width=percent+"%";
+    const dragFrame=sortContext.id+":"+dragId;
+    return <div  {...forwardProps}  {...ddProps} className={className} onClick={cl}>
+        { (editing && locked) && <div className="icon locked">Locked</div>}
+        <ItemList
+            dragdrop={editing && ! locked}
+            dragFrame={dragFrame}
+            allowOther={true}
+            horizontal={!vertical}
+            onSortEnd={(oldIndex,newIndex,oldFrame,targetFrame)=>{
+                sortContext.onDragEnd(oldIndex,newIndex,oldFrame,targetFrame);
+            }}
+            itemList={children||[]}
+            itemCreator={(item)=>{
+                let weight=getWeight(item);
+                let percent=(weightSum !== 0)?100*weight/weightSum:undefined;
+                let style={};
+                if (percent !== undefined){
+                    if (vertical) style.height=percent+"%";
+                    else style.width=percent+"%";
+                }
+                let Item = theFactory.createWidget(item, {...childProperties,style:style});
+                cidx++;
+                return (iprops)=>{
+                    return  <Item key={cidx} {...iprops}/>
+            }}
             }
-            let Item = theFactory.createWidget(item, {...childProperties,style:style});
-            cidx++;
-            return <Item key={cidx}/>
-        })}
+        />
     </div>
 }
 CombinedWidget.propTypes={
@@ -170,5 +192,10 @@ CombinedWidget.editableParameters={
     value: false,
     caption: false,
     vertical: {type:'BOOLEAN',default: false},
+    locked: {type: 'BOOLEAN', default: true},
     children: new ChildrenParam()
+}
+CombinedWidget.storeKeys={
+    editing: keys.gui.global.layoutEditing,
+    sequence: keys.gui.global.layoutSequence
 }

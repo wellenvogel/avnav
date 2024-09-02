@@ -179,6 +179,7 @@ export const useAvNavSortFrame=()=>{
         },
         onDrop: (ev)=>{
             ev.preventDefault();
+            ev.stopPropagation();
             let dids=ev.dataTransfer.getData(TYPE);
             let tdata=JSON.parse(dids);
             let other=tdata.uniqId !== context.uniqId;
@@ -195,7 +196,7 @@ export const useAvNavSortFrame=()=>{
             },tdata.id,context.mode);
             //console.log("best matching",bestMatching);
             if (bestMatching !== undefined && (other || (bestMatching !== tdata.id)) && context.onDragEnd){
-                context.onDragEnd(tdata.id,bestMatching,tdata.ctxid);
+                context.onDragEnd(tdata.id,bestMatching,tdata.ctxid,context.id);
             }
         }
     }
@@ -203,6 +204,7 @@ export const useAvNavSortFrame=()=>{
     return rt;
 }
 
+export const useAvnavSortContext=()=>useContext(SortContextImpl);
 
 export const SortContext=({onDragEnd,id,mode,children,allowOther,reverse})=>{
     return <SortContextImpl.Provider value={{

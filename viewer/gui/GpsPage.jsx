@@ -309,9 +309,9 @@ class GpsPage extends React.Component{
                     onItemClick: (item,data) => {this.onItemClick(item,data,panelData);},
                     onClick: ()=>{EditWidgetDialog.createDialog(undefined,getLayoutPage(),panelData.name,{beginning:false,weight:true,types:["!map"]});},
                     dragdrop: LayoutHandler.isEditing(),
-                    onSortEnd: (oldIndex,newIndex,frameId)=>{
+                    onSortEnd: (oldIndex,newIndex,frameId,targetFrameId)=>{
                         LayoutHandler.withTransaction(getLayoutPage(),
-                        (handler)=>handler.moveItem(panelData.page,frameId,oldIndex,newIndex,panelName));
+                        (handler)=>handler.moveItem(panelData.page,frameId,oldIndex,newIndex,targetFrameId));
                     }
                 };
                 panelList.push(prop);
