@@ -22,7 +22,7 @@
 ###############################################################################
 */
 import {useKeyEventHandler} from "../util/GuiHelpers";
-import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
+import {moveItem, SortableProps, useAvNavSortable} from "../hoc/Sortable";
 import {WidgetProps} from "./WidgetBase";
 import PropTypes from "prop-types";
 import React, {useState} from "react";
@@ -34,7 +34,8 @@ import {useDialog} from "./OverlayDialog";
 import EditWidgetDialog from "./EditWidgetDialog";
 
 const ChildWidget=(props)=>{
-    return <div className={'dialogRow row'}>
+    const dd=useAvNavSortable(props.dragId);
+    return <div className={'dialogRow row'} {...dd}>
         <span className="inputLabel">{"sub"+props.index}</span>
         <div className="input" onClick={props.onClick}>{props.name}</div>
     </div>
@@ -53,6 +54,13 @@ const RenderChildParam=(props)=>{
         <ItemList
             itemList={children}
             itemClass={ChildWidget}
+            dragdrop={true}
+            onSortEnd={(currentId,newId)=>{
+                let next=moveItem(currentId,newId,children);
+                if (next !== undefined) {
+                    setChildren(next);
+                }
+            }}
             onItemClick={(item,data)=>{
                 setDialog((props)=>{
                     return <EditWidgetDialog

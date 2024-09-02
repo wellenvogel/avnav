@@ -64,11 +64,7 @@ const Content=(props)=>{
         </div>
     );
 };
-let sid=0;
-const getSid=()=>{
-    sid++;
-    return "itemList"+sid;
-}
+
 const ItemList = (props) => {
     const itemList = [];
     const existingKeys = {};
@@ -122,7 +118,7 @@ const ItemList = (props) => {
                 return (
                     <SortContext
                         onDragEnd={handleDragEnd}
-                        id={props.dragFrame||getSid()}
+                        id={props.dragFrame}
                         allowOther={props.allowOther}
                         reverse={props.reverse}
                         mode={props.horizontal? SortModes.horizontal:SortModes.vertical}>

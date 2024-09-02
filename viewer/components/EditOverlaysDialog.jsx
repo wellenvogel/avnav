@@ -23,7 +23,7 @@ import featureFormatters from '../util/featureFormatter';
 import chartImage from '../images/Chart60.png';
 import {createEditableParameter,EditableParameter} from "./EditableParameters";
 import {getKnownStyleParam} from "../map/chartsourcebase";
-import {useAvNavSortable} from "../hoc/Sortable";
+import {moveItem, useAvNavSortable} from "../hoc/Sortable";
 
 const filterOverlayItem=(item,opt_itemInfo)=>{
     let rt=undefined;
@@ -708,13 +708,8 @@ class EditOverlaysDialog extends React.Component{
         }
     }
     moveItem(oldIndex,newIndex){
-        let overlays=this.state.list.slice();
-        if (oldIndex < 0 || oldIndex >= overlays.length) return;
-        if (newIndex < 0 || newIndex >= overlays.length) return;
-        let item=overlays[oldIndex];
-        overlays.splice(oldIndex,1);
-        overlays.splice(newIndex,0,item)
-        this.updateList(overlays);
+        const next=moveItem(oldIndex,newIndex,this.state.list);
+        if (next !== undefined) this.updateList(next);
     }
     reset(){
         if (this.props.resetCallback){
