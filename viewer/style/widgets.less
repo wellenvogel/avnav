@@ -41,7 +41,9 @@
   }
   .widgetData{
     text-align: right;
-    max-width: 100%;
+    max-width: calc(100% - 0.2em);
+    margin-left: auto;
+    margin-right: 0.1em;
     max-height: 100%;
     min-height: 0;
     min-width: 0;
@@ -162,8 +164,6 @@
   .smallWidget(@size){
     .widgetData{
       font-size: @smallFont;
-      padding-top: 0.55em;
-      padding-right: 0.1em;
     }
     width: @size;
     .vertical &{
@@ -238,6 +238,7 @@
     .smallWidget(@size1);
     .widgetData{
       text-align: center;
+      margin-top: @smallFont;
     }
   }
   &.timeStatusWidget{
@@ -252,12 +253,14 @@
     }
     .widgetData{
       text-align: center;
+      margin-top: unset;
     }
   }
   &.etaWidget{
     .smallWidget(@size1);
     .widgetData{
       text-align: center;
+      margin-top: unset;
       &.markerName{
         margin-top: 0;
       }
