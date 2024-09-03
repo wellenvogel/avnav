@@ -121,7 +121,7 @@ Helper.keysToStr=(dict)=>{
 
 Helper.getParam=(key)=>{
     // Find the key and everything up to the ampersand delimiter
-    let value=RegExp(""+key+"[^&]+").exec(window.location.search);
+    let value=RegExp("[?&]"+key+"=[^?&]*").exec(window.location.search);
 
     // Return the unescaped value minus everything starting from the equals sign or an empty string
     return decodeURIComponent(!!value ? value.toString().replace(/^[^=]+./,"") : "");

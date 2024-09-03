@@ -47,21 +47,25 @@ const toggleFullscreenDefault=()=>{
 
 let toggleFullscreen=toggleFullscreenDefault;
 
+const handleSplitMode=()=>{
+    if (globalStore.getData(keys.gui.global.splitMode)){
+        fullScreenAvailable=()=> ! window.avnavAndroid;
+        isFullScreen=()=>{return globalStore.getData(keys.gui.global.isFullScreen)};
+        toggleFullscreen=()=>{
+            splitsupport.sendToFrame('fullscreen');
+        }
+        splitsupport.subscribe('fullScreenChanged',(data)=>{
+            globalStore.storeData(keys.gui.global.isFullScreen,data.isFullScreen);
+        })
+    }
+}
 
 const init=()=>{
     try {
         globalStore.register(()=>{
-            if (globalStore.getData(keys.gui.global.splitMode)){
-                fullScreenAvailable=()=> ! window.avnavAndroid;
-                isFullScreen=()=>{return globalStore.getData(keys.gui.global.isFullScreen)};
-                toggleFullscreen=()=>{
-                    splitsupport.sendToFrame('fullscreen');
-                }
-                splitsupport.subscribe('fullScreenChanged',(data)=>{
-                    globalStore.storeData(keys.gui.global.isFullScreen,data.isFullScreen);
-                })
-            }
+            handleSplitMode();
         },[keys.gui.global.splitMode]);
+        handleSplitMode();
         let mode=Helper.getParam("fullscreen");
         if (mode) {
             splitsupport.addUrlParameter("fullscreen", mode);
@@ -139,14 +143,10 @@ const fullScreenDefinition={
     overflow: true
 };
 
-const getParameter=()=>{
-    return fullscreenParameter;
-}
 
 export default {
     fullScreenAvailable,
     fullScreenDefinition,
     toggleFullscreen,
-    init,
-    getParameter
+    init
 };
