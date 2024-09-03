@@ -41,7 +41,7 @@ const AlarmWidget=(props)=>{
         if (! alarmText) {
             if (! props.isEditing || ! props.mode) return null;
             return <div className={classes} onClick={onClick} {...ddProps} style={style}>
-                <div className="infoLeft">Alarm</div>
+                <WidgetHead caption={"Alarm"}/>
                 </div>;
         }
         return (
