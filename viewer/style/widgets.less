@@ -482,17 +482,19 @@
       padding: 0;
       margin: 0;
 
-      &.vertical {
+    }
+    &.vertical {
+      .listContainer {
         .flex-direction(column);
+      }
 
-        .widget {
-          height: unset;
-          min-height: 0;
-          width: 100%;
-          .flex-grow(1);
-          .flex-shrink(1);
-          border-right: unset;
-        }
+      .widget {
+        height: unset;
+        min-height: 0;
+        width: 100%;
+        .flex-grow(1);
+        .flex-shrink(1);
+        border-right: unset;
       }
     }
   }
