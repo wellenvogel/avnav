@@ -193,7 +193,7 @@ class MapPage extends React.Component{
                 dragdrop={globalStore.getData(keys.gui.global.layoutEditing)}
                 horizontal={mode === 'horizontal'}
                 allowOther={true}
-                dragFrame={panel}
+                dragFrame={panelItems.name}
                 onSortEnd={(oldIndex,newIndex,frameId,targetFrameId)=>{
                     LayoutHandler.withTransaction(this.getLayoutPage(),(handler)=>handler.moveItem(self.props.id, frameId, oldIndex, newIndex,targetFrameId))
                     }}

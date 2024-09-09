@@ -299,8 +299,8 @@ class GpsPage extends React.Component{
                 if (! panelData.list) return;
                 let sum = getWeightSum(panelData.list);
                 let prop={
-                    name: panelName,
-                    dragFrame: panelName,
+                    name: panelData.name,
+                    dragFrame: panelData.name,
                     allowOther: true,
                     className: 'widgetContainer',
                     itemCreator: (widget)=>{ return widgetCreator(widget,sum);},
