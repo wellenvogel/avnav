@@ -7,55 +7,55 @@ import PropTypes from 'prop-types';
 import keys from '../util/keys.jsx';
 import {useKeyEventHandler} from '../util/GuiHelpers.js';
 import AlarmHandler from '../nav/alarmhandler.js';
-import {useAvNavSortable} from "../hoc/Sortable";
-import {WidgetHead} from "./WidgetBase";
+import {WidgetFrame} from "./WidgetBase";
 
 
 //TODO: compare alarm info correctly
-const AlarmWidget=(props)=>{
-    useKeyEventHandler({name:'stop'},"alarm",()=>{
+const AlarmWidget = (props) => {
+    useKeyEventHandler({name: 'stop'}, "alarm", () => {
         if (props.onClick) props.onClick();
     })
-    const onClick=(ev)=>{
-        if (props.onClick){
+    const onClick = (ev) => {
+        if (props.onClick) {
             props.onClick(ev);
         }
         ev.stopPropagation();
     }
-    const ddProps=useAvNavSortable(props.dragId);
-        if (props.disabled) return null;
-        let classes="widget alarmWidget "+props.className||"";
-        let alarmText=undefined;
-        if (props.alarmInfo){
-            let list=AlarmHandler.sortedActiveAlarms(props.alarmInfo)
-            list.forEach((al)=>{
-                if (alarmText){
-                    alarmText+=","+al.name;
-                }
-                else {
-                    alarmText=al.name;
-                }
-            })
-        }
-        const style={...props.style,...ddProps.style};
-        if (! alarmText) {
-            if (! props.isEditing || ! props.mode) return null;
-            return <div className={classes} onClick={onClick} {...ddProps} style={style}>
-                <WidgetHead caption={"Alarm"}/>
-                </div>;
-        }
-        return (
-        <div className={classes} onClick={onClick} {...ddProps} style={style}>
-            <WidgetHead caption={"Alarm"}/>
-            <div>
-                <span className="alarmInfo">{alarmText}</span>
-            </div>
-        </div>
-        );
+    if (props.disabled) return null;
+    let alarmText = undefined;
+    if (props.alarmInfo) {
+        let list = AlarmHandler.sortedActiveAlarms(props.alarmInfo)
+        list.forEach((al) => {
+            if (alarmText) {
+                alarmText += "," + al.name;
+            } else {
+                alarmText = al.name;
+            }
+        })
     }
+    if (! alarmText){
+        if (! props.isEditing || ! props.mode) return null;
+    }
+    const Content = () => {
+        if (!alarmText) return null;
+        return <div>
+            <span className="alarmInfo">{alarmText}</span>
+        </div>
+    }
+    return (
+        <WidgetFrame
+            {...props}
+            className={(props.className || "") + " alarmWidget"}
+            caption="Alarm"
+            onClick={onClick}
+        >
+            <Content/>
+        </WidgetFrame>
+    );
+}
 
 
-AlarmWidget.propTypes={
+AlarmWidget.propTypes = {
     className: PropTypes.string,
     onClick: PropTypes.func,
     alarmInfo: PropTypes.object,
@@ -66,7 +66,7 @@ AlarmWidget.propTypes={
     mode: PropTypes.string
 };
 
-AlarmWidget.storeKeys={
+AlarmWidget.storeKeys = {
     alarmInfo: keys.nav.alarms.all,
     isEditing: keys.gui.global.layoutEditing,
     disabled: keys.gui.global.preventAlarms
