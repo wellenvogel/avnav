@@ -7,7 +7,6 @@ import PropTypes from 'prop-types';
 import keys from '../util/keys.jsx';
 import Formatter from '../util/formatter.js';
 import {WidgetFrame, WidgetProps} from "./WidgetBase";
-import {SortableProps} from "../hoc/Sortable";
 
 const ActiveRouteWidget =(props)=>{
         if (!props.routeName && ! props.isEditing) return null;
@@ -38,7 +37,6 @@ const ActiveRouteWidget =(props)=>{
 
 ActiveRouteWidget.propTypes={
     ...WidgetProps,
-    ...SortableProps,
     isAproaching: PropTypes.bool,
     routeName: PropTypes.string,
     eta: PropTypes.objectOf(Date),

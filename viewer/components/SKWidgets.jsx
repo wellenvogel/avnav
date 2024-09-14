@@ -5,7 +5,6 @@
 import React from 'react';
 import Formatter from "../util/formatter";
 import PropTypes from "prop-types";
-import {SortableProps} from "../hoc/Sortable";
 import {WidgetFrame, WidgetProps} from "./WidgetBase";
 
 const rad2deg=(rad,inDeg)=>{
@@ -46,7 +45,6 @@ export const SKRollWidget=(props)=>{
 
 
 SKRollWidget.propTypes={
-    ...SortableProps,
     ...WidgetProps,
     unit: PropTypes.string,
     value: PropTypes.oneOfType([PropTypes.string,PropTypes.number]),
@@ -90,7 +88,6 @@ export const SKPitchWidget = (props) => {
 }
 
 SKPitchWidget.propTypes={
-    ...SortableProps,
     ...WidgetProps,
     unit: PropTypes.string,
     value: PropTypes.oneOfType([PropTypes.string,PropTypes.number]),

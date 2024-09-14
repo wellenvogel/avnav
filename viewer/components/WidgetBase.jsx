@@ -28,7 +28,6 @@ import PropTypes from "prop-types";
 import React from "react";
 import {useKeyEventHandler} from "../util/GuiHelpers";
 import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
-import Value from "./Value";
 
 export const WidgetProps={
     onClick:    PropTypes.func,
@@ -36,7 +35,8 @@ export const WidgetProps={
     className:  PropTypes.string,
     mode:       PropTypes.string, //display info side by side if small
     caption:    PropTypes.string,
-    nightMode:  PropTypes.bool
+    nightMode:  PropTypes.bool,
+    ...SortableProps
 }
 
 export const WidgetHead=(props)=> {

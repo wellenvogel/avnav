@@ -7,9 +7,7 @@ import PropTypes from 'prop-types';
 import keys from '../util/keys.jsx';
 import PropertyHandler from '../util/propertyhandler.js';
 import AisFormatter from '../nav/aisformatter.jsx';
-import {useKeyEventHandler} from '../util/GuiHelpers.js';
-import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
-import {WidgetFrame, WidgetHead, WidgetProps} from "./WidgetBase";
+import {WidgetFrame, WidgetProps} from "./WidgetBase";
 
 
 const AisTargetWidget = (props) => {
@@ -76,7 +74,6 @@ AisTargetWidget.storeKeys = {
 };
 
 AisTargetWidget.propTypes = {
-    ...SortableProps,
     ...WidgetProps,
     isEditing: PropTypes.bool,
     current: PropTypes.object,

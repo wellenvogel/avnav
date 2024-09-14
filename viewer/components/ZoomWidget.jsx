@@ -7,7 +7,6 @@ import PropTypes from 'prop-types';
 import keys from '../util/keys.jsx';
 import Formatter from '../util/formatter.js';
 import {WidgetFrame, WidgetProps} from "./WidgetBase";
-import {SortableProps} from "../hoc/Sortable";
 
 const ZoomWidget =(props)=>{
         let classes="zoomWidget ";
@@ -34,7 +33,6 @@ const ZoomWidget =(props)=>{
 
 ZoomWidget.propTypes={
     ...WidgetProps,
-    ...SortableProps,
     zoom: PropTypes.number,
     requiredZoom: PropTypes.number,
     default: PropTypes.number,

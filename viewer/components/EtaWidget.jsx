@@ -6,9 +6,7 @@ import React from "react";
 import PropTypes from 'prop-types';
 import keys from '../util/keys.jsx';
 import Formatter from '../util/formatter.js';
-import {useKeyEventHandler} from '../util/GuiHelpers.js';
-import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
-import {WidgetFrame, WidgetHead, WidgetProps} from "./WidgetBase";
+import {WidgetFrame, WidgetProps} from "./WidgetBase";
 
 
 const EtaWidget = (props) => {
@@ -23,7 +21,6 @@ const EtaWidget = (props) => {
 };
 
 EtaWidget.propTypes={
-    ...SortableProps,
     ...WidgetProps,
     eta: PropTypes.objectOf(Date),
     wpname: PropTypes.string

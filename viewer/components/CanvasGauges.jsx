@@ -4,12 +4,10 @@
 
 import React, {useEffect, useRef} from "react";
 import PropTypes from 'prop-types';
-import {useKeyEventHandler} from '../util/GuiHelpers.js';
 import {RadialGauge,LinearGauge} from 'canvas-gauges';
 import base from '../base.js';
 import assign from 'object-assign';
-import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
-import {WidgetFrame, WidgetHead, WidgetProps} from "./WidgetBase";
+import {WidgetFrame, WidgetProps} from "./WidgetBase";
 
 export const getTicks=(minValue,maxValue,number)=>{
     if (minValue === undefined || maxValue === undefined || number === undefined) return;
@@ -155,7 +153,6 @@ const Gauge =(rprops)=>{
 
 Gauge.propTypes={
     ...WidgetProps,
-    ...SortableProps,
     gauge: PropTypes.oneOfType([PropTypes.object,PropTypes.func]).isRequired,
     name: PropTypes.string,
     unit: PropTypes.string,

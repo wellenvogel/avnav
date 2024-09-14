@@ -22,7 +22,7 @@
 ###############################################################################
 */
 import {useKeyEventHandler} from "../util/GuiHelpers";
-import {moveItem, SortableProps, useAvNavSortable, useAvnavSortContext} from "../hoc/Sortable";
+import {moveItem, useAvNavSortable, useAvnavSortContext} from "../hoc/Sortable";
 import {WidgetProps} from "./WidgetBase";
 import PropTypes from "prop-types";
 import React, {useState} from "react";
@@ -180,7 +180,6 @@ export const CombinedWidget=(props)=>{
 }
 CombinedWidget.propTypes={
     ...WidgetProps,
-    ...SortableProps,
     children: PropTypes.array,
     vertical: PropTypes.bool,
     editableParameters: PropTypes.object

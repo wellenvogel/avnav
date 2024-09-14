@@ -8,7 +8,6 @@ import keys from '../util/keys.jsx';
 import Formatter from '../util/formatter.js'
 import routeobjects from '../nav/routeobjects.js';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
-import {SortableProps} from "../hoc/Sortable";
 import {WidgetFrame, WidgetProps} from "./WidgetBase";
 
 const editor=new RouteEdit(RouteEdit.MODES.EDIT);
@@ -57,7 +56,6 @@ const EditRouteWidget = (props) => {
 
 
 EditRouteWidget.propTypes={
-    ...SortableProps,
     ...WidgetProps,
     route:   PropTypes.objectOf(routeobjects.Route),
     remain: PropTypes.number,

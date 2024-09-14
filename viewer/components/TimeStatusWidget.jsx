@@ -7,7 +7,6 @@ import PropTypes from "prop-types";
 import keys from "../util/keys.jsx";
 import Formatter from "../util/formatter.js";
 import globalStore from '../util/globalstore.jsx';
-import {SortableProps} from "../hoc/Sortable";
 import {WidgetFrame, WidgetProps} from "./WidgetBase";
 
 const TimeStatusWidget = (props=> {
@@ -28,7 +27,6 @@ const TimeStatusWidget = (props=> {
 });
 
 TimeStatusWidget.propTypes={
-    ...SortableProps,
     ...WidgetProps,
     time: PropTypes.objectOf(Date),
     gpsValid: PropTypes.bool

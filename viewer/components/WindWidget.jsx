@@ -7,7 +7,6 @@ import PropTypes from 'prop-types';
 import Formatter from '../util/formatter';
 import keys from '../util/keys.jsx';
 import navcompute from '../nav/navcompute.js';
-import {SortableProps} from "../hoc/Sortable";
 import {WidgetFrame, WidgetHead, WidgetProps} from "./WidgetBase";
 
 export const getWindData=(props)=>{
@@ -124,7 +123,6 @@ const WindWidget = (props) => {
 
 WindWidget.propTypes={
     ...WidgetProps,
-    ...SortableProps,
     windAngle:  PropTypes.number,
     windSpeed:  PropTypes.number,
     windAngleTrue:  PropTypes.number,

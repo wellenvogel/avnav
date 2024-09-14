@@ -4,11 +4,9 @@
 
 import React, {useEffect, useRef, useState} from "react";
 import PropTypes from 'prop-types';
-import {useKeyEventHandler} from '../util/GuiHelpers.js';
 import ReactHtmlParser,{convertNodeToElement} from 'react-html-parser/dist/react-html-parser.min.js';
 import base from '../base.js';
-import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
-import {WidgetFrame, WidgetHead, WidgetProps} from "./WidgetBase";
+import {WidgetFrame, WidgetProps} from "./WidgetBase";
 
 const REACT_EVENTS=('onCopy onCut onPaste onCompositionEnd onCompositionStart onCompositionUpdate onKeyDown onKeyPress onKeyUp'+
     ' onFocus onBlur onChange onInput onInvalid onReset onSubmit onError onLoad onClick onContextMenu onDoubleClick onDrag onDragEnd onDragEnter onDragExit'+
@@ -111,7 +109,6 @@ export const ExternalWidget =(props)=>{
 }
 
 ExternalWidget.propTypes={
-    ...SortableProps,
     ...WidgetProps,
     name: PropTypes.string,
     unit: PropTypes.string,

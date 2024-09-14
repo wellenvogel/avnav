@@ -7,7 +7,6 @@ import PropTypes from 'prop-types';
 import Formatter from '../util/formatter';
 import keys from '../util/keys.jsx';
 import navcompute from '../nav/navcompute.js';
-import {SortableProps} from "../hoc/Sortable";
 import {WidgetFrame, WidgetProps} from "./WidgetBase";
 
 const normalColors={
@@ -97,7 +96,6 @@ const XteWidget = (props) => {
 
 XteWidget.propTypes={
     ...WidgetProps,
-    ...SortableProps,
     markerXte:  PropTypes.number,
     xteMax:     PropTypes.number
 };

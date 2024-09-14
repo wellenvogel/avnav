@@ -10,7 +10,6 @@ import ItemList from './ItemList.jsx';
 import WaypointItem from './WayPointItem.jsx';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
 import GuiHelper from '../util/GuiHelpers.js';
-import {SortableProps} from "../hoc/Sortable";
 import {WidgetFrame, WidgetProps} from "./WidgetBase";
 
 const editor=new RouteEdit(RouteEdit.MODES.EDIT);
@@ -66,7 +65,6 @@ const RoutePointsWidget = (props) => {
 
 
 RoutePointsWidget.propTypes={
-    ...SortableProps,
     ...WidgetProps,
     route:          PropTypes.objectOf(routeobjects.Route),
     isActive:       PropTypes.bool,

@@ -6,7 +6,6 @@ import React from "react";
 import PropTypes from "prop-types";
 import keys from "../util/keys.jsx";
 import Formatter from "../util/formatter.js";
-import {SortableProps} from "../hoc/Sortable";
 import {WidgetFrame, WidgetProps} from "./WidgetBase";
 
 const DateTimeWidget = (props) => {
@@ -28,7 +27,6 @@ const DateTimeWidget = (props) => {
 }
 
 DateTimeWidget.propTypes={
-    ...SortableProps,
     ...WidgetProps,
     time: PropTypes.objectOf(Date),
     gpsValid: PropTypes.bool

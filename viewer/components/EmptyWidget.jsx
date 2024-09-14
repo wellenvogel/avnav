@@ -4,7 +4,6 @@
 
 import React from "react";
 import PropTypes from 'prop-types';
-import {SortableProps} from "../hoc/Sortable";
 import {WidgetFrame, WidgetProps} from "./WidgetBase";
 
 const EmptyWidget =(props)=>{
@@ -15,7 +14,6 @@ const EmptyWidget =(props)=>{
     }
 
 EmptyWidget.propTypes={
-    ...SortableProps,
     ...WidgetProps,
     classes: PropTypes.string
 };

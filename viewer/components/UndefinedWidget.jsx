@@ -3,7 +3,6 @@
  */
 
 import React from "react";
-import {SortableProps} from "../hoc/Sortable";
 import {WidgetFrame, WidgetProps} from "./WidgetBase";
 
 const UndefinedWidget=(props)=>{
@@ -18,7 +17,6 @@ const UndefinedWidget=(props)=>{
     }
 
 UndefinedWidget.propTypes={
-    ...SortableProps,
     ...WidgetProps
 };
 
