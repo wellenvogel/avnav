@@ -63,6 +63,9 @@
     opacity: 0.7;
     margin-left: 0.2em;
   }
+  .resize,.noresize{
+    .flex(1);
+  }
 }
 //----- dashboard pages (gps page) ------
 .hfield .widgetContainer .widget{
@@ -254,12 +257,16 @@
     .widgetData{
       text-align: center;
       margin-top: unset;
+      margin-left: auto;
+      margin-right: auto;
     }
   }
   &.etaWidget{
     .smallWidget(@size1);
     .widgetData{
       text-align: center;
+      margin-left: auto;
+      margin-right: auto;
       margin-top: unset;
       &.markerName{
         margin-top: 0;
@@ -424,11 +431,14 @@
     }
   }
   &.routePointsWidget {
-    .activeEntry .more {
-      display: inline-block;
+    .more {
+      display: none;
       position: absolute;
       right: 0;
       top: 20%;
+    }
+    .activeEntry .more{
+      display: inline-block;
     }
     overflow: hidden;
     .flex-shrink(1) !important;

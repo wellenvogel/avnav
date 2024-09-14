@@ -30,7 +30,7 @@ import theFactory from "./WidgetFactory";
 import {EditableParameter} from "./EditableParameters";
 import ItemList from "./ItemList";
 import DialogButton from "./DialogButton";
-import Dialogs, {useDialog} from "./OverlayDialog";
+import {useDialog} from "./OverlayDialog";
 import EditWidgetDialog from "./EditWidgetDialog";
 import keys from "../util/keys";
 
@@ -172,7 +172,7 @@ export const CombinedWidget=(props)=>{
                 let Item = theFactory.createWidget(item, {...childProperties,style:style});
                 cidx++;
                 return (iprops)=>{
-                    return  <Item key={cidx} {...iprops}/>
+                    return  <Item key={cidx} {...iprops} editing={editing}/>
             }}
             }
         />

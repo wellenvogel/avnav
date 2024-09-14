@@ -9,7 +9,7 @@ import {RadialGauge,LinearGauge} from 'canvas-gauges';
 import base from '../base.js';
 import assign from 'object-assign';
 import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
-import {WidgetHead, WidgetProps} from "./WidgetBase";
+import {WidgetFrame, WidgetHead, WidgetProps} from "./WidgetBase";
 
 export const getTicks=(minValue,maxValue,number)=>{
     if (minValue === undefined || maxValue === undefined || number === undefined) return;
@@ -62,8 +62,6 @@ const getProps=(props)=>{
 }
 
 const Gauge =(rprops)=>{
-    useKeyEventHandler(rprops,"widget");
-    const ddProps = useAvNavSortable(rprops.dragId);
     let canvas = useRef(null);
     let gauge = useRef(undefined);
     useEffect(()=>{
@@ -145,14 +143,13 @@ const Gauge =(rprops)=>{
     let textColor=props.colorText?props.colorText:defaultColors.text;
     let textStyle={color:textColor};
     return (
-        <div className={classes} onClick={props.onClick} style={style} {...ddProps}>
-            <WidgetHead {...props}/>
+        <WidgetFrame {...props} className={classes} style={style}>
             <div className="canvasFrame" ref={frame}>
                 {props.drawValue?
                 <div className="gaugeValue" ref={value} style={textStyle}>{nvalue}</div>:null}
                 <canvas className='widgetData' ref={canvasRef}></canvas>
             </div>
-        </div>
+        </WidgetFrame>
         );
 };
 

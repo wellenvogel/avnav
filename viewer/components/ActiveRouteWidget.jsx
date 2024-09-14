@@ -6,20 +6,15 @@ import React from "react";
 import PropTypes from 'prop-types';
 import keys from '../util/keys.jsx';
 import Formatter from '../util/formatter.js';
-import {useKeyEventHandler} from '../util/GuiHelpers.js';
-import {useAvNavSortable} from "../hoc/Sortable";
-
+import {WidgetFrame, WidgetProps} from "./WidgetBase";
+import {SortableProps} from "../hoc/Sortable";
 
 const ActiveRouteWidget =(props)=>{
-    useKeyEventHandler(props,"widget");
-    const ddProps=useAvNavSortable(props.dragId);
         if (!props.routeName && ! props.isEditing) return null;
-        let classes = "widget activeRouteWidget " + props.className || "";
+        let classes = "activeRouteWidget " + props.className || "";
         if (props.isApproaching) classes += " approach ";
-        const style={...props.style,...ddProps.style};
         return (
-            <div className={classes} onClick={props.onClick} style={style} {...ddProps}>
-                <div className="infoLeft">RTE</div>
+            <WidgetFrame {...props} className={classes} caption="RTE" unit={undefined}>
                 <div className="widgetData">
                     <div className="routeName">{props.routeName}</div>
                     <div>
@@ -36,26 +31,20 @@ const ActiveRouteWidget =(props)=>{
                         : <div></div>
                     }
                 </div>
-            </div>
+            </WidgetFrame>
         );
     }
 
 
 ActiveRouteWidget.propTypes={
-    //formatter: React.PropTypes.func,
-    onClick: PropTypes.func,
-    className: PropTypes.string,
-    updateCallback: PropTypes.func,
+    ...WidgetProps,
+    ...SortableProps,
     isAproaching: PropTypes.bool,
     routeName: PropTypes.string,
     eta: PropTypes.objectOf(Date),
     remain: PropTypes.number,
     nextCourse: PropTypes.number,
-    dragId: PropTypes.string,
-    isEditing: PropTypes.bool,
-    isApproaching: PropTypes.bool,
-    style: PropTypes.object
-
+    isEditing: PropTypes.bool
 };
 ActiveRouteWidget.storeKeys={
     isApproaching: keys.nav.route.isApproaching,

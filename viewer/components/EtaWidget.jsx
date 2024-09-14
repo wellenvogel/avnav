@@ -8,25 +8,19 @@ import keys from '../util/keys.jsx';
 import Formatter from '../util/formatter.js';
 import {useKeyEventHandler} from '../util/GuiHelpers.js';
 import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
-import {WidgetHead, WidgetProps} from "./WidgetBase";
+import {WidgetFrame, WidgetHead, WidgetProps} from "./WidgetBase";
 
 
-const EtaWidget =(props)=>{
-    useKeyEventHandler(props,"widget");
-    const ddProps=useAvNavSortable(props.dragId);
-    let eta=props.eta?Formatter.formatTime(props.eta):'--:--:--';
-    let classes="widget etaWidget "+props.className||"";
-    const style={...props.style,...ddProps.style};
-        return (
-        <div className={classes} {...ddProps} onClick={props.onClick}  style={style}>
-            <WidgetHead caption={props.caption}/>
-            <div className="resize">
-                <div className="widgetData markerEta">{eta}</div>
-                <div className="widgetData markerName" >{props.wpname}</div>
-            </div>
-        </div>
-        );
-    };
+const EtaWidget = (props) => {
+    let eta = props.eta ? Formatter.formatTime(props.eta) : '--:--:--';
+    let classes = "etaWidget " + props.className || "";
+    return (
+        <WidgetFrame {...props} className={classes}>
+            <div className="widgetData markerEta">{eta}</div>
+            <div className="widgetData markerName">{props.wpname}</div>
+        </WidgetFrame>
+    );
+};
 
 EtaWidget.propTypes={
     ...SortableProps,
