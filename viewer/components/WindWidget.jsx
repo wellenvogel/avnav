@@ -6,10 +6,9 @@ import React from "react";
 import PropTypes from 'prop-types';
 import Formatter from '../util/formatter';
 import keys from '../util/keys.jsx';
-import {useKeyEventHandler} from '../util/GuiHelpers.js';
 import navcompute from '../nav/navcompute.js';
-import {useAvNavSortable} from "../hoc/Sortable";
-import {WidgetHead} from "./WidgetBase";
+import {SortableProps} from "../hoc/Sortable";
+import {WidgetFrame, WidgetHead, WidgetProps} from "./WidgetBase";
 
 export const getWindData=(props)=>{
     let kind = props.kind;
@@ -59,8 +58,6 @@ export const getWindData=(props)=>{
 }
 
 const WindWidget = (props) => {
-    useKeyEventHandler(props, "widget");
-    const ddProps = useAvNavSortable(props.dragId);
     let wind = getWindData(props);
     const names = {
         A: {
@@ -76,8 +73,7 @@ const WindWidget = (props) => {
             angle: 'TWA'
         }
     }
-    let classes = "widget windWidget " + props.className || "";
-    let style = {...props.style, ...ddProps.style};
+    let classes = "windWidget " + props.className || "";
     let windSpeedStr = '';
     try {
         windSpeedStr = parseFloat(wind.windSpeed);
@@ -97,7 +93,7 @@ const WindWidget = (props) => {
         if (wind.windAngle > 180) wind.windAngle -= 360;
     }
     return (
-        <div className={classes} onClick={props.onClick} {...ddProps} style={style}>
+        <WidgetFrame {...props} className={classes} caption={undefined} unit={undefined}>
             {(props.mode === 'horizontal') ?
                 <React.Fragment>
                     <WidgetHead caption={'W' + wind.suffix}/>
@@ -110,7 +106,6 @@ const WindWidget = (props) => {
                 </React.Fragment>
                 :
                 <React.Fragment>
-                    <div className="resize">
                         <div className="windInner">
                             <WidgetHead caption={names[wind.suffix].angle} unit='°'/>
                             <div className='widgetData'>{Formatter.formatDirection(wind.windAngle)}</div>
@@ -119,18 +114,17 @@ const WindWidget = (props) => {
                             <WidgetHead caption={names[wind.suffix].speed} unit={props.showKnots ? "kn" : "m/s"}/>
                             <div className='widgetData'>{windSpeedStr}</div>
                         </div>
-                    </div>
                 </React.Fragment>
             }
-        </div>
+        </WidgetFrame>
 
     );
 }
 
 
 WindWidget.propTypes={
-    onClick: PropTypes.func,
-    className:    PropTypes.string,
+    ...WidgetProps,
+    ...SortableProps,
     windAngle:  PropTypes.number,
     windSpeed:  PropTypes.number,
     windAngleTrue:  PropTypes.number,
@@ -139,9 +133,7 @@ WindWidget.propTypes={
     kind: PropTypes.string, //true,apparent,auto,
     showKnots: PropTypes.bool,
     show360: PropTypes.bool,
-    mode: PropTypes.string,
-    dragId: PropTypes.string,
-    style: PropTypes.object
+    mode: PropTypes.string
 };
 
 WindWidget.storeKeys={

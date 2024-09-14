@@ -10,7 +10,7 @@ import navcompute from '../nav/navcompute.js';
 import {useKeyEventHandler} from '../util/GuiHelpers.js';
 import {getWindData} from "./WindWidget";
 import {useAvNavSortable} from "../hoc/Sortable";
-import {WidgetFrame, WidgetHead} from "./WidgetBase";
+import {WidgetFrame} from "./WidgetBase";
 
 const normalColors={
     green:  'rgba(5, 128, 30, 0.57)',

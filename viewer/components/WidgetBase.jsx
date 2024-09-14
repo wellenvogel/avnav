@@ -35,7 +35,8 @@ export const WidgetProps={
     style:      PropTypes.object,
     className:  PropTypes.string,
     mode:       PropTypes.string, //display info side by side if small
-    caption:    PropTypes.string
+    caption:    PropTypes.string,
+    nightMode:  PropTypes.bool
 }
 
 export const WidgetHead=(props)=> {

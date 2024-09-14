@@ -65,6 +65,8 @@
   }
   .resize,.noresize{
     .flex(1);
+    min-width: 0;
+    min-height: 0;
   }
 }
 //----- dashboard pages (gps page) ------
@@ -398,8 +400,12 @@
   &.DepthDisplay{
     .bigWidget(@size2);
   }
-  &.xteDisplay{
-    .smallWidget(@size1)
+  &.xteWidget{
+    .smallWidget(@size1);
+    canvas{
+      margin-right: auto;
+      margin-left: auto;
+    }
   }
   &.windGraphics{
     .smallWidget(@size2);
