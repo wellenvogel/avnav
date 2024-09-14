@@ -15,11 +15,11 @@ const editor=new RouteEdit(RouteEdit.MODES.EDIT);
 
 const EditRouteWidget = (props) => {
     let [route, notUsed, isActive] = StateHelper.getRouteIndexFlag(props);
-    let classes = "editRouteWidget " + props.className || "";
+    let classes = "editRouteWidget";
     if (isActive) classes += " activeRoute ";
     if (!route) {
         return (
-            <WidgetFrame {...props} className={classes} caption="RTE" unit={undefined}>
+            <WidgetFrame {...props} addClass={classes} caption="RTE" unit={undefined}>
                 <div className="routeName">No Route</div>
             </WidgetFrame>
         )
@@ -30,7 +30,7 @@ const EditRouteWidget = (props) => {
     let remain = isActive ? props.remain : undefined;
     let eta = isActive ? props.eta : undefined;
     return (
-        <WidgetFrame {...props} className={classes} caption="RTE" unit={undefined}>
+        <WidgetFrame {...props} addClass={classes} caption="RTE" unit={undefined}>
             <div className="routeName widgetData">{rname}</div>
             <div className="widgetData">
                 <span className="label">PTS:</span>

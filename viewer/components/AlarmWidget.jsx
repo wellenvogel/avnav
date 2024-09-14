@@ -45,7 +45,7 @@ const AlarmWidget = (props) => {
     return (
         <WidgetFrame
             {...props}
-            className={(props.className || "") + " alarmWidget"}
+            addClass="alarmWidget"
             caption="Alarm"
             unit={undefined}
             onClick={onClick}

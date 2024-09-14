@@ -31,13 +31,12 @@ export const SKRollWidget=(props)=>{
                 degreeArrow = degreeArrow + "\xA0\u21D2";
             }
         }
-        let classes="SKRollWidget "+props.className||"";
         let wdClasses="widgetData";
         if (Math.abs(rad2deg(props.value,props.inDegree)) >= props.criticalValue){
             wdClasses+=" critical";
         }
         return (
-            <WidgetFrame {...props} className={classes} >
+            <WidgetFrame {...props} addClass="SKRollWidget" >
                 <div className={wdClasses}>{degreeArrow}</div>
             </WidgetFrame>
         );
@@ -75,13 +74,12 @@ export const SKPitchWidget = (props) => {
             degreeArrow += "\xA0\u21D1";
         }
     }
-    let classes = "SKPitchWidget " + props.className || "";
     let wdClasses = "widgetData";
     if (Math.abs(rad2deg(props.value, props.inDegree)) >= props.criticalValue) {
         wdClasses += " critical";
     }
     return (
-        <WidgetFrame {...props} className={classes}>
+        <WidgetFrame {...props} addClass="SKPitchWidget">
             <div className={wdClasses}>{degreeArrow}</div>
         </WidgetFrame>
     );

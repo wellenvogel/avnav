@@ -19,7 +19,7 @@ const DirectWidget=(wprops)=>{
         else val=vdef+"";
     }
     return (
-        <WidgetFrame {...props}>
+        <WidgetFrame {...props} addClass="DirectWidget" >
             <div className='widgetData'>
                 <Value value={val}/>
             </div>

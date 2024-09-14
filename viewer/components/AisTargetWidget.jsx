@@ -16,7 +16,6 @@ const AisTargetWidget = (props) => {
         props.onClick({...props, mmsi: props.current ? props.current.mmsi : undefined});
     }
     let current = props.current || {};
-    let classes = "aisTargetWidget " + props.className || "";
     let small = (props.mode === "horizontal");
     let aisProperties = {};
     let color = undefined;
@@ -30,7 +29,7 @@ const AisTargetWidget = (props) => {
     if (current.mmsi !== undefined || props.mode === "gps" || props.isEditing) {
         const style = {...props.style, backgroundColor: color};
         return (
-            <WidgetFrame {...props} className={classes} style={style}
+            <WidgetFrame {...props} addClass="aisTargetWidget" style={style}
                  onClick={click} unit={undefined} caption='AIS'
             >
                 <div className="aisPart">

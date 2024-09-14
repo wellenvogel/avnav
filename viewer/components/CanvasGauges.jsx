@@ -134,14 +134,13 @@ const Gauge =(rprops)=>{
         }
     }
     let defaultColors=props.nightMode?nightColors:normalColors;
-    let classes="widget canvasGauge";
-    if (props.className) classes+=" "+props.className;
+    let classes="canvasGauge";
     if (props.typeClass) classes+=" "+props.typeClass;
     let style=props.style||{};
     let textColor=props.colorText?props.colorText:defaultColors.text;
     let textStyle={color:textColor};
     return (
-        <WidgetFrame {...props} className={classes} style={style}>
+        <WidgetFrame {...props} addClass={classes} style={style}>
             <div className="canvasFrame" ref={frame}>
                 {props.drawValue?
                 <div className="gaugeValue" ref={value} style={textStyle}>{nvalue}</div>:null}

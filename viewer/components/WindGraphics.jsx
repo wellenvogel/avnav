@@ -10,7 +10,7 @@ import navcompute from '../nav/navcompute.js';
 import {useKeyEventHandler} from '../util/GuiHelpers.js';
 import {getWindData} from "./WindWidget";
 import {useAvNavSortable} from "../hoc/Sortable";
-import {WidgetFrame} from "./WidgetBase";
+import {WidgetFrame, WidgetProps} from "./WidgetBase";
 
 const normalColors={
     green:  'rgba(5, 128, 30, 0.57)',
@@ -142,9 +142,6 @@ const WindGraphics = (props) => {
         canvas = item;
         setTimeout(drawWind, 0);
     }
-
-
-    let classes = "windGraphics " + props.classes || "" + " " + props.className || "";
     setTimeout(drawWind, 0);
     let current = getWindData(props);
     let windSpeed = "";
@@ -159,7 +156,7 @@ const WindGraphics = (props) => {
     } catch (e) {
     }
     return (
-        <WidgetFrame {...props} className={classes} unit={showKnots ? "kn" : "m/s"} caption="Wind" resize={false}>
+        <WidgetFrame {...props} addClass="windGraphics" unit={showKnots ? "kn" : "m/s"} caption="Wind" resize={false}>
             <canvas className='widgetData' ref={canvasRef}></canvas>
             <div className="windSpeed">{windSpeed}</div>
             <div className="windReference">{current.suffix}</div>
@@ -170,8 +167,7 @@ const WindGraphics = (props) => {
 }
 
 WindGraphics.propTypes={
-    onClick: PropTypes.func,
-    classes: PropTypes.string,
+    ...WidgetProps,
     windSpeed: PropTypes.number,
     windAngle: PropTypes.number,
     windAngleTrue:  PropTypes.number,
@@ -180,9 +176,6 @@ WindGraphics.propTypes={
     scaleAngle: PropTypes.number,
     nightMode: PropTypes.bool,
     kind: PropTypes.string, //true,apparent,auto,
-    className: PropTypes.string,
-    dragId: PropTypes.string,
-    style: PropTypes.object,
     show360: PropTypes.bool
 };
 WindGraphics.storeKeys={

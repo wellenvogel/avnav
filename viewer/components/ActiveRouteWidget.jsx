@@ -10,10 +10,10 @@ import {WidgetFrame, WidgetProps} from "./WidgetBase";
 
 const ActiveRouteWidget =(props)=>{
         if (!props.routeName && ! props.isEditing) return null;
-        let classes = "activeRouteWidget " + props.className || "";
+        let classes = "activeRouteWidget";
         if (props.isApproaching) classes += " approach ";
         return (
-            <WidgetFrame {...props} className={classes} caption="RTE" unit={undefined}>
+            <WidgetFrame {...props} addClass={classes} caption="RTE" unit={undefined}>
                 <div className="widgetData">
                     <div className="routeName">{props.routeName}</div>
                     <div>

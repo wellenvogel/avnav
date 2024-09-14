@@ -35,11 +35,11 @@ const RoutePointsWidget = (props) => {
     });
     let [route, index, isActive] = StateHelper.getRouteIndexFlag(props);
     if ((!route || !route.points || route.points.length < 1) && !props.isEditing) return null;
-    let classes = "routePointsWidget " + props.className || "";
+    let classes = "routePointsWidget";
     if (isActive) classes += " activeRoute ";
-    if (props.mode == 'horizontal' && !props.isEditing) return null; //we do not display...
+    if (props.mode === 'horizontal' && !props.isEditing) return null; //we do not display...
     return (
-        <WidgetFrame {...props} className={classes} caption={undefined} unit={undefined}>
+        <WidgetFrame {...props} addClass={classes} caption={undefined} unit={undefined}>
             <ItemList
                 itemList={route ? route.getRoutePoints(index, props.useRhumbLine) : []}
                 itemCreator={() => {

@@ -82,10 +82,9 @@ const XteWidget = (props) => {
         context.fill();
         context.closePath();
     }
-    let classes = "xteWidget " + props.className || "";
     setTimeout(drawXte, 0);
     return (
-        <WidgetFrame {...props} className={classes} caption="XTE" unit="nm">
+        <WidgetFrame {...props} addClass="xteWidget" caption="XTE" unit="nm">
             <canvas className='widgetData' ref={canvasRef}></canvas>
         </WidgetFrame>
 

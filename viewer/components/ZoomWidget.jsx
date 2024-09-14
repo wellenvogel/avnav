@@ -9,8 +9,6 @@ import Formatter from '../util/formatter.js';
 import {WidgetFrame, WidgetProps} from "./WidgetBase";
 
 const ZoomWidget =(props)=>{
-        let classes="zoomWidget ";
-        if (props.className) classes+=" "+props.className;
         let val=props.default||'--';
         if (props.zoom !== undefined) {
             val=Formatter.formatDecimalOpt(props.zoom, 2, 1);
@@ -20,7 +18,7 @@ const ZoomWidget =(props)=>{
             rzoom=Formatter.formatDecimalOpt(props.requiredZoom,2,1);
         }
         return (
-        <WidgetFrame {...props} className={classes} unit={undefined}>
+        <WidgetFrame {...props} addClass="zoomWidget" unit={undefined}>
             <div className='widgetData'>{val}
                 {
                     (rzoom !== undefined)?<div className="rzoom">({rzoom})</div>:''

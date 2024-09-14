@@ -6,9 +6,8 @@ import React from "react";
 import {WidgetFrame, WidgetProps} from "./WidgetBase";
 
 const UndefinedWidget=(props)=>{
-    let classes="undefinedWidget";
     return (
-        <WidgetFrame {...props} className={classes} caption="Undefined Widget">
+        <WidgetFrame {...props} addClass="undefinedWidget" caption="Undefined Widget">
             <div className='widgetData'>
                 {props.name}
             </div>

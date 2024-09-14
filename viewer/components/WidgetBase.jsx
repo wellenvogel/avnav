@@ -64,6 +64,7 @@ export const WidgetFrame=(props)=> {
     let classes = "widget ";
     if (props.isAverage) classes += " average";
     if (props.className) classes += " " + props.className;
+    if (props.addClass) classes += " " + props.addClass;
     const rsClass=(props.resize === false)?"noresize":"resize";
     return <div className={classes} onClick={props.onClick} {...sortableProps} style={props.style}>
         <WidgetHead {...props}/>
@@ -75,5 +76,7 @@ export const WidgetFrame=(props)=> {
 WidgetFrame.propTypes={
     ...WidgetProps,
     ...SortableProps,
-    resize: PropTypes.bool
+    ...WidgetHead.propTypes,
+    resize: PropTypes.bool,
+    addClass: PropTypes.string
 };

@@ -72,7 +72,6 @@ const WindWidget = (props) => {
             angle: 'TWA'
         }
     }
-    let classes = "windWidget " + props.className || "";
     let windSpeedStr = '';
     try {
         windSpeedStr = parseFloat(wind.windSpeed);
@@ -92,7 +91,7 @@ const WindWidget = (props) => {
         if (wind.windAngle > 180) wind.windAngle -= 360;
     }
     return (
-        <WidgetFrame {...props} className={classes} caption={undefined} unit={undefined}>
+        <WidgetFrame {...props} addClass="windWidget" caption={undefined} unit={undefined}>
             {(props.mode === 'horizontal') ?
                 <React.Fragment>
                     <WidgetHead caption={'W' + wind.suffix}/>

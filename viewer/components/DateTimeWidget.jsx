@@ -9,7 +9,6 @@ import Formatter from "../util/formatter.js";
 import {WidgetFrame, WidgetProps} from "./WidgetBase";
 
 const DateTimeWidget = (props) => {
-    let classes = "dateTimeWidget " + props.className || "";
     let time = "----";
     if (props.time) {
         time = Formatter.formatTime(props.time);
@@ -19,7 +18,7 @@ const DateTimeWidget = (props) => {
         date = Formatter.formatDate(props.time);
     }
     return (
-        <WidgetFrame {...props} className={classes} caption="Date" unit={undefined}>
+        <WidgetFrame {...props} addClass="dateTimeWidget" caption="Date" unit={undefined}>
                 <div className="widgetData date">{date}</div>
                 <div className="widgetData time">{time}</div>
         </WidgetFrame>

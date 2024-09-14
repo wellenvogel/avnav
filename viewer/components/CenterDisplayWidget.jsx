@@ -13,7 +13,6 @@ import {WidgetFrame, WidgetHead} from "./WidgetBase";
 
 
 const CenterDisplayWidget = (props) => {
-    let classes = "centerDisplayWidget " + props.className || "";
     let small = (props.mode == "horizontal");
     let measurePosition = props.measurePosition;
     let measureValues;
@@ -21,7 +20,7 @@ const CenterDisplayWidget = (props) => {
         measureValues = NavCompute.computeDistance(measurePosition, props.centerPosition, props.measureRhumbLine);
     }
     return (
-        <WidgetFrame {...props} className={classes} caption="Center" unit={undefined}>
+        <WidgetFrame {...props} addClass="centerDisplayWidget" caption="Center" unit={undefined}>
             {!small && <div className="widgetData">{Formatter.formatLonLats(props.centerPosition)}</div>}
             {(measurePosition !== undefined) &&
                 <div className="widgetData">

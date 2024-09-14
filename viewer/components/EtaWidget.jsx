@@ -11,9 +11,8 @@ import {WidgetFrame, WidgetProps} from "./WidgetBase";
 
 const EtaWidget = (props) => {
     let eta = props.eta ? Formatter.formatTime(props.eta) : '--:--:--';
-    let classes = "etaWidget " + props.className || "";
     return (
-        <WidgetFrame {...props} className={classes}>
+        <WidgetFrame {...props} addClass="etaWidget">
             <div className="widgetData markerEta">{eta}</div>
             <div className="widgetData markerName">{props.wpname}</div>
         </WidgetFrame>

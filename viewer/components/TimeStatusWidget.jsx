@@ -10,7 +10,6 @@ import globalStore from '../util/globalstore.jsx';
 import {WidgetFrame, WidgetProps} from "./WidgetBase";
 
 const TimeStatusWidget = (props=> {
-    let classes="timeStatusWidget "+props.className||"";
     let imgSrc=globalStore.getData(props.gpsValid?
         keys.properties.statusOkImage:
         keys.properties.statusErrorImage);
@@ -19,7 +18,7 @@ const TimeStatusWidget = (props=> {
         time=Formatter.formatTime(props.time);
     }
     return (
-        <WidgetFrame {...props} className={classes} unit={undefined}>
+        <WidgetFrame {...props} addClass="timeStatusWidget" unit={undefined}>
                 <img className="status" src={imgSrc}/>
                 <div className="widgetData">{time}</div>
         </WidgetFrame>
