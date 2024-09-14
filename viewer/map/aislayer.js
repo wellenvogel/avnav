@@ -554,7 +554,7 @@ AisLayer.prototype.computeTextOffsets=function(drawing, targetRot,textIndex, opt
     }
     let course=targetRot;
     if (course){
-        while (course > 360) course-=360;
+        while (course >= 360) course-=360;
         while (course < 0) course+=360;
     }
     if (! course || (0 <= course  &&  course < 90 )){
