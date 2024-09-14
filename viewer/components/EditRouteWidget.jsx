@@ -57,9 +57,9 @@ const EditRouteWidget = (props) => {
 
 EditRouteWidget.propTypes={
     ...WidgetProps,
-    route:   PropTypes.objectOf(routeobjects.Route),
+    route:   PropTypes.instanceOf(routeobjects.Route),
     remain: PropTypes.number,
-    eta:    PropTypes.objectOf(Date),
+    eta:    PropTypes.instanceOf(Date),
     isApproaching: PropTypes.bool,
     isActive: PropTypes.bool,
     useRhumbLine: PropTypes.bool

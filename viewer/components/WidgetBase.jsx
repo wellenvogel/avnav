@@ -33,6 +33,7 @@ export const WidgetProps={
     onClick:    PropTypes.func,
     style:      PropTypes.object,
     className:  PropTypes.string,
+    name:       PropTypes.string,
     mode:       PropTypes.string, //display info side by side if small
     caption:    PropTypes.string,
     nightMode:  PropTypes.bool,

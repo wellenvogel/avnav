@@ -134,7 +134,7 @@ const getWeight=(item)=>{
 const DEFAULT_NAME="CombinedWidget";
 export const CombinedWidget=(props)=>{
     useKeyEventHandler(props,"widget")
-    let {locked,editing,sequence,editableParameters,children,onClick,childProperties,dragId,className,vertical,...forwardProps}=props;
+    let {wclass,locked,editing,sequence,editableParameters,nightMode,children,onClick,childProperties,dragId,className,vertical,...forwardProps}=props;
     const sortContext=useAvnavSortContext();
     const ddProps = useAvNavSortable(locked?dragId:undefined);
     const cl=(ev)=>{

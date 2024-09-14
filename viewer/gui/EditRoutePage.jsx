@@ -28,6 +28,7 @@ import {Input, InputSelect} from "../components/Inputs";
 import DB from '../components/DialogButton';
 import Formatter from "../util/formatter";
 import {stopAnchorWithConfirm} from "../components/AnchorWatchDialog";
+import Page from "../components/Page";
 
 const RouteHandler=NavHandler.getRoutingHandler();
 const PAGENAME="editroutepage";
@@ -748,7 +749,7 @@ class EditRoutePage extends React.Component{
     }
 }
 EditRoutePage.propTypes={
-    ...MapPage.propertyTypes
+    ...Page.pageProperties
 }
 
 export default EditRoutePage;
