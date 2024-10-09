@@ -10,7 +10,7 @@ import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
 import {WidgetHead, WidgetProps} from "./WidgetBase";
 
 const DirectWidget=(wprops)=>{
-    const props=wprops.translateFunction?{...wprops,...wprops.translateFunction(wprops)}:wprops;
+    const props=(wprops && wprops.translateFunction)?{...wprops,...wprops.translateFunction({...wprops})}:wprops;
     useKeyEventHandler(wprops,"widget");
     const sortableProps=useAvNavSortable(props.dragId)
     let classes="widget ";
