@@ -24,7 +24,7 @@
 #  parts from this software (AIS decoding) are taken from the gpsd project
 #  so refer to this BSD licencse also (see ais.py) or omit ais.py 
 ###############################################################################
-import imp
+import importlib.util
 import inspect
 import json
 from typing import Dict, Any
@@ -656,9 +656,11 @@ class AVNPluginHandler(AVNWorker):
     if not os.path.exists(moduleFile):
       return None
     try:
-      rt = imp.load_source(name, moduleFile)
+      spec = importlib.util.spec_from_file_location(name, moduleFile)
+      module = importlib.util.module_from_spec(spec)
+      spec.loader.exec_module(module)
       AVNLog.info("loaded %s as %s", moduleFile, name)
-      return rt
+      return module
     except:
       AVNLog.error("unable to load %s:%s", moduleFile, traceback.format_exc())
     return None
