@@ -2,16 +2,11 @@
  * Created by andreas on 23.02.16.
  */
 
-import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import PropTypes from 'prop-types';
-import Helper from '../util/helper.js';
-import Value from './Value.jsx';
-import GuiHelper, {useKeyEventHandler} from '../util/GuiHelpers.js';
 import ReactHtmlParser,{convertNodeToElement} from 'react-html-parser/dist/react-html-parser.min.js';
 import base from '../base.js';
-import assign from 'object-assign';
-import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
-import {WidgetHead, WidgetProps} from "./WidgetBase";
+import {WidgetFrame, WidgetProps} from "./WidgetBase";
 
 const REACT_EVENTS=('onCopy onCut onPaste onCompositionEnd onCompositionStart onCompositionUpdate onKeyDown onKeyPress onKeyUp'+
     ' onFocus onBlur onChange onInput onInvalid onReset onSubmit onError onLoad onClick onContextMenu onDoubleClick onDrag onDragEnd onDragEnter onDragExit'+
@@ -58,9 +53,7 @@ const transform=(self,node,index)=>{
 };
 
 export const ExternalWidget =(props)=>{
-    useKeyEventHandler(props,"widget");
     const {updateCount,setUpdateCount}=useState(1);
-    const ddProps=useAvNavSortable(props.dragId);
     const initialCalled=useRef(false);
     const canvasRef=useRef(null);
     const getProps=()=>{
@@ -90,9 +83,7 @@ export const ExternalWidget =(props)=>{
         }
     })
     
-        let convertedProps=getProps()
-        let classes="widget externalWidget";
-        if (convertedProps.className) classes+=" "+convertedProps.className;
+        let convertedProps=getProps();
         let innerHtml=null;
         if (props.renderHtml){
             try {
@@ -108,18 +99,14 @@ export const ExternalWidget =(props)=>{
         let userHtml=(innerHtml!=null)?ReactHtmlParser(innerHtml,
             {transform:(node,index)=>{transform(userData.current,node,index);}}):null;
         return (
-        <div className={classes} {...ddProps} onClick={props.onClick} style={{...convertedProps.style, ...ddProps.style}}>
-            <WidgetHead {...convertedProps}/>
+        <WidgetFrame {...convertedProps} addClass="externalWidget" onClick={props.onClick} >
             {props.renderCanvas?<canvas className='widgetData' ref={canvasRef}></canvas>:null}
-            <div className="resize">
                 {userHtml}
-            </div>
-        </div>
+        </WidgetFrame>
         );
 }
 
 ExternalWidget.propTypes={
-    ...SortableProps,
     ...WidgetProps,
     name: PropTypes.string,
     unit: PropTypes.string,

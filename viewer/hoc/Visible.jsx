@@ -7,8 +7,8 @@ import React from 'react';
  * @constructor
  */
 const Visible=function(Component){
-    return function(props){
-        if (props.visible !== undefined && ! props.visible) return null;
+    return (props)=>{
+        if (props !== undefined && props.visible !== undefined && ! props.visible) return null;
         let {visible,...compProp}=props;
         return <Component {...compProp}/>;
     }

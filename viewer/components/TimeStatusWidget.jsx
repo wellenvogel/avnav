@@ -7,14 +7,9 @@ import PropTypes from "prop-types";
 import keys from "../util/keys.jsx";
 import Formatter from "../util/formatter.js";
 import globalStore from '../util/globalstore.jsx';
-import {useKeyEventHandler} from '../util/GuiHelpers.js';
-import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
-import {WidgetHead, WidgetProps} from "./WidgetBase";
+import {WidgetFrame, WidgetProps} from "./WidgetBase";
 
 const TimeStatusWidget = (props=> {
-    useKeyEventHandler(props,"widget");
-    const ddProps=useAvNavSortable(props.dragId);
-    let classes="widget timeStatusWidget "+props.className||"";
     let imgSrc=globalStore.getData(props.gpsValid?
         keys.properties.statusOkImage:
         keys.properties.statusErrorImage);
@@ -22,20 +17,15 @@ const TimeStatusWidget = (props=> {
     if (props.time !== undefined){
         time=Formatter.formatTime(props.time);
     }
-    const style={...props.style,...ddProps.style};
     return (
-        <div {...ddProps} className={classes} onClick={props.onClick} style={style}>
-            <WidgetHead caption={props.caption}/>
-            <div className="resize">
+        <WidgetFrame {...props} addClass="timeStatusWidget" unit={undefined}>
                 <img className="status" src={imgSrc}/>
                 <div className="widgetData">{time}</div>
-            </div>
-        </div>
+        </WidgetFrame>
     );
 });
 
 TimeStatusWidget.propTypes={
-    ...SortableProps,
     ...WidgetProps,
     time: PropTypes.objectOf(Date),
     gpsValid: PropTypes.bool

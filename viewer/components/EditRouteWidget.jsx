@@ -8,25 +8,20 @@ import keys from '../util/keys.jsx';
 import Formatter from '../util/formatter.js'
 import routeobjects from '../nav/routeobjects.js';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
-import {useKeyEventHandler} from '../util/GuiHelpers.js';
-import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
-import {WidgetHead, WidgetProps} from "./WidgetBase";
+import {WidgetFrame, WidgetProps} from "./WidgetBase";
 
 const editor=new RouteEdit(RouteEdit.MODES.EDIT);
 
 
 const EditRouteWidget = (props) => {
-    useKeyEventHandler(props, "widget");
-    const ddProps = useAvNavSortable(props.dragId);
     let [route, notUsed, isActive] = StateHelper.getRouteIndexFlag(props);
-    let classes = "widget editRouteWidget " + props.className || "";
+    let classes = "editRouteWidget";
     if (isActive) classes += " activeRoute ";
     if (!route) {
         return (
-            <div className={classes} onClick={props.onClick} style={props.style}>
-                <WidgetHead caption={'RTE'}/>
+            <WidgetFrame {...props} addClass={classes} caption="RTE" unit={undefined}>
                 <div className="routeName">No Route</div>
-            </div>
+            </WidgetFrame>
         )
     }
     let rname = route.name;
@@ -34,10 +29,8 @@ const EditRouteWidget = (props) => {
     let len = route.computeLength(0, props.useRhumbLine);
     let remain = isActive ? props.remain : undefined;
     let eta = isActive ? props.eta : undefined;
-    const style = {...props.style, ...ddProps.style};
     return (
-        <div className={classes} onClick={props.onClick} {...ddProps} style={style}>
-            <div className="infoLeft">RTE</div>
+        <WidgetFrame {...props} addClass={classes} caption="RTE" unit={undefined}>
             <div className="routeName widgetData">{rname}</div>
             <div className="widgetData">
                 <span className="label">PTS:</span>
@@ -57,17 +50,16 @@ const EditRouteWidget = (props) => {
                     <span className="label">ETA:</span>
                     <span className="routeInfo">{Formatter.formatTime(eta)}</span>
                 </div> : null}
-        </div>
+        </WidgetFrame>
     );
 }
 
 
 EditRouteWidget.propTypes={
-    ...SortableProps,
     ...WidgetProps,
-    route:   PropTypes.objectOf(routeobjects.Route),
+    route:   PropTypes.instanceOf(routeobjects.Route),
     remain: PropTypes.number,
-    eta:    PropTypes.objectOf(Date),
+    eta:    PropTypes.instanceOf(Date),
     isApproaching: PropTypes.bool,
     isActive: PropTypes.bool,
     useRhumbLine: PropTypes.bool

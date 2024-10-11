@@ -59,9 +59,9 @@ const getPanelWidgets=(panel)=>{
             item.key=layoutSequence+"_"+idx;
             idx++;
         })
-        return panelData.list;
+        return panelData;
     }
-    return [];
+    return {name:panel};
 }
 /**
  *
@@ -189,7 +189,8 @@ class MapWidgetsDialog extends React.Component{
         let current = getPanelWidgets(OVERLAYPANEL);
         let idx = 0;
         let rt = [];
-        current.forEach((item) => {
+        if (! current.list) return rt;
+        current.list.forEach((item) => {
             rt.push(assign({index: idx}, item));
             idx++;
         })
@@ -743,7 +744,7 @@ class NavPage extends React.Component{
                                     }
                                 )
                             }}
-                            itemList={getPanelWidgets(OVERLAYPANEL)}
+                            itemList={getPanelWidgets(OVERLAYPANEL).list || []}
                         />
                     </React.Fragment>}
                 buttonList={self.getButtons()}

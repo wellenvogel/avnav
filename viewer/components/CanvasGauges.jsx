@@ -4,12 +4,10 @@
 
 import React, {useEffect, useRef} from "react";
 import PropTypes from 'prop-types';
-import {useKeyEventHandler} from '../util/GuiHelpers.js';
 import {RadialGauge,LinearGauge} from 'canvas-gauges';
 import base from '../base.js';
 import assign from 'object-assign';
-import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
-import {WidgetHead, WidgetProps} from "./WidgetBase";
+import {WidgetFrame, WidgetProps} from "./WidgetBase";
 
 export const getTicks=(minValue,maxValue,number)=>{
     if (minValue === undefined || maxValue === undefined || number === undefined) return;
@@ -62,8 +60,6 @@ const getProps=(props)=>{
 }
 
 const Gauge =(rprops)=>{
-    useKeyEventHandler(rprops,"widget");
-    const ddProps = useAvNavSortable(rprops.dragId);
     let canvas = useRef(null);
     let gauge = useRef(undefined);
     useEffect(()=>{
@@ -138,27 +134,24 @@ const Gauge =(rprops)=>{
         }
     }
     let defaultColors=props.nightMode?nightColors:normalColors;
-    let classes="widget canvasGauge";
-    if (props.className) classes+=" "+props.className;
+    let classes="canvasGauge";
     if (props.typeClass) classes+=" "+props.typeClass;
     let style=props.style||{};
     let textColor=props.colorText?props.colorText:defaultColors.text;
     let textStyle={color:textColor};
     return (
-        <div className={classes} onClick={props.onClick} style={style} {...ddProps}>
-            <WidgetHead {...props}/>
+        <WidgetFrame {...props} addClass={classes} style={style}>
             <div className="canvasFrame" ref={frame}>
                 {props.drawValue?
                 <div className="gaugeValue" ref={value} style={textStyle}>{nvalue}</div>:null}
                 <canvas className='widgetData' ref={canvasRef}></canvas>
             </div>
-        </div>
+        </WidgetFrame>
         );
 };
 
 Gauge.propTypes={
     ...WidgetProps,
-    ...SortableProps,
     gauge: PropTypes.oneOfType([PropTypes.object,PropTypes.func]).isRequired,
     name: PropTypes.string,
     unit: PropTypes.string,

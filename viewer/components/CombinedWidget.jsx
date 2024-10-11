@@ -22,7 +22,7 @@
 ###############################################################################
 */
 import {useKeyEventHandler} from "../util/GuiHelpers";
-import {moveItem, SortableProps, useAvNavSortable, useAvnavSortContext} from "../hoc/Sortable";
+import {moveItem, useAvNavSortable, useAvnavSortContext} from "../hoc/Sortable";
 import {WidgetProps} from "./WidgetBase";
 import PropTypes from "prop-types";
 import React, {useState} from "react";
@@ -30,7 +30,7 @@ import theFactory from "./WidgetFactory";
 import {EditableParameter} from "./EditableParameters";
 import ItemList from "./ItemList";
 import DialogButton from "./DialogButton";
-import Dialogs, {useDialog} from "./OverlayDialog";
+import {useDialog} from "./OverlayDialog";
 import EditWidgetDialog from "./EditWidgetDialog";
 import keys from "../util/keys";
 
@@ -134,7 +134,7 @@ const getWeight=(item)=>{
 const DEFAULT_NAME="CombinedWidget";
 export const CombinedWidget=(props)=>{
     useKeyEventHandler(props,"widget")
-    let {locked,editing,sequence,editableParameters,children,onClick,childProperties,dragId,className,vertical,...forwardProps}=props;
+    let {wclass,locked,editing,sequence,editableParameters,nightMode,children,onClick,childProperties,dragId,className,vertical,...forwardProps}=props;
     const sortContext=useAvnavSortContext();
     const ddProps = useAvNavSortable(locked?dragId:undefined);
     const cl=(ev)=>{
@@ -172,7 +172,7 @@ export const CombinedWidget=(props)=>{
                 let Item = theFactory.createWidget(item, {...childProperties,style:style});
                 cidx++;
                 return (iprops)=>{
-                    return  <Item key={cidx} {...iprops}/>
+                    return  <Item key={cidx} {...iprops} editing={editing}/>
             }}
             }
         />
@@ -180,7 +180,6 @@ export const CombinedWidget=(props)=>{
 }
 CombinedWidget.propTypes={
     ...WidgetProps,
-    ...SortableProps,
     children: PropTypes.array,
     vertical: PropTypes.bool,
     editableParameters: PropTypes.object

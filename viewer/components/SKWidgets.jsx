@@ -3,11 +3,9 @@
  */
 
 import React from 'react';
-import {useKeyEventHandler} from "../util/GuiHelpers";
 import Formatter from "../util/formatter";
 import PropTypes from "prop-types";
-import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
-import {WidgetHead, WidgetProps} from "./WidgetBase";
+import {WidgetFrame, WidgetProps} from "./WidgetBase";
 
 const rad2deg=(rad,inDeg)=>{
     if (inDeg) return parseFloat(rad);
@@ -20,8 +18,6 @@ const DegreeFormatter = (value,inDeg)=> {
   };
 
 export const SKRollWidget=(props)=>{
-        useKeyEventHandler(props,"widget");
-        const dd=useAvNavSortable(props.dragId)
         let degreeArrow = "---";
         if (props.value !== undefined) {
             let value = DegreeFormatter(props.value, props.inDegree);
@@ -35,22 +31,19 @@ export const SKRollWidget=(props)=>{
                 degreeArrow = degreeArrow + "\xA0\u21D2";
             }
         }
-        let classes="widget SKRollWidget "+props.className||"";
         let wdClasses="widgetData";
         if (Math.abs(rad2deg(props.value,props.inDegree)) >= props.criticalValue){
             wdClasses+=" critical";
         }
         return (
-            <div className={classes} onClick={props.onClick} style={props.style||{}} {...dd}>
-                <WidgetHead {...props}/>
+            <WidgetFrame {...props} addClass="SKRollWidget" >
                 <div className={wdClasses}>{degreeArrow}</div>
-            </div>
+            </WidgetFrame>
         );
     }
 
 
 SKRollWidget.propTypes={
-    ...SortableProps,
     ...WidgetProps,
     unit: PropTypes.string,
     value: PropTypes.oneOfType([PropTypes.string,PropTypes.number]),
@@ -68,8 +61,6 @@ SKRollWidget.editableParameters={
 }
 
 export const SKPitchWidget = (props) => {
-    useKeyEventHandler(props, "widget")
-    const dd = useAvNavSortable(props.dragId);
     let degreeArrow = "---";
     if (props.value !== undefined) {
         let value = DegreeFormatter(props.value, props.inDegree);
@@ -83,21 +74,18 @@ export const SKPitchWidget = (props) => {
             degreeArrow += "\xA0\u21D1";
         }
     }
-    let classes = "widget SKPitchWidget " + props.className || "";
     let wdClasses = "widgetData";
     if (Math.abs(rad2deg(props.value, props.inDegree)) >= props.criticalValue) {
         wdClasses += " critical";
     }
     return (
-        <div className={classes} onClick={props.onClick} style={props.style || {}} {...dd}>
-            <WidgetHead {...props}/>
+        <WidgetFrame {...props} addClass="SKPitchWidget">
             <div className={wdClasses}>{degreeArrow}</div>
-        </div>
+        </WidgetFrame>
     );
 }
 
 SKPitchWidget.propTypes={
-    ...SortableProps,
     ...WidgetProps,
     unit: PropTypes.string,
     value: PropTypes.oneOfType([PropTypes.string,PropTypes.number]),

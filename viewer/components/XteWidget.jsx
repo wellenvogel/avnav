@@ -6,10 +6,8 @@ import React from "react";
 import PropTypes from 'prop-types';
 import Formatter from '../util/formatter';
 import keys from '../util/keys.jsx';
-import {useKeyEventHandler} from '../util/GuiHelpers.js';
 import navcompute from '../nav/navcompute.js';
-import {useAvNavSortable} from "../hoc/Sortable";
-import {WidgetHead} from "./WidgetBase";
+import {WidgetFrame, WidgetProps} from "./WidgetBase";
 
 const normalColors={
     all: '#000000'
@@ -19,8 +17,6 @@ const nightColors={
 }
 
 const XteWidget = (props) => {
-    useKeyEventHandler(props, "widget");
-    const ddProps = useAvNavSortable(props.dragId);
     let canvas = undefined;
     const canvasRef = (e) => canvas = e;
     const drawXte = () => {
@@ -86,14 +82,11 @@ const XteWidget = (props) => {
         context.fill();
         context.closePath();
     }
-    let classes = "widget xteWidget " + props.className || "";
-    const style = {...props.style, ...ddProps.style};
     setTimeout(drawXte, 0);
     return (
-        <div className={classes} onClick={props.onClick} {...ddProps} style={style}>
-            <WidgetHead caption="XTE" unit="nm"/>
+        <WidgetFrame {...props} addClass="xteWidget" caption="XTE" unit="nm">
             <canvas className='widgetData' ref={canvasRef}></canvas>
-        </div>
+        </WidgetFrame>
 
     );
 
@@ -101,13 +94,9 @@ const XteWidget = (props) => {
 
 
 XteWidget.propTypes={
-    onClick:    PropTypes.func,
-    className:  PropTypes.string,
+    ...WidgetProps,
     markerXte:  PropTypes.number,
-    xteMax:     PropTypes.number,
-    dragId:     PropTypes.string,
-    style:      PropTypes.object,
-    nightMode:  PropTypes.bool
+    xteMax:     PropTypes.number
 };
 
 XteWidget.storeKeys={

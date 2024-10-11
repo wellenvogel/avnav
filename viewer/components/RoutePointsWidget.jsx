@@ -9,9 +9,8 @@ import routeobjects from '../nav/routeobjects.js';
 import ItemList from './ItemList.jsx';
 import WaypointItem from './WayPointItem.jsx';
 import RouteEdit,{StateHelper} from '../nav/routeeditor.js';
-import GuiHelper, {useKeyEventHandler} from '../util/GuiHelpers.js';
-import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
-import {WidgetProps} from "./WidgetBase";
+import GuiHelper from '../util/GuiHelpers.js';
+import {WidgetFrame, WidgetProps} from "./WidgetBase";
 
 const editor=new RouteEdit(RouteEdit.MODES.EDIT);
 
@@ -21,8 +20,6 @@ const RoutePoint=(showLL)=>{
     }
 }
 const RoutePointsWidget = (props) => {
-    useKeyEventHandler(props, "widget");
-    const ddProps = useAvNavSortable(props.dragId);
     let listRef = undefined;
     const scrollSelected = () => {
         if (!listRef) return;
@@ -38,12 +35,11 @@ const RoutePointsWidget = (props) => {
     });
     let [route, index, isActive] = StateHelper.getRouteIndexFlag(props);
     if ((!route || !route.points || route.points.length < 1) && !props.isEditing) return null;
-    let classes = "widget routePointsWidget " + props.className || "";
+    let classes = "routePointsWidget";
     if (isActive) classes += " activeRoute ";
-    if (props.mode == 'horizontal' && !props.isEditing) return null; //we do not display...
-    const style = {...props.style, ...ddProps.style};
+    if (props.mode === 'horizontal' && !props.isEditing) return null; //we do not display...
     return (
-        <div className={classes} {...ddProps} style={style}>
+        <WidgetFrame {...props} addClass={classes} caption={undefined} unit={undefined}>
             <ItemList
                 itemList={route ? route.getRoutePoints(index, props.useRhumbLine) : []}
                 itemCreator={() => {
@@ -63,13 +59,12 @@ const RoutePointsWidget = (props) => {
                     listRef = element
                 }}
             />
-        </div>
+        </WidgetFrame>
     );
 }
 
 
 RoutePointsWidget.propTypes={
-    ...SortableProps,
     ...WidgetProps,
     route:          PropTypes.objectOf(routeobjects.Route),
     isActive:       PropTypes.bool,

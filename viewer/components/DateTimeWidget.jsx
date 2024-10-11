@@ -6,36 +6,26 @@ import React from "react";
 import PropTypes from "prop-types";
 import keys from "../util/keys.jsx";
 import Formatter from "../util/formatter.js";
-import {useKeyEventHandler} from '../util/GuiHelpers.js';
-import {SortableProps, useAvNavSortable} from "../hoc/Sortable";
-import {WidgetHead, WidgetProps} from "./WidgetBase";
+import {WidgetFrame, WidgetProps} from "./WidgetBase";
 
-const DateTimeWidget=(props)=>{
-    useKeyEventHandler(props,"widget");
-    const ddProps=useAvNavSortable(props.dragId);
-        let classes="widget dateTimeWidget "+props.className||"";
-        let time="----";
-        if (props.time){
-            time=Formatter.formatTime(props.time);
-        }
-        let date="----";
-        if (props.time){
-            date=Formatter.formatDate(props.time);
-        }
-        const style={...props.style,...ddProps.style};
-        return (
-        <div className={classes} onClick={props.onClick} {...ddProps} style={style}>
-            <WidgetHead caption="Date"/>
-            <div className="resize">
+const DateTimeWidget = (props) => {
+    let time = "----";
+    if (props.time) {
+        time = Formatter.formatTime(props.time);
+    }
+    let date = "----";
+    if (props.time) {
+        date = Formatter.formatDate(props.time);
+    }
+    return (
+        <WidgetFrame {...props} addClass="dateTimeWidget" caption="Date" unit={undefined}>
                 <div className="widgetData date">{date}</div>
                 <div className="widgetData time">{time}</div>
-            </div>
-        </div>
-        );
-    }
+        </WidgetFrame>
+    );
+}
 
 DateTimeWidget.propTypes={
-    ...SortableProps,
     ...WidgetProps,
     time: PropTypes.objectOf(Date),
     gpsValid: PropTypes.bool

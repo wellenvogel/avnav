@@ -9,23 +9,18 @@ import Formatter from '../util/formatter.js';
 import {useKeyEventHandler} from '../util/GuiHelpers.js';
 import NavCompute from "../nav/navcompute";
 import {useAvNavSortable} from "../hoc/Sortable";
-import {WidgetHead} from "./WidgetBase";
+import {WidgetFrame, WidgetHead} from "./WidgetBase";
 
 
 const CenterDisplayWidget = (props) => {
-    useKeyEventHandler(props, "widget");
-    const ddProps = useAvNavSortable(props.dragId);
-    let classes = "widget centerDisplayWidget " + props.className || "";
     let small = (props.mode == "horizontal");
     let measurePosition = props.measurePosition;
     let measureValues;
     if (measurePosition) {
         measureValues = NavCompute.computeDistance(measurePosition, props.centerPosition, props.measureRhumbLine);
     }
-    const style = {...props.style, ...ddProps.style};
     return (
-        <div className={classes} onClick={props.onClick} {...ddProps} style={style}>
-            <WidgetHead caption="Center"/>
+        <WidgetFrame {...props} addClass="centerDisplayWidget" caption="Center" unit={undefined}>
             {!small && <div className="widgetData">{Formatter.formatLonLats(props.centerPosition)}</div>}
             {(measurePosition !== undefined) &&
                 <div className="widgetData">
@@ -72,7 +67,7 @@ const CenterDisplayWidget = (props) => {
 
                 </div>
             </div>
-        </div>
+        </WidgetFrame>
     );
 }
 
