@@ -59,6 +59,12 @@ class EditWidgetDialog extends React.Component{
     }
     updateWidgetState(values,opt_new){
         let nvalues=undefined;
+        if(this.state.widget.formatter!=values.formatter)
+        {
+          //formatter has changed, so we have to clear formatterParameters
+          values.formatterParameters=[]
+        }
+
         if (opt_new){
             nvalues=values;
             let newState={
