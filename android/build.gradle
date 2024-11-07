@@ -30,7 +30,14 @@ dependencies {
     implementation "net.sf.marineapi:marineapi:0.11.0"
     implementation 'androidx.core:core:1.10.1'
     implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.github.felHR85:UsbSerial:6.1.0'
+    //see https://github.com/felHR85/UsbSerial/issues/375
+    implementation('com.github.felHR85:UsbSerial:7ad6c9f6'){
+        artifact {
+            name = 'UsbSerial'
+            classifier = 'release'
+            type = 'aar'
+        }
+    }
     implementation group: 'net.straylightlabs', name: 'hola', version: '0.2.2'
     implementation group: 'org.apache.httpcomponents', name: 'httpcore', version: '4.0'
     implementation 'androidx.documentfile:documentfile:1.0.1'
