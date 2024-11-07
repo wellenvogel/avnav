@@ -75,7 +75,6 @@ class AVNUdpReader(AVNWorker):
 
   def __init__(self,param):
     self.socket=None
-    self.mcinterfaces=[]
     AVNWorker.__init__(self, param)
 
   def updateConfig(self, param, child=None):
@@ -97,7 +96,6 @@ class AVNUdpReader(AVNWorker):
       self.checkUsedResource(UsedResource.T_UDP,self.P_PORT.fromDict(param))
 
   def joinGroup(self,mcgroup):
-    self.mcinterfaces=[]
     interfaces=netifaces.interfaces()
     for intf in interfaces:
       intfaddr=netifaces.ifaddresses(intf)
@@ -110,16 +108,8 @@ class AVNUdpReader(AVNWorker):
               try:
                 mreq = struct.pack("4s4s", socket.inet_aton(mcgroup), socket.inet_aton(addr))
                 self.socket.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
-                self.mcinterfaces.append(mreq)
               except:
                 pass
-  def leaveGroup(self):
-    for mreq in self.mcinterfaces:
-      try:
-        self.socket.setsockopt(socket.IPPROTO_IP,socket.IP_DROP_MEMBERSHIP,mreq)
-      except:
-        pass
-    self.mcinterfaces=[]
 
   #thread run method - just try forever
   def run(self):
@@ -133,11 +123,11 @@ class AVNUdpReader(AVNWorker):
       self.claimUsedResource(UsedResource.T_UDP,self.getParamValue('port'))
       self.setNameIfEmpty("%s-%s:%d" % (self.getName(), host, port))
       info="unknown"
-      self.leaveGroup()
       try:
         info = "%s:%d" % (host,port)
         self.setInfo(INAME,"trying udp listen at %s"%(info,),WorkerStatus.INACTIVE)
         self.socket=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,True)
         self.socket.bind((host, port))
         if self.getWParam(self.P_ALLOWMC):
           mcgroup=self.getWParam(self.P_MCADDR)
@@ -163,7 +153,7 @@ class AVNUdpReader(AVNWorker):
                           minTime=self.P_MINTIME.fromDict(self.param))
       except:
         AVNLog.info("exception while reading data from %s:%d %s",self.getStringParam('host'),self.getIntParam('port'),traceback.format_exc())
-    self.leaveGroup()
+
 avnav_handlerList.registerHandler(AVNUdpReader)
 
         
