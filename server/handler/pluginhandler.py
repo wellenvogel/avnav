@@ -68,7 +68,7 @@ def normalizedName(name):
     return name
 
 class ApiImpl(AVNApi):
-  def __init__(self,parent,store,queue,prefix,moduleFile):
+  def __init__(self,parent,store,queue,prefix,moduleFile,internal=False):
     """
 
     @param parent: the pluginhandler instance to access cfg data
@@ -94,6 +94,7 @@ class ApiImpl(AVNApi):
     self.converters=set()
     self.settingsFiles=[]
     self.jsCssOnly=False
+    self.internal=internal
 
   def isEnabled(self):
     return AVNUtil.getBool(self.getConfigValue(AVNPluginHandler.ENABLE_PARAMETER.name),True)
@@ -194,7 +195,10 @@ class ApiImpl(AVNApi):
       raise Exception("%s: missing path in data entry: %s"%(self.prefix,data))
     AVNLog.info("%s: register key %s"%(self.prefix,key))
     if self.store.isKeyRegistered(key,keySource):
-      allowOverwrite=self.getConfigValue(AVNApi.ALLOW_KEY_OVERWRITE,"false")
+      allowOverwrite=self.getConfigValue(AVNApi.ALLOW_KEY_OVERWRITE)
+      if allowOverwrite is None:
+        #let internal plugins default to true for keyOverride
+        allowOverwrite='true' if self.internal else 'false'
       if allowOverwrite.lower() != "true":
         self.error("key %s already registered, skipping it"%key)
         if key.find('*') >= 0:
@@ -493,28 +497,31 @@ class AVNPluginHandler(AVNWorker):
     if ev == '1':
       return True
     return False
-
+  D_BUILTIN='builtin'
+  D_SYSTEM='system'
+  D_USER='user'
+  ALL_DIRS=[D_BUILTIN,D_SYSTEM,D_USER]
   def run(self):
     builtInDir=self.getStringParam('builtinDir')
     systemDir=AVNHandlerManager.getDirWithDefault(self.param, 'systemDir', defaultSub=os.path.join('..', 'plugins'), belowData=False)
     userDir=AVNHandlerManager.getDirWithDefault(self.param, 'userDir', 'plugins')
     directories={
-      'builtin':{
+      self.D_BUILTIN:{
         'dir':builtInDir,
         'prefix':'builtin'
       },
-      'system':{
+      self.D_SYSTEM:{
         'dir':systemDir,
         'prefix':'system'
       },
-      'user':{
+      self.D_USER:{
         'dir':userDir,
         'prefix':'user'
       }
     }
 
 
-    for basedir in ['builtin','system','user']:
+    for basedir in self.ALL_DIRS:
       dircfg=directories[basedir]
       if not os.path.isdir(dircfg['dir']):
         continue
@@ -531,7 +538,7 @@ class AVNPluginHandler(AVNWorker):
           module=self.loadPluginFromDir(dir, moduleName)
         except:
           AVNLog.error("error loading plugin from %s:%s",dir,traceback.format_exc())
-        api = ApiImpl(self,self.navdata,self.queue,moduleName,inspect.getfile(module) if module is not None else module)
+        api = ApiImpl(self,self.navdata,self.queue,moduleName,inspect.getfile(module) if module is not None else module,internal=(basedir==self.D_BUILTIN))
         self.createdApis[moduleName]=api
         if module is not None:
           self.pluginDirs[moduleName]=os.path.realpath(dir)

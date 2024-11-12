@@ -177,7 +177,7 @@ class AVNApi(object):
     """
     raise NotImplemented()
 
-  def addData(self, key, value, source=None,record=None):
+  def addData(self, key, value, source=None,record=None, sourcePriority=60):
     """
     add a data item (potentially from a decoded NMEA record) to the internal data store
     the data added here later on will be fetched from the GUI
