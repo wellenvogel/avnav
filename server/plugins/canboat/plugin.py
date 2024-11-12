@@ -45,24 +45,15 @@ from avnav_worker import WorkerParameter
 from avnav_nmea import Key,NMEAParser
 
 class Status:
-  def __init__(self,base):
-    self.lastTime=None
-    self.lastPos=None
+  def __init__(self,base,source):
     self.base=base
-  def setPos(self):
-    self.lastPos=time.monotonic()
-  def setTime(self):
-    self.lastTime=time.monotonic()
-  def _valid(self,ts):
-    if ts is None:
-      return False
-    now=time.monotonic()
-    if (ts + 20) >= now:
-      return True
-    return False
+    self.source=source
   def toState(self,api):
-    hasPos=self._valid(self.lastPos)
-    hasTime=self._valid(self.lastTime)
+    lat=api.getSingleValue(NMEAParser.K_LAT.getKey(),True)
+    lon=api.getSingleValue(NMEAParser.K_LON.getKey(),True)
+    tm=api.getSingleValue(NMEAParser.K_TIME.getKey(),True)
+    hasPos=(lat is not None and lon is not None and lat.source==self.source and lon.source==self.source )
+    hasTime=(tm is not None and tm.source==self.source)
     if not hasPos and not hasTime:
       api.setStatus("RUNNING",self.base)
     else:
@@ -91,7 +82,7 @@ class Plugin(object):
   P_READPOS=WorkerParameter('readPos',description='read position from 129025 and cog/sog from 129026',
                             default=True, type=WorkerParameter.T_BOOLEAN)
   P_PRIORITY=WorkerParameter('priority', description='priority of for the channel',
-                             default=NMEAParser.DEFAULT_API_PRIORITY,
+                             default=40,
                              type=WorkerParameter.T_NUMBER)
   PATHES=[
     NMEAParser.K_TIME,
@@ -224,17 +215,24 @@ class Plugin(object):
     self.api.setStatus("STARTED", "connecting to n2kd at %s:%d"%(host,port))
     while sequence == self.changeSequence:
       try:
-        self.socket = socket.create_connection((host, port),timeout=1000)
-        self.status=Status("connected to n2kd at %s:%d" %(host,port))
+        self.socket = socket.create_connection((host, port),timeout=20)
+        self.status=Status("connected to n2kd at %s:%d" %(host,port),source)
         self.status.toState(self.api)
+        self.socket.settimeout(1)
         buffer=""
         lastTimeSet=time.monotonic()
-        while True:
-          data = self.socket.recv(1024)
-          if len(data) == 0:
-            raise Exception("connection to n2kd lost")
-          buffer = buffer + data.decode('ascii', 'ignore')
+        while sequence == self.changeSequence:
+          try:
+            data = self.socket.recv(1024)
+            if len(data) == 0:
+              raise Exception("connection to n2kd lost")
+            buffer = buffer + data.decode('ascii', 'ignore')
+          except socket.timeout:
+            pass
           lines = buffer.splitlines(True)
+          if len(lines) == 0:
+            self.status.toState(self.api)
+            continue
           if lines[-1][-1] == '\n':
             buffer=""
           else:
@@ -260,7 +258,6 @@ class Plugin(object):
                     dt=datetime.datetime(year=1970,month=1,day=1)
                     dt+=datetime.timedelta(days=cdate,milliseconds=ctime/10)
                   if dt is not None:
-                    self.status.setTime()
                     self.api.addData(NMEAParser.K_TIME.getKey(), self.formatTime(dt),source=source, sourcePriority=priority)
                   if autoSendRMC > 0:
                       if self.lastRmc is None or self.lastRmc < (now - autoSendRMC):
@@ -289,7 +286,6 @@ class Plugin(object):
                     lon=self._getField(msg,'Longitude')
                     lat=self._getField(msg,'Latitude')
                     if lon is not None and lat is not None:
-                      self.status.setPos()
                       self.api.addData(NMEAParser.K_LON.getKey(),lon,source=source,sourcePriority=priority)
                       self.api.addData(NMEAParser.K_LAT.getKey(),lat,source=source,sourcePriority=priority)
                 if pgn == 129026: #sog/cog
