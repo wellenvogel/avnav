@@ -29,7 +29,6 @@ import PropTypes from 'prop-types';
 import LayoutHandler from '../util/layouthandler.js';
 import OverlayDialog,{dialogHelper} from './OverlayDialog.jsx';
 import WidgetFactory, {filterByEditables} from '../components/WidgetFactory.jsx';
-import assign from 'object-assign';
 import {Input,InputSelect} from './Inputs.jsx';
 import DB from './DialogButton.jsx';
 import {getList,ParamValueInput} from "./ParamValueInput";
@@ -62,7 +61,7 @@ class EditWidgetDialog extends React.Component{
         if (opt_new){
             nvalues=values;
             let newState={
-                widget: assign({weight:this.state.widget.weight},nvalues),
+                widget: {weight:this.state.widget.weight,...nvalues},
                 parameters:WidgetFactory.getEditableWidgetParameters(nvalues.name)};
             newState.parameters.forEach((p)=>{
                 p.setDefault(newState.widget);
@@ -70,7 +69,10 @@ class EditWidgetDialog extends React.Component{
             this.setState(newState);
         }
         else {
-            nvalues = assign({}, this.state.widget, values);
+            nvalues = {...this.state.widget, ...values};
+            if (this.state.widget.formatter !== nvalues.formatter){
+                nvalues.formatterParameters=[];
+            }
             this.setState({widget: nvalues})
         }
     }
@@ -111,7 +113,7 @@ class EditWidgetDialog extends React.Component{
         if (this.props.panel !== this.state.panel){
             panelClass+=" changed";
         }
-        let completeWidgetData=assign({},cloneDeep(WidgetFactory.findWidget(this.state.widget.name)),this.state.widget);
+        let completeWidgetData={...cloneDeep(WidgetFactory.findWidget(this.state.widget.name)),...this.state.widget};
         return (
             <React.Fragment>
             <div className="selectDialog editWidgetDialog">
