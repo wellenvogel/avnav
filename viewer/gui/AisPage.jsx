@@ -51,8 +51,8 @@ const reducedAisInfos=[
 ];
 const fieldToLabel=(field)=>{
     let rt;
-    aisInfos.map(function(l1){
-        l1.map(function(l2){
+    aisInfos.map((l1)=>{
+        l1.map((l2)=>{
             if (l2.name == field) rt=l2.label;
         })
     });
@@ -62,8 +62,9 @@ const fieldToLabel=(field)=>{
 
 const aisSortCreator=(sortField)=>{
     return (a,b)=> {
-        let fa = a[sortField];
-        let fb = b[sortField];
+        let useFmt=sortField === 'shipname';
+        let fa = useFmt?AisFormatter.format(sortField,a):a[sortField];
+        let fb = useFmt?AisFormatter.format(sortField,b):b[sortField];
         if (sortField == 'tcpa') {
             if (fa < 0 && fb >= 0) return 1;
             if (fb < 0 && fa >= 0) return -1;
@@ -73,6 +74,8 @@ const aisSortCreator=(sortField)=>{
                 return 0;
             }
         }
+        if (typeof(fa) === 'string') fa=fa.toUpperCase();
+        if (typeof(fb) === 'string') fb=fb.toUpperCase();
         if (fa < fb) return -1;
         if (fa > fb) return 1;
         if (fa == fb) return 0;
@@ -93,7 +96,8 @@ const sortDialog=(sortField)=>{
     let list=[
         {label:'CPA', value:'cpa'},
         {label:'TCPA',value:'tcpa'},
-        {label:'DST',value:'distance'}
+        {label:'DST',value:'distance'},
+        {label:'Shipname',value:'shipname'}
     ];
     for (let i in list){
         if (list[i].value === sortField) list[i].selected=true;
@@ -111,7 +115,6 @@ const AisItem=(props)=>{
     let cl=props.addClass||'';
     if (props.initialTarget) cl+=" initialTarget";
     if (props.warning) cl+=" "+WARNING_CLASS;
-    let aisInfoKey=1;
     let clazz=fmt.format('clazz',props);
     if (clazz !== '') clazz="["+clazz+"]";
     let txt="";
@@ -158,7 +161,6 @@ const WARNING_CLASS='aisWarning';
 class AisPage extends React.Component{
     constructor(props){
         super(props);
-        let self=this;
         if (props.options && props.options.mmsi){
             this.initialMmsi=props.options.mmsi;
         }
@@ -181,7 +183,7 @@ class AisPage extends React.Component{
                 name:"AisNearest",
                 onClick:()=>{
                     navdata.getAisHandler().setTrackedTarget(0);
-                    self.props.history.pop();
+                    this.props.history.pop();
                 }
             },
             {
@@ -214,7 +216,7 @@ class AisPage extends React.Component{
             Mob.mobDefinition(this.props.history),
             {
                 name: 'Cancel',
-                onClick: ()=>{self.props.history.pop()}
+                onClick: ()=>{this.props.history.pop()}
             }
         ];
         this.listRef=undefined;
@@ -295,19 +297,18 @@ class AisPage extends React.Component{
     componentDidMount(){
     }
     render(){
-        let self=this;
         let updateTime=globalStore.getData(keys.properties.aisListUpdateTime,1)*1000;
         const AisList=Dynamic(ItemList,{minTime:updateTime});
-        const Summary=Dynamic(function(props){
+        const Summary=Dynamic((props)=>{
             let color=PropertyHandler.getAisColor({
                 warning: true
             });
             return (
-                <div className="aisSummary" onClick={self.sortDialog}>
+                <div className="aisSummary" onClick={this.sortDialog}>
                     <span className="aisNumTargets">{props.numTargets} Targets</span>
                     {(props.warning) && <span className={WARNING_CLASS} style={{backgroundColor:color}}
-                                              onClick={self.scrollWarning}/>}
-                    <span>sorted by {fieldToLabel(self.state.sortField)}</span>
+                                              onClick={this.scrollWarning}/>}
+                    <span>sorted by {fieldToLabel(this.state.sortField)}</span>
                     {(props.searchValue !== undefined) && <span>[{props.searchValue}]</span>}
                 </div>
             );
@@ -338,9 +339,9 @@ class AisPage extends React.Component{
                 />
                 <AisList
                     itemClass={MemoAisItem}
-                    onItemClick={function (item) {
-                        self.props.history.setOptions({mmsi:item.mmsi});
-                        self.props.history.replace('aisinfopage', {mmsi: item.mmsi});
+                    onItemClick={(item)=> {
+                        this.props.history.setOptions({mmsi:item.mmsi});
+                        this.props.history.replace('aisinfopage', {mmsi: item.mmsi});
                         }}
                     className="aisList"
                     {...aisListProps}
@@ -367,7 +368,7 @@ class AisPage extends React.Component{
                 mainContent={
                             MainContent
                         }
-                buttonList={self.buttons}/>
+                buttonList={this.buttons}/>
         );
     }
 }
