@@ -53,7 +53,7 @@ const transform=(self,node,index)=>{
 };
 
 export const ExternalWidget =(props)=>{
-    const {updateCount,setUpdateCount}=useState(1);
+    const [updateCount,setUpdateCount]=useState(1);
     const initialCalled=useRef(false);
     const canvasRef=useRef(null);
     const getProps=()=>{
