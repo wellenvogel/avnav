@@ -9,7 +9,15 @@ import Addons from './Addons.js';
 import Helper from '../util/helper.js';
 import Requests from '../util/requests.js';
 import GuiHelpers, {stateHelper} from '../util/GuiHelpers.js';
+import UploadHandler from "./UploadHandler";
 
+const contains=(list,url,opt_key)=>{
+    if (opt_key === undefined) opt_key="url";
+    for (let k=0;k<list.length;k++){
+        if (list[k][opt_key] === url) return true;
+    }
+    return false;
+}
 export default  class UserAppDialog extends React.Component{
     constructor(props){
         super(props);
@@ -21,11 +29,41 @@ export default  class UserAppDialog extends React.Component{
         this.state.internal=true;
         this.state.loaded=(props.fixed||{}).url === undefined || props.addon !== undefined; //addons loaded (for fixed)
         if (this.state.loaded && (props.addon||{}).keepUrl) this.state.internal=false;
+        this.state.uploadSequence=0;
         this.fillLists();
 
     }
+    readImages(opt_active){
+        Requests.getJson("?request=list&type=images")
+            .then((data)=>{
+                let itemList=[];
+                let activeUrl;
+                if (data.items) {
+                    data.items.forEach((el)=> {
+                        if (GuiHelpers.IMAGES.indexOf(Helper.getExt(el.name)) >= 0) {
+                            if (! contains(this.state.iconList,el.url)) {
+                                el.label = el.url;
+                                el.value = el.url;
+                                itemList.push(el);
+                            }
+                            if (opt_active !== undefined && el.name === opt_active){
+                                activeUrl=el.url;
+                            }
+                        }
+                    });
+                    this.setState( (prevState)=>{
+                        return {iconList: prevState.iconList.concat(itemList)}
+                    });
+                }
+                if (activeUrl !== undefined){
+                    this.stateHelper.setState({
+                        icon:activeUrl
+                    });
+                }
+            })
+            .catch((error)=>{})
+    }
     fillLists(){
-        let self=this;
         Requests.getJson("?request=list&type=user")
             .then((data)=>{
                 let iconList=[];
@@ -33,9 +71,11 @@ export default  class UserAppDialog extends React.Component{
                 if (data.items){
                     data.items.forEach((el)=>{
                         if (GuiHelpers.IMAGES.indexOf(Helper.getExt(el.name)) >= 0){
-                            el.label=el.url;
-                            el.value=el.url;
-                            iconList.push(el);
+                            if (! contains(this.state.iconList,el.url)) {
+                                el.label = el.url;
+                                el.value = el.url;
+                                iconList.push(el);
+                            }
                         }
                         if (Helper.getExt(el.name) === 'html'){
                             el.label=el.url;
@@ -43,30 +83,18 @@ export default  class UserAppDialog extends React.Component{
                             userFiles.push(el);
                         }
                     });
-                    self.setState({
-                        iconList:self.state.iconList.concat(iconList),
-                        userFiles:userFiles
+                    this.setState( (prevState)=> {
+                        return {
+                            iconList: prevState.iconList.concat(iconList),
+                            userFiles: userFiles
+                        }
                     });
                 }
             }).catch((error)=>{});
-        Requests.getJson("?request=list&type=images")
-            .then((data)=>{
-                let itemList=[];
-                if (data.items) {
-                    data.items.forEach((el)=> {
-                        if (GuiHelpers.IMAGES.indexOf(Helper.getExt(el.name)) >= 0) {
-                            el.label=el.url;
-                            el.value=el.url;
-                            itemList.push(el);
-                        }
-                    });
-                    self.setState({iconList: self.state.iconList.concat(itemList)});
-                }
-            })
-            .catch((error)=>{})
+        this.readImages();
         if (!this.state.loaded) Addons.readAddOns()
             .then((addons)=>{
-                let current=Addons.findAddonByUrl(addons,self.props.fixed.url)
+                let current=Addons.findAddonByUrl(addons,this.props.fixed.url)
                 if (current) this.stateHelper.setState(assign({},current,this.props.fixed));
                 this.setState({loaded:true})
             })
@@ -93,13 +121,12 @@ export default  class UserAppDialog extends React.Component{
     }
 
     render(){
-        let self=this;
         let fixed=this.props.fixed||{};
         let canEdit=this.stateHelper.getValue('canDelete',true);
         if (!this.state.loaded) canEdit=false;
         let fixedUrl=fixed.url !== undefined;
         let title="";
-        if (canEdit)title=fixed?"Modify ":"Create ";
+        if (canEdit)title=fixed.name?"Modify ":"Create ";
         return(
             <React.Fragment>
                 <div className="userAppDialog">
@@ -128,16 +155,41 @@ export default  class UserAppDialog extends React.Component{
                                     value={this.stateHelper.getValue('url','')}
                                     minSize={50}
                                     maxSize={100}
-                                    onChange={(val)=>self.stateHelper.setState({url:val})}/>
+                                    className={this.stateHelper.getValue('url')?"":"missing"}
+                                    onChange={(val)=>this.stateHelper.setState({url:val})}/>
                                 :
                                 <InputSelect
                                     dialogRow={true}
                                     label="internal url"
                                     value={this.stateHelper.getValue('url','')}
+                                    className={this.stateHelper.getValue('url')?"":"missing"}
                                     list={this.state.userFiles}
                                     showDialogFunction={this.dialogHelper.showDialog}
-                                    onChange={(selected)=>self.stateHelper.setState({url:selected.url})}/>
+                                    onChange={(selected)=>this.stateHelper.setState({url:selected.url})}/>
                             }
+                            <UploadHandler
+                                local={false}
+                                type={'images'}
+                                doneCallback={(param)=>{
+                                    this.readImages(param.param.name);
+                                }}
+                                errorCallback={(err)=>{if (err) Toast(err);}}
+                                uploadSequence={this.state.uploadSequence}
+                                checkNameCallback={(name)=>{
+                                    return new Promise((resolve,reject)=>{
+                                        if (contains(this.state.iconList,name,"name")){
+                                            reject(name+" already exists");
+                                            return;
+                                        }
+                                        let ext=Helper.getExt(name);
+                                        let rt={name:name};
+                                        if (GuiHelpers.IMAGES.indexOf(ext) < 0){
+                                            reject("only images of types "+GuiHelpers.IMAGES.join(","));
+                                            return;
+                                        }
+                                        resolve(rt);
+                                });}}
+                                />
                         </React.Fragment>
                     }
                     {canEdit ?
@@ -147,7 +199,7 @@ export default  class UserAppDialog extends React.Component{
                             value={this.stateHelper.getValue('title','')}
                             minSize={50}
                             maxSize={100}
-                            onChange={(value)=>{self.stateHelper.setState({title:value})}}
+                            onChange={(value)=>{this.stateHelper.setState({title:value})}}
                             />
                         :
                         <InputReadOnly
@@ -161,11 +213,18 @@ export default  class UserAppDialog extends React.Component{
                             dialogRow={true}
                             label="icon"
                             value={this.stateHelper.getValue('icon')}
-                            list={this.state.iconList}
+                            list={[{label:'--upload new--',value:undefined,upload:true}].concat(this.state.iconList)}
                             showDialogFunction={this.dialogHelper.showDialog}
-                            onChange={(selected)=>this.stateHelper.setState({
+                            className={this.stateHelper.getValue('icon')?"":"missing"}
+                            onChange={(selected)=>{
+                                if (selected.upload) {
+                                    this.setState({uploadSequence: this.state.uploadSequence + 1});
+                                    return;
+                                }
+                                this.stateHelper.setState({
                                     icon:selected.url
-                                })}
+                                });
+                            }}
                             >
                             {this.stateHelper.getValue('icon') && <img className="appIcon" src={this.stateHelper.getValue('icon')}/>}
                         </InputSelect>
@@ -190,7 +249,7 @@ export default  class UserAppDialog extends React.Component{
 
                     <div className="dialogButtons">
                         {(this.stateHelper.getValue('name') && this.stateHelper.getValue('canDelete') && canEdit) && <DB name="delete" onClick={()=>{
-                            self.dialogHelper.showDialog(OverlayDialog.createConfirmDialog("really delete User App?",
+                            this.dialogHelper.showDialog(OverlayDialog.createConfirmDialog("really delete User App?",
                                 ()=>{
                                     this.props.closeCallback();
                                     this.props.removeFunction(this.stateHelper.getValue('name'));

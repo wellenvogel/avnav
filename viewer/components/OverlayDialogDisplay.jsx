@@ -35,7 +35,7 @@ class OverlayDialog extends React.Component {
             <Container ref={(el)=>this.container=el} onClick={this.props.closeCallback}>
                 <div ref={(el)=>this.box=el} className={className} onClick={
                     (ev)=>{
-                    ev.preventDefault();
+                    //ev.preventDefault();
                     ev.stopPropagation();
                     }
                 }>
