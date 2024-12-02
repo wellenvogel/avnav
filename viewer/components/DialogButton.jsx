@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import {useKeyEventHandlerPlain} from '../util/GuiHelpers.js';
 import KeyHandler from '../util/keyhandler';
+import {concatsp} from "../util/helper";
 
 const COMPONENT="dialogButton";
 const DialogButton=(props)=>{
@@ -11,20 +12,16 @@ const DialogButton=(props)=>{
         });
         let {icon,style,disabled,visible,name,className,toggle,children,...forward}=props;
         if (visible === false) return null;
-        if (className === undefined) className="";
-        className += " dialogButton " + name;
         let spanStyle={};
         if (icon !== undefined) {
-            className+=" icon";
             spanStyle.backgroundImage = "url(" + icon + ")";
         }
-        className+=toggle?" active":" inactive";
         let add = {};
         if (disabled) {
             add.disabled = true;
         }
         return (
-            <button {...forward} {...add} className={className}>
+            <button {...forward} {...add} className={concatsp("dialogButton",name,(icon !== undefined)?"icon":undefined,toggle?"active":"inactive")}>
             <span style={spanStyle}/>
                 {children}
             </button>

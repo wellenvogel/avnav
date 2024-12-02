@@ -171,6 +171,22 @@ class IdGen{
     }
 }
 Helper.idGen=IdGen;
+export const concat=(...args)=>{
+    let rt="";
+    args.forEach((a)=>{
+        if (a !== undefined) rt+=a;
+    });
+    return rt;
+}
+export const concatsp=(...args)=>{
+    let rt="";
+    args.forEach((a)=>{
+        if (a !== undefined) rt+=" "+a;
+    });
+    return rt;
+}
+Helper.concat=concat;
+Helper.concatsp=concatsp;
 
 export default Helper;
 
