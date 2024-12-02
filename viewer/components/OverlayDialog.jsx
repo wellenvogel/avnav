@@ -7,73 +7,285 @@
  * the static methods will return promises for simple dialog handling
  */
 
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import assign from 'object-assign';
-import DialogDisplay from './OverlayDialogDisplay.jsx';
-import Dynamic from '../hoc/Dynamic.jsx';
 import InputMonitor from '../hoc/InputMonitor.jsx';
-import globalStore from '../util/globalstore.jsx';
-import ItemList from '../components/ItemList.jsx';
-import keys from '../util/keys.jsx';
 import DB from './DialogButton.jsx';
+import MapEventGuard from "../hoc/MapEventGuard";
+import PropTypes from "prop-types";
+import DialogButton from "./DialogButton.jsx";
+import Helper from "../util/helper";
 
-let id=1;
+
+/**
+ * the basic overlay dialog elements
+ */
+
+const Container=MapEventGuard(React.forwardRef((props,ref)=>{
+    return (
+        <div className="overlay_cover_active" onClick={props.onClick} ref={ref}>
+            {props.children}
+        </div>
+    )
+}));
+
+export const OverlayDialog = (props) => {
+    let Content = props.content;
+    let className = "dialog";
+    if (props.className) className += " " + props.className;
+    return (
+        <Container onClick={props.closeCallback}>
+            <div className={className} onClick={
+                (ev) => {
+                    //ev.preventDefault();
+                    ev.stopPropagation();
+                }
+            }>
+                <Content closeCallback={props.closeCallback}/></div>
+        </Container>
+    );
+}
+
+
+OverlayDialog.propTypes={
+    parent: PropTypes.element,
+    onClick: PropTypes.func, //click on container
+    closeCallback: PropTypes.func, //handed over to the child to close the dialog
+    className: PropTypes.string
+};
+
+export const DialogFrame=(props)=>{
+    let classNameS="";
+    let {title,className,flex,children,...fwprops}=props;
+    if (className) classNameS+=" "+className;
+    if (flex !== false) classNameS+=" flexInner";
+    return <div {...fwprops} className={classNameS}>
+        {(title)?<h3 className="dialogTitle">{title}</h3>:null}
+        {children}
+    </div>
+}
+DialogFrame.propTypes={
+    className: PropTypes.string,
+    title: PropTypes.string,
+    flex: PropTypes.bool,
+    children: PropTypes.any
+}
+
+export const DialogButtons=(props)=>{
+    const {className,children,buttonList,...fw}=props;
+    return <div {...fw} className={"dialogButtons "+((className!==undefined)?className:"")}>
+        {buttonList?buttonList.map((button)=>{
+            return <DialogButton {...button} key={button.name}>{button.label||button.name}</DialogButton>
+        }):null}
+        {children}
+    </div>
+}
+/**
+ * helper for dialogButtonList
+ */
+export const DBCancel=(onClick,props)=>{
+    return {name:'cancel',onClick:onClick,label:'Cancel',...props};
+}
+export const DBOk=(onClick,props)=>{
+    return {name:'ok',onClick:onClick,label:'Ok',...props};
+}
+
+
+export const dialogDisplay=(content,closeCallback)=>{
+    let Display=InputMonitor(OverlayDialog);
+    return(
+        <Display
+            className="nested"
+            content={content}
+            closeCallback={closeCallback}
+        />
+    );
+}
+/**
+ * a helper that will add dialog functionality to a component
+ * it will maintain a variable inside the component state that holds the dialog
+ * and it will wrap the render method to render the dialog if it is set
+ * it exposes a couple of methods to control the dialog
+ * normally you will instantiate it in the constructor like
+ *    this.dialogHelper=dialogHelper(this);
+ * and later you will use it like
+ *    this.dialogHelper.showDialog((props)=>return <div>HelloDialog</div>);
+ * @param thisref - the react component
+ * @param stateName
+ * @param opt_closeCallback - callback when dialog is closed
+ * @returns {*}
+ */
+export const dialogHelper=(thisref,stateName,opt_closeCallback)=>{
+    if (! stateName) stateName="dialog";
+    let rt={
+        showDialog:(Dialog)=>{
+            let state={};
+            state[stateName]=(props)=>{
+                return(
+                    <Dialog
+                        {...props}
+                        closeCallback={()=>{
+                            rt.hideDialog();
+                        }}
+                    />
+                )
+            };
+            thisref.setState(state);
+        },
+        hideDialog:()=>{
+            let state={};
+            state[stateName]=undefined;
+            thisref.setState(state);
+            notifyClosed();
+            if (opt_closeCallback) opt_closeCallback();
+        },
+        filterState:(state)=>{
+            let rt=assign({},state);
+            delete rt[stateName];
+            return rt;
+        },
+        getRender(){
+            if (!thisref.state[stateName]) return null;
+            return dialogDisplay(thisref.state[stateName],()=>{
+                this.hideDialog()
+            });
+        },
+        isShowing(){
+            return !!thisref.state[stateName];
+        }
+    };
+    rt.showDialog=rt.showDialog.bind(rt);
+    rt.hideDialog=rt.hideDialog.bind(rt);
+    rt.filterState=rt.filterState.bind(rt);
+    rt.getRender=rt.getRender.bind(rt);
+    let originalRender=thisref.render;
+    let newRender=()=>{
+        return <React.Fragment>
+            {rt.getRender()}
+            {originalRender.call(thisref)}
+        </React.Fragment>
+    };
+    thisref.render=newRender.bind(thisref);
+    return rt;
+};
+/**
+ * new style dialog usage
+ * @param closeCb
+ */
+export const useDialog=(closeCb)=>{
+    const [dialogContent,setDialog]=useState(undefined);
+    return [
+        ()=>{
+            if (! dialogContent || ! dialogContent.content) return null;
+            return dialogDisplay(dialogContent.content,()=>{
+                setDialog(undefined);
+                if (closeCb) closeCb();
+                if (dialogContent.close) dialogContent.close();
+            });
+
+        }
+        ,
+        (content,opt_closeCb)=>setDialog(content?{content:content,close:opt_closeCb}:undefined)
+    ]
+}
+
+/**
+ * handler for a global dialog
+ */
+let CBId=new Helper.idGen();
+let DId=new Helper.idGen();
+let globalDialogs=[];
+
+let globalDialogCallbacks={}
+
+const addGlobalDialog=(dialog,opt_cancel,opt_timeout)=>{
+    let id=DId.next();
+    let entry={dialog:dialog,cancel:opt_cancel,id:id};
+    if (opt_timeout){
+        entry.timer=window.setTimeout(()=>{
+            removeGlobalDialog(id);
+        },opt_timeout);
+    }
+    globalDialogs.forEach((de)=>{
+        if (de.cancel) de.cancel();
+        if (de.timer !== undefined) window.clearTimeout(de.timer);
+    });
+    globalDialogs=[];
+    if (dialog) globalDialogs.push(entry);
+    for (let k in globalDialogCallbacks){
+        globalDialogCallbacks[k](dialog,()=>removeDialog(id,true));
+    }
+    return id;
+}
+const removeGlobalDialog=(id,opt_omitCancel)=>{
+    let idx=-1;
+    for (let i=0;i<globalDialogs.length;i++){
+        if (globalDialogs[i].id===id){
+            idx=i;
+            break;
+        }
+    }
+    if (idx < 0) return false;
+    if (globalDialogs[idx].cancel && ! opt_omitCancel) globalDialogs[idx].cancel();
+    if (globalDialogs[idx].timer !== undefined) window.clearTimeout(globalDialogs[idx].timer);
+    globalDialogs.splice(idx,1);
+    if (globalDialogs.length < 1){
+        //we removed the last one
+        for (let k in globalDialogCallbacks){
+            globalDialogCallbacks[k](undefined);
+        }
+        notifyClosed();
+    }
+
+}
+const addCb=(callback)=>{
+    let id=CBId.next();
+    globalDialogCallbacks[id]=callback;
+    if (globalDialogs.length < 1 ){
+        callback();
+    }
+    else {
+        callback(globalDialogs[globalDialogs.length - 1].dialog,()=>removeGlobalDialog(globalDialogs[globalDialogs.length - 1].id));
+    }
+    return id;
+}
+const removeCb=(id)=>{
+    delete globalDialogCallbacks[id];
+}
+
+export const GlobalDialogDisplay=(props)=>{
+    const [DDisplay,setDialog]=useDialog(props.closeCallback);
+    useEffect(() => {
+        let id=addCb((dialog,closeCb)=>{
+            setDialog(dialog,closeCb);
+        });
+        return ()=>removeCb(id);
+    }, []);
+    return <DDisplay {...props}/>
+}
+
+
 const notifyClosed=()=>{
     if (window.avnav.android && window.avnav.android.dialogClosed){
         window.avnav.android.dialogClosed();
     }
 }
-const nextId=()=> {
-    id++;
-    return id;
-};
 /**
  *
  * @param key
  * @param opt_cancelCallback this will be called if the dialog
  *        is removed from "outside"
  */
-const addDialog=(key,content,opt_parent,opt_cancelCallback,opt_timeout)=> {
-    if (! key) key=nextId();
-    let properties={
-        content:content,
-        parent:opt_parent,
-        cancelCallback:opt_cancelCallback,
-        closeCallback: ()=>{removeDialog(key)},
-        onClick: ()=>{removeDialog(key)}
-    };
-    let currentDialogs=assign({},globalStore.getData(keys.gui.global.currentDialog,{}));
-    if (opt_timeout){
-        properties.timeoutHandler=window.setTimeout(removeDialog(key),opt_timeout);
-    }
-    currentDialogs[key]=properties;
-    globalStore.storeData(keys.gui.global.currentDialog,currentDialogs);
-    globalStore.storeData(keys.gui.global.currentDialog,currentDialogs);
-    return key;
+const addDialog=(content,opt_cancelCallback,opt_timeout)=> {
+    return addGlobalDialog(content,opt_cancelCallback,opt_timeout);
 };
 
 const removeDialog=(key,opt_omitCancel)=> {
-    let currentDialogs=assign({},globalStore.getData(keys.gui.global.currentDialog,{}));
-    let old=currentDialogs[key];
-    if (old !== undefined) {
-        delete currentDialogs[key];
-        if (old.timeoutHandler) {
-            window.clearTimeout(old.timeout);
-        }
-    }
-    globalStore.storeData(keys.gui.global.currentDialog,currentDialogs);
-    if (old && old.cancelCallback && ! opt_omitCancel) {
-        //do this after we updated the store to avoid endless loops
-        //if someone calls removeDialog in the cancel callback
-        old.cancelCallback();
-    }
-    notifyClosed();
-    return old !== undefined;
+    return removeGlobalDialog(key,opt_omitCancel);
 };
 
 const removeAll=()=>{
-    //no callbacks...
-    globalStore.storeData(keys.gui.global.currentDialog,{});
+    addGlobalDialog();
 };
 
 
@@ -193,29 +405,6 @@ const Dialogs = {
         };
     },
 
-/**
-     * get the react elemnt that will handle all the dialogs
-     */
-    getDialogContainer: (props) => {
-        let Item = InputMonitor(DialogDisplay);
-        let List = Dynamic(ItemList);
-        return <List {...props}
-            itemClass={Item}
-            storeKeys={{
-                items:keys.gui.global.currentDialog
-            }}
-            updateFunction={(state)=>{
-                let items=[];
-                for (let k in state.items){
-                    let ip=assign({key:k},state.items[k]);
-                    //delete properties we only handle internally
-                    delete ip.timeoutHandler;
-                    items.push(ip);
-                }
-                return {itemList:items};
-            }}
-            />;
-    },
 
     createAlertDialog: function(text,okFunction){
         return (props)=>{
@@ -242,12 +431,12 @@ const Dialogs = {
      */
     alert: function (text, opt_parent) {
         return new Promise(function (resolve, reject) {
-            let id = nextId();
+            let id;
             const okFunction = ()=> {
                 removeDialog(id,true);
                 resolve();
             };
-            addDialog(id,Dialogs.createAlertDialog(text,okFunction),opt_parent,()=> {
+            id=addDialog(Dialogs.createAlertDialog(text,okFunction),()=> {
                     resolve();
                 });
         });
@@ -261,15 +450,14 @@ const Dialogs = {
      */
     confirm: function (text, opt_parent, opt_title) {
         return new Promise(function (resolve, reject) {
-            let id = nextId();
-            const okFunction = (el)=> {
+            const okFunction = ()=> {
                 resolve(1);
             };
-            const cancelFunction = (el)=> {
+            const cancelFunction = ()=> {
                 reject();
             };
             let html = Dialogs.createConfirmDialog(text,okFunction,cancelFunction,opt_title);
-            addDialog(id,html,opt_parent,()=> {
+            addDialog(html,()=> {
                     reject();
                 });
         });
@@ -289,7 +477,7 @@ const Dialogs = {
      * @returns {*|OverlayDialog}
      */
     valueDialog: function (title, value, okCallback, opt_parent, opt_label, opt_cancelCallback) {
-        let id = nextId();
+        let id;
         const ok = (value)=> {
             removeDialog(id,true);
             okCallback(value);
@@ -298,7 +486,7 @@ const Dialogs = {
             if (removeDialog(id,true) && opt_cancelCallback) opt_cancelCallback();
         };
         let html= Dialogs.createValueDialog(title, value, ok, cancel, opt_label);
-        addDialog(id,html,opt_parent,()=> {
+        id=addDialog(html,()=> {
                 if (opt_cancelCallback) opt_cancelCallback();
             });
     },
@@ -313,7 +501,7 @@ const Dialogs = {
      * @returns {Promise}
      */
     valueDialogPromise: function (title, value, opt_parent, opt_label) {
-        let id = nextId();
+        let id;
         return new Promise(function (resolve, reject) {
             let Dialog = Dialogs.createValueDialog(title, value, (value)=> {
                 removeDialog(id,true);
@@ -323,7 +511,7 @@ const Dialogs = {
                 removeDialog(id,true);
                 reject();
             }, opt_label);
-            addDialog(id,Dialog,opt_parent,()=> {
+            id=addDialog(Dialog,()=> {
                     reject();
                 });
         })
@@ -339,13 +527,12 @@ const Dialogs = {
      */
     selectDialogPromise: function (title, list, opt_parent) {
         return new Promise(function (resolve, reject) {
-            let id = nextId();
             let Dialog = Dialogs.createSelectDialog(title, list, (value)=> {
                 resolve(value);
             }, ()=> {
                 reject();
             });
-            addDialog(id,Dialog, opt_parent,()=> {
+            addDialog(Dialog,()=> {
                         reject();
                     });
         })
@@ -361,8 +548,7 @@ const Dialogs = {
      * @returns dialogId
      */
     dialog: function (html, opt_parent,opt_cancelCallback,opt_timeout) {
-        let id = nextId();
-        return addDialog(id,html,opt_parent,opt_cancelCallback,opt_timeout);
+        return addDialog(html,opt_cancelCallback,opt_timeout);
     },
 
     hide: function(){
@@ -372,99 +558,7 @@ const Dialogs = {
 
 
 };
-export const dialogDisplay=(content,closeCallback)=>{
-    let Display=InputMonitor(DialogDisplay);
-    return(
-        <Display
-            className="nested"
-            content={content}
-            closeCallback={closeCallback}
-        />
-    );
-}
-/**
- * a helper that will add dialog functionality to a component
- * it will maintain a variable inside the component state that holds the dialog
- * and it will wrap the render method to render the dialog if it is set
- * it exposes a couple of methods to control the dialog
- * normally you will instantiate it in the constructor like
- *    this.dialogHelper=dialogHelper(this);
- * and later you will use it like
- *    this.dialogHelper.showDialog((props)=>return <div>HelloDialog</div>);
- * @param thisref - the react component
- * @param stateName
- * @param opt_closeCallback: callback when dialog is closed
- * @returns {*}
- */
-export const dialogHelper=(thisref,stateName,opt_closeCallback)=>{
-    if (! stateName) stateName="dialog";
-    let rt={
-        showDialog:(Dialog)=>{
-            let state={};
-            state[stateName]=(props)=>{
-                return(
-                    <Dialog
-                        {...props}
-                        closeCallback={()=>{
-                                rt.hideDialog();
-                            }}
-                        />
-                )
-            };
-            thisref.setState(state);
-        },
-        hideDialog:()=>{
-            let state={};
-            state[stateName]=undefined;
-            thisref.setState(state);
-            notifyClosed();
-            if (opt_closeCallback) opt_closeCallback();
-        },
-        filterState:(state)=>{
-            let rt=assign({},state);
-            delete rt[stateName];
-            return rt;
-        },
-        getRender(){
-            if (!thisref.state[stateName]) return null;
-            return dialogDisplay(thisref.state[stateName],()=>{
-                this.hideDialog()
-            });
-        },
-        isShowing(){
-          return !!thisref.state[stateName];
-        }
-    };
-    rt.showDialog=rt.showDialog.bind(rt);
-    rt.hideDialog=rt.hideDialog.bind(rt);
-    rt.filterState=rt.filterState.bind(rt);
-    rt.getRender=rt.getRender.bind(rt);
-    let originalRender=thisref.render;
-    let newRender=()=>{
-        return <React.Fragment>
-            {rt.getRender()}
-            {originalRender.call(thisref)}
-            </React.Fragment>
-    };
-    thisref.render=newRender.bind(thisref);
-    return rt;
-};
 
-export const useDialog=(closeCb)=>{
-    const [dialogContent,setDialog]=useState(undefined);
-    return [
-        ()=>{
-            if (! dialogContent || ! dialogContent.content) return null;
-            return dialogDisplay(dialogContent.content,()=>{
-                    setDialog(undefined);
-                    if (closeCb) closeCb();
-                });
-
-        }
-        ,
-        (content)=>setDialog(content?{content:content}:undefined)
-    ]
-}
 
 export const InfoItem=(props)=>{
     return <div className={"dialogRow "+props.className}>
@@ -483,3 +577,4 @@ InfoItem.show=(data,description)=>{
     return <InfoItem label={description.label} value={v}/>
 }
 export default Dialogs;
+

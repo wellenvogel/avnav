@@ -22,7 +22,7 @@ import WarningPage from './gui/WarningPage.jsx';
 import ViewPage from './gui/ViewPage.jsx';
 import AddonConfigPage from './gui/AddOnConfigPage.jsx';
 import ImporterPage from "./gui/ImporterPage";
-import OverlayDialog from './components/OverlayDialog.jsx';
+import OverlayDialog, {GlobalDialogDisplay} from './components/OverlayDialog.jsx';
 import globalStore from './util/globalstore.jsx';
 import Requests from './util/requests.js';
 import SoundHandler from './components/SoundHandler.jsx';
@@ -471,8 +471,7 @@ class App extends React.Component {
                     {etext}
                 </div>
                 </div>
-        }
-        const Dialogs = OverlayDialog.getDialogContainer;
+        };
         let appClass="app";
         let layoutClass=(this.props.layoutName||"").replace(/[^0-9a-zA-Z]/g,'_');
         appClass+=" "+layoutClass;
@@ -505,7 +504,7 @@ class App extends React.Component {
                 history={this.history}
                 nightMode={this.props.nightMode}
                 />
-            <Dialogs
+            <GlobalDialogDisplay
                 className={this.props.nightMode?"nightMode":""}/>
             { ! (avnav.android || globalStore.getData(keys.gui.global.preventAlarms)) && globalStore.getData(keys.properties.localAlarmSound) ?<DynamicSound
                 storeKeys={alarmStoreKeys}

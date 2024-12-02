@@ -161,6 +161,16 @@ Helper.addPolar=(a,b)=>{
   b=Helper.toCart(b);
   return Helper.toPol([a[0]+b[0],a[1]+b[1]]);
 }
+class IdGen{
+    constructor(opt_iv) {
+        this.value=opt_iv||0;
+    }
+    next(){
+        this.value++;
+        return this.value;
+    }
+}
+Helper.idGen=IdGen;
 
 export default Helper;
 

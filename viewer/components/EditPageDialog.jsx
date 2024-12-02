@@ -2,7 +2,6 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import LayoutHandler from '../util/layouthandler.js';
 import OverlayDialog from './OverlayDialog.jsx';
-import DialogContainer from './OverlayDialogDisplay.jsx';
 import assign from 'object-assign';
 import {Checkbox} from './Inputs.jsx';
 import DB from './DialogButton.jsx';

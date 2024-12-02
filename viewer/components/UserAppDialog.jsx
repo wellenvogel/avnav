@@ -10,6 +10,7 @@ import Helper from '../util/helper.js';
 import Requests from '../util/requests.js';
 import GuiHelpers, {stateHelper} from '../util/GuiHelpers.js';
 import UploadHandler from "./UploadHandler";
+import {DBCancel, DBOk, DialogButtons, DialogFrame} from "./OverlayDialog";
 
 const contains=(list,url,opt_key)=>{
     if (opt_key === undefined) opt_key="url";
@@ -128,9 +129,7 @@ export default  class UserAppDialog extends React.Component{
         let title="";
         if (canEdit)title=fixed.name?"Modify ":"Create ";
         return(
-            <React.Fragment>
-                <div className="userAppDialog">
-                    <h3 className="dialogTitle">{title+'User App'}</h3>
+            <DialogFrame className="userAppDialog" flex={true} title={title+'User App'}>
                     {(fixedUrl || ! canEdit) ?
                         <InputReadOnly
                             dialogRow={true}
@@ -247,27 +246,28 @@ export default  class UserAppDialog extends React.Component{
                     />}
 
 
-                    <div className="dialogButtons">
-                        {(this.stateHelper.getValue('name') && this.stateHelper.getValue('canDelete') && canEdit) && <DB name="delete" onClick={()=>{
-                            this.dialogHelper.showDialog(OverlayDialog.createConfirmDialog("really delete User App?",
-                                ()=>{
-                                    this.props.closeCallback();
-                                    this.props.removeFunction(this.stateHelper.getValue('name'));
-                                }
-                            ));
-                        }}>Delete</DB>}
-                        <DB name="cancel" onClick={this.props.closeCallback}>Cancel</DB>
-                        <DB name="ok" onClick={()=>{
+                    <DialogButtons buttonList={[
+                        {name:'delete',
+                            label:'Delete',
+                            onClick:()=>{
+                                this.dialogHelper.showDialog(OverlayDialog.createConfirmDialog("really delete User App?",
+                                    ()=>{
+                                        this.props.closeCallback();
+                                        this.props.removeFunction(this.stateHelper.getValue('name'));
+                                    }
+                                ));
+                            },
+                            visible:!!(this.stateHelper.getValue('name') && this.stateHelper.getValue('canDelete') && canEdit)
+                        },
+                        DBCancel(this.props.closeCallback),
+                        DBOk(()=>{
                             if (! this.checkOk()) return;
                             this.props.closeCallback();
                             this.props.okFunction(assign({},this.stateHelper.getValues(),this.props.fixed))
-                            }}
-                            disabled={!this.stateHelper.getValue('icon') || ! this.stateHelper.getValue('url')|| !canEdit}
-                            >Ok</DB>
-
-                    </div>
-                </div>
-            </React.Fragment>
+                        },
+                            {disabled: !this.stateHelper.getValue('icon') || ! this.stateHelper.getValue('url')|| !canEdit})
+                    ]}/>
+            </DialogFrame>
         );
     }
 }

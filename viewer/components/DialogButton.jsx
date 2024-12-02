@@ -6,16 +6,16 @@ import KeyHandler from '../util/keyhandler';
 class DialogButton extends React.Component {
     constructor(props){
         super(props);
-        let self=this;
         KeyHandler.registerDialogComponent("dialogButton");
         GuiHelper.keyEventHandler(this,(component,action)=>{
-            if (self.props.onClick && ! self.props.disabled) self.props.onClick();
+            if (this.props.onClick && ! this.props.disabled && this.props.visible !== false) this.props.onClick();
         },"dialogButton",this.props.name);
     }
     render() {
+        let {icon,style,disabled,visible,...forward}=this.props;
+        if (visible === false) return null;
         let className = this.props.className || "";
         className += " dialogButton " + this.props.name;
-        let {icon,style,disabled,...forward}=this.props;
         let spanStyle={};
         if (icon !== undefined) {
             className+=" icon";
@@ -42,7 +42,8 @@ DialogButton.propTypes={
     icon: PropTypes.string,
     style: PropTypes.object,
     disabled: PropTypes.bool,
-    toggle: PropTypes.bool
+    toggle: PropTypes.bool,
+    visible: PropTypes.bool
 };
 
 export default DialogButton;
