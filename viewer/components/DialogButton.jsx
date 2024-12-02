@@ -1,27 +1,24 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import GuiHelper from '../util/GuiHelpers.js';
+import {useKeyEventHandlerPlain} from '../util/GuiHelpers.js';
 import KeyHandler from '../util/keyhandler';
 
-class DialogButton extends React.Component {
-    constructor(props){
-        super(props);
-        KeyHandler.registerDialogComponent("dialogButton");
-        GuiHelper.keyEventHandler(this,(component,action)=>{
-            if (this.props.onClick && ! this.props.disabled && this.props.visible !== false) this.props.onClick();
-        },"dialogButton",this.props.name);
-    }
-    render() {
-        let {icon,style,disabled,visible,...forward}=this.props;
+const COMPONENT="dialogButton";
+const DialogButton=(props)=>{
+        KeyHandler.registerDialogComponent(COMPONENT);
+        useKeyEventHandlerPlain(props.name,COMPONENT,()=>{
+            if (props.onClick && ! props.disabled && props.visible !== false) props.onClick();
+        });
+        let {icon,style,disabled,visible,name,className,toggle,children,...forward}=props;
         if (visible === false) return null;
-        let className = this.props.className || "";
-        className += " dialogButton " + this.props.name;
+        if (className === undefined) className="";
+        className += " dialogButton " + name;
         let spanStyle={};
         if (icon !== undefined) {
             className+=" icon";
             spanStyle.backgroundImage = "url(" + icon + ")";
         }
-        className+=this.props.toggle?" active":" inactive";
+        className+=toggle?" active":" inactive";
         let add = {};
         if (disabled) {
             add.disabled = true;
@@ -29,11 +26,10 @@ class DialogButton extends React.Component {
         return (
             <button {...forward} {...add} className={className}>
             <span style={spanStyle}/>
-                {this.props.children}
+                {children}
             </button>
         );
     }
-}
 
 DialogButton.propTypes={
     onClick: PropTypes.func,

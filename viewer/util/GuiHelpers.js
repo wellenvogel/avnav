@@ -291,6 +291,9 @@ export const useKeyEventHandler=(props,component,opt_callback)=>{
         }
     },[])
 }
+export const useKeyEventHandlerPlain=(name,component,callback)=>{
+    return useKeyEventHandler({name:name},component,callback);
+}
 
 //from https://stackoverflow.com/questions/487073/how-to-check-if-element-is-visible-after-scrolling
 //returns:
