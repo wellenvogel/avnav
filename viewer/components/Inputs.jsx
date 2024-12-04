@@ -4,6 +4,7 @@ import OverlayDialog from './OverlayDialog.jsx';
 import PropTypes from 'prop-types';
 import assign from 'object-assign';
 import Toast from "./Toast";
+import value from "./Value";
 
 /**
  * input elements
@@ -19,9 +20,17 @@ const DEFAULT_TYPES={
     label: PropTypes.string,
     className: PropTypes.string,
     onChange: PropTypes.func,
-    dialogRow: PropTypes.bool
+    dialogRow: PropTypes.bool,
+    mandatory: PropTypes.oneOfType([PropTypes.bool,PropTypes.func])
 };
 
+const valueMissing=(check,value)=>{
+    if (!check) return false;
+    if (typeof check === 'function'){
+        return check(value);
+    }
+    return value === undefined || value === null;
+}
 
 export const Input=(props)=>{
     let className=props.dialogRow?"dialogRow":"";
@@ -37,6 +46,7 @@ export const Input=(props)=>{
     if (props.checkFunction){
         if (! props.checkFunction(props.value)) className+=" error";
     }
+    if (valueMissing(props.mandatory,props.value)) className+=" missing";
     return <div className={className} >
         <span className="inputLabel">{props.label}</span>
         <input size={size} type={props.type||"text"} value={props.value} onChange={
@@ -112,6 +122,7 @@ export const InputReadOnly=(props)=>{
     let className=props.dialogRow?"dialogRow":"";
     if (props.className) className+=" "+props.className;
     if (! props.onClick) className+=" disabled";
+    if (valueMissing(props.mandatory,props.value)) className+=" missing";
     let frameClick=props.frameClick?props.onClick:undefined;
     return <div className={className}  onClick={frameClick}>
         <span className="inputLabel">{props.label}</span>
@@ -210,11 +221,13 @@ export const ColorSelector=(props)=>{
     let style=props.style||{backgroundColor:props.value};
     let className=props.dialogRow?"dialogRow":"";
     if (props.className) className+=" "+props.className;
+    let ipClass="input";
+    if (valueMissing(props.mandatory,props.value)) ipClass+=" missing";
     return <div className={className+ " colorSelector"}
               onClick={onClick}>
             <span className="inputLabel">{props.label}</span>
             <div className="colorValue" style={style}></div>
-            <div className="input">{props.value}</div>
+            <div className={ipClass}>{props.value}</div>
         {props.children}
   </div>;
 };

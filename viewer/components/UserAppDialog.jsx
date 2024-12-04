@@ -144,24 +144,24 @@ export default  class UserAppDialog extends React.Component{
                                 value={this.state.internal}
                                 onChange={(nv)=>{
                                     this.setState({internal:nv});
-                                    this.stateHelper.setState({url:'',newWindow:false});
+                                    this.stateHelper.setState({url:undefined,newWindow:false});
                                     }
                                 }/>}
                             {!this.state.internal ?
                                 <Input
                                     dialogRow={true}
                                     label="external url"
-                                    value={this.stateHelper.getValue('url','')}
+                                    value={this.stateHelper.getValue('url')}
                                     minSize={50}
                                     maxSize={100}
-                                    className={this.stateHelper.getValue('url')?"":"missing"}
+                                    mandatory={(v)=>!v}
                                     onChange={(val)=>this.stateHelper.setState({url:val})}/>
                                 :
                                 <InputSelect
                                     dialogRow={true}
                                     label="internal url"
-                                    value={this.stateHelper.getValue('url','')}
-                                    className={this.stateHelper.getValue('url')?"":"missing"}
+                                    value={this.stateHelper.getValue('url')}
+                                    mandatory={(v)=>!v}
                                     list={this.state.userFiles}
                                     showDialogFunction={this.dialogHelper.showDialog}
                                     onChange={(selected)=>this.stateHelper.setState({url:selected.url})}/>
@@ -214,7 +214,7 @@ export default  class UserAppDialog extends React.Component{
                             value={this.stateHelper.getValue('icon')}
                             list={[{label:'--upload new--',value:undefined,upload:true}].concat(this.state.iconList)}
                             showDialogFunction={this.dialogHelper.showDialog}
-                            className={this.stateHelper.getValue('icon')?"":"missing"}
+                            mandatory={(v)=>!v}
                             onChange={(selected)=>{
                                 if (selected.upload) {
                                     this.setState({uploadSequence: this.state.uploadSequence + 1});
