@@ -259,10 +259,8 @@ export default  class UserAppDialog extends React.Component{
                             },
                             visible:!!(this.stateHelper.getValue('name') && this.stateHelper.getValue('canDelete') && canEdit)
                         },
-                        DBCancel(this.props.closeCallback),
+                        DBCancel(),
                         DBOk(()=>{
-                            if (! this.checkOk()) return;
-                            this.props.closeCallback();
                             this.props.okFunction(assign({},this.stateHelper.getValues(),this.props.fixed))
                         },
                             {disabled: !this.stateHelper.getValue('icon') || ! this.stateHelper.getValue('url')|| !canEdit})

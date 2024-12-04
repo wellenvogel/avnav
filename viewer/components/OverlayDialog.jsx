@@ -7,7 +7,7 @@
  * the static methods will return promises for simple dialog handling
  */
 
-import React, {useEffect, useState} from 'react';
+import React, {createContext, useContext, useEffect, useState} from 'react';
 import assign from 'object-assign';
 import InputMonitor from '../hoc/InputMonitor.jsx';
 import DB from './DialogButton.jsx';
@@ -34,6 +34,9 @@ export const OverlayDialog = (props) => {
     let className = "dialog";
     if (props.className) className += " " + props.className;
     return (
+        <DialogContext
+            closeFunction={props.closeCallback}
+        >
         <Container onClick={props.closeCallback}>
             <div className={className} onClick={
                 (ev) => {
@@ -43,6 +46,7 @@ export const OverlayDialog = (props) => {
             }>
                 <Content closeCallback={props.closeCallback}/></div>
         </Container>
+        </DialogContext>
     );
 }
 
@@ -80,14 +84,18 @@ export const DialogButtons=(props)=>{
         {children}
     </div>
 }
+DialogButtons.propTypes={
+    className: PropTypes.string,
+    buttonList: PropTypes.array
+}
 /**
  * helper for dialogButtonList
  */
-export const DBCancel=(onClick,props)=>{
-    return {name:'cancel',onClick:onClick,label:'Cancel',...props};
+export const DBCancel=(props)=>{
+    return {close: true,name:'cancel',label:'Cancel',...props};
 }
 export const DBOk=(onClick,props)=>{
-    return {name:'ok',onClick:onClick,label:'Ok',...props};
+    return {close: true,name:'ok',onClick:onClick,label:'Ok',...props};
 }
 
 
@@ -101,6 +109,20 @@ export const dialogDisplay=(content,closeCallback)=>{
         />
     );
 }
+
+const DialogContextImpl=createContext({
+    closeFunction:()=>{}
+});
+export const useDialogContext=()=>useContext(DialogContextImpl);
+export const DialogContext=({closeFunction,children})=>{
+    return <DialogContextImpl.Provider value={{
+        closeFunction:closeFunction
+    }}>
+        {children}
+    </DialogContextImpl.Provider>
+}
+
+
 /**
  * a helper that will add dialog functionality to a component
  * it will maintain a variable inside the component state that holds the dialog

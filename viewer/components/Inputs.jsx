@@ -4,7 +4,6 @@ import OverlayDialog from './OverlayDialog.jsx';
 import PropTypes from 'prop-types';
 import assign from 'object-assign';
 import Toast from "./Toast";
-import value from "./Value";
 
 /**
  * input elements

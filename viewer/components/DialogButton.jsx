@@ -3,14 +3,16 @@ import PropTypes from 'prop-types';
 import {useKeyEventHandlerPlain} from '../util/GuiHelpers.js';
 import KeyHandler from '../util/keyhandler';
 import {concatsp} from "../util/helper";
+import {useDialogContext} from "./OverlayDialog";
 
 const COMPONENT="dialogButton";
 const DialogButton=(props)=>{
+        const dialogContext=useDialogContext();
         KeyHandler.registerDialogComponent(COMPONENT);
         useKeyEventHandlerPlain(props.name,COMPONENT,()=>{
             if (props.onClick && ! props.disabled && props.visible !== false) props.onClick();
         });
-        let {icon,style,disabled,visible,name,className,toggle,children,...forward}=props;
+        let {icon,style,disabled,visible,name,className,toggle,children,onClick,close,...forward}=props;
         if (visible === false) return null;
         let spanStyle={};
         if (icon !== undefined) {
@@ -21,7 +23,15 @@ const DialogButton=(props)=>{
             add.disabled = true;
         }
         return (
-            <button {...forward} {...add} className={concatsp("dialogButton",name,(icon !== undefined)?"icon":undefined,toggle?"active":"inactive")}>
+            <button
+                {...forward}
+                {...add}
+                onClick={(ev)=>{
+                    if (! onClick || close) dialogContext.closeFunction();
+                    if (onClick) onClick(ev);
+                }}
+                className={concatsp("dialogButton",name,(icon !== undefined)?"icon":undefined,toggle?"active":"inactive")}
+            >
             <span style={spanStyle}/>
                 {children}
             </button>
@@ -36,7 +46,8 @@ DialogButton.propTypes={
     style: PropTypes.object,
     disabled: PropTypes.bool,
     toggle: PropTypes.bool,
-    visible: PropTypes.bool
+    visible: PropTypes.bool,
+    close: PropTypes.bool
 };
 
 export default DialogButton;
