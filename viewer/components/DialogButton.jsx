@@ -27,7 +27,7 @@ const DialogButton=(props)=>{
                 {...forward}
                 {...add}
                 onClick={(ev)=>{
-                    if (! onClick || close) dialogContext.closeFunction();
+                    if (! onClick || close) dialogContext.closeDialog();
                     if (onClick) onClick(ev);
                 }}
                 className={concatsp("dialogButton",name,(icon !== undefined)?"icon":undefined,toggle?"active":"inactive")}

@@ -1,276 +1,251 @@
-import React from 'react';
+import React, {useState} from 'react';
 import PropTypes from 'prop-types';
-import OverlayDialog, {dialogHelper} from './OverlayDialog.jsx';
+import OverlayDialog, {useDialogContext} from './OverlayDialog.jsx';
 import Toast from './Toast.jsx';
-import assign from 'object-assign';
 import {Checkbox,Input,InputReadOnly,InputSelect} from './Inputs.jsx';
-import DB from './DialogButton.jsx';
 import Addons from './Addons.js';
 import Helper from '../util/helper.js';
 import Requests from '../util/requests.js';
-import GuiHelpers, {stateHelper} from '../util/GuiHelpers.js';
+import GuiHelpers from '../util/GuiHelpers.js';
 import UploadHandler from "./UploadHandler";
 import {DBCancel, DBOk, DialogButtons, DialogFrame} from "./OverlayDialog";
 
-const contains=(list,url,opt_key)=>{
-    if (opt_key === undefined) opt_key="url";
-    for (let k=0;k<list.length;k++){
+const contains = (list, url, opt_key) => {
+    if (opt_key === undefined) opt_key = "url";
+    for (let k = 0; k < list.length; k++) {
         if (list[k][opt_key] === url) return true;
     }
     return false;
 }
-export default  class UserAppDialog extends React.Component{
-    constructor(props){
-        super(props);
-        this.stateHelper=stateHelper(this,assign({},props.addon,props.fixed),'addon');
-        this.dialogHelper=dialogHelper(this);
-        this.state.iconList=[];
-        this.state.userFiles=[];
-        this.state.addons=[];
-        this.state.internal=true;
-        this.state.loaded=(props.fixed||{}).url === undefined || props.addon !== undefined; //addons loaded (for fixed)
-        if (this.state.loaded && (props.addon||{}).keepUrl) this.state.internal=false;
-        this.state.uploadSequence=0;
-        this.fillLists();
+const UserAppDialog = (props) => {
+    const [currentAddon, setCurrentAddon] = useState({...props.addon, ...props.fixed});
+    const dialogContext = useDialogContext();
+    const [iconList, setIconList] = useState([]);
+    const [userFiles, setUserFiles] = useState([]);
+    const initiallyLoaded = (props.fixed || {}).url === undefined || props.addon !== undefined;
+    const [loaded, setLoaded] = useState(initiallyLoaded);
+    const [internal, setInternal] = useState(!(initiallyLoaded && (props.addon || {}).keepUrl));
+    const [uploadSequence, setUploadSequence] = useState(0);
 
-    }
-    readImages(opt_active){
+    const readImages = (opt_active) => {
         Requests.getJson("?request=list&type=images")
-            .then((data)=>{
-                let itemList=[];
+            .then((data) => {
+                let itemList = [];
                 let activeUrl;
                 if (data.items) {
-                    data.items.forEach((el)=> {
+                    data.items.forEach((el) => {
                         if (GuiHelpers.IMAGES.indexOf(Helper.getExt(el.name)) >= 0) {
-                            if (! contains(this.state.iconList,el.url)) {
+                            if (!contains(iconList, el.url)) {
                                 el.label = el.url;
                                 el.value = el.url;
                                 itemList.push(el);
                             }
-                            if (opt_active !== undefined && el.name === opt_active){
-                                activeUrl=el.url;
+                            if (opt_active !== undefined && el.name === opt_active) {
+                                activeUrl = el.url;
                             }
                         }
                     });
-                    this.setState( (prevState)=>{
-                        return {iconList: prevState.iconList.concat(itemList)}
+                    setIconList((prevState) => {
+                        return prevState.concat(itemList);
                     });
                 }
-                if (activeUrl !== undefined){
-                    this.stateHelper.setState({
-                        icon:activeUrl
-                    });
+                if (activeUrl !== undefined) {
+                    setCurrentAddon({...currentAddon, icon: activeUrl})
                 }
             })
-            .catch((error)=>{})
+            .catch((error) => {
+            })
     }
-    fillLists(){
+    const fillLists = () => {
         Requests.getJson("?request=list&type=user")
-            .then((data)=>{
-                let iconList=[];
-                let userFiles=[];
-                if (data.items){
-                    data.items.forEach((el)=>{
-                        if (GuiHelpers.IMAGES.indexOf(Helper.getExt(el.name)) >= 0){
-                            if (! contains(this.state.iconList,el.url)) {
+            .then((data) => {
+                let niconList = [];
+                let nuserFiles = [];
+                if (data.items) {
+                    data.items.forEach((el) => {
+                        if (GuiHelpers.IMAGES.indexOf(Helper.getExt(el.name)) >= 0) {
+                            if (!contains(iconList, el.url)) {
                                 el.label = el.url;
                                 el.value = el.url;
-                                iconList.push(el);
+                                niconList.push(el);
                             }
                         }
-                        if (Helper.getExt(el.name) === 'html'){
-                            el.label=el.url;
-                            el.value=el.url;
-                            userFiles.push(el);
+                        if (Helper.getExt(el.name) === 'html') {
+                            el.label = el.url;
+                            el.value = el.url;
+                            nuserFiles.push(el);
                         }
                     });
-                    this.setState( (prevState)=> {
-                        return {
-                            iconList: prevState.iconList.concat(iconList),
-                            userFiles: userFiles
-                        }
-                    });
+                    setIconList((prevList) => prevList.concat(niconList));
+                    setUserFiles(nuserFiles)
                 }
-            }).catch((error)=>{});
-        this.readImages();
-        if (!this.state.loaded) Addons.readAddOns()
-            .then((addons)=>{
-                let current=Addons.findAddonByUrl(addons,this.props.fixed.url)
-                if (current) this.stateHelper.setState(assign({},current,this.props.fixed));
-                this.setState({loaded:true})
+            }).catch((error) => {
+        });
+        readImages();
+        if (!loaded) Addons.readAddOns()
+            .then((addons) => {
+                let current = Addons.findAddonByUrl(addons, props.fixed.url)
+                if (current) setCurrentAddon({...current, ...props.fixed});
+                setLoaded(true);
             })
-            .catch((error)=>Toast("unable to load addons: "+error));
+            .catch((error) => Toast("unable to load addons: " + error));
 
     }
 
-
-    checkOk(){
-        let current=this.stateHelper.getValues();
-        if (! current.url){
-            Toast("you must provide an url");
-            return false;
-        }
-        if (! current.icon){
-            Toast("you must provide an icon");
-            return false;
-        }
-        if (! this.state.internal && ! current.url.startsWith("http")){
-            Toast("external urls must start with http");
-            return false;
-        }
-        return true;
-    }
-
-    render(){
-        let fixed=this.props.fixed||{};
-        let canEdit=this.stateHelper.getValue('canDelete',true);
-        if (!this.state.loaded) canEdit=false;
-        let fixedUrl=fixed.url !== undefined;
-        let title="";
-        if (canEdit)title=fixed.name?"Modify ":"Create ";
-        return(
-            <DialogFrame className="userAppDialog" flex={true} title={title+'User App'}>
-                    {(fixedUrl || ! canEdit) ?
-                        <InputReadOnly
-                            dialogRow={true}
-                            className="url"
-                            label="url"
-                            value={this.stateHelper.getValue('url','')}/>
-                        :
-                        <React.Fragment>
-                            {(canEdit && ! fixedUrl) && <Checkbox
-                                dialogRow={true}
-                                label="internal"
-                                value={this.state.internal}
-                                onChange={(nv)=>{
-                                    this.setState({internal:nv});
-                                    this.stateHelper.setState({url:undefined,newWindow:false});
-                                    }
-                                }/>}
-                            {!this.state.internal ?
-                                <Input
-                                    dialogRow={true}
-                                    label="external url"
-                                    value={this.stateHelper.getValue('url')}
-                                    minSize={50}
-                                    maxSize={100}
-                                    mandatory={(v)=>!v}
-                                    onChange={(val)=>this.stateHelper.setState({url:val})}/>
-                                :
-                                <InputSelect
-                                    dialogRow={true}
-                                    label="internal url"
-                                    value={this.stateHelper.getValue('url')}
-                                    mandatory={(v)=>!v}
-                                    list={this.state.userFiles}
-                                    showDialogFunction={this.dialogHelper.showDialog}
-                                    onChange={(selected)=>this.stateHelper.setState({url:selected.url})}/>
-                            }
-                            <UploadHandler
-                                local={false}
-                                type={'images'}
-                                doneCallback={(param)=>{
-                                    this.readImages(param.param.name);
-                                }}
-                                errorCallback={(err)=>{if (err) Toast(err);}}
-                                uploadSequence={this.state.uploadSequence}
-                                checkNameCallback={(name)=>{
-                                    return new Promise((resolve,reject)=>{
-                                        if (contains(this.state.iconList,name,"name")){
-                                            reject(name+" already exists");
-                                            return;
-                                        }
-                                        let ext=Helper.getExt(name);
-                                        let rt={name:name};
-                                        if (GuiHelpers.IMAGES.indexOf(ext) < 0){
-                                            reject("only images of types "+GuiHelpers.IMAGES.join(","));
-                                            return;
-                                        }
-                                        resolve(rt);
-                                });}}
-                                />
-                        </React.Fragment>
-                    }
-                    {canEdit ?
+    fillLists();
+    let fixed = props.fixed || {};
+    let canEdit = (currentAddon.canDelete === undefined || currentAddon.canDelete);
+    if (!loaded) canEdit = false;
+    let fixedUrl = fixed.url !== undefined;
+    let title = "";
+    if (canEdit) title = fixed.name ? "Modify " : "Create ";
+    return (
+        <DialogFrame className="userAppDialog" flex={true} title={title + 'User App'}>
+            {(fixedUrl || !canEdit) ?
+                <InputReadOnly
+                    dialogRow={true}
+                    className="url"
+                    label="url"
+                    value={currentAddon.url}/>
+                :
+                <React.Fragment>
+                    {(canEdit && !fixedUrl) && <Checkbox
+                        dialogRow={true}
+                        label="internal"
+                        value={internal}
+                        onChange={(nv) => {
+                            setInternal(nv);
+                            setCurrentAddon({...currentAddon, url: undefined, newWindow: false});
+                        }
+                        }/>}
+                    {!internal ?
                         <Input
                             dialogRow={true}
-                            label="title"
-                            value={this.stateHelper.getValue('title','')}
+                            label="external url"
+                            value={currentAddon.url}
                             minSize={50}
                             maxSize={100}
-                            onChange={(value)=>{this.stateHelper.setState({title:value})}}
-                            />
+                            mandatory={(v) => !v}
+                            onChange={(val) => setCurrentAddon({...currentAddon, url: val})}/>
                         :
-                        <InputReadOnly
-                            dialogRow={true}
-                            label="title"
-                            value={this.stateHelper.getValue('title')}
-                            />
-                    }
-                    {canEdit ?
                         <InputSelect
                             dialogRow={true}
-                            label="icon"
-                            value={this.stateHelper.getValue('icon')}
-                            list={[{label:'--upload new--',value:undefined,upload:true}].concat(this.state.iconList)}
-                            showDialogFunction={this.dialogHelper.showDialog}
-                            mandatory={(v)=>!v}
-                            onChange={(selected)=>{
-                                if (selected.upload) {
-                                    this.setState({uploadSequence: this.state.uploadSequence + 1});
+                            label="internal url"
+                            value={currentAddon.url}
+                            mandatory={(v) => !v}
+                            list={userFiles}
+                            showDialogFunction={dialogContext.showDialog}
+                            onChange={(selected) => setCurrentAddon({...currentAddon, url: selected.url})}/>
+                    }
+                    <UploadHandler
+                        local={false}
+                        type={'images'}
+                        doneCallback={(param) => {
+                            readImages(param.param.name);
+                        }}
+                        errorCallback={(err) => {
+                            if (err) Toast(err);
+                        }}
+                        uploadSequence={uploadSequence}
+                        checkNameCallback={(name) => {
+                            return new Promise((resolve, reject) => {
+                                if (contains(iconList, name, "name")) {
+                                    reject(name + " already exists");
                                     return;
                                 }
-                                this.stateHelper.setState({
-                                    icon:selected.url
-                                });
-                            }}
-                            >
-                            {this.stateHelper.getValue('icon') && <img className="appIcon" src={this.stateHelper.getValue('icon')}/>}
-                        </InputSelect>
-                        :
-                        <InputReadOnly
-                            dialogRow={true}
-                            label="icon"
-                            value={this.stateHelper.getValue('icon')}
-                            >
-                            {this.stateHelper.getValue('icon') && <img className="appIcon" src={this.stateHelper.getValue('icon')}/>}
-                         </InputReadOnly>
-                    }
-                    {canEdit && ! this.state.internal &&<Checkbox
-                        dialogRow={true}
-                        label={'newWindow'}
-                        value={this.stateHelper.getValue('newWindow') === 'true'}
-                        onChange={(nv)=>{
-                            this.stateHelper.setState({newWindow:nv?'true':'false'});
+                                let ext = Helper.getExt(name);
+                                let rt = {name: name};
+                                if (GuiHelpers.IMAGES.indexOf(ext) < 0) {
+                                    reject("only images of types " + GuiHelpers.IMAGES.join(","));
+                                    return;
+                                }
+                                resolve(rt);
+                            });
                         }}
-                    />}
+                    />
+                </React.Fragment>
+            }
+            {canEdit ?
+                <Input
+                    dialogRow={true}
+                    label="title"
+                    value={currentAddon.title}
+                    minSize={50}
+                    maxSize={100}
+                    onChange={(value) => {
+                        setCurrentAddon({...currentAddon, title: value})
+                    }}
+                />
+                :
+                <InputReadOnly
+                    dialogRow={true}
+                    label="title"
+                    value={currentAddon.title}
+                />
+            }
+            {canEdit ?
+                <InputSelect
+                    dialogRow={true}
+                    label="icon"
+                    value={currentAddon.icon}
+                    list={[{label: '--upload new--', value: undefined, upload: true}].concat(iconList)}
+                    showDialogFunction={dialogContext.showDialog}
+                    mandatory={(v) => !v}
+                    onChange={(selected) => {
+                        if (selected.upload) {
+                            setUploadSequence((uploadSequence) => uploadSequence + 1);
+                            return;
+                        }
+                        setCurrentAddon({...currentAddon, icon: selected.url});
+                    }}
+                >
+                    {currentAddon.icon && <img className="appIcon" src={currentAddon.icon}/>}
+                </InputSelect>
+                :
+                <InputReadOnly
+                    dialogRow={true}
+                    label="icon"
+                    value={currentAddon.icon}
+                >
+                    {currentAddon.icon && <img className="appIcon" src={currentAddon.icon}/>}
+                </InputReadOnly>
+            }
+            {canEdit && !internal && <Checkbox
+                dialogRow={true}
+                label={'newWindow'}
+                value={currentAddon.newWindow === 'true'}
+                onChange={(nv) => {
+                    setCurrentAddon({...currentAddon, newWindow: nv ? 'true' : 'false'});
+                }}
+            />}
 
 
-                    <DialogButtons buttonList={[
-                        {name:'delete',
-                            label:'Delete',
-                            onClick:()=>{
-                                this.dialogHelper.showDialog(OverlayDialog.createConfirmDialog("really delete User App?",
-                                    ()=>{
-                                        this.props.closeCallback();
-                                        this.props.removeFunction(this.stateHelper.getValue('name'));
-                                    }
-                                ));
-                            },
-                            visible:!!(this.stateHelper.getValue('name') && this.stateHelper.getValue('canDelete') && canEdit)
-                        },
-                        DBCancel(),
-                        DBOk(()=>{
-                            this.props.okFunction(assign({},this.stateHelper.getValues(),this.props.fixed))
-                        },
-                            {disabled: !this.stateHelper.getValue('icon') || ! this.stateHelper.getValue('url')|| !canEdit})
-                    ]}/>
-            </DialogFrame>
-        );
-    }
+            <DialogButtons buttonList={[
+                {
+                    name: 'delete',
+                    label: 'Delete',
+                    onClick: () => {
+                        dialogContext.showDialog(OverlayDialog.createConfirmDialog("really delete User App?",
+                            () => {
+                                dialogContext.closeDialog();
+                                props.removeFunction(currentAddon.name);
+                            }
+                        ));
+                    },
+                    close: false,
+                    visible: !!(currentAddon.name && currentAddon.canDelete && canEdit)
+                },
+                DBCancel(),
+                DBOk(() => {
+                        props.okFunction({...currentAddon, ...props.fixed});
+                    },
+                    {disabled: !currentAddon.icon || !currentAddon.url || !canEdit})
+            ]}/>
+        </DialogFrame>
+    );
 }
 
-UserAppDialog.propTypes={
+UserAppDialog.propTypes = {
     fixed: PropTypes.object.isRequired,
     addon: PropTypes.object,
     closeCallback: PropTypes.func.isRequired,
@@ -278,39 +253,42 @@ UserAppDialog.propTypes={
     removeFunction: PropTypes.func.isRequired
 };
 
-UserAppDialog.showUserAppDialog=(item,fixed,opt_showToasts)=>{
-    return new Promise((resolve,reject)=> {
-        if (! item && ! (fixed||{}).url){
-            let err="either addon or fixed.url required";
+UserAppDialog.showUserAppDialog = (item, fixed, opt_showToasts) => {
+    return new Promise((resolve, reject) => {
+        if (!item && !(fixed || {}).url) {
+            let err = "either addon or fixed.url required";
             if (opt_showToasts) Toast(err);
             reject(err);
         }
-        OverlayDialog.dialog((props)=> {
+        OverlayDialog.dialog((props) => {
             return (
                 <UserAppDialog
                     {...props}
-                    okFunction={(addon)=>{
-                        Addons.updateAddon(addon.name,addon.url,addon.icon,addon.title,addon.newWindow)
-                            .then((data)=>{resolve(data)})
-                            .catch((error)=>{
-                                if (opt_showToasts) Toast("unable to add/update: "+error);
+                    okFunction={(addon) => {
+                        Addons.updateAddon(addon.name, addon.url, addon.icon, addon.title, addon.newWindow)
+                            .then((data) => {
+                                resolve(data)
+                            })
+                            .catch((error) => {
+                                if (opt_showToasts) Toast("unable to add/update: " + error);
                                 reject(error);
                             });
                     }}
-                    removeFunction={(name)=>{
+                    removeFunction={(name) => {
                         Addons.removeAddon(name)
-                            .then((data)=>resolve(data))
-                            .catch((error)=>{
-                                if (opt_showToasts) Toast("unable to remove: "+error);
+                            .then((data) => resolve(data))
+                            .catch((error) => {
+                                if (opt_showToasts) Toast("unable to remove: " + error);
                                 reject(error);
                             });
                     }}
                     //TODO: item vs addon
                     addon={item}
                     fixed={fixed}
-                    />
+                />
             )
         })
     });
 };
 
+export default UserAppDialog;

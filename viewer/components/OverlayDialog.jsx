@@ -7,7 +7,7 @@
  * the static methods will return promises for simple dialog handling
  */
 
-import React, {createContext, useContext, useEffect, useState} from 'react';
+import React, {Children, cloneElement, createContext, useContext, useEffect, useRef, useState} from 'react';
 import assign from 'object-assign';
 import InputMonitor from '../hoc/InputMonitor.jsx';
 import DB from './DialogButton.jsx';
@@ -22,29 +22,42 @@ import Helper from "../util/helper";
  */
 
 const Container=MapEventGuard(React.forwardRef((props,ref)=>{
+    const dialogContext=useDialogContext();
+    const style={zIndex:dialogContext.zIndex};
     return (
-        <div className="overlay_cover_active" onClick={props.onClick} ref={ref}>
+        <div className="overlay_cover_active" onClick={props.onClick} style={style} ref={ref}>
             {props.children}
         </div>
     )
 }));
 
-export const OverlayDialog = (props) => {
-    let Content = props.content;
-    let className = "dialog";
-    if (props.className) className += " " + props.className;
+export const OverlayDialog = ({className,closeCallback,children}) => {
+    let [DialogDisplay,setDialog]=useDialog(); //for nested dialogs
+    const dialogContext=useDialogContext(); //if we are nested - just handle the z index
+    let classNameS = "dialog";
+    if (className) classNameS += " " + className;
+    const close=closeCallback;
+    const ourZIndex=dialogContext.zIndex+10;
     return (
         <DialogContext
-            closeFunction={props.closeCallback}
+            closeDialog={close}
+            showDialog={setDialog}
+            zIndex={ourZIndex}
         >
-        <Container onClick={props.closeCallback}>
-            <div className={className} onClick={
+        <Container onClick={close}>
+            <div
+                className={classNameS}
+                onClick={
                 (ev) => {
                     //ev.preventDefault();
                     ev.stopPropagation();
                 }
-            }>
-                <Content closeCallback={props.closeCallback}/></div>
+                }
+                style={{zIndex:ourZIndex+1}}
+            >
+                <DialogDisplay/>
+                {Children.map(children,(child)=>cloneElement(child,{closeCallback:close}))}
+            </div>
         </Container>
         </DialogContext>
     );
@@ -52,8 +65,6 @@ export const OverlayDialog = (props) => {
 
 
 OverlayDialog.propTypes={
-    parent: PropTypes.element,
-    onClick: PropTypes.func, //click on container
     closeCallback: PropTypes.func, //handed over to the child to close the dialog
     className: PropTypes.string
 };
@@ -99,29 +110,88 @@ export const DBOk=(onClick,props)=>{
 }
 
 
-export const dialogDisplay=(content,closeCallback)=>{
-    let Display=InputMonitor(OverlayDialog);
-    return(
-        <Display
-            className="nested"
-            content={content}
-            closeCallback={closeCallback}
-        />
-    );
-}
-
+const DIALOG_Z=120;
 const DialogContextImpl=createContext({
-    closeFunction:()=>{}
+    closeDialog:()=>{},
+    showDialog:(dialog,opt_cancelCallback,opt_timeout)=>{},
+    zIndex: DIALOG_Z
 });
 export const useDialogContext=()=>useContext(DialogContextImpl);
-export const DialogContext=({closeFunction,children})=>{
+const DialogContext=({closeDialog,showDialog,zIndex,children})=>{
     return <DialogContextImpl.Provider value={{
-        closeFunction:closeFunction
+        closeDialog:closeDialog?closeDialog:()=>{},
+        showDialog: showDialog?showDialog:()=>{},
+        zIndex: zIndex!==undefined?zIndex:DIALOG_Z
     }}>
         {children}
     </DialogContextImpl.Provider>
 }
 
+/**
+ * new style dialog usage
+ * @param closeCb
+ */
+export const useDialog=(closeCb)=>{
+    const [dialogContent,setDialog]=useState(undefined);
+    const dialogId=useRef(1);
+    const Display=InputMonitor(OverlayDialog);
+    return [
+        () => {
+            if (!dialogContent || !dialogContent.content) return null;
+            const ownId=dialogId.current;
+            return (
+                <Display closeCallback={() => {
+                    if (dialogContent &&  ownId === dialogContent.id) {
+                        setDialog(undefined);
+                        if (closeCb) closeCb();
+                        if (dialogContent.close) dialogContent.close();
+                    }
+                    else{
+                        console.log("deferred close");
+                    }
+                }}>
+                    <dialogContent.content/>
+                </Display>
+
+            )
+        }
+        ,
+        (content,opt_closeCb)=>{
+            if (content){
+                dialogId.current++;
+                if (dialogContent && dialogContent.content){
+                    if (dialogContent.close) dialogContent.close();
+                    //we will not call the global close callback
+                }
+                setDialog({content:content,close:opt_closeCb,id:dialogId.current});
+            }
+            else {
+                if (dialogContent && dialogContent.current && dialogContent.id === dialogId.current){
+                    if (dialogContent.close) dialogContent.close();
+                    if (closeCb) closeCb();
+                }
+                setDialog(undefined)
+            }
+        }
+    ]
+}
+
+
+/* =================================================================================================
+   legacy dialog handling
+   =================================================================================================*/
+
+export const dialogDisplay=(Content,closeCallback)=>{
+    let Display=InputMonitor(OverlayDialog);
+    return(
+        <Display
+            className="nested"
+            closeCallback={closeCallback}
+        >
+            <Content/>
+        </Display>
+    );
+}
 
 /**
  * a helper that will add dialog functionality to a component
@@ -190,26 +260,6 @@ export const dialogHelper=(thisref,stateName,opt_closeCallback)=>{
     thisref.render=newRender.bind(thisref);
     return rt;
 };
-/**
- * new style dialog usage
- * @param closeCb
- */
-export const useDialog=(closeCb)=>{
-    const [dialogContent,setDialog]=useState(undefined);
-    return [
-        ()=>{
-            if (! dialogContent || ! dialogContent.content) return null;
-            return dialogDisplay(dialogContent.content,()=>{
-                setDialog(undefined);
-                if (closeCb) closeCb();
-                if (dialogContent.close) dialogContent.close();
-            });
-
-        }
-        ,
-        (content,opt_closeCb)=>setDialog(content?{content:content,close:opt_closeCb}:undefined)
-    ]
-}
 
 /**
  * handler for a global dialog
