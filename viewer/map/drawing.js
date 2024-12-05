@@ -529,4 +529,7 @@ Drawing.prototype.cssPixelToCoord=function(xy){
 Drawing.prototype.pointToMap=function(lonlat){
     return this.converter.pointToMap(lonlat);
 }
+Drawing.prototype.pointFromMap=function(coord){
+    return this.converter.pointFromMap(coord);
+}
 
