@@ -117,7 +117,7 @@ const DialogContextImpl=createContext({
     zIndex: DIALOG_Z
 });
 export const useDialogContext=()=>useContext(DialogContextImpl);
-const DialogContext=({closeDialog,showDialog,zIndex,children})=>{
+export const DialogContext=({closeDialog,showDialog,zIndex,children})=>{
     return <DialogContextImpl.Provider value={{
         closeDialog:closeDialog?closeDialog:()=>{},
         showDialog: showDialog?showDialog:()=>{},
