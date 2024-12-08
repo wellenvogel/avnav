@@ -1,6 +1,6 @@
 //avnav (C) wellenvogel 2019
 
-import React, {Component, createRef} from 'react';
+import React, {Component, createRef, useEffect} from 'react';
 import History from './util/history.js';
 import Dynamic from './hoc/Dynamic.jsx';
 import keys from './util/keys.jsx';
@@ -22,7 +22,12 @@ import WarningPage from './gui/WarningPage.jsx';
 import ViewPage from './gui/ViewPage.jsx';
 import AddonConfigPage from './gui/AddOnConfigPage.jsx';
 import ImporterPage from "./gui/ImporterPage";
-import OverlayDialog, {DialogContext, GlobalDialogDisplay, useDialog} from './components/OverlayDialog.jsx';
+import OverlayDialog, {
+    DialogContext,
+    GlobalDialogDisplay,
+    setGlobalContext,
+    useDialog
+} from './components/OverlayDialog.jsx';
 import globalStore from './util/globalstore.jsx';
 import Requests from './util/requests.js';
 import SoundHandler from './components/SoundHandler.jsx';
@@ -164,6 +169,12 @@ let lastError={
 
 const MainBody = ({location, options, history, nightMode}) => {
     const [DialogDisplay, setDialog] = useDialog();
+    setGlobalContext(undefined,setDialog);
+    useEffect(() => {
+        return ()=>{
+            setGlobalContext();
+        }
+    }, []);
     return (
         <DialogContext
             showDialog={setDialog}
@@ -522,8 +533,6 @@ class App extends React.Component {
                 options={this.leftHistoryState.getValue('options')}
                 history={this.history}
                 nightMode={this.props.nightMode}
-                />
-            <GlobalDialogDisplay
                 />
             { ! (avnav.android || globalStore.getData(keys.gui.global.preventAlarms)) && globalStore.getData(keys.properties.localAlarmSound) ?<DynamicSound
                 storeKeys={alarmStoreKeys}

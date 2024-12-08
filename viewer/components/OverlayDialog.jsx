@@ -127,6 +127,22 @@ export const DialogContext=({closeDialog,showDialog,zIndex,children})=>{
     </DialogContextImpl.Provider>
 }
 
+const emptyContext={
+    closeDialog: ()=>{},
+    showDialog: ()=>{},
+    zIndex: DIALOG_Z
+};
+let globalContext={...emptyContext};
+
+export const setGlobalContext=(closeDialog,showDialog,zIndex)=>{
+    globalContext={
+        closeDialog: closeDialog?closeDialog:()=>{},
+        showDialog: showDialog?showDialog:()=>{},
+        zIndex: (zIndex!==undefined)?zIndex:DIALOG_Z
+    };
+}
+
+
 /**
  * new style dialog usage
  * @param closeCb
@@ -264,78 +280,16 @@ export const dialogHelper=(thisref,stateName,opt_closeCallback)=>{
 /**
  * handler for a global dialog
  */
-let CBId=new Helper.idGen();
-let DId=new Helper.idGen();
-let globalDialogs=[];
-
-let globalDialogCallbacks={}
-
 const addGlobalDialog=(dialog,opt_cancel,opt_timeout)=>{
-    let id=DId.next();
-    let entry={dialog:dialog,cancel:opt_cancel,id:id};
-    if (opt_timeout){
-        entry.timer=window.setTimeout(()=>{
-            removeGlobalDialog(id);
-        },opt_timeout);
+    const cancel=()=>{
+        notifyClosed();
+        if (opt_cancel) opt_cancel();
     }
-    globalDialogs.forEach((de)=>{
-        if (de.cancel) de.cancel();
-        if (de.timer !== undefined) window.clearTimeout(de.timer);
-    });
-    globalDialogs=[];
-    if (dialog) globalDialogs.push(entry);
-    for (let k in globalDialogCallbacks){
-        globalDialogCallbacks[k](dialog,()=>removeDialog(id,true));
-    }
-    return id;
+    globalContext.showDialog(dialog,cancel,opt_timeout);
 }
 const removeGlobalDialog=(id,opt_omitCancel)=>{
-    let idx=-1;
-    for (let i=0;i<globalDialogs.length;i++){
-        if (globalDialogs[i].id===id){
-            idx=i;
-            break;
-        }
-    }
-    if (idx < 0) return false;
-    if (globalDialogs[idx].cancel && ! opt_omitCancel) globalDialogs[idx].cancel();
-    if (globalDialogs[idx].timer !== undefined) window.clearTimeout(globalDialogs[idx].timer);
-    globalDialogs.splice(idx,1);
-    if (globalDialogs.length < 1){
-        //we removed the last one
-        for (let k in globalDialogCallbacks){
-            globalDialogCallbacks[k](undefined);
-        }
-        notifyClosed();
-    }
-
+    globalContext.showDialog();
 }
-const addCb=(callback)=>{
-    let id=CBId.next();
-    globalDialogCallbacks[id]=callback;
-    if (globalDialogs.length < 1 ){
-        callback();
-    }
-    else {
-        callback(globalDialogs[globalDialogs.length - 1].dialog,()=>removeGlobalDialog(globalDialogs[globalDialogs.length - 1].id));
-    }
-    return id;
-}
-const removeCb=(id)=>{
-    delete globalDialogCallbacks[id];
-}
-
-export const GlobalDialogDisplay=(props)=>{
-    const [DDisplay,setDialog]=useDialog(props.closeCallback);
-    useEffect(() => {
-        let id=addCb((dialog,closeCb)=>{
-            setDialog(dialog,closeCb);
-        });
-        return ()=>removeCb(id);
-    }, []);
-    return <DDisplay {...props}/>
-}
-
 
 const notifyClosed=()=>{
     if (window.avnav.android && window.avnav.android.dialogClosed){
