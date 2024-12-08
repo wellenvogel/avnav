@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
 import OverlayDialog, {useDialogContext} from './OverlayDialog.jsx';
 import Toast from './Toast.jsx';
@@ -92,7 +92,9 @@ const UserAppDialog = (props) => {
 
     }
 
-    fillLists();
+    useEffect(() => {
+        fillLists();
+    }, []);
     let fixed = props.fixed || {};
     let canEdit = (currentAddon.canDelete === undefined || currentAddon.canDelete);
     if (!loaded) canEdit = false;
