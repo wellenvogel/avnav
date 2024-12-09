@@ -30,6 +30,8 @@ import React,{useEffect, useState} from "react";
 import Requests from "../util/requests";
 import GuiHelpers from "../util/GuiHelpers";
 import Helper from "../util/helper";
+import UploadHandler from "./UploadHandler";
+import Toast from "./Toast";
 
 const SOURCES=[
     {
@@ -66,7 +68,8 @@ export const IconDialog=(props)=>{
     const [sources,setSources]=useState(0xff); //all
     const [iconList,setIconList]=useState([]);
     const [currentUrl,setCurrentUrl]=useState(props.value);
-    const loadIcons = () => {
+    const [uploadSequence,setUploadSequence]=useState(0);
+    const loadIcons = (opt_active,opt_activeType) => {
         setIconList([]);
         SOURCES.forEach((src) => {
             const active=!!(sources & src.flag);
@@ -85,6 +88,12 @@ export const IconDialog=(props)=>{
                                         el.value = el.url;
                                         el.icon= el.url;
                                         if (el.url === currentUrl) el.selected=true;
+                                        if (opt_active !== undefined){
+                                            if (el.name === opt_active && (opt_activeType === undefined || opt_activeType === src.type)){
+                                                dialogContext.closeDialog();
+                                                onChange(el);
+                                            }
+                                        }
                                         allIcons.push(el);
                                     }
                                 }
@@ -112,6 +121,7 @@ export const IconDialog=(props)=>{
                     className="checkBoxRow"
                     label={src.label}
                     value={active}
+                    key={src.flag}
                     onChange={(nv)=>{
                         setSources(changeFlag(sources,src.flag,nv));
                     }}/>
@@ -123,13 +133,45 @@ export const IconDialog=(props)=>{
         }}/>
         <DialogButtons
             buttonList={[
+                {
+                    name:'upload',
+                    label:'New',
+                    onClick:()=>setUploadSequence(uploadSequence+1),
+                    close:false,
+                    visible: (props.allowUpload === undefined|| props.allowUpload)
+                },
                 DBCancel()
             ]}
         >
         </DialogButtons>
+        <UploadHandler
+            local={false}
+            type={'images'}
+            doneCallback={(param)=>loadIcons(param.param.name,'images')}
+            errorCallback={(err) => {
+                if (err) Toast(err);
+            }}
+            uploadSequence={uploadSequence}
+            checkNameCallback={(name)=>{
+                return new Promise((resolve,reject)=>{
+                    if (contains(iconList, name, "name")) {
+                        reject(name + " already exists");
+                        return;
+                    }
+                    let ext = Helper.getExt(name);
+                    let rt = {name: name};
+                    if (GuiHelpers.IMAGES.indexOf(ext) < 0) {
+                        reject("only images of types " + GuiHelpers.IMAGES.join(","));
+                        return;
+                    }
+                    resolve(rt);
+                })
+            }}
+        />
     </DialogFrame>
 }
 IconDialog.propTypes={
     onChange: PropTypes.func,
-    resolveFunction: PropTypes.func
+    resolveFunction: PropTypes.func,
+    allowUpload: PropTypes.bool
 }

@@ -21,68 +21,27 @@ const contains = (list, url, opt_key) => {
 const UserAppDialog = (props) => {
     const [currentAddon, setCurrentAddon] = useState({...props.addon, ...props.fixed});
     const dialogContext = useDialogContext();
-    const [iconList, setIconList] = useState([]);
     const [userFiles, setUserFiles] = useState([]);
     const initiallyLoaded = (props.fixed || {}).url === undefined || props.addon !== undefined;
     const [loaded, setLoaded] = useState(initiallyLoaded);
     const [internal, setInternal] = useState(!(initiallyLoaded && (props.addon || {}).keepUrl));
-    const [uploadSequence, setUploadSequence] = useState(0);
 
-    const readImages = (opt_active) => {
-        Requests.getJson("?request=list&type=images")
-            .then((data) => {
-                let itemList = [];
-                let activeUrl;
-                if (data.items) {
-                    data.items.forEach((el) => {
-                        if (GuiHelpers.IMAGES.indexOf(Helper.getExt(el.name)) >= 0) {
-                            if (!contains(iconList, el.url)) {
-                                el.label = el.url;
-                                el.value = el.url;
-                                itemList.push(el);
-                            }
-                            if (opt_active !== undefined && el.name === opt_active) {
-                                activeUrl = el.url;
-                            }
-                        }
-                    });
-                    setIconList((prevState) => {
-                        return prevState.concat(itemList);
-                    });
-                }
-                if (activeUrl !== undefined) {
-                    setCurrentAddon({...currentAddon, icon: activeUrl})
-                }
-            })
-            .catch((error) => {
-            })
-    }
     const fillLists = () => {
         Requests.getJson("?request=list&type=user")
             .then((data) => {
-                let niconList = [];
                 let nuserFiles = [];
                 if (data.items) {
                     data.items.forEach((el) => {
-                        if (GuiHelpers.IMAGES.indexOf(Helper.getExt(el.name)) >= 0) {
-                            if (!contains(iconList, el.url)) {
-                                el.label = el.url;
-                                el.value = el.url;
-                                niconList.push(el);
-                            }
-                        }
                         if (Helper.getExt(el.name) === 'html') {
                             el.label = el.url;
                             el.value = el.url;
                             nuserFiles.push(el);
                         }
                     });
-                    setIconList((prevList) => prevList.concat(niconList));
                     setUserFiles(nuserFiles)
                 }
             }).catch((error) => {
         });
-        readImages();
         if (!loaded) Addons.readAddOns()
             .then((addons) => {
                 let current = Addons.findAddonByUrl(addons, props.fixed.url)
@@ -140,32 +99,6 @@ const UserAppDialog = (props) => {
                             showDialogFunction={dialogContext.showDialog}
                             onChange={(selected) => setCurrentAddon({...currentAddon, url: selected.url})}/>
                     }
-                    <UploadHandler
-                        local={false}
-                        type={'images'}
-                        doneCallback={(param) => {
-                            readImages(param.param.name);
-                        }}
-                        errorCallback={(err) => {
-                            if (err) Toast(err);
-                        }}
-                        uploadSequence={uploadSequence}
-                        checkNameCallback={(name) => {
-                            return new Promise((resolve, reject) => {
-                                if (contains(iconList, name, "name")) {
-                                    reject(name + " already exists");
-                                    return;
-                                }
-                                let ext = Helper.getExt(name);
-                                let rt = {name: name};
-                                if (GuiHelpers.IMAGES.indexOf(ext) < 0) {
-                                    reject("only images of types " + GuiHelpers.IMAGES.join(","));
-                                    return;
-                                }
-                                resolve(rt);
-                            });
-                        }}
-                    />
                 </React.Fragment>
             }
             {canEdit ?
@@ -186,37 +119,28 @@ const UserAppDialog = (props) => {
                     value={currentAddon.title}
                 />
             }
-            {(canEdit && false)?
-                <InputSelect
+            {(canEdit)?
+                <InputReadOnly
                     dialogRow={true}
                     label="icon"
                     value={currentAddon.icon}
-                    list={[{label: '--upload new--', value: undefined, upload: true}].concat(iconList)}
-                    showDialogFunction={dialogContext.showDialog}
                     mandatory={(v) => !v}
-                    onChange={(selected) => {
-                        if (selected.upload) {
-                            setUploadSequence((uploadSequence) => uploadSequence + 1);
-                            return;
-                        }
-                        setCurrentAddon({...currentAddon, icon: selected.url});
+                    onClick={()=>{
+                        dialogContext.showDialog(()=>{
+                            return <IconDialog
+                                value={currentAddon.icon}
+                                onChange={(icon)=>setCurrentAddon({...currentAddon,icon:icon.url})}
+                            />
+                        })
                     }}
                 >
                     {currentAddon.icon && <img className="appIcon" src={currentAddon.icon}/>}
-                </InputSelect>
+                </InputReadOnly>
                 :
                 <InputReadOnly
                     dialogRow={true}
                     label="icon"
                     value={currentAddon.icon}
-                    onClick={()=>{
-                        dialogContext.showDialog(()=>{
-                            return <IconDialog
-                                    value={currentAddon.icon}
-                                    onChange={(icon)=>setCurrentAddon({...currentAddon,icon:icon.url})}
-                                    />
-                        })
-                    }}
                 >
                     {currentAddon.icon && <img className="appIcon" src={currentAddon.icon}/>}
                 </InputReadOnly>
