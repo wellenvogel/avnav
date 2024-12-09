@@ -204,7 +204,7 @@ class AisPage extends React.Component{
                         this.searchHandler.setMultiple({searchActive:false});
                     }
                     else{
-                        Dialogs.valueDialogPromise("filter",this.state.searchValue)
+                        Dialogs.valueDialogPromise("filter",this.state.searchValue,undefined,true)
                             .then((value)=>{
                                 this.searchHandler.setMultiple({searchValue:value.toUpperCase(),searchActive: true});
                             })

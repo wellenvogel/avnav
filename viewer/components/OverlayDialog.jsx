@@ -418,68 +418,48 @@ const Dialogs = {
      * create a value dialog component
      * this method will not show the dialog directly
      * @param title
-     * @param value
+     * @param ivalue
      * @param okCallback
      * @param cancelCallback
      * @param opt_label
      * @return {Dialog}
      */
-    createValueDialog:(title,value,okCallback,cancelCallback,opt_label) =>{
-        class Dialog extends React.Component{
-            constructor(props){
-                super(props);
-                this.state={value:value};
-                this.valueChanged=this.valueChanged.bind(this);
-            }
-            valueChanged(event) {
-                this.setState({value: event.target.value});
-            }
-            render () {
+    createValueDialog:(title,ivalue,okCallback,cancelCallback,opt_label,opt_clear) =>{
+         return ()=>{
+                const [value,setValue]=useState(ivalue);
                 return (
-                    <div className="inner">
-                        <h3 className="dialogTitle">{title || 'Input'}</h3>
-                        <div>
+                    <DialogFrame title={title || 'Input'}>
                             <div className="dialogRow">
                                 <span className="inputLabel">{opt_label}</span>
-                                <input type="text" name="value" value={this.state.value} onChange={this.valueChanged}/>
+                                <input type="text" name="value" value={value} onChange={(ev)=>setValue(ev.target.value)}/>
                             </div>
-                        </div>
-                        <div className="dialogButtons">
+                        <DialogButtons>
+                            {opt_clear && <DB name="reset" close={false} onClick={()=>setValue('')}>Clear</DB>}
                             <DB name="cancel" onClick={cancelCallback}>Cancel</DB>
-                            <DB name="ok" onClick={() => okCallback(this.state.value)}>Ok</DB>
-                        </div>
-                    </div>
+                            <DB name="ok" onClick={() => okCallback(value)}>Ok</DB>
+                        </DialogButtons>
+                    </DialogFrame>
                 );
-            }
-        };
-        return Dialog;
+            };
     },
 
     createConfirmDialog: (text,okFunction,cancelFunction,opt_title) =>{
-        return (props)=> {
+        return ()=> {
             return (
-                <div className="inner">
-                    <h3 className="dialogTitle">{opt_title || ''}</h3>
-
+                <DialogFrame title={opt_title || ''}>
                     <div className="dialogText">{text}</div>
-                    <div className="dialogButtons">
-                        <DB name="cancel" onClick={() => {
-                            if (cancelFunction) cancelFunction();
-                            if (props.closeCallback) props.closeCallback();
-                        }}>Cancel</DB>
-                        <DB name="ok" onClick={() => {
-                            if (okFunction) okFunction();
-                            if (props.closeCallback) props.closeCallback();
-                        }}>Ok</DB>
-                    </div>
-                </div>
+                    <DialogButtons buttonList={[
+                        DBCancel(cancelFunction),
+                        DBOk(okFunction)
+                    ]}/>
+                </DialogFrame>
             );
         };
     },
 
 
     createAlertDialog: function(text,okFunction){
-        return (props)=>{
+        return ()=>{
             return (
                 <div className="inner">
                     <h3 className="dialogTitle">Alert</h3>
@@ -568,22 +548,19 @@ const Dialogs = {
      * to implement checking and asynchronous close use the valueDialog method
      * @param title
      * @param value
-     * @param opt_parent
      * @param opt_label
+     * @param opt_clear show clear button
      * @returns {Promise}
      */
-    valueDialogPromise: function (title, value, opt_parent, opt_label) {
-        let id;
+    valueDialogPromise: function (title, value, opt_label,opt_clear) {
         return new Promise(function (resolve, reject) {
             let Dialog = Dialogs.createValueDialog(title, value, (value)=> {
-                removeDialog(id,true);
                 resolve(value);
                 return true;
             }, ()=> {
-                removeDialog(id,true);
                 reject();
-            }, opt_label);
-            id=addDialog(Dialog,()=> {
+            }, opt_label,opt_clear);
+            addGlobalDialog(Dialog,()=> {
                     reject();
                 });
         })

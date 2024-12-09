@@ -22,6 +22,7 @@ const DialogButton=(props)=>{
         if (disabled) {
             add.disabled = true;
         }
+        if (close === undefined) close=true;
         return (
             <button
                 {...forward}
@@ -47,7 +48,7 @@ DialogButton.propTypes={
     disabled: PropTypes.bool,
     toggle: PropTypes.bool,
     visible: PropTypes.bool,
-    close: PropTypes.bool
+    close: PropTypes.bool  //default: true
 };
 
 export default DialogButton;
