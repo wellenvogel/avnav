@@ -24,9 +24,16 @@
  * edit server handler parameters
  */
 
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
-import OverlayDialog, {dialogHelper} from './OverlayDialog.jsx';
+import OverlayDialog, {
+    DBOk,
+    DialogButtons,
+    DialogFrame,
+    dialogHelper,
+    showPromiseDialog,
+    useDialogContext
+} from './OverlayDialog.jsx';
 import assign from 'object-assign';
 import DB from './DialogButton.jsx';
 import {ParamValueInput} from "./ParamValueInput";
@@ -35,18 +42,19 @@ import Toast from "./Toast";
 import {createEditableParameter} from "./EditableParameters";
 import Button from "./Button";
 import {stateHelper} from "../util/GuiHelpers";
+import DialogButton from "./DialogButton.jsx";
 
 const HelpButton=(props)=>{
-    let InfoDialog=(dprops)=>{
+    const dialogContext=useDialogContext();
+    let InfoDialog=()=>{
         return(
-            <div className="flexInner HelpDialog">
+            <DialogFrame className="HelpDialog">
                 <div className="dialogRow infoText">
                     {props.param.description}
                 </div>
-                <div className="dialogButtons">
-                    <DB name={'ok'} onClick={()=>dprops.closeCallback()}>Ok</DB>
-                </div>
-            </div>
+                <DialogButtons buttonList={DBOk()}>
+                </DialogButtons>
+            </DialogFrame>
         )
     }
     return <Button
@@ -56,34 +64,31 @@ const HelpButton=(props)=>{
             ev.stopPropagation();
             ev.preventDefault();
             if (props.param && props.param.description) {
-                props.showDialog(InfoDialog);
+                dialogContext.showDialog(InfoDialog);
             }
         }}
         />
 }
-class EditHandlerDialog extends React.Component{
-    constructor(props){
-        super(props);
-        this.state={
-            loaded:false,
-            parameters:undefined,
-            handlerId:props.handlerId
-        }
-        this.currentValues=stateHelper(this,{},'current');
-        this.modifiedValues=stateHelper(this,{},'modified');
-        this.dialogHelper=dialogHelper(this);
-    }
-    componentDidMount() {
+const EditHandlerDialog=(props)=>{
+    const [loaded,setLoaded]=useState(false);
+    const [parameters,setParameters]=useState(undefined);
+    const [handlerId,setHandlerId]=useState(props.handlerId);
+    const [currentValues,setCurrentValues]=useState({});
+    const [modifiedValues,setModifiedValues]=useState({});
+    const [name,setName]=useState();
+    const [canDelete,setCanDelete]=useState(false);
+    const dialogContext=useDialogContext();
+    useEffect(() => {
         let param={
             request: 'api',
             type: 'config',
-            handlerId: this.state.handlerId,
-            handlerName: this.props.handlerName
+            handlerId: handlerId,
+            handlerName: props.handlerName
         }
-        if (!this.props.addHandler){
+        if (!props.addHandler){
             param.command='getEditables';
-            if (this.props.child !== undefined){
-                param.child=this.props.child;
+            if (props.child !== undefined){
+                param.child=props.child;
             }
         }
         else{
@@ -91,9 +96,8 @@ class EditHandlerDialog extends React.Component{
         }
         RequestHandler.getJson('',undefined,param)
             .then((data)=>{
-                let nextState={};
-                if (this.props.handlerId === undefined && data.handlerId !== undefined){
-                    nextState.handlerId=data.handlerId;
+                if (props.handlerId === undefined && data.handlerId !== undefined){
+                    setHandlerId(data.handlerId);
                 }
                 let parameters=[];
                 data.data.forEach((param)=>{
@@ -103,7 +107,7 @@ class EditHandlerDialog extends React.Component{
                     let description=createEditableParameter(param.name,type,
                         param.rangeOrList,
                         param.name
-                        )
+                    )
                     if (! description) return;
                     description.default=param.default;
                     description.mandatory=param.mandatory;
@@ -111,77 +115,78 @@ class EditHandlerDialog extends React.Component{
                     description.condition=param.condition;
                     parameters.push(description);
                 })
-                nextState.loaded=true;
-                nextState.parameters=parameters;
-                nextState.name=data.configName||this.props.handlerName;
-                nextState.canDelete=data.canDelete;
-                this.setState(nextState);
-                this.currentValues.setState(data.values||{});
-                if (this.props.initialValues){
-                    this.modifiedValues.setState(this.props.initialValues);
+                setLoaded(true);
+                setParameters(parameters);
+                setName(data.configName||props.handlerName)
+                setCanDelete(data.canDelete);
+                setCurrentValues(data.values||{});
+                if (props.initialValues){
+                    setModifiedValues(props.initialValues);
                 }
             })
             .catch((e)=>{
                 Toast(e);
-                this.props.closeCallback();
+                dialogContext.closeDialog();
             });
-    }
-    getRequestParam(add){
+    }, []);
+
+    const getRequestParam= (add)=>{
         let rt=assign({
             request: 'api',
             type:'config',
-            handlerId: this.state.handlerId
+            handlerId: handlerId
         },add)
-        if (this.props.child !== undefined){
-            rt.child=this.props.child;
+        if (props.child !== undefined){
+            rt.child=props.child;
         }
         return rt;
     }
-    updateValues(){
-        let param=this.getRequestParam({command:'setConfig'});
-        RequestHandler.postJson('',this.modifiedValues.getState(),undefined,param)
+
+    const updateValues=()=>{
+        let param=getRequestParam({command:'setConfig'});
+        RequestHandler.postJson('',modifiedValues,undefined,param)
             .then((data)=>{
-                this.props.closeCallback();
+                dialogContext.closeDialog();
             })
             .catch(e=>Toast(e));
     }
-    deleteHandler(){
-        let text="really delete handler "+this.state.name||''+"?";
-        if (this.props.child){
-            text="really delete "+this.props.child+"?";
+    const deleteHandler=()=>{
+        let text="really delete handler "+name||''+"?";
+        if (props.child){
+            text="really delete "+props.child+"?";
         }
-        let confirm=OverlayDialog.createConfirmDialog(text,()=> {
-            let param = this.getRequestParam({command: this.props.child !== undefined ? 'deleteChild' : 'deleteHandler'});
-            RequestHandler.getJson('', undefined, param)
-                .then(() => this.props.closeCallback())
-                .catch(e => Toast(e))
-        });
-        this.dialogHelper.showDialog(confirm);
+        showPromiseDialog(dialogContext,OverlayDialog.createConfirmDialog(text))
+            .then(()=> {
+                let param = getRequestParam({command: props.child !== undefined ? 'deleteChild' : 'deleteHandler'});
+                return RequestHandler.getJson('', undefined, param);
+            },()=>{})
+            .then(() => dialogContext.closeDialog())
+            .catch(e => Toast(e));
     }
-    addHandler(){
-        let param=this.getRequestParam({handlerName:this.props.handlerName,command:'createHandler'});
-        RequestHandler.postJson('',this.modifiedValues.getState(),undefined,param)
+    const addHandler=()=>{
+        let param=getRequestParam({handlerName:props.handlerName,command:'createHandler'});
+        RequestHandler.postJson('',modifiedValues,undefined,param)
             .then((data)=>{
-                if (this.props.createdCallback){
-                    this.props.createdCallback(data.id)
+                if (props.createdCallback){
+                    props.createdCallback(data.id)
                 }
-                this.props.closeCallback()
+                dialogContext.closeDialog();
             })
             .catch((e)=>Toast(e));
     }
 
-    modifyValues(newValues){
-        let newState=assign(this.modifiedValues.getState(true),newValues)
-        let original=this.currentValues.getState()
+    const modifyValues=(newValues)=>{
+        let newState={...modifiedValues,...newValues};
+        let original=currentValues;
         for (let k in original){
             if (newState[k] === original[k] || (newState[k]+'') === (original[k]+'')){
                 delete newState[k];
             }
         }
-        this.modifiedValues.setState(newState,true);
+        setModifiedValues(newState);
     }
 
-    checkCondition(condition,values){
+    const checkCondition=(condition,values)=>{
         if (! (condition instanceof Array)){
             condition=[condition]
         }
@@ -191,9 +196,9 @@ class EditHandlerDialog extends React.Component{
                 let compare=condition[i][k];
                 let value=undefined;
                 let hasFound=false;
-                for (let pi in this.state.parameters) {
-                    if (this.state.parameters[pi].name === k){
-                        value=this.state.parameters[pi].getValueForDisplay(values);
+                for (let pi in parameters) {
+                    if (parameters[pi].name === k){
+                        value=parameters[pi].getValueForDisplay(values);
                         hasFound=true;
                         break;
                     }
@@ -211,7 +216,7 @@ class EditHandlerDialog extends React.Component{
                         break;
                     }
                     //intentionally use ==
-                    if (compare.substr(1) == value){
+                    if (compare.substring(1) == value){
                         matches=false;
                         break;
                     }
@@ -228,29 +233,24 @@ class EditHandlerDialog extends React.Component{
         return false;
     }
 
-    render () {
-        let self=this;
-        let currentValues=assign({},this.currentValues.getState(),this.modifiedValues.getState());
-        let name=this.state.name||'';
-        if (this.props.child){
-            name+=":"+this.props.child;
+        let renderValues={...currentValues,...modifiedValues};
+        let renderName=name||'';
+        if (props.child){
+            renderName+=":"+props.child;
         }
         return (
-            <React.Fragment>
-            <div className="selectDialog EditHandlerDialog">
-                <h3 className="dialogTitle">{this.props.title||'Edit Handler'}</h3>
-                <div className="dialogRow">{name}</div>
-                {!this.state.loaded ?
+            <DialogFrame className={"EditHandlerDialog"} title={props.title||'Edit Handler'}>
+                <div className="dialogRow">{renderName}</div>
+                {!loaded ?
                     <div className="loadingIndicator"></div>
                     :
                     <React.Fragment>
-                        {this.state.parameters.map((param) => {
-                            let notFilled=!param.mandatoryOk(currentValues);
+                        {parameters.map((param) => {
+                            let notFilled=!param.mandatoryOk(renderValues);
                             let children=
                                 <div className="paramButtons">
                                     {param.description && <HelpButton
                                         param={param}
-                                        showDialog={this.dialogHelper.showDialog}
                                     />
                                     }
                                     {param.default !== undefined && <Button
@@ -260,20 +260,20 @@ class EditHandlerDialog extends React.Component{
                                             ev.stopPropagation();
                                             let nv = {};
                                             nv[param.name] = param.default;
-                                            this.modifyValues(nv);
+                                            modifyValues(nv);
                                         }}
                                     />
                                     }
                                 </div>;
                             if (param.condition){
-                                let show=this.checkCondition(param.condition,currentValues);
+                                let show=checkCondition(param.condition,renderValues);
                                 if (!show) return null;
                             }
                             return ParamValueInput({
                                 param: param,
-                                currentValues: currentValues,
-                                showDialogFunction: this.dialogHelper.showDialog,
-                                onChange: (nv) => this.modifyValues(nv),
+                                currentValues: renderValues,
+                                showDialogFunction: dialogContext.showDialog,
+                                onChange: (nv) => modifyValues(nv),
                                 className: notFilled?'missing':'',
                                 children: children
                             })
@@ -281,21 +281,25 @@ class EditHandlerDialog extends React.Component{
 
                     </React.Fragment>
                 }
-                <div className="dialogButtons">
-                    {this.state.canDelete ?
-                        <DB name="delete" onClick={()=>{
-                            this.deleteHandler();
-                        }}>Delete</DB>:null}
-                    <DB name="cancel" onClick={this.props.closeCallback}>Cancel</DB>
+                <DialogButtons>
+                        <DB
+                            name="delete"
+                            onClick={()=>{
+                                deleteHandler();
+                            }}
+                            visible={canDelete}
+                            close={false}
+                        >
+                            Delete
+                        </DB>
+                    <DB name="cancel" >Cancel</DB>
                     <DB name="ok" onClick={()=>{
-                        if (! this.props.addHandler) this.updateValues();
-                        else this.addHandler();
+                        if (! props.addHandler) updateValues();
+                        else addHandler();
                     }}>Ok</DB>
-                </div>
-            </div>
-            </React.Fragment>
+                </DialogButtons>
+            </DialogFrame>
         );
-    }
 }
 
 EditHandlerDialog.propTypes={

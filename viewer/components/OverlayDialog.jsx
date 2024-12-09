@@ -7,13 +7,14 @@
  * the static methods will return promises for simple dialog handling
  */
 
-import React, {Children, cloneElement, createContext, useContext, useEffect, useRef, useState} from 'react';
+import React, {Children, cloneElement, createContext, useContext, useRef, useState} from 'react';
 import assign from 'object-assign';
 import InputMonitor from '../hoc/InputMonitor.jsx';
 import DB from './DialogButton.jsx';
 import MapEventGuard from "../hoc/MapEventGuard";
 import PropTypes from "prop-types";
 import DialogButton from "./DialogButton.jsx";
+import {concatsp} from "../util/helper";
 
 
 /**
@@ -118,11 +119,15 @@ export const DBOk=(onClick,props)=>{
 
 
 const DIALOG_Z=120;
-const DialogContextImpl=createContext({
-    closeDialog:()=>{},
-    showDialog:(dialog,opt_cancelCallback,opt_timeout)=>{},
-    zIndex: DIALOG_Z
-});
+
+const buildContext=(closeDialog,showDialog,zIndex)=>{
+    return {
+        closeDialog: closeDialog?closeDialog:()=>{},
+        showDialog: showDialog?showDialog:()=>{},
+        zIndex: (zIndex!==undefined)?zIndex:DIALOG_Z
+    };
+}
+const DialogContextImpl=createContext(buildContext());
 export const useDialogContext=()=>useContext(DialogContextImpl);
 export const DialogContext=({closeDialog,showDialog,zIndex,children})=>{
     return <DialogContextImpl.Provider value={{
@@ -134,19 +139,10 @@ export const DialogContext=({closeDialog,showDialog,zIndex,children})=>{
     </DialogContextImpl.Provider>
 }
 
-const emptyContext={
-    closeDialog: ()=>{},
-    showDialog: ()=>{},
-    zIndex: DIALOG_Z
-};
-let globalContext={...emptyContext};
+let globalContext=buildContext();
 
 export const setGlobalContext=(closeDialog,showDialog,zIndex)=>{
-    globalContext={
-        closeDialog: closeDialog?closeDialog:()=>{},
-        showDialog: showDialog?showDialog:()=>{},
-        zIndex: (zIndex!==undefined)?zIndex:DIALOG_Z
-    };
+    globalContext=buildContext(closeDialog,showDialog,zIndex);
 }
 
 
@@ -294,10 +290,6 @@ const addGlobalDialog=(dialog,opt_cancel,opt_timeout)=>{
     }
     globalContext.showDialog(dialog,cancel,opt_timeout);
 }
-const removeGlobalDialog=(id,opt_omitCancel)=>{
-    globalContext.showDialog();
-}
-
 const notifyClosed=()=>{
     if (window.avnav.android && window.avnav.android.dialogClosed){
         window.avnav.android.dialogClosed();
@@ -312,17 +304,6 @@ const notifyClosed=()=>{
 const addDialog=(content,opt_cancelCallback,opt_timeout)=> {
     return addGlobalDialog(content,opt_cancelCallback,opt_timeout);
 };
-
-const removeDialog=(key,opt_omitCancel)=> {
-    return removeGlobalDialog(key,opt_omitCancel);
-};
-
-const removeAll=()=>{
-    addGlobalDialog();
-};
-
-
-
 export const showPromiseDialog=(dialogContext,Dialog,args)=>{
     if (!dialogContext) dialogContext=globalContext;
     return new Promise((resolve,reject)=>{
@@ -356,6 +337,7 @@ const Dialogs = {
      */
     createSelectDialog: (title,list,okCallback,cancelCallback,optResetCallback)=> {
         return ({resolveFunction})=> {
+            const dialogContext=useDialogContext();
             return (
                 <DialogFrame className="selectDialog" title={title || ''}>
                     <div className="selectList">
@@ -363,6 +345,7 @@ const Dialogs = {
                             return(
                                 <div className={"listEntry "+(elem.selected && 'selectedItem')}
                                      onClick={function(){
+                                         dialogContext.closeDialog();
                                          if (resolveFunction) resolveFunction(elem);
                                          else if (okCallback) okCallback(elem);
                                     }}
@@ -504,12 +487,6 @@ const Dialogs = {
     dialog: function (html, opt_parent,opt_cancelCallback,opt_timeout) {
         return addDialog(html,opt_cancelCallback,opt_timeout);
     },
-
-    hide: function(){
-        removeAll();
-    },
-
-
 
 };
 
