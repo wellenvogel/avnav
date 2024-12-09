@@ -9,6 +9,7 @@ import Requests from '../util/requests.js';
 import GuiHelpers from '../util/GuiHelpers.js';
 import UploadHandler from "./UploadHandler";
 import {DBCancel, DBOk, DialogButtons, DialogFrame} from "./OverlayDialog";
+import {IconDialog} from "./IconDialog";
 
 const contains = (list, url, opt_key) => {
     if (opt_key === undefined) opt_key = "url";
@@ -185,7 +186,7 @@ const UserAppDialog = (props) => {
                     value={currentAddon.title}
                 />
             }
-            {canEdit ?
+            {(canEdit && false)?
                 <InputSelect
                     dialogRow={true}
                     label="icon"
@@ -208,6 +209,14 @@ const UserAppDialog = (props) => {
                     dialogRow={true}
                     label="icon"
                     value={currentAddon.icon}
+                    onClick={()=>{
+                        dialogContext.showDialog(()=>{
+                            return <IconDialog
+                                    value={currentAddon.icon}
+                                    onChange={(icon)=>setCurrentAddon({...currentAddon,icon:icon.url})}
+                                    />
+                        })
+                    }}
                 >
                     {currentAddon.icon && <img className="appIcon" src={currentAddon.icon}/>}
                 </InputReadOnly>

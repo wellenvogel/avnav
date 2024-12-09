@@ -412,6 +412,19 @@ body{
   }
 }
 
+.selectIconDialog{
+  .checkBoxRow{
+    .inputLabel{
+      width: unset;
+      margin-right: unset;
+      margin-left: 1em;
+    }
+  }
+  .selectedItem {
+    .nightBackFade(@colorSelection);
+  }
+}
+
 .overlayElement{
   &.sortableHelper {
     z-index: 130; //for dragdrop
@@ -639,6 +652,7 @@ body{
   padding: 1em;
   .nightBorderColorGR(30);
   .flex-display();
+  .flex-align-items(center);
 }
 .activeEntry{
   .nightBackColor(@colorSelection);

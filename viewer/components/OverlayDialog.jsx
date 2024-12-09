@@ -84,6 +84,11 @@ export const DialogText=({className,children})=>{
         {children}
     </div>
 }
+export const DialogRow=({className,children})=>{
+    return <div className={concatsp(className,"dialogRow")}>
+        {children}
+    </div>
+}
 DialogFrame.propTypes={
     className: PropTypes.string,
     title: PropTypes.string,
@@ -322,8 +327,22 @@ export const showPromiseDialog=(dialogContext,Dialog,args)=>{
     })
 }
 
+export const SelectList=({list,onClick})=> {
+    return <div className="selectList">
+        {list.map(function (elem) {
+            return (
+                <div className={"listEntry " + (elem.selected && 'selectedItem')}
+                     onClick={() => onClick(elem)}
+                     key={elem.value + ":" + elem.label}
+                >
+                    {elem.icon && <span className="icon" style={{backgroundImage: "url('" + elem.icon + "')"}}/>}
+                    <span className="entryLabel">{elem.label}</span>
+                </div>);
+        })}
+    </div>
+}
 
-                                            //"active input" to prevent resizes
+//"active input" to prevent resizes
 const Dialogs = {
     /**
      * create a select dialog component
@@ -335,26 +354,16 @@ const Dialogs = {
      * @param optResetCallback
      * @return {Function}
      */
-    createSelectDialog: (title,list,okCallback,cancelCallback,optResetCallback)=> {
-        return ({resolveFunction})=> {
-            const dialogContext=useDialogContext();
+    createSelectDialog: (title, list, okCallback, cancelCallback, optResetCallback) => {
+        return ({resolveFunction}) => {
+            const dialogContext = useDialogContext();
             return (
                 <DialogFrame className="selectDialog" title={title || ''}>
-                    <div className="selectList">
-                        {list.map(function(elem){
-                            return(
-                                <div className={"listEntry "+(elem.selected && 'selectedItem')}
-                                     onClick={function(){
-                                         dialogContext.closeDialog();
-                                         if (resolveFunction) resolveFunction(elem);
-                                         else if (okCallback) okCallback(elem);
-                                    }}
-                                     key={elem.value+":"+elem.label}
-                                    >
-                                    {elem.label}
-                                </div>);
-                        })}
-                    </div>
+                    <SelectList list={list} onClick={(elem)=>{
+                        dialogContext.closeDialog();
+                        if (resolveFunction) resolveFunction(elem);
+                        else if (okCallback) okCallback(elem);
+                    }}/>
                     <DialogButtons>
                         {optResetCallback && <DB
                             name="reset"
