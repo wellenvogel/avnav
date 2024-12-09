@@ -314,7 +314,7 @@ const scrollInContainer=(parent, element)=> {
     return 0;
 };
 
-const IMAGES=['png','jpg','svg','bmp','tiff','gif'];
+const IMAGES=['png','jpg','jpeg','svg','bmp','tiff','gif'];
 
 /**
  * helper for maintaining an object inside a components state
