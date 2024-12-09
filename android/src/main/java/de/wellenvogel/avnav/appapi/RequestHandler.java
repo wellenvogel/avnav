@@ -76,6 +76,7 @@ public class RequestHandler {
     public static String TYPE_USER="user";
     public static String TYPE_IMAGE="images";
     public static String TYPE_OVERLAY="overlay";
+    public static String TYPE_ICONS="icons";
     public static String TYPE_ADDON="addon";
     public static String TYPE_CONFIG="config";
     public static String TYPE_REMOTE="remotechannels";
@@ -254,6 +255,18 @@ public class RequestHandler {
                 @Override
                 public INavRequestHandler getHandler() {
                     return overlayHandler;
+                }
+            });
+        }catch(Exception e){
+            AvnLog.e("unable to create images handler",e);
+        }
+        try {
+            final IconRequestHandler iconHandler=new IconRequestHandler(TYPE_ICONS,service,
+                     "viewer/icons");
+            handlerMap.put(TYPE_ICONS, new LazyHandlerAccess() {
+                @Override
+                public INavRequestHandler getHandler() {
+                    return iconHandler;
                 }
             });
         }catch(Exception e){
