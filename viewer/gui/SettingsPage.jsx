@@ -535,8 +535,12 @@ class SettingsPage extends React.Component{
         if (this.hasChanges()) {
             return new Promise((resolve)=>{
                 OverlayDialog.confirm("discard changes?")
-                    .then(()=>resolve(0))
-                    .catch(()=>{})
+                    .then(()=>{
+                        resolve(0);
+                    })
+                    .catch((e)=>{
+                        console.log(e);
+                    })
             })
         }
         else {

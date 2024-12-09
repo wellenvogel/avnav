@@ -14,7 +14,6 @@ import DB from './DialogButton.jsx';
 import MapEventGuard from "../hoc/MapEventGuard";
 import PropTypes from "prop-types";
 import DialogButton from "./DialogButton.jsx";
-import Helper from "../util/helper";
 
 
 /**
@@ -324,7 +323,23 @@ const removeAll=()=>{
 
 
 
-
+export const showPromiseDialog=(dialogContext,Dialog,args)=>{
+    if (!dialogContext) dialogContext=globalContext;
+    return new Promise((resolve,reject)=>{
+        let resolved=false;
+        dialogContext.showDialog(()=>{
+            return <Dialog {...args} resolveFunction={(val)=>{
+                resolved=true;
+                resolve(val);
+            }} />
+        },()=>{
+            //give the resolve a chance to win
+            window.setTimeout(()=> {
+                if (!resolved) reject();
+            },0);
+        })
+    })
+}
 
 
                                             //"active input" to prevent resizes
@@ -340,38 +355,37 @@ const Dialogs = {
      * @return {Function}
      */
     createSelectDialog: (title,list,okCallback,cancelCallback,optResetCallback)=> {
-        return (props)=> {
+        return ({resolveFunction})=> {
             return (
-                <div className="selectDialog inner">
-                    <h3 className="dialogTitle">{title || ''}</h3>
+                <DialogFrame className="selectDialog" title={title || ''}>
                     <div className="selectList">
                         {list.map(function(elem){
                             return(
                                 <div className={"listEntry "+(elem.selected && 'selectedItem')}
                                      onClick={function(){
-                                        if (okCallback) okCallback(elem);
-                                        if (props.closeCallback) props.closeCallback();
+                                         if (resolveFunction) resolveFunction(elem);
+                                         else if (okCallback) okCallback(elem);
                                     }}
                                      key={elem.value+":"+elem.label}
-                                    >{elem.label}</div>);
+                                    >
+                                    {elem.label}
+                                </div>);
                         })}
                     </div>
-                    <div className="dialogButtons">
+                    <DialogButtons>
                         {optResetCallback && <DB
                             name="reset"
                             onClick={(ev)=>{
-                                if (props.closeCallback) props.closeCallback();
                                 optResetCallback(ev);
                             }}
                         >Reset</DB>}
                         <DB name="cancel"
                                 onClick={(ev)=>{
-                                    if (props.closeCallback) props.closeCallback();
                                     if (cancelCallback) cancelCallback(ev);
                                 }}
                             >Cancel</DB>
-                    </div>
-                </div>
+                    </DialogButtons>
+                </DialogFrame>
             );
 
         };
@@ -384,10 +398,11 @@ const Dialogs = {
      * @param okCallback
      * @param cancelCallback
      * @param opt_label
+     * @param opt_clear
      * @return {Dialog}
      */
     createValueDialog:(title,ivalue,okCallback,cancelCallback,opt_label,opt_clear) =>{
-         return ()=>{
+         return ({resolveFunction})=>{
                 const [value,setValue]=useState(ivalue);
                 return (
                     <DialogFrame title={title || 'Input'}>
@@ -398,7 +413,7 @@ const Dialogs = {
                         <DialogButtons>
                             {opt_clear && <DB name="reset" close={false} onClick={()=>setValue('')}>Clear</DB>}
                             <DB name="cancel" onClick={cancelCallback}>Cancel</DB>
-                            <DB name="ok" onClick={() => okCallback(value)}>Ok</DB>
+                            <DB name="ok" onClick={() => resolveFunction?resolveFunction(value):okCallback(value)}>Ok</DB>
                         </DialogButtons>
                     </DialogFrame>
                 );
@@ -406,13 +421,13 @@ const Dialogs = {
     },
 
     createConfirmDialog: (text,okFunction,cancelFunction,opt_title) =>{
-        return ()=> {
+        return ({resolveFunction})=> {
             return (
                 <DialogFrame title={opt_title || ''}>
                     <div className="dialogText">{text}</div>
                     <DialogButtons buttonList={[
                         DBCancel(cancelFunction),
-                        DBOk(okFunction)
+                        DBOk(resolveFunction||okFunction)
                     ]}/>
                 </DialogFrame>
             );
@@ -421,11 +436,11 @@ const Dialogs = {
 
 
     createAlertDialog: function(text,okFunction){
-        return ()=>{
+        return ({resolveFunction})=>{
             return (
                 <DialogFrame title={"Alert"}>
                     <DialogText>{text}</DialogText>
-                    <DialogButtons buttonList={DBOk(okFunction)}/>
+                    <DialogButtons buttonList={DBOk(resolveFunction||okFunction)}/>
                 </DialogFrame>
             );
         }
@@ -439,17 +454,8 @@ const Dialogs = {
      * @param opt_parent if set the HTML parent element
      * @returns {Promise}
      */
-    alert: function (text, opt_parent) {
-        return new Promise(function (resolve, reject) {
-            let id;
-            const okFunction = ()=> {
-                removeDialog(id,true);
-                resolve();
-            };
-            id=addDialog(Dialogs.createAlertDialog(text,okFunction),()=> {
-                    resolve();
-                });
-        });
+    alert: function (text) {
+        return showPromiseDialog(undefined,Dialogs.createAlertDialog(text));
     },
     /**
      * show a confirmation dialog
@@ -459,19 +465,7 @@ const Dialogs = {
      * @returns {Promise}
      */
     confirm: function (text, opt_parent, opt_title) {
-        return new Promise(function (resolve, reject) {
-            const okFunction = ()=> {
-                resolve(1);
-            };
-            const cancelFunction = ()=> {
-                reject();
-            };
-            let html = Dialogs.createConfirmDialog(text,okFunction,cancelFunction,opt_title);
-            addGlobalDialog(html,()=> {
-                    reject();
-                });
-        });
-
+        return showPromiseDialog(undefined,Dialogs.createConfirmDialog(text,undefined,undefined,opt_title));
     },
     /**
      * create a value dialog as a promise
@@ -484,17 +478,7 @@ const Dialogs = {
      * @returns {Promise}
      */
     valueDialogPromise: function (title, value, opt_label,opt_clear) {
-        return new Promise(function (resolve, reject) {
-            let Dialog = Dialogs.createValueDialog(title, value, (value)=> {
-                resolve(value);
-                return true;
-            }, ()=> {
-                reject();
-            }, opt_label,opt_clear);
-            addGlobalDialog(Dialog,()=> {
-                    reject();
-                });
-        })
+        return showPromiseDialog(undefined,Dialogs.createValueDialog(title, value, undefined,undefined,opt_label,opt_clear));
     },
     /**
      * create a value dialog as a promise
@@ -502,20 +486,10 @@ const Dialogs = {
      * to implement checking and asynchronous close use the valueDialog method
      * @param title
      * @param list
-     * @param opt_parent
      * @returns {Promise}
      */
-    selectDialogPromise: function (title, list, opt_parent) {
-        return new Promise(function (resolve, reject) {
-            let Dialog = Dialogs.createSelectDialog(title, list, (value)=> {
-                resolve(value);
-            }, ()=> {
-                reject();
-            });
-            addDialog(Dialog,()=> {
-                        reject();
-                    });
-        })
+    selectDialogPromise: function (title, list) {
+        return showPromiseDialog(undefined,Dialogs.createSelectDialog(title, list));
     },
     /**
      * create an arbitrary dialog
