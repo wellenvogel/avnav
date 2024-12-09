@@ -79,6 +79,11 @@ export const DialogFrame=(props)=>{
         {children}
     </div>
 }
+export const DialogText=({className,children})=>{
+    return <div className={concatsp(className,"dialogText")}>
+        {children}
+    </div>
+}
 DialogFrame.propTypes={
     className: PropTypes.string,
     title: PropTypes.string,
@@ -88,16 +93,19 @@ DialogFrame.propTypes={
 
 export const DialogButtons=(props)=>{
     const {className,children,buttonList,...fw}=props;
+    let buttons=buttonList;
+    if (! (buttons instanceof Array)) buttons=[buttons];
     return <div {...fw} className={"dialogButtons "+((className!==undefined)?className:"")}>
-        {buttonList?buttonList.map((button)=>{
+        {buttons.map((button)=>{
+            if (! button) return null;
             return <DialogButton {...button} key={button.name}>{button.label||button.name}</DialogButton>
-        }):null}
+        })}
         {children}
     </div>
 }
 DialogButtons.propTypes={
     className: PropTypes.string,
-    buttonList: PropTypes.array
+    buttonList: PropTypes.oneOfType([PropTypes.array,PropTypes.object])
 }
 /**
  * helper for dialogButtonList
@@ -461,14 +469,10 @@ const Dialogs = {
     createAlertDialog: function(text,okFunction){
         return ()=>{
             return (
-                <div className="inner">
-                    <h3 className="dialogTitle">Alert</h3>
-
-                    <div className="dialogText">{text}</div>
-                    <div className="dialogButtons">
-                        <DB name="ok" onClick={okFunction}>Ok</DB>
-                    </div>
-                </div>
+                <DialogFrame title={"Alert"}>
+                    <DialogText>{text}</DialogText>
+                    <DialogButtons buttonList={DBOk(okFunction)}/>
+                </DialogFrame>
             );
         }
 
@@ -509,38 +513,11 @@ const Dialogs = {
                 reject();
             };
             let html = Dialogs.createConfirmDialog(text,okFunction,cancelFunction,opt_title);
-            addDialog(html,()=> {
+            addGlobalDialog(html,()=> {
                     reject();
                 });
         });
 
-    },
-    /**
-     * a simple input value dialog
-     * @param {string} title the title text to be displayed
-     * @param {string} value the initial value
-     * @param {function} okCallback the callback when OK is clicked, value as parameter
-     *                   return false to keep the dialog open
-     *                   the callback will receive an asynchronous close function as
-     *                   second parameter
-     * @param opt_parent if set the parent HTML element
-     * @param opt_label if set an additional label
-     * @param opt_cancelCallback - if set a callback function being invoked on cancel
-     * @returns {*|OverlayDialog}
-     */
-    valueDialog: function (title, value, okCallback, opt_parent, opt_label, opt_cancelCallback) {
-        let id;
-        const ok = (value)=> {
-            removeDialog(id,true);
-            okCallback(value);
-        };
-        const cancel = ()=> {
-            if (removeDialog(id,true) && opt_cancelCallback) opt_cancelCallback();
-        };
-        let html= Dialogs.createValueDialog(title, value, ok, cancel, opt_label);
-        id=addDialog(html,()=> {
-                if (opt_cancelCallback) opt_cancelCallback();
-            });
     },
     /**
      * create a value dialog as a promise
