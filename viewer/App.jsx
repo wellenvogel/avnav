@@ -167,19 +167,28 @@ const ButtonSizer=(props)=>{
 let lastError={
 };
 
-const MainBody = ({location, options, history, nightMode}) => {
+let mainShowDialog=undefined;
+
+const GlobalDialog=()=>{
     const [DialogDisplay, setDialog] = useDialog();
     setGlobalContext(undefined,setDialog);
+    mainShowDialog=setDialog;
     useEffect(() => {
         return ()=>{
             setGlobalContext();
+            mainShowDialog=undefined;
         }
     }, []);
+    return <DialogDisplay/>
+}
+
+const MainBody = ({location, options, history, nightMode}) => {
+
     return (
         <DialogContext
-            showDialog={setDialog}
+            showDialog={mainShowDialog}
         >
-            <DialogDisplay/>
+            <GlobalDialog/>
             <DynamicRouter
                 storeKeys={{
                     sequence: keys.gui.global.propertySequence,
