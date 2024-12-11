@@ -33,9 +33,10 @@ import Helper from "../util/helper";
 import UploadHandler from "./UploadHandler";
 import Toast from "./Toast";
 
+const IMAGES_FLAG=1;
 const SOURCES=[
     {
-        flag: 1,
+        flag: IMAGES_FLAG,
         label: 'images',
         type: 'images'
     },
@@ -67,7 +68,6 @@ export const IconDialog=(props)=>{
     const onChange=props.resolveFunction||props.onChange;
     const [sources,setSources]=useState(0xff); //all
     const [iconList,setIconList]=useState([]);
-    const [currentUrl,setCurrentUrl]=useState(props.value);
     const [uploadSequence,setUploadSequence]=useState(0);
     const loadIcons = (opt_active,opt_activeType) => {
         setIconList([]);
@@ -87,7 +87,7 @@ export const IconDialog=(props)=>{
                                         el.label = el.name;
                                         el.value = el.url;
                                         el.icon= el.url;
-                                        if (el.url === currentUrl) el.selected=true;
+                                        if (el.url === props.value) el.selected=true;
                                         if (opt_active !== undefined){
                                             if (el.name === opt_active && (opt_activeType === undefined || opt_activeType === src.type)){
                                                 dialogContext.closeDialog();
@@ -138,7 +138,8 @@ export const IconDialog=(props)=>{
                     label:'New',
                     onClick:()=>setUploadSequence(uploadSequence+1),
                     close:false,
-                    visible: (props.allowUpload === undefined|| props.allowUpload)
+                    visible: (props.allowUpload === undefined|| props.allowUpload),
+                    disabled: ! (sources & IMAGES_FLAG)
                 },
                 DBCancel()
             ]}
