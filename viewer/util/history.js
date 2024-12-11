@@ -61,7 +61,9 @@ class History{
         this.updateCallback();
     }
     pop(){
-        this.history.splice(-1,1);
+        if (this.history.length > 1) {
+            this.history.splice(-1, 1);
+        }
         this.updateCallback(true);
     }
 
