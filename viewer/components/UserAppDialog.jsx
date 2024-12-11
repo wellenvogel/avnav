@@ -1,47 +1,119 @@
 import React, {useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
-import OverlayDialog, {useDialogContext} from './OverlayDialog.jsx';
+import OverlayDialog, {SelectList, showPromiseDialog, useDialogContext} from './OverlayDialog.jsx';
 import Toast from './Toast.jsx';
-import {Checkbox,Input,InputReadOnly,InputSelect} from './Inputs.jsx';
+import {Checkbox,Input,InputReadOnly} from './Inputs.jsx';
 import Addons from './Addons.js';
 import Helper from '../util/helper.js';
 import Requests from '../util/requests.js';
-import GuiHelpers from '../util/GuiHelpers.js';
 import UploadHandler from "./UploadHandler";
 import {DBCancel, DBOk, DialogButtons, DialogFrame} from "./OverlayDialog";
 import {IconDialog} from "./IconDialog";
+import globalStore from "../util/globalstore";
+import keys from "../util/keys";
 
-const contains = (list, url, opt_key) => {
-    if (opt_key === undefined) opt_key = "url";
-    for (let k = 0; k < list.length; k++) {
-        if (list[k][opt_key] === url) return true;
-    }
-    return false;
-}
-const UserAppDialog = (props) => {
-    const [currentAddon, setCurrentAddon] = useState({...props.addon, ...props.fixed});
-    const dialogContext = useDialogContext();
-    const [userFiles, setUserFiles] = useState([]);
-    const initiallyLoaded = (props.fixed || {}).url === undefined || props.addon !== undefined;
-    const [loaded, setLoaded] = useState(initiallyLoaded);
-    const [internal, setInternal] = useState(!(initiallyLoaded && (props.addon || {}).keepUrl));
-
-    const fillLists = () => {
+const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{
+    const dialogContext=useDialogContext();
+    const [uploadSequence,setUploadSequence]=useState(0);
+    const [userFiles,setUserFiles]=useState([]);
+    const listFiles=(name)=>{
         Requests.getJson("?request=list&type=user")
             .then((data) => {
                 let nuserFiles = [];
                 if (data.items) {
                     data.items.forEach((el) => {
                         if (Helper.getExt(el.name) === 'html') {
-                            el.label = el.url;
+                            el.label = el.name;
                             el.value = el.url;
+                            if (el.url === current) el.selected=true;
                             nuserFiles.push(el);
+                            if (name && el.name === name) {
+                                resolveFunction(el.url);
+                                dialogContext.closeDialog();
+                            }
                         }
                     });
                     setUserFiles(nuserFiles)
                 }
             }).catch((error) => {
         });
+    }
+    useEffect(() => {
+        listFiles();
+    }, []);
+    const checkName=(name)=>{
+        for (let i=0;i<userFiles.length;i++) {
+            if (userFiles[i].name ===name) return "file "+name+" already exists";
+        }
+    }
+    return <DialogFrame title={"Select HTML file"}>
+        <UploadHandler
+            uploadSequence={uploadSequence}
+            type={'user'}
+            checkNameCallback={(name)=>{
+                if (name && name.substring(name.length-4).toUpperCase() === 'HTML') {
+                    let err=checkName(name);
+                    if (err) return err;
+                    return {name: name}
+                }
+                return "only files of type html allowed";
+            }}
+            doneCallback={(v)=>listFiles(v.param.name)}
+            errorCallback={(err)=>Toast(err)}
+        />
+        <SelectList
+            list={userFiles}
+            onClick={(el)=>{
+                dialogContext.closeDialog();
+                resolveFunction(el.url);
+            }}
+        />
+        <DialogButtons buttonList={[
+            {
+                name: 'upload',
+                label: 'Upload',
+                onClick: ()=>{ setUploadSequence((old)=>old+1)},
+                visible: (allowUpload === undefined|| allowUpload) && globalStore.getData(keys.gui.capabilities.uploadUser),
+                close: false
+            },
+            {
+                name: 'new',
+                label: 'New',
+                onClick:()=>{
+                    showPromiseDialog(dialogContext,OverlayDialog.createValueDialog("enter html filename"),"")
+                        .then((name)=>{
+                            if (! name) throw Error("empty name");
+                            if (!Helper.getExt(name) === 'html') name+=".html";
+                            const err=checkName(name);
+                            if (err) throw Error(err);
+                            const data="<html>\n<head>\n</head>\n<body>\n<!--- your text here --->\n</body>\n</html>";
+                            Requests.postPlain({
+                                request:'upload',
+                                type: 'user',
+                                name: name
+                            }, data)
+                                .then(()=>{
+                                    listFiles();
+                                })
+                        })
+                        .catch((err)=>Toast(err+""));
+                },
+                visible: (allowUpload === undefined|| allowUpload) && globalStore.getData(keys.gui.capabilities.uploadUser),
+                close: false
+            },
+            DBCancel()
+
+        ]}/>
+    </DialogFrame>
+}
+
+const UserAppDialog = (props) => {
+    const [currentAddon, setCurrentAddon] = useState({...props.addon, ...props.fixed});
+    const dialogContext = useDialogContext();
+    const initiallyLoaded = (props.fixed || {}).url === undefined || props.addon !== undefined;
+    const [loaded, setLoaded] = useState(initiallyLoaded);
+    const [internal, setInternal] = useState(!(initiallyLoaded && (props.addon || {}).keepUrl));
+    const fillLists = () => {
         if (!loaded) Addons.readAddOns()
             .then((addons) => {
                 let current = Addons.findAddonByUrl(addons, props.fixed.url)
@@ -90,14 +162,21 @@ const UserAppDialog = (props) => {
                             mandatory={(v) => !v}
                             onChange={(val) => setCurrentAddon({...currentAddon, url: val})}/>
                         :
-                        <InputSelect
+                        <InputReadOnly
                             dialogRow={true}
                             label="internal url"
                             value={currentAddon.url}
                             mandatory={(v) => !v}
-                            list={userFiles}
-                            showDialogFunction={dialogContext.showDialog}
-                            onChange={(selected) => setCurrentAddon({...currentAddon, url: selected.url})}/>
+                            onClick={()=>{
+                                dialogContext.showDialog(()=>{
+                                    return <SelectHtmlDialog
+                                        resolveFunction={(url)=>
+                                            setCurrentAddon({...currentAddon,url:url})
+                                        }
+                                        current={currentAddon.url}
+                                    />
+                                })
+                            }}/>
                     }
                 </React.Fragment>
             }

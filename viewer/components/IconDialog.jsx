@@ -32,6 +32,8 @@ import GuiHelpers from "../util/GuiHelpers";
 import Helper from "../util/helper";
 import UploadHandler from "./UploadHandler";
 import Toast from "./Toast";
+import globalStore from "../util/globalstore";
+import keys from "../util/keys";
 
 const IMAGES_FLAG=1;
 const SOURCES=[
@@ -138,7 +140,7 @@ export const IconDialog=(props)=>{
                     label:'New',
                     onClick:()=>setUploadSequence(uploadSequence+1),
                     close:false,
-                    visible: (props.allowUpload === undefined|| props.allowUpload),
+                    visible: (props.allowUpload === undefined|| props.allowUpload) && globalStore.getData(keys.gui.capabilities.uploadImages),
                     disabled: ! (sources & IMAGES_FLAG)
                 },
                 DBCancel()
