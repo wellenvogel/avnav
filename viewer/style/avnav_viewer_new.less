@@ -420,6 +420,9 @@ body{
       margin-left: 1em;
     }
   }
+  .listEntry{
+    .flex-wrap(wrap);
+  }
   .selectedItem {
     .nightBackFade(@colorSelection);
   }
@@ -776,6 +779,7 @@ span.valuePrefix{
   background-size: contain;
   display: inline-block;
   background-repeat: no-repeat;
+  background-position: center;
   .nightOPacity();
 }
 .iconImage(@url){
