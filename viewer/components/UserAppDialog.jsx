@@ -1,6 +1,6 @@
 import React, {useEffect, useRef, useState} from 'react';
 import PropTypes from 'prop-types';
-import OverlayDialog, {DialogRow, SelectList, showPromiseDialog, useDialogContext} from './OverlayDialog.jsx';
+import OverlayDialog, {DialogRow, SelectList, useDialogContext} from './OverlayDialog.jsx';
 import Toast from './Toast.jsx';
 import {Checkbox, Input, InputReadOnly, valueMissing} from './Inputs.jsx';
 import Addons from './Addons.js';
@@ -13,16 +13,28 @@ import globalStore from "../util/globalstore";
 import keys from "../util/keys";
 import Prism from "prismjs";
 import CodeFlask from 'codeflask';
-const ItemNameDialog=({iname,resolveFunction,fixedExt,ititle,mandatory,checkName})=>{
+
+const promiseResolveHelper=({ok,err},resolveFunction,...args)=>{
+    let rt=resolveFunction(...args);
+    if (rt instanceof Promise){
+        rt.then(()=>ok && ok())
+            .catch((e)=>{err && err(e)})
+        return;
+    }
+    if (rt) ok && ok();
+    else err && err();
+}
+
+const ItemNameDialog=({iname,resolveFunction,fixedExt,title,mandatory,checkName})=>{
     const [name,setName]=useState(iname);
     const [error,setError]=useState();
     const dialogContext=useDialogContext();
-    const title=ititle?ititle:(iname?"Modify FileName":"Create FileName");
+    const titlevalue=title?title:(iname?"Modify FileName":"Create FileName");
     const completeName=(nn)=>{
         if (! fixedExt) return nn;
         return nn+"."+fixedExt;
     }
-    return <DialogFrame className={"itemNameDialog"} title={title}>
+    return <DialogFrame className={"itemNameDialog"} title={titlevalue}>
         <Input
             dialogRow={true}
             value={name}
@@ -41,12 +53,20 @@ const ItemNameDialog=({iname,resolveFunction,fixedExt,ititle,mandatory,checkName
         <DialogButtons buttonList={[
             DBCancel(),
             DBOk(()=> {
-                if (resolveFunction(completeName(name))) dialogContext.closeDialog();
+                promiseResolveHelper({ok:dialogContext.closeDialog},resolveFunction,completeName(name));
             },{close:false,disabled: valueMissing(mandatory,name) || !!error})
         ]}/>
     </DialogFrame>
 };
-const EditHtmlDialog=({data,resolveFunction,arrayResolve})=>{
+ItemNameDialog.propTypes={
+    iname: PropTypes.oneOfType([PropTypes.string,undefined]),
+    resolveFunction: PropTypes.func, //must return true to close the dialog
+    checkName: PropTypes.func, //if provided: return an error text if the name is invalid
+    title: PropTypes.func, //use this as dialog title
+    mandatory: PropTypes.oneOfType([PropTypes.bool,PropTypes.func]), //return true if the value is mandatory but not set
+    fixedExt: PropTypes.string //set a fixed extension
+}
+const EditHtmlDialog=({data,resolveFunction,saveFunction})=>{
     const flask=useRef();
     const editElement=useRef();
     const [changed,setChanged]=useState(false);
@@ -66,23 +86,19 @@ const EditHtmlDialog=({data,resolveFunction,arrayResolve})=>{
     return <DialogFrame title={"Edit HTML"} className={"editFileDialog"}>
         <div className={"edit"} ref={editElement}></div>
         <DialogButtons buttonList={[
+            {
+                name: 'save',
+                close: false,
+                onClick: ()=>{
+                    setChanged(false);
+                    promiseResolveHelper({err:()=>{setChanged(true)}},saveFunction,flask.current.getCode())
+                },
+                visible: !!saveFunction,
+                disabled: !changed
+            },
             DBCancel(),
             DBOk(()=> {
-                    if (arrayResolve) {
-                        resolveFunction([flask.current.getCode(), () => dialogContext.closeDialog()])
-                    }
-                    else{
-                        let rt=resolveFunction(flask.current.getCode());
-                        if (rt instanceof Promise){
-                            rt.then(()=>dialogContext.closeDialog())
-                                .catch((err)=>{if (err)Toast(err+"")});
-                            return;
-                        }
-                        if (rt){
-                            dialogContext.closeDialog();
-                        }
-
-                    }
+                promiseResolveHelper({ok:dialogContext.closeDialog},resolveFunction,flask.current.getCode());
                 },{disabled:!changed,close:false}
             )
         ]}></DialogButtons>
@@ -122,6 +138,19 @@ const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{
         if (! name) return;
         for (let i=0;i<userFiles.length;i++) {
             if (userFiles[i].name ===name) return "file "+name+" already exists";
+        }
+    }
+    const uploadFromEdit=async (name,data,overwrite)=>{
+        try {
+            await Requests.postPlain({
+                request: 'upload',
+                type: 'user',
+                name: name,
+                overwrite:overwrite
+            }, data);
+        }catch (e){
+            Toast(e);
+            throw e;
         }
     }
     return <DialogFrame title={"Select HTML file"}>
@@ -169,13 +198,11 @@ const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{
                             dialogContext.showDialog(() => <EditHtmlDialog
                                 data={data}
                                 resolveFunction={async (modifiedData) => {
-                                    await Requests.postPlain({
-                                        request: 'upload',
-                                        type: 'user',
-                                        name: name
-                                    }, modifiedData);
+                                    await uploadFromEdit(name,modifiedData,true);
                                     listFiles(name);
                                 }}
+                                saveFunction={async (modifiedData)=>
+                                    await uploadFromEdit(name,modifiedData,true)}
                             />)
                         }}/>
                     )
