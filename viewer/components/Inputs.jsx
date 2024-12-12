@@ -23,7 +23,7 @@ const DEFAULT_TYPES={
     mandatory: PropTypes.oneOfType([PropTypes.bool,PropTypes.func])
 };
 
-const valueMissing=(check,value)=>{
+export const valueMissing=(check,value)=>{
     if (!check) return false;
     if (typeof check === 'function'){
         return check(value);

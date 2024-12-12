@@ -1,8 +1,8 @@
 import React, {useEffect, useRef, useState} from 'react';
 import PropTypes from 'prop-types';
-import OverlayDialog, {SelectList, showPromiseDialog, useDialogContext} from './OverlayDialog.jsx';
+import OverlayDialog, {DialogRow, SelectList, showPromiseDialog, useDialogContext} from './OverlayDialog.jsx';
 import Toast from './Toast.jsx';
-import {Checkbox,Input,InputReadOnly} from './Inputs.jsx';
+import {Checkbox, Input, InputReadOnly, valueMissing} from './Inputs.jsx';
 import Addons from './Addons.js';
 import Helper from '../util/helper.js';
 import Requests from '../util/requests.js';
@@ -13,7 +13,40 @@ import globalStore from "../util/globalstore";
 import keys from "../util/keys";
 import Prism from "prismjs";
 import CodeFlask from 'codeflask';
-const EditHtmlDialog=({data,resolveFunction})=>{
+const ItemNameDialog=({iname,resolveFunction,fixedExt,ititle,mandatory,checkName})=>{
+    const [name,setName]=useState(iname);
+    const [error,setError]=useState();
+    const dialogContext=useDialogContext();
+    const title=ititle?ititle:(iname?"Modify FileName":"Create FileName");
+    const completeName=(nn)=>{
+        if (! fixedExt) return nn;
+        return nn+"."+fixedExt;
+    }
+    return <DialogFrame className={"itemNameDialog"} title={title}>
+        <Input
+            dialogRow={true}
+            value={name}
+            onChange={(nv)=>{
+                setName(nv);
+                if (checkName) {
+                    setError(checkName(completeName(nv)));
+                }
+            }}
+            mandatory={mandatory}
+            checkFunction={(n)=>!checkName(completeName(n))}
+            >
+            {fixedExt && <span className={"ext"}>.{fixedExt}</span>}
+        </Input>
+        { error && <DialogRow className={"errorText"}><span className={'inputLabel'}></span>{error}</DialogRow>}
+        <DialogButtons buttonList={[
+            DBCancel(),
+            DBOk(()=> {
+                if (resolveFunction(completeName(name))) dialogContext.closeDialog();
+            },{close:false,disabled: valueMissing(mandatory,name) || !!error})
+        ]}/>
+    </DialogFrame>
+};
+const EditHtmlDialog=({data,resolveFunction,arrayResolve})=>{
     const flask=useRef();
     const editElement=useRef();
     const [changed,setChanged]=useState(false);
@@ -35,7 +68,21 @@ const EditHtmlDialog=({data,resolveFunction})=>{
         <DialogButtons buttonList={[
             DBCancel(),
             DBOk(()=> {
-                    resolveFunction([flask.current.getCode(),()=>dialogContext.closeDialog()])
+                    if (arrayResolve) {
+                        resolveFunction([flask.current.getCode(), () => dialogContext.closeDialog()])
+                    }
+                    else{
+                        let rt=resolveFunction(flask.current.getCode());
+                        if (rt instanceof Promise){
+                            rt.then(()=>dialogContext.closeDialog())
+                                .catch((err)=>{if (err)Toast(err+"")});
+                            return;
+                        }
+                        if (rt){
+                            dialogContext.closeDialog();
+                        }
+
+                    }
                 },{disabled:!changed,close:false}
             )
         ]}></DialogButtons>
@@ -72,6 +119,7 @@ const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{
         listFiles();
     }, []);
     const checkName=(name)=>{
+        if (! name) return;
         for (let i=0;i<userFiles.length;i++) {
             if (userFiles[i].name ===name) return "file "+name+" already exists";
         }
@@ -110,34 +158,27 @@ const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{
                 name: 'new',
                 label: 'New',
                 onClick: () => {
-                    showPromiseDialog(dialogContext, OverlayDialog.createValueDialog("enter html filename"), "")
-                        .then((name) => {
+                    dialogContext.showDialog(()=><ItemNameDialog
+                        iname={""}
+                        fixedExt={"html"}
+                        mandatory={(v)=>!v}
+                        checkName={checkName}
+                        resolveFunction={(name)=>{
                             if (!name) return;
-                            if (!(Helper.getExt(name) === 'html')) name += ".html";
-                            const err = checkName(name);
-                            if (err) throw Error(err);
                             const data = `<html>\n<head>\n</head>\n<body>\n<p>Template ${name}</p>\n</body>\n</html>`;
-                            showPromiseDialog(dialogContext, (props) => {
-                                return <EditHtmlDialog data={data} {...props}/>
-                            })
-                                .then(([modifiedData,close]) => {
-                                    Requests.postPlain({
+                            dialogContext.showDialog(() => <EditHtmlDialog
+                                data={data}
+                                resolveFunction={async (modifiedData) => {
+                                    await Requests.postPlain({
                                         request: 'upload',
                                         type: 'user',
                                         name: name
-                                    }, modifiedData)
-                                        .then(() => {
-                                            close();
-                                            listFiles(name);
-                                        }, (err) => {
-                                            Toast(err + "");
-                                            listFiles();
-                                        })
-
-                                }, () => {
-                                })
-                        })
-                        .catch((err) => Toast(err + ""));
+                                    }, modifiedData);
+                                    listFiles(name);
+                                }}
+                            />)
+                        }}/>
+                    )
                 },
                 visible: (allowUpload === undefined|| allowUpload) && globalStore.getData(keys.gui.capabilities.uploadUser),
                 close: false
