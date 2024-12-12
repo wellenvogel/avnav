@@ -354,7 +354,8 @@ const UserAppDialog = (props) => {
                             const data = await Requests.getHtmlOrText("", {useNavUrl:true}, {
                                 request: 'download',
                                 type: 'user',
-                                name: name
+                                name: name,
+                                noattach: true
                             });
                             dialogContext.showDialog(() => <EditHtmlDialog
                                 data={data}
