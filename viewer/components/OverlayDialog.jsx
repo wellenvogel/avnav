@@ -391,7 +391,7 @@ const Dialogs = {
      * @param cancelCallback
      * @param opt_label
      * @param opt_clear
-     * @return {Dialog}
+     * @return {any}
      */
     createValueDialog:(title,ivalue,okCallback,cancelCallback,opt_label,opt_clear) =>{
          return ({resolveFunction})=>{
