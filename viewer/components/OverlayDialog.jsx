@@ -318,6 +318,7 @@ export const showPromiseDialog=(dialogContext,Dialog,args)=>{
             return <Dialog {...args} resolveFunction={(val)=>{
                 resolved=true;
                 resolve(val);
+                return true;
             }} />
         },()=>{
             //give the resolve a chance to win

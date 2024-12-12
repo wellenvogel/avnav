@@ -1,6 +1,6 @@
 import React, {useEffect, useRef, useState} from 'react';
 import PropTypes from 'prop-types';
-import OverlayDialog, {DialogRow, SelectList, useDialogContext} from './OverlayDialog.jsx';
+import OverlayDialog, {DialogRow, SelectList, showPromiseDialog, useDialogContext} from './OverlayDialog.jsx';
 import Toast from './Toast.jsx';
 import {Checkbox, Input, InputReadOnly, valueMissing} from './Inputs.jsx';
 import Addons from './Addons.js';
@@ -217,6 +217,31 @@ const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{
     </DialogFrame>
 }
 
+const TranslateUrlDialog=({resolveFunction,current})=>{
+    const dialogContext=useDialogContext();
+    useEffect(() => {
+        (async ()=> {
+            try {
+                const data = await Requests.getJson("?request=list&type=user");
+                if (data.items) {
+                    data.items.forEach((el) => {
+                        if (Helper.getExt(el.name) === 'html') {
+                            if (el.url === current) {
+                                dialogContext.closeDialog();
+                                resolveFunction(el.name);
+                            }
+                        }
+                    });
+                }
+            } catch (error) {
+
+            }
+            dialogContext.closeDialog();
+        })();
+    }, []);
+    return <DialogFrame title={"loading..."}/>
+}
+
 const UserAppDialog = (props) => {
     const [currentAddon, setCurrentAddon] = useState({...props.addon, ...props.fixed});
     const dialogContext = useDialogContext();
@@ -349,8 +374,14 @@ const UserAppDialog = (props) => {
                     name: 'edit',
                     close: false,
                     onClick:async ()=>{
-                        const name=currentAddon.url.replace(/.*\//,''); //TODO: really get name from url
+                        let name;
                         try {
+                            name = await showPromiseDialog(dialogContext, TranslateUrlDialog, {current: currentAddon.url});
+                        }catch (e) {
+                            Toast("unable to find file for "+currentAddon.url);
+                            return;
+                        }
+                        try{
                             const data = await Requests.getHtmlOrText("", {useNavUrl:true}, {
                                 request: 'download',
                                 type: 'user',
@@ -364,7 +395,7 @@ const UserAppDialog = (props) => {
                                 resolveFunction={async (mData)=> await uploadFromEdit(name,mData,true)}
                             />)
                         }catch (e){
-                            Toast(e);
+                            if (e) Toast(e);
                         }
                     },
                     visible: !!currentAddon.url && Helper.startsWith(currentAddon.url,"/user/viewer") && currentAddon.canDelete && canEdit && internal
