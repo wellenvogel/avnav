@@ -66,7 +66,7 @@ ItemNameDialog.propTypes={
     mandatory: PropTypes.oneOfType([PropTypes.bool,PropTypes.func]), //return true if the value is mandatory but not set
     fixedExt: PropTypes.string //set a fixed extension
 }
-const EditHtmlDialog=({data,resolveFunction,saveFunction})=>{
+const EditHtmlDialog=({data,title,resolveFunction,saveFunction})=>{
     const flask=useRef();
     const editElement=useRef();
     const [changed,setChanged]=useState(false);
@@ -83,7 +83,7 @@ const EditHtmlDialog=({data,resolveFunction,saveFunction})=>{
         flask.current.updateCode(data, true);
         flask.current.onUpdate(()=>setChanged(true));
     }, []);
-    return <DialogFrame title={"Edit HTML"} className={"editFileDialog"}>
+    return <DialogFrame title={title||"Edit HTML"} className={"editFileDialog"}>
         <div className={"edit"} ref={editElement}></div>
         <DialogButtons buttonList={[
             {
@@ -103,6 +103,20 @@ const EditHtmlDialog=({data,resolveFunction,saveFunction})=>{
             )
         ]}></DialogButtons>
     </DialogFrame>
+}
+
+const uploadFromEdit=async (name,data,overwrite)=>{
+    try {
+        await Requests.postPlain({
+            request: 'upload',
+            type: 'user',
+            name: name,
+            overwrite:overwrite
+        }, data);
+    }catch (e){
+        Toast(e);
+        throw e;
+    }
 }
 
 const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{
@@ -138,19 +152,6 @@ const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{
         if (! name) return;
         for (let i=0;i<userFiles.length;i++) {
             if (userFiles[i].name ===name) return "file "+name+" already exists";
-        }
-    }
-    const uploadFromEdit=async (name,data,overwrite)=>{
-        try {
-            await Requests.postPlain({
-                request: 'upload',
-                type: 'user',
-                name: name,
-                overwrite:overwrite
-            }, data);
-        }catch (e){
-            Toast(e);
-            throw e;
         }
     }
     return <DialogFrame title={"Select HTML file"}>
@@ -344,6 +345,29 @@ const UserAppDialog = (props) => {
 
 
             <DialogButtons buttonList={[
+                {
+                    name: 'edit',
+                    close: false,
+                    onClick:async ()=>{
+                        const name=currentAddon.url.replace(/.*\//,''); //TODO: really get name from url
+                        try {
+                            const data = await Requests.getHtmlOrText("", {useNavUrl:true}, {
+                                request: 'download',
+                                type: 'user',
+                                name: name
+                            });
+                            dialogContext.showDialog(() => <EditHtmlDialog
+                                data={data}
+                                title={"Edit "+name}
+                                saveFunction={async (mData)=> await uploadFromEdit(name,mData,true)}
+                                resolveFunction={async (mData)=> await uploadFromEdit(name,mData,true)}
+                            />)
+                        }catch (e){
+                            Toast(e);
+                        }
+                    },
+                    visible: !!currentAddon.url && Helper.startsWith(currentAddon.url,"/user/viewer") && currentAddon.canDelete && canEdit && internal
+                },
                 {
                     name: 'delete',
                     label: 'Delete',
