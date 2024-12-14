@@ -13,6 +13,7 @@ import globalStore from "../util/globalstore";
 import keys from "../util/keys";
 import Prism from "prismjs";
 import CodeFlask from 'codeflask';
+import DownloadButton from "./DownloadButton";
 
 const promiseResolveHelper=({ok,err},resolveFunction,...args)=>{
     let rt=resolveFunction(...args);
@@ -66,11 +67,12 @@ ItemNameDialog.propTypes={
     mandatory: PropTypes.oneOfType([PropTypes.bool,PropTypes.func]), //return true if the value is mandatory but not set
     fixedExt: PropTypes.string //set a fixed extension
 }
-const EditHtmlDialog=({data,title,resolveFunction,saveFunction})=>{
+const EditHtmlDialog=({data,title,resolveFunction,saveFunction,fileName})=>{
     const flask=useRef();
     const editElement=useRef();
     const [changed,setChanged]=useState(false);
     const dialogContext=useDialogContext();
+    const [uploadSequence,setUploadSequence]=useState(0);
     useEffect(() => {
         flask.current = new CodeFlask(editElement.current, {
             language: 'html',
@@ -84,8 +86,35 @@ const EditHtmlDialog=({data,title,resolveFunction,saveFunction})=>{
         flask.current.onUpdate(()=>setChanged(true));
     }, []);
     return <DialogFrame title={title||"Edit HTML"} className={"editFileDialog"}>
+        <UploadHandler
+            uploadSequence={uploadSequence}
+            local={true}
+            type={'user'}
+            doneCallback={(data)=>{
+                showPromiseDialog(dialogContext,OverlayDialog.createConfirmDialog("overwrite with "+data.name+" ?"))
+                    .then(()=>{
+                        flask.current.updateCode(data.data,true);
+                        setChanged(true);
+                    },()=>{})
+            }}
+            checkNameCallback={(name)=>{return {name:name}}}
+            errorCallback={(err)=>Toast(err)}
+        />
         <div className={"edit"} ref={editElement}></div>
         <DialogButtons buttonList={[
+            {
+              name:'upload',
+              label: 'Import',
+              onClick:()=>setUploadSequence((old)=>old+1),
+              close:false
+            },
+            ()=><DownloadButton
+                useDialogButton={true}
+                localData={()=>flask.current.getCode()}
+                fileName={fileName}
+                name={"download"}
+                close={false}
+            >Download</DownloadButton>,
             {
                 name: 'save',
                 close: false,
@@ -198,6 +227,7 @@ const SelectHtmlDialog=({allowUpload,resolveFunction,current})=>{
                             const data = `<html>\n<head>\n</head>\n<body>\n<p>Template ${name}</p>\n</body>\n</html>`;
                             dialogContext.showDialog(() => <EditHtmlDialog
                                 data={data}
+                                fileName={name}
                                 resolveFunction={async (modifiedData) => {
                                     await uploadFromEdit(name,modifiedData,true);
                                     listFiles(name);
@@ -390,6 +420,7 @@ const UserAppDialog = (props) => {
                             });
                             dialogContext.showDialog(() => <EditHtmlDialog
                                 data={data}
+                                fileName={name}
                                 title={"Edit "+name}
                                 saveFunction={async (mData)=> await uploadFromEdit(name,mData,true)}
                                 resolveFunction={async (mData)=> await uploadFromEdit(name,mData,true)}

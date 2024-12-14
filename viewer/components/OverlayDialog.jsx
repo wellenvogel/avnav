@@ -103,6 +103,10 @@ export const DialogButtons=(props)=>{
     return <div {...fw} className={"dialogButtons "+((className!==undefined)?className:"")}>
         {buttons.map((button)=>{
             if (! button) return null;
+            if (typeof(button) === 'function'){
+                const El=button;
+                return <El/>
+            }
             const label=button.label?button.label:button.name.substring(0,1).toUpperCase()+button.name.substring(1);
             return <DialogButton {...button} key={button.name}>{label}</DialogButton>
         })}

@@ -22,10 +22,11 @@
  #
  ###############################################################################
  */
-import React from 'react';
+import React, {useRef} from 'react';
 import PropTypes from 'prop-types';
 import DB from './DialogButton';
 import Button from './Button';
+import {useDialogContext} from "./OverlayDialog";
 
 const toBase64=(val)=>{
     if (typeof(val) === 'string'){
@@ -38,30 +39,32 @@ const toBase64=(val)=>{
     return window.btoa(val);
 }
 
-class DownloadButton extends React.Component{
-    constructor(props) {
-        super(props);
-        this.hiddenA=undefined
-    }
-    saveLocal(){
-        if (! this.hiddenA) return;
-        if (!this.props.localData) return false;
-        let data=this.props.localData;
-        if (typeof this.props.localData === 'function'){
-            data=this.props.localData();
+const DownloadButton=(props)=>{
+    const hiddenA=useRef();
+    const saveLocal=(fileName)=>{
+        if (! hiddenA.current) return;
+        if (!props.localData) return false;
+        let data=props.localData;
+        if (typeof data === 'function'){
+            data=data();
         }
         let dataUrl="data:application/octet-stream;base64,"+toBase64(data);
-        this.hiddenA.href=dataUrl;
+        if (window.avnav.android && window.avnav.android.dataDownload){
+           window.avnav.android.dataDownload(dataUrl,fileName,"application/octet-stream");
+        }
+        else {
+            hiddenA.current.href = dataUrl;
+            hiddenA.current.click();
+        }
     }
-    render() {
-        let {useDialogButton,url,localData,fileName,type,androidUrl,...forward}=this.props;
-        let Bt = useDialogButton ? DB : Button;
-        if (!url && ! localData) return null;
+    let {useDialogButton,url,localData,fileName,type,androidUrl,...forward}=props;
+    let Bt = useDialogButton ? DB : Button;
+    if (!url && ! localData) return null;
         return (
             <React.Fragment>
                 <a download={fileName||"file.txt"}
                    className="hidden"
-                   ref={(el) => this.hiddenA = el}
+                   ref={hiddenA}
                    href={url||""}
                    onClick={(ev)=>ev.stopPropagation()}
                 />
@@ -69,17 +72,16 @@ class DownloadButton extends React.Component{
                         {...forward}
                         onClick={(ev) =>{
                             ev.stopPropagation();
-                            if (! this.hiddenA) return;
-                            if (!url) this.saveLocal();
-                            this.hiddenA.click();
-                            if (this.props.onClick) this.props.onClick(ev);
+                            if (! hiddenA.current) return;
+                            if (!url) saveLocal(fileName);
+                            else hiddenA.current.click();
+                            if (props.onClick) props.onClick(ev);
                         }}
                     >
-                        {this.props.children}
+                        {props.children}
                     </Bt>
             </React.Fragment>
         )
-    }
 }
 
 DownloadButton.propTypes={

@@ -414,12 +414,38 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
         gpsService=null;
     }
 
+    private boolean startNextDownload(DownloadHandler.Download nextDownload,String mimeType){
+        if (download != null && download.isRunning()) return false;
+        nextDownload.progress=MainActivity.this.dlProgress;
+        nextDownload.dlText=MainActivity.this.dlText;
+        download=nextDownload;
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType(mimeType);
+        if (nextDownload.fileName != null) {
+            intent.putExtra(Intent.EXTRA_TITLE, nextDownload.fileName);
+        }
+        startActivityForResult(intent,Constants.FILE_OPEN_DOWNLOAD);
+        return true;
+    }
+
+    public void startDataDownload(String dataUrl,String fileName, String mimeType) throws Exception {
+        Uri uri=Uri.parse(dataUrl);
+        if (!"data".equals(uri.getScheme())){
+            throw new Exception("only data urls allowed for DataDownload");
+        }
+        DownloadHandler.DataDownload nextDownload=new DownloadHandler.DataDownload(dataUrl,this);
+        nextDownload.fileName=fileName;
+        startNextDownload(nextDownload,mimeType);
+    }
+
     private void initializeWebView(){
         if (webView != null) return;
         sharedPrefs.edit().putBoolean(Constants.WAITSTART,true).commit();
         jsInterface=new JavaScriptApi(this,getRequestHandler());
         webView=(WebView)findViewById(R.id.webmain);
         webView.getSettings().setJavaScriptEnabled(true);
+        webView.getSettings().setAllowFileAccess(true);
         webView.getSettings().setAllowFileAccess(true);
         if (Build.VERSION.SDK_INT >= 16){
             try {
@@ -563,16 +589,7 @@ public class MainActivity extends Activity implements IMediaUpdater, SharedPrefe
                     else {
                         nextDownload=DownloadHandler.createHandler(MainActivity.this,url,userAgent,contentDisposition,mimeType,l);
                     }
-                    nextDownload.progress=MainActivity.this.dlProgress;
-                    nextDownload.dlText=MainActivity.this.dlText;
-                    download=nextDownload;
-                    Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-                    intent.addCategory(Intent.CATEGORY_OPENABLE);
-                    intent.setType(mimeType);
-                    if (nextDownload.fileName != null) {
-                        intent.putExtra(Intent.EXTRA_TITLE, nextDownload.fileName);
-                    }
-                    startActivityForResult(intent,Constants.FILE_OPEN_DOWNLOAD);
+                    startNextDownload(nextDownload,mimeType);
                 }catch (Throwable t){
                     Toast.makeText(MainActivity.this,"download error:"+t,Toast.LENGTH_LONG).show();
                 }
