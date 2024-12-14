@@ -11,9 +11,9 @@ import React, {Children, cloneElement, createContext, useContext, useRef, useSta
 import assign from 'object-assign';
 import InputMonitor from '../hoc/InputMonitor.jsx';
 import DB from './DialogButton.jsx';
+import DialogButton from './DialogButton.jsx';
 import MapEventGuard from "../hoc/MapEventGuard";
 import PropTypes from "prop-types";
-import DialogButton from "./DialogButton.jsx";
 import {concatsp} from "../util/helper";
 
 
@@ -524,3 +524,15 @@ InfoItem.show=(data,description)=>{
 }
 export default Dialogs;
 
+export const promiseResolveHelper = ({ok, err}, resolveFunction, ...args) => {
+    let rt = resolveFunction(...args);
+    if (rt instanceof Promise) {
+        rt.then(() => ok && ok())
+            .catch((e) => {
+                err && err(e)
+            })
+        return;
+    }
+    if (rt) ok && ok();
+    else err && err();
+}
