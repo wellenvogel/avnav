@@ -454,7 +454,9 @@ class ImporterPage extends React.Component{
                         Toast(txt);
                     }}
                     src={undefined}
-                    ref={(el) => this.downloadFrame = el}/>
+                    ref={(el) => {
+                        this.downloadFrame = el;
+                    }}/>
             </React.Fragment>;
         }
 

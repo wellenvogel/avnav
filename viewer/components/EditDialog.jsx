@@ -32,7 +32,7 @@ export const EditDialog = ({data, title, language, resolveFunction, saveFunction
         flask.current.updateCode(data, true);
         flask.current.onUpdate(() => setChanged(true));
     }, []);
-    return <DialogFrame title={title || fileName || "Edit"} className={"editFileDialog"}>
+    return <DialogFrame title={title || fileName } className={"editFileDialog"}>
         <UploadHandler
             uploadSequence={uploadSequence}
             local={true}
