@@ -167,10 +167,10 @@ export const useDialog=(closeCb)=>{
     return [
         () => {
             if (!dialogContent || !dialogContent.content) return null;
-            const ownId=dialogId.current;
             return (
                 <Display closeCallback={() => {
-                    if (dialogContent &&  ownId === dialogContent.id) {
+                    //only close the dialog if there is not already a new dialog
+                    if (dialogContent &&  dialogId.current === dialogContent.id) {
                         setDialog(undefined);
                         if (closeCb) closeCb();
                         if (dialogContent.close) dialogContent.close();
