@@ -894,6 +894,7 @@ RouteData.prototype.startQuery=function() {
         this.lastReceivedRoute=undefined;
         this.lastSentRoute=undefined;
         this.lastSentLeg=undefined;
+        this.lastLegSequence=undefined;
         self.timer=window.setTimeout(function() {
             self.startQuery();
         },timeout);
@@ -901,7 +902,7 @@ RouteData.prototype.startQuery=function() {
     }
     else {
         let currentLegSequence=globalStore.getData(keys.nav.gps.updateleg);
-        if (this.lastLegSequence === undefined || this.lastLegSequence !== currentLegSequence) {
+        if (this.lastLegSequence === undefined || this.lastLegSequence !== currentLegSequence || this.lastReceivedLeg === undefined) {
             this.lastLegSequence=currentLegSequence;
             Requests.getJson(url, {checkOk: false}).then(
                 (data)=> {
