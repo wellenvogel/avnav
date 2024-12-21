@@ -31,11 +31,11 @@ import Formatter from "../util/formatter";
 import PropTypes from 'prop-types';
 import {useTimer} from "../util/GuiHelpers";
 import {DialogButtons, DialogFrame} from "./OverlayDialog";
+import DownloadButton from "./DownloadButton";
 
 const LogDialog=(props)=> {
     const [log,setLog]=useState();
     const [autoreload,setAutoReload]=useState(props.autoreload);
-    const downloadFrame=useRef();
     const mainref=useRef();
     const timer= useTimer((seq)=> {
         if (autoreload) {
@@ -74,19 +74,17 @@ const LogDialog=(props)=> {
                     }
                     toggle={autoreload}
                 >Auto</DB>
-                <DB
-                    name="download"
-                    onClick={()=>{
+                <DownloadButton
+                    name={"download"}
+                    useDialogButton={true}
+                    url={()=>{
                         let name=props.dlname?props.dlname:"avnav-"+Formatter.formatDateTime(new Date()).replace(/[: /]/g,'-').replace(/--/g,'-')+".log";
-                        let url=props.baseUrl+"&filename="+encodeURIComponent(name);
-                        if (downloadFrame.current){
-                            downloadFrame.current.src=url;
-                        }
+                        return props.baseUrl+"&filename="+encodeURIComponent(name);
                     }}
                     close={false}
                 >
                     Download
-                </DB>
+                </DownloadButton>
                 <DB name="reload"
                     close={false}
                     onClick={getLog}>
@@ -98,15 +96,6 @@ const LogDialog=(props)=> {
                     Ok
                 </DB>
             </DialogButtons>
-            <iframe
-                className="downloadFrame"
-                onLoad={(ev)=>{
-                    let txt=ev.target.contentDocument.body.textContent;
-                    if (! txt) return;
-                    Toast(txt);
-                }}
-                src={undefined}
-                ref={downloadFrame}/>
         </DialogFrame>
 }
 
