@@ -6,7 +6,7 @@ import assign from 'object-assign';
 import shallowcompare from "./compare";
 import Requests from "./requests";
 import base from "../base";
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 
 
 
@@ -246,6 +246,68 @@ const lifecycleTimer=(thisref,timercallback,interval,opt_autostart)=>{
         }
     };
 };
+/**
+ *
+ * @param timercallback
+ * @param interval
+ * @param opt_autostart
+ * @returns {{guardedCall: ((function(*, *): (boolean))|*), setTimeout: *, startTimer: (function(*): boolean), currentSequence: (function(): number), stopTimer: (function(*): boolean)}}
+ */
+export const useTimer=(timercallback,interval,opt_autostart)=>{
+    const timer=useRef(undefined);
+    const currentSequence=useRef(0);
+    const currentInterval=useRef(interval);
+    //we must wrap this into a ref to ensure that always the current callback
+    //with an up to date closure is called
+    const callbackHandler=useRef(timercallback);
+    const startTimer=(sequence)=>{
+        if (sequence !== undefined && sequence !== currentSequence.current) return false;
+        if (timer.current !== undefined){
+            currentSequence.current++;
+            window.clearTimeout(timer.current);
+        }
+        const startSequence=currentSequence.current;
+        timer.current=window.setTimeout(()=>{
+            if (currentSequence.current !== startSequence) return;
+            timer.current=undefined;
+            callbackHandler.current(startSequence);
+        },currentInterval.current);
+        return true;
+    }
+    const stopTimer=(sequence)=>{
+        if (sequence !== undefined && sequence !== currentSequence.current) return false;
+        if (timer.current !== undefined){
+            currentSequence.current++;
+            window.clearTimeout(timer.current);
+            timer.current=undefined;
+        }
+    }
+    useEffect(() => {
+        callbackHandler.current=timercallback;
+    }, [timercallback]);
+    useEffect(() => {
+        if (opt_autostart){
+            startTimer(0); //only start the timer if this is really an initial call
+        }
+        return ()=>{
+            stopTimer();
+        }
+    }, []);
+    return {
+        startTimer:(sequence)=>startTimer(sequence),
+        stopTimer:(sequence)=>stopTimer(sequence),
+        setTimeout:(newInterval,opt_stop)=>{
+            if (opt_stop) stopTimer();
+            currentInterval.current=newInterval;
+        },
+        currentSequence:()=>currentSequence.current,
+        guardedCall:(sequence,callback)=>{
+            if (sequence !== undefined && sequence !== currentSequence.current) return false;
+            callback(currentSequence.current);
+            return true;
+        }
+    }
+}
 
 const keyEventHandler=(thisref,callback,component,action)=>{
     const handler=(cbComponent,cbAction)=>{

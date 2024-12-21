@@ -23,90 +23,81 @@
  ###############################################################################
  * dialog for log file display
  */
-import React from "react";
+import React, {useCallback, useEffect, useRef, useState} from "react";
 import Requests from "../util/requests";
 import Toast from "./Toast";
 import DB from "./DialogButton";
 import Formatter from "../util/formatter";
 import PropTypes from 'prop-types';
-import GuiHelpers from "../util/GuiHelpers";
+import {useTimer} from "../util/GuiHelpers";
+import {DialogButtons, DialogFrame} from "./OverlayDialog";
 
-export default class LogDialog extends React.Component{
-    constructor(props) {
-        super(props);
-        this.state={
-            log:undefined,
-            loading: true,
-            autoreload: props.autoreload
-        };
-        this.downloadFrame=null;
-        this.mainref=null;
-        this.getLog=this.getLog.bind(this);
-        this.timer=new GuiHelpers.lifecycleTimer(this,(seq)=>{
-            if (this.state.autoreload){
-                this.getLog().then(()=>this.timer.startTimer(seq));
-                return;
-            }
-            this.timer.startTimer(seq);
-        },5000,true)
-    }
-    componentDidMount() {
-        this.getLog().then(()=>{})
-    }
-    componentDidUpdate(prevProps, prevState, snapshot) {
-        if (this.mainref) {
-            this.mainref.scrollTop = this.mainref.scrollHeight
+const LogDialog=(props)=> {
+    const [log,setLog]=useState();
+    const [autoreload,setAutoReload]=useState(props.autoreload);
+    const downloadFrame=useRef();
+    const mainref=useRef();
+    const timer= useTimer((seq)=> {
+        if (autoreload) {
+            getLog().then(() => timer.startTimer(seq));
+            return;
         }
-    }
-
-    getLog(){
-        return Requests.getHtmlOrText(this.props.baseUrl, {useNavUrl:false},{
-            maxBytes:this.props.maxBytes||500000
+        timer.startTimer(seq)
+    },5000,true);
+    useEffect(() => {
+        getLog().then(()=>{},()=>{});
+    }, []);
+    useEffect(() => {
+        if (mainref.current) {
+            mainref.current.scrollTop = mainref.current.scrollHeight
+        }
+    });
+    const getLog=()=>{
+        return Requests.getHtmlOrText(props.baseUrl, {useNavUrl:false},{
+            maxBytes:props.maxBytes||500000
         })
             .then((data)=>{
-                this.setState({log:data});
+                setLog(data);
                 return data;
             })
             .catch((e)=>Toast(e))
     }
-    render(){
-        return <div className="selectDialog LogDialog">
-            <h3 className="dialogTitle">{this.props.title||'AvNav log'}</h3>
-            <div className="logDisplay dialogRow" ref={(el)=>this.mainref=el}>
-                {this.state.log||''}
+    return <DialogFrame className="selectDialog LogDialog" title={props.title||'AvNav log'}>
+            <div className="logDisplay dialogRow" ref={mainref}>
+                {log||''}
             </div>
-            <div className="dialogButtons">
+            <DialogButtons>
                 <DB name="autoreload"
+                    close={false}
                     onClick={()=>
-                        this.setState((old)=>{
-                        return {autoreload:!old.autoreload};
-                        })
+                        setAutoReload((old)=>!old)
                     }
-                    toggle={this.state.autoreload}
+                    toggle={autoreload}
                 >Auto</DB>
                 <DB
                     name="download"
                     onClick={()=>{
-                        let name=this.props.dlname?this.props.dlname:"avnav-"+Formatter.formatDateTime(new Date()).replace(/[: /]/g,'-').replace(/--/g,'-')+".log";
-                        let url=this.props.baseUrl+"&filename="+encodeURIComponent(name);
-                        if (this.downloadFrame){
-                            this.downloadFrame.src=url;
+                        let name=props.dlname?props.dlname:"avnav-"+Formatter.formatDateTime(new Date()).replace(/[: /]/g,'-').replace(/--/g,'-')+".log";
+                        let url=props.baseUrl+"&filename="+encodeURIComponent(name);
+                        if (downloadFrame.current){
+                            downloadFrame.current.src=url;
                         }
                     }}
+                    close={false}
                 >
                     Download
                 </DB>
                 <DB name="reload"
-                    onClick={this.getLog}>
+                    close={false}
+                    onClick={getLog}>
                     Reload
                 </DB>
                 <DB
                     name="ok"
-                    onClick={this.props.closeCallback}
                 >
                     Ok
                 </DB>
-            </div>
+            </DialogButtons>
             <iframe
                 className="downloadFrame"
                 onLoad={(ev)=>{
@@ -115,9 +106,8 @@ export default class LogDialog extends React.Component{
                     Toast(txt);
                 }}
                 src={undefined}
-                ref={(el)=>this.downloadFrame=el}/>
-        </div>
-    }
+                ref={downloadFrame}/>
+        </DialogFrame>
 }
 
 LogDialog.propTypes={
@@ -127,3 +117,4 @@ LogDialog.propTypes={
     dlname:PropTypes.string,
     autoreload: PropTypes.bool
 }
+export default LogDialog;

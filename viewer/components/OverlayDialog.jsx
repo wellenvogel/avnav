@@ -170,13 +170,15 @@ export const useDialog=(closeCb)=>{
             return (
                 <Display closeCallback={() => {
                     //only close the dialog if there is not already a new dialog
-                    if (dialogContent &&  dialogId.current === dialogContent.id) {
-                        setDialog(undefined);
-                        if (closeCb) closeCb();
+                    if (dialogContent){
+                        if(dialogId.current === dialogContent.id) {
+                            setDialog(undefined);
+                            if (closeCb) closeCb();
+                        }
+                        else{
+                            console.log("deferred close");
+                        }
                         if (dialogContent.close) dialogContent.close();
-                    }
-                    else{
-                        console.log("deferred close");
                     }
                 }}>
                     <dialogContent.content/>
