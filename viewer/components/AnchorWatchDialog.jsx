@@ -39,7 +39,6 @@ const WatchDialog=(props)=> {
     const [radius,setRadius]=useState(globalStore.getData(keys.properties.anchorWatchDefault));
     const [bearing,setBearing]=useState(0);
     const [distance,setDistance]=useState(0);
-    const [refPoint,setRefPoint]=useState(undefined);
     const dialogContext=useDialogContext();
     const computeRefPoint=(sv,fromCenter)=>{
         let cv={radius,bearing,distance,refPoint};
