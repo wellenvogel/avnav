@@ -46,8 +46,9 @@ const Content=(props)=>{
                 else {
                     ItemClass = props.itemClass;
                 }
+                let onClick;
                 if (!itemProps.onClick && props.onItemClick) {
-                    itemProps.onClick=(data)=>{
+                    onClick=(data)=>{
                         if (data && data.stopPropagation) data.stopPropagation();
                         if (data && data.preventDefault) data.preventDefault();
                         if (props.reverse){
@@ -59,7 +60,7 @@ const Content=(props)=>{
                         }
                     }
                 }
-                return <ItemClass key={itemProps.key} {...itemProps}/>
+                return <ItemClass onClick={onClick} key={itemProps.key} {...itemProps}/>
             })}
         </div>
     );
