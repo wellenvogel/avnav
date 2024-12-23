@@ -30,7 +30,7 @@ import theFactory from "./WidgetFactory";
 import {EditableParameter} from "./EditableParameters";
 import ItemList from "./ItemList";
 import DialogButton from "./DialogButton";
-import {useDialog} from "./OverlayDialog";
+import {DialogButtons, useDialog, useDialogContext} from "./OverlayDialog";
 import EditWidgetDialog from "./EditWidgetDialog";
 import keys from "../util/keys";
 
@@ -56,7 +56,7 @@ const updateChildren=(children,index,data)=>{
 
 const RenderChildParam=(props)=>{
     if (! props.currentValues) return null;
-    const [Dialog,setDialog]=useDialog();
+    const dialogContext=useDialogContext();
     const [children,setChildrenImpl]=useState(props.currentValues.children||[])
     const setChildren=(ch)=>{
         if (ch === undefined) return;
@@ -64,7 +64,6 @@ const RenderChildParam=(props)=>{
         props.onChange({children:ch});
     }
     return <div className={'childWidgets'}>
-        <Dialog/>
         <ItemList
             itemList={children}
             itemClass={ChildWidget}
@@ -76,12 +75,12 @@ const RenderChildParam=(props)=>{
                 }
             }}
             onItemClick={(item,data)=>{
-                setDialog((props)=>{
+                dialogContext.showDialog((props)=>{
                     return <EditWidgetDialog
+                        {...props}
                         title={"Sub Widget "+item.index}
                         current={item}
                         weight={true}
-                        closeCallback={()=>setDialog()}
                         updateCallback={(data)=>{
                             setChildren(updateChildren(children,item.index,data));
                         }}
@@ -92,25 +91,26 @@ const RenderChildParam=(props)=>{
                 })
             }}
         />
-        <div className={'row dialogButtons insertButtons'}>
+        <DialogButtons>
             <DialogButton
                 name={'add'}
+                close={false}
                 onClick={()=>{
-                    setDialog((props)=>{
+                    dialogContext.showDialog((props)=>{
                         return <EditWidgetDialog
+                            {...props}
                             title="Add Sub"
                             current={{}}
                             weight={true}
                             insertCallback={(data)=>{
                                setChildren([...children,data]);
                             }}
-                            closeCallback={()=>setDialog()}
                         />
                     })
                 }}
             >
                 +Sub</DialogButton>
-        </div>
+        </DialogButtons>
     </div>
 }
 class ChildrenParam extends EditableParameter {
