@@ -23,12 +23,12 @@
  ###############################################################################
  */
 
-import React from 'react';
+import React, {useState} from 'react';
 import PropTypes from 'prop-types';
-import OverlayDialog, {dialogHelper} from './OverlayDialog.jsx';
+import {DialogButtons, DialogFrame, DialogRow, showPromiseDialog} from './OverlayDialog.jsx';
 import {Input, InputSelect} from './Inputs.jsx';
 import DB from './DialogButton.jsx';
-import assign from 'object-assign';
+
 const nameToExternalName=(name,fixedPrefix)=>{
     if (fixedPrefix) return fixedPrefix+name;
     return name;
@@ -41,56 +41,44 @@ const externalNameToName=(name,fixedPrefix)=>{
     }
     return name;
 }
-class SaveItemDialog extends React.Component{
-    constructor(props){
-        super(props);
-        let value=externalNameToName(props.value,props.fixedPrefix);
-        this.state=assign({
-            value: value
-            },
-            props.checkFunction(nameToExternalName(value,this.props.fixedPrefix)));
-        this.valueChanged=this.valueChanged.bind(this);
-    }
-    valueChanged(value) {
-        let nstate=assign({value:value},this.props.checkFunction(nameToExternalName(value,this.props.fixedPrefix)));
-        this.setState(nstate);
-    }
-    render () {
-        let info="New ";
-        if (this.state.active){
-            info="Active ";
+const SaveItemDialog = (props) => {
+    const [value, setValue] = useState(externalNameToName(props.value, props.fixedPrefix));
+    const [existingActive, setExistingActive] = useState(props.checkFunction(nameToExternalName(value, props.fixedPrefix)));
+    let info = "New ";
+    if (existingActive.active) {
+        info = "Active ";
+    } else {
+        if (existingActive.existing) {
+            info = "Existing ";
         }
-        else{
-            if (this.state.existing){
-                info="Existing ";
-            }
-        }
-        info+=this.props.itemLabel;
-        return (
-            <div className={this.props.className+" inner saveItemDialog"}>
-                <h3 className="dialogTitle">{this.props.title||('Select '+this.props.itemLabel+' Name')}</h3>
-                {this.props.subTitle?<p>{this.props.subTitle}</p>:null}
-                <div>
-                    <div className="dialogRow"><span className="wideLabel">{info}</span></div>
-                    <div className="dialogRow">
-                        <Input
-                            className="saveName"
-                            label={this.props.fixedPrefix||''}
-                            value={this.state.value} onChange={this.valueChanged}/>
-                    </div>
-                </div>
-                <div className="dialogButtons">
-                    <DB name="cancel" onClick={this.props.closeCallback}>Cancel</DB>
-                    <DB name="ok" onClick={() => {
-                        this.props.okCallback(nameToExternalName(this.state.value,this.props.fixedPrefix));
-                        this.props.closeCallback();
-                        }}
-                        disabled={this.state.existing && ! this.props.allowOverwrite}
-                    >{(this.state.existing && this.props.allowOverwrite) ? "Overwrite" : "Ok"}</DB>
-                </div>
+    }
+    info += props.itemLabel;
+    return (
+        <div className={props.className + " inner saveItemDialog"}>
+            <h3 className="dialogTitle">{props.title || ('Select ' + props.itemLabel + ' Name')}</h3>
+            {props.subTitle ? <p>{props.subTitle}</p> : null}
+            <div>
+                <DialogRow><span className="wideLabel">{info}</span></DialogRow>
+                <Input
+                    dialogRow={true}
+                    className="saveName"
+                    label={props.fixedPrefix || ''}
+                    value={value} onChange={(nv) => {
+                    setValue(nv);
+                    setExistingActive(props.checkFunction(nameToExternalName(nv, props.fixedPrefix)))
+                }}/>
             </div>
-        );
-    }
+            <DialogButtons>
+                <DB name="cancel">Cancel</DB>
+                <DB name="ok" onClick={() => {
+                    props.okCallback(nameToExternalName(value, props.fixedPrefix));
+                }}
+                    disabled={existingActive.existing && !props.allowOverwrite}
+                >{(existingActive.existing && props.allowOverwrite) ? "Overwrite" : "Ok"}</DB>
+            </DialogButtons>
+        </div>
+    );
+
 }
 
 SaveItemDialog.propTypes={
@@ -103,7 +91,6 @@ SaveItemDialog.propTypes={
     allowOverwrite: PropTypes.bool,
     value: PropTypes.string,
     okCallback: PropTypes.func.isRequired,
-    closeCallback: PropTypes.func.isRequired
 };
 /**
  *
@@ -112,16 +99,15 @@ SaveItemDialog.propTypes={
  * @param properties object with: title, itemLabel, subtitle, fixedPrefix
  * @return {*}
  */
-SaveItemDialog.createDialog=(name,checkFunction,properties)=>{
+SaveItemDialog.createDialog=(name,checkFunction,properties,opt_dialogContext)=>{
     if (! properties) properties={}
-    return new Promise((resolve,reject)=>{
-        OverlayDialog.dialog((props)=> {
+    return showPromiseDialog(opt_dialogContext,(props)=>{
             return <SaveItemDialog
                 {...properties}
                 {...props}
                 value={name}
                 okCallback={(newName)=>{
-                        resolve(newName)
+                        props.resolveFunction(newName)
                    }}
                 checkFunction={(cname)=>{
                         if (checkFunction){
@@ -131,51 +117,31 @@ SaveItemDialog.createDialog=(name,checkFunction,properties)=>{
                     }
                 }
                 />
-        },undefined,()=>{reject("")});
     });
 };
 
-class LoadItemDialog extends React.Component{
-    constructor(props){
-        super(props);
-        this.state={
-                value: props.value
-            };
-        this.valueChanged=this.valueChanged.bind(this);
-        this.dialog=dialogHelper(this);
-    }
-    valueChanged(value) {
-        let nstate={value:value};
-        this.setState(nstate);
-    }
-    render () {
+const LoadItemDialog=(props)=>{
+        const [value,setValue]=useState(props.value);
         return (
-            <div className={this.props.className+" inner loadItemDialog"}>
-                <h3 className="dialogTitle">{this.props.title||('Select '+this.props.itemLabel)}</h3>
-                {this.props.subTitle?<p>{this.props.subTitle}</p>:null}
-                <div>
-                    <div className="dialogRow">
+            <DialogFrame className={props.className+" loadItemDialog"} title={props.title||('Select '+props.itemLabel)}>
+                {props.subTitle?<p>{props.subTitle}</p>:null}
                         <InputSelect
+                            dialogRow={true}
                             className="loadName"
-                            label={this.props.itemLabel}
-                            value={this.state.value}
-                            itemList={this.props.itemList}
-                            onChange={this.valueChanged}
+                            label={props.itemLabel}
+                            value={value}
+                            itemList={props.itemList}
+                            onChange={(nv)=>setValue(nv)}
                             changeOnlyValue={true}
-                            showDialogFunction={this.dialog.showDialog}
                         />
-                    </div>
-                </div>
-                <div className="dialogButtons">
-                    <DB name="cancel" onClick={this.props.closeCallback}>Cancel</DB>
+                <DialogButtons >
+                    <DB name="cancel" >Cancel</DB>
                     <DB name="ok" onClick={() => {
-                        this.props.okCallback(this.state.value);
-                        this.props.closeCallback();
+                        props.okCallback(value);
                     }}>Ok</DB>
-                </div>
-            </div>
+                </DialogButtons>
+            </DialogFrame>
         );
-    }
 }
 
 LoadItemDialog.propTypes={
@@ -185,25 +151,22 @@ LoadItemDialog.propTypes={
     itemLabel: PropTypes.string.isRequired,
     value: PropTypes.string,
     itemList: PropTypes.any.isRequired,
-    okCallback: PropTypes.func.isRequired,
-    closeCallback: PropTypes.func.isRequired
+    okCallback: PropTypes.func.isRequired
 };
 
-LoadItemDialog.createDialog=(name,itemList,properties)=>{
+LoadItemDialog.createDialog=(name,itemList,properties,opt_dialogContext)=>{
     if (! properties) properties={}
-    return new Promise((resolve,reject)=>{
-        OverlayDialog.dialog((props)=> {
+    return showPromiseDialog(opt_dialogContext,(props)=>{
             return <LoadItemDialog
                 {...properties}
                 {...props}
                 value={name}
                 okCallback={(newName)=>{
-                    resolve(newName)
+                    props.resolveFunction(newName)
                 }}
                 itemList={itemList}
             />
-        },undefined,()=>{reject("")});
-    });
+        })
 };
 
 export {
