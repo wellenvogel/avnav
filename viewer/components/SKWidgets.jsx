@@ -18,6 +18,7 @@ const DegreeFormatter = (value,inDeg)=> {
   };
 
 export const SKRollWidget=(props)=>{
+        useKeyEventHandler(props,"widget");
         let degreeArrow = "---";
         if (props.value !== undefined) {
             let value = DegreeFormatter(props.value, props.inDegree);
