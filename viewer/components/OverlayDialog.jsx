@@ -505,6 +505,11 @@ const Dialogs = {
         return addDialog(html,opt_cancelCallback,opt_timeout);
     },
 
+    showDialog: function(opt_dialogContext,dialog){
+        if (! opt_dialogContext) Dialogs.dialog(dialog);
+        else opt_dialogContext.showDialog(dialog);
+    }
+
 };
 
 

@@ -1,10 +1,11 @@
-import React from 'react';
+import React, {useState} from 'react';
 import PropTypes from 'prop-types';
 import LayoutHandler from '../util/layouthandler.js';
-import OverlayDialog from './OverlayDialog.jsx';
+import OverlayDialog, {DialogButtons, DialogFrame} from './OverlayDialog.jsx';
 import assign from 'object-assign';
 import {Checkbox} from './Inputs.jsx';
 import DB from './DialogButton.jsx';
+import cloneDeep from "clone-deep";
 
 const OPTION_COMBINATIONS=[
     {
@@ -101,52 +102,42 @@ const getPanelList=(page,panelNames,handledOptions)=>{
     return rt;
 };
 
-class EditPageDialog extends React.Component{
-    constructor(props){
-        super(props);
-        this.state= {
-            page:props.page,
-            currentOptions: LayoutHandler.getOptionValues(props.handledOptions),
-            panelList:getPanelList(props.page,props.panelNames,props.handledOptions),
-            sizeCount: 0
-        };
-        this.sizeCount=0;
-        this.setMode=this.setMode.bind(this);
-    }
-    getPanelsAsArray(){
+const EditPageDialog=(props)=>{
+        const page=props.page;
+        const [currentOptions,setCurrentOptions]=useState(LayoutHandler.getOptionValues(props.handledOptions));
+        const [panelList,setPanelList]=useState(getPanelList(props.page,props.panelNames,props.handledOptions));
+            
+    const getPanelsAsArray=()=>{
         let rt=[];
-        for (let k in this.state.panelList){
-            rt.push(this.state.panelList[k]);
+        for (let k in panelList){
+            rt.push(panelList[k]);
         }
         return rt;
     }
-    setMode(option){
-        let nv=assign({},this.state.currentOptions);
-        nv[option]=!nv[option];
-        this.setState({currentOptions:nv});
+    const setMode=(option)=>{
+        setCurrentOptions((old)=>{
+            let rt={...old};
+            rt[option]=!old[option]
+            return rt;
+        })
     }
-    setCombination(panel,index){
-        let nv=assign({},this.state.panelList);
+    const setCombination=(panel,index)=>{
+        let nv=cloneDeep(panelList);
         nv[panel.basename].foundCombinations[index]=!nv[panel.basename].foundCombinations[index];
-        this.setState({panelList:nv});
+        setPanelList(nv);
     }
-    render () {
-        let self=this;
-        let panels=this.state.panelList;
         return (
-            <React.Fragment>
-            <div className="selectDialog editPageDialog">
-                <h3 className="dialogTitle">{this.props.title}</h3>
-                <div className="info"><span className="label">Page:</span>{this.props.page}</div>
+            <DialogFrame className="selectDialog editPageDialog" title={props.title}>
+                <div className="info"><span className="label">Page:</span>{props.page}</div>
                 <div className="selectCurrent" >
                     <div className="currentHeadline">Current Conditions</div>
-                    {this.props.handledOptions.map((option)=>{
+                    {props.handledOptions.map((option)=>{
                             return(
                                 <Checkbox className="modeSelect"
-                                          onClick={()=>{this.setMode(option)}}
+                                          onClick={()=>{setMode(option)}}
                                           key={option}
                                           label={option}
-                                          value={this.state.currentOptions[option]}  />
+                                          value={currentOptions[option]}  />
 
                                 )
                             }
@@ -154,14 +145,14 @@ class EditPageDialog extends React.Component{
                 </div>
                 <div className="panelList">
                     <div className="panelHeadline">Panel Configurations</div>
-                {this.getPanelsAsArray().map((panel)=>{
+                {getPanelsAsArray().map((panel)=>{
                     return <div className={"editPanel "+panel.basename} key={panel.basename.replace(/  */,'')}>
                         <span className="label">{panel.basename}</span>
                         <div className="combinationFrame">
-                        { getFilteredOptions(this.props.handledOptions).map((combination,index)=>{
+                        { getFilteredOptions(props.handledOptions).map((combination,index)=>{
                             return(
                                 <Checkbox className="combinationSelect"
-                                          onClick={()=>{this.setCombination(panel,index)}}
+                                          onClick={()=>{setCombination(panel,index)}}
                                           key={combination.display}
                                           label={combination.display}
                                           value={panel.foundCombinations[index]}
@@ -172,22 +163,19 @@ class EditPageDialog extends React.Component{
                         </div>
                 })}
                 </div>
-                <div className="dialogButtons">
-                    <DB name="cancel" onClick={this.props.closeCallback}>Cancel</DB>
+                <DialogButtons>
+                    <DB name="cancel" >Cancel</DB>
                     <DB name="ok" onClick={()=>{
-                        this.props.closeCallback();
-                        for (let pn in this.state.panelList){
-                            let panel=this.state.panelList[pn];
+                        for (let pn in panelList){
+                            let panel=panelList[pn];
                             panel.writePanelsToLayout();
                         }
-                        LayoutHandler.setTemporaryOptionValues(this.state.currentOptions);
+                        LayoutHandler.setTemporaryOptionValues(currentOptions);
                     }}>Ok</DB>
 
-                </div>
-            </div>
-            </React.Fragment>
+                </DialogButtons>
+            </DialogFrame>
         );
-    }
 }
 
 EditPageDialog.propTypes={
@@ -202,11 +190,13 @@ EditPageDialog.propTypes={
  *
  * @param pagename
  * @param panelnames
+ * @param handledOptions
+ * @param opt_dialogContext
  * @return {boolean}
  */
-EditPageDialog.createDialog=(pagename,panelnames,handledOptions)=>{
+EditPageDialog.createDialog=(pagename,panelnames,handledOptions,opt_dialogContext)=>{
     if (! LayoutHandler.isEditing()) return false;
-    OverlayDialog.dialog((props)=> {
+    OverlayDialog.showDialog(opt_dialogContext,(props)=> {
         return <EditPageDialog
             {...props}
             title="Edit Page Layout"
@@ -218,12 +208,12 @@ EditPageDialog.createDialog=(pagename,panelnames,handledOptions)=>{
     return true;
 };
 
-EditPageDialog.getButtonDef=(pagename,panelNames,handledOptions)=>{
+EditPageDialog.getButtonDef=(pagename,panelNames,handledOptions,opt_dialogContext)=>{
     return{
         name: 'EditPage',
         editOnly: true,
         onClick:()=>{
-            EditPageDialog.createDialog(pagename,panelNames,handledOptions);
+            EditPageDialog.createDialog(pagename,panelNames,handledOptions,opt_dialogContext);
         }
     }
 
