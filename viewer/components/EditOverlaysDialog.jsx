@@ -30,6 +30,7 @@ import {createEditableParameter} from "./EditableParameters";
 import {getKnownStyleParam} from "../map/chartsourcebase";
 import {moveItem, useAvNavSortable} from "../hoc/Sortable";
 import cloneDeep from "clone-deep";
+import base from "../base";
 
 const filterOverlayItem=(item,opt_itemInfo)=>{
     let rt=undefined;
@@ -87,6 +88,17 @@ const trackSort=(a,b)=>{
     if (ta > tb) return -1;
     return 0;
 }
+const useItemList=(initial)=>{
+    const [list,setList]=useState(initial);
+    return {
+        list:list,
+        setList:setList
+    }
+}
+const pushHelper=(dict,key,value)=>{
+    if (dict[key] === undefined) dict[key]=[];
+    dict[key].push(value);
+}
 const OverlayItemDialog = (props) => {
     const [itemsFetchCount, setItemsFetchCount] = useState(0);
     const [itemInfo, setItemInfo] = useState({});
@@ -94,20 +106,32 @@ const OverlayItemDialog = (props) => {
     const [changed, setChanged] = useState(false);
     const sortLists = ['icons', 'chart', 'overlay', 'images', 'user', 'knownOverlays', 'iconFiles', 'route', 'track']
     const [current, setCurrent] = useState(props.current || {});
+    const itemLists = {
+        icons: useItemList([{label: "--none--"}, {label: "--DefaultGpxIcon--", value: DefaultGpxIcon}]),
+        chart: useItemList([]),
+        overlay: useItemList([]),
+        images: useItemList([]),
+        user: useItemList([]),
+        knownOverlays: useItemList([]),
+        iconFiles: useItemList([{label: "--none--"}]),
+        route: useItemList([]),
+        track: useItemList([])
+    };
     const getItemList = (type) => {
+        const filledLists={};
         Requests.getJson("", {}, {
             request: 'listdir',
             type: type
         })
             .then((data) => {
-                itemLists[type] = data.items;
+                filledLists[type] = data.items;
                 if (type === 'user' || type === 'images' || type === 'overlay') {
                     data.items.forEach((item) => {
                         if (GuiHelpers.IMAGES.indexOf(Helper.getExt(item.name)) >= 0) {
                             let el = assign({}, item);
                             el.label = el.url;
                             el.value = el.url;
-                            itemLists.icons.push(el);
+                            pushHelper(filledLists,'icons',el);
                         }
                     })
                 }
@@ -129,16 +153,27 @@ const OverlayItemDialog = (props) => {
                         item.label = item.name;
                         item.value = item.url;
                         if (KNOWN_OVERLAY_EXTENSIONS.indexOf(Helper.getExt(item.name)) >= 0) {
-                            itemLists.knownOverlays.push(item);
+                            pushHelper(filledLists,'knownOverlays',item);
                         }
                         if (KNOWN_ICON_FILE_EXTENSIONS.indexOf(Helper.getExt(item.name)) >= 0) {
-                            itemLists.iconFiles.push(assign({}, item, {label: item.url}));
+                            pushHelper(filledLists,'iconFiles',{...item, label: item.url});
                         }
                     });
                 }
-                sortLists.forEach((list) => {
-                    itemLists[list].sort(itemSort);
-                });
+                for (let k in filledLists){
+                    if(itemLists[k]) {
+                        itemLists[k].setList((old)=>{
+                            let rt=old?old.concat(filledLists[k]):filledLists[k];
+                            if (sortLists.indexOf(k)>=0){
+                                rt.sort(itemSort);
+                            }
+                            return rt;
+                        });
+                    }
+                    else{
+                        base.log("invalid structure: "+k);
+                    }
+                }
                 setItemsFetchCount((old) => old + 1)
             })
             .catch((error) => {
@@ -146,17 +181,7 @@ const OverlayItemDialog = (props) => {
             })
     }
     //we make them only a variable as we consider them to be static
-    let itemLists = {
-        icons: [{label: "--none--"}, {label: "--DefaultGpxIcon--", value: DefaultGpxIcon}],
-        chart: [],
-        overlay: [],
-        images: [],
-        user: [],
-        knownOverlays: [],
-        iconFiles: [{label: "--none--"}],
-        route: [],
-        track: []
-    };
+
 
     useEffect(() => {
         getItemList('chart');
@@ -189,8 +214,11 @@ const OverlayItemDialog = (props) => {
         if (newType === current.type) return;
         let newState = {
             type: newType,
-            name: undefined
+            name: undefined,
+            opacity: current.opacity,
+            enabled: current.enabled
         };
+        newState[OVERLAY_ID]=current[OVERLAY_ID];
         updateCurrent(newState, true);
     }
     const analyseOverlay = (url, initial) => {
@@ -246,7 +274,7 @@ const OverlayItemDialog = (props) => {
     const filteredNameList = () => {
         let currentType = current.type;
         let rt = [];
-        itemLists.knownOverlays.forEach((item) => {
+        itemLists.knownOverlays.list.forEach((item) => {
             if (item.type === currentType) rt.push(item);
         })
         if (currentType === 'track') {
@@ -301,7 +329,7 @@ const OverlayItemDialog = (props) => {
                                     value: current.chartKey,
                                     label: current.name
                                 }}
-                                list={itemLists.chart}
+                                list={itemLists.chart.list}
                                 fetchCount={itemsFetchCount}
                                 onChange={(nv) => {
                                     updateCurrent({chartKey: nv.chartKey, name: nv.name});
@@ -322,7 +350,7 @@ const OverlayItemDialog = (props) => {
                                         newState.url += "/doc.kml";
                                     }
                                     let initial = current.name === undefined;
-                                    updateCurrent(newState, true);
+                                    updateCurrent(newState);
                                     analyseOverlay(newState.url, initial);
                                 }}
                             />
@@ -330,7 +358,7 @@ const OverlayItemDialog = (props) => {
                                 dialogRow={true}
                                 label="icon file"
                                 value={current.icons}
-                                list={itemLists.iconFiles}
+                                list={itemLists.iconFiles.list}
                                 fetchCount={itemsFetchCount}
                                 onChange={(nv) => {
                                     updateCurrent({icons: nv.url});
@@ -415,7 +443,7 @@ const OverlayItemDialog = (props) => {
                                 dialogRow={true}
                                 label="default icon"
                                 value={current.defaultIcon || '--none--'}
-                                list={itemLists.icons}
+                                list={itemLists.icons.list}
                                 fetchCount={itemsFetchCount}
                                 onChange={(nv) => {
                                     updateCurrent({defaultIcon: nv.value});
@@ -607,7 +635,7 @@ const EditOverlaysDialog = (props) => {
             return <OverlayItemDialog
                 {...props}
                 resolveFunction={(changed) => {
-                    if (changed.name) props.resolveFunction(changed);
+                    if (changed.name && changed.type) props.resolveFunction(changed);
                 }}
                 current={item}
                 title={item ? "Edit Overlay" : "New Overlay"}
@@ -716,8 +744,8 @@ const EditOverlaysDialog = (props) => {
             })
     }
 
-    const hideAll = () => {
-        currentConfig.setAllEnabled(false);
+    const enableDisableAll = (enabled) => {
+        currentConfig.setAllEnabled(enabled);
         setIsChanged(true);
         updateList(displayListFromOverlays(currentConfig.getOverlayList()))
     }
@@ -797,8 +825,14 @@ const EditOverlaysDialog = (props) => {
                 itemList={list}
             />
             <DialogButtons className="insertButtons">
+                <DB name="show"
+                    onClick={()=>enableDisableAll(true)}
+                    close={false}
+                >
+                    ShowAll
+                </DB>
                 <DB name="hide"
-                    onClick={hideAll}
+                    onClick={()=>enableDisableAll(false)}
                     close={false}
                 >
                     HideAll
