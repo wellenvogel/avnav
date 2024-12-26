@@ -66,6 +66,7 @@ const WindWidget = (props) => {
             angle: 'TWA'
         }
     }
+    let classes = "widget windWidget " + props.className || "";
     let wind = getWindData(props);
     var a180 = !(props.show360 || wind.suffix.endsWith('D'));
     var angle = Formatter.formatDirection(wind.windAngle,false,a180);

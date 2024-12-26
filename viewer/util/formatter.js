@@ -33,7 +33,7 @@ const formatLonLatsDecimal=function(coordinate,axis,format='DDM'){
       let min = 60*(deg-DEG);
       let MIN = Math.floor(min);
       let sec = 60*(min-MIN);
-      if (sec.toFixed(1) == '60.0'){
+      if (sec.toFixed(1).startsWith('6')){
           MIN+=1;
           sec=0;
           if(MIN==60){
@@ -45,7 +45,7 @@ const formatLonLatsDecimal=function(coordinate,axis,format='DDM'){
     } else {
       let DEG = Math.floor(deg);
       let min = 60*(deg-DEG);
-      if (min.toFixed(3) == '60.000'){
+      if (min.toFixed(3).startsWith('6')){
           DEG+=1;
           min=0;
       }

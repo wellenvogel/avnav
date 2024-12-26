@@ -30,7 +30,6 @@ const nightColors={
 };
 const WindGraphics = (props) => {
     useKeyEventHandler(props, "widget");
-    const ddProps = useAvNavSortable(props.dragId);
     let canvas = undefined;
     const drawWind = () => {
         let current = getWindData(props);
