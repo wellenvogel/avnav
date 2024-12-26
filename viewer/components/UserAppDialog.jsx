@@ -53,7 +53,7 @@ const ItemNameDialog=({iname,resolveFunction,fixedExt,title,mandatory,checkName}
     </DialogFrame>
 };
 ItemNameDialog.propTypes={
-    iname: PropTypes.oneOfType([PropTypes.string,undefined]),
+    iname: PropTypes.string,
     resolveFunction: PropTypes.func, //must return true to close the dialog
     checkName: PropTypes.func, //if provided: return an error text if the name is invalid
     title: PropTypes.func, //use this as dialog title

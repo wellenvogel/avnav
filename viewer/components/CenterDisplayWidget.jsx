@@ -9,7 +9,7 @@ import Formatter from '../util/formatter.js';
 import {useKeyEventHandler} from '../util/GuiHelpers.js';
 import NavCompute from "../nav/navcompute";
 import {useAvNavSortable} from "../hoc/Sortable";
-import {WidgetFrame, WidgetHead} from "./WidgetBase";
+import {WidgetFrame, WidgetHead, WidgetProps} from "./WidgetBase";
 
 
 const CenterDisplayWidget = (props) => {
@@ -83,8 +83,7 @@ CenterDisplayWidget.storeKeys={
 };
 
 CenterDisplayWidget.propTypes={
-    onClick: PropTypes.func,
-    className: PropTypes.string,
+    ...WidgetProps,
     markerCourse:PropTypes.number,
     markerDistance:PropTypes.number,
     centerCourse:PropTypes.number,
@@ -92,7 +91,6 @@ CenterDisplayWidget.propTypes={
     centerPosition: PropTypes.object,
     measurePosition: PropTypes.object,
     measureRhumbLine: PropTypes.bool,
-    dragId: PropTypes.string,
     style: PropTypes.object,
     mode: PropTypes.string
 };
