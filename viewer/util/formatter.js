@@ -5,41 +5,51 @@
 import navcompute from '../nav/navcompute.js';
 import {extendCoordinate} from "ol/extent";
 
+function pad(num, size) {
+    var s = '000000' + num;
+    return s.substr(s.length-size);
+}
+
 /**
  *
  * @param {number} coordinate
  * @param axis
  * @returns {string}
  */
-const formatLonLatsDecimal=function(coordinate,axis){
+const formatLonLatsDecimal=function(coordinate,axis,format='DDM'){
     coordinate = (coordinate+540)%360 - 180; // normalize for sphere being round
-
-    let abscoordinate = Math.abs(coordinate);
-    let coordinatedegrees = Math.floor(abscoordinate);
-
-    let coordinateminutes = (abscoordinate - coordinatedegrees)/(1/60);
-    let numdecimal=2;
-    //correctly handle the toFixed(x) - will do math rounding
-    if (coordinateminutes.toFixed(numdecimal) == 60){
-        coordinatedegrees+=1;
-        coordinateminutes=0;
-    }
-    if( coordinatedegrees < 10 ) {
-        coordinatedegrees = "0" + coordinatedegrees;
-    }
-    if (coordinatedegrees < 100 && axis == 'lon'){
-        coordinatedegrees = "0" + coordinatedegrees;
-    }
-    let str = coordinatedegrees + "\u00B0";
-
-    if( coordinateminutes < 10 ) {
-        str +="0";
-    }
-    str += coordinateminutes.toFixed(numdecimal) + "'";
+    var deg = Math.abs(coordinate);
     if (axis == "lon") {
-        str += coordinate < 0 ? "W" :"E";
+        var padding = 3;
+        var str = coordinate < 0 ? "W" :"E";
     } else {
-        str += coordinate < 0 ? "S" :"N";
+        var padding = 2;
+        var str = coordinate < 0 ? "S\u00A0" :"N\u00A0";
+    }
+    if(format=='DD') {
+      str += pad(deg.toFixed(5),padding+6) + "\u00B0";
+    } else if(format=='DMS') {
+      let DEG = Math.floor(deg);
+      let min = 60*(deg-DEG);
+      let MIN = Math.floor(min);
+      let sec = 60*(min-MIN);
+      if (sec.toFixed(1) == '60.0'){
+          MIN+=1;
+          sec=0;
+          if(MIN==60){
+            MIN=0;
+            DEG+=1;
+          }
+      }
+      str += pad(DEG,padding) + "\u00B0" + pad(MIN,2) + "'" + pad(sec.toFixed(1),4) + '"';
+    } else {
+      let DEG = Math.floor(deg);
+      let min = 60*(deg-DEG);
+      if (min.toFixed(3) == '60.000'){
+          DEG+=1;
+          min=0;
+      }
+      str += pad(DEG,padding) + "\u00B0" + pad(min.toFixed(3),6) + "'";
     }
     return str;
 };
@@ -49,15 +59,17 @@ const formatLonLatsDecimal=function(coordinate,axis){
  * @param {Point} lonlat
  * @returns {string}
  */
-const formatLonLats=function(lonlat){
+const formatLonLats=function(lonlat,format='DDM'){
     if (! lonlat || isNaN(lonlat.lat) || isNaN(lonlat.lon)){
         return "-----";
     }
-    let ns=this.formatLonLatsDecimal(lonlat.lat, 'lat');
-    let ew=this.formatLonLatsDecimal(lonlat.lon, 'lon');
-    return ns + ', ' + ew;
+    let lat=this.formatLonLatsDecimal(lonlat.lat, 'lat', format);
+    let lon=this.formatLonLatsDecimal(lonlat.lon, 'lon', format);
+    return lat + ' ' + lon;
 };
-formatLonLats.parameters=[];
+formatLonLats.parameters=[
+    {name:'format',type:'SELECT',list:['DD','DDM','DMS'],default:'DDM'}
+];
 
 /**
  * format a number with a fixed number of fractions
@@ -115,8 +127,8 @@ const formatDecimalOpt=function(number,fix,fract,addSpace){
 
 formatDecimalOpt.parameters=[
     {name:'fix',type:'NUMBER'},
-    {name: 'fract',type:'NUMBER'},
-    {name: 'addSpace',type:'BOOLEAN'}
+    {name:'fract',type:'NUMBER'},
+    {name:'addSpace',type:'BOOLEAN'}
 ];
 
 /**
