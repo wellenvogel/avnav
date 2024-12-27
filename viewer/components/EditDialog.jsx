@@ -18,6 +18,8 @@ export const EditDialog = ({data, title, language, resolveFunction, saveFunction
     const flask = useRef();
     const editElement = useRef();
     const [changed, setChanged] = useState(false);
+    const everChanged=useRef(false);
+    if (changed)everChanged.current=true;
     const dialogContext = useDialogContext();
     const [uploadSequence, setUploadSequence] = useState(0);
     useEffect(() => {
@@ -82,7 +84,7 @@ export const EditDialog = ({data, title, language, resolveFunction, saveFunction
             DBCancel(),
             DBOk(() => {
                     promiseResolveHelper({ok: dialogContext.closeDialog}, resolveFunction, flask.current.getCode());
-                }, {disabled: !changed, close: false}
+                }, {disabled: !everChanged.current, close: false}
             )
         ]}></DialogButtons>
     </DialogFrame>

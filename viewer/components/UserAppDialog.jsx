@@ -2,8 +2,7 @@ import React, {useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
 import OverlayDialog, {
     DialogRow,
-    promiseResolveHelper, SelectDialog,
-    SelectList,
+    promiseResolveHelper, SelectList,
     showPromiseDialog,
     useDialogContext
 } from './OverlayDialog.jsx';
@@ -199,31 +198,48 @@ const TranslateUrlDialog=({resolveFunction,current})=>{
     return <DialogFrame title={"loading..."}/>
 }
 
+const SelectExistingDialog=({existingAddons,resolveFunction})=>{
+    const dialogContext=useDialogContext();
+    const selist = [];
+    existingAddons.forEach((addon) => {
+        selist.push({value: addon, label: addon.title, icon: addon.icon});
+    })
+    return <DialogFrame className="selectDialog" title="Select Addon to Edit">
+        <SelectList list={selist} onClick={(elem)=>{
+            dialogContext.closeDialog();
+            resolveFunction(elem.value);
+        }}></SelectList>
+        <DialogButtons buttonList={[
+            {
+                name:"new",
+                onClick:()=>resolveFunction()
+            },
+            DBCancel()
+        ]}/>
+    </DialogFrame>
+}
+
 const UserAppDialog = (props) => {
     const [currentAddon, setCurrentAddon] = useState({...props.addon, ...props.fixed});
     const dialogContext = useDialogContext();
-    const initiallyLoaded = (props.fixed || {}).url === undefined || props.addon !== undefined;
-    const [loaded, setLoaded] = useState(initiallyLoaded);
-    const [internal, setInternal] = useState(!(initiallyLoaded && (props.addon || {}).keepUrl));
+    const fixed = props.fixed || {};
+    const shouldFind =  ! fixed.name && ( fixed.url  && ! props.addon);
+    const [loaded, setLoaded] = useState(!shouldFind);
+    const [internal, setInternal] = useState(!(!shouldFind && (props.addon || {}).keepUrl));
     const fillLists = () => {
         if (!loaded) Addons.readAddOns()
             .then((addons) => {
                 let current = Addons.findAddonByUrl(addons, props.fixed.url,true)
                 if (current.length) {
-                    const selist = [];
-                    selist.push({label: '--Create New --'});
-                    current.forEach((addon) => {
-                        selist.push({value: addon, label: addon.title, icon: addon.icon});
-                    })
                     showPromiseDialog(dialogContext, (props) =>
-                        <SelectDialog
+                        <SelectExistingDialog
                             {...props}
-                            list={selist}
+                            existingAddons={current}
                         />
                     )
                         .then((selected) => {
-                            if (selected.value !== undefined) {
-                                setCurrentAddon({...selected.value, ...props.fixed});
+                            if (selected !== undefined) {
+                                setCurrentAddon({...selected, ...props.fixed});
                             }
                         })
                         .catch(() => {
@@ -238,7 +254,6 @@ const UserAppDialog = (props) => {
     useEffect(() => {
         fillLists();
     }, []);
-    let fixed = props.fixed || {};
     let canEdit = unsetOrTrue(currentAddon.canDelete);
     if (!loaded) canEdit = false;
     let fixedUrl = fixed.url !== undefined;
