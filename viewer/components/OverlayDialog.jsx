@@ -350,6 +350,32 @@ export const SelectList=({list,onClick})=> {
     </div>
 }
 
+export const SelectDialog=({resolveFunction,title,list,optResetCallback,cancelCallback,okCallback})=>{
+        const dialogContext = useDialogContext();
+        return (
+            <DialogFrame className="selectDialog" title={title || ''}>
+                <SelectList list={list} onClick={(elem)=>{
+                    dialogContext.closeDialog();
+                    if (resolveFunction) resolveFunction(elem);
+                    else if (okCallback) okCallback(elem);
+                }}/>
+                <DialogButtons>
+                    {optResetCallback && <DB
+                        name="reset"
+                        onClick={(ev)=>{
+                            optResetCallback(ev);
+                        }}
+                    >Reset</DB>}
+                    <DB name="cancel"
+                        onClick={(ev)=>{
+                            if (cancelCallback) cancelCallback(ev);
+                        }}
+                    >Cancel</DB>
+                </DialogButtons>
+            </DialogFrame>
+        );
+
+    };
 //"active input" to prevent resizes
 const Dialogs = {
     /**
@@ -363,32 +389,14 @@ const Dialogs = {
      * @return {Function}
      */
     createSelectDialog: (title, list, okCallback, cancelCallback, optResetCallback) => {
-        return ({resolveFunction}) => {
-            const dialogContext = useDialogContext();
-            return (
-                <DialogFrame className="selectDialog" title={title || ''}>
-                    <SelectList list={list} onClick={(elem)=>{
-                        dialogContext.closeDialog();
-                        if (resolveFunction) resolveFunction(elem);
-                        else if (okCallback) okCallback(elem);
-                    }}/>
-                    <DialogButtons>
-                        {optResetCallback && <DB
-                            name="reset"
-                            onClick={(ev)=>{
-                                optResetCallback(ev);
-                            }}
-                        >Reset</DB>}
-                        <DB name="cancel"
-                                onClick={(ev)=>{
-                                    if (cancelCallback) cancelCallback(ev);
-                                }}
-                            >Cancel</DB>
-                    </DialogButtons>
-                </DialogFrame>
-            );
-
-        };
+        return (props)=><SelectDialog
+            {...props}
+            title={title}
+            okCallback={okCallback}
+            list={list}
+            cancelCallback={cancelCallback}
+            optResetCallback={optResetCallback}
+        />
     },
     /**
      * create a value dialog component

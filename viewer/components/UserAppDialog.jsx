@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
 import OverlayDialog, {
     DialogRow,
-    promiseResolveHelper,
+    promiseResolveHelper, SelectDialog,
     SelectList,
     showPromiseDialog,
     useDialogContext
@@ -10,7 +10,7 @@ import OverlayDialog, {
 import Toast from './Toast.jsx';
 import {Checkbox, Input, InputReadOnly, valueMissing} from './Inputs.jsx';
 import Addons from './Addons.js';
-import Helper from '../util/helper.js';
+import Helper, {unsetOrTrue} from '../util/helper.js';
 import Requests from '../util/requests.js';
 import UploadHandler from "./UploadHandler";
 import {DBCancel, DBOk, DialogButtons, DialogFrame} from "./OverlayDialog";
@@ -208,8 +208,27 @@ const UserAppDialog = (props) => {
     const fillLists = () => {
         if (!loaded) Addons.readAddOns()
             .then((addons) => {
-                let current = Addons.findAddonByUrl(addons, props.fixed.url)
-                if (current) setCurrentAddon({...current, ...props.fixed});
+                let current = Addons.findAddonByUrl(addons, props.fixed.url,true)
+                if (current.length) {
+                    const selist = [];
+                    selist.push({label: '--Create New --'});
+                    current.forEach((addon) => {
+                        selist.push({value: addon, label: addon.title, icon: addon.icon});
+                    })
+                    showPromiseDialog(dialogContext, (props) =>
+                        <SelectDialog
+                            {...props}
+                            list={selist}
+                        />
+                    )
+                        .then((selected) => {
+                            if (selected.value !== undefined) {
+                                setCurrentAddon({...selected.value, ...props.fixed});
+                            }
+                        })
+                        .catch(() => {
+                        })
+                }
                 setLoaded(true);
             })
             .catch((error) => Toast("unable to load addons: " + error));
@@ -220,11 +239,11 @@ const UserAppDialog = (props) => {
         fillLists();
     }, []);
     let fixed = props.fixed || {};
-    let canEdit = (currentAddon.canDelete === undefined || currentAddon.canDelete);
+    let canEdit = unsetOrTrue(currentAddon.canDelete);
     if (!loaded) canEdit = false;
     let fixedUrl = fixed.url !== undefined;
     let title = "";
-    if (canEdit) title = fixed.name ? "Modify " : "Create ";
+    if (canEdit) title = currentAddon.name ? "Modify " : "Create ";
     return (
         <DialogFrame className="userAppDialog" flex={true} title={title + 'User App'}>
             {(fixedUrl || !canEdit) ?
@@ -364,8 +383,14 @@ const UserAppDialog = (props) => {
                     onClick: () => {
                         dialogContext.showDialog(OverlayDialog.createConfirmDialog("really delete User App?",
                             () => {
-                                dialogContext.closeDialog();
-                                props.removeFunction(currentAddon.name);
+                                Addons.removeAddon(currentAddon.name)
+                                    .then((data) => {
+                                        props.resolveFunction(data);
+                                        dialogContext.closeDialog();
+                                    })
+                                    .catch((error) => {
+                                        if (unsetOrTrue(props.showToasts)) Toast("unable to remove: " + error);
+                                    });
                             }
                         ));
                     },
@@ -374,9 +399,18 @@ const UserAppDialog = (props) => {
                 },
                 DBCancel(),
                 DBOk(() => {
-                        props.okFunction({...currentAddon, ...props.fixed});
+                        const addon={...currentAddon, ...props.fixed};
+                        Addons.updateAddon(addon.name, addon.url, addon.icon, addon.title, addon.newWindow)
+                            .then((data) => {
+                                props.resolveFunction(data);
+                                dialogContext.closeDialog();
+                        })
+                        .catch((error) => {
+                            if (unsetOrTrue(props.showToasts)) Toast("unable to add/update: " + error);
+                        });
+
                     },
-                    {disabled: !currentAddon.icon || !currentAddon.url || !canEdit})
+                    {disabled: !currentAddon.icon || !currentAddon.url || !canEdit,close:false})
             ]}/>
         </DialogFrame>
     );
@@ -385,47 +419,7 @@ const UserAppDialog = (props) => {
 UserAppDialog.propTypes = {
     fixed: PropTypes.object.isRequired,
     addon: PropTypes.object,
-    closeCallback: PropTypes.func.isRequired,
-    okFunction: PropTypes.func.isRequired,
-    removeFunction: PropTypes.func.isRequired
-};
-
-UserAppDialog.showUserAppDialog = (item, fixed, opt_showToasts) => {
-    return new Promise((resolve, reject) => {
-        if (!item && !(fixed || {}).url) {
-            let err = "either addon or fixed.url required";
-            if (opt_showToasts) Toast(err);
-            reject(err);
-        }
-        OverlayDialog.dialog((props) => {
-            return (
-                <UserAppDialog
-                    {...props}
-                    okFunction={(addon) => {
-                        Addons.updateAddon(addon.name, addon.url, addon.icon, addon.title, addon.newWindow)
-                            .then((data) => {
-                                resolve(data)
-                            })
-                            .catch((error) => {
-                                if (opt_showToasts) Toast("unable to add/update: " + error);
-                                reject(error);
-                            });
-                    }}
-                    removeFunction={(name) => {
-                        Addons.removeAddon(name)
-                            .then((data) => resolve(data))
-                            .catch((error) => {
-                                if (opt_showToasts) Toast("unable to remove: " + error);
-                                reject(error);
-                            });
-                    }}
-                    //TODO: item vs addon
-                    addon={item}
-                    fixed={fixed}
-                />
-            )
-        })
-    });
+    resolveFunction: PropTypes.func
 };
 
 export default UserAppDialog;

@@ -30,15 +30,18 @@ const readAddOns = function (opt_showToast,opt_includeInvalid) {
     });
 };
 
-const findAddonByUrl=(addons,url)=>{
+const findAddonByUrl=(addons,url,opt_all)=>{
     if (! addons || !(addons instanceof Array)) return;
     if (! url) return;
+    let rtall=[];
     for (let i in addons){
         let addon=addons[i];
         if (addon.url == url){
-            return addon;
+            if (! opt_all) return addon;
+            rtall.push(addon);
         }
     }
+    return opt_all?rtall:undefined;
 };
 /**
  * update/add an addon

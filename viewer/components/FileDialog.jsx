@@ -29,7 +29,14 @@ import DB from "./DialogButton";
 import Requests from "../util/requests";
 import Toast from "./Toast";
 import EditOverlaysDialog, {KNOWN_OVERLAY_EXTENSIONS,DEFAULT_OVERLAY_CHARTENTRY} from "./EditOverlaysDialog";
-import OverlayDialog, {DialogButtons, DialogFrame, dialogHelper, DialogRow, InfoItem} from "./OverlayDialog";
+import OverlayDialog, {
+    DialogButtons,
+    DialogFrame,
+    dialogHelper,
+    DialogRow,
+    InfoItem,
+    showPromiseDialog
+} from "./OverlayDialog";
 import globalStore from "../util/globalstore";
 import ViewPage from "../gui/ViewPage";
 import assign from 'object-assign';
@@ -755,9 +762,13 @@ export const showFileDialog=(history,item,opt_doneCallback,opt_checkExists)=>{
             return;
         }
         if (action === 'userapp'){
-            UserAppDialog.showUserAppDialog(undefined, {url:item.url})
-                .then((data)=>doneAction())
-                .catch((error)=>doneAction());
+            if (item.url) {
+                showPromiseDialog(undefined, (props) =>
+                    <UserAppDialog {...props} fixed={{url: item.url}}/>
+                )
+                    .then((data) => doneAction())
+                    .catch((error) => doneAction());
+            }
         }
         if (action === 'delete'){
             return deleteItem(item,()=>doneAction());
