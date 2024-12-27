@@ -219,6 +219,15 @@ const SelectExistingDialog=({existingAddons,resolveFunction})=>{
     </DialogFrame>
 }
 
+const checkUrl=(val,isInternal)=>{
+    if (! val) return "must not be empty";
+    if (isInternal){
+        if (val.match(/^http/i)) return "internal urls must not start with http";
+        return
+    }
+    if (!val.match(/^https*:\/\//i)) return "external urls must start with http[s]://";
+}
+
 const UserAppDialog = (props) => {
     const [currentAddon, setCurrentAddon] = useState({...props.addon, ...props.fixed});
     const dialogContext = useDialogContext();
@@ -286,6 +295,7 @@ const UserAppDialog = (props) => {
                             minSize={50}
                             maxSize={100}
                             mandatory={(v) => !v}
+                            checkFunction={(v)=>checkUrl(v,false) === undefined}
                             onChange={(val) => setCurrentAddon({...currentAddon, url: val})}/>
                         :
                         <InputReadOnly
@@ -425,7 +435,9 @@ const UserAppDialog = (props) => {
                         });
 
                     },
-                    {disabled: !currentAddon.icon || !currentAddon.url || !canEdit,close:false})
+                    {
+                        disabled: !currentAddon.icon || !currentAddon.url || !canEdit || checkUrl(currentAddon.url,internal) !== undefined,
+                        close:false})
             ]}/>
         </DialogFrame>
     );
