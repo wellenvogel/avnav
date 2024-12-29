@@ -146,9 +146,11 @@ const formatDistance=function(distance,opt_unit){
     let number=parseFloat(distance);
     if (isNaN(number)) return "---";
     let factor=navcompute.NM;
+    if (opt_unit == 'ft') factor=1/3.280839895; // feet
+    if (opt_unit == 'yd') factor=3/3.280839895; // yards
     if (opt_unit == 'm') factor=1;
     if (opt_unit == 'km') factor=1000;
-    number=number/factor;
+    number/=factor;
     if (number < 1){
         return formatDecimal(number,3,2);
     }
@@ -158,7 +160,7 @@ const formatDistance=function(distance,opt_unit){
     return formatDecimal(number,5,0);
 };
 formatDistance.parameters=[
-    {name:'unit',type:'SELECT',list:['nm','m','km'],default:'nm'}
+    {name:'unit',type:'SELECT',list:['nm','m','km','ft','yd'],default:'nm'}
 ];
 
 /**

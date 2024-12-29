@@ -184,6 +184,7 @@ let widgetList=[
             windSpeedTrue: keys.nav.gps.trueWindSpeed,
         },
         formatter: 'formatSpeed',
+        formatterParameters: ['kn'],
         editableParameters: {
             formatterParameters: true,
             value: false,
@@ -336,11 +337,35 @@ let widgetList=[
         caption: 'DPT',
         unit: 'm',
         storeKeys:{
-            value:keys.nav.gps.depthBelowTransducer,
-            visible: keys.properties.showDepth
+            DBK: keys.nav.gps.depthBelowKeel,
+            DBS: keys.nav.gps.depthBelowWaterline,
+            DBT: keys.nav.gps.depthBelowTransducer,
         },
-        formatter: 'formatDecimal',
-        formatterParameters: [3,1,true]
+        formatter: 'formatDistance',
+        formatterParameters: ['m'],
+        translateFunction: (props)=>{
+            var kind=props.kind;
+            if(kind=='auto') {
+              kind='DBT';
+              if(props.DBK !== undefined) kind='DBK';
+              if(props.DBS !== undefined) kind='DBS';
+            }
+            if(kind=='DBT') var depth=props.DBT;
+            if(kind=='DBK') var depth=props.DBK;
+            if(kind=='DBS') var depth=props.DBS;
+            return {...props,
+              value: depth,
+              caption: kind,
+              unit: props.formatterParameters.length ? props.formatterParameters[0] : props.unit,
+            }
+        },
+        editableParameters:{
+            formatterParameters: true,
+            unit: false,
+            value: false,
+            caption: false,
+            kind: {type:'SELECT',list:['auto','DBT','DBK','DBS'],default:'auto'}
+        },
     },
     {
         name: 'XteDisplay',
